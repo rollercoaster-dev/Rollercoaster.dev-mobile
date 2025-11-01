@@ -14,7 +14,8 @@
     "type-check": "turbo run type-check",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,vue}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,vue}\"",
-    "clean": "turbo run clean && rm -rf node_modules"
+    "clean": "turbo run clean && rm -rf node_modules",
+    "update-pnpm": "node scripts/update-pnpm.js"
   },
   "devDependencies": {
     "prettier": "^3.2.5",
