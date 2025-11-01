@@ -21,9 +21,9 @@
     "turbo": "^2.0.0",
     "typescript": "^5.3.3"
   },
-  "packageManager": "pnpm@9.0.0",
+  "packageManager": "pnpm@10.20.0",
   "engines": {
     "node": ">=20.0.0",
-    "pnpm": ">=8.0.0"
+    "pnpm": ">=10.0.0"
   }
 }
