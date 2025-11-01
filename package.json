@@ -15,9 +15,13 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,vue}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,vue}\"",
     "clean": "turbo run clean && rm -rf node_modules",
-    "update-pnpm": "node scripts/update-pnpm.js"
+    "update-pnpm": "node scripts/update-pnpm.js",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:publish": "changeset publish"
   },
   "devDependencies": {
+    "@changesets/cli": "2.29.7",
     "prettier": "^3.2.5",
     "turbo": "^2.0.0",
     "typescript": "^5.3.3"
