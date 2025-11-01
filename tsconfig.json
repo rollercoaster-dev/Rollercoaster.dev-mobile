@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "composite": true
+  },
+  "include": [],
+  "references": [
+    // References to TypeScript packages will be added as they are migrated
+    // e.g., { "path": "./packages/openbadges-types" }
+  ]
+}
