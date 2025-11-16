@@ -1,0 +1,57 @@
+# Bun Configuration
+# https://bun.sh/docs/runtime/bunfig
+
+[install]
+# Use frozen lockfile in CI/production
+# Set to false for local dev to allow adding dependencies
+# CI uses --frozen-lockfile flag explicitly
+frozen-lockfile = false
+
+# Install dev dependencies by default (not production-only)
+production = false
+
+# Respect package.json engines field
+exact = false
+
+# Registry configuration
+registry = "https://registry.npmjs.org"
+
+[install.cache]
+# Cache directory for faster subsequent installs
+dir = ".bun-cache"
+
+# Don't disable cache (useful for local dev)
+disable = false
+
+[test]
+# Enable code coverage only when needed (use --coverage flag)
+# Set to false to avoid overhead on every test run
+# CI uses dedicated test:coverage script
+coverage = false
+
+# Coverage directory
+coverageDirectory = "coverage"
+
+# Coverage reporters (Bun supports: text, lcov)
+coverageReporter = ["text", "lcov"]
+
+# Skip test files from coverage reports
+coverageSkipTestFiles = true
+
+# Exclude patterns from coverage calculation (NOT test execution)
+coveragePathIgnorePatterns = [
+  "**/node_modules/**",
+  "**/dist/**",
+  "**/.bun/**",
+  "**/coverage/**"
+]
+
+[run]
+# Default shell for bun run scripts (system uses your system's default shell)
+shell = "system"
+
+# Use Bun's runtime for all executable files
+bun = true
+
+# Automatically install missing dependencies
+auto-install = false

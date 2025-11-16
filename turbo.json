@@ -12,12 +12,23 @@
       "persistent": true
     },
     "test": {
+      "cache": true,
+      "outputs": ["coverage/**"]
+    },
+    "test:unit": {
+      "cache": true,
+      "outputs": ["coverage/**"]
+    },
+    "test:integration": {
+      "cache": true,
+      "outputs": ["coverage/**"]
+    },
+    "test:e2e": {
       "dependsOn": ["build"],
       "cache": true,
       "outputs": ["coverage/**"]
     },
     "test:coverage": {
-      "dependsOn": ["build"],
       "cache": true,
       "outputs": ["coverage/**"]
     },
@@ -44,10 +55,12 @@
   },
   "globalDependencies": [
     "**/.env.*local",
-    "tsconfig.json"
+    "tsconfig.json",
+    "bunfig.toml"
   ],
   "globalEnv": [
     "NODE_ENV",
-    "CI"
+    "CI",
+    "BUN_ENV"
   ]
 }
