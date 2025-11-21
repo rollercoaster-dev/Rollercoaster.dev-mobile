@@ -1,0 +1,112 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# CodeRabbit Configuration
+# Docs: https://docs.coderabbit.ai/configure-coderabbit/
+
+reviews:
+  auto_review:
+    enabled: false # Only run reviews when requested via @coderabbitai review
+
+  # Disable tools that are already handled by CI
+  tools:
+    eslint:
+      enabled: false # Already runs in CI (bun run lint)
+    biome:
+      enabled: false # Not used in this project
+
+  # Path-specific review instructions
+  path_instructions:
+    # Vue Components - Accessibility & Best Practices
+    - path: "packages/openbadges-ui/src/components/**/*.vue"
+      instructions: |
+        Review for accessibility (a11y) compliance:
+        - Verify ARIA attributes on interactive elements
+        - Check keyboard navigation support (tabindex, keydown handlers)
+        - Ensure images have meaningful alt text
+        - Verify form inputs have associated labels
+        - Check heading hierarchy (h1 > h2 > h3)
+
+        Review for neurodiversity-friendly patterns:
+        - Check for configurable content density options
+        - Verify simplified view alternatives exist where appropriate
+        - Ensure focus states are clearly visible
+
+        Review Vue 3 best practices:
+        - Prefer Composition API patterns
+        - Check for proper prop validation
+        - Verify emits are properly declared
+
+    # API Routes - Security & Validation
+    - path: "apps/openbadges-modular-server/src/api/**/*.ts"
+      instructions: |
+        Review for security:
+        - Verify input validation using Zod schemas
+        - Check that authentication middleware is applied to protected routes
+        - Ensure proper error handling with appropriate HTTP status codes
+        - Look for potential injection vulnerabilities
+
+        Review for API design:
+        - Check OpenAPI documentation accuracy
+        - Verify consistent response formats
+        - Ensure proper HTTP methods are used
+
+    # Authentication - Security Focus
+    - path: "apps/openbadges-modular-server/src/auth/**/*.ts"
+      instructions: |
+        Security-critical code - review carefully:
+        - Check for authentication bypass vulnerabilities
+        - Verify JWT handling (expiration, signature validation)
+        - Review role-based access control (RBAC) logic
+        - Ensure credentials are never logged or exposed
+        - Check for timing attack vulnerabilities in comparisons
+
+    # Database Code - Data Integrity
+    - path: "apps/openbadges-modular-server/src/infrastructure/database/**/*.ts"
+      instructions: |
+        Review for data safety:
+        - Verify parameterized queries (no string concatenation for SQL)
+        - Check migration scripts for data loss risks
+        - Review mapper functions for correctness
+        - Ensure proper transaction handling where needed
+
+    # Logger - Sensitive Data Protection
+    - path: "packages/rd-logger/**/*.ts"
+      instructions: |
+        Review for sensitive data protection:
+        - Ensure sensitive data (passwords, tokens, keys) is never logged
+        - Verify pattern detection catches common secrets
+        - Check sanitization covers connection strings and credentials
+
+    # Security Utilities
+    - path: "**/utils/security/**/*.ts"
+      instructions: |
+        Security-critical code - review carefully:
+        - Verify sanitization functions cover all sensitive fields
+        - Check rate limiting configuration is appropriate
+        - Review CORS settings for overly permissive origins
+        - Ensure security headers are properly set
+
+    # Type Definitions - Spec Compliance
+    - path: "packages/openbadges-types/**/*.ts"
+      instructions: |
+        Review for Open Badges specification compliance:
+        - Verify types match Open Badges 2.0 and 3.0 specs
+        - Check type guards return correct boolean results
+        - Ensure JSON-LD context handling is accurate
+        - Verify Verifiable Credentials structure compliance
+
+    # Test Files - Quality Checks
+    - path: "**/*.test.ts"
+      instructions: |
+        Review test quality:
+        - Ensure tests have meaningful assertions (not just coverage)
+        - Check for proper mocking/stubbing practices
+        - Verify edge cases and error conditions are tested
+        - Look for flaky test patterns (timing, order dependencies)
+
+  # Exclude generated and dependency files from review
+  path_filters:
+    - "!**/dist/**"
+    - "!**/node_modules/**"
+    - "!**/*.lock"
+    - "!**/coverage/**"
+    - "!**/.bun-cache/**"
