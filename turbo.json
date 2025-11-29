@@ -53,14 +53,6 @@
       "cache": false
     }
   },
-  "globalDependencies": [
-    "**/.env.*local",
-    "tsconfig.json",
-    "bunfig.toml"
-  ],
-  "globalEnv": [
-    "NODE_ENV",
-    "CI",
-    "BUN_ENV"
-  ]
+  "globalDependencies": ["**/.env.*local", "tsconfig.json", "bunfig.toml"],
+  "globalEnv": ["NODE_ENV", "CI", "BUN_ENV"]
 }
