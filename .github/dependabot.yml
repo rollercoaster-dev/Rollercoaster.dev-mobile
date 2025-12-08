@@ -1,0 +1,50 @@
+version: 2
+updates:
+  # Root package.json and bun.lock
+  # Dependabot uses npm ecosystem for Bun workspaces
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    groups:
+      # Group all development dependencies together to reduce PR noise
+      dev-dependencies:
+        patterns:
+          - "*"
+        dependency-type: "development"
+      # Group production dependencies separately for easier review
+      production-dependencies:
+        patterns:
+          - "*"
+        dependency-type: "production"
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "chore(deps):"
+      include: "scope"
+    # Limit open PRs to avoid overwhelming the team
+    open-pull-requests-limit: 10
+    # Automatically rebase PRs when the base branch updates
+    rebase-strategy: "auto"
+
+  # GitHub Actions workflow dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    labels:
+      - "dependencies"
+      - "ci"
+    commit-message:
+      prefix: "chore(ci):"
+      include: "scope"
+    # Limit open PRs
+    open-pull-requests-limit: 5
+    # Automatically rebase PRs when the base branch updates
+    rebase-strategy: "auto"
