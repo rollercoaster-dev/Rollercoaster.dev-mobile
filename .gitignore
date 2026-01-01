@@ -64,5 +64,6 @@ Thumbs.db
 
 # Claude Code settings
 .claude/settings.local.json
+.claude/dev-plans/
 # Note: .claude/settings.json should be committed (team-shared settings)
 .playwright-mcp/
