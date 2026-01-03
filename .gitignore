@@ -68,3 +68,6 @@ Thumbs.db
 .claude/dev-plans/
 # Note: .claude/settings.json should be committed (team-shared settings)
 .playwright-mcp/
+
+# Git worktrees for /auto-milestone
+.worktrees/
