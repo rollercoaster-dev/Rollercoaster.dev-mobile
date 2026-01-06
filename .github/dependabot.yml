@@ -1,8 +1,8 @@
 version: 2
 updates:
   # Root package.json and bun.lock
-  # Dependabot uses npm ecosystem for Bun workspaces
-  - package-ecosystem: "npm"
+  # Dependabot now natively supports Bun (GA Feb 2025)
+  - package-ecosystem: "bun"
     directory: "/"
     schedule:
       interval: "weekly"
