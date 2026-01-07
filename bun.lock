@@ -111,6 +111,13 @@
         "zod-to-ts": "^1.2.0",
       },
     },
+    "packages/claude-knowledge": {
+      "name": "claude-knowledge",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@rollercoaster-dev/shared-config": "workspace:*",
+      },
+    },
     "packages/openbadges-types": {
       "name": "openbadges-types",
       "version": "3.2.3",
@@ -897,6 +904,8 @@
     "chownr": ["chownr@2.0.0", "", {}, "sha512-bIomtDF5KGpdogkLd9VspvFzk9KfpyyGlS8YFVZl7TGPBHL5snIOnxeshwVgPteQ9b4Eydl+pVbIyE1DcvCWgQ=="],
 
     "ci-info": ["ci-info@3.9.0", "", {}, "sha512-NIxF55hv4nSqQswkAeiOi1r83xy8JldOFDTWiug55KBu9Jnblncd2U6ViHmYgHf01TPZS77NJBhBMKdWj9HQMQ=="],
+
+    "claude-knowledge": ["claude-knowledge@workspace:packages/claude-knowledge"],
 
     "cli-cursor": ["cli-cursor@5.0.0", "", { "dependencies": { "restore-cursor": "^5.0.0" } }, "sha512-aCj4O5wKyszjMmDT4tZj93kxyydN/K5zPWSCe6/0AV/AA1pqe5ZBIw0a2ZfPQV7lL5/yb5HsUreJ6UFAF1tEQw=="],
 
