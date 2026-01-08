@@ -114,6 +114,25 @@
     "packages/claude-knowledge": {
       "name": "claude-knowledge",
       "version": "0.1.0",
+      "bin": {
+        "checkpoint": "src/cli.ts",
+      },
+      "dependencies": {
+        "@rollercoaster-dev/rd-logger": "workspace:*",
+      },
+      "devDependencies": {
+        "@rollercoaster-dev/shared-config": "workspace:*",
+      },
+    },
+    "packages/claude-workflows": {
+      "name": "claude-workflows",
+      "version": "0.1.0",
+      "bin": {
+        "workflow": "src/cli.ts",
+      },
+      "dependencies": {
+        "claude-knowledge": "workspace:*",
+      },
       "devDependencies": {
         "@rollercoaster-dev/shared-config": "workspace:*",
       },
@@ -906,6 +925,8 @@
     "ci-info": ["ci-info@3.9.0", "", {}, "sha512-NIxF55hv4nSqQswkAeiOi1r83xy8JldOFDTWiug55KBu9Jnblncd2U6ViHmYgHf01TPZS77NJBhBMKdWj9HQMQ=="],
 
     "claude-knowledge": ["claude-knowledge@workspace:packages/claude-knowledge"],
+
+    "claude-workflows": ["claude-workflows@workspace:packages/claude-workflows"],
 
     "cli-cursor": ["cli-cursor@5.0.0", "", { "dependencies": { "restore-cursor": "^5.0.0" } }, "sha512-aCj4O5wKyszjMmDT4tZj93kxyydN/K5zPWSCe6/0AV/AA1pqe5ZBIw0a2ZfPQV7lL5/yb5HsUreJ6UFAF1tEQw=="],
 
