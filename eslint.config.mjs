@@ -25,6 +25,17 @@ export default [
     },
   },
 
+  // Bun globals for Bun-native packages
+  {
+    files: ['packages/claude-knowledge/**/*.ts'],
+    languageOptions: {
+      globals: {
+        Bun: 'readonly',
+        process: 'readonly',
+      },
+    },
+  },
+
   // Ignore patterns for the entire monorepo
   {
     ignores: [
