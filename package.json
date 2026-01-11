@@ -9,6 +9,7 @@
     "apps/*"
   ],
   "scripts": {
+    "checkpoint": "bun packages/claude-knowledge/src/cli/index.ts",
     "dev": "bun run turbo dev",
     "build": "bun run turbo build",
     "test": "bun run turbo test",
