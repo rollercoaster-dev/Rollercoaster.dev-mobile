@@ -10,6 +10,12 @@
   ],
   "scripts": {
     "checkpoint": "bun packages/claude-knowledge/src/cli/index.ts",
+    "g:calls": "bun packages/claude-knowledge/src/cli/index.ts graph what-calls",
+    "g:deps": "bun packages/claude-knowledge/src/cli/index.ts graph what-depends-on",
+    "g:blast": "bun packages/claude-knowledge/src/cli/index.ts graph blast-radius",
+    "g:find": "bun packages/claude-knowledge/src/cli/index.ts graph find",
+    "g:summary": "bun packages/claude-knowledge/src/cli/index.ts graph summary",
+    "d:search": "bun packages/claude-knowledge/src/cli/index.ts docs search",
     "dev": "bun run turbo dev",
     "build": "bun run turbo build",
     "test": "bun run turbo test",
