@@ -5,7 +5,15 @@
   },
   "include": [],
   "references": [
-    // References to TypeScript packages will be added as they are migrated
-    // e.g., { "path": "./packages/openbadges-types" }
+    // Packages
+    { "path": "./packages/rd-logger" },
+    { "path": "./packages/openbadges-types" },
+    { "path": "./packages/claude-knowledge" },
+    { "path": "./packages/claude-workflows" },
+    // Apps
+    { "path": "./apps/openbadges-modular-server" }
+    // Note: shared-config, openbadges-ui, and openbadges-system excluded
+    // - shared-config: config-only package with no TypeScript source files
+    // - openbadges-ui, openbadges-system: Vue SFC declaration limitations prevent composite mode
   ]
 }
