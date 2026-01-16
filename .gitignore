@@ -68,6 +68,7 @@ Thumbs.db
 
 # Claude Code settings
 .claude/settings.local.json
+.claude/*.local.md
 .claude/dev-plans/
 .claude/execution-state.db
 # Note: .claude/settings.json should be committed (team-shared settings)
