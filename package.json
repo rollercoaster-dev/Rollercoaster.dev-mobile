@@ -16,6 +16,7 @@
     "g:find": "bun packages/claude-knowledge/src/cli/index.ts graph find",
     "g:summary": "bun packages/claude-knowledge/src/cli/index.ts graph summary",
     "d:search": "bun packages/claude-knowledge/src/cli/index.ts docs search",
+    "burndown": "bun scripts/burndown.ts",
     "dev": "bun run turbo dev",
     "build": "bun run turbo build",
     "test": "bun run turbo test",
