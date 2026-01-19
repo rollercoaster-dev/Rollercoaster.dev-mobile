@@ -54,5 +54,12 @@
     }
   },
   "globalDependencies": ["**/.env.*local", "tsconfig.json", "bunfig.toml"],
-  "globalEnv": ["NODE_ENV", "CI", "BUN_ENV"]
+  "globalEnv": [
+    "NODE_ENV",
+    "CI",
+    "BUN_ENV",
+    "MODULAR_SERVER_PORT",
+    "SYSTEM_SERVER_PORT",
+    "SYSTEM_VITE_PORT"
+  ]
 }
