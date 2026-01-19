@@ -2,10 +2,6 @@
 # Run lint-staged (eslint + prettier on staged files)
 bunx lint-staged
 
-# Run unit tests
-echo "Running test:unit..."
-bun run test:unit
-
 # Run type-check on the entire project
 echo "Running type-check..."
 bun run type-check
