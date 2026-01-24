@@ -58,6 +58,7 @@
     "NODE_ENV",
     "CI",
     "BUN_ENV",
+    "DEV_HOST",
     "MODULAR_SERVER_PORT",
     "SYSTEM_SERVER_PORT",
     "SYSTEM_VITE_PORT"
