@@ -36,6 +36,24 @@ export default [
     },
   },
 
+  // Test globals for test files across all packages
+  {
+    files: ['**/test/**/*.ts', '**/*.test.ts', '**/*.spec.ts', '**/__tests__/**/*.ts'],
+    languageOptions: {
+      globals: {
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+        console: 'readonly',
+      },
+    },
+  },
+
   // Ignore patterns for the entire monorepo
   {
     ignores: [
