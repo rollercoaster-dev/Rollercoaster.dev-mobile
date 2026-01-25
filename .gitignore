@@ -72,6 +72,7 @@ Thumbs.db
 .claude/dev-plans/
 .claude/execution-state.db
 # Note: .claude/settings.json should be committed (team-shared settings)
+# Note: .claude/knowledge.jsonl should be committed (git sync for cross-machine knowledge sharing)
 
 # Package-level claude-knowledge test artifacts
 packages/claude-knowledge/.claude/
