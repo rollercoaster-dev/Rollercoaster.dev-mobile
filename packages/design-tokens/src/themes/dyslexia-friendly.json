@@ -1,0 +1,99 @@
+{
+  "$name": "dyslexia-friendly",
+  "$description": "Dyslexia-friendly theme - OpenDyslexic font, cream background, increased spacing",
+  "theme": {
+    "typography": {
+      "font-family": {
+        "$value": "'OpenDyslexic', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
+      },
+      "text-primary": { "$value": "#333333" },
+      "text-secondary": { "$value": "#555555" }
+    },
+    "font": {
+      "size": {
+        "xs": { "$value": "0.875rem" },
+        "sm": { "$value": "1rem" },
+        "md": { "$value": "1.125rem" },
+        "lg": { "$value": "1.25rem" },
+        "xl": { "$value": "1.5rem" },
+        "2xl": { "$value": "1.75rem" }
+      },
+      "lineHeight": {
+        "tight": { "$value": "1.5" },
+        "normal": { "$value": "1.7" },
+        "relaxed": { "$value": "1.9" }
+      },
+      "weight": {
+        "normal": { "$value": "400" },
+        "medium": { "$value": "500" },
+        "bold": { "$value": "700" }
+      },
+      "letterSpacing": { "$value": "0.05em" },
+      "wordSpacing": { "$value": "0.1em" }
+    },
+    "surface": {
+      "background": { "$value": "#f8f5e4" },
+      "foreground": { "$value": "#333333" },
+      "card": { "$value": "#f8f5e4" },
+      "card-foreground": { "$value": "#333333" },
+      "popover": { "$value": "#f8f5e4" },
+      "popover-foreground": { "$value": "#333333" },
+      "muted": { "$value": "#f0edd8" },
+      "muted-foreground": { "$value": "#555555" }
+    },
+    "interactive": {
+      "primary": { "$value": "#1b70b6" },
+      "primary-foreground": { "$value": "#ffffff" }
+    },
+    "color": {
+      "primary-dark": { "$value": "#155a92" },
+      "primary-light": { "$value": "#5a9bd5" },
+      "success": { "$value": "#2e8b57" },
+      "error": { "$value": "#b54942" },
+      "warning": { "$value": "#b5913a" }
+    },
+    "feedback": {
+      "destructive": { "$value": "#b54942" },
+      "success": { "$value": "#2e8b57" },
+      "warning": { "$value": "#b5913a" }
+    },
+    "form": {
+      "border": { "$value": "#c8c3a9" },
+      "input": { "$value": "#f0edd8" },
+      "ring": { "$value": "#0066cc" }
+    },
+    "aliases": {
+      "bg-primary": { "$value": "#f8f5e4" },
+      "bg-secondary": { "$value": "#f0edd8" },
+      "border-color": { "$value": "#c8c3a9" },
+      "border-color-focus": { "$value": "#0066cc" },
+      "border-width": { "$value": "2px" },
+      "border-radius-md": { "$value": "6px" },
+      "border-radius-lg": { "$value": "8px" }
+    },
+    "space": {
+      "4": { "$value": "1.25rem" },
+      "6": { "$value": "1.75rem" },
+      "8": { "$value": "2.25rem" },
+      "between-paragraphs": { "$value": "1.5em" },
+      "paragraph-spacing": { "$value": "1.5em" }
+    },
+    "shadow": {
+      "sm": { "$value": "0 1px 2px rgba(0, 0, 0, 0.1)" },
+      "md": { "$value": "0 2px 4px rgba(0, 0, 0, 0.1)" },
+      "lg": { "$value": "0 3px 6px rgba(0, 0, 0, 0.1)" },
+      "focus": { "$value": "0 0 0 4px rgba(0, 102, 204, 0.4)" }
+    },
+    "component": {
+      "badge": {
+        "background": { "$value": "#f8f5e4" }
+      },
+      "form": {
+        "background": { "$value": "#f8f5e4" }
+      },
+      "dashboard": {
+        "background": { "$value": "#f8f5e4" }
+      }
+    }
+  }
+}

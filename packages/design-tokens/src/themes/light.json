@@ -1,0 +1,7 @@
+{
+  "$name": "light",
+  "$description": "Default light theme - base values defined in tokens",
+  "theme": {
+    "name": "light"
+  }
+}

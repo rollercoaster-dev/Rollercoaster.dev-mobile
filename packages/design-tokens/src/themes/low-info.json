@@ -1,0 +1,81 @@
+{
+  "$name": "low-info",
+  "$description": "Low info theme - simplified palette, reduced distractions, clear hierarchy",
+  "theme": {
+    "typography": {
+      "font-family": {
+        "$value": "'Atkinson Hyperlegible', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
+      },
+      "text-primary": { "$value": "#222222" }
+    },
+    "font": {
+      "size": {
+        "md": { "$value": "1rem" }
+      },
+      "lineHeight": {
+        "normal": { "$value": "1.6" }
+      },
+      "weight": {
+        "normal": { "$value": "400" },
+        "medium": { "$value": "600" },
+        "bold": { "$value": "700" }
+      }
+    },
+    "surface": {
+      "background": { "$value": "#ffffff" },
+      "foreground": { "$value": "#222222" },
+      "card": { "$value": "#ffffff" },
+      "card-foreground": { "$value": "#222222" },
+      "popover": { "$value": "#ffffff" },
+      "popover-foreground": { "$value": "#222222" },
+      "muted": { "$value": "#f0f0f0" },
+      "muted-foreground": { "$value": "#444444" }
+    },
+    "interactive": {
+      "primary": { "$value": "#0066cc" },
+      "primary-foreground": { "$value": "#ffffff" },
+      "secondary": { "$value": "#666666" },
+      "accent": { "$value": "#f0f0f0" },
+      "accent-foreground": { "$value": "#222222" }
+    },
+    "color": {
+      "primary-dark": { "$value": "#004d99" },
+      "primary-light": { "$value": "#4d94ff" },
+      "secondary-dark": { "$value": "#444444" },
+      "secondary-light": { "$value": "#888888" }
+    },
+    "form": {
+      "border": { "$value": "#dddddd" },
+      "input": { "$value": "#f0f0f0" },
+      "ring": { "$value": "#0066cc" }
+    },
+    "aliases": {
+      "bg-primary": { "$value": "#ffffff" },
+      "border-color": { "$value": "#dddddd" },
+      "border-color-focus": { "$value": "#0066cc" },
+      "border-width": { "$value": "2px" },
+      "border-radius-md": { "$value": "4px" },
+      "border-radius-lg": { "$value": "8px" }
+    },
+    "shadow": {
+      "sm": { "$value": "0 1px 2px rgba(0, 0, 0, 0.1)" },
+      "md": { "$value": "0 2px 4px rgba(0, 0, 0, 0.1)" },
+      "lg": { "$value": "0 4px 6px rgba(0, 0, 0, 0.1)" },
+      "focus": { "$value": "0 0 0 4px rgba(0, 102, 204, 0.5)" }
+    },
+    "component": {
+      "badge": {
+        "border-color": { "$value": "#dddddd" },
+        "border-width": { "$value": "2px" },
+        "title-color": { "$value": "#222222" },
+        "text-color": { "$value": "#444444" }
+      },
+      "form": {
+        "input-border": { "$value": "#999999" },
+        "input-focus": { "$value": "#0066cc" },
+        "button-primary-bg": { "$value": "#0066cc" },
+        "button-primary-color": { "$value": "#ffffff" }
+      }
+    }
+  }
+}

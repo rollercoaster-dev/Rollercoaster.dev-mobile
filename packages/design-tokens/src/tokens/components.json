@@ -1,0 +1,238 @@
+{
+  "badge-border-color": {
+    "$value": "{border}",
+    "$type": "color"
+  },
+  "badge-border-radius": {
+    "$value": "{radius.lg}",
+    "$type": "dimension"
+  },
+  "badge-padding": {
+    "$value": "{space.4}",
+    "$type": "dimension"
+  },
+  "badge-background": {
+    "$value": "{card}",
+    "$type": "color"
+  },
+  "badge-shadow": {
+    "$value": "{shadow.sm}",
+    "$type": "shadow"
+  },
+  "badge-title-color": {
+    "$value": "{foreground}",
+    "$type": "color"
+  },
+  "badge-text-color": {
+    "$value": "{muted-foreground}",
+    "$type": "color"
+  },
+  "badge-hover-shadow": {
+    "$value": "{shadow.md}",
+    "$type": "shadow"
+  },
+  "badge-focus-outline-color": {
+    "$value": "{ring}",
+    "$type": "color"
+  },
+  "verification-border-color": {
+    "$value": "{border}",
+    "$type": "color"
+  },
+  "verification-background": {
+    "$value": "{muted}",
+    "$type": "color"
+  },
+  "verification-text-color": {
+    "$value": "{muted-foreground}",
+    "$type": "color"
+  },
+  "verification-valid-color": {
+    "$value": "{success}",
+    "$type": "color"
+  },
+  "verification-invalid-color": {
+    "$value": "{destructive}",
+    "$type": "color"
+  },
+  "verification-warning-color": {
+    "$value": "{warning}",
+    "$type": "color"
+  },
+  "verification-button-bg": {
+    "$value": "{primary}",
+    "$type": "color"
+  },
+  "verification-button-color": {
+    "$value": "{primary-foreground}",
+    "$type": "color"
+  },
+  "verification-button-hover-bg": {
+    "$value": "{primary-dark}",
+    "$type": "color"
+  },
+  "verification-button-disabled-bg": {
+    "$value": "{text-disabled}",
+    "$type": "color"
+  },
+  "verification-label-color": {
+    "$value": "{muted-foreground}",
+    "$type": "color"
+  },
+  "badge-list-gap": {
+    "$value": "{space.4}",
+    "$type": "dimension"
+  },
+  "badge-list-empty-color": {
+    "$value": "{muted-foreground}",
+    "$type": "color"
+  },
+  "badge-list-pagination-gap": {
+    "$value": "{space.2}",
+    "$type": "dimension"
+  },
+  "badge-list-button-bg": {
+    "$value": "{color.gray.200}",
+    "$type": "color"
+  },
+  "badge-list-button-color": {
+    "$value": "{muted-foreground}",
+    "$type": "color"
+  },
+  "badge-list-button-hover-bg": {
+    "$value": "{color.gray.300}",
+    "$type": "color"
+  },
+  "badge-list-button-disabled-bg": {
+    "$value": "{color.gray.100}",
+    "$type": "color"
+  },
+  "badge-list-button-disabled-color": {
+    "$value": "{text-disabled}",
+    "$type": "color"
+  },
+  "profile-padding": {
+    "$value": "{space.6}",
+    "$type": "dimension"
+  },
+  "profile-gap": {
+    "$value": "{space.8}",
+    "$type": "dimension"
+  },
+  "profile-border-color": {
+    "$value": "{border}",
+    "$type": "color"
+  },
+  "profile-background": {
+    "$value": "{card}",
+    "$type": "color"
+  },
+  "profile-shadow": {
+    "$value": "{shadow.sm}",
+    "$type": "shadow"
+  },
+  "profile-title-color": {
+    "$value": "{foreground}",
+    "$type": "color"
+  },
+  "profile-text-color": {
+    "$value": "{muted-foreground}",
+    "$type": "color"
+  },
+  "profile-link-color": {
+    "$value": "{primary}",
+    "$type": "color"
+  },
+  "form-border-color": {
+    "$value": "{border}",
+    "$type": "color"
+  },
+  "form-background": {
+    "$value": "{card}",
+    "$type": "color"
+  },
+  "form-text-color": {
+    "$value": "{foreground}",
+    "$type": "color"
+  },
+  "form-label-color": {
+    "$value": "{muted-foreground}",
+    "$type": "color"
+  },
+  "form-input-border": {
+    "$value": "{color.gray.300}",
+    "$type": "color"
+  },
+  "form-input-focus": {
+    "$value": "{ring}",
+    "$type": "color"
+  },
+  "form-error-color": {
+    "$value": "{destructive}",
+    "$type": "color"
+  },
+  "form-success-color": {
+    "$value": "{success}",
+    "$type": "color"
+  },
+  "form-help-color": {
+    "$value": "{muted-foreground}",
+    "$type": "color"
+  },
+  "form-button-primary-bg": {
+    "$value": "{primary}",
+    "$type": "color"
+  },
+  "form-button-primary-color": {
+    "$value": "{primary-foreground}",
+    "$type": "color"
+  },
+  "form-button-secondary-bg": {
+    "$value": "{color.gray.200}",
+    "$type": "color"
+  },
+  "form-button-secondary-color": {
+    "$value": "{muted-foreground}",
+    "$type": "color"
+  },
+  "form-button-disabled-bg": {
+    "$value": "{bg-disabled}",
+    "$type": "color"
+  },
+  "form-button-disabled-color": {
+    "$value": "{text-disabled}",
+    "$type": "color"
+  },
+  "dashboard-border-color": {
+    "$value": "{border}",
+    "$type": "color"
+  },
+  "dashboard-background": {
+    "$value": "{card}",
+    "$type": "color"
+  },
+  "dashboard-text-color": {
+    "$value": "{foreground}",
+    "$type": "color"
+  },
+  "dashboard-secondary-color": {
+    "$value": "{muted-foreground}",
+    "$type": "color"
+  },
+  "dashboard-accent-color": {
+    "$value": "{primary}",
+    "$type": "color"
+  },
+  "dashboard-tab-active-border": {
+    "$value": "{primary}",
+    "$type": "color"
+  },
+  "dashboard-tab-hover-bg": {
+    "$value": "{muted}",
+    "$type": "color"
+  },
+  "dashboard-empty-color": {
+    "$value": "{muted-foreground}",
+    "$type": "color"
+  }
+}

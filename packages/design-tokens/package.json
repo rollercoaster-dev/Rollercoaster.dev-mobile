@@ -1,0 +1,54 @@
+{
+  "name": "@rollercoaster-dev/design-tokens",
+  "version": "0.1.0",
+  "description": "Design tokens for Rollercoaster.dev OpenBadges ecosystem - CSS, JS, Tailwind, and Tamagui outputs",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./build/js/index.js",
+      "types": "./build/js/index.d.ts"
+    },
+    "./css": "./build/css/tokens.css",
+    "./css/themes": "./build/css/themes.css",
+    "./tailwind": {
+      "import": "./build/tailwind/tailwind.config.js",
+      "types": "./build/tailwind/tailwind.config.d.ts"
+    },
+    "./tamagui": {
+      "import": "./build/tamagui/tokens.js",
+      "types": "./build/tamagui/tokens.d.ts"
+    }
+  },
+  "files": [
+    "build",
+    "src"
+  ],
+  "scripts": {
+    "build": "style-dictionary build --config style-dictionary.config.js && node build-themes.js",
+    "build:tokens": "style-dictionary build --config style-dictionary.config.js",
+    "build:themes": "node build-themes.js",
+    "build:watch": "style-dictionary build --config style-dictionary.config.js --watch",
+    "clean": "rm -rf build/*",
+    "verify": "node scripts/verify-css.js"
+  },
+  "devDependencies": {
+    "style-dictionary": "^4.0.0"
+  },
+  "keywords": [
+    "design-tokens",
+    "openbadges",
+    "accessibility",
+    "neurodiversity",
+    "css-variables",
+    "tailwind",
+    "tamagui",
+    "react-native"
+  ],
+  "author": "Rollercoaster.dev",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rollercoaster-dev/openbadges-monorepo",
+    "directory": "packages/design-tokens"
+  }
+}

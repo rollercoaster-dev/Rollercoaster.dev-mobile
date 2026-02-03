@@ -1,0 +1,85 @@
+{
+  "$name": "dark",
+  "$description": "Dark mode theme",
+  "theme": {
+    "surface": {
+      "background": { "$value": "#1a202c" },
+      "foreground": { "$value": "#f7fafc" },
+      "card": { "$value": "#2d3748" },
+      "card-foreground": { "$value": "#f7fafc" },
+      "popover": { "$value": "#2d3748" },
+      "popover-foreground": { "$value": "#f7fafc" },
+      "muted": { "$value": "#2d3748" },
+      "muted-foreground": { "$value": "#e2e8f0" }
+    },
+    "interactive": {
+      "primary": { "$value": "#63b3ed" },
+      "primary-foreground": { "$value": "#1a202c" },
+      "secondary": { "$value": "#a0aec0" },
+      "secondary-foreground": { "$value": "#1a202c" },
+      "accent": { "$value": "#4a5568" },
+      "accent-foreground": { "$value": "#f7fafc" }
+    },
+    "color": {
+      "primary": { "$value": "#63b3ed" },
+      "primary-dark": { "$value": "#4299e1" },
+      "primary-light": { "$value": "#90cdf4" },
+      "secondary": { "$value": "#a0aec0" },
+      "secondary-dark": { "$value": "#718096" },
+      "secondary-light": { "$value": "#cbd5e0" },
+      "success": { "$value": "#68d391" },
+      "success-light": { "$value": "#9ae6b4" },
+      "error": { "$value": "#fc8181" },
+      "error-light": { "$value": "#feb2b2" },
+      "warning": { "$value": "#f6ad55" },
+      "warning-light": { "$value": "#fbd38d" },
+      "info": { "$value": "#63b3ed" },
+      "info-light": { "$value": "#90cdf4" },
+      "gray": {
+        "50": { "$value": "#2d3748" },
+        "100": { "$value": "#2d3748" },
+        "200": { "$value": "#4a5568" },
+        "300": { "$value": "#718096" },
+        "400": { "$value": "#a0aec0" },
+        "500": { "$value": "#cbd5e0" },
+        "600": { "$value": "#e2e8f0" },
+        "700": { "$value": "#edf2f7" },
+        "800": { "$value": "#f7fafc" },
+        "900": { "$value": "#ffffff" }
+      }
+    },
+    "feedback": {
+      "destructive": { "$value": "#fc8181" },
+      "success": { "$value": "#68d391" },
+      "warning": { "$value": "#f6ad55" },
+      "info": { "$value": "#63b3ed" }
+    },
+    "form": {
+      "border": { "$value": "#4a5568" },
+      "input": { "$value": "#2d3748" },
+      "ring": { "$value": "#63b3ed" }
+    },
+    "typography": {
+      "text-primary": { "$value": "#f7fafc" },
+      "text-secondary": { "$value": "#e2e8f0" },
+      "text-disabled": { "$value": "#a0aec0" },
+      "text-inverse": { "$value": "#1a202c" }
+    },
+    "aliases": {
+      "bg-primary": { "$value": "#1a202c" },
+      "bg-secondary": { "$value": "#2d3748" },
+      "bg-disabled": { "$value": "#4a5568" },
+      "border-color": { "$value": "#4a5568" }
+    },
+    "shadow": {
+      "sm": { "$value": "0 1px 2px 0 rgba(0, 0, 0, 0.25)" },
+      "md": {
+        "$value": "0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.26)"
+      },
+      "lg": {
+        "$value": "0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.25)"
+      },
+      "focus": { "$value": "0 0 0 3px rgba(99, 179, 237, 0.4)" }
+    }
+  }
+}

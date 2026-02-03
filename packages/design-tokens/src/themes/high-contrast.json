@@ -1,0 +1,89 @@
+{
+  "$name": "high-contrast",
+  "$description": "High contrast theme - strong black/white contrast with pure colors",
+  "theme": {
+    "surface": {
+      "background": { "$value": "#ffffff" },
+      "foreground": { "$value": "#000000" },
+      "card": { "$value": "#ffffff" },
+      "card-foreground": { "$value": "#000000" },
+      "popover": { "$value": "#ffffff" },
+      "popover-foreground": { "$value": "#000000" },
+      "muted": { "$value": "#f0f0f0" },
+      "muted-foreground": { "$value": "#000000" }
+    },
+    "interactive": {
+      "primary": { "$value": "#0000ff" },
+      "primary-foreground": { "$value": "#ffffff" },
+      "secondary": { "$value": "#606060" },
+      "secondary-foreground": { "$value": "#ffffff" }
+    },
+    "color": {
+      "primary": { "$value": "#0000ff" },
+      "primary-dark": { "$value": "#0000cc" },
+      "primary-light": { "$value": "#3333ff" },
+      "secondary": { "$value": "#606060" },
+      "secondary-dark": { "$value": "#404040" },
+      "secondary-light": { "$value": "#808080" },
+      "success": { "$value": "#008000" },
+      "success-light": { "$value": "#ccffcc" },
+      "error": { "$value": "#ff0000" },
+      "error-light": { "$value": "#ffcccc" },
+      "warning": { "$value": "#ff8000" },
+      "warning-light": { "$value": "#ffe0cc" },
+      "info": { "$value": "#0000ff" },
+      "info-light": { "$value": "#ccccff" }
+    },
+    "feedback": {
+      "destructive": { "$value": "#ff0000" },
+      "success": { "$value": "#008000" },
+      "warning": { "$value": "#ff8000" },
+      "info": { "$value": "#0000ff" }
+    },
+    "form": {
+      "border": { "$value": "#000000" },
+      "input": { "$value": "#ffffff" },
+      "ring": { "$value": "#0000ff" }
+    },
+    "typography": {
+      "text-primary": { "$value": "#000000" },
+      "text-secondary": { "$value": "#000000" },
+      "text-disabled": { "$value": "#606060" },
+      "text-inverse": { "$value": "#ffffff" }
+    },
+    "aliases": {
+      "bg-primary": { "$value": "#ffffff" },
+      "bg-secondary": { "$value": "#f0f0f0" },
+      "bg-disabled": { "$value": "#d0d0d0" },
+      "border-color": { "$value": "#000000" },
+      "border-color-focus": { "$value": "#0000ff" }
+    },
+    "shadow": {
+      "sm": { "$value": "none" },
+      "md": { "$value": "none" },
+      "lg": { "$value": "none" },
+      "focus": { "$value": "0 0 0 3px rgba(0, 0, 255, 0.5)" }
+    },
+    "component": {
+      "badge": {
+        "border-color": { "$value": "#000000" },
+        "border-width": { "$value": "2px" },
+        "shadow": { "$value": "none" },
+        "hover-shadow": { "$value": "none" },
+        "focus-outline-color": { "$value": "#0000ff" },
+        "focus-outline-width": { "$value": "3px" }
+      },
+      "form": {
+        "input-border": { "$value": "#000000" },
+        "input-border-width": { "$value": "2px" },
+        "error-color": { "$value": "#ff0000" },
+        "success-color": { "$value": "#008000" }
+      },
+      "dashboard": {
+        "border-color": { "$value": "#000000" },
+        "tab-active-border": { "$value": "#0000ff" },
+        "tab-active-border-width": { "$value": "3px" }
+      }
+    }
+  }
+}
