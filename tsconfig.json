@@ -8,8 +8,6 @@
     // Packages
     { "path": "./packages/rd-logger" },
     { "path": "./packages/openbadges-types" },
-    { "path": "./packages/claude-knowledge" },
-    { "path": "./packages/claude-workflows" },
     // Apps
     { "path": "./apps/openbadges-modular-server" }
     // Note: shared-config, openbadges-ui, and openbadges-system excluded
