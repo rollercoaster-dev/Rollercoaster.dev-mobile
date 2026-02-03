@@ -8,6 +8,7 @@
     // Packages
     { "path": "./packages/rd-logger" },
     { "path": "./packages/openbadges-types" },
+    { "path": "./packages/openbadges-core" },
     // Apps
     { "path": "./apps/openbadges-modular-server" }
     // Note: shared-config, openbadges-ui, and openbadges-system excluded

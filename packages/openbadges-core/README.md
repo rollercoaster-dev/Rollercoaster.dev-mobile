@@ -1,0 +1,119 @@
+# @rollercoaster-dev/openbadges-core
+
+Shared core library for Open Badges functionality across Rollercoaster.dev applications.
+
+## Purpose
+
+This package provides shared utilities and core functionality for working with Open Badges across both the modular server and the system app. It eliminates code duplication by centralizing:
+
+- **Badge baking utilities** - PNG metadata embedding for badge images
+- **Cryptographic operations** - Signing, verification, and key management
+- **Credential generation** - Badge creation and validation logic
+- **Platform detection** - Runtime environment detection for Node.js and Bun
+
+## Installation
+
+This package is part of the monorepo workspace and used internally by other packages:
+
+```json
+{
+  "dependencies": {
+    "@rollercoaster-dev/openbadges-core": "workspace:*"
+  }
+}
+```
+
+## Usage
+
+```typescript
+import {
+  detectPlatform,
+  isBun,
+  isNode,
+} from "@rollercoaster-dev/openbadges-core";
+
+// Detect runtime platform
+const platform = detectPlatform(); // "node" | "bun" | "unknown"
+
+// Check specific platforms
+if (isBun()) {
+  // Use Bun-specific APIs
+}
+
+if (isNode()) {
+  // Use Node.js-specific APIs
+}
+```
+
+## API Overview (Planned Structure)
+
+### Platform Detection (✅ Implemented)
+
+- `detectPlatform()` - Detect current runtime environment
+- `isBun()` - Check if running in Bun
+- `isNode()` - Check if running in Node.js
+
+### Badge Baking (🚧 Coming Soon)
+
+- PNG metadata embedding
+- Baked badge extraction
+- Image validation
+
+### Crypto Utilities (🚧 Coming Soon)
+
+- RSA key pair generation
+- JWT signing and verification
+- JWKS endpoint support
+- Key management
+
+### Credential Generation (🚧 Coming Soon)
+
+- Open Badges 2.0 assertion generation
+- Open Badges 3.0 credential generation
+- Validation and verification
+
+## Development
+
+```bash
+# Build the package
+bun run build
+
+# Run type checking
+bun run type-check
+
+# Run linting
+bun run lint
+
+# Run tests
+bun test
+
+# Watch mode
+bun test --watch
+```
+
+## Architecture
+
+This package follows a modular structure:
+
+```text
+src/
+├── baking/        # Badge baking utilities (PNG metadata)
+├── crypto/        # Cryptographic operations
+├── credentials/   # Credential generation and validation
+├── types/         # Shared type definitions
+└── platform.ts    # Runtime platform detection
+```
+
+## Dependencies
+
+- `openbadges-types` - Open Badges type definitions
+- `@rollercoaster-dev/rd-logger` - Structured logging
+
+## License
+
+MIT
+
+## Links
+
+- [Monorepo Documentation](../../docs/)
+- [Open Badges Specification](https://www.imsglobal.org/spec/ob/v3p0/)

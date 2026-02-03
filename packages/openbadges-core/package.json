@@ -1,0 +1,73 @@
+{
+  "name": "@rollercoaster-dev/openbadges-core",
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "bun@1.3.7",
+  "description": "Shared core library for Open Badges functionality across Rollercoaster.dev applications",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "exports": {
+    ".": {
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "default": "./dist/index.js"
+    }
+  },
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "clean": "rm -rf dist",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write 'src/**/*.ts' 'tests/**/*.ts'",
+    "format:check": "prettier --check 'src/**/*.ts' 'tests/**/*.ts'",
+    "type-check": "tsc --noEmit",
+    "test": "bun test",
+    "test:unit": "bun test tests/",
+    "test:integration": "echo 'No integration tests yet'",
+    "test:e2e": "echo 'No E2E tests'",
+    "test:watch": "bun test --watch",
+    "test:coverage": "bun test --coverage"
+  },
+  "engines": {
+    "node": ">=18.12.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rollercoaster-dev/monorepo.git",
+    "directory": "packages/openbadges-core"
+  },
+  "keywords": [
+    "open-badges",
+    "badges",
+    "credentials",
+    "verifiable-credentials",
+    "crypto",
+    "baking",
+    "typescript"
+  ],
+  "author": "Rollercoaster.dev <team@rollercoaster.dev>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rollercoaster-dev/monorepo/issues"
+  },
+  "homepage": "https://github.com/rollercoaster-dev/monorepo/tree/main/packages/openbadges-core#readme",
+  "devDependencies": {
+    "@rollercoaster-dev/shared-config": "workspace:*",
+    "tsup": "^8.4.0"
+  },
+  "dependencies": {
+    "@rollercoaster-dev/rd-logger": "workspace:*",
+    "openbadges-types": "workspace:*"
+  },
+  "private": true
+}
