@@ -67,6 +67,7 @@
   },
   "dependencies": {
     "@rollercoaster-dev/rd-logger": "workspace:*",
+    "jose": "6.1.3",
     "openbadges-types": "workspace:*"
   },
   "private": true

@@ -18,3 +18,6 @@ export type { Platform } from "./platform.js";
 
 // Credentials module
 export * from "./credentials/index.js";
+
+// Crypto module
+export * from "./crypto/index.js";

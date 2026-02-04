@@ -16,6 +16,16 @@ export default [
   },
   ...node,
   {
+    // Web API globals available in Node.js 18+ and Bun
+    languageOptions: {
+      globals: {
+        CryptoKey: "readonly",
+        TextEncoder: "readonly",
+        TextDecoder: "readonly",
+      },
+    },
+  },
+  {
     files: ["**/*.test.ts", "**/*.spec.ts", "tests/**/*.ts"],
     languageOptions: {
       globals: {
