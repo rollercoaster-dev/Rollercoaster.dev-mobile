@@ -16,7 +16,5 @@
 export { detectPlatform, isBun, isNode } from "./platform.js";
 export type { Platform } from "./platform.js";
 
-// Future exports (placeholders for upcoming implementation):
-// - Badge baking (will be implemented in issue #686)
-// - Crypto utilities (will be implemented in issue #685)
-// - Credential generation (will be implemented in issue #684)
+// Credentials module
+export * from "./credentials/index.js";

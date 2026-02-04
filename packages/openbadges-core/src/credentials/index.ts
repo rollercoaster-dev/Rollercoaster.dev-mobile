@@ -1,9 +1,35 @@
 /**
  * Credentials Module
  *
- * Core credential creation and verification logic for Open Badges 3.0.
- * Handles VerifiableCredential wrapping and validation.
+ * Provides credential building and serialization for Open Badges 2.0 and 3.0.
  */
 
-// Placeholder - implementation coming in future issues
-export {};
+export {
+  BadgeVersion,
+  BADGE_VERSION_CONTEXTS,
+  VC_V2_CONTEXT_URL,
+  OBV3_CONTEXT_URL,
+  detectBadgeVersion,
+} from "./version.js";
+
+export type {
+  IssuerData,
+  BadgeClassData,
+  AssertionData,
+  RecipientData,
+  VerificationData,
+  VerifiableCredentialData,
+} from "./types.js";
+
+export type { BadgeSerializer } from "./serializer.js";
+export {
+  OpenBadges2Serializer,
+  OpenBadges3Serializer,
+  createSerializer,
+} from "./serializer.js";
+
+export {
+  buildCredential,
+  serializeOB3,
+  type CredentialOptions,
+} from "./credential-builder.js";
