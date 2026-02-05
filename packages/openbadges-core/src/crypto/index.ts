@@ -26,6 +26,14 @@ export {
   verifyDataIntegrityProof,
 } from "./signature.js";
 
+// Platform adapters
+export type {
+  CryptoProvider,
+  CompressionProvider,
+  PlatformConfig,
+} from "./adapters/types.js";
+export { NodeCryptoAdapter } from "./adapters/node-crypto.adapter.js";
+
 // JWT proof
 export type {
   JWTProof,

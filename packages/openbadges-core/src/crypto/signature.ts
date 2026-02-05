@@ -6,8 +6,8 @@
  */
 
 import type { JWK } from "jose";
-import { importJWK, CompactSign, compactVerify } from "jose";
 import type { Shared } from "openbadges-types";
+import { getPlatformConfig } from "../platform.js";
 
 /**
  * Supported key types for digital signatures
@@ -64,6 +64,8 @@ function getAlgorithm(keyType: KeyType): string {
 /**
  * Sign data with a JWK private key.
  * Returns a compact JWS (base64url encoded).
+ *
+ * Delegates to the configured CryptoProvider (defaults to jose in Node.js/Bun).
  */
 export async function signData(
   data: string,
@@ -72,17 +74,14 @@ export async function signData(
 ): Promise<string> {
   const actualKeyType = keyType ?? detectKeyType(privateKey);
   const alg = getAlgorithm(actualKeyType);
-  const key = await importJWK(privateKey, alg);
-
-  const jws = await new CompactSign(new TextEncoder().encode(data))
-    .setProtectedHeader({ alg })
-    .sign(key);
-
-  return jws;
+  const { crypto } = getPlatformConfig();
+  return crypto.sign(data, privateKey, alg);
 }
 
 /**
  * Verify a compact JWS signature against data and a JWK public key.
+ *
+ * Delegates to the configured CryptoProvider (defaults to jose in Node.js/Bun).
  */
 export async function verifySignature(
   data: string,
@@ -90,15 +89,14 @@ export async function verifySignature(
   publicKey: JWK,
   keyType?: KeyType,
 ): Promise<boolean> {
+  // Configuration and key detection errors must propagate (not be swallowed).
+  // Only verification failures are expected and returned as false.
+  const actualKeyType = keyType ?? detectKeyType(publicKey);
+  const alg = getAlgorithm(actualKeyType);
+  const { crypto } = getPlatformConfig();
+
   try {
-    const actualKeyType = keyType ?? detectKeyType(publicKey);
-    const alg = getAlgorithm(actualKeyType);
-    const key = await importJWK(publicKey, alg);
-
-    const { payload } = await compactVerify(signature, key);
-    const decoded = new TextDecoder().decode(payload);
-
-    return decoded === data;
+    return await crypto.verify(data, signature, publicKey, alg);
   } catch {
     // Signature verification failures are expected (invalid/tampered signatures).
     // Returns false rather than throwing to provide a clean boolean API.

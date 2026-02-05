@@ -12,13 +12,16 @@
  * @packageDocumentation
  */
 
-// Platform utilities
+// Platform utilities and configuration
 export {
   detectPlatform,
   isBun,
   isNode,
   isReactNative,
   assertBufferAvailable,
+  configure,
+  getPlatformConfig,
+  resetPlatformConfig,
 } from "./platform.js";
 export type { Platform } from "./platform.js";
 

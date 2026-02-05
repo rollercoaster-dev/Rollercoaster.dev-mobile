@@ -91,6 +91,76 @@ bun test
 bun test --watch
 ```
 
+## Platform Configuration
+
+### Node.js / Bun (zero config)
+
+No setup needed. The package auto-initializes with `NodeCryptoAdapter` and `InMemoryKeyProvider`:
+
+```typescript
+import { signData } from "@rollercoaster-dev/openbadges-core";
+
+// Just works — no configure() call required
+const jws = await signData(data, privateKey);
+```
+
+### React Native
+
+Call `configure()` at app startup before any crypto operations:
+
+```typescript
+import { configure } from "@rollercoaster-dev/openbadges-core";
+import { ExpoCryptoAdapter } from "./adapters/expo-crypto";
+import { SecureStoreKeyProvider } from "./adapters/secure-store";
+
+configure({
+  crypto: new ExpoCryptoAdapter(),
+  keyProvider: new SecureStoreKeyProvider(),
+});
+```
+
+### Custom Providers
+
+Implement the `CryptoProvider` interface for your platform:
+
+```typescript
+import type { CryptoProvider } from "@rollercoaster-dev/openbadges-core";
+
+class MyCryptoAdapter implements CryptoProvider {
+  async sign(
+    data: string,
+    privateKey: JWK,
+    algorithm: string,
+  ): Promise<string> {
+    /* ... */
+  }
+  async verify(
+    data: string,
+    signature: string,
+    publicKey: JWK,
+    algorithm: string,
+  ): Promise<boolean> {
+    /* ... */
+  }
+  async generateKeyPair(
+    algorithm: "Ed25519" | "RSA",
+  ): Promise<{ publicKey: JWK; privateKey: JWK }> {
+    /* ... */
+  }
+}
+```
+
+## Platform Support
+
+| Module                         | Node.js/Bun                     | React Native                             | Browser                       |
+| ------------------------------ | ------------------------------- | ---------------------------------------- | ----------------------------- |
+| Credentials                    | Yes                             | Yes                                      | Yes                           |
+| Crypto (signing, verification) | Yes                             | Yes (via `configure()`)                  | Yes (via `jose` / Web Crypto) |
+| KeyProvider                    | `InMemoryKeyProvider` (default) | `SecureStoreKeyProvider` (user-provided) | Not yet                       |
+| PNG Baking                     | Yes                             | No (`Buffer` required)                   | No (`Buffer` required)        |
+
+**Browser/Vue future possibility:** The crypto and credentials modules already work in browsers since they're built on `jose` (which uses Web Crypto API). Full browser support would require refactoring the baking module from `Buffer` to `Uint8Array` and adding a browser `KeyProvider` (e.g. IndexedDB). The same `configure()` pattern would cover this.
+
 ## Architecture
 
 This package follows a modular structure:
