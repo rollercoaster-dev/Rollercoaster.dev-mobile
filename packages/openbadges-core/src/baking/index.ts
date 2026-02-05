@@ -1,9 +1,32 @@
 /**
  * Badge Baking Module
  *
- * Handles embedding badge assertions into image files (PNG, SVG).
- * Implements the Open Badges baking specification for portable credentials.
+ * Handles embedding Open Badges credentials into image files.
+ * Currently supports PNG format via iTXt chunk embedding.
+ *
+ * @example
+ * ```typescript
+ * import { bakePNG, unbakePNG } from '@rollercoaster-dev/openbadges-core';
+ *
+ * // Embed a credential into a PNG image
+ * const bakedPNG = bakePNG(imageBuffer, credential);
+ *
+ * // Extract a credential from a baked PNG
+ * const credential = unbakePNG(bakedPNG);
+ * ```
  */
 
-// Placeholder - implementation coming in future issues
-export {};
+// Types
+export type {
+  ImageFormat,
+  BakeOptions,
+  BakedImage,
+  UnbakeResult,
+  BakingService,
+} from "./types.js";
+
+// PNG baking
+export { bakePNG, unbakePNG, isPNG } from "./png-baking.service.js";
+
+// Chunk utilities (for advanced usage)
+export type { Chunk } from "./png-chunk-utils.js";

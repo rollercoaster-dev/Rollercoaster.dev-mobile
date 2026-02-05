@@ -22,6 +22,7 @@ export default [
         CryptoKey: "readonly",
         TextEncoder: "readonly",
         TextDecoder: "readonly",
+        Buffer: "readonly",
       },
     },
   },

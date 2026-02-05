@@ -25,6 +25,19 @@ export default [
     },
   },
 
+  // Node/Bun globals for core library (works with binary data)
+  {
+    files: ['packages/openbadges-core/**/*.ts'],
+    languageOptions: {
+      globals: {
+        Buffer: 'readonly',
+        CryptoKey: 'readonly',
+        TextEncoder: 'readonly',
+        TextDecoder: 'readonly',
+      },
+    },
+  },
+
   // Bun globals for Bun-native packages
   {
     files: ['packages/claude-knowledge/**/*.ts'],
