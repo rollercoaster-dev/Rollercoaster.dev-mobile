@@ -254,4 +254,78 @@ describe("PNG Baking Service", () => {
       expect(extracted).toEqual(credential);
     });
   });
+
+  describe("error handling", () => {
+    it("should throw for PNG missing IEND chunk", () => {
+      // PNG signature + IHDR only, no IEND
+      const truncatedPNG = Buffer.from([
+        137,
+        80,
+        78,
+        71,
+        13,
+        10,
+        26,
+        10, // PNG signature
+        0,
+        0,
+        0,
+        13,
+        73,
+        72,
+        68,
+        82, // IHDR chunk header
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1,
+        8,
+        6,
+        0,
+        0,
+        0, // IHDR data
+        31,
+        21,
+        196,
+        137, // IHDR CRC
+      ]);
+      const credential = createMockOB2Assertion();
+
+      expect(() => bakePNG(truncatedPNG, credential)).toThrow(/IEND/i);
+    });
+
+    it("should return false for isPNG with empty buffer", () => {
+      expect(isPNG(Buffer.alloc(0))).toBe(false);
+    });
+
+    it("should return false for isPNG with JPEG data", () => {
+      // JPEG magic bytes
+      expect(isPNG(Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0, 0, 0]))).toBe(
+        false,
+      );
+    });
+
+    it("should handle bake/unbake with large credential", () => {
+      const png = createMinimalPNG();
+      const credential = createMockOB3Credential();
+      // Add large evidence array
+      (credential as Record<string, unknown>).evidence = Array.from(
+        { length: 100 },
+        (_, i) => ({
+          id: createIRI(`https://example.org/evidence/${i}`),
+          type: ["Evidence"],
+          name: `Evidence item ${i}`,
+          description: "A".repeat(200),
+        }),
+      );
+
+      const baked = bakePNG(png, credential);
+      const extracted = unbakePNG(baked);
+      expect(extracted).toEqual(credential);
+    });
+  });
 });

@@ -4,7 +4,11 @@ import {
   serializeOB3,
 } from "../../src/credentials/credential-builder";
 import { OpenBadges3Serializer } from "../../src/credentials/serializer";
-import { BadgeVersion, VC_V2_CONTEXT_URL } from "../../src/credentials/version";
+import {
+  BadgeVersion,
+  VC_V2_CONTEXT_URL,
+  OBV3_CONTEXT_URL,
+} from "../../src/credentials/version";
 import type { Shared } from "openbadges-types";
 import type {
   IssuerData,
@@ -131,5 +135,90 @@ describe("OB3 serializer error handling", () => {
       mockIssuer,
     ) as VerifiableCredentialData;
     expect(result.proof).toBeUndefined();
+  });
+});
+
+describe("credential building edge cases", () => {
+  it("should include evidence in OB3 credential", () => {
+    const assertionWithEvidence: AssertionData = {
+      ...mockAssertion,
+      evidence: [
+        {
+          id: "https://example.edu/evidence/1",
+          type: ["Evidence"],
+          name: "Project submission",
+          description: "Student's final project",
+        },
+      ],
+    };
+    const result = serializeOB3(
+      assertionWithEvidence,
+      mockBadgeClass,
+      mockIssuer,
+    );
+    expect(result.evidence).toBeDefined();
+    expect(result.evidence).toHaveLength(1);
+    expect((result.evidence as Array<{ name: string }>)[0]!.name).toBe(
+      "Project submission",
+    );
+  });
+
+  it("should include achievementType when provided", () => {
+    const badgeWithType: BadgeClassData = {
+      ...mockBadgeClass,
+      achievementType: "Competency",
+    };
+    const result = serializeOB3(mockAssertion, badgeWithType, mockIssuer);
+    expect(result.credentialSubject.achievement.achievementType).toBe(
+      "Competency",
+    );
+  });
+
+  it("should map issuedOn to validFrom in OB3", () => {
+    const result = serializeOB3(mockAssertion, mockBadgeClass, mockIssuer);
+    expect(result.validFrom).toBe(mockAssertion.issuedOn);
+  });
+
+  it("should map expires to validUntil in OB3", () => {
+    const assertionWithExpiry: AssertionData = {
+      ...mockAssertion,
+      expires: "2025-01-15T10:00:00Z",
+    };
+    const result = serializeOB3(
+      assertionWithExpiry,
+      mockBadgeClass,
+      mockIssuer,
+    );
+    expect(result.validUntil).toBe("2025-01-15T10:00:00Z");
+  });
+
+  it("should have OB3 @context with VC 2.0 first and OB3 second", () => {
+    const result = serializeOB3(mockAssertion, mockBadgeClass, mockIssuer);
+    const context = result["@context"] as string[];
+    expect(context).toHaveLength(2);
+    expect(context[0]).toBe(VC_V2_CONTEXT_URL);
+    expect(context[1]).toBe(OBV3_CONTEXT_URL);
+  });
+
+  it("should set credentialSubject.id from recipient identity", () => {
+    const result = serializeOB3(mockAssertion, mockBadgeClass, mockIssuer);
+    expect(result.credentialSubject.id).toBe("student@example.edu");
+  });
+
+  it("should include issuer details in OB3 credential", () => {
+    const issuerWithDetails: IssuerData = {
+      ...mockIssuer,
+      email: "admin@example.edu",
+      description: "A leading university",
+    };
+    const result = serializeOB3(
+      mockAssertion,
+      mockBadgeClass,
+      issuerWithDetails,
+    );
+    const issuer = result.issuer as Record<string, unknown>;
+    expect(issuer.email).toBe("admin@example.edu");
+    expect(issuer.description).toBe("A leading university");
+    expect((issuer.type as string[])[0]).toBe("Profile");
   });
 });

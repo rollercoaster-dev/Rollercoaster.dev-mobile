@@ -166,4 +166,75 @@ describe("DataIntegrityProof", () => {
     );
     expect(valid).toBe(false);
   });
+
+  test("returns false for proof with empty proofValue", async () => {
+    const provider = new InMemoryKeyProvider();
+    const { keyId } = await provider.generateKeyPair("Ed25519");
+    const publicKey = await provider.getPublicKey(keyId);
+
+    const emptyProof = {
+      type: "DataIntegrityProof" as const,
+      cryptosuite: Cryptosuite.EddsaRdfc2022,
+      created: new Date().toISOString() as Shared.DateTime,
+      proofPurpose: "assertionMethod" as const,
+      verificationMethod: "https://example.com/keys/1" as Shared.IRI,
+      proofValue: "",
+    };
+
+    expect(await verifyDataIntegrityProof("data", emptyProof, publicKey)).toBe(
+      false,
+    );
+  });
+
+  test("throws for unsupported cryptosuite", async () => {
+    const proof = {
+      type: "DataIntegrityProof" as const,
+      cryptosuite: "unknown-suite",
+      created: new Date().toISOString() as Shared.DateTime,
+      proofPurpose: "assertionMethod" as const,
+      verificationMethod: "https://example.com/keys/1" as Shared.IRI,
+      proofValue: "some-value",
+    };
+
+    await expect(
+      verifyDataIntegrityProof("data", proof, {
+        kty: "OKP",
+        crv: "Ed25519",
+      }),
+    ).rejects.toThrow("Unsupported cryptosuite");
+  });
+
+  test("signs credential with multiple proofs using different keys", async () => {
+    const provider = new InMemoryKeyProvider();
+    const { keyId: keyId1 } = await provider.generateKeyPair("Ed25519");
+    const { keyId: keyId2 } = await provider.generateKeyPair("Ed25519");
+
+    const privateKey1 = await provider.getPrivateKey(keyId1);
+    const publicKey1 = await provider.getPublicKey(keyId1);
+    const privateKey2 = await provider.getPrivateKey(keyId2);
+    const publicKey2 = await provider.getPublicKey(keyId2);
+
+    const data = JSON.stringify({ name: "Multi-signed Badge" });
+    const method1 = "https://example.com/keys/1" as Shared.IRI;
+    const method2 = "https://example.com/keys/2" as Shared.IRI;
+
+    const proof1 = await createDataIntegrityProof(data, privateKey1, method1);
+    const proof2 = await createDataIntegrityProof(data, privateKey2, method2);
+
+    // Both proofs should be independently verifiable
+    expect(await verifyDataIntegrityProof(data, proof1, publicKey1)).toBe(true);
+    expect(await verifyDataIntegrityProof(data, proof2, publicKey2)).toBe(true);
+
+    // Cross-key verification should fail
+    expect(await verifyDataIntegrityProof(data, proof1, publicKey2)).toBe(
+      false,
+    );
+    expect(await verifyDataIntegrityProof(data, proof2, publicKey1)).toBe(
+      false,
+    );
+
+    // Each proof has its own verificationMethod
+    expect(proof1.verificationMethod).toBe(method1);
+    expect(proof2.verificationMethod).toBe(method2);
+  });
 });

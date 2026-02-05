@@ -181,3 +181,67 @@ describe("Custom CryptoProvider integration", () => {
     expect(verifyCalls).toEqual(["hello"]);
   });
 });
+
+describe("Configure/reset lifecycle", () => {
+  beforeEach(() => {
+    resetPlatformConfig();
+  });
+
+  afterEach(() => {
+    resetPlatformConfig();
+  });
+
+  test("configure then reset then configure uses latest config", () => {
+    const mockCrypto1: CryptoProvider = {
+      sign: async () => "sig1",
+      verify: async () => true,
+      generateKeyPair: async () => ({ publicKey: {}, privateKey: {} }),
+    };
+    const mockCrypto2: CryptoProvider = {
+      sign: async () => "sig2",
+      verify: async () => false,
+      generateKeyPair: async () => ({ publicKey: {}, privateKey: {} }),
+    };
+
+    configure({ crypto: mockCrypto1, keyProvider: new InMemoryKeyProvider() });
+    expect(getPlatformConfig().crypto).toBe(mockCrypto1);
+
+    resetPlatformConfig();
+    configure({ crypto: mockCrypto2, keyProvider: new InMemoryKeyProvider() });
+    expect(getPlatformConfig().crypto).toBe(mockCrypto2);
+  });
+
+  test("configure with custom keyProvider makes it available", () => {
+    const customProvider = new InMemoryKeyProvider();
+    configure({
+      crypto: new NodeCryptoAdapter(),
+      keyProvider: customProvider,
+    });
+
+    const config = getPlatformConfig();
+    expect(config.keyProvider).toBe(customProvider);
+  });
+
+  test("default config keyProvider supports key operations", async () => {
+    const config = getPlatformConfig();
+    const { keyId, publicKey, privateKey } =
+      await config.keyProvider.generateKeyPair("Ed25519");
+
+    expect(keyId).toBeDefined();
+    expect(publicKey.kty).toBe("OKP");
+    expect(privateKey.d).toBeDefined();
+
+    const retrieved = await config.keyProvider.getPublicKey(keyId);
+    expect(retrieved).toEqual(publicKey);
+  });
+
+  test("default config crypto supports sign/verify", async () => {
+    const config = getPlatformConfig();
+    const { publicKey, privateKey } =
+      await config.crypto.generateKeyPair("Ed25519");
+
+    const sig = await config.crypto.sign("test", privateKey, "EdDSA");
+    const valid = await config.crypto.verify("test", sig, publicKey, "EdDSA");
+    expect(valid).toBe(true);
+  });
+});
