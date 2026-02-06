@@ -1,6 +1,6 @@
 {
   "name": "@rollercoaster-dev/openbadges-core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "packageManager": "bun@1.3.7",
   "description": "Shared core library for Open Badges functionality across Rollercoaster.dev applications",
