@@ -1,1 +1,46 @@
-.claude/saved-tasks.md
+# Claude Code (local/machine-specific)
+.claude/settings.local.json
+.claude/embeddings/
+.mcp.json
+
+# Dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native (generated)
+src/ios/
+src/android/
+
+# Metro
+.metro-health-check*
+
+# Debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+
+# Native build artifacts
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.pem
+
+# TypeScript
+*.tsbuildinfo
+
+# Environment
+.env*.local
+
+# Lockfiles (use npm ci in CI, lockfile generated from src/)
+src/package-lock.json
