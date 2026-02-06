@@ -17,16 +17,20 @@
     "./tamagui": {
       "import": "./build/tamagui/tokens.js",
       "types": "./build/tamagui/tokens.d.ts"
-    }
+    },
+    "./css/narrative": "./css/narrative.css",
+    "./unistyles": "./build/unistyles/index.ts"
   },
   "files": [
     "build",
+    "css",
     "src"
   ],
   "scripts": {
-    "build": "style-dictionary build --config style-dictionary.config.js && node build-themes.js",
+    "build": "style-dictionary build --config style-dictionary.config.js && node build-themes.js && node build-unistyles.js",
     "build:tokens": "style-dictionary build --config style-dictionary.config.js",
     "build:themes": "node build-themes.js",
+    "build:unistyles": "node build-unistyles.js",
     "build:watch": "style-dictionary build --config style-dictionary.config.js --watch",
     "clean": "rm -rf build/*",
     "verify": "node scripts/verify-css.js"

@@ -1,0 +1,15 @@
+{
+  "mood": {
+    "$description": "Theme mood metadata for documentation and theme-switcher UIs",
+    "name": {
+      "$value": "the-full-ride",
+      "$type": "string",
+      "$description": "Machine-friendly mood identifier"
+    },
+    "label": {
+      "$value": "The Full Ride",
+      "$type": "string",
+      "$description": "Human-friendly mood display name"
+    }
+  }
+}

@@ -1,0 +1,109 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Design Language — section blocks, badge labels, display text
+   ═══════════════════════════════════════════════════════════════════ */
+.playful-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--ob-space-4);
+  margin-top: var(--ob-space-4);
+}
+.section-block {
+  background: var(--ob-card);
+  color: var(--ob-foreground);
+  border: var(--ob-border-width-medium) solid var(--ob-border);
+  padding: var(--ob-space-6);
+  border-radius: var(--ob-border-radius-sm);
+  box-shadow: var(--ob-shadow-hard-lg);
+}
+.section-block.climb {
+  background: var(--ob-narrative-climb-bg);
+  color: var(--ob-narrative-climb-text);
+  border-color: var(--ob-narrative-climb-text);
+}
+.section-block.drop {
+  background: var(--ob-narrative-drop-bg);
+  color: var(--ob-narrative-drop-text);
+  border-color: var(--ob-narrative-drop-accent);
+}
+.section-block.stories {
+  background: var(--ob-narrative-stories-bg);
+  color: var(--ob-narrative-stories-text);
+  border-color: var(--ob-narrative-stories-accent-1);
+}
+.section-block.relief {
+  background: var(--ob-narrative-relief-bg);
+  color: var(--ob-narrative-relief-text);
+  border-color: var(--ob-narrative-relief-accent);
+}
+.section-block h3,
+.section-block code {
+  color: inherit;
+}
+.badge-label {
+  display: inline-block;
+  background: var(--ob-highlight);
+  color: var(--ob-highlight-foreground);
+  padding: var(--ob-space-1) var(--ob-space-3);
+  font-weight: var(--ob-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--ob-font-letterSpacing-wide);
+  font-size: var(--ob-font-size-xs);
+  border: var(--ob-border-width-medium) var(--ob-border-style) currentColor;
+  border-radius: var(--ob-border-radius-sm);
+  box-shadow: var(--ob-shadow-hard-sm);
+}
+.display-text {
+  font-family: var(--ob-font-headline);
+  font-size: var(--ob-font-size-display);
+  font-weight: var(--ob-font-weight-black);
+  line-height: var(--ob-font-lineHeight-tight);
+  letter-spacing: var(--ob-font-letterSpacing-tight);
+}
+.stroke-demo {
+  border: var(--ob-border-width-medium) var(--ob-border-style)
+    var(--ob-stroke-muted);
+  padding: var(--ob-space-3);
+  background: var(--ob-bg-secondary);
+  box-shadow: var(--ob-shadow-hard-md);
+}
+.type-samples h1 {
+  font-family: var(--ob-font-headline);
+  letter-spacing: var(--ob-font-letterSpacing-tight);
+  margin: 0 0 var(--ob-space-1);
+}
+.type-samples p {
+  margin: var(--ob-space-1) 0 var(--ob-space-2);
+}
+.type-samples code {
+  font-family: var(--ob-font-mono);
+  font-size: var(--ob-font-size-sm);
+  background: var(--ob-bg-secondary);
+  padding: var(--ob-space-1);
+  border: var(--ob-border-width-medium) var(--ob-border-style)
+    var(--ob-stroke-muted);
+  border-radius: var(--ob-border-radius-sm);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Accent palette showcase
+   ═══════════════════════════════════════════════════════════════════ */
+.accent-palette {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--ob-space-3);
+}
+.accent-swatch {
+  aspect-ratio: 1;
+  border: var(--ob-border-width-medium) var(--ob-border-style) currentColor;
+  border-radius: var(--ob-border-radius-sm);
+  display: flex;
+  align-items: flex-end;
+  padding: var(--ob-space-2);
+  box-shadow: var(--ob-shadow-hard-md);
+}
+.accent-name {
+  font-size: var(--ob-font-size-xs);
+  font-weight: var(--ob-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--ob-font-letterSpacing-label);
+}

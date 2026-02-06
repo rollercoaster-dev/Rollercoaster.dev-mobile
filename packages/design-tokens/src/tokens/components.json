@@ -35,6 +35,22 @@
     "$value": "{ring}",
     "$type": "color"
   },
+  "badge-sticker-bg": {
+    "$value": "{highlight}",
+    "$type": "color"
+  },
+  "badge-sticker-foreground": {
+    "$value": "{highlight-foreground}",
+    "$type": "color"
+  },
+  "card-border-style": {
+    "$value": "{border-style}",
+    "$type": "string"
+  },
+  "card-border-offset": {
+    "$value": "{border-offset}",
+    "$type": "dimension"
+  },
   "verification-border-color": {
     "$value": "{border}",
     "$type": "color"

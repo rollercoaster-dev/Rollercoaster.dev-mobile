@@ -1,7 +1,11 @@
 {
   "$name": "high-contrast",
-  "$description": "High contrast theme - strong black/white contrast with pure colors",
+  "$description": "Bold Ink — pure black/white, thick borders become a feature, no compromise on contrast",
   "theme": {
+    "mood": {
+      "name": { "$value": "bold-ink" },
+      "label": { "$value": "Bold Ink" }
+    },
     "surface": {
       "background": { "$value": "#ffffff" },
       "foreground": { "$value": "#000000" },
@@ -13,37 +17,63 @@
       "muted-foreground": { "$value": "#000000" }
     },
     "interactive": {
-      "primary": { "$value": "#0000ff" },
+      "primary": { "$value": "#000000" },
       "primary-foreground": { "$value": "#ffffff" },
       "secondary": { "$value": "#606060" },
       "secondary-foreground": { "$value": "#ffffff" }
     },
     "color": {
-      "primary": { "$value": "#0000ff" },
-      "primary-dark": { "$value": "#0000cc" },
-      "primary-light": { "$value": "#3333ff" },
+      "primary": { "$value": "#000000" },
+      "primary-dark": { "$value": "#000000" },
+      "primary-light": { "$value": "#333333" },
       "secondary": { "$value": "#606060" },
       "secondary-dark": { "$value": "#404040" },
       "secondary-light": { "$value": "#808080" },
-      "success": { "$value": "#008000" },
-      "success-light": { "$value": "#ccffcc" },
-      "error": { "$value": "#ff0000" },
+      "success": { "$value": "#008866" },
+      "success-light": { "$value": "#ccffee" },
+      "error": { "$value": "#cc0000" },
       "error-light": { "$value": "#ffcccc" },
-      "warning": { "$value": "#ff8000" },
+      "warning": { "$value": "#cc5500" },
       "warning-light": { "$value": "#ffe0cc" },
-      "info": { "$value": "#0000ff" },
-      "info-light": { "$value": "#ccccff" }
+      "info": { "$value": "#0055cc" },
+      "info-light": { "$value": "#cce0ff" }
+    },
+    "narrative": {
+      "climb": {
+        "bg": { "$value": "#ffffff" },
+        "text": { "$value": "#000000" }
+      },
+      "drop": {
+        "bg": { "$value": "#000000" },
+        "bg-end": { "$value": "#000000" },
+        "text": { "$value": "#ffffff" },
+        "accent": { "$value": "#0055cc" }
+      },
+      "stories": {
+        "bg": { "$value": "#2a2a2a" },
+        "text": { "$value": "#ffffff" },
+        "accent-1": { "$value": "#00ddaa" },
+        "accent-2": { "$value": "#ff8833" },
+        "accent-3": { "$value": "#aa55ff" },
+        "accent-4": { "$value": "#3399ff" },
+        "accent-foreground": { "$value": "#000000" }
+      },
+      "relief": {
+        "bg": { "$value": "#f0f0f0" },
+        "text": { "$value": "#000000" },
+        "accent": { "$value": "#008866" }
+      }
     },
     "feedback": {
-      "destructive": { "$value": "#ff0000" },
-      "success": { "$value": "#008000" },
-      "warning": { "$value": "#ff8000" },
-      "info": { "$value": "#0000ff" }
+      "destructive": { "$value": "#cc0000" },
+      "success": { "$value": "#008866" },
+      "warning": { "$value": "#cc5500" },
+      "info": { "$value": "#0055cc" }
     },
     "form": {
       "border": { "$value": "#000000" },
       "input": { "$value": "#ffffff" },
-      "ring": { "$value": "#0000ff" }
+      "ring": { "$value": "#0055cc" }
     },
     "typography": {
       "text-primary": { "$value": "#000000" },
@@ -56,32 +86,33 @@
       "bg-secondary": { "$value": "#f0f0f0" },
       "bg-disabled": { "$value": "#d0d0d0" },
       "border-color": { "$value": "#000000" },
-      "border-color-focus": { "$value": "#0000ff" }
+      "border-color-focus": { "$value": "#0055cc" },
+      "border-width": { "$value": "3px" }
     },
     "shadow": {
       "sm": { "$value": "none" },
       "md": { "$value": "none" },
       "lg": { "$value": "none" },
-      "focus": { "$value": "0 0 0 3px rgba(0, 0, 255, 0.5)" }
+      "focus": { "$value": "0 0 0 3px rgba(0, 85, 204, 0.5)" }
     },
     "component": {
       "badge": {
         "border-color": { "$value": "#000000" },
-        "border-width": { "$value": "2px" },
+        "border-width": { "$value": "3px" },
         "shadow": { "$value": "none" },
         "hover-shadow": { "$value": "none" },
-        "focus-outline-color": { "$value": "#0000ff" },
+        "focus-outline-color": { "$value": "#0055cc" },
         "focus-outline-width": { "$value": "3px" }
       },
       "form": {
         "input-border": { "$value": "#000000" },
-        "input-border-width": { "$value": "2px" },
-        "error-color": { "$value": "#ff0000" },
-        "success-color": { "$value": "#008000" }
+        "input-border-width": { "$value": "3px" },
+        "error-color": { "$value": "#cc0000" },
+        "success-color": { "$value": "#008866" }
       },
       "dashboard": {
         "border-color": { "$value": "#000000" },
-        "tab-active-border": { "$value": "#0000ff" },
+        "tab-active-border": { "$value": "#0055cc" },
         "tab-active-border-width": { "$value": "3px" }
       }
     }

@@ -1,13 +1,17 @@
 {
   "$name": "low-vision",
-  "$description": "Low vision theme - Atkinson Hyperlegible font, large sizes, high contrast",
+  "$description": "Loud & Clear — Atkinson Hyperlegible, 7:1+ contrast, extra-large display sizes, aggressive contrast narrative",
   "theme": {
+    "mood": {
+      "name": { "$value": "loud-and-clear" },
+      "label": { "$value": "Loud & Clear" }
+    },
     "typography": {
       "font-family": {
         "$value": "'Atkinson Hyperlegible', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
       },
-      "text-primary": { "$value": "#222222" },
-      "text-secondary": { "$value": "#444444" }
+      "text-primary": { "$value": "#111111" },
+      "text-secondary": { "$value": "#333333" }
     },
     "font": {
       "size": {
@@ -16,7 +20,13 @@
         "md": { "$value": "1.25rem" },
         "lg": { "$value": "1.5rem" },
         "xl": { "$value": "1.75rem" },
-        "2xl": { "$value": "2rem" }
+        "2xl": { "$value": "2rem" },
+        "3xl": { "$value": "2.5rem" },
+        "4xl": { "$value": "3.25rem" },
+        "5xl": { "$value": "4rem" },
+        "6xl": { "$value": "5rem" },
+        "7xl": { "$value": "6rem" },
+        "display": { "$value": "8rem" }
       },
       "lineHeight": {
         "tight": { "$value": "1.5" },
@@ -33,64 +43,98 @@
     },
     "surface": {
       "background": { "$value": "#ffffff" },
-      "foreground": { "$value": "#222222" },
+      "foreground": { "$value": "#111111" },
       "card": { "$value": "#ffffff" },
-      "card-foreground": { "$value": "#222222" },
+      "card-foreground": { "$value": "#111111" },
       "popover": { "$value": "#ffffff" },
-      "popover-foreground": { "$value": "#222222" },
+      "popover-foreground": { "$value": "#111111" },
       "muted": { "$value": "#f0f0f0" },
-      "muted-foreground": { "$value": "#444444" }
+      "muted-foreground": { "$value": "#333333" }
     },
     "interactive": {
-      "primary": { "$value": "#0066cc" },
+      "primary": { "$value": "#003d99" },
       "primary-foreground": { "$value": "#ffffff" },
-      "secondary": { "$value": "#666666" }
+      "secondary": { "$value": "#555555" }
     },
     "color": {
-      "primary-dark": { "$value": "#004d99" },
-      "primary-light": { "$value": "#4d94ff" },
-      "secondary-dark": { "$value": "#444444" },
-      "secondary-light": { "$value": "#888888" },
-      "success": { "$value": "#008000" },
-      "error": { "$value": "#cc0000" },
-      "warning": { "$value": "#cc6600" }
+      "primary": { "$value": "#003d99" },
+      "primary-dark": { "$value": "#002d73" },
+      "primary-light": { "$value": "#3366cc" },
+      "secondary": { "$value": "#555555" },
+      "secondary-dark": { "$value": "#333333" },
+      "secondary-light": { "$value": "#777777" },
+      "success": { "$value": "#006400" },
+      "error": { "$value": "#b30000" },
+      "warning": { "$value": "#995500" }
+    },
+    "narrative": {
+      "climb": {
+        "bg": { "$value": "#ffe50c" },
+        "text": { "$value": "#000000" }
+      },
+      "drop": {
+        "bg": { "$value": "#000000" },
+        "bg-end": { "$value": "#000000" },
+        "text": { "$value": "#ffffff" },
+        "accent": { "$value": "#6699ff" }
+      },
+      "stories": {
+        "bg": { "$value": "#1a2d4d" },
+        "text": { "$value": "#ffffff" },
+        "accent-1": { "$value": "#00aa77" },
+        "accent-2": { "$value": "#ff8844" },
+        "accent-3": { "$value": "#cc88ff" },
+        "accent-4": { "$value": "#66aaff" },
+        "accent-foreground": { "$value": "#ffffff" }
+      },
+      "relief": {
+        "bg": { "$value": "#e0f0e0" },
+        "text": { "$value": "#000000" },
+        "accent": { "$value": "#006400" }
+      }
     },
     "feedback": {
-      "destructive": { "$value": "#cc0000" },
-      "success": { "$value": "#008000" },
-      "warning": { "$value": "#cc6600" }
+      "destructive": { "$value": "#b30000" },
+      "success": { "$value": "#006400" },
+      "warning": { "$value": "#995500" }
     },
     "form": {
-      "border": { "$value": "#999999" },
+      "border": { "$value": "#555555" },
       "input": { "$value": "#f0f0f0" },
-      "ring": { "$value": "#0066cc" }
+      "ring": { "$value": "#003d99" }
     },
     "aliases": {
       "bg-primary": { "$value": "#ffffff" },
       "bg-secondary": { "$value": "#f0f0f0" },
-      "border-color": { "$value": "#999999" },
-      "border-color-focus": { "$value": "#0066cc" },
-      "border-width": { "$value": "2px" },
+      "border-color": { "$value": "#555555" },
+      "border-color-focus": { "$value": "#003d99" },
+      "border-width": { "$value": "3px" },
+      "border-radius-sm": { "$value": "4px" },
       "border-radius-md": { "$value": "6px" },
       "border-radius-lg": { "$value": "8px" }
     },
     "shadow": {
-      "sm": { "$value": "0 1px 2px rgba(0, 0, 0, 0.1)" },
-      "md": { "$value": "0 2px 4px rgba(0, 0, 0, 0.1)" },
-      "lg": { "$value": "0 4px 6px rgba(0, 0, 0, 0.1)" },
-      "focus": { "$value": "0 0 0 4px rgba(0, 102, 204, 0.5)" }
+      "sm": { "$value": "none" },
+      "md": { "$value": "none" },
+      "lg": { "$value": "none" },
+      "focus": { "$value": "0 0 0 4px rgba(0, 61, 153, 0.5)" }
+    },
+    "transition": {
+      "fast": { "$value": "0ms" },
+      "normal": { "$value": "0ms" },
+      "slow": { "$value": "0ms" }
     },
     "component": {
       "badge": {
-        "border-color": { "$value": "#999999" },
-        "border-width": { "$value": "2px" },
-        "title-color": { "$value": "#222222" },
-        "text-color": { "$value": "#444444" }
+        "border-color": { "$value": "#555555" },
+        "border-width": { "$value": "3px" },
+        "title-color": { "$value": "#111111" },
+        "text-color": { "$value": "#333333" }
       },
       "form": {
-        "input-border": { "$value": "#999999" },
-        "input-focus": { "$value": "#0066cc" },
-        "button-primary-bg": { "$value": "#0066cc" },
+        "input-border": { "$value": "#555555" },
+        "input-focus": { "$value": "#003d99" },
+        "button-primary-bg": { "$value": "#003d99" },
         "button-primary-color": { "$value": "#ffffff" }
       }
     }

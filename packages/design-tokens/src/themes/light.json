@@ -1,7 +1,11 @@
 {
   "$name": "light",
-  "$description": "Default light theme - base values defined in tokens",
+  "$description": "The Full Ride — base values defined in tokens, the complete rollercoaster experience",
   "theme": {
-    "name": "light"
+    "name": "light",
+    "mood": {
+      "name": { "$value": "the-full-ride" },
+      "label": { "$value": "The Full Ride" }
+    }
   }
 }

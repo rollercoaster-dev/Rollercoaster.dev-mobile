@@ -1,102 +1,178 @@
 {
   "color": {
-    "$description": "Foundational color palette - raw values that semantic tokens reference",
+    "$description": "Foundational color palette - rollercoaster.dev design language",
     "primary": {
-      "$value": "#3182ce",
+      "$value": "#0a0a0a",
       "$type": "color",
-      "$description": "Primary brand color"
+      "$description": "Primary brand color - confident black"
     },
     "primary-dark": {
-      "$value": "#2c5282",
+      "$value": "#000000",
       "$type": "color"
     },
     "primary-light": {
-      "$value": "#4299e1",
+      "$value": "#333333",
       "$type": "color"
     },
     "secondary": {
-      "$value": "#718096",
-      "$type": "color"
+      "$value": "#a78bfa",
+      "$type": "color",
+      "$description": "Purple accent"
     },
     "secondary-dark": {
-      "$value": "#4a5568",
+      "$value": "#7c5cbf",
       "$type": "color"
     },
     "secondary-light": {
-      "$value": "#a0aec0",
+      "$value": "#c4b5fd",
       "$type": "color"
     },
     "success": {
-      "$value": "#38a169",
-      "$type": "color"
+      "$value": "#059669",
+      "$type": "color",
+      "$description": "Emerald - from relief accent"
     },
     "success-light": {
-      "$value": "#c6f6d5",
-      "$type": "color"
+      "$value": "#d4f4e7",
+      "$type": "color",
+      "$description": "Mint - from relief background"
     },
     "error": {
-      "$value": "#e53e3e",
+      "$value": "#dc2626",
       "$type": "color"
     },
     "error-light": {
-      "$value": "#fed7d7",
+      "$value": "#fecaca",
       "$type": "color"
     },
     "warning": {
-      "$value": "#d69e2e",
+      "$value": "#d97706",
       "$type": "color"
     },
     "warning-light": {
-      "$value": "#feebc8",
+      "$value": "#fef3c7",
       "$type": "color"
     },
     "info": {
-      "$value": "#3182ce",
+      "$value": "#2563eb",
       "$type": "color"
     },
     "info-light": {
-      "$value": "#bee3f8",
+      "$value": "#dbeafe",
       "$type": "color"
+    },
+    "white": {
+      "$value": "#fafafa",
+      "$type": "color",
+      "$description": "Off-white base"
+    },
+    "black": {
+      "$value": "#0a0a0a",
+      "$type": "color",
+      "$description": "Near-black base"
+    },
+    "accent-purple": {
+      "$value": "#a78bfa",
+      "$type": "color"
+    },
+    "accent-mint": {
+      "$value": "#d4f4e7",
+      "$type": "color"
+    },
+    "accent-yellow": {
+      "$value": "#ffe50c",
+      "$type": "color"
+    },
+    "accent-emerald": {
+      "$value": "#059669",
+      "$type": "color"
+    },
+    "accent-teal": {
+      "$value": "#00d4aa",
+      "$type": "color"
+    },
+    "accent-orange": {
+      "$value": "#ff6b35",
+      "$type": "color"
+    },
+    "accent-sky": {
+      "$value": "#38bdf8",
+      "$type": "color"
+    },
+    "accent-purple-vivid": {
+      "$value": "#a855f7",
+      "$type": "color",
+      "$description": "Vivid purple from stories section — distinct from accent-purple"
+    },
+    "deep-indigo": {
+      "$value": "#1a1033",
+      "$type": "color",
+      "$description": "Deep indigo from drop gradient end and stories background"
+    },
+    "highlight": {
+      "$description": "Highlight colors for labels and callouts",
+      "yellow": {
+        "$value": "{color.accent-yellow}",
+        "$type": "color"
+      },
+      "mint": {
+        "$value": "{color.accent-mint}",
+        "$type": "color"
+      },
+      "purple": {
+        "$value": "{color.accent-purple}",
+        "$type": "color"
+      }
+    },
+    "ink": {
+      "$value": "{color.black}",
+      "$type": "color",
+      "$description": "Alias for near-black"
+    },
+    "paper": {
+      "$value": "{color.white}",
+      "$type": "color",
+      "$description": "Alias for off-white"
     },
     "gray": {
       "50": {
-        "$value": "#f7fafc",
+        "$value": "#fafafa",
         "$type": "color"
       },
       "100": {
-        "$value": "#edf2f7",
+        "$value": "#f5f5f5",
         "$type": "color"
       },
       "200": {
-        "$value": "#e2e8f0",
+        "$value": "#e5e5e5",
         "$type": "color"
       },
       "300": {
-        "$value": "#cbd5e0",
+        "$value": "#d4d4d4",
         "$type": "color"
       },
       "400": {
-        "$value": "#a0aec0",
+        "$value": "#a3a3a3",
         "$type": "color"
       },
       "500": {
-        "$value": "#718096",
+        "$value": "#737373",
         "$type": "color"
       },
       "600": {
-        "$value": "#4a5568",
+        "$value": "#525252",
         "$type": "color"
       },
       "700": {
-        "$value": "#2d3748",
+        "$value": "#404040",
         "$type": "color"
       },
       "800": {
-        "$value": "#1a202c",
+        "$value": "#262626",
         "$type": "color"
       },
       "900": {
-        "$value": "#171923",
+        "$value": "#0a0a0a",
         "$type": "color"
       }
     }

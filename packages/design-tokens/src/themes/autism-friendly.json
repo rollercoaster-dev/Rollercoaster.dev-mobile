@@ -1,7 +1,11 @@
 {
   "$name": "autism-friendly",
-  "$description": "Autism-friendly theme - predictable layouts, muted palette, no shadows, reduced sensory stimulation",
+  "$description": "Still Water — predictable layouts, muted desaturated palette, no shadows, zero motion, reduced sensory stimulation",
   "theme": {
+    "mood": {
+      "name": { "$value": "still-water" },
+      "label": { "$value": "Still Water" }
+    },
     "typography": {
       "font-family": { "$value": "'Arial', sans-serif" },
       "text-primary": { "$value": "#333333" }
@@ -28,15 +32,25 @@
       "muted-foreground": { "$value": "#666666" }
     },
     "interactive": {
-      "primary": { "$value": "#3d7e9a" },
+      "primary": { "$value": "#4d6d7d" },
       "primary-foreground": { "$value": "#ffffff" },
-      "secondary": { "$value": "#777777" }
+      "secondary": { "$value": "#8a7a9a" }
     },
     "color": {
-      "primary-dark": { "$value": "#2d5d72" },
-      "primary-light": { "$value": "#6ba3bc" },
-      "secondary-dark": { "$value": "#555555" },
-      "secondary-light": { "$value": "#999999" },
+      "primary": { "$value": "#4d6d7d" },
+      "primary-dark": { "$value": "#3d5d6d" },
+      "primary-light": { "$value": "#7a9aaa" },
+      "secondary": { "$value": "#8a7a9a" },
+      "secondary-dark": { "$value": "#6d5d7d" },
+      "secondary-light": { "$value": "#a79ab5" },
+      "success": { "$value": "#5a8a6a" },
+      "success-light": { "$value": "#e0f0e4" },
+      "error": { "$value": "#9a5a5a" },
+      "error-light": { "$value": "#f0e0e0" },
+      "warning": { "$value": "#8a7a5a" },
+      "warning-light": { "$value": "#f0ece0" },
+      "info": { "$value": "#5a7a9a" },
+      "info-light": { "$value": "#e0ecf4" },
       "gray": {
         "50": { "$value": "#f7f7f7" },
         "100": { "$value": "#eeeeee" },
@@ -50,16 +64,43 @@
         "900": { "$value": "#222222" }
       }
     },
+    "narrative": {
+      "climb": {
+        "bg": { "$value": "#f5f0d0" },
+        "text": { "$value": "#444444" }
+      },
+      "drop": {
+        "bg": { "$value": "#4a5a6a" },
+        "bg-end": { "$value": "#3d4d5d" },
+        "text": { "$value": "#eeeeee" },
+        "accent": { "$value": "#8a9aaa" }
+      },
+      "stories": {
+        "bg": { "$value": "#2d4d47" },
+        "text": { "$value": "#eeeeee" },
+        "accent-1": { "$value": "#6a9a8a" },
+        "accent-2": { "$value": "#a08a70" },
+        "accent-3": { "$value": "#887a96" },
+        "accent-4": { "$value": "#6a8a9e" },
+        "accent-foreground": { "$value": "#fafafa" }
+      },
+      "relief": {
+        "bg": { "$value": "#e8f0e8" },
+        "text": { "$value": "#444444" },
+        "accent": { "$value": "#5a8a6a" }
+      }
+    },
     "form": {
       "border": { "$value": "#dddddd" },
       "input": { "$value": "#eeeeee" },
-      "ring": { "$value": "#3d7e9a" }
+      "ring": { "$value": "#4d6d7d" }
     },
     "aliases": {
       "bg-primary": { "$value": "#f7f7f7" },
       "border-color": { "$value": "#dddddd" },
-      "border-color-focus": { "$value": "#3d7e9a" },
+      "border-color-focus": { "$value": "#4d6d7d" },
       "border-width": { "$value": "1px" },
+      "border-radius-sm": { "$value": "2px" },
       "border-radius-md": { "$value": "4px" }
     },
     "space": {
@@ -71,7 +112,12 @@
       "sm": { "$value": "none" },
       "md": { "$value": "none" },
       "lg": { "$value": "none" },
-      "focus": { "$value": "0 0 0 2px rgba(61, 126, 154, 0.4)" }
+      "focus": { "$value": "0 0 0 2px rgba(77, 109, 125, 0.4)" }
+    },
+    "transition": {
+      "fast": { "$value": "0ms" },
+      "normal": { "$value": "0ms" },
+      "slow": { "$value": "0ms" }
     },
     "component": {
       "badge": {
@@ -82,9 +128,9 @@
       },
       "form": {
         "input-border": { "$value": "#cccccc" },
-        "input-focus": { "$value": "#3d7e9a" },
+        "input-focus": { "$value": "#4d6d7d" },
         "background": { "$value": "#f7f7f7" },
-        "button-primary-bg": { "$value": "#3d7e9a" },
+        "button-primary-bg": { "$value": "#4d6d7d" },
         "button-primary-color": { "$value": "#ffffff" }
       }
     }

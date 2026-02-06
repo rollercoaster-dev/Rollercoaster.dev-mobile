@@ -49,6 +49,24 @@ const pathMappings = {
   "aliases.border-radius-lg": "border-radius-lg",
   "aliases.border-radius-xl": "border-radius-xl",
   "aliases.border-radius-pill": "border-radius-pill",
+  "mood.name": "mood-name",
+  "mood.label": "mood-label",
+  "narrative.climb.bg": "narrative-climb-bg",
+  "narrative.climb.text": "narrative-climb-text",
+  "narrative.drop.bg": "narrative-drop-bg",
+  "narrative.drop.bg-end": "narrative-drop-bg-end",
+  "narrative.drop.text": "narrative-drop-text",
+  "narrative.drop.accent": "narrative-drop-accent",
+  "narrative.stories.bg": "narrative-stories-bg",
+  "narrative.stories.text": "narrative-stories-text",
+  "narrative.stories.accent-1": "narrative-stories-accent-1",
+  "narrative.stories.accent-2": "narrative-stories-accent-2",
+  "narrative.stories.accent-3": "narrative-stories-accent-3",
+  "narrative.stories.accent-4": "narrative-stories-accent-4",
+  "narrative.stories.accent-foreground": "narrative-stories-accent-foreground",
+  "narrative.relief.bg": "narrative-relief-bg",
+  "narrative.relief.text": "narrative-relief-text",
+  "narrative.relief.accent": "narrative-relief-accent",
 };
 
 // Extract CSS variable declarations from nested token objects
@@ -106,13 +124,14 @@ async function buildThemes() {
  * DO NOT EDIT DIRECTLY.
  *
  * Available themes:
- *   .ob-dark-theme              – Dark mode
- *   .ob-high-contrast-theme     – Strong black/white contrast
- *   .ob-large-text-theme        – Larger fonts and line heights
- *   .ob-dyslexia-friendly-theme – OpenDyslexic font, cream bg, extra spacing
- *   .ob-low-vision-theme        – Atkinson Hyperlegible, high contrast, large text
- *   .ob-low-info-theme          – Simplified palette, reduced distractions
- *   .ob-autism-friendly-theme   – Predictable layout, muted palette, no shadows
+ *   :root (default)             – The Full Ride
+ *   .ob-dark-theme              – Night Ride
+ *   .ob-high-contrast-theme     – Bold Ink
+ *   .ob-large-text-theme        – Same Ride, Bigger Seat
+ *   .ob-dyslexia-friendly-theme – Warm Studio
+ *   .ob-low-vision-theme        – Loud & Clear
+ *   .ob-low-info-theme          – Clean Signal
+ *   .ob-autism-friendly-theme   – Still Water
  */
 
 /* Reduced motion preference */

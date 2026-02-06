@@ -1,7 +1,11 @@
 {
   "$name": "low-info",
-  "$description": "Low info theme - simplified palette, reduced distractions, clear hierarchy",
+  "$description": "Clean Signal — simplified palette, single accent, maximum signal-to-noise ratio, reduced distractions",
   "theme": {
+    "mood": {
+      "name": { "$value": "clean-signal" },
+      "label": { "$value": "Clean Signal" }
+    },
     "typography": {
       "font-family": {
         "$value": "'Atkinson Hyperlegible', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
@@ -32,48 +36,102 @@
       "muted-foreground": { "$value": "#444444" }
     },
     "interactive": {
-      "primary": { "$value": "#0066cc" },
+      "primary": { "$value": "#222222" },
       "primary-foreground": { "$value": "#ffffff" },
       "secondary": { "$value": "#666666" },
       "accent": { "$value": "#f0f0f0" },
       "accent-foreground": { "$value": "#222222" }
     },
     "color": {
-      "primary-dark": { "$value": "#004d99" },
-      "primary-light": { "$value": "#4d94ff" },
+      "primary": { "$value": "#222222" },
+      "primary-dark": { "$value": "#000000" },
+      "primary-light": { "$value": "#444444" },
+      "secondary": { "$value": "#666666" },
       "secondary-dark": { "$value": "#444444" },
-      "secondary-light": { "$value": "#888888" }
+      "secondary-light": { "$value": "#888888" },
+      "success": { "$value": "#006400" },
+      "success-light": { "$value": "#e0f0e0" },
+      "error": { "$value": "#b30000" },
+      "error-light": { "$value": "#f0e0e0" },
+      "warning": { "$value": "#995500" },
+      "warning-light": { "$value": "#f0ece0" },
+      "info": { "$value": "#003d99" },
+      "info-light": { "$value": "#e0ecf4" },
+      "gray": {
+        "50": { "$value": "#f5f5f5" },
+        "100": { "$value": "#eeeeee" },
+        "200": { "$value": "#dddddd" },
+        "300": { "$value": "#cccccc" },
+        "400": { "$value": "#999999" },
+        "500": { "$value": "#666666" },
+        "600": { "$value": "#555555" },
+        "700": { "$value": "#444444" },
+        "800": { "$value": "#222222" },
+        "900": { "$value": "#111111" }
+      }
+    },
+    "narrative": {
+      "climb": {
+        "bg": { "$value": "#ffffff" },
+        "text": { "$value": "#222222" }
+      },
+      "drop": {
+        "bg": { "$value": "#222222" },
+        "bg-end": { "$value": "#222222" },
+        "text": { "$value": "#ffffff" },
+        "accent": { "$value": "#003d99" }
+      },
+      "stories": {
+        "bg": { "$value": "#152840" },
+        "text": { "$value": "#ffffff" },
+        "accent-1": { "$value": "#003d99" },
+        "accent-2": { "$value": "#003d99" },
+        "accent-3": { "$value": "#003d99" },
+        "accent-4": { "$value": "#003d99" },
+        "accent-foreground": { "$value": "#ffffff" }
+      },
+      "relief": {
+        "bg": { "$value": "#f0f0f0" },
+        "text": { "$value": "#222222" },
+        "accent": { "$value": "#003d99" }
+      }
     },
     "form": {
-      "border": { "$value": "#dddddd" },
-      "input": { "$value": "#f0f0f0" },
-      "ring": { "$value": "#0066cc" }
+      "border": { "$value": "#cccccc" },
+      "input": { "$value": "#f5f5f5" },
+      "ring": { "$value": "#222222" }
     },
     "aliases": {
       "bg-primary": { "$value": "#ffffff" },
-      "border-color": { "$value": "#dddddd" },
-      "border-color-focus": { "$value": "#0066cc" },
+      "border-color": { "$value": "#cccccc" },
+      "border-color-focus": { "$value": "#222222" },
       "border-width": { "$value": "2px" },
+      "border-radius-sm": { "$value": "0" },
       "border-radius-md": { "$value": "4px" },
-      "border-radius-lg": { "$value": "8px" }
+      "border-radius-lg": { "$value": "4px" }
     },
     "shadow": {
-      "sm": { "$value": "0 1px 2px rgba(0, 0, 0, 0.1)" },
-      "md": { "$value": "0 2px 4px rgba(0, 0, 0, 0.1)" },
-      "lg": { "$value": "0 4px 6px rgba(0, 0, 0, 0.1)" },
-      "focus": { "$value": "0 0 0 4px rgba(0, 102, 204, 0.5)" }
+      "sm": { "$value": "none" },
+      "md": { "$value": "none" },
+      "lg": { "$value": "none" },
+      "focus": { "$value": "0 0 0 3px rgba(34, 34, 34, 0.4)" }
+    },
+    "transition": {
+      "fast": { "$value": "0ms" },
+      "normal": { "$value": "0ms" },
+      "slow": { "$value": "0ms" }
     },
     "component": {
       "badge": {
-        "border-color": { "$value": "#dddddd" },
+        "border-color": { "$value": "#cccccc" },
         "border-width": { "$value": "2px" },
         "title-color": { "$value": "#222222" },
         "text-color": { "$value": "#444444" }
       },
       "form": {
-        "input-border": { "$value": "#999999" },
-        "input-focus": { "$value": "#0066cc" },
-        "button-primary-bg": { "$value": "#0066cc" },
+        "input-border": { "$value": "#cccccc" },
+        "input-focus": { "$value": "#222222" },
+        "button-primary-bg": { "$value": "#222222" },
         "button-primary-color": { "$value": "#ffffff" }
       }
     }

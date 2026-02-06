@@ -1,11 +1,21 @@
 {
   "font-sans": {
-    "$value": "{font-system}",
+    "$value": "{font.family.instrument-sans}",
     "$type": "fontFamily",
-    "$description": "Alias for system font stack"
+    "$description": "Primary body font - Instrument Sans from landing page"
+  },
+  "font-headline": {
+    "$value": "{font.family.headline}",
+    "$type": "fontFamily",
+    "$description": "Display/headline font - Anybody from landing page"
+  },
+  "font-mono": {
+    "$value": "{font.family.mono}",
+    "$type": "fontFamily",
+    "$description": "Monospace font - DM Mono from landing page"
   },
   "line-height-tight": {
-    "$value": "1.3",
+    "$value": "1.05",
     "$type": "number"
   },
   "line-height-normal": {

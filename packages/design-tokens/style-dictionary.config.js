@@ -60,11 +60,16 @@ StyleDictionary.registerFormat({
     const foundational = {
       color: [],
       font: [],
+      narrative: [],
+      mood: [],
       space: [],
       radius: [],
       shadow: [],
       transition: [],
       zIndex: [],
+      borderWidth: [],
+      borderStyle: [],
+      borderOffset: [],
     };
     const semantic = [];
     const component = [];

@@ -2,18 +2,29 @@
   "font-system": {
     "$value": "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
     "$type": "fontFamily",
-    "$description": "System font stack - used by font-sans alias"
+    "$description": "System font stack - fallback"
   },
   "font": {
-    "$description": "Typography primitives",
+    "$description": "Typography primitives - landing page design language",
     "family": {
       "system": {
         "$value": "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
         "$type": "fontFamily"
       },
-      "inter": {
-        "$value": "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-        "$type": "fontFamily"
+      "instrument-sans": {
+        "$value": "'Instrument Sans', system-ui, sans-serif",
+        "$type": "fontFamily",
+        "$description": "Primary body font from landing page"
+      },
+      "headline": {
+        "$value": "'Anybody', sans-serif",
+        "$type": "fontFamily",
+        "$description": "Display/headline font from landing page"
+      },
+      "mono": {
+        "$value": "'DM Mono', monospace",
+        "$type": "fontFamily",
+        "$description": "Monospace font from landing page"
       },
       "atkinson": {
         "$value": "'Atkinson Hyperlegible', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
@@ -29,6 +40,11 @@
       }
     },
     "size": {
+      "2xs": {
+        "$value": "0.625rem",
+        "$type": "dimension",
+        "$description": "10px — below 12px minimum, use only for non-essential decorative metadata"
+      },
       "xs": {
         "$value": "0.75rem",
         "$type": "dimension"
@@ -56,6 +72,31 @@
       "3xl": {
         "$value": "2rem",
         "$type": "dimension"
+      },
+      "4xl": {
+        "$value": "2.5rem",
+        "$type": "dimension",
+        "$description": "Display size"
+      },
+      "5xl": {
+        "$value": "3rem",
+        "$type": "dimension",
+        "$description": "Display size"
+      },
+      "6xl": {
+        "$value": "3.75rem",
+        "$type": "dimension",
+        "$description": "Display size"
+      },
+      "7xl": {
+        "$value": "4.5rem",
+        "$type": "dimension",
+        "$description": "Display size"
+      },
+      "display": {
+        "$value": "6rem",
+        "$type": "dimension",
+        "$description": "Maximum display size for hero sections"
       }
     },
     "weight": {
@@ -74,12 +115,23 @@
       "bold": {
         "$value": "700",
         "$type": "fontWeight"
+      },
+      "black": {
+        "$value": "900",
+        "$type": "fontWeight",
+        "$description": "Extra bold for display headlines"
       }
     },
     "lineHeight": {
       "tight": {
+        "$value": "1.05",
+        "$type": "number",
+        "$description": "Single-line display headlines only — not for wrapping text"
+      },
+      "compact": {
         "$value": "1.3",
-        "$type": "number"
+        "$type": "number",
+        "$description": "Compact metadata line-height"
       },
       "normal": {
         "$value": "1.6",
@@ -88,6 +140,31 @@
       "relaxed": {
         "$value": "1.8",
         "$type": "number"
+      }
+    },
+    "letterSpacing": {
+      "tight": {
+        "$value": "-0.03em",
+        "$type": "dimension",
+        "$description": "Headlines and display text"
+      },
+      "normal": {
+        "$value": "0",
+        "$type": "dimension"
+      },
+      "label": {
+        "$value": "0.05em",
+        "$type": "dimension",
+        "$description": "Uppercase label tracking"
+      },
+      "wide": {
+        "$value": "0.1em",
+        "$type": "dimension"
+      },
+      "caps": {
+        "$value": "0.15em",
+        "$type": "dimension",
+        "$description": "Uppercase labels and captions"
       }
     }
   }

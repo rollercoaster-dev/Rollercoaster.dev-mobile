@@ -1,0 +1,93 @@
+{
+  "narrative": {
+    "$description": "Four-section color narrative from the rollercoaster.dev landing page — climb, drop, stories, relief",
+    "climb": {
+      "bg": {
+        "$value": "#ffe50c",
+        "$type": "color",
+        "$description": "The Climb background — bold yellow energy"
+      },
+      "text": {
+        "$value": "#0a0a0a",
+        "$type": "color",
+        "$description": "The Climb text — dark on yellow"
+      }
+    },
+    "drop": {
+      "bg": {
+        "$value": "#0a0a0a",
+        "$type": "color",
+        "$description": "The Drop background — near-black"
+      },
+      "bg-end": {
+        "$value": "#1a1033",
+        "$type": "color",
+        "$description": "The Drop gradient end — deep indigo"
+      },
+      "text": {
+        "$value": "#fafafa",
+        "$type": "color",
+        "$description": "The Drop text — light on dark"
+      },
+      "accent": {
+        "$value": "#a78bfa",
+        "$type": "color",
+        "$description": "The Drop accent — soft purple"
+      }
+    },
+    "stories": {
+      "bg": {
+        "$value": "#2b1f4b",
+        "$type": "color",
+        "$description": "The Stories background — elevated purple"
+      },
+      "text": {
+        "$value": "#fafafa",
+        "$type": "color",
+        "$description": "The Stories text — light on indigo"
+      },
+      "accent-1": {
+        "$value": "#00d4aa",
+        "$type": "color",
+        "$description": "Stories accent teal"
+      },
+      "accent-2": {
+        "$value": "#ff6b35",
+        "$type": "color",
+        "$description": "Stories accent orange"
+      },
+      "accent-3": {
+        "$value": "#a855f7",
+        "$type": "color",
+        "$description": "Stories accent vivid purple"
+      },
+      "accent-4": {
+        "$value": "#38bdf8",
+        "$type": "color",
+        "$description": "Stories accent sky blue"
+      },
+      "accent-foreground": {
+        "$value": "#0a0a0a",
+        "$type": "color",
+        "$description": "Text on stories accent backgrounds"
+      }
+    },
+    "relief": {
+      "bg": {
+        "$value": "#d4f4e7",
+        "$type": "color",
+        "$description": "The Relief background — soft mint"
+      },
+      "text": {
+        "$value": "#0a0a0a",
+        "$type": "color",
+        "$description": "The Relief text — dark on mint"
+      },
+      "accent": {
+        "$value": "#059669",
+        "$type": "color",
+        "$description": "The Relief accent — emerald"
+      }
+    }
+  }
+}

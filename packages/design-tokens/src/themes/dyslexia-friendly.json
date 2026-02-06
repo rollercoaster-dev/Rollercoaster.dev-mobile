@@ -1,10 +1,14 @@
 {
   "$name": "dyslexia-friendly",
-  "$description": "Dyslexia-friendly theme - OpenDyslexic font, cream background, increased spacing",
+  "$description": "Warm Studio — Lexend font (research-backed), cream background, warm gold/brown tones, increased spacing",
   "theme": {
+    "mood": {
+      "name": { "$value": "warm-studio" },
+      "label": { "$value": "Warm Studio" }
+    },
     "typography": {
       "font-family": {
-        "$value": "'OpenDyslexic', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
+        "$value": "'Lexend', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
       },
       "text-primary": { "$value": "#333333" },
       "text-secondary": { "$value": "#555555" }
@@ -19,17 +23,17 @@
         "2xl": { "$value": "1.75rem" }
       },
       "lineHeight": {
-        "tight": { "$value": "1.5" },
+        "tight": { "$value": "1.6" },
         "normal": { "$value": "1.7" },
         "relaxed": { "$value": "1.9" }
       },
       "weight": {
         "normal": { "$value": "400" },
-        "medium": { "$value": "500" },
+        "medium": { "$value": "600" },
         "bold": { "$value": "700" }
       },
-      "letterSpacing": { "$value": "0.05em" },
-      "wordSpacing": { "$value": "0.1em" }
+      "letterSpacing": { "$value": "0.12em" },
+      "wordSpacing": { "$value": "0.16em" }
     },
     "surface": {
       "background": { "$value": "#f8f5e4" },
@@ -42,32 +46,63 @@
       "muted-foreground": { "$value": "#555555" }
     },
     "interactive": {
-      "primary": { "$value": "#1b70b6" },
+      "primary": { "$value": "#4e7d9e" },
       "primary-foreground": { "$value": "#ffffff" }
     },
     "color": {
-      "primary-dark": { "$value": "#155a92" },
-      "primary-light": { "$value": "#5a9bd5" },
-      "success": { "$value": "#2e8b57" },
+      "primary": { "$value": "#4e7d9e" },
+      "primary-dark": { "$value": "#3a6280" },
+      "primary-light": { "$value": "#6a97b5" },
+      "secondary": { "$value": "#8860a0" },
+      "secondary-dark": { "$value": "#6d4a85" },
+      "secondary-light": { "$value": "#a080b8" },
+      "success": { "$value": "#4a8a62" },
       "error": { "$value": "#b54942" },
       "warning": { "$value": "#b5913a" }
     },
+    "narrative": {
+      "climb": {
+        "bg": { "$value": "#f5e6a0" },
+        "text": { "$value": "#333333" }
+      },
+      "drop": {
+        "bg": { "$value": "#3b2a4a" },
+        "bg-end": { "$value": "#332244" },
+        "text": { "$value": "#f8f5e4" },
+        "accent": { "$value": "#c4a8e0" }
+      },
+      "stories": {
+        "bg": { "$value": "#2a3d3d" },
+        "text": { "$value": "#f8f5e4" },
+        "accent-1": { "$value": "#4a8a62" },
+        "accent-2": { "$value": "#b86840" },
+        "accent-3": { "$value": "#8860a0" },
+        "accent-4": { "$value": "#4e7d9e" },
+        "accent-foreground": { "$value": "#fafafa" }
+      },
+      "relief": {
+        "bg": { "$value": "#e8f0e0" },
+        "text": { "$value": "#333333" },
+        "accent": { "$value": "#4a8a62" }
+      }
+    },
     "feedback": {
       "destructive": { "$value": "#b54942" },
-      "success": { "$value": "#2e8b57" },
+      "success": { "$value": "#4a8a62" },
       "warning": { "$value": "#b5913a" }
     },
     "form": {
       "border": { "$value": "#c8c3a9" },
       "input": { "$value": "#f0edd8" },
-      "ring": { "$value": "#0066cc" }
+      "ring": { "$value": "#4e7d9e" }
     },
     "aliases": {
       "bg-primary": { "$value": "#f8f5e4" },
       "bg-secondary": { "$value": "#f0edd8" },
       "border-color": { "$value": "#c8c3a9" },
-      "border-color-focus": { "$value": "#0066cc" },
+      "border-color-focus": { "$value": "#4e7d9e" },
       "border-width": { "$value": "2px" },
+      "border-radius-sm": { "$value": "4px" },
       "border-radius-md": { "$value": "6px" },
       "border-radius-lg": { "$value": "8px" }
     },
@@ -82,7 +117,12 @@
       "sm": { "$value": "0 1px 2px rgba(0, 0, 0, 0.1)" },
       "md": { "$value": "0 2px 4px rgba(0, 0, 0, 0.1)" },
       "lg": { "$value": "0 3px 6px rgba(0, 0, 0, 0.1)" },
-      "focus": { "$value": "0 0 0 4px rgba(0, 102, 204, 0.4)" }
+      "focus": { "$value": "0 0 0 4px rgba(78, 125, 158, 0.4)" }
+    },
+    "transition": {
+      "fast": { "$value": "0ms" },
+      "normal": { "$value": "0ms" },
+      "slow": { "$value": "0ms" }
     },
     "component": {
       "badge": {

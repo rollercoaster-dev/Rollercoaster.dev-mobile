@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenBadges Design Tokens - Overview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Anybody:wght@700;900&family=Instrument+Sans:wght@400;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../build/css/tokens.css" />
+  <link rel="stylesheet" href="../build/css/themes.css" />
+  <link rel="stylesheet" href="./shared.css" />
+</head>
+<body>
+  <div class="layout">
+  <div class="sidebar">
+    <h1>Design Tokens</h1>
+    <p>Drama from scale and color. Accessibility without compromise.</p>
+    <nav aria-label="Theme navigation">
+      <a class="active" href="./index.html">Overview</a>
+      <a href="./theme-landing.html">The Full Ride (Landing)</a>
+      <a href="./theme-default.html">The Full Ride (Default)</a>
+      <a href="./theme-dark.html">Night Ride (Dark)</a>
+      <a href="./theme-high-contrast.html">Bold Ink (High Contrast)</a>
+      <a href="./theme-dyslexia-friendly.html">Warm Studio (Dyslexia)</a>
+      <a href="./theme-autism-friendly.html">Still Water (Autism)</a>
+      <a href="./theme-large-text.html">Bigger Seat (Large Text)</a>
+      <a href="./theme-low-vision.html">Loud &amp; Clear (Low Vision)</a>
+      <a href="./theme-low-info.html">Clean Signal (Low Info)</a>
+    </nav>
+  </div>
+
+  <main class="main">
+    <header class="page-header">
+      <h1>Token Overview</h1>
+      <p>Narrative color arc, mood themes, and quick links.</p>
+    </header>
+
+    <section>
+      <h2>Color Narrative</h2>
+      <p class="section-desc">Four narrative sections define the emotional arc of the landing page and flow through every mood theme.</p>
+      <div class="playful-row" style="grid-template-columns: 1fr;">
+        <div class="section-block climb">
+          <span class="badge-label">Climb</span>
+          <h3 style="font-family: var(--ob-font-headline); margin-top: var(--ob-space-2);">The Climb</h3>
+          <p>Energy builds. Yellow warmth, dark ink. The opening statement.</p>
+          <code style="font-family: var(--ob-font-mono); font-size: var(--ob-font-size-xs);">--ob-narrative-climb-bg / --ob-narrative-climb-text</code>
+        </div>
+      </div>
+      <div class="playful-row" style="grid-template-columns: 1fr;">
+        <div class="section-block drop">
+          <span class="badge-label">Drop</span>
+          <h3 style="font-family: var(--ob-font-headline); margin-top: var(--ob-space-2);">The Drop</h3>
+          <p>Deep black to indigo. The moment of impact. Purple accents glow.</p>
+          <code style="font-family: var(--ob-font-mono); font-size: var(--ob-font-size-xs);">--ob-narrative-drop-bg / --ob-narrative-drop-text</code>
+        </div>
+      </div>
+      <div class="playful-row" style="grid-template-columns: 1fr;">
+        <div class="section-block stories">
+          <span class="badge-label" style="background: var(--ob-narrative-stories-accent-1); color: var(--ob-narrative-stories-accent-foreground);">Stories</span>
+          <h3 style="font-family: var(--ob-font-headline); margin-top: var(--ob-space-2);">The Stories</h3>
+          <p>Deep indigo canvas. Multi-color accents for individual badge stories.</p>
+          <code style="font-family: var(--ob-font-mono); font-size: var(--ob-font-size-xs);">--ob-narrative-stories-bg / --ob-narrative-stories-text</code>
+        </div>
+      </div>
+      <div class="playful-row" style="grid-template-columns: 1fr;">
+        <div class="section-block relief">
+          <span class="badge-label" style="background: var(--ob-narrative-relief-accent); color: var(--ob-color-white);">Relief</span>
+          <h3 style="font-family: var(--ob-font-headline); margin-top: var(--ob-space-2);">The Relief</h3>
+          <p>Mint calm. The landing zone. Footer, CTA, resolution.</p>
+          <code style="font-family: var(--ob-font-mono); font-size: var(--ob-font-size-xs);">--ob-narrative-relief-bg / --ob-narrative-relief-text</code>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Design Language</h2>
+      <p class="section-desc">Display type and narrative blocks define the visual identity.</p>
+      <div class="section-block climb" style="margin-bottom: var(--ob-space-4);">
+        <div class="display-text" style="font-size: var(--ob-font-size-5xl);">Badges<br>with bite.</div>
+      </div>
+      <div class="playful-row">
+        <div class="section-block drop">
+          <span class="badge-label">Section Block</span>
+          <p style="margin-top: var(--ob-space-2);">Clean cards with thin borders. No offset shadows.</p>
+        </div>
+        <div class="section-block">
+          <span class="badge-label">Badge Label</span>
+          <p style="margin-top: var(--ob-space-2);">Inline label without offset. Clean, readable metadata.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Type Samples</h2>
+      <div class="type-samples">
+        <h1>Anybody Headline</h1>
+        <p>Instrument Sans body copy keeps rhythm calm and clear.</p>
+        <p><code>DM Mono</code> for code and metadata.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>Mood Quick Links</h2>
+      <p class="section-desc">Each mood adapts the narrative arc for different accessibility needs.</p>
+      <div class="pair-grid">
+        <a class="swatch" href="./theme-landing.html" style="display:block; padding: var(--ob-space-3); text-decoration:none; color:var(--ob-foreground);">The Full Ride (Landing)</a>
+        <a class="swatch" href="./theme-default.html" style="display:block; padding: var(--ob-space-3); text-decoration:none; color:var(--ob-foreground);">The Full Ride (Default)</a>
+        <a class="swatch" href="./theme-dark.html" style="display:block; padding: var(--ob-space-3); text-decoration:none; color:var(--ob-foreground);">Night Ride (Dark)</a>
+        <a class="swatch" href="./theme-high-contrast.html" style="display:block; padding: var(--ob-space-3); text-decoration:none; color:var(--ob-foreground);">Bold Ink (High Contrast)</a>
+        <a class="swatch" href="./theme-dyslexia-friendly.html" style="display:block; padding: var(--ob-space-3); text-decoration:none; color:var(--ob-foreground);">Warm Studio (Dyslexia Friendly)</a>
+        <a class="swatch" href="./theme-autism-friendly.html" style="display:block; padding: var(--ob-space-3); text-decoration:none; color:var(--ob-foreground);">Still Water (Autism Friendly)</a>
+        <a class="swatch" href="./theme-large-text.html" style="display:block; padding: var(--ob-space-3); text-decoration:none; color:var(--ob-foreground);">Same Ride, Bigger Seat (Large Text)</a>
+        <a class="swatch" href="./theme-low-vision.html" style="display:block; padding: var(--ob-space-3); text-decoration:none; color:var(--ob-foreground);">Loud &amp; Clear (Low Vision)</a>
+        <a class="swatch" href="./theme-low-info.html" style="display:block; padding: var(--ob-space-3); text-decoration:none; color:var(--ob-foreground);">Clean Signal (Low Info)</a>
+      </div>
+    </section>
+  </main>
+  </div>
+</body>
+</html>

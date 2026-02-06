@@ -1,8 +1,8 @@
 {
   "background": {
-    "$value": "white",
+    "$value": "{color.white}",
     "$type": "color",
-    "$description": "Page background"
+    "$description": "Page background - off-white (#fafafa)"
   },
   "foreground": {
     "$value": "{color.gray.800}",
@@ -10,7 +10,7 @@
     "$description": "Primary text on page background"
   },
   "card": {
-    "$value": "white",
+    "$value": "{color.white}",
     "$type": "color",
     "$description": "Card/panel background"
   },
@@ -19,7 +19,7 @@
     "$type": "color"
   },
   "popover": {
-    "$value": "white",
+    "$value": "{color.white}",
     "$type": "color",
     "$description": "Popover/dropdown background"
   },
@@ -43,7 +43,7 @@
     "$description": "Primary action color"
   },
   "primary-foreground": {
-    "$value": "white",
+    "$value": "{color.white}",
     "$type": "color"
   },
   "secondary": {
@@ -51,7 +51,7 @@
     "$type": "color"
   },
   "secondary-foreground": {
-    "$value": "{color.gray.800}",
+    "$value": "{color.black}",
     "$type": "color"
   },
   "accent": {
@@ -62,12 +62,32 @@
     "$value": "{color.gray.800}",
     "$type": "color"
   },
+  "stroke": {
+    "$value": "{color.black}",
+    "$type": "color",
+    "$description": "Primary stroke color"
+  },
+  "stroke-muted": {
+    "$value": "{color.gray.300}",
+    "$type": "color",
+    "$description": "Muted stroke for secondary outlines"
+  },
+  "highlight": {
+    "$value": "{color.accent-yellow}",
+    "$type": "color",
+    "$description": "Highlight background"
+  },
+  "highlight-foreground": {
+    "$value": "{color.black}",
+    "$type": "color",
+    "$description": "Text on highlight"
+  },
   "destructive": {
     "$value": "{color.error}",
     "$type": "color"
   },
   "destructive-foreground": {
-    "$value": "white",
+    "$value": "{color.white}",
     "$type": "color"
   },
   "success": {
@@ -75,7 +95,7 @@
     "$type": "color"
   },
   "success-foreground": {
-    "$value": "white",
+    "$value": "{color.white}",
     "$type": "color"
   },
   "warning": {
@@ -91,7 +111,7 @@
     "$type": "color"
   },
   "info-foreground": {
-    "$value": "white",
+    "$value": "{color.white}",
     "$type": "color"
   },
   "border": {
@@ -126,7 +146,7 @@
     "$type": "color"
   },
   "text-inverse": {
-    "$value": "white",
+    "$value": "{color.white}",
     "$type": "color"
   },
   "bg-primary": {
@@ -150,8 +170,23 @@
     "$type": "color"
   },
   "border-width": {
-    "$value": "1px",
+    "$value": "{borderWidth.default}",
+    "$type": "dimension",
+    "$description": "Default border width"
+  },
+  "border-width-medium": {
+    "$value": "{borderWidth.medium}",
     "$type": "dimension"
+  },
+  "border-style": {
+    "$value": "{borderStyle.solid}",
+    "$type": "string",
+    "$description": "Default border style"
+  },
+  "border-offset": {
+    "$value": "{borderOffset.sm}",
+    "$type": "dimension",
+    "$description": "Border offset (legacy)"
   },
   "border-radius-sm": {
     "$value": "{radius.sm}",
@@ -188,5 +223,45 @@
   "z-index-tooltip": {
     "$value": "{z-tooltip}",
     "$type": "number"
+  },
+  "section-climb-bg": {
+    "$value": "{narrative.climb.bg}",
+    "$type": "color",
+    "$description": "Section background — The Climb"
+  },
+  "section-climb-text": {
+    "$value": "{narrative.climb.text}",
+    "$type": "color",
+    "$description": "Section text — The Climb"
+  },
+  "section-drop-bg": {
+    "$value": "{narrative.drop.bg}",
+    "$type": "color",
+    "$description": "Section background — The Drop"
+  },
+  "section-drop-text": {
+    "$value": "{narrative.drop.text}",
+    "$type": "color",
+    "$description": "Section text — The Drop"
+  },
+  "section-stories-bg": {
+    "$value": "{narrative.stories.bg}",
+    "$type": "color",
+    "$description": "Section background — The Stories"
+  },
+  "section-stories-text": {
+    "$value": "{narrative.stories.text}",
+    "$type": "color",
+    "$description": "Section text — The Stories"
+  },
+  "section-relief-bg": {
+    "$value": "{narrative.relief.bg}",
+    "$type": "color",
+    "$description": "Section background — The Relief"
+  },
+  "section-relief-text": {
+    "$value": "{narrative.relief.text}",
+    "$type": "color",
+    "$description": "Section text — The Relief"
   }
 }
