@@ -1,6 +1,6 @@
 {
   "name": "@rollercoaster-dev/design-tokens",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Design tokens for Rollercoaster.dev OpenBadges ecosystem - CSS, JS, Tailwind, and Tamagui outputs",
   "type": "module",
   "exports": {
