@@ -8,7 +8,9 @@ export {
   BadgeVersion,
   BADGE_VERSION_CONTEXTS,
   VC_V2_CONTEXT_URL,
+  VC_V1_CONTEXT_URL,
   OBV3_CONTEXT_URL,
+  OBV3_CONTEXT_URL_UNVERSIONED,
   detectBadgeVersion,
 } from "./version.js";
 

@@ -208,7 +208,12 @@ export async function verifyJWTProof(
 ): Promise<ProofVerificationResult> {
   try {
     const header = decodeProtectedHeader(jwtProof.jws);
-    const algorithm = header.alg ?? "RS256";
+    if (!header.alg) {
+      throw new Error(
+        "JWT missing required 'alg' header parameter. Cannot determine verification algorithm.",
+      );
+    }
+    const algorithm = header.alg;
 
     const publicKey = await importPublicKeyForVerification(
       options.publicKey,

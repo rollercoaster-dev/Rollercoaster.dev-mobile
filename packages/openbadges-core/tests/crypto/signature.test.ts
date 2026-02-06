@@ -76,6 +76,15 @@ describe("signData and verifySignature", () => {
 
     expect(valid).toBe(false);
   });
+
+  test("verify propagates key import errors (bad key format)", async () => {
+    // A malformed JWK should throw from importJWK, not silently return false
+    const badKey = { kty: "OKP", crv: "Ed25519" }; // missing required 'x' parameter
+
+    await expect(
+      verifySignature("data", "fake.jwt.signature", badKey, KeyType.Ed25519),
+    ).rejects.toThrow();
+  });
 });
 
 describe("detectKeyType", () => {

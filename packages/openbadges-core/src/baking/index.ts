@@ -16,17 +16,8 @@
  * ```
  */
 
-// Types
-export type {
-  ImageFormat,
-  BakeOptions,
-  BakedImage,
-  UnbakeResult,
-  BakingService,
-} from "./types.js";
-
 // PNG baking
-export { bakePNG, unbakePNG, isPNG } from "./png-baking.service.js";
+export { bakePNG, unbakePNG, isPNG } from "./png-baking.js";
 
 // Chunk utilities (for advanced usage)
 export type { Chunk } from "./png-chunk-utils.js";

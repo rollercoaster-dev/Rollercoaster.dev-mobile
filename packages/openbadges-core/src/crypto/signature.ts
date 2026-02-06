@@ -38,7 +38,12 @@ export interface DataIntegrityProof {
   type: "DataIntegrityProof";
   cryptosuite: string;
   created: Shared.DateTime;
-  proofPurpose: "assertionMethod" | string;
+  proofPurpose:
+    | "assertionMethod"
+    | "authentication"
+    | "keyAgreement"
+    | "capabilityInvocation"
+    | "capabilityDelegation";
   verificationMethod: Shared.IRI;
   proofValue: string;
 }
@@ -90,18 +95,12 @@ export async function verifySignature(
   keyType?: KeyType,
 ): Promise<boolean> {
   // Configuration and key detection errors must propagate (not be swallowed).
-  // Only verification failures are expected and returned as false.
+  // The adapter returns false for verification failures and throws for key errors.
   const actualKeyType = keyType ?? detectKeyType(publicKey);
   const alg = getAlgorithm(actualKeyType);
   const { crypto } = getPlatformConfig();
 
-  try {
-    return await crypto.verify(data, signature, publicKey, alg);
-  } catch {
-    // Signature verification failures are expected (invalid/tampered signatures).
-    // Returns false rather than throwing to provide a clean boolean API.
-    return false;
-  }
+  return crypto.verify(data, signature, publicKey, alg);
 }
 
 /**

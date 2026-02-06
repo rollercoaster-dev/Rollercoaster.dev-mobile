@@ -128,6 +128,18 @@ describe("OpenBadges3Serializer", () => {
       );
     });
 
+    it("should use 'creator' (not 'issuer') in achievement per OB3 spec", () => {
+      const result = serializer.serializeAssertion(
+        mockAssertion,
+        mockBadgeClass,
+        mockIssuer,
+      );
+      const subject = result["credentialSubject"] as Record<string, unknown>;
+      const achievement = subject.achievement as Record<string, unknown>;
+      expect(achievement).toHaveProperty("creator");
+      expect(achievement.creator).toBe(mockIssuer.id);
+    });
+
     it("should include credentialSubject with AchievementSubject", () => {
       const result = serializer.serializeAssertion(
         mockAssertion,
@@ -167,6 +179,17 @@ describe("OpenBadges2Serializer", () => {
     const result = serializer.serializeAssertion(mockAssertion);
     expect(result.type).toBe("Assertion");
     expect(result["issuedOn"]).toBe("2024-01-15T10:00:00Z");
+  });
+
+  it("should output 'badge' property per OB2 spec (not 'badgeClass')", () => {
+    const result = serializer.serializeAssertion(mockAssertion);
+    expect(result).toHaveProperty("badge");
+    expect(result).not.toHaveProperty("badgeClass");
+  });
+
+  it("should provide default hosted verification when none specified", () => {
+    const result = serializer.serializeAssertion(mockAssertion);
+    expect(result["verification"]).toEqual({ type: "hosted" });
   });
 
   it("should return V2 from getVersion()", () => {

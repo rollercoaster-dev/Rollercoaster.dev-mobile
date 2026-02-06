@@ -14,9 +14,16 @@ export enum BadgeVersion {
 /** W3C Verifiable Credentials Data Model 2.0 context URL — required as first context in OB3 credentials */
 export const VC_V2_CONTEXT_URL = "https://www.w3.org/ns/credentials/v2";
 
-/** Open Badges 3.0 context URL — required as second context in OB3 credentials */
+/** W3C Verifiable Credentials Data Model 1.1 context URL — legacy, still valid for OB3 */
+export const VC_V1_CONTEXT_URL = "https://www.w3.org/2018/credentials/v1";
+
+/** Open Badges 3.0 context URL (versioned) — canonical URL for OB3 context */
 export const OBV3_CONTEXT_URL =
   "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json";
+
+/** Open Badges 3.0 context URL (unversioned) — also valid, resolves to latest */
+export const OBV3_CONTEXT_URL_UNVERSIONED =
+  "https://purl.imsglobal.org/spec/ob/v3p0/context.json";
 
 /**
  * Badge version context URLs
@@ -32,8 +39,22 @@ export const BADGE_VERSION_CONTEXTS = {
   [BadgeVersion.V3]: [VC_V2_CONTEXT_URL, OBV3_CONTEXT_URL],
 };
 
+/** All known OB3 context URLs (versioned and unversioned) */
+const OB3_CONTEXT_URLS = [OBV3_CONTEXT_URL, OBV3_CONTEXT_URL_UNVERSIONED];
+
 /**
- * Detects the Open Badges version from a JSON-LD object
+ * Check if a value is a known OB3 context URL
+ */
+function isOB3Context(url: unknown): boolean {
+  return typeof url === "string" && OB3_CONTEXT_URLS.includes(url);
+}
+
+/**
+ * Detects the Open Badges version from a JSON-LD object.
+ *
+ * Recognizes OB3 credentials using either VC v1.1 or v2.0 context,
+ * and both versioned and unversioned OB3 context URLs.
+ *
  * @param obj The JSON-LD object to check
  * @returns The detected badge version or undefined if not detected
  */
@@ -51,30 +72,10 @@ export function detectBadgeVersion(
 
   // Handle array context
   if (Array.isArray(context)) {
-    if (
-      BADGE_VERSION_CONTEXTS[BadgeVersion.V3].some((url) =>
-        context.includes(url),
-      )
-    ) {
+    if (context.some(isOB3Context)) {
       return BadgeVersion.V3;
     }
     if (context.includes(BADGE_VERSION_CONTEXTS[BadgeVersion.V2])) {
-      return BadgeVersion.V2;
-    }
-    return undefined;
-  }
-
-  // Handle object context (extract values and check for known URLs)
-  if (typeof context === "object" && !Array.isArray(context)) {
-    const values = Object.values(context as Record<string, unknown>);
-    if (
-      values.some((v) =>
-        BADGE_VERSION_CONTEXTS[BadgeVersion.V3].includes(v as string),
-      )
-    ) {
-      return BadgeVersion.V3;
-    }
-    if (values.includes(BADGE_VERSION_CONTEXTS[BadgeVersion.V2])) {
       return BadgeVersion.V2;
     }
     return undefined;
@@ -85,8 +86,7 @@ export function detectBadgeVersion(
     if (context === BADGE_VERSION_CONTEXTS[BadgeVersion.V2]) {
       return BadgeVersion.V2;
     }
-    // Only detect V3 from the OB3-specific context, not VC 2.0 alone
-    if (context === OBV3_CONTEXT_URL) {
+    if (isOB3Context(context)) {
       return BadgeVersion.V3;
     }
   }

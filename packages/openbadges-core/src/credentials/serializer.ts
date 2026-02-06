@@ -103,7 +103,6 @@ export class OpenBadges2Serializer implements BadgeSerializer {
     | VerifiableCredentialData {
     const verification = assertion.verification || {
       type: "hosted",
-      ...(assertion.id ? { verificationProperty: assertion.id } : {}),
     };
 
     const result: Record<string, unknown> = {
@@ -111,7 +110,7 @@ export class OpenBadges2Serializer implements BadgeSerializer {
       id: assertion.id,
       type: "Assertion",
       recipient: assertion.recipient,
-      badgeClass: (assertion.badgeClass || badgeClass?.id) as Shared.IRI,
+      badge: (assertion.badgeClass || badgeClass?.id) as Shared.IRI,
       verification: verification,
       issuedOn: assertion.issuedOn,
     };
@@ -234,7 +233,7 @@ export class OpenBadges3Serializer implements BadgeSerializer {
       description: badgeClass.description,
       image: badgeClass.image,
       criteria: badgeClass.criteria,
-      issuer: issuer.id,
+      creator: issuer.id,
     };
     if (badgeClass.alignment) achievement.alignments = badgeClass.alignment;
     if (badgeClass.tags) achievement.tags = badgeClass.tags;

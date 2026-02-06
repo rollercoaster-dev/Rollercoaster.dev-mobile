@@ -35,20 +35,6 @@ export interface CryptoProvider {
 }
 
 /**
- * Abstraction for compression operations (Phase 3 — bitstring status lists).
- *
- * Not required for basic badge operations. Will be used for StatusList2021
- * credential compression.
- */
-export interface CompressionProvider {
-  /** Gzip compress data */
-  compress(data: Uint8Array): Promise<Uint8Array>;
-
-  /** Gzip decompress data */
-  decompress(data: Uint8Array): Promise<Uint8Array>;
-}
-
-/**
  * Full platform configuration for openbadges-core.
  *
  * Node.js/Bun environments get defaults automatically via lazy initialization.
@@ -57,5 +43,4 @@ export interface CompressionProvider {
 export interface PlatformConfig {
   crypto: CryptoProvider;
   keyProvider: KeyProvider;
-  compression?: CompressionProvider;
 }

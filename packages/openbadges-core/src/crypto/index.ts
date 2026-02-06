@@ -16,6 +16,11 @@ export { InMemoryKeyProvider, KeyStatus } from "./key-provider.js";
 
 // Signing and DataIntegrityProof
 export type { DataIntegrityProof } from "./signature.js";
+import type { DataIntegrityProof } from "./signature.js";
+import type { JWTProof } from "./jwt-proof.js";
+
+/** Discriminated union of all proof types (discriminant: `type`) */
+export type Proof = DataIntegrityProof | JWTProof;
 export {
   KeyType,
   Cryptosuite,
@@ -27,11 +32,7 @@ export {
 } from "./signature.js";
 
 // Platform adapters
-export type {
-  CryptoProvider,
-  CompressionProvider,
-  PlatformConfig,
-} from "./adapters/types.js";
+export type { CryptoProvider, PlatformConfig } from "./adapters/types.js";
 export { NodeCryptoAdapter } from "./adapters/node-crypto.adapter.js";
 
 // JWT proof

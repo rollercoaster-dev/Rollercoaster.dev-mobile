@@ -3,7 +3,9 @@ import {
   BadgeVersion,
   BADGE_VERSION_CONTEXTS,
   VC_V2_CONTEXT_URL,
+  VC_V1_CONTEXT_URL,
   OBV3_CONTEXT_URL,
+  OBV3_CONTEXT_URL_UNVERSIONED,
   detectBadgeVersion,
 } from "../../src/credentials/version";
 
@@ -81,24 +83,24 @@ describe("detectBadgeVersion", () => {
     ).toBeUndefined();
   });
 
-  it("should detect OB3 from object context with OB3 URL value", () => {
+  it("should detect OB3 from VC v1.1 context + OB3 unversioned URL", () => {
     const result = detectBadgeVersion({
-      "@context": { ob: OBV3_CONTEXT_URL },
+      "@context": [VC_V1_CONTEXT_URL, OBV3_CONTEXT_URL_UNVERSIONED],
     });
     expect(result).toBe(BadgeVersion.V3);
   });
 
-  it("should detect OB2 from object context with OB2 URL value", () => {
+  it("should detect OB3 from VC v1.1 context + OB3 versioned URL", () => {
     const result = detectBadgeVersion({
-      "@context": { ob: "https://w3id.org/openbadges/v2" },
+      "@context": [VC_V1_CONTEXT_URL, OBV3_CONTEXT_URL],
     });
-    expect(result).toBe(BadgeVersion.V2);
+    expect(result).toBe(BadgeVersion.V3);
   });
 
-  it("should return undefined for object context with unknown URLs", () => {
+  it("should detect OB3 from unversioned OB3 context URL alone", () => {
     const result = detectBadgeVersion({
-      "@context": { ob: "https://unknown.example.com" },
+      "@context": OBV3_CONTEXT_URL_UNVERSIONED,
     });
-    expect(result).toBeUndefined();
+    expect(result).toBe(BadgeVersion.V3);
   });
 });

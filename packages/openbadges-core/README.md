@@ -13,7 +13,15 @@ This package provides shared utilities and core functionality for working with O
 
 ## Installation
 
-This package is part of the monorepo workspace and used internally by other packages:
+### From npm
+
+```bash
+npm install @rollercoaster-dev/openbadges-core
+# or
+bun add @rollercoaster-dev/openbadges-core
+```
+
+### In monorepo workspace
 
 ```json
 {
@@ -45,32 +53,41 @@ if (isNode()) {
 }
 ```
 
-## API Overview (Planned Structure)
+## API Overview
 
-### Platform Detection (✅ Implemented)
+### Platform Detection
 
-- `detectPlatform()` - Detect current runtime environment
-- `isBun()` - Check if running in Bun
-- `isNode()` - Check if running in Node.js
+- `detectPlatform()` - Detect current runtime environment (`"node"` | `"bun"` | `"unknown"`)
+- `isBun()` / `isNode()` / `isReactNative()` - Check specific platforms
+- `configure()` - Set platform adapters (crypto, key provider) for React Native
+- `getPlatformConfig()` / `resetPlatformConfig()` - Read or reset configuration
+- `assertBufferAvailable()` - Guard for Buffer-dependent features (PNG baking)
 
-### Badge Baking (🚧 Coming Soon)
+### Badge Baking
 
-- PNG metadata embedding
-- Baked badge extraction
-- Image validation
+- `bakePNG(image, credential)` - Embed credential into PNG via iTXt chunk
+- `unbakePNG(image)` - Extract credential from a baked PNG
+- `isPNG(buffer)` - Check if a buffer is a valid PNG image
+- Types: `ImageFormat`, `BakeOptions`, `BakedImage`, `UnbakeResult`, `BakingService`, `Chunk`
 
-### Crypto Utilities (🚧 Coming Soon)
+### Crypto Utilities
 
-- RSA key pair generation
-- JWT signing and verification
-- JWKS endpoint support
-- Key management
+- **Signing**: `signData()`, `verifySignature()` - Raw data signing/verification
+- **Data Integrity Proofs**: `createDataIntegrityProof()`, `verifyDataIntegrityProof()`
+- **JWT Proofs**: `generateJWTProof()`, `verifyJWTProof()`, `isJWTProof()`, `getRecommendedAlgorithm()`
+- **Key Management**: `KeyProvider` interface, `InMemoryKeyProvider`, `KeyStatus`
+- **Key Detection**: `detectKeyType()`, `KeyType`, `Cryptosuite`
+- **Platform Adapters**: `CryptoProvider`, `NodeCryptoAdapter`
+- Types: `KeyAlgorithm`, `KeyMetadata`, `KeyPairResult`, `DataIntegrityProof`, `JWTProof`, `JWTProofPayload`, `ProofVerificationResult`, `SupportedJWTAlgorithm`, `PlatformConfig`
 
-### Credential Generation (🚧 Coming Soon)
+### Credential Generation
 
-- Open Badges 2.0 assertion generation
-- Open Badges 3.0 credential generation
-- Validation and verification
+- `buildCredential(options)` - Build an OB3 verifiable credential
+- `serializeOB3(credential)` - Serialize credential to OB3 format
+- `createSerializer(version)` - Factory for version-specific serializers
+- **Serializers**: `OpenBadges2Serializer`, `OpenBadges3Serializer`
+- **Version Detection**: `detectBadgeVersion()`, `BadgeVersion`
+- Types: `IssuerData`, `BadgeClassData`, `AssertionData`, `RecipientData`, `VerificationData`, `VerifiableCredentialData`, `CredentialOptions`, `BadgeSerializer`
 
 ## Development
 

@@ -36,7 +36,8 @@
     "test:integration": "echo 'No integration tests yet'",
     "test:e2e": "echo 'No E2E tests'",
     "test:watch": "bun test --watch",
-    "test:coverage": "bun test --coverage"
+    "test:coverage": "bun test --coverage",
+    "prepublishOnly": "bun run build"
   },
   "engines": {
     "node": ">=18.12.0"
@@ -66,11 +67,13 @@
     "tsup": "^8.4.0"
   },
   "dependencies": {
-    "@rollercoaster-dev/rd-logger": "workspace:*",
+    "@rollercoaster-dev/rd-logger": "^0.3.4",
     "jose": "6.1.3",
-    "openbadges-types": "workspace:*",
+    "openbadges-types": "^3.2.3",
     "png-chunks-encode": "^1.0.0",
     "png-chunks-extract": "^1.0.0"
   },
-  "private": true
+  "publishConfig": {
+    "access": "public"
+  }
 }

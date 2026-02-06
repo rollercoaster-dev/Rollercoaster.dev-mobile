@@ -34,11 +34,14 @@ export class NodeCryptoAdapter implements CryptoProvider {
     publicKey: JWK,
     algorithm: string,
   ): Promise<boolean> {
+    // Key import errors (bad format, unsupported algorithm) must propagate.
+    const key = await importJWK(publicKey, algorithm);
+
     try {
-      const key = await importJWK(publicKey, algorithm);
       const { payload } = await compactVerify(signature, key);
       return new TextDecoder().decode(payload) === data;
     } catch {
+      // Only verification failures (invalid/tampered signatures) return false.
       return false;
     }
   }

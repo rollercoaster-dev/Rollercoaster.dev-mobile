@@ -1,9 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import {
-  bakePNG,
-  unbakePNG,
-  isPNG,
-} from "../../src/baking/png-baking.service.js";
+import { bakePNG, unbakePNG, isPNG } from "../../src/baking/png-baking.js";
 import type { OB2, OB3 } from "openbadges-types";
 import { createIRI, createDateTime } from "openbadges-types";
 
@@ -326,6 +322,46 @@ describe("PNG Baking Service", () => {
       const baked = bakePNG(png, credential);
       const extracted = unbakePNG(baked);
       expect(extracted).toEqual(credential);
+    });
+  });
+
+  describe("OB3 baking keyword compliance", () => {
+    it("should use 'openbadgecredential' keyword for OB3 credentials", () => {
+      const png = createMinimalPNG();
+      const credential = createMockOB3Credential();
+
+      const baked = bakePNG(png, credential);
+      const extracted = unbakePNG(baked);
+      expect(extracted).toEqual(credential);
+    });
+
+    it("should use 'openbadges' keyword for OB2 credentials", () => {
+      const png = createMinimalPNG();
+      const credential = createMockOB2Assertion();
+
+      const baked = bakePNG(png, credential);
+      const extracted = unbakePNG(baked);
+      expect(extracted).toEqual(credential);
+    });
+
+    it("should bake and unbake a JWS string for OB3", () => {
+      const png = createMinimalPNG();
+      const jws = "eyJhbGciOiJFZERTQSJ9.eyJ2YyI6e319.signature";
+
+      const baked = bakePNG(png, jws);
+      const extracted = unbakePNG(baked);
+      expect(extracted).toBe(jws);
+    });
+
+    it("should replace OB2 baked data when re-baking with OB3", () => {
+      const png = createMinimalPNG();
+      const ob2 = createMockOB2Assertion();
+      const ob3 = createMockOB3Credential();
+
+      const bakedOB2 = bakePNG(png, ob2);
+      const bakedOB3 = bakePNG(bakedOB2, ob3);
+      const extracted = unbakePNG(bakedOB3);
+      expect(extracted).toEqual(ob3);
     });
   });
 });
