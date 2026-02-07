@@ -167,8 +167,6 @@
         "happy-dom": "20.5.0",
         "histoire": "^0.17.6",
         "jsdom": "^22.1.0",
-        "primeicons": "^6.0.0",
-        "primevue": "^3.0.0",
         "terser": "^5.39.0",
         "vite": "^4.5.14",
         "vitest": "^0.34.0",
@@ -176,7 +174,6 @@
         "vue-tsc": "^3.0.1",
       },
       "peerDependencies": {
-        "primevue": "^3.0.0",
         "vue": "^3.0.0",
       },
     },
@@ -1847,10 +1844,6 @@
     "prettier": ["prettier@3.8.1", "", { "bin": { "prettier": "bin/prettier.cjs" } }, "sha512-UOnG6LftzbdaHZcKoPFtOcCKztrQ57WkHDeRD9t/PTQtmT0NHSeWWepj6pS0z/N7+08BHFDQVUrfmfMRcZwbMg=="],
 
     "pretty-format": ["pretty-format@29.7.0", "", { "dependencies": { "@jest/schemas": "^29.6.3", "ansi-styles": "^5.0.0", "react-is": "^18.0.0" } }, "sha512-Pdlw/oPxN+aXdmM9R00JVC9WVFoCLTKJvDVLgmJ+qAffBMxsV85l/Lu7sNx4zSzPyoL2euImuEwHhOXdEgNFZQ=="],
-
-    "primeicons": ["primeicons@6.0.1", "", {}, "sha512-KDeO94CbWI4pKsPnYpA1FPjo79EsY9I+M8ywoPBSf9XMXoe/0crjbUK7jcQEDHuc0ZMRIZsxH3TYLv4TUtHmAA=="],
-
-    "primevue": ["primevue@3.53.1", "", { "peerDependencies": { "vue": "^3.0.0" } }, "sha512-Bp4peZPdhfKYXwvtsOGGh5dfgmTelm+LZEZKGs/c5mOHhsUJ6xi3EcOZoQVI6oklS946ayMQvgD5L0S7itGO0g=="],
 
     "process": ["process@0.11.10", "", {}, "sha512-cdGef/drWFoydD1JsMzuFf8100nZl+GT+yacc2bEced5f9Rjk4z+WtFUTBu9PhOi9j/jfmBPu0mMEY4wIdAF8A=="],
 
