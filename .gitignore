@@ -42,5 +42,8 @@ yarn-error.*
 # Environment
 .env*.local
 
+# Playwright MCP
+.playwright-mcp/
+
 # Lockfiles
 package-lock.json
