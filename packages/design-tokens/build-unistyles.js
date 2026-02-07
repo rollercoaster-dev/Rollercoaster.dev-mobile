@@ -8,6 +8,7 @@
  *   - tokens.ts     — spacing, sizing, radius, z-index, font weights, line heights
  *   - colorModes.ts — light/dark semantic color mappings
  *   - variants.ts   — accessibility variant partial overrides
+ *   - narrative.ts  — narrative arc tokens for light/dark + variants
  *   - index.ts      — barrel re-export
  */
 import { readFile, writeFile, mkdir } from "node:fs/promises";
@@ -57,11 +58,25 @@ function val(token) {
   return token.$value ?? token;
 }
 
+/** Quote a key if it's not a valid JS identifier */
+function safeKey(k) {
+  return /^\d/.test(k) || /[^a-zA-Z0-9_$]/.test(k) ? `'${k}'` : k;
+}
+
+/** Filter out undefined values from an object */
+function defined(obj) {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, v]) => v !== undefined),
+  );
+}
+
 /** Format object entries as TypeScript literal properties, filtering out undefined */
 function toTSObject(entries) {
   return entries
     .filter(([, v]) => v !== undefined && v !== null)
-    .map(([k, v]) => `  ${k}: ${typeof v === "string" ? `'${v}'` : v},`)
+    .map(([k, v]) => {
+      return `  ${safeKey(k)}: ${typeof v === "string" ? `'${v}'` : v},`;
+    })
     .join("\n");
 }
 
@@ -117,6 +132,66 @@ function extractThemeColors(theme) {
     shadow: val(theme.color?.black),
     focusRing: val(theme.form?.ring),
   };
+}
+
+/**
+ * Extract narrative tokens from a theme file.
+ * Falls back to undefined when not provided; caller is responsible for merge.
+ */
+function extractThemeNarrative(theme) {
+  return {
+    climb: {
+      bg: val(theme.narrative?.climb?.bg),
+      text: val(theme.narrative?.climb?.text),
+    },
+    drop: {
+      bg: val(theme.narrative?.drop?.bg),
+      bgEnd: val(theme.narrative?.drop?.["bg-end"]),
+      text: val(theme.narrative?.drop?.text),
+      accent: val(theme.narrative?.drop?.accent),
+    },
+    stories: {
+      bg: val(theme.narrative?.stories?.bg),
+      text: val(theme.narrative?.stories?.text),
+      accent1: val(theme.narrative?.stories?.["accent-1"]),
+      accent2: val(theme.narrative?.stories?.["accent-2"]),
+      accent3: val(theme.narrative?.stories?.["accent-3"]),
+      accent4: val(theme.narrative?.stories?.["accent-4"]),
+      accentForeground: val(theme.narrative?.stories?.["accent-foreground"]),
+    },
+    relief: {
+      bg: val(theme.narrative?.relief?.bg),
+      text: val(theme.narrative?.relief?.text),
+      accent: val(theme.narrative?.relief?.accent),
+    },
+  };
+}
+
+function mergeNarrative(base, override) {
+  return {
+    climb: { ...base.climb, ...defined(override.climb) },
+    drop: { ...base.drop, ...defined(override.drop) },
+    stories: { ...base.stories, ...defined(override.stories) },
+    relief: { ...base.relief, ...defined(override.relief) },
+  };
+}
+
+function diffNarrative(base, next) {
+  const out = {};
+  for (const section of ["climb", "drop", "stories", "relief"]) {
+    const baseSection = base[section];
+    const nextSection = next[section];
+    const sectionDiff = {};
+    for (const key of Object.keys(baseSection)) {
+      if (nextSection[key] && nextSection[key] !== baseSection[key]) {
+        sectionDiff[key] = nextSection[key];
+      }
+    }
+    if (Object.keys(sectionDiff).length > 0) {
+      out[section] = sectionDiff;
+    }
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------------------
@@ -187,28 +262,121 @@ async function buildTokens() {
     .filter(([k]) => !k.startsWith("$"))
     .map(([k, t]) => [camel(k), remToPx(val(t))]);
 
-  // font weights
+  // font weights (React Native iOS requires string values)
   const weightEntries = Object.entries(typo.font.weight)
     .filter(([k]) => !k.startsWith("$"))
-    .map(([k, t]) => [camel(k), parseInt(val(t), 10)]);
+    .map(([k, t]) => [camel(k), String(val(t))]);
 
   // line heights (unitless)
   const lineHeightEntries = Object.entries(typo.font.lineHeight)
     .filter(([k]) => !k.startsWith("$"))
     .map(([k, t]) => [camel(k), parseFloat(val(t))]);
 
+  // borderWidth: px → number
+  const borderWidthEntries = Object.entries(spacing.borderWidth)
+    .filter(([k]) => !k.startsWith("$"))
+    .map(([k, t]) => [camel(k), remToPx(val(t))]);
+
+  // transition: ms string → number
+  const transitionEntries = Object.entries(spacing.transition)
+    .filter(([k]) => !k.startsWith("$"))
+    .map(([k, t]) => {
+      const v = String(val(t));
+      const ms = v.match(/^(\d+)ms$/);
+      return [camel(k), ms ? parseInt(ms[1], 10) : parseInt(v, 10)];
+    });
+
+  // shadow: parse CSS shadow strings into RN shadow objects
+  const shadowEntries = Object.entries(spacing.shadow)
+    .filter(([k]) => !k.startsWith("$"))
+    .map(([k, t]) => {
+      const raw = val(t);
+      if (raw === "none") {
+        return [camel(k), { offsetX: 0, offsetY: 0, radius: 0, opacity: 0 }];
+      }
+      // Parse CSS box-shadow: supports "X Y blur [spread] rgba(...)" with px or unitless 0
+      // Match numeric values (with optional px) before the rgba part
+      const s = String(raw);
+      const rgbaMatch = s.match(
+        /rgba\(\s*[\d.]+,\s*[\d.]+,\s*[\d.]+,\s*([\d.]+)\s*\)/,
+      );
+      if (!rgbaMatch) {
+        console.warn(
+          `Could not parse shadow "${raw}" for key "${k}", skipping`,
+        );
+        return [camel(k), null];
+      }
+      const opacity = parseFloat(rgbaMatch[1]);
+      // Extract the numeric parts before rgba
+      const beforeRgba = s.slice(0, s.indexOf("rgba")).trim();
+      const nums = beforeRgba.match(/-?\d+/g);
+      if (!nums || nums.length < 3) {
+        console.warn(
+          `Could not parse shadow offsets "${raw}" for key "${k}", skipping`,
+        );
+        return [camel(k), null];
+      }
+      return [
+        camel(k),
+        {
+          offsetX: parseInt(nums[0], 10),
+          offsetY: parseInt(nums[1], 10),
+          radius: parseInt(nums[2], 10),
+          opacity,
+        },
+      ];
+    })
+    .filter(([, v]) => v !== null);
+
+  // letterSpacing: em → px (base 16px)
+  const letterSpacingEntries = Object.entries(typo.font.letterSpacing)
+    .filter(([k]) => !k.startsWith("$"))
+    .map(([k, t]) => {
+      const raw = String(val(t));
+      const em = raw.match(/^(-?[\d.]+)em$/);
+      if (em) return [camel(k), Math.round(parseFloat(em[1]) * 16 * 100) / 100];
+      return [camel(k), parseFloat(raw) || 0];
+    });
+
+  // fontFamily: extract first family name from CSS font stack
+  const fontFamilyEntries = Object.entries(typo.font.family)
+    .filter(([k]) => !k.startsWith("$"))
+    .map(([k, t]) => {
+      const raw = String(val(t));
+      // Extract first font name, stripping quotes
+      let first = raw
+        .split(",")[0]
+        .trim()
+        .replace(/^['"]|['"]$/g, "");
+      // Map system-ui → System for RN
+      if (first === "system-ui") first = "System";
+      // Normalize key: instrument-sans → body
+      const keyMap = { "instrument-sans": "body" };
+      return [keyMap[k] ?? camel(k), first];
+    });
+
   // large-text sizes from theme
   let sizeLEntries;
+  let lineHeightLEntries;
   try {
     const lt = await readJSON("themes/large-text.json");
     const ltSizes = lt.theme.font.size;
     sizeLEntries = Object.entries(ltSizes)
       .filter(([k]) => !k.startsWith("$"))
       .map(([k, t]) => [camel(k), remToPx(val(t))]);
+
+    // lineHeightL: large-text line heights (relaxed multiplier from large-text theme)
+    const ltLineHeights = lt.theme.font.lineHeight;
+    if (ltLineHeights) {
+      lineHeightLEntries = Object.entries(ltLineHeights)
+        .filter(([k]) => !k.startsWith("$"))
+        .map(([k, t]) => [camel(k), parseFloat(val(t))]);
+    }
   } catch (err) {
     if (err.code === "ENOENT") {
       console.warn("themes/large-text.json not found, skipping sizeL");
       sizeLEntries = null;
+      lineHeightLEntries = null;
     } else {
       throw err;
     }
@@ -248,13 +416,68 @@ ${toTSObject(weightEntries)}
 export const lineHeight = {
 ${toTSObject(lineHeightEntries)}
 } as const;
+`;
 
+  if (lineHeightLEntries) {
+    out += `
+export const lineHeightL = {
+${toTSObject(lineHeightLEntries)}
+} as const;
+`;
+  }
+
+  // borderWidth
+  out += `
+export const borderWidth = {
+${toTSObject(borderWidthEntries)}
+} as const;
+`;
+
+  // letterSpacing
+  out += `
+export const letterSpacing = {
+${toTSObject(letterSpacingEntries)}
+} as const;
+`;
+
+  // fontFamily
+  out += `
+export const fontFamily = {
+${toTSObject(fontFamilyEntries)}
+} as const;
+`;
+
+  // transition
+  out += `
+export const transition = {
+${toTSObject(transitionEntries)}
+} as const;
+`;
+
+  // shadow — needs special formatting (nested objects)
+  const shadowLines = shadowEntries
+    .map(([k, v]) => {
+      return `  ${safeKey(k)}: { offsetX: ${v.offsetX}, offsetY: ${v.offsetY}, radius: ${v.radius}, opacity: ${v.opacity} },`;
+    })
+    .join("\n");
+  out += `
+export const shadow = {
+${shadowLines}
+} as const;
+`;
+
+  out += `
 export type Space = typeof space;
-export type Size = typeof size;
+export type Size = typeof size;${sizeLEntries ? "\nexport type SizeL = typeof sizeL;" : ""}
 export type Radius = typeof radius;
 export type ZIndex = typeof zIndex;
 export type FontWeight = typeof fontWeight;
-export type LineHeight = typeof lineHeight;
+export type LineHeight = typeof lineHeight;${lineHeightLEntries ? "\nexport type LineHeightL = typeof lineHeightL;" : ""}
+export type BorderWidth = typeof borderWidth;
+export type LetterSpacing = typeof letterSpacing;
+export type FontFamily = typeof fontFamily;
+export type Transition = typeof transition;
+export type Shadow = typeof shadow;
 `;
 
   return out;
@@ -347,6 +570,94 @@ export const colorModes = {
 }
 
 // ---------------------------------------------------------------------------
+// narrative.ts — narrative arc tokens for light/dark + variants
+// ---------------------------------------------------------------------------
+
+async function buildNarrative() {
+  const narrative = await readJSON("tokens/narrative.json");
+  const dark = await readJSON("themes/dark.json");
+
+  const baseNarrative = extractThemeNarrative(narrative);
+  const darkNarrative = mergeNarrative(
+    baseNarrative,
+    extractThemeNarrative(dark.theme),
+  );
+
+  const variantFiles = [
+    { file: "high-contrast", name: "highContrast" },
+    { file: "dyslexia-friendly", name: "dyslexiaFriendly" },
+    { file: "autism-friendly", name: "autismFriendly" },
+    { file: "low-vision", name: "lowVision" },
+    { file: "low-info", name: "lowInfo" },
+  ];
+
+  const variants = [];
+
+  for (const { file, name } of variantFiles) {
+    const data = await readJSON(`themes/${file}.json`);
+    const merged = mergeNarrative(
+      baseNarrative,
+      extractThemeNarrative(data.theme),
+    );
+    const overrides = diffNarrative(baseNarrative, merged);
+    if (Object.keys(overrides).length > 0) {
+      variants.push({ name, overrides });
+    }
+  }
+
+  let out = `// Auto-generated from design-tokens. DO NOT EDIT.
+export interface Narrative {
+  climb: { bg: string; text: string };
+  drop: { bg: string; bgEnd: string; text: string; accent: string };
+  stories: {
+    bg: string;
+    text: string;
+    accent1: string;
+    accent2: string;
+    accent3: string;
+    accent4: string;
+    accentForeground: string;
+  };
+  relief: { bg: string; text: string; accent: string };
+}
+
+export type NarrativeOverride = Partial<{
+  climb: Partial<Narrative["climb"]>;
+  drop: Partial<Narrative["drop"]>;
+  stories: Partial<Narrative["stories"]>;
+  relief: Partial<Narrative["relief"]>;
+}>;
+
+export const lightNarrative: Narrative = ${JSON.stringify(baseNarrative, null, 2)};
+
+export const darkNarrative: Narrative = ${JSON.stringify(darkNarrative, null, 2)};
+
+export const narrativeModes = {
+  light: lightNarrative,
+  dark: darkNarrative,
+} as const;
+
+`;
+
+  for (const { name, overrides } of variants) {
+    out += `export const ${name}: NarrativeOverride = ${JSON.stringify(
+      overrides,
+      null,
+      2,
+    )};
+
+`;
+  }
+
+  out += `export const narrativeVariants = {
+${variants.map(({ name }) => `  ${name},`).join("\n")}
+} as const;
+`;
+
+  return out;
+}
+
+// ---------------------------------------------------------------------------
 // variants.ts — accessibility variant overrides (partial Colors)
 // ---------------------------------------------------------------------------
 
@@ -410,23 +721,54 @@ ${variants.map(({ name }) => `  ${name},`).join("\n")}
 // index.ts — barrel export
 // ---------------------------------------------------------------------------
 
-function buildIndex(hasSizeL) {
-  const sizeExports = hasSizeL
-    ? "space, size, sizeL, radius, zIndex, fontWeight, lineHeight"
-    : "space, size, radius, zIndex, fontWeight, lineHeight";
+function buildIndex(hasSizeL, hasLineHeightL) {
+  const valueExports = [
+    "space",
+    "size",
+    ...(hasSizeL ? ["sizeL"] : []),
+    "radius",
+    "zIndex",
+    "fontWeight",
+    "lineHeight",
+    ...(hasLineHeightL ? ["lineHeightL"] : []),
+    "borderWidth",
+    "letterSpacing",
+    "fontFamily",
+    "transition",
+    "shadow",
+  ].join(", ");
+
+  const typeExports = [
+    "Space",
+    "Size",
+    ...(hasSizeL ? ["SizeL"] : []),
+    "Radius",
+    "ZIndex",
+    "FontWeight",
+    "LineHeight",
+    ...(hasLineHeightL ? ["LineHeightL"] : []),
+    "BorderWidth",
+    "LetterSpacing",
+    "FontFamily",
+    "Transition",
+    "Shadow",
+  ].join(", ");
 
   return `// Auto-generated from design-tokens. DO NOT EDIT.
 export { palette } from './palette';
 export type { Palette } from './palette';
 
-export { ${sizeExports} } from './tokens';
-export type { Space, Size, Radius, ZIndex, FontWeight, LineHeight } from './tokens';
+export { ${valueExports} } from './tokens';
+export type { ${typeExports} } from './tokens';
 
 export { lightColors, darkColors, colorModes } from './colorModes';
 export type { Colors } from './colorModes';
 
 export { variants } from './variants';
 export type { VariantOverride } from './variants';
+
+export { lightNarrative, darkNarrative, narrativeModes, narrativeVariants } from './narrative';
+export type { Narrative, NarrativeOverride } from './narrative';
 `;
 }
 
@@ -443,19 +785,22 @@ async function main() {
     buildColorModes(),
     buildVariants(),
   ]);
+  const narrativeContent = await buildNarrative();
 
   const hasSizeL = tokens.includes("export const sizeL");
+  const hasLineHeightL = tokens.includes("export const lineHeightL");
 
   await Promise.all([
     writeFile(join(OUT, "palette.ts"), palette),
     writeFile(join(OUT, "tokens.ts"), tokens),
     writeFile(join(OUT, "colorModes.ts"), colorModes),
     writeFile(join(OUT, "variants.ts"), variantsContent),
-    writeFile(join(OUT, "index.ts"), buildIndex(hasSizeL)),
+    writeFile(join(OUT, "narrative.ts"), narrativeContent),
+    writeFile(join(OUT, "index.ts"), buildIndex(hasSizeL, hasLineHeightL)),
   ]);
 
   console.log(
-    "Built build/unistyles/ with palette, tokens, colorModes, variants, index",
+    "Built build/unistyles/ with palette, tokens, colorModes, variants, narrative, index",
   );
 }
 

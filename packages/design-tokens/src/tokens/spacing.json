@@ -1,6 +1,10 @@
 {
   "space": {
     "$description": "Spacing scale for margins, padding, and gaps",
+    "0": {
+      "$value": "0",
+      "$type": "dimension"
+    },
     "1": {
       "$value": "0.25rem",
       "$type": "dimension"
