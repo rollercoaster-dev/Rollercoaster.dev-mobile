@@ -22,6 +22,8 @@ const pathMappings = {
   "interactive.secondary-foreground": "secondary-foreground",
   "interactive.accent": "accent",
   "interactive.accent-foreground": "accent-foreground",
+  "interactive.highlight": "highlight",
+  "interactive.highlight-foreground": "highlight-foreground",
   "feedback.destructive": "destructive",
   "feedback.destructive-foreground": "destructive-foreground",
   "feedback.success": "success",

@@ -40,7 +40,9 @@
       "primary-foreground": { "$value": "#ffffff" },
       "secondary": { "$value": "#666666" },
       "accent": { "$value": "#f0f0f0" },
-      "accent-foreground": { "$value": "#222222" }
+      "accent-foreground": { "$value": "#222222" },
+      "highlight": { "$value": "#222222" },
+      "highlight-foreground": { "$value": "#ffffff" }
     },
     "color": {
       "primary": { "$value": "#222222" },

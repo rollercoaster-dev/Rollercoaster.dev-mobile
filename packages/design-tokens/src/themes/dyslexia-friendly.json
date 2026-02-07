@@ -47,7 +47,9 @@
     },
     "interactive": {
       "primary": { "$value": "#4e7d9e" },
-      "primary-foreground": { "$value": "#ffffff" }
+      "primary-foreground": { "$value": "#ffffff" },
+      "highlight": { "$value": "#4e7d9e" },
+      "highlight-foreground": { "$value": "#ffffff" }
     },
     "color": {
       "primary": { "$value": "#4e7d9e" },

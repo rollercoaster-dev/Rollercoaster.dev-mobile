@@ -54,7 +54,9 @@
     "interactive": {
       "primary": { "$value": "#003d99" },
       "primary-foreground": { "$value": "#ffffff" },
-      "secondary": { "$value": "#555555" }
+      "secondary": { "$value": "#555555" },
+      "highlight": { "$value": "#003d99" },
+      "highlight-foreground": { "$value": "#ffffff" }
     },
     "color": {
       "primary": { "$value": "#003d99" },

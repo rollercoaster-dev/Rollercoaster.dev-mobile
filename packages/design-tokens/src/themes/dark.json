@@ -22,7 +22,9 @@
       "secondary": { "$value": "#c4b5fd" },
       "secondary-foreground": { "$value": "#0a0a0a" },
       "accent": { "$value": "#3a2d5c" },
-      "accent-foreground": { "$value": "#fafafa" }
+      "accent-foreground": { "$value": "#fafafa" },
+      "highlight": { "$value": "#ffe50c" },
+      "highlight-foreground": { "$value": "#0a0a0a" }
     },
     "color": {
       "primary": { "$value": "#fafafa" },

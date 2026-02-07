@@ -20,7 +20,9 @@
       "primary": { "$value": "#000000" },
       "primary-foreground": { "$value": "#ffffff" },
       "secondary": { "$value": "#606060" },
-      "secondary-foreground": { "$value": "#ffffff" }
+      "secondary-foreground": { "$value": "#ffffff" },
+      "highlight": { "$value": "#000000" },
+      "highlight-foreground": { "$value": "#ffffff" }
     },
     "color": {
       "primary": { "$value": "#000000" },
