@@ -12,6 +12,7 @@
     "./css/themes": "./build/css/themes.css",
     "./tailwind": {
       "import": "./build/tailwind/tailwind.config.js",
+      "require": "./build/tailwind/tailwind.config.js",
       "types": "./build/tailwind/tailwind.config.d.ts"
     },
     "./tamagui": {
