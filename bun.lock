@@ -66,6 +66,7 @@
       "dependencies": {
         "@heroicons/vue": "^2.2.0",
         "@hono/oauth-providers": "^0.8.2",
+        "@rollercoaster-dev/design-tokens": "workspace:*",
         "@rollercoaster-dev/rd-logger": "workspace:*",
         "@types/jsonwebtoken": "^9.0.10",
         "@unhead/vue": "^2.0.9",
