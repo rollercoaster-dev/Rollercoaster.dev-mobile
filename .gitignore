@@ -45,5 +45,8 @@ yarn-error.*
 # Playwright MCP
 .playwright-mcp/
 
+# Storybook (auto-generated)
+.storybook/storybook.requires.ts
+
 # Lockfiles
 package-lock.json
