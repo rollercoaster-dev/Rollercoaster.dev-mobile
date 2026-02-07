@@ -13,8 +13,8 @@ web-build/
 expo-env.d.ts
 
 # Native (generated)
-src/ios/
-src/android/
+ios/
+android/
 
 # Metro
 .metro-health-check*
@@ -42,5 +42,5 @@ yarn-error.*
 # Environment
 .env*.local
 
-# Lockfiles (use npm ci in CI, lockfile generated from src/)
-src/package-lock.json
+# Lockfiles
+package-lock.json
