@@ -17,7 +17,7 @@
       "muted-foreground": { "$value": "#e5e5e5" }
     },
     "interactive": {
-      "primary": { "$value": "#fafafa" },
+      "primary": { "$value": "#5eead4" },
       "primary-foreground": { "$value": "#0a0a0a" },
       "secondary": { "$value": "#c4b5fd" },
       "secondary-foreground": { "$value": "#0a0a0a" },
@@ -27,9 +27,9 @@
       "highlight-foreground": { "$value": "#0a0a0a" }
     },
     "color": {
-      "primary": { "$value": "#fafafa" },
-      "primary-dark": { "$value": "#e5e5e5" },
-      "primary-light": { "$value": "#ffffff" },
+      "primary": { "$value": "#5eead4" },
+      "primary-dark": { "$value": "#2dd4bf" },
+      "primary-light": { "$value": "#99f6e4" },
       "secondary": { "$value": "#c4b5fd" },
       "secondary-dark": { "$value": "#a78bfa" },
       "secondary-light": { "$value": "#ddd6fe" },
@@ -98,7 +98,7 @@
     "form": {
       "border": { "$value": "#3a2d5c" },
       "input": { "$value": "#241845" },
-      "ring": { "$value": "#fafafa" }
+      "ring": { "$value": "#5eead4" }
     },
     "typography": {
       "text-primary": { "$value": "#fafafa" },
@@ -116,7 +116,7 @@
       "sm": { "$value": "none" },
       "md": { "$value": "none" },
       "lg": { "$value": "0 4px 12px rgba(0, 0, 0, 0.3)" },
-      "focus": { "$value": "0 0 0 3px rgba(250, 250, 250, 0.4)" }
+      "focus": { "$value": "0 0 0 3px rgba(94, 234, 212, 0.4)" }
     }
   }
 }
