@@ -12,6 +12,7 @@
     "lint": "expo lint",
     "test": "jest",
     "test:db": "jest src/db/__tests__/",
+    "test:ci": "jest --ci",
     "test:watch": "jest --watch"
   },
   "dependencies": {
@@ -22,8 +23,7 @@
     "@react-navigation/bottom-tabs": "^7.12.0",
     "@react-navigation/native": "^7.1.28",
     "@react-navigation/native-stack": "^7.12.0",
-    "@rollercoaster-dev/design-tokens": "file:../monorepo/packages/design-tokens",
-    "@rollercoaster-dev/rd-logger": "^0.3.4",
+    "@rollercoaster-dev/design-tokens": "^0.1.2",
     "@storybook/addon-ondevice-actions": "^10.2.1",
     "@storybook/addon-ondevice-controls": "^10.2.1",
     "@storybook/react-native": "^10.2.1",
