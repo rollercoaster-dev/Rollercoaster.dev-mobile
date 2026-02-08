@@ -12,6 +12,43 @@ export default [
   // Vue config (includes TypeScript rules for .ts, .tsx, .vue files)
   ...vue,
 
+  // Vue files: disable no-undef (TypeScript handles this) and add compiler macros
+  {
+    files: ['**/*.vue'],
+    languageOptions: {
+      globals: {
+        definePage: 'readonly',
+      },
+    },
+    rules: {
+      'no-undef': 'off',
+    },
+  },
+
+  // Browser globals for openbadges-system client files
+  {
+    files: ['apps/openbadges-system/src/client/**/*.{ts,js,vue}'],
+    languageOptions: {
+      globals: {
+        localStorage: 'readonly',
+        crypto: 'readonly',
+        TextEncoder: 'readonly',
+        Headers: 'readonly',
+        Request: 'readonly',
+        Response: 'readonly',
+        RequestInit: 'readonly',
+        Blob: 'readonly',
+        Event: 'readonly',
+        HTMLElement: 'readonly',
+        KeyboardEvent: 'readonly',
+        confirm: 'readonly',
+        prompt: 'readonly',
+        PublicKeyCredential: 'readonly',
+        AuthenticatorTransport: 'readonly',
+      },
+    },
+  },
+
   // Additional node globals for backend files
   {
     files: ['apps/openbadges-modular-server/**/*.ts', 'apps/openbadges-system/src/server/**/*.ts'],
@@ -62,7 +99,9 @@ export default [
         afterEach: 'readonly',
         beforeAll: 'readonly',
         afterAll: 'readonly',
+        vi: 'readonly',
         console: 'readonly',
+        global: 'readonly',
       },
     },
   },
