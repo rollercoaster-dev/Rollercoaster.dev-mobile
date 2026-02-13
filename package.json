@@ -14,7 +14,8 @@
     "test": "jest",
     "test:db": "jest src/db/__tests__/",
     "test:ci": "jest --ci",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "storybook:web": "storybook dev -p 6006 --config-dir .storybook-web"
   },
   "dependencies": {
     "@evolu/common": "^7.4.1",
@@ -70,6 +71,7 @@
     "@babel/preset-env": "^7.29.0",
     "@babel/preset-typescript": "^7.28.5",
     "@storybook/react": "^10.2.7",
+    "@storybook/react-native-web-vite": "^10.2.8",
     "@testing-library/react-native": "^13.3.3",
     "@types/jest": "^30.0.0",
     "@types/react": "~19.1.0",
