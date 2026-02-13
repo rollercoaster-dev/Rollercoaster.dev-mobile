@@ -6,6 +6,7 @@
   "scripts": {
     "start": "expo start",
     "ios": "expo run:ios",
+    "ios:device": "expo run:ios --device 00008150-00194C6E1480401C",
     "android": "expo run:android",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
