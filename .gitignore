@@ -1,6 +1,7 @@
 # Claude Code (local/machine-specific)
 .claude/settings.local.json
 .claude/embeddings/
+.claude/dev-plans/
 .mcp.json
 
 # Dependencies
