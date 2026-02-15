@@ -2,16 +2,16 @@
   "color": {
     "$description": "Foundational color palette - rollercoaster.dev design language",
     "primary": {
-      "$value": "#0a0a0a",
+      "$value": "#3b82f6",
       "$type": "color",
-      "$description": "Primary brand color - confident black"
+      "$description": "Primary action color - blue-500"
     },
     "primary-dark": {
-      "$value": "#000000",
+      "$value": "#2563eb",
       "$type": "color"
     },
     "primary-light": {
-      "$value": "#333333",
+      "$value": "#60a5fa",
       "$type": "color"
     },
     "secondary": {
@@ -98,6 +98,11 @@
     "accent-sky": {
       "$value": "#38bdf8",
       "$type": "color"
+    },
+    "accent-purple-light": {
+      "$value": "#ede9fe",
+      "$type": "color",
+      "$description": "Light purple background for evidence indicators"
     },
     "accent-purple-vivid": {
       "$value": "#a855f7",

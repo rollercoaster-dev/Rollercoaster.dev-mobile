@@ -10,9 +10,9 @@
     "$description": "Primary text on page background"
   },
   "card": {
-    "$value": "{color.white}",
+    "$value": "#ffffff",
     "$type": "color",
-    "$description": "Card/panel background"
+    "$description": "Card/panel background — pure white to contrast with #fafafa page bg"
   },
   "card-foreground": {
     "$value": "{color.gray.800}",
@@ -115,9 +115,9 @@
     "$type": "color"
   },
   "border": {
-    "$value": "{color.gray.200}",
+    "$value": "{color.gray.800}",
     "$type": "color",
-    "$description": "Default border color"
+    "$description": "Default border color — dark for neo-brutalist style"
   },
   "input": {
     "$value": "{color.gray.50}",

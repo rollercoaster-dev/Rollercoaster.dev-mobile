@@ -86,19 +86,19 @@
       "$description": "Subtle shadow for special use only"
     },
     "hard-sm": {
-      "$value": "2px 2px 0 rgba(0, 0, 0, 0.15)",
+      "$value": "2px 2px 0 rgba(0, 0, 0, 0.8)",
       "$type": "shadow",
-      "$description": "Small hard offset"
+      "$description": "Small hard offset — bold neo-brutalist shadow"
     },
     "hard-md": {
-      "$value": "3px 3px 0 rgba(0, 0, 0, 0.15)",
+      "$value": "3px 3px 0 rgba(0, 0, 0, 0.8)",
       "$type": "shadow",
-      "$description": "Medium hard offset"
+      "$description": "Medium hard offset — bold neo-brutalist shadow"
     },
     "hard-lg": {
-      "$value": "4px 4px 0 rgba(0, 0, 0, 0.15)",
+      "$value": "4px 4px 0 rgba(0, 0, 0, 0.8)",
       "$type": "shadow",
-      "$description": "Large hard offset"
+      "$description": "Large hard offset — bold neo-brutalist shadow"
     },
     "focus": {
       "$value": "0 0 0 3px rgba(10, 10, 10, 0.4)",

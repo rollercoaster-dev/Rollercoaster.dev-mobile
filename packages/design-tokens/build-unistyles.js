@@ -87,8 +87,8 @@ function toTSObject(entries) {
 function buildLightColorMap(semantic, colorData) {
   return {
     background: resolveRef(val(semantic.background), colorData, semantic),
-    backgroundSecondary: resolveRef(val(semantic.muted), colorData, semantic),
-    backgroundTertiary: resolveRef(val(semantic.border), colorData, semantic),
+    backgroundSecondary: resolveRef(val(semantic.card), colorData, semantic),
+    backgroundTertiary: resolveRef(val(semantic.accent), colorData, semantic),
     text: resolveRef(val(semantic.foreground), colorData, semantic),
     textSecondary: resolveRef(
       val(semantic["text-secondary"]),
@@ -103,6 +103,7 @@ function buildLightColorMap(semantic, colorData) {
     accentPrimary: resolveRef(val(semantic.primary), colorData, semantic),
     accentPurple: resolveRef(val(semantic.secondary), colorData, semantic),
     accentMint: val(colorData.color["accent-mint"]),
+    accentPurpleLight: val(colorData.color["accent-purple-light"]),
     accentYellow: val(colorData.color["accent-yellow"]),
     border: resolveRef(val(semantic.border), colorData, semantic),
     shadow: val(colorData.color.black),
@@ -127,6 +128,7 @@ function extractThemeColors(theme) {
     accentPurple:
       val(theme.color?.secondary) ?? val(theme.interactive?.secondary),
     accentMint: val(theme.color?.["accent-mint"]),
+    accentPurpleLight: val(theme.color?.["accent-purple-light"]),
     accentYellow: val(theme.color?.["accent-yellow"]),
     border: val(theme.form?.border),
     shadow: val(theme.color?.black),
@@ -548,6 +550,7 @@ export interface Colors {
   accentPrimary: string;
   accentPurple: string;
   accentMint: string;
+  accentPurpleLight: string;
   accentYellow: string;
   border: string;
   shadow: string;

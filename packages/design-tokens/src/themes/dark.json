@@ -49,6 +49,7 @@
       "accent-emerald": { "$value": "#20e8be" },
       "accent-teal": { "$value": "#20e8be" },
       "accent-orange": { "$value": "#ff8050" },
+      "accent-purple-light": { "$value": "#352760" },
       "accent-sky": { "$value": "#5cc8ff" },
       "gray": {
         "50": { "$value": "#241845" },
