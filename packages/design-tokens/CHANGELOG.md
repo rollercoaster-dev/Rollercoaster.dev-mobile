@@ -1,5 +1,11 @@
 # @rollercoaster-dev/design-tokens
 
+## 0.1.3
+
+### Patch Changes
+
+- 140fe1d: Add `accentPurpleLight` semantic color for evidence pill backgrounds. Light: #ede9fe, Dark: #352760. Also adds the color to the unistyles build pipeline and palette.
+
 ## 0.1.2
 
 ### Patch Changes
