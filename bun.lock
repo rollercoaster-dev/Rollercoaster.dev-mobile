@@ -12,7 +12,7 @@
         "@react-navigation/bottom-tabs": "^7.12.0",
         "@react-navigation/native": "^7.1.28",
         "@react-navigation/native-stack": "^7.12.0",
-        "@rollercoaster-dev/design-tokens": "^0.1.2",
+        "@rollercoaster-dev/design-tokens": "^0.1.3",
         "@storybook/addon-ondevice-actions": "^10.2.1",
         "@storybook/addon-ondevice-controls": "^10.2.1",
         "@storybook/react-native": "^10.2.1",
@@ -616,7 +616,7 @@
 
     "@rolldown/pluginutils": ["@rolldown/pluginutils@1.0.0-beta.46", "", {}, "sha512-xMNwJo/pHkEP/mhNVnW+zUiJDle6/hxrwO0mfSJuEVRbBfgrJFuUSRoZx/nYUw5pCjrysl9OkNXCkAdih8GCnA=="],
 
-    "@rollercoaster-dev/design-tokens": ["@rollercoaster-dev/design-tokens@0.1.2", "", {}, "sha512-PvRy/vUmxCA2Ts1IM5XneLKrOWJTssTnnnHFuckw4QRLNaSEWUTwL8hMm0wUjhSU2Mm2iy4O8Mi0giSKb4robg=="],
+    "@rollercoaster-dev/design-tokens": ["@rollercoaster-dev/design-tokens@0.1.3", "", {}, "sha512-jlDV0YashR23AoJ7wYZhBXRlpiYbzSXYp11wSI5ypWCy9/Owjrg7ejB862ylZSshTlXg/rPjJ/mX1nXhzxoX1Q=="],
 
     "@rollup/pluginutils": ["@rollup/pluginutils@5.3.0", "", { "dependencies": { "@types/estree": "^1.0.0", "estree-walker": "^2.0.2", "picomatch": "^4.0.2" }, "peerDependencies": { "rollup": "^1.20.0||^2.0.0||^3.0.0||^4.0.0" }, "optionalPeers": ["rollup"] }, "sha512-5EdhGZtnu3V88ces7s53hhfK5KSASnJZv8Lulpc04cWO3REESroJXg73DFsOmgbU2BhwV0E20bu2IDZb3VKW4Q=="],
 
