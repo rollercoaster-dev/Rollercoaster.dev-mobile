@@ -16,7 +16,13 @@
     "test:ci": "jest --ci",
     "test:watch": "jest --watch",
     "storybook:native": "sb-rn-get-stories -c .storybook && EXPO_PUBLIC_STORYBOOK_ENABLED=true expo run:ios",
-    "storybook:web": "storybook dev -p 6006 --config-dir .storybook-web"
+    "storybook:web": "storybook dev -p 6006 --config-dir .storybook-web",
+    "test:e2e": "maestro test e2e/flows/",
+    "test:e2e:single": "maestro test",
+    "logs:agent": "bash scripts/agent-logs.sh",
+    "start:worktree": "bash scripts/worktree-boot.sh",
+    "test:a11y": "bash scripts/a11y-audit.sh",
+    "test:a11y:json": "bash scripts/a11y-audit.sh --json"
   },
   "dependencies": {
     "@evolu/common": "^7.4.1",
