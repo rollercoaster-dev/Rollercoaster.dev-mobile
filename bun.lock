@@ -32,6 +32,7 @@
         "expo-status-bar": "~3.0.9",
         "expo-video": "~3.0.15",
         "openbadges-types": "^3.2.3",
+        "phosphor-react-native": "^3.0.3",
         "png-chunks-encode": "^1.0.0",
         "png-chunks-extract": "^1.0.0",
         "react": "19.1.0",
@@ -1922,6 +1923,8 @@
     "path-to-regexp": ["path-to-regexp@8.3.0", "", {}, "sha512-7jdwVIRtsP8MYpdXSwOS0YdD0Du+qOoF/AEPIt88PcCFrZCzx41oxku1jD88hZBwbNUIEfpqvuhjFaMAqMTWnA=="],
 
     "pathval": ["pathval@2.0.1", "", {}, "sha512-//nshmD55c46FuFw26xV/xFAaB5HF9Xdap7HJBBnrKdAd6/GxDBaNA1870O79+9ueg61cZLSVc+OaFlfmObYVQ=="],
+
+    "phosphor-react-native": ["phosphor-react-native@3.0.3", "", { "peerDependencies": { "react": "*", "react-native": "*", "react-native-svg": "*" } }, "sha512-h8UIIG/V4pgm20uvkt7L8G/GsOWKaU7rnyu2jnGt1vKmaigE0GZWXOHoEw9wZcfATHwvUpr/mkubEG/nbKeJkg=="],
 
     "picocolors": ["picocolors@1.1.1", "", {}, "sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA=="],
 
