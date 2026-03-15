@@ -108,6 +108,19 @@ function buildLightColorMap(semantic, colorData) {
     border: resolveRef(val(semantic.border), colorData, semantic),
     shadow: val(colorData.color.black),
     focusRing: resolveRef(val(semantic.ring), colorData, semantic),
+    highlight: resolveRef(val(semantic["highlight"]), colorData, semantic),
+    highlightForeground: resolveRef(
+      val(semantic["highlight-foreground"]),
+      colorData,
+      semantic,
+    ),
+    textDisabled: resolveRef(
+      val(semantic["text-disabled"]),
+      colorData,
+      semantic,
+    ),
+    textInverse: resolveRef(val(semantic["text-inverse"]), colorData, semantic),
+    bgDisabled: resolveRef(val(semantic["bg-disabled"]), colorData, semantic),
   };
 }
 
@@ -133,6 +146,11 @@ function extractThemeColors(theme) {
     border: val(theme.form?.border),
     shadow: val(theme.color?.black),
     focusRing: val(theme.form?.ring),
+    highlight: val(theme.interactive?.["highlight"]),
+    highlightForeground: val(theme.interactive?.["highlight-foreground"]),
+    textDisabled: val(theme.typography?.["text-disabled"]),
+    textInverse: val(theme.typography?.["text-inverse"]),
+    bgDisabled: val(theme.aliases?.["bg-disabled"]),
   };
 }
 
@@ -555,6 +573,11 @@ export interface Colors {
   border: string;
   shadow: string;
   focusRing: string;
+  highlight: string;
+  highlightForeground: string;
+  textDisabled: string;
+  textInverse: string;
+  bgDisabled: string;
 }
 
 export const lightColors: Colors = {
