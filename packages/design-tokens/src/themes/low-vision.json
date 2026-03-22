@@ -139,6 +139,38 @@
         "button-primary-bg": { "$value": "#003d99" },
         "button-primary-color": { "$value": "#ffffff" }
       }
+    },
+    "semantic": {
+      "chrome-header-border": { "$value": "#555555" },
+      "chrome-tab-bar-bg": { "$value": "#555555" },
+      "chrome-tab-bar-fg": { "$value": "#ffffff" },
+      "chrome-tab-bar-active-fg": { "$value": "#ffffff" },
+      "chrome-tab-bar-indicator": { "$value": "#ffffff" },
+      "chrome-top-bar-bg": { "$value": "#ffe50c" },
+      "chrome-top-bar-fg": { "$value": "#000000" },
+      "chrome-modal-border": { "$value": "#555555" },
+      "action-primary-bg": { "$value": "#003d99" },
+      "action-primary-hover-bg": { "$value": "#002d73" },
+      "action-secondary-bg": { "$value": "#ffffff" },
+      "action-secondary-fg": { "$value": "#111111" },
+      "action-destructive-bg": { "$value": "#995500" },
+      "action-destructive-fg": { "$value": "#ffffff" },
+      "action-disabled-fg": { "$value": "#555555" },
+      "action-selection-bg": { "$value": "#003d99" },
+      "action-selection-fg": { "$value": "#ffffff" },
+      "border-default": { "$value": "#555555" },
+      "border-strong": { "$value": "#111111" },
+      "border-subtle": { "$value": "#555555" },
+      "border-input": { "$value": "#555555" },
+      "border-focus": { "$value": "#003d99" },
+      "border-destructive": { "$value": "#b30000" },
+      "border-success": { "$value": "#006400" },
+      "journey-step-active-bg": { "$value": "#003d99" },
+      "journey-step-complete-bg": { "$value": "#006400" },
+      "journey-progress-fill": { "$value": "#003d99" },
+      "journey-completion-bg": { "$value": "#006400" },
+      "reward-badge-chrome-border": { "$value": "#555555" },
+      "typo-caption-color": { "$value": "#333333" }
     }
   }
 }

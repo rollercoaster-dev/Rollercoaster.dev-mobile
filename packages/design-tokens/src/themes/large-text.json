@@ -29,6 +29,17 @@
     },
     "space": {
       "between-paragraphs": { "$value": "1.5em" }
+    },
+    "semantic": {
+      "typo-display-size": { "$value": "7.5rem" },
+      "typo-heading-1-size": { "$value": "3.125rem" },
+      "typo-heading-2-size": { "$value": "2.5rem" },
+      "typo-heading-3-size": { "$value": "1.875rem" },
+      "typo-body-size": { "$value": "1.25rem" },
+      "typo-body-sm-size": { "$value": "1.09375rem" },
+      "typo-label-size": { "$value": "0.9375rem" },
+      "typo-caption-size": { "$value": "0.9375rem" },
+      "typo-mono-size": { "$value": "1.09375rem" }
     }
   }
 }

@@ -1,0 +1,108 @@
+{
+  "$description": "Typography role semantic tokens — structured text hierarchy for display, heading, body, label, caption",
+  "typo-display-size": {
+    "$value": "{font.size.display}",
+    "$type": "dimension",
+    "$description": "Display/hero text size"
+  },
+  "typo-display-weight": {
+    "$value": "{font.weight.black}",
+    "$type": "fontWeight",
+    "$description": "Display text weight"
+  },
+  "typo-display-family": {
+    "$value": "{font-headline}",
+    "$type": "fontFamily",
+    "$description": "Display text font family"
+  },
+  "typo-display-tracking": {
+    "$value": "{font.letterSpacing.tight}",
+    "$type": "dimension",
+    "$description": "Display text letter spacing"
+  },
+  "typo-heading-1-size": {
+    "$value": "{font.size.4xl}",
+    "$type": "dimension",
+    "$description": "H1 text size"
+  },
+  "typo-heading-1-weight": {
+    "$value": "{font.weight.bold}",
+    "$type": "fontWeight",
+    "$description": "H1 text weight"
+  },
+  "typo-heading-2-size": {
+    "$value": "{font.size.3xl}",
+    "$type": "dimension",
+    "$description": "H2 text size"
+  },
+  "typo-heading-2-weight": {
+    "$value": "{font.weight.bold}",
+    "$type": "fontWeight",
+    "$description": "H2 text weight"
+  },
+  "typo-heading-3-size": {
+    "$value": "{font.size.2xl}",
+    "$type": "dimension",
+    "$description": "H3 text size"
+  },
+  "typo-heading-3-weight": {
+    "$value": "{font.weight.semibold}",
+    "$type": "fontWeight",
+    "$description": "H3 text weight"
+  },
+  "typo-body-size": {
+    "$value": "{font.size.md}",
+    "$type": "dimension",
+    "$description": "Body text size"
+  },
+  "typo-body-weight": {
+    "$value": "{font.weight.normal}",
+    "$type": "fontWeight",
+    "$description": "Body text weight"
+  },
+  "typo-body-line-height": {
+    "$value": "{font.lineHeight.normal}",
+    "$type": "number",
+    "$description": "Body text line height"
+  },
+  "typo-body-sm-size": {
+    "$value": "{font.size.sm}",
+    "$type": "dimension",
+    "$description": "Small body text size"
+  },
+  "typo-label-size": {
+    "$value": "{font.size.xs}",
+    "$type": "dimension",
+    "$description": "Label text size"
+  },
+  "typo-label-weight": {
+    "$value": "{font.weight.semibold}",
+    "$type": "fontWeight",
+    "$description": "Label text weight"
+  },
+  "typo-label-tracking": {
+    "$value": "{font.letterSpacing.label}",
+    "$type": "dimension",
+    "$description": "Label text letter spacing"
+  },
+  "typo-caption-size": {
+    "$value": "{font.size.xs}",
+    "$type": "dimension",
+    "$description": "Caption text size"
+  },
+  "typo-caption-color": {
+    "$value": "{muted-foreground}",
+    "$type": "color",
+    "$description": "Caption text color"
+  },
+  "typo-mono-family": {
+    "$value": "{font-mono}",
+    "$type": "fontFamily",
+    "$description": "Monospace text font family"
+  },
+  "typo-mono-size": {
+    "$value": "{font.size.sm}",
+    "$type": "dimension",
+    "$description": "Monospace text size"
+  }
+}

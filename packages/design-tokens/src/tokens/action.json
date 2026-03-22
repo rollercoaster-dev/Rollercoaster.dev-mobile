@@ -1,0 +1,83 @@
+{
+  "$description": "Action semantic tokens — buttons, interactive states, selection",
+  "action-primary-bg": {
+    "$value": "{primary}",
+    "$type": "color",
+    "$description": "Primary action background"
+  },
+  "action-primary-fg": {
+    "$value": "{primary-foreground}",
+    "$type": "color",
+    "$description": "Primary action text"
+  },
+  "action-primary-hover-bg": {
+    "$value": "{color.primary-dark}",
+    "$type": "color",
+    "$description": "Primary action hover background"
+  },
+  "action-primary-active-bg": {
+    "$value": "{color.primary-dark}",
+    "$type": "color",
+    "$description": "Primary action pressed background"
+  },
+  "action-secondary-bg": {
+    "$value": "{card}",
+    "$type": "color",
+    "$description": "Secondary action background — neutral surface"
+  },
+  "action-secondary-fg": {
+    "$value": "{foreground}",
+    "$type": "color",
+    "$description": "Secondary action text"
+  },
+  "action-secondary-hover-bg": {
+    "$value": "{muted}",
+    "$type": "color",
+    "$description": "Secondary action hover background"
+  },
+  "action-destructive-bg": {
+    "$value": "{color.warning}",
+    "$type": "color",
+    "$description": "Destructive action background — amber warning tone"
+  },
+  "action-destructive-fg": {
+    "$value": "{foreground}",
+    "$type": "color",
+    "$description": "Destructive action text — dark on amber"
+  },
+  "action-destructive-hover-bg": {
+    "$value": "{color.warning}",
+    "$type": "color",
+    "$description": "Destructive action hover background"
+  },
+  "action-disabled-bg": {
+    "$value": "{bg-disabled}",
+    "$type": "color",
+    "$description": "Disabled action background (native-rd uses opacity instead)"
+  },
+  "action-disabled-fg": {
+    "$value": "{text-disabled}",
+    "$type": "color",
+    "$description": "Disabled action text (native-rd uses opacity instead)"
+  },
+  "action-disabled-border": {
+    "$value": "{color.gray.300}",
+    "$type": "color",
+    "$description": "Disabled action border"
+  },
+  "action-selection-bg": {
+    "$value": "{primary}",
+    "$type": "color",
+    "$description": "Selected item background — brand blue"
+  },
+  "action-selection-fg": {
+    "$value": "{primary-foreground}",
+    "$type": "color",
+    "$description": "Selected item text"
+  },
+  "action-selection-border": {
+    "$value": "{primary}",
+    "$type": "color",
+    "$description": "Selected item border"
+  }
+}

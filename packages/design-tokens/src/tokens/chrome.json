@@ -1,0 +1,68 @@
+{
+  "$description": "Chrome and app-shell semantic tokens — headers, tab bars, modals, top bars",
+  "chrome-header-bg": {
+    "$value": "{card}",
+    "$type": "color",
+    "$description": "App header background (hidden in native-rd, used by web)"
+  },
+  "chrome-header-fg": {
+    "$value": "{foreground}",
+    "$type": "color",
+    "$description": "App header text"
+  },
+  "chrome-header-border": {
+    "$value": "{border}",
+    "$type": "color",
+    "$description": "App header bottom border"
+  },
+  "chrome-tab-bar-bg": {
+    "$value": "{color.accent-purple}",
+    "$type": "color",
+    "$description": "Tab bar background — brand purple"
+  },
+  "chrome-tab-bar-fg": {
+    "$value": "{color.gray.800}",
+    "$type": "color",
+    "$description": "Tab bar inactive text — contrast-computed on purple"
+  },
+  "chrome-tab-bar-active-fg": {
+    "$value": "{color.black}",
+    "$type": "color",
+    "$description": "Tab bar active/selected text — contrast-computed on purple"
+  },
+  "chrome-tab-bar-indicator": {
+    "$value": "{color.black}",
+    "$type": "color",
+    "$description": "Tab bar active indicator"
+  },
+  "chrome-modal-bg": {
+    "$value": "{card}",
+    "$type": "color",
+    "$description": "Modal content background"
+  },
+  "chrome-modal-fg": {
+    "$value": "{foreground}",
+    "$type": "color",
+    "$description": "Modal content text"
+  },
+  "chrome-modal-overlay": {
+    "$value": "rgba(0, 0, 0, 0.5)",
+    "$type": "color",
+    "$description": "Modal backdrop overlay"
+  },
+  "chrome-modal-border": {
+    "$value": "{border}",
+    "$type": "color",
+    "$description": "Modal border"
+  },
+  "chrome-top-bar-bg": {
+    "$value": "{color.accent-yellow}",
+    "$type": "color",
+    "$description": "Status/top bar background — brand yellow"
+  },
+  "chrome-top-bar-fg": {
+    "$value": "{color.black}",
+    "$type": "color",
+    "$description": "Status/top bar text — dark on yellow"
+  }
+}

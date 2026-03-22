@@ -1,0 +1,108 @@
+{
+  "$description": "Badge and reward semantic tokens — badge chrome, accents, palette, celebration",
+  "reward-badge-chrome-bg": {
+    "$value": "{color.accent-purple}",
+    "$type": "color",
+    "$description": "Badge card chrome background — brand purple"
+  },
+  "reward-badge-chrome-fg": {
+    "$value": "{color.white}",
+    "$type": "color",
+    "$description": "Badge card chrome text — light on purple"
+  },
+  "reward-badge-chrome-border": {
+    "$value": "{border}",
+    "$type": "color",
+    "$description": "Badge card chrome border"
+  },
+  "reward-badge-accent-1": {
+    "$value": "{color.accent-yellow}",
+    "$type": "color",
+    "$description": "Badge accent — gold"
+  },
+  "reward-badge-accent-2": {
+    "$value": "{color.accent-mint}",
+    "$type": "color",
+    "$description": "Badge accent — mint"
+  },
+  "reward-badge-accent-3": {
+    "$value": "{color.accent-purple}",
+    "$type": "color",
+    "$description": "Badge accent — purple"
+  },
+  "reward-badge-accent-4": {
+    "$value": "{color.accent-teal}",
+    "$type": "color",
+    "$description": "Badge accent — teal"
+  },
+  "reward-badge-accent-5": {
+    "$value": "{color.accent-orange}",
+    "$type": "color",
+    "$description": "Badge accent — orange"
+  },
+  "reward-badge-label-bg": {
+    "$value": "{highlight}",
+    "$type": "color",
+    "$description": "Badge label background"
+  },
+  "reward-badge-label-fg": {
+    "$value": "{highlight-foreground}",
+    "$type": "color",
+    "$description": "Badge label text"
+  },
+  "reward-celebration-burst-1": {
+    "$value": "{color.primary-dark}",
+    "$type": "color",
+    "$description": "Celebration particle — blue"
+  },
+  "reward-celebration-burst-2": {
+    "$value": "{color.accent-yellow}",
+    "$type": "color",
+    "$description": "Celebration particle — yellow"
+  },
+  "reward-celebration-burst-3": {
+    "$value": "#16a34a",
+    "$type": "color",
+    "$description": "Celebration particle — green"
+  },
+  "reward-celebration-burst-4": {
+    "$value": "{color.accent-purple}",
+    "$type": "color",
+    "$description": "Celebration particle — purple"
+  },
+  "reward-celebration-burst-5": {
+    "$value": "#f97316",
+    "$type": "color",
+    "$description": "Celebration particle — orange"
+  },
+  "reward-celebration-burst-6": {
+    "$value": "{color.error}",
+    "$type": "color",
+    "$description": "Celebration particle — red"
+  },
+  "reward-celebration-text": {
+    "$value": "{foreground}",
+    "$type": "color",
+    "$description": "Celebration message text"
+  },
+  "reward-level-novice-bg": {
+    "$value": "{color.accent-mint}",
+    "$type": "color",
+    "$description": "Novice level indicator"
+  },
+  "reward-level-intermediate-bg": {
+    "$value": "{color.accent-sky}",
+    "$type": "color",
+    "$description": "Intermediate level indicator"
+  },
+  "reward-level-advanced-bg": {
+    "$value": "{color.accent-purple}",
+    "$type": "color",
+    "$description": "Advanced level indicator"
+  },
+  "reward-level-expert-bg": {
+    "$value": "{color.accent-yellow}",
+    "$type": "color",
+    "$description": "Expert level indicator"
+  }
+}

@@ -1,5 +1,21 @@
 # @rollercoaster-dev/design-tokens
 
+## Unreleased
+
+### Minor Changes
+
+- Full semantic token sweep for release-ready product design taxonomy:
+  - **Chrome tokens** (`chrome.json`): header, tab bar, modal, top bar roles
+  - **Action tokens** (`action.json`): primary, secondary, destructive, disabled, selection states
+  - **Surface & border tokens** (`surface-border.json`): card, sheet, input, sunken, elevated surfaces; default, strong, subtle, input, focus, destructive, success borders
+  - **Journey tokens** (`journey.json`): goal, step, progress, timeline, completion roles
+  - **Badge & reward tokens** (`badge-reward.json`): badge chrome, accent palette, celebration, level tiers
+  - **Typography role tokens** (`typography-roles.json`): display, heading 1-3, body, label, caption, mono roles
+  - Theme overrides added to all 7 non-default themes (dark, high-contrast, autism-friendly, dyslexia-friendly, low-vision, low-info, large-text)
+  - New Unistyles interfaces: `ChromeColors`, `ActionColors`, `SurfaceBorderColors`, `JourneyColors`, `BadgeRewardColors` with light/dark constants and variant overrides
+  - `semanticColorModes` export for unified light/dark mode switching
+  - All existing CSS variables and TypeScript exports preserved (fully additive)
+
 ## 0.1.3
 
 ### Patch Changes

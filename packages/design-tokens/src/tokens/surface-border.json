@@ -1,0 +1,78 @@
+{
+  "$description": "Surface and border semantic tokens — cards, sheets, inputs, border hierarchy",
+  "surface-card-bg": {
+    "$value": "{card}",
+    "$type": "color",
+    "$description": "Card surface background"
+  },
+  "surface-card-fg": {
+    "$value": "{card-foreground}",
+    "$type": "color",
+    "$description": "Card surface text"
+  },
+  "surface-sheet-bg": {
+    "$value": "{popover}",
+    "$type": "color",
+    "$description": "Bottom sheet / popover background"
+  },
+  "surface-sheet-fg": {
+    "$value": "{popover-foreground}",
+    "$type": "color",
+    "$description": "Bottom sheet / popover text"
+  },
+  "surface-input-bg": {
+    "$value": "{card}",
+    "$type": "color",
+    "$description": "Input field background — matches backgroundSecondary"
+  },
+  "surface-input-fg": {
+    "$value": "{foreground}",
+    "$type": "color",
+    "$description": "Input field text"
+  },
+  "surface-sunken-bg": {
+    "$value": "{muted}",
+    "$type": "color",
+    "$description": "Sunken/recessed area background"
+  },
+  "surface-elevated-bg": {
+    "$value": "{card}",
+    "$type": "color",
+    "$description": "Elevated surface background"
+  },
+  "border-default": {
+    "$value": "{border}",
+    "$type": "color",
+    "$description": "Default border color — strong neo-brutalist stroke"
+  },
+  "border-strong": {
+    "$value": "{color.black}",
+    "$type": "color",
+    "$description": "Strong structural border"
+  },
+  "border-subtle": {
+    "$value": "{stroke-muted}",
+    "$type": "color",
+    "$description": "Subtle/secondary border"
+  },
+  "border-input": {
+    "$value": "{border}",
+    "$type": "color",
+    "$description": "Input field border — matches default border (neo-brutalist)"
+  },
+  "border-focus": {
+    "$value": "{ring}",
+    "$type": "color",
+    "$description": "Focus ring / focus border"
+  },
+  "border-destructive": {
+    "$value": "{destructive}",
+    "$type": "color",
+    "$description": "Error/destructive border"
+  },
+  "border-success": {
+    "$value": "{success}",
+    "$type": "color",
+    "$description": "Success state border"
+  }
+}

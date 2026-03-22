@@ -1,0 +1,88 @@
+{
+  "$description": "Journey semantic tokens — goals, steps, progress, completion, timeline",
+  "journey-goal-bg": {
+    "$value": "{color.warning}",
+    "$type": "color",
+    "$description": "Goal card background — amber warning tone"
+  },
+  "journey-goal-fg": {
+    "$value": "{color.black}",
+    "$type": "color",
+    "$description": "Goal card text"
+  },
+  "journey-goal-border": {
+    "$value": "{border}",
+    "$type": "color",
+    "$description": "Goal card border"
+  },
+  "journey-step-bg": {
+    "$value": "{muted}",
+    "$type": "color",
+    "$description": "Step indicator default background"
+  },
+  "journey-step-fg": {
+    "$value": "{foreground}",
+    "$type": "color",
+    "$description": "Step indicator default text"
+  },
+  "journey-step-active-bg": {
+    "$value": "{primary}",
+    "$type": "color",
+    "$description": "Active step indicator background"
+  },
+  "journey-step-active-fg": {
+    "$value": "{primary-foreground}",
+    "$type": "color",
+    "$description": "Active step indicator text"
+  },
+  "journey-step-complete-bg": {
+    "$value": "{success}",
+    "$type": "color",
+    "$description": "Completed step indicator background — green in dots, blue in timeline"
+  },
+  "journey-step-complete-fg": {
+    "$value": "{success-foreground}",
+    "$type": "color",
+    "$description": "Completed step indicator text"
+  },
+  "journey-progress-track": {
+    "$value": "{color.gray.100}",
+    "$type": "color",
+    "$description": "Progress bar track background — matches backgroundTertiary"
+  },
+  "journey-progress-fill": {
+    "$value": "{primary}",
+    "$type": "color",
+    "$description": "Progress bar fill"
+  },
+  "journey-timeline-line": {
+    "$value": "{muted-foreground}",
+    "$type": "color",
+    "$description": "Timeline connector line — dashed muted stroke"
+  },
+  "journey-timeline-node-bg": {
+    "$value": "{card}",
+    "$type": "color",
+    "$description": "Timeline node background"
+  },
+  "journey-timeline-node-fg": {
+    "$value": "{foreground}",
+    "$type": "color",
+    "$description": "Timeline node text"
+  },
+  "journey-completion-bg": {
+    "$value": "{success}",
+    "$type": "color",
+    "$description": "Completion celebration background"
+  },
+  "journey-completion-fg": {
+    "$value": "{success-foreground}",
+    "$type": "color",
+    "$description": "Completion celebration text"
+  },
+  "journey-completion-accent": {
+    "$value": "{color.accent-yellow}",
+    "$type": "color",
+    "$description": "Completion celebration accent"
+  }
+}

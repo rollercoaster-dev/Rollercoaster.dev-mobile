@@ -90,7 +90,12 @@ function extractCSSVariables(tokens, prefix = "") {
         continue;
       }
 
-      const varName = pathMappings[path] ?? path.replace(/\./g, "-");
+      // Semantic section keys map directly to their token name (strip "semantic." prefix)
+      let varName = pathMappings[path];
+      if (!varName && path.startsWith("semantic.")) {
+        varName = path.slice("semantic.".length);
+      }
+      varName = varName ?? path.replace(/\./g, "-");
       declarations.push(`  --ob-${varName}: ${tokenValue};`);
     }
   }
