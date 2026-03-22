@@ -1,5 +1,11 @@
 # @rollercoaster-dev/design-tokens
 
+## 0.1.4
+
+### Patch Changes
+
+- 342e67a: Add highlight, highlightForeground, textDisabled, textInverse, and bgDisabled to the Colors interface. Each accessibility variant now resolves its own highlight color instead of inheriting the base yellow.
+
 ## Unreleased
 
 ### Minor Changes
