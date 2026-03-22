@@ -1,4 +1,9 @@
 #!/bin/sh
+set -e
+
+# Fail fast if the install is stale after pulling new deps or workspace links.
+bun run check:install
+
 # Run lint-staged (eslint + prettier on staged files)
 bunx lint-staged
 

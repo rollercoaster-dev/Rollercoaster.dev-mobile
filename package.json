@@ -11,7 +11,8 @@
   "scripts": {
     "burndown": "bun scripts/burndown.ts",
     "dev": "bun run turbo dev",
-    "build": "bun run turbo build",
+    "check:install": "bun scripts/check-install.ts",
+    "build": "bun run check:install && bun run turbo build",
     "test": "bun run turbo test",
     "test:unit": "bun run turbo test:unit",
     "test:integration": "bun run turbo test:integration",
@@ -20,7 +21,7 @@
     "test:all": "bun run test:unit && bun run test:integration && bun run test:e2e",
     "lint": "bun run turbo lint",
     "lint:fix": "bun run turbo lint --fix",
-    "type-check": "bun run turbo type-check",
+    "type-check": "bun run check:install && bun run turbo type-check",
     "format": "bunx prettier --write \"**/*.{ts,tsx,js,jsx,json,md,vue}\"",
     "format:check": "bunx prettier --check \"**/*.{ts,tsx,js,jsx,json,md,vue}\"",
     "clean": "bun run turbo clean && rm -rf node_modules .turbo .bun-cache",
