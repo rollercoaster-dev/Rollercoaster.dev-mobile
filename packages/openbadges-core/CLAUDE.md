@@ -90,28 +90,6 @@ Test file naming: `*.test.ts`
 
 ## Dependencies
 
-**Runtime**:
-
-- `openbadges-types` - Type definitions for OB 2.0/3.0
-- `@rollercoaster-dev/rd-logger` - Logging utilities
-
-**Dev**:
-
-- `@rollercoaster-dev/shared-config` - Shared tooling configs
-- `tsup` - Build tool
-
-## Current Status
-
-**Phase 1: Scaffold Complete** (✅)
-
-- Package structure created
-- Build configuration set up
-- Platform detection implemented
-
-**Next Steps**:
-
-- Issue #684: Extract credential generation logic
-- Issue #685: Extract crypto utilities
-- Issue #686: Extract baking utilities
-- Issue #687: Migrate modular server
-- Issue #688: Migrate system app
+- `openbadges-types` - OB 2.0/3.0 type definitions
+- `@rollercoaster-dev/rd-logger` - Structured logging
+- `tsup` - Build tool (dual ESM/CJS output)
