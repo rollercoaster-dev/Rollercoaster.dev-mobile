@@ -5,20 +5,14 @@ const {
 } = require("@storybook/react-native/metro/withStorybook");
 const path = require("path");
 
-// Monorepo root — needed so Metro can resolve workspace-linked packages
-const monorepoRoot = path.resolve(__dirname, "../..");
-
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(__dirname);
 
-// Watch the monorepo root for workspace packages (symlinked from packages/*)
-config.watchFolders = [monorepoRoot];
+// Expo SDK 54 auto-detects monorepo workspace layout (projectRoot,
+// watchFolders, nodeModulesPaths) — no manual overrides needed.
 
-// Resolve node_modules from both the app and the monorepo root
-config.resolver.nodeModulesPaths = [
-  path.resolve(__dirname, "node_modules"),
-  path.resolve(monorepoRoot, "node_modules"),
-];
+// Bun uses symlinks for node_modules — tell Metro to follow them
+config.resolver.unstable_enableSymlinks = true;
 
 // Ensure Metro respects package.json "exports" for subpath imports like
 // @rollercoaster-dev/design-tokens/unistyles
