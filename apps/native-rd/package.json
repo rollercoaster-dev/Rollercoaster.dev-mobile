@@ -89,6 +89,7 @@
     "@babel/preset-typescript": "^7.28.5",
     "@storybook/react": "^10.2.7",
     "@storybook/react-native-web-vite": "^10.2.8",
+    "@testing-library/dom": "^10.4.1",
     "@testing-library/react-native": "^13.3.3",
     "@types/jest": "^30.0.0",
     "@types/react": "~19.1.0",
