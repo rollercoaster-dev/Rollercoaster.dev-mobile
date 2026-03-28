@@ -12,13 +12,13 @@ This is the native rollercoaster.dev app — a personal learning/goal tracker fo
 
 ## Commands
 
-| Task | Command |
-|---|---|
-| Typecheck | `bun run typecheck` |
-| Lint | `bun run lint` |
-| Test | `npx jest --no-coverage` or `bun test --testPathPatterns <pattern>` |
-| CI test | `bun run test:ci` |
-| Build iOS | `npx expo run:ios` |
+| Task      | Command                                                             |
+| --------- | ------------------------------------------------------------------- |
+| Typecheck | `bun run type-check`                                                |
+| Lint      | `bun run lint`                                                      |
+| Test      | `npx jest --no-coverage` or `bun test --testPathPatterns <pattern>` |
+| CI test   | `bun run test:ci`                                                   |
+| Build iOS | `npx expo run:ios`                                                  |
 
 ## Tests
 
@@ -83,25 +83,25 @@ Badge logic comes from `openbadges-modular-server` in the [rollercoaster-dev mon
 
 ## Graph Flow (Issue Workflow)
 
-| Command | What it does |
-|---------|-------------|
-| `/work-on-issue <#>` | Creates branch, sets up board, fetches issue |
-| `/implement` | Implements code from a dev plan with atomic commits |
-| `/review` | Runs code-reviewer, test-analyzer, silent-failure-hunter in parallel |
-| `/self-review` | Pre-PR gate: runs local validation + CodeRabbit + Claude agents, auto-fixes critical issues |
-| `/accept-check` | Validates PR diff against issue acceptance criteria |
-| `/quality-score` | Grades codebase domains, updates docs/quality/grades.md |
-| `/review-to-task <pr>` | Converts unresolved PR comments to tracked issues |
-| `/finalize` | Pushes branch, creates PR, updates board |
-| `/auto-issue` | Creates a new GitHub issue |
-| `/board-status` | Shows project board state |
-| `/issue-fetcher` | Fetches and analyzes issue details |
-| `/milestone-status` | Shows milestone progress and blockers |
+| Command                | What it does                                                                                |
+| ---------------------- | ------------------------------------------------------------------------------------------- |
+| `/work-on-issue <#>`   | Creates branch, sets up board, fetches issue                                                |
+| `/implement`           | Implements code from a dev plan with atomic commits                                         |
+| `/review`              | Runs code-reviewer, test-analyzer, silent-failure-hunter in parallel                        |
+| `/self-review`         | Pre-PR gate: runs local validation + CodeRabbit + Claude agents, auto-fixes critical issues |
+| `/accept-check`        | Validates PR diff against issue acceptance criteria                                         |
+| `/quality-score`       | Grades codebase domains, updates docs/quality/grades.md                                     |
+| `/review-to-task <pr>` | Converts unresolved PR comments to tracked issues                                           |
+| `/finalize`            | Pushes branch, creates PR, updates board                                                    |
+| `/auto-issue`          | Creates a new GitHub issue                                                                  |
+| `/board-status`        | Shows project board state                                                                   |
+| `/issue-fetcher`       | Fetches and analyzes issue details                                                          |
+| `/milestone-status`    | Shows milestone progress and blockers                                                       |
 
 ## After Making Changes
 
-| Changed | Run |
-|---|---|
-| React Native code | `npx expo run:ios` (native build) |
-| Test files | `bun test --testPathPatterns <pattern>` |
-| Theme/style files | Build + visually verify on device |
+| Changed           | Run                                     |
+| ----------------- | --------------------------------------- |
+| React Native code | `npx expo run:ios` (native build)       |
+| Test files        | `bun test --testPathPatterns <pattern>` |
+| Theme/style files | Build + visually verify on device       |

@@ -8,27 +8,27 @@ See `docs/vision/product-vision.md` for full context.
 
 ## Quick Reference
 
-| Question | Where to look |
-|---|---|
-| What is this app? | `docs/vision/product-vision.md` |
-| Design principles? | `docs/vision/design-principles.md` |
-| User stories? | `docs/vision/user-stories.md` |
-| Architecture decisions? | `docs/decisions/ADR-*.md` |
-| Data model? | `docs/architecture/data-model.md` |
-| Design language? | `docs/design/design-language.md` |
-| Theme system? | `docs/design/nd-themes.md`, `docs/architecture/design-token-system.md` |
-| Accessibility? | `docs/accessibility-guidelines.md` |
+| Question                | Where to look                                                          |
+| ----------------------- | ---------------------------------------------------------------------- |
+| What is this app?       | `docs/vision/product-vision.md`                                        |
+| Design principles?      | `docs/vision/design-principles.md`                                     |
+| User stories?           | `docs/vision/user-stories.md`                                          |
+| Architecture decisions? | `docs/decisions/ADR-*.md`                                              |
+| Data model?             | `docs/architecture/data-model.md`                                      |
+| Design language?        | `docs/design/design-language.md`                                       |
+| Theme system?           | `docs/design/nd-themes.md`, `docs/architecture/design-token-system.md` |
+| Accessibility?          | `docs/accessibility-guidelines.md`                                     |
 
 ## Tech Stack
 
-| Layer | Choice | Docs |
-|---|---|---|
-| Runtime | Expo / React Native | `app.json`, `metro.config.js` |
-| UI styling | react-native-unistyles v3 | `docs/decisions/ADR-0002-ui-styling-library.md` |
-| Local storage | Evolu (SQLite + CRDT) | `docs/decisions/ADR-0003-sync-layer-decision.md`, `src/db/` |
-| Navigation | React Navigation | `src/navigation/` |
-| Testing | Jest 30 + @testing-library/react-native v13 | `jest.config.js`, `src/__tests__/` |
-| Design tokens | Unistyles themes (14 = 2 color modes x 7 variants) | `src/themes/` |
+| Layer         | Choice                                             | Docs                                                        |
+| ------------- | -------------------------------------------------- | ----------------------------------------------------------- |
+| Runtime       | Expo / React Native                                | `app.json`, `metro.config.js`                               |
+| UI styling    | react-native-unistyles v3                          | `docs/decisions/ADR-0002-ui-styling-library.md`             |
+| Local storage | Evolu (SQLite + CRDT)                              | `docs/decisions/ADR-0003-sync-layer-decision.md`, `src/db/` |
+| Navigation    | React Navigation                                   | `src/navigation/`                                           |
+| Testing       | Jest 30 + @testing-library/react-native v13        | `jest.config.js`, `src/__tests__/`                          |
+| Design tokens | Unistyles themes (14 = 2 color modes x 7 variants) | `src/themes/`                                               |
 
 ## Project Structure
 
@@ -48,24 +48,24 @@ src/
 
 ## Development Commands
 
-| Command | Purpose |
-|---|---|
-| `bun run typecheck` | TypeScript type checking |
-| `bun run lint` | ESLint |
-| `bun test` | Run Jest test suite |
-| `bun run test:ci` | CI test run |
-| `npx expo run:ios` | Build and run on iOS (NEVER use `expo start`) |
+| Command              | Purpose                                       |
+| -------------------- | --------------------------------------------- |
+| `bun run type-check` | TypeScript type checking                      |
+| `bun run lint`       | ESLint                                        |
+| `bun test`           | Run Jest test suite                           |
+| `bun run test:ci`    | CI test run                                   |
+| `npx expo run:ios`   | Build and run on iOS (NEVER use `expo start`) |
 
 ## App Legibility Commands
 
-| Command | Purpose |
-|---|---|
-| `bun run test:e2e` | Run all Maestro E2E flows |
-| `bun run test:e2e:single e2e/flows/<flow>.yaml` | Run single Maestro flow |
-| `bash .claude/skills/simulator-screenshot/screenshot.sh` | Capture simulator screenshot |
-| `bun run logs:agent` | Tail RN/Metro logs as JSON lines |
-| `bun run start:worktree` | Boot Metro on worktree-unique port |
-| `bun run test:a11y:json` | Run a11y suite, structured JSON output |
+| Command                                                  | Purpose                                |
+| -------------------------------------------------------- | -------------------------------------- |
+| `bun run test:e2e`                                       | Run all Maestro E2E flows              |
+| `bun run test:e2e:single e2e/flows/<flow>.yaml`          | Run single Maestro flow                |
+| `bash .claude/skills/simulator-screenshot/screenshot.sh` | Capture simulator screenshot           |
+| `bun run logs:agent`                                     | Tail RN/Metro logs as JSON lines       |
+| `bun run start:worktree`                                 | Boot Metro on worktree-unique port     |
+| `bun run test:a11y:json`                                 | Run a11y suite, structured JSON output |
 
 ## Architectural Rules
 
