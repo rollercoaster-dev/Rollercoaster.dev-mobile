@@ -1,0 +1,2316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Full Lifecycle: Edit → Focus → Complete → Timeline</title>
+  <style>
+    /* ───── Reset & Base ───── */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #fafafa;
+      --card: #ffffff;
+      --border: #262626;
+      --border-w: 3px;
+      --shadow: 4px 4px 0 rgba(38, 38, 38, 0.8);
+      --shadow-sm: 2px 2px 0 rgba(38, 38, 38, 0.8);
+      --blue: #3b82f6;
+      --yellow: #ffe50c;
+      --mint: #d4f4e7;
+      --purple: #a78bfa;
+      --orange: #f97316;
+      --completed: #22c55e;
+      --in-progress: #3b82f6;
+      --pending: #d1d5db;
+      --text: #262626;
+      --text-muted: #6b7280;
+      --radius: 6px;
+      --radius-sm: 4px;
+      --font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      --transition-speed: 0.3s;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      font-family: var(--font);
+      background: #e5e5e5;
+      color: var(--text);
+      -webkit-tap-highlight-color: transparent;
+      font-size: 16px;
+      line-height: 1.5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    body.reduced-motion *, body.reduced-motion *::before, body.reduced-motion *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+
+    :focus-visible {
+      outline: 3px solid var(--blue);
+      outline-offset: 2px;
+    }
+
+    /* ───── App Shell ───── */
+    .app-shell {
+      display: flex;
+      flex-direction: column;
+      width: 402px;
+      height: 874px;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    /* ───── Proto Banner ───── */
+    .proto-banner {
+      background: var(--yellow);
+      border-bottom: var(--border-w) solid var(--border);
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: 0.02em;
+      flex-shrink: 0;
+    }
+
+    /* ───── Mode Views ───── */
+    .mode-view {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+    }
+    .mode-view.active {
+      display: flex;
+    }
+
+    /* ───── Mode Indicator ───── */
+    .mode-indicator {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--card);
+      border-top: var(--border-w) solid var(--border);
+      padding: 6px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+      z-index: 100;
+      letter-spacing: 0.02em;
+    }
+
+    /* ───── Scrollable Content ───── */
+    .scroll-content {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 16px;
+      padding-bottom: 48px;
+    }
+
+    /* ───── Buttons ───── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: 700;
+      font-family: var(--font);
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      min-height: 44px;
+      transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+      box-shadow: var(--shadow);
+    }
+    .btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0 rgba(38,38,38,0.8);
+    }
+    .btn-primary {
+      background: var(--blue);
+      color: #fff;
+    }
+    .btn-secondary {
+      background: var(--card);
+      color: var(--text);
+    }
+    .btn-yellow {
+      background: var(--yellow);
+      color: var(--text);
+    }
+    .btn-full {
+      width: 100%;
+    }
+    .btn-sm {
+      padding: 8px 16px;
+      font-size: 14px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* ───── Cards ───── */
+    .card {
+      background: var(--card);
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    /* ───── Icon Buttons ───── */
+    .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      background: var(--card);
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 18px;
+      box-shadow: var(--shadow-sm);
+      transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+    }
+    .icon-btn:active {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0 rgba(38,38,38,0.8);
+    }
+
+    /* ───── Pill / Badge ───── */
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 2px solid var(--border);
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .pill-completed { background: var(--mint); }
+    .pill-in-progress { background: #dbeafe; }
+    .pill-pending { background: #f3f4f6; color: var(--text-muted); }
+
+    /* ════════════════════════════════════════
+       MODE 1: EDIT / CREATION VIEW
+    ════════════════════════════════════════ */
+    #edit-view .edit-header {
+      margin-bottom: 16px;
+    }
+    #edit-view .edit-header label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .edit-title-input {
+      width: 100%;
+      font-size: 24px;
+      font-weight: 800;
+      font-family: var(--font);
+      padding: 12px 16px;
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      background: var(--card);
+    }
+    .edit-desc-input {
+      width: 100%;
+      font-size: 16px;
+      font-family: var(--font);
+      padding: 12px 16px;
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      background: var(--card);
+      resize: vertical;
+      min-height: 80px;
+      margin-top: 12px;
+    }
+
+    .step-list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 20px 0 12px;
+    }
+    .step-list-header h3 {
+      font-size: 16px;
+      font-weight: 800;
+    }
+    .step-count {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .edit-step-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .edit-step-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card);
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-sm);
+      padding: 10px 12px;
+    }
+    .drag-handle {
+      cursor: grab;
+      font-size: 18px;
+      color: var(--text-muted);
+      user-select: none;
+      min-width: 24px;
+      text-align: center;
+    }
+    .drag-handle:active { cursor: grabbing; }
+    .edit-step-title {
+      flex: 1;
+      font-size: 16px;
+      font-family: var(--font);
+      border: none;
+      background: transparent;
+      padding: 4px;
+      border-bottom: 2px solid transparent;
+    }
+    .edit-step-title:focus {
+      border-bottom: 2px solid var(--blue);
+      outline: none;
+    }
+    .delete-step-btn {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: 2px solid transparent;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+    .delete-step-btn:hover, .delete-step-btn:focus-visible {
+      border-color: #ef4444;
+      color: #ef4444;
+      background: #fef2f2;
+    }
+
+    .add-step-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .add-step-input {
+      flex: 1;
+      font-size: 16px;
+      font-family: var(--font);
+      padding: 10px 12px;
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-sm);
+      background: var(--card);
+    }
+    .add-step-btn {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--blue);
+      color: #fff;
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .edit-actions {
+      margin-top: 24px;
+      padding-bottom: 16px;
+    }
+
+    /* ════════════════════════════════════════
+       MODE 2: FOCUS MODE
+    ════════════════════════════════════════ */
+    .focus-header {
+      padding: 12px 16px 0;
+      flex-shrink: 0;
+    }
+    .focus-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .focus-title {
+      font-size: 20px;
+      font-weight: 800;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ── Mini Timeline Strip ── */
+    .mini-timeline {
+      margin: 12px 16px 0;
+      padding: 8px 16px;
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--card);
+      cursor: pointer;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .mini-timeline-track {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 24px;
+      position: relative;
+    }
+    .mini-timeline-line {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 3px;
+      z-index: 0;
+    }
+    .mini-timeline-segment {
+      position: absolute;
+      top: 50%;
+      height: 3px;
+      transform: translateY(-50%);
+    }
+    .mini-timeline-segment.completed {
+      background: var(--blue);
+    }
+    .mini-timeline-segment.pending {
+      background: repeating-linear-gradient(90deg, var(--pending) 0, var(--pending) 4px, transparent 4px, transparent 8px);
+    }
+    .mini-node {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid var(--pending);
+      background: var(--card);
+      z-index: 1;
+      position: relative;
+      cursor: pointer;
+      transition: transform var(--transition-speed);
+    }
+    .mini-node:hover { transform: scale(1.3); }
+    .mini-node.completed {
+      background: var(--blue);
+      border-color: var(--blue);
+    }
+    .mini-node.current {
+      border-color: var(--blue);
+      border-width: 3px;
+      width: 18px;
+      height: 18px;
+    }
+    .mini-node.goal-node {
+      border-color: var(--yellow);
+      background: var(--yellow);
+      border-width: 3px;
+    }
+    .mini-node.goal-node.completed {
+      background: var(--yellow);
+      border-color: var(--border);
+    }
+    .mini-timeline-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 4px;
+    }
+
+    /* ── Progress Dots ── */
+    .progress-dots {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 16px 8px;
+      flex-shrink: 0;
+    }
+    .progress-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid var(--pending);
+      background: var(--card);
+      cursor: pointer;
+      transition: transform var(--transition-speed), background var(--transition-speed);
+      min-width: 12px;
+      min-height: 12px;
+    }
+    .progress-dot:hover { transform: scale(1.4); }
+    .progress-dot.completed {
+      background: var(--completed);
+      border-color: var(--completed);
+    }
+    .progress-dot.current {
+      border-color: var(--blue);
+      background: var(--blue);
+      transform: scale(1.3);
+    }
+    .progress-dot.goal-dot {
+      width: 16px;
+      height: 16px;
+      min-width: 16px;
+      min-height: 16px;
+      border-radius: 2px;
+      transform: rotate(45deg);
+      border-color: var(--yellow);
+      background: var(--yellow);
+    }
+    .progress-dot.goal-dot.current {
+      border-color: var(--border);
+      transform: rotate(45deg) scale(1.3);
+    }
+
+    /* ── Card Carousel ── */
+    .carousel-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 0;
+    }
+    .carousel-track {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .carousel-card {
+      position: absolute;
+      width: calc(100% - 64px);
+      max-width: 340px;
+      background: var(--card);
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      transition: transform var(--transition-speed), opacity var(--transition-speed);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .carousel-card.center { transform: translateX(0) scale(1); opacity: 1; z-index: 2; }
+    .carousel-card.left { transform: translateX(-85%) scale(0.88); opacity: 0.5; z-index: 1; pointer-events: none; }
+    .carousel-card.right { transform: translateX(85%) scale(0.88); opacity: 0.5; z-index: 1; pointer-events: none; }
+    .carousel-card.hidden { transform: translateX(0) scale(0.8); opacity: 0; z-index: 0; pointer-events: none; }
+    .carousel-card.goal-card {
+      border-top: 6px solid var(--yellow);
+    }
+    .carousel-card .step-number {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .carousel-card .step-title {
+      font-size: 22px;
+      font-weight: 800;
+    }
+    .carousel-card .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .step-checkbox {
+      width: 28px;
+      height: 28px;
+      min-width: 28px;
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--card);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transition: background var(--transition-speed);
+    }
+    .step-checkbox.checked {
+      background: var(--completed);
+      color: #fff;
+    }
+    .evidence-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 12px;
+      background: #f0f4ff;
+      border: 2px solid var(--border);
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background var(--transition-speed);
+    }
+    .evidence-badge:hover { background: #dbeafe; }
+    .evidence-badge.flash {
+      background: var(--yellow);
+    }
+
+    /* ── Carousel Nav Arrows ── */
+    .carousel-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      width: 48px;
+      height: 48px;
+      background: var(--card);
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      font-size: 20px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .carousel-nav.prev { left: 4px; }
+    .carousel-nav.next { right: 4px; }
+    .carousel-nav:hover { background: #f0f0f0; }
+    .carousel-nav:disabled, .carousel-nav.disabled {
+      opacity: 0.3;
+      pointer-events: none;
+    }
+
+    /* ── Bottom Drawer ── */
+    .drawer-overlay {
+      display: none;
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.3);
+      z-index: 200;
+    }
+    .drawer-overlay.open { display: block; }
+    .drawer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--card);
+      border-top: var(--border-w) solid var(--border);
+      border-radius: 12px 12px 0 0;
+      z-index: 201;
+      transition: transform var(--transition-speed);
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+    .drawer.closed { transform: translateY(calc(100% - 44px)); }
+    .drawer.peek { transform: translateY(calc(100% - 44px)); }
+    .drawer.open { transform: translateY(0); }
+    .drawer-handle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 16px;
+      cursor: pointer;
+      gap: 8px;
+      min-height: 44px;
+    }
+    .drawer-handle-bar {
+      width: 40px;
+      height: 4px;
+      background: var(--pending);
+      border-radius: 2px;
+    }
+    .drawer-handle-text {
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .drawer-content {
+      padding: 0 16px 24px;
+    }
+    .drawer.goal-drawer {
+      border-top-color: var(--yellow);
+    }
+    .drawer.goal-drawer .drawer-handle-bar {
+      background: var(--yellow);
+    }
+
+    .evidence-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 8px;
+    }
+    .evidence-item {
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 8px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      position: relative;
+      min-height: 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: background var(--transition-speed);
+    }
+    .evidence-item:hover { background: #f0f0f0; }
+    .evidence-item .ev-icon { font-size: 24px; }
+    .evidence-item.goal-evidence { border-left: 4px solid var(--yellow); }
+    .drawer-empty {
+      text-align: center;
+      padding: 24px 16px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    /* ── FAB ── */
+    .fab {
+      position: absolute;
+      bottom: 56px;
+      right: 16px;
+      width: 56px;
+      height: 56px;
+      background: var(--blue);
+      color: #fff;
+      border: var(--border-w) solid var(--border);
+      border-radius: 50%;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      font-size: 28px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 150;
+      transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+    }
+    .fab:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0 rgba(38,38,38,0.8);
+    }
+    @media (max-width: 432px) {
+      .fab { right: 16px; }
+    }
+
+    /* ── FAB Menu ── */
+    .fab-menu {
+      display: none;
+      position: absolute;
+      bottom: 120px;
+      right: 8px;
+      background: var(--card);
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      z-index: 160;
+      padding: 8px 0;
+      min-width: 200px;
+    }
+    .fab-menu.open { display: block; }
+    @media (max-width: 432px) {
+      .fab-menu { right: 8px; }
+    }
+    .fab-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      font-family: var(--font);
+      min-height: 44px;
+    }
+    .fab-menu-item:hover { background: #f0f4ff; }
+    .fab-menu-item .fm-icon { font-size: 18px; width: 24px; text-align: center; }
+
+    /* ════════════════════════════════════════
+       MODE 3: COMPLETION FLOW
+    ════════════════════════════════════════ */
+    #complete-view {
+      align-items: center;
+      justify-content: center;
+    }
+    .completion-card {
+      background: var(--card);
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 32px 24px;
+      text-align: center;
+      max-width: 340px;
+      width: 100%;
+      margin: 16px;
+    }
+    .completion-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+    .completion-card h2 {
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .completion-card p {
+      font-size: 16px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+    .completion-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .completion-evidence-list {
+      margin-top: 16px;
+      text-align: left;
+    }
+    .completion-evidence-list h4 {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--text-muted);
+    }
+    .completion-ev-item {
+      padding: 8px 12px;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-left: 4px solid var(--yellow);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    /* ── Confetti ── */
+    .confetti-container {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      z-index: 500;
+      overflow: hidden;
+    }
+    .confetti-piece {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      top: -10px;
+      animation: confetti-fall 2s ease-out forwards;
+    }
+    @keyframes confetti-fall {
+      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* ════════════════════════════════════════
+       MODE 4: TIMELINE VIEW
+    ════════════════════════════════════════ */
+    .timeline-header {
+      padding: 16px;
+      border-bottom: var(--border-w) solid var(--border);
+      flex-shrink: 0;
+    }
+    .timeline-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .timeline-header h2 {
+      font-size: 22px;
+      font-weight: 800;
+      flex: 1;
+    }
+    .timeline-desc {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .timeline-progress-bar {
+      margin-top: 12px;
+      height: 8px;
+      background: #e5e7eb;
+      border: 2px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .timeline-progress-fill {
+      height: 100%;
+      background: var(--blue);
+      transition: width var(--transition-speed);
+    }
+    .timeline-progress-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* ── Vertical Timeline ── */
+    .vertical-timeline {
+      padding: 16px 16px 16px 40px;
+      position: relative;
+    }
+    .timeline-line {
+      position: absolute;
+      left: 55px;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+    }
+    .timeline-line-segment {
+      width: 3px;
+      position: absolute;
+      left: 0;
+    }
+    .timeline-line-segment.completed { background: var(--blue); }
+    .timeline-line-segment.pending {
+      background: repeating-linear-gradient(180deg, var(--pending) 0, var(--pending) 4px, transparent 4px, transparent 8px);
+    }
+
+    .timeline-step {
+      position: relative;
+      padding-left: 40px;
+      margin-bottom: 24px;
+    }
+    .timeline-node {
+      position: absolute;
+      left: -1px;
+      top: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: var(--border-w) solid var(--pending);
+      background: var(--card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      z-index: 1;
+      cursor: pointer;
+      transition: transform var(--transition-speed);
+    }
+    .timeline-node:hover { transform: scale(1.15); }
+    .timeline-node.completed {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+    .timeline-node.in-progress {
+      border-color: var(--blue);
+      border-width: 4px;
+      color: var(--blue);
+    }
+    .timeline-step-content {
+      background: var(--card);
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      padding: 12px 16px;
+    }
+    .timeline-step-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      cursor: pointer;
+      min-height: 44px;
+    }
+    .timeline-step-title {
+      font-size: 16px;
+      font-weight: 700;
+      flex: 1;
+    }
+    .timeline-chevron {
+      font-size: 14px;
+      transition: transform var(--transition-speed);
+      min-width: 24px;
+      text-align: center;
+    }
+    .timeline-chevron.expanded { transform: rotate(180deg); }
+    .timeline-evidence-cards {
+      display: none;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 2px dashed #e5e7eb;
+    }
+    .timeline-evidence-cards.expanded { display: block; }
+    .timeline-ev-card {
+      padding: 8px 12px;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .timeline-ev-card .ev-icon { font-size: 16px; }
+    .timeline-no-ev {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* ── Finish Line ── */
+    .finish-line {
+      position: relative;
+      padding-left: 40px;
+      margin-bottom: 24px;
+    }
+    .finish-node {
+      position: absolute;
+      left: -5px;
+      top: 0;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--yellow);
+      border: var(--border-w) solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      z-index: 1;
+    }
+    .finish-content {
+      background: var(--card);
+      border: var(--border-w) solid var(--border);
+      border-left: 5px solid var(--yellow);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      padding: 16px;
+    }
+    .finish-content h3 {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .finish-ev-card {
+      padding: 8px 12px;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-left: 4px solid var(--yellow);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ════════════════════════════════════════
+       DEMO CONTROLS
+    ════════════════════════════════════════ */
+    .demo-toggle {
+      position: absolute;
+      top: 4px;
+      right: 8px;
+      z-index: 999;
+      background: var(--orange);
+      color: #fff;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: var(--font);
+    }
+    .demo-panel {
+      display: none;
+      position: absolute;
+      top: 32px;
+      right: 8px;
+      z-index: 998;
+      background: var(--card);
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 12px;
+      width: 200px;
+    }
+    .demo-panel.open { display: block; }
+    .demo-panel h4 {
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    .demo-panel button {
+      display: block;
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: var(--font);
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      text-align: left;
+    }
+    .demo-panel button:hover { background: #e5e7eb; }
+
+    /* ── Toast ── */
+    .toast {
+      display: none;
+      position: absolute;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--text);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-weight: 700;
+      z-index: 600;
+      max-width: 340px;
+      text-align: center;
+    }
+    .toast.visible { display: flex; align-items: center; gap: 12px; }
+    .toast-undo {
+      background: var(--yellow);
+      color: var(--text);
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 4px 12px;
+      font-weight: 700;
+      font-family: var(--font);
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    /* ── Confirm Dialog ── */
+    .confirm-overlay {
+      display: none;
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 700;
+      align-items: center;
+      justify-content: center;
+    }
+    .confirm-overlay.open {
+      display: flex;
+    }
+    .confirm-dialog {
+      background: var(--card);
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      max-width: 300px;
+      width: 90%;
+      text-align: center;
+    }
+    .confirm-dialog h3 { font-size: 18px; margin-bottom: 8px; }
+    .confirm-dialog p { font-size: 14px; color: var(--text-muted); margin-bottom: 16px; }
+    .confirm-actions { display: flex; gap: 8px; justify-content: center; }
+    .confirm-actions button { min-width: 80px; }
+
+    /* ── Responsive ── */
+    @media (min-width: 600px) {
+      .app-shell { border-left: var(--border-w) solid var(--border); border-right: var(--border-w) solid var(--border); }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell" role="application" aria-label="Full lifecycle prototype">
+    <!-- Banner -->
+    <div class="proto-banner" role="banner">Full Lifecycle: Edit → Focus → Complete → Timeline</div>
+
+    <!-- ═══════ MODE 1: EDIT VIEW ═══════ -->
+    <div id="edit-view" class="mode-view" role="region" aria-label="Edit mode">
+      <div class="scroll-content">
+        <div class="edit-header">
+          <label for="goal-title-input">Goal Title</label>
+          <input id="goal-title-input" class="edit-title-input" type="text" value="Learn TypeScript Generics" aria-label="Goal title">
+          <label for="goal-desc-input" style="margin-top:12px; display:block; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em">Description</label>
+          <textarea id="goal-desc-input" class="edit-desc-input" aria-label="Goal description">Master TypeScript generics through hands-on practice and documentation</textarea>
+        </div>
+
+        <div class="step-list-header">
+          <h3>Steps</h3>
+          <span class="step-count" id="edit-step-count" aria-live="polite">5 steps</span>
+        </div>
+
+        <ul class="edit-step-list" id="edit-step-list" role="list" aria-label="Steps list">
+        </ul>
+
+        <div class="add-step-row">
+          <input id="add-step-input" class="add-step-input" type="text" placeholder="Add a step..." aria-label="New step title">
+          <button class="add-step-btn" id="add-step-btn" aria-label="Add step" title="Add step">+</button>
+        </div>
+
+        <div class="edit-actions">
+          <button class="btn btn-primary btn-full" id="start-working-btn" aria-label="Start working">
+            Start Working
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ MODE 2: FOCUS VIEW ═══════ -->
+    <div id="focus-view" class="mode-view" role="region" aria-label="Focus mode">
+      <div class="focus-header">
+        <div class="focus-title-row">
+          <h2 class="focus-title" id="focus-title">Learn TypeScript Generics</h2>
+          <button class="icon-btn" id="edit-btn" aria-label="Edit goal" title="Edit goal">&#9998;</button>
+        </div>
+      </div>
+
+      <!-- Mini Timeline Strip -->
+      <div class="mini-timeline" id="mini-timeline" role="navigation" aria-label="Step progress timeline — tap to expand" tabindex="0">
+        <div class="mini-timeline-track" id="mini-timeline-track"></div>
+        <div class="mini-timeline-hint">Tap to expand timeline</div>
+      </div>
+
+      <!-- Progress Dots -->
+      <div class="progress-dots" id="progress-dots" role="tablist" aria-label="Step navigation"></div>
+
+      <!-- Card Carousel -->
+      <div class="carousel-container" role="region" aria-label="Step cards" aria-roledescription="carousel">
+        <div class="carousel-track" id="carousel-track"></div>
+        <button class="carousel-nav prev" id="carousel-prev" aria-label="Previous step" disabled>&#8249;</button>
+        <button class="carousel-nav next" id="carousel-next" aria-label="Next step">&#8250;</button>
+      </div>
+
+      <!-- Drawer -->
+      <div class="drawer-overlay" id="drawer-overlay" aria-hidden="true"></div>
+      <div class="drawer closed" id="drawer" role="complementary" aria-label="Evidence drawer">
+        <div class="drawer-handle" id="drawer-handle" role="button" aria-label="Toggle evidence drawer" tabindex="0">
+          <div class="drawer-handle-bar"></div>
+          <span class="drawer-handle-text" id="drawer-label">0 evidence items</span>
+        </div>
+        <div class="drawer-content" id="drawer-content"></div>
+      </div>
+
+      <!-- FAB -->
+      <button class="fab" id="fab" aria-label="Add evidence" aria-haspopup="true" aria-expanded="false">+</button>
+      <div class="fab-menu" id="fab-menu" role="menu" aria-label="Evidence type picker">
+        <button class="fab-menu-item" role="menuitem" data-type="photo"><span class="fm-icon">📷</span> Photo</button>
+        <button class="fab-menu-item" role="menuitem" data-type="screenshot"><span class="fm-icon">📸</span> Screenshot</button>
+        <button class="fab-menu-item" role="menuitem" data-type="video"><span class="fm-icon">🎬</span> Video</button>
+        <button class="fab-menu-item" role="menuitem" data-type="note"><span class="fm-icon">📝</span> Note</button>
+        <button class="fab-menu-item" role="menuitem" data-type="voice"><span class="fm-icon">🎙️</span> Voice Memo</button>
+        <button class="fab-menu-item" role="menuitem" data-type="link"><span class="fm-icon">🔗</span> Link</button>
+        <button class="fab-menu-item" role="menuitem" data-type="file"><span class="fm-icon">📎</span> File</button>
+      </div>
+    </div>
+
+    <!-- ═══════ MODE 3: COMPLETION VIEW ═══════ -->
+    <div id="complete-view" class="mode-view" role="region" aria-label="Completion celebration">
+      <div class="scroll-content" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100%;">
+        <div class="completion-card" id="completion-card">
+          <div class="completion-icon" aria-hidden="true">🎯</div>
+          <h2>You did it!</h2>
+          <p id="completion-text">All 5 steps completed for Learn TypeScript Generics</p>
+          <div class="completion-actions">
+            <button class="btn btn-primary btn-full" id="add-final-evidence-btn">Add Final Evidence</button>
+            <button class="btn btn-secondary btn-full" id="view-journey-btn">View Your Journey →</button>
+          </div>
+          <div class="completion-evidence-list" id="completion-evidence-list" style="display:none">
+            <h4>Goal Evidence Added</h4>
+            <div id="completion-ev-items"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ MODE 4: TIMELINE VIEW ═══════ -->
+    <div id="timeline-view" class="mode-view" role="region" aria-label="Timeline journey view">
+      <div class="timeline-header">
+        <div class="timeline-header-row">
+          <h2 id="timeline-title">Learn TypeScript Generics</h2>
+          <button class="btn btn-sm btn-secondary" id="timeline-back-btn">Back to Focus</button>
+        </div>
+        <p class="timeline-desc" id="timeline-desc">Master TypeScript generics through hands-on practice and documentation</p>
+        <div class="timeline-progress-bar">
+          <div class="timeline-progress-fill" id="timeline-progress-fill" style="width:40%"></div>
+        </div>
+        <div class="timeline-progress-label" id="timeline-progress-label">2 of 5 steps completed</div>
+      </div>
+      <div class="scroll-content" style="padding-top:8px">
+        <div class="vertical-timeline" id="vertical-timeline" role="list" aria-label="Timeline steps"></div>
+      </div>
+    </div>
+
+    <!-- Mode Indicator -->
+    <div class="mode-indicator" id="mode-indicator" aria-live="polite">📝 Edit</div>
+
+    <!-- Demo Controls -->
+    <button class="demo-toggle" id="demo-toggle" aria-label="Toggle demo controls">Demo ▾</button>
+    <div class="demo-panel" id="demo-panel" role="region" aria-label="Demo controls">
+      <h4>Demo Controls</h4>
+      <button id="demo-edit">📝 Go to Edit Mode</button>
+      <button id="demo-complete">🎉 Complete All Steps</button>
+      <button id="demo-reset">🔄 Reset</button>
+      <button id="demo-motion">⚡ Toggle Motion</button>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast" role="alert" aria-live="assertive">
+      <span id="toast-text"></span>
+      <button class="toast-undo" id="toast-undo">Undo</button>
+    </div>
+
+    <!-- Confirm Dialog -->
+    <div class="confirm-overlay" id="confirm-overlay" role="dialog" aria-modal="true" aria-label="Confirmation">
+    <div class="confirm-dialog">
+      <h3 id="confirm-title">Delete evidence?</h3>
+      <p id="confirm-text">This action can be undone for 5 seconds.</p>
+      <div class="confirm-actions">
+        <button class="btn btn-sm btn-secondary" id="confirm-cancel">Cancel</button>
+        <button class="btn btn-sm btn-primary" id="confirm-ok" style="background:#ef4444">Delete</button>
+      </div>
+    </div>
+
+    <!-- Confetti Container -->
+    <div class="confetti-container" id="confetti-container" aria-hidden="true"></div>
+  </div>
+
+  <script>
+    /* ═══════════════════════════════════════════
+       STATE
+    ═══════════════════════════════════════════ */
+    const EVIDENCE_TYPES = {
+      photo: { icon: '📷', label: 'Photo' },
+      screenshot: { icon: '📸', label: 'Screenshot' },
+      video: { icon: '🎬', label: 'Video' },
+      note: { icon: '📝', label: 'Note' },
+      voice: { icon: '🎙️', label: 'Voice Memo' },
+      link: { icon: '🔗', label: 'Link' },
+      file: { icon: '📎', label: 'File' }
+    };
+
+    function createInitialState() {
+      return {
+        goal: {
+          title: 'Learn TypeScript Generics',
+          description: 'Master TypeScript generics through hands-on practice and documentation'
+        },
+        steps: [
+          {
+            id: 1, title: 'Read the TypeScript handbook chapter', status: 'completed',
+            evidence: [
+              { id: 'e1', type: 'note', label: 'Key insight: generics preserve type information' },
+              { id: 'e2', type: 'link', label: 'typescriptlang.org/docs' }
+            ]
+          },
+          {
+            id: 2, title: 'Complete generic utility types exercise', status: 'completed',
+            evidence: [
+              { id: 'e3', type: 'screenshot', label: 'Exercise result screenshot' }
+            ]
+          },
+          {
+            id: 3, title: 'Build a type-safe event emitter', status: 'in-progress',
+            evidence: [
+              { id: 'e4', type: 'note', label: 'Started with basic emit/on' }
+            ]
+          },
+          {
+            id: 4, title: 'Write blog post about learnings', status: 'pending',
+            evidence: []
+          },
+          {
+            id: 5, title: 'Get code review from team', status: 'pending',
+            evidence: []
+          }
+        ],
+        goalEvidence: [
+          { id: 'ge1', type: 'link', label: 'github.com/joe/typescript-generics — repo link' }
+        ],
+        currentCardIndex: 2, // step 3 (0-indexed)
+        currentMode: 'focus',
+        cameFromEdit: false,
+        completionEvidence: [],
+        nextEvidenceId: 100
+      };
+    }
+
+    let state = createInitialState();
+
+    /* ═══════════════════════════════════════════
+       DOM REFS
+    ═══════════════════════════════════════════ */
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => document.querySelectorAll(sel);
+
+    const editView = $('#edit-view');
+    const focusView = $('#focus-view');
+    const completeView = $('#complete-view');
+    const timelineView = $('#timeline-view');
+    const modeIndicator = $('#mode-indicator');
+
+    /* ═══════════════════════════════════════════
+       MODE SWITCHING
+    ═══════════════════════════════════════════ */
+    function switchMode(mode, opts = {}) {
+      const views = { edit: editView, focus: focusView, complete: completeView, timeline: timelineView };
+      const labels = { edit: '📝 Edit', focus: '🎯 Focus', complete: '🎉 Complete', timeline: '📖 Timeline' };
+
+      Object.values(views).forEach(v => v.classList.remove('active'));
+      views[mode].classList.add('active');
+      modeIndicator.textContent = labels[mode];
+      state.currentMode = mode;
+
+      // Show/hide FAB and drawer only in focus mode
+      const fab = $('#fab');
+      const fabMenu = $('#fab-menu');
+      const drawer = $('#drawer');
+      if (mode === 'focus') {
+        fab.style.display = 'flex';
+        drawer.style.display = '';
+        renderFocusView();
+      } else {
+        fab.style.display = 'none';
+        fabMenu.classList.remove('open');
+        fab.setAttribute('aria-expanded', 'false');
+        drawer.style.display = 'none';
+        closeDrawer();
+      }
+
+      if (mode === 'edit') renderEditView();
+      if (mode === 'timeline') renderTimelineView();
+      if (mode === 'complete') renderCompletionView();
+
+      // Focus management
+      setTimeout(() => {
+        const firstFocusable = views[mode].querySelector('button, input, textarea, [tabindex="0"]');
+        if (firstFocusable) firstFocusable.focus();
+      }, 100);
+    }
+
+    /* ═══════════════════════════════════════════
+       EDIT VIEW
+    ═══════════════════════════════════════════ */
+    function renderEditView() {
+      const titleInput = $('#goal-title-input');
+      const descInput = $('#goal-desc-input');
+      titleInput.value = state.goal.title;
+      descInput.value = state.goal.description;
+
+      const btn = $('#start-working-btn');
+      btn.textContent = state.cameFromEdit ? 'Back to Focus' : 'Start Working';
+
+      renderEditStepList();
+    }
+
+    function renderEditStepList() {
+      const list = $('#edit-step-list');
+      list.innerHTML = '';
+      state.steps.forEach((step, i) => {
+        const li = document.createElement('li');
+        li.className = 'edit-step-item';
+        li.setAttribute('role', 'listitem');
+        li.draggable = true;
+        li.dataset.index = i;
+        li.innerHTML = `
+          <span class="drag-handle" aria-hidden="true" title="Drag to reorder">≡</span>
+          <input class="edit-step-title" type="text" value="${escHtml(step.title)}" aria-label="Step ${i + 1} title" data-index="${i}">
+          <button class="delete-step-btn" aria-label="Delete step ${i + 1}" data-index="${i}" title="Delete step">&times;</button>
+        `;
+        list.appendChild(li);
+      });
+      $('#edit-step-count').textContent = `${state.steps.length} step${state.steps.length !== 1 ? 's' : ''}`;
+
+      // Wire up delete buttons
+      list.querySelectorAll('.delete-step-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const idx = parseInt(e.currentTarget.dataset.index);
+          if (state.steps.length <= 1) return;
+          state.steps.splice(idx, 1);
+          // Adjust current card index
+          if (state.currentCardIndex >= state.steps.length) {
+            state.currentCardIndex = state.steps.length - 1;
+          }
+          renderEditStepList();
+        });
+      });
+
+      // Wire up inline editing
+      list.querySelectorAll('.edit-step-title').forEach(input => {
+        input.addEventListener('change', (e) => {
+          const idx = parseInt(e.target.dataset.index);
+          state.steps[idx].title = e.target.value;
+        });
+      });
+
+      // Drag & drop reorder
+      let dragIdx = null;
+      list.querySelectorAll('.edit-step-item').forEach(item => {
+        item.addEventListener('dragstart', (e) => {
+          dragIdx = parseInt(item.dataset.index);
+          item.style.opacity = '0.5';
+        });
+        item.addEventListener('dragend', () => {
+          item.style.opacity = '1';
+          dragIdx = null;
+        });
+        item.addEventListener('dragover', (e) => {
+          e.preventDefault();
+        });
+        item.addEventListener('drop', (e) => {
+          e.preventDefault();
+          const dropIdx = parseInt(item.dataset.index);
+          if (dragIdx !== null && dragIdx !== dropIdx) {
+            const [moved] = state.steps.splice(dragIdx, 1);
+            state.steps.splice(dropIdx, 0, moved);
+            renderEditStepList();
+          }
+        });
+      });
+    }
+
+    // Add step
+    $('#add-step-btn').addEventListener('click', () => {
+      const input = $('#add-step-input');
+      const title = input.value.trim();
+      if (!title) return;
+      state.steps.push({
+        id: Date.now(),
+        title,
+        status: 'pending',
+        evidence: []
+      });
+      input.value = '';
+      renderEditStepList();
+      input.focus();
+    });
+
+    $('#add-step-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') $('#add-step-btn').click();
+    });
+
+    // Save title/desc on change
+    $('#goal-title-input').addEventListener('input', (e) => {
+      state.goal.title = e.target.value;
+    });
+    $('#goal-desc-input').addEventListener('input', (e) => {
+      state.goal.description = e.target.value;
+    });
+
+    // Start Working / Back to Focus
+    $('#start-working-btn').addEventListener('click', () => {
+      state.cameFromEdit = false;
+      switchMode('focus');
+    });
+
+    // Edit button in focus mode
+    $('#edit-btn').addEventListener('click', () => {
+      state.cameFromEdit = true;
+      switchMode('edit');
+    });
+
+    /* ═══════════════════════════════════════════
+       FOCUS VIEW
+    ═══════════════════════════════════════════ */
+    function renderFocusView() {
+      $('#focus-title').textContent = state.goal.title;
+      renderMiniTimeline();
+      renderProgressDots();
+      renderCarousel();
+      updateDrawer();
+      updateCarouselNav();
+    }
+
+    /* ── Mini Timeline ── */
+    function renderMiniTimeline() {
+      const track = $('#mini-timeline-track');
+      track.innerHTML = '';
+      const total = state.steps.length + 1; // +1 for goal node
+
+      state.steps.forEach((step, i) => {
+        const node = document.createElement('div');
+        node.className = 'mini-node';
+        if (step.status === 'completed') node.classList.add('completed');
+        if (i === state.currentCardIndex && state.currentCardIndex < state.steps.length) node.classList.add('current');
+        node.setAttribute('role', 'button');
+        node.setAttribute('aria-label', `Step ${i + 1}: ${step.title} (${step.status})`);
+        node.tabIndex = 0;
+        node.addEventListener('click', () => { state.currentCardIndex = i; renderFocusView(); });
+        node.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); state.currentCardIndex = i; renderFocusView(); } });
+        track.appendChild(node);
+      });
+
+      // Goal node
+      const goalNode = document.createElement('div');
+      goalNode.className = 'mini-node goal-node';
+      if (state.currentCardIndex === state.steps.length) goalNode.classList.add('current');
+      if (state.steps.every(s => s.status === 'completed')) goalNode.classList.add('completed');
+      goalNode.setAttribute('role', 'button');
+      goalNode.setAttribute('aria-label', 'Goal evidence');
+      goalNode.tabIndex = 0;
+      goalNode.addEventListener('click', () => { state.currentCardIndex = state.steps.length; renderFocusView(); });
+      goalNode.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); state.currentCardIndex = state.steps.length; renderFocusView(); } });
+      track.appendChild(goalNode);
+
+      // Draw line segments behind nodes
+      // We use absolute positioning; compute after layout
+      requestAnimationFrame(() => {
+        const nodes = track.querySelectorAll('.mini-node');
+        if (nodes.length < 2) return;
+        // Remove old segments
+        track.querySelectorAll('.mini-timeline-segment').forEach(s => s.remove());
+        for (let i = 0; i < nodes.length - 1; i++) {
+          const seg = document.createElement('div');
+          seg.className = 'mini-timeline-segment';
+          const left = nodes[i].offsetLeft + nodes[i].offsetWidth / 2;
+          const right = nodes[i + 1].offsetLeft + nodes[i + 1].offsetWidth / 2;
+          seg.style.left = left + 'px';
+          seg.style.width = (right - left) + 'px';
+          // Completed if both endpoints are completed (or the step is completed)
+          const isCompleted = i < state.steps.length && state.steps[i].status === 'completed';
+          seg.classList.add(isCompleted ? 'completed' : 'pending');
+          track.insertBefore(seg, track.firstChild);
+        }
+      });
+    }
+
+    // Tap mini timeline strip to go to timeline
+    $('#mini-timeline').addEventListener('click', (e) => {
+      // Only if we clicked the strip itself or hint, not a node
+      if (e.target.classList.contains('mini-node')) return;
+      switchMode('timeline');
+    });
+    $('#mini-timeline').addEventListener('keydown', (e) => {
+      if ((e.key === 'Enter' || e.key === ' ') && !e.target.classList.contains('mini-node')) {
+        e.preventDefault();
+        switchMode('timeline');
+      }
+    });
+
+    /* ── Progress Dots ── */
+    function renderProgressDots() {
+      const container = $('#progress-dots');
+      container.innerHTML = '';
+      state.steps.forEach((step, i) => {
+        const dot = document.createElement('button');
+        dot.className = 'progress-dot';
+        if (step.status === 'completed') dot.classList.add('completed');
+        if (i === state.currentCardIndex) dot.classList.add('current');
+        dot.setAttribute('role', 'tab');
+        dot.setAttribute('aria-selected', i === state.currentCardIndex ? 'true' : 'false');
+        dot.setAttribute('aria-label', `Step ${i + 1}: ${step.title}`);
+        dot.addEventListener('click', () => { state.currentCardIndex = i; renderFocusView(); });
+        container.appendChild(dot);
+      });
+      // Goal dot
+      const goalDot = document.createElement('button');
+      goalDot.className = 'progress-dot goal-dot';
+      if (state.currentCardIndex === state.steps.length) goalDot.classList.add('current');
+      goalDot.setAttribute('role', 'tab');
+      goalDot.setAttribute('aria-selected', state.currentCardIndex === state.steps.length ? 'true' : 'false');
+      goalDot.setAttribute('aria-label', 'Goal evidence');
+      goalDot.addEventListener('click', () => { state.currentCardIndex = state.steps.length; renderFocusView(); });
+      container.appendChild(goalDot);
+    }
+
+    /* ── Card Carousel ── */
+    function renderCarousel() {
+      const track = $('#carousel-track');
+      track.innerHTML = '';
+      const totalCards = state.steps.length + 1; // +1 for goal card
+
+      // Step cards
+      state.steps.forEach((step, i) => {
+        const card = document.createElement('div');
+        card.className = 'carousel-card';
+        card.setAttribute('role', 'tabpanel');
+        card.setAttribute('aria-label', `Step ${i + 1}: ${step.title}`);
+
+        // Position class
+        let posClass = 'hidden';
+        if (i === state.currentCardIndex) posClass = 'center';
+        else if (i === state.currentCardIndex - 1) posClass = 'left';
+        else if (i === state.currentCardIndex + 1) posClass = 'right';
+        card.classList.add(posClass);
+
+        const statusClass = step.status === 'completed' ? 'pill-completed' : step.status === 'in-progress' ? 'pill-in-progress' : 'pill-pending';
+        const statusLabel = step.status === 'completed' ? 'Completed' : step.status === 'in-progress' ? 'In Progress' : 'Pending';
+        const evCount = step.evidence.length;
+        const evLabel = evCount === 0 ? 'No evidence yet' : `${evCount} item${evCount !== 1 ? 's' : ''}`;
+
+        card.innerHTML = `
+          <div class="step-number">Step ${i + 1} of ${state.steps.length}</div>
+          <div class="step-title">${escHtml(step.title)}</div>
+          <div class="status-row">
+            <span class="pill ${statusClass}">${statusLabel}</span>
+            <span class="evidence-badge" data-card="${i}" aria-label="${evCount} evidence items, tap to view" tabindex="0">📎 ${evLabel}</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; margin-top:4px;">
+            <button class="step-checkbox ${step.status === 'completed' ? 'checked' : ''}" data-step="${i}" aria-label="Mark step ${i + 1} ${step.status === 'completed' ? 'incomplete' : 'complete'}" aria-pressed="${step.status === 'completed'}">
+              ${step.status === 'completed' ? '✓' : ''}
+            </button>
+            <span style="font-size:15px; font-weight:600">${step.status === 'completed' ? 'Completed' : 'Mark complete'}</span>
+          </div>
+        `;
+        track.appendChild(card);
+      });
+
+      // Goal card
+      const goalCard = document.createElement('div');
+      goalCard.className = 'carousel-card goal-card';
+      goalCard.setAttribute('role', 'tabpanel');
+      goalCard.setAttribute('aria-label', 'Goal evidence');
+
+      let goalPosClass = 'hidden';
+      const goalIdx = state.steps.length;
+      if (state.currentCardIndex === goalIdx) goalPosClass = 'center';
+      else if (state.currentCardIndex === goalIdx - 1) goalPosClass = 'right';
+      else if (state.currentCardIndex === goalIdx + 1) goalPosClass = 'left';
+      goalCard.classList.add(goalPosClass);
+
+      const gEvCount = state.goalEvidence.length;
+      goalCard.innerHTML = `
+        <div class="step-number" style="color:var(--orange)">★ Goal</div>
+        <div class="step-title">Goal Evidence</div>
+        <p style="font-size:14px; color:var(--text-muted);">Evidence for the overall goal, not tied to a specific step</p>
+        <span class="evidence-badge" data-card="goal" aria-label="${gEvCount} goal evidence items, tap to view" tabindex="0">${gEvCount} item${gEvCount !== 1 ? 's' : ''}</span>
+      `;
+      track.appendChild(goalCard);
+
+      // Wire checkboxes
+      track.querySelectorAll('.step-checkbox').forEach(cb => {
+        cb.addEventListener('click', (e) => {
+          const idx = parseInt(e.currentTarget.dataset.step);
+          toggleStepCompletion(idx);
+        });
+      });
+
+      // Wire evidence badges to open drawer
+      track.querySelectorAll('.evidence-badge').forEach(badge => {
+        const handler = () => openDrawer();
+        badge.addEventListener('click', handler);
+        badge.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handler(); } });
+      });
+    }
+
+    function updateCarouselNav() {
+      const totalCards = state.steps.length + 1; // +1 for goal
+      const prev = $('#carousel-prev');
+      const next = $('#carousel-next');
+      prev.disabled = state.currentCardIndex === 0;
+      prev.classList.toggle('disabled', state.currentCardIndex === 0);
+      next.disabled = state.currentCardIndex === totalCards - 1;
+      next.classList.toggle('disabled', state.currentCardIndex === totalCards - 1);
+    }
+
+    $('#carousel-prev').addEventListener('click', () => {
+      if (state.currentCardIndex > 0) {
+        state.currentCardIndex--;
+        renderFocusView();
+      }
+    });
+    $('#carousel-next').addEventListener('click', () => {
+      if (state.currentCardIndex < state.steps.length) {
+        state.currentCardIndex++;
+        renderFocusView();
+      }
+    });
+
+    // Swipe support
+    let touchStartX = 0;
+    let touchStartY = 0;
+    const carouselContainer = document.querySelector('.carousel-container');
+    carouselContainer.addEventListener('touchstart', (e) => {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    carouselContainer.addEventListener('touchend', (e) => {
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      const dy = e.changedTouches[0].clientY - touchStartY;
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+        if (dx < 0 && state.currentCardIndex < state.steps.length) {
+          state.currentCardIndex++;
+          renderFocusView();
+        } else if (dx > 0 && state.currentCardIndex > 0) {
+          state.currentCardIndex--;
+          renderFocusView();
+        }
+      }
+    }, { passive: true });
+
+    // Keyboard nav
+    document.addEventListener('keydown', (e) => {
+      if (state.currentMode !== 'focus') return;
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.key === 'ArrowLeft' && state.currentCardIndex > 0) {
+        state.currentCardIndex--;
+        renderFocusView();
+      } else if (e.key === 'ArrowRight' && state.currentCardIndex < state.steps.length) {
+        state.currentCardIndex++;
+        renderFocusView();
+      }
+    });
+
+    /* ── Step Completion ── */
+    function toggleStepCompletion(idx) {
+      const step = state.steps[idx];
+      if (step.status === 'completed') {
+        step.status = 'pending';
+      } else {
+        step.status = 'completed';
+      }
+      renderFocusView();
+
+      // Check if all complete
+      if (state.steps.every(s => s.status === 'completed')) {
+        setTimeout(() => triggerCompletion(), 400);
+      }
+    }
+
+    /* ── Drawer ── */
+    function openDrawer() {
+      const drawer = $('#drawer');
+      const overlay = $('#drawer-overlay');
+      drawer.classList.remove('closed', 'peek');
+      drawer.classList.add('open');
+      overlay.classList.add('open');
+      overlay.setAttribute('aria-hidden', 'false');
+      updateDrawer();
+    }
+
+    function closeDrawer() {
+      const drawer = $('#drawer');
+      const overlay = $('#drawer-overlay');
+      drawer.classList.remove('open');
+      drawer.classList.add('closed');
+      overlay.classList.remove('open');
+      overlay.setAttribute('aria-hidden', 'true');
+    }
+
+    function updateDrawer() {
+      const drawer = $('#drawer');
+      const label = $('#drawer-label');
+      const content = $('#drawer-content');
+      const isGoal = state.currentCardIndex >= state.steps.length;
+
+      if (isGoal) {
+        drawer.classList.add('goal-drawer');
+      } else {
+        drawer.classList.remove('goal-drawer');
+      }
+
+      const evidence = isGoal ? state.goalEvidence : (state.steps[state.currentCardIndex]?.evidence || []);
+      const labelText = isGoal ? `Goal evidence: ${evidence.length} item${evidence.length !== 1 ? 's' : ''}` : `${evidence.length} evidence item${evidence.length !== 1 ? 's' : ''}`;
+      label.textContent = labelText;
+
+      if (evidence.length === 0) {
+        content.innerHTML = `<div class="drawer-empty">No evidence yet — tap + to add</div>`;
+      } else {
+        let html = '<div class="evidence-grid">';
+        evidence.forEach(ev => {
+          const info = EVIDENCE_TYPES[ev.type] || { icon: '📄', label: 'Item' };
+          html += `
+            <div class="evidence-item ${isGoal ? 'goal-evidence' : ''}" data-evid="${ev.id}" role="button" aria-label="${escHtml(ev.label)}. Long press to delete." tabindex="0">
+              <span class="ev-icon">${info.icon}</span>
+              <span>${escHtml(ev.label.length > 20 ? ev.label.slice(0, 20) + '…' : ev.label)}</span>
+            </div>
+          `;
+        });
+        html += '</div>';
+        content.innerHTML = html;
+
+        // Long press to delete
+        content.querySelectorAll('.evidence-item').forEach(item => {
+          let pressTimer = null;
+          const startPress = () => {
+            pressTimer = setTimeout(() => {
+              showConfirmDelete(item.dataset.evid, isGoal);
+            }, 600);
+          };
+          const cancelPress = () => { clearTimeout(pressTimer); };
+          item.addEventListener('mousedown', startPress);
+          item.addEventListener('mouseup', cancelPress);
+          item.addEventListener('mouseleave', cancelPress);
+          item.addEventListener('touchstart', startPress, { passive: true });
+          item.addEventListener('touchend', cancelPress);
+          item.addEventListener('touchcancel', cancelPress);
+          // Keyboard
+          item.addEventListener('keydown', (e) => {
+            if (e.key === 'Delete' || e.key === 'Backspace') {
+              showConfirmDelete(item.dataset.evid, isGoal);
+            }
+          });
+        });
+      }
+    }
+
+    $('#drawer-handle').addEventListener('click', () => {
+      const drawer = $('#drawer');
+      if (drawer.classList.contains('open')) {
+        closeDrawer();
+      } else {
+        openDrawer();
+      }
+    });
+    $('#drawer-handle').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const drawer = $('#drawer');
+        if (drawer.classList.contains('open')) closeDrawer(); else openDrawer();
+      }
+    });
+    $('#drawer-overlay').addEventListener('click', closeDrawer);
+
+    /* ── FAB & Evidence Adding ── */
+    const fab = $('#fab');
+    const fabMenu = $('#fab-menu');
+
+    fab.addEventListener('click', () => {
+      const isOpen = fabMenu.classList.contains('open');
+      fabMenu.classList.toggle('open');
+      fab.setAttribute('aria-expanded', !isOpen);
+      fab.textContent = isOpen ? '+' : '×';
+    });
+
+    fabMenu.querySelectorAll('.fab-menu-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const type = item.dataset.type;
+        addEvidence(type);
+        fabMenu.classList.remove('open');
+        fab.setAttribute('aria-expanded', 'false');
+        fab.textContent = '+';
+      });
+    });
+
+    // Close FAB on outside click
+    document.addEventListener('click', (e) => {
+      if (!fab.contains(e.target) && !fabMenu.contains(e.target)) {
+        fabMenu.classList.remove('open');
+        fab.setAttribute('aria-expanded', 'false');
+        fab.textContent = '+';
+      }
+    });
+
+    function addEvidence(type) {
+      const isGoal = state.currentCardIndex >= state.steps.length;
+      const info = EVIDENCE_TYPES[type] || { icon: '📄', label: 'Item' };
+      const newEv = {
+        id: 'ev' + (state.nextEvidenceId++),
+        type,
+        label: `${info.label} — ${new Date().toLocaleTimeString()}`
+      };
+
+      if (isGoal) {
+        state.goalEvidence.push(newEv);
+      } else {
+        state.steps[state.currentCardIndex].evidence.push(newEv);
+      }
+
+      renderFocusView();
+
+      // Flash evidence badge
+      const activeCard = $('#carousel-track').querySelectorAll('.carousel-card')[state.currentCardIndex];
+      if (activeCard) {
+        const badge = activeCard.querySelector('.evidence-badge');
+        if (badge) {
+          badge.classList.add('flash');
+          setTimeout(() => badge.classList.remove('flash'), 600);
+        }
+      }
+
+      // Open drawer to show new item
+      openDrawer();
+    }
+
+    /* ── Delete Evidence ── */
+    let pendingDelete = null;
+    let toastTimer = null;
+
+    function showConfirmDelete(evId, isGoal) {
+      pendingDelete = { evId, isGoal };
+      $('#confirm-overlay').classList.add('open');
+      $('#confirm-cancel').focus();
+    }
+
+    $('#confirm-cancel').addEventListener('click', () => {
+      pendingDelete = null;
+      $('#confirm-overlay').classList.remove('open');
+    });
+
+    $('#confirm-ok').addEventListener('click', () => {
+      if (!pendingDelete) return;
+      const { evId, isGoal } = pendingDelete;
+      let deletedItem = null;
+      let deletedFrom = null;
+      let deletedIndex = -1;
+
+      if (isGoal) {
+        const idx = state.goalEvidence.findIndex(e => e.id === evId);
+        if (idx >= 0) {
+          deletedItem = state.goalEvidence.splice(idx, 1)[0];
+          deletedFrom = 'goal';
+          deletedIndex = idx;
+        }
+      } else {
+        const step = state.steps[state.currentCardIndex];
+        if (step) {
+          const idx = step.evidence.findIndex(e => e.id === evId);
+          if (idx >= 0) {
+            deletedItem = step.evidence.splice(idx, 1)[0];
+            deletedFrom = state.currentCardIndex;
+            deletedIndex = idx;
+          }
+        }
+      }
+
+      $('#confirm-overlay').classList.remove('open');
+      pendingDelete = null;
+
+      if (deletedItem) {
+        renderFocusView();
+        openDrawer();
+        showUndoToast('Evidence deleted', () => {
+          // Undo
+          if (deletedFrom === 'goal') {
+            state.goalEvidence.splice(deletedIndex, 0, deletedItem);
+          } else {
+            state.steps[deletedFrom].evidence.splice(deletedIndex, 0, deletedItem);
+          }
+          renderFocusView();
+          openDrawer();
+        });
+      }
+    });
+
+    function showUndoToast(text, undoFn) {
+      const toast = $('#toast');
+      const toastText = $('#toast-text');
+      toastText.textContent = text;
+      toast.classList.add('visible');
+
+      clearTimeout(toastTimer);
+      const undoBtn = $('#toast-undo');
+
+      const doUndo = () => {
+        undoFn();
+        toast.classList.remove('visible');
+        clearTimeout(toastTimer);
+        undoBtn.removeEventListener('click', doUndo);
+      };
+
+      undoBtn.addEventListener('click', doUndo);
+
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('visible');
+        undoBtn.removeEventListener('click', doUndo);
+      }, 5000);
+    }
+
+    /* ═══════════════════════════════════════════
+       COMPLETION FLOW
+    ═══════════════════════════════════════════ */
+    function triggerCompletion() {
+      state.completionEvidence = [];
+      launchConfetti();
+      switchMode('complete');
+    }
+
+    function renderCompletionView() {
+      $('#completion-text').textContent = `All ${state.steps.length} steps completed for ${state.goal.title}`;
+      const evList = $('#completion-evidence-list');
+      const evItems = $('#completion-ev-items');
+
+      if (state.completionEvidence.length > 0) {
+        evList.style.display = 'block';
+        evItems.innerHTML = '';
+        state.completionEvidence.forEach(ev => {
+          const info = EVIDENCE_TYPES[ev.type] || { icon: '📄', label: 'Item' };
+          const div = document.createElement('div');
+          div.className = 'completion-ev-item';
+          div.textContent = `${info.icon} ${ev.label}`;
+          evItems.appendChild(div);
+        });
+        // Make "View Journey" primary
+        $('#add-final-evidence-btn').className = 'btn btn-secondary btn-full';
+        $('#view-journey-btn').className = 'btn btn-primary btn-full';
+      } else {
+        evList.style.display = 'none';
+        $('#add-final-evidence-btn').className = 'btn btn-primary btn-full';
+        $('#view-journey-btn').className = 'btn btn-secondary btn-full';
+      }
+    }
+
+    $('#add-final-evidence-btn').addEventListener('click', () => {
+      // Show a simple type picker (reuse FAB concept)
+      const types = Object.entries(EVIDENCE_TYPES);
+      const type = types[Math.floor(Math.random() * types.length)][0];
+      const info = EVIDENCE_TYPES[type];
+      const ev = {
+        id: 'cev' + (state.nextEvidenceId++),
+        type,
+        label: `${info.label} — added at completion`
+      };
+      state.completionEvidence.push(ev);
+      state.goalEvidence.push(ev);
+      renderCompletionView();
+    });
+
+    $('#view-journey-btn').addEventListener('click', () => {
+      switchMode('timeline');
+    });
+
+    function launchConfetti() {
+      if (document.body.classList.contains('reduced-motion')) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      const container = $('#confetti-container');
+      container.innerHTML = '';
+      const colors = ['#3b82f6', '#ffe50c', '#22c55e', '#a78bfa', '#f97316', '#ef4444'];
+      for (let i = 0; i < 60; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        piece.style.left = Math.random() * 100 + '%';
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.animationDelay = Math.random() * 0.5 + 's';
+        piece.style.animationDuration = (1.5 + Math.random()) + 's';
+        piece.style.width = (6 + Math.random() * 8) + 'px';
+        piece.style.height = (6 + Math.random() * 8) + 'px';
+        piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+        container.appendChild(piece);
+      }
+      setTimeout(() => { container.innerHTML = ''; }, 3000);
+    }
+
+    /* ═══════════════════════════════════════════
+       TIMELINE VIEW
+    ═══════════════════════════════════════════ */
+    function renderTimelineView() {
+      $('#timeline-title').textContent = state.goal.title;
+      $('#timeline-desc').textContent = state.goal.description;
+
+      const completedCount = state.steps.filter(s => s.status === 'completed').length;
+      const pct = state.steps.length > 0 ? (completedCount / state.steps.length) * 100 : 0;
+      $('#timeline-progress-fill').style.width = pct + '%';
+      $('#timeline-progress-label').textContent = `${completedCount} of ${state.steps.length} steps completed`;
+
+      const container = $('#vertical-timeline');
+      container.innerHTML = '';
+
+      // Line container
+      const lineDiv = document.createElement('div');
+      lineDiv.className = 'timeline-line';
+      container.appendChild(lineDiv);
+
+      // Steps
+      state.steps.forEach((step, i) => {
+        const stepEl = document.createElement('div');
+        stepEl.className = 'timeline-step';
+        stepEl.setAttribute('role', 'listitem');
+
+        const nodeClass = step.status === 'completed' ? 'completed' : step.status === 'in-progress' ? 'in-progress' : '';
+        const nodeContent = step.status === 'completed' ? '✓' : (i + 1);
+        const evHtml = step.evidence.length > 0
+          ? step.evidence.map(ev => {
+              const info = EVIDENCE_TYPES[ev.type] || { icon: '📄', label: 'Item' };
+              return `<div class="timeline-ev-card"><span class="ev-icon">${info.icon}</span> ${escHtml(ev.label)}</div>`;
+            }).join('')
+          : '<div class="timeline-no-ev">No evidence yet</div>';
+
+        stepEl.innerHTML = `
+          <div class="timeline-node ${nodeClass}" data-step-idx="${i}" role="button" aria-label="Go to step ${i + 1}" tabindex="0">${nodeContent}</div>
+          <div class="timeline-step-content">
+            <div class="timeline-step-header" data-toggle="${i}" role="button" aria-expanded="false" aria-label="Toggle step ${i + 1} evidence" tabindex="0">
+              <span class="pill ${step.status === 'completed' ? 'pill-completed' : step.status === 'in-progress' ? 'pill-in-progress' : 'pill-pending'}" style="font-size:10px">${step.status === 'completed' ? 'Done' : step.status === 'in-progress' ? 'Active' : 'Pending'}</span>
+              <span class="timeline-step-title">${escHtml(step.title)}</span>
+              <span class="timeline-chevron" data-toggle="${i}">▼</span>
+            </div>
+            <div class="timeline-evidence-cards" id="tl-ev-${i}">${evHtml}</div>
+          </div>
+        `;
+        container.appendChild(stepEl);
+      });
+
+      // Finish Line
+      const finishEl = document.createElement('div');
+      finishEl.className = 'finish-line';
+      const goalEvHtml = state.goalEvidence.length > 0
+        ? state.goalEvidence.map(ev => {
+            const info = EVIDENCE_TYPES[ev.type] || { icon: '📄', label: 'Item' };
+            return `<div class="finish-ev-card"><span class="ev-icon">${info.icon}</span> ${escHtml(ev.label)}</div>`;
+          }).join('')
+        : '<div class="timeline-no-ev">No goal evidence yet</div>';
+      finishEl.innerHTML = `
+        <div class="finish-node" aria-label="Goal finish line">★</div>
+        <div class="finish-content">
+          <h3>Goal Evidence</h3>
+          ${goalEvHtml}
+        </div>
+      `;
+      container.appendChild(finishEl);
+
+      // Line segments (position after render)
+      requestAnimationFrame(() => {
+        lineDiv.innerHTML = '';
+        const nodes = container.querySelectorAll('.timeline-node');
+        const finishNode = container.querySelector('.finish-node');
+        if (nodes.length === 0) return;
+
+        for (let i = 0; i < nodes.length; i++) {
+          const top = nodes[i].offsetTop + nodes[i].offsetHeight / 2;
+          let bottom;
+          if (i < nodes.length - 1) {
+            bottom = nodes[i + 1].offsetTop + nodes[i + 1].offsetHeight / 2;
+          } else if (finishNode) {
+            bottom = finishNode.offsetTop + finishNode.offsetHeight / 2;
+          } else {
+            break;
+          }
+          const seg = document.createElement('div');
+          seg.className = 'timeline-line-segment';
+          seg.style.top = top + 'px';
+          seg.style.height = (bottom - top) + 'px';
+          const isCompleted = state.steps[i]?.status === 'completed';
+          seg.classList.add(isCompleted ? 'completed' : 'pending');
+          lineDiv.appendChild(seg);
+        }
+      });
+
+      // Wire toggle
+      container.querySelectorAll('.timeline-step-header').forEach(header => {
+        header.addEventListener('click', () => {
+          const idx = header.dataset.toggle;
+          const evSection = $(`#tl-ev-${idx}`);
+          const chevron = header.querySelector('.timeline-chevron');
+          const expanded = evSection.classList.contains('expanded');
+          evSection.classList.toggle('expanded');
+          chevron.classList.toggle('expanded');
+          header.setAttribute('aria-expanded', !expanded);
+        });
+        header.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            header.click();
+          }
+        });
+      });
+
+      // Wire step nodes to navigate back to focus
+      container.querySelectorAll('.timeline-node').forEach(node => {
+        const handler = () => {
+          const idx = parseInt(node.dataset.stepIdx);
+          state.currentCardIndex = idx;
+          switchMode('focus');
+        };
+        node.addEventListener('click', handler);
+        node.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handler(); } });
+      });
+    }
+
+    // Back to Focus from timeline
+    $('#timeline-back-btn').addEventListener('click', () => {
+      switchMode('focus');
+    });
+
+    /* ═══════════════════════════════════════════
+       DEMO CONTROLS
+    ═══════════════════════════════════════════ */
+    $('#demo-toggle').addEventListener('click', () => {
+      $('#demo-panel').classList.toggle('open');
+    });
+
+    $('#demo-edit').addEventListener('click', () => {
+      state.cameFromEdit = false;
+      switchMode('edit');
+      $('#demo-panel').classList.remove('open');
+    });
+
+    $('#demo-complete').addEventListener('click', () => {
+      state.steps.forEach(s => s.status = 'completed');
+      triggerCompletion();
+      $('#demo-panel').classList.remove('open');
+    });
+
+    $('#demo-reset').addEventListener('click', () => {
+      state = createInitialState();
+      switchMode('focus');
+      $('#demo-panel').classList.remove('open');
+    });
+
+    $('#demo-motion').addEventListener('click', () => {
+      document.body.classList.toggle('reduced-motion');
+      const isReduced = document.body.classList.contains('reduced-motion');
+      $('#demo-motion').textContent = isReduced ? '⚡ Enable Motion' : '⚡ Toggle Motion';
+    });
+
+    /* ═══════════════════════════════════════════
+       UTILS
+    ═══════════════════════════════════════════ */
+    function escHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    /* ═══════════════════════════════════════════
+       INIT
+    ═══════════════════════════════════════════ */
+    switchMode('focus');
+  </script>
+</body>
+</html>

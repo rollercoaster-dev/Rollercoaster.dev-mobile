@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Approach C: Focus Mode with Bottom Drawer</title>
+  <style>
+    /* ───── Reset & Base ───── */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #fafafa;
+      --card: #ffffff;
+      --border: #262626;
+      --border-w: 3px;
+      --shadow: 4px 4px 0 rgba(38, 38, 38, 0.8);
+      --shadow-sm: 2px 2px 0 rgba(38, 38, 38, 0.8);
+      --blue: #3b82f6;
+      --yellow: #ffe50c;
+      --mint: #d4f4e7;
+      --purple: #a78bfa;
+      --text: #262626;
+      --text-muted: #6b7280;
+      --radius: 6px;
+      --radius-sm: 4px;
+      --completed: #22c55e;
+      --in-progress: #3b82f6;
+      --pending: #d1d5db;
+      --font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      --transition-speed: 0.3s;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      -webkit-tap-highlight-color: transparent;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    /* ───── Accessibility: Reduced Motion ───── */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+      .step-card {
+        transition: none !important;
+      }
+      .drawer {
+        transition: none !important;
+      }
+    }
+
+    /* ───── Focus Visible ───── */
+    :focus-visible {
+      outline: 3px solid var(--blue);
+      outline-offset: 2px;
+    }
+
+    /* ───── App Shell ───── */
+    .app-shell {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: 100dvh;
+      max-width: 430px;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    /* ───── Prototype Banner ───── */
+    .proto-banner {
+      background: var(--yellow);
+      border-bottom: var(--border-w) solid var(--border);
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+      flex-shrink: 0;
+      letter-spacing: -0.01em;
+    }
+
+    /* ───── Goal Header ───── */
+    .goal-header {
+      padding: 16px 16px 12px;
+      flex-shrink: 0;
+    }
+
+    .goal-title {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .progress-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .progress-bar-track {
+      flex: 1;
+      height: 10px;
+      background: var(--card);
+      border: var(--border-w) solid var(--border);
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--completed);
+      transition: width var(--transition-speed) ease;
+    }
+
+    .progress-label {
+      font-size: 14px;
+      font-weight: 700;
+      white-space: nowrap;
+      color: var(--text-muted);
+    }
+
+    /* ───── Step Progress Dots ───── */
+    .step-dots {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      padding: 4px 16px 12px;
+      flex-shrink: 0;
+    }
+
+    .step-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      background: var(--pending);
+      transition: background var(--transition-speed) ease, transform var(--transition-speed) ease;
+      cursor: pointer;
+    }
+
+    .step-dot[data-status="completed"] {
+      background: var(--completed);
+    }
+
+    .step-dot[data-status="in-progress"] {
+      background: var(--in-progress);
+    }
+
+    .step-dot[data-status="pending"] {
+      background: var(--pending);
+    }
+
+    .step-dot.active {
+      transform: scale(1.4);
+      border-width: var(--border-w);
+    }
+
+    /* ───── Step Navigator ───── */
+    .step-navigator {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 0 16px;
+      position: relative;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .step-counter {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      flex-shrink: 0;
+    }
+
+    .step-carousel {
+      position: relative;
+      width: 100%;
+      flex: 1;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      min-height: 0;
+    }
+
+    .step-card-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    /* Adjacent step peeks */
+    .step-card {
+      position: absolute;
+      width: calc(100% - 64px);
+      background: var(--card);
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      transition: transform var(--transition-speed) ease, opacity var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+      touch-action: pan-y;
+    }
+
+    .step-card.current {
+      z-index: 2;
+      transform: translateX(0) scale(1);
+      opacity: 1;
+      box-shadow: var(--shadow);
+    }
+
+    .step-card.prev {
+      z-index: 1;
+      transform: translateX(-85%) scale(0.88);
+      opacity: 0.5;
+      cursor: pointer;
+    }
+
+    .step-card.next {
+      z-index: 1;
+      transform: translateX(85%) scale(0.88);
+      opacity: 0.5;
+      cursor: pointer;
+    }
+
+    .step-card.hidden-left {
+      z-index: 0;
+      transform: translateX(-150%) scale(0.8);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .step-card.hidden-right {
+      z-index: 0;
+      transform: translateX(150%) scale(0.8);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Card internals */
+    .step-number {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .step-title {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      margin-bottom: 16px;
+    }
+
+    .step-status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    /* Checkbox */
+    .step-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      min-height: 44px;
+      padding: 4px 0;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .step-checkbox:active .checkbox-box {
+      transform: scale(0.9);
+    }
+
+    .checkbox-box {
+      width: 28px;
+      height: 28px;
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s ease, transform 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .checkbox-box.checked {
+      background: var(--completed);
+    }
+
+    .checkbox-box svg {
+      width: 18px;
+      height: 18px;
+      stroke: white;
+      stroke-width: 3;
+      fill: none;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+    }
+
+    .checkbox-box.checked svg {
+      opacity: 1;
+    }
+
+    .checkbox-label {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .checkbox-label.completed-text {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+
+    /* Evidence badge */
+    .evidence-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--mint);
+      border: 2px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: transform 0.1s ease;
+      min-height: 36px;
+    }
+
+    .evidence-badge:active {
+      transform: scale(0.95);
+    }
+
+    .evidence-badge .badge-icon {
+      font-size: 14px;
+    }
+
+    .evidence-badge.empty {
+      background: #f3f4f6;
+      color: var(--text-muted);
+    }
+
+    /* Navigation arrows */
+    .nav-arrows {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      padding: 12px 16px 8px;
+      flex-shrink: 0;
+    }
+
+    .nav-btn {
+      width: 48px;
+      height: 48px;
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius);
+      background: var(--card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 20px;
+      font-weight: 800;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+      color: var(--text);
+    }
+
+    .nav-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: none;
+    }
+
+    .nav-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .nav-btn:disabled:active {
+      transform: none;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .nav-btn svg {
+      width: 24px;
+      height: 24px;
+      stroke: currentColor;
+      stroke-width: 3;
+      fill: none;
+    }
+
+    /* ───── Bottom Drawer ───── */
+    .drawer-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 10;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--transition-speed) ease;
+    }
+
+    .drawer-overlay.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .drawer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 11;
+      background: var(--card);
+      border-top: var(--border-w) solid var(--border);
+      border-radius: 16px 16px 0 0;
+      transition: transform var(--transition-speed) ease;
+      max-height: 70vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .drawer.peek {
+      transform: translateY(calc(100% - 68px));
+    }
+
+    .drawer.open {
+      transform: translateY(0);
+    }
+
+    .drawer-handle-area {
+      padding: 12px 16px 8px;
+      cursor: grab;
+      touch-action: none;
+      flex-shrink: 0;
+    }
+
+    .drawer-handle-area:active {
+      cursor: grabbing;
+    }
+
+    .drawer-handle {
+      width: 40px;
+      height: 5px;
+      background: #d1d5db;
+      border-radius: 3px;
+      margin: 0 auto 8px;
+    }
+
+    .drawer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .drawer-title {
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .drawer-count {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      background: var(--mint);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 2px 10px;
+    }
+
+    .drawer-content {
+      padding: 8px 16px 24px;
+      overflow-y: auto;
+      flex: 1;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .evidence-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .evidence-item {
+      background: var(--bg);
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .evidence-type-icon {
+      width: 40px;
+      height: 40px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .evidence-type-icon.text { background: var(--yellow); }
+    .evidence-type-icon.link { background: #bfdbfe; }
+    .evidence-type-icon.screenshot { background: var(--purple); color: white; }
+    .evidence-type-icon.photo { background: var(--mint); }
+    .evidence-type-icon.video { background: #fca5a5; }
+    .evidence-type-icon.voice_memo { background: #fdba74; }
+    .evidence-type-icon.file { background: #e5e7eb; }
+
+    .evidence-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .evidence-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 2px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .evidence-meta {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .evidence-empty {
+      text-align: center;
+      padding: 32px 16px;
+      color: var(--text-muted);
+      font-size: 15px;
+    }
+
+    .evidence-empty-icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    /* ───── FAB ───── */
+    .fab {
+      position: absolute;
+      bottom: 80px;
+      right: 20px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--blue);
+      border: var(--border-w) solid var(--border);
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 12;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .fab:active {
+      transform: translate(2px, 2px) scale(0.95);
+      box-shadow: none;
+    }
+
+    .fab svg {
+      width: 28px;
+      height: 28px;
+      stroke: white;
+      stroke-width: 3;
+      fill: none;
+    }
+
+    .fab.open {
+      transform: rotate(45deg);
+    }
+
+    .fab.open:active {
+      transform: rotate(45deg) translate(2px, 2px) scale(0.95);
+    }
+
+    /* ───── Evidence Type Picker ───── */
+    .type-picker-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 11;
+      background: rgba(0, 0, 0, 0.3);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .type-picker-overlay.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .type-picker {
+      position: absolute;
+      bottom: 148px;
+      right: 20px;
+      z-index: 13;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-end;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(16px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .type-picker.visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    .type-picker-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--card);
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 16px;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+      min-height: 44px;
+      white-space: nowrap;
+    }
+
+    .type-picker-item:active {
+      transform: translate(2px, 2px);
+      box-shadow: none;
+    }
+
+    .type-picker-icon {
+      width: 32px;
+      height: 32px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .type-picker-label {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    /* Stagger animation */
+    .type-picker-item:nth-child(1) { transition-delay: 0.00s; }
+    .type-picker-item:nth-child(2) { transition-delay: 0.03s; }
+    .type-picker-item:nth-child(3) { transition-delay: 0.06s; }
+    .type-picker-item:nth-child(4) { transition-delay: 0.09s; }
+    .type-picker-item:nth-child(5) { transition-delay: 0.12s; }
+    .type-picker-item:nth-child(6) { transition-delay: 0.15s; }
+    .type-picker-item:nth-child(7) { transition-delay: 0.18s; }
+
+    .type-picker:not(.visible) .type-picker-item {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+
+    .type-picker.visible .type-picker-item {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ───── Swipe hint ───── */
+    .swipe-hint {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      padding: 0 16px 4px;
+      flex-shrink: 0;
+    }
+
+    /* ───── Status Pills ───── */
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+    }
+
+    .status-pill.completed { background: var(--mint); }
+    .status-pill.in-progress { background: #bfdbfe; }
+    .status-pill.pending { background: #f3f4f6; color: var(--text-muted); }
+
+    /* ───── Responsive ───── */
+    @media (min-width: 431px) {
+      .app-shell {
+        border-left: var(--border-w) solid var(--border);
+        border-right: var(--border-w) solid var(--border);
+      }
+    }
+
+    /* ───── Toast ───── */
+    .toast {
+      position: absolute;
+      bottom: 148px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--border);
+      color: white;
+      padding: 10px 20px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-weight: 700;
+      z-index: 20;
+      opacity: 0;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .toast.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell" role="main">
+    <!-- Prototype Banner -->
+    <div class="proto-banner" role="banner">
+      Approach C: Focus Mode — One step at a time with evidence drawer
+    </div>
+
+    <!-- Goal Header -->
+    <header class="goal-header">
+      <h1 class="goal-title">Learn TypeScript Generics</h1>
+      <div class="progress-row">
+        <div class="progress-bar-track" role="progressbar" aria-valuenow="2" aria-valuemin="0" aria-valuemax="5" aria-label="Goal progress: 2 of 5 steps completed">
+          <div class="progress-bar-fill" id="progressFill" style="width: 40%;"></div>
+        </div>
+        <span class="progress-label" id="progressLabel">2/5 steps</span>
+      </div>
+    </header>
+
+    <!-- Step Progress Dots -->
+    <nav class="step-dots" aria-label="Step progress indicators" id="stepDots"></nav>
+
+    <!-- Step Counter -->
+    <div class="step-counter" id="stepCounter" aria-live="polite">Step 3 of 5</div>
+
+    <!-- Step Carousel -->
+    <section class="step-navigator" aria-label="Step navigator">
+      <div class="step-carousel" id="stepCarousel"></div>
+    </section>
+
+    <!-- Swipe hint -->
+    <div class="swipe-hint" aria-hidden="true">Swipe or use arrows to navigate</div>
+
+    <!-- Navigation Arrows -->
+    <nav class="nav-arrows" aria-label="Step navigation">
+      <button class="nav-btn" id="prevBtn" aria-label="Previous step" disabled>
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
+      <button class="nav-btn" id="nextBtn" aria-label="Next step">
+        <svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"></polyline></svg>
+      </button>
+    </nav>
+
+    <!-- Drawer Overlay -->
+    <div class="drawer-overlay" id="drawerOverlay" aria-hidden="true"></div>
+
+    <!-- Bottom Drawer -->
+    <aside class="drawer peek" id="drawer" role="region" aria-label="Evidence drawer">
+      <div class="drawer-handle-area" id="drawerHandle" role="button" aria-label="Toggle evidence drawer" tabindex="0">
+        <div class="drawer-handle" aria-hidden="true"></div>
+        <div class="drawer-header">
+          <span class="drawer-title">Evidence</span>
+          <span class="drawer-count" id="drawerCount">1 item</span>
+        </div>
+      </div>
+      <div class="drawer-content" id="drawerContent">
+        <div class="evidence-grid" id="evidenceGrid"></div>
+      </div>
+    </aside>
+
+    <!-- FAB -->
+    <button class="fab" id="fab" aria-label="Add evidence" aria-expanded="false">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+    </button>
+
+    <!-- Type Picker Overlay -->
+    <div class="type-picker-overlay" id="typePickerOverlay"></div>
+
+    <!-- Evidence Type Picker -->
+    <div class="type-picker" id="typePicker" role="menu" aria-label="Choose evidence type"></div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </div>
+
+  <script>
+    // ───── Data ─────
+    const EVIDENCE_TYPES = [
+      { id: 'photo', label: 'Photo', icon: '📷', bg: '#d4f4e7' },
+      { id: 'screenshot', label: 'Screenshot', icon: '🖼', bg: '#a78bfa' },
+      { id: 'video', label: 'Video', icon: '🎬', bg: '#fca5a5' },
+      { id: 'text', label: 'Note', icon: '📝', bg: '#ffe50c' },
+      { id: 'voice_memo', label: 'Voice Memo', icon: '🎙', bg: '#fdba74' },
+      { id: 'link', label: 'Link', icon: '🔗', bg: '#bfdbfe' },
+      { id: 'file', label: 'File', icon: '📎', bg: '#e5e7eb' },
+    ];
+
+    const steps = [
+      {
+        id: 1,
+        title: 'Read the TypeScript handbook chapter',
+        status: 'completed',
+        evidence: [
+          { type: 'text', title: 'Chapter notes', meta: 'Added 3 days ago' },
+          { type: 'link', title: 'TS Handbook: Generics', meta: 'typescriptlang.org' },
+        ],
+      },
+      {
+        id: 2,
+        title: 'Complete generic utility types exercise',
+        status: 'completed',
+        evidence: [
+          { type: 'screenshot', title: 'All tests passing', meta: 'Added 2 days ago' },
+        ],
+      },
+      {
+        id: 3,
+        title: 'Build a type-safe event emitter',
+        status: 'in-progress',
+        evidence: [
+          { type: 'text', title: 'Design notes for EventEmitter<T>', meta: 'Added today' },
+        ],
+      },
+      {
+        id: 4,
+        title: 'Write blog post about learnings',
+        status: 'pending',
+        evidence: [],
+      },
+      {
+        id: 5,
+        title: 'Get code review from team',
+        status: 'pending',
+        evidence: [],
+      },
+    ];
+
+    let currentIndex = 2; // Start on step 3 (index 2), the in-progress one
+    let drawerOpen = false;
+    let pickerOpen = false;
+
+    // ───── DOM refs ─────
+    const stepCarousel = document.getElementById('stepCarousel');
+    const stepDots = document.getElementById('stepDots');
+    const stepCounter = document.getElementById('stepCounter');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const drawer = document.getElementById('drawer');
+    const drawerOverlay = document.getElementById('drawerOverlay');
+    const drawerHandle = document.getElementById('drawerHandle');
+    const drawerCount = document.getElementById('drawerCount');
+    const drawerContent = document.getElementById('drawerContent');
+    const evidenceGrid = document.getElementById('evidenceGrid');
+    const fab = document.getElementById('fab');
+    const typePicker = document.getElementById('typePicker');
+    const typePickerOverlay = document.getElementById('typePickerOverlay');
+    const progressFill = document.getElementById('progressFill');
+    const progressLabel = document.getElementById('progressLabel');
+    const toast = document.getElementById('toast');
+
+    // ───── Render functions ─────
+    function renderDots() {
+      stepDots.innerHTML = '';
+      steps.forEach((step, i) => {
+        const dot = document.createElement('button');
+        dot.className = 'step-dot' + (i === currentIndex ? ' active' : '');
+        dot.setAttribute('data-status', step.status);
+        dot.setAttribute('aria-label', `Step ${i + 1}: ${step.title} (${step.status})`);
+        dot.addEventListener('click', () => goToStep(i));
+        stepDots.appendChild(dot);
+      });
+    }
+
+    function getCardClass(i) {
+      const diff = i - currentIndex;
+      if (diff === 0) return 'current';
+      if (diff === -1) return 'prev';
+      if (diff === 1) return 'next';
+      if (diff < -1) return 'hidden-left';
+      return 'hidden-right';
+    }
+
+    function renderCards() {
+      stepCarousel.innerHTML = '';
+      steps.forEach((step, i) => {
+        const card = document.createElement('article');
+        card.className = `step-card ${getCardClass(i)}`;
+        card.setAttribute('aria-hidden', i !== currentIndex ? 'true' : 'false');
+
+        const statusLabel = step.status === 'completed' ? 'Completed' : step.status === 'in-progress' ? 'In progress' : 'Pending';
+        const evidenceCount = step.evidence.length;
+        const isCompleted = step.status === 'completed';
+
+        card.innerHTML = `
+          <div class="step-number">Step ${step.id} of ${steps.length}</div>
+          <h2 class="step-title">${step.title}</h2>
+          <div style="margin-bottom: 12px;">
+            <span class="status-pill ${step.status}">${statusLabel}</span>
+          </div>
+          <div class="step-status-row">
+            <div class="step-checkbox" role="checkbox" aria-checked="${isCompleted}" aria-label="Mark step as ${isCompleted ? 'incomplete' : 'complete'}" tabindex="${i === currentIndex ? '0' : '-1'}" data-step-index="${i}">
+              <div class="checkbox-box ${isCompleted ? 'checked' : ''}">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </div>
+              <span class="checkbox-label ${isCompleted ? 'completed-text' : ''}">${isCompleted ? 'Completed' : 'Mark complete'}</span>
+            </div>
+            <div class="evidence-badge ${evidenceCount === 0 ? 'empty' : ''}" data-step-index="${i}" tabindex="${i === currentIndex ? '0' : '-1'}" role="button" aria-label="${evidenceCount} evidence item${evidenceCount !== 1 ? 's' : ''}. Tap to view.">
+              <span class="badge-icon">${evidenceCount > 0 ? '📎' : '📭'}</span>
+              ${evidenceCount > 0 ? `${evidenceCount} item${evidenceCount !== 1 ? 's' : ''}` : 'No evidence'}
+            </div>
+          </div>
+        `;
+
+        // Adjacent card click to navigate
+        if (i !== currentIndex) {
+          card.addEventListener('click', () => goToStep(i));
+        }
+
+        stepCarousel.appendChild(card);
+      });
+
+      // Bind checkbox clicks
+      document.querySelectorAll('.step-checkbox').forEach(cb => {
+        cb.addEventListener('click', (e) => {
+          const idx = parseInt(cb.getAttribute('data-step-index'));
+          if (idx === currentIndex) toggleStepCompletion(idx);
+        });
+        cb.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            const idx = parseInt(cb.getAttribute('data-step-index'));
+            if (idx === currentIndex) toggleStepCompletion(idx);
+          }
+        });
+      });
+
+      // Bind evidence badge clicks
+      document.querySelectorAll('.evidence-badge').forEach(badge => {
+        badge.addEventListener('click', (e) => {
+          const idx = parseInt(badge.getAttribute('data-step-index'));
+          if (idx === currentIndex) {
+            e.stopPropagation();
+            openDrawer();
+          }
+        });
+      });
+    }
+
+    function renderEvidence() {
+      const step = steps[currentIndex];
+      const count = step.evidence.length;
+      drawerCount.textContent = count > 0 ? `${count} item${count !== 1 ? 's' : ''}` : 'Empty';
+
+      if (count === 0) {
+        evidenceGrid.innerHTML = `
+          <div class="evidence-empty">
+            <div class="evidence-empty-icon" aria-hidden="true">📭</div>
+            <div>No evidence yet.</div>
+            <div style="font-size: 13px; margin-top: 4px;">Tap the + button to add some!</div>
+          </div>
+        `;
+        return;
+      }
+
+      evidenceGrid.innerHTML = step.evidence.map(ev => {
+        const typeInfo = EVIDENCE_TYPES.find(t => t.id === ev.type) || EVIDENCE_TYPES[6];
+        return `
+          <div class="evidence-item">
+            <div class="evidence-type-icon ${ev.type}" style="background: ${typeInfo.bg};" aria-label="${typeInfo.label}">
+              ${typeInfo.icon}
+            </div>
+            <div class="evidence-info">
+              <div class="evidence-title">${ev.title}</div>
+              <div class="evidence-meta">${ev.meta}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateProgress() {
+      const completed = steps.filter(s => s.status === 'completed').length;
+      const pct = (completed / steps.length) * 100;
+      progressFill.style.width = `${pct}%`;
+      progressLabel.textContent = `${completed}/${steps.length} steps`;
+      document.querySelector('.progress-bar-track').setAttribute('aria-valuenow', completed);
+    }
+
+    function updateNavButtons() {
+      prevBtn.disabled = currentIndex === 0;
+      nextBtn.disabled = currentIndex === steps.length - 1;
+    }
+
+    function updateStepCounter() {
+      stepCounter.textContent = `Step ${currentIndex + 1} of ${steps.length}`;
+    }
+
+    // ───── Navigation ─────
+    function goToStep(index) {
+      if (index < 0 || index >= steps.length || index === currentIndex) return;
+      currentIndex = index;
+      closePicker();
+      closeDrawer();
+      renderDots();
+      renderCards();
+      renderEvidence();
+      updateNavButtons();
+      updateStepCounter();
+    }
+
+    prevBtn.addEventListener('click', () => goToStep(currentIndex - 1));
+    nextBtn.addEventListener('click', () => goToStep(currentIndex + 1));
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (pickerOpen || drawerOpen) return;
+      if (e.key === 'ArrowLeft') goToStep(currentIndex - 1);
+      if (e.key === 'ArrowRight') goToStep(currentIndex + 1);
+    });
+
+    // Swipe support
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let isSwiping = false;
+
+    stepCarousel.addEventListener('touchstart', (e) => {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      isSwiping = false;
+    }, { passive: true });
+
+    stepCarousel.addEventListener('touchmove', (e) => {
+      const dx = e.touches[0].clientX - touchStartX;
+      const dy = e.touches[0].clientY - touchStartY;
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 15) {
+        isSwiping = true;
+      }
+    }, { passive: true });
+
+    stepCarousel.addEventListener('touchend', (e) => {
+      if (!isSwiping) return;
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(dx) > 50) {
+        if (dx < 0) goToStep(currentIndex + 1);
+        else goToStep(currentIndex - 1);
+      }
+    }, { passive: true });
+
+    // ───── Step completion ─────
+    function toggleStepCompletion(index) {
+      const step = steps[index];
+      if (step.status === 'completed') {
+        step.status = step.evidence.length > 0 ? 'in-progress' : 'pending';
+      } else {
+        step.status = 'completed';
+      }
+      renderDots();
+      renderCards();
+      updateProgress();
+
+      if (step.status === 'completed') {
+        showToast('Step completed!');
+      }
+    }
+
+    // ───── Drawer ─────
+    function openDrawer() {
+      drawerOpen = true;
+      drawer.classList.remove('peek');
+      drawer.classList.add('open');
+      drawerOverlay.classList.add('visible');
+      drawerOverlay.setAttribute('aria-hidden', 'false');
+      closePicker();
+    }
+
+    function closeDrawer() {
+      drawerOpen = false;
+      drawer.classList.remove('open');
+      drawer.classList.add('peek');
+      drawerOverlay.classList.remove('visible');
+      drawerOverlay.setAttribute('aria-hidden', 'true');
+    }
+
+    function toggleDrawer() {
+      if (drawerOpen) closeDrawer();
+      else openDrawer();
+    }
+
+    drawerHandle.addEventListener('click', toggleDrawer);
+    drawerHandle.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleDrawer();
+      }
+    });
+    drawerOverlay.addEventListener('click', closeDrawer);
+
+    // Drawer touch drag
+    let drawerTouchStartY = 0;
+    let drawerDragging = false;
+
+    drawerHandle.addEventListener('touchstart', (e) => {
+      drawerTouchStartY = e.touches[0].clientY;
+      drawerDragging = true;
+    }, { passive: true });
+
+    drawerHandle.addEventListener('touchmove', (e) => {
+      // Prevent default to avoid scrolling while dragging
+    }, { passive: true });
+
+    drawerHandle.addEventListener('touchend', (e) => {
+      if (!drawerDragging) return;
+      drawerDragging = false;
+      const dy = e.changedTouches[0].clientY - drawerTouchStartY;
+      if (dy < -30 && !drawerOpen) openDrawer();
+      if (dy > 30 && drawerOpen) closeDrawer();
+    }, { passive: true });
+
+    // ───── FAB & Type Picker ─────
+    function renderTypePicker() {
+      typePicker.innerHTML = EVIDENCE_TYPES.map(type => `
+        <div class="type-picker-item" role="menuitem" tabindex="0" data-type="${type.id}" aria-label="Add ${type.label}">
+          <div class="type-picker-icon" style="background: ${type.bg};">${type.icon}</div>
+          <span class="type-picker-label">${type.label}</span>
+        </div>
+      `).join('');
+
+      typePicker.querySelectorAll('.type-picker-item').forEach(item => {
+        item.addEventListener('click', () => {
+          addEvidence(item.getAttribute('data-type'));
+        });
+        item.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            addEvidence(item.getAttribute('data-type'));
+          }
+        });
+      });
+    }
+
+    function openPicker() {
+      pickerOpen = true;
+      typePicker.classList.add('visible');
+      typePickerOverlay.classList.add('visible');
+      fab.classList.add('open');
+      fab.setAttribute('aria-expanded', 'true');
+    }
+
+    function closePicker() {
+      pickerOpen = false;
+      typePicker.classList.remove('visible');
+      typePickerOverlay.classList.remove('visible');
+      fab.classList.remove('open');
+      fab.setAttribute('aria-expanded', 'false');
+    }
+
+    function togglePicker() {
+      if (pickerOpen) closePicker();
+      else openPicker();
+    }
+
+    fab.addEventListener('click', togglePicker);
+    typePickerOverlay.addEventListener('click', closePicker);
+
+    function addEvidence(typeId) {
+      const typeInfo = EVIDENCE_TYPES.find(t => t.id === typeId);
+      const step = steps[currentIndex];
+      step.evidence.push({
+        type: typeId,
+        title: `New ${typeInfo.label.toLowerCase()}`,
+        meta: 'Just now',
+      });
+
+      // If step was pending, move to in-progress
+      if (step.status === 'pending') {
+        step.status = 'in-progress';
+        renderDots();
+      }
+
+      closePicker();
+      renderCards();
+      renderEvidence();
+      showToast(`${typeInfo.icon} ${typeInfo.label} added!`);
+
+      // Open drawer briefly to show the new item
+      setTimeout(() => openDrawer(), 300);
+    }
+
+    // ───── Toast ─────
+    let toastTimer = null;
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('visible');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('visible');
+      }, 2000);
+    }
+
+    // ───── Escape key ─────
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (pickerOpen) closePicker();
+        else if (drawerOpen) closeDrawer();
+      }
+    });
+
+    // ───── Init ─────
+    renderTypePicker();
+    renderDots();
+    renderCards();
+    renderEvidence();
+    updateProgress();
+    updateNavButtons();
+    updateStepCounter();
+  </script>
+</body>
+</html>

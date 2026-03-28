@@ -1,0 +1,6 @@
+appId: com.joe.rd.native-rd
+---
+# Badge tab navigation smoke test
+- launchApp
+- tapOn: "B"
+- assertVisible: "No badges yet"

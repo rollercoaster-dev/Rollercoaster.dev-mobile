@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iteration A — Design Token Prototype</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anybody:wght@400;500;600;700;900&family=Atkinson+Hyperlegible:wght@400;700&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600;700&family=Lexend:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="ob-tokens.css">
+  <link rel="stylesheet" href="ob-themes.css">
+  <link rel="stylesheet" href="wireframe.css">
+</head>
+<body>
+
+<div class="mobile-frame" data-density="normal">
+
+  <!-- Status Bar -->
+  <div class="status-bar">9:41 AM</div>
+
+  <!-- Header Bar -->
+  <div class="header-bar">
+    <button class="header-back" aria-label="Back">&#8249;</button>
+    <div class="header-title">Welcome</div>
+    <button class="header-settings" aria-label="Settings">&#9881;</button>
+  </div>
+
+  <!-- Screen Container -->
+  <div class="screen-container">
+
+    <!-- 1. Welcome Screen -->
+    <section id="screen-welcome" class="screen active">
+      <div class="welcome-text">
+        <h1>rollercoaster.dev</h1>
+        <p>Track your goals. Earn your badges.<br>Everything stays on your phone.</p>
+      </div>
+
+      <div class="section-label">Color mode</div>
+      <div class="color-mode-toggle">
+        <button class="active" data-mode="light">Light</button>
+        <button data-mode="dark">Dark</button>
+      </div>
+
+      <div class="section-label">Pick what feels right</div>
+      <div class="theme-swatches">
+        <div class="theme-swatch active" data-variant="default" title="The Full Ride"></div>
+        <div class="theme-swatch" data-variant="highContrast" title="Bold Ink"></div>
+        <div class="theme-swatch" data-variant="largeText" title="Same Ride, Bigger Seat">Aa</div>
+        <div class="theme-swatch" data-variant="dyslexia" title="Warm Studio"></div>
+        <div class="theme-swatch" data-variant="lowVision" title="Loud &amp; Clear"></div>
+        <div class="theme-swatch" data-variant="autismFriendly" title="Still Water"></div>
+        <div class="theme-swatch" data-variant="lowInfo" title="Clean Signal"></div>
+      </div>
+
+      <div class="section-label">Content density</div>
+      <div class="density-toggle">
+        <button data-density="compact">Compact</button>
+        <button data-density="normal" class="active">Normal</button>
+        <button data-density="spacious">Spacious</button>
+      </div>
+
+      <button id="btn-get-started" class="btn btn-primary">Get Started</button>
+    </section>
+
+    <!-- 2. Goals Tab — Empty -->
+    <section id="screen-goals-empty" class="screen">
+      <div class="empty-state">
+        <p>No badges yet. What have you been up to?</p>
+        <button id="btn-new-goal-empty" class="btn btn-primary">+ New Goal</button>
+      </div>
+    </section>
+
+    <!-- 3. Goals Tab — Populated -->
+    <section id="screen-goals-populated" class="screen">
+      <div id="goals-list">
+        <!-- rendered by JS -->
+      </div>
+      <button id="btn-new-goal" class="btn">+ New Goal</button>
+      <div class="collapsed-section">
+        <button id="collapsed-toggle" class="collapsed-toggle">&#9656; 4 completed</button>
+        <div id="collapsed-content" class="collapsed-content">
+          <div class="card"><div class="card-title">Fixed my bike</div><div class="card-subtitle">Completed</div></div>
+          <div class="card"><div class="card-title">Finished online course</div><div class="card-subtitle">Completed</div></div>
+          <div class="card"><div class="card-title">Organized my desk</div><div class="card-subtitle">Completed</div></div>
+          <div class="card"><div class="card-title">Ran a 5K</div><div class="card-subtitle">Completed</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Goal Detail -->
+    <section id="screen-goal-detail" class="screen">
+      <div class="goal-header">
+        <h2 id="goal-detail-title">Goal Title</h2>
+        <p id="goal-detail-desc">Description goes here.</p>
+      </div>
+
+      <div class="section-label">Steps</div>
+      <ul id="step-list" class="step-list">
+        <!-- rendered by JS -->
+      </ul>
+      <input id="add-step-input" class="step-add-input" type="text" placeholder="Step title — press Enter to add">
+      <p id="progress-text" class="progress-text">0/0 steps</p>
+      <button id="btn-add-step" class="btn btn-small">+ Add Step</button>
+
+      <div class="section-label">Evidence</div>
+      <div class="evidence-area">
+        <div class="evidence-thumb">&#128247;</div>
+        <div class="evidence-thumb">&#127908;</div>
+        <div class="evidence-thumb">&#128221;</div>
+      </div>
+      <button id="btn-add-evidence" class="btn btn-small">+ Add Evidence</button>
+
+      <button id="btn-complete-goal" class="btn btn-primary" style="margin-top: var(--ob-space-6)">Complete Goal</button>
+    </section>
+
+    <!-- 5. Badges Tab — Empty -->
+    <section id="screen-badges-empty" class="screen">
+      <div class="empty-state">
+        <p>No badges yet. Complete a goal to earn your first badge.</p>
+      </div>
+    </section>
+
+    <!-- 6. Badges Tab — Populated -->
+    <section id="screen-badges-populated" class="screen">
+      <div id="badges-grid" class="badge-grid">
+        <!-- rendered by JS -->
+      </div>
+    </section>
+
+    <!-- 7. Badge Detail -->
+    <section id="screen-badge-detail" class="screen">
+      <div class="badge-detail-image">&#9733;</div>
+      <div id="badge-detail-name" class="badge-detail-title">Badge Title</div>
+      <div id="badge-detail-earned" class="badge-detail-date">Jan 28, 2026</div>
+
+      <div class="section-label">Evidence</div>
+      <div class="evidence-area">
+        <div class="evidence-thumb">&#128247;</div>
+        <div class="evidence-thumb">&#128247;</div>
+        <div class="evidence-thumb">&#127908;</div>
+        <div class="evidence-thumb">&#128221;</div>
+      </div>
+
+      <div class="section-label">Export</div>
+      <div class="export-buttons">
+        <button class="btn btn-secondary btn-small">Save Image</button>
+        <button class="btn btn-secondary btn-small">Export JSON</button>
+      </div>
+    </section>
+
+    <!-- Settings -->
+    <section id="screen-settings" class="screen">
+      <div class="settings-section">
+        <h3>Appearance</h3>
+        <div class="settings-item"><span>Theme</span><span class="settings-value">Default</span></div>
+        <div class="settings-item"><span>Content Density</span><span class="settings-value">Normal</span></div>
+        <div class="settings-item"><span>Animation</span><span class="settings-value">Minimal</span></div>
+      </div>
+      <div class="settings-section">
+        <h3>Accessibility</h3>
+        <div class="settings-item"><span>Font</span><span class="settings-value">System</span></div>
+        <div class="settings-item"><span>Text Size</span><span class="settings-value">Default</span></div>
+        <div class="settings-item"><span>Spacing</span><span class="settings-value">Default</span></div>
+      </div>
+      <div class="settings-section">
+        <h3>Data</h3>
+        <div class="settings-item"><span>Export All Badges (OB3 JSON)</span></div>
+        <div class="settings-item"><span>Export All Goals (JSON)</span></div>
+        <div class="settings-item"><span>Storage Used</span><span class="settings-value">12 MB</span></div>
+      </div>
+      <div class="settings-section">
+        <h3>About</h3>
+        <div class="settings-item"><span>Version</span><span class="settings-value">0.1.0-alpha</span></div>
+        <div class="settings-item"><span>Open Source Licenses</span></div>
+      </div>
+    </section>
+
+  </div><!-- /screen-container -->
+
+  <!-- Tab Bar -->
+  <div class="tab-bar">
+    <button data-tab="goals" class="active">
+      <span class="tab-icon">&#9675;</span>
+      Goals
+    </button>
+    <button data-tab="badges">
+      <span class="tab-icon">&#9733;</span>
+      Badges
+    </button>
+  </div>
+
+  <!-- ===== Modals / Sheets ===== -->
+
+  <!-- New Goal Modal -->
+  <div id="modal-new-goal" class="modal-overlay">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <h3>New Goal</h3>
+        <button class="modal-close">&#10005;</button>
+      </div>
+      <div class="field">
+        <label for="new-goal-title">Title</label>
+        <input id="new-goal-title" type="text" placeholder="What are you working on?">
+      </div>
+      <button id="toggle-desc" class="collapsed-toggle" style="margin-bottom: var(--ob-space-2); font-size: var(--size-xs);">+ Add description</button>
+      <div id="desc-field" class="field" style="display:none">
+        <label for="new-goal-desc">Description</label>
+        <textarea id="new-goal-desc" placeholder="Optional — more detail about your goal"></textarea>
+      </div>
+      <button id="btn-create-goal" class="btn btn-primary">Create</button>
+    </div>
+  </div>
+
+  <!-- Evidence Picker Modal -->
+  <div id="modal-evidence-picker" class="modal-overlay">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <h3>Add Evidence</h3>
+        <button class="modal-close">&#10005;</button>
+      </div>
+      <ul class="option-list">
+        <li class="option-item" data-type="photo"><span class="option-icon">&#128247;</span> Take Photo</li>
+        <li class="option-item" data-type="library"><span class="option-icon">&#128444;</span> Choose from Library</li>
+        <li class="option-item" data-type="voice"><span class="option-icon">&#127908;</span> Voice Memo</li>
+        <li class="option-item" data-type="text"><span class="option-icon">&#128221;</span> Write a Note</li>
+        <li class="option-item" data-type="link"><span class="option-icon">&#128279;</span> Add Link</li>
+        <li class="option-item" data-type="file"><span class="option-icon">&#128206;</span> Attach File</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Evidence Capture Modal -->
+  <div id="modal-evidence-capture" class="modal-overlay">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <h3>Capture Evidence</h3>
+        <button class="modal-close">&#10005;</button>
+      </div>
+
+      <div id="evidence-capture-photo" class="evidence-capture-type">
+        <div class="capture-placeholder">Camera viewfinder placeholder</div>
+      </div>
+      <div id="evidence-capture-library" class="evidence-capture-type" style="display:none">
+        <div class="capture-placeholder">Photo library picker placeholder</div>
+      </div>
+      <div id="evidence-capture-voice" class="evidence-capture-type" style="display:none">
+        <div class="capture-placeholder short">Recording waveform placeholder</div>
+      </div>
+      <div id="evidence-capture-text" class="evidence-capture-type" style="display:none">
+        <div class="field">
+          <label>Note</label>
+          <textarea placeholder="Write your note here..."></textarea>
+        </div>
+      </div>
+      <div id="evidence-capture-link" class="evidence-capture-type" style="display:none">
+        <div class="field">
+          <label>URL</label>
+          <input type="url" placeholder="https://...">
+        </div>
+      </div>
+      <div id="evidence-capture-file" class="evidence-capture-type" style="display:none">
+        <div class="capture-placeholder short">File picker placeholder</div>
+      </div>
+
+      <div class="field">
+        <label>Caption (optional)</label>
+        <input type="text" placeholder="Add a caption...">
+      </div>
+      <button id="btn-attach-evidence" class="btn btn-primary">Attach</button>
+    </div>
+  </div>
+
+  <!-- Evidence Viewer Modal -->
+  <div id="modal-evidence-viewer" class="modal-overlay center">
+    <div class="modal-fullscreen">
+      <div class="modal-header">
+        <h3>Evidence</h3>
+        <button class="modal-close">&#10005;</button>
+      </div>
+      <div class="evidence-viewer-placeholder">Full-size evidence preview</div>
+      <p class="evidence-viewer-meta">Photo — Jan 28, 2026</p>
+    </div>
+  </div>
+
+  <!-- Goal Completion Modal -->
+  <div id="modal-goal-completion" class="modal-overlay center">
+    <div class="modal-fullscreen">
+      <h3 class="goal-completion-title">Complete this goal?</h3>
+      <p class="goal-completion-desc">You'll earn a badge for this achievement. You can always come back and add more evidence later.</p>
+      <button id="btn-confirm-complete" class="btn btn-primary">Complete</button>
+      <button id="btn-not-yet" class="btn" style="margin-top: var(--ob-space-2)">Not yet</button>
+    </div>
+  </div>
+
+  <!-- Badge Earned Modal -->
+  <div id="modal-badge-earned" class="modal-overlay center">
+    <div class="modal-fullscreen">
+      <div class="celebration-badge">&#9733;</div>
+      <h3 class="badge-earned-title">Badge Earned</h3>
+      <p class="celebration-text">First one. (noted.)</p>
+      <button id="btn-view-badge" class="btn btn-primary">View Badge</button>
+      <button id="btn-badge-done" class="btn" style="margin-top: var(--ob-space-2)">Done</button>
+    </div>
+  </div>
+
+</div><!-- /mobile-frame -->
+
+<!-- Prototype Controls -->
+<div class="prototype-controls">
+  <button id="demo-toggle" class="control-btn">Show Populated</button>
+</div>
+
+<script src="wireframe.js"></script>
+</body>
+</html>

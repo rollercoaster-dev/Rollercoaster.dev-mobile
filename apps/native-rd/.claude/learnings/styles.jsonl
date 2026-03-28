@@ -1,0 +1,1 @@
+{"id":"b7a7db8b-5cee-4ae2-8b87-5a5b2bfba618","timestamp":"2026-02-17T21:42:23.376Z","area":"styles","type":"pattern","content":"When a layout constant (e.g. PEEK_HEIGHT) is used in both a component file and its styles file, put it in the styles file and export it. The component imports from styles — styles don't import from components."}

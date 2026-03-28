@@ -1,0 +1,110 @@
+{
+  "fileHash": "5aaa9b7cf5b47c8e",
+  "timestamp": "2026-02-04T14:28:42.942Z",
+  "entities": [
+    {
+      "name": "VariantOverride",
+      "type": "interface",
+      "location": {
+        "file": "/Users/hailmary/Code/rollercoaster.dev/native-rd/src/themes/variants.ts",
+        "line": 29
+      }
+    },
+    {
+      "name": "Variant",
+      "type": "type",
+      "location": {
+        "file": "/Users/hailmary/Code/rollercoaster.dev/native-rd/src/themes/variants.ts",
+        "line": 10
+      }
+    },
+    {
+      "name": "VariantColorOverrides",
+      "type": "type",
+      "location": {
+        "file": "/Users/hailmary/Code/rollercoaster.dev/native-rd/src/themes/variants.ts",
+        "line": 27
+      }
+    },
+    {
+      "name": "variants",
+      "type": "variable",
+      "location": {
+        "file": "/Users/hailmary/Code/rollercoaster.dev/native-rd/src/themes/variants.ts",
+        "line": 18
+      }
+    },
+    {
+      "name": "variantOverrides",
+      "type": "variable",
+      "location": {
+        "file": "/Users/hailmary/Code/rollercoaster.dev/native-rd/src/themes/variants.ts",
+        "line": 44
+      }
+    },
+    {
+      "name": "variantOptions",
+      "type": "variable",
+      "location": {
+        "file": "/Users/hailmary/Code/rollercoaster.dev/native-rd/src/themes/variants.ts",
+        "line": 199
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "from": "/Users/hailmary/Code/rollercoaster.dev/native-rd/src/themes/variants.ts",
+      "to": "./palette#palette",
+      "type": "imports",
+      "location": {
+        "file": "/Users/hailmary/Code/rollercoaster.dev/native-rd/src/themes/variants.ts",
+        "line": 6
+      }
+    },
+    {
+      "from": "/Users/hailmary/Code/rollercoaster.dev/native-rd/src/themes/variants.ts",
+      "to": "./tokens#size",
+      "type": "imports",
+      "location": {
+        "file": "/Users/hailmary/Code/rollercoaster.dev/native-rd/src/themes/variants.ts",
+        "line": 7
+      }
+    },
+    {
+      "from": "/Users/hailmary/Code/rollercoaster.dev/native-rd/src/themes/variants.ts",
+      "to": "./tokens#sizeL",
+      "type": "imports",
+      "location": {
+        "file": "/Users/hailmary/Code/rollercoaster.dev/native-rd/src/themes/variants.ts",
+        "line": 7
+      }
+    },
+    {
+      "from": "/Users/hailmary/Code/rollercoaster.dev/native-rd/src/themes/variants.ts",
+      "to": "./tokens#lineHeight",
+      "type": "imports",
+      "location": {
+        "file": "/Users/hailmary/Code/rollercoaster.dev/native-rd/src/themes/variants.ts",
+        "line": 7
+      }
+    },
+    {
+      "from": "/Users/hailmary/Code/rollercoaster.dev/native-rd/src/themes/variants.ts",
+      "to": "./tokens#lineHeightL",
+      "type": "imports",
+      "location": {
+        "file": "/Users/hailmary/Code/rollercoaster.dev/native-rd/src/themes/variants.ts",
+        "line": 7
+      }
+    },
+    {
+      "from": "/Users/hailmary/Code/rollercoaster.dev/native-rd/src/themes/variants.ts",
+      "to": "./colorModes#Colors",
+      "type": "imports",
+      "location": {
+        "file": "/Users/hailmary/Code/rollercoaster.dev/native-rd/src/themes/variants.ts",
+        "line": 8
+      }
+    }
+  ]
+}

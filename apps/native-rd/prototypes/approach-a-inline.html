@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Approach A: Inline Expansion</title>
+  <style>
+    /* ── Reset & Base ──────────────────────────────── */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #fafafa;
+      --card: #ffffff;
+      --border: #262626;
+      --border-width: 3px;
+      --shadow: 4px 4px 0 rgba(38, 38, 38, 0.8);
+      --shadow-sm: 2px 2px 0 rgba(38, 38, 38, 0.8);
+      --radius: 6px;
+      --radius-sm: 4px;
+      --blue: #3b82f6;
+      --blue-light: #dbeafe;
+      --yellow: #ffe50c;
+      --mint: #d4f4e7;
+      --purple: #a78bfa;
+      --purple-light: #ede9fe;
+      --text: #262626;
+      --text-muted: #6b7280;
+      --danger: #ef4444;
+      --danger-light: #fee2e2;
+      --font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    html {
+      font-size: 16px;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Animations (respect reduced-motion) ──────── */
+    @media (prefers-reduced-motion: no-preference) {
+      .step-evidence-region {
+        transition: max-height 0.25s ease, opacity 0.2s ease, padding 0.25s ease;
+      }
+      .step-chevron {
+        transition: transform 0.2s ease;
+      }
+      .modal-overlay {
+        transition: opacity 0.15s ease;
+      }
+      .modal-panel {
+        transition: transform 0.15s ease, opacity 0.15s ease;
+      }
+      .undo-toast {
+        transition: transform 0.2s ease, opacity 0.2s ease;
+      }
+    }
+
+    /* ── Layout ────────────────────────────────────── */
+    .app-shell {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 16px;
+      padding-bottom: 80px;
+    }
+
+    /* ── Approach Banner ──────────────────────────── */
+    .approach-banner {
+      background: var(--yellow);
+      border: var(--border-width) solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow);
+      font-size: 0.875rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    /* ── Goal Header ──────────────────────────────── */
+    .goal-header {
+      background: var(--card);
+      border: var(--border-width) solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .goal-title-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .goal-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      line-height: 1.2;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border: var(--border-width) solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .status-badge--in-progress {
+      background: var(--blue-light);
+      color: var(--blue);
+    }
+
+    .status-badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      flex-shrink: 0;
+    }
+
+    .goal-description {
+      font-size: 1rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* ── Progress ──────────────────────────────────── */
+    .progress-section {
+      background: var(--card);
+      border: var(--border-width) solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px 24px;
+      margin-bottom: 24px;
+    }
+
+    .progress-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+
+    .progress-label {
+      font-size: 0.875rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .progress-count {
+      font-size: 1.125rem;
+      font-weight: 800;
+    }
+
+    .progress-bar-track {
+      width: 100%;
+      height: 12px;
+      background: #e5e7eb;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--blue);
+      border-radius: 2px;
+      /* width set via JS */
+    }
+
+    /* ── Steps List ────────────────────────────────── */
+    .steps-heading {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .steps-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* ── Single Step ───────────────────────────────── */
+    .step-card {
+      background: var(--card);
+      border: var(--border-width) solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .step-card[data-expanded="true"] {
+      box-shadow: 4px 4px 0 rgba(59, 130, 246, 0.5);
+    }
+
+    .step-trigger {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 16px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+      font-family: inherit;
+      font-size: 1rem;
+      color: var(--text);
+      min-height: 56px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .step-trigger:hover {
+      background: #f9fafb;
+    }
+
+    .step-trigger:focus-visible {
+      outline: 3px solid var(--blue);
+      outline-offset: -3px;
+      border-radius: var(--radius-sm);
+    }
+
+    /* Checkbox */
+    .step-checkbox {
+      width: 24px;
+      height: 24px;
+      min-width: 24px;
+      border: var(--border-width) solid var(--border);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: var(--card);
+    }
+
+    .step-card[data-completed="true"] .step-checkbox {
+      background: var(--blue);
+      border-color: var(--blue);
+    }
+
+    .step-checkbox-icon {
+      display: none;
+      width: 14px;
+      height: 14px;
+      color: #fff;
+    }
+
+    .step-card[data-completed="true"] .step-checkbox-icon {
+      display: block;
+    }
+
+    .step-label {
+      flex: 1;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    .step-card[data-completed="true"] .step-label {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+
+    .step-evidence-count {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      background: #f3f4f6;
+      border: 2px solid #d1d5db;
+      border-radius: var(--radius-sm);
+      padding: 2px 8px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .step-chevron {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      color: var(--text-muted);
+      transform: rotate(0deg);
+    }
+
+    .step-card[data-expanded="true"] .step-chevron {
+      transform: rotate(180deg);
+    }
+
+    /* ── Evidence Region (inline expansion) ───────── */
+    .step-evidence-region {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      padding: 0 16px;
+    }
+
+    .step-card[data-expanded="true"] .step-evidence-region {
+      max-height: 2000px;
+      opacity: 1;
+      padding: 0 16px 16px 16px;
+    }
+
+    .step-evidence-region-inner {
+      border-top: 2px dashed #d1d5db;
+      padding-top: 16px;
+    }
+
+    .step-card[data-expanded="true"] .step-evidence-region {
+      background: #fefce8;
+    }
+
+    /* ── Evidence Group ────────────────────────────── */
+    .evidence-group {
+      margin-bottom: 16px;
+    }
+
+    .evidence-group:last-of-type {
+      margin-bottom: 16px;
+    }
+
+    .evidence-group-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .evidence-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    /* ── Evidence Thumbnail ────────────────────────── */
+    .evidence-thumb {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      background: var(--card);
+      border: var(--border-width) solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-sm);
+      padding: 8px;
+      min-width: 80px;
+      max-width: 120px;
+    }
+
+    .evidence-thumb-icon {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-sm);
+      font-size: 1.25rem;
+    }
+
+    .evidence-thumb-icon--note {
+      background: var(--mint);
+    }
+
+    .evidence-thumb-icon--link {
+      background: var(--blue-light);
+    }
+
+    .evidence-thumb-icon--screenshot {
+      background: var(--purple-light);
+    }
+
+    .evidence-thumb-icon--photo {
+      background: #fef3c7;
+    }
+
+    .evidence-thumb-icon--video {
+      background: #fee2e2;
+    }
+
+    .evidence-thumb-icon--voice {
+      background: #fce7f3;
+    }
+
+    .evidence-thumb-icon--file {
+      background: #e5e7eb;
+    }
+
+    .evidence-thumb-name {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: var(--text);
+      text-align: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
+      line-height: 1.3;
+    }
+
+    .evidence-thumb-delete {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      width: 22px;
+      height: 22px;
+      background: var(--danger);
+      color: #fff;
+      border: 2px solid var(--border);
+      border-radius: 50%;
+      font-size: 0.75rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0;
+      opacity: 0;
+    }
+
+    .evidence-thumb:hover .evidence-thumb-delete,
+    .evidence-thumb:focus-within .evidence-thumb-delete {
+      opacity: 1;
+    }
+
+    /* On touch devices always show delete */
+    @media (hover: none) {
+      .evidence-thumb-delete {
+        opacity: 1;
+      }
+    }
+
+    .evidence-thumb-delete:focus-visible {
+      outline: 3px solid var(--blue);
+      outline-offset: 2px;
+    }
+
+    /* ── Empty Evidence State ──────────────────────── */
+    .evidence-empty {
+      text-align: center;
+      padding: 12px;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      font-style: italic;
+    }
+
+    /* ── Add Evidence Row ──────────────────────────── */
+    .add-evidence-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .add-evidence-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .add-evidence-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      min-width: 56px;
+      min-height: 56px;
+      padding: 8px 10px;
+      background: var(--card);
+      border: 2px dashed #9ca3af;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-family: inherit;
+      color: var(--text-muted);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .add-evidence-btn:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+      background: var(--blue-light);
+    }
+
+    .add-evidence-btn:focus-visible {
+      outline: 3px solid var(--blue);
+      outline-offset: 2px;
+    }
+
+    .add-evidence-btn-icon {
+      font-size: 1.25rem;
+      line-height: 1;
+    }
+
+    .add-evidence-btn-label {
+      font-size: 0.625rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    /* ── Modal Overlay ─────────────────────────────── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(38, 38, 38, 0.5);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .modal-overlay[data-open="true"] {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-panel {
+      background: var(--card);
+      border: var(--border-width) solid var(--border);
+      border-radius: var(--radius) var(--radius) 0 0;
+      box-shadow: 0 -4px 0 rgba(38, 38, 38, 0.8);
+      width: 100%;
+      max-width: 480px;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 24px;
+      transform: translateY(20px);
+      opacity: 0;
+    }
+
+    .modal-overlay[data-open="true"] .modal-panel {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .modal-title {
+      font-size: 1.125rem;
+      font-weight: 800;
+    }
+
+    .modal-close {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .modal-close:hover {
+      background: #f3f4f6;
+    }
+
+    .modal-close:focus-visible {
+      outline: 3px solid var(--blue);
+      outline-offset: 2px;
+    }
+
+    .modal-body {
+      margin-bottom: 16px;
+    }
+
+    .modal-body label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .modal-body textarea,
+    .modal-body input[type="text"],
+    .modal-body input[type="url"] {
+      width: 100%;
+      padding: 12px;
+      font-family: inherit;
+      font-size: 1rem;
+      border: var(--border-width) solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      color: var(--text);
+      resize: vertical;
+    }
+
+    .modal-body textarea:focus,
+    .modal-body input:focus {
+      outline: 3px solid var(--blue);
+      outline-offset: -3px;
+    }
+
+    .modal-body textarea {
+      min-height: 100px;
+    }
+
+    .modal-body .placeholder-area {
+      width: 100%;
+      height: 120px;
+      border: 3px dashed #9ca3af;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      font-weight: 600;
+      background: #f9fafb;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      min-width: 44px;
+      padding: 10px 20px;
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      border: var(--border-width) solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn:focus-visible {
+      outline: 3px solid var(--blue);
+      outline-offset: 2px;
+    }
+
+    .btn--primary {
+      background: var(--blue);
+      color: #fff;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn--primary:hover {
+      background: #2563eb;
+    }
+
+    .btn--secondary {
+      background: var(--card);
+      color: var(--text);
+    }
+
+    .btn--secondary:hover {
+      background: #f3f4f6;
+    }
+
+    /* ── Confirmation Dialog ───────────────────────── */
+    .confirm-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(38, 38, 38, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1100;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .confirm-overlay[data-open="true"] {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .confirm-panel {
+      background: var(--card);
+      border: var(--border-width) solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      max-width: 320px;
+      width: 90%;
+      text-align: center;
+    }
+
+    .confirm-message {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .confirm-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    /* ── Undo Toast ────────────────────────────────── */
+    .undo-toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      opacity: 0;
+      background: var(--border);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: var(--shadow);
+      z-index: 1200;
+      font-size: 0.875rem;
+      font-weight: 600;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .undo-toast[data-visible="true"] {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .undo-toast-btn {
+      background: var(--yellow);
+      color: var(--border);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 4px 12px;
+      font-family: inherit;
+      font-size: 0.8125rem;
+      font-weight: 800;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .undo-toast-btn:focus-visible {
+      outline: 3px solid var(--blue);
+      outline-offset: 2px;
+    }
+
+    /* ── Screen-reader only ────────────────────────── */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* ── Responsive ────────────────────────────────── */
+    @media (min-width: 480px) {
+      .app-shell {
+        padding: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- ── Approach Banner ────────────────────────── -->
+    <div class="approach-banner" role="banner">
+      Approach A: Inline Expansion &mdash; Evidence expands within each step
+    </div>
+
+    <!-- ── Goal Header ────────────────────────────── -->
+    <header class="goal-header">
+      <div class="goal-title-row">
+        <h1 class="goal-title">Learn TypeScript Generics</h1>
+        <span class="status-badge status-badge--in-progress" aria-label="Status: In Progress">
+          <span class="status-badge-dot" aria-hidden="true"></span>
+          In Progress
+        </span>
+      </div>
+      <p class="goal-description">
+        Deep dive into TypeScript generics &mdash; from basic syntax through advanced utility types and real-world patterns.
+      </p>
+    </header>
+
+    <!-- ── Progress ───────────────────────────────── -->
+    <section class="progress-section" aria-label="Goal progress">
+      <div class="progress-label-row">
+        <span class="progress-label">Progress</span>
+        <span class="progress-count" id="progress-count" aria-live="polite">2 / 5 steps done</span>
+      </div>
+      <div class="progress-bar-track" role="progressbar" aria-valuenow="2" aria-valuemin="0" aria-valuemax="5" aria-label="2 of 5 steps completed" id="progress-bar">
+        <div class="progress-bar-fill" id="progress-fill" style="width: 40%"></div>
+      </div>
+    </section>
+
+    <!-- ── Steps List ─────────────────────────────── -->
+    <section aria-label="Steps">
+      <h2 class="steps-heading">Steps</h2>
+      <ol class="steps-list" id="steps-list" role="list">
+        <!-- Steps rendered by JS -->
+      </ol>
+    </section>
+  </div>
+
+  <!-- ── Add Evidence Modal ──────────────────────── -->
+  <div class="modal-overlay" id="modal-overlay" data-open="false" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-hidden="true">
+    <div class="modal-panel" id="modal-panel">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-title">Add Evidence</h2>
+        <button class="modal-close" id="modal-close" aria-label="Close dialog">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-body">
+        <!-- Content set by JS -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn--secondary" id="modal-cancel">Cancel</button>
+        <button class="btn btn--primary" id="modal-save">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Confirm Delete Dialog ───────────────────── -->
+  <div class="confirm-overlay" id="confirm-overlay" data-open="false" role="alertdialog" aria-modal="true" aria-labelledby="confirm-msg" aria-hidden="true">
+    <div class="confirm-panel">
+      <p class="confirm-message" id="confirm-msg">Delete this evidence?</p>
+      <div class="confirm-actions">
+        <button class="btn btn--secondary" id="confirm-cancel">Cancel</button>
+        <button class="btn btn--primary" id="confirm-delete" style="background:var(--danger)">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Undo Toast ──────────────────────────────── -->
+  <div class="undo-toast" id="undo-toast" data-visible="false" role="status" aria-live="polite">
+    <span id="undo-toast-msg">Evidence deleted.</span>
+    <button class="undo-toast-btn" id="undo-btn">Undo</button>
+  </div>
+
+  <script>
+    // ── Data ────────────────────────────────────────
+    const EVIDENCE_TYPES = [
+      { key: 'photo',      label: 'Photo',  icon: '\u{1F4F7}' },
+      { key: 'video',      label: 'Video',  icon: '\u{1F3AC}' },
+      { key: 'note',       label: 'Note',   icon: '\u{1F4DD}' },
+      { key: 'link',       label: 'Link',   icon: '\u{1F517}' },
+      { key: 'voice_memo', label: 'Voice',  icon: '\u{1F3A4}' },
+      { key: 'file',       label: 'File',   icon: '\u{1F4C1}' },
+    ];
+
+    const TYPE_CSS_CLASS = {
+      note: 'note',
+      link: 'link',
+      screenshot: 'screenshot',
+      photo: 'photo',
+      video: 'video',
+      voice_memo: 'voice',
+      file: 'file',
+    };
+
+    const TYPE_EMOJI = {
+      note: '\u{1F4DD}',
+      link: '\u{1F517}',
+      screenshot: '\u{1F5BC}',
+      photo: '\u{1F4F7}',
+      video: '\u{1F3AC}',
+      voice_memo: '\u{1F3A4}',
+      file: '\u{1F4C1}',
+    };
+
+    const TYPE_GROUP_LABEL = {
+      note: 'Notes',
+      link: 'Links',
+      screenshot: 'Screenshots',
+      photo: 'Photos',
+      video: 'Videos',
+      voice_memo: 'Voice Memos',
+      file: 'Files',
+    };
+
+    let nextEvidenceId = 100;
+
+    let steps = [
+      {
+        id: 1,
+        label: 'Read the TypeScript handbook chapter',
+        completed: true,
+        evidence: [
+          { id: 1, type: 'note', name: 'Key takeaways' },
+          { id: 2, type: 'link', name: 'TS Handbook link' },
+        ],
+      },
+      {
+        id: 2,
+        label: 'Complete generic utility types exercise',
+        completed: true,
+        evidence: [
+          { id: 3, type: 'screenshot', name: 'Passing tests' },
+        ],
+      },
+      {
+        id: 3,
+        label: 'Build a type-safe event emitter',
+        completed: false,
+        evidence: [
+          { id: 4, type: 'note', name: 'Design notes' },
+        ],
+      },
+      {
+        id: 4,
+        label: 'Write blog post about learnings',
+        completed: false,
+        evidence: [],
+      },
+      {
+        id: 5,
+        label: 'Get code review from team',
+        completed: false,
+        evidence: [],
+      },
+    ];
+
+    let expandedStepId = null;
+    let undoTimeout = null;
+    let undoData = null;
+
+    // ── Rendering ──────────────────────────────────
+    function render() {
+      const list = document.getElementById('steps-list');
+      list.innerHTML = '';
+
+      steps.forEach((step) => {
+        const card = document.createElement('li');
+        card.className = 'step-card';
+        card.setAttribute('data-step-id', step.id);
+        card.setAttribute('data-completed', step.completed ? 'true' : 'false');
+        card.setAttribute('data-expanded', expandedStepId === step.id ? 'true' : 'false');
+
+        const isExpanded = expandedStepId === step.id;
+
+        // Trigger button
+        const trigger = document.createElement('button');
+        trigger.className = 'step-trigger';
+        trigger.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+        trigger.setAttribute('aria-controls', `evidence-region-${step.id}`);
+        trigger.setAttribute('type', 'button');
+
+        // Checkbox visual
+        const checkbox = document.createElement('span');
+        checkbox.className = 'step-checkbox';
+        checkbox.setAttribute('aria-hidden', 'true');
+        checkbox.innerHTML = `<svg class="step-checkbox-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+
+        // Label
+        const label = document.createElement('span');
+        label.className = 'step-label';
+        label.textContent = step.label;
+
+        // Evidence count badge
+        const countBadge = document.createElement('span');
+        countBadge.className = 'step-evidence-count';
+        countBadge.setAttribute('aria-label', `${step.evidence.length} evidence items`);
+        countBadge.textContent = `${step.evidence.length}`;
+
+        // Chevron
+        const chevron = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        chevron.classList.add('step-chevron');
+        chevron.setAttribute('viewBox', '0 0 24 24');
+        chevron.setAttribute('fill', 'none');
+        chevron.setAttribute('stroke', 'currentColor');
+        chevron.setAttribute('stroke-width', '3');
+        chevron.setAttribute('stroke-linecap', 'round');
+        chevron.setAttribute('stroke-linejoin', 'round');
+        chevron.setAttribute('aria-hidden', 'true');
+        chevron.innerHTML = '<polyline points="6 9 12 15 18 9"></polyline>';
+
+        trigger.appendChild(checkbox);
+        trigger.appendChild(label);
+        if (step.evidence.length > 0) {
+          trigger.appendChild(countBadge);
+        }
+        trigger.appendChild(chevron);
+
+        trigger.addEventListener('click', () => toggleStep(step.id));
+
+        card.appendChild(trigger);
+
+        // Evidence region
+        const region = document.createElement('div');
+        region.className = 'step-evidence-region';
+        region.id = `evidence-region-${step.id}`;
+        region.setAttribute('role', 'region');
+        region.setAttribute('aria-label', `Evidence for: ${step.label}`);
+
+        if (!isExpanded) {
+          region.setAttribute('aria-hidden', 'true');
+        }
+
+        const inner = document.createElement('div');
+        inner.className = 'step-evidence-region-inner';
+
+        // Group evidence by type
+        if (step.evidence.length > 0) {
+          const grouped = {};
+          step.evidence.forEach(ev => {
+            if (!grouped[ev.type]) grouped[ev.type] = [];
+            grouped[ev.type].push(ev);
+          });
+
+          const typeOrder = ['note', 'link', 'screenshot', 'photo', 'video', 'voice_memo', 'file'];
+          typeOrder.forEach(type => {
+            if (!grouped[type]) return;
+            const group = document.createElement('div');
+            group.className = 'evidence-group';
+
+            const groupLabel = document.createElement('div');
+            groupLabel.className = 'evidence-group-label';
+            groupLabel.textContent = TYPE_GROUP_LABEL[type] || type;
+            group.appendChild(groupLabel);
+
+            const items = document.createElement('div');
+            items.className = 'evidence-items';
+
+            grouped[type].forEach(ev => {
+              const thumb = document.createElement('div');
+              thumb.className = 'evidence-thumb';
+
+              const icon = document.createElement('div');
+              icon.className = `evidence-thumb-icon evidence-thumb-icon--${TYPE_CSS_CLASS[ev.type] || 'file'}`;
+              icon.setAttribute('aria-hidden', 'true');
+              icon.textContent = TYPE_EMOJI[ev.type] || '\u{1F4C4}';
+
+              const name = document.createElement('div');
+              name.className = 'evidence-thumb-name';
+              name.textContent = ev.name;
+
+              const del = document.createElement('button');
+              del.className = 'evidence-thumb-delete';
+              del.setAttribute('aria-label', `Delete evidence: ${ev.name}`);
+              del.textContent = '\u00D7';
+              del.addEventListener('click', (e) => {
+                e.stopPropagation();
+                confirmDelete(step.id, ev.id, ev.name);
+              });
+
+              thumb.appendChild(del);
+              thumb.appendChild(icon);
+              thumb.appendChild(name);
+              items.appendChild(thumb);
+            });
+
+            group.appendChild(items);
+            inner.appendChild(group);
+          });
+        } else {
+          const empty = document.createElement('div');
+          empty.className = 'evidence-empty';
+          empty.textContent = 'No evidence yet. Add some below!';
+          inner.appendChild(empty);
+        }
+
+        // Add evidence row
+        const addLabel = document.createElement('div');
+        addLabel.className = 'add-evidence-label';
+        addLabel.textContent = 'Add Evidence';
+        inner.appendChild(addLabel);
+
+        const addRow = document.createElement('div');
+        addRow.className = 'add-evidence-row';
+
+        EVIDENCE_TYPES.forEach(et => {
+          const btn = document.createElement('button');
+          btn.className = 'add-evidence-btn';
+          btn.setAttribute('type', 'button');
+          btn.setAttribute('aria-label', `Add ${et.label}`);
+          btn.innerHTML = `<span class="add-evidence-btn-icon" aria-hidden="true">${et.icon}</span><span class="add-evidence-btn-label">${et.label}</span>`;
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openAddModal(step.id, et.key, et.label);
+          });
+          addRow.appendChild(btn);
+        });
+
+        inner.appendChild(addRow);
+        region.appendChild(inner);
+        card.appendChild(region);
+        list.appendChild(card);
+      });
+
+      updateProgress();
+    }
+
+    // ── Step toggle ────────────────────────────────
+    function toggleStep(stepId) {
+      if (expandedStepId === stepId) {
+        expandedStepId = null;
+      } else {
+        expandedStepId = stepId;
+      }
+      render();
+
+      // Scroll expanded step into view
+      if (expandedStepId !== null) {
+        requestAnimationFrame(() => {
+          const card = document.querySelector(`[data-step-id="${expandedStepId}"]`);
+          if (card) {
+            card.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'nearest' });
+          }
+        });
+      }
+    }
+
+    // ── Progress ───────────────────────────────────
+    function updateProgress() {
+      const done = steps.filter(s => s.completed).length;
+      const total = steps.length;
+      const pct = total > 0 ? (done / total) * 100 : 0;
+
+      document.getElementById('progress-count').textContent = `${done} / ${total} steps done`;
+
+      const bar = document.getElementById('progress-bar');
+      bar.setAttribute('aria-valuenow', done);
+      bar.setAttribute('aria-valuemax', total);
+      bar.setAttribute('aria-label', `${done} of ${total} steps completed`);
+
+      document.getElementById('progress-fill').style.width = `${pct}%`;
+    }
+
+    // ── Add Evidence Modal ─────────────────────────
+    let activeModal = { stepId: null, type: null };
+
+    function openAddModal(stepId, typeKey, typeLabel) {
+      activeModal = { stepId, type: typeKey };
+
+      const overlay = document.getElementById('modal-overlay');
+      const title = document.getElementById('modal-title');
+      const body = document.getElementById('modal-body');
+
+      title.textContent = `Add ${typeLabel}`;
+
+      let bodyHTML = '';
+
+      switch (typeKey) {
+        case 'note':
+          bodyHTML = `
+            <label for="modal-note-input">Note content</label>
+            <textarea id="modal-note-input" placeholder="Write your note..."></textarea>
+          `;
+          break;
+        case 'link':
+          bodyHTML = `
+            <label for="modal-link-url">URL</label>
+            <input type="url" id="modal-link-url" placeholder="https://..." />
+            <label for="modal-link-name" style="margin-top:12px">Label (optional)</label>
+            <input type="text" id="modal-link-name" placeholder="Link description" />
+          `;
+          break;
+        case 'photo':
+          bodyHTML = `
+            <label>Select photo</label>
+            <div class="placeholder-area">Camera / gallery picker placeholder</div>
+          `;
+          break;
+        case 'video':
+          bodyHTML = `
+            <label>Select video</label>
+            <div class="placeholder-area">Video capture / picker placeholder</div>
+          `;
+          break;
+        case 'voice_memo':
+          bodyHTML = `
+            <label>Record voice memo</label>
+            <div class="placeholder-area">Audio recorder placeholder</div>
+          `;
+          break;
+        case 'file':
+          bodyHTML = `
+            <label>Select file</label>
+            <div class="placeholder-area">File picker placeholder</div>
+          `;
+          break;
+        default:
+          bodyHTML = `<div class="placeholder-area">Placeholder for ${typeLabel}</div>`;
+      }
+
+      body.innerHTML = bodyHTML;
+
+      overlay.setAttribute('data-open', 'true');
+      overlay.setAttribute('aria-hidden', 'false');
+
+      // Focus first input or close button
+      requestAnimationFrame(() => {
+        const firstInput = body.querySelector('textarea, input');
+        if (firstInput) {
+          firstInput.focus();
+        } else {
+          document.getElementById('modal-close').focus();
+        }
+      });
+
+      // Trap focus
+      document.addEventListener('keydown', modalKeyHandler);
+    }
+
+    function closeModal() {
+      const overlay = document.getElementById('modal-overlay');
+      overlay.setAttribute('data-open', 'false');
+      overlay.setAttribute('aria-hidden', 'true');
+      activeModal = { stepId: null, type: null };
+      document.removeEventListener('keydown', modalKeyHandler);
+
+      // Restore focus to the step's trigger
+      const trigger = document.querySelector(`[data-step-id="${expandedStepId}"] .step-trigger`);
+      if (trigger) trigger.focus();
+    }
+
+    function saveModal() {
+      if (!activeModal.stepId || !activeModal.type) return;
+
+      const step = steps.find(s => s.id === activeModal.stepId);
+      if (!step) return;
+
+      let name = '';
+      switch (activeModal.type) {
+        case 'note': {
+          const textarea = document.getElementById('modal-note-input');
+          const text = textarea ? textarea.value.trim() : '';
+          name = text.length > 0 ? text.substring(0, 30) + (text.length > 30 ? '...' : '') : 'Untitled note';
+          break;
+        }
+        case 'link': {
+          const nameInput = document.getElementById('modal-link-name');
+          const urlInput = document.getElementById('modal-link-url');
+          name = (nameInput && nameInput.value.trim()) || (urlInput && urlInput.value.trim()) || 'Untitled link';
+          if (name.length > 30) name = name.substring(0, 30) + '...';
+          break;
+        }
+        case 'photo':
+          name = 'New photo';
+          break;
+        case 'video':
+          name = 'New video';
+          break;
+        case 'voice_memo':
+          name = 'Voice memo';
+          break;
+        case 'file':
+          name = 'New file';
+          break;
+      }
+
+      step.evidence.push({
+        id: nextEvidenceId++,
+        type: activeModal.type,
+        name,
+      });
+
+      closeModal();
+      render();
+    }
+
+    function modalKeyHandler(e) {
+      if (e.key === 'Escape') {
+        closeModal();
+        return;
+      }
+      if (e.key === 'Tab') {
+        const panel = document.getElementById('modal-panel');
+        const focusable = panel.querySelectorAll('button, textarea, input, [tabindex]');
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+
+    document.getElementById('modal-close').addEventListener('click', closeModal);
+    document.getElementById('modal-cancel').addEventListener('click', closeModal);
+    document.getElementById('modal-save').addEventListener('click', saveModal);
+    document.getElementById('modal-overlay').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) closeModal();
+    });
+
+    // ── Confirm Delete ─────────────────────────────
+    let pendingDelete = { stepId: null, evidenceId: null };
+
+    function confirmDelete(stepId, evidenceId, evidenceName) {
+      pendingDelete = { stepId, evidenceId };
+      document.getElementById('confirm-msg').textContent = `Delete "${evidenceName}"?`;
+      const overlay = document.getElementById('confirm-overlay');
+      overlay.setAttribute('data-open', 'true');
+      overlay.setAttribute('aria-hidden', 'false');
+      document.getElementById('confirm-cancel').focus();
+
+      document.addEventListener('keydown', confirmKeyHandler);
+    }
+
+    function closeConfirm() {
+      const overlay = document.getElementById('confirm-overlay');
+      overlay.setAttribute('data-open', 'false');
+      overlay.setAttribute('aria-hidden', 'true');
+      pendingDelete = { stepId: null, evidenceId: null };
+      document.removeEventListener('keydown', confirmKeyHandler);
+    }
+
+    function executeDelete() {
+      if (!pendingDelete.stepId) return;
+      const step = steps.find(s => s.id === pendingDelete.stepId);
+      if (!step) { closeConfirm(); return; }
+
+      const idx = step.evidence.findIndex(e => e.id === pendingDelete.evidenceId);
+      if (idx === -1) { closeConfirm(); return; }
+
+      const removed = step.evidence.splice(idx, 1)[0];
+      const removedStepId = pendingDelete.stepId;
+      const removedIdx = idx;
+
+      closeConfirm();
+      render();
+      showUndo(removed, removedStepId, removedIdx);
+    }
+
+    function confirmKeyHandler(e) {
+      if (e.key === 'Escape') closeConfirm();
+    }
+
+    document.getElementById('confirm-cancel').addEventListener('click', closeConfirm);
+    document.getElementById('confirm-delete').addEventListener('click', executeDelete);
+    document.getElementById('confirm-overlay').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) closeConfirm();
+    });
+
+    // ── Undo Toast ─────────────────────────────────
+    function showUndo(evidence, stepId, idx) {
+      // Clear previous timeout
+      if (undoTimeout) {
+        clearTimeout(undoTimeout);
+        undoTimeout = null;
+      }
+
+      undoData = { evidence, stepId, idx };
+
+      const toast = document.getElementById('undo-toast');
+      document.getElementById('undo-toast-msg').textContent = `"${evidence.name}" deleted.`;
+      toast.setAttribute('data-visible', 'true');
+
+      undoTimeout = setTimeout(() => {
+        hideUndo();
+      }, 5000);
+    }
+
+    function hideUndo() {
+      const toast = document.getElementById('undo-toast');
+      toast.setAttribute('data-visible', 'false');
+      undoData = null;
+      if (undoTimeout) { clearTimeout(undoTimeout); undoTimeout = null; }
+    }
+
+    function performUndo() {
+      if (!undoData) return;
+      const step = steps.find(s => s.id === undoData.stepId);
+      if (step) {
+        // Re-insert at original position if possible
+        const idx = Math.min(undoData.idx, step.evidence.length);
+        step.evidence.splice(idx, 0, undoData.evidence);
+        render();
+      }
+      hideUndo();
+    }
+
+    document.getElementById('undo-btn').addEventListener('click', performUndo);
+
+    // ── Helpers ────────────────────────────────────
+    function prefersReducedMotion() {
+      return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    }
+
+    // ── Init ───────────────────────────────────────
+    render();
+  </script>
+</body>
+</html>
