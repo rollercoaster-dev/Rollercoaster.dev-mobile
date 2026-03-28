@@ -885,15 +885,29 @@
         // Add evidence card
         var typeInfo = EVIDENCE_TYPES.find(function (t) { return t.id === type; });
         var li = document.createElement('li');
+        var button = document.createElement('button');
+        var icon = document.createElement('span');
+        var body = document.createElement('span');
+        var typeLabel = document.createElement('span');
+        var text = document.createElement('span');
         li.className = 'evidence-item';
-        li.innerHTML =
-          '<button class="evidence-card" type="button" aria-label="' + typeInfo.label + ' evidence (placeholder)">' +
-            '<span class="evidence-icon" data-type="' + type + '" aria-hidden="true">' + typeInfo.emoji + '</span>' +
-            '<span class="evidence-body">' +
-              '<span class="evidence-type-label">' + typeInfo.label + '</span>' +
-              '<span class="evidence-text">New ' + typeInfo.label.toLowerCase() + ' evidence&hellip;</span>' +
-            '</span>' +
-          '</button>';
+        button.className = 'evidence-card';
+        button.type = 'button';
+        button.setAttribute('aria-label', typeInfo.label + ' evidence (placeholder)');
+        icon.className = 'evidence-icon';
+        icon.setAttribute('data-type', type);
+        icon.setAttribute('aria-hidden', 'true');
+        icon.textContent = typeInfo.emoji;
+        body.className = 'evidence-body';
+        typeLabel.className = 'evidence-type-label';
+        typeLabel.textContent = typeInfo.label;
+        text.className = 'evidence-text';
+        text.textContent = 'New ' + typeInfo.label.toLowerCase() + ' evidence...';
+        body.appendChild(typeLabel);
+        body.appendChild(text);
+        button.appendChild(icon);
+        button.appendChild(body);
+        li.appendChild(button);
         list.appendChild(li);
 
         closeAllPickers();
