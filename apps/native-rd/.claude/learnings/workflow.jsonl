@@ -1,1 +1,0 @@
-{"id":"9c2e239e-6fac-4e23-a53e-4aaaba47314d","timestamp":"2026-03-01T19:27:49.383Z","area":"workflow","type":"pattern","content":"Race condition: PR #215 and #217 both implemented issue #180 concurrently. #215 merged while #217 was in review phase. The /auto-issue setup phase should check if the issue is already closed before starting work to avoid duplicate effort."}

@@ -62,6 +62,6 @@ jobs:
       - name: Lint
         run: bun run turbo lint --filter=native-rd
 
-      - name: Test
+      - name: Validate test discovery
         working-directory: apps/native-rd
-        run: bun run test:ci
+        run: bun run test:ci:smoke

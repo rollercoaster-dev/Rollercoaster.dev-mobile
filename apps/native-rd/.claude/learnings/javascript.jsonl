@@ -1,1 +1,0 @@
-{"id":"c8d67da8-a407-4a63-97d4-8e5cbf98119f","timestamp":"2026-03-01T13:19:51.142Z","area":"javascript","type":"pattern","content":"Math.max(0, NaN) returns NaN, not 0. When doing date arithmetic from strings, always validate with Number.isNaN() after new Date().getTime() — the Date constructor never throws on invalid input, it returns Invalid Date whose getTime() is NaN."}

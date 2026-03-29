@@ -1,4 +1,3 @@
-/* global require, __dirname, module */
 const { getDefaultConfig } = require("expo/metro-config");
 const {
   withStorybook,

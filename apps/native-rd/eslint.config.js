@@ -1,7 +1,12 @@
-/* global module, require */
 // https://docs.expo.dev/guides/using-eslint/
 const { defineConfig } = require("eslint/config");
 const expoConfig = require("eslint-config-expo/flat");
+const nodeCommonJsGlobals = {
+  __dirname: "readonly",
+  module: "readonly",
+  process: "readonly",
+  require: "readonly",
+};
 
 const localRules = {
   plugins: {
@@ -28,6 +33,26 @@ const localRules = {
 
 module.exports = defineConfig([
   expoConfig,
+  {
+    files: [
+      "**/*.config.js",
+      "**/jest.resolver.js",
+      "**/src/eslint-rules/**/*.js",
+    ],
+    languageOptions: {
+      globals: nodeCommonJsGlobals,
+      sourceType: "commonjs",
+    },
+  },
+  {
+    files: ["**/src/__tests__/eslint-rules/**/*.ts"],
+    languageOptions: {
+      globals: nodeCommonJsGlobals,
+    },
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+    },
+  },
   localRules,
   {
     settings: {

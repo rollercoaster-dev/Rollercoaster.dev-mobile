@@ -8,6 +8,13 @@
 
 import { vue } from './packages/shared-config/eslint.config.mjs';
 
+const nodeCommonJsGlobals = {
+  __dirname: 'readonly',
+  module: 'readonly',
+  process: 'readonly',
+  require: 'readonly',
+};
+
 export default [
   // Vue config (includes TypeScript rules for .ts, .tsx, .vue files)
   ...vue,
@@ -182,6 +189,28 @@ export default [
     },
     rules: {
       'no-console': 'off',
+    },
+  },
+
+  // native-rd uses CommonJS for local toolchain/config glue and ESLint RuleTester harnesses
+  {
+    files: [
+      'apps/native-rd/*.config.js',
+      'apps/native-rd/jest.resolver.js',
+      'apps/native-rd/src/eslint-rules/**/*.js',
+    ],
+    languageOptions: {
+      globals: nodeCommonJsGlobals,
+      sourceType: 'commonjs',
+    },
+  },
+  {
+    files: ['apps/native-rd/src/__tests__/eslint-rules/**/*.ts'],
+    languageOptions: {
+      globals: nodeCommonJsGlobals,
+    },
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
     },
   },
 
