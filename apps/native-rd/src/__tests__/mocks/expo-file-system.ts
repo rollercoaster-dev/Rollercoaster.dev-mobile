@@ -1,3 +1,10 @@
+/**
+ * Mock for expo-file-system (and expo-file-system/legacy)
+ *
+ * Stubs native file system APIs that require device storage.
+ * Both the default and /legacy entry points map here via moduleNameMapper.
+ * All write/delete/info operations resolve successfully by default.
+ */
 export const cacheDirectory = "file:///cache/";
 export const documentDirectory = "file:///documents/";
 

@@ -1,3 +1,9 @@
+/**
+ * Mock for expo-sharing
+ *
+ * Stubs the native share sheet. Reports sharing as always available;
+ * shareAsync resolves without side effects.
+ */
 export function isAvailableAsync(): Promise<boolean> {
   return Promise.resolve(true);
 }

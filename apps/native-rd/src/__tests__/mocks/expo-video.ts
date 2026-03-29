@@ -1,3 +1,9 @@
+/**
+ * Mock for expo-video
+ *
+ * Stubs the native video player. VideoView renders a plain View with
+ * testID="video-player"; useVideoPlayer returns a controllable stub.
+ */
 import React from "react";
 import { View } from "react-native";
 
