@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Approach B: Timeline Journey</title>
+  <style>
+    /* ── Reset & Base ─────────────────────────────── */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #fafafa;
+      --card: #ffffff;
+      --border: #262626;
+      --border-w: 3px;
+      --radius: 6px;
+      --shadow: 4px 4px 0 rgba(38, 38, 38, 0.8);
+      --shadow-sm: 2px 2px 0 rgba(38, 38, 38, 0.8);
+      --blue: #3b82f6;
+      --yellow: #ffe50c;
+      --mint: #d4f4e7;
+      --purple: #a78bfa;
+      --pending-line: #d4d4d4;
+      --text: #262626;
+      --text-muted: #6b7280;
+      --node-size: 32px;
+      --timeline-left: 40px;
+      --font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    html {
+      font-size: 16px;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+      padding-bottom: 64px;
+    }
+
+    /* ── Prototype Banner ─────────────────────────── */
+    .proto-banner {
+      background: var(--yellow);
+      border-bottom: var(--border-w) solid var(--border);
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: 0.02em;
+    }
+
+    /* ── Goal Header ──────────────────────────────── */
+    .goal-header {
+      background: var(--card);
+      border-bottom: var(--border-w) solid var(--border);
+      padding: 24px 16px 20px;
+    }
+
+    .goal-status {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      background: var(--mint);
+      border: 2px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 8px;
+      margin-bottom: 8px;
+    }
+
+    .goal-title {
+      font-size: 24px;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+
+    .goal-description {
+      font-size: 16px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .goal-progress-bar {
+      margin-top: 16px;
+      height: 12px;
+      background: var(--bg);
+      border: var(--border-w) solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .goal-progress-fill {
+      height: 100%;
+      background: var(--blue);
+      transition: width 0.4s ease;
+    }
+
+    .goal-progress-label {
+      font-size: 13px;
+      font-weight: 700;
+      margin-top: 4px;
+      color: var(--text-muted);
+    }
+
+    /* ── Timeline Container ───────────────────────── */
+    .timeline {
+      padding: 24px 16px 0;
+      position: relative;
+    }
+
+    /* ── Timeline Step ────────────────────────────── */
+    .timeline-step {
+      position: relative;
+      padding-left: 56px; /* node-size + gap */
+      padding-bottom: 8px;
+      min-height: 80px;
+    }
+
+    .timeline-step:last-child {
+      padding-bottom: 0;
+    }
+
+    /* Vertical line segment BEFORE the node (between previous node and this one) */
+    .timeline-step::before {
+      content: '';
+      position: absolute;
+      left: 15px; /* center of 32px node */
+      top: -24px;
+      bottom: calc(100% - 16px);
+      width: var(--border-w);
+      background: var(--pending-line);
+    }
+
+    /* Vertical line segment AFTER the node (from node down to next) */
+    .timeline-step::after {
+      content: '';
+      position: absolute;
+      left: 15px;
+      top: 16px; /* half of node */
+      bottom: 0;
+      width: var(--border-w);
+      background: var(--pending-line);
+    }
+
+    .timeline-step:first-child::before {
+      display: none;
+    }
+
+    .timeline-step:last-child::after {
+      display: none;
+    }
+
+    /* Completed lines */
+    .timeline-step[data-status="completed"]::before,
+    .timeline-step[data-status="completed"]::after {
+      background: var(--blue);
+    }
+
+    .timeline-step[data-status="in-progress"]::before {
+      background: var(--blue);
+    }
+
+    .timeline-step[data-status="in-progress"]::after {
+      background: var(--pending-line);
+      border-left: none;
+      background-image: repeating-linear-gradient(
+        to bottom,
+        var(--pending-line) 0px,
+        var(--pending-line) 6px,
+        transparent 6px,
+        transparent 12px
+      );
+      background-color: transparent;
+    }
+
+    .timeline-step[data-status="pending"]::before,
+    .timeline-step[data-status="pending"]::after {
+      background-image: repeating-linear-gradient(
+        to bottom,
+        var(--pending-line) 0px,
+        var(--pending-line) 6px,
+        transparent 6px,
+        transparent 12px
+      );
+      background-color: transparent;
+    }
+
+    /* If step after a pending is also pending, the before line should be dashed */
+    .timeline-step[data-status="pending"] + .timeline-step[data-status="pending"]::before {
+      background-image: repeating-linear-gradient(
+        to bottom,
+        var(--pending-line) 0px,
+        var(--pending-line) 6px,
+        transparent 6px,
+        transparent 12px
+      );
+      background-color: transparent;
+    }
+
+    /* ── Milestone Node ───────────────────────────── */
+    .milestone-node {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: var(--node-size);
+      height: var(--node-size);
+      border-radius: 50%;
+      border: var(--border-w) solid var(--border);
+      background: var(--card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      flex-shrink: 0;
+    }
+
+    .timeline-step[data-status="completed"] .milestone-node {
+      background: var(--blue);
+      border-color: var(--border);
+    }
+
+    .timeline-step[data-status="completed"] .milestone-node .node-check {
+      display: block;
+    }
+
+    .timeline-step[data-status="completed"] .milestone-node .node-number {
+      display: none;
+    }
+
+    /* Celebration state for completed nodes */
+    .timeline-step[data-status="completed"] .milestone-node {
+      box-shadow: 0 0 0 4px var(--mint);
+    }
+
+    .milestone-node .node-check {
+      display: none;
+      width: 16px;
+      height: 16px;
+    }
+
+    .milestone-node .node-number {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text-muted);
+    }
+
+    .timeline-step[data-status="completed"] .milestone-node .node-number {
+      color: white;
+    }
+
+    /* Active/in-progress node gets a glow and is larger */
+    .timeline-step[data-status="in-progress"] .milestone-node {
+      width: 40px;
+      height: 40px;
+      left: -4px;
+      top: -4px;
+      border-color: var(--blue);
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2), var(--shadow);
+    }
+
+    .timeline-step[data-status="in-progress"] .milestone-node .node-number {
+      color: var(--blue);
+      font-size: 16px;
+    }
+
+    /* Star decoration on completed nodes */
+    .milestone-star {
+      display: none;
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      width: 18px;
+      height: 18px;
+      font-size: 14px;
+      line-height: 18px;
+      text-align: center;
+      z-index: 3;
+    }
+
+    .timeline-step[data-status="completed"] .milestone-star {
+      display: block;
+    }
+
+    /* ── Step Content ─────────────────────────────── */
+    .step-content {
+      padding-top: 4px;
+    }
+
+    .step-title {
+      font-size: 17px;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 4px;
+    }
+
+    .step-meta {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .timeline-step[data-status="completed"] .step-title {
+      color: var(--text);
+    }
+
+    .timeline-step[data-status="pending"] .step-title {
+      color: var(--text-muted);
+    }
+
+    .timeline-step[data-status="in-progress"] .step-title {
+      color: var(--blue);
+    }
+
+    /* ── Evidence Branch ──────────────────────────── */
+    .evidence-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .evidence-item {
+      position: relative;
+      padding-left: 20px;
+    }
+
+    /* Branch line connecting evidence to timeline */
+    .evidence-item::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      width: 12px;
+      height: var(--border-w);
+      background: var(--blue);
+      transform: translateY(-50%);
+    }
+
+    .timeline-step[data-status="pending"] .evidence-item::before,
+    .timeline-step[data-status="in-progress"] .evidence-item::before {
+      background: var(--pending-line);
+    }
+
+    .timeline-step[data-status="in-progress"] .evidence-item::before {
+      background: var(--blue);
+      opacity: 0.5;
+    }
+
+    .evidence-card {
+      background: var(--card);
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+      min-height: 44px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .evidence-card:hover,
+    .evidence-card:focus-visible {
+      transform: translate(-1px, -1px);
+      box-shadow: 3px 3px 0 rgba(38, 38, 38, 0.8);
+    }
+
+    .evidence-card:active {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0 rgba(38, 38, 38, 0.8);
+    }
+
+    .evidence-icon {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      border: 2px solid var(--border);
+    }
+
+    .evidence-icon[data-type="text"] {
+      background: var(--yellow);
+    }
+    .evidence-icon[data-type="link"] {
+      background: var(--mint);
+    }
+    .evidence-icon[data-type="screenshot"] {
+      background: var(--purple);
+      color: white;
+    }
+    .evidence-icon[data-type="photo"] {
+      background: var(--mint);
+    }
+    .evidence-icon[data-type="video"] {
+      background: #fca5a5;
+    }
+    .evidence-icon[data-type="voice_memo"] {
+      background: #fdba74;
+    }
+    .evidence-icon[data-type="file"] {
+      background: #d4d4d4;
+    }
+
+    .evidence-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .evidence-type-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    .evidence-text {
+      font-size: 14px;
+      line-height: 1.4;
+      color: var(--text);
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+    }
+
+    .evidence-text a {
+      color: var(--blue);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    /* ── Add Evidence Button ──────────────────────── */
+    .add-evidence-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 44px;
+      min-width: 44px;
+      padding: 8px 14px;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: var(--font);
+      color: var(--text);
+      background: var(--card);
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+      position: relative;
+    }
+
+    .add-evidence-btn:hover,
+    .add-evidence-btn:focus-visible {
+      transform: translate(-1px, -1px);
+      box-shadow: 3px 3px 0 rgba(38, 38, 38, 0.8);
+    }
+
+    .add-evidence-btn:active {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0 rgba(38, 38, 38, 0.8);
+    }
+
+    .add-evidence-btn .plus-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    /* ── Evidence Type Picker (floating pill bar) ─── */
+    .type-picker {
+      display: none;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+      padding: 12px;
+      background: var(--card);
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .type-picker.is-open {
+      display: flex;
+    }
+
+    .type-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      min-height: 44px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: var(--font);
+      color: var(--text);
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: 20px;
+      cursor: pointer;
+      transition: transform 0.1s ease, background 0.1s ease;
+      white-space: nowrap;
+    }
+
+    .type-pill:hover,
+    .type-pill:focus-visible {
+      background: var(--yellow);
+      transform: scale(1.04);
+    }
+
+    .type-pill:active {
+      transform: scale(0.97);
+    }
+
+    .type-pill .pill-emoji {
+      font-size: 16px;
+    }
+
+    /* ── Focus styles ─────────────────────────────── */
+    :focus-visible {
+      outline: 3px solid var(--blue);
+      outline-offset: 2px;
+    }
+
+    /* ── Reduced Motion ───────────────────────────── */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+
+      .timeline-step[data-status="completed"] .milestone-node {
+        box-shadow: 0 0 0 4px var(--mint);
+      }
+
+      .timeline-step[data-status="in-progress"] .milestone-node {
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2), var(--shadow);
+      }
+    }
+
+    /* ── Completed pulse animation ────────────────── */
+    @keyframes completed-pulse {
+      0%, 100% { box-shadow: 0 0 0 4px var(--mint); }
+      50% { box-shadow: 0 0 0 8px rgba(212, 244, 231, 0.4); }
+    }
+
+    .timeline-step[data-status="completed"] .milestone-node {
+      animation: completed-pulse 3s ease-in-out infinite;
+    }
+
+    /* ── Responsive ───────────────────────────────── */
+    @media (min-width: 600px) {
+      .timeline {
+        max-width: 560px;
+        margin: 0 auto;
+        padding: 32px 24px 0;
+      }
+
+      .goal-header {
+        max-width: 560px;
+        margin: 0 auto;
+        padding: 32px 24px 24px;
+        border-bottom: none;
+      }
+
+      .proto-banner + .goal-header {
+        border-bottom: var(--border-w) solid var(--border);
+      }
+    }
+
+    /* ── Toast/Confirmation ───────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--border);
+      color: white;
+      padding: 12px 20px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-weight: 700;
+      font-family: var(--font);
+      z-index: 100;
+      opacity: 0;
+      transition: transform 0.25s ease, opacity 0.25s ease;
+      pointer-events: none;
+    }
+
+    .toast.is-visible {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* ── Skip Link ────────────────────────────────── */
+    .skip-link {
+      position: absolute;
+      top: -100px;
+      left: 16px;
+      background: var(--blue);
+      color: white;
+      padding: 8px 16px;
+      border-radius: var(--radius);
+      font-weight: 700;
+      z-index: 200;
+      text-decoration: none;
+    }
+
+    .skip-link:focus {
+      top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#timeline">Skip to timeline</a>
+
+  <!-- Prototype Banner -->
+  <div class="proto-banner" role="banner">
+    Approach B: Timeline Journey &mdash; Steps as milestones with evidence branching off
+  </div>
+
+  <!-- Goal Header -->
+  <header class="goal-header">
+    <span class="goal-status" aria-label="Goal status: in progress">In Progress</span>
+    <h1 class="goal-title">Learn TypeScript Generics</h1>
+    <p class="goal-description">Master generics by reading docs, practicing exercises, building a real project, and sharing what I learned.</p>
+    <div class="goal-progress-bar" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" aria-label="Goal progress: 2 of 5 steps completed">
+      <div class="goal-progress-fill" style="width: 50%"></div>
+    </div>
+    <p class="goal-progress-label">2 of 5 steps completed</p>
+  </header>
+
+  <!-- Timeline -->
+  <main class="timeline" id="timeline" aria-label="Goal steps timeline">
+
+    <!-- Step 1: Completed -->
+    <article class="timeline-step" data-status="completed" data-step="1" aria-label="Step 1: Read the TypeScript handbook chapter, completed">
+      <div class="milestone-node" aria-hidden="true">
+        <svg class="node-check" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M3.5 8.5L6.5 11.5L12.5 4.5" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="node-number">1</span>
+        <span class="milestone-star" aria-hidden="true">&#9733;</span>
+      </div>
+      <div class="step-content">
+        <h2 class="step-title">Read the TypeScript handbook chapter</h2>
+        <p class="step-meta">Completed</p>
+
+        <ul class="evidence-list" aria-label="Evidence for step 1">
+          <li class="evidence-item">
+            <button class="evidence-card" type="button" aria-label="Text note: Key insight about generics preserving type information">
+              <span class="evidence-icon" data-type="text" aria-hidden="true">&#128221;</span>
+              <span class="evidence-body">
+                <span class="evidence-type-label">Note</span>
+                <span class="evidence-text">Key insight: generics preserve type information through transformations</span>
+              </span>
+            </button>
+          </li>
+          <li class="evidence-item">
+            <button class="evidence-card" type="button" aria-label="Link: typescriptlang.org generics handbook">
+              <span class="evidence-icon" data-type="link" aria-hidden="true">&#128279;</span>
+              <span class="evidence-body">
+                <span class="evidence-type-label">Link</span>
+                <span class="evidence-text"><span>typescriptlang.org/docs/handbook/2/generics</span></span>
+              </span>
+            </button>
+          </li>
+        </ul>
+
+        <button class="add-evidence-btn" type="button" aria-expanded="false" aria-controls="picker-1" data-step="1">
+          <span class="plus-icon" aria-hidden="true">+</span>
+          Add Evidence
+        </button>
+        <div class="type-picker" id="picker-1" role="group" aria-label="Choose evidence type for step 1"></div>
+      </div>
+    </article>
+
+    <!-- Step 2: Completed -->
+    <article class="timeline-step" data-status="completed" data-step="2" aria-label="Step 2: Complete generic utility types exercise, completed">
+      <div class="milestone-node" aria-hidden="true">
+        <svg class="node-check" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M3.5 8.5L6.5 11.5L12.5 4.5" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="node-number">2</span>
+        <span class="milestone-star" aria-hidden="true">&#9733;</span>
+      </div>
+      <div class="step-content">
+        <h2 class="step-title">Complete generic utility types exercise</h2>
+        <p class="step-meta">Completed</p>
+
+        <ul class="evidence-list" aria-label="Evidence for step 2">
+          <li class="evidence-item">
+            <button class="evidence-card" type="button" aria-label="Screenshot: exercise completion">
+              <span class="evidence-icon" data-type="screenshot" aria-hidden="true">&#128247;</span>
+              <span class="evidence-body">
+                <span class="evidence-type-label">Screenshot</span>
+                <span class="evidence-text">Exercise completion screenshot</span>
+              </span>
+            </button>
+          </li>
+        </ul>
+
+        <button class="add-evidence-btn" type="button" aria-expanded="false" aria-controls="picker-2" data-step="2">
+          <span class="plus-icon" aria-hidden="true">+</span>
+          Add Evidence
+        </button>
+        <div class="type-picker" id="picker-2" role="group" aria-label="Choose evidence type for step 2"></div>
+      </div>
+    </article>
+
+    <!-- Step 3: In Progress -->
+    <article class="timeline-step" data-status="in-progress" data-step="3" aria-label="Step 3: Build a type-safe event emitter, in progress, current step">
+      <div class="milestone-node" aria-hidden="true">
+        <span class="node-number">3</span>
+      </div>
+      <div class="step-content">
+        <h2 class="step-title">Build a type-safe event emitter</h2>
+        <p class="step-meta">In progress &mdash; current step</p>
+
+        <ul class="evidence-list" aria-label="Evidence for step 3">
+          <li class="evidence-item">
+            <button class="evidence-card" type="button" aria-label="Text note: Started with basic emit/on pattern">
+              <span class="evidence-icon" data-type="text" aria-hidden="true">&#128221;</span>
+              <span class="evidence-body">
+                <span class="evidence-type-label">Note</span>
+                <span class="evidence-text">Started with basic emit/on pattern, need to add type constraints</span>
+              </span>
+            </button>
+          </li>
+        </ul>
+
+        <button class="add-evidence-btn" type="button" aria-expanded="false" aria-controls="picker-3" data-step="3">
+          <span class="plus-icon" aria-hidden="true">+</span>
+          Add Evidence
+        </button>
+        <div class="type-picker" id="picker-3" role="group" aria-label="Choose evidence type for step 3"></div>
+      </div>
+    </article>
+
+    <!-- Step 4: Pending -->
+    <article class="timeline-step" data-status="pending" data-step="4" aria-label="Step 4: Write blog post about learnings, pending">
+      <div class="milestone-node" aria-hidden="true">
+        <span class="node-number">4</span>
+      </div>
+      <div class="step-content">
+        <h2 class="step-title">Write blog post about learnings</h2>
+        <p class="step-meta">Pending</p>
+
+        <button class="add-evidence-btn" type="button" aria-expanded="false" aria-controls="picker-4" data-step="4">
+          <span class="plus-icon" aria-hidden="true">+</span>
+          Add Evidence
+        </button>
+        <div class="type-picker" id="picker-4" role="group" aria-label="Choose evidence type for step 4"></div>
+      </div>
+    </article>
+
+    <!-- Step 5: Pending -->
+    <article class="timeline-step" data-status="pending" data-step="5" aria-label="Step 5: Get code review from team, pending">
+      <div class="milestone-node" aria-hidden="true">
+        <span class="node-number">5</span>
+      </div>
+      <div class="step-content">
+        <h2 class="step-title">Get code review from team</h2>
+        <p class="step-meta">Pending</p>
+
+        <button class="add-evidence-btn" type="button" aria-expanded="false" aria-controls="picker-5" data-step="5">
+          <span class="plus-icon" aria-hidden="true">+</span>
+          Add Evidence
+        </button>
+        <div class="type-picker" id="picker-5" role="group" aria-label="Choose evidence type for step 5"></div>
+      </div>
+    </article>
+
+  </main>
+
+  <!-- Toast -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // Evidence types
+      var EVIDENCE_TYPES = [
+        { id: 'photo',      emoji: '\uD83D\uDCF7', label: 'Photo' },
+        { id: 'screenshot', emoji: '\uD83D\uDCF1', label: 'Screenshot' },
+        { id: 'video',      emoji: '\uD83C\uDFA5', label: 'Video' },
+        { id: 'text',       emoji: '\uD83D\uDCDD', label: 'Note' },
+        { id: 'voice_memo', emoji: '\uD83C\uDF99\uFE0F', label: 'Voice' },
+        { id: 'link',       emoji: '\uD83D\uDD17', label: 'Link' },
+        { id: 'file',       emoji: '\uD83D\uDCC1', label: 'File' }
+      ];
+
+      // Populate type pickers
+      var pickers = document.querySelectorAll('.type-picker');
+      pickers.forEach(function (picker) {
+        EVIDENCE_TYPES.forEach(function (type) {
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'type-pill';
+          btn.setAttribute('data-type', type.id);
+          btn.setAttribute('aria-label', 'Add ' + type.label + ' evidence');
+          btn.innerHTML = '<span class="pill-emoji" aria-hidden="true">' + type.emoji + '</span> ' + type.label;
+          picker.appendChild(btn);
+        });
+      });
+
+      // Toggle picker
+      var addBtns = document.querySelectorAll('.add-evidence-btn');
+      addBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var pickerId = btn.getAttribute('aria-controls');
+          var picker = document.getElementById(pickerId);
+          var isOpen = picker.classList.contains('is-open');
+
+          // Close all others first
+          closeAllPickers();
+
+          if (!isOpen) {
+            picker.classList.add('is-open');
+            btn.setAttribute('aria-expanded', 'true');
+            // Focus first pill
+            var firstPill = picker.querySelector('.type-pill');
+            if (firstPill) firstPill.focus();
+          }
+        });
+      });
+
+      function closeAllPickers() {
+        document.querySelectorAll('.type-picker.is-open').forEach(function (p) {
+          p.classList.remove('is-open');
+        });
+        document.querySelectorAll('.add-evidence-btn').forEach(function (b) {
+          b.setAttribute('aria-expanded', 'false');
+        });
+      }
+
+      // Type pill clicks
+      document.addEventListener('click', function (e) {
+        var pill = e.target.closest('.type-pill');
+        if (!pill) return;
+
+        var type = pill.getAttribute('data-type');
+        var picker = pill.closest('.type-picker');
+        var stepEl = pill.closest('.timeline-step');
+        var stepNum = stepEl.getAttribute('data-step');
+
+        // Find or create evidence list
+        var list = stepEl.querySelector('.evidence-list');
+        if (!list) {
+          list = document.createElement('ul');
+          list.className = 'evidence-list';
+          list.setAttribute('aria-label', 'Evidence for step ' + stepNum);
+          var addBtn = stepEl.querySelector('.add-evidence-btn');
+          addBtn.parentNode.insertBefore(list, addBtn);
+        }
+
+        // Add evidence card
+        var typeInfo = EVIDENCE_TYPES.find(function (t) { return t.id === type; });
+        var li = document.createElement('li');
+        var button = document.createElement('button');
+        var icon = document.createElement('span');
+        var body = document.createElement('span');
+        var typeLabel = document.createElement('span');
+        var text = document.createElement('span');
+        li.className = 'evidence-item';
+        button.className = 'evidence-card';
+        button.type = 'button';
+        button.setAttribute('aria-label', typeInfo.label + ' evidence (placeholder)');
+        icon.className = 'evidence-icon';
+        icon.setAttribute('data-type', type);
+        icon.setAttribute('aria-hidden', 'true');
+        icon.textContent = typeInfo.emoji;
+        body.className = 'evidence-body';
+        typeLabel.className = 'evidence-type-label';
+        typeLabel.textContent = typeInfo.label;
+        text.className = 'evidence-text';
+        text.textContent = 'New ' + typeInfo.label.toLowerCase() + ' evidence...';
+        body.appendChild(typeLabel);
+        body.appendChild(text);
+        button.appendChild(icon);
+        button.appendChild(body);
+        li.appendChild(button);
+        list.appendChild(li);
+
+        closeAllPickers();
+        showToast(typeInfo.label + ' added to step ' + stepNum);
+
+        // Focus the new card
+        var newCard = li.querySelector('.evidence-card');
+        if (newCard) newCard.focus();
+      });
+
+      // Close picker on outside click
+      document.addEventListener('click', function (e) {
+        if (!e.target.closest('.type-picker') && !e.target.closest('.add-evidence-btn')) {
+          closeAllPickers();
+        }
+      });
+
+      // Close picker on Escape
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+          var openPicker = document.querySelector('.type-picker.is-open');
+          if (openPicker) {
+            closeAllPickers();
+            // Return focus to the add button
+            var pickerId = openPicker.id;
+            var addBtn = document.querySelector('[aria-controls="' + pickerId + '"]');
+            if (addBtn) addBtn.focus();
+          }
+        }
+      });
+
+      // Toast
+      var toastTimer = null;
+      function showToast(message) {
+        var toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.classList.add('is-visible');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () {
+          toast.classList.remove('is-visible');
+        }, 2200);
+      }
+
+      // Evidence card click (would open detail in real app)
+      document.addEventListener('click', function (e) {
+        var card = e.target.closest('.evidence-card');
+        if (!card) return;
+        // In a real app this would open an evidence detail view
+        // For the prototype, just show a brief visual feedback
+        showToast('Evidence detail view (not wired in prototype)');
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+# Claude Code (local/machine-specific)
+.claude/settings.local.json
+.claude/embeddings/
+.claude/dev-plans/
+.mcp.json
+
+# Dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native (generated)
+ios/
+android/
+
+# Metro
+.metro-health-check*
+
+# Debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+
+# Native build artifacts
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.pem
+
+# TypeScript
+*.tsbuildinfo
+
+# Environment
+.env*.local
+
+# Playwright MCP
+.playwright-mcp/
+
+# Storybook (auto-generated)
+.storybook/storybook.requires.ts
+
+# Lockfiles
+package-lock.json
+.claude/graphs/

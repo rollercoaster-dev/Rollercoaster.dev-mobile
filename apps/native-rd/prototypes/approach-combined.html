@@ -1,0 +1,2097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Combined Prototype: Focus + Completion + Timeline</title>
+  <style>
+    /* ───── Reset & Base ───── */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #fafafa;
+      --card: #ffffff;
+      --border: #262626;
+      --border-w: 3px;
+      --shadow: 4px 4px 0 rgba(38, 38, 38, 0.8);
+      --shadow-sm: 2px 2px 0 rgba(38, 38, 38, 0.8);
+      --blue: #3b82f6;
+      --yellow: #ffe50c;
+      --mint: #d4f4e7;
+      --purple: #a78bfa;
+      --orange: #f97316;
+      --completed: #22c55e;
+      --in-progress: #3b82f6;
+      --pending: #d1d5db;
+      --text: #262626;
+      --text-muted: #6b7280;
+      --radius: 6px;
+      --radius-sm: 4px;
+      --node-size: 32px;
+      --finish-node-size: 40px;
+      --font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      --transition-speed: 0.3s;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      -webkit-tap-highlight-color: transparent;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    /* ───── Accessibility: Reduced Motion ───── */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    :focus-visible {
+      outline: 3px solid var(--blue);
+      outline-offset: 2px;
+    }
+
+    /* ───── App Shell ───── */
+    .app-shell {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: 100dvh;
+      max-width: 430px;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    /* ───── Proto Banner ───── */
+    .proto-banner {
+      background: var(--yellow);
+      border-bottom: var(--border-w) solid var(--border);
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: 0.02em;
+      flex-shrink: 0;
+    }
+
+    /* ───── Demo Button ───── */
+    .demo-btn {
+      position: fixed;
+      top: 52px;
+      right: 8px;
+      z-index: 999;
+      background: var(--orange);
+      color: #fff;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .demo-btn:hover { opacity: 0.9; }
+
+    /* ───── Mode Container ───── */
+    .mode-container {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+    }
+    .mode-container.active {
+      display: flex;
+    }
+
+    /* ═══════════════════════════════════════════
+       FOCUS MODE
+       ═══════════════════════════════════════════ */
+
+    /* ── Focus Header ── */
+    .focus-header {
+      background: var(--card);
+      border-bottom: var(--border-w) solid var(--border);
+      padding: 12px 16px;
+      flex-shrink: 0;
+    }
+    .focus-header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .focus-goal-title {
+      font-size: 18px;
+      font-weight: 800;
+      flex: 1;
+      margin-right: 8px;
+    }
+    .btn-view-journey {
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: var(--shadow-sm);
+    }
+    .btn-view-journey:hover { background: #f0f0f0; }
+
+    .focus-progress-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .focus-progress-bar {
+      flex: 1;
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 4px;
+      border: 2px solid var(--border);
+      overflow: hidden;
+    }
+    .focus-progress-fill {
+      height: 100%;
+      background: var(--completed);
+      transition: width var(--transition-speed);
+    }
+    .focus-progress-label {
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    /* ── Step Dots ── */
+    .step-dots {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+    .step-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: var(--border-w) solid var(--border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      transition: transform 0.15s, box-shadow 0.15s;
+      background: var(--pending);
+      color: var(--text-muted);
+    }
+    .step-dot:hover { transform: scale(1.1); }
+    .step-dot[data-status="completed"] {
+      background: var(--completed);
+      color: #fff;
+    }
+    .step-dot[data-status="in-progress"] {
+      background: var(--blue);
+      color: #fff;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+    }
+    .step-dot[data-status="pending"] {
+      background: var(--pending);
+      color: var(--text-muted);
+    }
+
+    /* ── Card Carousel Area ── */
+    .carousel-area {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 0;
+    }
+    .carousel-track {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .step-card {
+      position: absolute;
+      width: calc(100% - 64px);
+      max-width: 340px;
+      background: var(--card);
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      transition: transform var(--transition-speed), opacity var(--transition-speed);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .step-card.center { transform: translateX(0) scale(1); opacity: 1; z-index: 2; }
+    .step-card.left { transform: translateX(-85%) scale(0.88); opacity: 0.5; z-index: 1; pointer-events: none; }
+    .step-card.right { transform: translateX(85%) scale(0.88); opacity: 0.5; z-index: 1; pointer-events: none; }
+    .step-card.hidden { transform: translateX(0) scale(0.8); opacity: 0; z-index: 0; pointer-events: none; }
+
+    .step-card-number {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .step-card-title {
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+    .step-card-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      border: 2px solid var(--border);
+    }
+    .status-pill.completed { background: var(--mint); }
+    .status-pill.in-progress { background: #dbeafe; }
+    .status-pill.pending { background: #f3f4f6; }
+
+    .evidence-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      background: #f3f4f6;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 4px 8px;
+    }
+
+    .step-checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .step-checkbox {
+      width: 28px;
+      height: 28px;
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--card);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .step-checkbox.checked {
+      background: var(--completed);
+      color: #fff;
+    }
+    .step-checkbox-label {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    /* ── Nav Arrows ── */
+    .nav-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 48px;
+      height: 48px;
+      background: var(--card);
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 20px;
+      font-weight: 700;
+      z-index: 10;
+    }
+    .nav-arrow:hover { background: #f0f0f0; }
+    .nav-arrow.disabled { opacity: 0.3; pointer-events: none; }
+    .nav-arrow.prev { left: 4px; }
+    .nav-arrow.next { right: 4px; }
+
+    /* ── Bottom Drawer ── */
+    .drawer-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      z-index: 19;
+    }
+    .drawer-overlay.visible { display: block; }
+
+    .drawer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--card);
+      border-top: var(--border-w) solid var(--border);
+      border-radius: 12px 12px 0 0;
+      z-index: 20;
+      transition: transform var(--transition-speed);
+      max-height: 65%;
+      display: flex;
+      flex-direction: column;
+    }
+    .drawer.peek { transform: translateY(calc(100% - 56px)); }
+    .drawer.open { transform: translateY(0); }
+
+    .drawer-handle {
+      padding: 12px 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-shrink: 0;
+      min-height: 48px;
+    }
+    .drawer-handle-bar {
+      width: 40px;
+      height: 4px;
+      background: #d1d5db;
+      border-radius: 2px;
+    }
+    .drawer-handle-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+    .drawer-content {
+      overflow-y: auto;
+      padding: 0 16px 16px;
+      flex: 1;
+    }
+
+    .evidence-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .evidence-thumb {
+      background: var(--card);
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-sm);
+      padding: 12px;
+      cursor: pointer;
+      position: relative;
+    }
+    .evidence-thumb:hover { background: #f9f9f9; }
+    .evidence-type-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      margin-bottom: 6px;
+      border: 2px solid var(--border);
+    }
+    .evidence-type-icon.note { background: var(--mint); }
+    .evidence-type-icon.link { background: #dbeafe; }
+    .evidence-type-icon.screenshot { background: #fde68a; }
+    .evidence-type-icon.photo { background: #e9d5ff; }
+    .evidence-type-icon.video { background: #fecaca; }
+    .evidence-type-icon.voice { background: #fed7aa; }
+    .evidence-type-icon.file { background: #d1d5db; }
+    .evidence-thumb-title {
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+    .evidence-thumb-preview {
+      font-size: 11px;
+      color: var(--text-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .empty-evidence {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 24px 16px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    .empty-evidence-arrow {
+      font-size: 24px;
+      margin-top: 8px;
+      display: block;
+    }
+
+    /* ── FAB ── */
+    .fab {
+      position: absolute;
+      bottom: 68px;
+      right: 16px;
+      width: 56px;
+      height: 56px;
+      background: var(--blue);
+      color: #fff;
+      border: var(--border-w) solid var(--border);
+      border-radius: 50%;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      cursor: pointer;
+      z-index: 25;
+      transition: transform 0.15s;
+    }
+    .fab:hover { transform: scale(1.05); }
+    .fab.open { transform: rotate(45deg); }
+
+    .fab-menu {
+      position: absolute;
+      bottom: 132px;
+      right: 16px;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 25;
+    }
+    .fab-menu.visible { display: flex; }
+    .fab-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--card);
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      padding: 10px 16px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      white-space: nowrap;
+      min-height: 44px;
+    }
+    .fab-menu-item:hover { background: #f0f0f0; }
+    .fab-menu-item-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      border: 2px solid var(--border);
+    }
+
+    /* ── Complete Goal Button (appears when all steps done) ── */
+    .complete-goal-btn {
+      display: none;
+      margin: 0 16px 8px;
+      padding: 14px;
+      background: var(--completed);
+      color: #fff;
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      text-align: center;
+    }
+    .complete-goal-btn.visible { display: block; }
+
+    /* ═══════════════════════════════════════════
+       COMPLETION FLOW MODE
+       ═══════════════════════════════════════════ */
+    .completion-mode {
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      overflow-y: auto;
+    }
+    .completion-inner {
+      width: 100%;
+      max-width: 380px;
+    }
+
+    /* Confetti canvas */
+    .confetti-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    .completion-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .completion-emoji {
+      font-size: 48px;
+      margin-bottom: 8px;
+      display: block;
+    }
+    .completion-title {
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .completion-sub {
+      font-size: 16px;
+      color: var(--text-muted);
+    }
+
+    .completion-evidence-picker {
+      background: var(--card);
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .completion-evidence-picker h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .completion-type-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .completion-type-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      min-height: 44px;
+    }
+    .completion-type-btn:hover { background: #f0f0f0; }
+
+    .completion-added-list {
+      margin-bottom: 16px;
+    }
+    .completion-added-item {
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-left: 5px solid var(--yellow);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .completion-actions {
+      display: flex;
+      gap: 12px;
+    }
+    .completion-btn {
+      flex: 1;
+      padding: 14px;
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius);
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      min-height: 48px;
+    }
+    .completion-btn.primary {
+      background: var(--blue);
+      color: #fff;
+      box-shadow: var(--shadow);
+    }
+    .completion-btn.secondary {
+      background: var(--card);
+      color: var(--text);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* ═══════════════════════════════════════════
+       TIMELINE MODE
+       ═══════════════════════════════════════════ */
+    .timeline-mode {
+      overflow-y: auto;
+    }
+
+    .timeline-header {
+      background: var(--card);
+      border-bottom: var(--border-w) solid var(--border);
+      padding: 12px 16px;
+      flex-shrink: 0;
+    }
+    .timeline-header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .timeline-goal-title {
+      font-size: 18px;
+      font-weight: 800;
+      flex: 1;
+      margin-right: 8px;
+    }
+    .timeline-completion-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      border: 2px solid var(--border);
+      background: var(--mint);
+      white-space: nowrap;
+    }
+    .timeline-completion-badge.in-progress-badge {
+      background: #dbeafe;
+    }
+    .btn-back-steps {
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: var(--shadow-sm);
+    }
+    .btn-back-steps:hover { background: #f0f0f0; }
+
+    .timeline-goal-desc {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .timeline-progress-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .timeline-progress-bar {
+      flex: 1;
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 4px;
+      border: 2px solid var(--border);
+      overflow: hidden;
+    }
+    .timeline-progress-fill {
+      height: 100%;
+      background: var(--completed);
+      transition: width var(--transition-speed);
+    }
+    .timeline-progress-label {
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    /* ── Timeline Body ── */
+    .timeline-body {
+      padding: 20px 16px 80px;
+    }
+
+    .timeline-step {
+      position: relative;
+      padding-left: 56px;
+      padding-bottom: 24px;
+    }
+    /* Vertical line */
+    .timeline-step::before {
+      content: '';
+      position: absolute;
+      left: 15px;
+      top: 32px;
+      bottom: 0;
+      width: 3px;
+    }
+    .timeline-step:last-child::before {
+      display: none;
+    }
+    .timeline-step.completed::before {
+      background: var(--blue);
+    }
+    .timeline-step.in-progress::before {
+      background: repeating-linear-gradient(
+        to bottom,
+        var(--blue) 0, var(--blue) 6px,
+        transparent 6px, transparent 12px
+      );
+    }
+    .timeline-step.pending::before {
+      background: repeating-linear-gradient(
+        to bottom,
+        var(--pending) 0, var(--pending) 6px,
+        transparent 6px, transparent 12px
+      );
+    }
+
+    .timeline-node {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: var(--node-size);
+      height: var(--node-size);
+      border-radius: 50%;
+      border: var(--border-w) solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      background: var(--card);
+    }
+    .timeline-step.completed .timeline-node {
+      background: var(--blue);
+      color: #fff;
+    }
+    .timeline-step.in-progress .timeline-node {
+      background: #dbeafe;
+      color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+    }
+    .timeline-step.pending .timeline-node {
+      background: #f3f4f6;
+      color: var(--text-muted);
+    }
+
+    .timeline-step-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      min-height: var(--node-size);
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+    .timeline-step-title {
+      font-size: 16px;
+      font-weight: 700;
+      flex: 1;
+    }
+    .timeline-chevron {
+      font-size: 18px;
+      transition: transform 0.2s;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .timeline-chevron.collapsed { transform: rotate(-90deg); }
+
+    .timeline-evidence-list {
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    .timeline-evidence-list.collapsed {
+      max-height: 0 !important;
+    }
+
+    .timeline-evidence-card {
+      background: var(--card);
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-sm);
+      padding: 12px;
+      margin-bottom: 8px;
+      margin-left: 8px;
+      position: relative;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    /* Horizontal connector line */
+    .timeline-evidence-card::before {
+      content: '';
+      position: absolute;
+      left: -12px;
+      top: 18px;
+      width: 8px;
+      height: 3px;
+      background: var(--blue);
+    }
+    .timeline-evidence-card .evidence-type-icon {
+      margin-bottom: 0;
+      flex-shrink: 0;
+    }
+    .timeline-evidence-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .timeline-evidence-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+    .timeline-evidence-preview {
+      font-size: 12px;
+      color: var(--text-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .timeline-no-evidence {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-style: italic;
+      margin-left: 8px;
+      padding: 8px 0;
+    }
+
+    /* ── Finish Line ── */
+    .finish-line {
+      position: relative;
+      padding-left: 56px;
+      padding-bottom: 24px;
+    }
+    .finish-line-node {
+      position: absolute;
+      left: -4px;
+      top: 0;
+      width: var(--finish-node-size);
+      height: var(--finish-node-size);
+      border-radius: 50%;
+      border: var(--border-w) solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 700;
+      background: var(--yellow);
+    }
+    .finish-line-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: var(--finish-node-size);
+      margin-bottom: 12px;
+    }
+    .finish-line-title {
+      font-size: 18px;
+      font-weight: 800;
+    }
+    .finish-line-badge {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      border: 2px solid var(--border);
+      background: var(--yellow);
+    }
+
+    .goal-evidence-card {
+      background: var(--card);
+      border: var(--border-w) solid var(--border);
+      border-left: 5px solid var(--yellow);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-sm);
+      padding: 12px;
+      margin-bottom: 8px;
+      margin-left: 8px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .goal-evidence-empty {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-left: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+    }
+    .goal-evidence-add-btn {
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .goal-evidence-add-btn:hover { background: #f0f0f0; }
+
+    /* ═══════════════════════════════════════════
+       MODALS & TOASTS
+       ═══════════════════════════════════════════ */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.visible {
+      display: flex;
+    }
+    .modal-content {
+      background: var(--card);
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      width: 100%;
+      max-width: 380px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .modal-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+    .modal-textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 12px;
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: var(--font);
+      font-size: 15px;
+      resize: vertical;
+      margin-bottom: 12px;
+    }
+    .modal-input {
+      width: 100%;
+      padding: 12px;
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: var(--font);
+      font-size: 15px;
+      margin-bottom: 12px;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+    .modal-btn {
+      padding: 10px 20px;
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      min-height: 44px;
+    }
+    .modal-btn.primary { background: var(--blue); color: #fff; box-shadow: var(--shadow-sm); }
+    .modal-btn.secondary { background: var(--card); color: var(--text); }
+
+    /* ── Confirm Dialog ── */
+    .confirm-text {
+      font-size: 15px;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+    .confirm-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--text);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      opacity: 0;
+      transition: transform 0.25s, opacity 0.25s;
+      max-width: 360px;
+      white-space: nowrap;
+    }
+    .toast.visible {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+    .toast-undo {
+      background: transparent;
+      border: 2px solid #fff;
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* ── Announce (screen reader) ── */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      padding: 0;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      border: 0;
+    }
+
+    /* ── Mode indicator ── */
+    .mode-indicator {
+      position: fixed;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--text);
+      color: #fff;
+      padding: 4px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 700;
+      z-index: 50;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    /* ── Context menu ── */
+    .context-menu {
+      display: none;
+      position: fixed;
+      z-index: 150;
+      background: var(--card);
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .context-menu.visible { display: block; }
+    .context-menu-item {
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .context-menu-item:hover { background: #f3f4f6; }
+    .context-menu-item.destructive { color: #ef4444; }
+
+    /* ── Responsive ── */
+    @media (min-width: 600px) {
+      .app-shell { border-left: var(--border-w) solid var(--border); border-right: var(--border-w) solid var(--border); }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell" role="application" aria-label="Goal tracking application">
+
+    <!-- Proto Banner -->
+    <div class="proto-banner" aria-hidden="true">Combined Prototype: Focus Mode + Completion Flow + Timeline Journey</div>
+
+    <!-- Demo Button -->
+    <button class="demo-btn" id="demoBtn" aria-label="Demo: complete all steps instantly">Demo: Complete All</button>
+
+    <!-- Screen Reader Announcements -->
+    <div id="announce" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- Mode Indicator -->
+    <div class="mode-indicator" id="modeIndicator" aria-live="polite">Focus Mode</div>
+
+    <!-- ═══════ FOCUS MODE ═══════ -->
+    <div class="mode-container active" id="focusMode" role="region" aria-label="Focus Mode - step by step view">
+
+      <!-- Focus Header -->
+      <header class="focus-header">
+        <div class="focus-header-top">
+          <h1 class="focus-goal-title" id="focusGoalTitle">Learn TypeScript Generics</h1>
+          <button class="btn-view-journey" id="btnViewJourney" aria-label="Switch to timeline journey view">View Journey</button>
+        </div>
+        <div class="focus-progress-row">
+          <div class="focus-progress-bar" role="progressbar" aria-valuenow="2" aria-valuemin="0" aria-valuemax="5" aria-label="Goal progress">
+            <div class="focus-progress-fill" id="focusProgressFill" style="width: 40%"></div>
+          </div>
+          <span class="focus-progress-label" id="focusProgressLabel">2/5 steps</span>
+        </div>
+        <nav class="step-dots" id="stepDots" aria-label="Step navigation"></nav>
+      </header>
+
+      <!-- Carousel Area -->
+      <div class="carousel-area" id="carouselArea">
+        <div class="carousel-track" id="carouselTrack"></div>
+
+        <!-- Nav Arrows -->
+        <button class="nav-arrow prev" id="prevBtn" aria-label="Previous step">&larr;</button>
+        <button class="nav-arrow next" id="nextBtn" aria-label="Next step">&rarr;</button>
+
+        <!-- FAB -->
+        <button class="fab" id="fab" aria-label="Add evidence" aria-expanded="false">+</button>
+
+        <!-- FAB Menu -->
+        <nav class="fab-menu" id="fabMenu" role="menu" aria-label="Evidence types">
+          <button class="fab-menu-item" role="menuitem" data-type="note">
+            <span class="fab-menu-item-icon note">N</span> Text Note
+          </button>
+          <button class="fab-menu-item" role="menuitem" data-type="link">
+            <span class="fab-menu-item-icon link">L</span> Link
+          </button>
+          <button class="fab-menu-item" role="menuitem" data-type="photo">
+            <span class="fab-menu-item-icon photo">P</span> Photo
+          </button>
+          <button class="fab-menu-item" role="menuitem" data-type="screenshot">
+            <span class="fab-menu-item-icon screenshot">S</span> Screenshot
+          </button>
+          <button class="fab-menu-item" role="menuitem" data-type="video">
+            <span class="fab-menu-item-icon video">V</span> Video
+          </button>
+          <button class="fab-menu-item" role="menuitem" data-type="voice">
+            <span class="fab-menu-item-icon voice">M</span> Voice Memo
+          </button>
+          <button class="fab-menu-item" role="menuitem" data-type="file">
+            <span class="fab-menu-item-icon file">F</span> File
+          </button>
+        </nav>
+      </div>
+
+      <!-- Complete Goal Button -->
+      <button class="complete-goal-btn" id="completeGoalBtn" aria-label="Complete this goal">Complete Goal</button>
+
+      <!-- Drawer Overlay -->
+      <div class="drawer-overlay" id="drawerOverlay"></div>
+
+      <!-- Bottom Drawer -->
+      <aside class="drawer peek" id="drawer" role="complementary" aria-label="Evidence drawer">
+        <div class="drawer-handle" id="drawerHandle" role="button" tabindex="0" aria-expanded="false" aria-label="Toggle evidence drawer">
+          <span class="drawer-handle-bar"></span>
+          <span class="drawer-handle-label" id="drawerLabel">0 evidence items</span>
+        </div>
+        <div class="drawer-content" id="drawerContent">
+          <div class="evidence-grid" id="evidenceGrid"></div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- ═══════ COMPLETION FLOW MODE ═══════ -->
+    <div class="mode-container completion-mode" id="completionMode" role="region" aria-label="Goal completion flow">
+      <canvas class="confetti-canvas" id="confettiCanvas" aria-hidden="true"></canvas>
+      <div class="completion-inner">
+        <div class="completion-header">
+          <span class="completion-emoji" aria-hidden="true">&#127919;</span>
+          <h1 class="completion-title">You did it!</h1>
+          <p class="completion-sub">Want to capture any final evidence for this goal?</p>
+        </div>
+
+        <div class="completion-evidence-picker">
+          <h3>Add Goal-Level Evidence</h3>
+          <div class="completion-type-grid" id="completionTypeGrid">
+            <button class="completion-type-btn" data-type="note">
+              <span class="fab-menu-item-icon note">N</span> Note
+            </button>
+            <button class="completion-type-btn" data-type="link">
+              <span class="fab-menu-item-icon link">L</span> Link
+            </button>
+            <button class="completion-type-btn" data-type="photo">
+              <span class="fab-menu-item-icon photo">P</span> Photo
+            </button>
+            <button class="completion-type-btn" data-type="screenshot">
+              <span class="fab-menu-item-icon screenshot">S</span> Screenshot
+            </button>
+            <button class="completion-type-btn" data-type="video">
+              <span class="fab-menu-item-icon video">V</span> Video
+            </button>
+            <button class="completion-type-btn" data-type="voice">
+              <span class="fab-menu-item-icon voice">M</span> Voice Memo
+            </button>
+          </div>
+        </div>
+
+        <div class="completion-added-list" id="completionAddedList"></div>
+
+        <div class="completion-actions">
+          <button class="completion-btn secondary" id="completionSkipBtn">Skip</button>
+          <button class="completion-btn primary" id="completionJourneyBtn">View Your Journey</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ TIMELINE MODE ═══════ -->
+    <div class="mode-container timeline-mode" id="timelineMode" role="region" aria-label="Timeline journey view">
+      <header class="timeline-header">
+        <div class="timeline-header-top">
+          <h1 class="timeline-goal-title">Learn TypeScript Generics</h1>
+          <button class="btn-back-steps" id="btnBackSteps" aria-label="Switch back to focus mode">Back to Steps</button>
+        </div>
+        <p class="timeline-goal-desc">Master TypeScript generics through hands-on exercises and real-world projects.</p>
+        <div class="timeline-progress-row">
+          <div class="timeline-progress-bar" role="progressbar" id="timelineProgressBar" aria-valuenow="2" aria-valuemin="0" aria-valuemax="5">
+            <div class="timeline-progress-fill" id="timelineProgressFill" style="width: 40%"></div>
+          </div>
+          <span class="timeline-progress-label" id="timelineProgressLabel">2/5</span>
+          <span class="timeline-completion-badge in-progress-badge" id="timelineBadge">In Progress</span>
+        </div>
+      </header>
+
+      <div class="timeline-body" id="timelineBody"></div>
+    </div>
+
+  </div>
+
+  <!-- ═══════ MODAL ═══════ -->
+  <div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-label="Add evidence">
+    <div class="modal-content" id="modalContent"></div>
+  </div>
+
+  <!-- ═══════ CONFIRM DIALOG ═══════ -->
+  <div class="modal-overlay" id="confirmOverlay" role="alertdialog" aria-modal="true" aria-label="Confirm action">
+    <div class="modal-content" id="confirmContent"></div>
+  </div>
+
+  <!-- ═══════ CONTEXT MENU ═══════ -->
+  <div class="context-menu" id="contextMenu" role="menu">
+    <button class="context-menu-item destructive" id="ctxDeleteBtn" role="menuitem">Delete Evidence</button>
+  </div>
+
+  <!-- ═══════ TOAST ═══════ -->
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <span id="toastMsg"></span>
+    <button class="toast-undo" id="toastUndo" style="display:none">Undo</button>
+  </div>
+
+  <script>
+    /* ─── State ─── */
+    const state = {
+      currentStep: 2, // 0-indexed, starts on step 3
+      currentMode: 'focus', // 'focus' | 'completion' | 'timeline'
+      goalCompleted: false,
+      goalEvidence: [],
+      steps: [
+        {
+          id: 1, title: 'Read the TypeScript handbook chapter', status: 'completed',
+          evidence: [
+            { id: 'e1', type: 'note', title: 'Key insight on generics', preview: 'Key insight: generics preserve type information through transformations' },
+            { id: 'e2', type: 'link', title: 'TS Handbook - Generics', preview: 'typescriptlang.org/docs/handbook/2/generics' }
+          ]
+        },
+        {
+          id: 2, title: 'Complete generic utility types exercise', status: 'completed',
+          evidence: [
+            { id: 'e3', type: 'screenshot', title: 'Exercise results', preview: 'All 12 utility type exercises passed' }
+          ]
+        },
+        {
+          id: 3, title: 'Build a type-safe event emitter', status: 'in-progress',
+          evidence: [
+            { id: 'e4', type: 'note', title: 'Implementation notes', preview: 'Started with basic emit/on pattern, need to add type constraints' }
+          ]
+        },
+        {
+          id: 4, title: 'Write blog post about learnings', status: 'pending',
+          evidence: []
+        },
+        {
+          id: 5, title: 'Get code review from team', status: 'pending',
+          evidence: []
+        }
+      ],
+      deletedEvidence: null, // for undo
+      undoTimer: null,
+      nextEvidenceId: 100,
+      contextMenuTarget: null,
+    };
+
+    /* ─── DOM Refs ─── */
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => document.querySelectorAll(sel);
+    const focusMode = $('#focusMode');
+    const completionMode = $('#completionMode');
+    const timelineMode = $('#timelineMode');
+    const announce = $('#announce');
+    const modeIndicator = $('#modeIndicator');
+
+    /* ─── Announce for SR ─── */
+    function announceText(text) {
+      announce.textContent = '';
+      requestAnimationFrame(() => { announce.textContent = text; });
+    }
+
+    /* ─── Mode Switching ─── */
+    function switchMode(mode) {
+      state.currentMode = mode;
+      focusMode.classList.toggle('active', mode === 'focus');
+      completionMode.classList.toggle('active', mode === 'completion');
+      timelineMode.classList.toggle('active', mode === 'timeline');
+
+      const labels = { focus: 'Focus Mode', completion: 'Completing Goal', timeline: 'Timeline Journey' };
+      modeIndicator.textContent = labels[mode];
+      announceText('Switched to ' + labels[mode]);
+
+      if (mode === 'focus') renderFocus();
+      if (mode === 'timeline') renderTimeline();
+      if (mode === 'completion') startCompletionFlow();
+
+      // Focus management
+      requestAnimationFrame(() => {
+        if (mode === 'focus') $('#focusGoalTitle').focus();
+        if (mode === 'timeline') $('.timeline-goal-title').focus();
+        if (mode === 'completion') $('.completion-title').focus();
+      });
+    }
+
+    /* ═══════════════════════════════════════════
+       FOCUS MODE RENDERING
+       ═══════════════════════════════════════════ */
+
+    function getCompletedCount() {
+      return state.steps.filter(s => s.status === 'completed').length;
+    }
+
+    function renderFocus() {
+      const done = getCompletedCount();
+      const total = state.steps.length;
+
+      // Progress
+      $('#focusProgressFill').style.width = ((done / total) * 100) + '%';
+      $('#focusProgressLabel').textContent = done + '/' + total + ' steps';
+      $('.focus-progress-bar').setAttribute('aria-valuenow', done);
+
+      // Dots
+      const dotsEl = $('#stepDots');
+      dotsEl.innerHTML = '';
+      state.steps.forEach((step, i) => {
+        const dot = document.createElement('button');
+        dot.className = 'step-dot';
+        dot.setAttribute('data-status', step.status);
+        dot.setAttribute('aria-label', 'Step ' + (i + 1) + ': ' + step.title + ' (' + step.status.replace('-', ' ') + ')');
+        dot.textContent = i + 1;
+        if (i === state.currentStep) dot.setAttribute('aria-current', 'step');
+        dot.addEventListener('click', () => goToStep(i));
+        dotsEl.appendChild(dot);
+      });
+
+      // Cards
+      renderCards();
+
+      // Arrows
+      $('#prevBtn').classList.toggle('disabled', state.currentStep === 0);
+      $('#nextBtn').classList.toggle('disabled', state.currentStep === state.steps.length - 1);
+
+      // Drawer
+      renderDrawer();
+
+      // Complete Goal button
+      const allDone = done === total;
+      $('#completeGoalBtn').classList.toggle('visible', allDone && !state.goalCompleted);
+
+      // Close FAB menu
+      closeFabMenu();
+    }
+
+    function renderCards() {
+      const track = $('#carouselTrack');
+      track.innerHTML = '';
+
+      state.steps.forEach((step, i) => {
+        const card = document.createElement('article');
+        card.className = 'step-card';
+        card.setAttribute('aria-label', 'Step ' + (i + 1) + ': ' + step.title);
+
+        let posClass = 'hidden';
+        if (i === state.currentStep) posClass = 'center';
+        else if (i === state.currentStep - 1) posClass = 'left';
+        else if (i === state.currentStep + 1) posClass = 'right';
+        card.classList.add(posClass);
+
+        const evCount = step.evidence.length;
+        const isChecked = step.status === 'completed';
+        const statusLabel = step.status.replace('-', ' ');
+
+        card.innerHTML = `
+          <span class="step-card-number">Step ${i + 1} of ${state.steps.length}</span>
+          <h2 class="step-card-title">${step.title}</h2>
+          <div class="step-card-row">
+            <span class="status-pill ${step.status}">${statusLabel}</span>
+            <span class="evidence-badge">${evCount} evidence</span>
+          </div>
+          <div class="step-checkbox-row">
+            <button class="step-checkbox ${isChecked ? 'checked' : ''}"
+              role="checkbox" aria-checked="${isChecked}"
+              aria-label="Mark step ${i + 1} as ${isChecked ? 'incomplete' : 'complete'}"
+              data-step="${i}">
+              ${isChecked ? '&#10003;' : ''}
+            </button>
+            <span class="step-checkbox-label">${isChecked ? 'Completed' : 'Mark complete'}</span>
+          </div>
+        `;
+
+        track.appendChild(card);
+      });
+
+      // Checkbox listeners
+      track.querySelectorAll('.step-checkbox').forEach(cb => {
+        cb.addEventListener('click', (e) => {
+          const idx = parseInt(e.currentTarget.dataset.step);
+          toggleStepComplete(idx);
+        });
+      });
+    }
+
+    function goToStep(idx) {
+      if (idx < 0 || idx >= state.steps.length) return;
+      state.currentStep = idx;
+      renderFocus();
+      announceText('Now viewing step ' + (idx + 1) + ': ' + state.steps[idx].title);
+    }
+
+    function toggleStepComplete(idx) {
+      const step = state.steps[idx];
+      if (step.status === 'completed') {
+        step.status = idx === findFirstInProgress() ? 'in-progress' : 'pending';
+        // Re-derive statuses
+        recomputeStatuses();
+        announceText('Step ' + (idx + 1) + ' marked incomplete');
+      } else {
+        step.status = 'completed';
+        recomputeStatuses();
+        announceText('Step ' + (idx + 1) + ' completed!');
+      }
+      renderFocus();
+
+      // Check if all done and this was the last step
+      if (getCompletedCount() === state.steps.length) {
+        triggerCompletion();
+      }
+    }
+
+    function recomputeStatuses() {
+      let foundIncomplete = false;
+      state.steps.forEach(step => {
+        if (step.status === 'completed') return;
+        if (!foundIncomplete) {
+          step.status = 'in-progress';
+          foundIncomplete = true;
+        } else {
+          step.status = 'pending';
+        }
+      });
+    }
+
+    function findFirstInProgress() {
+      return state.steps.findIndex(s => s.status === 'in-progress');
+    }
+
+    /* ── Nav Arrows ── */
+    $('#prevBtn').addEventListener('click', () => goToStep(state.currentStep - 1));
+    $('#nextBtn').addEventListener('click', () => goToStep(state.currentStep + 1));
+
+    /* ── Keyboard nav ── */
+    document.addEventListener('keydown', (e) => {
+      if (state.currentMode !== 'focus') return;
+      if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+      if (e.key === 'ArrowLeft') goToStep(state.currentStep - 1);
+      if (e.key === 'ArrowRight') goToStep(state.currentStep + 1);
+    });
+
+    /* ── Drawer ── */
+    function renderDrawer() {
+      const step = state.steps[state.currentStep];
+      const grid = $('#evidenceGrid');
+      const label = $('#drawerLabel');
+      const count = step.evidence.length;
+      label.textContent = count + ' evidence item' + (count !== 1 ? 's' : '');
+
+      if (count === 0) {
+        grid.innerHTML = '<div class="empty-evidence">No evidence yet for this step.<span class="empty-evidence-arrow" aria-hidden="true">&darr; Tap + to add</span></div>';
+      } else {
+        grid.innerHTML = '';
+        step.evidence.forEach(ev => {
+          const thumb = document.createElement('div');
+          thumb.className = 'evidence-thumb';
+          thumb.setAttribute('role', 'button');
+          thumb.setAttribute('tabindex', '0');
+          thumb.setAttribute('aria-label', ev.type + ': ' + ev.title);
+          thumb.dataset.evidenceId = ev.id;
+          thumb.innerHTML = `
+            <div class="evidence-type-icon ${ev.type}">${typeIcon(ev.type)}</div>
+            <div class="evidence-thumb-title">${ev.title}</div>
+            <div class="evidence-thumb-preview">${ev.preview}</div>
+          `;
+          // Context menu on right-click / long press
+          thumb.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            showContextMenu(e.clientX, e.clientY, ev.id, state.currentStep);
+          });
+          let pressTimer;
+          thumb.addEventListener('pointerdown', () => {
+            pressTimer = setTimeout(() => {
+              const rect = thumb.getBoundingClientRect();
+              showContextMenu(rect.left + rect.width / 2, rect.top, ev.id, state.currentStep);
+            }, 600);
+          });
+          thumb.addEventListener('pointerup', () => clearTimeout(pressTimer));
+          thumb.addEventListener('pointerleave', () => clearTimeout(pressTimer));
+
+          grid.appendChild(thumb);
+        });
+      }
+    }
+
+    function typeIcon(type) {
+      const icons = { note: 'N', link: 'L', photo: 'P', screenshot: 'S', video: 'V', voice: 'M', file: 'F' };
+      return icons[type] || '?';
+    }
+
+    const drawerHandle = $('#drawerHandle');
+    const drawer = $('#drawer');
+    const drawerOverlay = $('#drawerOverlay');
+
+    drawerHandle.addEventListener('click', toggleDrawer);
+    drawerHandle.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDrawer(); } });
+    drawerOverlay.addEventListener('click', closeDrawer);
+
+    function toggleDrawer() {
+      const isOpen = drawer.classList.contains('open');
+      if (isOpen) closeDrawer();
+      else openDrawer();
+    }
+    function openDrawer() {
+      drawer.classList.remove('peek');
+      drawer.classList.add('open');
+      drawerOverlay.classList.add('visible');
+      drawerHandle.setAttribute('aria-expanded', 'true');
+      announceText('Evidence drawer opened');
+    }
+    function closeDrawer() {
+      drawer.classList.remove('open');
+      drawer.classList.add('peek');
+      drawerOverlay.classList.remove('visible');
+      drawerHandle.setAttribute('aria-expanded', 'false');
+    }
+
+    /* ── FAB ── */
+    const fab = $('#fab');
+    const fabMenu = $('#fabMenu');
+
+    fab.addEventListener('click', () => {
+      const open = fabMenu.classList.contains('visible');
+      if (open) closeFabMenu();
+      else openFabMenu();
+    });
+
+    function openFabMenu() {
+      fabMenu.classList.add('visible');
+      fab.classList.add('open');
+      fab.setAttribute('aria-expanded', 'true');
+      // Focus first item
+      const first = fabMenu.querySelector('.fab-menu-item');
+      if (first) first.focus();
+    }
+    function closeFabMenu() {
+      fabMenu.classList.remove('visible');
+      fab.classList.remove('open');
+      fab.setAttribute('aria-expanded', 'false');
+    }
+
+    // FAB menu items
+    fabMenu.querySelectorAll('.fab-menu-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const type = item.dataset.type;
+        closeFabMenu();
+        openAddEvidenceModal(type, state.currentStep);
+      });
+    });
+
+    // Close FAB on click outside
+    document.addEventListener('click', (e) => {
+      if (!fab.contains(e.target) && !fabMenu.contains(e.target)) {
+        closeFabMenu();
+      }
+    });
+
+    /* ── Context Menu ── */
+    const contextMenu = $('#contextMenu');
+    const ctxDeleteBtn = $('#ctxDeleteBtn');
+
+    function showContextMenu(x, y, evidenceId, stepIdx) {
+      state.contextMenuTarget = { evidenceId, stepIdx };
+      contextMenu.style.left = Math.min(x, window.innerWidth - 160) + 'px';
+      contextMenu.style.top = Math.min(y, window.innerHeight - 60) + 'px';
+      contextMenu.classList.add('visible');
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!contextMenu.contains(e.target)) {
+        contextMenu.classList.remove('visible');
+      }
+    });
+
+    ctxDeleteBtn.addEventListener('click', () => {
+      contextMenu.classList.remove('visible');
+      if (!state.contextMenuTarget) return;
+      const { evidenceId, stepIdx } = state.contextMenuTarget;
+      showConfirmDialog(
+        'Delete this evidence? This action can be undone for 5 seconds.',
+        () => deleteEvidence(evidenceId, stepIdx)
+      );
+    });
+
+    function deleteEvidence(evidenceId, stepIdx) {
+      const step = state.steps[stepIdx];
+      const idx = step.evidence.findIndex(e => e.id === evidenceId);
+      if (idx === -1) return;
+      const removed = step.evidence.splice(idx, 1)[0];
+
+      state.deletedEvidence = { evidence: removed, stepIdx, position: idx };
+      renderFocus();
+      showToast('Evidence deleted', true, () => undoDelete());
+      announceText('Evidence deleted. Tap undo to recover.');
+    }
+
+    function undoDelete() {
+      if (!state.deletedEvidence) return;
+      const { evidence, stepIdx, position } = state.deletedEvidence;
+      state.steps[stepIdx].evidence.splice(position, 0, evidence);
+      state.deletedEvidence = null;
+      renderFocus();
+      showToast('Evidence restored');
+      announceText('Evidence restored');
+    }
+
+    /* ── Add Evidence Modal ── */
+    function openAddEvidenceModal(type, stepIdx, isGoalLevel) {
+      const modal = $('#modalOverlay');
+      const content = $('#modalContent');
+
+      let html = '';
+      if (type === 'note') {
+        html = `
+          <h2 class="modal-title">Add Text Note</h2>
+          <textarea class="modal-textarea" id="modalTextarea" placeholder="Write your note..." aria-label="Note text"></textarea>
+          <div class="modal-actions">
+            <button class="modal-btn secondary" id="modalCancel">Cancel</button>
+            <button class="modal-btn primary" id="modalSave">Save Note</button>
+          </div>`;
+      } else if (type === 'link') {
+        html = `
+          <h2 class="modal-title">Add Link</h2>
+          <input class="modal-input" id="modalLinkTitle" placeholder="Link title" aria-label="Link title">
+          <input class="modal-input" id="modalLinkUrl" placeholder="https://..." aria-label="URL">
+          <div class="modal-actions">
+            <button class="modal-btn secondary" id="modalCancel">Cancel</button>
+            <button class="modal-btn primary" id="modalSave">Save Link</button>
+          </div>`;
+      } else {
+        html = `
+          <h2 class="modal-title">Add ${type.charAt(0).toUpperCase() + type.slice(1)}</h2>
+          <div style="text-align:center;padding:32px 0;color:var(--text-muted);font-size:14px;">
+            <p style="font-size:40px;margin-bottom:8px;" aria-hidden="true">${typeIcon(type)}</p>
+            <p>In the real app, this would open the ${type} capture flow.</p>
+            <p style="margin-top:4px;">For this prototype, we will add a placeholder.</p>
+          </div>
+          <div class="modal-actions">
+            <button class="modal-btn secondary" id="modalCancel">Cancel</button>
+            <button class="modal-btn primary" id="modalSave">Add Placeholder</button>
+          </div>`;
+      }
+      content.innerHTML = html;
+      modal.classList.add('visible');
+      // Focus first input
+      requestAnimationFrame(() => {
+        const first = content.querySelector('textarea, input');
+        if (first) first.focus();
+      });
+
+      content.querySelector('#modalCancel').addEventListener('click', closeModal);
+      content.querySelector('#modalSave').addEventListener('click', () => {
+        let evidence;
+        if (type === 'note') {
+          const text = content.querySelector('#modalTextarea').value.trim();
+          if (!text) { closeModal(); return; }
+          evidence = { id: 'e' + (state.nextEvidenceId++), type: 'note', title: 'Text note', preview: text };
+        } else if (type === 'link') {
+          const title = content.querySelector('#modalLinkTitle').value.trim() || 'Untitled link';
+          const url = content.querySelector('#modalLinkUrl').value.trim() || 'example.com';
+          evidence = { id: 'e' + (state.nextEvidenceId++), type: 'link', title: title, preview: url };
+        } else {
+          evidence = { id: 'e' + (state.nextEvidenceId++), type: type, title: type.charAt(0).toUpperCase() + type.slice(1) + ' capture', preview: 'Placeholder ' + type };
+        }
+
+        if (isGoalLevel) {
+          state.goalEvidence.push(evidence);
+          renderCompletionAddedList();
+        } else {
+          state.steps[stepIdx].evidence.push(evidence);
+          openDrawer();
+          renderFocus();
+        }
+        closeModal();
+        showToast('Evidence added');
+        announceText(type + ' evidence added');
+      });
+    }
+
+    function closeModal() {
+      $('#modalOverlay').classList.remove('visible');
+    }
+
+    /* ── Confirm Dialog ── */
+    function showConfirmDialog(text, onConfirm) {
+      const overlay = $('#confirmOverlay');
+      const content = $('#confirmContent');
+      content.innerHTML = `
+        <h2 class="modal-title">Confirm</h2>
+        <p class="confirm-text">${text}</p>
+        <div class="confirm-actions">
+          <button class="modal-btn secondary" id="confirmNo">Cancel</button>
+          <button class="modal-btn primary" id="confirmYes">Delete</button>
+        </div>`;
+      overlay.classList.add('visible');
+      content.querySelector('#confirmNo').addEventListener('click', () => overlay.classList.remove('visible'));
+      content.querySelector('#confirmYes').addEventListener('click', () => {
+        overlay.classList.remove('visible');
+        onConfirm();
+      });
+      requestAnimationFrame(() => content.querySelector('#confirmNo').focus());
+    }
+
+    /* ── Toast ── */
+    function showToast(msg, withUndo, onUndo) {
+      clearTimeout(state.undoTimer);
+      const toast = $('#toast');
+      const toastMsg = $('#toastMsg');
+      const toastUndoBtn = $('#toastUndo');
+
+      toastMsg.textContent = msg;
+      toastUndoBtn.style.display = withUndo ? 'inline-block' : 'none';
+      toast.classList.add('visible');
+
+      if (withUndo && onUndo) {
+        const handler = () => {
+          onUndo();
+          clearTimeout(state.undoTimer);
+          hideToast();
+          toastUndoBtn.removeEventListener('click', handler);
+        };
+        toastUndoBtn.addEventListener('click', handler);
+      }
+
+      state.undoTimer = setTimeout(() => {
+        hideToast();
+        state.deletedEvidence = null;
+      }, 5000);
+    }
+
+    function hideToast() {
+      $('#toast').classList.remove('visible');
+    }
+
+    /* ═══════════════════════════════════════════
+       COMPLETION FLOW
+       ═══════════════════════════════════════════ */
+
+    function triggerCompletion() {
+      state.goalCompleted = true;
+      switchMode('completion');
+    }
+
+    function startCompletionFlow() {
+      state.goalEvidence = [];
+      renderCompletionAddedList();
+      launchConfetti();
+    }
+
+    function renderCompletionAddedList() {
+      const list = $('#completionAddedList');
+      list.innerHTML = '';
+      state.goalEvidence.forEach(ev => {
+        const item = document.createElement('div');
+        item.className = 'completion-added-item';
+        item.innerHTML = `<span class="evidence-type-icon ${ev.type}">${typeIcon(ev.type)}</span> ${ev.title}`;
+        list.appendChild(item);
+      });
+    }
+
+    // Completion type buttons
+    $('#completionTypeGrid').querySelectorAll('.completion-type-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        openAddEvidenceModal(btn.dataset.type, null, true);
+      });
+    });
+
+    $('#completionSkipBtn').addEventListener('click', () => switchMode('timeline'));
+    $('#completionJourneyBtn').addEventListener('click', () => switchMode('timeline'));
+
+    /* ── Confetti ── */
+    function launchConfetti() {
+      // Respect reduced motion
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      const canvas = $('#confettiCanvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const particles = [];
+      const colors = ['#3b82f6', '#ffe50c', '#22c55e', '#a78bfa', '#f97316', '#ef4444'];
+
+      for (let i = 0; i < 80; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height - canvas.height,
+          w: Math.random() * 10 + 4,
+          h: Math.random() * 6 + 3,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          vx: (Math.random() - 0.5) * 3,
+          vy: Math.random() * 3 + 2,
+          rot: Math.random() * 360,
+          vr: (Math.random() - 0.5) * 10,
+        });
+      }
+
+      let frame = 0;
+      const maxFrames = 120;
+
+      function animate() {
+        if (frame++ > maxFrames) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          return;
+        }
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.05;
+          p.rot += p.vr;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.rot * Math.PI) / 180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          ctx.restore();
+        });
+        requestAnimationFrame(animate);
+      }
+      animate();
+    }
+
+    /* ═══════════════════════════════════════════
+       TIMELINE MODE RENDERING
+       ═══════════════════════════════════════════ */
+
+    function renderTimeline() {
+      const done = getCompletedCount();
+      const total = state.steps.length;
+
+      $('#timelineProgressFill').style.width = ((done / total) * 100) + '%';
+      $('#timelineProgressLabel').textContent = done + '/' + total;
+      $('#timelineProgressBar').setAttribute('aria-valuenow', done);
+
+      const badge = $('#timelineBadge');
+      if (state.goalCompleted) {
+        badge.textContent = 'Completed \u2713';
+        badge.classList.remove('in-progress-badge');
+      } else {
+        badge.textContent = 'In Progress';
+        badge.classList.add('in-progress-badge');
+      }
+
+      const body = $('#timelineBody');
+      body.innerHTML = '';
+
+      state.steps.forEach((step, i) => {
+        const section = document.createElement('section');
+        section.className = 'timeline-step ' + step.status;
+        section.setAttribute('aria-label', 'Step ' + (i + 1) + ': ' + step.title);
+
+        const nodeSymbol = step.status === 'completed' ? '&#10003;' : (i + 1);
+
+        const evidenceHtml = step.evidence.length > 0
+          ? step.evidence.map(ev => `
+              <article class="timeline-evidence-card" aria-label="${ev.type}: ${ev.title}">
+                <div class="evidence-type-icon ${ev.type}">${typeIcon(ev.type)}</div>
+                <div class="timeline-evidence-info">
+                  <div class="timeline-evidence-title">${ev.title}</div>
+                  <div class="timeline-evidence-preview">${ev.preview}</div>
+                </div>
+              </article>`).join('')
+          : '<p class="timeline-no-evidence">No evidence for this step</p>';
+
+        section.innerHTML = `
+          <div class="timeline-node" aria-hidden="true">${nodeSymbol}</div>
+          <div class="timeline-step-header" role="button" tabindex="0"
+            aria-expanded="true" aria-controls="tl-ev-${i}">
+            <h3 class="timeline-step-title">${step.title}</h3>
+            <span class="timeline-chevron" aria-hidden="true">&#9660;</span>
+          </div>
+          <div class="timeline-evidence-list" id="tl-ev-${i}" role="region"
+            aria-label="Evidence for step ${i + 1}" style="max-height:500px;">
+            ${evidenceHtml}
+          </div>`;
+
+        body.appendChild(section);
+
+        // Collapse toggle
+        const header = section.querySelector('.timeline-step-header');
+        const chevron = section.querySelector('.timeline-chevron');
+        const evList = section.querySelector('.timeline-evidence-list');
+
+        header.addEventListener('click', () => {
+          const expanded = header.getAttribute('aria-expanded') === 'true';
+          header.setAttribute('aria-expanded', !expanded);
+          chevron.classList.toggle('collapsed', expanded);
+          evList.classList.toggle('collapsed', expanded);
+        });
+        header.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            header.click();
+          }
+        });
+      });
+
+      // Finish line
+      if (state.goalCompleted) {
+        const finishLine = document.createElement('section');
+        finishLine.className = 'finish-line';
+        finishLine.setAttribute('aria-label', 'Goal completion - final evidence');
+
+        const goalEvHtml = state.goalEvidence.length > 0
+          ? state.goalEvidence.map(ev => `
+              <article class="goal-evidence-card" aria-label="Goal evidence: ${ev.title}">
+                <div class="evidence-type-icon ${ev.type}">${typeIcon(ev.type)}</div>
+                <div class="timeline-evidence-info">
+                  <div class="timeline-evidence-title">${ev.title}</div>
+                  <div class="timeline-evidence-preview">${ev.preview}</div>
+                </div>
+              </article>`).join('')
+          : `<div class="goal-evidence-empty">
+              <span>No final evidence captured</span>
+              <button class="goal-evidence-add-btn" id="tlAddGoalEvBtn" aria-label="Add goal-level evidence">Add</button>
+            </div>`;
+
+        finishLine.innerHTML = `
+          <div class="finish-line-node" aria-hidden="true">&#9733;</div>
+          <div class="finish-line-header">
+            <h3 class="finish-line-title">Finish Line</h3>
+            <span class="finish-line-badge">Goal Evidence</span>
+          </div>
+          ${goalEvHtml}`;
+
+        body.appendChild(finishLine);
+
+        // Bind "Add" button if present
+        const addBtn = finishLine.querySelector('#tlAddGoalEvBtn');
+        if (addBtn) {
+          addBtn.addEventListener('click', () => {
+            openAddEvidenceModal('note', null, true);
+            // After modal closes, re-render timeline
+            const observer = new MutationObserver(() => {
+              if (!$('#modalOverlay').classList.contains('visible')) {
+                renderTimeline();
+                observer.disconnect();
+              }
+            });
+            observer.observe($('#modalOverlay'), { attributes: true });
+          });
+        }
+      }
+    }
+
+    /* ═══════════════════════════════════════════
+       MODE SWITCHING BUTTONS
+       ═══════════════════════════════════════════ */
+
+    $('#btnViewJourney').addEventListener('click', () => switchMode('timeline'));
+    $('#btnBackSteps').addEventListener('click', () => switchMode('focus'));
+    $('#completeGoalBtn').addEventListener('click', () => triggerCompletion());
+
+    /* ═══════════════════════════════════════════
+       DEMO BUTTON
+       ═══════════════════════════════════════════ */
+
+    $('#demoBtn').addEventListener('click', () => {
+      state.steps.forEach(step => { step.status = 'completed'; });
+      state.currentStep = state.steps.length - 1;
+      renderFocus();
+      // Short delay then trigger completion
+      setTimeout(() => triggerCompletion(), 400);
+    });
+
+    /* ─── Initial render ─── */
+    renderFocus();
+  </script>
+</body>
+</html>

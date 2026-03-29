@@ -1,0 +1,8 @@
+appId: com.joe.rd.native-rd
+---
+# Theme switcher smoke test
+- launchApp
+- tapOn: "S"
+- assertVisible: "Settings"
+- assertVisible: "Pick what feels right"
+- tapOn: "Night Ride"

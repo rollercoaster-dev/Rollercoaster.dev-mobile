@@ -1,0 +1,1 @@
+export { BadgeDetailScreen } from "./BadgeDetailScreen";

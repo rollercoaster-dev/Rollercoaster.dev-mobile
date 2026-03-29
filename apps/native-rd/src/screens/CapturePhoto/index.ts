@@ -1,0 +1,1 @@
+export { CapturePhoto } from "./CapturePhoto";
