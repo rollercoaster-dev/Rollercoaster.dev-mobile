@@ -1,3 +1,9 @@
+/**
+ * Mock for react-native-keyboard-controller
+ *
+ * Stubs the native keyboard event system. KeyboardProvider is a
+ * passthrough; KeyboardAwareScrollView renders a standard ScrollView.
+ */
 import React from "react";
 import { ScrollView } from "react-native";
 

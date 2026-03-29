@@ -1,3 +1,11 @@
+/**
+ * Mock for react-native-reanimated
+ *
+ * Stubs the native animation runtime. Easing functions return identity
+ * transforms, animation wrappers (withTiming, withSpring) return the
+ * target value immediately, and useSharedValue returns a plain object.
+ * The default export includes Animated.View as a string placeholder.
+ */
 const Easing = {
   linear: (t: number) => t,
   out: () => (t: number) => t,
