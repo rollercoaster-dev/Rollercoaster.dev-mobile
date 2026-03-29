@@ -1,3 +1,5 @@
+# Validation contract for native-rd in the monorepo:
+# See docs/architecture/native-rd-ci-contract.md
 name: CI - Native RD
 
 on:
