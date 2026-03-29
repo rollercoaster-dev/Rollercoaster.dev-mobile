@@ -1,2 +1,2 @@
-export { TextNoteViewerModal } from './TextNoteViewerModal';
-export type { TextNoteViewerModalProps } from './TextNoteViewerModal';
+export { TextNoteViewerModal } from "./TextNoteViewerModal";
+export type { TextNoteViewerModalProps } from "./TextNoteViewerModal";

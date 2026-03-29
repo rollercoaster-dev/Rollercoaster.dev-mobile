@@ -1,10 +1,10 @@
-import { StyleSheet } from 'react-native-unistyles';
+import { StyleSheet } from "react-native-unistyles";
 
 export const styles = StyleSheet.create((theme) => ({
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     gap: theme.space[2],
   },
   title: {
@@ -13,8 +13,8 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.text,
   },
   progressRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.space[3],
     marginTop: theme.space[3],
   },
@@ -26,6 +26,6 @@ export const styles = StyleSheet.create((theme) => ({
     fontFamily: theme.fontFamily.mono,
     color: theme.colors.text,
     minWidth: 60,
-    textAlign: 'right',
+    textAlign: "right",
   },
 }));

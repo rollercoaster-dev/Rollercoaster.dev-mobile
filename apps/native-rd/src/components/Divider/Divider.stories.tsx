@@ -1,12 +1,12 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import React from 'react';
-import { View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
-import { Text } from '../Text';
-import { Divider } from './Divider';
+import type { Meta, StoryObj } from "@storybook/react";
+import React from "react";
+import { View } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
+import { Text } from "../Text";
+import { Divider } from "./Divider";
 
 const meta: Meta<typeof Divider> = {
-  title: 'Divider',
+  title: "Divider",
   component: Divider,
 };
 

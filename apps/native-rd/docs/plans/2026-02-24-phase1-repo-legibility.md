@@ -13,6 +13,7 @@
 ### Task 1: Create root AGENTS.md
 
 **Files:**
+
 - Create: `AGENTS.md`
 
 **Step 1: Write AGENTS.md**
@@ -30,42 +31,43 @@ See `docs/vision/product-vision.md` for full context.
 
 ## Quick Reference
 
-| Question | Where to look |
-|---|---|
-| What is this app? | `docs/vision/product-vision.md` |
-| Design principles? | `docs/vision/design-principles.md` |
-| User stories? | `docs/vision/user-stories.md` |
-| Architecture decisions? | `docs/decisions/ADR-*.md` |
-| Data model? | `docs/architecture/data-model.md` |
-| Design language? | `docs/design/design-language.md` |
-| Theme system? | `docs/design/nd-themes.md`, `docs/architecture/design-token-system.md` |
-| Accessibility? | `docs/accessibility-guidelines.md` |
+| Question                | Where to look                                                          |
+| ----------------------- | ---------------------------------------------------------------------- |
+| What is this app?       | `docs/vision/product-vision.md`                                        |
+| Design principles?      | `docs/vision/design-principles.md`                                     |
+| User stories?           | `docs/vision/user-stories.md`                                          |
+| Architecture decisions? | `docs/decisions/ADR-*.md`                                              |
+| Data model?             | `docs/architecture/data-model.md`                                      |
+| Design language?        | `docs/design/design-language.md`                                       |
+| Theme system?           | `docs/design/nd-themes.md`, `docs/architecture/design-token-system.md` |
+| Accessibility?          | `docs/accessibility-guidelines.md`                                     |
 
 ## Tech Stack
 
-| Layer | Choice | Docs |
-|---|---|---|
-| Runtime | Expo / React Native | `app.json`, `metro.config.js` |
-| UI styling | react-native-unistyles v3 | `docs/decisions/ADR-0002-ui-styling-library.md` |
-| Local storage | Evolu (SQLite + CRDT) | `docs/decisions/ADR-0003-sync-layer-decision.md`, `src/db/` |
-| Navigation | React Navigation | `src/navigation/` |
-| Testing | Jest 30 + @testing-library/react-native v13 | `jest.config.js`, `src/__tests__/` |
-| Design tokens | Unistyles themes (14 = 2 color modes × 7 variants) | `src/themes/` |
+| Layer         | Choice                                             | Docs                                                        |
+| ------------- | -------------------------------------------------- | ----------------------------------------------------------- |
+| Runtime       | Expo / React Native                                | `app.json`, `metro.config.js`                               |
+| UI styling    | react-native-unistyles v3                          | `docs/decisions/ADR-0002-ui-styling-library.md`             |
+| Local storage | Evolu (SQLite + CRDT)                              | `docs/decisions/ADR-0003-sync-layer-decision.md`, `src/db/` |
+| Navigation    | React Navigation                                   | `src/navigation/`                                           |
+| Testing       | Jest 30 + @testing-library/react-native v13        | `jest.config.js`, `src/__tests__/`                          |
+| Design tokens | Unistyles themes (14 = 2 color modes × 7 variants) | `src/themes/`                                               |
 
 ## Project Structure
-
 ```
+
 src/
-├── __tests__/       # Test suites (mirrors src/ structure)
-├── components/      # Shared UI components (Button, Card, Input, etc.)
-├── db/              # Evolu database schema and queries
-├── hooks/           # Custom React hooks
-├── navigation/      # React Navigation stacks and tabs
-├── screens/         # Screen components (GoalsScreen, SettingsScreen, etc.)
-├── stories/         # Storybook stories
-├── styles/          # Shared style utilities
-├── themes/          # Unistyles theme definitions, tokens, palette
-└── utils/           # Utility functions
+├── **tests**/ # Test suites (mirrors src/ structure)
+├── components/ # Shared UI components (Button, Card, Input, etc.)
+├── db/ # Evolu database schema and queries
+├── hooks/ # Custom React hooks
+├── navigation/ # React Navigation stacks and tabs
+├── screens/ # Screen components (GoalsScreen, SettingsScreen, etc.)
+├── stories/ # Storybook stories
+├── styles/ # Shared style utilities
+├── themes/ # Unistyles theme definitions, tokens, palette
+└── utils/ # Utility functions
+
 ```
 
 ## Development Commands
@@ -127,6 +129,7 @@ docs. ~100 lines of progressive disclosure, not an encyclopedia."
 ### Task 2: Create in-repo CLAUDE.md
 
 **Files:**
+
 - Create: `CLAUDE.md`
 
 **Step 1: Write CLAUDE.md**
@@ -148,13 +151,13 @@ This is the native rollercoaster.dev app — a personal learning/goal tracker fo
 
 ## Development
 
-| Task | Command |
-|---|---|
-| Typecheck | `bun run typecheck` |
-| Lint | `bun run lint` |
-| Test | `bun test` or `bun test --testPathPatterns <pattern>` |
-| CI test | `bun run test:ci` |
-| Build iOS | `npx expo run:ios` |
+| Task      | Command                                               |
+| --------- | ----------------------------------------------------- |
+| Typecheck | `bun run typecheck`                                   |
+| Lint      | `bun run lint`                                        |
+| Test      | `bun test` or `bun test --testPathPatterns <pattern>` |
+| CI test   | `bun run test:ci`                                     |
+| Build iOS | `npx expo run:ios`                                    |
 
 ### Test Infrastructure
 
@@ -178,11 +181,11 @@ This is the native rollercoaster.dev app — a personal learning/goal tracker fo
 
 ## After Making Changes
 
-| Changed | Run |
-|---|---|
-| React Native code | `npx expo run:ios` (native build) |
-| Test files | `bun test --testPathPatterns <pattern>` |
-| Theme/style files | Build + visually verify on device |
+| Changed           | Run                                     |
+| ----------------- | --------------------------------------- |
+| React Native code | `npx expo run:ios` (native build)       |
+| Test files        | `bun test --testPathPatterns <pattern>` |
+| Theme/style files | Build + visually verify on device       |
 ```
 
 **Step 2: Verify length**
@@ -206,6 +209,7 @@ and auto-memory for project-specific context."
 ### Task 3: Create docs/vision/index.md
 
 **Files:**
+
 - Create: `docs/vision/index.md`
 
 **Step 1: Write the index**
@@ -215,11 +219,11 @@ and auto-memory for project-specific context."
 
 Documents defining what the app is, who it's for, and how it should feel.
 
-| Document | Summary | Last Verified |
-|---|---|---|
-| [product-vision.md](./product-vision.md) | What the app is, iterations A-D, relationship to monorepo | 2026-02-24 |
-| [design-principles.md](./design-principles.md) | ND-first design rules, visual identity, 7 themes | 2026-02-24 |
-| [user-stories.md](./user-stories.md) | Lina, Sam, Ava, Eva — real scenarios driving design | 2026-02-24 |
+| Document                                       | Summary                                                   | Last Verified |
+| ---------------------------------------------- | --------------------------------------------------------- | ------------- |
+| [product-vision.md](./product-vision.md)       | What the app is, iterations A-D, relationship to monorepo | 2026-02-24    |
+| [design-principles.md](./design-principles.md) | ND-first design rules, visual identity, 7 themes          | 2026-02-24    |
+| [user-stories.md](./user-stories.md)           | Lina, Sam, Ava, Eva — real scenarios driving design       | 2026-02-24    |
 ```
 
 **Step 2: Commit**
@@ -234,6 +238,7 @@ git commit -m "docs: add vision directory index"
 ### Task 4: Create docs/architecture/index.md
 
 **Files:**
+
 - Create: `docs/architecture/index.md`
 
 **Step 1: Write the index**
@@ -243,12 +248,12 @@ git commit -m "docs: add vision directory index"
 
 Technical architecture documents for the native app.
 
-| Document | Summary | Last Verified |
-|---|---|---|
-| [data-model.md](./data-model.md) | Goals, Steps, Badges, Evidence entities and relationships | 2026-02-24 |
-| [openbadges-core.md](./openbadges-core.md) | Plan for extracting badge logic from monorepo server | 2026-02-24 |
-| [local-first-sync.md](./local-first-sync.md) | Evolu sync architecture, encryption, self-hosted relay | 2026-02-24 |
-| [design-token-system.md](./design-token-system.md) | Unistyles theme tokens, composition, color modes × variants | 2026-02-24 |
+| Document                                           | Summary                                                     | Last Verified |
+| -------------------------------------------------- | ----------------------------------------------------------- | ------------- |
+| [data-model.md](./data-model.md)                   | Goals, Steps, Badges, Evidence entities and relationships   | 2026-02-24    |
+| [openbadges-core.md](./openbadges-core.md)         | Plan for extracting badge logic from monorepo server        | 2026-02-24    |
+| [local-first-sync.md](./local-first-sync.md)       | Evolu sync architecture, encryption, self-hosted relay      | 2026-02-24    |
+| [design-token-system.md](./design-token-system.md) | Unistyles theme tokens, composition, color modes × variants | 2026-02-24    |
 ```
 
 **Step 2: Commit**
@@ -263,6 +268,7 @@ git commit -m "docs: add architecture directory index"
 ### Task 5: Create docs/design/index.md
 
 **Files:**
+
 - Create: `docs/design/index.md`
 
 **Step 1: Write the index**
@@ -272,11 +278,11 @@ git commit -m "docs: add architecture directory index"
 
 Visual design, user experience, and theme documentation.
 
-| Document | Summary | Last Verified |
-|---|---|---|
-| [design-language.md](./design-language.md) | Neo-brutalist design language adapted for mobile | 2026-02-24 |
-| [nd-themes.md](./nd-themes.md) | 7 neurodiversity themes × 2 color modes = 14 theme configs | 2026-02-24 |
-| [user-flows.md](./user-flows.md) | Screen-by-screen flows for Iteration A | 2026-02-24 |
+| Document                                   | Summary                                                    | Last Verified |
+| ------------------------------------------ | ---------------------------------------------------------- | ------------- |
+| [design-language.md](./design-language.md) | Neo-brutalist design language adapted for mobile           | 2026-02-24    |
+| [nd-themes.md](./nd-themes.md)             | 7 neurodiversity themes × 2 color modes = 14 theme configs | 2026-02-24    |
+| [user-flows.md](./user-flows.md)           | Screen-by-screen flows for Iteration A                     | 2026-02-24    |
 ```
 
 **Step 2: Commit**
@@ -291,6 +297,7 @@ git commit -m "docs: add design directory index"
 ### Task 6: Create docs/decisions/index.md
 
 **Files:**
+
 - Create: `docs/decisions/index.md`
 
 **Step 1: Write the index**
@@ -300,12 +307,12 @@ git commit -m "docs: add design directory index"
 
 Decisions are immutable once accepted. To change a decision, write a new ADR that supersedes it.
 
-| ADR | Decision | Status | Last Verified |
-|---|---|---|---|
-| [ADR-0001](./ADR-0001-iteration-strategy.md) | Iteration A → B → C → D shipping strategy | Accepted | 2026-02-24 |
-| [ADR-0002](./ADR-0002-ui-styling-library.md) | react-native-unistyles v3 for styling | Accepted | 2026-02-24 |
-| [ADR-0003](./ADR-0003-sync-layer-decision.md) | Evolu for local-first sync | Accepted | 2026-02-24 |
-| [ADR-0004](./ADR-0004-data-model-storage.md) | Evolu-native data model with SQLite | Accepted | 2026-02-24 |
+| ADR                                           | Decision                                  | Status   | Last Verified |
+| --------------------------------------------- | ----------------------------------------- | -------- | ------------- |
+| [ADR-0001](./ADR-0001-iteration-strategy.md)  | Iteration A → B → C → D shipping strategy | Accepted | 2026-02-24    |
+| [ADR-0002](./ADR-0002-ui-styling-library.md)  | react-native-unistyles v3 for styling     | Accepted | 2026-02-24    |
+| [ADR-0003](./ADR-0003-sync-layer-decision.md) | Evolu for local-first sync                | Accepted | 2026-02-24    |
+| [ADR-0004](./ADR-0004-data-model-storage.md)  | Evolu-native data model with SQLite       | Accepted | 2026-02-24    |
 ```
 
 **Step 2: Commit**
@@ -320,6 +327,7 @@ git commit -m "docs: add decisions directory index"
 ### Task 7: Create docs/research/index.md
 
 **Files:**
+
 - Create: `docs/research/index.md`
 
 **Step 1: Write the index**
@@ -329,11 +337,11 @@ git commit -m "docs: add decisions directory index"
 
 Completed research documents. These informed ADRs but are not the decisions themselves.
 
-| Document | Summary | Last Verified |
-|---|---|---|
-| [ui-library-comparison.md](./ui-library-comparison.md) | Tamagui vs NativeWind vs Unistyles evaluation | 2026-02-24 |
-| [local-first-sync-comparison.md](./local-first-sync-comparison.md) | PowerSync vs Evolu vs RxDB evaluation | 2026-02-24 |
-| [evolu-prototype-findings.md](./evolu-prototype-findings.md) | Findings from Evolu prototype implementation | 2026-02-24 |
+| Document                                                           | Summary                                       | Last Verified |
+| ------------------------------------------------------------------ | --------------------------------------------- | ------------- |
+| [ui-library-comparison.md](./ui-library-comparison.md)             | Tamagui vs NativeWind vs Unistyles evaluation | 2026-02-24    |
+| [local-first-sync-comparison.md](./local-first-sync-comparison.md) | PowerSync vs Evolu vs RxDB evaluation         | 2026-02-24    |
+| [evolu-prototype-findings.md](./evolu-prototype-findings.md)       | Findings from Evolu prototype implementation  | 2026-02-24    |
 ```
 
 **Step 2: Commit**
@@ -348,6 +356,7 @@ git commit -m "docs: add research directory index"
 ### Task 8: Create docs/plans/index.md
 
 **Files:**
+
 - Create: `docs/plans/index.md`
 
 **Step 1: Write the index**
@@ -359,15 +368,15 @@ Implementation plans and vision documents. Active plans are in progress; complet
 
 ## Active
 
-| Document | Summary | Last Verified |
-|---|---|---|
-| [2026-02-24-agent-first-vision.md](./2026-02-24-agent-first-vision.md) | Vision for agent-first development across 5 capability layers | 2026-02-24 |
-| [2026-02-24-phase1-repo-legibility.md](./2026-02-24-phase1-repo-legibility.md) | Implementation plan for Phase 1: Repository Legibility | 2026-02-24 |
+| Document                                                                       | Summary                                                       | Last Verified |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------- | ------------- |
+| [2026-02-24-agent-first-vision.md](./2026-02-24-agent-first-vision.md)         | Vision for agent-first development across 5 capability layers | 2026-02-24    |
+| [2026-02-24-phase1-repo-legibility.md](./2026-02-24-phase1-repo-legibility.md) | Implementation plan for Phase 1: Repository Legibility        | 2026-02-24    |
 
 ## Reference
 
-| Document | Summary |
-|---|---|
+| Document                                                                   | Summary                                   |
+| -------------------------------------------------------------------------- | ----------------------------------------- |
 | [../roadmap/documentation-roadmap.md](../roadmap/documentation-roadmap.md) | Documentation phase tracking (Phases 1-4) |
 ```
 
@@ -383,6 +392,7 @@ git commit -m "docs: add plans directory index"
 ### Task 9: Fix stale references in product-vision.md
 
 **Files:**
+
 - Modify: `docs/vision/product-vision.md:128-136`
 
 **Step 1: Update the Technical Foundation table**
@@ -394,15 +404,15 @@ Replace the Technical Foundation table with:
 ```markdown
 ## Technical Foundation
 
-| Layer | Choice | Status |
-|-------|--------|--------|
-| **Runtime** | Expo / React Native | Decided |
-| **UI styling** | react-native-unistyles v3 | Decided (ADR-0002) |
-| **Local storage** | Evolu (SQLite + CRDT) | Decided (ADR-0003, ADR-0004) |
-| **Sync layer** | Evolu built-in sync | Decided (ADR-0003) |
-| **Badge logic** | `openbadges-core` (extracted from server) | Decided, extraction in progress |
-| **Types** | `openbadges-types` (shared with monorepo) | Existing, published on npm |
-| **Design tokens** | Unistyles theme system (14 themes) | Implemented |
+| Layer             | Choice                                    | Status                          |
+| ----------------- | ----------------------------------------- | ------------------------------- |
+| **Runtime**       | Expo / React Native                       | Decided                         |
+| **UI styling**    | react-native-unistyles v3                 | Decided (ADR-0002)              |
+| **Local storage** | Evolu (SQLite + CRDT)                     | Decided (ADR-0003, ADR-0004)    |
+| **Sync layer**    | Evolu built-in sync                       | Decided (ADR-0003)              |
+| **Badge logic**   | `openbadges-core` (extracted from server) | Decided, extraction in progress |
+| **Types**         | `openbadges-types` (shared with monorepo) | Existing, published on npm      |
+| **Design tokens** | Unistyles theme system (14 themes)        | Implemented                     |
 ```
 
 **Step 2: Update the Related Documents section**
@@ -425,6 +435,7 @@ Evolu (ADR-0003/0004)."
 ### Task 10: Update documentation-roadmap.md
 
 **Files:**
+
 - Modify: `docs/roadmap/documentation-roadmap.md:60-70`
 
 **Step 1: Update Phase 4 decisions status**
@@ -476,18 +487,18 @@ Expected: All ~253 tests pass (no code was changed, only docs).
 
 ## Summary
 
-| Task | What | Files |
-|---|---|---|
-| 1 | Root AGENTS.md | `AGENTS.md` |
-| 2 | In-repo CLAUDE.md | `CLAUDE.md` |
-| 3 | Vision index | `docs/vision/index.md` |
-| 4 | Architecture index | `docs/architecture/index.md` |
-| 5 | Design index | `docs/design/index.md` |
-| 6 | Decisions index | `docs/decisions/index.md` |
-| 7 | Research index | `docs/research/index.md` |
-| 8 | Plans index | `docs/plans/index.md` |
-| 9 | Fix stale product-vision.md | `docs/vision/product-vision.md` |
-| 10 | Update documentation roadmap | `docs/roadmap/documentation-roadmap.md` |
-| 11 | Final verification | (no new files) |
+| Task | What                         | Files                                   |
+| ---- | ---------------------------- | --------------------------------------- |
+| 1    | Root AGENTS.md               | `AGENTS.md`                             |
+| 2    | In-repo CLAUDE.md            | `CLAUDE.md`                             |
+| 3    | Vision index                 | `docs/vision/index.md`                  |
+| 4    | Architecture index           | `docs/architecture/index.md`            |
+| 5    | Design index                 | `docs/design/index.md`                  |
+| 6    | Decisions index              | `docs/decisions/index.md`               |
+| 7    | Research index               | `docs/research/index.md`                |
+| 8    | Plans index                  | `docs/plans/index.md`                   |
+| 9    | Fix stale product-vision.md  | `docs/vision/product-vision.md`         |
+| 10   | Update documentation roadmap | `docs/roadmap/documentation-roadmap.md` |
+| 11   | Final verification           | (no new files)                          |
 
 11 tasks, ~11 commits. All docs, no code changes. Estimated: 30-45 minutes of agent execution time.

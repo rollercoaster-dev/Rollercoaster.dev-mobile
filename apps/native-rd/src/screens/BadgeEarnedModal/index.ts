@@ -1,1 +1,4 @@
-export { BadgeEarnedModal, type BadgeEarnedModalProps } from './BadgeEarnedModal';
+export {
+  BadgeEarnedModal,
+  type BadgeEarnedModalProps,
+} from "./BadgeEarnedModal";

@@ -1,7 +1,7 @@
-import React from 'react';
-import { Pressable, View, Text, Switch } from 'react-native';
-import { useUnistyles } from 'react-native-unistyles';
-import { styles } from './SettingsRow.styles';
+import React from "react";
+import { Pressable, View, Text, Switch } from "react-native";
+import { useUnistyles } from "react-native-unistyles";
+import { styles } from "./SettingsRow.styles";
 
 export interface SettingsRowProps {
   label: string;
@@ -13,7 +13,12 @@ export interface SettingsRowProps {
   };
 }
 
-export function SettingsRow({ label, value, onPress, toggle }: SettingsRowProps) {
+export function SettingsRow({
+  label,
+  value,
+  onPress,
+  toggle,
+}: SettingsRowProps) {
   const { theme } = useUnistyles();
 
   const content = (

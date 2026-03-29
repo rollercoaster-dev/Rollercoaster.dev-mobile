@@ -1,12 +1,12 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import React from 'react';
-import { View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
-import { Text } from '../Text';
-import { EvidenceItem } from './EvidenceItem';
+import type { Meta, StoryObj } from "@storybook/react";
+import React from "react";
+import { View } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
+import { Text } from "../Text";
+import { EvidenceItem } from "./EvidenceItem";
 
 const meta: Meta<typeof EvidenceItem> = {
-  title: 'EvidenceItem',
+  title: "EvidenceItem",
   component: EvidenceItem,
 };
 
@@ -51,18 +51,28 @@ export const LongLabel: Story = {
 export const AllTypes: Story = {
   render: () => (
     <View style={storyStyles.grid}>
-      <Text variant="label" style={storyStyles.label}>All Evidence Types</Text>
-      {(['photo', 'screenshot', 'video', 'text', 'voice_memo', 'link', 'file'] as const).map(
-        (type) => (
-          <EvidenceItem
-            key={type}
-            id={type}
-            type={type}
-            label={type.replace('_', ' ')}
-            onLongPress={() => {}}
-          />
-        ),
-      )}
+      <Text variant="label" style={storyStyles.label}>
+        All Evidence Types
+      </Text>
+      {(
+        [
+          "photo",
+          "screenshot",
+          "video",
+          "text",
+          "voice_memo",
+          "link",
+          "file",
+        ] as const
+      ).map((type) => (
+        <EvidenceItem
+          key={type}
+          id={type}
+          type={type}
+          label={type.replace("_", " ")}
+          onLongPress={() => {}}
+        />
+      ))}
     </View>
   ),
 };
@@ -73,6 +83,6 @@ const storyStyles = StyleSheet.create((theme) => ({
   },
   label: {
     color: theme.colors.textMuted,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
 }));

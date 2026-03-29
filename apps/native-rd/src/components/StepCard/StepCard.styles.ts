@@ -1,5 +1,5 @@
-import { StyleSheet } from 'react-native-unistyles';
-import { shadowStyle } from '../../styles/shadows';
+import { StyleSheet } from "react-native-unistyles";
+import { shadowStyle } from "../../styles/shadows";
 
 export const styles = StyleSheet.create((theme) => ({
   container: {
@@ -9,28 +9,28 @@ export const styles = StyleSheet.create((theme) => ({
     fontSize: theme.size.xs,
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.textMuted,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: theme.letterSpacing.wide,
     fontFamily: theme.fontFamily.body,
   },
   title: {
-    fontSize: theme.size['2xl'],
+    fontSize: theme.size["2xl"],
     fontWeight: theme.fontWeight.black,
     color: theme.colors.text,
     fontFamily: theme.fontFamily.headline,
   },
   statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     gap: theme.space[2],
   },
   evidenceBadgeWrapper: {
-    position: 'relative' as const,
+    position: "relative" as const,
   },
   evidenceBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.space[1],
     backgroundColor: theme.colors.accentPurpleLight,
     borderWidth: theme.borderWidth.medium,
@@ -40,10 +40,10 @@ export const styles = StyleSheet.create((theme) => ({
     paddingVertical: theme.space[1],
     minHeight: 44,
     minWidth: 44,
-    ...shadowStyle(theme, 'hardSm'),
+    ...shadowStyle(theme, "hardSm"),
   },
   evidenceFlash: {
-    position: 'absolute' as const,
+    position: "absolute" as const,
     top: 0,
     left: 0,
     right: 0,
@@ -66,14 +66,14 @@ export const styles = StyleSheet.create((theme) => ({
     fontWeight: theme.fontWeight.semibold,
   },
   checkboxRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.space[3],
     marginTop: theme.space[1],
   },
   quickNoteRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.space[2],
   },
   quickNoteInput: {
@@ -98,9 +98,9 @@ export const styles = StyleSheet.create((theme) => ({
     paddingVertical: theme.space[2],
     minHeight: 44,
     minWidth: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...shadowStyle(theme, 'hardSm'),
+    alignItems: "center",
+    justifyContent: "center",
+    ...shadowStyle(theme, "hardSm"),
   },
   quickNoteButtonText: {
     fontSize: theme.size.sm,

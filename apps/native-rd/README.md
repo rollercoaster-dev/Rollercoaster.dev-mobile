@@ -24,28 +24,28 @@ npx expo start --android   # Android Emulator
 
 ## Commands
 
-| Command | What it does |
-|---------|-------------|
-| `npx expo start` | Start the dev server |
+| Command                  | What it does                                    |
+| ------------------------ | ----------------------------------------------- |
+| `npx expo start`         | Start the dev server                            |
 | `npx jest --no-coverage` | Run tests (use this, not `bun test` — it hangs) |
-| `npx tsc --noEmit` | Type-check |
-| `bun run lint` | Lint |
-| `bun run build` | Production build via EAS |
+| `npx tsc --noEmit`       | Type-check                                      |
+| `bun run lint`           | Lint                                            |
+| `bun run build`          | Production build via EAS                        |
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | Expo 54 (React Native 0.81) |
-| Language | TypeScript |
-| Database | [Evolu](https://www.evolu.dev/) — local-first SQLite with CRDT sync |
-| Styling | [react-native-unistyles](https://www.unistyles.io/) — zero re-render theme switching |
-| Navigation | React Navigation (bottom tabs + native stacks) |
-| Design Tokens | `@rollercoaster-dev/design-tokens` (shared with web) |
-| Testing | Jest + React Native Testing Library |
-| Storybook | Storybook for React Native |
+| Layer         | Technology                                                                           |
+| ------------- | ------------------------------------------------------------------------------------ |
+| Framework     | Expo 54 (React Native 0.81)                                                          |
+| Language      | TypeScript                                                                           |
+| Database      | [Evolu](https://www.evolu.dev/) — local-first SQLite with CRDT sync                  |
+| Styling       | [react-native-unistyles](https://www.unistyles.io/) — zero re-render theme switching |
+| Navigation    | React Navigation (bottom tabs + native stacks)                                       |
+| Design Tokens | `@rollercoaster-dev/design-tokens` (shared with web)                                 |
+| Testing       | Jest + React Native Testing Library                                                  |
+| Storybook     | Storybook for React Native                                                           |
 
 ---
 
@@ -102,15 +102,15 @@ Tab: Settings
 
 14 themes: 2 color modes × 7 variants — all shipped from day one, not as an afterthought.
 
-| Variant | Purpose |
-|---------|---------|
-| `default` | Standard |
-| `highContrast` | WCAG AAA (7:1), no shadows |
-| `largeText` | 1.25× font scale |
-| `dyslexia` | Lexend font, cream background, relaxed line height |
-| `lowVision` | Max contrast + large text |
-| `autismFriendly` | Muted colors, no shadows, reduced visual noise |
-| `lowInfo` | Minimal visual complexity |
+| Variant          | Purpose                                            |
+| ---------------- | -------------------------------------------------- |
+| `default`        | Standard                                           |
+| `highContrast`   | WCAG AAA (7:1), no shadows                         |
+| `largeText`      | 1.25× font scale                                   |
+| `dyslexia`       | Lexend font, cream background, relaxed line height |
+| `lowVision`      | Max contrast + large text                          |
+| `autismFriendly` | Muted colors, no shadows, reduced visual noise     |
+| `lowInfo`        | Minimal visual complexity                          |
 
 Theme names follow `{colorMode}-{variant}` (e.g. `light-default`, `dark-highContrast`).
 
@@ -120,19 +120,19 @@ See `src/themes/` for composition and `@rollercoaster-dev/design-tokens` for the
 
 ## Architecture Docs
 
-| Doc | What it covers |
-|-----|----------------|
-| [Product Vision](docs/vision/product-vision.md) | What the app is, who it's for, what it's not |
-| [User Stories](docs/vision/user-stories.md) | Lina, Malik, Tomás and the scenarios that drive design |
-| [ADR-0001: Iteration Strategy](docs/decisions/ADR-0001-iteration-strategy.md) | A→B→C→D, each a complete product |
-| [ADR-0002: UI Styling Library](docs/decisions/ADR-0002-ui-styling-library.md) | Why Unistyles |
-| [ADR-0003: Sync Layer](docs/decisions/ADR-0003-sync-layer-decision.md) | Why Evolu |
-| [ADR-0004: Data Model](docs/decisions/ADR-0004-data-model-storage.md) | Schema decisions, ULID strategy |
-| [Data Model](docs/architecture/data-model.md) | All entities across iterations A–D |
-| [Design Language](docs/design/design-language.md) | Typography, color, spacing reference |
-| [ND Themes](docs/design/nd-themes.md) | All 14 theme definitions |
-| [User Flows](docs/design/user-flows.md) | Screen-by-screen flows for Iteration A |
-| [Accessibility Guidelines](docs/accessibility-guidelines.md) | WCAG AA target, 44pt touch targets, testing |
+| Doc                                                                           | What it covers                                         |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------ |
+| [Product Vision](docs/vision/product-vision.md)                               | What the app is, who it's for, what it's not           |
+| [User Stories](docs/vision/user-stories.md)                                   | Lina, Malik, Tomás and the scenarios that drive design |
+| [ADR-0001: Iteration Strategy](docs/decisions/ADR-0001-iteration-strategy.md) | A→B→C→D, each a complete product                       |
+| [ADR-0002: UI Styling Library](docs/decisions/ADR-0002-ui-styling-library.md) | Why Unistyles                                          |
+| [ADR-0003: Sync Layer](docs/decisions/ADR-0003-sync-layer-decision.md)        | Why Evolu                                              |
+| [ADR-0004: Data Model](docs/decisions/ADR-0004-data-model-storage.md)         | Schema decisions, ULID strategy                        |
+| [Data Model](docs/architecture/data-model.md)                                 | All entities across iterations A–D                     |
+| [Design Language](docs/design/design-language.md)                             | Typography, color, spacing reference                   |
+| [ND Themes](docs/design/nd-themes.md)                                         | All 14 theme definitions                               |
+| [User Flows](docs/design/user-flows.md)                                       | Screen-by-screen flows for Iteration A                 |
+| [Accessibility Guidelines](docs/accessibility-guidelines.md)                  | WCAG AA target, 44pt touch targets, testing            |
 
 ---
 

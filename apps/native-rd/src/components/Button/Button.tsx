@@ -1,6 +1,6 @@
-import React from 'react';
-import { Pressable, Text, ActivityIndicator } from 'react-native';
-import { styles, type ButtonVariant, type ButtonSize } from './Button.styles';
+import React from "react";
+import { Pressable, Text, ActivityIndicator } from "react-native";
+import { styles, type ButtonVariant, type ButtonSize } from "./Button.styles";
 
 export type { ButtonVariant, ButtonSize };
 
@@ -30,8 +30,8 @@ const variantStyleMap = {
 export function Button({
   label,
   onPress,
-  variant = 'primary',
-  size = 'md',
+  variant = "primary",
+  size = "md",
   disabled = false,
   loading = false,
 }: ButtonProps) {
@@ -55,7 +55,9 @@ export function Button({
       {loading ? (
         <ActivityIndicator
           size="small"
-          color={variant === 'secondary' || variant === 'ghost' ? undefined : 'white'}
+          color={
+            variant === "secondary" || variant === "ghost" ? undefined : "white"
+          }
         />
       ) : (
         <Text style={[styles.label(size), labelStyleMap[variant]]}>

@@ -1,19 +1,22 @@
-import React, { Suspense } from 'react';
-import { View, FlatList, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useQuery } from '@evolu/react';
-import { useUnistyles } from 'react-native-unistyles';
-import { Text } from '../../components/Text';
-import { ErrorBoundary } from '../../components/ErrorBoundary';
-import { BadgeCard } from '../../components/BadgeCard';
-import { EmptyState } from '../../components/EmptyState';
-import { parseBadgeDesign } from '../../badges/types';
-import { badgesWithGoalsQuery } from '../../db';
-import { formatDate } from '../../utils/format';
-import type { BadgesStackParamList, RootTabParamList } from '../../navigation/types';
-import { styles } from './BadgesScreen.styles';
+import React, { Suspense } from "react";
+import { View, FlatList, ActivityIndicator } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useQuery } from "@evolu/react";
+import { useUnistyles } from "react-native-unistyles";
+import { Text } from "../../components/Text";
+import { ErrorBoundary } from "../../components/ErrorBoundary";
+import { BadgeCard } from "../../components/BadgeCard";
+import { EmptyState } from "../../components/EmptyState";
+import { parseBadgeDesign } from "../../badges/types";
+import { badgesWithGoalsQuery } from "../../db";
+import { formatDate } from "../../utils/format";
+import type {
+  BadgesStackParamList,
+  RootTabParamList,
+} from "../../navigation/types";
+import { styles } from "./BadgesScreen.styles";
 
 type BadgeRow = typeof badgesWithGoalsQuery.Row;
 type Nav = NativeStackNavigationProp<BadgesStackParamList>;
@@ -28,12 +31,13 @@ function BadgeList() {
         title="No badges yet"
         body="Complete goals to earn badges. Your collection will grow here."
         action={{
-          label: 'Go to Goals',
+          label: "Go to Goals",
           onPress: () => {
-            const parent = navigation.getParent<
-              NativeStackNavigationProp<RootTabParamList>
-            >();
-            parent?.navigate('GoalsTab', { screen: 'Goals' });
+            const parent =
+              navigation.getParent<
+                NativeStackNavigationProp<RootTabParamList>
+              >();
+            parent?.navigate("GoalsTab", { screen: "Goals" });
           },
         }}
       />
@@ -49,10 +53,14 @@ function BadgeList() {
       scrollIndicatorInsets={{ right: 1 }}
       renderItem={({ item }: { item: BadgeRow }) => (
         <BadgeCard
-          title={(item.goalTitle as string) ?? 'Untitled'}
-          earnedDate={formatDate((item.completedAt ?? item.createdAt) as string | null)}
+          title={(item.goalTitle as string) ?? "Untitled"}
+          earnedDate={formatDate(
+            (item.completedAt ?? item.createdAt) as string | null,
+          )}
           design={parseBadgeDesign(item.design as string | null)}
-          onPress={() => navigation.navigate('BadgeDetail', { badgeId: item.id })}
+          onPress={() =>
+            navigation.navigate("BadgeDetail", { badgeId: item.id })
+          }
         />
       )}
     />
@@ -63,7 +71,10 @@ export function BadgesScreen() {
   const { theme } = useUnistyles();
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.colors.accentYellow }}>
+    <SafeAreaView
+      edges={["top"]}
+      style={{ flex: 1, backgroundColor: theme.colors.accentYellow }}
+    >
       <View style={styles.header}>
         <Text variant="display">Badges</Text>
       </View>

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Platform } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Platform } from "react-native";
 
 /**
  * Shared hook for copy-to-clipboard with brief "Copied!" feedback.
@@ -10,7 +10,11 @@ export function useCopyToken() {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const copyToken = useCallback((path: string) => {
-    if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard) {
+    if (
+      Platform.OS === "web" &&
+      typeof navigator !== "undefined" &&
+      navigator.clipboard
+    ) {
       navigator.clipboard.writeText(path).catch(() => {
         console.warn(`[Story] Clipboard write failed for ${path}`);
       });

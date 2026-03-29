@@ -1,5 +1,5 @@
-import React from 'react';
-import { ScrollView } from 'react-native';
+import React from "react";
+import { ScrollView } from "react-native";
 
 export const KeyboardProvider = ({ children }: { children: React.ReactNode }) =>
   React.createElement(React.Fragment, null, children);

@@ -73,11 +73,11 @@ All user-created data:
 
 Evidence files (photos, videos, voice memos) and baked badge images are large. Options:
 
-| Strategy | Behavior | Trade-off |
-|----------|----------|-----------|
-| **Metadata only, files on demand** | Other devices see evidence exists, download on tap | Saves bandwidth, slight delay on first view |
-| **Threshold-based** | < 10MB syncs automatically, larger files on demand | Good default, most photos and voice memos sync |
-| **User-controlled** | Settings: "sync media over wifi only," "sync media never" | Maximum user control, more settings to manage |
+| Strategy                           | Behavior                                                  | Trade-off                                      |
+| ---------------------------------- | --------------------------------------------------------- | ---------------------------------------------- |
+| **Metadata only, files on demand** | Other devices see evidence exists, download on tap        | Saves bandwidth, slight delay on first view    |
+| **Threshold-based**                | < 10MB syncs automatically, larger files on demand        | Good default, most photos and voice memos sync |
+| **User-controlled**                | Settings: "sync media over wifi only," "sync media never" | Maximum user control, more settings to manage  |
 
 Recommended: **threshold-based as default, user can override.** Photos and voice memos sync automatically. Videos sync on demand or wifi-only.
 
@@ -133,12 +133,12 @@ Key recovery is an open design problem. If you lose your mnemonic/encryption key
 
 ## Sync Timeline by Iteration
 
-| Iteration | Sync status |
-|-----------|------------|
-| **A** | No sync. All data local. But data layer is sync-ready: ULIDs, no auto-increment IDs, no device-specific assumptions in schema. |
-| **B** | Sync ships. Multi-device replication for all user data. Evidence file sync (threshold-based). |
-| **C** | Skill tree positions and edges sync. |
-| **D** | Shared badges and verifications sync. Device-to-device sharing may use a separate channel (Bluetooth, QR, local network). |
+| Iteration | Sync status                                                                                                                    |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| **A**     | No sync. All data local. But data layer is sync-ready: ULIDs, no auto-increment IDs, no device-specific assumptions in schema. |
+| **B**     | Sync ships. Multi-device replication for all user data. Evidence file sync (threshold-based).                                  |
+| **C**     | Skill tree positions and edges sync.                                                                                           |
+| **D**     | Shared badges and verifications sync. Device-to-device sharing may use a separate channel (Bluetooth, QR, local network).      |
 
 ---
 
@@ -209,15 +209,15 @@ Before committing, build two prototypes that answer specific questions.
 
 ### Decision Criteria
 
-| Criterion | Weight | Notes |
-|-----------|--------|-------|
-| E2EE quality | High | Built-in vs DIY |
-| Expo compatibility | High | Must work today, not "soon" |
-| Developer experience | Medium | Schema definition, query ergonomics, debugging |
-| Self-hosting simplicity | Medium | How easy for users to run their own sync |
-| License alignment | Medium | MIT preferred over proprietary |
-| Performance | Low | Both are fine for personal data volumes |
-| Community size | Low | Nice to have, not a blocker |
+| Criterion               | Weight | Notes                                          |
+| ----------------------- | ------ | ---------------------------------------------- |
+| E2EE quality            | High   | Built-in vs DIY                                |
+| Expo compatibility      | High   | Must work today, not "soon"                    |
+| Developer experience    | Medium | Schema definition, query ergonomics, debugging |
+| Self-hosting simplicity | Medium | How easy for users to run their own sync       |
+| License alignment       | Medium | MIT preferred over proprietary                 |
+| Performance             | Low    | Both are fine for personal data volumes        |
+| Community size          | Low    | Nice to have, not a blocker                    |
 
 Results documented in [ADR-0004: Sync Layer](../decisions/ADR-0004-sync-layer.md) after prototyping.
 

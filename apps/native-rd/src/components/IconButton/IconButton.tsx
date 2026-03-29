@@ -1,6 +1,10 @@
-import React from 'react';
-import { Pressable } from 'react-native';
-import { styles, type IconButtonSize, type IconButtonVariant } from './IconButton.styles';
+import React from "react";
+import { Pressable } from "react-native";
+import {
+  styles,
+  type IconButtonSize,
+  type IconButtonVariant,
+} from "./IconButton.styles";
 
 export type { IconButtonSize, IconButtonVariant };
 
@@ -23,8 +27,8 @@ const variantStyleMap = {
 export function IconButton({
   icon,
   onPress,
-  size = 'md',
-  variant = 'default',
+  size = "md",
+  variant = "default",
   disabled = false,
   accessibilityLabel,
   testID,

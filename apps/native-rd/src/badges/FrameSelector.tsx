@@ -1,9 +1,9 @@
-import React, { useCallback } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import React, { useCallback } from "react";
+import { Pressable, ScrollView, Text, View } from "react-native";
+import { StyleSheet, useUnistyles } from "react-native-unistyles";
 
-import { selectorStyles } from './selectorStyles';
-import { BadgeFrame } from './types';
+import { selectorStyles } from "./selectorStyles";
+import { BadgeFrame } from "./types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -23,22 +23,22 @@ export interface FrameSelectorProps {
 const FRAMES = Object.values(BadgeFrame) as BadgeFrame[];
 
 const FRAME_LABELS: Record<BadgeFrame, string> = {
-  none: 'None',
-  boldBorder: 'Bold Border',
-  guilloche: 'Guilloche',
-  crossHatch: 'Cross Hatch',
-  microprint: 'Microprint',
-  rosette: 'Rosette',
+  none: "None",
+  boldBorder: "Bold Border",
+  guilloche: "Guilloche",
+  crossHatch: "Cross Hatch",
+  microprint: "Microprint",
+  rosette: "Rosette",
 };
 
 /** Simple visual hint character per frame type */
 const FRAME_GLYPHS: Record<BadgeFrame, string> = {
-  none: '—',
-  boldBorder: '▣',
-  guilloche: '◎',
-  crossHatch: '╳',
-  microprint: '⋮',
-  rosette: '✿',
+  none: "—",
+  boldBorder: "▣",
+  guilloche: "◎",
+  crossHatch: "╳",
+  microprint: "⋮",
+  rosette: "✿",
 };
 
 const THUMBNAIL_SIZE = 56;
@@ -51,7 +51,7 @@ export function FrameSelector({
   selectedFrame,
   onSelectFrame,
   accentColor,
-  testID = 'frame-selector',
+  testID = "frame-selector",
 }: FrameSelectorProps) {
   const { theme } = useUnistyles();
   const resolvedAccent = accentColor ?? theme.colors.accentPrimary;
@@ -92,10 +92,7 @@ export function FrameSelector({
               ]}
             >
               <View
-                style={[
-                  styles.thumbnail,
-                  { borderColor: theme.colors.border },
-                ]}
+                style={[styles.thumbnail, { borderColor: theme.colors.border }]}
               >
                 <Text
                   style={[
@@ -107,7 +104,10 @@ export function FrameSelector({
                 </Text>
               </View>
               <Text
-                style={[selectorStyles.label, { color: theme.colors.textSecondary, fontWeight: '500' }]}
+                style={[
+                  selectorStyles.label,
+                  { color: theme.colors.textSecondary, fontWeight: "500" },
+                ]}
                 numberOfLines={1}
               >
                 {FRAME_LABELS[frame]}
@@ -128,13 +128,13 @@ const styles = StyleSheet.create((theme) => ({
   thumbnail: {
     width: THUMBNAIL_SIZE,
     height: THUMBNAIL_SIZE,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 1,
     borderRadius: 0,
   },
   glyph: {
     fontSize: 24,
-    fontWeight: '700',
+    fontWeight: "700",
   },
 }));

@@ -15,23 +15,25 @@
  * Each image row: 0x00 filter byte + R,G,B repeated 64 times.
  */
 
-import { Buffer } from 'buffer';
-import { encodeChunks } from './png-chunk-utils';
+import { Buffer } from "buffer";
+import { encodeChunks } from "./png-chunk-utils";
 
 const WIDTH = 64;
 const HEIGHT = 64;
 
 /** Default accent blue used as fallback when no goal color is provided */
-export const DEFAULT_BADGE_COLOR = '#4B7BE5';
+export const DEFAULT_BADGE_COLOR = "#4B7BE5";
 
 /**
  * Parse a 6-digit hex color string (e.g. "#FF5733") into RGB byte values.
  * Falls back to DEFAULT_BADGE_COLOR if the input is invalid.
  */
 function parseHexColor(hex: string): [number, number, number] {
-  const clean = hex.startsWith('#') ? hex.slice(1) : hex;
+  const clean = hex.startsWith("#") ? hex.slice(1) : hex;
   if (!/^[0-9a-fA-F]{6}$/.test(clean)) {
-    console.warn(`[badgeImageGenerator] Invalid hex color "${hex}", falling back to ${DEFAULT_BADGE_COLOR}`);
+    console.warn(
+      `[badgeImageGenerator] Invalid hex color "${hex}", falling back to ${DEFAULT_BADGE_COLOR}`,
+    );
     return [0x4b, 0x7b, 0xe5]; // DEFAULT_BADGE_COLOR hardcoded to avoid recursion
   }
   return [
@@ -73,8 +75,8 @@ export function generateBadgeImagePNG(hexColor: string): Uint8Array {
   const ihdrData = Buffer.alloc(13);
   ihdrData.writeUInt32BE(WIDTH, 0);
   ihdrData.writeUInt32BE(HEIGHT, 4);
-  ihdrData[8] = 8;  // bit depth: 8 bits per channel
-  ihdrData[9] = 2;  // color type: 2 = RGB (truecolor, no alpha)
+  ihdrData[8] = 8; // bit depth: 8 bits per channel
+  ihdrData[9] = 2; // color type: 2 = RGB (truecolor, no alpha)
   ihdrData[10] = 0; // compression method: 0 (deflate)
   ihdrData[11] = 0; // filter method: 0 (adaptive)
   ihdrData[12] = 0; // interlace method: 0 (none)
@@ -108,7 +110,7 @@ export function generateBadgeImagePNG(hexColor: string): Uint8Array {
   //   DATA = raw pixel bytes
 
   const dataLen = pixelData.length;
-  const nlen = (~dataLen) & 0xffff;
+  const nlen = ~dataLen & 0xffff;
   const checksum = adler32(pixelData);
 
   // 2 (zlib header) + 1 (BFINAL/BTYPE) + 2 (LEN) + 2 (NLEN) + dataLen + 4 (Adler-32)
@@ -118,19 +120,19 @@ export function generateBadgeImagePNG(hexColor: string): Uint8Array {
   idatData[pos++] = 0x78; // CMF
   idatData[pos++] = 0x01; // FLG
   idatData[pos++] = 0x01; // BFINAL=1, BTYPE=00 (stored)
-  idatData[pos++] = dataLen & 0xff;       // LEN low
+  idatData[pos++] = dataLen & 0xff; // LEN low
   idatData[pos++] = (dataLen >> 8) & 0xff; // LEN high
-  idatData[pos++] = nlen & 0xff;          // NLEN low
-  idatData[pos++] = (nlen >> 8) & 0xff;  // NLEN high
+  idatData[pos++] = nlen & 0xff; // NLEN low
+  idatData[pos++] = (nlen >> 8) & 0xff; // NLEN high
   pixelData.copy(idatData, pos);
   pos += dataLen;
   idatData.writeUInt32BE(checksum, pos);
 
   // --- Assemble PNG via encodeChunks (handles CRC32 automatically) ---
   const chunks = [
-    { name: 'IHDR', data: new Uint8Array(ihdrData) },
-    { name: 'IDAT', data: new Uint8Array(idatData) },
-    { name: 'IEND', data: new Uint8Array(0) },
+    { name: "IHDR", data: new Uint8Array(ihdrData) },
+    { name: "IDAT", data: new Uint8Array(idatData) },
+    { name: "IEND", data: new Uint8Array(0) },
   ];
 
   return new Uint8Array(encodeChunks(chunks));

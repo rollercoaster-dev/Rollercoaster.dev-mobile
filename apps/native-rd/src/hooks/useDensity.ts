@@ -1,10 +1,14 @@
-import { useCallback, useEffect, useRef } from 'react';
-import { UnistylesRuntime } from 'react-native-unistyles';
-import { useQuery } from '@evolu/react';
-import { userSettingsQuery, createUserSettings, updateUserSettings } from '../db';
-import { scaleSpacing, type DensityLevel } from '../utils/density';
-import { space as baseSpace } from '../themes/tokens';
-import { themeNames, parseThemeName, type ThemeName } from '../themes/compose';
+import { useCallback, useEffect, useRef } from "react";
+import { UnistylesRuntime } from "react-native-unistyles";
+import { useQuery } from "@evolu/react";
+import {
+  userSettingsQuery,
+  createUserSettings,
+  updateUserSettings,
+} from "../db";
+import { scaleSpacing, type DensityLevel } from "../utils/density";
+import { space as baseSpace } from "../themes/tokens";
+import { themeNames, parseThemeName, type ThemeName } from "../themes/compose";
 
 function applyDensityToAllThemes(level: DensityLevel) {
   const scaled = scaleSpacing(baseSpace, level);
@@ -18,7 +22,9 @@ function applyDensityToAllThemes(level: DensityLevel) {
   // setTheme to the same name is a no-op, so we switch away and back.
   const current = UnistylesRuntime.themeName as ThemeName;
   const { colorMode } = parseThemeName(current);
-  const temp = themeNames.find((n) => n !== current && n.startsWith(colorMode))!;
+  const temp = themeNames.find(
+    (n) => n !== current && n.startsWith(colorMode),
+  )!;
   UnistylesRuntime.setTheme(temp);
   UnistylesRuntime.setTheme(current);
 }
@@ -27,7 +33,7 @@ export function useDensity() {
   const rows = useQuery(userSettingsQuery);
   const settings = rows[0] ?? null;
   const didInit = useRef(false);
-  const appliedLevel = useRef<DensityLevel>('default');
+  const appliedLevel = useRef<DensityLevel>("default");
 
   // Ensure a settings row exists (singleton pattern)
   useEffect(() => {
@@ -38,7 +44,7 @@ export function useDensity() {
   }, [settings]);
 
   const densityLevel: DensityLevel =
-    (settings?.density as DensityLevel) || 'default';
+    (settings?.density as DensityLevel) || "default";
 
   // Apply density to Unistyles themes when level changes
   useEffect(() => {

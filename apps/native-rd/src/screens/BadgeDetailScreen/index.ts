@@ -1,1 +1,1 @@
-export { BadgeDetailScreen } from './BadgeDetailScreen';
+export { BadgeDetailScreen } from "./BadgeDetailScreen";

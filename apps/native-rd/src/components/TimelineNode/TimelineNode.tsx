@@ -1,7 +1,7 @@
-import React from 'react';
-import { Pressable, Text, View } from 'react-native';
-import type { StepStatus } from '../../types/steps';
-import { styles, NODE_SIZE, GOAL_NODE_SIZE } from './TimelineNode.styles';
+import React from "react";
+import { Pressable, Text, View } from "react-native";
+import type { StepStatus } from "../../types/steps";
+import { styles, NODE_SIZE, GOAL_NODE_SIZE } from "./TimelineNode.styles";
 
 export interface TimelineNodeProps {
   status: StepStatus;
@@ -22,21 +22,21 @@ export function TimelineNode({
   const nodeStyle = [
     styles.node,
     isGoalNode && styles.goalNode,
-    !isGoalNode && status === 'completed' && styles.completedNode,
-    !isGoalNode && status === 'in-progress' && styles.inProgressNode,
+    !isGoalNode && status === "completed" && styles.completedNode,
+    !isGoalNode && status === "in-progress" && styles.inProgressNode,
   ];
 
   const textStyle = [
     styles.nodeText,
     isGoalNode && styles.goalText,
-    !isGoalNode && status === 'completed' && styles.completedText,
-    !isGoalNode && status === 'in-progress' && styles.inProgressText,
+    !isGoalNode && status === "completed" && styles.completedText,
+    !isGoalNode && status === "in-progress" && styles.inProgressText,
   ];
 
   const content = isGoalNode
-    ? '\u2605'
-    : status === 'completed'
-      ? '\u2713'
+    ? "\u2605"
+    : status === "completed"
+      ? "\u2713"
       : String(stepNumber);
 
   // Expand touch target to meet 44×44pt minimum

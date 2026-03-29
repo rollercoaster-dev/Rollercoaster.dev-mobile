@@ -1,42 +1,42 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import React from 'react';
-import { ScrollView, Text, View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
-import Svg, { Path } from 'react-native-svg';
-import { frameRegistry } from '../../badges/frames';
-import type { FrameGeneratorConfig } from '../../badges/frames';
-import type { FrameGenerator } from '../../badges/frames/types';
+import type { Meta, StoryObj } from "@storybook/react";
+import React from "react";
+import { ScrollView, Text, View } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
+import Svg, { Path } from "react-native-svg";
+import { frameRegistry } from "../../badges/frames";
+import type { FrameGeneratorConfig } from "../../badges/frames";
+import type { FrameGenerator } from "../../badges/frames/types";
 import {
   guillochePerEdge,
   guillochePerEdgeWithDots,
-} from '../../badges/frames/guillocheVariants';
-import { generateShapePath } from '../../badges/shapes/paths';
-import { BadgeShape } from '../../badges/types';
-import type { FrameDataParams } from '../../badges/types';
+} from "../../badges/frames/guillocheVariants";
+import { generateShapePath } from "../../badges/shapes/paths";
+import { BadgeShape } from "../../badges/types";
+import type { FrameDataParams } from "../../badges/types";
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
 const SHAPES: { key: BadgeShape; label: string }[] = [
-  { key: BadgeShape.circle, label: 'Circle' },
-  { key: BadgeShape.shield, label: 'Shield' },
-  { key: BadgeShape.hexagon, label: 'Hexagon' },
-  { key: BadgeShape.roundedRect, label: 'Rounded Rect' },
-  { key: BadgeShape.star, label: 'Star' },
-  { key: BadgeShape.diamond, label: 'Diamond' },
+  { key: BadgeShape.circle, label: "Circle" },
+  { key: BadgeShape.shield, label: "Shield" },
+  { key: BadgeShape.hexagon, label: "Hexagon" },
+  { key: BadgeShape.roundedRect, label: "Rounded Rect" },
+  { key: BadgeShape.star, label: "Star" },
+  { key: BadgeShape.diamond, label: "Diamond" },
 ];
 
 const ACCENT_COLORS = [
-  '#a78bfa', // purple
-  '#34d399', // mint
-  '#fbbf24', // yellow
-  '#10b981', // emerald
-  '#06b6d4', // teal
-  '#f97316', // orange
+  "#a78bfa", // purple
+  "#34d399", // mint
+  "#fbbf24", // yellow
+  "#10b981", // emerald
+  "#06b6d4", // teal
+  "#f97316", // orange
 ];
 
-const FRAME_KEYS = ['boldBorder', 'guilloche'] as const;
+const FRAME_KEYS = ["boldBorder", "guilloche"] as const;
 type FrameKey = (typeof FRAME_KEYS)[number];
 
 // ---------------------------------------------------------------------------
@@ -49,7 +49,7 @@ function FrameCell({
   size,
   params,
   fillColor,
-  strokeColor = '#1a1a1a',
+  strokeColor = "#1a1a1a",
   label,
 }: {
   shape: BadgeShape;
@@ -78,7 +78,12 @@ function FrameCell({
   return (
     <View style={styles.cell}>
       <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        <Path d={shapePath} fill={fillColor} stroke={strokeColor} strokeWidth={2} />
+        <Path
+          d={shapePath}
+          fill={fillColor}
+          stroke={strokeColor}
+          strokeWidth={2}
+        />
         {frameElements}
       </Svg>
       {label && <Text style={styles.label}>{label}</Text>}
@@ -106,11 +111,11 @@ function makeParams(overrides?: Partial<FrameDataParams>): FrameDataParams {
 // ---------------------------------------------------------------------------
 
 function FramePlayground({
-  frame = 'boldBorder',
+  frame = "boldBorder",
   shape = BadgeShape.circle,
   size = 160,
-  fillColor = '#a78bfa',
-  strokeColor = '#1a1a1a',
+  fillColor = "#a78bfa",
+  strokeColor = "#1a1a1a",
   stepCount = 5,
 }: {
   frame?: FrameKey;
@@ -136,34 +141,34 @@ function FramePlayground({
 }
 
 const meta: Meta<typeof FramePlayground> = {
-  title: 'Badges/FrameGenerators',
+  title: "Badges/FrameGenerators",
   component: FramePlayground,
   argTypes: {
     frame: {
-      control: { type: 'select' },
+      control: { type: "select" },
       options: FRAME_KEYS,
     },
     shape: {
-      control: { type: 'select' },
+      control: { type: "select" },
       options: Object.values(BadgeShape),
     },
     size: {
-      control: { type: 'select' },
+      control: { type: "select" },
       options: [80, 120, 160, 200, 256],
     },
-    fillColor: { control: 'color' },
-    strokeColor: { control: 'color' },
+    fillColor: { control: "color" },
+    strokeColor: { control: "color" },
     stepCount: {
-      control: { type: 'select' },
+      control: { type: "select" },
       options: [1, 2, 3, 4, 5, 8, 10, 15, 20],
     },
   },
   args: {
-    frame: 'boldBorder',
+    frame: "boldBorder",
     shape: BadgeShape.circle,
     size: 160,
-    fillColor: '#a78bfa',
-    strokeColor: '#1a1a1a',
+    fillColor: "#a78bfa",
+    strokeColor: "#1a1a1a",
     stepCount: 5,
   },
 };
@@ -246,7 +251,7 @@ function StepCountGrid() {
     <ScrollView contentContainerStyle={styles.grid}>
       <Text style={styles.heading}>Bold Border — Step Count Comparison</Text>
       <Text style={styles.subheading}>
-        stepCount {'<'} 4 → 2 rings, stepCount {'>='} 4 → 3 rings
+        stepCount {"<"} 4 → 2 rings, stepCount {">="} 4 → 3 rings
       </Text>
       <View style={styles.row}>
         {STEP_COUNTS.map((sc) => (
@@ -291,10 +296,22 @@ export const StepCountComparison: Story = {
 // 5. GuillocheVariants — compare corner-fix approaches
 // ---------------------------------------------------------------------------
 
-const VARIANT_GENERATORS: { key: string; label: string; generator: FrameGenerator }[] = [
-  { key: 'original', label: 'Production (shape-aware)', generator: frameRegistry.guilloche },
-  { key: 'per-edge', label: 'Per-Edge Segments', generator: guillochePerEdge },
-  { key: 'per-edge-dots', label: 'Per-Edge + Corner Dots', generator: guillochePerEdgeWithDots },
+const VARIANT_GENERATORS: {
+  key: string;
+  label: string;
+  generator: FrameGenerator;
+}[] = [
+  {
+    key: "original",
+    label: "Production (shape-aware)",
+    generator: frameRegistry.guilloche,
+  },
+  { key: "per-edge", label: "Per-Edge Segments", generator: guillochePerEdge },
+  {
+    key: "per-edge-dots",
+    label: "Per-Edge + Corner Dots",
+    generator: guillochePerEdgeWithDots,
+  },
 ];
 
 /** Renders a single badge with a specific guilloche variant */
@@ -304,7 +321,7 @@ function VariantCell({
   size,
   params,
   fillColor,
-  strokeColor = '#1a1a1a',
+  strokeColor = "#1a1a1a",
   label,
 }: {
   shape: BadgeShape;
@@ -333,7 +350,12 @@ function VariantCell({
   return (
     <View style={styles.cell}>
       <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        <Path d={shapePath} fill={fillColor} stroke={strokeColor} strokeWidth={2} />
+        <Path
+          d={shapePath}
+          fill={fillColor}
+          stroke={strokeColor}
+          strokeWidth={2}
+        />
         {frameElements}
       </Svg>
       {label && <Text style={styles.label}>{label}</Text>}
@@ -401,17 +423,17 @@ const styles = StyleSheet.create((theme) => ({
   variantHeading: {
     ...theme.textStyles.body,
     color: theme.colors.text,
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: theme.space[2],
     marginTop: theme.space[4],
   },
   row: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: theme.space[6],
   },
   cell: {
-    alignItems: 'center',
+    alignItems: "center",
     gap: theme.space[2],
   },
   label: {

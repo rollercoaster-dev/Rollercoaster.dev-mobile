@@ -1,9 +1,9 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import React from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
-import type { Colors } from '../../themes/colorModes';
-import { palette } from '../../themes/palette';
+import type { Meta, StoryObj } from "@storybook/react";
+import React from "react";
+import { Pressable, ScrollView, Text, View } from "react-native";
+import { StyleSheet, useUnistyles } from "react-native-unistyles";
+import type { Colors } from "../../themes/colorModes";
+import { palette } from "../../themes/palette";
 import {
   CopiedBadge,
   CopyableToken,
@@ -11,7 +11,7 @@ import {
   shadowStyle,
   sharedStyles,
   useCopyToken,
-} from './shared';
+} from "./shared";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -25,7 +25,7 @@ function isLight(hex: string): boolean {
 }
 
 function contrastingText(hex: string): string {
-  return isLight(hex) ? '#0a0a0a' : '#fafafa';
+  return isLight(hex) ? "#0a0a0a" : "#fafafa";
 }
 
 // ---------------------------------------------------------------------------
@@ -33,26 +33,26 @@ function contrastingText(hex: string): string {
 // ---------------------------------------------------------------------------
 
 const accentColors = [
-  { key: 'accentPurple', label: 'Purple', hex: palette.accentPurple },
-  { key: 'accentMint', label: 'Mint', hex: palette.accentMint },
-  { key: 'accentYellow', label: 'Yellow', hex: palette.accentYellow },
-  { key: 'accentEmerald', label: 'Emerald', hex: palette.accentEmerald },
-  { key: 'accentTeal', label: 'Teal', hex: palette.accentTeal },
-  { key: 'accentOrange', label: 'Orange', hex: palette.accentOrange },
-  { key: 'accentSky', label: 'Sky', hex: palette.accentSky },
+  { key: "accentPurple", label: "Purple", hex: palette.accentPurple },
+  { key: "accentMint", label: "Mint", hex: palette.accentMint },
+  { key: "accentYellow", label: "Yellow", hex: palette.accentYellow },
+  { key: "accentEmerald", label: "Emerald", hex: palette.accentEmerald },
+  { key: "accentTeal", label: "Teal", hex: palette.accentTeal },
+  { key: "accentOrange", label: "Orange", hex: palette.accentOrange },
+  { key: "accentSky", label: "Sky", hex: palette.accentSky },
 ] as const;
 
 const grayScale = [
-  { key: 'gray50', label: '50', hex: palette.gray50 },
-  { key: 'gray100', label: '100', hex: palette.gray100 },
-  { key: 'gray200', label: '200', hex: palette.gray200 },
-  { key: 'gray300', label: '300', hex: palette.gray300 },
-  { key: 'gray400', label: '400', hex: palette.gray400 },
-  { key: 'gray500', label: '500', hex: palette.gray500 },
-  { key: 'gray600', label: '600', hex: palette.gray600 },
-  { key: 'gray700', label: '700', hex: palette.gray700 },
-  { key: 'gray800', label: '800', hex: palette.gray800 },
-  { key: 'gray900', label: '900', hex: palette.gray900 },
+  { key: "gray50", label: "50", hex: palette.gray50 },
+  { key: "gray100", label: "100", hex: palette.gray100 },
+  { key: "gray200", label: "200", hex: palette.gray200 },
+  { key: "gray300", label: "300", hex: palette.gray300 },
+  { key: "gray400", label: "400", hex: palette.gray400 },
+  { key: "gray500", label: "500", hex: palette.gray500 },
+  { key: "gray600", label: "600", hex: palette.gray600 },
+  { key: "gray700", label: "700", hex: palette.gray700 },
+  { key: "gray800", label: "800", hex: palette.gray800 },
+  { key: "gray900", label: "900", hex: palette.gray900 },
 ] as const;
 
 type SemanticPair = {
@@ -62,24 +62,24 @@ type SemanticPair = {
 };
 
 const semanticPairs: SemanticPair[] = [
-  { bgKey: 'background', fgKey: 'text', label: 'Background / Text' },
-  { bgKey: 'backgroundSecondary', fgKey: 'text', label: 'Secondary BG' },
-  { bgKey: 'backgroundTertiary', fgKey: 'text', label: 'Tertiary BG' },
-  { bgKey: 'accentPrimary', fgKey: 'background', label: 'Accent Primary' },
-  { bgKey: 'accentPurple', fgKey: 'background', label: 'Accent Purple' },
-  { bgKey: 'accentMint', fgKey: 'text', label: 'Accent Mint' },
-  { bgKey: 'accentYellow', fgKey: 'text', label: 'Accent Yellow' },
-  { bgKey: 'border', fgKey: 'text', label: 'Border' },
-  { bgKey: 'shadow', fgKey: 'background', label: 'Shadow' },
-  { bgKey: 'focusRing', fgKey: 'background', label: 'Focus Ring' },
+  { bgKey: "background", fgKey: "text", label: "Background / Text" },
+  { bgKey: "backgroundSecondary", fgKey: "text", label: "Secondary BG" },
+  { bgKey: "backgroundTertiary", fgKey: "text", label: "Tertiary BG" },
+  { bgKey: "accentPrimary", fgKey: "background", label: "Accent Primary" },
+  { bgKey: "accentPurple", fgKey: "background", label: "Accent Purple" },
+  { bgKey: "accentMint", fgKey: "text", label: "Accent Mint" },
+  { bgKey: "accentYellow", fgKey: "text", label: "Accent Yellow" },
+  { bgKey: "border", fgKey: "text", label: "Border" },
+  { bgKey: "shadow", fgKey: "background", label: "Shadow" },
+  { bgKey: "focusRing", fgKey: "background", label: "Focus Ring" },
 ];
 
-const narrativeSections = ['climb', 'drop', 'stories', 'relief'] as const;
+const narrativeSections = ["climb", "drop", "stories", "relief"] as const;
 const narrativeLabels: Record<string, string> = {
-  climb: 'The Climb',
-  drop: 'The Drop',
-  stories: 'The Stories',
-  relief: 'The Relief',
+  climb: "The Climb",
+  drop: "The Drop",
+  stories: "The Stories",
+  relief: "The Relief",
 };
 
 // ---------------------------------------------------------------------------
@@ -87,7 +87,7 @@ const narrativeLabels: Record<string, string> = {
 // ---------------------------------------------------------------------------
 
 const meta: Meta = {
-  title: 'Design System/Colors',
+  title: "Design System/Colors",
 };
 
 export default meta;
@@ -175,8 +175,16 @@ function SemanticCard({ pair }: { pair: SemanticPair }) {
       </View>
       <View style={styles.pairInfo}>
         <Text style={sharedStyles.label}>{pair.label}</Text>
-        <CopyableToken path={`colors.${pair.bgKey}`} copiedToken={copiedToken} onCopy={copyToken} />
-        <CopyableToken path={`colors.${pair.fgKey}`} copiedToken={copiedToken} onCopy={copyToken} />
+        <CopyableToken
+          path={`colors.${pair.bgKey}`}
+          copiedToken={copiedToken}
+          onCopy={copyToken}
+        />
+        <CopyableToken
+          path={`colors.${pair.fgKey}`}
+          copiedToken={copiedToken}
+          onCopy={copyToken}
+        />
       </View>
     </View>
   );
@@ -205,10 +213,20 @@ export const SemanticColors: Story = {
 function ClimbAccents({ n }: { n: { bg: string; text: string } }) {
   return (
     <View style={styles.accentRow}>
-      <View style={[styles.badgeChip, { backgroundColor: n.text, borderColor: n.text }]}>
+      <View
+        style={[
+          styles.badgeChip,
+          { backgroundColor: n.text, borderColor: n.text },
+        ]}
+      >
         <Text style={[styles.badgeChipText, { color: n.bg }]}>BADGE LABEL</Text>
       </View>
-      <View style={[styles.badgeChip, { backgroundColor: 'transparent', borderColor: n.text }]}>
+      <View
+        style={[
+          styles.badgeChip,
+          { backgroundColor: "transparent", borderColor: n.text },
+        ]}
+      >
         <Text style={[styles.badgeChipText, { color: n.text }]}>OUTLINE</Text>
       </View>
     </View>
@@ -218,7 +236,7 @@ function ClimbAccents({ n }: { n: { bg: string; text: string } }) {
 function StoriesAccents() {
   const { theme } = useUnistyles();
   const { copiedToken, copyToken } = useCopyToken();
-  const accentKeys = ['accent1', 'accent2', 'accent3', 'accent4'] as const;
+  const accentKeys = ["accent1", "accent2", "accent3", "accent4"] as const;
 
   return (
     <View style={styles.accentRow}>
@@ -230,7 +248,9 @@ function StoriesAccents() {
             onPress={() => copyToken(`narrative.stories.${ak}`)}
             style={[styles.badgeChip, { backgroundColor: bg }]}
           >
-            <Text style={[styles.badgeChipText, { color: contrastingText(bg) }]}>
+            <Text
+              style={[styles.badgeChipText, { color: contrastingText(bg) }]}
+            >
               {ak.toUpperCase()}
             </Text>
             <CopiedBadge visible={copiedToken === `narrative.stories.${ak}`} />
@@ -241,7 +261,13 @@ function StoriesAccents() {
   );
 }
 
-function SingleAccentChip({ tokenPath, color }: { tokenPath: string; color: string }) {
+function SingleAccentChip({
+  tokenPath,
+  color,
+}: {
+  tokenPath: string;
+  color: string;
+}) {
   const { copiedToken, copyToken } = useCopyToken();
 
   return (
@@ -259,7 +285,11 @@ function SingleAccentChip({ tokenPath, color }: { tokenPath: string; color: stri
   );
 }
 
-function NarrativeBlock({ section }: { section: typeof narrativeSections[number] }) {
+function NarrativeBlock({
+  section,
+}: {
+  section: (typeof narrativeSections)[number];
+}) {
   const { theme } = useUnistyles();
   const { copiedToken, copyToken } = useCopyToken();
   const label = narrativeLabels[section];
@@ -272,18 +302,30 @@ function NarrativeBlock({ section }: { section: typeof narrativeSections[number]
         { backgroundColor: n.bg, borderColor: n.text },
       ]}
     >
-      <Text style={[styles.narrativeName, { color: n.text }]}>
-        {label}
-      </Text>
-      <CopyableToken path={`narrative.${section}.bg`} copiedToken={copiedToken} onCopy={copyToken} />
-      <CopyableToken path={`narrative.${section}.text`} copiedToken={copiedToken} onCopy={copyToken} />
-      {section === 'climb' && <ClimbAccents n={n} />}
-      {section === 'stories' && <StoriesAccents />}
-      {section === 'drop' && (
-        <SingleAccentChip tokenPath="narrative.drop.accent" color={theme.narrative.drop.accent} />
+      <Text style={[styles.narrativeName, { color: n.text }]}>{label}</Text>
+      <CopyableToken
+        path={`narrative.${section}.bg`}
+        copiedToken={copiedToken}
+        onCopy={copyToken}
+      />
+      <CopyableToken
+        path={`narrative.${section}.text`}
+        copiedToken={copiedToken}
+        onCopy={copyToken}
+      />
+      {section === "climb" && <ClimbAccents n={n} />}
+      {section === "stories" && <StoriesAccents />}
+      {section === "drop" && (
+        <SingleAccentChip
+          tokenPath="narrative.drop.accent"
+          color={theme.narrative.drop.accent}
+        />
       )}
-      {section === 'relief' && (
-        <SingleAccentChip tokenPath="narrative.relief.accent" color={theme.narrative.relief.accent} />
+      {section === "relief" && (
+        <SingleAccentChip
+          tokenPath="narrative.relief.accent"
+          color={theme.narrative.relief.accent}
+        />
       )}
     </View>
   );
@@ -311,23 +353,23 @@ export const NarrativeSections: Story = {
 
 const styles = StyleSheet.create((theme) => ({
   swatchGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: theme.space[3],
   },
   swatchCard: {
-    width: '48%',
+    width: "48%",
     borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.border,
     borderRadius: theme.radius.sm,
-    overflow: 'hidden',
+    overflow: "hidden",
     backgroundColor: theme.colors.backgroundSecondary,
-    ...shadowStyle(theme, 'hardMd'),
+    ...shadowStyle(theme, "hardMd"),
   },
   swatchColor: {
     height: 64,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     borderBottomWidth: theme.borderWidth.medium,
     borderBottomColor: theme.colors.border,
   },
@@ -340,29 +382,29 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: theme.size.xs,
     color: theme.colors.textMuted,
     marginTop: theme.space[1],
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
   grayStrip: {
-    flexDirection: 'row',
+    flexDirection: "row",
     borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.border,
     borderRadius: theme.radius.sm,
-    overflow: 'hidden',
-    ...shadowStyle(theme, 'hardMd'),
+    overflow: "hidden",
+    ...shadowStyle(theme, "hardMd"),
   },
   grayCell: {
     width: 72,
   },
   grayFill: {
     height: 64,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     borderBottomWidth: theme.borderWidth.medium,
     borderBottomColor: theme.colors.border,
   },
   grayMeta: {
     padding: theme.space[2],
-    alignItems: 'center',
+    alignItems: "center",
     backgroundColor: theme.colors.backgroundSecondary,
   },
   grayLabel: {
@@ -375,12 +417,12 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: theme.size.xs,
     fontFamily: theme.fontFamily.mono,
     color: theme.colors.textMuted,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
   pairPreview: {
     height: 56,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     borderBottomWidth: theme.borderWidth.medium,
     borderBottomColor: theme.colors.border,
   },
@@ -400,7 +442,7 @@ const styles = StyleSheet.create((theme) => ({
     padding: theme.space[6],
     borderWidth: theme.borderWidth.medium,
     borderRadius: theme.radius.sm,
-    ...shadowStyle(theme, 'hardLg'),
+    ...shadowStyle(theme, "hardLg"),
   },
   narrativeName: {
     fontFamily: theme.fontFamily.headline,
@@ -410,8 +452,8 @@ const styles = StyleSheet.create((theme) => ({
     marginBottom: theme.space[3],
   },
   accentRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: theme.space[2],
     marginTop: theme.space[3],
   },
@@ -421,14 +463,14 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius.sm,
     paddingVertical: theme.space[1],
     paddingHorizontal: theme.space[3],
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.space[2],
-    ...shadowStyle(theme, 'hardSm'),
+    ...shadowStyle(theme, "hardSm"),
   },
   badgeChipText: {
     fontWeight: theme.fontWeight.bold,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: theme.letterSpacing.wide,
     fontSize: theme.size.xs,
   },

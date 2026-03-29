@@ -4,14 +4,14 @@ Implementation plans and vision documents. Active plans are in progress; complet
 
 ## Active
 
-| Document | Summary | Last Verified |
-|---|---|---|
-| [2026-02-24-agent-first-vision.md](./2026-02-24-agent-first-vision.md) | Vision for agent-first development across 5 capability layers | 2026-02-24 |
-| [2026-02-24-phase1-repo-legibility.md](./2026-02-24-phase1-repo-legibility.md) | Implementation plan for Phase 1: Repository Legibility | 2026-02-24 |
-| [2026-02-27-badge-design-system-plan.md](./2026-02-27-badge-design-system-plan.md) | Badge designer system implementation plan | 2026-02-27 |
+| Document                                                                           | Summary                                                       | Last Verified |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------- | ------------- |
+| [2026-02-24-agent-first-vision.md](./2026-02-24-agent-first-vision.md)             | Vision for agent-first development across 5 capability layers | 2026-02-24    |
+| [2026-02-24-phase1-repo-legibility.md](./2026-02-24-phase1-repo-legibility.md)     | Implementation plan for Phase 1: Repository Legibility        | 2026-02-24    |
+| [2026-02-27-badge-design-system-plan.md](./2026-02-27-badge-design-system-plan.md) | Badge designer system implementation plan                     | 2026-02-27    |
 
 ## Reference
 
-| Document | Summary |
-|---|---|
+| Document                                                                   | Summary                                   |
+| -------------------------------------------------------------------------- | ----------------------------------------- |
 | [../roadmap/documentation-roadmap.md](../roadmap/documentation-roadmap.md) | Documentation phase tracking (Phases 1-4) |

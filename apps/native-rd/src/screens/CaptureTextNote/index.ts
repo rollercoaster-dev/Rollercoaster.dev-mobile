@@ -1,1 +1,1 @@
-export { CaptureTextNote } from './CaptureTextNote';
+export { CaptureTextNote } from "./CaptureTextNote";

@@ -5,11 +5,11 @@
  * shape boundary. Spacing is driven by daysToComplete: quick goals get
  * sparse bold hatching, long journeys get fine tight mesh.
  */
-import React from 'react';
-import { ClipPath, Defs, G, Path } from 'react-native-svg';
-import { generateShapePath } from '../shapes/paths';
-import { DEFAULT_STROKE_COLOR, clamp } from './constants';
-import type { FrameGenerator } from './types';
+import React from "react";
+import { ClipPath, Defs, G, Path } from "react-native-svg";
+import { generateShapePath } from "../shapes/paths";
+import { DEFAULT_STROKE_COLOR, clamp } from "./constants";
+import type { FrameGenerator } from "./types";
 
 let clipCounter = 0;
 
@@ -47,7 +47,7 @@ export function buildHatchLines(
   spacing: number,
   positive: boolean,
 ): string {
-  if (spacing <= 0) return '';
+  if (spacing <= 0) return "";
 
   const segments: string[] = [];
 
@@ -62,7 +62,7 @@ export function buildHatchLines(
     }
   }
 
-  return segments.join(' ');
+  return segments.join(" ");
 }
 
 export const crossHatchGenerator: FrameGenerator = ({
@@ -76,7 +76,7 @@ export const crossHatchGenerator: FrameGenerator = ({
   if (innerInset <= inset) {
     if (__DEV__) {
       console.warn(
-        '[crossHatchGenerator] Degenerate geometry: innerInset ' +
+        "[crossHatchGenerator] Degenerate geometry: innerInset " +
           `(${innerInset}) <= inset (${inset}). Frame skipped.`,
       );
     }
@@ -104,8 +104,8 @@ export const crossHatchGenerator: FrameGenerator = ({
         { id: clipId },
         React.createElement(Path, {
           d: `${outerPath} ${innerPath}`,
-          clipRule: 'evenodd',
-          fillRule: 'evenodd',
+          clipRule: "evenodd",
+          fillRule: "evenodd",
         }),
       ),
     ),
@@ -113,16 +113,16 @@ export const crossHatchGenerator: FrameGenerator = ({
       G,
       { clipPath: `url(#${clipId})` },
       React.createElement(Path, {
-        key: 'h-45',
+        key: "h-45",
         d: hatch45,
-        fill: 'none',
+        fill: "none",
         stroke: strokeColor,
         strokeWidth,
       }),
       React.createElement(Path, {
-        key: 'h-neg45',
+        key: "h-neg45",
         d: hatchNeg45,
-        fill: 'none',
+        fill: "none",
         stroke: strokeColor,
         strokeWidth,
       }),

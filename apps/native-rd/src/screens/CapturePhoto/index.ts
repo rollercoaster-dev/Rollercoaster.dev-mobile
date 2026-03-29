@@ -1,1 +1,1 @@
-export { CapturePhoto } from './CapturePhoto';
+export { CapturePhoto } from "./CapturePhoto";

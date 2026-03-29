@@ -11,19 +11,19 @@ Reads all documentation files, extracts factual claims, verifies each against th
 
 ### Input
 
-| Field       | Type     | Required | Description                                        |
-| ----------- | -------- | -------- | -------------------------------------------------- |
+| Field       | Type     | Required | Description                                                                     |
+| ----------- | -------- | -------- | ------------------------------------------------------------------------------- |
 | `scope`     | string[] | No       | Specific doc paths to check (default: `docs/**/*.md`, `CLAUDE.md`, `AGENTS.md`) |
-| `auto-file` | boolean  | No       | Auto-open GitHub issues for divergences (default: false) |
+| `auto-file` | boolean  | No       | Auto-open GitHub issues for divergences (default: false)                        |
 
 ### Output
 
-| Field               | Type   | Description                         |
-| ------------------- | ------ | ----------------------------------- |
-| `docsChecked`       | number | Total docs analyzed                 |
-| `claimsVerified`    | number | Total factual claims checked        |
-| `divergences`       | array  | Claims that don't match code        |
-| `issuesCreated`     | number | GitHub issues opened (if auto-file) |
+| Field            | Type   | Description                         |
+| ---------------- | ------ | ----------------------------------- |
+| `docsChecked`    | number | Total docs analyzed                 |
+| `claimsVerified` | number | Total factual claims checked        |
+| `divergences`    | array  | Claims that don't match code        |
+| `issuesCreated`  | number | GitHub issues opened (if auto-file) |
 
 ## When to Use
 
@@ -53,6 +53,7 @@ References to specific technologies, libraries, or tools (e.g., "uses Tamagui", 
 Numeric assertions like "14 themes", "253 tests", "6 accessibility variants".
 
 **Verification:**
+
 - Theme count: count entries in `src/themes/compose.ts`
 - Test count: `glob src/**/__tests__/**/*.test.{ts,tsx} | wc -l` (fast proxy — avoids spawning Jest)
 - Component count: `ls -d src/components/*/ | wc -l`
@@ -76,6 +77,7 @@ glob docs/**/*.md CLAUDE.md AGENTS.md
 ### Step 2: Extract Claims
 
 For each document, parse line by line:
+
 - Backtick paths → file path claims
 - Technology names (match against known list + any proper noun followed by description) → tech claims
 - Numbers followed by nouns ("14 themes", "6 variants") → count claims
@@ -98,6 +100,7 @@ For each `DIVERGED` claim:
 ```
 
 Severity:
+
 - **HIGH** — file path doesn't exist, technology removed
 - **MEDIUM** — count is wrong, feature description outdated
 - **LOW** — minor wording mismatch
@@ -137,9 +140,9 @@ Issues created: 2
 
 ## Error Handling
 
-| Condition                | Behavior                              |
-| ------------------------ | ------------------------------------- |
-| Doc file unreadable      | Skip file, report as "READ_ERROR"     |
-| Verification command fails| Mark claim as "UNVERIFIABLE", continue|
-| Issue creation fails     | Report divergence, note "issue not filed"|
-| tech-debt.md missing     | Skip tracker update, warn             |
+| Condition                  | Behavior                                  |
+| -------------------------- | ----------------------------------------- |
+| Doc file unreadable        | Skip file, report as "READ_ERROR"         |
+| Verification command fails | Mark claim as "UNVERIFIABLE", continue    |
+| Issue creation fails       | Report divergence, note "issue not filed" |
+| tech-debt.md missing       | Skip tracker update, warn                 |

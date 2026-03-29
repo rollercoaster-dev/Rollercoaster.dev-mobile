@@ -11,17 +11,17 @@ Prevents feedback from disappearing into closed PR threads. After a PR is merged
 
 ### Input
 
-| Field       | Type   | Required | Description             |
-| ----------- | ------ | -------- | ----------------------- |
-| `pr_number` | number | Yes      | Merged PR number        |
+| Field       | Type   | Required | Description      |
+| ----------- | ------ | -------- | ---------------- |
+| `pr_number` | number | Yes      | Merged PR number |
 
 ### Output
 
-| Field           | Type   | Description                      |
-| --------------- | ------ | -------------------------------- |
-| `reviewed`      | number | Total comments analyzed          |
-| `actionable`    | number | Comments classified as actionable|
-| `issuesCreated` | array  | Issue numbers created            |
+| Field           | Type   | Description                       |
+| --------------- | ------ | --------------------------------- |
+| `reviewed`      | number | Total comments analyzed           |
+| `actionable`    | number | Comments classified as actionable |
+| `issuesCreated` | array  | Issue numbers created             |
 
 ## When to Use
 
@@ -41,12 +41,14 @@ gh api repos/rollercoaster-dev/native-rd/pulls/<pr_number>/reviews
 ### Step 2: Filter for Actionable Items
 
 Include a comment if it matches ANY of:
+
 - CodeRabbit comment containing "Potential issue" or "Bug" markers
 - CodeRabbit comment with an actionable suggestion that has no resolution
 - Claude review item marked "should fix" or "critical"
 - Human reviewer comment requesting a change with no follow-up commit
 
 Exclude a comment if it matches ANY of:
+
 - Marked as "resolved" on GitHub
 - Has a reply from the PR author acknowledging/dismissing it
 - Contains only "nitpick", "nit:", "minor:", or "suggestion:" prefixes without "should fix"
@@ -57,6 +59,7 @@ Exclude a comment if it matches ANY of:
 Group related comments (same file + similar message) to avoid duplicate issues.
 
 For each actionable item, extract:
+
 - **Title**: Short summary of the requested change
 - **File**: Source file path
 - **Line**: Line number (if available)
@@ -116,9 +119,9 @@ Done. <N> issues created from <N> unresolved comments.
 
 ## Error Handling
 
-| Condition              | Behavior                           |
-| ---------------------- | ---------------------------------- |
-| PR not found           | Report error, exit                 |
+| Condition              | Behavior                                                                                 |
+| ---------------------- | ---------------------------------------------------------------------------------------- |
+| PR not found           | Report error, exit                                                                       |
 | PR not merged          | Report error: "PR #<N> is not yet merged. This skill operates on merged PRs only." Exit. |
-| No actionable comments | Report "no issues to create", exit |
-| Issue creation fails   | Warn, continue with remaining      |
+| No actionable comments | Report "no issues to create", exit                                                       |
+| Issue creation fails   | Warn, continue with remaining                                                            |

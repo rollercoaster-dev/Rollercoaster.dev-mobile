@@ -1,9 +1,9 @@
-import React from 'react';
-import { View, Modal, Pressable } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { AudioPlayer } from '../AudioPlayer';
-import { Text } from '../Text';
-import { styles } from './AudioPlayerModal.styles';
+import React from "react";
+import { View, Modal, Pressable } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { AudioPlayer } from "../AudioPlayer";
+import { Text } from "../Text";
+import { styles } from "./AudioPlayerModal.styles";
 
 export interface AudioPlayerModalProps {
   visible: boolean;
@@ -12,7 +12,12 @@ export interface AudioPlayerModalProps {
   onClose: () => void;
 }
 
-export function AudioPlayerModal({ visible, uri, durationMs, onClose }: AudioPlayerModalProps) {
+export function AudioPlayerModal({
+  visible,
+  uri,
+  durationMs,
+  onClose,
+}: AudioPlayerModalProps) {
   const insets = useSafeAreaInsets();
 
   if (!uri) return null;
@@ -25,7 +30,12 @@ export function AudioPlayerModal({ visible, uri, durationMs, onClose }: AudioPla
       onRequestClose={onClose}
       accessibilityViewIsModal
     >
-      <View style={[styles.overlay, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+      <View
+        style={[
+          styles.overlay,
+          { paddingTop: insets.top, paddingBottom: insets.bottom },
+        ]}
+      >
         <View style={styles.container}>
           <View style={styles.topBar}>
             <Text style={styles.heading}>Voice Memo</Text>
@@ -36,7 +46,7 @@ export function AudioPlayerModal({ visible, uri, durationMs, onClose }: AudioPla
               accessibilityLabel="Close audio player"
               hitSlop={16}
             >
-              <Text style={styles.closeText}>{'\u2715'}</Text>
+              <Text style={styles.closeText}>{"\u2715"}</Text>
             </Pressable>
           </View>
           <View style={styles.playerContainer}>

@@ -1,11 +1,11 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import React, { useState } from 'react';
-import { View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
-import { Input } from './Input';
+import type { Meta, StoryObj } from "@storybook/react";
+import React, { useState } from "react";
+import { View } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
+import { Input } from "./Input";
 
 const meta: Meta<typeof Input> = {
-  title: 'Input',
+  title: "Input",
   component: Input,
 };
 
@@ -14,7 +14,7 @@ export default meta;
 type Story = StoryObj<typeof Input>;
 
 function ControlledInput() {
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState("");
   return (
     <Input
       label="Goal title"

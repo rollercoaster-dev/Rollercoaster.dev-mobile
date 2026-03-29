@@ -1,7 +1,7 @@
-import React from 'react';
-import { Text } from 'react-native-svg';
-import { getSafeTextColor } from '../../utils/accessibility';
-import { fontFamily as fontFamilyTokens } from '../../themes/tokens';
+import React from "react";
+import { Text } from "react-native-svg";
+import { getSafeTextColor } from "../../utils/accessibility";
+import { fontFamily as fontFamilyTokens } from "../../themes/tokens";
 
 export interface CenterLabelProps {
   label: string | undefined;
@@ -47,7 +47,7 @@ export function CenterLabel({
 
   const text = label.trim().slice(0, CENTER_LABEL_MAX_CHARS);
   const fontSize = size * CENTER_LABEL_SIZE_RATIO * scale;
-  const textColor = getSafeTextColor(fillColor, 'CenterLabel');
+  const textColor = getSafeTextColor(fillColor, "CenterLabel");
   const cx = size / 2;
   const cy = getCenterLabelY(size, scale) + extraOffset;
 

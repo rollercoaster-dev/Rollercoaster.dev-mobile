@@ -44,13 +44,13 @@ Neurodivergent-first design benefits everyone. Clear information, predictable pa
 
 The native app and the monorepo are two products built on shared foundations:
 
-| | Monorepo | Native App |
-|---|----------|-----------|
-| **For** | Institutions (schools, youth centers, makerspaces) | Individuals |
-| **Purpose** | Issue and manage badges for others | Track your own learning and goals |
-| **Runs on** | Servers (Docker, self-hosted) | Your phone (Expo/React Native) |
-| **Data** | Organization-managed | User-owned, on-device |
-| **UI framework** | Vue 3 (openbadges-ui) | React Native |
+|                  | Monorepo                                           | Native App                        |
+| ---------------- | -------------------------------------------------- | --------------------------------- |
+| **For**          | Institutions (schools, youth centers, makerspaces) | Individuals                       |
+| **Purpose**      | Issue and manage badges for others                 | Track your own learning and goals |
+| **Runs on**      | Servers (Docker, self-hosted)                      | Your phone (Expo/React Native)    |
+| **Data**         | Organization-managed                               | User-owned, on-device             |
+| **UI framework** | Vue 3 (openbadges-ui)                              | React Native                      |
 
 **What they share:**
 
@@ -99,7 +99,7 @@ Most goal trackers show you everything — all your goals, all your steps, all y
 
 No goal trees, no progress bars, no weight. Just: here's what's next. Tap when done.
 
-The depth is always there — you can drill into any goal to see all steps, evidence, and history. But the daily surface is one action per goal. This is the screen you see when you open the app on the bus for 30 seconds. It answers the only question that matters when you're overwhelmed: *what's the one thing I could do right now?*
+The depth is always there — you can drill into any goal to see all steps, evidence, and history. But the daily surface is one action per goal. This is the screen you see when you open the app on the bus for 30 seconds. It answers the only question that matters when you're overwhelmed: _what's the one thing I could do right now?_
 
 This isn't a feature of a particular iteration — it's the primary interaction pattern. **Not yet implemented as of 2026-02-28** — currently the app opens to the goals list, not a task view.
 
@@ -135,15 +135,15 @@ Each iteration ships as a usable product. A is useful without B. B is useful wit
 
 ## Technical Foundation
 
-| Layer | Choice | Status |
-|-------|--------|--------|
-| **Runtime** | Expo / React Native | Decided |
-| **UI styling** | react-native-unistyles v3 | Decided (ADR-0002) |
-| **Local storage** | Evolu (SQLite + CRDT) | Decided (ADR-0003, ADR-0004) |
-| **Sync layer** | Evolu built-in sync | Decided (ADR-0003) |
-| **Badge logic** | `openbadges-core` (extracted from server) | Decided, extraction in progress |
-| **Types** | `openbadges-types` (shared with monorepo) | Existing, published on npm |
-| **Design tokens** | Unistyles theme system (14 themes) | Implemented |
+| Layer             | Choice                                    | Status                          |
+| ----------------- | ----------------------------------------- | ------------------------------- |
+| **Runtime**       | Expo / React Native                       | Decided                         |
+| **UI styling**    | react-native-unistyles v3                 | Decided (ADR-0002)              |
+| **Local storage** | Evolu (SQLite + CRDT)                     | Decided (ADR-0003, ADR-0004)    |
+| **Sync layer**    | Evolu built-in sync                       | Decided (ADR-0003)              |
+| **Badge logic**   | `openbadges-core` (extracted from server) | Decided, extraction in progress |
+| **Types**         | `openbadges-types` (shared with monorepo) | Existing, published on npm      |
+| **Design tokens** | Unistyles theme system (14 themes)        | Implemented                     |
 
 ---
 

@@ -1,8 +1,8 @@
-import React from 'react';
-import { Rect, Text } from 'react-native-svg';
-import type { BannerData, BadgeShape } from '../types';
-import { getSafeTextColor } from '../../utils/accessibility';
-import { fontFamily as fontFamilyTokens } from '../../themes/tokens';
+import React from "react";
+import { Rect, Text } from "react-native-svg";
+import type { BannerData, BadgeShape } from "../types";
+import { getSafeTextColor } from "../../utils/accessibility";
+import { fontFamily as fontFamilyTokens } from "../../themes/tokens";
 
 export interface BannerProps {
   banner: BannerData | undefined;
@@ -23,7 +23,7 @@ export interface BannerProps {
 export const BANNER_HEIGHT_RATIO = 0.18;
 
 /** Banner width as fraction of badge size */
-export const BANNER_WIDTH_RATIO = 0.80;
+export const BANNER_WIDTH_RATIO = 0.8;
 
 /** Hard shadow offset in pixels (neo-brutalist) */
 export const BANNER_SHADOW_OFFSET = 2;
@@ -32,21 +32,21 @@ export const BANNER_SHADOW_OFFSET = 2;
 export const BANNER_TOP_VISIBLE_RATIO = 0.05;
 
 /** Font size as fraction of badge size */
-export const BANNER_FONT_SIZE_RATIO = 0.10;
+export const BANNER_FONT_SIZE_RATIO = 0.1;
 
 /** Border width for the banner rect */
 export const BANNER_BORDER_WIDTH = 2;
 
-const DEFAULT_BORDER_COLOR = '#000000';
+const DEFAULT_BORDER_COLOR = "#000000";
 const STAR_BANNER_TOP_VISIBLE_RATIO = -0.3;
 
 export function getBannerTopY(
-  position: BannerData['position'],
+  position: BannerData["position"],
   size: number,
   topVisibleRatio: number = BANNER_TOP_VISIBLE_RATIO,
 ): number {
   const bannerH = size * BANNER_HEIGHT_RATIO;
-  if (position === 'bottom') {
+  if (position === "bottom") {
     // Mirror the top strap: 95% of the banner sits below the badge.
     return size - bannerH * topVisibleRatio;
   }
@@ -55,9 +55,14 @@ export function getBannerTopY(
   return -bannerH * (1 - topVisibleRatio);
 }
 
-export function getBannerTopVisibleRatio(position: BannerData['position'], shape?: BadgeShape): number {
-  if (position !== 'center') return BANNER_TOP_VISIBLE_RATIO;
-  return shape === 'star' ? STAR_BANNER_TOP_VISIBLE_RATIO : BANNER_TOP_VISIBLE_RATIO;
+export function getBannerTopVisibleRatio(
+  position: BannerData["position"],
+  shape?: BadgeShape,
+): number {
+  if (position !== "center") return BANNER_TOP_VISIBLE_RATIO;
+  return shape === "star"
+    ? STAR_BANNER_TOP_VISIBLE_RATIO
+    : BANNER_TOP_VISIBLE_RATIO;
 }
 
 export function Banner({
@@ -76,12 +81,13 @@ export function Banner({
   const bannerH = size * BANNER_HEIGHT_RATIO * scale;
   const bannerX = (size - bannerW) / 2;
   // Compute Y using scaled bannerH so position matches rendered size
-  const bannerY = banner.position === 'bottom'
-    ? size - bannerH * topVisibleRatio
-    : -bannerH * (1 - topVisibleRatio);
+  const bannerY =
+    banner.position === "bottom"
+      ? size - bannerH * topVisibleRatio
+      : -bannerH * (1 - topVisibleRatio);
 
-  const bannerFill = getSafeTextColor(badgeColor, 'Banner:fill');
-  const textFill = getSafeTextColor(bannerFill, 'Banner:text');
+  const bannerFill = getSafeTextColor(badgeColor, "Banner:fill");
+  const textFill = getSafeTextColor(bannerFill, "Banner:text");
   const fontSize = size * BANNER_FONT_SIZE_RATIO * scale;
 
   return (

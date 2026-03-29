@@ -1,12 +1,12 @@
-import { StyleSheet } from 'react-native-unistyles';
-import { shadowStyle } from '../../styles/shadows';
-import { palette } from '../../themes/adapter';
+import { StyleSheet } from "react-native-unistyles";
+import { shadowStyle } from "../../styles/shadows";
+import { palette } from "../../themes/adapter";
 
 export const styles = StyleSheet.create((theme) => ({
   topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[2],
   },
@@ -19,7 +19,7 @@ export const styles = StyleSheet.create((theme) => ({
   },
   scrollContent: {
     flexGrow: 1,
-    alignItems: 'center',
+    alignItems: "center",
     paddingTop: theme.space[8],
     paddingHorizontal: theme.space[4],
     paddingBottom: theme.space[12],
@@ -31,14 +31,14 @@ export const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius.sm,
     padding: theme.space[6],
     paddingHorizontal: theme.space[5],
-    alignItems: 'center',
+    alignItems: "center",
     maxWidth: 340,
-    width: '100%',
-    ...shadowStyle(theme, 'hardMd'),
+    width: "100%",
+    ...shadowStyle(theme, "hardMd"),
   },
   iconContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: theme.space[3],
   },
   iconImage: {
@@ -48,34 +48,34 @@ export const styles = StyleSheet.create((theme) => ({
   iconEmoji: {
     fontSize: 72,
     lineHeight: 96,
-    textAlign: 'center' as const,
+    textAlign: "center" as const,
   },
   headline: {
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: theme.space[2],
   },
   summary: {
-    textAlign: 'center',
+    textAlign: "center",
     color: theme.colors.textSecondary,
     marginBottom: theme.space[5],
   },
   actions: {
-    width: '100%',
+    width: "100%",
     gap: theme.space[3],
   },
   evidenceSection: {
-    width: '100%',
+    width: "100%",
     marginTop: theme.space[4],
-    alignItems: 'flex-start',
+    alignItems: "flex-start",
   },
   evidenceSectionTitle: {
     color: theme.colors.textSecondary,
     marginBottom: theme.space[2],
   },
   evidenceItem: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.space[2],
     paddingVertical: theme.space[2],
     paddingHorizontal: theme.space[3],
@@ -95,26 +95,26 @@ export const styles = StyleSheet.create((theme) => ({
   },
   centered: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: theme.space[4],
   },
   loadingIndicator: {
     marginTop: theme.space[8],
   },
   badgeStatus: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
     gap: theme.space[2],
     marginTop: theme.space[3],
-    width: '100%',
+    width: "100%",
   },
   badgeStatusText: {
     color: theme.colors.textSecondary,
   },
   // Evidence prompt phase styles
   inlineNoteContainer: {
-    width: '100%',
+    width: "100%",
     gap: theme.space[3],
     marginBottom: theme.space[4],
   },
@@ -122,7 +122,7 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.textSecondary,
   },
   inlineNoteInput: {
-    width: '100%',
+    width: "100%",
     minHeight: 100,
     maxHeight: 200,
     borderWidth: theme.borderWidth.medium,
@@ -133,18 +133,18 @@ export const styles = StyleSheet.create((theme) => ({
     fontFamily: theme.fontFamily.body,
     color: theme.colors.text,
     backgroundColor: theme.colors.background,
-    textAlignVertical: 'top' as const,
+    textAlignVertical: "top" as const,
   },
   evidenceChips: {
-    width: '100%',
+    width: "100%",
     gap: theme.space[2],
   },
   evidenceChipsLabel: {
     color: theme.colors.textSecondary,
   },
   evidenceChipRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: theme.space[2],
   },
 }));

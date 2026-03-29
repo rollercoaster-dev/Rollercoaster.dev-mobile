@@ -1,6 +1,6 @@
-import { StyleSheet } from 'react-native-unistyles';
-import { shadowStyle } from '../../styles/shadows';
-import { palette } from '../../themes/adapter';
+import { StyleSheet } from "react-native-unistyles";
+import { shadowStyle } from "../../styles/shadows";
+import { palette } from "../../themes/adapter";
 
 export const NODE_SIZE = 32;
 export const GOAL_NODE_SIZE = 40;
@@ -12,10 +12,10 @@ export const styles = StyleSheet.create((theme) => ({
     borderRadius: NODE_SIZE / 2,
     borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: theme.colors.background,
-    ...shadowStyle(theme, 'hardSm'),
+    ...shadowStyle(theme, "hardSm"),
   },
   goalNode: {
     width: GOAL_NODE_SIZE,

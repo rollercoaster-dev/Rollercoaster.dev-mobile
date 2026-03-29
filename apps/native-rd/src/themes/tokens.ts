@@ -16,7 +16,7 @@ import {
   fontFamily as _fontFamily,
   transition as _transition,
   shadow as _shadow,
-} from './adapter';
+} from "./adapter";
 
 export const space = _space;
 export const size = _size;

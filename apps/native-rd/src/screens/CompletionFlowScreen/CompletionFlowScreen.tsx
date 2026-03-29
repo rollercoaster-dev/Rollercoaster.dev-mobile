@@ -1,4 +1,4 @@
-import { Suspense, useState, useRef, useEffect, useCallback } from 'react';
+import { Suspense, useState, useRef, useEffect, useCallback } from "react";
 import {
   View,
   ScrollView,
@@ -8,19 +8,19 @@ import {
   KeyboardAvoidingView,
   Platform,
   AccessibilityInfo,
-} from 'react-native';
-import type { ImageSourcePropType } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, type NavigationProp } from '@react-navigation/native';
-import { useQuery } from '@evolu/react';
-import { useUnistyles } from 'react-native-unistyles';
-import { Text } from '../../components/Text';
-import { ErrorBoundary } from '../../components/ErrorBoundary';
-import { Button } from '../../components/Button';
-import { IconButton } from '../../components/IconButton';
-import { Confetti } from '../../components/Confetti';
-import { ModeIndicator } from '../../components/ModeIndicator';
-import { BadgeEarnedModal } from '../BadgeEarnedModal';
+} from "react-native";
+import type { ImageSourcePropType } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation, type NavigationProp } from "@react-navigation/native";
+import { useQuery } from "@evolu/react";
+import { useUnistyles } from "react-native-unistyles";
+import { Text } from "../../components/Text";
+import { ErrorBoundary } from "../../components/ErrorBoundary";
+import { Button } from "../../components/Button";
+import { IconButton } from "../../components/IconButton";
+import { Confetti } from "../../components/Confetti";
+import { ModeIndicator } from "../../components/ModeIndicator";
+import { BadgeEarnedModal } from "../BadgeEarnedModal";
 import {
   goalsQuery,
   stepsByGoalQuery,
@@ -32,22 +32,29 @@ import {
   EvidenceType,
   TEXT_EVIDENCE_PREFIX,
   GoalStatus,
-} from '../../db';
-import type { GoalId } from '../../db';
-import { useCreateBadge, PLACEHOLDER_IMAGE_URI } from '../../hooks/useCreateBadge';
+} from "../../db";
+import type { GoalId } from "../../db";
+import {
+  useCreateBadge,
+  PLACEHOLDER_IMAGE_URI,
+} from "../../hooks/useCreateBadge";
 import type {
   GoalsStackParamList,
   RootTabParamList,
   CompletionFlowScreenProps,
   CaptureScreenName,
-} from '../../navigation/types';
-import { EVIDENCE_OPTIONS, validateEvidenceType, type EvidenceTypeValue } from '../../types/evidence';
-import { EVIDENCE_TYPE_ICONS } from '../../constants/evidenceIcons';
-import { pendingDesignStore } from '../../stores/pendingDesignStore';
-import { Logger } from '../../shims/rd-logger';
-import { styles } from './CompletionFlowScreen.styles';
+} from "../../navigation/types";
+import {
+  EVIDENCE_OPTIONS,
+  validateEvidenceType,
+  type EvidenceTypeValue,
+} from "../../types/evidence";
+import { EVIDENCE_TYPE_ICONS } from "../../constants/evidenceIcons";
+import { pendingDesignStore } from "../../stores/pendingDesignStore";
+import { Logger } from "../../shims/rd-logger";
+import { styles } from "./CompletionFlowScreen.styles";
 
-const logger = new Logger('CompletionFlowScreen');
+const logger = new Logger("CompletionFlowScreen");
 
 /**
  * Optional image override for the completion icon.
@@ -57,19 +64,21 @@ const logger = new Logger('CompletionFlowScreen');
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const COMPLETION_ICON: ImageSourcePropType | undefined = undefined;
 
-const EVIDENCE_ROUTE_MAP: Partial<Record<EvidenceTypeValue, CaptureScreenName>> = {
-  [EvidenceType.photo]: 'CapturePhoto',
-  [EvidenceType.video]: 'CaptureVideo',
-  [EvidenceType.voice_memo]: 'CaptureVoiceMemo',
-  [EvidenceType.text]: 'CaptureTextNote',
-  [EvidenceType.link]: 'CaptureLink',
-  [EvidenceType.file]: 'CaptureFile',
+const EVIDENCE_ROUTE_MAP: Partial<
+  Record<EvidenceTypeValue, CaptureScreenName>
+> = {
+  [EvidenceType.photo]: "CapturePhoto",
+  [EvidenceType.video]: "CaptureVideo",
+  [EvidenceType.voice_memo]: "CaptureVoiceMemo",
+  [EvidenceType.text]: "CaptureTextNote",
+  [EvidenceType.link]: "CaptureLink",
+  [EvidenceType.file]: "CaptureFile",
 };
 
 /** Max chars for inline text note (matches CaptureTextNote constraint) */
 const MAX_NOTE_LENGTH = 1000;
 
-type CompletionPhase = 'evidence-prompt' | 'celebration';
+type CompletionPhase = "evidence-prompt" | "celebration";
 
 function CompletionContent({ goalId }: { goalId: string }) {
   const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
@@ -90,23 +99,32 @@ function CompletionContent({ goalId }: { goalId: string }) {
 
   // Phase: start in celebration if evidence already exists, otherwise show prompt
   const [phase, setPhase] = useState<CompletionPhase>(
-    hasGoalEvidence ? 'celebration' : 'evidence-prompt',
+    hasGoalEvidence ? "celebration" : "evidence-prompt",
   );
 
   // Transition to celebration when evidence appears (e.g. after inline save or returning from capture screen)
   useEffect(() => {
-    if (hasGoalEvidence && phase === 'evidence-prompt') {
-      setPhase('celebration');
-      AccessibilityInfo.announceForAccessibility('Evidence added! Generating your badge.');
+    if (hasGoalEvidence && phase === "evidence-prompt") {
+      setPhase("celebration");
+      AccessibilityInfo.announceForAccessibility(
+        "Evidence added! Generating your badge.",
+      );
     }
   }, [hasGoalEvidence, phase]);
 
   // Only create badge when in celebration phase (evidence exists)
-  const { status: badgeStatus, error: badgeError } = useCreateBadge(goalId as GoalId, {
-    ...(pendingDesign ? { design: pendingDesign } : {}),
-    enabled: phase === 'celebration',
-  });
-  const isBadgeCreating = badgeStatus === 'building' || badgeStatus === 'signing' || badgeStatus === 'storing' || badgeStatus === 'baking';
+  const { status: badgeStatus, error: badgeError } = useCreateBadge(
+    goalId as GoalId,
+    {
+      ...(pendingDesign ? { design: pendingDesign } : {}),
+      enabled: phase === "celebration",
+    },
+  );
+  const isBadgeCreating =
+    badgeStatus === "building" ||
+    badgeStatus === "signing" ||
+    badgeStatus === "storing" ||
+    badgeStatus === "baking";
 
   const [showConfetti, setShowConfetti] = useState(false);
   const [showBadgeModal, setShowBadgeModal] = useState(false);
@@ -115,13 +133,13 @@ function CompletionContent({ goalId }: { goalId: string }) {
 
   // Start confetti when entering celebration phase
   useEffect(() => {
-    if (phase === 'celebration') {
+    if (phase === "celebration") {
       setShowConfetti(true);
     }
   }, [phase]);
 
   useEffect(() => {
-    if (badgeStatus === 'done' && badgeRow && !hasShownModal.current) {
+    if (badgeStatus === "done" && badgeRow && !hasShownModal.current) {
       hasShownModal.current = true;
       capturedIsFirstBadge.current = allBadges.length === 1;
       setShowBadgeModal(true);
@@ -129,12 +147,13 @@ function CompletionContent({ goalId }: { goalId: string }) {
   }, [badgeStatus, badgeRow, allBadges.length]);
 
   // Inline text note state
-  const [noteText, setNoteText] = useState('');
+  const [noteText, setNoteText] = useState("");
   const [savingNote, setSavingNote] = useState(false);
   const textInputRef = useRef<TextInput>(null);
 
   const trimmedNote = noteText.trim();
-  const canSaveNote = trimmedNote.length > 0 && trimmedNote.length <= MAX_NOTE_LENGTH;
+  const canSaveNote =
+    trimmedNote.length > 0 && trimmedNote.length <= MAX_NOTE_LENGTH;
 
   const handleSaveInlineNote = useCallback(() => {
     if (!canSaveNote || savingNote) return;
@@ -147,9 +166,9 @@ function CompletionContent({ goalId }: { goalId: string }) {
         uri: `${TEXT_EVIDENCE_PREFIX}${trimmedNote}`,
         description: undefined,
       });
-      AccessibilityInfo.announceForAccessibility('Text note saved');
+      AccessibilityInfo.announceForAccessibility("Text note saved");
     } catch (error) {
-      logger.error('Failed to save inline text note', { goalId, error });
+      logger.error("Failed to save inline text note", { goalId, error });
     } finally {
       setSavingNote(false);
     }
@@ -176,14 +195,14 @@ function CompletionContent({ goalId }: { goalId: string }) {
   };
 
   const handleViewJourney = () => {
-    navigation.navigate('TimelineJourney', { goalId });
+    navigation.navigate("TimelineJourney", { goalId });
   };
 
   const isCompleted = goal?.status === GoalStatus.completed;
 
   const handleReopenGoal = () => {
     uncompleteGoal(goalId as GoalId);
-    navigation.navigate('FocusMode', { goalId });
+    navigation.navigate("FocusMode", { goalId });
   };
 
   const handleViewBadge = () => {
@@ -191,23 +210,27 @@ function CompletionContent({ goalId }: { goalId: string }) {
     if (!badgeRow) return;
     const parentNav = navigation.getParent<NavigationProp<RootTabParamList>>();
     if (parentNav) {
-      parentNav.navigate('BadgesTab', {
-        screen: 'BadgeDetail',
+      parentNav.navigate("BadgesTab", {
+        screen: "BadgeDetail",
         params: { badgeId: String(badgeRow.id) },
       });
     } else {
-      logger.warn('Could not navigate to badge detail — parent tab navigator not found');
+      logger.warn(
+        "Could not navigate to badge detail — parent tab navigator not found",
+      );
     }
   };
 
   const handleCustomizeBadge = () => {
     setShowBadgeModal(false);
     if (!badgeRow) {
-      logger.warn('handleCustomizeBadge: badgeRow is null — cannot navigate to designer');
+      logger.warn(
+        "handleCustomizeBadge: badgeRow is null — cannot navigate to designer",
+      );
       return;
     }
-    navigation.navigate('BadgeDesigner', {
-      mode: 'redesign',
+    navigation.navigate("BadgeDesigner", {
+      mode: "redesign",
       badgeId: String(badgeRow.id),
     });
   };
@@ -217,12 +240,12 @@ function CompletionContent({ goalId }: { goalId: string }) {
   };
 
   // Evidence prompt phase — capture evidence before celebration
-  if (phase === 'evidence-prompt') {
+  if (phase === "evidence-prompt") {
     return (
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View
@@ -232,7 +255,7 @@ function CompletionContent({ goalId }: { goalId: string }) {
             accessibilityLabel={`Almost there! Capture evidence for ${goal.title}`}
           >
             <View style={styles.iconContainer} accessibilityElementsHidden>
-              <Text style={styles.iconEmoji}>{'\u{1F3C6}'}</Text>
+              <Text style={styles.iconEmoji}>{"\u{1F3C6}"}</Text>
             </View>
             <Text
               variant="headline"
@@ -246,10 +269,7 @@ function CompletionContent({ goalId }: { goalId: string }) {
             </Text>
 
             {/* Inline text input — one-tap accessible */}
-            <View
-              style={styles.inlineNoteContainer}
-              accessible={false}
-            >
+            <View style={styles.inlineNoteContainer} accessible={false}>
               <Text variant="label" style={styles.inlineNoteLabel}>
                 Write about what you accomplished
               </Text>
@@ -281,7 +301,9 @@ function CompletionContent({ goalId }: { goalId: string }) {
                 Or capture another way
               </Text>
               <View style={styles.evidenceChipRow}>
-                {EVIDENCE_OPTIONS.filter((opt) => opt.type !== EvidenceType.text).map((opt) => (
+                {EVIDENCE_OPTIONS.filter(
+                  (opt) => opt.type !== EvidenceType.text,
+                ).map((opt) => (
                   <Button
                     key={opt.type}
                     label={`${opt.icon} ${opt.label}`}
@@ -301,7 +323,10 @@ function CompletionContent({ goalId }: { goalId: string }) {
   // Celebration phase — evidence exists, badge being created
   return (
     <View style={{ flex: 1 }}>
-      <Confetti visible={showConfetti} onComplete={() => setShowConfetti(false)} />
+      <Confetti
+        visible={showConfetti}
+        onComplete={() => setShowConfetti(false)}
+      />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View
           style={styles.card}
@@ -317,7 +342,7 @@ function CompletionContent({ goalId }: { goalId: string }) {
                 resizeMode="contain"
               />
             ) : (
-              <Text style={styles.iconEmoji}>{'\u{1F3AF}'}</Text>
+              <Text style={styles.iconEmoji}>{"\u{1F3AF}"}</Text>
             )}
           </View>
           <Text
@@ -335,12 +360,12 @@ function CompletionContent({ goalId }: { goalId: string }) {
             <Button
               label="Add Final Evidence"
               onPress={handleAddEvidence}
-              variant={hasGoalEvidence ? 'secondary' : 'primary'}
+              variant={hasGoalEvidence ? "secondary" : "primary"}
             />
             <Button
               label="View Your Journey →"
               onPress={handleViewJourney}
-              variant={hasGoalEvidence ? 'primary' : 'secondary'}
+              variant={hasGoalEvidence ? "primary" : "secondary"}
             />
             {isCompleted && (
               <Button
@@ -360,29 +385,35 @@ function CompletionContent({ goalId }: { goalId: string }) {
               accessibilityLabel="Creating your badge..."
             >
               <ActivityIndicator size="small" />
-              <Text variant="label" style={styles.badgeStatusText}>Creating your badge…</Text>
+              <Text variant="label" style={styles.badgeStatusText}>
+                Creating your badge…
+              </Text>
             </View>
           )}
 
-          {badgeStatus === 'no-key' && (
+          {badgeStatus === "no-key" && (
             <View
               style={styles.badgeStatus}
               accessible
               accessibilityRole="alert"
               accessibilityLabel="Badge could not be created: signing key unavailable"
             >
-              <Text variant="label" style={styles.badgeStatusText}>Badge signing key unavailable</Text>
+              <Text variant="label" style={styles.badgeStatusText}>
+                Badge signing key unavailable
+              </Text>
             </View>
           )}
 
-          {badgeStatus === 'error' && badgeError && (
+          {badgeStatus === "error" && badgeError && (
             <View
               style={styles.badgeStatus}
               accessible
               accessibilityRole="alert"
               accessibilityLabel={`Badge creation failed: ${badgeError}`}
             >
-              <Text variant="label" style={styles.badgeStatusText}>Badge creation failed: {badgeError}</Text>
+              <Text variant="label" style={styles.badgeStatusText}>
+                Badge creation failed: {badgeError}
+              </Text>
             </View>
           )}
 
@@ -392,19 +423,23 @@ function CompletionContent({ goalId }: { goalId: string }) {
                 Goal Evidence Added
               </Text>
               {goalEvidenceRows.map((ev) => {
-                const evType = validateEvidenceType(ev.type ?? 'file');
-                const icon = EVIDENCE_TYPE_ICONS[evType] ?? '\u{1F4C4}';
+                const evType = validateEvidenceType(ev.type ?? "file");
+                const icon = EVIDENCE_TYPE_ICONS[evType] ?? "\u{1F4C4}";
                 return (
                   <View
                     key={ev.id}
                     style={styles.evidenceItem}
                     accessible
                     accessibilityRole="text"
-                    accessibilityLabel={`${ev.type ?? 'file'} evidence: ${ev.description ?? ev.type}`}
+                    accessibilityLabel={`${ev.type ?? "file"} evidence: ${ev.description ?? ev.type}`}
                   >
                     <Text style={styles.evidenceIcon}>{icon}</Text>
-                    <Text variant="body" style={styles.evidenceLabel} numberOfLines={1}>
-                      {ev.description ?? ev.type ?? 'Evidence'}
+                    <Text
+                      variant="body"
+                      style={styles.evidenceLabel}
+                      numberOfLines={1}
+                    >
+                      {ev.description ?? ev.type ?? "Evidence"}
                     </Text>
                   </View>
                 );
@@ -432,10 +467,17 @@ export function CompletionFlowScreen({ route }: CompletionFlowScreenProps) {
   const { theme } = useUnistyles();
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.colors.background }}>
+    <SafeAreaView
+      edges={["top"]}
+      style={{ flex: 1, backgroundColor: theme.colors.background }}
+    >
       <View style={styles.topBar}>
         <IconButton
-          icon={<Text variant="body" style={styles.backIcon}>{'<'}</Text>}
+          icon={
+            <Text variant="body" style={styles.backIcon}>
+              {"<"}
+            </Text>
+          }
           onPress={() => navigation.goBack()}
           accessibilityLabel="Go back"
           size="sm"
@@ -445,7 +487,9 @@ export function CompletionFlowScreen({ route }: CompletionFlowScreenProps) {
       </View>
       <ErrorBoundary>
         <Suspense
-          fallback={<ActivityIndicator style={styles.loadingIndicator} size="large" />}
+          fallback={
+            <ActivityIndicator style={styles.loadingIndicator} size="large" />
+          }
         >
           <CompletionContent goalId={route.params.goalId} />
         </Suspense>

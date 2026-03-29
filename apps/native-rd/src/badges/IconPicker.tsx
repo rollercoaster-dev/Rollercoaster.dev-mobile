@@ -6,16 +6,16 @@
  * selecting icons with category tabs, search, and weight selection.
  */
 
-import React, { useCallback, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
-import type { IconWeight } from 'phosphor-react-native';
+import React, { useCallback, useState } from "react";
+import { Pressable, Text, View } from "react-native";
+import { StyleSheet, useUnistyles } from "react-native-unistyles";
+import type { IconWeight } from "phosphor-react-native";
 
-import { getIconComponent } from './iconRegistry';
-import { iconNameToLabel } from './iconIndex';
-import { IconPickerModal } from './IconPickerModal';
-import type { BadgeIconWeight } from './types';
-import { shadowStyle } from '../styles/shadows';
+import { getIconComponent } from "./iconRegistry";
+import { iconNameToLabel } from "./iconIndex";
+import { IconPickerModal } from "./IconPickerModal";
+import type { BadgeIconWeight } from "./types";
+import { shadowStyle } from "../styles/shadows";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -52,7 +52,7 @@ export function IconPicker({
   onSelectIcon,
   onSelectWeight,
   accentColor,
-  testID = 'icon-picker',
+  testID = "icon-picker",
 }: IconPickerProps) {
   const { theme } = useUnistyles();
   const [modalVisible, setModalVisible] = useState(false);
@@ -81,7 +81,9 @@ export function IconPicker({
           },
         ]}
       >
-        <View style={[styles.triggerIconBox, { backgroundColor: resolvedAccent }]}>
+        <View
+          style={[styles.triggerIconBox, { backgroundColor: resolvedAccent }]}
+        >
           {IconComponent && (
             <IconComponent
               size={TRIGGER_ICON_SIZE}
@@ -126,19 +128,19 @@ export function IconPicker({
 
 const styles = StyleSheet.create((theme) => ({
   trigger: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.space[3],
     padding: theme.space[3],
     borderWidth: theme.borderWidth.thick,
     borderRadius: 0,
-    ...shadowStyle(theme, 'hardSm'),
+    ...shadowStyle(theme, "hardSm"),
   },
   triggerIconBox: {
     width: 52,
     height: 52,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.border,
     borderRadius: 0,
@@ -149,7 +151,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   triggerLabel: {
     ...theme.textStyles.body,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   triggerHint: {
     ...theme.textStyles.caption,

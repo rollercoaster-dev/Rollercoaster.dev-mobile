@@ -1,16 +1,22 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Text as RNText, TextInput, Pressable, AccessibilityInfo } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { useUnistyles } from 'react-native-unistyles';
-import { useAnimationPref } from '../../hooks/useAnimationPref';
-import { triggerDragStart, triggerDragDrop } from '../../utils/haptics';
-import { IconButton } from '../IconButton';
-import { Text } from '../Text';
-import { EvidenceTypePicker } from '../EvidenceTypePicker';
-import { EvidenceType } from '../../db';
-import type { EvidenceTypeValue } from '../../types/evidence';
-import { DraggableStepItem } from './DraggableStepItem';
-import { styles } from './StepList.styles';
+import React, { useEffect, useRef, useState } from "react";
+import {
+  View,
+  Text as RNText,
+  TextInput,
+  Pressable,
+  AccessibilityInfo,
+} from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { useUnistyles } from "react-native-unistyles";
+import { useAnimationPref } from "../../hooks/useAnimationPref";
+import { triggerDragStart, triggerDragDrop } from "../../utils/haptics";
+import { IconButton } from "../IconButton";
+import { Text } from "../Text";
+import { EvidenceTypePicker } from "../EvidenceTypePicker";
+import { EvidenceType } from "../../db";
+import type { EvidenceTypeValue } from "../../types/evidence";
+import { DraggableStepItem } from "./DraggableStepItem";
+import { styles } from "./StepList.styles";
 
 export interface Step {
   id: string;
@@ -21,8 +27,15 @@ export interface Step {
 
 export interface StepListProps {
   steps: Step[];
-  onCreateStep?: (title: string, plannedEvidenceTypes: EvidenceTypeValue[]) => void;
-  onUpdateStep?: (id: string, title: string, plannedEvidenceTypes?: EvidenceTypeValue[]) => void;
+  onCreateStep?: (
+    title: string,
+    plannedEvidenceTypes: EvidenceTypeValue[],
+  ) => void;
+  onUpdateStep?: (
+    id: string,
+    title: string,
+    plannedEvidenceTypes?: EvidenceTypeValue[],
+  ) => void;
   onDeleteStep?: (id: string) => void;
   onReorderSteps?: (stepIds: string[]) => void;
 }
@@ -40,11 +53,15 @@ export function StepList({
   const { animationPref } = useAnimationPref();
 
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editText, setEditText] = useState('');
-  const [editPlannedTypes, setEditPlannedTypes] = useState<EvidenceTypeValue[]>([]);
+  const [editText, setEditText] = useState("");
+  const [editPlannedTypes, setEditPlannedTypes] = useState<EvidenceTypeValue[]>(
+    [],
+  );
   const editPlannedTypesRef = useRef<EvidenceTypeValue[]>([]);
-  const [newStepTitle, setNewStepTitle] = useState('');
-  const [newStepTypes, setNewStepTypes] = useState<EvidenceTypeValue[]>([EvidenceType.text as EvidenceTypeValue]);
+  const [newStepTitle, setNewStepTitle] = useState("");
+  const [newStepTypes, setNewStepTypes] = useState<EvidenceTypeValue[]>([
+    EvidenceType.text as EvidenceTypeValue,
+  ]);
   const newStepInputRef = useRef<TextInput>(null);
 
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -60,17 +77,19 @@ export function StepList({
       });
 
     const sub = AccessibilityInfo.addEventListener(
-      'screenReaderChanged',
+      "screenReaderChanged",
       setScreenReaderActive,
     );
     return () => sub.remove();
   }, []);
 
-  const showAccessibleControls = screenReaderActive || animationPref === 'none';
+  const showAccessibleControls = screenReaderActive || animationPref === "none";
 
   function startEditing(step: Step) {
     if (!onUpdateStep) return;
-    const types = step.plannedEvidenceTypes ?? [EvidenceType.text as EvidenceTypeValue];
+    const types = step.plannedEvidenceTypes ?? [
+      EvidenceType.text as EvidenceTypeValue,
+    ];
     setEditingId(step.id);
     setEditText(step.title);
     setEditPlannedTypes(types);
@@ -84,13 +103,19 @@ export function StepList({
       // Read from ref to get the latest value, even if onBlur fires before a pending setState
       const latestTypes = editPlannedTypesRef.current;
       const titleChanged = trimmed && trimmed !== currentStep?.title;
-      const typesChanged = JSON.stringify(latestTypes) !== JSON.stringify(currentStep?.plannedEvidenceTypes ?? []);
+      const typesChanged =
+        JSON.stringify(latestTypes) !==
+        JSON.stringify(currentStep?.plannedEvidenceTypes ?? []);
       if (titleChanged || typesChanged) {
-        onUpdateStep(editingId, trimmed || currentStep?.title || '', typesChanged ? latestTypes : undefined);
+        onUpdateStep(
+          editingId,
+          trimmed || currentStep?.title || "",
+          typesChanged ? latestTypes : undefined,
+        );
       }
     }
     setEditingId(null);
-    setEditText('');
+    setEditText("");
     setEditPlannedTypes([]);
     editPlannedTypesRef.current = [];
   }
@@ -107,18 +132,19 @@ export function StepList({
 
   function toggleNewStepType(type: EvidenceTypeValue) {
     setNewStepTypes((prev) =>
-      prev.includes(type)
-        ? prev.filter((t) => t !== type)
-        : [...prev, type],
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type],
     );
   }
 
   function handleNewStepSubmit() {
     const trimmed = newStepTitle.trim();
     if (trimmed && onCreateStep) {
-      const types = newStepTypes.length > 0 ? newStepTypes : [EvidenceType.text as EvidenceTypeValue];
+      const types =
+        newStepTypes.length > 0
+          ? newStepTypes
+          : [EvidenceType.text as EvidenceTypeValue];
       onCreateStep(trimmed, types);
-      setNewStepTitle('');
+      setNewStepTitle("");
       setNewStepTypes([EvidenceType.text as EvidenceTypeValue]);
     }
   }
@@ -132,12 +158,20 @@ export function StepList({
   function handleDragMove(translationY: number) {
     if (draggedIndex === null) return;
     const offset = Math.round(translationY / ITEM_HEIGHT);
-    const newIndex = Math.max(0, Math.min(steps.length - 1, draggedIndex + offset));
+    const newIndex = Math.max(
+      0,
+      Math.min(steps.length - 1, draggedIndex + offset),
+    );
     setHoverIndex(newIndex);
   }
 
   function handleDragEnd() {
-    if (draggedIndex !== null && hoverIndex !== null && draggedIndex !== hoverIndex && onReorderSteps) {
+    if (
+      draggedIndex !== null &&
+      hoverIndex !== null &&
+      draggedIndex !== hoverIndex &&
+      onReorderSteps
+    ) {
       const newOrder = [...steps];
       const [moved] = newOrder.splice(draggedIndex, 1);
       newOrder.splice(hoverIndex, 0, moved);
@@ -154,7 +188,10 @@ export function StepList({
   function handleMoveUp(index: number) {
     if (index <= 0 || !onReorderSteps) return;
     const newOrder = [...steps];
-    [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
+    [newOrder[index - 1], newOrder[index]] = [
+      newOrder[index],
+      newOrder[index - 1],
+    ];
     onReorderSteps(newOrder.map((s) => s.id));
     triggerDragDrop();
     AccessibilityInfo.announceForAccessibility(
@@ -165,7 +202,10 @@ export function StepList({
   function handleMoveDown(index: number) {
     if (index >= steps.length - 1 || !onReorderSteps) return;
     const newOrder = [...steps];
-    [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
+    [newOrder[index], newOrder[index + 1]] = [
+      newOrder[index + 1],
+      newOrder[index],
+    ];
     onReorderSteps(newOrder.map((s) => s.id));
     triggerDragDrop();
     AccessibilityInfo.announceForAccessibility(
@@ -174,57 +214,70 @@ export function StepList({
   }
 
   const canDrag = onReorderSteps && steps.length > 1 && editingId === null;
-  const stepCountLabel = `${steps.length} step${steps.length !== 1 ? 's' : ''}`;
+  const stepCountLabel = `${steps.length} step${steps.length !== 1 ? "s" : ""}`;
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <RNText style={styles.headerLabel} accessibilityRole="header">Steps</RNText>
-        <RNText
-          style={styles.count}
-          accessibilityLabel={stepCountLabel}
-        >
+        <RNText style={styles.headerLabel} accessibilityRole="header">
+          Steps
+        </RNText>
+        <RNText style={styles.count} accessibilityLabel={stepCountLabel}>
           {stepCountLabel}
         </RNText>
       </View>
 
       <GestureHandlerRootView style={styles.stepItems}>
         {steps.map((step, index) => {
-          const editContent = editingId === step.id ? (
-            <View>
-              <View style={styles.editRow}>
-                <RNText style={styles.dragHandle} accessibilityElementsHidden importantForAccessibility="no">≡</RNText>
-                <TextInput
-                  style={styles.editInput}
-                  value={editText}
-                  onChangeText={setEditText}
-                  onSubmitEditing={commitEdit}
-                  onBlur={commitEdit}
-                  autoFocus
-                  returnKeyType="done"
-                  placeholderTextColor={theme.colors.textMuted}
-                  selectTextOnFocus
-                  accessibilityLabel={`Edit step: ${step.title}`}
-                />
-                {onDeleteStep && (
-                  <IconButton
-                    icon={<Text variant="body" style={{ color: theme.colors.textMuted }}>✕</Text>}
-                    onPress={() => onDeleteStep(step.id)}
-                    size="sm"
-                    variant="ghost"
-                    accessibilityLabel={`Delete "${step.title}"`}
+          const editContent =
+            editingId === step.id ? (
+              <View>
+                <View style={styles.editRow}>
+                  <RNText
+                    style={styles.dragHandle}
+                    accessibilityElementsHidden
+                    importantForAccessibility="no"
+                  >
+                    ≡
+                  </RNText>
+                  <TextInput
+                    style={styles.editInput}
+                    value={editText}
+                    onChangeText={setEditText}
+                    onSubmitEditing={commitEdit}
+                    onBlur={commitEdit}
+                    autoFocus
+                    returnKeyType="done"
+                    placeholderTextColor={theme.colors.textMuted}
+                    selectTextOnFocus
+                    accessibilityLabel={`Edit step: ${step.title}`}
                   />
-                )}
+                  {onDeleteStep && (
+                    <IconButton
+                      icon={
+                        <Text
+                          variant="body"
+                          style={{ color: theme.colors.textMuted }}
+                        >
+                          ✕
+                        </Text>
+                      }
+                      onPress={() => onDeleteStep(step.id)}
+                      size="sm"
+                      variant="ghost"
+                      accessibilityLabel={`Delete "${step.title}"`}
+                    />
+                  )}
+                </View>
+                <View style={styles.evidencePickerRow}>
+                  <EvidenceTypePicker
+                    selectedTypes={editPlannedTypes}
+                    onToggleType={toggleEditType}
+                    label="Evidence types"
+                  />
+                </View>
               </View>
-              <View style={styles.evidencePickerRow}>
-                <EvidenceTypePicker
-                  selectedTypes={editPlannedTypes}
-                  onToggleType={toggleEditType}
-                  label="Evidence types"
-                />
-              </View>
-            </View>
-          ) : null;
+            ) : null;
 
           if (canDrag) {
             return (
@@ -234,7 +287,9 @@ export function StepList({
                 index={index}
                 isBeingDragged={draggedIndex === index}
                 onLabelPress={onUpdateStep ? startEditing : undefined}
-                onDeleteStep={onDeleteStep ? () => onDeleteStep(step.id) : undefined}
+                onDeleteStep={
+                  onDeleteStep ? () => onDeleteStep(step.id) : undefined
+                }
                 onDragStart={handleDragStart}
                 onDragMove={handleDragMove}
                 onDragEnd={handleDragEnd}
@@ -256,19 +311,36 @@ export function StepList({
               ) : (
                 <View>
                   <View style={styles.stepRow}>
-                    <RNText style={styles.dragHandle} accessibilityElementsHidden importantForAccessibility="no">≡</RNText>
+                    <RNText
+                      style={styles.dragHandle}
+                      accessibilityElementsHidden
+                      importantForAccessibility="no"
+                    >
+                      ≡
+                    </RNText>
                     <Pressable
                       style={styles.stepContent}
-                      onPress={onUpdateStep ? () => startEditing(step) : undefined}
+                      onPress={
+                        onUpdateStep ? () => startEditing(step) : undefined
+                      }
                       accessibilityRole="button"
                       accessibilityLabel={step.title}
-                      accessibilityHint={onUpdateStep ? 'Tap to edit step title' : undefined}
+                      accessibilityHint={
+                        onUpdateStep ? "Tap to edit step title" : undefined
+                      }
                     >
                       <RNText style={styles.stepTitleText}>{step.title}</RNText>
                     </Pressable>
                     {onDeleteStep && (
                       <IconButton
-                        icon={<Text variant="body" style={{ color: theme.colors.textMuted }}>✕</Text>}
+                        icon={
+                          <Text
+                            variant="body"
+                            style={{ color: theme.colors.textMuted }}
+                          >
+                            ✕
+                          </Text>
+                        }
                         onPress={() => onDeleteStep(step.id)}
                         size="sm"
                         variant="ghost"
@@ -276,14 +348,15 @@ export function StepList({
                       />
                     )}
                   </View>
-                  {step.plannedEvidenceTypes && step.plannedEvidenceTypes.length > 0 && (
-                    <View style={styles.evidenceIconsRow}>
-                      <EvidenceTypePicker
-                        selectedTypes={step.plannedEvidenceTypes}
-                        compact
-                      />
-                    </View>
-                  )}
+                  {step.plannedEvidenceTypes &&
+                    step.plannedEvidenceTypes.length > 0 && (
+                      <View style={styles.evidenceIconsRow}>
+                        <EvidenceTypePicker
+                          selectedTypes={step.plannedEvidenceTypes}
+                          compact
+                        />
+                      </View>
+                    )}
                 </View>
               )}
             </View>

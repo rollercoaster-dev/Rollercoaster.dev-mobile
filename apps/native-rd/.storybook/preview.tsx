@@ -1,9 +1,9 @@
-import type { Preview } from '@storybook/react';
-import React from 'react';
-import { Platform, ScrollView } from 'react-native';
-import { StyleSheet, UnistylesRuntime } from 'react-native-unistyles';
-import { themeNames, type ThemeName } from '../src/themes';
-import { EvoluAppProvider } from '../src/db/evolu';
+import type { Preview } from "@storybook/react";
+import React from "react";
+import { Platform, ScrollView } from "react-native";
+import { StyleSheet, UnistylesRuntime } from "react-native-unistyles";
+import { themeNames, type ThemeName } from "../src/themes";
+import { EvoluAppProvider } from "../src/db/evolu";
 
 const FONT_FACE_CSS = `
 @font-face { font-family: 'Anybody'; font-weight: 400; font-display: swap; src: url('/fonts/anybody-400.woff2') format('woff2'); }
@@ -25,8 +25,8 @@ const FONT_FACE_CSS = `
 @font-face { font-family: 'Lexend'; font-weight: 700; font-display: swap; src: url('/fonts/Lexend-Bold.woff2') format('woff2'); }
 `;
 
-if (Platform.OS === 'web' && typeof document !== 'undefined') {
-  const style = document.createElement('style');
+if (Platform.OS === "web" && typeof document !== "undefined") {
+  const style = document.createElement("style");
   style.textContent = FONT_FACE_CSS;
   document.head.appendChild(style);
 }
@@ -43,7 +43,10 @@ const themeDecorator = (Story: React.ComponentType, context: any) => {
 
   return (
     <EvoluAppProvider>
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+      >
         <Story />
       </ScrollView>
     </EvoluAppProvider>
@@ -65,17 +68,17 @@ const preview: Preview = {
   decorators: [themeDecorator],
   globalTypes: {
     theme: {
-      name: 'Theme',
-      description: 'Select a theme combination',
+      name: "Theme",
+      description: "Select a theme combination",
       toolbar: {
-        icon: 'paintbrush',
+        icon: "paintbrush",
         items: themeNames.map((name) => ({ value: name, title: name })),
         dynamicTitle: true,
       },
     },
   },
   initialGlobals: {
-    theme: 'light-default',
+    theme: "light-default",
   },
 };
 

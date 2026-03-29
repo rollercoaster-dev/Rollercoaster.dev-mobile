@@ -1,9 +1,9 @@
-import { StyleSheet } from 'react-native-unistyles';
+import { StyleSheet } from "react-native-unistyles";
 
 export const styles = StyleSheet.create((theme) => ({
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.space[3],
     minHeight: 48,
   },
@@ -13,8 +13,8 @@ export const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius.sm,
     borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   boxChecked: {
     backgroundColor: theme.colors.accentPrimary,
@@ -35,7 +35,7 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.text,
   },
   labelChecked: {
-    textDecorationLine: 'line-through',
+    textDecorationLine: "line-through",
     color: theme.colors.textSecondary,
   },
   boxDisabled: {

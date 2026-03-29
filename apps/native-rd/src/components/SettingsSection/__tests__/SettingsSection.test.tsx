@@ -1,10 +1,10 @@
-import React from 'react';
-import { Text } from 'react-native';
-import { renderWithProviders, screen } from '../../../__tests__/test-utils';
-import { SettingsSection } from '../SettingsSection';
+import React from "react";
+import { Text } from "react-native";
+import { renderWithProviders, screen } from "../../../__tests__/test-utils";
+import { SettingsSection } from "../SettingsSection";
 
-describe('SettingsSection', () => {
-  it('inserts n-1 separators for n children', () => {
+describe("SettingsSection", () => {
+  it("inserts n-1 separators for n children", () => {
     renderWithProviders(
       <SettingsSection title="Section">
         <Text>A</Text>
@@ -13,22 +13,22 @@ describe('SettingsSection', () => {
       </SettingsSection>,
     );
     // 3 children -> 2 separators
-    expect(screen.getAllByTestId('settings-separator')).toHaveLength(2);
+    expect(screen.getAllByTestId("settings-separator")).toHaveLength(2);
   });
 
-  it('renders no separator for a single child', () => {
+  it("renders no separator for a single child", () => {
     renderWithProviders(
       <SettingsSection title="Section">
         <Text>Only</Text>
       </SettingsSection>,
     );
-    expect(screen.queryAllByTestId('settings-separator')).toHaveLength(0);
+    expect(screen.queryAllByTestId("settings-separator")).toHaveLength(0);
   });
 
-  it('renders no separator with zero children', () => {
+  it("renders no separator with zero children", () => {
     renderWithProviders(
       <SettingsSection title="Section">{[]}</SettingsSection>,
     );
-    expect(screen.queryAllByTestId('settings-separator')).toHaveLength(0);
+    expect(screen.queryAllByTestId("settings-separator")).toHaveLength(0);
   });
 });

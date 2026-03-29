@@ -1,6 +1,6 @@
-import { StyleSheet } from 'react-native-unistyles';
-import { shadowStyle } from '../../styles/shadows';
-import { palette } from '../../themes/palette';
+import { StyleSheet } from "react-native-unistyles";
+import { shadowStyle } from "../../styles/shadows";
+import { palette } from "../../themes/palette";
 
 export const styles = StyleSheet.create((theme) => ({
   wrapper: {
@@ -14,12 +14,12 @@ export const styles = StyleSheet.create((theme) => ({
     fontSize: theme.size.xs,
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.warning,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: theme.letterSpacing.wide,
     fontFamily: theme.fontFamily.body,
   },
   title: {
-    fontSize: theme.size['2xl'],
+    fontSize: theme.size["2xl"],
     fontWeight: theme.fontWeight.black,
     color: theme.colors.text,
     fontFamily: theme.fontFamily.headline,
@@ -31,12 +31,12 @@ export const styles = StyleSheet.create((theme) => ({
     lineHeight: theme.lineHeight.sm,
   },
   evidenceBadgeWrapper: {
-    position: 'relative' as const,
-    alignSelf: 'flex-start' as const,
+    position: "relative" as const,
+    alignSelf: "flex-start" as const,
   },
   evidenceBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.space[1],
     backgroundColor: theme.colors.accentPurpleLight,
     borderWidth: theme.borderWidth.thin,
@@ -46,10 +46,10 @@ export const styles = StyleSheet.create((theme) => ({
     paddingVertical: theme.space[1],
     minHeight: 44,
     minWidth: 44,
-    ...shadowStyle(theme, 'hardSm'),
+    ...shadowStyle(theme, "hardSm"),
   },
   evidenceFlash: {
-    position: 'absolute' as const,
+    position: "absolute" as const,
     top: 0,
     left: 0,
     right: 0,

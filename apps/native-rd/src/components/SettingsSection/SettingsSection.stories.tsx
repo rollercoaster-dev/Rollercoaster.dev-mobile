@@ -1,12 +1,12 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import React, { useState } from 'react';
-import { View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
-import { SettingsRow } from '../SettingsRow';
-import { SettingsSection } from './SettingsSection';
+import type { Meta, StoryObj } from "@storybook/react";
+import React, { useState } from "react";
+import { View } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
+import { SettingsRow } from "../SettingsRow";
+import { SettingsSection } from "./SettingsSection";
 
 const meta: Meta<typeof SettingsSection> = {
-  title: 'SettingsSection',
+  title: "SettingsSection",
   component: SettingsSection,
 };
 
@@ -16,7 +16,12 @@ type Story = StoryObj<typeof SettingsSection>;
 
 function DarkModeToggle() {
   const [on, setOn] = useState(false);
-  return <SettingsRow label="Dark Mode" toggle={{ value: on, onValueChange: setOn }} />;
+  return (
+    <SettingsRow
+      label="Dark Mode"
+      toggle={{ value: on, onValueChange: setOn }}
+    />
+  );
 }
 
 export const SettingsPage: Story = {

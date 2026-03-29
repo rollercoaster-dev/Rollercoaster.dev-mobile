@@ -1,18 +1,22 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Pressable, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import { CameraView, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
-import { useVideoPlayer, VideoView } from 'expo-video';
-import { Paths, File, Directory } from 'expo-file-system';
-import { Text } from '../../components/Text';
-import { Card } from '../../components/Card';
-import { Button } from '../../components/Button';
-import { IconButton } from '../../components/IconButton';
-import { createEvidence, EvidenceType } from '../../db';
-import type { GoalId, StepId } from '../../db';
-import type { CaptureVideoScreenProps } from '../../navigation/types';
-import { styles } from './CaptureVideoScreen.styles';
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { View, Pressable, Alert } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
+import {
+  CameraView,
+  useCameraPermissions,
+  useMicrophonePermissions,
+} from "expo-camera";
+import { useVideoPlayer, VideoView } from "expo-video";
+import { Paths, File, Directory } from "expo-file-system";
+import { Text } from "../../components/Text";
+import { Card } from "../../components/Card";
+import { Button } from "../../components/Button";
+import { IconButton } from "../../components/IconButton";
+import { createEvidence, EvidenceType } from "../../db";
+import type { GoalId, StepId } from "../../db";
+import type { CaptureVideoScreenProps } from "../../navigation/types";
+import { styles } from "./CaptureVideoScreen.styles";
 
 /** Maximum recording duration in seconds */
 const MAX_DURATION_SECONDS = 60;
@@ -21,10 +25,10 @@ const MAX_DURATION_SECONDS = 60;
 function formatDuration(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
-  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
 }
 
-type CameraFacing = 'front' | 'back';
+type CameraFacing = "front" | "back";
 
 function Preview({ uri, elapsed }: { uri: string; elapsed: number }) {
   const player = useVideoPlayer(uri, (p) => {
@@ -55,7 +59,7 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [recordedUri, setRecordedUri] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
-  const [facing, setFacing] = useState<CameraFacing>('back');
+  const [facing, setFacing] = useState<CameraFacing>("back");
   const [isSaving, setIsSaving] = useState(false);
 
   // Clean up timer on unmount
@@ -94,8 +98,11 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
         setRecordedUri(result.uri);
       }
     } catch (error) {
-      console.error('[CaptureVideoScreen] Recording failed:', error);
-      Alert.alert('Recording Failed', 'Could not record video. Please try again.');
+      console.error("[CaptureVideoScreen] Recording failed:", error);
+      Alert.alert(
+        "Recording Failed",
+        "Could not record video. Please try again.",
+      );
     } finally {
       setIsRecording(false);
       if (timerRef.current) {
@@ -119,7 +126,7 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
   }, [isRecording, handleStartRecording, handleStopRecording]);
 
   const handleFlipCamera = useCallback(() => {
-    setFacing((prev) => (prev === 'back' ? 'front' : 'back'));
+    setFacing((prev) => (prev === "back" ? "front" : "back"));
   }, []);
 
   const handleRetake = useCallback(() => {
@@ -134,7 +141,7 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
     try {
       // Move video to app's document directory for persistent storage
       const filename = `video_${Date.now()}.mp4`;
-      const evidenceDir = new Directory(Paths.document, 'evidence');
+      const evidenceDir = new Directory(Paths.document, "evidence");
 
       // Ensure directory exists
       if (!evidenceDir.exists) {
@@ -164,8 +171,8 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
 
       navigation.goBack();
     } catch (error) {
-      console.error('[CaptureVideoScreen] Save failed:', error);
-      Alert.alert('Save Failed', 'Could not save video. Please try again.');
+      console.error("[CaptureVideoScreen] Save failed:", error);
+      Alert.alert("Save Failed", "Could not save video. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -181,10 +188,14 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
   const permissionsLoaded = cameraPermission !== null && micPermission !== null;
 
   return (
-    <SafeAreaView edges={['top']} style={styles.container}>
+    <SafeAreaView edges={["top"]} style={styles.container}>
       <View style={styles.topBar}>
         <IconButton
-          icon={<Text variant="body" style={styles.backIcon}>{'<'}</Text>}
+          icon={
+            <Text variant="body" style={styles.backIcon}>
+              {"<"}
+            </Text>
+          }
           onPress={() => navigation.goBack()}
           accessibilityLabel="Go back"
           size="sm"
@@ -202,11 +213,12 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
       ) : !hasPermissions ? (
         <View style={styles.permissionContainer}>
           <Card>
-            <Text variant="headline" style={{ textAlign: 'center' }}>
+            <Text variant="headline" style={{ textAlign: "center" }}>
               Camera Access Needed
             </Text>
             <Text variant="body" style={styles.permissionText}>
-              To record video evidence, this app needs access to your camera and microphone.
+              To record video evidence, this app needs access to your camera and
+              microphone.
             </Text>
             <Button
               label="Grant Access"
@@ -234,7 +246,7 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
             </View>
             <View style={styles.previewButton}>
               <Button
-                label={isSaving ? 'Saving...' : 'Use Video'}
+                label={isSaving ? "Saving..." : "Use Video"}
                 variant="primary"
                 onPress={handleSave}
               />
@@ -278,10 +290,10 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
               disabled={isRecording}
               accessible
               accessibilityRole="button"
-              accessibilityLabel={`Switch to ${facing === 'back' ? 'front' : 'back'} camera`}
+              accessibilityLabel={`Switch to ${facing === "back" ? "front" : "back"} camera`}
               accessibilityState={{ disabled: isRecording }}
             >
-              <Text variant="body">{'↻'}</Text>
+              <Text variant="body">{"↻"}</Text>
             </Pressable>
 
             <Pressable
@@ -289,7 +301,9 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
               onPress={handleToggleRecording}
               accessible
               accessibilityRole="button"
-              accessibilityLabel={isRecording ? 'Stop recording' : 'Start recording'}
+              accessibilityLabel={
+                isRecording ? "Stop recording" : "Start recording"
+              }
             >
               <View
                 style={

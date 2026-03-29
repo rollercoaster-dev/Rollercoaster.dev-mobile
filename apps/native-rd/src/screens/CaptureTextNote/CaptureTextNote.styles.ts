@@ -1,5 +1,5 @@
-import { StyleSheet } from 'react-native-unistyles';
-import { shadowStyle } from '../../styles/shadows';
+import { StyleSheet } from "react-native-unistyles";
+import { shadowStyle } from "../../styles/shadows";
 
 export const styles = StyleSheet.create((theme) => ({
   container: {
@@ -7,9 +7,9 @@ export const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.background,
   },
   topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[2],
   },
@@ -19,7 +19,7 @@ export const styles = StyleSheet.create((theme) => ({
   },
   saveButton: {
     minWidth: 48,
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
   },
   content: {
     flex: 1,
@@ -40,16 +40,16 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.text,
     backgroundColor: theme.colors.backgroundSecondary,
     minHeight: 200,
-    textAlignVertical: 'top',
-    ...shadowStyle(theme, 'hardMd'),
+    textAlignVertical: "top",
+    ...shadowStyle(theme, "hardMd"),
   },
   textInputFocused: {
     borderColor: theme.colors.focusRing,
   },
   footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[3],
   },

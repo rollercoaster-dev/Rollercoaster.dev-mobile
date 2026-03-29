@@ -1,10 +1,10 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import React from 'react';
-import { ScrollView, Text, View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
-import { BadgeRenderer } from '../../badges/BadgeRenderer';
-import { BadgeShape, BadgeFrame, BadgeIconWeight } from '../../badges/types';
-import type { BadgeDesign } from '../../badges/types';
+import type { Meta, StoryObj } from "@storybook/react";
+import React from "react";
+import { ScrollView, Text, View } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
+import { BadgeRenderer } from "../../badges/BadgeRenderer";
+import { BadgeShape, BadgeFrame, BadgeIconWeight } from "../../badges/types";
+import type { BadgeDesign } from "../../badges/types";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -14,11 +14,11 @@ function makeDesign(overrides: Partial<BadgeDesign> = {}): BadgeDesign {
   return {
     shape: BadgeShape.circle,
     frame: BadgeFrame.none,
-    color: '#a78bfa',
-    iconName: 'Trophy',
+    color: "#a78bfa",
+    iconName: "Trophy",
     iconWeight: BadgeIconWeight.regular,
-    title: 'Sample Badge',
-    centerMode: 'icon' as const,
+    title: "Sample Badge",
+    centerMode: "icon" as const,
     ...overrides,
   };
 }
@@ -28,11 +28,11 @@ function makeDesign(overrides: Partial<BadgeDesign> = {}): BadgeDesign {
 // ---------------------------------------------------------------------------
 
 const meta: Meta<typeof BadgeRenderer> = {
-  title: 'Badges/BadgeRenderer',
+  title: "Badges/BadgeRenderer",
   component: BadgeRenderer,
   argTypes: {
-    size: { control: { type: 'number', min: 64, max: 512, step: 16 } },
-    showShadow: { control: 'boolean' },
+    size: { control: { type: "number", min: 64, max: 512, step: 16 } },
+    showShadow: { control: "boolean" },
   },
   args: {
     design: makeDesign(),
@@ -57,60 +57,60 @@ const SHOWCASE: { design: BadgeDesign; label: string }[] = [
   {
     design: makeDesign({
       shape: BadgeShape.circle,
-      color: '#a78bfa',
-      iconName: 'Trophy',
-      title: 'Achievement',
+      color: "#a78bfa",
+      iconName: "Trophy",
+      title: "Achievement",
     }),
-    label: 'Circle / Trophy',
+    label: "Circle / Trophy",
   },
   {
     design: makeDesign({
       shape: BadgeShape.shield,
-      color: '#34d399',
-      iconName: 'ShieldCheck',
-      title: 'Protected',
+      color: "#34d399",
+      iconName: "ShieldCheck",
+      title: "Protected",
     }),
-    label: 'Shield / ShieldCheck',
+    label: "Shield / ShieldCheck",
   },
   {
     design: makeDesign({
       shape: BadgeShape.hexagon,
-      color: '#fbbf24',
-      iconName: 'Star',
+      color: "#fbbf24",
+      iconName: "Star",
       iconWeight: BadgeIconWeight.fill,
-      title: 'Star Hex',
+      title: "Star Hex",
     }),
-    label: 'Hexagon / Star',
+    label: "Hexagon / Star",
   },
   {
     design: makeDesign({
       shape: BadgeShape.roundedRect,
-      color: '#06b6d4',
-      iconName: 'Code',
+      color: "#06b6d4",
+      iconName: "Code",
       iconWeight: BadgeIconWeight.bold,
-      title: 'Developer',
+      title: "Developer",
     }),
-    label: 'RoundedRect / Code',
+    label: "RoundedRect / Code",
   },
   {
     design: makeDesign({
       shape: BadgeShape.star,
-      color: '#f97316',
-      iconName: 'Fire',
+      color: "#f97316",
+      iconName: "Fire",
       iconWeight: BadgeIconWeight.fill,
-      title: 'On Fire',
+      title: "On Fire",
     }),
-    label: 'Star / Fire',
+    label: "Star / Fire",
   },
   {
     design: makeDesign({
       shape: BadgeShape.diamond,
-      color: '#ec4899',
-      iconName: 'Heart',
+      color: "#ec4899",
+      iconName: "Heart",
       iconWeight: BadgeIconWeight.fill,
-      title: 'Beloved',
+      title: "Beloved",
     }),
-    label: 'Diamond / Heart',
+    label: "Diamond / Heart",
   },
 ];
 
@@ -149,14 +149,14 @@ function AllConfigurations() {
 
       <Text style={styles.heading}>Icon Weights</Text>
       <View style={styles.row}>
-        {(['thin', 'light', 'regular', 'bold', 'fill', 'duotone'] as const).map(
+        {(["thin", "light", "regular", "bold", "fill", "duotone"] as const).map(
           (weight) => (
             <View key={weight} style={styles.cell}>
               <BadgeRenderer
                 design={makeDesign({
                   iconWeight: weight,
-                  iconName: 'Star',
-                  color: '#8b5cf6',
+                  iconName: "Star",
+                  color: "#8b5cf6",
                 })}
                 size={100}
               />
@@ -168,13 +168,13 @@ function AllConfigurations() {
 
       <Text style={styles.heading}>Dark Fills (White Icon)</Text>
       <View style={styles.row}>
-        {['#1a1a2e', '#16213e', '#0f3460', '#1b1b2f', '#2c2c54'].map(
+        {["#1a1a2e", "#16213e", "#0f3460", "#1b1b2f", "#2c2c54"].map(
           (color, i) => (
             <View key={color} style={styles.cell}>
               <BadgeRenderer
                 design={makeDesign({
                   color,
-                  iconName: ['Crown', 'Rocket', 'Brain', 'Book', 'Medal'][i],
+                  iconName: ["Crown", "Rocket", "Brain", "Book", "Medal"][i],
                   shape: Object.values(BadgeShape)[i % 6],
                 })}
                 size={100}
@@ -207,18 +207,18 @@ const styles = StyleSheet.create((theme) => ({
     marginBottom: theme.space[4],
   },
   row: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: theme.space[6],
   },
   sizeRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: theme.space[4],
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
   },
   cell: {
-    alignItems: 'center',
+    alignItems: "center",
     gap: theme.space[2],
   },
   label: {

@@ -11,19 +11,19 @@ Analyzes codebase domains and assigns grades (A/B/C/D/F). Updates `docs/quality/
 
 ### Input
 
-| Field    | Type     | Required | Description                                    |
-| -------- | -------- | -------- | ---------------------------------------------- |
-| `domains`| string[] | No       | Specific domains to score (default: all)       |
+| Field     | Type     | Required | Description                              |
+| --------- | -------- | -------- | ---------------------------------------- |
+| `domains` | string[] | No       | Specific domains to score (default: all) |
 
 ### Output
 
-| Field                    | Type   | Description                    |
-| ------------------------ | ------ | ------------------------------ |
-| `grades`                 | object | Domain-to-grade mapping        |
-| `grades[domain].grade`   | string | A / B / C / D / F              |
-| `grades[domain].detail`  | string | Human-readable detail          |
-| `regressions`            | array  | Domains where grade dropped    |
-| `issuesCreated`          | number | Regression issues filed        |
+| Field                   | Type   | Description                 |
+| ----------------------- | ------ | --------------------------- |
+| `grades`                | object | Domain-to-grade mapping     |
+| `grades[domain].grade`  | string | A / B / C / D / F           |
+| `grades[domain].detail` | string | Human-readable detail       |
+| `regressions`           | array  | Domains where grade dropped |
+| `issuesCreated`         | number | Regression issues filed     |
 
 ## When to Use
 
@@ -33,14 +33,14 @@ Analyzes codebase domains and assigns grades (A/B/C/D/F). Updates `docs/quality/
 
 ## Domains and Grading Criteria
 
-| Domain       | Metric                                          | A     | B    | C    | D/F   |
-| ------------ | ----------------------------------------------- | ----- | ---- | ---- | ----- |
-| Components   | % with full structure (index.ts + styles + test)| 100%  | 90%+ | 75%+ | <75%  |
-| Tests        | % of components with behavioral tests           | 100%  | 85%+ | 70%+ | <70%  |
-| Lint         | Error and warning count                         | Both 0| 0 err| <5 err| 5+ err|
-| Type Safety  | Typecheck error count                           | 0     | --   | --   | Any   |
-| Accessibility| a11y contract tests pass rate                   | All   | 1-2 fail| 3-5 fail| 6+ fail|
-| Screens      | % with E2E Maestro coverage                     | 100%  | 75%+ | 50%+ | <50%  |
+| Domain        | Metric                                           | A      | B        | C        | D/F     |
+| ------------- | ------------------------------------------------ | ------ | -------- | -------- | ------- |
+| Components    | % with full structure (index.ts + styles + test) | 100%   | 90%+     | 75%+     | <75%    |
+| Tests         | % of components with behavioral tests            | 100%   | 85%+     | 70%+     | <70%    |
+| Lint          | Error and warning count                          | Both 0 | 0 err    | <5 err   | 5+ err  |
+| Type Safety   | Typecheck error count                            | 0      | --       | --       | Any     |
+| Accessibility | a11y contract tests pass rate                    | All    | 1-2 fail | 3-5 fail | 6+ fail |
+| Screens       | % with E2E Maestro coverage                      | 100%   | 75%+     | 50%+     | <50%    |
 
 ## Workflow
 
@@ -53,6 +53,7 @@ ls -d src/components/*/
 ```
 
 For each component directory, check for:
+
 - `index.ts` or `index.tsx` (barrel export)
 - `*.styles.ts` (stylesheet)
 - Corresponding test file (co-located at `src/components/<Name>/__tests__/` or in `src/__tests__/components/`)
@@ -112,6 +113,7 @@ Apply the grading criteria table to produce a grade per domain.
 Read `docs/quality/grades.md` and parse the previous grades table.
 
 For any grade that dropped (e.g., A -> B, B -> C):
+
 1. Create a GitHub issue:
    ```bash
    gh issue create \
@@ -147,9 +149,9 @@ Regressions: <N> (issues created: <N>)
 
 ## Error Handling
 
-| Condition                | Behavior                              |
-| ------------------------ | ------------------------------------- |
-| Command fails            | Grade as F. Open regression issue: "quality: {domain} command failed — grade cannot be computed." |
-| grades.md doesn't exist  | Create it (first run)                 |
-| Issue creation fails     | Include in output: "Regression detected but issue not filed — create manually." Report `regressions` and `issuesCreated` counts separately so discrepancy is visible. |
-| Partial data             | Grade available domains, skip others  |
+| Condition               | Behavior                                                                                                                                                              |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Command fails           | Grade as F. Open regression issue: "quality: {domain} command failed — grade cannot be computed."                                                                     |
+| grades.md doesn't exist | Create it (first run)                                                                                                                                                 |
+| Issue creation fails    | Include in output: "Regression detected but issue not filed — create manually." Report `regressions` and `issuesCreated` counts separately so discrepancy is visible. |
+| Partial data            | Grade available domains, skip others                                                                                                                                  |

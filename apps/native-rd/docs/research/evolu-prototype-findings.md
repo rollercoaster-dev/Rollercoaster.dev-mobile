@@ -18,6 +18,7 @@ Evolu v7.4 runs successfully on Expo 54 (React Native 0.81, Hermes) with a dev b
 ## Setup Complexity
 
 ### Dependencies Added
+
 - `@evolu/common`, `@evolu/react`, `@evolu/react-native` — core Evolu
 - `expo-sqlite`, `expo-secure-store` — Expo native modules (auto-configured)
 - `react-native-quick-crypto` — crypto primitives (required, no Expo Go)
@@ -25,31 +26,35 @@ Evolu v7.4 runs successfully on Expo 54 (React Native 0.81, Hermes) with a dev b
 - 7× `set.prototype.*` polyfills — Hermes lacks Set prototype methods
 
 ### Babel Plugins Required
+
 - `@babel/plugin-transform-dynamic-import`
 - `@babel/plugin-transform-modules-commonjs`
 - `@babel/plugin-transform-explicit-resource-management`
 
 ### Polyfills Required (Hermes)
+
 - **Set prototype methods** (difference, intersection, etc.) — must import `/auto` subpath to actually shim
 - **AbortSignal.any / AbortSignal.timeout** — inline polyfill needed
 - **Promise.withResolvers** — inline polyfill needed
 
 ### Key Setup Pitfall: Import Order
+
 The entry point (`index.ts`) **must use `require()` instead of `import`** to guarantee execution order. Babel's `plugin-transform-modules-commonjs` hoists import-converted-requires above interleaved statements, which breaks the required crypto → polyfills → app initialization order.
 
 ```ts
 // WRONG — crypto.install() runs after Evolu loads
-import { install } from 'react-native-quick-crypto';
+import { install } from "react-native-quick-crypto";
 install();
-import './polyfills';
+import "./polyfills";
 
 // CORRECT — guaranteed sequential execution
-const { install } = require('react-native-quick-crypto');
+const { install } = require("react-native-quick-crypto");
 install();
-require('./polyfills');
+require("./polyfills");
 ```
 
 ### Metro Config
+
 - `.wasm` added to `assetExts` (Evolu bundles WASM for web)
 - COOP/COEP headers added (for SharedArrayBuffer on web — not needed for native but doesn't hurt)
 
@@ -64,7 +69,9 @@ require('./polyfills');
 - Soft-delete via `isDeleted: sqliteTrue` (SQLite boolean = `0 | 1`, not JS boolean)
 
 ### Schema Definition
+
 Evolu uses branded types for schema validation at the type level:
+
 - `NonEmptyString1000` — validated string with max 1000 chars
 - `nullOr(T)` — nullable column
 - `DateIso` — ISO date string (use `dateToDateIso()` helper)
@@ -76,12 +83,12 @@ Validation uses `.from()` (Result), `.orThrow()`, or `.orNull()` — not `.safeP
 
 ## Bundle Size
 
-| Package | node_modules size |
-|---------|------------------|
-| `@evolu/*` (total) | 2.2 MB |
-| `react-native-quick-crypto` | 126 MB (includes OpenSSL framework) |
-| `expo-sqlite` | 81 MB |
-| `set.prototype.*` (7 packages) | ~760 KB |
+| Package                        | node_modules size                   |
+| ------------------------------ | ----------------------------------- |
+| `@evolu/*` (total)             | 2.2 MB                              |
+| `react-native-quick-crypto`    | 126 MB (includes OpenSSL framework) |
+| `expo-sqlite`                  | 81 MB                               |
+| `set.prototype.*` (7 packages) | ~760 KB                             |
 
 - `react-native-quick-crypto` dominates due to bundled OpenSSL XCFramework. This is a native binary — it doesn't affect JS bundle size.
 - Debug `.app` size: 118 MB (includes all debug symbols; production will be significantly smaller)
@@ -91,22 +98,23 @@ Validation uses `.from()` (Result), `.orThrow()`, or `.orNull()` — not `.safeP
 
 ## Expo 54 Compatibility
 
-| Feature | Status |
-|---------|--------|
-| Dev build (native modules) | Works |
-| Expo Go | Not supported (requires `react-native-quick-crypto` native module) |
-| expo-sqlite integration | Works via `@evolu/react-native/expo-sqlite` |
-| expo-secure-store | Auto-configured via config plugin |
-| Hermes engine | Works with polyfills |
-| React Native 0.81 | Works |
-| React 19 | Works |
-| Storybook coexistence | Works (Storybook toggle preserved) |
+| Feature                    | Status                                                             |
+| -------------------------- | ------------------------------------------------------------------ |
+| Dev build (native modules) | Works                                                              |
+| Expo Go                    | Not supported (requires `react-native-quick-crypto` native module) |
+| expo-sqlite integration    | Works via `@evolu/react-native/expo-sqlite`                        |
+| expo-secure-store          | Auto-configured via config plugin                                  |
+| Hermes engine              | Works with polyfills                                               |
+| React Native 0.81          | Works                                                              |
+| React 19                   | Works                                                              |
+| Storybook coexistence      | Works (Storybook toggle preserved)                                 |
 
 ---
 
 ## DX Notes
 
 ### Positives
+
 - **Zero backend** — no server to run, no sync config needed for local-only mode
 - **Type-safe queries** — Kysely provides excellent autocomplete for SELECT queries
 - **Branded types** — catch invalid data at compile time (e.g., empty strings, missing fields)
@@ -115,6 +123,7 @@ Validation uses `.from()` (Result), `.orThrow()`, or `.orNull()` — not `.safeP
 - **React Suspense integration** — `useQuery` suspends during first load
 
 ### Pain Points
+
 - **Polyfill dance** — 3 categories of polyfills needed for Hermes, with subtle gotchas (`/auto` vs default import, `require()` vs `import`)
 - **Import ordering sensitivity** — crypto must install before any Evolu module loads at the module level
 - **No `.safeParse()`** — API uses `.from()` / `.orThrow()` / `.orNull()`, which is idiomatic but different from Zod conventions many devs expect
@@ -123,7 +132,9 @@ Validation uses `.from()` (Result), `.orThrow()`, or `.orNull()` — not `.safeP
 - **`useQuery` return type** — returns `QueryRows` (a readonly array), not `{ rows }` like some ORMs
 
 ### API Surface
+
 The Evolu API is small and well-designed:
+
 - `createEvolu(deps)(Schema, config)` — one instance per app
 - `evolu.createQuery(cb)` — Kysely query builder
 - `evolu.insert(table, data)` / `evolu.update(table, data)` — mutations return Result
@@ -137,6 +148,7 @@ The Evolu API is small and well-designed:
 **Adopt Evolu as the sync-ready data layer for native-rd.**
 
 Reasons:
+
 1. Works with current stack (Expo 54, Hermes, React 19)
 2. Built-in E2EE via CRDT + owner keys — no application-layer encryption needed
 3. MIT license — fully open source
@@ -146,6 +158,7 @@ Reasons:
 7. Polyfill complexity is a one-time setup cost, well-documented in this file
 
 Risks to monitor:
+
 - Evolu v8 is coming with breaking changes; stay on v7.4 for now
 - `react-native-quick-crypto` is large (OpenSSL); evaluate `expo-crypto` as a future alternative
 - Web support (via `@evolu/react/web`) was not tested in this prototype

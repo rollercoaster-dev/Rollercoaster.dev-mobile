@@ -8,12 +8,12 @@
  * Circles are clipped to the frame band (outer shape minus inner shape)
  * using an even-odd clip path, matching the crossHatch pattern.
  */
-import React from 'react';
-import { Circle, ClipPath, Defs, G, Path } from 'react-native-svg';
-import { generateContour } from '../shapes/contours';
-import { generateShapePath } from '../shapes/paths';
-import { DEFAULT_STROKE_COLOR, clamp } from './constants';
-import type { FrameGenerator } from './types';
+import React from "react";
+import { Circle, ClipPath, Defs, G, Path } from "react-native-svg";
+import { generateContour } from "../shapes/contours";
+import { generateShapePath } from "../shapes/paths";
+import { DEFAULT_STROKE_COLOR, clamp } from "./constants";
+import type { FrameGenerator } from "./types";
 
 const ROSETTE_STROKE_WIDTH = 0.75;
 
@@ -43,7 +43,7 @@ export const rosetteGenerator: FrameGenerator = ({
   if (innerInset <= inset) {
     if (__DEV__) {
       console.warn(
-        '[rosetteGenerator] Degenerate geometry: innerInset ' +
+        "[rosetteGenerator] Degenerate geometry: innerInset " +
           `(${innerInset}) <= inset (${inset}). Frame skipped.`,
       );
     }
@@ -76,7 +76,7 @@ export const rosetteGenerator: FrameGenerator = ({
           cx,
           cy,
           r: rosetteRadius,
-          fill: 'none',
+          fill: "none",
           stroke: strokeColor,
           strokeWidth: ROSETTE_STROKE_WIDTH,
         }),
@@ -95,15 +95,11 @@ export const rosetteGenerator: FrameGenerator = ({
         { id: clipId },
         React.createElement(Path, {
           d: `${outerPath} ${innerPath}`,
-          clipRule: 'evenodd',
-          fillRule: 'evenodd',
+          clipRule: "evenodd",
+          fillRule: "evenodd",
         }),
       ),
     ),
-    React.createElement(
-      G,
-      { clipPath: `url(#${clipId})` },
-      ...circles,
-    ),
+    React.createElement(G, { clipPath: `url(#${clipId})` }, ...circles),
   );
 };

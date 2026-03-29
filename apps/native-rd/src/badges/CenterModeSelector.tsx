@@ -1,9 +1,9 @@
-import React, { useCallback } from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import React, { useCallback } from "react";
+import { Pressable, Text, TextInput, View } from "react-native";
+import { StyleSheet, useUnistyles } from "react-native-unistyles";
 
-import { selectorStyles } from './selectorStyles';
-import { BadgeCenterMode } from './types';
+import { selectorStyles } from "./selectorStyles";
+import { BadgeCenterMode } from "./types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -25,8 +25,8 @@ export interface CenterModeSelectorProps {
 const MODES = Object.values(BadgeCenterMode) as BadgeCenterMode[];
 
 const MODE_LABELS: Record<BadgeCenterMode, string> = {
-  icon: 'Icon',
-  monogram: 'Monogram',
+  icon: "Icon",
+  monogram: "Monogram",
 };
 
 // ---------------------------------------------------------------------------
@@ -39,7 +39,7 @@ export function CenterModeSelector({
   onSelectMode,
   onChangeMonogram,
   accentColor,
-  testID = 'center-mode-selector',
+  testID = "center-mode-selector",
 }: CenterModeSelectorProps) {
   const { theme } = useUnistyles();
   const resolvedAccent = accentColor ?? theme.colors.accentPrimary;
@@ -79,10 +79,8 @@ export function CenterModeSelector({
                 style={[
                   styles.optionText,
                   {
-                    color: isSelected
-                      ? resolvedAccent
-                      : theme.colors.text,
-                    fontWeight: isSelected ? '700' : '500',
+                    color: isSelected ? resolvedAccent : theme.colors.text,
+                    fontWeight: isSelected ? "700" : "500",
                   },
                 ]}
               >
@@ -123,11 +121,11 @@ export function CenterModeSelector({
 
 const styles = StyleSheet.create((theme) => ({
   row: {
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   option: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     minWidth: 100,
     minHeight: 44,
     paddingHorizontal: theme.space[3],
@@ -147,8 +145,8 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: 0,
     fontSize: 16,
     fontFamily: theme.fontFamily.body,
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: "600",
+    textAlign: "center",
     letterSpacing: 4,
   },
 }));

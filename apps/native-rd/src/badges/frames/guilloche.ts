@@ -1,9 +1,9 @@
-import React from 'react';
-import { ClipPath, Defs, G, Path } from 'react-native-svg';
-import { generateShapePath } from '../shapes/paths';
-import type { BadgeShape } from '../types';
-import { DEFAULT_STROKE_COLOR } from './constants';
-import type { FrameGenerator } from './types';
+import React from "react";
+import { ClipPath, Defs, G, Path } from "react-native-svg";
+import { generateShapePath } from "../shapes/paths";
+import type { BadgeShape } from "../types";
+import { DEFAULT_STROKE_COLOR } from "./constants";
+import type { FrameGenerator } from "./types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -269,7 +269,12 @@ function sampleShield(size: number, inset: number, n: number): SamplePoint[] {
   const l = inset;
   const w = size - inset * 2;
   const h = size - inset * 2;
-  return arcLengthResample(makeShieldSampler(size, inset), l + w / 2, inset + h / 2, n);
+  return arcLengthResample(
+    makeShieldSampler(size, inset),
+    l + w / 2,
+    inset + h / 2,
+    n,
+  );
 }
 
 /**
@@ -294,46 +299,72 @@ export function makeRoundedRectSampler(
       return { x: left + cr + (w - 2 * cr) * s, y: top };
     } else if (seg < 2) {
       const a = -Math.PI / 2 + (Math.PI / 2) * s;
-      return { x: left + w - cr + cr * Math.cos(a), y: top + cr + cr * Math.sin(a) };
+      return {
+        x: left + w - cr + cr * Math.cos(a),
+        y: top + cr + cr * Math.sin(a),
+      };
     } else if (seg < 3) {
       return { x: left + w, y: top + cr + (h - 2 * cr) * s };
     } else if (seg < 4) {
       const a = (Math.PI / 2) * s;
-      return { x: left + w - cr + cr * Math.cos(a), y: top + h - cr + cr * Math.sin(a) };
+      return {
+        x: left + w - cr + cr * Math.cos(a),
+        y: top + h - cr + cr * Math.sin(a),
+      };
     } else if (seg < 5) {
       return { x: left + w - cr - (w - 2 * cr) * s, y: top + h };
     } else if (seg < 6) {
       const a = Math.PI / 2 + (Math.PI / 2) * s;
-      return { x: left + cr + cr * Math.cos(a), y: top + h - cr + cr * Math.sin(a) };
+      return {
+        x: left + cr + cr * Math.cos(a),
+        y: top + h - cr + cr * Math.sin(a),
+      };
     } else if (seg < 7) {
       return { x: left, y: top + h - cr - (h - 2 * cr) * s };
     } else {
       const a = Math.PI + (Math.PI / 2) * s;
-      return { x: left + cr + cr * Math.cos(a), y: top + cr + cr * Math.sin(a) };
+      return {
+        x: left + cr + cr * Math.cos(a),
+        y: top + cr + cr * Math.sin(a),
+      };
     }
   };
 }
 
-function sampleRoundedRect(size: number, inset: number, n: number): SamplePoint[] {
+function sampleRoundedRect(
+  size: number,
+  inset: number,
+  n: number,
+): SamplePoint[] {
   const w = size - inset * 2;
   const h = size - inset * 2;
-  return arcLengthResample(makeRoundedRectSampler(size, inset), inset + w / 2, inset + h / 2, n);
+  return arcLengthResample(
+    makeRoundedRectSampler(size, inset),
+    inset + w / 2,
+    inset + h / 2,
+    n,
+  );
 }
 
 /** Dispatch to shape-specific sampler */
-export function sampleShapeContour(shape: BadgeShape, size: number, inset: number, n: number): SamplePoint[] {
+export function sampleShapeContour(
+  shape: BadgeShape,
+  size: number,
+  inset: number,
+  n: number,
+): SamplePoint[] {
   switch (shape) {
-    case 'circle':
+    case "circle":
       return sampleCircle(size, inset, n);
-    case 'hexagon':
+    case "hexagon":
       return sampleHexagon(size, inset, n);
-    case 'diamond':
+    case "diamond":
       return sampleDiamond(size, inset, n);
-    case 'star':
+    case "star":
       return sampleStar(size, inset, n);
-    case 'shield':
+    case "shield":
       return sampleShield(size, inset, n);
-    case 'roundedRect':
+    case "roundedRect":
       return sampleRoundedRect(size, inset, n);
     default: {
       const _exhaustive: never = shape;
@@ -361,9 +392,18 @@ export function catmullRomToCubic(
   const alpha = 0.5;
   const epsilon = 1e-6;
 
-  const d01 = Math.max(epsilon, Math.pow(Math.hypot(p1.x - p0.x, p1.y - p0.y), alpha));
-  const d12 = Math.max(epsilon, Math.pow(Math.hypot(p2.x - p1.x, p2.y - p1.y), alpha));
-  const d23 = Math.max(epsilon, Math.pow(Math.hypot(p3.x - p2.x, p3.y - p2.y), alpha));
+  const d01 = Math.max(
+    epsilon,
+    Math.pow(Math.hypot(p1.x - p0.x, p1.y - p0.y), alpha),
+  );
+  const d12 = Math.max(
+    epsilon,
+    Math.pow(Math.hypot(p2.x - p1.x, p2.y - p1.y), alpha),
+  );
+  const d23 = Math.max(
+    epsilon,
+    Math.pow(Math.hypot(p3.x - p2.x, p3.y - p2.y), alpha),
+  );
 
   const t0 = 0;
   const t1 = t0 + d01;
@@ -441,7 +481,10 @@ function buildWavePathsLinear(
     wave2Pts[i] = { x: pt.x - pt.nx * offset, y: pt.y - pt.ny * offset };
   }
 
-  return [buildLinearPathFromPoints(wave1Pts), buildLinearPathFromPoints(wave2Pts)];
+  return [
+    buildLinearPathFromPoints(wave1Pts),
+    buildLinearPathFromPoints(wave2Pts),
+  ];
 }
 
 type ShapeWaveProfile = {
@@ -453,18 +496,48 @@ type ShapeWaveProfile = {
 
 function getShapeWaveProfile(shape: BadgeShape): ShapeWaveProfile {
   switch (shape) {
-    case 'hexagon':
-      return { anchorCount: 6, useCornerEnvelope: true, useLinearPath: false, amplitudeScale: 1 };
-    case 'diamond':
-      return { anchorCount: 4, useCornerEnvelope: true, useLinearPath: false, amplitudeScale: 1 };
-    case 'star':
-      return { anchorCount: 10, useCornerEnvelope: true, useLinearPath: false, amplitudeScale: 1 };
-    case 'circle':
-      return { anchorCount: 0, useCornerEnvelope: false, useLinearPath: false, amplitudeScale: 1 };
-    case 'roundedRect':
-      return { anchorCount: 0, useCornerEnvelope: false, useLinearPath: true, amplitudeScale: 0.75 };
-    case 'shield':
-      return { anchorCount: 0, useCornerEnvelope: false, useLinearPath: true, amplitudeScale: 0.75 };
+    case "hexagon":
+      return {
+        anchorCount: 6,
+        useCornerEnvelope: true,
+        useLinearPath: false,
+        amplitudeScale: 1,
+      };
+    case "diamond":
+      return {
+        anchorCount: 4,
+        useCornerEnvelope: true,
+        useLinearPath: false,
+        amplitudeScale: 1,
+      };
+    case "star":
+      return {
+        anchorCount: 10,
+        useCornerEnvelope: true,
+        useLinearPath: false,
+        amplitudeScale: 1,
+      };
+    case "circle":
+      return {
+        anchorCount: 0,
+        useCornerEnvelope: false,
+        useLinearPath: false,
+        amplitudeScale: 1,
+      };
+    case "roundedRect":
+      return {
+        anchorCount: 0,
+        useCornerEnvelope: false,
+        useLinearPath: true,
+        amplitudeScale: 0.75,
+      };
+    case "shield":
+      return {
+        anchorCount: 0,
+        useCornerEnvelope: false,
+        useLinearPath: true,
+        amplitudeScale: 0.75,
+      };
     default: {
       const _exhaustive: never = shape;
       throw new Error(`Unknown shape: ${_exhaustive}`);
@@ -497,12 +570,18 @@ function normalizeAnchorIndices(anchorIndices: number[], n: number): number[] {
   return [...unique].sort((a, b) => a - b);
 }
 
-function distributeHalfWaves(edgeLengths: number[], totalHalfWaves: number): number[] {
+function distributeHalfWaves(
+  edgeLengths: number[],
+  totalHalfWaves: number,
+): number[] {
   if (edgeLengths.length === 0 || totalHalfWaves <= 0) {
     return edgeLengths.map(() => 0);
   }
 
-  const totalLength = edgeLengths.reduce((sum, edgeLength) => sum + edgeLength, 0);
+  const totalLength = edgeLengths.reduce(
+    (sum, edgeLength) => sum + edgeLength,
+    0,
+  );
   if (totalLength <= 0) {
     return edgeLengths.map(() => 0);
   }
@@ -513,7 +592,9 @@ function distributeHalfWaves(edgeLengths: number[], totalHalfWaves: number): num
   let prevRoundedTarget = 0;
   for (let i = 0; i < edgeLengths.length; i++) {
     cumulativeLength += edgeLengths[i];
-    const roundedTarget = Math.round((cumulativeLength / totalLength) * totalHalfWaves);
+    const roundedTarget = Math.round(
+      (cumulativeLength / totalLength) * totalHalfWaves,
+    );
     allocation[i] = Math.max(0, roundedTarget - prevRoundedTarget);
     prevRoundedTarget = roundedTarget;
   }
@@ -532,11 +613,11 @@ function buildEdgePhaseSpecs(
   n: number,
   totalHalfWaves: number,
 ): EdgePhaseSpec[] {
-  const edges: Omit<EdgePhaseSpec, 'halfWaves'>[] = [];
+  const edges: Omit<EdgePhaseSpec, "halfWaves">[] = [];
   for (let i = 0; i < anchorIndices.length; i++) {
     const start = anchorIndices[i];
     const end = anchorIndices[(i + 1) % anchorIndices.length];
-    const length = ((end - start) + n) % n;
+    const length = (end - start + n) % n;
     if (length > 0) {
       edges.push({ start, length });
     }
@@ -558,7 +639,7 @@ function buildAnchoredWavePaths(
 ): [string, string] {
   const n = samples.length;
   if (n === 0) {
-    return ['', ''];
+    return ["", ""];
   }
 
   const anchors = normalizeAnchorIndices(anchorIndices, n);
@@ -616,7 +697,13 @@ function buildShapeAwareWavePaths(
     }
     return buildWavePaths(samples, waveCount, amplitude);
   }
-  return buildAnchoredWavePaths(samples, anchors, waveCount, amplitude, profile.useCornerEnvelope);
+  return buildAnchoredWavePaths(
+    samples,
+    anchors,
+    waveCount,
+    amplitude,
+    profile.useCornerEnvelope,
+  );
 }
 
 function makeOuterClip(
@@ -641,7 +728,7 @@ function makeOuterClip(
 /** Build a closed SVG path string from offset points using Catmull-Rom smoothing */
 export function buildPathFromPoints(pts: { x: number; y: number }[]): string {
   const n = pts.length;
-  if (n < 3) return '';
+  if (n < 3) return "";
   const commands: string[] = new Array(n + 2);
   commands[0] = `M ${pts[0].x.toFixed(2)} ${pts[0].y.toFixed(2)}`;
 
@@ -655,21 +742,21 @@ export function buildPathFromPoints(pts: { x: number; y: number }[]): string {
       `C ${cp1.x.toFixed(2)} ${cp1.y.toFixed(2)} ${cp2.x.toFixed(2)} ${cp2.y.toFixed(2)} ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`;
   }
 
-  commands[n + 1] = 'Z';
-  return commands.join(' ');
+  commands[n + 1] = "Z";
+  return commands.join(" ");
 }
 
 function buildLinearPathFromPoints(pts: { x: number; y: number }[]): string {
   const n = pts.length;
-  if (n < 2) return '';
+  if (n < 2) return "";
   const commands: string[] = new Array(n + 2);
   commands[0] = `M ${pts[0].x.toFixed(2)} ${pts[0].y.toFixed(2)}`;
   for (let i = 1; i < n; i++) {
     commands[i] = `L ${pts[i].x.toFixed(2)} ${pts[i].y.toFixed(2)}`;
   }
   commands[n] = `L ${pts[0].x.toFixed(2)} ${pts[0].y.toFixed(2)}`;
-  commands[n + 1] = 'Z';
-  return commands.join(' ');
+  commands[n + 1] = "Z";
+  return commands.join(" ");
 }
 
 // ---------------------------------------------------------------------------
@@ -693,26 +780,36 @@ export const guillocheGenerator: FrameGenerator = ({
   if (innerInset <= inset) {
     if (__DEV__) {
       console.warn(
-        '[guillocheGenerator] Degenerate geometry: innerInset ' +
+        "[guillocheGenerator] Degenerate geometry: innerInset " +
           `(${innerInset}) <= inset (${inset}). Frame skipped.`,
       );
     }
     return null;
   }
 
-  const baseWaveCount = Math.max(3, Math.min(14, Math.round(params.stepCount * 1.5)));
+  const baseWaveCount = Math.max(
+    3,
+    Math.min(14, Math.round(params.stepCount * 1.5)),
+  );
   const profile = getShapeWaveProfile(shape);
-  const minWaveCountForAnchors = profile.anchorCount > 0 ? Math.ceil(profile.anchorCount / 2) : 3;
+  const minWaveCountForAnchors =
+    profile.anchorCount > 0 ? Math.ceil(profile.anchorCount / 2) : 3;
   const waveCount = Math.max(baseWaveCount, minWaveCountForAnchors);
   const bandMidInset = (inset + innerInset) / 2;
-  const amplitude = (innerInset - inset) * AMPLITUDE_RATIO * profile.amplitudeScale;
+  const amplitude =
+    (innerInset - inset) * AMPLITUDE_RATIO * profile.amplitudeScale;
   const n = waveCount * POINTS_PER_WAVE;
 
   const samples = sampleShapeContour(shape, size, bandMidInset, n);
-  const [wave1, wave2] = buildShapeAwareWavePaths(shape, samples, waveCount, amplitude);
+  const [wave1, wave2] = buildShapeAwareWavePaths(
+    shape,
+    samples,
+    waveCount,
+    amplitude,
+  );
 
   const pathProps = {
-    fill: 'none' as const,
+    fill: "none" as const,
     stroke: strokeColor,
     strokeWidth: WAVE_STROKE_WIDTH,
     opacity: WAVE_OPACITY,
@@ -726,8 +823,8 @@ export const guillocheGenerator: FrameGenerator = ({
     React.createElement(
       G,
       { clipPath: `url(#${clipId})` },
-      React.createElement(Path, { key: 'guilloche-0', d: wave1, ...pathProps }),
-      React.createElement(Path, { key: 'guilloche-1', d: wave2, ...pathProps }),
+      React.createElement(Path, { key: "guilloche-0", d: wave1, ...pathProps }),
+      React.createElement(Path, { key: "guilloche-1", d: wave2, ...pathProps }),
     ),
   );
 };

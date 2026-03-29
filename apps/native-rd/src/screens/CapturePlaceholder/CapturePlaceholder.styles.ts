@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native-unistyles';
+import { StyleSheet } from "react-native-unistyles";
 
 export const styles = StyleSheet.create((theme) => ({
   container: {
@@ -6,9 +6,9 @@ export const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.background,
   },
   topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[2],
   },
@@ -22,14 +22,14 @@ export const styles = StyleSheet.create((theme) => ({
   content: {
     flex: 1,
     padding: theme.space[4],
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   title: {
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: theme.space[2],
   },
   message: {
-    textAlign: 'center',
+    textAlign: "center",
     color: theme.colors.textSecondary,
     marginBottom: theme.space[4],
   },

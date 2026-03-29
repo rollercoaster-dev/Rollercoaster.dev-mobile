@@ -134,15 +134,15 @@ The main screen for working through a goal. You spend most of your time here.
 
 **Interactions:**
 
-| Action | How |
-|--------|-----|
-| Move between steps | Swipe left/right on the card |
-| Jump to a step | Tap the corresponding dot in ProgressDots |
-| Complete/uncomplete a step | Tap the checkbox on the StepCard |
-| View current evidence | Pull up the EvidenceDrawer |
-| Add evidence | Tap the FAB → pick evidence type |
-| Go to Edit Mode | Tap the ✏️ edit button in the header |
-| See the full journey | Tap anywhere on the MiniTimeline |
+| Action                     | How                                       |
+| -------------------------- | ----------------------------------------- |
+| Move between steps         | Swipe left/right on the card              |
+| Jump to a step             | Tap the corresponding dot in ProgressDots |
+| Complete/uncomplete a step | Tap the checkbox on the StepCard          |
+| View current evidence      | Pull up the EvidenceDrawer                |
+| Add evidence               | Tap the FAB → pick evidence type          |
+| Go to Edit Mode            | Tap the ✏️ edit button in the header      |
+| See the full journey       | Tap anywhere on the MiniTimeline          |
 
 **The goal card:** After all step cards, there's a final "goal card" (GoalEvidenceCard) for attaching evidence directly to the goal rather than a specific step.
 
@@ -176,10 +176,10 @@ A read-only visual overview of the whole goal. Good for seeing the big picture o
 
 **Interactions:**
 
-| Action | How |
-|--------|-----|
-| Return to Focus Mode | Tap "Back to Focus" button in header |
-| Jump to Focus Mode on a step | Tap any step node |
+| Action                       | How                                  |
+| ---------------------------- | ------------------------------------ |
+| Return to Focus Mode         | Tap "Back to Focus" button in header |
+| Jump to Focus Mode on a step | Tap any step node                    |
 
 ---
 
@@ -197,14 +197,14 @@ For managing the structure of the goal — title, description, steps. Not for do
 
 **Interactions:**
 
-| Action | How |
-|--------|-----|
-| Edit goal title | Tap title field, type |
-| Edit description | Tap description field, type |
-| Add a step | Tap "Add Step" button |
-| Reorder steps | Drag handle on each step row |
-| Delete a step | Swipe or trash icon |
-| Delete the goal | "Delete Goal" button (with confirmation) |
+| Action           | How                                      |
+| ---------------- | ---------------------------------------- |
+| Edit goal title  | Tap title field, type                    |
+| Edit description | Tap description field, type              |
+| Add a step       | Tap "Add Step" button                    |
+| Reorder steps    | Drag handle on each step row             |
+| Delete a step    | Swipe or trash icon                      |
+| Delete the goal  | "Delete Goal" button (with confirmation) |
 
 **Autosave:** Title and description save automatically after 500ms of inactivity. No "Save" button needed.
 
@@ -220,15 +220,15 @@ Focus Mode (any card) → FABMenu → pick type → Capture screen → back to F
 
 ### Evidence Types
 
-| Type | Capture Screen | What happens |
-|------|---------------|--------------|
-| Photo | CapturePhoto | Opens camera directly |
-| Video | CaptureVideo | Opens camera in video mode |
+| Type       | Capture Screen   | What happens                 |
+| ---------- | ---------------- | ---------------------------- |
+| Photo      | CapturePhoto     | Opens camera directly        |
+| Video      | CaptureVideo     | Opens camera in video mode   |
 | Voice Memo | CaptureVoiceMemo | Starts recording immediately |
-| Text Note | CaptureTextNote | Text editor |
-| Link | CaptureLink | URL field |
-| File | CaptureFile | Document picker |
-| Screenshot | CapturePhoto¹ | Captured via the photo route |
+| Text Note  | CaptureTextNote  | Text editor                  |
+| Link       | CaptureLink      | URL field                    |
+| File       | CaptureFile      | Document picker              |
+| Screenshot | CapturePhoto¹    | Captured via the photo route |
 
 _¹ No dedicated CaptureScreenshot route — screenshots are stored as `EvidenceType.screenshot` but captured through CapturePhoto._
 
@@ -363,24 +363,24 @@ Settings
 
 ## Screen Inventory
 
-| Screen | Type | Route |
-|--------|------|-------|
-| WelcomeScreen | Full screen (first launch only) | — |
-| GoalsScreen | Tab root | `Goals` |
-| NewGoalModal | Modal | `NewGoal` |
-| FocusModeScreen | Stack screen | `FocusMode` |
-| EditModeScreen | Stack screen | `EditMode` |
-| TimelineJourneyScreen | Stack screen | `TimelineJourney` |
-| CompletionFlowScreen | Stack screen | `CompletionFlow` |
-| CapturePhoto | Stack screen | `CapturePhoto` |
-| CaptureVideo | Stack screen | `CaptureVideo` |
-| CaptureVoiceMemo | Stack screen | `CaptureVoiceMemo` |
-| CaptureTextNote | Stack screen | `CaptureTextNote` |
-| CaptureLink | Stack screen | `CaptureLink` |
-| CaptureFile | Stack screen | `CaptureFile` |
-| BadgesScreen | Tab root | `Badges` |
-| BadgeDetailScreen | Stack screen | `BadgeDetail` |
-| SettingsScreen | Tab root | `Settings` |
+| Screen                | Type                            | Route              |
+| --------------------- | ------------------------------- | ------------------ |
+| WelcomeScreen         | Full screen (first launch only) | —                  |
+| GoalsScreen           | Tab root                        | `Goals`            |
+| NewGoalModal          | Modal                           | `NewGoal`          |
+| FocusModeScreen       | Stack screen                    | `FocusMode`        |
+| EditModeScreen        | Stack screen                    | `EditMode`         |
+| TimelineJourneyScreen | Stack screen                    | `TimelineJourney`  |
+| CompletionFlowScreen  | Stack screen                    | `CompletionFlow`   |
+| CapturePhoto          | Stack screen                    | `CapturePhoto`     |
+| CaptureVideo          | Stack screen                    | `CaptureVideo`     |
+| CaptureVoiceMemo      | Stack screen                    | `CaptureVoiceMemo` |
+| CaptureTextNote       | Stack screen                    | `CaptureTextNote`  |
+| CaptureLink           | Stack screen                    | `CaptureLink`      |
+| CaptureFile           | Stack screen                    | `CaptureFile`      |
+| BadgesScreen          | Tab root                        | `Badges`           |
+| BadgeDetailScreen     | Stack screen                    | `BadgeDetail`      |
+| SettingsScreen        | Tab root                        | `Settings`         |
 
 Plus modals/overlays (not stack routes): PhotoViewerModal, VideoPlayerModal, AudioPlayerModal, TextNoteViewerModal, ConfirmDeleteModal.
 
@@ -390,20 +390,20 @@ Note: `VoiceMemoScreen` is a standalone screen directory but voice memo capture 
 
 ## Interaction Summary
 
-| Action | Gesture/Control | Where |
-|--------|-----------------|-------|
-| Open a goal | Tap goal card | Goals list |
-| Create a goal | Tap "New Goal" button | Goals list |
-| Move between steps | Swipe left/right | Focus Mode |
-| Jump to step | Tap dot in ProgressDots or MiniTimeline | Focus Mode |
-| Complete a step | Tap checkbox on StepCard | Focus Mode |
-| Add evidence | Tap FAB → pick type | Focus Mode |
-| View full timeline | Tap MiniTimeline | Focus Mode |
-| Edit goal/steps | Tap ✏️ header icon | Focus Mode |
-| Complete goal | Automatic when all steps done | Focus Mode → Completion Flow |
-| View badge | Tap badge | Badges tab |
-| Export badge | Tap export option | Badge Detail |
-| Switch theme | Tap swatch | Settings or Welcome |
+| Action             | Gesture/Control                         | Where                        |
+| ------------------ | --------------------------------------- | ---------------------------- |
+| Open a goal        | Tap goal card                           | Goals list                   |
+| Create a goal      | Tap "New Goal" button                   | Goals list                   |
+| Move between steps | Swipe left/right                        | Focus Mode                   |
+| Jump to step       | Tap dot in ProgressDots or MiniTimeline | Focus Mode                   |
+| Complete a step    | Tap checkbox on StepCard                | Focus Mode                   |
+| Add evidence       | Tap FAB → pick type                     | Focus Mode                   |
+| View full timeline | Tap MiniTimeline                        | Focus Mode                   |
+| Edit goal/steps    | Tap ✏️ header icon                      | Focus Mode                   |
+| Complete goal      | Automatic when all steps done           | Focus Mode → Completion Flow |
+| View badge         | Tap badge                               | Badges tab                   |
+| Export badge       | Tap export option                       | Badge Detail                 |
+| Switch theme       | Tap swatch                              | Settings or Welcome          |
 
 ---
 

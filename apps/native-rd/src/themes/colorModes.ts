@@ -7,9 +7,9 @@ import {
   lightColors as _lightColors,
   darkColors as _darkColors,
   colorModeConfigs,
-} from './adapter';
+} from "./adapter";
 
-export type ColorMode = 'light' | 'dark';
+export type ColorMode = "light" | "dark";
 
 /**
  * Colors interface - uses string type for flexibility in variant overrides

@@ -1,14 +1,18 @@
-import React, { useEffect } from 'react';
-import { View, Modal, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
-import { useUnistyles } from 'react-native-unistyles';
-import { Text } from '../../components/Text';
-import { Button } from '../../components/Button';
-import { useAnimationPref } from '../../hooks/useAnimationPref';
-import { PLACEHOLDER_IMAGE_URI } from '../../hooks/useCreateBadge';
-import { getTimingConfig } from '../../utils/animation';
-import { styles } from './BadgeEarnedModal.styles';
+import React, { useEffect } from "react";
+import { View, Modal, Image } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+} from "react-native-reanimated";
+import { useUnistyles } from "react-native-unistyles";
+import { Text } from "../../components/Text";
+import { Button } from "../../components/Button";
+import { useAnimationPref } from "../../hooks/useAnimationPref";
+import { PLACEHOLDER_IMAGE_URI } from "../../hooks/useCreateBadge";
+import { getTimingConfig } from "../../utils/animation";
+import { styles } from "./BadgeEarnedModal.styles";
 
 export interface BadgeEarnedModalProps {
   visible: boolean;
@@ -37,7 +41,7 @@ export function BadgeEarnedModal({
     if (visible) {
       if (shouldAnimate) {
         scale.value = 0.85;
-        scale.value = withTiming(1, getTimingConfig(animationPref, 'quick'));
+        scale.value = withTiming(1, getTimingConfig(animationPref, "quick"));
       } else {
         scale.value = 1;
       }
@@ -49,7 +53,7 @@ export function BadgeEarnedModal({
   }));
 
   const hasImage = imageUri !== PLACEHOLDER_IMAGE_URI;
-  const microcopy = isFirstBadge ? 'First one. (noted.)' : 'Badge earned.';
+  const microcopy = isFirstBadge ? "First one. (noted.)" : "Badge earned.";
 
   return (
     <Modal
@@ -60,9 +64,12 @@ export function BadgeEarnedModal({
       accessibilityViewIsModal
     >
       <View
-        style={[styles.overlay, { backgroundColor: `${theme.colors.shadow}80` }]}
+        style={[
+          styles.overlay,
+          { backgroundColor: `${theme.colors.shadow}80` },
+        ]}
       >
-        <SafeAreaView edges={['bottom']} style={styles.container}>
+        <SafeAreaView edges={["bottom"]} style={styles.container}>
           <Animated.View style={animatedStyle}>
             <View
               style={styles.card}
@@ -78,7 +85,10 @@ export function BadgeEarnedModal({
                   resizeMode="contain"
                 />
               ) : (
-                <View style={styles.badgePlaceholder} accessibilityLabel="Badge image placeholder">
+                <View
+                  style={styles.badgePlaceholder}
+                  accessibilityLabel="Badge image placeholder"
+                >
                   <Text variant="headline">🏅</Text>
                 </View>
               )}
@@ -88,11 +98,23 @@ export function BadgeEarnedModal({
               </Text>
 
               <View style={styles.actions}>
-                <Button label="View Badge" onPress={onViewBadge} variant="primary" />
+                <Button
+                  label="View Badge"
+                  onPress={onViewBadge}
+                  variant="primary"
+                />
                 {onCustomize && (
-                  <Button label="Customize" onPress={onCustomize} variant="secondary" />
+                  <Button
+                    label="Customize"
+                    onPress={onCustomize}
+                    variant="secondary"
+                  />
                 )}
-                <Button label="Keep going" onPress={onContinue} variant="secondary" />
+                <Button
+                  label="Keep going"
+                  onPress={onContinue}
+                  variant="secondary"
+                />
               </View>
             </View>
           </Animated.View>

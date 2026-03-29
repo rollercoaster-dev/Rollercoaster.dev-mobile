@@ -1,8 +1,8 @@
-import React from 'react';
-import { Path } from 'react-native-svg';
-import { generateShapePath } from '../shapes/paths';
-import { DEFAULT_STROKE_COLOR } from './constants';
-import type { FrameGenerator } from './types';
+import React from "react";
+import { Path } from "react-native-svg";
+import { generateShapePath } from "../shapes/paths";
+import { DEFAULT_STROKE_COLOR } from "./constants";
+import type { FrameGenerator } from "./types";
 
 /** Proportional gap between concentric rings (fraction of badge size) */
 const RING_SPACING_RATIO = 0.04;
@@ -38,7 +38,7 @@ export const boldBorderGenerator: FrameGenerator = ({
   if (innermostInset >= innerInset) {
     if (__DEV__) {
       console.warn(
-        '[boldBorderGenerator] Degenerate geometry: innermost ring inset ' +
+        "[boldBorderGenerator] Degenerate geometry: innermost ring inset " +
           `(${innermostInset}) >= innerInset (${innerInset}). Frame skipped.`,
       );
     }
@@ -51,7 +51,7 @@ export const boldBorderGenerator: FrameGenerator = ({
     return React.createElement(Path, {
       key: `bold-border-${i}`,
       d,
-      fill: 'none',
+      fill: "none",
       stroke: strokeColor,
       strokeWidth: STROKE_WIDTHS[i],
     });

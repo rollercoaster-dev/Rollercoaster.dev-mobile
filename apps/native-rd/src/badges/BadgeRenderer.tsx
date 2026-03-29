@@ -18,27 +18,27 @@
  *  - autismFriendly: no shadow
  */
 
-import React, { useMemo, useId } from 'react';
-import Svg, { G, Path } from 'react-native-svg';
-import { useUnistyles } from 'react-native-unistyles';
-import type { IconWeight } from 'phosphor-react-native';
+import React, { useMemo, useId } from "react";
+import Svg, { G, Path } from "react-native-svg";
+import { useUnistyles } from "react-native-unistyles";
+import type { IconWeight } from "phosphor-react-native";
 
-import type { BadgeDesign } from './types';
-import { generateShapePath } from './shapes/paths';
-import { FRAME_BAND_RATIO } from './shapes/contours';
-import { getBadgeLayoutMetrics } from './layout';
-import { FrameOverlay } from './frames/FrameOverlay';
-import { PathText } from './text/PathText';
+import type { BadgeDesign } from "./types";
+import { generateShapePath } from "./shapes/paths";
+import { FRAME_BAND_RATIO } from "./shapes/contours";
+import { getBadgeLayoutMetrics } from "./layout";
+import { FrameOverlay } from "./frames/FrameOverlay";
+import { PathText } from "./text/PathText";
 import {
   Banner,
   BANNER_HEIGHT_RATIO,
   BANNER_TOP_VISIBLE_RATIO,
   getBannerTopVisibleRatio,
-} from './text/Banner';
-import { MonogramCenter } from './text/MonogramCenter';
-import { CenterLabel, getCenterLabelBottomOverflow } from './text/CenterLabel';
-import { getIconComponent } from './iconRegistry';
-import { getSafeTextColor } from '../utils/accessibility';
+} from "./text/Banner";
+import { MonogramCenter } from "./text/MonogramCenter";
+import { CenterLabel, getCenterLabelBottomOverflow } from "./text/CenterLabel";
+import { getIconComponent } from "./iconRegistry";
+import { getSafeTextColor } from "../utils/accessibility";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -74,7 +74,7 @@ export function BadgeRenderer({
   design,
   size = 256,
   showShadow: showShadowProp,
-  testID = 'badge-renderer',
+  testID = "badge-renderer",
 }: BadgeRendererProps) {
   const { theme } = useUnistyles();
   const pathTextId = useId();
@@ -83,7 +83,8 @@ export function BadgeRenderer({
   const hasShadow = showShadowProp ?? theme.shadows.opacity > 0;
 
   // High contrast / lowVision: thicker borders (autismFriendly also has opacity 0 but is NOT high contrast)
-  const isHighContrast = theme.variant === 'highContrast' || theme.variant === 'lowVision';
+  const isHighContrast =
+    theme.variant === "highContrast" || theme.variant === "lowVision";
   const strokeWidth = isHighContrast ? 4 : 3;
 
   // Inset shapes by half the stroke width so the stroke doesn't clip
@@ -97,24 +98,31 @@ export function BadgeRenderer({
     ? getBannerTopVisibleRatio(design.banner.position, design.shape)
     : BANNER_TOP_VISIBLE_RATIO;
   const centerLabelExtraOffset =
-    design.shape === 'star' && design.centerLabel?.trim()
+    design.shape === "star" && design.centerLabel?.trim()
       ? size * STAR_CENTER_LABEL_EXTRA_OFFSET_RATIO
       : 0;
 
   // Expand the SVG to include shadow offset so badge doesn't scale down
   const totalWidth = size + (hasShadow ? SHADOW_OFFSET : 0);
   const bannerOverflowAmount = design.banner
-    ? size * BANNER_HEIGHT_RATIO * layout.bannerScale * (1 - bannerTopVisibleRatio)
+    ? size *
+      BANNER_HEIGHT_RATIO *
+      layout.bannerScale *
+      (1 - bannerTopVisibleRatio)
     : 0;
   const bannerTopOverflow =
-    design.banner?.position !== 'bottom' ? bannerOverflowAmount : 0;
+    design.banner?.position !== "bottom" ? bannerOverflowAmount : 0;
   const bannerBottomOverflow =
-    design.banner?.position === 'bottom' ? bannerOverflowAmount : 0;
+    design.banner?.position === "bottom" ? bannerOverflowAmount : 0;
   const centerLabelBottomOverflow = design.centerLabel?.trim()
-    ? getCenterLabelBottomOverflow(size, layout.centerLabelScale) + centerLabelExtraOffset
+    ? getCenterLabelBottomOverflow(size, layout.centerLabelScale) +
+      centerLabelExtraOffset
     : 0;
   const totalHeight =
-    size + (hasShadow ? SHADOW_OFFSET : 0) + bannerTopOverflow + Math.max(bannerBottomOverflow, centerLabelBottomOverflow);
+    size +
+    (hasShadow ? SHADOW_OFFSET : 0) +
+    bannerTopOverflow +
+    Math.max(bannerBottomOverflow, centerLabelBottomOverflow);
 
   // Generate the shape path
   const pathD = useMemo(
@@ -124,12 +132,14 @@ export function BadgeRenderer({
 
   // Calculate icon color for WCAG AA contrast against fill
   const iconColor = useMemo(
-    () => getSafeTextColor(design.color, 'BadgeRenderer'),
+    () => getSafeTextColor(design.color, "BadgeRenderer"),
     [design.color],
   );
 
   // Icon sizing — centered at ~45% of badge diameter, scaled by layout density
-  const iconSize = Math.round(size * ICON_SIZE_RATIO * layout.centerContentScale);
+  const iconSize = Math.round(
+    size * ICON_SIZE_RATIO * layout.centerContentScale,
+  );
   const iconOffsetX = (size - iconSize) / 2;
   const iconOffsetY = layout.centerY - iconSize / 2;
 
@@ -191,7 +201,7 @@ export function BadgeRenderer({
       />
 
       {/* Layer 5: Center content — monogram OR icon */}
-      {design.centerMode === 'monogram' && design.monogram?.trim() ? (
+      {design.centerMode === "monogram" && design.monogram?.trim() ? (
         <MonogramCenter
           monogram={design.monogram}
           size={size}
@@ -205,7 +215,7 @@ export function BadgeRenderer({
           <G x={iconOffsetX} y={iconOffsetY}>
             <IconComponent
               size={iconSize}
-              weight={(design.iconWeight ?? 'regular') as IconWeight}
+              weight={(design.iconWeight ?? "regular") as IconWeight}
               color={iconColor}
             />
           </G>

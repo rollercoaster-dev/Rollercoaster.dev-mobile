@@ -1,11 +1,11 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import React, { useState } from 'react';
-import { View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
-import { Checkbox } from './Checkbox';
+import type { Meta, StoryObj } from "@storybook/react";
+import React, { useState } from "react";
+import { View } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
+import { Checkbox } from "./Checkbox";
 
 const meta: Meta<typeof Checkbox> = {
-  title: 'Checkbox',
+  title: "Checkbox",
   component: Checkbox,
 };
 

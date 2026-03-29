@@ -1,17 +1,22 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import React from 'react';
-import { View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
-import { Text } from '../Text';
-import { StatusBadge, type StatusBadgeVariant } from './StatusBadge';
+import type { Meta, StoryObj } from "@storybook/react";
+import React from "react";
+import { View } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
+import { Text } from "../Text";
+import { StatusBadge, type StatusBadgeVariant } from "./StatusBadge";
 
-const variants: StatusBadgeVariant[] = ['active', 'completed', 'locked', 'earned'];
+const variants: StatusBadgeVariant[] = [
+  "active",
+  "completed",
+  "locked",
+  "earned",
+];
 
 const meta: Meta<typeof StatusBadge> = {
-  title: 'StatusBadge',
+  title: "StatusBadge",
   component: StatusBadge,
   argTypes: {
-    variant: { control: 'select', options: variants },
+    variant: { control: "select", options: variants },
   },
 };
 
@@ -24,7 +29,9 @@ export const AllVariants: Story = {
     <View style={storyStyles.grid}>
       {variants.map((variant) => (
         <View key={variant} style={storyStyles.row}>
-          <Text variant="label" style={storyStyles.label}>{variant}</Text>
+          <Text variant="label" style={storyStyles.label}>
+            {variant}
+          </Text>
           <StatusBadge variant={variant} />
         </View>
       ))}
@@ -47,13 +54,13 @@ const storyStyles = StyleSheet.create((theme) => ({
     gap: theme.space[3],
   },
   row: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.space[3],
   },
   label: {
     color: theme.colors.textMuted,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     width: 80,
   },
 }));

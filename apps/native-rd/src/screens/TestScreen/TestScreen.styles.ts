@@ -1,5 +1,5 @@
-import { StyleSheet } from 'react-native-unistyles';
-import type { ComposedTheme } from '../../themes/compose';
+import { StyleSheet } from "react-native-unistyles";
+import type { ComposedTheme } from "../../themes/compose";
 
 export const styles = StyleSheet.create((theme) => ({
   container: {
@@ -12,17 +12,17 @@ export const styles = StyleSheet.create((theme) => ({
     gap: theme.space[6],
   },
   hero: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
     gap: theme.space[4],
   },
   heroText: {
     flex: 1,
   },
   heroTitle: {
-    fontSize: theme.size['3xl'],
-    lineHeight: theme.lineHeight['3xl'],
+    fontSize: theme.size["3xl"],
+    lineHeight: theme.lineHeight["3xl"],
     fontWeight: theme.fontWeight.bold,
     fontFamily: theme.fontFamily.headline,
     color: theme.colors.text,
@@ -36,8 +36,8 @@ export const styles = StyleSheet.create((theme) => ({
   },
   section: {},
   sectionTitle: {
-    fontSize: theme.size['2xl'],
-    lineHeight: theme.lineHeight['2xl'],
+    fontSize: theme.size["2xl"],
+    lineHeight: theme.lineHeight["2xl"],
     fontWeight: theme.fontWeight.bold,
     fontFamily: theme.fontFamily.headline,
     color: theme.colors.text,
@@ -54,8 +54,8 @@ export const styles = StyleSheet.create((theme) => ({
     gap: theme.space[3],
   },
   row: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: theme.space[3],
   },
   themeInfo: {
@@ -98,16 +98,21 @@ export const styles = StyleSheet.create((theme) => ({
     padding: t.space[5],
     marginBottom: t.space[3],
   }),
-  displayText: (t: ComposedTheme, sizeKey: keyof ComposedTheme['size'], color?: string) => {
+  displayText: (
+    t: ComposedTheme,
+    sizeKey: keyof ComposedTheme["size"],
+    color?: string,
+  ) => {
     const fontSize = t.size[sizeKey];
     const lineHeightMap = t.lineHeight as Record<string, number>;
-    const lineHeight = lineHeightMap[sizeKey as string] ?? Math.round(fontSize * 1.1);
+    const lineHeight =
+      lineHeightMap[sizeKey as string] ?? Math.round(fontSize * 1.1);
     return {
       fontSize,
       lineHeight,
-    fontWeight: t.fontWeight.black,
-    fontFamily: t.fontFamily.headline,
-    color: color ?? t.colors.text,
+      fontWeight: t.fontWeight.black,
+      fontFamily: t.fontFamily.headline,
+      color: color ?? t.colors.text,
     };
   },
   sectionBlock: (t: ComposedTheme) => ({
@@ -134,8 +139,8 @@ export const styles = StyleSheet.create((theme) => ({
     backgroundColor: t.colors.backgroundSecondary,
   }),
   typeHeadline: (t: ComposedTheme) => ({
-    fontSize: t.size['2xl'],
-    lineHeight: t.lineHeight['2xl'],
+    fontSize: t.size["2xl"],
+    lineHeight: t.lineHeight["2xl"],
     fontWeight: t.fontWeight.bold,
     fontFamily: t.fontFamily.headline,
     color: t.colors.text,
@@ -178,8 +183,8 @@ export const styles = StyleSheet.create((theme) => ({
     marginBottom: t.space[4],
   }),
   previewTitle: (t: ComposedTheme) => ({
-    fontSize: t.size['2xl'],
-    lineHeight: t.lineHeight['2xl'],
+    fontSize: t.size["2xl"],
+    lineHeight: t.lineHeight["2xl"],
     fontWeight: t.fontWeight.bold,
     fontFamily: t.fontFamily.headline,
     color: t.colors.text,
@@ -211,8 +216,8 @@ export const styles = StyleSheet.create((theme) => ({
     marginBottom: t.space[3],
   }),
   previewGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: theme.space[3],
   },
   narrativeCard: (bg: string, textColor: string, t: ComposedTheme) => ({
@@ -225,7 +230,7 @@ export const styles = StyleSheet.create((theme) => ({
     padding: t.space[4],
   }),
   badgeLabel: (textColor: string, bg: string, t: ComposedTheme) => ({
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
     backgroundColor: bg,
     color: textColor,
     borderRadius: t.radius.pill,
@@ -238,8 +243,8 @@ export const styles = StyleSheet.create((theme) => ({
     marginBottom: t.space[2],
   }),
   storyLabelRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: theme.space[2],
     marginBottom: theme.space[2],
   },
@@ -255,8 +260,8 @@ export const styles = StyleSheet.create((theme) => ({
     fontFamily: t.fontFamily.body,
   }),
   accentPaletteRow: (count: number) => ({
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: theme.space[3],
   }),
   accentSwatch: (bg: string, t: ComposedTheme) => ({
@@ -267,7 +272,7 @@ export const styles = StyleSheet.create((theme) => ({
     borderWidth: 1,
     borderColor: t.colors.border,
     padding: t.space[3],
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
   }),
   accentText: (textColor: string, t: ComposedTheme) => ({
     color: textColor,
@@ -286,8 +291,8 @@ export const styles = StyleSheet.create((theme) => ({
     marginBottom: t.space[4],
   }),
   landingCtaRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: theme.space[2],
     marginTop: theme.space[3],
   },

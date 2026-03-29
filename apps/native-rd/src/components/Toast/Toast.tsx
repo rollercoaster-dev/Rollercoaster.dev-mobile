@@ -1,13 +1,13 @@
-import React, { useEffect, useRef } from 'react';
-import { Pressable } from 'react-native';
+import React, { useEffect, useRef } from "react";
+import { Pressable } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
-} from 'react-native-reanimated';
-import { useAnimationPref } from '../../hooks/useAnimationPref';
-import { Text } from '../Text';
-import { styles } from './Toast.styles';
+} from "react-native-reanimated";
+import { useAnimationPref } from "../../hooks/useAnimationPref";
+import { Text } from "../Text";
+import { styles } from "./Toast.styles";
 
 export interface ToastAction {
   label: string;

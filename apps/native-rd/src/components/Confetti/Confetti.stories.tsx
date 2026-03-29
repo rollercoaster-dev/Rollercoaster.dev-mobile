@@ -1,12 +1,12 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import React, { useState } from 'react';
-import { View, Pressable } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
-import { Text } from '../Text';
-import { Confetti } from './Confetti';
+import type { Meta, StoryObj } from "@storybook/react";
+import React, { useState } from "react";
+import { View, Pressable } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
+import { Text } from "../Text";
+import { Confetti } from "./Confetti";
 
 const meta: Meta<typeof Confetti> = {
-  title: 'Confetti',
+  title: "Confetti",
   component: Confetti,
 };
 
@@ -26,7 +26,9 @@ function ConfettiDemo() {
         accessibilityRole="button"
         accessibilityLabel="Trigger confetti"
       >
-        <Text variant="label" style={storyStyles.buttonLabel}>🎉 Trigger Confetti</Text>
+        <Text variant="label" style={storyStyles.buttonLabel}>
+          🎉 Trigger Confetti
+        </Text>
       </Pressable>
     </View>
   );
@@ -52,8 +54,8 @@ const storyStyles = StyleSheet.create((theme) => ({
     flex: 1,
     minHeight: 300,
     backgroundColor: theme.colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: theme.space[4],
   },
   button: {
@@ -69,6 +71,6 @@ const storyStyles = StyleSheet.create((theme) => ({
   },
   note: {
     color: theme.colors.textMuted,
-    textAlign: 'center',
+    textAlign: "center",
   },
 }));

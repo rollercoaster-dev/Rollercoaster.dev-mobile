@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native-unistyles';
+import { StyleSheet } from "react-native-unistyles";
 
 export const styles = StyleSheet.create((theme) => ({
   container: {
@@ -6,9 +6,9 @@ export const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.background,
   },
   topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[2],
   },
@@ -24,7 +24,7 @@ export const styles = StyleSheet.create((theme) => ({
   },
   cameraContainer: {
     flex: 1,
-    overflow: 'hidden',
+    overflow: "hidden",
     borderRadius: theme.radius.md,
     margin: theme.space[4],
   },
@@ -34,18 +34,18 @@ export const styles = StyleSheet.create((theme) => ({
   permissionContainer: {
     flex: 1,
     padding: theme.space[4],
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     gap: theme.space[4],
   },
   permissionText: {
-    textAlign: 'center',
+    textAlign: "center",
     color: theme.colors.textSecondary,
   },
   controls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: theme.space[4],
     paddingHorizontal: theme.space[4],
     gap: theme.space[6],
@@ -56,8 +56,8 @@ export const styles = StyleSheet.create((theme) => ({
     borderRadius: 36,
     borderWidth: 4,
     borderColor: theme.colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: theme.colors.backgroundSecondary,
   },
   recordButtonInner: {
@@ -77,11 +77,11 @@ export const styles = StyleSheet.create((theme) => ({
     height: 44,
     borderRadius: 22,
     backgroundColor: theme.colors.backgroundTertiary,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   timer: {
-    textAlign: 'center',
+    textAlign: "center",
     color: theme.colors.error,
     paddingVertical: theme.space[2],
   },
@@ -92,15 +92,15 @@ export const styles = StyleSheet.create((theme) => ({
     flex: 1,
     margin: theme.space[4],
     borderRadius: theme.radius.md,
-    overflow: 'hidden',
+    overflow: "hidden",
     backgroundColor: theme.colors.backgroundTertiary,
   },
   previewVideo: {
     flex: 1,
   },
   previewControls: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     padding: theme.space[4],
     gap: theme.space[3],
   },
@@ -108,7 +108,7 @@ export const styles = StyleSheet.create((theme) => ({
     flex: 1,
   },
   maxDurationWarning: {
-    textAlign: 'center',
+    textAlign: "center",
     color: theme.colors.warning,
     paddingBottom: theme.space[1],
     fontSize: theme.size.xs,

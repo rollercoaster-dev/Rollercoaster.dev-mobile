@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native-unistyles';
+import { StyleSheet } from "react-native-unistyles";
 
 export const styles = StyleSheet.create((theme) => ({
   container: {
@@ -6,9 +6,9 @@ export const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.background,
   },
   topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[2],
   },

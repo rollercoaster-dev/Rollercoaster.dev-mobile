@@ -4,34 +4,34 @@
  * Records audio via device microphone, provides playback preview,
  * and saves the recording as evidence attached to a goal or step.
  */
-import React, { useState } from 'react';
-import { View, TextInput, Alert, Pressable, Linking } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useUnistyles } from 'react-native-unistyles';
-import { useNavigation } from '@react-navigation/native';
-import { Text } from '../../components/Text';
-import { Card } from '../../components/Card';
-import { Button } from '../../components/Button';
-import { IconButton } from '../../components/IconButton';
-import { useAudioRecorder } from '../../hooks/useAudioRecorder';
-import { createEvidence, EvidenceType } from '../../db';
-import type { GoalId, StepId } from '../../db';
-import type { CaptureVoiceMemoScreenProps } from '../../navigation/types';
-import { styles } from './VoiceMemoScreen.styles';
+import React, { useState } from "react";
+import { View, TextInput, Alert, Pressable, Linking } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useUnistyles } from "react-native-unistyles";
+import { useNavigation } from "@react-navigation/native";
+import { Text } from "../../components/Text";
+import { Card } from "../../components/Card";
+import { Button } from "../../components/Button";
+import { IconButton } from "../../components/IconButton";
+import { useAudioRecorder } from "../../hooks/useAudioRecorder";
+import { createEvidence, EvidenceType } from "../../db";
+import type { GoalId, StepId } from "../../db";
+import type { CaptureVoiceMemoScreenProps } from "../../navigation/types";
+import { styles } from "./VoiceMemoScreen.styles";
 
 /** Format milliseconds as MM:SS */
 function formatDuration(ms: number): string {
   const totalSeconds = Math.floor(ms / 1000);
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
-  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 }
 
 export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
   const navigation = useNavigation();
   const { theme } = useUnistyles();
   const { goalId, stepId } = route.params;
-  const [caption, setCaption] = useState('');
+  const [caption, setCaption] = useState("");
 
   const {
     status,
@@ -49,15 +49,20 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
   } = useAudioRecorder();
 
   function handleGoBack() {
-    if (status === 'recording' || status === 'paused' || status === 'recorded' || status === 'playing') {
+    if (
+      status === "recording" ||
+      status === "paused" ||
+      status === "recorded" ||
+      status === "playing"
+    ) {
       Alert.alert(
-        'Discard recording?',
-        'You have an unsaved recording. Going back will discard it.',
+        "Discard recording?",
+        "You have an unsaved recording. Going back will discard it.",
         [
-          { text: 'Keep Recording', style: 'cancel' },
+          { text: "Keep Recording", style: "cancel" },
           {
-            text: 'Discard',
-            style: 'destructive',
+            text: "Discard",
+            style: "destructive",
             onPress: async () => {
               await reset();
               navigation.goBack();
@@ -76,7 +81,7 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
     try {
       const metadata = JSON.stringify({
         durationMs,
-        format: 'm4a',
+        format: "m4a",
       });
 
       createEvidence({
@@ -92,8 +97,8 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
       navigation.goBack();
     } catch (err) {
       Alert.alert(
-        'Could not save',
-        'Something went wrong saving the voice memo. Please try again.',
+        "Could not save",
+        "Something went wrong saving the voice memo. Please try again.",
       );
     }
   }
@@ -103,12 +108,16 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
   }
 
   // Permission denied state
-  if (status === 'permission-denied') {
+  if (status === "permission-denied") {
     return (
-      <SafeAreaView edges={['top']} style={styles.container}>
+      <SafeAreaView edges={["top"]} style={styles.container}>
         <View style={styles.topBar}>
           <IconButton
-            icon={<Text variant="body" style={styles.backIcon}>{'<'}</Text>}
+            icon={
+              <Text variant="body" style={styles.backIcon}>
+                {"<"}
+              </Text>
+            }
             onPress={() => navigation.goBack()}
             accessibilityLabel="Go back"
             size="sm"
@@ -120,13 +129,14 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
           <Card>
             <View style={styles.permissionContent}>
               <Text style={styles.permissionIcon} accessibilityElementsHidden>
-                {'\uD83C\uDF99\uFE0F'}
+                {"\uD83C\uDF99\uFE0F"}
               </Text>
               <Text variant="headline" accessibilityRole="header">
                 Microphone Access Needed
               </Text>
               <Text variant="body" style={styles.permissionText}>
-                Voice memos need microphone access. You can enable it in your device settings.
+                Voice memos need microphone access. You can enable it in your
+                device settings.
               </Text>
               <Button
                 label="Open Settings"
@@ -146,10 +156,14 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
   }
 
   return (
-    <SafeAreaView edges={['top']} style={styles.container}>
+    <SafeAreaView edges={["top"]} style={styles.container}>
       <View style={styles.topBar}>
         <IconButton
-          icon={<Text variant="body" style={styles.backIcon}>{'<'}</Text>}
+          icon={
+            <Text variant="body" style={styles.backIcon}>
+              {"<"}
+            </Text>
+          }
           onPress={handleGoBack}
           accessibilityLabel="Go back"
           size="sm"
@@ -162,27 +176,29 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
         {/* Timer display */}
         <Text
           style={styles.timerText}
-          accessibilityLabel={`Recording duration: ${formatDuration(status === 'playing' ? playbackPositionMs : durationMs)}`}
+          accessibilityLabel={`Recording duration: ${formatDuration(status === "playing" ? playbackPositionMs : durationMs)}`}
           accessibilityLiveRegion="polite"
         >
-          {formatDuration(status === 'playing' ? playbackPositionMs : durationMs)}
+          {formatDuration(
+            status === "playing" ? playbackPositionMs : durationMs,
+          )}
         </Text>
 
         {/* Status indicator */}
         <View style={styles.statusRow}>
-          {(status === 'recording') && (
+          {status === "recording" && (
             <View
               style={styles.recordingIndicator}
               accessibilityElementsHidden
             />
           )}
           <Text variant="caption" style={styles.statusText}>
-            {status === 'idle' && 'Tap to start recording'}
-            {status === 'requesting-permission' && 'Requesting permission...'}
-            {status === 'recording' && 'Recording'}
-            {status === 'paused' && 'Paused'}
-            {status === 'recorded' && 'Recording complete'}
-            {status === 'playing' && 'Playing'}
+            {status === "idle" && "Tap to start recording"}
+            {status === "requesting-permission" && "Requesting permission..."}
+            {status === "recording" && "Recording"}
+            {status === "paused" && "Paused"}
+            {status === "recorded" && "Recording complete"}
+            {status === "playing" && "Playing"}
           </Text>
         </View>
 
@@ -197,19 +213,21 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
         )}
 
         {/* Recording controls */}
-        {(status === 'idle' || status === 'recording' || status === 'paused') && (
+        {(status === "idle" ||
+          status === "recording" ||
+          status === "paused") && (
           <View style={styles.controls}>
-            {status === 'recording' && (
+            {status === "recording" && (
               <IconButton
-                icon={<Text variant="body">{'\u23F8\uFE0F'}</Text>}
+                icon={<Text variant="body">{"\u23F8\uFE0F"}</Text>}
                 onPress={pauseRecording}
                 accessibilityLabel="Pause recording"
                 size="md"
               />
             )}
-            {status === 'paused' && (
+            {status === "paused" && (
               <IconButton
-                icon={<Text variant="body">{'\u25B6\uFE0F'}</Text>}
+                icon={<Text variant="body">{"\u25B6\uFE0F"}</Text>}
                 onPress={resumeRecording}
                 accessibilityLabel="Resume recording"
                 size="md"
@@ -217,22 +235,18 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
             )}
 
             <Pressable
-              onPress={
-                status === 'idle'
-                  ? startRecording
-                  : stopRecording
-              }
+              onPress={status === "idle" ? startRecording : stopRecording}
               accessible
               accessibilityRole="button"
               accessibilityLabel={
-                status === 'idle' ? 'Start recording' : 'Stop recording'
+                status === "idle" ? "Start recording" : "Stop recording"
               }
               style={({ pressed }) => [
                 styles.recordButton,
                 pressed && styles.recordButtonPressed,
               ]}
             >
-              {status === 'idle' ? (
+              {status === "idle" ? (
                 <View style={styles.recordButtonIdle} />
               ) : (
                 <View style={styles.recordButtonInner} />
@@ -242,10 +256,10 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
         )}
 
         {/* Playback controls (after recording) */}
-        {(status === 'recorded' || status === 'playing') && (
+        {(status === "recorded" || status === "playing") && (
           <>
             <View style={styles.playbackControls}>
-              {status === 'playing' ? (
+              {status === "playing" ? (
                 <Button
                   label="Stop"
                   variant="secondary"
@@ -258,15 +272,11 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
                   onPress={startPlayback}
                 />
               )}
-              <Button
-                label="Re-record"
-                variant="ghost"
-                onPress={reset}
-              />
+              <Button label="Re-record" variant="ghost" onPress={reset} />
             </View>
 
             {/* Playback progress bar */}
-            {status === 'playing' && durationMs > 0 && (
+            {status === "playing" && durationMs > 0 && (
               <View
                 style={styles.playbackProgress}
                 accessible
@@ -280,7 +290,9 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
                 <View
                   style={[
                     styles.playbackProgressFill,
-                    { width: `${Math.round((playbackPositionMs / durationMs) * 100)}%` },
+                    {
+                      width: `${Math.round((playbackPositionMs / durationMs) * 100)}%`,
+                    },
                   ]}
                 />
               </View>
@@ -313,13 +325,13 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
                     variant="destructive"
                     onPress={() => {
                       Alert.alert(
-                        'Discard recording?',
-                        'This recording will be lost.',
+                        "Discard recording?",
+                        "This recording will be lost.",
                         [
-                          { text: 'Keep', style: 'cancel' },
+                          { text: "Keep", style: "cancel" },
                           {
-                            text: 'Discard',
-                            style: 'destructive',
+                            text: "Discard",
+                            style: "destructive",
                             onPress: () => {
                               reset();
                             },

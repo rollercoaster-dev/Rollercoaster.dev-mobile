@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { View, TextInput, Text, type TextInputProps } from 'react-native';
-import { useUnistyles } from 'react-native-unistyles';
-import { styles } from './Input.styles';
+import React, { useState } from "react";
+import { View, TextInput, Text, type TextInputProps } from "react-native";
+import { useUnistyles } from "react-native-unistyles";
+import { styles } from "./Input.styles";
 
-export interface InputProps extends Omit<TextInputProps, 'style'> {
+export interface InputProps extends Omit<TextInputProps, "style"> {
   label?: string;
   error?: string;
   testID?: string;

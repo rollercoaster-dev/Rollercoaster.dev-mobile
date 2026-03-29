@@ -1,9 +1,9 @@
-import React from 'react';
-import { View } from 'react-native';
-import { ThemeSwitcher } from './ThemeSwitcher';
+import React from "react";
+import { View } from "react-native";
+import { ThemeSwitcher } from "./ThemeSwitcher";
 
 export default {
-  title: 'Components/ThemeSwitcher',
+  title: "Components/ThemeSwitcher",
   component: ThemeSwitcher,
 };
 

@@ -9,9 +9,9 @@
  * handles string and ArrayBuffer, not Uint8Array directly.
  */
 
-import * as FileSystem from 'expo-file-system/legacy';
+import * as FileSystem from "expo-file-system/legacy";
 
-const BADGES_SUBDIR = 'badges';
+const BADGES_SUBDIR = "badges";
 
 function getBadgesDirectory(): string {
   return `${FileSystem.documentDirectory}${BADGES_SUBDIR}/`;
@@ -25,7 +25,7 @@ function generateBadgeFilename(): string {
 
 /** Convert a Uint8Array to a base64 string without relying on Node's Buffer */
 function toBase64(data: Uint8Array): string {
-  let binary = '';
+  let binary = "";
   for (let i = 0; i < data.length; i++) {
     binary += String.fromCharCode(data[i]);
   }
@@ -50,7 +50,7 @@ export async function saveBadgePNG(data: Uint8Array): Promise<string> {
     }
   } catch (dirErr) {
     throw new Error(
-      `Failed to create badges directory at ${badgesDir}: ${dirErr instanceof Error ? dirErr.message : String(dirErr)}`
+      `Failed to create badges directory at ${badgesDir}: ${dirErr instanceof Error ? dirErr.message : String(dirErr)}`,
     );
   }
 
@@ -61,7 +61,7 @@ export async function saveBadgePNG(data: Uint8Array): Promise<string> {
     });
   } catch (writeErr) {
     throw new Error(
-      `Failed to write badge PNG to ${uri}: ${writeErr instanceof Error ? writeErr.message : String(writeErr)}`
+      `Failed to write badge PNG to ${uri}: ${writeErr instanceof Error ? writeErr.message : String(writeErr)}`,
     );
   }
 

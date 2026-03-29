@@ -7,11 +7,11 @@
  *
  * Ring count is driven by evidenceCount: 2–4 concentric text rings.
  */
-import React from 'react';
-import { ClipPath, Defs, G, Path, Text, TextPath } from 'react-native-svg';
-import { generateShapePath } from '../shapes/paths';
-import { DEFAULT_STROKE_COLOR, clamp } from './constants';
-import type { FrameGenerator } from './types';
+import React from "react";
+import { ClipPath, Defs, G, Path, Text, TextPath } from "react-native-svg";
+import { generateShapePath } from "../shapes/paths";
+import { DEFAULT_STROKE_COLOR, clamp } from "./constants";
+import type { FrameGenerator } from "./types";
 
 let clipCounter = 0;
 
@@ -34,8 +34,8 @@ export function buildMicroprintContent(
 ): string {
   const base =
     stepNames && stepNames.length > 0
-      ? stepNames.join(' \u2022 ') + ' \u2022 '
-      : '\u2022 \u2022 \u2022 ';
+      ? stepNames.join(" \u2022 ") + " \u2022 "
+      : "\u2022 \u2022 \u2022 ";
 
   const repeats = Math.ceil(minLength / base.length);
   return base.repeat(repeats);
@@ -61,7 +61,7 @@ export const microprintGenerator: FrameGenerator = ({
   if (innerInset <= inset) {
     if (__DEV__) {
       console.warn(
-        '[microprintGenerator] Degenerate geometry: innerInset ' +
+        "[microprintGenerator] Degenerate geometry: innerInset " +
           `(${innerInset}) <= inset (${inset}). Frame skipped.`,
       );
     }
@@ -91,7 +91,7 @@ export const microprintGenerator: FrameGenerator = ({
         key: `path-${i}`,
         id: ringPathId,
         d: ringD,
-        fill: 'none',
+        fill: "none",
       }),
     );
 
@@ -102,9 +102,13 @@ export const microprintGenerator: FrameGenerator = ({
           key: `text-${i}`,
           fill: strokeColor,
           fontSize,
-          fontFamily: 'monospace',
+          fontFamily: "monospace",
         },
-        React.createElement(TextPath, { href: `#${ringPathId}`, startOffset: '0%' }, content),
+        React.createElement(
+          TextPath,
+          { href: `#${ringPathId}`, startOffset: "0%" },
+          content,
+        ),
       ),
     );
   }
@@ -120,8 +124,8 @@ export const microprintGenerator: FrameGenerator = ({
         { id: clipId },
         React.createElement(Path, {
           d: `${outerPath} ${innerPath}`,
-          clipRule: 'evenodd',
-          fillRule: 'evenodd',
+          clipRule: "evenodd",
+          fillRule: "evenodd",
         }),
       ),
       ...ringPathDefs,

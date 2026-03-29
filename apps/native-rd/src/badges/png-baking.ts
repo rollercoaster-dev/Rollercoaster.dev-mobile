@@ -20,38 +20,43 @@
  * @see https://www.imsglobal.org/sites/default/files/Badges/OBv2p0Final/baking/index.html
  */
 
-import { Buffer } from 'buffer';
-import type { OB2, OB3 } from 'openbadges-types';
+import { Buffer } from "buffer";
+import type { OB2, OB3 } from "openbadges-types";
 import {
   extractChunks,
   encodeChunks,
   findiTXtChunk,
   createiTXtChunk,
-} from './png-chunk-utils';
+} from "./png-chunk-utils";
 
 // --- Inlined version detection (not exported from the npm package) ---
 
 // Using a plain object instead of const enum — Babel does not inline const enum values
 const BadgeVersion = {
-  V2: '2.0',
-  V3: '3.0',
+  V2: "2.0",
+  V3: "3.0",
 } as const;
-type BadgeVersion = typeof BadgeVersion[keyof typeof BadgeVersion];
+type BadgeVersion = (typeof BadgeVersion)[keyof typeof BadgeVersion];
 
 const OBV3_CONTEXT_URLS = [
-  'https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json',
-  'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
+  "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
+  "https://purl.imsglobal.org/spec/ob/v3p0/context.json",
 ];
 
-function detectBadgeVersion(
-  credential: Record<string, unknown>,
-): BadgeVersion {
-  const context = credential['@context'];
+function detectBadgeVersion(credential: Record<string, unknown>): BadgeVersion {
+  const context = credential["@context"];
   if (Array.isArray(context)) {
-    if (context.some((c) => typeof c === 'string' && OBV3_CONTEXT_URLS.includes(c))) {
+    if (
+      context.some(
+        (c) => typeof c === "string" && OBV3_CONTEXT_URLS.includes(c),
+      )
+    ) {
       return BadgeVersion.V3;
     }
-  } else if (typeof context === 'string' && OBV3_CONTEXT_URLS.includes(context)) {
+  } else if (
+    typeof context === "string" &&
+    OBV3_CONTEXT_URLS.includes(context)
+  ) {
     return BadgeVersion.V3;
   }
   return BadgeVersion.V2;
@@ -60,9 +65,9 @@ function detectBadgeVersion(
 // --- End inlined version detection ---
 
 /** OB2 baking keyword per OB2 baking spec */
-const OB2_KEYWORD = 'openbadges';
+const OB2_KEYWORD = "openbadges";
 /** OB3 baking keyword per OB3 spec Section 5.3.1.1 */
-const OB3_KEYWORD = 'openbadgecredential';
+const OB3_KEYWORD = "openbadgecredential";
 /** Both keywords for unbaking (try OB3 first, then OB2) */
 const BAKING_KEYWORDS = [OB3_KEYWORD, OB2_KEYWORD];
 
@@ -90,7 +95,7 @@ export function isPNG(buffer: Buffer): boolean {
 function getBakingKeyword(
   credential: string | OB2.Assertion | OB3.VerifiableCredential,
 ): string {
-  if (typeof credential === 'string') {
+  if (typeof credential === "string") {
     return OB3_KEYWORD;
   }
 
@@ -116,37 +121,37 @@ export function bakePNG(
   credential: string | OB2.Assertion | OB3.VerifiableCredential,
 ): Buffer {
   if (!isPNG(imageBuffer)) {
-    throw new Error('Invalid PNG image: missing PNG signature');
+    throw new Error("Invalid PNG image: missing PNG signature");
   }
 
   const chunks = extractChunks(imageBuffer);
   const keyword = getBakingKeyword(credential);
   const content =
-    typeof credential === 'string' ? credential : JSON.stringify(credential);
+    typeof credential === "string" ? credential : JSON.stringify(credential);
 
   const iTxtChunk = createiTXtChunk(keyword, content);
 
-  const iendIndex = chunks.findIndex((chunk) => chunk.name === 'IEND');
+  const iendIndex = chunks.findIndex((chunk) => chunk.name === "IEND");
   if (iendIndex === -1) {
-    throw new Error('Invalid PNG image: missing IEND chunk');
+    throw new Error("Invalid PNG image: missing IEND chunk");
   }
 
   // Remove any existing baking iTXt chunks (both keywords)
   const filteredChunks = chunks.filter((chunk) => {
-    if (chunk.name !== 'iTXt') return true;
+    if (chunk.name !== "iTXt") return true;
 
     const keywordEndIndex = chunk.data.indexOf(0);
     if (keywordEndIndex === -1) return true;
 
     const chunkKeyword = Buffer.from(
       chunk.data.slice(0, keywordEndIndex),
-    ).toString('utf-8');
+    ).toString("utf-8");
     return !BAKING_KEYWORDS.includes(chunkKeyword);
   });
 
   // Insert new iTXt chunk before IEND
   const newIendIndex = filteredChunks.findIndex(
-    (chunk) => chunk.name === 'IEND',
+    (chunk) => chunk.name === "IEND",
   );
   filteredChunks.splice(newIendIndex, 0, iTxtChunk);
 
@@ -167,7 +172,7 @@ export function unbakePNG(
   imageBuffer: Buffer,
 ): string | OB2.Assertion | OB3.VerifiableCredential | null {
   if (!isPNG(imageBuffer)) {
-    throw new Error('Invalid PNG image: missing PNG signature');
+    throw new Error("Invalid PNG image: missing PNG signature");
   }
 
   const chunks = extractChunks(imageBuffer);
@@ -189,34 +194,36 @@ export function unbakePNG(
 
   const keywordEnd = data.indexOf(0);
   if (keywordEnd === -1) {
-    throw new Error('Invalid iTXt chunk: missing keyword terminator');
+    throw new Error("Invalid iTXt chunk: missing keyword terminator");
   }
 
   const pos = keywordEnd + 1 + 1 + 1; // After keyword null, compression flag, compression method
 
   const langTagEnd = data.indexOf(0, pos);
   if (langTagEnd === -1) {
-    throw new Error('Invalid iTXt chunk: missing language tag terminator');
+    throw new Error("Invalid iTXt chunk: missing language tag terminator");
   }
 
   const translatedKeywordEnd = data.indexOf(0, langTagEnd + 1);
   if (translatedKeywordEnd === -1) {
-    throw new Error('Invalid iTXt chunk: missing translated keyword terminator');
+    throw new Error(
+      "Invalid iTXt chunk: missing translated keyword terminator",
+    );
   }
 
   const textStart = translatedKeywordEnd + 1;
 
   if (textStart >= data.length) {
-    throw new Error('Invalid iTXt chunk: missing credential data');
+    throw new Error("Invalid iTXt chunk: missing credential data");
   }
 
-  const credentialText = Buffer.from(data.slice(textStart)).toString('utf-8');
+  const credentialText = Buffer.from(data.slice(textStart)).toString("utf-8");
 
   // If it looks like a JWS (three dot-separated segments), return as string
   if (
-    credentialText.includes('.') &&
-    credentialText.split('.').length === 3 &&
-    !credentialText.startsWith('{')
+    credentialText.includes(".") &&
+    credentialText.split(".").length === 3 &&
+    !credentialText.startsWith("{")
   ) {
     return credentialText;
   }

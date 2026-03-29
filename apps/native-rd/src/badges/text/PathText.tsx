@@ -1,9 +1,9 @@
-import React from 'react';
-import { Defs, G, Path, Text, TextPath } from 'react-native-svg';
-import type { BadgeShape, PathTextPosition } from '../types';
-import { generateContour } from '../shapes/contours';
-import { getSafeTextColor } from '../../utils/accessibility';
-import { fontFamily as fontFamilyTokens } from '../../themes/tokens';
+import React from "react";
+import { Defs, G, Path, Text, TextPath } from "react-native-svg";
+import type { BadgeShape, PathTextPosition } from "../types";
+import { generateContour } from "../shapes/contours";
+import { getSafeTextColor } from "../../utils/accessibility";
+import { fontFamily as fontFamilyTokens } from "../../themes/tokens";
 
 export interface PathTextProps {
   pathText: string | undefined;
@@ -42,9 +42,9 @@ export function PathText({
   instanceId,
   fontScale = 1,
 }: PathTextProps): React.ReactElement | null {
-  const position = pathTextPosition ?? 'top';
-  const showTop = position === 'top' || position === 'both';
-  const showBottom = position === 'bottom' || position === 'both';
+  const position = pathTextPosition ?? "top";
+  const showTop = position === "top" || position === "both";
+  const showBottom = position === "bottom" || position === "both";
 
   const topText = showTop ? pathText?.trim() : undefined;
   const bottomText = showBottom ? pathTextBottom?.trim() : undefined;
@@ -56,7 +56,7 @@ export function PathText({
   const topId = `pathtext-top-${id}`;
   const bottomId = `pathtext-bottom-${id}`;
   const fontSize = size * PATH_TEXT_FONT_SIZE_RATIO * fontScale;
-  const textColor = getSafeTextColor(fillColor, 'PathText');
+  const textColor = getSafeTextColor(fillColor, "PathText");
   const rotateTransform = `rotate(180 ${size / 2} ${size / 2})`;
   const renderedTopText = topText;
   const renderedBottomText = bottomText;
@@ -65,7 +65,9 @@ export function PathText({
     <>
       <Defs>
         {topText && <Path id={topId} d={contour.textPathTop} fill="none" />}
-        {bottomText && <Path id={bottomId} d={contour.textPathBottom} fill="none" />}
+        {bottomText && (
+          <Path id={bottomId} d={contour.textPathBottom} fill="none" />
+        )}
       </Defs>
       <G transform={rotateTransform}>
         {renderedTopText && (
@@ -87,7 +89,11 @@ export function PathText({
             fontSize={fontSize}
             fontFamily={fontFamily}
           >
-            <TextPath href={`#${bottomId}`} startOffset="50%" textAnchor="middle">
+            <TextPath
+              href={`#${bottomId}`}
+              startOffset="50%"
+              textAnchor="middle"
+            >
               {renderedBottomText}
             </TextPath>
           </Text>

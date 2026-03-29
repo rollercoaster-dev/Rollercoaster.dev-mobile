@@ -11,22 +11,22 @@ The "Ralph Wiggum Loop": agents iterate with agent reviewers until all are satis
 
 ### Input
 
-| Field             | Type    | Required | Description                                |
-| ----------------- | ------- | -------- | ------------------------------------------ |
-| `issue_number`    | number  | Yes      | GitHub issue number                        |
+| Field             | Type    | Required | Description                                        |
+| ----------------- | ------- | -------- | -------------------------------------------------- |
+| `issue_number`    | number  | Yes      | GitHub issue number                                |
 | `max_retry`       | number  | No       | Max fix attempts per critical finding (default: 3) |
-| `skip_coderabbit` | boolean | No       | Skip CodeRabbit CLI review (default: false)|
+| `skip_coderabbit` | boolean | No       | Skip CodeRabbit CLI review (default: false)        |
 
 ### Output
 
-| Field               | Type    | Description                              |
-| ------------------- | ------- | ---------------------------------------- |
-| `ready`             | boolean | Whether PR creation should proceed       |
-| `summary.total`     | number  | Total findings across all reviewers      |
-| `summary.critical`  | number  | Critical findings count                  |
-| `summary.fixed`     | number  | Successfully auto-fixed count            |
-| `summary.unresolved`| number  | Critical findings not fixed              |
-| `blockers`          | array   | Unresolved critical findings (if any)    |
+| Field                | Type    | Description                           |
+| -------------------- | ------- | ------------------------------------- |
+| `ready`              | boolean | Whether PR creation should proceed    |
+| `summary.total`      | number  | Total findings across all reviewers   |
+| `summary.critical`   | number  | Critical findings count               |
+| `summary.fixed`      | number  | Successfully auto-fixed count         |
+| `summary.unresolved` | number  | Critical findings not fixed           |
+| `blockers`           | array   | Unresolved critical findings (if any) |
 
 ### Side Effects
 
@@ -56,6 +56,7 @@ npx jest --no-coverage
 ```
 
 If validation fails:
+
 1. Attempt to fix the issue
 2. Re-run the failing command
 3. If still failing after 2 attempts, add to blockers and continue to review
@@ -69,6 +70,7 @@ Skip if `skip_coderabbit` is true.
 ```
 
 Parse the output for findings. CodeRabbit categories:
+
 - **"Potential issue"** or **"Bug"** --> CRITICAL
 - **"Improvement"** or **"Suggestion"** --> MEDIUM
 - **"Nitpick"** --> LOW
@@ -109,12 +111,12 @@ Normalize all findings to a common schema:
 
 Classification thresholds (same as the `review` skill):
 
-| Source                | CRITICAL                             | HIGH             | MEDIUM/LOW        |
-| --------------------- | ------------------------------------ | ---------------- | ----------------- |
-| CodeRabbit            | "Potential issue" / "Bug"            | "Improvement"    | "Nitpick"         |
-| code-reviewer         | Confidence >= 91 OR label="Critical" | Confidence >= 75 | Confidence < 75   |
-| silent-failure-hunter | Severity="CRITICAL"                  | Severity="HIGH"  | MEDIUM/LOW        |
-| pr-test-analyzer      | Gap rating >= 8                      | Gap rating >= 5  | Gap rating < 5    |
+| Source                | CRITICAL                             | HIGH             | MEDIUM/LOW      |
+| --------------------- | ------------------------------------ | ---------------- | --------------- |
+| CodeRabbit            | "Potential issue" / "Bug"            | "Improvement"    | "Nitpick"       |
+| code-reviewer         | Confidence >= 91 OR label="Critical" | Confidence >= 75 | Confidence < 75 |
+| silent-failure-hunter | Severity="CRITICAL"                  | Severity="HIGH"  | MEDIUM/LOW      |
+| pr-test-analyzer      | Gap rating >= 8                      | Gap rating >= 5  | Gap rating < 5  |
 
 ### Step 5: Auto-Fix Loop
 
@@ -158,10 +160,12 @@ Calculate summary:
 ```
 
 **If `unresolved == 0`:**
+
 - Return `{ ready: true, summary }`
 - Print: "Self-review PASSED. Ready for /finalize."
 
 **If `unresolved > 0`:**
+
 - Return `{ ready: false, summary, blockers }`
 - Print the unresolved findings
 - BLOCK: Do not proceed to /finalize
@@ -191,10 +195,10 @@ Result: READY / BLOCKED
 
 ## Error Handling
 
-| Condition              | Behavior                              |
-| ---------------------- | ------------------------------------- |
-| CodeRabbit CLI missing | Warn, skip CodeRabbit. Output must show "CodeRabbit: SKIPPED". Result reads "READY (degraded — CodeRabbit skipped)". |
+| Condition              | Behavior                                                                                                                                                    |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CodeRabbit CLI missing | Warn, skip CodeRabbit. Output must show "CodeRabbit: SKIPPED". Result reads "READY (degraded — CodeRabbit skipped)".                                        |
 | Agent fails to spawn   | Log error with agent name and error type. Continue with other agents. Output must show "<Agent>: SKIPPED (spawn error)". Include `degraded` flag in result. |
-| All agents fail        | Report error with per-agent failure details. Mark as BLOCKED. |
-| Fix breaks validation  | Revert fix, mark as unresolved        |
-| Max retry exceeded     | Mark as unresolved, continue          |
+| All agents fail        | Report error with per-agent failure details. Mark as BLOCKED.                                                                                               |
+| Fix breaks validation  | Revert fix, mark as unresolved                                                                                                                              |
+| Max retry exceeded     | Mark as unresolved, continue                                                                                                                                |

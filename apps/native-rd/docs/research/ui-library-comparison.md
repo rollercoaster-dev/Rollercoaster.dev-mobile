@@ -17,6 +17,7 @@ The native app needs:
 5. **Custom font support** — OpenDyslexic, Anybody (headlines), DM Mono, Atkinson Hyperlegible
 
 The existing monorepo uses a three-tier CSS custom property system:
+
 - **Foundational** — primitive values (palette, fonts, spacing)
 - **Semantic** — context tokens (`--ob-primary`, `--ob-background`)
 - **Component** — per-component overrides (`--ob-badge-background`)
@@ -30,6 +31,7 @@ The existing monorepo uses a three-tier CSS custom property system:
 **GitHub:** ~13.6k stars | **Latest:** v2.0.0-rc.0 (Jan 2026) | **Actively maintained**
 
 **Strengths:**
+
 - Three-tier token architecture (`createTokens` → `createThemes` → variants) directly mirrors our CSS custom property system
 - Runtime theme switching with smart re-rendering (only updates when accessed keys change)
 - 50+ components (buttons, forms, cards, navigation, modals)
@@ -40,6 +42,7 @@ The existing monorepo uses a three-tier CSS custom property system:
 - Styled and unstyled component variants
 
 **Weaknesses:**
+
 - Accessibility is manual — every ARIA label, focus trap, screen reader hint must be added by hand
 - Steep learning curve (compiler concepts, optimization strategies)
 - No direct Vue compatibility (React-only components, but CSS variables exportable)
@@ -63,6 +66,7 @@ The existing monorepo uses a three-tier CSS custom property system:
 **GitHub:** ~4.9k + ~7.6k stars | **Latest:** v4.0.0-alpha (Jan 2026) | **Actively maintained**
 
 **Strengths:**
+
 - Built on `@react-native-aria` — accessibility is automatic (focus trapping, screen reader labels, keyboard nav, WCAG AA out of the box)
 - 40+ production-ready accessible components
 - NativeWind v4 CSS variables support runtime theme switching
@@ -72,6 +76,7 @@ The existing monorepo uses a three-tier CSS custom property system:
 - Designed for Expo managed workflow
 
 **Weaknesses:**
+
 - Copy-paste component approach (more maintenance than npm package)
 - NativeWind adds Tailwind learning curve
 - Less performant than Tamagui's compiler (76ms vs 70ms mount benchmark)
@@ -94,23 +99,28 @@ The existing monorepo uses a three-tier CSS custom property system:
 ## Also Evaluated
 
 ### React Native Paper (14.3k stars)
+
 - Most comprehensive components (60+), excellent accessibility (WCAG 2.1 AA)
 - **Rejected:** Material Design lock-in conflicts with custom ND themes. High contrast, muted palettes, and autism-friendly aesthetics fight Material Design's opinionated visual language.
 
 ### React Native Unistyles (2.8k stars)
+
 - Zero JS re-renders on theme changes (C++ layer optimization)
 - Styling-only — needs pairing with component library
 - **Interesting as performance layer** but adds complexity of managing two libraries
 
 ### NativeWind v4 standalone (7.6k stars)
+
 - Excellent theming with CSS variables, Tailwind config shareable with web
 - Styling-only — no components. Best used with Gluestack UI v2.
 
 ### Dripsy (2.1k stars)
+
 - Theme-UI inspired, responsive arrays
 - **Passed:** Less active community, minimal component set, no accessibility features
 
 ### Shopify Restyle (3.4k stars)
+
 - Type-enforced theme system, used in Shopify's production app
 - **Passed:** No pre-built components, requires building entire component library
 
@@ -118,15 +128,15 @@ The existing monorepo uses a three-tier CSS custom property system:
 
 ## Core Trade-off
 
-| | Tamagui | Gluestack + NativeWind |
-|---|---------|----------------------|
-| **Theming** | Best architecture (mirrors our 3-tier system) | Good (Tailwind + CSS vars) |
-| **Accessibility** | Manual (significant work) | Automatic (built-in WCAG AA) |
-| **Performance** | Best (compiler optimization) | Good (slightly behind) |
-| **Components** | 50+ styled/unstyled | 40+ all accessible |
-| **Learning curve** | Steep | Moderate |
-| **Token sharing** | CSS variable export | Tailwind config sharing |
-| **Maintenance** | npm package | Copy-paste model |
+|                    | Tamagui                                       | Gluestack + NativeWind       |
+| ------------------ | --------------------------------------------- | ---------------------------- |
+| **Theming**        | Best architecture (mirrors our 3-tier system) | Good (Tailwind + CSS vars)   |
+| **Accessibility**  | Manual (significant work)                     | Automatic (built-in WCAG AA) |
+| **Performance**    | Best (compiler optimization)                  | Good (slightly behind)       |
+| **Components**     | 50+ styled/unstyled                           | 40+ all accessible           |
+| **Learning curve** | Steep                                         | Moderate                     |
+| **Token sharing**  | CSS variable export                           | Tailwind config sharing      |
+| **Maintenance**    | npm package                                   | Copy-paste model             |
 
 **The tension:** Tamagui has the best theming architecture and performance. Gluestack has the best accessibility with the least manual work. Since neurodivergent-first accessibility is our non-negotiable differentiator, Gluestack's automatic accessibility has a real advantage — but Tamagui's token system is a better architectural match.
 
@@ -164,6 +174,7 @@ This token sharing layer should live in a shared package (e.g., `@rollercoaster-
 ## Recommendation
 
 **Defer final decision until prototyping.** Both Tamagui and Gluestack + NativeWind are strong candidates. The decision should be informed by:
+
 - A prototype of badge display + theme switching in each
 - Accessibility audit of the Tamagui prototype (how much manual work?)
 - Token sharing proof-of-concept between the chosen library and `openbadges-ui`

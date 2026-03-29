@@ -1,11 +1,11 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import React, { useState } from 'react';
-import { View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
-import { SettingsRow } from './SettingsRow';
+import type { Meta, StoryObj } from "@storybook/react";
+import React, { useState } from "react";
+import { View } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
+import { SettingsRow } from "./SettingsRow";
 
 const meta: Meta<typeof SettingsRow> = {
-  title: 'SettingsRow',
+  title: "SettingsRow",
   component: SettingsRow,
 };
 
@@ -15,13 +15,22 @@ type Story = StoryObj<typeof SettingsRow>;
 
 function ToggleRow() {
   const [on, setOn] = useState(false);
-  return <SettingsRow label="Dark Mode" toggle={{ value: on, onValueChange: setOn }} />;
+  return (
+    <SettingsRow
+      label="Dark Mode"
+      toggle={{ value: on, onValueChange: setOn }}
+    />
+  );
 }
 
 export const AllTypes: Story = {
   render: () => (
     <View style={storyStyles.grid}>
-      <SettingsRow label="Account" value="user@example.com" onPress={() => {}} />
+      <SettingsRow
+        label="Account"
+        value="user@example.com"
+        onPress={() => {}}
+      />
       <SettingsRow label="Notifications" onPress={() => {}} />
       <ToggleRow />
       <SettingsRow label="Version" value="1.0.0" />
@@ -35,7 +44,7 @@ const storyStyles = StyleSheet.create((theme) => ({
     borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.border,
     borderRadius: theme.radius.sm,
-    overflow: 'hidden',
+    overflow: "hidden",
     backgroundColor: theme.colors.backgroundSecondary,
   },
 }));

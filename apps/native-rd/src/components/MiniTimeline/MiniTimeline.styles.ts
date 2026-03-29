@@ -1,5 +1,5 @@
-import { StyleSheet } from 'react-native-unistyles';
-import { shadowStyle } from '../../styles/shadows';
+import { StyleSheet } from "react-native-unistyles";
+import { shadowStyle } from "../../styles/shadows";
 
 export const styles = StyleSheet.create((theme) => ({
   container: {
@@ -9,11 +9,11 @@ export const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.backgroundSecondary,
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[2],
-    ...shadowStyle(theme, 'hardSm'),
+    ...shadowStyle(theme, "hardSm"),
   },
   track: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
     height: 24,
   },
   node: {
@@ -56,16 +56,16 @@ export const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.accentPrimary,
   },
   segmentPending: {
-    backgroundColor: 'transparent' as const,
+    backgroundColor: "transparent" as const,
     borderTopWidth: 3,
-    borderStyle: 'dashed' as const,
+    borderStyle: "dashed" as const,
     borderColor: theme.colors.textMuted,
     height: 0,
   },
   hintText: {
     fontSize: theme.size.xs,
     color: theme.colors.textMuted,
-    textAlign: 'center' as const,
+    textAlign: "center" as const,
     marginTop: 4,
     fontFamily: theme.fontFamily.body,
   },

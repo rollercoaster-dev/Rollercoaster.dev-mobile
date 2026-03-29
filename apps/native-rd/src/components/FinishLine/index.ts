@@ -1,1 +1,1 @@
-export { FinishLine, type FinishLineProps } from './FinishLine';
+export { FinishLine, type FinishLineProps } from "./FinishLine";

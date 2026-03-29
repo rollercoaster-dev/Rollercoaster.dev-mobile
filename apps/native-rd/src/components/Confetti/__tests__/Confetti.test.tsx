@@ -1,23 +1,25 @@
-import React from 'react';
-import { render } from '@testing-library/react-native';
-import { Confetti } from '../Confetti';
+import React from "react";
+import { render } from "@testing-library/react-native";
+import { Confetti } from "../Confetti";
 
-jest.mock('../../../hooks/useAnimationPref', () => ({
+jest.mock("../../../hooks/useAnimationPref", () => ({
   useAnimationPref: jest.fn(() => ({
-    animationPref: 'full',
+    animationPref: "full",
     shouldAnimate: true,
     shouldReduceMotion: false,
     setAnimationPref: jest.fn(),
   })),
 }));
 
-const { useAnimationPref } = jest.requireMock('../../../hooks/useAnimationPref');
+const { useAnimationPref } = jest.requireMock(
+  "../../../hooks/useAnimationPref",
+);
 
-describe('Confetti', () => {
+describe("Confetti", () => {
   beforeEach(() => {
     jest.useFakeTimers();
     useAnimationPref.mockReturnValue({
-      animationPref: 'full',
+      animationPref: "full",
       shouldAnimate: true,
       shouldReduceMotion: false,
       setAnimationPref: jest.fn(),
@@ -28,14 +30,14 @@ describe('Confetti', () => {
     jest.useRealTimers();
   });
 
-  it('renders nothing when not visible', () => {
+  it("renders nothing when not visible", () => {
     const { toJSON } = render(<Confetti visible={false} />);
     expect(toJSON()).toBeNull();
   });
 
-  it('renders nothing when shouldAnimate is false', () => {
+  it("renders nothing when shouldAnimate is false", () => {
     useAnimationPref.mockReturnValue({
-      animationPref: 'none',
+      animationPref: "none",
       shouldAnimate: false,
       shouldReduceMotion: true,
       setAnimationPref: jest.fn(),
@@ -45,17 +47,17 @@ describe('Confetti', () => {
     expect(toJSON()).toBeNull();
   });
 
-  it('renders confetti pieces when visible and animations enabled', () => {
+  it("renders confetti pieces when visible and animations enabled", () => {
     const { toJSON } = render(<Confetti visible={true} />);
     const tree = toJSON();
     expect(tree).not.toBeNull();
     // Container should have children (confetti pieces)
-    expect(tree?.type).toBe('View');
+    expect(tree?.type).toBe("View");
     expect(tree?.children).not.toBeNull();
     expect(tree?.children?.length).toBe(60);
   });
 
-  it('calls onComplete after cleanup timeout', () => {
+  it("calls onComplete after cleanup timeout", () => {
     const onComplete = jest.fn();
     render(<Confetti visible={true} onComplete={onComplete} />);
 
@@ -64,7 +66,7 @@ describe('Confetti', () => {
     expect(onComplete).toHaveBeenCalledTimes(1);
   });
 
-  it('calls onComplete exactly once even after extended time', () => {
+  it("calls onComplete exactly once even after extended time", () => {
     const onComplete = jest.fn();
     render(<Confetti visible={true} onComplete={onComplete} />);
 
@@ -76,9 +78,11 @@ describe('Confetti', () => {
     expect(onComplete).toHaveBeenCalledTimes(1);
   });
 
-  it('marks confetti as hidden from accessibility', () => {
+  it("marks confetti as hidden from accessibility", () => {
     const { toJSON } = render(<Confetti visible={true} />);
     expect(toJSON()?.props.accessibilityElementsHidden).toBe(true);
-    expect(toJSON()?.props.importantForAccessibility).toBe('no-hide-descendants');
+    expect(toJSON()?.props.importantForAccessibility).toBe(
+      "no-hide-descendants",
+    );
   });
 });

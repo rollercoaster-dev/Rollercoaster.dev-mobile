@@ -40,5 +40,6 @@ const makeEvoluInstance = () => ({
 /**
  * createEvolu is curried: createEvolu(deps)(schema, options) => evoluInstance
  */
-export const createEvolu = (_deps: unknown) => (_schema: unknown, _options?: unknown) =>
-  makeEvoluInstance();
+export const createEvolu =
+  (_deps: unknown) => (_schema: unknown, _options?: unknown) =>
+    makeEvoluInstance();

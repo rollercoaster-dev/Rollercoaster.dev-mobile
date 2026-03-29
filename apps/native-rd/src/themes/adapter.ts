@@ -25,7 +25,7 @@ import {
   type Narrative as PkgNarrative,
   type NarrativeOverride as PkgNarrativeOverride,
   type VariantOverride as PkgVariantOverride,
-} from '@rollercoaster-dev/design-tokens/unistyles';
+} from "@rollercoaster-dev/design-tokens/unistyles";
 
 // ---------------------------------------------------------------------------
 // Palette — package colors + app-specific additions + name aliases
@@ -35,21 +35,21 @@ export const palette = {
   ...pkgPalette,
 
   // App-specific colors not in the package
-  cream100: '#f8f5e4',
-  cream200: '#f0edd6',
-  purpleDesaturated: '#b4a7d6',
-  mintDesaturated: '#c8e6d4',
-  yellow200: '#f0e68c',
-  green600: '#16a34a',
+  cream100: "#f8f5e4",
+  cream200: "#f0edd6",
+  purpleDesaturated: "#b4a7d6",
+  mintDesaturated: "#c8e6d4",
+  yellow200: "#f0e68c",
+  green600: "#16a34a",
 
   // Name aliases for backward compat with native-rd palette references
-  purple300: pkgPalette.secondaryLight,   // '#c4b5fd'
-  purple400: pkgPalette.accentPurple,     // '#a78bfa'
-  mint200: pkgPalette.accentMint,         // '#d4f4e7'
-  mint600: pkgPalette.success,            // '#059669'
-  yellow300: pkgPalette.accentYellow,     // '#ffe50c'
-  blue600: pkgPalette.info,              // '#2563eb'
-  red600: pkgPalette.error,              // '#dc2626'
+  purple300: pkgPalette.secondaryLight, // '#c4b5fd'
+  purple400: pkgPalette.accentPurple, // '#a78bfa'
+  mint200: pkgPalette.accentMint, // '#d4f4e7'
+  mint600: pkgPalette.success, // '#059669'
+  yellow300: pkgPalette.accentYellow, // '#ffe50c'
+  blue600: pkgPalette.info, // '#2563eb'
+  red600: pkgPalette.error, // '#dc2626'
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -99,7 +99,7 @@ export const fontWeight = pkgFontWeight;
 // ---------------------------------------------------------------------------
 
 // Keys that match between native-rd size scale and what we want in lineHeight
-const sizeKeys = ['xs', 'sm', 'md', 'lg', 'xl', '2xl', '3xl'] as const;
+const sizeKeys = ["xs", "sm", "md", "lg", "xl", "2xl", "3xl"] as const;
 
 function computeLineHeights(
   sizeScale: Record<string, number>,

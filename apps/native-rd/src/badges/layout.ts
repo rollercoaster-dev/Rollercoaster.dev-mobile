@@ -1,6 +1,6 @@
-import type { BadgeDesign, BadgeShape } from './types';
+import type { BadgeDesign, BadgeShape } from "./types";
 
-export type BadgeLayoutDensity = 'default' | 'balanced' | 'compact';
+export type BadgeLayoutDensity = "default" | "balanced" | "compact";
 
 type BadgeLayoutMetrics = {
   density: BadgeLayoutDensity;
@@ -31,21 +31,31 @@ const SHAPE_CENTER_Y_OFFSET: Record<BadgeShape, number> = {
 };
 
 function hasVisibleCenterBanner(design: BadgeDesign) {
-  return design.banner?.position === 'center' && Boolean(design.banner.text?.trim());
+  return (
+    design.banner?.position === "center" && Boolean(design.banner.text?.trim())
+  );
 }
 
 function hasVisibleBottomBanner(design: BadgeDesign) {
-  return design.banner?.position === 'bottom' && Boolean(design.banner.text?.trim());
+  return (
+    design.banner?.position === "bottom" && Boolean(design.banner.text?.trim())
+  );
 }
 
 function hasVisibleTopPathText(design: BadgeDesign) {
-  const position = design.pathTextPosition ?? 'top';
-  return (position === 'top' || position === 'both') && Boolean(design.pathText?.trim());
+  const position = design.pathTextPosition ?? "top";
+  return (
+    (position === "top" || position === "both") &&
+    Boolean(design.pathText?.trim())
+  );
 }
 
 function hasVisibleBottomPathText(design: BadgeDesign) {
-  const position = design.pathTextPosition ?? 'top';
-  return (position === 'bottom' || position === 'both') && Boolean(design.pathTextBottom?.trim());
+  const position = design.pathTextPosition ?? "top";
+  return (
+    (position === "bottom" || position === "both") &&
+    Boolean(design.pathTextBottom?.trim())
+  );
 }
 
 export function getBadgeLayoutMetrics(
@@ -66,19 +76,18 @@ export function getBadgeLayoutMetrics(
     Number(centerBannerVisible || bottomBannerVisible) +
     Number(centerLabelVisible);
 
-  let density: BadgeLayoutDensity = 'default';
-  if (layoutPressure >= 3 || (bottomPathTextVisible && (centerLabelVisible || centerBannerVisible))) {
-    density = 'compact';
+  let density: BadgeLayoutDensity = "default";
+  if (
+    layoutPressure >= 3 ||
+    (bottomPathTextVisible && (centerLabelVisible || centerBannerVisible))
+  ) {
+    density = "compact";
   } else if (layoutPressure >= 2) {
-    density = 'balanced';
+    density = "balanced";
   }
 
   const densityScale =
-    density === 'compact'
-      ? 0.82
-      : density === 'balanced'
-        ? 0.9
-        : 1;
+    density === "compact" ? 0.82 : density === "balanced" ? 0.9 : 1;
 
   const shapeOffset = SHAPE_CENTER_Y_OFFSET[design.shape] ?? 0;
   const shapeTextScale = SHAPE_PATH_TEXT_SCALE[design.shape] ?? 0.85;
@@ -91,11 +100,17 @@ export function getBadgeLayoutMetrics(
       (bottomPathTextVisible ? -0.004 : 0));
 
   const textInsetReduction =
-    density === 'compact' ? size * 0.055 : density === 'balanced' ? size * 0.04 : size * 0.03;
+    density === "compact"
+      ? size * 0.055
+      : density === "balanced"
+        ? size * 0.04
+        : size * 0.03;
   const minTextInset = inset + size * 0.03;
   const pathTextInset = Math.max(minTextInset, innerInset - textInsetReduction);
   const compactTextCompression =
-    topPathTextVisible && bottomPathTextVisible && centerBannerVisible ? 0.78 : 1;
+    topPathTextVisible && bottomPathTextVisible && centerBannerVisible
+      ? 0.78
+      : 1;
   const pathTextFontScale =
     shapeTextScale * densityScale * compactTextCompression;
 
@@ -103,11 +118,12 @@ export function getBadgeLayoutMetrics(
     density,
     centerY,
     centerContentScale:
-      density === 'compact' ? 0.78 : density === 'balanced' ? 0.88 : 1,
+      density === "compact" ? 0.78 : density === "balanced" ? 0.88 : 1,
     centerLabelScale:
-      density === 'compact' ? 0.72 : density === 'balanced' ? 0.84 : 1,
+      density === "compact" ? 0.72 : density === "balanced" ? 0.84 : 1,
     pathTextFontScale,
     pathTextInset,
-    bannerScale: density === 'compact' ? 0.88 : density === 'balanced' ? 0.94 : 1,
+    bannerScale:
+      density === "compact" ? 0.88 : density === "balanced" ? 0.94 : 1,
   };
 }

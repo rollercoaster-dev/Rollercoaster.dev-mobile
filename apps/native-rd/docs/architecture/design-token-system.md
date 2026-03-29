@@ -62,29 +62,29 @@ Tokens use the [DTCG](https://design-tokens.github.io/community-group/format/) `
 
 ### `src/tokens/` — 8 primitive token files
 
-| File | Contents |
-|------|----------|
-| `colors.json` | Palette primitives (primary, secondary, accents, grays) |
+| File              | Contents                                                         |
+| ----------------- | ---------------------------------------------------------------- |
+| `colors.json`     | Palette primitives (primary, secondary, accents, grays)          |
 | `typography.json` | Font families, size scale, weights, line heights, letter spacing |
-| `spacing.json` | Space scale, border radius, z-index, shadows |
-| `semantic.json` | Semantic mappings (surface, interactive, form colors) |
-| `narrative.json` | Four-section color narrative (climb, drop, stories, relief) |
-| `mood.json` | Theme mood names and descriptions |
-| `aliases.json` | Convenience aliases (ink, paper, highlight) |
-| `components.json` | Component-level token compositions |
+| `spacing.json`    | Space scale, border radius, z-index, shadows                     |
+| `semantic.json`   | Semantic mappings (surface, interactive, form colors)            |
+| `narrative.json`  | Four-section color narrative (climb, drop, stories, relief)      |
+| `mood.json`       | Theme mood names and descriptions                                |
+| `aliases.json`    | Convenience aliases (ink, paper, highlight)                      |
+| `components.json` | Component-level token compositions                               |
 
 ### `src/themes/` — 8 theme override files
 
-| File | Theme |
-|------|-------|
-| `light.json` | Default (light) base |
-| `dark.json` | Dark mode |
-| `high-contrast.json` | WCAG AAA high contrast |
-| `large-text.json` | 1.25x size scale |
-| `dyslexia-friendly.json` | Cream bg, relaxed spacing |
-| `low-vision.json` | High contrast + large text |
-| `low-info.json` | Reduced visual noise |
-| `autism-friendly.json` | Muted/desaturated colors |
+| File                     | Theme                      |
+| ------------------------ | -------------------------- |
+| `light.json`             | Default (light) base       |
+| `dark.json`              | Dark mode                  |
+| `high-contrast.json`     | WCAG AAA high contrast     |
+| `large-text.json`        | 1.25x size scale           |
+| `dyslexia-friendly.json` | Cream bg, relaxed spacing  |
+| `low-vision.json`        | High contrast + large text |
+| `low-info.json`          | Reduced visual noise       |
+| `autism-friendly.json`   | Muted/desaturated colors   |
 
 ---
 
@@ -122,14 +122,14 @@ bun run build:unistyles # Unistyles JS only
 
 ## Exports
 
-| Import path | What | Consumer |
-|-------------|------|----------|
-| `@rollercoaster-dev/design-tokens/css` | CSS custom properties (`:root`) | Web apps |
-| `@rollercoaster-dev/design-tokens/css/themes` | Theme class overrides | Web apps |
-| `@rollercoaster-dev/design-tokens/css/narrative` | Narrative section + badge label classes | Web apps, landing page |
-| `@rollercoaster-dev/design-tokens/unistyles` | Palette, tokens, colorModes, variants | native-rd (React Native) |
-| `@rollercoaster-dev/design-tokens/tailwind` | Tailwind config preset | Tailwind projects |
-| `@rollercoaster-dev/design-tokens/tamagui` | Tamagui token config | Tamagui projects |
+| Import path                                      | What                                    | Consumer                 |
+| ------------------------------------------------ | --------------------------------------- | ------------------------ |
+| `@rollercoaster-dev/design-tokens/css`           | CSS custom properties (`:root`)         | Web apps                 |
+| `@rollercoaster-dev/design-tokens/css/themes`    | Theme class overrides                   | Web apps                 |
+| `@rollercoaster-dev/design-tokens/css/narrative` | Narrative section + badge label classes | Web apps, landing page   |
+| `@rollercoaster-dev/design-tokens/unistyles`     | Palette, tokens, colorModes, variants   | native-rd (React Native) |
+| `@rollercoaster-dev/design-tokens/tailwind`      | Tailwind config preset                  | Tailwind projects        |
+| `@rollercoaster-dev/design-tokens/tamagui`       | Tamagui token config                    | Tamagui projects         |
 
 ---
 
@@ -137,14 +137,14 @@ bun run build:unistyles # Unistyles JS only
 
 The `build/unistyles/` directory contains auto-generated TypeScript consumed by native-rd:
 
-| File | Exports |
-|------|---------|
-| `palette.ts` | `palette` — 30+ raw color constants |
-| `tokens.ts` | `space`, `size`, `sizeL`, `radius`, `zIndex`, `fontWeight`, `lineHeight`, `lineHeightL` |
-| `colorModes.ts` | `Colors` interface, `lightColors`, `darkColors`, `colorModes` |
-| `variants.ts` | `VariantOverride` type, 5 variant color override objects |
-| `narrative.ts` | `Narrative` interface, light/dark narrative modes, 5 variant narrative overrides |
-| `index.ts` | Re-exports everything above |
+| File            | Exports                                                                                 |
+| --------------- | --------------------------------------------------------------------------------------- |
+| `palette.ts`    | `palette` — 30+ raw color constants                                                     |
+| `tokens.ts`     | `space`, `size`, `sizeL`, `radius`, `zIndex`, `fontWeight`, `lineHeight`, `lineHeightL` |
+| `colorModes.ts` | `Colors` interface, `lightColors`, `darkColors`, `colorModes`                           |
+| `variants.ts`   | `VariantOverride` type, 5 variant color override objects                                |
+| `narrative.ts`  | `Narrative` interface, light/dark narrative modes, 5 variant narrative overrides        |
+| `index.ts`      | Re-exports everything above                                                             |
 
 ---
 
@@ -180,8 +180,8 @@ native-rd composes **2 color modes × 7 variants = 14 themes** via `compose.ts`:
 // compose.ts
 const themes = Object.fromEntries(
   colorModeList.flatMap((cm) =>
-    variants.map((v) => [`${cm}-${v}`, composeTheme(cm, v)])
-  )
+    variants.map((v) => [`${cm}-${v}`, composeTheme(cm, v)]),
+  ),
 ) as Record<ThemeName, ComposedTheme>;
 ```
 

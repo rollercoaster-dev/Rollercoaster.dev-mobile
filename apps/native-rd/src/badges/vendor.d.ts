@@ -1,6 +1,6 @@
 // Type declarations for untyped vendored dependencies
 
-declare module 'png-chunks-extract' {
+declare module "png-chunks-extract" {
   interface Chunk {
     name: string;
     data: Uint8Array;
@@ -9,7 +9,7 @@ declare module 'png-chunks-extract' {
   export = extractChunks;
 }
 
-declare module 'png-chunks-encode' {
+declare module "png-chunks-encode" {
   interface Chunk {
     name: string;
     data: Uint8Array;

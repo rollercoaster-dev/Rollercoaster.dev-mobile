@@ -1,26 +1,26 @@
-import React, { useEffect, useMemo, useRef } from 'react';
-import { View, Dimensions } from 'react-native';
+import React, { useEffect, useMemo, useRef } from "react";
+import { View, Dimensions } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
   withDelay,
   Easing,
-} from 'react-native-reanimated';
-import { useAnimationPref } from '../../hooks/useAnimationPref';
-import { palette } from '../../themes/adapter';
-import { styles } from './Confetti.styles';
+} from "react-native-reanimated";
+import { useAnimationPref } from "../../hooks/useAnimationPref";
+import { palette } from "../../themes/adapter";
+import { styles } from "./Confetti.styles";
 
 const PIECE_COUNT = 60;
 const CLEANUP_MS = 3000;
 const COLORS = [
-  palette.blue600,    // #2563eb
-  palette.yellow300,  // #ffe50c
-  palette.green600,   // #16a34a
-  palette.purple400,  // #a78bfa
+  palette.blue600, // #2563eb
+  palette.yellow300, // #ffe50c
+  palette.green600, // #16a34a
+  palette.purple400, // #a78bfa
   // eslint-disable-next-line local/no-raw-colors -- decorative confetti particle, not themed UI
-  '#f97316',          // orange
-  palette.red600,     // #dc2626
+  "#f97316", // orange
+  palette.red600, // #dc2626
 ];
 
 interface PieceConfig {
@@ -44,7 +44,7 @@ function generatePieces(): PieceConfig[] {
 }
 
 function ConfettiPiece({ config }: { config: PieceConfig }) {
-  const screenHeight = Dimensions.get('window').height;
+  const screenHeight = Dimensions.get("window").height;
   const translateY = useSharedValue(-10);
   const rotate = useSharedValue(0);
   const opacity = useSharedValue(1);
@@ -85,7 +85,7 @@ function ConfettiPiece({ config }: { config: PieceConfig }) {
     <Animated.View
       style={[
         {
-          position: 'absolute',
+          position: "absolute",
           top: -10,
           left: `${config.left}%`,
           width: config.size,

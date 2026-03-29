@@ -28,6 +28,7 @@
 **Architecture:** Client-side SQLite syncs with a backend database (Postgres/MongoDB/MySQL) via PowerSync service. Real-time streaming sync over WebSocket. Server-authoritative conflict resolution.
 
 **Strengths:**
+
 - Official Drizzle ORM integration (`@powersync/drizzle-driver`, beta) — existing monorepo schema can migrate
 - Excellent Expo/React Native SDK (v1.29.0, Jan 2026)
 - Self-hostable Open Edition (free)
@@ -36,6 +37,7 @@
 - Rust-based sync client (as of Jan 2026)
 
 **Weaknesses:**
+
 - E2EE is not built-in — server can see plaintext data
 - Requires implementing application-layer encryption for true E2EE (encrypt fields before write, decrypt on read)
 - Requires a backend database (Postgres/MongoDB/MySQL) for sync
@@ -52,6 +54,7 @@
 **Architecture:** CRDT-based (Last Write Wins + causally ordered logs). Every database change is a CRDT message. Stateless relay server handles sync and backup. SQLite on device.
 
 **Strengths:**
+
 - E2EE is built in and fundamental — server literally cannot read user data
 - Fully MIT licensed (client + relay)
 - Self-hostable relay (stateless, can run serverless, Docker image available)
@@ -60,6 +63,7 @@
 - Philosophically aligned: privacy-first, user-owned data
 
 **Weaknesses:**
+
 - Uses Kysely as query builder, not Drizzle ORM — migration required
 - Smaller community than PowerSync
 - Expo SDK 54 support still being validated (GitHub Issue #578)
@@ -77,6 +81,7 @@
 **Architecture:** Reactive NoSQL database with backend-agnostic replication. Supports HTTP, GraphQL, WebSocket, WebRTC (P2P), CouchDB replication protocols.
 
 **Strengths:**
+
 - Most mature and battle-tested (since 2016, 22k+ stars)
 - Extremely flexible replication (any backend, any protocol)
 - Self-hostable server plugin
@@ -84,6 +89,7 @@
 - Client-side conflict resolution with custom handlers
 
 **Weaknesses:**
+
 - NoSQL document model (not relational like current SQLite setup)
 - Not compatible with Drizzle ORM
 - Premium required for SQLite storage adapter + encryption
@@ -95,32 +101,38 @@
 ## Also Evaluated
 
 ### ElectricSQL
+
 - Postgres-to-SQLite sync, open source (Apache 2.0), self-hostable
 - Good Expo support, might work with Drizzle (untested)
 - **No E2EE support**, requires Postgres backend
 - Active but less mature than PowerSync
 
 ### Triplit
+
 - Full-stack sync database, self-hostable (can deploy on Hono)
 - Expo compatible with polyfills
 - **Company folded** — now community-driven, uncertain future
 - No E2EE, uses triples data model (not relational)
 
 ### Zero (Rocicorp)
+
 - Ultra-fast sync engine, successor to Replicache
 - React Native/Expo support added in v0.23
 - Still in public alpha, Postgres-only, no E2EE
 
 ### WatermelonDB
+
 - Built for React Native, lazy-loading, sync protocol
 - In maintenance mode (last release May 2025)
 - DIY backend, no Drizzle support
 
 ### VLCN/cr-sqlite
+
 - CRDTs built into SQLite extension
 - No explicit React Native support, DIY sync infrastructure
 
 ### Automerge / Yjs / Loro (CRDT libraries)
+
 - Lower-level building blocks, not complete solutions
 - Would require building storage + sync layers from scratch
 - Yjs has `y-op-sqlite` persistence for React Native
@@ -129,30 +141,32 @@
 
 ## Comparison Matrix
 
-| | PowerSync | Evolu | RxDB |
-|---|-----------|-------|------|
-| **Expo support** | Excellent | Good (maturing) | Excellent |
-| **E2EE** | App-layer (DIY) | Built-in | Premium plugin |
-| **Drizzle ORM** | Yes (official) | No (Kysely) | No (own syntax) |
-| **Self-hostable** | Yes (free tier) | Yes (MIT) | Yes |
-| **Conflict resolution** | Server-side | CRDT (automatic) | Client-side (custom) |
-| **Data model** | Relational (SQLite) | Relational (SQLite + CRDT) | NoSQL (document) |
-| **License** | Apache 2.0 client / FSL server | MIT | Apache 2.0 / Premium |
-| **Maturity** | Production | Growing | Mature |
-| **Community** | Active, growing | Smaller | Largest (22k stars) |
-| **Backend required** | Postgres/MongoDB/MySQL | None (relay only) | Flexible |
+|                         | PowerSync                      | Evolu                      | RxDB                 |
+| ----------------------- | ------------------------------ | -------------------------- | -------------------- |
+| **Expo support**        | Excellent                      | Good (maturing)            | Excellent            |
+| **E2EE**                | App-layer (DIY)                | Built-in                   | Premium plugin       |
+| **Drizzle ORM**         | Yes (official)                 | No (Kysely)                | No (own syntax)      |
+| **Self-hostable**       | Yes (free tier)                | Yes (MIT)                  | Yes                  |
+| **Conflict resolution** | Server-side                    | CRDT (automatic)           | Client-side (custom) |
+| **Data model**          | Relational (SQLite)            | Relational (SQLite + CRDT) | NoSQL (document)     |
+| **License**             | Apache 2.0 client / FSL server | MIT                        | Apache 2.0 / Premium |
+| **Maturity**            | Production                     | Growing                    | Mature               |
+| **Community**           | Active, growing                | Smaller                    | Largest (22k stars)  |
+| **Backend required**    | Postgres/MongoDB/MySQL         | None (relay only)          | Flexible             |
 
 ---
 
 ## Core Trade-off
 
 ### PowerSync: Pragmatic choice
+
 - Keeps Drizzle compatibility (huge win for monorepo alignment)
 - Production-ready, great performance
 - E2EE is possible but requires manual implementation
 - Server (FSL license) is free but not fully open source
 
 ### Evolu: Philosophical choice
+
 - E2EE is fundamental, not an afterthought
 - Fully MIT, aligns with open-source values
 - No backend database needed (just a stateless relay)
@@ -164,14 +178,14 @@
 
 ## Alignment with Project Values
 
-| Principle (from ADR-0002 & Vision) | PowerSync | Evolu |
-|---|---|---|
-| "Users retain full control over badge data" | Partial (server sees data) | Full (E2EE) |
-| "Privacy by design" | Requires app-layer work | Built-in |
-| "No vendor lock-in" | Free tier, self-hostable | MIT, self-hostable |
-| "Badges survive service shutdowns" | Yes (local SQLite) | Yes (local SQLite) |
-| "Local storage as primary" | Yes | Yes |
-| "Easy export and migration" | Yes | Yes |
+| Principle (from ADR-0002 & Vision)          | PowerSync                  | Evolu              |
+| ------------------------------------------- | -------------------------- | ------------------ |
+| "Users retain full control over badge data" | Partial (server sees data) | Full (E2EE)        |
+| "Privacy by design"                         | Requires app-layer work    | Built-in           |
+| "No vendor lock-in"                         | Free tier, self-hostable   | MIT, self-hostable |
+| "Badges survive service shutdowns"          | Yes (local SQLite)         | Yes (local SQLite) |
+| "Local storage as primary"                  | Yes                        | Yes                |
+| "Easy export and migration"                 | Yes                        | Yes                |
 
 ---
 

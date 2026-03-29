@@ -7,10 +7,10 @@
  * Only the local evolu module needs jest.mock() here.
  */
 
-jest.mock('../evolu', () => ({
+jest.mock("../evolu", () => ({
   evolu: {
     insert: jest.fn((_table: string, data: unknown) => data),
     update: jest.fn((_table: string, data: unknown) => data),
-    createQuery: jest.fn((fn: unknown) => ({ type: 'QUERY', fn })),
+    createQuery: jest.fn((fn: unknown) => ({ type: "QUERY", fn })),
   },
 }));

@@ -40,13 +40,13 @@ This document outlines accessibility requirements and best practices for the nat
 We provide a utility function to verify color contrast ratios:
 
 ```typescript
-import { getContrastRatio, meetsWCAG } from '../utils/accessibility';
+import { getContrastRatio, meetsWCAG } from "../utils/accessibility";
 
 // Check contrast ratio
-const ratio = getContrastRatio('#262626', '#d97706'); // Returns 4.75
+const ratio = getContrastRatio("#262626", "#d97706"); // Returns 4.75
 
 // Verify WCAG compliance
-const result = meetsWCAG('#262626', '#d97706', 'AA', 'normal');
+const result = meetsWCAG("#262626", "#d97706", "AA", "normal");
 // Returns: { passes: true, ratio: 4.75, required: 4.5 }
 ```
 
@@ -59,15 +59,15 @@ When using hardcoded colors (e.g., for consistent appearance across themes), alw
 const styles = {
   destructive: {
     backgroundColor: theme.colors.warning, // #d97706
-    color: '#262626', // 4.75:1 contrast ✓
+    color: "#262626", // 4.75:1 contrast ✓
   },
 };
 
 // ✗ BAD - No contrast verification
 const styles = {
   destructive: {
-    backgroundColor: '#ff6b35',
-    color: '#fafafa', // May fail WCAG!
+    backgroundColor: "#ff6b35",
+    color: "#fafafa", // May fail WCAG!
   },
 };
 ```
@@ -287,16 +287,16 @@ Use this checklist when creating or modifying components:
 We provide contrast ratio verification via the accessibility utility:
 
 ```typescript
-import { meetsWCAG } from '../utils/accessibility';
+import { meetsWCAG } from "../utils/accessibility";
 
 // In your test file
-describe('Button contrast', () => {
-  it('meets WCAG AA in all themes', () => {
+describe("Button contrast", () => {
+  it("meets WCAG AA in all themes", () => {
     const result = meetsWCAG(
-      '#262626', // text color
-      '#d97706', // background color
-      'AA',
-      'normal'
+      "#262626", // text color
+      "#d97706", // background color
+      "AA",
+      "normal",
     );
 
     expect(result.passes).toBe(true);
@@ -327,15 +327,15 @@ When making UI changes, verify across all variants:
 
 ```typescript
 // Switch theme in app
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from "../hooks/useTheme";
 
 const { setTheme } = useTheme();
 
 // Test each variant
-setTheme('default-light');
-setTheme('default-dark');
-setTheme('highContrast-light');
-setTheme('highContrast-dark');
+setTheme("default-light");
+setTheme("default-dark");
+setTheme("highContrast-light");
+setTheme("highContrast-dark");
 // ... test remaining variants
 ```
 

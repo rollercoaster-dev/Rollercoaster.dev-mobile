@@ -1,1 +1,1 @@
-export { CaptureFile } from './CaptureFile';
+export { CaptureFile } from "./CaptureFile";

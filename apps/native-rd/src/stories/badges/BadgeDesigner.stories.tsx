@@ -1,16 +1,16 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import React, { useState } from 'react';
-import { ScrollView, View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import type { Meta, StoryObj } from "@storybook/react";
+import React, { useState } from "react";
+import { ScrollView, View } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
 
-import { BadgeRenderer } from '../../badges/BadgeRenderer';
-import { ShapeSelector } from '../../badges/ShapeSelector';
-import { ColorPicker } from '../../badges/ColorPicker';
-import { IconPicker } from '../../badges/IconPicker';
-import { FrameSelector } from '../../badges/FrameSelector';
-import { CenterModeSelector } from '../../badges/CenterModeSelector';
-import { PathTextEditor } from '../../badges/PathTextEditor';
-import { BannerEditor } from '../../badges/BannerEditor';
+import { BadgeRenderer } from "../../badges/BadgeRenderer";
+import { ShapeSelector } from "../../badges/ShapeSelector";
+import { ColorPicker } from "../../badges/ColorPicker";
+import { IconPicker } from "../../badges/IconPicker";
+import { FrameSelector } from "../../badges/FrameSelector";
+import { CenterModeSelector } from "../../badges/CenterModeSelector";
+import { PathTextEditor } from "../../badges/PathTextEditor";
+import { BannerEditor } from "../../badges/BannerEditor";
 import {
   BadgeShape,
   BadgeFrame,
@@ -19,8 +19,8 @@ import {
   PathTextPosition,
   BannerPosition,
   createDefaultBadgeDesign,
-} from '../../badges/types';
-import type { BadgeDesign } from '../../badges/types';
+} from "../../badges/types";
+import type { BadgeDesign } from "../../badges/types";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -28,7 +28,7 @@ import type { BadgeDesign } from '../../badges/types';
 
 function makeDesign(overrides: Partial<BadgeDesign> = {}): BadgeDesign {
   return {
-    ...createDefaultBadgeDesign('Sample Badge'),
+    ...createDefaultBadgeDesign("Sample Badge"),
     ...overrides,
   };
 }
@@ -37,7 +37,10 @@ function makeDesign(overrides: Partial<BadgeDesign> = {}): BadgeDesign {
 // Interactive composer (renders all sub-components wired together)
 // ---------------------------------------------------------------------------
 
-function BadgeDesignerComposer({ initialDesign, goalColor }: {
+function BadgeDesignerComposer({
+  initialDesign,
+  goalColor,
+}: {
   initialDesign: BadgeDesign;
   goalColor?: string;
 }) {
@@ -70,46 +73,78 @@ function BadgeDesignerComposer({ initialDesign, goalColor }: {
 
         <CenterModeSelector
           selectedMode={design.centerMode}
-          monogram={design.monogram ?? ''}
-          onSelectMode={(centerMode) => setDesign((prev) => ({ ...prev, centerMode }))}
-          onChangeMonogram={(monogram: string) => setDesign((prev) => ({ ...prev, monogram }))}
+          monogram={design.monogram ?? ""}
+          onSelectMode={(centerMode) =>
+            setDesign((prev) => ({ ...prev, centerMode }))
+          }
+          onChangeMonogram={(monogram: string) =>
+            setDesign((prev) => ({ ...prev, monogram }))
+          }
           accentColor={design.color}
         />
 
         <PathTextEditor
           enabled={design.pathText !== undefined}
-          text={design.pathText ?? ''}
-          textBottom={design.pathTextBottom ?? ''}
+          text={design.pathText ?? ""}
+          textBottom={design.pathTextBottom ?? ""}
           position={design.pathTextPosition ?? PathTextPosition.top}
           goalTitle={design.title}
-          onToggle={(enabled) => setDesign((prev) => ({
-            ...prev,
-            pathText: enabled ? '' : undefined,
-            pathTextPosition: enabled ? PathTextPosition.top : undefined,
-            pathTextBottom: enabled ? prev.pathTextBottom : undefined,
-          }))}
-          onChangeText={(pathText) => setDesign((prev) => ({ ...prev, pathText }))}
-          onChangeTextBottom={(pathTextBottom) => setDesign((prev) => ({ ...prev, pathTextBottom }))}
-          onChangePosition={(pathTextPosition) => setDesign((prev) => ({ ...prev, pathTextPosition }))}
+          onToggle={(enabled) =>
+            setDesign((prev) => ({
+              ...prev,
+              pathText: enabled ? "" : undefined,
+              pathTextPosition: enabled ? PathTextPosition.top : undefined,
+              pathTextBottom: enabled ? prev.pathTextBottom : undefined,
+            }))
+          }
+          onChangeText={(pathText) =>
+            setDesign((prev) => ({ ...prev, pathText }))
+          }
+          onChangeTextBottom={(pathTextBottom) =>
+            setDesign((prev) => ({ ...prev, pathTextBottom }))
+          }
+          onChangePosition={(pathTextPosition) =>
+            setDesign((prev) => ({ ...prev, pathTextPosition }))
+          }
           accentColor={design.color}
         />
 
         <BannerEditor
           enabled={design.banner != null}
-          text={design.banner?.text ?? ''}
+          text={design.banner?.text ?? ""}
           position={design.banner?.position ?? BannerPosition.center}
-          onToggle={(enabled) => setDesign((prev) => ({
-            ...prev,
-            banner: enabled ? { text: '', position: BannerPosition.center } : undefined,
-          }))}
-          onChangeText={(text) => setDesign((prev) => ({
-            ...prev,
-            banner: { ...(prev.banner ?? { text: '', position: BannerPosition.center }), text },
-          }))}
-          onChangePosition={(position) => setDesign((prev) => ({
-            ...prev,
-            banner: { ...(prev.banner ?? { text: '', position: BannerPosition.center }), position },
-          }))}
+          onToggle={(enabled) =>
+            setDesign((prev) => ({
+              ...prev,
+              banner: enabled
+                ? { text: "", position: BannerPosition.center }
+                : undefined,
+            }))
+          }
+          onChangeText={(text) =>
+            setDesign((prev) => ({
+              ...prev,
+              banner: {
+                ...(prev.banner ?? {
+                  text: "",
+                  position: BannerPosition.center,
+                }),
+                text,
+              },
+            }))
+          }
+          onChangePosition={(position) =>
+            setDesign((prev) => ({
+              ...prev,
+              banner: {
+                ...(prev.banner ?? {
+                  text: "",
+                  position: BannerPosition.center,
+                }),
+                position,
+              },
+            }))
+          }
           accentColor={design.color}
         />
       </ScrollView>
@@ -118,7 +153,9 @@ function BadgeDesignerComposer({ initialDesign, goalColor }: {
         <IconPicker
           selectedIcon={design.iconName}
           selectedWeight={design.iconWeight}
-          onSelectIcon={(iconName) => setDesign((prev) => ({ ...prev, iconName }))}
+          onSelectIcon={(iconName) =>
+            setDesign((prev) => ({ ...prev, iconName }))
+          }
           onSelectWeight={(iconWeight) =>
             setDesign((prev) => ({ ...prev, iconWeight }))
           }
@@ -134,7 +171,7 @@ function BadgeDesignerComposer({ initialDesign, goalColor }: {
 // ---------------------------------------------------------------------------
 
 const meta: Meta = {
-  title: 'Badges/BadgeDesigner',
+  title: "Badges/BadgeDesigner",
 };
 
 export default meta;
@@ -153,8 +190,8 @@ export const DefaultDesign: Story = {
     <BadgeDesignerComposer
       initialDesign={makeDesign({
         shape: BadgeShape.circle,
-        color: '#a78bfa',
-        iconName: 'Trophy',
+        color: "#a78bfa",
+        iconName: "Trophy",
         iconWeight: BadgeIconWeight.regular,
       })}
     />
@@ -166,8 +203,8 @@ export const WithGoalColor: Story = {
     <BadgeDesignerComposer
       initialDesign={makeDesign({
         shape: BadgeShape.hexagon,
-        color: '#06b6d4',
-        iconName: 'Code',
+        color: "#06b6d4",
+        iconName: "Code",
         iconWeight: BadgeIconWeight.bold,
       })}
       goalColor="#06b6d4"
@@ -181,8 +218,8 @@ export const AllShapes: Story = {
       initialDesign={makeDesign({
         shape: BadgeShape.star,
         frame: BadgeFrame.none,
-        color: '#f97316',
-        iconName: 'Fire',
+        color: "#f97316",
+        iconName: "Fire",
         iconWeight: BadgeIconWeight.fill,
       })}
     />
@@ -195,16 +232,16 @@ export const WithAllControls: Story = {
       initialDesign={makeDesign({
         shape: BadgeShape.shield,
         frame: BadgeFrame.guilloche,
-        color: '#06b6d4',
-        iconName: 'Trophy',
+        color: "#06b6d4",
+        iconName: "Trophy",
         iconWeight: BadgeIconWeight.bold,
         centerMode: BadgeCenterMode.monogram,
-        monogram: 'JC',
-        centerLabel: 'EXPERT',
-        pathText: 'ACHIEVEMENT',
+        monogram: "JC",
+        centerLabel: "EXPERT",
+        pathText: "ACHIEVEMENT",
         pathTextPosition: PathTextPosition.both,
-        pathTextBottom: 'EARNED 2026',
-        banner: { text: 'WINNER', position: BannerPosition.center },
+        pathTextBottom: "EARNED 2026",
+        banner: { text: "WINNER", position: BannerPosition.center },
         frameParams: {
           variant: 0,
           stepCount: 8,
@@ -228,11 +265,11 @@ const styles = StyleSheet.create((theme) => ({
   scrollContent: {
     padding: theme.space[4],
     gap: theme.space[4],
-    alignItems: 'center',
+    alignItems: "center",
   },
   previewContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: theme.space[4],
     borderRadius: theme.radius.sm,
     borderWidth: theme.borderWidth.medium,

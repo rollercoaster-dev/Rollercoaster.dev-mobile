@@ -1,15 +1,15 @@
-import { StyleSheet } from 'react-native-unistyles';
-import { shadowStyle } from '../../styles/shadows';
+import { StyleSheet } from "react-native-unistyles";
+import { shadowStyle } from "../../styles/shadows";
 
 export const styles = StyleSheet.create((theme) => ({
   overlay: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: theme.space[4],
   },
   container: {
-    width: '100%',
+    width: "100%",
     maxWidth: 340,
   },
   card: {
@@ -18,8 +18,8 @@ export const styles = StyleSheet.create((theme) => ({
     borderColor: theme.colors.border,
     borderRadius: theme.radius.sm,
     padding: theme.space[6],
-    alignItems: 'center',
-    ...shadowStyle(theme, 'hardMd'),
+    alignItems: "center",
+    ...shadowStyle(theme, "hardMd"),
   },
   badgeImage: {
     width: 120,
@@ -35,16 +35,16 @@ export const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius.sm,
     backgroundColor: theme.colors.background,
     marginBottom: theme.space[4],
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   microcopy: {
-    textAlign: 'center',
+    textAlign: "center",
     color: theme.colors.textSecondary,
     marginBottom: theme.space[5],
   },
   actions: {
-    width: '100%',
+    width: "100%",
     gap: theme.space[3],
   },
 }));

@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { View, Modal, Pressable, Image } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text } from '../Text';
-import { styles } from './PhotoViewerModal.styles';
+import React, { useEffect, useState } from "react";
+import { View, Modal, Pressable, Image } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Text } from "../Text";
+import { styles } from "./PhotoViewerModal.styles";
 
 export interface PhotoViewerModalProps {
   visible: boolean;
@@ -11,7 +11,12 @@ export interface PhotoViewerModalProps {
   onClose: () => void;
 }
 
-export function PhotoViewerModal({ visible, uri, description, onClose }: PhotoViewerModalProps) {
+export function PhotoViewerModal({
+  visible,
+  uri,
+  description,
+  onClose,
+}: PhotoViewerModalProps) {
   const [imageError, setImageError] = useState(false);
   const insets = useSafeAreaInsets();
 
@@ -27,10 +32,15 @@ export function PhotoViewerModal({ visible, uri, description, onClose }: PhotoVi
       transparent={false}
       animationType="slide"
       onRequestClose={onClose}
-      supportedOrientations={['portrait', 'landscape']}
+      supportedOrientations={["portrait", "landscape"]}
       accessibilityViewIsModal
     >
-      <View style={[styles.overlay, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+      <View
+        style={[
+          styles.overlay,
+          { paddingTop: insets.top, paddingBottom: insets.bottom },
+        ]}
+      >
         <View style={styles.container}>
           <View style={styles.topBar}>
             <Pressable
@@ -40,7 +50,7 @@ export function PhotoViewerModal({ visible, uri, description, onClose }: PhotoVi
               accessibilityLabel="Close photo viewer"
               hitSlop={16}
             >
-              <Text style={styles.closeText}>{'\u2715'}</Text>
+              <Text style={styles.closeText}>{"\u2715"}</Text>
             </Pressable>
           </View>
           <View style={styles.imageContainer}>
@@ -51,7 +61,7 @@ export function PhotoViewerModal({ visible, uri, description, onClose }: PhotoVi
                 source={{ uri }}
                 style={styles.image}
                 resizeMode="contain"
-                accessibilityLabel={description ?? 'Photo evidence'}
+                accessibilityLabel={description ?? "Photo evidence"}
                 onError={() => setImageError(true)}
               />
             )}

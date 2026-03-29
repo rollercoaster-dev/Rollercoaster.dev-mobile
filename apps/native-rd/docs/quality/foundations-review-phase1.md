@@ -5,24 +5,24 @@ Branch: `chore/foundations-review-phase1`
 
 ## Verification Results
 
-| Check | Result |
-|-------|--------|
-| `bun run typecheck` | PASS (0 errors) |
-| `bun run lint` | PASS (0 errors, 313 warnings) |
-| `npx jest --no-coverage` | PASS (88 suites, 1244 tests) |
-| `bun run test:a11y:json` | PASS (15/15 contracts, all 14 themes) |
-| Planning stack | Cleaned: 1 item (Full Roadmap base goal) |
+| Check                    | Result                                   |
+| ------------------------ | ---------------------------------------- |
+| `bun run typecheck`      | PASS (0 errors)                          |
+| `bun run lint`           | PASS (0 errors, 313 warnings)            |
+| `npx jest --no-coverage` | PASS (88 suites, 1244 tests)             |
+| `bun run test:a11y:json` | PASS (15/15 contracts, all 14 themes)    |
+| Planning stack           | Cleaned: 1 item (Full Roadmap base goal) |
 
 ## Quality Grades (Updated)
 
-| Domain | Grade | Previous | Change |
-|--------|-------|----------|--------|
-| Components | C | C | -- |
-| Tests | B- | C | up |
-| Lint | A | A | -- |
-| Type Safety | A | A | -- |
-| Accessibility | A | A | -- |
-| Screens | C | D | up |
+| Domain        | Grade | Previous | Change |
+| ------------- | ----- | -------- | ------ |
+| Components    | C     | C        | --     |
+| Tests         | B-    | C        | up     |
+| Lint          | A     | A        | --     |
+| Type Safety   | A     | A        | --     |
+| Accessibility | A     | A        | --     |
+| Screens       | C     | D        | up     |
 
 ## What's Solid
 
@@ -61,32 +61,35 @@ Branch: `chore/foundations-review-phase1`
 
 ## Iteration A Completion Status
 
-| Milestone | Status | Open Issues |
-|-----------|--------|-------------|
-| 0.0 Pre-Implementation | Done | 0/16 |
-| 0.1 Foundation | Done | 0/19 |
-| A.1 Core Data Loop | Done | 0/11 |
-| A.2 Evidence System | Done | 0/13 |
-| A.3 Badge System | Done | 0/7 |
-| A.4 Themes & Polish | **3 open** | #65 Welcome screen, #67 Batch export, #68 Character moments |
-| A.5 Badge Designer | Done | 0/8 (+ tracking epic) |
-| Agent-First Dev | Done | 0/4 |
+| Milestone              | Status     | Open Issues                                                 |
+| ---------------------- | ---------- | ----------------------------------------------------------- |
+| 0.0 Pre-Implementation | Done       | 0/16                                                        |
+| 0.1 Foundation         | Done       | 0/19                                                        |
+| A.1 Core Data Loop     | Done       | 0/11                                                        |
+| A.2 Evidence System    | Done       | 0/13                                                        |
+| A.3 Badge System       | Done       | 0/7                                                         |
+| A.4 Themes & Polish    | **3 open** | #65 Welcome screen, #67 Batch export, #68 Character moments |
+| A.5 Badge Designer     | Done       | 0/8 (+ tracking epic)                                       |
+| Agent-First Dev        | Done       | 0/4                                                         |
 
 **Iteration A is ~95% complete.** Three A.4 issues remain: Welcome screen (#65), batch export (#67), and character moments (#68).
 
 ## Recommendation: What's Next
 
 **Option A: Hardening Sprint (recommended)**
+
 - Write the 5 HIGH-priority component tests (~half day)
 - Fix the evidenceViewers dependency inversion (~1 hour)
 - Close A.4: Welcome screen (#65) is the most impactful remaining item
 - This gets Tests to B+ and Components to B before starting new feature work
 
 **Option B: Move to Iteration B (Learning Journey)**
+
 - B.0 milestone has 0 issues — needs planning first
 - Risk: accumulating more tech debt on an already-C-graded component structure
 
 **Option C: Complete A.4 first, then B.0**
+
 - Ship Welcome screen (#65) — great first impression
 - Batch export (#67) and character moments (#68) are nice-to-haves
 - Then move to B.0 with confidence that Iteration A is truly done

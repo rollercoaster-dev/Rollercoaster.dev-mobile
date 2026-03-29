@@ -1,4 +1,4 @@
-import type { FrameDataParams } from '../types';
+import type { FrameDataParams } from "../types";
 
 const MS_PER_DAY = 86_400_000;
 
@@ -20,9 +20,12 @@ export type ComputeFrameParamsInput = {
  * - daysToComplete: whole-day diff between createdAt and completedAt (or now)
  * - variant: always 0 (reserved for future use)
  */
-export function computeFrameParams(input: ComputeFrameParamsInput): FrameDataParams {
+export function computeFrameParams(
+  input: ComputeFrameParamsInput,
+): FrameDataParams {
   const startMs = Date.parse(input.createdAt);
-  const endMs = input.completedAt !== null ? Date.parse(input.completedAt) : Date.now();
+  const endMs =
+    input.completedAt !== null ? Date.parse(input.completedAt) : Date.now();
 
   let daysToComplete = 0;
   if (!isNaN(startMs) && !isNaN(endMs)) {

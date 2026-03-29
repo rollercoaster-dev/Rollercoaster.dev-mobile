@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native-unistyles';
+import { StyleSheet } from "react-native-unistyles";
 
 export const styles = StyleSheet.create((theme) => ({
   overlay: {
@@ -9,9 +9,9 @@ export const styles = StyleSheet.create((theme) => ({
     flex: 1,
   },
   topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[3],
     borderBottomWidth: theme.borderWidth.medium,
@@ -30,7 +30,7 @@ export const styles = StyleSheet.create((theme) => ({
   },
   playerContainer: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     paddingHorizontal: theme.space[4],
   },
 }));

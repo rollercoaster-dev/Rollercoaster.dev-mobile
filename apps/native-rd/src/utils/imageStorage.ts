@@ -1,6 +1,6 @@
-import { File, Directory, Paths } from 'expo-file-system';
+import { File, Directory, Paths } from "expo-file-system";
 
-const PHOTOS_SUBDIR = 'evidence/photos';
+const PHOTOS_SUBDIR = "evidence/photos";
 
 function getPhotosDirectory(): Directory {
   return new Directory(Paths.document, PHOTOS_SUBDIR);

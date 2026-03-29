@@ -1,12 +1,12 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import React, { useState } from 'react';
-import { View, Pressable } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
-import { Text } from '../Text';
-import { Toast } from './Toast';
+import type { Meta, StoryObj } from "@storybook/react";
+import React, { useState } from "react";
+import { View, Pressable } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
+import { Text } from "../Text";
+import { Toast } from "./Toast";
 
 const meta: Meta<typeof Toast> = {
-  title: 'Toast',
+  title: "Toast",
   component: Toast,
 };
 
@@ -14,7 +14,13 @@ export default meta;
 
 type Story = StoryObj<typeof Toast>;
 
-function ToastDemo({ message, actionLabel }: { message: string; actionLabel?: string }) {
+function ToastDemo({
+  message,
+  actionLabel,
+}: {
+  message: string;
+  actionLabel?: string;
+}) {
   const [visible, setVisible] = useState(true);
   return (
     <View style={storyStyles.container}>
@@ -46,19 +52,12 @@ export const Simple: Story = {
 };
 
 export const WithAction: Story = {
-  render: () => (
-    <ToastDemo
-      message="Evidence deleted"
-      actionLabel="Undo"
-    />
-  ),
+  render: () => <ToastDemo message="Evidence deleted" actionLabel="Undo" />,
 };
 
 export const LongMessage: Story = {
   render: () => (
-    <ToastDemo
-      message="Your goal has been saved and all evidence has been attached successfully"
-    />
+    <ToastDemo message="Your goal has been saved and all evidence has been attached successfully" />
   ),
 };
 
@@ -81,10 +80,10 @@ const storyStyles = StyleSheet.create((theme) => ({
     minHeight: 200,
     padding: theme.space[4],
     backgroundColor: theme.colors.background,
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
   },
   trigger: {
-    alignSelf: 'center',
+    alignSelf: "center",
     paddingVertical: theme.space[3],
     paddingHorizontal: theme.space[4],
     borderWidth: theme.borderWidth.medium,
@@ -94,6 +93,6 @@ const storyStyles = StyleSheet.create((theme) => ({
   },
   note: {
     color: theme.colors.textMuted,
-    textAlign: 'center',
+    textAlign: "center",
   },
 }));

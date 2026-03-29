@@ -1,6 +1,6 @@
-import type { ComposedTheme } from '../themes/compose';
+import type { ComposedTheme } from "../themes/compose";
 
-type ShadowKey = keyof ComposedTheme['shadow'];
+type ShadowKey = keyof ComposedTheme["shadow"];
 
 /**
  * Build React Native shadow style props from a theme shadow token.

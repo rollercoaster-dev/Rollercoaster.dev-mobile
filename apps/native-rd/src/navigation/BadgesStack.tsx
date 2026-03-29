@@ -1,9 +1,9 @@
-import React from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { BadgesScreen } from '../screens/BadgesScreen';
-import { BadgeDetailScreen } from '../screens/BadgeDetailScreen';
-import { BadgeDesignerScreen } from '../screens/BadgeDesignerScreen';
-import type { BadgesStackParamList } from './types';
+import React from "react";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { BadgesScreen } from "../screens/BadgesScreen";
+import { BadgeDetailScreen } from "../screens/BadgeDetailScreen";
+import { BadgeDesignerScreen } from "../screens/BadgeDesignerScreen";
+import type { BadgesStackParamList } from "./types";
 
 const Stack = createNativeStackNavigator<BadgesStackParamList>();
 

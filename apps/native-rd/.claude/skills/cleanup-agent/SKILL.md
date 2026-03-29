@@ -11,18 +11,18 @@ Runs five targeted scans to detect entropy in the codebase. Produces a structure
 
 ### Input
 
-| Field       | Type     | Required | Description                                      |
-| ----------- | -------- | -------- | ------------------------------------------------ |
-| `scans`     | string[] | No       | Specific scans to run (default: all five)        |
+| Field       | Type     | Required | Description                                                |
+| ----------- | -------- | -------- | ---------------------------------------------------------- |
+| `scans`     | string[] | No       | Specific scans to run (default: all five)                  |
 | `auto-file` | boolean  | No       | Auto-open GitHub issues for HIGH findings (default: false) |
 
 ### Output
 
-| Field               | Type   | Description                         |
-| ------------------- | ------ | ----------------------------------- |
-| `findings`          | array  | All findings with severity          |
-| `summary`           | object | Count per severity level            |
-| `issuesCreated`     | number | GitHub issues opened (if auto-file) |
+| Field           | Type   | Description                         |
+| --------------- | ------ | ----------------------------------- |
+| `findings`      | array  | All findings with severity          |
+| `summary`       | object | Count per severity level            |
+| `issuesCreated` | number | GitHub issues opened (if auto-file) |
 
 ## When to Use
 
@@ -38,6 +38,7 @@ Runs five targeted scans to detect entropy in the codebase. Produces a structure
 Detect exports with zero non-test importers.
 
 **How:**
+
 1. List all `export` declarations across `src/` (excluding test files, stories, and type-only exports)
 2. For each export, grep for its name across `src/` (excluding the defining file and test files)
 3. If zero import sites found, flag as dead code
@@ -49,6 +50,7 @@ Detect exports with zero non-test importers.
 Cross-reference barrel exports against actual import sites.
 
 **How:**
+
 1. Read all `src/components/*/index.ts` barrel files
 2. For each re-exported symbol, grep for imports of that symbol across `src/`
 3. Flag symbols that are only imported by the barrel itself (re-exported but never consumed)
@@ -60,6 +62,7 @@ Cross-reference barrel exports against actual import sites.
 Check documentation freshness by verifying file path references and date claims.
 
 **How:**
+
 1. Read all `docs/**/*.md` files
 2. Extract file path references (backtick-quoted paths like `src/foo/bar.ts`)
 3. Check each referenced path exists with Glob
@@ -72,6 +75,7 @@ Check documentation freshness by verifying file path references and date claims.
 Detect code that violates established patterns.
 
 **How:**
+
 1. **Raw colors outside style files**: Grep for hex color literals (`#[0-9a-fA-F]{3,8}`) in `.tsx` files under `src/components/` and `src/screens/` (excluding `.styles.ts` files and test files)
 2. **Non-unistyles StyleSheet**: Grep for `StyleSheet.create` imports from `react-native` (should use `react-native-unistyles`)
 3. **require() calls**: Grep for `require(` in `.ts`/`.tsx` files under `src/` (prefer ES imports). Exclude `.js` files (ESLint rules are CJS)
@@ -83,6 +87,7 @@ Detect code that violates established patterns.
 Identify components without behavioral tests.
 
 **How:**
+
 1. Read `src/__tests__/structure/component-structure.test.ts` (⚠️ hardcoded path — update if this file moves)
 2. Extract the `KNOWN_UNTESTED` set
 3. List all component directories under `src/components/`
@@ -144,8 +149,8 @@ Issues created: 1
 
 ## Error Handling
 
-| Condition                | Behavior                              |
-| ------------------------ | ------------------------------------- |
-| Grep/glob fails          | Skip scan, report as "SCAN_ERROR"     |
-| Issue creation fails     | Report finding, note "issue not filed"|
-| tech-debt.md missing     | Skip tracker update, warn             |
+| Condition            | Behavior                               |
+| -------------------- | -------------------------------------- |
+| Grep/glob fails      | Skip scan, report as "SCAN_ERROR"      |
+| Issue creation fails | Report finding, note "issue not filed" |
+| tech-debt.md missing | Skip tracker update, warn              |

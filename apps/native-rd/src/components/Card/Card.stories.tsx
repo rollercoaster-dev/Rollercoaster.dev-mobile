@@ -1,14 +1,14 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import React from 'react';
-import { View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
-import { Text } from '../Text';
-import { Card, type CardSize } from './Card';
+import type { Meta, StoryObj } from "@storybook/react";
+import React from "react";
+import { View } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
+import { Text } from "../Text";
+import { Card, type CardSize } from "./Card";
 
-const sizes: CardSize[] = ['compact', 'normal', 'spacious'];
+const sizes: CardSize[] = ["compact", "normal", "spacious"];
 
 const meta: Meta<typeof Card> = {
-  title: 'Card',
+  title: "Card",
   component: Card,
 };
 
@@ -21,7 +21,9 @@ export const AllSizes: Story = {
     <View style={storyStyles.grid}>
       {sizes.map((size) => (
         <View key={size} style={storyStyles.row}>
-          <Text variant="label" style={storyStyles.label}>{size}</Text>
+          <Text variant="label" style={storyStyles.label}>
+            {size}
+          </Text>
           <Card size={size}>
             <Text variant="title">Card Title</Text>
             <Text variant="body">Card content goes here.</Text>
@@ -50,6 +52,6 @@ const storyStyles = StyleSheet.create((theme) => ({
   },
   label: {
     color: theme.colors.textMuted,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
 }));

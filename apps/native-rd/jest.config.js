@@ -1,35 +1,44 @@
 module.exports = {
   transform: {
-    '^.+\\.[jt]sx?$': 'babel-jest',
+    "^.+\\.[jt]sx?$": "babel-jest",
   },
-  testEnvironment: 'react-native/jest/react-native-env.js',
-  resolver: './jest.resolver.js',
+  testEnvironment: "react-native/jest/react-native-env.js",
+  resolver: "./jest.resolver.js",
   haste: {
-    defaultPlatform: 'ios',
-    platforms: ['android', 'ios', 'native'],
+    defaultPlatform: "ios",
+    platforms: ["android", "ios", "native"],
   },
   moduleNameMapper: {
-    '\\.(png|jpg|jpeg|gif|webp|svg)$': '<rootDir>/src/__tests__/mocks/fileMock.js',
-    '^@evolu/common$': '<rootDir>/src/db/__tests__/mocks/evolu-common.ts',
-    '^@evolu/react$': '<rootDir>/src/__tests__/mocks/evolu-react.ts',
-    '^@evolu/react-native/expo-sqlite$': '<rootDir>/src/__tests__/mocks/evolu-react-native.ts',
-    '../shims/rd-logger': '<rootDir>/src/db/__tests__/mocks/rd-logger.ts',
-    '^react-native-reanimated$': '<rootDir>/src/__tests__/mocks/reanimated.ts',
-    '^react-native-unistyles$': '<rootDir>/src/__tests__/mocks/unistyles.ts',
-    '^react-native-safe-area-context$': '<rootDir>/src/__tests__/mocks/safe-area-context.ts',
-    '^expo-audio$': '<rootDir>/src/__tests__/mocks/expo-audio.ts',
-    '^expo-sharing$': '<rootDir>/src/__tests__/mocks/expo-sharing.ts',
-    '^expo-file-system$': '<rootDir>/src/__tests__/mocks/expo-file-system.ts',
-    '^expo-file-system/legacy$': '<rootDir>/src/__tests__/mocks/expo-file-system.ts',
-    '^expo-video$': '<rootDir>/src/__tests__/mocks/expo-video.ts',
-    '^@react-navigation/native$': '<rootDir>/src/__tests__/mocks/navigation.ts',
-    '^expo-secure-store$': '<rootDir>/src/__tests__/mocks/expo-secure-store.ts',
-    '^react-native-view-shot$': '<rootDir>/src/__tests__/mocks/react-native-view-shot.ts',
-    '^react-native-keyboard-controller$': '<rootDir>/src/__tests__/mocks/keyboard-controller.ts',
+    "\\.(png|jpg|jpeg|gif|webp|svg)$":
+      "<rootDir>/src/__tests__/mocks/fileMock.js",
+    "^@evolu/common$": "<rootDir>/src/db/__tests__/mocks/evolu-common.ts",
+    "^@evolu/react$": "<rootDir>/src/__tests__/mocks/evolu-react.ts",
+    "^@evolu/react-native/expo-sqlite$":
+      "<rootDir>/src/__tests__/mocks/evolu-react-native.ts",
+    "../shims/rd-logger": "<rootDir>/src/db/__tests__/mocks/rd-logger.ts",
+    "^react-native-reanimated$": "<rootDir>/src/__tests__/mocks/reanimated.ts",
+    "^react-native-unistyles$": "<rootDir>/src/__tests__/mocks/unistyles.ts",
+    "^react-native-safe-area-context$":
+      "<rootDir>/src/__tests__/mocks/safe-area-context.ts",
+    "^expo-audio$": "<rootDir>/src/__tests__/mocks/expo-audio.ts",
+    "^expo-sharing$": "<rootDir>/src/__tests__/mocks/expo-sharing.ts",
+    "^expo-file-system$": "<rootDir>/src/__tests__/mocks/expo-file-system.ts",
+    "^expo-file-system/legacy$":
+      "<rootDir>/src/__tests__/mocks/expo-file-system.ts",
+    "^expo-video$": "<rootDir>/src/__tests__/mocks/expo-video.ts",
+    "^@react-navigation/native$": "<rootDir>/src/__tests__/mocks/navigation.ts",
+    "^expo-secure-store$": "<rootDir>/src/__tests__/mocks/expo-secure-store.ts",
+    "^react-native-view-shot$":
+      "<rootDir>/src/__tests__/mocks/react-native-view-shot.ts",
+    "^react-native-keyboard-controller$":
+      "<rootDir>/src/__tests__/mocks/keyboard-controller.ts",
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(\\.bun/.*?/node_modules/)?(@rollercoaster-dev/design-tokens|@testing-library/react-native|react-native|@react-native|phosphor-react-native|react-native-keyboard-controller)/)',
+    "node_modules/(?!(\\.bun/.*?/node_modules/)?(@rollercoaster-dev/design-tokens|@testing-library/react-native|react-native|@react-native|phosphor-react-native|react-native-keyboard-controller)/)",
   ],
-  setupFiles: [require.resolve('react-native/jest/setup'), './src/db/__tests__/setup.ts'],
-  testMatch: ['**/src/**/__tests__/**/*.test.{ts,tsx}'],
+  setupFiles: [
+    require.resolve("react-native/jest/setup"),
+    "./src/db/__tests__/setup.ts",
+  ],
+  testMatch: ["**/src/**/__tests__/**/*.test.{ts,tsx}"],
 };

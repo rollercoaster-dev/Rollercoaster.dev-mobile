@@ -1,6 +1,6 @@
-import React from 'react';
-import { Pressable, View } from 'react-native';
-import { styles, type CardSize } from './Card.styles';
+import React from "react";
+import { Pressable, View } from "react-native";
+import { styles, type CardSize } from "./Card.styles";
 
 export type { CardSize };
 
@@ -15,7 +15,7 @@ export interface CardProps {
 
 export function Card({
   children,
-  size = 'normal',
+  size = "normal",
   onPress,
   onLongPress,
   accessibilityLabel,

@@ -4,44 +4,47 @@
  * Tests the state machine logic: idle -> recording -> recorded -> playing
  * and permission handling. Uses expo-audio mock from __tests__/mocks/expo-audio.ts.
  */
-import { renderHook, act } from '@testing-library/react-native';
-import { requestRecordingPermissionsAsync, setAudioModeAsync } from 'expo-audio';
-import { useAudioRecorder } from '../useAudioRecorder';
+import { renderHook, act } from "@testing-library/react-native";
+import {
+  requestRecordingPermissionsAsync,
+  setAudioModeAsync,
+} from "expo-audio";
+import { useAudioRecorder } from "../useAudioRecorder";
 
 // Access mock instances for assertions
 const {
   __mockRecorderInstance: mockRecorder,
   __mockPlayerInstance: mockPlayer,
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-} = require('expo-audio');
+} = require("expo-audio");
 
 beforeEach(() => {
   jest.clearAllMocks();
   // Reset recorder state
   mockRecorder.isRecording = false;
-  mockRecorder.uri = 'file:///mock-recording.m4a';
+  mockRecorder.uri = "file:///mock-recording.m4a";
   // Default: permission granted
   (requestRecordingPermissionsAsync as jest.Mock).mockResolvedValue({
     granted: true,
-    status: 'granted',
+    status: "granted",
     canAskAgain: true,
-    expires: 'never',
+    expires: "never",
   });
 });
 
-describe('useAudioRecorder', () => {
-  describe('initial state', () => {
-    it('starts in idle status', () => {
+describe("useAudioRecorder", () => {
+  describe("initial state", () => {
+    it("starts in idle status", () => {
       const { result } = renderHook(() => useAudioRecorder());
-      expect(result.current.status).toBe('idle');
+      expect(result.current.status).toBe("idle");
       expect(result.current.durationMs).toBe(0);
       expect(result.current.uri).toBeNull();
       expect(result.current.error).toBeNull();
     });
   });
 
-  describe('startRecording', () => {
-    it('requests permission and starts recording', async () => {
+  describe("startRecording", () => {
+    it("requests permission and starts recording", async () => {
       const { result } = renderHook(() => useAudioRecorder());
 
       await act(async () => {
@@ -55,15 +58,15 @@ describe('useAudioRecorder', () => {
       });
       expect(mockRecorder.prepareToRecordAsync).toHaveBeenCalled();
       expect(mockRecorder.record).toHaveBeenCalled();
-      expect(result.current.status).toBe('recording');
+      expect(result.current.status).toBe("recording");
     });
 
-    it('sets permission-denied when permission is not granted', async () => {
+    it("sets permission-denied when permission is not granted", async () => {
       (requestRecordingPermissionsAsync as jest.Mock).mockResolvedValue({
         granted: false,
-        status: 'denied',
+        status: "denied",
         canAskAgain: false,
-        expires: 'never',
+        expires: "never",
       });
 
       const { result } = renderHook(() => useAudioRecorder());
@@ -72,13 +75,13 @@ describe('useAudioRecorder', () => {
         await result.current.startRecording();
       });
 
-      expect(result.current.status).toBe('permission-denied');
-      expect(result.current.error).toContain('Microphone permission');
+      expect(result.current.status).toBe("permission-denied");
+      expect(result.current.error).toContain("Microphone permission");
     });
 
-    it('handles recording start failure gracefully', async () => {
+    it("handles recording start failure gracefully", async () => {
       mockRecorder.prepareToRecordAsync.mockRejectedValueOnce(
-        new Error('Microphone busy'),
+        new Error("Microphone busy"),
       );
 
       const { result } = renderHook(() => useAudioRecorder());
@@ -87,13 +90,13 @@ describe('useAudioRecorder', () => {
         await result.current.startRecording();
       });
 
-      expect(result.current.status).toBe('idle');
-      expect(result.current.error).toBe('Microphone busy');
+      expect(result.current.status).toBe("idle");
+      expect(result.current.error).toBe("Microphone busy");
     });
   });
 
-  describe('stopRecording', () => {
-    it('stops recording and provides URI', async () => {
+  describe("stopRecording", () => {
+    it("stops recording and provides URI", async () => {
       const { result } = renderHook(() => useAudioRecorder());
 
       await act(async () => {
@@ -106,14 +109,14 @@ describe('useAudioRecorder', () => {
       });
 
       expect(mockRecorder.stop).toHaveBeenCalled();
-      expect(result.current.status).toBe('recorded');
-      expect(result.current.uri).toBe('file:///mock-recording.m4a');
+      expect(result.current.status).toBe("recorded");
+      expect(result.current.uri).toBe("file:///mock-recording.m4a");
       expect(result.current.durationMs).toBe(5000);
     });
   });
 
-  describe('pauseRecording', () => {
-    it('pauses the current recording', async () => {
+  describe("pauseRecording", () => {
+    it("pauses the current recording", async () => {
       const { result } = renderHook(() => useAudioRecorder());
 
       await act(async () => {
@@ -126,12 +129,12 @@ describe('useAudioRecorder', () => {
       });
 
       expect(mockRecorder.pause).toHaveBeenCalled();
-      expect(result.current.status).toBe('paused');
+      expect(result.current.status).toBe("paused");
     });
   });
 
-  describe('resumeRecording', () => {
-    it('resumes a paused recording', async () => {
+  describe("resumeRecording", () => {
+    it("resumes a paused recording", async () => {
       const { result } = renderHook(() => useAudioRecorder());
 
       await act(async () => {
@@ -149,12 +152,12 @@ describe('useAudioRecorder', () => {
 
       // record called twice: initial start + resume
       expect(mockRecorder.record).toHaveBeenCalledTimes(2);
-      expect(result.current.status).toBe('recording');
+      expect(result.current.status).toBe("recording");
     });
   });
 
-  describe('playback', () => {
-    it('starts playback of recorded audio', async () => {
+  describe("playback", () => {
+    it("starts playback of recorded audio", async () => {
       const { result } = renderHook(() => useAudioRecorder());
 
       // Record first
@@ -173,10 +176,10 @@ describe('useAudioRecorder', () => {
 
       expect(mockPlayer.seekTo).toHaveBeenCalledWith(0);
       expect(mockPlayer.play).toHaveBeenCalled();
-      expect(result.current.status).toBe('playing');
+      expect(result.current.status).toBe("playing");
     });
 
-    it('stops playback and returns to recorded state', async () => {
+    it("stops playback and returns to recorded state", async () => {
       const { result } = renderHook(() => useAudioRecorder());
 
       await act(async () => {
@@ -194,12 +197,12 @@ describe('useAudioRecorder', () => {
       });
 
       expect(mockPlayer.pause).toHaveBeenCalled();
-      expect(result.current.status).toBe('recorded');
+      expect(result.current.status).toBe("recorded");
     });
   });
 
-  describe('reset', () => {
-    it('returns to idle state and clears all data', async () => {
+  describe("reset", () => {
+    it("returns to idle state and clears all data", async () => {
       const { result } = renderHook(() => useAudioRecorder());
 
       await act(async () => {
@@ -216,7 +219,7 @@ describe('useAudioRecorder', () => {
         await result.current.reset();
       });
 
-      expect(result.current.status).toBe('idle');
+      expect(result.current.status).toBe("idle");
       expect(result.current.durationMs).toBe(0);
       expect(result.current.uri).toBeNull();
       expect(result.current.error).toBeNull();

@@ -1,16 +1,16 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import React from 'react';
-import { ScrollView, Text, View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import type { Meta, StoryObj } from "@storybook/react";
+import React from "react";
+import { ScrollView, Text, View } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
 
-import { BadgeRenderer } from '../../badges/BadgeRenderer';
+import { BadgeRenderer } from "../../badges/BadgeRenderer";
 import {
   BadgeShape,
   BadgeFrame,
   BadgeIconWeight,
   BadgeCenterMode,
-} from '../../badges/types';
-import type { BadgeDesign, FrameDataParams } from '../../badges/types';
+} from "../../badges/types";
+import type { BadgeDesign, FrameDataParams } from "../../badges/types";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -34,7 +34,12 @@ const FRAMES: BadgeFrame[] = [
 ];
 
 const ACCENT_COLORS = [
-  '#a78bfa', '#34d399', '#fbbf24', '#10b981', '#06b6d4', '#f97316',
+  "#a78bfa",
+  "#34d399",
+  "#fbbf24",
+  "#10b981",
+  "#06b6d4",
+  "#f97316",
 ];
 
 // ---------------------------------------------------------------------------
@@ -51,7 +56,7 @@ function makeDesign(
     shape,
     frame,
     color: ACCENT_COLORS[colorIndex % ACCENT_COLORS.length],
-    iconName: 'Trophy',
+    iconName: "Trophy",
     iconWeight: BadgeIconWeight.regular,
     title: `${frame} ${shape}`,
     centerMode: BadgeCenterMode.icon,
@@ -71,7 +76,7 @@ function makeDesign(
 // ---------------------------------------------------------------------------
 
 const meta: Meta = {
-  title: 'Badges/FrameOverlays',
+  title: "Badges/FrameOverlays",
 };
 
 export default meta;
@@ -113,11 +118,31 @@ export const FrameMatrix: Story = {
 // 2. DataDrivenScaling — same frame, different data params
 // ---------------------------------------------------------------------------
 
-const SCALING_CASES: { label: string; frame: BadgeFrame; params: Partial<FrameDataParams> }[] = [
-  { label: 'guilloche · 2 steps', frame: BadgeFrame.guilloche, params: { stepCount: 2 } },
-  { label: 'guilloche · 10 steps', frame: BadgeFrame.guilloche, params: { stepCount: 10 } },
-  { label: 'crossHatch · 3 days', frame: BadgeFrame.crossHatch, params: { daysToComplete: 3 } },
-  { label: 'crossHatch · 180 days', frame: BadgeFrame.crossHatch, params: { daysToComplete: 180 } },
+const SCALING_CASES: {
+  label: string;
+  frame: BadgeFrame;
+  params: Partial<FrameDataParams>;
+}[] = [
+  {
+    label: "guilloche · 2 steps",
+    frame: BadgeFrame.guilloche,
+    params: { stepCount: 2 },
+  },
+  {
+    label: "guilloche · 10 steps",
+    frame: BadgeFrame.guilloche,
+    params: { stepCount: 10 },
+  },
+  {
+    label: "crossHatch · 3 days",
+    frame: BadgeFrame.crossHatch,
+    params: { daysToComplete: 3 },
+  },
+  {
+    label: "crossHatch · 180 days",
+    frame: BadgeFrame.crossHatch,
+    params: { daysToComplete: 180 },
+  },
 ];
 
 function DataDrivenGrid() {
@@ -160,17 +185,17 @@ const styles = StyleSheet.create((theme) => ({
   subheading: {
     ...theme.textStyles.body,
     color: theme.colors.textSecondary,
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: theme.space[2],
     marginTop: theme.space[4],
   },
   row: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: theme.space[4],
   },
   cell: {
-    alignItems: 'center',
+    alignItems: "center",
     gap: theme.space[2],
   },
   label: {

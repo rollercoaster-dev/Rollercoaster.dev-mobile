@@ -100,16 +100,16 @@ Pure TypeScript utilities.
 
 ## What Stays in the Server
 
-| Module | Why it stays |
-|--------|-------------|
-| `api/` (controllers, routes) | Hono-specific HTTP handling |
-| `infrastructure/database/` | Drizzle ORM, PostgreSQL/SQLite adapters |
-| `core/key.service.ts` | File system-based key storage |
-| `core/status-list.service.ts` | Requires database access |
-| `core/credential-status.service.ts` | Requires database access |
-| `infrastructure/assets/` | File/S3 storage |
-| `auth/` | Server authentication |
-| `infrastructure/cache/` | Server-side caching |
+| Module                              | Why it stays                            |
+| ----------------------------------- | --------------------------------------- |
+| `api/` (controllers, routes)        | Hono-specific HTTP handling             |
+| `infrastructure/database/`          | Drizzle ORM, PostgreSQL/SQLite adapters |
+| `core/key.service.ts`               | File system-based key storage           |
+| `core/status-list.service.ts`       | Requires database access                |
+| `core/credential-status.service.ts` | Requires database access                |
+| `infrastructure/assets/`            | File/S3 storage                         |
+| `auth/`                             | Server authentication                   |
+| `infrastructure/cache/`             | Server-side caching                     |
 
 ---
 
@@ -121,7 +121,7 @@ The biggest coupling point is key management. The server stores keys on the file
 interface KeyProvider {
   getPublicKey(keyId: string): Promise<JsonWebKey>;
   getPrivateKey(keyId: string): Promise<JsonWebKey>;
-  generateKeyPair(algorithm: 'Ed25519' | 'RSA'): Promise<{
+  generateKeyPair(algorithm: "Ed25519" | "RSA"): Promise<{
     publicKey: JsonWebKey;
     privateKey: JsonWebKey;
     keyId: string;
@@ -140,27 +140,28 @@ interface KeyProvider {
 
 Some server dependencies don't exist in React Native:
 
-| Dependency | Server | React Native | Solution |
-|-----------|--------|-------------|----------|
-| Node.js `crypto` | Built-in | Not available | `expo-crypto` or `react-native-quick-crypto` |
-| Node.js `zlib` | Built-in | Not available | `pako` (pure JS gzip) or `react-native-compressor` |
-| `jose` | Works | Works (pure JS) | No change needed |
-| `png-chunks-*` | Works | Needs testing | May need Buffer polyfill |
-| `@xmldom/xmldom` | Works | Works (pure JS) | No change needed |
-| File system | `fs` | Not available | KeyProvider abstraction handles this |
+| Dependency       | Server   | React Native    | Solution                                           |
+| ---------------- | -------- | --------------- | -------------------------------------------------- |
+| Node.js `crypto` | Built-in | Not available   | `expo-crypto` or `react-native-quick-crypto`       |
+| Node.js `zlib`   | Built-in | Not available   | `pako` (pure JS gzip) or `react-native-compressor` |
+| `jose`           | Works    | Works (pure JS) | No change needed                                   |
+| `png-chunks-*`   | Works    | Needs testing   | May need Buffer polyfill                           |
+| `@xmldom/xmldom` | Works    | Works (pure JS) | No change needed                                   |
+| File system      | `fs`     | Not available   | KeyProvider abstraction handles this               |
 
 The core package should:
+
 - Avoid direct Node.js built-in imports
 - Accept crypto and compression implementations via dependency injection or conditional imports
 - Provide a `Platform` configuration that consumers set at initialization
 
 ```typescript
 // Consumer initializes with platform-specific implementations
-import { configure } from '@rollercoaster-dev/openbadges-core';
+import { configure } from "@rollercoaster-dev/openbadges-core";
 
 configure({
-  crypto: expoCryptoAdapter,    // or nodeCryptoAdapter
-  compression: pakoAdapter,     // or zlibAdapter
+  crypto: expoCryptoAdapter, // or nodeCryptoAdapter
+  compression: pakoAdapter, // or zlibAdapter
   keyProvider: secureStoreKeys, // or fileSystemKeys
 });
 ```
@@ -223,25 +224,25 @@ import {
   configure,
 
   // Badge baking
-  bakeBadge,        // Embed credential in PNG/SVG
-  unbakeBadge,      // Extract credential from PNG/SVG
+  bakeBadge, // Embed credential in PNG/SVG
+  unbakeBadge, // Extract credential from PNG/SVG
 
   // Credentials
-  buildCredential,  // Create an OB3 Verifiable Credential
-  signCredential,   // Sign a credential with a private key
-  serializeOB2,     // Convert to OB2 format
-  serializeOB3,     // Convert to OB3 format
+  buildCredential, // Create an OB3 Verifiable Credential
+  signCredential, // Sign a credential with a private key
+  serializeOB2, // Convert to OB2 format
+  serializeOB3, // Convert to OB3 format
 
   // Verification
   verifyCredential, // Full verification (signature + expiration)
-  verifySignature,  // Signature-only verification
+  verifySignature, // Signature-only verification
 
   // Crypto
-  generateKeyPair,  // Generate Ed25519 or RSA keys
+  generateKeyPair, // Generate Ed25519 or RSA keys
 
   // Types
-  KeyProvider,       // Interface for key storage
-} from '@rollercoaster-dev/openbadges-core';
+  KeyProvider, // Interface for key storage
+} from "@rollercoaster-dev/openbadges-core";
 ```
 
 ---
@@ -260,25 +261,26 @@ Verification, OB2 serialization, bitstring utilities, and SVG baking can come la
 
 ### Minimum Viable Extraction
 
-| Module | Needed for Iteration A | Can defer |
-|--------|----------------------|-----------|
-| Credential building | Yes | |
-| Ed25519 signing | Yes | |
-| Key pair generation | Yes | |
-| PNG baking | Yes | |
-| KeyProvider interface | Yes | |
-| Platform configuration | Yes | |
-| Verification | | Yes (iteration D) |
-| JWT proofs | | Yes |
-| SVG baking | | Yes |
-| OB2 serialization | | Yes |
-| Bitstring utilities | | Yes |
+| Module                 | Needed for Iteration A | Can defer         |
+| ---------------------- | ---------------------- | ----------------- |
+| Credential building    | Yes                    |                   |
+| Ed25519 signing        | Yes                    |                   |
+| Key pair generation    | Yes                    |                   |
+| PNG baking             | Yes                    |                   |
+| KeyProvider interface  | Yes                    |                   |
+| Platform configuration | Yes                    |                   |
+| Verification           |                        | Yes (iteration D) |
+| JWT proofs             |                        | Yes               |
+| SVG baking             |                        | Yes               |
+| OB2 serialization      |                        | Yes               |
+| Bitstring utilities    |                        | Yes               |
 
 ---
 
 ## Extraction Strategy
 
 ### Phase 1: Minimum for Iteration A
+
 1. Create `packages/openbadges-core` in the monorepo
 2. Extract credential building + OB3 serialization
 3. Extract Ed25519 signing with KeyProvider interface
@@ -288,12 +290,14 @@ Verification, OB2 serialization, bitstring utilities, and SVG baking can come la
 7. Publish to npm as `@rollercoaster-dev/openbadges-core`
 
 ### Phase 2: Server Migration
+
 8. Refactor `openbadges-modular-server` to import from `openbadges-core`
 9. Implement `FileSystemKeyProvider`
 10. Remove duplicated code from server
 11. Verify all server tests still pass
 
 ### Phase 3: Remaining Modules
+
 12. Extract verification logic (needed for iteration D)
 13. Extract JWT proof handling
 14. Extract SVG baking

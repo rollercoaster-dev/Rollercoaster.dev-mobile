@@ -76,6 +76,7 @@ New personal accounts must complete closed testing before production access:
 ### Permissions Audit
 
 Current permissions (from `app.json`):
+
 - Microphone — voice memo evidence
 - Photo library — photo evidence
 - Camera — photo capture evidence
@@ -97,12 +98,14 @@ All permissions have clear, user-facing justification. No background location, n
 ## Future: UG Migration (When Justified)
 
 Triggers to consider forming UG (haftungsbeschränkt):
+
 - Revenue exceeds hobby level
 - Want "rollercoaster.dev" as publisher name
 - Need liability protection for commercial activity
 - Want to accept investment or hire
 
 **Migration steps:**
+
 1. Form UG via Musterprotokoll (~€400-700)
 2. Transfer iOS app via App Store Connect (preserves ratings/reviews)
 3. Transfer Android app via Play Console (preserves everything)
@@ -113,20 +116,20 @@ Triggers to consider forming UG (haftungsbeschränkt):
 
 ### Launch (Year 1)
 
-| Item | Cost |
-|------|------|
-| Gewerbeanmeldung | ~€40 |
-| Apple Developer (annual) | €99 |
-| Google Play (one-time) | €25 |
-| EAS Build (free tier) | €0 |
+| Item                       | Cost          |
+| -------------------------- | ------------- |
+| Gewerbeanmeldung           | ~€40          |
+| Apple Developer (annual)   | €99           |
+| Google Play (one-time)     | €25           |
+| EAS Build (free tier)      | €0            |
 | Domain (rollercoaster.dev) | Already owned |
-| **Total** | **~€165** |
+| **Total**                  | **~€165**     |
 
 ### If/When UG (additional)
 
-| Item | Cost |
-|------|------|
-| UG formation (notary + register) | ~€400-700 |
-| Steuerberater (annual) | ~€1,000-2,500 |
-| IHK membership (annual) | ~€50-150 |
-| Business bank account (annual) | ~€120-360 |
+| Item                             | Cost          |
+| -------------------------------- | ------------- |
+| UG formation (notary + register) | ~€400-700     |
+| Steuerberater (annual)           | ~€1,000-2,500 |
+| IHK membership (annual)          | ~€50-150      |
+| Business bank account (annual)   | ~€120-360     |

@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, Pressable, Text as RNText } from 'react-native';
-import { EVIDENCE_OPTIONS, type EvidenceTypeValue } from '../../types/evidence';
-import { styles } from './EvidenceTypePicker.styles';
+import React from "react";
+import { View, Pressable, Text as RNText } from "react-native";
+import { EVIDENCE_OPTIONS, type EvidenceTypeValue } from "../../types/evidence";
+import { styles } from "./EvidenceTypePicker.styles";
 
 export interface EvidenceTypePickerProps {
   /** Currently selected evidence types */
@@ -52,9 +52,7 @@ export function EvidenceTypePicker({
 
   return (
     <View style={styles.container}>
-      {label ? (
-        <RNText style={styles.label}>{label}</RNText>
-      ) : null}
+      {label ? <RNText style={styles.label}>{label}</RNText> : null}
       <View
         style={styles.chipsContainer}
         accessible
@@ -72,9 +70,7 @@ export function EvidenceTypePicker({
               accessibilityState={{ checked: isSelected }}
               accessibilityLabel={opt.label}
               accessibilityHint={
-                isSelected
-                  ? `Deselect ${opt.label}`
-                  : `Select ${opt.label}`
+                isSelected ? `Deselect ${opt.label}` : `Select ${opt.label}`
               }
             >
               <RNText style={styles.chipIcon}>{opt.icon}</RNText>

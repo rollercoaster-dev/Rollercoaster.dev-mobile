@@ -1,10 +1,14 @@
-import React from 'react';
-import { Text } from 'react-native';
-import { renderWithProviders, screen, fireEvent } from '../../../__tests__/test-utils';
-import { IconButton } from '../IconButton';
+import React from "react";
+import { Text } from "react-native";
+import {
+  renderWithProviders,
+  screen,
+  fireEvent,
+} from "../../../__tests__/test-utils";
+import { IconButton } from "../IconButton";
 
-describe('IconButton', () => {
-  it('renders the icon and is accessible', () => {
+describe("IconButton", () => {
+  it("renders the icon and is accessible", () => {
     renderWithProviders(
       <IconButton
         icon={<Text>X</Text>}
@@ -12,11 +16,11 @@ describe('IconButton', () => {
         accessibilityLabel="Close"
       />,
     );
-    expect(screen.getByRole('button', { name: 'Close' })).toBeOnTheScreen();
-    expect(screen.getByText('X')).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Close" })).toBeOnTheScreen();
+    expect(screen.getByText("X")).toBeOnTheScreen();
   });
 
-  it('calls onPress when pressed', () => {
+  it("calls onPress when pressed", () => {
     const onPress = jest.fn();
     renderWithProviders(
       <IconButton
@@ -25,11 +29,11 @@ describe('IconButton', () => {
         accessibilityLabel="Add"
       />,
     );
-    fireEvent.press(screen.getByRole('button', { name: 'Add' }));
+    fireEvent.press(screen.getByRole("button", { name: "Add" }));
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
-  it('does not call onPress when disabled', () => {
+  it("does not call onPress when disabled", () => {
     const onPress = jest.fn();
     renderWithProviders(
       <IconButton
@@ -39,7 +43,7 @@ describe('IconButton', () => {
         disabled
       />,
     );
-    fireEvent.press(screen.getByRole('button', { name: 'Add' }));
+    fireEvent.press(screen.getByRole("button", { name: "Add" }));
     expect(onPress).not.toHaveBeenCalled();
   });
 });

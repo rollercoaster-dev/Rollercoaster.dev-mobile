@@ -11,6 +11,7 @@
 The data model for native-rd must support the core learning loop (Goal → Step → Evidence → Badge) while remaining sync-ready from day one. The model grows across iterations A through D, adding new entities without replacing existing ones.
 
 Key requirements:
+
 1. **Entity hierarchy** — Goals contain Steps, both can have Evidence, completed Goals earn Badges
 2. **ULID identifiers** — Globally unique, lexicographically sortable, CRDT-compatible
 3. **Sync-ready** — Schema must work with Evolu's CRDT-based sync (ADR-0003)
@@ -23,6 +24,7 @@ The full data model specification is documented in `docs/architecture/data-model
 ## Decision
 
 Adopt the iterative data model defined in `docs/architecture/data-model.md` with:
+
 - **ULIDs for all entity IDs** (using Evolu's `id()` branded types)
 - **Evolu schema definition** (branded types, validation at type level)
 - **Iteration A starting point** (Goal, Step, Evidence, Badge)
@@ -71,6 +73,7 @@ Badge {
 ```
 
 **Relationships:**
+
 - Goal 1:N Step
 - Goal 1:N Evidence
 - Step 1:N Evidence
@@ -91,6 +94,7 @@ All entities use ULIDs. No entity is replaced or removed — each iteration adds
 **Decision:** Use ULIDs (Universally Unique Lexicographically Sortable Identifiers) for all entity IDs.
 
 **Rationale:**
+
 - Globally unique without coordination (essential for CRDT sync)
 - Sortable by creation time (useful for display ordering)
 - Compatible with SQLite primary keys
@@ -103,6 +107,7 @@ All entities use ULIDs. No entity is replaced or removed — each iteration adds
 **Decision:** Evidence can attach to either a Goal or a Step (exactly one, not both).
 
 **Rationale:**
+
 - Step-level evidence: Proves completion of an individual step (Tomás photographing each circuit)
 - Goal-level evidence: Proves overall progress or final result (Lina's before/after of the stage section)
 - Flexibility supports different user workflows without forcing a single pattern
@@ -114,6 +119,7 @@ All entities use ULIDs. No entity is replaced or removed — each iteration adds
 **Decision:** Badge entity stores the complete Open Badges 3.0 Verifiable Credential as JSON, plus a baked image.
 
 **Rationale:**
+
 - The OB3 credential is the portable artifact — everything else in the database is local convenience
 - Storing the full credential JSON eliminates the need to rebuild it on export
 - Baking the credential into the badge image makes it shareable and verifiable
@@ -126,6 +132,7 @@ All entities use ULIDs. No entity is replaced or removed — each iteration adds
 **Decision:** Use Evolu's `isDeleted` flag for deletions, not hard deletes.
 
 **Rationale:**
+
 - Required by Evolu's CRDT sync model (tombstones prevent deletion conflicts)
 - Enables sync'd deletion across devices
 - Allows future "undo delete" or "restore from backup" features
@@ -138,12 +145,14 @@ All entities use ULIDs. No entity is replaced or removed — each iteration adds
 **Decision:** Design Iteration A schema with Iteration B sync needs in mind, even if fields aren't exposed in A's UI.
 
 **Rationale:**
+
 - Avoids schema migrations between A and B
 - Goals can have `paused` status even if A doesn't show it
 - Steps can move between goals even if A doesn't allow it
 - Evolu's schema is defined at compile time — adding fields later requires migration
 
 **Mitigations:**
+
 - Keep the schema minimal for A (only fields actually needed)
 - Plan B/C/D additions now but implement incrementally
 - Document the evolution in `data-model.md` so future context is preserved
@@ -158,6 +167,7 @@ All entities use ULIDs. No entity is replaced or removed — each iteration adds
 ### Schema Validation
 
 Evolu uses branded types for compile-time validation:
+
 - `NonEmptyString1000` — Non-empty string, max 1000 characters
 - `nullOr(T)` — Nullable column
 - `DateIso` — ISO 8601 date string (use `dateToDateIso()` helper)
@@ -168,6 +178,7 @@ Validation uses `.from()`, `.orThrow()`, or `.orNull()` — not Zod's `.safePars
 ### Current Implementation
 
 As of 2026-02-18, Iteration A schema is fully implemented:
+
 - ✅ **Goal table** — Defined in `src/db/schema.ts` with full CRUD operations in `src/db/queries.ts`
 - ✅ **Step table** — Full CRUD operations including reorder support
 - ✅ **Evidence table** — All 7 evidence types (photo, screenshot, text, voice_memo, video, link, file)
@@ -177,6 +188,7 @@ As of 2026-02-18, Iteration A schema is fully implemented:
 ## Consequences
 
 **Positive:**
+
 - Clean entity hierarchy matches the learning loop mental model
 - ULIDs enable sync without coordination or collision risk
 - Soft-delete pattern required by CRDTs, but also enables undo features
@@ -185,12 +197,14 @@ As of 2026-02-18, Iteration A schema is fully implemented:
 - Evidence flexibility supports diverse user workflows
 
 **Negative / Risks:**
+
 - Evolu's schema is immutable after creation — adding fields requires migration
 - Kysely query builder (not Drizzle ORM) differs from monorepo patterns
 - Branded types increase type complexity (`.orThrow()` instead of `.safeParse()`)
 - Evidence attachment pattern (goalId OR stepId) requires application-level validation
 
 **Mitigations:**
+
 - Plan schema additions early (documented in `data-model.md`)
 - Kysely provides excellent type safety and SQL compatibility
 - Evolu's validation API is well-documented in prototype findings

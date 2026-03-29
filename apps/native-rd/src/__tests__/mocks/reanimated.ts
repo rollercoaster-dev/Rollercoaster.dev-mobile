@@ -21,6 +21,6 @@ const named = {
 // because without __esModule the default import IS module.exports
 module.exports = {
   ...named,
-  View: 'Animated.View',
-  default: { View: 'Animated.View', ...named },
+  View: "Animated.View",
+  default: { View: "Animated.View", ...named },
 };

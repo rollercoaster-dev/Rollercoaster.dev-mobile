@@ -35,11 +35,11 @@ We do not collect, transmit, or store any personal data on external servers. The
 
 The app requests the following permissions, only when you choose to use the related feature:
 
-| Permission | Why | When |
-|------------|-----|------|
-| **Camera** | Take photos as evidence for your goals | Only when you tap "Take Photo" |
-| **Photo Library** | Select existing photos as evidence | Only when you tap "Choose Photo" |
-| **Microphone** | Record voice memos as evidence | Only when you tap "Record Voice Memo" |
+| Permission        | Why                                    | When                                  |
+| ----------------- | -------------------------------------- | ------------------------------------- |
+| **Camera**        | Take photos as evidence for your goals | Only when you tap "Take Photo"        |
+| **Photo Library** | Select existing photos as evidence     | Only when you tap "Choose Photo"      |
+| **Microphone**    | Record voice memos as evidence         | Only when you tap "Record Voice Memo" |
 
 These permissions are requested at the moment you first use each feature, not at app launch. You can revoke any permission at any time in your device settings.
 

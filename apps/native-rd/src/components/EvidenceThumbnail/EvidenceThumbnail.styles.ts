@@ -1,5 +1,5 @@
-import { StyleSheet } from 'react-native-unistyles';
-import { shadowStyle } from '../../styles/shadows';
+import { StyleSheet } from "react-native-unistyles";
+import { shadowStyle } from "../../styles/shadows";
 
 export const styles = StyleSheet.create((theme) => ({
   container: {
@@ -7,19 +7,19 @@ export const styles = StyleSheet.create((theme) => ({
     borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.border,
     borderRadius: theme.radius.sm,
-    overflow: 'hidden',
+    overflow: "hidden",
     minHeight: 48,
-    ...shadowStyle(theme, 'hardSm'),
+    ...shadowStyle(theme, "hardSm"),
   },
   preview: {
     height: 80,
     backgroundColor: theme.colors.backgroundTertiary,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   previewImage: {
     height: 80,
-    width: '100%',
+    width: "100%",
   },
   previewIcon: {
     fontSize: 24,
@@ -28,7 +28,7 @@ export const styles = StyleSheet.create((theme) => ({
     height: 80,
     backgroundColor: theme.colors.backgroundTertiary,
     padding: theme.space[2],
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   textSnippet: {
     fontSize: theme.size.xs,
@@ -56,7 +56,7 @@ export const styles = StyleSheet.create((theme) => ({
     fontSize: theme.size.xs,
     fontFamily: theme.fontFamily.mono,
     color: theme.colors.textMuted,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: theme.letterSpacing.label,
     marginTop: 2,
   },

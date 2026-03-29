@@ -1,8 +1,8 @@
-import React from 'react';
-import { Pressable, Text } from 'react-native';
-import type { EvidenceTypeValue } from '../../types/evidence';
-import { EVIDENCE_TYPE_ICONS } from '../../constants/evidenceIcons';
-import { styles } from './EvidenceItem.styles';
+import React from "react";
+import { Pressable, Text } from "react-native";
+import type { EvidenceTypeValue } from "../../types/evidence";
+import { EVIDENCE_TYPE_ICONS } from "../../constants/evidenceIcons";
+import { styles } from "./EvidenceItem.styles";
 
 export interface EvidenceItemProps {
   id: string;
@@ -16,9 +16,9 @@ export interface EvidenceItemProps {
 const MAX_LABEL_LENGTH = 20;
 
 function truncateLabel(label: string): string {
-  if (!label) return '';
+  if (!label) return "";
   if (label.length <= MAX_LABEL_LENGTH) return label;
-  return label.slice(0, MAX_LABEL_LENGTH) + '\u2026';
+  return label.slice(0, MAX_LABEL_LENGTH) + "\u2026";
 }
 
 export function EvidenceItem({
@@ -40,7 +40,9 @@ export function EvidenceItem({
       accessible
       accessibilityRole="button"
       accessibilityLabel={`${type} evidence: ${truncated}`}
-      accessibilityHint={onPress ? 'Tap to view, long press to delete' : 'Long press to delete'}
+      accessibilityHint={
+        onPress ? "Tap to view, long press to delete" : "Long press to delete"
+      }
       style={({ pressed }) => [
         styles.container(isGoal),
         pressed && styles.pressed,

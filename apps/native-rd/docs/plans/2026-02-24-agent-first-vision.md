@@ -18,13 +18,13 @@ This document maps the capability layers needed to reach that goal, inspired by 
 
 ## Current State vs. Target
 
-| Capability | Today | Target |
-|---|---|---|
-| **Repository legibility** | AGENTS.md, CLAUDE.md, 6 directory indexes, cross-linked docs, freshness metadata | **Complete.** Structured knowledge base with progressive disclosure. |
-| **Code enforcement** | ESLint + TypeScript, manual architectural review | Custom lint rules for architectural boundaries, structural tests, agent-readable error messages |
-| **App legibility** | Agents can't see or drive the running app | Maestro E2E, simulator screenshots via MCP, per-worktree app boot, agent-readable logs |
-| **Feedback loops** | CodeRabbit + Claude review on PRs, graph-flow workflow | Self-review before external review, quality scoring per domain, review comments become tasks |
-| **Entropy management** | Manual cleanup, no quality tracking | Golden principles as lint rules, recurring cleanup agents, versioned tech debt tracker |
+| Capability                | Today                                                                            | Target                                                                                          |
+| ------------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| **Repository legibility** | AGENTS.md, CLAUDE.md, 6 directory indexes, cross-linked docs, freshness metadata | **Complete.** Structured knowledge base with progressive disclosure.                            |
+| **Code enforcement**      | ESLint + TypeScript, manual architectural review                                 | Custom lint rules for architectural boundaries, structural tests, agent-readable error messages |
+| **App legibility**        | Agents can't see or drive the running app                                        | Maestro E2E, simulator screenshots via MCP, per-worktree app boot, agent-readable logs          |
+| **Feedback loops**        | CodeRabbit + Claude review on PRs, graph-flow workflow                           | Self-review before external review, quality scoring per domain, review comments become tasks    |
+| **Entropy management**    | Manual cleanup, no quality tracking                                              | Golden principles as lint rules, recurring cleanup agents, versioned tech debt tracker          |
 
 ---
 
@@ -168,14 +168,14 @@ Each phase builds on the previous. Phase 1 is prerequisite for everything.
 
 ## Success Metrics
 
-| Metric | Current | Target |
-|---|---|---|
-| PRs per day | ~1 | 3-5 |
-| % PRs merged without human code review | ~0% | 80% |
-| Mean time from prompt to merged PR | Hours (with human in loop) | < 30 min for standard changes |
-| Agent-reported blockers per run | Not tracked | < 1 per run |
-| Test coverage | ~80% | Maintained > 80% as velocity increases |
-| Doc freshness | Not tracked | 100% of docs verified within 30 days |
+| Metric                                 | Current                    | Target                                 |
+| -------------------------------------- | -------------------------- | -------------------------------------- |
+| PRs per day                            | ~1                         | 3-5                                    |
+| % PRs merged without human code review | ~0%                        | 80%                                    |
+| Mean time from prompt to merged PR     | Hours (with human in loop) | < 30 min for standard changes          |
+| Agent-reported blockers per run        | Not tracked                | < 1 per run                            |
+| Test coverage                          | ~80%                       | Maintained > 80% as velocity increases |
+| Doc freshness                          | Not tracked                | 100% of docs verified within 30 days   |
 
 ---
 

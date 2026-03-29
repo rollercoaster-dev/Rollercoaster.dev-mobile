@@ -1,14 +1,14 @@
-import React, { useEffect } from 'react';
-import { View } from 'react-native';
+import React, { useEffect } from "react";
+import { View } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
   withSpring,
-} from 'react-native-reanimated';
-import { useAnimationPref } from '../../hooks/useAnimationPref';
-import { getTimingConfig, getSpringConfig } from '../../utils/animation';
-import { styles } from './ProgressBar.styles';
+} from "react-native-reanimated";
+import { useAnimationPref } from "../../hooks/useAnimationPref";
+import { getTimingConfig, getSpringConfig } from "../../utils/animation";
+import { styles } from "./ProgressBar.styles";
 
 export interface ProgressBarProps {
   progress: number;
@@ -20,10 +20,13 @@ export function ProgressBar({ progress }: ProgressBarProps) {
   const width = useSharedValue(clamped);
 
   useEffect(() => {
-    if (animationPref === 'full') {
-      width.value = withSpring(clamped, getSpringConfig('full'));
+    if (animationPref === "full") {
+      width.value = withSpring(clamped, getSpringConfig("full"));
     } else {
-      width.value = withTiming(clamped, getTimingConfig(animationPref, 'normal'));
+      width.value = withTiming(
+        clamped,
+        getTimingConfig(animationPref, "normal"),
+      );
     }
   }, [clamped, animationPref, width]);
 

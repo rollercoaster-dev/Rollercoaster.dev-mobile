@@ -1,5 +1,5 @@
-import { StyleSheet } from 'react-native-unistyles';
-import { shadowStyle } from '../../styles/shadows';
+import { StyleSheet } from "react-native-unistyles";
+import { shadowStyle } from "../../styles/shadows";
 
 export const styles = StyleSheet.create((theme) => ({
   button: {
@@ -9,9 +9,9 @@ export const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.accentPrimary,
     borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.text,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...shadowStyle(theme, 'hardSm'),
+    alignItems: "center",
+    justifyContent: "center",
+    ...shadowStyle(theme, "hardSm"),
   },
   pressed: {
     transform: [{ translateX: 2 }, { translateY: 2 }],
@@ -24,6 +24,6 @@ export const styles = StyleSheet.create((theme) => ({
     lineHeight: 22,
   },
   iconOpen: {
-    transform: [{ rotate: '45deg' }],
+    transform: [{ rotate: "45deg" }],
   },
 }));

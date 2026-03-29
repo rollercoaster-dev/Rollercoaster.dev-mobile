@@ -1,5 +1,5 @@
-import React, { createContext, useCallback, useContext, useState } from 'react';
-import { Toast, type ToastAction } from './Toast';
+import React, { createContext, useCallback, useContext, useState } from "react";
+import { Toast, type ToastAction } from "./Toast";
 
 export interface ToastOptions {
   message: string;
@@ -15,7 +15,9 @@ interface ToastContextValue {
 const ToastContext = createContext<ToastContextValue | null>(null);
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
-  const [toastState, setToastState] = useState<(ToastOptions & { visible: boolean }) | null>(null);
+  const [toastState, setToastState] = useState<
+    (ToastOptions & { visible: boolean }) | null
+  >(null);
 
   const showToast = useCallback((options: ToastOptions) => {
     setToastState({ ...options, visible: true });
@@ -44,7 +46,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 export function useToast(): ToastContextValue {
   const ctx = useContext(ToastContext);
   if (!ctx) {
-    throw new Error('useToast must be used within a ToastProvider');
+    throw new Error("useToast must be used within a ToastProvider");
   }
   return ctx;
 }

@@ -1,15 +1,15 @@
-import { StyleSheet } from 'react-native-unistyles';
-import { shadowStyle } from '../../styles/shadows';
-import { palette } from '../../themes/adapter';
+import { StyleSheet } from "react-native-unistyles";
+import { shadowStyle } from "../../styles/shadows";
+import { palette } from "../../themes/adapter";
 
 export const styles = StyleSheet.create((theme) => ({
   container: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginTop: theme.space[2],
   },
   nodeColumn: {
     width: 40,
-    alignItems: 'center',
+    alignItems: "center",
     marginRight: theme.space[3],
   },
   contentCard: {
@@ -21,7 +21,7 @@ export const styles = StyleSheet.create((theme) => ({
     borderLeftColor: palette.yellow300,
     borderRadius: theme.radius.sm,
     padding: theme.space[4],
-    ...shadowStyle(theme, 'hardSm'),
+    ...shadowStyle(theme, "hardSm"),
   },
   heading: {
     fontSize: 18,
@@ -30,8 +30,8 @@ export const styles = StyleSheet.create((theme) => ({
     marginBottom: theme.space[2],
   },
   evidenceCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.space[2],
     paddingVertical: theme.space[2],
     paddingHorizontal: theme.space[3],
@@ -54,6 +54,6 @@ export const styles = StyleSheet.create((theme) => ({
   noEvidence: {
     fontSize: 13,
     color: theme.colors.textSecondary,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
 }));

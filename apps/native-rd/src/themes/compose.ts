@@ -3,13 +3,24 @@
  * Generates all 14 theme combinations (2 colorModes × 7 variants)
  */
 
-import { colorModes, type ColorMode, type Colors } from './colorModes';
-import { variantOverrides, variants, type Variant } from './variants';
+import { colorModes, type ColorMode, type Colors } from "./colorModes";
+import { variantOverrides, variants, type Variant } from "./variants";
 import {
-  space, size, sizeL, radius, zIndex, fontWeight, lineHeight, lineHeightL,
-  borderWidth, letterSpacing, fontFamily, transition, shadow,
-} from './tokens';
-import { narrativeModes, type Narrative } from './adapter';
+  space,
+  size,
+  sizeL,
+  radius,
+  zIndex,
+  fontWeight,
+  lineHeight,
+  lineHeightL,
+  borderWidth,
+  letterSpacing,
+  fontFamily,
+  transition,
+  shadow,
+} from "./tokens";
+import { narrativeModes, type Narrative } from "./adapter";
 
 /** Size scale type - either normal or large */
 export type SizeScale = typeof size | typeof sizeL;
@@ -25,7 +36,7 @@ export interface FontFamilyConfig {
 }
 
 /** Valid font weight values from design tokens */
-type FontWeightValue = typeof fontWeight[keyof typeof fontWeight];
+type FontWeightValue = (typeof fontWeight)[keyof typeof fontWeight];
 
 /** A single typography preset */
 export interface TextStyle {
@@ -71,7 +82,7 @@ export interface ComposedTheme {
  */
 export function composeTheme(
   colorMode: ColorMode,
-  variant: Variant
+  variant: Variant,
 ): ComposedTheme {
   const base = colorModes[colorMode];
   const baseNarrative = narrativeModes[colorMode];
@@ -107,24 +118,32 @@ export function composeTheme(
 
   // Resolve font family per variant
   const resolvedFontFamily: FontFamilyConfig = variantDef.fontFamily
-    ? { body: variantDef.fontFamily, headline: variantDef.fontFamily, mono: fontFamily.mono }
-    : { body: fontFamily.body, headline: fontFamily.headline, mono: fontFamily.mono };
+    ? {
+        body: variantDef.fontFamily,
+        headline: variantDef.fontFamily,
+        mono: fontFamily.mono,
+      }
+    : {
+        body: fontFamily.body,
+        headline: fontFamily.headline,
+        mono: fontFamily.mono,
+      };
 
   // Build typography presets using resolved scales
   const s = sizeScale as Record<string, number>;
   const lh = lineHeightScale as Record<string, number>;
   const textStyles: TextStyles = {
     display: {
-      fontSize: s['4xl'] ?? 40,
+      fontSize: s["4xl"] ?? 40,
       fontWeight: fontWeight.black,
-      lineHeight: Math.round((s['4xl'] ?? 40) * 1.05),
+      lineHeight: Math.round((s["4xl"] ?? 40) * 1.05),
       letterSpacing: letterSpacing.tight,
       fontFamily: resolvedFontFamily.headline,
     },
     headline: {
-      fontSize: s['2xl'] ?? 24,
+      fontSize: s["2xl"] ?? 24,
       fontWeight: fontWeight.bold,
-      lineHeight: Math.round((s['2xl'] ?? 24) * 1.3),
+      lineHeight: Math.round((s["2xl"] ?? 24) * 1.3),
       letterSpacing: letterSpacing.tight,
       fontFamily: resolvedFontFamily.headline,
     },
@@ -188,7 +207,10 @@ export function composeTheme(
 /**
  * Generate theme name from colorMode and variant
  */
-export function getThemeName(colorMode: ColorMode, variant: Variant): ThemeName {
+export function getThemeName(
+  colorMode: ColorMode,
+  variant: Variant,
+): ThemeName {
   return `${colorMode}-${variant}` as ThemeName;
 }
 
@@ -199,7 +221,7 @@ export function parseThemeName(themeName: ThemeName): {
   colorMode: ColorMode;
   variant: Variant;
 } {
-  const idx = themeName.indexOf('-');
+  const idx = themeName.indexOf("-");
   const colorMode = themeName.slice(0, idx) as ColorMode;
   const variant = themeName.slice(idx + 1) as Variant;
   return { colorMode, variant };
@@ -208,17 +230,17 @@ export function parseThemeName(themeName: ThemeName): {
 /** All possible theme names - derived from colorMode × variant */
 export type ThemeName = `${ColorMode}-${Variant}`;
 
-const colorModeList: ColorMode[] = ['light', 'dark'];
+const colorModeList: ColorMode[] = ["light", "dark"];
 
-export const themeNames: ThemeName[] = colorModeList.flatMap(
-  (cm) => variants.map((v) => `${cm}-${v}` as ThemeName)
+export const themeNames: ThemeName[] = colorModeList.flatMap((cm) =>
+  variants.map((v) => `${cm}-${v}` as ThemeName),
 );
 
 /** All 14 composed themes - derived from colorMode × variant */
 export const themes = Object.fromEntries(
   colorModeList.flatMap((cm) =>
-    variants.map((v) => [`${cm}-${v}`, composeTheme(cm, v)])
-  )
+    variants.map((v) => [`${cm}-${v}`, composeTheme(cm, v)]),
+  ),
 ) as Record<ThemeName, ComposedTheme>;
 
 export type Themes = typeof themes;

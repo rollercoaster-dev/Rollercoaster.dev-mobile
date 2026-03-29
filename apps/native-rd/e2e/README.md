@@ -49,8 +49,8 @@ appId: com.joe.rd.native-rd
 
 ## Current Flows
 
-| Flow | User Story | Description |
-|------|-----------|-------------|
-| `goal-create-complete.yaml` | Lina's Quiet Victory | Create a goal (completion flow is aspirational) |
-| `badge-view.yaml` | Badge tab | Navigate to badges tab, verify empty state |
-| `settings-theme-switch.yaml` | Theme switch | Navigate to settings, switch to Night Ride theme |
+| Flow                         | User Story           | Description                                      |
+| ---------------------------- | -------------------- | ------------------------------------------------ |
+| `goal-create-complete.yaml`  | Lina's Quiet Victory | Create a goal (completion flow is aspirational)  |
+| `badge-view.yaml`            | Badge tab            | Navigate to badges tab, verify empty state       |
+| `settings-theme-switch.yaml` | Theme switch         | Navigate to settings, switch to Night Ride theme |

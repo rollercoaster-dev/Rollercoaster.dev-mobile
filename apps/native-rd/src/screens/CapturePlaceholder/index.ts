@@ -1,1 +1,1 @@
-export { CapturePlaceholder } from './CapturePlaceholder';
+export { CapturePlaceholder } from "./CapturePlaceholder";

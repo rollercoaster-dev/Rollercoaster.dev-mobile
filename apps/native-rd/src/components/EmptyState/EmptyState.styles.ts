@@ -1,8 +1,8 @@
-import { StyleSheet } from 'react-native-unistyles';
+import { StyleSheet } from "react-native-unistyles";
 
 export const styles = StyleSheet.create((theme) => ({
   container: {
-    alignItems: 'center',
+    alignItems: "center",
     padding: theme.space[8],
     gap: theme.space[2],
   },
@@ -13,12 +13,12 @@ export const styles = StyleSheet.create((theme) => ({
   title: {
     ...theme.textStyles.title,
     color: theme.colors.text,
-    textAlign: 'center',
+    textAlign: "center",
   },
   body: {
     ...theme.textStyles.body,
     color: theme.colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: theme.size.sm,
     lineHeight: theme.lineHeight.sm,
   },

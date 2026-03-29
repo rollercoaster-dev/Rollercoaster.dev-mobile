@@ -1,19 +1,19 @@
-import React from 'react';
-import { Text } from 'react-native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { useUnistyles } from 'react-native-unistyles';
-import { getRecommendedTextColor } from '../utils/accessibility';
-import { GoalsStack } from './GoalsStack';
-import { BadgesStack } from './BadgesStack';
-import { SettingsStack } from './SettingsStack';
-import type { RootTabParamList } from './types';
+import React from "react";
+import { Text } from "react-native";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { useUnistyles } from "react-native-unistyles";
+import { getRecommendedTextColor } from "../utils/accessibility";
+import { GoalsStack } from "./GoalsStack";
+import { BadgesStack } from "./BadgesStack";
+import { SettingsStack } from "./SettingsStack";
+import type { RootTabParamList } from "./types";
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
 const tabLetters: Record<keyof RootTabParamList, string> = {
-  GoalsTab: 'G',
-  BadgesTab: 'B',
-  SettingsTab: 'S',
+  GoalsTab: "G",
+  BadgesTab: "B",
+  SettingsTab: "S",
 };
 
 export function TabNavigator() {
@@ -24,7 +24,8 @@ export function TabNavigator() {
   const activeTextColor = getRecommendedTextColor(theme.colors.accentPurple);
   // For inactive state, use a slightly muted version while maintaining 3:1 contrast
   // If active is white, inactive is light gray; if active is black, inactive is dark gray
-  const inactiveTextColor = activeTextColor === '#FFFFFF' ? '#e5e5e5' : '#404040';
+  const inactiveTextColor =
+    activeTextColor === "#FFFFFF" ? "#e5e5e5" : "#404040";
 
   return (
     <Tab.Navigator
@@ -35,11 +36,11 @@ export function TabNavigator() {
           <Text
             style={{
               color,
-              fontSize: theme.size['2xl'],
+              fontSize: theme.size["2xl"],
               fontWeight: theme.fontWeight.black,
               fontFamily: theme.fontFamily.headline,
               letterSpacing: theme.letterSpacing.tight,
-              lineHeight: theme.size['2xl'] * 1.2,
+              lineHeight: theme.size["2xl"] * 1.2,
             }}
           >
             {tabLetters[route.name]}

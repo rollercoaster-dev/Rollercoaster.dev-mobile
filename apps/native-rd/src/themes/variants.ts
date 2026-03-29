@@ -3,31 +3,31 @@
  * Each variant defines what it changes from the base colorMode
  */
 
-import { size, sizeL, lineHeight, lineHeightL } from './tokens';
+import { size, sizeL, lineHeight, lineHeightL } from "./tokens";
 import {
   variantColors,
   narrativeVariants,
   type VariantOverride as TokenVariantOverride,
   type NarrativeOverride,
-} from './adapter';
+} from "./adapter";
 
 export type Variant =
-  | 'default'
-  | 'highContrast'
-  | 'largeText'
-  | 'dyslexia'
-  | 'lowVision'
-  | 'autismFriendly'
-  | 'lowInfo';
+  | "default"
+  | "highContrast"
+  | "largeText"
+  | "dyslexia"
+  | "lowVision"
+  | "autismFriendly"
+  | "lowInfo";
 
 export const variants: Variant[] = [
-  'default',
-  'highContrast',
-  'largeText',
-  'dyslexia',
-  'lowVision',
-  'autismFriendly',
-  'lowInfo',
+  "default",
+  "highContrast",
+  "largeText",
+  "dyslexia",
+  "lowVision",
+  "autismFriendly",
+  "lowInfo",
 ];
 
 interface VariantOverride {
@@ -74,7 +74,7 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
     colors: variantColors.dyslexiaFriendly,
     narrative: narrativeVariants.dyslexiaFriendly,
     lineHeight: lineHeightL,
-    fontFamily: 'Lexend',
+    fontFamily: "Lexend",
   },
 
   /**
@@ -86,7 +86,7 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
     narrative: narrativeVariants.lowVision,
     shadows: { opacity: 0 },
     size: sizeL,
-    fontFamily: 'AtkinsonHyperlegible',
+    fontFamily: "AtkinsonHyperlegible",
   },
 
   /**
@@ -113,35 +113,35 @@ export const variantOptions: Array<{
   label: string;
   description: string;
 }> = [
-  { id: 'default', label: 'The Full Ride', description: 'Standard theme' },
+  { id: "default", label: "The Full Ride", description: "Standard theme" },
   {
-    id: 'highContrast',
-    label: 'Bold Ink',
-    description: 'High contrast (WCAG AAA)',
+    id: "highContrast",
+    label: "Bold Ink",
+    description: "High contrast (WCAG AAA)",
   },
   {
-    id: 'largeText',
-    label: 'Same Ride, Bigger Seat',
-    description: '1.25x text size',
+    id: "largeText",
+    label: "Same Ride, Bigger Seat",
+    description: "1.25x text size",
   },
   {
-    id: 'dyslexia',
-    label: 'Warm Studio',
-    description: 'Dyslexia-friendly',
+    id: "dyslexia",
+    label: "Warm Studio",
+    description: "Dyslexia-friendly",
   },
   {
-    id: 'lowVision',
-    label: 'Loud & Clear',
-    description: 'Low vision support',
+    id: "lowVision",
+    label: "Loud & Clear",
+    description: "Low vision support",
   },
   {
-    id: 'autismFriendly',
-    label: 'Still Water',
-    description: 'Autism-friendly',
+    id: "autismFriendly",
+    label: "Still Water",
+    description: "Autism-friendly",
   },
   {
-    id: 'lowInfo',
-    label: 'Clean Signal',
-    description: 'Reduced visual noise',
+    id: "lowInfo",
+    label: "Clean Signal",
+    description: "Reduced visual noise",
   },
 ];

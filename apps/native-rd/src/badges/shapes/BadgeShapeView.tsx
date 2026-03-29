@@ -12,11 +12,11 @@
  * by the `size` prop (default 256).
  */
 
-import React from 'react';
-import Svg, { Path } from 'react-native-svg';
-import { useUnistyles } from 'react-native-unistyles';
-import { type BadgeShape } from '../types';
-import { generateShapePath } from './paths';
+import React from "react";
+import Svg, { Path } from "react-native-svg";
+import { useUnistyles } from "react-native-unistyles";
+import { type BadgeShape } from "../types";
+import { generateShapePath } from "./paths";
 
 export interface BadgeShapeViewProps {
   /** Which shape to render */
@@ -49,7 +49,8 @@ export function BadgeShapeView({
   const hasShadow = showShadowProp ?? theme.shadows.opacity > 0;
 
   // High contrast / lowVision: thicker borders (autismFriendly also has opacity 0 but is NOT high contrast)
-  const isHighContrast = theme.variant === 'highContrast' || theme.variant === 'lowVision';
+  const isHighContrast =
+    theme.variant === "highContrast" || theme.variant === "lowVision";
   const resolvedStrokeWidth = strokeWidthProp ?? (isHighContrast ? 4 : 3);
 
   // Inset shapes by half the stroke width so the stroke doesn't clip
@@ -90,4 +91,3 @@ export function BadgeShapeView({
     </Svg>
   );
 }
-

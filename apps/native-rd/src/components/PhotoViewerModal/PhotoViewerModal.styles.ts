@@ -1,35 +1,35 @@
-import { StyleSheet } from 'react-native-unistyles';
+import { StyleSheet } from "react-native-unistyles";
 
 export const styles = StyleSheet.create((theme) => ({
   overlay: {
     flex: 1,
     // eslint-disable-next-line local/no-raw-colors -- fullscreen media overlay, intentionally opaque black
-    backgroundColor: 'black',
+    backgroundColor: "black",
   },
   container: {
     flex: 1,
   },
   topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[2],
   },
   closeText: {
     fontSize: 18,
     // eslint-disable-next-line local/no-raw-colors -- white-on-black media overlay chrome
-    color: 'white',
+    color: "white",
     fontWeight: theme.fontWeight.bold,
   },
   imageContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   image: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   captionBar: {
     paddingHorizontal: theme.space[4],
@@ -37,16 +37,16 @@ export const styles = StyleSheet.create((theme) => ({
   },
   captionText: {
     // eslint-disable-next-line local/no-raw-colors -- white-on-black media overlay chrome
-    color: 'white',
+    color: "white",
     fontSize: theme.size.sm,
     fontFamily: theme.fontFamily.body,
-    textAlign: 'center',
+    textAlign: "center",
   },
   errorText: {
     // eslint-disable-next-line local/no-raw-colors -- white-on-black media overlay chrome
-    color: 'white',
+    color: "white",
     fontSize: theme.size.sm,
     fontFamily: theme.fontFamily.body,
-    textAlign: 'center',
+    textAlign: "center",
   },
 }));

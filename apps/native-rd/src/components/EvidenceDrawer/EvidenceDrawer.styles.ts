@@ -1,5 +1,5 @@
-import { StyleSheet } from 'react-native-unistyles';
-import { palette } from '../../themes/palette';
+import { StyleSheet } from "react-native-unistyles";
+import { palette } from "../../themes/palette";
 
 /**
  * Collapsed height of the EvidenceDrawer in points.
@@ -10,7 +10,7 @@ export const PEEK_HEIGHT = 56;
 
 export const styles = StyleSheet.create((theme) => ({
   overlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
@@ -22,7 +22,7 @@ export const styles = StyleSheet.create((theme) => ({
     flex: 1,
   },
   drawer: (isGoal: boolean) => ({
-    position: 'absolute' as const,
+    position: "absolute" as const,
     bottom: 0,
     left: 0,
     right: 0,
@@ -36,19 +36,19 @@ export const styles = StyleSheet.create((theme) => ({
     borderTopLeftRadius: theme.radius.xl,
     borderTopRightRadius: theme.radius.xl,
     zIndex: 21,
-    overflow: 'hidden' as const,
+    overflow: "hidden" as const,
   }),
   handleArea: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'space-between' as const,
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "space-between" as const,
     paddingVertical: theme.space[3],
     paddingHorizontal: theme.space[4],
     minHeight: PEEK_HEIGHT,
   },
   handleLeft: {
-    flexDirection: 'column' as const,
-    alignItems: 'center' as const,
+    flexDirection: "column" as const,
+    alignItems: "center" as const,
     flex: 1,
     gap: theme.space[1],
   },
@@ -68,8 +68,8 @@ export const styles = StyleSheet.create((theme) => ({
     flex: 1,
   },
   grid: {
-    flexDirection: 'row' as const,
-    flexWrap: 'wrap' as const,
+    flexDirection: "row" as const,
+    flexWrap: "wrap" as const,
     gap: theme.space[2],
     paddingTop: 0,
     paddingHorizontal: theme.space[4],
@@ -82,13 +82,13 @@ export const styles = StyleSheet.create((theme) => ({
     fontSize: theme.size.sm,
     color: theme.colors.textMuted,
     fontFamily: theme.fontFamily.body,
-    fontStyle: 'italic',
-    textAlign: 'center',
-    width: '100%',
+    fontStyle: "italic",
+    textAlign: "center",
+    width: "100%",
     paddingVertical: theme.space[4],
   },
   fabMenuContainer: {
-    alignItems: 'flex-end' as const,
+    alignItems: "flex-end" as const,
     paddingHorizontal: theme.space[4],
     paddingBottom: theme.space[2],
   },

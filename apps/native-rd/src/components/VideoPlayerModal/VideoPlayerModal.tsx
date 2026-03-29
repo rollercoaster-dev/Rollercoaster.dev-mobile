@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { View, Modal, Pressable } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useVideoPlayer, VideoView } from 'expo-video';
-import { Text } from '../Text';
-import { styles } from './VideoPlayerModal.styles';
+import React, { useState, useEffect } from "react";
+import { View, Modal, Pressable } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useVideoPlayer, VideoView } from "expo-video";
+import { Text } from "../Text";
+import { styles } from "./VideoPlayerModal.styles";
 
 export interface VideoPlayerModalProps {
   visible: boolean;
@@ -19,9 +19,9 @@ function PlayerContent({ uri }: { uri: string }) {
   });
 
   useEffect(() => {
-    const subscription = player.addListener('statusChange', (payload) => {
-      if (payload.status === 'error') {
-        console.error('[VideoPlayerModal] Playback error', { uri, payload });
+    const subscription = player.addListener("statusChange", (payload) => {
+      if (payload.status === "error") {
+        console.error("[VideoPlayerModal] Playback error", { uri, payload });
         setError(true);
       }
     });
@@ -44,7 +44,11 @@ function PlayerContent({ uri }: { uri: string }) {
   );
 }
 
-export function VideoPlayerModal({ visible, uri, onClose }: VideoPlayerModalProps) {
+export function VideoPlayerModal({
+  visible,
+  uri,
+  onClose,
+}: VideoPlayerModalProps) {
   const insets = useSafeAreaInsets();
 
   if (!visible) return null;
@@ -55,10 +59,15 @@ export function VideoPlayerModal({ visible, uri, onClose }: VideoPlayerModalProp
       transparent={false}
       animationType="slide"
       onRequestClose={onClose}
-      supportedOrientations={['portrait', 'landscape']}
+      supportedOrientations={["portrait", "landscape"]}
       accessibilityViewIsModal
     >
-      <View style={[styles.overlay, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+      <View
+        style={[
+          styles.overlay,
+          { paddingTop: insets.top, paddingBottom: insets.bottom },
+        ]}
+      >
         <View style={styles.container}>
           <View style={styles.topBar}>
             <Pressable
@@ -68,7 +77,7 @@ export function VideoPlayerModal({ visible, uri, onClose }: VideoPlayerModalProp
               accessibilityLabel="Close video player"
               hitSlop={16}
             >
-              <Text style={styles.closeText}>{'✕'}</Text>
+              <Text style={styles.closeText}>{"✕"}</Text>
             </Pressable>
           </View>
           <View style={styles.videoContainer}>

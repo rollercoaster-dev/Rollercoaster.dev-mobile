@@ -1,16 +1,16 @@
-import React from 'react';
-import { View, Image } from 'react-native';
-import type { ImageSourcePropType } from 'react-native';
-import { Text } from '../Text';
-import { styles } from './ModeIndicator.styles';
+import React from "react";
+import { View, Image } from "react-native";
+import type { ImageSourcePropType } from "react-native";
+import { Text } from "../Text";
+import { styles } from "./ModeIndicator.styles";
 
-export type LifecycleMode = 'edit' | 'focus' | 'complete' | 'timeline';
+export type LifecycleMode = "edit" | "focus" | "complete" | "timeline";
 
 const MODE_CONFIG: Record<LifecycleMode, { emoji: string; label: string }> = {
-  edit: { emoji: '📝', label: 'Edit' },
-  focus: { emoji: '🎯', label: 'Focus' },
-  complete: { emoji: '🎉', label: 'Complete' },
-  timeline: { emoji: '📖', label: 'Timeline' },
+  edit: { emoji: "📝", label: "Edit" },
+  focus: { emoji: "🎯", label: "Focus" },
+  complete: { emoji: "🎉", label: "Complete" },
+  timeline: { emoji: "📖", label: "Timeline" },
 };
 
 export interface ModeIndicatorProps {

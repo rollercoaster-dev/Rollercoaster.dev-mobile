@@ -16,6 +16,7 @@ The native rollercoaster.dev app requires a styling solution that supports:
 4. Maintainable, scalable styling patterns
 
 We built two prototypes to evaluate options:
+
 - `prototypes/ui-tamagui` — Tamagui with token-based theming
 - `prototypes/ui-nativewind` — NativeWind with Tailwind CSS approach
 
@@ -35,14 +36,14 @@ Use **react-native-unistyles** for styling instead of Tamagui or NativeWind.
 
 ## Comparison
 
-| Requirement | Tamagui | NativeWind | Unistyles |
-|-------------|---------|------------|-----------|
-| Theme switching without re-renders | ❌ Context-based | ❌ Context-based | ✅ Native layer |
-| 7 accessibility themes | ⚠️ Re-renders on switch | ⚠️ Re-renders on switch | ✅ Zero re-renders |
-| Bundle size | ⚠️ ~150kb | ✅ ~20kb | ✅ ~15kb |
-| Production proven at scale | ✅ | ✅ | ✅ (v0 iOS) |
-| Component library included | ✅ | ❌ | ❌ |
-| Learning curve | ⚠️ Complex | ✅ Tailwind familiar | ✅ Simple |
+| Requirement                        | Tamagui                 | NativeWind              | Unistyles          |
+| ---------------------------------- | ----------------------- | ----------------------- | ------------------ |
+| Theme switching without re-renders | ❌ Context-based        | ❌ Context-based        | ✅ Native layer    |
+| 7 accessibility themes             | ⚠️ Re-renders on switch | ⚠️ Re-renders on switch | ✅ Zero re-renders |
+| Bundle size                        | ⚠️ ~150kb               | ✅ ~20kb                | ✅ ~15kb           |
+| Production proven at scale         | ✅                      | ✅                      | ✅ (v0 iOS)        |
+| Component library included         | ✅                      | ❌                      | ❌                 |
+| Learning curve                     | ⚠️ Complex              | ✅ Tailwind familiar    | ✅ Simple          |
 
 ## Rationale
 
@@ -57,17 +58,20 @@ Use **react-native-unistyles** for styling instead of Tamagui or NativeWind.
 ## Consequences
 
 **Positive:**
+
 - Zero re-render theme switching for 7 accessibility themes
 - Smaller bundle size than Tamagui
 - Aligns with production-proven v0 architecture
 - Simpler dependency (styling only, not a component framework)
 
 **Negative / Risks:**
+
 - No built-in component library (we build our own)
 - Less community resources than Tamagui or NativeWind
 - Prototype code needs adaptation (styling API differs)
 
 **Mitigations:**
+
 - Use native components where possible (native modals, Zeego for menus)
 - Adopt complementary libraries from v0 stack (LegendList, Reanimated, Tanstack Query)
 - Theme tokens from prototypes transfer to Unistyles themes
@@ -76,13 +80,13 @@ Use **react-native-unistyles** for styling instead of Tamagui or NativeWind.
 
 Based on v0 architecture research:
 
-| Layer | Library |
-|-------|---------|
-| Styling | react-native-unistyles |
-| Lists | LegendList |
-| Animation | React Native Reanimated |
-| Menus | Zeego |
-| Data fetching | Tanstack Query |
+| Layer         | Library                 |
+| ------------- | ----------------------- |
+| Styling       | react-native-unistyles  |
+| Lists         | LegendList              |
+| Animation     | React Native Reanimated |
+| Menus         | Zeego                   |
+| Data fetching | Tanstack Query          |
 
 ## Related Documents
 

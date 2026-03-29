@@ -1,15 +1,19 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import React from 'react';
-import { View, Text as RNText } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
-import { Text } from '../Text';
-import { IconButton, type IconButtonVariant, type IconButtonSize } from './IconButton';
+import type { Meta, StoryObj } from "@storybook/react";
+import React from "react";
+import { View, Text as RNText } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
+import { Text } from "../Text";
+import {
+  IconButton,
+  type IconButtonVariant,
+  type IconButtonSize,
+} from "./IconButton";
 
-const variants: IconButtonVariant[] = ['default', 'ghost', 'destructive'];
-const sizes: IconButtonSize[] = ['sm', 'md', 'lg'];
+const variants: IconButtonVariant[] = ["default", "ghost", "destructive"];
+const sizes: IconButtonSize[] = ["sm", "md", "lg"];
 
 const meta: Meta<typeof IconButton> = {
-  title: 'IconButton',
+  title: "IconButton",
   component: IconButton,
 };
 
@@ -22,7 +26,9 @@ export const AllVariants: Story = {
     <View style={storyStyles.grid}>
       {variants.map((variant) => (
         <View key={variant} style={storyStyles.row}>
-          <Text variant="label" style={storyStyles.label}>{variant}</Text>
+          <Text variant="label" style={storyStyles.label}>
+            {variant}
+          </Text>
           <IconButton
             icon={<RNText>+</RNText>}
             variant={variant}
@@ -41,7 +47,9 @@ export const AllSizes: Story = {
       {sizes.map((size) => (
         <IconButton
           key={size}
-          icon={<RNText>{size === 'sm' ? '×' : size === 'md' ? '+' : '⚙'}</RNText>}
+          icon={
+            <RNText>{size === "sm" ? "×" : size === "md" ? "+" : "⚙"}</RNText>
+          }
           size={size}
           onPress={() => {}}
           accessibilityLabel={`${size} button`}
@@ -56,13 +64,13 @@ const storyStyles = StyleSheet.create((theme) => ({
     gap: theme.space[4],
   },
   row: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: theme.space[3],
-    alignItems: 'center',
+    alignItems: "center",
   },
   label: {
     color: theme.colors.textMuted,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     width: 100,
   },
 }));

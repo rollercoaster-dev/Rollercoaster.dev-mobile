@@ -1,44 +1,63 @@
-import React, { Suspense, useMemo, useRef, useState } from 'react';
-import { View, ScrollView, Image, ActivityIndicator, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useQuery } from '@evolu/react';
-import { useUnistyles } from 'react-native-unistyles';
-import { Text } from '../../components/Text';
-import { IconButton } from '../../components/IconButton';
-import { Button } from '../../components/Button';
-import { Card } from '../../components/Card';
-import { ErrorBoundary } from '../../components/ErrorBoundary';
-import { badgeWithGoalQuery, deleteBadge } from '../../db';
-import type { BadgeId } from '../../db';
-import { PLACEHOLDER_IMAGE_URI } from '../../hooks/useCreateBadge';
-import { useBadgeExport } from '../../hooks/useBadgeExport';
-import { BadgeRenderer } from '../../badges/BadgeRenderer';
-import { parseBadgeDesign } from '../../badges/types';
-import { formatDate } from '../../utils/format';
-import type { BadgeDetailScreenProps, BadgesStackParamList } from '../../navigation/types';
-import { styles } from './BadgeDetailScreen.styles';
+import React, { Suspense, useMemo, useRef, useState } from "react";
+import {
+  View,
+  ScrollView,
+  Image,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useQuery } from "@evolu/react";
+import { useUnistyles } from "react-native-unistyles";
+import { Text } from "../../components/Text";
+import { IconButton } from "../../components/IconButton";
+import { Button } from "../../components/Button";
+import { Card } from "../../components/Card";
+import { ErrorBoundary } from "../../components/ErrorBoundary";
+import { badgeWithGoalQuery, deleteBadge } from "../../db";
+import type { BadgeId } from "../../db";
+import { PLACEHOLDER_IMAGE_URI } from "../../hooks/useCreateBadge";
+import { useBadgeExport } from "../../hooks/useBadgeExport";
+import { BadgeRenderer } from "../../badges/BadgeRenderer";
+import { parseBadgeDesign } from "../../badges/types";
+import { formatDate } from "../../utils/format";
+import type {
+  BadgeDetailScreenProps,
+  BadgesStackParamList,
+} from "../../navigation/types";
+import { styles } from "./BadgeDetailScreen.styles";
 
 function BadgeDetailContent({ badgeId }: { badgeId: string }) {
-  const navigation = useNavigation<NativeStackNavigationProp<BadgesStackParamList>>();
-  const query = useMemo(() => badgeWithGoalQuery(badgeId as BadgeId), [badgeId]);
+  const navigation =
+    useNavigation<NativeStackNavigationProp<BadgesStackParamList>>();
+  const query = useMemo(
+    () => badgeWithGoalQuery(badgeId as BadgeId),
+    [badgeId],
+  );
   const rows = useQuery(query);
   const badge = rows[0] ?? null;
 
   const [imageLoadFailed, setImageLoadFailed] = useState(false);
-  const { exportImage, exportDesignImage, exportJSON, isExportingImage, isExportingJSON } = useBadgeExport();
+  const {
+    exportImage,
+    exportDesignImage,
+    exportJSON,
+    isExportingImage,
+    isExportingJSON,
+  } = useBadgeExport();
   const badgeRendererRef = useRef<View>(null);
 
   const handleDelete = () => {
     Alert.alert(
-      'Delete Badge',
-      'This will permanently remove this badge. This cannot be undone.',
+      "Delete Badge",
+      "This will permanently remove this badge. This cannot be undone.",
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: "Cancel", style: "cancel" },
         {
-          text: 'Delete',
-          style: 'destructive',
+          text: "Delete",
+          style: "destructive",
           onPress: () => {
             deleteBadge(badgeId as BadgeId);
             navigation.goBack();
@@ -57,9 +76,12 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
   }
 
   const imageUri = badge.imageUri as string | null;
-  const hasRealImage = imageUri && imageUri !== PLACEHOLDER_IMAGE_URI && !imageLoadFailed;
-  const goalTitle = (badge.goalTitle as string) ?? 'Untitled';
-  const earnedDate = formatDate((badge.completedAt ?? badge.createdAt) as string | null);
+  const hasRealImage =
+    imageUri && imageUri !== PLACEHOLDER_IMAGE_URI && !imageLoadFailed;
+  const goalTitle = (badge.goalTitle as string) ?? "Untitled";
+  const earnedDate = formatDate(
+    (badge.completedAt ?? badge.createdAt) as string | null,
+  );
   const design = parseBadgeDesign(badge.design as string | null);
 
   return (
@@ -79,7 +101,7 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
       ) : (
         <View style={styles.badgeImage}>
           <Text style={styles.badgeInitial}>
-            {(goalTitle.charAt(0) || '?').toUpperCase()}
+            {(goalTitle.charAt(0) || "?").toUpperCase()}
           </Text>
         </View>
       )}
@@ -92,7 +114,7 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
       <Button
         label="Customize Badge"
         variant="secondary"
-        onPress={() => navigation.navigate('BadgeDesigner', { badgeId })}
+        onPress={() => navigation.navigate("BadgeDesigner", { badgeId })}
       />
 
       <Card>
@@ -121,7 +143,9 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
           <Button
             label="Export Credential (JSON)"
             variant="secondary"
-            onPress={() => exportJSON(badge.credential as string | null, goalTitle)}
+            onPress={() =>
+              exportJSON(badge.credential as string | null, goalTitle)
+            }
             loading={isExportingJSON}
             disabled={!badge.credential}
           />
@@ -143,10 +167,13 @@ export function BadgeDetailScreen({ route }: BadgeDetailScreenProps) {
   const { theme } = useUnistyles();
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.colors.background }}>
+    <SafeAreaView
+      edges={["top"]}
+      style={{ flex: 1, backgroundColor: theme.colors.background }}
+    >
       <View style={styles.topBar}>
         <IconButton
-          icon={<Text variant="headline">{'\u2190'}</Text>}
+          icon={<Text variant="headline">{"\u2190"}</Text>}
           onPress={() => navigation.goBack()}
           variant="ghost"
           accessibilityLabel="Go back"

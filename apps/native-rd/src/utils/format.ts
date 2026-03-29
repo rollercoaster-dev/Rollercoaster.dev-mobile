@@ -3,13 +3,13 @@
  * Returns empty string for null/undefined, returns the raw string if parsing fails.
  */
 export function formatDate(dateStr: string | null | undefined): string {
-  if (!dateStr) return '';
+  if (!dateStr) return "";
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return dateStr;
-  return d.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
   });
 }
 
@@ -20,5 +20,5 @@ export function formatDuration(ms: number): string {
   const totalSeconds = Math.floor(ms / 1000);
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
-  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 }

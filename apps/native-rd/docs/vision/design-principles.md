@@ -79,13 +79,13 @@ The monorepo's [design language](https://github.com/rollercoaster-dev/monorepo/b
 
 ### Typography
 
-| Use | Font | Why |
-|-----|------|-----|
-| **Headlines** | Anybody | Character, from landing page DNA. Bundled with the app. |
-| **Body** | System font stack | Familiar, fast, respects OS accessibility settings |
-| **Mono** | DM Mono | Personality in technical contexts (badge metadata, details) |
-| **Dyslexia option** | OpenDyslexic | User-selectable accessibility |
-| **Low vision option** | Atkinson Hyperlegible | Designed for legibility at any size |
+| Use                   | Font                  | Why                                                         |
+| --------------------- | --------------------- | ----------------------------------------------------------- |
+| **Headlines**         | Anybody               | Character, from landing page DNA. Bundled with the app.     |
+| **Body**              | System font stack     | Familiar, fast, respects OS accessibility settings          |
+| **Mono**              | DM Mono               | Personality in technical contexts (badge metadata, details) |
+| **Dyslexia option**   | OpenDyslexic          | User-selectable accessibility                               |
+| **Low vision option** | Atkinson Hyperlegible | Designed for legibility at any size                         |
 
 ### Color
 
@@ -119,15 +119,15 @@ Borrowed from the landing page's voice:
 
 Every theme ships from day one. These aren't progressive enhancements — they're core.
 
-| Theme | Who it serves | Key characteristics |
-|-------|--------------|-------------------|
-| **Light** (default) | General use | Clean, calm, landing page accents as highlights |
-| **Dark** | Low light, preference, reduced eye strain | Dark backgrounds, maintained contrast ratios |
-| **High Contrast** | Low vision | WCAG AAA contrast, 2px borders, strong focus indicators |
-| **Large Text** | Reading difficulty, low vision | Larger base font, relaxed line heights, increased spacing |
-| **Dyslexia-Friendly** | Dyslexia | OpenDyslexic font, cream background (#f8f5e4), extra letter/word spacing |
-| **Low Vision** | Severe visual impairment | Atkinson Hyperlegible font, high contrast, large touch targets |
-| **Autism-Friendly** | Sensory sensitivities | Muted colors, no shadows, no animations, predictable borders |
+| Theme                 | Who it serves                             | Key characteristics                                                      |
+| --------------------- | ----------------------------------------- | ------------------------------------------------------------------------ |
+| **Light** (default)   | General use                               | Clean, calm, landing page accents as highlights                          |
+| **Dark**              | Low light, preference, reduced eye strain | Dark backgrounds, maintained contrast ratios                             |
+| **High Contrast**     | Low vision                                | WCAG AAA contrast, 2px borders, strong focus indicators                  |
+| **Large Text**        | Reading difficulty, low vision            | Larger base font, relaxed line heights, increased spacing                |
+| **Dyslexia-Friendly** | Dyslexia                                  | OpenDyslexic font, cream background (#f8f5e4), extra letter/word spacing |
+| **Low Vision**        | Severe visual impairment                  | Atkinson Hyperlegible font, high contrast, large touch targets           |
+| **Autism-Friendly**   | Sensory sensitivities                     | Muted colors, no shadows, no animations, predictable borders             |
 
 ### Rules for Themes
 

@@ -1,5 +1,5 @@
-import { StyleSheet } from 'react-native-unistyles';
-import { shadowStyle } from '../../styles/shadows';
+import { StyleSheet } from "react-native-unistyles";
+import { shadowStyle } from "../../styles/shadows";
 
 export const styles = StyleSheet.create((theme) => ({
   container: {
@@ -9,7 +9,7 @@ export const styles = StyleSheet.create((theme) => ({
     fontSize: theme.size.xs,
     fontWeight: theme.fontWeight.bold,
     fontFamily: theme.fontFamily.body,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: theme.letterSpacing.wide,
     color: theme.colors.textMuted,
     marginBottom: theme.space[2],
@@ -19,9 +19,9 @@ export const styles = StyleSheet.create((theme) => ({
     borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.border,
     borderRadius: theme.radius.sm,
-    overflow: 'hidden',
+    overflow: "hidden",
     backgroundColor: theme.colors.backgroundSecondary,
-    ...shadowStyle(theme, 'hardMd'),
+    ...shadowStyle(theme, "hardMd"),
   },
   separator: {
     height: 1,

@@ -1,10 +1,10 @@
-import React from 'react';
-import { View, Text, Pressable } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { Card } from '../Card';
-import { useFlashOnIncrease } from '../../hooks/useFlashOnIncrease';
-import { formatEvidenceLabel } from '../../utils/formatEvidenceLabel';
-import { styles } from './GoalEvidenceCard.styles';
+import React from "react";
+import { View, Text, Pressable } from "react-native";
+import Animated from "react-native-reanimated";
+import { Card } from "../Card";
+import { useFlashOnIncrease } from "../../hooks/useFlashOnIncrease";
+import { formatEvidenceLabel } from "../../utils/formatEvidenceLabel";
+import { styles } from "./GoalEvidenceCard.styles";
 
 export interface GoalEvidenceCardProps {
   evidenceCount: number;
@@ -23,11 +23,7 @@ export function GoalEvidenceCard({
       <Card>
         <View style={styles.container}>
           <Text style={styles.goalLabel}>★ Goal</Text>
-          <Text
-            style={styles.title}
-            accessible
-            accessibilityRole="header"
-          >
+          <Text style={styles.title} accessible accessibilityRole="header">
             Goal Evidence
           </Text>
           <Text style={styles.description}>

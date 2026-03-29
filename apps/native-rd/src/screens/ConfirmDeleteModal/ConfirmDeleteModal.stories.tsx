@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { View } from 'react-native';
-import { Button } from '../../components/Button';
-import { ConfirmDeleteModal } from './ConfirmDeleteModal';
+import React, { useState } from "react";
+import { View } from "react-native";
+import { Button } from "../../components/Button";
+import { ConfirmDeleteModal } from "./ConfirmDeleteModal";
 
 export default {
-  title: 'Screens/ConfirmDeleteModal',
+  title: "Screens/ConfirmDeleteModal",
   component: ConfirmDeleteModal,
 };
 
@@ -19,7 +19,7 @@ export function DeleteGoal() {
         onCancel={() => setVisible(false)}
         onConfirm={() => {
           setVisible(false);
-          console.log('Deleted');
+          console.log("Deleted");
         }}
         title="Delete this goal?"
         message="All progress and evidence will be permanently deleted."
@@ -39,7 +39,7 @@ export function DeleteStep() {
         onCancel={() => setVisible(false)}
         onConfirm={() => {
           setVisible(false);
-          console.log('Deleted');
+          console.log("Deleted");
         }}
         title="Delete this step?"
         message="This action cannot be undone."
@@ -59,7 +59,7 @@ export function CustomLabels() {
         onCancel={() => setVisible(false)}
         onConfirm={() => {
           setVisible(false);
-          console.log('Removed');
+          console.log("Removed");
         }}
         title="Remove evidence?"
         confirmLabel="Remove"

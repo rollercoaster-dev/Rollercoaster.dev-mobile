@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, Text } from 'react-native';
-import { styles, type StatusBadgeVariant } from './StatusBadge.styles';
+import React from "react";
+import { View, Text } from "react-native";
+import { styles, type StatusBadgeVariant } from "./StatusBadge.styles";
 
 export type { StatusBadgeVariant };
 
@@ -10,10 +10,10 @@ export interface StatusBadgeProps {
 }
 
 const defaultLabels: Record<StatusBadgeVariant, string> = {
-  active: 'Active',
-  completed: 'Done',
-  locked: 'Locked',
-  earned: 'Earned',
+  active: "Active",
+  completed: "Done",
+  locked: "Locked",
+  earned: "Earned",
 };
 
 const variantBgMap = {
@@ -40,9 +40,7 @@ export function StatusBadge({ variant, label }: StatusBadgeProps) {
       accessibilityLabel={`Status: ${displayLabel}`}
       accessibilityRole="text"
     >
-      <Text style={[styles.text, variantTextMap[variant]]}>
-        {displayLabel}
-      </Text>
+      <Text style={[styles.text, variantTextMap[variant]]}>{displayLabel}</Text>
     </View>
   );
 }

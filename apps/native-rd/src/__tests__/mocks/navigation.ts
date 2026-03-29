@@ -1,7 +1,7 @@
 /**
  * Mock for @react-navigation/native
  */
-import React from 'react';
+import React from "react";
 
 const useNavigation = jest.fn(() => ({
   navigate: jest.fn(),
@@ -12,8 +12,8 @@ const useNavigation = jest.fn(() => ({
 }));
 
 const useRoute = jest.fn(() => ({
-  key: 'test-route',
-  name: 'TestScreen',
+  key: "test-route",
+  name: "TestScreen",
   params: {},
 }));
 
@@ -24,17 +24,18 @@ const useFocusEffect = jest.fn((callback: () => void | (() => void)) => {
 
 const useIsFocused = jest.fn(() => true);
 
-const NavigationContainer = ({ children }: { children: React.ReactNode }) => children;
+const NavigationContainer = ({ children }: { children: React.ReactNode }) =>
+  children;
 
 const DefaultTheme = {
   dark: false,
   colors: {
-    background: '#ffffff',
-    card: '#ffffff',
-    text: '#000000',
-    border: '#d8d8d8',
-    primary: '#007AFF',
-    notification: '#ff3b30',
+    background: "#ffffff",
+    card: "#ffffff",
+    text: "#000000",
+    border: "#d8d8d8",
+    primary: "#007AFF",
+    notification: "#ff3b30",
   },
 };
 

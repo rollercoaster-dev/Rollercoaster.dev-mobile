@@ -1,9 +1,9 @@
-import { StyleSheet } from 'react-native-unistyles';
+import { StyleSheet } from "react-native-unistyles";
 
 export const styles = StyleSheet.create((theme) => ({
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.space[3],
     padding: theme.space[3],
     backgroundColor: theme.colors.backgroundSecondary,
@@ -16,8 +16,8 @@ export const styles = StyleSheet.create((theme) => ({
     height: 40,
     borderRadius: theme.radius.sm,
     backgroundColor: theme.colors.accentPrimary,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.border,
   },
@@ -35,10 +35,10 @@ export const styles = StyleSheet.create((theme) => ({
     height: 6,
     backgroundColor: theme.colors.backgroundTertiary,
     borderRadius: 3,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   progressFill: {
-    height: '100%',
+    height: "100%",
     backgroundColor: theme.colors.accentPrimary,
     borderRadius: 3,
   },
@@ -47,6 +47,6 @@ export const styles = StyleSheet.create((theme) => ({
     fontFamily: theme.fontFamily.mono,
     color: theme.colors.textMuted,
     minWidth: 40,
-    textAlign: 'right',
+    textAlign: "right",
   },
 }));

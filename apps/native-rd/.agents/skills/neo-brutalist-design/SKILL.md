@@ -20,12 +20,15 @@ Bold, confident, accessible. Drama comes from **structure** (thick borders, hard
 ## The 7 Rules
 
 ### 1. 2px Borders Everywhere
+
 ```ts
-borderWidth: theme.borderWidth.medium   // 2px — the neo-brutalist standard
+borderWidth: theme.borderWidth.medium; // 2px — the neo-brutalist standard
 ```
+
 Every card, input, button, badge chip, and container uses `medium` (2px). Use `thin` (1px) only for subtle internal dividers. Never use `default` (1px) for containers.
 
 ### 2. Hard Offset Shadows (Zero Blur)
+
 ```ts
 // Import from shared.tsx:
 import { shadowStyle } from '../stories/design-system/shared';
@@ -43,80 +46,93 @@ import { shadowStyle } from '../stories/design-system/shared';
   shadowRadius: 0,  // ZERO — this is the key
 }
 ```
+
 **NEVER use blurred shadows** (`shadowRadius > 0`). Hard offset = neo-brutalist. The offset creates a crisp printed-poster feel.
 
 Shadow size guide:
+
 - `hardSm` (2px) — small interactive: badge chips, status pills, icon buttons
 - `hardMd` (3px) — standard interactive: cards, buttons, inputs
 - `hardLg` (4px) — large containers: modals, hero sections, narrative blocks
 
 ### 3. Sharp Corners (Small Radius)
+
 ```ts
-borderRadius: theme.radius.sm    // 2px — cards, containers, chips
-borderRadius: theme.radius.md    // 4px — buttons, inputs
-borderRadius: theme.radius.pill  // 9999 — status pills, avatars
+borderRadius: theme.radius.sm; // 2px — cards, containers, chips
+borderRadius: theme.radius.md; // 4px — buttons, inputs
+borderRadius: theme.radius.pill; // 9999 — status pills, avatars
 ```
+
 Radii are deliberately SMALL. This is neo-brutalism — not rounded modern UI. **Never use `radius.lg` (8px) or `radius.xl` (12px) for component containers.** Those are reserved for decorative story previews only.
 
-| Element | Radius |
-|---------|--------|
-| Cards, containers, chips | `radius.sm` (2px) |
-| Buttons, inputs | `radius.md` (4px) |
+| Element                        | Radius               |
+| ------------------------------ | -------------------- |
+| Cards, containers, chips       | `radius.sm` (2px)    |
+| Buttons, inputs                | `radius.md` (4px)    |
 | Status pills, circular buttons | `radius.pill` (9999) |
 
 ### 4. Bold, Tight Typography
+
 ```ts
 // Headlines — Anybody font, tight letter-spacing
-fontFamily: theme.fontFamily.headline   // 'Anybody'
-letterSpacing: theme.letterSpacing.tight // -0.48 (creates density and drama)
-fontWeight: theme.fontWeight.black       // '900' — display only
-fontWeight: theme.fontWeight.bold        // '700' — headings
+fontFamily: theme.fontFamily.headline; // 'Anybody'
+letterSpacing: theme.letterSpacing.tight; // -0.48 (creates density and drama)
+fontWeight: theme.fontWeight.black; // '900' — display only
+fontWeight: theme.fontWeight.bold; // '700' — headings
 
 // Body — Instrument Sans
-fontFamily: theme.fontFamily.body        // 'Instrument Sans'
-fontWeight: theme.fontWeight.normal      // '400'
+fontFamily: theme.fontFamily.body; // 'Instrument Sans'
+fontWeight: theme.fontWeight.normal; // '400'
 
 // Labels (uppercase, tracked)
-textTransform: 'uppercase'
-letterSpacing: theme.letterSpacing.wide  // 1.6
-fontWeight: theme.fontWeight.bold
-fontSize: theme.size.xs                  // 12px
+textTransform: "uppercase";
+letterSpacing: theme.letterSpacing.wide; // 1.6
+fontWeight: theme.fontWeight.bold;
+fontSize: theme.size.xs; // 12px
 ```
+
 Use the `textStyles` presets from the theme (`theme.textStyles.display`, `.headline`, `.title`, `.body`, `.caption`, `.label`, `.mono`) — or the `<Text variant="...">` component — rather than assembling typography manually.
 
 ### 5. Accent Colors Are Highlights, Not Backgrounds
+
 ```ts
 // CORRECT — accent as a small highlight
-backgroundColor: theme.narrative.climb.bg   // narrative section bg
-color: theme.narrative.climb.text            // narrative section text
+backgroundColor: theme.narrative.climb.bg; // narrative section bg
+color: theme.narrative.climb.text; // narrative section text
 
 // CORRECT — accent on a chip/badge
-backgroundColor: theme.colors.accentPurple  // small pill or badge
+backgroundColor: theme.colors.accentPurple; // small pill or badge
 
 // WRONG — large area with accent color
-backgroundColor: theme.colors.accentPurple  // card background ← NO
+backgroundColor: theme.colors.accentPurple; // card background ← NO
 ```
+
 The base is always `background` / `backgroundSecondary`. Accents appear as:
+
 - Status badge fills (small pills)
 - Narrative section backgrounds (special containers only)
 - Focus rings and borders
 - Small decorative elements
 
 ### 6. High Contrast Without Harshness
+
 ```ts
 // Near-black, not pure black
-theme.colors.text          // #262626 light / #fafafa dark
-theme.colors.accentPrimary // #0a0a0a light / #fafafa dark
+theme.colors.text; // #262626 light / #fafafa dark
+theme.colors.accentPrimary; // #0a0a0a light / #fafafa dark
 
 // Off-white, not stark white
-theme.colors.background    // #fafafa light / #1a1033 dark
+theme.colors.background; // #fafafa light / #1a1033 dark
 ```
+
 Dark mode uses deep indigo (`#1a1033`) not pure black. Light mode uses off-white (`#fafafa`) not pure white.
 
 ### 7. 48dp Minimum Touch Targets
+
 ```ts
-minHeight: 48  // Every pressable element
+minHeight: 48; // Every pressable element
 ```
+
 No exceptions. Small visual elements (like icon buttons) can appear smaller visually but must have 48dp hit area.
 
 ---
@@ -124,20 +140,22 @@ No exceptions. Small visual elements (like icon buttons) can appear smaller visu
 ## Component Recipes
 
 ### Card (Standard Container)
+
 ```ts
 const styles = StyleSheet.create((theme) => ({
   card: {
     backgroundColor: theme.colors.backgroundSecondary,
-    borderWidth: theme.borderWidth.medium,          // 2px
+    borderWidth: theme.borderWidth.medium, // 2px
     borderColor: theme.colors.border,
-    borderRadius: theme.radius.sm,                   // 2px
-    padding: theme.space[4],                         // 16px
-    ...shadowStyle(theme, 'hardMd'),                 // 3px hard offset
+    borderRadius: theme.radius.sm, // 2px
+    padding: theme.space[4], // 16px
+    ...shadowStyle(theme, "hardMd"), // 3px hard offset
   },
 }));
 ```
 
 ### Button (Primary)
+
 ```ts
 button: {
   backgroundColor: theme.colors.accentPrimary,      // near-black
@@ -158,6 +176,7 @@ buttonLabel: {
 ```
 
 ### Button (Secondary / Outline)
+
 ```ts
 buttonSecondary: {
   backgroundColor: theme.colors.backgroundSecondary,
@@ -169,6 +188,7 @@ buttonSecondary: {
 ```
 
 ### Button (Ghost)
+
 ```ts
 buttonGhost: {
   backgroundColor: 'transparent',
@@ -180,6 +200,7 @@ buttonGhost: {
 ```
 
 ### Input
+
 ```ts
 input: {
   borderWidth: theme.borderWidth.medium,             // 2px
@@ -199,6 +220,7 @@ inputFocused: {
 ```
 
 ### Badge Chip / Status Pill
+
 ```ts
 badgeChip: {
   borderWidth: theme.borderWidth.medium,
@@ -218,6 +240,7 @@ statusPill: {
 ```
 
 ### Checkbox
+
 ```ts
 box: {
   width: 24,
@@ -233,6 +256,7 @@ boxChecked: {
 ```
 
 ### IconButton
+
 ```ts
 iconButton: {
   width: 48,
@@ -246,6 +270,7 @@ iconButton: {
 ```
 
 ### Divider
+
 ```ts
 divider: {
   height: theme.borderWidth.medium,                  // 2px — not 1px
@@ -254,6 +279,7 @@ divider: {
 ```
 
 ### Progress Bar
+
 ```ts
 track: {
   height: 8,
@@ -276,18 +302,19 @@ fill: {
 Always use the `shadowStyle()` helper from `src/styles/shadows.ts`:
 
 ```ts
-import { shadowStyle } from '../../styles/shadows';
+import { shadowStyle } from "../../styles/shadows";
 
 // In StyleSheet.create:
 const styles = StyleSheet.create((theme) => ({
   card: {
-    ...shadowStyle(theme, 'hardMd'),
+    ...shadowStyle(theme, "hardMd"),
     // other styles...
   },
 }));
 ```
 
 If you need to expand manually (rare):
+
 ```ts
 shadowColor: '#000000',
 shadowOffset: { width: theme.shadow.hardMd.offsetX, height: theme.shadow.hardMd.offsetY },

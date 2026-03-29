@@ -24,18 +24,22 @@ export function parsePlannedEvidenceTypes(
     const parsed = JSON.parse(json);
 
     if (!Array.isArray(parsed)) {
-      log.warn('[parsePlannedEvidenceTypes] not an array', { raw: json });
+      log.warn("[parsePlannedEvidenceTypes] not an array", { raw: json });
       return null;
     }
 
-    const strings = parsed.filter((item): item is string => typeof item === 'string');
+    const strings = parsed.filter(
+      (item): item is string => typeof item === "string",
+    );
     if (strings.length !== parsed.length) {
-      log.warn('[parsePlannedEvidenceTypes] filtered non-string elements', { raw: json });
+      log.warn("[parsePlannedEvidenceTypes] filtered non-string elements", {
+        raw: json,
+      });
     }
 
     return strings.length > 0 ? strings : null;
   } catch (error) {
-    log.error('[parsePlannedEvidenceTypes] invalid JSON', { raw: json, error });
+    log.error("[parsePlannedEvidenceTypes] invalid JSON", { raw: json, error });
     return null;
   }
 }

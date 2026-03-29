@@ -1,8 +1,8 @@
-import { StyleSheet } from 'react-native-unistyles';
-import { shadowStyle } from '../../styles/shadows';
+import { StyleSheet } from "react-native-unistyles";
+import { shadowStyle } from "../../styles/shadows";
 
-export type IconButtonSize = 'sm' | 'md' | 'lg';
-export type IconButtonVariant = 'default' | 'ghost' | 'destructive';
+export type IconButtonSize = "sm" | "md" | "lg";
+export type IconButtonVariant = "default" | "ghost" | "destructive";
 
 const sizeValues = {
   sm: 36,
@@ -18,28 +18,28 @@ const hitSlopValues: Record<IconButtonSize, number> = {
 };
 
 export const styles = StyleSheet.create((theme) => ({
-  pressable: (size: IconButtonSize = 'md') => ({
+  pressable: (size: IconButtonSize = "md") => ({
     width: sizeValues[size],
     height: sizeValues[size],
     borderRadius: theme.radius.sm,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
     hitSlop: hitSlopValues[size],
   }),
   variantDefault: {
     backgroundColor: theme.colors.backgroundSecondary,
     borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.border,
-    ...shadowStyle(theme, 'hardSm'),
+    ...shadowStyle(theme, "hardSm"),
   },
   variantGhost: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
   variantDestructive: {
     backgroundColor: theme.colors.backgroundSecondary,
     borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.border,
-    ...shadowStyle(theme, 'hardSm'),
+    ...shadowStyle(theme, "hardSm"),
   },
   pressed: {
     opacity: 0.7,

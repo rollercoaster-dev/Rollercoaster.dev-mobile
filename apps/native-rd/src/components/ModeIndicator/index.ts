@@ -1,2 +1,2 @@
-export { ModeIndicator } from './ModeIndicator';
-export type { ModeIndicatorProps, LifecycleMode } from './ModeIndicator';
+export { ModeIndicator } from "./ModeIndicator";
+export type { ModeIndicatorProps, LifecycleMode } from "./ModeIndicator";

@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native-unistyles';
+import { StyleSheet } from "react-native-unistyles";
 
 export const styles = StyleSheet.create((theme) => ({
   track: {
@@ -7,10 +7,10 @@ export const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.backgroundTertiary,
     borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.border,
-    overflow: 'hidden' as const,
+    overflow: "hidden" as const,
   },
   fillBase: {
-    height: '100%' as const,
+    height: "100%" as const,
     backgroundColor: theme.colors.accentPrimary,
   },
 }));

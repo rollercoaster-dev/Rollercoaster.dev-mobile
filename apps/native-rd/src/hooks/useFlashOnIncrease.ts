@@ -1,11 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from "react";
 import {
   useSharedValue,
   useAnimatedStyle,
   withSequence,
   withTiming,
-} from 'react-native-reanimated';
-import { useAnimationPref } from './useAnimationPref';
+} from "react-native-reanimated";
+import { useAnimationPref } from "./useAnimationPref";
 
 /**
  * Returns an animated style that flashes (opacity 0→1→0) when `count` increases.

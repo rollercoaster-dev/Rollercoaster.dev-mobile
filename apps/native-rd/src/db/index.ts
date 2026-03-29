@@ -9,8 +9,8 @@ export {
   BadgeId,
   UserSettingsId,
   Schema,
-} from './schema';
-export { evolu, useAppEvolu, EvoluAppProvider } from './evolu';
+} from "./schema";
+export { evolu, useAppEvolu, EvoluAppProvider } from "./evolu";
 export {
   // Goal
   goalsQuery,
@@ -53,4 +53,4 @@ export {
   updateUserSettings,
   updateUserSettingsKey,
   markWelcomeSeen,
-} from './queries';
+} from "./queries";

@@ -1,1 +1,1 @@
-export { GoalsScreen } from './GoalsScreen';
+export { GoalsScreen } from "./GoalsScreen";

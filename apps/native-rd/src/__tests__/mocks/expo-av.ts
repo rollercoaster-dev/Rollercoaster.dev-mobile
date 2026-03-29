@@ -10,7 +10,7 @@ const mockRecordingInstance = {
   startAsync: jest.fn().mockResolvedValue(undefined),
   stopAndUnloadAsync: jest.fn().mockResolvedValue(undefined),
   pauseAsync: jest.fn().mockResolvedValue(undefined),
-  getURI: jest.fn(() => 'file:///mock-recording.m4a'),
+  getURI: jest.fn(() => "file:///mock-recording.m4a"),
   getStatusAsync: jest.fn(() =>
     Promise.resolve({
       canRecord: false,
@@ -42,12 +42,15 @@ class MockRecording {
 const Audio = {
   Recording: MockRecording,
   Sound: {
-    createAsync: jest.fn(() =>
-      Promise.resolve({ sound: mockSoundInstance }),
-    ),
+    createAsync: jest.fn(() => Promise.resolve({ sound: mockSoundInstance })),
   },
   requestPermissionsAsync: jest.fn(() =>
-    Promise.resolve({ granted: true, status: 'granted', canAskAgain: true, expires: 'never' }),
+    Promise.resolve({
+      granted: true,
+      status: "granted",
+      canAskAgain: true,
+      expires: "never",
+    }),
   ),
   setAudioModeAsync: jest.fn().mockResolvedValue(undefined),
   RecordingOptionsPresets: {

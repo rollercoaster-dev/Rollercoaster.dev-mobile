@@ -2,8 +2,8 @@
  * Accessibility utilities for WCAG compliance
  */
 
-export type WCAGLevel = 'AA' | 'AAA';
-export type TextSize = 'normal' | 'large';
+export type WCAGLevel = "AA" | "AAA";
+export type TextSize = "normal" | "large";
 
 /**
  * Convert hex color to RGB values
@@ -28,9 +28,12 @@ function getRelativeLuminance(r: number, g: number, b: number): number {
   const gsRGB = g / 255;
   const bsRGB = b / 255;
 
-  const R = rsRGB <= 0.03928 ? rsRGB / 12.92 : Math.pow((rsRGB + 0.055) / 1.055, 2.4);
-  const G = gsRGB <= 0.03928 ? gsRGB / 12.92 : Math.pow((gsRGB + 0.055) / 1.055, 2.4);
-  const B = bsRGB <= 0.03928 ? bsRGB / 12.92 : Math.pow((bsRGB + 0.055) / 1.055, 2.4);
+  const R =
+    rsRGB <= 0.03928 ? rsRGB / 12.92 : Math.pow((rsRGB + 0.055) / 1.055, 2.4);
+  const G =
+    gsRGB <= 0.03928 ? gsRGB / 12.92 : Math.pow((gsRGB + 0.055) / 1.055, 2.4);
+  const B =
+    bsRGB <= 0.03928 ? bsRGB / 12.92 : Math.pow((bsRGB + 0.055) / 1.055, 2.4);
 
   return 0.2126 * R + 0.7152 * G + 0.0722 * B;
 }
@@ -43,12 +46,15 @@ function getRelativeLuminance(r: number, g: number, b: number): number {
  * @param background - Hex color string (e.g., '#FFFFFF')
  * @returns Contrast ratio (1-21)
  */
-export function getContrastRatio(foreground: string, background: string): number {
+export function getContrastRatio(
+  foreground: string,
+  background: string,
+): number {
   const fg = hexToRgb(foreground);
   const bg = hexToRgb(background);
 
   if (!fg || !bg) {
-    throw new Error('Invalid hex color format');
+    throw new Error("Invalid hex color format");
   }
 
   const fgLuminance = getRelativeLuminance(fg.r, fg.g, fg.b);
@@ -72,8 +78,8 @@ export function getContrastRatio(foreground: string, background: string): number
 export function meetsWCAG(
   foreground: string,
   background: string,
-  level: WCAGLevel = 'AA',
-  textSize: TextSize = 'normal'
+  level: WCAGLevel = "AA",
+  textSize: TextSize = "normal",
 ): { passes: boolean; ratio: number; required: number } {
   const ratio = getContrastRatio(foreground, background);
 
@@ -100,11 +106,13 @@ export function meetsWCAG(
  * @param background - Hex color string
  * @returns '#000000' or '#FFFFFF'
  */
-export function getRecommendedTextColor(background: string): '#000000' | '#FFFFFF' {
-  const whiteContrast = getContrastRatio('#FFFFFF', background);
-  const blackContrast = getContrastRatio('#000000', background);
+export function getRecommendedTextColor(
+  background: string,
+): "#000000" | "#FFFFFF" {
+  const whiteContrast = getContrastRatio("#FFFFFF", background);
+  const blackContrast = getContrastRatio("#000000", background);
 
-  return whiteContrast > blackContrast ? '#FFFFFF' : '#000000';
+  return whiteContrast > blackContrast ? "#FFFFFF" : "#000000";
 }
 
 /**
@@ -114,17 +122,22 @@ export function getRecommendedTextColor(background: string): '#000000' | '#FFFFF
  */
 const warnedSafeTextColorKeys = new Set<string>();
 
-export function getSafeTextColor(background: string, caller?: string): '#000000' | '#FFFFFF' {
+export function getSafeTextColor(
+  background: string,
+  caller?: string,
+): "#000000" | "#FFFFFF" {
   try {
     return getRecommendedTextColor(background);
   } catch (error) {
-    const tag = caller ?? 'getSafeTextColor';
+    const tag = caller ?? "getSafeTextColor";
     const warnKey = `${tag}:${background}`;
     if (!warnedSafeTextColorKeys.has(warnKey)) {
       warnedSafeTextColorKeys.add(warnKey);
       const message = error instanceof Error ? error.message : String(error);
-      console.warn(`[${tag}] contrast calculation failed for "${background}": ${message}. Falling back to #FFFFFF.`);
+      console.warn(
+        `[${tag}] contrast calculation failed for "${background}": ${message}. Falling back to #FFFFFF.`,
+      );
     }
-    return '#FFFFFF';
+    return "#FFFFFF";
   }
 }

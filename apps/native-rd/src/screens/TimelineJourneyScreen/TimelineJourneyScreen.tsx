@@ -1,29 +1,32 @@
-import { Suspense, useMemo } from 'react';
-import { View, ScrollView, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, type NavigationProp } from '@react-navigation/native';
-import { useQuery } from '@evolu/react';
-import { useUnistyles } from 'react-native-unistyles';
-import { Text } from '../../components/Text';
-import { ErrorBoundary } from '../../components/ErrorBoundary';
-import { Button } from '../../components/Button';
-import { IconButton } from '../../components/IconButton';
-import { ProgressBar } from '../../components/ProgressBar';
-import { TimelineStep } from '../../components/TimelineStep';
-import { FinishLine } from '../../components/FinishLine';
+import { Suspense, useMemo } from "react";
+import { View, ScrollView, ActivityIndicator } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation, type NavigationProp } from "@react-navigation/native";
+import { useQuery } from "@evolu/react";
+import { useUnistyles } from "react-native-unistyles";
+import { Text } from "../../components/Text";
+import { ErrorBoundary } from "../../components/ErrorBoundary";
+import { Button } from "../../components/Button";
+import { IconButton } from "../../components/IconButton";
+import { ProgressBar } from "../../components/ProgressBar";
+import { TimelineStep } from "../../components/TimelineStep";
+import { FinishLine } from "../../components/FinishLine";
 import {
   goalsQuery,
   stepsByGoalQuery,
   evidenceByGoalQuery,
   stepEvidenceByGoalQuery,
   StepStatus,
-} from '../../db';
-import type { GoalId } from '../../db';
-import type { GoalsStackParamList, TimelineJourneyScreenProps } from '../../navigation/types';
-import type { StepStatus as UIStepStatus } from '../../types/steps';
-import type { EvidenceItemData } from '../../components/EvidenceDrawer';
-import { validateEvidenceType } from '../../types/evidence';
-import { styles } from './TimelineJourneyScreen.styles';
+} from "../../db";
+import type { GoalId } from "../../db";
+import type {
+  GoalsStackParamList,
+  TimelineJourneyScreenProps,
+} from "../../navigation/types";
+import type { StepStatus as UIStepStatus } from "../../types/steps";
+import type { EvidenceItemData } from "../../components/EvidenceDrawer";
+import { validateEvidenceType } from "../../types/evidence";
+import { styles } from "./TimelineJourneyScreen.styles";
 
 function TimelineContent({ goalId }: { goalId: string }) {
   const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
@@ -33,19 +36,25 @@ function TimelineContent({ goalId }: { goalId: string }) {
   const goalEvidenceRows = useQuery(evidenceByGoalQuery(goalId as GoalId));
 
   // Build UI steps with status
-  const firstPendingIndex = stepRows.findIndex((r) => r.status !== StepStatus.completed);
-  const uiSteps: { id: string; title: string; status: UIStepStatus; evidenceCount: number }[] =
-    stepRows.map((row, index) => ({
-      id: row.id,
-      title: row.title ?? '',
-      status:
-        row.status === StepStatus.completed
-          ? 'completed'
-          : index === firstPendingIndex
-            ? 'in-progress'
-            : 'pending',
-      evidenceCount: 0,
-    }));
+  const firstPendingIndex = stepRows.findIndex(
+    (r) => r.status !== StepStatus.completed,
+  );
+  const uiSteps: {
+    id: string;
+    title: string;
+    status: UIStepStatus;
+    evidenceCount: number;
+  }[] = stepRows.map((row, index) => ({
+    id: row.id,
+    title: row.title ?? "",
+    status:
+      row.status === StepStatus.completed
+        ? "completed"
+        : index === firstPendingIndex
+          ? "in-progress"
+          : "pending",
+    evidenceCount: 0,
+  }));
 
   // Query evidence per step
   const stepEvidenceData = useStepEvidence(goalId as GoalId, stepRows);
@@ -59,11 +68,13 @@ function TimelineContent({ goalId }: { goalId: string }) {
   // Goal evidence for FinishLine
   const goalEvidence: EvidenceItemData[] = goalEvidenceRows.map((row) => ({
     id: row.id,
-    type: validateEvidenceType(row.type ?? 'file'),
-    label: row.description ?? row.type ?? 'Evidence',
+    type: validateEvidenceType(row.type ?? "file"),
+    label: row.description ?? row.type ?? "Evidence",
   }));
 
-  const completedCount = stepRows.filter((s) => s.status === StepStatus.completed).length;
+  const completedCount = stepRows.filter(
+    (s) => s.status === StepStatus.completed,
+  ).length;
   const progress = stepRows.length > 0 ? completedCount / stepRows.length : 0;
 
   if (!goal) {
@@ -75,11 +86,11 @@ function TimelineContent({ goalId }: { goalId: string }) {
   }
 
   const handleBackToFocus = () => {
-    navigation.navigate('FocusMode', { goalId });
+    navigation.navigate("FocusMode", { goalId });
   };
 
   const handleNodePress = (_stepIndex: number) => {
-    navigation.navigate('FocusMode', { goalId });
+    navigation.navigate("FocusMode", { goalId });
   };
 
   return (
@@ -151,8 +162,8 @@ function useStepEvidence(
       const list = grouped.get(ev.stepId) ?? [];
       list.push({
         id: ev.id as string,
-        type: validateEvidenceType((ev.type ?? 'file') as string),
-        label: (ev.description ?? ev.type ?? 'Evidence') as string,
+        type: validateEvidenceType((ev.type ?? "file") as string),
+        label: (ev.description ?? ev.type ?? "Evidence") as string,
       });
       grouped.set(ev.stepId, list);
     }
@@ -165,10 +176,17 @@ export function TimelineJourneyScreen({ route }: TimelineJourneyScreenProps) {
   const { theme } = useUnistyles();
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.colors.accentYellow }}>
+    <SafeAreaView
+      edges={["top"]}
+      style={{ flex: 1, backgroundColor: theme.colors.accentYellow }}
+    >
       <View style={styles.topBar}>
         <IconButton
-          icon={<Text variant="body" style={styles.backIcon}>{'<'}</Text>}
+          icon={
+            <Text variant="body" style={styles.backIcon}>
+              {"<"}
+            </Text>
+          }
           onPress={() => navigation.goBack()}
           accessibilityLabel="Go back"
           size="sm"
@@ -179,7 +197,9 @@ export function TimelineJourneyScreen({ route }: TimelineJourneyScreenProps) {
       <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
         <ErrorBoundary>
           <Suspense
-            fallback={<ActivityIndicator style={styles.loadingIndicator} size="large" />}
+            fallback={
+              <ActivityIndicator style={styles.loadingIndicator} size="large" />
+            }
           >
             <TimelineContent goalId={route.params.goalId} />
           </Suspense>

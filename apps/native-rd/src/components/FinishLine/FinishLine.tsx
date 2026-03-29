@@ -1,9 +1,9 @@
-import React from 'react';
-import { View, Text } from 'react-native';
-import { TimelineNode } from '../TimelineNode';
-import type { EvidenceItemData } from '../EvidenceDrawer';
-import { EVIDENCE_TYPE_ICONS } from '../../constants/evidenceIcons';
-import { styles } from './FinishLine.styles';
+import React from "react";
+import { View, Text } from "react-native";
+import { TimelineNode } from "../TimelineNode";
+import type { EvidenceItemData } from "../EvidenceDrawer";
+import { EVIDENCE_TYPE_ICONS } from "../../constants/evidenceIcons";
+import { styles } from "./FinishLine.styles";
 
 export interface FinishLineProps {
   goalEvidence: EvidenceItemData[];
@@ -20,11 +20,7 @@ export function FinishLine({ goalEvidence }: FinishLineProps) {
         />
       </View>
       <View style={styles.contentCard}>
-        <Text
-          style={styles.heading}
-          accessible
-          accessibilityRole="header"
-        >
+        <Text style={styles.heading} accessible accessibilityRole="header">
           Goal Evidence
         </Text>
         {goalEvidence.length > 0 ? (
@@ -36,7 +32,7 @@ export function FinishLine({ goalEvidence }: FinishLineProps) {
               accessibilityLabel={`${ev.type} evidence: ${ev.label}`}
             >
               <Text style={styles.evidenceIcon}>
-                {EVIDENCE_TYPE_ICONS[ev.type] ?? '\u{1F4C4}'}
+                {EVIDENCE_TYPE_ICONS[ev.type] ?? "\u{1F4C4}"}
               </Text>
               <Text style={styles.evidenceLabel} numberOfLines={1}>
                 {ev.label}

@@ -1,18 +1,22 @@
-import React, { useState } from 'react';
-import { View, Text, Pressable, TextInput } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { useUnistyles } from 'react-native-unistyles';
-import { Card } from '../Card';
-import { StatusBadge, type StatusBadgeVariant } from '../StatusBadge';
-import { Checkbox } from '../Checkbox';
-import { EvidenceTypePicker } from '../EvidenceTypePicker';
-import { useFlashOnIncrease } from '../../hooks/useFlashOnIncrease';
-import { formatEvidenceLabel } from '../../utils/formatEvidenceLabel';
-import { EVIDENCE_OPTIONS, validateEvidenceType, type EvidenceTypeValue } from '../../types/evidence';
-import { EvidenceType } from '../../db';
-import { styles } from './StepCard.styles';
+import React, { useState } from "react";
+import { View, Text, Pressable, TextInput } from "react-native";
+import Animated from "react-native-reanimated";
+import { useUnistyles } from "react-native-unistyles";
+import { Card } from "../Card";
+import { StatusBadge, type StatusBadgeVariant } from "../StatusBadge";
+import { Checkbox } from "../Checkbox";
+import { EvidenceTypePicker } from "../EvidenceTypePicker";
+import { useFlashOnIncrease } from "../../hooks/useFlashOnIncrease";
+import { formatEvidenceLabel } from "../../utils/formatEvidenceLabel";
+import {
+  EVIDENCE_OPTIONS,
+  validateEvidenceType,
+  type EvidenceTypeValue,
+} from "../../types/evidence";
+import { EvidenceType } from "../../db";
+import { styles } from "./StepCard.styles";
 
-export type StepCardStatus = 'completed' | 'in-progress' | 'pending';
+export type StepCardStatus = "completed" | "in-progress" | "pending";
 
 export interface StepCardStep {
   id: string;
@@ -33,18 +37,21 @@ export interface StepCardProps {
 }
 
 const statusToVariant: Record<StepCardStatus, StatusBadgeVariant> = {
-  completed: 'completed',
-  'in-progress': 'active',
-  pending: 'locked',
+  completed: "completed",
+  "in-progress": "active",
+  pending: "locked",
 };
 
 const statusToLabel: Record<StepCardStatus, string> = {
-  completed: 'Completed',
-  'in-progress': 'In Progress',
-  pending: 'Pending',
+  completed: "Completed",
+  "in-progress": "In Progress",
+  pending: "Pending",
 };
 
-function getMissingEvidenceOption(plannedTypes: string[], capturedTypes: string[]) {
+function getMissingEvidenceOption(
+  plannedTypes: string[],
+  capturedTypes: string[],
+) {
   const missing = plannedTypes.find((t) => !capturedTypes.includes(t));
   if (!missing) return null;
   return EVIDENCE_OPTIONS.find((o) => o.type === missing) ?? null;
@@ -59,7 +66,7 @@ export function StepCard({
   onQuickNote,
 }: StepCardProps) {
   const { theme } = useUnistyles();
-  const isCompleted = step.status === 'completed';
+  const isCompleted = step.status === "completed";
   const evidenceLabel = formatEvidenceLabel(step.evidenceCount);
   const flashStyle = useFlashOnIncrease(step.evidenceCount);
 
@@ -71,8 +78,12 @@ export function StepCard({
       ? !plannedTypes.some((t) => capturedTypes.includes(t))
       : false;
 
-  const blockerOption = isBlocked ? getMissingEvidenceOption(plannedTypes!, capturedTypes) : null;
-  const hintText = blockerOption ? `Add ${blockerOption.icon} ${blockerOption.label} to complete` : null;
+  const blockerOption = isBlocked
+    ? getMissingEvidenceOption(plannedTypes!, capturedTypes)
+    : null;
+  const hintText = blockerOption
+    ? `Add ${blockerOption.icon} ${blockerOption.label} to complete`
+    : null;
 
   // Quick-note: show when text is planned, not yet captured, and step is not complete
   const showQuickNote =
@@ -82,13 +93,13 @@ export function StepCard({
     !capturedTypes.includes(EvidenceType.text) &&
     !!onQuickNote;
 
-  const [quickNoteText, setQuickNoteText] = useState('');
+  const [quickNoteText, setQuickNoteText] = useState("");
 
   const handleQuickNoteSubmit = () => {
     const trimmed = quickNoteText.trim();
     if (trimmed && onQuickNote) {
       onQuickNote(trimmed);
-      setQuickNoteText('');
+      setQuickNoteText("");
     }
   };
 
@@ -103,8 +114,8 @@ export function StepCard({
   const checkboxLabel = blockerOption
     ? `Mark complete, requires ${blockerOption.icon} ${blockerOption.label}`
     : isCompleted
-      ? 'Completed'
-      : 'Mark complete';
+      ? "Completed"
+      : "Mark complete";
 
   return (
     <Card>

@@ -8,30 +8,37 @@
  * All IDs are ULIDs generated via id('TableName') branded types.
  * Soft-delete pattern used for CRDT sync compatibility.
  */
-import { id, NonEmptyString1000, NonEmptyString, nullOr, DateIso, Int } from '@evolu/common';
+import {
+  id,
+  NonEmptyString1000,
+  NonEmptyString,
+  nullOr,
+  DateIso,
+  Int,
+} from "@evolu/common";
 
 /** Goal ULID identifier */
-export const GoalId = id('Goal');
+export const GoalId = id("Goal");
 export type GoalId = typeof GoalId.Type;
 
 /** Goal status enum */
 export const GoalStatus = {
-  active: 'active',
-  completed: 'completed',
+  active: "active",
+  completed: "completed",
 } as const;
 
 /** Step ULID identifier */
-export const StepId = id('Step');
+export const StepId = id("Step");
 export type StepId = typeof StepId.Type;
 
 /** Step status enum */
 export const StepStatus = {
-  pending: 'pending',
-  completed: 'completed',
+  pending: "pending",
+  completed: "completed",
 } as const;
 
 /** Evidence ULID identifier */
-export const EvidenceId = id('Evidence');
+export const EvidenceId = id("Evidence");
 export type EvidenceId = typeof EvidenceId.Type;
 
 /**
@@ -39,24 +46,24 @@ export type EvidenceId = typeof EvidenceId.Type;
  * Supports multiple media types for documenting progress
  */
 export const EvidenceType = {
-  photo: 'photo',
-  screenshot: 'screenshot',
-  text: 'text',
-  voice_memo: 'voice_memo',
-  video: 'video',
-  link: 'link',
-  file: 'file',
+  photo: "photo",
+  screenshot: "screenshot",
+  text: "text",
+  voice_memo: "voice_memo",
+  video: "video",
+  link: "link",
+  file: "file",
 } as const;
 
 /** URI prefix for inline text evidence (text content stored in the URI field) */
-export const TEXT_EVIDENCE_PREFIX = 'content:text;';
+export const TEXT_EVIDENCE_PREFIX = "content:text;";
 
 /** Badge ULID identifier */
-export const BadgeId = id('Badge');
+export const BadgeId = id("Badge");
 export type BadgeId = typeof BadgeId.Type;
 
 /** UserSettings ULID identifier */
-export const UserSettingsId = id('UserSettings');
+export const UserSettingsId = id("UserSettings");
 export type UserSettingsId = typeof UserSettingsId.Type;
 
 /**

@@ -1,2 +1,2 @@
-export { StepList } from './StepList';
-export type { StepListProps, Step } from './StepList';
+export { StepList } from "./StepList";
+export type { StepListProps, Step } from "./StepList";

@@ -12,9 +12,9 @@
  * Returns a Buffer containing the PNG bytes, ready for bakePNG().
  */
 
-import { captureRef } from 'react-native-view-shot';
-import { Buffer } from 'buffer';
-import { isPNG } from './png-baking';
+import { captureRef } from "react-native-view-shot";
+import { Buffer } from "buffer";
+import { isPNG } from "./png-baking";
 
 const DEFAULT_SIZE = 512;
 
@@ -36,7 +36,7 @@ export async function captureBadge(
 ): Promise<Buffer> {
   if (!ref.current) {
     throw new Error(
-      'captureBadge: ref.current is null — ensure the BadgeRenderer is mounted before calling captureBadge',
+      "captureBadge: ref.current is null — ensure the BadgeRenderer is mounted before calling captureBadge",
     );
   }
 
@@ -46,9 +46,9 @@ export async function captureBadge(
   let base64: string;
   try {
     base64 = await captureRef(ref, {
-      format: 'png',
+      format: "png",
       quality: 1,
-      result: 'base64',
+      result: "base64",
       width,
       height,
     });
@@ -59,10 +59,10 @@ export async function captureBadge(
     );
   }
 
-  const buffer = Buffer.from(base64, 'base64');
+  const buffer = Buffer.from(base64, "base64");
 
   if (!isPNG(buffer)) {
-    throw new Error('captureBadge: captured data is not a valid PNG');
+    throw new Error("captureBadge: captured data is not a valid PNG");
   }
 
   return buffer;

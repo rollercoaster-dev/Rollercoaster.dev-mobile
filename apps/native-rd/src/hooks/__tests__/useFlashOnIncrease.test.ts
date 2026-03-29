@@ -1,16 +1,16 @@
-import { renderHook } from '@testing-library/react-native';
-import { useFlashOnIncrease } from '../useFlashOnIncrease';
+import { renderHook } from "@testing-library/react-native";
+import { useFlashOnIncrease } from "../useFlashOnIncrease";
 
-jest.mock('../useAnimationPref', () => ({
+jest.mock("../useAnimationPref", () => ({
   useAnimationPref: () => ({
-    animationPref: 'full',
+    animationPref: "full",
     shouldAnimate: true,
     shouldReduceMotion: false,
     setAnimationPref: jest.fn(),
   }),
 }));
 
-jest.mock('react-native-reanimated', () => {
+jest.mock("react-native-reanimated", () => {
   let sharedVal = { value: 0 };
   return {
     useSharedValue: (initial: number) => {
@@ -23,13 +23,13 @@ jest.mock('react-native-reanimated', () => {
   };
 });
 
-describe('useFlashOnIncrease', () => {
-  it('returns an animated style object', () => {
+describe("useFlashOnIncrease", () => {
+  it("returns an animated style object", () => {
     const { result } = renderHook(() => useFlashOnIncrease(0));
-    expect(result.current).toHaveProperty('opacity');
+    expect(result.current).toHaveProperty("opacity");
   });
 
-  it('starts with zero opacity', () => {
+  it("starts with zero opacity", () => {
     const { result } = renderHook(() => useFlashOnIncrease(0));
     expect(result.current.opacity).toBe(0);
   });

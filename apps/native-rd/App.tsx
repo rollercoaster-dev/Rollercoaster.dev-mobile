@@ -1,23 +1,27 @@
-import { StatusBar } from 'expo-status-bar';
-import { View } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { NavigationContainer, DefaultTheme, type Theme } from '@react-navigation/native';
-import { EvoluAppProvider } from './src/db';
-import { TabNavigator } from './src/navigation';
-import { ToastProvider } from './src/components/Toast';
-import { useFonts } from './src/hooks/useFonts';
-import { useTheme, ThemeProvider, useThemeContext } from './src/hooks/useTheme';
-import { useDensity } from './src/hooks/useDensity';
-import { useAnimationPref } from './src/hooks/useAnimationPref';
-import { useFirstLaunch } from './src/hooks/useFirstLaunch';
-import { WelcomeScreen } from './src/screens/WelcomeScreen';
+import { StatusBar } from "expo-status-bar";
+import { View } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import {
+  NavigationContainer,
+  DefaultTheme,
+  type Theme,
+} from "@react-navigation/native";
+import { EvoluAppProvider } from "./src/db";
+import { TabNavigator } from "./src/navigation";
+import { ToastProvider } from "./src/components/Toast";
+import { useFonts } from "./src/hooks/useFonts";
+import { useTheme, ThemeProvider, useThemeContext } from "./src/hooks/useTheme";
+import { useDensity } from "./src/hooks/useDensity";
+import { useAnimationPref } from "./src/hooks/useAnimationPref";
+import { useFirstLaunch } from "./src/hooks/useFirstLaunch";
+import { WelcomeScreen } from "./src/screens/WelcomeScreen";
 
-const STORYBOOK_ENABLED = process.env.EXPO_PUBLIC_STORYBOOK_ENABLED === 'true';
+const STORYBOOK_ENABLED = process.env.EXPO_PUBLIC_STORYBOOK_ENABLED === "true";
 
 let StorybookUI: React.ComponentType | null = null;
 if (STORYBOOK_ENABLED) {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  StorybookUI = require('./.storybook').default;
+  StorybookUI = require("./.storybook").default;
 }
 
 /**
@@ -31,7 +35,9 @@ function ThemedApp() {
 
   // Loading: Evolu hasn't read settings from SQLite yet
   if (isFirstLaunch === null) {
-    return <View style={{ flex: 1, backgroundColor: theme.colors.background }} />;
+    return (
+      <View style={{ flex: 1, backgroundColor: theme.colors.background }} />
+    );
   }
 
   // First launch — show WelcomeScreen above NavigationContainer
@@ -55,7 +61,7 @@ function ThemedApp() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <StatusBar style={isDark ? "light" : "dark"} />
       <NavigationContainer theme={navTheme}>
         <ToastProvider>
           <TabNavigator />

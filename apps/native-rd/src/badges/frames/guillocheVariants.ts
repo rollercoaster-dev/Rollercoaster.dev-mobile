@@ -8,12 +8,12 @@
  * 1. Per-edge + clip — clean wave segments, clipped to frame band
  * 2. Per-edge + clip + dots — same, with decorative circles at vertices
  */
-import React from 'react';
-import { Circle, ClipPath, Defs, G, Path } from 'react-native-svg';
-import type { BadgeShape } from '../types';
-import { generateShapePath } from '../shapes/paths';
-import { DEFAULT_STROKE_COLOR } from './constants';
-import type { FrameGenerator } from './types';
+import React from "react";
+import { Circle, ClipPath, Defs, G, Path } from "react-native-svg";
+import type { BadgeShape } from "../types";
+import { generateShapePath } from "../shapes/paths";
+import { DEFAULT_STROKE_COLOR } from "./constants";
+import type { FrameGenerator } from "./types";
 import {
   type SamplePoint,
   POINTS_PER_WAVE,
@@ -24,28 +24,34 @@ import {
   buildWavePaths,
   makeRoundedRectSampler,
   makeShieldSampler,
-} from './guilloche';
+} from "./guilloche";
 
 let clipCounter = 0;
 
 function shapeAmplitudeScale(shape: BadgeShape): number {
-  if (shape === 'shield' || shape === 'roundedRect') {
+  if (shape === "shield" || shape === "roundedRect") {
     return 0.75;
   }
   return 1;
 }
 
-function coreWaveParams(shape: BadgeShape, inset: number, innerInset: number, stepCount: number) {
+function coreWaveParams(
+  shape: BadgeShape,
+  inset: number,
+  innerInset: number,
+  stepCount: number,
+) {
   const waveCount = Math.max(3, Math.min(14, Math.round(stepCount * 1.5)));
   const bandMidInset = (inset + innerInset) / 2;
-  const amplitude = (innerInset - inset) * AMPLITUDE_RATIO * shapeAmplitudeScale(shape);
+  const amplitude =
+    (innerInset - inset) * AMPLITUDE_RATIO * shapeAmplitudeScale(shape);
   const n = waveCount * POINTS_PER_WAVE;
   return { waveCount, bandMidInset, amplitude, n };
 }
 
 function pathProps(strokeColor: string) {
   return {
-    fill: 'none' as const,
+    fill: "none" as const,
     stroke: strokeColor,
     strokeWidth: WAVE_STROKE_WIDTH,
     opacity: WAVE_OPACITY,
@@ -121,17 +127,17 @@ function getShapeCornerIndices(
   n: number,
 ): number[] {
   switch (shape) {
-    case 'circle':
+    case "circle":
       return [];
-    case 'hexagon':
+    case "hexagon":
       return uniformCorners(6, n);
-    case 'diamond':
+    case "diamond":
       return uniformCorners(4, n);
-    case 'star':
+    case "star":
       return uniformCorners(10, n);
-    case 'roundedRect':
+    case "roundedRect":
       return parametricCorners(makeRoundedRectSampler(size, inset), 8, n);
-    case 'shield':
+    case "shield":
       return parametricCorners(makeShieldSampler(size, inset), 7, n);
     default: {
       const _exhaustive: never = shape;
@@ -173,7 +179,7 @@ function buildPerEdgeWavePaths(
   for (let i = 0; i < edgeCount; i++) {
     const start = corners[i];
     const end = corners[(i + 1) % edgeCount];
-    const length = ((end - start) + n) % n;
+    const length = (end - start + n) % n;
     const proportion = length / n;
     const desiredHalfWaves = proportion * waveCount * 2;
     const halfWaves = Math.max(1, Math.round(desiredHalfWaves));
@@ -204,7 +210,7 @@ function buildPerEdgeWavePaths(
     wave2Commands.push(buildOpenPath(pts2));
   }
 
-  return [wave1Commands.join(' '), wave2Commands.join(' ')];
+  return [wave1Commands.join(" "), wave2Commands.join(" ")];
 }
 
 // ---------------------------------------------------------------------------
@@ -217,14 +223,16 @@ function buildPerEdgeWavePaths(
  */
 function buildOpenPath(pts: { x: number; y: number }[]): string {
   const m = pts.length;
-  if (m < 2) return '';
+  if (m < 2) return "";
 
-  const commands: string[] = [`M ${pts[0].x.toFixed(2)} ${pts[0].y.toFixed(2)}`];
+  const commands: string[] = [
+    `M ${pts[0].x.toFixed(2)} ${pts[0].y.toFixed(2)}`,
+  ];
   for (let i = 1; i < m; i++) {
     commands.push(`L ${pts[i].x.toFixed(2)} ${pts[i].y.toFixed(2)}`);
   }
 
-  return commands.join(' ');
+  return commands.join(" ");
 }
 
 // ---------------------------------------------------------------------------
@@ -274,7 +282,12 @@ export const guillochePerEdge: FrameGenerator = ({
   );
   const samples = sampleShapeContour(shape, size, bandMidInset, n);
   const corners = getShapeCornerIndices(shape, size, bandMidInset, n);
-  const [wave1, wave2] = buildPerEdgeWavePaths(samples, corners, waveCount, amplitude);
+  const [wave1, wave2] = buildPerEdgeWavePaths(
+    samples,
+    corners,
+    waveCount,
+    amplitude,
+  );
 
   const props = pathProps(strokeColor);
   const { clipId, defsElement } = makeClipElements(shape, size, inset);
@@ -286,8 +299,8 @@ export const guillochePerEdge: FrameGenerator = ({
     React.createElement(
       G,
       { clipPath: `url(#${clipId})` },
-      React.createElement(Path, { key: 'g-0', d: wave1, ...props }),
-      React.createElement(Path, { key: 'g-1', d: wave2, ...props }),
+      React.createElement(Path, { key: "g-0", d: wave1, ...props }),
+      React.createElement(Path, { key: "g-1", d: wave2, ...props }),
     ),
   );
 };
@@ -314,7 +327,12 @@ export const guillochePerEdgeWithDots: FrameGenerator = ({
   );
   const samples = sampleShapeContour(shape, size, bandMidInset, n);
   const corners = getShapeCornerIndices(shape, size, bandMidInset, n);
-  const [wave1, wave2] = buildPerEdgeWavePaths(samples, corners, waveCount, amplitude);
+  const [wave1, wave2] = buildPerEdgeWavePaths(
+    samples,
+    corners,
+    waveCount,
+    amplitude,
+  );
 
   const props = pathProps(strokeColor);
   const dotRadius = amplitude * 0.35;
@@ -330,7 +348,7 @@ export const guillochePerEdgeWithDots: FrameGenerator = ({
         cx: pt.x,
         cy: pt.y,
         r: dotRadius,
-        fill: 'none',
+        fill: "none",
         stroke: strokeColor,
         strokeWidth: WAVE_STROKE_WIDTH,
         opacity: WAVE_OPACITY,
@@ -345,8 +363,8 @@ export const guillochePerEdgeWithDots: FrameGenerator = ({
     React.createElement(
       G,
       { clipPath: `url(#${clipId})` },
-      React.createElement(Path, { key: 'g-0', d: wave1, ...props }),
-      React.createElement(Path, { key: 'g-1', d: wave2, ...props }),
+      React.createElement(Path, { key: "g-0", d: wave1, ...props }),
+      React.createElement(Path, { key: "g-1", d: wave2, ...props }),
     ),
     ...dots,
   );

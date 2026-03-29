@@ -1,8 +1,8 @@
-import React from 'react';
-import { View, Modal, Pressable, ScrollView } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text } from '../Text';
-import { styles } from './TextNoteViewerModal.styles';
+import React from "react";
+import { View, Modal, Pressable, ScrollView } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Text } from "../Text";
+import { styles } from "./TextNoteViewerModal.styles";
 
 export interface TextNoteViewerModalProps {
   visible: boolean;
@@ -29,7 +29,12 @@ export function TextNoteViewerModal({
       onRequestClose={onClose}
       accessibilityViewIsModal
     >
-      <View style={[styles.overlay, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+      <View
+        style={[
+          styles.overlay,
+          { paddingTop: insets.top, paddingBottom: insets.bottom },
+        ]}
+      >
         <View style={styles.container}>
           <View style={styles.topBar}>
             <Text style={styles.heading}>Text Note</Text>
@@ -40,7 +45,7 @@ export function TextNoteViewerModal({
               accessibilityLabel="Close text note viewer"
               hitSlop={16}
             >
-              <Text style={styles.closeText}>{'\u2715'}</Text>
+              <Text style={styles.closeText}>{"\u2715"}</Text>
             </Pressable>
           </View>
           <ScrollView

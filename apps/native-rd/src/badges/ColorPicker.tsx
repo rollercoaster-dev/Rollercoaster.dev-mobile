@@ -1,8 +1,8 @@
-import React, { useMemo } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import React, { useMemo } from "react";
+import { Pressable, ScrollView, Text, View } from "react-native";
+import { StyleSheet, useUnistyles } from "react-native-unistyles";
 
-import { selectorStyles } from './selectorStyles';
+import { selectorStyles } from "./selectorStyles";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -20,13 +20,13 @@ export interface ColorPickerProps {
 // ---------------------------------------------------------------------------
 
 const ACCENT_COLORS: { hex: string; label: string }[] = [
-  { hex: '#a78bfa', label: 'Purple' },
-  { hex: '#34d399', label: 'Mint' },
-  { hex: '#fbbf24', label: 'Yellow' },
-  { hex: '#10b981', label: 'Emerald' },
-  { hex: '#06b6d4', label: 'Teal' },
-  { hex: '#f97316', label: 'Orange' },
-  { hex: '#38bdf8', label: 'Sky' },
+  { hex: "#a78bfa", label: "Purple" },
+  { hex: "#34d399", label: "Mint" },
+  { hex: "#fbbf24", label: "Yellow" },
+  { hex: "#10b981", label: "Emerald" },
+  { hex: "#06b6d4", label: "Teal" },
+  { hex: "#f97316", label: "Orange" },
+  { hex: "#38bdf8", label: "Sky" },
 ];
 
 const SWATCH_SIZE = 44;
@@ -39,14 +39,14 @@ export function ColorPicker({
   selectedColor,
   onSelectColor,
   goalColor,
-  testID = 'color-picker',
+  testID = "color-picker",
 }: ColorPickerProps) {
   const { theme } = useUnistyles();
 
   const swatches = useMemo(() => {
     const list = [...ACCENT_COLORS];
     if (goalColor) {
-      list.unshift({ hex: goalColor, label: 'Goal' });
+      list.unshift({ hex: goalColor, label: "Goal" });
     }
     return list;
   }, [goalColor]);
@@ -80,7 +80,7 @@ export function ColorPicker({
                     backgroundColor: hex,
                     borderColor: isSelected
                       ? theme.colors.border
-                      : 'transparent',
+                      : "transparent",
                     borderWidth: isSelected ? 4 : 3,
                   },
                 ]}
@@ -92,7 +92,7 @@ export function ColorPicker({
                     color: isSelected
                       ? theme.colors.text
                       : theme.colors.textSecondary,
-                    fontWeight: isSelected ? '700' : '500',
+                    fontWeight: isSelected ? "700" : "500",
                   },
                 ]}
                 numberOfLines={1}
@@ -113,7 +113,7 @@ export function ColorPicker({
 
 const styles = StyleSheet.create((theme) => ({
   cell: {
-    alignItems: 'center',
+    alignItems: "center",
     minWidth: 56,
     minHeight: 72,
     gap: theme.space[1],

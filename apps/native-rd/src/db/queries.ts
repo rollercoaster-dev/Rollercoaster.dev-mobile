@@ -9,10 +9,16 @@
  * - All IDs are ULIDs (branded types)
  * - All errors logged with rd-logger for debugging and monitoring
  */
-import { NonEmptyString1000, NonEmptyString, dateToDateIso, sqliteTrue, Int } from '@evolu/common';
-import { Logger } from '../shims/rd-logger';
-import { parsePlannedEvidenceTypes } from '../utils/parsePlannedEvidenceTypes';
-import { evolu } from './evolu';
+import {
+  NonEmptyString1000,
+  NonEmptyString,
+  dateToDateIso,
+  sqliteTrue,
+  Int,
+} from "@evolu/common";
+import { Logger } from "../shims/rd-logger";
+import { parsePlannedEvidenceTypes } from "../utils/parsePlannedEvidenceTypes";
+import { evolu } from "./evolu";
 import {
   GoalId,
   GoalStatus,
@@ -21,7 +27,7 @@ import {
   EvidenceId,
   BadgeId,
   UserSettingsId,
-} from './schema';
+} from "./schema";
 
 // Initialize logger for database operations
 const logger = new Logger();
@@ -31,10 +37,10 @@ const logger = new Logger();
 /** Query all non-deleted goals, ordered by creation date descending */
 export const goalsQuery = evolu.createQuery((db) =>
   db
-    .selectFrom('goal')
+    .selectFrom("goal")
     .selectAll()
-    .where('isDeleted', 'is', null)
-    .orderBy('createdAt', 'desc'),
+    .where("isDeleted", "is", null)
+    .orderBy("createdAt", "desc"),
 );
 
 /**
@@ -46,7 +52,7 @@ export const goalsQuery = evolu.createQuery((db) =>
 export function createGoal(title: string) {
   const parsedTitle = NonEmptyString1000.orNull(title.trim());
   if (!parsedTitle) {
-    logger.error('Goal title validation failed', {
+    logger.error("Goal title validation failed", {
       titleLength: title.length,
       titleTrimmed: title.trim().length,
     });
@@ -58,13 +64,13 @@ export function createGoal(title: string) {
   const parsedStatus = NonEmptyString1000.orThrow(GoalStatus.active);
 
   try {
-    return evolu.insert('goal', {
+    return evolu.insert("goal", {
       title: parsedTitle,
       status: parsedStatus,
     });
   } catch (error) {
-    logger.error('Failed to insert goal', { title: parsedTitle, error });
-    throw new Error('Failed to create goal. Please try again.');
+    logger.error("Failed to insert goal", { title: parsedTitle, error });
+    throw new Error("Failed to create goal. Please try again.");
   }
 }
 
@@ -84,7 +90,7 @@ export function updateGoal(
   if (fields.title !== undefined) {
     const parsed = NonEmptyString1000.orNull(fields.title.trim());
     if (!parsed) {
-      logger.error('Goal title validation failed during update', {
+      logger.error("Goal title validation failed during update", {
         goalId: id,
         titleLength: fields.title.length,
       });
@@ -101,7 +107,7 @@ export function updateGoal(
     } else {
       const parsed = NonEmptyString1000.orNull(fields.description.trim());
       if (!parsed) {
-        logger.error('Goal description validation failed during update', {
+        logger.error("Goal description validation failed during update", {
           goalId: id,
           descriptionLength: fields.description.length,
         });
@@ -114,10 +120,10 @@ export function updateGoal(
   }
 
   try {
-    return evolu.update('goal', update as Parameters<typeof evolu.update>[1]);
+    return evolu.update("goal", update as Parameters<typeof evolu.update>[1]);
   } catch (error) {
-    logger.error('Failed to update goal', { goalId: id, fields, error });
-    throw new Error('Failed to update goal. Please try again.');
+    logger.error("Failed to update goal", { goalId: id, fields, error });
+    throw new Error("Failed to update goal. Please try again.");
   }
 }
 
@@ -133,7 +139,7 @@ export function completeGoal(
 ) {
   if (!canCompleteGoal(goalEvidence)) {
     throw new Error(
-      'Cannot complete goal: no evidence attached. Add at least one evidence item first.',
+      "Cannot complete goal: no evidence attached. Add at least one evidence item first.",
     );
   }
 
@@ -141,22 +147,22 @@ export function completeGoal(
   const now = dateToDateIso(new Date());
 
   if (!now.ok) {
-    logger.error('Failed to generate completion timestamp', {
+    logger.error("Failed to generate completion timestamp", {
       goalId: id,
       dateValue: new Date().toISOString(),
     });
-    throw new Error('Failed to record completion time. Please try again.');
+    throw new Error("Failed to record completion time. Please try again.");
   }
 
   try {
-    return evolu.update('goal', {
+    return evolu.update("goal", {
       id,
       status: parsedStatus,
       completedAt: now.value,
     });
   } catch (error) {
-    logger.error('Failed to complete goal', { goalId: id, error });
-    throw new Error('Failed to complete goal. Please try again.');
+    logger.error("Failed to complete goal", { goalId: id, error });
+    throw new Error("Failed to complete goal. Please try again.");
   }
 }
 
@@ -169,14 +175,14 @@ export function uncompleteGoal(id: GoalId) {
   const parsedStatus = NonEmptyString1000.orThrow(GoalStatus.active);
 
   try {
-    return evolu.update('goal', {
+    return evolu.update("goal", {
       id,
       status: parsedStatus,
       completedAt: null,
     });
   } catch (error) {
-    logger.error('Failed to uncomplete goal', { goalId: id, error });
-    throw new Error('Failed to uncomplete goal. Please try again.');
+    logger.error("Failed to uncomplete goal", { goalId: id, error });
+    throw new Error("Failed to uncomplete goal. Please try again.");
   }
 }
 
@@ -187,10 +193,10 @@ export function uncompleteGoal(id: GoalId) {
  */
 export function deleteGoal(id: GoalId) {
   try {
-    return evolu.update('goal', { id, isDeleted: sqliteTrue });
+    return evolu.update("goal", { id, isDeleted: sqliteTrue });
   } catch (error) {
-    logger.error('Failed to delete goal', { goalId: id, error });
-    throw new Error('Failed to delete goal. Please try again.');
+    logger.error("Failed to delete goal", { goalId: id, error });
+    throw new Error("Failed to delete goal. Please try again.");
   }
 }
 
@@ -209,7 +215,7 @@ function serializePlannedTypes(
   const json = JSON.stringify(types);
   const result = NonEmptyString1000.orNull(json);
   if (!result) {
-    logger.error('Serialized plannedEvidenceTypes exceeds 1000 chars', {
+    logger.error("Serialized plannedEvidenceTypes exceeds 1000 chars", {
       typeCount: types.length,
       jsonLength: json.length,
     });
@@ -237,7 +243,10 @@ export function canCompleteStep(
   const validEvidence = stepEvidence.filter((e) => e.type !== null);
   if (validEvidence.length === 0) return false;
 
-  const plannedTypes = parsePlannedEvidenceTypes(plannedEvidenceTypesJson, logger);
+  const plannedTypes = parsePlannedEvidenceTypes(
+    plannedEvidenceTypesJson,
+    logger,
+  );
   if (plannedTypes === null) return true;
 
   return validEvidence.some((e) => plannedTypes.includes(e.type!));
@@ -265,11 +274,11 @@ export function canCompleteGoal(
 export const stepsByGoalQuery = (goalId: GoalId) =>
   evolu.createQuery((db) =>
     db
-      .selectFrom('step')
+      .selectFrom("step")
       .selectAll()
-      .where('isDeleted', 'is', null)
-      .where('goalId', '=', goalId)
-      .orderBy('ordinal', 'asc'),
+      .where("isDeleted", "is", null)
+      .where("goalId", "=", goalId)
+      .orderBy("ordinal", "asc"),
   );
 
 /**
@@ -288,7 +297,7 @@ export function createStep(
 ) {
   const parsedTitle = NonEmptyString1000.orNull(title.trim());
   if (!parsedTitle) {
-    logger.error('Step title validation failed', {
+    logger.error("Step title validation failed", {
       goalId,
       titleLength: title.length,
     });
@@ -301,16 +310,21 @@ export function createStep(
   const serializedTypes = serializePlannedTypes(plannedEvidenceTypes);
 
   try {
-    return evolu.insert('step', {
+    return evolu.insert("step", {
       goalId,
       title: parsedTitle,
       status: parsedStatus,
       ordinal: ordinal !== undefined ? Int.orNull(ordinal) : null,
-      plannedEvidenceTypes: serializedTypes === undefined ? null : serializedTypes,
+      plannedEvidenceTypes:
+        serializedTypes === undefined ? null : serializedTypes,
     });
   } catch (error) {
-    logger.error('Failed to insert step', { goalId, title: parsedTitle, error });
-    throw new Error('Failed to create step. Please try again.');
+    logger.error("Failed to insert step", {
+      goalId,
+      title: parsedTitle,
+      error,
+    });
+    throw new Error("Failed to create step. Please try again.");
   }
 }
 
@@ -323,14 +337,18 @@ export function createStep(
  */
 export function updateStep(
   id: StepId,
-  fields: { title?: string; ordinal?: number | null; plannedEvidenceTypes?: readonly string[] | null },
+  fields: {
+    title?: string;
+    ordinal?: number | null;
+    plannedEvidenceTypes?: readonly string[] | null;
+  },
 ) {
   const update: Record<string, unknown> = { id };
 
   if (fields.title !== undefined) {
     const parsed = NonEmptyString1000.orNull(fields.title.trim());
     if (!parsed) {
-      logger.error('Step title validation failed during update', {
+      logger.error("Step title validation failed during update", {
         stepId: id,
         titleLength: fields.title.length,
       });
@@ -342,7 +360,8 @@ export function updateStep(
   }
 
   if (fields.ordinal !== undefined) {
-    update.ordinal = fields.ordinal !== null ? Int.orNull(fields.ordinal) : null;
+    update.ordinal =
+      fields.ordinal !== null ? Int.orNull(fields.ordinal) : null;
   }
 
   const serializedTypes = serializePlannedTypes(fields.plannedEvidenceTypes);
@@ -351,10 +370,10 @@ export function updateStep(
   }
 
   try {
-    return evolu.update('step', update as Parameters<typeof evolu.update>[1]);
+    return evolu.update("step", update as Parameters<typeof evolu.update>[1]);
   } catch (error) {
-    logger.error('Failed to update step', { stepId: id, fields, error });
-    throw new Error('Failed to update step. Please try again.');
+    logger.error("Failed to update step", { stepId: id, fields, error });
+    throw new Error("Failed to update step. Please try again.");
   }
 }
 
@@ -373,8 +392,8 @@ export function completeStep(
     const hasAnyEvidence = stepEvidence.some((e) => e.type !== null);
     throw new Error(
       hasAnyEvidence
-        ? 'Cannot complete step: no evidence matching the planned types. Add a matching evidence item first.'
-        : 'Cannot complete step: no evidence attached. Add at least one evidence item first.',
+        ? "Cannot complete step: no evidence matching the planned types. Add a matching evidence item first."
+        : "Cannot complete step: no evidence attached. Add at least one evidence item first.",
     );
   }
 
@@ -382,22 +401,22 @@ export function completeStep(
   const now = dateToDateIso(new Date());
 
   if (!now.ok) {
-    logger.error('Failed to generate step completion timestamp', {
+    logger.error("Failed to generate step completion timestamp", {
       stepId: id,
       dateValue: new Date().toISOString(),
     });
-    throw new Error('Failed to record completion time. Please try again.');
+    throw new Error("Failed to record completion time. Please try again.");
   }
 
   try {
-    return evolu.update('step', {
+    return evolu.update("step", {
       id,
       status: parsedStatus,
       completedAt: now.value,
     });
   } catch (error) {
-    logger.error('Failed to complete step', { stepId: id, error });
-    throw new Error('Failed to complete step. Please try again.');
+    logger.error("Failed to complete step", { stepId: id, error });
+    throw new Error("Failed to complete step. Please try again.");
   }
 }
 
@@ -410,14 +429,14 @@ export function uncompleteStep(id: StepId) {
   const parsedStatus = NonEmptyString1000.orThrow(StepStatus.pending);
 
   try {
-    return evolu.update('step', {
+    return evolu.update("step", {
       id,
       status: parsedStatus,
       completedAt: null,
     });
   } catch (error) {
-    logger.error('Failed to uncomplete step', { stepId: id, error });
-    throw new Error('Failed to uncomplete step. Please try again.');
+    logger.error("Failed to uncomplete step", { stepId: id, error });
+    throw new Error("Failed to uncomplete step. Please try again.");
   }
 }
 
@@ -428,10 +447,10 @@ export function uncompleteStep(id: StepId) {
  */
 export function deleteStep(id: StepId) {
   try {
-    return evolu.update('step', { id, isDeleted: sqliteTrue });
+    return evolu.update("step", { id, isDeleted: sqliteTrue });
   } catch (error) {
-    logger.error('Failed to delete step', { stepId: id, error });
-    throw new Error('Failed to delete step. Please try again.');
+    logger.error("Failed to delete step", { stepId: id, error });
+    throw new Error("Failed to delete step. Please try again.");
   }
 }
 
@@ -449,9 +468,9 @@ export function reorderSteps(goalId: GoalId, stepIds: StepId[]) {
     // Fixed: Check for null explicitly, not falsy (0 is valid!)
     if (ordinal !== null) {
       try {
-        evolu.update('step', { id: stepId, ordinal });
+        evolu.update("step", { id: stepId, ordinal });
       } catch (error) {
-        logger.error('Failed to update step ordinal', {
+        logger.error("Failed to update step ordinal", {
           goalId,
           stepId,
           ordinal: index,
@@ -460,7 +479,7 @@ export function reorderSteps(goalId: GoalId, stepIds: StepId[]) {
         failures.push({ index, stepId });
       }
     } else {
-      logger.warn('Failed to parse ordinal for step', {
+      logger.warn("Failed to parse ordinal for step", {
         goalId,
         stepId,
         index,
@@ -470,7 +489,7 @@ export function reorderSteps(goalId: GoalId, stepIds: StepId[]) {
   });
 
   if (failures.length > 0) {
-    logger.error('Step reordering had failures', {
+    logger.error("Step reordering had failures", {
       goalId,
       totalSteps: stepIds.length,
       failureCount: failures.length,
@@ -492,11 +511,11 @@ export function reorderSteps(goalId: GoalId, stepIds: StepId[]) {
 export const evidenceByGoalQuery = (goalId: GoalId) =>
   evolu.createQuery((db) =>
     db
-      .selectFrom('evidence')
+      .selectFrom("evidence")
       .selectAll()
-      .where('isDeleted', 'is', null)
-      .where('goalId', '=', goalId)
-      .orderBy('createdAt', 'desc'),
+      .where("isDeleted", "is", null)
+      .where("goalId", "=", goalId)
+      .orderBy("createdAt", "desc"),
   );
 
 /**
@@ -507,11 +526,11 @@ export const evidenceByGoalQuery = (goalId: GoalId) =>
 export const evidenceByStepQuery = (stepId: StepId) =>
   evolu.createQuery((db) =>
     db
-      .selectFrom('evidence')
+      .selectFrom("evidence")
       .selectAll()
-      .where('isDeleted', 'is', null)
-      .where('stepId', '=', stepId)
-      .orderBy('createdAt', 'desc'),
+      .where("isDeleted", "is", null)
+      .where("stepId", "=", stepId)
+      .orderBy("createdAt", "desc"),
   );
 
 /**
@@ -524,14 +543,14 @@ export const evidenceByStepQuery = (stepId: StepId) =>
 export const stepEvidenceByGoalQuery = (goalId: GoalId) =>
   evolu.createQuery((db) =>
     db
-      .selectFrom('evidence')
-      .innerJoin('step', 'step.id', 'evidence.stepId')
-      .selectAll('evidence')
-      .select('step.title as stepTitle')
-      .where('step.goalId', '=', goalId)
-      .where('evidence.isDeleted', 'is', null)
-      .where('step.isDeleted', 'is', null)
-      .orderBy('evidence.createdAt', 'desc'),
+      .selectFrom("evidence")
+      .innerJoin("step", "step.id", "evidence.stepId")
+      .selectAll("evidence")
+      .select("step.title as stepTitle")
+      .where("step.goalId", "=", goalId)
+      .where("evidence.isDeleted", "is", null)
+      .where("step.isDeleted", "is", null)
+      .orderBy("evidence.createdAt", "desc"),
   );
 
 /**
@@ -559,7 +578,7 @@ export function createEvidence(params: {
   const hasNeither = !params.goalId && !params.stepId;
 
   if (hasBoth || hasNeither) {
-    logger.error('Evidence attachment constraint violation', {
+    logger.error("Evidence attachment constraint violation", {
       hasGoalId: !!params.goalId,
       hasStepId: !!params.stepId,
       goalId: params.goalId,
@@ -567,7 +586,7 @@ export function createEvidence(params: {
     });
     throw new Error(
       `Evidence must attach to exactly one of goalId or stepId. ` +
-        `Received: goalId=${params.goalId || 'null'}, stepId=${params.stepId || 'null'}`,
+        `Received: goalId=${params.goalId || "null"}, stepId=${params.stepId || "null"}`,
     );
   }
 
@@ -575,7 +594,7 @@ export function createEvidence(params: {
   const parsedUri = NonEmptyString1000.orNull(params.uri);
 
   if (!parsedType) {
-    logger.error('Evidence type validation failed', {
+    logger.error("Evidence type validation failed", {
       typeLength: params.type?.length,
     });
     throw new Error(
@@ -584,7 +603,7 @@ export function createEvidence(params: {
   }
 
   if (!parsedUri) {
-    logger.error('Evidence URI validation failed', {
+    logger.error("Evidence URI validation failed", {
       uriLength: params.uri?.length,
     });
     throw new Error(
@@ -596,7 +615,7 @@ export function createEvidence(params: {
   if (params.description) {
     parsedDescription = NonEmptyString1000.orNull(params.description);
     if (!parsedDescription) {
-      logger.error('Evidence description validation failed', {
+      logger.error("Evidence description validation failed", {
         descriptionLength: params.description.length,
       });
       throw new Error(
@@ -609,7 +628,7 @@ export function createEvidence(params: {
   if (params.metadata) {
     parsedMetadata = NonEmptyString1000.orNull(params.metadata);
     if (!parsedMetadata) {
-      logger.error('Evidence metadata validation failed', {
+      logger.error("Evidence metadata validation failed", {
         metadataLength: params.metadata.length,
       });
       throw new Error(
@@ -619,7 +638,7 @@ export function createEvidence(params: {
   }
 
   try {
-    return evolu.insert('evidence', {
+    return evolu.insert("evidence", {
       goalId: params.goalId || null,
       stepId: params.stepId || null,
       type: parsedType,
@@ -628,13 +647,13 @@ export function createEvidence(params: {
       metadata: parsedMetadata,
     });
   } catch (error) {
-    logger.error('Failed to insert evidence', {
+    logger.error("Failed to insert evidence", {
       goalId: params.goalId,
       stepId: params.stepId,
       type: parsedType,
       error,
     });
-    throw new Error('Failed to create evidence. Please try again.');
+    throw new Error("Failed to create evidence. Please try again.");
   }
 }
 
@@ -654,7 +673,7 @@ export function updateEvidence(
     if (fields.description !== null) {
       const parsed = NonEmptyString1000.orNull(fields.description);
       if (!parsed) {
-        logger.error('Evidence description validation failed during update', {
+        logger.error("Evidence description validation failed during update", {
           evidenceId: id,
           descriptionLength: fields.description.length,
         });
@@ -672,7 +691,7 @@ export function updateEvidence(
     if (fields.metadata !== null) {
       const parsed = NonEmptyString1000.orNull(fields.metadata);
       if (!parsed) {
-        logger.error('Evidence metadata validation failed during update', {
+        logger.error("Evidence metadata validation failed during update", {
           evidenceId: id,
           metadataLength: fields.metadata.length,
         });
@@ -687,10 +706,17 @@ export function updateEvidence(
   }
 
   try {
-    return evolu.update('evidence', update as Parameters<typeof evolu.update>[1]);
+    return evolu.update(
+      "evidence",
+      update as Parameters<typeof evolu.update>[1],
+    );
   } catch (error) {
-    logger.error('Failed to update evidence', { evidenceId: id, fields, error });
-    throw new Error('Failed to update evidence. Please try again.');
+    logger.error("Failed to update evidence", {
+      evidenceId: id,
+      fields,
+      error,
+    });
+    throw new Error("Failed to update evidence. Please try again.");
   }
 }
 
@@ -701,10 +727,10 @@ export function updateEvidence(
  */
 export function deleteEvidence(id: EvidenceId) {
   try {
-    return evolu.update('evidence', { id, isDeleted: sqliteTrue });
+    return evolu.update("evidence", { id, isDeleted: sqliteTrue });
   } catch (error) {
-    logger.error('Failed to delete evidence', { evidenceId: id, error });
-    throw new Error('Failed to delete evidence. Please try again.');
+    logger.error("Failed to delete evidence", { evidenceId: id, error });
+    throw new Error("Failed to delete evidence. Please try again.");
   }
 }
 
@@ -717,10 +743,10 @@ export function deleteEvidence(id: EvidenceId) {
  */
 export function restoreEvidence(id: EvidenceId) {
   try {
-    return evolu.update('evidence', { id, isDeleted: null as never });
+    return evolu.update("evidence", { id, isDeleted: null as never });
   } catch (error) {
-    logger.error('Failed to restore evidence', { evidenceId: id, error });
-    throw new Error('Failed to restore evidence. Please try again.');
+    logger.error("Failed to restore evidence", { evidenceId: id, error });
+    throw new Error("Failed to restore evidence. Please try again.");
   }
 }
 
@@ -732,10 +758,10 @@ export function restoreEvidence(id: EvidenceId) {
  */
 export const badgesQuery = evolu.createQuery((db) =>
   db
-    .selectFrom('badge')
+    .selectFrom("badge")
     .selectAll()
-    .where('isDeleted', 'is', null)
-    .orderBy('createdAt', 'desc'),
+    .where("isDeleted", "is", null)
+    .orderBy("createdAt", "desc"),
 );
 
 /**
@@ -746,10 +772,10 @@ export const badgesQuery = evolu.createQuery((db) =>
 export const badgeByGoalQuery = (goalId: GoalId) =>
   evolu.createQuery((db) =>
     db
-      .selectFrom('badge')
+      .selectFrom("badge")
       .selectAll()
-      .where('isDeleted', 'is', null)
-      .where('goalId', '=', goalId)
+      .where("isDeleted", "is", null)
+      .where("goalId", "=", goalId)
       .limit(1),
   );
 
@@ -761,10 +787,10 @@ export const badgeByGoalQuery = (goalId: GoalId) =>
 export const badgeByIdQuery = (badgeId: BadgeId) =>
   evolu.createQuery((db) =>
     db
-      .selectFrom('badge')
+      .selectFrom("badge")
       .selectAll()
-      .where('isDeleted', 'is', null)
-      .where('id', '=', badgeId)
+      .where("isDeleted", "is", null)
+      .where("id", "=", badgeId)
       .limit(1),
   );
 
@@ -778,25 +804,25 @@ export const badgeByIdQuery = (badgeId: BadgeId) =>
 export const badgeWithGoalQuery = (badgeId: BadgeId) =>
   evolu.createQuery((db) =>
     db
-      .selectFrom('badge')
-      .leftJoin('goal', (join) =>
+      .selectFrom("badge")
+      .leftJoin("goal", (join) =>
         join
-          .onRef('goal.id', '=', 'badge.goalId')
-          .on('goal.isDeleted', 'is', null),
+          .onRef("goal.id", "=", "badge.goalId")
+          .on("goal.isDeleted", "is", null),
       )
       .select([
-        'badge.id',
-        'badge.goalId',
-        'badge.credential',
-        'badge.imageUri',
-        'badge.design',
-        'badge.createdAt',
-        'goal.title as goalTitle',
-        'goal.completedAt',
-        'goal.color as goalColor',
+        "badge.id",
+        "badge.goalId",
+        "badge.credential",
+        "badge.imageUri",
+        "badge.design",
+        "badge.createdAt",
+        "goal.title as goalTitle",
+        "goal.completedAt",
+        "goal.color as goalColor",
       ])
-      .where('badge.isDeleted', 'is', null)
-      .where('badge.id', '=', badgeId)
+      .where("badge.isDeleted", "is", null)
+      .where("badge.id", "=", badgeId)
       .limit(1),
   );
 
@@ -807,23 +833,23 @@ export const badgeWithGoalQuery = (badgeId: BadgeId) =>
  */
 export const badgesWithGoalsQuery = evolu.createQuery((db) =>
   db
-    .selectFrom('badge')
-    .leftJoin('goal', (join) =>
+    .selectFrom("badge")
+    .leftJoin("goal", (join) =>
       join
-        .onRef('goal.id', '=', 'badge.goalId')
-        .on('goal.isDeleted', 'is', null),
+        .onRef("goal.id", "=", "badge.goalId")
+        .on("goal.isDeleted", "is", null),
     )
     .select([
-      'badge.id',
-      'badge.goalId',
-      'badge.imageUri',
-      'badge.design',
-      'badge.createdAt',
-      'goal.title as goalTitle',
-      'goal.completedAt',
+      "badge.id",
+      "badge.goalId",
+      "badge.imageUri",
+      "badge.design",
+      "badge.createdAt",
+      "goal.title as goalTitle",
+      "goal.completedAt",
     ])
-    .where('badge.isDeleted', 'is', null)
-    .orderBy('badge.createdAt', 'desc'),
+    .where("badge.isDeleted", "is", null)
+    .orderBy("badge.createdAt", "desc"),
 );
 
 /**
@@ -845,7 +871,7 @@ export function createBadge(params: {
   const parsedImageUri = NonEmptyString1000.orNull(params.imageUri);
 
   if (!parsedCredential) {
-    logger.error('Badge credential validation failed', {
+    logger.error("Badge credential validation failed", {
       credentialLength: params.credential?.length,
     });
     throw new Error(
@@ -854,7 +880,7 @@ export function createBadge(params: {
   }
 
   if (!parsedImageUri) {
-    logger.error('Badge imageUri validation failed', {
+    logger.error("Badge imageUri validation failed", {
       imageUriLength: params.imageUri?.length,
     });
     throw new Error(
@@ -862,21 +888,23 @@ export function createBadge(params: {
     );
   }
 
-  const parsedDesign = params.design ? NonEmptyString.orNull(params.design) : null;
+  const parsedDesign = params.design
+    ? NonEmptyString.orNull(params.design)
+    : null;
 
   try {
-    return evolu.insert('badge', {
+    return evolu.insert("badge", {
       goalId: params.goalId,
       credential: parsedCredential,
       imageUri: parsedImageUri,
       design: parsedDesign,
     });
   } catch (error) {
-    logger.error('Failed to insert badge', {
+    logger.error("Failed to insert badge", {
       goalId: params.goalId,
       error,
     });
-    throw new Error('Failed to create badge. Please try again.');
+    throw new Error("Failed to create badge. Please try again.");
   }
 }
 
@@ -896,7 +924,7 @@ export function updateBadge(
   if (fields.credential !== undefined) {
     const parsed = NonEmptyString.orNull(fields.credential);
     if (!parsed) {
-      logger.error('Badge credential validation failed during update', {
+      logger.error("Badge credential validation failed during update", {
         badgeId: id,
         credentialLength: fields.credential?.length,
       });
@@ -910,7 +938,7 @@ export function updateBadge(
   if (fields.imageUri !== undefined) {
     const parsed = NonEmptyString1000.orNull(fields.imageUri);
     if (!parsed) {
-      logger.error('Badge imageUri validation failed during update', {
+      logger.error("Badge imageUri validation failed during update", {
         badgeId: id,
         imageUriLength: fields.imageUri?.length,
       });
@@ -925,7 +953,7 @@ export function updateBadge(
     if (fields.design !== null) {
       const parsed = NonEmptyString.orNull(fields.design);
       if (!parsed) {
-        logger.error('Badge design validation failed during update', {
+        logger.error("Badge design validation failed during update", {
           badgeId: id,
           designLength: fields.design?.length,
         });
@@ -940,10 +968,10 @@ export function updateBadge(
   }
 
   try {
-    return evolu.update('badge', update as Parameters<typeof evolu.update>[1]);
+    return evolu.update("badge", update as Parameters<typeof evolu.update>[1]);
   } catch (error) {
-    logger.error('Failed to update badge', { badgeId: id, fields, error });
-    throw new Error('Failed to update badge. Please try again.');
+    logger.error("Failed to update badge", { badgeId: id, fields, error });
+    throw new Error("Failed to update badge. Please try again.");
   }
 }
 
@@ -954,10 +982,10 @@ export function updateBadge(
  */
 export function deleteBadge(id: BadgeId) {
   try {
-    return evolu.update('badge', { id, isDeleted: sqliteTrue });
+    return evolu.update("badge", { id, isDeleted: sqliteTrue });
   } catch (error) {
-    logger.error('Failed to delete badge', { badgeId: id, error });
-    throw new Error('Failed to delete badge. Please try again.');
+    logger.error("Failed to delete badge", { badgeId: id, error });
+    throw new Error("Failed to delete badge. Please try again.");
   }
 }
 
@@ -969,9 +997,9 @@ export function deleteBadge(id: BadgeId) {
  */
 export const userSettingsQuery = evolu.createQuery((db) =>
   db
-    .selectFrom('userSettings')
+    .selectFrom("userSettings")
     .selectAll()
-    .where('isDeleted', 'is', null)
+    .where("isDeleted", "is", null)
     .limit(1),
 );
 
@@ -982,10 +1010,12 @@ export const userSettingsQuery = evolu.createQuery((db) =>
  */
 export function createUserSettings() {
   try {
-    return evolu.insert('userSettings', {});
+    return evolu.insert("userSettings", {});
   } catch (error) {
-    logger.error('Failed to create user settings', { error });
-    throw new Error('Failed to initialize app settings. Please reinstall the app.');
+    logger.error("Failed to create user settings", { error });
+    throw new Error(
+      "Failed to initialize app settings. Please reinstall the app.",
+    );
   }
 }
 
@@ -1011,7 +1041,7 @@ export function updateUserSettings(
     if (fields.theme !== null) {
       const parsed = NonEmptyString1000.orNull(fields.theme);
       if (!parsed) {
-        logger.error('UserSettings theme validation failed', {
+        logger.error("UserSettings theme validation failed", {
           themeLength: fields.theme.length,
         });
         throw new Error(
@@ -1028,7 +1058,7 @@ export function updateUserSettings(
     if (fields.density !== null) {
       const parsed = NonEmptyString1000.orNull(fields.density);
       if (!parsed) {
-        logger.error('UserSettings density validation failed', {
+        logger.error("UserSettings density validation failed", {
           densityLength: fields.density.length,
         });
         throw new Error(
@@ -1045,7 +1075,7 @@ export function updateUserSettings(
     if (fields.animationPref !== null) {
       const parsed = NonEmptyString1000.orNull(fields.animationPref);
       if (!parsed) {
-        logger.error('UserSettings animationPref validation failed', {
+        logger.error("UserSettings animationPref validation failed", {
           animationPrefLength: fields.animationPref.length,
         });
         throw new Error(
@@ -1062,7 +1092,7 @@ export function updateUserSettings(
     if (fields.fontScale !== null) {
       const parsed = Int.orNull(fields.fontScale);
       if (parsed === null) {
-        logger.error('UserSettings fontScale validation failed', {
+        logger.error("UserSettings fontScale validation failed", {
           fontScale: fields.fontScale,
         });
         throw new Error(
@@ -1077,12 +1107,16 @@ export function updateUserSettings(
 
   try {
     return evolu.update(
-      'userSettings',
+      "userSettings",
       update as Parameters<typeof evolu.update>[1],
     );
   } catch (error) {
-    logger.error('Failed to update user settings', { settingsId: id, fields, error });
-    throw new Error('Failed to update settings. Please try again.');
+    logger.error("Failed to update user settings", {
+      settingsId: id,
+      fields,
+      error,
+    });
+    throw new Error("Failed to update settings. Please try again.");
   }
 }
 
@@ -1092,7 +1126,7 @@ export function updateUserSettings(
  * Idempotent — safe to call if already set.
  */
 export function markWelcomeSeen(id: UserSettingsId) {
-  return evolu.update('userSettings', {
+  return evolu.update("userSettings", {
     id,
     hasSeenWelcome: Int.orThrow(1),
   } as Parameters<typeof evolu.update>[1]);
@@ -1105,15 +1139,20 @@ export function markWelcomeSeen(id: UserSettingsId) {
 export function updateUserSettingsKey(id: UserSettingsId, keyId: string) {
   const parsed = NonEmptyString1000.orNull(keyId);
   if (!parsed) {
-    throw new Error(`Key ID must be 1-1000 characters (received ${keyId.length})`);
+    throw new Error(
+      `Key ID must be 1-1000 characters (received ${keyId.length})`,
+    );
   }
   try {
-    return evolu.update('userSettings', {
+    return evolu.update("userSettings", {
       id,
       keyId: parsed,
     } as Parameters<typeof evolu.update>[1]);
   } catch (error) {
-    logger.error('Failed to store keyId in user settings', { settingsId: id, error });
-    throw new Error('Failed to save key reference. Please try again.');
+    logger.error("Failed to store keyId in user settings", {
+      settingsId: id,
+      error,
+    });
+    throw new Error("Failed to save key reference. Please try again.");
   }
 }

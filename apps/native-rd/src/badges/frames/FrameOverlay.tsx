@@ -5,9 +5,9 @@
  * registry. Returns null for 'none' frames or missing params.
  * Catches generator errors to prevent frame bugs from crashing the badge.
  */
-import React from 'react';
-import type { BadgeFrame, BadgeShape, FrameDataParams } from '../types';
-import { frameRegistry } from './registry';
+import React from "react";
+import type { BadgeFrame, BadgeShape, FrameDataParams } from "../types";
+import { frameRegistry } from "./registry";
 
 export interface FrameOverlayProps {
   frame: BadgeFrame;
@@ -28,12 +28,14 @@ export function FrameOverlay({
   params,
   strokeColor,
 }: FrameOverlayProps): React.ReactElement | null {
-  if (frame === 'none' || params === undefined) return null;
+  if (frame === "none" || params === undefined) return null;
 
   const generator = frameRegistry[frame];
   if (!generator) {
     if (__DEV__) {
-      console.warn(`[FrameOverlay] Unknown frame type "${frame}". Rendering without frame.`);
+      console.warn(
+        `[FrameOverlay] Unknown frame type "${frame}". Rendering without frame.`,
+      );
     }
     return null;
   }
@@ -42,11 +44,14 @@ export function FrameOverlay({
     return generator({ shape, size, inset, innerInset, params, strokeColor });
   } catch (error) {
     if (__DEV__) {
-      console.warn('[FrameOverlay] Frame generator threw, rendering without frame.', {
-        frame,
-        shape,
-        error: error instanceof Error ? error.message : String(error),
-      });
+      console.warn(
+        "[FrameOverlay] Frame generator threw, rendering without frame.",
+        {
+          frame,
+          shape,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
     }
     return null;
   }

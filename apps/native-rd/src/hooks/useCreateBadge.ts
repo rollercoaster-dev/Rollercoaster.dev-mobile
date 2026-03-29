@@ -24,8 +24,8 @@
  * mounted, no second badge will be created. In practice, CompletionFlowScreen
  * is only mounted for one goal at a time.
  */
-import { useEffect, useRef, useState } from 'react';
-import { useQuery } from '@evolu/react';
+import { useEffect, useRef, useState } from "react";
+import { useQuery } from "@evolu/react";
 import {
   goalsQuery,
   evidenceByGoalQuery,
@@ -34,9 +34,9 @@ import {
   canCompleteGoal,
   completeGoal,
   createBadge,
-} from '../db';
-import type { GoalId } from '../db';
-import { keyProvider } from '../crypto';
+} from "../db";
+import type { GoalId } from "../db";
+import { keyProvider } from "../crypto";
 import {
   buildUnsignedCredential,
   buildDid,
@@ -45,25 +45,25 @@ import {
   isPNG,
   saveBadgePNG,
   DEFAULT_BADGE_COLOR,
-} from '../badges';
-import { Buffer } from 'buffer';
-import { useUserKey } from './useUserKey';
-import { Logger } from '../shims/rd-logger';
+} from "../badges";
+import { Buffer } from "buffer";
+import { useUserKey } from "./useUserKey";
+import { Logger } from "../shims/rd-logger";
 
-const logger = new Logger('useCreateBadge');
+const logger = new Logger("useCreateBadge");
 
-export const PLACEHOLDER_IMAGE_URI = 'pending:baked-image';
+export const PLACEHOLDER_IMAGE_URI = "pending:baked-image";
 
 export type BadgeCreationStatus =
-  | 'idle'
-  | 'loading'   // key not ready yet — transient, not a user-visible error
-  | 'building'
-  | 'signing'
-  | 'baking'    // generating + baking the PNG image
-  | 'storing'
-  | 'done'
-  | 'error'
-  | 'no-key';   // key is ready but absent (permanent failure)
+  | "idle"
+  | "loading" // key not ready yet — transient, not a user-visible error
+  | "building"
+  | "signing"
+  | "baking" // generating + baking the PNG image
+  | "storing"
+  | "done"
+  | "error"
+  | "no-key"; // key is ready but absent (permanent failure)
 
 export interface UseCreateBadgeResult {
   status: BadgeCreationStatus;
@@ -72,11 +72,11 @@ export interface UseCreateBadgeResult {
 
 /** base64url-encode a Uint8Array without relying on Node's Buffer */
 function toBase64Url(bytes: Uint8Array): string {
-  let binary = '';
+  let binary = "";
   for (let i = 0; i < bytes.length; i++) {
     binary += String.fromCharCode(bytes[i]);
   }
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
 }
 
 export interface UseCreateBadgeOptions {
@@ -88,7 +88,10 @@ export interface UseCreateBadgeOptions {
   enabled?: boolean;
 }
 
-export function useCreateBadge(goalId: GoalId, options?: UseCreateBadgeOptions): UseCreateBadgeResult {
+export function useCreateBadge(
+  goalId: GoalId,
+  options?: UseCreateBadgeOptions,
+): UseCreateBadgeResult {
   const enabled = options?.enabled !== false;
   const { keyId, isReady } = useUserKey();
 
@@ -100,7 +103,7 @@ export function useCreateBadge(goalId: GoalId, options?: UseCreateBadgeOptions):
   const badgeRows = useQuery(badgeByGoalQuery(goalId));
   const existingBadge = badgeRows[0] ?? null;
 
-  const [status, setStatus] = useState<BadgeCreationStatus>('idle');
+  const [status, setStatus] = useState<BadgeCreationStatus>("idle");
   const [error, setError] = useState<string | null>(null);
 
   // Capture latest evidence in a ref so the effect can read it without
@@ -121,19 +124,19 @@ export function useCreateBadge(goalId: GoalId, options?: UseCreateBadgeOptions):
   useEffect(() => {
     // Already done — badge exists (reactive update after createBadge)
     if (existingBadge) {
-      setStatus('done');
+      setStatus("done");
       return;
     }
 
     // Key still initialising — transient state, not a user-visible problem
     if (!isReady) {
-      setStatus('loading');
+      setStatus("loading");
       return;
     }
 
     // Key is ready but absent — permanent failure (generation failed)
     if (!keyId) {
-      setStatus('no-key');
+      setStatus("no-key");
       return;
     }
 
@@ -151,7 +154,7 @@ export function useCreateBadge(goalId: GoalId, options?: UseCreateBadgeOptions):
 
     (async () => {
       try {
-        setStatus('building');
+        setStatus("building");
 
         const publicKeyJwk = await keyProvider.getPublicKey(keyId);
         const issuerDid = buildDid(publicKeyJwk);
@@ -162,13 +165,13 @@ export function useCreateBadge(goalId: GoalId, options?: UseCreateBadgeOptions):
           ...gev.map((ev) => ({
             id: ev.id as string,
             type: (ev.type as string | null) ?? null,
-            uri: (ev.uri as string | null) ?? '',
+            uri: (ev.uri as string | null) ?? "",
             description: (ev.description as string | null) ?? null,
           })),
           ...sev.map((ev) => ({
             id: ev.id as string,
             type: (ev.type as string | null) ?? null,
-            uri: (ev.uri as string | null) ?? '',
+            uri: (ev.uri as string | null) ?? "",
             description: (ev.description as string | null) ?? null,
             stepTitle: (ev.stepTitle as string | null) ?? null,
           })),
@@ -187,7 +190,7 @@ export function useCreateBadge(goalId: GoalId, options?: UseCreateBadgeOptions):
           issuedOn,
         });
 
-        setStatus('signing');
+        setStatus("signing");
 
         const credentialJson = JSON.stringify(unsignedCredential);
         const encoded = new TextEncoder().encode(credentialJson);
@@ -203,16 +206,16 @@ export function useCreateBadge(goalId: GoalId, options?: UseCreateBadgeOptions):
         const signedCredential = {
           ...unsignedCredential,
           proof: {
-            type: 'DataIntegrityProof',
-            cryptosuite: 'eddsa-raw-json-iteration-a',
+            type: "DataIntegrityProof",
+            cryptosuite: "eddsa-raw-json-iteration-a",
             created: issuedOn,
-            proofPurpose: 'assertionMethod',
+            proofPurpose: "assertionMethod",
             verificationMethod: `${issuerDid}#key-1`,
             proofValue,
           },
         };
 
-        setStatus('baking');
+        setStatus("baking");
 
         // Use pre-captured designer PNG when available, otherwise fall back to
         // the solid-color generator (with a warning so silent downgrades are visible).
@@ -220,12 +223,14 @@ export function useCreateBadge(goalId: GoalId, options?: UseCreateBadgeOptions):
         let pngBuffer: Buffer;
         if (capturedPngRef.current) {
           if (!isPNG(capturedPngRef.current)) {
-            throw new Error('useCreateBadge: capturedPng is not a valid PNG buffer');
+            throw new Error(
+              "useCreateBadge: capturedPng is not a valid PNG buffer",
+            );
           }
           pngBuffer = capturedPngRef.current;
         } else {
           logger.warn(
-            'No captured PNG provided — falling back to solid-color badge image',
+            "No captured PNG provided — falling back to solid-color badge image",
             { goalId },
           );
           pngBuffer = Buffer.from(generateBadgeImagePNG(hexColor));
@@ -238,19 +243,23 @@ export function useCreateBadge(goalId: GoalId, options?: UseCreateBadgeOptions):
         try {
           imageUri = await saveBadgePNG(bakedPng);
         } catch (imageErr) {
-          logger.error('Badge image save failed, using placeholder', {
+          logger.error("Badge image save failed, using placeholder", {
             goalId,
             error: imageErr,
           });
         }
 
-        setStatus('storing');
+        setStatus("storing");
 
         // Validate evidence gating BEFORE any mutations to prevent partial state
         // (badge created but goal not completed).
-        const goalEvidenceForGating = gev.map((e) => ({ type: (e.type as string | null) ?? null }));
+        const goalEvidenceForGating = gev.map((e) => ({
+          type: (e.type as string | null) ?? null,
+        }));
         if (!canCompleteGoal(goalEvidenceForGating)) {
-          throw new Error('Cannot complete goal: no evidence attached. Add at least one evidence item first.');
+          throw new Error(
+            "Cannot complete goal: no evidence attached. Add at least one evidence item first.",
+          );
         }
 
         // createBadge first — it validates and can throw (non-empty credential required).
@@ -264,13 +273,16 @@ export function useCreateBadge(goalId: GoalId, options?: UseCreateBadgeOptions):
         });
         completeGoal(goalId, goalEvidenceForGating);
 
-        setStatus('done');
-        logger.info('Badge credential created', { goalId, credentialId });
+        setStatus("done");
+        logger.info("Badge credential created", { goalId, credentialId });
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Unknown error';
+        const message = err instanceof Error ? err.message : "Unknown error";
         setError(message);
-        setStatus('error');
-        logger.error('Failed to create badge credential', { goalId, error: err });
+        setStatus("error");
+        logger.error("Failed to create badge credential", {
+          goalId,
+          error: err,
+        });
       }
       // No finally reset — hasTriggered.current stays true permanently
     })();

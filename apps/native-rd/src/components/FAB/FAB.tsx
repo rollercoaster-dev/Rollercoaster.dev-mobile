@@ -1,6 +1,6 @@
-import React from 'react';
-import { Pressable, Text } from 'react-native';
-import { styles } from './FAB.styles';
+import React from "react";
+import { Pressable, Text } from "react-native";
+import { styles } from "./FAB.styles";
 
 export interface FABProps {
   isOpen: boolean;
@@ -13,12 +13,9 @@ export function FAB({ isOpen, onToggle }: FABProps) {
       onPress={onToggle}
       accessible
       accessibilityRole="button"
-      accessibilityLabel={isOpen ? 'Close evidence menu' : 'Add evidence'}
+      accessibilityLabel={isOpen ? "Close evidence menu" : "Add evidence"}
       accessibilityState={{ expanded: isOpen }}
-      style={({ pressed }) => [
-        styles.button,
-        pressed && styles.pressed,
-      ]}
+      style={({ pressed }) => [styles.button, pressed && styles.pressed]}
     >
       <Text style={[styles.icon, isOpen && styles.iconOpen]}>+</Text>
     </Pressable>

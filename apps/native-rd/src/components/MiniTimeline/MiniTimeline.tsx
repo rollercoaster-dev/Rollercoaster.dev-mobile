@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, Pressable, Text } from 'react-native';
-import { styles } from './MiniTimeline.styles';
-import type { StepStatus } from '../../types/steps';
+import React from "react";
+import { View, Pressable, Text } from "react-native";
+import { styles } from "./MiniTimeline.styles";
+import type { StepStatus } from "../../types/steps";
 
 export type { StepStatus };
 
@@ -22,9 +22,10 @@ export function MiniTimeline({
   currentIndex,
   onStepTap,
   onTimelineTap,
-  accessibilityLabel = 'Step progress timeline \u2014 tap to expand',
+  accessibilityLabel = "Step progress timeline \u2014 tap to expand",
 }: MiniTimelineProps) {
-  const allCompleted = steps.length > 0 && steps.every((s) => s.status === 'completed');
+  const allCompleted =
+    steps.length > 0 && steps.every((s) => s.status === "completed");
 
   return (
     <View style={styles.container}>
@@ -43,7 +44,7 @@ export function MiniTimeline({
                 <View
                   style={[
                     styles.node,
-                    step.status === 'completed' && styles.nodeCompleted,
+                    step.status === "completed" && styles.nodeCompleted,
                     isCurrent && styles.nodeCurrent,
                   ]}
                 />
@@ -51,7 +52,7 @@ export function MiniTimeline({
               <View
                 style={[
                   styles.segment,
-                  step.status === 'completed'
+                  step.status === "completed"
                     ? styles.segmentCompleted
                     : styles.segmentPending,
                 ]}

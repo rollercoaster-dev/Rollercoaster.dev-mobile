@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { View, Text, Pressable } from 'react-native';
-import { TimelineNode } from '../TimelineNode';
-import { StatusBadge, type StatusBadgeVariant } from '../StatusBadge';
-import type { StepStatus } from '../../types/steps';
-import type { EvidenceItemData } from '../EvidenceDrawer';
-import { EVIDENCE_TYPE_ICONS } from '../../constants/evidenceIcons';
-import { styles } from './TimelineStep.styles';
+import React, { useState } from "react";
+import { View, Text, Pressable } from "react-native";
+import { TimelineNode } from "../TimelineNode";
+import { StatusBadge, type StatusBadgeVariant } from "../StatusBadge";
+import type { StepStatus } from "../../types/steps";
+import type { EvidenceItemData } from "../EvidenceDrawer";
+import { EVIDENCE_TYPE_ICONS } from "../../constants/evidenceIcons";
+import { styles } from "./TimelineStep.styles";
 
 export interface TimelineStepData {
   id: string;
@@ -23,15 +23,15 @@ export interface TimelineStepProps {
 }
 
 const statusToVariant: Record<StepStatus, StatusBadgeVariant> = {
-  completed: 'completed',
-  'in-progress': 'active',
-  pending: 'locked',
+  completed: "completed",
+  "in-progress": "active",
+  pending: "locked",
 };
 
 const statusToLabel: Record<StepStatus, string> = {
-  completed: 'Done',
-  'in-progress': 'Active',
-  pending: 'Pending',
+  completed: "Done",
+  "in-progress": "Active",
+  pending: "Pending",
 };
 
 export function TimelineStep({
@@ -75,7 +75,7 @@ export function TimelineStep({
             style={[styles.chevron, expanded && styles.chevronExpanded]}
             accessibilityElementsHidden
           >
-            {'\u25BC'}
+            {"\u25BC"}
           </Text>
         </Pressable>
         {expanded && (
@@ -89,7 +89,7 @@ export function TimelineStep({
                   accessibilityLabel={`${ev.type} evidence: ${ev.label}`}
                 >
                   <Text style={styles.evidenceIcon}>
-                    {EVIDENCE_TYPE_ICONS[ev.type] ?? '\u{1F4C4}'}
+                    {EVIDENCE_TYPE_ICONS[ev.type] ?? "\u{1F4C4}"}
                   </Text>
                   <Text style={styles.evidenceLabel} numberOfLines={1}>
                     {ev.label}

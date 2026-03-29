@@ -1,5 +1,5 @@
-import { StyleSheet } from 'react-native-unistyles';
-import { shadowStyle } from '../../styles/shadows';
+import { StyleSheet } from "react-native-unistyles";
+import { shadowStyle } from "../../styles/shadows";
 
 export const styles = StyleSheet.create((theme) => ({
   container: {
@@ -9,18 +9,18 @@ export const styles = StyleSheet.create((theme) => ({
     fontSize: theme.size.xs,
     fontWeight: theme.fontWeight.bold,
     fontFamily: theme.fontFamily.body,
-    textTransform: 'uppercase' as const,
+    textTransform: "uppercase" as const,
     letterSpacing: theme.letterSpacing.wide,
     color: theme.colors.textMuted,
   },
   chipsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: theme.space[2],
   },
   chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.space[1],
     paddingHorizontal: theme.space[3],
     paddingVertical: theme.space[2],
@@ -29,7 +29,7 @@ export const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius.sm,
     backgroundColor: theme.colors.background,
     minHeight: 44,
-    ...shadowStyle(theme, 'hardSm'),
+    ...shadowStyle(theme, "hardSm"),
   },
   chipSelected: {
     backgroundColor: theme.colors.accentPrimary,
@@ -48,13 +48,13 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.background,
   },
   compactChipsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: theme.space[1],
   },
   compactChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 2,
     paddingHorizontal: theme.space[1],
     paddingVertical: 2,

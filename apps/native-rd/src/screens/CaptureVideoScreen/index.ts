@@ -1,1 +1,1 @@
-export { CaptureVideoScreen } from './CaptureVideoScreen';
+export { CaptureVideoScreen } from "./CaptureVideoScreen";

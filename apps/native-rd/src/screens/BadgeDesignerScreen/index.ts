@@ -1,1 +1,1 @@
-export { BadgeDesignerScreen } from './BadgeDesignerScreen';
+export { BadgeDesignerScreen } from "./BadgeDesignerScreen";

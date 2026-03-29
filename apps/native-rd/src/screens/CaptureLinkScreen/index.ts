@@ -1,1 +1,1 @@
-export { CaptureLinkScreen } from './CaptureLinkScreen';
+export { CaptureLinkScreen } from "./CaptureLinkScreen";

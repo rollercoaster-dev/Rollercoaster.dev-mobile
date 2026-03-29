@@ -1,11 +1,11 @@
-import { StyleSheet } from 'react-native-unistyles';
-import { shadowStyle } from '../../styles/shadows';
+import { StyleSheet } from "react-native-unistyles";
+import { shadowStyle } from "../../styles/shadows";
 
 export const styles = StyleSheet.create((theme) => ({
   topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[2],
   },
@@ -23,8 +23,8 @@ export const styles = StyleSheet.create((theme) => ({
   },
   centered: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: theme.space[4],
   },
   section: {
@@ -32,7 +32,7 @@ export const styles = StyleSheet.create((theme) => ({
   },
   label: {
     color: theme.colors.textSecondary,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   titleInput: {
@@ -47,7 +47,7 @@ export const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.space[3],
     paddingVertical: theme.space[3],
     minHeight: 48,
-    ...shadowStyle(theme, 'hardSm'),
+    ...shadowStyle(theme, "hardSm"),
   },
   inputError: {
     borderColor: theme.colors.accentPrimary,
@@ -66,8 +66,8 @@ export const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.space[3],
     paddingVertical: theme.space[3],
     minHeight: 80,
-    textAlignVertical: 'top',
-    ...shadowStyle(theme, 'hardSm'),
+    textAlignVertical: "top",
+    ...shadowStyle(theme, "hardSm"),
   },
   buttonSection: {
     marginTop: theme.space[4],

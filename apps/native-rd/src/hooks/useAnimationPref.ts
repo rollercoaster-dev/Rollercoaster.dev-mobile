@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useState } from 'react';
-import { AccessibilityInfo } from 'react-native';
-import { useQuery } from '@evolu/react';
-import { UnistylesRuntime } from 'react-native-unistyles';
-import { userSettingsQuery, updateUserSettings } from '../db';
-import { parseThemeName, type ThemeName } from '../themes/compose';
+import { useCallback, useEffect, useState } from "react";
+import { AccessibilityInfo } from "react-native";
+import { useQuery } from "@evolu/react";
+import { UnistylesRuntime } from "react-native-unistyles";
+import { userSettingsQuery, updateUserSettings } from "../db";
+import { parseThemeName, type ThemeName } from "../themes/compose";
 
-export type AnimationPref = 'full' | 'reduced' | 'none';
+export type AnimationPref = "full" | "reduced" | "none";
 
-const VALID_PREFS = new Set<string>(['full', 'reduced', 'none']);
+const VALID_PREFS = new Set<string>(["full", "reduced", "none"]);
 
 /**
  * Resolves the effective animation preference from three sources:
@@ -33,7 +33,7 @@ export function useAnimationPref() {
       });
 
     const sub = AccessibilityInfo.addEventListener(
-      'reduceMotionChanged',
+      "reduceMotionChanged",
       (enabled) => {
         if (mounted) setOsReduceMotion(enabled);
       },
@@ -46,23 +46,24 @@ export function useAnimationPref() {
   }, []);
 
   // Detect autism-friendly theme
-  const themeName = (UnistylesRuntime.themeName as ThemeName) || 'light-default';
+  const themeName =
+    (UnistylesRuntime.themeName as ThemeName) || "light-default";
   const { variant } = parseThemeName(themeName);
-  const isAutismFriendly = variant === 'autismFriendly';
+  const isAutismFriendly = variant === "autismFriendly";
 
   // Validate database value against known prefs
   const rawPref = settings?.animationPref;
   const userPref: AnimationPref =
-    typeof rawPref === 'string' && VALID_PREFS.has(rawPref)
+    typeof rawPref === "string" && VALID_PREFS.has(rawPref)
       ? (rawPref as AnimationPref)
-      : 'full';
+      : "full";
 
   // Priority: autism-friendly theme > OS reduceMotion > user pref
   let animationPref: AnimationPref;
   if (isAutismFriendly) {
-    animationPref = 'none';
+    animationPref = "none";
   } else if (osReduceMotion) {
-    animationPref = 'none';
+    animationPref = "none";
   } else {
     animationPref = userPref;
   }
@@ -81,8 +82,8 @@ export function useAnimationPref() {
 
   return {
     animationPref,
-    shouldAnimate: animationPref !== 'none',
-    shouldReduceMotion: animationPref !== 'full',
+    shouldAnimate: animationPref !== "none",
+    shouldReduceMotion: animationPref !== "full",
     setAnimationPref,
   };
 }

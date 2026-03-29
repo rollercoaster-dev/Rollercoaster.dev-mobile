@@ -9,9 +9,9 @@
  *   - Removed `.js` extensions from imports (Metro resolver doesn't need them)
  */
 
-import { Buffer } from 'buffer';
-import extract from 'png-chunks-extract';
-import encode from 'png-chunks-encode';
+import { Buffer } from "buffer";
+import extract from "png-chunks-extract";
+import encode from "png-chunks-encode";
 
 /**
  * PNG chunk structure
@@ -40,7 +40,7 @@ export function encodeChunks(chunks: Chunk[]): Buffer {
  */
 export function findiTXtChunk(chunks: Chunk[], keyword: string): Chunk | null {
   for (const chunk of chunks) {
-    if (chunk.name !== 'iTXt') {
+    if (chunk.name !== "iTXt") {
       continue;
     }
 
@@ -52,7 +52,7 @@ export function findiTXtChunk(chunks: Chunk[], keyword: string): Chunk | null {
 
     const chunkKeyword = Buffer.from(
       chunk.data.slice(0, keywordEndIndex),
-    ).toString('utf-8');
+    ).toString("utf-8");
     if (chunkKeyword === keyword) {
       return chunk;
     }
@@ -73,8 +73,8 @@ export function findiTXtChunk(chunks: Chunk[], keyword: string): Chunk | null {
  * - Text (UTF-8)
  */
 export function createiTXtChunk(keyword: string, text: string): Chunk {
-  const keywordBuffer = Buffer.from(keyword, 'utf-8');
-  const textBuffer = Buffer.from(text, 'utf-8');
+  const keywordBuffer = Buffer.from(keyword, "utf-8");
+  const textBuffer = Buffer.from(text, "utf-8");
 
   const data = Buffer.concat([
     keywordBuffer,
@@ -87,7 +87,7 @@ export function createiTXtChunk(keyword: string, text: string): Chunk {
   ]);
 
   return {
-    name: 'iTXt',
+    name: "iTXt",
     data: new Uint8Array(data),
   };
 }

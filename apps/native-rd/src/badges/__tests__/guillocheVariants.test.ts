@@ -1,8 +1,11 @@
-import React from 'react';
-import { guillochePerEdge, guillochePerEdgeWithDots } from '../frames/guillocheVariants';
-import type { FrameGeneratorConfig } from '../frames/types';
-import { BadgeShape } from '../types';
-import type { FrameDataParams } from '../types';
+import React from "react";
+import {
+  guillochePerEdge,
+  guillochePerEdgeWithDots,
+} from "../frames/guillocheVariants";
+import type { FrameGeneratorConfig } from "../frames/types";
+import { BadgeShape } from "../types";
+import type { FrameDataParams } from "../types";
 
 const SIZE = 256;
 const INSET = 4;
@@ -16,7 +19,9 @@ const defaultParams: FrameDataParams = {
   evidenceTypes: 3,
 };
 
-function makeConfig(overrides: Partial<FrameGeneratorConfig> = {}): FrameGeneratorConfig {
+function makeConfig(
+  overrides: Partial<FrameGeneratorConfig> = {},
+): FrameGeneratorConfig {
   return {
     shape: BadgeShape.circle,
     size: SIZE,
@@ -41,9 +46,7 @@ function flatChildren(element: AnyElement): AnyElement[] {
 }
 
 function findPaths(element: AnyElement): AnyElement[] {
-  return flatChildren(element).filter(
-    (el) => el.props?.d !== undefined,
-  );
+  return flatChildren(element).filter((el) => el.props?.d !== undefined);
 }
 
 function findCircles(element: AnyElement): AnyElement[] {
@@ -54,13 +57,19 @@ function findCircles(element: AnyElement): AnyElement[] {
 
 const allShapes = Object.values(BadgeShape) as BadgeShape[];
 
-describe('guillochePerEdge', () => {
-  test('returns null for degenerate geometry', () => {
-    expect(guillochePerEdge(makeConfig({ inset: INNER_INSET, innerInset: INNER_INSET }))).toBeNull();
+describe("guillochePerEdge", () => {
+  test("returns null for degenerate geometry", () => {
+    expect(
+      guillochePerEdge(
+        makeConfig({ inset: INNER_INSET, innerInset: INNER_INSET }),
+      ),
+    ).toBeNull();
   });
 
-  test('returns null for inverted geometry', () => {
-    expect(guillochePerEdge(makeConfig({ inset: 50, innerInset: 10 }))).toBeNull();
+  test("returns null for inverted geometry", () => {
+    expect(
+      guillochePerEdge(makeConfig({ inset: 50, innerInset: 10 })),
+    ).toBeNull();
   });
 
   test.each(allShapes)('shape "%s" renders without throwing', (shape) => {
@@ -72,22 +81,24 @@ describe('guillochePerEdge', () => {
     const result = guillochePerEdge(makeConfig())!;
     for (const path of findPaths(result)) {
       // Skip clip-path shape definitions
-      if (path.props.fill === 'none') {
+      if (path.props.fill === "none") {
         expect(path.props.stroke).toBeDefined();
       }
     }
   });
 
-  test('applies custom strokeColor', () => {
-    const result = guillochePerEdge(makeConfig({ strokeColor: '#ff0000' }))!;
-    const wavePaths = findPaths(result).filter((p) => p.props.fill === 'none' && p.props.stroke);
+  test("applies custom strokeColor", () => {
+    const result = guillochePerEdge(makeConfig({ strokeColor: "#ff0000" }))!;
+    const wavePaths = findPaths(result).filter(
+      (p) => p.props.fill === "none" && p.props.stroke,
+    );
     expect(wavePaths.length).toBeGreaterThanOrEqual(2);
     for (const path of wavePaths) {
-      expect(path.props.stroke).toBe('#ff0000');
+      expect(path.props.stroke).toBe("#ff0000");
     }
   });
 
-  test('includes clip path defs', () => {
+  test("includes clip path defs", () => {
     const result = guillochePerEdge(makeConfig())!;
     const all = flatChildren(result);
     const hasClipPath = all.some((el) => el.props?.clipPath);
@@ -95,9 +106,13 @@ describe('guillochePerEdge', () => {
   });
 });
 
-describe('guillochePerEdgeWithDots', () => {
-  test('returns null for degenerate geometry', () => {
-    expect(guillochePerEdgeWithDots(makeConfig({ inset: INNER_INSET, innerInset: INNER_INSET }))).toBeNull();
+describe("guillochePerEdgeWithDots", () => {
+  test("returns null for degenerate geometry", () => {
+    expect(
+      guillochePerEdgeWithDots(
+        makeConfig({ inset: INNER_INSET, innerInset: INNER_INSET }),
+      ),
+    ).toBeNull();
   });
 
   test.each(allShapes)('shape "%s" renders without throwing', (shape) => {
@@ -105,7 +120,7 @@ describe('guillochePerEdgeWithDots', () => {
     expect(result).not.toBeNull();
   });
 
-  test('non-circle shapes have corner dots', () => {
+  test("non-circle shapes have corner dots", () => {
     const shapesWithCorners: BadgeShape[] = [
       BadgeShape.hexagon,
       BadgeShape.diamond,
@@ -121,17 +136,21 @@ describe('guillochePerEdgeWithDots', () => {
     }
   });
 
-  test('circle has no corner dots', () => {
-    const result = guillochePerEdgeWithDots(makeConfig({ shape: BadgeShape.circle }))!;
+  test("circle has no corner dots", () => {
+    const result = guillochePerEdgeWithDots(
+      makeConfig({ shape: BadgeShape.circle }),
+    )!;
     const circles = findCircles(result);
     expect(circles).toHaveLength(0);
   });
 
-  test('dots have correct stroke styling', () => {
-    const result = guillochePerEdgeWithDots(makeConfig({ shape: BadgeShape.hexagon }))!;
+  test("dots have correct stroke styling", () => {
+    const result = guillochePerEdgeWithDots(
+      makeConfig({ shape: BadgeShape.hexagon }),
+    )!;
     const circles = findCircles(result);
     for (const circle of circles) {
-      expect(circle.props.fill).toBe('none');
+      expect(circle.props.fill).toBe("none");
       expect(circle.props.stroke).toBeDefined();
     }
   });

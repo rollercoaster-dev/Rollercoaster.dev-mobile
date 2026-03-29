@@ -1,5 +1,5 @@
-import { StyleSheet } from 'react-native-unistyles';
-import { shadowStyle } from '../../styles/shadows';
+import { StyleSheet } from "react-native-unistyles";
+import { shadowStyle } from "../../styles/shadows";
 
 export const styles = StyleSheet.create((theme) => ({
   container: {
@@ -7,9 +7,9 @@ export const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.background,
   },
   topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[2],
   },
@@ -24,7 +24,7 @@ export const styles = StyleSheet.create((theme) => ({
     padding: theme.space[4],
     paddingBottom: theme.space[12],
     gap: theme.space[4],
-    alignItems: 'center',
+    alignItems: "center",
   },
   badgeImage: {
     width: 120,
@@ -33,39 +33,39 @@ export const styles = StyleSheet.create((theme) => ({
     borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.accentPurple,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...shadowStyle(theme, 'hardMd'),
+    alignItems: "center",
+    justifyContent: "center",
+    ...shadowStyle(theme, "hardMd"),
   },
   badgeInitial: {
-    fontSize: theme.size['5xl'],
-    lineHeight: theme.size['5xl'] * 1.3,
+    fontSize: theme.size["5xl"],
+    lineHeight: theme.size["5xl"] * 1.3,
     fontWeight: theme.fontWeight.black,
     fontFamily: theme.fontFamily.headline,
     color: theme.colors.background,
   },
   infoSection: {
-    width: '100%',
+    width: "100%",
     gap: theme.space[3],
   },
   title: {
     ...theme.textStyles.headline,
     color: theme.colors.text,
-    textAlign: 'center',
+    textAlign: "center",
   },
   description: {
     ...theme.textStyles.body,
     color: theme.colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
   sectionLabel: {
     ...theme.textStyles.label,
     color: theme.colors.textMuted,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
   criteriaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.space[2],
   },
   criteriaText: {
@@ -75,8 +75,8 @@ export const styles = StyleSheet.create((theme) => ({
   },
   centered: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: theme.space[4],
   },
   loadingIndicator: {

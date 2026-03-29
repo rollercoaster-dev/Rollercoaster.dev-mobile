@@ -1,7 +1,7 @@
-import React from 'react';
-import { Pressable, View, Text } from 'react-native';
-import * as Haptics from 'expo-haptics';
-import { styles } from './Checkbox.styles';
+import React from "react";
+import { Pressable, View, Text } from "react-native";
+import * as Haptics from "expo-haptics";
+import { styles } from "./Checkbox.styles";
 
 export interface CheckboxProps {
   checked: boolean;
@@ -11,7 +11,13 @@ export interface CheckboxProps {
   disabled?: boolean;
 }
 
-export function Checkbox({ checked, onToggle, label, onLabelPress, disabled = false }: CheckboxProps) {
+export function Checkbox({
+  checked,
+  onToggle,
+  label,
+  onLabelPress,
+  disabled = false,
+}: CheckboxProps) {
   function handleToggle() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     onToggle();
@@ -27,7 +33,13 @@ export function Checkbox({ checked, onToggle, label, onLabelPress, disabled = fa
         accessibilityLabel={label}
         accessibilityState={{ checked, disabled }}
       >
-        <View style={[styles.box, checked && styles.boxChecked, disabled && styles.boxDisabled]}>
+        <View
+          style={[
+            styles.box,
+            checked && styles.boxChecked,
+            disabled && styles.boxDisabled,
+          ]}
+        >
           {checked && <Text style={styles.checkmark}>✓</Text>}
         </View>
       </Pressable>
@@ -35,7 +47,7 @@ export function Checkbox({ checked, onToggle, label, onLabelPress, disabled = fa
         onPress={onLabelPress ?? handleToggle}
         style={styles.labelContainer}
         accessibilityLabel={onLabelPress ? `Edit ${label}` : label}
-        accessibilityHint={onLabelPress ? 'Tap to edit step title' : undefined}
+        accessibilityHint={onLabelPress ? "Tap to edit step title" : undefined}
       >
         <Text style={[styles.label, checked && styles.labelChecked]}>
           {label}

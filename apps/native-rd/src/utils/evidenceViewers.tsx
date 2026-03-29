@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { Alert, Linking } from 'react-native';
-import * as Sharing from 'expo-sharing';
-import { PhotoViewerModal } from '../components/PhotoViewerModal';
-import { TextNoteViewerModal } from '../components/TextNoteViewerModal';
-import { VideoPlayerModal } from '../components/VideoPlayerModal';
-import { AudioPlayerModal } from '../components/AudioPlayerModal';
-import { TEXT_EVIDENCE_PREFIX } from '../db';
-import type { Evidence } from '../components/EvidenceThumbnail';
+import React, { useState } from "react";
+import { Alert, Linking } from "react-native";
+import * as Sharing from "expo-sharing";
+import { PhotoViewerModal } from "../components/PhotoViewerModal";
+import { TextNoteViewerModal } from "../components/TextNoteViewerModal";
+import { VideoPlayerModal } from "../components/VideoPlayerModal";
+import { AudioPlayerModal } from "../components/AudioPlayerModal";
+import { TEXT_EVIDENCE_PREFIX } from "../db";
+import type { Evidence } from "../components/EvidenceThumbnail";
 
 // ---------------------------------------------------------------------------
 // Pure helpers
@@ -22,38 +22,41 @@ export function tryParseJSON(str: string): Record<string, unknown> | null {
 
 export function mimeToUTI(mimeType: string): string {
   const map: Record<string, string> = {
-    'application/pdf': 'com.adobe.pdf',
-    'text/plain': 'public.plain-text',
-    'text/csv': 'public.comma-separated-values-text',
-    'text/markdown': 'net.daringfireball.markdown',
-    'image/jpeg': 'public.jpeg',
-    'image/png': 'public.png',
-    'image/gif': 'com.compuserve.gif',
-    'image/webp': 'public.webp',
-    'image/heic': 'public.heic',
-    'image/heif': 'public.heif',
-    'application/msword': 'com.microsoft.word.doc',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
-      'org.openxmlformats.wordprocessingml.document',
-    'application/vnd.ms-excel': 'com.microsoft.excel.xls',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
-      'org.openxmlformats.spreadsheetml.sheet',
+    "application/pdf": "com.adobe.pdf",
+    "text/plain": "public.plain-text",
+    "text/csv": "public.comma-separated-values-text",
+    "text/markdown": "net.daringfireball.markdown",
+    "image/jpeg": "public.jpeg",
+    "image/png": "public.png",
+    "image/gif": "com.compuserve.gif",
+    "image/webp": "public.webp",
+    "image/heic": "public.heic",
+    "image/heif": "public.heif",
+    "application/msword": "com.microsoft.word.doc",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+      "org.openxmlformats.wordprocessingml.document",
+    "application/vnd.ms-excel": "com.microsoft.excel.xls",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+      "org.openxmlformats.spreadsheetml.sheet",
   };
-  return map[mimeType] ?? 'public.item';
+  return map[mimeType] ?? "public.item";
 }
 
 export async function openFile(uri: string, metadata?: string) {
   try {
-    const { File } = await import('expo-file-system');
+    const { File } = await import("expo-file-system");
     const file = new File(uri);
     if (!file.exists) {
-      Alert.alert('File not found', 'The file may have been deleted.');
+      Alert.alert("File not found", "The file may have been deleted.");
       return;
     }
 
     const canShare = await Sharing.isAvailableAsync();
     if (!canShare) {
-      Alert.alert('Cannot open file', 'File sharing is not available on this device.');
+      Alert.alert(
+        "Cannot open file",
+        "File sharing is not available on this device.",
+      );
       return;
     }
 
@@ -67,8 +70,8 @@ export async function openFile(uri: string, metadata?: string) {
 
     await Sharing.shareAsync(uri, options);
   } catch (error) {
-    console.error('[evidenceViewers] Failed to open file', { uri, error });
-    Alert.alert('Cannot open file', 'Something went wrong opening the file.');
+    console.error("[evidenceViewers] Failed to open file", { uri, error });
+    Alert.alert("Cannot open file", "Something went wrong opening the file.");
   }
 }
 
@@ -77,62 +80,75 @@ export async function openFile(uri: string, metadata?: string) {
 // ---------------------------------------------------------------------------
 
 export function useEvidenceViewer() {
-  const [photoViewer, setPhotoViewer] = useState<{ uri: string; description?: string } | null>(null);
-  const [textViewer, setTextViewer] = useState<{ text: string; createdAt?: string } | null>(null);
+  const [photoViewer, setPhotoViewer] = useState<{
+    uri: string;
+    description?: string;
+  } | null>(null);
+  const [textViewer, setTextViewer] = useState<{
+    text: string;
+    createdAt?: string;
+  } | null>(null);
   const [videoViewer, setVideoViewer] = useState<string | null>(null);
-  const [audioPlayer, setAudioPlayer] = useState<{ uri: string; durationMs?: number } | null>(null);
+  const [audioPlayer, setAudioPlayer] = useState<{
+    uri: string;
+    durationMs?: number;
+  } | null>(null);
 
   function viewEvidence(evidence: Evidence) {
     const meta = evidence.metadata ? tryParseJSON(evidence.metadata) : null;
 
     switch (evidence.type) {
-      case 'photo':
-      case 'screenshot':
+      case "photo":
+      case "screenshot":
         if (evidence.uri) {
           setPhotoViewer({ uri: evidence.uri, description: evidence.title });
         } else {
-          Alert.alert('Cannot view', 'Photo file is missing.');
+          Alert.alert("Cannot view", "Photo file is missing.");
         }
         break;
-      case 'video':
+      case "video":
         if (evidence.uri) {
           setVideoViewer(evidence.uri);
         } else {
-          Alert.alert('Cannot play', 'Video file is missing.');
+          Alert.alert("Cannot play", "Video file is missing.");
         }
         break;
-      case 'text': {
+      case "text": {
         const textContent = evidence.uri?.startsWith(TEXT_EVIDENCE_PREFIX)
           ? evidence.uri.slice(TEXT_EVIDENCE_PREFIX.length)
           : evidence.title;
         setTextViewer({
           text: textContent,
-          createdAt: evidence.title !== textContent ? evidence.title : undefined,
+          createdAt:
+            evidence.title !== textContent ? evidence.title : undefined,
         });
         break;
       }
-      case 'voice_memo':
+      case "voice_memo":
         if (evidence.uri) {
           setAudioPlayer({
             uri: evidence.uri,
-            durationMs: typeof meta?.durationMs === 'number' ? meta.durationMs : undefined,
+            durationMs:
+              typeof meta?.durationMs === "number"
+                ? meta.durationMs
+                : undefined,
           });
         } else {
-          Alert.alert('Cannot play', 'Audio file is missing.');
+          Alert.alert("Cannot play", "Audio file is missing.");
         }
         break;
-      case 'link':
+      case "link":
         if (evidence.uri) {
           Linking.openURL(evidence.uri).catch(() => {
-            Alert.alert('Cannot open link', `Unable to open: ${evidence.uri}`);
+            Alert.alert("Cannot open link", `Unable to open: ${evidence.uri}`);
           });
         }
         break;
-      case 'file':
+      case "file":
         if (evidence.uri) {
           openFile(evidence.uri, evidence.metadata);
         } else {
-          Alert.alert('Cannot open', 'File is missing.');
+          Alert.alert("Cannot open", "File is missing.");
         }
         break;
     }

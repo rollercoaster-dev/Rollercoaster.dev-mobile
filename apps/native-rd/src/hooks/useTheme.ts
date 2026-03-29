@@ -1,7 +1,12 @@
-import { createContext, useContext, useCallback, useState } from 'react';
-import { useUnistyles, UnistylesRuntime } from 'react-native-unistyles';
-import { themes, parseThemeName, type ThemeName, type ComposedTheme } from '../themes/compose';
-import type { Variant } from '../themes/variants';
+import { createContext, useContext, useCallback, useState } from "react";
+import { useUnistyles, UnistylesRuntime } from "react-native-unistyles";
+import {
+  themes,
+  parseThemeName,
+  type ThemeName,
+  type ComposedTheme,
+} from "../themes/compose";
+import type { Variant } from "../themes/variants";
 
 /**
  * The 7 peer themes from @rollercoaster-dev/design-tokens.
@@ -12,32 +17,36 @@ export const themeOptions: Array<{
   label: string;
   description: string;
 }> = [
-  { id: 'light-default', label: 'The Full Ride', description: 'Standard theme' },
-  { id: 'dark-default', label: 'Night Ride', description: 'Dark mode' },
   {
-    id: 'light-highContrast',
-    label: 'Bold Ink',
-    description: 'High contrast (WCAG AAA)',
+    id: "light-default",
+    label: "The Full Ride",
+    description: "Standard theme",
+  },
+  { id: "dark-default", label: "Night Ride", description: "Dark mode" },
+  {
+    id: "light-highContrast",
+    label: "Bold Ink",
+    description: "High contrast (WCAG AAA)",
   },
   {
-    id: 'light-dyslexia',
-    label: 'Warm Studio',
-    description: 'Dyslexia-friendly',
+    id: "light-dyslexia",
+    label: "Warm Studio",
+    description: "Dyslexia-friendly",
   },
   {
-    id: 'light-autismFriendly',
-    label: 'Still Water',
-    description: 'Autism-friendly',
+    id: "light-autismFriendly",
+    label: "Still Water",
+    description: "Autism-friendly",
   },
   {
-    id: 'light-lowVision',
-    label: 'Loud & Clear',
-    description: 'Low vision support',
+    id: "light-lowVision",
+    label: "Loud & Clear",
+    description: "Low vision support",
   },
   {
-    id: 'light-lowInfo',
-    label: 'Clean Signal',
-    description: 'Reduced visual noise',
+    id: "light-lowInfo",
+    label: "Clean Signal",
+    description: "Reduced visual noise",
   },
 ];
 
@@ -56,7 +65,7 @@ export const ThemeProvider = ThemeContext.Provider;
 export function useThemeContext(): ThemeContextValue {
   const ctx = useContext(ThemeContext);
   if (!ctx) {
-    throw new Error('useThemeContext must be used within a ThemeProvider');
+    throw new Error("useThemeContext must be used within a ThemeProvider");
   }
   return ctx;
 }
@@ -81,9 +90,10 @@ export function useTheme() {
   const [, bump] = useState(0);
 
   // Read current theme from Unistyles runtime (always fresh after re-render)
-  const themeName = (UnistylesRuntime.themeName as ThemeName) || 'light-default';
+  const themeName =
+    (UnistylesRuntime.themeName as ThemeName) || "light-default";
   const theme = themes[themeName];
-  const isDark = themeName.startsWith('dark');
+  const isDark = themeName.startsWith("dark");
   const { variant } = parseThemeName(themeName);
 
   const setTheme = useCallback((name: ThemeName) => {

@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native-unistyles';
+import { StyleSheet } from "react-native-unistyles";
 
 export const styles = StyleSheet.create((theme) => ({
   container: {
@@ -6,9 +6,9 @@ export const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.background,
   },
   topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[2],
   },
@@ -23,14 +23,14 @@ export const styles = StyleSheet.create((theme) => ({
     flex: 1,
     padding: theme.space[4],
     gap: theme.space[4],
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   heading: {
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: theme.space[2],
   },
   description: {
-    textAlign: 'center',
+    textAlign: "center",
     color: theme.colors.textSecondary,
     marginBottom: theme.space[2],
   },
@@ -38,7 +38,7 @@ export const styles = StyleSheet.create((theme) => ({
     gap: theme.space[3],
   },
   filePreview: {
-    alignItems: 'center',
+    alignItems: "center",
     gap: theme.space[2],
     paddingVertical: theme.space[4],
   },
@@ -46,11 +46,11 @@ export const styles = StyleSheet.create((theme) => ({
     fontSize: 48,
   },
   fileName: {
-    textAlign: 'center',
+    textAlign: "center",
     fontWeight: theme.fontWeight.medium,
   },
   fileMeta: {
-    textAlign: 'center',
+    textAlign: "center",
     color: theme.colors.textMuted,
     fontSize: theme.size.xs,
   },

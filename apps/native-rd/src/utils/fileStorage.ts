@@ -1,12 +1,12 @@
-import { File, Directory, Paths } from 'expo-file-system';
+import { File, Directory, Paths } from "expo-file-system";
 
-const FILES_SUBDIR = 'evidence/files';
+const FILES_SUBDIR = "evidence/files";
 
 /** Maximum file size in bytes (50 MB) */
 export const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
 
 /** Human-readable max file size for display */
-export const MAX_FILE_SIZE_LABEL = '50 MB';
+export const MAX_FILE_SIZE_LABEL = "50 MB";
 
 /**
  * MIME types allowed for file attachment evidence.
@@ -14,22 +14,22 @@ export const MAX_FILE_SIZE_LABEL = '50 MB';
  */
 export const ALLOWED_MIME_TYPES = [
   // PDF
-  'application/pdf',
+  "application/pdf",
   // Images
-  'image/jpeg',
-  'image/png',
-  'image/gif',
-  'image/webp',
-  'image/heic',
-  'image/heif',
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "image/heic",
+  "image/heif",
   // Documents
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  'text/plain',
-  'text/csv',
-  'text/markdown',
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "text/plain",
+  "text/csv",
+  "text/markdown",
 ];
 
 function getFilesDirectory(): Directory {
@@ -45,8 +45,8 @@ function generateFilename(originalName: string): string {
   const timestamp = Date.now().toString(36);
   const random = Math.random().toString(36).slice(2, 8);
   // Preserve the original extension
-  const dotIndex = originalName.lastIndexOf('.');
-  const ext = dotIndex >= 0 ? originalName.slice(dotIndex) : '';
+  const dotIndex = originalName.lastIndexOf(".");
+  const ext = dotIndex >= 0 ? originalName.slice(dotIndex) : "";
   return `${timestamp}-${random}${ext}`;
 }
 
@@ -63,7 +63,7 @@ export function validateFile(
   }
 
   if (mimeType && !ALLOWED_MIME_TYPES.includes(mimeType)) {
-    return 'File type is not supported. Please choose a PDF, image, or document.';
+    return "File type is not supported. Please choose a PDF, image, or document.";
   }
 
   return null;
@@ -75,7 +75,10 @@ export function validateFile(
  * @param originalName - The original filename (for extension preservation)
  * @returns The destination file URI
  */
-export function saveFileToAppStorage(sourceUri: string, originalName: string): string {
+export function saveFileToAppStorage(
+  sourceUri: string,
+  originalName: string,
+): string {
   const filesDir = getFilesDirectory();
   if (!filesDir.exists) {
     filesDir.create({ intermediates: true });

@@ -1,9 +1,9 @@
-import { View, Text, Pressable } from 'react-native';
-import { BadgeRenderer } from '../../badges/BadgeRenderer';
-import type { BadgeDesign } from '../../badges/types';
-import { styles } from './BadgeCard.styles';
+import { View, Text, Pressable } from "react-native";
+import { BadgeRenderer } from "../../badges/BadgeRenderer";
+import type { BadgeDesign } from "../../badges/types";
+import { styles } from "./BadgeCard.styles";
 
-export type BadgeCardSize = 'compact' | 'normal' | 'spacious';
+export type BadgeCardSize = "compact" | "normal" | "spacious";
 
 export interface BadgeCardProps {
   title: string;
@@ -19,14 +19,14 @@ export function BadgeCard({
   earnedDate,
   evidenceCount,
   design,
-  size = 'normal',
+  size = "normal",
   onPress,
 }: BadgeCardProps) {
   return (
     <Pressable
       onPress={onPress}
       accessible
-      accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityRole={onPress ? "button" : undefined}
       accessibilityLabel={`Badge: ${title}, earned ${earnedDate}`}
       style={styles.pressable}
     >
@@ -36,7 +36,7 @@ export function BadgeCard({
         ) : (
           <View style={styles.image}>
             <Text style={styles.imageText}>
-              {(title.charAt(0) || '?').toUpperCase()}
+              {(title.charAt(0) || "?").toUpperCase()}
             </Text>
           </View>
         )}
@@ -44,7 +44,8 @@ export function BadgeCard({
         <Text style={styles.date}>{earnedDate}</Text>
         {evidenceCount !== undefined && (
           <Text style={styles.evidenceCount}>
-            {evidenceCount} {evidenceCount === 1 ? 'piece' : 'pieces'} of evidence
+            {evidenceCount} {evidenceCount === 1 ? "piece" : "pieces"} of
+            evidence
           </Text>
         )}
       </View>

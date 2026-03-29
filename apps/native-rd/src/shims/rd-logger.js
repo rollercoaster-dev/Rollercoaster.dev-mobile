@@ -5,10 +5,18 @@
  */
 export class Logger {
   constructor(name) {
-    this._name = name || 'app';
+    this._name = name || "app";
   }
-  error(...args) { console.error(`[${this._name}]`, ...args); }
-  warn(...args) { console.warn(`[${this._name}]`, ...args); }
-  info(...args) { console.info(`[${this._name}]`, ...args); }
-  debug(...args) { console.debug(`[${this._name}]`, ...args); }
+  error(...args) {
+    console.error(`[${this._name}]`, ...args);
+  }
+  warn(...args) {
+    console.warn(`[${this._name}]`, ...args);
+  }
+  info(...args) {
+    console.info(`[${this._name}]`, ...args);
+  }
+  debug(...args) {
+    console.debug(`[${this._name}]`, ...args);
+  }
 }

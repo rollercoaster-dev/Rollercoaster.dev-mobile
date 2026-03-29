@@ -192,49 +192,49 @@ Neither of them needed an institution, a server, or an internet connection to do
 
 Evidence is what makes a badge more than a checkbox. Every badge should have at least one piece of evidence attached.
 
-| Type | Examples | Iteration |
-|------|----------|-----------|
-| **Photo** | Before/after shots, finished work, event attendance | A |
-| **Screenshot** | Messages, certificates, completion screens | A |
-| **Text** | Written reflections, notes, descriptions | A |
-| **Voice memo** | Audio walkthrough, verbal reflection | A |
-| **Video** | Timelapse, screen recording, demo | A |
-| **Link** | External URLs (portfolio, repo, article) | A |
-| **File** | PDFs, documents, exports | A |
+| Type           | Examples                                            | Iteration |
+| -------------- | --------------------------------------------------- | --------- |
+| **Photo**      | Before/after shots, finished work, event attendance | A         |
+| **Screenshot** | Messages, certificates, completion screens          | A         |
+| **Text**       | Written reflections, notes, descriptions            | A         |
+| **Voice memo** | Audio walkthrough, verbal reflection                | A         |
+| **Video**      | Timelapse, screen recording, demo                   | A         |
+| **Link**       | External URLs (portfolio, repo, article)            | A         |
+| **File**       | PDFs, documents, exports                            | A         |
 
 ---
 
 ## Features by Iteration
 
-| Feature | Iter | Built? | Notes |
-|---------|------|--------|-------|
-| Task view (next best step) | A | No | Cross-goal "next step" screen not implemented |
-| Create goals | A | Yes | Title at creation; description editable after |
-| Break into steps | A | Yes | Drag-and-drop reorder |
-| Attach evidence (6/7 types) | A | Mostly | Screenshot type broken (route silently fails) |
-| Complete steps/goals | A | Yes | |
-| Earn self-signed badge | A | Yes | Ed25519 signing + PNG baking |
-| Private/encrypted badges | A | Yes | Local-only, Evolu encryption |
-| Badge designer | A | Yes | Shape, color, icon, weight. Phase 2 (frames, text) planned |
-| Export (JSON + image) | A | Yes | Via expo-sharing |
-| View badge evidence | A | Partial | Badge detail shows metadata, not goal evidence |
-| Multiple concurrent goals | B | Partial | Goals list renders all; no management UI; `sortOrder` field unused |
-| Reorganize steps between goals | B | No | |
-| Pause/resume goals | B | No | Only `active`/`completed` status; `uncompleteGoal()` exists |
-| Goal journal | B | No | |
-| Learning stack (interrupts) | B | No | |
-| Factual nudges (drift detection) | B | No | |
-| Multi-device sync | B | No | Evolu chosen but not enabled |
-| Skill tree visualization | C | No | |
-| Manual node placement | C | No | |
-| User-drawn connections | C | No | |
-| Visual states (earned/active/planned) | C | No | |
-| Badge sharing (device-to-device) | D | No | |
-| Selective disclosure (you choose who sees) | D | No | |
-| Peer verification | D | No | |
-| Mentor/sponsor verification | D | No | |
-| Verification chains (verifier's badges add weight) | D | No | |
-| OB3 spec-compliant signing (eddsa-rdfc-2022) | D | No | Currently uses raw JSON signing |
+| Feature                                            | Iter | Built?  | Notes                                                              |
+| -------------------------------------------------- | ---- | ------- | ------------------------------------------------------------------ |
+| Task view (next best step)                         | A    | No      | Cross-goal "next step" screen not implemented                      |
+| Create goals                                       | A    | Yes     | Title at creation; description editable after                      |
+| Break into steps                                   | A    | Yes     | Drag-and-drop reorder                                              |
+| Attach evidence (6/7 types)                        | A    | Mostly  | Screenshot type broken (route silently fails)                      |
+| Complete steps/goals                               | A    | Yes     |                                                                    |
+| Earn self-signed badge                             | A    | Yes     | Ed25519 signing + PNG baking                                       |
+| Private/encrypted badges                           | A    | Yes     | Local-only, Evolu encryption                                       |
+| Badge designer                                     | A    | Yes     | Shape, color, icon, weight. Phase 2 (frames, text) planned         |
+| Export (JSON + image)                              | A    | Yes     | Via expo-sharing                                                   |
+| View badge evidence                                | A    | Partial | Badge detail shows metadata, not goal evidence                     |
+| Multiple concurrent goals                          | B    | Partial | Goals list renders all; no management UI; `sortOrder` field unused |
+| Reorganize steps between goals                     | B    | No      |                                                                    |
+| Pause/resume goals                                 | B    | No      | Only `active`/`completed` status; `uncompleteGoal()` exists        |
+| Goal journal                                       | B    | No      |                                                                    |
+| Learning stack (interrupts)                        | B    | No      |                                                                    |
+| Factual nudges (drift detection)                   | B    | No      |                                                                    |
+| Multi-device sync                                  | B    | No      | Evolu chosen but not enabled                                       |
+| Skill tree visualization                           | C    | No      |                                                                    |
+| Manual node placement                              | C    | No      |                                                                    |
+| User-drawn connections                             | C    | No      |                                                                    |
+| Visual states (earned/active/planned)              | C    | No      |                                                                    |
+| Badge sharing (device-to-device)                   | D    | No      |                                                                    |
+| Selective disclosure (you choose who sees)         | D    | No      |                                                                    |
+| Peer verification                                  | D    | No      |                                                                    |
+| Mentor/sponsor verification                        | D    | No      |                                                                    |
+| Verification chains (verifier's badges add weight) | D    | No      |                                                                    |
+| OB3 spec-compliant signing (eddsa-rdfc-2022)       | D    | No      | Currently uses raw JSON signing                                    |
 
 ---
 

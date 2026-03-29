@@ -1,17 +1,17 @@
-import { StyleSheet } from 'react-native-unistyles';
-import { shadowStyle } from '../../styles/shadows';
+import { StyleSheet } from "react-native-unistyles";
+import { shadowStyle } from "../../styles/shadows";
 
 export const styles = StyleSheet.create((theme) => ({
   topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[2],
     paddingBottom: theme.space[4],
     backgroundColor: theme.colors.accentYellow,
     zIndex: 1,
-    ...shadowStyle(theme, 'hardMd'),
+    ...shadowStyle(theme, "hardMd"),
   },
   backIcon: {
     fontSize: 18,
@@ -25,8 +25,8 @@ export const styles = StyleSheet.create((theme) => ({
   },
   centered: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: theme.space[4],
   },
   header: {
@@ -36,9 +36,9 @@ export const styles = StyleSheet.create((theme) => ({
     borderBottomColor: theme.colors.border,
   },
   headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     gap: theme.space[2],
   },
   title: {
@@ -66,6 +66,6 @@ export const styles = StyleSheet.create((theme) => ({
     paddingBottom: theme.space[8],
   },
   timelineContainer: {
-    position: 'relative',
+    position: "relative",
   },
 }));

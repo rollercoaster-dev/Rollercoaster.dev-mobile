@@ -1,9 +1,9 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import React, { useState } from 'react';
-import { StepList, type Step } from './StepList';
+import type { Meta, StoryObj } from "@storybook/react";
+import React, { useState } from "react";
+import { StepList, type Step } from "./StepList";
 
 const meta: Meta<typeof StepList> = {
-  title: 'StepList',
+  title: "StepList",
   component: StepList,
 };
 
@@ -12,11 +12,11 @@ export default meta;
 type Story = StoryObj<typeof StepList>;
 
 const initialSteps: Step[] = [
-  { id: '1', title: 'Set up project structure', completed: true },
-  { id: '2', title: 'Install dependencies', completed: true },
-  { id: '3', title: 'Create component files', completed: false },
-  { id: '4', title: 'Write Storybook stories', completed: false },
-  { id: '5', title: 'Add accessibility labels', completed: false },
+  { id: "1", title: "Set up project structure", completed: true },
+  { id: "2", title: "Install dependencies", completed: true },
+  { id: "3", title: "Create component files", completed: false },
+  { id: "4", title: "Write Storybook stories", completed: false },
+  { id: "5", title: "Add accessibility labels", completed: false },
 ];
 
 function InteractiveStepList() {
@@ -30,9 +30,7 @@ function InteractiveStepList() {
   }
 
   function handleUpdate(id: string, title: string) {
-    setSteps((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, title } : s)),
-    );
+    setSteps((prev) => prev.map((s) => (s.id === id ? { ...s, title } : s)));
   }
 
   function handleDelete(id: string) {
@@ -59,7 +57,5 @@ export const Interactive: Story = {
 };
 
 export const ReadOnly: Story = {
-  render: () => (
-    <StepList steps={initialSteps} />
-  ),
+  render: () => <StepList steps={initialSteps} />,
 };

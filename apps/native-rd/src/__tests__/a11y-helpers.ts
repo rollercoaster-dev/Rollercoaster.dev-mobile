@@ -16,11 +16,11 @@ interface AccessibilityProps {
   accessibilityRole?: string;
   role?: string;
   accessibilityLabel?: string;
-  'aria-label'?: string;
+  "aria-label"?: string;
   accessibilityState?: Record<string, unknown>;
   accessibilityValue?: AccessibilityValue;
   accessibilityViewIsModal?: boolean;
-  accessibilityLiveRegion?: 'polite' | 'assertive' | 'none';
+  accessibilityLiveRegion?: "polite" | "assertive" | "none";
   [key: string]: unknown;
 }
 
@@ -29,21 +29,15 @@ interface TestElement {
 }
 
 /** Assert that an element has the expected accessibilityRole. */
-export function expectAccessibleRole(
-  element: TestElement,
-  role: string,
-) {
+export function expectAccessibleRole(element: TestElement, role: string) {
   expect(element.props.accessibilityRole ?? element.props.role).toBe(role);
 }
 
 /** Assert that an element has the expected accessibilityLabel. */
-export function expectAccessibleLabel(
-  element: TestElement,
-  label: string,
-) {
-  expect(
-    element.props.accessibilityLabel ?? element.props['aria-label'],
-  ).toBe(label);
+export function expectAccessibleLabel(element: TestElement, label: string) {
+  expect(element.props.accessibilityLabel ?? element.props["aria-label"]).toBe(
+    label,
+  );
 }
 
 /** Assert that an element has accessible=true. */
@@ -82,7 +76,7 @@ export function expectModalAccessibility(element: TestElement) {
 /** Assert that an element has accessibilityLiveRegion set. */
 export function expectLiveRegion(
   element: TestElement,
-  region: 'polite' | 'assertive' | 'none' = 'polite',
+  region: "polite" | "assertive" | "none" = "polite",
 ) {
   expect(element.props.accessibilityLiveRegion).toBe(region);
 }

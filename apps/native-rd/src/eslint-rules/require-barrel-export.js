@@ -1,5 +1,5 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 // Module-level cache avoids repeated fs.existsSync for the same directory.
 // Trade-off: in watch/IDE mode this persists for the process lifetime, so adding
@@ -11,8 +11,8 @@ function hasBarrelFile(dir) {
   if (_barrelCache.has(dir)) return _barrelCache.get(dir);
   try {
     const result =
-      fs.existsSync(path.join(dir, 'index.ts')) ||
-      fs.existsSync(path.join(dir, 'index.tsx'));
+      fs.existsSync(path.join(dir, "index.ts")) ||
+      fs.existsSync(path.join(dir, "index.tsx"));
     _barrelCache.set(dir, result);
     return result;
   } catch {
@@ -27,17 +27,17 @@ function hasBarrelFile(dir) {
 /** @type {import('eslint').Rule.RuleModule} */
 module.exports = {
   meta: {
-    type: 'problem',
+    type: "problem",
     docs: {
       description:
-        'Every component directory under src/components/ must have an index.ts barrel export',
+        "Every component directory under src/components/ must have an index.ts barrel export",
     },
     messages: {
       missingBarrel: [
         "Component directory '{{ dir }}' is missing an index.ts barrel export. ",
-        'Create src/components/{{ dir }}/index.ts that re-exports the component. ',
-        'This ensures consistent import paths across the codebase.',
-      ].join(''),
+        "Create src/components/{{ dir }}/index.ts that re-exports the component. ",
+        "This ensures consistent import paths across the codebase.",
+      ].join(""),
     },
     schema: [],
   },
@@ -45,7 +45,7 @@ module.exports = {
   create(context) {
     const filename = (context.filename || context.getFilename()).replace(
       /\\/g,
-      '/'
+      "/",
     );
 
     // Only run on files directly inside a component directory
@@ -54,15 +54,14 @@ module.exports = {
 
     const componentName = match[1];
     // Skip non-component directories (e.g., __tests__, shared)
-    if (componentName.startsWith('__') || componentName === 'shared')
-      return {};
+    if (componentName.startsWith("__") || componentName === "shared") return {};
 
     const idx = filename.indexOf(`/src/components/${componentName}/`);
     if (idx === -1) return {};
 
     const componentDir = filename.substring(
       0,
-      idx + `/src/components/${componentName}`.length
+      idx + `/src/components/${componentName}`.length,
     );
 
     if (!hasBarrelFile(componentDir)) {
@@ -70,7 +69,7 @@ module.exports = {
         Program(node) {
           context.report({
             node,
-            messageId: 'missingBarrel',
+            messageId: "missingBarrel",
             data: { dir: componentName },
           });
         },

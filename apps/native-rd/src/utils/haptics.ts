@@ -1,4 +1,4 @@
-import * as Haptics from 'expo-haptics';
+import * as Haptics from "expo-haptics";
 
 export function triggerDragStart(): void {
   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});

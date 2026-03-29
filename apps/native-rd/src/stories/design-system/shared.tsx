@@ -1,8 +1,8 @@
-import React from 'react';
-import { Pressable, Text, View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
-import type { ComposedTheme } from '../../themes/compose';
-import { useCopyToken } from './useCopyToken';
+import React from "react";
+import { Pressable, Text, View } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
+import type { ComposedTheme } from "../../themes/compose";
+import { useCopyToken } from "./useCopyToken";
 
 // ---------------------------------------------------------------------------
 // Shared sub-components used across design-system stories
@@ -13,7 +13,10 @@ type SectionHeaderProps = {
   description: string;
 };
 
-export function SectionHeader({ title, description }: SectionHeaderProps): React.JSX.Element {
+export function SectionHeader({
+  title,
+  description,
+}: SectionHeaderProps): React.JSX.Element {
   return (
     <View style={sharedStyles.header}>
       <Text style={sharedStyles.title}>{title}</Text>
@@ -26,7 +29,9 @@ type CopiedBadgeProps = {
   visible: boolean;
 };
 
-export function CopiedBadge({ visible }: CopiedBadgeProps): React.JSX.Element | null {
+export function CopiedBadge({
+  visible,
+}: CopiedBadgeProps): React.JSX.Element | null {
   if (!visible) return null;
   return <Text style={sharedStyles.copied}>Copied!</Text>;
 }
@@ -37,7 +42,11 @@ type CopyableTokenProps = {
   onCopy: (path: string) => void;
 };
 
-export function CopyableToken({ path, copiedToken, onCopy }: CopyableTokenProps): React.JSX.Element {
+export function CopyableToken({
+  path,
+  copiedToken,
+  onCopy,
+}: CopyableTokenProps): React.JSX.Element {
   return (
     <Pressable onPress={() => onCopy(path)} style={sharedStyles.tokenRow}>
       <Text style={sharedStyles.mono}>{path}</Text>
@@ -50,7 +59,7 @@ export function CopyableToken({ path, copiedToken, onCopy }: CopyableTokenProps)
 // Shadow helper
 // ---------------------------------------------------------------------------
 
-type ShadowKey = keyof ComposedTheme['shadow'];
+type ShadowKey = keyof ComposedTheme["shadow"];
 
 /**
  * Build React Native shadow style props from a theme shadow token.
@@ -59,7 +68,7 @@ type ShadowKey = keyof ComposedTheme['shadow'];
 export function shadowStyle(theme: ComposedTheme, key: ShadowKey) {
   const s = theme.shadow[key];
   return {
-    shadowColor: '#000000',
+    shadowColor: "#000000",
     shadowOffset: { width: s.offsetX, height: s.offsetY },
     shadowOpacity: s.opacity,
     shadowRadius: s.radius,
@@ -100,11 +109,11 @@ export const sharedStyles = StyleSheet.create((theme) => ({
   copied: {
     fontSize: theme.size.xs,
     fontWeight: theme.fontWeight.bold,
-    color: '#059669',
+    color: "#059669",
   },
   tokenRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.space[2],
   },
   label: {

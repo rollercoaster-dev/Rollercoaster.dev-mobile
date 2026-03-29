@@ -1,11 +1,11 @@
-import React from 'react';
-import { View, Modal } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useUnistyles } from 'react-native-unistyles';
-import { Text } from '../../components/Text';
-import { Card } from '../../components/Card';
-import { Button } from '../../components/Button';
-import { styles } from './ConfirmDeleteModal.styles';
+import React from "react";
+import { View, Modal } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useUnistyles } from "react-native-unistyles";
+import { Text } from "../../components/Text";
+import { Card } from "../../components/Card";
+import { Button } from "../../components/Button";
+import { styles } from "./ConfirmDeleteModal.styles";
 
 export interface ConfirmDeleteModalProps {
   visible: boolean;
@@ -21,10 +21,10 @@ export function ConfirmDeleteModal({
   visible,
   onCancel,
   onConfirm,
-  title = 'Delete this item?',
-  message = 'This action cannot be undone.',
-  confirmLabel = 'Delete',
-  cancelLabel = 'Cancel',
+  title = "Delete this item?",
+  message = "This action cannot be undone.",
+  confirmLabel = "Delete",
+  cancelLabel = "Cancel",
 }: ConfirmDeleteModalProps) {
   const { theme } = useUnistyles();
 
@@ -36,8 +36,13 @@ export function ConfirmDeleteModal({
       onRequestClose={onCancel}
       accessibilityViewIsModal
     >
-      <View style={[styles.overlay, { backgroundColor: `${theme.colors.shadow}80` }]}>
-        <SafeAreaView edges={['bottom']} style={styles.container}>
+      <View
+        style={[
+          styles.overlay,
+          { backgroundColor: `${theme.colors.shadow}80` },
+        ]}
+      >
+        <SafeAreaView edges={["bottom"]} style={styles.container}>
           <Card size="normal">
             <View
               style={styles.content}

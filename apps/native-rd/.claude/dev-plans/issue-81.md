@@ -20,6 +20,7 @@ Perform a comprehensive accessibility audit of the native-rd app and implement f
 ## Affected Areas
 
 ### Components to Audit/Fix
+
 - `/Users/hailmary/Code/rollercoaster.dev/native-rd/src/components/Button/Button.tsx` - Verify all variant contrast ratios
 - `/Users/hailmary/Code/rollercoaster.dev/native-rd/src/components/Button/Button.styles.ts` - Adjust destructive button colors if needed
 - `/Users/hailmary/Code/rollercoaster.dev/native-rd/src/navigation/TabNavigator.tsx` - Fix navigation bar text contrast
@@ -30,6 +31,7 @@ Perform a comprehensive accessibility audit of the native-rd app and implement f
 - `/Users/hailmary/Code/rollercoaster.dev/native-rd/src/screens/CelebrationModal/CelebrationModal.tsx` - Focus management
 
 ### New Files to Create
+
 - `/Users/hailmary/Code/rollercoaster.dev/native-rd/src/utils/accessibility.ts` - Utility functions for color contrast validation
 - `/Users/hailmary/Code/rollercoaster.dev/native-rd/docs/accessibility-guidelines.md` - Developer guidelines
 
@@ -38,11 +40,13 @@ Perform a comprehensive accessibility audit of the native-rd app and implement f
 ### Step 1: Create accessibility utilities and audit infrastructure
 
 **Files**:
+
 - `/Users/hailmary/Code/rollercoaster.dev/native-rd/src/utils/accessibility.ts` (new)
 
 **Commit**: `feat(a11y): add accessibility utilities and color contrast checker`
 
 **Changes**:
+
 - Create utility function to calculate contrast ratios (WCAG formula)
 - Add function to validate WCAG AA compliance (4.5:1 for normal text, 3:1 for large text)
 - Add function to get recommended text color for background
@@ -55,12 +59,14 @@ Perform a comprehensive accessibility audit of the native-rd app and implement f
 ### Step 2: Audit and fix button color contrast
 
 **Files**:
+
 - `/Users/hailmary/Code/rollercoaster.dev/native-rd/src/components/Button/Button.styles.ts`
 - `/Users/hailmary/Code/rollercoaster.dev/native-rd/src/themes/adapter.ts` (if color adjustments needed)
 
 **Commit**: `fix(a11y): ensure button variants meet WCAG AA contrast requirements`
 
 **Changes**:
+
 - Analyze destructive button contrast (dark text on orange `warning` color)
 - If contrast fails, adjust text color to use white/light color on warning background
 - Verify primary button (purple background with light text) meets standards
@@ -77,11 +83,13 @@ Perform a comprehensive accessibility audit of the native-rd app and implement f
 ### Step 3: Fix navigation bar text contrast
 
 **Files**:
+
 - `/Users/hailmary/Code/rollercoaster.dev/native-rd/src/navigation/TabNavigator.tsx`
 
 **Commit**: `fix(a11y): improve tab bar text contrast on purple background`
 
 **Changes**:
+
 - Verify current contrast of black text on `accentPurple` background
 - If insufficient, adjust `tabBarActiveTintColor` to use white or a lighter color
 - Ensure inactive tab color also meets minimum contrast (3:1 for UI components)
@@ -97,6 +105,7 @@ Perform a comprehensive accessibility audit of the native-rd app and implement f
 ### Step 4: Add missing accessibility labels and hints
 
 **Files**:
+
 - `/Users/hailmary/Code/rollercoaster.dev/native-rd/src/components/Card/Card.tsx`
 - `/Users/hailmary/Code/rollercoaster.dev/native-rd/src/components/StatusBadge/StatusBadge.tsx`
 - `/Users/hailmary/Code/rollercoaster.dev/native-rd/src/components/EmptyState/EmptyState.tsx`
@@ -106,6 +115,7 @@ Perform a comprehensive accessibility audit of the native-rd app and implement f
 **Commit**: `feat(a11y): add accessibility labels and semantic roles to components`
 
 **Changes**:
+
 - Card: When pressable, ensure `accessibilityLabel` is set (accept as prop with sensible default)
 - StatusBadge: Add `accessibilityLabel` prop to announce badge status
 - EmptyState: Add `accessibilityRole="header"` to title text
@@ -120,12 +130,14 @@ Perform a comprehensive accessibility audit of the native-rd app and implement f
 ### Step 5: Improve modal focus management
 
 **Files**:
+
 - `/Users/hailmary/Code/rollercoaster.dev/native-rd/src/screens/ConfirmDeleteModal/ConfirmDeleteModal.tsx`
 - `/Users/hailmary/Code/rollercoaster.dev/native-rd/src/screens/CelebrationModal/CelebrationModal.tsx`
 
 **Commit**: `feat(a11y): improve modal focus management and announcements`
 
 **Changes**:
+
 - ConfirmDeleteModal: Add `accessibilityViewIsModal={true}` to Modal component
 - Add `accessibilityLiveRegion="polite"` to modal content for screen reader announcements
 - CelebrationModal: Same modal accessibility improvements
@@ -139,12 +151,14 @@ Perform a comprehensive accessibility audit of the native-rd app and implement f
 ### Step 6: Verify minimum touch target sizes
 
 **Files**:
+
 - `/Users/hailmary/Code/rollercoaster.dev/native-rd/src/components/Button/Button.styles.ts`
 - `/Users/hailmary/Code/rollercoaster.dev/native-rd/src/components/IconButton/IconButton.styles.ts`
 
 **Commit**: `feat(a11y): ensure all touch targets meet 44x44 minimum size`
 
 **Changes**:
+
 - Button: Verify `minHeight` is at least 44 for 'sm' size (currently 36, needs adjustment)
 - Change small button minHeight from 36 to 44
 - IconButton: Verify sizes meet minimum (check sm, md, lg variants)
@@ -159,11 +173,13 @@ Perform a comprehensive accessibility audit of the native-rd app and implement f
 ### Step 7: Add Switch accessibility for SettingsRow
 
 **Files**:
+
 - `/Users/hailmary/Code/rollercoaster.dev/native-rd/src/components/SettingsRow/SettingsRow.tsx`
 
 **Commit**: `feat(a11y): add accessibility labels to Switch components in SettingsRow`
 
 **Changes**:
+
 - When rendering Switch, add `accessibilityLabel` prop that describes what the switch controls
 - Pass label text to Switch component
 - Ensure Switch inherits proper accessibility state (on/off)
@@ -176,11 +192,13 @@ Perform a comprehensive accessibility audit of the native-rd app and implement f
 ### Step 8: Create accessibility documentation
 
 **Files**:
+
 - `/Users/hailmary/Code/rollercoaster.dev/native-rd/docs/accessibility-guidelines.md` (new)
 
 **Commit**: `docs(a11y): add accessibility guidelines for developers`
 
 **Changes**:
+
 - Document WCAG AA requirements (contrast ratios, touch targets)
 - Provide checklist for new components:
   - All interactive elements need `accessibilityLabel`
@@ -201,11 +219,13 @@ Perform a comprehensive accessibility audit of the native-rd app and implement f
 ### Step 9: Add contrast ratio verification for all themes
 
 **Files**:
+
 - `/Users/hailmary/Code/rollercoaster.dev/native-rd/src/themes/__tests__/contrast.test.ts` (new)
 
 **Commit**: `test(a11y): add automated contrast ratio tests for all theme variants`
 
 **Changes**:
+
 - Create test file using the accessibility utility
 - Test all 12 theme variants (2 color modes × 6 variants)
 - Verify button variants meet WCAG AA:
@@ -226,6 +246,7 @@ Perform a comprehensive accessibility audit of the native-rd app and implement f
 ## Testing Strategy
 
 ### Manual Testing
+
 - [ ] Test Button variants in Storybook across all theme variants
 - [ ] Verify TabNavigator text is readable in all themes
 - [ ] Use iOS VoiceOver to navigate through:
@@ -241,12 +262,15 @@ Perform a comprehensive accessibility audit of the native-rd app and implement f
 - [ ] Check touch target sizes are adequate on physical device
 
 ### Automated Testing
+
 - [ ] Run contrast ratio verification script for all themes
 - [ ] Document any failures and required color adjustments
 - [ ] (Future) Add accessibility test suite with jest/vitest
 
 ### Color Contrast Verification
+
 Test these combinations across all 12 theme variants:
+
 1. Primary button: `background` text on `accentPrimary` background
 2. Secondary button: `text` on `backgroundSecondary`
 3. Destructive button: text color on `warning` background (currently fails)
@@ -254,6 +278,7 @@ Test these combinations across all 12 theme variants:
 5. Tab bar inactive: `backgroundSecondary` on `accentPurple`
 
 Tools to use:
+
 - Contrast checker utility (step 1)
 - WebAIM Contrast Checker (https://webaim.org/resources/contrastchecker/)
 - Manual testing with Color Contrast Analyzer
@@ -277,12 +302,15 @@ Tools to use:
 ## Notes
 
 ### Priority Issues (from PR #80)
+
 1. **Destructive button contrast**: Currently uses `theme.colors.text` (black) on `theme.colors.warning` (orange). This likely fails WCAG AA in most themes. Solution: Use white/light text color.
 
 2. **Navigation text on purple**: TabNavigator uses black text (`theme.colors.text`) on purple background (`theme.colors.accentPurple`). Needs verification and potential adjustment.
 
 ### Current Accessibility Strengths
+
 The codebase already has good accessibility practices:
+
 - Button component has proper `accessibilityRole`, `accessibilityLabel`, and `accessibilityState`
 - IconButton requires `accessibilityLabel` prop (good pattern)
 - Input component has labels and accessibility attributes
@@ -291,6 +319,7 @@ The codebase already has good accessibility practices:
 - CollapsibleSection properly announces expanded state
 
 ### Areas Needing Improvement
+
 - Card component when pressable needs better accessibility labels
 - StatusBadge should announce its variant to screen readers
 - Modal focus management could be enhanced
@@ -298,19 +327,23 @@ The codebase already has good accessibility practices:
 - Some components could benefit from `accessibilityHint` for complex interactions
 
 ### Theme Considerations
+
 The app has 12 theme variants:
+
 - Light/Dark color modes (2)
 - 6 accessibility-focused variants: default, highContrast, largeText, dyslexia, lowVision, autismFriendly, lowInfo
 
 The highContrast and lowVision variants are specifically designed for WCAG AAA compliance with maximum contrast and no shadows. The fixes in this issue should ensure ALL variants meet at least WCAG AA standards.
 
 ### Follow-up Work
+
 - Consider implementing automated accessibility tests with @testing-library/react-native and jest-native
 - Add ESLint plugin for accessibility (eslint-plugin-react-native-a11y)
 - Consider adding focus indicators for keyboard navigation (if needed for future iPad support)
 - Create a11y test suite in CI/CD pipeline
 
 ### WCAG Guidelines Reference
+
 - **WCAG AA Normal Text**: 4.5:1 contrast ratio (< 18pt regular, < 14pt bold)
 - **WCAG AA Large Text**: 3:1 contrast ratio (≥ 18pt regular, ≥ 14pt bold)
 - **Touch Targets**: Minimum 44×44 points (iOS HIG)
@@ -318,7 +351,9 @@ The highContrast and lowVision variants are specifically designed for WCAG AAA c
 - **Screen Reader**: All content accessible, proper semantic roles
 
 ### Complexity Justification
+
 **MEDIUM complexity** because:
+
 - Requires auditing ~17 component files across the codebase
 - Needs color contrast analysis across 12 theme variants
 - Involves creating new utility functions and documentation

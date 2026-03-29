@@ -1,15 +1,15 @@
-import { StyleSheet } from 'react-native-unistyles';
-import { shadowStyle } from '../../styles/shadows';
-import { GOAL_NODE_SIZE } from '../TimelineNode/TimelineNode.styles';
+import { StyleSheet } from "react-native-unistyles";
+import { shadowStyle } from "../../styles/shadows";
+import { GOAL_NODE_SIZE } from "../TimelineNode/TimelineNode.styles";
 
 export const styles = StyleSheet.create((theme) => ({
   container: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginBottom: theme.space[4],
   },
   nodeColumn: {
     width: GOAL_NODE_SIZE,
-    alignItems: 'center',
+    alignItems: "center",
     marginRight: theme.space[3],
   },
   contentCard: {
@@ -18,11 +18,11 @@ export const styles = StyleSheet.create((theme) => ({
     borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.border,
     borderRadius: theme.radius.sm,
-    ...shadowStyle(theme, 'hardSm'),
+    ...shadowStyle(theme, "hardSm"),
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: theme.space[3],
     paddingHorizontal: theme.space[4],
     minHeight: 44,
@@ -42,7 +42,7 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.textSecondary,
   },
   chevronExpanded: {
-    transform: [{ rotate: '180deg' }],
+    transform: [{ rotate: "180deg" }],
   },
   evidenceSection: {
     borderTopWidth: 1,
@@ -51,8 +51,8 @@ export const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.space[4],
   },
   evidenceCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.space[2],
     paddingVertical: theme.space[2],
     paddingHorizontal: theme.space[3],
@@ -73,6 +73,6 @@ export const styles = StyleSheet.create((theme) => ({
   noEvidence: {
     fontSize: theme.size.xs,
     color: theme.colors.textSecondary,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
 }));

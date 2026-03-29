@@ -8,35 +8,38 @@
  *
  * Requires react-native-quick-crypto to be installed at app entry (index.ts does this).
  */
-import * as SecureStore from 'expo-secure-store';
-import type { KeyProvider } from './KeyProvider';
-import { Logger } from '../shims/rd-logger';
+import * as SecureStore from "expo-secure-store";
+import type { KeyProvider } from "./KeyProvider";
+import { Logger } from "../shims/rd-logger";
 
-const logger = new Logger('crypto');
+const logger = new Logger("crypto");
 
-const PRIV_KEY_PREFIX = 'rcd_privkey_';
-const PUB_KEY_PREFIX = 'rcd_pubkey_';
+const PRIV_KEY_PREFIX = "rcd_privkey_";
+const PUB_KEY_PREFIX = "rcd_pubkey_";
 
 export class SecureStoreKeyProvider implements KeyProvider {
   async isAvailable(): Promise<boolean> {
     try {
-      await SecureStore.getItemAsync('rcd_availability_check');
+      await SecureStore.getItemAsync("rcd_availability_check");
       return true;
     } catch {
       return false;
     }
   }
 
-  async generateKeyPair(): Promise<{ keyId: string; publicKeyJwk: JsonWebKey }> {
+  async generateKeyPair(): Promise<{
+    keyId: string;
+    publicKeyJwk: JsonWebKey;
+  }> {
     const keyPair = await crypto.subtle.generateKey(
-      { name: 'Ed25519' },
+      { name: "Ed25519" },
       true, // extractable — needed to export as JWK
-      ['sign', 'verify'],
+      ["sign", "verify"],
     );
 
     const [privateKeyJwk, publicKeyJwk] = await Promise.all([
-      crypto.subtle.exportKey('jwk', keyPair.privateKey),
-      crypto.subtle.exportKey('jwk', keyPair.publicKey),
+      crypto.subtle.exportKey("jwk", keyPair.privateKey),
+      crypto.subtle.exportKey("jwk", keyPair.publicKey),
     ]);
 
     const keyId = crypto.randomUUID();
@@ -57,7 +60,7 @@ export class SecureStoreKeyProvider implements KeyProvider {
       ),
     ]);
 
-    logger.info('Ed25519 keypair generated and stored', { keyId });
+    logger.info("Ed25519 keypair generated and stored", { keyId });
     return { keyId, publicKeyJwk };
   }
 
@@ -77,16 +80,19 @@ export class SecureStoreKeyProvider implements KeyProvider {
 
     const privateKeyJwk = JSON.parse(raw) as JsonWebKey;
     const cryptoKey = await crypto.subtle.importKey(
-      'jwk',
+      "jwk",
       privateKeyJwk,
-      { name: 'Ed25519' },
+      { name: "Ed25519" },
       false, // not extractable after import
-      ['sign'],
+      ["sign"],
     );
 
     // Slice to a plain ArrayBuffer — crypto.subtle.sign requires BufferSource (not SharedArrayBuffer)
-    const buffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer;
-    const signature = await crypto.subtle.sign('Ed25519', cryptoKey, buffer);
+    const buffer = data.buffer.slice(
+      data.byteOffset,
+      data.byteOffset + data.byteLength,
+    ) as ArrayBuffer;
+    const signature = await crypto.subtle.sign("Ed25519", cryptoKey, buffer);
     return new Uint8Array(signature);
   }
 }

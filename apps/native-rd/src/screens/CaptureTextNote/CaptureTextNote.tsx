@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef } from "react";
 import {
   View,
   TextInput,
@@ -6,18 +6,18 @@ import {
   Platform,
   AccessibilityInfo,
   Alert,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import { useUnistyles } from 'react-native-unistyles';
-import { Text } from '../../components/Text';
-import { Button } from '../../components/Button';
-import { IconButton } from '../../components/IconButton';
-import { Input } from '../../components/Input';
-import { createEvidence, EvidenceType, TEXT_EVIDENCE_PREFIX } from '../../db';
-import type { GoalId, StepId } from '../../db';
-import type { CaptureTextNoteScreenProps } from '../../navigation/types';
-import { styles } from './CaptureTextNote.styles';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
+import { useUnistyles } from "react-native-unistyles";
+import { Text } from "../../components/Text";
+import { Button } from "../../components/Button";
+import { IconButton } from "../../components/IconButton";
+import { Input } from "../../components/Input";
+import { createEvidence, EvidenceType, TEXT_EVIDENCE_PREFIX } from "../../db";
+import type { GoalId, StepId } from "../../db";
+import type { CaptureTextNoteScreenProps } from "../../navigation/types";
+import { styles } from "./CaptureTextNote.styles";
 
 /** Maximum characters for note content (NonEmptyString1000 constraint) */
 const MAX_CONTENT_LENGTH = 1000;
@@ -31,13 +31,14 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
   const { goalId, stepId } = route.params;
   const textInputRef = useRef<TextInput>(null);
 
-  const [content, setContent] = useState('');
-  const [caption, setCaption] = useState('');
+  const [content, setContent] = useState("");
+  const [caption, setCaption] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const trimmedContent = content.trim();
-  const canSave = trimmedContent.length > 0 && trimmedContent.length <= MAX_CONTENT_LENGTH;
+  const canSave =
+    trimmedContent.length > 0 && trimmedContent.length <= MAX_CONTENT_LENGTH;
   const charCount = trimmedContent.length;
   const isNearLimit = charCount >= WARNING_THRESHOLD;
   const isOverLimit = charCount > MAX_CONTENT_LENGTH;
@@ -55,21 +56,35 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
         description: caption.trim() || undefined,
       });
 
-      AccessibilityInfo.announceForAccessibility('Text note saved');
+      AccessibilityInfo.announceForAccessibility("Text note saved");
       navigation.goBack();
     } catch (error) {
-      console.error('[CaptureTextNote] Failed to save text note', { goalId, stepId, error });
-      Alert.alert('Could not save note', 'Something went wrong. Please try again.');
+      console.error("[CaptureTextNote] Failed to save text note", {
+        goalId,
+        stepId,
+        error,
+      });
+      Alert.alert(
+        "Could not save note",
+        "Something went wrong. Please try again.",
+      );
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.colors.background }}>
+    <SafeAreaView
+      edges={["top"]}
+      style={{ flex: 1, backgroundColor: theme.colors.background }}
+    >
       <View style={styles.topBar}>
         <IconButton
-          icon={<Text variant="body" style={styles.backIcon}>{'<'}</Text>}
+          icon={
+            <Text variant="body" style={styles.backIcon}>
+              {"<"}
+            </Text>
+          }
           onPress={() => navigation.goBack()}
           accessibilityLabel="Go back"
           size="sm"
@@ -89,15 +104,12 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
 
       <KeyboardAvoidingView
         style={styles.content}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}
       >
         <TextInput
           ref={textInputRef}
-          style={[
-            styles.textInput,
-            isFocused && styles.textInputFocused,
-          ]}
+          style={[styles.textInput, isFocused && styles.textInputFocused]}
           placeholder="What happened? What did you learn?"
           placeholderTextColor={theme.colors.textMuted}
           value={content}
@@ -125,7 +137,7 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
         </View>
       </KeyboardAvoidingView>
 
-      <SafeAreaView edges={['bottom']}>
+      <SafeAreaView edges={["bottom"]}>
         <View style={styles.footer}>
           <Text
             variant="caption"

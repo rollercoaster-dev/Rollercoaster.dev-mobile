@@ -1,20 +1,26 @@
-import React, { Suspense, useMemo, useState } from 'react';
-import { View, FlatList, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useQuery } from '@evolu/react';
-import { useUnistyles } from 'react-native-unistyles';
-import { Text } from '../../components/Text';
-import { ErrorBoundary } from '../../components/ErrorBoundary';
-import { IconButton } from '../../components/IconButton';
-import { GoalCard, type GoalCardGoal } from '../../components/GoalCard';
-import { EmptyState } from '../../components/EmptyState';
-import { ConfirmDeleteModal } from '../ConfirmDeleteModal';
-import { goalsQuery, stepsByGoalQuery, deleteGoal, GoalStatus, StepStatus } from '../../db';
-import type { GoalId } from '../../db';
-import { GoalsStackParamList } from '../../navigation/types';
-import { styles } from './GoalsScreen.styles';
+import React, { Suspense, useMemo, useState } from "react";
+import { View, FlatList, ActivityIndicator } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useQuery } from "@evolu/react";
+import { useUnistyles } from "react-native-unistyles";
+import { Text } from "../../components/Text";
+import { ErrorBoundary } from "../../components/ErrorBoundary";
+import { IconButton } from "../../components/IconButton";
+import { GoalCard, type GoalCardGoal } from "../../components/GoalCard";
+import { EmptyState } from "../../components/EmptyState";
+import { ConfirmDeleteModal } from "../ConfirmDeleteModal";
+import {
+  goalsQuery,
+  stepsByGoalQuery,
+  deleteGoal,
+  GoalStatus,
+  StepStatus,
+} from "../../db";
+import type { GoalId } from "../../db";
+import { GoalsStackParamList } from "../../navigation/types";
+import { styles } from "./GoalsScreen.styles";
 
 type GoalRow = typeof goalsQuery.Row;
 type Nav = NativeStackNavigationProp<GoalsStackParamList>;
@@ -28,7 +34,10 @@ function GoalCardWithSteps({
   onPress: () => void;
   onLongPress: () => void;
 }) {
-  const query = useMemo(() => stepsByGoalQuery(goalRow.id as GoalId), [goalRow.id]);
+  const query = useMemo(
+    () => stepsByGoalQuery(goalRow.id as GoalId),
+    [goalRow.id],
+  );
   const stepRows = useQuery(query);
   const stepsTotal = stepRows.length;
   const stepsCompleted = stepRows.filter(
@@ -37,8 +46,8 @@ function GoalCardWithSteps({
 
   const goal: GoalCardGoal = {
     id: goalRow.id,
-    title: goalRow.title ?? '',
-    status: goalRow.status === GoalStatus.completed ? 'completed' : 'active',
+    title: goalRow.title ?? "",
+    status: goalRow.status === GoalStatus.completed ? "completed" : "active",
     stepsTotal,
     stepsCompleted,
   };
@@ -68,8 +77,8 @@ function GoalList() {
         title="No goals yet"
         body="Add your first learning goal to get started."
         action={{
-          label: 'Create Goal',
-          onPress: () => navigation.navigate('NewGoal'),
+          label: "Create Goal",
+          onPress: () => navigation.navigate("NewGoal"),
         }}
       />
     );
@@ -81,12 +90,14 @@ function GoalList() {
         data={rows}
         scrollEnabled={false}
         keyExtractor={(item) => item.id}
-        style={{ overflow: 'visible' }}
+        style={{ overflow: "visible" }}
         contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (
           <GoalCardWithSteps
             goalRow={item}
-            onPress={() => navigation.navigate('FocusMode', { goalId: item.id })}
+            onPress={() =>
+              navigation.navigate("FocusMode", { goalId: item.id })
+            }
             onLongPress={() => handleDelete(item)}
           />
         )}
@@ -96,7 +107,11 @@ function GoalList() {
         onCancel={() => setDeleteTarget(null)}
         onConfirm={confirmDelete}
         title="Delete this goal?"
-        message={deleteTarget ? `"${deleteTarget.title}" and all progress will be permanently deleted.` : ''}
+        message={
+          deleteTarget
+            ? `"${deleteTarget.title}" and all progress will be permanently deleted.`
+            : ""
+        }
       />
     </>
   );
@@ -108,17 +123,29 @@ export function GoalsScreen() {
   const { theme } = useUnistyles();
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.colors.accentYellow }}>
+    <SafeAreaView
+      edges={["top"]}
+      style={{ flex: 1, backgroundColor: theme.colors.accentYellow }}
+    >
       <View style={styles.header}>
         <Text variant="display">Goals</Text>
         <IconButton
-          icon={<Text variant="headline" style={styles.addIcon}>+</Text>}
-          onPress={() => navigation.navigate('NewGoal')}
+          icon={
+            <Text variant="headline" style={styles.addIcon}>
+              +
+            </Text>
+          }
+          onPress={() => navigation.navigate("NewGoal")}
           accessibilityLabel="Create new goal"
           testID="create-new-goal"
         />
       </View>
-      <View style={[styles.scrollContent, { flex: 1, backgroundColor: theme.colors.background }]}>
+      <View
+        style={[
+          styles.scrollContent,
+          { flex: 1, backgroundColor: theme.colors.background },
+        ]}
+      >
         <ErrorBoundary>
           <Suspense
             fallback={

@@ -1,22 +1,22 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import React from 'react';
-import { View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
-import { Text } from '../Text';
-import { EvidenceDrawer } from './EvidenceDrawer';
-import type { EvidenceItemData } from './EvidenceDrawer';
+import type { Meta, StoryObj } from "@storybook/react";
+import React from "react";
+import { View } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
+import { Text } from "../Text";
+import { EvidenceDrawer } from "./EvidenceDrawer";
+import type { EvidenceItemData } from "./EvidenceDrawer";
 
 const mockEvidence: EvidenceItemData[] = [
-  { id: '1', type: 'photo', label: 'Lab notebook page' },
-  { id: '2', type: 'link', label: 'Reference paper' },
-  { id: '3', type: 'text', label: 'My observations' },
-  { id: '4', type: 'video', label: 'Experiment recording' },
-  { id: '5', type: 'voice_memo', label: 'Voice memo notes' },
-  { id: '6', type: 'file', label: 'Data export CSV' },
+  { id: "1", type: "photo", label: "Lab notebook page" },
+  { id: "2", type: "link", label: "Reference paper" },
+  { id: "3", type: "text", label: "My observations" },
+  { id: "4", type: "video", label: "Experiment recording" },
+  { id: "5", type: "voice_memo", label: "Voice memo notes" },
+  { id: "6", type: "file", label: "Data export CSV" },
 ];
 
 const meta: Meta<typeof EvidenceDrawer> = {
-  title: 'EvidenceDrawer',
+  title: "EvidenceDrawer",
   component: EvidenceDrawer,
 };
 
@@ -27,7 +27,9 @@ type Story = StoryObj<typeof EvidenceDrawer>;
 export const ClosedPeek: Story = {
   render: () => (
     <View style={storyStyles.container}>
-      <Text variant="label" style={storyStyles.label}>Closed (Peek) — 3 items</Text>
+      <Text variant="label" style={storyStyles.label}>
+        Closed (Peek) — 3 items
+      </Text>
       <EvidenceDrawer
         evidence={mockEvidence.slice(0, 3)}
         isOpen={false}
@@ -41,7 +43,9 @@ export const ClosedPeek: Story = {
 export const OpenGrid: Story = {
   render: () => (
     <View style={storyStyles.container}>
-      <Text variant="label" style={storyStyles.label}>Open — Evidence Grid</Text>
+      <Text variant="label" style={storyStyles.label}>
+        Open — Evidence Grid
+      </Text>
       <EvidenceDrawer
         evidence={mockEvidence}
         isOpen
@@ -55,7 +59,9 @@ export const OpenGrid: Story = {
 export const EmptyState: Story = {
   render: () => (
     <View style={storyStyles.container}>
-      <Text variant="label" style={storyStyles.label}>Open — Empty State</Text>
+      <Text variant="label" style={storyStyles.label}>
+        Open — Empty State
+      </Text>
       <EvidenceDrawer
         evidence={[]}
         isOpen
@@ -69,7 +75,9 @@ export const EmptyState: Story = {
 export const GoalDrawer: Story = {
   render: () => (
     <View style={storyStyles.container}>
-      <Text variant="label" style={storyStyles.label}>Goal Drawer — Yellow Styling</Text>
+      <Text variant="label" style={storyStyles.label}>
+        Goal Drawer — Yellow Styling
+      </Text>
       <EvidenceDrawer
         evidence={mockEvidence.slice(0, 4)}
         isGoal
@@ -84,12 +92,12 @@ export const GoalDrawer: Story = {
 const storyStyles = StyleSheet.create((theme) => ({
   container: {
     height: 400,
-    position: 'relative',
+    position: "relative",
     backgroundColor: theme.colors.backgroundSecondary,
   },
   label: {
     color: theme.colors.textMuted,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     padding: theme.space[3],
   },
 }));

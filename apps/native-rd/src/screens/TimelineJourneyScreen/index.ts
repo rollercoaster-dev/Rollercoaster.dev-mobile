@@ -1,1 +1,1 @@
-export { TimelineJourneyScreen } from './TimelineJourneyScreen';
+export { TimelineJourneyScreen } from "./TimelineJourneyScreen";

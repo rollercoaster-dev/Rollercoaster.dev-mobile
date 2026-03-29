@@ -11,13 +11,13 @@ const mockRecorderInstance = {
   stop: jest.fn().mockResolvedValue(undefined),
   pause: jest.fn(),
   isRecording: false,
-  uri: 'file:///mock-recording.m4a',
+  uri: "file:///mock-recording.m4a",
   getStatus: jest.fn(() => ({
     canRecord: false,
     isRecording: false,
     durationMillis: 5000,
     mediaServicesDidReset: false,
-    url: 'file:///mock-recording.m4a',
+    url: "file:///mock-recording.m4a",
   })),
 };
 
@@ -39,9 +39,9 @@ const mockPlayerInstance = {
 const mockPlayerStatus = {
   id: 1,
   currentTime: 0,
-  playbackState: 'idle',
-  timeControlStatus: 'paused',
-  reasonForWaitingToPlay: '',
+  playbackState: "idle",
+  timeControlStatus: "paused",
+  reasonForWaitingToPlay: "",
   mute: false,
   duration: 5,
   playing: false,
@@ -58,18 +58,23 @@ module.exports = {
   useAudioPlayer: jest.fn(() => mockPlayerInstance),
   useAudioPlayerStatus: jest.fn(() => mockPlayerStatus),
   requestRecordingPermissionsAsync: jest.fn(() =>
-    Promise.resolve({ granted: true, status: 'granted', canAskAgain: true, expires: 'never' }),
+    Promise.resolve({
+      granted: true,
+      status: "granted",
+      canAskAgain: true,
+      expires: "never",
+    }),
   ),
   setAudioModeAsync: jest.fn().mockResolvedValue(undefined),
   RecordingPresets: {
     HIGH_QUALITY: {
-      extension: '.m4a',
+      extension: ".m4a",
       sampleRate: 44100,
       numberOfChannels: 2,
       bitRate: 128000,
-      android: { outputFormat: 'mpeg4', audioEncoder: 'aac' },
-      ios: { audioQuality: 127, outputFormat: 'aac ' },
-      web: { mimeType: 'audio/webm', bitsPerSecond: 128000 },
+      android: { outputFormat: "mpeg4", audioEncoder: "aac" },
+      ios: { audioQuality: 127, outputFormat: "aac " },
+      web: { mimeType: "audio/webm", bitsPerSecond: 128000 },
     },
   },
   // Expose mock instances for test assertions

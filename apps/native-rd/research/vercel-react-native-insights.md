@@ -15,15 +15,15 @@ Vercel's v0 iOS app was built with **React Native + Expo**, targeting Apple Desi
 
 ### Core Stack
 
-| Layer | Technology |
-|-------|------------|
-| Framework | React Native + Expo |
-| Lists | LegendList (virtualized) |
-| Animation | React Native Reanimated |
-| Keyboard | react-native-keyboard-controller |
-| Styling | react-native-unistyles |
-| Menus | Zeego (native UIMenu) |
-| Effects | @callstack/liquid-glass |
+| Layer     | Technology                       |
+| --------- | -------------------------------- |
+| Framework | React Native + Expo              |
+| Lists     | LegendList (virtualized)         |
+| Animation | React Native Reanimated          |
+| Keyboard  | react-native-keyboard-controller |
+| Styling   | react-native-unistyles           |
+| Menus     | Zeego (native UIMenu)            |
+| Effects   | @callstack/liquid-glass          |
 
 ### Key Architecture Decisions
 
@@ -46,6 +46,7 @@ ComposerHeightProvider → MessageListProvider → NewMessageAnimationProvider �
 **Native Over JS Components**
 
 Deliberately avoided JavaScript component libraries in favor of native elements:
+
 - Native `Alert` component
 - Native `Modal` with `presentationStyle="formSheet"` for bottom sheets
 - Zeego wrapping `react-native-ios-context-menu` for native menus
@@ -60,16 +61,17 @@ This creates type-safe API clients with automatic caching and deduplication.
 
 ### Performance Techniques
 
-| Technique | Benefit |
-|-----------|---------|
-| `contentInset` on ScrollView | Avoids Yoga layout recalculations |
-| Synchronous `ref.measure()` | New Architecture enables height on first render |
-| Animation pool limiting | Max 4 words animating simultaneously |
-| No autoscroll during streaming | Content fills naturally, manual scroll button |
+| Technique                      | Benefit                                         |
+| ------------------------------ | ----------------------------------------------- |
+| `contentInset` on ScrollView   | Avoids Yoga layout recalculations               |
+| Synchronous `ref.measure()`    | New Architecture enables height on first render |
+| Animation pool limiting        | Max 4 words animating simultaneously            |
+| No autoscroll during streaming | Content fills naturally, manual scroll button   |
 
 ### Native Patches Applied
 
 The team patched `RCTUITextView` (Objective-C) for:
+
 - Disabled scroll indicators
 - Removed bounce effects
 - Interactive keyboard dismissal
@@ -91,16 +93,16 @@ Fix problems from top of stack down.
 
 ### Rule Categories by Priority
 
-| Priority | Category | Impact | Rule Count |
-|----------|----------|--------|------------|
-| 1 | Eliminating Waterfalls | CRITICAL | 5 |
-| 2 | Bundle Size | CRITICAL | 5 |
-| 3 | Server-Side Performance | HIGH | 7 |
-| 4 | Client-Side Data Fetching | MEDIUM-HIGH | 4 |
-| 5 | Re-render Optimization | MEDIUM | 12 |
-| 6 | Rendering Performance | MEDIUM | 9 |
-| 7 | JavaScript Performance | LOW-MEDIUM | 12 |
-| 8 | Advanced Patterns | LOW | 3 |
+| Priority | Category                  | Impact      | Rule Count |
+| -------- | ------------------------- | ----------- | ---------- |
+| 1        | Eliminating Waterfalls    | CRITICAL    | 5          |
+| 2        | Bundle Size               | CRITICAL    | 5          |
+| 3        | Server-Side Performance   | HIGH        | 7          |
+| 4        | Client-Side Data Fetching | MEDIUM-HIGH | 4          |
+| 5        | Re-render Optimization    | MEDIUM      | 12         |
+| 6        | Rendering Performance     | MEDIUM      | 9          |
+| 7        | JavaScript Performance    | LOW-MEDIUM  | 12         |
+| 8        | Advanced Patterns         | LOW         | 3          |
 
 ### Key Patterns
 
@@ -112,10 +114,7 @@ const theme = await loadTheme();
 const badges = await fetchBadges();
 
 // Better: Parallel
-const [theme, badges] = await Promise.all([
-  loadTheme(),
-  fetchBadges()
-]);
+const [theme, badges] = await Promise.all([loadTheme(), fetchBadges()]);
 ```
 
 **Lazy State Initialization**
@@ -151,13 +150,13 @@ After evaluating Tamagui and NativeWind prototypes, and reviewing Vercel's v0 iO
 
 ### Why react-native-unistyles wins
 
-| Requirement | Tamagui | NativeWind | Unistyles |
-|-------------|---------|------------|-----------|
-| Theme switching without re-renders | ❌ Context-based | ❌ Context-based | ✅ No Context needed |
-| 7 accessibility themes | ⚠️ Works but re-renders | ⚠️ Works but re-renders | ✅ Zero re-render switching |
-| Bundle size | ⚠️ Large | ✅ Small | ✅ Small |
-| Learning curve | ⚠️ Complex API | ✅ Tailwind familiar | ✅ Simple API |
-| v0 production proven | ❌ | ❌ | ✅ Vercel's choice |
+| Requirement                        | Tamagui                 | NativeWind              | Unistyles                   |
+| ---------------------------------- | ----------------------- | ----------------------- | --------------------------- |
+| Theme switching without re-renders | ❌ Context-based        | ❌ Context-based        | ✅ No Context needed        |
+| 7 accessibility themes             | ⚠️ Works but re-renders | ⚠️ Works but re-renders | ✅ Zero re-render switching |
+| Bundle size                        | ⚠️ Large                | ✅ Small                | ✅ Small                    |
+| Learning curve                     | ⚠️ Complex API          | ✅ Tailwind familiar    | ✅ Simple API               |
+| v0 production proven               | ❌                      | ❌                      | ✅ Vercel's choice          |
 
 ### The core insight
 
@@ -167,17 +166,18 @@ With 7 neurodiversity-focused themes that users may switch frequently, avoiding 
 
 ### Recommended stack (from v0)
 
-| Layer | Library |
-|-------|---------|
-| Styling | react-native-unistyles |
-| Lists | LegendList |
-| Animation | React Native Reanimated |
-| Menus | Zeego (native) |
-| Data fetching | Tanstack Query |
+| Layer         | Library                 |
+| ------------- | ----------------------- |
+| Styling       | react-native-unistyles  |
+| Lists         | LegendList              |
+| Animation     | React Native Reanimated |
+| Menus         | Zeego (native)          |
+| Data fetching | Tanstack Query          |
 
 ### What happens to the prototypes
 
 The Tamagui and NativeWind prototypes served their purpose—they validated that:
+
 1. The 7-theme system works conceptually
 2. The component structure (BadgeCard, ThemeSwitcher) is sound
 3. Accessibility patterns are correct
@@ -186,12 +186,12 @@ The prototype code can be adapted to Unistyles. The theme tokens and component l
 
 ### Libraries to adopt
 
-| Library | Purpose | Link |
-|---------|---------|------|
+| Library                | Purpose                | Link                                                        |
+| ---------------------- | ---------------------- | ----------------------------------------------------------- |
 | react-native-unistyles | Zero re-render theming | [GitHub](https://github.com/jpudysz/react-native-unistyles) |
-| LegendList | Virtualized lists | [GitHub](https://github.com/LegendApp/legend-list) |
-| Zeego | Native menus | [GitHub](https://github.com/nandorojo/zeego) |
-| Tanstack Query | Data fetching/caching | [tanstack.com](https://tanstack.com/query) |
+| LegendList             | Virtualized lists      | [GitHub](https://github.com/LegendApp/legend-list)          |
+| Zeego                  | Native menus           | [GitHub](https://github.com/nandorojo/zeego)                |
+| Tanstack Query         | Data fetching/caching  | [tanstack.com](https://tanstack.com/query)                  |
 
 ---
 
@@ -204,6 +204,7 @@ npx skills add vercel-labs/agent-skills --yes
 ```
 
 Installed to `.agents/skills/`:
+
 - `vercel-react-native-skills` (30+ rules)
 - `vercel-react-best-practices` (57 rules)
 - `vercel-composition-patterns` (8 rules)

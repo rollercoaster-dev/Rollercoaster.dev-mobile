@@ -1,9 +1,9 @@
-import React from 'react';
-import { View, Pressable } from 'react-native';
-import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
-import { Text } from '../Text';
-import { formatDuration } from '../../utils/format';
-import { styles } from './AudioPlayer.styles';
+import React from "react";
+import { View, Pressable } from "react-native";
+import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
+import { Text } from "../Text";
+import { formatDuration } from "../../utils/format";
+import { styles } from "./AudioPlayer.styles";
 
 export interface AudioPlayerProps {
   uri: string;
@@ -30,7 +30,7 @@ export function AudioPlayer({ uri, durationMs }: AudioPlayerProps) {
         player.play();
       }
     } catch (error) {
-      console.error('[AudioPlayer] Playback error', { uri, error });
+      console.error("[AudioPlayer] Playback error", { uri, error });
     }
   }
 
@@ -40,10 +40,13 @@ export function AudioPlayer({ uri, durationMs }: AudioPlayerProps) {
         onPress={handleToggle}
         accessible
         accessibilityRole="button"
-        accessibilityLabel={isPlaying ? 'Pause audio' : 'Play audio'}
-        style={({ pressed }) => [styles.playButton, pressed && styles.playButtonPressed]}
+        accessibilityLabel={isPlaying ? "Pause audio" : "Play audio"}
+        style={({ pressed }) => [
+          styles.playButton,
+          pressed && styles.playButtonPressed,
+        ]}
       >
-        <Text style={styles.playIcon}>{isPlaying ? '\u23F8' : '\u25B6'}</Text>
+        <Text style={styles.playIcon}>{isPlaying ? "\u23F8" : "\u25B6"}</Text>
       </Pressable>
 
       <View style={styles.progressContainer}>
@@ -57,7 +60,12 @@ export function AudioPlayer({ uri, durationMs }: AudioPlayerProps) {
             now: Math.round(progress * 100),
           }}
         >
-          <View style={[styles.progressFill, { width: `${Math.round(progress * 100)}%` }]} />
+          <View
+            style={[
+              styles.progressFill,
+              { width: `${Math.round(progress * 100)}%` },
+            ]}
+          />
         </View>
       </View>
 

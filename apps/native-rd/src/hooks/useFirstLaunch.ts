@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef } from 'react';
-import { useQuery } from '@evolu/react';
-import { userSettingsQuery, createUserSettings, markWelcomeSeen } from '../db';
-import { Logger } from '../shims/rd-logger';
+import { useCallback, useEffect, useRef } from "react";
+import { useQuery } from "@evolu/react";
+import { userSettingsQuery, createUserSettings, markWelcomeSeen } from "../db";
+import { Logger } from "../shims/rd-logger";
 
 export interface FirstLaunchState {
   /** null = still loading, true = first launch, false = returning user */
@@ -16,7 +16,7 @@ export interface FirstLaunchState {
  *
  * Follows the same singleton/init pattern as useDensity and useAnimationPref.
  */
-const logger = new Logger('useFirstLaunch');
+const logger = new Logger("useFirstLaunch");
 
 export function useFirstLaunch(): FirstLaunchState {
   const rows = useQuery(userSettingsQuery);
@@ -36,7 +36,7 @@ export function useFirstLaunch(): FirstLaunchState {
     try {
       markWelcomeSeen(settings.id);
     } catch (error) {
-      logger.error('Failed to mark welcome as seen', { error });
+      logger.error("Failed to mark welcome as seen", { error });
     }
   }, [settings]);
 

@@ -1,7 +1,10 @@
-import React from 'react';
-import { Text } from 'react-native-svg';
-import { getSafeTextColor } from '../../utils/accessibility';
-import { fontFamily as fontFamilyTokens, fontWeight as fontWeightTokens } from '../../themes/tokens';
+import React from "react";
+import { Text } from "react-native-svg";
+import { getSafeTextColor } from "../../utils/accessibility";
+import {
+  fontFamily as fontFamilyTokens,
+  fontWeight as fontWeightTokens,
+} from "../../themes/tokens";
 
 export interface MonogramCenterProps {
   monogram: string | undefined;
@@ -24,7 +27,11 @@ export const MONOGRAM_SIZE_RATIO_2 = 0.28;
 /** Font size as fraction of badge diameter — 3 characters */
 export const MONOGRAM_SIZE_RATIO_3 = 0.22;
 
-const RATIO_BY_LENGTH = [MONOGRAM_SIZE_RATIO_1, MONOGRAM_SIZE_RATIO_2, MONOGRAM_SIZE_RATIO_3];
+const RATIO_BY_LENGTH = [
+  MONOGRAM_SIZE_RATIO_1,
+  MONOGRAM_SIZE_RATIO_2,
+  MONOGRAM_SIZE_RATIO_3,
+];
 
 export function MonogramCenter({
   monogram,
@@ -40,7 +47,7 @@ export function MonogramCenter({
   const chars = monogram.trim().slice(0, 3);
   const ratio = RATIO_BY_LENGTH[Math.min(chars.length, 3) - 1];
   const fontSize = size * ratio * scale;
-  const textColor = getSafeTextColor(fillColor, 'MonogramCenter');
+  const textColor = getSafeTextColor(fillColor, "MonogramCenter");
   const cx = size / 2;
   const cy = centerY ?? size / 2;
 

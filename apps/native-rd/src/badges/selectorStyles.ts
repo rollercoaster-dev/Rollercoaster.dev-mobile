@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native-unistyles';
+import { StyleSheet } from "react-native-unistyles";
 
 export const selectorStyles = StyleSheet.create((theme) => ({
   row: {
@@ -11,8 +11,8 @@ export const selectorStyles = StyleSheet.create((theme) => ({
     fontFamily: theme.fontFamily.body,
   },
   cell: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: theme.space[2],
     paddingVertical: theme.space[2],
     minWidth: 72,

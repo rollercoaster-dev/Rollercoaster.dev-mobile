@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, Pressable } from 'react-native';
-import { styles } from './ProgressDots.styles';
-import type { StepStatus } from '../../types/steps';
+import React from "react";
+import { View, Pressable } from "react-native";
+import { styles } from "./ProgressDots.styles";
+import type { StepStatus } from "../../types/steps";
 
 export type { StepStatus };
 
@@ -23,14 +23,22 @@ export function ProgressDots({
   showGoalDot = true,
 }: ProgressDotsProps) {
   const maxIndex = steps.length + (showGoalDot ? 0 : -1);
-  if (__DEV__ && maxIndex >= 0 && (currentIndex < 0 || currentIndex > maxIndex)) {
+  if (
+    __DEV__ &&
+    maxIndex >= 0 &&
+    (currentIndex < 0 || currentIndex > maxIndex)
+  ) {
     console.warn(
       `ProgressDots: currentIndex (${currentIndex}) is out of bounds [0..${maxIndex}]`,
     );
   }
 
   return (
-    <View style={styles.container} accessibilityRole="tablist" accessibilityLabel="Step navigation">
+    <View
+      style={styles.container}
+      accessibilityRole="tablist"
+      accessibilityLabel="Step navigation"
+    >
       {steps.map((step, index) => {
         const isCurrent = index === currentIndex;
         return (
@@ -46,8 +54,8 @@ export function ProgressDots({
             <View
               style={[
                 styles.dot,
-                step.status === 'completed' && styles.dotCompleted,
-                step.status === 'in-progress' && styles.dotInProgress,
+                step.status === "completed" && styles.dotCompleted,
+                step.status === "in-progress" && styles.dotInProgress,
                 isCurrent && styles.dotCurrent,
               ]}
             />

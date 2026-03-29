@@ -1,2 +1,2 @@
-export { CardCarousel } from './CardCarousel';
-export type { CardCarouselProps } from './CardCarousel';
+export { CardCarousel } from "./CardCarousel";
+export type { CardCarouselProps } from "./CardCarousel";

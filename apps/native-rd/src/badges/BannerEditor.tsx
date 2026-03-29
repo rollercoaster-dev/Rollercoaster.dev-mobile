@@ -1,8 +1,8 @@
-import React, { useCallback } from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import React, { useCallback } from "react";
+import { Pressable, Text, TextInput, View } from "react-native";
+import { StyleSheet, useUnistyles } from "react-native-unistyles";
 
-import { BannerPosition } from './types';
+import { BannerPosition } from "./types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -26,8 +26,8 @@ export interface BannerEditorProps {
 const POSITIONS = Object.values(BannerPosition) as BannerPosition[];
 
 const POSITION_LABELS: Record<BannerPosition, string> = {
-  center: 'Center',
-  bottom: 'Bottom',
+  center: "Center",
+  bottom: "Bottom",
 };
 
 // ---------------------------------------------------------------------------
@@ -42,12 +42,15 @@ export function BannerEditor({
   onChangeText,
   onChangePosition,
   accentColor,
-  testID = 'banner-editor',
+  testID = "banner-editor",
 }: BannerEditorProps) {
   const { theme } = useUnistyles();
   const resolvedAccent = accentColor ?? theme.colors.accentPrimary;
 
-  const handleToggle = useCallback(() => onToggle(!enabled), [onToggle, enabled]);
+  const handleToggle = useCallback(
+    () => onToggle(!enabled),
+    [onToggle, enabled],
+  );
 
   const handlePosition = useCallback(
     (pos: BannerPosition) => onChangePosition(pos),
@@ -74,7 +77,7 @@ export function BannerEditor({
             styles.toggleText,
             {
               color: enabled ? resolvedAccent : theme.colors.text,
-              fontWeight: enabled ? '700' : '500',
+              fontWeight: enabled ? "700" : "500",
             },
           ]}
         >
@@ -130,10 +133,8 @@ export function BannerEditor({
                     style={[
                       styles.optionText,
                       {
-                        color: isSelected
-                          ? resolvedAccent
-                          : theme.colors.text,
-                        fontWeight: isSelected ? '700' : '500',
+                        color: isSelected ? resolvedAccent : theme.colors.text,
+                        fontWeight: isSelected ? "700" : "500",
                       },
                     ]}
                   >
@@ -155,8 +156,8 @@ export function BannerEditor({
 
 const styles = StyleSheet.create((theme) => ({
   toggle: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     minHeight: 44,
     paddingHorizontal: theme.space[3],
     paddingVertical: theme.space[2],
@@ -168,14 +169,14 @@ const styles = StyleSheet.create((theme) => ({
     fontFamily: theme.fontFamily.body,
   },
   row: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: theme.space[3],
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[2],
   },
   option: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     minWidth: 100,
     minHeight: 44,
     paddingHorizontal: theme.space[3],
@@ -195,8 +196,8 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: 0,
     fontSize: 16,
     fontFamily: theme.fontFamily.body,
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: "600",
+    textAlign: "center",
     letterSpacing: 2,
   },
 }));

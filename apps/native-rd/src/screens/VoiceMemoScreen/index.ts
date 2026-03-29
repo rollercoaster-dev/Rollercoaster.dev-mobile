@@ -1,1 +1,1 @@
-export { VoiceMemoScreen } from './VoiceMemoScreen';
+export { VoiceMemoScreen } from "./VoiceMemoScreen";

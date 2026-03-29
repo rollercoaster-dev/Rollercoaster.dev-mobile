@@ -1,4 +1,4 @@
-import { useFonts as useExpoFonts } from 'expo-font';
+import { useFonts as useExpoFonts } from "expo-font";
 
 /**
  * Custom font loading hook
@@ -11,15 +11,15 @@ import { useFonts as useExpoFonts } from 'expo-font';
  */
 export function useFonts() {
   const [fontsLoaded, fontError] = useExpoFonts({
-    'OpenDyslexic': require('../../assets/fonts/OpenDyslexic-Regular.otf'),
-    'OpenDyslexic-Bold': require('../../assets/fonts/OpenDyslexic-Bold.otf'),
-    'AtkinsonHyperlegible': require('../../assets/fonts/AtkinsonHyperlegible-Regular.ttf'),
-    'AtkinsonHyperlegible-Bold': require('../../assets/fonts/AtkinsonHyperlegible-Bold.ttf'),
+    OpenDyslexic: require("../../assets/fonts/OpenDyslexic-Regular.otf"),
+    "OpenDyslexic-Bold": require("../../assets/fonts/OpenDyslexic-Bold.otf"),
+    AtkinsonHyperlegible: require("../../assets/fonts/AtkinsonHyperlegible-Regular.ttf"),
+    "AtkinsonHyperlegible-Bold": require("../../assets/fonts/AtkinsonHyperlegible-Bold.ttf"),
   });
 
   // Log font loading errors but don't block rendering
   if (fontError) {
-    console.warn('Font loading error:', fontError);
+    console.warn("Font loading error:", fontError);
   }
 
   return {

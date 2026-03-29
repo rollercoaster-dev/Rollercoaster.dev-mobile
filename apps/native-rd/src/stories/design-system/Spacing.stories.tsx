@@ -1,43 +1,55 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import React from 'react';
-import { Pressable, Text, View } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import type { Meta, StoryObj } from "@storybook/react";
+import React from "react";
+import { Pressable, Text, View } from "react-native";
+import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import {
   CopiedBadge,
   SectionHeader,
   sharedStyles,
   useCopyToken,
-} from './shared';
+} from "./shared";
 
 // ---------------------------------------------------------------------------
 // Data
 // ---------------------------------------------------------------------------
 
-const spaceKeys = ['0', '1', '2', '3', '4', '5', '6', '8', '10', '12', '16'] as const;
+const spaceKeys = [
+  "0",
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "8",
+  "10",
+  "12",
+  "16",
+] as const;
 
 const radiusEntries = [
-  { label: 'sm', key: 'sm' },
-  { label: 'md', key: 'md' },
-  { label: 'lg', key: 'lg' },
-  { label: 'xl', key: 'xl' },
-  { label: 'pill', key: 'pill' },
+  { label: "sm", key: "sm" },
+  { label: "md", key: "md" },
+  { label: "lg", key: "lg" },
+  { label: "xl", key: "xl" },
+  { label: "pill", key: "pill" },
 ] as const;
 
 const borderWidthEntries = [
-  { label: 'Thin', key: 'thin', desc: '' },
-  { label: 'Default', key: 'default', desc: '' },
-  { label: 'Medium', key: 'medium', desc: 'Neo-brutalist standard' },
-  { label: 'Thick', key: 'thick', desc: '' },
+  { label: "Thin", key: "thin", desc: "" },
+  { label: "Default", key: "default", desc: "" },
+  { label: "Medium", key: "medium", desc: "Neo-brutalist standard" },
+  { label: "Thick", key: "thick", desc: "" },
 ] as const;
 
 const shadowEntries = [
-  { label: 'sm', key: 'sm' },
-  { label: 'md', key: 'md' },
-  { label: 'lg', key: 'lg' },
-  { label: 'hardSm', key: 'hardSm' },
-  { label: 'hardMd', key: 'hardMd' },
-  { label: 'hardLg', key: 'hardLg' },
-  { label: 'focus', key: 'focus' },
+  { label: "sm", key: "sm" },
+  { label: "md", key: "md" },
+  { label: "lg", key: "lg" },
+  { label: "hardSm", key: "hardSm" },
+  { label: "hardMd", key: "hardMd" },
+  { label: "hardLg", key: "hardLg" },
+  { label: "focus", key: "focus" },
 ] as const;
 
 // ---------------------------------------------------------------------------
@@ -45,7 +57,7 @@ const shadowEntries = [
 // ---------------------------------------------------------------------------
 
 const meta: Meta = {
-  title: 'Design System/Spacing',
+  title: "Design System/Spacing",
 };
 export default meta;
 type Story = StoryObj;
@@ -92,7 +104,7 @@ export const SpaceScale: Story = {
   ),
 };
 
-function RadiusCard({ entry }: { entry: typeof radiusEntries[number] }) {
+function RadiusCard({ entry }: { entry: (typeof radiusEntries)[number] }) {
   const { theme } = useUnistyles();
   const { copiedToken, copyToken } = useCopyToken();
   const token = `radius.${entry.key}`;
@@ -111,7 +123,9 @@ function RadiusCard({ entry }: { entry: typeof radiusEntries[number] }) {
       />
       <View style={styles.metaCenter}>
         <Text style={styles.metaName}>{entry.label}</Text>
-        <Text style={sharedStyles.metaValue}>{r === 9999 ? 'pill' : `${r}px`}</Text>
+        <Text style={sharedStyles.metaValue}>
+          {r === 9999 ? "pill" : `${r}px`}
+        </Text>
         <Text style={sharedStyles.mono}>{token}</Text>
         <CopiedBadge visible={copiedToken === token} />
       </View>
@@ -135,7 +149,11 @@ export const BorderRadius: Story = {
   ),
 };
 
-function BorderWidthCard({ entry }: { entry: typeof borderWidthEntries[number] }) {
+function BorderWidthCard({
+  entry,
+}: {
+  entry: (typeof borderWidthEntries)[number];
+}) {
   const { theme } = useUnistyles();
   const { copiedToken, copyToken } = useCopyToken();
   const token = `borderWidth.${entry.key}`;
@@ -179,11 +197,16 @@ export const BorderWidths: Story = {
   ),
 };
 
-function ShadowCard({ entry }: { entry: typeof shadowEntries[number] }) {
+function ShadowCard({ entry }: { entry: (typeof shadowEntries)[number] }) {
   const { theme } = useUnistyles();
   const { copiedToken, copyToken } = useCopyToken();
   const token = `shadow.${entry.key}`;
-  const s = (theme.shadow as Record<string, { offsetX: number; offsetY: number; radius: number; opacity: number }>)[entry.key];
+  const s = (
+    theme.shadow as Record<
+      string,
+      { offsetX: number; offsetY: number; radius: number; opacity: number }
+    >
+  )[entry.key];
 
   return (
     <Pressable onPress={() => copyToken(token)} style={styles.shadowCard}>
@@ -191,7 +214,7 @@ function ShadowCard({ entry }: { entry: typeof shadowEntries[number] }) {
         style={[
           styles.shadowPreview,
           s && {
-            shadowColor: '#000000',
+            shadowColor: "#000000",
             shadowOffset: { width: s.offsetX, height: s.offsetY },
             shadowOpacity: s.opacity,
             shadowRadius: s.radius,
@@ -232,8 +255,8 @@ const styles = StyleSheet.create((theme) => ({
     gap: theme.space[2],
   },
   grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: theme.space[3],
   },
   metaName: {
@@ -243,18 +266,18 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.text,
   },
   metaCenter: {
-    alignItems: 'center',
+    alignItems: "center",
     gap: 2,
   },
   noteText: {
     fontSize: theme.size.xs,
-    fontStyle: 'italic',
+    fontStyle: "italic",
     fontFamily: theme.fontFamily.body,
     color: theme.colors.textMuted,
   },
   spaceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.space[4],
   },
   spaceBar: {
@@ -263,14 +286,14 @@ const styles = StyleSheet.create((theme) => ({
     opacity: 0.8,
   },
   spaceMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.space[3],
     minWidth: 200,
   },
   radiusCard: {
-    width: '30%',
-    alignItems: 'center',
+    width: "30%",
+    alignItems: "center",
     gap: theme.space[2],
     padding: theme.space[4],
     backgroundColor: theme.colors.backgroundSecondary,
@@ -285,8 +308,8 @@ const styles = StyleSheet.create((theme) => ({
     borderWidth: theme.borderWidth.medium,
   },
   bwCard: {
-    width: '48%',
-    alignItems: 'center',
+    width: "48%",
+    alignItems: "center",
     gap: theme.space[3],
     padding: theme.space[4],
     backgroundColor: theme.colors.backgroundSecondary,
@@ -295,15 +318,15 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius.lg,
   },
   bwPreview: {
-    width: '100%',
+    width: "100%",
     height: 60,
-    borderStyle: 'solid',
+    borderStyle: "solid",
     borderRadius: theme.radius.sm,
     backgroundColor: theme.colors.backgroundSecondary,
   },
   shadowCard: {
-    width: '30%',
-    alignItems: 'center',
+    width: "30%",
+    alignItems: "center",
     gap: theme.space[2],
     padding: theme.space[6],
     paddingBottom: theme.space[4],

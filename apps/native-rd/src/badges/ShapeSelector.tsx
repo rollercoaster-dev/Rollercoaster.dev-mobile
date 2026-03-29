@@ -1,10 +1,10 @@
-import React, { useCallback } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { useUnistyles } from 'react-native-unistyles';
+import React, { useCallback } from "react";
+import { Pressable, ScrollView, Text, View } from "react-native";
+import { useUnistyles } from "react-native-unistyles";
 
-import { selectorStyles } from './selectorStyles';
-import { BadgeShapeView } from './shapes/BadgeShapeView';
-import { BadgeShape } from './types';
+import { selectorStyles } from "./selectorStyles";
+import { BadgeShapeView } from "./shapes/BadgeShapeView";
+import { BadgeShape } from "./types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -24,12 +24,12 @@ export interface ShapeSelectorProps {
 const SHAPES = Object.values(BadgeShape) as BadgeShape[];
 
 const SHAPE_LABELS: Record<BadgeShape, string> = {
-  circle: 'Circle',
-  shield: 'Shield',
-  hexagon: 'Hexagon',
-  roundedRect: 'Rounded Rect',
-  star: 'Star',
-  diamond: 'Diamond',
+  circle: "Circle",
+  shield: "Shield",
+  hexagon: "Hexagon",
+  roundedRect: "Rounded Rect",
+  star: "Star",
+  diamond: "Diamond",
 };
 
 const THUMBNAIL_SIZE = 56;
@@ -42,7 +42,7 @@ export function ShapeSelector({
   selectedShape,
   onSelectShape,
   accentColor,
-  testID = 'shape-selector',
+  testID = "shape-selector",
 }: ShapeSelectorProps) {
   const { theme } = useUnistyles();
   const resolvedAccent = accentColor ?? theme.colors.accentPrimary;
@@ -90,7 +90,10 @@ export function ShapeSelector({
                 showShadow={false}
               />
               <Text
-                style={[selectorStyles.label, { color: theme.colors.textSecondary, fontWeight: '500' }]}
+                style={[
+                  selectorStyles.label,
+                  { color: theme.colors.textSecondary, fontWeight: "500" },
+                ]}
                 numberOfLines={1}
               >
                 {SHAPE_LABELS[shape]}
@@ -102,4 +105,3 @@ export function ShapeSelector({
     </View>
   );
 }
-

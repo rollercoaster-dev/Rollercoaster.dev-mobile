@@ -1,5 +1,5 @@
-import type { ReactElement } from 'react';
-import type { BadgeShape, FrameDataParams } from '../types';
+import type { ReactElement } from "react";
+import type { BadgeShape, FrameDataParams } from "../types";
 
 /** Configuration passed to every frame generator */
 export type FrameGeneratorConfig = {
@@ -13,4 +13,6 @@ export type FrameGeneratorConfig = {
 };
 
 /** A frame generator takes config and returns SVG elements (or null for no-op frames) */
-export type FrameGenerator = (config: FrameGeneratorConfig) => ReactElement | null;
+export type FrameGenerator = (
+  config: FrameGeneratorConfig,
+) => ReactElement | null;

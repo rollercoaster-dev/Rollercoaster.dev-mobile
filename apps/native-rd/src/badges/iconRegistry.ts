@@ -10,7 +10,7 @@
  * 3. Add it to the curated list in iconIndex.ts
  */
 
-import type { Icon } from 'phosphor-react-native';
+import type { Icon } from "phosphor-react-native";
 
 // Import curated icons — tree-shaking will strip unused ones
 import {
@@ -166,7 +166,7 @@ import {
   RocketLaunch,
   Rocket,
   X,
-} from 'phosphor-react-native';
+} from "phosphor-react-native";
 
 /**
  * Registry mapping icon names to Phosphor React Native components.

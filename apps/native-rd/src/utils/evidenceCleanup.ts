@@ -1,8 +1,8 @@
-import { File } from 'expo-file-system';
-import { Logger } from '../shims/rd-logger';
-import { EvidenceType } from '../db';
+import { File } from "expo-file-system";
+import { Logger } from "../shims/rd-logger";
+import { EvidenceType } from "../db";
 
-const logger = new Logger('evidenceCleanup');
+const logger = new Logger("evidenceCleanup");
 
 /** Evidence types that store files on disk. Keep in sync with EvidenceType enum. */
 const FILE_BACKED_TYPES: Set<string> = new Set([
@@ -20,7 +20,10 @@ const FILE_BACKED_TYPES: Set<string> = new Set([
  * @param uri - The evidence URI (file path)
  * @param type - The evidence type
  */
-export function deleteEvidenceFile(uri: string | undefined, type: string): void {
+export function deleteEvidenceFile(
+  uri: string | undefined,
+  type: string,
+): void {
   if (!uri || !FILE_BACKED_TYPES.has(type)) {
     return;
   }
@@ -32,6 +35,10 @@ export function deleteEvidenceFile(uri: string | undefined, type: string): void 
     }
   } catch (error) {
     // Log but don't throw — the DB record should still be soft-deleted
-    logger.error('Failed to delete evidence file from disk', { uri, type, error });
+    logger.error("Failed to delete evidence file from disk", {
+      uri,
+      type,
+      error,
+    });
   }
 }

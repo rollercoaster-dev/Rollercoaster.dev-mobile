@@ -1,18 +1,24 @@
-import React, { useEffect } from 'react';
-import { View, Pressable, ScrollView, Text, useWindowDimensions } from 'react-native';
+import React, { useEffect } from "react";
+import {
+  View,
+  Pressable,
+  ScrollView,
+  Text,
+  useWindowDimensions,
+} from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
-} from 'react-native-reanimated';
-import { useUnistyles } from 'react-native-unistyles';
-import { useAnimationPref } from '../../hooks/useAnimationPref';
-import { getTimingConfig } from '../../utils/animation';
-import type { EvidenceTypeValue } from '../../types/evidence';
-import { EvidenceItem } from '../EvidenceItem';
-import { FAB } from '../FAB';
-import { FABMenu } from '../FABMenu';
-import { styles, PEEK_HEIGHT } from './EvidenceDrawer.styles';
+} from "react-native-reanimated";
+import { useUnistyles } from "react-native-unistyles";
+import { useAnimationPref } from "../../hooks/useAnimationPref";
+import { getTimingConfig } from "../../utils/animation";
+import type { EvidenceTypeValue } from "../../types/evidence";
+import { EvidenceItem } from "../EvidenceItem";
+import { FAB } from "../FAB";
+import { FABMenu } from "../FABMenu";
+import { styles, PEEK_HEIGHT } from "./EvidenceDrawer.styles";
 
 export interface EvidenceItemData {
   id: string;
@@ -54,7 +60,7 @@ export function EvidenceDrawer({
   const overlayOpacity = useSharedValue(0);
 
   useEffect(() => {
-    const config = getTimingConfig(animationPref, 'normal');
+    const config = getTimingConfig(animationPref, "normal");
     heightValue.value = withTiming(isOpen ? maxHeight : PEEK_HEIGHT, config);
     overlayOpacity.value = withTiming(isOpen ? 1 : 0, config);
   }, [isOpen, maxHeight, animationPref, heightValue, overlayOpacity]);
@@ -71,18 +77,20 @@ export function EvidenceDrawer({
   const COLUMNS = 3;
   const horizontalPadding = theme.space[4] * 2;
   const totalGap = theme.space[2] * (COLUMNS - 1);
-  const itemWidth = Math.floor((windowWidth - horizontalPadding - totalGap) / COLUMNS);
+  const itemWidth = Math.floor(
+    (windowWidth - horizontalPadding - totalGap) / COLUMNS,
+  );
 
   const drawerLabel = isGoal
-    ? `Goal evidence: ${items.length} item${items.length !== 1 ? 's' : ''}`
-    : `${items.length} evidence item${items.length !== 1 ? 's' : ''}`;
+    ? `Goal evidence: ${items.length} item${items.length !== 1 ? "s" : ""}`
+    : `${items.length} evidence item${items.length !== 1 ? "s" : ""}`;
 
   return (
     <>
       {/* Overlay */}
       <Animated.View
         style={[styles.overlay, overlayAnimStyle]}
-        pointerEvents={isOpen ? 'auto' : 'none'}
+        pointerEvents={isOpen ? "auto" : "none"}
       >
         <Pressable
           onPress={onToggle}
@@ -98,7 +106,7 @@ export function EvidenceDrawer({
         style={[styles.drawer(isGoal), drawerAnimStyle]}
         accessible
         accessibilityRole="summary"
-        accessibilityLabel={isGoal ? 'Goal evidence drawer' : 'Evidence drawer'}
+        accessibilityLabel={isGoal ? "Goal evidence drawer" : "Evidence drawer"}
       >
         {/* Handle bar */}
         <View style={styles.handleArea}>
@@ -120,7 +128,10 @@ export function EvidenceDrawer({
         {/* FAB Menu */}
         {onSelectEvidenceType && (
           <View style={styles.fabMenuContainer}>
-            <FABMenu isOpen={isFABMenuOpen} onSelectType={onSelectEvidenceType} />
+            <FABMenu
+              isOpen={isFABMenuOpen}
+              onSelectType={onSelectEvidenceType}
+            />
           </View>
         )}
 
@@ -130,9 +141,7 @@ export function EvidenceDrawer({
           contentContainerStyle={styles.grid}
         >
           {items.length === 0 ? (
-            <Text style={styles.emptyText}>
-              No evidence yet — tap + to add
-            </Text>
+            <Text style={styles.emptyText}>No evidence yet — tap + to add</Text>
           ) : (
             items.map((item) => (
               <View key={item.id} style={styles.gridItem(itemWidth)}>

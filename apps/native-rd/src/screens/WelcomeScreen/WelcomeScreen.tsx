@@ -1,12 +1,12 @@
-import React from 'react';
-import { View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useUnistyles } from 'react-native-unistyles';
-import { Text } from '../../components/Text';
-import { Button } from '../../components/Button';
-import { Card } from '../../components/Card';
-import { ThemeSwitcher } from '../../components/ThemeSwitcher';
-import { styles } from './WelcomeScreen.styles';
+import React from "react";
+import { View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useUnistyles } from "react-native-unistyles";
+import { Text } from "../../components/Text";
+import { Button } from "../../components/Button";
+import { Card } from "../../components/Card";
+import { ThemeSwitcher } from "../../components/ThemeSwitcher";
+import { styles } from "./WelcomeScreen.styles";
 
 export interface WelcomeScreenProps {
   onGetStarted: () => void;
@@ -17,7 +17,7 @@ export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
 
   return (
     <SafeAreaView
-      edges={['top', 'bottom']}
+      edges={["top", "bottom"]}
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
       <View style={styles.content}>
@@ -44,11 +44,7 @@ export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
       </View>
 
       <View style={styles.footer}>
-        <Button
-          label="Get Started"
-          onPress={onGetStarted}
-          size="lg"
-        />
+        <Button label="Get Started" onPress={onGetStarted} size="lg" />
       </View>
     </SafeAreaView>
   );

@@ -1,6 +1,6 @@
-import type { Space } from '../themes/tokens';
+import type { Space } from "../themes/tokens";
 
-export type DensityLevel = 'compact' | 'default' | 'comfortable';
+export type DensityLevel = "compact" | "default" | "comfortable";
 
 export const DENSITY_MULTIPLIERS: Record<DensityLevel, number> = {
   compact: 0.75,
@@ -13,9 +13,13 @@ export const densityOptions: {
   label: string;
   description: string;
 }[] = [
-  { id: 'compact', label: 'Compact', description: 'Tighter spacing (0.75×)' },
-  { id: 'default', label: 'Default', description: 'Standard spacing' },
-  { id: 'comfortable', label: 'Comfortable', description: 'Roomier spacing (1.25×)' },
+  { id: "compact", label: "Compact", description: "Tighter spacing (0.75×)" },
+  { id: "default", label: "Default", description: "Standard spacing" },
+  {
+    id: "comfortable",
+    label: "Comfortable",
+    description: "Roomier spacing (1.25×)",
+  },
 ];
 
 export function getDensityMultiplier(level: DensityLevel): number {

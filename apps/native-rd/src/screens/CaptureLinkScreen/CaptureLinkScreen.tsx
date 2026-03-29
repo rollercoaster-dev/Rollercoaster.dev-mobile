@@ -1,24 +1,24 @@
-import React, { useState } from 'react';
-import { View, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import { Text } from '../../components/Text';
-import { Card } from '../../components/Card';
-import { Button } from '../../components/Button';
-import { Input } from '../../components/Input';
-import { IconButton } from '../../components/IconButton';
-import { createEvidence, EvidenceType } from '../../db';
-import type { GoalId, StepId } from '../../db';
-import type { CaptureLinkScreenProps } from '../../navigation/types';
-import { isValidUrl, normalizeUrl } from '../../utils/url';
-import { styles } from './CaptureLinkScreen.styles';
+import React, { useState } from "react";
+import { View, Alert } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
+import { Text } from "../../components/Text";
+import { Card } from "../../components/Card";
+import { Button } from "../../components/Button";
+import { Input } from "../../components/Input";
+import { IconButton } from "../../components/IconButton";
+import { createEvidence, EvidenceType } from "../../db";
+import type { GoalId, StepId } from "../../db";
+import type { CaptureLinkScreenProps } from "../../navigation/types";
+import { isValidUrl, normalizeUrl } from "../../utils/url";
+import { styles } from "./CaptureLinkScreen.styles";
 
 export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
   const navigation = useNavigation();
   const { goalId, stepId } = route.params;
 
-  const [url, setUrl] = useState('');
-  const [caption, setCaption] = useState('');
+  const [url, setUrl] = useState("");
+  const [caption, setCaption] = useState("");
   const [urlError, setUrlError] = useState<string | undefined>();
   const [saving, setSaving] = useState(false);
 
@@ -35,11 +35,11 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
 
   function validateUrl(): boolean {
     if (!trimmedUrl) {
-      setUrlError('Please enter a URL');
+      setUrlError("Please enter a URL");
       return false;
     }
     if (!hasValidUrl) {
-      setUrlError('Please enter a valid URL (e.g. https://example.com)');
+      setUrlError("Please enter a valid URL (e.g. https://example.com)");
       return false;
     }
     return true;
@@ -59,18 +59,27 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
       });
       navigation.goBack();
     } catch (error) {
-      console.error('[CaptureLinkScreen] Failed to save link evidence', { error });
-      Alert.alert('Could not save link', 'Something went wrong. Please try again.');
+      console.error("[CaptureLinkScreen] Failed to save link evidence", {
+        error,
+      });
+      Alert.alert(
+        "Could not save link",
+        "Something went wrong. Please try again.",
+      );
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <SafeAreaView edges={['top']} style={styles.container}>
+    <SafeAreaView edges={["top"]} style={styles.container}>
       <View style={styles.topBar}>
         <IconButton
-          icon={<Text variant="body" style={styles.backIcon}>{'<'}</Text>}
+          icon={
+            <Text variant="body" style={styles.backIcon}>
+              {"<"}
+            </Text>
+          }
           onPress={() => navigation.goBack()}
           accessibilityLabel="Go back"
           size="sm"
@@ -108,7 +117,7 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
           <Card>
             <View style={styles.previewCard}>
               <Text style={styles.previewIcon} accessibilityElementsHidden>
-                {'\u{1F517}'}
+                {"\u{1F517}"}
               </Text>
               <Text
                 variant="body"

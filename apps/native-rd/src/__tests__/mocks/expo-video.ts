@@ -1,5 +1,5 @@
-import React from 'react';
-import { View } from 'react-native';
+import React from "react";
+import { View } from "react-native";
 
 export function useVideoPlayer() {
   return {
@@ -11,7 +11,7 @@ export function useVideoPlayer() {
 }
 
 export function VideoView(props: Record<string, unknown>) {
-  return React.createElement(View, { testID: 'video-player', ...props });
+  return React.createElement(View, { testID: "video-player", ...props });
 }
 
 export function isPictureInPictureSupported() {

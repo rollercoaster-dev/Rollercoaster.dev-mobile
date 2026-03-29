@@ -1,12 +1,12 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import React from 'react';
-import { View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
-import { Text } from '../Text';
-import { ProgressBar } from './ProgressBar';
+import type { Meta, StoryObj } from "@storybook/react";
+import React from "react";
+import { View } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
+import { Text } from "../Text";
+import { ProgressBar } from "./ProgressBar";
 
 const meta: Meta<typeof ProgressBar> = {
-  title: 'ProgressBar',
+  title: "ProgressBar",
   component: ProgressBar,
 };
 

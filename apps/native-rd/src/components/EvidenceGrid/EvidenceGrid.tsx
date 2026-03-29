@@ -1,9 +1,9 @@
-import React from 'react';
-import { View, Text, Alert } from 'react-native';
-import * as Haptics from 'expo-haptics';
-import { Button } from '../Button';
-import { EvidenceThumbnail, type Evidence } from '../EvidenceThumbnail';
-import { styles } from './EvidenceGrid.styles';
+import React from "react";
+import { View, Text, Alert } from "react-native";
+import * as Haptics from "expo-haptics";
+import { Button } from "../Button";
+import { EvidenceThumbnail, type Evidence } from "../EvidenceThumbnail";
+import { styles } from "./EvidenceGrid.styles";
 
 export interface EvidenceGridProps {
   evidences: Evidence[];
@@ -12,29 +12,30 @@ export interface EvidenceGridProps {
   onAdd?: () => void;
 }
 
-export function EvidenceGrid({ evidences, onPress, onDelete, onAdd }: EvidenceGridProps) {
+export function EvidenceGrid({
+  evidences,
+  onPress,
+  onDelete,
+  onAdd,
+}: EvidenceGridProps) {
   function handleLongPress(evidence: Evidence) {
     if (!onDelete) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    Alert.alert(
-      'Delete evidence?',
-      'This cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => onDelete(evidence),
-        },
-      ],
-    );
+    Alert.alert("Delete evidence?", "This cannot be undone.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => onDelete(evidence),
+      },
+    ]);
   }
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerLabel}>
-          Evidence{evidences.length > 0 ? ` (${evidences.length})` : ''}
+          Evidence{evidences.length > 0 ? ` (${evidences.length})` : ""}
         </Text>
       </View>
       {evidences.length === 0 ? (
@@ -46,7 +47,9 @@ export function EvidenceGrid({ evidences, onPress, onDelete, onAdd }: EvidenceGr
               <EvidenceThumbnail
                 evidence={evidence}
                 onPress={onPress ? () => onPress(evidence) : undefined}
-                onLongPress={onDelete ? () => handleLongPress(evidence) : undefined}
+                onLongPress={
+                  onDelete ? () => handleLongPress(evidence) : undefined
+                }
               />
             </View>
           ))}

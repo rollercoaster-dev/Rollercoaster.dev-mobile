@@ -1,30 +1,30 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import React from 'react';
-import { ScrollView, Text, View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
-import { BadgeShapeView } from '../../badges/shapes';
-import { BadgeShape } from '../../badges/types';
+import type { Meta, StoryObj } from "@storybook/react";
+import React from "react";
+import { ScrollView, Text, View } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
+import { BadgeShapeView } from "../../badges/shapes";
+import { BadgeShape } from "../../badges/types";
 
 // ---------------------------------------------------------------------------
 // Meta
 // ---------------------------------------------------------------------------
 
 const meta: Meta<typeof BadgeShapeView> = {
-  title: 'Badges/BadgeShapes',
+  title: "Badges/BadgeShapes",
   component: BadgeShapeView,
   argTypes: {
     shape: {
-      control: { type: 'select' },
+      control: { type: "select" },
       options: Object.values(BadgeShape),
     },
-    fillColor: { control: 'color' },
-    size: { control: { type: 'number', min: 64, max: 512, step: 16 } },
-    strokeWidth: { control: { type: 'number', min: 1, max: 8, step: 0.5 } },
-    showShadow: { control: 'boolean' },
+    fillColor: { control: "color" },
+    size: { control: { type: "number", min: 64, max: 512, step: 16 } },
+    strokeWidth: { control: { type: "number", min: 1, max: 8, step: 0.5 } },
+    showShadow: { control: "boolean" },
   },
   args: {
     shape: BadgeShape.circle,
-    fillColor: '#a78bfa',
+    fillColor: "#a78bfa",
     size: 128,
     strokeWidth: 3,
   },
@@ -44,21 +44,21 @@ export const Playground: Story = {};
 // ---------------------------------------------------------------------------
 
 const SHAPES: { key: BadgeShape; label: string }[] = [
-  { key: BadgeShape.circle, label: 'Circle' },
-  { key: BadgeShape.shield, label: 'Shield' },
-  { key: BadgeShape.hexagon, label: 'Hexagon' },
-  { key: BadgeShape.roundedRect, label: 'Rounded Rect' },
-  { key: BadgeShape.star, label: 'Star' },
-  { key: BadgeShape.diamond, label: 'Diamond' },
+  { key: BadgeShape.circle, label: "Circle" },
+  { key: BadgeShape.shield, label: "Shield" },
+  { key: BadgeShape.hexagon, label: "Hexagon" },
+  { key: BadgeShape.roundedRect, label: "Rounded Rect" },
+  { key: BadgeShape.star, label: "Star" },
+  { key: BadgeShape.diamond, label: "Diamond" },
 ];
 
 const ACCENT_COLORS = [
-  '#a78bfa', // purple
-  '#34d399', // mint
-  '#fbbf24', // yellow
-  '#10b981', // emerald
-  '#06b6d4', // teal
-  '#f97316', // orange
+  "#a78bfa", // purple
+  "#34d399", // mint
+  "#fbbf24", // yellow
+  "#10b981", // emerald
+  "#06b6d4", // teal
+  "#f97316", // orange
 ];
 
 function AllShapes() {
@@ -116,12 +116,12 @@ const styles = StyleSheet.create((theme) => ({
     marginBottom: theme.space[4],
   },
   row: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: theme.space[6],
   },
   cell: {
-    alignItems: 'center',
+    alignItems: "center",
     gap: theme.space[2],
   },
   label: {

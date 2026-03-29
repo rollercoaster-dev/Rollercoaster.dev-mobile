@@ -6,7 +6,7 @@
  * with stroke inset so nothing clips the viewBox.
  */
 
-import type { BadgeShape } from '../types';
+import type { BadgeShape } from "../types";
 
 /**
  * Generate a circle path.
@@ -22,8 +22,8 @@ export function circlePath(size: number, inset: number): string {
     `M ${cx - r} ${cy}`,
     `A ${r} ${r} 0 1 1 ${cx + r} ${cy}`,
     `A ${r} ${r} 0 1 1 ${cx - r} ${cy}`,
-    'Z',
-  ].join(' ');
+    "Z",
+  ].join(" ");
 }
 
 /**
@@ -60,8 +60,8 @@ export function shieldPath(size: number, inset: number): string {
     `L ${l} ${shoulderY}`,
     // Left shoulder curve
     `Q ${l} ${t} ${l + w * 0.075} ${t}`,
-    'Z',
-  ].join(' ');
+    "Z",
+  ].join(" ");
 }
 
 /**
@@ -76,18 +76,15 @@ export function hexagonPath(size: number, inset: number): string {
   const points: Array<[number, number]> = [];
   for (let i = 0; i < 6; i++) {
     const angle = (Math.PI / 180) * (60 * i - 30); // -30 for flat-top
-    points.push([
-      cx + r * Math.cos(angle),
-      cy + r * Math.sin(angle),
-    ]);
+    points.push([cx + r * Math.cos(angle), cy + r * Math.sin(angle)]);
   }
 
   const [first, ...rest] = points;
   return [
     `M ${first[0].toFixed(2)} ${first[1].toFixed(2)}`,
     ...rest.map(([x, y]) => `L ${x.toFixed(2)} ${y.toFixed(2)}`),
-    'Z',
-  ].join(' ');
+    "Z",
+  ].join(" ");
 }
 
 /**
@@ -112,8 +109,8 @@ export function roundedRectPath(size: number, inset: number): string {
     `Q ${l} ${t + h} ${l} ${t + h - r}`,
     `L ${l} ${t + r}`,
     `Q ${l} ${t} ${l + r} ${t}`,
-    'Z',
-  ].join(' ');
+    "Z",
+  ].join(" ");
 }
 
 /**
@@ -132,18 +129,15 @@ export function starPath(size: number, inset: number): string {
     const r = i % 2 === 0 ? outerR : innerR;
     // Start from top (-90°), step 36° per vertex
     const angle = (Math.PI / 180) * (36 * i - 90);
-    points.push([
-      cx + r * Math.cos(angle),
-      cy + r * Math.sin(angle),
-    ]);
+    points.push([cx + r * Math.cos(angle), cy + r * Math.sin(angle)]);
   }
 
   const [first, ...rest] = points;
   return [
     `M ${first[0].toFixed(2)} ${first[1].toFixed(2)}`,
     ...rest.map(([x, y]) => `L ${x.toFixed(2)} ${y.toFixed(2)}`),
-    'Z',
-  ].join(' ');
+    "Z",
+  ].join(" ");
 }
 
 /**
@@ -159,12 +153,15 @@ export function diamondPath(size: number, inset: number): string {
     `L ${cx + r} ${cy}`, // right
     `L ${cx} ${cy + r}`, // bottom
     `L ${cx - r} ${cy}`, // left
-    'Z',
-  ].join(' ');
+    "Z",
+  ].join(" ");
 }
 
 /** Map shape key to path generator */
-const pathGenerators: Record<BadgeShape, (size: number, inset: number) => string> = {
+const pathGenerators: Record<
+  BadgeShape,
+  (size: number, inset: number) => string
+> = {
   circle: circlePath,
   shield: shieldPath,
   hexagon: hexagonPath,

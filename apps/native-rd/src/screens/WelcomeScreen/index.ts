@@ -1,1 +1,1 @@
-export { WelcomeScreen, type WelcomeScreenProps } from './WelcomeScreen';
+export { WelcomeScreen, type WelcomeScreenProps } from "./WelcomeScreen";

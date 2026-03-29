@@ -1,10 +1,10 @@
-import React from 'react';
-import { render, fireEvent, screen } from '@testing-library/react-native';
-import { ErrorBoundary } from '../ErrorBoundary';
-import { Text } from 'react-native';
+import React from "react";
+import { render, fireEvent, screen } from "@testing-library/react-native";
+import { ErrorBoundary } from "../ErrorBoundary";
+import { Text } from "react-native";
 
 function ThrowingChild({ shouldThrow }: { shouldThrow: boolean }) {
-  if (shouldThrow) throw new Error('Test error');
+  if (shouldThrow) throw new Error("Test error");
   return <Text>Child content</Text>;
 }
 
@@ -12,8 +12,9 @@ function ThrowingChild({ shouldThrow }: { shouldThrow: boolean }) {
 const originalConsoleError = console.error;
 beforeAll(() => {
   console.error = (...args: unknown[]) => {
-    const msg = typeof args[0] === 'string' ? args[0] : '';
-    if (msg.includes('ErrorBoundary caught') || msg.includes('The above error')) return;
+    const msg = typeof args[0] === "string" ? args[0] : "";
+    if (msg.includes("ErrorBoundary caught") || msg.includes("The above error"))
+      return;
     originalConsoleError(...args);
   };
 });
@@ -21,47 +22,47 @@ afterAll(() => {
   console.error = originalConsoleError;
 });
 
-describe('ErrorBoundary', () => {
-  it('renders children when no error', () => {
+describe("ErrorBoundary", () => {
+  it("renders children when no error", () => {
     render(
       <ErrorBoundary>
         <ThrowingChild shouldThrow={false} />
       </ErrorBoundary>,
     );
 
-    expect(screen.getByText('Child content')).toBeTruthy();
+    expect(screen.getByText("Child content")).toBeTruthy();
   });
 
-  it('shows fallback UI when child throws', () => {
+  it("shows fallback UI when child throws", () => {
     render(
       <ErrorBoundary>
         <ThrowingChild shouldThrow={true} />
       </ErrorBoundary>,
     );
 
-    expect(screen.getByText('Something went wrong')).toBeTruthy();
-    expect(screen.getByText('Test error')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Try Again' })).toBeTruthy();
+    expect(screen.getByText("Something went wrong")).toBeTruthy();
+    expect(screen.getByText("Test error")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Try Again" })).toBeTruthy();
   });
 
-  it('has accessible alert role and label on fallback container', () => {
+  it("has accessible alert role and label on fallback container", () => {
     render(
       <ErrorBoundary>
         <ThrowingChild shouldThrow={true} />
       </ErrorBoundary>,
     );
 
-    expect(screen.getByLabelText('Error: something went wrong')).toBeTruthy();
+    expect(screen.getByLabelText("Error: something went wrong")).toBeTruthy();
   });
 
-  it('resets error state on Try Again press', () => {
+  it("resets error state on Try Again press", () => {
     const { rerender } = render(
       <ErrorBoundary>
         <ThrowingChild shouldThrow={true} />
       </ErrorBoundary>,
     );
 
-    expect(screen.getByText('Something went wrong')).toBeTruthy();
+    expect(screen.getByText("Something went wrong")).toBeTruthy();
 
     // Re-render with non-throwing child before pressing reset
     rerender(
@@ -70,13 +71,13 @@ describe('ErrorBoundary', () => {
       </ErrorBoundary>,
     );
 
-    fireEvent.press(screen.getByRole('button', { name: 'Try Again' }));
+    fireEvent.press(screen.getByRole("button", { name: "Try Again" }));
 
-    expect(screen.getByText('Child content')).toBeTruthy();
-    expect(screen.queryByText('Something went wrong')).toBeNull();
+    expect(screen.getByText("Child content")).toBeTruthy();
+    expect(screen.queryByText("Something went wrong")).toBeNull();
   });
 
-  it('uses custom fallback when provided', () => {
+  it("uses custom fallback when provided", () => {
     render(
       <ErrorBoundary
         fallback={(error, _reset) => (
@@ -87,8 +88,8 @@ describe('ErrorBoundary', () => {
       </ErrorBoundary>,
     );
 
-    expect(screen.getByTestId('custom-fallback')).toBeTruthy();
-    expect(screen.getByText('Custom: Test error')).toBeTruthy();
-    expect(screen.queryByText('Something went wrong')).toBeNull();
+    expect(screen.getByTestId("custom-fallback")).toBeTruthy();
+    expect(screen.getByText("Custom: Test error")).toBeTruthy();
+    expect(screen.queryByText("Something went wrong")).toBeNull();
   });
 });

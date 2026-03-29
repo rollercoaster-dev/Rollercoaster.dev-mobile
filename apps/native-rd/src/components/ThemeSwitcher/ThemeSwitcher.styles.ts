@@ -1,11 +1,11 @@
-import { StyleSheet } from 'react-native-unistyles';
-import { shadowStyle } from '../../styles/shadows';
+import { StyleSheet } from "react-native-unistyles";
+import { shadowStyle } from "../../styles/shadows";
 
 export const styles = StyleSheet.create((theme) => ({
   container: {},
   title: {
-    fontSize: theme.size['2xl'],
-    lineHeight: theme.lineHeight['2xl'],
+    fontSize: theme.size["2xl"],
+    lineHeight: theme.lineHeight["2xl"],
     fontWeight: theme.fontWeight.bold,
     fontFamily: theme.fontFamily.headline,
     color: theme.colors.text,
@@ -16,10 +16,10 @@ export const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius.md,
     borderWidth: theme.borderWidth.medium,
     minHeight: 48,
-    justifyContent: 'center' as const,
+    justifyContent: "center" as const,
     marginBottom: theme.space[3],
   },
   optionSelected: {
-    ...shadowStyle(theme, 'hardMd'),
+    ...shadowStyle(theme, "hardMd"),
   },
 }));

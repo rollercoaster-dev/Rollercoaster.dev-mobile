@@ -11,15 +11,16 @@ Set up the complete SQLite database schema with Evolu ORM for all core entities 
 
 ## Dependencies
 
-| Issue | Title                        | Status | Type    |
-| ----- | ----------------------------- | ------ | ------- |
-| #12   | Initialize Expo project       | Closed | Blocker |
+| Issue | Title                   | Status | Type    |
+| ----- | ----------------------- | ------ | ------- |
+| #12   | Initialize Expo project | Closed | Blocker |
 
 **Status**: All dependencies met
 
 ## Objective
 
 Complete the database layer for Iteration A by:
+
 - Extending the existing Goal schema with missing fields
 - Creating Step, Evidence, Badge, and UserSettings schemas
 - Implementing TypeScript types for all entities
@@ -40,6 +41,7 @@ Complete the database layer for Iteration A by:
 **Files**: `/Users/hailmary/Code/rollercoaster.dev/native-rd/src/db/schema.ts`
 **Commit**: `feat(db): extend Goal schema with icon, color, and sort_order`
 **Changes**:
+
 - Add `icon` field (nullable string for emoji/icon identifier)
 - Add `color` field (nullable string for hex color code)
 - Add `sortOrder` field (nullable number for custom ordering)
@@ -51,6 +53,7 @@ Complete the database layer for Iteration A by:
 **Files**: `/Users/hailmary/Code/rollercoaster.dev/native-rd/src/db/schema.ts`, `/Users/hailmary/Code/rollercoaster.dev/native-rd/src/db/queries.ts`
 **Commit**: `feat(db): add Step schema with CRUD operations`
 **Changes**:
+
 - Define `StepId` branded type using `id('Step')`
 - Define `StepStatus` enum: `pending`, `completed`
 - Add `step` table to Schema:
@@ -74,6 +77,7 @@ Complete the database layer for Iteration A by:
 **Files**: `/Users/hailmary/Code/rollercoaster.dev/native-rd/src/db/schema.ts`, `/Users/hailmary/Code/rollercoaster.dev/native-rd/src/db/queries.ts`
 **Commit**: `feat(db): add Evidence schema with CRUD operations`
 **Changes**:
+
 - Define `EvidenceId` branded type using `id('Evidence')`
 - Define `EvidenceType` enum: `photo`, `screenshot`, `text`, `voice_memo`, `video`, `link`, `file`
 - Add `evidence` table to Schema:
@@ -97,6 +101,7 @@ Complete the database layer for Iteration A by:
 **Files**: `/Users/hailmary/Code/rollercoaster.dev/native-rd/src/db/schema.ts`, `/Users/hailmary/Code/rollercoaster.dev/native-rd/src/db/queries.ts`
 **Commit**: `feat(db): add Badge schema with CRUD operations`
 **Changes**:
+
 - Define `BadgeId` branded type using `id('Badge')`
 - Add `badge` table to Schema:
   - `id`: BadgeId (ULID, auto-generated)
@@ -116,6 +121,7 @@ Complete the database layer for Iteration A by:
 **Files**: `/Users/hailmary/Code/rollercoaster.dev/native-rd/src/db/schema.ts`, `/Users/hailmary/Code/rollercoaster.dev/native-rd/src/db/queries.ts`
 **Commit**: `feat(db): add UserSettings schema with CRUD operations`
 **Changes**:
+
 - Define `UserSettingsId` branded type using `id('UserSettings')`
 - Add `userSettings` table to Schema:
   - `id`: UserSettingsId (ULID, single row expected)
@@ -134,6 +140,7 @@ Complete the database layer for Iteration A by:
 **Files**: `/Users/hailmary/Code/rollercoaster.dev/native-rd/src/db/index.ts`, `/Users/hailmary/Code/rollercoaster.dev/native-rd/src/db/schema.ts`
 **Commit**: `feat(db): export all types and queries for new tables`
 **Changes**:
+
 - Export all new ID types: `StepId`, `EvidenceId`, `BadgeId`, `UserSettingsId`
 - Export all new status/enum types: `StepStatus`, `EvidenceType`
 - Export all new queries and CRUD operations
@@ -145,6 +152,7 @@ Complete the database layer for Iteration A by:
 **Files**: `/Users/hailmary/Code/rollercoaster.dev/native-rd/src/db/schema.ts`, `/Users/hailmary/Code/rollercoaster.dev/native-rd/src/db/queries.ts`
 **Commit**: `docs(db): add JSDoc comments for all schemas and queries`
 **Changes**:
+
 - Add comprehensive JSDoc comments to all schema tables
 - Document field meanings, constraints, and relationships
 - Add usage examples for complex queries
@@ -178,6 +186,7 @@ Complete the database layer for Iteration A by:
 ## Notes
 
 **Evolu Schema Details:**
+
 - System columns (`createdAt`, `updatedAt`, `isDeleted`, `ownerId`) are automatically added by Evolu
 - ULIDs are generated using `id('TableName')` branded types
 - Use `NonEmptyString1000`, `nullOr()`, `DateIso` for validation
@@ -185,6 +194,7 @@ Complete the database layer for Iteration A by:
 - Migrations: Evolu schemas are immutable after creation - adding fields later requires migration
 
 **Data Model Alignment:**
+
 - Schema matches `docs/architecture/data-model.md` Iteration A specification
 - Sync-ready design per ADR-0003 (Evolu CRDT-based sync)
 - ULID strategy per ADR-0004 (globally unique, sortable IDs)
@@ -192,6 +202,7 @@ Complete the database layer for Iteration A by:
 - Badge stores full OB3 credential JSON (preparation for openbadges-core integration)
 
 **Future Considerations:**
+
 - Iteration B will add: JournalEntry, GoalLink, LearningStack tables
 - Iteration B will extend Goal with: `paused` status, `pausedAt` timestamp, `tags` array
 - Iteration B will make Step.goalId mutable (steps can move between goals)
@@ -199,6 +210,7 @@ Complete the database layer for Iteration A by:
 - Badge credential creation requires openbadges-core extraction (Issue #58, #59)
 
 **Implementation Order Rationale:**
+
 1. Goal extension first (minimal change, validates pattern)
 2. Step next (most frequently used, needed for Issue #38)
 3. Evidence next (depends on Goal and Step being complete)
@@ -206,6 +218,7 @@ Complete the database layer for Iteration A by:
 5. UserSettings last (independent, lower priority)
 
 **Blast Radius:**
+
 - Low: Only affects database layer
 - Existing Goal usage in GoalsScreen, GoalDetailScreen, NewGoalModal continues to work
 - Step, Evidence, Badge, UserSettings are new - no existing code to break

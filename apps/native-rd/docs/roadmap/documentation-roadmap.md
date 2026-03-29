@@ -14,12 +14,12 @@
 
 ### Open questions to answer in Phase 1
 
-| Doc | Key Questions |
-|-----|---------------|
-| Product vision | How does the native app relate to the monorepo long-term? Does the web app eventually use the same features? |
-| User stories | What does Lina's "quiet victory" look like on a phone? What new stories does mobile enable? |
-| Design principles | Which monorepo principles carry over directly? Which need adapting for mobile? |
-| Iteration strategy | What's the exact scope boundary for each iteration? What's the definition of done for A before starting B? |
+| Doc                | Key Questions                                                                                                |
+| ------------------ | ------------------------------------------------------------------------------------------------------------ |
+| Product vision     | How does the native app relate to the monorepo long-term? Does the web app eventually use the same features? |
+| User stories       | What does Lina's "quiet victory" look like on a phone? What new stories does mobile enable?                  |
+| Design principles  | Which monorepo principles carry over directly? Which need adapting for mobile?                               |
+| Iteration strategy | What's the exact scope boundary for each iteration? What's the definition of done for A before starting B?   |
 
 ---
 
@@ -31,11 +31,11 @@
 
 ### Open questions to answer in Phase 2
 
-| Doc | Key Questions |
-|-----|---------------|
-| Data model | How does the planning graph Phase 2 model (Plan/PlanStep) map to mobile? Is the skill tree a view on the same data or its own entity? How do self-signed badges link to completed goals? |
-| openbadges-core | What are the exact modules to extract? What's the minimum for iteration A? Can extraction happen incrementally? What's the API surface? |
-| Local-first sync | At what point does sync become necessary? Can iteration A ship without sync and add it in B? What's the encryption key management story on mobile? |
+| Doc              | Key Questions                                                                                                                                                                            |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Data model       | How does the planning graph Phase 2 model (Plan/PlanStep) map to mobile? Is the skill tree a view on the same data or its own entity? How do self-signed badges link to completed goals? |
+| openbadges-core  | What are the exact modules to extract? What's the minimum for iteration A? Can extraction happen incrementally? What's the API surface?                                                  |
+| Local-first sync | At what point does sync become necessary? Can iteration A ship without sync and add it in B? What's the encryption key management story on mobile?                                       |
 
 ---
 
@@ -48,12 +48,12 @@
 
 ### Open questions to answer in Phase 3
 
-| Doc | Key Questions |
-|-----|---------------|
-| User flows | What's the minimum number of screens for iteration A? What navigation pattern (tabs, stack, drawer)? |
-| Design language | How do "character moments" from the landing page feel on mobile? Which fonts need bundling vs system fallback? |
-| ND themes | How does runtime theme switching work in React Native? How do we handle system accessibility settings (Dynamic Type, bold text, reduced motion)? |
-| Design tokens | Can we extract existing `openbadges-ui` CSS tokens into JSON as a starting point? What tooling (Style Dictionary?) transforms tokens for both platforms? |
+| Doc             | Key Questions                                                                                                                                            |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| User flows      | What's the minimum number of screens for iteration A? What navigation pattern (tabs, stack, drawer)?                                                     |
+| Design language | How do "character moments" from the landing page feel on mobile? Which fonts need bundling vs system fallback?                                           |
+| ND themes       | How does runtime theme switching work in React Native? How do we handle system accessibility settings (Dynamic Type, bold text, reduced motion)?         |
+| Design tokens   | Can we extract existing `openbadges-ui` CSS tokens into JSON as a starting point? What tooling (Style Dictionary?) transforms tokens for both platforms? |
 
 ---
 
@@ -79,14 +79,14 @@
 
 ## Summary
 
-| Phase | Docs | Status |
-|-------|------|--------|
-| Research | 2 docs | Done |
-| Phase 1 — Foundation | 4 docs | Complete |
-| Phase 2 — Architecture | 3 docs | Complete |
-| Phase 3 — Design | 4 docs | Complete |
-| Phase 4 — Decisions | 3 docs + 2 prototypes | Complete |
-| **Total** | **16 docs + 2 prototypes** | **All complete** |
+| Phase                  | Docs                       | Status           |
+| ---------------------- | -------------------------- | ---------------- |
+| Research               | 2 docs                     | Done             |
+| Phase 1 — Foundation   | 4 docs                     | Complete         |
+| Phase 2 — Architecture | 3 docs                     | Complete         |
+| Phase 3 — Design       | 4 docs                     | Complete         |
+| Phase 4 — Decisions    | 3 docs + 2 prototypes      | Complete         |
+| **Total**              | **16 docs + 2 prototypes** | **All complete** |
 
 ---
 

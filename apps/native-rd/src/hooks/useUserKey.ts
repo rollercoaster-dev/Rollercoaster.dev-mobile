@@ -8,13 +8,17 @@
  * Idempotent — does nothing if a keyId is already stored.
  * Silent — no UI, key generation happens in the background.
  */
-import { useEffect, useRef, useState } from 'react';
-import { useQuery } from '@evolu/react';
-import { userSettingsQuery, createUserSettings, updateUserSettingsKey } from '../db';
-import { keyProvider } from '../crypto';
-import { Logger } from '../shims/rd-logger';
+import { useEffect, useRef, useState } from "react";
+import { useQuery } from "@evolu/react";
+import {
+  userSettingsQuery,
+  createUserSettings,
+  updateUserSettingsKey,
+} from "../db";
+import { keyProvider } from "../crypto";
+import { Logger } from "../shims/rd-logger";
 
-const logger = new Logger('useUserKey');
+const logger = new Logger("useUserKey");
 
 export interface UserKeyState {
   /** The keyId stored in UserSettings (null until generation completes) */
@@ -51,19 +55,19 @@ export function useUserKey(): UserKeyState {
       try {
         const available = await keyProvider.isAvailable();
         if (!available) {
-          setError('Secure storage is unavailable on this device');
-          logger.warn('SecureStore unavailable — badge signing will not work');
+          setError("Secure storage is unavailable on this device");
+          logger.warn("SecureStore unavailable — badge signing will not work");
           return;
         }
 
         const { keyId } = await keyProvider.generateKeyPair();
         // Evolu mutations are synchronous CRDT operations — no await needed.
         updateUserSettingsKey(settings.id, keyId);
-        logger.info('Ed25519 keypair ready', { keyId });
+        logger.info("Ed25519 keypair ready", { keyId });
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Unknown error';
+        const message = err instanceof Error ? err.message : "Unknown error";
         setError(`Key generation failed: ${message}`);
-        logger.error('Failed to generate or store keypair', { error: err });
+        logger.error("Failed to generate or store keypair", { error: err });
       } finally {
         isGenerating.current = false;
       }

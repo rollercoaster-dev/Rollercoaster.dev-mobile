@@ -1,2 +1,2 @@
-export { AudioPlayerModal } from './AudioPlayerModal';
-export type { AudioPlayerModalProps } from './AudioPlayerModal';
+export { AudioPlayerModal } from "./AudioPlayerModal";
+export type { AudioPlayerModalProps } from "./AudioPlayerModal";

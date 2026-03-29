@@ -15,14 +15,14 @@
  * @returns true if the string is a valid http/https URL
  */
 export function isValidUrl(input: string): boolean {
-  if (!input || typeof input !== 'string') return false;
+  if (!input || typeof input !== "string") return false;
 
   const trimmed = input.trim();
   if (trimmed.length === 0) return false;
 
   try {
     const url = new URL(trimmed);
-    return url.protocol === 'http:' || url.protocol === 'https:';
+    return url.protocol === "http:" || url.protocol === "https:";
   } catch {
     return false;
   }

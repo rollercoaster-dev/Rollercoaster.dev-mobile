@@ -1,9 +1,9 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import React from 'react';
-import { ScrollView, Text, View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import type { Meta, StoryObj } from "@storybook/react";
+import React from "react";
+import { ScrollView, Text, View } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
 
-import { BadgeRenderer } from '../../badges/BadgeRenderer';
+import { BadgeRenderer } from "../../badges/BadgeRenderer";
 import {
   BadgeShape,
   BadgeFrame,
@@ -11,8 +11,8 @@ import {
   BadgeCenterMode,
   PathTextPosition,
   BannerPosition,
-} from '../../badges/types';
-import type { BadgeDesign } from '../../badges/types';
+} from "../../badges/types";
+import type { BadgeDesign } from "../../badges/types";
 
 // ---------------------------------------------------------------------------
 // Base design helper
@@ -22,10 +22,10 @@ function base(overrides: Partial<BadgeDesign> = {}): BadgeDesign {
   return {
     shape: BadgeShape.circle,
     frame: BadgeFrame.guilloche,
-    color: '#a78bfa',
-    iconName: 'Trophy',
+    color: "#a78bfa",
+    iconName: "Trophy",
     iconWeight: BadgeIconWeight.regular,
-    title: 'Sample Badge',
+    title: "Sample Badge",
     centerMode: BadgeCenterMode.icon,
     frameParams: {
       variant: 0,
@@ -43,7 +43,7 @@ function base(overrides: Partial<BadgeDesign> = {}): BadgeDesign {
 // ---------------------------------------------------------------------------
 
 const meta: Meta = {
-  title: 'Badges/TextFeatures',
+  title: "Badges/TextFeatures",
 };
 
 export default meta;
@@ -53,7 +53,7 @@ type Story = StoryObj;
 // 1. MonogramVariants — 1/2/3 char monograms
 // ---------------------------------------------------------------------------
 
-const MONOGRAMS = ['J', 'JC', 'JCZ'];
+const MONOGRAMS = ["J", "JC", "JCZ"];
 
 function MonogramGrid() {
   return (
@@ -63,10 +63,15 @@ function MonogramGrid() {
         {MONOGRAMS.map((m) => (
           <View key={m} style={styles.cell}>
             <BadgeRenderer
-              design={base({ centerMode: BadgeCenterMode.monogram, monogram: m })}
+              design={base({
+                centerMode: BadgeCenterMode.monogram,
+                monogram: m,
+              })}
               size={140}
             />
-            <Text style={styles.label}>{m.length} char: {m}</Text>
+            <Text style={styles.label}>
+              {m.length} char: {m}
+            </Text>
           </View>
         ))}
       </View>
@@ -82,7 +87,7 @@ export const MonogramVariants: Story = {
 // 2. CenterLabel — short / medium / max
 // ---------------------------------------------------------------------------
 
-const LABELS = ['Go!', 'TypeScript', 'COMPLETED!'];
+const LABELS = ["Go!", "TypeScript", "COMPLETED!"];
 
 function CenterLabelGrid() {
   return (
@@ -91,10 +96,7 @@ function CenterLabelGrid() {
       <View style={styles.row}>
         {LABELS.map((label) => (
           <View key={label} style={styles.cell}>
-            <BadgeRenderer
-              design={base({ centerLabel: label })}
-              size={140}
-            />
+            <BadgeRenderer design={base({ centerLabel: label })} size={140} />
             <Text style={styles.label}>{label.length} chars</Text>
           </View>
         ))}
@@ -112,9 +114,9 @@ export const CenterLabel: Story = {
 // ---------------------------------------------------------------------------
 
 const PATH_CASES: { position: PathTextPosition; label: string }[] = [
-  { position: PathTextPosition.top, label: 'Top only' },
-  { position: PathTextPosition.bottom, label: 'Bottom only' },
-  { position: PathTextPosition.both, label: 'Both' },
+  { position: PathTextPosition.top, label: "Top only" },
+  { position: PathTextPosition.bottom, label: "Bottom only" },
+  { position: PathTextPosition.both, label: "Both" },
 ];
 
 function PathTextGrid() {
@@ -126,9 +128,9 @@ function PathTextGrid() {
           <View key={position} style={styles.cell}>
             <BadgeRenderer
               design={base({
-                pathText: 'ACHIEVEMENT',
+                pathText: "ACHIEVEMENT",
                 pathTextPosition: position,
-                pathTextBottom: 'EARNED 2026',
+                pathTextBottom: "EARNED 2026",
               })}
               size={140}
             />
@@ -149,8 +151,8 @@ export const PathTextPositions: Story = {
 // ---------------------------------------------------------------------------
 
 const BANNER_CASES: { position: BannerPosition; label: string }[] = [
-  { position: BannerPosition.center, label: 'Center banner' },
-  { position: BannerPosition.bottom, label: 'Bottom banner' },
+  { position: BannerPosition.center, label: "Center banner" },
+  { position: BannerPosition.bottom, label: "Bottom banner" },
 ];
 
 function BannerGrid() {
@@ -161,7 +163,7 @@ function BannerGrid() {
         {BANNER_CASES.map(({ position, label }) => (
           <View key={position} style={styles.cell}>
             <BadgeRenderer
-              design={base({ banner: { text: 'WINNER', position } })}
+              design={base({ banner: { text: "WINNER", position } })}
               size={140}
             />
             <Text style={styles.label}>{label}</Text>
@@ -190,12 +192,12 @@ export const KitchenSink: Story = {
             shape: BadgeShape.shield,
             frame: BadgeFrame.guilloche,
             centerMode: BadgeCenterMode.monogram,
-            monogram: 'JC',
-            centerLabel: 'EXPERT',
-            pathText: 'ACHIEVEMENT UNLOCKED',
+            monogram: "JC",
+            centerLabel: "EXPERT",
+            pathText: "ACHIEVEMENT UNLOCKED",
             pathTextPosition: PathTextPosition.both,
-            pathTextBottom: 'ROLLERCOASTER DEV',
-            banner: { text: 'WINNER', position: BannerPosition.center },
+            pathTextBottom: "ROLLERCOASTER DEV",
+            banner: { text: "WINNER", position: BannerPosition.center },
           })}
           size={200}
         />
@@ -205,18 +207,18 @@ export const KitchenSink: Story = {
 };
 
 const MIXED_LAYOUT_SHAPES = [
-  { shape: BadgeShape.circle, label: 'Circle' },
-  { shape: BadgeShape.shield, label: 'Shield' },
-  { shape: BadgeShape.roundedRect, label: 'Rounded Rect' },
+  { shape: BadgeShape.circle, label: "Circle" },
+  { shape: BadgeShape.shield, label: "Shield" },
+  { shape: BadgeShape.roundedRect, label: "Rounded Rect" },
 ];
 
 const KITCHEN_SINK_SHAPES = [
-  { shape: BadgeShape.circle, label: 'Circle' },
-  { shape: BadgeShape.shield, label: 'Shield' },
-  { shape: BadgeShape.hexagon, label: 'Hexagon' },
-  { shape: BadgeShape.roundedRect, label: 'Rounded Rect' },
-  { shape: BadgeShape.star, label: 'Star' },
-  { shape: BadgeShape.diamond, label: 'Diamond' },
+  { shape: BadgeShape.circle, label: "Circle" },
+  { shape: BadgeShape.shield, label: "Shield" },
+  { shape: BadgeShape.hexagon, label: "Hexagon" },
+  { shape: BadgeShape.roundedRect, label: "Rounded Rect" },
+  { shape: BadgeShape.star, label: "Star" },
+  { shape: BadgeShape.diamond, label: "Diamond" },
 ];
 
 export const MixedTextLayouts: Story = {
@@ -230,12 +232,12 @@ export const MixedTextLayouts: Story = {
               design={base({
                 shape,
                 centerMode: BadgeCenterMode.monogram,
-                monogram: 'JC',
-                centerLabel: 'EXPERT',
-                pathText: 'SPRING 2026',
+                monogram: "JC",
+                centerLabel: "EXPERT",
+                pathText: "SPRING 2026",
                 pathTextPosition: PathTextPosition.both,
-                pathTextBottom: 'ACHIEVEMENT',
-                banner: { text: 'WINNER', position: BannerPosition.center },
+                pathTextBottom: "ACHIEVEMENT",
+                banner: { text: "WINNER", position: BannerPosition.center },
               })}
               size={180}
             />
@@ -258,12 +260,12 @@ export const KitchenSinkAllShapes: Story = {
               design={base({
                 shape,
                 centerMode: BadgeCenterMode.monogram,
-                monogram: 'JC',
-                centerLabel: 'EXPERT',
-                pathText: 'SPRING 2026',
+                monogram: "JC",
+                centerLabel: "EXPERT",
+                pathText: "SPRING 2026",
                 pathTextPosition: PathTextPosition.both,
-                pathTextBottom: 'ACHIEVEMENT',
-                banner: { text: 'WINNER', position: BannerPosition.center },
+                pathTextBottom: "ACHIEVEMENT",
+                banner: { text: "WINNER", position: BannerPosition.center },
               })}
               size={180}
             />
@@ -290,12 +292,12 @@ const styles = StyleSheet.create((theme) => ({
     marginBottom: theme.space[2],
   },
   row: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: theme.space[4],
   },
   cell: {
-    alignItems: 'center',
+    alignItems: "center",
     gap: theme.space[2],
   },
   label: {

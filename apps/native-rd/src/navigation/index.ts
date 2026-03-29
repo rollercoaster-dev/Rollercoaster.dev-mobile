@@ -1,7 +1,7 @@
-export { TabNavigator } from './TabNavigator';
-export { GoalsStack } from './GoalsStack';
-export { BadgesStack } from './BadgesStack';
-export { SettingsStack } from './SettingsStack';
+export { TabNavigator } from "./TabNavigator";
+export { GoalsStack } from "./GoalsStack";
+export { BadgesStack } from "./BadgesStack";
+export { SettingsStack } from "./SettingsStack";
 export type {
   RootTabParamList,
   GoalsStackParamList,
@@ -12,4 +12,4 @@ export type {
   BadgesScreenProps,
   BadgeDetailScreenProps,
   SettingsScreenProps,
-} from './types';
+} from "./types";

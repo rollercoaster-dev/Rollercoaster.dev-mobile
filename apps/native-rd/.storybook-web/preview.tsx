@@ -1,19 +1,19 @@
 // Must configure unistyles before any component imports
-import { StyleSheet } from 'react-native-unistyles';
-import { themes } from '../src/themes';
+import { StyleSheet } from "react-native-unistyles";
+import { themes } from "../src/themes";
 
 StyleSheet.configure({
   themes,
   settings: {
-    initialTheme: 'light-default',
+    initialTheme: "light-default",
   },
 });
 
-import type { Preview } from '@storybook/react';
-import React from 'react';
-import { ScrollView } from 'react-native';
-import { UnistylesRuntime } from 'react-native-unistyles';
-import { themeNames, type ThemeName } from '../src/themes';
+import type { Preview } from "@storybook/react";
+import React from "react";
+import { ScrollView } from "react-native";
+import { UnistylesRuntime } from "react-native-unistyles";
+import { themeNames, type ThemeName } from "../src/themes";
 
 const FONT_FACE_CSS = `
 @font-face { font-family: 'Anybody'; font-weight: 400; font-display: swap; src: url('/fonts/anybody-400.woff2') format('woff2'); }
@@ -35,9 +35,12 @@ const FONT_FACE_CSS = `
 @font-face { font-family: 'Lexend'; font-weight: 700; font-display: swap; src: url('/fonts/Lexend-Bold.woff2') format('woff2'); }
 `;
 
-if (typeof document !== 'undefined' && !document.getElementById('storybook-web-fonts')) {
-  const style = document.createElement('style');
-  style.id = 'storybook-web-fonts';
+if (
+  typeof document !== "undefined" &&
+  !document.getElementById("storybook-web-fonts")
+) {
+  const style = document.createElement("style");
+  style.id = "storybook-web-fonts";
   style.textContent = FONT_FACE_CSS;
   document.head.appendChild(style);
 }
@@ -74,17 +77,17 @@ const preview: Preview = {
   decorators: [themeDecorator],
   globalTypes: {
     theme: {
-      name: 'Theme',
-      description: 'Select a theme combination',
+      name: "Theme",
+      description: "Select a theme combination",
       toolbar: {
-        icon: 'paintbrush',
+        icon: "paintbrush",
         items: themeNames.map((name) => ({ value: name, title: name })),
         dynamicTitle: true,
       },
     },
   },
   initialGlobals: {
-    theme: 'light-default',
+    theme: "light-default",
   },
 };
 

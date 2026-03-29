@@ -1,18 +1,22 @@
-import React from 'react';
-import { PathText, PATH_TEXT_FONT_SIZE_RATIO, PATH_TEXT_OPACITY } from '../text/PathText';
-import type { PathTextProps } from '../text/PathText';
-import { BadgeShape } from '../types';
+import React from "react";
+import {
+  PathText,
+  PATH_TEXT_FONT_SIZE_RATIO,
+  PATH_TEXT_OPACITY,
+} from "../text/PathText";
+import type { PathTextProps } from "../text/PathText";
+import { BadgeShape } from "../types";
 
-const DARK_FILL = '#1a1a2e';
-const LIGHT_FILL = '#fef3c7';
+const DARK_FILL = "#1a1a2e";
+const LIGHT_FILL = "#fef3c7";
 const SIZE = 256;
 
 function makeProps(overrides: Partial<PathTextProps> = {}): PathTextProps {
   return {
-    pathText: 'TOP TEXT',
-    pathTextBottom: 'BOTTOM TEXT',
-    pathTextPosition: 'both',
-    shape: 'circle' as const,
+    pathText: "TOP TEXT",
+    pathTextBottom: "BOTTOM TEXT",
+    pathTextPosition: "both",
+    shape: "circle" as const,
     size: SIZE,
     fillColor: DARK_FILL,
     ...overrides,
@@ -39,96 +43,122 @@ function findByType(el: AnyElement, typeName: string): AnyElement[] {
   const all = flatElements(el);
   return all.filter((e) => {
     const type = e.type as { displayName?: string; name?: string } | string;
-    if (typeof type === 'string') return type === typeName;
+    if (typeof type === "string") return type === typeName;
     return type.displayName === typeName || type.name === typeName;
   });
 }
 
-describe('PathText', () => {
+describe("PathText", () => {
   // ── Null guards ──────────────────────────────────────────────────────
 
-  it('returns null when both texts are undefined', () => {
-    expect(PathText(makeProps({ pathText: undefined, pathTextBottom: undefined }))).toBeNull();
-  });
-
-  it('returns null when both texts are empty strings', () => {
-    expect(PathText(makeProps({ pathText: '', pathTextBottom: '' }))).toBeNull();
-  });
-
-  it('returns null when both texts are whitespace', () => {
-    expect(PathText(makeProps({ pathText: '   ', pathTextBottom: '   ' }))).toBeNull();
-  });
-
-  it('returns null when position is top but pathText is empty', () => {
+  it("returns null when both texts are undefined", () => {
     expect(
-      PathText(makeProps({ pathText: '', pathTextPosition: 'top', pathTextBottom: 'BOTTOM' })),
+      PathText(makeProps({ pathText: undefined, pathTextBottom: undefined })),
     ).toBeNull();
   });
 
-  it('returns null when position is bottom but pathTextBottom is empty', () => {
+  it("returns null when both texts are empty strings", () => {
     expect(
-      PathText(makeProps({ pathText: 'TOP', pathTextPosition: 'bottom', pathTextBottom: '' })),
+      PathText(makeProps({ pathText: "", pathTextBottom: "" })),
+    ).toBeNull();
+  });
+
+  it("returns null when both texts are whitespace", () => {
+    expect(
+      PathText(makeProps({ pathText: "   ", pathTextBottom: "   " })),
+    ).toBeNull();
+  });
+
+  it("returns null when position is top but pathText is empty", () => {
+    expect(
+      PathText(
+        makeProps({
+          pathText: "",
+          pathTextPosition: "top",
+          pathTextBottom: "BOTTOM",
+        }),
+      ),
+    ).toBeNull();
+  });
+
+  it("returns null when position is bottom but pathTextBottom is empty", () => {
+    expect(
+      PathText(
+        makeProps({
+          pathText: "TOP",
+          pathTextPosition: "bottom",
+          pathTextBottom: "",
+        }),
+      ),
     ).toBeNull();
   });
 
   // ── Position rendering ─────────────────────────────────────────────
 
   it('renders only top arc for position "top"', () => {
-    const el = PathText(makeProps({ pathTextPosition: 'top' }))!;
-    const textPaths = findByType(el, 'TextPath');
+    const el = PathText(makeProps({ pathTextPosition: "top" }))!;
+    const textPaths = findByType(el, "TextPath");
     expect(textPaths).toHaveLength(1);
-    expect(textPaths[0].props.children).toBe('TOP TEXT');
+    expect(textPaths[0].props.children).toBe("TOP TEXT");
   });
 
   it('renders only bottom arc for position "bottom"', () => {
-    const el = PathText(makeProps({ pathTextPosition: 'bottom' }))!;
-    const textPaths = findByType(el, 'TextPath');
+    const el = PathText(makeProps({ pathTextPosition: "bottom" }))!;
+    const textPaths = findByType(el, "TextPath");
     expect(textPaths).toHaveLength(1);
-    expect(textPaths[0].props.children).toBe('BOTTOM TEXT');
+    expect(textPaths[0].props.children).toBe("BOTTOM TEXT");
   });
 
   it('renders both arcs for position "both"', () => {
-    const el = PathText(makeProps({ pathTextPosition: 'both' }))!;
-    const textPaths = findByType(el, 'TextPath');
+    const el = PathText(makeProps({ pathTextPosition: "both" }))!;
+    const textPaths = findByType(el, "TextPath");
     expect(textPaths).toHaveLength(2);
   });
 
-  it('defaults to top arc when pathTextPosition is undefined', () => {
-    const el = PathText(makeProps({ pathTextPosition: undefined, pathTextBottom: undefined }))!;
-    const textPaths = findByType(el, 'TextPath');
+  it("defaults to top arc when pathTextPosition is undefined", () => {
+    const el = PathText(
+      makeProps({ pathTextPosition: undefined, pathTextBottom: undefined }),
+    )!;
+    const textPaths = findByType(el, "TextPath");
     expect(textPaths).toHaveLength(1);
-    expect(textPaths[0].props.children).toBe('TOP TEXT');
+    expect(textPaths[0].props.children).toBe("TOP TEXT");
   });
 
   // ── SVG structure ──────────────────────────────────────────────────
 
-  it('renders Defs with Path elements having unique ids', () => {
+  it("renders Defs with Path elements having unique ids", () => {
     const el = PathText(makeProps())!;
-    const defs = findByType(el, 'Defs');
+    const defs = findByType(el, "Defs");
     expect(defs).toHaveLength(1);
 
-    const paths = findByType(defs[0], 'Path');
+    const paths = findByType(defs[0], "Path");
     expect(paths.length).toBeGreaterThanOrEqual(2);
     const ids = paths.map((p) => p.props.id);
     expect(ids[0]).toMatch(/^pathtext-top-\d+$/);
     expect(ids[1]).toMatch(/^pathtext-bottom-\d+$/);
   });
 
-  it('TextPath href references matching Defs path id', () => {
-    const el = PathText(makeProps({ pathTextPosition: 'top' }))!;
-    const paths = findByType(el, 'Path');
-    const textPaths = findByType(el, 'TextPath');
+  it("TextPath href references matching Defs path id", () => {
+    const el = PathText(makeProps({ pathTextPosition: "top" }))!;
+    const paths = findByType(el, "Path");
+    const textPaths = findByType(el, "TextPath");
 
-    const defPath = paths.find((p) => String(p.props.id ?? '').startsWith('pathtext-top-'));
+    const defPath = paths.find((p) =>
+      String(p.props.id ?? "").startsWith("pathtext-top-"),
+    );
     expect(defPath).toBeDefined();
     expect(textPaths[0].props.href).toBe(`#${String(defPath!.props.id)}`);
   });
 
-  it('keeps the top path distinct from the bottom path geometry', () => {
-    const el = PathText(makeProps({ pathTextPosition: 'both' }))!;
-    const paths = findByType(el, 'Path');
-    const topPath = paths.find((p) => String(p.props.id ?? '').startsWith('pathtext-top-'));
-    const bottomPath = paths.find((p) => String(p.props.id ?? '').startsWith('pathtext-bottom-'));
+  it("keeps the top path distinct from the bottom path geometry", () => {
+    const el = PathText(makeProps({ pathTextPosition: "both" }))!;
+    const paths = findByType(el, "Path");
+    const topPath = paths.find((p) =>
+      String(p.props.id ?? "").startsWith("pathtext-top-"),
+    );
+    const bottomPath = paths.find((p) =>
+      String(p.props.id ?? "").startsWith("pathtext-bottom-"),
+    );
 
     expect(topPath).toBeDefined();
     expect(bottomPath).toBeDefined();
@@ -137,60 +167,66 @@ describe('PathText', () => {
     expect(bottomPath!.props.d).toMatch(/A [\d.]+ [\d.]+ 0 0 0 /);
   });
 
-  it('rotates the full path text layer 180 degrees as a single group', () => {
-    const el = PathText(makeProps({ pathTextPosition: 'both' }))!;
-    const groups = findByType(el, 'G');
-    const textPaths = findByType(el, 'TextPath');
+  it("rotates the full path text layer 180 degrees as a single group", () => {
+    const el = PathText(makeProps({ pathTextPosition: "both" }))!;
+    const groups = findByType(el, "G");
+    const textPaths = findByType(el, "TextPath");
 
     expect(groups).toHaveLength(1);
-    expect(groups[0].props.transform).toBe('rotate(180 128 128)');
+    expect(groups[0].props.transform).toBe("rotate(180 128 128)");
     expect(textPaths).toHaveLength(2);
-    expect(textPaths[0].props.children).toBe('TOP TEXT');
-    expect(textPaths[1].props.children).toBe('BOTTOM TEXT');
+    expect(textPaths[0].props.children).toBe("TOP TEXT");
+    expect(textPaths[1].props.children).toBe("BOTTOM TEXT");
   });
 
   // ── Opacity ────────────────────────────────────────────────────────
 
-  it('applies PATH_TEXT_OPACITY as fillOpacity', () => {
-    const el = PathText(makeProps({ pathTextPosition: 'top' }))!;
-    const texts = findByType(el, 'Text');
+  it("applies PATH_TEXT_OPACITY as fillOpacity", () => {
+    const el = PathText(makeProps({ pathTextPosition: "top" }))!;
+    const texts = findByType(el, "Text");
     expect(texts[0].props.fillOpacity).toBe(PATH_TEXT_OPACITY);
   });
 
   // ── Font size ──────────────────────────────────────────────────────
 
-  it.each([128, 256, 512])('scales font size for badge size %d', (size) => {
-    const el = PathText(makeProps({ size, pathTextPosition: 'top' }))!;
-    const texts = findByType(el, 'Text');
+  it.each([128, 256, 512])("scales font size for badge size %d", (size) => {
+    const el = PathText(makeProps({ size, pathTextPosition: "top" }))!;
+    const texts = findByType(el, "Text");
     expect(texts[0].props.fontSize).toBe(size * PATH_TEXT_FONT_SIZE_RATIO);
   });
 
   // ── Font family ────────────────────────────────────────────────────
 
-  it('uses DM Mono by default', () => {
-    const el = PathText(makeProps({ pathTextPosition: 'top' }))!;
-    const texts = findByType(el, 'Text');
-    expect(texts[0].props.fontFamily).toBe('DM Mono');
+  it("uses DM Mono by default", () => {
+    const el = PathText(makeProps({ pathTextPosition: "top" }))!;
+    const texts = findByType(el, "Text");
+    expect(texts[0].props.fontFamily).toBe("DM Mono");
   });
 
-  it('accepts custom fontFamily', () => {
-    const el = PathText(makeProps({ pathTextPosition: 'top', fontFamily: 'Lexend' }))!;
-    const texts = findByType(el, 'Text');
-    expect(texts[0].props.fontFamily).toBe('Lexend');
+  it("accepts custom fontFamily", () => {
+    const el = PathText(
+      makeProps({ pathTextPosition: "top", fontFamily: "Lexend" }),
+    )!;
+    const texts = findByType(el, "Text");
+    expect(texts[0].props.fontFamily).toBe("Lexend");
   });
 
   // ── Color contrast ─────────────────────────────────────────────────
 
-  it('uses white text on dark fill', () => {
-    const el = PathText(makeProps({ fillColor: DARK_FILL, pathTextPosition: 'top' }))!;
-    const texts = findByType(el, 'Text');
-    expect(texts[0].props.fill).toBe('#FFFFFF');
+  it("uses white text on dark fill", () => {
+    const el = PathText(
+      makeProps({ fillColor: DARK_FILL, pathTextPosition: "top" }),
+    )!;
+    const texts = findByType(el, "Text");
+    expect(texts[0].props.fill).toBe("#FFFFFF");
   });
 
-  it('uses black text on light fill', () => {
-    const el = PathText(makeProps({ fillColor: LIGHT_FILL, pathTextPosition: 'top' }))!;
-    const texts = findByType(el, 'Text');
-    expect(texts[0].props.fill).toBe('#000000');
+  it("uses black text on light fill", () => {
+    const el = PathText(
+      makeProps({ fillColor: LIGHT_FILL, pathTextPosition: "top" }),
+    )!;
+    const texts = findByType(el, "Text");
+    expect(texts[0].props.fill).toBe("#000000");
   });
 
   // ── All shapes ─────────────────────────────────────────────────────
@@ -198,15 +234,17 @@ describe('PathText', () => {
   const ALL_SHAPES = Object.values(BadgeShape);
 
   test.each(ALL_SHAPES)('renders without throwing for shape "%s"', (shape) => {
-    expect(() => PathText(makeProps({ shape, pathTextPosition: 'both' }))).not.toThrow();
+    expect(() =>
+      PathText(makeProps({ shape, pathTextPosition: "both" })),
+    ).not.toThrow();
   });
 
   // ── Text centering ─────────────────────────────────────────────────
 
-  it('centers text along path with startOffset 50%', () => {
-    const el = PathText(makeProps({ pathTextPosition: 'top' }))!;
-    const textPaths = findByType(el, 'TextPath');
-    expect(textPaths[0].props.startOffset).toBe('50%');
-    expect(textPaths[0].props.textAnchor).toBe('middle');
+  it("centers text along path with startOffset 50%", () => {
+    const el = PathText(makeProps({ pathTextPosition: "top" }))!;
+    const textPaths = findByType(el, "TextPath");
+    expect(textPaths[0].props.startOffset).toBe("50%");
+    expect(textPaths[0].props.textAnchor).toBe("middle");
   });
 });

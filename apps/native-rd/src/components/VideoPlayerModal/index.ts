@@ -1,1 +1,1 @@
-export { VideoPlayerModal } from './VideoPlayerModal';
+export { VideoPlayerModal } from "./VideoPlayerModal";

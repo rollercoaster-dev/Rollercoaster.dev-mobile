@@ -21,6 +21,7 @@ Everything else depends on these. Types define the data contract, contours provi
 ### Task 1: Update BadgeDesign type
 
 **Files:**
+
 - Modify: `src/badges/types.ts:48-60`
 - Modify: `src/badges/__tests__/types.test.ts`
 
@@ -30,13 +31,13 @@ Add tests for the new `centerMode` field in `createDefaultBadgeDesign` and backw
 
 ```typescript
 // In describe('createDefaultBadgeDesign')
-test('defaults to icon centerMode', () => {
-  const design = createDefaultBadgeDesign('Test');
-  expect(design.centerMode).toBe('icon');
+test("defaults to icon centerMode", () => {
+  const design = createDefaultBadgeDesign("Test");
+  expect(design.centerMode).toBe("icon");
 });
 
-test('does not include new optional fields by default', () => {
-  const design = createDefaultBadgeDesign('Test');
+test("does not include new optional fields by default", () => {
+  const design = createDefaultBadgeDesign("Test");
   expect(design.monogram).toBeUndefined();
   expect(design.centerLabel).toBeUndefined();
   expect(design.pathText).toBeUndefined();
@@ -46,51 +47,51 @@ test('does not include new optional fields by default', () => {
 });
 
 // In describe('parseBadgeDesign')
-test('parses legacy design without new fields (backward compat)', () => {
+test("parses legacy design without new fields (backward compat)", () => {
   const legacy = JSON.stringify({
-    shape: 'circle',
-    frame: 'none',
-    color: '#a78bfa',
-    iconName: 'Trophy',
-    iconWeight: 'regular',
-    title: 'Old Badge',
+    shape: "circle",
+    frame: "none",
+    color: "#a78bfa",
+    iconName: "Trophy",
+    iconWeight: "regular",
+    title: "Old Badge",
   });
   const result = parseBadgeDesign(legacy);
   expect(result).not.toBeNull();
-  expect(result!.shape).toBe('circle');
+  expect(result!.shape).toBe("circle");
   // centerMode not present in legacy — that's fine, renderer defaults to 'icon'
   expect(result!.centerMode).toBeUndefined();
 });
 
-test('parses design with all new fields', () => {
+test("parses design with all new fields", () => {
   const full = JSON.stringify({
-    shape: 'shield',
-    frame: 'guilloche',
-    color: '#ffe50c',
-    iconName: 'Star',
-    iconWeight: 'bold',
-    title: 'Full Badge',
-    centerMode: 'monogram',
-    monogram: 'JS',
-    centerLabel: 'CERT',
-    pathText: 'JavaScript Mastery',
-    pathTextPosition: 'both',
-    pathTextBottom: '2026',
-    banner: { text: 'EARNED', position: 'bottom' },
+    shape: "shield",
+    frame: "guilloche",
+    color: "#ffe50c",
+    iconName: "Star",
+    iconWeight: "bold",
+    title: "Full Badge",
+    centerMode: "monogram",
+    monogram: "JS",
+    centerLabel: "CERT",
+    pathText: "JavaScript Mastery",
+    pathTextPosition: "both",
+    pathTextBottom: "2026",
+    banner: { text: "EARNED", position: "bottom" },
     frameParams: {
       variant: 0,
       stepCount: 5,
       evidenceCount: 12,
       daysToComplete: 45,
       evidenceTypes: 3,
-      stepNames: ['Plan', 'Build', 'Test', 'Deploy', 'Document'],
+      stepNames: ["Plan", "Build", "Test", "Deploy", "Document"],
     },
   });
   const result = parseBadgeDesign(full);
   expect(result).not.toBeNull();
-  expect(result!.centerMode).toBe('monogram');
-  expect(result!.monogram).toBe('JS');
-  expect(result!.banner?.text).toBe('EARNED');
+  expect(result!.centerMode).toBe("monogram");
+  expect(result!.monogram).toBe("JS");
+  expect(result!.banner?.text).toBe("EARNED");
   expect(result!.frameParams?.stepCount).toBe(5);
 });
 ```
@@ -107,28 +108,31 @@ In `src/badges/types.ts`, update the `BadgeDesign` type to add new fields:
 ```typescript
 /** Center content mode */
 export const BadgeCenterMode = {
-  icon: 'icon',
-  monogram: 'monogram',
+  icon: "icon",
+  monogram: "monogram",
 } as const;
 
-export type BadgeCenterMode = (typeof BadgeCenterMode)[keyof typeof BadgeCenterMode];
+export type BadgeCenterMode =
+  (typeof BadgeCenterMode)[keyof typeof BadgeCenterMode];
 
 /** Text-on-path placement */
 export const PathTextPosition = {
-  top: 'top',
-  bottom: 'bottom',
-  both: 'both',
+  top: "top",
+  bottom: "bottom",
+  both: "both",
 } as const;
 
-export type PathTextPosition = (typeof PathTextPosition)[keyof typeof PathTextPosition];
+export type PathTextPosition =
+  (typeof PathTextPosition)[keyof typeof PathTextPosition];
 
 /** Banner position */
 export const BannerPosition = {
-  center: 'center',
-  bottom: 'bottom',
+  center: "center",
+  bottom: "bottom",
 } as const;
 
-export type BannerPosition = (typeof BannerPosition)[keyof typeof BannerPosition];
+export type BannerPosition =
+  (typeof BannerPosition)[keyof typeof BannerPosition];
 
 /** Data-driven frame parameters, computed from goal journey data */
 export type FrameDataParams = {
@@ -182,6 +186,7 @@ Expected: PASS (or identify any callers that need updating due to required `cent
 **Step 6: Fix any type errors in callers**
 
 The `createDefaultBadgeDesign` result now has `centerMode: 'icon'`. This is additive. But anywhere that constructs a `BadgeDesign` literal manually may need `centerMode` added. Check:
+
 - `src/screens/BadgeDesignerScreen/BadgeDesignerScreen.tsx` (the designer)
 - `src/badges/__tests__/BadgeRenderer.test.tsx` (test fixtures)
 - Any Storybook stories with inline `BadgeDesign` objects
@@ -204,15 +209,16 @@ git commit -m "feat(badges): extend BadgeDesign type with center mode, text, ban
 ### Task 2: Shape contour system
 
 **Files:**
+
 - Create: `src/badges/shapes/contours.ts`
 - Create: `src/badges/__tests__/contours.test.ts`
 
 **Step 1: Write the failing tests**
 
 ```typescript
-import { generateContour } from '../shapes/contours';
-import { BadgeShape } from '../types';
-import type { ShapeContour } from '../shapes/contours';
+import { generateContour } from "../shapes/contours";
+import { BadgeShape } from "../types";
+import type { ShapeContour } from "../shapes/contours";
 
 const SIZE = 256;
 const INSET = 2;
@@ -236,15 +242,15 @@ function expectValidContour(contour: ShapeContour) {
 
 const ALL_SHAPES = Object.values(BadgeShape) as BadgeShape[];
 
-describe('generateContour', () => {
+describe("generateContour", () => {
   test.each(ALL_SHAPES)('produces valid contour for "%s"', (shape) => {
     const contour = generateContour(shape, SIZE, INSET);
     expectValidContour(contour);
   });
 
-  test('inner path is smaller than outer path', () => {
+  test("inner path is smaller than outer path", () => {
     // Circle: inner radius < outer radius
-    const contour = generateContour('circle', SIZE, INSET);
+    const contour = generateContour("circle", SIZE, INSET);
     // Inner path should contain smaller coordinate values
     const outerNums = (contour.outerPath.match(/[\d.]+/g) ?? []).map(Number);
     const innerNums = (contour.innerPath.match(/[\d.]+/g) ?? []).map(Number);
@@ -253,40 +259,40 @@ describe('generateContour', () => {
     expect(innerMax).toBeLessThan(outerMax);
   });
 
-  test('hexagon has 6 vertices', () => {
-    const contour = generateContour('hexagon', SIZE, INSET);
+  test("hexagon has 6 vertices", () => {
+    const contour = generateContour("hexagon", SIZE, INSET);
     expect(contour.vertices).toHaveLength(6);
   });
 
-  test('star has 5 vertices (tips only)', () => {
-    const contour = generateContour('star', SIZE, INSET);
+  test("star has 5 vertices (tips only)", () => {
+    const contour = generateContour("star", SIZE, INSET);
     expect(contour.vertices).toHaveLength(5);
   });
 
-  test('diamond has 4 vertices', () => {
-    const contour = generateContour('diamond', SIZE, INSET);
+  test("diamond has 4 vertices", () => {
+    const contour = generateContour("diamond", SIZE, INSET);
     expect(contour.vertices).toHaveLength(4);
   });
 
-  test('circle has N vertices (evenly distributed)', () => {
-    const contour = generateContour('circle', SIZE, INSET);
+  test("circle has N vertices (evenly distributed)", () => {
+    const contour = generateContour("circle", SIZE, INSET);
     // Circle uses 8 evenly-spaced points
     expect(contour.vertices.length).toBeGreaterThanOrEqual(4);
   });
 
-  test('shield has 3 vertices (shoulders + point)', () => {
-    const contour = generateContour('shield', SIZE, INSET);
+  test("shield has 3 vertices (shoulders + point)", () => {
+    const contour = generateContour("shield", SIZE, INSET);
     expect(contour.vertices).toHaveLength(3);
   });
 
-  test('roundedRect has 4 vertices (corners)', () => {
-    const contour = generateContour('roundedRect', SIZE, INSET);
+  test("roundedRect has 4 vertices (corners)", () => {
+    const contour = generateContour("roundedRect", SIZE, INSET);
     expect(contour.vertices).toHaveLength(4);
   });
 
-  test('scaling works — different sizes produce different contours', () => {
-    const small = generateContour('circle', 100, INSET);
-    const large = generateContour('circle', 400, INSET);
+  test("scaling works — different sizes produce different contours", () => {
+    const small = generateContour("circle", 100, INSET);
+    const large = generateContour("circle", 400, INSET);
     expect(small.outerPath).not.toBe(large.outerPath);
   });
 });
@@ -336,6 +342,7 @@ git commit -m "feat(badges): add shape contour system for frame and text geometr
 ### Task 3: Data mapper — goal data to frame parameters
 
 **Files:**
+
 - Create: `src/badges/frames/dataMapper.ts`
 - Create: `src/badges/__tests__/dataMapper.test.ts`
 
@@ -344,61 +351,67 @@ git commit -m "feat(badges): add shape contour system for frame and text geometr
 Test the pure mapping functions (no Evolu dependency — pass raw data in):
 
 ```typescript
-import { computeFrameParams } from '../frames/dataMapper';
-import type { FrameDataParams } from '../types';
+import { computeFrameParams } from "../frames/dataMapper";
+import type { FrameDataParams } from "../types";
 
-describe('computeFrameParams', () => {
-  test('computes params from goal data', () => {
+describe("computeFrameParams", () => {
+  test("computes params from goal data", () => {
     const params = computeFrameParams({
       stepCount: 5,
-      stepNames: ['Plan', 'Build', 'Test', 'Deploy', 'Document'],
+      stepNames: ["Plan", "Build", "Test", "Deploy", "Document"],
       evidenceCount: 12,
       evidenceTypes: 3,
-      createdAt: '2026-01-01T00:00:00Z',
-      completedAt: '2026-02-15T00:00:00Z',
+      createdAt: "2026-01-01T00:00:00Z",
+      completedAt: "2026-02-15T00:00:00Z",
     });
 
     expect(params.stepCount).toBe(5);
     expect(params.evidenceCount).toBe(12);
     expect(params.evidenceTypes).toBe(3);
     expect(params.daysToComplete).toBe(45);
-    expect(params.stepNames).toEqual(['Plan', 'Build', 'Test', 'Deploy', 'Document']);
+    expect(params.stepNames).toEqual([
+      "Plan",
+      "Build",
+      "Test",
+      "Deploy",
+      "Document",
+    ]);
     expect(params.variant).toBe(0);
   });
 
-  test('handles same-day completion', () => {
+  test("handles same-day completion", () => {
     const params = computeFrameParams({
       stepCount: 1,
-      stepNames: ['Do it'],
+      stepNames: ["Do it"],
       evidenceCount: 1,
       evidenceTypes: 1,
-      createdAt: '2026-02-27T10:00:00Z',
-      completedAt: '2026-02-27T15:00:00Z',
+      createdAt: "2026-02-27T10:00:00Z",
+      completedAt: "2026-02-27T15:00:00Z",
     });
     expect(params.daysToComplete).toBe(0);
   });
 
-  test('handles zero steps and zero evidence', () => {
+  test("handles zero steps and zero evidence", () => {
     const params = computeFrameParams({
       stepCount: 0,
       stepNames: [],
       evidenceCount: 0,
       evidenceTypes: 0,
-      createdAt: '2026-01-01T00:00:00Z',
-      completedAt: '2026-01-02T00:00:00Z',
+      createdAt: "2026-01-01T00:00:00Z",
+      completedAt: "2026-01-02T00:00:00Z",
     });
     expect(params.stepCount).toBe(0);
     expect(params.evidenceCount).toBe(0);
     expect(params.daysToComplete).toBe(1);
   });
 
-  test('handles missing completedAt (uses current date)', () => {
+  test("handles missing completedAt (uses current date)", () => {
     const params = computeFrameParams({
       stepCount: 3,
-      stepNames: ['A', 'B', 'C'],
+      stepNames: ["A", "B", "C"],
       evidenceCount: 5,
       evidenceTypes: 2,
-      createdAt: '2026-02-20T00:00:00Z',
+      createdAt: "2026-02-20T00:00:00Z",
       completedAt: null,
     });
     expect(params.daysToComplete).toBeGreaterThanOrEqual(0);
@@ -450,6 +463,7 @@ Each frame type is an independent module. They can be built in parallel once Pha
 ### Task 4: Frame generator interface + registry + boldBorder
 
 **Files:**
+
 - Create: `src/badges/frames/types.ts`
 - Modify: `src/badges/frames/index.ts`
 - Create: `src/badges/frames/boldBorder.ts`
@@ -458,50 +472,75 @@ Each frame type is an independent module. They can be built in parallel once Pha
 **Step 1: Write failing tests for boldBorder**
 
 ```typescript
-import React from 'react';
-import { renderToStaticMarkup } from 'react-dom/server'; // or test via RNTL
-import { boldBorderGenerator } from '../frames/boldBorder';
+import React from "react";
+import { renderToStaticMarkup } from "react-dom/server"; // or test via RNTL
+import { boldBorderGenerator } from "../frames/boldBorder";
 
 // Note: frame generators return React elements (SVG nodes).
 // Test them by checking the returned element structure.
 
-describe('boldBorderGenerator', () => {
+describe("boldBorderGenerator", () => {
   const baseConfig = {
-    shape: 'circle' as const,
+    shape: "circle" as const,
     size: 256,
     inset: 2,
     innerInset: 32,
   };
 
-  test('returns SVG elements for low step count (double border)', () => {
+  test("returns SVG elements for low step count (double border)", () => {
     const result = boldBorderGenerator({
       ...baseConfig,
-      params: { variant: 0, stepCount: 2, evidenceCount: 0, daysToComplete: 1, evidenceTypes: 0, stepNames: [] },
+      params: {
+        variant: 0,
+        stepCount: 2,
+        evidenceCount: 0,
+        daysToComplete: 1,
+        evidenceTypes: 0,
+        stepNames: [],
+      },
     });
     expect(result).not.toBeNull();
     // Should render 2 concentric Path elements
   });
 
-  test('returns SVG elements for high step count (triple border)', () => {
+  test("returns SVG elements for high step count (triple border)", () => {
     const result = boldBorderGenerator({
       ...baseConfig,
-      params: { variant: 0, stepCount: 6, evidenceCount: 0, daysToComplete: 1, evidenceTypes: 0, stepNames: [] },
+      params: {
+        variant: 0,
+        stepCount: 6,
+        evidenceCount: 0,
+        daysToComplete: 1,
+        evidenceTypes: 0,
+        stepNames: [],
+      },
     });
     expect(result).not.toBeNull();
     // Should render 3 concentric Path elements
   });
 
-  test.each(['circle', 'shield', 'hexagon', 'roundedRect', 'star', 'diamond'] as const)(
-    'renders without error for shape "%s"',
-    (shape) => {
-      const result = boldBorderGenerator({
-        ...baseConfig,
-        shape,
-        params: { variant: 0, stepCount: 3, evidenceCount: 0, daysToComplete: 1, evidenceTypes: 0, stepNames: [] },
-      });
-      expect(result).not.toBeNull();
-    },
-  );
+  test.each([
+    "circle",
+    "shield",
+    "hexagon",
+    "roundedRect",
+    "star",
+    "diamond",
+  ] as const)('renders without error for shape "%s"', (shape) => {
+    const result = boldBorderGenerator({
+      ...baseConfig,
+      shape,
+      params: {
+        variant: 0,
+        stepCount: 3,
+        evidenceCount: 0,
+        daysToComplete: 1,
+        evidenceTypes: 0,
+        stepNames: [],
+      },
+    });
+    expect(result).not.toBeNull();
+  });
 });
 ```
 
@@ -515,8 +554,8 @@ Expected: FAIL — module not found.
 Create `src/badges/frames/types.ts`:
 
 ```typescript
-import type { ReactElement } from 'react';
-import type { BadgeShape, FrameDataParams } from '../types';
+import type { ReactElement } from "react";
+import type { BadgeShape, FrameDataParams } from "../types";
 
 export type FrameGeneratorConfig = {
   shape: BadgeShape;
@@ -526,7 +565,9 @@ export type FrameGeneratorConfig = {
   params: FrameDataParams;
 };
 
-export type FrameGenerator = (config: FrameGeneratorConfig) => ReactElement | null;
+export type FrameGenerator = (
+  config: FrameGeneratorConfig,
+) => ReactElement | null;
 ```
 
 **Step 4: Implement boldBorder.ts**
@@ -559,6 +600,7 @@ git commit -m "feat(badges): add frame generator interface and boldBorder frame"
 ### Task 5: Guilloche frame generator
 
 **Files:**
+
 - Create: `src/badges/frames/guilloche.ts`
 - Create: `src/badges/__tests__/guilloche.test.ts`
 
@@ -567,41 +609,66 @@ git commit -m "feat(badges): add frame generator interface and boldBorder frame"
 Test that guilloche produces SVG path elements, that wave count scales with step count, and that it works for all 6 shapes.
 
 ```typescript
-import { guillocheGenerator } from '../frames/guilloche';
+import { guillocheGenerator } from "../frames/guilloche";
 
-describe('guillocheGenerator', () => {
+describe("guillocheGenerator", () => {
   const baseConfig = {
-    shape: 'circle' as const,
+    shape: "circle" as const,
     size: 256,
     inset: 2,
     innerInset: 32,
   };
 
-  test('produces more complex output for higher step count', () => {
+  test("produces more complex output for higher step count", () => {
     const simple = guillocheGenerator({
       ...baseConfig,
-      params: { variant: 0, stepCount: 1, evidenceCount: 0, daysToComplete: 1, evidenceTypes: 0, stepNames: [] },
+      params: {
+        variant: 0,
+        stepCount: 1,
+        evidenceCount: 0,
+        daysToComplete: 1,
+        evidenceTypes: 0,
+        stepNames: [],
+      },
     });
     const complex = guillocheGenerator({
       ...baseConfig,
-      params: { variant: 0, stepCount: 10, evidenceCount: 0, daysToComplete: 1, evidenceTypes: 0, stepNames: [] },
+      params: {
+        variant: 0,
+        stepCount: 10,
+        evidenceCount: 0,
+        daysToComplete: 1,
+        evidenceTypes: 0,
+        stepNames: [],
+      },
     });
     expect(simple).not.toBeNull();
     expect(complex).not.toBeNull();
     // Complex should have more path data (longer d attribute or more child elements)
   });
 
-  test.each(['circle', 'shield', 'hexagon', 'roundedRect', 'star', 'diamond'] as const)(
-    'renders without error for shape "%s"',
-    (shape) => {
-      const result = guillocheGenerator({
-        ...baseConfig,
-        shape,
-        params: { variant: 0, stepCount: 5, evidenceCount: 0, daysToComplete: 1, evidenceTypes: 0, stepNames: [] },
-      });
-      expect(result).not.toBeNull();
-    },
-  );
+  test.each([
+    "circle",
+    "shield",
+    "hexagon",
+    "roundedRect",
+    "star",
+    "diamond",
+  ] as const)('renders without error for shape "%s"', (shape) => {
+    const result = guillocheGenerator({
+      ...baseConfig,
+      shape,
+      params: {
+        variant: 0,
+        stepCount: 5,
+        evidenceCount: 0,
+        daysToComplete: 1,
+        evidenceTypes: 0,
+        stepNames: [],
+      },
+    });
+    expect(result).not.toBeNull();
+  });
 });
 ```
 
@@ -612,6 +679,7 @@ Run: `bun test --testPathPatterns guilloche.test.ts`
 **Step 3: Implement guilloche.ts**
 
 The guilloche generator:
+
 - Gets the shape contour (outer + inner paths)
 - Samples points along the contour at regular intervals
 - Generates sine wave oscillations between outer and inner boundary
@@ -620,7 +688,8 @@ The guilloche generator:
 - Stroke only, no fill. Stroke color derived from badge color at reduced opacity.
 
 This is the most math-heavy frame. The key algorithm:
-1. Sample N points along the shape contour (N = wave count * points per wave)
+
+1. Sample N points along the shape contour (N = wave count \* points per wave)
 2. For each point, offset perpendicular to the contour by `sin(t) * amplitude`
 3. Connect sampled points with smooth cubic bezier curves
 4. Optionally add a second wave offset by phase for interlocking pattern
@@ -644,6 +713,7 @@ git commit -m "feat(badges): add guilloche frame generator with shape-aware sine
 ### Task 6: CrossHatch frame generator
 
 **Files:**
+
 - Create: `src/badges/frames/crossHatch.ts`
 - Create: `src/badges/__tests__/crossHatch.test.ts`
 
@@ -675,6 +745,7 @@ git commit -m "feat(badges): add crossHatch frame generator with time-driven den
 ### Task 7: Microprint frame generator
 
 **Files:**
+
 - Create: `src/badges/frames/microprint.ts`
 - Create: `src/badges/__tests__/microprint.test.ts`
 
@@ -707,6 +778,7 @@ git commit -m "feat(badges): add microprint frame generator with goal data text"
 ### Task 8: Rosette frame generator
 
 **Files:**
+
 - Create: `src/badges/frames/rosette.ts`
 - Create: `src/badges/__tests__/rosette.test.ts`
 
@@ -740,6 +812,7 @@ git commit -m "feat(badges): add rosette frame generator with evidence-driven co
 ### Task 9: FrameOverlay component — integrates registry with BadgeRenderer
 
 **Files:**
+
 - Create: `src/badges/frames/FrameOverlay.tsx`
 - Create: `src/badges/__tests__/FrameOverlay.test.tsx`
 - Modify: `src/badges/BadgeRenderer.tsx:130-132`
@@ -754,7 +827,11 @@ Test that `FrameOverlay` renders nothing for `frame: 'none'`, delegates to corre
 
 ```typescript
 export function FrameOverlay({
-  frame, shape, size, inset, params
+  frame,
+  shape,
+  size,
+  inset,
+  params,
 }: {
   frame: BadgeFrame;
   shape: BadgeShape;
@@ -762,11 +839,13 @@ export function FrameOverlay({
   inset: number;
   params?: FrameDataParams;
 }) {
-  if (frame === 'none' || !params) return null;
+  if (frame === "none" || !params) return null;
   const contour = generateContour(shape, size, inset);
   const generator = frameRegistry[frame];
   return generator({
-    shape, size, inset,
+    shape,
+    size,
+    inset,
     innerInset: inset + size * FRAME_BAND_RATIO,
     params,
   });
@@ -778,14 +857,16 @@ export function FrameOverlay({
 Replace the `{/* Layer 3: Frame — not yet implemented */}` comment with:
 
 ```tsx
-{/* Layer 3: Frame overlay */}
+{
+  /* Layer 3: Frame overlay */
+}
 <FrameOverlay
   frame={design.frame}
   shape={design.shape}
   size={size}
   inset={inset}
   params={design.frameParams}
-/>
+/>;
 ```
 
 **Step 5: Run tests, verify pass**
@@ -814,6 +895,7 @@ Center monogram, center label, text-on-path, and banner. Each is independent.
 ### Task 10: MonogramCenter component
 
 **Files:**
+
 - Create: `src/badges/text/MonogramCenter.tsx`
 - Create: `src/badges/__tests__/MonogramCenter.test.tsx`
 
@@ -844,6 +926,7 @@ git commit -m "feat(badges): add MonogramCenter SVG text component"
 ### Task 11: CenterLabel component
 
 **Files:**
+
 - Create: `src/badges/text/CenterLabel.tsx`
 - Create: `src/badges/__tests__/CenterLabel.test.tsx`
 
@@ -862,6 +945,7 @@ git commit -m "feat(badges): add CenterLabel SVG text component"
 ### Task 12: PathText component
 
 **Files:**
+
 - Create: `src/badges/text/PathText.tsx`
 - Create: `src/badges/__tests__/PathText.test.tsx`
 
@@ -894,6 +978,7 @@ git commit -m "feat(badges): add PathText component for text-on-path inscription
 ### Task 13: Banner component
 
 **Files:**
+
 - Create: `src/badges/text/Banner.tsx`
 - Create: `src/badges/__tests__/Banner.test.tsx`
 
@@ -929,6 +1014,7 @@ git commit -m "feat(badges): add Banner ribbon overlay component"
 ### Task 14: Wire text system into BadgeRenderer
 
 **Files:**
+
 - Create: `src/badges/text/index.ts`
 - Modify: `src/badges/BadgeRenderer.tsx`
 - Modify: `src/badges/__tests__/BadgeRenderer.test.tsx`
@@ -1052,6 +1138,7 @@ New selectors for the BadgeDesignerScreen.
 ### Task 15: FrameSelector component
 
 **Files:**
+
 - Create: `src/badges/FrameSelector.tsx`
 - Create: `src/badges/__tests__/FrameSelector.test.tsx`
 
@@ -1062,6 +1149,7 @@ Test: renders 6 options (none + 5 frames), calls `onSelectFrame` on tap, selecte
 **Step 2: Implement FrameSelector.tsx**
 
 Follow the same pattern as `ShapeSelector.tsx`:
+
 - Horizontal `ScrollView` with frame thumbnails
 - Each thumbnail shows a small simplified preview of the pattern (can be a static icon/symbol per frame initially)
 - Selected state: bold border matching accent color
@@ -1080,6 +1168,7 @@ git commit -m "feat(badges): add FrameSelector component for designer UI"
 ### Task 16: CenterModeSelector component
 
 **Files:**
+
 - Create: `src/badges/CenterModeSelector.tsx`
 - Create: `src/badges/__tests__/CenterModeSelector.test.tsx`
 
@@ -1107,6 +1196,7 @@ git commit -m "feat(badges): add CenterModeSelector with icon/monogram toggle"
 ### Task 17: PathTextEditor component
 
 **Files:**
+
 - Create: `src/badges/PathTextEditor.tsx`
 - Create: `src/badges/__tests__/PathTextEditor.test.tsx`
 
@@ -1135,6 +1225,7 @@ git commit -m "feat(badges): add PathTextEditor for text-on-path controls"
 ### Task 18: BannerEditor component
 
 **Files:**
+
 - Create: `src/badges/BannerEditor.tsx`
 - Create: `src/badges/__tests__/BannerEditor.test.tsx`
 
@@ -1162,6 +1253,7 @@ git commit -m "feat(badges): add BannerEditor for banner/ribbon controls"
 ### Task 19: Wire new selectors into BadgeDesignerScreen
 
 **Files:**
+
 - Modify: `src/screens/BadgeDesignerScreen/BadgeDesignerScreen.tsx`
 - Modify: `src/screens/BadgeDesignerScreen/__tests__/BadgeDesignerScreen.test.tsx`
 
@@ -1174,6 +1266,7 @@ Test the full designer flow: frame selection updates preview, monogram toggle sw
 **Step 3: Add state handlers and new sections**
 
 Add state for:
+
 - `frame` (BadgeFrame)
 - `centerMode` ('icon' | 'monogram')
 - `monogram` (string)
@@ -1184,6 +1277,7 @@ Add state for:
 - `banner` ({ text, position } | null)
 
 Add new sections after existing icon picker:
+
 1. FrameSelector
 2. CenterModeSelector (conditionally shows icon picker or monogram input)
 3. CenterLabel input (TextInput, max 10 chars)
@@ -1210,6 +1304,7 @@ git commit -m "feat(badges): wire frame, text, and banner controls into badge de
 ### Task 20: Storybook stories for new features
 
 **Files:**
+
 - Modify: `src/stories/badges/BadgeDesigner.stories.tsx`
 - Create: `src/stories/badges/FrameOverlays.stories.tsx`
 - Create: `src/stories/badges/TextFeatures.stories.tsx`
@@ -1241,6 +1336,7 @@ git commit -m "feat(badges): add Storybook stories for frames, text, and data-dr
 ### Task 21: Final integration test + backward compatibility verification
 
 **Files:**
+
 - Modify: `src/screens/BadgeDesignerScreen/__tests__/BadgeDesignerScreen.test.tsx`
 
 **Step 1: Write integration test for full designer flow**
@@ -1298,12 +1394,15 @@ Task 1 (types)
 ### Parallelism Opportunities
 
 Once Task 1 (types) is done:
+
 - **Stream A:** Task 2 → Tasks 4-8 (parallel) → Task 9
 - **Stream B:** Tasks 10-13 (parallel)
 - **Stream C:** Task 3 (dataMapper, independent)
 
 Once Tasks 9 + all text components done:
+
 - Task 14 (wire renderer)
 
 Once Task 14 done:
+
 - **Stream D:** Tasks 15-18 (parallel) → Task 19 → Tasks 20-21 (parallel)

@@ -1,13 +1,13 @@
-import React from 'react';
-import { View, Text } from 'react-native';
-import { Button, type ButtonProps } from '../Button';
-import { styles } from './EmptyState.styles';
+import React from "react";
+import { View, Text } from "react-native";
+import { Button, type ButtonProps } from "../Button";
+import { styles } from "./EmptyState.styles";
 
 export interface EmptyStateProps {
   title: string;
   body: string;
   icon?: string;
-  action?: Pick<ButtonProps, 'label' | 'onPress'>;
+  action?: Pick<ButtonProps, "label" | "onPress">;
 }
 
 export function EmptyState({ title, body, icon, action }: EmptyStateProps) {

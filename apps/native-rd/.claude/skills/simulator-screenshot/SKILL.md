@@ -21,7 +21,11 @@ Default output: `/tmp/simulator-screenshot-<timestamp>.png`
 JSON to stdout on success:
 
 ```json
-{"success": true, "path": "/tmp/simulator-screenshot-1234567890.png", "udid": "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"}
+{
+  "success": true,
+  "path": "/tmp/simulator-screenshot-1234567890.png",
+  "udid": "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+}
 ```
 
 ## Workflow

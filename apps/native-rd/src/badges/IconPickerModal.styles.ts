@@ -1,5 +1,5 @@
-import { StyleSheet } from 'react-native-unistyles';
-import { shadowStyle } from '../styles/shadows';
+import { StyleSheet } from "react-native-unistyles";
+import { shadowStyle } from "../styles/shadows";
 
 /** Grid cell dimensions */
 export const MODAL_ICON_SIZE = 28;
@@ -20,15 +20,15 @@ export const styles = StyleSheet.create((theme) => ({
 
   // -- Header (matches BadgeDesignerScreen topBar) --
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[2],
     paddingBottom: theme.space[4],
     backgroundColor: theme.colors.accentYellow,
     zIndex: 1,
-    ...shadowStyle(theme, 'hardMd'),
+    ...shadowStyle(theme, "hardMd"),
   },
   headerTitle: {
     ...theme.textStyles.title,
@@ -40,14 +40,14 @@ export const styles = StyleSheet.create((theme) => ({
   closeButton: {
     width: 48,
     height: 48,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   // -- Preview bar --
   previewBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.space[3],
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[3],
@@ -56,8 +56,8 @@ export const styles = StyleSheet.create((theme) => ({
   previewIconContainer: {
     width: 56,
     height: 56,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.border,
     borderRadius: 0,
@@ -70,8 +70,8 @@ export const styles = StyleSheet.create((theme) => ({
 
   // -- Search --
   searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[2],
     gap: theme.space[2],
@@ -92,25 +92,25 @@ export const styles = StyleSheet.create((theme) => ({
     ...theme.textStyles.caption,
     color: theme.colors.textMuted,
     minWidth: 50,
-    textAlign: 'center',
+    textAlign: "center",
   },
   clearButton: {
     width: 44,
     height: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   clearButtonText: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
     fontFamily: theme.fontFamily.body,
     color: theme.colors.textSecondary,
   },
 
   // -- Category tabs --
   categoryContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: theme.space[2],
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[2],
@@ -122,10 +122,10 @@ export const styles = StyleSheet.create((theme) => ({
     minHeight: 44,
     paddingHorizontal: theme.space[2],
     paddingVertical: theme.space[1],
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: theme.borderWidth.medium,
-    borderColor: 'transparent',
+    borderColor: "transparent",
     borderRadius: 0,
   },
   categoryTabActive: {
@@ -139,16 +139,16 @@ export const styles = StyleSheet.create((theme) => ({
   },
   gridColumnWrapper: {
     paddingHorizontal: theme.space[4],
-    justifyContent: 'flex-start',
+    justifyContent: "flex-start",
     gap: theme.space[1],
   },
   iconCell: {
     width: MODAL_CELL_SIZE,
     height: MODAL_CELL_SIZE,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 3,
-    borderColor: 'transparent',
+    borderColor: "transparent",
     borderRadius: 0,
     margin: 4,
   },
@@ -160,14 +160,14 @@ export const styles = StyleSheet.create((theme) => ({
     fontFamily: theme.fontFamily.body,
     color: theme.colors.textMuted,
     marginTop: 2,
-    textAlign: 'center',
+    textAlign: "center",
   },
   iconLabelSelected: {
     color: theme.colors.background,
   },
   emptyContainer: {
     padding: theme.space[8],
-    alignItems: 'center',
+    alignItems: "center",
   },
   emptyText: {
     ...theme.textStyles.body,
@@ -176,7 +176,7 @@ export const styles = StyleSheet.create((theme) => ({
 
   // -- Weight bar --
   weightBar: {
-    flexDirection: 'row',
+    flexDirection: "row",
     borderTopWidth: theme.borderWidth.thick,
     borderTopColor: theme.colors.border,
     backgroundColor: theme.colors.backgroundSecondary,
@@ -184,8 +184,8 @@ export const styles = StyleSheet.create((theme) => ({
   weightSegment: {
     flex: 1,
     minHeight: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     borderRightWidth: theme.borderWidth.medium,
     borderRightColor: theme.colors.border,
   },
@@ -194,7 +194,7 @@ export const styles = StyleSheet.create((theme) => ({
   },
   weightLabel: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
     fontFamily: theme.fontFamily.body,
     color: theme.colors.text,
   },
