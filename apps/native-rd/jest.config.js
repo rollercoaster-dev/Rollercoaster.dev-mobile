@@ -28,8 +28,8 @@ module.exports = {
     '^react-native-keyboard-controller$': '<rootDir>/src/__tests__/mocks/keyboard-controller.ts',
   },
   transformIgnorePatterns: [
-    '/node_modules/(?!(@rollercoaster-dev/design-tokens|@testing-library/react-native|react-native|@react-native|phosphor-react-native|react-native-keyboard-controller)/)',
+    'node_modules/(?!(\\.bun/.*?/node_modules/)?(@rollercoaster-dev/design-tokens|@testing-library/react-native|react-native|@react-native|phosphor-react-native|react-native-keyboard-controller)/)',
   ],
-  setupFiles: ['./node_modules/react-native/jest/setup.js', './src/db/__tests__/setup.ts'],
+  setupFiles: [require.resolve('react-native/jest/setup'), './src/db/__tests__/setup.ts'],
   testMatch: ['**/src/**/__tests__/**/*.test.{ts,tsx}'],
 };
