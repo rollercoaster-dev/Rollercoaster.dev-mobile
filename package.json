@@ -46,8 +46,11 @@
     "typescript": "^5.8.3"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx,vue}": [
+    "!(apps/native-rd/**)*.{ts,tsx,js,jsx,vue}": [
       "eslint --fix --cache",
+      "prettier --write"
+    ],
+    "apps/native-rd/**/*.{ts,tsx,js,jsx}": [
       "prettier --write"
     ],
     "*.{json,md,yml,yaml,css,scss}": [
@@ -57,5 +60,8 @@
   "packageManager": "bun@1.3.7",
   "engines": {
     "bun": ">=1.3.7"
+  },
+  "patchedDependencies": {
+    "ajv-formats@3.0.1": "patches/ajv-formats@3.0.1.patch"
   }
 }
