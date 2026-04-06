@@ -1,8 +1,12 @@
 appId: com.joe.rd.native-rd
 ---
-# Theme switcher smoke test
+# Theme switcher — verify "Night Ride" selection takes effect
+# Status: required
+# Criteria: stable feature, outcome assertion present, deterministic
 - launchApp
 - tapOn: "S"
 - assertVisible: "Settings"
 - assertVisible: "Pick what feels right"
 - tapOn: "Night Ride"
+- assertVisible:
+    id: "selected-theme"

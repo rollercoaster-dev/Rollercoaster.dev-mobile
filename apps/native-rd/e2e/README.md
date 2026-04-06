@@ -15,7 +15,7 @@ End-to-end test flows for the native-rd app, designed for agent authoring and ex
 bun run test:e2e
 
 # Run a single flow
-bun run test:e2e:single e2e/flows/goal-create-complete.yaml
+bun run test:e2e:single e2e/flows/goal-create.yaml
 
 # JSON output for agent consumption
 maestro test --format junit e2e/flows/
@@ -47,10 +47,30 @@ appId: com.joe.rd.native-rd
     text: "Value to type"
 ```
 
+## Required vs Optional Flows
+
+Each flow YAML file has a `# Status: required` or `# Status: optional` comment header.
+
+A flow qualifies as **required** when it meets ALL three criteria:
+
+> **Note:** CI enforcement for required flows is not yet implemented — `scripts/run-e2e.sh` currently runs all flows unfiltered and Maestro is not executed in CI (only Jest unit tests run via `test:ci`). CI integration is tracked in epic #889.
+
+1. **Outcome assertions** — It has assertions that verify outcomes, not just that actions were performed
+2. **Stable feature** — It tests a stable, implemented feature (not aspirational)
+3. **Deterministic** — No race conditions or flaky element matching
+
+A flow is **optional** when it covers aspirational or partially-implemented features. Optional flows are tracked but excluded from CI gates.
+
 ## Current Flows
 
-| Flow                         | User Story           | Description                                      |
-| ---------------------------- | -------------------- | ------------------------------------------------ |
-| `goal-create-complete.yaml`  | Lina's Quiet Victory | Create a goal (completion flow is aspirational)  |
-| `badge-view.yaml`            | Badge tab            | Navigate to badges tab, verify empty state       |
-| `settings-theme-switch.yaml` | Theme switch         | Navigate to settings, switch to Night Ride theme |
+| Flow                         | Status   | User Story           | Description                                               |
+| ---------------------------- | -------- | -------------------- | --------------------------------------------------------- |
+| `goal-create.yaml`           | required | Lina's Quiet Victory | Create a goal, verify navigation to Design Badge screen   |
+| `badge-view.yaml`            | required | Badge tab            | Navigate to badges tab, verify empty state                |
+| `settings-theme-switch.yaml` | required | Theme switch         | Navigate to settings, switch to Night Ride, verify change |
+
+## Deferred Flows
+
+| Flow                 | Blocked On                          | Notes                                                                                                       |
+| -------------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `goal-complete.yaml` | Goal detail / completion UI feature | Split from original `goal-create-complete.yaml`. Will test marking a goal as complete once the UI is built. |

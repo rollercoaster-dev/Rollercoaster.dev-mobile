@@ -1,6 +1,8 @@
 appId: com.joe.rd.native-rd
 ---
 # Badge tab navigation smoke test
+# Status: required
+# Criteria: stable feature, assertVisible confirms navigation + empty state render, deterministic
 - launchApp
 - tapOn: "B"
 - assertVisible: "No badges yet"

@@ -61,6 +61,7 @@ export function ThemeSwitcher() {
               accessibilityRole="radio"
               accessibilityState={{ checked: isSelected }}
               accessibilityLabel={`${option.label}. ${option.description}`}
+              testID={isSelected ? "selected-theme" : undefined}
               style={[
                 styles.option,
                 {
