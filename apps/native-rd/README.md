@@ -9,28 +9,58 @@ A neurodiversity-first goal tracker and Open Badges portfolio app for iOS and An
 ## Quick Start
 
 ```bash
+cd /path/to/monorepo
 bun install
-npx expo start
+cd apps/native-rd
+bun run ios
 ```
 
 ### Device/Simulator
 
 ```bash
-npx expo start --ios       # iOS Simulator
-npx expo start --android   # Android Emulator
+bun run ios                # iOS Simulator via Expo native build
+IOS_DEVICE_ID=<udid> bun run ios:device
+bun run android            # Android Emulator via Expo native build
+bun run start:worktree     # Metro on a worktree-safe port
 ```
+
+`native-rd` is a dev-client/native-modules app. Use native builds (`expo run:ios` /
+`expo run:android` via the Bun scripts), not `expo start`.
+
+## Verified Monorepo Status
+
+Verified on April 7, 2026:
+
+- `native-rd` is correctly registered as a Bun workspace in the monorepo.
+- `bun run turbo build --filter=native-rd` passes. The package build is intentionally
+  a no-op because the Expo app does not produce a standard monorepo build artifact.
+- `bun run turbo type-check --filter=native-rd` passes.
+- The supported iOS launch flow is `bun run ios` from `apps/native-rd/`, or
+  `bun run native:ios` from the monorepo root.
+- The iOS launch path is stabilized through `scripts/run-ios.sh`, which installs pods
+  directly and then runs `expo run:ios --no-install`.
+
+Current implementation note:
+
+- Expo's own CocoaPods phase was flaky in this monorepo because Bun could inject a
+  temporary Node shim and npm-compat environment variables that broke autolinking.
+- The wrapper script now pins a real Node binary, clears Bun's `npm_*` env vars,
+  runs `pod install --repo-update --ansi`, and then launches Expo with `--no-install`.
 
 ---
 
 ## Commands
 
-| Command                  | What it does                                    |
-| ------------------------ | ----------------------------------------------- |
-| `npx expo start`         | Start the dev server                            |
-| `npx jest --no-coverage` | Run tests (use this, not `bun test` — it hangs) |
-| `npx tsc --noEmit`       | Type-check                                      |
-| `bun run lint`           | Lint                                            |
-| `bun run build`          | Production build via EAS                        |
+| Command                                   | What it does                                          |
+| ----------------------------------------- | ----------------------------------------------------- |
+| `bun run ios`                             | Build and run the iOS dev client                      |
+| `IOS_DEVICE_ID=<udid> bun run ios:device` | Build and run the iOS dev client on a specific device |
+| `bun run android`                         | Build and run the Android dev client                  |
+| `bun run start:worktree`                  | Start Metro on a worktree-safe port                   |
+| `npx jest --no-coverage`                  | Run tests (use this, not `bun test` — it hangs)       |
+| `npx tsc --noEmit`                        | Type-check                                            |
+| `bun run lint`                            | Lint                                                  |
+| `bun run build`                           | Monorepo build placeholder (no app artifact)          |
 
 ---
 
