@@ -58,6 +58,16 @@ describe("Evidence CRUD Operations", () => {
         }),
       ).not.toThrow();
     });
+
+    test("should ignore inherited attachment fields", () => {
+      const params = Object.assign(Object.create({ goalId: mockGoalId }), {
+        stepId: mockStepId,
+        type: "photo",
+        uri: "file://photo.jpg",
+      });
+
+      expect(() => createEvidence(params)).not.toThrow();
+    });
   });
 
   test.each([

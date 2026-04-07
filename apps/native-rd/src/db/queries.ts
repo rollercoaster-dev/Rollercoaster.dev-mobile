@@ -573,20 +573,25 @@ export function createEvidence(params: {
   description?: string;
   metadata?: string;
 }) {
+  const goalId = Object.hasOwn(params, "goalId") ? params.goalId : undefined;
+  const stepId = Object.hasOwn(params, "stepId") ? params.stepId : undefined;
+
   // Validate exactly one of goalId/stepId is set
-  const hasBoth = params.goalId && params.stepId;
-  const hasNeither = !params.goalId && !params.stepId;
+  const hasGoalId = goalId != null;
+  const hasStepId = stepId != null;
+  const hasBoth = hasGoalId && hasStepId;
+  const hasNeither = !hasGoalId && !hasStepId;
 
   if (hasBoth || hasNeither) {
     logger.error("Evidence attachment constraint violation", {
-      hasGoalId: !!params.goalId,
-      hasStepId: !!params.stepId,
-      goalId: params.goalId,
-      stepId: params.stepId,
+      hasGoalId,
+      hasStepId,
+      goalId,
+      stepId,
     });
     throw new Error(
       `Evidence must attach to exactly one of goalId or stepId. ` +
-        `Received: goalId=${params.goalId || "null"}, stepId=${params.stepId || "null"}`,
+        `Received: goalId=${goalId || "null"}, stepId=${stepId || "null"}`,
     );
   }
 
@@ -639,8 +644,8 @@ export function createEvidence(params: {
 
   try {
     return evolu.insert("evidence", {
-      goalId: params.goalId || null,
-      stepId: params.stepId || null,
+      goalId: goalId || null,
+      stepId: stepId || null,
       type: parsedType,
       uri: parsedUri,
       description: parsedDescription,
@@ -648,8 +653,8 @@ export function createEvidence(params: {
     });
   } catch (error) {
     logger.error("Failed to insert evidence", {
-      goalId: params.goalId,
-      stepId: params.stepId,
+      goalId,
+      stepId,
       type: parsedType,
       error,
     });
