@@ -1,5 +1,12 @@
-import React, { useState } from "react";
-import { View, Text, Pressable, TextInput } from "react-native";
+import React, { useRef, useState } from "react";
+import {
+  View,
+  Text,
+  Pressable,
+  TextInput,
+  ScrollView,
+  Keyboard,
+} from "react-native";
 import Animated from "react-native-reanimated";
 import { useUnistyles } from "react-native-unistyles";
 import { Card } from "../Card";
@@ -34,6 +41,8 @@ export interface StepCardProps {
   onToggleComplete: () => void;
   onEvidenceTap: () => void;
   onQuickNote?: (text: string) => void;
+  onQuickNoteFocus?: () => void;
+  onQuickNoteBlur?: () => void;
 }
 
 const statusToVariant: Record<StepCardStatus, StatusBadgeVariant> = {
@@ -64,11 +73,14 @@ export function StepCard({
   onToggleComplete,
   onEvidenceTap,
   onQuickNote,
+  onQuickNoteFocus,
+  onQuickNoteBlur,
 }: StepCardProps) {
   const { theme } = useUnistyles();
   const isCompleted = step.status === "completed";
   const evidenceLabel = formatEvidenceLabel(step.evidenceCount);
   const flashStyle = useFlashOnIncrease(step.evidenceCount);
+  const quickNoteInputRef = useRef<TextInput>(null);
 
   const plannedTypes = step.plannedEvidenceTypes ?? null;
   const capturedTypes = step.capturedEvidenceTypes ?? [];
@@ -100,6 +112,8 @@ export function StepCard({
     if (trimmed && onQuickNote) {
       onQuickNote(trimmed);
       setQuickNoteText("");
+      quickNoteInputRef.current?.blur();
+      Keyboard.dismiss();
     }
   };
 
@@ -119,7 +133,11 @@ export function StepCard({
 
   return (
     <Card>
-      <View style={styles.container}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.container}
+      >
         <Text style={styles.stepNumber}>
           Step {stepIndex + 1} of {totalSteps}
         </Text>
@@ -182,29 +200,35 @@ export function StepCard({
         {showQuickNote && (
           <View style={styles.quickNoteRow}>
             <TextInput
+              ref={quickNoteInputRef}
               style={styles.quickNoteInput}
               value={quickNoteText}
               onChangeText={setQuickNoteText}
+              onFocus={onQuickNoteFocus}
+              onBlur={onQuickNoteBlur}
               placeholder="Quick note..."
               placeholderTextColor={theme.colors.textMuted}
               returnKeyType="done"
               onSubmitEditing={handleQuickNoteSubmit}
+              testID="step-card-quick-note-input"
               accessible
-              accessibilityLabel="Add a quick text note"
-              accessibilityHint="Submits as text evidence for this step"
+              accessibilityLabel="Quick note"
+              accessibilityHint="Type a quick note for this step, then tap Add to save it"
             />
             <Pressable
               onPress={handleQuickNoteSubmit}
               style={styles.quickNoteButton}
+              testID="step-card-quick-note-add-button"
               accessible
               accessibilityRole="button"
-              accessibilityLabel="Submit quick note"
+              accessibilityLabel="Add quick note"
+              accessibilityHint="Saves this quick note to the current step"
             >
               <Text style={styles.quickNoteButtonText}>Add</Text>
             </Pressable>
           </View>
         )}
-      </View>
+      </ScrollView>
     </Card>
   );
 }

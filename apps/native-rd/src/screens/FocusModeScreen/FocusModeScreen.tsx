@@ -11,6 +11,8 @@ import {
   ActivityIndicator,
   AccessibilityInfo,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
@@ -351,6 +353,11 @@ function FocusContent({ goalId }: { goalId: string }) {
     if (!isDrawerOpen) setIsDrawerOpen(true);
   };
 
+  const handleQuickNoteFocus = () => {
+    setIsDrawerOpen(false);
+    setIsFABMenuOpen(false);
+  };
+
   const handleSelectEvidenceType = (type: EvidenceTypeValue) => {
     setIsFABMenuOpen(false);
     const routeName = EVIDENCE_ROUTE_MAP[type];
@@ -462,45 +469,48 @@ function FocusContent({ goalId }: { goalId: string }) {
       />
 
       {/* CardCarousel with ProgressDots as indicator */}
-      <CardCarousel
-        currentIndex={currentCardIndex}
-        onIndexChange={handleIndexChange}
-        accessibilityLabel={`Focus mode cards, ${stepRows.length} steps`}
-        renderIndicator={() => (
-          <ProgressDots
-            steps={dotSteps}
-            currentIndex={currentCardIndex}
-            onDotTap={handleIndexChange}
-            showGoalDot
-          />
-        )}
-      >
-        {[
-          ...stepsWithEvidence.map((step, index) => (
-            <StepCard
-              key={step.id}
-              step={{
-                id: step.id,
-                title: step.title,
-                status: step.status as StepCardStatus,
-                evidenceCount: step.evidenceCount,
-                plannedEvidenceTypes: step.plannedEvidenceTypes,
-                capturedEvidenceTypes: step.capturedEvidenceTypes,
-              }}
-              stepIndex={index}
-              totalSteps={stepRows.length}
-              onToggleComplete={() => handleToggleStep(step.id)}
-              onEvidenceTap={handleEvidenceTap}
-              onQuickNote={(text) => handleQuickNote(step.id, text)}
+      <View style={styles.carouselSection}>
+        <CardCarousel
+          currentIndex={currentCardIndex}
+          onIndexChange={handleIndexChange}
+          accessibilityLabel={`Focus mode cards, ${stepRows.length} steps`}
+          renderIndicator={() => (
+            <ProgressDots
+              steps={dotSteps}
+              currentIndex={currentCardIndex}
+              onDotTap={handleIndexChange}
+              showGoalDot
             />
-          )),
-          <GoalEvidenceCard
-            key="goal-evidence"
-            evidenceCount={goalEvidenceCount}
-            onEvidenceTap={handleEvidenceTap}
-          />,
-        ]}
-      </CardCarousel>
+          )}
+        >
+          {[
+            ...stepsWithEvidence.map((step, index) => (
+              <StepCard
+                key={step.id}
+                step={{
+                  id: step.id,
+                  title: step.title,
+                  status: step.status as StepCardStatus,
+                  evidenceCount: step.evidenceCount,
+                  plannedEvidenceTypes: step.plannedEvidenceTypes,
+                  capturedEvidenceTypes: step.capturedEvidenceTypes,
+                }}
+                stepIndex={index}
+                totalSteps={stepRows.length}
+                onToggleComplete={() => handleToggleStep(step.id)}
+                onEvidenceTap={handleEvidenceTap}
+                onQuickNote={(text) => handleQuickNote(step.id, text)}
+                onQuickNoteFocus={handleQuickNoteFocus}
+              />
+            )),
+            <GoalEvidenceCard
+              key="goal-evidence"
+              evidenceCount={goalEvidenceCount}
+              onEvidenceTap={handleEvidenceTap}
+            />,
+          ]}
+        </CardCarousel>
+      </View>
 
       {/* EvidenceDrawer */}
       <EvidenceDrawer
@@ -571,7 +581,11 @@ export function FocusModeScreen({ route }: FocusModeNavProps) {
         <Text variant="label">Focus Mode</Text>
         <View style={styles.spacer} />
       </View>
-      <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1, backgroundColor: theme.colors.background }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}
+      >
         <ErrorBoundary>
           <Suspense
             fallback={
@@ -582,7 +596,7 @@ export function FocusModeScreen({ route }: FocusModeNavProps) {
           </Suspense>
         </ErrorBoundary>
         <ModeIndicator mode="focus" />
-      </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

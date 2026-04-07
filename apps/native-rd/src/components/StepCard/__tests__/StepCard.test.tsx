@@ -1,4 +1,5 @@
 import React from "react";
+import { Keyboard } from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -240,7 +241,7 @@ describe("StepCard", () => {
         {...defaultProps}
       />,
     );
-    expect(screen.getByLabelText("Add a quick text note")).toBeOnTheScreen();
+    expect(screen.getByLabelText("Quick note")).toBeOnTheScreen();
   });
 
   it("does not render quick-note input when text is already captured", () => {
@@ -253,7 +254,7 @@ describe("StepCard", () => {
         {...defaultProps}
       />,
     );
-    expect(screen.queryByLabelText("Add a quick text note")).toBeNull();
+    expect(screen.queryByLabelText("Quick note")).toBeNull();
   });
 
   it("calls onQuickNote with trimmed text on submit", () => {
@@ -268,10 +269,53 @@ describe("StepCard", () => {
         onQuickNote={onQuickNote}
       />,
     );
-    const input = screen.getByLabelText("Add a quick text note");
+    const input = screen.getByLabelText("Quick note");
     fireEvent.changeText(input, "  My reflection  ");
-    fireEvent.press(screen.getByLabelText("Submit quick note"));
+    fireEvent.press(screen.getByLabelText("Add quick note"));
     expect(onQuickNote).toHaveBeenCalledWith("My reflection");
+  });
+
+  it("dismisses the keyboard after adding a quick note", () => {
+    const onQuickNote = jest.fn();
+    const dismissSpy = jest
+      .spyOn(Keyboard, "dismiss")
+      .mockImplementation(() => undefined);
+
+    renderWithProviders(
+      <StepCard
+        step={makeStep({
+          plannedEvidenceTypes: ["text"],
+          capturedEvidenceTypes: [],
+        })}
+        {...defaultProps}
+        onQuickNote={onQuickNote}
+      />,
+    );
+
+    fireEvent.changeText(screen.getByLabelText("Quick note"), "Reflection");
+    fireEvent.press(screen.getByLabelText("Add quick note"));
+
+    expect(onQuickNote).toHaveBeenCalledWith("Reflection");
+    expect(dismissSpy).toHaveBeenCalled();
+
+    dismissSpy.mockRestore();
+  });
+
+  it("exposes stable automation hooks for the real quick-note controls", () => {
+    renderWithProviders(
+      <StepCard
+        step={makeStep({
+          plannedEvidenceTypes: ["text"],
+          capturedEvidenceTypes: [],
+        })}
+        {...defaultProps}
+      />,
+    );
+
+    expect(screen.getByTestId("step-card-quick-note-input")).toBeOnTheScreen();
+    expect(
+      screen.getByTestId("step-card-quick-note-add-button"),
+    ).toBeOnTheScreen();
   });
 
   it("does not render quick-note when step is completed", () => {
@@ -285,7 +329,7 @@ describe("StepCard", () => {
         {...defaultProps}
       />,
     );
-    expect(screen.queryByLabelText("Add a quick text note")).toBeNull();
+    expect(screen.queryByLabelText("Quick note")).toBeNull();
   });
 
   it("does not call onQuickNote when input is empty or whitespace", () => {
@@ -300,9 +344,9 @@ describe("StepCard", () => {
         onQuickNote={onQuickNote}
       />,
     );
-    const input = screen.getByLabelText("Add a quick text note");
+    const input = screen.getByLabelText("Quick note");
     fireEvent.changeText(input, "   ");
-    fireEvent.press(screen.getByLabelText("Submit quick note"));
+    fireEvent.press(screen.getByLabelText("Add quick note"));
     expect(onQuickNote).not.toHaveBeenCalled();
   });
 
