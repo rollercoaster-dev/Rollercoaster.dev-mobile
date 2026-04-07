@@ -22,6 +22,8 @@
     "test:e2e": "bash scripts/run-e2e.sh",
     "test:e2e:single": "maestro test",
     "logs:agent": "bash scripts/agent-logs.sh",
+    "ios:worktree-launch": "bash scripts/worktree-launch-ios.sh",
+    "worktree:port": "bash scripts/worktree-port.sh --json",
     "start:worktree": "bash scripts/worktree-boot.sh",
     "test:a11y": "bash scripts/a11y-audit.sh",
     "test:a11y:json": "bash scripts/a11y-audit.sh --json"

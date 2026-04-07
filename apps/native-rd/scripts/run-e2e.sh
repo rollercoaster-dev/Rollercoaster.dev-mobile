@@ -7,4 +7,10 @@ if ! command -v maestro >/dev/null 2>&1; then
   exit 0
 fi
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+if xcrun simctl list devices booted | grep -q "Booted"; then
+  "${SCRIPT_DIR}/worktree-launch-ios.sh"
+fi
+
 maestro test e2e/flows/
