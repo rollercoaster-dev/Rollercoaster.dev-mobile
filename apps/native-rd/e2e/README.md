@@ -63,14 +63,15 @@ A flow is **optional** when it covers aspirational or partially-implemented feat
 
 ## Current Flows
 
-| Flow                         | Status   | User Story           | Description                                               |
-| ---------------------------- | -------- | -------------------- | --------------------------------------------------------- |
-| `goal-create.yaml`           | required | Lina's Quiet Victory | Create a goal, verify navigation to Design Badge screen   |
-| `badge-view.yaml`            | required | Badge tab            | Navigate to badges tab, verify empty state                |
-| `settings-theme-switch.yaml` | required | Theme switch         | Navigate to settings, switch to Night Ride, verify change |
+| Flow                         | Status   | User Story           | Description                                                               |
+| ---------------------------- | -------- | -------------------- | ------------------------------------------------------------------------- |
+| `goal-create.yaml`           | required | Lina's Quiet Victory | Create a goal, verify navigation to Design Badge screen                   |
+| `goal-create-complete.yaml`  | required | Lina's Quiet Victory | Create a goal, add a note in Focus Mode, complete it, add final goal note |
+| `badge-view.yaml`            | required | Badge tab            | Navigate to badges tab, verify empty state                                |
+| `settings-theme-switch.yaml` | required | Theme switch         | Navigate to settings, switch to Night Ride, verify change                 |
 
 ## Deferred Flows
 
-| Flow                 | Blocked On                          | Notes                                                                                                       |
-| -------------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `goal-complete.yaml` | Goal detail / completion UI feature | Split from original `goal-create-complete.yaml`. Will test marking a goal as complete once the UI is built. |
+| Flow                 | Blocked On                         | Notes                                                                                                                 |
+| -------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `goal-complete.yaml` | Separate goal completion scenarios | Keep for future completion-path variants beyond the main real quick-note flow covered by `goal-create-complete.yaml`. |

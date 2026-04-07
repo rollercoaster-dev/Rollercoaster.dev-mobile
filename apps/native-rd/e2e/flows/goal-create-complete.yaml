@@ -1,0 +1,42 @@
+appId: com.joe.rd.native-rd
+---
+# Lina's Quiet Victory — create a goal, add a quick note, complete the step, add a final goal note
+# Status: required
+# Criteria: stable feature, outcome assertion present, deterministic
+- launchApp
+- runFlow:
+    when:
+      visible: "Pick what feels right"
+    commands:
+      - tapOn: "Get Started"
+- assertVisible: "Goals"
+- tapOn:
+    id: "create-new-goal"
+- assertVisible: "New Goal"
+- tapOn: "What do you want to learn?"
+- inputText: "Reorganize Local History section"
+- tapOn: "Create Goal"
+- assertVisible: "Design Badge"
+- tapOn: "Use This Design"
+- assertVisible: "Edit Goal"
+- tapOn: "Add a new step"
+- inputText: "Write a quick reflection"
+- tapOn: "Write a Note"
+- tapOn: "Add step"
+- assertVisible: "Write a quick reflection"
+- tapOn: "Start Working"
+- assertVisible: "Focus Mode"
+- assertVisible:
+    id: "step-card-quick-note-input"
+- inputText:
+    id: "step-card-quick-note-input"
+    text: "Found a better way to organize the section"
+- tapOn:
+    id: "step-card-quick-note-add-button"
+- assertVisible: "Mark complete"
+- tapOn: "Mark complete"
+- assertVisible: "One last thing!"
+- tapOn: "Write about your achievement"
+- inputText: "Finished organizing the section and wrote down what worked."
+- tapOn: "Save Note"
+- assertVisible: "You did it!"
