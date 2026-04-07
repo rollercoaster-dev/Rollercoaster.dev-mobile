@@ -326,7 +326,6 @@ function FocusContent({ goalId }: { goalId: string }) {
     try {
       createEvidence({
         stepId: stepId as StepId,
-        goalId: goalId as GoalId,
         type: EvidenceType.text,
         uri: TEXT_EVIDENCE_PREFIX + text,
         description: text.length > 50 ? text.slice(0, 50) + "..." : text,

@@ -511,7 +511,6 @@ describe("FocusModeScreen", () => {
     fireEvent.press(screen.getByTestId("step-card-quick-note-add-button"));
     expect(mockCreateEvidence).toHaveBeenCalledWith({
       stepId: "step-1",
-      goalId: "goal-1",
       type: "text",
       uri: "content:text;My reflection",
       description: "My reflection",
@@ -601,7 +600,6 @@ describe("FocusModeScreen", () => {
 
     expect(mockCreateEvidence).toHaveBeenCalledWith({
       stepId: "step-1",
-      goalId: "goal-1",
       type: "text",
       uri: "content:text;My reflection",
       description: "My reflection",
