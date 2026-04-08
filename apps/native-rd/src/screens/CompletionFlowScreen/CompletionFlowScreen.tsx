@@ -250,7 +250,7 @@ function CompletionContent({ goalId }: { goalId: string }) {
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View
             style={styles.card}
-            accessible
+            accessible={false}
             accessibilityRole="summary"
             accessibilityLabel={`Almost there! Capture evidence for ${goal.title}`}
           >
@@ -282,6 +282,7 @@ function CompletionContent({ goalId }: { goalId: string }) {
                 multiline
                 textAlignVertical="top"
                 maxLength={MAX_NOTE_LENGTH}
+                testID="completion-note-input"
                 accessible
                 accessibilityLabel="Write about your achievement"
                 accessibilityHint="Type a reflection about what you accomplished"
@@ -292,6 +293,7 @@ function CompletionContent({ goalId }: { goalId: string }) {
                 disabled={!canSaveNote}
                 loading={savingNote}
                 variant="primary"
+                testID="completion-save-note-button"
               />
             </View>
 
@@ -330,7 +332,7 @@ function CompletionContent({ goalId }: { goalId: string }) {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View
           style={styles.card}
-          accessible
+          accessible={false}
           accessibilityRole="summary"
           accessibilityLabel={`Congratulations! All ${stepRows.length} steps completed for ${goal.title}`}
         >

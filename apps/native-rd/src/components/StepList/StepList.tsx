@@ -378,6 +378,7 @@ export function StepList({
                 onSubmitEditing={handleNewStepSubmit}
                 returnKeyType="done"
                 blurOnSubmit={false}
+                testID="step-list-new-step-input"
                 accessibilityLabel="Add a new step"
                 accessibilityHint="Type a step title and press return to add"
               />
@@ -385,6 +386,7 @@ export function StepList({
             <Pressable
               style={styles.addStepButton}
               onPress={handleNewStepSubmit}
+              testID="step-list-add-step-button"
               accessibilityRole="button"
               accessibilityLabel="Add step"
             >

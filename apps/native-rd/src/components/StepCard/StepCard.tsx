@@ -42,7 +42,6 @@ export interface StepCardProps {
   onEvidenceTap: () => void;
   onQuickNote?: (text: string) => void;
   onQuickNoteFocus?: () => void;
-  onQuickNoteBlur?: () => void;
 }
 
 const statusToVariant: Record<StepCardStatus, StatusBadgeVariant> = {
@@ -74,7 +73,6 @@ export function StepCard({
   onEvidenceTap,
   onQuickNote,
   onQuickNoteFocus,
-  onQuickNoteBlur,
 }: StepCardProps) {
   const { theme } = useUnistyles();
   const isCompleted = step.status === "completed";
@@ -205,7 +203,6 @@ export function StepCard({
               value={quickNoteText}
               onChangeText={setQuickNoteText}
               onFocus={onQuickNoteFocus}
-              onBlur={onQuickNoteBlur}
               placeholder="Quick note..."
               placeholderTextColor={theme.colors.textMuted}
               returnKeyType="done"
