@@ -565,27 +565,32 @@ export const stepEvidenceByGoalQuery = (goalId: GoalId) =>
  * @returns Insert command
  * @throws Error if validation fails or constraint violated
  */
-export function createEvidence(params: {
-  goalId?: GoalId;
-  stepId?: StepId;
+type StepEvidenceParams = { stepId: StepId; goalId?: never };
+type GoalEvidenceParams = { goalId: GoalId; stepId?: never };
+type CreateEvidenceBase = {
   type: string;
   uri: string;
   description?: string;
   metadata?: string;
-}) {
-  const goalId = Object.hasOwn(params, "goalId") ? params.goalId : undefined;
-  const stepId = Object.hasOwn(params, "stepId") ? params.stepId : undefined;
+};
+export type CreateEvidenceParams = (StepEvidenceParams | GoalEvidenceParams) &
+  CreateEvidenceBase;
 
-  // Validate exactly one of goalId/stepId is set
-  const hasGoalId = goalId != null;
-  const hasStepId = stepId != null;
-  const hasBoth = hasGoalId && hasStepId;
-  const hasNeither = !hasGoalId && !hasStepId;
+export function createEvidence(params: CreateEvidenceParams) {
+  const goalId = Object.hasOwn(params, "goalId")
+    ? (params as GoalEvidenceParams).goalId
+    : undefined;
+  const stepId = Object.hasOwn(params, "stepId")
+    ? (params as StepEvidenceParams).stepId
+    : undefined;
 
+  // Runtime defense-in-depth (type system prevents this at compile time)
+  const hasBoth = goalId != null && stepId != null;
+  const hasNeither = goalId == null && stepId == null;
   if (hasBoth || hasNeither) {
     logger.error("Evidence attachment constraint violation", {
-      hasGoalId,
-      hasStepId,
+      hasGoalId: goalId != null,
+      hasStepId: stepId != null,
       goalId,
       stepId,
     });
