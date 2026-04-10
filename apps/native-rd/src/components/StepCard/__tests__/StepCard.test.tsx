@@ -318,6 +318,22 @@ describe("StepCard", () => {
     ).toBeOnTheScreen();
   });
 
+  it("calls onQuickNoteFocus when the quick note input is focused", () => {
+    const onQuickNoteFocus = jest.fn();
+    renderWithProviders(
+      <StepCard
+        step={makeStep({
+          plannedEvidenceTypes: ["text"],
+          capturedEvidenceTypes: [],
+        })}
+        {...defaultProps}
+        onQuickNoteFocus={onQuickNoteFocus}
+      />,
+    );
+    fireEvent(screen.getByTestId("step-card-quick-note-input"), "focus");
+    expect(onQuickNoteFocus).toHaveBeenCalledTimes(1);
+  });
+
   it("does not render quick-note when step is completed", () => {
     renderWithProviders(
       <StepCard

@@ -9,4 +9,4 @@ export const KEYBOARD_AVOIDING_PROPS = {
     | "padding"
     | "height",
   keyboardVerticalOffset: Platform.OS === "ios" ? 88 : 0,
-} as const;
+};

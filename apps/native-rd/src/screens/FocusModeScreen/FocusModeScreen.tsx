@@ -67,9 +67,12 @@ import {
 } from "../../types/evidence";
 import type { StepStatus as UIStepStatus } from "../../types/steps";
 import { deleteEvidenceFile } from "../../utils/evidenceCleanup";
+import { Logger } from "../../shims/rd-logger";
 import { KEYBOARD_AVOIDING_PROPS } from "../../utils/keyboard";
 import { useEvidenceViewer } from "../../utils/evidenceViewers";
 import { styles } from "./FocusModeScreen.styles";
+
+const logger = new Logger("FocusModeScreen");
 
 const EVIDENCE_ROUTE_MAP: Partial<
   Record<EvidenceTypeValue, CaptureScreenName>
@@ -331,10 +334,7 @@ function FocusContent({ goalId }: { goalId: string }) {
         description: text.length > 50 ? text.slice(0, 50) + "..." : text,
       });
     } catch (error) {
-      console.error("[FocusModeScreen] Failed to create quick note", {
-        stepId,
-        error,
-      });
+      logger.error("Failed to create quick note", { stepId, error });
       showToast({ message: "Could not save note", duration: 3000 });
     }
   };

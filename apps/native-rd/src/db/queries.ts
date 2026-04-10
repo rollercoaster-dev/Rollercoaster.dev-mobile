@@ -17,6 +17,7 @@ import {
   Int,
 } from "@evolu/common";
 import { Logger } from "../shims/rd-logger";
+import type { EvidenceTypeValue } from "../types/evidence";
 import { parsePlannedEvidenceTypes } from "../utils/parsePlannedEvidenceTypes";
 import { evolu } from "./evolu";
 import {
@@ -554,21 +555,23 @@ export const stepEvidenceByGoalQuery = (goalId: GoalId) =>
   );
 
 /**
- * Create evidence attached to either a goal or a step
- * @param params - Evidence parameters
- * @param params.goalId - Goal ID (exactly one of goalId/stepId required)
- * @param params.stepId - Step ID (exactly one of goalId/stepId required)
- * @param params.type - Evidence type (photo, screenshot, text, etc.)
+ * Create evidence attached to either a goal or a step.
+ *
+ * Pass `{ goalId }` for goal-level evidence or `{ stepId }` for step-level
+ * evidence. The type system enforces exactly one attachment target; a runtime
+ * guard provides defense-in-depth for untyped callers.
+ *
+ * @param params.type - Evidence type (photo, text, link, etc.)
  * @param params.uri - Local file path or URL
  * @param params.description - Optional caption
  * @param params.metadata - Optional JSON metadata string
- * @returns Insert command
- * @throws Error if validation fails or constraint violated
+ * @returns Evolu insert command
+ * @throws Error if validation fails or attachment constraint violated
  */
 type StepEvidenceParams = { stepId: StepId; goalId?: never };
 type GoalEvidenceParams = { goalId: GoalId; stepId?: never };
 type CreateEvidenceBase = {
-  type: string;
+  type: EvidenceTypeValue;
   uri: string;
   description?: string;
   metadata?: string;

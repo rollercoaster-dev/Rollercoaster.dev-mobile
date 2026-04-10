@@ -99,6 +99,7 @@ describe("Evidence CRUD Operations", () => {
       "metadata",
     ],
   ])("createEvidence rejects %s", (_label, fields, expectedField) => {
+    // @ts-expect-error — intentionally invalid fields to test runtime validation
     expect(() => createEvidence({ goalId: mockGoalId, ...fields })).toThrow(
       new RegExp(`Evidence ${expectedField} must be`, "i"),
     );
