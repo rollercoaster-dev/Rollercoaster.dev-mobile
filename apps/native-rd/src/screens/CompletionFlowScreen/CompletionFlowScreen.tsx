@@ -6,7 +6,6 @@ import {
   ActivityIndicator,
   TextInput,
   KeyboardAvoidingView,
-  Platform,
   AccessibilityInfo,
 } from "react-native";
 import type { ImageSourcePropType } from "react-native";
@@ -52,6 +51,7 @@ import {
 import { EVIDENCE_TYPE_ICONS } from "../../constants/evidenceIcons";
 import { pendingDesignStore } from "../../stores/pendingDesignStore";
 import { Logger } from "../../shims/rd-logger";
+import { KEYBOARD_AVOIDING_PROPS } from "../../utils/keyboard";
 import { styles } from "./CompletionFlowScreen.styles";
 
 const logger = new Logger("CompletionFlowScreen");
@@ -242,11 +242,7 @@ function CompletionContent({ goalId }: { goalId: string }) {
   // Evidence prompt phase — capture evidence before celebration
   if (phase === "evidence-prompt") {
     return (
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}
-      >
+      <KeyboardAvoidingView style={{ flex: 1 }} {...KEYBOARD_AVOIDING_PROPS}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View
             style={styles.card}

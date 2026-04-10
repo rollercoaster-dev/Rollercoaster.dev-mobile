@@ -12,7 +12,6 @@ import {
   AccessibilityInfo,
   Alert,
   KeyboardAvoidingView,
-  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
@@ -68,6 +67,7 @@ import {
 } from "../../types/evidence";
 import type { StepStatus as UIStepStatus } from "../../types/steps";
 import { deleteEvidenceFile } from "../../utils/evidenceCleanup";
+import { KEYBOARD_AVOIDING_PROPS } from "../../utils/keyboard";
 import { useEvidenceViewer } from "../../utils/evidenceViewers";
 import { styles } from "./FocusModeScreen.styles";
 
@@ -353,8 +353,8 @@ function FocusContent({ goalId }: { goalId: string }) {
   };
 
   const handleQuickNoteFocus = () => {
-    setIsDrawerOpen(false);
-    setIsFABMenuOpen(false);
+    if (isDrawerOpen) setIsDrawerOpen(false);
+    if (isFABMenuOpen) setIsFABMenuOpen(false);
   };
 
   const handleSelectEvidenceType = (type: EvidenceTypeValue) => {
@@ -582,8 +582,7 @@ export function FocusModeScreen({ route }: FocusModeNavProps) {
       </View>
       <KeyboardAvoidingView
         style={{ flex: 1, backgroundColor: theme.colors.background }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}
+        {...KEYBOARD_AVOIDING_PROPS}
       >
         <ErrorBoundary>
           <Suspense
