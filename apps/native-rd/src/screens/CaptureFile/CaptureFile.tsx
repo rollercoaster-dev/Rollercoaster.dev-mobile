@@ -79,8 +79,9 @@ export function CaptureFile({ route }: CaptureFileScreenProps) {
 
       // Create evidence record
       createEvidence({
-        goalId: stepId ? undefined : (goalId as GoalId),
-        stepId: stepId ? (stepId as StepId) : undefined,
+        ...(stepId
+          ? { stepId: stepId as StepId }
+          : { goalId: goalId as GoalId }),
         type: EvidenceType.file,
         uri: savedUri,
         metadata,

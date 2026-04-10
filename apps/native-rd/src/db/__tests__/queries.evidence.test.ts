@@ -21,6 +21,7 @@ describe("Evidence CRUD Operations", () => {
   describe("createEvidence - Parent Attachment (critical constraint)", () => {
     test("should throw when both goalId and stepId are provided", () => {
       expect(() =>
+        // @ts-expect-error — type system prevents this, testing runtime guard
         createEvidence({
           goalId: mockGoalId,
           stepId: mockStepId,
@@ -32,6 +33,7 @@ describe("Evidence CRUD Operations", () => {
 
     test("should throw when neither goalId nor stepId are provided", () => {
       expect(() =>
+        // @ts-expect-error — type system prevents this, testing runtime guard
         createEvidence({
           type: "photo",
           uri: "file://photo.jpg",
@@ -56,6 +58,19 @@ describe("Evidence CRUD Operations", () => {
           type: "photo",
           uri: "file://photo.jpg",
         }),
+      ).not.toThrow();
+    });
+
+    test("should ignore inherited attachment fields", () => {
+      // Simulates prototype-chain leaks that bypass TypeScript at runtime
+      const params = Object.assign(Object.create({ goalId: mockGoalId }), {
+        stepId: mockStepId,
+        type: "photo",
+        uri: "file://photo.jpg",
+      });
+
+      expect(() =>
+        createEvidence(params as Parameters<typeof createEvidence>[0]),
       ).not.toThrow();
     });
   });
@@ -84,6 +99,7 @@ describe("Evidence CRUD Operations", () => {
       "metadata",
     ],
   ])("createEvidence rejects %s", (_label, fields, expectedField) => {
+    // @ts-expect-error — intentionally invalid fields to test runtime validation
     expect(() => createEvidence({ goalId: mockGoalId, ...fields })).toThrow(
       new RegExp(`Evidence ${expectedField} must be`, "i"),
     );

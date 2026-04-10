@@ -3,11 +3,11 @@ import {
   View,
   TextInput,
   KeyboardAvoidingView,
-  Platform,
   AccessibilityInfo,
   Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { KEYBOARD_AVOIDING_PROPS } from "../../utils/keyboard";
 import { useNavigation } from "@react-navigation/native";
 import { useUnistyles } from "react-native-unistyles";
 import { Text } from "../../components/Text";
@@ -49,8 +49,9 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
     setSaving(true);
     try {
       createEvidence({
-        goalId: stepId ? undefined : (goalId as GoalId),
-        stepId: stepId ? (stepId as StepId) : undefined,
+        ...(stepId
+          ? { stepId: stepId as StepId }
+          : { goalId: goalId as GoalId }),
         type: EvidenceType.text,
         uri: `${TEXT_EVIDENCE_PREFIX}${trimmedContent}`,
         description: caption.trim() || undefined,
@@ -102,11 +103,7 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
         </View>
       </View>
 
-      <KeyboardAvoidingView
-        style={styles.content}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}
-      >
+      <KeyboardAvoidingView style={styles.content} {...KEYBOARD_AVOIDING_PROPS}>
         <TextInput
           ref={textInputRef}
           style={[styles.textInput, isFocused && styles.textInputFocused]}

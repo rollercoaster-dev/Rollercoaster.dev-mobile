@@ -102,9 +102,9 @@ function AnimatedCard({
   return (
     <Animated.View
       style={animatedStyle}
-      accessible={isCenter}
+      accessible={false}
       accessibilityElementsHidden={!isCenter}
-      importantForAccessibility={isCenter ? "yes" : "no-hide-descendants"}
+      importantForAccessibility={isCenter ? "no" : "no-hide-descendants"}
     >
       {children}
     </Animated.View>
@@ -194,26 +194,7 @@ export function CardCarousel({
   ).current;
 
   return (
-    <View
-      style={styles.container}
-      accessible
-      accessibilityRole="adjustable"
-      accessibilityLabel={accessibilityLabel}
-      accessibilityValue={{
-        now: safeIndex,
-        min: 0,
-        max: children.length - 1,
-        text: `Card ${safeIndex + 1} of ${children.length}`,
-      }}
-      accessibilityActions={[{ name: "increment" }, { name: "decrement" }]}
-      onAccessibilityAction={(event) => {
-        if (event.nativeEvent.actionName === "increment" && !isLast) {
-          onIndexChange(safeIndex + 1);
-        } else if (event.nativeEvent.actionName === "decrement" && !isFirst) {
-          onIndexChange(safeIndex - 1);
-        }
-      }}
-    >
+    <View style={styles.container}>
       {/* Track + overlay arrows */}
       <View style={styles.trackWrapper}>
         <View style={styles.track} {...panResponder.panHandlers}>
@@ -238,6 +219,7 @@ export function CardCarousel({
             accessible
             accessibilityRole="button"
             accessibilityLabel="Previous card"
+            accessibilityHint={`Moves to the previous item in ${accessibilityLabel}`}
             accessibilityState={{ disabled: isFirst }}
           >
             <Text style={styles.arrowText}>&#8249;</Text>
@@ -253,6 +235,7 @@ export function CardCarousel({
             accessible
             accessibilityRole="button"
             accessibilityLabel="Next card"
+            accessibilityHint={`Moves to the next item in ${accessibilityLabel}`}
             accessibilityState={{ disabled: isLast }}
           >
             <Text style={styles.arrowText}>&#8250;</Text>

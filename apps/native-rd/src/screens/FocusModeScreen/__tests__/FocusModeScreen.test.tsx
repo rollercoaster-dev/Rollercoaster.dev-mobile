@@ -506,16 +506,107 @@ describe("FocusModeScreen", () => {
       stepEvidence: [],
     });
     renderWithProviders(<FocusModeScreen {...routeProps} />);
-    const input = screen.getByLabelText("Add a quick text note");
+    const input = screen.getByTestId("step-card-quick-note-input");
     fireEvent.changeText(input, "My reflection");
-    fireEvent.press(screen.getByLabelText("Submit quick note"));
+    fireEvent.press(screen.getByTestId("step-card-quick-note-add-button"));
     expect(mockCreateEvidence).toHaveBeenCalledWith({
       stepId: "step-1",
-      goalId: "goal-1",
       type: "text",
       uri: "content:text;My reflection",
       description: "My reflection",
     });
+  });
+
+  it("closes the evidence drawer when quick-note entry begins", () => {
+    setupQueries({
+      steps: [
+        {
+          id: "step-1",
+          title: "Read docs",
+          status: "pending",
+          ordinal: 0,
+          plannedEvidenceTypes: '["text"]',
+        },
+        {
+          id: "step-2",
+          title: "Practice",
+          status: "completed",
+          ordinal: 1,
+          plannedEvidenceTypes: null,
+        },
+      ],
+      stepEvidence: [],
+    });
+
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+    fireEvent.press(screen.getByLabelText("Toggle evidence drawer"));
+    expect(screen.getByLabelText("Close evidence drawer")).toBeOnTheScreen();
+
+    fireEvent(screen.getByTestId("step-card-quick-note-input"), "focus");
+
+    expect(
+      screen.getByLabelText("Close evidence drawer").props.accessible,
+    ).toBe(false);
+  });
+
+  it("supports the real quick note then complete flow through accessible controls", () => {
+    const steps = [
+      {
+        id: "step-1",
+        title: "Read docs",
+        status: "pending",
+        ordinal: 0,
+        plannedEvidenceTypes: '["text"]',
+      },
+      {
+        id: "step-2",
+        title: "Practice",
+        status: "completed",
+        ordinal: 1,
+        plannedEvidenceTypes: null,
+      },
+    ];
+
+    setupQueries({
+      steps,
+      stepEvidence: [],
+    });
+
+    const view = renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+    fireEvent.changeText(
+      screen.getByTestId("step-card-quick-note-input"),
+      "My reflection",
+    );
+    fireEvent.press(screen.getByTestId("step-card-quick-note-add-button"));
+
+    setupQueries({
+      steps,
+      stepEvidence: [
+        {
+          id: "ev-s1",
+          type: "text",
+          uri: "content:text;My reflection",
+          description: "My reflection",
+          stepId: "step-1",
+        },
+      ],
+    });
+
+    view.unmount();
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+    fireEvent.press(screen.getAllByLabelText("Mark complete")[0]);
+
+    expect(mockCreateEvidence).toHaveBeenCalledWith({
+      stepId: "step-1",
+      type: "text",
+      uri: "content:text;My reflection",
+      description: "My reflection",
+    });
+    expect(mockCompleteStep).toHaveBeenCalledWith("step-1", '["text"]', [
+      { type: "text" },
+    ]);
   });
 
   it("auto-navigates to CompletionFlow when all steps complete with evidence gate", () => {

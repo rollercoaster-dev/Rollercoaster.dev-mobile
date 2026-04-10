@@ -162,8 +162,9 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
       });
 
       createEvidence({
-        goalId: goalId ? (goalId as GoalId) : undefined,
-        stepId: stepId ? (stepId as StepId) : undefined,
+        ...(stepId
+          ? { stepId: stepId as StepId }
+          : { goalId: goalId as GoalId }),
         type: EvidenceType.video,
         uri: destUri,
         metadata,

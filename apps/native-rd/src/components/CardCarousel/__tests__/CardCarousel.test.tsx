@@ -14,7 +14,7 @@ jest.mock("expo-haptics", () => ({
 
 function Card({ label }: { label: string }) {
   return (
-    <View accessibilityLabel={label}>
+    <View accessible accessibilityLabel={label}>
       <Text>{label}</Text>
     </View>
   );
@@ -123,18 +123,25 @@ describe("CardCarousel", () => {
   });
 
   describe("accessibility", () => {
-    it("has adjustable role on container", () => {
-      renderWithProviders(
+    it("keeps the current card children individually reachable", () => {
+      const { UNSAFE_queryByProps } = renderWithProviders(
         <CardCarousel {...defaultProps}>
           <Card label="Card A" />
           <Card label="Card B" />
           <Card label="Card C" />
         </CardCarousel>,
       );
-      expect(screen.getByRole("adjustable")).toBeOnTheScreen();
+
+      expect(screen.getByLabelText("Card B")).toBeOnTheScreen();
+      expect(
+        UNSAFE_queryByProps({
+          accessible: true,
+          importantForAccessibility: "yes",
+        }),
+      ).toBeNull();
     });
 
-    it("uses custom accessibility label when provided", () => {
+    it("passes the carousel label through to navigation hints", () => {
       renderWithProviders(
         <CardCarousel {...defaultProps} accessibilityLabel="Step carousel">
           <Card label="Card A" />
@@ -142,7 +149,12 @@ describe("CardCarousel", () => {
           <Card label="Card C" />
         </CardCarousel>,
       );
-      expect(screen.getByLabelText("Step carousel")).toBeOnTheScreen();
+      expect(
+        screen.getByLabelText("Previous card").props.accessibilityHint,
+      ).toBe("Moves to the previous item in Step carousel");
+      expect(screen.getByLabelText("Next card").props.accessibilityHint).toBe(
+        "Moves to the next item in Step carousel",
+      );
     });
 
     it("has correct accessibility labels on arrows", () => {
@@ -158,36 +170,25 @@ describe("CardCarousel", () => {
     });
 
     it("hides non-center cards from accessibility tree", () => {
-      const { UNSAFE_getByProps } = renderWithProviders(
+      const { UNSAFE_getAllByProps, UNSAFE_getByProps } = renderWithProviders(
         <CardCarousel currentIndex={1} onIndexChange={jest.fn()}>
           <Card label="Left" />
           <Card label="Center" />
           <Card label="Right" />
         </CardCarousel>,
       );
-      // Center card wrapper is accessible, non-center cards are hidden
-      const centerWrapper = UNSAFE_getByProps({
-        accessible: true,
-        importantForAccessibility: "yes",
-      });
-      expect(centerWrapper).toBeTruthy();
-    });
 
-    it("provides accessibilityValue for adjustable role", () => {
-      renderWithProviders(
-        <CardCarousel currentIndex={1} onIndexChange={jest.fn()}>
-          <Card label="Card A" />
-          <Card label="Card B" />
-          <Card label="Card C" />
-        </CardCarousel>,
-      );
-      const container = screen.getByRole("adjustable");
-      expect(container.props.accessibilityValue).toEqual({
-        now: 1,
-        min: 0,
-        max: 2,
-        text: "Card 2 of 3",
-      });
+      expect(
+        UNSAFE_getByProps({
+          accessible: false,
+          importantForAccessibility: "no",
+        }),
+      ).toBeTruthy();
+      expect(
+        UNSAFE_getAllByProps({
+          importantForAccessibility: "no-hide-descendants",
+        }).length,
+      ).toBeGreaterThanOrEqual(2);
     });
 
     it("clamps out-of-bounds currentIndex", () => {
@@ -197,9 +198,9 @@ describe("CardCarousel", () => {
           <Card label="Card B" />
         </CardCarousel>,
       );
-      // Clamped to last index (1), so accessibilityValue.now should be 1
-      const container = screen.getByRole("adjustable");
-      expect(container.props.accessibilityValue?.now).toBe(1);
+      expect(
+        screen.getByLabelText("Next card").props.accessibilityState?.disabled,
+      ).toBe(true);
     });
   });
 });

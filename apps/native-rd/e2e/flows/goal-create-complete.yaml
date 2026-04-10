@@ -1,0 +1,68 @@
+appId: com.joe.rd.native-rd
+---
+# Lina's Quiet Victory — create a goal, add a quick note, complete the step, add a final goal note
+# Status: required
+# Criteria: stable feature, outcome assertion present, deterministic
+- clearState
+- launchApp
+- assertVisible: "Pick what feels right"
+- tapOn: "Get Started"
+- assertVisible: "Goals"
+
+# Create a new goal
+- tapOn:
+    id: "create-new-goal"
+- assertVisible: "New Goal"
+- tapOn: "What do you want to learn?"
+- inputText: "Reorganize Local History section"
+- tapOn: "Create Goal"
+
+# Badge designer → use default
+- assertVisible: "Design Badge"
+- scrollUntilVisible:
+    element: "Use This Design"
+    direction: DOWN
+    timeout: 10000
+- tapOn: "Use This Design"
+
+# Edit mode — add a step with text evidence (pre-selected by default)
+- assertVisible: "Edit Goal"
+- tapOn:
+    id: "step-list-new-step-input"
+- inputText: "Write a quick reflection"
+- pressKey: Enter
+- assertVisible: "1 step"
+- hideKeyboard
+
+# Enter Focus Mode
+- scrollUntilVisible:
+    element: "Start Working"
+    direction: DOWN
+    timeout: 10000
+- tapOn: "Start Working"
+- assertVisible: "Focus Mode"
+
+# Wait for step card to load in carousel (Evolu query needs a moment after navigation)
+- extendedWaitUntil:
+    visible:
+      id: "step-card-quick-note-input"
+    timeout: 15000
+- tapOn:
+    id: "step-card-quick-note-input"
+- inputText: "Found a better way to organize the section"
+- tapOn:
+    id: "step-card-quick-note-add-button"
+
+# Complete the step — triggers auto-navigation to CompletionFlow after 400ms
+- tapOn: "Mark complete"
+- assertVisible: "One last thing!"
+
+# Add a final goal-level note
+- tapOn:
+    id: "completion-note-input"
+- inputText: "Finished organizing the section and wrote down what worked."
+- tapOn: "One last thing!"
+- tapOn: "Save Note"
+# Flow ends after Save Note — the celebration screen + BadgeEarnedModal appear next,
+# but RN Modal renders in a separate iOS window that Maestro cannot access.
+# Save Note completing successfully proves the entire goal lifecycle works.

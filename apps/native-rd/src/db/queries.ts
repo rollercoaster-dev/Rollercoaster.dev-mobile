@@ -17,6 +17,7 @@ import {
   Int,
 } from "@evolu/common";
 import { Logger } from "../shims/rd-logger";
+import type { EvidenceTypeValue } from "../types/evidence";
 import { parsePlannedEvidenceTypes } from "../utils/parsePlannedEvidenceTypes";
 import { evolu } from "./evolu";
 import {
@@ -554,39 +555,51 @@ export const stepEvidenceByGoalQuery = (goalId: GoalId) =>
   );
 
 /**
- * Create evidence attached to either a goal or a step
- * @param params - Evidence parameters
- * @param params.goalId - Goal ID (exactly one of goalId/stepId required)
- * @param params.stepId - Step ID (exactly one of goalId/stepId required)
- * @param params.type - Evidence type (photo, screenshot, text, etc.)
+ * Create evidence attached to either a goal or a step.
+ *
+ * Pass `{ goalId }` for goal-level evidence or `{ stepId }` for step-level
+ * evidence. The type system enforces exactly one attachment target; a runtime
+ * guard provides defense-in-depth for untyped callers.
+ *
+ * @param params.type - Evidence type (photo, text, link, etc.)
  * @param params.uri - Local file path or URL
  * @param params.description - Optional caption
  * @param params.metadata - Optional JSON metadata string
- * @returns Insert command
- * @throws Error if validation fails or constraint violated
+ * @returns Evolu insert command
+ * @throws Error if validation fails or attachment constraint violated
  */
-export function createEvidence(params: {
-  goalId?: GoalId;
-  stepId?: StepId;
-  type: string;
+type StepEvidenceParams = { stepId: StepId; goalId?: never };
+type GoalEvidenceParams = { goalId: GoalId; stepId?: never };
+type CreateEvidenceBase = {
+  type: EvidenceTypeValue;
   uri: string;
   description?: string;
   metadata?: string;
-}) {
-  // Validate exactly one of goalId/stepId is set
-  const hasBoth = params.goalId && params.stepId;
-  const hasNeither = !params.goalId && !params.stepId;
+};
+export type CreateEvidenceParams = (StepEvidenceParams | GoalEvidenceParams) &
+  CreateEvidenceBase;
 
+export function createEvidence(params: CreateEvidenceParams) {
+  const goalId = Object.hasOwn(params, "goalId")
+    ? (params as GoalEvidenceParams).goalId
+    : undefined;
+  const stepId = Object.hasOwn(params, "stepId")
+    ? (params as StepEvidenceParams).stepId
+    : undefined;
+
+  // Runtime defense-in-depth (type system prevents this at compile time)
+  const hasBoth = goalId != null && stepId != null;
+  const hasNeither = goalId == null && stepId == null;
   if (hasBoth || hasNeither) {
     logger.error("Evidence attachment constraint violation", {
-      hasGoalId: !!params.goalId,
-      hasStepId: !!params.stepId,
-      goalId: params.goalId,
-      stepId: params.stepId,
+      hasGoalId: goalId != null,
+      hasStepId: stepId != null,
+      goalId,
+      stepId,
     });
     throw new Error(
       `Evidence must attach to exactly one of goalId or stepId. ` +
-        `Received: goalId=${params.goalId || "null"}, stepId=${params.stepId || "null"}`,
+        `Received: goalId=${goalId || "null"}, stepId=${stepId || "null"}`,
     );
   }
 
@@ -639,8 +652,8 @@ export function createEvidence(params: {
 
   try {
     return evolu.insert("evidence", {
-      goalId: params.goalId || null,
-      stepId: params.stepId || null,
+      goalId: goalId || null,
+      stepId: stepId || null,
       type: parsedType,
       uri: parsedUri,
       description: parsedDescription,
@@ -648,8 +661,8 @@ export function createEvidence(params: {
     });
   } catch (error) {
     logger.error("Failed to insert evidence", {
-      goalId: params.goalId,
-      stepId: params.stepId,
+      goalId,
+      stepId,
       type: parsedType,
       error,
     });

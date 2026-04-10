@@ -11,6 +11,7 @@ export interface ButtonProps {
   size?: ButtonSize;
   disabled?: boolean;
   loading?: boolean;
+  testID?: string;
 }
 
 const labelStyleMap = {
@@ -34,6 +35,7 @@ export function Button({
   size = "md",
   disabled = false,
   loading = false,
+  testID,
 }: ButtonProps) {
   const isDisabled = disabled || loading;
 
@@ -41,6 +43,7 @@ export function Button({
     <Pressable
       onPress={onPress}
       disabled={isDisabled}
+      testID={testID}
       accessible
       accessibilityRole="button"
       accessibilityLabel={label}

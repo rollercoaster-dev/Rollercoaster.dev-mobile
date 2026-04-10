@@ -1,4 +1,5 @@
 import { StyleSheet } from "react-native-unistyles";
+import { PEEK_HEIGHT } from "../../components/EvidenceDrawer/EvidenceDrawer.styles";
 import { shadowStyle } from "../../styles/shadows";
 
 export const styles = StyleSheet.create((theme) => ({
@@ -31,6 +32,10 @@ export const styles = StyleSheet.create((theme) => ({
     justifyContent: "center",
     alignItems: "center",
     padding: theme.space[4],
+  },
+  carouselSection: {
+    flex: 1,
+    paddingBottom: PEEK_HEIGHT + theme.space[3],
   },
   headerRow: {
     flexDirection: "row",

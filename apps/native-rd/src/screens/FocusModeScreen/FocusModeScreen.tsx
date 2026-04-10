@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   AccessibilityInfo,
   Alert,
+  KeyboardAvoidingView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
@@ -66,8 +67,12 @@ import {
 } from "../../types/evidence";
 import type { StepStatus as UIStepStatus } from "../../types/steps";
 import { deleteEvidenceFile } from "../../utils/evidenceCleanup";
+import { Logger } from "../../shims/rd-logger";
+import { KEYBOARD_AVOIDING_PROPS } from "../../utils/keyboard";
 import { useEvidenceViewer } from "../../utils/evidenceViewers";
 import { styles } from "./FocusModeScreen.styles";
+
+const logger = new Logger("FocusModeScreen");
 
 const EVIDENCE_ROUTE_MAP: Partial<
   Record<EvidenceTypeValue, CaptureScreenName>
@@ -324,16 +329,12 @@ function FocusContent({ goalId }: { goalId: string }) {
     try {
       createEvidence({
         stepId: stepId as StepId,
-        goalId: goalId as GoalId,
         type: EvidenceType.text,
         uri: TEXT_EVIDENCE_PREFIX + text,
         description: text.length > 50 ? text.slice(0, 50) + "..." : text,
       });
     } catch (error) {
-      console.error("[FocusModeScreen] Failed to create quick note", {
-        stepId,
-        error,
-      });
+      logger.error("Failed to create quick note", { stepId, error });
       showToast({ message: "Could not save note", duration: 3000 });
     }
   };
@@ -349,6 +350,11 @@ function FocusContent({ goalId }: { goalId: string }) {
   const handleToggleFABMenu = () => {
     setIsFABMenuOpen((prev) => !prev);
     if (!isDrawerOpen) setIsDrawerOpen(true);
+  };
+
+  const handleQuickNoteFocus = () => {
+    if (isDrawerOpen) setIsDrawerOpen(false);
+    if (isFABMenuOpen) setIsFABMenuOpen(false);
   };
 
   const handleSelectEvidenceType = (type: EvidenceTypeValue) => {
@@ -462,45 +468,48 @@ function FocusContent({ goalId }: { goalId: string }) {
       />
 
       {/* CardCarousel with ProgressDots as indicator */}
-      <CardCarousel
-        currentIndex={currentCardIndex}
-        onIndexChange={handleIndexChange}
-        accessibilityLabel={`Focus mode cards, ${stepRows.length} steps`}
-        renderIndicator={() => (
-          <ProgressDots
-            steps={dotSteps}
-            currentIndex={currentCardIndex}
-            onDotTap={handleIndexChange}
-            showGoalDot
-          />
-        )}
-      >
-        {[
-          ...stepsWithEvidence.map((step, index) => (
-            <StepCard
-              key={step.id}
-              step={{
-                id: step.id,
-                title: step.title,
-                status: step.status as StepCardStatus,
-                evidenceCount: step.evidenceCount,
-                plannedEvidenceTypes: step.plannedEvidenceTypes,
-                capturedEvidenceTypes: step.capturedEvidenceTypes,
-              }}
-              stepIndex={index}
-              totalSteps={stepRows.length}
-              onToggleComplete={() => handleToggleStep(step.id)}
-              onEvidenceTap={handleEvidenceTap}
-              onQuickNote={(text) => handleQuickNote(step.id, text)}
+      <View style={styles.carouselSection}>
+        <CardCarousel
+          currentIndex={currentCardIndex}
+          onIndexChange={handleIndexChange}
+          accessibilityLabel={`Focus mode cards, ${stepRows.length} steps`}
+          renderIndicator={() => (
+            <ProgressDots
+              steps={dotSteps}
+              currentIndex={currentCardIndex}
+              onDotTap={handleIndexChange}
+              showGoalDot
             />
-          )),
-          <GoalEvidenceCard
-            key="goal-evidence"
-            evidenceCount={goalEvidenceCount}
-            onEvidenceTap={handleEvidenceTap}
-          />,
-        ]}
-      </CardCarousel>
+          )}
+        >
+          {[
+            ...stepsWithEvidence.map((step, index) => (
+              <StepCard
+                key={step.id}
+                step={{
+                  id: step.id,
+                  title: step.title,
+                  status: step.status as StepCardStatus,
+                  evidenceCount: step.evidenceCount,
+                  plannedEvidenceTypes: step.plannedEvidenceTypes,
+                  capturedEvidenceTypes: step.capturedEvidenceTypes,
+                }}
+                stepIndex={index}
+                totalSteps={stepRows.length}
+                onToggleComplete={() => handleToggleStep(step.id)}
+                onEvidenceTap={handleEvidenceTap}
+                onQuickNote={(text) => handleQuickNote(step.id, text)}
+                onQuickNoteFocus={handleQuickNoteFocus}
+              />
+            )),
+            <GoalEvidenceCard
+              key="goal-evidence"
+              evidenceCount={goalEvidenceCount}
+              onEvidenceTap={handleEvidenceTap}
+            />,
+          ]}
+        </CardCarousel>
+      </View>
 
       {/* EvidenceDrawer */}
       <EvidenceDrawer
@@ -571,7 +580,10 @@ export function FocusModeScreen({ route }: FocusModeNavProps) {
         <Text variant="label">Focus Mode</Text>
         <View style={styles.spacer} />
       </View>
-      <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1, backgroundColor: theme.colors.background }}
+        {...KEYBOARD_AVOIDING_PROPS}
+      >
         <ErrorBoundary>
           <Suspense
             fallback={
@@ -582,7 +594,7 @@ export function FocusModeScreen({ route }: FocusModeNavProps) {
           </Suspense>
         </ErrorBoundary>
         <ModeIndicator mode="focus" />
-      </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
