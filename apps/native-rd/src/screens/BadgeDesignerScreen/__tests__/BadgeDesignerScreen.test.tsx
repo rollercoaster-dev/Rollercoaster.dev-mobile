@@ -1,8 +1,11 @@
 import React from "react";
+import { Alert } from "react-native";
+import { Buffer } from "buffer";
 import {
   renderWithProviders,
   screen,
   fireEvent,
+  waitFor,
 } from "../../../__tests__/test-utils";
 import { BadgeDesignerScreen } from "../BadgeDesignerScreen";
 import type { BadgeDesignerScreenProps } from "../../../navigation/types";
@@ -54,6 +57,11 @@ jest.mock("../../../stores/pendingDesignStore", () => ({
     consume: (...args: unknown[]) => mockPendingDesignStore.consume(...args),
     clear: (...args: unknown[]) => mockPendingDesignStore.clear(...args),
   },
+}));
+
+const mockCaptureBadge = jest.fn();
+jest.mock("../../../badges/captureBadge", () => ({
+  captureBadge: (...args: unknown[]) => mockCaptureBadge(...args),
 }));
 
 // Mock react-native-svg
@@ -163,6 +171,7 @@ const mockRoute = {
 beforeEach(() => {
   jest.clearAllMocks();
   mockUseQuery.mockReturnValue([]);
+  mockCaptureBadge.mockResolvedValue(Buffer.from("png-bytes"));
 });
 
 // ---------------------------------------------------------------------------
@@ -458,32 +467,65 @@ describe("BadgeDesignerScreen — new-goal mode", () => {
     expect(screen.getByText("Skip — Use Default")).toBeOnTheScreen();
   });
 
-  it("saves design to pendingDesignStore and navigates on save", () => {
+  it("captures PNG, saves to pendingDesignStore, and navigates on save", async () => {
     mockUseQuery.mockReturnValue([makeGoalRow()]);
     renderWithProviders(
       <BadgeDesignerScreen route={newGoalRoute} navigation={{} as never} />,
     );
 
     fireEvent.press(screen.getByText("Use This Design"));
-    expect(mockPendingDesignStore.set).toHaveBeenCalledWith(
-      "goal-1",
-      expect.stringContaining('"shape"'),
-    );
+
+    await waitFor(() => {
+      expect(mockCaptureBadge).toHaveBeenCalledWith(
+        expect.objectContaining({ current: expect.anything() }),
+        { width: 512, height: 512 },
+      );
+    });
+    await waitFor(() => {
+      expect(mockPendingDesignStore.set).toHaveBeenCalledWith("goal-1", {
+        designJson: expect.stringContaining('"shape"'),
+        pngBase64: Buffer.from("png-bytes").toString("base64"),
+      });
+    });
     expect(mockReplace).toHaveBeenCalledWith("EditMode", { goalId: "goal-1" });
   });
 
-  it("saves default design and navigates on skip", () => {
+  it("captures default design and navigates on skip", async () => {
     mockUseQuery.mockReturnValue([makeGoalRow()]);
     renderWithProviders(
       <BadgeDesignerScreen route={newGoalRoute} navigation={{} as never} />,
     );
 
     fireEvent.press(screen.getByText("Skip — Use Default"));
-    expect(mockPendingDesignStore.set).toHaveBeenCalledWith(
-      "goal-1",
-      expect.stringContaining('"shape"'),
-    );
+
+    await waitFor(() => {
+      expect(mockPendingDesignStore.set).toHaveBeenCalledWith("goal-1", {
+        designJson: expect.stringContaining('"shape"'),
+        pngBase64: Buffer.from("png-bytes").toString("base64"),
+      });
+    });
     expect(mockReplace).toHaveBeenCalledWith("EditMode", { goalId: "goal-1" });
+  });
+
+  it("alerts and does not navigate when capture fails", async () => {
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    mockCaptureBadge.mockRejectedValueOnce(new Error("view not mounted"));
+    mockUseQuery.mockReturnValue([makeGoalRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={newGoalRoute} navigation={{} as never} />,
+    );
+
+    fireEvent.press(screen.getByText("Use This Design"));
+
+    await waitFor(() => {
+      expect(alertSpy).toHaveBeenCalledWith(
+        "Save Failed",
+        expect.stringContaining("Could not save"),
+      );
+    });
+    expect(mockPendingDesignStore.set).not.toHaveBeenCalled();
+    expect(mockReplace).not.toHaveBeenCalled();
+    alertSpy.mockRestore();
   });
 
   it("shows loading indicator when goal data is not yet available", () => {

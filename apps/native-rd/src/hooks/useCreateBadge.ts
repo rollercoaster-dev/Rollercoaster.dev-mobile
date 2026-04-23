@@ -218,7 +218,11 @@ export function useCreateBadge(
         setStatus("baking");
 
         // Use pre-captured designer PNG when available, otherwise fall back to
-        // the solid-color generator (with a warning so silent downgrades are visible).
+        // the solid-color generator. When the caller provides a `design` but no
+        // `capturedPng`, that's always a programmer error — it means the designer
+        // surface forgot to capture the preview before handing off. Fail loudly
+        // so the silent "baked a solid color instead of the user's design" bug
+        // can't ship again.
         const hexColor = (goal.color as string | null) ?? DEFAULT_BADGE_COLOR;
         let pngBuffer: Buffer;
         if (capturedPngRef.current) {
@@ -228,6 +232,10 @@ export function useCreateBadge(
             );
           }
           pngBuffer = capturedPngRef.current;
+        } else if (designRef.current) {
+          throw new Error(
+            "useCreateBadge: design provided without capturedPng — the designer surface must capture the preview before triggering badge creation",
+          );
         } else {
           logger.warn(
             "No captured PNG provided — falling back to solid-color badge image",

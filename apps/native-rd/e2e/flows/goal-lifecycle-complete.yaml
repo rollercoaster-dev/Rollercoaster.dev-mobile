@@ -1,0 +1,77 @@
+appId: com.joe.rd.native-rd
+---
+# Goal lifecycle flow — create goal, choose badge design, add step, complete step with evidence, and save final goal evidence note
+# Status: required
+# Criteria: stable feature, outcome assertions at each transition, deterministic selectors for lifecycle actions
+- launchApp:
+    clearState: true
+    clearKeychain: true
+- assertVisible: "Pick what feels right"
+- tapOn: "The Full Ride. Standard theme"
+- tapOn: "Get Started"
+- assertVisible: "Goals"
+- tapOn:
+    id: "create-new-goal"
+- assertVisible: "New Goal"
+- tapOn:
+    id: "new-goal-title"
+- inputText: "Plan community archive exhibit"
+- tapOn:
+    id: "create-goal"
+- assertVisible: "Design Badge"
+- scrollUntilVisible:
+    element:
+      id: "use-this-design"
+    direction: DOWN
+- tapOn:
+    id: "use-this-design"
+- assertVisible: "Edit Goal"
+- tapOn:
+    id: "step-list-new-step-input"
+- inputText: "Draft exhibit outline"
+- tapOn:
+    id: "step-list-add-step-button"
+- assertVisible: "Draft exhibit outline"
+- assertVisible: "1 step"
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: "start-working"
+    direction: DOWN
+- tapOn:
+    id: "start-working"
+- assertVisible: "Focus Mode"
+- assertVisible:
+    id: "step-card-quick-note-input"
+- tapOn:
+    id: "step-card-quick-note-input"
+- inputText: "Outlined the key sections and supporting artifacts."
+- pressKey: enter
+- tapOn:
+    text: "Mark complete.*"
+- assertVisible:
+    id: "completion-note-input"
+- tapOn:
+    id: "completion-note-input"
+- inputText: "Finished the archive exhibit plan and documented the result."
+# Dismiss the soft keyboard by tapping the static header — Maestro's `hideKeyboard`
+# cannot find a dismiss affordance here, and the keyboard intercepts the save tap.
+- tapOn: "One last thing!"
+- scrollUntilVisible:
+    element:
+      id: "completion-save-note-button"
+    direction: DOWN
+- tapOn:
+    id: "completion-save-note-button"
+# Assert on the BadgeEarnedModal's rendered image testID. The modal auto-
+# appears once badgeStatus === "done" and occludes the celebration headline.
+# In E2E mode the outer card's a11y grouping is dropped (EXPO_PUBLIC_E2E_MODE
+# gate), so the nested testID is reachable. `badge-earned-image` is only
+# rendered on the non-placeholder branch (imageUri !== PLACEHOLDER_IMAGE_URI),
+# so asserting on it proves the whole pipeline: save → evidence persisted →
+# phase transitioned → badge created AND baked to a real PNG (not the solid-
+# color fallback).
+- extendedWaitUntil:
+    visible:
+      id: "badge-earned-image"
+    timeout: 15000

@@ -54,6 +54,14 @@ export function BadgeEarnedModal({
 
   const hasImage = imageUri !== PLACEHOLDER_IMAGE_URI;
   const microcopy = isFirstBadge ? "First one. (noted.)" : "Badge earned.";
+  const isE2E = process.env.EXPO_PUBLIC_E2E_MODE === "true";
+  const cardA11yProps = isE2E
+    ? ({ accessible: false } as const)
+    : ({
+        accessible: true,
+        accessibilityLabel: "Badge earned",
+        accessibilityLiveRegion: "polite" as const,
+      } as const);
 
   return (
     <Modal
@@ -71,23 +79,20 @@ export function BadgeEarnedModal({
       >
         <SafeAreaView edges={["bottom"]} style={styles.container}>
           <Animated.View style={animatedStyle}>
-            <View
-              style={styles.card}
-              accessible
-              accessibilityLabel="Badge earned"
-              accessibilityLiveRegion="polite"
-            >
+            <View style={styles.card} {...cardA11yProps}>
               {hasImage ? (
                 <Image
                   source={{ uri: imageUri }}
                   style={styles.badgeImage}
                   accessibilityLabel="Badge image"
                   resizeMode="contain"
+                  testID="badge-earned-image"
                 />
               ) : (
                 <View
                   style={styles.badgePlaceholder}
                   accessibilityLabel="Badge image placeholder"
+                  testID="badge-earned-image-placeholder"
                 >
                   <Text variant="headline">🏅</Text>
                 </View>

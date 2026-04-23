@@ -26,6 +26,7 @@
     "format:check": "bunx prettier --check \"**/*.{ts,tsx,js,jsx,json,md,vue}\"",
     "native:start": "cd apps/native-rd && bun run start",
     "native:ios": "cd apps/native-rd && bash scripts/run-ios.sh",
+    "native:ios:e2e": "cd apps/native-rd && bun run ios:e2e",
     "native:android": "cd apps/native-rd && bun run android",
     "native:test": "cd apps/native-rd && bun run test",
     "clean": "bun run turbo clean && rm -rf node_modules .turbo .bun-cache",

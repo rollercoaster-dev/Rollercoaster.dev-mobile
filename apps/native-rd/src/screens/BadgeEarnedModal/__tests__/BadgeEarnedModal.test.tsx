@@ -129,4 +129,22 @@ describe("BadgeEarnedModal", () => {
     renderWithProviders(<BadgeEarnedModal {...defaultProps} />);
     expect(screen.getByText("Badge earned.")).toBeOnTheScreen();
   });
+
+  describe("E2E mode gating", () => {
+    const originalE2E = process.env.EXPO_PUBLIC_E2E_MODE;
+    beforeAll(() => {
+      process.env.EXPO_PUBLIC_E2E_MODE = "true";
+    });
+    afterAll(() => {
+      process.env.EXPO_PUBLIC_E2E_MODE = originalE2E;
+    });
+
+    it("drops the card a11y wrapper so nested testIDs are reachable", () => {
+      renderWithProviders(<BadgeEarnedModal {...defaultProps} />);
+      // Under E2E mode, the composed "Badge earned" label is not on the card
+      expect(screen.queryByLabelText("Badge earned")).toBeNull();
+      // but the nested badge image testID is reachable
+      expect(screen.getByTestId("badge-earned-image")).toBeOnTheScreen();
+    });
+  });
 });

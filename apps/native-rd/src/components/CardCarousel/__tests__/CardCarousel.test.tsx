@@ -203,4 +203,27 @@ describe("CardCarousel", () => {
       ).toBe(true);
     });
   });
+
+  describe("E2E mode gating", () => {
+    const originalE2E = process.env.EXPO_PUBLIC_E2E_MODE;
+    beforeAll(() => {
+      process.env.EXPO_PUBLIC_E2E_MODE = "true";
+    });
+    afterAll(() => {
+      process.env.EXPO_PUBLIC_E2E_MODE = originalE2E;
+    });
+
+    it("drops adjustable role so descendant testIDs are reachable", () => {
+      renderWithProviders(
+        <CardCarousel {...defaultProps}>
+          <Card label="Card A" />
+          <Card label="Card B" />
+          <Card label="Card C" />
+        </CardCarousel>,
+      );
+      // Under EXPO_PUBLIC_E2E_MODE=true, the outer grouping is disabled so
+      // Maestro can reach testIDs inside the center card.
+      expect(screen.queryByRole("adjustable")).toBeNull();
+    });
+  });
 });

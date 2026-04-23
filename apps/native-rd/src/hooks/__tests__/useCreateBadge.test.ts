@@ -220,10 +220,16 @@ describe("useCreateBadge", () => {
   });
 
   describe("when design option is provided", () => {
-    it("passes design to createBadge", async () => {
+    it("passes design to createBadge when capturedPng is also provided", async () => {
       const designJson =
         '{"shape":"circle","color":"#FF0000","iconName":"Trophy","iconWeight":"regular","frame":"none","title":"Test"}';
-      renderHook(() => useCreateBadge(GOAL_ID, { design: designJson }));
+      const fakePng = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+      renderHook(() =>
+        useCreateBadge(GOAL_ID, {
+          design: designJson,
+          capturedPng: fakePng,
+        }),
+      );
       await act(async () => {});
 
       expect(mockCreateBadge).toHaveBeenCalledWith(
@@ -240,6 +246,19 @@ describe("useCreateBadge", () => {
         unknown
       >;
       expect(callArg).not.toHaveProperty("design");
+    });
+
+    it("fails loudly when design is provided without capturedPng", async () => {
+      const designJson =
+        '{"shape":"circle","color":"#FF0000","iconName":"Trophy","iconWeight":"regular","frame":"none","title":"Test"}';
+      const { result } = renderHook(() =>
+        useCreateBadge(GOAL_ID, { design: designJson }),
+      );
+      await act(async () => {});
+
+      expect(result.current.status).toBe("error");
+      expect(result.current.error).toContain("capturedPng");
+      expect(mockCreateBadge).not.toHaveBeenCalled();
     });
   });
 

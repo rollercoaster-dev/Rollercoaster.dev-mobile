@@ -1,4 +1,4 @@
-import React, { Suspense, useCallback, useMemo, useState } from "react";
+import React, { Suspense, useCallback, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -6,6 +6,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { captureBadge } from "../../badges/captureBadge";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -62,7 +63,12 @@ interface DesignEditorProps {
   onDesignChange: (design: BadgeDesign) => void;
   onSave: () => void;
   saveLabel?: string;
+  saveTestID?: string;
+  saveDisabled?: boolean;
+  saveLoading?: boolean;
   extraFooter?: React.ReactNode;
+  /** Ref attached to the preview View — callers capture a PNG from it. */
+  previewRef?: React.RefObject<View | null>;
 }
 
 function DesignEditor({
@@ -72,7 +78,11 @@ function DesignEditor({
   onDesignChange,
   onSave,
   saveLabel = "Save Design",
+  saveTestID,
+  saveDisabled,
+  saveLoading,
   extraFooter,
+  previewRef,
 }: DesignEditorProps) {
   const { theme } = useUnistyles();
 
@@ -233,6 +243,8 @@ function DesignEditor({
       keyboardShouldPersistTaps="handled"
     >
       <View
+        ref={previewRef}
+        collapsable={false}
         style={styles.previewContainer}
         accessibilityRole="image"
         accessibilityLabel={previewLabel}
@@ -334,7 +346,13 @@ function DesignEditor({
       </View>
 
       <View style={styles.footer}>
-        <Button label={saveLabel} onPress={onSave} />
+        <Button
+          label={saveLabel}
+          onPress={onSave}
+          testID={saveTestID}
+          disabled={saveDisabled}
+          loading={saveLoading}
+        />
         {extraFooter}
       </View>
     </ScrollView>
@@ -433,10 +451,22 @@ function BadgeDesignerContentNewGoal({ goalId }: { goalId: string }) {
 
   const goalColor = (goal?.color as string | null) ?? null;
 
+  const previewRef = useRef<View | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
   const saveAndNavigate = useCallback(
-    (designToSave: BadgeDesign) => {
+    async (designToSave: BadgeDesign) => {
+      if (isSaving) return;
+      setIsSaving(true);
       try {
-        pendingDesignStore.set(goalId, JSON.stringify(designToSave));
+        const pngBuffer = await captureBadge(previewRef, {
+          width: 512,
+          height: 512,
+        });
+        pendingDesignStore.set(goalId, {
+          designJson: JSON.stringify(designToSave),
+          pngBase64: pngBuffer.toString("base64"),
+        });
         navigation.replace("EditMode", { goalId });
       } catch (err) {
         logger.error("Failed to save design and navigate", {
@@ -447,17 +477,18 @@ function BadgeDesignerContentNewGoal({ goalId }: { goalId: string }) {
           "Save Failed",
           "Could not save your badge design. Please try again.",
         );
+        setIsSaving(false);
       }
     },
-    [goalId, navigation],
+    [goalId, isSaving, navigation],
   );
 
   const handleSave = useCallback(() => {
-    saveAndNavigate(currentDesign);
+    void saveAndNavigate(currentDesign);
   }, [currentDesign, saveAndNavigate]);
 
   const handleSkip = useCallback(() => {
-    saveAndNavigate(initialDesign);
+    void saveAndNavigate(initialDesign);
   }, [initialDesign, saveAndNavigate]);
 
   if (!goal) {
@@ -478,11 +509,16 @@ function BadgeDesignerContentNewGoal({ goalId }: { goalId: string }) {
       onDesignChange={setDesign}
       onSave={handleSave}
       saveLabel="Use This Design"
+      saveTestID="use-this-design"
+      saveLoading={isSaving}
+      previewRef={previewRef}
       extraFooter={
         <Button
           label="Skip — Use Default"
           variant="secondary"
           onPress={handleSkip}
+          testID="skip-default-design"
+          disabled={isSaving}
         />
       }
     />

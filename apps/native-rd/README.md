@@ -57,10 +57,15 @@ Current implementation note:
 | `IOS_DEVICE_ID=<udid> bun run ios:device` | Build and run the iOS dev client on a specific device |
 | `bun run android`                         | Build and run the Android dev client                  |
 | `bun run start:worktree`                  | Start Metro on a worktree-safe port                   |
-| `npx jest --no-coverage`                  | Run tests (use this, not `bun test` — it hangs)       |
+| `bun run test`                            | Run Jest tests through the Node wrapper               |
 | `npx tsc --noEmit`                        | Type-check                                            |
 | `bun run lint`                            | Lint                                                  |
 | `bun run build`                           | Monorepo build placeholder (no app artifact)          |
+
+`native-rd` uses Jest, not Bun's test runner. The package test scripts run
+`scripts/jest-node.sh` so Jest executes under real Node even though the monorepo
+sets `[run] bun = true` for other package CLIs. Do not replace this wrapper with
+plain `jest` or `bun test`; that reintroduces Bun/Jest runtime failures.
 
 ---
 

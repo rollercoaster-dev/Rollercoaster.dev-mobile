@@ -78,7 +78,7 @@ module.exports = {
   // The optional `.bun/.*?/node_modules/` prefix handles Bun's symlink layout
   // where packages live at node_modules/.bun/<pkg@ver>/node_modules/<pkg>.
   transformIgnorePatterns: [
-    "node_modules/(?!(\\.bun/.*?/node_modules/)?(@rollercoaster-dev/design-tokens|@testing-library/react-native|react-native|@react-native|phosphor-react-native|react-native-keyboard-controller)/)",
+    "node_modules/(?!(\\.bun/.*?/node_modules/)?(@rollercoaster-dev/design-tokens|@testing-library/react-native|expo|react-native|@react-native|phosphor-react-native|react-native-keyboard-controller)/)",
   ],
 
   // require.resolve follows Bun symlinks correctly; raw string paths break

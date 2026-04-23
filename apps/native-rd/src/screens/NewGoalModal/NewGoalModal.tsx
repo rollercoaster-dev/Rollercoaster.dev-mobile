@@ -73,6 +73,7 @@ export function NewGoalModal() {
             autoFocus
             returnKeyType="done"
             onSubmitEditing={handleCreate}
+            testID="new-goal-title"
           />
         </Card>
 
@@ -80,6 +81,7 @@ export function NewGoalModal() {
           label="Create Goal"
           onPress={handleCreate}
           disabled={!title.trim()}
+          testID="create-goal"
         />
       </View>
     </SafeAreaView>

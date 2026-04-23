@@ -43,11 +43,11 @@ export function Button({
     <Pressable
       onPress={onPress}
       disabled={isDisabled}
-      testID={testID}
       accessible
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled: isDisabled, busy: loading }}
+      testID={testID}
       style={({ pressed }) => [
         styles.pressable(size),
         variantStyleMap[variant],

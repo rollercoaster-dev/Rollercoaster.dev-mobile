@@ -9,6 +9,7 @@ import {
   AccessibilityInfo,
 } from "react-native";
 import type { ImageSourcePropType } from "react-native";
+import { Buffer } from "buffer";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import { useQuery } from "@evolu/react";
@@ -80,7 +81,15 @@ const MAX_NOTE_LENGTH = 1000;
 
 type CompletionPhase = "evidence-prompt" | "celebration";
 
-function CompletionContent({ goalId }: { goalId: string }) {
+function CompletionContent({
+  goalId,
+  pendingDesignJson,
+  pendingCapturedPng,
+}: {
+  goalId: string;
+  pendingDesignJson: string | undefined;
+  pendingCapturedPng: Buffer | undefined;
+}) {
   const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
@@ -90,10 +99,6 @@ function CompletionContent({ goalId }: { goalId: string }) {
   const badgeRows = useQuery(badgeByGoalQuery(goalId as GoalId));
   const badgeRow = badgeRows[0] ?? null;
   const allBadges = useQuery(badgesQuery);
-
-  // consume() reads and deletes — prevents accumulation in the in-memory Map
-  const pendingDesignRef = useRef(pendingDesignStore.consume(goalId));
-  const pendingDesign = pendingDesignRef.current;
 
   const hasGoalEvidence = goalEvidenceRows.length > 0;
 
@@ -116,7 +121,8 @@ function CompletionContent({ goalId }: { goalId: string }) {
   const { status: badgeStatus, error: badgeError } = useCreateBadge(
     goalId as GoalId,
     {
-      ...(pendingDesign ? { design: pendingDesign } : {}),
+      ...(pendingDesignJson ? { design: pendingDesignJson } : {}),
+      ...(pendingCapturedPng ? { capturedPng: pendingCapturedPng } : {}),
       enabled: phase === "celebration",
     },
   );
@@ -463,6 +469,18 @@ function CompletionContent({ goalId }: { goalId: string }) {
 export function CompletionFlowScreen({ route }: CompletionFlowScreenProps) {
   const navigation = useNavigation();
   const { theme } = useUnistyles();
+  const { goalId } = route.params;
+
+  // Consume the pending design ONCE at this level — outside the inner Suspense
+  // boundary so the ref survives inner remounts when Evolu queries resolve.
+  // (An inner useRef inside CompletionContent was re-running consume() on every
+  // Suspense-triggered remount; the first remount ate the entry and the
+  // later mount whose useCreateBadge effect actually fires saw nothing.)
+  const pendingDesignRef = useRef(pendingDesignStore.consume(goalId));
+  const pendingDesign = pendingDesignRef.current;
+  const pendingCapturedPngRef = useRef(
+    pendingDesign ? Buffer.from(pendingDesign.pngBase64, "base64") : undefined,
+  );
 
   return (
     <SafeAreaView
@@ -489,7 +507,11 @@ export function CompletionFlowScreen({ route }: CompletionFlowScreenProps) {
             <ActivityIndicator style={styles.loadingIndicator} size="large" />
           }
         >
-          <CompletionContent goalId={route.params.goalId} />
+          <CompletionContent
+            goalId={goalId}
+            pendingDesignJson={pendingDesign?.designJson}
+            pendingCapturedPng={pendingCapturedPngRef.current}
+          />
         </Suspense>
       </ErrorBoundary>
       <ModeIndicator mode="complete" />
