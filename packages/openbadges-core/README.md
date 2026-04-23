@@ -195,6 +195,8 @@ src/
 
 - `openbadges-types` - Open Badges type definitions
 - `@rollercoaster-dev/rd-logger` - Structured logging
+- `jose` - JWT/JWS primitives used by the crypto module
+- `png-chunks-encode` / `png-chunks-extract` - PNG metadata I/O for badge baking
 
 ## License
 
