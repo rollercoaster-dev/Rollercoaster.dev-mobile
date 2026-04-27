@@ -17,7 +17,7 @@ jest.mock("react-native-reanimated", () => {
       sharedVal = { value: initial };
       return sharedVal;
     },
-    useAnimatedStyle: (fn: () => object) => fn(),
+    useAnimatedStyle: <T>(fn: () => T): T => fn(),
     withSequence: (...args: unknown[]) => args[args.length - 1],
     withTiming: (val: number) => val,
   };
@@ -31,6 +31,9 @@ describe("useFlashOnIncrease", () => {
 
   it("starts with zero opacity", () => {
     const { result } = renderHook(() => useFlashOnIncrease(0));
-    expect(result.current.opacity).toBe(0);
+    // result.current types as AnimatedStyleHandle<{opacity}>; the real type is
+    // opaque in reanimated v4+, but the mock returns a plain object.
+    const style = result.current as unknown as { opacity: number };
+    expect(style.opacity).toBe(0);
   });
 });

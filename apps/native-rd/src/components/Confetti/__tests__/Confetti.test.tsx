@@ -51,10 +51,12 @@ describe("Confetti", () => {
     const { toJSON } = render(<Confetti visible={true} />);
     const tree = toJSON();
     expect(tree).not.toBeNull();
+    if (!tree || Array.isArray(tree))
+      throw new Error("expected single root node");
     // Container should have children (confetti pieces)
-    expect(tree?.type).toBe("View");
-    expect(tree?.children).not.toBeNull();
-    expect(tree?.children?.length).toBe(60);
+    expect(tree.type).toBe("View");
+    expect(tree.children).not.toBeNull();
+    expect(tree.children?.length).toBe(60);
   });
 
   it("calls onComplete after cleanup timeout", () => {
@@ -80,9 +82,10 @@ describe("Confetti", () => {
 
   it("marks confetti as hidden from accessibility", () => {
     const { toJSON } = render(<Confetti visible={true} />);
-    expect(toJSON()?.props.accessibilityElementsHidden).toBe(true);
-    expect(toJSON()?.props.importantForAccessibility).toBe(
-      "no-hide-descendants",
-    );
+    const tree = toJSON();
+    if (!tree || Array.isArray(tree))
+      throw new Error("expected single root node");
+    expect(tree.props.accessibilityElementsHidden).toBe(true);
+    expect(tree.props.importantForAccessibility).toBe("no-hide-descendants");
   });
 });
