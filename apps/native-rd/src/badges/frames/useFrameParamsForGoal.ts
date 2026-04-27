@@ -9,23 +9,31 @@ import type { GoalId } from "../../db/schema";
 import type { FrameDataParams } from "../types";
 import { computeFrameParams } from "./dataMapper";
 
+/** Sentinel for the brief window before goal data hydrates. */
+const PLACEHOLDER_GOAL_ID = "" as GoalId;
+
 /**
- * Convenience hook: queries Evolu for goal steps and evidence,
- * then derives FrameDataParams via computeFrameParams.
+ * Returns derived FrameDataParams for a goal. When `goalId` or `createdAt`
+ * is null (data still hydrating), returns null — callers should refrain
+ * from writing frameParams onto a design until real values land.
  */
 export function useFrameParamsForGoal(
-  goalId: GoalId,
-  createdAt: string,
+  goalId: GoalId | null,
+  createdAt: string | null,
   completedAt: string | null,
-): FrameDataParams {
-  const stepsQuery = useMemo(() => stepsByGoalQuery(goalId), [goalId]);
+): FrameDataParams | null {
+  const queryGoalId = goalId ?? PLACEHOLDER_GOAL_ID;
+  const stepsQuery = useMemo(
+    () => stepsByGoalQuery(queryGoalId),
+    [queryGoalId],
+  );
   const goalEvidenceQuery = useMemo(
-    () => evidenceByGoalQuery(goalId),
-    [goalId],
+    () => evidenceByGoalQuery(queryGoalId),
+    [queryGoalId],
   );
   const stepEvidenceQuery = useMemo(
-    () => stepEvidenceByGoalQuery(goalId),
-    [goalId],
+    () => stepEvidenceByGoalQuery(queryGoalId),
+    [queryGoalId],
   );
 
   const steps = useQuery(stepsQuery);
@@ -33,6 +41,7 @@ export function useFrameParamsForGoal(
   const stepEvidence = useQuery(stepEvidenceQuery);
 
   return useMemo(() => {
+    if (goalId === null || createdAt === null) return null;
     const stepNames = steps.map((s: { title: string | null }) =>
       String(s.title),
     );
@@ -47,5 +56,5 @@ export function useFrameParamsForGoal(
       createdAt,
       completedAt,
     });
-  }, [steps, goalEvidence, stepEvidence, createdAt, completedAt]);
+  }, [goalId, steps, goalEvidence, stepEvidence, createdAt, completedAt]);
 }

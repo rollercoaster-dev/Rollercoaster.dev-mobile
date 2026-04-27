@@ -15,6 +15,17 @@ import {
   starPath,
   diamondPath,
 } from "./paths";
+import { measureTextWidth } from "../text/measureTextWidth";
+
+/** Text-aware arc sizing inputs. */
+export type ContourTextOpts = {
+  topText?: string;
+  bottomText?: string;
+  fontSize?: number;
+};
+
+/** Caps sweep below 180° so the arc endpoints don't meet at 6 o'clock. */
+const MAX_ARC_ANGLE = 0.9 * Math.PI;
 
 /** Geometry metadata for a badge shape, used by frame overlays and text-on-path. */
 export type ShapeContour = {
@@ -53,9 +64,44 @@ function bottomArc(cx: number, cy: number, r: number): string {
   return `M ${cx + r} ${cy} A ${r} ${r} 0 0 0 ${cx - r} ${cy}`;
 }
 
+function arcAngleForText(text: string, fontSize: number, r: number): number {
+  const width = measureTextWidth(text, fontSize);
+  if (width <= 0 || r <= 0) return Math.PI;
+  const angle = width / r;
+  return Math.min(MAX_ARC_ANGLE, Math.max(0.25 * Math.PI, angle));
+}
+
+/**
+ * `side="top"`: arc centered at -π/2 (12 o'clock), sweep-flag=1.
+ * `side="bottom"`: arc centered at +π/2 (6 o'clock), sweep-flag=0.
+ * Both written left-to-right so SVG textPath reads naturally.
+ */
+function arcSized(
+  cx: number,
+  cy: number,
+  r: number,
+  angle: number,
+  side: "top" | "bottom",
+): string {
+  const half = angle / 2;
+  const baseAngle = side === "top" ? -Math.PI / 2 : Math.PI / 2;
+  const sweepFlag = side === "top" ? 1 : 0;
+  const startAngle = baseAngle + (side === "top" ? -half : half);
+  const endAngle = baseAngle + (side === "top" ? half : -half);
+  const startX = cx + r * Math.cos(startAngle);
+  const startY = cy + r * Math.sin(startAngle);
+  const endX = cx + r * Math.cos(endAngle);
+  const endY = cy + r * Math.sin(endAngle);
+  return `M ${startX} ${startY} A ${r} ${r} 0 0 ${sweepFlag} ${endX} ${endY}`;
+}
+
 // ── Circle ─────────────────────────────────────────────────────────────
 
-function circleContour(size: number, inset: number): ShapeContour {
+function circleContour(
+  size: number,
+  inset: number,
+  opts?: ContourTextOpts,
+): ShapeContour {
   const cx = size / 2;
   const cy = size / 2;
   const outerR = size / 2 - inset;
@@ -75,15 +121,48 @@ function circleContour(size: number, inset: number): ShapeContour {
   return {
     outerPath: circlePath(size, inset),
     innerPath: circlePath(size, innerInset),
-    textPathTop: topArc(cx, cy * TEXT_ARC_TOP_CY_RATIO, textR),
-    textPathBottom: bottomArc(cx, cy * TEXT_ARC_BOTTOM_CY_RATIO, textR),
+    textPathTop: pickArc({ side: "top", cx, cy, textR, size, opts }),
+    textPathBottom: pickArc({ side: "bottom", cx, cy, textR, size, opts }),
     vertices,
   };
 }
 
+type PickArcConfig = {
+  side: "top" | "bottom";
+  cx: number;
+  cy: number;
+  textR: number;
+  size: number;
+  opts: ContourTextOpts | undefined;
+  /** Override the per-side legacy cy multiplier (only used when no text is given). */
+  legacyCyRatio?: number;
+};
+
+function pickArc(c: PickArcConfig): string {
+  const text = c.side === "top" ? c.opts?.topText : c.opts?.bottomText;
+  if (text) {
+    const rawFontSize = c.opts?.fontSize;
+    const fontSize =
+      Number.isFinite(rawFontSize) && (rawFontSize as number) > 0
+        ? (rawFontSize as number)
+        : c.size * 0.09;
+    const angle = arcAngleForText(text, fontSize, c.textR);
+    return arcSized(c.cx, c.cy, c.textR, angle, c.side);
+  }
+  const legacyCyRatio =
+    c.legacyCyRatio ??
+    (c.side === "top" ? TEXT_ARC_TOP_CY_RATIO : TEXT_ARC_BOTTOM_CY_RATIO);
+  const legacy = c.side === "top" ? topArc : bottomArc;
+  return legacy(c.cx, c.cy * legacyCyRatio, c.textR);
+}
+
 // ── Hexagon ────────────────────────────────────────────────────────────
 
-function hexagonContour(size: number, inset: number): ShapeContour {
+function hexagonContour(
+  size: number,
+  inset: number,
+  opts?: ContourTextOpts,
+): ShapeContour {
   const cx = size / 2;
   const cy = size / 2;
   const outerR = size / 2 - inset;
@@ -103,15 +182,19 @@ function hexagonContour(size: number, inset: number): ShapeContour {
   return {
     outerPath: hexagonPath(size, inset),
     innerPath: hexagonPath(size, innerInset),
-    textPathTop: topArc(cx, cy * TEXT_ARC_TOP_CY_RATIO, textR),
-    textPathBottom: bottomArc(cx, cy * TEXT_ARC_BOTTOM_CY_RATIO, textR),
+    textPathTop: pickArc({ side: "top", cx, cy, textR, size, opts }),
+    textPathBottom: pickArc({ side: "bottom", cx, cy, textR, size, opts }),
     vertices,
   };
 }
 
 // ── Diamond ────────────────────────────────────────────────────────────
 
-function diamondContour(size: number, inset: number): ShapeContour {
+function diamondContour(
+  size: number,
+  inset: number,
+  opts?: ContourTextOpts,
+): ShapeContour {
   const cx = size / 2;
   const cy = size / 2;
   const outerR = size / 2 - inset;
@@ -121,8 +204,8 @@ function diamondContour(size: number, inset: number): ShapeContour {
   return {
     outerPath: diamondPath(size, inset),
     innerPath: diamondPath(size, innerInset),
-    textPathTop: topArc(cx, cy * TEXT_ARC_TOP_CY_RATIO, textR),
-    textPathBottom: bottomArc(cx, cy * TEXT_ARC_BOTTOM_CY_RATIO, textR),
+    textPathTop: pickArc({ side: "top", cx, cy, textR, size, opts }),
+    textPathBottom: pickArc({ side: "bottom", cx, cy, textR, size, opts }),
     vertices: [
       { x: cx, y: cy - outerR }, // top
       { x: cx + outerR, y: cy }, // right
@@ -134,7 +217,11 @@ function diamondContour(size: number, inset: number): ShapeContour {
 
 // ── Star ───────────────────────────────────────────────────────────────
 
-function starContour(size: number, inset: number): ShapeContour {
+function starContour(
+  size: number,
+  inset: number,
+  opts?: ContourTextOpts,
+): ShapeContour {
   const cx = size / 2;
   const cy = size / 2;
   const outerR = size / 2 - inset;
@@ -154,15 +241,35 @@ function starContour(size: number, inset: number): ShapeContour {
   return {
     outerPath: starPath(size, inset),
     innerPath: starPath(size, innerInset),
-    textPathTop: topArc(cx, cy * 1.17, textR),
-    textPathBottom: bottomArc(cx, cy * 0.94, textR),
+    textPathTop: pickArc({
+      side: "top",
+      cx,
+      cy,
+      textR,
+      size,
+      opts,
+      legacyCyRatio: 1.17,
+    }),
+    textPathBottom: pickArc({
+      side: "bottom",
+      cx,
+      cy,
+      textR,
+      size,
+      opts,
+      legacyCyRatio: 0.94,
+    }),
     vertices,
   };
 }
 
 // ── Shield ─────────────────────────────────────────────────────────────
 
-function shieldContour(size: number, inset: number): ShapeContour {
+function shieldContour(
+  size: number,
+  inset: number,
+  opts?: ContourTextOpts,
+): ShapeContour {
   const cx = size / 2;
   const cy = size / 2;
   const innerInset = inset + size * FRAME_BAND_RATIO;
@@ -181,8 +288,15 @@ function shieldContour(size: number, inset: number): ShapeContour {
   return {
     outerPath: shieldPath(size, inset),
     innerPath: shieldPath(size, innerInset),
-    textPathTop: topArc(cx, cy * TEXT_ARC_TOP_CY_RATIO, textR),
-    textPathBottom: bottomArc(cx, cy * TEXT_ARC_BOTTOM_CY_RATIO, textR * 0.8),
+    textPathTop: pickArc({ side: "top", cx, cy, textR, size, opts }),
+    textPathBottom: pickArc({
+      side: "bottom",
+      cx,
+      cy,
+      textR: textR * 0.8,
+      size,
+      opts,
+    }),
     vertices: [
       { x: l, y: shoulderY }, // left shoulder
       { x: r, y: shoulderY }, // right shoulder
@@ -193,7 +307,11 @@ function shieldContour(size: number, inset: number): ShapeContour {
 
 // ── Rounded Rectangle ──────────────────────────────────────────────────
 
-function roundedRectContour(size: number, inset: number): ShapeContour {
+function roundedRectContour(
+  size: number,
+  inset: number,
+  opts?: ContourTextOpts,
+): ShapeContour {
   const cx = size / 2;
   const cy = size / 2;
   const innerInset = inset + size * FRAME_BAND_RATIO;
@@ -207,8 +325,8 @@ function roundedRectContour(size: number, inset: number): ShapeContour {
   return {
     outerPath: roundedRectPath(size, inset),
     innerPath: roundedRectPath(size, innerInset),
-    textPathTop: topArc(cx, cy * TEXT_ARC_TOP_CY_RATIO, textR),
-    textPathBottom: bottomArc(cx, cy * TEXT_ARC_BOTTOM_CY_RATIO, textR),
+    textPathTop: pickArc({ side: "top", cx, cy, textR, size, opts }),
+    textPathBottom: pickArc({ side: "bottom", cx, cy, textR, size, opts }),
     vertices: [
       { x: l + w * 0.25, y: t + h * 0.25 }, // top-left
       { x: l + w * 0.75, y: t + h * 0.25 }, // top-right
@@ -222,7 +340,7 @@ function roundedRectContour(size: number, inset: number): ShapeContour {
 
 const contourGenerators: Record<
   BadgeShape,
-  (size: number, inset: number) => ShapeContour
+  (size: number, inset: number, opts?: ContourTextOpts) => ShapeContour
 > = {
   circle: circleContour,
   shield: shieldContour,
@@ -238,11 +356,16 @@ const contourGenerators: Record<
  * @param shape - Badge shape type
  * @param size  - Bounding box dimension (square)
  * @param inset - Stroke inset (typically half stroke width)
+ * @param opts  - Optional text-aware sizing inputs. When provided, the top
+ *                and bottom inscription arcs are sized to the text width
+ *                and centered on the badge's vertical axis. Without opts
+ *                the legacy fixed half-circle arcs are returned.
  */
 export function generateContour(
   shape: BadgeShape,
   size: number,
   inset: number,
+  opts?: ContourTextOpts,
 ): ShapeContour {
-  return contourGenerators[shape](size, inset);
+  return contourGenerators[shape](size, inset, opts);
 }

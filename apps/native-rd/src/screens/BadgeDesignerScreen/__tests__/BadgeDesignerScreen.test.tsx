@@ -430,6 +430,68 @@ describe("BadgeDesignerScreen", () => {
       screen.getByLabelText(/Badge preview:.*guilloche.*frame/),
     ).toBeOnTheScreen();
   });
+
+  // ── TDD: bugs the user reported ──────────────────────────────────────
+  // FrameOverlay returns null when `params` is undefined — see
+  // FrameOverlay.test.tsx:56-66. So selecting a frame in the designer
+  // without also setting `frameParams` produces a design that renders no
+  // border at all. The designer currently ships exactly that bug:
+  // handleFrameChange (BadgeDesignerScreen.tsx:119-124) sets only `frame`.
+  // useFrameParamsForGoal exists for this purpose but is never wired in.
+  it("attaches frameParams when a non-none frame is selected", () => {
+    mockUseQuery.mockReturnValue([makeRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+
+    fireEvent.press(screen.getByLabelText("Guilloche frame"));
+    fireEvent.press(screen.getByLabelText("Save Design"));
+
+    const savedJson = mockUpdateBadge.mock.calls[0][1].design as string;
+    const parsed = JSON.parse(savedJson);
+    expect(parsed.frame).toBe("guilloche");
+    // Without frameParams, FrameOverlay short-circuits and no frame renders.
+    expect(parsed.frameParams).toBeDefined();
+    expect(parsed.frameParams).toEqual(
+      expect.objectContaining({ variant: expect.any(Number) }),
+    );
+  });
+
+  it("clears frameParams when frame is set back to none", () => {
+    mockUseQuery.mockReturnValue([
+      makeRow({
+        design: JSON.stringify({
+          shape: "circle",
+          frame: "boldBorder",
+          frameParams: {
+            variant: 0,
+            stepCount: 3,
+            evidenceCount: 5,
+            daysToComplete: 30,
+            evidenceTypes: 3,
+            stepNames: ["A", "B", "C"],
+          },
+          color: "#a78bfa",
+          iconName: "Trophy",
+          iconWeight: "regular",
+          title: "Test",
+          centerMode: "icon",
+        }),
+      }),
+    ]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+
+    fireEvent.press(screen.getByLabelText("None frame"));
+    fireEvent.press(screen.getByLabelText("Save Design"));
+
+    const savedJson = mockUpdateBadge.mock.calls[0][1].design as string;
+    const parsed = JSON.parse(savedJson);
+    expect(parsed.frame).toBe("none");
+    // No frame ⇒ frameParams should be dropped (no orphan params).
+    expect(parsed.frameParams).toBeUndefined();
+  });
 });
 
 // ---------------------------------------------------------------------------

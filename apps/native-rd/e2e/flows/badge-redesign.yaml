@@ -1,0 +1,70 @@
+appId: com.joe.rd.native-rd
+---
+# Badge designer — redesign mode flow.
+# Status: TDD-style — expected to surface known designer bugs.
+# Criteria: state propagation to preview a11y label, save round-trips to DB.
+#
+# Visual rendering bugs ("borders don't appear", "curved text not centered")
+# are caught at the unit-test layer (BadgeDesignerScreen.test.tsx, PathText
+# .test.tsx, FrameOverlay.test.tsx). Maestro's role here is the user-flow
+# contract: navigation, state changes reaching the preview's a11y label,
+# and persistence across designer entries.
+#
+# Setup: chains goal-lifecycle-complete.yaml so a real earned badge exists
+# in Evolu. That flow ends at the BadgeEarnedModal with `badge-earned-image`
+# visible. From there the modal's "Customize" button lands in redesign mode
+# (CompletionFlowScreen.tsx:230-242 → mode: "redesign", badgeId: ...).
+- runFlow: goal-lifecycle-complete.yaml
+
+# ── Enter the designer in redesign mode ─────────────────────────────────
+# E2E build (EXPO_PUBLIC_E2E_MODE=true) drops the BadgeEarnedModal card's
+# a11y wrapper, so the nested "Customize" button is reachable directly.
+- tapOn: "Customize"
+- assertVisible: "Design Badge"
+- assertVisible:
+    id: "badge-renderer"
+
+# ── State propagation: shape change reaches the preview a11y label ──────
+- tapOn: "Shield shape"
+- assertVisible:
+    text: "Badge preview:.*shield.*"
+
+# ── State propagation: color change reaches the preview a11y label ──────
+- tapOn: "Mint color"
+- assertVisible:
+    text: "Badge preview:.*#34d399.*"
+
+# ── State propagation: frame change reaches the preview a11y label ──────
+# The label updates regardless of whether the frame actually renders —
+# that visual bug is caught at the unit-test layer, not here.
+- tapOn: "Guilloche frame"
+- assertVisible:
+    text: "Badge preview:.*guilloche frame.*"
+
+# ── Save round-trip: designer persists changes back to Evolu ────────────
+# Redesign mode has no testID on its save button (BadgeDesignerScreen.tsx
+# :422-430 — only new-goal mode sets saveTestID). We rely on the literal
+# label "Save Design".
+- scrollUntilVisible:
+    element:
+      text: "Save Design"
+    direction: DOWN
+- tapOn: "Save Design"
+
+# After save, BadgeDesignerContentBadge calls navigation.goBack() — we
+# return to whichever screen pushed the designer (CompletionFlowScreen).
+# Re-enter the designer through the Badges tab to verify persistence.
+- tapOn:
+    id: "tab-BadgesTab"
+- assertVisible: "Badges"
+- tapOn:
+    text: "Badge: Plan community archive exhibit.*"
+- assertVisible: "Customize Badge"
+- tapOn: "Customize Badge"
+- assertVisible: "Design Badge"
+
+# ── Persistence assertion: saved state survives reload from Evolu ───────
+# All three changed fields should round-trip into the new designer
+# instance's preview a11y label.
+- assertVisible:
+    text: "Badge preview:.*#34d399.*shield.*guilloche frame.*"

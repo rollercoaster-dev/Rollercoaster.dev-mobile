@@ -32,6 +32,7 @@ export function TabNavigator() {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarShowLabel: false,
+        tabBarButtonTestID: `tab-${route.name}`,
         tabBarIcon: ({ color }) => (
           <Text
             style={{

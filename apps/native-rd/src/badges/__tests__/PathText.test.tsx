@@ -167,13 +167,15 @@ describe("PathText", () => {
     expect(bottomPath!.props.d).toMatch(/A [\d.]+ [\d.]+ 0 0 0 /);
   });
 
-  it("rotates the full path text layer 180 degrees as a single group", () => {
+  it("renders top and bottom inscriptions without a wrapping rotate group", () => {
+    // Previously a `<G transform="rotate(180 ...)">` wrapped both texts so
+    // the legacy half-circle arcs would read right-side-up. Now arcs are
+    // sized to text and oriented for natural reading direction, so the
+    // rotation transform is removed and the texts render at the SVG root.
     const el = PathText(makeProps({ pathTextPosition: "both" }))!;
-    const groups = findByType(el, "G");
     const textPaths = findByType(el, "TextPath");
-
-    expect(groups).toHaveLength(1);
-    expect(groups[0].props.transform).toBe("rotate(180 128 128)");
+    const groups = findByType(el, "G");
+    expect(groups).toHaveLength(0);
     expect(textPaths).toHaveLength(2);
     expect(textPaths[0].props.children).toBe("TOP TEXT");
     expect(textPaths[1].props.children).toBe("BOTTOM TEXT");
@@ -241,10 +243,28 @@ describe("PathText", () => {
 
   // ── Text centering ─────────────────────────────────────────────────
 
-  it("centers text along path with startOffset 50%", () => {
-    const el = PathText(makeProps({ pathTextPosition: "top" }))!;
-    const textPaths = findByType(el, "TextPath");
-    expect(textPaths[0].props.startOffset).toBe("50%");
-    expect(textPaths[0].props.textAnchor).toBe("middle");
+  it("sizes the top arc's angular sweep to the text width", () => {
+    // Centering is now achieved by sizing the arc itself to the text and
+    // anchoring it on the badge's vertical axis (rather than relying on
+    // textPath's startOffset/textAnchor, which were unreliable on iOS).
+    // Therefore short and long inscriptions must produce distinct arc
+    // geometries.
+    const elShort = PathText(
+      makeProps({ pathText: "AB", pathTextPosition: "top" }),
+    )!;
+    const elLong = PathText(
+      makeProps({ pathText: "ACHIEVEMENT UNLOCKED", pathTextPosition: "top" }),
+    )!;
+    const shortPaths = findByType(elShort, "Path");
+    const longPaths = findByType(elLong, "Path");
+    const shortTopPath = shortPaths.find((p) =>
+      String(p.props.id ?? "").startsWith("pathtext-top-"),
+    );
+    const longTopPath = longPaths.find((p) =>
+      String(p.props.id ?? "").startsWith("pathtext-top-"),
+    );
+    expect(shortTopPath).toBeDefined();
+    expect(longTopPath).toBeDefined();
+    expect(shortTopPath!.props.d).not.toBe(longTopPath!.props.d);
   });
 });

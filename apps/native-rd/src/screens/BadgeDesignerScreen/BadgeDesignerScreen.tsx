@@ -2,7 +2,7 @@ import React, { Suspense, useCallback, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  ScrollView,
+  Animated,
   TextInput,
   View,
 } from "react-native";
@@ -10,6 +10,7 @@ import { captureBadge } from "../../badges/captureBadge";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useUnistyles } from "react-native-unistyles";
 import { useQuery } from "@evolu/react";
 
@@ -22,6 +23,7 @@ import { ShapeSelector } from "../../badges/ShapeSelector";
 import { ColorPicker } from "../../badges/ColorPicker";
 import { IconPicker } from "../../badges/IconPicker";
 import { FrameSelector } from "../../badges/FrameSelector";
+import { useFrameParamsForGoal } from "../../badges/frames";
 import { CenterModeSelector } from "../../badges/CenterModeSelector";
 import { PathTextEditor } from "../../badges/PathTextEditor";
 import { BannerEditor } from "../../badges/BannerEditor";
@@ -37,9 +39,10 @@ import type {
   BadgeDesign,
   BadgeShape,
   BadgeIconWeight,
+  FrameDataParams,
 } from "../../badges/types";
 import { badgeWithGoalQuery, goalsQuery, updateBadge } from "../../db";
-import type { BadgeId } from "../../db";
+import type { BadgeId, GoalId } from "../../db";
 import { pendingDesignStore } from "../../stores/pendingDesignStore";
 import { Logger } from "../../shims/rd-logger";
 import type {
@@ -52,6 +55,16 @@ const logger = new Logger("BadgeDesignerScreen");
 
 const DEFAULT_BANNER = { text: "", position: BannerPosition.center } as const;
 
+/** Reserved space below topBar for the floating preview overlay at rest. */
+const PREVIEW_OVERLAY_HEIGHT = 200;
+
+/**
+ * Hardcoded rather than read via `useBottomTabBarHeight` from
+ * `@react-navigation/bottom-tabs`: that import pulls in ESM that needs
+ * extra Babel-transform whitelisting in the Jest config for marginal gain.
+ */
+const TAB_BAR_HEIGHT = 56;
+
 // ---------------------------------------------------------------------------
 // Shared design editor UI (stateless — receives design + callbacks)
 // ---------------------------------------------------------------------------
@@ -60,8 +73,10 @@ interface DesignEditorProps {
   currentDesign: BadgeDesign;
   goalColor?: string | null;
   goalTitle?: string;
+  derivedFrameParams: FrameDataParams | null;
   onDesignChange: (design: BadgeDesign) => void;
   onSave: () => void;
+  onBack: () => void;
   saveLabel?: string;
   saveTestID?: string;
   saveDisabled?: boolean;
@@ -75,8 +90,10 @@ function DesignEditor({
   currentDesign,
   goalColor,
   goalTitle,
+  derivedFrameParams,
   onDesignChange,
   onSave,
+  onBack,
   saveLabel = "Save Design",
   saveTestID,
   saveDisabled,
@@ -85,6 +102,11 @@ function DesignEditor({
   previewRef,
 }: DesignEditorProps) {
   const { theme } = useUnistyles();
+
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const [topBarHeight, setTopBarHeight] = useState(64);
+  const insets = useSafeAreaInsets();
+  const tabBarHeight = TAB_BAR_HEIGHT + insets.bottom;
 
   // --- Existing handlers ---
   const handleShapeChange = useCallback(
@@ -118,9 +140,20 @@ function DesignEditor({
   // --- Frame + Center handlers ---
   const handleFrameChange = useCallback(
     (frame: BadgeFrame) => {
-      onDesignChange({ ...currentDesign, frame });
+      if (frame === BadgeFrame.none) {
+        onDesignChange({ ...currentDesign, frame, frameParams: undefined });
+      } else {
+        // Fall back to the design's existing frameParams during the
+        // hydration window so a re-selected frame doesn't regress to a
+        // params-less state and silently render no ring.
+        onDesignChange({
+          ...currentDesign,
+          frame,
+          frameParams: derivedFrameParams ?? currentDesign.frameParams,
+        });
+      }
     },
-    [currentDesign, onDesignChange],
+    [currentDesign, derivedFrameParams, onDesignChange],
   );
 
   const handleCenterModeChange = useCallback(
@@ -238,124 +271,173 @@ function DesignEditor({
   const previewLabel = `Badge preview: ${currentDesign.color} ${currentDesign.shape} ${frame} frame with ${currentDesign.iconName} icon`;
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.scrollContent}
-      keyboardShouldPersistTaps="handled"
-    >
-      <View
-        ref={previewRef}
-        collapsable={false}
-        style={styles.previewContainer}
-        accessibilityRole="image"
-        accessibilityLabel={previewLabel}
+    <View style={styles.editorRoot}>
+      <Animated.ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingTop: topBarHeight + PREVIEW_OVERLAY_HEIGHT,
+            paddingBottom: tabBarHeight + 16,
+          },
+        ]}
+        keyboardShouldPersistTaps="handled"
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true },
+        )}
+        scrollEventThrottle={16}
       >
-        <BadgeRenderer design={currentDesign} size={160} />
-      </View>
-
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionLabel}>Shape</Text>
-        <ShapeSelector
-          selectedShape={currentDesign.shape}
-          onSelectShape={handleShapeChange}
-          accentColor={currentDesign.color}
-        />
-      </View>
-
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionLabel}>Color</Text>
-        <ColorPicker
-          selectedColor={currentDesign.color}
-          onSelectColor={handleColorChange}
-          goalColor={goalColor ?? undefined}
-        />
-      </View>
-
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionLabel}>Frame</Text>
-        <FrameSelector
-          selectedFrame={frame}
-          onSelectFrame={handleFrameChange}
-          accentColor={currentDesign.color}
-        />
-      </View>
-
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionLabel}>Center</Text>
-        <CenterModeSelector
-          selectedMode={centerMode}
-          monogram={monogram}
-          onSelectMode={handleCenterModeChange}
-          onChangeMonogram={handleMonogramChange}
-          accentColor={currentDesign.color}
-        />
-      </View>
-
-      {centerMode === BadgeCenterMode.icon && (
-        <View style={styles.iconSection}>
-          <Text style={styles.sectionLabel}>Icon</Text>
-          <IconPicker
-            selectedIcon={currentDesign.iconName}
-            selectedWeight={currentDesign.iconWeight}
-            onSelectIcon={handleIconChange}
-            onSelectWeight={handleWeightChange}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionLabel}>Shape</Text>
+          <ShapeSelector
+            selectedShape={currentDesign.shape}
+            onSelectShape={handleShapeChange}
             accentColor={currentDesign.color}
           />
         </View>
-      )}
 
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionLabel}>Center Label</Text>
-        <TextInput
-          accessibilityLabel="Center label"
-          value={centerLabel}
-          onChangeText={handleCenterLabelChange}
-          maxLength={10}
-          placeholder="Optional label"
-          placeholderTextColor={theme.colors.textSecondary}
-          style={styles.centerLabelInput}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionLabel}>Color</Text>
+          <ColorPicker
+            selectedColor={currentDesign.color}
+            onSelectColor={handleColorChange}
+            goalColor={goalColor ?? undefined}
+          />
+        </View>
+
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionLabel}>Frame</Text>
+          <FrameSelector
+            selectedFrame={frame}
+            onSelectFrame={handleFrameChange}
+            accentColor={currentDesign.color}
+          />
+        </View>
+
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionLabel}>Center</Text>
+          <CenterModeSelector
+            selectedMode={centerMode}
+            monogram={monogram}
+            onSelectMode={handleCenterModeChange}
+            onChangeMonogram={handleMonogramChange}
+            accentColor={currentDesign.color}
+          />
+        </View>
+
+        {centerMode === BadgeCenterMode.icon && (
+          <View style={styles.iconSection}>
+            <Text style={styles.sectionLabel}>Icon</Text>
+            <IconPicker
+              selectedIcon={currentDesign.iconName}
+              selectedWeight={currentDesign.iconWeight}
+              onSelectIcon={handleIconChange}
+              onSelectWeight={handleWeightChange}
+              accentColor={currentDesign.color}
+            />
+          </View>
+        )}
+
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionLabel}>Center Label</Text>
+          <TextInput
+            accessibilityLabel="Center label"
+            value={centerLabel}
+            onChangeText={handleCenterLabelChange}
+            maxLength={10}
+            placeholder="Optional label"
+            placeholderTextColor={theme.colors.textSecondary}
+            style={styles.centerLabelInput}
+          />
+        </View>
+
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionLabel}>Path Text</Text>
+          <PathTextEditor
+            enabled={pathTextEnabled}
+            text={pathText}
+            textBottom={pathTextBottom}
+            position={pathTextPosition}
+            goalTitle={goalTitle ?? currentDesign.title}
+            onToggle={handlePathTextToggle}
+            onChangeText={handlePathTextChange}
+            onChangeTextBottom={handlePathTextBottomChange}
+            onChangePosition={handlePathTextPositionChange}
+            accentColor={currentDesign.color}
+          />
+        </View>
+
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionLabel}>Banner</Text>
+          <BannerEditor
+            enabled={bannerEnabled}
+            text={bannerText}
+            position={bannerPosition}
+            onToggle={handleBannerToggle}
+            onChangeText={handleBannerTextChange}
+            onChangePosition={handleBannerPositionChange}
+            accentColor={currentDesign.color}
+          />
+        </View>
+
+        <View style={styles.footer}>
+          <Button
+            label={saveLabel}
+            onPress={onSave}
+            testID={saveTestID}
+            disabled={saveDisabled}
+            loading={saveLoading}
+          />
+          {extraFooter}
+        </View>
+      </Animated.ScrollView>
+
+      <View
+        style={styles.topBar}
+        onLayout={(e) => {
+          const next = e.nativeEvent.layout.height;
+          setTopBarHeight((prev) => (prev === next ? prev : next));
+        }}
+      >
+        <IconButton
+          icon={<Text variant="headline">{"\u2190"}</Text>}
+          onPress={onBack}
+          variant="ghost"
+          accessibilityLabel="Go back"
         />
+        <Text style={styles.topBarTitle}>Design Badge</Text>
+        <View style={styles.spacer} />
       </View>
 
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionLabel}>Path Text</Text>
-        <PathTextEditor
-          enabled={pathTextEnabled}
-          text={pathText}
-          textBottom={pathTextBottom}
-          position={pathTextPosition}
-          goalTitle={goalTitle ?? currentDesign.title}
-          onToggle={handlePathTextToggle}
-          onChangeText={handlePathTextChange}
-          onChangeTextBottom={handlePathTextBottomChange}
-          onChangePosition={handlePathTextPositionChange}
-          accentColor={currentDesign.color}
-        />
-      </View>
-
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionLabel}>Banner</Text>
-        <BannerEditor
-          enabled={bannerEnabled}
-          text={bannerText}
-          position={bannerPosition}
-          onToggle={handleBannerToggle}
-          onChangeText={handleBannerTextChange}
-          onChangePosition={handleBannerPositionChange}
-          accentColor={currentDesign.color}
-        />
-      </View>
-
-      <View style={styles.footer}>
-        <Button
-          label={saveLabel}
-          onPress={onSave}
-          testID={saveTestID}
-          disabled={saveDisabled}
-          loading={saveLoading}
-        />
-        {extraFooter}
-      </View>
-    </ScrollView>
+      <Animated.View
+        style={[
+          styles.previewOverlay,
+          {
+            top: topBarHeight,
+            transform: [
+              {
+                translateY: scrollY.interpolate({
+                  inputRange: [0, topBarHeight],
+                  outputRange: [0, -topBarHeight],
+                  extrapolate: "clamp",
+                }),
+              },
+            ],
+          },
+        ]}
+        pointerEvents="none"
+      >
+        <View
+          ref={previewRef}
+          collapsable={false}
+          style={styles.previewContainer}
+          accessibilityRole="image"
+          accessibilityLabel={previewLabel}
+        >
+          <BadgeRenderer design={currentDesign} size={160} />
+        </View>
+      </Animated.View>
+    </View>
   );
 }
 
@@ -385,6 +467,12 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
   const [design, setDesign] = useState<BadgeDesign | null>(null);
   const currentDesign = design ?? initialDesign;
   const goalColor = badge?.goalColor as string | null | undefined;
+
+  const derivedFrameParams = useFrameParamsForGoal(
+    (badge?.goalId as GoalId | null | undefined) ?? null,
+    (badge?.createdAt as string | null | undefined) ?? null,
+    (badge?.completedAt as string | null | undefined) ?? null,
+  );
 
   const handleSave = useCallback(() => {
     if (!currentDesign) return;
@@ -424,8 +512,10 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
       currentDesign={currentDesign}
       goalColor={goalColor}
       goalTitle={badgeGoalTitle}
+      derivedFrameParams={derivedFrameParams}
       onDesignChange={setDesign}
       onSave={handleSave}
+      onBack={() => navigation.goBack()}
     />
   );
 }
@@ -450,6 +540,12 @@ function BadgeDesignerContentNewGoal({ goalId }: { goalId: string }) {
   const currentDesign = design ?? initialDesign;
 
   const goalColor = (goal?.color as string | null) ?? null;
+
+  const derivedFrameParams = useFrameParamsForGoal(
+    goalId as GoalId,
+    (goal?.createdAt as string | null | undefined) ?? null,
+    null,
+  );
 
   const previewRef = useRef<View | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -506,8 +602,10 @@ function BadgeDesignerContentNewGoal({ goalId }: { goalId: string }) {
       currentDesign={currentDesign}
       goalColor={goalColor}
       goalTitle={newGoalTitle}
+      derivedFrameParams={derivedFrameParams}
       onDesignChange={setDesign}
       onSave={handleSave}
+      onBack={() => navigation.goBack()}
       saveLabel="Use This Design"
       saveTestID="use-this-design"
       saveLoading={isSaving}
@@ -565,28 +663,15 @@ export function BadgeDesignerScreen({
       edges={["top"]}
       style={{ flex: 1, backgroundColor: theme.colors.accentYellow }}
     >
-      <View style={styles.topBar}>
-        <IconButton
-          icon={<Text variant="headline">{"\u2190"}</Text>}
-          onPress={() => navigation.goBack()}
-          variant="ghost"
-          accessibilityLabel="Go back"
-        />
-        <Text style={styles.topBarTitle}>Design Badge</Text>
-        <View style={styles.spacer} />
-      </View>
-
-      <View style={styles.contentArea}>
-        <ErrorBoundary>
-          <Suspense
-            fallback={
-              <ActivityIndicator style={styles.loadingIndicator} size="large" />
-            }
-          >
-            {content}
-          </Suspense>
-        </ErrorBoundary>
-      </View>
+      <ErrorBoundary>
+        <Suspense
+          fallback={
+            <ActivityIndicator style={styles.loadingIndicator} size="large" />
+          }
+        >
+          {content}
+        </Suspense>
+      </ErrorBoundary>
     </SafeAreaView>
   );
 }

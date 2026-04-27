@@ -2,11 +2,15 @@ import { StyleSheet } from "react-native-unistyles";
 import { shadowStyle } from "../../styles/shadows";
 
 export const styles = StyleSheet.create((theme) => ({
-  contentArea: {
+  editorRoot: {
     flex: 1,
     backgroundColor: theme.colors.background,
   },
   topBar: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -14,7 +18,7 @@ export const styles = StyleSheet.create((theme) => ({
     paddingVertical: theme.space[2],
     paddingBottom: theme.space[4],
     backgroundColor: theme.colors.accentYellow,
-    zIndex: 1,
+    zIndex: 2,
     ...shadowStyle(theme, "hardMd"),
   },
   topBarTitle: {
@@ -25,9 +29,16 @@ export const styles = StyleSheet.create((theme) => ({
     width: 48,
   },
   scrollContent: {
-    paddingBottom: theme.space[12],
     gap: theme.space[4],
     alignItems: "center",
+  },
+  previewOverlay: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    paddingVertical: theme.space[2],
+    zIndex: 3,
   },
   previewContainer: {
     alignItems: "center",

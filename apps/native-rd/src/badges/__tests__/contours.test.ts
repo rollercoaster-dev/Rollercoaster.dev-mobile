@@ -141,3 +141,138 @@ describe("generateContour", () => {
     expect(largeSpread).toBeLessThan(smallSpread);
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────
+// TDD: bug #2 — path text appears bunched on right side, not centered.
+// User-supplied screenshot shows "PATH TOP"/"PATH BOTTOM" running along
+// the right hemisphere of the badge instead of curving across the top
+// and bottom.
+//
+// Diagnosis: generateContour produces a fixed half-circle for both top
+// and bottom arcs, regardless of text. PathText.tsx then relies on SVG
+// textPath's `startOffset="50%"` + `textAnchor="middle"` to center the
+// text along that fixed path. On react-native-svg + iOS this positioning
+// is not reliably honored, so text starts at the path's start point
+// (cx + r, ...) — the right side — and reads along the arc from there.
+//
+// Fix direction (per design intent — "the arcs need to be centered which
+// means they need to know their length"): arc geometry must be a
+// function of the text content so the path spans the exact angular
+// range needed for the text and is positioned symmetrically around the
+// badge's vertical centerline. That makes rendering correct
+// independent of textPath positioning quirks.
+// ─────────────────────────────────────────────────────────────────────
+describe("text-aware arc sizing", () => {
+  it("top arc geometry varies with the text it must contain", () => {
+    // Today, generateContour ignores text — short and long inscriptions
+    // get the same fixed half-circle path. A correctly centered arc
+    // must span an angular range proportional to text length, so these
+    // two calls must produce different `textPathTop` strings.
+    const short = (
+      generateContour as unknown as (
+        shape: string,
+        size: number,
+        inset: number,
+        opts?: { topText?: string; bottomText?: string },
+      ) => ShapeContour
+    )("circle", SIZE, 0, { topText: "AB" });
+    const long = (
+      generateContour as unknown as (
+        shape: string,
+        size: number,
+        inset: number,
+        opts?: { topText?: string; bottomText?: string },
+      ) => ShapeContour
+    )("circle", SIZE, 0, { topText: "ACHIEVEMENT UNLOCKED" });
+
+    expect(short.textPathTop).not.toBe(long.textPathTop);
+  });
+
+  it("bottom arc geometry varies with the text it must contain", () => {
+    const short = (
+      generateContour as unknown as (
+        shape: string,
+        size: number,
+        inset: number,
+        opts?: { topText?: string; bottomText?: string },
+      ) => ShapeContour
+    )("circle", SIZE, 0, { bottomText: "X" });
+    const long = (
+      generateContour as unknown as (
+        shape: string,
+        size: number,
+        inset: number,
+        opts?: { topText?: string; bottomText?: string },
+      ) => ShapeContour
+    )("circle", SIZE, 0, { bottomText: "MMXXVI ANNUAL EDITION" });
+
+    expect(short.textPathBottom).not.toBe(long.textPathBottom);
+  });
+
+  // Text-awareness must apply to every shape — a refactor that drops `opts`
+  // from one generator's signature would otherwise silently fall back to
+  // the legacy half-circle for that shape only.
+  test.each(ALL_SHAPES)(
+    "%s: top arc geometry depends on topText (text-aware applies to all shapes)",
+    (shape) => {
+      const noText = generateContour(shape, SIZE, 0);
+      const withText = (
+        generateContour as unknown as (
+          shape: string,
+          size: number,
+          inset: number,
+          opts?: { topText?: string },
+        ) => ShapeContour
+      )(shape, SIZE, 0, { topText: "INSCRIBED" });
+      expect(withText.textPathTop).not.toBe(noText.textPathTop);
+    },
+  );
+
+  test.each(ALL_SHAPES)(
+    "%s: bottom arc geometry depends on bottomText",
+    (shape) => {
+      const noText = generateContour(shape, SIZE, 0);
+      const withText = (
+        generateContour as unknown as (
+          shape: string,
+          size: number,
+          inset: number,
+          opts?: { bottomText?: string },
+        ) => ShapeContour
+      )(shape, SIZE, 0, { bottomText: "INSCRIBED" });
+      expect(withText.textPathBottom).not.toBe(noText.textPathBottom);
+    },
+  );
+
+  // The PR's central claim: removing the 180° rotation works because both
+  // arcs are written left-to-right. Pin start.x < end.x for both sides so
+  // a regression that flips a sweep flag is caught directly.
+  it("text-sized arcs are written left-to-right", () => {
+    const c = (
+      generateContour as unknown as (
+        shape: string,
+        size: number,
+        inset: number,
+        opts?: { topText?: string; bottomText?: string },
+      ) => ShapeContour
+    )("circle", SIZE, 0, { topText: "TOP", bottomText: "BOTTOM" });
+
+    const parseEndpoints = (d: string) => {
+      const match = d.match(
+        /^M\s+([-\d.]+)\s+([-\d.]+)\s+A\s+[-\d.]+\s+[-\d.]+\s+0\s+0\s+[01]\s+([-\d.]+)\s+([-\d.]+)/,
+      );
+      if (!match) throw new Error(`unparseable arc: ${d}`);
+      return {
+        startX: Number(match[1]),
+        startY: Number(match[2]),
+        endX: Number(match[3]),
+        endY: Number(match[4]),
+      };
+    };
+
+    const top = parseEndpoints(c.textPathTop);
+    const bottom = parseEndpoints(c.textPathBottom);
+    expect(top.startX).toBeLessThan(top.endX);
+    expect(bottom.startX).toBeLessThan(bottom.endX);
+  });
+});
