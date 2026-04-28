@@ -1,5 +1,12 @@
 # @rollercoaster-dev/openbadges-core
 
+## 0.1.2
+
+### Patch Changes
+
+- Updated dependencies [ac80a78]
+  - @rollercoaster-dev/rd-logger@0.4.0
+
 ## 0.1.1
 
 ### Patch Changes
