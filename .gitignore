@@ -80,3 +80,7 @@ packages/claude-knowledge/.claude/
 
 # Git worktrees for /auto-milestone
 .worktrees/
+
+# Local tooling artifacts
+.superset/
+.claude/scheduled_tasks.lock
