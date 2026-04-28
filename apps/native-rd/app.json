@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "native-rd",
+    "name": "Rollercoaster.dev",
     "slug": "native-rd",
     "version": "0.1.0",
     "orientation": "portrait",
@@ -10,11 +10,15 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#fafafa"
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.joe.rd.native-rd",
+      "icon": {
+        "light": "./assets/icon.png",
+        "dark": "./assets/icon-dark.png"
+      },
       "infoPlist": {
         "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to record voice memos as evidence for your goals."
       }
@@ -22,7 +26,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#ffe50c"
       },
       "package": "com.joe.rd.nativerd"
     },
