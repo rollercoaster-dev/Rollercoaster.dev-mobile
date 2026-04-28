@@ -39,6 +39,13 @@ const DefaultTheme = {
   },
 };
 
+const CommonActions = {
+  navigate: (name: string, params?: object) => ({
+    type: "NAVIGATE",
+    payload: params ? { name, params } : { name },
+  }),
+};
+
 module.exports = {
   useNavigation,
   useRoute,
@@ -46,4 +53,5 @@ module.exports = {
   useIsFocused,
   NavigationContainer,
   DefaultTheme,
+  CommonActions,
 };

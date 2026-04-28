@@ -30,5 +30,10 @@ const named = {
 module.exports = {
   ...named,
   View: "Animated.View",
-  default: { View: "Animated.View", ...named },
+  Text: "Animated.Text",
+  default: {
+    View: "Animated.View",
+    Text: "Animated.Text",
+    ...named,
+  },
 };

@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GBS Bottom Menu — Redesign Concepts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wght@600;700;900&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ---- brand tokens (mirrored from design-tokens, hardcoded so the file is self-contained) ---- */
+  :root {
+    --ob-bg: #FFF8E7;          /* cream page bg */
+    --ob-card: #FFFFFF;
+    --ob-fg: #1A1A1A;
+    --ob-muted: #6B6B6B;
+    --ob-border: #1A1A1A;
+    --ob-purple: #8B5CF6;      /* accent purple (brand tab bar) */
+    --ob-yellow: #FFD93D;      /* accent yellow (brand top bar) */
+    --ob-pink:   #FF6B9D;
+    --ob-teal:   #4ECDC4;
+    --ob-shadow-hard: 4px 4px 0 var(--ob-border);
+    --ob-shadow-hard-sm: 2px 2px 0 var(--ob-border);
+    --ob-shadow-hard-lg: 6px 6px 0 var(--ob-border);
+    --headline: 'Anybody', system-ui, sans-serif;
+    --body: 'Instrument Sans', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: #EFE9D8;
+    font-family: var(--body);
+    color: var(--ob-fg);
+    padding: 32px 16px 64px;
+    min-height: 100vh;
+  }
+
+  .page-header {
+    max-width: 1200px;
+    margin: 0 auto 32px;
+    text-align: center;
+  }
+  .page-header h1 {
+    font-family: var(--headline);
+    font-weight: 900;
+    font-size: 28px;
+    letter-spacing: -0.02em;
+    margin: 0 0 8px;
+  }
+  .page-header p {
+    color: var(--ob-muted);
+    margin: 0;
+    font-size: 15px;
+  }
+
+  .lab {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 32px;
+    max-width: 1280px;
+    margin: 0 auto;
+    align-items: start;
+  }
+
+  .concept {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  .concept-meta {
+    width: 100%;
+    max-width: 360px;
+    background: var(--ob-card);
+    border: 2px solid var(--ob-border);
+    box-shadow: var(--ob-shadow-hard);
+    padding: 16px 18px;
+  }
+  .concept-meta h2 {
+    font-family: var(--headline);
+    font-weight: 800;
+    font-size: 18px;
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+  .concept-meta .tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    background: var(--ob-yellow);
+    border: 1.5px solid var(--ob-border);
+    padding: 2px 8px;
+    margin-bottom: 8px;
+  }
+  .concept-meta p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #333;
+  }
+  .concept-meta ul {
+    margin: 8px 0 0;
+    padding-left: 18px;
+    font-size: 12.5px;
+    color: #444;
+  }
+  .concept-meta li { margin-bottom: 2px; }
+
+  /* ---- shared phone frame ---- */
+  .phone {
+    width: 360px;
+    height: 640px;
+    background: var(--ob-card);
+    border: 2.5px solid var(--ob-border);
+    box-shadow: var(--ob-shadow-hard-lg);
+    border-radius: 28px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .status-bar {
+    height: 36px;
+    background: var(--ob-yellow);
+    border-bottom: 2px solid var(--ob-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 18px;
+    font-weight: 700;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .status-bar .dots { letter-spacing: 2px; }
+  .screen-content {
+    flex: 1;
+    padding: 18px 18px 0;
+    overflow: hidden;
+    background: var(--ob-bg);
+  }
+  .screen-content h3 {
+    font-family: var(--headline);
+    font-weight: 800;
+    font-size: 22px;
+    margin: 4px 0 14px;
+    letter-spacing: -0.01em;
+  }
+
+  /* fake content cards */
+  .goal-card {
+    background: var(--ob-card);
+    border: 2px solid var(--ob-border);
+    box-shadow: var(--ob-shadow-hard-sm);
+    padding: 12px 14px;
+    margin-bottom: 12px;
+  }
+  .goal-card .title { font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+  .goal-card .progress {
+    height: 8px;
+    background: #EEE;
+    border: 1.5px solid var(--ob-border);
+    overflow: hidden;
+  }
+  .goal-card .fill { height: 100%; background: var(--ob-teal); }
+  .goal-card .meta { font-size: 11px; color: var(--ob-muted); margin-top: 6px; }
+
+  /* =========================================================================
+     CONCEPT A — Icon + Label Pills (active pill pops via offset shadow)
+     Keeps the 3-tab pattern, but each tab is a real button with icon + label.
+     Active state lifts the whole pill forward with a shifted hard shadow.
+     ========================================================================= */
+  .nav-a {
+    flex-shrink: 0;
+    background: var(--ob-bg);
+    border-top: 2.5px solid var(--ob-border);
+    padding: 10px 12px 14px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+  .nav-a .pill {
+    background: var(--ob-card);
+    border: 2px solid var(--ob-border);
+    box-shadow: var(--ob-shadow-hard-sm);
+    padding: 8px 4px 6px;
+    text-align: center;
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .nav-a .pill:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--ob-border); }
+  .nav-a .pill.active {
+    background: var(--ob-purple);
+    color: #FFF;
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0 var(--ob-border);
+  }
+  .nav-a .pill .ico {
+    font-size: 22px;
+    line-height: 1;
+    margin-bottom: 4px;
+    display: block;
+  }
+  .nav-a .pill .lbl {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  /* =========================================================================
+     CONCEPT B — Floating Action Dock (centered + CTA, two side tabs, settings as corner button)
+     Bottom area is mostly transparent; only the dock + a small settings button float.
+     Centered "+" is the primary action (New Goal) — settings demoted to a corner.
+     ========================================================================= */
+  .nav-b-zone {
+    flex-shrink: 0;
+    height: 96px;
+    background: linear-gradient(to top, var(--ob-bg) 60%, rgba(255, 248, 231, 0));
+    position: relative;
+    padding: 0 16px;
+  }
+  .nav-b-dock {
+    position: absolute;
+    left: 16px;
+    right: 64px;
+    bottom: 16px;
+    height: 60px;
+    background: var(--ob-card);
+    border: 2.5px solid var(--ob-border);
+    box-shadow: var(--ob-shadow-hard);
+    border-radius: 30px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 0 6px;
+  }
+  .nav-b-dock .tab {
+    background: none;
+    border: none;
+    font: inherit;
+    color: var(--ob-fg);
+    padding: 8px 4px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    border-radius: 24px;
+  }
+  .nav-b-dock .tab .ico { font-size: 20px; }
+  .nav-b-dock .tab .lbl { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; }
+  .nav-b-dock .tab.active {
+    background: var(--ob-yellow);
+    border: 2px solid var(--ob-border);
+    padding: 6px 14px;
+  }
+  .nav-b-dock .fab {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--ob-purple);
+    border: 2.5px solid var(--ob-border);
+    box-shadow: var(--ob-shadow-hard-sm);
+    color: #FFF;
+    font-family: var(--headline);
+    font-weight: 900;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+    margin: 0 4px;
+    transform: translateY(-14px);
+  }
+  .nav-b-corner {
+    position: absolute;
+    right: 16px;
+    bottom: 16px;
+    width: 60px;
+    height: 60px;
+    background: var(--ob-card);
+    border: 2.5px solid var(--ob-border);
+    box-shadow: var(--ob-shadow-hard);
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 22px;
+  }
+
+  /* =========================================================================
+     CONCEPT C — Segmented Color Slabs with Sliding Indicator
+     Three colored slabs (purple / yellow / pink-ish), thick black bar slides
+     under the active one. Each slab shows icon stacked over short label.
+     Brings more of the brand palette into the chrome.
+     ========================================================================= */
+  .nav-c {
+    flex-shrink: 0;
+    border-top: 3px solid var(--ob-border);
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    height: 76px;
+    position: relative;
+  }
+  .nav-c .slab {
+    border: none;
+    border-right: 2px solid var(--ob-border);
+    cursor: pointer;
+    font: inherit;
+    color: var(--ob-fg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding-bottom: 10px;
+    position: relative;
+    transition: filter 0.1s;
+  }
+  .nav-c .slab:last-child { border-right: none; }
+  .nav-c .slab:not(.active) { filter: saturate(0.55) brightness(0.96); }
+  .nav-c .slab .ico { font-size: 22px; line-height: 1; }
+  .nav-c .slab .lbl { font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+  .nav-c .slab[data-tab="goals"] { background: var(--ob-purple); color: #FFF; }
+  .nav-c .slab[data-tab="badges"] { background: var(--ob-yellow); }
+  .nav-c .slab[data-tab="settings"] { background: var(--ob-pink); color: #1A1A1A; }
+  .nav-c .indicator {
+    position: absolute;
+    bottom: 0;
+    height: 6px;
+    background: var(--ob-border);
+    width: 33.3333%;
+    transition: left 0.18s ease;
+  }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>GBS Bottom Menu — 3 Redesign Concepts</h1>
+  <p>Replacing the single-letter "G / B / S" tab bar in <code>native-rd</code>. Each concept addresses a different problem with the current pattern.</p>
+</header>
+
+<div class="lab">
+
+  <!-- ============= CONCEPT A ============= -->
+  <div class="concept">
+    <div class="concept-meta">
+      <span class="tag">Concept A</span>
+      <h2>Icon + Label Pills</h2>
+      <p>Each tab becomes a discrete brutalist button with an icon and an uppercase label. The active tab pops forward via a shifted hard shadow — readable in every theme without relying on subtle text color shifts.</p>
+      <ul>
+        <li>Lowest-risk change — same shape, same 3-tab model</li>
+        <li>Fixes the "what does G mean" affordance gap</li>
+        <li>Active state visible to color-blind & low-vision users (shape + position cue)</li>
+      </ul>
+    </div>
+    <div class="phone">
+      <div class="status-bar"><span>9:41</span><span class="dots">• • •</span></div>
+      <div class="screen-content">
+        <h3>Goals</h3>
+        <div class="goal-card">
+          <div class="title">Run 5k three times this week</div>
+          <div class="progress"><div class="fill" style="width: 66%"></div></div>
+          <div class="meta">2 of 3 runs · due Sun</div>
+        </div>
+        <div class="goal-card">
+          <div class="title">Read 20 pages a day</div>
+          <div class="progress"><div class="fill" style="width: 40%"></div></div>
+          <div class="meta">8 of 20 pages today</div>
+        </div>
+        <div class="goal-card">
+          <div class="title">Practice German — 15 min</div>
+          <div class="progress"><div class="fill" style="width: 100%; background: #FFD93D"></div></div>
+          <div class="meta">Done today ✓</div>
+        </div>
+      </div>
+      <nav class="nav-a" aria-label="Primary">
+        <button class="pill active" aria-current="page">
+          <span class="ico" aria-hidden="true">◎</span><span class="lbl">Goals</span>
+        </button>
+        <button class="pill">
+          <span class="ico" aria-hidden="true">✦</span><span class="lbl">Badges</span>
+        </button>
+        <button class="pill">
+          <span class="ico" aria-hidden="true">⚙</span><span class="lbl">Settings</span>
+        </button>
+      </nav>
+    </div>
+  </div>
+
+  <!-- ============= CONCEPT B ============= -->
+  <div class="concept">
+    <div class="concept-meta">
+      <span class="tag">Concept B</span>
+      <h2>Floating Dock + Action</h2>
+      <p>The bar floats off the edge as a pill-shaped dock. A centered <strong>+</strong> button (New Goal) becomes the primary action. Settings demotes to a corner button — it's used rarely and shouldn't share weight with daily actions.</p>
+      <ul>
+        <li>Surfaces the most common action: <em>creating a new goal</em></li>
+        <li>Reduces chrome weight — content gets more vertical space</li>
+        <li>Trade-off: only 2 navigation tabs in the dock; settings moves out</li>
+      </ul>
+    </div>
+    <div class="phone">
+      <div class="status-bar"><span>9:41</span><span class="dots">• • •</span></div>
+      <div class="screen-content">
+        <h3>Goals</h3>
+        <div class="goal-card">
+          <div class="title">Run 5k three times this week</div>
+          <div class="progress"><div class="fill" style="width: 66%"></div></div>
+          <div class="meta">2 of 3 runs · due Sun</div>
+        </div>
+        <div class="goal-card">
+          <div class="title">Read 20 pages a day</div>
+          <div class="progress"><div class="fill" style="width: 40%"></div></div>
+          <div class="meta">8 of 20 pages today</div>
+        </div>
+        <div class="goal-card">
+          <div class="title">Practice German — 15 min</div>
+          <div class="progress"><div class="fill" style="width: 100%; background: #FFD93D"></div></div>
+          <div class="meta">Done today ✓</div>
+        </div>
+      </div>
+      <div class="nav-b-zone">
+        <div class="nav-b-dock" aria-label="Primary">
+          <button class="tab active" aria-current="page">
+            <span class="ico" aria-hidden="true">◎</span><span class="lbl">Goals</span>
+          </button>
+          <button class="fab" aria-label="New goal">+</button>
+          <button class="tab">
+            <span class="ico" aria-hidden="true">✦</span><span class="lbl">Badges</span>
+          </button>
+        </div>
+        <button class="nav-b-corner" aria-label="Settings">⚙</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============= CONCEPT C ============= -->
+  <div class="concept">
+    <div class="concept-meta">
+      <span class="tag">Concept C</span>
+      <h2>Segmented Color Slabs</h2>
+      <p>Three full-bleed colored slabs (purple / yellow / pink) with a thick black indicator that slides under the active tab. Inactive slabs desaturate. Brings more of the brand palette into the chrome instead of one solid purple slab.</p>
+      <ul>
+        <li>Most visually distinctive — strongest brutalist statement</li>
+        <li>Active state cued by saturation + indicator (redundant encoding)</li>
+        <li>Risk: heavier visually; needs muting in <code>autismFriendly</code> / <code>lowInfo</code> themes</li>
+      </ul>
+    </div>
+    <div class="phone">
+      <div class="status-bar"><span>9:41</span><span class="dots">• • •</span></div>
+      <div class="screen-content">
+        <h3>Goals</h3>
+        <div class="goal-card">
+          <div class="title">Run 5k three times this week</div>
+          <div class="progress"><div class="fill" style="width: 66%"></div></div>
+          <div class="meta">2 of 3 runs · due Sun</div>
+        </div>
+        <div class="goal-card">
+          <div class="title">Read 20 pages a day</div>
+          <div class="progress"><div class="fill" style="width: 40%"></div></div>
+          <div class="meta">8 of 20 pages today</div>
+        </div>
+        <div class="goal-card">
+          <div class="title">Practice German — 15 min</div>
+          <div class="progress"><div class="fill" style="width: 100%; background: #FFD93D"></div></div>
+          <div class="meta">Done today ✓</div>
+        </div>
+      </div>
+      <nav class="nav-c" aria-label="Primary">
+        <button class="slab active" data-tab="goals" aria-current="page">
+          <span class="ico" aria-hidden="true">◎</span><span class="lbl">Goals</span>
+        </button>
+        <button class="slab" data-tab="badges">
+          <span class="ico" aria-hidden="true">✦</span><span class="lbl">Badges</span>
+        </button>
+        <button class="slab" data-tab="settings">
+          <span class="ico" aria-hidden="true">⚙</span><span class="lbl">Settings</span>
+        </button>
+        <span class="indicator" aria-hidden="true" style="left: 0;"></span>
+      </nav>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Make each concept's tabs clickable so you can feel the active-state behavior.
+  document.querySelectorAll('.nav-a').forEach(nav => {
+    nav.querySelectorAll('.pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        nav.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+  });
+  document.querySelectorAll('.nav-b-dock').forEach(nav => {
+    nav.querySelectorAll('.tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        nav.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+  });
+  document.querySelectorAll('.nav-c').forEach(nav => {
+    const indicator = nav.querySelector('.indicator');
+    const slabs = [...nav.querySelectorAll('.slab')];
+    slabs.forEach((btn, i) => {
+      btn.addEventListener('click', () => {
+        slabs.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        indicator.style.left = (i * 33.3333) + '%';
+      });
+    });
+  });
+</script>
+
+</body>
+</html>

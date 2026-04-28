@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GBS Menu — Concept B Refined (3 variations)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wght@600;700;900&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ob-bg: #FFF8E7;
+    --ob-card: #FFFFFF;
+    --ob-fg: #1A1A1A;
+    --ob-muted: #6B6B6B;
+    --ob-border: #1A1A1A;
+    --ob-purple: #8B5CF6;
+    --ob-yellow: #FFD93D;
+    --ob-pink:   #FF6B9D;
+    --ob-teal:   #4ECDC4;
+    --ob-green:  #7BD389;
+    --ob-shadow-hard: 4px 4px 0 var(--ob-border);
+    --ob-shadow-hard-sm: 2px 2px 0 var(--ob-border);
+    --ob-shadow-hard-lg: 6px 6px 0 var(--ob-border);
+    --headline: 'Anybody', system-ui, sans-serif;
+    --body: 'Instrument Sans', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: #EFE9D8;
+    font-family: var(--body);
+    color: var(--ob-fg);
+    padding: 32px 16px 80px;
+    min-height: 100vh;
+  }
+
+  .page-header {
+    max-width: 1200px;
+    margin: 0 auto 16px;
+    text-align: center;
+  }
+  .page-header h1 {
+    font-family: var(--headline);
+    font-weight: 900;
+    font-size: 28px;
+    letter-spacing: -0.02em;
+    margin: 0 0 8px;
+  }
+  .page-header p {
+    color: var(--ob-muted);
+    margin: 0 auto;
+    font-size: 15px;
+    max-width: 720px;
+  }
+  .inspiration-strip {
+    max-width: 920px;
+    margin: 24px auto 36px;
+    background: var(--ob-card);
+    border: 2px solid var(--ob-border);
+    box-shadow: var(--ob-shadow-hard);
+    padding: 14px 18px;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .inspiration-strip strong { font-family: var(--headline); }
+  .inspiration-strip code {
+    background: var(--ob-yellow);
+    border: 1px solid var(--ob-border);
+    padding: 0 5px;
+    font-size: 11.5px;
+  }
+
+  .lab {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 32px;
+    max-width: 1320px;
+    margin: 0 auto;
+    align-items: start;
+  }
+
+  .concept {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  .concept-meta {
+    width: 100%;
+    max-width: 380px;
+    background: var(--ob-card);
+    border: 2px solid var(--ob-border);
+    box-shadow: var(--ob-shadow-hard);
+    padding: 16px 18px;
+  }
+  .concept-meta h2 {
+    font-family: var(--headline);
+    font-weight: 800;
+    font-size: 18px;
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+  .concept-meta .tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border: 1.5px solid var(--ob-border);
+    padding: 2px 8px;
+    margin-bottom: 8px;
+  }
+  .concept-meta .tag.b1 { background: var(--ob-teal); }
+  .concept-meta .tag.b2 { background: var(--ob-yellow); }
+  .concept-meta .tag.b3 { background: var(--ob-pink); }
+  .concept-meta p { margin: 0 0 8px; font-size: 13px; line-height: 1.5; }
+  .concept-meta ul { margin: 8px 0 0; padding-left: 18px; font-size: 12.5px; color: #444; }
+  .concept-meta li { margin-bottom: 3px; }
+
+  .phone {
+    width: 380px;
+    height: 680px;
+    background: var(--ob-card);
+    border: 2.5px solid var(--ob-border);
+    box-shadow: var(--ob-shadow-hard-lg);
+    border-radius: 32px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .status-bar {
+    height: 36px;
+    background: var(--ob-yellow);
+    border-bottom: 2px solid var(--ob-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 18px;
+    font-weight: 700;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .status-bar .dots { letter-spacing: 2px; }
+  .screen-content {
+    flex: 1;
+    padding: 18px 18px 0;
+    overflow: hidden;
+    background: var(--ob-bg);
+    position: relative;
+  }
+  .screen-content h3 {
+    font-family: var(--headline);
+    font-weight: 800;
+    font-size: 22px;
+    margin: 4px 0 14px;
+    letter-spacing: -0.01em;
+    transition: opacity 0.18s;
+  }
+
+  .goal-card {
+    background: var(--ob-card);
+    border: 2px solid var(--ob-border);
+    box-shadow: var(--ob-shadow-hard-sm);
+    padding: 12px 14px;
+    margin-bottom: 12px;
+  }
+  .goal-card .title { font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+  .goal-card .progress {
+    height: 8px;
+    background: #EEE;
+    border: 1.5px solid var(--ob-border);
+    overflow: hidden;
+  }
+  .goal-card .fill { height: 100%; background: var(--ob-teal); }
+  .goal-card .meta { font-size: 11px; color: var(--ob-muted); margin-top: 6px; }
+
+  .badge-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+  .badge {
+    aspect-ratio: 1;
+    background: var(--ob-card);
+    border: 2px solid var(--ob-border);
+    box-shadow: var(--ob-shadow-hard-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+  }
+  .badge.b-purple { background: var(--ob-purple); color: #FFF; }
+  .badge.b-yellow { background: var(--ob-yellow); }
+  .badge.b-pink   { background: var(--ob-pink); }
+  .badge.b-teal   { background: var(--ob-teal); }
+
+  .settings-row {
+    background: var(--ob-card);
+    border: 2px solid var(--ob-border);
+    box-shadow: var(--ob-shadow-hard-sm);
+    padding: 14px;
+    margin-bottom: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .settings-row .arr { color: var(--ob-muted); }
+
+  /* =========================================================================
+     B1 — FOCUS PILL
+     Inspired by iOS Focus mode lock-screen indicator: only the active tab
+     gets a labeled pill — inactive tabs collapse to icon-only dots. The
+     entire dock breathes with negative space. Settings is integrated as the
+     trailing dot inside the same pill, no orphan corner button.
+     ========================================================================= */
+  .nav-b1-zone {
+    flex-shrink: 0;
+    height: 100px;
+    background: var(--ob-bg);
+    position: relative;
+    padding: 0 16px 18px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .nav-b1-pill {
+    background: var(--ob-card);
+    border: 2.5px solid var(--ob-border);
+    box-shadow: var(--ob-shadow-hard);
+    border-radius: 30px;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 56px;
+  }
+  .nav-b1-pill .tab {
+    background: none;
+    border: none;
+    font: inherit;
+    cursor: pointer;
+    height: 44px;
+    border-radius: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ob-fg);
+    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .nav-b1-pill .tab.collapsed {
+    width: 44px;
+    padding: 0;
+  }
+  .nav-b1-pill .tab.collapsed .lbl { display: none; }
+  .nav-b1-pill .tab.active {
+    background: var(--ob-purple);
+    color: #FFF;
+    padding: 0 18px 0 14px;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    border: 2px solid var(--ob-border);
+  }
+  .nav-b1-pill .tab .ico { font-size: 20px; line-height: 1; }
+  .nav-b1-pill .tab.collapsed:hover { background: rgba(0,0,0,0.06); }
+  .nav-b1-pill .fab {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--ob-yellow);
+    border: 2.5px solid var(--ob-border);
+    box-shadow: var(--ob-shadow-hard-sm);
+    font-family: var(--headline);
+    font-weight: 900;
+    font-size: 22px;
+    cursor: pointer;
+    margin: 0 4px;
+  }
+
+  /* =========================================================================
+     B2 — SPEED-DIAL DOCK
+     Material 3 FAB Menu inspired. The "+" expands into 3 contextual actions
+     (New Goal, Add Evidence, Share Badge), removing the ambiguity of "+".
+     Settings becomes a properly integrated trailing tab inside the dock —
+     no orphan corner button.
+     ========================================================================= */
+  .nav-b2-zone {
+    flex-shrink: 0;
+    height: 130px;
+    background: var(--ob-bg);
+    position: relative;
+    padding: 0 16px 16px;
+  }
+  .nav-b2-dock {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    height: 64px;
+    background: var(--ob-card);
+    border: 2.5px solid var(--ob-border);
+    box-shadow: var(--ob-shadow-hard);
+    border-radius: 32px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 64px 1fr 1fr;
+    align-items: center;
+    padding: 4px 8px;
+    gap: 2px;
+  }
+  .nav-b2-dock .tab {
+    background: none;
+    border: none;
+    font: inherit;
+    color: var(--ob-fg);
+    cursor: pointer;
+    height: 52px;
+    border-radius: 26px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+  }
+  .nav-b2-dock .tab .ico { font-size: 19px; line-height: 1; }
+  .nav-b2-dock .tab .lbl {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .nav-b2-dock .tab.active {
+    background: var(--ob-purple);
+    color: #FFF;
+    border: 2px solid var(--ob-border);
+  }
+  .nav-b2-dock .fab {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--ob-yellow);
+    border: 2.5px solid var(--ob-border);
+    box-shadow: var(--ob-shadow-hard-sm);
+    color: var(--ob-fg);
+    font-family: var(--headline);
+    font-weight: 900;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+    transform: translateY(-18px);
+    transition: transform 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    justify-self: center;
+  }
+  .nav-b2-dock.expanded .fab {
+    transform: translateY(-18px) rotate(45deg);
+    background: var(--ob-pink);
+  }
+  .nav-b2-actions {
+    position: absolute;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s, transform 0.22s;
+  }
+  .nav-b2-zone.expanded .nav-b2-actions {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(-4px);
+  }
+  .nav-b2-actions .action {
+    background: var(--ob-card);
+    border: 2px solid var(--ob-border);
+    box-shadow: var(--ob-shadow-hard-sm);
+    border-radius: 24px;
+    padding: 8px 16px 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .nav-b2-actions .action .dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid var(--ob-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+  .nav-b2-actions .action .dot.teal { background: var(--ob-teal); }
+  .nav-b2-actions .action .dot.green { background: var(--ob-green); }
+  .nav-b2-actions .action .dot.pink { background: var(--ob-pink); }
+  .nav-b2-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0);
+    pointer-events: none;
+    transition: background 0.18s;
+  }
+  .nav-b2-zone.expanded .nav-b2-backdrop {
+    background: rgba(0,0,0,0.35);
+    pointer-events: auto;
+  }
+
+  /* =========================================================================
+     B3 — ADAPTIVE / CONTEXT-AWARE
+     The dock changes shape based on the active tab. On Goals/Badges it shows
+     a contextual primary-action FAB ("+ New Goal" / "+ New Badge"). On
+     Settings the FAB disappears and the dock collapses to a slim 3-tab strip
+     — settings doesn't need a creation action, so the chrome adapts.
+     Inspired by iOS 26's context-aware lock screens.
+     ========================================================================= */
+  .nav-b3-zone {
+    flex-shrink: 0;
+    background: var(--ob-bg);
+    padding: 0 16px 16px;
+    transition: padding 0.25s;
+  }
+  .nav-b3-zone.compact { padding: 0 16px 12px; }
+  .nav-b3-context {
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ob-muted);
+    transition: opacity 0.2s, height 0.25s;
+  }
+  .nav-b3-zone.compact .nav-b3-context { height: 0; opacity: 0; }
+  .nav-b3-dock {
+    height: 64px;
+    background: var(--ob-card);
+    border: 2.5px solid var(--ob-border);
+    box-shadow: var(--ob-shadow-hard);
+    border-radius: 32px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 72px 1fr;
+    align-items: center;
+    padding: 4px 8px;
+    transition: grid-template-columns 0.3s, height 0.25s;
+  }
+  .nav-b3-zone.compact .nav-b3-dock {
+    height: 52px;
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  .nav-b3-dock .tab {
+    background: none;
+    border: none;
+    font: inherit;
+    color: var(--ob-fg);
+    cursor: pointer;
+    height: 52px;
+    border-radius: 26px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+  }
+  .nav-b3-zone.compact .nav-b3-dock .tab { height: 44px; }
+  .nav-b3-dock .tab .ico { font-size: 19px; line-height: 1; }
+  .nav-b3-dock .tab .lbl {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .nav-b3-dock .tab.active {
+    background: var(--ob-purple);
+    color: #FFF;
+    border: 2px solid var(--ob-border);
+  }
+  .nav-b3-dock .fab {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--ob-yellow);
+    border: 2.5px solid var(--ob-border);
+    box-shadow: var(--ob-shadow-hard-sm);
+    color: var(--ob-fg);
+    font-family: var(--headline);
+    font-weight: 900;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+    transform: translateY(-16px);
+    justify-self: center;
+    transition: transform 0.25s, opacity 0.2s, width 0.25s;
+  }
+  .nav-b3-zone.compact .nav-b3-dock .fab {
+    width: 0;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-16px) scale(0.5);
+  }
+  .nav-b3-toggle-hint {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: var(--ob-card);
+    border: 1.5px solid var(--ob-border);
+    box-shadow: var(--ob-shadow-hard-sm);
+    border-radius: 14px;
+    padding: 4px 10px;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Concept B — Refined</h1>
+  <p>Three variations on the floating-dock idea, each pulling from a different design tradition.</p>
+</header>
+
+<div class="inspiration-strip">
+  <strong>Refining:</strong> the original Concept B had three weak spots — (1) the orphan Settings corner button felt visually unbalanced, (2) the <code>+</code> FAB was ambiguous (new goal? new badge?), (3) tab/FAB/tab proportions were uneven.
+  Each variation below fixes a different combination of these issues.
+</div>
+
+<div class="lab">
+
+  <!-- ============= B1 ============= -->
+  <div class="concept">
+    <div class="concept-meta">
+      <span class="tag b1">Variation B1</span>
+      <h2>Focus Pill</h2>
+      <p>Borrowed from iOS Focus-mode indicators: only the <em>active</em> tab gets a labeled pill — inactive tabs collapse to icon-only circles. Settings sits as the trailing dot inside the same pill (no orphan corner button). The dock breathes.</p>
+      <ul>
+        <li>Lightest visual footprint of the three</li>
+        <li>Active context is unmistakable — text + color cue</li>
+        <li>Asymmetric weight = active tab feels "in focus"</li>
+        <li>FAB stays small/yellow — not the center of gravity</li>
+      </ul>
+    </div>
+    <div class="phone" data-variant="b1">
+      <div class="status-bar"><span>9:41</span><span class="dots">• • •</span></div>
+      <div class="screen-content">
+        <h3>Goals</h3>
+        <div class="goal-card">
+          <div class="title">Run 5k three times this week</div>
+          <div class="progress"><div class="fill" style="width: 66%"></div></div>
+          <div class="meta">2 of 3 runs · due Sun</div>
+        </div>
+        <div class="goal-card">
+          <div class="title">Read 20 pages a day</div>
+          <div class="progress"><div class="fill" style="width: 40%"></div></div>
+          <div class="meta">8 of 20 pages today</div>
+        </div>
+        <div class="goal-card">
+          <div class="title">Practice German — 15 min</div>
+          <div class="progress"><div class="fill" style="width: 100%; background: #FFD93D"></div></div>
+          <div class="meta">Done today ✓</div>
+        </div>
+      </div>
+      <div class="nav-b1-zone">
+        <div class="nav-b1-pill" aria-label="Primary">
+          <button class="tab active" data-tab="goals">
+            <span class="ico" aria-hidden="true">◎</span><span class="lbl">Goals</span>
+          </button>
+          <button class="tab collapsed" data-tab="badges" aria-label="Badges">
+            <span class="ico" aria-hidden="true">✦</span><span class="lbl">Badges</span>
+          </button>
+          <button class="fab" aria-label="New goal">+</button>
+          <button class="tab collapsed" data-tab="settings" aria-label="Settings">
+            <span class="ico" aria-hidden="true">⚙</span><span class="lbl">Settings</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============= B2 ============= -->
+  <div class="concept">
+    <div class="concept-meta">
+      <span class="tag b2">Variation B2</span>
+      <h2>Speed-Dial Dock</h2>
+      <p>Material 3 FAB Menu pattern. Tap <code style="background:#FFD93D; padding:0 4px; border:1px solid #1A1A1A">+</code> and it expands into 3 contextual creation actions — kills the "what does + do" ambiguity. Settings folds into the dock as a fourth tab. Symmetric, no orphans.</p>
+      <ul>
+        <li>Most powerful — surfaces all primary creation paths</li>
+        <li>Tap-to-expand keeps idle UI minimal</li>
+        <li>Dock has 4 tabs (G, B, S + a content tab) — even spacing</li>
+        <li>Try it: tap the yellow + button below ↓</li>
+      </ul>
+    </div>
+    <div class="phone" data-variant="b2">
+      <div class="status-bar"><span>9:41</span><span class="dots">• • •</span></div>
+      <div class="screen-content">
+        <h3>Goals</h3>
+        <div class="goal-card">
+          <div class="title">Run 5k three times this week</div>
+          <div class="progress"><div class="fill" style="width: 66%"></div></div>
+          <div class="meta">2 of 3 runs · due Sun</div>
+        </div>
+        <div class="goal-card">
+          <div class="title">Read 20 pages a day</div>
+          <div class="progress"><div class="fill" style="width: 40%"></div></div>
+          <div class="meta">8 of 20 pages today</div>
+        </div>
+        <div class="goal-card">
+          <div class="title">Practice German — 15 min</div>
+          <div class="progress"><div class="fill" style="width: 100%; background: #FFD93D"></div></div>
+          <div class="meta">Done today ✓</div>
+        </div>
+      </div>
+      <div class="nav-b2-zone" id="b2-zone">
+        <div class="nav-b2-backdrop"></div>
+        <div class="nav-b2-actions">
+          <button class="action"><span class="dot teal" aria-hidden="true">◎</span>New goal</button>
+          <button class="action"><span class="dot green" aria-hidden="true">📷</span>Add evidence</button>
+          <button class="action"><span class="dot pink" aria-hidden="true">✦</span>Share badge</button>
+        </div>
+        <div class="nav-b2-dock" aria-label="Primary">
+          <button class="tab active" data-tab="goals">
+            <span class="ico" aria-hidden="true">◎</span><span class="lbl">Goals</span>
+          </button>
+          <button class="tab" data-tab="badges">
+            <span class="ico" aria-hidden="true">✦</span><span class="lbl">Badges</span>
+          </button>
+          <button class="fab" id="b2-fab" aria-label="Create">+</button>
+          <button class="tab" data-tab="evidence">
+            <span class="ico" aria-hidden="true">📓</span><span class="lbl">Log</span>
+          </button>
+          <button class="tab" data-tab="settings">
+            <span class="ico" aria-hidden="true">⚙</span><span class="lbl">Settings</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============= B3 ============= -->
+  <div class="concept">
+    <div class="concept-meta">
+      <span class="tag b3">Variation B3</span>
+      <h2>Adaptive Dock</h2>
+      <p>The dock <em>changes shape</em> based on the active tab. Goals/Badges = fully expanded with a contextual <code>+</code> FAB ("New Goal" / "New Badge"). Settings = the FAB hides, the dock collapses to a slim 3-tab strip. Inspired by iOS 26's context-aware lock screens.</p>
+      <ul>
+        <li>Most ambitious — questions whether chrome should be static</li>
+        <li>Settings tab gets less weight by design (rarely used)</li>
+        <li>FAB label adapts: "Goal" on Goals tab, "Badge" on Badges tab</li>
+        <li>Try it: tap the ⚙ tab to see it collapse</li>
+      </ul>
+    </div>
+    <div class="phone" data-variant="b3">
+      <div class="status-bar"><span>9:41</span><span class="dots">• • •</span></div>
+      <div class="screen-content" id="b3-content">
+        <div class="nav-b3-toggle-hint">tap ⚙ to morph</div>
+        <h3 id="b3-title">Goals</h3>
+        <div id="b3-goals">
+          <div class="goal-card">
+            <div class="title">Run 5k three times this week</div>
+            <div class="progress"><div class="fill" style="width: 66%"></div></div>
+            <div class="meta">2 of 3 runs · due Sun</div>
+          </div>
+          <div class="goal-card">
+            <div class="title">Read 20 pages a day</div>
+            <div class="progress"><div class="fill" style="width: 40%"></div></div>
+            <div class="meta">8 of 20 pages today</div>
+          </div>
+          <div class="goal-card">
+            <div class="title">Practice German — 15 min</div>
+            <div class="progress"><div class="fill" style="width: 100%; background: #FFD93D"></div></div>
+            <div class="meta">Done today ✓</div>
+          </div>
+        </div>
+        <div id="b3-badges" style="display:none">
+          <div class="badge-grid">
+            <div class="badge b-purple">★</div>
+            <div class="badge b-yellow">✦</div>
+            <div class="badge b-pink">♥</div>
+            <div class="badge b-teal">◎</div>
+            <div class="badge b-yellow">⚡</div>
+            <div class="badge b-purple">⬡</div>
+          </div>
+        </div>
+        <div id="b3-settings" style="display:none">
+          <div class="settings-row">Theme <span class="arr">›</span></div>
+          <div class="settings-row">Accessibility <span class="arr">›</span></div>
+          <div class="settings-row">Backup &amp; sync <span class="arr">›</span></div>
+          <div class="settings-row">About <span class="arr">›</span></div>
+        </div>
+      </div>
+      <div class="nav-b3-zone" id="b3-zone">
+        <div class="nav-b3-context" id="b3-context">+ New Goal</div>
+        <div class="nav-b3-dock" aria-label="Primary">
+          <button class="tab active" data-tab="goals">
+            <span class="ico" aria-hidden="true">◎</span><span class="lbl">Goals</span>
+          </button>
+          <button class="tab" data-tab="badges">
+            <span class="ico" aria-hidden="true">✦</span><span class="lbl">Badges</span>
+          </button>
+          <button class="fab" id="b3-fab" aria-label="Create">+</button>
+          <button class="tab" data-tab="settings">
+            <span class="ico" aria-hidden="true">⚙</span><span class="lbl">Settings</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ---------- B1 ----------
+  document.querySelectorAll('[data-variant="b1"] .nav-b1-pill').forEach(pill => {
+    const tabs = [...pill.querySelectorAll('.tab')];
+    tabs.forEach(t => t.addEventListener('click', () => {
+      tabs.forEach(b => { b.classList.remove('active'); b.classList.add('collapsed'); });
+      t.classList.remove('collapsed');
+      t.classList.add('active');
+    }));
+  });
+
+  // ---------- B2 ----------
+  const b2Zone = document.getElementById('b2-zone');
+  const b2Fab = document.getElementById('b2-fab');
+  const b2Dock = b2Zone.querySelector('.nav-b2-dock');
+  b2Fab.addEventListener('click', (e) => {
+    e.stopPropagation();
+    b2Zone.classList.toggle('expanded');
+    b2Dock.classList.toggle('expanded');
+  });
+  b2Zone.querySelector('.nav-b2-backdrop').addEventListener('click', () => {
+    b2Zone.classList.remove('expanded');
+    b2Dock.classList.remove('expanded');
+  });
+  b2Zone.querySelectorAll('.nav-b2-actions .action').forEach(a => {
+    a.addEventListener('click', () => {
+      b2Zone.classList.remove('expanded');
+      b2Dock.classList.remove('expanded');
+    });
+  });
+  b2Dock.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => {
+      b2Dock.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+      t.classList.add('active');
+    });
+  });
+
+  // ---------- B3 ----------
+  const b3Zone = document.getElementById('b3-zone');
+  const b3Context = document.getElementById('b3-context');
+  const b3Title = document.getElementById('b3-title');
+  const b3Tabs = b3Zone.querySelectorAll('.tab');
+  const panels = {
+    goals: document.getElementById('b3-goals'),
+    badges: document.getElementById('b3-badges'),
+    settings: document.getElementById('b3-settings'),
+  };
+  const titles = { goals: 'Goals', badges: 'Badges', settings: 'Settings' };
+  const contextLabels = { goals: '+ New Goal', badges: '+ New Badge', settings: '' };
+  b3Tabs.forEach(t => {
+    t.addEventListener('click', () => {
+      const tab = t.dataset.tab;
+      b3Tabs.forEach(b => b.classList.remove('active'));
+      t.classList.add('active');
+      b3Title.textContent = titles[tab];
+      Object.entries(panels).forEach(([k, el]) => el.style.display = (k === tab ? 'block' : 'none'));
+      if (tab === 'settings') {
+        b3Zone.classList.add('compact');
+      } else {
+        b3Zone.classList.remove('compact');
+        b3Context.textContent = contextLabels[tab];
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
