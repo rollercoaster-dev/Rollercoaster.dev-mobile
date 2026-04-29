@@ -1,8 +1,8 @@
 import React, { Suspense } from "react";
 import { ScrollView, View, ActivityIndicator } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Text } from "../../components/Text";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
+import { ScreenHeader } from "../../components/ScreenHeader";
 import { SettingsSection } from "../../components/SettingsSection";
 import { SettingsRow } from "../../components/SettingsRow";
 import { ThemeSwitcher } from "../../components/ThemeSwitcher";
@@ -29,12 +29,8 @@ function DensityPicker() {
 
 export function SettingsScreen() {
   return (
-    <SafeAreaView edges={["top"]} style={styles.safeArea}>
-      <View style={styles.header}>
-        <Text variant="display" style={styles.headerTitle}>
-          Settings
-        </Text>
-      </View>
+    <View style={styles.screen}>
+      <ScreenHeader title="Settings" />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         style={styles.scrollContainer}
@@ -54,6 +50,6 @@ export function SettingsScreen() {
 
         <Text style={styles.version}>Built with Expo + Evolu + Unistyles</Text>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

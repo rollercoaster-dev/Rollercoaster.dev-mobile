@@ -1,12 +1,11 @@
 import { Suspense, useMemo } from "react";
 import { View, ScrollView, ActivityIndicator } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import { useQuery } from "@evolu/react";
 import { Text } from "../../components/Text";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { Button } from "../../components/Button";
-import { IconButton } from "../../components/IconButton";
+import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { ProgressBar } from "../../components/ProgressBar";
 import { TimelineStep } from "../../components/TimelineStep";
 import { FinishLine } from "../../components/FinishLine";
@@ -174,23 +173,8 @@ export function TimelineJourneyScreen({ route }: TimelineJourneyScreenProps) {
   const navigation = useNavigation();
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.safeArea}>
-      <View style={styles.topBar}>
-        <IconButton
-          icon={
-            <Text variant="body" style={styles.backIcon}>
-              {"<"}
-            </Text>
-          }
-          onPress={() => navigation.goBack()}
-          accessibilityLabel="Go back"
-          size="sm"
-        />
-        <Text variant="label" style={styles.topBarTitle}>
-          Timeline
-        </Text>
-        <View style={styles.spacer} />
-      </View>
+    <View style={styles.screen}>
+      <ScreenSubHeader label="Timeline" onBack={() => navigation.goBack()} />
       <View style={styles.body}>
         <ErrorBoundary>
           <Suspense
@@ -202,6 +186,6 @@ export function TimelineJourneyScreen({ route }: TimelineJourneyScreenProps) {
           </Suspense>
         </ErrorBoundary>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }

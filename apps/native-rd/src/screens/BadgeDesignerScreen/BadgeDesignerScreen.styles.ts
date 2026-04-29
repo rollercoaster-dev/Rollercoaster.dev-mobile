@@ -6,31 +6,16 @@ export const styles = StyleSheet.create((theme) => ({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
-  safeArea: {
+  screen: {
     flex: 1,
-    backgroundColor: theme.colors.accentPurple,
+    backgroundColor: theme.colors.background,
   },
   topBar: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: theme.space[4],
-    paddingVertical: theme.space[2],
-    paddingBottom: theme.space[4],
-    backgroundColor: theme.colors.accentPurple,
     zIndex: 2,
-    ...shadowStyle(theme, "hardMd"),
-  },
-  topBarTitle: {
-    ...theme.textStyles.title,
-    color: theme.colors.accentPurpleFg,
-  },
-  spacer: {
-    width: 48,
   },
   scrollContent: {
     gap: theme.space[4],

@@ -1,12 +1,12 @@
 import React, { Suspense, useMemo, useState } from "react";
 import { View, FlatList, ActivityIndicator } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@evolu/react";
 import { Text } from "../../components/Text";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { IconButton } from "../../components/IconButton";
+import { ScreenHeader } from "../../components/ScreenHeader";
 import { GoalCard, type GoalCardGoal } from "../../components/GoalCard";
 import { EmptyState } from "../../components/EmptyState";
 import { ConfirmDeleteModal } from "../ConfirmDeleteModal";
@@ -120,22 +120,22 @@ export function GoalsScreen() {
   const navigation = useNavigation<Nav>();
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.safeArea}>
-      <View style={styles.header}>
-        <Text variant="display" style={styles.headerTitle}>
-          Goals
-        </Text>
-        <IconButton
-          icon={
-            <Text variant="headline" style={styles.addIcon}>
-              +
-            </Text>
-          }
-          onPress={() => navigation.navigate("NewGoal")}
-          accessibilityLabel="Create new goal"
-          testID="create-new-goal"
-        />
-      </View>
+    <View style={styles.screen}>
+      <ScreenHeader
+        title="Goals"
+        right={
+          <IconButton
+            icon={
+              <Text variant="headline" style={styles.addIcon}>
+                +
+              </Text>
+            }
+            onPress={() => navigation.navigate("NewGoal")}
+            accessibilityLabel="Create new goal"
+            testID="create-new-goal"
+          />
+        }
+      />
       <View style={styles.scrollContent}>
         <ErrorBoundary>
           <Suspense
@@ -147,6 +147,6 @@ export function GoalsScreen() {
           </Suspense>
         </ErrorBoundary>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }

@@ -1,5 +1,4 @@
 import { StyleSheet } from "react-native-unistyles";
-import { shadowStyle } from "../styles/shadows";
 
 /** Grid cell dimensions */
 export const MODAL_ICON_SIZE = 28;
@@ -9,27 +8,15 @@ export const MODAL_GRID_COLUMNS = 5;
 export const MODAL_ROW_HEIGHT = MODAL_CELL_SIZE + 8;
 
 export const styles = StyleSheet.create((theme) => ({
-  headerSafeArea: {
+  modalRoot: {
     flex: 1,
-    backgroundColor: theme.colors.accentPurple,
+    backgroundColor: theme.colors.background,
   },
   contentArea: {
     flex: 1,
     backgroundColor: theme.colors.background,
   },
 
-  // -- Header (matches BadgeDesignerScreen topBar) --
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: theme.space[4],
-    paddingVertical: theme.space[2],
-    paddingBottom: theme.space[4],
-    backgroundColor: theme.colors.accentPurple,
-    zIndex: 1,
-    ...shadowStyle(theme, "hardMd"),
-  },
   headerTitle: {
     ...theme.textStyles.title,
     color: theme.colors.accentPurpleFg,
@@ -42,6 +29,11 @@ export const styles = StyleSheet.create((theme) => ({
     height: 48,
     justifyContent: "center",
     alignItems: "center",
+  },
+  closeIconFallback: {
+    color: theme.colors.accentPurpleFg,
+    fontSize: 18,
+    fontWeight: "700",
   },
 
   // -- Preview bar --

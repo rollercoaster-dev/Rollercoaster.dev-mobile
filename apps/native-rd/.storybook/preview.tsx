@@ -1,6 +1,7 @@
 import type { Preview } from "@storybook/react";
 import React from "react";
 import { Platform, ScrollView } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StyleSheet, UnistylesRuntime } from "react-native-unistyles";
 import { themeNames, type ThemeName } from "../src/themes";
 import { EvoluAppProvider } from "../src/db/evolu";
@@ -42,14 +43,16 @@ const themeDecorator = (Story: React.ComponentType, context: any) => {
   }, [selectedTheme]);
 
   return (
-    <EvoluAppProvider>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.content}
-      >
-        <Story />
-      </ScrollView>
-    </EvoluAppProvider>
+    <SafeAreaProvider>
+      <EvoluAppProvider>
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.content}
+        >
+          <Story />
+        </ScrollView>
+      </EvoluAppProvider>
+    </SafeAreaProvider>
   );
 };
 

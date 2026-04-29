@@ -13,7 +13,7 @@ import {
   Alert,
   KeyboardAvoidingView,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import { useQuery } from "@evolu/react";
 import { Text } from "../../components/Text";
@@ -560,23 +560,8 @@ export function FocusModeScreen({ route }: FocusModeNavProps) {
   const navigation = useNavigation();
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.safeArea}>
-      <View style={styles.topBar}>
-        <IconButton
-          icon={
-            <Text variant="body" style={styles.backIcon}>
-              {"<"}
-            </Text>
-          }
-          onPress={() => navigation.goBack()}
-          accessibilityLabel="Go back"
-          size="sm"
-        />
-        <Text variant="label" style={styles.topBarTitle}>
-          Focus Mode
-        </Text>
-        <View style={styles.spacer} />
-      </View>
+    <View style={styles.screen}>
+      <ScreenSubHeader label="Focus Mode" onBack={() => navigation.goBack()} />
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingView}
         {...KEYBOARD_AVOIDING_PROPS}
@@ -592,6 +577,6 @@ export function FocusModeScreen({ route }: FocusModeNavProps) {
         </ErrorBoundary>
         <ModeIndicator mode="focus" />
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
