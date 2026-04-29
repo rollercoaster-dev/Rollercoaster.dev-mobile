@@ -1,6 +1,7 @@
 import React, { Suspense } from "react";
 import { ScrollView, View, ActivityIndicator } from "react-native";
 import { Text } from "../../components/Text";
+import { useTabScreenContentInset } from "../../navigation/useTabScreenContentInset";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { SettingsSection } from "../../components/SettingsSection";
@@ -28,11 +29,13 @@ function DensityPicker() {
 }
 
 export function SettingsScreen() {
+  const tabInset = useTabScreenContentInset();
+
   return (
     <View style={styles.screen}>
       <ScreenHeader title="Settings" />
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, tabInset]}
         style={styles.scrollContainer}
       >
         <ThemeSwitcher />

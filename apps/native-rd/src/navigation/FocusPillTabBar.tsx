@@ -15,6 +15,7 @@ import { CommonActions } from "@react-navigation/native";
 import { GearSix, Medal, Target } from "phosphor-react-native";
 import { Text } from "../components/Text";
 import { shadowStyle } from "../styles/shadows";
+import { borderWidth } from "../themes/tokens";
 import { getRecommendedTextColor } from "../utils/accessibility";
 import { useAnimationPref } from "../hooks/useAnimationPref";
 import type { RootTabParamList } from "./types";
@@ -30,7 +31,13 @@ const TAB_LABELS: Record<RouteName, string> = {
 const ICON_SIZE = 24;
 const ICON_WEIGHT = "bold" as const;
 const MORPH_DURATION = 220;
-const PILL_HEIGHT = 64;
+export const PILL_HEIGHT = 64;
+
+/** Distance the pill's outer edge sits above the tab bar slot — the bar
+ * uses this as a negative top margin so its top half breaks above the
+ * slot. Consumers (e.g. EvidenceDrawer, screen content padding) need the
+ * same value to clear the lifted half. */
+export const PILL_LIFT = PILL_HEIGHT / 2 + borderWidth.medium;
 
 if (
   Platform.OS === "android" &&
@@ -226,16 +233,16 @@ const styles = StyleSheet.create((theme) => {
   };
   return {
     container: {
-      backgroundColor: "transparent",
+      backgroundColor: theme.colors.accentPurple,
+      borderTopWidth: theme.borderWidth.medium,
+      borderTopColor: theme.colors.border,
       overflow: "visible" as const,
     },
     bar: {
       flexDirection: "row" as const,
       alignItems: "center" as const,
-      gap: 12,
-      // Lifts the bar so its top half breaks above the tab bar slot —
-      // half the pill's outer height (height + top + bottom border).
-      marginTop: -(PILL_HEIGHT / 2 + theme.borderWidth.medium),
+      gap: 3,
+      marginTop: -PILL_LIFT,
     },
     pill: { ...pillBase, flex: 1 },
     settingsPill: pillBase,

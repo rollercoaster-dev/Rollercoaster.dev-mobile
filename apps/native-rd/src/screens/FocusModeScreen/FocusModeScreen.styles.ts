@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native-unistyles";
-import { PEEK_HEIGHT } from "../../components/EvidenceDrawer/EvidenceDrawer.styles";
+import { DRAWER_CLOSED_HEIGHT } from "../../components/EvidenceDrawer/EvidenceDrawer.styles";
 
 export const styles = StyleSheet.create((theme) => ({
   screen: {
@@ -24,7 +24,7 @@ export const styles = StyleSheet.create((theme) => ({
   },
   carouselSection: {
     flex: 1,
-    paddingBottom: PEEK_HEIGHT + theme.space[3],
+    paddingBottom: DRAWER_CLOSED_HEIGHT + theme.space[3],
   },
   headerRow: {
     flexDirection: "row",

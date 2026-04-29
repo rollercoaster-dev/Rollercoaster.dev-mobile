@@ -7,7 +7,6 @@ export const styles = StyleSheet.create((theme) => ({
   },
   scrollContent: {
     padding: theme.space[4],
-    paddingBottom: theme.space[12],
     gap: theme.space[4],
   },
   listContent: {

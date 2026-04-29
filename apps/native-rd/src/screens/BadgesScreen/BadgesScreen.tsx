@@ -1,6 +1,7 @@
 import React, { Suspense } from "react";
 import { View, FlatList, ActivityIndicator } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { useTabScreenContentInset } from "../../navigation/useTabScreenContentInset";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@evolu/react";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
@@ -21,6 +22,7 @@ type Nav = NativeStackNavigationProp<BadgesStackParamList>;
 
 function BadgeList() {
   const navigation = useNavigation<Nav>();
+  const tabInset = useTabScreenContentInset();
   const rows = useQuery(badgesWithGoalsQuery);
 
   if (rows.length === 0) {
@@ -47,7 +49,11 @@ function BadgeList() {
       data={rows}
       keyExtractor={(item) => item.id}
       style={{ flex: 1 }}
-      contentContainerStyle={[styles.scrollContent, styles.listContent]}
+      contentContainerStyle={[
+        styles.scrollContent,
+        styles.listContent,
+        tabInset,
+      ]}
       scrollIndicatorInsets={{ right: 1 }}
       renderItem={({ item }: { item: BadgeRow }) => (
         <BadgeCard

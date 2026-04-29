@@ -1,6 +1,7 @@
 import React, { Suspense, useMemo, useState } from "react";
 import { View, FlatList, ActivityIndicator } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { useTabScreenContentInset } from "../../navigation/useTabScreenContentInset";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@evolu/react";
 import { Text } from "../../components/Text";
@@ -118,6 +119,7 @@ function GoalList() {
 
 export function GoalsScreen() {
   const navigation = useNavigation<Nav>();
+  const tabInset = useTabScreenContentInset();
 
   return (
     <View style={styles.screen}>
@@ -136,7 +138,7 @@ export function GoalsScreen() {
           />
         }
       />
-      <View style={styles.scrollContent}>
+      <View style={[styles.scrollContent, tabInset]}>
         <ErrorBoundary>
           <Suspense
             fallback={

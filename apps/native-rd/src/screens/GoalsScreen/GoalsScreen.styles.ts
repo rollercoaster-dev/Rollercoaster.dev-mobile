@@ -9,7 +9,6 @@ export const styles = StyleSheet.create((theme) => ({
     flex: 1,
     backgroundColor: theme.colors.background,
     padding: theme.space[4],
-    paddingBottom: theme.space[12],
     gap: theme.space[4],
   },
   addIcon: {

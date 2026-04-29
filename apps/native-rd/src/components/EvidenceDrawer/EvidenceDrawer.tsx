@@ -18,7 +18,7 @@ import type { EvidenceTypeValue } from "../../types/evidence";
 import { EvidenceItem } from "../EvidenceItem";
 import { FAB } from "../FAB";
 import { FABMenu } from "../FABMenu";
-import { styles, PEEK_HEIGHT } from "./EvidenceDrawer.styles";
+import { styles, DRAWER_CLOSED_HEIGHT } from "./EvidenceDrawer.styles";
 
 export interface EvidenceItemData {
   id: string;
@@ -56,12 +56,15 @@ export function EvidenceDrawer({
   const items = evidence ?? [];
 
   // Animate drawer height and overlay opacity together
-  const heightValue = useSharedValue(PEEK_HEIGHT);
+  const heightValue = useSharedValue(DRAWER_CLOSED_HEIGHT);
   const overlayOpacity = useSharedValue(0);
 
   useEffect(() => {
     const config = getTimingConfig(animationPref, "normal");
-    heightValue.value = withTiming(isOpen ? maxHeight : PEEK_HEIGHT, config);
+    heightValue.value = withTiming(
+      isOpen ? maxHeight : DRAWER_CLOSED_HEIGHT,
+      config,
+    );
     overlayOpacity.value = withTiming(isOpen ? 1 : 0, config);
   }, [isOpen, maxHeight, animationPref, heightValue, overlayOpacity]);
 
