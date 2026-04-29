@@ -22,4 +22,15 @@ export const styles = StyleSheet.create((theme) => ({
   optionSelected: {
     ...shadowStyle(theme, "cardElevation"),
   },
+  headerRow: {
+    flexDirection: "row" as const,
+    alignItems: "flex-start" as const,
+    gap: theme.space[2],
+  },
+  headerText: {
+    flex: 1,
+  },
+  sampleTextCol: {
+    flex: 1,
+  },
 }));

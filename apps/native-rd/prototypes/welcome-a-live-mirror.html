@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome A — Live Mirror</title>
+  <style>
+    /* ── Fonts (loaded from apps/native-rd/assets/fonts/) ── */
+    @font-face {
+      font-family: 'Anybody';
+      src: url('../assets/fonts/anybody-700.woff2') format('woff2');
+      font-weight: 700;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Anybody';
+      src: url('../assets/fonts/anybody-900.woff2') format('woff2');
+      font-weight: 900;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Instrument Sans';
+      src: url('../assets/fonts/instrument-sans-400.woff2') format('woff2');
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Instrument Sans';
+      src: url('../assets/fonts/instrument-sans-600.woff2') format('woff2');
+      font-weight: 600;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Instrument Sans';
+      src: url('../assets/fonts/instrument-sans-700.woff2') format('woff2');
+      font-weight: 700;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Lexend';
+      src: url('../assets/fonts/Lexend-Regular.woff2') format('woff2');
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Lexend';
+      src: url('../assets/fonts/Lexend-SemiBold.woff2') format('woff2');
+      font-weight: 600;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Lexend';
+      src: url('../assets/fonts/Lexend-Bold.woff2') format('woff2');
+      font-weight: 700;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Atkinson Hyperlegible';
+      src: url('../assets/fonts/AtkinsonHyperlegible-Regular.ttf') format('truetype');
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Atkinson Hyperlegible';
+      src: url('../assets/fonts/AtkinsonHyperlegible-Bold.ttf') format('truetype');
+      font-weight: 700;
+      font-display: swap;
+    }
+
+    /* ── Reset ─────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #e5e5e5;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 24px 0;
+      font-family: 'Instrument Sans', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Phone frame ──────────────────────── */
+    .phone {
+      width: 390px;
+      min-height: 844px;
+      border: 8px solid #0a0a0a;
+      border-radius: 36px;
+      overflow: hidden;
+      position: relative;
+      transition: background-color 0.2s ease;
+    }
+
+    /*
+     * Theme variables — values resolved from the actual app tokens.
+     * Source: packages/design-tokens/build/unistyles/{colorModes,variants,semanticColors,tokens}.ts
+     * Composition logic mirrors apps/native-rd/src/themes/compose.ts
+     */
+
+    /*
+     * Theme variables — values resolved from the actual app tokens.
+     * Source: packages/design-tokens/build/unistyles/{colorModes,variants,semanticColors,tokens}.ts
+     * Composition logic mirrors apps/native-rd/src/themes/compose.ts
+     *
+     * The header band uses `accentPurple` / `accentPurpleFg` to match the
+     * canonical native-rd ScreenHeader pattern (HeaderBand.tsx + ScreenHeader.styles.ts).
+     */
+
+    /* light-default — "The Full Ride" */
+    .phone {
+      --bg: #fafafa;                 /* lightColors.background */
+      --bg-secondary: #f0f0f0;       /* lightColors.backgroundSecondary */
+      --card: #ffffff;               /* surface-card-bg (light) */
+      --card-fg: #262626;             /* surface-card-fg (light) */
+      --text: #262626;
+      --text-secondary: #737373;
+      --border: #262626;
+      --border-w: 1px;               /* borderWidth.default */
+      --shadow: 3px 3px 0 rgba(10,10,10,0.8);     /* shadow.hardMd (cardElevation) */
+      --shadow-sm: 2px 2px 0 rgba(10,10,10,0.8);  /* shadow.hardSm */
+      --radius: 8px;                 /* radius.lg */
+      --radius-sm: 4px;              /* radius.md */
+      --accent: #ffe50c;             /* accentYellow (logo brand color) */
+      --primary: #3b82f6;            /* actionPrimaryBg (light) */
+      --primary-fg: #fafafa;          /* actionPrimaryFg (light) */
+      --purple: #a78bfa;              /* accentPurple — header band bg + sample badge */
+      --purple-fg: #0a0a0a;           /* accentPurpleFg — header band text */
+      --font-body: 'Instrument Sans', system-ui, sans-serif;
+      --font-display: 'Anybody', 'Instrument Sans', system-ui, sans-serif;
+      --line-height: 1.6;             /* lineHeight.normal */
+      --size-display: 32px;           /* size.3xl */
+      --size-body: 16px;              /* size.md */
+      --size-small: 14px;             /* size.sm */
+    }
+
+    /* dark-default — "Night Ride"
+       Tier-1 shadows zero out in dark per themes/compose.ts:131-133, so
+       the bold border carries depth. */
+    .phone[data-theme="dark-default"] {
+      --bg: #1a1033;                 /* darkColors.background */
+      --bg-secondary: #241845;
+      --card: #241845;                /* surface-card-bg (dark) */
+      --card-fg: #fafafa;
+      --text: #fafafa;
+      --text-secondary: #cfc7e0;
+      --border: #cfc7e0;
+      --border-w: 1px;
+      --shadow: none;                 /* tier-1 zeroed in dark */
+      --shadow-sm: none;
+      --primary: #5eead4;             /* actionPrimaryBg (dark) */
+      --primary-fg: #0a0a0a;
+      --purple: #c4b5fd;              /* accentPurple (dark) */
+      --purple-fg: #0a0a0a;
+    }
+
+    /* light-highContrast — "Bold Ink" */
+    .phone[data-theme="light-highContrast"] {
+      --bg: #ffffff;
+      --bg-secondary: #f0f0f0;        /* not overridden — inherits light */
+      --card: #ffffff;
+      --card-fg: #000000;
+      --text: #000000;
+      --text-secondary: #000000;
+      --border: #000000;
+      --border-w: 3px;                /* aliases.border-width = 3px */
+      --shadow: none;                 /* shadows.opacity = 0 */
+      --shadow-sm: none;
+      --primary: #000000;
+      --primary-fg: #ffffff;
+      --purple: #606060;              /* variant accentPurple */
+      --purple-fg: #ffffff;            /* variant accentPurpleFg */
+    }
+
+    /* light-dyslexia — "Warm Studio"
+       Lexend font + relaxed line-height (lineHeightL.normal = 1.7) */
+    .phone[data-theme="light-dyslexia"] {
+      --bg: #f8f5e4;
+      --bg-secondary: #f0edd8;
+      --card: #f8f5e4;                /* surface-card-bg (dyslexia) */
+      --card-fg: #333333;
+      --text: #333333;
+      --text-secondary: #555555;
+      --border: #c8c3a9;
+      --border-w: 2px;
+      --shadow: 3px 3px 0 rgba(10,10,10,0.8);
+      --shadow-sm: 2px 2px 0 rgba(10,10,10,0.8);
+      --primary: #4e7d9e;
+      --primary-fg: #fafafa;          /* not overridden — inherits actionPrimaryFg */
+      --purple: #8860a0;
+      --purple-fg: #0a0a0a;            /* not overridden — inherits light */
+      --font-body: 'Lexend', system-ui, sans-serif;
+      --font-display: 'Lexend', system-ui, sans-serif;
+      --line-height: 1.7;             /* lineHeightL.normal */
+    }
+
+    /* light-autismFriendly — "Still Water"
+       Muted/desaturated, shadows zeroed out */
+    .phone[data-theme="light-autismFriendly"] {
+      --bg: #f7f7f7;
+      --bg-secondary: #eeeeee;
+      --card: #ffffff;
+      --card-fg: #333333;
+      --text: #333333;
+      --text-secondary: #737373;      /* not overridden — inherits light */
+      --border: #dddddd;
+      --border-w: 1px;
+      --shadow: none;                 /* shadows.opacity = 0 */
+      --shadow-sm: none;
+      --primary: #4d6d7d;
+      --primary-fg: #ffffff;
+      --purple: #8a7a9a;
+      --purple-fg: #0a0a0a;            /* not overridden — inherits light */
+    }
+
+    /* light-lowVision — "Loud & Clear"
+       Atkinson Hyperlegible + sizeL (1.25× scale) + zeroed shadows */
+    .phone[data-theme="light-lowVision"] {
+      --bg: #ffffff;
+      --bg-secondary: #f0f0f0;        /* inherits light */
+      --card: #ffffff;
+      --card-fg: #111111;
+      --text: #111111;
+      --text-secondary: #333333;
+      --border: #555555;
+      --border-w: 3px;                /* aliases.border-width = 3px */
+      --shadow: none;
+      --shadow-sm: none;
+      --primary: #003d99;
+      --primary-fg: #fafafa;          /* not overridden */
+      --purple: #555555;
+      --purple-fg: #ffffff;            /* variant accentPurpleFg */
+      --font-body: 'Atkinson Hyperlegible', system-ui, sans-serif;
+      --font-display: 'Atkinson Hyperlegible', system-ui, sans-serif;
+      --size-display: 40px;           /* sizeL.3xl */
+      --size-body: 20px;              /* sizeL.md */
+      --size-small: 17.5px;           /* sizeL.sm */
+    }
+
+    /* light-lowInfo — "Clean Signal" */
+    .phone[data-theme="light-lowInfo"] {
+      --bg: #ffffff;
+      --bg-secondary: #f0f0f0;        /* inherits light */
+      --card: #ffffff;
+      --card-fg: #222222;
+      --text: #222222;
+      --text-secondary: #737373;      /* inherits light */
+      --border: #cccccc;
+      --border-w: 2px;                /* aliases.border-width = 2px */
+      --shadow: 3px 3px 0 rgba(10,10,10,0.8);     /* shadows.opacity = 1 (kept) */
+      --shadow-sm: 2px 2px 0 rgba(10,10,10,0.8);
+      --primary: #222222;
+      --primary-fg: #ffffff;
+      --purple: #666666;
+      --purple-fg: #ffffff;            /* variant accentPurpleFg */
+    }
+
+    /* ── Screen layout ───────────────────────── */
+    .screen {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      line-height: var(--line-height);
+      min-height: 844px;
+      display: flex;
+      flex-direction: column;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    /* ── Brand hero (mirrors HeaderBand pattern: accentPurple bg + cardElevation) ── */
+    .hero {
+      background: var(--purple);
+      color: var(--purple-fg);
+      padding: 56px 24px 28px;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      box-shadow: var(--shadow);     /* cardElevation = hardMd (zeroed in dark) */
+      position: relative;
+      z-index: 1;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    .logo-mark {
+      width: 64px;
+      height: 64px;
+      flex-shrink: 0;
+    }
+    .hero-text { flex: 1; }
+    .hero-greeting {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      opacity: 0.7;
+      margin-bottom: 4px;
+    }
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: var(--size-display);
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -0.5px;
+    }
+
+    /* ── Body ─────────────────────────────────── */
+    .body {
+      padding: 24px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .copy {
+      font-size: var(--size-body);
+      color: var(--text-secondary);
+    }
+    .copy strong { color: var(--text); }
+
+    /* ── Sample card (proves how UI looks in theme) ── */
+    .sample-card {
+      background: var(--card);
+      color: var(--card-fg, var(--text));
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      transition: background-color 0.2s, box-shadow 0.2s, border-color 0.2s;
+    }
+    .sample-badge {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--purple);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 18px;
+      border: var(--border-w) solid var(--border);
+    }
+    .sample-text { flex: 1; min-width: 0; }
+    .sample-title {
+      font-weight: 700;
+      font-size: var(--size-body);
+      margin-bottom: 2px;
+    }
+    .sample-meta {
+      font-size: var(--size-small);
+      color: var(--text-secondary);
+    }
+
+    /* ── Theme picker section ────────────────── */
+    .picker-label {
+      font-size: var(--size-small);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-secondary);
+      margin-top: 8px;
+    }
+    .chips {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .chip {
+      all: unset;
+      cursor: pointer;
+      aspect-ratio: 1;
+      border-radius: var(--radius-sm);
+      border: 2px solid var(--border);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.1s ease;
+    }
+    .chip:hover { transform: translate(-1px, -1px); }
+    .chip:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+    .chip[aria-pressed="true"] {
+      outline: 3px solid var(--primary);
+      outline-offset: 2px;
+    }
+    .chip-stripe {
+      flex: 1;
+      display: flex;
+    }
+    .chip-stripe span { flex: 1; }
+    .chip-name {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 4px;
+      text-align: center;
+      background: rgba(255,255,255,0.9);
+      color: #0a0a0a;
+      border-top: 1px solid #0a0a0a;
+      line-height: 1.1;
+    }
+
+    /* Chip swatch backgrounds (always-on, regardless of phone theme) */
+    .chip-light .chip-stripe { background: #ffffff; }
+    .chip-light .chip-stripe span:nth-child(1) { background: #ffe50c; flex: 0 0 30%; }
+    .chip-light .chip-stripe span:nth-child(2) { background: #a78bfa; flex: 0 0 25%; }
+
+    .chip-dark .chip-stripe { background: #1a1033; }
+    .chip-dark .chip-stripe span:nth-child(1) { background: #5eead4; flex: 0 0 30%; }
+    .chip-dark .chip-stripe span:nth-child(2) { background: #c4b5fd; flex: 0 0 25%; }
+    .chip-dark .chip-name { background: #1a1033; color: #fafafa; border-top-color: #cfc7e0; }
+
+    .chip-hc .chip-stripe { background: #ffffff; }
+    .chip-hc .chip-stripe span:nth-child(1) { background: #000000; flex: 0 0 50%; }
+    .chip-hc .chip-stripe span:nth-child(2) { background: #ffe50c; flex: 0 0 25%; }
+
+    .chip-dys .chip-stripe { background: #f8f5e4; }
+    .chip-dys .chip-stripe span:nth-child(1) { background: #f4c430; flex: 0 0 30%; }
+    .chip-dys .chip-stripe span:nth-child(2) { background: #d97706; flex: 0 0 25%; }
+
+    .chip-aut .chip-stripe { background: #f5f3ee; }
+    .chip-aut .chip-stripe span:nth-child(1) { background: #c8e6d4; flex: 0 0 35%; }
+    .chip-aut .chip-stripe span:nth-child(2) { background: #b4a7d6; flex: 0 0 30%; }
+
+    .chip-lv .chip-stripe { background: #ffffff; }
+    .chip-lv .chip-stripe span:nth-child(1) { background: #000000; flex: 0 0 60%; }
+    .chip-lv .chip-stripe span:nth-child(2) { background: #ffe50c; flex: 0 0 20%; }
+
+    .chip-li .chip-stripe { background: #ffffff; }
+    .chip-li .chip-stripe span:nth-child(1) { background: #f5f5f5; flex: 0 0 40%; }
+    .chip-li .chip-stripe span:nth-child(2) { background: #d4d4d4; flex: 0 0 25%; }
+
+    /* ── Footer with CTA ─────────────────────── */
+    .footer {
+      padding: 16px 24px 32px;
+      border-top: var(--border-w) solid var(--border);
+      background: var(--bg-secondary);
+    }
+    .cta {
+      all: unset;
+      cursor: pointer;
+      display: block;
+      text-align: center;
+      width: 100%;
+      padding: 16px;
+      background: var(--primary);
+      color: var(--primary-fg);
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 18px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .cta:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+    .cta:active { transform: translate(2px, 2px); box-shadow: var(--shadow-sm); }
+
+    .footnote {
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="phone" data-theme="light-default" id="phone">
+    <div class="screen">
+      <!-- Brand hero -->
+      <header class="hero">
+        <svg class="logo-mark" viewBox="0 0 1200 1200" aria-hidden="true">
+          <!-- Brand mark (logo-light.svg) — static colors, unaffected by theme. -->
+          <rect width="1200" height="1200" fill="#ffe50c"/>
+          <path d="M594.39,201.77c26.75-3.92,39.18,22.01,62.88,29,18.93,5.58,41.99-.51,57.38,11.7,16.22,12.87,12.12,37.54,21.06,55.05,9.15,17.92,34.36,29.38,36.8,49.84,3.03,25.49-18.97,39.75-21.81,62.23-3.23,25.51,8.52,51.92-18.22,68.42-11.76,7.26-28.71,9.23-39.38,16.82-13.96,9.93-20.59,31.87-38.06,38.05-23.37,8.26-40.27-13.9-65.06-7.69-15.3,3.84-25.92,12.99-43.1,7.99-19.12-5.57-24.45-28.06-38.93-38.35-12.54-8.91-31.63-9.54-43.8-19.42-20-16.22-11.54-40.66-13.45-62.65-2.2-25.34-26.05-38.7-22.19-66.59,2.63-19,25.83-30.9,34.79-46,11.14-18.77,5.32-44.27,23.62-58.34,15.2-11.68,36.88-5.47,55.03-10.54,19.12-5.34,35.41-27.02,52.44-29.52Z" fill="#a78bfa"/>
+          <text x="600" y="380" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="180" font-weight="900" fill="#0a0a0a">RD</text>
+        </svg>
+        <div class="hero-text">
+          <div class="hero-greeting">Hey there 👋</div>
+          <h1 class="hero-title">Welcome to your ride.</h1>
+        </div>
+      </header>
+
+      <main class="body">
+        <p class="copy">
+          rollercoaster.dev is your personal goal tracker. <strong>Everything stays on your phone</strong> — your data, your pace, your ride.
+        </p>
+
+        <p class="copy">
+          First, let's <strong>pick a look that fits your brain</strong>. Tap a swatch — the whole app changes so you can see how it feels.
+        </p>
+
+        <!-- Sample card (proves the theme) -->
+        <div class="sample-card" aria-hidden="true">
+          <div class="sample-badge">★</div>
+          <div class="sample-text">
+            <div class="sample-title">Daily reading</div>
+            <div class="sample-meta">3 of 5 days complete</div>
+          </div>
+        </div>
+
+        <div class="picker-label">Your look (tap to preview)</div>
+        <div class="chips" role="radiogroup" aria-label="Theme">
+          <button class="chip chip-light" data-target="light-default" aria-pressed="true">
+            <div class="chip-stripe"><span></span><span></span><span></span></div>
+            <div class="chip-name">Full Ride</div>
+          </button>
+          <button class="chip chip-dark" data-target="dark-default" aria-pressed="false">
+            <div class="chip-stripe"><span></span><span></span><span></span></div>
+            <div class="chip-name">Night Ride</div>
+          </button>
+          <button class="chip chip-hc" data-target="light-highContrast" aria-pressed="false">
+            <div class="chip-stripe"><span></span><span></span><span></span></div>
+            <div class="chip-name">Bold Ink</div>
+          </button>
+          <button class="chip chip-dys" data-target="light-dyslexia" aria-pressed="false">
+            <div class="chip-stripe"><span></span><span></span><span></span></div>
+            <div class="chip-name">Warm Studio</div>
+          </button>
+          <button class="chip chip-aut" data-target="light-autismFriendly" aria-pressed="false">
+            <div class="chip-stripe"><span></span><span></span><span></span></div>
+            <div class="chip-name">Still Water</div>
+          </button>
+          <button class="chip chip-lv" data-target="light-lowVision" aria-pressed="false">
+            <div class="chip-stripe"><span></span><span></span><span></span></div>
+            <div class="chip-name">Loud & Clear</div>
+          </button>
+          <button class="chip chip-li" data-target="light-lowInfo" aria-pressed="false">
+            <div class="chip-stripe"><span></span><span></span><span></span></div>
+            <div class="chip-name">Clean Signal</div>
+          </button>
+        </div>
+      </main>
+
+      <footer class="footer">
+        <button class="cta">Get started</button>
+        <p class="footnote">You can change this anytime in Settings.</p>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    const phone = document.getElementById('phone');
+    document.querySelectorAll('.chip').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', 'false'));
+        btn.setAttribute('aria-pressed', 'true');
+        phone.dataset.theme = btn.dataset.target;
+      });
+    });
+  </script>
+</body>
+</html>
