@@ -54,6 +54,7 @@ export function NewGoalModal() {
             </Text>
           }
           onPress={() => navigation.goBack()}
+          tone="ghost"
           accessibilityLabel="Close"
           size="sm"
         />

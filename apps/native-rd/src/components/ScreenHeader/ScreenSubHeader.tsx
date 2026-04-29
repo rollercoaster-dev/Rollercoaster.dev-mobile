@@ -20,7 +20,7 @@ export function ScreenSubHeader({ label, onBack }: ScreenSubHeaderProps) {
           </Text>
         }
         onPress={onBack}
-        variant="ghost"
+        tone="chrome"
         accessibilityLabel="Go back"
       />
       <Text variant="title" style={styles.subLabel} accessibilityRole="header">

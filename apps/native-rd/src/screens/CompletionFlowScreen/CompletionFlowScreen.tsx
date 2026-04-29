@@ -495,6 +495,7 @@ export function CompletionFlowScreen({ route }: CompletionFlowScreenProps) {
             </Text>
           }
           onPress={() => navigation.goBack()}
+          tone="ghost"
           accessibilityLabel="Go back"
           size="sm"
         />

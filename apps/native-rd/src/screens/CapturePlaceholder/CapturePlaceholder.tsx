@@ -30,6 +30,7 @@ export function CapturePlaceholder({ route }: { route: { name: string } }) {
             </Text>
           }
           onPress={() => navigation.goBack()}
+          tone="ghost"
           accessibilityLabel="Go back"
           size="sm"
         />

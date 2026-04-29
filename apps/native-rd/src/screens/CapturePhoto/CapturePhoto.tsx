@@ -115,6 +115,7 @@ export function CapturePhoto({ route }: CapturePhotoScreenProps) {
             </Text>
           }
           onPress={() => navigation.goBack()}
+          tone="ghost"
           accessibilityLabel="Go back"
           size="sm"
         />

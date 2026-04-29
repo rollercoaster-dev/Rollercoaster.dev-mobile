@@ -25,8 +25,18 @@ import {
   lightChromeColors as pkgLightChromeColors,
   darkChromeColors as pkgDarkChromeColors,
   chromeVariants as pkgChromeVariants,
+  lightActionColors as pkgLightActionColors,
+  darkActionColors as pkgDarkActionColors,
+  actionVariants as pkgActionVariants,
+  lightSurfaceBorderColors as pkgLightSurfaceBorderColors,
+  darkSurfaceBorderColors as pkgDarkSurfaceBorderColors,
+  surfaceBorderVariants as pkgSurfaceBorderVariants,
   type ChromeColors as PkgChromeColors,
   type ChromeOverride as PkgChromeOverride,
+  type ActionColors as PkgActionColors,
+  type ActionOverride as PkgActionOverride,
+  type SurfaceBorderColors as PkgSurfaceBorderColors,
+  type SurfaceBorderOverride as PkgSurfaceBorderOverride,
   type Narrative as PkgNarrative,
   type NarrativeOverride as PkgNarrativeOverride,
   type VariantOverride as PkgVariantOverride,
@@ -188,6 +198,26 @@ export const darkChromeColors = pkgDarkChromeColors;
 export const chromeVariants = pkgChromeVariants;
 export type Chrome = PkgChromeColors;
 export type ChromeOverride = PkgChromeOverride;
+
+// ---------------------------------------------------------------------------
+// Action (buttons + interactive states) — per color mode + variant
+// ---------------------------------------------------------------------------
+
+export const lightActionColors = pkgLightActionColors;
+export const darkActionColors = pkgDarkActionColors;
+export const actionVariants = pkgActionVariants;
+export type Action = PkgActionColors;
+export type ActionOverride = PkgActionOverride;
+
+// ---------------------------------------------------------------------------
+// SurfaceBorder (cards, sheets, inputs, border hierarchy) — per color mode + variant
+// ---------------------------------------------------------------------------
+
+export const lightSurfaceBorderColors = pkgLightSurfaceBorderColors;
+export const darkSurfaceBorderColors = pkgDarkSurfaceBorderColors;
+export const surfaceBorderVariants = pkgSurfaceBorderVariants;
+export type SurfaceBorder = PkgSurfaceBorderColors;
+export type SurfaceBorderOverride = PkgSurfaceBorderOverride;
 
 // ---------------------------------------------------------------------------
 // New token categories — pass through

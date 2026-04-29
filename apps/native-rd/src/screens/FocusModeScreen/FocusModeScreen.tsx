@@ -16,7 +16,6 @@ import {
 import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import { useQuery } from "@evolu/react";
-import { useUnistyles } from "react-native-unistyles";
 import { Pencil } from "phosphor-react-native";
 import { Text } from "../../components/Text";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
@@ -97,7 +96,6 @@ function getEvidenceTypeLabel(type: EvidenceTypeValue): string {
 
 function FocusContent({ goalId }: { goalId: string }) {
   const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
-  const { theme } = useUnistyles();
   const { showToast, hideToast } = useToast();
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
@@ -484,8 +482,9 @@ function FocusContent({ goalId }: { goalId: string }) {
           {goal.title}
         </Text>
         <IconButton
-          icon={<Pencil color={theme.colors.text} size={20} weight="bold" />}
+          icon={<Pencil size={20} weight="bold" />}
           onPress={handleEditPress}
+          tone="ghost"
           accessibilityLabel="Edit goal"
           size="sm"
         />

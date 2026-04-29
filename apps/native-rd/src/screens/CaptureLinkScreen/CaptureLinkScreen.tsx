@@ -82,6 +82,7 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
             </Text>
           }
           onPress={() => navigation.goBack()}
+          tone="ghost"
           accessibilityLabel="Go back"
           size="sm"
         />

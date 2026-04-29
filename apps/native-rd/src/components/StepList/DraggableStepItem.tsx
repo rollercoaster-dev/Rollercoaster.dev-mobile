@@ -134,17 +134,10 @@ export function DraggableStepItem({
               </Pressable>
               {onDeleteStep && (
                 <IconButton
-                  icon={
-                    <Text
-                      variant="body"
-                      style={{ color: theme.colors.textMuted }}
-                    >
-                      ✕
-                    </Text>
-                  }
+                  icon={<Text variant="body">✕</Text>}
                   onPress={onDeleteStep}
                   size="sm"
-                  variant="ghost"
+                  tone="ghost"
                   accessibilityLabel={`Delete "${step.title}"`}
                 />
               )}

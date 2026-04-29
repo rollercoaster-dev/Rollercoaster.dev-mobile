@@ -133,6 +133,7 @@ export function GoalsScreen() {
               </Text>
             }
             onPress={() => navigation.navigate("NewGoal")}
+            tone="chrome"
             accessibilityLabel="Create new goal"
             testID="create-new-goal"
           />

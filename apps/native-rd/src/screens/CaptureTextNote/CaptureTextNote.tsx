@@ -87,6 +87,7 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
             </Text>
           }
           onPress={() => navigation.goBack()}
+          tone="ghost"
           accessibilityLabel="Go back"
           size="sm"
         />
