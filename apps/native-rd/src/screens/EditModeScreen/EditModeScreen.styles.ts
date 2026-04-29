@@ -32,7 +32,7 @@ export const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.space[3],
     paddingVertical: theme.space[3],
     minHeight: 48,
-    ...shadowStyle(theme, "hardSm"),
+    ...shadowStyle(theme, "cardElevationSmall"),
   },
   inputError: {
     borderColor: theme.colors.accentPrimary,
@@ -52,7 +52,7 @@ export const styles = StyleSheet.create((theme) => ({
     paddingVertical: theme.space[3],
     minHeight: 80,
     textAlignVertical: "top",
-    ...shadowStyle(theme, "hardSm"),
+    ...shadowStyle(theme, "cardElevationSmall"),
   },
   buttonSection: {
     marginTop: theme.space[4],

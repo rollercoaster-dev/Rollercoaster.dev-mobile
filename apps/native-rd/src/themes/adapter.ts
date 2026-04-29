@@ -147,6 +147,9 @@ export const lightColors = {
 export const darkColors = {
   ...pkgDarkColors,
   accentSecondary: pkgDarkColors.accentMint,
+  shadow: "#000000",
+  textMuted: "#a89cc4",
+  accentPurple: "#8d7eb0",
   error: pkgPalette.error,
   warning: pkgPalette.warning,
   success: pkgPalette.success,
@@ -160,7 +163,7 @@ export const colorModeConfigs = {
   },
   dark: {
     colors: darkColors,
-    shadows: { opacity: 0.6 },
+    shadows: { opacity: 1.0 },
   },
 } as const;
 

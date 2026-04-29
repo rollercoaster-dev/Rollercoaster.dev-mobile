@@ -153,3 +153,39 @@ Two values in source JSON still need updating (currently inherit yellow where th
 - `low-vision.json` — `chrome-top-bar-bg: #ffe50c` (variant uses `#003d99` accent elsewhere)
 
 To use any of this from native-rd, the wiring needed is at minimum: `compose.ts` reads chrome from adapter, exposes as `theme.chrome.*` on the composed theme. Anything beyond that (rebinding through `colorModes.ts` / `variants.ts`) is the same kind of friction this map documents — avoid it.
+
+---
+
+## Shadow & border policy (post 2026-04-29 dark rework)
+
+**Issue:** [#934 dark theme rework](https://github.com/rollercoaster-dev/monorepo/issues/934) · **Plan:** [2026-04-29-dark-mode-rework.md](../plans/2026-04-29-dark-mode-rework.md)
+
+### The neo-brutalist depth metaphor doesn't transfer 1:1 between modes
+
+Light mode communicates depth with a hard offset shadow on a black-ish surface. Dark mode can't reuse the same recipe — a shadow drawn against a dark indigo bg either disappears (matching shadow color) or blooms outward (light shadow color). The fix is mode-specific encodings of the same conceptual elevation.
+
+| Tier   | Surfaces                                       | Light mode               | Dark mode                                    |
+| ------ | ---------------------------------------------- | ------------------------ | -------------------------------------------- |
+| Tier 1 | cards, list rows, buttons, pills, inputs       | hard offset shadow       | bold border (~10:1), **no shadow**           |
+| Tier 2 | modals, sheets, FABs, toasts, drag-active rows | hard offset shadow       | bold border + **black hard shadow** (cutout) |
+| Tier 3 | chrome bands (top header, tab bar)             | flat lavender, no shadow | flat darker lavender (`#8d7eb0`), no shadow  |
+
+Why this works: in dark mode a black shadow against a dark surface reads as a _void cutout_, not a glow. That preserves the brutalist offset shape on tier-2 elements that need to lift off the page. Tier-1 surfaces lose shadows entirely — the new high-contrast lavender border (`#cfc7e0`, ~10:1 vs bg) carries the depth instead.
+
+### Semantic shadow tokens
+
+Components consume role-named tokens, not the underlying primitives:
+
+| Role                        | Light              | Dark         | Used by                                            |
+| --------------------------- | ------------------ | ------------ | -------------------------------------------------- |
+| `shadow.cardElevation`      | `hardMd` (3,3,0.8) | zero opacity | tier-1 standard surfaces                           |
+| `shadow.cardElevationSmall` | `hardSm` (2,2,0.8) | zero opacity | tier-1 small surfaces (chips, icon buttons, nodes) |
+| `shadow.modalElevation`     | `hardLg` (4,4,0.8) | `hardLg`     | tier-2 surfaces (modal/FAB/toast/drag)             |
+
+Wired in `apps/native-rd/src/themes/tokens.ts` and overridden per-mode in `compose.ts` (`darkShadowOverrides`). The shadow's _color_ (`theme.colors.shadow`) flips per mode in the adapter: `#0a0a0a` in light, `#000000` in dark — never white-on-dark, which is what the pre-#934 build did.
+
+The raw `hardSm` / `hardMd` / `hardLg` tokens still exist in the design-tokens package and remain referenced by design-system stories that document the primitives. Product code does not call them directly.
+
+### Border policy in dark
+
+Borders are the load-bearing element. Default `theme.colors.border` flips from indigo `#3a2d5c` (1.5:1, fails WCAG 3:1) to lavender near-white `#cfc7e0` (~10:1) in dark. Component-side: keep using `theme.colors.border` — the contrast change is automatic via the token.

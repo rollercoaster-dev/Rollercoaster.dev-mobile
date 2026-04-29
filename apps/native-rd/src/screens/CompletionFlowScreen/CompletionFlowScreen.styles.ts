@@ -34,7 +34,7 @@ export const styles = StyleSheet.create((theme) => ({
     alignItems: "center",
     maxWidth: 340,
     width: "100%",
-    ...shadowStyle(theme, "hardMd"),
+    ...shadowStyle(theme, "cardElevation"),
   },
   iconContainer: {
     alignItems: "center",

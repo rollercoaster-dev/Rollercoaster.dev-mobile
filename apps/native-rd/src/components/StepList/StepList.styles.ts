@@ -9,7 +9,7 @@ export const styles = StyleSheet.create((theme) => {
     backgroundColor: theme.colors.background,
     paddingHorizontal: theme.space[3],
     paddingVertical: theme.space[2],
-    ...shadowStyle(theme, "hardSm"),
+    ...shadowStyle(theme, "cardElevationSmall"),
   } as const;
 
   return {
@@ -25,7 +25,7 @@ export const styles = StyleSheet.create((theme) => {
     draggingItem: {
       backgroundColor: theme.colors.backgroundSecondary,
       borderColor: theme.colors.accentPrimary,
-      ...shadowStyle(theme, "hardLg"),
+      ...shadowStyle(theme, "modalElevation"),
       elevation: 4,
     },
     stepRow: {
@@ -113,7 +113,7 @@ export const styles = StyleSheet.create((theme) => {
       borderRadius: theme.radius.sm,
       alignItems: "center",
       justifyContent: "center",
-      ...shadowStyle(theme, "hardSm"),
+      ...shadowStyle(theme, "cardElevationSmall"),
     },
     addStepButtonText: {
       fontSize: 22,

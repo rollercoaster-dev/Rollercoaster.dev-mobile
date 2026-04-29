@@ -13,7 +13,7 @@ export const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.space[4],
     backgroundColor: theme.colors.accentPurple,
     zIndex: 1,
-    ...shadowStyle(theme, "hardMd"),
+    ...shadowStyle(theme, "cardElevation"),
   }),
   title: {
     color: theme.colors.accentPurpleFg,

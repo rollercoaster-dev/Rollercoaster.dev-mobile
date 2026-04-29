@@ -40,7 +40,7 @@ export const styles = StyleSheet.create((theme) => ({
     paddingVertical: theme.space[1],
     minHeight: 44,
     minWidth: 44,
-    ...shadowStyle(theme, "hardSm"),
+    ...shadowStyle(theme, "cardElevationSmall"),
   },
   evidenceFlash: {
     position: "absolute" as const,
@@ -100,7 +100,7 @@ export const styles = StyleSheet.create((theme) => ({
     minWidth: 44,
     alignItems: "center",
     justifyContent: "center",
-    ...shadowStyle(theme, "hardSm"),
+    ...shadowStyle(theme, "cardElevationSmall"),
   },
   quickNoteButtonText: {
     fontSize: theme.size.sm,

@@ -9,12 +9,12 @@
     "surface": {
       "background": { "$value": "#1a1033" },
       "foreground": { "$value": "#fafafa" },
-      "card": { "$value": "#241845" },
+      "card": { "$value": "#2a1d4e" },
       "card-foreground": { "$value": "#fafafa" },
-      "popover": { "$value": "#241845" },
+      "popover": { "$value": "#36265e" },
       "popover-foreground": { "$value": "#fafafa" },
-      "muted": { "$value": "#2d1f52" },
-      "muted-foreground": { "$value": "#e5e5e5" }
+      "muted": { "$value": "#241845" },
+      "muted-foreground": { "$value": "#a89cc4" }
     },
     "interactive": {
       "primary": { "$value": "#5eead4" },
@@ -97,13 +97,13 @@
       "info": { "$value": "#60a5fa" }
     },
     "form": {
-      "border": { "$value": "#3a2d5c" },
+      "border": { "$value": "#cfc7e0" },
       "input": { "$value": "#241845" },
       "ring": { "$value": "#5eead4" }
     },
     "typography": {
       "text-primary": { "$value": "#fafafa" },
-      "text-secondary": { "$value": "#e5e5e5" },
+      "text-secondary": { "$value": "#cfc7e0" },
       "text-disabled": { "$value": "#737373" },
       "text-inverse": { "$value": "#0a0a0a" }
     },
@@ -111,12 +111,12 @@
       "bg-primary": { "$value": "#1a1033" },
       "bg-secondary": { "$value": "#241845" },
       "bg-disabled": { "$value": "#3a2d5c" },
-      "border-color": { "$value": "#3a2d5c" }
+      "border-color": { "$value": "#cfc7e0" }
     },
     "shadow": {
       "sm": { "$value": "none" },
       "md": { "$value": "none" },
-      "lg": { "$value": "0 4px 12px rgba(0, 0, 0, 0.3)" },
+      "lg": { "$value": "0 6px 0 0 rgba(0, 0, 0, 1.0)" },
       "focus": { "$value": "0 0 0 3px rgba(94, 234, 212, 0.4)" }
     },
     "semantic": {
@@ -156,9 +156,9 @@
       "surface-input-fg": { "$value": "#fafafa" },
       "surface-sunken-bg": { "$value": "#2d1f52" },
       "surface-elevated-bg": { "$value": "#2d1f52" },
-      "border-default": { "$value": "#3a2d5c" },
+      "border-default": { "$value": "#cfc7e0" },
       "border-strong": { "$value": "#fafafa" },
-      "border-subtle": { "$value": "#524573" },
+      "border-subtle": { "$value": "#7c6ba0" },
       "border-input": { "$value": "#3a2d5c" },
       "border-focus": { "$value": "#5eead4" },
       "journey-goal-bg": { "$value": "#fbbf24" },

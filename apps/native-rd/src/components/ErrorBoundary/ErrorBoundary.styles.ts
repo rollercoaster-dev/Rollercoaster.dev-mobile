@@ -15,7 +15,7 @@ export const styles = StyleSheet.create((theme) => ({
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.backgroundSecondary,
     gap: theme.space[3],
-    ...shadowStyle(theme, "hardMd"),
+    ...shadowStyle(theme, "cardElevation"),
   },
   title: {
     color: theme.colors.text,

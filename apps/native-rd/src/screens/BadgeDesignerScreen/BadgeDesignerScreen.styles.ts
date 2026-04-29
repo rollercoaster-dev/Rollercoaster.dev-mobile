@@ -37,7 +37,7 @@ export const styles = StyleSheet.create((theme) => ({
     borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.backgroundSecondary,
-    ...shadowStyle(theme, "hardMd"),
+    ...shadowStyle(theme, "cardElevation"),
   },
   sectionContainer: {
     width: "100%",

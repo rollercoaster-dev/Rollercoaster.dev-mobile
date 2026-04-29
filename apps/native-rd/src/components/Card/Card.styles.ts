@@ -18,7 +18,7 @@ export const styles = StyleSheet.create((theme) => ({
     borderColor: theme.colors.border,
     borderRadius: theme.radius.sm,
     padding: theme.space[sizeMap[size]],
-    ...shadowStyle(theme, "hardMd"),
+    ...shadowStyle(theme, "cardElevation"),
   }),
   container: (size: CardSize = "normal") => ({
     backgroundColor: theme.colors.backgroundSecondary,
@@ -26,7 +26,7 @@ export const styles = StyleSheet.create((theme) => ({
     borderColor: theme.colors.border,
     borderRadius: theme.radius.sm,
     padding: theme.space[sizeMap[size]],
-    ...shadowStyle(theme, "hardMd"),
+    ...shadowStyle(theme, "cardElevation"),
   }),
   pressed: {
     transform: [{ translateX: 2 }, { translateY: 2 }],

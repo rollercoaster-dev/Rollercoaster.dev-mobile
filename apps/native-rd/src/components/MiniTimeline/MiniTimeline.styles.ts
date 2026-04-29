@@ -9,7 +9,7 @@ export const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.backgroundSecondary,
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[2],
-    ...shadowStyle(theme, "hardSm"),
+    ...shadowStyle(theme, "cardElevationSmall"),
   },
   track: {
     flexDirection: "row" as const,

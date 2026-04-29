@@ -20,6 +20,6 @@ export const styles = StyleSheet.create((theme) => ({
     marginBottom: theme.space[3],
   },
   optionSelected: {
-    ...shadowStyle(theme, "hardMd"),
+    ...shadowStyle(theme, "cardElevation"),
   },
 }));

@@ -37,7 +37,7 @@ export const styles = StyleSheet.create((theme) => ({
     borderColor: theme.colors.border,
     alignItems: "center" as const,
     justifyContent: "center" as const,
-    ...shadowStyle(theme, "hardSm"),
+    ...shadowStyle(theme, "cardElevationSmall"),
   },
   arrowDisabled: {
     opacity: 0.3,

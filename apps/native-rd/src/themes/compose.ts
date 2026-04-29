@@ -19,6 +19,7 @@ import {
   fontFamily,
   transition,
   shadow,
+  darkShadowOverrides,
 } from "./tokens";
 import {
   narrativeModes,
@@ -125,6 +126,11 @@ export function composeTheme(
   // Determine shadow opacity
   const shadowOpacity = variantDef.shadows?.opacity ?? base.shadows.opacity;
 
+  // Tier-1 shadows zero out in dark so the new bold border carries depth;
+  // tier-2 modalElevation keeps its hard offset.
+  const composedShadow =
+    colorMode === "dark" ? { ...shadow, ...darkShadowOverrides } : shadow;
+
   // Determine size scale
   const sizeScale = variantDef.size ?? size;
 
@@ -214,7 +220,7 @@ export function composeTheme(
     letterSpacing,
     fontFamily: resolvedFontFamily,
     transition,
-    shadow,
+    shadow: composedShadow,
     textStyles,
     variant,
   };

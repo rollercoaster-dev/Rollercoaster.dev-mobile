@@ -26,13 +26,13 @@ export const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.accentPrimary,
     borderWidth: theme.borderWidth.thick,
     borderColor: theme.colors.accentPrimary,
-    ...shadowStyle(theme, "hardMd"),
+    ...shadowStyle(theme, "cardElevation"),
   },
   variantSecondary: {
     backgroundColor: theme.colors.backgroundSecondary,
     borderWidth: theme.borderWidth.thick,
     borderColor: theme.colors.border,
-    ...shadowStyle(theme, "hardMd"),
+    ...shadowStyle(theme, "cardElevation"),
   },
   variantGhost: {
     backgroundColor: "transparent",
@@ -43,7 +43,7 @@ export const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.warning,
     borderWidth: theme.borderWidth.thick,
     borderColor: theme.colors.text,
-    ...shadowStyle(theme, "hardMd"),
+    ...shadowStyle(theme, "cardElevation"),
   },
   pressed: {
     transform: [{ translateX: 2 }, { translateY: 2 }],

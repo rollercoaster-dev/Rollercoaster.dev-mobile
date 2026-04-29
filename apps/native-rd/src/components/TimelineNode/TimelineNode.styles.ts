@@ -15,7 +15,7 @@ export const styles = StyleSheet.create((theme) => ({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: theme.colors.background,
-    ...shadowStyle(theme, "hardSm"),
+    ...shadowStyle(theme, "cardElevationSmall"),
   },
   goalNode: {
     width: GOAL_NODE_SIZE,

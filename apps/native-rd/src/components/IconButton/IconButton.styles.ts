@@ -30,7 +30,7 @@ export const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.backgroundSecondary,
     borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.border,
-    ...shadowStyle(theme, "hardSm"),
+    ...shadowStyle(theme, "cardElevationSmall"),
   },
   variantGhost: {
     backgroundColor: "transparent",
@@ -39,7 +39,7 @@ export const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.backgroundSecondary,
     borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.border,
-    ...shadowStyle(theme, "hardSm"),
+    ...shadowStyle(theme, "cardElevationSmall"),
   },
   pressed: {
     opacity: 0.7,
