@@ -3,7 +3,6 @@ import { View, ScrollView, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import { useQuery } from "@evolu/react";
-import { useUnistyles } from "react-native-unistyles";
 import { Text } from "../../components/Text";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { Button } from "../../components/Button";
@@ -173,13 +172,9 @@ function useStepEvidence(
 
 export function TimelineJourneyScreen({ route }: TimelineJourneyScreenProps) {
   const navigation = useNavigation();
-  const { theme } = useUnistyles();
 
   return (
-    <SafeAreaView
-      edges={["top"]}
-      style={{ flex: 1, backgroundColor: theme.colors.accentYellow }}
-    >
+    <SafeAreaView edges={["top"]} style={styles.safeArea}>
       <View style={styles.topBar}>
         <IconButton
           icon={
@@ -191,10 +186,12 @@ export function TimelineJourneyScreen({ route }: TimelineJourneyScreenProps) {
           accessibilityLabel="Go back"
           size="sm"
         />
-        <Text variant="label">Timeline</Text>
+        <Text variant="label" style={styles.topBarTitle}>
+          Timeline
+        </Text>
         <View style={styles.spacer} />
       </View>
-      <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <View style={styles.body}>
         <ErrorBoundary>
           <Suspense
             fallback={

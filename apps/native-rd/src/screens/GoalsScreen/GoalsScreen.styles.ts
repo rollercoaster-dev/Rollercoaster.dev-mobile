@@ -6,7 +6,16 @@ export const styles = StyleSheet.create((theme) => ({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
+  safeArea: {
+    flex: 1,
+    backgroundColor: theme.colors.accentPurple,
+  },
+  headerTitle: {
+    color: theme.colors.accentPurpleFg,
+  },
   scrollContent: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
     padding: theme.space[4],
     paddingBottom: theme.space[12],
     gap: theme.space[4],
@@ -15,7 +24,7 @@ export const styles = StyleSheet.create((theme) => ({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: theme.colors.accentYellow,
+    backgroundColor: theme.colors.accentPurple,
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[2],
     paddingBottom: theme.space[4],

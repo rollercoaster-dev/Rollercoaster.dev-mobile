@@ -24,6 +24,7 @@ export interface Colors {
   accentPrimary: string;
   accentSecondary: string;
   accentPurple: string;
+  accentPurpleFg: string;
   accentPurpleLight: string;
   accentMint: string;
   accentYellow: string;

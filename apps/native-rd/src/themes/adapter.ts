@@ -22,6 +22,11 @@ import {
   variants as pkgVariants,
   narrativeModes as pkgNarrativeModes,
   narrativeVariants as pkgNarrativeVariants,
+  lightChromeColors as pkgLightChromeColors,
+  darkChromeColors as pkgDarkChromeColors,
+  chromeVariants as pkgChromeVariants,
+  type ChromeColors as PkgChromeColors,
+  type ChromeOverride as PkgChromeOverride,
   type Narrative as PkgNarrative,
   type NarrativeOverride as PkgNarrativeOverride,
   type VariantOverride as PkgVariantOverride,
@@ -170,6 +175,16 @@ export const narrativeModes = pkgNarrativeModes;
 export const narrativeVariants = pkgNarrativeVariants;
 export type Narrative = PkgNarrative;
 export type NarrativeOverride = PkgNarrativeOverride;
+
+// ---------------------------------------------------------------------------
+// Chrome (app shell: top bar, header, modal, tab bar) — per color mode + variant
+// ---------------------------------------------------------------------------
+
+export const lightChromeColors = pkgLightChromeColors;
+export const darkChromeColors = pkgDarkChromeColors;
+export const chromeVariants = pkgChromeVariants;
+export type Chrome = PkgChromeColors;
+export type ChromeOverride = PkgChromeOverride;
 
 // ---------------------------------------------------------------------------
 // New token categories — pass through

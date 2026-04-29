@@ -6,6 +6,13 @@ export const styles = StyleSheet.create((theme) => ({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
+  safeArea: {
+    flex: 1,
+    backgroundColor: theme.colors.accentPurple,
+  },
+  scrollContainer: {
+    backgroundColor: theme.colors.background,
+  },
   scrollContent: {
     padding: theme.space[4],
     paddingBottom: theme.space[12],
@@ -15,12 +22,15 @@ export const styles = StyleSheet.create((theme) => ({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: theme.colors.accentYellow,
+    backgroundColor: theme.colors.accentPurple,
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[2],
     paddingBottom: theme.space[4],
     zIndex: 1,
     ...shadowStyle(theme, "hardMd"),
+  },
+  headerTitle: {
+    color: theme.colors.accentPurpleFg,
   },
   version: {
     ...theme.textStyles.caption,

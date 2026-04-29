@@ -4,7 +4,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@evolu/react";
-import { useUnistyles } from "react-native-unistyles";
 import { Text } from "../../components/Text";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { BadgeCard } from "../../components/BadgeCard";
@@ -68,17 +67,14 @@ function BadgeList() {
 }
 
 export function BadgesScreen() {
-  const { theme } = useUnistyles();
-
   return (
-    <SafeAreaView
-      edges={["top"]}
-      style={{ flex: 1, backgroundColor: theme.colors.accentYellow }}
-    >
+    <SafeAreaView edges={["top"]} style={styles.safeArea}>
       <View style={styles.header}>
-        <Text variant="display">Badges</Text>
+        <Text variant="display" style={styles.headerTitle}>
+          Badges
+        </Text>
       </View>
-      <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <View style={styles.container}>
         <ErrorBoundary>
           <Suspense
             fallback={

@@ -7,8 +7,10 @@ import { size, sizeL, lineHeight, lineHeightL } from "./tokens";
 import {
   variantColors,
   narrativeVariants,
+  chromeVariants,
   type VariantOverride as TokenVariantOverride,
   type NarrativeOverride,
+  type ChromeOverride,
 } from "./adapter";
 
 export type Variant =
@@ -33,6 +35,7 @@ export const variants: Variant[] = [
 interface VariantOverride {
   colors?: TokenVariantOverride;
   narrative?: NarrativeOverride;
+  chrome?: ChromeOverride;
   shadows?: { opacity: number };
   size?: typeof size | typeof sizeL;
   lineHeight?: typeof lineHeight | typeof lineHeightL;
@@ -56,6 +59,7 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
   highContrast: {
     colors: variantColors.highContrast,
     narrative: narrativeVariants.highContrast,
+    chrome: chromeVariants.highContrast,
     shadows: { opacity: 0 },
   },
 
@@ -73,6 +77,7 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
   dyslexia: {
     colors: variantColors.dyslexiaFriendly,
     narrative: narrativeVariants.dyslexiaFriendly,
+    chrome: chromeVariants.dyslexiaFriendly,
     lineHeight: lineHeightL,
     fontFamily: "Lexend",
   },
@@ -84,6 +89,7 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
   lowVision: {
     colors: variantColors.lowVision,
     narrative: narrativeVariants.lowVision,
+    chrome: chromeVariants.lowVision,
     shadows: { opacity: 0 },
     size: sizeL,
     fontFamily: "AtkinsonHyperlegible",
@@ -95,6 +101,7 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
   autismFriendly: {
     colors: variantColors.autismFriendly,
     narrative: narrativeVariants.autismFriendly,
+    chrome: chromeVariants.autismFriendly,
     shadows: { opacity: 0 },
   },
 
@@ -105,6 +112,7 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
   lowInfo: {
     colors: variantColors.lowInfo,
     narrative: narrativeVariants.lowInfo,
+    chrome: chromeVariants.lowInfo,
   },
 };
 

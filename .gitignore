@@ -80,3 +80,6 @@ packages/claude-knowledge/.claude/
 
 # Git worktrees for /auto-milestone
 .worktrees/
+
+# Superset tooling cache
+.superset/

@@ -11,7 +11,7 @@ export const MODAL_ROW_HEIGHT = MODAL_CELL_SIZE + 8;
 export const styles = StyleSheet.create((theme) => ({
   headerSafeArea: {
     flex: 1,
-    backgroundColor: theme.colors.accentYellow,
+    backgroundColor: theme.colors.accentPurple,
   },
   contentArea: {
     flex: 1,
@@ -26,13 +26,13 @@ export const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[2],
     paddingBottom: theme.space[4],
-    backgroundColor: theme.colors.accentYellow,
+    backgroundColor: theme.colors.accentPurple,
     zIndex: 1,
     ...shadowStyle(theme, "hardMd"),
   },
   headerTitle: {
     ...theme.textStyles.title,
-    color: theme.colors.text,
+    color: theme.colors.accentPurpleFg,
   },
   headerSpacer: {
     width: 48,

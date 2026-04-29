@@ -96,7 +96,7 @@ function toTSObject(entries) {
 function buildLightColorMap(semantic, colorData) {
   return {
     background: resolveRef(val(semantic.background), colorData, semantic),
-    backgroundSecondary: resolveRef(val(semantic.card), colorData, semantic),
+    backgroundSecondary: resolveRef(val(semantic.muted), colorData, semantic),
     backgroundTertiary: resolveRef(val(semantic.accent), colorData, semantic),
     text: resolveRef(val(semantic.foreground), colorData, semantic),
     textSecondary: resolveRef(
@@ -111,6 +111,11 @@ function buildLightColorMap(semantic, colorData) {
     ),
     accentPrimary: resolveRef(val(semantic.primary), colorData, semantic),
     accentPurple: resolveRef(val(semantic.secondary), colorData, semantic),
+    accentPurpleFg: resolveRef(
+      val(semantic["secondary-foreground"]),
+      colorData,
+      semantic,
+    ),
     accentMint: val(colorData.color["accent-mint"]),
     accentPurpleLight: val(colorData.color["accent-purple-light"]),
     accentYellow: val(colorData.color["accent-yellow"]),
@@ -149,6 +154,7 @@ function extractThemeColors(theme) {
     accentPrimary: val(theme.interactive?.primary),
     accentPurple:
       val(theme.color?.secondary) ?? val(theme.interactive?.secondary),
+    accentPurpleFg: val(theme.interactive?.["secondary-foreground"]),
     accentMint: val(theme.color?.["accent-mint"]),
     accentPurpleLight: val(theme.color?.["accent-purple-light"]),
     accentYellow: val(theme.color?.["accent-yellow"]),
@@ -576,6 +582,7 @@ export interface Colors {
   textMuted: string;
   accentPrimary: string;
   accentPurple: string;
+  accentPurpleFg: string;
   accentMint: string;
   accentPurpleLight: string;
   accentYellow: string;
@@ -1100,10 +1107,6 @@ async function main() {
     writeFile(join(OUT, "semanticColors.ts"), semanticColorsContent),
     writeFile(join(OUT, "index.ts"), buildIndex(hasSizeL, hasLineHeightL)),
   ]);
-
-  console.log(
-    "Built build/unistyles/ with palette, tokens, colorModes, variants, narrative, semanticColors, index",
-  );
 }
 
 main().catch((err) => {

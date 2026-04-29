@@ -20,7 +20,13 @@ import {
   transition,
   shadow,
 } from "./tokens";
-import { narrativeModes, type Narrative } from "./adapter";
+import {
+  narrativeModes,
+  lightChromeColors,
+  darkChromeColors,
+  type Narrative,
+  type Chrome,
+} from "./adapter";
 
 /** Size scale type - either normal or large */
 export type SizeScale = typeof size | typeof sizeL;
@@ -61,6 +67,7 @@ export interface TextStyles {
 export interface ComposedTheme {
   colors: Colors;
   narrative: Narrative;
+  chrome: Chrome;
   shadows: { opacity: number };
   space: typeof space;
   size: SizeScale;
@@ -105,6 +112,14 @@ export function composeTheme(
       stories: { ...baseNarrative.stories, ...variantDef.narrative.stories },
       relief: { ...baseNarrative.relief, ...variantDef.narrative.relief },
     };
+  }
+
+  // Compose chrome: base from colorMode, then variant overrides
+  const baseChrome =
+    colorMode === "light" ? lightChromeColors : darkChromeColors;
+  let chrome: Chrome = { ...baseChrome };
+  if (variantDef.chrome) {
+    chrome = { ...chrome, ...variantDef.chrome };
   }
 
   // Determine shadow opacity
@@ -187,6 +202,7 @@ export function composeTheme(
   return {
     colors,
     narrative,
+    chrome,
     shadows: { opacity: shadowOpacity },
     space,
     size: sizeScale,

@@ -1,7 +1,6 @@
 import React, { Suspense } from "react";
 import { ScrollView, View, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useUnistyles } from "react-native-unistyles";
 import { Text } from "../../components/Text";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { SettingsSection } from "../../components/SettingsSection";
@@ -29,19 +28,16 @@ function DensityPicker() {
 }
 
 export function SettingsScreen() {
-  const { theme } = useUnistyles();
-
   return (
-    <SafeAreaView
-      edges={["top"]}
-      style={{ flex: 1, backgroundColor: theme.colors.accentYellow }}
-    >
+    <SafeAreaView edges={["top"]} style={styles.safeArea}>
       <View style={styles.header}>
-        <Text variant="display">Settings</Text>
+        <Text variant="display" style={styles.headerTitle}>
+          Settings
+        </Text>
       </View>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
-        style={{ backgroundColor: theme.colors.background }}
+        style={styles.scrollContainer}
       >
         <ThemeSwitcher />
 

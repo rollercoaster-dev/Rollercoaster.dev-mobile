@@ -16,7 +16,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import { useQuery } from "@evolu/react";
-import { useUnistyles } from "react-native-unistyles";
 import { Text } from "../../components/Text";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { IconButton } from "../../components/IconButton";
@@ -559,13 +558,9 @@ function useStepEvidenceCounts(
 
 export function FocusModeScreen({ route }: FocusModeNavProps) {
   const navigation = useNavigation();
-  const { theme } = useUnistyles();
 
   return (
-    <SafeAreaView
-      edges={["top"]}
-      style={{ flex: 1, backgroundColor: theme.colors.accentYellow }}
-    >
+    <SafeAreaView edges={["top"]} style={styles.safeArea}>
       <View style={styles.topBar}>
         <IconButton
           icon={
@@ -577,11 +572,13 @@ export function FocusModeScreen({ route }: FocusModeNavProps) {
           accessibilityLabel="Go back"
           size="sm"
         />
-        <Text variant="label">Focus Mode</Text>
+        <Text variant="label" style={styles.topBarTitle}>
+          Focus Mode
+        </Text>
         <View style={styles.spacer} />
       </View>
       <KeyboardAvoidingView
-        style={{ flex: 1, backgroundColor: theme.colors.background }}
+        style={styles.keyboardAvoidingView}
         {...KEYBOARD_AVOIDING_PROPS}
       >
         <ErrorBoundary>
