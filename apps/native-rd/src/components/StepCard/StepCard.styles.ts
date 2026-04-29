@@ -59,17 +59,20 @@ export const styles = StyleSheet.create((theme) => ({
   plannedTypesRow: {
     marginTop: theme.space[1],
   },
-  hintText: {
-    fontSize: theme.size.sm,
-    fontFamily: theme.fontFamily.body,
-    color: theme.colors.warning,
-    fontWeight: theme.fontWeight.semibold,
-  },
   checkboxRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: theme.space[3],
     marginTop: theme.space[1],
+  },
+  quickNoteSection: {
+    gap: theme.space[2],
+  },
+  quickNoteLabel: {
+    fontSize: theme.size.sm,
+    fontFamily: theme.fontFamily.body,
+    fontWeight: theme.fontWeight.semibold,
+    color: theme.colors.text,
   },
   quickNoteRow: {
     flexDirection: "row",

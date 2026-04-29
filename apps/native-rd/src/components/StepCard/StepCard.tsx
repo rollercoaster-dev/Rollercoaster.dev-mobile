@@ -91,9 +91,6 @@ export function StepCard({
   const blockerOption = isBlocked
     ? getMissingEvidenceOption(plannedTypes!, capturedTypes)
     : null;
-  const hintText = blockerOption
-    ? `Add ${blockerOption.icon} ${blockerOption.label} to complete`
-    : null;
 
   // Quick-note: show when text is planned, not yet captured, and step is not complete
   const showQuickNote =
@@ -123,11 +120,10 @@ export function StepCard({
     }
   };
 
-  const checkboxLabel = blockerOption
-    ? `Mark complete, requires ${blockerOption.icon} ${blockerOption.label}`
-    : isCompleted
-      ? "Completed"
-      : "Mark complete";
+  const checkboxLabel = isCompleted ? "Completed" : "Mark complete";
+  const checkboxA11yHint = blockerOption
+    ? `Add ${blockerOption.label} to complete this step`
+    : undefined;
 
   return (
     <Card>
@@ -180,49 +176,49 @@ export function StepCard({
           </View>
         )}
 
-        {hintText && (
-          <Text style={styles.hintText} accessible accessibilityRole="text">
-            {hintText}
-          </Text>
-        )}
-
         <View style={styles.checkboxRow}>
           <Checkbox
             checked={isCompleted}
             onToggle={handleCheckboxPress}
             label={checkboxLabel}
             disabled={isBlocked}
+            accessibilityHint={checkboxA11yHint}
           />
         </View>
 
         {showQuickNote && (
-          <View style={styles.quickNoteRow}>
-            <TextInput
-              ref={quickNoteInputRef}
-              style={styles.quickNoteInput}
-              value={quickNoteText}
-              onChangeText={setQuickNoteText}
-              onFocus={onQuickNoteFocus}
-              placeholder="Quick note..."
-              placeholderTextColor={theme.colors.textMuted}
-              returnKeyType="done"
-              onSubmitEditing={handleQuickNoteSubmit}
-              testID="step-card-quick-note-input"
-              accessible
-              accessibilityLabel="Quick note"
-              accessibilityHint="Type a quick note for this step, then tap Add to save it"
-            />
-            <Pressable
-              onPress={handleQuickNoteSubmit}
-              style={styles.quickNoteButton}
-              testID="step-card-quick-note-add-button"
-              accessible
-              accessibilityRole="button"
-              accessibilityLabel="Add quick note"
-              accessibilityHint="Saves this quick note to the current step"
-            >
-              <Text style={styles.quickNoteButtonText}>Add</Text>
-            </Pressable>
+          <View style={styles.quickNoteSection}>
+            <Text style={styles.quickNoteLabel} accessibilityRole="text">
+              Add a note to complete this step
+            </Text>
+            <View style={styles.quickNoteRow}>
+              <TextInput
+                ref={quickNoteInputRef}
+                style={styles.quickNoteInput}
+                value={quickNoteText}
+                onChangeText={setQuickNoteText}
+                onFocus={onQuickNoteFocus}
+                placeholder="Quick note..."
+                placeholderTextColor={theme.colors.textMuted}
+                returnKeyType="done"
+                onSubmitEditing={handleQuickNoteSubmit}
+                testID="step-card-quick-note-input"
+                accessible
+                accessibilityLabel="Quick note"
+                accessibilityHint="Add a note to complete this step"
+              />
+              <Pressable
+                onPress={handleQuickNoteSubmit}
+                style={styles.quickNoteButton}
+                testID="step-card-quick-note-add-button"
+                accessible
+                accessibilityRole="button"
+                accessibilityLabel="Add quick note"
+                accessibilityHint="Saves this quick note to the current step"
+              >
+                <Text style={styles.quickNoteButtonText}>Add</Text>
+              </Pressable>
+            </View>
           </View>
         )}
       </ScrollView>

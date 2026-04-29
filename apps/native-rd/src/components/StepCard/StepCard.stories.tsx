@@ -93,6 +93,59 @@ export const Interactive: Story = {
   },
 };
 
+export const BlockedRequiresText: Story = {
+  render: () => (
+    <StepCard
+      step={makeStep({
+        status: "in-progress",
+        evidenceCount: 0,
+        plannedEvidenceTypes: ["text"],
+        capturedEvidenceTypes: [],
+      })}
+      stepIndex={0}
+      totalSteps={3}
+      onToggleComplete={() => {}}
+      onEvidenceTap={() => {}}
+      onQuickNote={() => {}}
+    />
+  ),
+};
+
+export const BlockedRequiresPhoto: Story = {
+  render: () => (
+    <StepCard
+      step={makeStep({
+        status: "in-progress",
+        evidenceCount: 0,
+        plannedEvidenceTypes: ["photo"],
+        capturedEvidenceTypes: [],
+      })}
+      stepIndex={0}
+      totalSteps={3}
+      onToggleComplete={() => {}}
+      onEvidenceTap={() => {}}
+    />
+  ),
+};
+
+export const MultiplePlannedTypes: Story = {
+  render: () => (
+    <StepCard
+      step={makeStep({
+        status: "in-progress",
+        evidenceCount: 0,
+        plannedEvidenceTypes: ["photo", "text"],
+        capturedEvidenceTypes: [],
+      })}
+      stepIndex={0}
+      totalSteps={3}
+      onToggleComplete={() => {}}
+      onEvidenceTap={() => {}}
+      onQuickNote={() => {}}
+    />
+  ),
+};
+
 const storyStyles = StyleSheet.create((theme) => ({
   grid: {
     gap: theme.space[4],
