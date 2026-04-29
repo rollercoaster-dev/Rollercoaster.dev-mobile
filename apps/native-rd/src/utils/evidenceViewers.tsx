@@ -99,7 +99,6 @@ export function useEvidenceViewer() {
 
     switch (evidence.type) {
       case "photo":
-      case "screenshot":
         if (evidence.uri) {
           setPhotoViewer({ uri: evidence.uri, description: evidence.title });
         } else {

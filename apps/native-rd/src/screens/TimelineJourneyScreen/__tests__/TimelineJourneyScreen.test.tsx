@@ -35,7 +35,6 @@ jest.mock("../../../db", () => ({
   StepStatus: { pending: "pending", completed: "completed" },
   EvidenceType: {
     photo: "photo",
-    screenshot: "screenshot",
     text: "text",
     voice_memo: "voice_memo",
     video: "video",
@@ -77,7 +76,7 @@ const STEP_EVIDENCE = [
   {
     id: "ev-1",
     type: "photo",
-    description: "Screenshot",
+    description: "Photo proof",
     uri: "/photo.jpg",
     stepId: "step-1",
   },
@@ -219,6 +218,6 @@ describe("TimelineJourneyScreen", () => {
     renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
     // Expand first step
     fireEvent.press(screen.getByLabelText("Read docs, Done"));
-    expect(screen.getByText("Screenshot")).toBeOnTheScreen();
+    expect(screen.getByText("Photo proof")).toBeOnTheScreen();
   });
 });

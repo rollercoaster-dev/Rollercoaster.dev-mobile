@@ -61,15 +61,15 @@ A manageable piece of a goal.
 
 Proof of work. Attached to a goal or a step.
 
-| Field       | Type          | Notes                                                                            |
-| ----------- | ------------- | -------------------------------------------------------------------------------- |
-| id          | string (ULID) | Primary key                                                                      |
-| goal_id     | string        | Nullable — set if attached to a goal                                             |
-| step_id     | string        | Nullable — set if attached to a step                                             |
-| type        | enum          | `photo` \| `screenshot` \| `text` \| `voice_memo` \| `video` \| `link` \| `file` |
-| uri         | string        | Local file path or URL                                                           |
-| description | string        | Optional caption                                                                 |
-| created_at  | timestamp     |                                                                                  |
+| Field       | Type          | Notes                                                            |
+| ----------- | ------------- | ---------------------------------------------------------------- |
+| id          | string (ULID) | Primary key                                                      |
+| goal_id     | string        | Nullable — set if attached to a goal                             |
+| step_id     | string        | Nullable — set if attached to a step                             |
+| type        | enum          | `photo` \| `text` \| `voice_memo` \| `video` \| `link` \| `file` |
+| uri         | string        | Local file path or URL                                           |
+| description | string        | Optional caption                                                 |
+| created_at  | timestamp     |                                                                  |
 
 Exactly one of `goal_id` or `step_id` is set. Evidence lives at both levels because sometimes proof is per-step (Tomás photographing each circuit) and sometimes it's for the whole goal (Lina's before/after of the section).
 
@@ -289,7 +289,7 @@ All entities use ULIDs (Universally Unique Lexicographically Sortable Identifier
 | ------------------------ | -------------- | ----------------------------------------------------------------------------------------------- |
 | **Goal**                 | ✅ Implemented | `src/db/schema.ts`, full CRUD in `src/db/queries.ts`                                            |
 | **Step**                 | ✅ Implemented | Full CRUD including reorder support                                                             |
-| **Evidence**             | ✅ Implemented | All 7 types (photo, screenshot, text, voice_memo, video, link, file)                            |
+| **Evidence**             | ✅ Implemented | All 6 types (photo, text, voice_memo, video, link, file)                                        |
 | **Badge**                | ✅ Implemented | OB3 Verifiable Credential JSON + baked image URI                                                |
 | **UserSettings**         | ✅ Implemented | Singleton pattern; not in original Iteration A spec but added for theme/density/animation prefs |
 | JournalEntry             | —              | Iteration B                                                                                     |

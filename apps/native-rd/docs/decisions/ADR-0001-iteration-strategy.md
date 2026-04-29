@@ -29,7 +29,7 @@ Build the native app in four iterations. Each iteration ships as a usable, compl
 
 - Create a goal with a title and optional description
 - Break a goal into ordered steps
-- Attach evidence to goals and steps (photo, screenshot, text, voice memo, video, link, file)
+- Attach evidence to goals and steps (photo, text, voice memo, video, link, file)
 - Mark steps complete
 - Mark goal complete and earn a self-signed Open Badge (using `openbadges-core`)
 - View your badges and their evidence
@@ -46,7 +46,6 @@ Build the native app in four iterations. Each iteration ships as a usable, compl
 | Create goal (description)              | Partial   | Description only editable after creation in `EditModeScreen`, not collected at creation time                                                |
 | Break into ordered steps               | Done      | `StepList` with drag-and-drop reordering                                                                                                    |
 | Evidence: photo                        | Done      | `CapturePhoto` via `expo-image-picker`                                                                                                      |
-| Evidence: screenshot                   | Broken    | In schema + FABMenu but no capture screen; route map silently ignores it                                                                    |
 | Evidence: text                         | Done      | `CaptureTextNote`                                                                                                                           |
 | Evidence: voice memo                   | Done      | `VoiceMemoScreen` with pause/resume/playback                                                                                                |
 | Evidence: video                        | Done      | `CaptureVideoScreen` with 60s max, front/back                                                                                               |

@@ -47,7 +47,6 @@ export type EvidenceId = typeof EvidenceId.Type;
  */
 export const EvidenceType = {
   photo: "photo",
-  screenshot: "screenshot",
   text: "text",
   voice_memo: "voice_memo",
   video: "video",
@@ -103,14 +102,14 @@ export const Schema = {
     ordinal: nullOr(Int), // Ordering within goal
     status: NonEmptyString1000, // 'pending' | 'completed'
     completedAt: nullOr(DateIso),
-    plannedEvidenceTypes: nullOr(NonEmptyString1000), // JSON-encoded string[] of EvidenceType values, null = any type
+    plannedEvidenceTypes: nullOr(NonEmptyString1000), // JSON-encoded string[] of EvidenceType values, null = no evidence requirement
   },
 
   /**
    * Evidence table
    *
    * Flexible attachment of evidence to Goal OR Step (exactly one).
-   * Supports multiple media types: photo, screenshot, text, voice_memo, video, link, file.
+   * Supports multiple media types: photo, text, voice_memo, video, link, file.
    * Application must validate exactly one of goalId/stepId is set.
    */
   evidence: {

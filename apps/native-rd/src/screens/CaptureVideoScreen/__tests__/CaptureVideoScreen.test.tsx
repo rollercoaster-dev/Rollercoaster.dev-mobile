@@ -67,7 +67,6 @@ jest.mock("../../../db", () => ({
   createEvidence: jest.fn(),
   EvidenceType: {
     photo: "photo",
-    screenshot: "screenshot",
     text: "text",
     voice_memo: "voice_memo",
     video: "video",

@@ -107,9 +107,9 @@ This isn't a feature of a particular iteration — it's the primary interaction 
 
 The core loop. Create a goal, break it into steps, complete steps, earn a self-signed badge. Private, personal, no verification needed. This is Lina's story — a small way to honour something only you understand the weight of. It's Sam's story — showing up to a meeting and writing one line about it. It's Ava's story — navigating a months-long diagnostic process one phone call at a time.
 
-**What's done:** Goal creation, ordered steps with drag-and-drop, 6/7 evidence types (photo, text, voice memo, video, link, file), step/goal completion, Ed25519-signed OB3 badges with PNG baking, badge designer (shape/color/icon/weight), 14 themes, JSON + image export, fully offline.
+**What's done:** Goal creation, ordered steps with drag-and-drop, 6 evidence types (photo, text, voice memo, video, link, file), step/goal completion, Ed25519-signed OB3 badges with PNG baking, badge designer (shape/color/icon/weight), 14 themes, JSON + image export, fully offline.
 
-**Gaps:** Screenshot evidence (broken — route silently fails), badge detail doesn't surface evidence, task view not built, Welcome screen (#65), batch export (#67), character moments (#68). Badge designer Phase 2 (A.6, 14 issues) adds frame generators and text components.
+**Gaps:** Badge detail doesn't surface evidence, task view not built, Welcome screen (#65), batch export (#67), character moments (#68). Badge designer Phase 2 (A.6, 14 issues) adds frame generators and text components.
 
 ### Iteration B — Learning Journey (not started)
 

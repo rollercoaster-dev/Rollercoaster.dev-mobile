@@ -74,6 +74,33 @@ export const styles = StyleSheet.create((theme) => ({
     fontWeight: theme.fontWeight.semibold,
     color: theme.colors.text,
   },
+  quickActionsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: theme.space[2],
+  },
+  quickActionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.space[1],
+    backgroundColor: theme.colors.backgroundSecondary,
+    borderWidth: theme.borderWidth.medium,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.sm,
+    paddingHorizontal: theme.space[3],
+    paddingVertical: theme.space[2],
+    minHeight: 44,
+    ...shadowStyle(theme, "cardElevationSmall"),
+  },
+  quickActionIcon: {
+    fontSize: 16,
+  },
+  quickActionText: {
+    fontSize: theme.size.sm,
+    fontWeight: theme.fontWeight.bold,
+    fontFamily: theme.fontFamily.body,
+    color: theme.colors.text,
+  },
   quickNoteRow: {
     flexDirection: "row",
     alignItems: "center",

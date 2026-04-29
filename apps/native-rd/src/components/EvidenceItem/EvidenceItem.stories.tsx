@@ -54,25 +54,17 @@ export const AllTypes: Story = {
       <Text variant="label" style={storyStyles.label}>
         All Evidence Types
       </Text>
-      {(
-        [
-          "photo",
-          "screenshot",
-          "video",
-          "text",
-          "voice_memo",
-          "link",
-          "file",
-        ] as const
-      ).map((type) => (
-        <EvidenceItem
-          key={type}
-          id={type}
-          type={type}
-          label={type.replace("_", " ")}
-          onLongPress={() => {}}
-        />
-      ))}
+      {(["photo", "video", "text", "voice_memo", "link", "file"] as const).map(
+        (type) => (
+          <EvidenceItem
+            key={type}
+            id={type}
+            type={type}
+            label={type.replace("_", " ")}
+            onLongPress={() => {}}
+          />
+        ),
+      )}
     </View>
   ),
 };

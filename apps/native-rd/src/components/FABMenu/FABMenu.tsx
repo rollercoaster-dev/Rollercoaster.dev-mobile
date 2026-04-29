@@ -1,23 +1,11 @@
 import React from "react";
 import { View, Pressable, Text } from "react-native";
-import { EvidenceType } from "../../db";
-import type { EvidenceTypeValue } from "../../types/evidence";
+import {
+  EVIDENCE_CAPTURE_OPTIONS,
+  type EvidenceTypeValue,
+} from "../../types/evidence";
 import { Card } from "../Card";
 import { styles } from "./FABMenu.styles";
-
-const EVIDENCE_MENU_ITEMS: {
-  type: EvidenceTypeValue;
-  icon: string;
-  label: string;
-}[] = [
-  { type: EvidenceType.photo, icon: "\u{1F4F7}", label: "Photo" },
-  { type: EvidenceType.screenshot, icon: "\u{1F4F8}", label: "Screenshot" },
-  { type: EvidenceType.video, icon: "\u{1F3AC}", label: "Video" },
-  { type: EvidenceType.text, icon: "\u{1F4DD}", label: "Note" },
-  { type: EvidenceType.voice_memo, icon: "\u{1F3A4}", label: "Voice Memo" },
-  { type: EvidenceType.link, icon: "\u{1F517}", label: "Link" },
-  { type: EvidenceType.file, icon: "\u{1F4CE}", label: "File" },
-];
 
 export interface FABMenuProps {
   isOpen: boolean;
@@ -36,7 +24,7 @@ export function FABMenu({ isOpen, onSelectType }: FABMenuProps) {
     >
       <Card>
         <View style={styles.itemList}>
-          {EVIDENCE_MENU_ITEMS.map((item) => (
+          {EVIDENCE_CAPTURE_OPTIONS.map((item) => (
             <Pressable
               key={item.type}
               onPress={() => onSelectType(item.type)}

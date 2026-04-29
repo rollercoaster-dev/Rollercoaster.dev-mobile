@@ -61,7 +61,7 @@ Current native-rd is already close to the right model:
 
 - `badge` rows are completed awards tied to a `goalId`.
 - `useCreateBadge` generates an OB3-shaped credential from the completed goal and evidence.
-- Evidence already supports user-controlled artifacts such as photo, screenshot, text, voice memo, video, link, and file.
+- Evidence already supports user-controlled artifacts such as photo, text, voice memo, video, link, and file.
 - `png-baking` can bake and unbake OB3/OB2 badge chunks for earned credentials, which may help later for file import.
 
 The missing concept is a **source opportunity** separate from the completed local `badge`.

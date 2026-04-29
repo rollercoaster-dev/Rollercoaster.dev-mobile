@@ -19,13 +19,9 @@ const EVIDENCE_ROUTE_MAP: Record<string, string> = {
 
 describe("Evidence options", () => {
   it("covers all user-facing evidence types", () => {
-    // screenshot is not user-selectable from the action sheet
-    const excludedTypes: string[] = [EvidenceType.screenshot];
-    const userFacingTypes = Object.values(EvidenceType).filter(
-      (t) => !excludedTypes.includes(t),
+    expect([...ACTION_SHEET_TYPES].sort()).toEqual(
+      [...Object.values(EvidenceType)].sort(),
     );
-
-    expect([...ACTION_SHEET_TYPES].sort()).toEqual([...userFacingTypes].sort());
   });
 
   it("has a route for every evidence option type", () => {

@@ -15,7 +15,7 @@ const baseStep = {
 };
 
 const evidence: EvidenceItemData[] = [
-  { id: "ev-1", type: "photo", label: "Screenshot of progress" },
+  { id: "ev-1", type: "photo", label: "Progress photo" },
   { id: "ev-2", type: "link", label: "Useful article" },
 ];
 
@@ -48,13 +48,13 @@ describe("TimelineStep", () => {
 
   it("evidence section is collapsed by default", () => {
     renderWithProviders(<TimelineStep {...baseProps} />);
-    expect(screen.queryByText("Screenshot of progress")).not.toBeOnTheScreen();
+    expect(screen.queryByText("Progress photo")).not.toBeOnTheScreen();
   });
 
   it("expands evidence on header tap", () => {
     renderWithProviders(<TimelineStep {...baseProps} />);
     fireEvent.press(screen.getByLabelText("Read the docs, Active"));
-    expect(screen.getByText("Screenshot of progress")).toBeOnTheScreen();
+    expect(screen.getByText("Progress photo")).toBeOnTheScreen();
     expect(screen.getByText("Useful article")).toBeOnTheScreen();
   });
 
@@ -62,9 +62,9 @@ describe("TimelineStep", () => {
     renderWithProviders(<TimelineStep {...baseProps} />);
     const header = screen.getByLabelText("Read the docs, Active");
     fireEvent.press(header);
-    expect(screen.getByText("Screenshot of progress")).toBeOnTheScreen();
+    expect(screen.getByText("Progress photo")).toBeOnTheScreen();
     fireEvent.press(header);
-    expect(screen.queryByText("Screenshot of progress")).not.toBeOnTheScreen();
+    expect(screen.queryByText("Progress photo")).not.toBeOnTheScreen();
   });
 
   it('shows "No evidence yet" when empty', () => {

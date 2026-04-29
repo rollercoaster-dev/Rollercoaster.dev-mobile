@@ -12,7 +12,7 @@ The app stores the following data **locally on your device only**:
 
 - **Goals** — titles, descriptions, status, completion dates
 - **Steps** — titles, order, status, completion dates
-- **Evidence** — photos, screenshots, text notes, voice memos, videos, links, and files you attach to goals or steps
+- **Evidence** — photos, text notes, voice memos, videos, links, and files you attach to goals or steps
 - **Badges** — Open Badges 3.0 credentials generated when you complete a goal
 - **Preferences** — your chosen theme, text size, animation settings
 
