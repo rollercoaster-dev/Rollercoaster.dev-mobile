@@ -20,6 +20,7 @@ unset IFS
 
 export PATH="$clean_path"
 unset NODE npm_node_execpath
+export NODE_ENV="test"
 
 node_bin="$(command -v node)"
 if command -v mise >/dev/null 2>&1; then
