@@ -10,7 +10,6 @@ import { Alert, Image, Linking } from "react-native";
 jest.mock("../../../db", () => ({
   EvidenceType: {
     photo: "photo",
-    screenshot: "screenshot",
     text: "text",
     voice_memo: "voice_memo",
     video: "video",

@@ -12,6 +12,7 @@ StyleSheet.configure({
 import type { Preview } from "@storybook/react";
 import React from "react";
 import { ScrollView } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { UnistylesRuntime } from "react-native-unistyles";
 import { themeNames, type ThemeName } from "../src/themes";
 
@@ -56,9 +57,14 @@ const themeDecorator = (Story: React.ComponentType, context: any) => {
   }, [selectedTheme]);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Story />
-    </ScrollView>
+    <SafeAreaProvider>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+      >
+        <Story />
+      </ScrollView>
+    </SafeAreaProvider>
   );
 };
 

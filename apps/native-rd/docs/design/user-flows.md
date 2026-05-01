@@ -228,9 +228,6 @@ Focus Mode (any card) → FABMenu → pick type → Capture screen → back to F
 | Text Note  | CaptureTextNote  | Text editor                  |
 | Link       | CaptureLink      | URL field                    |
 | File       | CaptureFile      | Document picker              |
-| Screenshot | CapturePhoto¹    | Captured via the photo route |
-
-_¹ No dedicated CaptureScreenshot route — screenshots are stored as `EvidenceType.screenshot` but captured through CapturePhoto._
 
 ### After Capture
 
@@ -241,7 +238,7 @@ _¹ No dedicated CaptureScreenshot route — screenshots are stored as `Evidence
 ### Viewing Evidence
 
 - Tap any evidence item in the EvidenceDrawer → full-screen viewer
-- Photo/screenshot → PhotoViewerModal
+- Photo → PhotoViewerModal
 - Video → VideoPlayerModal
 - Voice memo → AudioPlayerModal
 - Text note → TextNoteViewerModal

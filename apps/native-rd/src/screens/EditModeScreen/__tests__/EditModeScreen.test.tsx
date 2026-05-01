@@ -68,7 +68,6 @@ jest.mock("../../../db", () => ({
   StepStatus: { pending: "pending", completed: "completed" },
   EvidenceType: {
     photo: "photo",
-    screenshot: "screenshot",
     text: "text",
     voice_memo: "voice_memo",
     video: "video",

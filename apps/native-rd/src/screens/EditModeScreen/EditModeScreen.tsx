@@ -10,14 +10,13 @@ import {
   KeyboardProvider,
   KeyboardAwareScrollView,
 } from "react-native-keyboard-controller";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import { useQuery } from "@evolu/react";
 import { useUnistyles } from "react-native-unistyles";
 import { Text } from "../../components/Text";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { Button } from "../../components/Button";
-import { IconButton } from "../../components/IconButton";
+import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { StepList } from "../../components/StepList";
 import { ConfirmDeleteModal } from "../ConfirmDeleteModal";
 import {
@@ -41,6 +40,7 @@ import type {
   EditModeScreenProps,
   GoalsStackParamList,
 } from "../../navigation/types";
+import { useTabScreenContentInset } from "../../navigation/useTabScreenContentInset";
 import { ModeIndicator } from "../../components/ModeIndicator";
 import { styles } from "./EditModeScreen.styles";
 
@@ -55,6 +55,7 @@ function EditContent({
 }) {
   const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
   const { theme } = useUnistyles();
+  const tabInset = useTabScreenContentInset();
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
   const stepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
@@ -234,7 +235,7 @@ function EditContent({
   return (
     <KeyboardProvider>
       <KeyboardAwareScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, tabInset]}
         bottomOffset={40}
         keyboardShouldPersistTaps="handled"
       >
@@ -332,24 +333,8 @@ export function EditModeScreen({ route }: EditModeScreenProps) {
   const { goalId, cameFromFocus = false } = route.params;
 
   return (
-    <SafeAreaView
-      edges={["top"]}
-      style={{ flex: 1, backgroundColor: theme.colors.background }}
-    >
-      <View style={styles.topBar}>
-        <IconButton
-          icon={
-            <Text variant="body" style={styles.backIcon}>
-              {"<"}
-            </Text>
-          }
-          onPress={() => navigation.goBack()}
-          accessibilityLabel="Go back"
-          size="sm"
-        />
-        <Text variant="label">Edit Goal</Text>
-        <View style={styles.spacer} />
-      </View>
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <ScreenSubHeader label="Edit Goal" onBack={() => navigation.goBack()} />
       <ErrorBoundary>
         <Suspense
           fallback={
@@ -360,6 +345,6 @@ export function EditModeScreen({ route }: EditModeScreenProps) {
         </Suspense>
       </ErrorBoundary>
       <ModeIndicator mode="edit" />
-    </SafeAreaView>
+    </View>
   );
 }

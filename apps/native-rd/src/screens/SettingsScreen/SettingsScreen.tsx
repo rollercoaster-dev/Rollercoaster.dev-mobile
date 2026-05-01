@@ -1,9 +1,9 @@
 import React, { Suspense } from "react";
 import { ScrollView, View, ActivityIndicator } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useUnistyles } from "react-native-unistyles";
 import { Text } from "../../components/Text";
+import { useTabScreenContentInset } from "../../navigation/useTabScreenContentInset";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
+import { ScreenHeader } from "../../components/ScreenHeader";
 import { SettingsSection } from "../../components/SettingsSection";
 import { SettingsRow } from "../../components/SettingsRow";
 import { ThemeSwitcher } from "../../components/ThemeSwitcher";
@@ -29,19 +29,14 @@ function DensityPicker() {
 }
 
 export function SettingsScreen() {
-  const { theme } = useUnistyles();
+  const tabInset = useTabScreenContentInset();
 
   return (
-    <SafeAreaView
-      edges={["top"]}
-      style={{ flex: 1, backgroundColor: theme.colors.accentYellow }}
-    >
-      <View style={styles.header}>
-        <Text variant="display">Settings</Text>
-      </View>
+    <View style={styles.screen}>
+      <ScreenHeader title="Settings" />
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        style={{ backgroundColor: theme.colors.background }}
+        contentContainerStyle={[styles.scrollContent, tabInset]}
+        style={styles.scrollContainer}
       >
         <ThemeSwitcher />
 
@@ -58,6 +53,6 @@ export function SettingsScreen() {
 
         <Text style={styles.version}>Built with Expo + Evolu + Unistyles</Text>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

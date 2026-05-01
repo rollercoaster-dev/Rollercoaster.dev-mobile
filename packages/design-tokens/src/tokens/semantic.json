@@ -28,9 +28,9 @@
     "$type": "color"
   },
   "muted": {
-    "$value": "{color.gray.50}",
+    "$value": "#f0f0f0",
     "$type": "color",
-    "$description": "Subtle background"
+    "$description": "Elevated surface — distinct from background, used for headers, cards, sidebars"
   },
   "muted-foreground": {
     "$value": "{color.gray.500}",

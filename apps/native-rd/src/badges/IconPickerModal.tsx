@@ -16,10 +16,11 @@ import {
   View,
   type ListRenderItemInfo,
 } from "react-native";
-import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useUnistyles } from "react-native-unistyles";
 import type { IconWeight } from "phosphor-react-native";
 
+import { HeaderBand } from "../components/ScreenHeader";
 import { getIconComponent } from "./iconRegistry";
 import {
   searchIcons,
@@ -237,13 +238,8 @@ export function IconPickerModal({
           when this Modal is rendered inside a parent ScrollView */}
       {visible && (
         <SafeAreaProvider>
-          <SafeAreaView
-            edges={["top"]}
-            style={styles.headerSafeArea}
-            testID={testID}
-          >
-            {/* Header (matches BadgeDesignerScreen topBar) */}
-            <View style={styles.header}>
+          <View style={styles.modalRoot} testID={testID}>
+            <HeaderBand>
               <Pressable
                 onPress={onClose}
                 accessibilityRole="button"
@@ -251,22 +247,20 @@ export function IconPickerModal({
                 style={styles.closeButton}
               >
                 {XIcon ? (
-                  <XIcon size={24} color={theme.colors.text} />
+                  <XIcon
+                    size={24}
+                    color={theme.colors.accentPurpleFg}
+                    weight="bold"
+                  />
                 ) : (
-                  <Text
-                    style={{
-                      color: theme.colors.text,
-                      fontSize: 18,
-                      fontWeight: "700",
-                    }}
-                  >
-                    {"\u2715"}
-                  </Text>
+                  <Text style={styles.closeIconFallback}>{"\u2715"}</Text>
                 )}
               </Pressable>
-              <Text style={styles.headerTitle}>Choose Icon</Text>
+              <Text style={styles.headerTitle} accessibilityRole="header">
+                Choose Icon
+              </Text>
               <View style={styles.headerSpacer} />
-            </View>
+            </HeaderBand>
 
             <View style={styles.contentArea}>
               {/* Preview bar */}
@@ -413,7 +407,7 @@ export function IconPickerModal({
                 })}
               </View>
             </View>
-          </SafeAreaView>
+          </View>
         </SafeAreaProvider>
       )}
     </Modal>

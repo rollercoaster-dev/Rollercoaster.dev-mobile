@@ -198,6 +198,7 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
             </Text>
           }
           onPress={() => navigation.goBack()}
+          tone="ghost"
           accessibilityLabel="Go back"
           size="sm"
         />

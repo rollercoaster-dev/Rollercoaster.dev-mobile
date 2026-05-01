@@ -29,7 +29,7 @@ Build the native app in four iterations. Each iteration ships as a usable, compl
 
 - Create a goal with a title and optional description
 - Break a goal into ordered steps
-- Attach evidence to goals and steps (photo, screenshot, text, voice memo, video, link, file)
+- Attach evidence to goals and steps (photo, text, voice memo, video, link, file)
 - Mark steps complete
 - Mark goal complete and earn a self-signed Open Badge (using `openbadges-core`)
 - View your badges and their evidence
@@ -40,33 +40,32 @@ Build the native app in four iterations. Each iteration ships as a usable, compl
 
 **Current state (2026-02-28):**
 
-| Feature                                | Status    | Notes                                                                                                                                       |
-| -------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Create goal (title)                    | Done      | `NewGoalModal` → immediate navigation to `BadgeDesignerScreen`                                                                              |
-| Create goal (description)              | Partial   | Description only editable after creation in `EditModeScreen`, not collected at creation time                                                |
-| Break into ordered steps               | Done      | `StepList` with drag-and-drop reordering                                                                                                    |
-| Evidence: photo                        | Done      | `CapturePhoto` via `expo-image-picker`                                                                                                      |
-| Evidence: screenshot                   | Broken    | In schema + FABMenu but no capture screen; route map silently ignores it                                                                    |
-| Evidence: text                         | Done      | `CaptureTextNote`                                                                                                                           |
-| Evidence: voice memo                   | Done      | `VoiceMemoScreen` with pause/resume/playback                                                                                                |
-| Evidence: video                        | Done      | `CaptureVideoScreen` with 60s max, front/back                                                                                               |
-| Evidence: link                         | Done      | `CaptureLinkScreen` with URL validation                                                                                                     |
-| Evidence: file                         | Done      | `CaptureFile` with mime/size validation                                                                                                     |
-| Mark steps complete                    | Done      | `FocusModeScreen` toggle                                                                                                                    |
-| Mark goal complete + earn badge        | Done      | `CompletionFlowScreen` → `useCreateBadge` (Ed25519 signing, PNG baking)                                                                     |
-| OB3 signing                            | Partial   | Uses `eddsa-raw-json-iteration-a` cryptosuite, not spec-compliant `eddsa-rdfc-2022` (intentional — full compliance deferred to Iteration D) |
-| Badge designer                         | Done      | Shape, color, icon, weight; new-goal and redesign modes                                                                                     |
-| View badges list                       | Done      | `BadgesScreen`                                                                                                                              |
-| View badge + evidence                  | Partial   | `BadgeDetailScreen` shows badge image + credential metadata but does NOT surface the goal's evidence                                        |
-| Local-first data                       | Done      | Evolu (SQLite + CRDT) + `expo-file-system`                                                                                                  |
-| Offline                                | Done      | No network dependency in any path                                                                                                           |
-| 14 themes (7 variants × 2 color modes) | Done      | `ThemeSwitcher` in Settings with live preview                                                                                               |
-| Export badge JSON                      | Done      | `expo-sharing` share sheet                                                                                                                  |
-| Export badge image                     | Done      | `expo-sharing` share sheet                                                                                                                  |
-| Task view (next best step)             | Not built | The cross-goal "one next step per active goal" screen described in the product vision is not implemented                                    |
-| Welcome screen (#65)                   | Not built | First-launch experience                                                                                                                     |
-| Batch export (#67)                     | Not built | Export all badges + goals at once                                                                                                           |
-| Character moments (#68)                | Not built | Personality-driven empty states and milestones                                                                                              |
+| Feature                                | Status    | Notes                                                                                                                                                          |
+| -------------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Create goal (title)                    | Done      | `NewGoalModal` → immediate navigation to `BadgeDesignerScreen`                                                                                                 |
+| Create goal (description)              | Partial   | Description only editable after creation in `EditModeScreen`, not collected at creation time                                                                   |
+| Break into ordered steps               | Done      | `StepList` with drag-and-drop reordering                                                                                                                       |
+| Evidence: photo                        | Done      | `CapturePhoto` via `expo-image-picker`                                                                                                                         |
+| Evidence: text                         | Done      | `CaptureTextNote`                                                                                                                                              |
+| Evidence: voice memo                   | Done      | `VoiceMemoScreen` with pause/resume/playback                                                                                                                   |
+| Evidence: video                        | Done      | `CaptureVideoScreen` with 60s max, front/back                                                                                                                  |
+| Evidence: link                         | Done      | `CaptureLinkScreen` with URL validation                                                                                                                        |
+| Evidence: file                         | Done      | `CaptureFile` with mime/size validation                                                                                                                        |
+| Mark steps complete                    | Done      | `FocusModeScreen` toggle                                                                                                                                       |
+| Mark goal complete + earn badge        | Done      | `CompletionFlowScreen` → `useCreateBadge` (Ed25519 signing, PNG baking)                                                                                        |
+| OB3 signing                            | Partial   | Not externally verifiable — 6 spec gaps tracked in [OB3 Compliance Status](../architecture/ob3-compliance-status.md). Full compliance deferred to Iteration D. |
+| Badge designer                         | Done      | Shape, color, icon, weight; new-goal and redesign modes                                                                                                        |
+| View badges list                       | Done      | `BadgesScreen`                                                                                                                                                 |
+| View badge + evidence                  | Partial   | `BadgeDetailScreen` shows badge image + credential metadata but does NOT surface the goal's evidence                                                           |
+| Local-first data                       | Done      | Evolu (SQLite + CRDT) + `expo-file-system`                                                                                                                     |
+| Offline                                | Done      | No network dependency in any path                                                                                                                              |
+| 14 themes (7 variants × 2 color modes) | Done      | `ThemeSwitcher` in Settings with live preview                                                                                                                  |
+| Export badge JSON                      | Done      | `expo-sharing` share sheet                                                                                                                                     |
+| Export badge image                     | Done      | `expo-sharing` share sheet                                                                                                                                     |
+| Task view (next best step)             | Not built | The cross-goal "one next step per active goal" screen described in the product vision is not implemented                                                       |
+| Welcome screen (#65)                   | Not built | First-launch experience                                                                                                                                        |
+| Batch export (#67)                     | Not built | Export all badges + goals at once                                                                                                                              |
+| Character moments (#68)                | Not built | Personality-driven empty states and milestones                                                                                                                 |
 
 **Badge Designer extended scope (A.5 + A.6):**
 
@@ -174,7 +173,7 @@ A.5 (Phase 1) is complete — basic badge designer with shape, color, icon, and 
 - Mentor role — a verified badge holder can verify others in that domain
 - Badge import — receive a badge issued by an institutional server (monorepo federation)
 - Optional cloud community features (discovery, public profiles)
-- Upgrade OB3 proof from `eddsa-raw-json-iteration-a` to spec-compliant `eddsa-rdfc-2022` cryptosuite
+- Full OB3 spec compliance — close all 6 gaps tracked in [OB3 Compliance Status](../architecture/ob3-compliance-status.md): cryptosuite upgrade to `eddsa-rdfc-2022`, RDFC-1.0 canonicalization, spec-compliant `did:key` encoding, and 4 schema-shape fixes (top-level `name`/`issuanceDate`, `creator` as object, `proof` as array)
 
 **Not in scope:**
 

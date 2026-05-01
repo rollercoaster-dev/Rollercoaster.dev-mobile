@@ -19,7 +19,7 @@ export const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius.sm,
     padding: theme.space[6],
     alignItems: "center",
-    ...shadowStyle(theme, "hardMd"),
+    ...shadowStyle(theme, "modalElevation"),
   },
   badgeImage: {
     width: 120,

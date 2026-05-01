@@ -119,6 +119,7 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
               </Text>
             }
             onPress={() => navigation.goBack()}
+            tone="ghost"
             accessibilityLabel="Go back"
             size="sm"
           />
@@ -165,6 +166,7 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
             </Text>
           }
           onPress={handleGoBack}
+          tone="ghost"
           accessibilityLabel="Go back"
           size="sm"
         />
@@ -221,6 +223,7 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
               <IconButton
                 icon={<Text variant="body">{"\u23F8\uFE0F"}</Text>}
                 onPress={pauseRecording}
+                tone="surface"
                 accessibilityLabel="Pause recording"
                 size="md"
               />
@@ -229,6 +232,7 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
               <IconButton
                 icon={<Text variant="body">{"\u25B6\uFE0F"}</Text>}
                 onPress={resumeRecording}
+                tone="surface"
                 accessibilityLabel="Resume recording"
                 size="md"
               />

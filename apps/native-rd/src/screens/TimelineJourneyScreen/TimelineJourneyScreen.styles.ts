@@ -1,24 +1,13 @@
 import { StyleSheet } from "react-native-unistyles";
-import { shadowStyle } from "../../styles/shadows";
 
 export const styles = StyleSheet.create((theme) => ({
-  topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: theme.space[4],
-    paddingVertical: theme.space[2],
-    paddingBottom: theme.space[4],
-    backgroundColor: theme.colors.accentYellow,
-    zIndex: 1,
-    ...shadowStyle(theme, "hardMd"),
+  screen: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
   },
-  backIcon: {
-    fontSize: 18,
-    fontWeight: theme.fontWeight.bold,
-  },
-  spacer: {
-    width: 48,
+  body: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
   },
   loadingIndicator: {
     marginTop: theme.space[8],

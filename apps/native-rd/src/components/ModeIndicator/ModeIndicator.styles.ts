@@ -11,9 +11,6 @@ export const styles = StyleSheet.create((theme) => ({
     alignItems: "center" as const,
     justifyContent: "center" as const,
     gap: theme.space[2],
-    backgroundColor: theme.colors.backgroundSecondary,
-    borderTopWidth: theme.borderWidth.medium,
-    borderTopColor: theme.colors.border,
   },
   icon: {
     fontSize: 16,

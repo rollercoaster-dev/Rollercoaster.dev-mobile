@@ -7,7 +7,6 @@ import {
   View,
 } from "react-native";
 import { captureBadge } from "../../badges/captureBadge";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -15,9 +14,9 @@ import { useUnistyles } from "react-native-unistyles";
 import { useQuery } from "@evolu/react";
 
 import { Text } from "../../components/Text";
-import { IconButton } from "../../components/IconButton";
 import { Button } from "../../components/Button";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
+import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { BadgeRenderer } from "../../badges/BadgeRenderer";
 import { ShapeSelector } from "../../badges/ShapeSelector";
 import { ColorPicker } from "../../badges/ColorPicker";
@@ -399,14 +398,7 @@ function DesignEditor({
           setTopBarHeight((prev) => (prev === next ? prev : next));
         }}
       >
-        <IconButton
-          icon={<Text variant="headline">{"\u2190"}</Text>}
-          onPress={onBack}
-          variant="ghost"
-          accessibilityLabel="Go back"
-        />
-        <Text style={styles.topBarTitle}>Design Badge</Text>
-        <View style={styles.spacer} />
+        <ScreenSubHeader label="Design Badge" onBack={onBack} />
       </View>
 
       <Animated.View
@@ -659,10 +651,7 @@ export function BadgeDesignerScreen({
   }
 
   return (
-    <SafeAreaView
-      edges={["top"]}
-      style={{ flex: 1, backgroundColor: theme.colors.accentYellow }}
-    >
+    <View style={styles.screen}>
       <ErrorBoundary>
         <Suspense
           fallback={
@@ -672,6 +661,6 @@ export function BadgeDesignerScreen({
           {content}
         </Suspense>
       </ErrorBoundary>
-    </SafeAreaView>
+    </View>
   );
 }

@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome B — Wallpaper Gallery</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #e5e5e5;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 24px 0;
+      font-family: 'Instrument Sans', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Phone frame ─────────────────── */
+    .phone {
+      width: 390px;
+      min-height: 844px;
+      border: 8px solid #0a0a0a;
+      border-radius: 36px;
+      overflow: hidden;
+      position: relative;
+      background: #fafafa;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Brand hero (consistent across) ── */
+    .hero {
+      background: #ffe50c;
+      border-bottom: 3px solid #0a0a0a;
+      padding: 56px 24px 24px;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .logo-mark { width: 56px; height: 56px; flex-shrink: 0; }
+    .hero-greeting {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      opacity: 0.7;
+      margin-bottom: 2px;
+      color: #0a0a0a;
+    }
+    .hero-title {
+      font-family: 'Anybody', system-ui, sans-serif;
+      font-size: 26px;
+      font-weight: 900;
+      line-height: 1.05;
+      color: #0a0a0a;
+      letter-spacing: -0.5px;
+    }
+    .hero-sub {
+      font-size: 14px;
+      color: #262626;
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+
+    /* ── Gallery scroll container ───── */
+    .gallery-wrap {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      background: #fafafa;
+    }
+
+    .gallery-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #525252;
+      padding: 0 4px;
+      margin-bottom: -4px;
+    }
+
+    /* ── Wallpaper card (each is a mini-mockup IN that theme) ── */
+    .wp {
+      all: unset;
+      cursor: pointer;
+      display: block;
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+      border: 3px solid #0a0a0a;
+      box-shadow: 4px 4px 0 rgba(10,10,10,0.9);
+      transition: transform 0.1s ease;
+    }
+    .wp:hover { transform: translate(-1px, -1px); }
+    .wp:focus-visible { outline: 3px solid #2dd4bf; outline-offset: 3px; }
+    .wp[aria-pressed="true"] {
+      outline: 4px solid #2dd4bf;
+      outline-offset: 3px;
+    }
+    .wp[aria-pressed="true"]::after {
+      content: '✓';
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 32px;
+      height: 32px;
+      background: #2dd4bf;
+      border: 3px solid #0a0a0a;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      color: #0a0a0a;
+      z-index: 2;
+    }
+
+    /* ── Mockup contents (rendered in each theme) ── */
+    .mockup {
+      padding: 14px 14px 16px;
+      min-height: 170px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .mockup-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .mockup-title {
+      font-weight: 900;
+      font-size: 18px;
+      letter-spacing: -0.3px;
+    }
+    .mockup-mood {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      opacity: 0.7;
+    }
+    .mockup-card {
+      border: 2px solid;
+      border-radius: 6px;
+      padding: 10px 12px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .mockup-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      border: 2px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 14px;
+      color: #ffffff;
+    }
+    .mockup-card-text { flex: 1; min-width: 0; }
+    .mockup-card-title {
+      font-weight: 700;
+      font-size: 13px;
+      line-height: 1.2;
+    }
+    .mockup-card-meta {
+      font-size: 11px;
+      margin-top: 2px;
+    }
+    .mockup-row { display: flex; gap: 8px; align-items: center; }
+    .mockup-cta {
+      padding: 8px 14px;
+      border: 2px solid;
+      border-radius: 6px;
+      font-weight: 800;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .mockup-pill {
+      padding: 4px 10px;
+      border: 2px solid;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .mockup-name {
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.95);
+      border-top: 2px solid;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .mockup-name .desc { font-weight: 400; opacity: 0.7; font-size: 11px; }
+
+    /* ── Per-theme mockup styling ─────────────── */
+    /* light-default */
+    .wp-light .mockup { background: #ffffff; color: #0a0a0a; font-family: 'Instrument Sans', system-ui, sans-serif; }
+    .wp-light .mockup-title { color: #0a0a0a; }
+    .wp-light .mockup-card { background: #ffffff; border-color: #0a0a0a; box-shadow: 2px 2px 0 rgba(10,10,10,0.9); }
+    .wp-light .mockup-badge { background: #a78bfa; border-color: #0a0a0a; }
+    .wp-light .mockup-card-meta { color: #525252; }
+    .wp-light .mockup-cta { background: #2dd4bf; color: #0a0a0a; border-color: #0a0a0a; box-shadow: 2px 2px 0 rgba(10,10,10,0.9); }
+    .wp-light .mockup-pill { background: #ffe50c; border-color: #0a0a0a; }
+    .wp-light .mockup-name { background: #ffffff; border-top-color: #0a0a0a; color: #0a0a0a; }
+
+    /* dark-default — Night Ride */
+    .wp-dark .mockup { background: #1a1033; color: #fafafa; font-family: 'Instrument Sans', system-ui, sans-serif; }
+    .wp-dark .mockup-card { background: #2a1d4e; border-color: #cfc7e0; }
+    .wp-dark .mockup-badge { background: #c4b5fd; border-color: #cfc7e0; color: #0a0a0a; }
+    .wp-dark .mockup-card-meta { color: #cfc7e0; }
+    .wp-dark .mockup-cta { background: #5eead4; color: #0a0a0a; border-color: #5eead4; }
+    .wp-dark .mockup-pill { background: #ffe50c; color: #0a0a0a; border-color: #ffe50c; }
+    .wp-dark .mockup-name { background: #2a1d4e; border-top-color: #cfc7e0; color: #fafafa; }
+    .wp-dark .mockup-name .desc { color: #cfc7e0; }
+
+    /* light-highContrast — Bold Ink */
+    .wp-hc { box-shadow: none; border-width: 4px; }
+    .wp-hc .mockup { background: #ffffff; color: #000000; font-family: 'Instrument Sans', system-ui, sans-serif; }
+    .wp-hc .mockup-card { background: #ffffff; border-color: #000000; border-width: 3px; }
+    .wp-hc .mockup-badge { background: #4c1d95; border-color: #000000; border-width: 3px; }
+    .wp-hc .mockup-card-meta { color: #000000; }
+    .wp-hc .mockup-cta { background: #000000; color: #ffffff; border-color: #000000; }
+    .wp-hc .mockup-pill { background: #ffe50c; border-color: #000000; color: #000000; border-width: 3px; }
+    .wp-hc .mockup-name { background: #ffffff; border-top-color: #000000; border-top-width: 3px; color: #000000; }
+
+    /* light-dyslexia — Warm Studio */
+    .wp-dys .mockup { background: #f8f5e4; color: #2d2014; font-family: 'Lexend', system-ui, sans-serif; line-height: 1.7; }
+    .wp-dys .mockup-card { background: #ffffff; border-color: #5a4a35; }
+    .wp-dys .mockup-badge { background: #8b5cf6; border-color: #5a4a35; }
+    .wp-dys .mockup-card-meta { color: #5a4a35; }
+    .wp-dys .mockup-cta { background: #d97706; color: #ffffff; border-color: #5a4a35; box-shadow: 2px 2px 0 rgba(90,74,53,0.6); }
+    .wp-dys .mockup-pill { background: #f4c430; border-color: #5a4a35; color: #2d2014; }
+    .wp-dys .mockup-name { background: #f8f5e4; border-top-color: #5a4a35; color: #2d2014; font-family: 'Lexend', system-ui, sans-serif; }
+    .wp-dys .mockup-name .desc { color: #5a4a35; }
+
+    /* light-autismFriendly — Still Water */
+    .wp-aut { box-shadow: none; border-width: 2px; border-color: #b8b3a8; }
+    .wp-aut .mockup { background: #f5f3ee; color: #3d3d3d; font-family: 'Instrument Sans', system-ui, sans-serif; }
+    .wp-aut .mockup-card { background: #faf8f3; border-color: #b8b3a8; }
+    .wp-aut .mockup-badge { background: #b4a7d6; border-color: #b8b3a8; }
+    .wp-aut .mockup-card-meta { color: #6b6b6b; }
+    .wp-aut .mockup-cta { background: #c8e6d4; color: #3d3d3d; border-color: #b8b3a8; }
+    .wp-aut .mockup-pill { background: #faf8f3; border-color: #b8b3a8; color: #3d3d3d; }
+    .wp-aut .mockup-name { background: #f5f3ee; border-top-color: #b8b3a8; color: #3d3d3d; }
+    .wp-aut .mockup-name .desc { color: #6b6b6b; }
+
+    /* light-lowVision — Loud & Clear */
+    .wp-lv { box-shadow: none; border-width: 5px; }
+    .wp-lv .mockup { background: #ffffff; color: #000000; font-family: 'AtkinsonHyperlegible', 'Atkinson Hyperlegible', system-ui, sans-serif; font-size: 17px; }
+    .wp-lv .mockup-title { font-size: 22px; }
+    .wp-lv .mockup-card { background: #ffffff; border-color: #000000; border-width: 3px; }
+    .wp-lv .mockup-badge { background: #4c1d95; border-color: #000000; border-width: 3px; }
+    .wp-lv .mockup-card-title { font-size: 16px; }
+    .wp-lv .mockup-card-meta { color: #000000; font-size: 14px; }
+    .wp-lv .mockup-cta { background: #000000; color: #ffffff; border-color: #000000; font-size: 14px; }
+    .wp-lv .mockup-pill { background: #ffe50c; border-color: #000000; color: #000000; border-width: 3px; font-size: 13px; }
+    .wp-lv .mockup-name { background: #ffffff; border-top-color: #000000; border-top-width: 3px; color: #000000; font-family: 'AtkinsonHyperlegible', system-ui, sans-serif; }
+
+    /* light-lowInfo — Clean Signal */
+    .wp-li { box-shadow: none; border-width: 1px; border-color: #d4d4d4; }
+    .wp-li .mockup { background: #ffffff; color: #262626; font-family: 'Instrument Sans', system-ui, sans-serif; }
+    .wp-li .mockup-card { background: #ffffff; border-color: #d4d4d4; border-width: 1px; }
+    .wp-li .mockup-badge { background: #737373; border-color: #d4d4d4; border-width: 1px; color: #ffffff; }
+    .wp-li .mockup-card-meta { color: #737373; }
+    .wp-li .mockup-cta { background: #525252; color: #ffffff; border-color: #525252; border-width: 1px; }
+    .wp-li .mockup-pill { background: #f5f5f5; border-color: #d4d4d4; color: #262626; border-width: 1px; }
+    .wp-li .mockup-name { background: #ffffff; border-top-color: #d4d4d4; border-top-width: 1px; color: #262626; }
+    .wp-li .mockup-name .desc { color: #737373; }
+
+    /* ── Footer ──────────────────────────────── */
+    .footer {
+      background: #ffffff;
+      padding: 16px 24px 32px;
+      border-top: 3px solid #0a0a0a;
+      flex-shrink: 0;
+    }
+    .cta {
+      all: unset;
+      cursor: pointer;
+      display: block;
+      text-align: center;
+      width: 100%;
+      padding: 16px;
+      background: #2dd4bf;
+      color: #0a0a0a;
+      border: 3px solid #0a0a0a;
+      border-radius: 8px;
+      box-shadow: 4px 4px 0 rgba(10,10,10,0.9);
+      font-family: 'Anybody', system-ui, sans-serif;
+      font-weight: 800;
+      font-size: 18px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .cta:focus-visible { outline: 3px solid #ffe50c; outline-offset: 3px; }
+    .cta:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 rgba(10,10,10,0.9); }
+    .footnote {
+      text-align: center;
+      font-size: 13px;
+      color: #525252;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="phone">
+    <header class="hero">
+      <svg class="logo-mark" viewBox="0 0 1200 1200" aria-hidden="true">
+        <rect width="1200" height="1200" fill="#ffe50c"/>
+        <path d="M594.39,201.77c26.75-3.92,39.18,22.01,62.88,29,18.93,5.58,41.99-.51,57.38,11.7,16.22,12.87,12.12,37.54,21.06,55.05,9.15,17.92,34.36,29.38,36.8,49.84,3.03,25.49-18.97,39.75-21.81,62.23-3.23,25.51,8.52,51.92-18.22,68.42-11.76,7.26-28.71,9.23-39.38,16.82-13.96,9.93-20.59,31.87-38.06,38.05-23.37,8.26-40.27-13.9-65.06-7.69-15.3,3.84-25.92,12.99-43.1,7.99-19.12-5.57-24.45-28.06-38.93-38.35-12.54-8.91-31.63-9.54-43.8-19.42-20-16.22-11.54-40.66-13.45-62.65-2.2-25.34-26.05-38.7-22.19-66.59,2.63-19,25.83-30.9,34.79-46,11.14-18.77,5.32-44.27,23.62-58.34,15.2-11.68,36.88-5.47,55.03-10.54,19.12-5.34,35.41-27.02,52.44-29.52Z" fill="#a78bfa"/>
+        <text x="600" y="380" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="180" font-weight="900" fill="#0a0a0a">RD</text>
+      </svg>
+      <div>
+        <div class="hero-greeting">Welcome aboard</div>
+        <h1 class="hero-title">Pick your view.</h1>
+        <p class="hero-sub">What does your rollercoaster look like?</p>
+      </div>
+    </header>
+
+    <div class="gallery-wrap">
+      <div class="gallery-label">Tap a wallpaper to choose your theme</div>
+
+      <button class="wp wp-light" aria-pressed="true">
+        <div class="mockup">
+          <div class="mockup-top">
+            <div class="mockup-title">Today's goals</div>
+            <div class="mockup-mood">FULL RIDE</div>
+          </div>
+          <div class="mockup-card">
+            <div class="mockup-badge">★</div>
+            <div class="mockup-card-text">
+              <div class="mockup-card-title">Daily reading</div>
+              <div class="mockup-card-meta">3 of 5 days complete</div>
+            </div>
+          </div>
+          <div class="mockup-row">
+            <div class="mockup-cta">+ Capture</div>
+            <div class="mockup-pill">streak · 12 days</div>
+          </div>
+        </div>
+        <div class="mockup-name">
+          <span>The Full Ride</span>
+          <span class="desc">Standard</span>
+        </div>
+      </button>
+
+      <button class="wp wp-dark" aria-pressed="false">
+        <div class="mockup">
+          <div class="mockup-top">
+            <div class="mockup-title">Today's goals</div>
+            <div class="mockup-mood">NIGHT RIDE</div>
+          </div>
+          <div class="mockup-card">
+            <div class="mockup-badge">★</div>
+            <div class="mockup-card-text">
+              <div class="mockup-card-title">Daily reading</div>
+              <div class="mockup-card-meta">3 of 5 days complete</div>
+            </div>
+          </div>
+          <div class="mockup-row">
+            <div class="mockup-cta">+ Capture</div>
+            <div class="mockup-pill">streak · 12 days</div>
+          </div>
+        </div>
+        <div class="mockup-name">
+          <span>Night Ride</span>
+          <span class="desc">Dark mode</span>
+        </div>
+      </button>
+
+      <button class="wp wp-hc" aria-pressed="false">
+        <div class="mockup">
+          <div class="mockup-top">
+            <div class="mockup-title">Today's goals</div>
+            <div class="mockup-mood">BOLD INK</div>
+          </div>
+          <div class="mockup-card">
+            <div class="mockup-badge">★</div>
+            <div class="mockup-card-text">
+              <div class="mockup-card-title">Daily reading</div>
+              <div class="mockup-card-meta">3 of 5 days complete</div>
+            </div>
+          </div>
+          <div class="mockup-row">
+            <div class="mockup-cta">+ Capture</div>
+            <div class="mockup-pill">streak · 12 days</div>
+          </div>
+        </div>
+        <div class="mockup-name">
+          <span>Bold Ink</span>
+          <span class="desc">High contrast (WCAG AAA)</span>
+        </div>
+      </button>
+
+      <button class="wp wp-dys" aria-pressed="false">
+        <div class="mockup">
+          <div class="mockup-top">
+            <div class="mockup-title">Today's goals</div>
+            <div class="mockup-mood">WARM STUDIO</div>
+          </div>
+          <div class="mockup-card">
+            <div class="mockup-badge">★</div>
+            <div class="mockup-card-text">
+              <div class="mockup-card-title">Daily reading</div>
+              <div class="mockup-card-meta">3 of 5 days complete</div>
+            </div>
+          </div>
+          <div class="mockup-row">
+            <div class="mockup-cta">+ Capture</div>
+            <div class="mockup-pill">streak · 12 days</div>
+          </div>
+        </div>
+        <div class="mockup-name">
+          <span>Warm Studio</span>
+          <span class="desc">Dyslexia-friendly · Lexend font</span>
+        </div>
+      </button>
+
+      <button class="wp wp-aut" aria-pressed="false">
+        <div class="mockup">
+          <div class="mockup-top">
+            <div class="mockup-title">Today's goals</div>
+            <div class="mockup-mood">STILL WATER</div>
+          </div>
+          <div class="mockup-card">
+            <div class="mockup-badge">★</div>
+            <div class="mockup-card-text">
+              <div class="mockup-card-title">Daily reading</div>
+              <div class="mockup-card-meta">3 of 5 days complete</div>
+            </div>
+          </div>
+          <div class="mockup-row">
+            <div class="mockup-cta">+ Capture</div>
+            <div class="mockup-pill">streak · 12 days</div>
+          </div>
+        </div>
+        <div class="mockup-name">
+          <span>Still Water</span>
+          <span class="desc">Autism-friendly · low stim</span>
+        </div>
+      </button>
+
+      <button class="wp wp-lv" aria-pressed="false">
+        <div class="mockup">
+          <div class="mockup-top">
+            <div class="mockup-title">Today's goals</div>
+            <div class="mockup-mood">LOUD &amp; CLEAR</div>
+          </div>
+          <div class="mockup-card">
+            <div class="mockup-badge">★</div>
+            <div class="mockup-card-text">
+              <div class="mockup-card-title">Daily reading</div>
+              <div class="mockup-card-meta">3 of 5 done</div>
+            </div>
+          </div>
+          <div class="mockup-row">
+            <div class="mockup-cta">+ Capture</div>
+            <div class="mockup-pill">streak · 12</div>
+          </div>
+        </div>
+        <div class="mockup-name">
+          <span>Loud &amp; Clear</span>
+          <span class="desc">Low vision · large text</span>
+        </div>
+      </button>
+
+      <button class="wp wp-li" aria-pressed="false">
+        <div class="mockup">
+          <div class="mockup-top">
+            <div class="mockup-title">Today's goals</div>
+            <div class="mockup-mood">CLEAN SIGNAL</div>
+          </div>
+          <div class="mockup-card">
+            <div class="mockup-badge">★</div>
+            <div class="mockup-card-text">
+              <div class="mockup-card-title">Daily reading</div>
+              <div class="mockup-card-meta">3 of 5 days complete</div>
+            </div>
+          </div>
+          <div class="mockup-row">
+            <div class="mockup-cta">+ Capture</div>
+            <div class="mockup-pill">streak · 12 days</div>
+          </div>
+        </div>
+        <div class="mockup-name">
+          <span>Clean Signal</span>
+          <span class="desc">Reduced visual noise</span>
+        </div>
+      </button>
+    </div>
+
+    <footer class="footer">
+      <button class="cta">Get started</button>
+      <p class="footnote">You can change this anytime in Settings.</p>
+    </footer>
+  </div>
+
+  <script>
+    document.querySelectorAll('.wp').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.wp').forEach(b => b.setAttribute('aria-pressed', 'false'));
+        btn.setAttribute('aria-pressed', 'true');
+      });
+    });
+  </script>
+</body>
+</html>

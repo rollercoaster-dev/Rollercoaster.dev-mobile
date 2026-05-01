@@ -29,23 +29,22 @@ beforeEach(() => {
 
 describe("WelcomeScreen", () => {
   describe("content", () => {
-    it("renders the app name", () => {
+    it("renders the welcome greeting", () => {
       renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
-      expect(screen.getByText("rollercoaster.dev")).toBeOnTheScreen();
+      expect(screen.getByText(/Hey there/)).toBeOnTheScreen();
+      expect(screen.getByText("Welcome to your ride.")).toBeOnTheScreen();
     });
 
-    it("renders the correct tagline from spec", () => {
+    it("renders the body intro copy", () => {
       renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
       expect(
-        screen.getByText(
-          "Track your goals. Earn your badges. Everything stays on your phone.",
-        ),
+        screen.getByText(/rollercoaster\.dev is your personal goal tracker\./),
       ).toBeOnTheScreen();
     });
 
-    it("renders the ThemeSwitcher title", () => {
+    it("renders the picker label", () => {
       renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
-      expect(screen.getByText("Pick what feels right")).toBeOnTheScreen();
+      expect(screen.getByText("Your look (tap to preview)")).toBeOnTheScreen();
     });
 
     it("renders all 7 theme option labels", () => {
@@ -67,8 +66,14 @@ describe("WelcomeScreen", () => {
     it("renders the settings reminder text", () => {
       renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
       expect(
-        screen.getByText("You can always change it in Settings."),
+        screen.getByText("You can change this anytime in Settings."),
       ).toBeOnTheScreen();
+    });
+
+    it("renders the sample card content", () => {
+      renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
+      expect(screen.getByText("Daily reading")).toBeOnTheScreen();
+      expect(screen.getByText("3 of 5 days complete")).toBeOnTheScreen();
     });
   });
 

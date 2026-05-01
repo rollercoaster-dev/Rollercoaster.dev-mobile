@@ -11,7 +11,7 @@ export const styles = StyleSheet.create((theme) => ({
     borderColor: theme.colors.border,
     paddingHorizontal: theme.space[3],
     paddingVertical: theme.space[1],
-    ...shadowStyle(theme, "hardSm"),
+    ...shadowStyle(theme, "cardElevationSmall"),
   },
   variantActive: {
     backgroundColor: theme.colors.accentYellow,

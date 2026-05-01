@@ -120,6 +120,7 @@ export function CaptureFile({ route }: CaptureFileScreenProps) {
             </Text>
           }
           onPress={() => navigation.goBack()}
+          tone="ghost"
           accessibilityLabel="Go back"
           size="sm"
         />

@@ -20,12 +20,12 @@ The core loop: create a goal, break it into steps, attach evidence, complete ste
 
 Lina finished reorganizing the Local History section — months of quiet work nobody asked her to do. On the bus home, she opens the app, taps "New Goal," types "Reorganize Local History section," and marks it complete.
 
-She takes a photo of the neatly organized shelves from her camera roll — a before and after she'd been keeping for herself. She adds a screenshot of the thank-you Slack message from the head librarian. And a short note: "This matters to the community even if it wasn't in my job description."
+She takes a photo of the neatly organized shelves from her camera roll — a before and after she'd been keeping for herself. She adds a link to the thank-you Slack message from the head librarian. And a short note: "This matters to the community even if it wasn't in my job description."
 
 The app creates a self-signed "Local History Archivist" badge with all three pieces of evidence attached. It lives on her phone. She didn't need wifi, an account, or anyone's approval.
 
-**Features used:** Create goal, attach evidence (photos, screenshots, text), complete goal, earn self-signed badge
-**Evidence:** Before/after photos, screenshot of thank-you message, written reflection
+**Features used:** Create goal, attach evidence (photos, links, text), complete goal, earn self-signed badge
+**Evidence:** Before/after photos, thank-you message link, written reflection
 **ND pattern:** Private recognition without external validation, works offline, no social pressure
 
 ---
@@ -104,7 +104,7 @@ She creates a goal: "Get assessed at the PIA." Then she breaks it down: "Ask the
 
 The first step sits there for two weeks. Calling is hard. Then one morning she does it — gets the appointment, four months out. She marks the step done and writes: "They were actually nice on the phone. Appointment is June 12th."
 
-Over the months she adds evidence as it comes — a photo of the completed questionnaire packet, a note after the first session ("She asked about childhood. I cried. Felt seen."), a screenshot of the follow-up appointment confirmation. The app doesn't care that months pass between steps. It just shows: here's where you are, here's what's next.
+Over the months she adds evidence as it comes — a photo of the completed questionnaire packet, a note after the first session ("She asked about childhood. I cried. Felt seen."), a link to the follow-up appointment confirmation. The app doesn't care that months pass between steps. It just shows: here's where you are, here's what's next.
 
 When the report comes back and she has her diagnosis, she adds a photo of the cover page (not the full report — that's hers) and marks the goal complete. The badge reads "Self-Advocated: Pursued and Completed Diagnostic Assessment." It's the most private badge she'll ever earn. It means everything.
 
@@ -195,7 +195,6 @@ Evidence is what makes a badge more than a checkbox. Every badge should have at 
 | Type           | Examples                                            | Iteration |
 | -------------- | --------------------------------------------------- | --------- |
 | **Photo**      | Before/after shots, finished work, event attendance | A         |
-| **Screenshot** | Messages, certificates, completion screens          | A         |
 | **Text**       | Written reflections, notes, descriptions            | A         |
 | **Voice memo** | Audio walkthrough, verbal reflection                | A         |
 | **Video**      | Timelapse, screen recording, demo                   | A         |
@@ -211,7 +210,7 @@ Evidence is what makes a badge more than a checkbox. Every badge should have at 
 | Task view (next best step)                         | A    | No      | Cross-goal "next step" screen not implemented                      |
 | Create goals                                       | A    | Yes     | Title at creation; description editable after                      |
 | Break into steps                                   | A    | Yes     | Drag-and-drop reorder                                              |
-| Attach evidence (6/7 types)                        | A    | Mostly  | Screenshot type broken (route silently fails)                      |
+| Attach evidence (6 types)                          | A    | Yes     | Photo, text, voice memo, video, link, and file                     |
 | Complete steps/goals                               | A    | Yes     |                                                                    |
 | Earn self-signed badge                             | A    | Yes     | Ed25519 signing + PNG baking                                       |
 | Private/encrypted badges                           | A    | Yes     | Local-only, Evolu encryption                                       |

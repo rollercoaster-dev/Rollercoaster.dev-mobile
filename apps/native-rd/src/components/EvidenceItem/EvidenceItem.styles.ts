@@ -18,7 +18,7 @@ export const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius.sm,
     borderLeftWidth: isGoal ? 4 : theme.borderWidth.thin,
     borderLeftColor: isGoal ? palette.yellow300 : theme.colors.border,
-    ...shadowStyle(theme, "hardSm"),
+    ...shadowStyle(theme, "cardElevationSmall"),
   }),
   pressed: {
     opacity: 0.7,

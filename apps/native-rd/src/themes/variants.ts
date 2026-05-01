@@ -7,8 +7,14 @@ import { size, sizeL, lineHeight, lineHeightL } from "./tokens";
 import {
   variantColors,
   narrativeVariants,
+  chromeVariants,
+  actionVariants,
+  surfaceBorderVariants,
   type VariantOverride as TokenVariantOverride,
   type NarrativeOverride,
+  type ChromeOverride,
+  type ActionOverride,
+  type SurfaceBorderOverride,
 } from "./adapter";
 
 export type Variant =
@@ -33,6 +39,9 @@ export const variants: Variant[] = [
 interface VariantOverride {
   colors?: TokenVariantOverride;
   narrative?: NarrativeOverride;
+  chrome?: ChromeOverride;
+  action?: ActionOverride;
+  surfaceBorder?: SurfaceBorderOverride;
   shadows?: { opacity: number };
   size?: typeof size | typeof sizeL;
   lineHeight?: typeof lineHeight | typeof lineHeightL;
@@ -56,6 +65,9 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
   highContrast: {
     colors: variantColors.highContrast,
     narrative: narrativeVariants.highContrast,
+    chrome: chromeVariants.highContrast,
+    action: actionVariants.highContrast,
+    surfaceBorder: surfaceBorderVariants.highContrast,
     shadows: { opacity: 0 },
   },
 
@@ -73,6 +85,9 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
   dyslexia: {
     colors: variantColors.dyslexiaFriendly,
     narrative: narrativeVariants.dyslexiaFriendly,
+    chrome: chromeVariants.dyslexiaFriendly,
+    action: actionVariants.dyslexiaFriendly,
+    surfaceBorder: surfaceBorderVariants.dyslexiaFriendly,
     lineHeight: lineHeightL,
     fontFamily: "Lexend",
   },
@@ -84,6 +99,9 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
   lowVision: {
     colors: variantColors.lowVision,
     narrative: narrativeVariants.lowVision,
+    chrome: chromeVariants.lowVision,
+    action: actionVariants.lowVision,
+    surfaceBorder: surfaceBorderVariants.lowVision,
     shadows: { opacity: 0 },
     size: sizeL,
     fontFamily: "AtkinsonHyperlegible",
@@ -95,6 +113,9 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
   autismFriendly: {
     colors: variantColors.autismFriendly,
     narrative: narrativeVariants.autismFriendly,
+    chrome: chromeVariants.autismFriendly,
+    action: actionVariants.autismFriendly,
+    surfaceBorder: surfaceBorderVariants.autismFriendly,
     shadows: { opacity: 0 },
   },
 
@@ -105,6 +126,9 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
   lowInfo: {
     colors: variantColors.lowInfo,
     narrative: narrativeVariants.lowInfo,
+    chrome: chromeVariants.lowInfo,
+    action: actionVariants.lowInfo,
+    surfaceBorder: surfaceBorderVariants.lowInfo,
   },
 };
 

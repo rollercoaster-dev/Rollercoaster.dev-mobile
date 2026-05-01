@@ -41,7 +41,7 @@ export const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.backgroundSecondary,
     minHeight: 200,
     textAlignVertical: "top",
-    ...shadowStyle(theme, "hardMd"),
+    ...shadowStyle(theme, "cardElevation"),
   },
   textInputFocused: {
     borderColor: theme.colors.focusRing,

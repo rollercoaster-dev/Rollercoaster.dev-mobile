@@ -44,7 +44,7 @@
     "lint-staged": "16.2.7",
     "prettier": "^3.7.3",
     "turbo": "^2.0.0",
-    "typescript": "^5.8.3"
+    "typescript": "^6.0.3"
   },
   "lint-staged": {
     "!(apps/native-rd/**)*.{ts,tsx,js,jsx,vue}": [

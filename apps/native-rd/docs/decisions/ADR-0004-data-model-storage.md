@@ -59,7 +59,7 @@ Evidence {
   id: ULID
   goalId: nullable ULID → Goal
   stepId: nullable ULID → Step
-  type: 'photo' | 'screenshot' | 'text' | 'voice_memo' | 'video' | 'link' | 'file'
+  type: 'photo' | 'text' | 'voice_memo' | 'video' | 'link' | 'file'
   uri: string (local file path or URL)
   description: nullable string
 }
@@ -181,7 +181,7 @@ As of 2026-02-18, Iteration A schema is fully implemented:
 
 - ✅ **Goal table** — Defined in `src/db/schema.ts` with full CRUD operations in `src/db/queries.ts`
 - ✅ **Step table** — Full CRUD operations including reorder support
-- ✅ **Evidence table** — All 7 evidence types (photo, screenshot, text, voice_memo, video, link, file)
+- ✅ **Evidence table** — All 6 evidence types (photo, text, voice_memo, video, link, file)
 - ✅ **Badge table** — OB3 Verifiable Credential JSON + baked image URI
 - ✅ **UserSettings table** — Singleton pattern for theme, density, animation preferences
 

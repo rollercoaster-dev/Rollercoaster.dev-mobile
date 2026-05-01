@@ -17,7 +17,7 @@ export const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius.sm,
     paddingVertical: theme.space[3],
     paddingHorizontal: theme.space[4],
-    ...shadowStyle(theme, "hardMd"),
+    ...shadowStyle(theme, "modalElevation"),
   },
   message: {
     flex: 1,

@@ -7,7 +7,6 @@ const logger = new Logger("evidenceCleanup");
 /** Evidence types that store files on disk. Keep in sync with EvidenceType enum. */
 const FILE_BACKED_TYPES: Set<string> = new Set([
   EvidenceType.photo,
-  EvidenceType.screenshot,
   EvidenceType.video,
   EvidenceType.voice_memo,
   EvidenceType.file,

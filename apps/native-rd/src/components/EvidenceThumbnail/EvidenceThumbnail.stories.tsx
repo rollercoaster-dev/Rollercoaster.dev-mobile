@@ -14,7 +14,7 @@ export default meta;
 type Story = StoryObj<typeof EvidenceThumbnail>;
 
 const evidences: Evidence[] = [
-  { id: "1", title: "Screenshot of progress", type: "photo" },
+  { id: "1", title: "Progress photo", type: "photo" },
   { id: "2", title: "Voice memo reflection", type: "voice_memo" },
   { id: "3", title: "Written notes", type: "text" },
   { id: "4", title: "Tutorial link", type: "link" },

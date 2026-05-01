@@ -1,6 +1,6 @@
 {
   "name": "native-rd",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "private": true,
   "main": "index.ts",
   "scripts": {
@@ -10,7 +10,7 @@
     "ios:e2e": "EXPO_PUBLIC_E2E_MODE=true bash scripts/run-ios.sh",
     "android": "expo run:android",
     "web": "expo start --web",
-    "type-check": "tsc --noEmit",
+    "type-check": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
     "build": "echo 'Expo app — no build step'",
     "lint": "expo lint",
     "test": "bash scripts/jest-node.sh",
@@ -104,6 +104,6 @@
     "jest-expo": "^54.0.17",
     "react-test-renderer": "19.1.0",
     "storybook": "10.3.5",
-    "typescript": "~5.9.2"
+    "typescript": "~6.0.3"
   }
 }

@@ -55,6 +55,7 @@
       "primary": { "$value": "#003d99" },
       "primary-foreground": { "$value": "#ffffff" },
       "secondary": { "$value": "#555555" },
+      "secondary-foreground": { "$value": "#ffffff" },
       "highlight": { "$value": "#003d99" },
       "highlight-foreground": { "$value": "#ffffff" }
     },

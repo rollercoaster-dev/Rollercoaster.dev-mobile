@@ -20,6 +20,17 @@ export const styles = StyleSheet.create((theme) => ({
     marginBottom: theme.space[3],
   },
   optionSelected: {
-    ...shadowStyle(theme, "hardMd"),
+    ...shadowStyle(theme, "cardElevation"),
+  },
+  headerRow: {
+    flexDirection: "row" as const,
+    alignItems: "flex-start" as const,
+    gap: theme.space[2],
+  },
+  headerText: {
+    flex: 1,
+  },
+  sampleTextCol: {
+    flex: 1,
   },
 }));

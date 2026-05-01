@@ -1,25 +1,14 @@
 import { StyleSheet } from "react-native-unistyles";
-import { PEEK_HEIGHT } from "../../components/EvidenceDrawer/EvidenceDrawer.styles";
-import { shadowStyle } from "../../styles/shadows";
+import { DRAWER_CLOSED_HEIGHT } from "../../components/EvidenceDrawer/EvidenceDrawer.styles";
 
 export const styles = StyleSheet.create((theme) => ({
-  topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: theme.space[4],
-    paddingVertical: theme.space[2],
-    paddingBottom: theme.space[4],
-    backgroundColor: theme.colors.accentYellow,
-    zIndex: 1,
-    ...shadowStyle(theme, "hardMd"),
+  screen: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
   },
-  backIcon: {
-    fontSize: 18,
-    fontWeight: theme.fontWeight.bold,
-  },
-  spacer: {
-    width: 48,
+  keyboardAvoidingView: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
   },
   loadingIndicator: {
     marginTop: theme.space[8],
@@ -35,7 +24,7 @@ export const styles = StyleSheet.create((theme) => ({
   },
   carouselSection: {
     flex: 1,
-    paddingBottom: PEEK_HEIGHT + theme.space[3],
+    paddingBottom: DRAWER_CLOSED_HEIGHT + theme.space[3],
   },
   headerRow: {
     flexDirection: "row",

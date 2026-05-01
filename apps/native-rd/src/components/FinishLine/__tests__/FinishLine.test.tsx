@@ -4,7 +4,7 @@ import { FinishLine } from "../FinishLine";
 import type { EvidenceItemData } from "../../EvidenceDrawer";
 
 const evidence: EvidenceItemData[] = [
-  { id: "ev-1", type: "photo", label: "Final screenshot" },
+  { id: "ev-1", type: "photo", label: "Final photo" },
   { id: "ev-2", type: "text", label: "Reflection note" },
 ];
 
@@ -17,7 +17,7 @@ describe("FinishLine", () => {
 
   it("shows evidence items", () => {
     renderWithProviders(<FinishLine goalEvidence={evidence} />);
-    expect(screen.getByText("Final screenshot")).toBeOnTheScreen();
+    expect(screen.getByText("Final photo")).toBeOnTheScreen();
     expect(screen.getByText("Reflection note")).toBeOnTheScreen();
   });
 
@@ -29,7 +29,7 @@ describe("FinishLine", () => {
   it("has accessible evidence labels", () => {
     renderWithProviders(<FinishLine goalEvidence={evidence} />);
     expect(
-      screen.getByLabelText("photo evidence: Final screenshot"),
+      screen.getByLabelText("photo evidence: Final photo"),
     ).toBeOnTheScreen();
   });
 });

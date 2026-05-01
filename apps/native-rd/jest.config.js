@@ -49,7 +49,6 @@ module.exports = {
 
     // Animation/styling — native thread integration
     "^react-native-reanimated$": "<rootDir>/src/__tests__/mocks/reanimated.ts",
-    "^react-native-unistyles$": "<rootDir>/src/__tests__/mocks/unistyles.ts",
 
     // Layout — native safe area insets
     "^react-native-safe-area-context$":
@@ -86,6 +85,9 @@ module.exports = {
   // resolves it without needing require.resolve.
   setupFiles: [
     require.resolve("react-native/jest/setup"),
+    require.resolve("react-native-unistyles/mocks"),
+    "./unistyles.ts",
+    "./src/__tests__/setup-unistyles.ts",
     "./src/db/__tests__/setup.ts",
   ],
 

@@ -175,7 +175,7 @@ export function BadgeDetailScreen({ route }: BadgeDetailScreenProps) {
         <IconButton
           icon={<Text variant="headline">{"\u2190"}</Text>}
           onPress={() => navigation.goBack()}
-          variant="ghost"
+          tone="ghost"
           accessibilityLabel="Go back"
         />
         <Text style={styles.topBarTitle}>Badge</Text>

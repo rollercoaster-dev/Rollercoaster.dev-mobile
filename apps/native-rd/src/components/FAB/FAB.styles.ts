@@ -11,7 +11,7 @@ export const styles = StyleSheet.create((theme) => ({
     borderColor: theme.colors.text,
     alignItems: "center",
     justifyContent: "center",
-    ...shadowStyle(theme, "hardSm"),
+    ...shadowStyle(theme, "modalElevation"),
   },
   pressed: {
     transform: [{ translateX: 2 }, { translateY: 2 }],

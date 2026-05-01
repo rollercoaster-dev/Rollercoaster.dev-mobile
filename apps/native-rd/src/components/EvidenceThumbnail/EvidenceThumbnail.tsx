@@ -24,7 +24,6 @@ export interface EvidenceThumbnailProps {
 
 const typeIcons: Record<EvidenceTypeValue, string> = {
   photo: "\u{1F4F7}",
-  screenshot: "\u{1F4F1}",
   voice_memo: "\u{1F3A4}",
   text: "\u{1F4DD}",
   link: "\u{1F517}",
@@ -57,10 +56,7 @@ async function openLinkInBrowser(uri: string): Promise<void> {
 
 function PreviewContent({ evidence }: { evidence: Evidence }) {
   const [imageError, setImageError] = useState(false);
-  const isImageType =
-    evidence.type === "photo" ||
-    evidence.type === "screenshot" ||
-    evidence.type === "video";
+  const isImageType = evidence.type === "photo" || evidence.type === "video";
 
   if (isImageType && evidence.uri && !imageError) {
     return (

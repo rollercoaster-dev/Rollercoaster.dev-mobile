@@ -22,6 +22,21 @@ import {
   variants as pkgVariants,
   narrativeModes as pkgNarrativeModes,
   narrativeVariants as pkgNarrativeVariants,
+  lightChromeColors as pkgLightChromeColors,
+  darkChromeColors as pkgDarkChromeColors,
+  chromeVariants as pkgChromeVariants,
+  lightActionColors as pkgLightActionColors,
+  darkActionColors as pkgDarkActionColors,
+  actionVariants as pkgActionVariants,
+  lightSurfaceBorderColors as pkgLightSurfaceBorderColors,
+  darkSurfaceBorderColors as pkgDarkSurfaceBorderColors,
+  surfaceBorderVariants as pkgSurfaceBorderVariants,
+  type ChromeColors as PkgChromeColors,
+  type ChromeOverride as PkgChromeOverride,
+  type ActionColors as PkgActionColors,
+  type ActionOverride as PkgActionOverride,
+  type SurfaceBorderColors as PkgSurfaceBorderColors,
+  type SurfaceBorderOverride as PkgSurfaceBorderOverride,
   type Narrative as PkgNarrative,
   type NarrativeOverride as PkgNarrativeOverride,
   type VariantOverride as PkgVariantOverride,
@@ -142,6 +157,9 @@ export const lightColors = {
 export const darkColors = {
   ...pkgDarkColors,
   accentSecondary: pkgDarkColors.accentMint,
+  shadow: "#000000",
+  textMuted: "#a89cc4",
+  accentPurple: "#8d7eb0",
   error: pkgPalette.error,
   warning: pkgPalette.warning,
   success: pkgPalette.success,
@@ -155,7 +173,7 @@ export const colorModeConfigs = {
   },
   dark: {
     colors: darkColors,
-    shadows: { opacity: 0.6 },
+    shadows: { opacity: 1.0 },
   },
 } as const;
 
@@ -170,6 +188,36 @@ export const narrativeModes = pkgNarrativeModes;
 export const narrativeVariants = pkgNarrativeVariants;
 export type Narrative = PkgNarrative;
 export type NarrativeOverride = PkgNarrativeOverride;
+
+// ---------------------------------------------------------------------------
+// Chrome (app shell: top bar, header, modal, tab bar) — per color mode + variant
+// ---------------------------------------------------------------------------
+
+export const lightChromeColors = pkgLightChromeColors;
+export const darkChromeColors = pkgDarkChromeColors;
+export const chromeVariants = pkgChromeVariants;
+export type Chrome = PkgChromeColors;
+export type ChromeOverride = PkgChromeOverride;
+
+// ---------------------------------------------------------------------------
+// Action (buttons + interactive states) — per color mode + variant
+// ---------------------------------------------------------------------------
+
+export const lightActionColors = pkgLightActionColors;
+export const darkActionColors = pkgDarkActionColors;
+export const actionVariants = pkgActionVariants;
+export type Action = PkgActionColors;
+export type ActionOverride = PkgActionOverride;
+
+// ---------------------------------------------------------------------------
+// SurfaceBorder (cards, sheets, inputs, border hierarchy) — per color mode + variant
+// ---------------------------------------------------------------------------
+
+export const lightSurfaceBorderColors = pkgLightSurfaceBorderColors;
+export const darkSurfaceBorderColors = pkgDarkSurfaceBorderColors;
+export const surfaceBorderVariants = pkgSurfaceBorderVariants;
+export type SurfaceBorder = PkgSurfaceBorderColors;
+export type SurfaceBorderOverride = PkgSurfaceBorderOverride;
 
 // ---------------------------------------------------------------------------
 // New token categories — pass through

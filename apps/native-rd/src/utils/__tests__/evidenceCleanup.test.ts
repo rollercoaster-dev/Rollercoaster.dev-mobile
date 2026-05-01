@@ -42,11 +42,6 @@ describe("deleteEvidenceFile", () => {
     expect(mockFileDelete).toHaveBeenCalled();
   });
 
-  it("deletes file for screenshot evidence", () => {
-    deleteEvidenceFile("/screenshot.png", "screenshot");
-    expect(mockFileDelete).toHaveBeenCalled();
-  });
-
   it("deletes file for file evidence", () => {
     deleteEvidenceFile("/doc.pdf", "file");
     expect(mockFileDelete).toHaveBeenCalled();

@@ -9,6 +9,7 @@ export interface CheckboxProps {
   label: string;
   onLabelPress?: () => void;
   disabled?: boolean;
+  accessibilityHint?: string;
 }
 
 export function Checkbox({
@@ -17,6 +18,7 @@ export function Checkbox({
   label,
   onLabelPress,
   disabled = false,
+  accessibilityHint,
 }: CheckboxProps) {
   function handleToggle() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
@@ -31,6 +33,7 @@ export function Checkbox({
         accessible
         accessibilityRole="checkbox"
         accessibilityLabel={label}
+        accessibilityHint={accessibilityHint}
         accessibilityState={{ checked, disabled }}
       >
         <View

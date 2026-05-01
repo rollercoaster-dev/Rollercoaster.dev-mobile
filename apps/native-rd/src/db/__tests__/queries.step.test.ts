@@ -86,7 +86,7 @@ describe("Step CRUD Operations", () => {
 
   describe("canCompleteStep", () => {
     test.each([
-      ["no evidence, null planned types", null, [], false],
+      ["no evidence, null planned types", null, [], true],
       ["no evidence, planned types set", '["photo"]', [], false],
       [
         'wrong type evidence, planned types = ["photo"]',
@@ -113,15 +113,24 @@ describe("Step CRUD Operations", () => {
         [{ type: "text" }],
         true,
       ],
-      ["evidence with null type only", null, [{ type: null }], false],
+      [
+        "evidence with null type only, null planned types",
+        null,
+        [{ type: null }],
+        true,
+      ],
     ])("%s → %s", (_label, plannedJson, evidence, expected) => {
       expect(canCompleteStep(plannedJson, evidence)).toBe(expected);
     });
   });
 
   describe("completeStep with gating", () => {
-    test("no evidence → throws descriptive message", () => {
-      expect(() => completeStep(mockStepId, null, [])).toThrow(
+    test("no planned evidence types and no evidence → succeeds", () => {
+      expect(() => completeStep(mockStepId, null, [])).not.toThrow();
+    });
+
+    test("planned type with no evidence → throws descriptive message", () => {
+      expect(() => completeStep(mockStepId, '["photo"]', [])).toThrow(
         "Cannot complete step: no evidence attached",
       );
     });

@@ -71,6 +71,7 @@ Thumbs.db
 .claude/*.local.md
 .claude/dev-plans/
 .claude/execution-state.db
+.claude/scheduled_tasks.lock
 # Note: .claude/settings.json should be committed (team-shared settings)
 # Note: .claude/knowledge.jsonl should be committed (git sync for cross-machine knowledge sharing)
 
@@ -81,6 +82,5 @@ packages/claude-knowledge/.claude/
 # Git worktrees for /auto-milestone
 .worktrees/
 
-# Local tooling artifacts
+# Superset tooling cache
 .superset/
-.claude/scheduled_tasks.lock

@@ -35,7 +35,7 @@ export const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.accentPurple,
     alignItems: "center",
     justifyContent: "center",
-    ...shadowStyle(theme, "hardMd"),
+    ...shadowStyle(theme, "cardElevation"),
   },
   badgeInitial: {
     fontSize: theme.size["5xl"],

@@ -5,11 +5,17 @@ import { StyleSheet } from "react-native-unistyles";
 import { Text } from "../Text";
 import {
   IconButton,
-  type IconButtonVariant,
   type IconButtonSize,
+  type IconButtonTone,
 } from "./IconButton";
 
-const variants: IconButtonVariant[] = ["default", "ghost", "destructive"];
+const tones: IconButtonTone[] = [
+  "chrome",
+  "ghost",
+  "surface",
+  "primary",
+  "destructive",
+];
 const sizes: IconButtonSize[] = ["sm", "md", "lg"];
 
 const meta: Meta<typeof IconButton> = {
@@ -21,22 +27,33 @@ export default meta;
 
 type Story = StoryObj<typeof IconButton>;
 
-export const AllVariants: Story = {
+// Renders chrome tones over a purple band so the transparent container reads
+// against the same surface they sit on in the app.
+function ChromeBand({ children }: { children: React.ReactNode }) {
+  return <View style={storyStyles.chromeBand}>{children}</View>;
+}
+
+export const AllTones: Story = {
   render: () => (
     <View style={storyStyles.grid}>
-      {variants.map((variant) => (
-        <View key={variant} style={storyStyles.row}>
-          <Text variant="label" style={storyStyles.label}>
-            {variant}
-          </Text>
+      {tones.map((tone) => {
+        const button = (
           <IconButton
             icon={<RNText>+</RNText>}
-            variant={variant}
+            tone={tone}
             onPress={() => {}}
-            accessibilityLabel={`${variant} button`}
+            accessibilityLabel={`${tone} button`}
           />
-        </View>
-      ))}
+        );
+        return (
+          <View key={tone} style={storyStyles.row}>
+            <Text variant="label" style={storyStyles.label}>
+              {tone}
+            </Text>
+            {tone === "chrome" ? <ChromeBand>{button}</ChromeBand> : button}
+          </View>
+        );
+      })}
     </View>
   ),
 };
@@ -72,5 +89,10 @@ const storyStyles = StyleSheet.create((theme) => ({
     color: theme.colors.textMuted,
     textTransform: "uppercase",
     width: 100,
+  },
+  chromeBand: {
+    backgroundColor: theme.colors.accentPurple,
+    padding: theme.space[2],
+    borderRadius: theme.radius.sm,
   },
 }));

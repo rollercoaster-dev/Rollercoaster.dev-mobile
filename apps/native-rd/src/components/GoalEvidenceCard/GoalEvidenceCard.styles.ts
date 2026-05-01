@@ -46,7 +46,7 @@ export const styles = StyleSheet.create((theme) => ({
     paddingVertical: theme.space[1],
     minHeight: 44,
     minWidth: 44,
-    ...shadowStyle(theme, "hardSm"),
+    ...shadowStyle(theme, "cardElevationSmall"),
   },
   evidenceFlash: {
     position: "absolute" as const,

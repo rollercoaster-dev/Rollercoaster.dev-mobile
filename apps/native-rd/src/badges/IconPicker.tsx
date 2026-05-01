@@ -134,7 +134,7 @@ const styles = StyleSheet.create((theme) => ({
     padding: theme.space[3],
     borderWidth: theme.borderWidth.thick,
     borderRadius: 0,
-    ...shadowStyle(theme, "hardSm"),
+    ...shadowStyle(theme, "cardElevationSmall"),
   },
   triggerIconBox: {
     width: 52,

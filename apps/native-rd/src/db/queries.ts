@@ -231,7 +231,8 @@ function serializePlannedTypes(
  * Check if a step has sufficient evidence to be completed.
  *
  * If plannedEvidenceTypes is set (non-null JSON array), at least one
- * evidence item must match a planned type. If null, any evidence suffices.
+ * evidence item must match a planned type. If null, no step evidence is
+ * required.
  *
  * @param plannedEvidenceTypesJson - Value from step.plannedEvidenceTypes column (JSON string or null)
  * @param stepEvidence - All non-deleted evidence rows for this step
@@ -241,14 +242,14 @@ export function canCompleteStep(
   plannedEvidenceTypesJson: string | null,
   stepEvidence: Array<{ type: string | null }>,
 ): boolean {
-  const validEvidence = stepEvidence.filter((e) => e.type !== null);
-  if (validEvidence.length === 0) return false;
-
   const plannedTypes = parsePlannedEvidenceTypes(
     plannedEvidenceTypesJson,
     logger,
   );
   if (plannedTypes === null) return true;
+
+  const validEvidence = stepEvidence.filter((e) => e.type !== null);
+  if (validEvidence.length === 0) return false;
 
   return validEvidence.some((e) => plannedTypes.includes(e.type!));
 }
@@ -379,10 +380,11 @@ export function updateStep(
 }
 
 /**
- * Mark step as completed with current timestamp
- * @param id - Step ID
- * @returns Update command
- * @throws Error if timestamp generation fails
+ * Mark step as completed after evidence gating.
+ *
+ * Throws if {@link canCompleteStep} would reject the supplied evidence,
+ * with a message that distinguishes "no evidence at all" from "no
+ * evidence matching the planned types".
  */
 export function completeStep(
   id: StepId,

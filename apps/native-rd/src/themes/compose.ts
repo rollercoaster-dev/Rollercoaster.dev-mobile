@@ -19,8 +19,21 @@ import {
   fontFamily,
   transition,
   shadow,
+  darkShadowOverrides,
 } from "./tokens";
-import { narrativeModes, type Narrative } from "./adapter";
+import {
+  narrativeModes,
+  lightChromeColors,
+  darkChromeColors,
+  lightActionColors,
+  darkActionColors,
+  lightSurfaceBorderColors,
+  darkSurfaceBorderColors,
+  type Narrative,
+  type Chrome,
+  type Action,
+  type SurfaceBorder,
+} from "./adapter";
 
 /** Size scale type - either normal or large */
 export type SizeScale = typeof size | typeof sizeL;
@@ -61,6 +74,9 @@ export interface TextStyles {
 export interface ComposedTheme {
   colors: Colors;
   narrative: Narrative;
+  chrome: Chrome;
+  action: Action;
+  surfaceBorder: SurfaceBorder;
   shadows: { opacity: number };
   space: typeof space;
   size: SizeScale;
@@ -107,8 +123,34 @@ export function composeTheme(
     };
   }
 
+  const baseChrome =
+    colorMode === "light" ? lightChromeColors : darkChromeColors;
+  let chrome: Chrome = { ...baseChrome };
+  if (variantDef.chrome) {
+    chrome = { ...chrome, ...variantDef.chrome };
+  }
+
+  const baseAction =
+    colorMode === "light" ? lightActionColors : darkActionColors;
+  let action: Action = { ...baseAction };
+  if (variantDef.action) {
+    action = { ...action, ...variantDef.action };
+  }
+
+  const baseSurfaceBorder =
+    colorMode === "light" ? lightSurfaceBorderColors : darkSurfaceBorderColors;
+  let surfaceBorder: SurfaceBorder = { ...baseSurfaceBorder };
+  if (variantDef.surfaceBorder) {
+    surfaceBorder = { ...surfaceBorder, ...variantDef.surfaceBorder };
+  }
+
   // Determine shadow opacity
   const shadowOpacity = variantDef.shadows?.opacity ?? base.shadows.opacity;
+
+  // Tier-1 shadows zero out in dark so the new bold border carries depth;
+  // tier-2 modalElevation keeps its hard offset.
+  const composedShadow =
+    colorMode === "dark" ? { ...shadow, ...darkShadowOverrides } : shadow;
 
   // Determine size scale
   const sizeScale = variantDef.size ?? size;
@@ -187,6 +229,9 @@ export function composeTheme(
   return {
     colors,
     narrative,
+    chrome,
+    action,
+    surfaceBorder,
     shadows: { opacity: shadowOpacity },
     space,
     size: sizeScale,
@@ -198,7 +243,7 @@ export function composeTheme(
     letterSpacing,
     fontFamily: resolvedFontFamily,
     transition,
-    shadow,
+    shadow: composedShadow,
     textStyles,
     variant,
   };

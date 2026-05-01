@@ -18,7 +18,7 @@ export const styles = StyleSheet.create((theme) => ({
     borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.border,
     borderRadius: theme.radius.sm,
-    ...shadowStyle(theme, "hardSm"),
+    ...shadowStyle(theme, "cardElevationSmall"),
   },
   header: {
     flexDirection: "row",

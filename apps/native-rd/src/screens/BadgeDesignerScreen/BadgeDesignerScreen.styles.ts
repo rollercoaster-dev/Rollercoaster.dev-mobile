@@ -6,27 +6,16 @@ export const styles = StyleSheet.create((theme) => ({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
+  screen: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
   topBar: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: theme.space[4],
-    paddingVertical: theme.space[2],
-    paddingBottom: theme.space[4],
-    backgroundColor: theme.colors.accentYellow,
     zIndex: 2,
-    ...shadowStyle(theme, "hardMd"),
-  },
-  topBarTitle: {
-    ...theme.textStyles.title,
-    color: theme.colors.text,
-  },
-  spacer: {
-    width: 48,
   },
   scrollContent: {
     gap: theme.space[4],
@@ -48,7 +37,7 @@ export const styles = StyleSheet.create((theme) => ({
     borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.backgroundSecondary,
-    ...shadowStyle(theme, "hardMd"),
+    ...shadowStyle(theme, "cardElevation"),
   },
   sectionContainer: {
     width: "100%",

@@ -4,7 +4,7 @@ import { shadowStyle } from "../../styles/shadows";
 export const styles = StyleSheet.create((theme) => ({
   container: {
     minWidth: 200,
-    ...shadowStyle(theme, "hardMd"),
+    ...shadowStyle(theme, "modalElevation"),
   },
   itemList: {
     gap: theme.space[1],

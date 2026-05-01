@@ -21,7 +21,7 @@ export const styles = StyleSheet.create((theme) => ({
     borderLeftColor: palette.yellow300,
     borderRadius: theme.radius.sm,
     padding: theme.space[4],
-    ...shadowStyle(theme, "hardSm"),
+    ...shadowStyle(theme, "cardElevationSmall"),
   },
   heading: {
     fontSize: 18,

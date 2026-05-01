@@ -2,23 +2,8 @@ import { StyleSheet } from "react-native-unistyles";
 import { shadowStyle } from "../../styles/shadows";
 
 export const styles = StyleSheet.create((theme) => ({
-  topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: theme.space[4],
-    paddingVertical: theme.space[2],
-  },
-  backIcon: {
-    fontSize: 18,
-    fontWeight: theme.fontWeight.bold,
-  },
-  spacer: {
-    width: 48,
-  },
   scrollContent: {
     padding: theme.space[4],
-    paddingBottom: theme.space[12],
     gap: theme.space[4],
   },
   centered: {
@@ -47,7 +32,7 @@ export const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.space[3],
     paddingVertical: theme.space[3],
     minHeight: 48,
-    ...shadowStyle(theme, "hardSm"),
+    ...shadowStyle(theme, "cardElevationSmall"),
   },
   inputError: {
     borderColor: theme.colors.accentPrimary,
@@ -67,7 +52,7 @@ export const styles = StyleSheet.create((theme) => ({
     paddingVertical: theme.space[3],
     minHeight: 80,
     textAlignVertical: "top",
-    ...shadowStyle(theme, "hardSm"),
+    ...shadowStyle(theme, "cardElevationSmall"),
   },
   buttonSection: {
     marginTop: theme.space[4],

@@ -29,7 +29,7 @@ export const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius.sm,
     backgroundColor: theme.colors.background,
     minHeight: 44,
-    ...shadowStyle(theme, "hardSm"),
+    ...shadowStyle(theme, "cardElevationSmall"),
   },
   chipSelected: {
     backgroundColor: theme.colors.accentPrimary,

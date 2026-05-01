@@ -21,7 +21,7 @@ export const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius.sm,
     overflow: "hidden",
     backgroundColor: theme.colors.backgroundSecondary,
-    ...shadowStyle(theme, "hardMd"),
+    ...shadowStyle(theme, "cardElevation"),
   },
   separator: {
     height: 1,

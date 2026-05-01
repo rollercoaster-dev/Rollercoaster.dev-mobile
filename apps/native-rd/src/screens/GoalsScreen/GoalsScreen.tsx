@@ -1,13 +1,13 @@
 import React, { Suspense, useMemo, useState } from "react";
 import { View, FlatList, ActivityIndicator } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
+import { useTabScreenContentInset } from "../../navigation/useTabScreenContentInset";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@evolu/react";
-import { useUnistyles } from "react-native-unistyles";
 import { Text } from "../../components/Text";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { IconButton } from "../../components/IconButton";
+import { ScreenHeader } from "../../components/ScreenHeader";
 import { GoalCard, type GoalCardGoal } from "../../components/GoalCard";
 import { EmptyState } from "../../components/EmptyState";
 import { ConfirmDeleteModal } from "../ConfirmDeleteModal";
@@ -119,33 +119,27 @@ function GoalList() {
 
 export function GoalsScreen() {
   const navigation = useNavigation<Nav>();
-  // Subscribe to theme changes to trigger re-renders
-  const { theme } = useUnistyles();
+  const tabInset = useTabScreenContentInset();
 
   return (
-    <SafeAreaView
-      edges={["top"]}
-      style={{ flex: 1, backgroundColor: theme.colors.accentYellow }}
-    >
-      <View style={styles.header}>
-        <Text variant="display">Goals</Text>
-        <IconButton
-          icon={
-            <Text variant="headline" style={styles.addIcon}>
-              +
-            </Text>
-          }
-          onPress={() => navigation.navigate("NewGoal")}
-          accessibilityLabel="Create new goal"
-          testID="create-new-goal"
-        />
-      </View>
-      <View
-        style={[
-          styles.scrollContent,
-          { flex: 1, backgroundColor: theme.colors.background },
-        ]}
-      >
+    <View style={styles.screen}>
+      <ScreenHeader
+        title="Goals"
+        right={
+          <IconButton
+            icon={
+              <Text variant="headline" style={styles.addIcon}>
+                +
+              </Text>
+            }
+            onPress={() => navigation.navigate("NewGoal")}
+            tone="chrome"
+            accessibilityLabel="Create new goal"
+            testID="create-new-goal"
+          />
+        }
+      />
+      <View style={[styles.scrollContent, tabInset]}>
         <ErrorBoundary>
           <Suspense
             fallback={
@@ -156,6 +150,6 @@ export function GoalsScreen() {
           </Suspense>
         </ErrorBoundary>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }

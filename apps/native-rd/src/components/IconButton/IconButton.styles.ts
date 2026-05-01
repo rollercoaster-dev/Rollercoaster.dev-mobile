@@ -1,8 +1,14 @@
 import { StyleSheet } from "react-native-unistyles";
 import { shadowStyle } from "../../styles/shadows";
+import type { ComposedTheme } from "../../themes/compose";
 
 export type IconButtonSize = "sm" | "md" | "lg";
-export type IconButtonVariant = "default" | "ghost" | "destructive";
+export type IconButtonTone =
+  | "chrome"
+  | "ghost"
+  | "surface"
+  | "primary"
+  | "destructive";
 
 const sizeValues = {
   sm: 36,
@@ -26,20 +32,31 @@ export const styles = StyleSheet.create((theme) => ({
     justifyContent: "center" as const,
     hitSlop: hitSlopValues[size],
   }),
-  variantDefault: {
-    backgroundColor: theme.colors.backgroundSecondary,
-    borderWidth: theme.borderWidth.medium,
-    borderColor: theme.colors.border,
-    ...shadowStyle(theme, "hardSm"),
-  },
-  variantGhost: {
+  // Chrome and ghost are both transparent so the surface they sit on shows
+  // through; the difference is which token the foreground resolves against.
+  toneChrome: {
     backgroundColor: "transparent",
   },
-  variantDestructive: {
-    backgroundColor: theme.colors.backgroundSecondary,
+  toneGhost: {
+    backgroundColor: "transparent",
+  },
+  toneSurface: {
+    backgroundColor: theme.action.actionSecondaryBg,
     borderWidth: theme.borderWidth.medium,
-    borderColor: theme.colors.border,
-    ...shadowStyle(theme, "hardSm"),
+    borderColor: theme.surfaceBorder.borderDefault,
+    ...shadowStyle(theme, "cardElevationSmall"),
+  },
+  tonePrimary: {
+    backgroundColor: theme.action.actionPrimaryBg,
+    borderWidth: theme.borderWidth.medium,
+    borderColor: theme.surfaceBorder.borderDefault,
+    ...shadowStyle(theme, "cardElevationSmall"),
+  },
+  toneDestructive: {
+    backgroundColor: theme.action.actionDestructiveBg,
+    borderWidth: theme.borderWidth.medium,
+    borderColor: theme.surfaceBorder.borderDestructive,
+    ...shadowStyle(theme, "cardElevationSmall"),
   },
   pressed: {
     opacity: 0.7,
@@ -48,3 +65,24 @@ export const styles = StyleSheet.create((theme) => ({
     opacity: 0.4,
   },
 }));
+
+// Lives in the styles module so call sites never reach for a token to set
+// icon color themselves.
+export function resolveIconColor(
+  theme: Pick<ComposedTheme, "chrome" | "action" | "surfaceBorder">,
+  tone: IconButtonTone,
+): string {
+  switch (tone) {
+    case "chrome":
+      // Foreground on the app's purple chrome band — same role as tab bar text.
+      return theme.chrome.chromeTabBarFg;
+    case "ghost":
+      return theme.surfaceBorder.surfaceCardFg;
+    case "surface":
+      return theme.action.actionSecondaryFg;
+    case "primary":
+      return theme.action.actionPrimaryFg;
+    case "destructive":
+      return theme.action.actionDestructiveFg;
+  }
+}

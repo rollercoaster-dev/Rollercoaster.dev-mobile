@@ -40,7 +40,7 @@ export const styles = StyleSheet.create((theme) => ({
     paddingVertical: theme.space[1],
     minHeight: 44,
     minWidth: 44,
-    ...shadowStyle(theme, "hardSm"),
+    ...shadowStyle(theme, "cardElevationSmall"),
   },
   evidenceFlash: {
     position: "absolute" as const,
@@ -59,17 +59,47 @@ export const styles = StyleSheet.create((theme) => ({
   plannedTypesRow: {
     marginTop: theme.space[1],
   },
-  hintText: {
-    fontSize: theme.size.sm,
-    fontFamily: theme.fontFamily.body,
-    color: theme.colors.warning,
-    fontWeight: theme.fontWeight.semibold,
-  },
   checkboxRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: theme.space[3],
     marginTop: theme.space[1],
+  },
+  quickNoteSection: {
+    gap: theme.space[2],
+  },
+  quickNoteLabel: {
+    fontSize: theme.size.sm,
+    fontFamily: theme.fontFamily.body,
+    fontWeight: theme.fontWeight.semibold,
+    color: theme.colors.text,
+  },
+  quickActionsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: theme.space[2],
+  },
+  quickActionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.space[1],
+    backgroundColor: theme.colors.backgroundSecondary,
+    borderWidth: theme.borderWidth.medium,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.sm,
+    paddingHorizontal: theme.space[3],
+    paddingVertical: theme.space[2],
+    minHeight: 44,
+    ...shadowStyle(theme, "cardElevationSmall"),
+  },
+  quickActionIcon: {
+    fontSize: 16,
+  },
+  quickActionText: {
+    fontSize: theme.size.sm,
+    fontWeight: theme.fontWeight.bold,
+    fontFamily: theme.fontFamily.body,
+    color: theme.colors.text,
   },
   quickNoteRow: {
     flexDirection: "row",
@@ -100,7 +130,7 @@ export const styles = StyleSheet.create((theme) => ({
     minWidth: 44,
     alignItems: "center",
     justifyContent: "center",
-    ...shadowStyle(theme, "hardSm"),
+    ...shadowStyle(theme, "cardElevationSmall"),
   },
   quickNoteButtonText: {
     fontSize: theme.size.sm,
