@@ -163,7 +163,7 @@ A.5 (Phase 1) is complete — basic badge designer with shape, color, icon, and 
 ## Iteration D — Community
 
 **Theme:** The personal tool connects to other people.
-**Status:** Not started (2026-02-28). No code, data model, or issues exist. OB3 signing upgrade (`eddsa-rdfc-2022`) deferred to this iteration.
+**Status:** Not started (2026-02-28). No implementation code or issues exist. Planned data model documented in [data-model.md](../architecture/data-model.md#iteration-d--community); verification and identity-disclosure approach in [personal-data-verification.md](../architecture/personal-data-verification.md). OB3 signing upgrade (`eddsa-rdfc-2022`) deferred to this iteration.
 
 **Scope (adds to C):**
 

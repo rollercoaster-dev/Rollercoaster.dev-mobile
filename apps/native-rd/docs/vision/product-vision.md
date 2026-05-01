@@ -125,9 +125,9 @@ Add the visual layer. Your badges become nodes in a skill tree you design. Plan 
 
 ### Iteration D — Community (not started)
 
-Add peer verification and badge sharing. Share a badge with a mentor or peer device-to-device. They review your evidence and verify with a tap. Their name and credentials attach to your badge cryptographically. No server needed — phones talk directly. This is where the personal tool connects to other people. Also upgrades OB3 signing from the current `eddsa-raw-json-iteration-a` to spec-compliant `eddsa-rdfc-2022`.
+Add peer verification and badge sharing. Share a badge with a mentor or peer device-to-device. They review your evidence and verify with a tap. Their DID, verification type, and optional authority badge attach to your badge cryptographically. Personal identity fields such as name or email remain opt-in per badge or share, with a review step before they are signed or exported. No server needed — phones talk directly. This is where the personal tool connects to other people. Also upgrades OB3 signing from the current `eddsa-raw-json-iteration-a` to spec-compliant `eddsa-rdfc-2022`.
 
-**No code or data model exists for this iteration.**
+**No implementation code exists for this iteration.** Planned entities are documented in the data model. See [Personal Data and Badge Verification](../architecture/personal-data-verification.md) for the privacy-preserving verification model.
 
 Each iteration ships as a usable product. A is useful without B. B is useful without C or D. No iteration is a throwaway prototype.
 

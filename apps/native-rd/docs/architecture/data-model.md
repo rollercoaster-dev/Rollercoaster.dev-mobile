@@ -87,6 +87,8 @@ An OB3 Verifiable Credential, earned on goal completion.
 
 The `credential` field contains the complete OB3 JSON — issuer (self), recipient (self), achievement, evidence references, and cryptographic signature. This is the portable artifact. Everything else in this database is local convenience.
 
+Iteration A badges intentionally do not require a name, email address, account, or demographic profile. The credential subject is the user's locally generated DID. This allows cryptographic verification of the badge without forcing real-world identity disclosure. See [Personal Data and Badge Verification](./personal-data-verification.md) for the Iteration D identity-disclosure model.
+
 ### Iteration A Relationships
 
 ```
@@ -228,6 +230,8 @@ SkillTreeNode 1──* SkillTreeEdge (as to_node)
 
 Two new entities. Adds peer verification and badge sharing.
 
+Verification in this iteration vouches for a badge, its evidence, and the holder/verifier DIDs. It should not be described as legal identity verification unless the user explicitly disclosed identity fields and the verifier's signed attestation records that those fields were reviewed.
+
 ### Verification
 
 A cryptographic attestation that someone vouches for a badge.
@@ -243,6 +247,8 @@ A cryptographic attestation that someone vouches for a badge.
 | created_at        | timestamp     |                                                           |
 
 Carmen's verification of Kayla's badge includes Carmen's DID, her "Raised Bed Gardening" badge as authority, and a cryptographic signature. This data is embedded in the badge's OB3 credential JSON, making it portable — the verification travels with the badge.
+
+By default, this verifies that Carmen's DID endorsed Kayla's badge DID and evidence. If Kayla chooses to include a name, email, or other personal data, that disclosure should be stored as an explicit snapshot so Kayla can later see which badges or shares contain identifying information.
 
 ### ShareRecord
 
