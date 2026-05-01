@@ -1,5 +1,13 @@
 # native-rd
 
+## 0.1.3
+
+### Patch Changes
+
+- Updated dependencies [5810c0b]
+  - openbadges-types@4.0.0
+  - @rollercoaster-dev/openbadges-core@0.1.3
+
 ## 0.1.2
 
 ### Patch Changes
