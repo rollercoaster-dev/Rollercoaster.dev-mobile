@@ -1,6 +1,6 @@
 import React from "react";
 import { Rect, Text } from "react-native-svg";
-import type { BannerData, BadgeShape } from "../types";
+import { BadgeShape, type BannerData } from "../types";
 import { getSafeTextColor } from "../../utils/accessibility";
 import { fontFamily as fontFamilyTokens } from "../../themes/tokens";
 
@@ -28,7 +28,7 @@ export const BANNER_WIDTH_RATIO = 0.8;
 /** Hard shadow offset in pixels (neo-brutalist) */
 export const BANNER_SHADOW_OFFSET = 2;
 
-/** Y-center ratio for 'center' position */
+/** Fraction of the banner that remains visible above the badge edge for the 'top' strap position */
 export const BANNER_TOP_VISIBLE_RATIO = 0.05;
 
 /** Font size as fraction of badge size */
@@ -51,7 +51,7 @@ export function getBannerTopY(
     return size - bannerH * topVisibleRatio;
   }
 
-  // "center" now behaves like a top strap: 95% of the banner sits above the badge.
+  // Top strap: 95% of the banner sits above the badge.
   return -bannerH * (1 - topVisibleRatio);
 }
 
@@ -59,10 +59,47 @@ export function getBannerTopVisibleRatio(
   position: BannerData["position"],
   shape?: BadgeShape,
 ): number {
-  if (position !== "center") return BANNER_TOP_VISIBLE_RATIO;
-  return shape === "star"
+  if (position !== "top") return BANNER_TOP_VISIBLE_RATIO;
+  return shape === BadgeShape.star
     ? STAR_BANNER_TOP_VISIBLE_RATIO
     : BANNER_TOP_VISIBLE_RATIO;
+}
+
+/** Banner rect geometry (x/y/width/height) for the given size, scale, and shape. */
+export function getBannerBox(
+  banner: BannerData,
+  size: number,
+  scale: number,
+  shape?: BadgeShape,
+): { x: number; y: number; w: number; h: number } {
+  const topVisibleRatio = getBannerTopVisibleRatio(banner.position, shape);
+  const w = size * BANNER_WIDTH_RATIO * scale;
+  const h = size * BANNER_HEIGHT_RATIO * scale;
+  const x = (size - w) / 2;
+  const y =
+    banner.position === "bottom"
+      ? size - h * topVisibleRatio
+      : -h * (1 - topVisibleRatio);
+  return { x, y, w, h };
+}
+
+/**
+ * Vertical amount the banner extends beyond the badge bounds: `top` is the
+ * height above y=0, `bottom` is the height below y=size. The inactive
+ * direction (i.e. the side the banner isn't on) returns 0.
+ */
+export function getBannerOverflow(
+  banner: BannerData,
+  size: number,
+  scale: number,
+  shape?: BadgeShape,
+): { top: number; bottom: number } {
+  const topVisibleRatio = getBannerTopVisibleRatio(banner.position, shape);
+  const overflow = size * BANNER_HEIGHT_RATIO * scale * (1 - topVisibleRatio);
+  return {
+    top: banner.position !== "bottom" ? overflow : 0,
+    bottom: banner.position === "bottom" ? overflow : 0,
+  };
 }
 
 export function Banner({

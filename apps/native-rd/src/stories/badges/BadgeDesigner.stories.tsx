@@ -112,12 +112,12 @@ function BadgeDesignerComposer({
         <BannerEditor
           enabled={design.banner != null}
           text={design.banner?.text ?? ""}
-          position={design.banner?.position ?? BannerPosition.center}
+          position={design.banner?.position ?? BannerPosition.top}
           onToggle={(enabled) =>
             setDesign((prev) => ({
               ...prev,
               banner: enabled
-                ? { text: "", position: BannerPosition.center }
+                ? { text: "", position: BannerPosition.top }
                 : undefined,
             }))
           }
@@ -127,7 +127,7 @@ function BadgeDesignerComposer({
               banner: {
                 ...(prev.banner ?? {
                   text: "",
-                  position: BannerPosition.center,
+                  position: BannerPosition.top,
                 }),
                 text,
               },
@@ -139,7 +139,7 @@ function BadgeDesignerComposer({
               banner: {
                 ...(prev.banner ?? {
                   text: "",
-                  position: BannerPosition.center,
+                  position: BannerPosition.top,
                 }),
                 position,
               },
@@ -237,11 +237,11 @@ export const WithAllControls: Story = {
         iconWeight: BadgeIconWeight.bold,
         centerMode: BadgeCenterMode.monogram,
         monogram: "JC",
-        centerLabel: "EXPERT",
+        bottomLabel: "EXPERT",
         pathText: "ACHIEVEMENT",
         pathTextPosition: PathTextPosition.both,
         pathTextBottom: "EARNED 2026",
-        banner: { text: "WINNER", position: BannerPosition.center },
+        banner: { text: "WINNER", position: BannerPosition.top },
         frameParams: {
           variant: 0,
           stepCount: 8,

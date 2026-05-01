@@ -6,15 +6,15 @@ export {
   MONOGRAM_SIZE_RATIO_3,
 } from "./MonogramCenter";
 
-export { CenterLabel } from "./CenterLabel";
-export type { CenterLabelProps } from "./CenterLabel";
+export { BottomLabel } from "./BottomLabel";
+export type { BottomLabelProps } from "./BottomLabel";
 export {
-  CENTER_LABEL_SIZE_RATIO,
-  CENTER_LABEL_TOP_MARGIN_RATIO,
-  CENTER_LABEL_MAX_CHARS,
-  getCenterLabelY,
-  getCenterLabelBottomOverflow,
-} from "./CenterLabel";
+  BOTTOM_LABEL_SIZE_RATIO,
+  BOTTOM_LABEL_TOP_MARGIN_RATIO,
+  BOTTOM_LABEL_MAX_CHARS,
+  getBottomLabelY,
+  getBottomLabelBottomOverflow,
+} from "./BottomLabel";
 
 export { PathText } from "./PathText";
 export type { PathTextProps } from "./PathText";

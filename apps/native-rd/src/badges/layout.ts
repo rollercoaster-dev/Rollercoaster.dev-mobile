@@ -2,11 +2,14 @@ import type { BadgeDesign, BadgeShape } from "./types";
 
 export type BadgeLayoutDensity = "default" | "balanced" | "compact";
 
-type BadgeLayoutMetrics = {
+/** Center icon size as a fraction of badge size, before density scaling. */
+export const ICON_SIZE_RATIO = 0.45;
+
+export type BadgeLayoutMetrics = {
   density: BadgeLayoutDensity;
   centerY: number;
   centerContentScale: number;
-  centerLabelScale: number;
+  bottomLabelScale: number;
   pathTextFontScale: number;
   pathTextInset: number;
   bannerScale: number;
@@ -30,9 +33,9 @@ const SHAPE_CENTER_Y_OFFSET: Record<BadgeShape, number> = {
   diamond: -0.01,
 };
 
-function hasVisibleCenterBanner(design: BadgeDesign) {
+function hasVisibleTopBanner(design: BadgeDesign) {
   return (
-    design.banner?.position === "center" && Boolean(design.banner.text?.trim())
+    design.banner?.position === "top" && Boolean(design.banner.text?.trim())
   );
 }
 
@@ -66,20 +69,20 @@ export function getBadgeLayoutMetrics(
 ): BadgeLayoutMetrics {
   const topPathTextVisible = hasVisibleTopPathText(design);
   const bottomPathTextVisible = hasVisibleBottomPathText(design);
-  const centerBannerVisible = hasVisibleCenterBanner(design);
+  const topBannerVisible = hasVisibleTopBanner(design);
   const bottomBannerVisible = hasVisibleBottomBanner(design);
-  const centerLabelVisible = Boolean(design.centerLabel?.trim());
+  const bottomLabelVisible = Boolean(design.bottomLabel?.trim());
 
   const layoutPressure =
     Number(topPathTextVisible) +
     Number(bottomPathTextVisible) +
-    Number(centerBannerVisible || bottomBannerVisible) +
-    Number(centerLabelVisible);
+    Number(topBannerVisible || bottomBannerVisible) +
+    Number(bottomLabelVisible);
 
   let density: BadgeLayoutDensity = "default";
   if (
     layoutPressure >= 3 ||
-    (bottomPathTextVisible && (centerLabelVisible || centerBannerVisible))
+    (bottomPathTextVisible && (bottomLabelVisible || topBannerVisible))
   ) {
     density = "compact";
   } else if (layoutPressure >= 2) {
@@ -108,9 +111,7 @@ export function getBadgeLayoutMetrics(
   const minTextInset = inset + size * 0.03;
   const pathTextInset = Math.max(minTextInset, innerInset - textInsetReduction);
   const compactTextCompression =
-    topPathTextVisible && bottomPathTextVisible && centerBannerVisible
-      ? 0.78
-      : 1;
+    topPathTextVisible && bottomPathTextVisible && topBannerVisible ? 0.78 : 1;
   const pathTextFontScale =
     shapeTextScale * densityScale * compactTextCompression;
 
@@ -119,7 +120,7 @@ export function getBadgeLayoutMetrics(
     centerY,
     centerContentScale:
       density === "compact" ? 0.78 : density === "balanced" ? 0.88 : 1,
-    centerLabelScale:
+    bottomLabelScale:
       density === "compact" ? 0.72 : density === "balanced" ? 0.84 : 1,
     pathTextFontScale,
     pathTextInset,

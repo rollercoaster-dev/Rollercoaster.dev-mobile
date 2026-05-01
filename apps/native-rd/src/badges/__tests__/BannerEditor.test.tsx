@@ -15,7 +15,7 @@ describe("BannerEditor", () => {
   const defaultProps = {
     enabled: false,
     text: "",
-    position: BannerPosition.center,
+    position: BannerPosition.top,
     onToggle,
     onChangeText,
     onChangePosition,
@@ -106,7 +106,7 @@ describe("BannerEditor", () => {
   });
 
   it.each([
-    { pos: BannerPosition.center, label: "Center position" },
+    { pos: BannerPosition.top, label: "Top position" },
     { pos: BannerPosition.bottom, label: "Bottom position" },
   ])("renders $label option with radio role", ({ label }) => {
     renderWithProviders(<BannerEditor {...defaultProps} enabled={true} />);
@@ -117,7 +117,7 @@ describe("BannerEditor", () => {
   });
 
   it.each([
-    { selected: BannerPosition.center, label: "Center position" },
+    { selected: BannerPosition.top, label: "Top position" },
     { selected: BannerPosition.bottom, label: "Bottom position" },
   ])("marks $label as checked when selected", ({ selected, label }) => {
     renderWithProviders(
@@ -134,7 +134,7 @@ describe("BannerEditor", () => {
       <BannerEditor
         {...defaultProps}
         enabled={true}
-        position={BannerPosition.center}
+        position={BannerPosition.top}
       />,
     );
 

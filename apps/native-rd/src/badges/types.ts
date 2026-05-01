@@ -69,7 +69,7 @@ export type PathTextPosition =
 
 /** Position for the banner/ribbon overlay */
 export const BannerPosition = {
-  center: "center",
+  top: "top",
   bottom: "bottom",
 } as const;
 
@@ -104,7 +104,7 @@ export type BannerData = {
  *   `'both'` → both arcs rendered.
  *
  * **Constraint enforcement:**
- * `monogram` (1-3 chars) and `centerLabel` (max ~10 chars) are validated
+ * `monogram` (1-3 chars) and `bottomLabel` (max ~10 chars) are validated
  * at the renderer/UI layer, not here — this type represents stored data.
  */
 export type BadgeDesign = {
@@ -115,9 +115,8 @@ export type BadgeDesign = {
   iconWeight: BadgeIconWeight;
   title: string; // display title (from goal, editable)
   centerMode: BadgeCenterMode;
-  label?: string; // optional custom label
   monogram?: string; // 1-3 chars, enforced at UI layer
-  centerLabel?: string; // max ~10 chars, enforced at UI layer
+  bottomLabel?: string; // max ~10 chars, rendered below the badge; enforced at UI layer
   pathText?: string; // top arc inscription
   pathTextPosition?: PathTextPosition; // which arcs to render
   pathTextBottom?: string; // bottom arc inscription

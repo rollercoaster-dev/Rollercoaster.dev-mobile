@@ -365,12 +365,12 @@ describe("BadgeDesignerScreen", () => {
     expect(screen.queryByLabelText(/Selected icon:.*Tap to change/)).toBeNull();
   });
 
-  it("renders center label input", () => {
+  it("renders bottom label input", () => {
     mockUseQuery.mockReturnValue([makeRow()]);
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
-    expect(screen.getByLabelText("Center label")).toBeOnTheScreen();
+    expect(screen.getByLabelText("Bottom label")).toBeOnTheScreen();
   });
 
   it("includes new fields in saved JSON after changes", () => {
@@ -632,7 +632,7 @@ describe("BadgeDesignerScreen — integration", () => {
     expect(parsed.pathText).toBe("ACHIEVEMENT");
     expect(parsed.pathTextPosition).toBe("top");
     expect(parsed.banner).toEqual(
-      expect.objectContaining({ text: "WINNER", position: "center" }),
+      expect.objectContaining({ text: "WINNER", position: "top" }),
     );
   });
 

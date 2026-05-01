@@ -26,7 +26,7 @@ export interface BannerEditorProps {
 const POSITIONS = Object.values(BannerPosition) as BannerPosition[];
 
 const POSITION_LABELS: Record<BannerPosition, string> = {
-  center: "Center",
+  top: "Top",
   bottom: "Bottom",
 };
 

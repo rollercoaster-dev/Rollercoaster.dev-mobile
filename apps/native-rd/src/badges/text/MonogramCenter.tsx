@@ -33,6 +33,25 @@ const RATIO_BY_LENGTH = [
   MONOGRAM_SIZE_RATIO_3,
 ];
 
+/**
+ * Resolve the rendered monogram font size for a non-empty trimmed string,
+ * applying the same 1/2/3-char ratio table the component uses. Pure — usable
+ * by layout-box consumers that need monogram dimensions without rendering.
+ *
+ * Precondition: `monogram.trim()` is non-empty. Returns 0 for empty input
+ * so layout consumers don't silently get a non-zero size for absent text.
+ */
+export function getMonogramFontSize(
+  monogram: string,
+  size: number,
+  scale = 1,
+): number {
+  const chars = monogram.trim().slice(0, 3);
+  if (chars.length === 0) return 0;
+  const ratio = RATIO_BY_LENGTH[chars.length - 1];
+  return size * ratio * scale;
+}
+
 export function MonogramCenter({
   monogram,
   size,
@@ -45,8 +64,7 @@ export function MonogramCenter({
   if (!monogram || monogram.trim().length === 0) return null;
 
   const chars = monogram.trim().slice(0, 3);
-  const ratio = RATIO_BY_LENGTH[Math.min(chars.length, 3) - 1];
-  const fontSize = size * ratio * scale;
+  const fontSize = getMonogramFontSize(monogram, size, scale);
   const textColor = getSafeTextColor(fillColor, "MonogramCenter");
   const cx = size / 2;
   const cy = centerY ?? size / 2;

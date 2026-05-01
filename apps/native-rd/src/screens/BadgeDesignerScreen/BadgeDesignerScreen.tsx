@@ -52,7 +52,7 @@ import { styles } from "./BadgeDesignerScreen.styles";
 
 const logger = new Logger("BadgeDesignerScreen");
 
-const DEFAULT_BANNER = { text: "", position: BannerPosition.center } as const;
+const DEFAULT_BANNER = { text: "", position: BannerPosition.top } as const;
 
 /** Reserved space below topBar for the floating preview overlay at rest. */
 const PREVIEW_OVERLAY_HEIGHT = 200;
@@ -169,9 +169,9 @@ function DesignEditor({
     [currentDesign, onDesignChange],
   );
 
-  const handleCenterLabelChange = useCallback(
-    (centerLabel: string) => {
-      onDesignChange({ ...currentDesign, centerLabel });
+  const handleBottomLabelChange = useCallback(
+    (bottomLabel: string) => {
+      onDesignChange({ ...currentDesign, bottomLabel });
     },
     [currentDesign, onDesignChange],
   );
@@ -254,7 +254,7 @@ function DesignEditor({
   const frame = currentDesign.frame ?? BadgeFrame.none;
   const centerMode = currentDesign.centerMode ?? BadgeCenterMode.icon;
   const monogram = currentDesign.monogram ?? "";
-  const centerLabel = currentDesign.centerLabel ?? "";
+  const bottomLabel = currentDesign.bottomLabel ?? "";
   const pathTextEnabled =
     currentDesign.pathText !== undefined ||
     currentDesign.pathTextPosition !== undefined;
@@ -264,8 +264,7 @@ function DesignEditor({
   const pathTextBottom = currentDesign.pathTextBottom ?? "";
   const bannerEnabled = currentDesign.banner != null;
   const bannerText = currentDesign.banner?.text ?? "";
-  const bannerPosition =
-    currentDesign.banner?.position ?? BannerPosition.center;
+  const bannerPosition = currentDesign.banner?.position ?? BannerPosition.top;
 
   const previewLabel = `Badge preview: ${currentDesign.color} ${currentDesign.shape} ${frame} frame with ${currentDesign.iconName} icon`;
 
@@ -338,15 +337,15 @@ function DesignEditor({
         )}
 
         <View style={styles.sectionContainer}>
-          <Text style={styles.sectionLabel}>Center Label</Text>
+          <Text style={styles.sectionLabel}>Bottom Label</Text>
           <TextInput
-            accessibilityLabel="Center label"
-            value={centerLabel}
-            onChangeText={handleCenterLabelChange}
+            accessibilityLabel="Bottom label"
+            value={bottomLabel}
+            onChangeText={handleBottomLabelChange}
             maxLength={10}
             placeholder="Optional label"
             placeholderTextColor={theme.colors.textSecondary}
-            style={styles.centerLabelInput}
+            style={styles.bottomLabelInput}
           />
         </View>
 

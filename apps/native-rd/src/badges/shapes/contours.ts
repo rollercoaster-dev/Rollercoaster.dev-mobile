@@ -39,6 +39,37 @@ export type ShapeContour = {
 /** Frame band width as a fraction of badge size. */
 export const FRAME_BAND_RATIO = 0.12;
 
+/**
+ * Radius of the arc that path text is drawn along, per shape.
+ *
+ * Mirrors the per-shape `textR` calculations used inside `generateContour`.
+ * Exported so layout-only consumers (tests, layout-box helpers) can derive
+ * the path-text bounding region without rendering SVG.
+ */
+export function getPathTextRadius(
+  shape: BadgeShape,
+  size: number,
+  inset: number,
+  side: "top" | "bottom" = "top",
+): number {
+  const outerR = size / 2 - inset;
+  switch (shape) {
+    case "circle":
+    case "hexagon":
+      return outerR * 0.8;
+    case "diamond":
+      return outerR * 0.7;
+    case "star":
+      return outerR * 1.0;
+    case "shield": {
+      const half = (size - inset * 2) / 2;
+      return side === "bottom" ? half * 0.8 : half;
+    }
+    case "roundedRect":
+      return (size - inset * 2) / 2;
+  }
+}
+
 /** Default text arc center Y ratios — top arc raised, bottom arc lowered. */
 const TEXT_ARC_TOP_CY_RATIO = 0.8;
 const TEXT_ARC_BOTTOM_CY_RATIO = 1.1;

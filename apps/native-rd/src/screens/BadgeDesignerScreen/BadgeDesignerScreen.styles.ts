@@ -53,7 +53,7 @@ export const styles = StyleSheet.create((theme) => ({
     width: "100%",
     gap: theme.space[2],
   },
-  centerLabelInput: {
+  bottomLabelInput: {
     marginHorizontal: theme.space[4],
     minHeight: 44,
     paddingHorizontal: theme.space[3],
