@@ -184,4 +184,6 @@ Badges are self-signed [Open Badges 3.0](https://www.imsglobal.org/spec/ob/v3p0)
 
 No issuer server. No account. The badge is yours.
 
+> **Iteration A caveat:** badges currently fail external verifiers (e.g. verifybadge.org) by design. Local verification works; spec-strict third-party verification lands in Iteration D. See [OB3 Compliance Status](docs/architecture/ob3-compliance-status.md).
+
 See [openbadges-core architecture](docs/architecture/openbadges-core.md) for architecture details. The `@rollercoaster-dev/openbadges-core` package lives at `packages/openbadges-core/` in the monorepo and is declared as a `workspace:*` dependency.

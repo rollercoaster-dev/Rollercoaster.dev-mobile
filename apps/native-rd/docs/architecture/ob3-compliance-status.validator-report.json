@@ -1,0 +1,78 @@
+{
+  "id": "0aecd4b5-fdc4-4245-bd30-0e4302d9981f",
+  "generated": "2026-05-01T09:17:43",
+  "generator": "OB30Inspector",
+  "input": {
+    "name": "badge-Test-1777626975527.json",
+    "type": "JSON"
+  },
+  "summary": {
+    "outcome": "ERROR",
+    "fatals": 0,
+    "errors": 6,
+    "warnings": 0,
+    "exceptions": 0,
+    "notRun": 0,
+    "totalRun": 13
+  },
+  "specification": {
+    "pid": "ob30.pid",
+    "shortName": "ob",
+    "version": "3.0",
+    "title": "Open Badges 3.0"
+  },
+  "fatals": [],
+  "errors": [
+    {
+      "message": "$: must be valid to one and only one schema, but 0 are valid",
+      "location": {
+        "resource": "badge-Test-1777626975527.json"
+      },
+      "generator": "JsonSchemaProbe|https://purl.imsglobal.org/spec/ob/v3p0/schema/json/ob_v3p0_anyachievementcredential_schema.json",
+      "detailsMessage": null
+    },
+    {
+      "message": "$.credentialSubject.achievement.creator: string found, object expected",
+      "location": {
+        "resource": "badge-Test-1777626975527.json"
+      },
+      "generator": "JsonSchemaProbe|https://purl.imsglobal.org/spec/ob/v3p0/schema/json/ob_v3p0_anyachievementcredential_schema.json",
+      "detailsMessage": null
+    },
+    {
+      "message": "$.proof: object found, array expected",
+      "location": {
+        "resource": "badge-Test-1777626975527.json"
+      },
+      "generator": "JsonSchemaProbe|https://purl.imsglobal.org/spec/ob/v3p0/schema/json/ob_v3p0_anyachievementcredential_schema.json",
+      "detailsMessage": null
+    },
+    {
+      "message": "$: required property 'name' not found",
+      "location": {
+        "resource": "badge-Test-1777626975527.json"
+      },
+      "generator": "JsonSchemaProbe|https://purl.imsglobal.org/spec/ob/v3p0/schema/json/ob_v3p0_anyachievementcredential_schema.json",
+      "detailsMessage": null
+    },
+    {
+      "message": "$: required property 'issuanceDate' not found",
+      "location": {
+        "resource": "badge-Test-1777626975527.json"
+      },
+      "generator": "JsonSchemaProbe|https://purl.imsglobal.org/spec/ob/v3p0/schema/json/ob_v3p0_anyachievementcredential_schema.json",
+      "detailsMessage": null
+    },
+    {
+      "message": "No proof with type any of (\"Ed25519Signature2020\", \"DataIntegrityProof\" with cryptosuite attr of \"eddsa-rdfc-2022\" or \"eddsa-2022\") or proof purpose \"assertionMethod\" found",
+      "location": {
+        "resource": "badge-Test-1777626975527.json"
+      },
+      "generator": "EmbeddedProofProbe",
+      "detailsMessage": null
+    }
+  ],
+  "warnings": [],
+  "exceptions": [],
+  "notRun": []
+}
