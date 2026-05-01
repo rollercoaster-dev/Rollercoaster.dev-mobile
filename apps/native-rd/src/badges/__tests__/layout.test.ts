@@ -121,6 +121,15 @@ describe("per-shape behavior", () => {
     const circle = getMetrics({ shape: "circle" });
     expect(star.pathTextFontScale).toBeLessThan(circle.pathTextFontScale);
   });
+
+  it("slightly scales down hexagon and diamond center content to clear contracted path text", () => {
+    const circle = getMetrics({ shape: "circle" });
+    const hexagon = getMetrics({ shape: "hexagon" });
+    const diamond = getMetrics({ shape: "diamond" });
+
+    expect(hexagon.centerContentScale).toBeLessThan(circle.centerContentScale);
+    expect(diamond.centerContentScale).toBeLessThan(circle.centerContentScale);
+  });
 });
 
 // ── pathTextInset floor ────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 # Badge Component Test System + Field Rename Refactor
 
 **Date:** 2026-05-01
-**Status:** Phases 0 + 1 complete — Phases 2-4 pending
+**Status:** Phases 0 + 1 + 2 complete — Phases 3-4 pending
 **Owner:** Joe
 
 ## Context
@@ -116,7 +116,9 @@ Implementation reuses existing exports rather than re-deriving:
 
 ---
 
-### Phase 2 — Logic-only invariant test matrix
+### Phase 2 — Logic-only invariant test matrix ✅
+
+**Status:** Complete (2026-05-01).
 
 **New file: `badges/__tests__/layout.invariants.test.ts`**
 
@@ -140,9 +142,8 @@ test.each(matrix)("layout invariants: %s", (design, size) => {
   expect(boxes.iconOrMonogram.cy).toBeCloseTo(layout.centerY, 1);
   // Containment invariants
   forEachBox(boxes, (b) => expect(boxIsInside(b, boxes.viewBox)).toBe(true));
-  // Non-overlap invariants (with allow-list)
-  forEachPair(boxes, (a, b, names) => {
-    if (isAllowedOverlap(names)) return;
+  // Non-overlap invariants for foreground layers
+  forEachPair(collectForegroundBoxes(boxes), (a, b) => {
     expect(boxesOverlap(a, b)).toBe(false);
   });
   // Bottom label sits below shape with margin > 0
@@ -152,20 +153,35 @@ test.each(matrix)("layout invariants: %s", (design, size) => {
 });
 ```
 
-**Allowed overlaps** (intentional, named explicitly):
+**Structural overlaps** (intentional, asserted separately):
 
 - `frame` ↔ `shape` (frame overlay sits on shape)
 - `pathTextTop` / `pathTextBottom` ↔ `frame` (path text rides the frame band)
 - `banner` ↔ `shape` (banner straddles edge by design)
 - `iconOrMonogram` ↔ `shape` (centered inside)
 
+These are not part of the foreground collision matrix because `shape` and the
+current `frame` box are coarse structural boxes. Foreground layers (`pathText*`,
+`banner`, `bottomLabel`, `iconOrMonogram`) must not collide with each other.
+
 **Edge cases as separate tests** (not in matrix):
 
 - Longest legal `pathText` + longest `pathTextBottom` simultaneously
 - Monogram = 3 chars at smallest size
 - Banner with longest legal text on each shape
+- Bottom banner plus bottom label, to ensure the label clears the banner
 
 Performance target: full matrix < 2s. If slower, sample size set down to `[200]`.
+
+**Outcome (2026-05-01):**
+
+- Implementation now includes:
+  1. `84f8a233` — `__tests__/_geometryHelpers.ts`: `boxesOverlap`, `boxIsInside`, `cartesian`, `collectBoxes` (treating `iconOrMonogram` as a symbolic square box around its centre), `collectForegroundBoxes`, `forEachBox`, and `forEachPair`.
+  2. `d4fc3085` — `__tests__/layout.invariants.test.ts`: 5,184-row cartesian matrix plus edge-case suites (long top + long bottom path text per shape, 3-char monogram at smallest size per shape, longest banner text on each shape × position, bottom banner + bottom label).
+  3. Follow-up fix — `layoutBoxes.ts` offsets bottom labels below bottom-position banners instead of codifying the overlap as allowed.
+- Full matrix + edge cases run in ~1.9s on dev hardware (well under the 2s budget).
+- Verified by deliberately setting `SHAPE_CENTER_Y_OFFSET.circle = 0.15`: 198 cases failed with diagnostics like `pathTextBottom ↔ iconOrMonogram` plus full bbox dumps for both layers.
+- All 5,859 badge tests still green; `bun run type-check` passes; `bun run lint` has 0 errors and the repo's existing warning baseline.
 
 ---
 
@@ -183,12 +199,39 @@ Existing stories continue to work after Phase 0 renames.
 
 ---
 
-### Phase 4 — Decide together
+### Phase 4 — Automated visual guardrails
 
-After Phase 3 the user reviews the matrix story. Two outcomes:
+After Phase 3 the user reviews the matrix story. If the fully loaded examples
+still show spacing/legibility problems, add automated tests in three layers
+instead of trying to make the full cartesian matrix pixel-based.
 
-- **Logic + eyeballs sufficient** → stop. Closing state: invariant tests run in CI, stories serve as visual reference.
-- **Visual drift caught only by eye** → add Phase 4: Playwright + jest-image-snapshot for ~20 representative badges. Out of scope for this plan; will write a follow-up.
+1. **Tighten logic invariants** — keep the cheap `getBadgeLayoutBoxes`
+   matrix, but add bounded spacing rules:
+   - top banners must clear the badge apex by a minimum visual gap
+   - bottom labels must sit within a min/max gap range, not merely below the shape
+   - foreground layers (`banner`, `pathText*`, `bottomLabel`, `iconOrMonogram`) must not overlap
+   - center content must stay inside the usable interior when both path-text arcs are present
+2. **Add path-geometry tests** — validate `PathText`/contour math directly:
+   - top path midpoint stays near top-center
+   - bottom path midpoint stays near bottom-center
+   - bottom path direction keeps text readable on the lower arc
+   - path text baselines stay in the intended frame band instead of cutting through decorative contour lines
+3. **Add a small rendered regression suite** — render representative badges
+   rather than the whole matrix:
+   - fully loaded badge for each shape
+   - smallest-size monogram + path text
+   - top banner + both path-text arcs
+   - bottom banner + bottom label
+   - longest legal banner/path/bottom-label text
+4. **Add region assertions where snapshots are too blunt**:
+   - banner bottom region does not touch the badge apex region
+   - bottom label gap remains within the approved range
+   - center icon region does not intersect path text regions
+   - bottom path text occupies the lower arc band, not a diagonal band through the interior
+
+Closing state: the fast invariant matrix guards broad geometry regressions in
+CI, path tests guard arc math, and a small visual suite guards the cases humans
+can spot in the fully loaded screenshot.
 
 ---
 
@@ -251,7 +294,7 @@ npx jest --no-coverage --testPathPatterns badges  # native-rd badge tests only
 
 - `npx jest --no-coverage --testPathPatterns layout.invariants` runs in < 2s
 - Deliberately break a centering offset in `layout.ts` and confirm tests fail with a useful message
-- Confirm allow-listed overlaps (e.g. icon ↔ shape) are not flagged as failures
+- Confirm structural overlaps (e.g. icon ↔ shape) are asserted separately from foreground collisions
 
 **Phase 3 specific:**
 

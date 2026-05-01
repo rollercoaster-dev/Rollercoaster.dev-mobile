@@ -33,6 +33,15 @@ const SHAPE_CENTER_Y_OFFSET: Record<BadgeShape, number> = {
   diamond: -0.01,
 };
 
+const SHAPE_CENTER_CONTENT_SCALE: Record<BadgeShape, number> = {
+  circle: 1,
+  shield: 1,
+  hexagon: 0.86,
+  roundedRect: 1,
+  star: 1,
+  diamond: 0.55,
+};
+
 function hasVisibleTopBanner(design: BadgeDesign) {
   return (
     design.banner?.position === "top" && Boolean(design.banner.text?.trim())
@@ -94,6 +103,7 @@ export function getBadgeLayoutMetrics(
 
   const shapeOffset = SHAPE_CENTER_Y_OFFSET[design.shape] ?? 0;
   const shapeTextScale = SHAPE_PATH_TEXT_SCALE[design.shape] ?? 0.85;
+  const shapeCenterContentScale = SHAPE_CENTER_CONTENT_SCALE[design.shape] ?? 1;
 
   const centerY =
     size *
@@ -119,7 +129,8 @@ export function getBadgeLayoutMetrics(
     density,
     centerY,
     centerContentScale:
-      density === "compact" ? 0.78 : density === "balanced" ? 0.88 : 1,
+      (density === "compact" ? 0.78 : density === "balanced" ? 0.88 : 1) *
+      shapeCenterContentScale,
     bottomLabelScale:
       density === "compact" ? 0.72 : density === "balanced" ? 0.84 : 1,
     pathTextFontScale,

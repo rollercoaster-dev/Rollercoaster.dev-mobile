@@ -1,6 +1,7 @@
 import {
   getBadgeLayoutBoxes,
   DEFAULT_STROKE_WIDTH,
+  PATH_TEXT_VIEWBOX_PADDING_RATIO,
   SHADOW_OFFSET,
 } from "../layoutBoxes";
 import type { BadgeDesign } from "../types";
@@ -50,6 +51,26 @@ describe("getBadgeLayoutBoxes — viewport", () => {
       SIZE,
     ).viewBox.h;
     expect(withLabel).toBeGreaterThan(baseline);
+  });
+
+  it("extends viewBox for outward star path text", () => {
+    const boxes = getBadgeLayoutBoxes(
+      makeDesign({
+        shape: "star",
+        pathText: "TOP",
+        pathTextBottom: "BOTTOM",
+        pathTextPosition: "both",
+      }),
+      SIZE,
+    );
+
+    expect(boxes.pathTextTop!.y).toBeGreaterThanOrEqual(boxes.viewBox.y);
+    expect(boxes.pathTextTop!.y - boxes.viewBox.y).toBeGreaterThanOrEqual(
+      SIZE * PATH_TEXT_VIEWBOX_PADDING_RATIO,
+    );
+    expect(
+      boxes.pathTextBottom!.y + boxes.pathTextBottom!.h,
+    ).toBeLessThanOrEqual(boxes.viewBox.y + boxes.viewBox.h);
   });
 });
 

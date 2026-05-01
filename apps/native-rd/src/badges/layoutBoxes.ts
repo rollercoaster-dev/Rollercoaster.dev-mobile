@@ -14,7 +14,11 @@ import {
   type BadgeLayoutDensity,
   type BadgeLayoutMetrics,
 } from "./layout";
-import { FRAME_BAND_RATIO, getPathTextRadius } from "./shapes/contours";
+import {
+  FRAME_BAND_RATIO,
+  getPathTextCenterY,
+  getPathTextRadius,
+} from "./shapes/contours";
 import {
   BANNER_TOP_VISIBLE_RATIO,
   getBannerBox,
@@ -69,7 +73,7 @@ export type LayoutBoxes = {
   innerInset: number;
   /** Banner top-visible-ratio used (with star-shape override applied for top-position banners). */
   bannerTopVisibleRatio: number;
-  /** Star-shape extra offset applied to the bottom label, when applicable. */
+  /** Extra offset applied to the bottom label to clear star points or a bottom banner. */
   bottomLabelExtraOffset: number;
 };
 
@@ -78,6 +82,9 @@ export const DEFAULT_STROKE_WIDTH = 3;
 
 /** Hard-shadow offset applied to the badge silhouette. */
 export const SHADOW_OFFSET = 5;
+
+/** Extra viewport breathing room for curved text glyph ascenders/descenders. */
+export const PATH_TEXT_VIEWBOX_PADDING_RATIO = 0.04;
 
 export type LayoutBoxesOptions = {
   /** Stroke width used for the shape border. Default 3 (renderer default). */
@@ -171,8 +178,15 @@ export function getBadgeLayoutBoxes(
     ? getBannerBox(visibleBanner, size, metrics.bannerScale, design.shape)
     : null;
 
+  const bottomBannerClearance =
+    visibleBanner?.position === "bottom" && bannerBox
+      ? bannerBox.y + bannerBox.h - size
+      : 0;
   const bottomLabelExtraOffset = hasBottomLabel
-    ? getBottomLabelExtraOffset(design.shape, size)
+    ? Math.max(
+        getBottomLabelExtraOffset(design.shape, size),
+        bottomBannerClearance,
+      )
     : 0;
   const bottomLabelBox: Box | null = hasBottomLabel
     ? buildBottomLabelBox(
@@ -196,6 +210,8 @@ export function getBadgeLayoutBoxes(
     hasBottomLabel,
     bottomLabelExtraOffset,
     shape: design.shape,
+    pathTextTop,
+    pathTextBottom,
   });
 
   return {
@@ -224,7 +240,7 @@ function buildPathTextBox(
   side: "top" | "bottom",
 ): Box {
   const r = getPathTextRadius(design.shape, size, inset, side);
-  const cy = size / 2;
+  const cy = getPathTextCenterY(design.shape, size, side);
   // Bound the arc band as a slim horizontal strip at the apex (y = cy ± r),
   // thickened by fontSize. Width spans the full arc diameter — a conservative
   // bounding box approximation since the text actually traces a curve.
@@ -267,6 +283,8 @@ type ViewBoxInputs = {
   hasBottomLabel: boolean;
   bottomLabelExtraOffset: number;
   shape: BadgeDesign["shape"];
+  pathTextTop: Box | null;
+  pathTextBottom: Box | null;
 };
 
 function buildViewBox({
@@ -278,6 +296,8 @@ function buildViewBox({
   hasBottomLabel,
   bottomLabelExtraOffset,
   shape,
+  pathTextTop,
+  pathTextBottom,
 }: ViewBoxInputs): Box {
   const shadow = hasShadow ? SHADOW_OFFSET : 0;
   const bannerOverflow = banner
@@ -287,15 +307,26 @@ function buildViewBox({
     ? getBottomLabelBottomOverflow(size, bottomLabelScale) +
       bottomLabelExtraOffset
     : 0;
+  const pathTextPadding = size * PATH_TEXT_VIEWBOX_PADDING_RATIO;
+  const pathTextTopOverflow = pathTextTop
+    ? Math.max(0, pathTextPadding - pathTextTop.y)
+    : 0;
+  const pathTextBottomOverflow = pathTextBottom
+    ? Math.max(0, pathTextBottom.y + pathTextBottom.h + pathTextPadding - size)
+    : 0;
 
   return {
     x: 0,
-    y: -bannerOverflow.top,
+    y: -Math.max(bannerOverflow.top, pathTextTopOverflow),
     w: size + shadow,
     h:
       size +
       shadow +
-      bannerOverflow.top +
-      Math.max(bannerOverflow.bottom, bottomLabelBottomOverflow),
+      Math.max(bannerOverflow.top, pathTextTopOverflow) +
+      Math.max(
+        bannerOverflow.bottom,
+        bottomLabelBottomOverflow,
+        pathTextBottomOverflow,
+      ),
   };
 }

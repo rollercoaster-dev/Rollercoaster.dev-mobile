@@ -150,6 +150,18 @@ describe("PathText", () => {
     expect(textPaths[0].props.href).toBe(`#${String(defPath!.props.id)}`);
   });
 
+  it("centers inscriptions on their arc paths", () => {
+    const el = PathText(makeProps({ pathTextPosition: "both" }))!;
+    const texts = findByType(el, "Text");
+    const textPaths = findByType(el, "TextPath");
+
+    expect(texts).toHaveLength(2);
+    expect(texts[0].props.textAnchor).toBe("middle");
+    expect(texts[1].props.textAnchor).toBe("middle");
+    expect(textPaths[0].props.startOffset).toBe("50%");
+    expect(textPaths[1].props.startOffset).toBe("50%");
+  });
+
   it("keeps the top path distinct from the bottom path geometry", () => {
     const el = PathText(makeProps({ pathTextPosition: "both" }))!;
     const paths = findByType(el, "Path");
@@ -244,11 +256,8 @@ describe("PathText", () => {
   // ── Text centering ─────────────────────────────────────────────────
 
   it("sizes the top arc's angular sweep to the text width", () => {
-    // Centering is now achieved by sizing the arc itself to the text and
-    // anchoring it on the badge's vertical axis (rather than relying on
-    // textPath's startOffset/textAnchor, which were unreliable on iOS).
-    // Therefore short and long inscriptions must produce distinct arc
-    // geometries.
+    // Short and long inscriptions still produce distinct arc geometries; the
+    // text is then centered on that arc by TextPath startOffset/textAnchor.
     const elShort = PathText(
       makeProps({ pathText: "AB", pathTextPosition: "top" }),
     )!;

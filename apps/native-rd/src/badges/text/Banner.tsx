@@ -28,8 +28,8 @@ export const BANNER_WIDTH_RATIO = 0.8;
 /** Hard shadow offset in pixels (neo-brutalist) */
 export const BANNER_SHADOW_OFFSET = 2;
 
-/** Fraction of the banner that remains visible above the badge edge for the 'top' strap position */
-export const BANNER_TOP_VISIBLE_RATIO = 0.05;
+/** Negative ratio leaves a small gap between the banner and the badge edge. */
+export const BANNER_TOP_VISIBLE_RATIO = -0.12;
 
 /** Font size as fraction of badge size */
 export const BANNER_FONT_SIZE_RATIO = 0.1;
@@ -38,7 +38,7 @@ export const BANNER_FONT_SIZE_RATIO = 0.1;
 export const BANNER_BORDER_WIDTH = 2;
 
 const DEFAULT_BORDER_COLOR = "#000000";
-const STAR_BANNER_TOP_VISIBLE_RATIO = -0.3;
+const STAR_BANNER_TOP_VISIBLE_RATIO = -0.45;
 
 export function getBannerTopY(
   position: BannerData["position"],
@@ -59,7 +59,10 @@ export function getBannerTopVisibleRatio(
   position: BannerData["position"],
   shape?: BadgeShape,
 ): number {
-  if (position !== "top") return BANNER_TOP_VISIBLE_RATIO;
+  void position;
+  // Star uses the same lift on both top and bottom positions because its
+  // points cut close to either edge of the badge, so the banner needs the
+  // extra clearance regardless of side.
   return shape === BadgeShape.star
     ? STAR_BANNER_TOP_VISIBLE_RATIO
     : BANNER_TOP_VISIBLE_RATIO;

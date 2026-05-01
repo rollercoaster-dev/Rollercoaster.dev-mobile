@@ -4,8 +4,18 @@
  * Verifies path validity, inner < outer geometry, correct vertex counts,
  * open text arcs, and bounding-box containment for all 6 badge shapes.
  */
-import { generateContour, type ShapeContour } from "../shapes/contours";
+import {
+  FRAME_BAND_RATIO,
+  generateContour,
+  getPathTextCenterY,
+  getPathTextRadius,
+  type ShapeContour,
+} from "../shapes/contours";
+import { getBadgeLayoutMetrics, ICON_SIZE_RATIO } from "../layout";
+import { PATH_TEXT_FONT_SIZE_RATIO } from "../text/PathText";
 import { BadgeShape } from "../types";
+import { type Point, pointInPolygon } from "./_geometryHelpers";
+import { outlinePolygon } from "./_shapePolygons";
 
 const SIZE = 256;
 const INSET = 2;
@@ -48,6 +58,96 @@ const ALL_SHAPES: BadgeShape[] = [
   "star",
   "diamond",
 ];
+const NON_STAR_SHAPES = ALL_SHAPES.filter((shape) => shape !== BadgeShape.star);
+const RENDER_STROKE_INSET = 1.5;
+
+function distanceToSegment(point: Point, a: Point, b: Point): number {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const lengthSq = dx * dx + dy * dy;
+  if (lengthSq === 0) return Math.hypot(point.x - a.x, point.y - a.y);
+  const t = Math.max(
+    0,
+    Math.min(1, ((point.x - a.x) * dx + (point.y - a.y) * dy) / lengthSq),
+  );
+  return Math.hypot(point.x - (a.x + t * dx), point.y - (a.y + t * dy));
+}
+
+function distanceToPolygon(point: Point, polygon: Point[]): number {
+  let min = Number.POSITIVE_INFINITY;
+  for (let i = 0; i < polygon.length; i++) {
+    min = Math.min(
+      min,
+      distanceToSegment(point, polygon[i]!, polygon[(i + 1) % polygon.length]!),
+    );
+  }
+  return min;
+}
+
+function parseArc(d: string): { start: Point; end: Point; r: number } {
+  const match = d.match(
+    /^M\s+([-\d.]+)\s+([-\d.]+)\s+A\s+([-\d.]+)\s+[-\d.]+\s+0\s+0\s+[01]\s+([-\d.]+)\s+([-\d.]+)/,
+  );
+  if (!match) throw new Error(`unparseable arc: ${d}`);
+  return {
+    start: { x: Number(match[1]), y: Number(match[2]) },
+    r: Number(match[3]),
+    end: { x: Number(match[4]), y: Number(match[5]) },
+  };
+}
+
+function sampleArc(
+  d: string,
+  size: number,
+  sampleCount = 48,
+  centerY = size / 2,
+): Point[] {
+  const { start, end, r } = parseArc(d);
+  const cx = size / 2;
+  const cy = centerY;
+  const startAngle = Math.atan2(start.y - cy, start.x - cx);
+  const endAngle = Math.atan2(end.y - cy, end.x - cx);
+
+  return Array.from({ length: sampleCount + 1 }, (_, i) => {
+    const t = i / sampleCount;
+    const angle = startAngle + (endAngle - startAngle) * t;
+    return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
+  });
+}
+
+function pathTextFixture(shape: BadgeShape, size = SIZE) {
+  const design = {
+    shape,
+    frame: "boldBorder" as const,
+    color: "#a78bfa",
+    iconName: "Trophy",
+    iconWeight: "regular" as const,
+    title: "Test Badge",
+    centerMode: "icon" as const,
+    pathText: "TOP PATH",
+    pathTextBottom: "BOTTOM TEST",
+    pathTextPosition: "both" as const,
+    banner: { text: "BAZINGA! YOOP", position: "bottom" as const },
+    bottomLabel: "FfdasdgagA",
+  };
+  const innerInset = RENDER_STROKE_INSET + size * FRAME_BAND_RATIO;
+  const metrics = getBadgeLayoutMetrics(
+    design,
+    size,
+    RENDER_STROKE_INSET,
+    innerInset,
+  );
+  const fontSize = size * PATH_TEXT_FONT_SIZE_RATIO * metrics.pathTextFontScale;
+  return {
+    contour: generateContour(shape, size, metrics.pathTextInset, {
+      topText: design.pathText,
+      bottomText: design.pathTextBottom,
+      fontSize,
+    }),
+    fontSize,
+    innerInset,
+  };
+}
 
 describe("generateContour", () => {
   const contours: Record<string, ShapeContour> = {};
@@ -244,6 +344,58 @@ describe("text-aware arc sizing", () => {
     },
   );
 
+  test.each(NON_STAR_SHAPES)(
+    "%s: text radius contracts inside the frame band",
+    (shape) => {
+      const innerFrameRadius = SIZE / 2 - INSET - SIZE * FRAME_BAND_RATIO;
+      expect(getPathTextRadius(shape, SIZE, INSET, "top")).toBeLessThan(
+        innerFrameRadius,
+      );
+      expect(getPathTextRadius(shape, SIZE, INSET, "bottom")).toBeLessThan(
+        innerFrameRadius,
+      );
+    },
+  );
+
+  it("star text radius expands outside the frame band", () => {
+    const outerR = SIZE / 2 - INSET;
+    expect(getPathTextRadius("star", SIZE, INSET, "top")).toBeGreaterThan(
+      outerR,
+    );
+    expect(getPathTextRadius("star", SIZE, INSET, "bottom")).toBeGreaterThan(
+      outerR,
+    );
+  });
+
+  test.each(ALL_SHAPES)("%s: path text clears the center icon", (shape) => {
+    const metrics = getBadgeLayoutMetrics(
+      {
+        shape,
+        frame: "none",
+        color: "#a78bfa",
+        iconName: "Trophy",
+        iconWeight: "regular",
+        title: "Test Badge",
+        centerMode: "icon",
+        pathText: "TOP",
+        pathTextBottom: "BOTTOM",
+        pathTextPosition: "both",
+      },
+      SIZE,
+      INSET,
+      INSET + SIZE * FRAME_BAND_RATIO,
+    );
+    const iconHalf = (SIZE * ICON_SIZE_RATIO * metrics.centerContentScale) / 2;
+    const textHalf =
+      (SIZE * PATH_TEXT_FONT_SIZE_RATIO * metrics.pathTextFontScale) / 2;
+    expect(
+      getPathTextRadius(shape, SIZE, INSET, "top") - textHalf,
+    ).toBeGreaterThan(iconHalf);
+    expect(
+      getPathTextRadius(shape, SIZE, INSET, "bottom") - textHalf,
+    ).toBeGreaterThan(iconHalf);
+  });
+
   // The PR's central claim: removing the 180° rotation works because both
   // arcs are written left-to-right. Pin start.x < end.x for both sides so
   // a regression that flips a sweep flag is caught directly.
@@ -275,4 +427,75 @@ describe("text-aware arc sizing", () => {
     expect(top.startX).toBeLessThan(top.endX);
     expect(bottom.startX).toBeLessThan(bottom.endX);
   });
+});
+
+describe("path text shape-intersection clearance", () => {
+  test.each([BadgeShape.hexagon, BadgeShape.diamond])(
+    "%s top text band stays inside the inner frame boundary",
+    (shape) => {
+      const { contour, fontSize, innerInset } = pathTextFixture(shape);
+      const innerFrame = outlinePolygon(shape, SIZE, innerInset);
+      const textBandRadius = fontSize;
+
+      for (const point of sampleArc(
+        contour.textPathTop,
+        SIZE,
+        48,
+        getPathTextCenterY(shape, SIZE, "top"),
+      )) {
+        const clearance = distanceToPolygon(point, innerFrame);
+        expect(pointInPolygon(point, innerFrame)).toBe(true);
+        expect(clearance).toBeGreaterThan(textBandRadius);
+      }
+    },
+  );
+
+  it("star top text band stays outside the star silhouette", () => {
+    const { contour, fontSize } = pathTextFixture(BadgeShape.star);
+    const outerStar = outlinePolygon(
+      BadgeShape.star,
+      SIZE,
+      RENDER_STROKE_INSET,
+    );
+    const textBandRadius = fontSize * 0.1;
+
+    const centralTextSpan = sampleArc(
+      contour.textPathTop,
+      SIZE,
+      48,
+      getPathTextCenterY(BadgeShape.star, SIZE, "top"),
+    ).slice(20, 29);
+    for (const point of centralTextSpan) {
+      const clearance = distanceToPolygon(point, outerStar);
+      expect(pointInPolygon(point, outerStar)).toBe(false);
+      expect(clearance).toBeGreaterThan(textBandRadius);
+    }
+  });
+});
+
+describe("getPathTextCenterY", () => {
+  // Pinning per-shape offsets prevents an accidental future tweak from
+  // silently shifting one shape's text into the frame band — visual
+  // regressions surface as a one-line failure here instead of a wall of
+  // matrix overlap errors.
+  const SIZE = 200;
+  const cy = SIZE / 2;
+  const expected: Record<BadgeShape, { top: number; bottom: number }> = {
+    circle: { top: cy - 4, bottom: cy + 3 },
+    hexagon: { top: cy - 4, bottom: cy + 3 },
+    diamond: { top: cy - 4, bottom: cy + 3 },
+    shield: { top: cy - 4, bottom: cy + 3 },
+    roundedRect: { top: cy - 4, bottom: cy + 3 },
+    star: { top: cy - 8, bottom: cy + 3 },
+  };
+
+  test.each(ALL_SHAPES)(
+    "%s: top and bottom offsets match the table",
+    (shape) => {
+      expect(getPathTextCenterY(shape, SIZE, "top")).toBe(expected[shape].top);
+      expect(getPathTextCenterY(shape, SIZE, "bottom")).toBe(
+        expected[shape].bottom,
+      );
+    },
+  );
 });

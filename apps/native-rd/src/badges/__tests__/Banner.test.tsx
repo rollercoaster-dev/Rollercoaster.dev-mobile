@@ -84,7 +84,7 @@ describe("Banner", () => {
     },
   );
 
-  it("keeps only 5% of the top banner inside the badge", () => {
+  it("keeps the top banner clear of the badge edge", () => {
     const el = Banner(
       makeProps({ banner: { text: "TEST", position: "top" } }),
     )!;
@@ -95,9 +95,10 @@ describe("Banner", () => {
       -expectedH * (1 - BANNER_TOP_VISIBLE_RATIO),
       5,
     );
+    expect(Number(mainRect.props.y) + expectedH).toBeLessThan(0);
   });
 
-  it("keeps only 5% of the bottom banner inside the badge (mirrors top)", () => {
+  it("keeps the bottom banner clear of the badge edge", () => {
     const el = Banner(
       makeProps({ banner: { text: "TEST", position: "bottom" } }),
     )!;
@@ -105,12 +106,13 @@ describe("Banner", () => {
     const mainRect = rects[1];
     const bannerH = SIZE * BANNER_HEIGHT_RATIO;
     // Bottom banner: top edge at size - bannerH * visibleRatio
-    // So (size - bannerY) / bannerH ≈ visibleRatio (5%)
+    // So (size - bannerY) / bannerH ≈ visibleRatio; negative means a gap.
     const visibleAboveBadge = SIZE - mainRect.props.y;
     expect(visibleAboveBadge / bannerH).toBeCloseTo(
       BANNER_TOP_VISIBLE_RATIO,
       2,
     );
+    expect(mainRect.props.y).toBeGreaterThan(SIZE);
   });
 
   // ── Banner dimensions ──────────────────────────────────────────────
