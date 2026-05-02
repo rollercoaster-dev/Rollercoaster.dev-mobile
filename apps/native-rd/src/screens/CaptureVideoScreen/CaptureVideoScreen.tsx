@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { View, Pressable, Alert } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import {
   CameraView,
@@ -12,7 +11,7 @@ import { Paths, File, Directory } from "expo-file-system";
 import { Text } from "../../components/Text";
 import { Card } from "../../components/Card";
 import { Button } from "../../components/Button";
-import { IconButton } from "../../components/IconButton";
+import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { createEvidence, EvidenceType } from "../../db";
 import type { GoalId, StepId } from "../../db";
 import type { CaptureVideoScreenProps } from "../../navigation/types";
@@ -117,6 +116,47 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
     cameraRef.current.stopRecording();
   }, [isRecording]);
 
+  const handleGoBack = useCallback(() => {
+    if (isRecording) {
+      Alert.alert(
+        "Discard recording?",
+        "You're still recording. Going back will stop and discard the video.",
+        [
+          { text: "Keep Recording", style: "cancel" },
+          {
+            text: "Discard",
+            style: "destructive",
+            onPress: () => {
+              cameraRef.current?.stopRecording();
+              if (timerRef.current) {
+                clearInterval(timerRef.current);
+                timerRef.current = null;
+              }
+              navigation.goBack();
+            },
+          },
+        ],
+      );
+      return;
+    }
+    if (recordedUri) {
+      Alert.alert(
+        "Discard recording?",
+        "You have an unsaved video. Going back will discard it.",
+        [
+          { text: "Keep", style: "cancel" },
+          {
+            text: "Discard",
+            style: "destructive",
+            onPress: () => navigation.goBack(),
+          },
+        ],
+      );
+      return;
+    }
+    navigation.goBack();
+  }, [isRecording, recordedUri, navigation]);
+
   const handleToggleRecording = useCallback(() => {
     if (isRecording) {
       handleStopRecording();
@@ -189,22 +229,8 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
   const permissionsLoaded = cameraPermission !== null && micPermission !== null;
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.container}>
-      <View style={styles.topBar}>
-        <IconButton
-          icon={
-            <Text variant="body" style={styles.backIcon}>
-              {"<"}
-            </Text>
-          }
-          onPress={() => navigation.goBack()}
-          tone="ghost"
-          accessibilityLabel="Go back"
-          size="sm"
-        />
-        <Text variant="label">Record Video</Text>
-        <View style={styles.spacer} />
-      </View>
+    <View style={styles.container}>
+      <ScreenSubHeader label="Record Video" onBack={handleGoBack} />
 
       {!permissionsLoaded ? (
         <View style={styles.permissionContainer}>
@@ -287,18 +313,6 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
           )}
           <View style={styles.controls}>
             <Pressable
-              style={styles.flipButton}
-              onPress={handleFlipCamera}
-              disabled={isRecording}
-              accessible
-              accessibilityRole="button"
-              accessibilityLabel={`Switch to ${facing === "back" ? "front" : "back"} camera`}
-              accessibilityState={{ disabled: isRecording }}
-            >
-              <Text variant="body">{"↻"}</Text>
-            </Pressable>
-
-            <Pressable
               style={styles.recordButton}
               onPress={handleToggleRecording}
               accessible
@@ -315,12 +329,20 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
                 }
               />
             </Pressable>
-
-            {/* Spacer to balance the flip button */}
-            <View style={styles.flipButton} />
+            <Pressable
+              style={styles.flipButton}
+              onPress={handleFlipCamera}
+              disabled={isRecording}
+              accessible
+              accessibilityRole="button"
+              accessibilityLabel={`Switch to ${facing === "back" ? "front" : "back"} camera`}
+              accessibilityState={{ disabled: isRecording }}
+            >
+              <Text variant="body">{"↻"}</Text>
+            </Pressable>
           </View>
         </View>
       )}
-    </SafeAreaView>
+    </View>
   );
 }

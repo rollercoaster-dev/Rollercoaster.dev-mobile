@@ -1,11 +1,10 @@
 import React from "react";
 import { View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Text } from "../../components/Text";
 import { Card } from "../../components/Card";
 import { Button } from "../../components/Button";
-import { IconButton } from "../../components/IconButton";
+import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { styles } from "./CapturePlaceholder.styles";
 
 const LABELS: Record<string, string> = {
@@ -21,22 +20,8 @@ export function CapturePlaceholder({ route }: { route: { name: string } }) {
   const label = LABELS[route.name] ?? route.name;
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.container}>
-      <View style={styles.topBar}>
-        <IconButton
-          icon={
-            <Text variant="body" style={styles.backIcon}>
-              {"<"}
-            </Text>
-          }
-          onPress={() => navigation.goBack()}
-          tone="ghost"
-          accessibilityLabel="Go back"
-          size="sm"
-        />
-        <Text variant="label">{label}</Text>
-        <View style={styles.spacer} />
-      </View>
+    <View style={styles.container}>
+      <ScreenSubHeader label={label} onBack={() => navigation.goBack()} />
       <View style={styles.content}>
         <Card>
           <Text variant="headline" style={styles.title}>
@@ -52,6 +37,6 @@ export function CapturePlaceholder({ route }: { route: { name: string } }) {
           />
         </Card>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }

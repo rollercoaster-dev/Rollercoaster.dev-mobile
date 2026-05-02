@@ -5,20 +5,6 @@ export const styles = StyleSheet.create((theme) => ({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
-  topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: theme.space[4],
-    paddingVertical: theme.space[2],
-  },
-  backIcon: {
-    fontSize: 18,
-    fontWeight: theme.fontWeight.bold,
-  },
-  spacer: {
-    width: theme.space[12],
-  },
   content: {
     flex: 1,
     padding: theme.space[4],
@@ -28,6 +14,7 @@ export const styles = StyleSheet.create((theme) => ({
   },
   timerText: {
     fontSize: 48,
+    lineHeight: 60,
     fontWeight: theme.fontWeight.bold,
     fontVariant: ["tabular-nums"],
     color: theme.colors.text,
@@ -77,6 +64,29 @@ export const styles = StyleSheet.create((theme) => ({
   },
   recordButtonPressed: {
     opacity: 0.7,
+  },
+  pauseIcon: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+  },
+  pauseIconBar: {
+    width: 4,
+    height: 16,
+    backgroundColor: theme.colors.text,
+    borderRadius: 1,
+  },
+  playIcon: {
+    width: 0,
+    height: 0,
+    borderTopWidth: 8,
+    borderBottomWidth: 8,
+    borderLeftWidth: 14,
+    borderTopColor: "transparent",
+    borderBottomColor: "transparent",
+    borderLeftColor: theme.colors.text,
+    marginLeft: 2,
   },
   playbackControls: {
     flexDirection: "row",

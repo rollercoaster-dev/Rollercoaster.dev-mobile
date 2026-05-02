@@ -10,14 +10,12 @@ import {
 } from "react-native";
 import type { ImageSourcePropType } from "react-native";
 import { Buffer } from "buffer";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import { useQuery } from "@evolu/react";
-import { useUnistyles } from "react-native-unistyles";
 import { Text } from "../../components/Text";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { Button } from "../../components/Button";
-import { IconButton } from "../../components/IconButton";
+import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { Confetti } from "../../components/Confetti";
 import { ModeIndicator } from "../../components/ModeIndicator";
 import { BadgeEarnedModal } from "../BadgeEarnedModal";
@@ -468,7 +466,6 @@ function CompletionContent({
 
 export function CompletionFlowScreen({ route }: CompletionFlowScreenProps) {
   const navigation = useNavigation();
-  const { theme } = useUnistyles();
   const { goalId } = route.params;
 
   // Consume the pending design ONCE at this level — outside the inner Suspense
@@ -483,25 +480,8 @@ export function CompletionFlowScreen({ route }: CompletionFlowScreenProps) {
   );
 
   return (
-    <SafeAreaView
-      edges={["top"]}
-      style={{ flex: 1, backgroundColor: theme.colors.background }}
-    >
-      <View style={styles.topBar}>
-        <IconButton
-          icon={
-            <Text variant="body" style={styles.backIcon}>
-              {"<"}
-            </Text>
-          }
-          onPress={() => navigation.goBack()}
-          tone="ghost"
-          accessibilityLabel="Go back"
-          size="sm"
-        />
-        <Text variant="label">Complete</Text>
-        <View style={styles.spacer} />
-      </View>
+    <View style={styles.container}>
+      <ScreenSubHeader label="Complete" onBack={() => navigation.goBack()} />
       <ErrorBoundary>
         <Suspense
           fallback={
@@ -516,6 +496,6 @@ export function CompletionFlowScreen({ route }: CompletionFlowScreenProps) {
         </Suspense>
       </ErrorBoundary>
       <ModeIndicator mode="complete" />
-    </SafeAreaView>
+    </View>
   );
 }

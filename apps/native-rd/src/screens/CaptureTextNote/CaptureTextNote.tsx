@@ -12,8 +12,8 @@ import { useNavigation } from "@react-navigation/native";
 import { useUnistyles } from "react-native-unistyles";
 import { Text } from "../../components/Text";
 import { Button } from "../../components/Button";
-import { IconButton } from "../../components/IconButton";
 import { Input } from "../../components/Input";
+import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { createEvidence, EvidenceType, TEXT_EVIDENCE_PREFIX } from "../../db";
 import type { GoalId, StepId } from "../../db";
 import type { CaptureTextNoteScreenProps } from "../../navigation/types";
@@ -75,34 +75,11 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
   }
 
   return (
-    <SafeAreaView
-      edges={["top"]}
-      style={{ flex: 1, backgroundColor: theme.colors.background }}
-    >
-      <View style={styles.topBar}>
-        <IconButton
-          icon={
-            <Text variant="body" style={styles.backIcon}>
-              {"<"}
-            </Text>
-          }
-          onPress={() => navigation.goBack()}
-          tone="ghost"
-          accessibilityLabel="Go back"
-          size="sm"
-        />
-        <Text variant="label">Write a Note</Text>
-        <View style={styles.saveButton}>
-          <Button
-            label="Save"
-            variant="primary"
-            size="sm"
-            onPress={handleSave}
-            disabled={!canSave}
-            loading={saving}
-          />
-        </View>
-      </View>
+    <View style={styles.container}>
+      <ScreenSubHeader
+        label="Write a Note"
+        onBack={() => navigation.goBack()}
+      />
 
       <KeyboardAvoidingView style={styles.content} {...KEYBOARD_AVOIDING_PROPS}>
         <TextInput
@@ -155,6 +132,6 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
           />
         </View>
       </SafeAreaView>
-    </SafeAreaView>
+    </View>
   );
 }

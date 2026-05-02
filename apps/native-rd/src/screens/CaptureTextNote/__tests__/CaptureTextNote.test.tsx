@@ -97,18 +97,15 @@ describe("CaptureTextNote", () => {
     expect(mockGoBack).toHaveBeenCalledTimes(1);
   });
 
-  it("disables Save buttons when content is empty", () => {
+  it("disables Save button when content is empty", () => {
     renderWithProviders(
       <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
     );
-    // There are two save buttons (top bar + footer)
-    const saveButtons = screen.getAllByLabelText("Save Note");
-    for (const btn of saveButtons) {
-      expect(btn.props.accessibilityState?.disabled).toBe(true);
-    }
+    const saveButton = screen.getByLabelText("Save Note");
+    expect(saveButton.props.accessibilityState?.disabled).toBe(true);
   });
 
-  it("enables Save buttons when content is entered", () => {
+  it("enables Save button when content is entered", () => {
     renderWithProviders(
       <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
     );
@@ -116,12 +113,8 @@ describe("CaptureTextNote", () => {
       screen.getByLabelText("Note content"),
       "My first note",
     );
-    // The footer Save Note button should now be enabled
-    const saveButtons = screen.getAllByLabelText("Save Note");
-    const enabledButton = saveButtons.find(
-      (btn) => btn.props.accessibilityState?.disabled !== true,
-    );
-    expect(enabledButton).toBeDefined();
+    const saveButton = screen.getByLabelText("Save Note");
+    expect(saveButton.props.accessibilityState?.disabled).not.toBe(true);
   });
 
   it("updates character counter as user types", () => {

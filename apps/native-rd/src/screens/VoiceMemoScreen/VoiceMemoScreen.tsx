@@ -6,13 +6,13 @@
  */
 import React, { useState } from "react";
 import { View, TextInput, Alert, Pressable, Linking } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useUnistyles } from "react-native-unistyles";
 import { useNavigation } from "@react-navigation/native";
 import { Text } from "../../components/Text";
 import { Card } from "../../components/Card";
 import { Button } from "../../components/Button";
 import { IconButton } from "../../components/IconButton";
+import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { useAudioRecorder } from "../../hooks/useAudioRecorder";
 import { createEvidence, EvidenceType } from "../../db";
 import type { GoalId, StepId } from "../../db";
@@ -110,22 +110,11 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
   // Permission denied state
   if (status === "permission-denied") {
     return (
-      <SafeAreaView edges={["top"]} style={styles.container}>
-        <View style={styles.topBar}>
-          <IconButton
-            icon={
-              <Text variant="body" style={styles.backIcon}>
-                {"<"}
-              </Text>
-            }
-            onPress={() => navigation.goBack()}
-            tone="ghost"
-            accessibilityLabel="Go back"
-            size="sm"
-          />
-          <Text variant="label">Voice Memo</Text>
-          <View style={styles.spacer} />
-        </View>
+      <View style={styles.container}>
+        <ScreenSubHeader
+          label="Voice Memo"
+          onBack={() => navigation.goBack()}
+        />
         <View style={styles.content}>
           <Card>
             <View style={styles.permissionContent}>
@@ -152,27 +141,13 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
             </View>
           </Card>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.container}>
-      <View style={styles.topBar}>
-        <IconButton
-          icon={
-            <Text variant="body" style={styles.backIcon}>
-              {"<"}
-            </Text>
-          }
-          onPress={handleGoBack}
-          tone="ghost"
-          accessibilityLabel="Go back"
-          size="sm"
-        />
-        <Text variant="label">Voice Memo</Text>
-        <View style={styles.spacer} />
-      </View>
+    <View style={styles.container}>
+      <ScreenSubHeader label="Voice Memo" onBack={handleGoBack} />
 
       <View style={styles.content}>
         {/* Timer display */}
@@ -221,7 +196,12 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
           <View style={styles.controls}>
             {status === "recording" && (
               <IconButton
-                icon={<Text variant="body">{"\u23F8\uFE0F"}</Text>}
+                icon={
+                  <View style={styles.pauseIcon}>
+                    <View style={styles.pauseIconBar} />
+                    <View style={styles.pauseIconBar} />
+                  </View>
+                }
                 onPress={pauseRecording}
                 tone="surface"
                 accessibilityLabel="Pause recording"
@@ -230,7 +210,7 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
             )}
             {status === "paused" && (
               <IconButton
-                icon={<Text variant="body">{"\u25B6\uFE0F"}</Text>}
+                icon={<View style={styles.playIcon} />}
                 onPress={resumeRecording}
                 tone="surface"
                 accessibilityLabel="Resume recording"
@@ -350,6 +330,6 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
           </>
         )}
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
