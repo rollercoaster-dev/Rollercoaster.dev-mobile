@@ -13,6 +13,7 @@ Implementation plans and vision documents. Active plans are in progress; complet
 | [2026-04-28-ios-testflight-readiness.md](./2026-04-28-ios-testflight-readiness.md)                             | Track iOS TestFlight readiness for Rollercoaster.dev              | 2026-04-28    |
 | [2026-04-28-design-token-simplification-and-chrome.md](./2026-04-28-design-token-simplification-and-chrome.md) | Simplify native-rd themes and move app headers to chrome tokens   | 2026-04-28    |
 | [2026-05-01-badge-test-system-and-field-rename.md](./2026-05-01-badge-test-system-and-field-rename.md)         | Logic-only badge layout invariant tests + mismatched field rename | 2026-05-01    |
+| [2026-05-02-expo-doctor-build-validation.md](./2026-05-02-expo-doctor-build-validation.md)                     | Resolve Expo build-readiness issues for preview testing           | 2026-05-02    |
 
 ## Reference
 

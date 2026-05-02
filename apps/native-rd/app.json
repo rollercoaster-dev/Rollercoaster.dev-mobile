@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Rollercoaster.dev",
-    "slug": "native-rd",
+    "slug": "rollercoasterdev",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -20,7 +20,8 @@
         "dark": "./assets/icon-dark.png"
       },
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to record voice memos as evidence for your goals."
+        "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to record voice memos as evidence for your goals.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -28,7 +29,12 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffe50c"
       },
-      "package": "com.joe.rd.nativerd"
+      "package": "com.joe.rd.nativerd",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.CAMERA"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -50,7 +56,31 @@
           "photosPermission": "Allow $(PRODUCT_NAME) to access your photos for evidence capture.",
           "cameraPermission": "Allow $(PRODUCT_NAME) to use the camera to take photos as evidence."
         }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to record video as evidence for your goals.",
+          "microphonePermission": "Allow $(PRODUCT_NAME) to record audio when capturing video evidence.",
+          "recordAudioAndroid": true
+        }
+      ],
+      "expo-asset",
+      "@react-native-community/datetimepicker",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "buildReactNativeFromSource": true
+          }
+        }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "d7a5b9b4-48b0-460b-ab51-912e11cebd10"
+      }
+    },
+    "owner": "rollercoasterdev"
   }
 }

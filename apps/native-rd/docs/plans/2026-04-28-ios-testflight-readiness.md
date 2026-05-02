@@ -1,14 +1,26 @@
 # iOS TestFlight Readiness
 
-**Last verified:** 2026-04-28  
-**App name:** Rollercoaster.dev  
-**Status:** Preparing for first iOS TestFlight build
+**Last verified:** 2026-05-02
+**App name:** Rollercoaster.dev
+**Status:** Preparing for first iOS TestFlight build; not ready for tester invites
+
+## Latest Readiness Review
+
+Reviewed 2026-05-02. Other than build/distribution prep, the app is broadly close enough for closed-beta preparation: `bun run type-check`, `bun run test:ci`, `bun run lint` (warnings only), and `bun run test:a11y:json` passed locally.
+
+Remaining blockers before inviting testers:
+
+- Complete EAS/TestFlight setup and submit a standalone build.
+- Validate the standalone build on a physical iPhone, including camera, photo library, voice memo, persistence, badge creation/export, icon, and splash.
+- Finish privacy/contact metadata and host the privacy policy publicly.
+- Fix [#982](https://github.com/rollercoaster-dev/monorepo/issues/982): badge creation should surface signing key setup failures instead of remaining in loading state.
+- Re-run required Maestro flows against a production-like install. The 2026-05-02 E2E attempt failed because the installed simulator app was a dev build without an embedded JS bundle (`No script URL provided`), so it does not prove an app-flow regression.
 
 ## Current Decisions
 
 - App display name: `Rollercoaster.dev`
 - iOS bundle identifier: `com.joe.rd.native-rd`
-- Apple Developer Program: enrollment submitted, awaiting confirmation
+- Apple Developer Program: enrolled, confirmed 2026-05-02
 - Distribution path: Expo EAS Build → App Store Connect → TestFlight
 - First testing target: internal TestFlight testers, then external testers after beta review
 
@@ -20,12 +32,12 @@
 - [x] Generate app icon assets from the RD logo
 - [x] Set Expo app display name to `Rollercoaster.dev`
 - [ ] Decide whether to keep iOS bundle ID as `com.joe.rd.native-rd`
-- [ ] Decide whether to keep Expo slug as `native-rd`
+- [x] Decide whether to keep Expo slug as `native-rd` — changed to `rollercoasterdev` during `eas init` on 2026-05-02
 - [ ] Decide final App Store display name spelling and capitalization
 
 ### Apple Account
 
-- [ ] Apple Developer Program approval received
+- [x] Apple Developer Program approval received
 - [ ] App Store Connect access confirmed
 - [ ] App Store Connect app record created
 - [ ] Bundle ID registered or confirmed through EAS credentials setup
