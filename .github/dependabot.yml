@@ -20,6 +20,45 @@ updates:
         patterns:
           - "*"
         dependency-type: "production"
+    ignore:
+      # Pinned pending decision on the rd-logger Express adapter (issue tracking
+      # whether we keep the adapter and bump to Express 5 or drop it entirely).
+      # Express 4 → 5 is a breaking change in middleware/error-handling APIs and
+      # the adapter would need a real port + a major rd-logger release.
+      - dependency-name: "express"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/express"
+        update-types: ["version-update:semver-major"]
+      # @hono/node-server is only consumed by rd-logger's own Hono adapter
+      # integration test; the v1 → v2 jump is breaking and lives in the same
+      # adapter-fate decision.
+      - dependency-name: "@hono/node-server"
+        update-types: ["version-update:semver-major"]
+      # Vite 7+ / Vitest 4 cause CI failures for our apps:
+      # - Vite 8 stricter ESM resolution breaks zod's named exports under our
+      #   server vitest config (z.object → undefined).
+      # - Vitest 4's new forks-by-default worker pool times out under Bun.
+      # Tracked in the vite/vitest migration issue; remove these ignores when
+      # the migration lands.
+      - dependency-name: "vite"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "vitest"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@vitejs/plugin-vue"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@vitest/coverage-istanbul"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@vitest/ui"
+        update-types: ["version-update:semver-major"]
+      # Plugins whose latest majors require Vite 7+; pinned alongside Vite.
+      - dependency-name: "vite-plugin-vue-inspector"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "unplugin-auto-import"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "unplugin-vue-components"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "unplugin-vue-router"
+        update-types: ["version-update:semver-major"]
     labels:
       - "dependencies"
     commit-message:
