@@ -12,6 +12,7 @@
     "web": "expo start --web",
     "type-check": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
     "build": "echo 'Expo app — no build step'",
+    "eas-build-post-install": "cd ../.. && bun run build",
     "lint": "expo lint",
     "test": "bash scripts/jest-node.sh",
     "test:db": "bash scripts/jest-node.sh src/db/__tests__/",
