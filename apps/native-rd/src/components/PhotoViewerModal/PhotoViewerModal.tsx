@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { View, Modal, Pressable, Image } from "react-native";
+import React from "react";
+import { View, Modal, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "../Text";
+import { PhotoContent } from "../EvidenceContent/PhotoContent";
 import { styles } from "./PhotoViewerModal.styles";
 
 export interface PhotoViewerModalProps {
@@ -17,12 +18,7 @@ export function PhotoViewerModal({
   description,
   onClose,
 }: PhotoViewerModalProps) {
-  const [imageError, setImageError] = useState(false);
   const insets = useSafeAreaInsets();
-
-  useEffect(() => {
-    setImageError(false);
-  }, [uri]);
 
   if (!visible) return null;
 
@@ -41,39 +37,18 @@ export function PhotoViewerModal({
           { paddingTop: insets.top, paddingBottom: insets.bottom },
         ]}
       >
-        <View style={styles.container}>
-          <View style={styles.topBar}>
-            <Pressable
-              onPress={onClose}
-              accessible
-              accessibilityRole="button"
-              accessibilityLabel="Close photo viewer"
-              hitSlop={16}
-            >
-              <Text style={styles.closeText}>{"\u2715"}</Text>
-            </Pressable>
-          </View>
-          <View style={styles.imageContainer}>
-            {!uri || imageError ? (
-              <Text style={styles.errorText}>Failed to load image</Text>
-            ) : (
-              <Image
-                source={{ uri }}
-                style={styles.image}
-                resizeMode="contain"
-                accessibilityLabel={description ?? "Photo evidence"}
-                onError={() => setImageError(true)}
-              />
-            )}
-          </View>
-          {description ? (
-            <View style={styles.captionBar}>
-              <Text style={styles.captionText} numberOfLines={2}>
-                {description}
-              </Text>
-            </View>
-          ) : null}
+        <View style={styles.topBar}>
+          <Pressable
+            onPress={onClose}
+            accessible
+            accessibilityRole="button"
+            accessibilityLabel="Close photo viewer"
+            hitSlop={16}
+          >
+            <Text style={styles.closeText}>{"\u2715"}</Text>
+          </Pressable>
         </View>
+        <PhotoContent uri={uri} description={description} />
       </View>
     </Modal>
   );

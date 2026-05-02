@@ -57,6 +57,7 @@ export const PendingCollapsed: Story = {
         stepIndex={0}
         evidence={[]}
         onNodePress={() => {}}
+        onEvidencePress={() => {}}
       />
     </View>
   ),
@@ -70,6 +71,7 @@ export const InProgressCollapsed: Story = {
         stepIndex={1}
         evidence={mockEvidence.slice(0, 2)}
         onNodePress={() => {}}
+        onEvidencePress={() => {}}
       />
     </View>
   ),
@@ -83,6 +85,7 @@ export const CompletedCollapsed: Story = {
         stepIndex={2}
         evidence={mockEvidence}
         onNodePress={() => {}}
+        onEvidencePress={() => {}}
       />
     </View>
   ),
@@ -96,6 +99,7 @@ export const ExpandedWithEvidence: Story = {
         stepIndex={2}
         evidence={mockEvidence}
         onNodePress={() => {}}
+        onEvidencePress={() => {}}
         defaultExpanded
       />
     </View>
@@ -110,6 +114,7 @@ export const ExpandedEmpty: Story = {
         stepIndex={0}
         evidence={[]}
         onNodePress={() => {}}
+        onEvidencePress={() => {}}
         defaultExpanded
       />
     </View>
@@ -128,6 +133,7 @@ export const LongTitle: Story = {
         stepIndex={0}
         evidence={mockEvidence}
         onNodePress={() => {}}
+        onEvidencePress={() => {}}
       />
     </View>
   ),

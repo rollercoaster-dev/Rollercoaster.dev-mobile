@@ -1,8 +1,8 @@
 import React from "react";
 import { View, Modal, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AudioPlayer } from "../AudioPlayer";
 import { Text } from "../Text";
+import { AudioContent } from "../EvidenceContent/AudioContent";
 import { styles } from "./AudioPlayerModal.styles";
 
 export interface AudioPlayerModalProps {
@@ -36,23 +36,19 @@ export function AudioPlayerModal({
           { paddingTop: insets.top, paddingBottom: insets.bottom },
         ]}
       >
-        <View style={styles.container}>
-          <View style={styles.topBar}>
-            <Text style={styles.heading}>Voice Memo</Text>
-            <Pressable
-              onPress={onClose}
-              accessible
-              accessibilityRole="button"
-              accessibilityLabel="Close audio player"
-              hitSlop={16}
-            >
-              <Text style={styles.closeText}>{"\u2715"}</Text>
-            </Pressable>
-          </View>
-          <View style={styles.playerContainer}>
-            <AudioPlayer uri={uri} durationMs={durationMs} />
-          </View>
+        <View style={styles.topBar}>
+          <Text style={styles.heading}>Voice Memo</Text>
+          <Pressable
+            onPress={onClose}
+            accessible
+            accessibilityRole="button"
+            accessibilityLabel="Close audio player"
+            hitSlop={16}
+          >
+            <Text style={styles.closeText}>{"\u2715"}</Text>
+          </Pressable>
         </View>
+        <AudioContent uri={uri} durationMs={durationMs} />
       </View>
     </Modal>
   );

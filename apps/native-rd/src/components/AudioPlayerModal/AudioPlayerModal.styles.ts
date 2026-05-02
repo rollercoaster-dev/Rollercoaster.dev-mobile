@@ -28,9 +28,4 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.text,
     fontWeight: theme.fontWeight.bold,
   },
-  playerContainer: {
-    flex: 1,
-    justifyContent: "center",
-    paddingHorizontal: theme.space[4],
-  },
 }));

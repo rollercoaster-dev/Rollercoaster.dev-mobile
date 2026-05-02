@@ -23,7 +23,7 @@ const mockEvidence: EvidenceItemData[] = [
 export const Empty: Story = {
   render: () => (
     <View style={storyStyles.container}>
-      <FinishLine goalEvidence={[]} />
+      <FinishLine goalEvidence={[]} onEvidencePress={() => {}} />
     </View>
   ),
 };
@@ -31,7 +31,7 @@ export const Empty: Story = {
 export const WithEvidence: Story = {
   render: () => (
     <View style={storyStyles.container}>
-      <FinishLine goalEvidence={mockEvidence} />
+      <FinishLine goalEvidence={mockEvidence} onEvidencePress={() => {}} />
     </View>
   ),
 };
@@ -39,7 +39,7 @@ export const WithEvidence: Story = {
 export const SingleItem: Story = {
   render: () => (
     <View style={storyStyles.container}>
-      <FinishLine goalEvidence={[mockEvidence[0]]} />
+      <FinishLine goalEvidence={[mockEvidence[0]]} onEvidencePress={() => {}} />
     </View>
   ),
 };

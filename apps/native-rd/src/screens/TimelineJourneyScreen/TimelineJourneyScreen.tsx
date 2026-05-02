@@ -91,6 +91,13 @@ function TimelineContent({ goalId }: { goalId: string }) {
     navigation.navigate("FocusMode", { goalId });
   };
 
+  const handleEvidencePress = (evidenceId: string) => {
+    navigation.navigate("EvidenceViewer", {
+      goalId,
+      initialEvidenceId: evidenceId,
+    });
+  };
+
   return (
     <View style={{ flex: 1 }}>
       {/* Header */}
@@ -134,9 +141,13 @@ function TimelineContent({ goalId }: { goalId: string }) {
               stepIndex={index}
               evidence={stepEvidenceData[index] ?? []}
               onNodePress={handleNodePress}
+              onEvidencePress={handleEvidencePress}
             />
           ))}
-          <FinishLine goalEvidence={goalEvidence} />
+          <FinishLine
+            goalEvidence={goalEvidence}
+            onEvidencePress={handleEvidencePress}
+          />
         </View>
       </ScrollView>
     </View>

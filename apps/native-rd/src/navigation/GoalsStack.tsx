@@ -15,6 +15,7 @@ import { EditModeScreen } from "../screens/EditModeScreen";
 import { CompletionFlowScreen } from "../screens/CompletionFlowScreen";
 import { TimelineJourneyScreen } from "../screens/TimelineJourneyScreen";
 import { BadgeDesignerScreen } from "../screens/BadgeDesignerScreen";
+import { EvidenceViewerScreen } from "../screens/EvidenceViewerScreen";
 import type { GoalsStackParamList } from "./types";
 
 const Stack = createNativeStackNavigator<GoalsStackParamList>();
@@ -26,6 +27,7 @@ export function GoalsStack() {
       <Stack.Screen name="FocusMode" component={FocusModeScreen} />
       <Stack.Screen name="CompletionFlow" component={CompletionFlowScreen} />
       <Stack.Screen name="TimelineJourney" component={TimelineJourneyScreen} />
+      <Stack.Screen name="EvidenceViewer" component={EvidenceViewerScreen} />
       <Stack.Screen
         name="NewGoal"
         component={NewGoalModal}

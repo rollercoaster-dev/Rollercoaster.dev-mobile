@@ -549,7 +549,7 @@ export const stepEvidenceByGoalQuery = (goalId: GoalId) =>
       .selectFrom("evidence")
       .innerJoin("step", "step.id", "evidence.stepId")
       .selectAll("evidence")
-      .select("step.title as stepTitle")
+      .select(["step.title as stepTitle", "step.ordinal as stepOrdinal"])
       .where("step.goalId", "=", goalId)
       .where("evidence.isDeleted", "is", null)
       .where("step.isDeleted", "is", null)
