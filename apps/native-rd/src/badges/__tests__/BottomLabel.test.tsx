@@ -1,9 +1,14 @@
 import {
   BottomLabel,
+  BOTTOM_LABEL_HORIZONTAL_PADDING,
+  BOTTOM_LABEL_INPUT_MAX_CHARS,
   BOTTOM_LABEL_SIZE_RATIO,
   BOTTOM_LABEL_TOP_MARGIN_RATIO,
+  getBottomLabelAvailableWidth,
+  getBottomLabelFontSize,
   getBottomLabelY,
 } from "../text/BottomLabel";
+import { measureTextWidth } from "../text/measureTextWidth";
 
 const DARK_FILL = "#1a1a2e";
 const LIGHT_FILL = "#fef3c7";
@@ -105,14 +110,38 @@ describe("BottomLabel", () => {
     expect(el!.props.fontFamily).toBe("Lexend");
   });
 
-  // ── Label clamping ───────────────────────────────────────────────────
+  // ── Label sizing ─────────────────────────────────────────────────────
 
-  it("clamps label to 10 characters", () => {
+  it("extends the label cap beyond the old 10-character limit", () => {
     const el = BottomLabel({
       label: "This is too long",
       size: 256,
       fillColor: DARK_FILL,
     });
-    expect(el!.props.children).toBe("This is to");
+    expect(el!.props.children).toBe("This is too long");
+  });
+
+  it("still applies an input-length safety cap", () => {
+    const longLabel = "A".repeat(BOTTOM_LABEL_INPUT_MAX_CHARS + 5);
+    const el = BottomLabel({
+      label: longLabel,
+      size: 256,
+      fillColor: DARK_FILL,
+    });
+    expect(el!.props.children).toHaveLength(BOTTOM_LABEL_INPUT_MAX_CHARS);
+  });
+
+  it("sizes long labels to the frame width with 4px horizontal padding", () => {
+    const label = "This is too long";
+    const size = 256;
+    const fontSize = getBottomLabelFontSize(label, size);
+    const renderedWidth = measureTextWidth(label, fontSize);
+
+    expect(getBottomLabelAvailableWidth(size)).toBe(
+      size - BOTTOM_LABEL_HORIZONTAL_PADDING * 2,
+    );
+    expect(renderedWidth).toBeLessThanOrEqual(
+      getBottomLabelAvailableWidth(size),
+    );
   });
 });

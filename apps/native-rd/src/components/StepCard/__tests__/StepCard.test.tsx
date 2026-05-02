@@ -1,5 +1,4 @@
 import React from "react";
-import { Keyboard } from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -27,7 +26,6 @@ const defaultProps = {
   totalSteps: 5,
   onToggleComplete: jest.fn(),
   onEvidenceTap: jest.fn(),
-  onQuickNote: jest.fn(),
   onQuickEvidence: jest.fn(),
 };
 
@@ -185,7 +183,7 @@ describe("StepCard", () => {
     expect(screen.queryByText(/Add.*Take Photo.*to complete/)).toBeNull();
   });
 
-  it("exposes blocker reason via checkbox accessibilityHint when blocked", () => {
+  it("hides the Mark Complete checkbox when blocked", () => {
     renderWithProviders(
       <StepCard
         step={makeStep({
@@ -195,13 +193,70 @@ describe("StepCard", () => {
         {...defaultProps}
       />,
     );
-    const checkbox = screen.getByRole("checkbox");
-    expect(checkbox.props.accessibilityHint).toBe(
-      "Add Take Photo to complete this step",
-    );
+    expect(screen.queryByRole("checkbox")).toBeNull();
+    expect(screen.queryByText("Mark complete")).toBeNull();
   });
 
-  it("does not set accessibilityHint when evidence matches planned type", () => {
+  it("shows the 'Add evidence to complete' prompt when blocked", () => {
+    renderWithProviders(
+      <StepCard
+        step={makeStep({
+          plannedEvidenceTypes: ["photo"],
+          capturedEvidenceTypes: [],
+        })}
+        {...defaultProps}
+      />,
+    );
+    expect(screen.getByText("Add evidence to complete")).toBeOnTheScreen();
+  });
+
+  it("exposes blocker reason via prompt accessibilityLabel when blocked", () => {
+    renderWithProviders(
+      <StepCard
+        step={makeStep({
+          plannedEvidenceTypes: ["photo"],
+          capturedEvidenceTypes: [],
+        })}
+        {...defaultProps}
+      />,
+    );
+    expect(
+      screen.getByLabelText("Add Take Photo to complete this step"),
+    ).toBeOnTheScreen();
+  });
+
+  it("stays blocked when only some of multiple planned types are captured (regression: PR #987)", () => {
+    renderWithProviders(
+      <StepCard
+        step={makeStep({
+          plannedEvidenceTypes: ["photo", "video", "text"],
+          capturedEvidenceTypes: ["photo"],
+        })}
+        {...defaultProps}
+      />,
+    );
+    // Earlier `some(...)` logic would have unblocked the step after the
+    // first capture; with `every` semantics it remains blocked until all
+    // planned types are present.
+    expect(screen.getByText("Add evidence to complete")).toBeOnTheScreen();
+    expect(screen.queryByRole("checkbox")).toBeNull();
+  });
+
+  it("unblocks only after every planned type has been captured", () => {
+    renderWithProviders(
+      <StepCard
+        step={makeStep({
+          plannedEvidenceTypes: ["photo", "text"],
+          capturedEvidenceTypes: ["photo", "text"],
+        })}
+        {...defaultProps}
+      />,
+    );
+    expect(screen.getByRole("checkbox")).toBeOnTheScreen();
+    expect(screen.queryByText("Add evidence to complete")).toBeNull();
+  });
+
+  it("shows checkbox (not prompt) when evidence matches planned type", () => {
     renderWithProviders(
       <StepCard
         step={makeStep({
@@ -211,58 +266,11 @@ describe("StepCard", () => {
         {...defaultProps}
       />,
     );
-    const checkbox = screen.getByRole("checkbox");
-    expect(checkbox.props.accessibilityHint).toBeUndefined();
+    expect(screen.getByRole("checkbox")).toBeOnTheScreen();
+    expect(screen.queryByText("Add evidence to complete")).toBeNull();
   });
 
-  it("uses simple checkbox label even when blocked (no requires X suffix)", () => {
-    renderWithProviders(
-      <StepCard
-        step={makeStep({
-          plannedEvidenceTypes: ["photo"],
-          capturedEvidenceTypes: [],
-        })}
-        {...defaultProps}
-      />,
-    );
-    expect(screen.getByText("Mark complete")).toBeOnTheScreen();
-    expect(screen.queryByText(/requires/i)).toBeNull();
-  });
-
-  it("checkbox remains actionable when blocked", () => {
-    renderWithProviders(
-      <StepCard
-        step={makeStep({
-          plannedEvidenceTypes: ["photo"],
-          capturedEvidenceTypes: [],
-        })}
-        {...defaultProps}
-      />,
-    );
-    const checkbox = screen.getByRole("checkbox");
-    expect(checkbox.props.accessibilityState?.disabled).toBe(false);
-  });
-
-  it("tapping blocked checkbox calls onEvidenceTap instead of onToggleComplete", () => {
-    const onToggleComplete = jest.fn();
-    const onEvidenceTap = jest.fn();
-    renderWithProviders(
-      <StepCard
-        step={makeStep({
-          plannedEvidenceTypes: ["photo"],
-          capturedEvidenceTypes: [],
-        })}
-        {...defaultProps}
-        onToggleComplete={onToggleComplete}
-        onEvidenceTap={onEvidenceTap}
-      />,
-    );
-    fireEvent.press(screen.getByRole("checkbox"));
-    expect(onEvidenceTap).toHaveBeenCalledTimes(1);
-    expect(onToggleComplete).not.toHaveBeenCalled();
-  });
-
-  it("renders quick evidence actions for missing non-text planned types", () => {
+  it("renders quick evidence actions for all missing planned types including text", () => {
     renderWithProviders(
       <StepCard
         step={makeStep({
@@ -274,10 +282,10 @@ describe("StepCard", () => {
     );
     expect(screen.getByLabelText("Add Photo evidence")).toBeOnTheScreen();
     expect(screen.queryByLabelText("Add Video evidence")).toBeNull();
-    expect(screen.queryByLabelText("Add Note evidence")).toBeNull();
+    expect(screen.getByLabelText("Add Note evidence")).toBeOnTheScreen();
   });
 
-  it("calls onQuickEvidence when a quick evidence action is pressed", () => {
+  it("calls onQuickEvidence with the type when a quick action is pressed", () => {
     const onQuickEvidence = jest.fn();
     renderWithProviders(
       <StepCard
@@ -291,6 +299,22 @@ describe("StepCard", () => {
     );
     fireEvent.press(screen.getByLabelText("Add File evidence"));
     expect(onQuickEvidence).toHaveBeenCalledWith("file");
+  });
+
+  it("calls onQuickEvidence with 'text' when the Note quick action is pressed", () => {
+    const onQuickEvidence = jest.fn();
+    renderWithProviders(
+      <StepCard
+        step={makeStep({
+          plannedEvidenceTypes: ["text"],
+          capturedEvidenceTypes: [],
+        })}
+        {...defaultProps}
+        onQuickEvidence={onQuickEvidence}
+      />,
+    );
+    fireEvent.press(screen.getByLabelText("Add Note evidence"));
+    expect(onQuickEvidence).toHaveBeenCalledWith("text");
   });
 
   it("hides quick evidence actions when onQuickEvidence callback is not provided", () => {
@@ -308,18 +332,19 @@ describe("StepCard", () => {
     expect(screen.queryByLabelText("Add Photo evidence")).toBeNull();
   });
 
-  it("renders no quick evidence actions when all non-text planned types are captured", () => {
+  it("renders no quick evidence actions when all planned types are captured", () => {
     renderWithProviders(
       <StepCard
         step={makeStep({
-          plannedEvidenceTypes: ["photo", "video"],
-          capturedEvidenceTypes: ["photo", "video"],
+          plannedEvidenceTypes: ["photo", "video", "text"],
+          capturedEvidenceTypes: ["photo", "video", "text"],
         })}
         {...defaultProps}
       />,
     );
     expect(screen.queryByLabelText("Add Photo evidence")).toBeNull();
     expect(screen.queryByLabelText("Add Video evidence")).toBeNull();
+    expect(screen.queryByLabelText("Add Note evidence")).toBeNull();
   });
 
   it("renders no quick evidence actions when step is completed", () => {
@@ -327,218 +352,14 @@ describe("StepCard", () => {
       <StepCard
         step={makeStep({
           status: "completed",
-          plannedEvidenceTypes: ["photo"],
-          capturedEvidenceTypes: [],
-        })}
-        {...defaultProps}
-      />,
-    );
-    expect(screen.queryByLabelText("Add Photo evidence")).toBeNull();
-  });
-
-  // --- Quick note ---
-
-  it("renders quick-note input when text is a planned type and not yet captured", () => {
-    renderWithProviders(
-      <StepCard
-        step={makeStep({
-          plannedEvidenceTypes: ["text"],
-          capturedEvidenceTypes: [],
-        })}
-        {...defaultProps}
-      />,
-    );
-    expect(screen.getByLabelText("Quick note")).toBeOnTheScreen();
-  });
-
-  it("does not render quick-note input when text is already captured", () => {
-    renderWithProviders(
-      <StepCard
-        step={makeStep({
-          plannedEvidenceTypes: ["text"],
-          capturedEvidenceTypes: ["text"],
-        })}
-        {...defaultProps}
-      />,
-    );
-    expect(screen.queryByLabelText("Quick note")).toBeNull();
-  });
-
-  it("calls onQuickNote with trimmed text on submit", () => {
-    const onQuickNote = jest.fn();
-    renderWithProviders(
-      <StepCard
-        step={makeStep({
-          plannedEvidenceTypes: ["text"],
-          capturedEvidenceTypes: [],
-        })}
-        {...defaultProps}
-        onQuickNote={onQuickNote}
-      />,
-    );
-    const input = screen.getByLabelText("Quick note");
-    fireEvent.changeText(input, "  My reflection  ");
-    fireEvent.press(screen.getByLabelText("Add quick note"));
-    expect(onQuickNote).toHaveBeenCalledWith("My reflection");
-  });
-
-  it("dismisses the keyboard after adding a quick note", () => {
-    const onQuickNote = jest.fn();
-    const dismissSpy = jest
-      .spyOn(Keyboard, "dismiss")
-      .mockImplementation(() => undefined);
-
-    renderWithProviders(
-      <StepCard
-        step={makeStep({
-          plannedEvidenceTypes: ["text"],
-          capturedEvidenceTypes: [],
-        })}
-        {...defaultProps}
-        onQuickNote={onQuickNote}
-      />,
-    );
-
-    fireEvent.changeText(screen.getByLabelText("Quick note"), "Reflection");
-    fireEvent.press(screen.getByLabelText("Add quick note"));
-
-    expect(onQuickNote).toHaveBeenCalledWith("Reflection");
-    expect(dismissSpy).toHaveBeenCalled();
-
-    dismissSpy.mockRestore();
-  });
-
-  it("exposes stable automation hooks for the real quick-note controls", () => {
-    renderWithProviders(
-      <StepCard
-        step={makeStep({
-          plannedEvidenceTypes: ["text"],
-          capturedEvidenceTypes: [],
-        })}
-        {...defaultProps}
-      />,
-    );
-
-    expect(screen.getByTestId("step-card-quick-note-input")).toBeOnTheScreen();
-    expect(
-      screen.getByTestId("step-card-quick-note-add-button"),
-    ).toBeOnTheScreen();
-  });
-
-  it("calls onQuickNoteFocus when the quick note input is focused", () => {
-    const onQuickNoteFocus = jest.fn();
-    renderWithProviders(
-      <StepCard
-        step={makeStep({
-          plannedEvidenceTypes: ["text"],
-          capturedEvidenceTypes: [],
-        })}
-        {...defaultProps}
-        onQuickNoteFocus={onQuickNoteFocus}
-      />,
-    );
-    fireEvent(screen.getByTestId("step-card-quick-note-input"), "focus");
-    expect(onQuickNoteFocus).toHaveBeenCalledTimes(1);
-  });
-
-  it("does not render quick-note when step is completed", () => {
-    renderWithProviders(
-      <StepCard
-        step={makeStep({
-          status: "completed",
-          plannedEvidenceTypes: ["text"],
-          capturedEvidenceTypes: [],
-        })}
-        {...defaultProps}
-      />,
-    );
-    expect(screen.queryByLabelText("Quick note")).toBeNull();
-  });
-
-  it("does not call onQuickNote when input is empty or whitespace", () => {
-    const onQuickNote = jest.fn();
-    renderWithProviders(
-      <StepCard
-        step={makeStep({
-          plannedEvidenceTypes: ["text"],
-          capturedEvidenceTypes: [],
-        })}
-        {...defaultProps}
-        onQuickNote={onQuickNote}
-      />,
-    );
-    const input = screen.getByLabelText("Quick note");
-    fireEvent.changeText(input, "   ");
-    fireEvent.press(screen.getByLabelText("Add quick note"));
-    expect(onQuickNote).not.toHaveBeenCalled();
-  });
-
-  it("renders a visible label tying the quick-note to the requirement", () => {
-    renderWithProviders(
-      <StepCard
-        step={makeStep({
-          plannedEvidenceTypes: ["text"],
-          capturedEvidenceTypes: [],
-        })}
-        {...defaultProps}
-      />,
-    );
-    expect(
-      screen.getByText("Add a note to complete this step"),
-    ).toBeOnTheScreen();
-  });
-
-  it("does not render the quick-note label when text is already captured", () => {
-    renderWithProviders(
-      <StepCard
-        step={makeStep({
-          plannedEvidenceTypes: ["text"],
-          capturedEvidenceTypes: ["text"],
-        })}
-        {...defaultProps}
-      />,
-    );
-    expect(screen.queryByText("Add a note to complete this step")).toBeNull();
-  });
-
-  it("with multiple planned types including text, shows quick-note and non-text quick actions", () => {
-    renderWithProviders(
-      <StepCard
-        step={makeStep({
           plannedEvidenceTypes: ["photo", "text"],
           capturedEvidenceTypes: [],
         })}
         {...defaultProps}
       />,
     );
-    expect(screen.getByLabelText("Quick note")).toBeOnTheScreen();
-    expect(
-      screen.getByText("Add a note to complete this step"),
-    ).toBeOnTheScreen();
-    expect(screen.getByLabelText("Add Photo evidence")).toBeOnTheScreen();
-    // Chips remain as the at-a-glance status indicator
-    expect(screen.getByLabelText("Planned evidence types")).toBeOnTheScreen();
-    // Redundant orange prompt is gone
-    expect(screen.queryByText(/Add.*Write a Note.*to complete/)).toBeNull();
-  });
-
-  it("with multiple planned non-text types, shows chips and quick actions without quick-note", () => {
-    renderWithProviders(
-      <StepCard
-        step={makeStep({
-          plannedEvidenceTypes: ["photo", "voice_memo"],
-          capturedEvidenceTypes: [],
-        })}
-        {...defaultProps}
-      />,
-    );
-    expect(screen.queryByLabelText("Quick note")).toBeNull();
-    expect(screen.getByLabelText("Planned evidence types")).toBeOnTheScreen();
-    expect(screen.getByLabelText("Add Photo evidence")).toBeOnTheScreen();
-    expect(screen.getByLabelText("Add Voice Memo evidence")).toBeOnTheScreen();
-    expect(
-      screen.getByRole("checkbox").props.accessibilityState?.disabled,
-    ).toBe(false);
+    expect(screen.queryByLabelText("Add Photo evidence")).toBeNull();
+    expect(screen.queryByLabelText("Add Note evidence")).toBeNull();
   });
 
   it("does not render chips or block completion when plannedEvidenceTypes is empty array", () => {

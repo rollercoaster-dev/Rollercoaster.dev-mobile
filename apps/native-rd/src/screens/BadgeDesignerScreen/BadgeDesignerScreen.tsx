@@ -18,6 +18,7 @@ import { Button } from "../../components/Button";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { BadgeRenderer } from "../../badges/BadgeRenderer";
+import { BOTTOM_LABEL_INPUT_MAX_CHARS } from "../../badges/text/BottomLabel";
 import { ShapeSelector } from "../../badges/ShapeSelector";
 import { ColorPicker } from "../../badges/ColorPicker";
 import { IconPicker } from "../../badges/IconPicker";
@@ -339,10 +340,11 @@ function DesignEditor({
         <View style={styles.sectionContainer}>
           <Text style={styles.sectionLabel}>Bottom Label</Text>
           <TextInput
+            accessibilityRole="text"
             accessibilityLabel="Bottom label"
             value={bottomLabel}
             onChangeText={handleBottomLabelChange}
-            maxLength={10}
+            maxLength={BOTTOM_LABEL_INPUT_MAX_CHARS}
             placeholder="Optional label"
             placeholderTextColor={theme.colors.textSecondary}
             style={styles.bottomLabelInput}

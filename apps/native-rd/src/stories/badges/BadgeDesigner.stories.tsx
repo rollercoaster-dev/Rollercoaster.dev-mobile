@@ -21,6 +21,7 @@ import {
   createDefaultBadgeDesign,
 } from "../../badges/types";
 import type { BadgeDesign } from "../../badges/types";
+import { BADGE_CANVAS_BACKGROUND } from "../../badges/constants";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -274,7 +275,7 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius.sm,
     borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.border,
-    backgroundColor: theme.colors.backgroundSecondary,
+    backgroundColor: BADGE_CANVAS_BACKGROUND,
   },
   iconPickerContainer: {
     flex: 1,

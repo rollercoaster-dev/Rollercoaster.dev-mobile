@@ -104,7 +104,7 @@ export type BannerData = {
  *   `'both'` → both arcs rendered.
  *
  * **Constraint enforcement:**
- * `monogram` (1-3 chars) and `bottomLabel` (max ~10 chars) are validated
+ * `monogram` (1-3 chars) and `bottomLabel` are constrained
  * at the renderer/UI layer, not here — this type represents stored data.
  */
 export type BadgeDesign = {
@@ -116,7 +116,7 @@ export type BadgeDesign = {
   title: string; // display title (from goal, editable)
   centerMode: BadgeCenterMode;
   monogram?: string; // 1-3 chars, enforced at UI layer
-  bottomLabel?: string; // max ~10 chars, rendered below the badge; enforced at UI layer
+  bottomLabel?: string; // rendered below the badge; constrained at UI/render layer
   pathText?: string; // top arc inscription
   pathTextPosition?: PathTextPosition; // which arcs to render
   pathTextBottom?: string; // bottom arc inscription

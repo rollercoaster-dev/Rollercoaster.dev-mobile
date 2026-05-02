@@ -26,8 +26,8 @@ import {
   getBannerTopVisibleRatio,
 } from "./text/Banner";
 import {
-  BOTTOM_LABEL_SIZE_RATIO,
-  BOTTOM_LABEL_MAX_CHARS,
+  BOTTOM_LABEL_INPUT_MAX_CHARS,
+  getBottomLabelFontSize,
   getBottomLabelY,
   getBottomLabelBottomOverflow,
   getBottomLabelExtraOffset,
@@ -261,8 +261,8 @@ function buildBottomLabelBox(
 ): Box {
   const label = (design.bottomLabel ?? "")
     .trim()
-    .slice(0, BOTTOM_LABEL_MAX_CHARS);
-  const fontSize = size * BOTTOM_LABEL_SIZE_RATIO * scale;
+    .slice(0, BOTTOM_LABEL_INPUT_MAX_CHARS);
+  const fontSize = getBottomLabelFontSize(label, size, scale);
   const cy = getBottomLabelY(size, scale) + extraOffset;
   const textWidth = measureTextWidth(label, fontSize);
 

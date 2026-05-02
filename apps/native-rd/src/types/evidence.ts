@@ -4,14 +4,11 @@ export type EvidenceTypeValue =
   (typeof EvidenceType)[keyof typeof EvidenceType];
 
 /**
- * Subset of evidence types reachable through quick-action buttons on a
- * blocked step card. `text` is excluded because the quick-note input
- * is the dedicated entry point for text evidence.
+ * Evidence types reachable through quick-action buttons on a blocked
+ * step card. Includes `text` — tapping its button navigates to the
+ * `CaptureTextNote` screen for full-screen note capture.
  */
-export type QuickEvidenceType = Exclude<
-  EvidenceTypeValue,
-  typeof EvidenceType.text
->;
+export type QuickEvidenceType = EvidenceTypeValue;
 
 const VALID_EVIDENCE_TYPES = new Set<string>(Object.values(EvidenceType));
 

@@ -12,6 +12,10 @@ export {
   BOTTOM_LABEL_SIZE_RATIO,
   BOTTOM_LABEL_TOP_MARGIN_RATIO,
   BOTTOM_LABEL_MAX_CHARS,
+  BOTTOM_LABEL_INPUT_MAX_CHARS,
+  BOTTOM_LABEL_HORIZONTAL_PADDING,
+  getBottomLabelAvailableWidth,
+  getBottomLabelFontSize,
   getBottomLabelY,
   getBottomLabelBottomOverflow,
 } from "./BottomLabel";

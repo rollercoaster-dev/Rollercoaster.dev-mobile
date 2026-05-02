@@ -48,11 +48,9 @@ import {
   uncompleteStep,
   deleteEvidence,
   restoreEvidence,
-  createEvidence,
   canCompleteStep,
   EvidenceType,
   StepStatus,
-  TEXT_EVIDENCE_PREFIX,
 } from "../../db";
 import type { GoalId, StepId, EvidenceId } from "../../db";
 import { useToast } from "../../components/Toast";
@@ -328,20 +326,6 @@ function FocusContent({ goalId }: { goalId: string }) {
     }
   };
 
-  const handleQuickNote = (stepId: string, text: string) => {
-    try {
-      createEvidence({
-        stepId: stepId as StepId,
-        type: EvidenceType.text,
-        uri: TEXT_EVIDENCE_PREFIX + text,
-        description: text.length > 50 ? text.slice(0, 50) + "..." : text,
-      });
-    } catch (error) {
-      logger.error("Failed to create quick note", { stepId, error });
-      showToast({ message: "Could not save note", duration: 3000 });
-    }
-  };
-
   const handleEvidenceTap = () => {
     setIsDrawerOpen(true);
   };
@@ -353,11 +337,6 @@ function FocusContent({ goalId }: { goalId: string }) {
   const handleToggleFABMenu = () => {
     setIsFABMenuOpen((prev) => !prev);
     if (!isDrawerOpen) setIsDrawerOpen(true);
-  };
-
-  const handleQuickNoteFocus = () => {
-    if (isDrawerOpen) setIsDrawerOpen(false);
-    if (isFABMenuOpen) setIsFABMenuOpen(false);
   };
 
   const handleSelectEvidenceType = (type: EvidenceTypeValue) => {
@@ -529,8 +508,6 @@ function FocusContent({ goalId }: { goalId: string }) {
                 totalSteps={stepRows.length}
                 onToggleComplete={() => handleToggleStep(step.id)}
                 onEvidenceTap={handleEvidenceTap}
-                onQuickNote={(text) => handleQuickNote(step.id, text)}
-                onQuickNoteFocus={handleQuickNoteFocus}
                 onQuickEvidence={(type) => handleQuickEvidence(step.id, type)}
               />
             )),

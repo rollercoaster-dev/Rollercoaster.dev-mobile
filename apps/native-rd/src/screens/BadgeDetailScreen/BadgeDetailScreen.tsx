@@ -290,7 +290,11 @@ function BadgeDetailContent({
       >
         <View style={styles.previewContainer}>
           {design ? (
-            <View ref={badgeRendererRef} collapsable={false}>
+            <View
+              ref={badgeRendererRef}
+              collapsable={false}
+              style={styles.badgeCanvas}
+            >
               <BadgeRenderer design={design} size={160} />
             </View>
           ) : hasRealImage ? (

@@ -537,7 +537,7 @@ describe("FocusModeScreen", () => {
     expect(mockCanCompleteStep).not.toHaveBeenCalled();
   });
 
-  it("calls createEvidence when quick-note is submitted", () => {
+  it("navigates to CaptureTextNote when the Note quick-action is pressed", () => {
     setupQueries({
       steps: [
         {
@@ -558,51 +558,14 @@ describe("FocusModeScreen", () => {
       stepEvidence: [],
     });
     renderWithProviders(<FocusModeScreen {...routeProps} />);
-    const input = screen.getByTestId("step-card-quick-note-input");
-    fireEvent.changeText(input, "My reflection");
-    fireEvent.press(screen.getByTestId("step-card-quick-note-add-button"));
-    expect(mockCreateEvidence).toHaveBeenCalledWith({
+    fireEvent.press(screen.getByLabelText("Add Note evidence"));
+    expect(mockNavigate).toHaveBeenCalledWith("CaptureTextNote", {
+      goalId: "goal-1",
       stepId: "step-1",
-      type: "text",
-      uri: "content:text;My reflection",
-      description: "My reflection",
     });
   });
 
-  it("closes the evidence drawer when quick-note entry begins", () => {
-    setupQueries({
-      steps: [
-        {
-          id: "step-1",
-          title: "Read docs",
-          status: "pending",
-          ordinal: 0,
-          plannedEvidenceTypes: '["text"]',
-        },
-        {
-          id: "step-2",
-          title: "Practice",
-          status: "completed",
-          ordinal: 1,
-          plannedEvidenceTypes: null,
-        },
-      ],
-      stepEvidence: [],
-    });
-
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-
-    fireEvent.press(screen.getByLabelText("Toggle evidence drawer"));
-    expect(screen.getByLabelText("Close evidence drawer")).toBeOnTheScreen();
-
-    fireEvent(screen.getByTestId("step-card-quick-note-input"), "focus");
-
-    expect(
-      screen.getByLabelText("Close evidence drawer").props.accessible,
-    ).toBe(false);
-  });
-
-  it("supports the real quick note then complete flow through accessible controls", () => {
+  it("supports the text-note then complete flow once captured externally", () => {
     const steps = [
       {
         id: "step-1",
@@ -620,19 +583,18 @@ describe("FocusModeScreen", () => {
       },
     ];
 
-    setupQueries({
-      steps,
-      stepEvidence: [],
+    // Step 1: from Focus Mode, tapping the Note quick-action navigates to
+    // the dedicated capture screen — text creation itself happens there.
+    setupQueries({ steps, stepEvidence: [] });
+    const view = renderWithProviders(<FocusModeScreen {...routeProps} />);
+    fireEvent.press(screen.getByLabelText("Add Note evidence"));
+    expect(mockNavigate).toHaveBeenCalledWith("CaptureTextNote", {
+      goalId: "goal-1",
+      stepId: "step-1",
     });
 
-    const view = renderWithProviders(<FocusModeScreen {...routeProps} />);
-
-    fireEvent.changeText(
-      screen.getByTestId("step-card-quick-note-input"),
-      "My reflection",
-    );
-    fireEvent.press(screen.getByTestId("step-card-quick-note-add-button"));
-
+    // Step 2: once the user has captured a text note in CaptureTextNote and
+    // returned, FocusMode should let them complete the step.
     setupQueries({
       steps,
       stepEvidence: [
@@ -650,12 +612,6 @@ describe("FocusModeScreen", () => {
     renderWithProviders(<FocusModeScreen {...routeProps} />);
     fireEvent.press(screen.getAllByLabelText("Mark complete")[0]);
 
-    expect(mockCreateEvidence).toHaveBeenCalledWith({
-      stepId: "step-1",
-      type: "text",
-      uri: "content:text;My reflection",
-      description: "My reflection",
-    });
     expect(mockCompleteStep).toHaveBeenCalledWith("step-1", '["text"]', [
       { type: "text" },
     ]);

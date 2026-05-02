@@ -1173,3 +1173,24 @@ export function updateUserSettingsKey(id: UserSettingsId, keyId: string) {
     throw new Error("Failed to save key reference. Please try again.");
   }
 }
+
+/**
+ * Clear an orphaned keyId from user settings.
+ * Called by useUserKey when the stored keyId points to a SecureStore entry
+ * that no longer exists (e.g. after an iOS keychain wipe). Setting it to null
+ * lets the generation effect re-run and produce a fresh keypair.
+ */
+export function clearUserSettingsKey(id: UserSettingsId) {
+  try {
+    return evolu.update("userSettings", {
+      id,
+      keyId: null,
+    } as Parameters<typeof evolu.update>[1]);
+  } catch (error) {
+    logger.error("Failed to clear keyId in user settings", {
+      settingsId: id,
+      error,
+    });
+    throw new Error("Failed to clear key reference. Please try again.");
+  }
+}

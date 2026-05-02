@@ -3,6 +3,7 @@ import { Text } from "react-native-svg";
 import { BadgeShape } from "../types";
 import { getSafeTextColor } from "../../utils/accessibility";
 import { fontFamily as fontFamilyTokens } from "../../themes/tokens";
+import { measureTextWidth } from "./measureTextWidth";
 
 export interface BottomLabelProps {
   label: string | undefined;
@@ -21,8 +22,14 @@ export const BOTTOM_LABEL_SIZE_RATIO = 0.15;
 /** Gap between badge bottom and the outside label, as a fraction of badge size */
 export const BOTTOM_LABEL_TOP_MARGIN_RATIO = 0.03;
 
-/** Maximum characters for bottom label */
-export const BOTTOM_LABEL_MAX_CHARS = 10;
+/** Horizontal inset inside the badge/frame width. */
+export const BOTTOM_LABEL_HORIZONTAL_PADDING = 4;
+
+/** Maximum input characters for bottom label. Text still scales to fit the frame width. */
+export const BOTTOM_LABEL_INPUT_MAX_CHARS = 24;
+
+/** @deprecated Use BOTTOM_LABEL_INPUT_MAX_CHARS. */
+export const BOTTOM_LABEL_MAX_CHARS = BOTTOM_LABEL_INPUT_MAX_CHARS;
 
 /**
  * Star badges have a deep concavity at the bottom, so the bottom label is
@@ -51,6 +58,26 @@ export function getBottomLabelBottomOverflow(size: number, scale = 1): number {
   return topMargin + fontSize;
 }
 
+export function getBottomLabelAvailableWidth(size: number): number {
+  return Math.max(0, size - BOTTOM_LABEL_HORIZONTAL_PADDING * 2);
+}
+
+export function getBottomLabelFontSize(
+  label: string,
+  size: number,
+  scale = 1,
+): number {
+  const baseFontSize = size * BOTTOM_LABEL_SIZE_RATIO * scale;
+  const availableWidth = getBottomLabelAvailableWidth(size);
+  const measuredWidth = measureTextWidth(label, baseFontSize);
+
+  if (measuredWidth <= availableWidth || measuredWidth === 0) {
+    return baseFontSize;
+  }
+
+  return baseFontSize * (availableWidth / measuredWidth);
+}
+
 export function BottomLabel({
   label,
   size,
@@ -61,8 +88,8 @@ export function BottomLabel({
 }: BottomLabelProps) {
   if (!label || label.trim().length === 0) return null;
 
-  const text = label.trim().slice(0, BOTTOM_LABEL_MAX_CHARS);
-  const fontSize = size * BOTTOM_LABEL_SIZE_RATIO * scale;
+  const text = label.trim().slice(0, BOTTOM_LABEL_INPUT_MAX_CHARS);
+  const fontSize = getBottomLabelFontSize(text, size, scale);
   const textColor = getSafeTextColor(fillColor, "BottomLabel");
   const cx = size / 2;
   const cy = getBottomLabelY(size, scale) + extraOffset;

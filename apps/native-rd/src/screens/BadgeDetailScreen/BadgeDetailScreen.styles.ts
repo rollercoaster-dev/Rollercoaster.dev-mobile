@@ -1,5 +1,6 @@
 import { StyleSheet } from "react-native-unistyles";
 import { shadowStyle } from "../../styles/shadows";
+import { BADGE_CANVAS_BACKGROUND } from "../../badges/constants";
 
 export const styles = StyleSheet.create((theme) => ({
   screen: {
@@ -34,8 +35,11 @@ export const styles = StyleSheet.create((theme) => ({
     borderRadius: 0,
     borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.border,
-    backgroundColor: theme.colors.backgroundSecondary,
+    backgroundColor: BADGE_CANVAS_BACKGROUND,
     ...shadowStyle(theme, "cardElevation"),
+  },
+  badgeCanvas: {
+    backgroundColor: BADGE_CANVAS_BACKGROUND,
   },
   badgeImage: {
     width: 120,

@@ -1,14 +1,6 @@
-import React, { useRef, useState } from "react";
-import {
-  View,
-  Text,
-  Pressable,
-  TextInput,
-  ScrollView,
-  Keyboard,
-} from "react-native";
+import React from "react";
+import { View, Text, Pressable, ScrollView } from "react-native";
 import Animated from "react-native-reanimated";
-import { useUnistyles } from "react-native-unistyles";
 import { Card } from "../Card";
 import { StatusBadge, type StatusBadgeVariant } from "../StatusBadge";
 import { Checkbox } from "../Checkbox";
@@ -22,7 +14,6 @@ import {
   type EvidenceCaptureOption,
   type QuickEvidenceType,
 } from "../../types/evidence";
-import { EvidenceType } from "../../db";
 import { styles } from "./StepCard.styles";
 
 export type StepCardStatus = "completed" | "in-progress" | "pending";
@@ -42,8 +33,6 @@ export interface StepCardProps {
   totalSteps: number;
   onToggleComplete: () => void;
   onEvidenceTap: () => void;
-  onQuickNote?: (text: string) => void;
-  onQuickNoteFocus?: () => void;
   onQuickEvidence?: (type: QuickEvidenceType) => void;
 }
 
@@ -78,7 +67,6 @@ function getMissingQuickEvidenceOptions(
 ): readonly QuickEvidenceCaptureOption[] {
   return EVIDENCE_CAPTURE_OPTIONS.filter(
     (option): option is QuickEvidenceCaptureOption =>
-      option.type !== EvidenceType.text &&
       plannedTypes.includes(option.type) &&
       !capturedTypes.includes(option.type),
   );
@@ -90,63 +78,34 @@ export function StepCard({
   totalSteps,
   onToggleComplete,
   onEvidenceTap,
-  onQuickNote,
-  onQuickNoteFocus,
   onQuickEvidence,
 }: StepCardProps) {
-  const { theme } = useUnistyles();
   const isCompleted = step.status === "completed";
   const evidenceLabel = formatEvidenceLabel(step.evidenceCount);
   const flashStyle = useFlashOnIncrease(step.evidenceCount);
-  const quickNoteInputRef = useRef<TextInput>(null);
 
   const plannedTypes = step.plannedEvidenceTypes ?? null;
   const capturedTypes = step.capturedEvidenceTypes ?? [];
   const hasPlannedTypes = plannedTypes !== null && plannedTypes.length > 0;
+  // Block until EVERY planned evidence type has been captured. Using `some`
+  // here would unblock the step after a single capture, which lets users
+  // mark a multi-evidence step complete without supplying all the planned
+  // pieces and breaks the evidence-gated completion contract.
   const isBlocked =
     !isCompleted && hasPlannedTypes
-      ? !plannedTypes.some((t) => capturedTypes.includes(t))
+      ? plannedTypes.some((t) => !capturedTypes.includes(t))
       : false;
 
   const blockerOption = isBlocked
     ? getMissingEvidenceOption(plannedTypes!, capturedTypes)
     : null;
 
-  const showQuickNote =
-    !isCompleted &&
-    hasPlannedTypes &&
-    plannedTypes.includes(EvidenceType.text) &&
-    !capturedTypes.includes(EvidenceType.text) &&
-    !!onQuickNote;
   const quickEvidenceOptions =
     !isCompleted && hasPlannedTypes && onQuickEvidence
       ? getMissingQuickEvidenceOptions(plannedTypes, capturedTypes)
       : [];
 
-  const [quickNoteText, setQuickNoteText] = useState("");
-
-  const handleQuickNoteSubmit = () => {
-    const trimmed = quickNoteText.trim();
-    if (trimmed && onQuickNote) {
-      onQuickNote(trimmed);
-      setQuickNoteText("");
-      quickNoteInputRef.current?.blur();
-      Keyboard.dismiss();
-    }
-  };
-
-  const handleCheckboxPress = () => {
-    if (isBlocked) {
-      onEvidenceTap();
-    } else {
-      onToggleComplete();
-    }
-  };
-
   const checkboxLabel = isCompleted ? "Completed" : "Mark complete";
-  const checkboxA11yHint = blockerOption
-    ? `Add ${blockerOption.label} to complete this step`
-    : undefined;
 
   return (
     <Card>
@@ -199,14 +158,27 @@ export function StepCard({
           </View>
         )}
 
-        <View style={styles.checkboxRow}>
-          <Checkbox
-            checked={isCompleted}
-            onToggle={handleCheckboxPress}
-            label={checkboxLabel}
-            accessibilityHint={checkboxA11yHint}
-          />
-        </View>
+        {isBlocked ? (
+          <Text
+            style={styles.addEvidencePromptText}
+            accessibilityRole="text"
+            accessibilityLabel={
+              blockerOption
+                ? `Add ${blockerOption.label} to complete this step`
+                : "Add evidence to complete"
+            }
+          >
+            Add evidence to complete
+          </Text>
+        ) : (
+          <View style={styles.checkboxRow}>
+            <Checkbox
+              checked={isCompleted}
+              onToggle={onToggleComplete}
+              label={checkboxLabel}
+            />
+          </View>
+        )}
 
         {onQuickEvidence && quickEvidenceOptions.length > 0 && (
           <View style={styles.quickActionsRow}>
@@ -229,42 +201,6 @@ export function StepCard({
                 <Text style={styles.quickActionText}>{option.label}</Text>
               </Pressable>
             ))}
-          </View>
-        )}
-
-        {showQuickNote && (
-          <View style={styles.quickNoteSection}>
-            <Text style={styles.quickNoteLabel} accessibilityRole="text">
-              Add a note to complete this step
-            </Text>
-            <View style={styles.quickNoteRow}>
-              <TextInput
-                ref={quickNoteInputRef}
-                style={styles.quickNoteInput}
-                value={quickNoteText}
-                onChangeText={setQuickNoteText}
-                onFocus={onQuickNoteFocus}
-                placeholder="Quick note..."
-                placeholderTextColor={theme.colors.textMuted}
-                returnKeyType="done"
-                onSubmitEditing={handleQuickNoteSubmit}
-                testID="step-card-quick-note-input"
-                accessible
-                accessibilityLabel="Quick note"
-                accessibilityHint="Add a note to complete this step"
-              />
-              <Pressable
-                onPress={handleQuickNoteSubmit}
-                style={styles.quickNoteButton}
-                testID="step-card-quick-note-add-button"
-                accessible
-                accessibilityRole="button"
-                accessibilityLabel="Add quick note"
-                accessibilityHint="Saves this quick note to the current step"
-              >
-                <Text style={styles.quickNoteButtonText}>Add</Text>
-              </Pressable>
-            </View>
           </View>
         )}
       </ScrollView>
