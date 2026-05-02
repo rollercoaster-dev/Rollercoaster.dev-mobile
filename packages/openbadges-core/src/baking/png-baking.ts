@@ -204,6 +204,7 @@ export function unbakePNG(
   } catch (error) {
     throw new Error(
       `Failed to parse credential JSON: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
     );
   }
 }
