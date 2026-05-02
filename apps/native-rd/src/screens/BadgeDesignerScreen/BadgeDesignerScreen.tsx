@@ -407,9 +407,13 @@ function DesignEditor({
             top: topBarHeight,
             transform: [
               {
+                // Stop the upward slide at the bottom edge of the safe-area
+                // inset so the preview never crosses into the notch / dynamic
+                // island. `topBarHeight` (from onLayout) includes
+                // `paddingTop: insets.top` from HeaderBand, hence the subtract.
                 translateY: scrollY.interpolate({
                   inputRange: [0, topBarHeight],
-                  outputRange: [0, -topBarHeight],
+                  outputRange: [0, -Math.max(0, topBarHeight - insets.top)],
                   extrapolate: "clamp",
                 }),
               },

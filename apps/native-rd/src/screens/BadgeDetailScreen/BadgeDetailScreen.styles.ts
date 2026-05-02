@@ -2,29 +2,40 @@ import { StyleSheet } from "react-native-unistyles";
 import { shadowStyle } from "../../styles/shadows";
 
 export const styles = StyleSheet.create((theme) => ({
-  container: {
+  screen: {
     flex: 1,
     backgroundColor: theme.colors.background,
   },
   topBar: {
-    flexDirection: "row",
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 2,
+  },
+  previewOverlay: {
+    position: "absolute",
+    left: 0,
+    right: 0,
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[2],
-  },
-  topBarTitle: {
-    ...theme.textStyles.title,
-    color: theme.colors.text,
-  },
-  spacer: {
-    width: 48,
+    zIndex: 3,
   },
   scrollContent: {
-    padding: theme.space[4],
+    paddingHorizontal: theme.space[4],
     paddingBottom: theme.space[12],
     gap: theme.space[4],
+    alignItems: "stretch",
+  },
+  previewContainer: {
     alignItems: "center",
+    justifyContent: "center",
+    padding: theme.space[4],
+    borderRadius: 0,
+    borderWidth: theme.borderWidth.medium,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.backgroundSecondary,
+    ...shadowStyle(theme, "cardElevation"),
   },
   badgeImage: {
     width: 120,
@@ -46,7 +57,10 @@ export const styles = StyleSheet.create((theme) => ({
   },
   infoSection: {
     width: "100%",
-    gap: theme.space[3],
+    gap: theme.space[5],
+  },
+  infoBlock: {
+    gap: theme.space[2],
   },
   title: {
     ...theme.textStyles.headline,
@@ -58,20 +72,31 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.textSecondary,
     textAlign: "center",
   },
+  bodyText: {
+    ...theme.textStyles.body,
+    color: theme.colors.text,
+  },
+  identityChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: theme.space[2],
+  },
+  chipIcon: {
+    fontSize: theme.size.lg,
+    lineHeight: theme.size.lg * 1.2,
+  },
+  chipColorDot: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: theme.borderWidth.thin,
+    borderColor: theme.colors.border,
+  },
   sectionLabel: {
     ...theme.textStyles.label,
     color: theme.colors.textMuted,
     textTransform: "uppercase",
-  },
-  criteriaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.space[2],
-  },
-  criteriaText: {
-    ...theme.textStyles.body,
-    color: theme.colors.text,
-    flex: 1,
   },
   centered: {
     flex: 1,
@@ -81,5 +106,10 @@ export const styles = StyleSheet.create((theme) => ({
   },
   loadingIndicator: {
     marginTop: theme.space[8],
+  },
+  backIcon: {
+    fontSize: 22,
+    fontWeight: theme.fontWeight.black,
+    color: theme.colors.accentPurpleFg,
   },
 }));

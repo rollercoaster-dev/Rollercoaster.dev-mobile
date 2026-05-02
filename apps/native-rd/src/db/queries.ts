@@ -833,6 +833,8 @@ export const badgeWithGoalQuery = (badgeId: BadgeId) =>
         "badge.design",
         "badge.createdAt",
         "goal.title as goalTitle",
+        "goal.description as goalDescription",
+        "goal.icon as goalIcon",
         "goal.completedAt",
         "goal.color as goalColor",
       ])
