@@ -60,8 +60,8 @@ New personal accounts must complete closed testing before production access:
 
 ### Build Configuration
 
-- [ ] Verify `bundleIdentifier` (iOS): `com.joe.rd.native-rd`
-- [ ] Verify `package` (Android): `com.joe.rd.nativerd`
+- [ ] Verify `bundleIdentifier` (iOS): `dev.rollercoaster.app`
+- [ ] Verify `package` (Android): `dev.rollercoaster.app`
 - [ ] Set version to `1.0.0` in `app.json`
 - [ ] Configure EAS Build (`eas.json`) for production profiles
 - [ ] Test production build on physical devices

@@ -1,4 +1,4 @@
-appId: com.joe.rd.native-rd
+appId: dev.rollercoaster.app
 ---
 # Evidence viewer flow — capture mixed-type evidence, open the Timeline,
 # tap an item to push EvidenceViewerScreen, switch via the thumbnail strip,

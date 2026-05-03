@@ -41,7 +41,7 @@
     "production": {
       "ios": {
         "appleId": "info@rollercoaster.dev",
-        "ascAppId": "REPLACE_AFTER_PHASE_3C_APP_STORE_CONNECT_RECORD",
+        "ascAppId": "6766029904",
         "appleTeamId": "86VL756N99"
       },
       "android": {

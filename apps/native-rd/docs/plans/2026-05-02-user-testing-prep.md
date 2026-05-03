@@ -69,7 +69,7 @@ Three focused sittings. See `docs/plans/2026-04-28-ios-testflight-readiness.md` 
 
 #### Sitting A — Decisions only (no tooling)
 
-- [ ] Confirm iOS bundle ID: `com.joe.rd.native-rd` (yes/no)
+- [ ] Confirm iOS bundle ID: `dev.rollercoaster.app` (yes/no)
 - [x] Confirm Expo slug: `rollercoasterdev` — set during `eas init` 2026-05-02 (project ID `d7a5b9b4-48b0-460b-ab51-912e11cebd10`, owner `rollercoasterdev`)
 - [ ] Confirm App Store display name spelling/capitalisation
 - [ ] Choose feedback contact email (used in TestFlight metadata + privacy policy)
@@ -158,13 +158,13 @@ All open phases are tracked as GitHub issues under milestone [**`native-rd: User
 
 ## Open Decisions (block specific phases)
 
-| Decision                                | Blocks       | Default if undecided                       |
-| --------------------------------------- | ------------ | ------------------------------------------ |
-| Bundle ID `com.joe.rd.native-rd` final? | Phase 3B     | Keep as-is                                 |
-| ~~Expo slug~~ resolved 2026-05-02       | —            | `rollercoasterdev` (set during `eas init`) |
-| Display name capitalisation             | Phase 3C     | `Rollercoaster.dev`                        |
-| Feedback contact email                  | Phase 3C + 5 | TBD                                        |
-| Privacy policy host URL                 | Phase 5      | TBD                                        |
+| Decision                                 | Blocks       | Default if undecided                       |
+| ---------------------------------------- | ------------ | ------------------------------------------ |
+| Bundle ID `dev.rollercoaster.app` final? | Phase 3B     | Keep as-is                                 |
+| ~~Expo slug~~ resolved 2026-05-02        | —            | `rollercoasterdev` (set during `eas init`) |
+| Display name capitalisation              | Phase 3C     | `Rollercoaster.dev`                        |
+| Feedback contact email                   | Phase 3C + 5 | TBD                                        |
+| Privacy policy host URL                  | Phase 5      | TBD                                        |
 
 ---
 

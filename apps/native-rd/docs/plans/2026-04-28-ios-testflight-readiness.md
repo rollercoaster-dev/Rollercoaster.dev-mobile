@@ -19,7 +19,7 @@ Remaining blockers before inviting testers:
 ## Current Decisions
 
 - App display name: `Rollercoaster.dev`
-- iOS bundle identifier: `com.joe.rd.native-rd`
+- iOS bundle identifier: `dev.rollercoaster.app`
 - Apple Developer Program: enrolled, confirmed 2026-05-02
 - Distribution path: Expo EAS Build → App Store Connect → TestFlight
 - First testing target: internal TestFlight testers, then external testers after beta review
@@ -31,7 +31,7 @@ Remaining blockers before inviting testers:
 - [x] Create native app logo source at `assets/logo.svg`
 - [x] Generate app icon assets from the RD logo
 - [x] Set Expo app display name to `Rollercoaster.dev`
-- [ ] Decide whether to keep iOS bundle ID as `com.joe.rd.native-rd`
+- [ ] Decide whether to keep iOS bundle ID as `dev.rollercoaster.app`
 - [x] Decide whether to keep Expo slug as `native-rd` — changed to `rollercoasterdev` during `eas init` on 2026-05-02
 - [ ] Decide final App Store display name spelling and capitalization
 
