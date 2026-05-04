@@ -61,29 +61,31 @@ Each phase has **one clear deliverable**. Supporting prep (privacy policy, quali
 
 - [x] Enrolment approved
 
-### Phase 3 — TestFlight build pipeline
+### Phase 3 — TestFlight build pipeline ✅ DONE 2026-05-03
 
 Three focused sittings. See `docs/plans/2026-04-28-ios-testflight-readiness.md` for granular Apple admin steps.
 
 > **Note on phase numbering:** Phases 1 and 2 (Sentry + in-app bug button) were dropped on 2026-05-02 in favour of platform built-ins; their numbers are intentionally skipped to preserve the existing issue references (#973–#978).
 
+> **Closure note (2026-05-03):** Internal testing is live with crashes flowing into App Store Connect → TestFlight → Crashes, so #973 and #974 are closed. The unchecked items below are kept for historical reference; the small follow-ups (display name, ASC App ID placeholder in `eas.json`) are tracked in the new triage issue #1012 or roll into Phase 5.
+
 #### Sitting A — Decisions only (no tooling)
 
-- [ ] Confirm iOS bundle ID: `dev.rollercoaster.app` (yes/no)
+- [x] Confirm iOS bundle ID: `dev.rollercoaster.app` — rebranded in PR #1011 (2026-05-03)
 - [x] Confirm Expo slug: `rollercoasterdev` — set during `eas init` 2026-05-02 (project ID `d7a5b9b4-48b0-460b-ab51-912e11cebd10`, owner `rollercoasterdev`)
 - [ ] Confirm App Store display name spelling/capitalisation
 - [ ] Choose feedback contact email (used in TestFlight metadata + privacy policy)
-- [ ] Decide build/version strategy (semver? buildNumber autoincrement?)
+- [x] Decide build/version strategy — `autoIncrement: true` on production profile in `eas.json`
 
-#### Sitting B — EAS Build
+#### Sitting B — EAS Build ✅
 
-- [ ] `eas login`
-- [ ] `eas init`
-- [ ] Add `eas.json` with development + production profiles
-- [ ] Let EAS manage iOS signing credentials
-- [ ] Produce first iOS production-profile build
+- [x] `eas login`
+- [x] `eas init`
+- [x] Add `eas.json` with development + production profiles (PR #985)
+- [x] Let EAS manage iOS signing credentials
+- [x] Produce first iOS production-profile build
 
-#### Sitting C — App Store Connect + first submission
+#### Sitting C — App Store Connect + first submission ✅
 
 - [ ] Create App Store Connect app record
 - [ ] Beta app description drafted
@@ -133,26 +135,40 @@ Three focused sittings. See `docs/plans/2026-04-28-ios-testflight-readiness.md` 
 
 See `docs/launch/app-store-launch-plan.md` for the full Google Play context.
 
+### Phase 8 — Crash triage workflow (added 2026-05-03, runs continuously during beta)
+
+**Deliverable:** repeatable workflow for turning TestFlight `.ips` reports into actionable issues, including Hermes JS symbolication. Stays inside the no-third-party-SDK policy.
+
+- [ ] Archive Hermes sourcemaps + dSYMs per EAS build, indexed by `CFBundleVersion`
+- [ ] `apps/native-rd/.claude/skills/crash-triage/` skill: `.ips` + build number → symbolicated stack
+- [ ] Issue template: one issue per crash signature (not per occurrence)
+- [ ] Triage labels: `crash:native`, `crash:js-hermes`, `crash:reanimated`, `crash:launch`, `crash:flaky`
+- [ ] Release-gate: top-3 crash signatures from previous build must each have a tracked issue before promoting to external testers
+- [ ] `docs/launch/crash-triage-runbook.md` with the day-to-day process
+
+Tracked in #1012.
+
 ---
 
 ## Tracked Issues
 
 All open phases are tracked as GitHub issues under milestone [**`native-rd: User Testing Prep`**](https://github.com/rollercoaster-dev/monorepo/milestone/29) on project board #11 (Monorepo Development). One issue per atomic deliverable, scoped to fit a single PR.
 
-| Phase        | Issue                                                            | Title                                                                    |
-| ------------ | ---------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| 3B           | [#973](https://github.com/rollercoaster-dev/monorepo/issues/973) | chore(native-rd): EAS Build setup + first iOS production build           |
-| 3C           | [#974](https://github.com/rollercoaster-dev/monorepo/issues/974) | chore(native-rd): App Store Connect record + first TestFlight submission |
-| 4            | [#975](https://github.com/rollercoaster-dev/monorepo/issues/975) | chore(native-rd): physical iPhone validation pass                        |
-| 5            | [#976](https://github.com/rollercoaster-dev/monorepo/issues/976) | docs(native-rd): host privacy policy publicly + finalise contact email   |
-| 6            | [#977](https://github.com/rollercoaster-dev/monorepo/issues/977) | chore(native-rd): refresh quality dashboard + tech-debt re-verification  |
-| 7            | [#978](https://github.com/rollercoaster-dev/monorepo/issues/978) | chore(native-rd): Google Play closed-test setup + 14-day clock start     |
-| App behavior | [#982](https://github.com/rollercoaster-dev/monorepo/issues/982) | fix(native-rd): prevent badge creation from hanging when key setup fails |
+| Phase        | Issue                                                              | Title                                                                       |
+| ------------ | ------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| 1            | [#971](https://github.com/rollercoaster-dev/monorepo/issues/971)   | feat(native-rd): integrate Sentry for crash reporting (UUID-only, scrubbed) |
+| 2            | [#972](https://github.com/rollercoaster-dev/monorepo/issues/972)   | feat(native-rd): in-app Report a Bug button via Sentry feedback API         |
+| 4            | [#975](https://github.com/rollercoaster-dev/monorepo/issues/975)   | chore(native-rd): physical iPhone validation pass                           |
+| 5            | [#976](https://github.com/rollercoaster-dev/monorepo/issues/976)   | docs(native-rd): host privacy policy publicly + finalise contact email      |
+| 6            | [#977](https://github.com/rollercoaster-dev/monorepo/issues/977)   | chore(native-rd): refresh quality dashboard + tech-debt re-verification     |
+| 7            | [#978](https://github.com/rollercoaster-dev/monorepo/issues/978)   | chore(native-rd): Google Play closed-test setup + 14-day clock start        |
+| 8            | [#1012](https://github.com/rollercoaster-dev/monorepo/issues/1012) | chore(native-rd): TestFlight crash triage workflow + Hermes symbolication   |
+| App behavior | [#982](https://github.com/rollercoaster-dev/monorepo/issues/982)   | fix(native-rd): prevent badge creation from hanging when key setup fails    |
 
 **Closed:**
 
-- [#971](https://github.com/rollercoaster-dev/monorepo/issues/971) Sentry integration — incompatible with no-data-collected privacy promise
-- [#972](https://github.com/rollercoaster-dev/monorepo/issues/972) In-app Report a Bug button — TestFlight + Play Console built-ins cover this
+- [#973](https://github.com/rollercoaster-dev/monorepo/issues/973) EAS Build setup + first iOS production build — pipeline operational, builds reaching TestFlight (closed 2026-05-03)
+- [#974](https://github.com/rollercoaster-dev/monorepo/issues/974) App Store Connect record + first TestFlight submission — internal testing live with active crash reports (closed 2026-05-03)
 
 ---
 
@@ -188,3 +204,5 @@ All open phases are tracked as GitHub issues under milestone [**`native-rd: User
 | 2026-05-02 | Dropped Phases 1 (Sentry) and 2 (in-app bug button) — incompatible with the "no data collected" privacy promise. Closed #971 and #972. Bug reporting now relies on TestFlight + Play Console built-ins. | Joe + Claude |
 | 2026-05-02 | User-testing readiness review: build/distribution prep remains the primary blocker; local gates pass; E2E unverified on standalone build; opened #982 for the one non-build badge creation blocker.     | Codex        |
 | 2026-05-02 | Status snapshot updated: TestFlight build pipeline now 🟡 In progress (EAS initialised, `eas.json` added in PR #985, dev cloud build verified). Production build + `eas submit` still pending.          | Joe + Claude |
+| 2026-05-03 | Internal testing live; crashes flowing into TestFlight. Closed #973 (EAS Build) and #974 (ASC + first submission). Added Phase 8 — crash triage workflow tracked in #1012.                              | Joe + Claude |
+| 2026-05-04 | Sentry policy reversed: compliant with no-PII promise via UUID-only identity, IP suppression, breadcrumb scrubbing, and a documented privacy verification test. Reopened #971 + #972.                   | Joe + Claude |
