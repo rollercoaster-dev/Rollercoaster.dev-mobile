@@ -82,5 +82,8 @@ packages/claude-knowledge/.claude/
 # Git worktrees for /auto-milestone
 .worktrees/
 
-# Superset tooling cache
-.superset/
+# Superset tooling — track config + scripts, ignore runtime cache
+.superset/*
+!.superset/config.json
+!.superset/setup.sh
+!.superset/teardown.sh
