@@ -159,5 +159,6 @@ export const Schema = {
     fontScale: nullOr(Int), // Integer percentage: 100 = default, 80-150 range
     keyId: nullOr(NonEmptyString1000), // UUID referencing Ed25519 keypair in SecureStore
     hasSeenWelcome: nullOr(Int), // 1 = seen, null = first launch
+    focusTimelineHidden: nullOr(Int), // 1 = hidden, null = visible (default)
   },
 };

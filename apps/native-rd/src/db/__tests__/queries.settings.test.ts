@@ -57,6 +57,24 @@ describe("UserSettings CRUD Operations", () => {
     ).not.toThrow();
   });
 
+  test("should throw when focusTimelineHidden is not an integer", () => {
+    expect(() =>
+      updateUserSettings(mockSettingsId, { focusTimelineHidden: 1.5 }),
+    ).toThrow("focusTimelineHidden must be an integer");
+  });
+
+  test.each([1, 0])("should accept focusTimelineHidden %i", (value) => {
+    expect(() =>
+      updateUserSettings(mockSettingsId, { focusTimelineHidden: value }),
+    ).not.toThrow();
+  });
+
+  test("should accept null focusTimelineHidden", () => {
+    expect(() =>
+      updateUserSettings(mockSettingsId, { focusTimelineHidden: null }),
+    ).not.toThrow();
+  });
+
   test("should succeed updating multiple fields", () => {
     expect(() =>
       updateUserSettings(mockSettingsId, {
@@ -64,6 +82,7 @@ describe("UserSettings CRUD Operations", () => {
         density: "compact",
         animationPref: "full",
         fontScale: 100,
+        focusTimelineHidden: 1,
       }),
     ).not.toThrow();
   });
@@ -75,6 +94,7 @@ describe("UserSettings CRUD Operations", () => {
         density: null,
         animationPref: "reduced",
         fontScale: null,
+        focusTimelineHidden: null,
       }),
     ).not.toThrow();
   });

@@ -16,7 +16,7 @@ import {
 import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import { useQuery } from "@evolu/react";
-import { Pencil } from "phosphor-react-native";
+import { Pencil, Eye, EyeSlash } from "phosphor-react-native";
 import { Text } from "../../components/Text";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { IconButton } from "../../components/IconButton";
@@ -72,6 +72,7 @@ import { deleteEvidenceFile } from "../../utils/evidenceCleanup";
 import { Logger } from "../../shims/rd-logger";
 import { KEYBOARD_AVOIDING_PROPS } from "../../utils/keyboard";
 import { useEvidenceViewer } from "../../utils/evidenceViewers";
+import { useFocusModePrefs } from "../../hooks/useFocusModePrefs";
 import { styles } from "./FocusModeScreen.styles";
 
 const logger = new Logger("FocusModeScreen");
@@ -111,6 +112,7 @@ function FocusContent({ goalId }: { goalId: string }) {
   const [isFABMenuOpen, setIsFABMenuOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const { viewEvidence, viewerModals } = useEvidenceViewer();
+  const { timelineHidden, setTimelineHidden } = useFocusModePrefs();
   const lifecycle = useRef({
     announcedComplete: false,
     triggeredCompletion: false,
@@ -501,6 +503,21 @@ function FocusContent({ goalId }: { goalId: string }) {
           {goal.title}
         </Text>
         <IconButton
+          icon={
+            timelineHidden ? (
+              <EyeSlash size={20} weight="bold" />
+            ) : (
+              <Eye size={20} weight="bold" />
+            )
+          }
+          onPress={() => setTimelineHidden(!timelineHidden)}
+          tone="ghost"
+          accessibilityLabel={
+            timelineHidden ? "Show timeline" : "Hide timeline"
+          }
+          size="sm"
+        />
+        <IconButton
           icon={<Pencil size={20} weight="bold" />}
           onPress={handleEditPress}
           tone="ghost"
@@ -510,12 +527,14 @@ function FocusContent({ goalId }: { goalId: string }) {
       </View>
 
       {/* MiniTimeline */}
-      <MiniTimeline
-        steps={timelineSteps}
-        currentIndex={currentCardIndex}
-        onStepTap={handleIndexChange}
-        onTimelineTap={handleTimelineTap}
-      />
+      {!timelineHidden && (
+        <MiniTimeline
+          steps={timelineSteps}
+          currentIndex={currentCardIndex}
+          onStepTap={handleIndexChange}
+          onTimelineTap={handleTimelineTap}
+        />
+      )}
 
       {/* CardCarousel with ProgressDots as indicator */}
       <View style={styles.carouselSection}>

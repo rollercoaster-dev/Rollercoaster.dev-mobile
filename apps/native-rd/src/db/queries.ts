@@ -1064,10 +1064,46 @@ export function createUserSettings() {
   }
 }
 
+function validateString1000Field(
+  value: string | null | undefined,
+  fieldKey: string,
+  errorLabel: string,
+): string | null | undefined {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  const parsed = NonEmptyString1000.orNull(value);
+  if (!parsed) {
+    logger.error(`UserSettings ${fieldKey} validation failed`, {
+      [`${fieldKey}Length`]: value.length,
+    });
+    throw new Error(
+      `${errorLabel} must be 1-1000 characters (received ${value.length})`,
+    );
+  }
+  return parsed;
+}
+
+function validateIntField(
+  value: number | null | undefined,
+  fieldKey: string,
+  errorLabel: string,
+): number | null | undefined {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  const parsed = Int.orNull(value);
+  if (parsed === null) {
+    logger.error(`UserSettings ${fieldKey} validation failed`, {
+      [fieldKey]: value,
+    });
+    throw new Error(`${errorLabel} must be an integer (received ${value})`);
+  }
+  return parsed;
+}
+
 /**
  * Update user settings fields
  * @param id - UserSettings ID (from userSettingsQuery)
- * @param fields - Fields to update (theme, density, animationPref, fontScale)
+ * @param fields - Fields to update
  * @returns Update command
  * @throws Error if validation fails
  */
@@ -1078,76 +1114,38 @@ export function updateUserSettings(
     density?: string | null;
     animationPref?: string | null;
     fontScale?: number | null;
+    focusTimelineHidden?: number | null;
   },
 ) {
   const update: Record<string, unknown> = { id };
 
-  if (fields.theme !== undefined) {
-    if (fields.theme !== null) {
-      const parsed = NonEmptyString1000.orNull(fields.theme);
-      if (!parsed) {
-        logger.error("UserSettings theme validation failed", {
-          themeLength: fields.theme.length,
-        });
-        throw new Error(
-          `Theme must be 1-1000 characters (received ${fields.theme.length})`,
-        );
-      }
-      update.theme = parsed;
-    } else {
-      update.theme = null;
-    }
-  }
+  const theme = validateString1000Field(fields.theme, "theme", "Theme");
+  if (theme !== undefined) update.theme = theme;
 
-  if (fields.density !== undefined) {
-    if (fields.density !== null) {
-      const parsed = NonEmptyString1000.orNull(fields.density);
-      if (!parsed) {
-        logger.error("UserSettings density validation failed", {
-          densityLength: fields.density.length,
-        });
-        throw new Error(
-          `Density must be 1-1000 characters (received ${fields.density.length})`,
-        );
-      }
-      update.density = parsed;
-    } else {
-      update.density = null;
-    }
-  }
+  const density = validateString1000Field(fields.density, "density", "Density");
+  if (density !== undefined) update.density = density;
 
-  if (fields.animationPref !== undefined) {
-    if (fields.animationPref !== null) {
-      const parsed = NonEmptyString1000.orNull(fields.animationPref);
-      if (!parsed) {
-        logger.error("UserSettings animationPref validation failed", {
-          animationPrefLength: fields.animationPref.length,
-        });
-        throw new Error(
-          `Animation preference must be 1-1000 characters (received ${fields.animationPref.length})`,
-        );
-      }
-      update.animationPref = parsed;
-    } else {
-      update.animationPref = null;
-    }
-  }
+  const animationPref = validateString1000Field(
+    fields.animationPref,
+    "animationPref",
+    "Animation preference",
+  );
+  if (animationPref !== undefined) update.animationPref = animationPref;
 
-  if (fields.fontScale !== undefined) {
-    if (fields.fontScale !== null) {
-      const parsed = Int.orNull(fields.fontScale);
-      if (parsed === null) {
-        logger.error("UserSettings fontScale validation failed", {
-          fontScale: fields.fontScale,
-        });
-        throw new Error(
-          `Font scale must be an integer (received ${fields.fontScale})`,
-        );
-      }
-      update.fontScale = parsed;
-    } else {
-      update.fontScale = null;
-    }
+  const fontScale = validateIntField(
+    fields.fontScale,
+    "fontScale",
+    "Font scale",
+  );
+  if (fontScale !== undefined) update.fontScale = fontScale;
+
+  const focusTimelineHidden = validateIntField(
+    fields.focusTimelineHidden,
+    "focusTimelineHidden",
+    "focusTimelineHidden",
+  );
+  if (focusTimelineHidden !== undefined) {
+    update.focusTimelineHidden = focusTimelineHidden;
   }
 
   try {

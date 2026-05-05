@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef } from "react";
-import { useQuery } from "@evolu/react";
-import { userSettingsQuery, createUserSettings, markWelcomeSeen } from "../db";
+import { useCallback } from "react";
+import { markWelcomeSeen } from "../db";
+import { useUserSettingsRow } from "./useUserSettingsRow";
 import { Logger } from "../shims/rd-logger";
 
 export interface FirstLaunchState {
@@ -13,23 +13,11 @@ export interface FirstLaunchState {
  * Reads the hasSeenWelcome flag from Evolu userSettings.
  * Returns loading state (null) until the first query resolves,
  * preventing a flash of the wrong screen during DB init.
- *
- * Follows the same singleton/init pattern as useDensity and useAnimationPref.
  */
 const logger = new Logger("useFirstLaunch");
 
 export function useFirstLaunch(): FirstLaunchState {
-  const rows = useQuery(userSettingsQuery);
-  const settings = rows[0] ?? null;
-  const didInit = useRef(false);
-
-  // Ensure a settings row exists (singleton pattern)
-  useEffect(() => {
-    if (!settings && !didInit.current) {
-      didInit.current = true;
-      createUserSettings();
-    }
-  }, [settings]);
+  const { settings, isLoading } = useUserSettingsRow();
 
   const markSeen = useCallback(() => {
     if (!settings) return;
@@ -40,8 +28,7 @@ export function useFirstLaunch(): FirstLaunchState {
     }
   }, [settings]);
 
-  // Loading: Evolu hasn't resolved yet
-  if (rows.length === 0) {
+  if (isLoading) {
     return { isFirstLaunch: null, markSeen };
   }
 

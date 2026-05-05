@@ -70,12 +70,15 @@ jest.mock("../../../db", () => ({
   stepEvidenceByGoalQuery: jest.fn(
     (id: string) => `stepEvidenceByGoalQuery-${id}`,
   ),
+  userSettingsQuery: "userSettingsQuery",
   completeStep: (...args: unknown[]) => mockCompleteStep(...args),
   uncompleteStep: (...args: unknown[]) => mockUncompleteStep(...args),
   deleteEvidence: (...args: unknown[]) => mockDeleteEvidence(...args),
   restoreEvidence: (...args: unknown[]) => mockRestoreEvidence(...args),
   createEvidence: (...args: unknown[]) => mockCreateEvidence(...args),
   canCompleteStep: (...args: unknown[]) => mockCanCompleteStep(...args),
+  createUserSettings: jest.fn(),
+  updateUserSettings: jest.fn(),
   isPendingStep: (s: { status: string | null }) => s.status === "pending",
   findFirstPendingIndex: (rows: { status: string | null }[]) =>
     rows.findIndex((s) => s.status === "pending"),

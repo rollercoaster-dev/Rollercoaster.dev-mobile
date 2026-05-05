@@ -14,13 +14,8 @@
  * Silent — no UI, key generation happens in the background.
  */
 import { useEffect, useRef, useState } from "react";
-import { useQuery } from "@evolu/react";
-import {
-  userSettingsQuery,
-  createUserSettings,
-  updateUserSettingsKey,
-  clearUserSettingsKey,
-} from "../db";
+import { updateUserSettingsKey, clearUserSettingsKey } from "../db";
+import { useUserSettingsRow } from "./useUserSettingsRow";
 import { keyProvider } from "../crypto";
 import { Logger } from "../shims/rd-logger";
 
@@ -36,9 +31,7 @@ export interface UserKeyState {
 }
 
 export function useUserKey(): UserKeyState {
-  const rows = useQuery(userSettingsQuery);
-  const settings = rows[0] ?? null;
-  const didInit = useRef(false);
+  const { settings } = useUserSettingsRow();
   const isGenerating = useRef(false);
   // The most recently completed verification — if storedKeyId still matches
   // this, we skip the probe. Reset implicitly when storedKeyId changes.
@@ -51,14 +44,6 @@ export function useUserKey(): UserKeyState {
 
   const [error, setError] = useState<string | null>(null);
   const [verified, setVerified] = useState(false);
-
-  // Ensure a settings row exists (singleton pattern — same as useDensity)
-  useEffect(() => {
-    if (!settings && !didInit.current) {
-      didInit.current = true;
-      createUserSettings();
-    }
-  }, [settings]);
 
   // Verify the stored keyId still resolves in SecureStore. If the underlying
   // key data has been wiped (iOS keychain reset, app reinstall, bundle id

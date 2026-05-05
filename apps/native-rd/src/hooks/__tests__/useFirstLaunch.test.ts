@@ -19,10 +19,12 @@ jest.mock("../../db", () => ({
 }));
 
 import { useFirstLaunch } from "../useFirstLaunch";
+import { __resetUserSettingsRowInitForTests } from "../useUserSettingsRow";
 
 beforeEach(() => {
   jest.clearAllMocks();
   mockUseQuery.mockReturnValue([]);
+  __resetUserSettingsRowInitForTests();
 });
 
 const makeSettings = (overrides: Record<string, unknown> = {}) => ({

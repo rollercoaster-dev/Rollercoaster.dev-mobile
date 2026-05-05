@@ -9,6 +9,7 @@
 import { renderHook, act } from "@testing-library/react-native";
 import { useQuery } from "@evolu/react";
 import { useUserKey } from "../useUserKey";
+import { __resetUserSettingsRowInitForTests } from "../useUserSettingsRow";
 import {
   updateUserSettingsKey,
   clearUserSettingsKey,
@@ -48,6 +49,7 @@ const MOCK_SETTINGS_ID = "settings-id-001" as Parameters<
 
 beforeEach(() => {
   jest.clearAllMocks();
+  __resetUserSettingsRowInitForTests();
 });
 
 describe("useUserKey", () => {
