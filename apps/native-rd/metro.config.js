@@ -1,4 +1,5 @@
 const { getDefaultConfig } = require("expo/metro-config");
+const { withSentryConfig } = require("@sentry/react-native/metro");
 const {
   withStorybook,
 } = require("@storybook/react-native/metro/withStorybook");
@@ -46,7 +47,14 @@ config.server = {
   },
 };
 
-module.exports = withStorybook(config, {
+// Sentry: generate Debug IDs that correlate the JS bundle to its sourcemap.
+// Required alongside the @sentry/react-native/expo config plugin — the latter
+// uploads sourcemaps during native builds, this one tags the bundle so Sentry
+// can match the upload to the right release. Must wrap the config before
+// Storybook so Storybook can opt out cleanly when STORYBOOK_ENABLED.
+const sentryConfig = withSentryConfig(config);
+
+module.exports = withStorybook(sentryConfig, {
   configPath: path.resolve(__dirname, "./.storybook"),
   enabled: process.env.EXPO_PUBLIC_STORYBOOK_ENABLED === "true",
 });

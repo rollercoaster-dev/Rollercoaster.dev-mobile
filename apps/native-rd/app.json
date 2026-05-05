@@ -74,6 +74,14 @@
             "buildReactNativeFromSource": true
           }
         }
+      ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "organization": "rollercoasterdev",
+          "project": "native-rd",
+          "url": "https://sentry.io/"
+        }
       ]
     ],
     "extra": {

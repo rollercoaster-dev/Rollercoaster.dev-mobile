@@ -15,20 +15,18 @@
 
 ## Bug Reporting Strategy
 
-**Closed beta uses platform built-ins. No third-party crash reporting, no in-app code, no privacy-policy compromise.**
+**Closed beta uses platform built-ins for tester feedback, plus Sentry (privacy-scrubbed) for symbolicated crash reports.** Reversed 2026-05-04 — Sentry is compatible with the no-PII promise when configured deliberately (UUID-only identity, `sendDefaultPii: false`, `beforeSend`/`beforeBreadcrumb` scrubbing, IP suppression, `tracesSampleRate: 0`). See #971.
 
-| Channel         | Tool                                                                                                                                                                                            | Privacy posture                                                                                |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| iOS testers     | TestFlight 3-finger screenshot feedback + automatic crash reports → App Store Connect                                                                                                           | Apple collects under their privacy terms; testers accepted these when joining TestFlight       |
-| Android testers | Play Console built-in tester feedback + automatic crash reports                                                                                                                                 | Google collects under their privacy terms; testers accepted these when joining the closed test |
-| Privacy policy  | "We collect no data ourselves. If you install via TestFlight or Google Play, those platforms collect crash reports under their own privacy policies, which you accepted when joining the test." | Honest and accurate                                                                            |
+| Channel         | Tool                                                                                                                         | Privacy posture                                                                                |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| iOS testers     | TestFlight 3-finger screenshot feedback + automatic crash reports → App Store Connect                                        | Apple collects under their privacy terms; testers accepted these when joining TestFlight       |
+| Android testers | Play Console built-in tester feedback + automatic crash reports                                                              | Google collects under their privacy terms; testers accepted these when joining the closed test |
+| Crash reporting | Sentry (UUID-only identity, scrubbed events) — symbolicated JS stacks via Hermes sourcemap upload                            | No PII leaves the device; verified by `docs/launch/privacy-verification.md` (#971)             |
+| Privacy policy  | Updated to declare _Crash Data_ + _Performance Data_ not linked to identity (App Privacy nutrition labels) — handled in #976 | Honest and accurate after #976 lands                                                           |
 
 **What we explicitly chose not to do:**
 
-- **No Sentry** — its core function is data collection, incompatible with the "What Data We Collect — None" promise in `docs/launch/privacy-policy.md`
-- **No in-app bug-report button** — TestFlight's screenshot feedback covers iOS; Play Console covers Android. Adding our own button is unnecessary code and unnecessary privacy surface.
-
-This stance can be revisited if/when scaling past closed beta requires more telemetry. Closed beta does not.
+- **No in-app bug-report button** — TestFlight's screenshot feedback covers iOS; Play Console covers Android. Sentry's user feedback API (#972) is the only in-app reporting hook.
 
 ---
 
@@ -65,7 +63,7 @@ Each phase has **one clear deliverable**. Supporting prep (privacy policy, quali
 
 Three focused sittings. See `docs/plans/2026-04-28-ios-testflight-readiness.md` for granular Apple admin steps.
 
-> **Note on phase numbering:** Phases 1 and 2 (Sentry + in-app bug button) were dropped on 2026-05-02 in favour of platform built-ins; their numbers are intentionally skipped to preserve the existing issue references (#973–#978).
+> **Note on phase numbering:** Phases 1 and 2 (Sentry + in-app bug button) were dropped on 2026-05-02, then reinstated on 2026-05-04 once Sentry was confirmed compatible with the no-PII promise (UUID-only identity, scrubbing, IP suppression). Phases run in parallel with Phase 3+ rather than blocking it.
 
 > **Closure note (2026-05-03):** Internal testing is live with crashes flowing into App Store Connect → TestFlight → Crashes, so #973 and #974 are closed. The unchecked items below are kept for historical reference; the small follow-ups (display name, ASC App ID placeholder in `eas.json`) are tracked in the new triage issue #1012 or roll into Phase 5.
 
@@ -135,18 +133,11 @@ Three focused sittings. See `docs/plans/2026-04-28-ios-testflight-readiness.md` 
 
 See `docs/launch/app-store-launch-plan.md` for the full Google Play context.
 
-### Phase 8 — Crash triage workflow (added 2026-05-03, runs continuously during beta)
+### ~~Phase 8 — Crash triage workflow~~ 🚫 Closed 2026-05-04 — absorbed into Phase 1
 
-**Deliverable:** repeatable workflow for turning TestFlight `.ips` reports into actionable issues, including Hermes JS symbolication. Stays inside the no-third-party-SDK policy.
+The DIY symbolication tooling (sourcemap archive, `metro-symbolicate` skill, build-number index) is made redundant by Sentry's automatic sourcemap upload + server-side symbolication. The non-tooling pieces that survived — release-gate policy, one-issue-per-signature discipline, label conventions, TestFlight Organizer fallback note — are folded into #971 as a single `docs/launch/crash-triage-runbook.md` deliverable.
 
-- [ ] Archive Hermes sourcemaps + dSYMs per EAS build, indexed by `CFBundleVersion`
-- [ ] `apps/native-rd/.claude/skills/crash-triage/` skill: `.ips` + build number → symbolicated stack
-- [ ] Issue template: one issue per crash signature (not per occurrence)
-- [ ] Triage labels: `crash:native`, `crash:js-hermes`, `crash:reanimated`, `crash:launch`, `crash:flaky`
-- [ ] Release-gate: top-3 crash signatures from previous build must each have a tracked issue before promoting to external testers
-- [ ] `docs/launch/crash-triage-runbook.md` with the day-to-day process
-
-Tracked in #1012.
+#1012 closed with a full breakdown of what was dropped vs. absorbed.
 
 ---
 
@@ -154,21 +145,21 @@ Tracked in #1012.
 
 All open phases are tracked as GitHub issues under milestone [**`native-rd: User Testing Prep`**](https://github.com/rollercoaster-dev/monorepo/milestone/29) on project board #11 (Monorepo Development). One issue per atomic deliverable, scoped to fit a single PR.
 
-| Phase        | Issue                                                              | Title                                                                       |
-| ------------ | ------------------------------------------------------------------ | --------------------------------------------------------------------------- |
-| 1            | [#971](https://github.com/rollercoaster-dev/monorepo/issues/971)   | feat(native-rd): integrate Sentry for crash reporting (UUID-only, scrubbed) |
-| 2            | [#972](https://github.com/rollercoaster-dev/monorepo/issues/972)   | feat(native-rd): in-app Report a Bug button via Sentry feedback API         |
-| 4            | [#975](https://github.com/rollercoaster-dev/monorepo/issues/975)   | chore(native-rd): physical iPhone validation pass                           |
-| 5            | [#976](https://github.com/rollercoaster-dev/monorepo/issues/976)   | docs(native-rd): host privacy policy publicly + finalise contact email      |
-| 6            | [#977](https://github.com/rollercoaster-dev/monorepo/issues/977)   | chore(native-rd): refresh quality dashboard + tech-debt re-verification     |
-| 7            | [#978](https://github.com/rollercoaster-dev/monorepo/issues/978)   | chore(native-rd): Google Play closed-test setup + 14-day clock start        |
-| 8            | [#1012](https://github.com/rollercoaster-dev/monorepo/issues/1012) | chore(native-rd): TestFlight crash triage workflow + Hermes symbolication   |
-| App behavior | [#982](https://github.com/rollercoaster-dev/monorepo/issues/982)   | fix(native-rd): prevent badge creation from hanging when key setup fails    |
+| Phase        | Issue                                                            | Title                                                                       |
+| ------------ | ---------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| 1            | [#971](https://github.com/rollercoaster-dev/monorepo/issues/971) | feat(native-rd): integrate Sentry for crash reporting (UUID-only, scrubbed) |
+| 2            | [#972](https://github.com/rollercoaster-dev/monorepo/issues/972) | feat(native-rd): in-app Report a Bug button via Sentry feedback API         |
+| 4            | [#975](https://github.com/rollercoaster-dev/monorepo/issues/975) | chore(native-rd): physical iPhone validation pass                           |
+| 5            | [#976](https://github.com/rollercoaster-dev/monorepo/issues/976) | docs(native-rd): host privacy policy publicly + finalise contact email      |
+| 6            | [#977](https://github.com/rollercoaster-dev/monorepo/issues/977) | chore(native-rd): refresh quality dashboard + tech-debt re-verification     |
+| 7            | [#978](https://github.com/rollercoaster-dev/monorepo/issues/978) | chore(native-rd): Google Play closed-test setup + 14-day clock start        |
+| App behavior | [#982](https://github.com/rollercoaster-dev/monorepo/issues/982) | fix(native-rd): prevent badge creation from hanging when key setup fails    |
 
 **Closed:**
 
 - [#973](https://github.com/rollercoaster-dev/monorepo/issues/973) EAS Build setup + first iOS production build — pipeline operational, builds reaching TestFlight (closed 2026-05-03)
 - [#974](https://github.com/rollercoaster-dev/monorepo/issues/974) App Store Connect record + first TestFlight submission — internal testing live with active crash reports (closed 2026-05-03)
+- [#1012](https://github.com/rollercoaster-dev/monorepo/issues/1012) TestFlight crash triage workflow + Hermes symbolication — made redundant by Sentry; runbook + release-gate items absorbed into #971 (closed 2026-05-04)
 
 ---
 
@@ -197,12 +188,13 @@ All open phases are tracked as GitHub issues under milestone [**`native-rd: User
 
 ## Update Log
 
-| Date       | Change                                                                                                                                                                                                  | By           |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
-| 2026-05-02 | Doc created. Phase 0 confirmed done. Phase 1 selected as next focus.                                                                                                                                    | Joe + Claude |
-| 2026-05-02 | Milestone #29 + 8 issues (#971–#978) created and linked to project #11.                                                                                                                                 | Joe + Claude |
-| 2026-05-02 | Dropped Phases 1 (Sentry) and 2 (in-app bug button) — incompatible with the "no data collected" privacy promise. Closed #971 and #972. Bug reporting now relies on TestFlight + Play Console built-ins. | Joe + Claude |
-| 2026-05-02 | User-testing readiness review: build/distribution prep remains the primary blocker; local gates pass; E2E unverified on standalone build; opened #982 for the one non-build badge creation blocker.     | Codex        |
-| 2026-05-02 | Status snapshot updated: TestFlight build pipeline now 🟡 In progress (EAS initialised, `eas.json` added in PR #985, dev cloud build verified). Production build + `eas submit` still pending.          | Joe + Claude |
-| 2026-05-03 | Internal testing live; crashes flowing into TestFlight. Closed #973 (EAS Build) and #974 (ASC + first submission). Added Phase 8 — crash triage workflow tracked in #1012.                              | Joe + Claude |
-| 2026-05-04 | Sentry policy reversed: compliant with no-PII promise via UUID-only identity, IP suppression, breadcrumb scrubbing, and a documented privacy verification test. Reopened #971 + #972.                   | Joe + Claude |
+| Date       | Change                                                                                                                                                                                                                                            | By           |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| 2026-05-02 | Doc created. Phase 0 confirmed done. Phase 1 selected as next focus.                                                                                                                                                                              | Joe + Claude |
+| 2026-05-02 | Milestone #29 + 8 issues (#971–#978) created and linked to project #11.                                                                                                                                                                           | Joe + Claude |
+| 2026-05-02 | Dropped Phases 1 (Sentry) and 2 (in-app bug button) — incompatible with the "no data collected" privacy promise. Closed #971 and #972. Bug reporting now relies on TestFlight + Play Console built-ins.                                           | Joe + Claude |
+| 2026-05-02 | User-testing readiness review: build/distribution prep remains the primary blocker; local gates pass; E2E unverified on standalone build; opened #982 for the one non-build badge creation blocker.                                               | Codex        |
+| 2026-05-02 | Status snapshot updated: TestFlight build pipeline now 🟡 In progress (EAS initialised, `eas.json` added in PR #985, dev cloud build verified). Production build + `eas submit` still pending.                                                    | Joe + Claude |
+| 2026-05-03 | Internal testing live; crashes flowing into TestFlight. Closed #973 (EAS Build) and #974 (ASC + first submission). Added Phase 8 — crash triage workflow tracked in #1012.                                                                        | Joe + Claude |
+| 2026-05-04 | Sentry policy reversed: compliant with no-PII promise via UUID-only identity, IP suppression, breadcrumb scrubbing, and a documented privacy verification test. Reopened #971 + #972.                                                             | Joe + Claude |
+| 2026-05-04 | Phase 8 / #1012 closed — made redundant by Sentry. Surviving non-tooling pieces (release-gate policy, one-issue-per-signature discipline, TestFlight Organizer fallback note) folded into #971 as a single `crash-triage-runbook.md` deliverable. | Joe + Claude |
