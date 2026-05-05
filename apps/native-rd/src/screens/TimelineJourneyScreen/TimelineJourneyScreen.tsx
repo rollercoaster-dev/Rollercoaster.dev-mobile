@@ -14,6 +14,7 @@ import {
   stepsByGoalQuery,
   evidenceByGoalQuery,
   stepEvidenceByGoalQuery,
+  findFirstPendingIndex,
   StepStatus,
 } from "../../db";
 import type { GoalId } from "../../db";
@@ -34,9 +35,7 @@ function TimelineContent({ goalId }: { goalId: string }) {
   const goalEvidenceRows = useQuery(evidenceByGoalQuery(goalId as GoalId));
 
   // Build UI steps with status
-  const firstPendingIndex = stepRows.findIndex(
-    (r) => r.status !== StepStatus.completed,
-  );
+  const firstPendingIndex = findFirstPendingIndex(stepRows);
   const uiSteps: {
     id: string;
     title: string;

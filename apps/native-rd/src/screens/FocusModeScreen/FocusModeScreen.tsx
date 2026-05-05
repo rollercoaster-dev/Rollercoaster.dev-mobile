@@ -49,6 +49,8 @@ import {
   deleteEvidence,
   restoreEvidence,
   canCompleteStep,
+  isPendingStep,
+  findFirstPendingIndex,
   EvidenceType,
   StepStatus,
 } from "../../db";
@@ -109,8 +111,11 @@ function FocusContent({ goalId }: { goalId: string }) {
   const [isFABMenuOpen, setIsFABMenuOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const { viewEvidence, viewerModals } = useEvidenceViewer();
-  const hasAnnouncedComplete = useRef(false);
-  const hasTriggeredCompletion = useRef(false);
+  const lifecycle = useRef({
+    announcedComplete: false,
+    triggeredCompletion: false,
+    snappedToFirstPending: false,
+  });
   const isMounted = useRef(true);
   const pendingFileDeletionRef = useRef<{
     id: string;
@@ -218,18 +223,33 @@ function FocusContent({ goalId }: { goalId: string }) {
     stepRows.length > 0 &&
     stepRows.every((s) => s.status === StepStatus.completed);
 
+  // Snap to first pending step on initial load. Dep is stepRows.length —
+  // useQuery returns a fresh array each emission, so depending on stepRows
+  // would re-fire pointlessly.
+  const stepRowsLength = stepRows.length;
+  useEffect(() => {
+    if (lifecycle.current.snappedToFirstPending) return;
+    if (stepRowsLength === 0) return;
+    lifecycle.current.snappedToFirstPending = true;
+    const firstPendingIndex = findFirstPendingIndex(stepRows);
+    if (firstPendingIndex > 0) {
+      setCurrentCardIndex(firstPendingIndex);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only fire on initial population
+  }, [stepRowsLength]);
+
   // Announce when all steps become complete and auto-navigate to completion flow
   useEffect(() => {
     if (!goal) return;
-    if (allStepsComplete && !hasAnnouncedComplete.current) {
-      hasAnnouncedComplete.current = true;
+    if (allStepsComplete && !lifecycle.current.announcedComplete) {
+      lifecycle.current.announcedComplete = true;
       AccessibilityInfo.announceForAccessibility(
         `All steps completed for "${goal.title}". Goal is ready to complete!`,
       );
 
       // Auto-navigate to completion flow after brief delay
-      if (!hasTriggeredCompletion.current) {
-        hasTriggeredCompletion.current = true;
+      if (!lifecycle.current.triggeredCompletion) {
+        lifecycle.current.triggeredCompletion = true;
         const timer = setTimeout(() => {
           if (isMounted.current) {
             navigation.navigate("CompletionFlow", { goalId });
@@ -238,8 +258,8 @@ function FocusContent({ goalId }: { goalId: string }) {
         return () => clearTimeout(timer);
       }
     } else if (!allStepsComplete) {
-      hasAnnouncedComplete.current = false;
-      hasTriggeredCompletion.current = false;
+      lifecycle.current.announcedComplete = false;
+      lifecycle.current.triggeredCompletion = false;
     }
   }, [goal, allStepsComplete, goalId, navigation]);
 
@@ -309,6 +329,26 @@ function FocusContent({ goalId }: { goalId: string }) {
         AccessibilityInfo.announceForAccessibility(
           `Step "${step.title}" completed`,
         );
+        // Advance past the just-completed step to the next pending one.
+        // stepRows is the pre-completion snapshot, so skip stepId explicitly.
+        // Forward first, then wrap; if nothing remains pending, the
+        // all-steps-complete effect navigates to CompletionFlow.
+        const isOtherPending = (s: (typeof stepRows)[number]): boolean =>
+          s.id !== stepId && isPendingStep(s);
+        const completedIndex = stepRows.findIndex((s) => s.id === stepId);
+        const forwardIndex = stepRows.findIndex(
+          (s, i) => i > completedIndex && isOtherPending(s),
+        );
+        const nextIndex =
+          forwardIndex !== -1
+            ? forwardIndex
+            : stepRows.findIndex(isOtherPending);
+        if (nextIndex !== -1 && nextIndex !== currentCardIndex) {
+          // Use handleIndexChange (not setCurrentCardIndex) so the evidence
+          // drawer / FAB menu close — otherwise an open overlay would persist
+          // over the new step's content.
+          handleIndexChange(nextIndex);
+        }
       }
     } catch (error) {
       const message =

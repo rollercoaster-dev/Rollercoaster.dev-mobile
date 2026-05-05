@@ -11,10 +11,6 @@ export const styles = StyleSheet.create((theme) => ({
     padding: theme.space[4],
     gap: theme.space[4],
   },
-  addIcon: {
-    fontSize: 24,
-    lineHeight: 28,
-  },
   listContent: {
     gap: theme.space[3],
   },

@@ -4,61 +4,70 @@ import { useNavigation } from "@react-navigation/native";
 import { useTabScreenContentInset } from "../../navigation/useTabScreenContentInset";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@evolu/react";
-import { Text } from "../../components/Text";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
-import { IconButton } from "../../components/IconButton";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { GoalCard, type GoalCardGoal } from "../../components/GoalCard";
 import { EmptyState } from "../../components/EmptyState";
 import { ConfirmDeleteModal } from "../ConfirmDeleteModal";
+import { Logger } from "../../shims/rd-logger";
 import {
-  goalsQuery,
-  stepsByGoalQuery,
+  activeGoalsQuery,
+  stepsForActiveGoalsQuery,
   deleteGoal,
+  isPendingStep,
   GoalStatus,
   StepStatus,
 } from "../../db";
-import type { GoalId } from "../../db";
 import { GoalsStackParamList } from "../../navigation/types";
 import { styles } from "./GoalsScreen.styles";
 
-type GoalRow = typeof goalsQuery.Row;
+const logger = new Logger("GoalsScreen");
+
+type GoalRow = typeof activeGoalsQuery.Row;
+type StepRow = typeof stepsForActiveGoalsQuery.Row;
 type Nav = NativeStackNavigationProp<GoalsStackParamList>;
 
-function GoalCardWithSteps({
-  goalRow,
-  onPress,
-  onLongPress,
-}: {
-  goalRow: GoalRow;
-  onPress: () => void;
-  onLongPress: () => void;
-}) {
-  const query = useMemo(
-    () => stepsByGoalQuery(goalRow.id as GoalId),
-    [goalRow.id],
-  );
-  const stepRows = useQuery(query);
-  const stepsTotal = stepRows.length;
-  const stepsCompleted = stepRows.filter(
+function buildGoalCardGoal(
+  goalRow: GoalRow,
+  steps: readonly StepRow[],
+): GoalCardGoal {
+  const stepsCompleted = steps.filter(
     (s) => s.status === StepStatus.completed,
   ).length;
-
-  const goal: GoalCardGoal = {
+  return {
     id: goalRow.id,
     title: goalRow.title ?? "",
     status: goalRow.status === GoalStatus.completed ? "completed" : "active",
-    stepsTotal,
+    stepsTotal: steps.length,
     stepsCompleted,
+    nextStepTitle: steps.find(isPendingStep)?.title ?? null,
   };
-
-  return <GoalCard goal={goal} onPress={onPress} onLongPress={onLongPress} />;
 }
 
 function GoalList() {
   const navigation = useNavigation<Nav>();
-  const rows = useQuery(goalsQuery);
+  const rows = useQuery(activeGoalsQuery);
+  const allSteps = useQuery(stepsForActiveGoalsQuery);
   const [deleteTarget, setDeleteTarget] = useState<GoalRow | null>(null);
+
+  // Evolu's join surfaces goalId as nullable despite the schema; warn and
+  // skip if it ever happens so a regression here doesn't silently drop a
+  // goal's step data.
+  const stepsByGoalId = useMemo(() => {
+    const map = new Map<string, StepRow[]>();
+    for (const step of allSteps) {
+      if (!step.goalId) {
+        logger.warn("Step row missing goalId in stepsForActiveGoalsQuery", {
+          stepId: step.id,
+        });
+        continue;
+      }
+      const list = map.get(step.goalId);
+      if (list) list.push(step);
+      else map.set(step.goalId, [step]);
+    }
+    return map;
+  }, [allSteps]);
 
   function handleDelete(row: GoalRow) {
     setDeleteTarget(row);
@@ -93,8 +102,8 @@ function GoalList() {
         style={{ overflow: "visible" }}
         contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (
-          <GoalCardWithSteps
-            goalRow={item}
+          <GoalCard
+            goal={buildGoalCardGoal(item, stepsByGoalId.get(item.id) ?? [])}
             onPress={() =>
               navigation.navigate("FocusMode", { goalId: item.id })
             }
@@ -118,27 +127,11 @@ function GoalList() {
 }
 
 export function GoalsScreen() {
-  const navigation = useNavigation<Nav>();
   const tabInset = useTabScreenContentInset();
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader
-        title="Goals"
-        right={
-          <IconButton
-            icon={
-              <Text variant="headline" style={styles.addIcon}>
-                +
-              </Text>
-            }
-            onPress={() => navigation.navigate("NewGoal")}
-            tone="chrome"
-            accessibilityLabel="Create new goal"
-            testID="create-new-goal"
-          />
-        }
-      />
+      <ScreenHeader title="Goals" />
       <View style={[styles.scrollContent, tabInset]}>
         <ErrorBoundary>
           <Suspense

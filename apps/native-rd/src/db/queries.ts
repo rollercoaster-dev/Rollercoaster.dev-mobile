@@ -45,6 +45,36 @@ export const goalsQuery = evolu.createQuery((db) =>
 );
 
 /**
+ * Used by the home Goals screen so completed goals don't clutter the
+ * "what's next" surface — they live in the Badges tab instead.
+ */
+export const activeGoalsQuery = evolu.createQuery((db) =>
+  db
+    .selectFrom("goal")
+    .selectAll()
+    .where("isDeleted", "is", null)
+    .where("status", "=", GoalStatus.active)
+    .orderBy("createdAt", "desc"),
+);
+
+/**
+ * Steps for every active goal in a single subscription, grouped client-side
+ * by goalId. Avoids the N+1 of calling stepsByGoalQuery per goal card on the
+ * home screen.
+ */
+export const stepsForActiveGoalsQuery = evolu.createQuery((db) =>
+  db
+    .selectFrom("step")
+    .innerJoin("goal", "goal.id", "step.goalId")
+    .select(["step.id", "step.goalId", "step.title", "step.status"])
+    .where("step.isDeleted", "is", null)
+    .where("goal.isDeleted", "is", null)
+    .where("goal.status", "=", GoalStatus.active)
+    .orderBy("step.goalId", "asc")
+    .orderBy("step.ordinal", "asc"),
+);
+
+/**
  * Create a new goal with given title
  * @param title - Goal title (trimmed and validated)
  * @returns Insert command
@@ -62,12 +92,10 @@ export function createGoal(title: string) {
     );
   }
 
-  const parsedStatus = NonEmptyString1000.orThrow(GoalStatus.active);
-
   try {
     return evolu.insert("goal", {
       title: parsedTitle,
-      status: parsedStatus,
+      status: GoalStatus.active,
     });
   } catch (error) {
     logger.error("Failed to insert goal", { title: parsedTitle, error });
@@ -144,7 +172,6 @@ export function completeGoal(
     );
   }
 
-  const parsedStatus = NonEmptyString1000.orThrow(GoalStatus.completed);
   const now = dateToDateIso(new Date());
 
   if (!now.ok) {
@@ -158,7 +185,7 @@ export function completeGoal(
   try {
     return evolu.update("goal", {
       id,
-      status: parsedStatus,
+      status: GoalStatus.completed,
       completedAt: now.value,
     });
   } catch (error) {
@@ -173,12 +200,10 @@ export function completeGoal(
  * @returns Update command
  */
 export function uncompleteGoal(id: GoalId) {
-  const parsedStatus = NonEmptyString1000.orThrow(GoalStatus.active);
-
   try {
     return evolu.update("goal", {
       id,
-      status: parsedStatus,
+      status: GoalStatus.active,
       completedAt: null,
     });
   } catch (error) {
@@ -268,6 +293,13 @@ export function canCompleteGoal(
 
 // Step CRUD
 
+export const isPendingStep = (s: { status: string | null }): boolean =>
+  s.status === StepStatus.pending;
+
+export const findFirstPendingIndex = (
+  rows: readonly { status: string | null }[],
+): number => rows.findIndex(isPendingStep);
+
 /**
  * Query all non-deleted steps for a goal, ordered by ordinal
  * @param goalId - Goal ID
@@ -308,14 +340,13 @@ export function createStep(
     );
   }
 
-  const parsedStatus = NonEmptyString1000.orThrow(StepStatus.pending);
   const serializedTypes = serializePlannedTypes(plannedEvidenceTypes);
 
   try {
     return evolu.insert("step", {
       goalId,
       title: parsedTitle,
-      status: parsedStatus,
+      status: StepStatus.pending,
       ordinal: ordinal !== undefined ? Int.orNull(ordinal) : null,
       plannedEvidenceTypes:
         serializedTypes === undefined ? null : serializedTypes,
@@ -400,7 +431,6 @@ export function completeStep(
     );
   }
 
-  const parsedStatus = NonEmptyString1000.orThrow(StepStatus.completed);
   const now = dateToDateIso(new Date());
 
   if (!now.ok) {
@@ -414,7 +444,7 @@ export function completeStep(
   try {
     return evolu.update("step", {
       id,
-      status: parsedStatus,
+      status: StepStatus.completed,
       completedAt: now.value,
     });
   } catch (error) {
@@ -429,12 +459,10 @@ export function completeStep(
  * @returns Update command
  */
 export function uncompleteStep(id: StepId) {
-  const parsedStatus = NonEmptyString1000.orThrow(StepStatus.pending);
-
   try {
     return evolu.update("step", {
       id,
-      status: parsedStatus,
+      status: StepStatus.pending,
       completedAt: null,
     });
   } catch (error) {

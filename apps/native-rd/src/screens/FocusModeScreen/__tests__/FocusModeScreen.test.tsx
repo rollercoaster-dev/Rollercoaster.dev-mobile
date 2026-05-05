@@ -76,6 +76,9 @@ jest.mock("../../../db", () => ({
   restoreEvidence: (...args: unknown[]) => mockRestoreEvidence(...args),
   createEvidence: (...args: unknown[]) => mockCreateEvidence(...args),
   canCompleteStep: (...args: unknown[]) => mockCanCompleteStep(...args),
+  isPendingStep: (s: { status: string | null }) => s.status === "pending",
+  findFirstPendingIndex: (rows: { status: string | null }[]) =>
+    rows.findIndex((s) => s.status === "pending"),
 }));
 
 const mockUseQuery = jest.fn();
@@ -217,6 +220,156 @@ describe("FocusModeScreen", () => {
     expect(screen.getByText("Read docs")).toBeOnTheScreen();
   });
 
+  it("advances the carousel to the next pending step after completing one", () => {
+    setupQueries({
+      steps: [
+        {
+          id: "step-1",
+          title: "Read docs",
+          status: "pending",
+          ordinal: 0,
+          plannedEvidenceTypes: null,
+        },
+        {
+          id: "step-2",
+          title: "Practice",
+          status: "pending",
+          ordinal: 1,
+          plannedEvidenceTypes: null,
+        },
+      ],
+      stepEvidence: [],
+    });
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+    // Lands on step-1 (first pending). Mark it complete.
+    expect(screen.getByText("Step 1 of 2")).toBeOnTheScreen();
+    fireEvent.press(screen.getByText("Mark complete"));
+    expect(mockCompleteStep).toHaveBeenCalledWith("step-1", null, []);
+    // Carousel should advance to step-2 instead of staying on the completed step.
+    expect(screen.getByText("Step 2 of 2")).toBeOnTheScreen();
+    expect(screen.getByText("Practice")).toBeOnTheScreen();
+  });
+
+  it("auto-snaps the carousel to the first pending step on mount", () => {
+    setupQueries({
+      steps: [
+        { id: "step-1", title: "Read docs", status: "completed", ordinal: 0 },
+        { id: "step-2", title: "Practice", status: "completed", ordinal: 1 },
+        { id: "step-3", title: "Build it", status: "pending", ordinal: 2 },
+      ],
+    });
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+    // The current step indicator reflects the snapped index, so users land on
+    // the first pending step instead of swiping past completed ones.
+    expect(screen.getByText("Step 3 of 3")).toBeOnTheScreen();
+    expect(screen.getByText("Build it")).toBeOnTheScreen();
+  });
+
+  it("does not snap when the first step is already pending", () => {
+    setupQueries({
+      steps: [
+        { id: "step-1", title: "Read docs", status: "pending", ordinal: 0 },
+        { id: "step-2", title: "Practice", status: "pending", ordinal: 1 },
+      ],
+    });
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+    expect(screen.getByText("Step 1 of 2")).toBeOnTheScreen();
+    expect(screen.getByText("Read docs")).toBeOnTheScreen();
+  });
+
+  it("wraps backward to find a pending step earlier than the just-completed one", () => {
+    setupQueries({
+      steps: [
+        { id: "step-1", title: "Read docs", status: "pending", ordinal: 0 },
+        { id: "step-2", title: "Practice", status: "completed", ordinal: 1 },
+        { id: "step-3", title: "Build it", status: "pending", ordinal: 2 },
+      ],
+      stepEvidence: [],
+    });
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+    // Snap puts us on step-1 (first pending). Swipe forward twice to reach
+    // step-3 (also pending), bypassing the completed step-2.
+    fireEvent.press(screen.getByLabelText("Next card"));
+    fireEvent.press(screen.getByLabelText("Next card"));
+    expect(screen.getByText("Step 3 of 3")).toBeOnTheScreen();
+    // Complete step-3. Forward search finds nothing pending, so the wrap
+    // path must pull the carousel back to step-1.
+    fireEvent.press(screen.getByText("Mark complete"));
+    expect(mockCompleteStep).toHaveBeenCalledWith("step-3", null, []);
+    expect(screen.getByText("Step 1 of 3")).toBeOnTheScreen();
+  });
+
+  it("does not advance when the last pending step is completed", () => {
+    setupQueries({
+      steps: [
+        { id: "step-1", title: "Read docs", status: "completed", ordinal: 0 },
+        { id: "step-2", title: "Practice", status: "pending", ordinal: 1 },
+      ],
+      stepEvidence: [],
+    });
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+    // Snap puts us on step-2 (the only pending one).
+    expect(screen.getByText("Step 2 of 2")).toBeOnTheScreen();
+    fireEvent.press(screen.getByText("Mark complete"));
+    expect(mockCompleteStep).toHaveBeenCalledWith("step-2", null, []);
+    // No other pending steps — carousel stays put. The all-steps-complete
+    // effect handles the navigation to CompletionFlow separately.
+    expect(screen.getByText("Step 2 of 2")).toBeOnTheScreen();
+  });
+
+  it("closes the evidence drawer when auto-advancing after step completion", () => {
+    setupQueries({
+      steps: [
+        { id: "step-1", title: "Read docs", status: "pending", ordinal: 0 },
+        { id: "step-2", title: "Practice", status: "pending", ordinal: 1 },
+      ],
+      stepEvidence: [
+        {
+          id: "ev-s1",
+          type: "text",
+          uri: "/note.txt",
+          description: "Step notes",
+          stepId: "step-1",
+        },
+      ],
+    });
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+    // Open the evidence drawer on step-1. The overlay's `accessible` prop
+    // tracks the drawer's open state — true when open, false when closed.
+    fireEvent.press(screen.getByLabelText("Toggle evidence drawer"));
+    expect(
+      screen.getByLabelText("Close evidence drawer").props.accessible,
+    ).toBe(true);
+    // Complete step-1; advance to step-2 must also close the drawer so the
+    // overlay doesn't persist over the next step's content.
+    fireEvent.press(screen.getByText("Mark complete"));
+    expect(screen.getByText("Step 2 of 2")).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText("Close evidence drawer").props.accessible,
+    ).toBe(false);
+  });
+
+  it("keeps the carousel in place and toasts when completeStep throws", () => {
+    setupQueries({
+      steps: [
+        { id: "step-1", title: "Read docs", status: "pending", ordinal: 0 },
+        { id: "step-2", title: "Practice", status: "pending", ordinal: 1 },
+      ],
+      stepEvidence: [],
+    });
+    mockCompleteStep.mockImplementationOnce(() => {
+      throw new Error("DB write failed");
+    });
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+    expect(screen.getByText("Step 1 of 2")).toBeOnTheScreen();
+    fireEvent.press(screen.getByText("Mark complete"));
+    // Error toast appears, carousel must NOT advance.
+    expect(
+      screen.getByText("Could not update step: DB write failed"),
+    ).toBeOnTheScreen();
+    expect(screen.getByText("Step 1 of 2")).toBeOnTheScreen();
+  });
+
   it("calls completeStep when step checkbox is toggled", () => {
     setupQueries();
     renderWithProviders(<FocusModeScreen {...routeProps} />);
@@ -234,6 +387,9 @@ describe("FocusModeScreen", () => {
       ],
     });
     renderWithProviders(<FocusModeScreen {...routeProps} />);
+    // FocusMode auto-snaps to the first pending step (step-2). Swipe back to
+    // the completed step so its checkbox is the active card.
+    fireEvent.press(screen.getByLabelText("Previous card"));
     // "Completed" appears as both StatusBadge label and Checkbox label
     // Target the checkbox specifically
     const completedElements = screen.getAllByText("Completed");
@@ -530,6 +686,8 @@ describe("FocusModeScreen", () => {
       ],
     });
     renderWithProviders(<FocusModeScreen {...routeProps} />);
+    // Auto-snap puts us on step-2 (pending); swipe back to the completed step.
+    fireEvent.press(screen.getByLabelText("Previous card"));
     // Target the checkbox — "Completed" appears in both StatusBadge and Checkbox
     const completedElements = screen.getAllByText("Completed");
     fireEvent.press(completedElements[completedElements.length - 1]);

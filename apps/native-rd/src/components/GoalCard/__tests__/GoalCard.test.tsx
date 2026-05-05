@@ -12,6 +12,7 @@ const makeGoal = (overrides?: Partial<GoalCardGoal>): GoalCardGoal => ({
   status: "active",
   stepsTotal: 5,
   stepsCompleted: 2,
+  nextStepTitle: null,
   ...overrides,
 });
 
@@ -82,6 +83,47 @@ describe("GoalCard", () => {
     it('shows "Active" badge for active goals', () => {
       renderWithProviders(<GoalCard goal={makeGoal({ status: "active" })} />);
       expect(screen.getByText("Active")).toBeOnTheScreen();
+    });
+  });
+
+  describe("next step rendering", () => {
+    it("renders the next step title when provided", () => {
+      renderWithProviders(
+        <GoalCard
+          goal={makeGoal({ nextStepTitle: "Open a savings account" })}
+        />,
+      );
+      expect(screen.getByText("Open a savings account")).toBeOnTheScreen();
+    });
+
+    it("omits the next step line when nextStepTitle is null", () => {
+      renderWithProviders(
+        <GoalCard goal={makeGoal({ nextStepTitle: null })} />,
+      );
+      expect(screen.getByText("Learn TypeScript")).toBeOnTheScreen();
+      expect(screen.queryByTestId("goal-card-next-step")).toBeNull();
+    });
+
+    it("treats whitespace-only nextStepTitle as no next step", () => {
+      renderWithProviders(
+        <GoalCard goal={makeGoal({ nextStepTitle: "   " })} />,
+      );
+      expect(screen.queryByTestId("goal-card-next-step")).toBeNull();
+    });
+
+    it("includes the next step in the accessibilityLabel", () => {
+      const onPress = jest.fn();
+      renderWithProviders(
+        <GoalCard
+          goal={makeGoal({ nextStepTitle: "Open a savings account" })}
+          onPress={onPress}
+        />,
+      );
+      expect(
+        screen.getByLabelText(
+          "Learn TypeScript, next: Open a savings account, 2 of 5 steps completed, active",
+        ),
+      ).toBeOnTheScreen();
     });
   });
 });
