@@ -14,6 +14,7 @@ import { Button } from "../../components/Button";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { createEvidence, EvidenceType } from "../../db";
 import type { GoalId, StepId } from "../../db";
+import { reportError } from "../../services/sentry-report";
 import type { CaptureVideoScreenProps } from "../../navigation/types";
 import { styles } from "./CaptureVideoScreen.styles";
 
@@ -98,6 +99,7 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
       }
     } catch (error) {
       console.error("[CaptureVideoScreen] Recording failed:", error);
+      reportError(error, { area: "evidence.capture", kind: "video" });
       Alert.alert(
         "Recording Failed",
         "Could not record video. Please try again.",
@@ -213,6 +215,7 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
       navigation.goBack();
     } catch (error) {
       console.error("[CaptureVideoScreen] Save failed:", error);
+      reportError(error, { area: "evidence.capture", kind: "video" });
       Alert.alert("Save Failed", "Could not save video. Please try again.");
     } finally {
       setIsSaving(false);

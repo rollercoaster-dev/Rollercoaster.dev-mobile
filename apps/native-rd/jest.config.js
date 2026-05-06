@@ -71,6 +71,12 @@ module.exports = {
       "<rootDir>/src/__tests__/mocks/react-native-view-shot.ts",
     "^react-native-keyboard-controller$":
       "<rootDir>/src/__tests__/mocks/keyboard-controller.ts",
+
+    // Sentry SDK ships ESM that Jest's babel-jest pipeline can't parse;
+    // unit tests should mock locally (see sentry-report.test.ts) when they
+    // need to assert what's captured.
+    "^@sentry/react-native$":
+      "<rootDir>/src/__tests__/mocks/sentry-react-native.ts",
   },
 
   // Allow Babel to transform these packages (they ship ESM or Flow source).

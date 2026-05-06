@@ -1,4 +1,5 @@
 import React from "react";
+import { Alert, Platform } from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -35,6 +36,12 @@ jest.mock(
   },
 );
 
+const mockNativeCrash = jest.fn();
+jest.mock("@sentry/react-native", () => ({
+  __esModule: true,
+  nativeCrash: (...args: unknown[]) => mockNativeCrash(...args),
+}));
+
 const mockSetTheme = jest.fn();
 const mockSetDensity = jest.fn();
 
@@ -59,10 +66,27 @@ jest.mock("../../../hooks/useDensity", () => ({
   }),
 }));
 
-import { SettingsScreen } from "../SettingsScreen";
+import { isSentryDebugToolsEnabled, SettingsScreen } from "../SettingsScreen";
+
+const originalPlatform = Platform.OS;
+const mockAlert = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+const mockWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
 
 beforeEach(() => {
   jest.clearAllMocks();
+  Object.defineProperty(Platform, "OS", {
+    configurable: true,
+    value: originalPlatform,
+  });
+});
+
+afterAll(() => {
+  mockAlert.mockRestore();
+  mockWarn.mockRestore();
+  Object.defineProperty(Platform, "OS", {
+    configurable: true,
+    value: originalPlatform,
+  });
 });
 
 describe("SettingsScreen", () => {
@@ -124,5 +148,44 @@ describe("SettingsScreen", () => {
     expect(
       screen.getByText("Built with Expo + Evolu + Unistyles"),
     ).toBeOnTheScreen();
+  });
+
+  describe("native crash trigger gating", () => {
+    it.each([
+      ["true", true],
+      [undefined, false],
+      ["1", false],
+    ])("parses EXPO_PUBLIC_SENTRY_DEBUG_TOOLS=%s", (value, expected) => {
+      expect(isSentryDebugToolsEnabled(value)).toBe(expected);
+    });
+
+    it("triggers Sentry.nativeCrash on Version long-press when debug tools enabled on iOS", () => {
+      renderWithProviders(<SettingsScreen sentryDebugToolsEnabled />);
+      fireEvent(screen.getByRole("button", { name: "Version" }), "longPress");
+      expect(mockNativeCrash).toHaveBeenCalledTimes(1);
+    });
+
+    it("shows the Android debug limitation instead of no-oping", () => {
+      Object.defineProperty(Platform, "OS", {
+        configurable: true,
+        value: "android",
+      });
+      renderWithProviders(<SettingsScreen sentryDebugToolsEnabled />);
+      fireEvent(screen.getByRole("button", { name: "Version" }), "longPress");
+      expect(mockNativeCrash).not.toHaveBeenCalled();
+      expect(mockAlert).toHaveBeenCalledWith(
+        "Native crash unavailable",
+        "Android native crash verification requires a release-mode preview build.",
+      );
+      expect(mockWarn).toHaveBeenCalledWith(
+        "Sentry native crash skipped: Android native crash verification requires a release-mode preview build.",
+      );
+    });
+
+    it("does not expose Version as a button when debug tools disabled", () => {
+      renderWithProviders(<SettingsScreen sentryDebugToolsEnabled={false} />);
+      expect(screen.queryByRole("button", { name: "Version" })).toBeNull();
+      expect(mockNativeCrash).not.toHaveBeenCalled();
+    });
   });
 });

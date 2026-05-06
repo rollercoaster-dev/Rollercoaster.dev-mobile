@@ -48,6 +48,7 @@ import {
 } from "../badges";
 import { Buffer } from "buffer";
 import { useUserKey } from "./useUserKey";
+import { reportError } from "../services/sentry-report";
 import { Logger } from "../shims/rd-logger";
 
 const logger = new Logger("useCreateBadge");
@@ -255,6 +256,9 @@ export function useCreateBadge(
             goalId,
             error: imageErr,
           });
+          // Fallback path is invisible to the outer catch; report explicitly
+          // so chronic FS / SecureStore failures are not silently shipped.
+          reportError(imageErr, { area: "badge.create", kind: "store" });
         }
 
         setStatus("storing");
@@ -291,6 +295,10 @@ export function useCreateBadge(
           goalId,
           error: err,
         });
+        // Single outer report — the broad catch covers build/sign/bake/store
+        // stages. Sub-stage granularity would require per-stage try/catch and
+        // is deferred until triage data shows we need it.
+        reportError(err, { area: "badge.create" });
       }
       // No finally reset — hasTriggered.current stays true permanently
     })();

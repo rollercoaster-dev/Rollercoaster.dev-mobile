@@ -17,6 +17,7 @@ import { useEffect, useRef, useState } from "react";
 import { updateUserSettingsKey, clearUserSettingsKey } from "../db";
 import { useUserSettingsRow } from "./useUserSettingsRow";
 import { keyProvider } from "../crypto";
+import { reportError } from "../services/sentry-report";
 import { Logger } from "../shims/rd-logger";
 
 const logger = new Logger("useUserKey");
@@ -98,6 +99,7 @@ export function useUserKey(): UserKeyState {
             keyId: verifyingKeyId,
             error: err,
           });
+          reportError(err, { area: "key.verify" });
           setError(`Key verification failed: ${message}`);
         }
         setVerified(false);
@@ -128,6 +130,7 @@ export function useUserKey(): UserKeyState {
         const message = err instanceof Error ? err.message : "Unknown error";
         setError(`Key generation failed: ${message}`);
         logger.error("Failed to generate or store keypair", { error: err });
+        reportError(err, { area: "key.generate" });
       } finally {
         isGenerating.current = false;
       }

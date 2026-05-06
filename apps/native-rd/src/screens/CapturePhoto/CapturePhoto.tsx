@@ -9,6 +9,7 @@ import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { createEvidence, EvidenceType } from "../../db";
 import type { GoalId, StepId } from "../../db";
 import { saveImageToAppStorage } from "../../utils/imageStorage";
+import { reportError } from "../../services/sentry-report";
 import type { CapturePhotoScreenProps } from "../../navigation/types";
 import { styles } from "./CapturePhoto.styles";
 
@@ -43,6 +44,7 @@ export function CapturePhoto({ route }: CapturePhotoScreenProps) {
         stepId,
         error,
       });
+      reportError(error, { area: "evidence.capture", kind: "photo" });
       Alert.alert("Save failed", "Could not save the photo. Please try again.");
     } finally {
       setBusy(false);

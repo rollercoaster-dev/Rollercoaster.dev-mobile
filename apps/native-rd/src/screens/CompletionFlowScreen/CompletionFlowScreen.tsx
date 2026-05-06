@@ -50,6 +50,7 @@ import {
 import { EVIDENCE_TYPE_ICONS } from "../../constants/evidenceIcons";
 import { pendingDesignStore } from "../../stores/pendingDesignStore";
 import { Logger } from "../../shims/rd-logger";
+import { reportError } from "../../services/sentry-report";
 import { KEYBOARD_AVOIDING_PROPS } from "../../utils/keyboard";
 import { styles } from "./CompletionFlowScreen.styles";
 
@@ -173,6 +174,7 @@ function CompletionContent({
       AccessibilityInfo.announceForAccessibility("Text note saved");
     } catch (error) {
       logger.error("Failed to save inline text note", { goalId, error });
+      reportError(error, { area: "completion.flow" });
     } finally {
       setSavingNote(false);
     }

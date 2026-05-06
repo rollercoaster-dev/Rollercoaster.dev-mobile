@@ -8,6 +8,10 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_SENTRY_ENVIRONMENT": "development",
+        "EXPO_PUBLIC_SENTRY_DEBUG_TOOLS": "true"
+      },
       "ios": {
         "simulator": true,
         "resourceClass": "m-medium"
@@ -17,8 +21,12 @@
       }
     },
     "preview": {
-      "extends": "development",
+      "extends": "production",
       "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_SENTRY_ENVIRONMENT": "preview",
+        "EXPO_PUBLIC_SENTRY_DEBUG_TOOLS": "true"
+      },
       "ios": {
         "simulator": false,
         "resourceClass": "m-medium"
@@ -29,6 +37,9 @@
     },
     "production": {
       "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_SENTRY_ENVIRONMENT": "production"
+      },
       "ios": {
         "resourceClass": "m-medium"
       },

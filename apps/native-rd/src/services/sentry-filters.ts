@@ -32,8 +32,39 @@ import type { ErrorEvent, Breadcrumb } from "@sentry/react-native";
 const LOCAL_PATH_PATTERN = /\/Users\/[^/\s)]+/g;
 const EMAIL_PATTERN = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi;
 
+// Native IO errors from expo-document-picker / expo-camera / expo-av / Evolu
+// frequently carry user-content URIs and sandbox paths in `Error.message`.
+// Examples we've seen surface in catch blocks across the capture screens:
+//   file:///var/mobile/Containers/Data/Application/<UUID>/tmp/IMG_1234.HEIC
+//   content://com.android.providers.media.documents/document/...
+//   ph://9F983DBA-EC35-4C19-8B11-7C6F0E4E9D33/L0/001
+//   asset-library://asset/asset.JPG?id=...
+//   /storage/emulated/0/Download/tax_return_2024.pdf
+// Filenames especially can be user-meaningful (e.g. "tax_return_2024.pdf").
+// Redact the whole URI/path token rather than try to keep "safe" parts.
+const URI_SCHEME_PATTERN =
+  /\b(?:file|content|asset-library|ph|assets-library):\/\/[^\s'")>]*/gi;
+const SANDBOX_PATH_PATTERN =
+  /(?:\/private)?\/var\/mobile\/Containers\/[^\s'")>]*/g;
+const ANDROID_PATH_PATTERN = /\/data\/(?:user|data)\/[^\s'")>]*/g;
+const ANDROID_SHARED_STORAGE_PATH_PATTERN =
+  /\/(?:storage\/emulated\/\d+|sdcard|mnt\/sdcard)\/[^\s'")>]*/g;
+
 const REDACTED_PATH = "/<redacted>";
 const REDACTED_EMAIL = "[redacted-email]";
+const REDACTED_URI = "<redacted-uri>";
+
+// `event.contexts` is Sentry's container for `device`, `os`, `app`, `runtime`
+// and any custom contexts written via `Sentry.setContext`. The SDK fills the
+// categorical ones; anything else is app- or integration-authored and could
+// carry user content. Allow-list the categorical entries; drop the rest.
+const ALLOWED_CONTEXT_KEYS = new Set([
+  "app",
+  "device",
+  "os",
+  "runtime",
+  "react_native_context",
+]);
 
 const HTTP_BREADCRUMB_CATEGORIES = new Set(["fetch", "xhr", "http", "request"]);
 const SAFE_HTTP_METHODS = new Set([
@@ -62,6 +93,10 @@ function toHostOnlyOrUndefined(url: string): string | undefined {
 function scrubExceptionValue(value: string): string {
   return value
     .replace(EMAIL_PATTERN, REDACTED_EMAIL)
+    .replace(URI_SCHEME_PATTERN, REDACTED_URI)
+    .replace(SANDBOX_PATH_PATTERN, REDACTED_PATH)
+    .replace(ANDROID_PATH_PATTERN, REDACTED_PATH)
+    .replace(ANDROID_SHARED_STORAGE_PATH_PATTERN, REDACTED_PATH)
     .replace(LOCAL_PATH_PATTERN, REDACTED_PATH);
 }
 
@@ -107,6 +142,14 @@ function scrubHttpBreadcrumbData(
 export function scrubEvent(event: ErrorEvent): ErrorEvent {
   delete event.user;
   delete event.extra;
+
+  if (event.contexts) {
+    for (const key of Object.keys(event.contexts)) {
+      if (!ALLOWED_CONTEXT_KEYS.has(key)) {
+        delete event.contexts[key];
+      }
+    }
+  }
 
   if (event.exception?.values) {
     for (const exc of event.exception.values) {

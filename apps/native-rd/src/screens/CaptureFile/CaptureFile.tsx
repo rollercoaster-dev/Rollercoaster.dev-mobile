@@ -14,6 +14,7 @@ import {
   MAX_FILE_SIZE_LABEL,
   ALLOWED_MIME_TYPES,
 } from "../../utils/fileStorage";
+import { reportError } from "../../services/sentry-report";
 import type { CaptureFileScreenProps } from "../../navigation/types";
 import { styles } from "./CaptureFile.styles";
 
@@ -93,6 +94,7 @@ export function CaptureFile({ route }: CaptureFileScreenProps) {
         stepId,
         error,
       });
+      reportError(error, { area: "evidence.capture", kind: "file" });
       Alert.alert("Save failed", "Could not save the file. Please try again.");
     } finally {
       setBusy(false);

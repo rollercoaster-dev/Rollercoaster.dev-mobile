@@ -30,8 +30,14 @@ const OFFLINE_ERROR_PATTERNS: RegExp[] = [
 export function initSentry(): void {
   if (__DEV__) return;
 
+  // Set per-EAS-profile in eas.json's build.<profile>.env block. Expo only
+  // inlines EXPO_PUBLIC_* into the JS bundle, so reading EAS_BUILD_PROFILE
+  // directly would be undefined at runtime.
+  const environment = process.env.EXPO_PUBLIC_SENTRY_ENVIRONMENT ?? "unknown";
+
   Sentry.init({
     dsn: SENTRY_DSN,
+    environment,
 
     // Privacy posture (#971). `sendDefaultPii: false` also tells the relay
     // `infer_ip: 'never'`, so client IPs are never attached server-side.

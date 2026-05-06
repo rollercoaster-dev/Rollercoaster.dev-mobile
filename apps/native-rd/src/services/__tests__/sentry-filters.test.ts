@@ -43,6 +43,63 @@ describe("scrubEvent", () => {
     expect(scrubbed.exception?.values?.[0]?.value).toContain("/<redacted>");
   });
 
+  it.each([
+    [
+      "iOS file URI with filename",
+      "ENOENT at file:///var/mobile/Containers/Data/Application/ABC/tmp/tax_return_2024.pdf",
+      ["tax_return_2024.pdf", "file://", "/var/mobile/Containers"],
+    ],
+    [
+      "Android content URI",
+      "Could not open content://com.android.providers.media.documents/document/image%3A1234",
+      ["content://", "com.android.providers"],
+    ],
+    [
+      "PhotoKit ph:// URI",
+      "Failed to load ph://9F983DBA-EC35-4C19-8B11-7C6F0E4E9D33/L0/001",
+      ["ph://", "9F983DBA"],
+    ],
+    [
+      "asset-library URI",
+      "Asset not found: asset-library://asset/asset.JPG?id=ABC&ext=JPG",
+      ["asset-library://", "asset.JPG"],
+    ],
+    [
+      "legacy assets-library URI",
+      "Asset not found: assets-library://asset/asset.MOV?id=XYZ&ext=MOV",
+      ["assets-library://", "asset.MOV", "XYZ"],
+    ],
+    [
+      "iOS sandbox path without scheme",
+      "ENOENT at /private/var/mobile/Containers/Data/Application/X/Documents/notes.txt",
+      ["notes.txt", "/var/mobile/Containers", "/private/var/mobile"],
+    ],
+    [
+      "Android /data/user path",
+      "Permission denied at /data/user/0/com.example.app/files/private.db",
+      ["private.db", "/data/user/0"],
+    ],
+    [
+      "Android shared storage path",
+      "Permission denied at /storage/emulated/0/Download/tax_return_2024.pdf",
+      ["tax_return_2024.pdf", "/storage/emulated/0"],
+    ],
+    [
+      "Android sdcard path",
+      "Failed to copy /sdcard/Documents/private_notes.md",
+      ["private_notes.md", "/sdcard"],
+    ],
+  ])("redacts %s", (_label, message, leakyFragments) => {
+    const event = makeEvent({
+      exception: { values: [{ type: "Error", value: message }] },
+    });
+    const scrubbed = scrubEvent(event);
+    const scrubbedValue = scrubbed.exception?.values?.[0]?.value ?? "";
+    for (const fragment of leakyFragments) {
+      expect(scrubbedValue).not.toContain(fragment);
+    }
+  });
+
   it("redacts email addresses in exception values", () => {
     const event = makeEvent({
       exception: {
@@ -107,6 +164,30 @@ describe("scrubEvent", () => {
     });
     const scrubbed = scrubEvent(event);
     expect(scrubbed.extra).toBeUndefined();
+  });
+
+  it("strips non-allowlisted custom contexts", () => {
+    const event = makeEvent({
+      contexts: {
+        // Categorical SDK-managed entries — must be preserved.
+        app: { app_version: "1.0.0" },
+        device: { model: "iPhone15,2" },
+        os: { name: "iOS", version: "17.0" },
+        runtime: { name: "hermes", version: "0.74" },
+        react_native_context: { jsEngine: "hermes" },
+        // Arbitrary app-written context — must be removed.
+        user_data: { title: "leak: goal title" },
+        goal: { id: "abc", title: "leak" },
+      },
+    });
+    const scrubbed = scrubEvent(event);
+    expect(scrubbed.contexts?.app).toBeDefined();
+    expect(scrubbed.contexts?.device).toBeDefined();
+    expect(scrubbed.contexts?.os).toBeDefined();
+    expect(scrubbed.contexts?.runtime).toBeDefined();
+    expect(scrubbed.contexts?.react_native_context).toBeDefined();
+    expect(scrubbed.contexts?.user_data).toBeUndefined();
+    expect(scrubbed.contexts?.goal).toBeUndefined();
   });
 
   it("re-scrubs breadcrumbs merged onto the final event", () => {

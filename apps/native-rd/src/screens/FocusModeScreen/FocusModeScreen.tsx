@@ -70,6 +70,7 @@ import {
 import type { StepStatus as UIStepStatus } from "../../types/steps";
 import { deleteEvidenceFile } from "../../utils/evidenceCleanup";
 import { Logger } from "../../shims/rd-logger";
+import { reportError } from "../../services/sentry-report";
 import { KEYBOARD_AVOIDING_PROPS } from "../../utils/keyboard";
 import { useEvidenceViewer } from "../../utils/evidenceViewers";
 import { useFocusModePrefs } from "../../hooks/useFocusModePrefs";
@@ -276,6 +277,7 @@ function FocusContent({ goalId }: { goalId: string }) {
         evidenceId: pending.id,
         error,
       });
+      reportError(error, { area: "focus.mode", kind: "evidence-restore" });
     }
     pendingFileDeletionRef.current = null;
     hideToast();
@@ -361,6 +363,7 @@ function FocusContent({ goalId }: { goalId: string }) {
         stepId,
         error,
       });
+      reportError(error, { area: "focus.mode", kind: "step-toggle" });
       showToast({
         message: `Could not update step: ${message}`,
         duration: 3000,
@@ -458,6 +461,7 @@ function FocusContent({ goalId }: { goalId: string }) {
         evidenceId: id,
         error,
       });
+      reportError(error, { area: "focus.mode" });
       Alert.alert(
         "Could not delete evidence",
         "Something went wrong. Please try again.",

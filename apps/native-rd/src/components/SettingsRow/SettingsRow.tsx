@@ -1,5 +1,11 @@
 import React from "react";
-import { Pressable, View, Text, Switch } from "react-native";
+import {
+  Pressable,
+  View,
+  Text,
+  Switch,
+  type AccessibilityActionEvent,
+} from "react-native";
 import { useUnistyles } from "react-native-unistyles";
 import { styles } from "./SettingsRow.styles";
 
@@ -7,6 +13,7 @@ export interface SettingsRowProps {
   label: string;
   value?: string;
   onPress?: () => void;
+  onLongPress?: () => void;
   toggle?: {
     value: boolean;
     onValueChange: (value: boolean) => void;
@@ -17,9 +24,20 @@ export function SettingsRow({
   label,
   value,
   onPress,
+  onLongPress,
   toggle,
 }: SettingsRowProps) {
   const { theme } = useUnistyles();
+  const longPressAccessibilityProps = onLongPress
+    ? {
+        accessibilityActions: [{ name: "longpress", label: "Long press" }],
+        onAccessibilityAction: (event: AccessibilityActionEvent) => {
+          if (event.nativeEvent.actionName === "longpress") {
+            onLongPress();
+          }
+        },
+      }
+    : {};
 
   const content = (
     <>
@@ -41,13 +59,15 @@ export function SettingsRow({
     </>
   );
 
-  if (onPress) {
+  if (onPress || onLongPress) {
     return (
       <Pressable
         onPress={onPress}
+        onLongPress={onLongPress}
         accessible
         accessibilityRole="button"
         accessibilityLabel={label}
+        {...longPressAccessibilityProps}
         style={({ pressed }) => [styles.container, pressed && styles.pressed]}
       >
         {content}

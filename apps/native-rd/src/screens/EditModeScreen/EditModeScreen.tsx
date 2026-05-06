@@ -31,6 +31,7 @@ import {
   StepStatus,
 } from "../../db";
 import type { GoalId, StepId } from "../../db";
+import { reportError } from "../../services/sentry-report";
 import {
   validateEvidenceType,
   type EvidenceTypeValue,
@@ -93,6 +94,7 @@ function EditContent({
             title: trimmed,
             error,
           });
+          reportError(error, { area: "goal.mutate", kind: "update" });
           setTitleError("Failed to update title");
         }
       }, DEBOUNCE_MS);
@@ -112,6 +114,7 @@ function EditContent({
             goalId,
             error,
           });
+          reportError(error, { area: "goal.mutate", kind: "update" });
           Alert.alert("Error", "Failed to update description.");
         }
       }, DEBOUNCE_MS);
@@ -153,6 +156,7 @@ function EditContent({
         newTitle,
         error,
       });
+      reportError(error, { area: "step.mutate", kind: "update" });
       Alert.alert("Error", "Could not update step.");
     }
   }
@@ -167,6 +171,7 @@ function EditContent({
         stepId,
         error,
       });
+      reportError(error, { area: "step.mutate", kind: "delete" });
       Alert.alert("Error", "Could not delete step.");
     }
   }
@@ -192,6 +197,7 @@ function EditContent({
         stepTitle,
         error,
       });
+      reportError(error, { area: "step.mutate", kind: "create" });
       Alert.alert("Error", "Could not create step.");
     }
   }
@@ -204,6 +210,7 @@ function EditContent({
         goalId,
         error,
       });
+      reportError(error, { area: "step.mutate", kind: "reorder" });
       Alert.alert("Error", "Could not reorder steps.");
     }
   }
@@ -218,6 +225,7 @@ function EditContent({
         goalId,
         error,
       });
+      reportError(error, { area: "goal.mutate", kind: "delete" });
       setShowDeleteGoalModal(false);
       Alert.alert(
         "Could not delete goal",

@@ -16,6 +16,7 @@ import { Input } from "../../components/Input";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { createEvidence, EvidenceType, TEXT_EVIDENCE_PREFIX } from "../../db";
 import type { GoalId, StepId } from "../../db";
+import { reportError } from "../../services/sentry-report";
 import type { CaptureTextNoteScreenProps } from "../../navigation/types";
 import { styles } from "./CaptureTextNote.styles";
 
@@ -65,6 +66,7 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
         stepId,
         error,
       });
+      reportError(error, { area: "evidence.capture", kind: "text" });
       Alert.alert(
         "Could not save note",
         "Something went wrong. Please try again.",
