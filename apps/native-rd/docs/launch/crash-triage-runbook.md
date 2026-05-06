@@ -117,6 +117,7 @@ In both cases, fall back to **Apple's pipeline:**
 
 ## Related
 
+- `docs/launch/sentry-setup.md` — concise setup rationale and privacy controls
 - `docs/plans/2026-05-04-sentry-integration.md` — implementation plan (#971)
 - `docs/launch/privacy-verification.md` — privacy test plan, run before each TestFlight push
 - `docs/plans/2026-05-02-user-testing-prep.md` — overall closed-beta context

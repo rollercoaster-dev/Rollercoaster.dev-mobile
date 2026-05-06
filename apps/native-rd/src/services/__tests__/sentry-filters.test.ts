@@ -43,6 +43,26 @@ describe("scrubEvent", () => {
     expect(scrubbed.exception?.values?.[0]?.value).toContain("/<redacted>");
   });
 
+  it("redacts email addresses in exception values", () => {
+    const event = makeEvent({
+      exception: {
+        values: [
+          {
+            type: "Error",
+            value: "Failed invite for test+pii@example.com",
+          },
+        ],
+      },
+    });
+    const scrubbed = scrubEvent(event);
+    expect(scrubbed.exception?.values?.[0]?.value).not.toContain(
+      "test+pii@example.com",
+    );
+    expect(scrubbed.exception?.values?.[0]?.value).toContain(
+      "[redacted-email]",
+    );
+  });
+
   it("reduces request URLs to host-only", () => {
     const event = makeEvent({
       request: {
@@ -154,6 +174,31 @@ describe("beforeBreadcrumbFilter", () => {
     expect(result?.data?.method).toBe("GET");
   });
 
+  it("removes arbitrary data from request breadcrumbs", () => {
+    const result = beforeBreadcrumbFilter(
+      make({
+        category: "request",
+        message: "https://example.com/path?email=x@y.com",
+        data: {
+          url: "https://example.com/path?email=x@y.com",
+          method: "post",
+          status_code: 201,
+          headers: { authorization: "Bearer secret" },
+          cookies: "session=abc",
+          body: "test+pii@example.com",
+          request_body_size: 123,
+          arbitrary: "Joe Czarnecki",
+        },
+      }),
+    );
+    expect(result?.message).toBeUndefined();
+    expect(result?.data).toEqual({
+      url: "https://example.com",
+      method: "POST",
+      status_code: 201,
+    });
+  });
+
   it("reduces xhr URLs to host-only", () => {
     const result = beforeBreadcrumbFilter(
       make({
@@ -173,6 +218,30 @@ describe("beforeBreadcrumbFilter", () => {
       }),
     );
     expect(result?.data?.url).toBe("https://example.com");
+  });
+
+  it("drops touch breadcrumbs", () => {
+    expect(
+      beforeBreadcrumbFilter(
+        make({
+          category: "touch",
+          message: "tap",
+          data: { path: "GoalDetail > title" },
+        }),
+      ),
+    ).toBeNull();
+  });
+
+  it("drops ui.multiClick breadcrumbs", () => {
+    expect(
+      beforeBreadcrumbFilter(
+        make({
+          category: "ui.multiClick",
+          message: "rage tap",
+          data: { path: "GoalDetail > title" },
+        }),
+      ),
+    ).toBeNull();
   });
 
   it("passes unrelated breadcrumbs through unchanged", () => {
