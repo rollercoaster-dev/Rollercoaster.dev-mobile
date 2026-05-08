@@ -82,7 +82,8 @@
           "project": "native-rd",
           "url": "https://sentry.io/"
         }
-      ]
+      ],
+      "expo-font"
     ],
     "extra": {
       "eas": {
