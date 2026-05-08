@@ -3,7 +3,7 @@ name: native-rd-build
 description: Build native-rd for any target — local iOS simulator/device, local Release builds, EAS development/preview/production, Android (when generated). Use when the user hits a build failure, asks how to produce a build of any kind, needs to diagnose runtime errors that look build-related ("No script URL provided", missing assets, signing issues), or wants to understand what `eas.json` / `app.json` / `Podfile.properties.json` settings actually do. Also use as a pre-flight checklist before starting a fresh build.
 metadata:
   author: rollercoaster.dev
-  version: "2.2.0"
+  version: "2.3.0"
 ---
 
 # native-rd Build Playbook
@@ -22,20 +22,20 @@ Comprehensive build reference for `apps/native-rd`. Stack: **Expo SDK 54 + RN 0.
 
 ## Build matrix
 
-| Target                         | Local command                                              | EAS profile                                              | Status                                                                                            |
-| ------------------------------ | ---------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| iOS Simulator (dev client)     | `bun run ios` (with `IOS_DEVICE_ID` empty)                 | `eas build -p ios --profile development`                 | `[VERIFIED 2026-05-02]` local sim + EAS development profile (cloud build)                         |
-| iOS Device (dev client)        | `bun run ios` (or `IOS_DEVICE_ID=… bun run ios:device`)    | `eas build -p ios --profile development` (then sideload) | `[VERIFIED 2026-05-02]` local device                                                              |
-| iOS Release (local sim)        | `npx expo run:ios --configuration Release`                 | n/a                                                      | `[VERIFIED 2026-05-02]` per `docs/plans/2026-05-02-expo-doctor-build-validation.md`               |
-| iOS Release (local device)     | `npx expo run:ios --configuration Release --device <udid>` | n/a                                                      | `[UNTESTED]`                                                                                      |
-| iOS preview build (signed IPA) | n/a                                                        | `eas build -p ios --profile preview`                     | `[UNTESTED]`                                                                                      |
-| iOS production build           | n/a                                                        | `eas build -p ios --profile production`                  | `[UNTESTED]`                                                                                      |
-| iOS App Store submit           | n/a                                                        | `eas submit -p ios --profile production`                 | `[BROKEN]` `ascAppId` placeholder in `eas.json`                                                   |
-| Android Emulator (dev client)  | `bun run android`                                          | `eas build -p android --profile development`             | `[BROKEN]` no `android/` directory generated                                                      |
-| Android Device (dev client)    | `bun run android --device`                                 | same                                                     | `[BROKEN]` same                                                                                   |
-| Android preview APK            | n/a                                                        | `eas build -p android --profile preview`                 | `[UNTESTED]`                                                                                      |
-| Android production AAB         | n/a                                                        | `eas build -p android --profile production`              | `[UNTESTED]`                                                                                      |
-| Android Play Store submit      | n/a                                                        | `eas submit -p android --profile production`             | `[BROKEN]` `play-service-account.json` not committed (rightfully so — needs developer-local copy) |
+| Target                         | Local command                                              | EAS profile                                              | Status                                                                                                                                                                                                                        |
+| ------------------------------ | ---------------------------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| iOS Simulator (dev client)     | `bun run ios` (with `IOS_DEVICE_ID` empty)                 | `eas build -p ios --profile development`                 | `[VERIFIED 2026-05-02]` local sim + EAS development profile (cloud build)                                                                                                                                                     |
+| iOS Device (dev client)        | `bun run ios` (or `IOS_DEVICE_ID=… bun run ios:device`)    | `eas build -p ios --profile development` (then sideload) | `[VERIFIED 2026-05-02]` local device                                                                                                                                                                                          |
+| iOS Release (local sim)        | `npx expo run:ios --configuration Release`                 | n/a                                                      | `[VERIFIED 2026-05-02]` per `docs/plans/2026-05-02-expo-doctor-build-validation.md`                                                                                                                                           |
+| iOS Release (local device)     | `npx expo run:ios --configuration Release --device <udid>` | n/a                                                      | `[UNTESTED]`                                                                                                                                                                                                                  |
+| iOS preview build (signed IPA) | n/a                                                        | `eas build -p ios --profile preview`                     | `[UNTESTED]`                                                                                                                                                                                                                  |
+| iOS production build           | n/a                                                        | `eas build -p ios --profile production`                  | `[UNTESTED]`                                                                                                                                                                                                                  |
+| iOS App Store submit           | n/a                                                        | `eas submit -p ios --profile production`                 | `[BROKEN]` `ascAppId` placeholder in `eas.json`                                                                                                                                                                               |
+| Android Emulator (dev client)  | `bun run android`                                          | `eas build -p android --profile development`             | `[VERIFIED 2026-05-07]` local emulator (Pixel 6a / API 35 / Google APIs / arm64-v8a). Required: write `android/local.properties`, install NDK `27.1.12297006`, bump `react-native-nitro-modules` to `^0.35.6` (Gotchas 7/8/9) |
+| Android Device (dev client)    | `bun run android --device`                                 | same                                                     | `[UNTESTED]` should work once an Android device is paired and `adb devices` lists it; same Gotchas 7/8/9 apply                                                                                                                |
+| Android preview APK            | n/a                                                        | `eas build -p android --profile preview`                 | `[VERIFIED 2026-05-07]` ~33min cloud build, signed APK artifact downloadable from EAS dashboard. First attempt errored in POST_INSTALL_HOOK (Gotcha 10) — fix in commit 2d2e46b4 unblocked it                                 |
+| Android production AAB         | n/a                                                        | `eas build -p android --profile production`              | `[UNTESTED]`                                                                                                                                                                                                                  |
+| Android Play Store submit      | n/a                                                        | `eas submit -p android --profile production`             | `[BROKEN]` `play-service-account.json` not committed (rightfully so — needs developer-local copy)                                                                                                                             |
 
 ---
 
@@ -103,27 +103,59 @@ For device Release, signing comes from your Apple Team (currently `86VL756N99` p
 
 ---
 
-## Local Android — `[BROKEN]`
+## Local Android — dev client
 
-`[BROKEN]` as of 2026-05-02 — no `apps/native-rd/android/` directory exists. `bun run android` will fail with a missing-project error.
+`[VERIFIED 2026-05-07]` Pixel 6a emulator (API 35, Google APIs, arm64-v8a). New architecture + Hermes work; bundles 6107 modules in ~17s.
 
-To generate the Android project:
+### One-time toolchain prerequisites
+
+Set up by Android Studio Standard wizard, with three additions:
+
+1. **Android Studio** — `brew install --cask android-studio`. Run "Standard" setup wizard to install SDK to `~/Library/Android/sdk`.
+2. **SDK packages** beyond Standard wizard (via Settings → Languages & Frameworks → Android SDK):
+   - SDK Tools tab: tick **Android SDK Command-line Tools (latest)** (provides `sdkmanager`, `avdmanager`)
+   - SDK Platforms tab: enable **Show Package Details**, expand **Android 15.0 / API 35**, tick **Android SDK Platform 35** + **Google APIs ARM 64 v8a System Image** (Apple Silicon needs ARM64; the x86_64 image is unusably slow under Rosetta)
+3. **NDK 27.1.12297006** — required by Expo SDK 54 build config; **NOT installed by Standard wizard**. See Gotcha 8.
+4. **Env vars** in `~/.zshenv` (sourced for non-interactive shells too):
+
+   ```sh
+   export ANDROID_HOME="$HOME/Library/Android/sdk"
+   export ANDROID_SDK_ROOT="$ANDROID_HOME"
+   export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
+   ```
+
+### Per-project bootstrap
+
+After `npx expo prebuild --platform android`:
+
+1. **Write `android/local.properties`** (Gotcha 7 — Gradle won't find the SDK without it, even with `ANDROID_HOME` exported):
+
+   ```bash
+   echo "sdk.dir=$HOME/Library/Android/sdk" > apps/native-rd/android/local.properties
+   ```
+
+   Gitignored via `apps/native-rd/.gitignore` line 18 (`android/`). Per-developer file.
+
+2. **Verify `react-native-nitro-modules`** in `package.json` is `^0.35.6` or newer. Older 0.33.x lacks the `CxxPart` class that `react-native-unistyles@3.2.4`'s autogenerated Kotlin bindings require (Gotcha 9).
+
+### Build & run
 
 ```bash
 cd apps/native-rd
-npx expo prebuild --platform android      # generates android/ from app.json
-bun run android                           # then this should work
+
+# Boot an emulator first (Studio → Device Manager → ▶ on your AVD)
+adb devices                               # should list emulator-5554
+
+bun run android                           # Debug build → install → start Metro
 ```
 
-`[UNTESTED]` after generation. We have not validated:
+First Gradle compile is slow (~6 min — RN core C++ + Hermes + native modules for arm64-v8a). Incremental rebuilds are seconds.
 
-- whether `expo prebuild --platform android` produces a working project for our plugin set
-- whether emulator / physical device flows work
-- whether new architecture + Hermes works on Android (`newArchEnabled: true` in `app.json` applies to both platforms)
+### What's still untested
 
-When you do generate the Android project, expect a similar pod-equivalent build sequence (Gradle + JVM), and look out for analogous prebuilt-RN issues to iOS Gotcha 1.
-
-**If you regenerate Android, document what you find** — promote this section to `[VERIFIED]`.
+- **Physical Android device** — same flow should work once a device is paired (`adb devices` lists it). Likely needs USB debugging enabled on the device.
+- **Release configuration locally** — equivalent of `npx expo run:ios --configuration Release`. Try `npx expo run:android --variant release`.
+- **New architecture edge cases** — TurboModules, Fabric components specific to the app may behave differently from iOS. Ran without smoke-test; one warning observed: `setLayoutAnimationEnabledExperimental is currently a no-op in the New Architecture` (benign).
 
 ---
 
@@ -219,7 +251,7 @@ eas submit --platform android --profile production   # BLOCKED: play-service-acc
 Before either submit can run:
 
 - **iOS:** create the App Store Connect record (Apple Dev portal → "App Store Connect" → "My Apps" → "+"), then replace `submit.production.ios.ascAppId` in `eas.json` with the real numeric ID.
-- **Android:** download a Google Play service-account JSON (Play Console → API access), save as `apps/native-rd/play-service-account.json` (gitignored — verify before committing). The `serviceAccountKeyPath` in `eas.json` is a relative path from the app dir.
+- **Android:** download a Google Play service-account JSON (Play Console → API access), save as `apps/native-rd/play-service-account.json`. Confirm it's covered by `apps/native-rd/.gitignore` (the explicit `play-service-account.json` line) before doing anything else: `git check-ignore -v apps/native-rd/play-service-account.json`. The `serviceAccountKeyPath` in `eas.json` is a relative path from the app dir.
 
 ---
 
@@ -386,6 +418,134 @@ Best practice: always kill Metro **before** running `bun add` / `bunx expo insta
 
 ---
 
+## Gotcha 7 — Android: `SDK location not found` despite `ANDROID_HOME` set
+
+`[VERIFIED 2026-05-07]`
+
+**Symptom (Gradle configuration phase, not compile):**
+
+```
+> Failed to apply plugin 'com.facebook.react.rootproject'.
+   > A problem occurred configuring project ':app'.
+      > SDK location not found. Define a valid SDK location with an ANDROID_HOME
+        environment variable or by setting the sdk.dir path in your project's
+        local properties file at '.../android/local.properties'.
+```
+
+`echo $ANDROID_HOME` shows the right path, `adb` is on `PATH`, but Gradle still can't find the SDK.
+
+**Cause:** env-var inheritance is fragile across the `bun → npm-script → expo-cli → @expo/spawn-async → gradlew` chain. Each layer can fail to forward env. Bun in particular spawns child processes via Node's `child_process` without re-sourcing shell init files. Even with `ANDROID_HOME` exported in `~/.zshenv`, the `gradlew` invocation may run in a stripped environment.
+
+**Fix:** write `android/local.properties` — Gradle's Android plugin reads `sdk.dir` here before checking env vars, and this file is machine-local (gitignored).
+
+```bash
+echo "sdk.dir=$HOME/Library/Android/sdk" > apps/native-rd/android/local.properties
+```
+
+**Survives `expo prebuild`?** Yes for non-`--clean`; **NO** for `--clean` (regenerates the whole `android/` directory, wiping `local.properties`). Re-write after `--clean`.
+
+**Does this affect EAS?** No — EAS cloud build hosts have `ANDROID_HOME` set system-wide and the build uses a fresh checkout that doesn't include `local.properties`. This is purely a local-build concern.
+
+---
+
+## Gotcha 8 — Android: `[CXX1101] NDK ... did not have a source.properties file`
+
+`[VERIFIED 2026-05-07]`
+
+**Symptom (Gradle configuration phase):**
+
+```
+> Failed to apply plugin 'com.facebook.react.rootproject'.
+   > A problem occurred configuring project ':app'.
+      > [CXX1101] NDK at /Users/.../Library/Android/sdk/ndk/27.1.12297006
+        did not have a source.properties file
+```
+
+The NDK directory exists at the expected version path but is empty or missing `source.properties`.
+
+**Cause:** Android Studio's "Standard" setup wizard creates an empty NDK directory (a placeholder for "side-by-side NDK" entries the IDE has registered) without actually populating it. Gradle's CXX detection in `com.android.ndk.cxx` walks `ndk/` looking for valid installs and bails the moment it hits a partial install. Expo SDK 54's Android template pins `ndk: 27.1.12297006` (visible in the `[ExpoRootProject] Using the following versions:` block at build start) — that exact directory must be a complete install.
+
+**Fix:** wipe the placeholder and reinstall via `sdkmanager` (which lands metadata files correctly):
+
+```bash
+rm -rf "$HOME/Library/Android/sdk/ndk/27.1.12297006"
+yes | sdkmanager "ndk;27.1.12297006"
+ls "$HOME/Library/Android/sdk/ndk/27.1.12297006/source.properties"   # verify
+```
+
+`sdkmanager` is on PATH after installing **Android SDK Command-line Tools (latest)** in SDK Manager → SDK Tools.
+
+**Survives `expo prebuild`?** Yes — NDK is global, not per-project.
+
+**Does this affect EAS?** No — EAS build hosts have NDKs preinstalled for all supported versions.
+
+---
+
+## Gotcha 9 — Android: `Unresolved reference 'CxxPart'` in unistyles autogen
+
+`[VERIFIED 2026-05-07]`
+
+**Symptom (Kotlin compile of `:react-native-unistyles:compileDebugKotlin`):**
+
+```
+e: .../react-native-unistyles/nitrogen/generated/android/kotlin/.../HybridNativePlatformSpec.kt:121:82
+   Unresolved reference 'CxxPart'.
+e: .../HybridNativePlatformSpec.kt:123:14 'initHybrid' overrides nothing.
+e: .../HybridNativePlatformSpec.kt:125:3 'createCxxPart' overrides nothing.
+```
+
+iOS does NOT show this error even though the equivalent Swift autogen also references `CxxPart`.
+
+**Cause:** `react-native-unistyles@3.2.4` was generated by `nitrogen` against `react-native-nitro-modules@0.35.5`. Our `package.json` had `"react-native-nitro-modules": "^0.33.5"`, which resolved to `0.33.9` — too old to provide the `CxxPart` class that the autogenerated bindings reference. iOS hides the mismatch via Swift's lenient cross-module name resolution; Android Kotlin fails fast.
+
+**Fix:** bump in `apps/native-rd/package.json`:
+
+```diff
+- "react-native-nitro-modules": "^0.33.5",
++ "react-native-nitro-modules": "^0.35.6",
+```
+
+Then `bun install`. Other consumers (`@evolu/react-native` peer `>=0.31`, `react-native-quick-crypto` peer `>=0.29.1`) are satisfied by 0.35.6.
+
+**Survives `expo prebuild`?** Yes (it's a JS-package version, not native-dir state).
+
+**Does this affect EAS?** Yes — EAS reads the same `package.json`. The fix lands automatically once committed.
+
+**General lesson:** when a transitive package (here: `react-native-unistyles`) ships **autogenerated native code** targeting a specific version of a dependency it declares as `*` peer, the version that actually gets installed must match what the autogen was compiled against, or Kotlin will reject it. iOS Swift is more forgiving and may build a binary that silently mismatches at runtime. Android catching this first is a feature, not a bug.
+
+---
+
+## Gotcha 10 — EAS Android: `bunx: command not found` in post-install hook
+
+`[VERIFIED 2026-05-07]`
+
+**Symptom (EAS cloud build, fails ~10s into POST_INSTALL_HOOK phase):**
+
+```
+$ cd ../.. && bunx turbo build --filter=native-rd^...
+/usr/bin/bash: line 1: bunx: command not found
+error: script "eas-build-post-install" exited with code 127
+```
+
+EAS dashboard shows `Status: ERRORED` with `errorCode: UNKNOWN_ERROR` and message _"Unknown error. See logs of the Post-install hook build phase for more information."_
+
+**Cause:** EAS's Linux Android build worker is pinned to Bun **1.2.20**, which doesn't ship `bunx` as a separate binary on `PATH`. The macOS iOS workers run a more recent Bun that does. Since the same `eas-build-post-install` hook runs on both platforms, iOS silently passes and Android silently fails.
+
+**Fix:** in `apps/native-rd/package.json`, replace `bunx` (separate binary) with `bun x` (subcommand of `bun`, available on every modern Bun version):
+
+```diff
+- "eas-build-post-install": "cd ../.. && bunx turbo build --filter=native-rd^...",
++ "eas-build-post-install": "cd ../.. && bun x turbo build --filter=native-rd^...",
+```
+
+Functionally identical; portable across Bun versions.
+
+**Survives `expo prebuild`?** Yes — `package.json` is project-root config, not generated.
+
+**Does this affect local builds?** No. Local Bun (≥1.2.x) has `bunx` symlinked in `~/.bun/bin`. The hook also doesn't run on local `bun run android` — only on `eas build`.
+
+---
+
 ## Standard recovery sequences
 
 ### Local iOS device build, fresh from scratch
@@ -430,15 +590,27 @@ eas build --platform ios --profile development      # or preview / production
 
 ### Going back to a prior build state
 
-If `expo prebuild` produced bad output and you want to undo:
+`apps/native-rd/.gitignore` (line 18) ignores **both `ios/` and `android/`** — these are generated locally by `expo prebuild` and never committed. `git restore ios/` is therefore not a recovery path; it does nothing because there's no tracked content.
+
+To undo a bad prebuild:
 
 ```bash
-git status ios/                # see what changed
-git restore ios/               # if everything in ios/ is regenerated and you want to revert
-# rerun prebuild after fixing the underlying issue (app.json, plugin versions)
+cd apps/native-rd
+rm -rf ios                          # or rm -rf android
+npx expo prebuild --platform ios    # or --platform android — regenerates from app.json
+
+# RE-APPLY per-project edits BEFORE running any build:
+#   iOS    : ios/Podfile.properties.json        (e.g. ios.buildReactNativeFromSource: true)
+#   Android: echo "sdk.dir=$HOME/Library/Android/sdk" > android/local.properties
+
+# Then build normally — pods/gradle deps resolve on first invocation:
+#   iOS    : cd ios && pod install && cd ..    (Podfile changed → must run pod install)
+#   Android: bun run android                    (Gradle wrapper auto-resolves; no separate install step)
 ```
 
-`ios/` is committed to the repo (this is intentional per `scripts/run-ios.sh` — see comments in that script). You can always restore from git.
+The "source of truth" for native config is `app.json` + Expo plugins. Anything in `ios/` or `android/` that wasn't generated from those (e.g. `Podfile.properties.json` flag for `buildReactNativeFromSource`, `android/local.properties`) is a developer-local override that must be re-applied after regeneration.
+
+**Why iOS needs an explicit `pod install` and Android does not:** `expo prebuild` rewrites `Podfile` but doesn't run CocoaPods, so the next `xcodebuild` will fail with "Pods has not been installed". On Android the Gradle wrapper does dep resolution as part of the first build invocation — `./gradlew` standalone is not a pre-flight step worth running manually.
 
 ---
 
@@ -456,17 +628,20 @@ git restore ios/               # if everything in ios/ is regenerated and you wa
 
 ## Quick reference: what gets edited where
 
-| File                                               | Purpose                                                                           | Survives `expo prebuild` non-`--clean`? | Survives `--clean`?      |
-| -------------------------------------------------- | --------------------------------------------------------------------------------- | --------------------------------------- | ------------------------ |
-| `apps/native-rd/app.json`                          | Source of truth for icons, splash, plugins, deployment target, bundle/package IDs | Read from                               | Read from                |
-| `apps/native-rd/eas.json`                          | EAS build/submit profile config                                                   | Yes (not under `ios/` or `android/`)    | Yes                      |
-| `apps/native-rd/.env.local`                        | Per-developer env (`IOS_DEVICE_ID`, etc.). Gitignored                             | Yes                                     | Yes                      |
-| `apps/native-rd/scripts/run-ios.sh`                | Bash launcher; sources `.env.local`, calls `expo run:ios`                         | Yes                                     | Yes                      |
-| `apps/native-rd/ios/Podfile.properties.json`       | RN/Expo build flags, incl. `buildReactNativeFromSource`                           | Yes                                     | **NO** — re-add manually |
-| `apps/native-rd/ios/nativerd/Images.xcassets/`     | Generated iOS assets                                                              | Regenerated from `app.json`             | Regenerated              |
-| `apps/native-rd/ios/Podfile`                       | Generated; do not edit                                                            | Regenerated                             | Regenerated              |
-| `apps/native-rd/android/`                          | Generated Android project (currently doesn't exist)                               | Regenerated                             | Regenerated              |
-| `~/Library/Developer/Xcode/DerivedData/nativerd-*` | Xcode build cache                                                                 | n/a (outside repo)                      | n/a                      |
+| File                                               | Purpose                                                                              | Survives `expo prebuild` non-`--clean`? | Survives `--clean`?        |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------- | -------------------------- |
+| `apps/native-rd/app.json`                          | Source of truth for icons, splash, plugins, deployment target, bundle/package IDs    | Read from                               | Read from                  |
+| `apps/native-rd/eas.json`                          | EAS build/submit profile config                                                      | Yes (not under `ios/` or `android/`)    | Yes                        |
+| `apps/native-rd/.env.local`                        | Per-developer env (`IOS_DEVICE_ID`, etc.). Gitignored                                | Yes                                     | Yes                        |
+| `apps/native-rd/scripts/run-ios.sh`                | Bash launcher; sources `.env.local`, calls `expo run:ios`                            | Yes                                     | Yes                        |
+| `apps/native-rd/ios/Podfile.properties.json`       | RN/Expo build flags, incl. `buildReactNativeFromSource`                              | Yes                                     | **NO** — re-add manually   |
+| `apps/native-rd/ios/nativerd/Images.xcassets/`     | Generated iOS assets                                                                 | Regenerated from `app.json`             | Regenerated                |
+| `apps/native-rd/ios/Podfile`                       | Generated; do not edit                                                               | Regenerated                             | Regenerated                |
+| `apps/native-rd/android/`                          | Generated Android project. Gitignored                                                | Regenerated                             | Regenerated                |
+| `apps/native-rd/android/local.properties`          | Per-developer SDK location pointer (`sdk.dir=...`). Required for local Gradle builds | Yes                                     | **NO** — re-write manually |
+| `~/Library/Developer/Xcode/DerivedData/nativerd-*` | Xcode build cache                                                                    | n/a (outside repo)                      | n/a                        |
+| `~/Library/Android/sdk/`                           | Android SDK + NDK + system images. Managed by Studio's SDK Manager + `sdkmanager`    | n/a (outside repo)                      | n/a                        |
+| `~/.zshenv`                                        | Shell env vars for `ANDROID_HOME` etc. Chezmoi-managed (`chezmoi edit ~/.zshenv`)    | Yes                                     | Yes                        |
 
 ---
 

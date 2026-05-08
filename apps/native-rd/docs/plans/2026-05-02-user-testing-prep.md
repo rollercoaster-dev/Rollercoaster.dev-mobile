@@ -143,18 +143,19 @@ Feature requests should not be implemented during beta stabilization unless they
 
 The only non-build app-behavior blocker found in this review is badge creation when signing key setup fails: `useUserKey` can surface SecureStore/key-generation errors while `useCreateBadge` remains in transient loading. Track in [#982](https://github.com/rollercoaster-dev/monorepo/issues/982).
 
-| Area                      | State                   | Notes                                                                                                               |
-| ------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Apple Developer Program   | ✅ Enrolled             | Confirmed 2026-05-02                                                                                                |
-| Crash / bug reporting     | ✅ Covered by platforms | TestFlight (iOS) + Play Console (Android) — no in-app code needed                                                   |
-| TestFlight build pipeline | 🟡 In progress          | EAS initialised; `eas.json` added; dev cloud build verified. First production build + `eas submit` still pending.   |
-| App Store Connect record  | ❌ Not started          | Bundle ID, slug, display name still TBD                                                                             |
-| Privacy policy            | 🟡 Drafted, unhosted    | `docs/launch/privacy-policy.md` — needs platform-disclosure sentence + contact email + public URL                   |
-| Quality dashboard         | 🟡 Stale                | `docs/quality/grades.md` last updated 2026-02-28 — 2 months old, much has shipped since                             |
-| Foundations review        | 🟡 Stale                | Same — see `docs/quality/foundations-review-phase1.md`                                                              |
-| Tech debt log             | 🟡 Stale                | 5 HIGH-severity items still listed OPEN; need re-verification                                                       |
-| Badge creation error path | 🟡 Issue opened         | [#982](https://github.com/rollercoaster-dev/monorepo/issues/982) — avoid endless loading if signing key setup fails |
-| Google Play account       | ❌ Not started          | Personal account €25 + 14-day / 12-tester closed test required                                                      |
+| Area                      | State                   | Notes                                                                                                                                                                  |
+| ------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Apple Developer Program   | ✅ Enrolled             | Confirmed 2026-05-02                                                                                                                                                   |
+| Crash / bug reporting     | ✅ Covered by platforms | TestFlight (iOS) + Play Console (Android) — no in-app code needed                                                                                                      |
+| TestFlight build pipeline | 🟡 In progress          | EAS initialised; `eas.json` added; dev cloud build verified. First production build + `eas submit` still pending.                                                      |
+| App Store Connect record  | ❌ Not started          | Bundle ID, slug, display name still TBD                                                                                                                                |
+| Privacy policy            | 🟡 Drafted, unhosted    | `docs/launch/privacy-policy.md` — needs platform-disclosure sentence + contact email + public URL                                                                      |
+| Quality dashboard         | 🟡 Stale                | `docs/quality/grades.md` last updated 2026-02-28 — 2 months old, much has shipped since                                                                                |
+| Foundations review        | 🟡 Stale                | Same — see `docs/quality/foundations-review-phase1.md`                                                                                                                 |
+| Tech debt log             | 🟡 Stale                | 5 HIGH-severity items still listed OPEN; need re-verification                                                                                                          |
+| Badge creation error path | 🟡 Issue opened         | [#982](https://github.com/rollercoaster-dev/monorepo/issues/982) — avoid endless loading if signing key setup fails                                                    |
+| Google Play account       | 🟡 In progress          | Signup form filled 2026-05-07; awaiting Google ID verification (24–48 h async). Personal account €25 + 14-day / 12-tester closed test still required                   |
+| Android build pipeline    | ✅ DONE 2026-05-07      | Local emulator dev-client (Pixel 6a / API 35) and EAS preview APK both green. Commits `f245fd1f`, `2d2e46b4`, `64176f14`, `cbeee3ef` on `feat/native-rd-android-setup` |
 
 ---
 
@@ -231,14 +232,19 @@ Three focused sittings. See `docs/plans/2026-04-28-ios-testflight-readiness.md` 
 
 ### Phase 7 — Android (after first iOS testers are running)
 
-- [ ] Google Play Console personal account (~€25)
+**Build pipeline complete 2026-05-07.** Distribution side blocked on Google Play account verification.
+
+- [x] Android EAS profile + first build — `eas.json` `preview` profile produces a signed APK; verified 2026-05-07 (build #3, commit `2d2e46b4`, ~33 min). Local emulator dev-client also green (Pixel 6a / API 35, Gotchas 7/8/9/10 captured in `native-rd-build` skill).
+- [🟡] Google Play Console personal account (~€25) — signup form filled 2026-05-07; awaiting Google ID verification (asynchronous, 24–48 h).
+- [ ] `play-service-account.json` generated + saved to `apps/native-rd/` (gitignored). Required for `eas submit`. Depends on Play Console access.
 - [ ] Closed testing track created in Play Console — **the 14-day clock starts here**
 - [ ] Recruit 12 testers (Google Group / email list, opt-in)
 - [ ] Testers stay opted in for 14 consecutive days
-- [ ] Android EAS profile + first build
+- [ ] First `eas submit --platform android --profile production` (uploads AAB to Internal Testing track)
 - [ ] Apply for production access after 14 days
 
 See `docs/launch/app-store-launch-plan.md` for the full Google Play context.
+See `apps/native-rd/.claude/skills/native-rd-build/SKILL.md` (v2.3.0+) for the local + EAS Android build playbook.
 
 ### ~~Phase 8 — Crash triage workflow~~ 🚫 Closed 2026-05-04 — absorbed into Phase 1
 
@@ -295,14 +301,15 @@ All open phases are tracked as GitHub issues under milestone [**`native-rd: User
 
 ## Update Log
 
-| Date       | Change                                                                                                                                                                                                                                            | By           |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
-| 2026-05-02 | Doc created. Phase 0 confirmed done. Phase 1 selected as next focus.                                                                                                                                                                              | Joe + Claude |
-| 2026-05-02 | Milestone #29 + 8 issues (#971–#978) created and linked to project #11.                                                                                                                                                                           | Joe + Claude |
-| 2026-05-02 | Dropped Phases 1 (Sentry) and 2 (in-app bug button) — incompatible with the "no data collected" privacy promise. Closed #971 and #972. Bug reporting now relies on TestFlight + Play Console built-ins.                                           | Joe + Claude |
-| 2026-05-02 | User-testing readiness review: build/distribution prep remains the primary blocker; local gates pass; E2E unverified on standalone build; opened #982 for the one non-build badge creation blocker.                                               | Codex        |
-| 2026-05-02 | Status snapshot updated: TestFlight build pipeline now 🟡 In progress (EAS initialised, `eas.json` added in PR #985, dev cloud build verified). Production build + `eas submit` still pending.                                                    | Joe + Claude |
-| 2026-05-03 | Internal testing live; crashes flowing into TestFlight. Closed #973 (EAS Build) and #974 (ASC + first submission). Added Phase 8 — crash triage workflow tracked in #1012.                                                                        | Joe + Claude |
-| 2026-05-04 | Sentry policy reversed: compliant with no-PII promise via UUID-only identity, IP suppression, breadcrumb scrubbing, and a documented privacy verification test. Reopened #971 + #972.                                                             | Joe + Claude |
-| 2026-05-04 | Phase 8 / #1012 closed — made redundant by Sentry. Surviving non-tooling pieces (release-gate policy, one-issue-per-signature discipline, TestFlight Organizer fallback note) folded into #971 as a single `crash-triage-runbook.md` deliverable. | Joe + Claude |
-| 2026-05-08 | Refocused plan for user testing: observability and bug intake first, Android Sentry before Android testers, minimal German path after beta blockers, feature requests captured but not built by default.                                          | Codex        |
+| Date       | Change                                                                                                                                                                                                                                                                                                                                                                  | By           |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| 2026-05-02 | Doc created. Phase 0 confirmed done. Phase 1 selected as next focus.                                                                                                                                                                                                                                                                                                    | Joe + Claude |
+| 2026-05-02 | Milestone #29 + 8 issues (#971–#978) created and linked to project #11.                                                                                                                                                                                                                                                                                                 | Joe + Claude |
+| 2026-05-02 | Dropped Phases 1 (Sentry) and 2 (in-app bug button) — incompatible with the "no data collected" privacy promise. Closed #971 and #972. Bug reporting now relies on TestFlight + Play Console built-ins.                                                                                                                                                                 | Joe + Claude |
+| 2026-05-02 | User-testing readiness review: build/distribution prep remains the primary blocker; local gates pass; E2E unverified on standalone build; opened #982 for the one non-build badge creation blocker.                                                                                                                                                                     | Codex        |
+| 2026-05-02 | Status snapshot updated: TestFlight build pipeline now 🟡 In progress (EAS initialised, `eas.json` added in PR #985, dev cloud build verified). Production build + `eas submit` still pending.                                                                                                                                                                          | Joe + Claude |
+| 2026-05-03 | Internal testing live; crashes flowing into TestFlight. Closed #973 (EAS Build) and #974 (ASC + first submission). Added Phase 8 — crash triage workflow tracked in #1012.                                                                                                                                                                                              | Joe + Claude |
+| 2026-05-04 | Sentry policy reversed: compliant with no-PII promise via UUID-only identity, IP suppression, breadcrumb scrubbing, and a documented privacy verification test. Reopened #971 + #972.                                                                                                                                                                                   | Joe + Claude |
+| 2026-05-04 | Phase 8 / #1012 closed — made redundant by Sentry. Surviving non-tooling pieces (release-gate policy, one-issue-per-signature discipline, TestFlight Organizer fallback note) folded into #971 as a single `crash-triage-runbook.md` deliverable.                                                                                                                       | Joe + Claude |
+| 2026-05-07 | Phase 7 build pipeline complete: local Android emulator dev-client and EAS preview APK both green. Four commits on `feat/native-rd-android-setup` (nitro-modules `^0.35.6`, EAS `bun x` fix, build-skill rewrite, VERIFIED bump). Three new gotchas + one EAS gotcha captured in `native-rd-build` skill. Google Play Console signup started; awaiting ID verification. | Joe + Claude |
+| 2026-05-08 | Refocused plan for user testing: observability and bug intake first, Android Sentry before Android testers, minimal German path after beta blockers, feature requests captured but not built by default.                                                                                                                                                                | Codex        |
