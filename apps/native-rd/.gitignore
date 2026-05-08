@@ -37,6 +37,9 @@ yarn-error.*
 *.mobileprovision
 *.pem
 
+# Google Play service account key (developer-local; required by `eas submit -p android`)
+play-service-account.json
+
 # TypeScript
 *.tsbuildinfo
 

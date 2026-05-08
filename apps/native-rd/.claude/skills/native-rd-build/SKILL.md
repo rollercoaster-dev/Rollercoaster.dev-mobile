@@ -251,7 +251,7 @@ eas submit --platform android --profile production   # BLOCKED: play-service-acc
 Before either submit can run:
 
 - **iOS:** create the App Store Connect record (Apple Dev portal → "App Store Connect" → "My Apps" → "+"), then replace `submit.production.ios.ascAppId` in `eas.json` with the real numeric ID.
-- **Android:** download a Google Play service-account JSON (Play Console → API access), save as `apps/native-rd/play-service-account.json` (gitignored — verify before committing). The `serviceAccountKeyPath` in `eas.json` is a relative path from the app dir.
+- **Android:** download a Google Play service-account JSON (Play Console → API access), save as `apps/native-rd/play-service-account.json`. Confirm it's covered by `apps/native-rd/.gitignore` (the explicit `play-service-account.json` line) before doing anything else: `git check-ignore -v apps/native-rd/play-service-account.json`. The `serviceAccountKeyPath` in `eas.json` is a relative path from the app dir.
 
 ---
 
@@ -596,12 +596,21 @@ To undo a bad prebuild:
 
 ```bash
 cd apps/native-rd
-rm -rf ios                     # or rm -rf android
-npx expo prebuild --platform ios   # or --platform android — regenerates from app.json
-# then re-apply per-project edits (Podfile.properties.json on iOS, local.properties on Android)
+rm -rf ios                          # or rm -rf android
+npx expo prebuild --platform ios    # or --platform android — regenerates from app.json
+
+# RE-APPLY per-project edits BEFORE running any build:
+#   iOS    : ios/Podfile.properties.json        (e.g. ios.buildReactNativeFromSource: true)
+#   Android: echo "sdk.dir=$HOME/Library/Android/sdk" > android/local.properties
+
+# Then build normally — pods/gradle deps resolve on first invocation:
+#   iOS    : cd ios && pod install && cd ..    (Podfile changed → must run pod install)
+#   Android: bun run android                    (Gradle wrapper auto-resolves; no separate install step)
 ```
 
 The "source of truth" for native config is `app.json` + Expo plugins. Anything in `ios/` or `android/` that wasn't generated from those (e.g. `Podfile.properties.json` flag for `buildReactNativeFromSource`, `android/local.properties`) is a developer-local override that must be re-applied after regeneration.
+
+**Why iOS needs an explicit `pod install` and Android does not:** `expo prebuild` rewrites `Podfile` but doesn't run CocoaPods, so the next `xcodebuild` will fail with "Pods has not been installed". On Android the Gradle wrapper does dep resolution as part of the first build invocation — `./gradlew` standalone is not a pre-flight step worth running manually.
 
 ---
 
