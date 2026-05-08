@@ -9,3 +9,16 @@ export const EVIDENCE_TYPE_ICONS: Record<EvidenceTypeValue, string> = {
   link: "\u{1F517}",
   file: "\u{1F4CE}",
 };
+
+/**
+ * Human-readable labels for screen readers. Raw type ids like `voice_memo`
+ * are announced literally by TTS — give them a friendly name instead.
+ */
+export const EVIDENCE_TYPE_LABELS: Record<EvidenceTypeValue, string> = {
+  photo: "photo",
+  video: "video",
+  text: "text",
+  voice_memo: "voice memo",
+  link: "link",
+  file: "file",
+};

@@ -35,9 +35,9 @@ describe("density classification", () => {
     expect(getMetrics({ pathText: "HELLO" }).density).toBe("default");
   });
 
-  it("returns balanced for 2 features (path text + center label)", () => {
+  it("returns balanced for 2 features (path text + bottom label)", () => {
     expect(
-      getMetrics({ pathText: "HELLO", centerLabel: "Expert" }).density,
+      getMetrics({ pathText: "HELLO", bottomLabel: "Expert" }).density,
     ).toBe("balanced");
   });
 
@@ -47,27 +47,27 @@ describe("density classification", () => {
         pathText: "HELLO",
         pathTextPosition: "both",
         pathTextBottom: "WORLD",
-        centerLabel: "Expert",
+        bottomLabel: "Expert",
       }).density,
     ).toBe("compact");
   });
 
-  it("forces compact when bottom path text + center label", () => {
+  it("forces compact when bottom path text + bottom label", () => {
     expect(
       getMetrics({
         pathTextPosition: "bottom",
         pathTextBottom: "WORLD",
-        centerLabel: "Expert",
+        bottomLabel: "Expert",
       }).density,
     ).toBe("compact");
   });
 
-  it("forces compact when bottom path text + center banner", () => {
+  it("forces compact when bottom path text + top banner", () => {
     expect(
       getMetrics({
         pathTextPosition: "bottom",
         pathTextBottom: "WORLD",
-        banner: { text: "WINNER", position: "center" },
+        banner: { text: "WINNER", position: "top" },
       }).density,
     ).toBe("compact");
   });
@@ -82,7 +82,7 @@ describe("scale factors", () => {
     ["compact", 0.78, 0.72, 0.88, 0.82],
   ] as [BadgeLayoutDensity, number, number, number, number][])(
     "%s density returns correct scales",
-    (_density, centerContent, centerLabel, banner, densityScale) => {
+    (_density, centerContent, bottomLabel, banner, densityScale) => {
       // Build a design that produces the desired density
       const overrides: Partial<BadgeDesign> =
         _density === "compact"
@@ -90,16 +90,16 @@ describe("scale factors", () => {
               pathText: "A",
               pathTextPosition: "both" as const,
               pathTextBottom: "B",
-              centerLabel: "C",
+              bottomLabel: "C",
             }
           : _density === "balanced"
-            ? { pathText: "A", centerLabel: "B" }
+            ? { pathText: "A", bottomLabel: "B" }
             : {};
 
       const m = getMetrics(overrides);
       expect(m.density).toBe(_density);
       expect(m.centerContentScale).toBe(centerContent);
-      expect(m.centerLabelScale).toBe(centerLabel);
+      expect(m.bottomLabelScale).toBe(bottomLabel);
       expect(m.bannerScale).toBe(banner);
       // pathTextFontScale includes per-shape multiplier
       expect(m.pathTextFontScale).toBeCloseTo(0.92 * densityScale, 4);
@@ -121,6 +121,15 @@ describe("per-shape behavior", () => {
     const circle = getMetrics({ shape: "circle" });
     expect(star.pathTextFontScale).toBeLessThan(circle.pathTextFontScale);
   });
+
+  it("slightly scales down hexagon and diamond center content to clear contracted path text", () => {
+    const circle = getMetrics({ shape: "circle" });
+    const hexagon = getMetrics({ shape: "hexagon" });
+    const diamond = getMetrics({ shape: "diamond" });
+
+    expect(hexagon.centerContentScale).toBeLessThan(circle.centerContentScale);
+    expect(diamond.centerContentScale).toBeLessThan(circle.centerContentScale);
+  });
 });
 
 // ── pathTextInset floor ────────────────────────────────────────────────
@@ -136,26 +145,26 @@ describe("pathTextInset", () => {
 // ── compactTextCompression ─────────────────────────────────────────────
 
 describe("compact text compression", () => {
-  it("applies 0.78 multiplier when top + bottom path text + center banner all visible", () => {
+  it("applies 0.78 multiplier when top + bottom path text + top banner all visible", () => {
     const m = getMetrics({
       pathText: "TOP",
       pathTextPosition: "both",
       pathTextBottom: "BOTTOM",
-      banner: { text: "WINNER", position: "center" },
+      banner: { text: "WINNER", position: "top" },
     });
     // pathTextFontScale = shapeScale * densityScale * 0.78
     // circle=0.92, compact=0.82, compression=0.78
     expect(m.pathTextFontScale).toBeCloseTo(0.92 * 0.82 * 0.78, 4);
   });
 
-  it("does not apply compression when center banner is absent", () => {
+  it("does not apply compression when top banner is absent", () => {
     const m = getMetrics({
       pathText: "TOP",
       pathTextPosition: "both",
       pathTextBottom: "BOTTOM",
-      centerLabel: "Expert",
+      bottomLabel: "Expert",
     });
-    // No compression — centerBanner not visible
+    // No compression — topBanner not visible
     expect(m.pathTextFontScale).toBeCloseTo(0.92 * 0.82, 4);
   });
 });

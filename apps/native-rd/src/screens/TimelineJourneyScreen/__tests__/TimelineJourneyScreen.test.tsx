@@ -48,6 +48,8 @@ jest.mock("../../../db", () => ({
   stepEvidenceByGoalQuery: jest.fn(
     (id: string) => `stepEvidenceByGoalQuery-${id}`,
   ),
+  findFirstPendingIndex: (rows: { status: string | null }[]) =>
+    rows.findIndex((s) => s.status === "pending"),
 }));
 
 const mockUseQuery = jest.fn();

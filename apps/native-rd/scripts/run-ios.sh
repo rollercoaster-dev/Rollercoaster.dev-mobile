@@ -11,6 +11,21 @@ IOS_DIR="${APP_DIR}/ios"
 
 cd "${APP_DIR}"
 
+# Source .env.local if present — picks up IOS_DEVICE_ID and similar developer-local overrides.
+# Existing shell exports take precedence (we don't clobber).
+if [ -f "${APP_DIR}/.env.local" ]; then
+  while IFS= read -r line || [ -n "${line}" ]; do
+    case "${line}" in
+      ''|\#*) continue ;;
+    esac
+    key="${line%%=*}"
+    value="${line#*=}"
+    if [ -z "${!key:-}" ]; then
+      export "${key}=${value}"
+    fi
+  done < "${APP_DIR}/.env.local"
+fi
+
 resolve_node_bin() {
   if [ -n "${NODE:-}" ] && [ -x "${NODE}" ] && [[ "${NODE}" != /private/tmp/bun-node-* ]]; then
     printf '%s\n' "${NODE}"

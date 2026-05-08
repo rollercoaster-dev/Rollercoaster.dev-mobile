@@ -20,6 +20,7 @@ const goals: GoalCardGoal[] = [
     status: "active",
     stepsTotal: 5,
     stepsCompleted: 2,
+    nextStepTitle: "Set up bottom tab navigator",
   },
   {
     id: "2",
@@ -27,6 +28,7 @@ const goals: GoalCardGoal[] = [
     status: "active",
     stepsTotal: 8,
     stepsCompleted: 6,
+    nextStepTitle: "Document GoalCard variants",
   },
   {
     id: "3",
@@ -34,6 +36,7 @@ const goals: GoalCardGoal[] = [
     status: "completed",
     stepsTotal: 3,
     stepsCompleted: 3,
+    nextStepTitle: null,
   },
   {
     id: "4",
@@ -41,6 +44,7 @@ const goals: GoalCardGoal[] = [
     status: "active",
     stepsTotal: 0,
     stepsCompleted: 0,
+    nextStepTitle: null,
   },
 ];
 

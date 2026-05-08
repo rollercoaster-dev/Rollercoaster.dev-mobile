@@ -6,7 +6,7 @@ End-to-end test flows for the native-rd app, designed for agent authoring and ex
 
 - **Maestro CLI**: `brew install maestro` (not in devDependencies — requires separate install)
 - **iOS Simulator**: Must be booted with the app installed (`npx expo run:ios`)
-- **App ID**: `com.joe.rd.native-rd`
+- **App ID**: `dev.rollercoaster.app`
 
 ## Running Flows
 
@@ -37,7 +37,7 @@ Prefer `id:` for interactive elements (buttons, inputs). Use text matching for a
 ### Flow structure
 
 ```yaml
-appId: com.joe.rd.native-rd
+appId: dev.rollercoaster.app
 ---
 - launchApp
 - assertVisible: "Screen Title"

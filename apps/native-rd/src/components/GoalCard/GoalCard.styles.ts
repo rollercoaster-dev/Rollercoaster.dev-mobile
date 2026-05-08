@@ -12,6 +12,11 @@ export const styles = StyleSheet.create((theme) => ({
     ...theme.textStyles.title,
     color: theme.colors.text,
   },
+  nextStep: {
+    ...theme.textStyles.headline,
+    color: theme.colors.text,
+    marginTop: theme.space[3],
+  },
   progressRow: {
     flexDirection: "row",
     alignItems: "center",

@@ -2,6 +2,7 @@ import React, { Component, type ReactNode } from "react";
 import { View } from "react-native";
 import { Text } from "../Text";
 import { Button } from "../Button";
+import { reportError } from "../../services/sentry-report";
 import { styles } from "./ErrorBoundary.styles";
 
 interface ErrorBoundaryProps {
@@ -24,9 +25,9 @@ export class ErrorBoundary extends Component<
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, info: React.ErrorInfo) {
-    // Future: send to error tracking service
-    console.error("ErrorBoundary caught:", error, info.componentStack);
+  componentDidCatch(error: Error) {
+    reportError(error, { area: "render" });
+    console.error("ErrorBoundary caught:", error);
   }
 
   handleReset = () => {

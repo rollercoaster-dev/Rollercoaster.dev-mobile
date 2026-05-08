@@ -8,9 +8,14 @@ import { styles } from "./ScreenHeader.styles";
 export interface ScreenSubHeaderProps {
   label: string;
   onBack: () => void;
+  right?: React.ReactNode;
 }
 
-export function ScreenSubHeader({ label, onBack }: ScreenSubHeaderProps) {
+export function ScreenSubHeader({
+  label,
+  onBack,
+  right,
+}: ScreenSubHeaderProps) {
   return (
     <HeaderBand>
       <IconButton
@@ -26,7 +31,9 @@ export function ScreenSubHeader({ label, onBack }: ScreenSubHeaderProps) {
       <Text variant="title" style={styles.subLabel} accessibilityRole="header">
         {label}
       </Text>
-      <View style={styles.spacer} />
+      {/* Trailing slot: render `right` if provided, otherwise an empty
+          spacer matching the back-button width so the label stays centered. */}
+      {right ?? <View style={styles.spacer} />}
     </HeaderBand>
   );
 }

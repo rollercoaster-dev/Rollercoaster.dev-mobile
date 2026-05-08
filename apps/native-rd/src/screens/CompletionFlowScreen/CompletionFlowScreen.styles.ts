@@ -3,19 +3,9 @@ import { shadowStyle } from "../../styles/shadows";
 import { palette } from "../../themes/adapter";
 
 export const styles = StyleSheet.create((theme) => ({
-  topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: theme.space[4],
-    paddingVertical: theme.space[2],
-  },
-  backIcon: {
-    fontSize: 18,
-    fontWeight: theme.fontWeight.bold,
-  },
-  spacer: {
-    width: 48,
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
   },
   scrollContent: {
     flexGrow: 1,

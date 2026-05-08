@@ -18,7 +18,7 @@ const SIZE = 256;
 
 function makeProps(overrides: Partial<BannerProps> = {}): BannerProps {
   return {
-    banner: { text: "ACHIEVED", position: "center" },
+    banner: { text: "ACHIEVED", position: "top" },
     size: SIZE,
     badgeColor: DARK_BADGE,
     ...overrides,
@@ -59,19 +59,19 @@ describe("Banner", () => {
 
   it("returns null when banner text is empty", () => {
     expect(
-      Banner(makeProps({ banner: { text: "", position: "center" } })),
+      Banner(makeProps({ banner: { text: "", position: "top" } })),
     ).toBeNull();
   });
 
   it("returns null when banner text is whitespace", () => {
     expect(
-      Banner(makeProps({ banner: { text: "   ", position: "center" } })),
+      Banner(makeProps({ banner: { text: "   ", position: "top" } })),
     ).toBeNull();
   });
 
   // ── Position geometry ──────────────────────────────────────────────
 
-  it.each([["center"], ["bottom"]] as const)(
+  it.each([["top"], ["bottom"]] as const)(
     'positions banner at correct y for "%s"',
     (position) => {
       const banner: BannerData = { text: "TEST", position };
@@ -84,9 +84,9 @@ describe("Banner", () => {
     },
   );
 
-  it("keeps only 5% of the center banner inside the badge", () => {
+  it("keeps the top banner clear of the badge edge", () => {
     const el = Banner(
-      makeProps({ banner: { text: "TEST", position: "center" } }),
+      makeProps({ banner: { text: "TEST", position: "top" } }),
     )!;
     const rects = findByType(el, "Rect");
     const mainRect = rects[1];
@@ -95,9 +95,10 @@ describe("Banner", () => {
       -expectedH * (1 - BANNER_TOP_VISIBLE_RATIO),
       5,
     );
+    expect(Number(mainRect.props.y) + expectedH).toBeLessThan(0);
   });
 
-  it("keeps only 5% of the bottom banner inside the badge (mirrors top)", () => {
+  it("keeps the bottom banner clear of the badge edge", () => {
     const el = Banner(
       makeProps({ banner: { text: "TEST", position: "bottom" } }),
     )!;
@@ -105,12 +106,13 @@ describe("Banner", () => {
     const mainRect = rects[1];
     const bannerH = SIZE * BANNER_HEIGHT_RATIO;
     // Bottom banner: top edge at size - bannerH * visibleRatio
-    // So (size - bannerY) / bannerH ≈ visibleRatio (5%)
+    // So (size - bannerY) / bannerH ≈ visibleRatio; negative means a gap.
     const visibleAboveBadge = SIZE - mainRect.props.y;
     expect(visibleAboveBadge / bannerH).toBeCloseTo(
       BANNER_TOP_VISIBLE_RATIO,
       2,
     );
+    expect(mainRect.props.y).toBeGreaterThan(SIZE);
   });
 
   // ── Banner dimensions ──────────────────────────────────────────────
@@ -241,7 +243,7 @@ describe("Banner", () => {
 
   it("trims whitespace from banner text", () => {
     const el = Banner(
-      makeProps({ banner: { text: "  HELLO  ", position: "center" } }),
+      makeProps({ banner: { text: "  HELLO  ", position: "top" } }),
     )!;
     const texts = findByType(el, "Text");
     expect(texts[0].props.children).toBe("HELLO");

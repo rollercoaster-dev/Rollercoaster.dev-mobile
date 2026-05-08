@@ -12,13 +12,15 @@ This is the native rollercoaster.dev app — a personal learning/goal tracker fo
 
 ## Commands
 
-| Task      | Command                                                             |
-| --------- | ------------------------------------------------------------------- |
-| Typecheck | `bun run type-check`                                                |
-| Lint      | `bun run lint`                                                      |
-| Test      | `npx jest --no-coverage` or `bun test --testPathPatterns <pattern>` |
-| CI test   | `bun run test:ci`                                                   |
-| Build iOS | `npx expo run:ios`                                                  |
+| Task      | Command                                                                          |
+| --------- | -------------------------------------------------------------------------------- |
+| Typecheck | `bun run type-check`                                                             |
+| Lint      | `bun run lint`                                                                   |
+| Test      | `npx jest --no-coverage` or `bun test --testPathPatterns <pattern>`              |
+| CI test   | `bun run test:ci`                                                                |
+| Build iOS | `npx expo run:ios` (sim) or `bun run ios` (uses `.env.local` for device default) |
+
+**Any build target?** Load the `native-rd-build` skill — covers local iOS sim/device, Release builds, EAS profiles, and Android (when set up). Each section is tagged `[VERIFIED <date>]` / `[UNTESTED]` / `[BROKEN]` so you know what's battle-tested. **Update the skill as you use it** — promote tags, add gotchas, bump version.
 
 ## Tests
 

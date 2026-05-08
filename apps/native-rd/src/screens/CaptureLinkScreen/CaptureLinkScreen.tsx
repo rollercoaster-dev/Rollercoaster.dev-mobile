@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { View, Alert } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Text } from "../../components/Text";
 import { Card } from "../../components/Card";
 import { Button } from "../../components/Button";
 import { Input } from "../../components/Input";
-import { IconButton } from "../../components/IconButton";
+import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { createEvidence, EvidenceType } from "../../db";
 import type { GoalId, StepId } from "../../db";
+import { reportError } from "../../services/sentry-report";
 import type { CaptureLinkScreenProps } from "../../navigation/types";
 import { isValidUrl, normalizeUrl } from "../../utils/url";
 import { styles } from "./CaptureLinkScreen.styles";
@@ -63,6 +63,7 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
       console.error("[CaptureLinkScreen] Failed to save link evidence", {
         error,
       });
+      reportError(error, { area: "evidence.capture", kind: "link" });
       Alert.alert(
         "Could not save link",
         "Something went wrong. Please try again.",
@@ -73,22 +74,8 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
   }
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.container}>
-      <View style={styles.topBar}>
-        <IconButton
-          icon={
-            <Text variant="body" style={styles.backIcon}>
-              {"<"}
-            </Text>
-          }
-          onPress={() => navigation.goBack()}
-          tone="ghost"
-          accessibilityLabel="Go back"
-          size="sm"
-        />
-        <Text variant="label">Add Link</Text>
-        <View style={styles.spacer} />
-      </View>
+    <View style={styles.container}>
+      <ScreenSubHeader label="Add Link" onBack={() => navigation.goBack()} />
 
       <View style={styles.content}>
         <View style={styles.inputSection}>
@@ -152,6 +139,6 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
           />
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }

@@ -36,6 +36,7 @@ const activeGoal: GoalCardGoal = {
   status: "active",
   stepsTotal: 5,
   stepsCompleted: 2,
+  nextStepTitle: null,
 };
 
 const completedGoal: GoalCardGoal = {
@@ -44,6 +45,7 @@ const completedGoal: GoalCardGoal = {
   status: "completed",
   stepsTotal: 3,
   stepsCompleted: 3,
+  nextStepTitle: null,
 };
 
 describe("Accessibility Contracts", () => {

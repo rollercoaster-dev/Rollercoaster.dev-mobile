@@ -84,19 +84,19 @@ export const MonogramVariants: Story = {
 };
 
 // ---------------------------------------------------------------------------
-// 2. CenterLabel — short / medium / max
+// 2. BottomLabel — short / medium / max
 // ---------------------------------------------------------------------------
 
 const LABELS = ["Go!", "TypeScript", "COMPLETED!"];
 
-function CenterLabelGrid() {
+function BottomLabelGrid() {
   return (
     <ScrollView contentContainerStyle={styles.grid}>
-      <Text style={styles.heading}>Center Label Variants</Text>
+      <Text style={styles.heading}>Bottom Label Variants</Text>
       <View style={styles.row}>
         {LABELS.map((label) => (
           <View key={label} style={styles.cell}>
-            <BadgeRenderer design={base({ centerLabel: label })} size={140} />
+            <BadgeRenderer design={base({ bottomLabel: label })} size={140} />
             <Text style={styles.label}>{label.length} chars</Text>
           </View>
         ))}
@@ -105,8 +105,8 @@ function CenterLabelGrid() {
   );
 }
 
-export const CenterLabel: Story = {
-  render: () => <CenterLabelGrid />,
+export const BottomLabel: Story = {
+  render: () => <BottomLabelGrid />,
 };
 
 // ---------------------------------------------------------------------------
@@ -147,11 +147,11 @@ export const PathTextPositions: Story = {
 };
 
 // ---------------------------------------------------------------------------
-// 4. BannerPositions — center / bottom
+// 4. BannerPositions — top / bottom
 // ---------------------------------------------------------------------------
 
 const BANNER_CASES: { position: BannerPosition; label: string }[] = [
-  { position: BannerPosition.center, label: "Center banner" },
+  { position: BannerPosition.top, label: "Top banner" },
   { position: BannerPosition.bottom, label: "Bottom banner" },
 ];
 
@@ -193,11 +193,11 @@ export const KitchenSink: Story = {
             frame: BadgeFrame.guilloche,
             centerMode: BadgeCenterMode.monogram,
             monogram: "JC",
-            centerLabel: "EXPERT",
+            bottomLabel: "EXPERT",
             pathText: "ACHIEVEMENT UNLOCKED",
             pathTextPosition: PathTextPosition.both,
             pathTextBottom: "ROLLERCOASTER DEV",
-            banner: { text: "WINNER", position: BannerPosition.center },
+            banner: { text: "WINNER", position: BannerPosition.top },
           })}
           size={200}
         />
@@ -233,11 +233,11 @@ export const MixedTextLayouts: Story = {
                 shape,
                 centerMode: BadgeCenterMode.monogram,
                 monogram: "JC",
-                centerLabel: "EXPERT",
+                bottomLabel: "EXPERT",
                 pathText: "SPRING 2026",
                 pathTextPosition: PathTextPosition.both,
                 pathTextBottom: "ACHIEVEMENT",
-                banner: { text: "WINNER", position: BannerPosition.center },
+                banner: { text: "WINNER", position: BannerPosition.top },
               })}
               size={180}
             />
@@ -261,11 +261,11 @@ export const KitchenSinkAllShapes: Story = {
                 shape,
                 centerMode: BadgeCenterMode.monogram,
                 monogram: "JC",
-                centerLabel: "EXPERT",
+                bottomLabel: "EXPERT",
                 pathText: "SPRING 2026",
                 pathTextPosition: PathTextPosition.both,
                 pathTextBottom: "ACHIEVEMENT",
-                banner: { text: "WINNER", position: BannerPosition.center },
+                banner: { text: "WINNER", position: BannerPosition.top },
               })}
               size={180}
             />

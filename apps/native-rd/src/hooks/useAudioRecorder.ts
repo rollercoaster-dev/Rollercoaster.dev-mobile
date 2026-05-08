@@ -16,6 +16,7 @@ import {
   setAudioModeAsync,
   RecordingPresets,
 } from "expo-audio";
+import { reportError } from "../services/sentry-report";
 
 /** Recording status states */
 export type RecorderStatus =
@@ -126,6 +127,7 @@ export function useAudioRecorder(): AudioRecorderState & AudioRecorderActions {
           ? err.message
           : "Failed to start recording. Please try again.",
       );
+      reportError(err, { area: "audio.record", kind: "start" });
     }
   }, [recorder]);
 
@@ -151,6 +153,7 @@ export function useAudioRecorder(): AudioRecorderState & AudioRecorderActions {
           ? err.message
           : "Failed to stop recording. Please try again.",
       );
+      reportError(err, { area: "audio.record", kind: "stop" });
     }
   }, [recorder]);
 
@@ -163,6 +166,7 @@ export function useAudioRecorder(): AudioRecorderState & AudioRecorderActions {
       setError(
         err instanceof Error ? err.message : "Failed to pause recording.",
       );
+      reportError(err, { area: "audio.record" });
     }
   }, [recorder]);
 
@@ -174,6 +178,7 @@ export function useAudioRecorder(): AudioRecorderState & AudioRecorderActions {
       setError(
         err instanceof Error ? err.message : "Failed to resume recording.",
       );
+      reportError(err, { area: "audio.record" });
     }
   }, [recorder]);
 
@@ -193,6 +198,7 @@ export function useAudioRecorder(): AudioRecorderState & AudioRecorderActions {
       setError(
         err instanceof Error ? err.message : "Failed to play recording.",
       );
+      reportError(err, { area: "audio.playback" });
     }
   }, [uri, player]);
 

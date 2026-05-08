@@ -10,7 +10,7 @@
  */
 import React from "react";
 import { Circle, ClipPath, Defs, G, Path } from "react-native-svg";
-import type { BadgeShape } from "../types";
+import { BadgeShape } from "../types";
 import { generateShapePath } from "../shapes/paths";
 import { DEFAULT_STROKE_COLOR } from "./constants";
 import type { FrameGenerator } from "./types";
@@ -29,7 +29,7 @@ import {
 let clipCounter = 0;
 
 function shapeAmplitudeScale(shape: BadgeShape): number {
-  if (shape === "shield" || shape === "roundedRect") {
+  if (shape === BadgeShape.shield || shape === BadgeShape.roundedRect) {
     return 0.75;
   }
   return 1;

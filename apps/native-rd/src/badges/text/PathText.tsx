@@ -76,8 +76,11 @@ export function PathText({
           fillOpacity={PATH_TEXT_OPACITY}
           fontSize={fontSize}
           fontFamily={fontFamily}
+          textAnchor="middle"
         >
-          <TextPath href={`#${topId}`}>{topText}</TextPath>
+          <TextPath href={`#${topId}`} startOffset="50%">
+            {topText}
+          </TextPath>
         </Text>
       )}
       {bottomText && (
@@ -86,8 +89,11 @@ export function PathText({
           fillOpacity={PATH_TEXT_OPACITY}
           fontSize={fontSize}
           fontFamily={fontFamily}
+          textAnchor="middle"
         >
-          <TextPath href={`#${bottomId}`}>{bottomText}</TextPath>
+          <TextPath href={`#${bottomId}`} startOffset="50%">
+            {bottomText}
+          </TextPath>
         </Text>
       )}
     </>

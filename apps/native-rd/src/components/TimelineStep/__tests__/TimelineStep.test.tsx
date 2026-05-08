@@ -24,6 +24,7 @@ const baseProps = {
   stepIndex: 0,
   evidence,
   onNodePress: jest.fn(),
+  onEvidencePress: jest.fn(),
 };
 
 describe("TimelineStep", () => {
@@ -80,5 +81,16 @@ describe("TimelineStep", () => {
     );
     fireEvent.press(screen.getByLabelText("Go to step 3: Read the docs"));
     expect(onNodePress).toHaveBeenCalledWith(2);
+  });
+
+  it("calls onEvidencePress with evidence id when an evidence card is tapped", () => {
+    const onEvidencePress = jest.fn();
+    renderWithProviders(
+      <TimelineStep {...baseProps} onEvidencePress={onEvidencePress} />,
+    );
+    fireEvent.press(screen.getByLabelText("Read the docs, Active"));
+    fireEvent.press(screen.getByLabelText("photo evidence: Progress photo"));
+    expect(onEvidencePress).toHaveBeenCalledWith("ev-1");
+    expect(onEvidencePress).toHaveBeenCalledTimes(1);
   });
 });

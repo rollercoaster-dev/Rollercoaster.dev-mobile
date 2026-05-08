@@ -60,8 +60,8 @@ New personal accounts must complete closed testing before production access:
 
 ### Build Configuration
 
-- [ ] Verify `bundleIdentifier` (iOS): `com.joe.rd.native-rd`
-- [ ] Verify `package` (Android): `com.joe.rd.nativerd`
+- [ ] Verify `bundleIdentifier` (iOS): `dev.rollercoaster.app`
+- [ ] Verify `package` (Android): `dev.rollercoaster.app`
 - [ ] Set version to `1.0.0` in `app.json`
 - [ ] Configure EAS Build (`eas.json`) for production profiles
 - [ ] Test production build on physical devices
@@ -86,7 +86,10 @@ All permissions have clear, user-facing justification. No background location, n
 ## Phase 3: Submission
 
 - [ ] Build with `eas build --platform all --profile production`
-- [ ] Submit with `eas submit --platform ios` and `eas submit --platform android`
+- [ ] Submit iOS/TestFlight through `bun run testflight:ios` from `apps/native-rd`
+  - This runs `eas build --platform ios --profile production --auto-submit`.
+  - Do **not** submit iOS with bare `eas submit --latest`; it can re-submit an already-used IPA and fail because App Store Connect requires unique build numbers per app version.
+- [ ] Submit Android with `eas submit --platform android --profile production --latest`
 - [ ] Monitor review status (Apple: 1-3 days, Google: ~24 hours)
 
 ## Phase 4: Post-Launch

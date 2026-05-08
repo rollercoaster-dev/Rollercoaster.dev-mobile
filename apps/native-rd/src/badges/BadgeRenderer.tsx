@@ -7,7 +7,7 @@
  * 3. Frame overlay — decorative frame band (boldBorder, guilloche, etc.)
  * 4. PathText — coin-style inscriptions following the shape contour
  * 5. Center layer — monogram text (centerMode: 'monogram') OR Phosphor icon
- *    (centerMode: 'icon'); optional CenterLabel below
+ *    (centerMode: 'icon'); optional BottomLabel rendered below the badge
  * 6. Banner — neo-brutalist ribbon overlay with text
  *
  * The icon color is auto-calculated for WCAG AA contrast against the shape
@@ -25,18 +25,12 @@ import type { IconWeight } from "phosphor-react-native";
 
 import type { BadgeDesign } from "./types";
 import { generateShapePath } from "./shapes/paths";
-import { FRAME_BAND_RATIO } from "./shapes/contours";
-import { getBadgeLayoutMetrics } from "./layout";
+import { getBadgeLayoutBoxes, SHADOW_OFFSET } from "./layoutBoxes";
 import { FrameOverlay } from "./frames/FrameOverlay";
 import { PathText } from "./text/PathText";
-import {
-  Banner,
-  BANNER_HEIGHT_RATIO,
-  BANNER_TOP_VISIBLE_RATIO,
-  getBannerTopVisibleRatio,
-} from "./text/Banner";
+import { Banner } from "./text/Banner";
 import { MonogramCenter } from "./text/MonogramCenter";
-import { CenterLabel, getCenterLabelBottomOverflow } from "./text/CenterLabel";
+import { BottomLabel } from "./text/BottomLabel";
 import { getIconComponent } from "./iconRegistry";
 import { getSafeTextColor } from "../utils/accessibility";
 
@@ -56,17 +50,6 @@ export interface BadgeRendererProps {
 }
 
 // ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-/** Shadow offset in logical pixels (down-right) */
-const SHADOW_OFFSET = 5;
-
-/** Icon size as a fraction of badge size */
-const ICON_SIZE_RATIO = 0.45;
-const STAR_CENTER_LABEL_EXTRA_OFFSET_RATIO = 0.18;
-
-// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -79,78 +62,49 @@ export function BadgeRenderer({
   const { theme } = useUnistyles();
   const pathTextId = useId();
 
-  // Derive shadow visibility from theme when not explicitly set
   const hasShadow = showShadowProp ?? theme.shadows.opacity > 0;
 
-  // High contrast / lowVision: thicker borders (autismFriendly also has opacity 0 but is NOT high contrast)
+  // highContrast / lowVision use thicker borders (autismFriendly is also no-shadow but uses normal borders).
   const isHighContrast =
     theme.variant === "highContrast" || theme.variant === "lowVision";
   const strokeWidth = isHighContrast ? 4 : 3;
 
-  // Inset shapes by half the stroke width so the stroke doesn't clip
-  const inset = strokeWidth / 2;
-  const innerInset = inset + size * FRAME_BAND_RATIO;
+  const boxes = useMemo(
+    () => getBadgeLayoutBoxes(design, size, { strokeWidth, hasShadow }),
+    [design, size, strokeWidth, hasShadow],
+  );
+  const {
+    inset,
+    innerInset,
+    viewBox,
+    iconOrMonogram,
+    metrics: layout,
+    bannerTopVisibleRatio,
+    bottomLabelExtraOffset,
+  } = boxes;
 
-  // Adaptive layout density — scales text/content when badge gets crowded
-  const layout = getBadgeLayoutMetrics(design, size, inset, innerInset);
-
-  const bannerTopVisibleRatio = design.banner
-    ? getBannerTopVisibleRatio(design.banner.position, design.shape)
-    : BANNER_TOP_VISIBLE_RATIO;
-  const centerLabelExtraOffset =
-    design.shape === "star" && design.centerLabel?.trim()
-      ? size * STAR_CENTER_LABEL_EXTRA_OFFSET_RATIO
-      : 0;
-
-  // Expand the SVG to include shadow offset so badge doesn't scale down
-  const totalWidth = size + (hasShadow ? SHADOW_OFFSET : 0);
-  const bannerOverflowAmount = design.banner
-    ? size *
-      BANNER_HEIGHT_RATIO *
-      layout.bannerScale *
-      (1 - bannerTopVisibleRatio)
-    : 0;
-  const bannerTopOverflow =
-    design.banner?.position !== "bottom" ? bannerOverflowAmount : 0;
-  const bannerBottomOverflow =
-    design.banner?.position === "bottom" ? bannerOverflowAmount : 0;
-  const centerLabelBottomOverflow = design.centerLabel?.trim()
-    ? getCenterLabelBottomOverflow(size, layout.centerLabelScale) +
-      centerLabelExtraOffset
-    : 0;
-  const totalHeight =
-    size +
-    (hasShadow ? SHADOW_OFFSET : 0) +
-    bannerTopOverflow +
-    Math.max(bannerBottomOverflow, centerLabelBottomOverflow);
-
-  // Generate the shape path
   const pathD = useMemo(
     () => generateShapePath(design.shape, size, inset),
     [design.shape, size, inset],
   );
 
-  // Calculate icon color for WCAG AA contrast against fill
   const iconColor = useMemo(
     () => getSafeTextColor(design.color, "BadgeRenderer"),
     [design.color],
   );
 
-  // Icon sizing — centered at ~45% of badge diameter, scaled by layout density
-  const iconSize = Math.round(
-    size * ICON_SIZE_RATIO * layout.centerContentScale,
-  );
-  const iconOffsetX = (size - iconSize) / 2;
-  const iconOffsetY = layout.centerY - iconSize / 2;
+  const iconSize = iconOrMonogram.size;
+  const iconOffsetX = iconOrMonogram.cx - iconSize / 2;
+  const iconOffsetY = iconOrMonogram.cy - iconSize / 2;
 
   // Resolve icon component
   const IconComponent = getIconComponent(design.iconName);
 
   return (
     <Svg
-      width={totalWidth}
-      height={totalHeight}
-      viewBox={`0 ${-bannerTopOverflow} ${totalWidth} ${totalHeight}`}
+      width={viewBox.w}
+      height={viewBox.h}
+      viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`}
       accessibilityRole="image"
       accessibilityLabel={`${design.title} badge, ${design.shape} shape`}
       testID={testID}
@@ -222,14 +176,14 @@ export function BadgeRenderer({
         )
       )}
 
-      {/* Layer 5b: CenterLabel — optional label below center content */}
-      <CenterLabel
-        label={design.centerLabel}
+      {/* Layer 5b: BottomLabel — optional label rendered below the badge */}
+      <BottomLabel
+        label={design.bottomLabel}
         size={size}
         fillColor={design.color}
-        extraOffset={centerLabelExtraOffset}
+        extraOffset={bottomLabelExtraOffset}
         fontFamily={theme.fontFamily.body}
-        scale={layout.centerLabelScale}
+        scale={layout.bottomLabelScale}
       />
 
       {/* Layer 6: Banner — neo-brutalist ribbon overlay */}

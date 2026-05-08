@@ -18,6 +18,7 @@ import { Button } from "../../components/Button";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { BadgeRenderer } from "../../badges/BadgeRenderer";
+import { BOTTOM_LABEL_INPUT_MAX_CHARS } from "../../badges/text/BottomLabel";
 import { ShapeSelector } from "../../badges/ShapeSelector";
 import { ColorPicker } from "../../badges/ColorPicker";
 import { IconPicker } from "../../badges/IconPicker";
@@ -52,7 +53,7 @@ import { styles } from "./BadgeDesignerScreen.styles";
 
 const logger = new Logger("BadgeDesignerScreen");
 
-const DEFAULT_BANNER = { text: "", position: BannerPosition.center } as const;
+const DEFAULT_BANNER = { text: "", position: BannerPosition.top } as const;
 
 /** Reserved space below topBar for the floating preview overlay at rest. */
 const PREVIEW_OVERLAY_HEIGHT = 200;
@@ -169,9 +170,9 @@ function DesignEditor({
     [currentDesign, onDesignChange],
   );
 
-  const handleCenterLabelChange = useCallback(
-    (centerLabel: string) => {
-      onDesignChange({ ...currentDesign, centerLabel });
+  const handleBottomLabelChange = useCallback(
+    (bottomLabel: string) => {
+      onDesignChange({ ...currentDesign, bottomLabel });
     },
     [currentDesign, onDesignChange],
   );
@@ -254,7 +255,7 @@ function DesignEditor({
   const frame = currentDesign.frame ?? BadgeFrame.none;
   const centerMode = currentDesign.centerMode ?? BadgeCenterMode.icon;
   const monogram = currentDesign.monogram ?? "";
-  const centerLabel = currentDesign.centerLabel ?? "";
+  const bottomLabel = currentDesign.bottomLabel ?? "";
   const pathTextEnabled =
     currentDesign.pathText !== undefined ||
     currentDesign.pathTextPosition !== undefined;
@@ -264,8 +265,7 @@ function DesignEditor({
   const pathTextBottom = currentDesign.pathTextBottom ?? "";
   const bannerEnabled = currentDesign.banner != null;
   const bannerText = currentDesign.banner?.text ?? "";
-  const bannerPosition =
-    currentDesign.banner?.position ?? BannerPosition.center;
+  const bannerPosition = currentDesign.banner?.position ?? BannerPosition.top;
 
   const previewLabel = `Badge preview: ${currentDesign.color} ${currentDesign.shape} ${frame} frame with ${currentDesign.iconName} icon`;
 
@@ -338,15 +338,16 @@ function DesignEditor({
         )}
 
         <View style={styles.sectionContainer}>
-          <Text style={styles.sectionLabel}>Center Label</Text>
+          <Text style={styles.sectionLabel}>Bottom Label</Text>
           <TextInput
-            accessibilityLabel="Center label"
-            value={centerLabel}
-            onChangeText={handleCenterLabelChange}
-            maxLength={10}
+            accessibilityRole="text"
+            accessibilityLabel="Bottom label"
+            value={bottomLabel}
+            onChangeText={handleBottomLabelChange}
+            maxLength={BOTTOM_LABEL_INPUT_MAX_CHARS}
             placeholder="Optional label"
             placeholderTextColor={theme.colors.textSecondary}
-            style={styles.centerLabelInput}
+            style={styles.bottomLabelInput}
           />
         </View>
 
@@ -408,9 +409,13 @@ function DesignEditor({
             top: topBarHeight,
             transform: [
               {
+                // Stop the upward slide at the bottom edge of the safe-area
+                // inset so the preview never crosses into the notch / dynamic
+                // island. `topBarHeight` (from onLayout) includes
+                // `paddingTop: insets.top` from HeaderBand, hence the subtract.
                 translateY: scrollY.interpolate({
                   inputRange: [0, topBarHeight],
-                  outputRange: [0, -topBarHeight],
+                  outputRange: [0, -Math.max(0, topBarHeight - insets.top)],
                   extrapolate: "clamp",
                 }),
               },

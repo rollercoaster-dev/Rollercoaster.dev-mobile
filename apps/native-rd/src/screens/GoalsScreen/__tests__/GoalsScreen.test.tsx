@@ -33,9 +33,10 @@ jest.mock("@evolu/react", () => {
 });
 
 jest.mock("../../../db", () => ({
-  goalsQuery: { __brand: "goalsQuery" },
-  stepsByGoalQuery: jest.fn(() => ({ __brand: "stepsByGoalQuery" })),
+  activeGoalsQuery: { __brand: "activeGoalsQuery" },
+  stepsForActiveGoalsQuery: { __brand: "stepsForActiveGoalsQuery" },
   deleteGoal: jest.fn(),
+  isPendingStep: (s: { status: string | null }) => s.status === "pending",
   GoalStatus: { active: "active", completed: "completed" },
   StepStatus: { pending: "pending", completed: "completed" },
 }));
@@ -84,15 +85,9 @@ describe("GoalsScreen", () => {
       expect(screen.getByText("Goals")).toBeOnTheScreen();
     });
 
-    it("renders add button with accessibility label", () => {
+    it("does not render an add button in the header", () => {
       renderWithProviders(<GoalsScreen />);
-      expect(screen.getByLabelText("Create new goal")).toBeOnTheScreen();
-    });
-
-    it("navigates to NewGoal when add button is pressed", () => {
-      renderWithProviders(<GoalsScreen />);
-      fireEvent.press(screen.getByLabelText("Create new goal"));
-      expect(mockNavigate).toHaveBeenCalledWith("NewGoal");
+      expect(screen.queryByLabelText("Create new goal")).toBeNull();
     });
   });
 
@@ -102,10 +97,9 @@ describe("GoalsScreen", () => {
         makeGoalRow({ id: "goal-1", title: "Learn TypeScript" }),
         makeGoalRow({ id: "goal-2", title: "Learn Rust" }),
       ];
-      // First call for goalsQuery returns goals, subsequent calls for stepsByGoalQuery return empty
       mockUseQuery.mockImplementation((query: { __brand?: string }) => {
-        if (query?.__brand === "goalsQuery") return goals;
-        return []; // stepsByGoalQuery
+        if (query?.__brand === "activeGoalsQuery") return goals;
+        return [];
       });
 
       renderWithProviders(<GoalsScreen />);
@@ -116,7 +110,7 @@ describe("GoalsScreen", () => {
     it("navigates to FocusMode when a goal card is pressed", () => {
       const goals = [makeGoalRow({ id: "goal-1", title: "Learn TypeScript" })];
       mockUseQuery.mockImplementation((query: { __brand?: string }) => {
-        if (query?.__brand === "goalsQuery") return goals;
+        if (query?.__brand === "activeGoalsQuery") return goals;
         return [];
       });
 
@@ -128,11 +122,103 @@ describe("GoalsScreen", () => {
     });
   });
 
+  describe("next step surfacing", () => {
+    it("renders the first pending step's title on the goal card", () => {
+      const goals = [makeGoalRow({ id: "goal-1", title: "Save €10,000" })];
+      const steps = [
+        {
+          id: "step-1",
+          goalId: "goal-1",
+          title: "Open a savings account",
+          status: "pending",
+          ordinal: 0,
+        },
+        {
+          id: "step-2",
+          goalId: "goal-1",
+          title: "Set up direct deposit",
+          status: "pending",
+          ordinal: 1,
+        },
+      ];
+      mockUseQuery.mockImplementation((query: { __brand?: string }) => {
+        if (query?.__brand === "activeGoalsQuery") return goals;
+        if (query?.__brand === "stepsForActiveGoalsQuery") return steps;
+        return [];
+      });
+
+      renderWithProviders(<GoalsScreen />);
+      expect(screen.getByText("Open a savings account")).toBeOnTheScreen();
+    });
+
+    it("skips completed steps when picking the next pending one", () => {
+      const goals = [makeGoalRow({ id: "goal-1", title: "Save €10,000" })];
+      const steps = [
+        {
+          id: "step-1",
+          goalId: "goal-1",
+          title: "Open a savings account",
+          status: "completed",
+          ordinal: 0,
+        },
+        {
+          id: "step-2",
+          goalId: "goal-1",
+          title: "Set up direct deposit",
+          status: "pending",
+          ordinal: 1,
+        },
+      ];
+      mockUseQuery.mockImplementation((query: { __brand?: string }) => {
+        if (query?.__brand === "activeGoalsQuery") return goals;
+        if (query?.__brand === "stepsForActiveGoalsQuery") return steps;
+        return [];
+      });
+
+      renderWithProviders(<GoalsScreen />);
+      expect(screen.getByText("Set up direct deposit")).toBeOnTheScreen();
+      expect(screen.queryByText("Open a savings account")).toBeNull();
+    });
+
+    it("scopes steps to their owning goal when multiple goals exist", () => {
+      const goals = [
+        makeGoalRow({ id: "goal-1", title: "Save €10,000" }),
+        makeGoalRow({ id: "goal-2", title: "Train to ride 200k" }),
+      ];
+      const steps = [
+        {
+          id: "step-1",
+          goalId: "goal-1",
+          title: "Open a savings account",
+          status: "pending",
+          ordinal: 0,
+        },
+        {
+          id: "step-2",
+          goalId: "goal-2",
+          title: "Buy cycling shoes",
+          status: "pending",
+          ordinal: 0,
+        },
+      ];
+      mockUseQuery.mockImplementation((query: { __brand?: string }) => {
+        if (query?.__brand === "activeGoalsQuery") return goals;
+        if (query?.__brand === "stepsForActiveGoalsQuery") return steps;
+        return [];
+      });
+
+      renderWithProviders(<GoalsScreen />);
+      // Each goal card surfaces only its own next step
+      expect(screen.getByText("Open a savings account")).toBeOnTheScreen();
+      expect(screen.getByText("Buy cycling shoes")).toBeOnTheScreen();
+    });
+  });
+
   describe("delete flow", () => {
     it("shows confirm modal on long press and deletes on confirm", () => {
       const goals = [makeGoalRow({ id: "goal-1", title: "Learn TypeScript" })];
       mockUseQuery.mockImplementation((query: { __brand?: string }) => {
-        if (query?.__brand === "goalsQuery") return goals;
+        if (query?.__brand === "activeGoalsQuery") return goals;
         return [];
       });
 

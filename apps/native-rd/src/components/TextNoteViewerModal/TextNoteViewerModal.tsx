@@ -1,7 +1,8 @@
 import React from "react";
-import { View, Modal, Pressable, ScrollView } from "react-native";
+import { View, Modal, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "../Text";
+import { TextContent } from "../EvidenceContent/TextContent";
 import { styles } from "./TextNoteViewerModal.styles";
 
 export interface TextNoteViewerModalProps {
@@ -35,33 +36,19 @@ export function TextNoteViewerModal({
           { paddingTop: insets.top, paddingBottom: insets.bottom },
         ]}
       >
-        <View style={styles.container}>
-          <View style={styles.topBar}>
-            <Text style={styles.heading}>Text Note</Text>
-            <Pressable
-              onPress={onClose}
-              accessible
-              accessibilityRole="button"
-              accessibilityLabel="Close text note viewer"
-              hitSlop={16}
-            >
-              <Text style={styles.closeText}>{"\u2715"}</Text>
-            </Pressable>
-          </View>
-          <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollContent}
+        <View style={styles.topBar}>
+          <Text style={styles.heading}>Text Note</Text>
+          <Pressable
+            onPress={onClose}
+            accessible
+            accessibilityRole="button"
+            accessibilityLabel="Close text note viewer"
+            hitSlop={16}
           >
-            <Text style={styles.noteText} accessibilityRole="text">
-              {text}
-            </Text>
-          </ScrollView>
-          {createdAt ? (
-            <View style={styles.footer}>
-              <Text style={styles.timestampText}>{createdAt}</Text>
-            </View>
-          ) : null}
+            <Text style={styles.closeText}>{"\u2715"}</Text>
+          </Pressable>
         </View>
+        <TextContent text={text} createdAt={createdAt} />
       </View>
     </Modal>
   );

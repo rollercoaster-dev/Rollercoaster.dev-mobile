@@ -23,7 +23,14 @@ require("./polyfills");
 // 3. Unistyles theme configuration
 require("./unistyles");
 
-// 4. Register the app (or Storybook when EXPO_PUBLIC_STORYBOOK_ENABLED is set)
+// 4. Initialise Sentry before any app code runs.
+// No-ops in __DEV__; runs in EAS preview / TestFlight / production.
+// See src/services/sentry.ts for the privacy posture.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { initSentry, wrap: sentryWrap } = require("./src/services/sentry");
+initSentry();
+
+// 5. Register the app (or Storybook when EXPO_PUBLIC_STORYBOOK_ENABLED is set)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { registerRootComponent } = require("expo");
 
@@ -34,5 +41,12 @@ if (process.env.EXPO_PUBLIC_STORYBOOK_ENABLED === "true") {
 } else {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { App } = require("./App");
-  registerRootComponent(App);
+  registerRootComponent(
+    sentryWrap(App, {
+      touchEventBoundaryProps: {
+        enableRageTapDetection: false,
+        maxComponentTreeSize: 0,
+      },
+    }),
+  );
 }

@@ -11,6 +11,7 @@ export interface GoalCardGoal {
   status: "active" | "completed";
   stepsTotal: number;
   stepsCompleted: number;
+  nextStepTitle: string | null;
 }
 
 export interface GoalCardProps {
@@ -26,7 +27,16 @@ export function GoalCard({ goal, onPress, onLongPress }: GoalCardProps) {
   const statusVariant: StatusBadgeVariant =
     goal.status === "completed" ? "completed" : "active";
 
-  const accessibilityLabel = `${goal.title}, ${goal.stepsCompleted} of ${goal.stepsTotal} steps completed, ${goal.status}`;
+  const nextStep = goal.nextStepTitle?.trim() || null;
+
+  const accessibilityLabel = [
+    goal.title,
+    nextStep && `next: ${nextStep}`,
+    `${goal.stepsCompleted} of ${goal.stepsTotal} steps completed`,
+    goal.status,
+  ]
+    .filter(Boolean)
+    .join(", ");
 
   return (
     <Card
@@ -46,6 +56,15 @@ export function GoalCard({ goal, onPress, onLongPress }: GoalCardProps) {
         </Text>
         <StatusBadge variant={statusVariant} />
       </View>
+      {nextStep && (
+        <Text
+          style={styles.nextStep}
+          numberOfLines={2}
+          testID="goal-card-next-step"
+        >
+          {nextStep}
+        </Text>
+      )}
       {goal.stepsTotal > 0 && (
         <View style={styles.progressRow}>
           <View style={styles.progressBar}>

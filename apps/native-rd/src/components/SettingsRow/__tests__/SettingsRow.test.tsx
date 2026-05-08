@@ -88,6 +88,36 @@ describe("SettingsRow", () => {
     expect(onValueChange).toHaveBeenCalledWith(true);
   });
 
+  it("fires onLongPress when long-pressed", () => {
+    const onLongPress = jest.fn();
+    renderWithProviders(
+      <SettingsRow label="Version" onLongPress={onLongPress} />,
+    );
+    fireEvent(screen.getByRole("button", { name: "Version" }), "longPress");
+    expect(onLongPress).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders as a Pressable when only onLongPress is provided", () => {
+    renderWithProviders(<SettingsRow label="Version" onLongPress={() => {}} />);
+    expect(screen.getByRole("button", { name: "Version" })).toBeOnTheScreen();
+  });
+
+  it("exposes long press as an accessibility action", () => {
+    const onLongPress = jest.fn();
+    renderWithProviders(
+      <SettingsRow label="Version" onLongPress={onLongPress} />,
+    );
+    const button = screen.getByRole("button", { name: "Version" });
+
+    expect(button.props.accessibilityActions).toEqual([
+      { name: "longpress", label: "Long press" },
+    ]);
+    fireEvent(button, "accessibilityAction", {
+      nativeEvent: { actionName: "longpress" },
+    });
+    expect(onLongPress).toHaveBeenCalledTimes(1);
+  });
+
   it("renders value text only when value prop is provided", () => {
     const { unmount } = renderWithProviders(
       <SettingsRow label="Version" value="1.2.3" />,

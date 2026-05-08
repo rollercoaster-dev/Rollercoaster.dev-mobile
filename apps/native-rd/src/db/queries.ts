@@ -45,6 +45,36 @@ export const goalsQuery = evolu.createQuery((db) =>
 );
 
 /**
+ * Used by the home Goals screen so completed goals don't clutter the
+ * "what's next" surface — they live in the Badges tab instead.
+ */
+export const activeGoalsQuery = evolu.createQuery((db) =>
+  db
+    .selectFrom("goal")
+    .selectAll()
+    .where("isDeleted", "is", null)
+    .where("status", "=", GoalStatus.active)
+    .orderBy("createdAt", "desc"),
+);
+
+/**
+ * Steps for every active goal in a single subscription, grouped client-side
+ * by goalId. Avoids the N+1 of calling stepsByGoalQuery per goal card on the
+ * home screen.
+ */
+export const stepsForActiveGoalsQuery = evolu.createQuery((db) =>
+  db
+    .selectFrom("step")
+    .innerJoin("goal", "goal.id", "step.goalId")
+    .select(["step.id", "step.goalId", "step.title", "step.status"])
+    .where("step.isDeleted", "is", null)
+    .where("goal.isDeleted", "is", null)
+    .where("goal.status", "=", GoalStatus.active)
+    .orderBy("step.goalId", "asc")
+    .orderBy("step.ordinal", "asc"),
+);
+
+/**
  * Create a new goal with given title
  * @param title - Goal title (trimmed and validated)
  * @returns Insert command
@@ -62,12 +92,10 @@ export function createGoal(title: string) {
     );
   }
 
-  const parsedStatus = NonEmptyString1000.orThrow(GoalStatus.active);
-
   try {
     return evolu.insert("goal", {
       title: parsedTitle,
-      status: parsedStatus,
+      status: GoalStatus.active,
     });
   } catch (error) {
     logger.error("Failed to insert goal", { title: parsedTitle, error });
@@ -144,7 +172,6 @@ export function completeGoal(
     );
   }
 
-  const parsedStatus = NonEmptyString1000.orThrow(GoalStatus.completed);
   const now = dateToDateIso(new Date());
 
   if (!now.ok) {
@@ -158,7 +185,7 @@ export function completeGoal(
   try {
     return evolu.update("goal", {
       id,
-      status: parsedStatus,
+      status: GoalStatus.completed,
       completedAt: now.value,
     });
   } catch (error) {
@@ -173,12 +200,10 @@ export function completeGoal(
  * @returns Update command
  */
 export function uncompleteGoal(id: GoalId) {
-  const parsedStatus = NonEmptyString1000.orThrow(GoalStatus.active);
-
   try {
     return evolu.update("goal", {
       id,
-      status: parsedStatus,
+      status: GoalStatus.active,
       completedAt: null,
     });
   } catch (error) {
@@ -268,6 +293,13 @@ export function canCompleteGoal(
 
 // Step CRUD
 
+export const isPendingStep = (s: { status: string | null }): boolean =>
+  s.status === StepStatus.pending;
+
+export const findFirstPendingIndex = (
+  rows: readonly { status: string | null }[],
+): number => rows.findIndex(isPendingStep);
+
 /**
  * Query all non-deleted steps for a goal, ordered by ordinal
  * @param goalId - Goal ID
@@ -308,14 +340,13 @@ export function createStep(
     );
   }
 
-  const parsedStatus = NonEmptyString1000.orThrow(StepStatus.pending);
   const serializedTypes = serializePlannedTypes(plannedEvidenceTypes);
 
   try {
     return evolu.insert("step", {
       goalId,
       title: parsedTitle,
-      status: parsedStatus,
+      status: StepStatus.pending,
       ordinal: ordinal !== undefined ? Int.orNull(ordinal) : null,
       plannedEvidenceTypes:
         serializedTypes === undefined ? null : serializedTypes,
@@ -400,7 +431,6 @@ export function completeStep(
     );
   }
 
-  const parsedStatus = NonEmptyString1000.orThrow(StepStatus.completed);
   const now = dateToDateIso(new Date());
 
   if (!now.ok) {
@@ -414,7 +444,7 @@ export function completeStep(
   try {
     return evolu.update("step", {
       id,
-      status: parsedStatus,
+      status: StepStatus.completed,
       completedAt: now.value,
     });
   } catch (error) {
@@ -429,12 +459,10 @@ export function completeStep(
  * @returns Update command
  */
 export function uncompleteStep(id: StepId) {
-  const parsedStatus = NonEmptyString1000.orThrow(StepStatus.pending);
-
   try {
     return evolu.update("step", {
       id,
-      status: parsedStatus,
+      status: StepStatus.pending,
       completedAt: null,
     });
   } catch (error) {
@@ -549,7 +577,7 @@ export const stepEvidenceByGoalQuery = (goalId: GoalId) =>
       .selectFrom("evidence")
       .innerJoin("step", "step.id", "evidence.stepId")
       .selectAll("evidence")
-      .select("step.title as stepTitle")
+      .select(["step.title as stepTitle", "step.ordinal as stepOrdinal"])
       .where("step.goalId", "=", goalId)
       .where("evidence.isDeleted", "is", null)
       .where("step.isDeleted", "is", null)
@@ -833,6 +861,8 @@ export const badgeWithGoalQuery = (badgeId: BadgeId) =>
         "badge.design",
         "badge.createdAt",
         "goal.title as goalTitle",
+        "goal.description as goalDescription",
+        "goal.icon as goalIcon",
         "goal.completedAt",
         "goal.color as goalColor",
       ])
@@ -1034,10 +1064,46 @@ export function createUserSettings() {
   }
 }
 
+function validateString1000Field(
+  value: string | null | undefined,
+  fieldKey: string,
+  errorLabel: string,
+): string | null | undefined {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  const parsed = NonEmptyString1000.orNull(value);
+  if (!parsed) {
+    logger.error(`UserSettings ${fieldKey} validation failed`, {
+      [`${fieldKey}Length`]: value.length,
+    });
+    throw new Error(
+      `${errorLabel} must be 1-1000 characters (received ${value.length})`,
+    );
+  }
+  return parsed;
+}
+
+function validateIntField(
+  value: number | null | undefined,
+  fieldKey: string,
+  errorLabel: string,
+): number | null | undefined {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  const parsed = Int.orNull(value);
+  if (parsed === null) {
+    logger.error(`UserSettings ${fieldKey} validation failed`, {
+      [fieldKey]: value,
+    });
+    throw new Error(`${errorLabel} must be an integer (received ${value})`);
+  }
+  return parsed;
+}
+
 /**
  * Update user settings fields
  * @param id - UserSettings ID (from userSettingsQuery)
- * @param fields - Fields to update (theme, density, animationPref, fontScale)
+ * @param fields - Fields to update
  * @returns Update command
  * @throws Error if validation fails
  */
@@ -1048,76 +1114,38 @@ export function updateUserSettings(
     density?: string | null;
     animationPref?: string | null;
     fontScale?: number | null;
+    focusTimelineHidden?: number | null;
   },
 ) {
   const update: Record<string, unknown> = { id };
 
-  if (fields.theme !== undefined) {
-    if (fields.theme !== null) {
-      const parsed = NonEmptyString1000.orNull(fields.theme);
-      if (!parsed) {
-        logger.error("UserSettings theme validation failed", {
-          themeLength: fields.theme.length,
-        });
-        throw new Error(
-          `Theme must be 1-1000 characters (received ${fields.theme.length})`,
-        );
-      }
-      update.theme = parsed;
-    } else {
-      update.theme = null;
-    }
-  }
+  const theme = validateString1000Field(fields.theme, "theme", "Theme");
+  if (theme !== undefined) update.theme = theme;
 
-  if (fields.density !== undefined) {
-    if (fields.density !== null) {
-      const parsed = NonEmptyString1000.orNull(fields.density);
-      if (!parsed) {
-        logger.error("UserSettings density validation failed", {
-          densityLength: fields.density.length,
-        });
-        throw new Error(
-          `Density must be 1-1000 characters (received ${fields.density.length})`,
-        );
-      }
-      update.density = parsed;
-    } else {
-      update.density = null;
-    }
-  }
+  const density = validateString1000Field(fields.density, "density", "Density");
+  if (density !== undefined) update.density = density;
 
-  if (fields.animationPref !== undefined) {
-    if (fields.animationPref !== null) {
-      const parsed = NonEmptyString1000.orNull(fields.animationPref);
-      if (!parsed) {
-        logger.error("UserSettings animationPref validation failed", {
-          animationPrefLength: fields.animationPref.length,
-        });
-        throw new Error(
-          `Animation preference must be 1-1000 characters (received ${fields.animationPref.length})`,
-        );
-      }
-      update.animationPref = parsed;
-    } else {
-      update.animationPref = null;
-    }
-  }
+  const animationPref = validateString1000Field(
+    fields.animationPref,
+    "animationPref",
+    "Animation preference",
+  );
+  if (animationPref !== undefined) update.animationPref = animationPref;
 
-  if (fields.fontScale !== undefined) {
-    if (fields.fontScale !== null) {
-      const parsed = Int.orNull(fields.fontScale);
-      if (parsed === null) {
-        logger.error("UserSettings fontScale validation failed", {
-          fontScale: fields.fontScale,
-        });
-        throw new Error(
-          `Font scale must be an integer (received ${fields.fontScale})`,
-        );
-      }
-      update.fontScale = parsed;
-    } else {
-      update.fontScale = null;
-    }
+  const fontScale = validateIntField(
+    fields.fontScale,
+    "fontScale",
+    "Font scale",
+  );
+  if (fontScale !== undefined) update.fontScale = fontScale;
+
+  const focusTimelineHidden = validateIntField(
+    fields.focusTimelineHidden,
+    "focusTimelineHidden",
+    "focusTimelineHidden",
+  );
+  if (focusTimelineHidden !== undefined) {
+    update.focusTimelineHidden = focusTimelineHidden;
   }
 
   try {
@@ -1169,5 +1197,26 @@ export function updateUserSettingsKey(id: UserSettingsId, keyId: string) {
       error,
     });
     throw new Error("Failed to save key reference. Please try again.");
+  }
+}
+
+/**
+ * Clear an orphaned keyId from user settings.
+ * Called by useUserKey when the stored keyId points to a SecureStore entry
+ * that no longer exists (e.g. after an iOS keychain wipe). Setting it to null
+ * lets the generation effect re-run and produce a fresh keypair.
+ */
+export function clearUserSettingsKey(id: UserSettingsId) {
+  try {
+    return evolu.update("userSettings", {
+      id,
+      keyId: null,
+    } as Parameters<typeof evolu.update>[1]);
+  } catch (error) {
+    logger.error("Failed to clear keyId in user settings", {
+      settingsId: id,
+      error,
+    });
+    throw new Error("Failed to clear key reference. Please try again.");
   }
 }

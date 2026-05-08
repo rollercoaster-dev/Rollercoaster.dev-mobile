@@ -11,7 +11,7 @@ import { BadgeRenderer } from "../BadgeRenderer";
 import type { BadgeDesign } from "../types";
 import { BadgeShape, BadgeFrame, BadgeIconWeight } from "../types";
 import { BANNER_HEIGHT_RATIO, BANNER_TOP_VISIBLE_RATIO } from "../text/Banner";
-import { getCenterLabelBottomOverflow } from "../text/CenterLabel";
+import { getBottomLabelBottomOverflow } from "../text/BottomLabel";
 import { getSafeTextColor } from "../../utils/accessibility";
 
 // Mock the icon registry instead of phosphor-react-native directly.
@@ -200,12 +200,12 @@ describe("BadgeRenderer", () => {
     expect(badge.props.height).toBe(200);
   });
 
-  it("expands upward when a center banner sits above the badge", () => {
+  it("expands upward when a top banner sits above the badge", () => {
     const size = 200;
     renderWithProviders(
       <BadgeRenderer
         design={createDesign({
-          banner: { text: "WINNER", position: "center" },
+          banner: { text: "WINNER", position: "top" },
         })}
         size={size}
         showShadow={false}
@@ -219,11 +219,11 @@ describe("BadgeRenderer", () => {
     expect(badge.props.height).toBeCloseTo(size + topOverflow, 5);
   });
 
-  it("expands downward when the center label sits below the badge", () => {
+  it("expands downward when the bottom label sits below the badge", () => {
     const size = 200;
     renderWithProviders(
       <BadgeRenderer
-        design={createDesign({ centerLabel: "EXPERT" })}
+        design={createDesign({ bottomLabel: "EXPERT" })}
         size={size}
         showShadow={false}
       />,
@@ -232,7 +232,7 @@ describe("BadgeRenderer", () => {
     const badge = screen.getByTestId("badge-renderer");
     expect(badge.props.width).toBe(size);
     expect(badge.props.height).toBeCloseTo(
-      size + getCenterLabelBottomOverflow(size),
+      size + getBottomLabelBottomOverflow(size),
       5,
     );
   });
@@ -378,11 +378,11 @@ describe("BadgeRenderer", () => {
     });
   });
 
-  describe("CenterLabel", () => {
-    it("renders the label text when centerLabel is set", () => {
+  describe("BottomLabel", () => {
+    it("renders the label text when bottomLabel is set", () => {
       const { toJSON } = renderWithProviders(
         <BadgeRenderer
-          design={createDesign({ centerLabel: "Runner Up" })}
+          design={createDesign({ bottomLabel: "Runner Up" })}
           showShadow={false}
         />,
       );
@@ -390,7 +390,7 @@ describe("BadgeRenderer", () => {
       expect(JSON.stringify(toJSON())).toContain("Runner Up");
     });
 
-    it("does not render label text when centerLabel is absent", () => {
+    it("does not render label text when bottomLabel is absent", () => {
       const { toJSON } = renderWithProviders(
         <BadgeRenderer design={createDesign()} showShadow={false} />,
       );
@@ -398,13 +398,13 @@ describe("BadgeRenderer", () => {
       expect(JSON.stringify(toJSON())).not.toContain("Runner Up");
     });
 
-    it("renders monogram with CenterLabel without errors", () => {
+    it("renders monogram with BottomLabel without errors", () => {
       const { toJSON } = renderWithProviders(
         <BadgeRenderer
           design={createDesign({
             centerMode: "monogram" as const,
             monogram: "X",
-            centerLabel: "Novice",
+            bottomLabel: "Novice",
           })}
         />,
       );

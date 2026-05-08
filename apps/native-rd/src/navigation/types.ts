@@ -27,6 +27,7 @@ export type GoalsStackParamList = {
   FocusMode: { goalId: string };
   CompletionFlow: { goalId: string };
   TimelineJourney: { goalId: string };
+  EvidenceViewer: { goalId: string; initialEvidenceId: string };
   NewGoal: undefined;
   EditMode: { goalId: string; cameFromFocus?: boolean };
   BadgeDesigner:
@@ -81,6 +82,10 @@ export type CompletionFlowScreenProps = NativeStackScreenProps<
 export type TimelineJourneyScreenProps = NativeStackScreenProps<
   GoalsStackParamList,
   "TimelineJourney"
+>;
+export type EvidenceViewerScreenProps = NativeStackScreenProps<
+  GoalsStackParamList,
+  "EvidenceViewer"
 >;
 
 export type BadgesScreenProps = NativeStackScreenProps<

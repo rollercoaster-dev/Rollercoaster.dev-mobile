@@ -106,7 +106,6 @@ export const BlockedRequiresText: Story = {
       totalSteps={3}
       onToggleComplete={() => {}}
       onEvidenceTap={() => {}}
-      onQuickNote={() => {}}
     />
   ),
 };
@@ -141,7 +140,6 @@ export const MultiplePlannedTypes: Story = {
       totalSteps={3}
       onToggleComplete={() => {}}
       onEvidenceTap={() => {}}
-      onQuickNote={() => {}}
     />
   ),
 };

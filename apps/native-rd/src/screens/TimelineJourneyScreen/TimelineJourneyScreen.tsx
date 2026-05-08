@@ -14,6 +14,7 @@ import {
   stepsByGoalQuery,
   evidenceByGoalQuery,
   stepEvidenceByGoalQuery,
+  findFirstPendingIndex,
   StepStatus,
 } from "../../db";
 import type { GoalId } from "../../db";
@@ -34,9 +35,7 @@ function TimelineContent({ goalId }: { goalId: string }) {
   const goalEvidenceRows = useQuery(evidenceByGoalQuery(goalId as GoalId));
 
   // Build UI steps with status
-  const firstPendingIndex = stepRows.findIndex(
-    (r) => r.status !== StepStatus.completed,
-  );
+  const firstPendingIndex = findFirstPendingIndex(stepRows);
   const uiSteps: {
     id: string;
     title: string;
@@ -91,6 +90,13 @@ function TimelineContent({ goalId }: { goalId: string }) {
     navigation.navigate("FocusMode", { goalId });
   };
 
+  const handleEvidencePress = (evidenceId: string) => {
+    navigation.navigate("EvidenceViewer", {
+      goalId,
+      initialEvidenceId: evidenceId,
+    });
+  };
+
   return (
     <View style={{ flex: 1 }}>
       {/* Header */}
@@ -134,9 +140,13 @@ function TimelineContent({ goalId }: { goalId: string }) {
               stepIndex={index}
               evidence={stepEvidenceData[index] ?? []}
               onNodePress={handleNodePress}
+              onEvidencePress={handleEvidencePress}
             />
           ))}
-          <FinishLine goalEvidence={goalEvidence} />
+          <FinishLine
+            goalEvidence={goalEvidence}
+            onEvidencePress={handleEvidencePress}
+          />
         </View>
       </ScrollView>
     </View>

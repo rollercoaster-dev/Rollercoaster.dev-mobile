@@ -16,7 +16,7 @@ import {
 import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import { useQuery } from "@evolu/react";
-import { Pencil } from "phosphor-react-native";
+import { Pencil, Eye, EyeSlash } from "phosphor-react-native";
 import { Text } from "../../components/Text";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { IconButton } from "../../components/IconButton";
@@ -48,11 +48,11 @@ import {
   uncompleteStep,
   deleteEvidence,
   restoreEvidence,
-  createEvidence,
   canCompleteStep,
+  isPendingStep,
+  findFirstPendingIndex,
   EvidenceType,
   StepStatus,
-  TEXT_EVIDENCE_PREFIX,
 } from "../../db";
 import type { GoalId, StepId, EvidenceId } from "../../db";
 import { useToast } from "../../components/Toast";
@@ -70,8 +70,10 @@ import {
 import type { StepStatus as UIStepStatus } from "../../types/steps";
 import { deleteEvidenceFile } from "../../utils/evidenceCleanup";
 import { Logger } from "../../shims/rd-logger";
+import { reportError } from "../../services/sentry-report";
 import { KEYBOARD_AVOIDING_PROPS } from "../../utils/keyboard";
 import { useEvidenceViewer } from "../../utils/evidenceViewers";
+import { useFocusModePrefs } from "../../hooks/useFocusModePrefs";
 import { styles } from "./FocusModeScreen.styles";
 
 const logger = new Logger("FocusModeScreen");
@@ -111,8 +113,12 @@ function FocusContent({ goalId }: { goalId: string }) {
   const [isFABMenuOpen, setIsFABMenuOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const { viewEvidence, viewerModals } = useEvidenceViewer();
-  const hasAnnouncedComplete = useRef(false);
-  const hasTriggeredCompletion = useRef(false);
+  const { timelineHidden, setTimelineHidden } = useFocusModePrefs();
+  const lifecycle = useRef({
+    announcedComplete: false,
+    triggeredCompletion: false,
+    snappedToFirstPending: false,
+  });
   const isMounted = useRef(true);
   const pendingFileDeletionRef = useRef<{
     id: string;
@@ -220,18 +226,33 @@ function FocusContent({ goalId }: { goalId: string }) {
     stepRows.length > 0 &&
     stepRows.every((s) => s.status === StepStatus.completed);
 
+  // Snap to first pending step on initial load. Dep is stepRows.length —
+  // useQuery returns a fresh array each emission, so depending on stepRows
+  // would re-fire pointlessly.
+  const stepRowsLength = stepRows.length;
+  useEffect(() => {
+    if (lifecycle.current.snappedToFirstPending) return;
+    if (stepRowsLength === 0) return;
+    lifecycle.current.snappedToFirstPending = true;
+    const firstPendingIndex = findFirstPendingIndex(stepRows);
+    if (firstPendingIndex > 0) {
+      setCurrentCardIndex(firstPendingIndex);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only fire on initial population
+  }, [stepRowsLength]);
+
   // Announce when all steps become complete and auto-navigate to completion flow
   useEffect(() => {
     if (!goal) return;
-    if (allStepsComplete && !hasAnnouncedComplete.current) {
-      hasAnnouncedComplete.current = true;
+    if (allStepsComplete && !lifecycle.current.announcedComplete) {
+      lifecycle.current.announcedComplete = true;
       AccessibilityInfo.announceForAccessibility(
         `All steps completed for "${goal.title}". Goal is ready to complete!`,
       );
 
       // Auto-navigate to completion flow after brief delay
-      if (!hasTriggeredCompletion.current) {
-        hasTriggeredCompletion.current = true;
+      if (!lifecycle.current.triggeredCompletion) {
+        lifecycle.current.triggeredCompletion = true;
         const timer = setTimeout(() => {
           if (isMounted.current) {
             navigation.navigate("CompletionFlow", { goalId });
@@ -240,8 +261,8 @@ function FocusContent({ goalId }: { goalId: string }) {
         return () => clearTimeout(timer);
       }
     } else if (!allStepsComplete) {
-      hasAnnouncedComplete.current = false;
-      hasTriggeredCompletion.current = false;
+      lifecycle.current.announcedComplete = false;
+      lifecycle.current.triggeredCompletion = false;
     }
   }, [goal, allStepsComplete, goalId, navigation]);
 
@@ -256,6 +277,7 @@ function FocusContent({ goalId }: { goalId: string }) {
         evidenceId: pending.id,
         error,
       });
+      reportError(error, { area: "focus.mode", kind: "evidence-restore" });
     }
     pendingFileDeletionRef.current = null;
     hideToast();
@@ -311,6 +333,26 @@ function FocusContent({ goalId }: { goalId: string }) {
         AccessibilityInfo.announceForAccessibility(
           `Step "${step.title}" completed`,
         );
+        // Advance past the just-completed step to the next pending one.
+        // stepRows is the pre-completion snapshot, so skip stepId explicitly.
+        // Forward first, then wrap; if nothing remains pending, the
+        // all-steps-complete effect navigates to CompletionFlow.
+        const isOtherPending = (s: (typeof stepRows)[number]): boolean =>
+          s.id !== stepId && isPendingStep(s);
+        const completedIndex = stepRows.findIndex((s) => s.id === stepId);
+        const forwardIndex = stepRows.findIndex(
+          (s, i) => i > completedIndex && isOtherPending(s),
+        );
+        const nextIndex =
+          forwardIndex !== -1
+            ? forwardIndex
+            : stepRows.findIndex(isOtherPending);
+        if (nextIndex !== -1 && nextIndex !== currentCardIndex) {
+          // Use handleIndexChange (not setCurrentCardIndex) so the evidence
+          // drawer / FAB menu close — otherwise an open overlay would persist
+          // over the new step's content.
+          handleIndexChange(nextIndex);
+        }
       }
     } catch (error) {
       const message =
@@ -321,24 +363,11 @@ function FocusContent({ goalId }: { goalId: string }) {
         stepId,
         error,
       });
+      reportError(error, { area: "focus.mode", kind: "step-toggle" });
       showToast({
         message: `Could not update step: ${message}`,
         duration: 3000,
       });
-    }
-  };
-
-  const handleQuickNote = (stepId: string, text: string) => {
-    try {
-      createEvidence({
-        stepId: stepId as StepId,
-        type: EvidenceType.text,
-        uri: TEXT_EVIDENCE_PREFIX + text,
-        description: text.length > 50 ? text.slice(0, 50) + "..." : text,
-      });
-    } catch (error) {
-      logger.error("Failed to create quick note", { stepId, error });
-      showToast({ message: "Could not save note", duration: 3000 });
     }
   };
 
@@ -353,11 +382,6 @@ function FocusContent({ goalId }: { goalId: string }) {
   const handleToggleFABMenu = () => {
     setIsFABMenuOpen((prev) => !prev);
     if (!isDrawerOpen) setIsDrawerOpen(true);
-  };
-
-  const handleQuickNoteFocus = () => {
-    if (isDrawerOpen) setIsDrawerOpen(false);
-    if (isFABMenuOpen) setIsFABMenuOpen(false);
   };
 
   const handleSelectEvidenceType = (type: EvidenceTypeValue) => {
@@ -437,6 +461,7 @@ function FocusContent({ goalId }: { goalId: string }) {
         evidenceId: id,
         error,
       });
+      reportError(error, { area: "focus.mode" });
       Alert.alert(
         "Could not delete evidence",
         "Something went wrong. Please try again.",
@@ -482,6 +507,21 @@ function FocusContent({ goalId }: { goalId: string }) {
           {goal.title}
         </Text>
         <IconButton
+          icon={
+            timelineHidden ? (
+              <EyeSlash size={20} weight="bold" />
+            ) : (
+              <Eye size={20} weight="bold" />
+            )
+          }
+          onPress={() => setTimelineHidden(!timelineHidden)}
+          tone="ghost"
+          accessibilityLabel={
+            timelineHidden ? "Show timeline" : "Hide timeline"
+          }
+          size="sm"
+        />
+        <IconButton
           icon={<Pencil size={20} weight="bold" />}
           onPress={handleEditPress}
           tone="ghost"
@@ -491,12 +531,14 @@ function FocusContent({ goalId }: { goalId: string }) {
       </View>
 
       {/* MiniTimeline */}
-      <MiniTimeline
-        steps={timelineSteps}
-        currentIndex={currentCardIndex}
-        onStepTap={handleIndexChange}
-        onTimelineTap={handleTimelineTap}
-      />
+      {!timelineHidden && (
+        <MiniTimeline
+          steps={timelineSteps}
+          currentIndex={currentCardIndex}
+          onStepTap={handleIndexChange}
+          onTimelineTap={handleTimelineTap}
+        />
+      )}
 
       {/* CardCarousel with ProgressDots as indicator */}
       <View style={styles.carouselSection}>
@@ -529,8 +571,6 @@ function FocusContent({ goalId }: { goalId: string }) {
                 totalSteps={stepRows.length}
                 onToggleComplete={() => handleToggleStep(step.id)}
                 onEvidenceTap={handleEvidenceTap}
-                onQuickNote={(text) => handleQuickNote(step.id, text)}
-                onQuickNoteFocus={handleQuickNoteFocus}
                 onQuickEvidence={(type) => handleQuickEvidence(step.id, type)}
               />
             )),

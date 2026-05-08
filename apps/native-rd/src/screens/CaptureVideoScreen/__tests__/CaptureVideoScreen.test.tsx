@@ -229,4 +229,32 @@ describe("CaptureVideoScreen", () => {
 
     expect(screen.getByTestId("camera-view")).toBeTruthy();
   });
+
+  it("disables flip camera while recording", async () => {
+    // Pending promise so we can observe the in-flight recording state.
+    // Switching cameras mid-record corrupts the file, so the disabled
+    // contract is load-bearing.
+    mockRecordAsync.mockImplementationOnce(() => new Promise(() => {}));
+
+    render(
+      <CaptureVideoScreen
+        route={defaultRoute}
+        navigation={undefined as never}
+      />,
+    );
+
+    expect(
+      screen.getByLabelText("Switch to front camera").props.accessibilityState
+        ?.disabled,
+    ).not.toBe(true);
+
+    await act(async () => {
+      fireEvent.press(screen.getByLabelText("Start recording"));
+    });
+
+    expect(
+      screen.getByLabelText("Switch to front camera").props.accessibilityState
+        ?.disabled,
+    ).toBe(true);
+  });
 });

@@ -1,15 +1,16 @@
 import React from "react";
 import { View, Text } from "react-native";
 import { TimelineNode } from "../TimelineNode";
+import { TimelineEvidenceCard } from "../TimelineEvidenceCard";
 import type { EvidenceItemData } from "../EvidenceDrawer";
-import { EVIDENCE_TYPE_ICONS } from "../../constants/evidenceIcons";
 import { styles } from "./FinishLine.styles";
 
 export interface FinishLineProps {
   goalEvidence: EvidenceItemData[];
+  onEvidencePress: (evidenceId: string) => void;
 }
 
-export function FinishLine({ goalEvidence }: FinishLineProps) {
+export function FinishLine({ goalEvidence, onEvidencePress }: FinishLineProps) {
   return (
     <View style={styles.container}>
       <View style={styles.nodeColumn}>
@@ -25,19 +26,12 @@ export function FinishLine({ goalEvidence }: FinishLineProps) {
         </Text>
         {goalEvidence.length > 0 ? (
           goalEvidence.map((ev) => (
-            <View
+            <TimelineEvidenceCard
               key={ev.id}
-              style={styles.evidenceCard}
-              accessible
-              accessibilityLabel={`${ev.type} evidence: ${ev.label}`}
-            >
-              <Text style={styles.evidenceIcon}>
-                {EVIDENCE_TYPE_ICONS[ev.type] ?? "\u{1F4C4}"}
-              </Text>
-              <Text style={styles.evidenceLabel} numberOfLines={1}>
-                {ev.label}
-              </Text>
-            </View>
+              evidence={ev}
+              isGoal
+              onPress={onEvidencePress}
+            />
           ))
         ) : (
           <Text style={styles.noEvidence}>No goal evidence yet</Text>

@@ -57,4 +57,29 @@ describe("ScreenSubHeader", () => {
     fireEvent.press(screen.getByLabelText("Go back"));
     expect(onBack).toHaveBeenCalledTimes(1);
   });
+
+  it("renders right slot when provided", () => {
+    const onPress = jest.fn();
+    renderWithProviders(
+      <ScreenSubHeader
+        label="Write a Note"
+        onBack={() => {}}
+        right={
+          <IconButton
+            icon={<RNText>S</RNText>}
+            onPress={onPress}
+            accessibilityLabel="Save note"
+          />
+        }
+      />,
+    );
+    fireEvent.press(screen.getByLabelText("Save note"));
+    expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  it("falls back to spacer when right slot is omitted", () => {
+    renderWithProviders(<ScreenSubHeader label="Settings" onBack={() => {}} />);
+    // Spacer fallback keeps the label centered against the back button.
+    expect(screen.queryByLabelText("Save note")).toBeNull();
+  });
 });

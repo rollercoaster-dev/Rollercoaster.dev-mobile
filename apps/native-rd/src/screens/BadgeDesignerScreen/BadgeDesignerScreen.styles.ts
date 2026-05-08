@@ -1,5 +1,6 @@
 import { StyleSheet } from "react-native-unistyles";
 import { shadowStyle } from "../../styles/shadows";
+import { BADGE_CANVAS_BACKGROUND } from "../../badges/constants";
 
 export const styles = StyleSheet.create((theme) => ({
   editorRoot: {
@@ -36,7 +37,7 @@ export const styles = StyleSheet.create((theme) => ({
     borderRadius: 0,
     borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.border,
-    backgroundColor: theme.colors.backgroundSecondary,
+    backgroundColor: BADGE_CANVAS_BACKGROUND,
     ...shadowStyle(theme, "cardElevation"),
   },
   sectionContainer: {
@@ -53,7 +54,7 @@ export const styles = StyleSheet.create((theme) => ({
     width: "100%",
     gap: theme.space[2],
   },
-  centerLabelInput: {
+  bottomLabelInput: {
     marginHorizontal: theme.space[4],
     minHeight: 44,
     paddingHorizontal: theme.space[3],

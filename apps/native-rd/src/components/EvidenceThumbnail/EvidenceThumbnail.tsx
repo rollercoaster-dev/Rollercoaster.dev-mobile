@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { Pressable, View, Text, Image, Linking, Alert } from "react-native";
+import { Pressable, View, Text, Image } from "react-native";
 import { EvidenceType, TEXT_EVIDENCE_PREFIX } from "../../db";
 import { formatDuration } from "../../utils/format";
+import { openLinkInBrowser } from "../../utils/evidenceViewers";
 import { styles } from "./EvidenceThumbnail.styles";
 
 type EvidenceTypeValue = (typeof EvidenceType)[keyof typeof EvidenceType];
@@ -37,20 +38,6 @@ function parseMetadata(metadata?: string): Record<string, unknown> | null {
     return JSON.parse(metadata);
   } catch {
     return null;
-  }
-}
-
-async function openLinkInBrowser(uri: string): Promise<void> {
-  try {
-    const canOpen = await Linking.canOpenURL(uri);
-    if (canOpen) {
-      await Linking.openURL(uri);
-    } else {
-      Alert.alert("Cannot open link", `Unable to open: ${uri}`);
-    }
-  } catch (error) {
-    console.error("[EvidenceThumbnail] Failed to open link", { uri, error });
-    Alert.alert("Cannot open link", `Failed to open: ${uri}`);
   }
 }
 

@@ -2,6 +2,11 @@ import React from "react";
 import { render, fireEvent, screen } from "@testing-library/react-native";
 import { ErrorBoundary } from "../ErrorBoundary";
 import { Text } from "react-native";
+import { reportError } from "../../../services/sentry-report";
+
+jest.mock("../../../services/sentry-report", () => ({
+  reportError: jest.fn(),
+}));
 
 function ThrowingChild({ shouldThrow }: { shouldThrow: boolean }) {
   if (shouldThrow) throw new Error("Test error");
@@ -23,6 +28,10 @@ afterAll(() => {
 });
 
 describe("ErrorBoundary", () => {
+  beforeEach(() => {
+    (reportError as jest.Mock).mockClear();
+  });
+
   it("renders children when no error", () => {
     render(
       <ErrorBoundary>
@@ -75,6 +84,20 @@ describe("ErrorBoundary", () => {
 
     expect(screen.getByText("Child content")).toBeTruthy();
     expect(screen.queryByText("Something went wrong")).toBeNull();
+  });
+
+  it("reports rendered errors via reportError with area=render", () => {
+    render(
+      <ErrorBoundary>
+        <ThrowingChild shouldThrow={true} />
+      </ErrorBoundary>,
+    );
+
+    expect(reportError).toHaveBeenCalledTimes(1);
+    const [err, ctx] = (reportError as jest.Mock).mock.calls[0];
+    expect(err).toBeInstanceOf(Error);
+    expect((err as Error).message).toBe("Test error");
+    expect(ctx).toEqual({ area: "render" });
   });
 
   it("uses custom fallback when provided", () => {

@@ -1,11 +1,16 @@
-const { getDefaultConfig } = require("expo/metro-config");
+const { getSentryExpoConfig } = require("@sentry/react-native/metro");
 const {
   withStorybook,
 } = require("@storybook/react-native/metro/withStorybook");
 const path = require("path");
 
+// Sentry's Expo-aware helper: wraps `expo/metro-config`'s getDefaultConfig and
+// injects Debug ID generation into Expo's asset-serialization pipeline (the
+// supported integration point for SDK 50+). Replaces the `withSentryConfig`
+// wrapper, which is for plain RN and is incompatible with Expo's static
+// export serializer (returns assets array, not { code, map }).
 /** @type {import('expo/metro-config').MetroConfig} */
-const config = getDefaultConfig(__dirname);
+const config = getSentryExpoConfig(__dirname);
 
 // Expo SDK 54 auto-detects monorepo workspace layout (projectRoot,
 // watchFolders, nodeModulesPaths) — no manual overrides needed.

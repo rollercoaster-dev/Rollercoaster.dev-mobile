@@ -1,0 +1,1275 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Evidence Viewer — Approaches Prototype</title>
+    <style>
+      :root {
+        --bg: #fafafa;
+        --bg-sec: #f0f0f0;
+        --bg-ter: #f5f5f5;
+        --text: #262626;
+        --text-sec: #737373;
+        --accent-primary: #3b82f6;
+        --accent-purple: #a78bfa;
+        --accent-mint: #d4f4e7;
+        --accent-yellow: #ffe50c;
+        --border: #262626;
+        --shadow: #0a0a0a;
+        --error: #dc2626;
+        --success: #059669;
+        --font-body:
+          "Instrument Sans", system-ui, -apple-system, Segoe UI, Roboto,
+          sans-serif;
+        --font-headline: "Anybody", system-ui, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: #1a1033;
+        color: var(--text);
+        font-family: var(--font-body);
+        min-height: 100vh;
+      }
+      .page {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 32px 16px 64px;
+      }
+      .page-header {
+        color: #fafafa;
+        margin-bottom: 32px;
+        text-align: center;
+      }
+      .page-header h1 {
+        font-family: var(--font-headline);
+        font-size: 28px;
+        margin: 0 0 8px;
+      }
+      .page-header p {
+        margin: 0;
+        opacity: 0.85;
+        font-size: 14px;
+      }
+
+      .frames {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 32px;
+      }
+      @media (max-width: 1100px) {
+        .frames {
+          grid-template-columns: 1fr;
+          max-width: 420px;
+          margin: 0 auto;
+        }
+      }
+
+      .approach-label {
+        text-align: center;
+        color: #fafafa;
+        margin-bottom: 12px;
+      }
+      .approach-label .num {
+        display: inline-block;
+        background: var(--accent-yellow);
+        color: #0a0a0a;
+        border: 2px solid var(--border);
+        padding: 2px 8px;
+        font-weight: 700;
+        margin-right: 6px;
+        font-size: 12px;
+      }
+      .approach-label .name {
+        font-weight: 600;
+        font-size: 15px;
+      }
+      .approach-label .desc {
+        margin-top: 6px;
+        font-size: 12px;
+        opacity: 0.8;
+        max-width: 320px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      /* Phone frame */
+      .phone {
+        background: #0a0a0a;
+        border-radius: 44px;
+        padding: 12px;
+        margin: 0 auto;
+        width: 360px;
+        max-width: 100%;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      }
+      .screen {
+        background: var(--bg);
+        border-radius: 32px;
+        overflow: hidden;
+        position: relative;
+        height: 720px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Header (purple) */
+      .status-bar {
+        background: var(--accent-purple);
+        height: 38px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 18px;
+        font-size: 12px;
+        color: #0a0a0a;
+        font-weight: 600;
+      }
+      .nav-bar {
+        background: var(--accent-purple);
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 16px;
+        position: relative;
+      }
+      .nav-title {
+        position: absolute;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-family: var(--font-headline);
+        font-weight: 700;
+        font-size: 18px;
+      }
+      .icon-btn {
+        width: 36px;
+        height: 36px;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+        font-size: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* Content */
+      .content {
+        flex: 1;
+        overflow: auto;
+        padding: 16px;
+      }
+      .goal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 14px;
+      }
+      .goal-title {
+        font-family: var(--font-headline);
+        font-size: 26px;
+        font-weight: 800;
+        margin: 0;
+      }
+      .focus-btn {
+        background: var(--bg);
+        border: 2px solid var(--border);
+        padding: 8px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 3px 3px 0 var(--border);
+      }
+      .progress-wrap {
+        margin-bottom: 8px;
+      }
+      .progress-bar {
+        height: 8px;
+        background: var(--bg-sec);
+        border: 2px solid var(--border);
+        position: relative;
+      }
+      .progress-fill {
+        height: 100%;
+        background: var(--accent-primary);
+        width: 100%;
+      }
+      .progress-text {
+        font-size: 12px;
+        font-weight: 600;
+        margin-top: 6px;
+      }
+      .divider {
+        height: 2px;
+        background: var(--border);
+        margin: 12px -16px;
+      }
+
+      /* Timeline step */
+      .step {
+        display: grid;
+        grid-template-columns: 36px 1fr;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+      .step-node {
+        width: 36px;
+        height: 36px;
+        border: 2px solid var(--border);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        background: var(--accent-primary);
+        color: #fff;
+        font-weight: 700;
+      }
+      .step-node.goal {
+        background: var(--accent-yellow);
+        color: #0a0a0a;
+      }
+      .step-card {
+        border: 2px solid var(--border);
+        background: var(--bg);
+        box-shadow: 4px 4px 0 var(--border);
+        padding: 12px;
+      }
+      .step-card.goal {
+        border-left: 6px solid var(--accent-yellow);
+      }
+      .step-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .done-pill {
+        background: var(--accent-mint);
+        border: 2px solid var(--border);
+        padding: 2px 8px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+      }
+      .step-title {
+        font-weight: 700;
+        font-size: 16px;
+      }
+      .step-card .caret {
+        margin-left: auto;
+        font-size: 12px;
+      }
+      .ev-list {
+        margin-top: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .ev-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--bg);
+        border: 2px solid var(--border);
+        padding: 8px 10px;
+        font-size: 13px;
+        cursor: pointer;
+        text-align: left;
+        width: 100%;
+      }
+      .ev-item:hover {
+        background: var(--bg-sec);
+      }
+      .ev-item:focus-visible {
+        outline: 3px solid var(--accent-primary);
+        outline-offset: 2px;
+      }
+      .ev-icon {
+        font-size: 18px;
+      }
+      .ev-label {
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .goal-ev-title {
+        font-family: var(--font-headline);
+        font-weight: 800;
+        font-size: 18px;
+        margin-bottom: 8px;
+      }
+
+      /* Bottom nav */
+      .bottom-nav {
+        background: var(--accent-purple);
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        padding: 0 12px;
+        gap: 8px;
+      }
+      .nav-pill {
+        background: var(--bg);
+        border: 2px solid var(--border);
+        border-radius: 32px;
+        padding: 8px 14px;
+        font-size: 13px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: 3px 3px 0 var(--border);
+      }
+      .nav-add {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: var(--accent-yellow);
+        border: 2px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        font-weight: 700;
+        box-shadow: 3px 3px 0 var(--border);
+      }
+      .nav-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--bg);
+        border: 2px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        box-shadow: 3px 3px 0 var(--border);
+      }
+
+      /* ============================================ */
+      /* Approach 1 — Bottom Sheet + Swipe Carousel  */
+      /* ============================================ */
+      .sheet-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s;
+        z-index: 10;
+      }
+      .sheet-backdrop.open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .sheet {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--bg);
+        border-top: 3px solid var(--border);
+        border-radius: 24px 24px 0 0;
+        height: 78%;
+        transform: translateY(100%);
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 11;
+        display: flex;
+        flex-direction: column;
+      }
+      .sheet.open {
+        transform: translateY(0);
+      }
+      .sheet-handle {
+        height: 4px;
+        width: 40px;
+        background: var(--border);
+        border-radius: 2px;
+        margin: 8px auto;
+      }
+      .sheet-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 4px 16px 8px;
+        border-bottom: 2px solid var(--border);
+      }
+      .sheet-title {
+        font-family: var(--font-headline);
+        font-weight: 800;
+        font-size: 16px;
+      }
+      .sheet-close {
+        width: 32px;
+        height: 32px;
+        border: 2px solid var(--border);
+        background: var(--bg);
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 700;
+        box-shadow: 2px 2px 0 var(--border);
+      }
+      .carousel {
+        flex: 1;
+        overflow: hidden;
+        position: relative;
+      }
+      .carousel-track {
+        display: flex;
+        height: 100%;
+        transition: transform 0.25s ease;
+      }
+      .carousel-slide {
+        min-width: 100%;
+        padding: 16px;
+        overflow: auto;
+      }
+      .carousel-nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 16px;
+        border-top: 2px solid var(--border);
+        background: var(--bg-sec);
+      }
+      .carousel-arrow {
+        width: 36px;
+        height: 36px;
+        border: 2px solid var(--border);
+        background: var(--bg);
+        cursor: pointer;
+        font-size: 16px;
+        box-shadow: 2px 2px 0 var(--border);
+      }
+      .carousel-arrow:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+      .dots {
+        display: flex;
+        gap: 6px;
+      }
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--bg);
+        border: 2px solid var(--border);
+      }
+      .dot.active {
+        background: var(--border);
+      }
+
+      /* Evidence content blocks */
+      .ev-meta {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        font-size: 12px;
+        color: var(--text-sec);
+        margin-bottom: 10px;
+      }
+      .ev-type-pill {
+        background: var(--accent-yellow);
+        border: 2px solid var(--border);
+        padding: 2px 8px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #0a0a0a;
+      }
+      .ev-body-text {
+        background: var(--bg-sec);
+        border: 2px solid var(--border);
+        padding: 14px;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      .ev-photo {
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        background:
+          linear-gradient(135deg, #a78bfa 0%, #5eead4 100%),
+          var(--bg-sec);
+        border: 2px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 48px;
+      }
+      .ev-link {
+        background: var(--bg-sec);
+        border: 2px solid var(--border);
+        padding: 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        color: var(--text);
+      }
+      .ev-link-fav {
+        width: 32px;
+        height: 32px;
+        background: var(--accent-primary);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+      }
+      .ev-link-host {
+        font-size: 11px;
+        color: var(--text-sec);
+      }
+      .ev-audio {
+        background: var(--bg-sec);
+        border: 2px solid var(--border);
+        padding: 14px;
+      }
+      .ev-audio-bar {
+        height: 36px;
+        background: var(--bg);
+        border: 2px solid var(--border);
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        padding: 0 8px;
+        gap: 8px;
+      }
+      .ev-audio-wave {
+        flex: 1;
+        height: 16px;
+        background: repeating-linear-gradient(
+          90deg,
+          var(--border) 0,
+          var(--border) 2px,
+          transparent 2px,
+          transparent 5px
+        );
+      }
+      .ev-description {
+        margin-top: 10px;
+        font-size: 13px;
+        color: var(--text-sec);
+        font-style: italic;
+      }
+
+      /* ============================================ */
+      /* Approach 2 — Full-screen + Thumbnail Strip  */
+      /* ============================================ */
+      .fullscreen {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        background: var(--bg);
+        z-index: 12;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        transform: translateX(100%);
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .fullscreen.open {
+        transform: translateX(0);
+      }
+      .fs-nav {
+        background: var(--accent-purple);
+        height: 56px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        padding: 0 12px;
+        gap: 8px;
+        position: relative;
+        min-width: 0;
+      }
+      .fs-title {
+        font-family: var(--font-headline);
+        font-weight: 700;
+        font-size: 16px;
+      }
+      .fs-counter {
+        margin-left: auto;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .fs-body {
+        flex: 1;
+        min-width: 0;
+        min-height: 0;
+        overflow: auto;
+        padding: 16px;
+      }
+      .fs-strip {
+        border-top: 2px solid var(--border);
+        background: var(--bg-sec);
+        padding: 10px;
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        flex-shrink: 0;
+        min-width: 0;
+        max-width: 100%;
+      }
+      .thumb {
+        flex: 0 0 auto;
+        width: 64px;
+        border: 0;
+        background: transparent;
+        padding: 0;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        position: relative;
+        text-align: center;
+      }
+      .thumb-icon {
+        width: 64px;
+        height: 64px;
+        border: 2px solid var(--border);
+        background: var(--bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        position: relative;
+      }
+      .thumb.goal .thumb-icon {
+        border-left-width: 6px;
+        border-left-color: var(--accent-yellow);
+      }
+      .thumb.step .thumb-icon {
+        border-bottom-width: 6px;
+        border-bottom-color: var(--accent-primary);
+      }
+      .thumb.active .thumb-icon {
+        outline: 3px solid var(--accent-primary);
+        outline-offset: 2px;
+      }
+      .thumb-label {
+        font-size: 10px;
+        font-weight: 600;
+        line-height: 1.2;
+        color: var(--text);
+        max-width: 64px;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        word-break: break-word;
+      }
+      .thumb.active .thumb-label {
+        color: var(--accent-primary);
+        font-weight: 700;
+      }
+
+      /* ============================================ */
+      /* Approach 3 — Centered Modal + Sidebar List  */
+      /* ============================================ */
+      .modal-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+      }
+      .modal-backdrop.open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .modal {
+        background: var(--bg);
+        border: 3px solid var(--border);
+        box-shadow: 6px 6px 0 var(--border);
+        width: 100%;
+        max-height: 90%;
+        display: flex;
+        flex-direction: column;
+        transform: scale(0.95);
+        transition: transform 0.2s;
+      }
+      .modal-backdrop.open .modal {
+        transform: scale(1);
+      }
+      .modal-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 12px;
+        border-bottom: 2px solid var(--border);
+        background: var(--accent-yellow);
+      }
+      .modal-head .ev-type-pill {
+        background: var(--bg);
+      }
+      .modal-body {
+        padding: 14px;
+        overflow: auto;
+        max-height: 280px;
+      }
+      .modal-sidebar {
+        border-top: 2px solid var(--border);
+        background: var(--bg-sec);
+        max-height: 200px;
+        display: flex;
+        flex-direction: column;
+      }
+      .sidebar-toggle {
+        background: transparent;
+        border: 0;
+        padding: 10px 12px;
+        text-align: left;
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .sidebar-list {
+        overflow: auto;
+        padding: 0 8px 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .sidebar-list[hidden] {
+        display: none;
+      }
+      .sidebar-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px;
+        border: 2px solid var(--border);
+        background: var(--bg);
+        cursor: pointer;
+        font-size: 12px;
+        text-align: left;
+      }
+      .sidebar-item.active {
+        background: var(--accent-mint);
+      }
+      .sidebar-item .step-tag {
+        margin-left: auto;
+        font-size: 10px;
+        background: var(--bg-sec);
+        border: 1px solid var(--border);
+        padding: 1px 6px;
+        font-weight: 700;
+      }
+
+      .hint {
+        text-align: center;
+        margin-top: 14px;
+        color: #fafafa;
+        font-size: 12px;
+        opacity: 0.7;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="page-header">
+        <h1>Evidence Viewer — 3 Approaches</h1>
+        <p>
+          Tap any evidence item in any phone to open. All three approaches let
+          you browse every piece of evidence once open.
+        </p>
+      </header>
+
+      <div class="frames">
+        <!-- Approach 1 -->
+        <div>
+          <div class="approach-label">
+            <div>
+              <span class="num">1</span><span class="name">Bottom Sheet + Swipe Carousel</span>
+            </div>
+            <div class="desc">
+              Slides up from the bottom. Swipe / arrows to browse. Light
+              touch — keeps timeline visible behind backdrop.
+            </div>
+          </div>
+          <div class="phone">
+            <div class="screen" data-frame="1">
+              <!-- Timeline UI rendered by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Approach 2 -->
+        <div>
+          <div class="approach-label">
+            <div>
+              <span class="num">2</span><span class="name">Full-screen + Thumbnail Strip</span>
+            </div>
+            <div class="desc">
+              Pushes a dedicated screen. Thumbnail strip at bottom shows every
+              item — tap to jump. Best for focused review.
+            </div>
+          </div>
+          <div class="phone">
+            <div class="screen" data-frame="2"></div>
+          </div>
+        </div>
+
+        <!-- Approach 3 -->
+        <div>
+          <div class="approach-label">
+            <div>
+              <span class="num">3</span><span class="name">Modal + Collapsible List</span>
+            </div>
+            <div class="desc">
+              Centered modal. "All evidence" list expands below to switch
+              items. Compact, good for quick context-switching.
+            </div>
+          </div>
+          <div class="phone">
+            <div class="screen" data-frame="3"></div>
+          </div>
+        </div>
+      </div>
+
+      <p class="hint">
+        Click an evidence row in any phone to open that approach. Use ← / → on
+        the carousel & full-screen, or list rows on the modal.
+      </p>
+    </div>
+
+    <script>
+      // Shared fake data — same across all 3 frames so comparison is fair
+      const evidence = [
+        {
+          id: "e1",
+          stepId: "s1",
+          stepTitle: "Asdf",
+          type: "text",
+          icon: "📝",
+          label: "Add, fjjlvwj",
+          body: "Add, fjjlvwj — quick note from the day I marked this step done. Reflecting on what worked and what to revisit.",
+          createdAt: "May 1, 09:14",
+        },
+        {
+          id: "e2",
+          stepId: "s1",
+          stepTitle: "Asdf",
+          type: "photo",
+          icon: "📷",
+          label: "Workspace setup",
+          createdAt: "May 1, 09:18",
+          description: "Desk after I finished step 1.",
+        },
+        {
+          id: "e3",
+          stepId: "s1",
+          stepTitle: "Asdf",
+          type: "link",
+          icon: "🔗",
+          label: "rollercoaster.dev",
+          url: "https://rollercoaster.dev/blog/why-evidence",
+          host: "rollercoaster.dev",
+          createdAt: "May 1, 09:22",
+        },
+        {
+          id: "e4",
+          stepId: "goal",
+          stepTitle: "Goal Evidence",
+          type: "text",
+          icon: "📝",
+          label: "text",
+          body: "text — short reflection on completing the goal. This space holds the why, the friction, and the win.",
+          createdAt: "May 2, 18:02",
+        },
+        {
+          id: "e5",
+          stepId: "goal",
+          stepTitle: "Goal Evidence",
+          type: "voice_memo",
+          icon: "🎙️",
+          label: "Voice note 0:42",
+          duration: "0:42",
+          createdAt: "May 2, 18:05",
+        },
+        {
+          id: "e6",
+          stepId: "goal",
+          stepTitle: "Goal Evidence",
+          type: "photo",
+          icon: "📷",
+          label: "Finished badge",
+          createdAt: "May 2, 18:08",
+          description: "Snapshot of the issued badge.",
+        },
+      ];
+
+      function evIndex(id) {
+        return evidence.findIndex((e) => e.id === id);
+      }
+
+      // Render the timeline (same in all 3 frames). The frame number controls
+      // which approach handler fires when an evidence row is tapped.
+      function renderTimeline(frameEl, frameNum) {
+        const stepEvidence = evidence.filter((e) => e.stepId === "s1");
+        const goalEvidence = evidence.filter((e) => e.stepId === "goal");
+
+        frameEl.innerHTML = `
+          <div class="status-bar">
+            <span>20:31</span>
+            <span>•••• 📶 🔋</span>
+          </div>
+          <div class="nav-bar">
+            <button class="icon-btn" aria-label="Back">←</button>
+            <div class="nav-title">Timeline</div>
+            <span style="width:36px"></span>
+          </div>
+          <div class="content">
+            <div class="goal-header">
+              <h2 class="goal-title">Taae</h2>
+              <button class="focus-btn">Back to Focus</button>
+            </div>
+            <div class="progress-wrap">
+              <div class="progress-bar"><div class="progress-fill"></div></div>
+              <div class="progress-text">1 of 1 steps completed</div>
+            </div>
+            <div class="divider"></div>
+
+            <div class="step">
+              <div class="step-node">✓</div>
+              <div class="step-card">
+                <div class="step-row">
+                  <span class="done-pill">DONE</span>
+                  <span class="step-title">Asdf</span>
+                  <span class="caret">▲</span>
+                </div>
+                <div class="ev-list">
+                  ${stepEvidence
+                    .map(
+                      (e) => `
+                    <button class="ev-item" data-ev-id="${e.id}">
+                      <span class="ev-icon">${e.icon}</span>
+                      <span class="ev-label">${e.label}</span>
+                    </button>`,
+                    )
+                    .join("")}
+                </div>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="step-node goal">★</div>
+              <div class="step-card goal">
+                <div class="goal-ev-title">Goal Evidence</div>
+                <div class="ev-list">
+                  ${goalEvidence
+                    .map(
+                      (e) => `
+                    <button class="ev-item" data-ev-id="${e.id}">
+                      <span class="ev-icon">${e.icon}</span>
+                      <span class="ev-label">${e.label}</span>
+                    </button>`,
+                    )
+                    .join("")}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="nav-pill">🎯 Goals</div>
+            <div class="nav-add">+</div>
+            <div class="nav-circle">🏅</div>
+            <div class="nav-circle">⚙️</div>
+          </div>
+        `;
+
+        // Wire up evidence taps for this frame's approach
+        frameEl.querySelectorAll(".ev-item").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const id = btn.dataset.evId;
+            openApproach(frameEl, frameNum, id);
+          });
+        });
+      }
+
+      // Renders evidence body content (used by all 3 approaches)
+      function renderEvidenceBody(e) {
+        const meta = `
+          <div class="ev-meta">
+            <span class="ev-type-pill">${e.type.toUpperCase()}</span>
+            <span>${e.stepTitle}</span>
+            <span>•</span>
+            <span>${e.createdAt}</span>
+          </div>`;
+
+        let body = "";
+        if (e.type === "text") {
+          body = `<div class="ev-body-text">${e.body}</div>`;
+        } else if (e.type === "photo") {
+          body = `<div class="ev-photo">${e.icon}</div>` +
+            (e.description ? `<div class="ev-description">${e.description}</div>` : "");
+        } else if (e.type === "link") {
+          body = `
+            <a class="ev-link" href="#" onclick="return false">
+              <div class="ev-link-fav">${e.host[0].toUpperCase()}</div>
+              <div>
+                <div style="font-weight:700">${e.label}</div>
+                <div class="ev-link-host">${e.url}</div>
+              </div>
+            </a>`;
+        } else if (e.type === "voice_memo") {
+          body = `
+            <div class="ev-audio">
+              <div style="font-weight:700">Voice memo</div>
+              <div class="ev-audio-bar">
+                <span style="font-size:14px">▶</span>
+                <div class="ev-audio-wave"></div>
+                <span style="font-size:11px">${e.duration}</span>
+              </div>
+            </div>`;
+        }
+        return meta + body;
+      }
+
+      function openApproach(frameEl, frameNum, evId) {
+        if (frameNum === 1) openSheet(frameEl, evId);
+        if (frameNum === 2) openFullscreen(frameEl, evId);
+        if (frameNum === 3) openModal(frameEl, evId);
+      }
+
+      // ============================================
+      // Approach 1 — Bottom sheet + carousel
+      // ============================================
+      function openSheet(frameEl, evId) {
+        let sheet = frameEl.querySelector(".sheet");
+        let backdrop = frameEl.querySelector(".sheet-backdrop");
+        if (!sheet) {
+          backdrop = document.createElement("div");
+          backdrop.className = "sheet-backdrop";
+          frameEl.appendChild(backdrop);
+
+          sheet = document.createElement("div");
+          sheet.className = "sheet";
+          sheet.innerHTML = `
+            <div class="sheet-handle"></div>
+            <div class="sheet-head">
+              <div class="sheet-title">Evidence</div>
+              <button class="sheet-close" aria-label="Close">✕</button>
+            </div>
+            <div class="carousel">
+              <div class="carousel-track"></div>
+            </div>
+            <div class="carousel-nav">
+              <button class="carousel-arrow" data-dir="-1" aria-label="Previous">◀</button>
+              <div class="dots"></div>
+              <button class="carousel-arrow" data-dir="1" aria-label="Next">▶</button>
+            </div>
+          `;
+          frameEl.appendChild(sheet);
+
+          backdrop.addEventListener("click", () => closeSheet(frameEl));
+          sheet
+            .querySelector(".sheet-close")
+            .addEventListener("click", () => closeSheet(frameEl));
+          sheet.querySelectorAll(".carousel-arrow").forEach((a) => {
+            a.addEventListener("click", () => {
+              const dir = parseInt(a.dataset.dir, 10);
+              const cur = parseInt(sheet.dataset.idx, 10);
+              const next = cur + dir;
+              if (next >= 0 && next < evidence.length) {
+                setSheetIdx(frameEl, next);
+              }
+            });
+          });
+        }
+
+        const track = sheet.querySelector(".carousel-track");
+        track.innerHTML = evidence
+          .map((e) => `<div class="carousel-slide">${renderEvidenceBody(e)}</div>`)
+          .join("");
+
+        const dots = sheet.querySelector(".dots");
+        dots.innerHTML = evidence.map(() => `<span class="dot"></span>`).join("");
+
+        setSheetIdx(frameEl, evIndex(evId));
+        backdrop.classList.add("open");
+        sheet.classList.add("open");
+      }
+      function setSheetIdx(frameEl, idx) {
+        const sheet = frameEl.querySelector(".sheet");
+        sheet.dataset.idx = idx;
+        sheet.querySelector(".carousel-track").style.transform =
+          `translateX(-${idx * 100}%)`;
+        sheet.querySelectorAll(".dot").forEach((d, i) => {
+          d.classList.toggle("active", i === idx);
+        });
+        sheet.querySelector('[data-dir="-1"]').disabled = idx === 0;
+        sheet.querySelector('[data-dir="1"]').disabled = idx === evidence.length - 1;
+        sheet.querySelector(".sheet-title").textContent =
+          `Evidence — ${idx + 1} of ${evidence.length}`;
+      }
+      function closeSheet(frameEl) {
+        frameEl.querySelector(".sheet")?.classList.remove("open");
+        frameEl.querySelector(".sheet-backdrop")?.classList.remove("open");
+      }
+
+      // ============================================
+      // Approach 2 — Full-screen + thumbnail strip
+      // ============================================
+      function openFullscreen(frameEl, evId) {
+        let fs = frameEl.querySelector(".fullscreen");
+        if (!fs) {
+          fs = document.createElement("div");
+          fs.className = "fullscreen";
+          fs.innerHTML = `
+            <div class="fs-nav">
+              <button class="icon-btn" aria-label="Back">←</button>
+              <div class="fs-title">Evidence</div>
+              <span class="fs-counter"></span>
+            </div>
+            <div class="fs-body"></div>
+            <div class="fs-strip"></div>
+          `;
+          frameEl.appendChild(fs);
+          fs.querySelector(".icon-btn").addEventListener("click", () => {
+            fs.classList.remove("open");
+          });
+        }
+
+        const strip = fs.querySelector(".fs-strip");
+        strip.innerHTML = evidence
+          .map(
+            (e, i) => `
+            <button class="thumb ${e.stepId === "goal" ? "goal" : "step"}"
+                    data-thumb="${i}"
+                    aria-label="${e.label}, from ${e.stepTitle}">
+              <span class="thumb-icon">${e.icon}</span>
+              <span class="thumb-label">${e.label}</span>
+            </button>`,
+          )
+          .join("");
+        strip.querySelectorAll(".thumb").forEach((t) => {
+          t.addEventListener("click", () => {
+            setFullscreenIdx(frameEl, parseInt(t.dataset.thumb, 10));
+          });
+        });
+
+        setFullscreenIdx(frameEl, evIndex(evId));
+        fs.classList.add("open");
+      }
+      function setFullscreenIdx(frameEl, idx) {
+        const fs = frameEl.querySelector(".fullscreen");
+        const e = evidence[idx];
+        fs.querySelector(".fs-body").innerHTML = renderEvidenceBody(e);
+        fs.querySelector(".fs-counter").textContent = `${idx + 1} / ${evidence.length}`;
+        fs.querySelectorAll(".thumb").forEach((t, i) => {
+          t.classList.toggle("active", i === idx);
+          if (i === idx) t.scrollIntoView({ inline: "center", block: "nearest" });
+        });
+      }
+
+      // ============================================
+      // Approach 3 — Modal + collapsible list
+      // ============================================
+      function openModal(frameEl, evId) {
+        let backdrop = frameEl.querySelector(".modal-backdrop");
+        if (!backdrop) {
+          backdrop = document.createElement("div");
+          backdrop.className = "modal-backdrop";
+          backdrop.innerHTML = `
+            <div class="modal">
+              <div class="modal-head">
+                <span class="ev-type-pill"></span>
+                <button class="sheet-close" aria-label="Close">✕</button>
+              </div>
+              <div class="modal-body"></div>
+              <div class="modal-sidebar">
+                <button class="sidebar-toggle" aria-expanded="false">
+                  <span>All evidence (${evidence.length})</span>
+                  <span class="caret">▼</span>
+                </button>
+                <div class="sidebar-list" hidden></div>
+              </div>
+            </div>
+          `;
+          frameEl.appendChild(backdrop);
+
+          backdrop.addEventListener("click", (ev) => {
+            if (ev.target === backdrop) closeModal(frameEl);
+          });
+          backdrop
+            .querySelector(".sheet-close")
+            .addEventListener("click", () => closeModal(frameEl));
+          backdrop
+            .querySelector(".sidebar-toggle")
+            .addEventListener("click", () => {
+              const list = backdrop.querySelector(".sidebar-list");
+              const toggle = backdrop.querySelector(".sidebar-toggle");
+              const expanded = !list.hasAttribute("hidden");
+              if (expanded) {
+                list.setAttribute("hidden", "");
+                toggle.setAttribute("aria-expanded", "false");
+                toggle.querySelector(".caret").textContent = "▼";
+              } else {
+                list.removeAttribute("hidden");
+                toggle.setAttribute("aria-expanded", "true");
+                toggle.querySelector(".caret").textContent = "▲";
+              }
+            });
+        }
+
+        const list = backdrop.querySelector(".sidebar-list");
+        list.innerHTML = evidence
+          .map(
+            (e) => `
+            <button class="sidebar-item" data-ev-id="${e.id}">
+              <span style="font-size:18px">${e.icon}</span>
+              <span>${e.label}</span>
+              <span class="step-tag">${e.stepId === "goal" ? "GOAL" : "S1"}</span>
+            </button>`,
+          )
+          .join("");
+        list.querySelectorAll(".sidebar-item").forEach((it) => {
+          it.addEventListener("click", () => setModalEv(frameEl, it.dataset.evId));
+        });
+
+        setModalEv(frameEl, evId);
+        backdrop.classList.add("open");
+      }
+      function setModalEv(frameEl, evId) {
+        const backdrop = frameEl.querySelector(".modal-backdrop");
+        const e = evidence[evIndex(evId)];
+        backdrop.querySelector(".ev-type-pill").textContent = e.type.toUpperCase();
+        backdrop.querySelector(".modal-body").innerHTML = renderEvidenceBody(e);
+        backdrop.querySelectorAll(".sidebar-item").forEach((it) => {
+          it.classList.toggle("active", it.dataset.evId === evId);
+        });
+      }
+      function closeModal(frameEl) {
+        frameEl.querySelector(".modal-backdrop")?.classList.remove("open");
+      }
+
+      // Init all 3 frames
+      document.querySelectorAll(".screen").forEach((frame) => {
+        const num = parseInt(frame.dataset.frame, 10);
+        renderTimeline(frame, num);
+      });
+    </script>
+  </body>
+</html>

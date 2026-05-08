@@ -14,6 +14,8 @@ export { evolu, useAppEvolu, EvoluAppProvider } from "./evolu";
 export {
   // Goal
   goalsQuery,
+  activeGoalsQuery,
+  stepsForActiveGoalsQuery,
   createGoal,
   updateGoal,
   completeGoal,
@@ -21,6 +23,8 @@ export {
   deleteGoal,
   // Step
   stepsByGoalQuery,
+  isPendingStep,
+  findFirstPendingIndex,
   createStep,
   updateStep,
   canCompleteStep,
@@ -52,5 +56,6 @@ export {
   createUserSettings,
   updateUserSettings,
   updateUserSettingsKey,
+  clearUserSettingsKey,
   markWelcomeSeen,
 } from "./queries";

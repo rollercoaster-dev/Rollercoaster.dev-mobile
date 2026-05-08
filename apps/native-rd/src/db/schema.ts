@@ -21,20 +21,28 @@ import {
 export const GoalId = id("Goal");
 export type GoalId = typeof GoalId.Type;
 
-/** Goal status enum */
+/**
+ * Goal status enum.
+ * Values are pre-branded NonEmptyString1000 so consumers can use them directly
+ * in Evolu inserts/updates and Kysely where-clauses without re-wrapping.
+ */
 export const GoalStatus = {
-  active: "active",
-  completed: "completed",
+  active: NonEmptyString1000.orThrow("active"),
+  completed: NonEmptyString1000.orThrow("completed"),
 } as const;
 
 /** Step ULID identifier */
 export const StepId = id("Step");
 export type StepId = typeof StepId.Type;
 
-/** Step status enum */
+/**
+ * Step status enum.
+ * Values are pre-branded NonEmptyString1000 so consumers can use them directly
+ * in Evolu inserts/updates and Kysely where-clauses without re-wrapping.
+ */
 export const StepStatus = {
-  pending: "pending",
-  completed: "completed",
+  pending: NonEmptyString1000.orThrow("pending"),
+  completed: NonEmptyString1000.orThrow("completed"),
 } as const;
 
 /** Evidence ULID identifier */
@@ -151,5 +159,6 @@ export const Schema = {
     fontScale: nullOr(Int), // Integer percentage: 100 = default, 80-150 range
     keyId: nullOr(NonEmptyString1000), // UUID referencing Ed25519 keypair in SecureStore
     hasSeenWelcome: nullOr(Int), // 1 = seen, null = first launch
+    focusTimelineHidden: nullOr(Int), // 1 = hidden, null = visible (default)
   },
 };

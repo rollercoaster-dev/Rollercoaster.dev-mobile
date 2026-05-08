@@ -91,10 +91,9 @@ describe("createDefaultBadgeDesign", () => {
 
   test("does not include optional fields by default", () => {
     const design = createDefaultBadgeDesign("Test");
-    expect(design.label).toBeUndefined();
     expect(design.frameParams).toBeUndefined();
     expect(design.monogram).toBeUndefined();
-    expect(design.centerLabel).toBeUndefined();
+    expect(design.bottomLabel).toBeUndefined();
     expect(design.pathText).toBeUndefined();
     expect(design.pathTextPosition).toBeUndefined();
     expect(design.pathTextBottom).toBeUndefined();
@@ -175,11 +174,11 @@ describe("parseBadgeDesign", () => {
       title: "Full Badge",
       centerMode: "monogram",
       monogram: "ABC",
-      centerLabel: "Level 5",
+      bottomLabel: "Level 5",
       pathText: "ACHIEVEMENT UNLOCKED",
       pathTextPosition: "top",
       pathTextBottom: "EARNED 2026",
-      banner: { text: "CERTIFIED", position: "center" },
+      banner: { text: "CERTIFIED", position: "top" },
       frameParams: {
         variant: 2,
         stepCount: 5,
@@ -287,8 +286,8 @@ describe("BadgeDesign new type enums", () => {
     expect(Object.keys(PathTextPosition)).toHaveLength(3);
   });
 
-  test("BannerPosition has center and bottom", () => {
-    expect(BannerPosition.center).toBe("center");
+  test("BannerPosition has top and bottom", () => {
+    expect(BannerPosition.top).toBe("top");
     expect(BannerPosition.bottom).toBe("bottom");
     expect(Object.keys(BannerPosition)).toHaveLength(2);
   });
