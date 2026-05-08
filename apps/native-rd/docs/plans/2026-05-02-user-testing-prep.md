@@ -8,8 +8,114 @@
 
 ## The Single Next Thing
 
-> **Phase 3 — Sitting A: lock the bundle ID, slug, display name, and feedback email.**
-> Pure decisions, no tooling. When done, move to Sitting B (EAS Build).
+> **Stabilize the closed-beta feedback loop.**
+> Before broad invites, every tester path needs a way to report problems and every crash path needs to be observable enough to act on.
+
+Order of work as of 2026-05-08:
+
+1. Land the current Android build pipeline PR, treating unrelated repo-wide CI coverage hangs as external blockers rather than native-rd work.
+2. Work the serial execution queue below from top to bottom.
+3. Do not start later cleanup, full i18n, or feature requests until the current queue item is closed or intentionally skipped.
+
+---
+
+## Current Strategy — 2026-05-08
+
+Everything outside `apps/native-rd` is paused unless it directly blocks native-rd user testing.
+
+### Release Readiness Priorities
+
+| Priority | Workstream                                       | Outcome                                                                                       | Tracking                                     |
+| -------- | ------------------------------------------------ | --------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| P0       | Observability + feedback                         | Crashes and tester reports can be captured, scrubbed, and converted into actionable issues    | #971 closed, #972 open, Android Sentry TBD   |
+| P0       | Known beta-blocking bugs                         | Core flows do not trap testers or make local data/badges feel unreliable                      | Create issues from Joe's bug list            |
+| P1       | Real-device validation                           | iPhone production-like build is tested against camera, mic, persistence, badge export, crash  | #975                                         |
+| P1       | Minimal German path                              | German testers can complete the main flow without hitting English-only critical UI everywhere | #988 foundation, narrower German slice TBD   |
+| P1       | Quality refresh                                  | We know which stale quality items block beta and which can wait                               | #977                                         |
+| P2       | Feature request intake                           | User requests are captured without derailing beta stabilization                               | New issue label/process, no default build-in |
+| Paused   | Broad i18n, OB3 verifier parity, non-native work | Valuable, but not required for first user testing unless a tester blocker proves otherwise    | Existing milestones/issues                   |
+
+### Serial Execution Queue
+
+There is one active work slot. Work this queue from top to bottom; do not run these in parallel. If an item is skipped, leave a comment on the issue explaining why and move to the next item.
+
+| Order | Issue/PR                                             | Why now                                                                                       | Done when                                                                      |
+| ----- | ---------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| 0     | PR #1025 Android build pipeline                      | Clears the current native-rd Android build work already in review                             | PR is merged or explicitly parked                                              |
+| 1     | #1022 DeveloperScreen for debug tools                | Gives us a stable, gated place for crash/test-event actions before deeper Sentry verification | Dev tools are reachable only in dev/preview and dangerous actions stay gated   |
+| 2     | #1027 Android Sentry crash delivery                  | Android currently is not sending crash reports; fix this before Android testers               | A production-like Android crash appears in Sentry with safe metadata           |
+| 3     | #1021 Sentry breadcrumb call sites                   | Makes crash/user reports actionable without collecting user content                           | Core flows emit closed-enum, non-identifying breadcrumbs                       |
+| 4     | #972 In-app Report a Bug                             | Gives testers a structured feedback path beyond platform screenshot feedback                  | Settings has a tested feedback flow wired to Sentry                            |
+| 5     | #1028 Bug + feature request intake                   | Lets Joe turn known bugs and tester feedback into consistently triaged issues                 | Labels/template/script exist and are linked from this plan                     |
+| 6     | #984 Atomic SecureStore key writes                   | Prevents half-written badge signing keys before testers hit badge completion                  | Key writes are all-or-nothing and covered by tests                             |
+| 7     | #982 Badge creation error state                      | Prevents users from getting stuck in endless loading if key setup fails                       | Completion flow surfaces a clear error instead of hanging                      |
+| 8     | #1026 Focus-mode evidence fixes                      | Fixes known core-flow mismatches in step completion and evidence capture                      | Focus mode evidence gating, quick actions, and accessibility are aligned       |
+| 9     | #943 Persist theme switching                         | Avoids a visible personalization/settings regression across app restarts                      | Selected supported theme survives restart                                      |
+| 10    | #975 Physical iPhone validation                      | Confirms production-like iOS behavior on real hardware before external invites                | Camera/photo/mic/persistence/badge/export/crash paths are checked              |
+| 11    | #977 Quality dashboard refresh                       | Re-checks stale high-severity debt before widening the beta                                   | Open HIGH items are classified as blocker or acceptable beta risk              |
+| 12    | #988 i18n foundation                                 | Prepares translations without starting broad string migration prematurely                     | i18n infrastructure, language selection, pseudo locale, and tests are in place |
+| 13    | #1029 Minimal German first-test path                 | Makes the main beta flow usable for German testers                                            | German covers the first-test path; full app translation remains later          |
+| 14    | #978 Google Play closed-test setup                   | Starts Android distribution only after crash visibility and core blockers are handled         | Closed-test setup is ready and the 14-day clock is started intentionally       |
+| 15    | #936 Remove dead chrome composition                  | Low-risk cleanup after beta blockers are under control                                        | Unused native-rd chrome wiring is removed                                      |
+| 16    | #983 Delete unrouted TestScreen                      | Removes dead code after tester-critical paths are stable                                      | TestScreen is gone and tests/type-check still pass                             |
+| 17    | #961 Prune unused dependencies/dead code             | Reduces maintenance cost after launch-critical work                                           | Fallow findings are reviewed and safe removals are done                        |
+| 18    | #960 Badge matrix Storybook/visual snapshot decision | Useful visual coverage, but not a first-tester blocker                                        | Decision and/or coverage lands without blocking beta                           |
+
+Stop after order 13 to invite the first tiny iOS cohort if iPhone validation and quality triage say the risk is acceptable. Continue to order 14 before inviting Android testers.
+
+### First Tester Entry Criteria
+
+Invite the first tiny TestFlight cohort only after:
+
+- iOS crash reporting has been verified from an installed TestFlight build.
+- There is a clear bug-reporting route: TestFlight screenshot feedback and/or in-app Sentry feedback.
+- P0 known bugs are either fixed or documented as acceptable beta risks.
+- Badge completion does not leave users stuck in an endless loading state if signing key setup fails (#982).
+- A short "what to test" script exists so testers exercise goals, evidence capture, focus mode, badge creation, export, settings, and feedback.
+
+Android testers wait until:
+
+- Android Sentry crash reporting is verified from a production-like Android build.
+- Google Play closed-test setup is ready enough to start the 14-day clock intentionally.
+- The same P0 known bugs have been cleared or accepted.
+
+### Minimal German Path
+
+German support is useful for local testing, but full app translation should not block the first beta. The recommended cut is:
+
+1. Land i18n foundation (#988): dependencies, `src/i18n/`, language selection, pseudo locale, tests.
+2. Translate only the first-test path:
+   - onboarding / welcome
+   - goals list and goal creation
+   - focus mode and step completion
+   - evidence capture labels and errors
+   - badge completion
+   - settings basics, including feedback
+3. Defer badge designer, developer/debug tools, edge-case admin copy, and full pseudo-locale snapshot coverage until after the first tester loop.
+
+### Bug + Feature Intake
+
+Use one issue per actionable item. During user testing, every issue should answer: "Does this block testing, degrade testing, or wait?"
+
+Bug labels:
+
+- `app:native-rd`
+- `type:bug`
+- `source:user-testing` when found by testers
+- `priority:critical` only for data loss, unrecoverable stuck states, or app launch blockers
+- `priority:high` for common core-flow failures
+- `beta-blocker` for issues that must be fixed before inviting or expanding testers
+- `needs-triage` until severity and next action are decided
+
+Feature request labels:
+
+- `app:native-rd`
+- `type:feature-request`
+- `source:user-testing`
+- `needs-triage`
+- `priority:later` by default
+
+Feature requests should not be implemented during beta stabilization unless they remove a testing blocker. Capture them, link any supporting tester quotes or scenarios, and revisit after the first feedback loop.
 
 ---
 
@@ -21,12 +127,13 @@
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | iOS testers     | TestFlight 3-finger screenshot feedback + automatic crash reports → App Store Connect                                        | Apple collects under their privacy terms; testers accepted these when joining TestFlight       |
 | Android testers | Play Console built-in tester feedback + automatic crash reports                                                              | Google collects under their privacy terms; testers accepted these when joining the closed test |
-| Crash reporting | Sentry (UUID-only identity, scrubbed events) — symbolicated JS stacks via Hermes sourcemap upload                            | No PII leaves the device; verified by `docs/launch/privacy-verification.md` (#971)             |
+| Crash reporting | Sentry (UUID-only identity, scrubbed events) — symbolicated JS stacks via Hermes sourcemap upload                            | iOS is set up; Android crash delivery still needs verification/fix before Android testers      |
 | Privacy policy  | Updated to declare _Crash Data_ + _Performance Data_ not linked to identity (App Privacy nutrition labels) — handled in #976 | Honest and accurate after #976 lands                                                           |
 
-**What we explicitly chose not to do:**
+**Current decision:**
 
-- **No in-app bug-report button** — TestFlight's screenshot feedback covers iOS; Play Console covers Android. Sentry's user feedback API (#972) is the only in-app reporting hook.
+- Add in-app feedback if we want a cross-platform route that is easier to turn into GitHub issues than platform screenshot feedback alone (#972).
+- Keep platform feedback enabled either way because screenshots and OS/device context are useful during closed testing.
 
 ---
 
@@ -198,3 +305,4 @@ All open phases are tracked as GitHub issues under milestone [**`native-rd: User
 | 2026-05-03 | Internal testing live; crashes flowing into TestFlight. Closed #973 (EAS Build) and #974 (ASC + first submission). Added Phase 8 — crash triage workflow tracked in #1012.                                                                        | Joe + Claude |
 | 2026-05-04 | Sentry policy reversed: compliant with no-PII promise via UUID-only identity, IP suppression, breadcrumb scrubbing, and a documented privacy verification test. Reopened #971 + #972.                                                             | Joe + Claude |
 | 2026-05-04 | Phase 8 / #1012 closed — made redundant by Sentry. Surviving non-tooling pieces (release-gate policy, one-issue-per-signature discipline, TestFlight Organizer fallback note) folded into #971 as a single `crash-triage-runbook.md` deliverable. | Joe + Claude |
+| 2026-05-08 | Refocused plan for user testing: observability and bug intake first, Android Sentry before Android testers, minimal German path after beta blockers, feature requests captured but not built by default.                                          | Codex        |
