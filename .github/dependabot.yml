@@ -17,8 +17,8 @@ updates:
           - "*"
         dependency-type: "development"
         update-types:
-          - "version-update:semver-minor"
-          - "version-update:semver-patch"
+          - "minor"
+          - "patch"
       # Group production dependency patch/minor updates separately for easier
       # review while leaving major updates as individual migration PRs.
       production-dependencies:
@@ -26,8 +26,8 @@ updates:
           - "*"
         dependency-type: "production"
         update-types:
-          - "version-update:semver-minor"
-          - "version-update:semver-patch"
+          - "minor"
+          - "patch"
     ignore:
       # Pinned pending decision on the rd-logger Express adapter (issue tracking
       # whether we keep the adapter and bump to Express 5 or drop it entirely).
