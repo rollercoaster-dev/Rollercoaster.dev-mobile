@@ -53,7 +53,6 @@ export function initSentry(): void {
     enableCaptureFailedRequests: false,
     attachScreenshot: false,
     attachViewHierarchy: false,
-    attachAllThreads: false,
     attachThreads: false,
     attachStacktrace: true,
     enableLogs: false,
