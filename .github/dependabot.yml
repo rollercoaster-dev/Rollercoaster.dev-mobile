@@ -10,16 +10,24 @@ updates:
       time: "09:00"
       timezone: "UTC"
     groups:
-      # Group all development dependencies together to reduce PR noise
+      # Group development dependency patch/minor updates together to reduce PR
+      # noise while leaving major updates as individual migration PRs.
       dev-dependencies:
         patterns:
           - "*"
         dependency-type: "development"
-      # Group production dependencies separately for easier review
+        update-types:
+          - "version-update:semver-minor"
+          - "version-update:semver-patch"
+      # Group production dependency patch/minor updates separately for easier
+      # review while leaving major updates as individual migration PRs.
       production-dependencies:
         patterns:
           - "*"
         dependency-type: "production"
+        update-types:
+          - "version-update:semver-minor"
+          - "version-update:semver-patch"
     ignore:
       # Pinned pending decision on the rd-logger Express adapter (issue tracking
       # whether we keep the adapter and bump to Express 5 or drop it entirely).
