@@ -5,6 +5,11 @@ appId: dev.rollercoaster.app
 # Criteria: stable feature, outcome assertion present, deterministic
 - clearState
 - launchApp
+# Expo SDK 55 dev-client lands on its server picker after clearState
+# instead of auto-reloading the last bundle. Bypass via the dev-client
+# deep-link scheme `exp+<slug>://expo-development-client/?url=<bundle-url>`.
+# Onboarding hint + dev-menu modals are pre-disabled in run-e2e.sh.
+- openLink: "exp+rollercoasterdev://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081"
 - assertVisible: "Welcome to your ride."
 - tapOn: "The Full Ride. Standard theme"
 - tapOn: "Get Started"
