@@ -4,11 +4,10 @@ appId: dev.rollercoaster.app
 # open the Timeline, tap a card to push EvidenceViewerScreen, switch via the
 # thumbnail strip, then back out to Timeline.
 #
-# Mixing two types instead of two text notes:
-# 1. Exercises distinct render branches in EvidenceContent (LinkContent vs
-#    TextContent) — a real "viewer" smoke test, not just pagination.
-# 2. Yields naturally-distinct card labels on the Timeline so Maestro can
-#    differentiate cards via tapOn / assertVisible.
+# Mixing two types (vs. two text notes): exercises distinct render branches
+# in EvidenceContent (LinkContent vs TextContent) — a real "viewer" smoke
+# test, not just pagination. Captions on both items give the Timeline cards
+# unique labels Maestro can match without ambiguity.
 #
 # Captures are ordered link → text so the createdAt-desc viewer ordering puts
 # text at index 0 ("1 / 2") and link at index 1 ("2 / 2") — counter ascends
@@ -33,12 +32,16 @@ appId: dev.rollercoaster.app
 - inputText: "Curate evidence demo"
 - tapOn: "Create Goal"
 
-# Badge designer → use default
+# Badge designer → use default. centerElement so the button is scrolled to
+# the middle of the screen rather than just into-bounds — without it the
+# button can sit under the FocusPillTabBar's lifted FAB and the tap lands on
+# the tab bar instead of the button.
 - assertVisible: "Design Badge"
 - scrollUntilVisible:
     element: "Use This Design"
     direction: DOWN
     timeout: 10000
+    centerElement: true
 - tapOn: "Use This Design"
 
 # Edit mode — add a step
@@ -59,8 +62,15 @@ appId: dev.rollercoaster.app
 - assertVisible: "Focus Mode"
 
 # Add a link evidence first (older). FAB → FABMenu → CaptureLinkScreen.
-# Caption gives the card a unique label on the Timeline so Maestro can
-# disambiguate from the text note added next.
+# `pressKey: Enter` after the caption fires the keyboard's blue check
+# (returnKeyType="done") to dismiss the soft keyboard so the Save Link
+# button below it is tappable. CaptureLinkScreen has no KeyboardAvoidingView,
+# so without dismissing first the Save tap lands on the keyboard.
+#
+# Caption is tapped by placeholder text (not by "Caption (optional)" label)
+# because Input renders BOTH a Text label and a TextInput with the same
+# accessibilityLabel — tapping by label hits the non-interactive Text first
+# and inputText then appends to whichever field still holds focus.
 - extendedWaitUntil:
     visible: "Add evidence"
     timeout: 15000
@@ -69,19 +79,24 @@ appId: dev.rollercoaster.app
 - assertVisible: "Add Link"
 - tapOn: "https://example.com"
 - inputText: "https://archive.org/details/community-history"
-- tapOn: "Caption (optional)"
+- tapOn: "What is this link about?"
 - inputText: "Reference archive"
+- pressKey: Enter
 - tapOn: "Save Link"
 - assertVisible: "Focus Mode"
 
-# Add a text note (newer). CaptureTextNote's footer is inside
-# KeyboardAvoidingView, so Save Note rises with the soft keyboard.
+# Add a text note (newer). CaptureTextNote now wraps inputs in a ScrollView
+# inside KAV with the footer outside the scroll, so the caption Input is
+# reachable above the keyboard. After typing the caption, pressKey: Enter
+# fires the blue check (returnKeyType="done") to dismiss the keyboard so
+# Save Note is tappable.
 - tapOn: "Add evidence"
 - tapOn: "Note"
 - assertVisible: "Write a Note"
 - inputText: "Reflection on archive sources"
-- tapOn: "Caption (optional)"
+- tapOn: "Add a short caption"
 - inputText: "Text reflection"
+- pressKey: Enter
 - tapOn: "Save Note"
 - assertVisible: "Focus Mode"
 
