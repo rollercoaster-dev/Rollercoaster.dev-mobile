@@ -83,62 +83,57 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
         onBack={() => navigation.goBack()}
       />
 
-      <KeyboardAvoidingView
-        style={styles.keyboardAvoiding}
-        {...KEYBOARD_AVOIDING_PROPS}
-      >
-        <View style={styles.content}>
-          <TextInput
-            ref={textInputRef}
-            style={[styles.textInput, isFocused && styles.textInputFocused]}
-            placeholder="What happened? What did you learn?"
-            placeholderTextColor={theme.colors.textMuted}
-            value={content}
-            onChangeText={setContent}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            multiline
-            textAlignVertical="top"
-            autoFocus
-            maxLength={MAX_CONTENT_LENGTH + 100}
-            accessible
-            accessibilityLabel="Note content"
-            accessibilityHint="Write your text note here"
+      <KeyboardAvoidingView style={styles.content} {...KEYBOARD_AVOIDING_PROPS}>
+        <TextInput
+          ref={textInputRef}
+          style={[styles.textInput, isFocused && styles.textInputFocused]}
+          placeholder="What happened? What did you learn?"
+          placeholderTextColor={theme.colors.textMuted}
+          value={content}
+          onChangeText={setContent}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          multiline
+          textAlignVertical="top"
+          autoFocus
+          maxLength={MAX_CONTENT_LENGTH + 100}
+          accessible
+          accessibilityLabel="Note content"
+          accessibilityHint="Write your text note here"
+        />
+
+        <View style={styles.captionContainer}>
+          <Input
+            label="Caption (optional)"
+            placeholder="Add a short caption"
+            value={caption}
+            onChangeText={setCaption}
+            maxLength={1000}
+            returnKeyType="done"
           />
-
-          <View style={styles.captionContainer}>
-            <Input
-              label="Caption (optional)"
-              placeholder="Add a short caption"
-              value={caption}
-              onChangeText={setCaption}
-              maxLength={1000}
-              returnKeyType="done"
-            />
-          </View>
         </View>
-
-        <SafeAreaView edges={["bottom"]}>
-          <View style={styles.footer}>
-            <Text
-              variant="caption"
-              style={[
-                styles.charCount,
-                (isNearLimit || isOverLimit) && styles.charCountWarning,
-              ]}
-              accessibilityLabel={`${charCount} of ${MAX_CONTENT_LENGTH} characters used`}
-            >
-              {charCount}/{MAX_CONTENT_LENGTH}
-            </Text>
-            <Button
-              label="Save Note"
-              onPress={handleSave}
-              disabled={!canSave}
-              loading={saving}
-            />
-          </View>
-        </SafeAreaView>
       </KeyboardAvoidingView>
+
+      <SafeAreaView edges={["bottom"]}>
+        <View style={styles.footer}>
+          <Text
+            variant="caption"
+            style={[
+              styles.charCount,
+              (isNearLimit || isOverLimit) && styles.charCountWarning,
+            ]}
+            accessibilityLabel={`${charCount} of ${MAX_CONTENT_LENGTH} characters used`}
+          >
+            {charCount}/{MAX_CONTENT_LENGTH}
+          </Text>
+          <Button
+            label="Save Note"
+            onPress={handleSave}
+            disabled={!canSave}
+            loading={saving}
+          />
+        </View>
+      </SafeAreaView>
     </View>
   );
 }
