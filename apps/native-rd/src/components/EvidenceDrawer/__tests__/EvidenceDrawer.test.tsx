@@ -162,4 +162,28 @@ describe("EvidenceDrawer", () => {
       ).not.toBeOnTheScreen();
     });
   });
+
+  describe("E2E mode gating", () => {
+    const originalE2E = process.env.EXPO_PUBLIC_E2E_MODE;
+    beforeAll(() => {
+      process.env.EXPO_PUBLIC_E2E_MODE = "true";
+    });
+    afterAll(() => {
+      process.env.EXPO_PUBLIC_E2E_MODE = originalE2E;
+    });
+
+    it("drops drawer summary wrapper so the FAB is reachable", () => {
+      renderWithProviders(
+        <EvidenceDrawer {...defaultProps} onAddEvidence={jest.fn()} />,
+      );
+      // Under EXPO_PUBLIC_E2E_MODE=true, the outer drawer grouping is
+      // disabled so Maestro can resolve the FAB's `accessibilityLabel`
+      // "Add evidence" without it being collapsed into the drawer's
+      // "Evidence drawer" composed label.
+      expect(screen.queryByLabelText("Evidence drawer")).toBeNull();
+      expect(screen.queryByLabelText("Goal evidence drawer")).toBeNull();
+      // FAB inside the drawer remains reachable via its own a11y label.
+      expect(screen.getByLabelText("Add evidence")).toBeOnTheScreen();
+    });
+  });
 });

@@ -15,13 +15,23 @@ export interface FABMenuProps {
 export function FABMenu({ isOpen, onSelectType }: FABMenuProps) {
   if (!isOpen) return null;
 
+  // The menu wrapper's `accessible+role=menu` collapses descendants
+  // (each menuitem Pressable) into a single a11y node on iOS, hiding
+  // individual labels (e.g. "Note") from Maestro element lookup. Drop
+  // the grouping in E2E mode; each Pressable still declares
+  // `accessible+role=menuitem+label` so screen readers continue to
+  // announce each option as a discrete menu item in production.
+  const isE2E = process.env.EXPO_PUBLIC_E2E_MODE === "true";
+  const menuA11yProps = isE2E
+    ? ({ accessible: false } as const)
+    : ({
+        accessible: true,
+        accessibilityRole: "menu" as const,
+        accessibilityLabel: "Add evidence menu",
+      } as const);
+
   return (
-    <View
-      style={styles.container}
-      accessible
-      accessibilityRole="menu"
-      accessibilityLabel="Add evidence menu"
-    >
+    <View style={styles.container} {...menuA11yProps}>
       <Card>
         <View style={styles.itemList}>
           {EVIDENCE_CAPTURE_OPTIONS.map((item) => (
