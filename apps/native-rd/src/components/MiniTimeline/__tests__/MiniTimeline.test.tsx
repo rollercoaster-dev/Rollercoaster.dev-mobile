@@ -141,6 +141,31 @@ describe("MiniTimeline", () => {
     });
   });
 
+  describe("E2E mode gating", () => {
+    const originalE2E = process.env.EXPO_PUBLIC_E2E_MODE;
+    beforeAll(() => {
+      process.env.EXPO_PUBLIC_E2E_MODE = "true";
+    });
+    afterAll(() => {
+      process.env.EXPO_PUBLIC_E2E_MODE = originalE2E;
+    });
+
+    it("drops Pressable a11y wrapper so the inner Text is reachable", () => {
+      renderWithProviders(
+        <MiniTimeline steps={makeSteps("pending")} {...defaultProps} />,
+      );
+      // Under EXPO_PUBLIC_E2E_MODE=true the wrapping Pressable's
+      // `accessible+role+label` props are dropped, so iOS no longer
+      // collapses the inner "Tap to expand timeline" Text into the
+      // composed parent label. Maestro can now match the inner text
+      // literally.
+      expect(
+        screen.queryByLabelText("Step progress timeline — tap to expand"),
+      ).toBeNull();
+      expect(screen.getByText("Tap to expand timeline")).toBeOnTheScreen();
+    });
+  });
+
   describe("edge cases", () => {
     it("renders only goal node when steps array is empty", () => {
       renderWithProviders(<MiniTimeline steps={[]} {...defaultProps} />);
