@@ -62,4 +62,27 @@ describe("ThemeChipGrid", () => {
     );
     expect(mockSetTheme).toHaveBeenCalledWith(target.id);
   });
+
+  describe("E2E mode gating", () => {
+    const originalE2E = process.env.EXPO_PUBLIC_E2E_MODE;
+    beforeAll(() => {
+      process.env.EXPO_PUBLIC_E2E_MODE = "true";
+    });
+    afterAll(() => {
+      process.env.EXPO_PUBLIC_E2E_MODE = originalE2E;
+    });
+
+    it("drops radiogroup wrapper so descendant chip labels are reachable", () => {
+      renderWithProviders(<ThemeChipGrid />);
+      // Under EXPO_PUBLIC_E2E_MODE=true, the outer grouping is disabled
+      // so Maestro can resolve each chip's composed accessibilityLabel
+      // (e.g. "The Full Ride. Standard theme") without colliding with
+      // the parent radiogroup's "Theme" label.
+      expect(screen.queryByRole("radiogroup")).toBeNull();
+      // Individual radios remain reachable because each Pressable has
+      // its own `accessible+role=radio+label`.
+      const radios = screen.getAllByRole("radio");
+      expect(radios.length).toBe(themeOptions.length);
+    });
+  });
 });
