@@ -165,3 +165,80 @@ If a flow breaks at the FABMenu or MiniTimeline label, add the gate per items 4 
   into a shared `_onboarding.yaml` prefix. The skill explicitly says inline is
   fine while there are only two — staying consistent with that until a third
   flow needs the prefix.
+
+---
+
+## Status checkpoint — 2026-05-10 ~18:46
+
+Branch state at this checkpoint:
+
+```
+ea510a1a test(native-rd): dismiss soft keyboard before Save Note in CaptureTextNote recipe
+a7cd03e2 fix(native-rd): gate EvidenceDrawer and FABMenu wrappers behind EXPO_PUBLIC_E2E_MODE
+df2bf1fd fix(native-rd): gate ThemeChipGrid radiogroup wrapper behind EXPO_PUBLIC_E2E_MODE
+4a9cedac fix(native-rd): bypass Expo SDK 55 dev-launcher picker for Maestro E2E
+5323d68a test(native-rd): replace removed step-card quick-note path with FAB → CaptureTextNote
+a26caf32 test(native-rd): update Welcome onboarding prefix for redesigned WelcomeScreen
+bae7f60a test(native-rd): replace removed create-new-goal testID with tab-fab-new-goal
+ace2706c docs(native-rd): plan Maestro flow realignment after post-#1006 UI changes
+```
+
+### What landed beyond the original plan
+
+The original plan's three commits (1–3) plus the docs commit are intact.
+Running flows on `bun run native:ios:e2e` exposed a separate environment
+regression: the SDK 55 `expo-dev-client` 55.0.32 no longer auto-loads the
+last bundle URL on cold launch, so Maestro's `clearState` reinstall lands
+on the dev-client server picker instead of WelcomeScreen. SDK 55 PR
+`9ce26bfe` listed Maestro E2E as TODO before merge but merged before that
+ran. This branch absorbs the env fix because the same PR will be the first
+post-SDK-55 E2E run.
+
+Four additional commits beyond the original plan (with rationale):
+
+- `4a9cedac` — dev-launcher bypass: `openLink` to `exp+rollercoasterdev://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081` after `launchApp`, plus a one-shot `EXDevMenuIsOnboardingFinished=YES` UserDefault write in `scripts/run-e2e.sh`. Maestro bug #1601 (UserDefaults survive `clearState` on iOS) makes the write sticky. Skill `.claude/skills/maestro-e2e/SKILL.md` updated with the SDK-55 section.
+- `df2bf1fd` — ThemeChipGrid `accessible+role=radiogroup+label="Theme"` wrapper gated behind `EXPO_PUBLIC_E2E_MODE`. Anticipated by plan risk #7 / step 4.
+- `a7cd03e2` — EvidenceDrawer `accessible+role=summary+label="Evidence drawer"` AND FABMenu `accessible+role=menu+label="Add evidence menu"` wrappers gated. Plan step 4 anticipated FABMenu; EvidenceDrawer was new but structurally identical (same FAB → CaptureTextNote unblock surface).
+- `ea510a1a` — keyboard interception fix per plan risk #2: replace recipe's static-tap fallback with `hideKeyboard` before `tapOn: "Save Note"` in three flows (current state — see Open Questions below; this commit's tactic was intermediate, may need follow-up).
+
+All wrapper-gate commits include a Jest test that flips `process.env.EXPO_PUBLIC_E2E_MODE = "true"` for one describe block and asserts the wrapper is dropped — mirroring the existing `CardCarousel` / `BadgeEarnedModal` test pattern. The test guards future refactors from silently re-growing the trap.
+
+### Verification status
+
+| Flow                           | Result on resume baseline                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `goal-create.yaml`             | ✅ Passes end-to-end (12/12 steps).                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `goal-create-complete.yaml`    | 🟡 Reached "Save Note" tap but keyboard interception failed the next assertion. Switched to `hideKeyboard` in `ea510a1a` but the verification re-run flaked at an earlier step ("Edit Goal" not visible after "Use This Design") before reaching the new keyboard-dismiss path. Likely Evolu/SecureStore state contamination from rapid `clearState` cycles. **Re-run after a sim reset to see if `hideKeyboard` actually works for this screen.** |
+| `goal-lifecycle-complete.yaml` | ❓ Not yet run on this branch.                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `evidence-viewer.yaml`         | ❓ Not yet run on this branch.                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `badge-redesign.yaml`          | ❓ Not yet run. Chains lifecycle, will inherit upstream fixes.                                                                                                                                                                                                                                                                                                                                                                                     |
+| `badge-view.yaml`              | ❓ Not yet run. Read-only, no clearState.                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `settings-theme-switch.yaml`   | ❓ Not yet run. Read-only, no clearState. Note: ThemeChipGrid gate may affect this flow's Settings screen (Settings still uses `ThemeSwitcher`, which has its own "Pick what feels right" — but the gate change drops the `radiogroup` wrapper from any ThemeChipGrid usage, potentially elsewhere). Verify on resume.                                                                                                                             |
+
+### Open questions on resume
+
+1. ~~**Does `hideKeyboard` actually dismiss the keyboard on `CaptureTextNote`?**~~ Confirmed: **no.** Re-run produced the explicit Maestro error _"Couldn't hide the keyboard. This can happen if the app uses a custom input or doesn't expose a standard dismiss action."_ Both flow-level fallbacks have now failed:
+   - `tapOn: "Write a Note"` (static header) — completes but doesn't dismiss (iOS only auto-dismisses on taps to interactive elements; `ScreenSubHeader`'s centered Text is non-interactive).
+   - `hideKeyboard` — errors out as above.
+
+   **Recommended source-side fix:** in `apps/native-rd/src/screens/CaptureTextNote/CaptureTextNote.tsx`, move the `SafeAreaView edges={["bottom"]}` footer (which contains the `Save Note` Button) **inside** the `KeyboardAvoidingView` so the footer rises with the keyboard. This is also a real-user UX bug — on small iPhones the Save Note button is hidden behind the keyboard for any user with the soft keyboard up. Adding `keyboardShouldPersistTaps="handled"` to the wrapping ScrollView (if added) lets a tap on the visible Save button register without first dismissing the keyboard.
+
+   Alternative if the source change is undesirable for some reason: `swipe: { direction: DOWN }` over the input area in the flow, or a coordinate tap (`tapOn: { point: "50%,15%" }`) on the empty space at the very top of the screen above the header.
+
+2. **Test flakiness pattern.** The `goal-create-complete` retry failed at "Edit Goal" — a step that previously passed. Consider whether back-to-back `clearState` runs leave Evolu sqlite or SecureStore in a half-cleared state. May be worth `xcrun simctl shutdown booted && xcrun simctl boot <UDID>` between flow runs in CI.
+3. **Multi-step lifecycle flows: auto-advance.** Plan diagnosis row #4 noted FocusMode now auto-advances after step completion. Today the lifecycle flow's only step exits via auto-nav to CompletionFlow. If a future flow has 2+ steps, the assertion after the first `tapOn: "Mark complete"` needs to expect the next step's content, not a transition screen.
+
+### How to resume
+
+1. **Sim reset** to clear state contamination: `xcrun simctl shutdown booted && bun run native:ios:e2e` (rebuilds + relaunches; ~10 min for clean build, faster if Pod cache hot).
+2. **Re-run goal-create-complete** to validate `hideKeyboard` on `CaptureTextNote`. If it errors or doesn't dismiss, fall back per question #1 above.
+3. **If green: run remaining flows** in order — `goal-lifecycle-complete`, `evidence-viewer`, `badge-redesign`, `badge-view`, `settings-theme-switch`. Each surfaces different things; expect at most one of: MiniTimeline `"Tap to expand timeline"` wrapper trap (plan step 5, conditional), Settings/`ThemeSwitcher` divergence from gated ThemeChipGrid.
+4. **End-of-branch sweep**: `bun run test:e2e` (full suite) once all flows pass individually. Then update this plan's status, optionally trim the Open Questions, and move to PR.
+
+### Key references for the next session
+
+- Skill: `.claude/skills/maestro-e2e/SKILL.md` — has the new "Dev-launcher bypass after clearState" section that documents the SDK-55 mechanism end to end.
+- Source-side gate pattern: `apps/native-rd/src/screens/BadgeEarnedModal/BadgeEarnedModal.tsx` (`cardA11yProps`), `apps/native-rd/src/components/CardCarousel/CardCarousel.tsx`. Three more components now follow this pattern: `ThemeChipGrid`, `EvidenceDrawer`, `FABMenu`.
+- UserDefault key: `EXDevMenuIsOnboardingFinished` (bool, set in `scripts/run-e2e.sh`).
+- Deep-link scheme: `exp+rollercoasterdev` (`Info.plist` `CFBundleURLTypes`), NOT bundle ID, NOT bare slug.
+- Bundle URL: `http://localhost:8081` works on iOS sim because sim shares host's network stack — the LAN IP shown in the dev-client picker is unnecessary for sim runs.
