@@ -77,7 +77,9 @@ echo "Installing iOS pods directly before Expo launch..."
 
 echo "Launching iOS app with Expo (skipping Expo-managed install step)..."
 
-if [ -n "${IOS_DEVICE_ID:-}" ]; then
+# E2E flows (clearState + clearKeychain) are destructive — must run on an
+# ephemeral simulator, never a developer's physical device.
+if [ -n "${IOS_DEVICE_ID:-}" ] && [ "${EXPO_PUBLIC_E2E_MODE:-}" != "true" ]; then
   exec npx expo run:ios --no-install --device "${IOS_DEVICE_ID}" "$@"
 fi
 
