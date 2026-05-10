@@ -351,3 +351,197 @@ No changes to `EvidenceDrawer`, `ThemeChipGrid`, `FABMenu` source — those gate
 - **EvidenceDrawer auto-collapse on focus return.** When CaptureTextNote does `navigation.goBack()`, FocusModeScreen's `isDrawerOpen` state persists. The drawer's expanded overlay covers the StepCard / MiniTimeline. The current flow fix (explicit `tapOn: "Toggle evidence drawer"`) is a workaround; a real fix would be a `useFocusEffect` to collapse the drawer on focus return after evidence save, OR resize the drawer so it doesn't visually occlude the StepCard.
 - **Text-evidence card labels**. `description ?? type ?? "Evidence"` falls back to "text" for un-captioned text notes — true everywhere (Timeline, FocusMode drawer, CompletionFlow, useAllEvidenceForGoal ×2). Hard to distinguish notes without captions. Consider a helper `evidenceLabel(row)` that for `type === "text"` extracts an excerpt from `uri.slice(TEXT_EVIDENCE_PREFIX.length)`. 7 callsites today.
 - **`captureBadge` race in BadgeDesignerScreen.** When flows run back-to-back without sim reset, `Use This Design` sometimes taps successfully but `navigation.replace("EditMode", …)` doesn't fire — the screen stays on the designer. Sim shutdown/boot fixes it deterministically. Likely react-native-view-shot getting an unstable view ref under hot-reload state. Worth investigating but out of scope.
+
+---
+
+## Status checkpoint — 2026-05-10 ~20:30
+
+Branch state at this checkpoint:
+
+```
+7b034401 test(native-rd): clearState in badge-view to make empty-state assertion run-order safe
+a307f8e6 test(native-rd): rewrite evidence-viewer flow with mixed evidence types
+dad01a29 docs(native-rd): checkpoint Maestro E2E plan after keyboard fix + MiniTimeline gate
+a5037003 test(native-rd): close EvidenceDrawer before tapping past it in CaptureTextNote flows
+bfaf6cde fix(native-rd): gate MiniTimeline expand-hint a11y wrapper behind EXPO_PUBLIC_E2E_MODE
+… (prior checkpoint commits unchanged)
+```
+
+### Working tree (UNCOMMITTED) at checkpoint
+
+Three files modified, awaiting verification + commit:
+
+- **`apps/native-rd/e2e/flows/evidence-viewer.yaml`** — three additions:
+  1. `centerElement: true` on the badge designer's `scrollUntilVisible: "Use This Design"`. Without it the button sits behind the FocusPillTabBar's lifted FAB and the tap lands on the tab bar, not the button.
+  2. Caption taps switched from `tapOn: "Caption (optional)"` to the placeholder text (`"What is this link about?"` and `"Add a short caption"`). The "Caption (optional)" label is rendered as both a non-interactive `Text` element AND the TextInput's `accessibilityLabel`. Maestro hits the Text first; subsequent `inputText` then appends to whichever field still holds focus, leaving the caption empty.
+  3. `pressKey: Enter` after each caption fires the keyboard's blue check (returnKeyType="done") to dismiss the soft keyboard so Save Link / Save Note below it become tappable.
+- **`apps/native-rd/src/screens/CaptureTextNote/CaptureTextNote.tsx` + `CaptureTextNote.styles.ts`** — restructure to fix layout regression introduced by `37f459d7`. The previous fix moved the SafeAreaView footer inside KAV, but `SafeAreaView edges={["bottom"]}` adds a static inset that double-counts when the home indicator is hidden (keyboard up), shifting the footer up to overlap the caption label. Combined with `flex:1` on the textInput fighting the caption Input for space, the result was the broken layout in Joe's screenshot.
+
+  New structure:
+  - `<ScrollView keyboardShouldPersistTaps="handled">` wraps TextInput + caption Input. Caption is reachable above the keyboard via scroll.
+  - TextInput drops `flex:1`, keeps `minHeight: 200`. No more flex-fighting.
+  - Footer is a plain `View` with `paddingBottom: insets.bottom` (from `useSafeAreaInsets`) — no SafeAreaView. Manual inset means the bottom space disappears when the home indicator is hidden, exactly matching iOS behavior.
+  - All 15 existing CaptureTextNote Jest tests still pass.
+
+### Verification status
+
+| Flow                           | Status on this checkpoint                                                                                                                                                                                                                                                                                                                       |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `goal-create.yaml`             | ✅ Passed prior checkpoint; not re-run.                                                                                                                                                                                                                                                                                                         |
+| `goal-create-complete.yaml`    | ✅ Passed prior checkpoint; not re-run.                                                                                                                                                                                                                                                                                                         |
+| `goal-lifecycle-complete.yaml` | ✅ Passed prior checkpoint; not re-run.                                                                                                                                                                                                                                                                                                         |
+| `evidence-viewer.yaml`         | 🟡 **Partial verification** in this session: the rewrite (committed) + centerElement + pressKey + placeholder-tap pattern got the flow through Save Link successfully. Save Note + caption blocked on the CaptureTextNote layout bug — fix is in working tree but UNVERIFIED. **Resume with: re-run after sim reset to verify the layout fix.** |
+| `badge-redesign.yaml`          | ❓ Not yet run.                                                                                                                                                                                                                                                                                                                                 |
+| `badge-view.yaml`              | ❓ Not yet run. clearState fix committed (`7b034401`).                                                                                                                                                                                                                                                                                          |
+| `settings-theme-switch.yaml`   | ❓ Not yet run.                                                                                                                                                                                                                                                                                                                                 |
+
+### What this session learned (lessons for the SKILL)
+
+1. **`scrollUntilVisible` accepts partial visibility through overlays.** Default visibility check uses element bounds vs. screen bounds — it does NOT account for sibling overlays like FocusPillTabBar. When a button sits at the bottom of a scrollable list and the FAB tab bar is lifted at the screen bottom, the scroll completes (button is "visible") but the tap target is occluded. Fix: add `centerElement: true` so the scroll positions the element at screen center, well clear of any overlay.
+2. **`tapOn` by Input label hits the rendered `<Text>`, not the TextInput.** The `Input` component renders both — the label as a `<Text>` element above the TextInput, and the TextInput with `accessibilityLabel = label ?? placeholder`. Maestro hits the topmost matching element, which is the non-interactive Text. Fix: tap inputs by their **placeholder text** (e.g. `tapOn: "What is this link about?"`), not by their visible label.
+3. **`pressKey: Enter` to dismiss the keyboard via the blue check.** When `returnKeyType="done"` is set on a single-line Input, Enter fires the iOS done key and dismisses the keyboard. Use this when a Save button below a TextInput needs to be tapped but is hidden behind the keyboard.
+4. **`SafeAreaView edges={["bottom"]}` inside `KeyboardAvoidingView` is a footgun.** SafeAreaView adds its inset based on the static bottom inset, but iOS hides the home indicator when the keyboard is up. The static inset effectively reserves space the layout can't see, shifting children. Fix: use `useSafeAreaInsets` and apply `paddingBottom` manually so it disappears when not needed.
+
+### How to resume
+
+1. **Sim reset + re-run evidence-viewer** to verify the CaptureTextNote layout fix unblocks the caption tap and Save Note. Recipe (from `apps/native-rd`):
+   ```bash
+   xcrun simctl shutdown booted; sleep 2
+   xcrun simctl boot 8A8E593D-8FCB-4C96-8E24-29BB697E9769; sleep 5
+   APP_PATH=$(stat -f "%N" -t "%Y" ~/Library/Developer/Xcode/DerivedData/Rollercoasterdev-*/Build/Products/Debug-iphonesimulator/Rollercoasterdev.app | sort -r | head -1)
+   xcrun simctl install booted "$APP_PATH"
+   xcrun simctl spawn booted defaults write dev.rollercoaster.app EXDevMenuIsOnboardingFinished -bool YES
+   bun run test:e2e:single e2e/flows/evidence-viewer.yaml
+   ```
+   Metro must already be running with `EXPO_PUBLIC_E2E_MODE=true` so the source layout fix gets picked up via JS bundle re-bundling on cold launch.
+2. **If green:** commit the source + flow changes as two atomic commits. Suggested messages:
+   - `fix(native-rd): restructure CaptureTextNote layout to keep Save Note + caption clear of keyboard`
+   - `test(native-rd): unblock evidence-viewer with centerElement + placeholder-tap + blue-check dismiss`
+3. **If red:** the layout fix may not have hot-reloaded. Try `npx expo start --clear` to reset Metro's transformer cache.
+4. **Then run remaining flows** with sim reset between each: `badge-redesign`, `badge-view`, `settings-theme-switch`.
+5. **Full-suite sweep**: `bun run test:e2e` once individual flows pass.
+6. **Update SKILL** (`.claude/skills/maestro-e2e/SKILL.md`) with the four lessons above plus the prior checkpoint's EvidenceDrawer overlay + MiniTimeline expand-hint gate notes.
+
+### Decisions made in this session
+
+- **CaptureTextNote layout: restructure, not revert** (Joe's choice when offered the three options). The keyboard fix in `37f459d7` had a real layout regression; reverting to the original would have re-introduced the Save-button-behind-keyboard UX bug. Restructuring with ScrollView + bounded textInput + manual insets is the durable fix.
+- **Captions stay in the flow, not type-fallback labels.** Earlier in the session captions were dropped while debugging the layout bug, and card-tap selectors switched to anchored regex on the type strings (`^text$` / `^link$`). Once the layout fix landed, captions came back because they yield naturally-unique card labels and exercise the description path on save.
+
+---
+
+## Status checkpoint — 2026-05-10 ~21:15
+
+**Status: `evidence-viewer.yaml` is now GREEN end-to-end.** ✅
+
+### What landed in this session
+
+Three new commits beyond the previous checkpoint:
+
+- **`revert(native-rd): undo CaptureTextNote layout fix to keep caption visible`**
+  The 20:30 checkpoint's layout restructure (ScrollView + flexGrow + manual
+  insets) made the multiline body TextInput grow to fill the ScrollView
+  viewport and pushed the caption Input below the visible area. Joe's
+  screenshot showed `Write a Note` header → giant body input → `Save Note`
+  → empty space → keyboard, with the caption Input nowhere visible. That
+  also explained an earlier Maestro confusion: tapping the placeholder of
+  the off-screen caption found the AX node but `inputText` likely never
+  focused into it, leaving `description` empty.
+
+  Reverted both `CaptureTextNote.tsx` and `CaptureTextNote.styles.ts` to
+  match `origin/main`. The structure is now: KAV wraps body+caption,
+  SafeAreaView footer outside KAV. **Side effect (out-of-scope per Joe):**
+  Save Note is hidden behind the soft keyboard during input. Acceptable
+  because the new flow uses `pressKey: Enter` after caption to dismiss
+  the keyboard via the caption Input's `returnKeyType="done"`. Pre-existing
+  real-user UX bug; tracked as out-of-scope follow-up.
+
+- **`fix(native-rd): gate evidence-card a11y wrappers behind EXPO_PUBLIC_E2E_MODE`**
+  Three components had the same iOS-AX-wrapper trap as MiniTimeline /
+  ThemeChipGrid / EvidenceDrawer / FABMenu: a `<Pressable accessible
+accessibilityLabel="${type} evidence: ${title}">` collapses children
+  into one AX node, hiding the inner `<Text>{title}</Text>` from
+  Maestro's `tapOn: text:` selector. Components gated:
+  - `TimelineEvidenceCard` (used in TimelineJourneyScreen, FinishLine)
+  - `EvidenceThumbnail` (used in EvidenceDrawer's grid)
+  - `ViewerStripThumb` (used in EvidenceViewer's bottom thumbnail strip)
+
+  Each ships with a Jest test mirroring the existing pattern: flip
+  `process.env.EXPO_PUBLIC_E2E_MODE = "true"`, assert the composed
+  `accessibilityLabel` is gone and the inner Text becomes reachable.
+  The branch now has **6 components** following this pattern; extracting
+  a `useGroupedA11y(props)` helper is a worthwhile follow-up.
+
+- **`test(native-rd): unblock evidence-viewer flow`** — three flow changes:
+  1. `centerElement: true` on `scrollUntilVisible: "Use This Design"` so
+     the button is centered (was sitting under FocusPillTabBar's lifted FAB).
+  2. Caption taps switched to placeholder text (`"What is this link
+about?"`, `"Add a short caption"`) instead of label `"Caption (optional)"`
+     — Input renders the label as both `<Text>` and `accessibilityLabel`,
+     and Maestro hits the non-interactive Text first.
+  3. `pressKey: Enter` after each caption fires the caption's
+     `returnKeyType="done"` blue check to dismiss the keyboard so Save
+     Link / Save Note become tappable.
+
+### Verification status
+
+| Flow                           | Status                                                                                                                         |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| `goal-create.yaml`             | ✅ Passed prior checkpoint; not re-run.                                                                                        |
+| `goal-create-complete.yaml`    | ⚠️ Was green on `37f459d7` source. With revert, will likely fail on `tapOn: "Save Note"` (keyboard hides it). Needs re-verify. |
+| `goal-lifecycle-complete.yaml` | ⚠️ Same as above.                                                                                                              |
+| `evidence-viewer.yaml`         | ✅ **GREEN end-to-end** on this checkpoint.                                                                                    |
+| `badge-redesign.yaml`          | ❓ Not yet run.                                                                                                                |
+| `badge-view.yaml`              | ❓ Not yet run.                                                                                                                |
+| `settings-theme-switch.yaml`   | ❓ Not yet run.                                                                                                                |
+
+### Out of scope (Joe's call)
+
+- **Save Note button visible above keyboard.** Originally what `37f459d7`
+  tried to fix. The current main behavior hides Save Note behind the soft
+  keyboard while the user is typing the body. Joe noted: "would be better
+  if the button was visible, there's enough space for it, but that's out
+  of scope". Tracked for a future session — the right fix is probably
+  footer-inside-KAV with manual `paddingBottom: insets.bottom` (no
+  SafeAreaView) AND keep both inputs as direct children of KAV (no
+  ScrollView). That preserves caption visibility AND lifts the footer.
+
+### Open blocker for next session
+
+`goal-create-complete.yaml` and `goal-lifecycle-complete.yaml` previously
+relied on `37f459d7`'s footer-inside-KAV behavior. They type into the body
+TextInput then tap Save Note immediately, with no caption interaction to
+dismiss the keyboard. With the source reverted these flows will likely
+fail at `tapOn: "Save Note"`. Three flow-level workarounds in priority
+order:
+
+1. **`swipe: { direction: DOWN, from: { x: 50%, y: 30% } }`** before
+   `tapOn: "Save Note"` — swipe-down dismisses iOS keyboards reliably.
+2. **`tapOn: "Add a short caption"` → `pressKey: Enter`** — focus the
+   caption (no input needed), Enter fires the blue check, keyboard
+   dismisses. Slightly more invasive but matches the evidence-viewer
+   pattern.
+3. **Solve the keyboard issue properly at source** — out of scope this
+   session, see "Out of scope" above.
+
+### How to resume
+
+1. Re-run `goal-create-complete.yaml` to confirm the Save-Note keyboard
+   failure mode. Apply workaround #1 or #2 to that flow + apply the same
+   to `goal-lifecycle-complete.yaml`.
+2. Run remaining flows with sim reset between each: `badge-redesign`,
+   `badge-view`, `settings-theme-switch`.
+3. Full-suite sweep: `bun run test:e2e`.
+4. Update `.claude/skills/maestro-e2e/SKILL.md` with this session's
+   lessons:
+   - `scrollUntilVisible` accepts partial visibility through overlays
+     (use `centerElement: true` when an overlay like FocusPillTabBar can
+     occlude the bottom of the visible area).
+   - `tapOn` by Input label hits the rendered `<Text>`, not the
+     TextInput. Tap by **placeholder** text instead.
+   - `pressKey: Enter` on a single-line Input with `returnKeyType="done"`
+     dismisses the keyboard via the blue check.
+   - `SafeAreaView edges={["bottom"]}` inside `KeyboardAvoidingView` is
+     a footgun (static inset double-counts when home indicator is
+     hidden); use `useSafeAreaInsets` + `paddingBottom` manually.
+   - The Pressable-a11y-wrapper trap now applies to **6+ components**;
+     follow the gate pattern when adding new wrappers.
