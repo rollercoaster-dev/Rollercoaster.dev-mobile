@@ -47,8 +47,8 @@ appId: dev.rollercoaster.app
     id: "start-working"
 - assertVisible: "Focus Mode"
 # Add a text note via the FAB → FABMenu → CaptureTextNote path.
-# Tap the static "Write a Note" header to dismiss the soft keyboard before
-# tapping Save Note — TextInput has autoFocus, footer button gets intercepted.
+# CaptureTextNote's footer is inside KeyboardAvoidingView, so Save Note rises
+# with the soft keyboard and is tappable without dismissing it first.
 - extendedWaitUntil:
     visible: "Add evidence"
     timeout: 15000
@@ -56,7 +56,6 @@ appId: dev.rollercoaster.app
 - tapOn: "Note"
 - assertVisible: "Write a Note"
 - inputText: "Outlined the key sections and supporting artifacts."
-- tapOn: "Write a Note"
 - tapOn: "Save Note"
 - assertVisible: "Focus Mode"
 - tapOn:
