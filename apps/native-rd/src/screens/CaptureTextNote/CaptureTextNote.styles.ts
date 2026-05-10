@@ -6,6 +6,9 @@ export const styles = StyleSheet.create((theme) => ({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
+  keyboardAvoiding: {
+    flex: 1,
+  },
   content: {
     flex: 1,
     padding: theme.space[4],
