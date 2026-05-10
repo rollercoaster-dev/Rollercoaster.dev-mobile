@@ -67,4 +67,34 @@ describe("ViewerStripThumb", () => {
     );
     expect(onPress).toHaveBeenCalledTimes(1);
   });
+
+  describe("E2E mode gating", () => {
+    const originalE2E = process.env.EXPO_PUBLIC_E2E_MODE;
+    beforeAll(() => {
+      process.env.EXPO_PUBLIC_E2E_MODE = "true";
+    });
+    afterAll(() => {
+      process.env.EXPO_PUBLIC_E2E_MODE = originalE2E;
+    });
+
+    it("drops Pressable a11y wrapper so the inner title Text is reachable", () => {
+      renderWithProviders(
+        <ViewerStripThumb
+          evidence={stepEvidence}
+          isActive={false}
+          onPress={jest.fn()}
+        />,
+      );
+      // Under EXPO_PUBLIC_E2E_MODE=true the wrapping Pressable's
+      // `accessible+role+label` props are dropped, so iOS no longer
+      // collapses the inner title Text into the composed parent label.
+      // Maestro can now match the inner text literally.
+      expect(
+        screen.queryByLabelText(
+          "text evidence: Mid-week note, from Read the docs",
+        ),
+      ).toBeNull();
+      expect(screen.getByText("Mid-week note")).toBeOnTheScreen();
+    });
+  });
 });
