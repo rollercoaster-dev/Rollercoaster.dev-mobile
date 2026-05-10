@@ -71,6 +71,10 @@ appId: dev.rollercoaster.app
 - tapOn: "Save Note"
 - assertVisible: "Focus Mode"
 
+# Close the EvidenceDrawer so its dim overlay doesn't capture the next tap
+# on the MiniTimeline above it.
+- tapOn: "Toggle evidence drawer"
+
 # Open the Timeline view via MiniTimeline's tap-to-expand affordance
 - tapOn: "Tap to expand timeline"
 - assertVisible: "Timeline"

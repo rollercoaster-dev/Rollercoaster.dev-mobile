@@ -58,6 +58,11 @@ appId: dev.rollercoaster.app
 - inputText: "Outlined the key sections and supporting artifacts."
 - tapOn: "Save Note"
 - assertVisible: "Focus Mode"
+# Close the EvidenceDrawer before tapping the StepCard's checkbox.
+# Returning from CaptureTextNote leaves the drawer expanded, and its dim
+# overlay captures taps at the StepCard's screen position even though
+# Maestro can match the checkbox by accessibility hierarchy.
+- tapOn: "Toggle evidence drawer"
 - tapOn:
     text: "Mark complete.*"
 - assertVisible:
