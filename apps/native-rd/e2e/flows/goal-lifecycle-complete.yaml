@@ -41,12 +41,16 @@ appId: dev.rollercoaster.app
 - tapOn:
     id: "start-working"
 - assertVisible: "Focus Mode"
-- assertVisible:
-    id: "step-card-quick-note-input"
-- tapOn:
-    id: "step-card-quick-note-input"
+# Add a text note via the FAB → FABMenu → CaptureTextNote path
+- extendedWaitUntil:
+    visible: "Add evidence"
+    timeout: 15000
+- tapOn: "Add evidence"
+- tapOn: "Note"
+- assertVisible: "Write a Note"
 - inputText: "Outlined the key sections and supporting artifacts."
-- pressKey: enter
+- tapOn: "Save Note"
+- assertVisible: "Focus Mode"
 - tapOn:
     text: "Mark complete.*"
 - assertVisible:

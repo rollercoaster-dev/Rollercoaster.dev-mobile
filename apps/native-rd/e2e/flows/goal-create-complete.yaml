@@ -43,16 +43,17 @@ appId: dev.rollercoaster.app
 - tapOn: "Start Working"
 - assertVisible: "Focus Mode"
 
-# Wait for step card to load in carousel (Evolu query needs a moment after navigation)
+# Wait for the EvidenceDrawer FAB to mount (Evolu query needs a moment after navigation)
 - extendedWaitUntil:
-    visible:
-      id: "step-card-quick-note-input"
+    visible: "Add evidence"
     timeout: 15000
-- tapOn:
-    id: "step-card-quick-note-input"
+# Add a text note via the FAB → FABMenu → CaptureTextNote path
+- tapOn: "Add evidence"
+- tapOn: "Note"
+- assertVisible: "Write a Note"
 - inputText: "Found a better way to organize the section"
-- tapOn:
-    id: "step-card-quick-note-add-button"
+- tapOn: "Save Note"
+- assertVisible: "Focus Mode"
 
 # Complete the step — triggers auto-navigation to CompletionFlow after 400ms
 - tapOn: "Mark complete"

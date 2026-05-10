@@ -43,25 +43,26 @@ appId: dev.rollercoaster.app
 - tapOn: "Start Working"
 - assertVisible: "Focus Mode"
 
-# Add a text note to the step
+# Add a text note via the FAB → FABMenu → CaptureTextNote path
 - extendedWaitUntil:
-    visible:
-      id: "step-card-quick-note-input"
+    visible: "Add evidence"
     timeout: 15000
-- tapOn:
-    id: "step-card-quick-note-input"
+- tapOn: "Add evidence"
+- tapOn: "Note"
+- assertVisible: "Write a Note"
 - inputText: "First piece of evidence"
-- tapOn:
-    id: "step-card-quick-note-add-button"
+- tapOn: "Save Note"
+- assertVisible: "Focus Mode"
 
 # Add a second text note. Both items are text type, so the viewer only
 # exercises the text branch in this flow; non-text branches are covered by
 # unit tests on EvidenceContent.
-- tapOn:
-    id: "step-card-quick-note-input"
+- tapOn: "Add evidence"
+- tapOn: "Note"
+- assertVisible: "Write a Note"
 - inputText: "Second piece of evidence"
-- tapOn:
-    id: "step-card-quick-note-add-button"
+- tapOn: "Save Note"
+- assertVisible: "Focus Mode"
 
 # Open the Timeline view via MiniTimeline's tap-to-expand affordance
 - tapOn: "Tap to expand timeline"
