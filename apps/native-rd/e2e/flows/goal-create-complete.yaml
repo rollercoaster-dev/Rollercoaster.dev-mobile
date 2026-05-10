@@ -52,11 +52,14 @@ appId: dev.rollercoaster.app
 - extendedWaitUntil:
     visible: "Add evidence"
     timeout: 15000
-# Add a text note via the FAB → FABMenu → CaptureTextNote path
+# Add a text note via the FAB → FABMenu → CaptureTextNote path.
+# Tap the static "Write a Note" header to dismiss the soft keyboard before
+# tapping Save Note — TextInput has autoFocus, footer button gets intercepted.
 - tapOn: "Add evidence"
 - tapOn: "Note"
 - assertVisible: "Write a Note"
 - inputText: "Found a better way to organize the section"
+- tapOn: "Write a Note"
 - tapOn: "Save Note"
 - assertVisible: "Focus Mode"
 
