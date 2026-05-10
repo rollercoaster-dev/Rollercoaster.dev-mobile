@@ -11,7 +11,7 @@ appId: dev.rollercoaster.app
 - tapOn: "Get Started"
 - assertVisible: "Goals"
 - tapOn:
-    id: "create-new-goal"
+    id: "tab-fab-new-goal"
 - assertVisible: "New Goal"
 - tapOn:
     id: "new-goal-title"

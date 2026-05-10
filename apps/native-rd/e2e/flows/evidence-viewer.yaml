@@ -11,7 +11,7 @@ appId: dev.rollercoaster.app
 
 # Create a goal
 - tapOn:
-    id: "create-new-goal"
+    id: "tab-fab-new-goal"
 - assertVisible: "New Goal"
 - tapOn: "What do you want to learn?"
 - inputText: "Curate evidence demo"

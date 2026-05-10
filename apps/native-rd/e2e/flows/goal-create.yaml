@@ -8,7 +8,7 @@ appId: dev.rollercoaster.app
     clearKeychain: true
 - assertVisible: "Goals"
 - tapOn:
-    id: "create-new-goal"
+    id: "tab-fab-new-goal"
 - assertVisible: "New Goal"
 - tapOn: "What do you want to learn?"
 - inputText: "Reorganize Local History section"
