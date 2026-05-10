@@ -2,7 +2,27 @@ appId: dev.rollercoaster.app
 ---
 # Badge tab navigation smoke test
 # Status: required
-# Criteria: stable feature, assertVisible confirms navigation + empty state render, deterministic
+# Criteria: stable feature, assertVisible confirms navigation + empty state, deterministic
+#
+# Uses clearState so the assertion holds regardless of run order in
+# `bun run test:e2e`. Without it, Maestro's alphabetical execution puts
+# badge-redesign before badge-view and the earned badge breaks the empty-state
+# check. Trade: the flow is no longer a "no-clearState navigation smoke" — it
+# now exercises onboarding too. The full-suite reliability is worth the
+# slightly broader scope.
+- clearState
 - launchApp
-- tapOn: "B"
+# Expo SDK 55 dev-client lands on its server picker after clearState
+# instead of auto-reloading the last bundle. Bypass via the dev-client
+# deep-link scheme `exp+<slug>://expo-development-client/?url=<bundle-url>`.
+# Onboarding hint + dev-menu modals are pre-disabled in run-e2e.sh.
+- openLink: "exp+rollercoasterdev://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081"
+- assertVisible: "Welcome to your ride."
+- tapOn: "The Full Ride. Standard theme"
+- tapOn: "Get Started"
+- assertVisible: "Goals"
+
+# Tap the Badges tab and confirm empty state
+- tapOn:
+    id: "tab-BadgesTab"
 - assertVisible: "No badges yet"
