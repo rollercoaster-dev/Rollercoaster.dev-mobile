@@ -6,7 +6,7 @@ appId: dev.rollercoaster.app
 - launchApp:
     clearState: true
     clearKeychain: true
-- assertVisible: "Pick what feels right"
+- assertVisible: "Welcome to your ride."
 - tapOn: "The Full Ride. Standard theme"
 - tapOn: "Get Started"
 - assertVisible: "Goals"

@@ -5,7 +5,8 @@ appId: dev.rollercoaster.app
 # then back out to Timeline.
 - clearState
 - launchApp
-- assertVisible: "Pick what feels right"
+- assertVisible: "Welcome to your ride."
+- tapOn: "The Full Ride. Standard theme"
 - tapOn: "Get Started"
 - assertVisible: "Goals"
 

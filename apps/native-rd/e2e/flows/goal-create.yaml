@@ -6,6 +6,9 @@ appId: dev.rollercoaster.app
 - launchApp:
     clearState: true
     clearKeychain: true
+- assertVisible: "Welcome to your ride."
+- tapOn: "The Full Ride. Standard theme"
+- tapOn: "Get Started"
 - assertVisible: "Goals"
 - tapOn:
     id: "tab-fab-new-goal"
