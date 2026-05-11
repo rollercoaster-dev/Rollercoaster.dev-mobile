@@ -9,8 +9,16 @@ import { measureTextWidth } from "./measureTextWidth";
 
 /** Matches the BadgeDesigner preview at which arc geometry is calibrated. */
 const REFERENCE_SIZE = 160;
-/** strokeWidth / 2 for the standard (non-highContrast) frame stroke; see BadgeRenderer. */
-const REFERENCE_INSET = 1.5;
+/**
+ * Matches `metrics.pathTextInset` at REFERENCE_SIZE in default density —
+ * the value BadgeRenderer actually passes into PathText/generateContour,
+ * not the raw stroke half-width. At size=160:
+ *   strokeWidth/2 + REFERENCE_SIZE * (FRAME_BAND_RATIO − textInsetReduction)
+ *   = 1.5 + 160 * (0.12 − 0.03) = 15.9
+ * Rounded up so the derived cap is conservative. Using 1.5 here
+ * overestimated arc capacity and still let strings overflow on device.
+ */
+const REFERENCE_INSET = 16;
 /** Headroom for kerning + the largeText/dyslexia a11y font scales. */
 const SAFETY_MARGIN = 0.92;
 

@@ -5,6 +5,7 @@ import {
   fireEvent,
 } from "../../__tests__/test-utils";
 import { PathTextEditor } from "../PathTextEditor";
+import { getPathTextMaxChars } from "../text/pathTextLimits";
 import { BadgeShape, PathTextPosition } from "../types";
 
 describe("PathTextEditor", () => {
@@ -302,20 +303,36 @@ describe("PathTextEditor", () => {
   // Character counter feedback
   // -------------------------------------------------------------------------
 
-  it("renders a character counter that reflects current top input length", () => {
-    renderWithProviders(
-      <PathTextEditor {...defaultProps} enabled={true} text="HELLO" />,
-    );
+  it("renders a top counter whose max matches getPathTextMaxChars(shape, 'top')", () => {
+    const shape = BadgeShape.circle;
+    const expectedMax = getPathTextMaxChars(shape, "top");
 
-    const counter = screen.getByLabelText(/^Top: 5 of \d+ characters used$/);
-    expect(counter).toBeOnTheScreen();
-  });
-
-  it("renders a character counter for the bottom input", () => {
     renderWithProviders(
       <PathTextEditor
         {...defaultProps}
         enabled={true}
+        shape={shape}
+        text="HELLO"
+      />,
+    );
+
+    expect(
+      screen.getByLabelText(`Top: 5 of ${expectedMax} characters used`),
+    ).toBeOnTheScreen();
+    expect(screen.getByLabelText("Path text").props.maxLength).toBe(
+      expectedMax,
+    );
+  });
+
+  it("renders a bottom counter whose max matches getPathTextMaxChars(shape, 'bottom')", () => {
+    const shape = BadgeShape.star;
+    const expectedMax = getPathTextMaxChars(shape, "bottom");
+
+    renderWithProviders(
+      <PathTextEditor
+        {...defaultProps}
+        enabled={true}
+        shape={shape}
         position={PathTextPosition.both}
         text="TOP"
         textBottom="BTM"
@@ -323,7 +340,16 @@ describe("PathTextEditor", () => {
     );
 
     expect(
-      screen.getByLabelText(/^Bottom: 3 of \d+ characters used$/),
+      screen.getByLabelText(`Bottom: 3 of ${expectedMax} characters used`),
     ).toBeOnTheScreen();
+    expect(screen.getByLabelText("Path text bottom").props.maxLength).toBe(
+      expectedMax,
+    );
+  });
+
+  it("uses tighter caps on diamond than on star", () => {
+    expect(getPathTextMaxChars(BadgeShape.diamond, "top")).toBeLessThan(
+      getPathTextMaxChars(BadgeShape.star, "top"),
+    );
   });
 });

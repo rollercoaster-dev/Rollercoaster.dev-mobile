@@ -557,7 +557,7 @@ Functionally identical; portable across Bun versions.
 
 **Symptom (iOS Simulator, fresh install of dev client from `bun run native:ios` or `bun run ios`):** Build + install succeed, app launches, but the dev launcher renders an error screen:
 
-```
+```text
 There was a problem loading the project.
 This development build encountered the following error:
 Failed to load app from http://192.168.178.129:8081/...

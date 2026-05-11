@@ -59,14 +59,19 @@ done < <(env | awk -F= '/^npm_/ { print $1 }')
 
 # Resolve Android SDK. Gradle won't pick up env-only ANDROID_HOME reliably
 # when invoked through bun → npm-script → expo-cli, so we also write
-# android/local.properties below.
+# android/local.properties below. Accept either ANDROID_HOME or
+# ANDROID_SDK_ROOT — Google renamed the latter as the canonical name but
+# many setups still export only ANDROID_HOME (or vice versa).
+if [ -z "${ANDROID_HOME:-}" ] && [ -n "${ANDROID_SDK_ROOT:-}" ]; then
+  export ANDROID_HOME="${ANDROID_SDK_ROOT}"
+fi
 if [ -z "${ANDROID_HOME:-}" ] && [ -d "${HOME}/Library/Android/sdk" ]; then
   export ANDROID_HOME="${HOME}/Library/Android/sdk"
 fi
 export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
 
 if [ -z "${ANDROID_HOME:-}" ] || [ ! -d "${ANDROID_HOME}" ]; then
-  echo "Error: Android SDK not found. Set ANDROID_HOME or install via Android Studio." >&2
+  echo "Error: Android SDK not found. Set ANDROID_HOME or ANDROID_SDK_ROOT, or install via Android Studio." >&2
   echo "  Expected default: ${HOME}/Library/Android/sdk" >&2
   exit 1
 fi
@@ -92,17 +97,28 @@ fi
 
 # Require a connected emulator or device. `adb devices` lines after the
 # header look like "<id>\tdevice" once authorized.
-if ! adb devices | awk 'NR>1 && $2=="device" { found=1 } END { exit !found }'; then
+device_count="$(adb devices | awk 'NR>1 && $2=="device" { n++ } END { print n+0 }')"
+if [ "${device_count}" -eq 0 ]; then
   echo "Error: no Android device/emulator connected." >&2
   echo "  Boot one from Android Studio (Device Manager → ▶) or plug in a device with USB debugging." >&2
   adb devices >&2 || true
   exit 1
 fi
+if [ "${device_count}" -gt 1 ] && [ -z "${ANDROID_DEVICE_ID:-}" ]; then
+  echo "Error: multiple Android devices/emulators connected — set ANDROID_DEVICE_ID to pick one." >&2
+  adb devices >&2 || true
+  exit 1
+fi
 
 # Reverse the Metro port so the emulator/device can reach the host's bundler
-# via localhost. Idempotent and harmless if already reversed.
+# via localhost. Scope to the target device when ANDROID_DEVICE_ID is set so
+# the reverse binds to the same device Expo will launch on. Idempotent.
 echo "Reversing tcp:8081 to host..."
-adb reverse tcp:8081 tcp:8081 >/dev/null
+if [ -n "${ANDROID_DEVICE_ID:-}" ]; then
+  adb -s "${ANDROID_DEVICE_ID}" reverse tcp:8081 tcp:8081 >/dev/null
+else
+  adb reverse tcp:8081 tcp:8081 >/dev/null
+fi
 
 # Pin packager host to localhost. Combined with `adb reverse` above, this
 # makes Metro reachable from emulators AND USB-connected devices without
