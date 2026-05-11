@@ -17,8 +17,8 @@ describe("measureTextWidth", () => {
     expect(large).toBeCloseTo(small * 3);
   });
 
-  it("matches the 0.7em char-width approximation", () => {
-    expect(measureTextWidth("ABCDE", 20)).toBeCloseTo(5 * 20 * 0.7);
+  it("matches the 0.8em char-width approximation", () => {
+    expect(measureTextWidth("ABCDE", 20)).toBeCloseTo(5 * 20 * 0.8);
   });
 
   // Boundary safety: invalid inputs must not propagate NaN/Infinity into

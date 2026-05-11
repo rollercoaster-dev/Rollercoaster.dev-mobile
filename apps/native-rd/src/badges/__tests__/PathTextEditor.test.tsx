@@ -5,7 +5,7 @@ import {
   fireEvent,
 } from "../../__tests__/test-utils";
 import { PathTextEditor } from "../PathTextEditor";
-import { PathTextPosition } from "../types";
+import { BadgeShape, PathTextPosition } from "../types";
 
 describe("PathTextEditor", () => {
   const onToggle = jest.fn();
@@ -18,6 +18,7 @@ describe("PathTextEditor", () => {
     text: "",
     textBottom: "",
     position: PathTextPosition.top,
+    shape: BadgeShape.circle,
     goalTitle: "My Goal",
     onToggle,
     onChangeText,
@@ -295,5 +296,34 @@ describe("PathTextEditor", () => {
 
     fireEvent.changeText(screen.getByLabelText("Path text bottom"), "BOTTOM");
     expect(onChangeTextBottom).toHaveBeenCalledWith("BOTTOM");
+  });
+
+  // -------------------------------------------------------------------------
+  // Character counter feedback
+  // -------------------------------------------------------------------------
+
+  it("renders a character counter that reflects current top input length", () => {
+    renderWithProviders(
+      <PathTextEditor {...defaultProps} enabled={true} text="HELLO" />,
+    );
+
+    const counter = screen.getByLabelText(/^Top: 5 of \d+ characters used$/);
+    expect(counter).toBeOnTheScreen();
+  });
+
+  it("renders a character counter for the bottom input", () => {
+    renderWithProviders(
+      <PathTextEditor
+        {...defaultProps}
+        enabled={true}
+        position={PathTextPosition.both}
+        text="TOP"
+        textBottom="BTM"
+      />,
+    );
+
+    expect(
+      screen.getByLabelText(/^Bottom: 3 of \d+ characters used$/),
+    ).toBeOnTheScreen();
   });
 });

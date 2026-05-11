@@ -7,6 +7,9 @@
  */
 
 import type { BadgeShape } from "../types";
+
+/** One of the two open-arc inscription sides. */
+export type PathTextSide = "top" | "bottom";
 import {
   circlePath,
   shieldPath,
@@ -50,7 +53,7 @@ export function getPathTextRadius(
   shape: BadgeShape,
   size: number,
   inset: number,
-  side: "top" | "bottom" = "top",
+  side: PathTextSide = "top",
 ): number {
   const outerR = size / 2 - inset;
   switch (shape) {
@@ -89,13 +92,13 @@ const PATH_TEXT_CENTER_Y_OFFSET: Record<
   diamond: { top: -4, bottom: 3 },
   shield: { top: -4, bottom: 3 },
   roundedRect: { top: -4, bottom: 3 },
-  star: { top: -8, bottom: 3 },
+  star: { top: -8, bottom: 14 },
 };
 
 export function getPathTextCenterY(
   shape: BadgeShape,
   size: number,
-  side: "top" | "bottom" = "top",
+  side: PathTextSide = "top",
 ): number {
   return size / 2 + PATH_TEXT_CENTER_Y_OFFSET[shape][side];
 }
@@ -142,7 +145,7 @@ function arcSized(
   cy: number,
   r: number,
   angle: number,
-  side: "top" | "bottom",
+  side: PathTextSide,
 ): string {
   const half = angle / 2;
   const baseAngle = side === "top" ? -Math.PI / 2 : Math.PI / 2;
@@ -198,7 +201,7 @@ function circleContour(
 }
 
 type PickArcConfig = {
-  side: "top" | "bottom";
+  side: PathTextSide;
   cx: number;
   cy: number;
   textR: number;

@@ -2,7 +2,8 @@ import React, { useCallback } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 
-import { PathTextPosition } from "./types";
+import { getPathTextMaxChars } from "./text/pathTextLimits";
+import { BadgeShape, PathTextPosition } from "./types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -13,6 +14,7 @@ export interface PathTextEditorProps {
   text: string;
   textBottom: string;
   position: PathTextPosition;
+  shape: BadgeShape;
   goalTitle: string;
   onToggle: (enabled: boolean) => void;
   onChangeText: (text: string) => void;
@@ -34,6 +36,27 @@ const POSITION_LABELS: Record<PathTextPosition, string> = {
   both: "Both",
 };
 
+/** Show the counter in warning color when fewer chars than this remain. */
+const COUNTER_WARNING_REMAINING = 3;
+
+interface CharCounterProps {
+  count: number;
+  max: number;
+  label: string;
+}
+
+function CharCounter({ count, max, label }: CharCounterProps) {
+  const isNearLimit = max - count <= COUNTER_WARNING_REMAINING;
+  return (
+    <Text
+      style={[styles.counter, isNearLimit && styles.counterWarning]}
+      accessibilityLabel={`${label}: ${count} of ${max} characters used`}
+    >
+      {count}/{max}
+    </Text>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -43,6 +66,7 @@ export function PathTextEditor({
   text,
   textBottom,
   position,
+  shape,
   goalTitle,
   onToggle,
   onChangeText,
@@ -53,6 +77,9 @@ export function PathTextEditor({
 }: PathTextEditorProps) {
   const { theme } = useUnistyles();
   const resolvedAccent = accentColor ?? theme.colors.accentPrimary;
+
+  const maxTop = getPathTextMaxChars(shape, "top");
+  const maxBottom = getPathTextMaxChars(shape, "bottom");
 
   const handleToggle = useCallback(
     () => onToggle(!enabled),
@@ -96,23 +123,27 @@ export function PathTextEditor({
         <>
           {(position === PathTextPosition.top ||
             position === PathTextPosition.both) && (
-            <TextInput
-              accessibilityLabel="Path text"
-              value={text}
-              onChangeText={onChangeText}
-              autoCapitalize="characters"
-              autoCorrect={false}
-              placeholder={goalTitle}
-              placeholderTextColor={theme.colors.textSecondary}
-              style={[
-                styles.input,
-                {
-                  borderColor: theme.colors.border,
-                  color: theme.colors.text,
-                  backgroundColor: theme.colors.background,
-                },
-              ]}
-            />
+            <>
+              <TextInput
+                accessibilityLabel="Path text"
+                value={text}
+                onChangeText={onChangeText}
+                maxLength={maxTop}
+                autoCapitalize="characters"
+                autoCorrect={false}
+                placeholder={goalTitle}
+                placeholderTextColor={theme.colors.textSecondary}
+                style={[
+                  styles.input,
+                  {
+                    borderColor: theme.colors.border,
+                    color: theme.colors.text,
+                    backgroundColor: theme.colors.background,
+                  },
+                ]}
+              />
+              <CharCounter count={text.length} max={maxTop} label="Top" />
+            </>
           )}
 
           <View
@@ -157,23 +188,31 @@ export function PathTextEditor({
 
           {(position === PathTextPosition.bottom ||
             position === PathTextPosition.both) && (
-            <TextInput
-              accessibilityLabel="Path text bottom"
-              value={textBottom}
-              onChangeText={onChangeTextBottom}
-              autoCapitalize="characters"
-              autoCorrect={false}
-              placeholder={goalTitle}
-              placeholderTextColor={theme.colors.textSecondary}
-              style={[
-                styles.input,
-                {
-                  borderColor: theme.colors.border,
-                  color: theme.colors.text,
-                  backgroundColor: theme.colors.background,
-                },
-              ]}
-            />
+            <>
+              <TextInput
+                accessibilityLabel="Path text bottom"
+                value={textBottom}
+                onChangeText={onChangeTextBottom}
+                maxLength={maxBottom}
+                autoCapitalize="characters"
+                autoCorrect={false}
+                placeholder={goalTitle}
+                placeholderTextColor={theme.colors.textSecondary}
+                style={[
+                  styles.input,
+                  {
+                    borderColor: theme.colors.border,
+                    color: theme.colors.text,
+                    backgroundColor: theme.colors.background,
+                  },
+                ]}
+              />
+              <CharCounter
+                count={textBottom.length}
+                max={maxBottom}
+                label="Bottom"
+              />
+            </>
           )}
         </>
       )}
@@ -230,5 +269,17 @@ const styles = StyleSheet.create((theme) => ({
     fontWeight: "600",
     textAlign: "center",
     letterSpacing: 2,
+  },
+  counter: {
+    marginHorizontal: theme.space[4],
+    marginTop: theme.space[1],
+    fontSize: 12,
+    fontFamily: theme.fontFamily.body,
+    textAlign: "right",
+    color: theme.colors.textMuted,
+  },
+  counterWarning: {
+    color: theme.colors.accentPrimary,
+    fontWeight: "700",
   },
 }));

@@ -89,6 +89,7 @@ function BadgeDesignerComposer({
           text={design.pathText ?? ""}
           textBottom={design.pathTextBottom ?? ""}
           position={design.pathTextPosition ?? PathTextPosition.top}
+          shape={design.shape}
           goalTitle={design.title}
           onToggle={(enabled) =>
             setDesign((prev) => ({
