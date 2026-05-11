@@ -22,7 +22,9 @@ fi
 APP_BUNDLE_ID="dev.rollercoaster.app"
 if xcrun simctl list devices booted 2>/dev/null | grep -q Booted; then
   xcrun simctl spawn booted defaults write \
-    "${APP_BUNDLE_ID}" EXDevMenuIsOnboardingFinished -bool YES 2>/dev/null || true
+    "${APP_BUNDLE_ID}" EXDevMenuIsOnboardingFinished -bool YES
+else
+  echo "warning: no booted simulator; EXDevMenuIsOnboardingFinished not pre-seeded" >&2
 fi
 
 maestro test e2e/flows/
