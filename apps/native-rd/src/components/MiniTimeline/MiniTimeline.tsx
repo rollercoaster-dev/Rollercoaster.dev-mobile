@@ -32,6 +32,11 @@ export function MiniTimeline({
   // element's name), so Maestro can't find the literal inner text. Drop the
   // grouping in E2E mode; production keeps `accessible+role=button+label` so
   // screen readers announce the timeline as a single button.
+  //
+  // Contract note: in E2E mode the caller-supplied `accessibilityLabel` prop
+  // is intentionally dropped — Maestro reaches the inner Text by its literal
+  // content ("Tap to expand timeline"). Re-applying the prop to the Text
+  // child would override that content for a11y lookup and break the flow.
   const isE2E = process.env.EXPO_PUBLIC_E2E_MODE === "true";
   const expandA11y = isE2E
     ? ({ accessible: false } as const)
