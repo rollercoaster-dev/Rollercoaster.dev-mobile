@@ -3,8 +3,9 @@ appId: dev.rollercoaster.app
 # Lina's Quiet Victory — create a goal, add a quick note, complete the step, add a final goal note
 # Status: required
 # Criteria: stable feature, outcome assertion present, deterministic
-- clearState
-- launchApp
+- launchApp:
+    clearState: true
+    clearKeychain: true
 # Expo SDK 55 dev-client lands on its server picker after clearState
 # instead of auto-reloading the last bundle. Bypass via the dev-client
 # deep-link scheme `exp+<slug>://expo-development-client/?url=<bundle-url>`.
