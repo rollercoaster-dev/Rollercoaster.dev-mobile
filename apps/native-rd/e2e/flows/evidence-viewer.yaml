@@ -108,9 +108,12 @@ appId: dev.rollercoaster.app
 - tapOn: "Tap to expand timeline"
 - assertVisible: "Timeline"
 
-# Expand the step row so its evidence cards are visible
+# Expand the step row so its evidence cards are visible.
+# Without this assert the next tap could appear-pass on a stale "Text
+# reflection" caption if the expand silently no-ops.
 - tapOn:
     text: "Capture mixed evidence.*"
+- assertVisible: "Text reflection"
 
 # Tap the text-evidence card → EvidenceViewerScreen pushes in.
 # Text was captured second so it's index 0 in the createdAt-desc sort.
