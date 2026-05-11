@@ -30,9 +30,14 @@ export function ViewerStripThumb({
   // name), so Maestro can't match the inner title literally. Drop the
   // grouping in E2E mode; production keeps `accessible+role+label` so
   // screen readers announce each thumb as one button with full context.
+  // `accessibilityState` stays outside the gate so the screen-reader
+  // selection cue is preserved in both modes.
   const isE2E = process.env.EXPO_PUBLIC_E2E_MODE === "true";
   const thumbA11y = isE2E
-    ? ({ accessible: false } as const)
+    ? ({
+        accessible: false,
+        accessibilityState: { selected: isActive },
+      } as const)
     : ({
         accessible: true,
         accessibilityRole: "button" as const,
