@@ -4,7 +4,7 @@ End-to-end test flows for the native-rd app, designed for agent authoring and ex
 
 ## Prerequisites
 
-- **Maestro CLI**: `brew install maestro` (not in devDependencies — requires separate install)
+- **Maestro CLI**: `brew tap mobile-dev-inc/tap && brew install mobile-dev-inc/tap/maestro` (not in devDependencies — requires separate install). Do not use `brew install maestro`; that installs the wrong Homebrew cask for this runner.
 - **iOS Simulator**: Must be booted with the app installed (`npx expo run:ios`)
 - **App ID**: `dev.rollercoaster.app`
 
