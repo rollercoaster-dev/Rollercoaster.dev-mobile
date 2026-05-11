@@ -76,6 +76,8 @@ appId: dev.rollercoaster.app
 - tapOn:
     id: "completion-note-input"
 - inputText: "Finished organizing the section and wrote down what worked."
+# Dismiss the soft keyboard by tapping the static header — Maestro's `hideKeyboard`
+# cannot find a dismiss affordance here, and the keyboard intercepts the save tap.
 - tapOn: "One last thing!"
 - tapOn: "Save Note"
 # Flow ends after Save Note — the celebration screen + BadgeEarnedModal appear next,
