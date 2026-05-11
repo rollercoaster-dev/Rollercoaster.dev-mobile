@@ -54,12 +54,16 @@ appId: dev.rollercoaster.app
     visible: "Add evidence"
     timeout: 15000
 # Add a text note via the FAB → FABMenu → CaptureTextNote path.
-# CaptureTextNote's footer is inside KeyboardAvoidingView, so Save Note rises
-# with the soft keyboard and is tappable without dismissing it first.
+# CaptureTextNote's footer sits outside KeyboardAvoidingView (CaptureTextNote.tsx:117),
+# so Save Note is hidden behind the soft keyboard after typing the body. Tap the
+# caption Input and press Enter to fire returnKeyType="done" and dismiss the
+# keyboard before Save Note. Mirrors the evidence-viewer.yaml pattern.
 - tapOn: "Add evidence"
 - tapOn: "Note"
 - assertVisible: "Write a Note"
 - inputText: "Found a better way to organize the section"
+- tapOn: "Add a short caption"
+- pressKey: Enter
 - tapOn: "Save Note"
 - assertVisible: "Focus Mode"
 
