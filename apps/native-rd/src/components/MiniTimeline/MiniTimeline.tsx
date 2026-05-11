@@ -27,6 +27,26 @@ export function MiniTimeline({
   const allCompleted =
     steps.length > 0 && steps.every((s) => s.status === "completed");
 
+  // The Pressable wrapping the "Tap to expand timeline" Text collapses the
+  // child into a single a11y node on iOS (its accessibilityLabel becomes the
+  // element's name), so Maestro can't find the literal inner text. Drop the
+  // grouping in E2E mode; production keeps `accessible+role=button+label` so
+  // screen readers announce the timeline as a single button.
+  //
+  // Contract note: in E2E mode the caller-supplied `accessibilityLabel` prop
+  // is intentionally dropped — Maestro reaches the inner Text by its literal
+  // content ("Tap to expand timeline"). Re-applying the prop to the Text
+  // child would override that content for a11y lookup and break the flow.
+  const isE2E = process.env.EXPO_PUBLIC_E2E_MODE === "true";
+  const expandA11y = isE2E
+    ? ({ accessible: false } as const)
+    : ({
+        accessible: true,
+        accessibilityRole: "button" as const,
+        accessibilityLabel,
+        accessibilityHint: "Opens full timeline view",
+      } as const);
+
   return (
     <View style={styles.container}>
       <View style={styles.track}>
@@ -76,13 +96,7 @@ export function MiniTimeline({
           />
         </Pressable>
       </View>
-      <Pressable
-        onPress={onTimelineTap}
-        accessible
-        accessibilityRole="button"
-        accessibilityLabel={accessibilityLabel}
-        accessibilityHint="Opens full timeline view"
-      >
+      <Pressable onPress={onTimelineTap} {...expandA11y}>
         <Text style={styles.hintText}>Tap to expand timeline</Text>
       </Pressable>
     </View>

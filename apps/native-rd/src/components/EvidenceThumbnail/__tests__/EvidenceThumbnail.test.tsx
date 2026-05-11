@@ -284,4 +284,34 @@ describe("EvidenceThumbnail", () => {
     expect(onPress).toHaveBeenCalled();
     expect(Linking.canOpenURL).not.toHaveBeenCalled();
   });
+
+  // --- E2E gating ---
+
+  describe("E2E mode gating", () => {
+    const originalE2E = process.env.EXPO_PUBLIC_E2E_MODE;
+    beforeAll(() => {
+      process.env.EXPO_PUBLIC_E2E_MODE = "true";
+    });
+    afterAll(() => {
+      process.env.EXPO_PUBLIC_E2E_MODE = originalE2E;
+    });
+
+    it("drops Pressable a11y wrapper so the inner title Text is reachable", () => {
+      const evidence: Evidence = {
+        id: "1",
+        title: "Reference archive",
+        type: "link",
+        uri: "https://example.com",
+      };
+      render(<EvidenceThumbnail evidence={evidence} />);
+      // Under EXPO_PUBLIC_E2E_MODE=true the wrapping Pressable's
+      // `accessible+role+label` props are dropped, so iOS no longer
+      // collapses the inner title Text into the composed parent label.
+      // Maestro can now match the inner text literally.
+      expect(
+        screen.queryByLabelText("link evidence: Reference archive"),
+      ).toBeNull();
+      expect(screen.getByText("Reference archive")).toBeTruthy();
+    });
+  });
 });

@@ -25,13 +25,30 @@ export function ViewerStripThumb({
       ? "Goal Evidence"
       : (evidence.stepTitle ?? "Step");
 
+  // The Pressable wrapping the icon + title collapses children into a single
+  // a11y node on iOS (composed accessibilityLabel becomes the element's
+  // name), so Maestro can't match the inner title literally. Drop the
+  // grouping in E2E mode; production keeps `accessible+role+label` so
+  // screen readers announce each thumb as one button with full context.
+  // `accessibilityState` stays outside the gate so the screen-reader
+  // selection cue is preserved in both modes.
+  const isE2E = process.env.EXPO_PUBLIC_E2E_MODE === "true";
+  const thumbA11y = isE2E
+    ? ({
+        accessible: false,
+        accessibilityState: { selected: isActive },
+      } as const)
+    : ({
+        accessible: true,
+        accessibilityRole: "button" as const,
+        accessibilityLabel: `${EVIDENCE_TYPE_LABELS[evidence.type] ?? evidence.type} evidence: ${evidence.title}, from ${sourceLabel}`,
+        accessibilityState: { selected: isActive },
+      } as const);
+
   return (
     <Pressable
       onPress={onPress}
-      accessible
-      accessibilityRole="button"
-      accessibilityLabel={`${EVIDENCE_TYPE_LABELS[evidence.type] ?? evidence.type} evidence: ${evidence.title}, from ${sourceLabel}`}
-      accessibilityState={{ selected: isActive }}
+      {...thumbA11y}
       style={({ pressed }) => [
         styles.container(isActive),
         pressed && styles.pressed,

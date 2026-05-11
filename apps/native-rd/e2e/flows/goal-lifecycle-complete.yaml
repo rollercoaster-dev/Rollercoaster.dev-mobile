@@ -6,12 +6,17 @@ appId: dev.rollercoaster.app
 - launchApp:
     clearState: true
     clearKeychain: true
-- assertVisible: "Pick what feels right"
+# Expo SDK 55 dev-client lands on its server picker after clearState
+# instead of auto-reloading the last bundle. Bypass via the dev-client
+# deep-link scheme `exp+<slug>://expo-development-client/?url=<bundle-url>`.
+# Onboarding hint + dev-menu modals are pre-disabled in run-e2e.sh.
+- openLink: "exp+rollercoasterdev://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081"
+- assertVisible: "Welcome to your ride."
 - tapOn: "The Full Ride. Standard theme"
 - tapOn: "Get Started"
 - assertVisible: "Goals"
 - tapOn:
-    id: "create-new-goal"
+    id: "tab-fab-new-goal"
 - assertVisible: "New Goal"
 - tapOn:
     id: "new-goal-title"
@@ -41,12 +46,27 @@ appId: dev.rollercoaster.app
 - tapOn:
     id: "start-working"
 - assertVisible: "Focus Mode"
-- assertVisible:
-    id: "step-card-quick-note-input"
-- tapOn:
-    id: "step-card-quick-note-input"
+# Add a text note via the FAB → FABMenu → CaptureTextNote path.
+# CaptureTextNote's footer sits outside KeyboardAvoidingView (CaptureTextNote.tsx:117),
+# so Save Note is hidden behind the soft keyboard after typing the body. Tap the
+# caption Input and press Enter to fire returnKeyType="done" and dismiss the
+# keyboard before Save Note. Mirrors the evidence-viewer.yaml pattern.
+- extendedWaitUntil:
+    visible: "Add evidence"
+    timeout: 15000
+- tapOn: "Add evidence"
+- tapOn: "Note"
+- assertVisible: "Write a Note"
 - inputText: "Outlined the key sections and supporting artifacts."
-- pressKey: enter
+- tapOn: "Add a short caption"
+- pressKey: Enter
+- tapOn: "Save Note"
+- assertVisible: "Focus Mode"
+# Close the EvidenceDrawer before tapping the StepCard's checkbox.
+# Returning from CaptureTextNote leaves the drawer expanded, and its dim
+# overlay captures taps at the StepCard's screen position even though
+# Maestro can match the checkbox by accessibility hierarchy.
+- tapOn: "Toggle evidence drawer"
 - tapOn:
     text: "Mark complete.*"
 - assertVisible:

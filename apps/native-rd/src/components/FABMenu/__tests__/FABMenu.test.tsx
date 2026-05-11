@@ -51,4 +51,27 @@ describe("FABMenu", () => {
     renderWithProviders(<FABMenu {...defaultProps} />);
     expect(screen.getAllByRole("menuitem").length).toBeGreaterThan(0);
   });
+
+  describe("E2E mode gating", () => {
+    const originalE2E = process.env.EXPO_PUBLIC_E2E_MODE;
+    beforeAll(() => {
+      process.env.EXPO_PUBLIC_E2E_MODE = "true";
+    });
+    afterAll(() => {
+      process.env.EXPO_PUBLIC_E2E_MODE = originalE2E;
+    });
+
+    it("drops menu wrapper so each menuitem label is reachable", () => {
+      renderWithProviders(<FABMenu {...defaultProps} />);
+      // Under EXPO_PUBLIC_E2E_MODE=true, the outer menu grouping is
+      // disabled so Maestro can resolve each menu item's label
+      // (e.g. "Note", "Photo") without colliding with the parent menu's
+      // "Add evidence menu" composed label.
+      expect(screen.queryByLabelText("Add evidence menu")).toBeNull();
+      // Individual menu items remain reachable.
+      expect(screen.getAllByRole("menuitem")).toHaveLength(
+        EVIDENCE_CAPTURE_OPTIONS.length,
+      );
+    });
+  });
 });

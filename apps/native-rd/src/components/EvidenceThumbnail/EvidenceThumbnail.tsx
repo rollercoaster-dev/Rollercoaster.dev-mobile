@@ -111,15 +111,27 @@ export function EvidenceThumbnail({
   const accessibilityHint =
     isLink && !onPress ? "Opens link in browser" : undefined;
 
+  // The Pressable wrapping the preview + title collapses the inner Text into
+  // a single a11y node on iOS (composed accessibilityLabel becomes the
+  // element's name), so Maestro can't match the inner title literally. Drop
+  // the grouping in E2E mode; production keeps `accessible+role+label` so
+  // screen readers announce each thumbnail as one button with full context.
+  const isE2E = process.env.EXPO_PUBLIC_E2E_MODE === "true";
+  const thumbA11y = isE2E
+    ? ({ accessible: false } as const)
+    : ({
+        accessible: true,
+        accessibilityRole: isInteractive ? ("button" as const) : undefined,
+        accessibilityLabel: `${evidence.type} evidence: ${evidence.title}`,
+        accessibilityHint,
+      } as const);
+
   return (
     <Pressable
       onPress={handlePress}
       onLongPress={onLongPress}
       disabled={!isInteractive && !onLongPress}
-      accessible
-      accessibilityRole={isInteractive ? "button" : undefined}
-      accessibilityLabel={`${evidence.type} evidence: ${evidence.title}`}
-      accessibilityHint={accessibilityHint}
+      {...thumbA11y}
       style={({ pressed }) => [
         pressed && (isInteractive || onLongPress) && styles.pressed,
       ]}

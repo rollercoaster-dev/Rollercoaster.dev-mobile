@@ -88,6 +88,20 @@ export function EvidenceDrawer({
     ? `Goal evidence: ${items.length} item${items.length !== 1 ? "s" : ""}`
     : `${items.length} evidence item${items.length !== 1 ? "s" : ""}`;
 
+  // The drawer's `accessible+role=summary` wrapper collapses descendants
+  // (FAB, FABMenu, evidence items) into a single a11y node on iOS, hiding
+  // them from Maestro element lookup. Drop the grouping in E2E mode; the
+  // descendants retain their own accessibility props (FAB has
+  // `accessibilityLabel="Add evidence"`, FABMenu items have role=menuitem).
+  const isE2E = process.env.EXPO_PUBLIC_E2E_MODE === "true";
+  const drawerA11yProps = isE2E
+    ? ({ accessible: false } as const)
+    : ({
+        accessible: true,
+        accessibilityRole: "summary" as const,
+        accessibilityLabel: isGoal ? "Goal evidence drawer" : "Evidence drawer",
+      } as const);
+
   return (
     <>
       {/* Overlay */}
@@ -107,9 +121,7 @@ export function EvidenceDrawer({
       {/* Drawer */}
       <Animated.View
         style={[styles.drawer(isGoal), drawerAnimStyle]}
-        accessible
-        accessibilityRole="summary"
-        accessibilityLabel={isGoal ? "Goal evidence drawer" : "Evidence drawer"}
+        {...drawerA11yProps}
       >
         {/* Handle bar */}
         <View style={styles.handleArea}>

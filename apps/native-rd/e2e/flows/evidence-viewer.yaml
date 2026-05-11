@@ -1,28 +1,47 @@
 appId: dev.rollercoaster.app
 ---
-# Evidence viewer flow — capture mixed-type evidence, open the Timeline,
-# tap an item to push EvidenceViewerScreen, switch via the thumbnail strip,
-# then back out to Timeline.
+# Evidence viewer flow — capture mixed-type evidence (one link + one text),
+# open the Timeline, tap a card to push EvidenceViewerScreen, switch via the
+# thumbnail strip, then back out to Timeline.
+#
+# Mixing two types (vs. two text notes): exercises distinct render branches
+# in EvidenceContent (LinkContent vs TextContent) — a real "viewer" smoke
+# test, not just pagination. Captions on both items give the Timeline cards
+# unique labels Maestro can match without ambiguity.
+#
+# Captures are ordered link → text so the createdAt-desc viewer ordering puts
+# text at index 0 ("1 / 2") and link at index 1 ("2 / 2") — counter ascends
+# in the same direction the flow walks the strip.
 - clearState
 - launchApp
-- assertVisible: "Pick what feels right"
+# Expo SDK 55 dev-client lands on its server picker after clearState
+# instead of auto-reloading the last bundle. Bypass via the dev-client
+# deep-link scheme `exp+<slug>://expo-development-client/?url=<bundle-url>`.
+# Onboarding hint + dev-menu modals are pre-disabled in run-e2e.sh.
+- openLink: "exp+rollercoasterdev://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081"
+- assertVisible: "Welcome to your ride."
+- tapOn: "The Full Ride. Standard theme"
 - tapOn: "Get Started"
 - assertVisible: "Goals"
 
 # Create a goal
 - tapOn:
-    id: "create-new-goal"
+    id: "tab-fab-new-goal"
 - assertVisible: "New Goal"
 - tapOn: "What do you want to learn?"
 - inputText: "Curate evidence demo"
 - tapOn: "Create Goal"
 
-# Badge designer → use default
+# Badge designer → use default. centerElement so the button is scrolled to
+# the middle of the screen rather than just into-bounds — without it the
+# button can sit under the FocusPillTabBar's lifted FAB and the tap lands on
+# the tab bar instead of the button.
 - assertVisible: "Design Badge"
 - scrollUntilVisible:
     element: "Use This Design"
     direction: DOWN
     timeout: 10000
+    centerElement: true
 - tapOn: "Use This Design"
 
 # Edit mode — add a step
@@ -42,46 +61,73 @@ appId: dev.rollercoaster.app
 - tapOn: "Start Working"
 - assertVisible: "Focus Mode"
 
-# Add a text note to the step
+# Add a link evidence first (older). FAB → FABMenu → CaptureLinkScreen.
+# `pressKey: Enter` after the caption fires the keyboard's blue check
+# (returnKeyType="done") to dismiss the soft keyboard so the Save Link
+# button below it is tappable. CaptureLinkScreen has no KeyboardAvoidingView,
+# so without dismissing first the Save tap lands on the keyboard.
+#
+# Caption is tapped by placeholder text (not by "Caption (optional)" label)
+# because Input renders BOTH a Text label and a TextInput with the same
+# accessibilityLabel — tapping by label hits the non-interactive Text first
+# and inputText then appends to whichever field still holds focus.
 - extendedWaitUntil:
-    visible:
-      id: "step-card-quick-note-input"
+    visible: "Add evidence"
     timeout: 15000
-- tapOn:
-    id: "step-card-quick-note-input"
-- inputText: "First piece of evidence"
-- tapOn:
-    id: "step-card-quick-note-add-button"
+- tapOn: "Add evidence"
+- tapOn: "Link"
+- assertVisible: "Add Link"
+- tapOn: "https://example.com"
+- inputText: "https://archive.org/details/community-history"
+- tapOn: "What is this link about?"
+- inputText: "Reference archive"
+- pressKey: Enter
+- tapOn: "Save Link"
+- assertVisible: "Focus Mode"
 
-# Add a second text note. Both items are text type, so the viewer only
-# exercises the text branch in this flow; non-text branches are covered by
-# unit tests on EvidenceContent.
-- tapOn:
-    id: "step-card-quick-note-input"
-- inputText: "Second piece of evidence"
-- tapOn:
-    id: "step-card-quick-note-add-button"
+# Add a text note (newer). CaptureTextNote now wraps inputs in a ScrollView
+# inside KAV with the footer outside the scroll, so the caption Input is
+# reachable above the keyboard. After typing the caption, pressKey: Enter
+# fires the blue check (returnKeyType="done") to dismiss the keyboard so
+# Save Note is tappable.
+- tapOn: "Add evidence"
+- tapOn: "Note"
+- assertVisible: "Write a Note"
+- inputText: "Reflection on archive sources"
+- tapOn: "Add a short caption"
+- inputText: "Text reflection"
+- pressKey: Enter
+- tapOn: "Save Note"
+- assertVisible: "Focus Mode"
+
+# Close the EvidenceDrawer so its dim overlay doesn't capture the next tap
+# on the MiniTimeline above it.
+- tapOn: "Toggle evidence drawer"
 
 # Open the Timeline view via MiniTimeline's tap-to-expand affordance
 - tapOn: "Tap to expand timeline"
 - assertVisible: "Timeline"
 
-# Expand the step row so its evidence cards are visible
+# Expand the step row so its evidence cards are visible.
+# Without this assert the next tap could appear-pass on a stale "Text
+# reflection" caption if the expand silently no-ops.
 - tapOn:
     text: "Capture mixed evidence.*"
+- assertVisible: "Text reflection"
 
-# Tap the first evidence card → EvidenceViewerScreen pushes in
+# Tap the text-evidence card → EvidenceViewerScreen pushes in.
+# Text was captured second so it's index 0 in the createdAt-desc sort.
 - tapOn:
-    text: "First piece of evidence"
+    text: "Text reflection"
 - assertVisible: "Evidence"
 - assertVisible: "1 / 2"
 
-# Tap the other thumbnail to switch active item
+# Switch to the link-evidence thumbnail (link was captured first → index 1).
 - tapOn:
-    text: ".*Second piece of evidence.*"
+    text: "Reference archive"
 - assertVisible: "2 / 2"
 
 # Back to Timeline
 - tapOn: "Go back"
 - assertVisible: "Timeline"
-- assertVisible: "First piece of evidence"
+- assertVisible: "Text reflection"

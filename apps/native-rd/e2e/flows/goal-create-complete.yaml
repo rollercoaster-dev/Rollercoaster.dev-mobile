@@ -3,15 +3,22 @@ appId: dev.rollercoaster.app
 # Lina's Quiet Victory — create a goal, add a quick note, complete the step, add a final goal note
 # Status: required
 # Criteria: stable feature, outcome assertion present, deterministic
-- clearState
-- launchApp
-- assertVisible: "Pick what feels right"
+- launchApp:
+    clearState: true
+    clearKeychain: true
+# Expo SDK 55 dev-client lands on its server picker after clearState
+# instead of auto-reloading the last bundle. Bypass via the dev-client
+# deep-link scheme `exp+<slug>://expo-development-client/?url=<bundle-url>`.
+# Onboarding hint + dev-menu modals are pre-disabled in run-e2e.sh.
+- openLink: "exp+rollercoasterdev://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081"
+- assertVisible: "Welcome to your ride."
+- tapOn: "The Full Ride. Standard theme"
 - tapOn: "Get Started"
 - assertVisible: "Goals"
 
 # Create a new goal
 - tapOn:
-    id: "create-new-goal"
+    id: "tab-fab-new-goal"
 - assertVisible: "New Goal"
 - tapOn: "What do you want to learn?"
 - inputText: "Reorganize Local History section"
@@ -42,16 +49,29 @@ appId: dev.rollercoaster.app
 - tapOn: "Start Working"
 - assertVisible: "Focus Mode"
 
-# Wait for step card to load in carousel (Evolu query needs a moment after navigation)
+# Wait for the EvidenceDrawer FAB to mount (Evolu query needs a moment after navigation)
 - extendedWaitUntil:
-    visible:
-      id: "step-card-quick-note-input"
+    visible: "Add evidence"
     timeout: 15000
-- tapOn:
-    id: "step-card-quick-note-input"
+# Add a text note via the FAB → FABMenu → CaptureTextNote path.
+# CaptureTextNote's footer sits outside KeyboardAvoidingView (CaptureTextNote.tsx:117),
+# so Save Note is hidden behind the soft keyboard after typing the body. Tap the
+# caption Input and press Enter to fire returnKeyType="done" and dismiss the
+# keyboard before Save Note. Mirrors the evidence-viewer.yaml pattern.
+- tapOn: "Add evidence"
+- tapOn: "Note"
+- assertVisible: "Write a Note"
 - inputText: "Found a better way to organize the section"
-- tapOn:
-    id: "step-card-quick-note-add-button"
+- tapOn: "Add a short caption"
+- pressKey: Enter
+- tapOn: "Save Note"
+- assertVisible: "Focus Mode"
+
+# Close the EvidenceDrawer before tapping the StepCard's checkbox.
+# Returning from CaptureTextNote leaves the drawer expanded, and its dim
+# overlay captures taps at the StepCard's screen position even though
+# Maestro can match the checkbox by accessibility hierarchy.
+- tapOn: "Toggle evidence drawer"
 
 # Complete the step — triggers auto-navigation to CompletionFlow after 400ms
 - tapOn: "Mark complete"
@@ -61,6 +81,8 @@ appId: dev.rollercoaster.app
 - tapOn:
     id: "completion-note-input"
 - inputText: "Finished organizing the section and wrote down what worked."
+# Dismiss the soft keyboard by tapping the static header — Maestro's `hideKeyboard`
+# cannot find a dismiss affordance here, and the keyboard intercepts the save tap.
 - tapOn: "One last thing!"
 - tapOn: "Save Note"
 # Flow ends after Save Note — the celebration screen + BadgeEarnedModal appear next,

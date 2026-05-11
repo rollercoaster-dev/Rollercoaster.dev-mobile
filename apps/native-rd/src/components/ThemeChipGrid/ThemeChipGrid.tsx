@@ -50,13 +50,22 @@ export function ThemeChipGrid() {
     rows.push(themeOptions.slice(i, i + COLUMN_COUNT));
   }
 
+  // The radiogroup wrapper collapses descendant Pressables into a single
+  // a11y node on iOS, which hides individual chips from Maestro element
+  // lookup. Drop the grouping in E2E mode; the Pressables retain their
+  // own `accessible+role=radio+label` so screen readers still treat each
+  // chip as a discrete radio option in production.
+  const isE2E = process.env.EXPO_PUBLIC_E2E_MODE === "true";
+  const groupingA11y = isE2E
+    ? ({ accessible: false } as const)
+    : ({
+        accessible: true,
+        accessibilityRole: "radiogroup" as const,
+        accessibilityLabel: "Theme",
+      } as const);
+
   return (
-    <View
-      accessible
-      accessibilityRole="radiogroup"
-      accessibilityLabel="Theme"
-      style={styles.grid}
-    >
+    <View {...groupingA11y} style={styles.grid}>
       {rows.map((rowOptions, rowIdx) => {
         const placeholderCount = COLUMN_COUNT - rowOptions.length;
         return (
