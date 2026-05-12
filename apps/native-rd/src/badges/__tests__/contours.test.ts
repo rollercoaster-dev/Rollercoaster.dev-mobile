@@ -486,7 +486,7 @@ describe("getPathTextCenterY", () => {
     diamond: { top: cy - 4, bottom: cy + 3 },
     shield: { top: cy - 4, bottom: cy + 3 },
     roundedRect: { top: cy - 4, bottom: cy + 3 },
-    star: { top: cy - 8, bottom: cy + 3 },
+    star: { top: cy - 8, bottom: cy + 14 },
   };
 
   test.each(ALL_SHAPES)(

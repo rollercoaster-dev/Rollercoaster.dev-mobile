@@ -26,6 +26,7 @@ import { FrameSelector } from "../../badges/FrameSelector";
 import { useFrameParamsForGoal } from "../../badges/frames";
 import { CenterModeSelector } from "../../badges/CenterModeSelector";
 import { PathTextEditor } from "../../badges/PathTextEditor";
+import { getPathTextMaxChars } from "../../badges/text/pathTextLimits";
 import { BannerEditor } from "../../badges/BannerEditor";
 import {
   parseBadgeDesign,
@@ -111,7 +112,15 @@ function DesignEditor({
   // --- Existing handlers ---
   const handleShapeChange = useCallback(
     (shape: BadgeShape) => {
-      onDesignChange({ ...currentDesign, shape });
+      if (shape === currentDesign.shape) return;
+      const maxTop = getPathTextMaxChars(shape, "top");
+      const maxBottom = getPathTextMaxChars(shape, "bottom");
+      onDesignChange({
+        ...currentDesign,
+        shape,
+        pathText: currentDesign.pathText?.slice(0, maxTop),
+        pathTextBottom: currentDesign.pathTextBottom?.slice(0, maxBottom),
+      });
     },
     [currentDesign, onDesignChange],
   );
@@ -358,6 +367,7 @@ function DesignEditor({
             text={pathText}
             textBottom={pathTextBottom}
             position={pathTextPosition}
+            shape={currentDesign.shape}
             goalTitle={goalTitle ?? currentDesign.title}
             onToggle={handlePathTextToggle}
             onChangeText={handlePathTextChange}

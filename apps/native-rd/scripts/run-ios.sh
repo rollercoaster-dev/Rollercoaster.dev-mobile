@@ -83,4 +83,11 @@ if [ -n "${IOS_DEVICE_ID:-}" ] && [ "${EXPO_PUBLIC_E2E_MODE:-}" != "true" ]; the
   exec npx expo run:ios --no-install --device "${IOS_DEVICE_ID}" "$@"
 fi
 
+# Simulator path: pin Metro's advertised hostname to localhost. Without this
+# Expo CLI picks the host's primary LAN interface, and the dev client inside
+# the simulator surfaces "Failed to load app from http://<lan-ip>:8081"
+# instead of fetching the bundle. The simulator shares the host network
+# stack, so localhost always routes to Metro.
+export REACT_NATIVE_PACKAGER_HOSTNAME="${REACT_NATIVE_PACKAGER_HOSTNAME:-localhost}"
+
 exec npx expo run:ios --no-install "$@"

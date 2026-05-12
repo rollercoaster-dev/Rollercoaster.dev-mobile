@@ -3,7 +3,7 @@ name: native-rd-build
 description: Build native-rd for any target — local iOS simulator/device, local Release builds, EAS development/preview/production, Android (when generated). Use when the user hits a build failure, asks how to produce a build of any kind, needs to diagnose runtime errors that look build-related ("No script URL provided", missing assets, signing issues), or wants to understand what `eas.json` / `app.json` / `Podfile.properties.json` settings actually do. Also use as a pre-flight checklist before starting a fresh build.
 metadata:
   author: rollercoaster.dev
-  version: "2.3.0"
+  version: "2.4.0"
 ---
 
 # native-rd Build Playbook
@@ -22,20 +22,20 @@ Comprehensive build reference for `apps/native-rd`. Stack: **Expo SDK 54 + RN 0.
 
 ## Build matrix
 
-| Target                         | Local command                                              | EAS profile                                              | Status                                                                                                                                                                                                                        |
-| ------------------------------ | ---------------------------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| iOS Simulator (dev client)     | `bun run ios` (with `IOS_DEVICE_ID` empty)                 | `eas build -p ios --profile development`                 | `[VERIFIED 2026-05-02]` local sim + EAS development profile (cloud build)                                                                                                                                                     |
-| iOS Device (dev client)        | `bun run ios` (or `IOS_DEVICE_ID=… bun run ios:device`)    | `eas build -p ios --profile development` (then sideload) | `[VERIFIED 2026-05-02]` local device                                                                                                                                                                                          |
-| iOS Release (local sim)        | `npx expo run:ios --configuration Release`                 | n/a                                                      | `[VERIFIED 2026-05-02]` per `docs/plans/2026-05-02-expo-doctor-build-validation.md`                                                                                                                                           |
-| iOS Release (local device)     | `npx expo run:ios --configuration Release --device <udid>` | n/a                                                      | `[UNTESTED]`                                                                                                                                                                                                                  |
-| iOS preview build (signed IPA) | n/a                                                        | `eas build -p ios --profile preview`                     | `[UNTESTED]`                                                                                                                                                                                                                  |
-| iOS production build           | n/a                                                        | `eas build -p ios --profile production`                  | `[UNTESTED]`                                                                                                                                                                                                                  |
-| iOS App Store submit           | n/a                                                        | `eas submit -p ios --profile production`                 | `[BROKEN]` `ascAppId` placeholder in `eas.json`                                                                                                                                                                               |
-| Android Emulator (dev client)  | `bun run android`                                          | `eas build -p android --profile development`             | `[VERIFIED 2026-05-07]` local emulator (Pixel 6a / API 35 / Google APIs / arm64-v8a). Required: write `android/local.properties`, install NDK `27.1.12297006`, bump `react-native-nitro-modules` to `^0.35.6` (Gotchas 7/8/9) |
-| Android Device (dev client)    | `bun run android --device`                                 | same                                                     | `[UNTESTED]` should work once an Android device is paired and `adb devices` lists it; same Gotchas 7/8/9 apply                                                                                                                |
-| Android preview APK            | n/a                                                        | `eas build -p android --profile preview`                 | `[VERIFIED 2026-05-07]` ~33min cloud build, signed APK artifact downloadable from EAS dashboard. First attempt errored in POST_INSTALL_HOOK (Gotcha 10) — fix in commit 2d2e46b4 unblocked it                                 |
-| Android production AAB         | n/a                                                        | `eas build -p android --profile production`              | `[UNTESTED]`                                                                                                                                                                                                                  |
-| Android Play Store submit      | n/a                                                        | `eas submit -p android --profile production`             | `[BROKEN]` `play-service-account.json` not committed (rightfully so — needs developer-local copy)                                                                                                                             |
+| Target                         | Local command                                                       | EAS profile                                              | Status                                                                                                                                                                                                                                                                                                                                 |
+| ------------------------------ | ------------------------------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| iOS Simulator (dev client)     | `bun run ios` (with `IOS_DEVICE_ID` empty)                          | `eas build -p ios --profile development`                 | `[VERIFIED 2026-05-11]` local sim + EAS development profile (cloud build). `scripts/run-ios.sh` pins `REACT_NATIVE_PACKAGER_HOSTNAME=localhost` on the sim branch to avoid Gotcha 11                                                                                                                                                   |
+| iOS Device (dev client)        | `bun run ios` (or `IOS_DEVICE_ID=… bun run ios:device`)             | `eas build -p ios --profile development` (then sideload) | `[VERIFIED 2026-05-02]` local device                                                                                                                                                                                                                                                                                                   |
+| iOS Release (local sim)        | `npx expo run:ios --configuration Release`                          | n/a                                                      | `[VERIFIED 2026-05-02]` per `docs/plans/2026-05-02-expo-doctor-build-validation.md`                                                                                                                                                                                                                                                    |
+| iOS Release (local device)     | `npx expo run:ios --configuration Release --device <udid>`          | n/a                                                      | `[UNTESTED]`                                                                                                                                                                                                                                                                                                                           |
+| iOS preview build (signed IPA) | n/a                                                                 | `eas build -p ios --profile preview`                     | `[UNTESTED]`                                                                                                                                                                                                                                                                                                                           |
+| iOS production build           | n/a                                                                 | `eas build -p ios --profile production`                  | `[UNTESTED]`                                                                                                                                                                                                                                                                                                                           |
+| iOS App Store submit           | n/a                                                                 | `eas submit -p ios --profile production`                 | `[BROKEN]` `ascAppId` placeholder in `eas.json`                                                                                                                                                                                                                                                                                        |
+| Android Emulator (dev client)  | `bun run android`                                                   | `eas build -p android --profile development`             | `[VERIFIED 2026-05-07]` local emulator (Pixel 6a / API 35 / Google APIs / arm64-v8a). Now routes through `scripts/run-android.sh` which handles `adb reverse` + localhost pinning (Gotcha 11). Required: write `android/local.properties`, install NDK `27.1.12297006`, bump `react-native-nitro-modules` to `^0.35.6` (Gotchas 7/8/9) |
+| Android Device (dev client)    | `bun run android:device` (or `ANDROID_DEVICE_ID=… bun run android`) | same                                                     | `[UNTESTED]` should work once an Android device is paired and `adb devices` lists it; same Gotchas 7/8/9/11 apply                                                                                                                                                                                                                      |
+| Android preview APK            | n/a                                                                 | `eas build -p android --profile preview`                 | `[VERIFIED 2026-05-07]` ~33min cloud build, signed APK artifact downloadable from EAS dashboard. First attempt errored in POST_INSTALL_HOOK (Gotcha 10) — fix in commit 2d2e46b4 unblocked it                                                                                                                                          |
+| Android production AAB         | n/a                                                                 | `eas build -p android --profile production`              | `[UNTESTED]`                                                                                                                                                                                                                                                                                                                           |
+| Android Play Store submit      | n/a                                                                 | `eas submit -p android --profile production`             | `[BROKEN]` `play-service-account.json` not committed (rightfully so — needs developer-local copy)                                                                                                                                                                                                                                      |
 
 ---
 
@@ -54,7 +54,7 @@ bun run ios:device   # explicit device, requires IOS_DEVICE_ID exported in shell
 npx expo run:ios     # raw — no .env.local sourcing, no IOS_DEVICE_ID validation
 ```
 
-`bun run ios` calls `scripts/run-ios.sh`, which sources `.env.local` (gitignored, per-developer) and dispatches to either `npx expo run:ios --device <udid>` or `npx expo run:ios` depending on whether `IOS_DEVICE_ID` is set.
+`bun run ios` calls `scripts/run-ios.sh`, which sources `.env.local` (gitignored, per-developer) and dispatches to either `npx expo run:ios --device <udid>` or `npx expo run:ios` depending on whether `IOS_DEVICE_ID` is set. On the simulator branch it also pins `REACT_NATIVE_PACKAGER_HOSTNAME=localhost` so the dev client doesn't try to fetch the bundle from the host's LAN IP (Gotcha 11).
 
 ### Per-developer config — `.env.local`
 
@@ -77,7 +77,7 @@ Starting Metro Bundler
 iOS Bundled NNNNms apps/native-rd/index.ts (5000+ modules)
 ```
 
-See gotchas: 1, 2, 3, 4 below.
+See gotchas: 1, 2, 3, 4, 11 below.
 
 ---
 
@@ -126,17 +126,18 @@ Set up by Android Studio Standard wizard, with three additions:
 
 ### Per-project bootstrap
 
-After `npx expo prebuild --platform android`:
+`bun run android` routes through `scripts/run-android.sh`, which writes `android/local.properties` if missing, runs `adb reverse tcp:8081 tcp:8081`, and exports `REACT_NATIVE_PACKAGER_HOSTNAME=localhost` so the dev client reliably reaches Metro from emulator or USB device. You only need to do the prebuild + nitro-modules check by hand:
 
-1. **Write `android/local.properties`** (Gotcha 7 — Gradle won't find the SDK without it, even with `ANDROID_HOME` exported):
-
-   ```bash
-   echo "sdk.dir=$HOME/Library/Android/sdk" > apps/native-rd/android/local.properties
-   ```
-
-   Gitignored via `apps/native-rd/.gitignore` line 18 (`android/`). Per-developer file.
-
+1. **Run `npx expo prebuild --platform android`** once (or after toolchain bumps).
 2. **Verify `react-native-nitro-modules`** in `package.json` is `^0.35.6` or newer. Older 0.33.x lacks the `CxxPart` class that `react-native-unistyles@3.2.4`'s autogenerated Kotlin bindings require (Gotcha 9).
+
+Manual `local.properties` bootstrap is still documented for cases where you bypass the launcher script (Gotcha 7 explains why Gradle needs the file even with `ANDROID_HOME` exported):
+
+```bash
+echo "sdk.dir=$HOME/Library/Android/sdk" > apps/native-rd/android/local.properties
+```
+
+`android/` is gitignored (per-developer file).
 
 ### Build & run
 
@@ -147,7 +148,11 @@ cd apps/native-rd
 adb devices                               # should list emulator-5554
 
 bun run android                           # Debug build → install → start Metro
+# explicit device targeting:
+ANDROID_DEVICE_ID=emulator-5554 bun run android:device
 ```
+
+`run-android.sh` will refuse to launch if no device/emulator is connected (clearer failure than letting Gradle build first and then crashing on install).
 
 First Gradle compile is slow (~6 min — RN core C++ + Hermes + native modules for arm64-v8a). Incremental rebuilds are seconds.
 
@@ -546,6 +551,42 @@ Functionally identical; portable across Bun versions.
 
 ---
 
+## Gotcha 11 — Simulator dev client shows "Failed to load app from http://&lt;lan-ip&gt;:8081"
+
+`[VERIFIED 2026-05-11]`
+
+**Symptom (iOS Simulator, fresh install of dev client from `bun run native:ios` or `bun run ios`):** Build + install succeed, app launches, but the dev launcher renders an error screen:
+
+```text
+There was a problem loading the project.
+This development build encountered the following error:
+Failed to load app from http://192.168.178.129:8081/...
+```
+
+The IP shown matches the host Mac's primary LAN interface (`ifconfig en0 | grep "inet "`). Same `bun run ios` invocation may have auto-loaded the bundle weeks earlier without intervention.
+
+**Cause:** Expo CLI's Metro bundler advertises a single hostname for its served URL, and recent CLI versions default to the host's primary LAN interface for that hostname even when the target is a simulator. The dev launcher embeds that URL and tries to fetch the bundle from it on first launch. iOS Simulator shares the host's network stack, so `localhost` always works — but the LAN IP often doesn't, depending on firewall, VPN, or interface state. When the LAN IP route fails, the dev client surfaces the error rather than falling back to `localhost`.
+
+Likely triggered by a recent Expo CLI release changing the default URL resolution; the simulator detection that historically pinned localhost regressed.
+
+**Fix:** export `REACT_NATIVE_PACKAGER_HOSTNAME=localhost` before invoking `expo run:ios` on simulator targets. The launcher script `scripts/run-ios.sh` does this on the simulator branch (when `IOS_DEVICE_ID` is empty); device builds continue to use the LAN IP so a paired iPhone can still reach Metro.
+
+```bash
+# Simulator path inside scripts/run-ios.sh
+export REACT_NATIVE_PACKAGER_HOSTNAME="${REACT_NATIVE_PACKAGER_HOSTNAME:-localhost}"
+exec npx expo run:ios --no-install "$@"
+```
+
+Equivalent fix for Android lives in `scripts/run-android.sh`: combine `adb reverse tcp:8081 tcp:8081` with `REACT_NATIVE_PACKAGER_HOSTNAME=localhost` so emulators _and_ USB-connected devices reach Metro at `localhost` without depending on the host's LAN IP.
+
+If the simulator continues to show the stale URL after the fix, the dev launcher cached the old "recent project" entry. Shake → Go Home → Reload, or delete the app from the simulator and rebuild.
+
+**Survives `expo prebuild`?** Yes — the fix lives in `scripts/run-ios.sh` / `scripts/run-android.sh`, not in `ios/` or `android/`.
+
+**Does this affect EAS?** No. EAS preview/production builds embed the JS bundle at build time and don't talk to Metro. EAS development builds talk to Metro, but the URL is set by whoever runs `expo start` against them, not by the build itself.
+
+---
+
 ## Standard recovery sequences
 
 ### Local iOS device build, fresh from scratch
@@ -628,20 +669,21 @@ The "source of truth" for native config is `app.json` + Expo plugins. Anything i
 
 ## Quick reference: what gets edited where
 
-| File                                               | Purpose                                                                              | Survives `expo prebuild` non-`--clean`? | Survives `--clean`?        |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------- | -------------------------- |
-| `apps/native-rd/app.json`                          | Source of truth for icons, splash, plugins, deployment target, bundle/package IDs    | Read from                               | Read from                  |
-| `apps/native-rd/eas.json`                          | EAS build/submit profile config                                                      | Yes (not under `ios/` or `android/`)    | Yes                        |
-| `apps/native-rd/.env.local`                        | Per-developer env (`IOS_DEVICE_ID`, etc.). Gitignored                                | Yes                                     | Yes                        |
-| `apps/native-rd/scripts/run-ios.sh`                | Bash launcher; sources `.env.local`, calls `expo run:ios`                            | Yes                                     | Yes                        |
-| `apps/native-rd/ios/Podfile.properties.json`       | RN/Expo build flags, incl. `buildReactNativeFromSource`                              | Yes                                     | **NO** — re-add manually   |
-| `apps/native-rd/ios/nativerd/Images.xcassets/`     | Generated iOS assets                                                                 | Regenerated from `app.json`             | Regenerated                |
-| `apps/native-rd/ios/Podfile`                       | Generated; do not edit                                                               | Regenerated                             | Regenerated                |
-| `apps/native-rd/android/`                          | Generated Android project. Gitignored                                                | Regenerated                             | Regenerated                |
-| `apps/native-rd/android/local.properties`          | Per-developer SDK location pointer (`sdk.dir=...`). Required for local Gradle builds | Yes                                     | **NO** — re-write manually |
-| `~/Library/Developer/Xcode/DerivedData/nativerd-*` | Xcode build cache                                                                    | n/a (outside repo)                      | n/a                        |
-| `~/Library/Android/sdk/`                           | Android SDK + NDK + system images. Managed by Studio's SDK Manager + `sdkmanager`    | n/a (outside repo)                      | n/a                        |
-| `~/.zshenv`                                        | Shell env vars for `ANDROID_HOME` etc. Chezmoi-managed (`chezmoi edit ~/.zshenv`)    | Yes                                     | Yes                        |
+| File                                               | Purpose                                                                               | Survives `expo prebuild` non-`--clean`? | Survives `--clean`?        |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------- | --------------------------------------- | -------------------------- |
+| `apps/native-rd/app.json`                          | Source of truth for icons, splash, plugins, deployment target, bundle/package IDs     | Read from                               | Read from                  |
+| `apps/native-rd/eas.json`                          | EAS build/submit profile config                                                       | Yes (not under `ios/` or `android/`)    | Yes                        |
+| `apps/native-rd/.env.local`                        | Per-developer env (`IOS_DEVICE_ID`, etc.). Gitignored                                 | Yes                                     | Yes                        |
+| `apps/native-rd/scripts/run-ios.sh`                | Bash launcher; sources `.env.local`, calls `expo run:ios`, pins localhost on sim      | Yes                                     | Yes                        |
+| `apps/native-rd/scripts/run-android.sh`            | Bash launcher; SDK detection, writes `local.properties`, `adb reverse`, localhost pin | Yes                                     | Yes                        |
+| `apps/native-rd/ios/Podfile.properties.json`       | RN/Expo build flags, incl. `buildReactNativeFromSource`                               | Yes                                     | **NO** — re-add manually   |
+| `apps/native-rd/ios/nativerd/Images.xcassets/`     | Generated iOS assets                                                                  | Regenerated from `app.json`             | Regenerated                |
+| `apps/native-rd/ios/Podfile`                       | Generated; do not edit                                                                | Regenerated                             | Regenerated                |
+| `apps/native-rd/android/`                          | Generated Android project. Gitignored                                                 | Regenerated                             | Regenerated                |
+| `apps/native-rd/android/local.properties`          | Per-developer SDK location pointer (`sdk.dir=...`). Required for local Gradle builds  | Yes                                     | **NO** — re-write manually |
+| `~/Library/Developer/Xcode/DerivedData/nativerd-*` | Xcode build cache                                                                     | n/a (outside repo)                      | n/a                        |
+| `~/Library/Android/sdk/`                           | Android SDK + NDK + system images. Managed by Studio's SDK Manager + `sdkmanager`     | n/a (outside repo)                      | n/a                        |
+| `~/.zshenv`                                        | Shell env vars for `ANDROID_HOME` etc. Chezmoi-managed (`chezmoi edit ~/.zshenv`)     | Yes                                     | Yes                        |
 
 ---
 

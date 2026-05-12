@@ -140,8 +140,9 @@ describe("BottomLabel", () => {
     expect(getBottomLabelAvailableWidth(size)).toBe(
       size - BOTTOM_LABEL_HORIZONTAL_PADDING * 2,
     );
+    // Allow tiny FP drift from the shrink ratio (availableWidth / measuredWidth).
     expect(renderedWidth).toBeLessThanOrEqual(
-      getBottomLabelAvailableWidth(size),
+      getBottomLabelAvailableWidth(size) + 1e-9,
     );
   });
 });
