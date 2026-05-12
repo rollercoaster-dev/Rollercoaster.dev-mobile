@@ -1,4 +1,4 @@
-import { createContext, useContext, useCallback, useState } from "react";
+import { createContext, useContext, useCallback } from "react";
 import { useUnistyles, UnistylesRuntime } from "react-native-unistyles";
 import {
   themes,
@@ -71,25 +71,15 @@ export function useThemeContext(): ThemeContextValue {
 }
 
 /**
- * Single-dimension theme hook.
- *
- * Uses useUnistyles() as the re-render trigger (proven reactive in Unistyles v3),
- * then reads UnistylesRuntime.themeName and looks up the static themes map
- * for plain-string color values (not C++ proxies).
- *
- * A useState counter is kept as a belt-and-suspenders fallback to guarantee
- * a React re-render even if useUnistyles() doesn't fire synchronously.
+ * Reads from the static `themes` map (plain strings) rather than the live
+ * theme proxy returned by useUnistyles() — those values are C++ proxies that
+ * can't be passed across the JS boundary safely.
  *
  * Call once at App root, then share via ThemeProvider.
  */
 export function useTheme() {
-  // Primary re-render trigger: Unistyles v3 reactive hook
   useUnistyles();
 
-  // Fallback re-render trigger
-  const [, bump] = useState(0);
-
-  // Read current theme from Unistyles runtime (always fresh after re-render)
   const themeName =
     (UnistylesRuntime.themeName as ThemeName) || "light-default";
   const theme = themes[themeName];
@@ -98,8 +88,6 @@ export function useTheme() {
 
   const setTheme = useCallback((name: ThemeName) => {
     UnistylesRuntime.setTheme(name);
-    // Force React re-render in case useUnistyles() doesn't fire synchronously
-    bump((n) => n + 1);
   }, []);
 
   return { themeName, theme, isDark, variant, setTheme };

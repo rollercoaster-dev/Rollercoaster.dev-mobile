@@ -32,14 +32,18 @@ if (typeof AbortSignal.any === "undefined") {
 }
 
 // AbortSignal.timeout (not yet in all Hermes versions)
+// Hermes does not implement DOMException, so the abort reason is a plain Error
+// tagged with name === "TimeoutError" — the shape consumers actually check per
+// the WHATWG fetch spec.
 if (typeof AbortSignal.timeout === "undefined") {
   // @ts-ignore -- runtime polyfill for Hermes; types exist but implementation does not
   AbortSignal.timeout = (ms: number): AbortSignal => {
     const controller = new AbortController();
-    setTimeout(
-      () => controller.abort(new DOMException("TimeoutError", "TimeoutError")),
-      ms,
-    );
+    setTimeout(() => {
+      const reason = new Error("TimeoutError");
+      reason.name = "TimeoutError";
+      controller.abort(reason);
+    }, ms);
     return controller.signal;
   };
 }

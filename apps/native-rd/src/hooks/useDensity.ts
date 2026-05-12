@@ -4,7 +4,7 @@ import { updateUserSettings } from "../db";
 import { useUserSettingsRow } from "./useUserSettingsRow";
 import { scaleSpacing, type DensityLevel } from "../utils/density";
 import { space as baseSpace } from "../themes/tokens";
-import { themeNames, parseThemeName, type ThemeName } from "../themes/compose";
+import { themeNames, type ThemeName } from "../themes/compose";
 
 function applyDensityToAllThemes(level: DensityLevel) {
   const scaled = scaleSpacing(baseSpace, level);
@@ -14,15 +14,6 @@ function applyDensityToAllThemes(level: DensityLevel) {
       space: scaled,
     }));
   }
-  // Force StyleSheet re-evaluation by toggling themes.
-  // setTheme to the same name is a no-op, so we switch away and back.
-  const current = UnistylesRuntime.themeName as ThemeName;
-  const { colorMode } = parseThemeName(current);
-  const temp = themeNames.find(
-    (n) => n !== current && n.startsWith(colorMode),
-  )!;
-  UnistylesRuntime.setTheme(temp);
-  UnistylesRuntime.setTheme(current);
 }
 
 export function useDensity() {
