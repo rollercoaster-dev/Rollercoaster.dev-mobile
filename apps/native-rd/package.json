@@ -97,7 +97,7 @@
     "@babel/plugin-transform-dynamic-import": "^7.27.1",
     "@babel/plugin-transform-explicit-resource-management": "^7.28.6",
     "@babel/plugin-transform-modules-commonjs": "^7.28.6",
-    "@babel/preset-env": "^7.29.0",
+    "@babel/preset-env": "^7.29.5",
     "@babel/preset-typescript": "^7.28.5",
     "@babel/runtime": "7.29.2",
     "@storybook/react": "^10.3.6",
