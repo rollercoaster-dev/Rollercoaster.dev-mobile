@@ -6,7 +6,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { captureBadge } from "../../badges/captureBadge";
+import { captureBadge, getCaptureDimensions } from "../../badges/captureBadge";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -17,7 +17,10 @@ import { Text } from "../../components/Text";
 import { Button } from "../../components/Button";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
-import { BadgeRenderer } from "../../badges/BadgeRenderer";
+import {
+  BadgeRenderer,
+  getRendererLayoutOptions,
+} from "../../badges/BadgeRenderer";
 import { BOTTOM_LABEL_INPUT_MAX_CHARS } from "../../badges/text/BottomLabel";
 import { ShapeSelector } from "../../badges/ShapeSelector";
 import { ColorPicker } from "../../badges/ColorPicker";
@@ -435,13 +438,13 @@ function DesignEditor({
         pointerEvents="none"
       >
         <View
-          ref={previewRef}
-          collapsable={false}
           style={styles.previewContainer}
           accessibilityRole="image"
           accessibilityLabel={previewLabel}
         >
-          <BadgeRenderer design={currentDesign} size={160} />
+          <View ref={previewRef} collapsable={false} style={styles.badgeCanvas}>
+            <BadgeRenderer design={currentDesign} size={160} />
+          </View>
         </View>
       </Animated.View>
     </View>
@@ -534,6 +537,7 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
 function BadgeDesignerContentNewGoal({ goalId }: { goalId: string }) {
   const navigation =
     useNavigation<NativeStackNavigationProp<GoalsStackParamList>>();
+  const { theme } = useUnistyles();
   const goals = useQuery(goalsQuery);
   const goal = goals.find((g) => g.id === goalId) ?? null;
 
@@ -562,10 +566,14 @@ function BadgeDesignerContentNewGoal({ goalId }: { goalId: string }) {
       if (isSaving) return;
       setIsSaving(true);
       try {
-        const pngBuffer = await captureBadge(previewRef, {
-          width: 512,
-          height: 512,
-        });
+        const pngBuffer = await captureBadge(
+          previewRef,
+          getCaptureDimensions(
+            designToSave,
+            undefined,
+            getRendererLayoutOptions(theme),
+          ),
+        );
         pendingDesignStore.set(goalId, {
           designJson: JSON.stringify(designToSave),
           pngBase64: pngBuffer.toString("base64"),
@@ -583,7 +591,7 @@ function BadgeDesignerContentNewGoal({ goalId }: { goalId: string }) {
         setIsSaving(false);
       }
     },
-    [goalId, isSaving, navigation],
+    [goalId, isSaving, navigation, theme],
   );
 
   const handleSave = useCallback(() => {

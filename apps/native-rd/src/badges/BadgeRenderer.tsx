@@ -24,8 +24,13 @@ import { useUnistyles } from "react-native-unistyles";
 import type { IconWeight } from "phosphor-react-native";
 
 import type { BadgeDesign } from "./types";
+import type { AppTheme } from "../themes";
 import { generateShapePath } from "./shapes/paths";
-import { getBadgeLayoutBoxes, SHADOW_OFFSET } from "./layoutBoxes";
+import {
+  getBadgeLayoutBoxes,
+  SHADOW_OFFSET,
+  type LayoutBoxesOptions,
+} from "./layoutBoxes";
 import { FrameOverlay } from "./frames/FrameOverlay";
 import { PathText } from "./text/PathText";
 import { Banner } from "./text/Banner";
@@ -53,6 +58,24 @@ export interface BadgeRendererProps {
 // Component
 // ---------------------------------------------------------------------------
 
+/**
+ * Returns the `{ strokeWidth, hasShadow }` the renderer will actually use for
+ * a given theme. Capture pipelines must consume this so `getCaptureDimensions`
+ * sees the same viewBox the renderer mounts — otherwise a theme mismatch
+ * (e.g. highContrast strokeWidth=4, shadowless variants) reintroduces
+ * stretching when `captureRef` scales the source view.
+ */
+export function getRendererLayoutOptions(
+  theme: AppTheme,
+  showShadowOverride?: boolean,
+): Required<LayoutBoxesOptions> {
+  const hasShadow = showShadowOverride ?? theme.shadows.opacity > 0;
+  const isHighContrast =
+    theme.variant === "highContrast" || theme.variant === "lowVision";
+  const strokeWidth = isHighContrast ? 4 : 3;
+  return { strokeWidth, hasShadow };
+}
+
 export function BadgeRenderer({
   design,
   size = 256,
@@ -62,12 +85,10 @@ export function BadgeRenderer({
   const { theme } = useUnistyles();
   const pathTextId = useId();
 
-  const hasShadow = showShadowProp ?? theme.shadows.opacity > 0;
-
-  // highContrast / lowVision use thicker borders (autismFriendly is also no-shadow but uses normal borders).
-  const isHighContrast =
-    theme.variant === "highContrast" || theme.variant === "lowVision";
-  const strokeWidth = isHighContrast ? 4 : 3;
+  const { strokeWidth, hasShadow } = getRendererLayoutOptions(
+    theme,
+    showShadowProp,
+  );
 
   const boxes = useMemo(
     () => getBadgeLayoutBoxes(design, size, { strokeWidth, hasShadow }),

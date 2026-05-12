@@ -246,7 +246,7 @@ function BadgeDetailContent({
               variant="secondary"
               onPress={() =>
                 design
-                  ? exportDesignImage(badgeRendererRef)
+                  ? exportDesignImage(badgeRendererRef, design)
                   : exportImage(imageUri)
               }
               loading={isExportingImage}

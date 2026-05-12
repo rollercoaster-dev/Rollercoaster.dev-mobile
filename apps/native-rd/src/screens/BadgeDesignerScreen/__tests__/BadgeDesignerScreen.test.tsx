@@ -62,6 +62,7 @@ jest.mock("../../../stores/pendingDesignStore", () => ({
 const mockCaptureBadge = jest.fn();
 jest.mock("../../../badges/captureBadge", () => ({
   captureBadge: (...args: unknown[]) => mockCaptureBadge(...args),
+  getCaptureDimensions: () => ({ width: 512, height: 512 }),
 }));
 
 // Mock react-native-svg

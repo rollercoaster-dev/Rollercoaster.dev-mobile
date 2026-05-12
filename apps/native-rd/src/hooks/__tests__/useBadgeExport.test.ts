@@ -1,5 +1,6 @@
 import { renderHook, act } from "@testing-library/react-native";
 import { Alert } from "react-native";
+import { Buffer } from "buffer";
 
 jest.mock("../useCreateBadge", () => ({
   PLACEHOLDER_IMAGE_URI: "pending:baked-image",
@@ -12,13 +13,24 @@ jest.mock("expo-sharing", () => ({
 
 jest.mock("expo-file-system/legacy", () => ({
   cacheDirectory: "file:///cache/",
-  EncodingType: { UTF8: "utf8" },
+  EncodingType: { UTF8: "utf8", Base64: "base64" },
   writeAsStringAsync: jest.fn(() => Promise.resolve()),
   deleteAsync: jest.fn(() => Promise.resolve()),
 }));
 
+jest.mock("../../badges/captureBadge", () => {
+  const actual = jest.requireActual("../../badges/captureBadge");
+  return {
+    ...actual,
+    captureBadge: jest.fn(),
+    getCaptureDimensions: jest.fn(),
+  };
+});
+
 import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system/legacy";
+import { captureBadge, getCaptureDimensions } from "../../badges/captureBadge";
+import { createDefaultBadgeDesign } from "../../badges/types";
 import { useBadgeExport } from "../useBadgeExport";
 
 jest.spyOn(Alert, "alert");
@@ -30,6 +42,11 @@ describe("useBadgeExport", () => {
     (Sharing.shareAsync as jest.Mock).mockResolvedValue(undefined);
     (FileSystem.writeAsStringAsync as jest.Mock).mockResolvedValue(undefined);
     (FileSystem.deleteAsync as jest.Mock).mockResolvedValue(undefined);
+    (captureBadge as jest.Mock).mockResolvedValue(Buffer.from([0x89, 0x50]));
+    (getCaptureDimensions as jest.Mock).mockReturnValue({
+      width: 480,
+      height: 512,
+    });
   });
 
   describe("exportImage", () => {
@@ -198,6 +215,124 @@ describe("useBadgeExport", () => {
         "Cannot access the device cache directory.",
       );
       expect(FileSystem.writeAsStringAsync).not.toHaveBeenCalled();
+
+      Object.defineProperty(FileSystem, "cacheDirectory", {
+        value: original,
+        writable: true,
+      });
+    });
+  });
+
+  describe("exportDesignImage", () => {
+    const mockRef = { current: {} } as React.RefObject<unknown>;
+    const design = createDefaultBadgeDesign("Test", "#4caf50");
+
+    it("captures with dimensions from getCaptureDimensions(design, ...)", async () => {
+      const { result } = renderHook(() => useBadgeExport());
+
+      await act(async () => {
+        await result.current.exportDesignImage(mockRef, design);
+      });
+
+      expect(getCaptureDimensions).toHaveBeenCalledWith(
+        design,
+        undefined,
+        expect.objectContaining({
+          strokeWidth: expect.any(Number),
+          hasShadow: expect.any(Boolean),
+        }),
+      );
+      expect(captureBadge).toHaveBeenCalledWith(mockRef, {
+        width: 480,
+        height: 512,
+      });
+    });
+
+    it("writes the captured PNG and shares the temp file", async () => {
+      const { result } = renderHook(() => useBadgeExport());
+
+      await act(async () => {
+        await result.current.exportDesignImage(mockRef, design);
+      });
+
+      expect(FileSystem.writeAsStringAsync).toHaveBeenCalledWith(
+        expect.stringContaining("badge-export-"),
+        expect.any(String),
+        { encoding: FileSystem.EncodingType.Base64 },
+      );
+      expect(Sharing.shareAsync).toHaveBeenCalledWith(
+        expect.stringContaining(".png"),
+        expect.objectContaining({ UTI: "public.png" }),
+      );
+    });
+
+    it("cleans up the temp file on success", async () => {
+      const { result } = renderHook(() => useBadgeExport());
+
+      await act(async () => {
+        await result.current.exportDesignImage(mockRef, design);
+      });
+
+      expect(FileSystem.deleteAsync).toHaveBeenCalledWith(
+        expect.stringContaining(".png"),
+        { idempotent: true },
+      );
+    });
+
+    it("cleans up the temp file even when captureBadge throws", async () => {
+      (captureBadge as jest.Mock).mockRejectedValueOnce(
+        new Error("captureRef failed"),
+      );
+      const { result } = renderHook(() => useBadgeExport());
+
+      await act(async () => {
+        await result.current.exportDesignImage(mockRef, design);
+      });
+
+      expect(FileSystem.deleteAsync).toHaveBeenCalledWith(
+        expect.stringContaining(".png"),
+        { idempotent: true },
+      );
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "Export failed",
+        expect.any(String),
+      );
+      expect(result.current.isExportingImage).toBe(false);
+    });
+
+    it("shows alert when sharing is unavailable", async () => {
+      (Sharing.isAvailableAsync as jest.Mock).mockResolvedValueOnce(false);
+      const { result } = renderHook(() => useBadgeExport());
+
+      await act(async () => {
+        await result.current.exportDesignImage(mockRef, design);
+      });
+
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "Sharing unavailable",
+        expect.any(String),
+      );
+      expect(captureBadge).not.toHaveBeenCalled();
+    });
+
+    it("shows alert when cacheDirectory is null", async () => {
+      const original = FileSystem.cacheDirectory;
+      Object.defineProperty(FileSystem, "cacheDirectory", {
+        value: null,
+        writable: true,
+      });
+
+      const { result } = renderHook(() => useBadgeExport());
+
+      await act(async () => {
+        await result.current.exportDesignImage(mockRef, design);
+      });
+
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "Export failed",
+        "Cannot access the device cache directory.",
+      );
+      expect(captureBadge).not.toHaveBeenCalled();
 
       Object.defineProperty(FileSystem, "cacheDirectory", {
         value: original,

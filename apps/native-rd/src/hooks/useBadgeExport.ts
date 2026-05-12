@@ -1,11 +1,15 @@
 import { useState, useCallback } from "react";
 import { Alert } from "react-native";
+import { useUnistyles } from "react-native-unistyles";
 import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system/legacy";
 import { PLACEHOLDER_IMAGE_URI } from "./useCreateBadge";
-import { captureBadge } from "../badges/captureBadge";
+import { captureBadge, getCaptureDimensions } from "../badges/captureBadge";
+import { getRendererLayoutOptions } from "../badges/BadgeRenderer";
+import type { BadgeDesign } from "../badges/types";
 
 export function useBadgeExport() {
+  const { theme } = useUnistyles();
   const [isExportingImage, setIsExportingImage] = useState(false);
   const [isExportingJSON, setIsExportingJSON] = useState(false);
 
@@ -48,7 +52,7 @@ export function useBadgeExport() {
   }, []);
 
   const exportDesignImage = useCallback(
-    async (ref: React.RefObject<unknown>) => {
+    async (ref: React.RefObject<unknown>, design: BadgeDesign) => {
       const cacheDir = FileSystem.cacheDirectory;
       if (!cacheDir) {
         Alert.alert(
@@ -70,7 +74,14 @@ export function useBadgeExport() {
           return;
         }
 
-        const pngBuffer = await captureBadge(ref, { width: 512, height: 512 });
+        const pngBuffer = await captureBadge(
+          ref,
+          getCaptureDimensions(
+            design,
+            undefined,
+            getRendererLayoutOptions(theme),
+          ),
+        );
         await FileSystem.writeAsStringAsync(
           tempUri,
           pngBuffer.toString("base64"),
@@ -104,7 +115,7 @@ export function useBadgeExport() {
         setIsExportingImage(false);
       }
     },
-    [],
+    [theme],
   );
 
   const exportJSON = useCallback(

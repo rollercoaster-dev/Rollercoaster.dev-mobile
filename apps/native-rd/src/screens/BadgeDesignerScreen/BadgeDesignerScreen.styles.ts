@@ -40,6 +40,13 @@ export const styles = StyleSheet.create((theme) => ({
     backgroundColor: BADGE_CANVAS_BACKGROUND,
     ...shadowStyle(theme, "cardElevation"),
   },
+  // Padding-free wrapper around BadgeRenderer. The capture ref must attach
+  // here, not on previewContainer, so captureRef sees the same aspect ratio
+  // as getBadgeLayoutBoxes' viewBox — otherwise the padding/border on
+  // previewContainer reintroduces stretching in the exported PNG.
+  badgeCanvas: {
+    backgroundColor: BADGE_CANVAS_BACKGROUND,
+  },
   sectionContainer: {
     width: "100%",
     gap: theme.space[2],

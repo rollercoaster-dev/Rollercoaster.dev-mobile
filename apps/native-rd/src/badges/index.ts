@@ -12,7 +12,7 @@ export {
 } from "./badgeImageGenerator";
 export { saveBadgePNG } from "./badgeStorage";
 export { BADGE_CANVAS_BACKGROUND } from "./constants";
-export { captureBadge } from "./captureBadge";
+export { captureBadge, getCaptureDimensions } from "./captureBadge";
 export type { CaptureBadgeOptions } from "./captureBadge";
 
 export {
