@@ -24,10 +24,17 @@ appId: dev.rollercoaster.app
 - tapOn:
     id: "create-goal"
 - assertVisible: "Design Badge"
+# centerElement: true forces the button into the middle of the viewport.
+# Without it, scrollUntilVisible stops as soon as the button's bounding box
+# enters screen bounds — but the AppTabBar (TAB_BAR_HEIGHT=56 + insets.bottom)
+# is a floating overlay that occludes that region. The default visibility
+# check is bounding-box only, not occlusion-aware, so the tap fires on the
+# tab bar instead of the button and the screen never navigates to Edit Goal.
 - scrollUntilVisible:
     element:
       id: "use-this-design"
     direction: DOWN
+    centerElement: true
 - tapOn:
     id: "use-this-design"
 - assertVisible: "Edit Goal"

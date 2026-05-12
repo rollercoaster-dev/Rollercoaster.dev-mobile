@@ -1,4 +1,6 @@
 appId: dev.rollercoaster.app
+env:
+  METRO_HOST: localhost
 ---
 # Badge tab navigation smoke test
 # Status: required
@@ -16,7 +18,9 @@ appId: dev.rollercoaster.app
 # instead of auto-reloading the last bundle. Bypass via the dev-client
 # deep-link scheme `exp+<slug>://expo-development-client/?url=<bundle-url>`.
 # Onboarding hint + dev-menu modals are pre-disabled in run-e2e.sh.
-- openLink: "exp+rollercoasterdev://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081"
+# METRO_HOST defaults to localhost (simulator); override with
+# `METRO_HOST=<host-lan-ip>` for physical-device runs (issue #1059 Phase 6).
+- openLink: "exp+rollercoasterdev://expo-development-client/?url=http%3A%2F%2F${METRO_HOST}%3A8081"
 - assertVisible: "Welcome to your ride."
 - tapOn: "The Full Ride. Standard theme"
 - tapOn: "Get Started"

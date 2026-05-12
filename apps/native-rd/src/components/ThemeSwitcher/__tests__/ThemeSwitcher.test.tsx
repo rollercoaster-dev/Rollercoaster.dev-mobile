@@ -69,4 +69,30 @@ describe("ThemeSwitcher", () => {
       ).toBeOnTheScreen();
     }
   });
+
+  describe("E2E mode gating", () => {
+    const originalE2E = process.env.EXPO_PUBLIC_E2E_MODE;
+    beforeAll(() => {
+      process.env.EXPO_PUBLIC_E2E_MODE = "true";
+    });
+    afterAll(() => {
+      if (originalE2E === undefined) {
+        delete process.env.EXPO_PUBLIC_E2E_MODE;
+      } else {
+        process.env.EXPO_PUBLIC_E2E_MODE = originalE2E;
+      }
+    });
+
+    it("drops radiogroup wrapper so descendant option labels are reachable", () => {
+      renderWithProviders(<ThemeSwitcher />);
+      // Under EXPO_PUBLIC_E2E_MODE=true the outer grouping is disabled
+      // so Maestro can resolve each option's composed accessibilityLabel
+      // (e.g. "Night Ride. Dark mode"). Without this gate, iOS collapses
+      // every option into the parent radiogroup's a11y node and Maestro
+      // can no longer reach them.
+      expect(screen.queryByRole("radiogroup")).toBeNull();
+      const radios = screen.getAllByRole("radio");
+      expect(radios.length).toBe(themeOptions.length);
+    });
+  });
 });

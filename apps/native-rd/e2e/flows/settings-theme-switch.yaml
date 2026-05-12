@@ -4,9 +4,16 @@ appId: dev.rollercoaster.app
 # Status: required
 # Criteria: stable feature, outcome assertion present, deterministic
 - launchApp
-- tapOn: "S"
+# Settings tab is a gear icon — no text node to match, must use testID.
+- tapOn:
+    id: "tab-SettingsTab"
 - assertVisible: "Settings"
 - assertVisible: "Pick what feels right"
-- tapOn: "Night Ride"
+# Each theme option is a Pressable with accessible=true and a composed
+# accessibilityLabel `${label}. ${description}`. The wrapper collapses
+# the inner Text nodes (accessible-wrapper trap), so we must match the
+# composed string — see ThemeSwitcher.tsx:138-144 and themeOptions in
+# hooks/useTheme.ts.
+- tapOn: "Night Ride. Dark mode"
 - assertVisible:
     id: "selected-theme"

@@ -45,10 +45,13 @@ appId: dev.rollercoaster.app
 # Redesign mode has no testID on its save button (BadgeDesignerScreen.tsx
 # :422-430 — only new-goal mode sets saveTestID). We rely on the literal
 # label "Save Design".
+# centerElement: true forces the button above the AppTabBar overlay; see
+# goal-lifecycle-complete.yaml for the full rationale.
 - scrollUntilVisible:
     element:
       text: "Save Design"
     direction: DOWN
+    centerElement: true
 - tapOn: "Save Design"
 
 # After save, BadgeDesignerContentBadge calls navigation.goBack() — we

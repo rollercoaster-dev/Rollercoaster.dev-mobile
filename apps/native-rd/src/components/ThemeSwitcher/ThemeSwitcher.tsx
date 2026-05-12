@@ -120,15 +120,25 @@ function previewStyles(themeId: ThemeName) {
 export function ThemeSwitcher() {
   const { themeName, setTheme } = useThemeContext();
 
+  // The radiogroup wrapper collapses descendant Pressables into a single
+  // a11y node on iOS, which hides individual options from Maestro element
+  // lookup. Drop the grouping in E2E mode; the Pressables retain their
+  // own `accessible+role=radio+label` so screen readers still treat each
+  // option as a discrete radio in production. Mirrors ThemeChipGrid.
+  const isE2E = process.env.EXPO_PUBLIC_E2E_MODE === "true";
+  const groupingA11y = isE2E
+    ? ({ accessible: false } as const)
+    : ({
+        accessible: true,
+        accessibilityRole: "radiogroup" as const,
+        accessibilityLabel: "Theme selection",
+      } as const);
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Pick what feels right</Text>
 
-      <View
-        accessible
-        accessibilityRole="radiogroup"
-        accessibilityLabel="Theme selection"
-      >
+      <View {...groupingA11y}>
         {themeOptions.map((option) => {
           const isSelected = themeName === option.id;
           const cardTheme = themes[option.id];

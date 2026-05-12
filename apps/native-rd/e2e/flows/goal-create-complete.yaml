@@ -26,10 +26,13 @@ appId: dev.rollercoaster.app
 
 # Badge designer → use default
 - assertVisible: "Design Badge"
+# centerElement: true keeps the button above the floating AppTabBar
+# (see goal-lifecycle-complete.yaml for the full rationale).
 - scrollUntilVisible:
     element: "Use This Design"
     direction: DOWN
     timeout: 10000
+    centerElement: true
 - tapOn: "Use This Design"
 
 # Edit mode — add a step with text evidence (pre-selected by default)
