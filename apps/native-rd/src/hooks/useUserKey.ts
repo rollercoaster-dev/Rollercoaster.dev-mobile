@@ -17,7 +17,7 @@ import { useEffect, useRef, useState } from "react";
 import { updateUserSettingsKey, clearUserSettingsKey } from "../db";
 import { useUserSettingsRow } from "./useUserSettingsRow";
 import { keyProvider } from "../crypto";
-import { reportError } from "../services/sentry-report";
+import { reportError, breadcrumb } from "../services/sentry-report";
 import { Logger } from "../shims/rd-logger";
 
 const logger = new Logger("useUserKey");
@@ -77,6 +77,7 @@ export function useUserKey(): UserKeyState {
 
     (async () => {
       try {
+        breadcrumb({ category: "key", message: "verify" });
         await keyProvider.getPublicKey(verifyingKeyId);
         // Stale-result guard: if settings.keyId changed during verification,
         // discard this result rather than marking a different key verified.
@@ -122,6 +123,7 @@ export function useUserKey(): UserKeyState {
           return;
         }
 
+        breadcrumb({ category: "key", message: "generate" });
         const { keyId } = await keyProvider.generateKeyPair();
         // Evolu mutations are synchronous CRDT operations — no await needed.
         updateUserSettingsKey(settings.id, keyId);

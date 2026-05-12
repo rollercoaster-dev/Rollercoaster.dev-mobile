@@ -35,6 +35,7 @@ export type ReportContext =
   | { area: "key.generate" }
   | { area: "key.verify" }
   | { area: "evidence.capture"; kind: EvidenceTypeValue }
+  | { area: "evidence.view"; kind?: EvidenceTypeValue }
   | { area: "evidence.cleanup" }
   | { area: "goal.mutate"; kind: "create" | "update" | "delete" | "complete" }
   | {
@@ -49,6 +50,7 @@ export type ReportContext =
   | { area: "audio.record"; kind?: "start" | "stop" | "permission" | "cleanup" }
   | { area: "audio.playback" }
   | { area: "navigation" }
+  | { area: "db.write" }
   | { area: "render" };
 
 // No-op in dev — `initSentry()` returns early before any client is installed,
@@ -77,7 +79,18 @@ export function reportError(error: unknown, ctx: ReportContext): void {
  * useCreateBadge, useUserKey) deliberately do NOT appear here, to avoid
  * double-reporting the same error.
  */
-const SCOPE_TO_AREA: Record<string, ReportContext> = {};
+const SCOPE_TO_AREA: Record<string, ReportContext> = {
+  useFocusModePrefs: { area: "focus.mode" },
+  evidenceCleanup: { area: "evidence.cleanup" },
+  // db.queries spans 5 entity types; stack frame distinguishes which function.
+  "db.queries": { area: "db.write" },
+  // evidenceViewers omits kind — spans both link and file open paths.
+  evidenceViewers: { area: "evidence.view" },
+  VideoContent: { area: "evidence.view", kind: "video" },
+  PhotoContent: { area: "evidence.view", kind: "photo" },
+  LinkContent: { area: "evidence.view", kind: "link" },
+  FileContent: { area: "evidence.view", kind: "file" },
+};
 
 // `map` parameter exists as a test seam — production callers always omit it.
 // Adding scopes still requires editing SCOPE_TO_AREA above; no runtime
@@ -100,6 +113,8 @@ export function reportLoggerError(
  * scrubber in sentry-filters.ts is a backstop, but the API itself is
  * unreachable from app code without producing safe values.
  */
+// No "uncomplete" message — reverse-status mutations map to "update" (goal)
+// or "toggle" (step) since both directions of the flip share one breadcrumb.
 export type BreadcrumbInput =
   | { category: "goal"; message: "create" | "update" | "delete" | "complete" }
   | {

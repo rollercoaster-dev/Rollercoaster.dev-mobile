@@ -48,7 +48,7 @@ import {
 } from "../badges";
 import { Buffer } from "buffer";
 import { useUserKey } from "./useUserKey";
-import { reportError } from "../services/sentry-report";
+import { reportError, breadcrumb } from "../services/sentry-report";
 import { Logger } from "../shims/rd-logger";
 
 const logger = new Logger("useCreateBadge");
@@ -156,6 +156,7 @@ export function useCreateBadge(
     (async () => {
       try {
         setStatus("building");
+        breadcrumb({ category: "badge", message: "build" });
 
         const publicKeyJwk = await keyProvider.getPublicKey(keyId);
         const issuerDid = buildDid(publicKeyJwk);
@@ -192,6 +193,7 @@ export function useCreateBadge(
         });
 
         setStatus("signing");
+        breadcrumb({ category: "badge", message: "sign" });
 
         const credentialJson = JSON.stringify(unsignedCredential);
         const encoded = new TextEncoder().encode(credentialJson);
@@ -217,6 +219,7 @@ export function useCreateBadge(
         };
 
         setStatus("baking");
+        breadcrumb({ category: "badge", message: "bake" });
 
         // Use pre-captured designer PNG when available, otherwise fall back to
         // the solid-color generator. When the caller provides a `design` but no
@@ -262,6 +265,7 @@ export function useCreateBadge(
         }
 
         setStatus("storing");
+        breadcrumb({ category: "badge", message: "store" });
 
         // Validate evidence gating BEFORE any mutations to prevent partial state
         // (badge created but goal not completed).

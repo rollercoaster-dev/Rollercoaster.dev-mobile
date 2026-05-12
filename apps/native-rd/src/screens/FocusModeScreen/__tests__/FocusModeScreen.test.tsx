@@ -52,6 +52,11 @@ jest.mock("../../../utils/evidenceCleanup", () => ({
   deleteEvidenceFile: jest.fn(),
 }));
 
+jest.mock("../../../services/sentry-report", () => ({
+  reportError: jest.fn(),
+  breadcrumb: jest.fn(),
+}));
+
 jest.mock("../../../db", () => ({
   StepStatus: { pending: "pending", completed: "completed" },
   EvidenceType: {
@@ -853,5 +858,35 @@ describe("FocusModeScreen", () => {
     renderWithProviders(<FocusModeScreen {...routeProps} />);
     fireEvent.press(screen.getByText("Mark complete"));
     expect(mockCompleteStep).toHaveBeenCalledWith("step-1", null, []);
+  });
+
+  describe("breadcrumbs", () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const {
+      breadcrumb: mockBreadcrumb,
+    } = require("../../../services/sentry-report");
+
+    it("emits focus/enter on mount and focus/exit on unmount", () => {
+      setupQueries();
+      const { unmount } = renderWithProviders(
+        <FocusModeScreen {...routeProps} />,
+      );
+
+      expect(mockBreadcrumb).toHaveBeenCalledWith({
+        category: "focus",
+        message: "enter",
+      });
+      expect(mockBreadcrumb).not.toHaveBeenCalledWith({
+        category: "focus",
+        message: "exit",
+      });
+
+      unmount();
+
+      expect(mockBreadcrumb).toHaveBeenCalledWith({
+        category: "focus",
+        message: "exit",
+      });
+    });
   });
 });

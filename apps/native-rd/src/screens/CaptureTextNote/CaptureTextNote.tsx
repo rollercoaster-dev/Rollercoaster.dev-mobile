@@ -17,6 +17,7 @@ import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { createEvidence, EvidenceType, TEXT_EVIDENCE_PREFIX } from "../../db";
 import type { GoalId, StepId } from "../../db";
 import { reportError } from "../../services/sentry-report";
+import { useEvidenceStartBreadcrumb } from "../../hooks/useEvidenceStartBreadcrumb";
 import type { CaptureTextNoteScreenProps } from "../../navigation/types";
 import { styles } from "./CaptureTextNote.styles";
 
@@ -36,6 +37,8 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
   const [caption, setCaption] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  useEvidenceStartBreadcrumb("text");
 
   const trimmedContent = content.trim();
   const canSave =

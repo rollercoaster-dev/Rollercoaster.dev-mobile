@@ -16,6 +16,7 @@ import {
   sqliteTrue,
   Int,
 } from "@evolu/common";
+import { breadcrumb } from "../services/sentry-report";
 import { Logger } from "../shims/rd-logger";
 import type { EvidenceTypeValue } from "../types/evidence";
 import { parsePlannedEvidenceTypes } from "../utils/parsePlannedEvidenceTypes";
@@ -30,8 +31,8 @@ import {
   UserSettingsId,
 } from "./schema";
 
-// Initialize logger for database operations
-const logger = new Logger();
+// Scope "db.queries" routes caught Evolu/Kysely errors through SCOPE_TO_AREA → db.write.
+const logger = new Logger("db.queries");
 
 // Goal CRUD
 
@@ -81,6 +82,7 @@ export const stepsForActiveGoalsQuery = evolu.createQuery((db) =>
  * @throws Error if validation fails
  */
 export function createGoal(title: string) {
+  breadcrumb({ category: "goal", message: "create" });
   const parsedTitle = NonEmptyString1000.orNull(title.trim());
   if (!parsedTitle) {
     logger.error("Goal title validation failed", {
@@ -114,6 +116,7 @@ export function updateGoal(
   id: GoalId,
   fields: { title?: string; description?: string | null },
 ) {
+  breadcrumb({ category: "goal", message: "update" });
   const update: Record<string, unknown> = { id };
 
   if (fields.title !== undefined) {
@@ -166,6 +169,7 @@ export function completeGoal(
   id: GoalId,
   goalEvidence: Array<{ type: string | null }>,
 ) {
+  breadcrumb({ category: "goal", message: "complete" });
   if (!canCompleteGoal(goalEvidence)) {
     throw new Error(
       "Cannot complete goal: no evidence attached. Add at least one evidence item first.",
@@ -200,6 +204,7 @@ export function completeGoal(
  * @returns Update command
  */
 export function uncompleteGoal(id: GoalId) {
+  breadcrumb({ category: "goal", message: "update" });
   try {
     return evolu.update("goal", {
       id,
@@ -218,6 +223,7 @@ export function uncompleteGoal(id: GoalId) {
  * @returns Update command
  */
 export function deleteGoal(id: GoalId) {
+  breadcrumb({ category: "goal", message: "delete" });
   try {
     return evolu.update("goal", { id, isDeleted: sqliteTrue });
   } catch (error) {
@@ -329,6 +335,7 @@ export function createStep(
   ordinal?: number,
   plannedEvidenceTypes?: readonly string[] | null,
 ) {
+  breadcrumb({ category: "step", message: "create" });
   const parsedTitle = NonEmptyString1000.orNull(title.trim());
   if (!parsedTitle) {
     logger.error("Step title validation failed", {
@@ -376,6 +383,7 @@ export function updateStep(
     plannedEvidenceTypes?: readonly string[] | null;
   },
 ) {
+  breadcrumb({ category: "step", message: "update" });
   const update: Record<string, unknown> = { id };
 
   if (fields.title !== undefined) {
@@ -422,6 +430,7 @@ export function completeStep(
   plannedEvidenceTypesJson: string | null,
   stepEvidence: Array<{ type: string | null }>,
 ) {
+  breadcrumb({ category: "step", message: "toggle" });
   if (!canCompleteStep(plannedEvidenceTypesJson, stepEvidence)) {
     const hasAnyEvidence = stepEvidence.some((e) => e.type !== null);
     throw new Error(
@@ -459,6 +468,7 @@ export function completeStep(
  * @returns Update command
  */
 export function uncompleteStep(id: StepId) {
+  breadcrumb({ category: "step", message: "toggle" });
   try {
     return evolu.update("step", {
       id,
@@ -477,6 +487,7 @@ export function uncompleteStep(id: StepId) {
  * @returns Update command
  */
 export function deleteStep(id: StepId) {
+  breadcrumb({ category: "step", message: "delete" });
   try {
     return evolu.update("step", { id, isDeleted: sqliteTrue });
   } catch (error) {
@@ -492,6 +503,7 @@ export function deleteStep(id: StepId) {
  * @throws Error if any ordinal update fails
  */
 export function reorderSteps(goalId: GoalId, stepIds: StepId[]) {
+  breadcrumb({ category: "step", message: "reorder" });
   const failures: { index: number; stepId: string }[] = [];
 
   stepIds.forEach((stepId, index) => {
@@ -610,6 +622,7 @@ export type CreateEvidenceParams = (StepEvidenceParams | GoalEvidenceParams) &
   CreateEvidenceBase;
 
 export function createEvidence(params: CreateEvidenceParams) {
+  breadcrumb({ category: "evidence", message: "save", kind: params.type });
   const goalId = Object.hasOwn(params, "goalId")
     ? (params as GoalEvidenceParams).goalId
     : undefined;

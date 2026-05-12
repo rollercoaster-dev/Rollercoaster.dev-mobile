@@ -188,6 +188,58 @@ describe("reportLoggerError", () => {
       kind: "photo",
     });
   });
+
+  describe("production SCOPE_TO_AREA registrations", () => {
+    it("routes useFocusModePrefs to focus.mode", () => {
+      reportLoggerError("useFocusModePrefs", new Error("boom"));
+      expect(mockState.captured).toHaveLength(1);
+      expect(mockState.captured[0].scope.tags).toEqual({ area: "focus.mode" });
+    });
+
+    it("routes evidenceCleanup to evidence.cleanup", () => {
+      reportLoggerError("evidenceCleanup", new Error("boom"));
+      expect(mockState.captured).toHaveLength(1);
+      expect(mockState.captured[0].scope.tags).toEqual({
+        area: "evidence.cleanup",
+      });
+    });
+
+    it("routes db.queries to db.write", () => {
+      reportLoggerError("db.queries", new Error("boom"));
+      expect(mockState.captured).toHaveLength(1);
+      expect(mockState.captured[0].scope.tags).toEqual({ area: "db.write" });
+    });
+
+    it("routes evidenceViewers to evidence.view with no kind (spans link+file)", () => {
+      reportLoggerError("evidenceViewers", new Error("boom"));
+      expect(mockState.captured).toHaveLength(1);
+      expect(mockState.captured[0].scope.tags).toEqual({
+        area: "evidence.view",
+      });
+    });
+
+    it.each([
+      ["VideoContent", "video"],
+      ["PhotoContent", "photo"],
+      ["LinkContent", "link"],
+      ["FileContent", "file"],
+    ])("routes %s to evidence.view with kind:%s", (scope, kind) => {
+      reportLoggerError(scope, new Error("boom"));
+      expect(mockState.captured).toHaveLength(1);
+      expect(mockState.captured[0].scope.tags).toEqual({
+        area: "evidence.view",
+        kind,
+      });
+    });
+
+    // The default "app" scope must remain unmapped — db/queries.ts used to use
+    // it, and re-introducing it would route every Logger() without a scope
+    // through Sentry, bypassing the deliberate per-scope audit.
+    it("still no-ops for the default 'app' scope after db.queries rename", () => {
+      reportLoggerError("app", new Error("boom"));
+      expect(mockState.captured).toHaveLength(0);
+    });
+  });
 });
 
 describe("breadcrumb", () => {

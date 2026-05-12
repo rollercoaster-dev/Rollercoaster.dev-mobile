@@ -15,6 +15,7 @@ import {
   ALLOWED_MIME_TYPES,
 } from "../../utils/fileStorage";
 import { reportError } from "../../services/sentry-report";
+import { useEvidenceStartBreadcrumb } from "../../hooks/useEvidenceStartBreadcrumb";
 import type { CaptureFileScreenProps } from "../../navigation/types";
 import { styles } from "./CaptureFile.styles";
 
@@ -43,6 +44,8 @@ export function CaptureFile({ route }: CaptureFileScreenProps) {
   const navigation = useNavigation();
   const { goalId, stepId } = route.params;
   const [busy, setBusy] = useState(false);
+
+  useEvidenceStartBreadcrumb("file");
 
   async function handlePickFile() {
     if (busy) return;

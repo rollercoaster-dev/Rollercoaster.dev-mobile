@@ -36,12 +36,19 @@ jest.mock("../../db", () => ({
   clearUserSettingsKey: jest.fn(),
 }));
 
+jest.mock("../../services/sentry-report", () => ({
+  reportError: jest.fn(),
+  breadcrumb: jest.fn(),
+}));
+
 const mockUseQuery = useQuery as jest.Mock;
 const mockCreateUserSettings = createUserSettings as jest.Mock;
 const mockUpdateUserSettingsKey = updateUserSettingsKey as jest.Mock;
 const mockClearUserSettingsKey = clearUserSettingsKey as jest.Mock;
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { keyProvider: mockKeyProvider } = require("../../crypto");
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { breadcrumb: mockBreadcrumb } = require("../../services/sentry-report");
 
 const MOCK_SETTINGS_ID = "settings-id-001" as Parameters<
   typeof updateUserSettingsKey
@@ -277,6 +284,52 @@ describe("useUserKey", () => {
       await act(async () => {});
 
       expect(result.current.error).toContain("crypto unavailable");
+    });
+  });
+
+  describe("breadcrumbs", () => {
+    it("emits 'key/verify' before getPublicKey on stored-keyId verification", async () => {
+      mockUseQuery.mockReturnValue([
+        { id: MOCK_SETTINGS_ID, keyId: "existing-key-id" },
+      ]);
+
+      renderHook(() => useUserKey());
+      await act(async () => {});
+
+      expect(mockBreadcrumb).toHaveBeenCalledWith({
+        category: "key",
+        message: "verify",
+      });
+      // Verify happens; generate should NOT (keyId already exists)
+      expect(mockBreadcrumb).not.toHaveBeenCalledWith({
+        category: "key",
+        message: "generate",
+      });
+    });
+
+    it("emits 'key/generate' before generateKeyPair on first-launch", async () => {
+      mockUseQuery.mockReturnValue([{ id: MOCK_SETTINGS_ID, keyId: null }]);
+
+      renderHook(() => useUserKey());
+      await act(async () => {});
+
+      expect(mockBreadcrumb).toHaveBeenCalledWith({
+        category: "key",
+        message: "generate",
+      });
+    });
+
+    it("does NOT emit 'key/generate' when SecureStore is unavailable (breadcrumb stays accurate)", async () => {
+      mockUseQuery.mockReturnValue([{ id: MOCK_SETTINGS_ID, keyId: null }]);
+      mockKeyProvider.isAvailable.mockResolvedValueOnce(false);
+
+      renderHook(() => useUserKey());
+      await act(async () => {});
+
+      expect(mockBreadcrumb).not.toHaveBeenCalledWith({
+        category: "key",
+        message: "generate",
+      });
     });
   });
 });

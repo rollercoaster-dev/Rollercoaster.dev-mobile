@@ -4,10 +4,11 @@
 
 This document is the playbook. It is forward-looking — most of what's described here is _not yet implemented_.
 
-**Status:** Concept / RFC. Not yet executed.
+**Status:** Concept / RFC. Foundational pieces shipped (Sentry.init, scrubber, `reportError` API, ErrorBoundary wiring, direct critical-path reports). Bridge allowlist and breadcrumb call sites landed on branch `feat/issue-1021-sentry-bridge-and-breadcrumbs` (2026-05-12). Remaining: EAS preview privacy verification run before TestFlight; see plan `docs/plans/2026-05-12-sentry-usage-finish.md`.
 **Owner:** Joe
 **Created:** 2026-05-06
 **Revised:** 2026-05-06 — tightened API after review: closed enums for `kind` / breadcrumb data, scrubber must cover `event.contexts`, Logger bridge rewritten for the JS shim, ErrorBoundary plan now extends the existing component, `environment` plan corrected for Expo bundling.
+**Revised:** 2026-05-12 — added `db.write` and `evidence.view` ReportContext members to cover scopes the original example list didn't anticipate (db/queries.ts spans 5 entity types; evidence view/load failures are distinct from capture and cleanup). See `docs/plans/2026-05-12-sentry-usage-finish.md` for the per-scope audit.
 **Related:** `sentry-setup.md`, `privacy-verification.md`, `crash-triage-runbook.md`, `app-store-launch-plan.md`
 
 ---
@@ -78,6 +79,8 @@ type ReportContext =
   | { area: "completion.flow" }
   | { area: "audio.record"; kind?: "start" | "stop" | "permission" | "cleanup" }
   | { area: "navigation" }
+  | { area: "db.write" } // db/queries.ts — spans 5 entity types
+  | { area: "evidence.view"; kind?: EvidenceTypeValue } // view/load side, distinct from capture/cleanup
   | { area: "render" };
 
 export function reportError(error: unknown, ctx: ReportContext): void {
@@ -151,13 +154,18 @@ export class Logger {
 `reportLoggerError(scope, err)` lives in `sentry-report.ts`:
 
 ```ts
+// Illustrative; source of truth: src/services/sentry-report.ts.
+// useCreateBadge/useUserKey deliberately absent — they call reportError()
+// directly; bridge would double-report.
 const SCOPE_TO_AREA: Record<string, ReportContext> = {
-  useCreateBadge: { area: "badge.create" },
-  useUserKey: { area: "key.generate" },
-  // Requires changing src/db/queries.ts from new Logger() to new Logger("db.queries").
-  // Do not map the default "app" scope; it is too broad for privacy-safe routing.
-  "db.queries": { area: "goal.mutate", kind: "update" }, // catch-all for audited db ops
-  BadgeDesignerScreen: { area: "badge.create", kind: "build" },
+  useFocusModePrefs: { area: "focus.mode" },
+  evidenceCleanup: { area: "evidence.cleanup" },
+  "db.queries": { area: "db.write" }, // spans 5 entity types; stack trace distinguishes which function
+  evidenceViewers: { area: "evidence.view" }, // link+file open, no kind
+  VideoContent: { area: "evidence.view", kind: "video" },
+  PhotoContent: { area: "evidence.view", kind: "photo" },
+  LinkContent: { area: "evidence.view", kind: "link" },
+  FileContent: { area: "evidence.view", kind: "file" },
   // ...explicit list. Unknown scope => no report.
 };
 

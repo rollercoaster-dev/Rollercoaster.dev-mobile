@@ -9,6 +9,7 @@ import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { createEvidence, EvidenceType } from "../../db";
 import type { GoalId, StepId } from "../../db";
 import { reportError } from "../../services/sentry-report";
+import { useEvidenceStartBreadcrumb } from "../../hooks/useEvidenceStartBreadcrumb";
 import type { CaptureLinkScreenProps } from "../../navigation/types";
 import { isValidUrl, normalizeUrl } from "../../utils/url";
 import { styles } from "./CaptureLinkScreen.styles";
@@ -21,6 +22,8 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
   const [caption, setCaption] = useState("");
   const [urlError, setUrlError] = useState<string | undefined>();
   const [saving, setSaving] = useState(false);
+
+  useEvidenceStartBreadcrumb("link");
 
   const trimmedUrl = normalizeUrl(url);
   const hasValidUrl = isValidUrl(trimmedUrl);

@@ -15,6 +15,7 @@ import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { createEvidence, EvidenceType } from "../../db";
 import type { GoalId, StepId } from "../../db";
 import { reportError } from "../../services/sentry-report";
+import { useEvidenceStartBreadcrumb } from "../../hooks/useEvidenceStartBreadcrumb";
 import type { CaptureVideoScreenProps } from "../../navigation/types";
 import { styles } from "./CaptureVideoScreen.styles";
 
@@ -61,6 +62,8 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
   const [elapsed, setElapsed] = useState(0);
   const [facing, setFacing] = useState<CameraFacing>("back");
   const [isSaving, setIsSaving] = useState(false);
+
+  useEvidenceStartBreadcrumb("video");
 
   // Clean up timer on unmount
   useEffect(() => {

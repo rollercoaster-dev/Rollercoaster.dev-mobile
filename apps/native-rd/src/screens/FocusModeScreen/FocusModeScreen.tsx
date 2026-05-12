@@ -70,7 +70,7 @@ import {
 import type { StepStatus as UIStepStatus } from "../../types/steps";
 import { deleteEvidenceFile } from "../../utils/evidenceCleanup";
 import { Logger } from "../../shims/rd-logger";
-import { reportError } from "../../services/sentry-report";
+import { reportError, breadcrumb } from "../../services/sentry-report";
 import { KEYBOARD_AVOIDING_PROPS } from "../../utils/keyboard";
 import { useEvidenceViewer } from "../../utils/evidenceViewers";
 import { useFocusModePrefs } from "../../hooks/useFocusModePrefs";
@@ -128,7 +128,9 @@ function FocusContent({ goalId }: { goalId: string }) {
   } | null>(null);
 
   useEffect(() => {
+    breadcrumb({ category: "focus", message: "enter" });
     return () => {
+      breadcrumb({ category: "focus", message: "exit" });
       isMounted.current = false;
       if (pendingFileDeletionRef.current) {
         clearTimeout(pendingFileDeletionRef.current.timer);

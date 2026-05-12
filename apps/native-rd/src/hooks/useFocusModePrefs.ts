@@ -13,7 +13,9 @@ export function useFocusModePrefs() {
   const setTimelineHidden = useCallback(
     (hidden: boolean) => {
       if (!settings) {
-        logger.error("setTimelineHidden called before settings row exists");
+        logger.error("setTimelineHidden called before settings row exists", {
+          error: new Error("missing settings row"),
+        });
         return;
       }
       try {

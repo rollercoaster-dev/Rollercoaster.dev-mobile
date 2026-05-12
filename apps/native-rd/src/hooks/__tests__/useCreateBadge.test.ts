@@ -45,6 +45,11 @@ jest.mock("../../db", () => ({
   createBadge: jest.fn(),
 }));
 
+jest.mock("../../services/sentry-report", () => ({
+  reportError: jest.fn(),
+  breadcrumb: jest.fn(),
+}));
+
 jest.mock("../../badges", () => ({
   buildUnsignedCredential: jest.fn(() => ({
     "@context": ["https://www.w3.org/ns/credentials/v2"],
@@ -74,6 +79,8 @@ const { keyProvider: mockKeyProvider } = require("../../crypto");
 const { useUserKey: mockUseUserKey } = require("../useUserKey");
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockBadges = require("../../badges");
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { breadcrumb: mockBreadcrumb } = require("../../services/sentry-report");
 
 const GOAL_ID = "goal-01" as GoalId;
 const MOCK_GOAL = {
@@ -470,6 +477,40 @@ describe("useCreateBadge", () => {
       await act(async () => {});
 
       expect(mockCreateBadge).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("breadcrumbs", () => {
+    it("emits build, sign, bake, store breadcrumbs in order on success", async () => {
+      renderHook(() => useCreateBadge(GOAL_ID));
+      await act(async () => {});
+
+      const calls = mockBreadcrumb.mock.calls.map(
+        (c: [{ category: string; message: string }]) => c[0],
+      );
+      expect(calls).toEqual([
+        { category: "badge", message: "build" },
+        { category: "badge", message: "sign" },
+        { category: "badge", message: "bake" },
+        { category: "badge", message: "store" },
+      ]);
+    });
+
+    it("emits earlier-phase breadcrumbs but not later ones when an early phase throws", async () => {
+      mockKeyProvider.sign.mockRejectedValueOnce(new Error("sign failed"));
+
+      renderHook(() => useCreateBadge(GOAL_ID));
+      await act(async () => {});
+
+      const messages = mockBreadcrumb.mock.calls.map(
+        (c: [{ message: string }]) => c[0].message,
+      );
+      // build + sign fire (sign breadcrumb is emitted BEFORE the failing await)
+      expect(messages).toContain("build");
+      expect(messages).toContain("sign");
+      // bake + store do not fire because the catch was hit first
+      expect(messages).not.toContain("bake");
+      expect(messages).not.toContain("store");
     });
   });
 });

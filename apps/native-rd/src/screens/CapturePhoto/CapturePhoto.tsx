@@ -10,6 +10,7 @@ import { createEvidence, EvidenceType } from "../../db";
 import type { GoalId, StepId } from "../../db";
 import { saveImageToAppStorage } from "../../utils/imageStorage";
 import { reportError } from "../../services/sentry-report";
+import { useEvidenceStartBreadcrumb } from "../../hooks/useEvidenceStartBreadcrumb";
 import type { CapturePhotoScreenProps } from "../../navigation/types";
 import { styles } from "./CapturePhoto.styles";
 
@@ -24,6 +25,8 @@ export function CapturePhoto({ route }: CapturePhotoScreenProps) {
   const navigation = useNavigation();
   const { goalId, stepId } = route.params;
   const [busy, setBusy] = useState(false);
+
+  useEvidenceStartBreadcrumb("photo");
 
   function savePhoto(result: ImagePicker.ImagePickerSuccessResult) {
     setBusy(true);
