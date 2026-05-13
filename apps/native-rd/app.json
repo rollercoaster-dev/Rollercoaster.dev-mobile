@@ -83,7 +83,8 @@
           "url": "https://sentry.io/"
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-localization"
     ],
     "extra": {
       "eas": {

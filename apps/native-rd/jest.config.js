@@ -62,6 +62,7 @@ module.exports = {
       "<rootDir>/src/__tests__/mocks/expo-file-system.ts",
     "^expo-video$": "<rootDir>/src/__tests__/mocks/expo-video.ts",
     "^expo-secure-store$": "<rootDir>/src/__tests__/mocks/expo-secure-store.ts",
+    "^expo-localization$": "<rootDir>/src/__tests__/mocks/expo-localization.ts",
 
     // Navigation — native stack navigator
     "^@react-navigation/native$": "<rootDir>/src/__tests__/mocks/navigation.ts",

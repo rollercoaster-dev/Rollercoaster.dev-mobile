@@ -18,6 +18,7 @@ See `docs/vision/product-vision.md` for full context.
 | Design language?        | `docs/design/design-language.md`                                       |
 | Theme system?           | `docs/design/nd-themes.md`, `docs/architecture/design-token-system.md` |
 | Accessibility?          | `docs/accessibility-guidelines.md`                                     |
+| Internationalization?   | `docs/i18n.md`                                                         |
 
 ## Tech Stack
 

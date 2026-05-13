@@ -1,6 +1,10 @@
 /**
  * Application entry point
- * Order matters: crypto → polyfills → unistyles → app
+ * Order matters: crypto → polyfills → unistyles → sentry → i18n → app
+ *
+ * Sentry comes before i18n so that any throw from i18next init reaches
+ * telemetry. i18n still precedes the App require, so screen modules
+ * never see an uninitialized t().
  *
  * Using require() instead of import to guarantee execution order —
  * Babel's commonjs transform hoists import-converted-requires above
@@ -30,7 +34,12 @@ require("./unistyles");
 const { initSentry, wrap: sentryWrap } = require("./src/services/sentry");
 initSentry();
 
-// 5. Register the app (or Storybook when EXPO_PUBLIC_STORYBOOK_ENABLED is set)
+// 5. Initialise i18next synchronously, after Sentry so any init throw is
+// captured by telemetry. Must run before the App require below so screen
+// module-level t() calls cannot race init.
+require("./src/i18n");
+
+// 6. Register the app (or Storybook when EXPO_PUBLIC_STORYBOOK_ENABLED is set)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { registerRootComponent } = require("expo");
 
