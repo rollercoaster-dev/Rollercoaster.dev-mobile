@@ -1,0 +1,52 @@
+appId: dev.rollercoaster.app
+---
+# Theme persistence — verify Night Ride survives a full app restart.
+# Status: required (issue #943 acceptance criteria)
+# Criteria: stable feature, outcome assertion present, deterministic
+# Companion: settings-theme-switch.yaml asserts immediate selection;
+# this flow extends it with a relaunch to verify Evolu-backed persistence.
+
+# Fresh install — clearState wipes Evolu's SQLite so we start at
+# WelcomeScreen and avoid bleed from a prior run that already set a theme.
+- launchApp:
+    clearState: true
+    clearKeychain: true
+# Expo SDK 55+ dev-launcher bypass — cold launch via simctl doesn't carry
+# the bundle URL the way `expo run:ios` does. See .claude/skills/maestro-e2e.
+- openLink: "exp+rollercoasterdev://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081"
+
+# First-run onboarding prefix — hasSeenWelcome was wiped with the install.
+- assertVisible: "Welcome to your ride."
+- tapOn: "The Full Ride. Standard theme"
+- tapOn: "Get Started"
+- assertVisible: "Goals"
+
+# Switch to Night Ride and verify immediate selection.
+- tapOn:
+    id: "tab-SettingsTab"
+- assertVisible: "Pick what feels right"
+- tapOn: "Night Ride. Dark mode"
+- assertVisible:
+    id: "selected-theme"
+
+# Restart with state preserved — clearState defaults to false here, so
+# Evolu's SQLite (and userSettings.theme) survives across the relaunch.
+- launchApp
+- openLink: "exp+rollercoasterdev://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081"
+
+# We should land directly on Goals — hasSeenWelcome=1 was persisted before
+# the restart, so onboarding doesn't replay.
+- assertVisible: "Goals"
+
+- tapOn:
+    id: "tab-SettingsTab"
+- assertVisible: "Pick what feels right"
+
+# Deterministic post-restart assertion: the Pressable currently bearing the
+# `selected-theme` testID (only attached to the selected option — see
+# ThemeSwitcher.tsx:155) must also be the Night Ride card. If persistence
+# regressed and Unistyles defaulted back to light-default, the testID would
+# attach to "The Full Ride" instead and this combined matcher would fail.
+- assertVisible:
+    id: "selected-theme"
+    text: "Night Ride"

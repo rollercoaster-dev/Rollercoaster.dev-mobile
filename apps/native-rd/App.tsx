@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { StatusBar } from "expo-status-bar";
 import { View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -11,6 +12,7 @@ import { TabNavigator } from "./src/navigation";
 import { ToastProvider } from "./src/components/Toast";
 import { useFonts } from "./src/hooks/useFonts";
 import { useTheme, ThemeProvider, useThemeContext } from "./src/hooks/useTheme";
+import { useThemePersistence } from "./src/hooks/useThemePersistence";
 import { useDensity } from "./src/hooks/useDensity";
 import { useAnimationPref } from "./src/hooks/useAnimationPref";
 import { useFirstLaunch } from "./src/hooks/useFirstLaunch";
@@ -25,25 +27,25 @@ if (STORYBOOK_ENABLED) {
 }
 
 /**
- * Inner app that consumes the theme context and re-renders when theme changes
+ * Inner app that consumes the theme context and re-renders when theme changes.
+ *
+ * Wraps children in a nested ThemeProvider whose setTheme persists to Evolu
+ * (via useThemePersistence). The outer provider in App() exists before
+ * EvoluAppProvider mounts and has only the Unistyles-only setTheme — this
+ * override applies once we're inside EvoluAppProvider's scope.
  */
 function ThemedApp() {
-  const { theme, isDark } = useThemeContext();
+  const themeContext = useThemeContext();
+  const { theme, isDark } = themeContext;
   const { isFirstLaunch, markSeen } = useFirstLaunch();
+  const { setTheme: persistingSetTheme } = useThemePersistence();
   useDensity(); // Apply saved density to all themes on mount
   useAnimationPref(); // Initialize OS reduceMotion listener
 
-  // Loading: Evolu hasn't read settings from SQLite yet
-  if (isFirstLaunch === null) {
-    return (
-      <View style={{ flex: 1, backgroundColor: theme.colors.background }} />
-    );
-  }
-
-  // First launch — show WelcomeScreen above NavigationContainer
-  if (isFirstLaunch) {
-    return <WelcomeScreen onGetStarted={markSeen} />;
-  }
+  const persistingThemeContext = useMemo(
+    () => ({ ...themeContext, setTheme: persistingSetTheme }),
+    [themeContext, persistingSetTheme],
+  );
 
   const navTheme: Theme = {
     ...DefaultTheme,
@@ -59,16 +61,29 @@ function ThemedApp() {
     },
   };
 
-  return (
-    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <StatusBar style={isDark ? "light" : "dark"} />
-      <NavigationContainer theme={navTheme}>
-        <ToastProvider>
-          <TabNavigator />
-        </ToastProvider>
-      </NavigationContainer>
-    </View>
-  );
+  let body: React.ReactNode;
+  if (isFirstLaunch === null) {
+    // Loading: Evolu hasn't read settings from SQLite yet
+    body = (
+      <View style={{ flex: 1, backgroundColor: theme.colors.background }} />
+    );
+  } else if (isFirstLaunch) {
+    // First launch — show WelcomeScreen above NavigationContainer
+    body = <WelcomeScreen onGetStarted={markSeen} />;
+  } else {
+    body = (
+      <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+        <StatusBar style={isDark ? "light" : "dark"} />
+        <NavigationContainer theme={navTheme}>
+          <ToastProvider>
+            <TabNavigator />
+          </ToastProvider>
+        </NavigationContainer>
+      </View>
+    );
+  }
+
+  return <ThemeProvider value={persistingThemeContext}>{body}</ThemeProvider>;
 }
 
 /**

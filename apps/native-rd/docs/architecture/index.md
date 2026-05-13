@@ -12,3 +12,4 @@ Technical architecture documents for the native app.
 | [design-token-system.md](./design-token-system.md)                   | Unistyles theme tokens, composition, color modes x variants           | 2026-02-24    |
 | [design-token-system-map.md](./design-token-system-map.md)           | Current-state map of token data flow + friction points                | 2026-04-28    |
 | [design-token-migration-audit.md](./design-token-migration-audit.md) | Per-key audit + migration plan for consuming package semantic systems | 2026-04-28    |
+| [theme-persistence.md](./theme-persistence.md)                       | Evolu-backed theme persistence, provider nesting, flash policy        | 2026-05-13    |

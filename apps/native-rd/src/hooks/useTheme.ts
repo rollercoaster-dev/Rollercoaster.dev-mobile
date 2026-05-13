@@ -11,6 +11,10 @@ import type { Variant } from "../themes/variants";
 /**
  * The 7 peer themes from @rollercoaster-dev/design-tokens.
  * Dark mode ("Night Ride") is one of the 7 — not a separate axis.
+ *
+ * Note: the Unistyles registry still composes all 14 colorMode × variant
+ * combinations (see themes/compose.ts). The 7 below are the only values
+ * the persistence layer accepts on read or write. See issue #940.
  */
 export const themeOptions: Array<{
   id: ThemeName;
@@ -49,6 +53,19 @@ export const themeOptions: Array<{
     description: "Reduced visual noise",
   },
 ];
+
+/** Supported theme names — the persistence layer's source of truth. */
+export const VALID_THEME_NAMES: ReadonlySet<ThemeName> = new Set(
+  themeOptions.map((o) => o.id),
+);
+
+/** Default fallback used when a persisted theme value is missing or invalid. */
+export const FALLBACK_THEME_NAME: ThemeName = "light-default";
+
+/** Type guard for persisted/runtime theme name validation. */
+export function isValidThemeName(name: unknown): name is ThemeName {
+  return typeof name === "string" && VALID_THEME_NAMES.has(name as ThemeName);
+}
 
 interface ThemeContextValue {
   themeName: ThemeName;
