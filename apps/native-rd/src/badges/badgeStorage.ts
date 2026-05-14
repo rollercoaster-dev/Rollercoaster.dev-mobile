@@ -65,5 +65,17 @@ export async function saveBadgePNG(data: Uint8Array): Promise<string> {
     );
   }
 
+  // Post-write verification — writeAsStringAsync has been observed to resolve
+  // without surfacing iOS storage errors (sandbox / quota), leaving us with a
+  // URI that points to nothing. If the file isn't there afterwards, treat the
+  // save as failed so the caller's placeholder fallback engages instead of
+  // shipping a broken URI into the badge row.
+  const verify = await FileSystem.getInfoAsync(uri);
+  if (!verify.exists) {
+    throw new Error(
+      `Badge PNG write completed but file is missing at ${uri}. Likely an iOS sandbox / quota issue.`,
+    );
+  }
+
   return uri;
 }

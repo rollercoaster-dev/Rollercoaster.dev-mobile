@@ -101,7 +101,12 @@ export function BadgeEarnedModal({
           <Animated.View style={animatedStyle}>
             <View style={styles.card} {...cardA11yProps}>
               {hasImage ? (
+                // `key={imageUri}` forces a fresh native Image mount when the
+                // rebake flow swaps the badge row's imageUri mid-display.
+                // Without it, iOS's UIImageView occasionally hangs onto the
+                // previous fetch and skips loading the new URI.
                 <Image
+                  key={imageUri}
                   source={{ uri: imageUri }}
                   style={styles.badgeImage}
                   accessibilityLabel="Badge image"
