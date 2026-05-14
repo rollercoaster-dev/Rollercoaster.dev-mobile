@@ -16,8 +16,7 @@ import { styles } from "./CapturePhoto.styles";
 
 const PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
   mediaTypes: ["images"],
-  allowsEditing: true,
-  aspect: [4, 3] as [number, number],
+  allowsEditing: false,
   quality: 0.8,
 };
 
