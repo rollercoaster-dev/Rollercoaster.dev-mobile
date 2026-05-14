@@ -19,7 +19,8 @@ single `ci.yml` workflow described below.
 
 There is a single CI workflow: `.github/workflows/ci.yml`. It runs on every PR
 (except docs-only changes filtered by `paths-ignore`) and on every push to
-`main`.
+`main`. The script names below are defined in the root `package.json`;
+treat that file as the source of truth if a command name changes.
 
 | Step           | Command                                                 | Notes                                                               |
 | -------------- | ------------------------------------------------------- | ------------------------------------------------------------------- |

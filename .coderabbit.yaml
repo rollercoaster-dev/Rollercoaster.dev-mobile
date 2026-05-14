@@ -58,6 +58,7 @@ reviews:
     - path: "apps/native-rd/src/screens/**/*.{ts,tsx}"
       instructions: |
         Screens compose components; they don't define primitives.
+        Source of truth for native-rd conventions: apps/native-rd/CLAUDE.md.
 
         - No imports from another screen's directory (the
           `local/no-component-imports-screens` rule enforces this; flag
@@ -84,6 +85,7 @@ reviews:
       instructions: |
         This package must comply with the Open Badges 2.0 and 3.0 specs
         and the W3C Verifiable Credentials Data Model.
+        Source of truth for package context: packages/openbadges-core/CLAUDE.md.
 
         - JSON-LD @context handling must preserve order and include the
           required OB contexts
@@ -98,6 +100,7 @@ reviews:
       instructions: |
         Tokens are generated into multiple targets (CSS variables, Unistyles
         themes) by Style Dictionary.
+        Source of truth for token architecture: packages/design-tokens/CLAUDE.md.
 
         - Light and dark themes must define the same token keys
           (no missing-in-one-theme drift)
