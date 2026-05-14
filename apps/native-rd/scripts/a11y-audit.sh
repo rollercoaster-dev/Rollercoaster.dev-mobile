@@ -32,9 +32,12 @@ done
 TMPFILE=$(mktemp /tmp/a11y-results-XXXXXX.json)
 trap 'rm -f "$TMPFILE"' EXIT
 
-# Run Jest — capture exit code without letting set -e abort
+# Run Jest via the jest-node.sh wrapper so we get a real Node binary
+# (not Bun's injected `node` shim — see docs/architecture/ci-contract.md).
+# Capture exit code without letting set -e abort.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 set +e
-npx jest --testPathPatterns "$PATTERN" --json --outputFile "$TMPFILE" --no-coverage 2>&1 | tail -1 >&2
+bash "$SCRIPT_DIR/jest-node.sh" --testPathPatterns "$PATTERN" --json --outputFile "$TMPFILE" --no-coverage 2>&1 | tail -1 >&2
 EXIT_CODE=$?
 set -e
 

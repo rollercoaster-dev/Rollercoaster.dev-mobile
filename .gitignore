@@ -12,6 +12,7 @@ build/
 out/
 .turbo/
 *.tsbuildinfo
+apps/native-rd/.storybook-web-static/
 
 # Environment variables
 .env

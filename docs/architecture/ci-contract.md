@@ -1,128 +1,202 @@
-# native-rd: CI and Validation Contract
+# CI and Validation Contract
 
-Follow-up to PR #882 (monorepo import) and PR #890 (Jest stabilization).
-Resolves issue #888.
+This is a standalone repo housing one app (`apps/native-rd`) and two
+workspace packages (`packages/design-tokens`, `packages/openbadges-core`).
+CI is split across two path-filtered workflows so PRs only run the
+checks that matter for the changed code.
 
-## Validation Environments
+## Workflows
 
-native-rd has a different toolchain from the rest of the monorepo:
+| Workflow                        | File                                 | Triggers on                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ci-native-rd`                  | `.github/workflows/ci-native-rd.yml` | Changes under `apps/native-rd/**` (excluding `docs/`, `research/`, `prototypes/` subdirs), `packages/design-tokens/**`, `packages/openbadges-core/**`, or root inputs that affect the gate (`bun.lock`, `bunfig.toml`, `turbo.json`, `package.json`, `.prettierignore`) / the workflow file. A blanket `**/*.md` exclusion is deliberately NOT applied — see "Why no blanket `**/*.md` exclusion" below. |
+| `ci-packages`                   | `.github/workflows/ci-packages.yml`  | Changes under `packages/**` (excluding `**/*.md` and `**/docs/**`), or root inputs that affect the gate (`bun.lock`, `bunfig.toml`, `turbo.json`, `package.json`, `tsconfig.json`, `eslint.config.mjs`, `.prettierignore`) / the workflow file.                                                                                                                                                          |
+| `ci-docs`                       | `.github/workflows/ci-docs.yml`      | Any `**/*.md` change, plus `.prettierignore` / the workflow file. Catches docs-only PRs that other workflows' path filters skip.                                                                                                                                                                                                                                                                         |
+| `codeql`                        | `.github/workflows/codeql.yml`       | Security scanning (JS/TS), weekly + on push/PR.                                                                                                                                                                                                                                                                                                                                                          |
+| `dco`                           | `.github/workflows/dco.yml`          | Verifies `Signed-off-by:` on commits touching app/package paths.                                                                                                                                                                                                                                                                                                                                         |
+| `claude` / `claude-code-review` | `.github/workflows/claude*.yml`      | Claude Code Review integration. Manual / comment-triggered.                                                                                                                                                                                                                                                                                                                                              |
 
-- Test runner: Jest 30 + babel-jest (not bun test)
-- Lint: eslint-config-expo + six local rules (not shared-config Vue/TS rules)
-- Types: TypeScript strict, RN-aware tsconfig
+Both validation workflows use the same install + cache layout:
 
-For this reason it has its own ESLint config (`apps/native-rd/eslint.config.js`).
-Its lint, typecheck, and test tasks run alongside the workspace packages in the
-single `ci.yml` workflow described below.
+1. `actions/checkout@v6`
+2. `oven-sh/setup-bun@v2` with `bun-version-file: package.json` (locks to `bun@1.3.7`)
+3. `actions/setup-node@v6` (Node 22; native-rd uses `apps/native-rd/.nvmrc`)
+4. Cache `~/.bun/install/cache` keyed on `bun.lock`
+5. Cache `.turbo` keyed on `bun.lock` + the workflow file
+6. `bun install --frozen-lockfile`
 
-## CI Workflow
+## ci-native-rd validation steps
 
-There is a single CI workflow: `.github/workflows/ci.yml`. It runs on every PR
-(except docs-only changes filtered by `paths-ignore`) and on every push to
-`main`. The script names below are defined in the root `package.json`;
-treat that file as the source of truth if a command name changes.
+| Step                 | Command                                                                       | Notes                                                                                                                                                               |
+| -------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Format check         | `bun run format:check`                                                        | Root Prettier glob (`**/*.{ts,tsx,js,jsx,json,md}`) honoring `.prettierignore`.                                                                                     |
+| Typecheck            | `bun run turbo type-check --filter=native-rd`                                 | `turbo.json` declares `type-check.dependsOn: ["^build"]`, so design-tokens and openbadges-core builds run automatically as prerequisites.                           |
+| Lint                 | `bun run turbo lint --filter=native-rd`                                       | Delegates to `expo lint` + the six native-rd local rules. Root ESLint is not invoked here (see "What does NOT apply").                                              |
+| Test (with coverage) | `cd apps/native-rd && bun run test:ci -- --coverage --coverageReporters=lcov` | Jest 30 via `scripts/jest-node.sh`. Writes `apps/native-rd/coverage/lcov.info`.                                                                                     |
+| Coverage upload      | `codecov/codecov-action@v5`                                                   | `flags: native-rd`, `files: apps/native-rd/coverage/lcov.info`. `continue-on-error: true` until `CODECOV_TOKEN` is provisioned in repo secrets.                     |
+| a11y audit           | `cd apps/native-rd && bun run test:a11y:json > a11y.json`                     | Pure-Jest audit (no simulator). Output uploaded as the `a11y-audit` artifact via `actions/upload-artifact@v4` and runs even on prior-step failure (`if: always()`). |
+| Storybook web build  | `cd apps/native-rd && bun run storybook:web:build`                            | Static build to `apps/native-rd/.storybook-web-static/` (gitignored). Verifies stories compile; not deployed.                                                       |
 
-| Step      | Command                         | Notes                                                                                                                                                                              |
-| --------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Install   | `bun install --frozen-lockfile` | Locked install from `bun.lock`                                                                                                                                                     |
-| Typecheck | `bun run type-check`            | `turbo type-check` across workspace. `turbo.json` declares `type-check.dependsOn: ["^build"]`, so the design-tokens and openbadges-core builds run automatically as prerequisites. |
-| Lint      | `bun run lint`                  | `turbo lint` across workspace; native-rd uses its own ESLint config                                                                                                                |
-| Test      | `bun run test`                  | `turbo test` runs Jest in native-rd (via `apps/native-rd/scripts/jest-node.sh`) and `bun test` in openbadges-core                                                                  |
+## ci-packages validation steps
 
-Earlier revisions of this doc described a two-workflow split (a root CI plus a
-separate native-rd workflow). That split has been removed: the broader
-workflow's coverage was promoted into a single `ci.yml` and the duplicate
-deleted.
+| Step         | Command                                            |
+| ------------ | -------------------------------------------------- |
+| Format check | `bun run format:check`                             |
+| Typecheck    | `bun run turbo type-check --filter='./packages/*'` |
+| Lint         | `bun run turbo lint --filter='./packages/*'`       |
+| Test         | `bun run turbo test --filter='./packages/*'`       |
+| Build        | `bun run turbo build --filter='./packages/*'`      |
 
-Docs-only changes (`**/*.md`, `docs/**`, `apps/*/docs/**`, `apps/*/research/**`,
-`apps/*/prototypes/**`) skip CI via `paths-ignore`.
+## ci-docs validation steps
+
+| Step         | Command                |
+| ------------ | ---------------------- |
+| Format check | `bun run format:check` |
+
+`ci-docs` is a thin workflow that triggers on any `**/*.md` change
+(plus `.prettierignore` and the workflow file itself). It exists to
+catch Prettier issues in markdown that would otherwise slip through:
+the `ci-native-rd` and `ci-packages` filters deliberately exclude
+docs-only paths, so a pure-docs PR can leave their `format:check`
+unexecuted. `ci-docs` runs only the format check (no node toolchain
+needed for Prettier), so the job is fast.
+
+## Why no blanket `**/*.md` exclusion on ci-native-rd
+
+The `ci-native-rd` workflow filter does NOT carry a top-level
+`!**/*.md` (or equivalent) exclusion. An earlier revision did, and it
+caused the workflow to never register on PRs that mixed code changes
+with any markdown file (PR template edits, plan docs, architecture
+docs touched in the same PR). PR #26 was the canary that surfaced
+this — see commit `cedbc3c` for the removal rationale.
+
+What this means in practice:
+
+- A PR that touches only `apps/native-rd/CLAUDE.md` (or any top-level
+  markdown under `apps/native-rd/`) WILL still trigger `ci-native-rd`.
+  The cost is a few minutes of CI per pure-docs PR.
+- The only excluded native-rd subdirs are `docs/`, `research/`,
+  `prototypes/` (curated dirs whose contents never affect build/test).
+- For `ci-packages`, `**/*.md` and `**/docs/**` ARE excluded under
+  `packages/**`, because no package code-path consumes those.
+- Pure-docs PRs that miss every other workflow are still caught by
+  `ci-docs`, which runs `format:check` on any `**/*.md` change.
+
+The tradeoff is intentional: correctness on mixed PRs over efficiency
+on pure-docs PRs.
+
+## Why Jest (not `bun test`) for native-rd
+
+`apps/native-rd/scripts/jest-node.sh` is the entry point for every Jest
+invocation in CI. It exists because:
+
+- The root `bunfig.toml` sets `[run] bun = true`, which prepends a
+  Bun-provided `node` shim to `PATH` for package CLIs.
+- Running Jest through that shim crashes in `jest-runtime` before tests
+  load with: `TypeError: Attempted to assign to readonly property` in
+  `_getMockedNativeModule`.
+- `jest-node.sh` strips Bun's `bun-node-*` shim from `PATH`, unsets
+  Bun's `NODE` / `npm_node_execpath` values, prefers a `mise` Node when
+  available, then executes `node node_modules/.bin/jest "$@"`.
+
+This keeps native-rd on Jest while leaving the rest of the workspace
+free to use Bun's runtime and `bun test` if needed.
+
+Expo packages that ship ESM through Bun's isolated
+`node_modules/.bun/.../node_modules/` layout must be listed in
+`transformIgnorePatterns`. In particular, `expo/virtual/env.js`
+requires the `expo` package allowlist entry in
+`apps/native-rd/jest.config.js`.
+
+## a11y audit contract
+
+- Script: `apps/native-rd/scripts/a11y-audit.sh` (also runnable as
+  `bun run test:a11y` for human output or `bun run test:a11y:json` for
+  machine-readable output).
+- Backed by: `bash scripts/jest-node.sh --testPathPatterns accessibility --json` — Jest is invoked through the same `jest-node.sh` wrapper as the main test step so Bun's injected `node` shim is bypassed (see "Why Jest (not `bun test`) for native-rd" above).
+- Runner dependencies: `python3` (preinstalled on `ubuntu-latest`) for
+  the JSON summary formatter.
+- Asserts: every test matching the `accessibility` pattern — including
+  `src/__tests__/accessibility.test.tsx` and
+  `src/themes/__tests__/contrast.test.ts` — passes.
+- CI artifact: `a11y-audit` containing `apps/native-rd/a11y.json`. Uploaded
+  even when the step fails so failures are inspectable.
+
+## Codecov contract
+
+- Token: `CODECOV_TOKEN` repo secret.
+- Flag: `native-rd`.
+- Coverage file: `apps/native-rd/coverage/lcov.info`.
+- The upload step is initially `continue-on-error: true`. Once the
+  token is provisioned and verified, flip it off so missing uploads
+  fail the run.
 
 ## Pre-commit Behavior
 
-Root `lint-staged` configuration:
+Root `lint-staged` configuration (in `package.json`):
 
-- `apps/native-rd/**/*.{ts,tsx,js,jsx}`: Prettier only (no root ESLint)
-- All other TS/TSX/JS/JSX/Vue: root ESLint + Prettier
-- JSON, YAML, MD, CSS: Prettier only
+- `apps/native-rd/**/*.{ts,tsx,js,jsx}` — Prettier only (no root ESLint)
+- `packages/openbadges-core/**/*.ts` — ESLint `--fix --cache` + Prettier
+- JSON / YAML / MD / CSS / SCSS — Prettier only
 
 Root ESLint does NOT run on native-rd source files because:
 
-- Root config uses Vue/TS rules incompatible with Expo/React-Native globals
-- Root config does not load eslint-config-expo or the six local plugin rules
-- Running root ESLint on native files can block commits for false positives
+- The root flat config (`eslint.config.mjs`) exists and is used by
+  `lint-staged` for `packages/openbadges-core`, but it explicitly
+  ignores `apps/native-rd/**` — the Expo/React Native globals it would
+  need would conflict with the root rule set.
+- The Expo-native config (`apps/native-rd/eslint.config.js`) plus the
+  six local plugin rules are the source of truth for native-rd.
+- Running root ESLint on native files can block commits for false
+  positives.
 
-To lint native-rd files locally before committing, run:
+To lint native-rd files locally before committing:
 
 ```bash
 cd apps/native-rd && bun run lint
 ```
 
-## Test Contract
+`.husky/pre-commit` runs:
 
-- Test runner: Jest 30 with `babel-jest` transform (not bun test)
-- Test command in CI: `bun run test` from the repo root (turbo dispatches the
-  native-rd `test` script, which runs `bash scripts/jest-node.sh`). The
-  `apps/native-rd/bun run test:ci` script remains as a local convenience for
-  running Jest with the `--ci` flag directly.
-- Test discovery: `src/**/__tests__/**/*.test.{ts,tsx}`
-- The smoke command (`bun run test:ci:smoke`) is retained as a
-  debugging tool but is not used in CI.
-- All tests run in Node via the React Native Jest environment
-  (`react-native/jest/react-native-env.js`)
-- The Jest package scripts intentionally call `scripts/jest-node.sh`, not `jest`
-  directly. The monorepo `bunfig.toml` sets `[run] bun = true`, which prepends a
-  Bun-provided `node` shim to `PATH` for package CLIs. Running Jest through that
-  shim crashes in `jest-runtime` before tests load with:
-  `TypeError: Attempted to assign to readonly property` in
-  `_getMockedNativeModule`.
-- `scripts/jest-node.sh` strips Bun's temporary `bun-node-*` shim from `PATH`,
-  unsets Bun's `NODE`/`npm_node_execpath` values, prefers a `mise` Node when
-  available, and then executes `node node_modules/.bin/jest`. This keeps
-  native-rd on Jest while leaving the rest of the monorepo free to use Bun's
-  runtime and `bun test`.
-- Expo packages that ship ESM through Bun's isolated `.bun/.../node_modules/`
-  layout must be listed in `transformIgnorePatterns`. In particular,
-  `expo/virtual/env.js` requires the `expo` package allowlist entry in
-  `apps/native-rd/jest.config.js`.
+```bash
+bun run check:install      # Fail fast if install is stale after pulling new deps
+bunx lint-staged           # Prettier on native-rd, ESLint+Prettier on packages/openbadges-core
+bun run type-check         # Full workspace typecheck
+```
 
 ## Local Launch Contract
 
-- Treat `npx expo run:ios` / `bun run ios` as the canonical local iOS start path.
-- Treat `npx expo run:android` / `bun run android` as the canonical local Android start path.
-- Do not treat `expo start` as the primary launch command for this app. `native-rd`
-  depends on native modules and is intended to run as a native build/dev client app.
-- The root monorepo wrapper `bun run native:ios` is expected to delegate to
+- Treat `npx expo run:ios` / `bun run ios` as the canonical iOS start
+  path. The root wrapper `bun run native:ios` delegates to
   `cd apps/native-rd && bash scripts/run-ios.sh`.
-
-## Monorepo Verification Notes
-
-Verified on April 7, 2026:
-
-- Bun workspace wiring is correct: `native-rd` is discoverable as a workspace package.
-- Turbo task wiring is correct: `bun run turbo build --filter=native-rd` and
-  `bun run turbo type-check --filter=native-rd` both succeed.
-- The package-level `build` script is intentionally a no-op because this Expo app does
-  not emit a standard monorepo build artifact.
-- The generated native `ios/` directory is expected to remain untracked; it is ignored
-  in `apps/native-rd/.gitignore`.
-- The stabilized iOS launch path is `scripts/run-ios.sh`, used by both
-  `bun run ios` in `apps/native-rd` and `bun run native:ios` from the monorepo root.
-- The shared `ios:device` script is expected to receive its target device via
-  `IOS_DEVICE_ID`, rather than hardcoding a contributor-specific UDID.
-
-Launcher implementation note:
-
-- Expo-managed CocoaPods installation proved flaky in this monorepo because Bun could
-  launch the command with a temporary Node shim and npm-compat environment variables
-  that broke `expo-modules-autolinking`.
-- `scripts/run-ios.sh` avoids that path by selecting a real Node binary, clearing
-  Bun-injected `npm_*` variables, running `pod install --repo-update --ansi`
-  directly, and then delegating to `expo run:ios --no-install`.
+- Treat `npx expo run:android` / `bun run android` as the canonical
+  Android start path.
+- Do NOT treat `expo start` as the primary launch command. `native-rd`
+  is a native dev-client app, not Expo Go.
+- The shared `ios:device` script receives its target device via
+  `IOS_DEVICE_ID` (no hardcoded contributor UDIDs).
 
 ## What Does NOT Apply to native-rd
 
-The following root-level checks do not run for native-rd (by design):
+By design, the following do not run for native-rd:
 
-- `bun test` / vitest — native-rd uses Jest, not bun's test runner
-- Root ESLint (`eslint.config.mjs`) — native-rd uses `eslint.config.js` inside the app
-- Root unit/integration/e2e turbo tasks — native-rd tests run via Jest (not `bun test`) inside the single `ci.yml` workflow
+- `bun test` / vitest — native-rd uses Jest, not Bun's test runner.
+- Root ESLint — native-rd uses its local `eslint.config.js`.
+- E2E (Maestro) — runs locally only via
+  `apps/native-rd/scripts/run-e2e.sh`. CI has no simulator / device.
+- EAS build verification — handled by `eas-build-post-install` during
+  EAS cloud builds, not GitHub Actions.
+
+## Branch Protection
+
+The required status checks on `main` should be:
+
+- `ci-native-rd / Native-RD Validate`
+- `ci-packages / Packages Validate`
+- `ci-docs / Docs Format Check`
+- `dco-check / Verify Signed-off-by`
+- (optional) `CodeQL`
+
+The legacy `validate / Build, Typecheck, Lint & Test` check from the
+removed monolithic `ci.yml` must be dropped at the same time the
+workflow file is deleted, or merges to `main` will block.
