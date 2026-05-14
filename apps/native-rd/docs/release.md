@@ -53,14 +53,25 @@ workflow"** and supply the tag (e.g., `v0.1.4`) as the `ref` input.
 
 ## Advancing the Android rollout
 
-```bash
-cd apps/native-rd
-# Bumps the current production rollout to the given fraction
-npx eas-cli@latest submit:rollout --platform android --track production --rollout 0.5
-npx eas-cli@latest submit:rollout --platform android --track production --rollout 1.0
-```
+EAS CLI doesn't expose a rollout subcommand — rollout management happens
+in Play Console (or via the Google Play Developer API). Two supported paths:
 
-Or use Play Console → Release management → Production → "Edit release".
+1. **Play Console (recommended for ad-hoc advancement):**
+   Release management → Production → open the active release → "Edit release" →
+   adjust the staged rollout percentage → review → start rollout.
+2. **Fastlane `supply` (if you want it scripted):**
+   ```bash
+   bundle exec fastlane supply \
+     --track production \
+     --rollout 0.5 \
+     --skip_upload_apk \
+     --skip_upload_aab \
+     --skip_upload_metadata \
+     --skip_upload_changelogs \
+     --skip_upload_images \
+     --skip_upload_screenshots
+   ```
+   Requires a Play Console service account JSON locally (do **not** commit it).
 
 ## Rolling back
 
