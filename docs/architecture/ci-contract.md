@@ -102,8 +102,10 @@ Root `lint-staged` configuration (in `package.json`):
 
 Root ESLint does NOT run on native-rd source files because:
 
-- The root config (if any is added) would conflict with Expo/React Native
-  globals.
+- The root flat config (`eslint.config.mjs`) exists and is used by
+  `lint-staged` for `packages/openbadges-core`, but it explicitly
+  ignores `apps/native-rd/**` — the Expo/React Native globals it would
+  need would conflict with the root rule set.
 - The Expo-native config (`apps/native-rd/eslint.config.js`) plus the
   six local plugin rules are the source of truth for native-rd.
 - Running root ESLint on native files can block commits for false
