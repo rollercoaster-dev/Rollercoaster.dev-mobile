@@ -2,22 +2,25 @@
  * useCreateBadge
  *
  * Orchestrates OB3 credential creation when a goal is completed.
- * On first call (when no badge exists yet):
- *   1. Builds unsigned credential via buildUnsignedCredential
- *   2. Signs the JSON with the user's Ed25519 key via keyProvider.sign
- *   3. Generates a badge PNG from the goal color
- *   4. Bakes the signed credential into the PNG (OB3 iTXt chunk)
- *   5. Persists the PNG to disk and records the URI
- *   6. Calls createBadge (persists credential + image URI)
- *   7. Calls completeGoal (marks goal as completed)
  *
- * If image generation or baking fails, falls back to the placeholder URI
- * so badge creation still succeeds even without a baked image.
+ * First completion (no existing badge):
+ *   1. Build unsigned credential, 2. sign, 3. bake PNG, 4. save to disk,
+ *   5. createBadge (persist credential + image URI), 6. completeGoal.
+ *   If image save fails, falls back to a placeholder URI so badge creation
+ *   still succeeds.
  *
- * Idempotent — returns 'done' immediately if a badge already exists.
- * Race-condition safe — once triggered, the ref guard is never reset,
- * preventing Strict Mode double-invocation or re-render loops from
- * unstable array refs returned by Evolu queries.
+ * Re-completion (existing badge + goal reopened to active):
+ *   - completed goal      → idempotent done, no DB writes.
+ *   - no diff vs snapshot → silent completeGoal, status done (modal
+ *                           shows the original badge).
+ *   - diff detected       → status `rebake-required` until the caller
+ *                           passes `confirmRebake: true`, then the same
+ *                           pipeline runs and writes via updateBadge
+ *                           (preserves badge id; existing design is kept).
+ *
+ * Race-condition safe — once a mutating branch fires, the ref guard is
+ * never reset, preventing Strict Mode double-invocation or re-render
+ * loops from unstable array refs returned by Evolu queries.
  *
  * goalId stability assumption: hasTriggered is keyed to the component
  * instance, not the goalId. If goalId changes while the component stays
@@ -34,8 +37,10 @@ import {
   canCompleteGoal,
   completeGoal,
   createBadge,
+  updateBadge,
+  GoalStatus,
 } from "../db";
-import type { GoalId } from "../db";
+import type { GoalId, BadgeId } from "../db";
 import { keyProvider } from "../crypto";
 import {
   buildUnsignedCredential,
@@ -43,7 +48,9 @@ import {
   bakePNG,
   isPNG,
   saveBadgePNG,
+  hasChangesSinceBake,
 } from "../badges";
+import type { EvidenceRow } from "../badges";
 import { Buffer } from "buffer";
 import { useUserKey } from "./useUserKey";
 import { reportError, breadcrumb } from "../services/sentry-report";
@@ -62,7 +69,8 @@ export type BadgeCreationStatus =
   | "storing"
   | "done"
   | "error"
-  | "no-key"; // key is ready but absent (permanent failure)
+  | "no-key" // key is ready but absent (permanent failure)
+  | "rebake-required"; // existing badge + active goal + diff vs snapshot — awaiting user confirmation
 
 export interface UseCreateBadgeResult {
   status: BadgeCreationStatus;
@@ -85,6 +93,12 @@ export interface UseCreateBadgeOptions {
   design?: string;
   /** When false, delays badge creation until enabled. Defaults to true. */
   enabled?: boolean;
+  /**
+   * When the hook would otherwise sit in `rebake-required`, set this to `true` to
+   * approve the rebake. The pipeline then re-signs the credential with the current
+   * goal/evidence state and writes via `updateBadge` instead of `createBadge`.
+   */
+  confirmRebake?: boolean;
 }
 
 export function useCreateBadge(
@@ -92,6 +106,7 @@ export function useCreateBadge(
   options?: UseCreateBadgeOptions,
 ): UseCreateBadgeResult {
   const enabled = options?.enabled !== false;
+  const confirmRebake = options?.confirmRebake === true;
   const { keyId, isReady } = useUserKey();
 
   const goals = useQuery(goalsQuery);
@@ -121,10 +136,86 @@ export function useCreateBadge(
   const hasTriggered = useRef(false);
 
   useEffect(() => {
-    // Already done — badge exists (reactive update after createBadge)
+    // Goal data not loaded yet — every downstream branch needs goal.title /
+    // status / description, so bail before reading them.
+    if (!goal) return;
+
     if (existingBadge) {
-      setStatus("done");
-      return;
+      // Goal already completed — idempotent done. Catches the post-rebake
+      // reactive update too: completeGoal flips status before the next render
+      // and lands us here without re-firing any mutation.
+      if (goal.status === GoalStatus.completed) {
+        setStatus("done");
+        return;
+      }
+
+      // Active + existing badge means the user reopened. Diff the current
+      // goal/evidence state against the credential's frozen snapshot.
+      const { goalEvidence: gev, stepEvidence: sev } = evidenceRef.current;
+      const mergedEvidence: EvidenceRow[] = [
+        ...gev.map((ev) => ({
+          id: ev.id as string,
+          type: (ev.type as string | null) ?? null,
+          uri: (ev.uri as string | null) ?? "",
+          description: (ev.description as string | null) ?? null,
+        })),
+        ...sev.map((ev) => ({
+          id: ev.id as string,
+          type: (ev.type as string | null) ?? null,
+          uri: (ev.uri as string | null) ?? "",
+          description: (ev.description as string | null) ?? null,
+          stepTitle: (ev.stepTitle as string | null) ?? null,
+        })),
+      ];
+      const goalForDiff = {
+        id: goal.id as string,
+        title: goal.title as string,
+        description: (goal.description as string | null) ?? null,
+      };
+
+      if (
+        !hasChangesSinceBake(
+          existingBadge.credential as string | null,
+          goalForDiff,
+          mergedEvidence,
+        )
+      ) {
+        // No changes since the original bake — silently complete the goal so
+        // the celebration screen lands on the existing badge.
+        if (!enabled) return;
+        if (!hasTriggered.current) {
+          hasTriggered.current = true;
+          try {
+            const goalEvidenceForGating = gev.map((ev) => ({
+              type: (ev.type as string | null) ?? null,
+            }));
+            if (canCompleteGoal(goalEvidenceForGating)) {
+              completeGoal(goalId, goalEvidenceForGating);
+            }
+          } catch (err) {
+            const message =
+              err instanceof Error ? err.message : "Unknown error";
+            setError(message);
+            setStatus("error");
+            logger.error("Silent re-complete failed", { goalId, error: err });
+            // Silent re-complete failures don't map cleanly onto the build/sign/bake/store
+            // taxonomy — report without a kind tag and rely on the area + log payload.
+            reportError(err, { area: "badge.create" });
+            return;
+          }
+        }
+        setStatus("done");
+        return;
+      }
+
+      // Changes detected — wait for caller to confirm via confirmRebake.
+      if (!confirmRebake) {
+        setStatus("rebake-required");
+        return;
+      }
+
+      // Confirmed → fall through to the bake IIFE, which will branch on
+      // existingBadge for updateBadge vs createBadge.
     }
 
     // Key still initialising — transient state, not a user-visible problem
@@ -138,9 +229,6 @@ export function useCreateBadge(
       setStatus("no-key");
       return;
     }
-
-    // Goal data not loaded yet
-    if (!goal) return;
 
     // Caller requested to delay badge creation (e.g. waiting for evidence)
     if (!enabled) return;
@@ -265,15 +353,26 @@ export function useCreateBadge(
           );
         }
 
-        // createBadge first — it validates and can throw (non-empty credential required).
-        // If it throws, completeGoal has not yet fired, so no partial state occurs.
+        // Persist credential + image. createBadge / updateBadge each validate
+        // their inputs and can throw before completeGoal fires, so a failure
+        // here leaves the goal active rather than completed-without-badge.
         // Both are synchronous Evolu CRDT mutations — no await needed.
-        createBadge({
-          goalId,
-          credential: JSON.stringify(signedCredential),
-          imageUri,
-          ...(designRef.current ? { design: designRef.current } : {}),
-        });
+        const credentialJsonOut = JSON.stringify(signedCredential);
+        if (existingBadge) {
+          // Rebake path: keep the existing design (Redesign-first already
+          // wrote a new one via the designer), refresh the credential + PNG.
+          updateBadge(existingBadge.id as BadgeId, {
+            credential: credentialJsonOut,
+            imageUri,
+          });
+        } else {
+          createBadge({
+            goalId,
+            credential: credentialJsonOut,
+            imageUri,
+            ...(designRef.current ? { design: designRef.current } : {}),
+          });
+        }
         completeGoal(goalId, goalEvidenceForGating);
 
         setStatus("done");
@@ -293,7 +392,7 @@ export function useCreateBadge(
       }
       // No finally reset — hasTriggered.current stays true permanently
     })();
-  }, [existingBadge, isReady, keyId, goal, goalId, enabled]); // evidence read via ref, not deps
+  }, [existingBadge, isReady, keyId, goal, goalId, enabled, confirmRebake]); // evidence read via ref, not deps
 
   return { status, error };
 }

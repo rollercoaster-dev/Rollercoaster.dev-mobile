@@ -4,7 +4,7 @@
 import { renderHook, act } from "@testing-library/react-native";
 import { useQuery } from "@evolu/react";
 import { useCreateBadge } from "../useCreateBadge";
-import { completeGoal, createBadge } from "../../db";
+import { completeGoal, createBadge, updateBadge } from "../../db";
 import type { GoalId } from "../../db";
 
 // openbadges-core and jose are ESM-only — mock at module level
@@ -43,6 +43,11 @@ jest.mock("../../db", () => ({
     evidence.some((e) => e.type !== null),
   completeGoal: jest.fn(),
   createBadge: jest.fn(),
+  updateBadge: jest.fn(),
+  GoalStatus: {
+    active: "active",
+    completed: "completed",
+  },
 }));
 
 jest.mock("../../services/sentry-report", () => ({
@@ -64,11 +69,15 @@ jest.mock("../../badges", () => ({
   saveBadgePNG: jest.fn(() =>
     Promise.resolve("file:///app/badges/test-badge.png"),
   ),
+  // Re-export the real diff helper — it's pure logic, no native deps.
+  hasChangesSinceBake: jest.requireActual("../../badges/credentialDiff")
+    .hasChangesSinceBake,
 }));
 
 const mockUseQuery = useQuery as jest.Mock;
 const mockCompleteGoal = completeGoal as jest.Mock;
 const mockCreateBadge = createBadge as jest.Mock;
+const mockUpdateBadge = updateBadge as jest.Mock;
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { keyProvider: mockKeyProvider } = require("../../crypto");
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -134,12 +143,48 @@ describe("useCreateBadge", () => {
   });
 
   describe("when badge already exists", () => {
-    it("returns status: done without creating a new badge", async () => {
+    // Credential snapshot matching MOCK_GOAL (active, "My Goal", no description)
+    // + the default single photo-evidence row. Anything differing flips diff to "changes".
+    const SNAPSHOT_CREDENTIAL = JSON.stringify({
+      credentialSubject: {
+        achievement: {
+          name: "My Goal",
+          description: "Achievement: My Goal",
+        },
+      },
+      evidence: [{ id: "urn:ulid:ev-1" }],
+    });
+
+    function mockExistingBadge(badge: {
+      id?: string;
+      credential?: string;
+      goalStatus?: string;
+    }) {
+      const goal = {
+        ...MOCK_GOAL,
+        status: badge.goalStatus ?? "active",
+      };
       mockUseQuery.mockImplementation((query: string) => {
-        if (query === "mock-goals-query") return [MOCK_GOAL];
+        if (query === "mock-goals-query") return [goal];
+        if (query === "mock-evidence-query")
+          return [{ id: "ev-1", type: "photo", goalId: GOAL_ID }];
+        if (query === "mock-step-evidence-query") return [];
         if (query === "mock-badge-query")
-          return [{ id: "badge-01", goalId: GOAL_ID }];
+          return [
+            {
+              id: badge.id ?? "badge-01",
+              goalId: GOAL_ID,
+              credential: badge.credential,
+            },
+          ];
         return [];
+      });
+    }
+
+    it("idempotent: goal already completed → status done, no DB writes", async () => {
+      mockExistingBadge({
+        credential: SNAPSHOT_CREDENTIAL,
+        goalStatus: "completed",
       });
 
       const { result } = renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
@@ -147,6 +192,83 @@ describe("useCreateBadge", () => {
 
       expect(result.current.status).toBe("done");
       expect(mockCreateBadge).not.toHaveBeenCalled();
+      expect(mockUpdateBadge).not.toHaveBeenCalled();
+      expect(mockCompleteGoal).not.toHaveBeenCalled();
+    });
+
+    it("active goal + no diff: silently calls completeGoal and lands on done", async () => {
+      mockExistingBadge({ credential: SNAPSHOT_CREDENTIAL });
+
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
+      await act(async () => {});
+
+      expect(result.current.status).toBe("done");
+      expect(mockCompleteGoal).toHaveBeenCalledTimes(1);
+      // No new bake — credential + image stay as-is.
+      expect(mockCreateBadge).not.toHaveBeenCalled();
+      expect(mockUpdateBadge).not.toHaveBeenCalled();
+    });
+
+    it("active goal + diff detected: surfaces rebake-required and stops, no DB writes", async () => {
+      // Evidence count was 0 at bake time; the user has since added one item.
+      const stale = JSON.stringify({
+        credentialSubject: {
+          achievement: {
+            name: "My Goal",
+            description: "Achievement: My Goal",
+          },
+        },
+        evidence: [],
+      });
+      mockExistingBadge({ credential: stale });
+
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
+      await act(async () => {});
+
+      expect(result.current.status).toBe("rebake-required");
+      expect(mockCreateBadge).not.toHaveBeenCalled();
+      expect(mockUpdateBadge).not.toHaveBeenCalled();
+      expect(mockCompleteGoal).not.toHaveBeenCalled();
+    });
+
+    it("active goal + diff + confirmRebake: runs the pipeline via updateBadge, not createBadge", async () => {
+      const stale = JSON.stringify({
+        credentialSubject: {
+          achievement: {
+            name: "My Goal",
+            description: "Achievement: My Goal",
+          },
+        },
+        evidence: [],
+      });
+      mockExistingBadge({ credential: stale });
+
+      const { result } = renderHook(() =>
+        useCreateBadge(GOAL_ID, { ...WITH_PNG, confirmRebake: true }),
+      );
+      await act(async () => {});
+
+      expect(result.current.status).toBe("done");
+      expect(mockUpdateBadge).toHaveBeenCalledWith(
+        "badge-01",
+        expect.objectContaining({
+          credential: expect.stringContaining("VerifiableCredential"),
+          imageUri: "file:///app/badges/test-badge.png",
+        }),
+      );
+      expect(mockCreateBadge).not.toHaveBeenCalled();
+      expect(mockCompleteGoal).toHaveBeenCalledTimes(1);
+    });
+
+    it("malformed credential JSON: fails open into rebake-required", async () => {
+      mockExistingBadge({ credential: "{not-json" });
+
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
+      await act(async () => {});
+
+      expect(result.current.status).toBe("rebake-required");
+      expect(mockUpdateBadge).not.toHaveBeenCalled();
+      expect(mockCompleteGoal).not.toHaveBeenCalled();
     });
   });
 
