@@ -6,9 +6,8 @@ on:
   workflow_dispatch:
     inputs:
       ref:
-        description: "Git ref to build (branch, tag, or commit SHA). Defaults to the current branch."
+        description: "Git ref to build (branch, tag, or commit SHA). Leave blank to use the branch picked in the 'Use workflow from' dropdown."
         required: false
-        default: "main"
 
 concurrency:
   group: build-internal
@@ -18,7 +17,7 @@ jobs:
   validate:
     uses: ./.github/workflows/_validate.yml
     with:
-      ref: ${{ inputs.ref }}
+      ref: ${{ inputs.ref || github.ref }}
 
   build-and-submit:
     needs: validate
@@ -30,7 +29,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ inputs.ref || github.ref }}
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
