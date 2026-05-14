@@ -4,7 +4,12 @@
  * Tests validation and error handling for OB3 credential storage
  */
 
-import { createBadge, updateBadge, deleteBadge } from "../queries";
+import {
+  createBadge,
+  updateBadge,
+  deleteBadge,
+  badgeVersionsByGoalQuery,
+} from "../queries";
 import type { GoalId, BadgeId } from "../schema";
 
 const mockGoalId = "goal_test_123" as GoalId;
@@ -137,5 +142,69 @@ describe("Badge CRUD Operations", () => {
     } else {
       expect(() => updateBadge(mockBadgeId, fields)).not.toThrow();
     }
+  });
+});
+
+describe("badgeVersionsByGoalQuery", () => {
+  // Records the Kysely builder chain so we can assert the query shape without
+  // a real database. Each chainable returns `this` and pushes the call.
+  type Call = { method: string; args: unknown[] };
+
+  function makeRecordingDb() {
+    const calls: Call[] = [];
+    const builder: Record<string, (...args: unknown[]) => unknown> = {};
+    const chain =
+      (method: string) =>
+      (...args: unknown[]) => {
+        calls.push({ method, args });
+        return builder;
+      };
+    for (const method of [
+      "selectFrom",
+      "selectAll",
+      "where",
+      "orderBy",
+      "limit",
+    ]) {
+      builder[method] = chain(method);
+    }
+    return { db: builder, calls };
+  }
+
+  it("selects from the badge table without filtering out soft-deleted rows", () => {
+    const { db, calls } = makeRecordingDb();
+    const query = badgeVersionsByGoalQuery("goal_history_1" as GoalId);
+    // Mocked createQuery stashes the builder fn on the returned object.
+    // Cast through unknown — the real Query<Row> type intentionally hides
+    // its builder fn; the test mock attaches it for assertion purposes only.
+    const fn = (query as unknown as { fn: (db: unknown) => unknown }).fn;
+    fn(db);
+
+    expect(calls).toContainEqual({ method: "selectFrom", args: ["badge"] });
+    // The whole point of this query: no isDeleted filter, so soft-deleted
+    // prior versions remain visible to the history surface.
+    const whereCalls = calls.filter((c) => c.method === "where");
+    const hasIsDeletedFilter = whereCalls.some(
+      (c) => c.args[0] === "isDeleted",
+    );
+    expect(hasIsDeletedFilter).toBe(false);
+  });
+
+  it("filters by goalId and orders newest-first", () => {
+    const { db, calls } = makeRecordingDb();
+    const query = badgeVersionsByGoalQuery("goal_history_2" as GoalId);
+    // Cast through unknown — the real Query<Row> type intentionally hides
+    // its builder fn; the test mock attaches it for assertion purposes only.
+    const fn = (query as unknown as { fn: (db: unknown) => unknown }).fn;
+    fn(db);
+
+    expect(calls).toContainEqual({
+      method: "where",
+      args: ["goalId", "=", "goal_history_2"],
+    });
+    expect(calls).toContainEqual({
+      method: "orderBy",
+      args: ["createdAt", "desc"],
+    });
   });
 });

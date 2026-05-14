@@ -48,6 +48,7 @@ export {
   badgeByIdQuery,
   badgeWithGoalQuery,
   badgesWithGoalsQuery,
+  badgeVersionsByGoalQuery,
   createBadge,
   updateBadge,
   deleteBadge,

@@ -836,6 +836,26 @@ export const badgeByGoalQuery = (goalId: GoalId) =>
   );
 
 /**
+ * Query every badge row ever written for a goal — active AND soft-deleted —
+ * newest first. Used by BadgeDetail to render the version-history modal.
+ *
+ * Unlike badgeByGoalQuery, this deliberately does NOT filter out isDeleted
+ * rows: a rebake soft-deletes the previous canonical badge, and the history
+ * surface needs those prior versions.
+ *
+ * @param goalId - Goal ID
+ * @returns Query for all badge versions (deleted + active) for the goal
+ */
+export const badgeVersionsByGoalQuery = (goalId: GoalId) =>
+  evolu.createQuery((db) =>
+    db
+      .selectFrom("badge")
+      .selectAll()
+      .where("goalId", "=", goalId)
+      .orderBy("createdAt", "desc"),
+  );
+
+/**
  * Query a single badge by its ID
  * @param badgeId - Badge ID
  * @returns Query for single badge
