@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Modal, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, {
@@ -37,6 +37,12 @@ export function BadgeEarnedModal({
 
   const scale = useSharedValue(shouldAnimate ? 0.85 : 1);
 
+  // Reset failure state when the URI changes — a new image gets a fresh chance to load.
+  const [imageLoadFailed, setImageLoadFailed] = useState(false);
+  useEffect(() => {
+    setImageLoadFailed(false);
+  }, [imageUri]);
+
   useEffect(() => {
     if (visible) {
       if (shouldAnimate) {
@@ -52,7 +58,7 @@ export function BadgeEarnedModal({
     transform: [{ scale: scale.value }],
   }));
 
-  const hasImage = imageUri !== PLACEHOLDER_IMAGE_URI;
+  const hasImage = imageUri !== PLACEHOLDER_IMAGE_URI && !imageLoadFailed;
   const microcopy = isFirstBadge ? "First one. (noted.)" : "Badge earned.";
   const isE2E = process.env.EXPO_PUBLIC_E2E_MODE === "true";
   const cardA11yProps = isE2E
@@ -87,6 +93,7 @@ export function BadgeEarnedModal({
                   accessibilityLabel="Badge image"
                   resizeMode="contain"
                   testID="badge-earned-image"
+                  onError={() => setImageLoadFailed(true)}
                 />
               ) : (
                 <View

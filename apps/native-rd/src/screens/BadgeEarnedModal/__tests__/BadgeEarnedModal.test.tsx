@@ -60,6 +60,16 @@ describe("BadgeEarnedModal", () => {
     expect(screen.getByLabelText("Badge image placeholder")).toBeOnTheScreen();
   });
 
+  it("falls back to placeholder when the image fails to load", () => {
+    renderWithProviders(<BadgeEarnedModal {...defaultProps} />);
+    // Sanity — the real image is rendered first.
+    const image = screen.getByTestId("badge-earned-image");
+    fireEvent(image, "error");
+    // After onError fires, the slot swaps to the placeholder rather than rendering empty.
+    expect(screen.getByLabelText("Badge image placeholder")).toBeOnTheScreen();
+    expect(screen.queryByTestId("badge-earned-image")).toBeNull();
+  });
+
   it("shows first-badge microcopy when isFirstBadge is true", () => {
     renderWithProviders(
       <BadgeEarnedModal {...defaultProps} isFirstBadge={true} />,
