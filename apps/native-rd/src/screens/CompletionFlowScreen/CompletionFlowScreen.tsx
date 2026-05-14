@@ -130,8 +130,8 @@ function CompletionContent({
   // Default-design fallback for goals with no pending design (typically goals
   // whose New-Goal session expired before completion, since pendingDesignStore
   // is in-memory). Render an offscreen BadgeRenderer with the design-system
-  // default (square + first-letter monogram), capture once, and feed the PNG
-  // into useCreateBadge. Kills the old solid-blue fallback.
+  // default (rounded-rectangle + first-letter monogram), capture once, and
+  // feed the PNG into useCreateBadge. Kills the old solid-blue fallback.
   const goalTitleForDefault = (goal?.title as string | null) ?? "";
   const goalColorForDefault = (goal?.color as string | null) ?? null;
   const fallbackDesign: BadgeDesign | null =
