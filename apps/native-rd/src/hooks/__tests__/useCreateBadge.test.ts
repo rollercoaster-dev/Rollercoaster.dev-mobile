@@ -69,6 +69,12 @@ jest.mock("../../badges", () => ({
   saveBadgePNG: jest.fn(() =>
     Promise.resolve("file:///app/badges/test-badge.png"),
   ),
+  // Throws by default so the rebake test below can assert that the bake
+  // falls back to capturedPng when no existing image is readable. Tests
+  // that want the "prefer existing PNG" path mock this per-case.
+  readBadgePNG: jest.fn(() =>
+    Promise.reject(new Error("no existing badge file in mock")),
+  ),
   // Re-export the real pure helpers — they have no native deps and the
   // hook's branching relies on their exact semantics.
   hasChangesSinceBake: jest.requireActual("../../badges/credentialDiff")
@@ -162,6 +168,7 @@ describe("useCreateBadge", () => {
       id?: string;
       credential?: string;
       goalStatus?: string;
+      imageUri?: string;
     }) {
       const goal = {
         ...MOCK_GOAL,
@@ -178,6 +185,7 @@ describe("useCreateBadge", () => {
               id: badge.id ?? "badge-01",
               goalId: GOAL_ID,
               credential: badge.credential,
+              imageUri: badge.imageUri,
             },
           ];
         return [];
@@ -261,6 +269,99 @@ describe("useCreateBadge", () => {
       );
       expect(mockCreateBadge).not.toHaveBeenCalled();
       expect(mockCompleteGoal).toHaveBeenCalledTimes(1);
+    });
+
+    it("rebake prefers the existing baked PNG over the captured one (skips the offscreen capture)", async () => {
+      const stale = JSON.stringify({
+        credentialSubject: {
+          achievement: {
+            name: "My Goal",
+            description: "Achievement: My Goal",
+          },
+        },
+        evidence: [],
+      });
+      mockExistingBadge({
+        credential: stale,
+        imageUri: "file:///app/badges/orig.png",
+      });
+      // Pretend the existing baked file is a valid PNG on disk.
+      const EXISTING_PNG = Buffer.from([
+        137, 80, 78, 71, 13, 10, 26, 10, 99, 99, 99,
+      ]);
+      mockBadges.readBadgePNG.mockResolvedValueOnce(EXISTING_PNG);
+
+      renderHook(() =>
+        useCreateBadge(GOAL_ID, { ...WITH_PNG, confirmRebake: true }),
+      );
+      await act(async () => {});
+
+      // bakePNG must have received the existing-file bytes, NOT the
+      // possibly-blank captured PNG from the offscreen host.
+      expect(mockBadges.readBadgePNG).toHaveBeenCalledWith(
+        "file:///app/badges/orig.png",
+      );
+      expect(mockBadges.bakePNG).toHaveBeenCalledWith(
+        EXISTING_PNG,
+        expect.any(String),
+      );
+    });
+
+    it("rebake falls back to capturedPng when reading the existing file fails", async () => {
+      const stale = JSON.stringify({
+        credentialSubject: {
+          achievement: {
+            name: "My Goal",
+            description: "Achievement: My Goal",
+          },
+        },
+        evidence: [],
+      });
+      mockExistingBadge({
+        credential: stale,
+        imageUri: "file:///app/badges/orig.png",
+      });
+      mockBadges.readBadgePNG.mockRejectedValueOnce(new Error("no such file"));
+
+      const { result } = renderHook(() =>
+        useCreateBadge(GOAL_ID, { ...WITH_PNG, confirmRebake: true }),
+      );
+      await act(async () => {});
+
+      expect(result.current.status).toBe("done");
+      expect(mockBadges.bakePNG).toHaveBeenCalledWith(
+        VALID_PNG,
+        expect.any(String),
+      );
+    });
+
+    it("rebake skips the existing-PNG read when the row's imageUri is the placeholder sentinel", async () => {
+      const stale = JSON.stringify({
+        credentialSubject: {
+          achievement: {
+            name: "My Goal",
+            description: "Achievement: My Goal",
+          },
+        },
+        evidence: [],
+      });
+      mockExistingBadge({
+        credential: stale,
+        imageUri: "pending:baked-image",
+      });
+
+      renderHook(() =>
+        useCreateBadge(GOAL_ID, { ...WITH_PNG, confirmRebake: true }),
+      );
+      await act(async () => {});
+
+      // The placeholder sentinel means there's no usable baked file to read.
+      // Don't even try — fall through to the captured PNG.
+      expect(mockBadges.readBadgePNG).not.toHaveBeenCalled();
+      expect(mockBadges.bakePNG).toHaveBeenCalledWith(
+        VALID_PNG,
+        expect.any(String),
+      );
     });
 
     it("malformed credential JSON: fails open into rebake-required", async () => {

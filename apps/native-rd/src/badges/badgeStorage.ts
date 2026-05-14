@@ -9,6 +9,7 @@
  * handles string and ArrayBuffer, not Uint8Array directly.
  */
 
+import { Buffer } from "buffer";
 import * as FileSystem from "expo-file-system/legacy";
 
 const BADGES_SUBDIR = "badges";
@@ -78,4 +79,28 @@ export async function saveBadgePNG(data: Uint8Array): Promise<string> {
   }
 
   return uri;
+}
+
+/**
+ * Read a previously-saved badge PNG back into a Buffer.
+ *
+ * Lets the rebake path re-use the existing baked image instead of
+ * re-rendering + capturing the BadgeRenderer offscreen — the offscreen
+ * capture has been observed to snapshot a transparent layer before the SVG
+ * paints, producing a blank PNG even though `captureRef` resolves cleanly.
+ *
+ * Throws if the file is missing or unreadable so callers can decide whether
+ * to fall back to a fresh capture.
+ */
+export async function readBadgePNG(uri: string): Promise<Buffer> {
+  try {
+    const base64 = await FileSystem.readAsStringAsync(uri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    return Buffer.from(base64, "base64");
+  } catch (readErr) {
+    throw new Error(
+      `Failed to read badge PNG at ${uri}: ${readErr instanceof Error ? readErr.message : String(readErr)}`,
+    );
+  }
 }

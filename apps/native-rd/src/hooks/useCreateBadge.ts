@@ -48,6 +48,7 @@ import {
   bakePNG,
   isPNG,
   saveBadgePNG,
+  readBadgePNG,
   hasChangesSinceBake,
   mergeEvidenceRows,
 } from "../badges";
@@ -279,21 +280,52 @@ export function useCreateBadge(
         setStatus("baking");
         breadcrumb({ category: "badge", message: "bake" });
 
-        // capturedPng is required — either a pending design's PNG or an
-        // auto-captured default-design PNG. The old solid-color fallback
-        // baked an unloved blue square into the credential and is gone
-        // for good.
-        if (!capturedPngRef.current) {
-          throw new Error(
-            "useCreateBadge: capturedPng is required — callers must provide a captured badge PNG (from a pending design or auto-captured default) before enabling badge creation",
-          );
+        // PNG source priority:
+        //   1. Rebake-with-existing-design — re-read the previously baked
+        //      file and re-bake the new credential into the same pixels.
+        //      Skips the offscreen capture host entirely, which has been
+        //      observed to snapshot a transparent layer before the SVG
+        //      paints (producing a blank PNG that bakes + saves cleanly
+        //      but renders empty in the modal).
+        //   2. Caller-supplied captured PNG (pending design, designer
+        //      preview, or auto-captured default for fresh first bakes).
+        let pngBuffer: Buffer | null = null;
+        const existingImageUri =
+          existingBadge?.imageUri &&
+          existingBadge.imageUri !== PLACEHOLDER_IMAGE_URI
+            ? (existingBadge.imageUri as string)
+            : null;
+        if (existingImageUri) {
+          try {
+            const existing = await readBadgePNG(existingImageUri);
+            if (isPNG(existing)) {
+              pngBuffer = existing;
+            } else {
+              logger.warn(
+                "Existing badge PNG is not a valid PNG; falling back to capture",
+                { goalId, imageUri: existingImageUri },
+              );
+            }
+          } catch (readErr) {
+            logger.warn(
+              "Failed to read existing badge PNG; falling back to capture",
+              { goalId, imageUri: existingImageUri, error: readErr },
+            );
+          }
         }
-        if (!isPNG(capturedPngRef.current)) {
-          throw new Error(
-            "useCreateBadge: capturedPng is not a valid PNG buffer",
-          );
+        if (!pngBuffer) {
+          if (!capturedPngRef.current) {
+            throw new Error(
+              "useCreateBadge: capturedPng is required — callers must provide a captured badge PNG (from a pending design or auto-captured default) before enabling badge creation",
+            );
+          }
+          if (!isPNG(capturedPngRef.current)) {
+            throw new Error(
+              "useCreateBadge: capturedPng is not a valid PNG buffer",
+            );
+          }
+          pngBuffer = capturedPngRef.current;
         }
-        const pngBuffer = capturedPngRef.current;
         const bakedPng = bakePNG(pngBuffer, JSON.stringify(signedCredential));
 
         // Save to disk — legitimately recoverable (filesystem errors). Fall back

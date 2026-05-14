@@ -17,7 +17,7 @@ export {
   generateBadgeImagePNG,
   DEFAULT_BADGE_COLOR,
 } from "./badgeImageGenerator";
-export { saveBadgePNG } from "./badgeStorage";
+export { saveBadgePNG, readBadgePNG } from "./badgeStorage";
 export { BADGE_CANVAS_BACKGROUND } from "./constants";
 export { captureBadge, getCaptureDimensions } from "./captureBadge";
 export type { CaptureBadgeOptions } from "./captureBadge";

@@ -12,12 +12,13 @@ jest.mock("expo-file-system/legacy", () => ({
   getInfoAsync: jest.fn(),
   makeDirectoryAsync: jest.fn(),
   writeAsStringAsync: jest.fn(),
+  readAsStringAsync: jest.fn(),
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockFS = require("expo-file-system/legacy");
 
-import { saveBadgePNG } from "../badgeStorage";
+import { saveBadgePNG, readBadgePNG } from "../badgeStorage";
 
 const MINIMAL_PNG = new Uint8Array([
   137, 80, 78, 71, 13, 10, 26, 10, 0, 1, 2, 3,
@@ -129,5 +130,30 @@ describe("saveBadgePNG", () => {
     const uri2 = await saveBadgePNG(MINIMAL_PNG);
 
     expect(uri1).not.toBe(uri2);
+  });
+});
+
+describe("readBadgePNG", () => {
+  it("returns a Buffer of the decoded base64 file content", async () => {
+    const expected = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 1, 2, 3]);
+    mockFS.readAsStringAsync.mockResolvedValueOnce(expected.toString("base64"));
+
+    const got = await readBadgePNG("file:///foo/bar.png");
+
+    expect(mockFS.readAsStringAsync).toHaveBeenCalledWith(
+      "file:///foo/bar.png",
+      {
+        encoding: "base64",
+      },
+    );
+    expect(Array.from(got)).toEqual(Array.from(expected));
+  });
+
+  it("throws with the target URI when readAsStringAsync rejects", async () => {
+    mockFS.readAsStringAsync.mockRejectedValueOnce(new Error("ENOENT"));
+
+    await expect(readBadgePNG("file:///missing.png")).rejects.toThrow(
+      /Failed to read badge PNG at file:.*missing\.png.*ENOENT/,
+    );
   });
 });
