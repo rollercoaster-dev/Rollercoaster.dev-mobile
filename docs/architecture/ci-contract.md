@@ -123,4 +123,4 @@ The following root-level checks do not run for native-rd (by design):
 
 - `bun test` / vitest — native-rd uses Jest, not bun's test runner
 - Root ESLint (`eslint.config.mjs`) — native-rd uses `eslint.config.js` inside the app
-- Root unit/integration/e2e turbo tasks — native-rd tests run via Jest in the native workflow
+- Root unit/integration/e2e turbo tasks — native-rd tests run via Jest (not `bun test`) inside the single `ci.yml` workflow

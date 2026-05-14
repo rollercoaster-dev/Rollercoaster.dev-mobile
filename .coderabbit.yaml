@@ -2,19 +2,10 @@
 # CodeRabbit Configuration
 # Docs: https://docs.coderabbit.ai/configure-coderabbit/
 
-language: en-US
-early_access: false
-
 reviews:
   profile: chill
-  request_changes_workflow: false
-  commit_status: true
-  high_level_summary: true
   poem: false
   in_progress_fortune: false
-  collapse_walkthrough: true
-  changed_files_summary: true
-  sequence_diagrams: true
 
   auto_review:
     enabled: true
