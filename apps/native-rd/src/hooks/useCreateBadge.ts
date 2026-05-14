@@ -34,8 +34,9 @@ import {
   canCompleteGoal,
   completeGoal,
   createBadge,
+  deleteBadge,
 } from "../db";
-import type { GoalId } from "../db";
+import type { GoalId, BadgeId } from "../db";
 import { keyProvider } from "../crypto";
 import {
   buildUnsignedCredential,
@@ -43,6 +44,8 @@ import {
   bakePNG,
   isPNG,
   saveBadgePNG,
+  readBadgePNG,
+  shouldRebake,
 } from "../badges";
 import { Buffer } from "buffer";
 import { useUserKey } from "./useUserKey";
@@ -67,6 +70,13 @@ export type BadgeCreationStatus =
 export interface UseCreateBadgeResult {
   status: BadgeCreationStatus;
   error: string | null;
+  /**
+   * True iff the most recent run produced a fresh credential that replaced
+   * a pre-existing badge (rebake path). Distinguishes "first bake" from
+   * "re-completion that materially changed something" so callers can vary
+   * celebration copy.
+   */
+  rebaked: boolean;
 }
 
 /** base64url-encode a Uint8Array without relying on Node's Buffer */
@@ -104,6 +114,7 @@ export function useCreateBadge(
 
   const [status, setStatus] = useState<BadgeCreationStatus>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [rebaked, setRebaked] = useState(false);
 
   // Capture latest evidence in a ref so the effect can read it without
   // listing the arrays as deps (Evolu returns new refs every render).
@@ -121,12 +132,6 @@ export function useCreateBadge(
   const hasTriggered = useRef(false);
 
   useEffect(() => {
-    // Already done — badge exists (reactive update after createBadge)
-    if (existingBadge) {
-      setStatus("done");
-      return;
-    }
-
     // Key still initialising — transient state, not a user-visible problem
     if (!isReady) {
       setStatus("loading");
@@ -145,11 +150,45 @@ export function useCreateBadge(
     // Caller requested to delay badge creation (e.g. waiting for evidence)
     if (!enabled) return;
 
+    const { goalEvidence: gev, stepEvidence: sev } = evidenceRef.current;
+
+    // Rebake policy: when a badge already exists, decide whether to issue a
+    // new credential (rebake) or short-circuit. shouldRebake returns true iff
+    // evidence has changed OR the design has been edited since the bake.
+    // Same-evidence + same-design = same-credential = idempotent done.
+    const currentEvidenceIds = [
+      ...gev.map((ev) => ({ id: ev.id as string })),
+      ...sev.map((ev) => ({ id: ev.id as string })),
+    ];
+    const isRebake = existingBadge
+      ? shouldRebake(
+          {
+            credential: existingBadge.credential as string,
+            createdAt: existingBadge.createdAt as string | null,
+            updatedAt: existingBadge.updatedAt as string | null,
+          },
+          currentEvidenceIds,
+        )
+      : false;
+
+    if (existingBadge && !isRebake) {
+      setStatus("done");
+      return;
+    }
+
     // Guard against re-entry
     if (hasTriggered.current) return;
     hasTriggered.current = true;
 
-    const { goalEvidence: gev, stepEvidence: sev } = evidenceRef.current;
+    const previousBadgeId = existingBadge
+      ? (existingBadge.id as BadgeId)
+      : null;
+    const previousImageUri = existingBadge
+      ? (existingBadge.imageUri as string | null)
+      : null;
+    const previousDesign = existingBadge
+      ? (existingBadge.design as string | null)
+      : null;
 
     (async () => {
       try {
@@ -217,23 +256,41 @@ export function useCreateBadge(
         };
 
         setStatus("baking");
-        breadcrumb({ category: "badge", message: "bake" });
+        breadcrumb({
+          category: "badge",
+          message: isRebake ? "rebake" : "bake",
+        });
 
-        // capturedPng is required — either a pending design's PNG or an
-        // auto-captured default-design PNG. The old solid-color fallback
-        // baked an unloved blue square into the credential and is gone
-        // for good.
-        if (!capturedPngRef.current) {
+        // PNG source priority:
+        //   1. Caller-provided capturedPng (fresh Designer capture, or
+        //      auto-captured default for first-time bake)
+        //   2. Rebake with no fresh capture → read prior baked PNG from disk
+        //      to preserve the visual. Known limitation: design-only edits
+        //      don't visually propagate via this path; user must re-capture
+        //      via Designer. Tracked as a follow-up.
+        // The old solid-color fallback baked an unloved blue square into the
+        // credential and is gone for good — capturedPng (or a readable prior
+        // PNG on rebake) is required.
+        let pngBuffer: Buffer;
+        if (capturedPngRef.current) {
+          if (!isPNG(capturedPngRef.current)) {
+            throw new Error(
+              "useCreateBadge: capturedPng is not a valid PNG buffer",
+            );
+          }
+          pngBuffer = capturedPngRef.current;
+        } else if (
+          isRebake &&
+          previousImageUri &&
+          previousImageUri !== PLACEHOLDER_IMAGE_URI
+        ) {
+          const prev = await readBadgePNG(previousImageUri);
+          pngBuffer = Buffer.from(prev);
+        } else {
           throw new Error(
             "useCreateBadge: capturedPng is required — callers must provide a captured badge PNG (from a pending design or auto-captured default) before enabling badge creation",
           );
         }
-        if (!isPNG(capturedPngRef.current)) {
-          throw new Error(
-            "useCreateBadge: capturedPng is not a valid PNG buffer",
-          );
-        }
-        const pngBuffer = capturedPngRef.current;
         const bakedPng = bakePNG(pngBuffer, JSON.stringify(signedCredential));
 
         // Save to disk — legitimately recoverable (filesystem errors). Fall back
@@ -266,18 +323,48 @@ export function useCreateBadge(
         }
 
         // createBadge first — it validates and can throw (non-empty credential required).
-        // If it throws, completeGoal has not yet fired, so no partial state occurs.
-        // Both are synchronous Evolu CRDT mutations — no await needed.
+        // If it throws, completeGoal/deleteBadge have not yet fired, so no partial state.
+        // On rebake: the new row inserts BEFORE the previous is soft-deleted, so
+        // badgeByGoalQuery transitions atomically from "old row visible" to
+        // "new row visible" without an empty interval.
+        // All Evolu mutations are synchronous CRDT writes — no await needed.
+        const persistedDesign =
+          designRef.current ?? previousDesign ?? undefined;
         createBadge({
           goalId,
           credential: JSON.stringify(signedCredential),
           imageUri,
-          ...(designRef.current ? { design: designRef.current } : {}),
+          ...(persistedDesign ? { design: persistedDesign } : {}),
         });
         completeGoal(goalId, goalEvidenceForGating);
 
+        if (isRebake && previousBadgeId) {
+          // Soft-delete the prior canonical row AFTER the new one is committed.
+          // If this throws (extremely unlikely — it's a flag update), the new
+          // row is already in place; the next read picks the newest and the
+          // history modal will simply show both as "active". Worth the noise.
+          try {
+            deleteBadge(previousBadgeId);
+          } catch (deleteErr) {
+            logger.error("Rebake: failed to soft-delete previous badge row", {
+              goalId,
+              previousBadgeId,
+              error: deleteErr,
+            });
+            reportError(deleteErr, {
+              area: "badge.create",
+              kind: "rebake.delete",
+            });
+          }
+        }
+
+        if (isRebake) setRebaked(true);
         setStatus("done");
-        logger.info("Badge credential created", { goalId, credentialId });
+        logger.info(isRebake ? "Badge rebaked" : "Badge credential created", {
+          goalId,
+          credentialId,
+          previousBadgeId,
+        });
       } catch (err) {
         const message = err instanceof Error ? err.message : "Unknown error";
         setError(message);
@@ -295,5 +382,5 @@ export function useCreateBadge(
     })();
   }, [existingBadge, isReady, keyId, goal, goalId, enabled]); // evidence read via ref, not deps
 
-  return { status, error };
+  return { status, error, rebaked };
 }

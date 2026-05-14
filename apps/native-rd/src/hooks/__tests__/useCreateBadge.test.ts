@@ -43,6 +43,7 @@ jest.mock("../../db", () => ({
     evidence.some((e) => e.type !== null),
   completeGoal: jest.fn(),
   createBadge: jest.fn(),
+  deleteBadge: jest.fn(),
 }));
 
 jest.mock("../../services/sentry-report", () => ({
@@ -50,21 +51,33 @@ jest.mock("../../services/sentry-report", () => ({
   breadcrumb: jest.fn(),
 }));
 
-jest.mock("../../badges", () => ({
-  buildUnsignedCredential: jest.fn(() => ({
-    "@context": ["https://www.w3.org/ns/credentials/v2"],
-    id: "urn:uuid:cred-01",
-    type: ["VerifiableCredential"],
-  })),
-  buildDid: jest.fn(() => "did:key:testkey"),
-  bakePNG: jest.fn(() => Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])),
-  isPNG: jest.fn(
-    (buf: Buffer) => buf.length >= 8 && buf[0] === 137 && buf[1] === 80,
-  ),
-  saveBadgePNG: jest.fn(() =>
-    Promise.resolve("file:///app/badges/test-badge.png"),
-  ),
-}));
+jest.mock("../../badges", () => {
+  // Pass-through to the real rebake-policy helpers so the hook's gating
+  // logic exercises the same code as production.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const realDiff = jest.requireActual("../../badges/credentialDiff");
+  return {
+    buildUnsignedCredential: jest.fn(() => ({
+      "@context": ["https://www.w3.org/ns/credentials/v2"],
+      id: "urn:uuid:cred-01",
+      type: ["VerifiableCredential"],
+    })),
+    buildDid: jest.fn(() => "did:key:testkey"),
+    bakePNG: jest.fn(() => Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])),
+    isPNG: jest.fn(
+      (buf: Buffer) => buf.length >= 8 && buf[0] === 137 && buf[1] === 80,
+    ),
+    saveBadgePNG: jest.fn(() =>
+      Promise.resolve("file:///app/badges/test-badge.png"),
+    ),
+    readBadgePNG: jest.fn(() =>
+      Promise.resolve(new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10])),
+    ),
+    shouldRebake: realDiff.shouldRebake,
+    evidenceIdsDifferFromCredential: realDiff.evidenceIdsDifferFromCredential,
+    designChangedSinceBake: realDiff.designChangedSinceBake,
+  };
+});
 
 const mockUseQuery = useQuery as jest.Mock;
 const mockCompleteGoal = completeGoal as jest.Mock;
@@ -77,8 +90,25 @@ const { useUserKey: mockUseUserKey } = require("../useUserKey");
 const mockBadges = require("../../badges");
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { breadcrumb: mockBreadcrumb } = require("../../services/sentry-report");
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { deleteBadge: mockDeleteBadge } = require("../../db");
 
 const GOAL_ID = "goal-01" as GoalId;
+
+/**
+ * Build a stored OB3 credential JSON containing the given evidence IDs.
+ * Mirrors the urn:ulid:<id> prefix the credential builder writes.
+ */
+function fakeStoredCredential(evidenceIds: string[]): string {
+  return JSON.stringify({
+    "@context": ["https://www.w3.org/ns/credentials/v2"],
+    type: ["VerifiableCredential"],
+    evidence: evidenceIds.map((id) => ({
+      id: `urn:ulid:${id}`,
+      type: ["Evidence"],
+    })),
+  });
+}
 const MOCK_GOAL = {
   id: GOAL_ID,
   title: "My Goal",
@@ -134,11 +164,25 @@ describe("useCreateBadge", () => {
   });
 
   describe("when badge already exists", () => {
-    it("returns status: done without creating a new badge", async () => {
+    it("returns status: done without creating a new badge when evidence and design are unchanged", async () => {
+      const TS = "2026-05-14T10:00:00.000Z";
       mockUseQuery.mockImplementation((query: string) => {
         if (query === "mock-goals-query") return [MOCK_GOAL];
+        if (query === "mock-evidence-query")
+          return [{ id: "ev-1", type: "photo", goalId: GOAL_ID }];
+        if (query === "mock-step-evidence-query") return [];
         if (query === "mock-badge-query")
-          return [{ id: "badge-01", goalId: GOAL_ID }];
+          return [
+            {
+              id: "badge-01",
+              goalId: GOAL_ID,
+              credential: fakeStoredCredential(["ev-1"]),
+              imageUri: "file:///app/badges/old.png",
+              design: null,
+              createdAt: TS,
+              updatedAt: TS,
+            },
+          ];
         return [];
       });
 
@@ -146,7 +190,9 @@ describe("useCreateBadge", () => {
       await act(async () => {});
 
       expect(result.current.status).toBe("done");
+      expect(result.current.rebaked).toBe(false);
       expect(mockCreateBadge).not.toHaveBeenCalled();
+      expect(mockDeleteBadge).not.toHaveBeenCalled();
     });
   });
 
@@ -437,6 +483,170 @@ describe("useCreateBadge", () => {
       await act(async () => {});
 
       expect(mockCreateBadge).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("rebake on re-completion", () => {
+    const BAKE_TS = "2026-05-14T10:00:00.000Z";
+
+    function setupExistingBadge({
+      credentialEvidenceIds,
+      currentEvidenceIds,
+      updatedAt = BAKE_TS,
+      design = null as string | null,
+      imageUri = "file:///app/badges/old.png" as string,
+    }: {
+      credentialEvidenceIds: string[];
+      currentEvidenceIds: string[];
+      updatedAt?: string;
+      design?: string | null;
+      imageUri?: string;
+    }) {
+      mockUseQuery.mockImplementation((query: string) => {
+        if (query === "mock-goals-query") return [MOCK_GOAL];
+        if (query === "mock-evidence-query")
+          return currentEvidenceIds.map((id) => ({
+            id,
+            type: "photo",
+            goalId: GOAL_ID,
+          }));
+        if (query === "mock-step-evidence-query") return [];
+        if (query === "mock-badge-query")
+          return [
+            {
+              id: "badge-old",
+              goalId: GOAL_ID,
+              credential: fakeStoredCredential(credentialEvidenceIds),
+              imageUri,
+              design,
+              createdAt: BAKE_TS,
+              updatedAt,
+            },
+          ];
+        return [];
+      });
+    }
+
+    it("rebakes when evidence has changed: createBadge, then deleteBadge(old), rebaked=true", async () => {
+      setupExistingBadge({
+        credentialEvidenceIds: ["ev-1"],
+        currentEvidenceIds: ["ev-1", "ev-2"], // evidence added
+      });
+
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID));
+      await act(async () => {});
+
+      expect(result.current.status).toBe("done");
+      expect(result.current.rebaked).toBe(true);
+      expect(mockCreateBadge).toHaveBeenCalledTimes(1);
+      expect(mockDeleteBadge).toHaveBeenCalledWith("badge-old");
+    });
+
+    it("calls createBadge before deleteBadge (atomic transition, no empty interval)", async () => {
+      setupExistingBadge({
+        credentialEvidenceIds: ["ev-1"],
+        currentEvidenceIds: ["ev-1", "ev-2"],
+      });
+      const order: string[] = [];
+      mockCreateBadge.mockImplementation(() => order.push("createBadge"));
+      mockDeleteBadge.mockImplementation(() => order.push("deleteBadge"));
+      mockCompleteGoal.mockImplementation(() => order.push("completeGoal"));
+
+      renderHook(() => useCreateBadge(GOAL_ID));
+      await act(async () => {});
+
+      expect(order).toEqual(["createBadge", "completeGoal", "deleteBadge"]);
+    });
+
+    it("rebakes when design changed (updatedAt > createdAt) even if evidence is unchanged", async () => {
+      setupExistingBadge({
+        credentialEvidenceIds: ["ev-1"],
+        currentEvidenceIds: ["ev-1"],
+        updatedAt: "2026-05-14T10:10:00.000Z", // designer save bumped updatedAt
+      });
+
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID));
+      await act(async () => {});
+
+      expect(result.current.status).toBe("done");
+      expect(result.current.rebaked).toBe(true);
+      expect(mockCreateBadge).toHaveBeenCalled();
+      expect(mockDeleteBadge).toHaveBeenCalledWith("badge-old");
+    });
+
+    it("does NOT call deleteBadge when createBadge throws on rebake (no partial state)", async () => {
+      setupExistingBadge({
+        credentialEvidenceIds: ["ev-1"],
+        currentEvidenceIds: ["ev-1", "ev-2"],
+      });
+      mockCreateBadge.mockImplementationOnce(() => {
+        throw new Error("db write failed");
+      });
+
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID));
+      await act(async () => {});
+
+      expect(result.current.status).toBe("error");
+      expect(mockDeleteBadge).not.toHaveBeenCalled();
+    });
+
+    it("stores a fresh credential id (new urn:uuid) and issuedOn on rebake", async () => {
+      setupExistingBadge({
+        credentialEvidenceIds: ["ev-1"],
+        currentEvidenceIds: ["ev-1", "ev-2"],
+      });
+
+      renderHook(() => useCreateBadge(GOAL_ID));
+      await act(async () => {});
+
+      const callArg = mockCreateBadge.mock.calls[0][0] as {
+        credential: string;
+      };
+      const credential = JSON.parse(callArg.credential) as Record<
+        string,
+        unknown
+      >;
+      // The unsignedCredential mock always returns id: urn:uuid:cred-01, so we
+      // assert the shape — the production path uses a fresh crypto.randomUUID
+      // per bake, and the proof.created is a fresh ISO timestamp.
+      expect(credential).toHaveProperty("id");
+      expect(credential).toHaveProperty("proof");
+      const proof = credential.proof as { created: string };
+      expect(typeof proof.created).toBe("string");
+      expect(proof.created).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    });
+
+    it("reuses previous design when caller does not supply one (rebake from reopen)", async () => {
+      setupExistingBadge({
+        credentialEvidenceIds: ["ev-1"],
+        currentEvidenceIds: ["ev-1", "ev-2"],
+        design: '{"shape":"circle","color":"#FF0000"}',
+      });
+
+      renderHook(() => useCreateBadge(GOAL_ID));
+      await act(async () => {});
+
+      expect(mockCreateBadge).toHaveBeenCalledWith(
+        expect.objectContaining({
+          design: '{"shape":"circle","color":"#FF0000"}',
+        }),
+      );
+    });
+
+    it("emits the 'rebake' breadcrumb (instead of 'bake') on the rebake path", async () => {
+      setupExistingBadge({
+        credentialEvidenceIds: ["ev-1"],
+        currentEvidenceIds: ["ev-1", "ev-2"],
+      });
+
+      renderHook(() => useCreateBadge(GOAL_ID));
+      await act(async () => {});
+
+      const messages = mockBreadcrumb.mock.calls.map(
+        (c: [{ message: string }]) => c[0].message,
+      );
+      expect(messages).toContain("rebake");
+      expect(messages).not.toContain("bake");
     });
   });
 

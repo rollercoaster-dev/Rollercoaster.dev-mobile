@@ -32,6 +32,31 @@ function toBase64(data: Uint8Array): string {
   return btoa(binary);
 }
 
+/** Convert a base64 string back to a Uint8Array. Inverse of toBase64. */
+function fromBase64(b64: string): Uint8Array {
+  const binary = atob(b64);
+  const out = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) out[i] = binary.charCodeAt(i);
+  return out;
+}
+
+/**
+ * Read a previously-saved badge PNG back into memory.
+ *
+ * Used by the rebake flow: when re-completing a goal with new evidence but
+ * no fresh capture from the Designer, we re-use the previous badge's visual
+ * bytes and bake a new credential into them.
+ *
+ * @param uri - File URI returned by saveBadgePNG
+ * @returns PNG bytes
+ */
+export async function readBadgePNG(uri: string): Promise<Uint8Array> {
+  const base64 = await FileSystem.readAsStringAsync(uri, {
+    encoding: FileSystem.EncodingType.Base64,
+  });
+  return fromBase64(base64);
+}
+
 /**
  * Save a baked PNG buffer to the badges directory.
  *

@@ -30,7 +30,10 @@ import type { EvidenceTypeValue } from "../types/evidence";
  * are unrepresentable in this type, which is the privacy guarantee.
  */
 export type ReportContext =
-  | { area: "badge.create"; kind?: "build" | "sign" | "bake" | "store" }
+  | {
+      area: "badge.create";
+      kind?: "build" | "sign" | "bake" | "store" | "rebake.delete";
+    }
   | { area: "badge.storage"; kind?: "read" | "write" | "delete" }
   | { area: "key.generate" }
   | { area: "key.verify" }
@@ -126,7 +129,10 @@ export type BreadcrumbInput =
       message: "start" | "save" | "discard";
       kind: EvidenceTypeValue;
     }
-  | { category: "badge"; message: "build" | "sign" | "bake" | "store" }
+  | {
+      category: "badge";
+      message: "build" | "sign" | "bake" | "rebake" | "store";
+    }
   | { category: "key"; message: "generate" | "verify" }
   | { category: "focus"; message: "enter" | "exit" };
 
