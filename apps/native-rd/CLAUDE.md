@@ -4,6 +4,7 @@
 
 - **NEVER run interactive CLI commands** (auth flows, prompts, `git rebase -i`, etc.) — they hang.
 - **Always use native builds** — run `npx expo run:ios` (not `npx expo start`). This is a dev client app, not Expo Go.
+  - **Exception:** if the user names a GUI tool (e.g. "set this up in Xcode", "open in Android Studio"), give them the GUI flow — `npx expo prebuild --platform ios` → `cd ios && pod install` → `open ios/Rollercoasterdev.xcworkspace` → walk them through team signing + ▶ in Xcode.app. The CLI rule above governs autonomous agent work; it is **not** what to give a user who explicitly asked for the GUI.
 - **Always check PR review comments before merging** — even when CI is green. Run the full review cycle every time.
 
 ## Project Context
