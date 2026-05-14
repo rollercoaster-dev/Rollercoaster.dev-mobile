@@ -1,34 +1,17 @@
-# Validation contract for native-rd in the monorepo:
-# See docs/architecture/native-rd-ci-contract.md
-name: CI - Native RD
+name: Mobile CI
 
 on:
   pull_request:
-    branches: [main]
-    paths:
-      - "apps/native-rd/**"
-      - "packages/design-tokens/**"
-      - "packages/openbadges-core/**"
-      - "packages/openbadges-types/**"
-      - "bun.lock"
-      - ".github/workflows/ci-native-rd.yml"
   push:
     branches: [main]
-    paths:
-      - "apps/native-rd/**"
-      - "packages/design-tokens/**"
-      - "packages/openbadges-core/**"
-      - "packages/openbadges-types/**"
-      - "bun.lock"
-      - ".github/workflows/ci-native-rd.yml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  ci-native-rd:
-    name: Typecheck, Lint & Test (native-rd)
+  validate:
+    name: Build, Typecheck, Lint & Test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -55,15 +38,16 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Build workspace dependencies
-        run: bun run turbo build --filter=native-rd^...
+      - name: Build workspace packages
+        run: |
+          bun --filter @rollercoaster-dev/design-tokens build
+          bun --filter @rollercoaster-dev/openbadges-core build
 
       - name: Typecheck
-        run: bun run turbo type-check --filter=native-rd
+        run: bun run type-check
 
       - name: Lint
-        run: bun run turbo lint --filter=native-rd
+        run: bun run lint
 
       - name: Test
-        working-directory: apps/native-rd
-        run: bun run test:ci
+        run: bun run test

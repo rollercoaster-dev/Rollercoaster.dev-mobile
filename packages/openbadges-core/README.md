@@ -21,7 +21,7 @@ npm install @rollercoaster-dev/openbadges-core
 bun add @rollercoaster-dev/openbadges-core
 ```
 
-### In monorepo workspace
+### In workspace
 
 ```json
 {

@@ -1,16 +1,15 @@
 {
-  "name": "rollercoaster-monorepo",
+  "name": "rollercoaster-dev-mobile",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Monorepo for Rollercoaster.dev OpenBadges ecosystem",
+  "description": "Mobile app and shared badge packages for Rollercoaster.dev",
   "workspaces": [
     "packages/*",
     "apps/*"
   ],
   "scripts": {
-    "burndown": "bun scripts/burndown.ts",
-    "dev": "bun run turbo dev",
+    "dev": "bun run turbo dev --filter=native-rd",
     "check:install": "bun scripts/check-install.ts",
     "build": "bun run check:install && bun run turbo build",
     "test": "bun run turbo test",
@@ -18,12 +17,11 @@
     "test:integration": "bun run turbo test:integration",
     "test:e2e": "bun run turbo test:e2e",
     "test:coverage": "bun run turbo test:coverage",
-    "test:all": "bun run test:unit && bun run test:integration && bun run test:e2e",
     "lint": "bun run turbo lint",
     "lint:fix": "bun run turbo lint --fix",
     "type-check": "bun run check:install && bun run turbo type-check",
-    "format": "bunx prettier --write \"**/*.{ts,tsx,js,jsx,json,md,vue}\"",
-    "format:check": "bunx prettier --check \"**/*.{ts,tsx,js,jsx,json,md,vue}\"",
+    "format": "bunx prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "bunx prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "native:start": "cd apps/native-rd && bun run start",
     "native:ios": "cd apps/native-rd && bash scripts/run-ios.sh",
     "native:ios:e2e": "cd apps/native-rd && bun run ios:e2e",
@@ -43,11 +41,11 @@
     "typescript": "^6.0.3"
   },
   "lint-staged": {
-    "!(apps/native-rd/**)*.{ts,tsx,js,jsx,vue}": [
-      "eslint --fix --cache",
+    "apps/native-rd/**/*.{ts,tsx,js,jsx}": [
       "prettier --write"
     ],
-    "apps/native-rd/**/*.{ts,tsx,js,jsx}": [
+    "packages/openbadges-core/**/*.ts": [
+      "eslint --fix --cache",
       "prettier --write"
     ],
     "*.{json,md,yml,yaml,css,scss}": [

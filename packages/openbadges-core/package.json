@@ -45,7 +45,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/rollercoaster-dev/monorepo.git",
+    "url": "git+https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile.git",
     "directory": "packages/openbadges-core"
   },
   "keywords": [
@@ -60,12 +60,15 @@
   "author": "Rollercoaster.dev <team@rollercoaster.dev>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/rollercoaster-dev/monorepo/issues"
+    "url": "https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues"
   },
-  "homepage": "https://github.com/rollercoaster-dev/monorepo/tree/main/packages/openbadges-core#readme",
+  "homepage": "https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/tree/main/packages/openbadges-core#readme",
   "devDependencies": {
-    "@rollercoaster-dev/shared-config": "workspace:*",
-    "tsup": "^8.4.0"
+    "tsup": "^8.4.0",
+    "typescript": "^6.0.3",
+    "eslint": "^9.39.4",
+    "@eslint/js": "^9.39.4",
+    "typescript-eslint": "^8.59.3"
   },
   "dependencies": {
     "@rollercoaster-dev/rd-logger": "^0.4.0",

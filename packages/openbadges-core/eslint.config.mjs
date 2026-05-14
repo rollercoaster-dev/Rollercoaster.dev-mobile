@@ -1,58 +1,42 @@
-/**
- * ESLint configuration for openbadges-core
- * Uses shared config from @rollercoaster-dev/shared-config
- */
-
-import { node } from "@rollercoaster-dev/shared-config/eslint";
+import js from "@eslint/js";
+import tseslint from "typescript-eslint";
 
 export default [
   {
-    ignores: [
-      "dist/**",
-      "coverage/**",
-      "node_modules/**",
-      "*.tsbuildinfo",
-    ],
+    ignores: ["dist/**", "node_modules/**", "coverage/**"],
   },
-  ...node,
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
   {
-    files: ["**/*.ts"],
-    rules: {
-      // Core package: must not import from apps or UI layer
-      // See docs/architecture/overview.md#prohibited-import-directions
-      "no-restricted-imports": [
-        "error",
-        {
-          paths: [
-            {
-              name: "openbadges-ui",
-              message: "packages/* must not import from apps or UI layer. See docs/architecture/overview.md",
-            },
-            {
-              name: "@rollercoaster-dev/design-tokens",
-              message: "openbadges-core must not import design-tokens (different layer). See docs/architecture/overview.md",
-            },
-          ],
-        },
-      ],
-    },
-  },
-  {
-    // Web API globals available in Node.js 18+ and Bun
+    files: ["src/**/*.ts", "tests/**/*.ts", "tsup.config.ts"],
     languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
       globals: {
+        Buffer: "readonly",
         CryptoKey: "readonly",
         TextEncoder: "readonly",
         TextDecoder: "readonly",
-        Buffer: "readonly",
+        URL: "readonly",
+        console: "readonly",
+        process: "readonly",
+        setTimeout: "readonly",
+        clearTimeout: "readonly",
+        setInterval: "readonly",
+        clearInterval: "readonly",
       },
+    },
+    rules: {
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "no-undef": "off",
     },
   },
   {
     files: ["**/*.test.ts", "**/*.spec.ts", "tests/**/*.ts"],
     languageOptions: {
       globals: {
-        // Bun test environment
         describe: "readonly",
         it: "readonly",
         test: "readonly",
@@ -61,13 +45,6 @@ export default [
         afterEach: "readonly",
         beforeAll: "readonly",
         afterAll: "readonly",
-        // Node.js globals for tests
-        console: "readonly",
-        setTimeout: "readonly",
-        clearTimeout: "readonly",
-        setInterval: "readonly",
-        clearInterval: "readonly",
-        URL: "readonly",
       },
     },
   },

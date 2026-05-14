@@ -4,7 +4,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", "build/**", ".next/**", "out/**"],
+      "outputs": ["dist/**", "build/**"],
       "cache": true
     },
     "dev": {
@@ -54,13 +54,5 @@
     }
   },
   "globalDependencies": ["**/.env.*local", "tsconfig.json", "bunfig.toml"],
-  "globalEnv": [
-    "NODE_ENV",
-    "CI",
-    "BUN_ENV",
-    "DEV_HOST",
-    "MODULAR_SERVER_PORT",
-    "SYSTEM_SERVER_PORT",
-    "SYSTEM_VITE_PORT"
-  ]
+  "globalEnv": ["NODE_ENV", "CI", "BUN_ENV", "DEV_HOST"]
 }

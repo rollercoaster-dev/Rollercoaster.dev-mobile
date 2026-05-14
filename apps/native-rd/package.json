@@ -67,7 +67,7 @@
     "expo-status-bar": "~55.0.6",
     "expo-video": "~55.0.16",
     "i18next": "26.1.0",
-    "openbadges-types": "workspace:*",
+    "openbadges-types": "^4.0.0",
     "phosphor-react-native": "^3.0.3",
     "png-chunks-encode": "^1.0.0",
     "png-chunks-extract": "^1.0.0",

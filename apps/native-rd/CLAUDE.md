@@ -36,7 +36,7 @@ This is the native rollercoaster.dev app — a personal learning/goal tracker fo
 
 Neo-brutalist visual language with hard shadows, bold borders, and confident typography.
 
-- **Tokens from:** `@rollercoaster-dev/design-tokens` (npm package, lives in openbadges-monorepo)
+- **Tokens from:** `@rollercoaster-dev/design-tokens` (workspace package at `packages/design-tokens/`)
 - **Adapter layer:** `src/themes/adapter.ts` — the single import boundary from the package
 - **Theme composition:** `src/themes/compose.ts` — 2 color modes x 7 variants = 14 themes
 - **Shadows:** `src/styles/shadows.ts` — `shadowStyle(theme, key)` helper; hard shadows (`hardSm`/`hardMd`/`hardLg`) have radius: 0
@@ -68,7 +68,7 @@ All interactive elements require: `accessibilityRole`, `accessibilityLabel`, 44x
 
 ## OpenBadges Core
 
-Badge logic comes from `openbadges-modular-server` in the [rollercoaster-dev monorepo](https://github.com/rollercoaster-dev/openbadges-monorepo). Being extracted into `@rollercoaster-dev/openbadges-core` as a shared package.
+Badge logic lives in `@rollercoaster-dev/openbadges-core` (workspace package at `packages/openbadges-core/`).
 
 - **What native-rd uses:** credential building, Ed25519 signing, key pair generation, PNG baking
 - **Key abstraction:** `KeyProvider` interface — server uses `FileSystemKeyProvider`, native app will use `SecureStoreKeyProvider` (Expo SecureStore)

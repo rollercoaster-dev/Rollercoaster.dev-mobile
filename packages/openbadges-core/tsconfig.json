@@ -1,27 +1,21 @@
 {
-  "extends": "@rollercoaster-dev/shared-config/tsconfig",
   "compilerOptions": {
-    // Project structure
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
     "composite": true,
-    "outDir": "./dist",
-    "rootDir": ".",
-
-    // Enable emit (override shared config's noEmit)
-    "noEmit": false,
     "declaration": true,
     "declarationMap": true,
-
-    // Module resolution - use bundler for compatibility with tsup
-    // tsup handles the actual ESM/CJS output transformation
-    "moduleResolution": "Bundler",
-    "module": "ESNext",
-    "allowImportingTsExtensions": false,
-
-    // Type definitions
-    "types": ["node", "bun"],
-
-    // Keep strict settings
-    "resolveJsonModule": true
+    "sourceMap": true,
+    "outDir": "./dist",
+    "rootDir": ".",
+    "noEmit": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "types": ["node", "bun"]
   },
   "include": ["src/**/*"],
   "exclude": [
