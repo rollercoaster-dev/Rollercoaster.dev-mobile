@@ -17,6 +17,7 @@ import type { GoalId, StepId } from "../../db";
 import { reportError } from "../../services/sentry-report";
 import { useEvidenceStartBreadcrumb } from "../../hooks/useEvidenceStartBreadcrumb";
 import type { CaptureVideoScreenProps } from "../../navigation/types";
+import { useTabScreenContentInset } from "../../navigation/useTabScreenContentInset";
 import { styles } from "./CaptureVideoScreen.styles";
 
 /** Maximum recording duration in seconds */
@@ -50,6 +51,7 @@ function Preview({ uri, elapsed }: { uri: string; elapsed: number }) {
 export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
   const navigation = useNavigation();
   const { goalId, stepId } = route.params;
+  const tabInset = useTabScreenContentInset();
 
   const cameraRef = useRef<CameraView>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -270,7 +272,7 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
           <Text variant="caption" style={styles.timer}>
             Duration: {formatDuration(elapsed)}
           </Text>
-          <View style={styles.previewControls}>
+          <View style={[styles.previewControls, tabInset]}>
             <View style={styles.previewButton}>
               <Button
                 label="Retake"
@@ -317,7 +319,7 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
               {MAX_DURATION_SECONDS - elapsed}s remaining
             </Text>
           )}
-          <View style={styles.controls}>
+          <View style={[styles.controls, tabInset]}>
             <Pressable
               style={styles.recordButton}
               onPress={handleToggleRecording}

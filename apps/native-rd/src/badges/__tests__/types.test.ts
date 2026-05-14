@@ -51,13 +51,14 @@ describe("createDefaultBadgeDesign", () => {
     const design = createDefaultBadgeDesign("Learn TypeScript", "#ffe50c");
 
     expect(design).toEqual<BadgeDesign>({
-      shape: "circle",
+      shape: "roundedRect",
       frame: "none",
       color: "#ffe50c",
       iconName: "Trophy",
       iconWeight: "regular",
       title: "Learn TypeScript",
-      centerMode: "icon",
+      centerMode: "monogram",
+      monogram: "L",
     });
   });
 
@@ -92,7 +93,6 @@ describe("createDefaultBadgeDesign", () => {
   test("does not include optional fields by default", () => {
     const design = createDefaultBadgeDesign("Test");
     expect(design.frameParams).toBeUndefined();
-    expect(design.monogram).toBeUndefined();
     expect(design.bottomLabel).toBeUndefined();
     expect(design.pathText).toBeUndefined();
     expect(design.pathTextPosition).toBeUndefined();
@@ -100,9 +100,19 @@ describe("createDefaultBadgeDesign", () => {
     expect(design.banner).toBeUndefined();
   });
 
-  test("defaults to icon centerMode", () => {
+  test("defaults to monogram centerMode with the title's first letter", () => {
     const design = createDefaultBadgeDesign("Test");
-    expect(design.centerMode).toBe("icon");
+    expect(design.centerMode).toBe("monogram");
+    expect(design.monogram).toBe("T");
+  });
+
+  test("uses '?' as the monogram when title is empty or whitespace-only", () => {
+    expect(createDefaultBadgeDesign("").monogram).toBe("?");
+    expect(createDefaultBadgeDesign("   ").monogram).toBe("?");
+  });
+
+  test("uppercases the monogram when title starts with a lowercase letter", () => {
+    expect(createDefaultBadgeDesign("apple").monogram).toBe("A");
   });
 
   test("result is JSON-serializable", () => {

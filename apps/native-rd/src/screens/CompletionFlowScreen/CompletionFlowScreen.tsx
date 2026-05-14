@@ -11,7 +11,9 @@ import {
 import type { ImageSourcePropType } from "react-native";
 import { Buffer } from "buffer";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@evolu/react";
+import { useUnistyles } from "react-native-unistyles";
 import { Text } from "../../components/Text";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { Button } from "../../components/Button";
@@ -19,6 +21,13 @@ import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { Confetti } from "../../components/Confetti";
 import { ModeIndicator } from "../../components/ModeIndicator";
 import { BadgeEarnedModal } from "../BadgeEarnedModal";
+import {
+  BadgeRenderer,
+  getRendererLayoutOptions,
+} from "../../badges/BadgeRenderer";
+import { captureBadge, getCaptureDimensions } from "../../badges/captureBadge";
+import { createDefaultBadgeDesign } from "../../badges/types";
+import type { BadgeDesign } from "../../badges/types";
 import {
   goalsQuery,
   stepsByGoalQuery,
@@ -89,7 +98,9 @@ function CompletionContent({
   pendingDesignJson: string | undefined;
   pendingCapturedPng: Buffer | undefined;
 }) {
-  const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<GoalsStackParamList>>();
+  const { theme } = useUnistyles();
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
   const stepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
@@ -116,13 +127,62 @@ function CompletionContent({
     }
   }, [hasGoalEvidence, phase]);
 
-  // Only create badge when in celebration phase (evidence exists)
+  // Default-design fallback for goals with no pending design (typically goals
+  // whose New-Goal session expired before completion, since pendingDesignStore
+  // is in-memory). Render an offscreen BadgeRenderer with the design-system
+  // default (rounded-rectangle + first-letter monogram), capture once, and
+  // feed the PNG into useCreateBadge. Kills the old solid-blue fallback.
+  const goalTitleForDefault = (goal?.title as string | null) ?? "";
+  const goalColorForDefault = (goal?.color as string | null) ?? null;
+  const fallbackDesign: BadgeDesign | null =
+    !pendingCapturedPng && goal
+      ? createDefaultBadgeDesign(goalTitleForDefault, goalColorForDefault)
+      : null;
+  const fallbackRef = useRef<View | null>(null);
+  const [fallbackPng, setFallbackPng] = useState<Buffer | null>(null);
+  const [fallbackHostLaidOut, setFallbackHostLaidOut] = useState(false);
+  const fallbackCaptureStarted = useRef(false);
+
+  useEffect(() => {
+    if (pendingCapturedPng || !fallbackDesign || fallbackPng) return;
+    if (!fallbackHostLaidOut) return; // wait for the offscreen view to be attached + measured
+    if (fallbackCaptureStarted.current) return;
+    fallbackCaptureStarted.current = true;
+    const dimensions = getCaptureDimensions(
+      fallbackDesign,
+      undefined,
+      getRendererLayoutOptions(theme),
+    );
+    captureBadge(fallbackRef, dimensions)
+      .then((buf) => setFallbackPng(buf))
+      .catch((err) => {
+        logger.error("Default-design capture failed", { goalId, error: err });
+        reportError(err, { area: "badge.create", kind: "bake" });
+        fallbackCaptureStarted.current = false;
+      });
+  }, [
+    pendingCapturedPng,
+    fallbackDesign,
+    fallbackPng,
+    fallbackHostLaidOut,
+    theme,
+    goalId,
+  ]);
+
+  const capturedPngForBake = pendingCapturedPng ?? fallbackPng ?? undefined;
+  const designJsonForBake =
+    pendingDesignJson ??
+    (fallbackDesign && fallbackPng
+      ? JSON.stringify(fallbackDesign)
+      : undefined);
+
+  // Only create badge when evidence exists AND we have a PNG (pending or auto-captured)
   const { status: badgeStatus, error: badgeError } = useCreateBadge(
     goalId as GoalId,
     {
-      ...(pendingDesignJson ? { design: pendingDesignJson } : {}),
-      ...(pendingCapturedPng ? { capturedPng: pendingCapturedPng } : {}),
-      enabled: phase === "celebration",
+      ...(designJsonForBake ? { design: designJsonForBake } : {}),
+      ...(capturedPngForBake ? { capturedPng: capturedPngForBake } : {}),
+      enabled: phase === "celebration" && capturedPngForBake !== undefined,
     },
   );
   const isBadgeCreating =
@@ -208,7 +268,9 @@ function CompletionContent({
 
   const handleReopenGoal = () => {
     uncompleteGoal(goalId as GoalId);
-    navigation.navigate("FocusMode", { goalId });
+    // replace so a back gesture doesn't drop the user back into the
+    // just-left celebration screen (which would re-show BadgeEarnedModal).
+    navigation.replace("FocusMode", { goalId });
   };
 
   const handleViewBadge = () => {
@@ -245,10 +307,32 @@ function CompletionContent({
     setShowBadgeModal(false);
   };
 
+  // Offscreen host for the default-design capture. Rendered in both phases
+  // so the PNG is ready by the time the user transitions to celebration.
+  const fallbackHost = fallbackDesign ? (
+    <View
+      ref={fallbackRef}
+      collapsable={false}
+      style={styles.fallbackCaptureHost}
+      pointerEvents="none"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      testID="completion-fallback-capture-host"
+      onLayout={(e) => {
+        if (e.nativeEvent.layout.width > 0 && !fallbackHostLaidOut) {
+          setFallbackHostLaidOut(true);
+        }
+      }}
+    >
+      <BadgeRenderer design={fallbackDesign} size={160} showShadow={false} />
+    </View>
+  ) : null;
+
   // Evidence prompt phase — capture evidence before celebration
   if (phase === "evidence-prompt") {
     return (
       <KeyboardAvoidingView style={{ flex: 1 }} {...KEYBOARD_AVOIDING_PROPS}>
+        {fallbackHost}
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View
             style={styles.card}
@@ -327,6 +411,7 @@ function CompletionContent({
   // Celebration phase — evidence exists, badge being created
   return (
     <View style={{ flex: 1 }}>
+      {fallbackHost}
       <Confetti
         visible={showConfetti}
         onComplete={() => setShowConfetti(false)}

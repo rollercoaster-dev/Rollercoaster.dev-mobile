@@ -140,8 +140,13 @@ export function isValidHexColor(value: string): boolean {
 /**
  * Create a sensible default BadgeDesign from a goal title and color.
  *
- * Uses circle shape, no frame, Trophy icon at regular weight.
- * Falls back to signature purple if no color provided or if color is invalid hex.
+ * Rounded rectangle shape, monogram of the title's first letter — matches the
+ * placeholder rendering used in BadgeCard tiles, so the pre-bake preview
+ * and the unstyled tile fallback agree.
+ *
+ * `iconName` / `iconWeight` are populated as harmless defaults; they are
+ * not drawn while `centerMode === monogram`, but BadgeDesigner re-uses
+ * them if the user toggles `centerMode` back to `icon`.
  */
 export function createDefaultBadgeDesign(
   title: string,
@@ -149,14 +154,16 @@ export function createDefaultBadgeDesign(
 ): BadgeDesign {
   const resolvedColor =
     color && isValidHexColor(color) ? color : DEFAULT_DESIGN_COLOR;
+  const firstLetter = (title.trim().charAt(0) || "?").toUpperCase();
   return {
-    shape: BadgeShape.circle,
+    shape: BadgeShape.roundedRect,
     frame: BadgeFrame.none,
     color: resolvedColor,
     iconName: DEFAULT_ICON_NAME,
     iconWeight: BadgeIconWeight.regular,
     title,
-    centerMode: BadgeCenterMode.icon,
+    centerMode: BadgeCenterMode.monogram,
+    monogram: firstLetter,
   };
 }
 

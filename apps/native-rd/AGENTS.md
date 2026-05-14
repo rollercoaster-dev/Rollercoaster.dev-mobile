@@ -107,3 +107,7 @@ Each `docs/` subdirectory has an `index.md` with a summary and links:
 4. `/finalize` — push branch, create PR, update board
 
 After merge: `/review-to-task <pr-number>` to convert unresolved review comments into tracked issues.
+
+### Handling Review-Skipped Findings
+
+Every review finding (`/simplify`, `/review`, `/self-review`, CodeRabbit) you choose not to fix in scope must be tracked as a **GH issue** (preferred) and/or a **"Follow-ups" section in the active plan** under `apps/native-rd/docs/plans/`. Never chat-only.

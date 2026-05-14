@@ -83,6 +83,7 @@ Badge logic lives in `@rollercoaster-dev/openbadges-core` (workspace package at 
 - **Planning stack**: use `p-stack`, `p-goal`, `p-plan` etc. for tracking work
 - **Issue workflow**: graph-flow skills (`setup`, `implement`, `finalize`)
 - **Code review**: CodeRabbit CLI at `~/.local/bin/coderabbit` — use `coderabbit review --plain`
+- **Review-skipped findings**: track as GH issue or in plan "Follow-ups" — never chat-only. See `AGENTS.md` → Handling Review-Skipped Findings.
 
 ## Graph Flow (Issue Workflow)
 
