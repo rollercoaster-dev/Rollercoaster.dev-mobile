@@ -98,6 +98,23 @@ export function useAudioRecorder(): AudioRecorderState & AudioRecorderActions {
     }
   }, [status, playerStatus.currentTime, playerStatus.didJustFinish]);
 
+  // Read latest recorder handle via a ref so the polling effect below
+  // doesn't restart its interval every render. expo-audio returns a new
+  // recorder reference each call, which would otherwise re-trigger the effect.
+  const recorderRef = useRef(recorder);
+  recorderRef.current = recorder;
+
+  // Poll the native recorder for elapsed duration while recording so the UI
+  // ticks live. The expo-audio status callback only fires on isFinished, so
+  // without this poll the timer stays at 00:00 until stopRecording().
+  useEffect(() => {
+    if (status !== "recording") return;
+    const id = setInterval(() => {
+      setDurationMs(recorderRef.current.getStatus().durationMillis);
+    }, 200);
+    return () => clearInterval(id);
+  }, [status]);
+
   const startRecording = useCallback(async () => {
     try {
       setError(null);
