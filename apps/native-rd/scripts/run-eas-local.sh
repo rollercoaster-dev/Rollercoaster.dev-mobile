@@ -110,9 +110,18 @@ echo "  workingdir: ${WORKDIR}"
 echo "  artifact:   ${artifact}"
 echo
 
-exec eas build \
+# Process substitution keeps stderr separate from stdout (a `2>&1 | redact`
+# pipeline would collapse both onto stdout, breaking callers that capture
+# them separately, e.g. CI log redirection). `|| ec=$?` captures the exit
+# code without tripping `set -e`. `wait` lets the redact subprocesses drain
+# before the script exits — otherwise the last few lines can race.
+ec=0
+eas build \
   --platform "${platform}" \
   --profile "${profile}" \
   --local \
   --non-interactive \
-  --output "${artifact}" 2>&1 | redact
+  --output "${artifact}" \
+  > >(redact) 2> >(redact >&2) || ec=$?
+wait
+exit "${ec}"
