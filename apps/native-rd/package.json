@@ -45,7 +45,7 @@
     "@rollercoaster-dev/design-tokens": "workspace:*",
     "@rollercoaster-dev/openbadges-core": "workspace:*",
     "@sentry/cli": "3.4.1",
-    "@sentry/react-native": "~7.11.0",
+    "@sentry/react-native": "~8.11.1",
     "@storybook/addon-ondevice-actions": "^10.2.1",
     "@storybook/addon-ondevice-controls": "^10.2.1",
     "@storybook/react-native": "^10.2.1",
