@@ -3,80 +3,131 @@
 # Docs: https://docs.coderabbit.ai/configure-coderabbit/
 
 reviews:
+  profile: chill
+  poem: false
+  in_progress_fortune: false
+
   auto_review:
     enabled: true
     drafts: false # Skip draft PRs - review when marked ready
-    auto_incremental_review: false # Don't auto-review on subsequent commits (saves API limits)
+    auto_incremental_review: true
+    auto_pause_after_reviewed_commits: 5
 
   # Disable tools that are already handled by CI
   tools:
     eslint:
-      enabled: false # Already runs in CI (bun run lint)
+      enabled: false # CI runs `bun run lint` including the custom local rules
     biome:
       enabled: false # Not used in this project
+    oxlint:
+      enabled: false # Not used; would duplicate ESLint findings on TS files
+    # actionlint, shellcheck, markdownlint, yamllint, languagetool,
+    # gitleaks, trufflehog, semgrep, checkov are left on their defaults —
+    # they fill gaps CI does not cover.
 
   # Path-specific review instructions
   path_instructions:
-    # Vue Components - Accessibility & Best Practices
-    - path: "packages/openbadges-ui/src/components/**/*.vue"
+    # Native-RD UI Components — ND Accessibility & Design System
+    - path: "apps/native-rd/src/components/**/*.{ts,tsx}"
       instructions: |
-        Review for accessibility (a11y) compliance:
-        - Verify ARIA attributes on interactive elements
-        - Check keyboard navigation support (tabindex, keydown handlers)
-        - Ensure images have meaningful alt text
-        - Verify form inputs have associated labels
-        - Check heading hierarchy (h1 > h2 > h3)
+        Review React Native components against the ND-accessibility contract
+        documented in apps/native-rd/CLAUDE.md.
 
-        Review for neurodiversity-friendly patterns:
-        - Check for configurable content density options
-        - Verify simplified view alternatives exist where appropriate
-        - Ensure focus states are clearly visible
+        Accessibility:
+        - All interactive elements have accessibilityRole and accessibilityLabel
+        - Touch targets are at least 44pt × 44pt
+        - Focus states are visible
+        - Animations respect AccessibilityInfo.isReduceMotionEnabled() — never
+          animate motion when reduce-motion is on
+        - Color contrast meets WCAG AA against both light and dark themes
 
-        Review Vue 3 best practices:
-        - Prefer Composition API patterns
-        - Check for proper prop validation
-        - Verify emits are properly declared
+        Design system discipline:
+        - No raw color values; consume design tokens via Unistyles or
+          @rollercoaster-dev/design-tokens. The local ESLint rule
+          `local/no-raw-colors` enforces this — flag dynamic style construction
+          the rule may miss
+        - Components live in src/components/, not in src/screens/
+        - Each component directory exposes a barrel index.ts
+          (enforced by `local/require-barrel-export`)
 
-    # API Routes - Security & Validation
-    - path: "apps/openbadges-modular-server/src/api/**/*.ts"
+        File size:
+        - Components over ~250 lines should be split
+          (the `local/file-size-limit` rule warns at the configured threshold)
+
+    # Native-RD Screens — Composition & Navigation
+    - path: "apps/native-rd/src/screens/**/*.{ts,tsx}"
       instructions: |
-        Review for security:
-        - Verify input validation using Zod schemas
-        - Check that authentication middleware is applied to protected routes
-        - Ensure proper error handling with appropriate HTTP status codes
-        - Look for potential injection vulnerabilities
+        Screens compose components; they don't define primitives.
+        Source of truth for native-rd conventions: apps/native-rd/CLAUDE.md.
 
-        Review for API design:
-        - Check OpenAPI documentation accuracy
-        - Verify consistent response formats
-        - Ensure proper HTTP methods are used
+        - No imports from another screen's directory (the
+          `local/no-component-imports-screens` rule enforces this; flag
+          architectural violations the rule cannot statically see, e.g.
+          duplicated layout code)
+        - Navigation params should be typed against the navigator's param list
+        - Data fetching belongs in hooks/services, not inline in the screen
+        - Loading and error states must be ND-friendly: calm copy, no jargon,
+          no walls of red text
 
-    # Authentication - Security Focus
-    - path: "apps/openbadges-modular-server/src/auth/**/*.ts"
+    # Native-RD E2E Tests — Detox Flake Prevention
+    - path: "apps/native-rd/e2e/**/*.{ts,tsx}"
       instructions: |
-        Security-critical code - review carefully:
-        - Check for authentication bypass vulnerabilities
-        - Verify JWT handling (expiration, signature validation)
-        - Review role-based access control (RBAC) logic
-        - Ensure credentials are never logged or exposed
-        - Check for timing attack vulnerabilities in comparisons
+        Detox flake-prevention:
+        - Use testID over text-based selectors where possible (text is
+          localized and changes between i18n updates)
+        - Wait on element state (waitFor(...).toBeVisible()), never on
+          fixed sleep timers
+        - Reset app state per test (device.launchApp({newInstance: true}))
+        - Tests must run on both iOS sim and Android emulator targets
 
-    # Database Code - Data Integrity
-    - path: "apps/openbadges-modular-server/src/infrastructure/database/**/*.ts"
+    # OpenBadges Core — Spec Compliance
+    - path: "packages/openbadges-core/src/**/*.ts"
       instructions: |
-        Review for data safety:
-        - Verify parameterized queries (no string concatenation for SQL)
-        - Check migration scripts for data loss risks
-        - Review mapper functions for correctness
-        - Ensure proper transaction handling where needed
+        This package must comply with the Open Badges 2.0 and 3.0 specs
+        and the W3C Verifiable Credentials Data Model.
+        Source of truth for package context: packages/openbadges-core/CLAUDE.md.
 
-    # Logger - Sensitive Data Protection
-    - path: "packages/rd-logger/**/*.ts"
+        - JSON-LD @context handling must preserve order and include the
+          required OB contexts
+        - Type guards return boolean and never throw
+        - Verifiable Credential proof and issuer fields are required where
+          the spec mandates them; do not default-construct invalid VCs
+        - When changing exported types, check downstream impact in
+          apps/native-rd/src (this package is consumed as workspace:*)
+
+    # Design Tokens — Generation & Consistency
+    - path: "packages/design-tokens/src/**/*.{ts,js,json}"
       instructions: |
-        Review for sensitive data protection:
-        - Ensure sensitive data (passwords, tokens, keys) is never logged
-        - Verify pattern detection catches common secrets
-        - Check sanitization covers connection strings and credentials
+        Tokens are generated into multiple targets (CSS variables, Unistyles
+        themes) by Style Dictionary.
+        Source of truth for token architecture: packages/design-tokens/CLAUDE.md.
+
+        - Light and dark themes must define the same token keys
+          (no missing-in-one-theme drift)
+        - ND-friendly tokens (motion, density, contrast) keep their semantic
+          names — renaming is a breaking change for consumers
+        - Don't hand-edit generated output in packages/design-tokens/css/
+          or the Unistyles dist (those are build artifacts)
+        - Adding a new token requires updating the source AND any consumer
+          mapping in apps/native-rd
+
+    # GitHub Workflows — No Removed Packages
+    - path: ".github/workflows/**/*.{yml,yaml}"
+      instructions: |
+        Per the root CLAUDE.md, do NOT restore CI references to packages
+        extracted in the 2026-05-14 split:
+        - apps/openbadges-system
+        - apps/openbadges-modular-server
+        - packages/openbadges-ui
+        - packages/shared-config
+        - packages/rd-logger (as a workspace path; the registry dep is fine)
+
+        Workflow hygiene:
+        - Pin actions by major version (actions/checkout@v6 etc.), not by
+          floating tags like @main
+        - Concurrency groups should cancel-in-progress on PR refs
+        - Add `paths:` filters where a workflow does not need to run on
+          unrelated changes (docs-only, plan-only, etc.)
 
     # Security Utilities
     - path: "**/utils/security/**/*.ts"
@@ -86,15 +137,6 @@ reviews:
         - Check rate limiting configuration is appropriate
         - Review CORS settings for overly permissive origins
         - Ensure security headers are properly set
-
-    # Type Definitions - Spec Compliance
-    - path: "packages/openbadges-types/**/*.ts"
-      instructions: |
-        Review for Open Badges specification compliance:
-        - Verify types match Open Badges 2.0 and 3.0 specs
-        - Check type guards return correct boolean results
-        - Ensure JSON-LD context handling is accurate
-        - Verify Verifiable Credentials structure compliance
 
     # Test Files - Quality Checks
     - path: "**/*.test.ts"
@@ -107,8 +149,16 @@ reviews:
 
   # Exclude generated and dependency files from review
   path_filters:
-    - "!**/dist/**"
     - "!**/node_modules/**"
+    - "!**/dist/**"
     - "!**/*.lock"
     - "!**/coverage/**"
     - "!**/.bun-cache/**"
+    - "!**/.turbo/**"
+    - "!**/.expo/**"
+    - "!**/__snapshots__/**"
+    - "!**/.storybook-static/**"
+    - "!apps/native-rd/ios/**" # expo prebuild output
+    - "!apps/native-rd/android/**" # expo prebuild output
+    - "!packages/design-tokens/css/**" # style-dictionary generated
+    - "!**/CHANGELOG.md"
