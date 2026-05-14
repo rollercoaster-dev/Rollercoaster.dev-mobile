@@ -11,6 +11,7 @@ import {
 import type { ImageSourcePropType } from "react-native";
 import { Buffer } from "buffer";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@evolu/react";
 import { useUnistyles } from "react-native-unistyles";
 import { Text } from "../../components/Text";
@@ -97,7 +98,8 @@ function CompletionContent({
   pendingDesignJson: string | undefined;
   pendingCapturedPng: Buffer | undefined;
 }) {
-  const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<GoalsStackParamList>>();
   const { theme } = useUnistyles();
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
@@ -266,7 +268,9 @@ function CompletionContent({
 
   const handleReopenGoal = () => {
     uncompleteGoal(goalId as GoalId);
-    navigation.navigate("FocusMode", { goalId });
+    // replace so a back gesture doesn't drop the user back into the
+    // just-left celebration screen (which would re-show BadgeEarnedModal).
+    navigation.replace("FocusMode", { goalId });
   };
 
   const handleViewBadge = () => {

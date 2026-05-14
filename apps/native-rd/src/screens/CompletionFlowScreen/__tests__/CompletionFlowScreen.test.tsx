@@ -11,6 +11,7 @@ import { CompletionFlowScreen } from "../CompletionFlowScreen";
 
 const mockGoBack = jest.fn();
 const mockNavigate = jest.fn();
+const mockReplace = jest.fn();
 const mockParentNavigate = jest.fn();
 const mockGetParent = jest.fn(() => ({ navigate: mockParentNavigate }));
 jest.mock("@react-navigation/native", () => {
@@ -21,6 +22,7 @@ jest.mock("@react-navigation/native", () => {
       ...actual.useNavigation(),
       goBack: mockGoBack,
       navigate: mockNavigate,
+      replace: mockReplace,
       getParent: mockGetParent,
     })),
   };
@@ -332,7 +334,7 @@ describe("CompletionFlowScreen", () => {
       expect(screen.queryByLabelText("Reopen Goal")).not.toBeOnTheScreen();
     });
 
-    it("calls uncompleteGoal and navigates to FocusMode on reopen", () => {
+    it("calls uncompleteGoal and replaces with FocusMode on reopen", () => {
       setupQueries({
         goal: { ...GOAL, status: "completed" },
         goalEvidence: GOAL_EVIDENCE,
@@ -340,7 +342,9 @@ describe("CompletionFlowScreen", () => {
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
       fireEvent.press(screen.getByLabelText("Reopen Goal"));
       expect(mockUncompleteGoal).toHaveBeenCalledWith("goal-1");
-      expect(mockNavigate).toHaveBeenCalledWith("FocusMode", {
+      // replace (not navigate) so a back gesture from FocusMode doesn't
+      // drop the user back into the celebration screen they just left.
+      expect(mockReplace).toHaveBeenCalledWith("FocusMode", {
         goalId: "goal-1",
       });
     });
