@@ -2,6 +2,11 @@ name: _validate
 
 on:
   workflow_call:
+    inputs:
+      ref:
+        description: "Git ref to check out and validate. Defaults to the caller workflow's commit."
+        required: false
+        type: string
 
 jobs:
   validate:
@@ -10,6 +15,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref }}
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2

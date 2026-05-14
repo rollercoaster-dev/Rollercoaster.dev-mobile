@@ -21,6 +21,8 @@ concurrency:
 jobs:
   validate:
     uses: ./.github/workflows/_validate.yml
+    with:
+      ref: ${{ inputs.ref || github.event.release.tag_name || github.ref }}
 
   build-and-submit:
     needs: validate

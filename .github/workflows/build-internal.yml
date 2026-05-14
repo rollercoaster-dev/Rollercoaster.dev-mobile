@@ -17,6 +17,8 @@ concurrency:
 jobs:
   validate:
     uses: ./.github/workflows/_validate.yml
+    with:
+      ref: ${{ inputs.ref }}
 
   build-and-submit:
     needs: validate
