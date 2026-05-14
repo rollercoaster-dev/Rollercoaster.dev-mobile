@@ -53,11 +53,11 @@ What it is: All native build work happens in EAS cloud (free macOS workers, sign
 
 ### Release tracks
 
-| Track       | Trigger                                        | EAS profile   | iOS destination          | Android destination | Auto-submit | Notes                                              |
-| ----------- | ---------------------------------------------- | ------------- | ------------------------ | ------------------- | ----------- | -------------------------------------------------- |
-| Development | `workflow_dispatch` only                       | `development` | dev client (simulator)   | dev client (APK)    | No          | Used by devs/agents; usually run locally instead.  |
-| Internal    | Push to `main`                                 | `preview`     | TestFlight internal      | Play internal       | Yes         | Continuous internal builds; one per merged PR.     |
-| Production  | Tag `v*.*.*` (created by release-please merge) | `production`  | TestFlight ext + App Store review | Play production (staged 10% → 50% → 100%) | Yes         | One release per tag. Manual rollout advance.       |
+| Track       | Trigger                                        | EAS profile   | iOS destination                   | Android destination                       | Auto-submit | Notes                                             |
+| ----------- | ---------------------------------------------- | ------------- | --------------------------------- | ----------------------------------------- | ----------- | ------------------------------------------------- |
+| Development | `workflow_dispatch` only                       | `development` | dev client (simulator)            | dev client (APK)                          | No          | Used by devs/agents; usually run locally instead. |
+| Internal    | Push to `main`                                 | `preview`     | TestFlight internal               | Play internal                             | Yes         | Continuous internal builds; one per merged PR.    |
+| Production  | Tag `v*.*.*` (created by release-please merge) | `production`  | TestFlight ext + App Store review | Play production (staged 10% → 50% → 100%) | Yes         | One release per tag. Manual rollout advance.      |
 
 Rationale: tying production to a tag (not a branch push) gives a deliberate "we are shipping now" gesture; release-please owns tag creation when its PR merges, so the human action is just merging the release PR.
 
@@ -83,12 +83,12 @@ Rationale: tying production to a tag (not a branch push) gives a deliberate "we 
 
 ### Secrets (GitHub → Actions)
 
-| Secret                      | Source                                                | Used by                          |
-| --------------------------- | ----------------------------------------------------- | -------------------------------- |
-| `EXPO_TOKEN`                | https://expo.dev/accounts/[org]/settings/access-tokens | All EAS calls                    |
-| `SENTRY_AUTH_TOKEN`         | Sentry org auth token (org:read, project:releases)    | EAS build (passed through env) + sourcemap finalize |
-| `APPLE_APP_STORE_CONNECT_API_KEY_*` (3 vars: key id, issuer id, key contents) | ASC → Users → Integrations | `eas submit` for iOS (preferred over Apple ID + 2FA app-specific password) |
-| `ANDROID_PLAY_SERVICE_ACCOUNT_JSON` | Google Cloud service account with Play Developer API access | `eas submit` for Android. Replaces `serviceAccountKeyPath` in `eas.json` (write to file in the job) |
+| Secret                                                                        | Source                                                      | Used by                                                                                             |
+| ----------------------------------------------------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `EXPO_TOKEN`                                                                  | https://expo.dev/accounts/[org]/settings/access-tokens      | All EAS calls                                                                                       |
+| `SENTRY_AUTH_TOKEN`                                                           | Sentry org auth token (org:read, project:releases)          | EAS build (passed through env) + sourcemap finalize                                                 |
+| `APPLE_APP_STORE_CONNECT_API_KEY_*` (3 vars: key id, issuer id, key contents) | ASC → Users → Integrations                                  | `eas submit` for iOS (preferred over Apple ID + 2FA app-specific password)                          |
+| `ANDROID_PLAY_SERVICE_ACCOUNT_JSON`                                           | Google Cloud service account with Play Developer API access | `eas submit` for Android. Replaces `serviceAccountKeyPath` in `eas.json` (write to file in the job) |
 
 Move the Apple submit config away from Apple ID + 2FA. App Store Connect API keys are the only sane choice for CI. Update `submit.production.ios` in `eas.json` accordingly.
 

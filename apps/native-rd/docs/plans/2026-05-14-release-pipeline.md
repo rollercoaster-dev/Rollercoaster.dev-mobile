@@ -17,6 +17,7 @@
 This plan assumes the engineer has read the research doc and understands the three-track model (development / internal / production). It also assumes the items in `docs/plans/2026-04-28-ios-testflight-readiness.md` are complete enough that a first internal build can succeed manually (i.e., `eas build --profile preview --platform ios` works locally today). If that's not true, fix it before starting Task 5.
 
 Memory reminders for the implementer:
+
 - **Atomic commits.** One logical change per commit. Never bulk-commit at the end.
 - **Never post PR comments / review replies** without explicit per-action authorization.
 - **Pull before any rebase/reset.** Verify base and divergence first.
@@ -48,20 +49,17 @@ These cannot be automated — they involve external accounts. Complete all of th
 **Files:** None.
 
 - [ ] **Step 1: Create App Store Connect API key**
-
   1. Go to https://appstoreconnect.apple.com → Users and Access → Integrations → App Store Connect API → Team Keys.
   2. Click "Generate API Key" (or "+"). Name: `rollercoasterdev-ci`. Access: **App Manager**.
   3. Download the `.p8` file (only available once). Note the **Key ID** and the **Issuer ID** shown on that page.
   4. Save the `.p8` contents — you'll paste it as a GitHub secret in Step 4.
 
 - [ ] **Step 2: Verify Play Console service account JSON**
-
   1. The `eas.json` already references `./play-service-account.json` but this file should not be committed. Confirm with `git ls-files apps/native-rd/play-service-account.json` — expected output: empty (the file is gitignored or not present).
   2. If you don't already have one: Google Cloud Console → IAM & Admin → Service Accounts → Create. Grant the role **Service Account User**. Then in Play Console → Setup → API access → grant **Release manager** to that service account.
   3. Save the JSON key — you'll paste it as a GitHub secret in Step 4.
 
 - [ ] **Step 3: Create an Expo personal access token**
-
   1. Go to https://expo.dev → Account settings → Access tokens.
   2. Click "Create token". Name: `github-actions-ci`. Save the token.
 
@@ -69,14 +67,14 @@ These cannot be automated — they involve external accounts. Complete all of th
 
   In the GitHub repo → Settings → Secrets and variables → Actions → New repository secret. Add each of:
 
-  | Secret name                              | Value                                        |
-  | ---------------------------------------- | -------------------------------------------- |
-  | `EXPO_TOKEN`                             | From Step 3                                  |
-  | `SENTRY_AUTH_TOKEN`                      | From Sentry org → User Auth Tokens (scopes: `project:releases`, `org:read`) |
-  | `APPLE_ASC_KEY_ID`                       | Key ID from Step 1                           |
-  | `APPLE_ASC_ISSUER_ID`                    | Issuer ID from Step 1                        |
-  | `APPLE_ASC_KEY_P8`                       | Full contents of the `.p8` file from Step 1, including the `-----BEGIN PRIVATE KEY-----` lines |
-  | `ANDROID_PLAY_SERVICE_ACCOUNT_JSON`      | Full JSON contents from Step 2               |
+  | Secret name                         | Value                                                                                          |
+  | ----------------------------------- | ---------------------------------------------------------------------------------------------- |
+  | `EXPO_TOKEN`                        | From Step 3                                                                                    |
+  | `SENTRY_AUTH_TOKEN`                 | From Sentry org → User Auth Tokens (scopes: `project:releases`, `org:read`)                    |
+  | `APPLE_ASC_KEY_ID`                  | Key ID from Step 1                                                                             |
+  | `APPLE_ASC_ISSUER_ID`               | Issuer ID from Step 1                                                                          |
+  | `APPLE_ASC_KEY_P8`                  | Full contents of the `.p8` file from Step 1, including the `-----BEGIN PRIVATE KEY-----` lines |
+  | `ANDROID_PLAY_SERVICE_ACCOUNT_JSON` | Full JSON contents from Step 2                                                                 |
 
 - [ ] **Step 5: Verify access works**
 
@@ -89,6 +87,7 @@ These cannot be automated — they involve external accounts. Complete all of th
 `apps/native-rd/package.json` is at `0.1.3` but `apps/native-rd/app.json` is still at `0.1.0`. release-please will own both going forward, but the starting state must be consistent.
 
 **Files:**
+
 - Modify: `apps/native-rd/app.json:4` (the `expo.version` field)
 
 - [ ] **Step 1: Update version in `app.json`**
@@ -128,6 +127,7 @@ These cannot be automated — they involve external accounts. Complete all of th
 The current `eas.json` references `play-service-account.json` (a path) and uses Apple ID + team ID for iOS submit. Both need to be reworked so CI can supply credentials via environment variables/files written at runtime.
 
 **Files:**
+
 - Modify: `apps/native-rd/eas.json` (the `submit.production` block)
 
 - [ ] **Step 1: Replace `submit.production` block in `eas.json`**
@@ -206,6 +206,7 @@ The current `eas.json` references `play-service-account.json` (a path) and uses 
 release-please reads conventional commits on `main`, opens/maintains a "Release vX.Y.Z" PR with version bumps + changelog. Merging that PR creates the `v*.*.*` tag and a GitHub Release — which is the production trigger in Task 6.
 
 **Files:**
+
 - Create: `.github/release-please-config.json`
 - Create: `.github/.release-please-manifest.json`
 - Create: `.github/workflows/release-please.yml`
@@ -298,6 +299,7 @@ release-please reads conventional commits on `main`, opens/maintains a "Release 
 The existing `ci.yml` does install + typecheck + lint + test. Tasks 5 and 6 need the same validation before triggering a build. Extract it.
 
 **Files:**
+
 - Create: `.github/workflows/_validate.yml`
 - Modify: `.github/workflows/ci.yml`
 
@@ -406,6 +408,7 @@ The existing `ci.yml` does install + typecheck + lint + test. Tasks 5 and 6 need
 On every push to `main`, build the `preview` EAS profile and submit to TestFlight internal + Play internal track.
 
 **Files:**
+
 - Create: `.github/workflows/build-internal.yml`
 
 - [ ] **Step 1: Create `.github/workflows/build-internal.yml`**
@@ -509,6 +512,7 @@ On every push to `main`, build the `preview` EAS profile and submit to TestFligh
 On every `v*.*.*` tag (created when release-please's PR merges), build the `production` EAS profile, submit to TestFlight external + Play production at 10% rollout, and finalize the Sentry release.
 
 **Files:**
+
 - Create: `.github/workflows/build-production.yml`
 
 - [ ] **Step 1: Create `.github/workflows/build-production.yml`**
@@ -631,24 +635,25 @@ On every `v*.*.*` tag (created when release-please's PR merges), build the `prod
 The pipeline isn't useful if the next person (you in three months) has to reverse-engineer it.
 
 **Files:**
+
 - Create: `apps/native-rd/docs/release.md`
 - Modify: `apps/native-rd/CLAUDE.md` (add one link line)
 - Modify: `apps/native-rd/docs/plans/index.md` (add this plan)
 
 - [ ] **Step 1: Create `apps/native-rd/docs/release.md`**
 
-  ```markdown
+  ````markdown
   # Release Runbook
 
   **Last verified:** 2026-05-14
 
   ## Pipeline at a glance
 
-  | Track       | Trigger                              | Workflow                       | EAS profile   | Destination                         |
-  | ----------- | ------------------------------------ | ------------------------------ | ------------- | ----------------------------------- |
-  | Internal    | Push to `main`                       | `build-internal.yml`           | `preview`     | TestFlight internal + Play internal |
-  | Production  | Tag `v*.*.*` (release-please merge)  | `build-production.yml`         | `production`  | TestFlight ext + Play prod (10%)    |
-  | Dev (rare)  | `workflow_dispatch` on build-internal | `build-internal.yml`           | `preview`     | TestFlight internal                 |
+  | Track      | Trigger                               | Workflow               | EAS profile  | Destination                         |
+  | ---------- | ------------------------------------- | ---------------------- | ------------ | ----------------------------------- |
+  | Internal   | Push to `main`                        | `build-internal.yml`   | `preview`    | TestFlight internal + Play internal |
+  | Production | Tag `v*.*.*` (release-please merge)   | `build-production.yml` | `production` | TestFlight ext + Play prod (10%)    |
+  | Dev (rare) | `workflow_dispatch` on build-internal | `build-internal.yml`   | `preview`    | TestFlight internal                 |
 
   ## Cutting a production release
 
@@ -670,11 +675,11 @@ The pipeline isn't useful if the next person (you in three months) has to revers
   npx eas-cli@latest submit:rollout --platform android --track production --rollout 0.5
   npx eas-cli@latest submit:rollout --platform android --track production --rollout 1.0
   ```
+  ````
 
   Or use Play Console → Release management → Production → "Edit release".
 
   ## Rolling back
-
   - **Android:** Play Console → Production → halt rollout (keeps current users on the halted version; new installs continue to get the previous version). Then ship a fixed `v*.*.*` ASAP — Play doesn't allow shipping a lower versionCode.
   - **iOS:** App Store Connect → "Remove from sale" only blocks new downloads; existing installs are unaffected. Ship a fixed `v*.*.*` and request expedited review if critical.
 
@@ -687,11 +692,13 @@ The pipeline isn't useful if the next person (you in three months) has to revers
   See `docs/research/release-pipeline.md` § Secrets. All six are stored as GitHub repo secrets.
 
   ## Failure modes
-
   - **EAS build fails:** check the EAS dashboard link in the workflow log. Most failures are JS/native compile errors that reproduce locally with `npx expo run:ios --configuration Release`.
   - **iOS submit fails with "no API key":** `APPLE_ASC_KEY_P8` secret is malformed (missing `-----BEGIN`/`-----END` lines).
   - **Android submit fails with "no service account":** `ANDROID_PLAY_SERVICE_ACCOUNT_JSON` secret is malformed (not valid JSON).
   - **Sentry finalize fails:** the build still shipped; finalize is metadata-only. Run `npx @sentry/cli releases finalize <version>` manually.
+
+  ```
+
   ```
 
 - [ ] **Step 2: Add a link line to `apps/native-rd/CLAUDE.md`**
@@ -709,7 +716,7 @@ The pipeline isn't useful if the next person (you in three months) has to revers
   Append a row to the Active table (the table ends before the "## Reference" heading):
 
   ```markdown
-  | [2026-05-14-release-pipeline.md](./2026-05-14-release-pipeline.md)                                                                                              | Build automated iOS+Android release pipeline (EAS + GH Actions + release-please) | 2026-05-14    |
+  | [2026-05-14-release-pipeline.md](./2026-05-14-release-pipeline.md) | Build automated iOS+Android release pipeline (EAS + GH Actions + release-please) | 2026-05-14 |
   ```
 
 - [ ] **Step 4: Commit**
@@ -728,6 +735,7 @@ The pipeline isn't useful if the next person (you in three months) has to revers
 This is a separate PR with its own risk surface; do not bundle with the pipeline rollout.
 
 **Files:**
+
 - Modify: `apps/native-rd/app.json` (the `expo-build-properties` plugin entry)
 
 - [ ] **Step 1: Establish baseline iOS build time**
