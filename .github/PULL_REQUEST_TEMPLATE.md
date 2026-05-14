@@ -28,6 +28,8 @@
 - [ ] Tests pass locally (`bun test`)
 - [ ] Lint passes (`bun run lint`)
 - [ ] Type check passes (`bun run type-check`)
+- [ ] Format check passes (`bun run format:check`)
+- [ ] For visible UI changes: a11y audit passes (`cd apps/native-rd && bun run test:a11y`)
 
 ## Related Issues
 
