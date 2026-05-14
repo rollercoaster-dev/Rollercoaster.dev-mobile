@@ -2,18 +2,37 @@
 # CodeRabbit Configuration
 # Docs: https://docs.coderabbit.ai/configure-coderabbit/
 
+language: en-US
+early_access: false
+
 reviews:
+  profile: chill
+  request_changes_workflow: false
+  commit_status: true
+  high_level_summary: true
+  poem: false
+  in_progress_fortune: false
+  collapse_walkthrough: true
+  changed_files_summary: true
+  sequence_diagrams: true
+
   auto_review:
     enabled: true
     drafts: false # Skip draft PRs - review when marked ready
-    auto_incremental_review: false # Don't auto-review on subsequent commits (saves API limits)
+    auto_incremental_review: true
+    auto_pause_after_reviewed_commits: 5
 
   # Disable tools that are already handled by CI
   tools:
     eslint:
-      enabled: false # Already runs in CI (bun run lint)
+      enabled: false # CI runs `bun run lint` including the custom local rules
     biome:
       enabled: false # Not used in this project
+    oxlint:
+      enabled: false # Not used; would duplicate ESLint findings on TS files
+    # actionlint, shellcheck, markdownlint, yamllint, languagetool,
+    # gitleaks, trufflehog, semgrep, checkov are left on their defaults —
+    # they fill gaps CI does not cover.
 
   # Path-specific review instructions
   path_instructions:
@@ -136,8 +155,16 @@ reviews:
 
   # Exclude generated and dependency files from review
   path_filters:
-    - "!**/dist/**"
     - "!**/node_modules/**"
+    - "!**/dist/**"
     - "!**/*.lock"
     - "!**/coverage/**"
     - "!**/.bun-cache/**"
+    - "!**/.turbo/**"
+    - "!**/.expo/**"
+    - "!**/__snapshots__/**"
+    - "!**/.storybook-static/**"
+    - "!apps/native-rd/ios/**" # expo prebuild output
+    - "!apps/native-rd/android/**" # expo prebuild output
+    - "!packages/design-tokens/css/**" # style-dictionary generated
+    - "!**/CHANGELOG.md"
