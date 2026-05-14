@@ -1,0 +1,23 @@
+#!/usr/bin/env sh
+# Auto-append Signed-off-by trailer (DCO) to every commit.
+# Equivalent to passing `-s` on every `git commit`. The workflow at
+# .github/workflows/dco.yml requires this trailer on non-merge commits.
+
+COMMIT_MSG_FILE=$1
+COMMIT_SOURCE=$2
+
+# Merge commits are excluded by the DCO workflow (--no-merges); don't add.
+case "$COMMIT_SOURCE" in
+  merge) exit 0 ;;
+esac
+
+NAME=$(git config user.name)
+EMAIL=$(git config user.email)
+
+if [ -z "$NAME" ] || [ -z "$EMAIL" ]; then
+  exit 0
+fi
+
+git interpret-trailers \
+  --trailer "Signed-off-by: $NAME <$EMAIL>" \
+  --in-place "$COMMIT_MSG_FILE"
