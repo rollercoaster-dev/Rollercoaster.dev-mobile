@@ -5,6 +5,12 @@ export type {
   CredentialInput,
 } from "./credentialBuilder";
 
+export {
+  designChangedSinceBake,
+  evidenceIdsDifferFromCredential,
+  shouldRebake,
+} from "./credentialDiff";
+
 export { bakePNG, unbakePNG, isPNG } from "./png-baking";
 export {
   generateBadgeImagePNG,
