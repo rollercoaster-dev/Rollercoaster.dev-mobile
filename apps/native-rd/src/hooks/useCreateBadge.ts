@@ -219,14 +219,13 @@ export function useCreateBadge(
         setStatus("baking");
         breadcrumb({ category: "badge", message: "bake" });
 
-        // capturedPng is required. Callers (CompletionFlowScreen) must
-        // provide either a pending design's PNG or an auto-captured
-        // default-design PNG before enabling badge creation. The old
-        // solid-color fallback baked an unloved blue square into the
-        // credential and is gone for good.
+        // capturedPng is required — either a pending design's PNG or an
+        // auto-captured default-design PNG. The old solid-color fallback
+        // baked an unloved blue square into the credential and is gone
+        // for good.
         if (!capturedPngRef.current) {
           throw new Error(
-            "useCreateBadge: capturedPng is required — callers must capture a default-design PNG before enabling badge creation",
+            "useCreateBadge: capturedPng is required — callers must provide a captured badge PNG (from a pending design or auto-captured default) before enabling badge creation",
           );
         }
         if (!isPNG(capturedPngRef.current)) {
