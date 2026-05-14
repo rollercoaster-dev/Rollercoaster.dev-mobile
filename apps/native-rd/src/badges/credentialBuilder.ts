@@ -40,6 +40,51 @@ export interface CredentialInput {
 }
 
 /**
+ * Description recorded on the OB3 `achievement` object. Falls back to a
+ * deterministic label when the source goal has no description so the
+ * credential never contains an empty string. Exported so consumers that
+ * need to compare a credential's stored description against a goal's
+ * current state can reproduce the same fallback (see credentialDiff).
+ */
+export function expectedAchievementDescription(
+  goal: Pick<GoalData, "title" | "description">,
+): string {
+  return goal.description ?? `Achievement: ${goal.title}`;
+}
+
+/**
+ * Merge a goal's per-goal evidence + per-step evidence into a single
+ * EvidenceRow array suitable for buildUnsignedCredential / hasChangesSinceBake.
+ * Step rows carry the optional `stepTitle`; goal rows omit it.
+ *
+ * Accepts the raw row shapes that come back from `evidenceByGoalQuery` /
+ * `stepEvidenceByGoalQuery` (untyped fields).
+ */
+export function mergeEvidenceRows(
+  goalEvidence: ReadonlyArray<Record<string, unknown>>,
+  stepEvidence: ReadonlyArray<Record<string, unknown>>,
+): EvidenceRow[] {
+  const asString = (v: unknown): string => (v as string | null) ?? "";
+  const asNullable = (v: unknown): string | null =>
+    (v as string | null) ?? null;
+  return [
+    ...goalEvidence.map((ev) => ({
+      id: ev.id as string,
+      type: asNullable(ev.type),
+      uri: asString(ev.uri),
+      description: asNullable(ev.description),
+    })),
+    ...stepEvidence.map((ev) => ({
+      id: ev.id as string,
+      type: asNullable(ev.type),
+      uri: asString(ev.uri),
+      description: asNullable(ev.description),
+      stepTitle: asNullable(ev.stepTitle),
+    })),
+  ];
+}
+
+/**
  * Constructs a simplified did:key identifier from an Ed25519 public key JWK.
  *
  * NOTE: Simplified implementation for Iteration A only.
@@ -86,7 +131,7 @@ export function buildUnsignedCredential(
     id: achievementId,
     issuer: iri(input.issuerDid),
     name: input.goal.title,
-    description: input.goal.description ?? `Achievement: ${input.goal.title}`,
+    description: expectedAchievementDescription(input.goal),
     criteria: {
       narrative:
         input.evidence.length > 0

@@ -12,11 +12,12 @@
 import type { GoalData, EvidenceRow } from "./credentialBuilder";
 
 /**
- * Mirrors credentialBuilder.ts: badge `description` falls back to
- * `Achievement: <title>` when the source goal has no description. Keep
- * these in sync — if the builder's fallback changes, update here too.
+ * Mirrors `expectedAchievementDescription` in credentialBuilder.ts — duplicated
+ * (intentionally) so this module stays import-clean of openbadges-core, which
+ * is ESM and hard to load under jest. If the builder's fallback rule changes,
+ * update both sites.
  */
-function expectedDescription(goal: {
+function expectedAchievementDescription(goal: {
   title: string;
   description: string | null;
 }): string {
@@ -70,7 +71,8 @@ export function hasChangesSinceBake(
   if (!achievement) return true;
 
   if (achievement.name !== currentGoal.title) return true;
-  if (achievement.description !== expectedDescription(currentGoal)) return true;
+  if (achievement.description !== expectedAchievementDescription(currentGoal))
+    return true;
 
   return false;
 }

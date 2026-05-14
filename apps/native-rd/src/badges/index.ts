@@ -1,4 +1,9 @@
-export { buildUnsignedCredential, buildDid } from "./credentialBuilder";
+export {
+  buildUnsignedCredential,
+  buildDid,
+  expectedAchievementDescription,
+  mergeEvidenceRows,
+} from "./credentialBuilder";
 export type {
   GoalData,
   EvidenceRow,

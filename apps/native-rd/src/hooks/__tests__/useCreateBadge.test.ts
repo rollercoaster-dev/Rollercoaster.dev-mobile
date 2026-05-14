@@ -69,9 +69,12 @@ jest.mock("../../badges", () => ({
   saveBadgePNG: jest.fn(() =>
     Promise.resolve("file:///app/badges/test-badge.png"),
   ),
-  // Re-export the real diff helper — it's pure logic, no native deps.
+  // Re-export the real pure helpers — they have no native deps and the
+  // hook's branching relies on their exact semantics.
   hasChangesSinceBake: jest.requireActual("../../badges/credentialDiff")
     .hasChangesSinceBake,
+  mergeEvidenceRows: jest.requireActual("../../badges/credentialBuilder")
+    .mergeEvidenceRows,
 }));
 
 const mockUseQuery = useQuery as jest.Mock;

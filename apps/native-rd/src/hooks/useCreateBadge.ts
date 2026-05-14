@@ -49,8 +49,8 @@ import {
   isPNG,
   saveBadgePNG,
   hasChangesSinceBake,
+  mergeEvidenceRows,
 } from "../badges";
-import type { EvidenceRow } from "../badges";
 import { Buffer } from "buffer";
 import { useUserKey } from "./useUserKey";
 import { reportError, breadcrumb } from "../services/sentry-report";
@@ -152,21 +152,7 @@ export function useCreateBadge(
       // Active + existing badge means the user reopened. Diff the current
       // goal/evidence state against the credential's frozen snapshot.
       const { goalEvidence: gev, stepEvidence: sev } = evidenceRef.current;
-      const mergedEvidence: EvidenceRow[] = [
-        ...gev.map((ev) => ({
-          id: ev.id as string,
-          type: (ev.type as string | null) ?? null,
-          uri: (ev.uri as string | null) ?? "",
-          description: (ev.description as string | null) ?? null,
-        })),
-        ...sev.map((ev) => ({
-          id: ev.id as string,
-          type: (ev.type as string | null) ?? null,
-          uri: (ev.uri as string | null) ?? "",
-          description: (ev.description as string | null) ?? null,
-          stepTitle: (ev.stepTitle as string | null) ?? null,
-        })),
-      ];
+      const mergedEvidence = mergeEvidenceRows(gev, sev);
       const goalForDiff = {
         id: goal.id as string,
         title: goal.title as string,
@@ -249,21 +235,7 @@ export function useCreateBadge(
         const credentialId = `urn:uuid:${crypto.randomUUID()}`;
         const issuedOn = new Date().toISOString();
 
-        const allEvidence = [
-          ...gev.map((ev) => ({
-            id: ev.id as string,
-            type: (ev.type as string | null) ?? null,
-            uri: (ev.uri as string | null) ?? "",
-            description: (ev.description as string | null) ?? null,
-          })),
-          ...sev.map((ev) => ({
-            id: ev.id as string,
-            type: (ev.type as string | null) ?? null,
-            uri: (ev.uri as string | null) ?? "",
-            description: (ev.description as string | null) ?? null,
-            stepTitle: (ev.stepTitle as string | null) ?? null,
-          })),
-        ];
+        const allEvidence = mergeEvidenceRows(gev, sev);
 
         const unsignedCredential = buildUnsignedCredential({
           goal: {
