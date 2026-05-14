@@ -1,9 +1,15 @@
-# Validation contract for native-rd:
-# See docs/architecture/ci-contract.md
+# Validation contract: docs/architecture/ci-contract.md
 name: CI
 
 on:
   pull_request:
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+      - "apps/*/docs/**"
+      - "apps/*/research/**"
+      - "apps/*/prototypes/**"
+      - ".github/PULL_REQUEST_TEMPLATE.md"
   push:
     branches: [main]
 
@@ -12,8 +18,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  ci-native-rd:
-    name: Typecheck, Lint & Test (native-rd)
+  validate:
+    name: Build, Typecheck, Lint & Test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -40,15 +46,16 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Build workspace dependencies
-        run: bun run turbo build --filter=native-rd^...
+      - name: Build workspace packages
+        run: |
+          bun --filter @rollercoaster-dev/design-tokens build
+          bun --filter @rollercoaster-dev/openbadges-core build
 
       - name: Typecheck
-        run: bun run turbo type-check --filter=native-rd
+        run: bun run type-check
 
       - name: Lint
-        run: bun run turbo lint --filter=native-rd
+        run: bun run lint
 
       - name: Test
-        working-directory: apps/native-rd
-        run: bun run test:ci
+        run: bun run test
