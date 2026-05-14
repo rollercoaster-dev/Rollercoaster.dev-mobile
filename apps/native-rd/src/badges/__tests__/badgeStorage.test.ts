@@ -59,7 +59,10 @@ describe("saveBadgePNG", () => {
 
   describe("when the badges directory does not exist", () => {
     it("creates the directory before writing", async () => {
-      mockFS.getInfoAsync.mockResolvedValue({ exists: false });
+      // First call (dir check) → missing; second call (post-write file check) → present.
+      mockFS.getInfoAsync
+        .mockResolvedValueOnce({ exists: false })
+        .mockResolvedValueOnce({ exists: true });
 
       await saveBadgePNG(MINIMAL_PNG);
 
@@ -68,6 +71,21 @@ describe("saveBadgePNG", () => {
         { intermediates: true },
       );
       expect(mockFS.writeAsStringAsync).toHaveBeenCalled();
+    });
+  });
+
+  describe("post-write verification", () => {
+    it("throws when writeAsStringAsync resolves but the file is not on disk", async () => {
+      // Mirror the iOS sandbox / quota silent-failure mode: write resolves
+      // cleanly but the file never lands. saveBadgePNG must surface this
+      // instead of returning a URI that points to nothing.
+      mockFS.getInfoAsync
+        .mockResolvedValueOnce({ exists: true }) // dir present
+        .mockResolvedValueOnce({ exists: false }); // post-write check fails
+
+      await expect(saveBadgePNG(MINIMAL_PNG)).rejects.toThrow(
+        /Badge PNG write completed but file is missing/,
+      );
     });
   });
 
