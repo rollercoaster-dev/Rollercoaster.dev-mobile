@@ -45,10 +45,14 @@ jobs:
         working-directory: .
 
       - name: Write credential files
+        # Append a trailing newline. PEM-encoded keys conventionally end with
+        # a newline after -----END PRIVATE KEY-----, and some OpenSSL/JWT
+        # parsers refuse to load a key without one. JSON parsers don't care
+        # either way; adding the newline is harmless.
         run: |
           mkdir -p ../../secrets
-          printf '%s' "${{ secrets.APPLE_ASC_KEY_P8 }}" > ../../secrets/asc-api-key.p8
-          printf '%s' "${{ secrets.ANDROID_PLAY_SERVICE_ACCOUNT_JSON }}" > ../../secrets/play-service-account.json
+          printf '%s\n' "${{ secrets.APPLE_ASC_KEY_P8 }}" > ../../secrets/asc-api-key.p8
+          printf '%s\n' "${{ secrets.ANDROID_PLAY_SERVICE_ACCOUNT_JSON }}" > ../../secrets/play-service-account.json
           chmod 600 ../../secrets/asc-api-key.p8 ../../secrets/play-service-account.json
 
       - name: Build (EAS, preview profile, both platforms)
