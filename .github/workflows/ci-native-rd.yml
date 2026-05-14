@@ -11,8 +11,10 @@ on:
       - "packages/design-tokens/**"
       - "packages/openbadges-core/**"
       - "bun.lock"
+      - "bunfig.toml"
       - "turbo.json"
       - "package.json"
+      - ".prettierignore"
       - ".github/workflows/ci-native-rd.yml"
   push:
     branches: [main]
@@ -84,6 +86,7 @@ jobs:
           fail_ci_if_error: false
 
       - name: a11y audit
+        if: always()
         working-directory: apps/native-rd
         run: bun run test:a11y:json > a11y.json
 
