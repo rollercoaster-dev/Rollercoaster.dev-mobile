@@ -51,12 +51,29 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "info@rollercoaster.dev",
         "ascAppId": "6766029904",
-        "appleTeamId": "86VL756N99"
+        "appleTeamId": "86VL756N99",
+        "ascApiKeyPath": "../../secrets/asc-api-key.p8",
+        "ascApiKeyId": "$APPLE_ASC_KEY_ID",
+        "ascApiIssuerId": "$APPLE_ASC_ISSUER_ID"
       },
       "android": {
-        "serviceAccountKeyPath": "./play-service-account.json",
+        "serviceAccountKeyPath": "../../secrets/play-service-account.json",
+        "track": "production",
+        "releaseStatus": "inProgress",
+        "rollout": 0.1
+      }
+    },
+    "preview": {
+      "ios": {
+        "ascAppId": "6766029904",
+        "appleTeamId": "86VL756N99",
+        "ascApiKeyPath": "../../secrets/asc-api-key.p8",
+        "ascApiKeyId": "$APPLE_ASC_KEY_ID",
+        "ascApiIssuerId": "$APPLE_ASC_ISSUER_ID"
+      },
+      "android": {
+        "serviceAccountKeyPath": "../../secrets/play-service-account.json",
         "track": "internal"
       }
     }
