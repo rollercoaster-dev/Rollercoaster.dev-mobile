@@ -23,6 +23,7 @@
     "test:watch": "bash scripts/jest-node.sh --watch",
     "storybook:native": "sb-rn-get-stories -c .storybook && EXPO_PUBLIC_STORYBOOK_ENABLED=true bash scripts/run-ios.sh",
     "storybook:web": "storybook dev -p 6006 --config-dir .storybook-web",
+    "storybook:web:build": "storybook build --config-dir .storybook-web --output-dir .storybook-web-static",
     "test:e2e": "bash scripts/run-e2e.sh",
     "test:e2e:single": "maestro test",
     "logs:agent": "bash scripts/agent-logs.sh",
