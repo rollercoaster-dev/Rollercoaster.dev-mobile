@@ -115,8 +115,7 @@ function FocusContent({ goalId }: { goalId: string }) {
   const { viewEvidence, viewerModals } = useEvidenceViewer();
   const { timelineHidden, setTimelineHidden } = useFocusModePrefs();
   const lifecycle = useRef({
-    announcedComplete: false,
-    triggeredCompletion: false,
+    completionFired: false,
     snappedToFirstPending: false,
     // Tracks whether we observed an incomplete-state during this mount.
     // Without this, reopening a goal (which leaves all steps completed)
@@ -256,26 +255,21 @@ function FocusContent({ goalId }: { goalId: string }) {
     if (!goal) return;
     if (!allStepsComplete) {
       lifecycle.current.sawIncomplete = true;
-      lifecycle.current.announcedComplete = false;
-      lifecycle.current.triggeredCompletion = false;
+      lifecycle.current.completionFired = false;
       return;
     }
     if (!lifecycle.current.sawIncomplete) return;
-    if (lifecycle.current.announcedComplete) return;
-    lifecycle.current.announcedComplete = true;
+    if (lifecycle.current.completionFired) return;
+    lifecycle.current.completionFired = true;
     AccessibilityInfo.announceForAccessibility(
       `All steps completed for "${goal.title}". Goal is ready to complete!`,
     );
-
-    if (!lifecycle.current.triggeredCompletion) {
-      lifecycle.current.triggeredCompletion = true;
-      const timer = setTimeout(() => {
-        if (isMounted.current) {
-          navigation.navigate("CompletionFlow", { goalId });
-        }
-      }, 400);
-      return () => clearTimeout(timer);
-    }
+    const timer = setTimeout(() => {
+      if (isMounted.current) {
+        navigation.navigate("CompletionFlow", { goalId });
+      }
+    }, 400);
+    return () => clearTimeout(timer);
   }, [goal, allStepsComplete, goalId, navigation]);
 
   const handleUndoDelete = useCallback(() => {
