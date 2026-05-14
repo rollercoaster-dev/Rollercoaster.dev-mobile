@@ -17,6 +17,7 @@ Implementation plans and vision documents. Active plans are in progress; complet
 | [2026-05-12-sentry-usage-finish.md](./2026-05-12-sentry-usage-finish.md)                                                                                        | Finish Planned Sentry rollout: logger bridge + breadcrumbs + verification         | 2026-05-12    |
 | [2026-05-14-android-bug-triage.md](./2026-05-14-android-bug-triage.md)                                                                                          | Fix Android bugs: video controls under tab bar, audio timer, badge fallback       | 2026-05-14    |
 | [2026-05-14-badge-rebake-on-reopen.md](./2026-05-14-badge-rebake-on-reopen.md) ([#15](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/15)) | Rebake badge with confirmation when a goal is reopened, updated, and re-completed | 2026-05-14    |
+| [2026-05-14-badge-completion-flow.md](./2026-05-14-badge-completion-flow.md)                                                                                    | Flow spec + flowchart for first completion, reopen, and re-completion (precedes #15) | 2026-05-14  |
 
 ## Reference
 
