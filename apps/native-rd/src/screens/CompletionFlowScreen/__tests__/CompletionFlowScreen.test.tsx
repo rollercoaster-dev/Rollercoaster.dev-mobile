@@ -1,4 +1,5 @@
 import React from "react";
+import { Alert } from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -38,9 +39,9 @@ jest.mock("../../../hooks/useAnimationPref", () => ({
 }));
 
 const mockUseCreateBadge = jest.fn<
-  { status: string; error: string | null },
+  { status: string; error: string | null; rebaked: boolean },
   [string, { enabled?: boolean; design?: unknown }]
->(() => ({ status: "done", error: null }));
+>(() => ({ status: "done", error: null, rebaked: false }));
 jest.mock("../../../hooks/useCreateBadge", () => ({
   PLACEHOLDER_IMAGE_URI: "pending:baked-image",
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -162,7 +163,11 @@ describe("CompletionFlowScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseQuery.mockReturnValue([]);
-    mockUseCreateBadge.mockReturnValue({ status: "done", error: null });
+    mockUseCreateBadge.mockReturnValue({
+      status: "done",
+      error: null,
+      rebaked: false,
+    });
   });
 
   describe("evidence prompt phase (no goal evidence)", () => {
@@ -334,7 +339,58 @@ describe("CompletionFlowScreen", () => {
       expect(screen.queryByLabelText("Reopen Goal")).not.toBeOnTheScreen();
     });
 
-    it("calls uncompleteGoal and replaces with FocusMode on reopen", () => {
+    it("shows the Reopen confirmation Alert (no immediate state change)", () => {
+      const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+      setupQueries({
+        goal: { ...GOAL, status: "completed" },
+        goalEvidence: GOAL_EVIDENCE,
+      });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      fireEvent.press(screen.getByLabelText("Reopen Goal"));
+      expect(alertSpy).toHaveBeenCalledWith(
+        "Reopen this goal?",
+        expect.stringContaining("history"),
+        expect.any(Array),
+      );
+      // No state change until the user confirms.
+      expect(mockUncompleteGoal).not.toHaveBeenCalled();
+      alertSpy.mockRestore();
+    });
+
+    it("does NOT call uncompleteGoal when the user taps Cancel on the Reopen Alert", () => {
+      const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (_t: string, _m: any, buttons: any) => {
+          const cancel = buttons.find(
+            (b: { style?: string }) => b.style === "cancel",
+          );
+          cancel?.onPress?.();
+        },
+      );
+      setupQueries({
+        goal: { ...GOAL, status: "completed" },
+        goalEvidence: GOAL_EVIDENCE,
+      });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      fireEvent.press(screen.getByLabelText("Reopen Goal"));
+      expect(mockUncompleteGoal).not.toHaveBeenCalled();
+      expect(mockReplace).not.toHaveBeenCalledWith(
+        "FocusMode",
+        expect.anything(),
+      );
+      alertSpy.mockRestore();
+    });
+
+    it("calls uncompleteGoal and replaces with FocusMode when Reopen is confirmed", () => {
+      const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (_t: string, _m: any, buttons: any) => {
+          const confirm = buttons.find(
+            (b: { text?: string }) => b.text === "Reopen",
+          );
+          confirm?.onPress?.();
+        },
+      );
       setupQueries({
         goal: { ...GOAL, status: "completed" },
         goalEvidence: GOAL_EVIDENCE,
@@ -347,6 +403,34 @@ describe("CompletionFlowScreen", () => {
       expect(mockReplace).toHaveBeenCalledWith("FocusMode", {
         goalId: "goal-1",
       });
+      alertSpy.mockRestore();
+    });
+  });
+
+  describe("celebration copy varies on rebaked flag", () => {
+    it('shows "You did it!" on a first-time bake', () => {
+      mockUseCreateBadge.mockReturnValue({
+        status: "done",
+        error: null,
+        rebaked: false,
+      });
+      setupQueries({ goalEvidence: GOAL_EVIDENCE });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      expect(screen.getByText("You did it!")).toBeOnTheScreen();
+    });
+
+    it('shows "Badge updated ✦" when the hook reports a rebake', () => {
+      mockUseCreateBadge.mockReturnValue({
+        status: "done",
+        error: null,
+        rebaked: true,
+      });
+      setupQueries({ goalEvidence: GOAL_EVIDENCE });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      expect(screen.getByText("Badge updated ✦")).toBeOnTheScreen();
+      expect(
+        screen.getByText("Badge updated with your new evidence"),
+      ).toBeOnTheScreen();
     });
   });
 
@@ -421,21 +505,33 @@ describe("CompletionFlowScreen", () => {
 
   describe("badge creation lifecycle", () => {
     it("shows loading indicator while badge is being created", () => {
-      mockUseCreateBadge.mockReturnValue({ status: "building", error: null });
+      mockUseCreateBadge.mockReturnValue({
+        status: "building",
+        error: null,
+        rebaked: false,
+      });
       setupQueries({ goalEvidence: GOAL_EVIDENCE });
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
       expect(screen.getByLabelText("Creating your badge...")).toBeOnTheScreen();
     });
 
     it("shows loading indicator during signing phase", () => {
-      mockUseCreateBadge.mockReturnValue({ status: "signing", error: null });
+      mockUseCreateBadge.mockReturnValue({
+        status: "signing",
+        error: null,
+        rebaked: false,
+      });
       setupQueries({ goalEvidence: GOAL_EVIDENCE });
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
       expect(screen.getByLabelText("Creating your badge...")).toBeOnTheScreen();
     });
 
     it("does not show loading indicator when done", () => {
-      mockUseCreateBadge.mockReturnValue({ status: "done", error: null });
+      mockUseCreateBadge.mockReturnValue({
+        status: "done",
+        error: null,
+        rebaked: false,
+      });
       setupQueries({ goalEvidence: GOAL_EVIDENCE });
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
       expect(
@@ -447,6 +543,7 @@ describe("CompletionFlowScreen", () => {
       mockUseCreateBadge.mockReturnValue({
         status: "error",
         error: "crypto unavailable",
+        rebaked: false,
       });
       setupQueries({ goalEvidence: GOAL_EVIDENCE });
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
@@ -456,21 +553,33 @@ describe("CompletionFlowScreen", () => {
     });
 
     it("shows loading indicator during storing phase", () => {
-      mockUseCreateBadge.mockReturnValue({ status: "storing", error: null });
+      mockUseCreateBadge.mockReturnValue({
+        status: "storing",
+        error: null,
+        rebaked: false,
+      });
       setupQueries({ goalEvidence: GOAL_EVIDENCE });
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
       expect(screen.getByLabelText("Creating your badge...")).toBeOnTheScreen();
     });
 
     it("shows loading indicator during baking phase", () => {
-      mockUseCreateBadge.mockReturnValue({ status: "baking", error: null });
+      mockUseCreateBadge.mockReturnValue({
+        status: "baking",
+        error: null,
+        rebaked: false,
+      });
       setupQueries({ goalEvidence: GOAL_EVIDENCE });
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
       expect(screen.getByLabelText("Creating your badge...")).toBeOnTheScreen();
     });
 
     it("shows key unavailable message when status is no-key", () => {
-      mockUseCreateBadge.mockReturnValue({ status: "no-key", error: null });
+      mockUseCreateBadge.mockReturnValue({
+        status: "no-key",
+        error: null,
+        rebaked: false,
+      });
       setupQueries({ goalEvidence: GOAL_EVIDENCE });
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
       expect(
@@ -481,14 +590,22 @@ describe("CompletionFlowScreen", () => {
     });
 
     it("still renders celebration content during badge creation", () => {
-      mockUseCreateBadge.mockReturnValue({ status: "building", error: null });
+      mockUseCreateBadge.mockReturnValue({
+        status: "building",
+        error: null,
+        rebaked: false,
+      });
       setupQueries({ goalEvidence: GOAL_EVIDENCE });
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
       expect(screen.getByText("You did it!")).toBeOnTheScreen();
     });
 
     it("still renders celebration content when status is no-key", () => {
-      mockUseCreateBadge.mockReturnValue({ status: "no-key", error: null });
+      mockUseCreateBadge.mockReturnValue({
+        status: "no-key",
+        error: null,
+        rebaked: false,
+      });
       setupQueries({ goalEvidence: GOAL_EVIDENCE });
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
       expect(screen.getByText("You did it!")).toBeOnTheScreen();
@@ -497,7 +614,11 @@ describe("CompletionFlowScreen", () => {
 
   describe("BadgeEarnedModal integration", () => {
     it("shows BadgeEarnedModal when badgeStatus is done and badge exists", () => {
-      mockUseCreateBadge.mockReturnValue({ status: "done", error: null });
+      mockUseCreateBadge.mockReturnValue({
+        status: "done",
+        error: null,
+        rebaked: false,
+      });
       setupQueries({
         goalEvidence: GOAL_EVIDENCE,
         badge: BADGE_ROW,
@@ -508,21 +629,33 @@ describe("CompletionFlowScreen", () => {
     });
 
     it("does not show BadgeEarnedModal when badgeStatus is building", () => {
-      mockUseCreateBadge.mockReturnValue({ status: "building", error: null });
+      mockUseCreateBadge.mockReturnValue({
+        status: "building",
+        error: null,
+        rebaked: false,
+      });
       setupQueries({ goalEvidence: GOAL_EVIDENCE, badge: null, allBadges: [] });
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
       expect(screen.queryByLabelText("Badge earned")).not.toBeOnTheScreen();
     });
 
     it("does not show BadgeEarnedModal when no badge row yet", () => {
-      mockUseCreateBadge.mockReturnValue({ status: "done", error: null });
+      mockUseCreateBadge.mockReturnValue({
+        status: "done",
+        error: null,
+        rebaked: false,
+      });
       setupQueries({ goalEvidence: GOAL_EVIDENCE, badge: null, allBadges: [] });
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
       expect(screen.queryByLabelText("Badge earned")).not.toBeOnTheScreen();
     });
 
     it("shows first-badge microcopy when only one badge exists", () => {
-      mockUseCreateBadge.mockReturnValue({ status: "done", error: null });
+      mockUseCreateBadge.mockReturnValue({
+        status: "done",
+        error: null,
+        rebaked: false,
+      });
       setupQueries({
         goalEvidence: GOAL_EVIDENCE,
         badge: BADGE_ROW,
@@ -534,7 +667,11 @@ describe("CompletionFlowScreen", () => {
 
     it("shows neutral microcopy when multiple badges exist", () => {
       const otherBadge = { ...BADGE_ROW, id: "badge-2", goalId: "goal-2" };
-      mockUseCreateBadge.mockReturnValue({ status: "done", error: null });
+      mockUseCreateBadge.mockReturnValue({
+        status: "done",
+        error: null,
+        rebaked: false,
+      });
       setupQueries({
         goalEvidence: GOAL_EVIDENCE,
         badge: BADGE_ROW,
@@ -545,7 +682,11 @@ describe("CompletionFlowScreen", () => {
     });
 
     it('dismisses modal on "Keep going"', () => {
-      mockUseCreateBadge.mockReturnValue({ status: "done", error: null });
+      mockUseCreateBadge.mockReturnValue({
+        status: "done",
+        error: null,
+        rebaked: false,
+      });
       setupQueries({
         goalEvidence: GOAL_EVIDENCE,
         badge: BADGE_ROW,
@@ -557,7 +698,11 @@ describe("CompletionFlowScreen", () => {
     });
 
     it('navigates to BadgeDetail via parent tab navigator on "View Badge"', () => {
-      mockUseCreateBadge.mockReturnValue({ status: "done", error: null });
+      mockUseCreateBadge.mockReturnValue({
+        status: "done",
+        error: null,
+        rebaked: false,
+      });
       setupQueries({
         goalEvidence: GOAL_EVIDENCE,
         badge: BADGE_ROW,
@@ -572,7 +717,11 @@ describe("CompletionFlowScreen", () => {
     });
 
     it("does not re-show BadgeEarnedModal after dismissal and re-render", () => {
-      mockUseCreateBadge.mockReturnValue({ status: "done", error: null });
+      mockUseCreateBadge.mockReturnValue({
+        status: "done",
+        error: null,
+        rebaked: false,
+      });
       setupQueries({
         goalEvidence: GOAL_EVIDENCE,
         badge: BADGE_ROW,

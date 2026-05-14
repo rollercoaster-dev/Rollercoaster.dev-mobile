@@ -7,6 +7,7 @@ import {
   TextInput,
   KeyboardAvoidingView,
   AccessibilityInfo,
+  Alert,
 } from "react-native";
 import type { ImageSourcePropType } from "react-native";
 import { Buffer } from "buffer";
@@ -177,14 +178,15 @@ function CompletionContent({
       : undefined);
 
   // Only create badge when evidence exists AND we have a PNG (pending or auto-captured)
-  const { status: badgeStatus, error: badgeError } = useCreateBadge(
-    goalId as GoalId,
-    {
-      ...(designJsonForBake ? { design: designJsonForBake } : {}),
-      ...(capturedPngForBake ? { capturedPng: capturedPngForBake } : {}),
-      enabled: phase === "celebration" && capturedPngForBake !== undefined,
-    },
-  );
+  const {
+    status: badgeStatus,
+    error: badgeError,
+    rebaked,
+  } = useCreateBadge(goalId as GoalId, {
+    ...(designJsonForBake ? { design: designJsonForBake } : {}),
+    ...(capturedPngForBake ? { capturedPng: capturedPngForBake } : {}),
+    enabled: phase === "celebration" && capturedPngForBake !== undefined,
+  });
   const isBadgeCreating =
     badgeStatus === "building" ||
     badgeStatus === "signing" ||
@@ -267,10 +269,27 @@ function CompletionContent({
   const isCompleted = goal?.status === GoalStatus.completed;
 
   const handleReopenGoal = () => {
-    uncompleteGoal(goalId as GoalId);
-    // replace so a back gesture doesn't drop the user back into the
-    // just-left celebration screen (which would re-show BadgeEarnedModal).
-    navigation.replace("FocusMode", { goalId });
+    // The destructive moment is here, at Reopen — not at re-Complete — so the
+    // user makes the trade-off with full context (history is preserved, badge
+    // will be re-issued) before doing the deed. Re-complete stays
+    // confirmation-free so the celebration moment isn't interrupted.
+    Alert.alert(
+      "Reopen this goal?",
+      "You can add evidence and complete it again to issue an updated badge. The current badge stays in your history.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Reopen",
+          style: "default",
+          onPress: () => {
+            uncompleteGoal(goalId as GoalId);
+            // replace so a back gesture doesn't drop the user back into the
+            // just-left celebration screen (which would re-show BadgeEarnedModal).
+            navigation.replace("FocusMode", { goalId });
+          },
+        },
+      ],
+    );
   };
 
   const handleViewBadge = () => {
@@ -439,10 +458,12 @@ function CompletionContent({
             style={styles.headline}
             accessibilityRole="header"
           >
-            You did it!
+            {rebaked ? "Badge updated ✦" : "You did it!"}
           </Text>
           <Text variant="body" style={styles.summary}>
-            All {stepRows.length} steps completed for {goal.title}
+            {rebaked
+              ? "Badge updated with your new evidence"
+              : `All ${stepRows.length} steps completed for ${goal.title}`}
           </Text>
 
           <View style={styles.actions}>
