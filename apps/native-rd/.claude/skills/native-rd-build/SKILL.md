@@ -3,7 +3,7 @@ name: native-rd-build
 description: Build native-rd for any target — local iOS simulator/device, local Release builds, EAS development/preview/production, Android (when generated). Use when the user hits a build failure, asks how to produce a build of any kind, needs to diagnose runtime errors that look build-related ("No script URL provided", missing assets, signing issues), or wants to understand what `eas.json` / `app.json` / `Podfile.properties.json` settings actually do. Also use as a pre-flight checklist before starting a fresh build.
 metadata:
   author: rollercoaster.dev
-  version: "2.4.0"
+  version: "2.5.0"
 ---
 
 # native-rd Build Playbook
@@ -11,6 +11,47 @@ metadata:
 Comprehensive build reference for `apps/native-rd`. Stack: **Expo SDK 54 + RN 0.81.5 + Hermes + new architecture (`newArchEnabled: true`)**, building with **Xcode 26.x** and EAS CLI ≥ 13.
 
 > **This skill is a living document. Update it every time you use it.** Sections are tagged with their evidence status; promote `[UNTESTED]` → `[VERIFIED <date>]` after the first successful real run, demote to `[BROKEN]` if it fails for a non-trivial reason, and add new Gotcha sections when you hit something new. Untested guidance left untouched is exactly how playbooks rot. See "Maintaining this skill" at the bottom.
+
+---
+
+## Did the user say "Xcode" or "Android Studio"?
+
+`[VERIFIED 2026-05-14]`
+
+**If yes, default to the GUI flow, not the CLI matrix below.** The whole rest of this skill is CLI-first because that is the right default for autonomous agent work — but when the user explicitly names the GUI tool, that overrides the CLI default. Don't redirect them to `bun run ios` / `bun run android`.
+
+### iOS — first-time setup in Xcode.app
+
+```bash
+cd apps/native-rd
+npx expo prebuild --platform ios        # generates ios/ from app.json (~30 sec)
+cd ios && pod install && cd ..          # ~5–10 min first time (RN built from source)
+open ios/Rollercoasterdev.xcworkspace   # ALWAYS the .xcworkspace, NEVER the .xcodeproj
+```
+
+In Xcode.app:
+
+1. Left navigator → blue **`Rollercoasterdev`** at top → middle pane → TARGETS → **`Rollercoasterdev`** → **Signing & Capabilities** tab.
+2. Tick **Automatically manage signing** → pick the team for `86VL756N99` from the Team dropdown. If the dropdown is empty: **Xcode → Settings → Accounts** → sign in with the Apple ID, then back to Signing & Capabilities.
+3. Top bar destination dropdown → pick **an iOS Simulator** (e.g. iPhone 16 Pro). Avoid old physical devices stuck on iOS 16.x — Xcode 26 can't reliably pair with them (see Gotcha 12).
+4. ▶ (`⌘R`). Metro starts automatically when the app launches in the simulator.
+
+### Android — first-time setup in Android Studio
+
+```bash
+cd apps/native-rd
+npx expo prebuild --platform android    # generates android/ from app.json
+echo "sdk.dir=$HOME/Library/Android/sdk" > android/local.properties   # required (Gotcha 7)
+open -a "Android Studio" android        # opens the generated Gradle project
+```
+
+In Android Studio: wait for Gradle sync, pick an AVD from the device dropdown, hit ▶. (NDK 27.1.12297006 must be installed — see Gotcha 8.)
+
+### When NOT to use the GUI flow
+
+- Autonomous agent loops (no human asked for Xcode) → use the CLI matrix below.
+- Release builds, EAS profiles, CI → use the CLI matrix below.
+- Debug-build iteration where Metro hot reload is the win → CLI (`bun run ios`) is faster because it starts Metro with the right hostname pin (Gotcha 11) for free.
 
 ## Evidence tags
 
@@ -584,6 +625,48 @@ If the simulator continues to show the stale URL after the fix, the dev launcher
 **Survives `expo prebuild`?** Yes — the fix lives in `scripts/run-ios.sh` / `scripts/run-android.sh`, not in `ios/` or `android/`.
 
 **Does this affect EAS?** No. EAS preview/production builds embed the JS bundle at build time and don't talk to Metro. EAS development builds talk to Metro, but the URL is set by whoever runs `expo start` against them, not by the build itself.
+
+---
+
+## Gotcha 12 — Old iPhone (iOS 16.x) cannot be debugged from Xcode 26
+
+`[VERIFIED 2026-05-14]`
+
+**Symptom (build succeeds, install fails):**
+
+```
+xcodebuild: error: Timed out waiting for all destinations matching the provided destination specifier to become available
+
+        Available destinations for the "Rollercoasterdev" scheme:
+                { platform:iOS, arch:arm64, id:00008020-..., name:Garry's iPhone,
+                  error:The developer disk image could not be mounted on this device. }
+
+DVTDeviceOperation: Encountered a build number "" that is incompatible with DVTBuildVersion.
+```
+
+Often accompanied by `Failed to enable wireless functionality on the device` (com.apple.dtdevicekit Code 805). All of these are downstream symptoms of the same root cause.
+
+**Cause:** Xcode 26 ships DDIs for iOS 16.0, 16.1, and 16.4 — **not 16.3** (or any specific intermediate build). More importantly, the device pairing protocol used by `devicectl` for iOS 16 devices is buggy in Xcode 26 (`build number ""` means Xcode can't even read the iOS build off the phone). The iPhone X (A11) is stuck on iOS 16.x forever — Apple dropped A11 from iOS 17 — so there is no version of iOS that this device + Xcode 26 will reliably talk to.
+
+**Status of attempted fixes as of 2026-05-14 (do not over-claim):**
+
+- `[NOT TRIED]` — Symlinking 16.4 DDI as 16.3 (`sudo ln -s 16.4 .../DeviceSupport/16.3`). Was suggested mid-session but never executed (got pulled into a passcode/Trust tangent before the `sudo` ran). Worth trying first next time.
+- `[NOT TRIED]` — Real 16.3 DDI from community repo (`filsv/iOSDeviceSupport`). Canonical workaround for old-iOS + new-Xcode combos. Try if Fix 1 (symlink) fails with a signature mismatch.
+- `[CONFIRMED IRRELEVANT]` — Setting passcode, enabling Developer Mode, trust handshake reset, `usbmuxd` restart, replug. All standard pairing prereqs; none resolve the DDI/protocol issue on their own. The user had Developer Mode on and the phone showing up fine in Finder/Xcode when this kept failing.
+
+**Working fallbacks if device fixes fail:**
+
+1. **Use the simulator.** Unset `IOS_DEVICE_ID` (in `.env.local` or shell), run `bun run ios` (CLI) or build from Xcode.app picking an iOS Simulator destination. Best path for daily dev when device debugging isn't critical.
+2. **EAS preview build → sideload.** `eas build --platform ios --profile preview` produces a signed IPA. Install via Apple Configurator. Loses Metro hot reload but proves the app runs natively on the old device.
+3. **Install Xcode 15.x alongside Xcode 26.** `[UNTESTED]` — last Xcode that uses the legacy lockdown protocol natively for iOS 16 devices. `sudo xcode-select -s /Applications/Xcode-15.app/Contents/Developer` before the build, switch back when done.
+
+**Lesson for future sessions (see [[tried-vs-assumed]] memory):** don't declare this combo dead until you've actually executed Fix 1 (symlink + Xcode full restart) and verified by `ls -la` that the symlink exists, then verified by re-running the build that the error changed. Confidence without execution wastes the user's time.
+
+**How to recognize this fast in future sessions:** if the user is targeting a physical iPhone and the destination listing says `error:The developer disk image could not be mounted on this device` AND the `build number ""` warning appears, check the iPhone's iOS version. If it's iOS 16.x and the device is A11/A10 hardware (iPhone X / 8 / 7 — anything that can't take iOS 17), **cut the device tangent immediately** and pivot to the simulator. Don't go down the DDI symlink / download / Trust prompt / passcode rabbit hole — none of those will work for this combo.
+
+**Survives `expo prebuild`?** N/A — this is a device-side / Xcode-side issue, not project state.
+
+**Does this affect EAS?** No — EAS cloud builders use their own toolchain. The resulting IPA installs on the device fine; only the local debug-tether is broken.
 
 ---
 
