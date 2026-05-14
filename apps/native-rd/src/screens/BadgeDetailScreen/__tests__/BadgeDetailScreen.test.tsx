@@ -10,6 +10,8 @@ import type { BadgeDetailScreenProps } from "../../../navigation/types";
 const mockNavigate = jest.fn();
 const mockGoBack = jest.fn();
 
+const mockParentNavigate = jest.fn();
+const mockGetParentFactory = jest.fn(() => ({ navigate: mockParentNavigate }));
 jest.mock("@react-navigation/native", () => {
   const actual = jest.requireActual("@react-navigation/native");
   return {
@@ -17,6 +19,7 @@ jest.mock("@react-navigation/native", () => {
     useNavigation: () => ({
       navigate: mockNavigate,
       goBack: mockGoBack,
+      getParent: mockGetParentFactory,
       setOptions: jest.fn(),
       addListener: jest.fn(() => jest.fn()),
       canGoBack: jest.fn(() => true),
@@ -35,6 +38,9 @@ jest.mock("@evolu/react", () => {
 
 jest.mock("../../../db", () => ({
   badgeWithGoalQuery: jest.fn(() => ({ __brand: "badgeWithGoalQuery" })),
+  badgeVersionsByGoalQuery: jest.fn(() => ({
+    __brand: "badgeVersionsByGoalQuery",
+  })),
 }));
 
 jest.mock("../../../hooks/useCreateBadge", () => ({
@@ -43,9 +49,11 @@ jest.mock("../../../hooks/useCreateBadge", () => ({
 
 const mockExportImage = jest.fn();
 const mockExportJSON = jest.fn();
+const mockExportDesignImage = jest.fn();
 jest.mock("../../../hooks/useBadgeExport", () => ({
   useBadgeExport: () => ({
     exportImage: mockExportImage,
+    exportDesignImage: mockExportDesignImage,
     exportJSON: mockExportJSON,
     isExportingImage: false,
     isExportingJSON: false,
@@ -59,10 +67,31 @@ const makeRow = (overrides: Record<string, unknown> = {}) => ({
   credential: "{}",
   imageUri: "pending:baked-image",
   createdAt: "2026-01-28T00:00:00.000Z",
+  updatedAt: "2026-01-28T00:00:00.000Z",
   goalTitle: "Learn TypeScript",
   completedAt: "2026-01-28T00:00:00.000Z",
   ...overrides,
 });
+
+/** Helper to set both the joined-badge query and the versions list. */
+function setupQueries({
+  badge = makeRow(),
+  versions = [] as Array<Record<string, unknown>>,
+}: {
+  badge?: ReturnType<typeof makeRow> | null;
+  versions?: Array<Record<string, unknown>>;
+} = {}) {
+  mockUseQuery.mockImplementation((query: unknown) => {
+    if (
+      typeof query === "object" &&
+      query !== null &&
+      (query as { __brand?: string }).__brand === "badgeVersionsByGoalQuery"
+    ) {
+      return versions;
+    }
+    return badge ? [badge] : [];
+  });
+}
 
 const mockRoute = {
   params: { badgeId: "badge-1" },
@@ -228,6 +257,94 @@ describe("BadgeDetailScreen", () => {
         '{"type":"VC"}',
         "Learn TypeScript",
       );
+    });
+  });
+
+  describe("outdated badge signal", () => {
+    it("renders the 'Design updated · Reopen to re-issue' caption when updatedAt > createdAt", () => {
+      setupQueries({
+        badge: makeRow({
+          createdAt: "2026-01-28T00:00:00.000Z",
+          updatedAt: "2026-01-28T10:00:00.000Z",
+        }),
+      });
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      expect(screen.getByTestId("badge-outdated-caption")).toBeOnTheScreen();
+      expect(
+        screen.getByText("Design updated · Reopen to re-issue"),
+      ).toBeOnTheScreen();
+    });
+
+    it("does NOT render the outdated caption when createdAt == updatedAt", () => {
+      setupQueries({ badge: makeRow() });
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      expect(
+        screen.queryByTestId("badge-outdated-caption"),
+      ).not.toBeOnTheScreen();
+    });
+
+    it("navigates to GoalsTab > CompletionFlow when the outdated caption is tapped", () => {
+      setupQueries({
+        badge: makeRow({
+          createdAt: "2026-01-28T00:00:00.000Z",
+          updatedAt: "2026-01-28T10:00:00.000Z",
+        }),
+      });
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      fireEvent.press(screen.getByTestId("badge-outdated-caption"));
+      expect(mockParentNavigate).toHaveBeenCalledWith("GoalsTab", {
+        screen: "CompletionFlow",
+        params: { goalId: "goal-1" },
+      });
+    });
+  });
+
+  describe("version chip + history modal", () => {
+    it("does NOT render the chip when only one version exists", () => {
+      setupQueries({
+        badge: makeRow(),
+        versions: [makeRow({ isDeleted: null })],
+      });
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      expect(screen.queryByTestId("badge-version-chip")).not.toBeOnTheScreen();
+    });
+
+    it("renders 'vN of M · History' chip when multiple versions exist", () => {
+      setupQueries({
+        badge: makeRow({ id: "badge-current" }),
+        versions: [
+          makeRow({ id: "badge-current", isDeleted: null }),
+          makeRow({ id: "badge-v1", isDeleted: 1 }),
+        ],
+      });
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      expect(screen.getByTestId("badge-version-chip")).toBeOnTheScreen();
+      expect(screen.getByText("v2 of 2 · History")).toBeOnTheScreen();
+    });
+
+    it("opens the BadgeVersionHistoryModal when the chip is tapped", () => {
+      setupQueries({
+        badge: makeRow({ id: "badge-current" }),
+        versions: [
+          makeRow({ id: "badge-current", isDeleted: null }),
+          makeRow({ id: "badge-v1", isDeleted: 1 }),
+        ],
+      });
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      fireEvent.press(screen.getByTestId("badge-version-chip"));
+      expect(screen.getByText("Version history")).toBeOnTheScreen();
     });
   });
 });

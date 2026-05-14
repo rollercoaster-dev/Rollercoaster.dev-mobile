@@ -116,4 +116,37 @@ export const styles = StyleSheet.create((theme) => ({
     fontWeight: theme.fontWeight.black,
     color: theme.colors.accentPurpleFg,
   },
+  // Dashed amber frame applied to the preview when the design has been
+  // edited since the bake — visual "this baked artifact is out of date"
+  // signal paired with the tap-target caption below the badge.
+  previewContainerOutdated: {
+    borderColor: theme.colors.warning,
+    borderStyle: "dashed",
+    borderWidth: theme.borderWidth.medium,
+  },
+  outdatedCaption: {
+    alignSelf: "center",
+    paddingHorizontal: theme.space[3],
+    paddingVertical: theme.space[2],
+    borderWidth: theme.borderWidth.thin,
+    borderColor: theme.colors.warning,
+    borderStyle: "dashed",
+  },
+  outdatedCaptionText: {
+    ...theme.textStyles.label,
+    color: theme.colors.warning,
+    textAlign: "center",
+  },
+  versionChip: {
+    alignSelf: "center",
+    paddingHorizontal: theme.space[3],
+    paddingVertical: theme.space[1],
+    borderWidth: theme.borderWidth.thin,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.backgroundSecondary,
+  },
+  versionChipText: {
+    ...theme.textStyles.label,
+    color: theme.colors.textSecondary,
+  },
 }));

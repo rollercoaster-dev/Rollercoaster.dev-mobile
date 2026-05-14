@@ -5,9 +5,10 @@ import {
   Image,
   ActivityIndicator,
   Alert,
+  Pressable,
   type LayoutChangeEvent,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery } from "@evolu/react";
@@ -17,18 +18,28 @@ import { Card } from "../../components/Card";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { IconButton } from "../../components/IconButton";
 import { HeaderBand } from "../../components/ScreenHeader";
-import { badgeWithGoalQuery, deleteBadge } from "../../db";
-import type { BadgeId } from "../../db";
+import {
+  badgeWithGoalQuery,
+  badgeVersionsByGoalQuery,
+  deleteBadge,
+} from "../../db";
+import type { BadgeId, GoalId } from "../../db";
 import { PLACEHOLDER_IMAGE_URI } from "../../hooks/useCreateBadge";
 import { useBadgeExport } from "../../hooks/useBadgeExport";
 import { BadgeRenderer } from "../../badges/BadgeRenderer";
 import { parseBadgeDesign } from "../../badges/types";
+import { designChangedSinceBake } from "../../badges/credentialDiff";
 import { formatDate } from "../../utils/format";
 import type {
   BadgeDetailScreenProps,
   BadgesStackParamList,
+  RootTabParamList,
 } from "../../navigation/types";
 import { styles } from "./BadgeDetailScreen.styles";
+import {
+  BadgeVersionHistoryModal,
+  type BadgeVersionRow,
+} from "./BadgeVersionHistoryModal";
 
 /**
  * Initial reservation for the floating preview before onLayout fires.
@@ -114,10 +125,20 @@ function BadgeDetailContent({
   const rows = useQuery(query);
   const badge = rows[0] ?? null;
 
+  // Fetch every version of this goal's badge so we can render the "vN of M"
+  // chip and feed the history modal. Safe before we know the goalId — the
+  // query factory accepts a placeholder when the badge hasn't resolved yet.
+  const versionsQuery = useMemo(
+    () => badgeVersionsByGoalQuery((badge?.goalId ?? "") as GoalId),
+    [badge?.goalId],
+  );
+  const versionRows = useQuery(versionsQuery);
+
   const [imageLoadFailed, setImageLoadFailed] = useState(false);
   const [previewHeight, setPreviewHeight] = useState(
     PREVIEW_OVERLAY_INITIAL_HEIGHT,
   );
+  const [historyOpen, setHistoryOpen] = useState(false);
   const {
     exportImage,
     exportDesignImage,
@@ -175,6 +196,45 @@ function BadgeDetailContent({
   );
   const hasIdentityChip = Boolean(goalIcon || goalColor);
 
+  // The visible badge is "outdated" when the design has been edited since the
+  // bake — see designChangedSinceBake. We surface this with a dashed amber
+  // frame and a caption that doubles as a tap target into the Reopen flow.
+  const isOutdated = designChangedSinceBake({
+    createdAt: (badge.createdAt as string | null) ?? null,
+    updatedAt: (badge.updatedAt as string | null) ?? null,
+  });
+
+  // Version chip: only show when there's more than one row (active +
+  // soft-deleted). The current row's index in the newest-first list is its
+  // position — we know it's always the first non-deleted entry.
+  const totalVersions = versionRows.length;
+  const currentVersionIndex = versionRows.findIndex((r) => r.isDeleted == null);
+  const currentVersion =
+    currentVersionIndex >= 0 ? totalVersions - currentVersionIndex : 0;
+  const showVersionChip = totalVersions > 1;
+
+  const goalId = (badge.goalId as string) ?? null;
+  const handleOutdatedCaptionPress = () => {
+    if (!goalId) return;
+    // Cross-tab navigation: from BadgesTab → GoalsTab → CompletionFlow. The
+    // user lands on the celebration screen for that goal, where the Reopen
+    // confirmation Alert is wired up.
+    const parentNav = navigation.getParent<NavigationProp<RootTabParamList>>();
+    if (!parentNav) return;
+    parentNav.navigate("GoalsTab", {
+      screen: "CompletionFlow",
+      params: { goalId },
+    });
+  };
+
+  const versionsForModal: BadgeVersionRow[] = versionRows.map((r) => ({
+    id: r.id as string,
+    credential: r.credential as string | null,
+    imageUri: r.imageUri as string | null,
+    createdAt: r.createdAt as string | null,
+    isDeleted: (r.isDeleted ?? null) as 0 | 1 | null,
+  }));
+
   return (
     <>
       <ScrollView
@@ -205,6 +265,40 @@ function BadgeDetailContent({
 
         {earnedDate ? (
           <Text style={styles.description}>Earned {earnedDate}</Text>
+        ) : null}
+
+        {isOutdated ? (
+          // Pressable, not Button: this is a captioned status indicator with
+          // dashed amber framing — Button would not match the warning chrome.
+          // eslint-disable-next-line local/no-shared-component-reimplementation
+          <Pressable
+            onPress={handleOutdatedCaptionPress}
+            accessibilityRole="button"
+            accessibilityLabel="Design updated. Reopen to re-issue the badge."
+            style={styles.outdatedCaption}
+            testID="badge-outdated-caption"
+          >
+            <Text style={styles.outdatedCaptionText}>
+              Design updated · Reopen to re-issue
+            </Text>
+          </Pressable>
+        ) : null}
+
+        {showVersionChip ? (
+          // Pressable, not Button: this is a compact metadata chip ("vN of M
+          // · History"), not a primary action — Button styling would overweight it.
+          // eslint-disable-next-line local/no-shared-component-reimplementation
+          <Pressable
+            onPress={() => setHistoryOpen(true)}
+            accessibilityRole="button"
+            accessibilityLabel={`v${currentVersion} of ${totalVersions}, view version history`}
+            style={styles.versionChip}
+            testID="badge-version-chip"
+          >
+            <Text style={styles.versionChipText}>
+              v{currentVersion} of {totalVersions} · History
+            </Text>
+          </Pressable>
         ) : null}
 
         <Button
@@ -287,8 +381,18 @@ function BadgeDetailContent({
           const next = e.nativeEvent.layout.height;
           setPreviewHeight((prev) => (prev === next ? prev : next));
         }}
+        accessibilityLabel={
+          isOutdated
+            ? `${goalTitle} badge — design updated, current badge is out of date`
+            : undefined
+        }
       >
-        <View style={styles.previewContainer}>
+        <View
+          style={[
+            styles.previewContainer,
+            isOutdated && styles.previewContainerOutdated,
+          ]}
+        >
           {design ? (
             <View
               ref={badgeRendererRef}
@@ -314,6 +418,13 @@ function BadgeDetailContent({
           )}
         </View>
       </View>
+
+      <BadgeVersionHistoryModal
+        visible={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        versions={versionsForModal}
+        goalTitle={goalTitle}
+      />
     </>
   );
 }

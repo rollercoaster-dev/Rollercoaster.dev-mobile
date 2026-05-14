@@ -34,7 +34,7 @@ interface BadgeVersionHistoryModalProps {
   visible: boolean;
   onClose: () => void;
   /** Newest first. Includes both active and soft-deleted rows. */
-  versions: ReadonlyArray<BadgeVersionRow>;
+  versions: readonly BadgeVersionRow[];
   goalTitle: string;
 }
 
@@ -137,6 +137,10 @@ export function BadgeVersionHistoryModal({
                     const issuedOn =
                       extractIssuedOn(row.credential) ?? row.createdAt;
                     return (
+                      // Intentional Pressable, not Button: rows carry a
+                      // thumbnail, version label, date, and "Current" pill —
+                      // richer than Button supports.
+                      // eslint-disable-next-line local/no-shared-component-reimplementation
                       <Pressable
                         key={row.id}
                         onPress={() => setSelectedId(row.id)}

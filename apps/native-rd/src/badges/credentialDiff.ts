@@ -43,7 +43,7 @@ function extractEvidenceIdsFromCredential(credentialJson: string): Set<string> {
 /** True when the evidence IDs in the stored credential differ from current evidence. */
 export function evidenceIdsDifferFromCredential(
   credentialJson: string,
-  currentEvidence: ReadonlyArray<{ id: string }>,
+  currentEvidence: readonly { id: string }[],
 ): boolean {
   const credentialIds = extractEvidenceIdsFromCredential(credentialJson);
   const currentIds = new Set(currentEvidence.map((e) => e.id));
@@ -91,7 +91,7 @@ export function shouldRebake(
     createdAt: string | null;
     updatedAt: string | null;
   },
-  currentEvidence: ReadonlyArray<{ id: string }>,
+  currentEvidence: readonly { id: string }[],
 ): boolean {
   if (designChangedSinceBake(badge)) return true;
   return evidenceIdsDifferFromCredential(badge.credential, currentEvidence);

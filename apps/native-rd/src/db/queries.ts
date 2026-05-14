@@ -893,6 +893,10 @@ export const badgeWithGoalQuery = (badgeId: BadgeId) =>
         "badge.imageUri",
         "badge.design",
         "badge.createdAt",
+        // updatedAt powers the "design changed since bake" detection on this
+        // surface — see designChangedSinceBake. Without it the outdated-frame
+        // signal can't fire.
+        "badge.updatedAt",
         "goal.title as goalTitle",
         "goal.description as goalDescription",
         "goal.icon as goalIcon",
