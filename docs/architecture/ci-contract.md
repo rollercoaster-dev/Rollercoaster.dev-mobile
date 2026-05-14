@@ -7,13 +7,13 @@ checks that matter for the changed code.
 
 ## Workflows
 
-| Workflow                        | File                                 | Triggers on                                                                                                                                                                                                                                                              |
-| ------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `ci-native-rd`                  | `.github/workflows/ci-native-rd.yml` | Changes under `apps/native-rd/**`, `packages/design-tokens/**`, `packages/openbadges-core/**`, or root inputs that affect the gate (`bun.lock`, `bunfig.toml`, `turbo.json`, `package.json`, `.prettierignore`) / the workflow file. Docs-only changes are filtered out. |
-| `ci-packages`                   | `.github/workflows/ci-packages.yml`  | Changes under `packages/**`, or root inputs that affect the gate (`bun.lock`, `bunfig.toml`, `turbo.json`, `package.json`, `tsconfig.json`, `eslint.config.mjs`, `.prettierignore`) / the workflow file. Package docs are filtered out.                                  |
-| `codeql`                        | `.github/workflows/codeql.yml`       | Security scanning (JS/TS), weekly + on push/PR.                                                                                                                                                                                                                          |
-| `dco`                           | `.github/workflows/dco.yml`          | Verifies `Signed-off-by:` on commits touching app/package paths.                                                                                                                                                                                                         |
-| `claude` / `claude-code-review` | `.github/workflows/claude*.yml`      | Claude Code Review integration. Manual / comment-triggered.                                                                                                                                                                                                              |
+| Workflow                        | File                                 | Triggers on                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ci-native-rd`                  | `.github/workflows/ci-native-rd.yml` | Changes under `apps/native-rd/**` (excluding `docs/`, `research/`, `prototypes/` subdirs), `packages/design-tokens/**`, `packages/openbadges-core/**`, or root inputs that affect the gate (`bun.lock`, `bunfig.toml`, `turbo.json`, `package.json`, `.prettierignore`) / the workflow file. A blanket `**/*.md` exclusion is deliberately NOT applied — see "Why no blanket `**/*.md` exclusion" below. |
+| `ci-packages`                   | `.github/workflows/ci-packages.yml`  | Changes under `packages/**` (excluding `**/*.md` and `**/docs/**`), or root inputs that affect the gate (`bun.lock`, `bunfig.toml`, `turbo.json`, `package.json`, `tsconfig.json`, `eslint.config.mjs`, `.prettierignore`) / the workflow file.                                                                                                                                                          |
+| `codeql`                        | `.github/workflows/codeql.yml`       | Security scanning (JS/TS), weekly + on push/PR.                                                                                                                                                                                                                                                                                                                                                          |
+| `dco`                           | `.github/workflows/dco.yml`          | Verifies `Signed-off-by:` on commits touching app/package paths.                                                                                                                                                                                                                                                                                                                                         |
+| `claude` / `claude-code-review` | `.github/workflows/claude*.yml`      | Claude Code Review integration. Manual / comment-triggered.                                                                                                                                                                                                                                                                                                                                              |
 
 Both validation workflows use the same install + cache layout:
 
@@ -45,6 +45,28 @@ Both validation workflows use the same install + cache layout:
 | Lint         | `bun run turbo lint --filter='./packages/*'`       |
 | Test         | `bun run turbo test --filter='./packages/*'`       |
 | Build        | `bun run turbo build --filter='./packages/*'`      |
+
+## Why no blanket `**/*.md` exclusion
+
+The `ci-native-rd` workflow filter does NOT carry a top-level
+`!**/*.md` (or equivalent) exclusion. An earlier revision did, and it
+caused the workflow to never register on PRs that mixed code changes
+with any markdown file (PR template edits, plan docs, architecture
+docs touched in the same PR). PR #26 was the canary that surfaced
+this — see commit `cedbc3c` for the removal rationale.
+
+What this means in practice:
+
+- A PR that touches only `apps/native-rd/CLAUDE.md` (or any top-level
+  markdown under `apps/native-rd/`) WILL still trigger `ci-native-rd`.
+  The cost is a few minutes of CI per pure-docs PR.
+- The only excluded native-rd subdirs are `docs/`, `research/`,
+  `prototypes/` (curated dirs whose contents never affect build/test).
+- For `ci-packages`, `**/*.md` and `**/docs/**` ARE excluded under
+  `packages/**`, because no package code-path consumes those.
+
+The tradeoff is intentional: correctness on mixed PRs over efficiency
+on pure-docs PRs.
 
 ## Why Jest (not `bun test`) for native-rd
 
