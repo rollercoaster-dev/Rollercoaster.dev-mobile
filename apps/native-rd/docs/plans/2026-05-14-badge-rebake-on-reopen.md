@@ -1,9 +1,11 @@
 # Badge Rebake on Reopen + Re-Completion
 
-**Status:** Implementation plan — ready for fresh branch
+**Status:** Shipped on `lowly-agreement` + PR [#29](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/pull/29) — **blocked by a regression**: after a confirmed rebake, the `BadgeEarnedModal` opens but the badge image slot is completely empty (no image AND no 🏅 placeholder fallback). Two fix attempts have not resolved it; see [Open regression](#open-regression-post-rebake-modal-empty-2026-05-14) at the bottom.
 **Tracking issue:** [#15](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/15)
+**PR:** [#29](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/pull/29)
 **Created:** 2026-05-14 · **Last updated:** 2026-05-14
 **Related:**
+
 - [2026-05-14-badge-completion-flow.md](./2026-05-14-badge-completion-flow.md) — flow spec + flowchart + microcopy; read first for the desired behaviour, then this doc for the implementation sketch.
 - [2026-05-14-android-bug-triage.md](./2026-05-14-android-bug-triage.md) — same session; the reopen-loop fix landed there, this is the follow-up feature it surfaced.
 
@@ -29,6 +31,7 @@ When a badge already exists, `useCreateBadge` short-circuits to `"done"` and `Ba
 A compounding bug: `BadgeEarnedModal.tsx:83-99` has no `onError` fallback. When the existing `imageUri` resolves but the file is unreadable (e.g. clean install with restored Evolu state, broken save on first bake), the image slot renders empty — see the screenshot attached to the original investigation.
 
 We want:
+
 1. When the user reopens, updates, and re-completes a goal, prompt them with three options: cancel, rebake with the existing design, or redesign first and then rebake.
 2. The modal stops rendering empty when an image URI doesn't resolve.
 
@@ -48,14 +51,14 @@ See [the flow spec](./2026-05-14-badge-completion-flow.md) for the full flowchar
 
 Resolved in the spec — restated for quick reference:
 
-| Question                  | Decision                                                                                                                                                                              |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| What counts as "updated"? | Diff vs credential snapshot: `evidence[]` count, `goal.title`, `goal.description`. Catches the common "added evidence" case.                                                          |
-| Cancel UX                 | Back to FocusMode, goal stays `active`.                                                                                                                                               |
-| Rebake design source      | Default: `existingBadge.design` if set, else `createDefaultBadgeDesign(goal.title, goal.color)`. User can override via **Redesign first** (saves new design through existing redesign mode, then offscreen capture picks it up). |
-| Confirmation UI           | Native `Alert.alert`, three buttons.                                                                                                                                                  |
-| Microcopy                 | See spec [Microcopy](./2026-05-14-badge-completion-flow.md#microcopy) section; aligned with `~/Code/rollercoaster.dev/landing/docs/BRAND_LANGUAGE.md`.                                 |
-| New status name           | `"rebake-required"`                                                                                                                                                                   |
+| Question                  | Decision                                                                                                                                                                                                                               |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| What counts as "updated"? | Diff vs credential snapshot: `evidence[]` count, `goal.title`, `goal.description`. Catches the common "added evidence" case.                                                                                                           |
+| Cancel UX                 | Back to FocusMode, goal stays `active`.                                                                                                                                                                                                |
+| Rebake design source      | Default: `existingBadge.design` if set, else `createDefaultBadgeDesign(goal.title, goal.color)`. User can override via **Redesign first** (saves new design through existing redesign mode, then offscreen capture picks it up).       |
+| Confirmation UI           | Native `Alert.alert`, three buttons.                                                                                                                                                                                                   |
+| Microcopy                 | See spec [Microcopy](./2026-05-14-badge-completion-flow.md#microcopy) section; aligned with `~/Code/rollercoaster.dev/landing/docs/BRAND_LANGUAGE.md`.                                                                                 |
+| New status name           | `"rebake-required"`                                                                                                                                                                                                                    |
 | Return-signal mechanism   | Route param `returnAction: "rebake"` on `navigate("BadgeDesigner", …)`. `BadgeDesignerScreen` reads it and on save navigates back with a matching param; `CompletionFlowScreen` reads that param on focus and flips `rebakeConfirmed`. |
 
 ## Implementation sketch
@@ -119,7 +122,7 @@ Pure-logic addition with no UI changes.
   - **Cancel** → `navigation.goBack()`.
   - **Rebake** → `setRebakeConfirmed(true)`.
   - **Redesign first** → `navigation.navigate("BadgeDesigner", { mode: "redesign", badgeId, returnAction: "rebake" })`.
-- Offscreen fallback host (`CompletionFlowScreen.tsx:312-329`): currently fires only when `pendingDesignStore` is empty *and* no existing badge. Extend the gating so it also fires for the rebake path keyed on `existingBadge.design` (or `createDefaultBadgeDesign(…)` when `design` is null). The capture feeds the same `capturedPngForBake` slot that's already wired into `useCreateBadge`.
+- Offscreen fallback host (`CompletionFlowScreen.tsx:312-329`): currently fires only when `pendingDesignStore` is empty _and_ no existing badge. Extend the gating so it also fires for the rebake path keyed on `existingBadge.design` (or `createDefaultBadgeDesign(…)` when `design` is null). The capture feeds the same `capturedPngForBake` slot that's already wired into `useCreateBadge`.
 - On focus, check route params for `returnAction === "rebake"`; if set, `setRebakeConfirmed(true)` and clear the param via `navigation.setParams(…)`.
 - Modal microcopy variant: pass an `isRebake` boolean (or derive from a third condition) so `BadgeEarnedModal` can show `Badge updated.` with a matching `accessibilityLabel`.
 - Tests:
@@ -167,3 +170,94 @@ Pure-logic addition with no UI changes.
    - **Back from designer without saving:** same setup → tap **Redesign first** → back-gesture out of the designer → Alert reappears.
 3. Regression: complete a fresh goal — no Alert, no extra prompt, normal flow.
 4. Accessibility: VoiceOver / TalkBack reads the rebake-variant microcopy correctly and announces the modal as `"Badge updated"`.
+
+## Landed work (PR #29, branch `lowly-agreement`)
+
+Commits on top of `main` (most recent first):
+
+| Commit    | Scope                                                                                                                                                                    |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `41407e8` | **fix(native-rd):** post-rebake modal image — verify save in `saveBadgePNG`, remount `<Image>` on URI change via `key={imageUri}`. **DID NOT FIX the regression below.** |
+| `ea0ff23` | refactor(native-rd): extract `mergeEvidenceRows` + share `expectedAchievementDescription` (drive-by `/simplify` pass).                                                   |
+| `17f4ea6` | chore(native-rd): credentialDiff prefers `readonly T[]` over `ReadonlyArray<T>` (lint nit).                                                                              |
+| `3a0efb0` | feat(native-rd): BadgeDesignerScreen redesign-mode rebake return signal.                                                                                                 |
+| `6ea0552` | feat(native-rd): CompletionFlowScreen rebake alert + offscreen-host re-seed + modal `isRebake` variant + return-param consumer.                                          |
+| `839fd3a` | feat(native-rd): branch `useCreateBadge` on existing-badge state for re-completion (5 paths: completed / no-diff silent / rebake-required / confirmed / first-bake).     |
+| `8d47a5c` | feat(native-rd): add `hasChangesSinceBake` credential-diff helper.                                                                                                       |
+| `113c386` | fix(native-rd): `BadgeEarnedModal` falls back to placeholder on image load failure (`onError`).                                                                          |
+| `d435a13` | docs(plans): add badge completion flow spec + refresh rebake plan.                                                                                                       |
+
+Local jest: 146 tests pass across `useCreateBadge | CompletionFlow | BadgeEarnedModal | badgeStorage | credentialDiff | BadgeDesigner`. Type-check + lint clean on changed files. **Automated test coverage does not catch the open regression — it's a runtime-only failure on iOS.**
+
+## Open regression: post-rebake modal empty (2026-05-14)
+
+### Symptom (from on-device test)
+
+After a confirmed **Rebake** path through the new Alert:
+
+1. Alert fires, three buttons visible.
+2. User taps **Rebake**.
+3. Modal opens with View Badge / Customize / Keep going buttons + microcopy.
+4. **The 120×120 badge image slot is completely empty.** Not the 🏅 placeholder — fully blank.
+
+This is the _exact_ symptom from the original report (#15) that motivated the modal hardening commit (`113c386`). Despite that hardening + two follow-up defensive fixes, the slot is still empty on rebake.
+
+The user has not confirmed whether the same regression hits the **Redesign first** path — only **Rebake** has been verified to break. The silent-complete path (no diff, accidental reopen) and the first-bake happy path have not been re-verified post-rebake-fix.
+
+### What's been tried (and didn't fix it)
+
+1. **`onError` fallback on `<Image>`** (`113c386`): if the URI resolves but the file can't load, render the 🏅 placeholder instead of an empty slot. — User still sees fully blank, so either `onError` isn't firing OR the placeholder render itself is failing.
+2. **`<Image key={imageUri}>`** (`41407e8`): force a fresh native mount when the rebake swaps `badgeRow.imageUri` mid-display, in case iOS UIImageView held onto the previous fetch. — No effect.
+3. **Post-write existence check in `saveBadgePNG`** (`41407e8`): throw if `writeAsStringAsync` resolved but the file isn't actually on disk (iOS sandbox / quota silent failure). — If this were the cause, the IIFE's catch would set `imageUri = PLACEHOLDER` and the 🏅 placeholder would render. User says empty, not placeholder, so this isn't it.
+
+### What we know vs. what we don't
+
+**Known good in this flow (because their respective tests / earlier behaviour pass):**
+
+- `useCreateBadge` enters the bake IIFE on rebake (the modal opens at all, which requires `badgeStatus === "done"` AND `badgeRow` non-null).
+- `bakePNG` produces a buffer of acceptable shape (the same code-path runs on first bake which works).
+- `updateBadge` accepts a 1-1000 char `imageUri` (typical paths are ~150 chars).
+- The Alert + return-param round-trip works (Alert is firing, Rebake button is reachable).
+
+**Unknown / not yet diagnosed:**
+
+- What is actually rendering in the image slot — `<Image>` with a broken `uri`, or the placeholder `<View>`, or neither?
+- What `badgeRow.imageUri` value is in state at modal open time? (OLD stale value, NEW correct value, `PLACEHOLDER_IMAGE_URI`, empty string, undefined cast to string?)
+- Does the iOS device's `Documents/badges/` directory actually contain the file referenced by the new `imageUri`?
+- Does the modal ever re-render with an updated `imageUri` after the Evolu reactive query catches up, or does it stay on the first value it observed?
+- Is `BadgeEarnedModal`'s `badgePlaceholder` style rendering with zero height? (If the parent `card` style or the placeholder style has changed and the View is rendered with height: 0, it would look empty.)
+
+### Hypotheses to test next session (in priority order)
+
+1. **The placeholder View itself has zero size / wrong style.** Cheapest to check first. Read `BadgeEarnedModal.styles.ts`, confirm `badgePlaceholder` has explicit width/height. If a `flex` change recently shrank it, the user would see "empty" even when `hasImage === false`.
+2. **`badgeRow.imageUri` is still the _old_ baked URI** (Evolu reactive lag) and the **old file was unbaked / overwritten** between sessions. The `key={imageUri}` makes this worse on the second render swap, not better, because each remount restarts the load. Verify by logging `badgeRow.imageUri` at the moment `setShowBadgeModal(true)` fires AND on every render where the modal is open.
+3. **`onError` is firing but `setImageLoadFailed(true)` is being immediately reset** by the `useEffect(() => setImageLoadFailed(false), [imageUri])` whenever a re-render happens. If `imageUri` is "changing" each render (e.g., a new String wrapper or re-derived value), the failure latch is wiped before React commits the placeholder branch. **Check that `imageUri` is referentially stable across re-renders when the underlying value hasn't changed.** Specifically `badgeRow.imageUri ?? PLACEHOLDER_IMAGE_URI` could yield a new string identity per render if `badgeRow` itself reactively updates without `imageUri` changing.
+4. **The IIFE silently swallowed a bake/save error.** Check Sentry breadcrumbs for the rebake session — was `badge` → `store` emitted? Was a `badge.create` error reported? If `saveBadgePNG` is now throwing post-fix, the IIFE catch sets `imageUri = PLACEHOLDER` AND reports — but the modal still tries to render with PLACEHOLDER, which should show the 🏅 emoji. If the user is seeing EMPTY where 🏅 should be, that points back to hypothesis (1): the placeholder render itself is broken.
+5. **The Modal's `<Image>` is rendering but with `width: 0, height: 0`.** Force a console.log inside the BadgeEarnedModal render to print the actual `imageUri` + `hasImage` + the resolved `styles.badgeImage`. On a device, add a temporary debug overlay that prints the URI value.
+
+### Concrete next-step debugging recipe
+
+1. Add temporary debug `Text` elements inside `BadgeEarnedModal.tsx` right next to the image slot:
+   ```tsx
+   <Text>uri={String(imageUri)}</Text>
+   <Text>hasImage={String(hasImage)}</Text>
+   <Text>failed={String(imageLoadFailed)}</Text>
+   ```
+2. Re-run the rebake flow on the iOS sim. Read the values.
+3. If `hasImage=true` and `uri` looks valid → the file is missing or unreadable. Open Files.app → On My iPhone → `Rollercoasterdev` → `Documents/badges/` and check whether the URI's filename exists.
+4. If `hasImage=false` → the placeholder branch is rendering. The "empty modal" perception means the placeholder View has no visible content. Inspect `badgePlaceholder` style.
+5. If `uri` is `pending:baked-image` → the bake IIFE's `imageUri` ended up as `PLACEHOLDER_IMAGE_URI`, meaning `saveBadgePNG` threw. Check Sentry / logs.
+6. If `uri` is an empty string or `undefined` cast to string → the DB row update path is dropping the URI somewhere; inspect `updateBadge` validation.
+
+### File map for next session
+
+- `apps/native-rd/src/screens/BadgeEarnedModal/BadgeEarnedModal.tsx` — modal render + `hasImage` gating + `imageLoadFailed` latch + `key={imageUri}`.
+- `apps/native-rd/src/screens/BadgeEarnedModal/BadgeEarnedModal.styles.ts` — `badgeImage` / `badgePlaceholder` styles. **Read this first** for hypothesis (1).
+- `apps/native-rd/src/screens/CompletionFlowScreen/CompletionFlowScreen.tsx` — modal trigger effect (line ~268), `badgeRow.imageUri ?? PLACEHOLDER_IMAGE_URI` prop derivation (~line 580 in current state).
+- `apps/native-rd/src/hooks/useCreateBadge.ts` — bake IIFE with `if (existingBadge) { updateBadge(...) } else { createBadge(...) }`; the `let imageUri = PLACEHOLDER_IMAGE_URI; try { imageUri = await saveBadgePNG(...) } catch ...` pattern.
+- `apps/native-rd/src/badges/badgeStorage.ts` — `saveBadgePNG` with post-write `getInfoAsync` verification.
+
+### Out-of-scope follow-ups (already tracked / known)
+
+- The bug is **only verified for the Rebake button**; Redesign-first hasn't been re-tested. Don't assume both paths fail or both succeed until each is exercised.
+- The original empty-slot report from #15 (without a rebake — just a clean install with restored Evolu state) should also be re-verified once the rebake path is fixed.
