@@ -25,7 +25,7 @@
 
 <!-- How was this tested? What should reviewers verify? -->
 
-- [ ] Tests pass locally (`bun test`)
+- [ ] Tests pass locally (`bun run test`)
 - [ ] Lint passes (`bun run lint`)
 - [ ] Type check passes (`bun run type-check`)
 - [ ] Format check passes (`bun run format:check`)
