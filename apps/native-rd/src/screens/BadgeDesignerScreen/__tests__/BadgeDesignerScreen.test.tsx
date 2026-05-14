@@ -259,7 +259,7 @@ describe("BadgeDesignerScreen", () => {
     expect(mockGoBack).toHaveBeenCalled();
   });
 
-  it("redesign + returnAction=rebake: navigates to CompletionFlow with the goal id after save", () => {
+  it("redesign + returnAction=rebake: captures a fresh PNG, stores it via pendingDesignStore, then navigates to CompletionFlow", async () => {
     mockUseQuery.mockReturnValue([makeRow()]);
     const redesignRoute = {
       params: {
@@ -279,14 +279,25 @@ describe("BadgeDesignerScreen", () => {
 
     fireEvent.press(screen.getByLabelText("Save Design"));
     expect(mockUpdateBadge).toHaveBeenCalled();
-    expect(mockNavigate).toHaveBeenCalledWith("CompletionFlow", {
-      goalId: "goal-1",
-      returnAction: "rebake",
-    });
+    // captureBadge + pendingDesignStore.set + navigate run after an async tick.
+    await waitFor(() =>
+      expect(mockNavigate).toHaveBeenCalledWith("CompletionFlow", {
+        goalId: "goal-1",
+        returnAction: "rebake",
+      }),
+    );
+    expect(mockCaptureBadge).toHaveBeenCalled();
+    expect(mockPendingDesignStore.set).toHaveBeenCalledWith(
+      "goal-1",
+      expect.objectContaining({
+        designJson: expect.stringContaining('"shape":"circle"'),
+        pngBase64: expect.any(String),
+      }),
+    );
     expect(mockGoBack).not.toHaveBeenCalled();
   });
 
-  it("redesign without returnAction: falls back to goBack after save (no rebake signal)", () => {
+  it("redesign without returnAction: falls back to goBack after save (no rebake signal, no fresh capture)", async () => {
     mockUseQuery.mockReturnValue([makeRow()]);
     const redesignRoute = {
       params: { mode: "redesign" as const, badgeId: "badge-1" },
@@ -301,11 +312,45 @@ describe("BadgeDesignerScreen", () => {
     );
 
     fireEvent.press(screen.getByLabelText("Save Design"));
-    expect(mockGoBack).toHaveBeenCalled();
+    await waitFor(() => expect(mockGoBack).toHaveBeenCalled());
     expect(mockNavigate).not.toHaveBeenCalledWith(
       "CompletionFlow",
       expect.anything(),
     );
+    // No rebake signal → no fresh capture, no pendingDesignStore write.
+    expect(mockCaptureBadge).not.toHaveBeenCalled();
+    expect(mockPendingDesignStore.set).not.toHaveBeenCalled();
+  });
+
+  it("redesign + returnAction=rebake: still navigates to CompletionFlow if captureBadge fails (rebake will reuse existing PNG)", async () => {
+    mockUseQuery.mockReturnValue([makeRow()]);
+    mockCaptureBadge.mockRejectedValueOnce(new Error("captureRef boom"));
+    const redesignRoute = {
+      params: {
+        mode: "redesign" as const,
+        badgeId: "badge-1",
+        returnAction: "rebake" as const,
+      },
+      key: "BadgeDesigner-1",
+      name: "BadgeDesigner" as const,
+    };
+    renderWithProviders(
+      <BadgeDesignerScreen
+        route={redesignRoute as never}
+        navigation={{} as never}
+      />,
+    );
+
+    fireEvent.press(screen.getByLabelText("Save Design"));
+    await waitFor(() =>
+      expect(mockNavigate).toHaveBeenCalledWith("CompletionFlow", {
+        goalId: "goal-1",
+        returnAction: "rebake",
+      }),
+    );
+    // Capture failed → pendingDesignStore not written; CompletionFlow's
+    // rebake will fall through to reading the existing badge image.
+    expect(mockPendingDesignStore.set).not.toHaveBeenCalled();
   });
 
   it("redesign + returnAction=rebake: Back gesture must not flip the rebake signal", () => {

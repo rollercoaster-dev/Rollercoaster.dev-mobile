@@ -212,12 +212,21 @@ function CompletionContent({
     goalId,
   ]);
 
-  const capturedPngForBake = pendingCapturedPng ?? fallbackPng ?? undefined;
+  // The pending design store is the deliberate "I just designed this" path —
+  // its PNG is authoritative. The offscreen-host PNG is opportunistic and
+  // should only feed the bake when nothing better exists.
   const designJsonForBake =
     pendingDesignJson ??
     (fallbackDesign && fallbackPng
       ? JSON.stringify(fallbackDesign)
       : undefined);
+  const hasReadableExistingPng = Boolean(
+    badgeRow?.imageUri && badgeRow.imageUri !== PLACEHOLDER_IMAGE_URI,
+  );
+  const hasAnyPngForBake =
+    pendingCapturedPng !== undefined ||
+    fallbackPng !== null ||
+    hasReadableExistingPng;
 
   // Tracks whether the user has approved a rebake via the Alert (either
   // "Rebake" outright, or after returning from BadgeDesigner via "Redesign
@@ -225,13 +234,14 @@ function CompletionContent({
   // `rebake-required` to actually rebaking.
   const [rebakeConfirmed, setRebakeConfirmed] = useState(false);
 
-  // Only create badge when evidence exists AND we have a PNG (pending or auto-captured)
+  // Only create badge when evidence exists AND we have something to bake into.
   const { status: badgeStatus, error: badgeError } = useCreateBadge(
     goalId as GoalId,
     {
       ...(designJsonForBake ? { design: designJsonForBake } : {}),
-      ...(capturedPngForBake ? { capturedPng: capturedPngForBake } : {}),
-      enabled: phase === "celebration" && capturedPngForBake !== undefined,
+      ...(pendingCapturedPng ? { freshCapturedPng: pendingCapturedPng } : {}),
+      ...(fallbackPng ? { capturedPng: fallbackPng } : {}),
+      enabled: phase === "celebration" && hasAnyPngForBake,
       confirmRebake: rebakeConfirmed,
     },
   );

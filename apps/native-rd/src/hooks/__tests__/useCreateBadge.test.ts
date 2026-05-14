@@ -335,6 +335,45 @@ describe("useCreateBadge", () => {
       );
     });
 
+    it("rebake prefers freshCapturedPng over the existing baked PNG (Redesign-first path)", async () => {
+      const stale = JSON.stringify({
+        credentialSubject: {
+          achievement: {
+            name: "My Goal",
+            description: "Achievement: My Goal",
+          },
+        },
+        evidence: [],
+      });
+      mockExistingBadge({
+        credential: stale,
+        imageUri: "file:///app/badges/orig.png",
+      });
+      // Existing read is available — should be ignored because the caller
+      // supplied a fresh capture (freshly-designed badge from the designer).
+      mockBadges.readBadgePNG.mockResolvedValueOnce(
+        Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 0xff]),
+      );
+      const FRESH_PNG = Buffer.from([
+        137, 80, 78, 71, 13, 10, 26, 10, 1, 2, 3, 4, 5,
+      ]);
+
+      renderHook(() =>
+        useCreateBadge(GOAL_ID, {
+          freshCapturedPng: FRESH_PNG,
+          confirmRebake: true,
+        }),
+      );
+      await act(async () => {});
+
+      // The fresh capture wins — bake gets THOSE bytes, not the existing file.
+      expect(mockBadges.bakePNG).toHaveBeenCalledWith(
+        FRESH_PNG,
+        expect.any(String),
+      );
+      expect(mockBadges.readBadgePNG).not.toHaveBeenCalled();
+    });
+
     it("rebake skips the existing-PNG read when the row's imageUri is the placeholder sentinel", async () => {
       const stale = JSON.stringify({
         credentialSubject: {

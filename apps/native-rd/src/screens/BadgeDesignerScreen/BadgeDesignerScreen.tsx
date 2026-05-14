@@ -473,6 +473,7 @@ function BadgeDesignerContentBadge({
   // returnAction, so the typed navigate() call is never reached from there.
   const navigation =
     useNavigation<NativeStackNavigationProp<GoalsStackParamList>>();
+  const { theme } = useUnistyles();
   const query = useMemo(
     () => badgeWithGoalQuery(badgeId as BadgeId),
     [badgeId],
@@ -494,6 +495,8 @@ function BadgeDesignerContentBadge({
   const currentDesign = design ?? initialDesign;
   const goalColor = badge?.goalColor as string | null | undefined;
   const goalIdForReturn = (badge?.goalId as string | null | undefined) ?? null;
+  const previewRef = useRef<View | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const derivedFrameParams = useFrameParamsForGoal(
     (badge?.goalId as GoalId | null | undefined) ?? null,
@@ -501,8 +504,9 @@ function BadgeDesignerContentBadge({
     (badge?.completedAt as string | null | undefined) ?? null,
   );
 
-  const handleSave = useCallback(() => {
-    if (!currentDesign) return;
+  const handleSave = useCallback(async () => {
+    if (!currentDesign || isSaving) return;
+    setIsSaving(true);
     try {
       updateBadge(badgeId as BadgeId, {
         design: JSON.stringify(currentDesign),
@@ -513,9 +517,38 @@ function BadgeDesignerContentBadge({
         "Save Failed",
         "Could not save your badge design. Please try again.",
       );
+      setIsSaving(false);
       return;
     }
+
     if (returnAction === "rebake" && goalIdForReturn) {
+      // Capture the freshly-designed preview as a PNG so CompletionFlow can
+      // feed it into the rebake as `freshCapturedPng`. Without this, the
+      // rebake falls back to re-using the prior baked image — which renders
+      // the OLD design with the new credential, defeating the whole point
+      // of Redesign-first.
+      try {
+        const pngBuffer = await captureBadge(
+          previewRef,
+          getCaptureDimensions(
+            currentDesign,
+            undefined,
+            getRendererLayoutOptions(theme),
+          ),
+        );
+        pendingDesignStore.set(goalIdForReturn, {
+          designJson: JSON.stringify(currentDesign),
+          pngBase64: pngBuffer.toString("base64"),
+        });
+      } catch (captureErr) {
+        // Capture failures shouldn't block the navigation — the rebake will
+        // gracefully fall back to re-baking the existing baked image. Log
+        // so we can detect chronic capture problems.
+        logger.warn(
+          "Redesign-rebake capture failed; rebake will reuse existing PNG",
+          { badgeId, error: captureErr },
+        );
+      }
       // CompletionFlowScreen reads `returnAction` on focus, flips
       // rebakeConfirmed, and clears the param. Navigating (instead of
       // goBack) ensures the param is delivered even if the back gesture
@@ -524,10 +557,20 @@ function BadgeDesignerContentBadge({
         goalId: goalIdForReturn,
         returnAction: "rebake",
       });
+      setIsSaving(false);
       return;
     }
     navigation.goBack();
-  }, [badgeId, currentDesign, navigation, returnAction, goalIdForReturn]);
+    setIsSaving(false);
+  }, [
+    badgeId,
+    currentDesign,
+    isSaving,
+    navigation,
+    returnAction,
+    goalIdForReturn,
+    theme,
+  ]);
 
   if (!badge || !currentDesign) {
     return (
@@ -552,8 +595,10 @@ function BadgeDesignerContentBadge({
       goalTitle={badgeGoalTitle}
       derivedFrameParams={derivedFrameParams}
       onDesignChange={setDesign}
-      onSave={handleSave}
+      onSave={() => void handleSave()}
       onBack={() => navigation.goBack()}
+      saveLoading={isSaving}
+      previewRef={previewRef}
     />
   );
 }

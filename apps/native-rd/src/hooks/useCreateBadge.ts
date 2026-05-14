@@ -88,7 +88,20 @@ function toBase64Url(bytes: Uint8Array): string {
 }
 
 export interface UseCreateBadgeOptions {
-  /** Pre-captured 512x512 PNG from captureBadge(). When provided, replaces the solid-color fallback. */
+  /**
+   * **Authoritative** pre-captured PNG of the badge the user just committed
+   * to — e.g. the result of the BadgeDesigner's captureBadge on save. When
+   * set, this is the source of truth for the bake; it wins over any
+   * existing-on-disk badge image.
+   */
+  freshCapturedPng?: Buffer;
+  /**
+   * **Opportunistic** pre-captured PNG, intended for the first-bake fallback
+   * when the user skipped the designer (CompletionFlowScreen's offscreen
+   * BadgeRenderer host). Only used when neither `freshCapturedPng` nor the
+   * existing-on-disk image is available — the offscreen capture has been
+   * observed to snapshot a transparent layer before the SVG paints.
+   */
   capturedPng?: Buffer;
   /** Serialized BadgeDesign JSON to persist on the badge record. */
   design?: string;
@@ -126,7 +139,9 @@ export function useCreateBadge(
   const evidenceRef = useRef({ goalEvidence, stepEvidence });
   evidenceRef.current = { goalEvidence, stepEvidence };
 
-  // Same pattern for capturedPng and design — read latest value without adding to deps.
+  // Same pattern for PNG inputs and design — read latest value without adding to deps.
+  const freshCapturedPngRef = useRef(options?.freshCapturedPng);
+  freshCapturedPngRef.current = options?.freshCapturedPng;
   const capturedPngRef = useRef(options?.capturedPng);
   capturedPngRef.current = options?.capturedPng;
   const designRef = useRef(options?.design);
@@ -280,43 +295,59 @@ export function useCreateBadge(
         setStatus("baking");
         breadcrumb({ category: "badge", message: "bake" });
 
-        // PNG source priority:
-        //   1. Rebake-with-existing-design — re-read the previously baked
-        //      file and re-bake the new credential into the same pixels.
-        //      Skips the offscreen capture host entirely, which has been
-        //      observed to snapshot a transparent layer before the SVG
-        //      paints (producing a blank PNG that bakes + saves cleanly
-        //      but renders empty in the modal).
-        //   2. Caller-supplied captured PNG (pending design, designer
-        //      preview, or auto-captured default for fresh first bakes).
+        // PNG source priority (highest first):
+        //   1. `freshCapturedPng` — caller-supplied authoritative capture
+        //      (BadgeDesigner save → pendingDesignStore). Reflects the
+        //      user's most recent design choice, so it wins over anything
+        //      we'd read from disk.
+        //   2. Existing badge's previously baked file. For Rebake-without-
+        //      redesign: same pixels as the badge the user already had,
+        //      just re-baked with the refreshed credential. Skips the
+        //      offscreen capture host, which has been observed to snapshot
+        //      a transparent layer before the SVG paints.
+        //   3. `capturedPng` — offscreen fallback. Last-resort for first
+        //      bakes when the user skipped the designer.
         let pngBuffer: Buffer | null = null;
-        const existingImageUri =
-          existingBadge?.imageUri &&
-          existingBadge.imageUri !== PLACEHOLDER_IMAGE_URI
-            ? (existingBadge.imageUri as string)
-            : null;
-        if (existingImageUri) {
-          try {
-            const existing = await readBadgePNG(existingImageUri);
-            if (isPNG(existing)) {
-              pngBuffer = existing;
-            } else {
-              logger.warn(
-                "Existing badge PNG is not a valid PNG; falling back to capture",
-                { goalId, imageUri: existingImageUri },
-              );
-            }
-          } catch (readErr) {
-            logger.warn(
-              "Failed to read existing badge PNG; falling back to capture",
-              { goalId, imageUri: existingImageUri, error: readErr },
+
+        if (freshCapturedPngRef.current) {
+          if (!isPNG(freshCapturedPngRef.current)) {
+            throw new Error(
+              "useCreateBadge: freshCapturedPng is not a valid PNG buffer",
             );
           }
+          pngBuffer = freshCapturedPngRef.current;
         }
+
+        if (!pngBuffer) {
+          const existingImageUri =
+            existingBadge?.imageUri &&
+            existingBadge.imageUri !== PLACEHOLDER_IMAGE_URI
+              ? (existingBadge.imageUri as string)
+              : null;
+          if (existingImageUri) {
+            try {
+              const existing = await readBadgePNG(existingImageUri);
+              if (isPNG(existing)) {
+                pngBuffer = existing;
+              } else {
+                logger.warn(
+                  "Existing badge PNG is not a valid PNG; falling back to capture",
+                  { goalId, imageUri: existingImageUri },
+                );
+              }
+            } catch (readErr) {
+              logger.warn(
+                "Failed to read existing badge PNG; falling back to capture",
+                { goalId, imageUri: existingImageUri, error: readErr },
+              );
+            }
+          }
+        }
+
         if (!pngBuffer) {
           if (!capturedPngRef.current) {
             throw new Error(
-              "useCreateBadge: capturedPng is required — callers must provide a captured badge PNG (from a pending design or auto-captured default) before enabling badge creation",
+              "useCreateBadge: no PNG source available — callers must provide freshCapturedPng or capturedPng (or there must be a readable existing badge image)",
             );
           }
           if (!isPNG(capturedPngRef.current)) {
