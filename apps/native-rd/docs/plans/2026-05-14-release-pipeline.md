@@ -811,3 +811,44 @@ Open decisions from research doc:
 - (5) ASC API key migration → **decided: yes, now.** Encoded in Tasks 0 and 2.
 
 No placeholders, no "TODO" steps, no unspecified commands.
+
+---
+
+## Implementation deviations (recorded during execution on PR #28)
+
+Captured here so anyone reading the plan after the fact knows where reality
+parted ways from the original text.
+
+- **Tasks 5 + 6 triggers — click-only.** Plan originally had Task 5 firing
+  on `push: branches: [main]` and Task 6 firing on `push: tags: ["v*.*.*"]`.
+  Per a user directive during execution, both became click-only: Task 5 is
+  `workflow_dispatch` only; Task 6 is `release: types: [published]` +
+  `workflow_dispatch`. release-please still publishes the Release on PR
+  merge, so the production happy path is unchanged.
+- **Task 4 — `ci.yml` thin-caller refactor abandoned.** PR #26 landed on
+  `main` mid-execution and replaced the single monorepo-era `ci.yml` with
+  three path-filtered workflows (`ci-native-rd.yml`, `ci-packages.yml`,
+  `ci-docs.yml`). The original Task 4 step "make `ci.yml` a caller of
+  `_validate.yml`" no longer applies — there is no `ci.yml`. `_validate.yml`
+  still exists but services only the release workflows (`build-internal`,
+  `build-production`); the PR-time CI gates own their own (richer)
+  validation contract.
+- **Task 6 Sentry org/project.** Plan placeholder used `rollercoaster-dev`
+  for `SENTRY_ORG`. Verified against `app.json`'s `@sentry/react-native/expo`
+  plugin block — actual value is `rollercoasterdev` (no dash). Workflow uses
+  the verified value.
+- **`printf` newline + secret-via-env hardening.** Two iterations on the
+  credential-writing step, both from Copilot review feedback on PR #28:
+  first added a trailing newline (`printf '%s\n'`) so PEM keys are
+  parser-friendly, then moved the secrets to `env:` so multi-line content
+  can't be expanded into the script source by `${{ secrets.* }}`
+  interpolation.
+- **`inputs.ref` default on `build-internal`.** Initial draft hardcoded
+  `default: "main"` on the workflow_dispatch input; that overrode the
+  selection in the "Use workflow from" dropdown. Final version drops the
+  default and falls through to `github.ref`, so the dropdown choice is the
+  implicit ref.
+- **Runbook Android-rollout command.** Plan / first runbook draft pointed
+  at `npx eas-cli submit:rollout` — that subcommand does not exist.
+  Replaced with Play Console UI flow + a `fastlane supply` example for
+  scripted advancement.
