@@ -204,3 +204,13 @@ Per `apps/native-rd/CLAUDE.md`, run native builds (not `expo start`):
    - **Badge**: Create a fresh goal with no prior badges. Complete it. Add evidence. Confirm: no blue badge modal appears; the celebration card instead shows the "Design your badge" CTA. Tap it → `BadgeDesigner` opens in `new-goal` mode → design + save → returns to completion screen → `BadgeEarnedModal` now opens with the _designed_ badge image, not blue.
 
 3. **Regression check**: Complete a _second_ goal where a badge design already exists in `pendingDesignStore` (via the New Goal → design flow). Confirm the modal still appears immediately with the designed image — the `needs-design` branch should not fire when `capturedPng` is provided.
+
+---
+
+## Follow-ups from `/simplify` review (commit dfb0aeb)
+
+Items flagged by review but intentionally out of scope for this fix:
+
+- **#21** — Centralize `GoalsStackNav` / `BadgesStackNav` type aliases. Five+ screens repeat `useNavigation<NativeStackNavigationProp<GoalsStackParamList>>()` inline; `EditModeScreen.tsx:57` still uses the older `NavigationProp<…>` form.
+- **#22** — Clarify FocusMode auto-nav behavior when steps re-complete in the same mount post-Reopen. May be intended; needs product input. Related to #15 (badge rebake on reopen).
+- **#23** — Stabilize `goal` reference in `FocusModeScreen.tsx:103` to avoid effect re-runs on every Evolu emission. Pre-existing, not a regression.
