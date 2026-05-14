@@ -29,16 +29,25 @@ jobs:
         run: |
           set -euo pipefail
 
-          # List non-merge commits in the PR
-          commits=$(git log --no-merges --format='%H' "${BASE_SHA}..${HEAD_SHA}")
+          # List non-merge commits in the PR (hash<TAB>author-email)
+          commits=$(git log --no-merges --format='%H%x09%ae' "${BASE_SHA}..${HEAD_SHA}")
           missing=""
 
-          for sha in $commits; do
+          # Bot author-email patterns we exempt from the DCO trailer requirement.
+          # GitHub bot accounts use *+<bot>@users.noreply.github.com or *[bot]@users.noreply.github.com.
+          bot_re='(^[0-9]+\+(Copilot|dependabot|github-actions)(\[bot\])?@users\.noreply\.github\.com$|^[^@]+\[bot\]@users\.noreply\.github\.com$)'
+
+          while IFS=$'\t' read -r sha author_email; do
+            [ -z "$sha" ] && continue
+            if echo "$author_email" | grep -qE "$bot_re"; then
+              echo "Skipping bot-authored commit $sha ($author_email)"
+              continue
+            fi
             if ! git show -s --format=%B "$sha" | grep -qE "^Signed-off-by: .+ <.+@.+>$"; then
               subject=$(git show -s --format=%s "$sha")
               missing="${missing}${sha} ${subject}"$'\n'
             fi
-          done
+          done <<< "$commits"
 
           if [ -n "$missing" ]; then
             echo "::error::The following commits are missing a 'Signed-off-by:' trailer (DCO)."
