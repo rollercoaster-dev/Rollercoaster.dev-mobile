@@ -1,4 +1,5 @@
 import React from "react";
+import { Alert } from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -12,6 +13,7 @@ import { CompletionFlowScreen } from "../CompletionFlowScreen";
 const mockGoBack = jest.fn();
 const mockNavigate = jest.fn();
 const mockReplace = jest.fn();
+const mockSetParams = jest.fn();
 const mockParentNavigate = jest.fn();
 const mockGetParent = jest.fn(() => ({ navigate: mockParentNavigate }));
 jest.mock("@react-navigation/native", () => {
@@ -23,6 +25,7 @@ jest.mock("@react-navigation/native", () => {
       goBack: mockGoBack,
       navigate: mockNavigate,
       replace: mockReplace,
+      setParams: mockSetParams,
       getParent: mockGetParent,
     })),
   };
@@ -585,6 +588,172 @@ describe("CompletionFlowScreen", () => {
       expect(screen.queryByLabelText("Badge earned")).not.toBeOnTheScreen();
       rerender(<CompletionFlowScreen {...routeProps} />);
       expect(screen.queryByLabelText("Badge earned")).not.toBeOnTheScreen();
+    });
+
+    it("renders rebake variant of BadgeEarnedModal after a rebake-required → done transition", () => {
+      // The hook first reports `rebake-required` (no DB writes yet), then after
+      // confirmRebake flips and the pipeline completes, settles into `done`.
+      // The screen latches `didRebake` on the first sighting so the modal can
+      // pick the rebake microcopy + a11y label.
+      mockUseCreateBadge
+        .mockReturnValueOnce({ status: "rebake-required", error: null })
+        .mockReturnValue({ status: "done", error: null });
+      setupQueries({
+        goalEvidence: GOAL_EVIDENCE,
+        badge: BADGE_ROW,
+        allBadges: [BADGE_ROW],
+      });
+      const { rerender } = renderWithProviders(
+        <CompletionFlowScreen {...routeProps} />,
+      );
+      rerender(<CompletionFlowScreen {...routeProps} />);
+      expect(screen.getByText("Badge updated.")).toBeOnTheScreen();
+      expect(screen.getByLabelText("Badge updated")).toBeOnTheScreen();
+    });
+  });
+
+  describe("rebake-on-reopen alert", () => {
+    let alertSpy: jest.SpyInstance;
+    beforeEach(() => {
+      alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    });
+    afterEach(() => {
+      alertSpy.mockRestore();
+    });
+
+    function findButton(
+      label: string,
+    ): { text: string; onPress?: () => void; style?: string } | undefined {
+      const lastCall = alertSpy.mock.calls.at(-1);
+      if (!lastCall) return undefined;
+      const buttons = lastCall[2] as Array<{
+        text: string;
+        onPress?: () => void;
+        style?: string;
+      }>;
+      return buttons.find((b) => b.text === label);
+    }
+
+    it("fires Alert.alert with the rebake copy + three buttons when status is rebake-required", () => {
+      mockUseCreateBadge.mockReturnValue({
+        status: "rebake-required",
+        error: null,
+      });
+      setupQueries({
+        goalEvidence: GOAL_EVIDENCE,
+        badge: BADGE_ROW,
+        allBadges: [BADGE_ROW],
+      });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      expect(alertSpy).toHaveBeenCalledTimes(1);
+      const [title, body, buttons] = alertSpy.mock.calls[0];
+      expect(title).toBe("Rebake your badge?");
+      expect(body).toBe(
+        "Things changed since you last earned this. Rebake replaces the original.",
+      );
+      expect((buttons as Array<{ text: string }>).map((b) => b.text)).toEqual([
+        "Cancel",
+        "Rebake",
+        "Redesign first",
+      ]);
+    });
+
+    it("Cancel: navigates back to FocusMode (goal stays active)", () => {
+      mockUseCreateBadge.mockReturnValue({
+        status: "rebake-required",
+        error: null,
+      });
+      setupQueries({
+        goalEvidence: GOAL_EVIDENCE,
+        badge: BADGE_ROW,
+        allBadges: [BADGE_ROW],
+      });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      const cancel = findButton("Cancel");
+      expect(cancel?.style).toBe("cancel");
+      cancel?.onPress?.();
+      expect(mockGoBack).toHaveBeenCalled();
+    });
+
+    it("Rebake: re-invokes useCreateBadge with confirmRebake: true on the next render", () => {
+      mockUseCreateBadge.mockReturnValue({
+        status: "rebake-required",
+        error: null,
+      });
+      setupQueries({
+        goalEvidence: GOAL_EVIDENCE,
+        badge: BADGE_ROW,
+        allBadges: [BADGE_ROW],
+      });
+      const { rerender } = renderWithProviders(
+        <CompletionFlowScreen {...routeProps} />,
+      );
+      findButton("Rebake")?.onPress?.();
+      rerender(<CompletionFlowScreen {...routeProps} />);
+      expect(mockUseCreateBadge).toHaveBeenLastCalledWith(
+        "goal-1",
+        expect.objectContaining({ confirmRebake: true }),
+      );
+    });
+
+    it("Redesign first: navigates to BadgeDesigner with returnAction=rebake and the badge id", () => {
+      mockUseCreateBadge.mockReturnValue({
+        status: "rebake-required",
+        error: null,
+      });
+      setupQueries({
+        goalEvidence: GOAL_EVIDENCE,
+        badge: BADGE_ROW,
+        allBadges: [BADGE_ROW],
+      });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      findButton("Redesign first")?.onPress?.();
+      expect(mockNavigate).toHaveBeenCalledWith("BadgeDesigner", {
+        mode: "redesign",
+        badgeId: "badge-1",
+        returnAction: "rebake",
+      });
+    });
+
+    it("does not fire the alert when status is not rebake-required", () => {
+      mockUseCreateBadge.mockReturnValue({ status: "done", error: null });
+      setupQueries({
+        goalEvidence: GOAL_EVIDENCE,
+        badge: BADGE_ROW,
+        allBadges: [BADGE_ROW],
+      });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      expect(alertSpy).not.toHaveBeenCalled();
+    });
+
+    it("returnAction=rebake on focus flips confirmRebake and clears the param", () => {
+      mockUseCreateBadge.mockReturnValue({
+        status: "rebake-required",
+        error: null,
+      });
+      setupQueries({
+        goalEvidence: GOAL_EVIDENCE,
+        badge: BADGE_ROW,
+        allBadges: [BADGE_ROW],
+      });
+      const rebakeReturnRoute = {
+        route: {
+          key: "CompletionFlow-1",
+          name: "CompletionFlow" as const,
+          params: { goalId: "goal-1", returnAction: "rebake" as const },
+        },
+        navigation: {} as any,
+      };
+      const { rerender } = renderWithProviders(
+        <CompletionFlowScreen {...rebakeReturnRoute} />,
+      );
+      // setParams must be invoked to clear the consumed signal.
+      expect(mockSetParams).toHaveBeenCalledWith({ returnAction: undefined });
+      rerender(<CompletionFlowScreen {...rebakeReturnRoute} />);
+      expect(mockUseCreateBadge).toHaveBeenLastCalledWith(
+        "goal-1",
+        expect.objectContaining({ confirmRebake: true }),
+      );
     });
   });
 });

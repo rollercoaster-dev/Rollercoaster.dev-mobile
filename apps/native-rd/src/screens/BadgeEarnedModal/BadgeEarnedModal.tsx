@@ -19,6 +19,12 @@ export interface BadgeEarnedModalProps {
   /** File URI for the badge image, or PLACEHOLDER_IMAGE_URI when the baked image is unavailable. */
   imageUri: string;
   isFirstBadge: boolean;
+  /**
+   * When true, the modal swaps to the "Badge updated." rebake variant: the
+   * microcopy + a11y label both match what sighted users see. Defaults to
+   * false (first-completion behaviour).
+   */
+  isRebake?: boolean;
   onViewBadge: () => void;
   onContinue: () => void;
   onCustomize?: () => void;
@@ -28,6 +34,7 @@ export function BadgeEarnedModal({
   visible,
   imageUri,
   isFirstBadge,
+  isRebake = false,
   onViewBadge,
   onContinue,
   onCustomize,
@@ -59,13 +66,20 @@ export function BadgeEarnedModal({
   }));
 
   const hasImage = imageUri !== PLACEHOLDER_IMAGE_URI && !imageLoadFailed;
-  const microcopy = isFirstBadge ? "First one. (noted.)" : "Badge earned.";
+  // Rebake takes precedence over first-badge — by definition the rebake variant
+  // only applies when a prior badge exists.
+  const microcopy = isRebake
+    ? "Badge updated."
+    : isFirstBadge
+      ? "First one. (noted.)"
+      : "Badge earned.";
+  const a11yLabel = isRebake ? "Badge updated" : "Badge earned";
   const isE2E = process.env.EXPO_PUBLIC_E2E_MODE === "true";
   const cardA11yProps = isE2E
     ? ({ accessible: false } as const)
     : ({
         accessible: true,
-        accessibilityLabel: "Badge earned",
+        accessibilityLabel: a11yLabel,
         accessibilityLiveRegion: "polite" as const,
       } as const);
 

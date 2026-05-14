@@ -7,10 +7,15 @@ import {
   TextInput,
   KeyboardAvoidingView,
   AccessibilityInfo,
+  Alert,
 } from "react-native";
 import type { ImageSourcePropType } from "react-native";
 import { Buffer } from "buffer";
-import { useNavigation, type NavigationProp } from "@react-navigation/native";
+import {
+  useNavigation,
+  useIsFocused,
+  type NavigationProp,
+} from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@evolu/react";
 import { useUnistyles } from "react-native-unistyles";
@@ -26,7 +31,7 @@ import {
   getRendererLayoutOptions,
 } from "../../badges/BadgeRenderer";
 import { captureBadge, getCaptureDimensions } from "../../badges/captureBadge";
-import { createDefaultBadgeDesign } from "../../badges/types";
+import { createDefaultBadgeDesign, parseBadgeDesign } from "../../badges/types";
 import type { BadgeDesign } from "../../badges/types";
 import {
   goalsQuery,
@@ -93,13 +98,22 @@ function CompletionContent({
   goalId,
   pendingDesignJson,
   pendingCapturedPng,
+  returnAction,
 }: {
   goalId: string;
   pendingDesignJson: string | undefined;
   pendingCapturedPng: Buffer | undefined;
+  /**
+   * Set when the user returns from BadgeDesigner via the rebake "Redesign
+   * first" path. Consumed once on focus → flips `rebakeConfirmed` and is
+   * then cleared via `navigation.setParams` so a later remount doesn't
+   * auto-rebake again.
+   */
+  returnAction?: "rebake";
 }) {
   const navigation =
     useNavigation<NativeStackNavigationProp<GoalsStackParamList>>();
+  const isFocused = useIsFocused();
   const { theme } = useUnistyles();
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
@@ -127,21 +141,45 @@ function CompletionContent({
     }
   }, [hasGoalEvidence, phase]);
 
-  // Default-design fallback for goals with no pending design (typically goals
-  // whose New-Goal session expired before completion, since pendingDesignStore
-  // is in-memory). Render an offscreen BadgeRenderer with the design-system
-  // default (rounded-rectangle + first-letter monogram), capture once, and
-  // feed the PNG into useCreateBadge. Kills the old solid-blue fallback.
+  // Offscreen capture host for either:
+  //   (a) first completion without a pending design → fall back to the
+  //       design-system default (rounded-rectangle + first-letter monogram), or
+  //   (b) re-completion that needs a rebake → reuse the existing badge's
+  //       persisted design (or default if the existing record has none).
+  // Either way the captured PNG flows into useCreateBadge.capturedPng.
   const goalTitleForDefault = (goal?.title as string | null) ?? "";
   const goalColorForDefault = (goal?.color as string | null) ?? null;
+  const existingDesignParsed: BadgeDesign | null = badgeRow?.design
+    ? parseBadgeDesign(badgeRow.design as string)
+    : null;
   const fallbackDesign: BadgeDesign | null =
     !pendingCapturedPng && goal
-      ? createDefaultBadgeDesign(goalTitleForDefault, goalColorForDefault)
+      ? (existingDesignParsed ??
+        createDefaultBadgeDesign(goalTitleForDefault, goalColorForDefault))
       : null;
   const fallbackRef = useRef<View | null>(null);
   const [fallbackPng, setFallbackPng] = useState<Buffer | null>(null);
   const [fallbackHostLaidOut, setFallbackHostLaidOut] = useState(false);
   const fallbackCaptureStarted = useRef(false);
+  // Track which design produced the cached PNG so a reactive design swap
+  // (e.g. the user saved a fresh design via the Redesign-first flow) forces
+  // a recapture rather than baking the stale image.
+  const lastCapturedDesignKeyRef = useRef<string | null>(null);
+  const fallbackDesignKey = fallbackDesign
+    ? JSON.stringify(fallbackDesign)
+    : null;
+
+  useEffect(() => {
+    if (
+      fallbackDesignKey &&
+      fallbackDesignKey !== lastCapturedDesignKeyRef.current
+    ) {
+      // Design changed since the last capture — invalidate so the capture
+      // effect below re-fires with the new design.
+      setFallbackPng(null);
+      fallbackCaptureStarted.current = false;
+    }
+  }, [fallbackDesignKey]);
 
   useEffect(() => {
     if (pendingCapturedPng || !fallbackDesign || fallbackPng) return;
@@ -153,8 +191,12 @@ function CompletionContent({
       undefined,
       getRendererLayoutOptions(theme),
     );
+    const capturedKey = fallbackDesignKey;
     captureBadge(fallbackRef, dimensions)
-      .then((buf) => setFallbackPng(buf))
+      .then((buf) => {
+        lastCapturedDesignKeyRef.current = capturedKey;
+        setFallbackPng(buf);
+      })
       .catch((err) => {
         logger.error("Default-design capture failed", { goalId, error: err });
         reportError(err, { area: "badge.create", kind: "bake" });
@@ -163,6 +205,7 @@ function CompletionContent({
   }, [
     pendingCapturedPng,
     fallbackDesign,
+    fallbackDesignKey,
     fallbackPng,
     fallbackHostLaidOut,
     theme,
@@ -176,6 +219,12 @@ function CompletionContent({
       ? JSON.stringify(fallbackDesign)
       : undefined);
 
+  // Tracks whether the user has approved a rebake via the Alert (either
+  // "Rebake" outright, or after returning from BadgeDesigner via "Redesign
+  // first"). Passed through to useCreateBadge so it can move from
+  // `rebake-required` to actually rebaking.
+  const [rebakeConfirmed, setRebakeConfirmed] = useState(false);
+
   // Only create badge when evidence exists AND we have a PNG (pending or auto-captured)
   const { status: badgeStatus, error: badgeError } = useCreateBadge(
     goalId as GoalId,
@@ -183,6 +232,7 @@ function CompletionContent({
       ...(designJsonForBake ? { design: designJsonForBake } : {}),
       ...(capturedPngForBake ? { capturedPng: capturedPngForBake } : {}),
       enabled: phase === "celebration" && capturedPngForBake !== undefined,
+      confirmRebake: rebakeConfirmed,
     },
   );
   const isBadgeCreating =
@@ -195,6 +245,10 @@ function CompletionContent({
   const [showBadgeModal, setShowBadgeModal] = useState(false);
   const hasShownModal = useRef(false);
   const capturedIsFirstBadge = useRef(false);
+  // Latched true once the hook has reported `rebake-required` this session,
+  // so when status flips to `done` the modal can pick the rebake variant.
+  // Survives the post-bake reactive `existingBadge` update.
+  const [didRebake, setDidRebake] = useState(false);
 
   // Start confetti when entering celebration phase
   useEffect(() => {
@@ -204,12 +258,67 @@ function CompletionContent({
   }, [phase]);
 
   useEffect(() => {
+    if (badgeStatus === "rebake-required") {
+      setDidRebake(true);
+    }
+  }, [badgeStatus]);
+
+  useEffect(() => {
     if (badgeStatus === "done" && badgeRow && !hasShownModal.current) {
       hasShownModal.current = true;
       capturedIsFirstBadge.current = allBadges.length === 1;
       setShowBadgeModal(true);
     }
   }, [badgeStatus, badgeRow, allBadges.length]);
+
+  // Consume the rebake-return signal once on focus: flip `rebakeConfirmed`
+  // (so useCreateBadge advances out of `rebake-required`) and immediately
+  // clear the route param so a later focus / remount doesn't re-trigger.
+  useEffect(() => {
+    if (!isFocused || returnAction !== "rebake") return;
+    setRebakeConfirmed(true);
+    navigation.setParams({ returnAction: undefined });
+  }, [isFocused, returnAction, navigation]);
+
+  // Alert dispatch — one per focus session, re-fired when the screen
+  // regains focus (e.g. user backed out of the designer without saving).
+  const alertShownThisFocusRef = useRef(false);
+  useEffect(() => {
+    if (!isFocused) {
+      alertShownThisFocusRef.current = false;
+      return;
+    }
+    if (badgeStatus !== "rebake-required") return;
+    if (rebakeConfirmed) return;
+    if (alertShownThisFocusRef.current) return;
+    if (!badgeRow) return;
+    alertShownThisFocusRef.current = true;
+    const badgeId = String(badgeRow.id);
+    Alert.alert(
+      "Rebake your badge?",
+      "Things changed since you last earned this. Rebake replaces the original.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+          onPress: () => navigation.goBack(),
+        },
+        {
+          text: "Rebake",
+          onPress: () => setRebakeConfirmed(true),
+        },
+        {
+          text: "Redesign first",
+          onPress: () =>
+            navigation.navigate("BadgeDesigner", {
+              mode: "redesign",
+              badgeId,
+              returnAction: "rebake",
+            }),
+        },
+      ],
+    );
+  }, [isFocused, badgeStatus, rebakeConfirmed, badgeRow, navigation]);
 
   // Inline text note state
   const [noteText, setNoteText] = useState("");
@@ -542,6 +651,7 @@ function CompletionContent({
           visible={showBadgeModal}
           imageUri={badgeRow.imageUri ?? PLACEHOLDER_IMAGE_URI}
           isFirstBadge={capturedIsFirstBadge.current}
+          isRebake={didRebake}
           onViewBadge={handleViewBadge}
           onCustomize={handleCustomizeBadge}
           onContinue={handleDismissBadgeModal}
@@ -553,7 +663,7 @@ function CompletionContent({
 
 export function CompletionFlowScreen({ route }: CompletionFlowScreenProps) {
   const navigation = useNavigation();
-  const { goalId } = route.params;
+  const { goalId, returnAction } = route.params;
 
   // Consume the pending design ONCE at this level — outside the inner Suspense
   // boundary so the ref survives inner remounts when Evolu queries resolve.
@@ -579,6 +689,7 @@ export function CompletionFlowScreen({ route }: CompletionFlowScreenProps) {
             goalId={goalId}
             pendingDesignJson={pendingDesign?.designJson}
             pendingCapturedPng={pendingCapturedPngRef.current}
+            returnAction={returnAction}
           />
         </Suspense>
       </ErrorBoundary>

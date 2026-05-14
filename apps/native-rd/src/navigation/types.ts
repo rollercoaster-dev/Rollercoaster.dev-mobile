@@ -25,14 +25,20 @@ export type CaptureScreenName = keyof CaptureRoutes;
 export type GoalsStackParamList = {
   Goals: undefined;
   FocusMode: { goalId: string };
-  CompletionFlow: { goalId: string };
+  /**
+   * `returnAction: "rebake"` — signals that the user came back from the
+   * BadgeDesigner via the "Redesign first" path of the rebake-on-reopen
+   * alert. CompletionFlowScreen reads it on focus, flips `rebakeConfirmed`,
+   * and clears the param so a later remount doesn't auto-rebake again.
+   */
+  CompletionFlow: { goalId: string; returnAction?: "rebake" };
   TimelineJourney: { goalId: string };
   EvidenceViewer: { goalId: string; initialEvidenceId: string };
   NewGoal: undefined;
   EditMode: { goalId: string; cameFromFocus?: boolean };
   BadgeDesigner:
     | { mode: "new-goal"; goalId: string }
-    | { mode: "redesign"; badgeId: string };
+    | { mode: "redesign"; badgeId: string; returnAction?: "rebake" };
 } & CaptureRoutes;
 
 export type BadgesStackParamList = {

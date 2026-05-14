@@ -82,6 +82,23 @@ describe("BadgeEarnedModal", () => {
     expect(screen.getByText("Badge earned.")).toBeOnTheScreen();
   });
 
+  it("shows rebake microcopy + a11y label when isRebake is true", () => {
+    renderWithProviders(<BadgeEarnedModal {...defaultProps} isRebake />);
+    expect(screen.getByText("Badge updated.")).toBeOnTheScreen();
+    expect(screen.getByLabelText("Badge updated")).toBeOnTheScreen();
+    // First-badge / neutral copy must NOT appear in the rebake variant.
+    expect(screen.queryByText("First one. (noted.)")).not.toBeOnTheScreen();
+    expect(screen.queryByText("Badge earned.")).not.toBeOnTheScreen();
+  });
+
+  it("rebake variant wins over isFirstBadge (rebake by definition means a prior badge existed)", () => {
+    renderWithProviders(
+      <BadgeEarnedModal {...defaultProps} isFirstBadge isRebake />,
+    );
+    expect(screen.getByText("Badge updated.")).toBeOnTheScreen();
+    expect(screen.queryByText("First one. (noted.)")).not.toBeOnTheScreen();
+  });
+
   it('calls onViewBadge when "View Badge" is pressed', () => {
     const onViewBadge = jest.fn();
     renderWithProviders(
