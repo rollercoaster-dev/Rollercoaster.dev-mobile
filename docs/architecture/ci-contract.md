@@ -22,14 +22,12 @@ There is a single CI workflow: `.github/workflows/ci.yml`. It runs on every PR
 `main`. The script names below are defined in the root `package.json`;
 treat that file as the source of truth if a command name changes.
 
-| Step           | Command                                                 | Notes                                                               |
-| -------------- | ------------------------------------------------------- | ------------------------------------------------------------------- |
-| Install        | `bun install --frozen-lockfile`                         | Locked install from `bun.lock`                                      |
-| Build packages | `bun --filter @rollercoaster-dev/design-tokens build`   | Style Dictionary output needed before consumers type-check          |
-|                | `bun --filter @rollercoaster-dev/openbadges-core build` | `dist/` needed for native-rd's TypeScript resolution                |
-| Typecheck      | `bun run type-check`                                    | `turbo type-check` across workspace                                 |
-| Lint           | `bun run lint`                                          | `turbo lint` across workspace; native-rd uses its own ESLint config |
-| Test           | `bun run test`                                          | `turbo test` runs Jest in native-rd, `bun test` in openbadges-core  |
+| Step      | Command                         | Notes                                                                                                                                                                              |
+| --------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Install   | `bun install --frozen-lockfile` | Locked install from `bun.lock`                                                                                                                                                     |
+| Typecheck | `bun run type-check`            | `turbo type-check` across workspace. `turbo.json` declares `type-check.dependsOn: ["^build"]`, so the design-tokens and openbadges-core builds run automatically as prerequisites. |
+| Lint      | `bun run lint`                  | `turbo lint` across workspace; native-rd uses its own ESLint config                                                                                                                |
+| Test      | `bun run test`                  | `turbo test` runs Jest in native-rd (via `apps/native-rd/scripts/jest-node.sh`) and `bun test` in openbadges-core                                                                  |
 
 Earlier revisions of this doc described a two-workflow split (a root CI plus a
 separate native-rd workflow). That split has been removed: the broader
@@ -62,7 +60,10 @@ cd apps/native-rd && bun run lint
 ## Test Contract
 
 - Test runner: Jest 30 with `babel-jest` transform (not bun test)
-- Test command for CI: `bun run test:ci` from `apps/native-rd/`
+- Test command in CI: `bun run test` from the repo root (turbo dispatches the
+  native-rd `test` script, which runs `bash scripts/jest-node.sh`). The
+  `apps/native-rd/bun run test:ci` script remains as a local convenience for
+  running Jest with the `--ci` flag directly.
 - Test discovery: `src/**/__tests__/**/*.test.{ts,tsx}`
 - The smoke command (`bun run test:ci:smoke`) is retained as a
   debugging tool but is not used in CI.

@@ -1,5 +1,25 @@
 # CodeRabbit + CI Cleanup Implementation Plan
 
+> **Note (post-merge):** The plan below is preserved as it was executed. After the
+> initial task pass, a `/simplify` review trimmed the resulting PR further:
+>
+> - Removed the explicit `Build workspace packages` step from `ci.yml` (the Task 6
+>   snippet still shows it). Turbo's `type-check.dependsOn: ["^build"]` rule in
+>   `turbo.json` builds the upstream packages automatically when `bun run type-check`
+>   runs, so the explicit step was redundant.
+> - Dropped eight `.coderabbit.yaml` keys whose values matched the CodeRabbit
+>   defaults (`language`, `early_access`, `request_changes_workflow`,
+>   `commit_status`, `high_level_summary`, `collapse_walkthrough`,
+>   `changed_files_summary`, `sequence_diagrams`). Kept `profile: chill`,
+>   `poem: false`, and `in_progress_fortune: false` — those are the intentional
+>   non-defaults.
+> - Added `Source of truth:` cross-references in the screens, openbadges-core,
+>   and design-tokens path_instructions blocks.
+> - Updated `docs/architecture/ci-contract.md` to remove the explicit build step
+>   and to point at the implicit turbo dependency instead.
+>
+> See the PR for the exact diffs.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Fix everything surfaced in the CodeRabbit research pass: (1) replace the stale, pre-extraction `.coderabbit.yaml` with a config that matches the post-2026-05-14 layout and exploits the free open-source plan; (2) consolidate the redundant `ci.yml` / `ci-native-rd.yml` workflow pair into a single workflow; (3) sync `docs/architecture/ci-contract.md` to the new reality.
