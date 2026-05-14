@@ -63,16 +63,19 @@ done < <(env | awk -F= '/^npm_/ { print $1 }')
 # Fetch SENTRY_AUTH_TOKEN from Keychain. Never echoed. If neither in env nor
 # keychain AND user hasn't opted out, fail loud — silently producing a build
 # without sourcemap upload would let crashes ship unsymbolicated.
-if [ -z "${SENTRY_AUTH_TOKEN:-}" ]; then
-  if security find-generic-password -s SENTRY_AUTH_TOKEN -w >/dev/null 2>&1; then
-    SENTRY_AUTH_TOKEN="$(security find-generic-password -s SENTRY_AUTH_TOKEN -w)"
+# Skip the Keychain lookup entirely when SENTRY_DISABLE_AUTO_UPLOAD=1 — the
+# opt-out flag should not export the token into the build environment.
+if [ "${SENTRY_DISABLE_AUTO_UPLOAD:-0}" = "0" ] && [ -z "${SENTRY_AUTH_TOKEN:-}" ]; then
+  if token="$(security find-generic-password -s SENTRY_AUTH_TOKEN -w 2>/dev/null)" && [ -n "${token}" ]; then
+    SENTRY_AUTH_TOKEN="${token}"
     export SENTRY_AUTH_TOKEN
-  elif [ "${SENTRY_DISABLE_AUTO_UPLOAD:-0}" = "0" ]; then
+  else
     echo "Error: SENTRY_AUTH_TOKEN not in Keychain and not in env." >&2
     echo "  Add one: security add-generic-password -a \"\$USER\" -s SENTRY_AUTH_TOKEN -U -w" >&2
     echo "  Or skip Sentry upload: SENTRY_DISABLE_AUTO_UPLOAD=1 $0 $*" >&2
     exit 1
   fi
+  unset token
 fi
 
 sha="$(git -C "${APP_DIR}" rev-parse --short HEAD 2>/dev/null || echo nogit)"
