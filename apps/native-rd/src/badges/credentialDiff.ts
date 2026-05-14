@@ -41,7 +41,7 @@ function expectedDescription(goal: {
 export function hasChangesSinceBake(
   credentialJson: string | null | undefined,
   currentGoal: GoalData,
-  currentEvidence: ReadonlyArray<EvidenceRow>,
+  currentEvidence: readonly EvidenceRow[],
 ): boolean {
   if (!credentialJson) return true;
 
