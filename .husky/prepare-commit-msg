@@ -1,0 +1,34 @@
+#!/bin/sh
+# Append a Signed-off-by trailer to the commit message if one is not present.
+# Required by .github/workflows/dco.yml; see LICENSING.md and CONTRIBUTING.md.
+
+set -e
+
+COMMIT_MSG_FILE="$1"
+COMMIT_SOURCE="$2"
+
+# Skip for merge / squash / amend-via-template / fixup commits where Git
+# composes the message itself.
+case "$COMMIT_SOURCE" in
+  merge|squash) exit 0 ;;
+esac
+
+# Already signed off? Nothing to do.
+if grep -qE '^Signed-off-by: .+ <.+@.+>$' "$COMMIT_MSG_FILE"; then
+  exit 0
+fi
+
+NAME=$(git config user.name)
+EMAIL=$(git config user.email)
+
+if [ -z "$NAME" ] || [ -z "$EMAIL" ]; then
+  echo "prepare-commit-msg: user.name / user.email not set; cannot add Signed-off-by." >&2
+  exit 0
+fi
+
+# git interpret-trailers handles blank-line separation and existing trailers
+# correctly, so we don't have to reason about message format ourselves.
+git interpret-trailers \
+  --if-exists addIfDifferent \
+  --trailer "Signed-off-by: $NAME <$EMAIL>" \
+  --in-place "$COMMIT_MSG_FILE"
