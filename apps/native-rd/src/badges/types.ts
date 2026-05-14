@@ -140,7 +140,7 @@ export function isValidHexColor(value: string): boolean {
 /**
  * Create a sensible default BadgeDesign from a goal title and color.
  *
- * Square shape, monogram of the title's first letter — matches the
+ * Rounded rectangle shape, monogram of the title's first letter — matches the
  * placeholder rendering used in BadgeCard tiles, so the pre-bake preview
  * and the unstyled tile fallback agree.
  *
