@@ -23,6 +23,16 @@ beforeEach(() => {
   // Reset recorder state
   mockRecorder.isRecording = false;
   mockRecorder.uri = "file:///mock-recording.m4a";
+  // clearAllMocks does NOT reset mockImplementation, so re-install the
+  // default getStatus impl so a prior test's "live duration" override
+  // doesn't bleed into stopRecording's authoritative duration assertion.
+  mockRecorder.getStatus.mockImplementation(() => ({
+    canRecord: false,
+    isRecording: false,
+    durationMillis: 5000,
+    mediaServicesDidReset: false,
+    url: "file:///mock-recording.m4a",
+  }));
   // Default: permission granted
   (requestRecordingPermissionsAsync as jest.Mock).mockResolvedValue({
     granted: true,
@@ -92,6 +102,99 @@ describe("useAudioRecorder", () => {
 
       expect(result.current.status).toBe("idle");
       expect(result.current.error).toBe("Microphone busy");
+    });
+  });
+
+  describe("live duration", () => {
+    it("ticks durationMs while status is recording", async () => {
+      jest.useFakeTimers();
+      try {
+        // Recorder reports 0ms initially, then advances on each poll
+        let mockDurationMs = 0;
+        mockRecorder.getStatus.mockImplementation(() => ({
+          canRecord: true,
+          isRecording: true,
+          durationMillis: mockDurationMs,
+          mediaServicesDidReset: false,
+          url: "file:///mock-recording.m4a",
+        }));
+
+        const { result } = renderHook(() => useAudioRecorder());
+
+        await act(async () => {
+          mockRecorder.isRecording = true;
+          await result.current.startRecording();
+        });
+
+        expect(result.current.status).toBe("recording");
+        expect(result.current.durationMs).toBe(0);
+
+        // Advance the polling interval; recorder reports growing duration
+        mockDurationMs = 1200;
+        await act(async () => {
+          jest.advanceTimersByTime(200);
+        });
+        expect(result.current.durationMs).toBe(1200);
+
+        mockDurationMs = 2400;
+        await act(async () => {
+          jest.advanceTimersByTime(200);
+        });
+        expect(result.current.durationMs).toBe(2400);
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
+    it("freezes durationMs when paused and resumes on resume", async () => {
+      jest.useFakeTimers();
+      try {
+        let mockDurationMs = 0;
+        mockRecorder.getStatus.mockImplementation(() => ({
+          canRecord: true,
+          isRecording: true,
+          durationMillis: mockDurationMs,
+          mediaServicesDidReset: false,
+          url: "file:///mock-recording.m4a",
+        }));
+
+        const { result } = renderHook(() => useAudioRecorder());
+
+        await act(async () => {
+          mockRecorder.isRecording = true;
+          await result.current.startRecording();
+        });
+
+        mockDurationMs = 1500;
+        await act(async () => {
+          jest.advanceTimersByTime(200);
+        });
+        expect(result.current.durationMs).toBe(1500);
+
+        await act(async () => {
+          await result.current.pauseRecording();
+        });
+
+        // While paused, even if the underlying recorder reports more time
+        // (it shouldn't, but defensively), our state should not change.
+        mockDurationMs = 9999;
+        await act(async () => {
+          jest.advanceTimersByTime(1000);
+        });
+        expect(result.current.durationMs).toBe(1500);
+
+        // On resume, polling restarts and duration advances again
+        mockDurationMs = 2000;
+        await act(async () => {
+          await result.current.resumeRecording();
+        });
+        await act(async () => {
+          jest.advanceTimersByTime(200);
+        });
+        expect(result.current.durationMs).toBe(2000);
+      } finally {
+        jest.useRealTimers();
+      }
     });
   });
 

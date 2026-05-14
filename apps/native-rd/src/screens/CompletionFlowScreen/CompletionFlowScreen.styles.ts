@@ -137,4 +137,17 @@ export const styles = StyleSheet.create((theme) => ({
     flexWrap: "wrap",
     gap: theme.space[2],
   },
+  // Offscreen wrapper for the default-design BadgeRenderer used by
+  // captureBadge() when no pending design is available. Must stay inside
+  // the window — Android's view-shot rejects views with negative
+  // coordinates as "view is invalid". opacity: 0 keeps it invisible while
+  // still letting captureRef snapshot it.
+  fallbackCaptureHost: {
+    position: "absolute" as const,
+    left: 0,
+    top: 0,
+    width: 160,
+    height: 160,
+    opacity: 0,
+  },
 }));

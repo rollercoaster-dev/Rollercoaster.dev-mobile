@@ -483,7 +483,42 @@ describe("FocusModeScreen", () => {
     expect(screen.getByText("Focus Mode")).toBeOnTheScreen();
   });
 
-  it("auto-navigates to CompletionFlow when all steps are completed", () => {
+  it("auto-navigates to CompletionFlow on the pending→complete transition", () => {
+    jest.useFakeTimers();
+    // Start with one step pending so allStepsComplete=false on mount.
+    // The auto-nav only fires after we observe a transition from incomplete
+    // to complete — this prevents Reopen Goal from immediately bouncing the
+    // user back to CompletionFlow (since reopening leaves all steps completed).
+    setupQueries({
+      steps: [
+        { id: "step-1", title: "Read docs", status: "completed", ordinal: 0 },
+        { id: "step-2", title: "Practice", status: "pending", ordinal: 1 },
+      ],
+    });
+    const view = renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+    jest.advanceTimersByTime(400);
+    expect(mockNavigate).not.toHaveBeenCalledWith("CompletionFlow", {
+      goalId: "goal-1",
+    });
+
+    // Now flip the pending step to completed and rerender.
+    setupQueries({
+      steps: [
+        { id: "step-1", title: "Read docs", status: "completed", ordinal: 0 },
+        { id: "step-2", title: "Practice", status: "completed", ordinal: 1 },
+      ],
+    });
+    view.rerender(<FocusModeScreen {...routeProps} />);
+
+    jest.advanceTimersByTime(400);
+    expect(mockNavigate).toHaveBeenCalledWith("CompletionFlow", {
+      goalId: "goal-1",
+    });
+    jest.useRealTimers();
+  });
+
+  it("does NOT auto-navigate on a fresh mount where every step is already completed (reopen-goal case)", () => {
     jest.useFakeTimers();
     setupQueries({
       steps: [
@@ -493,8 +528,8 @@ describe("FocusModeScreen", () => {
     });
     renderWithProviders(<FocusModeScreen {...routeProps} />);
 
-    jest.advanceTimersByTime(400);
-    expect(mockNavigate).toHaveBeenCalledWith("CompletionFlow", {
+    jest.advanceTimersByTime(1000);
+    expect(mockNavigate).not.toHaveBeenCalledWith("CompletionFlow", {
       goalId: "goal-1",
     });
     jest.useRealTimers();
@@ -783,8 +818,32 @@ describe("FocusModeScreen", () => {
     ]);
   });
 
-  it("auto-navigates to CompletionFlow when all steps complete with evidence gate", () => {
+  it("auto-navigates to CompletionFlow on the transition when all steps complete with evidence gate", () => {
     jest.useFakeTimers();
+    setupQueries({
+      steps: [
+        {
+          id: "step-1",
+          title: "Read docs",
+          status: "completed",
+          ordinal: 0,
+          plannedEvidenceTypes: '["text"]',
+        },
+        {
+          id: "step-2",
+          title: "Practice",
+          status: "pending",
+          ordinal: 1,
+          plannedEvidenceTypes: null,
+        },
+      ],
+    });
+    const view = renderWithProviders(<FocusModeScreen {...routeProps} />);
+    jest.advanceTimersByTime(400);
+    expect(mockNavigate).not.toHaveBeenCalledWith("CompletionFlow", {
+      goalId: "goal-1",
+    });
+
     setupQueries({
       steps: [
         {
@@ -803,7 +862,7 @@ describe("FocusModeScreen", () => {
         },
       ],
     });
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
+    view.rerender(<FocusModeScreen {...routeProps} />);
     jest.advanceTimersByTime(400);
     expect(mockNavigate).toHaveBeenCalledWith("CompletionFlow", {
       goalId: "goal-1",

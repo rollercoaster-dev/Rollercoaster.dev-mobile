@@ -57,9 +57,6 @@ jest.mock("../../badges", () => ({
     type: ["VerifiableCredential"],
   })),
   buildDid: jest.fn(() => "did:key:testkey"),
-  generateBadgeImagePNG: jest.fn(
-    () => new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]),
-  ),
   bakePNG: jest.fn(() => Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])),
   isPNG: jest.fn(
     (buf: Buffer) => buf.length >= 8 && buf[0] === 137 && buf[1] === 80,
@@ -67,7 +64,6 @@ jest.mock("../../badges", () => ({
   saveBadgePNG: jest.fn(() =>
     Promise.resolve("file:///app/badges/test-badge.png"),
   ),
-  DEFAULT_BADGE_COLOR: "#4B7BE5",
 }));
 
 const mockUseQuery = useQuery as jest.Mock;
@@ -91,6 +87,10 @@ const MOCK_GOAL = {
   status: "active",
 };
 
+/** Minimal valid PNG header — captured by callers and required by useCreateBadge. */
+const VALID_PNG = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+const WITH_PNG = { capturedPng: VALID_PNG };
+
 beforeEach(() => {
   jest.clearAllMocks();
   mockUseUserKey.mockReturnValue({
@@ -98,9 +98,6 @@ beforeEach(() => {
     isReady: true,
     error: null,
   });
-  mockBadges.generateBadgeImagePNG.mockReturnValue(
-    new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]),
-  );
   mockBadges.bakePNG.mockReturnValue(
     Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
   );
@@ -131,7 +128,7 @@ describe("useCreateBadge", () => {
         return [MOCK_GOAL];
       });
 
-      const { result } = renderHook(() => useCreateBadge(GOAL_ID));
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
       expect(result.current.status).toBe("loading");
     });
   });
@@ -145,7 +142,7 @@ describe("useCreateBadge", () => {
         return [];
       });
 
-      const { result } = renderHook(() => useCreateBadge(GOAL_ID));
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
       await act(async () => {});
 
       expect(result.current.status).toBe("done");
@@ -155,7 +152,7 @@ describe("useCreateBadge", () => {
 
   describe("successful badge creation", () => {
     it("calls keyProvider.getPublicKey and sign", async () => {
-      renderHook(() => useCreateBadge(GOAL_ID));
+      renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
       await act(async () => {});
 
       expect(mockKeyProvider.getPublicKey).toHaveBeenCalledWith("key-001");
@@ -167,14 +164,14 @@ describe("useCreateBadge", () => {
       mockCompleteGoal.mockImplementation(() => callOrder.push("completeGoal"));
       mockCreateBadge.mockImplementation(() => callOrder.push("createBadge"));
 
-      renderHook(() => useCreateBadge(GOAL_ID));
+      renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
       await act(async () => {});
 
       expect(callOrder).toEqual(["createBadge", "completeGoal"]);
     });
 
     it("calls createBadge with the real image URI from saveBadgePNG (not the placeholder)", async () => {
-      renderHook(() => useCreateBadge(GOAL_ID));
+      renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
       await act(async () => {});
 
       expect(mockCreateBadge).toHaveBeenCalledWith(
@@ -186,7 +183,7 @@ describe("useCreateBadge", () => {
     });
 
     it("stores a credential JSON string", async () => {
-      renderHook(() => useCreateBadge(GOAL_ID));
+      renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
       await act(async () => {});
 
       expect(mockCreateBadge).toHaveBeenCalledWith(
@@ -197,67 +194,27 @@ describe("useCreateBadge", () => {
     });
 
     it("reaches status: done after successful creation", async () => {
-      const { result } = renderHook(() => useCreateBadge(GOAL_ID));
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
       await act(async () => {});
 
       expect(result.current.status).toBe("done");
       expect(result.current.error).toBeNull();
     });
-
-    it("passes the goal color to generateBadgeImagePNG", async () => {
-      renderHook(() => useCreateBadge(GOAL_ID));
-      await act(async () => {});
-
-      expect(mockBadges.generateBadgeImagePNG).toHaveBeenCalledWith("#FF5733");
-    });
-
-    it("falls back to DEFAULT_BADGE_COLOR when goal.color is null", async () => {
-      const goalWithoutColor = { ...MOCK_GOAL, color: null };
-      mockUseQuery.mockImplementation((query: string) => {
-        if (query === "mock-goals-query") return [goalWithoutColor];
-        if (query === "mock-badge-query") return [];
-        return [];
-      });
-
-      renderHook(() => useCreateBadge(GOAL_ID));
-      await act(async () => {});
-
-      expect(mockBadges.generateBadgeImagePNG).toHaveBeenCalledWith("#4B7BE5");
-    });
   });
 
-  describe("when design option is provided", () => {
-    it("passes design to createBadge when capturedPng is also provided", async () => {
-      const designJson =
-        '{"shape":"circle","color":"#FF0000","iconName":"Trophy","iconWeight":"regular","frame":"none","title":"Test"}';
-      const fakePng = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
-      renderHook(() =>
-        useCreateBadge(GOAL_ID, {
-          design: designJson,
-          capturedPng: fakePng,
-        }),
-      );
+  describe("when capturedPng is missing", () => {
+    it("fails loudly — callers must provide a PNG (no more silent blue fallback)", async () => {
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID));
       await act(async () => {});
 
-      expect(mockCreateBadge).toHaveBeenCalledWith(
-        expect.objectContaining({ design: designJson }),
-      );
+      expect(result.current.status).toBe("error");
+      expect(result.current.error).toContain("capturedPng");
+      expect(mockCreateBadge).not.toHaveBeenCalled();
     });
 
-    it("does not include design key when option is not provided", async () => {
-      renderHook(() => useCreateBadge(GOAL_ID));
-      await act(async () => {});
-
-      const callArg = mockCreateBadge.mock.calls[0][0] as Record<
-        string,
-        unknown
-      >;
-      expect(callArg).not.toHaveProperty("design");
-    });
-
-    it("fails loudly when design is provided without capturedPng", async () => {
+    it("fails loudly when design is provided but capturedPng is not", async () => {
       const designJson =
-        '{"shape":"circle","color":"#FF0000","iconName":"Trophy","iconWeight":"regular","frame":"none","title":"Test"}';
+        '{"shape":"square","color":"#FF0000","iconName":"Trophy","iconWeight":"regular","frame":"none","title":"Test","centerMode":"monogram","monogram":"T"}';
       const { result } = renderHook(() =>
         useCreateBadge(GOAL_ID, { design: designJson }),
       );
@@ -269,24 +226,44 @@ describe("useCreateBadge", () => {
     });
   });
 
-  describe("when capturedPng is provided", () => {
-    it("passes the captured PNG to bakePNG instead of generating one", async () => {
-      const fakePng = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
-      renderHook(() => useCreateBadge(GOAL_ID, { capturedPng: fakePng }));
+  describe("when design option is provided", () => {
+    it("passes design to createBadge when capturedPng is also provided", async () => {
+      const designJson =
+        '{"shape":"square","color":"#FF0000","iconName":"Trophy","iconWeight":"regular","frame":"none","title":"Test","centerMode":"monogram","monogram":"T"}';
+      renderHook(() =>
+        useCreateBadge(GOAL_ID, {
+          design: designJson,
+          capturedPng: VALID_PNG,
+        }),
+      );
       await act(async () => {});
 
-      expect(mockBadges.bakePNG).toHaveBeenCalledWith(
-        fakePng,
-        expect.any(String),
+      expect(mockCreateBadge).toHaveBeenCalledWith(
+        expect.objectContaining({ design: designJson }),
       );
     });
 
-    it("does NOT call generateBadgeImagePNG", async () => {
-      const fakePng = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
-      renderHook(() => useCreateBadge(GOAL_ID, { capturedPng: fakePng }));
+    it("does not include design key when option is not provided", async () => {
+      renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
       await act(async () => {});
 
-      expect(mockBadges.generateBadgeImagePNG).not.toHaveBeenCalled();
+      const callArg = mockCreateBadge.mock.calls[0][0] as Record<
+        string,
+        unknown
+      >;
+      expect(callArg).not.toHaveProperty("design");
+    });
+  });
+
+  describe("when capturedPng is provided", () => {
+    it("passes the captured PNG to bakePNG", async () => {
+      renderHook(() => useCreateBadge(GOAL_ID, { capturedPng: VALID_PNG }));
+      await act(async () => {});
+
+      expect(mockBadges.bakePNG).toHaveBeenCalledWith(
+        VALID_PNG,
+        expect.any(String),
+      );
     });
   });
 
@@ -302,7 +279,7 @@ describe("useCreateBadge", () => {
         return [MOCK_GOAL];
       });
 
-      const { result } = renderHook(() => useCreateBadge(GOAL_ID));
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
       expect(result.current.status).toBe("no-key");
     });
   });
@@ -313,7 +290,7 @@ describe("useCreateBadge", () => {
         new Error("key not found in SecureStore"),
       );
 
-      const { result } = renderHook(() => useCreateBadge(GOAL_ID));
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
       await act(async () => {});
 
       expect(result.current.status).toBe("error");
@@ -327,28 +304,11 @@ describe("useCreateBadge", () => {
         new Error("crypto unavailable"),
       );
 
-      const { result } = renderHook(() => useCreateBadge(GOAL_ID));
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
       await act(async () => {});
 
       expect(result.current.status).toBe("error");
       expect(result.current.error).toContain("crypto unavailable");
-    });
-  });
-
-  describe("when image generation fails (generateBadgeImagePNG throws)", () => {
-    it("sets status: error — PNG generation failure is a code defect, not recoverable", async () => {
-      mockBadges.generateBadgeImagePNG.mockImplementationOnce(() => {
-        throw new Error("PNG generation failed");
-      });
-
-      const { result } = renderHook(() => useCreateBadge(GOAL_ID));
-      await act(async () => {});
-
-      // generateBadgeImagePNG is pure computation — any throw is a code defect
-      // and must propagate to the outer error handler, not degrade gracefully.
-      expect(result.current.status).toBe("error");
-      expect(result.current.error).toContain("PNG generation failed");
-      expect(mockCreateBadge).not.toHaveBeenCalled();
     });
   });
 
@@ -358,7 +318,7 @@ describe("useCreateBadge", () => {
         throw new Error("corrupt PNG chunk");
       });
 
-      const { result } = renderHook(() => useCreateBadge(GOAL_ID));
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
       await act(async () => {});
 
       // bakePNG throwing means the PNG we generated is corrupt — a code defect.
@@ -373,7 +333,7 @@ describe("useCreateBadge", () => {
     it("still calls createBadge with the placeholder URI (graceful degradation)", async () => {
       mockBadges.saveBadgePNG.mockRejectedValueOnce(new Error("disk full"));
 
-      const { result } = renderHook(() => useCreateBadge(GOAL_ID));
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
       await act(async () => {});
 
       expect(result.current.status).toBe("done");
@@ -391,7 +351,7 @@ describe("useCreateBadge", () => {
         throw new Error("db write failed");
       });
 
-      const { result } = renderHook(() => useCreateBadge(GOAL_ID));
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
       await act(async () => {});
 
       expect(result.current.status).toBe("error");
@@ -405,7 +365,7 @@ describe("useCreateBadge", () => {
       // sign returns 64 zero bytes — deterministic base64url output
       mockKeyProvider.sign.mockResolvedValue(new Uint8Array(64));
 
-      renderHook(() => useCreateBadge(GOAL_ID));
+      renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
       await act(async () => {});
 
       const callArg = mockCreateBadge.mock.calls[0][0] as {
@@ -444,7 +404,7 @@ describe("useCreateBadge", () => {
         return [];
       });
 
-      renderHook(() => useCreateBadge(GOAL_ID));
+      renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
       await act(async () => {});
 
       expect(mockBadges.buildUnsignedCredential).toHaveBeenCalledWith(
@@ -457,7 +417,7 @@ describe("useCreateBadge", () => {
     });
 
     it("omits stepTitle property for goal-level evidence", async () => {
-      renderHook(() => useCreateBadge(GOAL_ID));
+      renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
       await act(async () => {});
 
       const callArg = mockBadges.buildUnsignedCredential.mock.calls[0][0] as {
@@ -470,10 +430,10 @@ describe("useCreateBadge", () => {
 
   describe("idempotency", () => {
     it("does not create a second badge on re-render", async () => {
-      const { rerender } = renderHook(() => useCreateBadge(GOAL_ID));
+      const { rerender } = renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
       await act(async () => {});
 
-      rerender(() => useCreateBadge(GOAL_ID));
+      rerender(() => useCreateBadge(GOAL_ID, WITH_PNG));
       await act(async () => {});
 
       expect(mockCreateBadge).toHaveBeenCalledTimes(1);
@@ -482,7 +442,7 @@ describe("useCreateBadge", () => {
 
   describe("breadcrumbs", () => {
     it("emits build, sign, bake, store breadcrumbs in order on success", async () => {
-      renderHook(() => useCreateBadge(GOAL_ID));
+      renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
       await act(async () => {});
 
       const calls = mockBreadcrumb.mock.calls.map(
@@ -499,7 +459,7 @@ describe("useCreateBadge", () => {
     it("emits earlier-phase breadcrumbs but not later ones when an early phase throws", async () => {
       mockKeyProvider.sign.mockRejectedValueOnce(new Error("sign failed"));
 
-      renderHook(() => useCreateBadge(GOAL_ID));
+      renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
       await act(async () => {});
 
       const messages = mockBreadcrumb.mock.calls.map(

@@ -115,9 +115,13 @@ function FocusContent({ goalId }: { goalId: string }) {
   const { viewEvidence, viewerModals } = useEvidenceViewer();
   const { timelineHidden, setTimelineHidden } = useFocusModePrefs();
   const lifecycle = useRef({
-    announcedComplete: false,
-    triggeredCompletion: false,
+    completionFired: false,
     snappedToFirstPending: false,
+    // Tracks whether we observed an incomplete-state during this mount.
+    // Without this, reopening a goal (which leaves all steps completed)
+    // lands FocusMode in allStepsComplete=true, fires the auto-nav, and
+    // bounces the user straight back to CompletionFlow + BadgeEarnedModal.
+    sawIncomplete: false,
   });
   const isMounted = useRef(true);
   const pendingFileDeletionRef = useRef<{
@@ -243,29 +247,29 @@ function FocusContent({ goalId }: { goalId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only fire on initial population
   }, [stepRowsLength]);
 
-  // Announce when all steps become complete and auto-navigate to completion flow
+  // Announce when all steps become complete and auto-navigate to completion flow.
+  // Only fires on the incomplete → complete transition, not on a fresh mount
+  // that lands already-complete (e.g. after Reopen Goal, where the step rows
+  // stay completed but the goal status is back to active).
   useEffect(() => {
     if (!goal) return;
-    if (allStepsComplete && !lifecycle.current.announcedComplete) {
-      lifecycle.current.announcedComplete = true;
-      AccessibilityInfo.announceForAccessibility(
-        `All steps completed for "${goal.title}". Goal is ready to complete!`,
-      );
-
-      // Auto-navigate to completion flow after brief delay
-      if (!lifecycle.current.triggeredCompletion) {
-        lifecycle.current.triggeredCompletion = true;
-        const timer = setTimeout(() => {
-          if (isMounted.current) {
-            navigation.navigate("CompletionFlow", { goalId });
-          }
-        }, 400);
-        return () => clearTimeout(timer);
-      }
-    } else if (!allStepsComplete) {
-      lifecycle.current.announcedComplete = false;
-      lifecycle.current.triggeredCompletion = false;
+    if (!allStepsComplete) {
+      lifecycle.current.sawIncomplete = true;
+      lifecycle.current.completionFired = false;
+      return;
     }
+    if (!lifecycle.current.sawIncomplete) return;
+    if (lifecycle.current.completionFired) return;
+    lifecycle.current.completionFired = true;
+    AccessibilityInfo.announceForAccessibility(
+      `All steps completed for "${goal.title}". Goal is ready to complete!`,
+    );
+    const timer = setTimeout(() => {
+      if (isMounted.current) {
+        navigation.navigate("CompletionFlow", { goalId });
+      }
+    }, 400);
+    return () => clearTimeout(timer);
   }, [goal, allStepsComplete, goalId, navigation]);
 
   const handleUndoDelete = useCallback(() => {
