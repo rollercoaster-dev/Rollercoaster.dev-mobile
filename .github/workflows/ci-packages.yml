@@ -8,8 +8,12 @@ on:
       - "!packages/**/*.md"
       - "!packages/**/docs/**"
       - "bun.lock"
+      - "bunfig.toml"
       - "turbo.json"
       - "package.json"
+      - "tsconfig.json"
+      - "eslint.config.mjs"
+      - ".prettierignore"
       - ".github/workflows/ci-packages.yml"
   push:
     branches: [main]
