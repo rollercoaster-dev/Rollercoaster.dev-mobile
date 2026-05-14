@@ -7,13 +7,13 @@ checks that matter for the changed code.
 
 ## Workflows
 
-| Workflow | File | Triggers on |
-| -------- | ---- | ----------- |
-| `ci-native-rd` | `.github/workflows/ci-native-rd.yml` | Changes under `apps/native-rd/**`, `packages/design-tokens/**`, `packages/openbadges-core/**`, or `bun.lock` / `turbo.json` / root `package.json` / the workflow file. Docs-only changes are filtered out. |
-| `ci-packages` | `.github/workflows/ci-packages.yml` | Changes under `packages/**`, or `bun.lock` / `turbo.json` / root `package.json` / the workflow file. Package docs are filtered out. |
-| `codeql` | `.github/workflows/codeql.yml` | Security scanning (JS/TS), weekly + on push/PR. |
-| `dco` | `.github/workflows/dco.yml` | Verifies `Signed-off-by:` on commits touching app/package paths. |
-| `claude` / `claude-code-review` | `.github/workflows/claude*.yml` | Claude Code Review integration. Manual / comment-triggered. |
+| Workflow                        | File                                 | Triggers on                                                                                                                                                                                                |
+| ------------------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ci-native-rd`                  | `.github/workflows/ci-native-rd.yml` | Changes under `apps/native-rd/**`, `packages/design-tokens/**`, `packages/openbadges-core/**`, or `bun.lock` / `turbo.json` / root `package.json` / the workflow file. Docs-only changes are filtered out. |
+| `ci-packages`                   | `.github/workflows/ci-packages.yml`  | Changes under `packages/**`, or `bun.lock` / `turbo.json` / root `package.json` / the workflow file. Package docs are filtered out.                                                                        |
+| `codeql`                        | `.github/workflows/codeql.yml`       | Security scanning (JS/TS), weekly + on push/PR.                                                                                                                                                            |
+| `dco`                           | `.github/workflows/dco.yml`          | Verifies `Signed-off-by:` on commits touching app/package paths.                                                                                                                                           |
+| `claude` / `claude-code-review` | `.github/workflows/claude*.yml`      | Claude Code Review integration. Manual / comment-triggered.                                                                                                                                                |
 
 Both validation workflows use the same install + cache layout:
 
@@ -26,25 +26,25 @@ Both validation workflows use the same install + cache layout:
 
 ## ci-native-rd validation steps
 
-| Step | Command | Notes |
-| ---- | ------- | ----- |
-| Format check | `bun run format:check` | Root Prettier glob (`**/*.{ts,tsx,js,jsx,json,md}`) honoring `.prettierignore`. |
-| Typecheck | `bun run turbo type-check --filter=native-rd` | `turbo.json` declares `type-check.dependsOn: ["^build"]`, so design-tokens and openbadges-core builds run automatically as prerequisites. |
-| Lint | `bun run turbo lint --filter=native-rd` | Delegates to `expo lint` + the six native-rd local rules. Root ESLint is not invoked here (see "What does NOT apply"). |
-| Test (with coverage) | `cd apps/native-rd && bun run test:ci -- --coverage --coverageReporters=lcov` | Jest 30 via `scripts/jest-node.sh`. Writes `apps/native-rd/coverage/lcov.info`. |
-| Coverage upload | `codecov/codecov-action@v5` | `flags: native-rd`, `files: apps/native-rd/coverage/lcov.info`. `continue-on-error: true` until `CODECOV_TOKEN` is provisioned in repo secrets. |
-| a11y audit | `cd apps/native-rd && bun run test:a11y:json > a11y.json` | Pure-Jest audit (no simulator). Output uploaded as the `a11y-audit` artifact via `actions/upload-artifact@v4` and runs even on prior-step failure (`if: always()`). |
-| Storybook web build | `cd apps/native-rd && bun run storybook:web:build` | Static build to `apps/native-rd/.storybook-web-static/` (gitignored). Verifies stories compile; not deployed. |
+| Step                 | Command                                                                       | Notes                                                                                                                                                               |
+| -------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Format check         | `bun run format:check`                                                        | Root Prettier glob (`**/*.{ts,tsx,js,jsx,json,md}`) honoring `.prettierignore`.                                                                                     |
+| Typecheck            | `bun run turbo type-check --filter=native-rd`                                 | `turbo.json` declares `type-check.dependsOn: ["^build"]`, so design-tokens and openbadges-core builds run automatically as prerequisites.                           |
+| Lint                 | `bun run turbo lint --filter=native-rd`                                       | Delegates to `expo lint` + the six native-rd local rules. Root ESLint is not invoked here (see "What does NOT apply").                                              |
+| Test (with coverage) | `cd apps/native-rd && bun run test:ci -- --coverage --coverageReporters=lcov` | Jest 30 via `scripts/jest-node.sh`. Writes `apps/native-rd/coverage/lcov.info`.                                                                                     |
+| Coverage upload      | `codecov/codecov-action@v5`                                                   | `flags: native-rd`, `files: apps/native-rd/coverage/lcov.info`. `continue-on-error: true` until `CODECOV_TOKEN` is provisioned in repo secrets.                     |
+| a11y audit           | `cd apps/native-rd && bun run test:a11y:json > a11y.json`                     | Pure-Jest audit (no simulator). Output uploaded as the `a11y-audit` artifact via `actions/upload-artifact@v4` and runs even on prior-step failure (`if: always()`). |
+| Storybook web build  | `cd apps/native-rd && bun run storybook:web:build`                            | Static build to `apps/native-rd/.storybook-web-static/` (gitignored). Verifies stories compile; not deployed.                                                       |
 
 ## ci-packages validation steps
 
-| Step | Command |
-| ---- | ------- |
-| Format check | `bun run format:check` |
-| Typecheck | `bun run turbo type-check --filter='./packages/*'` |
-| Lint | `bun run turbo lint --filter='./packages/*'` |
-| Test | `bun run turbo test --filter='./packages/*'` |
-| Build | `bun run turbo build --filter='./packages/*'` |
+| Step         | Command                                            |
+| ------------ | -------------------------------------------------- |
+| Format check | `bun run format:check`                             |
+| Typecheck    | `bun run turbo type-check --filter='./packages/*'` |
+| Lint         | `bun run turbo lint --filter='./packages/*'`       |
+| Test         | `bun run turbo test --filter='./packages/*'`       |
+| Build        | `bun run turbo build --filter='./packages/*'`      |
 
 ## Why Jest (not `bun test`) for native-rd
 

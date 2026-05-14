@@ -11,7 +11,7 @@ Status: active · Owner: Joe · Created: 2026-05-14
 - **No a11y audit gate** — `apps/native-rd/scripts/a11y-audit.sh` exists but is never run.
 - **No Storybook build verification** — Storybook config exists but isn't compiled in CI.
 - **`docs/architecture/ci-contract.md` still describes a monorepo** (references native-rd alongside other monorepo apps, single-workflow rationale tied to monorepo turbo wiring).
-- **`lint-staged` references `packages/openbadges-core/**`** — that path is still present here, so the rule is correct, but the contract should be re-validated for the standalone repo.
+- **`lint-staged` rule for `packages/openbadges-core`** — the `packages/openbadges-core/**` path is still present here, so the rule is correct, but the contract should be re-validated for the standalone repo.
 
 The goal is to re-establish a strong CI gate that matches what the monorepo had for `native-rd`, adapted to standalone reality, with split workflows so PRs only run what's relevant.
 
@@ -40,8 +40,8 @@ on:
   pull_request:
     paths:
       - "apps/native-rd/**"
-      - "packages/design-tokens/**"        # native-rd dep
-      - "packages/openbadges-core/**"      # native-rd dep
+      - "packages/design-tokens/**" # native-rd dep
+      - "packages/openbadges-core/**" # native-rd dep
       - "bun.lock"
       - "turbo.json"
       - "package.json"
@@ -143,15 +143,15 @@ Add Prettier + a11y checkboxes to `.github/PULL_REQUEST_TEMPLATE.md`.
 
 ## Files touched
 
-| File | Action |
-| ---- | ------ |
-| `.github/workflows/ci.yml` | delete (last commit) |
-| `.github/workflows/ci-native-rd.yml` | create |
-| `.github/workflows/ci-packages.yml` | create |
-| `apps/native-rd/package.json` | add `storybook:web:build` |
-| `.gitignore` | add Storybook static output |
-| `docs/architecture/ci-contract.md` | full rewrite |
-| `.github/PULL_REQUEST_TEMPLATE.md` | add Prettier + a11y rows |
+| File                                 | Action                      |
+| ------------------------------------ | --------------------------- |
+| `.github/workflows/ci.yml`           | delete (last commit)        |
+| `.github/workflows/ci-native-rd.yml` | create                      |
+| `.github/workflows/ci-packages.yml`  | create                      |
+| `apps/native-rd/package.json`        | add `storybook:web:build`   |
+| `.gitignore`                         | add Storybook static output |
+| `docs/architecture/ci-contract.md`   | full rewrite                |
+| `.github/PULL_REQUEST_TEMPLATE.md`   | add Prettier + a11y rows    |
 
 Untouched: `codeql.yml`, `dco.yml`, `claude.yml`, `claude-code-review.yml`, `dependabot.yml`, root `package.json`, root `lint-staged` config, `turbo.json`, `.husky/pre-commit`.
 
