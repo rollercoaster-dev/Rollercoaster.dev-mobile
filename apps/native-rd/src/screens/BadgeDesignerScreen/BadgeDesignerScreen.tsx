@@ -455,8 +455,24 @@ function DesignEditor({
 // Badge editing content — used by both BadgesStack and GoalsStack redesign
 // ---------------------------------------------------------------------------
 
-function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
-  const navigation = useNavigation();
+function BadgeDesignerContentBadge({
+  badgeId,
+  returnAction,
+}: {
+  badgeId: string;
+  /**
+   * Optional round-trip signal: when set to "rebake", saving the new design
+   * navigates back to CompletionFlow with a matching param so that screen
+   * picks up the redesign and proceeds with the rebake instead of just
+   * going back to the previous stack entry.
+   */
+  returnAction?: "rebake";
+}) {
+  // Typed to GoalsStack because the rebake return navigates to CompletionFlow,
+  // which only lives in GoalsStack. The Badges-tab entrypoint never sets
+  // returnAction, so the typed navigate() call is never reached from there.
+  const navigation =
+    useNavigation<NativeStackNavigationProp<GoalsStackParamList>>();
   const query = useMemo(
     () => badgeWithGoalQuery(badgeId as BadgeId),
     [badgeId],
@@ -477,6 +493,7 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
   const [design, setDesign] = useState<BadgeDesign | null>(null);
   const currentDesign = design ?? initialDesign;
   const goalColor = badge?.goalColor as string | null | undefined;
+  const goalIdForReturn = (badge?.goalId as string | null | undefined) ?? null;
 
   const derivedFrameParams = useFrameParamsForGoal(
     (badge?.goalId as GoalId | null | undefined) ?? null,
@@ -498,8 +515,19 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
       );
       return;
     }
+    if (returnAction === "rebake" && goalIdForReturn) {
+      // CompletionFlowScreen reads `returnAction` on focus, flips
+      // rebakeConfirmed, and clears the param. Navigating (instead of
+      // goBack) ensures the param is delivered even if the back gesture
+      // would have skipped CompletionFlow in the stack.
+      navigation.navigate("CompletionFlow", {
+        goalId: goalIdForReturn,
+        returnAction: "rebake",
+      });
+      return;
+    }
     navigation.goBack();
-  }, [badgeId, currentDesign, navigation]);
+  }, [badgeId, currentDesign, navigation, returnAction, goalIdForReturn]);
 
   if (!badge || !currentDesign) {
     return (
@@ -645,7 +673,7 @@ function BadgeDesignerContentNewGoal({ goalId }: { goalId: string }) {
 type ScreenParams =
   | { badgeId: string; mode?: undefined }
   | { mode: "new-goal"; goalId: string }
-  | { mode: "redesign"; badgeId: string };
+  | { mode: "redesign"; badgeId: string; returnAction?: "rebake" };
 
 export function BadgeDesignerScreen({
   route,
@@ -658,7 +686,16 @@ export function BadgeDesignerScreen({
   if ("mode" in params && params.mode === "new-goal") {
     content = <BadgeDesignerContentNewGoal goalId={params.goalId} />;
   } else if ("badgeId" in params && params.badgeId) {
-    content = <BadgeDesignerContentBadge badgeId={params.badgeId} />;
+    const returnAction =
+      "mode" in params && params.mode === "redesign"
+        ? params.returnAction
+        : undefined;
+    content = (
+      <BadgeDesignerContentBadge
+        badgeId={params.badgeId}
+        returnAction={returnAction}
+      />
+    );
   } else {
     logger.error("BadgeDesignerScreen: unrecognized params", { params });
     content = (

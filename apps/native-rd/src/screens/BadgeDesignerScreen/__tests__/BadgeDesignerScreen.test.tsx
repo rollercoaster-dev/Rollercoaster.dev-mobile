@@ -12,13 +12,14 @@ import type { BadgeDesignerScreenProps } from "../../../navigation/types";
 
 const mockGoBack = jest.fn();
 const mockReplace = jest.fn();
+const mockNavigate = jest.fn();
 
 jest.mock("@react-navigation/native", () => {
   const actual = jest.requireActual("@react-navigation/native");
   return {
     ...actual,
     useNavigation: () => ({
-      navigate: jest.fn(),
+      navigate: mockNavigate,
       goBack: mockGoBack,
       replace: mockReplace,
       setOptions: jest.fn(),
@@ -256,6 +257,80 @@ describe("BadgeDesignerScreen", () => {
       }),
     );
     expect(mockGoBack).toHaveBeenCalled();
+  });
+
+  it("redesign + returnAction=rebake: navigates to CompletionFlow with the goal id after save", () => {
+    mockUseQuery.mockReturnValue([makeRow()]);
+    const redesignRoute = {
+      params: {
+        mode: "redesign" as const,
+        badgeId: "badge-1",
+        returnAction: "rebake" as const,
+      },
+      key: "BadgeDesigner-1",
+      name: "BadgeDesigner" as const,
+    };
+    renderWithProviders(
+      <BadgeDesignerScreen
+        route={redesignRoute as never}
+        navigation={{} as never}
+      />,
+    );
+
+    fireEvent.press(screen.getByLabelText("Save Design"));
+    expect(mockUpdateBadge).toHaveBeenCalled();
+    expect(mockNavigate).toHaveBeenCalledWith("CompletionFlow", {
+      goalId: "goal-1",
+      returnAction: "rebake",
+    });
+    expect(mockGoBack).not.toHaveBeenCalled();
+  });
+
+  it("redesign without returnAction: falls back to goBack after save (no rebake signal)", () => {
+    mockUseQuery.mockReturnValue([makeRow()]);
+    const redesignRoute = {
+      params: { mode: "redesign" as const, badgeId: "badge-1" },
+      key: "BadgeDesigner-1",
+      name: "BadgeDesigner" as const,
+    };
+    renderWithProviders(
+      <BadgeDesignerScreen
+        route={redesignRoute as never}
+        navigation={{} as never}
+      />,
+    );
+
+    fireEvent.press(screen.getByLabelText("Save Design"));
+    expect(mockGoBack).toHaveBeenCalled();
+    expect(mockNavigate).not.toHaveBeenCalledWith(
+      "CompletionFlow",
+      expect.anything(),
+    );
+  });
+
+  it("redesign + returnAction=rebake: Back gesture must not flip the rebake signal", () => {
+    mockUseQuery.mockReturnValue([makeRow()]);
+    const redesignRoute = {
+      params: {
+        mode: "redesign" as const,
+        badgeId: "badge-1",
+        returnAction: "rebake" as const,
+      },
+      key: "BadgeDesigner-1",
+      name: "BadgeDesigner" as const,
+    };
+    renderWithProviders(
+      <BadgeDesignerScreen
+        route={redesignRoute as never}
+        navigation={{} as never}
+      />,
+    );
+
+    fireEvent.press(screen.getByLabelText("Go back"));
+    expect(mockGoBack).toHaveBeenCalled();
+    // No save, so no updateBadge and no rebake navigation should happen.
+    expect(mockUpdateBadge).not.toHaveBeenCalled();
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
   it("updates preview when a different shape is selected", () => {
