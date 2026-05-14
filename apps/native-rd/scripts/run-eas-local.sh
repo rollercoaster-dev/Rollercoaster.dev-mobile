@@ -92,11 +92,14 @@ artifact="${ARTIFACT_DIR}/native-rd-${platform}-${profile}-${sha}.${ext}"
 
 # Redact the base64 payload printed by eas-cli-local-build-plugin when its
 # subprocess exits non-zero — the payload inlines the Android keystore + key
-# passwords + alias. Pattern matches `<pkg>@<ver> <base64≥100 chars>`.
+# passwords + alias. Two passes: (1) the known leak shape if the plugin name
+# is still in the line, (2) any standalone long base64 run as defense-in-depth
+# if EAS ever changes its log format (newlines, scoped package name, etc.).
 redact() {
   awk '{
     gsub(/eas-cli-local-build-plugin@[0-9.]+ [A-Za-z0-9+\/=]{100,}/,
          "eas-cli-local-build-plugin@<ver> [REDACTED EAS PAYLOAD]");
+    gsub(/[A-Za-z0-9+\/=]{200,}/, "[REDACTED BASE64]");
     print;
     fflush();
   }'
