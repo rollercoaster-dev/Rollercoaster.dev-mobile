@@ -1,16 +1,13 @@
 name: CodeQL Security Scanning
 
-# Disabled by default: CodeQL requires GitHub Advanced Security on private repos.
-# To re-enable, restore the push/pull_request/schedule triggers below.
-#
-#   push:
-#     branches: [main]
-#   pull_request:
-#     branches: [main]
-#   schedule:
-#     - cron: "0 0 * * 0"
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Run weekly on Sunday at midnight UTC
+    - cron: "0 0 * * 0"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
