@@ -11,25 +11,32 @@ native-rd has a different toolchain from the rest of the monorepo:
 - Lint: eslint-config-expo + six local rules (not shared-config Vue/TS rules)
 - Types: TypeScript strict, RN-aware tsconfig
 
-For this reason it has its own dedicated CI workflow (`ci-native-rd.yml`) and
-its own ESLint config (`apps/native-rd/eslint.config.js`).
+For this reason it has its own ESLint config (`apps/native-rd/eslint.config.js`).
+Its lint, typecheck, and test tasks run alongside the workspace packages in the
+single `ci.yml` workflow described below.
 
-## CI Workflow Boundary
+## CI Workflow
 
-| Check              | Root CI (`ci.yml`)                              | Native CI (`ci-native-rd.yml`) |
-| ------------------ | ----------------------------------------------- | ------------------------------ |
-| Lint (`expo lint`) | via `turbo lint` (scope-filtered, cached)       | Always (filter=native-rd)      |
-| TypeScript         | via `turbo type-check` (scope-filtered, cached) | Always (filter=native-rd)      |
-| Jest tests         | Not run                                         | Always (`bun run test:ci`)     |
-| Prettier format    | via `format:check`                              | Not run (delegated to root)    |
-| Build              | via `turbo build`                               | Not run (no build step)        |
+There is a single CI workflow: `.github/workflows/ci.yml`. It runs on every PR
+(except docs-only changes filtered by `paths-ignore`) and on every push to
+`main`.
 
-`ci.yml` triggers on ALL PRs; `ci-native-rd.yml` triggers only when `apps/native-rd/**`
-or its workspace deps change. When both trigger on a native-rd PR the lint and type-check
-for native-rd run twice (once in each workflow). Turbo caches per-package within a single
-run, but there is no remote cache configured, so the two workflows do not share results.
-The duplicated work is cheap (~seconds) because lint and type-check for a single package
-are fast.
+| Step           | Command                                                 | Notes                                                               |
+| -------------- | ------------------------------------------------------- | ------------------------------------------------------------------- |
+| Install        | `bun install --frozen-lockfile`                         | Locked install from `bun.lock`                                      |
+| Build packages | `bun --filter @rollercoaster-dev/design-tokens build`   | Style Dictionary output needed before consumers type-check          |
+|                | `bun --filter @rollercoaster-dev/openbadges-core build` | `dist/` needed for native-rd's TypeScript resolution                |
+| Typecheck      | `bun run type-check`                                    | `turbo type-check` across workspace                                 |
+| Lint           | `bun run lint`                                          | `turbo lint` across workspace; native-rd uses its own ESLint config |
+| Test           | `bun run test`                                          | `turbo test` runs Jest in native-rd, `bun test` in openbadges-core  |
+
+Earlier revisions of this doc described a two-workflow split (a root CI plus a
+separate native-rd workflow). That split has been removed: the broader
+workflow's coverage was promoted into a single `ci.yml` and the duplicate
+deleted.
+
+Docs-only changes (`**/*.md`, `docs/**`, `apps/*/docs/**`, `apps/*/research/**`,
+`apps/*/prototypes/**`) skip CI via `paths-ignore`.
 
 ## Pre-commit Behavior
 
