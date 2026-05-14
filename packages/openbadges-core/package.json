@@ -58,7 +58,7 @@
     "typescript"
   ],
   "author": "Rollercoaster.dev <team@rollercoaster.dev>",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues"
   },

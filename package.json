@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "description": "Mobile app and shared badge packages for Rollercoaster.dev",
+  "license": "SEE LICENSE IN ./LICENSING.md",
   "workspaces": [
     "packages/*",
     "apps/*"
