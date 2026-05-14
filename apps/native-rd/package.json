@@ -30,6 +30,10 @@
     "test:a11y": "bash scripts/a11y-audit.sh",
     "test:a11y:json": "bash scripts/a11y-audit.sh --json",
     "testflight:ios": "bash scripts/testflight-ios.sh",
+    "eas:local:android": "bash scripts/run-eas-local.sh android preview",
+    "eas:local:android:prod": "bash scripts/run-eas-local.sh android production",
+    "eas:local:ios": "bash scripts/run-eas-local.sh ios preview",
+    "eas:local:ios:prod": "bash scripts/run-eas-local.sh ios production",
     "gen:pseudo": "bun run scripts/generate-pseudo-locale.ts"
   },
   "dependencies": {
