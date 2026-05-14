@@ -37,7 +37,6 @@ export const styles = StyleSheet.create((theme) => ({
     alignItems: "center",
     justifyContent: "center",
     paddingTop: theme.space[4],
-    paddingBottom: theme.space[16],
     paddingHorizontal: theme.space[4],
   },
   recordButton: {
