@@ -9,3 +9,4 @@ Completed research documents. These informed ADRs but are not the decisions them
 | [evolu-prototype-findings.md](./evolu-prototype-findings.md)                         | Findings from Evolu prototype implementation                | 2026-02-24    |
 | [openbadges-external-earning-research.md](./openbadges-external-earning-research.md) | Initial research for importing external badge opportunities | 2026-04-23    |
 | [native-rd-translations-research.md](./native-rd-translations-research.md)           | Recommended translation strategy for native-rd              | 2026-05-02    |
+| [release-pipeline.md](./release-pipeline.md)                                         | GH-Actions-orchestrated EAS pipeline for iOS + Android      | 2026-05-14    |
