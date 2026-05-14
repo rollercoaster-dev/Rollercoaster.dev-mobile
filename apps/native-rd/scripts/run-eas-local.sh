@@ -13,6 +13,8 @@
 #   run-eas-local.sh ios preview
 #
 # Env overrides:
+#   EAS_LOCAL_BUILD_VOLUME         Mountpoint to use for the workingdir.
+#                                   Defaults to /Volumes/SpinDrive.
 #   SENTRY_DISABLE_AUTO_UPLOAD=1   Skip Sentry sourcemap upload (use when the
 #                                   keychain token is rotated/missing).
 
@@ -25,20 +27,29 @@ cd "${APP_DIR}"
 platform="${1:-android}"
 profile="${2:-preview}"
 
-# Pre-flight: SpinDrive must be the actual external volume. If it isn't
-# mounted, /Volumes/SpinDrive can be a regular dir on the system SSD — which
-# would defeat the entire point of redirecting the workingdir.
-SPINDRIVE_MOUNT="/Volumes/SpinDrive"
-SPINDRIVE_EXPECTED_FS="/dev/disk8s1"
+# Pre-flight: the target volume must be a separate mounted filesystem. If it
+# isn't, the path can resolve to a regular dir on the system SSD — which would
+# defeat the entire point of redirecting the workingdir. Compare filesystem
+# device numbers (stat -f '%d') instead of hardcoding a device path like
+# /dev/disk8s1: macOS disk identifiers are unstable across reboots and depend
+# on USB attach order.
+VOLUME_MOUNT="${EAS_LOCAL_BUILD_VOLUME:-/Volumes/SpinDrive}"
 
-actual_fs="$(df "${SPINDRIVE_MOUNT}" 2>/dev/null | awk 'NR==2 {print $1}')"
-if [ "${actual_fs}" != "${SPINDRIVE_EXPECTED_FS}" ]; then
-  echo "Error: ${SPINDRIVE_MOUNT} is not mounted on ${SPINDRIVE_EXPECTED_FS} (got '${actual_fs:-nothing}')." >&2
-  echo "  Mount SpinDrive before running EAS local builds." >&2
+if [ ! -d "${VOLUME_MOUNT}" ]; then
+  echo "Error: ${VOLUME_MOUNT} does not exist." >&2
+  echo "  Mount it (or set EAS_LOCAL_BUILD_VOLUME) before running EAS local builds." >&2
   exit 1
 fi
 
-WORKDIR="${SPINDRIVE_MOUNT}/caches/eas-build-local"
+root_fsid="$(stat -f '%d' /)"
+mount_fsid="$(stat -f '%d' "${VOLUME_MOUNT}" 2>/dev/null || true)"
+if [ -z "${mount_fsid}" ] || [ "${mount_fsid}" = "${root_fsid}" ]; then
+  echo "Error: ${VOLUME_MOUNT} is not a separate mounted filesystem (same device as /)." >&2
+  echo "  The path exists but resolves to the system disk — mount the external volume first." >&2
+  exit 1
+fi
+
+WORKDIR="${VOLUME_MOUNT}/caches/eas-build-local"
 ARTIFACT_DIR="${WORKDIR}/artifacts"
 mkdir -p "${WORKDIR}" "${ARTIFACT_DIR}"
 export EAS_LOCAL_BUILD_WORKINGDIR="${WORKDIR}"
