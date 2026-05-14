@@ -40,11 +40,9 @@ import { keyProvider } from "../crypto";
 import {
   buildUnsignedCredential,
   buildDid,
-  generateBadgeImagePNG,
   bakePNG,
   isPNG,
   saveBadgePNG,
-  DEFAULT_BADGE_COLOR,
 } from "../badges";
 import { Buffer } from "buffer";
 import { useUserKey } from "./useUserKey";
@@ -221,32 +219,22 @@ export function useCreateBadge(
         setStatus("baking");
         breadcrumb({ category: "badge", message: "bake" });
 
-        // Use pre-captured designer PNG when available, otherwise fall back to
-        // the solid-color generator. When the caller provides a `design` but no
-        // `capturedPng`, that's always a programmer error — it means the designer
-        // surface forgot to capture the preview before handing off. Fail loudly
-        // so the silent "baked a solid color instead of the user's design" bug
-        // can't ship again.
-        const hexColor = (goal.color as string | null) ?? DEFAULT_BADGE_COLOR;
-        let pngBuffer: Buffer;
-        if (capturedPngRef.current) {
-          if (!isPNG(capturedPngRef.current)) {
-            throw new Error(
-              "useCreateBadge: capturedPng is not a valid PNG buffer",
-            );
-          }
-          pngBuffer = capturedPngRef.current;
-        } else if (designRef.current) {
+        // capturedPng is required. Callers (CompletionFlowScreen) must
+        // provide either a pending design's PNG or an auto-captured
+        // default-design PNG before enabling badge creation. The old
+        // solid-color fallback baked an unloved blue square into the
+        // credential and is gone for good.
+        if (!capturedPngRef.current) {
           throw new Error(
-            "useCreateBadge: design provided without capturedPng — the designer surface must capture the preview before triggering badge creation",
+            "useCreateBadge: capturedPng is required — callers must capture a default-design PNG before enabling badge creation",
           );
-        } else {
-          logger.warn(
-            "No captured PNG provided — falling back to solid-color badge image",
-            { goalId },
-          );
-          pngBuffer = Buffer.from(generateBadgeImagePNG(hexColor));
         }
+        if (!isPNG(capturedPngRef.current)) {
+          throw new Error(
+            "useCreateBadge: capturedPng is not a valid PNG buffer",
+          );
+        }
+        const pngBuffer = capturedPngRef.current;
         const bakedPng = bakePNG(pngBuffer, JSON.stringify(signedCredential));
 
         // Save to disk — legitimately recoverable (filesystem errors). Fall back

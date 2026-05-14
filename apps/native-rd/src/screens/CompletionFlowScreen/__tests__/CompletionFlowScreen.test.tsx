@@ -45,6 +45,20 @@ jest.mock("../../../hooks/useCreateBadge", () => ({
   useCreateBadge: (goalId: any, opts: any) => mockUseCreateBadge(goalId, opts),
 }));
 
+// The default-design auto-capture in CompletionContent calls these. Stub the
+// renderer (avoid expensive SVG render in jsdom) and resolve captureBadge
+// immediately with a fake PNG so the `enabled: true` branch can be observed.
+jest.mock("../../../badges/BadgeRenderer", () => ({
+  BadgeRenderer: () => null,
+  getRendererLayoutOptions: () => ({ strokeWidth: 3, hasShadow: false }),
+}));
+jest.mock("../../../badges/captureBadge", () => ({
+  captureBadge: jest.fn(() =>
+    Promise.resolve(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])),
+  ),
+  getCaptureDimensions: jest.fn(() => ({ width: 512, height: 512 })),
+}));
+
 const mockUncompleteGoal = jest.fn();
 const mockCreateEvidence = jest.fn();
 jest.mock("../../../db", () => ({
@@ -352,12 +366,24 @@ describe("CompletionFlowScreen", () => {
       expect(screen.getAllByText("Complete").length).toBeGreaterThanOrEqual(1);
     });
 
-    it("calls useCreateBadge with the correct goalId", () => {
+    it("calls useCreateBadge with the correct goalId", async () => {
       setupQueries({ goalEvidence: GOAL_EVIDENCE });
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
-      expect(mockUseCreateBadge).toHaveBeenCalledWith(
-        "goal-1",
-        expect.objectContaining({ enabled: true }),
+      // The default-design auto-capture waits for onLayout before snapshotting.
+      // RN's test renderer doesn't fire layout events automatically, so we
+      // dispatch one synthetically.
+      fireEvent(
+        screen.getByTestId("completion-fallback-capture-host", {
+          includeHiddenElements: true,
+        }),
+        "layout",
+        { nativeEvent: { layout: { x: 0, y: 0, width: 160, height: 160 } } },
+      );
+      await waitFor(() =>
+        expect(mockUseCreateBadge).toHaveBeenCalledWith(
+          "goal-1",
+          expect.objectContaining({ enabled: true }),
+        ),
       );
     });
 
@@ -370,12 +396,21 @@ describe("CompletionFlowScreen", () => {
       );
     });
 
-    it("passes enabled: true to useCreateBadge during celebration phase", () => {
+    it("passes enabled: true to useCreateBadge during celebration phase (after default-design capture)", async () => {
       setupQueries({ goalEvidence: GOAL_EVIDENCE }); // has evidence => celebration phase
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
-      expect(mockUseCreateBadge).toHaveBeenCalledWith(
-        "goal-1",
-        expect.objectContaining({ enabled: true }),
+      fireEvent(
+        screen.getByTestId("completion-fallback-capture-host", {
+          includeHiddenElements: true,
+        }),
+        "layout",
+        { nativeEvent: { layout: { x: 0, y: 0, width: 160, height: 160 } } },
+      );
+      await waitFor(() =>
+        expect(mockUseCreateBadge).toHaveBeenCalledWith(
+          "goal-1",
+          expect.objectContaining({ enabled: true }),
+        ),
       );
     });
   });
