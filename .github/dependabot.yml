@@ -24,6 +24,15 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    ignore:
+      # Jest 30.4.x has a regression where jest-runtime.resetModules
+      # calls _moduleMocker.clearMocksOnScope without checking existence,
+      # breaking the ModuleMocker shipped via react-native/jest/react-native-env.js.
+      # Revisit once jest 30.5 lands.
+      - dependency-name: "jest"
+        versions: ["30.4.x"]
+      - dependency-name: "babel-jest"
+        versions: ["30.4.x"]
     labels:
       - "dependencies"
     commit-message:
