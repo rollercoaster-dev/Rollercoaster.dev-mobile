@@ -113,7 +113,7 @@ requires the `expo` package allowlist entry in
 - Script: `apps/native-rd/scripts/a11y-audit.sh` (also runnable as
   `bun run test:a11y` for human output or `bun run test:a11y:json` for
   machine-readable output).
-- Backed by: `npx jest --testPathPatterns accessibility --json`.
+- Backed by: `bash scripts/jest-node.sh --testPathPatterns accessibility --json` — Jest is invoked through the same `jest-node.sh` wrapper as the main test step so Bun's injected `node` shim is bypassed (see "Why Jest (not `bun test`) for native-rd" above).
 - Runner dependencies: `python3` (preinstalled on `ubuntu-latest`) for
   the JSON summary formatter.
 - Asserts: every test matching the `accessibility` pattern — including
