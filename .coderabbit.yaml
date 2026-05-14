@@ -17,6 +17,105 @@ reviews:
 
   # Path-specific review instructions
   path_instructions:
+    # Native-RD UI Components — ND Accessibility & Design System
+    - path: "apps/native-rd/src/components/**/*.{ts,tsx}"
+      instructions: |
+        Review React Native components against the ND-accessibility contract
+        documented in apps/native-rd/CLAUDE.md.
+
+        Accessibility:
+        - All interactive elements have accessibilityRole and accessibilityLabel
+        - Touch targets are at least 44pt × 44pt
+        - Focus states are visible
+        - Animations respect AccessibilityInfo.isReduceMotionEnabled() — never
+          animate motion when reduce-motion is on
+        - Color contrast meets WCAG AA against both light and dark themes
+
+        Design system discipline:
+        - No raw color values; consume design tokens via Unistyles or
+          @rollercoaster-dev/design-tokens. The local ESLint rule
+          `local/no-raw-colors` enforces this — flag dynamic style construction
+          the rule may miss
+        - Components live in src/components/, not in src/screens/
+        - Each component directory exposes a barrel index.ts
+          (enforced by `local/require-barrel-export`)
+
+        File size:
+        - Components over ~250 lines should be split
+          (the `local/file-size-limit` rule warns at the configured threshold)
+
+    # Native-RD Screens — Composition & Navigation
+    - path: "apps/native-rd/src/screens/**/*.{ts,tsx}"
+      instructions: |
+        Screens compose components; they don't define primitives.
+
+        - No imports from another screen's directory (the
+          `local/no-component-imports-screens` rule enforces this; flag
+          architectural violations the rule cannot statically see, e.g.
+          duplicated layout code)
+        - Navigation params should be typed against the navigator's param list
+        - Data fetching belongs in hooks/services, not inline in the screen
+        - Loading and error states must be ND-friendly: calm copy, no jargon,
+          no walls of red text
+
+    # Native-RD E2E Tests — Detox Flake Prevention
+    - path: "apps/native-rd/e2e/**/*.{ts,tsx}"
+      instructions: |
+        Detox flake-prevention:
+        - Use testID over text-based selectors where possible (text is
+          localized and changes between i18n updates)
+        - Wait on element state (waitFor(...).toBeVisible()), never on
+          fixed sleep timers
+        - Reset app state per test (device.launchApp({newInstance: true}))
+        - Tests must run on both iOS sim and Android emulator targets
+
+    # OpenBadges Core — Spec Compliance
+    - path: "packages/openbadges-core/src/**/*.ts"
+      instructions: |
+        This package must comply with the Open Badges 2.0 and 3.0 specs
+        and the W3C Verifiable Credentials Data Model.
+
+        - JSON-LD @context handling must preserve order and include the
+          required OB contexts
+        - Type guards return boolean and never throw
+        - Verifiable Credential proof and issuer fields are required where
+          the spec mandates them; do not default-construct invalid VCs
+        - When changing exported types, check downstream impact in
+          apps/native-rd/src (this package is consumed as workspace:*)
+
+    # Design Tokens — Generation & Consistency
+    - path: "packages/design-tokens/src/**/*.{ts,js,json}"
+      instructions: |
+        Tokens are generated into multiple targets (CSS variables, Unistyles
+        themes) by Style Dictionary.
+
+        - Light and dark themes must define the same token keys
+          (no missing-in-one-theme drift)
+        - ND-friendly tokens (motion, density, contrast) keep their semantic
+          names — renaming is a breaking change for consumers
+        - Don't hand-edit generated output in packages/design-tokens/css/
+          or the Unistyles dist (those are build artifacts)
+        - Adding a new token requires updating the source AND any consumer
+          mapping in apps/native-rd
+
+    # GitHub Workflows — No Removed Packages
+    - path: ".github/workflows/**/*.{yml,yaml}"
+      instructions: |
+        Per the root CLAUDE.md, do NOT restore CI references to packages
+        extracted in the 2026-05-14 split:
+        - apps/openbadges-system
+        - apps/openbadges-modular-server
+        - packages/openbadges-ui
+        - packages/shared-config
+        - packages/rd-logger (as a workspace path; the registry dep is fine)
+
+        Workflow hygiene:
+        - Pin actions by major version (actions/checkout@v6 etc.), not by
+          floating tags like @main
+        - Concurrency groups should cancel-in-progress on PR refs
+        - Add `paths:` filters where a workflow does not need to run on
+          unrelated changes (docs-only, plan-only, etc.)
+
     # Security Utilities
     - path: "**/utils/security/**/*.ts"
       instructions: |
