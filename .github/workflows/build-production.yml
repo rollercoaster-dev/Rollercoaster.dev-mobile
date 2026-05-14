@@ -1,0 +1,83 @@
+name: build-production
+
+# Manual / click only:
+# - "release: published" fires when a GitHub Release is published from the
+#   Releases page (release-please does this automatically when its PR merges,
+#   or a human can click "Publish release" in the UI).
+# - "workflow_dispatch" lets us re-run a release against a specific tag/SHA.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref to build (tag or commit SHA)"
+        required: true
+
+concurrency:
+  group: build-production
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    uses: ./.github/workflows/_validate.yml
+
+  build-and-submit:
+    needs: validate
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/native-rd
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.event.release.tag_name || github.ref }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: "package.json"
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+        working-directory: .
+
+      - name: Read version
+        id: version
+        run: echo "value=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Write credential files
+        run: |
+          mkdir -p ../../secrets
+          printf '%s' "${{ secrets.APPLE_ASC_KEY_P8 }}" > ../../secrets/asc-api-key.p8
+          printf '%s' "${{ secrets.ANDROID_PLAY_SERVICE_ACCOUNT_JSON }}" > ../../secrets/play-service-account.json
+          chmod 600 ../../secrets/asc-api-key.p8 ../../secrets/play-service-account.json
+
+      - name: Build (EAS, production profile, both platforms)
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: npx eas-cli@latest build --profile production --platform all --non-interactive --no-wait
+
+      - name: Submit (EAS, production profile, both platforms — 10% Android rollout)
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          APPLE_ASC_KEY_ID: ${{ secrets.APPLE_ASC_KEY_ID }}
+          APPLE_ASC_ISSUER_ID: ${{ secrets.APPLE_ASC_ISSUER_ID }}
+        run: npx eas-cli@latest submit --profile production --platform all --latest --non-interactive --wait
+
+      - name: Finalize Sentry release
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: rollercoasterdev
+          SENTRY_PROJECT: native-rd
+          RELEASE_VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          npx --yes @sentry/cli@latest releases finalize "$RELEASE_VERSION"
+          npx --yes @sentry/cli@latest releases deploys "$RELEASE_VERSION" new --env production
