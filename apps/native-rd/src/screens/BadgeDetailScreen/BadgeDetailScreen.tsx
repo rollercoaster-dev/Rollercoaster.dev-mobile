@@ -125,20 +125,10 @@ function BadgeDetailContent({
   const rows = useQuery(query);
   const badge = rows[0] ?? null;
 
-  // Fetch every version of this goal's badge so we can render the "vN of M"
-  // chip and feed the history modal. Safe before we know the goalId — the
-  // query factory accepts a placeholder when the badge hasn't resolved yet.
-  const versionsQuery = useMemo(
-    () => badgeVersionsByGoalQuery((badge?.goalId ?? "") as GoalId),
-    [badge?.goalId],
-  );
-  const versionRows = useQuery(versionsQuery);
-
   const [imageLoadFailed, setImageLoadFailed] = useState(false);
   const [previewHeight, setPreviewHeight] = useState(
     PREVIEW_OVERLAY_INITIAL_HEIGHT,
   );
-  const [historyOpen, setHistoryOpen] = useState(false);
   const {
     exportImage,
     exportDesignImage,
@@ -204,15 +194,6 @@ function BadgeDetailContent({
     updatedAt: (badge.updatedAt as string | null) ?? null,
   });
 
-  // Version chip: only show when there's more than one row (active +
-  // soft-deleted). The current row's index in the newest-first list is its
-  // position — we know it's always the first non-deleted entry.
-  const totalVersions = versionRows.length;
-  const currentVersionIndex = versionRows.findIndex((r) => r.isDeleted == null);
-  const currentVersion =
-    currentVersionIndex >= 0 ? totalVersions - currentVersionIndex : 0;
-  const showVersionChip = totalVersions > 1;
-
   const goalId = (badge.goalId as string) ?? null;
   const handleOutdatedCaptionPress = () => {
     if (!goalId) return;
@@ -226,14 +207,6 @@ function BadgeDetailContent({
       params: { goalId },
     });
   };
-
-  const versionsForModal: BadgeVersionRow[] = versionRows.map((r) => ({
-    id: r.id as string,
-    credential: r.credential as string | null,
-    imageUri: r.imageUri as string | null,
-    createdAt: r.createdAt as string | null,
-    isDeleted: (r.isDeleted ?? null) as 0 | 1 | null,
-  }));
 
   return (
     <>
@@ -284,21 +257,11 @@ function BadgeDetailContent({
           </Pressable>
         ) : null}
 
-        {showVersionChip ? (
-          // Pressable, not Button: this is a compact metadata chip ("vN of M
-          // · History"), not a primary action — Button styling would overweight it.
-          // eslint-disable-next-line local/no-shared-component-reimplementation
-          <Pressable
-            onPress={() => setHistoryOpen(true)}
-            accessibilityRole="button"
-            accessibilityLabel={`v${currentVersion} of ${totalVersions}, view version history`}
-            style={styles.versionChip}
-            testID="badge-version-chip"
-          >
-            <Text style={styles.versionChipText}>
-              v{currentVersion} of {totalVersions} · History
-            </Text>
-          </Pressable>
+        {goalId ? (
+          <BadgeVersionsSection
+            goalId={goalId as GoalId}
+            goalTitle={goalTitle}
+          />
         ) : null}
 
         <Button
@@ -418,7 +381,63 @@ function BadgeDetailContent({
           )}
         </View>
       </View>
+    </>
+  );
+}
 
+/**
+ * Owns the version-history query and its modal state. Mounted only after the
+ * parent has resolved a concrete `goalId`, so the branded-type contract is
+ * preserved and `badgeVersionsByGoalQuery` is never subscribed with a
+ * placeholder id.
+ */
+function BadgeVersionsSection({
+  goalId,
+  goalTitle,
+}: {
+  goalId: GoalId;
+  goalTitle: string;
+}) {
+  const versionsQuery = useMemo(
+    () => badgeVersionsByGoalQuery(goalId),
+    [goalId],
+  );
+  const versionRows = useQuery(versionsQuery);
+  const [historyOpen, setHistoryOpen] = useState(false);
+
+  // The current row's index in the newest-first list is its position —
+  // it's always the first non-deleted entry.
+  const totalVersions = versionRows.length;
+  const currentVersionIndex = versionRows.findIndex((r) => r.isDeleted == null);
+  const currentVersion =
+    currentVersionIndex >= 0 ? totalVersions - currentVersionIndex : 0;
+
+  if (totalVersions <= 1) return null;
+
+  const versionsForModal: BadgeVersionRow[] = versionRows.map((r) => ({
+    id: r.id as string,
+    credential: r.credential as string | null,
+    imageUri: r.imageUri as string | null,
+    createdAt: r.createdAt as string | null,
+    isDeleted: (r.isDeleted ?? null) as 0 | 1 | null,
+  }));
+
+  return (
+    <>
+      {/* Pressable, not Button: this is a compact metadata chip ("vN of M
+          · History"), not a primary action — Button styling would overweight it. */}
+      {/* eslint-disable-next-line local/no-shared-component-reimplementation */}
+      <Pressable
+        onPress={() => setHistoryOpen(true)}
+        accessibilityRole="button"
+        accessibilityLabel={`v${currentVersion} of ${totalVersions}, view version history`}
+        style={styles.versionChip}
+        testID="badge-version-chip"
+      >
+        <Text style={styles.versionChipText}>
+          v{currentVersion} of {totalVersions} · History
+        </Text>
+      </Pressable>
       <BadgeVersionHistoryModal
         visible={historyOpen}
         onClose={() => setHistoryOpen(false)}
