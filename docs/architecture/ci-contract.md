@@ -11,6 +11,7 @@ checks that matter for the changed code.
 | ------------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ci-native-rd`                  | `.github/workflows/ci-native-rd.yml` | Changes under `apps/native-rd/**` (excluding `docs/`, `research/`, `prototypes/` subdirs), `packages/design-tokens/**`, `packages/openbadges-core/**`, or root inputs that affect the gate (`bun.lock`, `bunfig.toml`, `turbo.json`, `package.json`, `.prettierignore`) / the workflow file. A blanket `**/*.md` exclusion is deliberately NOT applied — see "Why no blanket `**/*.md` exclusion" below. |
 | `ci-packages`                   | `.github/workflows/ci-packages.yml`  | Changes under `packages/**` (excluding `**/*.md` and `**/docs/**`), or root inputs that affect the gate (`bun.lock`, `bunfig.toml`, `turbo.json`, `package.json`, `tsconfig.json`, `eslint.config.mjs`, `.prettierignore`) / the workflow file.                                                                                                                                                          |
+| `ci-docs`                       | `.github/workflows/ci-docs.yml`      | Any `**/*.md` change, plus `.prettierignore` / the workflow file. Catches docs-only PRs that other workflows' path filters skip.                                                                                                                                                                                                                                                                         |
 | `codeql`                        | `.github/workflows/codeql.yml`       | Security scanning (JS/TS), weekly + on push/PR.                                                                                                                                                                                                                                                                                                                                                          |
 | `dco`                           | `.github/workflows/dco.yml`          | Verifies `Signed-off-by:` on commits touching app/package paths.                                                                                                                                                                                                                                                                                                                                         |
 | `claude` / `claude-code-review` | `.github/workflows/claude*.yml`      | Claude Code Review integration. Manual / comment-triggered.                                                                                                                                                                                                                                                                                                                                              |
@@ -46,7 +47,21 @@ Both validation workflows use the same install + cache layout:
 | Test         | `bun run turbo test --filter='./packages/*'`       |
 | Build        | `bun run turbo build --filter='./packages/*'`      |
 
-## Why no blanket `**/*.md` exclusion
+## ci-docs validation steps
+
+| Step         | Command                |
+| ------------ | ---------------------- |
+| Format check | `bun run format:check` |
+
+`ci-docs` is a thin workflow that triggers on any `**/*.md` change
+(plus `.prettierignore` and the workflow file itself). It exists to
+catch Prettier issues in markdown that would otherwise slip through:
+the `ci-native-rd` and `ci-packages` filters deliberately exclude
+docs-only paths, so a pure-docs PR can leave their `format:check`
+unexecuted. `ci-docs` runs only the format check (no node toolchain
+needed for Prettier), so the job is fast.
+
+## Why no blanket `**/*.md` exclusion on ci-native-rd
 
 The `ci-native-rd` workflow filter does NOT carry a top-level
 `!**/*.md` (or equivalent) exclusion. An earlier revision did, and it
@@ -64,6 +79,8 @@ What this means in practice:
   `prototypes/` (curated dirs whose contents never affect build/test).
 - For `ci-packages`, `**/*.md` and `**/docs/**` ARE excluded under
   `packages/**`, because no package code-path consumes those.
+- Pure-docs PRs that miss every other workflow are still caught by
+  `ci-docs`, which runs `format:check` on any `**/*.md` change.
 
 The tradeoff is intentional: correctness on mixed PRs over efficiency
 on pure-docs PRs.
@@ -176,6 +193,7 @@ The required status checks on `main` should be:
 
 - `ci-native-rd / Native-RD Validate`
 - `ci-packages / Packages Validate`
+- `ci-docs / Docs Format Check`
 - `dco-check / Verify Signed-off-by`
 - (optional) `CodeQL`
 
