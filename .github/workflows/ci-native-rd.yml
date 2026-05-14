@@ -15,7 +15,6 @@ on:
       - "apps/native-rd/docs/**"
       - "apps/native-rd/research/**"
       - "apps/native-rd/prototypes/**"
-      - "**/*.md"
   push:
     branches: [main]
 
