@@ -5,16 +5,15 @@ on:
   pull_request:
     paths:
       - "apps/native-rd/**"
+      - "!apps/native-rd/docs/**"
+      - "!apps/native-rd/research/**"
+      - "!apps/native-rd/prototypes/**"
       - "packages/design-tokens/**"
       - "packages/openbadges-core/**"
       - "bun.lock"
       - "turbo.json"
       - "package.json"
       - ".github/workflows/ci-native-rd.yml"
-    paths-ignore:
-      - "apps/native-rd/docs/**"
-      - "apps/native-rd/research/**"
-      - "apps/native-rd/prototypes/**"
   push:
     branches: [main]
 
