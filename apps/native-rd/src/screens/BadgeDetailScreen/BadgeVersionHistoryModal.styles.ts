@@ -37,9 +37,6 @@ export const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.background,
     ...shadowStyle(theme, "cardElevation"),
   },
-  versionRowSelected: {
-    borderColor: theme.colors.accentPurple,
-  },
   thumbnail: {
     width: 48,
     height: 48,
