@@ -230,7 +230,16 @@ export function useCreateBadge(
               ? (existingBadge.imageUri as string)
               : null;
           if (existingImageUri) {
-            const existing = await readBadgePNG(existingImageUri);
+            let existing: Buffer;
+            try {
+              existing = await readBadgePNG(existingImageUri);
+            } catch (readErr) {
+              // Surface the URI so the user-visible badgeError points at the
+              // missing/unreadable file instead of a raw FileSystem message.
+              throw new Error(
+                `useCreateBadge: failed to read existing badge PNG at ${existingImageUri}: ${readErr instanceof Error ? readErr.message : String(readErr)}`,
+              );
+            }
             if (!isPNG(existing)) {
               throw new Error(
                 `useCreateBadge: existing badge PNG at ${existingImageUri} is not a valid PNG`,

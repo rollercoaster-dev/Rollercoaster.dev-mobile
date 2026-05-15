@@ -263,6 +263,9 @@ describe("useCreateBadge", () => {
 
       expect(result.current.status).toBe("error");
       expect(result.current.error).toContain("File missing");
+      // The URI must be in the surfaced error so the user-visible badgeError
+      // points at the missing file, not a context-free FileSystem message.
+      expect(result.current.error).toContain(EXISTING_IMAGE_URI);
       expect(mockBadges.bakePNG).not.toHaveBeenCalled();
       expect(mockUpdateBadge).not.toHaveBeenCalled();
       expect(mockCreateBadge).not.toHaveBeenCalled();
