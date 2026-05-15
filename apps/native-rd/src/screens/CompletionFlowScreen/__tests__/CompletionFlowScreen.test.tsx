@@ -263,6 +263,13 @@ describe("CompletionFlowScreen", () => {
   });
 
   describe("celebration phase (goal evidence exists)", () => {
+    // For tests that target the post-bake action buttons (Add Final
+    // Evidence, View Your Journey, Reopen Goal), use a completed goal:
+    // that's the state right after Bake It fires + completeGoal flips
+    // status. Pre-bake the celebration phase shows the Bake It /
+    // Redesign First gate instead — those have their own tests below.
+    const POST_BAKE = { ...GOAL, status: "completed" };
+
     it("shows celebration immediately when goal already has evidence", () => {
       setupQueries({ goalEvidence: GOAL_EVIDENCE });
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
@@ -277,8 +284,8 @@ describe("CompletionFlowScreen", () => {
       ).toBeOnTheScreen();
     });
 
-    it("shows both action buttons", () => {
-      setupQueries({ goalEvidence: GOAL_EVIDENCE });
+    it("shows both action buttons (post-bake state)", () => {
+      setupQueries({ goal: POST_BAKE, goalEvidence: GOAL_EVIDENCE });
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
       expect(screen.getByLabelText("Add Final Evidence")).toBeOnTheScreen();
       expect(screen.getByLabelText(/View Your Journey/)).toBeOnTheScreen();
@@ -292,7 +299,7 @@ describe("CompletionFlowScreen", () => {
     });
 
     it('navigates to capture screen when "Add Final Evidence" is tapped', () => {
-      setupQueries({ goalEvidence: GOAL_EVIDENCE });
+      setupQueries({ goal: POST_BAKE, goalEvidence: GOAL_EVIDENCE });
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
       fireEvent.press(screen.getByLabelText("Add Final Evidence"));
       expect(mockNavigate).toHaveBeenCalledWith("CapturePhoto", {
@@ -301,7 +308,7 @@ describe("CompletionFlowScreen", () => {
     });
 
     it('navigates to TimelineJourney when "View Your Journey" is tapped', () => {
-      setupQueries({ goalEvidence: GOAL_EVIDENCE });
+      setupQueries({ goal: POST_BAKE, goalEvidence: GOAL_EVIDENCE });
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
       fireEvent.press(screen.getByLabelText(/View Your Journey/));
       expect(mockNavigate).toHaveBeenCalledWith("TimelineJourney", {
@@ -373,9 +380,9 @@ describe("CompletionFlowScreen", () => {
     it("calls useCreateBadge with the correct goalId", async () => {
       setupQueries({ goalEvidence: GOAL_EVIDENCE });
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
-      // The default-design auto-capture waits for onLayout before snapshotting.
-      // RN's test renderer doesn't fire layout events automatically, so we
-      // dispatch one synthetically.
+      // The default-design auto-capture waits for onLayout before
+      // snapshotting. RN's test renderer doesn't fire layout events
+      // automatically, so we dispatch one synthetically.
       fireEvent(
         screen.getByTestId("completion-fallback-capture-host", {
           includeHiddenElements: true,
@@ -383,6 +390,8 @@ describe("CompletionFlowScreen", () => {
         "layout",
         { nativeEvent: { layout: { x: 0, y: 0, width: 160, height: 160 } } },
       );
+      // The bake never fires automatically — user must tap Bake It first.
+      fireEvent.press(screen.getByLabelText("Bake It"));
       await waitFor(() =>
         expect(mockUseCreateBadge).toHaveBeenCalledWith(
           "goal-1",
@@ -400,8 +409,8 @@ describe("CompletionFlowScreen", () => {
       );
     });
 
-    it("passes enabled: true to useCreateBadge during celebration phase (after default-design capture)", async () => {
-      setupQueries({ goalEvidence: GOAL_EVIDENCE }); // has evidence => celebration phase
+    it("passes enabled: false to useCreateBadge in celebration phase until user taps Bake It", async () => {
+      setupQueries({ goalEvidence: GOAL_EVIDENCE });
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
       fireEvent(
         screen.getByTestId("completion-fallback-capture-host", {
@@ -410,12 +419,100 @@ describe("CompletionFlowScreen", () => {
         "layout",
         { nativeEvent: { layout: { x: 0, y: 0, width: 160, height: 160 } } },
       );
+      // Without tapping Bake It, enabled stays false even after the
+      // fallback capture resolves.
+      await waitFor(() => {
+        const lastCallArgs =
+          mockUseCreateBadge.mock.calls[
+            mockUseCreateBadge.mock.calls.length - 1
+          ];
+        expect(lastCallArgs[1]).toMatchObject({ enabled: false });
+      });
+    });
+
+    it("passes enabled: true to useCreateBadge after Bake It is tapped", async () => {
+      setupQueries({ goalEvidence: GOAL_EVIDENCE });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      fireEvent(
+        screen.getByTestId("completion-fallback-capture-host", {
+          includeHiddenElements: true,
+        }),
+        "layout",
+        { nativeEvent: { layout: { x: 0, y: 0, width: 160, height: 160 } } },
+      );
+      fireEvent.press(screen.getByLabelText("Bake It"));
       await waitFor(() =>
         expect(mockUseCreateBadge).toHaveBeenCalledWith(
           "goal-1",
           expect.objectContaining({ enabled: true }),
         ),
       );
+    });
+  });
+
+  describe("pre-bake choice (Bake It / Redesign First)", () => {
+    it("renders Bake It and Redesign First when in celebration, goal active, no prior tap", () => {
+      setupQueries({ goalEvidence: GOAL_EVIDENCE });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      expect(screen.getByLabelText("Bake It")).toBeOnTheScreen();
+      expect(screen.getByLabelText("Redesign First")).toBeOnTheScreen();
+    });
+
+    it("hides the choice once the goal is completed (post-bake / view-only)", () => {
+      setupQueries({
+        goal: { ...GOAL, status: "completed" },
+        goalEvidence: GOAL_EVIDENCE,
+      });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      expect(screen.queryByLabelText("Bake It")).not.toBeOnTheScreen();
+      expect(screen.queryByLabelText("Redesign First")).not.toBeOnTheScreen();
+    });
+
+    it("Redesign First on first completion (no badge yet) navigates to BadgeDesigner new-goal mode", () => {
+      setupQueries({ goalEvidence: GOAL_EVIDENCE });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      fireEvent.press(screen.getByLabelText("Redesign First"));
+      expect(mockNavigate).toHaveBeenCalledWith("BadgeDesigner", {
+        mode: "new-goal",
+        goalId: "goal-1",
+      });
+    });
+
+    it("Redesign First on re-completion (badge exists) navigates to BadgeDesigner redesign mode", () => {
+      // Pre-bake state: hook hasn't completed the bake yet, so status is
+      // "idle". Without this the default "done" mock immediately opens
+      // the modal and the pre-bake UI is gone.
+      mockUseCreateBadge.mockReturnValue({ status: "idle", error: null });
+      setupQueries({
+        goalEvidence: GOAL_EVIDENCE,
+        badge: BADGE_ROW,
+        allBadges: [BADGE_ROW],
+      });
+      // Re-completion lands on evidence-prompt; advance by re-rendering
+      // with a higher evidence count so the count-based advance triggers.
+      const { rerender } = renderWithProviders(
+        <CompletionFlowScreen {...routeProps} />,
+      );
+      const FRESH_EVIDENCE = [
+        ...GOAL_EVIDENCE,
+        {
+          id: "ev-2",
+          type: "text",
+          description: "Fresh reflection",
+          uri: "content:text;new note",
+        },
+      ];
+      setupQueries({
+        goalEvidence: FRESH_EVIDENCE,
+        badge: BADGE_ROW,
+        allBadges: [BADGE_ROW],
+      });
+      rerender(<CompletionFlowScreen {...routeProps} />);
+      fireEvent.press(screen.getByLabelText("Redesign First"));
+      expect(mockNavigate).toHaveBeenCalledWith("BadgeDesigner", {
+        mode: "redesign",
+        badgeId: "badge-1",
+      });
     });
   });
 
@@ -496,9 +593,16 @@ describe("CompletionFlowScreen", () => {
   });
 
   describe("BadgeEarnedModal integration", () => {
+    // The modal appears post-bake. Post-bake the goal is `completed`
+    // (completeGoal flipped it). Tests use status: "completed" so the
+    // pre-bake choice gate is skipped and the bake hook's `done` status
+    // (mocked) immediately opens the modal.
+    const POST_BAKE = { ...GOAL, status: "completed" };
+
     it("shows BadgeEarnedModal when badgeStatus is done and badge exists", () => {
       mockUseCreateBadge.mockReturnValue({ status: "done", error: null });
       setupQueries({
+        goal: POST_BAKE,
         goalEvidence: GOAL_EVIDENCE,
         badge: BADGE_ROW,
         allBadges: [BADGE_ROW],
@@ -509,14 +613,24 @@ describe("CompletionFlowScreen", () => {
 
     it("does not show BadgeEarnedModal when badgeStatus is building", () => {
       mockUseCreateBadge.mockReturnValue({ status: "building", error: null });
-      setupQueries({ goalEvidence: GOAL_EVIDENCE, badge: null, allBadges: [] });
+      setupQueries({
+        goal: POST_BAKE,
+        goalEvidence: GOAL_EVIDENCE,
+        badge: null,
+        allBadges: [],
+      });
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
       expect(screen.queryByLabelText("Badge earned")).not.toBeOnTheScreen();
     });
 
     it("does not show BadgeEarnedModal when no badge row yet", () => {
       mockUseCreateBadge.mockReturnValue({ status: "done", error: null });
-      setupQueries({ goalEvidence: GOAL_EVIDENCE, badge: null, allBadges: [] });
+      setupQueries({
+        goal: POST_BAKE,
+        goalEvidence: GOAL_EVIDENCE,
+        badge: null,
+        allBadges: [],
+      });
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
       expect(screen.queryByLabelText("Badge earned")).not.toBeOnTheScreen();
     });
@@ -524,6 +638,7 @@ describe("CompletionFlowScreen", () => {
     it("shows first-badge microcopy when only one badge exists", () => {
       mockUseCreateBadge.mockReturnValue({ status: "done", error: null });
       setupQueries({
+        goal: POST_BAKE,
         goalEvidence: GOAL_EVIDENCE,
         badge: BADGE_ROW,
         allBadges: [BADGE_ROW],
@@ -536,6 +651,7 @@ describe("CompletionFlowScreen", () => {
       const otherBadge = { ...BADGE_ROW, id: "badge-2", goalId: "goal-2" };
       mockUseCreateBadge.mockReturnValue({ status: "done", error: null });
       setupQueries({
+        goal: POST_BAKE,
         goalEvidence: GOAL_EVIDENCE,
         badge: BADGE_ROW,
         allBadges: [BADGE_ROW, otherBadge],
@@ -547,6 +663,7 @@ describe("CompletionFlowScreen", () => {
     it('dismisses modal on "Keep going"', () => {
       mockUseCreateBadge.mockReturnValue({ status: "done", error: null });
       setupQueries({
+        goal: POST_BAKE,
         goalEvidence: GOAL_EVIDENCE,
         badge: BADGE_ROW,
         allBadges: [BADGE_ROW],
@@ -559,6 +676,7 @@ describe("CompletionFlowScreen", () => {
     it('navigates to BadgeDetail via parent tab navigator on "View Badge"', () => {
       mockUseCreateBadge.mockReturnValue({ status: "done", error: null });
       setupQueries({
+        goal: POST_BAKE,
         goalEvidence: GOAL_EVIDENCE,
         badge: BADGE_ROW,
         allBadges: [BADGE_ROW],
@@ -574,6 +692,7 @@ describe("CompletionFlowScreen", () => {
     it("does not re-show BadgeEarnedModal after dismissal and re-render", () => {
       mockUseCreateBadge.mockReturnValue({ status: "done", error: null });
       setupQueries({
+        goal: POST_BAKE,
         goalEvidence: GOAL_EVIDENCE,
         badge: BADGE_ROW,
         allBadges: [BADGE_ROW],

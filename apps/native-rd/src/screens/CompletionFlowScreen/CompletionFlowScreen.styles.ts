@@ -53,6 +53,11 @@ export const styles = StyleSheet.create((theme) => ({
     width: "100%",
     gap: theme.space[3],
   },
+  previewContainer: {
+    width: "100%",
+    alignItems: "center",
+    marginBottom: theme.space[4],
+  },
   evidenceSection: {
     width: "100%",
     marginTop: theme.space[4],
