@@ -191,9 +191,14 @@ export function useCreateBadge(
             const goalEvidenceForGating = gev.map((ev) => ({
               type: (ev.type as string | null) ?? null,
             }));
-            if (canCompleteGoal(goalEvidenceForGating)) {
-              completeGoal(goalId, goalEvidenceForGating);
+            if (!canCompleteGoal(goalEvidenceForGating)) {
+              // Matches the bake-path gating at line 385 — refuse to claim
+              // completion when evidence requirements aren't satisfied.
+              throw new Error(
+                "Cannot complete goal: no evidence attached. Add at least one evidence item first.",
+              );
             }
+            completeGoal(goalId, goalEvidenceForGating);
           } catch (err) {
             const message =
               err instanceof Error ? err.message : "Unknown error";
