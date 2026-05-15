@@ -45,7 +45,7 @@ Two reasons the slot ends up blank rather than stale-but-visible:
 1. **No `onError` fallback in `BadgeEarnedModal`.** `BadgeDetailScreen.tsx:117,164,306` tracks `imageLoadFailed` and falls back to a design-rendered or initial-letter tile. The modal at `BadgeEarnedModal.tsx:83-99` only branches on `imageUri !== PLACEHOLDER_IMAGE_URI` — if the URI looks valid but the file can't load, nothing renders.
 2. **The short-circuit is the deeper issue.** Even when the file resolves, the credential is frozen at the first bake. The user added evidence after reopening; the badge they see — and the OB3 credential inside it — does not reflect those additions.
 
-These compound: the modal looks empty, *and* even if it didn't, it would be misleading.
+These compound: the modal looks empty, _and_ even if it didn't, it would be misleading.
 
 ## Desired flow
 
@@ -113,6 +113,7 @@ flowchart TD
 6. Microcopy — see the [Microcopy](#microcopy) section below.
 
 > **Implementation note.** This deliberately re-uses two existing primitives instead of inventing new ones:
+>
 > - The redesign mode's `updateBadge({ design })` write is exactly what we'd do anyway, so no new designer mode is required.
 > - The offscreen fallback capture host at `CompletionFlowScreen.tsx:312-329` already produces a PNG from a `BadgeDesign`. We just need it to fire for the rebake branch when `existingBadge.design` resolves to something usable, not only when `pendingDesignStore` is empty.
 
@@ -126,23 +127,23 @@ Aligned with `~/Code/rollercoaster.dev/landing/docs/BRAND_LANGUAGE.md`: direct, 
 
 ### Alert — changes detected on re-completion
 
-| Slot         | Copy                                                                                  | Notes                                                                                              |
-| ------------ | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| Title        | `Rebake your badge?`                                                                   | Sentence case for iOS Alert convention. Direct question, no preface.                              |
-| Body         | `Things changed since you last earned this. Rebake replaces the original.`             | States what happened and what the action does. No "cannot be recovered" warning theatre.          |
-| Button 1     | `Cancel`                                                                               | Native default. Returns to FocusMode, goal stays active.                                          |
-| Button 2     | `Rebake`                                                                               | The primary action when changes are evidence-only.                                                 |
-| Button 3     | `Redesign first`                                                                       | Explicit about ordering — design first, then rebake.                                              |
+| Slot     | Copy                                                                       | Notes                                                                                    |
+| -------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Title    | `Rebake your badge?`                                                       | Sentence case for iOS Alert convention. Direct question, no preface.                     |
+| Body     | `Things changed since you last earned this. Rebake replaces the original.` | States what happened and what the action does. No "cannot be recovered" warning theatre. |
+| Button 1 | `Cancel`                                                                   | Native default. Returns to FocusMode, goal stays active.                                 |
+| Button 2 | `Rebake`                                                                   | The primary action when changes are evidence-only.                                       |
+| Button 3 | `Redesign first`                                                           | Explicit about ordering — design first, then rebake.                                     |
 
 ### BadgeEarnedModal — post-rebake microcopy variant
 
 `BadgeEarnedModal.tsx:56` currently picks between `"First one. (noted.)"` and `"Badge earned."` based on `isFirstBadge`. Add a third variant for the rebake case:
 
-| State                              | Copy                       | Notes                                                                                            |
-| ---------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------ |
-| First badge                        | `First one. (noted.)`      | Unchanged.                                                                                       |
-| Subsequent badges                  | `Badge earned.`            | Unchanged.                                                                                       |
-| Rebake (existing badge updated)    | `Badge updated.`           | Matches the `X.` pattern. Direct, no fanfare.                                                    |
+| State                           | Copy                  | Notes                                         |
+| ------------------------------- | --------------------- | --------------------------------------------- |
+| First badge                     | `First one. (noted.)` | Unchanged.                                    |
+| Subsequent badges               | `Badge earned.`       | Unchanged.                                    |
+| Rebake (existing badge updated) | `Badge updated.`      | Matches the `X.` pattern. Direct, no fanfare. |
 
 **Alternative considered:** `// you came back` — invokes the brand's comment-style return pattern (BRAND_LANGUAGE.md §"Comment-Style Acknowledgments"). It fits the rebake moment well thematically, but it's a stronger voice move than the modal currently carries, and `Badge updated.` is a safer default for a primary surface. Keeping it on the table for a copy review if we want to make the rebake moment feel more like a return than an update.
 
@@ -154,13 +155,13 @@ Aligned with `~/Code/rollercoaster.dev/landing/docs/BRAND_LANGUAGE.md`: direct, 
 
 Decisions were originally captured in the [rebake-on-reopen plan](./2026-05-14-badge-rebake-on-reopen.md). Restated here so the flow spec is self-contained:
 
-| Question                  | Decision                                                                                          | Notes                                                                                                  |
-| ------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| What counts as "changed"? | Diff credential snapshot: `evidence[]` count, `goal.title`, `goal.description`.                   | Catches the common case. Step rows aren't included — they appear inside credential `evidence.stepTitle` already.    |
-| Cancel UX                 | `navigation.goBack()` to FocusMode, goal stays `active`.                                          | Alternative (mark completed without rebake) is confusing — stale badge + new evidence.                 |
+| Question                  | Decision                                                                                                                                      | Notes                                                                                                                                                                                                                                                                                                                |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| What counts as "changed"? | Diff credential snapshot: `evidence[]` count, `goal.title`, `goal.description`.                                                               | Catches the common case. Step rows aren't included — they appear inside credential `evidence.stepTitle` already.                                                                                                                                                                                                     |
+| Cancel UX                 | `navigation.goBack()` to FocusMode, goal stays `active`.                                                                                      | Alternative (mark completed without rebake) is confusing — stale badge + new evidence.                                                                                                                                                                                                                               |
 | Rebake design source      | Default: `existingBadge.design` if set, else `createDefaultBadgeDesign(goal.title, goal.color)`. User can override via **Redesign & rebake**. | Preserves the user's customised look by default. The redesign path saves the new design via `updateBadge({ design })` (existing redesign-mode behaviour) and signals `CompletionFlowScreen` to rebake; the offscreen capture host then picks up the new design and produces the PNG — no new designer mode required. |
-| Confirmation UI           | Native `Alert.alert` from `CompletionFlowScreen` with three buttons: **Cancel** / **Rebake** / **Redesign & rebake**. | In-screen card is more design work; punt unless review pushes back. Three-button `Alert.alert` renders fine on both platforms. |
-| Modal microcopy on rebake | TBD — needs copy review before implementation.                                                    | Existing copy: `"First one. (noted.)"` / `"Badge earned."`. Add a third variant for the rebake case.   |
+| Confirmation UI           | Native `Alert.alert` from `CompletionFlowScreen` with three buttons: **Cancel** / **Rebake** / **Redesign & rebake**.                         | In-screen card is more design work; punt unless review pushes back. Three-button `Alert.alert` renders fine on both platforms.                                                                                                                                                                                       |
+| Modal microcopy on rebake | TBD — needs copy review before implementation.                                                                                                | Existing copy: `"First one. (noted.)"` / `"Badge earned."`. Add a third variant for the rebake case.                                                                                                                                                                                                                 |
 
 ## Edge cases the flow has to handle
 
