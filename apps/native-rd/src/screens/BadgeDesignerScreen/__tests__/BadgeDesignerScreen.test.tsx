@@ -617,6 +617,31 @@ describe("BadgeDesignerScreen — new-goal mode", () => {
     expect(mockReplace).toHaveBeenCalledWith("EditMode", { goalId: "goal-1" });
   });
 
+  it("with returnVia: 'back', save navigates goBack() instead of replace('EditMode')", async () => {
+    // Redesign-First round-trip from CompletionFlow: the screen owns the
+    // back navigation, so the designer must goBack() after save rather than
+    // replacing into EditMode (which would discard the CompletionFlow
+    // entry).
+    const backRoute = {
+      params: {
+        mode: "new-goal" as const,
+        goalId: "goal-1",
+        returnVia: "back" as const,
+      },
+      key: "BadgeDesigner-back",
+      name: "BadgeDesigner" as const,
+    } as unknown as BadgeDesignerScreenProps["route"];
+    mockUseQuery.mockReturnValue([makeGoalRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={backRoute} navigation={{} as never} />,
+    );
+
+    fireEvent.press(screen.getByText("Use This Design"));
+
+    await waitFor(() => expect(mockGoBack).toHaveBeenCalled());
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+
   it("alerts and does not navigate when capture fails", async () => {
     const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
     mockCaptureBadge.mockRejectedValueOnce(new Error("view not mounted"));
