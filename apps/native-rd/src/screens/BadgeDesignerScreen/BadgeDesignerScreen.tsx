@@ -481,6 +481,7 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
   const goalColor = badge?.goalColor as string | null | undefined;
   const goalIdForCapture = (badge?.goalId as string | null | undefined) ?? null;
   const previewRef = useRef<View | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const derivedFrameParams = useFrameParamsForGoal(
     (badge?.goalId as GoalId | null | undefined) ?? null,
@@ -489,23 +490,14 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
   );
 
   const handleSave = useCallback(async () => {
-    if (!currentDesign) return;
+    if (!currentDesign || isSaving) return;
+    setIsSaving(true);
     const designJson = JSON.stringify(currentDesign);
-    try {
-      updateBadge(badgeId as BadgeId, { design: designJson });
-    } catch (err) {
-      logger.error("Failed to save badge design", { badgeId, error: err });
-      Alert.alert(
-        "Save Failed",
-        "Could not save your badge design. Please try again.",
-      );
-      return;
-    }
 
-    // Pre-capture here rather than letting CompletionFlow re-render and
-    // re-capture, which has hit transparent-snapshot races on iOS. Fail loud:
-    // without a fresh capture the rebake would silently embed the new credential
-    // into the previous design's PNG.
+    // Capture first, then persist. If updateBadge ran first and capture
+    // failed, the badge row would point at the old PNG with a new design —
+    // an out-of-sync state that survives the user backing out of the alert.
+    let pngBase64: string | null = null;
     if (goalIdForCapture) {
       try {
         const pngBuffer = await captureBadge(
@@ -516,10 +508,7 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
             getRendererLayoutOptions(theme),
           ),
         );
-        pendingDesignStore.set(goalIdForCapture, {
-          designJson,
-          pngBase64: pngBuffer.toString("base64"),
-        });
+        pngBase64 = pngBuffer.toString("base64");
       } catch (captureErr) {
         logger.error("Redesign-save capture failed", {
           badgeId,
@@ -530,12 +519,32 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
           "Save Failed",
           "Could not capture your design preview. Please try again.",
         );
+        setIsSaving(false);
         return;
       }
     }
 
+    try {
+      updateBadge(badgeId as BadgeId, { design: designJson });
+    } catch (err) {
+      logger.error("Failed to save badge design", { badgeId, error: err });
+      Alert.alert(
+        "Save Failed",
+        "Could not save your badge design. Please try again.",
+      );
+      setIsSaving(false);
+      return;
+    }
+
+    if (goalIdForCapture && pngBase64) {
+      pendingDesignStore.set(goalIdForCapture, {
+        designJson,
+        pngBase64,
+      });
+    }
+
     navigation.goBack();
-  }, [badgeId, currentDesign, goalIdForCapture, navigation, theme]);
+  }, [badgeId, currentDesign, goalIdForCapture, isSaving, navigation, theme]);
 
   if (!badge || !currentDesign) {
     return (
@@ -563,6 +572,8 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
       onSave={handleSave}
       onBack={() => navigation.goBack()}
       previewRef={previewRef}
+      saveLoading={isSaving}
+      saveDisabled={isSaving}
     />
   );
 }

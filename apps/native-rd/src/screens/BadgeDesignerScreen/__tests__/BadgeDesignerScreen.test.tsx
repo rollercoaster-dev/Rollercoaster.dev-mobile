@@ -249,13 +249,16 @@ describe("BadgeDesignerScreen", () => {
     );
 
     fireEvent.press(screen.getByLabelText("Save Design"));
-    expect(mockUpdateBadge).toHaveBeenCalledWith(
-      "badge-1",
-      expect.objectContaining({
-        design: expect.stringContaining('"shape":"circle"'),
-      }),
+    // updateBadge runs after the capture promise resolves (capture-first
+    // ordering keeps the badge row and PNG in sync on capture failure).
+    await waitFor(() =>
+      expect(mockUpdateBadge).toHaveBeenCalledWith(
+        "badge-1",
+        expect.objectContaining({
+          design: expect.stringContaining('"shape":"circle"'),
+        }),
+      ),
     );
-    // goBack fires after the post-save capture promise resolves.
     await waitFor(() => expect(mockGoBack).toHaveBeenCalled());
   });
 
@@ -283,7 +286,9 @@ describe("BadgeDesignerScreen", () => {
     // Without a fresh capture the rebake would silently embed the new
     // credential into the previous design's PNG. Show an alert and keep the
     // user in the designer so they can retry — mirrors the new-goal-mode
-    // saveAndNavigate pattern.
+    // saveAndNavigate pattern. Also: capture happens before updateBadge,
+    // so a capture failure must NOT have updated the badge row (otherwise
+    // the stored design and image drift apart on back-out).
     mockUseQuery.mockReturnValue([makeRow()]);
     mockCaptureBadge.mockRejectedValue(new Error("capture timeout"));
     const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
@@ -301,7 +306,36 @@ describe("BadgeDesignerScreen", () => {
     );
     expect(mockGoBack).not.toHaveBeenCalled();
     expect(mockPendingDesignStore.set).not.toHaveBeenCalled();
+    expect(mockUpdateBadge).not.toHaveBeenCalled();
     alertSpy.mockRestore();
+  });
+
+  it("guards Save against double-tap (only one updateBadge + capture per click run)", async () => {
+    // Async handleSave: without an isSaving guard, two rapid taps would
+    // launch two captures, write two pendingDesignStore entries, and call
+    // goBack twice.
+    mockUseQuery.mockReturnValue([makeRow()]);
+    let resolveCapture: ((buf: Buffer) => void) | undefined;
+    mockCaptureBadge.mockImplementation(
+      () =>
+        new Promise<Buffer>((resolve) => {
+          resolveCapture = resolve;
+        }),
+    );
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+
+    const saveBtn = screen.getByLabelText("Save Design");
+    fireEvent.press(saveBtn);
+    fireEvent.press(saveBtn);
+    fireEvent.press(saveBtn);
+
+    expect(mockCaptureBadge).toHaveBeenCalledTimes(1);
+    resolveCapture?.(Buffer.from("png-bytes"));
+    await waitFor(() => expect(mockGoBack).toHaveBeenCalledTimes(1));
+    expect(mockUpdateBadge).toHaveBeenCalledTimes(1);
+    expect(mockPendingDesignStore.set).toHaveBeenCalledTimes(1);
   });
 
   it("updates preview when a different shape is selected", () => {
@@ -334,11 +368,14 @@ describe("BadgeDesignerScreen", () => {
     fireEvent.press(screen.getByLabelText("Mint color"));
     fireEvent.press(screen.getByLabelText("Save Design"));
 
-    expect(mockUpdateBadge).toHaveBeenCalledWith(
-      "badge-1",
-      expect.objectContaining({
-        design: expect.stringContaining('"shape":"shield"'),
-      }),
+    // updateBadge runs after capture resolves (capture-first ordering).
+    await waitFor(() =>
+      expect(mockUpdateBadge).toHaveBeenCalledWith(
+        "badge-1",
+        expect.objectContaining({
+          design: expect.stringContaining('"shape":"shield"'),
+        }),
+      ),
     );
     expect(mockUpdateBadge).toHaveBeenCalledWith(
       "badge-1",
@@ -346,7 +383,6 @@ describe("BadgeDesignerScreen", () => {
         design: expect.stringContaining('"color":"#34d399"'),
       }),
     );
-    // goBack fires after the post-save capture promise resolves.
     await waitFor(() => expect(mockGoBack).toHaveBeenCalled());
   });
 
@@ -421,7 +457,7 @@ describe("BadgeDesignerScreen", () => {
     expect(screen.getByLabelText("Bottom label")).toBeOnTheScreen();
   });
 
-  it("includes new fields in saved JSON after changes", () => {
+  it("includes new fields in saved JSON after changes", async () => {
     mockUseQuery.mockReturnValue([makeRow()]);
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
@@ -436,8 +472,9 @@ describe("BadgeDesignerScreen", () => {
     // Toggle banner on
     fireEvent.press(screen.getByLabelText("Enable banner"));
 
-    // Save
+    // Save (updateBadge runs after capture resolves — capture-first order).
     fireEvent.press(screen.getByLabelText("Save Design"));
+    await waitFor(() => expect(mockUpdateBadge).toHaveBeenCalled());
 
     const savedJson = mockUpdateBadge.mock.calls[0][1].design;
     expect(savedJson).toContain('"frame":"guilloche"');
@@ -445,7 +482,7 @@ describe("BadgeDesignerScreen", () => {
     expect(savedJson).toContain('"banner"');
   });
 
-  it("toggle-off clears path text and banner from saved JSON", () => {
+  it("toggle-off clears path text and banner from saved JSON", async () => {
     mockUseQuery.mockReturnValue([makeRow()]);
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
@@ -460,6 +497,7 @@ describe("BadgeDesignerScreen", () => {
     fireEvent.press(screen.getByLabelText("Enable banner"));
 
     fireEvent.press(screen.getByLabelText("Save Design"));
+    await waitFor(() => expect(mockUpdateBadge).toHaveBeenCalled());
 
     const savedJson = mockUpdateBadge.mock.calls[0][1].design;
     expect(savedJson).not.toContain('"pathText"');
@@ -486,7 +524,7 @@ describe("BadgeDesignerScreen", () => {
   // border at all. The designer currently ships exactly that bug:
   // handleFrameChange (BadgeDesignerScreen.tsx:119-124) sets only `frame`.
   // useFrameParamsForGoal exists for this purpose but is never wired in.
-  it("attaches frameParams when a non-none frame is selected", () => {
+  it("attaches frameParams when a non-none frame is selected", async () => {
     mockUseQuery.mockReturnValue([makeRow()]);
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
@@ -494,6 +532,7 @@ describe("BadgeDesignerScreen", () => {
 
     fireEvent.press(screen.getByLabelText("Guilloche frame"));
     fireEvent.press(screen.getByLabelText("Save Design"));
+    await waitFor(() => expect(mockUpdateBadge).toHaveBeenCalled());
 
     const savedJson = mockUpdateBadge.mock.calls[0][1].design as string;
     const parsed = JSON.parse(savedJson);
@@ -505,7 +544,7 @@ describe("BadgeDesignerScreen", () => {
     );
   });
 
-  it("clears frameParams when frame is set back to none", () => {
+  it("clears frameParams when frame is set back to none", async () => {
     mockUseQuery.mockReturnValue([
       makeRow({
         design: JSON.stringify({
@@ -533,6 +572,7 @@ describe("BadgeDesignerScreen", () => {
 
     fireEvent.press(screen.getByLabelText("None frame"));
     fireEvent.press(screen.getByLabelText("Save Design"));
+    await waitFor(() => expect(mockUpdateBadge).toHaveBeenCalled());
 
     const savedJson = mockUpdateBadge.mock.calls[0][1].design as string;
     const parsed = JSON.parse(savedJson);
@@ -678,7 +718,7 @@ describe("BadgeDesignerScreen — new-goal mode", () => {
 // ---------------------------------------------------------------------------
 
 describe("BadgeDesignerScreen — integration", () => {
-  it("full happy path: frame + path text + banner → save → verify JSON", () => {
+  it("full happy path: frame + path text + banner → save → verify JSON", async () => {
     mockUseQuery.mockReturnValue([makeRow()]);
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
@@ -695,10 +735,10 @@ describe("BadgeDesignerScreen — integration", () => {
     fireEvent.press(screen.getByLabelText("Enable banner"));
     fireEvent.changeText(screen.getByLabelText("Banner text"), "WINNER");
 
-    // Save
+    // Save (updateBadge runs after capture resolves — capture-first order).
     fireEvent.press(screen.getByLabelText("Save Design"));
+    await waitFor(() => expect(mockUpdateBadge).toHaveBeenCalledTimes(1));
 
-    expect(mockUpdateBadge).toHaveBeenCalledTimes(1);
     const savedJson = mockUpdateBadge.mock.calls[0][1].design;
     const parsed = JSON.parse(savedJson);
     expect(parsed.frame).toBe("guilloche");
