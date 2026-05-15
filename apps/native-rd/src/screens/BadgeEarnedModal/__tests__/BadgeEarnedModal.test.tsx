@@ -53,6 +53,26 @@ describe("BadgeEarnedModal", () => {
     expect(screen.getByLabelText("Badge image")).toBeOnTheScreen();
   });
 
+  it("remounts the Image when imageUri changes (key={imageUri} guards iOS stale-fetch)", () => {
+    // Regression guard for commit 1f70a63: iOS UIImageView can hang onto the
+    // previous fetch when the source URI swaps mid-display (e.g. post-rebake).
+    // key={imageUri} forces React to unmount-then-remount the host so the
+    // native view re-fetches. If key= is dropped, React reuses the same fiber
+    // across rerenders and the test-instance identity stays the same.
+    const { rerender } = renderWithProviders(
+      <BadgeEarnedModal {...defaultProps} imageUri="file:///badges/v1.png" />,
+    );
+    const firstImage = screen.getByTestId("badge-earned-image");
+    expect(firstImage.props.source).toEqual({ uri: "file:///badges/v1.png" });
+
+    rerender(
+      <BadgeEarnedModal {...defaultProps} imageUri="file:///badges/v2.png" />,
+    );
+    const secondImage = screen.getByTestId("badge-earned-image");
+    expect(secondImage.props.source).toEqual({ uri: "file:///badges/v2.png" });
+    expect(secondImage).not.toBe(firstImage);
+  });
+
   it("renders placeholder when imageUri is pending sentinel", () => {
     renderWithProviders(
       <BadgeEarnedModal {...defaultProps} imageUri="pending:baked-image" />,
