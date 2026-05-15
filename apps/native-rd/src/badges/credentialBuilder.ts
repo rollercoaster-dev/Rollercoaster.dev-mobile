@@ -39,18 +39,8 @@ export interface CredentialInput {
   issuedOn: string;
 }
 
-/**
- * Description recorded on the OB3 `achievement` object. Falls back to a
- * deterministic label when the source goal has no description so the
- * credential never contains an empty string. Exported so consumers that
- * need to compare a credential's stored description against a goal's
- * current state can reproduce the same fallback (see credentialDiff).
- */
-export function expectedAchievementDescription(
-  goal: Pick<GoalData, "title" | "description">,
-): string {
-  return goal.description ?? `Achievement: ${goal.title}`;
-}
+import { expectedAchievementDescription } from "./expectedAchievementDescription";
+export { expectedAchievementDescription };
 
 /**
  * Merge a goal's per-goal evidence + per-step evidence into a single

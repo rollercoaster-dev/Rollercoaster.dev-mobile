@@ -10,19 +10,7 @@
  * stale badge.
  */
 import type { GoalData, EvidenceRow } from "./credentialBuilder";
-
-/**
- * Mirrors `expectedAchievementDescription` in credentialBuilder.ts — duplicated
- * (intentionally) so this module stays import-clean of openbadges-core, which
- * is ESM and hard to load under jest. If the builder's fallback rule changes,
- * update both sites.
- */
-function expectedAchievementDescription(goal: {
-  title: string;
-  description: string | null;
-}): string {
-  return goal.description ?? `Achievement: ${goal.title}`;
-}
+import { expectedAchievementDescription } from "./expectedAchievementDescription";
 
 /**
  * Returns true when the goal/evidence state has diverged from the
