@@ -98,55 +98,56 @@ export function BadgeEarnedModal({
         ]}
       >
         <SafeAreaView edges={["bottom"]} style={styles.container}>
-          <Animated.View style={animatedStyle}>
-            <View style={styles.card} {...cardA11yProps}>
-              {hasImage ? (
-                // `key={imageUri}` forces a fresh native Image mount when the
-                // rebake flow swaps the badge row's imageUri mid-display.
-                // Without it, iOS's UIImageView occasionally hangs onto the
-                // previous fetch and skips loading the new URI.
-                <Image
-                  key={imageUri}
-                  source={{ uri: imageUri }}
-                  style={styles.badgeImage}
-                  accessibilityLabel="Badge image"
-                  resizeMode="contain"
-                  testID="badge-earned-image"
-                  onError={() => setImageLoadFailed(true)}
-                />
-              ) : (
-                <View
-                  style={styles.badgePlaceholder}
-                  accessibilityLabel="Badge image placeholder"
-                  testID="badge-earned-image-placeholder"
-                >
-                  <Text variant="headline">🏅</Text>
-                </View>
-              )}
+          <Animated.View
+            style={[styles.card, animatedStyle]}
+            {...cardA11yProps}
+          >
+            {hasImage ? (
+              // `key={imageUri}` forces a fresh native Image mount when the
+              // rebake flow swaps the badge row's imageUri mid-display.
+              // Without it, iOS's UIImageView occasionally hangs onto the
+              // previous fetch and skips loading the new URI.
+              <Image
+                key={imageUri}
+                source={{ uri: imageUri }}
+                style={styles.badgeImage}
+                accessibilityLabel="Badge image"
+                resizeMode="contain"
+                testID="badge-earned-image"
+                onError={() => setImageLoadFailed(true)}
+              />
+            ) : (
+              <View
+                style={styles.badgePlaceholder}
+                accessibilityLabel="Badge image placeholder"
+                testID="badge-earned-image-placeholder"
+              >
+                <Text variant="headline">🏅</Text>
+              </View>
+            )}
 
-              <Text variant="body" style={styles.microcopy}>
-                {microcopy}
-              </Text>
+            <Text variant="body" style={styles.microcopy}>
+              {microcopy}
+            </Text>
 
-              <View style={styles.actions}>
+            <View style={styles.actions}>
+              <Button
+                label="View Badge"
+                onPress={onViewBadge}
+                variant="primary"
+              />
+              {onCustomize && (
                 <Button
-                  label="View Badge"
-                  onPress={onViewBadge}
-                  variant="primary"
-                />
-                {onCustomize && (
-                  <Button
-                    label="Customize"
-                    onPress={onCustomize}
-                    variant="secondary"
-                  />
-                )}
-                <Button
-                  label="Keep going"
-                  onPress={onContinue}
+                  label="Customize"
+                  onPress={onCustomize}
                   variant="secondary"
                 />
-              </View>
+              )}
+              <Button
+                label="Keep going"
+                onPress={onContinue}
+                variant="secondary"
+              />
             </View>
           </Animated.View>
         </SafeAreaView>
