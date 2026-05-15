@@ -2,27 +2,22 @@
  * useCreateBadge
  *
  * Orchestrates OB3 credential creation when a goal is completed.
- * On first call (when no badge exists yet):
- *   1. Builds unsigned credential via buildUnsignedCredential
- *   2. Signs the JSON with the user's Ed25519 key via keyProvider.sign
- *   3. Generates a badge PNG from the goal color
- *   4. Bakes the signed credential into the PNG (OB3 iTXt chunk)
- *   5. Persists the PNG to disk and records the URI
- *   6. Calls createBadge (persists credential + image URI)
- *   7. Calls completeGoal (marks goal as completed)
  *
- * If image generation or baking fails, falls back to the placeholder URI
- * so badge creation still succeeds even without a baked image.
+ * First completion (no existing badge):
+ *   1. Build unsigned credential, 2. sign, 3. bake PNG, 4. save to disk,
+ *   5. createBadge (persist credential + image URI), 6. completeGoal.
  *
- * Idempotent — returns 'done' immediately if a badge already exists.
- * Race-condition safe — once triggered, the ref guard is never reset,
- * preventing Strict Mode double-invocation or re-render loops from
- * unstable array refs returned by Evolu queries.
+ * Re-completion (existing badge + goal reopened to active):
+ *   - completed goal → idempotent done, no DB writes.
+ *   - active goal → fall through to bake IIFE, write via updateBadge
+ *     (preserves badge id; existing design is kept). The bake source is
+ *     either the caller's freshCapturedPng (designer redesign), the
+ *     existing on-disk PNG (re-uses prior pixels with the refreshed
+ *     credential), or the offscreen-host capturedPng fallback.
  *
- * goalId stability assumption: hasTriggered is keyed to the component
- * instance, not the goalId. If goalId changes while the component stays
- * mounted, no second badge will be created. In practice, CompletionFlowScreen
- * is only mounted for one goal at a time.
+ * Race-condition safe — once a mutating branch fires, the ref guard is
+ * never reset, preventing Strict Mode double-invocation or re-render
+ * loops from unstable array refs returned by Evolu queries.
  */
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@evolu/react";
@@ -34,8 +29,10 @@ import {
   canCompleteGoal,
   completeGoal,
   createBadge,
+  updateBadge,
+  GoalStatus,
 } from "../db";
-import type { GoalId } from "../db";
+import type { GoalId, BadgeId } from "../db";
 import { keyProvider } from "../crypto";
 import {
   buildUnsignedCredential,
@@ -43,6 +40,7 @@ import {
   bakePNG,
   isPNG,
   saveBadgePNG,
+  readBadgePNG,
 } from "../badges";
 import { Buffer } from "buffer";
 import { useUserKey } from "./useUserKey";
@@ -79,7 +77,18 @@ function toBase64Url(bytes: Uint8Array): string {
 }
 
 export interface UseCreateBadgeOptions {
-  /** Pre-captured 512x512 PNG from captureBadge(). When provided, replaces the solid-color fallback. */
+  /**
+   * Authoritative pre-captured PNG from the BadgeDesigner save (Redesign First
+   * round-trip via pendingDesignStore). Wins over both the existing on-disk
+   * PNG and the offscreen-host fallback — this is the design the user just
+   * committed to.
+   */
+  freshCapturedPng?: Buffer;
+  /**
+   * Opportunistic offscreen-host capture (first completion default-design path).
+   * Only used when neither freshCapturedPng nor a readable existing PNG is
+   * available.
+   */
   capturedPng?: Buffer;
   /** Serialized BadgeDesign JSON to persist on the badge record. */
   design?: string;
@@ -110,7 +119,9 @@ export function useCreateBadge(
   const evidenceRef = useRef({ goalEvidence, stepEvidence });
   evidenceRef.current = { goalEvidence, stepEvidence };
 
-  // Same pattern for capturedPng and design — read latest value without adding to deps.
+  // Same pattern for PNG inputs and design — read latest value without adding to deps.
+  const freshCapturedPngRef = useRef(options?.freshCapturedPng);
+  freshCapturedPngRef.current = options?.freshCapturedPng;
   const capturedPngRef = useRef(options?.capturedPng);
   capturedPngRef.current = options?.capturedPng;
   const designRef = useRef(options?.design);
@@ -121,8 +132,13 @@ export function useCreateBadge(
   const hasTriggered = useRef(false);
 
   useEffect(() => {
-    // Already done — badge exists (reactive update after createBadge)
-    if (existingBadge) {
+    // Goal data not loaded yet — every downstream branch needs goal.status.
+    if (!goal) return;
+
+    // Existing badge AND goal already completed — idempotent done. Catches
+    // the post-bake reactive update too: completeGoal flips status before
+    // the next render and lands us here without re-firing any mutation.
+    if (existingBadge && goal.status === GoalStatus.completed) {
       setStatus("done");
       return;
     }
@@ -139,10 +155,8 @@ export function useCreateBadge(
       return;
     }
 
-    // Goal data not loaded yet
-    if (!goal) return;
-
-    // Caller requested to delay badge creation (e.g. waiting for evidence)
+    // Caller requested to delay badge creation (e.g. waiting for evidence
+    // or for the user to tap Bake It in the celebration phase).
     if (!enabled) return;
 
     // Guard against re-entry
@@ -219,21 +233,65 @@ export function useCreateBadge(
         setStatus("baking");
         breadcrumb({ category: "badge", message: "bake" });
 
-        // capturedPng is required — either a pending design's PNG or an
-        // auto-captured default-design PNG. The old solid-color fallback
-        // baked an unloved blue square into the credential and is gone
-        // for good.
-        if (!capturedPngRef.current) {
-          throw new Error(
-            "useCreateBadge: capturedPng is required — callers must provide a captured badge PNG (from a pending design or auto-captured default) before enabling badge creation",
-          );
+        // PNG source priority:
+        //   1. freshCapturedPng — designer's authoritative capture (Redesign
+        //      First). Reflects the user's most recent commitment.
+        //   2. Existing on-disk PNG — re-completion's Bake It reuses prior
+        //      pixels with the refreshed credential. Skips the offscreen
+        //      capture host, which has a known race where the SVG hasn't
+        //      painted yet and the snapshot comes back transparent.
+        //   3. capturedPng — offscreen-host fallback (first completion
+        //      default-design path).
+        let pngBuffer: Buffer | null = null;
+
+        if (freshCapturedPngRef.current) {
+          if (!isPNG(freshCapturedPngRef.current)) {
+            throw new Error(
+              "useCreateBadge: freshCapturedPng is not a valid PNG buffer",
+            );
+          }
+          pngBuffer = freshCapturedPngRef.current;
         }
-        if (!isPNG(capturedPngRef.current)) {
-          throw new Error(
-            "useCreateBadge: capturedPng is not a valid PNG buffer",
-          );
+
+        if (!pngBuffer) {
+          const existingImageUri =
+            existingBadge?.imageUri &&
+            existingBadge.imageUri !== PLACEHOLDER_IMAGE_URI
+              ? (existingBadge.imageUri as string)
+              : null;
+          if (existingImageUri) {
+            try {
+              const existing = await readBadgePNG(existingImageUri);
+              if (isPNG(existing)) {
+                pngBuffer = existing;
+              } else {
+                logger.warn(
+                  "Existing badge PNG is not a valid PNG; falling back to capture",
+                  { goalId, imageUri: existingImageUri },
+                );
+              }
+            } catch (readErr) {
+              logger.warn(
+                "Failed to read existing badge PNG; falling back to capture",
+                { goalId, imageUri: existingImageUri, error: readErr },
+              );
+            }
+          }
         }
-        const pngBuffer = capturedPngRef.current;
+
+        if (!pngBuffer) {
+          if (!capturedPngRef.current) {
+            throw new Error(
+              "useCreateBadge: no PNG source available — callers must provide freshCapturedPng or capturedPng (or there must be a readable existing badge image)",
+            );
+          }
+          if (!isPNG(capturedPngRef.current)) {
+            throw new Error(
+              "useCreateBadge: capturedPng is not a valid PNG buffer",
+            );
+          }
+          pngBuffer = capturedPngRef.current;
+        }
         const bakedPng = bakePNG(pngBuffer, JSON.stringify(signedCredential));
 
         // Save to disk — legitimately recoverable (filesystem errors). Fall back
@@ -265,15 +323,26 @@ export function useCreateBadge(
           );
         }
 
-        // createBadge first — it validates and can throw (non-empty credential required).
-        // If it throws, completeGoal has not yet fired, so no partial state occurs.
+        // Persist credential + image. createBadge / updateBadge each validate
+        // their inputs and can throw before completeGoal fires, so a failure
+        // here leaves the goal active rather than completed-without-badge.
         // Both are synchronous Evolu CRDT mutations — no await needed.
-        createBadge({
-          goalId,
-          credential: JSON.stringify(signedCredential),
-          imageUri,
-          ...(designRef.current ? { design: designRef.current } : {}),
-        });
+        const credentialJsonOut = JSON.stringify(signedCredential);
+        if (existingBadge) {
+          // Rebake path: refresh credential + image; Redesign First's design
+          // write already landed via BadgeDesignerScreen's handleSave.
+          updateBadge(existingBadge.id as BadgeId, {
+            credential: credentialJsonOut,
+            imageUri,
+          });
+        } else {
+          createBadge({
+            goalId,
+            credential: credentialJsonOut,
+            imageUri,
+            ...(designRef.current ? { design: designRef.current } : {}),
+          });
+        }
         completeGoal(goalId, goalEvidenceForGating);
 
         setStatus("done");

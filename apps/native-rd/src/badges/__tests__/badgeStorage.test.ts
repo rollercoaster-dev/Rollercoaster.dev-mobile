@@ -12,12 +12,13 @@ jest.mock("expo-file-system/legacy", () => ({
   getInfoAsync: jest.fn(),
   makeDirectoryAsync: jest.fn(),
   writeAsStringAsync: jest.fn(),
+  readAsStringAsync: jest.fn(),
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockFS = require("expo-file-system/legacy");
 
-import { saveBadgePNG } from "../badgeStorage";
+import { saveBadgePNG, readBadgePNG } from "../badgeStorage";
 
 const MINIMAL_PNG = new Uint8Array([
   137, 80, 78, 71, 13, 10, 26, 10, 0, 1, 2, 3,
@@ -129,5 +130,29 @@ describe("saveBadgePNG", () => {
     const uri2 = await saveBadgePNG(MINIMAL_PNG);
 
     expect(uri1).not.toBe(uri2);
+  });
+});
+
+describe("readBadgePNG", () => {
+  const URI = "file:///data/user/0/app/files/badges/abc-123.png";
+
+  it("returns a Buffer of the file's bytes when the file exists", async () => {
+    const base64 = Buffer.from(MINIMAL_PNG).toString("base64");
+    mockFS.getInfoAsync.mockResolvedValue({ exists: true });
+    mockFS.readAsStringAsync.mockResolvedValue(base64);
+
+    const buf = await readBadgePNG(URI);
+
+    expect(Array.from(buf)).toEqual(Array.from(MINIMAL_PNG));
+    expect(mockFS.readAsStringAsync).toHaveBeenCalledWith(URI, {
+      encoding: "base64",
+    });
+  });
+
+  it("throws when the file does not exist — no silent fallback", async () => {
+    mockFS.getInfoAsync.mockResolvedValue({ exists: false });
+
+    await expect(readBadgePNG(URI)).rejects.toThrow(/Badge PNG not found/);
+    expect(mockFS.readAsStringAsync).not.toHaveBeenCalled();
   });
 });
