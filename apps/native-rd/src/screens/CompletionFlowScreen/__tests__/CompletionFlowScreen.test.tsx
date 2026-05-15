@@ -398,6 +398,11 @@ describe("CompletionFlowScreen", () => {
         { nativeEvent: { layout: { x: 0, y: 0, width: 160, height: 160 } } },
       );
       // The bake never fires automatically — user must tap Bake It first.
+      // Bake It is disabled until the fallback capture promise resolves
+      // (hasAnyBakeSource gate). Wait for it to become enabled before tap.
+      await waitFor(() =>
+        expect(screen.getByLabelText("Bake It")).not.toBeDisabled(),
+      );
       fireEvent.press(screen.getByLabelText("Bake It"));
       await waitFor(() =>
         expect(mockUseCreateBadge).toHaveBeenCalledWith(
@@ -446,6 +451,10 @@ describe("CompletionFlowScreen", () => {
         }),
         "layout",
         { nativeEvent: { layout: { x: 0, y: 0, width: 160, height: 160 } } },
+      );
+      // Bake It is disabled until the fallback capture resolves.
+      await waitFor(() =>
+        expect(screen.getByLabelText("Bake It")).not.toBeDisabled(),
       );
       fireEvent.press(screen.getByLabelText("Bake It"));
       await waitFor(() =>
@@ -522,6 +531,27 @@ describe("CompletionFlowScreen", () => {
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
       expect(screen.getByLabelText("Bake It")).toBeOnTheScreen();
       expect(screen.getByLabelText("Redesign First")).toBeOnTheScreen();
+    });
+
+    it("disables Bake It until a bake source is available — tapping early stays in enabled:false", async () => {
+      // First-completion default-design path: no pending PNG, no existing
+      // badge, and the offscreen-host onLayout has not fired so fallbackPng
+      // stays null. Without disabling the button, an eager tap flips
+      // userConfirmedBake → choice UI disappears → post-bake actions render
+      // even though useCreateBadge.enabled is still false, letting the user
+      // navigate away before the bake fires.
+      setupQueries({ goalEvidence: GOAL_EVIDENCE });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      const bakeBtn = screen.getByLabelText("Bake It");
+      expect(bakeBtn).toBeDisabled();
+      fireEvent.press(bakeBtn);
+      // Even after the press, the choice UI stays (userConfirmedBake didn't
+      // flip), and the hook still sees enabled:false.
+      expect(screen.getByLabelText("Bake It")).toBeOnTheScreen();
+      const lastArgs = mockUseCreateBadge.mock.calls[
+        mockUseCreateBadge.mock.calls.length - 1
+      ][1] as { enabled?: boolean };
+      expect(lastArgs.enabled).toBe(false);
     });
 
     it("Redesign First on first completion navigates to new-goal designer with returnVia: 'back'", () => {

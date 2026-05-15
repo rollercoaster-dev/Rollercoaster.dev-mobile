@@ -505,6 +505,12 @@ function CompletionContent({
                 onPress={handleBakeIt}
                 variant="primary"
                 testID="completion-bake-it-button"
+                // Prevents userConfirmedBake from flipping without a usable
+                // source: the choice UI would disappear and post-bake actions
+                // would render even though useCreateBadge is still disabled
+                // (no PNG → enabled=false), letting the user navigate away
+                // before the bake fires.
+                disabled={!hasAnyBakeSource}
               />
               <Button
                 label="Redesign First"
