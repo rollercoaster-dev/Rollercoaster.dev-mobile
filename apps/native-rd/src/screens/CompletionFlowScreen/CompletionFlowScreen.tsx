@@ -275,20 +275,21 @@ function CompletionContent({
   //   2. Existing badge's stored design (re-completion).
   //   3. Default design from goal title + color (first completion without
   //      a designer visit).
+  const badgeDesignJson = (badgeRow?.design as string | null) ?? null;
   const previewDesign = useMemo<BadgeDesign | null>(() => {
     if (pendingDesignJson) {
       const parsed = parseBadgeDesign(pendingDesignJson);
       if (parsed) return parsed;
     }
-    if (badgeRow?.design) {
-      const parsed = parseBadgeDesign(badgeRow.design as string);
+    if (badgeDesignJson) {
+      const parsed = parseBadgeDesign(badgeDesignJson);
       if (parsed) return parsed;
     }
     if (!goal) return null;
     return createDefaultBadgeDesign(goalTitleForDefault, goalColorForDefault);
   }, [
     pendingDesignJson,
-    badgeRow,
+    badgeDesignJson,
     goal,
     goalTitleForDefault,
     goalColorForDefault,
