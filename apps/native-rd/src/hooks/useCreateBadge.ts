@@ -67,13 +67,12 @@ export interface UseCreateBadgeResult {
   error: string | null;
 }
 
-/** base64url-encode a Uint8Array without relying on Node's Buffer */
 function toBase64Url(bytes: Uint8Array): string {
-  let binary = "";
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+  return Buffer.from(bytes)
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=/g, "");
 }
 
 export interface UseCreateBadgeOptions {
@@ -292,7 +291,8 @@ export function useCreateBadge(
           }
           pngBuffer = capturedPngRef.current;
         }
-        const bakedPng = bakePNG(pngBuffer, JSON.stringify(signedCredential));
+        const credentialJsonOut = JSON.stringify(signedCredential);
+        const bakedPng = bakePNG(pngBuffer, credentialJsonOut);
 
         // Save to disk — legitimately recoverable (filesystem errors). Fall back
         // to placeholder so badge creation still succeeds without a baked image.
@@ -327,7 +327,6 @@ export function useCreateBadge(
         // their inputs and can throw before completeGoal fires, so a failure
         // here leaves the goal active rather than completed-without-badge.
         // Both are synchronous Evolu CRDT mutations — no await needed.
-        const credentialJsonOut = JSON.stringify(signedCredential);
         if (existingBadge) {
           // Rebake path: refresh credential + image; Redesign First's design
           // write already landed via BadgeDesignerScreen's handleSave.
