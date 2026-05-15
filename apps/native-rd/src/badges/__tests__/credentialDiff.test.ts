@@ -26,13 +26,13 @@ function makeCredentialJson(
   overrides: {
     title?: string;
     description?: string;
-    evidenceCount?: number;
+    evidenceIds?: readonly string[];
   } = {},
 ): string {
   const title = overrides.title ?? baseGoal.title;
   const description =
     overrides.description ?? baseGoal.description ?? `Achievement: ${title}`;
-  const evidenceCount = overrides.evidenceCount ?? baseEvidence.length;
+  const evidenceIds = overrides.evidenceIds ?? baseEvidence.map((ev) => ev.id);
   return JSON.stringify({
     credentialSubject: {
       achievement: {
@@ -40,8 +40,8 @@ function makeCredentialJson(
         description,
       },
     },
-    evidence: Array.from({ length: evidenceCount }, (_, i) => ({
-      id: `urn:ulid:ev-${i}`,
+    evidence: evidenceIds.map((id) => ({
+      id: `urn:ulid:${id}`,
     })),
   });
 }
@@ -59,6 +59,22 @@ describe("hasChangesSinceBake", () => {
       { id: "ev-3", type: "audio", uri: "file://audio.m4a", description: null },
     ];
     expect(hasChangesSinceBake(credential, baseGoal, expanded)).toBe(true);
+  });
+
+  it("returns true when an evidence row was swapped for another with the same count", () => {
+    // delete-one-add-one: same length, different identity. The old
+    // length-only check missed this; identity-set comparison catches it.
+    const credential = makeCredentialJson();
+    const swapped: EvidenceRow[] = [
+      baseEvidence[0]!,
+      {
+        id: "ev-replacement",
+        type: "photo",
+        uri: "file://other.png",
+        description: null,
+      },
+    ];
+    expect(hasChangesSinceBake(credential, baseGoal, swapped)).toBe(true);
   });
 
   it("returns true when the goal title was edited after the bake", () => {
@@ -83,7 +99,7 @@ describe("hasChangesSinceBake", () => {
     const credential = makeCredentialJson({
       title: titleOnlyGoal.title,
       description: `Achievement: ${titleOnlyGoal.title}`,
-      evidenceCount: 0,
+      evidenceIds: [],
     });
     expect(hasChangesSinceBake(credential, titleOnlyGoal, [])).toBe(false);
   });
