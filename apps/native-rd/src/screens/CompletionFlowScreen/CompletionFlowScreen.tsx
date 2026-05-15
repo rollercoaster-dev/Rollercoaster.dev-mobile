@@ -340,17 +340,33 @@ function CompletionContent({
 
   const handleBakeIt = () => setUserConfirmedBake(true);
 
-  // Redesign First is only available when a badge already exists
-  // (re-completion). For first completion the user designed in the
-  // NewGoal flow already; redesigning from here can't cleanly return
-  // through the new-goal designer (whose save replaces to EditMode).
-  // Post-bake, they can redesign from BadgeDetail's Customize button.
-  const canRedesign = Boolean(badgeRow);
+  // Redesign First is ALWAYS available before the bake — every completion
+  // gets the chance to change the badge first.
+  //   - Re-completion (badgeRow exists): redesign mode loads the existing
+  //     badge's design; its save captures + writes pendingDesignStore and
+  //     goBack()s.
+  //   - First completion (no badgeRow): new-goal mode with returnVia: "back"
+  //     so its save returns here instead of replacing to EditMode. The
+  //     current pending design (consumed at mount) is written back to the
+  //     store first so the designer pre-loads what the user already had.
   const handleRedesignFirst = () => {
-    if (!badgeRow) return;
+    if (badgeRow) {
+      navigation.navigate("BadgeDesigner", {
+        mode: "redesign",
+        badgeId: String(badgeRow.id),
+      });
+      return;
+    }
+    if (pendingDesignJson && pendingCapturedPng) {
+      pendingDesignStore.set(goalId, {
+        designJson: pendingDesignJson,
+        pngBase64: pendingCapturedPng.toString("base64"),
+      });
+    }
     navigation.navigate("BadgeDesigner", {
-      mode: "redesign",
-      badgeId: String(badgeRow.id),
+      mode: "new-goal",
+      goalId,
+      returnVia: "back",
     });
   };
 
@@ -552,14 +568,12 @@ function CompletionContent({
                 variant="primary"
                 testID="completion-bake-it-button"
               />
-              {canRedesign && (
-                <Button
-                  label="Redesign First"
-                  onPress={handleRedesignFirst}
-                  variant="secondary"
-                  testID="completion-redesign-first-button"
-                />
-              )}
+              <Button
+                label="Redesign First"
+                onPress={handleRedesignFirst}
+                variant="secondary"
+                testID="completion-redesign-first-button"
+              />
             </View>
           ) : (
             <View style={styles.actions}>

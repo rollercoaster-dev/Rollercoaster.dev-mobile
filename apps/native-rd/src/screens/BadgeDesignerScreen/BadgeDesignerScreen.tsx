@@ -569,18 +569,32 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
 // GoalsStack: new-goal mode — no badge exists yet, design saved to store
 // ---------------------------------------------------------------------------
 
-function BadgeDesignerContentNewGoal({ goalId }: { goalId: string }) {
+function BadgeDesignerContentNewGoal({
+  goalId,
+  returnVia,
+}: {
+  goalId: string;
+  returnVia?: "back";
+}) {
   const navigation =
     useNavigation<NativeStackNavigationProp<GoalsStackParamList>>();
   const { theme } = useUnistyles();
   const goals = useQuery(goalsQuery);
   const goal = goals.find((g) => g.id === goalId) ?? null;
 
+  // Pre-load from pendingDesignStore when present so a return visit
+  // (e.g. CompletionFlow's "Redesign First" path) opens with the
+  // user's previous design rather than the default.
   const initialDesign = useMemo(() => {
+    const pending = pendingDesignStore.get(goalId);
+    if (pending) {
+      const parsed = parseBadgeDesign(pending.designJson);
+      if (parsed) return parsed;
+    }
     const title = (goal?.title as string) ?? "Untitled";
     const color = (goal?.color as string | null) ?? null;
     return createDefaultBadgeDesign(title, color);
-  }, [goal]);
+  }, [goal, goalId]);
 
   const [design, setDesign] = useState<BadgeDesign | null>(null);
   const currentDesign = design ?? initialDesign;
@@ -613,7 +627,11 @@ function BadgeDesignerContentNewGoal({ goalId }: { goalId: string }) {
           designJson: JSON.stringify(designToSave),
           pngBase64: pngBuffer.toString("base64"),
         });
-        navigation.replace("EditMode", { goalId });
+        if (returnVia === "back") {
+          navigation.goBack();
+        } else {
+          navigation.replace("EditMode", { goalId });
+        }
       } catch (err) {
         logger.error("Failed to save design and navigate", {
           goalId,
@@ -626,7 +644,7 @@ function BadgeDesignerContentNewGoal({ goalId }: { goalId: string }) {
         setIsSaving(false);
       }
     },
-    [goalId, isSaving, navigation, theme],
+    [goalId, isSaving, navigation, returnVia, theme],
   );
 
   const handleSave = useCallback(() => {
@@ -679,7 +697,7 @@ function BadgeDesignerContentNewGoal({ goalId }: { goalId: string }) {
 
 type ScreenParams =
   | { badgeId: string; mode?: undefined }
-  | { mode: "new-goal"; goalId: string }
+  | { mode: "new-goal"; goalId: string; returnVia?: "back" }
   | { mode: "redesign"; badgeId: string };
 
 export function BadgeDesignerScreen({
@@ -691,7 +709,12 @@ export function BadgeDesignerScreen({
 
   let content: React.ReactNode;
   if ("mode" in params && params.mode === "new-goal") {
-    content = <BadgeDesignerContentNewGoal goalId={params.goalId} />;
+    content = (
+      <BadgeDesignerContentNewGoal
+        goalId={params.goalId}
+        returnVia={params.returnVia}
+      />
+    );
   } else if ("badgeId" in params && params.badgeId) {
     content = <BadgeDesignerContentBadge badgeId={params.badgeId} />;
   } else {
