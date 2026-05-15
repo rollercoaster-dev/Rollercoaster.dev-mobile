@@ -59,6 +59,13 @@ const logger = new Logger("BadgeDesignerScreen");
 
 const DEFAULT_BANNER = { text: "", position: BannerPosition.top } as const;
 
+function showSaveFailedAlert() {
+  Alert.alert(
+    "Save Failed",
+    "Could not save your badge design. Please try again.",
+  );
+}
+
 /** Reserved space below topBar for the floating preview overlay at rest. */
 const PREVIEW_OVERLAY_HEIGHT = 200;
 
@@ -513,10 +520,7 @@ function BadgeDesignerContentBadge({
       });
     } catch (err) {
       logger.error("Failed to save badge design", { badgeId, error: err });
-      Alert.alert(
-        "Save Failed",
-        "Could not save your badge design. Please try again.",
-      );
+      showSaveFailedAlert();
       setIsSaving(false);
       return;
     }
@@ -657,10 +661,7 @@ function BadgeDesignerContentNewGoal({ goalId }: { goalId: string }) {
           goalId,
           error: err,
         });
-        Alert.alert(
-          "Save Failed",
-          "Could not save your badge design. Please try again.",
-        );
+        showSaveFailedAlert();
         setIsSaving(false);
       }
     },
