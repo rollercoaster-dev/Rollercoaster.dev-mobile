@@ -21,7 +21,6 @@ export interface BadgeEarnedModalProps {
   isFirstBadge: boolean;
   onViewBadge: () => void;
   onContinue: () => void;
-  onCustomize?: () => void;
 }
 
 export function BadgeEarnedModal({
@@ -30,7 +29,6 @@ export function BadgeEarnedModal({
   isFirstBadge,
   onViewBadge,
   onContinue,
-  onCustomize,
 }: BadgeEarnedModalProps) {
   const { theme } = useUnistyles();
   const { animationPref, shouldAnimate } = useAnimationPref();
@@ -113,13 +111,6 @@ export function BadgeEarnedModal({
                   onPress={onViewBadge}
                   variant="primary"
                 />
-                {onCustomize && (
-                  <Button
-                    label="Customize"
-                    onPress={onCustomize}
-                    variant="secondary"
-                  />
-                )}
                 <Button
                   label="Keep going"
                   onPress={onContinue}

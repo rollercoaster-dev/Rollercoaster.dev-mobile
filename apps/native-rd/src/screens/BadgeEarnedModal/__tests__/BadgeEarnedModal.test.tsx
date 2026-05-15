@@ -97,25 +97,9 @@ describe("BadgeEarnedModal", () => {
     expect(card.props.accessibilityLiveRegion).toBe("polite");
   });
 
-  it("does not render Customize button when onCustomize is not provided", () => {
+  it("does not render a Customize button (redesign is pre-bake only)", () => {
     renderWithProviders(<BadgeEarnedModal {...defaultProps} />);
     expect(screen.queryByText("Customize")).not.toBeOnTheScreen();
-  });
-
-  it("renders Customize button when onCustomize is provided", () => {
-    renderWithProviders(
-      <BadgeEarnedModal {...defaultProps} onCustomize={jest.fn()} />,
-    );
-    expect(screen.getByText("Customize")).toBeOnTheScreen();
-  });
-
-  it("calls onCustomize when Customize button is pressed", () => {
-    const onCustomize = jest.fn();
-    renderWithProviders(
-      <BadgeEarnedModal {...defaultProps} onCustomize={onCustomize} />,
-    );
-    fireEvent.press(screen.getByLabelText("Customize"));
-    expect(onCustomize).toHaveBeenCalledTimes(1);
   });
 
   it("starts at scale 1 when shouldAnimate is false", () => {

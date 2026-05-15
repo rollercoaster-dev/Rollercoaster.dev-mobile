@@ -381,20 +381,6 @@ function CompletionContent({
     }
   };
 
-  const handleCustomizeBadge = () => {
-    setShowBadgeModal(false);
-    if (!badgeRow) {
-      logger.warn(
-        "handleCustomizeBadge: badgeRow is null — cannot navigate to designer",
-      );
-      return;
-    }
-    navigation.navigate("BadgeDesigner", {
-      mode: "redesign",
-      badgeId: String(badgeRow.id),
-    });
-  };
-
   const handleDismissBadgeModal = () => {
     setShowBadgeModal(false);
   };
@@ -674,7 +660,6 @@ function CompletionContent({
           imageUri={badgeRow.imageUri ?? PLACEHOLDER_IMAGE_URI}
           isFirstBadge={capturedIsFirstBadge.current}
           onViewBadge={handleViewBadge}
-          onCustomize={handleCustomizeBadge}
           onContinue={handleDismissBadgeModal}
         />
       )}
