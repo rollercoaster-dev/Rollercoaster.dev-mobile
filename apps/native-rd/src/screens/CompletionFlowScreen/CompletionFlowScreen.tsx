@@ -308,12 +308,17 @@ function CompletionContent({
 
   // Alert dispatch — one per focus session, re-fired when the screen
   // regains focus (e.g. user backed out of the designer without saving).
+  // Gated on phase === "celebration" so the prompt can't pop while the
+  // user is still in the evidence-prompt phase (the existing-badge branch
+  // in useCreateBadge sets "rebake-required" as soon as changes are
+  // detected, independent of the screen's readiness).
   const alertShownThisFocusRef = useRef(false);
   useEffect(() => {
     if (!isFocused) {
       alertShownThisFocusRef.current = false;
       return;
     }
+    if (phase !== "celebration") return;
     if (badgeStatus !== "rebake-required") return;
     if (rebakeConfirmed) return;
     if (alertShownThisFocusRef.current) return;
@@ -344,7 +349,7 @@ function CompletionContent({
         },
       ],
     );
-  }, [isFocused, badgeStatus, rebakeConfirmed, badgeRow, navigation]);
+  }, [isFocused, phase, badgeStatus, rebakeConfirmed, badgeRow, navigation]);
 
   // Inline text note state
   const [noteText, setNoteText] = useState("");
