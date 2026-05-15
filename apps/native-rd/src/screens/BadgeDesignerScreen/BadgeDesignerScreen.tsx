@@ -49,6 +49,7 @@ import { badgeWithGoalQuery, goalsQuery, updateBadge } from "../../db";
 import type { BadgeId, GoalId } from "../../db";
 import { pendingDesignStore } from "../../stores/pendingDesignStore";
 import { Logger } from "../../shims/rd-logger";
+import { reportError } from "../../services/sentry-report";
 import type {
   BadgeDesignerScreenProps,
   GoalsStackParamList,
@@ -457,6 +458,7 @@ function DesignEditor({
 
 function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
   const navigation = useNavigation();
+  const { theme } = useUnistyles();
   const query = useMemo(
     () => badgeWithGoalQuery(badgeId as BadgeId),
     [badgeId],
@@ -477,6 +479,8 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
   const [design, setDesign] = useState<BadgeDesign | null>(null);
   const currentDesign = design ?? initialDesign;
   const goalColor = badge?.goalColor as string | null | undefined;
+  const goalIdForCapture = (badge?.goalId as string | null | undefined) ?? null;
+  const previewRef = useRef<View | null>(null);
 
   const derivedFrameParams = useFrameParamsForGoal(
     (badge?.goalId as GoalId | null | undefined) ?? null,
@@ -484,7 +488,7 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
     (badge?.completedAt as string | null | undefined) ?? null,
   );
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     if (!currentDesign) return;
     try {
       updateBadge(badgeId as BadgeId, {
@@ -498,8 +502,38 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
       );
       return;
     }
+
+    // Capture the freshly-designed preview as a PNG and stash it via
+    // pendingDesignStore so any downstream rebake (CompletionFlow's
+    // re-completion path) consumes the new design's pixels instead of
+    // re-rendering and re-capturing (which has hit transparent-snapshot
+    // races on iOS). Independent of the save above — failure here is
+    // non-fatal; the consumer falls back to the existing on-disk PNG.
+    if (goalIdForCapture) {
+      try {
+        const pngBuffer = await captureBadge(
+          previewRef,
+          getCaptureDimensions(
+            currentDesign,
+            undefined,
+            getRendererLayoutOptions(theme),
+          ),
+        );
+        pendingDesignStore.set(goalIdForCapture, {
+          designJson: JSON.stringify(currentDesign),
+          pngBase64: pngBuffer.toString("base64"),
+        });
+      } catch (captureErr) {
+        logger.warn(
+          "Redesign-save capture failed; downstream rebake will reuse existing PNG",
+          { badgeId, error: captureErr },
+        );
+        reportError(captureErr, { area: "badge.create", kind: "bake" });
+      }
+    }
+
     navigation.goBack();
-  }, [badgeId, currentDesign, navigation]);
+  }, [badgeId, currentDesign, goalIdForCapture, navigation, theme]);
 
   if (!badge || !currentDesign) {
     return (
@@ -526,6 +560,7 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
       onDesignChange={setDesign}
       onSave={handleSave}
       onBack={() => navigation.goBack()}
+      previewRef={previewRef}
     />
   );
 }

@@ -242,7 +242,7 @@ describe("BadgeDesignerScreen", () => {
     expect(screen.getByLabelText("Save Design")).toBeOnTheScreen();
   });
 
-  it("calls updateBadge and goBack when Save is pressed", () => {
+  it("calls updateBadge and goBack when Save is pressed", async () => {
     mockUseQuery.mockReturnValue([makeRow()]);
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
@@ -255,7 +255,42 @@ describe("BadgeDesignerScreen", () => {
         design: expect.stringContaining('"shape":"circle"'),
       }),
     );
+    // goBack fires after the post-save capture promise resolves.
+    await waitFor(() => expect(mockGoBack).toHaveBeenCalled());
+  });
+
+  it("captures PNG, writes pendingDesignStore entry on save (for downstream rebake)", async () => {
+    mockUseQuery.mockReturnValue([makeRow()]);
+    mockCaptureBadge.mockResolvedValue(Buffer.from("redesigned-png-bytes"));
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+
+    fireEvent.press(screen.getByLabelText("Save Design"));
+
+    await waitFor(() => expect(mockPendingDesignStore.set).toHaveBeenCalled());
+    expect(mockPendingDesignStore.set).toHaveBeenCalledWith(
+      "goal-1",
+      expect.objectContaining({
+        designJson: expect.stringContaining('"shape":"circle"'),
+        pngBase64: Buffer.from("redesigned-png-bytes").toString("base64"),
+      }),
+    );
     expect(mockGoBack).toHaveBeenCalled();
+  });
+
+  it("still navigates back when capture fails (downstream rebake falls back to existing PNG)", async () => {
+    mockUseQuery.mockReturnValue([makeRow()]);
+    mockCaptureBadge.mockRejectedValue(new Error("capture timeout"));
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+
+    fireEvent.press(screen.getByLabelText("Save Design"));
+
+    await waitFor(() => expect(mockGoBack).toHaveBeenCalled());
+    expect(mockUpdateBadge).toHaveBeenCalled();
+    expect(mockPendingDesignStore.set).not.toHaveBeenCalled();
   });
 
   it("updates preview when a different shape is selected", () => {
@@ -278,7 +313,7 @@ describe("BadgeDesignerScreen", () => {
     expect(screen.getByLabelText(/Badge preview:.*#34d399/)).toBeOnTheScreen();
   });
 
-  it("persists modified design when Save is pressed after changes", () => {
+  it("persists modified design when Save is pressed after changes", async () => {
     mockUseQuery.mockReturnValue([makeRow()]);
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
@@ -300,7 +335,8 @@ describe("BadgeDesignerScreen", () => {
         design: expect.stringContaining('"color":"#34d399"'),
       }),
     );
-    expect(mockGoBack).toHaveBeenCalled();
+    // goBack fires after the post-save capture promise resolves.
+    await waitFor(() => expect(mockGoBack).toHaveBeenCalled());
   });
 
   it("creates default design when badge has no existing design", () => {
