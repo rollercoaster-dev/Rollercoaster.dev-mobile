@@ -451,11 +451,41 @@ describe("CompletionFlowScreen", () => {
   });
 
   describe("pre-bake choice (Bake It / Redesign First)", () => {
-    it("renders Bake It and Redesign First when in celebration, goal active, no prior tap", () => {
+    it("never auto-bakes — even when a pending captured PNG is present, enabled stays false until Bake It is tapped", async () => {
+      // Simulates first completion via NewGoal designer: pendingDesignStore
+      // had an entry, outer screen consumed it, inner sees pendingCapturedPng.
+      // Earlier code auto-confirmed in this scenario; this regression test
+      // pins down that the user always has to tap Bake It.
+      const {
+        pendingDesignStore,
+      } = require("../../../stores/pendingDesignStore");
+      pendingDesignStore.set("goal-1", {
+        designJson: '{"shape":"circle"}',
+        pngBase64: Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]).toString(
+          "base64",
+        ),
+      });
+      setupQueries({ goalEvidence: GOAL_EVIDENCE });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      // No Bake It tap. After all microtasks settle, enabled must remain false.
+      await waitFor(() => {
+        const lastCallArgs =
+          mockUseCreateBadge.mock.calls[
+            mockUseCreateBadge.mock.calls.length - 1
+          ];
+        expect(lastCallArgs[1]).toMatchObject({ enabled: false });
+      });
+      // Sanity: Bake It is still on screen, waiting for the user.
+      expect(screen.getByLabelText("Bake It")).toBeOnTheScreen();
+    });
+
+    it("renders only Bake It on first completion (no badge to redesign yet)", () => {
       setupQueries({ goalEvidence: GOAL_EVIDENCE });
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
       expect(screen.getByLabelText("Bake It")).toBeOnTheScreen();
-      expect(screen.getByLabelText("Redesign First")).toBeOnTheScreen();
+      // Redesign First is only available once a badge exists; first
+      // completion's design was committed in the NewGoal flow already.
+      expect(screen.queryByLabelText("Redesign First")).not.toBeOnTheScreen();
     });
 
     it("hides the choice once the goal is completed (post-bake / view-only)", () => {
@@ -466,16 +496,6 @@ describe("CompletionFlowScreen", () => {
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
       expect(screen.queryByLabelText("Bake It")).not.toBeOnTheScreen();
       expect(screen.queryByLabelText("Redesign First")).not.toBeOnTheScreen();
-    });
-
-    it("Redesign First on first completion (no badge yet) navigates to BadgeDesigner new-goal mode", () => {
-      setupQueries({ goalEvidence: GOAL_EVIDENCE });
-      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
-      fireEvent.press(screen.getByLabelText("Redesign First"));
-      expect(mockNavigate).toHaveBeenCalledWith("BadgeDesigner", {
-        mode: "new-goal",
-        goalId: "goal-1",
-      });
     });
 
     it("Redesign First on re-completion (badge exists) navigates to BadgeDesigner redesign mode", () => {

@@ -206,15 +206,11 @@ function CompletionContent({
       ? JSON.stringify(fallbackDesign)
       : undefined);
 
-  // Tracks the user's explicit pre-bake confirmation. The bake never fires
-  // automatically — it waits for either an explicit Bake It tap or for the
-  // outer screen to deliver a fresh PNG from BadgeDesigner (Redesign First
-  // round-trip, treated as implicit confirmation since the user already
-  // committed to this design via Save).
+  // The bake NEVER fires automatically — only when the user explicitly taps
+  // Bake It. No implicit confirmation: a fresh PNG from BadgeDesigner counts
+  // as a new bake source, not as approval to bake. The user always sees the
+  // preview + Bake It button before anything is written.
   const [userConfirmedBake, setUserConfirmedBake] = useState(false);
-  useEffect(() => {
-    if (pendingCapturedPng) setUserConfirmedBake(true);
-  }, [pendingCapturedPng]);
 
   // Source of truth for "is there anything to bake into?"
   //   - Fresh capture from the designer wins.
@@ -344,15 +340,18 @@ function CompletionContent({
 
   const handleBakeIt = () => setUserConfirmedBake(true);
 
+  // Redesign First is only available when a badge already exists
+  // (re-completion). For first completion the user designed in the
+  // NewGoal flow already; redesigning from here can't cleanly return
+  // through the new-goal designer (whose save replaces to EditMode).
+  // Post-bake, they can redesign from BadgeDetail's Customize button.
+  const canRedesign = Boolean(badgeRow);
   const handleRedesignFirst = () => {
-    if (badgeRow) {
-      navigation.navigate("BadgeDesigner", {
-        mode: "redesign",
-        badgeId: String(badgeRow.id),
-      });
-      return;
-    }
-    navigation.navigate("BadgeDesigner", { mode: "new-goal", goalId });
+    if (!badgeRow) return;
+    navigation.navigate("BadgeDesigner", {
+      mode: "redesign",
+      badgeId: String(badgeRow.id),
+    });
   };
 
   const isCompleted = goal?.status === GoalStatus.completed;
@@ -553,12 +552,14 @@ function CompletionContent({
                 variant="primary"
                 testID="completion-bake-it-button"
               />
-              <Button
-                label="Redesign First"
-                onPress={handleRedesignFirst}
-                variant="secondary"
-                testID="completion-redesign-first-button"
-              />
+              {canRedesign && (
+                <Button
+                  label="Redesign First"
+                  onPress={handleRedesignFirst}
+                  variant="secondary"
+                  testID="completion-redesign-first-button"
+                />
+              )}
             </View>
           ) : (
             <View style={styles.actions}>
