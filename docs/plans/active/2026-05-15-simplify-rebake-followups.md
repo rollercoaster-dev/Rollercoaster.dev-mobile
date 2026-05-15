@@ -1,9 +1,9 @@
 # Simplify follow-ups from the rebake-on-reopen branch
 
 Date: 2026-05-15
-Origin: `simplify/rebake-on-reopen` /simplify pass (commits bfb1ebc..c8367cb)
+Origin: `simplify/rebake-on-reopen` /simplify pass (commits bfb1ebc..c8367cb) + follow-up PR review of that branch
 
-The /simplify pass on `simplify/rebake-on-reopen` applied 6 low-risk wins (JSON.stringify dedup, Buffer-based base64, TOCTOU pre-check removed, memo dep tightened, narration comments deleted). The review agents surfaced 6 further findings that are real but each warrants its own scoped change. This plan tracks them as sub-issues under one epic.
+The /simplify pass on `simplify/rebake-on-reopen` applied 6 low-risk wins (JSON.stringify dedup, Buffer-based base64, TOCTOU pre-check removed, memo dep tightened, narration comments deleted). The review agents surfaced 6 further refactor findings (§1-6 below). A follow-up `/pr-review-toolkit:review-pr` pass on the same branch surfaced 3 pre-existing violations of the `no_placeholders_or_fallbacks` project rule (§7-9) and a hardening pass (§10). All are tracked as sub-issues under one epic.
 
 Each item below is one sub-issue.
 
@@ -83,9 +83,60 @@ Low ROI; cosmetic. Pair with any other CompletionFlow change above.
 
 ---
 
+---
+
+## 7. Remove `PLACEHOLDER_IMAGE_URI` save-failure fallback in `useCreateBadge` (#48)
+
+**Where:** `apps/native-rd/src/hooks/useCreateBadge.ts:269-281`
+
+The try/catch around `saveBadgePNG` swallows the failure, substitutes `PLACEHOLDER_IMAGE_URI`, then proceeds to `createBadge`/`updateBadge` — persisting a row pointing at a non-existent URI. Violates the `no_placeholders_or_fallbacks` rule ("fail loud on save/read errors"). Pre-existing on `main`, surfaced during PR review.
+
+**Proposed:** delete the try/catch. Let `saveBadgePNG` errors propagate to the outer catch at L317, which sets `status: "error"` and surfaces `badgeError` to the user. `CompletionFlowScreen:566-577` already renders this state.
+
+Coordinate with §2 (the `PLACEHOLDER_IMAGE_URI` constant relocation).
+
+---
+
+## 8. Remove 🏅 emoji placeholder branch from `BadgeEarnedModal` (#49)
+
+**Where:** `apps/native-rd/src/screens/BadgeEarnedModal/BadgeEarnedModal.tsx:83-102`
+
+Literally the prohibited emoji placeholder named in `no_placeholders_or_fallbacks`. Pre-existing on `main`.
+
+**Proposed:** delete the placeholder branch and the `hasImage` flag. Once §7 lands, the branch is unreachable dead code. Drop the corresponding test scaffolding at `BadgeEarnedModal.test.tsx:56-61` and the `PLACEHOLDER_IMAGE_URI` mock.
+
+Depends on §7.
+
+---
+
+## 9. Remove `Image onError` fallback UI in `BadgeDetailScreen` (#50)
+
+**Where:** `apps/native-rd/src/screens/BadgeDetailScreen/BadgeDetailScreen.tsx:117, 164, 300-308`
+
+`onError`-driven fallback UI when the badge image fails to load. Violates `no_placeholders_or_fallbacks` ("no onError fallback UI; fail loud on save/read errors"). Pre-existing on `main`.
+
+**Proposed:** remove the `onError`-driven fallback. If the image fails to load, surface the failure (or let it surface so a defect is debuggable) — do not silently render a substitute.
+
+---
+
+## 10. Hardening pass: silent failures + Sentry scope gaps (#51)
+
+Bundle of small fail-loud / visible-error fixes. Pre-existing on `main`.
+
+- **Default-design capture retry loop with no UI** — `CompletionFlowScreen.tsx:164-170`. Cap retries; surface failure in visible state; gate or disable Bake It.
+- **`handleSaveInlineNote` silent on catch** — `CompletionFlowScreen.tsx:261-279`. Add `Alert.alert("Could not save note", error.message)`.
+- **View Badge no-op when parent nav missing** — `CompletionFlowScreen.tsx:338-352`. Show an error or `reportError`; don't dismiss the modal until navigate succeeds.
+- **Sentry scope coverage gap** — `sentry-report.ts:82-93` excludes `useCreateBadge`/`CompletionFlowScreen`/`BadgeDesignerScreen` because they use direct `reportError` — but several `logger.warn`/`logger.error` sites in those files are neither in `SCOPE_TO_AREA` nor wrapped. Audit each.
+- **Empty `if (!routeName) return` on unknown evidence type** — `CompletionFlowScreen.tsx:289-299`. Add `logger.error` + user-visible alert.
+- **Zero-width layout indefinite wait** — `CompletionFlowScreen.tsx:368-372`. Add a `logger.warn` after a timeout, or show an explicit "preparing badge…" state.
+- **`parseBadgeDesign` silent drop on redesign pre-load** — `BadgeDesignerScreen.tsx:584-588`. Add `logger.warn`.
+
+---
+
 ## Order & dependencies
 
-- 3 → 4 (#4 trivially follows #3)
+- §3 → §4 (#44 → #45 — #45 trivially follows #44)
+- §7 → §8 (#48 → #49 — removing the save-failure fallback makes the emoji branch dead code)
 - All others independent
 
-Pick up in any order. None block the rest of the branch from merging.
+Pick up in any order. None block the rest of the parent branch from merging.
