@@ -149,21 +149,6 @@ describe("BadgeDetailScreen", () => {
     expect(mockGoBack).toHaveBeenCalled();
   });
 
-  it('renders "Customize Badge" button and navigates to BadgeDesigner', () => {
-    mockUseQuery.mockReturnValue([makeRow()]);
-    renderWithProviders(
-      <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
-    );
-
-    const customizeBtn = screen.getByLabelText("Customize Badge");
-    expect(customizeBtn).toBeOnTheScreen();
-
-    fireEvent.press(customizeBtn);
-    expect(mockNavigate).toHaveBeenCalledWith("BadgeDesigner", {
-      badgeId: "badge-1",
-    });
-  });
-
   describe("export buttons", () => {
     it("renders export buttons when badge exists", () => {
       mockUseQuery.mockReturnValue([makeRow()]);

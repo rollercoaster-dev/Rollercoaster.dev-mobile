@@ -12,12 +12,13 @@ jest.mock("expo-file-system/legacy", () => ({
   getInfoAsync: jest.fn(),
   makeDirectoryAsync: jest.fn(),
   writeAsStringAsync: jest.fn(),
+  readAsStringAsync: jest.fn(),
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockFS = require("expo-file-system/legacy");
 
-import { saveBadgePNG } from "../badgeStorage";
+import { saveBadgePNG, readBadgePNG } from "../badgeStorage";
 
 const MINIMAL_PNG = new Uint8Array([
   137, 80, 78, 71, 13, 10, 26, 10, 0, 1, 2, 3,
@@ -59,7 +60,10 @@ describe("saveBadgePNG", () => {
 
   describe("when the badges directory does not exist", () => {
     it("creates the directory before writing", async () => {
-      mockFS.getInfoAsync.mockResolvedValue({ exists: false });
+      // First call (dir check) → missing; second call (post-write file check) → present.
+      mockFS.getInfoAsync
+        .mockResolvedValueOnce({ exists: false })
+        .mockResolvedValueOnce({ exists: true });
 
       await saveBadgePNG(MINIMAL_PNG);
 
@@ -68,6 +72,21 @@ describe("saveBadgePNG", () => {
         { intermediates: true },
       );
       expect(mockFS.writeAsStringAsync).toHaveBeenCalled();
+    });
+  });
+
+  describe("post-write verification", () => {
+    it("throws when writeAsStringAsync resolves but the file is not on disk", async () => {
+      // Mirror the iOS sandbox / quota silent-failure mode: write resolves
+      // cleanly but the file never lands. saveBadgePNG must surface this
+      // instead of returning a URI that points to nothing.
+      mockFS.getInfoAsync
+        .mockResolvedValueOnce({ exists: true }) // dir present
+        .mockResolvedValueOnce({ exists: false }); // post-write check fails
+
+      await expect(saveBadgePNG(MINIMAL_PNG)).rejects.toThrow(
+        /Badge PNG write completed but file is missing/,
+      );
     });
   });
 
@@ -111,5 +130,29 @@ describe("saveBadgePNG", () => {
     const uri2 = await saveBadgePNG(MINIMAL_PNG);
 
     expect(uri1).not.toBe(uri2);
+  });
+});
+
+describe("readBadgePNG", () => {
+  const URI = "file:///data/user/0/app/files/badges/abc-123.png";
+
+  it("returns a Buffer of the file's bytes when the file exists", async () => {
+    const base64 = Buffer.from(MINIMAL_PNG).toString("base64");
+    mockFS.readAsStringAsync.mockResolvedValue(base64);
+
+    const buf = await readBadgePNG(URI);
+
+    expect(Array.from(buf)).toEqual(Array.from(MINIMAL_PNG));
+    expect(mockFS.readAsStringAsync).toHaveBeenCalledWith(URI, {
+      encoding: "base64",
+    });
+  });
+
+  it("propagates the underlying read error — no silent fallback", async () => {
+    mockFS.readAsStringAsync.mockRejectedValue(
+      new Error("File does not exist"),
+    );
+
+    await expect(readBadgePNG(URI)).rejects.toThrow(/File does not exist/);
   });
 });

@@ -31,7 +31,16 @@ export type GoalsStackParamList = {
   NewGoal: undefined;
   EditMode: { goalId: string; cameFromFocus?: boolean };
   BadgeDesigner:
-    | { mode: "new-goal"; goalId: string }
+    | {
+        mode: "new-goal";
+        goalId: string;
+        /**
+         * "back" — CompletionFlow's pre-bake "Redesign First" path. After
+         * save, navigation.goBack() returns to CompletionFlow instead of
+         * replacing to EditMode (the standard new-goal flow target).
+         */
+        returnVia?: "back";
+      }
     | { mode: "redesign"; badgeId: string };
 } & CaptureRoutes;
 

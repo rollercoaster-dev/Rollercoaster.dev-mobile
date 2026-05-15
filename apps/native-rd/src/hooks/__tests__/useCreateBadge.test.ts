@@ -4,7 +4,7 @@
 import { renderHook, act } from "@testing-library/react-native";
 import { useQuery } from "@evolu/react";
 import { useCreateBadge } from "../useCreateBadge";
-import { completeGoal, createBadge } from "../../db";
+import { completeGoal, createBadge, updateBadge, GoalStatus } from "../../db";
 import type { GoalId } from "../../db";
 
 // openbadges-core and jose are ESM-only — mock at module level
@@ -43,6 +43,8 @@ jest.mock("../../db", () => ({
     evidence.some((e) => e.type !== null),
   completeGoal: jest.fn(),
   createBadge: jest.fn(),
+  updateBadge: jest.fn(),
+  GoalStatus: { active: "active", completed: "completed" },
 }));
 
 jest.mock("../../services/sentry-report", () => ({
@@ -64,11 +66,15 @@ jest.mock("../../badges", () => ({
   saveBadgePNG: jest.fn(() =>
     Promise.resolve("file:///app/badges/test-badge.png"),
   ),
+  readBadgePNG: jest.fn(() =>
+    Promise.resolve(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])),
+  ),
 }));
 
 const mockUseQuery = useQuery as jest.Mock;
 const mockCompleteGoal = completeGoal as jest.Mock;
 const mockCreateBadge = createBadge as jest.Mock;
+const mockUpdateBadge = updateBadge as jest.Mock;
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { keyProvider: mockKeyProvider } = require("../../crypto");
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -133,12 +139,15 @@ describe("useCreateBadge", () => {
     });
   });
 
-  describe("when badge already exists", () => {
-    it("returns status: done without creating a new badge", async () => {
+  describe("when badge already exists AND goal is completed", () => {
+    it("returns status: done without creating or updating a badge (idempotent)", async () => {
       mockUseQuery.mockImplementation((query: string) => {
-        if (query === "mock-goals-query") return [MOCK_GOAL];
+        if (query === "mock-goals-query")
+          return [{ ...MOCK_GOAL, status: GoalStatus.completed }];
         if (query === "mock-badge-query")
-          return [{ id: "badge-01", goalId: GOAL_ID }];
+          return [
+            { id: "badge-01", goalId: GOAL_ID, imageUri: "file:///old.png" },
+          ];
         return [];
       });
 
@@ -147,6 +156,146 @@ describe("useCreateBadge", () => {
 
       expect(result.current.status).toBe("done");
       expect(mockCreateBadge).not.toHaveBeenCalled();
+      expect(mockUpdateBadge).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("when badge already exists AND goal is active (re-completion)", () => {
+    const EXISTING_IMAGE_URI = "file:///app/badges/old-badge.png";
+
+    it("re-bakes via updateBadge (not createBadge) using freshCapturedPng when provided", async () => {
+      mockUseQuery.mockImplementation((query: string) => {
+        if (query === "mock-goals-query") return [MOCK_GOAL]; // active
+        if (query === "mock-evidence-query")
+          return [{ id: "ev-1", type: "photo", goalId: GOAL_ID }];
+        if (query === "mock-badge-query")
+          return [
+            {
+              id: "badge-01",
+              goalId: GOAL_ID,
+              imageUri: EXISTING_IMAGE_URI,
+            },
+          ];
+        return [];
+      });
+
+      const FRESH = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 99, 99]);
+      const { result } = renderHook(() =>
+        useCreateBadge(GOAL_ID, { freshCapturedPng: FRESH }),
+      );
+      await act(async () => {});
+
+      expect(result.current.status).toBe("done");
+      expect(mockUpdateBadge).toHaveBeenCalledWith(
+        "badge-01",
+        expect.objectContaining({
+          credential: expect.stringContaining("VerifiableCredential"),
+          imageUri: "file:///app/badges/test-badge.png",
+        }),
+      );
+      expect(mockCreateBadge).not.toHaveBeenCalled();
+      expect(mockCompleteGoal).toHaveBeenCalled();
+      // freshCapturedPng wins — readBadgePNG must NOT be called.
+      expect(mockBadges.readBadgePNG).not.toHaveBeenCalled();
+      // bakePNG seeds from the fresh buffer
+      expect(mockBadges.bakePNG).toHaveBeenCalledWith(
+        FRESH,
+        expect.any(String),
+      );
+    });
+
+    it("re-bakes using readBadgePNG of the existing imageUri when no freshCapturedPng is provided", async () => {
+      mockUseQuery.mockImplementation((query: string) => {
+        if (query === "mock-goals-query") return [MOCK_GOAL]; // active
+        if (query === "mock-evidence-query")
+          return [{ id: "ev-1", type: "photo", goalId: GOAL_ID }];
+        if (query === "mock-badge-query")
+          return [
+            {
+              id: "badge-01",
+              goalId: GOAL_ID,
+              imageUri: EXISTING_IMAGE_URI,
+            },
+          ];
+        return [];
+      });
+
+      const EXISTING_BYTES = Buffer.from([
+        137, 80, 78, 71, 13, 10, 26, 10, 7, 7, 7,
+      ]);
+      mockBadges.readBadgePNG.mockResolvedValueOnce(EXISTING_BYTES);
+
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID));
+      await act(async () => {});
+
+      expect(result.current.status).toBe("done");
+      expect(mockBadges.readBadgePNG).toHaveBeenCalledWith(EXISTING_IMAGE_URI);
+      expect(mockBadges.bakePNG).toHaveBeenCalledWith(
+        EXISTING_BYTES,
+        expect.any(String),
+      );
+      expect(mockUpdateBadge).toHaveBeenCalled();
+      expect(mockCreateBadge).not.toHaveBeenCalled();
+    });
+
+    it("fails loud when readBadgePNG throws on re-completion (does not silently fall back)", async () => {
+      mockUseQuery.mockImplementation((query: string) => {
+        if (query === "mock-goals-query") return [MOCK_GOAL]; // active
+        if (query === "mock-evidence-query")
+          return [{ id: "ev-1", type: "photo", goalId: GOAL_ID }];
+        if (query === "mock-badge-query")
+          return [
+            {
+              id: "badge-01",
+              goalId: GOAL_ID,
+              imageUri: EXISTING_IMAGE_URI,
+            },
+          ];
+        return [];
+      });
+      mockBadges.readBadgePNG.mockRejectedValueOnce(new Error("File missing"));
+
+      const FALLBACK = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 1, 1]);
+      const { result } = renderHook(() =>
+        useCreateBadge(GOAL_ID, { capturedPng: FALLBACK }),
+      );
+      await act(async () => {});
+
+      expect(result.current.status).toBe("error");
+      expect(result.current.error).toContain("File missing");
+      // The URI must be in the surfaced error so the user-visible badgeError
+      // points at the missing file, not a context-free FileSystem message.
+      expect(result.current.error).toContain(EXISTING_IMAGE_URI);
+      expect(mockBadges.bakePNG).not.toHaveBeenCalled();
+      expect(mockUpdateBadge).not.toHaveBeenCalled();
+      expect(mockCreateBadge).not.toHaveBeenCalled();
+    });
+
+    it("fails loud when readBadgePNG returns non-PNG bytes on re-completion", async () => {
+      mockUseQuery.mockImplementation((query: string) => {
+        if (query === "mock-goals-query") return [MOCK_GOAL]; // active
+        if (query === "mock-evidence-query")
+          return [{ id: "ev-1", type: "photo", goalId: GOAL_ID }];
+        if (query === "mock-badge-query")
+          return [
+            {
+              id: "badge-01",
+              goalId: GOAL_ID,
+              imageUri: EXISTING_IMAGE_URI,
+            },
+          ];
+        return [];
+      });
+      mockBadges.readBadgePNG.mockResolvedValueOnce(
+        Buffer.from([0, 0, 0, 0, 0, 0, 0, 0]),
+      );
+
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID));
+      await act(async () => {});
+
+      expect(result.current.status).toBe("error");
+      expect(result.current.error).toContain("is not a valid PNG");
+      expect(mockBadges.bakePNG).not.toHaveBeenCalled();
     });
   });
 
