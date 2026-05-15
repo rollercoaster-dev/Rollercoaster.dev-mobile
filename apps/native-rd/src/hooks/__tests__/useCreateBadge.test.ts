@@ -238,7 +238,7 @@ describe("useCreateBadge", () => {
       expect(mockCreateBadge).not.toHaveBeenCalled();
     });
 
-    it("falls back to capturedPng when readBadgePNG fails and no freshCapturedPng is provided", async () => {
+    it("fails loud when readBadgePNG throws on re-completion (does not silently fall back)", async () => {
       mockUseQuery.mockImplementation((query: string) => {
         if (query === "mock-goals-query") return [MOCK_GOAL]; // active
         if (query === "mock-evidence-query")
@@ -261,12 +261,38 @@ describe("useCreateBadge", () => {
       );
       await act(async () => {});
 
-      expect(result.current.status).toBe("done");
-      expect(mockBadges.bakePNG).toHaveBeenCalledWith(
-        FALLBACK,
-        expect.any(String),
+      expect(result.current.status).toBe("error");
+      expect(result.current.error).toContain("File missing");
+      expect(mockBadges.bakePNG).not.toHaveBeenCalled();
+      expect(mockUpdateBadge).not.toHaveBeenCalled();
+      expect(mockCreateBadge).not.toHaveBeenCalled();
+    });
+
+    it("fails loud when readBadgePNG returns non-PNG bytes on re-completion", async () => {
+      mockUseQuery.mockImplementation((query: string) => {
+        if (query === "mock-goals-query") return [MOCK_GOAL]; // active
+        if (query === "mock-evidence-query")
+          return [{ id: "ev-1", type: "photo", goalId: GOAL_ID }];
+        if (query === "mock-badge-query")
+          return [
+            {
+              id: "badge-01",
+              goalId: GOAL_ID,
+              imageUri: EXISTING_IMAGE_URI,
+            },
+          ];
+        return [];
+      });
+      mockBadges.readBadgePNG.mockResolvedValueOnce(
+        Buffer.from([0, 0, 0, 0, 0, 0, 0, 0]),
       );
-      expect(mockUpdateBadge).toHaveBeenCalled();
+
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID));
+      await act(async () => {});
+
+      expect(result.current.status).toBe("error");
+      expect(result.current.error).toContain("is not a valid PNG");
+      expect(mockBadges.bakePNG).not.toHaveBeenCalled();
     });
   });
 

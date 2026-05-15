@@ -230,22 +230,13 @@ export function useCreateBadge(
               ? (existingBadge.imageUri as string)
               : null;
           if (existingImageUri) {
-            try {
-              const existing = await readBadgePNG(existingImageUri);
-              if (isPNG(existing)) {
-                pngBuffer = existing;
-              } else {
-                logger.warn(
-                  "Existing badge PNG is not a valid PNG; falling back to capture",
-                  { goalId, imageUri: existingImageUri },
-                );
-              }
-            } catch (readErr) {
-              logger.warn(
-                "Failed to read existing badge PNG; falling back to capture",
-                { goalId, imageUri: existingImageUri, error: readErr },
+            const existing = await readBadgePNG(existingImageUri);
+            if (!isPNG(existing)) {
+              throw new Error(
+                `useCreateBadge: existing badge PNG at ${existingImageUri} is not a valid PNG`,
               );
             }
+            pngBuffer = existing;
           }
         }
 
