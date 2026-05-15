@@ -261,3 +261,30 @@ The user has not confirmed whether the same regression hits the **Redesign first
 
 - The bug is **only verified for the Rebake button**; Redesign-first hasn't been re-tested. Don't assume both paths fail or both succeed until each is exercised.
 - The original empty-slot report from #15 (without a rebake — just a clean install with restored Evolu state) should also be re-verified once the rebake path is fixed.
+
+## /simplify follow-ups (post-review on PR #29)
+
+Findings from the three review agents that were intentionally deferred out of PR #29 — track here so they're not lost.
+
+### Refactors (medium risk, separate PRs)
+
+- **Flatten `useCreateBadge.ts:159-221` re-completion branching.** Extract `decideReCompletion(existingBadge, goal, evidence): 'idempotent-done' | 'silent-complete' | 'await-rebake' | 'rebake-now'` and replace the nested `if/else` with a flat switch. Same effect body, half the indentation, easier to unit-test the decision in isolation.
+- **Extract `resolvePngSource()` from `useCreateBadge.ts:310-359`.** Three sequential `if (!pngBuffer)` blocks with subtly different fallthroughs and three `isPNG`-validation paths. Pull to a pure async helper `resolvePngSource({ fresh, existingBadge, fallback }): Promise<Buffer>` that the effect can `await` once.
+- **Move `returnAction: "rebake"` off navigation params.** The designer→completion-flow round-trip currently rides on a navigation param that has to be consumed-and-cleared via `setParams({ returnAction: undefined })`. The `pendingDesignStore` (already touched by the designer save path) can carry a `rebakeRequested: true` flag instead — one carrier, no clear-on-consume dance, no risk of stack-grow if reached via a non-CompletionFlow entry.
+- **`returnAction: "rebake"` is a single-valued string literal in 7 files.** Either a `type ReturnAction = "rebake"` alias in `navigation/types.ts` (and import it), or just `rebake?: boolean`. Currently each site re-declares the literal.
+- **Collapse `ScreenParams` union in `BadgeDesignerScreen.tsx:718`.** Re-derives mode from raw params (`"mode" in params && params.mode === "new-goal"`) instead of using the existing discriminated union from `navigation/types.ts`. Switch on `params.mode` exhaustively.
+
+### Shared abstractions (cross-cutting, low priority)
+
+- **Extract `useImageWithFallback(uri)`** to dedupe the `imageLoadFailed + uri !== PLACEHOLDER + onError={...}` triad shared by `BadgeEarnedModal.tsx`, `BadgeDetailScreen.tsx:117,164,306`, and `EvidenceThumbnail.tsx:54`.
+- **`parseCredential(json)` selector.** Both `credentialDiff.ts:55-75` (`hasChangesSinceBake`) and `BadgeDetailScreen.tsx:46-61` (`extractCriteriaNarrative`) walk `credential.credentialSubject.achievement.*` via cascading `as Record<string, unknown>` casts + `JSON.parse` try/catch. Lift to a typed accessor in `badges/`.
+- **Pre-existing: `toBase64Url` (`useCreateBadge.ts:82`) and `toBase64` (`badgeStorage.ts:28`)** are two hand-rolled base64 encoders with the same `String.fromCharCode` loop. Untouched by #29; worth a follow-up consolidation.
+
+### Suspected bugs worth verifying
+
+- **`hasReadableExistingPng` only checks the URI string, not the file** (`CompletionFlowScreen.tsx:223-225` mirrored at `useCreateBadge.ts:321-345`). The screen marks the bake "enabled" because the URI looks valid and suppresses the fallback host; but the hook still does an async `readBadgePNG` that may fail, with `capturedPng` already nulled out. Either always render the fallback host, or let the hook fall back to a fresh capture instead of throwing.
+- **Designer save without edits re-writes design JSON unconditionally** (BadgeDesigner `handleSave` → `updateBadge({ design })`). If the user opens the designer and presses Save without changes, the same JSON is rewritten — which then trips `lastCapturedDesignKeyRef` invalidation downstream. Compare new design JSON to existing and skip the write when equal.
+
+### Style cleanup (when you next touch these files)
+
+- **Trim change-narrating comments** in `useCreateBadge.ts` (file-header `Race-condition safe...` paragraph, `// Once triggered, never reset...` at :150, `// Changes detected — wait for caller to confirm...` at :213, the 12-line PNG-priority docblock at :298) and `CompletionFlowScreen.tsx` (`returnAction` prop docblock at :106-112, several `// ...` lines that narrate the PR rather than explain non-obvious WHY). Per CLAUDE.md: keep only non-obvious WHY (hidden constraints, subtle invariants, workarounds).
