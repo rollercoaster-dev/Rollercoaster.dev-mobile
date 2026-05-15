@@ -24,15 +24,6 @@ function generateBadgeFilename(): string {
   return `${timestamp}-${random}.png`;
 }
 
-/** Convert a Uint8Array to a base64 string without relying on Node's Buffer */
-function toBase64(data: Uint8Array): string {
-  let binary = "";
-  for (let i = 0; i < data.length; i++) {
-    binary += String.fromCharCode(data[i]);
-  }
-  return btoa(binary);
-}
-
 /**
  * Save a baked PNG buffer to the badges directory.
  *
@@ -57,9 +48,11 @@ export async function saveBadgePNG(data: Uint8Array): Promise<string> {
 
   const uri = `${badgesDir}${generateBadgeFilename()}`;
   try {
-    await FileSystem.writeAsStringAsync(uri, toBase64(data), {
-      encoding: FileSystem.EncodingType.Base64,
-    });
+    await FileSystem.writeAsStringAsync(
+      uri,
+      Buffer.from(data).toString("base64"),
+      { encoding: FileSystem.EncodingType.Base64 },
+    );
   } catch (writeErr) {
     throw new Error(
       `Failed to write badge PNG to ${uri}: ${writeErr instanceof Error ? writeErr.message : String(writeErr)}`,
