@@ -7,6 +7,7 @@ import {
   waitFor,
 } from "../../../__tests__/test-utils";
 import { CompletionFlowScreen } from "../CompletionFlowScreen";
+import { pendingDesignStore } from "../../../stores/pendingDesignStore";
 
 // --- Mocks ---
 
@@ -726,6 +727,67 @@ describe("CompletionFlowScreen", () => {
       expect(alertSpy).not.toHaveBeenCalled();
     });
 
+    it("Redesign first: picks up pendingDesignStore entry written while screen was backgrounded", () => {
+      // Simulates the full Redesign-first round-trip: user lands in
+      // CompletionFlow (no pending entry), navigates to designer, designer
+      // writes to pendingDesignStore, user returns via
+      // navigate("CompletionFlow", { returnAction: "rebake" }). The outer
+      // screen instance is reused, so the initial useState consume saw
+      // nothing — only the returnAction-keyed effect's re-consume can
+      // surface the fresh PNG.
+      pendingDesignStore.clear();
+      mockUseCreateBadge.mockReturnValue({
+        status: "rebake-required",
+        error: null,
+      });
+      setupQueries({
+        goalEvidence: GOAL_EVIDENCE,
+        badge: BADGE_ROW,
+        allBadges: [BADGE_ROW],
+      });
+
+      const { rerender } = renderWithProviders(
+        <CompletionFlowScreen {...routeProps} />,
+      );
+      // First mount — no pending entry exists yet.
+      expect(mockUseCreateBadge).toHaveBeenLastCalledWith(
+        "goal-1",
+        expect.not.objectContaining({ freshCapturedPng: expect.anything() }),
+      );
+
+      // Designer writes a fresh capture while the user is in the designer.
+      const FRESH_PNG_B64 = Buffer.from([
+        137, 80, 78, 71, 13, 10, 26, 10, 1, 2, 3,
+      ]).toString("base64");
+      pendingDesignStore.set("goal-1", {
+        designJson: '{"shape":"square"}',
+        pngBase64: FRESH_PNG_B64,
+      });
+
+      // Return-from-designer: navigation.navigate with returnAction lands
+      // back on the existing CompletionFlow instance (rerender, not remount).
+      const rebakeReturnRoute = {
+        route: {
+          key: "CompletionFlow-1",
+          name: "CompletionFlow" as const,
+          params: { goalId: "goal-1", returnAction: "rebake" as const },
+        },
+        navigation: {} as any,
+      };
+      rerender(<CompletionFlowScreen {...rebakeReturnRoute} />);
+
+      // The fresh PNG must now flow into useCreateBadge as freshCapturedPng.
+      expect(mockUseCreateBadge).toHaveBeenLastCalledWith(
+        "goal-1",
+        expect.objectContaining({
+          freshCapturedPng: Buffer.from(FRESH_PNG_B64, "base64"),
+        }),
+      );
+      // pendingDesignStore should be drained — re-consume must not pull a
+      // stale entry on a subsequent rerender.
+      expect(pendingDesignStore.get("goal-1")).toBeUndefined();
+    });
+
     it("returnAction=rebake on focus flips confirmRebake and clears the param", () => {
       mockUseCreateBadge.mockReturnValue({
         status: "rebake-required",
@@ -754,6 +816,33 @@ describe("CompletionFlowScreen", () => {
         "goal-1",
         expect.objectContaining({ confirmRebake: true }),
       );
+    });
+
+    it("Redesign first return does not flash the rebake Alert before auto-confirming", () => {
+      // Regression: the alert effect and the return-action consumer effect
+      // run after the same render. The consumer flips rebakeConfirmed, but
+      // the alert effect's closure still sees rebakeConfirmed=false — so
+      // without an explicit returnAction guard the alert flashes before
+      // the auto-confirm propagates.
+      mockUseCreateBadge.mockReturnValue({
+        status: "rebake-required",
+        error: null,
+      });
+      setupQueries({
+        goalEvidence: GOAL_EVIDENCE,
+        badge: BADGE_ROW,
+        allBadges: [BADGE_ROW],
+      });
+      const rebakeReturnRoute = {
+        route: {
+          key: "CompletionFlow-1",
+          name: "CompletionFlow" as const,
+          params: { goalId: "goal-1", returnAction: "rebake" as const },
+        },
+        navigation: {} as any,
+      };
+      renderWithProviders(<CompletionFlowScreen {...rebakeReturnRoute} />);
+      expect(alertSpy).not.toHaveBeenCalled();
     });
   });
 });

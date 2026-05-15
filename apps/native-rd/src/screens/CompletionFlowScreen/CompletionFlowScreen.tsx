@@ -311,13 +311,19 @@ function CompletionContent({
   // Gated on phase === "celebration" so the prompt can't pop while the
   // user is still in the evidence-prompt phase (the existing-badge branch
   // in useCreateBadge sets "rebake-required" as soon as changes are
-  // detected, independent of the screen's readiness).
+  // detected, independent of the screen's readiness). Also skipped when
+  // returnAction === "rebake" is incoming: that means the user already
+  // chose Redesign-first and the consumer effect will flip rebakeConfirmed
+  // in the same render pass — without this guard, the alert effect's
+  // closure (still seeing rebakeConfirmed=false) would race and flash the
+  // Alert before the auto-confirm propagates.
   const alertShownThisFocusRef = useRef(false);
   useEffect(() => {
     if (!isFocused) {
       alertShownThisFocusRef.current = false;
       return;
     }
+    if (returnAction === "rebake") return;
     if (phase !== "celebration") return;
     if (badgeStatus !== "rebake-required") return;
     if (rebakeConfirmed) return;
@@ -349,7 +355,15 @@ function CompletionContent({
         },
       ],
     );
-  }, [isFocused, phase, badgeStatus, rebakeConfirmed, badgeRow, navigation]);
+  }, [
+    isFocused,
+    returnAction,
+    phase,
+    badgeStatus,
+    rebakeConfirmed,
+    badgeRow,
+    navigation,
+  ]);
 
   // Inline text note state
   const [noteText, setNoteText] = useState("");
@@ -696,16 +710,36 @@ export function CompletionFlowScreen({ route }: CompletionFlowScreenProps) {
   const navigation = useNavigation();
   const { goalId, returnAction } = route.params;
 
-  // Consume the pending design ONCE at this level — outside the inner Suspense
-  // boundary so the ref survives inner remounts when Evolu queries resolve.
-  // (An inner useRef inside CompletionContent was re-running consume() on every
-  // Suspense-triggered remount; the first remount ate the entry and the
-  // later mount whose useCreateBadge effect actually fires saw nothing.)
-  const pendingDesignRef = useRef(pendingDesignStore.consume(goalId));
-  const pendingDesign = pendingDesignRef.current;
-  const pendingCapturedPngRef = useRef(
+  // Pending-design carrier — must live at this level so it survives inner
+  // Suspense remounts when Evolu queries resolve. (A previous useRef inside
+  // CompletionContent re-ran consume() on every Suspense-triggered remount;
+  // the first remount ate the entry and the later mount whose useCreateBadge
+  // effect actually fires saw nothing.) We keep it in state rather than a
+  // ref so it can pick up a second consume when the user returns from
+  // BadgeDesigner via "Redesign first" — see the effect below.
+  const [pendingDesign, setPendingDesign] = useState(() =>
+    pendingDesignStore.consume(goalId),
+  );
+  const [pendingCapturedPng, setPendingCapturedPng] = useState<
+    Buffer | undefined
+  >(() =>
     pendingDesign ? Buffer.from(pendingDesign.pngBase64, "base64") : undefined,
   );
+
+  // Re-consume after returning from BadgeDesigner via "Redesign first".
+  // navigation.navigate("CompletionFlow", { returnAction: "rebake" }) targets
+  // an existing screen instance, so this outer component is NOT remounted
+  // and the initial useState above never sees the fresh entry. Without this
+  // effect the rebake IIFE in useCreateBadge falls back to readBadgePNG on
+  // the existing on-disk file — i.e. the OLD design — defeating the whole
+  // point of Redesign-first.
+  useEffect(() => {
+    if (returnAction !== "rebake") return;
+    const fresh = pendingDesignStore.consume(goalId);
+    if (!fresh) return;
+    setPendingDesign(fresh);
+    setPendingCapturedPng(Buffer.from(fresh.pngBase64, "base64"));
+  }, [returnAction, goalId]);
 
   return (
     <View style={styles.container}>
@@ -719,7 +753,7 @@ export function CompletionFlowScreen({ route }: CompletionFlowScreenProps) {
           <CompletionContent
             goalId={goalId}
             pendingDesignJson={pendingDesign?.designJson}
-            pendingCapturedPng={pendingCapturedPngRef.current}
+            pendingCapturedPng={pendingCapturedPng}
             returnAction={returnAction}
           />
         </Suspense>
