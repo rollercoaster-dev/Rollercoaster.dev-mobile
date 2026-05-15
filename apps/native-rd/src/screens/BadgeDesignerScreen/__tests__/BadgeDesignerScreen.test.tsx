@@ -279,18 +279,29 @@ describe("BadgeDesignerScreen", () => {
     expect(mockGoBack).toHaveBeenCalled();
   });
 
-  it("still navigates back when capture fails (downstream rebake falls back to existing PNG)", async () => {
+  it("fails loud (alerts) and does not navigate back when redesign-save capture fails", async () => {
+    // Without a fresh capture the rebake would silently embed the new
+    // credential into the previous design's PNG. Show an alert and keep the
+    // user in the designer so they can retry — mirrors the new-goal-mode
+    // saveAndNavigate pattern.
     mockUseQuery.mockReturnValue([makeRow()]);
     mockCaptureBadge.mockRejectedValue(new Error("capture timeout"));
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
 
     fireEvent.press(screen.getByLabelText("Save Design"));
 
-    await waitFor(() => expect(mockGoBack).toHaveBeenCalled());
-    expect(mockUpdateBadge).toHaveBeenCalled();
+    await waitFor(() =>
+      expect(alertSpy).toHaveBeenCalledWith(
+        "Save Failed",
+        expect.stringContaining("Could not capture"),
+      ),
+    );
+    expect(mockGoBack).not.toHaveBeenCalled();
     expect(mockPendingDesignStore.set).not.toHaveBeenCalled();
+    alertSpy.mockRestore();
   });
 
   it("updates preview when a different shape is selected", () => {

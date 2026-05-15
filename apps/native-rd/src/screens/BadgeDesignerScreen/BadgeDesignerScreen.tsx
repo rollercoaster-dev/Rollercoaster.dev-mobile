@@ -503,8 +503,9 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
     }
 
     // Pre-capture here rather than letting CompletionFlow re-render and
-    // re-capture, which has hit transparent-snapshot races on iOS.
-    // Non-fatal: consumer falls back to the existing on-disk PNG.
+    // re-capture, which has hit transparent-snapshot races on iOS. Fail loud:
+    // without a fresh capture the rebake would silently embed the new credential
+    // into the previous design's PNG.
     if (goalIdForCapture) {
       try {
         const pngBuffer = await captureBadge(
@@ -520,11 +521,16 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
           pngBase64: pngBuffer.toString("base64"),
         });
       } catch (captureErr) {
-        logger.warn(
-          "Redesign-save capture failed; downstream rebake will reuse existing PNG",
-          { badgeId, error: captureErr },
-        );
+        logger.error("Redesign-save capture failed", {
+          badgeId,
+          error: captureErr,
+        });
         reportError(captureErr, { area: "badge.create", kind: "bake" });
+        Alert.alert(
+          "Save Failed",
+          "Could not capture your design preview. Please try again.",
+        );
+        return;
       }
     }
 
