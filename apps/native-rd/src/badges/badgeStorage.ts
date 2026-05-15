@@ -84,19 +84,10 @@ export async function saveBadgePNG(data: Uint8Array): Promise<string> {
 /**
  * Read a previously-saved badge PNG back into memory.
  *
- * Used by the re-completion bake path: re-baking the new credential into the
- * existing on-disk pixels avoids the offscreen-capture timing bug where the
- * SVG hasn't finished painting yet and the snapshot comes back transparent.
- *
  * Throws when the file is missing or unreadable — callers must decide whether
  * to fall back to another bake source. No silent placeholder fallback.
  */
 export async function readBadgePNG(uri: string): Promise<Buffer> {
-  const info = await FileSystem.getInfoAsync(uri);
-  if (!info.exists) {
-    throw new Error(`Badge PNG not found at ${uri}`);
-  }
-
   const base64 = await FileSystem.readAsStringAsync(uri, {
     encoding: FileSystem.EncodingType.Base64,
   });

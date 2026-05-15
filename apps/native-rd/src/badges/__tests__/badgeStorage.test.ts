@@ -138,7 +138,6 @@ describe("readBadgePNG", () => {
 
   it("returns a Buffer of the file's bytes when the file exists", async () => {
     const base64 = Buffer.from(MINIMAL_PNG).toString("base64");
-    mockFS.getInfoAsync.mockResolvedValue({ exists: true });
     mockFS.readAsStringAsync.mockResolvedValue(base64);
 
     const buf = await readBadgePNG(URI);
@@ -149,10 +148,11 @@ describe("readBadgePNG", () => {
     });
   });
 
-  it("throws when the file does not exist — no silent fallback", async () => {
-    mockFS.getInfoAsync.mockResolvedValue({ exists: false });
+  it("propagates the underlying read error — no silent fallback", async () => {
+    mockFS.readAsStringAsync.mockRejectedValue(
+      new Error("File does not exist"),
+    );
 
-    await expect(readBadgePNG(URI)).rejects.toThrow(/Badge PNG not found/);
-    expect(mockFS.readAsStringAsync).not.toHaveBeenCalled();
+    await expect(readBadgePNG(URI)).rejects.toThrow(/File does not exist/);
   });
 });
