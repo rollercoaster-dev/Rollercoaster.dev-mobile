@@ -502,12 +502,9 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
       return;
     }
 
-    // Capture the freshly-designed preview as a PNG and stash it via
-    // pendingDesignStore so any downstream rebake (CompletionFlow's
-    // re-completion path) consumes the new design's pixels instead of
-    // re-rendering and re-capturing (which has hit transparent-snapshot
-    // races on iOS). Independent of the save above — failure here is
-    // non-fatal; the consumer falls back to the existing on-disk PNG.
+    // Pre-capture here rather than letting CompletionFlow re-render and
+    // re-capture, which has hit transparent-snapshot races on iOS.
+    // Non-fatal: consumer falls back to the existing on-disk PNG.
     if (goalIdForCapture) {
       try {
         const pngBuffer = await captureBadge(
@@ -581,9 +578,8 @@ function BadgeDesignerContentNewGoal({
   const goals = useQuery(goalsQuery);
   const goal = goals.find((g) => g.id === goalId) ?? null;
 
-  // Pre-load from pendingDesignStore when present so a return visit
-  // (e.g. CompletionFlow's "Redesign First" path) opens with the
-  // user's previous design rather than the default.
+  // Pre-load from pendingDesignStore so a Redesign-First return opens
+  // with the user's previous design, not the default.
   const initialDesign = useMemo(() => {
     const pending = pendingDesignStore.get(goalId);
     if (pending) {

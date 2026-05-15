@@ -9,13 +9,11 @@ import {
 import {
   View,
   ScrollView,
-  Image,
   ActivityIndicator,
   TextInput,
   KeyboardAvoidingView,
   AccessibilityInfo,
 } from "react-native";
-import type { ImageSourcePropType } from "react-native";
 import { Buffer } from "buffer";
 import {
   useNavigation,
@@ -76,14 +74,6 @@ import { styles } from "./CompletionFlowScreen.styles";
 
 const logger = new Logger("CompletionFlowScreen");
 
-/**
- * Optional image override for the completion icon.
- * Set to an image source (e.g. require('../../../assets/icon.png')) to use an image,
- * or leave as undefined to use the default emoji.
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const COMPLETION_ICON: ImageSourcePropType | undefined = undefined;
-
 const EVIDENCE_ROUTE_MAP: Partial<
   Record<EvidenceTypeValue, CaptureScreenName>
 > = {
@@ -123,25 +113,15 @@ function CompletionContent({
 
   const hasGoalEvidence = goalEvidenceRows.length > 0;
 
-  // Re-completion = the user already has a badge for this goal and reopened
-  // it (status flipped back to active). Distinct from first completion in
-  // three ways: (1) the bake writes via updateBadge, not createBadge;
-  // (2) the evidence-prompt phase shows even when prior evidence exists,
-  // because the persisted rows are the previous bake's; (3) the celebration
-  // preview seeds from the existing badge's design.
   const isReCompletion =
     Boolean(badgeRow) && goal?.status !== GoalStatus.completed;
 
-  // Anchor for re-completion's count-based evidence-prompt advance: capture
-  // the evidence count at mount so we can detect "the user added something
-  // new this session" without depending on whether old evidence exists.
+  // Re-completion only advances on evidence added *this session* — the
+  // persisted rows are the previous bake's snapshot, not fresh proof.
   const initialEvidenceCount = useRef(goalEvidenceRows.length);
   const hasFreshEvidence =
     goalEvidenceRows.length > initialEvidenceCount.current;
 
-  // Phase: first completion uses hasGoalEvidence (existing rule).
-  // Re-completion always lands on evidence-prompt and only advances after
-  // fresh evidence is added — old rows are the previous bake's snapshot.
   const [phase, setPhase] = useState<CompletionPhase>(() => {
     if (isReCompletion) return "evidence-prompt";
     return hasGoalEvidence ? "celebration" : "evidence-prompt";
@@ -157,12 +137,9 @@ function CompletionContent({
     );
   }, [phase, isReCompletion, hasFreshEvidence, hasGoalEvidence]);
 
-  // Default-design fallback for FIRST completion only — re-completion uses
-  // the existing on-disk PNG via useCreateBadge's readBadgePNG path, so we
-  // skip the offscreen capture host entirely (and dodge its known
-  // transparent-snapshot race). Render an offscreen BadgeRenderer with the
-  // design-system default (rounded-rectangle + first-letter monogram),
-  // capture once, and feed the PNG into useCreateBadge.
+  // First-completion-only fallback: re-completion reuses the existing
+  // on-disk PNG via readBadgePNG, sidestepping the transparent-snapshot
+  // race in the offscreen capture host.
   const goalTitleForDefault = (goal?.title as string | null) ?? "";
   const goalColorForDefault = (goal?.color as string | null) ?? null;
   const fallbackDesign: BadgeDesign | null =
@@ -206,17 +183,10 @@ function CompletionContent({
       ? JSON.stringify(fallbackDesign)
       : undefined);
 
-  // The bake NEVER fires automatically — only when the user explicitly taps
-  // Bake It. No implicit confirmation: a fresh PNG from BadgeDesigner counts
-  // as a new bake source, not as approval to bake. The user always sees the
-  // preview + Bake It button before anything is written.
+  // Bake never auto-fires — the user always taps Bake It explicitly, even
+  // when a fresh designer PNG is already in hand.
   const [userConfirmedBake, setUserConfirmedBake] = useState(false);
 
-  // Source of truth for "is there anything to bake into?"
-  //   - Fresh capture from the designer wins.
-  //   - The offscreen-host fallback covers first completion default-design.
-  //   - On re-completion, the hook's readBadgePNG path uses the existing
-  //     on-disk image, so an existing imageUri also counts as a bake source.
   const hasExistingBadgeImage = Boolean(
     badgeRow?.imageUri && badgeRow.imageUri !== PLACEHOLDER_IMAGE_URI,
   );
@@ -245,7 +215,6 @@ function CompletionContent({
   const hasShownModal = useRef(false);
   const capturedIsFirstBadge = useRef(false);
 
-  // Start confetti when entering celebration phase
   useEffect(() => {
     if (phase === "celebration") {
       setShowConfetti(true);
@@ -269,12 +238,6 @@ function CompletionContent({
   const canSaveNote =
     trimmedNote.length > 0 && trimmedNote.length <= MAX_NOTE_LENGTH;
 
-  // Preview design for the celebration phase. Always a real design — never
-  // a placeholder. Source order:
-  //   1. Pending design just saved from BadgeDesigner (wins).
-  //   2. Existing badge's stored design (re-completion).
-  //   3. Default design from goal title + color (first completion without
-  //      a designer visit).
   const badgeDesignJson = (badgeRow?.design as string | null) ?? null;
   const previewDesign = useMemo<BadgeDesign | null>(() => {
     if (pendingDesignJson) {
@@ -341,15 +304,6 @@ function CompletionContent({
 
   const handleBakeIt = () => setUserConfirmedBake(true);
 
-  // Redesign First is ALWAYS available before the bake — every completion
-  // gets the chance to change the badge first.
-  //   - Re-completion (badgeRow exists): redesign mode loads the existing
-  //     badge's design; its save captures + writes pendingDesignStore and
-  //     goBack()s.
-  //   - First completion (no badgeRow): new-goal mode with returnVia: "back"
-  //     so its save returns here instead of replacing to EditMode. The
-  //     current pending design (consumed at mount) is written back to the
-  //     store first so the designer pre-loads what the user already had.
   const handleRedesignFirst = () => {
     if (badgeRow) {
       navigation.navigate("BadgeDesigner", {
@@ -358,6 +312,7 @@ function CompletionContent({
       });
       return;
     }
+    // Re-stash the consumed design so the designer pre-loads it on return.
     if (pendingDesignJson && pendingCapturedPng) {
       pendingDesignStore.set(goalId, {
         designJson: pendingDesignJson,
@@ -376,8 +331,7 @@ function CompletionContent({
 
   const handleReopenGoal = () => {
     uncompleteGoal(goalId as GoalId);
-    // replace so a back gesture doesn't drop the user back into the
-    // just-left celebration screen (which would re-show BadgeEarnedModal).
+    // replace, not navigate — back to the celebration screen would re-show BadgeEarnedModal.
     navigation.replace("FocusMode", { goalId });
   };
 
@@ -401,8 +355,7 @@ function CompletionContent({
     setShowBadgeModal(false);
   };
 
-  // Offscreen host for the default-design capture. Rendered in both phases
-  // so the PNG is ready by the time the user transitions to celebration.
+  // Mounted in both phases so the PNG is ready before the user reaches celebration.
   const fallbackHost = fallbackDesign ? (
     <View
       ref={fallbackRef}
@@ -422,7 +375,6 @@ function CompletionContent({
     </View>
   ) : null;
 
-  // Evidence prompt phase — capture evidence before celebration
   if (phase === "evidence-prompt") {
     return (
       <KeyboardAvoidingView style={{ flex: 1 }} {...KEYBOARD_AVOIDING_PROPS}>
@@ -502,7 +454,6 @@ function CompletionContent({
     );
   }
 
-  // Celebration phase — evidence exists, badge being created
   return (
     <View style={{ flex: 1 }}>
       {fallbackHost}
@@ -518,15 +469,7 @@ function CompletionContent({
           accessibilityLabel={`Congratulations! All ${stepRows.length} steps completed for ${goal.title}`}
         >
           <View style={styles.iconContainer} accessibilityElementsHidden>
-            {COMPLETION_ICON ? (
-              <Image
-                source={COMPLETION_ICON}
-                style={styles.iconImage}
-                resizeMode="contain"
-              />
-            ) : (
-              <Text style={styles.iconEmoji}>{"\u{1F3AF}"}</Text>
-            )}
+            <Text style={styles.iconEmoji}>{"\u{1F3AF}"}</Text>
           </View>
           <Text
             variant="headline"
@@ -539,12 +482,6 @@ function CompletionContent({
             All {stepRows.length} steps completed for {goal.title}
           </Text>
 
-          {/*
-            Pre-bake choice gate. The bake never fires automatically — the
-            user picks Bake It or Redesign First. Skipped when the goal is
-            already completed (a completed goal means the bake already
-            landed, so the celebration is a view-only state).
-          */}
           {showBakeChoice && previewDesign && (
             <View
               style={styles.previewContainer}
@@ -687,16 +624,10 @@ export function CompletionFlowScreen({ route }: CompletionFlowScreenProps) {
   const navigation = useNavigation();
   const { goalId } = route.params;
 
-  // Consume the pending design at this level — outside the inner Suspense
-  // boundary so the entry survives inner remounts when Evolu queries
-  // resolve. (An inner useRef inside CompletionContent re-ran consume() on
-  // every Suspense-triggered remount; the first remount ate the entry and
-  // the later mount that actually fired the bake saw nothing.)
-  //
-  // We use state instead of a ref so a fresh entry from a later
-  // BadgeDesigner save (Redesign First round-trip) — delivered while this
-  // screen is still in the stack — can flow into the inner content.
-  // useFocusEffect re-consumes on every focus return.
+  // Consume outside the inner Suspense boundary so the entry survives
+  // Evolu-triggered remounts (inner consume() ate the entry on first remount
+  // before the bake-firing mount could see it). State, not ref, so a fresh
+  // BadgeDesigner save during the same stack visit can flow through.
   const [pendingDesign, setPendingDesign] = useState(() =>
     pendingDesignStore.consume(goalId),
   );

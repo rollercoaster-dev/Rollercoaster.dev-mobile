@@ -1,23 +1,8 @@
 /**
- * useCreateBadge
- *
- * Orchestrates OB3 credential creation when a goal is completed.
- *
- * First completion (no existing badge):
- *   1. Build unsigned credential, 2. sign, 3. bake PNG, 4. save to disk,
- *   5. createBadge (persist credential + image URI), 6. completeGoal.
- *
- * Re-completion (existing badge + goal reopened to active):
- *   - completed goal → idempotent done, no DB writes.
- *   - active goal → fall through to bake IIFE, write via updateBadge
- *     (preserves badge id; existing design is kept). The bake source is
- *     either the caller's freshCapturedPng (designer redesign), the
- *     existing on-disk PNG (re-uses prior pixels with the refreshed
- *     credential), or the offscreen-host capturedPng fallback.
- *
- * Race-condition safe — once a mutating branch fires, the ref guard is
- * never reset, preventing Strict Mode double-invocation or re-render
- * loops from unstable array refs returned by Evolu queries.
+ * Orchestrates OB3 credential creation on goal completion (first-time and
+ * rebake-after-reopen). Race-safe: once a mutating branch fires, the ref
+ * guard is never reset, so Strict-Mode double-invocation and Evolu's
+ * unstable array refs cannot re-enter.
  */
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@evolu/react";
@@ -113,12 +98,10 @@ export function useCreateBadge(
   const [status, setStatus] = useState<BadgeCreationStatus>("idle");
   const [error, setError] = useState<string | null>(null);
 
-  // Capture latest evidence in a ref so the effect can read it without
-  // listing the arrays as deps (Evolu returns new refs every render).
+  // Refs let the effect read latest values without listing them as deps —
+  // Evolu queries return fresh array refs every render.
   const evidenceRef = useRef({ goalEvidence, stepEvidence });
   evidenceRef.current = { goalEvidence, stepEvidence };
-
-  // Same pattern for PNG inputs and design — read latest value without adding to deps.
   const freshCapturedPngRef = useRef(options?.freshCapturedPng);
   freshCapturedPngRef.current = options?.freshCapturedPng;
   const capturedPngRef = useRef(options?.capturedPng);
@@ -126,39 +109,33 @@ export function useCreateBadge(
   const designRef = useRef(options?.design);
   designRef.current = options?.design;
 
-  // Once triggered, never reset — prevents re-entry after status state updates
-  // or after existingBadge reactively updates from null to a badge object.
+  // Never reset — prevents re-entry after status state updates or after
+  // existingBadge reactively flips from null to a row.
   const hasTriggered = useRef(false);
 
   useEffect(() => {
-    // Goal data not loaded yet — every downstream branch needs goal.status.
     if (!goal) return;
 
-    // Existing badge AND goal already completed — idempotent done. Catches
-    // the post-bake reactive update too: completeGoal flips status before
-    // the next render and lands us here without re-firing any mutation.
+    // Idempotent done — also catches the post-bake reactive tick where
+    // completeGoal has flipped status before the next render.
     if (existingBadge && goal.status === GoalStatus.completed) {
       setStatus("done");
       return;
     }
 
-    // Key still initialising — transient state, not a user-visible problem
     if (!isReady) {
       setStatus("loading");
       return;
     }
 
-    // Key is ready but absent — permanent failure (generation failed)
+    // Key ready but absent → permanent failure (generation failed).
     if (!keyId) {
       setStatus("no-key");
       return;
     }
 
-    // Caller requested to delay badge creation (e.g. waiting for evidence
-    // or for the user to tap Bake It in the celebration phase).
     if (!enabled) return;
 
-    // Guard against re-entry
     if (hasTriggered.current) return;
     hasTriggered.current = true;
 
@@ -232,15 +209,9 @@ export function useCreateBadge(
         setStatus("baking");
         breadcrumb({ category: "badge", message: "bake" });
 
-        // PNG source priority:
-        //   1. freshCapturedPng — designer's authoritative capture (Redesign
-        //      First). Reflects the user's most recent commitment.
-        //   2. Existing on-disk PNG — re-completion's Bake It reuses prior
-        //      pixels with the refreshed credential. Skips the offscreen
-        //      capture host, which has a known race where the SVG hasn't
-        //      painted yet and the snapshot comes back transparent.
-        //   3. capturedPng — offscreen-host fallback (first completion
-        //      default-design path).
+        // PNG source priority: designer redesign > existing on-disk PNG >
+        // offscreen capture. The middle source dodges the transparent-
+        // snapshot race in the capture host on iOS.
         let pngBuffer: Buffer | null = null;
 
         if (freshCapturedPngRef.current) {
@@ -323,13 +294,10 @@ export function useCreateBadge(
           );
         }
 
-        // Persist credential + image. createBadge / updateBadge each validate
-        // their inputs and can throw before completeGoal fires, so a failure
-        // here leaves the goal active rather than completed-without-badge.
-        // Both are synchronous Evolu CRDT mutations — no await needed.
+        // createBadge / updateBadge validate inputs and can throw before
+        // completeGoal — a failure leaves the goal active rather than
+        // completed-without-badge.
         if (existingBadge) {
-          // Rebake path: refresh credential + image; Redesign First's design
-          // write already landed via BadgeDesignerScreen's handleSave.
           updateBadge(existingBadge.id as BadgeId, {
             credential: credentialJsonOut,
             imageUri,

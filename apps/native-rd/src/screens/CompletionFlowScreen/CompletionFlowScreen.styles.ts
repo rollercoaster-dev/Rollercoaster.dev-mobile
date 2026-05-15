@@ -31,10 +31,6 @@ export const styles = StyleSheet.create((theme) => ({
     justifyContent: "center",
     marginBottom: theme.space[3],
   },
-  iconImage: {
-    width: 80,
-    height: 80,
-  },
   iconEmoji: {
     fontSize: 72,
     lineHeight: 96,
