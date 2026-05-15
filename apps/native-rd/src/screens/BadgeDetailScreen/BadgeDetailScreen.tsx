@@ -207,12 +207,6 @@ function BadgeDetailContent({
           <Text style={styles.description}>Earned {earnedDate}</Text>
         ) : null}
 
-        <Button
-          label="Customize Badge"
-          variant="secondary"
-          onPress={() => navigation.navigate("BadgeDesigner", { badgeId })}
-        />
-
         <Card>
           <View style={styles.infoSection}>
             {goalDescription ? (
