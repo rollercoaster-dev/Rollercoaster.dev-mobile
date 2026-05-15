@@ -490,10 +490,9 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
 
   const handleSave = useCallback(async () => {
     if (!currentDesign) return;
+    const designJson = JSON.stringify(currentDesign);
     try {
-      updateBadge(badgeId as BadgeId, {
-        design: JSON.stringify(currentDesign),
-      });
+      updateBadge(badgeId as BadgeId, { design: designJson });
     } catch (err) {
       logger.error("Failed to save badge design", { badgeId, error: err });
       Alert.alert(
@@ -520,7 +519,7 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
           ),
         );
         pendingDesignStore.set(goalIdForCapture, {
-          designJson: JSON.stringify(currentDesign),
+          designJson,
           pngBase64: pngBuffer.toString("base64"),
         });
       } catch (captureErr) {
