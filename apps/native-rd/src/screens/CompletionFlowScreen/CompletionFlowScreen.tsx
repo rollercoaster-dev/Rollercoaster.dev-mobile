@@ -1,4 +1,11 @@
-import { Suspense, useState, useRef, useEffect, useCallback } from "react";
+import {
+  Suspense,
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
 import {
   View,
   ScrollView,
@@ -149,14 +156,24 @@ function CompletionContent({
   // Either way the captured PNG flows into useCreateBadge.capturedPng.
   const goalTitleForDefault = (goal?.title as string | null) ?? "";
   const goalColorForDefault = (goal?.color as string | null) ?? null;
-  const existingDesignParsed: BadgeDesign | null = badgeRow?.design
-    ? parseBadgeDesign(badgeRow.design as string)
-    : null;
-  const fallbackDesign: BadgeDesign | null =
-    !pendingCapturedPng && goal
-      ? (existingDesignParsed ??
-        createDefaultBadgeDesign(goalTitleForDefault, goalColorForDefault))
-      : null;
+  const existingDesignRaw = (badgeRow?.design as string | null) ?? null;
+  const existingDesignParsed = useMemo<BadgeDesign | null>(
+    () => (existingDesignRaw ? parseBadgeDesign(existingDesignRaw) : null),
+    [existingDesignRaw],
+  );
+  const fallbackDesign = useMemo<BadgeDesign | null>(() => {
+    if (pendingCapturedPng || !goal) return null;
+    return (
+      existingDesignParsed ??
+      createDefaultBadgeDesign(goalTitleForDefault, goalColorForDefault)
+    );
+  }, [
+    pendingCapturedPng,
+    goal,
+    existingDesignParsed,
+    goalTitleForDefault,
+    goalColorForDefault,
+  ]);
   const fallbackRef = useRef<View | null>(null);
   const [fallbackPng, setFallbackPng] = useState<Buffer | null>(null);
   const [fallbackHostLaidOut, setFallbackHostLaidOut] = useState(false);
@@ -165,9 +182,10 @@ function CompletionContent({
   // (e.g. the user saved a fresh design via the Redesign-first flow) forces
   // a recapture rather than baking the stale image.
   const lastCapturedDesignKeyRef = useRef<string | null>(null);
-  const fallbackDesignKey = fallbackDesign
-    ? JSON.stringify(fallbackDesign)
-    : null;
+  const fallbackDesignKey = useMemo(
+    () => (fallbackDesign ? JSON.stringify(fallbackDesign) : null),
+    [fallbackDesign],
+  );
 
   useEffect(() => {
     if (
@@ -217,9 +235,7 @@ function CompletionContent({
   // should only feed the bake when nothing better exists.
   const designJsonForBake =
     pendingDesignJson ??
-    (fallbackDesign && fallbackPng
-      ? JSON.stringify(fallbackDesign)
-      : undefined);
+    (fallbackDesignKey && fallbackPng ? fallbackDesignKey : undefined);
   const hasReadableExistingPng = Boolean(
     badgeRow?.imageUri && badgeRow.imageUri !== PLACEHOLDER_IMAGE_URI,
   );
