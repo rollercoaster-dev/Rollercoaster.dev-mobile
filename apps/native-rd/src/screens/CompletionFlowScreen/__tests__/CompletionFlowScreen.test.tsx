@@ -4,6 +4,7 @@ import {
   screen,
   fireEvent,
   waitFor,
+  act,
 } from "../../../__tests__/test-utils";
 import { CompletionFlowScreen } from "../CompletionFlowScreen";
 
@@ -14,7 +15,9 @@ const mockNavigate = jest.fn();
 const mockReplace = jest.fn();
 const mockParentNavigate = jest.fn();
 const mockGetParent = jest.fn(() => ({ navigate: mockParentNavigate }));
+let lastFocusCallback: (() => void | (() => void)) | undefined;
 jest.mock("@react-navigation/native", () => {
+  const ReactRuntime = require("react");
   const actual = jest.requireActual("../../../__tests__/mocks/navigation");
   return {
     ...actual,
@@ -25,6 +28,10 @@ jest.mock("@react-navigation/native", () => {
       replace: mockReplace,
       getParent: mockGetParent,
     })),
+    useFocusEffect: jest.fn((callback: () => void | (() => void)) => {
+      lastFocusCallback = callback;
+      ReactRuntime.useEffect(callback, []);
+    }),
   };
 });
 
@@ -479,6 +486,37 @@ describe("CompletionFlowScreen", () => {
       expect(screen.getByLabelText("Bake It")).toBeOnTheScreen();
     });
 
+    it("forwards the pendingDesignStore entry to useCreateBadge as freshCapturedPng when Bake It is tapped", async () => {
+      // Pins the headline contract: the design the user just saved in
+      // BadgeDesigner is the one that gets baked. A regression that swaps
+      // freshCapturedPng for capturedPng (the offscreen fallback) would
+      // silently bake the wrong design.
+      const FRESH_BYTES = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 9, 9]);
+      const {
+        pendingDesignStore,
+      } = require("../../../stores/pendingDesignStore");
+      pendingDesignStore.set("goal-1", {
+        designJson: '{"shape":"triangle"}',
+        pngBase64: FRESH_BYTES.toString("base64"),
+      });
+      setupQueries({ goalEvidence: GOAL_EVIDENCE });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      fireEvent.press(screen.getByLabelText("Bake It"));
+      await waitFor(() => {
+        const lastCallArgs =
+          mockUseCreateBadge.mock.calls[
+            mockUseCreateBadge.mock.calls.length - 1
+          ];
+        expect(lastCallArgs[1]).toMatchObject({ enabled: true });
+        expect(
+          (lastCallArgs[1] as { freshCapturedPng?: Buffer }).freshCapturedPng,
+        ).toBeInstanceOf(Buffer);
+        expect(
+          (lastCallArgs[1] as { freshCapturedPng?: Buffer }).freshCapturedPng,
+        ).toEqual(FRESH_BYTES);
+      });
+    });
+
     it("renders Bake It AND Redesign First on first completion — the user gets the choice before every bake", () => {
       setupQueries({ goalEvidence: GOAL_EVIDENCE });
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
@@ -505,6 +543,45 @@ describe("CompletionFlowScreen", () => {
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
       expect(screen.queryByLabelText("Bake It")).not.toBeOnTheScreen();
       expect(screen.queryByLabelText("Redesign First")).not.toBeOnTheScreen();
+    });
+
+    it("re-consumes pendingDesignStore on refocus (Redesign First → save → back round-trip)", async () => {
+      // Initial mount: store is empty, no freshCapturedPng flows to the hook.
+      // Then the user goes to BadgeDesigner via Redesign First, saves a new
+      // design (which sets pendingDesignStore), and navigates back. On refocus
+      // useFocusEffect must re-consume the store so the new PNG is in hand
+      // for the next Bake It tap.
+      setupQueries({ goalEvidence: GOAL_EVIDENCE });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      const initialArgs = mockUseCreateBadge.mock.calls[
+        mockUseCreateBadge.mock.calls.length - 1
+      ][1] as { freshCapturedPng?: Buffer };
+      expect(initialArgs.freshCapturedPng).toBeUndefined();
+
+      const FRESH = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 2, 2]);
+      const {
+        pendingDesignStore,
+      } = require("../../../stores/pendingDesignStore");
+      pendingDesignStore.set("goal-1", {
+        designJson: '{"shape":"square"}',
+        pngBase64: FRESH.toString("base64"),
+      });
+
+      await act(async () => {
+        lastFocusCallback?.();
+      });
+      fireEvent.press(screen.getByLabelText("Bake It"));
+
+      await waitFor(() => {
+        const lastCall =
+          mockUseCreateBadge.mock.calls[
+            mockUseCreateBadge.mock.calls.length - 1
+          ];
+        expect(lastCall[1]).toMatchObject({ enabled: true });
+        expect(
+          (lastCall[1] as { freshCapturedPng?: Buffer }).freshCapturedPng,
+        ).toEqual(FRESH);
+      });
     });
 
     it("Redesign First on re-completion (badge exists) navigates to BadgeDesigner redesign mode", () => {
