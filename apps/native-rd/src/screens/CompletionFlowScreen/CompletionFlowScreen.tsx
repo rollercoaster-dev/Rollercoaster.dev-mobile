@@ -140,11 +140,21 @@ function CompletionContent({
   // First-completion-only fallback: re-completion reuses the existing
   // on-disk PNG via readBadgePNG, sidestepping the transparent-snapshot
   // race in the offscreen capture host.
+  //
+  // Hydration precedence when there's no warm pendingCapturedPng:
+  //   1. goal.design — the user's configured design persisted at designer save
+  //      (issue #60: ensures bake honors the configured design across cold
+  //      start + Evolu sync rather than silently substituting the default).
+  //   2. createDefaultBadgeDesign — synthesized default (true last resort).
   const goalTitleForDefault = (goal?.title as string | null) ?? "";
   const goalColorForDefault = (goal?.color as string | null) ?? null;
+  const persistedGoalDesign = parseBadgeDesign(
+    (goal?.design as string | null) ?? null,
+  );
   const fallbackDesign: BadgeDesign | null =
     !pendingCapturedPng && goal && !badgeRow
-      ? createDefaultBadgeDesign(goalTitleForDefault, goalColorForDefault)
+      ? (persistedGoalDesign ??
+        createDefaultBadgeDesign(goalTitleForDefault, goalColorForDefault))
       : null;
   const fallbackRef = useRef<View | null>(null);
   const [fallbackPng, setFallbackPng] = useState<Buffer | null>(null);
@@ -239,9 +249,18 @@ function CompletionContent({
     trimmedNote.length > 0 && trimmedNote.length <= MAX_NOTE_LENGTH;
 
   const badgeDesignJson = (badgeRow?.design as string | null) ?? null;
+  const goalDesignJson = (goal?.design as string | null) ?? null;
   const previewDesign = useMemo<BadgeDesign | null>(() => {
     if (pendingDesignJson) {
       const parsed = parseBadgeDesign(pendingDesignJson);
+      if (parsed) return parsed;
+    }
+    // goal.design sits between the warm pending json and the post-bake badge
+    // row so the celebration preview honors the configured design on cold
+    // start (issue #60) — pre-bake we only have goal.design; post-bake the
+    // badge row carries the bake-time snapshot.
+    if (goalDesignJson) {
+      const parsed = parseBadgeDesign(goalDesignJson);
       if (parsed) return parsed;
     }
     if (badgeDesignJson) {
@@ -252,6 +271,7 @@ function CompletionContent({
     return createDefaultBadgeDesign(goalTitleForDefault, goalColorForDefault);
   }, [
     pendingDesignJson,
+    goalDesignJson,
     badgeDesignJson,
     goal,
     goalTitleForDefault,

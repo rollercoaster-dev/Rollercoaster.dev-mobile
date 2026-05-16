@@ -50,7 +50,7 @@ const mockUseCreateBadge = jest.fn<
 >(() => ({ status: "done", error: null }));
 jest.mock("../../../hooks/useCreateBadge", () => ({
   PLACEHOLDER_IMAGE_URI: "pending:baked-image",
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   useCreateBadge: (goalId: any, opts: any) => mockUseCreateBadge(goalId, opts),
 }));
 
@@ -523,6 +523,85 @@ describe("CompletionFlowScreen", () => {
         expect(
           (lastCallArgs[1] as { freshCapturedPng?: Buffer }).freshCapturedPng,
         ).toEqual(FRESH_BYTES);
+      });
+    });
+
+    // Regression: issue #60 — pre-bake, after cold start, the configured
+    // design was lost (pendingDesignStore is in-memory). goal.design now
+    // hydrates fallbackDesign so the offscreen capture host renders the
+    // user's configuration, not the synthesized default.
+    it("hydrates fallbackDesign from goal.design when pendingDesignStore is empty", async () => {
+      const goalDesignJson = JSON.stringify({
+        shape: "shield",
+        color: "#0033ff",
+        iconName: "Star",
+        iconWeight: "fill",
+        title: "Persisted Title",
+        centerMode: "icon",
+        frame: "none",
+      });
+      setupQueries({
+        goal: { ...GOAL, design: goalDesignJson },
+        goalEvidence: GOAL_EVIDENCE,
+      });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      fireEvent(
+        screen.getByTestId("completion-fallback-capture-host", {
+          includeHiddenElements: true,
+        }),
+        "layout",
+        { nativeEvent: { layout: { x: 0, y: 0, width: 160, height: 160 } } },
+      );
+      await waitFor(() =>
+        expect(screen.getByLabelText("Bake It")).not.toBeDisabled(),
+      );
+      fireEvent.press(screen.getByLabelText("Bake It"));
+      await waitFor(() => {
+        const lastArgs = mockUseCreateBadge.mock.calls[
+          mockUseCreateBadge.mock.calls.length - 1
+        ][1] as { design?: string; capturedPng?: Buffer; enabled?: boolean };
+        expect(lastArgs.enabled).toBe(true);
+        // designJsonForBake is the offscreen-rendered design serialized; for
+        // the hydrated path it should contain the persisted shape, not the
+        // default "circle".
+        expect(lastArgs.design).toContain('"shape":"shield"');
+        expect(lastArgs.capturedPng).toBeInstanceOf(Buffer);
+      });
+    });
+
+    it("pendingDesignStore beats goal.design when both are present (preserves warm PNG)", async () => {
+      const goalDesignJson = JSON.stringify({
+        shape: "shield",
+        color: "#0033ff",
+        iconName: "Star",
+        iconWeight: "fill",
+        title: "Persisted",
+        centerMode: "icon",
+        frame: "none",
+      });
+      const WARM_BYTES = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 7, 7]);
+      const {
+        pendingDesignStore,
+      } = require("../../../stores/pendingDesignStore");
+      pendingDesignStore.set("goal-1", {
+        designJson: '{"shape":"triangle"}',
+        pngBase64: WARM_BYTES.toString("base64"),
+      });
+      setupQueries({
+        goal: { ...GOAL, design: goalDesignJson },
+        goalEvidence: GOAL_EVIDENCE,
+      });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      fireEvent.press(screen.getByLabelText("Bake It"));
+      await waitFor(() => {
+        const lastArgs = mockUseCreateBadge.mock.calls[
+          mockUseCreateBadge.mock.calls.length - 1
+        ][1] as {
+          design?: string;
+          freshCapturedPng?: Buffer;
+        };
+        expect(lastArgs.design).toContain('"shape":"triangle"');
+        expect(lastArgs.freshCapturedPng).toEqual(WARM_BYTES);
       });
     });
 
