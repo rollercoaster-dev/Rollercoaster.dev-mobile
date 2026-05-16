@@ -1,8 +1,8 @@
 import { renderHook } from "@testing-library/react-native";
 import { UnistylesRuntime } from "react-native-unistyles";
 
-import { useTheme } from "../useTheme";
-import { themes } from "../../themes/compose";
+import { themeOptions, useTheme } from "../useTheme";
+import { themeNames, themes } from "../../themes/compose";
 
 const mockRuntime = UnistylesRuntime as unknown as {
   themeName: string;
@@ -17,6 +17,10 @@ beforeEach(() => {
 });
 
 describe("useTheme", () => {
+  it("keeps UI theme options aligned with the runtime registry", () => {
+    expect(themeOptions.map((option) => option.id)).toEqual(themeNames);
+  });
+
   it("reads the current runtime theme from Unistyles rt", () => {
     setMockRuntimeThemeName("dark-default");
 
