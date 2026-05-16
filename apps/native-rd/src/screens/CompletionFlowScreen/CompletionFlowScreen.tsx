@@ -142,9 +142,8 @@ function CompletionContent({
   // on-disk PNG via readBadgePNG.
   //
   // Hydration precedence when there's no warm pendingCapturedPng:
-  //   1. goal.design — the user's configured design persisted at designer save
-  //      (issue #60: ensures bake honors the configured design across cold
-  //      start + Evolu sync rather than silently substituting the default).
+  //   1. goal.design — persisted source; survives cold start and Evolu sync,
+  //      unlike the in-memory pendingDesignStore.
   //   2. createDefaultBadgeDesign — synthesized default (true last resort).
   const goalTitleForDefault = (goal?.title as string | null) ?? "";
   const goalColorForDefault = (goal?.color as string | null) ?? null;
@@ -247,10 +246,10 @@ function CompletionContent({
       const parsed = parseBadgeDesign(pendingDesignJson);
       if (parsed) return parsed;
     }
-    // goal.design sits between the warm pending json and the post-bake badge
-    // row so the celebration preview honors the configured design on cold
-    // start (issue #60) — pre-bake we only have goal.design; post-bake the
-    // badge row carries the bake-time snapshot.
+    // goal.design sits between warm pending and post-bake badge tiers:
+    // pre-bake the badge row doesn't exist yet, so goal.design is the only
+    // configured-design source after cold start. Post-bake, the badge row
+    // wins because it holds the bake-time snapshot.
     if (goalDesignJson) {
       const parsed = parseBadgeDesign(goalDesignJson);
       if (parsed) return parsed;
