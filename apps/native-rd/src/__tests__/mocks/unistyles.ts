@@ -40,8 +40,6 @@ const StyleSheet = {
   configure: jest.fn(),
 };
 
-const useUnistyles = jest.fn(() => ({ theme: mockTheme }));
-
 const UnistylesRuntime = {
   themeName: "light-default",
   setTheme: jest.fn(),
@@ -53,5 +51,10 @@ const UnistylesRuntime = {
   statusBar: { height: 0 },
   navigationBar: { height: 0 },
 };
+
+const useUnistyles = jest.fn(() => ({
+  theme: mockTheme,
+  rt: UnistylesRuntime,
+}));
 
 module.exports = { StyleSheet, useUnistyles, UnistylesRuntime, mockTheme };

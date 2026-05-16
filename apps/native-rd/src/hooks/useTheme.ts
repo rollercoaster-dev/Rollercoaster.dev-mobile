@@ -12,15 +12,15 @@ import type { Variant } from "../themes/variants";
  * The 7 peer themes from @rollercoaster-dev/design-tokens.
  * Dark mode ("Night Ride") is one of the 7 — not a separate axis.
  *
- * Note: the Unistyles registry still composes all 14 colorMode × variant
- * combinations (see themes/compose.ts). The 7 below are the only values
- * the persistence layer accepts on read or write. See issue #940.
+ * These are the seven product themes registered with Unistyles and accepted
+ * by persistence. composeTheme can still build unsupported combinations for
+ * previews/tests, but they are not runtime theme names.
  */
-export const themeOptions: Array<{
+export const themeOptions: {
   id: ThemeName;
   label: string;
   description: string;
-}> = [
+}[] = [
   {
     id: "light-default",
     label: "The Full Ride",
@@ -95,10 +95,15 @@ export function useThemeContext(): ThemeContextValue {
  * Call once at App root, then share via ThemeProvider.
  */
 export function useTheme() {
-  useUnistyles();
+  const { rt } = useUnistyles();
 
-  const themeName =
-    (UnistylesRuntime.themeName as ThemeName) || "light-default";
+  // Reading `rt.themeName` subscribes this hook to Unistyles theme-name
+  // changes. Reading `UnistylesRuntime.themeName` directly does not trigger a
+  // React re-render, which leaves selected-state UI stale after setTheme().
+  const runtimeThemeName = rt.themeName;
+  const themeName = isValidThemeName(runtimeThemeName)
+    ? runtimeThemeName
+    : FALLBACK_THEME_NAME;
   const theme = themes[themeName];
   const isDark = themeName.startsWith("dark");
   const { variant } = parseThemeName(themeName);
