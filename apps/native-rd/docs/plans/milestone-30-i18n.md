@@ -4,7 +4,7 @@ Captures the audit decisions and wave ordering that aren't readable from issue b
 
 ## Goal
 
-Ship the German first-test path (#1029) so native-rd is usable for German testers, without committing to a full app translation before beta.
+Ship the German first-test path so native-rd is usable for German testers, without committing to a full app translation before beta. #1029 is the closeout gate for the path, not a standalone implementation ticket.
 
 ## Live status
 
@@ -36,18 +36,20 @@ gh api graphql -f query='
   | .[] | "\(if .ready then "READY " else "blocked" end)  #\(.n)\(if .parent then "  (sub of #\(.parent))" else "" end)  \(.title)"'
 ```
 
-**Next actionable issue:** whatever the query above flags `READY` at the top. As of milestone audit, that is **#988** (the foundation) — everything else is blocked on it transitively.
+**Next actionable issue:** whatever the query above flags `READY` at the top, excluding #1029 while it is acting as the closeout gate. As of the 2026-05-16 review, #988 is closed and the ready implementation tickets are #990, #991, and #993.
 
 ## Wave ordering and rationale
 
 ```
-Wave 0:  #988                          foundation (deps + src/i18n/ + language selection)
-Wave 1:  #993 → then #989, #990, #991  cross-cutting prereqs (see Hermes ordering below)
+Wave 0:  #988                          foundation (deps + src/i18n/ + language selection) — closed
+Wave 1:  #991, #993, #990              cross-cutting prereqs (testIDs, Hermes Intl, raw-string lint)
 Wave 2:  #992                          shared labels keyspace
 Wave 3:  #995, #996, #997, #998, #999  screen migrations (parallel)
 Wave 4:  #1000                         permission-denied centralization
-Wave 5:  #1029                         epic closeout — German tester path shippable
-Post-epic: #1001, #1002, #1003         badge surfaces + regression gate
+Wave 5:  #1004                         native German locale files + permission strings
+Wave 6:  #1003                         pseudo-locale regression gate for the #1029 path
+Wave 7:  #1029                         closeout gate — German tester path shippable
+Post-epic: #1001, #1002                badge surfaces
 ```
 
 Rationale points the GH graph can't carry:
@@ -56,7 +58,13 @@ Rationale points the GH graph can't carry:
 - **#991 (testIDs) before screen migrations.** Migrating strings before adding testIDs would create two unrelated diffs in every screen-test PR (i18n + testID). Doing testIDs first decouples `git blame`.
 - **#992 (shared labels) before screen migrations.** Many screens reference `evidenceTypes.*`, `common.actions.*`, etc. Migrating shared labels first reduces churn in subsequent screen PRs.
 - **#1000 (permission-denied) is its own ticket, not folded into #998/#999.** Cross-cutting copy benefits from being centralized in one diff rather than smeared across two capture-cluster PRs.
-- **#1003 scoped to #1029 screens only.** "Full pseudo-locale snapshot coverage" was explicitly out of scope for #1029 per its body. Adding badge-screen coverage when #1001/#1002 land is a one-line follow-up.
+- **#1004 is back in scope.** German is now the approved second language, and German testers should not see a mix of translated runtime copy and English native permission dialogs.
+- **#1003 scoped to #1029 screens only.** "Full pseudo-locale snapshot coverage" remains out of scope for badge surfaces. Adding badge-screen coverage when #1001/#1002 land is a one-line follow-up.
+- **#1029 is closeout.** It should verify the full German first-test path after child work lands: JS resources, native locale files, fallback behavior, generated translations reviewed by a native speaker, and manual iOS/Android checks.
+
+## Translation workflow
+
+The first German batch can be generated to keep implementation moving, but #1029 does not close until a native speaker has reviewed the German resources and native locale strings. Review should cover tone, neurodivergent-first wording, permission-dialog clarity, and consistency of app terms such as "goal", "evidence", "focus mode", and "badge".
 
 ## Audit decisions (2026-05-13)
 
@@ -73,12 +81,23 @@ What changed on this milestone in today's audit, and why:
 
 No issues were merged or deleted. No scope was changed inside any ticket beyond #993 and #1003.
 
+## Review decisions (2026-05-16)
+
+| Change                      | Reason                                                                                               |
+| --------------------------- | ---------------------------------------------------------------------------------------------------- |
+| #1029 clarified as closeout | The implementation work lives in child tickets; #1029 verifies the complete German tester path.      |
+| #1004 re-added to milestone | German is now the chosen second language, and native permission/app strings must not remain English. |
+| German review gate added    | Generated translations are acceptable for the first batch, but a native-speaker review is required.  |
+| Wave 1 ordering clarified   | #991 and #993 should land before migrations; #990 can land early or after the first migration slice. |
+
 ## Deferred items and their gates
 
-These are tracked but not in the milestone:
+Tracked but not in the milestone:
 
 - **#994 (Android live locale-change strategy).** Gate: confirm punt or bridge. Cheap doc-only resolution once a second language is on the roadmap.
-- **#1004 (native locale files).** Gate: product decides which second language ships. Re-add to a future milestone when that decision lands.
+  No longer deferred:
+
+- **#1004 (native locale files).** German is the selected second language, so this issue belongs in this milestone.
 
 ## Re-entry instructions
 
