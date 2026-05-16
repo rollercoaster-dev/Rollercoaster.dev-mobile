@@ -33,6 +33,7 @@ import { BadgeEarnedModal } from "../BadgeEarnedModal";
 import {
   BadgeRenderer,
   getRendererLayoutOptions,
+  type BadgeRendererHandle,
 } from "../../badges/BadgeRenderer";
 import { captureBadge, getCaptureDimensions } from "../../badges/captureBadge";
 import { createDefaultBadgeDesign, parseBadgeDesign } from "../../badges/types";
@@ -138,22 +139,29 @@ function CompletionContent({
   }, [phase, isReCompletion, hasFreshEvidence, hasGoalEvidence]);
 
   // First-completion-only fallback: re-completion reuses the existing
-  // on-disk PNG via readBadgePNG, sidestepping the transparent-snapshot
-  // race in the offscreen capture host.
+  // on-disk PNG via readBadgePNG.
+  //
+  // Hydration precedence when there's no warm pendingCapturedPng:
+  //   1. goal.design — persisted source; survives cold start and Evolu sync,
+  //      unlike the in-memory pendingDesignStore.
+  //   2. createDefaultBadgeDesign — synthesized default (true last resort).
   const goalTitleForDefault = (goal?.title as string | null) ?? "";
   const goalColorForDefault = (goal?.color as string | null) ?? null;
+  const persistedGoalDesign = parseBadgeDesign(
+    (goal?.design as string | null) ?? null,
+  );
   const fallbackDesign: BadgeDesign | null =
     !pendingCapturedPng && goal && !badgeRow
-      ? createDefaultBadgeDesign(goalTitleForDefault, goalColorForDefault)
+      ? (persistedGoalDesign ??
+        createDefaultBadgeDesign(goalTitleForDefault, goalColorForDefault))
       : null;
-  const fallbackRef = useRef<View | null>(null);
+  const fallbackRef = useRef<BadgeRendererHandle | null>(null);
   const [fallbackPng, setFallbackPng] = useState<Buffer | null>(null);
-  const [fallbackHostLaidOut, setFallbackHostLaidOut] = useState(false);
   const fallbackCaptureStarted = useRef(false);
 
   useEffect(() => {
     if (pendingCapturedPng || !fallbackDesign || fallbackPng) return;
-    if (!fallbackHostLaidOut) return; // wait for the offscreen view to be attached + measured
+    if (!fallbackRef.current) return; // wait for BadgeRenderer to attach the handle
     if (fallbackCaptureStarted.current) return;
     fallbackCaptureStarted.current = true;
     const dimensions = getCaptureDimensions(
@@ -168,14 +176,7 @@ function CompletionContent({
         reportError(err, { area: "badge.create", kind: "bake" });
         fallbackCaptureStarted.current = false;
       });
-  }, [
-    pendingCapturedPng,
-    fallbackDesign,
-    fallbackPng,
-    fallbackHostLaidOut,
-    theme,
-    goalId,
-  ]);
+  }, [pendingCapturedPng, fallbackDesign, fallbackPng, theme, goalId]);
 
   const designJsonForBake =
     pendingDesignJson ??
@@ -239,9 +240,18 @@ function CompletionContent({
     trimmedNote.length > 0 && trimmedNote.length <= MAX_NOTE_LENGTH;
 
   const badgeDesignJson = (badgeRow?.design as string | null) ?? null;
+  const goalDesignJson = (goal?.design as string | null) ?? null;
   const previewDesign = useMemo<BadgeDesign | null>(() => {
     if (pendingDesignJson) {
       const parsed = parseBadgeDesign(pendingDesignJson);
+      if (parsed) return parsed;
+    }
+    // goal.design sits between warm pending and post-bake badge tiers:
+    // pre-bake the badge row doesn't exist yet, so goal.design is the only
+    // configured-design source after cold start. Post-bake, the badge row
+    // wins because it holds the bake-time snapshot.
+    if (goalDesignJson) {
+      const parsed = parseBadgeDesign(goalDesignJson);
       if (parsed) return parsed;
     }
     if (badgeDesignJson) {
@@ -252,6 +262,7 @@ function CompletionContent({
     return createDefaultBadgeDesign(goalTitleForDefault, goalColorForDefault);
   }, [
     pendingDesignJson,
+    goalDesignJson,
     badgeDesignJson,
     goal,
     goalTitleForDefault,
@@ -356,22 +367,23 @@ function CompletionContent({
   };
 
   // Mounted in both phases so the PNG is ready before the user reaches celebration.
+  // The wrapper is purely an offscreen positioning host now — capture goes through
+  // the BadgeRenderer's imperative handle (Svg.toDataURL), not the view buffer.
   const fallbackHost = fallbackDesign ? (
     <View
-      ref={fallbackRef}
       collapsable={false}
       style={styles.fallbackCaptureHost}
       pointerEvents="none"
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
       testID="completion-fallback-capture-host"
-      onLayout={(e) => {
-        if (e.nativeEvent.layout.width > 0 && !fallbackHostLaidOut) {
-          setFallbackHostLaidOut(true);
-        }
-      }}
     >
-      <BadgeRenderer design={fallbackDesign} size={160} showShadow={false} />
+      <BadgeRenderer
+        ref={fallbackRef}
+        design={fallbackDesign}
+        size={160}
+        showShadow={false}
+      />
     </View>
   ) : null;
 

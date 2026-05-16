@@ -1,15 +1,24 @@
 import { Buffer } from "buffer";
 import { captureBadge, getCaptureDimensions } from "../captureBadge";
 import { createDefaultBadgeDesign, BannerPosition } from "../types";
-import {
-  captureRef,
-  MOCK_PNG_BASE64,
-} from "../../__tests__/mocks/react-native-view-shot";
+import { MOCK_PNG_BASE64 } from "../../__tests__/mocks/react-native-view-shot";
 import { isPNG, bakePNG } from "../png-baking";
 import { getBadgeLayoutBoxes } from "../layoutBoxes";
+import type { BadgeRendererHandle } from "../BadgeRenderer";
 
-// The mock is wired via jest.config.js moduleNameMapper
-const mockRef = { current: {} } as React.RefObject<unknown>;
+// Build a fresh mock ref with a jest.fn `captureAsPng` per test. captureBadge
+// calls `ref.current.captureAsPng({ width, height })`; the handle is what
+// react-native-svg's `Svg.toDataURL` provides at runtime, wrapped in a Buffer
+// by BadgeRenderer's imperative handle.
+function makeMockRef(
+  impl?: jest.Mock,
+): React.RefObject<BadgeRendererHandle | null> {
+  const captureAsPng =
+    impl ?? jest.fn().mockResolvedValue(Buffer.from(MOCK_PNG_BASE64, "base64"));
+  return {
+    current: { captureAsPng } as BadgeRendererHandle,
+  } as React.RefObject<BadgeRendererHandle | null>;
+}
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -17,65 +26,72 @@ beforeEach(() => {
 
 describe("captureBadge", () => {
   it("returns a Buffer on successful capture", async () => {
-    const result = await captureBadge(mockRef);
+    const result = await captureBadge(makeMockRef());
     expect(Buffer.isBuffer(result)).toBe(true);
     expect(result.length).toBeGreaterThan(0);
   });
 
   it("returns a valid PNG", async () => {
-    const result = await captureBadge(mockRef);
+    const result = await captureBadge(makeMockRef());
     expect(isPNG(result)).toBe(true);
   });
 
   it("uses default 512x512 dimensions when no options passed", async () => {
-    await captureBadge(mockRef);
-    expect(captureRef).toHaveBeenCalledWith(
-      mockRef,
-      expect.objectContaining({ width: 512, height: 512 }),
-    );
+    const captureAsPng = jest
+      .fn()
+      .mockResolvedValue(Buffer.from(MOCK_PNG_BASE64, "base64"));
+    const ref = makeMockRef(captureAsPng);
+    await captureBadge(ref);
+    expect(captureAsPng).toHaveBeenCalledWith({ width: 512, height: 512 });
   });
 
   it("accepts custom width/height options", async () => {
-    await captureBadge(mockRef, { width: 256, height: 256 });
-    expect(captureRef).toHaveBeenCalledWith(
-      mockRef,
-      expect.objectContaining({ width: 256, height: 256 }),
-    );
+    const captureAsPng = jest
+      .fn()
+      .mockResolvedValue(Buffer.from(MOCK_PNG_BASE64, "base64"));
+    const ref = makeMockRef(captureAsPng);
+    await captureBadge(ref, { width: 256, height: 256 });
+    expect(captureAsPng).toHaveBeenCalledWith({ width: 256, height: 256 });
   });
 
-  it("passes non-square dimensions to captureRef", async () => {
-    await captureBadge(mockRef, { width: 512, height: 420 });
-    expect(captureRef).toHaveBeenCalledWith(
-      mockRef,
-      expect.objectContaining({ width: 512, height: 420 }),
-    );
+  it("passes non-square dimensions to the imperative handle", async () => {
+    const captureAsPng = jest
+      .fn()
+      .mockResolvedValue(Buffer.from(MOCK_PNG_BASE64, "base64"));
+    const ref = makeMockRef(captureAsPng);
+    await captureBadge(ref, { width: 512, height: 420 });
+    expect(captureAsPng).toHaveBeenCalledWith({ width: 512, height: 420 });
   });
 
   it("throws when ref.current is null", async () => {
-    const nullRef = { current: null } as React.RefObject<unknown>;
+    const nullRef = {
+      current: null,
+    } as React.RefObject<BadgeRendererHandle | null>;
     await expect(captureBadge(nullRef)).rejects.toThrow(
       "captureBadge: ref.current is null",
     );
   });
 
-  it("throws when captureRef rejects", async () => {
-    captureRef.mockRejectedValueOnce(new Error("View not mounted"));
-    await expect(captureBadge(mockRef)).rejects.toThrow(
-      "captureBadge: captureRef failed — View not mounted",
+  it("throws when the handle rejects", async () => {
+    const ref = makeMockRef(
+      jest.fn().mockRejectedValue(new Error("View not mounted")),
+    );
+    await expect(captureBadge(ref)).rejects.toThrow(
+      "captureBadge: capture failed — View not mounted",
     );
   });
 
   it("throws when captured data is not a valid PNG", async () => {
-    captureRef.mockResolvedValueOnce(
-      Buffer.from("not a png").toString("base64"),
+    const ref = makeMockRef(
+      jest.fn().mockResolvedValue(Buffer.from("not a png")),
     );
-    await expect(captureBadge(mockRef)).rejects.toThrow(
+    await expect(captureBadge(ref)).rejects.toThrow(
       "captureBadge: captured data is not a valid PNG",
     );
   });
 
   it("produces a PNG that can be baked without errors", async () => {
-    const pngBuffer = await captureBadge(mockRef);
+    const pngBuffer = await captureBadge(makeMockRef());
     const credential = JSON.stringify({
       "@context": [
         "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",

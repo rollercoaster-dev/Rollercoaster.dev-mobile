@@ -38,10 +38,12 @@ jest.mock("@evolu/react", () => {
 });
 
 const mockUpdateBadge = jest.fn();
+const mockUpdateGoal = jest.fn();
 jest.mock("../../../db", () => ({
   badgeWithGoalQuery: jest.fn(() => ({ __brand: "badgeWithGoalQuery" })),
   goalsQuery: { __brand: "goalsQuery" },
   updateBadge: (...args: unknown[]) => mockUpdateBadge(...args),
+  updateGoal: (...args: unknown[]) => mockUpdateGoal(...args),
 }));
 
 const mockPendingDesignStore = {
@@ -655,6 +657,98 @@ describe("BadgeDesignerScreen — new-goal mode", () => {
       });
     });
     expect(mockReplace).toHaveBeenCalledWith("EditMode", { goalId: "goal-1" });
+  });
+
+  // Regression: issue #60 — design must survive cold start. saveAndNavigate
+  // persists to goal.design alongside the warm pendingDesignStore write.
+  it("persists serialized design to goal.design on Use This Design", async () => {
+    mockUseQuery.mockReturnValue([makeGoalRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={newGoalRoute} navigation={{} as never} />,
+    );
+
+    fireEvent.press(screen.getByText("Use This Design"));
+
+    await waitFor(() => {
+      expect(mockUpdateGoal).toHaveBeenCalledWith("goal-1", {
+        design: expect.stringContaining('"shape"'),
+      });
+    });
+  });
+
+  it("persists default design to goal.design on Skip — Use Default", async () => {
+    mockUseQuery.mockReturnValue([makeGoalRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={newGoalRoute} navigation={{} as never} />,
+    );
+
+    fireEvent.press(screen.getByText("Skip — Use Default"));
+
+    // "I want the default" is a real user choice — also survives cold start.
+    await waitFor(() => {
+      expect(mockUpdateGoal).toHaveBeenCalledWith("goal-1", {
+        design: expect.stringContaining('"shape"'),
+      });
+    });
+  });
+
+  // Regression: cold-start re-entry to the designer (e.g. "Redesign First"
+  // after force-quit) used to read only pendingDesignStore and lose the
+  // configured design. initialDesign now falls through to goal.design.
+  it("hydrates initialDesign from goal.design when pendingDesignStore is empty", () => {
+    mockPendingDesignStore.get.mockReturnValueOnce(undefined);
+    const persistedDesignJson = JSON.stringify({
+      shape: "shield",
+      color: "#ff00ff",
+      iconName: "Heart",
+      iconWeight: "fill",
+      title: "Cold Start",
+      centerMode: "icon",
+      frame: "none",
+    });
+    mockUseQuery.mockReturnValue([
+      makeGoalRow({ design: persistedDesignJson }),
+    ]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={newGoalRoute} navigation={{} as never} />,
+    );
+    // Shield is the persisted shape; if the screen had fallen through to the
+    // default it would render circle. The shape selector exposes the chosen
+    // shape via a "selected" accessibilityState.
+    const shieldOption = screen.getByLabelText("Shield shape");
+    expect(shieldOption.props.accessibilityState?.checked).toBe(true);
+  });
+
+  it("pendingDesignStore wins over goal.design when both are present", () => {
+    const warmJson = JSON.stringify({
+      shape: "star",
+      color: "#0000ff",
+      iconName: "Heart",
+      iconWeight: "fill",
+      title: "Warm",
+      centerMode: "icon",
+      frame: "none",
+    });
+    const persistedJson = JSON.stringify({
+      shape: "shield",
+      color: "#ff00ff",
+      iconName: "Heart",
+      iconWeight: "fill",
+      title: "Persisted",
+      centerMode: "icon",
+      frame: "none",
+    });
+    mockPendingDesignStore.get.mockReturnValueOnce({
+      designJson: warmJson,
+      pngBase64: "",
+    });
+    mockUseQuery.mockReturnValue([makeGoalRow({ design: persistedJson })]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={newGoalRoute} navigation={{} as never} />,
+    );
+    // Star (warm) wins over shield (persisted) — preserves the warm PNG path.
+    const starOption = screen.getByLabelText("Star shape");
+    expect(starOption.props.accessibilityState?.checked).toBe(true);
   });
 
   it("with returnVia: 'back', save navigates goBack() instead of replace('EditMode')", async () => {

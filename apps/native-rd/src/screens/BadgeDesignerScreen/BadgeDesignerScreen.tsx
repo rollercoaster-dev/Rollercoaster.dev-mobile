@@ -20,6 +20,7 @@ import { ScreenSubHeader } from "../../components/ScreenHeader";
 import {
   BadgeRenderer,
   getRendererLayoutOptions,
+  type BadgeRendererHandle,
 } from "../../badges/BadgeRenderer";
 import { BOTTOM_LABEL_INPUT_MAX_CHARS } from "../../badges/text/BottomLabel";
 import { ShapeSelector } from "../../badges/ShapeSelector";
@@ -45,7 +46,12 @@ import type {
   BadgeIconWeight,
   FrameDataParams,
 } from "../../badges/types";
-import { badgeWithGoalQuery, goalsQuery, updateBadge } from "../../db";
+import {
+  badgeWithGoalQuery,
+  goalsQuery,
+  updateBadge,
+  updateGoal,
+} from "../../db";
 import type { BadgeId, GoalId } from "../../db";
 import { pendingDesignStore } from "../../stores/pendingDesignStore";
 import { Logger } from "../../shims/rd-logger";
@@ -87,8 +93,8 @@ interface DesignEditorProps {
   saveDisabled?: boolean;
   saveLoading?: boolean;
   extraFooter?: React.ReactNode;
-  /** Ref attached to the preview View — callers capture a PNG from it. */
-  previewRef?: React.RefObject<View | null>;
+  /** Ref attached to the BadgeRenderer — callers capture a PNG via its handle. */
+  previewRef?: React.RefObject<BadgeRendererHandle | null>;
 }
 
 function DesignEditor({
@@ -443,8 +449,8 @@ function DesignEditor({
           accessibilityRole="image"
           accessibilityLabel={previewLabel}
         >
-          <View ref={previewRef} collapsable={false} style={styles.badgeCanvas}>
-            <BadgeRenderer design={currentDesign} size={160} />
+          <View collapsable={false} style={styles.badgeCanvas}>
+            <BadgeRenderer ref={previewRef} design={currentDesign} size={160} />
           </View>
         </View>
       </Animated.View>
@@ -480,7 +486,7 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
   const currentDesign = design ?? initialDesign;
   const goalColor = badge?.goalColor as string | null | undefined;
   const goalIdForCapture = (badge?.goalId as string | null | undefined) ?? null;
-  const previewRef = useRef<View | null>(null);
+  const previewRef = useRef<BadgeRendererHandle | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   const derivedFrameParams = useFrameParamsForGoal(
@@ -595,14 +601,19 @@ function BadgeDesignerContentNewGoal({
   const goals = useQuery(goalsQuery);
   const goal = goals.find((g) => g.id === goalId) ?? null;
 
-  // Pre-load from pendingDesignStore so a Redesign-First return opens
-  // with the user's previous design, not the default.
+  // Three-tier precedence so a Redesign-First return — warm session OR after
+  // cold start — opens with the user's configured design, not the default:
+  //   1. pendingDesignStore (warm session)
+  //   2. goal.design (persisted; survives cold start + Evolu sync)
+  //   3. createDefaultBadgeDesign (true fallback)
   const initialDesign = useMemo(() => {
     const pending = pendingDesignStore.get(goalId);
     if (pending) {
       const parsed = parseBadgeDesign(pending.designJson);
       if (parsed) return parsed;
     }
+    const persisted = parseBadgeDesign((goal?.design as string | null) ?? null);
+    if (persisted) return persisted;
     const title = (goal?.title as string) ?? "Untitled";
     const color = (goal?.color as string | null) ?? null;
     return createDefaultBadgeDesign(title, color);
@@ -619,7 +630,7 @@ function BadgeDesignerContentNewGoal({
     null,
   );
 
-  const previewRef = useRef<View | null>(null);
+  const previewRef = useRef<BadgeRendererHandle | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   const saveAndNavigate = useCallback(
@@ -627,6 +638,7 @@ function BadgeDesignerContentNewGoal({
       if (isSaving) return;
       setIsSaving(true);
       try {
+        const designJson = JSON.stringify(designToSave);
         const pngBuffer = await captureBadge(
           previewRef,
           getCaptureDimensions(
@@ -635,8 +647,12 @@ function BadgeDesignerContentNewGoal({
             getRendererLayoutOptions(theme),
           ),
         );
+        // Persist to goal row first so a navigation that interrupts the
+        // pendingDesignStore write still leaves the configured design on
+        // disk — the source of truth across cold starts and device sync.
+        updateGoal(goalId as GoalId, { design: designJson });
         pendingDesignStore.set(goalId, {
-          designJson: JSON.stringify(designToSave),
+          designJson,
           pngBase64: pngBuffer.toString("base64"),
         });
         if (returnVia === "back") {
