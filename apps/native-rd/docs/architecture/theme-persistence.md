@@ -57,15 +57,23 @@ App
 
 ## Validation surface
 
-`VALID_THEME_NAMES` is a `Set<ThemeName>` derived from the 7 exposed `themeOptions`. Both read and write paths gate on `isValidThemeName()`. This is intentionally **narrower** than the typed `ThemeName` union (14 values from `compose.ts`) — see _Known mismatch_ below.
+`VALID_THEME_NAMES` is a `Set<ThemeName>` derived from the 7 exposed `themeOptions`. Both read and write paths gate on `isValidThemeName()`. `ThemeName`, `themeNames`, and the Unistyles runtime registry now share the same 7-value product theme set.
 
 ---
 
-## Known mismatch with `compose.ts`
+## Runtime Registry
 
-`src/themes/compose.ts:278-289` registers all 14 combinations of `colorMode × variant`. The settings UI exposes only the 7 in `themeOptions`. Issue [#940](https://github.com/rollercoaster-dev/openbadges-monorepo/issues/940) intended to collapse the registry to 7 but the cleanup did not land.
+`src/themes/compose.ts` keeps `composeTheme(colorMode, variant)` flexible enough to build unsupported combinations for previews and tests, but only seven product themes are registered with Unistyles:
 
-The persistence layer treats the 7 as canonical: writes are restricted to that set, and reads outside the set fall back. We did **not** delete the extra 7 from the registry because hooks like `useDensity.ts:11` iterate `themeNames` to push per-theme density updates and shrinking the registry would silently drop coverage. Reopen #940 if/when that consolidation is wanted.
+- `light-default`
+- `dark-default`
+- `light-highContrast`
+- `light-dyslexia`
+- `light-autismFriendly`
+- `light-lowVision`
+- `light-lowInfo`
+
+The persistence layer treats those 7 as canonical: writes are restricted to that set, and reads outside the set fall back. `useDensity.ts` iterates the same `themeNames`, so density updates no longer touch unregistered or unsupported dark/accessibility combinations.
 
 ---
 
@@ -109,4 +117,4 @@ The E2E restart flow uses a combined `id="selected-theme"` + `text="Night Ride"`
 - `App.tsx` — provider nesting (outer + inner `ThemeProvider`).
 - `src/db/schema.ts:154-156` — `userSettings.theme` column.
 - `src/db/queries.ts:1123-1136` — `updateUserSettings` theme branch.
-- `src/themes/compose.ts:278-289` — 14-theme registry (see _Known mismatch_).
+- `src/themes/compose.ts:278-300` — 7-theme runtime registry plus flexible `composeTheme()`.

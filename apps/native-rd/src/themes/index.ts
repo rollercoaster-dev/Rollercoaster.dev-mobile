@@ -19,6 +19,7 @@ export {
   parseThemeName,
 } from "./compose";
 export type {
+  AllThemeName,
   ThemeName,
   ComposedTheme,
   Themes,
