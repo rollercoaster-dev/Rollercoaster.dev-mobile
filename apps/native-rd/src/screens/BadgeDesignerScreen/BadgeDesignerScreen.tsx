@@ -45,7 +45,12 @@ import type {
   BadgeIconWeight,
   FrameDataParams,
 } from "../../badges/types";
-import { badgeWithGoalQuery, goalsQuery, updateBadge } from "../../db";
+import {
+  badgeWithGoalQuery,
+  goalsQuery,
+  updateBadge,
+  updateGoal,
+} from "../../db";
 import type { BadgeId, GoalId } from "../../db";
 import { pendingDesignStore } from "../../stores/pendingDesignStore";
 import { Logger } from "../../shims/rd-logger";
@@ -595,14 +600,19 @@ function BadgeDesignerContentNewGoal({
   const goals = useQuery(goalsQuery);
   const goal = goals.find((g) => g.id === goalId) ?? null;
 
-  // Pre-load from pendingDesignStore so a Redesign-First return opens
-  // with the user's previous design, not the default.
+  // Three-tier precedence so a Redesign-First return — warm session OR after
+  // cold start — opens with the user's configured design, not the default:
+  //   1. pendingDesignStore (warm session)
+  //   2. goal.design (persisted; survives cold start + Evolu sync)
+  //   3. createDefaultBadgeDesign (true fallback)
   const initialDesign = useMemo(() => {
     const pending = pendingDesignStore.get(goalId);
     if (pending) {
       const parsed = parseBadgeDesign(pending.designJson);
       if (parsed) return parsed;
     }
+    const persisted = parseBadgeDesign((goal?.design as string | null) ?? null);
+    if (persisted) return persisted;
     const title = (goal?.title as string) ?? "Untitled";
     const color = (goal?.color as string | null) ?? null;
     return createDefaultBadgeDesign(title, color);
@@ -627,6 +637,7 @@ function BadgeDesignerContentNewGoal({
       if (isSaving) return;
       setIsSaving(true);
       try {
+        const designJson = JSON.stringify(designToSave);
         const pngBuffer = await captureBadge(
           previewRef,
           getCaptureDimensions(
@@ -635,8 +646,12 @@ function BadgeDesignerContentNewGoal({
             getRendererLayoutOptions(theme),
           ),
         );
+        // Persist to goal row first so a navigation that interrupts the
+        // pendingDesignStore write still leaves the configured design on
+        // disk — the source of truth across cold starts and device sync.
+        updateGoal(goalId as GoalId, { design: designJson });
         pendingDesignStore.set(goalId, {
-          designJson: JSON.stringify(designToSave),
+          designJson,
           pngBase64: pngBuffer.toString("base64"),
         });
         if (returnVia === "back") {
