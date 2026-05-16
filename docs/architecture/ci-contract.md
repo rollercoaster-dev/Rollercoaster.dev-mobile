@@ -135,7 +135,7 @@ requires the `expo` package allowlist entry in
 
 Root `lint-staged` configuration (in `package.json`):
 
-- `apps/native-rd/**/*.{ts,tsx,js,jsx}` — Prettier only (no root ESLint)
+- `apps/native-rd/**/*.{ts,tsx,js,jsx}` — ESLint `--fix --cache` via `apps/native-rd/eslint.config.js` + Prettier
 - `packages/openbadges-core/**/*.ts` — ESLint `--fix --cache` + Prettier
 - JSON / YAML / MD / CSS / SCSS — Prettier only
 
@@ -150,7 +150,13 @@ Root ESLint does NOT run on native-rd source files because:
 - Running root ESLint on native files can block commits for false
   positives.
 
-To lint native-rd files locally before committing:
+The pre-commit hook does lint staged native-rd JS/TS files, but it points ESLint at the native app config explicitly:
+
+```bash
+eslint --fix --cache --config apps/native-rd/eslint.config.js <staged native files>
+```
+
+To lint all native-rd files locally before committing:
 
 ```bash
 cd apps/native-rd && bun run lint
@@ -160,7 +166,7 @@ cd apps/native-rd && bun run lint
 
 ```bash
 bun run check:install      # Fail fast if install is stale after pulling new deps
-bunx lint-staged           # Prettier on native-rd, ESLint+Prettier on packages/openbadges-core
+bunx lint-staged           # ESLint+Prettier on staged native-rd and packages/openbadges-core files
 bun run type-check         # Full workspace typecheck
 ```
 

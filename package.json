@@ -43,6 +43,7 @@
   },
   "lint-staged": {
     "apps/native-rd/**/*.{ts,tsx,js,jsx}": [
+      "eslint --fix --cache --config apps/native-rd/eslint.config.js",
       "prettier --write"
     ],
     "packages/openbadges-core/**/*.ts": [
