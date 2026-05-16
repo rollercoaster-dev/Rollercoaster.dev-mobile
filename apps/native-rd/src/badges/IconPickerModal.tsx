@@ -6,7 +6,7 @@
  * live preview, and a weight selector pinned at the bottom.
  */
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   FlatList,
   Modal,
@@ -16,7 +16,10 @@ import {
   View,
   type ListRenderItemInfo,
 } from "react-native";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useUnistyles } from "react-native-unistyles";
 import type { IconWeight } from "phosphor-react-native";
 
@@ -130,8 +133,27 @@ const ModalIconCell = React.memo(function ModalIconCell({
 // Main component
 // ---------------------------------------------------------------------------
 
-export function IconPickerModal({
-  visible,
+export function IconPickerModal(props: IconPickerModalProps) {
+  return (
+    <Modal
+      visible={props.visible}
+      animationType="slide"
+      presentationStyle="fullScreen"
+      onRequestClose={props.onClose}
+      accessibilityViewIsModal
+    >
+      {/* Only mount content when visible to avoid FlatList nesting warnings
+          when this Modal is rendered inside a parent ScrollView */}
+      {props.visible && (
+        <SafeAreaProvider>
+          <IconPickerModalContent {...props} />
+        </SafeAreaProvider>
+      )}
+    </Modal>
+  );
+}
+
+function IconPickerModalContent({
   selectedIcon,
   selectedWeight,
   onSelectIcon,
@@ -139,20 +161,13 @@ export function IconPickerModal({
   onClose,
   accentColor,
   testID = "icon-picker-modal",
-}: IconPickerModalProps) {
+}: Omit<IconPickerModalProps, "visible">) {
   const { theme } = useUnistyles();
+  const insets = useSafeAreaInsets();
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<IconCategory | null>(
     null,
   );
-
-  // Reset search/filter state when modal closes so it's fresh on reopen
-  useEffect(() => {
-    if (!visible) {
-      setQuery("");
-      setActiveCategory(null);
-    }
-  }, [visible]);
 
   const resolvedAccent = accentColor ?? theme.colors.accentPrimary;
   const iconColor = theme.colors.text;
@@ -227,189 +242,173 @@ export function IconPickerModal({
   const XIcon = getIconComponent("X");
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="fullScreen"
-      onRequestClose={onClose}
-      accessibilityViewIsModal
-    >
-      {/* Only mount content when visible to avoid FlatList nesting warnings
-          when this Modal is rendered inside a parent ScrollView */}
-      {visible && (
-        <SafeAreaProvider>
-          <View style={styles.modalRoot} testID={testID}>
-            <HeaderBand>
+    <View style={styles.modalRoot} testID={testID}>
+      <HeaderBand>
+        <Pressable
+          onPress={onClose}
+          accessibilityRole="button"
+          accessibilityLabel="Close icon picker"
+          style={styles.closeButton}
+        >
+          {XIcon ? (
+            <XIcon
+              size={24}
+              color={theme.colors.accentPurpleFg}
+              weight="bold"
+            />
+          ) : (
+            <Text style={styles.closeIconFallback}>{"\u2715"}</Text>
+          )}
+        </Pressable>
+        <Text style={styles.headerTitle} accessibilityRole="header">
+          Choose Icon
+        </Text>
+        <View style={styles.headerSpacer} />
+      </HeaderBand>
+
+      <View style={styles.contentArea}>
+        {/* Preview bar */}
+        <View
+          style={styles.previewBar}
+          accessibilityLiveRegion="polite"
+          accessibilityLabel={`Selected: ${selectedLabel}, ${weightLabel}`}
+        >
+          <View
+            style={[
+              styles.previewIconContainer,
+              { backgroundColor: resolvedAccent },
+            ]}
+          >
+            {SelectedIconComponent && (
+              <SelectedIconComponent
+                size={PREVIEW_ICON_SIZE}
+                weight={selectedWeight as IconWeight}
+                color={selectedIconColor}
+              />
+            )}
+          </View>
+          <Text style={styles.previewLabel}>
+            {selectedLabel} — {weightLabel}
+          </Text>
+        </View>
+
+        {/* Search */}
+        <View style={styles.searchContainer}>
+          <TextInput
+            testID={`${testID}-search`}
+            accessibilityRole="search"
+            accessibilityLabel="Search icons"
+            placeholder="Search icons..."
+            placeholderTextColor={theme.colors.textSecondary}
+            value={query}
+            onChangeText={handleSearchChange}
+            style={styles.searchInput}
+            autoCapitalize="none"
+            autoCorrect={false}
+            returnKeyType="search"
+          />
+          <Text style={styles.searchCount}>{visibleIcons.length} icons</Text>
+          {query.length > 0 && (
+            <Pressable
+              onPress={handleClearSearch}
+              accessibilityRole="button"
+              accessibilityLabel="Clear search"
+              style={styles.clearButton}
+            >
+              <Text style={styles.clearButtonText}>{"\u2715"}</Text>
+            </Pressable>
+          )}
+        </View>
+
+        {/* Category tabs */}
+        <View
+          style={styles.categoryContainer}
+          accessibilityRole="tablist"
+          accessibilityLabel="Icon categories"
+        >
+          {CATEGORY_ORDER.map((category) => {
+            const isActive = activeCategory === category && !query.trim();
+            const catIconName = CATEGORY_ICONS[category];
+            const CatIcon = getIconComponent(catIconName);
+            return (
               <Pressable
-                onPress={onClose}
-                accessibilityRole="button"
-                accessibilityLabel="Close icon picker"
-                style={styles.closeButton}
+                key={category}
+                onPress={() => handleCategoryPress(category)}
+                accessibilityRole="tab"
+                accessibilityLabel={`${CATEGORY_LABELS[category]} category${isActive ? ", active" : ""}`}
+                accessibilityState={{ selected: isActive }}
+                style={[
+                  styles.categoryTab,
+                  isActive && styles.categoryTabActive,
+                  isActive && { backgroundColor: resolvedAccent },
+                ]}
               >
-                {XIcon ? (
-                  <XIcon
-                    size={24}
-                    color={theme.colors.accentPurpleFg}
-                    weight="bold"
+                {CatIcon && (
+                  <CatIcon
+                    size={CATEGORY_TAB_ICON_SIZE}
+                    weight={isActive ? "fill" : "regular"}
+                    color={isActive ? selectedIconColor : iconColor}
                   />
-                ) : (
-                  <Text style={styles.closeIconFallback}>{"\u2715"}</Text>
                 )}
               </Pressable>
-              <Text style={styles.headerTitle} accessibilityRole="header">
-                Choose Icon
-              </Text>
-              <View style={styles.headerSpacer} />
-            </HeaderBand>
+            );
+          })}
+        </View>
 
-            <View style={styles.contentArea}>
-              {/* Preview bar */}
-              <View
-                style={styles.previewBar}
-                accessibilityLiveRegion="polite"
-                accessibilityLabel={`Selected: ${selectedLabel}, ${weightLabel}`}
+        {/* Icon grid */}
+        <FlatList
+          style={{ flex: 1 }}
+          data={visibleIcons}
+          keyExtractor={keyExtractor}
+          renderItem={renderIcon}
+          numColumns={MODAL_GRID_COLUMNS}
+          contentContainerStyle={styles.gridContent}
+          columnWrapperStyle={styles.gridColumnWrapper}
+          initialNumToRender={20}
+          maxToRenderPerBatch={30}
+          windowSize={5}
+          getItemLayout={getItemLayout}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No icons found</Text>
+            </View>
+          }
+        />
+
+        {/* Weight bar (fixed bottom) */}
+        <View
+          style={[styles.weightBar, { paddingBottom: insets.bottom }]}
+          accessibilityRole="radiogroup"
+          accessibilityLabel="Icon weight"
+        >
+          {WEIGHTS.map((w, i) => {
+            const isActive = w.value === selectedWeight;
+            return (
+              <Pressable
+                key={w.value}
+                onPress={() => onSelectWeight(w.value)}
+                accessibilityRole="radio"
+                accessibilityLabel={`${w.label} weight`}
+                accessibilityState={{ checked: isActive }}
+                style={[
+                  styles.weightSegment,
+                  i === WEIGHTS.length - 1 && styles.weightSegmentLast,
+                  isActive && { backgroundColor: resolvedAccent },
+                ]}
               >
-                <View
+                <Text
                   style={[
-                    styles.previewIconContainer,
-                    { backgroundColor: resolvedAccent },
+                    styles.weightLabel,
+                    isActive && styles.weightLabelActive,
                   ]}
                 >
-                  {SelectedIconComponent && (
-                    <SelectedIconComponent
-                      size={PREVIEW_ICON_SIZE}
-                      weight={selectedWeight as IconWeight}
-                      color={selectedIconColor}
-                    />
-                  )}
-                </View>
-                <Text style={styles.previewLabel}>
-                  {selectedLabel} — {weightLabel}
+                  {w.abbrev}
                 </Text>
-              </View>
-
-              {/* Search */}
-              <View style={styles.searchContainer}>
-                <TextInput
-                  testID={`${testID}-search`}
-                  accessibilityRole="search"
-                  accessibilityLabel="Search icons"
-                  placeholder="Search icons..."
-                  placeholderTextColor={theme.colors.textSecondary}
-                  value={query}
-                  onChangeText={handleSearchChange}
-                  style={styles.searchInput}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  returnKeyType="search"
-                />
-                <Text style={styles.searchCount}>
-                  {visibleIcons.length} icons
-                </Text>
-                {query.length > 0 && (
-                  <Pressable
-                    onPress={handleClearSearch}
-                    accessibilityRole="button"
-                    accessibilityLabel="Clear search"
-                    style={styles.clearButton}
-                  >
-                    <Text style={styles.clearButtonText}>{"\u2715"}</Text>
-                  </Pressable>
-                )}
-              </View>
-
-              {/* Category tabs */}
-              <View
-                style={styles.categoryContainer}
-                accessibilityRole="tablist"
-                accessibilityLabel="Icon categories"
-              >
-                {CATEGORY_ORDER.map((category) => {
-                  const isActive = activeCategory === category && !query.trim();
-                  const catIconName = CATEGORY_ICONS[category];
-                  const CatIcon = getIconComponent(catIconName);
-                  return (
-                    <Pressable
-                      key={category}
-                      onPress={() => handleCategoryPress(category)}
-                      accessibilityRole="tab"
-                      accessibilityLabel={`${CATEGORY_LABELS[category]} category${isActive ? ", active" : ""}`}
-                      accessibilityState={{ selected: isActive }}
-                      style={[
-                        styles.categoryTab,
-                        isActive && styles.categoryTabActive,
-                        isActive && { backgroundColor: resolvedAccent },
-                      ]}
-                    >
-                      {CatIcon && (
-                        <CatIcon
-                          size={CATEGORY_TAB_ICON_SIZE}
-                          weight={isActive ? "fill" : "regular"}
-                          color={isActive ? selectedIconColor : iconColor}
-                        />
-                      )}
-                    </Pressable>
-                  );
-                })}
-              </View>
-
-              {/* Icon grid */}
-              <FlatList
-                style={{ flex: 1 }}
-                data={visibleIcons}
-                keyExtractor={keyExtractor}
-                renderItem={renderIcon}
-                numColumns={MODAL_GRID_COLUMNS}
-                contentContainerStyle={styles.gridContent}
-                columnWrapperStyle={styles.gridColumnWrapper}
-                initialNumToRender={20}
-                maxToRenderPerBatch={30}
-                windowSize={5}
-                getItemLayout={getItemLayout}
-                ListEmptyComponent={
-                  <View style={styles.emptyContainer}>
-                    <Text style={styles.emptyText}>No icons found</Text>
-                  </View>
-                }
-              />
-
-              {/* Weight bar (fixed bottom) */}
-              <View
-                style={styles.weightBar}
-                accessibilityRole="radiogroup"
-                accessibilityLabel="Icon weight"
-              >
-                {WEIGHTS.map((w, i) => {
-                  const isActive = w.value === selectedWeight;
-                  return (
-                    <Pressable
-                      key={w.value}
-                      onPress={() => onSelectWeight(w.value)}
-                      accessibilityRole="radio"
-                      accessibilityLabel={`${w.label} weight`}
-                      accessibilityState={{ checked: isActive }}
-                      style={[
-                        styles.weightSegment,
-                        i === WEIGHTS.length - 1 && styles.weightSegmentLast,
-                        isActive && { backgroundColor: resolvedAccent },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.weightLabel,
-                          isActive && styles.weightLabelActive,
-                        ]}
-                      >
-                        {w.abbrev}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </View>
-          </View>
-        </SafeAreaProvider>
-      )}
-    </Modal>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+    </View>
   );
 }
