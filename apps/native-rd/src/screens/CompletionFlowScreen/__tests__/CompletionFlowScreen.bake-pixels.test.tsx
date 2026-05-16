@@ -85,6 +85,7 @@ interface PngPixels {
 function decodeRgbaPng(buf: Buffer): PngPixels {
   // Skip signature (8 bytes); walk chunks until IEND.
   let offset = 8;
+  let sawIHDR = false;
   let width = 0;
   let height = 0;
   let bitDepth = 0;
@@ -98,6 +99,7 @@ function decodeRgbaPng(buf: Buffer): PngPixels {
     const data = buf.subarray(offset, offset + length);
     offset += length + 4; // skip CRC
     if (type === "IHDR") {
+      sawIHDR = true;
       width = data.readUInt32BE(0);
       height = data.readUInt32BE(4);
       bitDepth = data[8];
@@ -107,6 +109,21 @@ function decodeRgbaPng(buf: Buffer): PngPixels {
     } else if (type === "IEND") {
       break;
     }
+  }
+  // Hard guards before the statistic helpers run. Without these, a malformed
+  // input (no IHDR, no IDAT, zero dims) would silently produce a NaN mean
+  // alpha — and an assertion swap like `toBeGreaterThanOrEqual(0)` would let
+  // that pass. The regression test must be hard to fool.
+  if (!sawIHDR) {
+    throw new Error("decodeRgbaPng: no IHDR chunk found");
+  }
+  if (idatChunks.length === 0) {
+    throw new Error("decodeRgbaPng: no IDAT chunks found");
+  }
+  if (width === 0 || height === 0) {
+    throw new Error(
+      `decodeRgbaPng: zero dimensions (${width}x${height}) — IHDR is degenerate`,
+    );
   }
   if (bitDepth !== 8 || colorType !== 6) {
     throw new Error(
@@ -173,6 +190,13 @@ describe("Issue #60 regression — completion bake yields non-transparent pixels
     );
 
     expect(mockToDataURL).toHaveBeenCalled();
+    // The pipeline must pass the toDataURL bytes through faithfully — no
+    // silent substitution, no transparent fallback. If a future regression
+    // re-introduced captureRef and ignored toDataURL, this equality would
+    // fail before the pixel-statistic assertions even ran.
+    expect(
+      buffer.equals(Buffer.from(NON_TRANSPARENT_2X2_BASE64, "base64")),
+    ).toBe(true);
     const pixels = decodeRgbaPng(buffer);
     expect(pixels.width).toBe(2);
     expect(pixels.height).toBe(2);

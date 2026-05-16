@@ -24,14 +24,13 @@ import { Buffer } from "buffer";
 import { isPNG } from "./png-baking";
 import { getBadgeLayoutBoxes, type LayoutBoxesOptions } from "./layoutBoxes";
 import type { BadgeDesign } from "./types";
-import type { BadgeRendererHandle } from "./BadgeRenderer";
+import type { BadgeRendererHandle, CaptureBadgeOptions } from "./BadgeRenderer";
 
 const DEFAULT_SIZE = 512;
 
-export interface CaptureBadgeOptions {
-  width?: number;
-  height?: number;
-}
+// Re-export so callers can `import { CaptureBadgeOptions } from "./captureBadge"`
+// without having to know it's declared alongside the handle type.
+export type { CaptureBadgeOptions };
 
 /**
  * Compute aspect-ratio-preserving capture dimensions for a badge design.

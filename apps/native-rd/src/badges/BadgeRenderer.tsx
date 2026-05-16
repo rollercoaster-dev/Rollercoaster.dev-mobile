@@ -62,20 +62,40 @@ export interface BadgeRendererProps {
 }
 
 /**
+ * Output dimensions for `captureAsPng` / `captureBadge`. Both axes are
+ * required together — passing one without the other was a footgun in the
+ * previous shape (the inner guard silently dropped both).
+ *
+ * Source via `getCaptureDimensions(design, max, layoutOptions)` with
+ * layoutOptions matching the live theme, so the requested PNG aspect ratio
+ * lines up with the renderer's actual viewBox.
+ */
+export interface CaptureBadgeOptions {
+  width: number;
+  height: number;
+}
+
+/**
  * Imperative handle exposed via `forwardRef`. Use with `useRef<BadgeRendererHandle>`
  * and pass the ref to `captureBadge(ref, options)`.
  *
  * `captureAsPng` serializes from the SVG model on the native side via
  * `react-native-svg`'s `toDataURL`, sidestepping the view-buffer timing race
  * that `react-native-view-shot`'s `captureRef` exhibited for non-trivial
- * designs (see issue #60 emulator findings).
+ * designs.
  */
 export interface BadgeRendererHandle {
-  captureAsPng: (options?: {
-    width?: number;
-    height?: number;
-  }) => Promise<Buffer>;
+  captureAsPng: (options?: CaptureBadgeOptions) => Promise<Buffer>;
 }
+
+/**
+ * How long `captureAsPng` waits for the native `Svg.toDataURL` callback
+ * before rejecting. A dropped native bridge or unmounted-mid-flight Svg
+ * leaves the callback uninvoked — without this timeout, every awaiting
+ * caller hangs indefinitely (the original failure mode this rewrite was
+ * meant to escape, just one bridge call deeper).
+ */
+const CAPTURE_TIMEOUT_MS = 5_000;
 
 // ---------------------------------------------------------------------------
 // Component
@@ -113,7 +133,7 @@ export const BadgeRenderer = forwardRef<
   useImperativeHandle(
     ref,
     () => ({
-      captureAsPng: ({ width, height } = {}) =>
+      captureAsPng: (options) =>
         new Promise<Buffer>((resolve, reject) => {
           const node = svgRef.current;
           if (!node) {
@@ -124,9 +144,8 @@ export const BadgeRenderer = forwardRef<
             );
             return;
           }
-          // react-native-svg ships toDataURL on every <Svg> instance (see its
-          // type declaration). We guard for environments (older versions,
-          // alternate forks) that strip it.
+          // react-native-svg attaches toDataURL as a class field on every
+          // <Svg> instance. Older versions and forks may strip it.
           if (typeof node.toDataURL !== "function") {
             reject(
               new Error(
@@ -135,13 +154,37 @@ export const BadgeRenderer = forwardRef<
             );
             return;
           }
-          const options =
-            typeof width === "number" && typeof height === "number"
-              ? { width, height }
-              : undefined;
+          // Timeout guards against a dropped native bridge: the callback
+          // would never fire, and the Promise constructor doesn't reject on
+          // its own. Late callbacks after timeout become no-ops because
+          // resolve/reject are latched.
+          let settled = false;
+          const timer = setTimeout(() => {
+            if (settled) return;
+            settled = true;
+            reject(
+              new Error(
+                `BadgeRenderer.captureAsPng: toDataURL did not respond within ${CAPTURE_TIMEOUT_MS}ms — native bridge may have dropped the call`,
+              ),
+            );
+          }, CAPTURE_TIMEOUT_MS);
           try {
-            node.toDataURL((base64: string) => {
-              if (!base64) {
+            node.toDataURL((base64: unknown) => {
+              if (settled) return;
+              settled = true;
+              clearTimeout(timer);
+              // The (base64: string) annotation in react-native-svg's types
+              // is a claim about the bridge contract, not an enforcement.
+              // Older versions / forks have passed null/objects on failure.
+              if (typeof base64 !== "string") {
+                reject(
+                  new Error(
+                    `BadgeRenderer.captureAsPng: toDataURL returned a non-string (${typeof base64})`,
+                  ),
+                );
+                return;
+              }
+              if (base64.length === 0) {
                 reject(
                   new Error(
                     "BadgeRenderer.captureAsPng: toDataURL returned an empty result",
@@ -152,6 +195,9 @@ export const BadgeRenderer = forwardRef<
               resolve(Buffer.from(base64, "base64"));
             }, options);
           } catch (err) {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
             reject(
               err instanceof Error
                 ? err
@@ -300,3 +346,5 @@ export const BadgeRenderer = forwardRef<
     </Svg>
   );
 });
+
+BadgeRenderer.displayName = "BadgeRenderer";
