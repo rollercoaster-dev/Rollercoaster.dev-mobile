@@ -95,10 +95,15 @@ export function useThemeContext(): ThemeContextValue {
  * Call once at App root, then share via ThemeProvider.
  */
 export function useTheme() {
-  useUnistyles();
+  const { rt } = useUnistyles();
 
-  const themeName =
-    (UnistylesRuntime.themeName as ThemeName) || "light-default";
+  // Reading `rt.themeName` subscribes this hook to Unistyles theme-name
+  // changes. Reading `UnistylesRuntime.themeName` directly does not trigger a
+  // React re-render, which leaves selected-state UI stale after setTheme().
+  const runtimeThemeName = rt.themeName;
+  const themeName = isValidThemeName(runtimeThemeName)
+    ? runtimeThemeName
+    : FALLBACK_THEME_NAME;
   const theme = themes[themeName];
   const isDark = themeName.startsWith("dark");
   const { variant } = parseThemeName(themeName);
