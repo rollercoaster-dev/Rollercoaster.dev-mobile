@@ -42,6 +42,14 @@ describe("Goal CRUD Operations", () => {
     [">1000 char description", { description: "a".repeat(1001) }, true],
     ["null description", { description: null }, false],
     ["valid description", { description: "Valid description" }, false],
+    ["empty design", { design: "" }, true],
+    ["null design", { design: null }, false],
+    ["valid design JSON", { design: '{"centerMode":"icon"}' }, false],
+    [
+      "long design JSON (>1000 chars)",
+      { design: `{"data":"${"a".repeat(2000)}"}` },
+      false,
+    ],
   ] as const)("updateGoal with %s", (_label, fields, shouldThrow) => {
     if (shouldThrow) {
       expect(() => updateGoal(mockGoalId, fields)).toThrow();

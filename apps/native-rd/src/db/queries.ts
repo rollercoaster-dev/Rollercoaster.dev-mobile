@@ -106,15 +106,19 @@ export function createGoal(title: string) {
 }
 
 /**
- * Update goal title and/or description
+ * Update goal title, description, and/or design
  * @param id - Goal ID
- * @param fields - Fields to update (title, description)
+ * @param fields - Fields to update (title, description, design)
  * @returns Update command
  * @throws Error if validation fails
  */
 export function updateGoal(
   id: GoalId,
-  fields: { title?: string; description?: string | null },
+  fields: {
+    title?: string;
+    description?: string | null;
+    design?: string | null;
+  },
 ) {
   breadcrumb({ category: "goal", message: "update" });
   const update: Record<string, unknown> = { id };
@@ -151,6 +155,24 @@ export function updateGoal(
     }
   }
 
+  if (fields.design !== undefined) {
+    if (fields.design === null) {
+      update.design = null;
+    } else {
+      const parsed = NonEmptyString.orNull(fields.design);
+      if (!parsed) {
+        logger.error("Goal design validation failed during update", {
+          goalId: id,
+          designLength: fields.design.length,
+        });
+        throw new Error(
+          `Goal design must not be empty (received ${fields.design.length} characters)`,
+        );
+      }
+      update.design = parsed;
+    }
+  }
+
   try {
     return evolu.update("goal", update as Parameters<typeof evolu.update>[1]);
   } catch (error) {
@@ -167,7 +189,7 @@ export function updateGoal(
  */
 export function completeGoal(
   id: GoalId,
-  goalEvidence: Array<{ type: string | null }>,
+  goalEvidence: { type: string | null }[],
 ) {
   breadcrumb({ category: "goal", message: "complete" });
   if (!canCompleteGoal(goalEvidence)) {
@@ -271,7 +293,7 @@ function serializePlannedTypes(
  */
 export function canCompleteStep(
   plannedEvidenceTypesJson: string | null,
-  stepEvidence: Array<{ type: string | null }>,
+  stepEvidence: { type: string | null }[],
 ): boolean {
   const plannedTypes = parsePlannedEvidenceTypes(
     plannedEvidenceTypesJson,
@@ -292,7 +314,7 @@ export function canCompleteStep(
  * @returns true if the goal can be completed
  */
 export function canCompleteGoal(
-  goalEvidence: Array<{ type: string | null }>,
+  goalEvidence: { type: string | null }[],
 ): boolean {
   return goalEvidence.some((e) => e.type !== null);
 }
@@ -428,7 +450,7 @@ export function updateStep(
 export function completeStep(
   id: StepId,
   plannedEvidenceTypesJson: string | null,
-  stepEvidence: Array<{ type: string | null }>,
+  stepEvidence: { type: string | null }[],
 ) {
   breadcrumb({ category: "step", message: "toggle" });
   if (!canCompleteStep(plannedEvidenceTypesJson, stepEvidence)) {

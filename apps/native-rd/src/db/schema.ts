@@ -95,6 +95,7 @@ export const Schema = {
     icon: nullOr(NonEmptyString1000), // Emoji or icon identifier
     color: nullOr(NonEmptyString1000), // Hex color code
     sortOrder: nullOr(Int), // Custom ordering
+    design: nullOr(NonEmptyString), // BadgeDesign JSON — pre-bake source of truth; mirrors badge.design
   },
 
   /**
