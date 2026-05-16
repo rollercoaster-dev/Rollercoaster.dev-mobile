@@ -3,16 +3,6 @@
     "sentry": {
       "type": "http",
       "url": "https://mcp.sentry.dev/mcp"
-    },
-    "graph-flow": {
-      "command": "bun",
-      "args": [
-        "run",
-        "/Users/joeczarnecki/Code/local-plugins/plugins/graph-flow/packages/mcp/src/index.ts"
-      ],
-      "env": {
-        "CLAUDE_PROJECT_DIR": "/Users/joeczarnecki/Code/rollercoaster.dev/Rollercoaster.dev-mobile"
-      }
     }
   }
 }
