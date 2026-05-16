@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Stand up an automated iOS + Android release pipeline that builds and submits internal builds on every push to `main` and production builds on every `v*.*.*` tag, with versioning + changelog handled by release-please.
+**Goal:** Stand up a click-only iOS + Android release pipeline: manual internal builds, production builds on published GitHub Releases, and versioning + changelog handled by release-please.
 
-**Architecture:** GitHub Actions orchestrates EAS Build and EAS Submit. EAS owns signing, native build, and store upload (already configured in `eas.json`). GitHub Actions owns triggers, version bumping (release-please), Sentry release finalization, and notifications. Three workflows: `_validate.yml` (reusable), `build-internal.yml` (push to `main`), `build-production.yml` (tag `v*.*.*`). The existing `ci.yml` becomes a thin caller of `_validate.yml`.
+**Architecture:** GitHub Actions orchestrates EAS Build and EAS Submit. EAS owns signing, native build, and store upload (already configured in `eas.json`). GitHub Actions owns triggers, version bumping (release-please), Sentry release finalization, and notifications. Three release workflows: `_release-validate.yml` (reusable release preflight), `build-internal.yml` (manual preview build/submit), and `build-production.yml` (published Release or manual production build/submit). Existing CI remains in the standalone repo workflows: `ci-native-rd.yml`, `ci-packages.yml`, and `ci-docs.yml`.
 
 **Tech Stack:** GitHub Actions, EAS CLI (Expo), release-please, Sentry CLI, App Store Connect API, Google Play Developer API.
 
@@ -31,14 +31,13 @@ Files this plan creates or modifies:
 - Create: `.github/release-please-config.json` — release-please component config.
 - Create: `.github/.release-please-manifest.json` — release-please version state.
 - Create: `.github/workflows/release-please.yml` — opens/updates the release PR (Task 3).
-- Create: `.github/workflows/_validate.yml` — reusable validate workflow (Task 4).
-- Modify: `.github/workflows/ci.yml` — call `_validate.yml` (Task 4).
-- Create: `.github/workflows/build-internal.yml` — preview build + submit on push to `main` (Task 5).
-- Create: `.github/workflows/build-production.yml` — production build + submit on tag (Task 6).
+- Create: `.github/workflows/_release-validate.yml` — reusable release preflight workflow (Task 4).
+- Create: `.github/workflows/build-internal.yml` — manual preview build + explicit-ID submit (Task 5).
+- Create: `.github/workflows/build-production.yml` — Release-published/manual production build + explicit-ID submit (Task 6).
 - Create: `apps/native-rd/docs/release.md` — release operations runbook (Task 7).
 - Modify: `apps/native-rd/CLAUDE.md` — link to the runbook (Task 7).
 
-Each file has one responsibility. The two workflows that build (internal, production) deliberately do not share more than the reusable validate workflow — they have different secrets, different inputs, and different failure modes; consolidating them via matrix would obscure that.
+Each file has one responsibility. The two workflows that build (internal, production) share only the reusable release preflight workflow; build and submit are split into per-platform jobs so a submission targets the exact EAS build ID produced by the corresponding build job.
 
 ---
 
@@ -294,30 +293,37 @@ release-please reads conventional commits on `main`, opens/maintains a "Release 
 
 ---
 
-## Task 4: Extract reusable validate workflow
+## Task 4: Add reusable release preflight workflow
 
-The existing `ci.yml` does install + typecheck + lint + test. Tasks 5 and 6 need the same validation before triggering a build. Extract it.
+The standalone repo already has full CI in `ci-native-rd.yml`, `ci-packages.yml`, and `ci-docs.yml`. Release builds need a focused preflight gate that checks the exact ref being built before EAS starts. This workflow is intentionally named `_release-validate.yml` so it is not mistaken for the full PR/main CI contract.
 
 **Files:**
 
-- Create: `.github/workflows/_validate.yml`
-- Modify: `.github/workflows/ci.yml`
+- Create: `.github/workflows/_release-validate.yml`
+- Modify: `docs/architecture/ci-contract.md`
 
-- [ ] **Step 1: Create `.github/workflows/_validate.yml`**
+- [ ] **Step 1: Create `.github/workflows/_release-validate.yml`**
 
   ```yaml
-  name: _validate
+  name: _release-validate
 
   on:
     workflow_call:
+      inputs:
+        ref:
+          description: "Git ref to check out and validate. Defaults to the caller workflow's commit."
+          required: false
+          type: string
 
   jobs:
     validate:
-      name: Build, Typecheck, Lint & Test
+      name: Release Format, Typecheck, Lint & Test
       runs-on: ubuntu-latest
       steps:
         - name: Checkout
           uses: actions/checkout@v6
+          with:
+            ref: ${{ inputs.ref }}
 
         - name: Setup Bun
           uses: oven-sh/setup-bun@v2
@@ -340,6 +346,9 @@ The existing `ci.yml` does install + typecheck + lint + test. Tasks 5 and 6 need
         - name: Install dependencies
           run: bun install --frozen-lockfile
 
+        - name: Format check
+          run: bun run format:check
+
         - name: Typecheck
           run: bun run type-check
 
@@ -350,264 +359,86 @@ The existing `ci.yml` does install + typecheck + lint + test. Tasks 5 and 6 need
           run: bun run test
   ```
 
-  Leading underscore convention signals "internal / not directly triggered."
+- [ ] **Step 2: Document the boundary**
 
-- [ ] **Step 2: Replace `.github/workflows/ci.yml` body with a caller**
+  Update `docs/architecture/ci-contract.md` to state that `_release-validate.yml` is a release preflight gate and does not replace the fuller `ci-native-rd` PR/main validation contract.
 
-  Open `.github/workflows/ci.yml` and replace its contents with:
+- [ ] **Step 3: Lint the workflow**
 
-  ```yaml
-  # Validation contract: docs/architecture/ci-contract.md
-  name: CI
+  `actionlint .github/workflows/_release-validate.yml`. Expected: no output.
 
-  on:
-    pull_request:
-      paths-ignore:
-        - "**/*.md"
-        - "docs/**"
-        - "apps/*/docs/**"
-        - "apps/*/research/**"
-        - "apps/*/prototypes/**"
-        - ".github/PULL_REQUEST_TEMPLATE.md"
-    push:
-      branches: [main]
-
-  concurrency:
-    group: ${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: true
-
-  jobs:
-    validate:
-      uses: ./.github/workflows/_validate.yml
-  ```
-
-- [ ] **Step 3: Lint both workflows**
-
-  `actionlint .github/workflows/ci.yml .github/workflows/_validate.yml`. Expected: no output.
-
-- [ ] **Step 4: Verify ci-contract.md still describes reality**
-
-  Read `docs/architecture/ci-contract.md` (referenced from `ci.yml` line 1). If it documents specific job step names or shapes, update it to point at `_validate.yml` for the validation contract. If it doesn't exist or is generic enough to remain accurate, leave it alone.
-
-- [ ] **Step 5: Commit**
+- [ ] **Step 4: Commit**
 
   ```bash
-  git add .github/workflows/_validate.yml .github/workflows/ci.yml
-  # Add docs/architecture/ci-contract.md too if you updated it in Step 4
-  git commit -s -m "ci: extract reusable _validate workflow; ci.yml becomes a caller"
+  git add .github/workflows/_release-validate.yml docs/architecture/ci-contract.md
+  git commit -s -m "ci(release): add reusable release validation workflow"
   ```
-
-- [ ] **Step 6: Verify after merge**
-
-  Open a no-op PR (or rely on this PR) and confirm the CI run still shows install + typecheck + lint + test as expected.
 
 ---
 
-## Task 5: Internal build + submit workflow (push to `main`)
+## Task 5: Internal build + explicit-ID submit workflow
 
-On every push to `main`, build the `preview` EAS profile and submit to TestFlight internal + Play internal track.
+Internal builds are manual-only. The workflow validates the requested ref, builds the selected platform(s), captures each EAS build ID, then submits exactly those build IDs to TestFlight internal and/or Play internal.
 
 **Files:**
 
 - Create: `.github/workflows/build-internal.yml`
 
-- [ ] **Step 1: Create `.github/workflows/build-internal.yml`**
+- [ ] **Step 1: Create the workflow**
 
-  ```yaml
-  name: build-internal
+  Key requirements:
+  - Trigger: `workflow_dispatch` only.
+  - Inputs: optional `ref`; `platform` choice of `all`, `ios`, or `android`.
+  - Validation: call `./.github/workflows/_release-validate.yml` with the same ref the build jobs check out.
+  - Build: use per-platform jobs and `eas build --json` without `--no-wait` so the command waits for the build to finish and returns the build ID.
+  - Submit: use per-platform submit jobs with `eas submit --id <build-id>`, never `--latest`.
 
-  on:
-    push:
-      branches: [main]
-      paths:
-        - "apps/native-rd/**"
-        - "packages/**"
-        - ".github/workflows/build-internal.yml"
-        - ".github/workflows/_validate.yml"
-        - "bun.lock"
-    workflow_dispatch:
+- [ ] **Step 2: Keep credential writing shell-safe**
 
-  concurrency:
-    group: build-internal
-    cancel-in-progress: false
+  Pass multiline secrets via `env:`, then write them with shell variables:
 
-  jobs:
-    validate:
-      uses: ./.github/workflows/_validate.yml
-
-    build-and-submit:
-      needs: validate
-      runs-on: ubuntu-latest
-      defaults:
-        run:
-          working-directory: apps/native-rd
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v6
-
-        - name: Setup Bun
-          uses: oven-sh/setup-bun@v2
-          with:
-            bun-version-file: "package.json"
-
-        - name: Setup Node
-          uses: actions/setup-node@v6
-          with:
-            node-version: 22
-
-        - name: Install dependencies
-          run: bun install --frozen-lockfile
-          working-directory: .
-
-        - name: Write credential files
-          run: |
-            mkdir -p ../../secrets
-            printf '%s' "${{ secrets.APPLE_ASC_KEY_P8 }}" > ../../secrets/asc-api-key.p8
-            printf '%s' "${{ secrets.ANDROID_PLAY_SERVICE_ACCOUNT_JSON }}" > ../../secrets/play-service-account.json
-            chmod 600 ../../secrets/asc-api-key.p8 ../../secrets/play-service-account.json
-
-        - name: Build (EAS, preview profile, both platforms)
-          env:
-            EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-            SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          run: npx eas-cli@latest build --profile preview --platform all --non-interactive --no-wait
-
-        - name: Submit (EAS, preview profile, both platforms — latest finished build)
-          env:
-            EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-            APPLE_ASC_KEY_ID: ${{ secrets.APPLE_ASC_KEY_ID }}
-            APPLE_ASC_ISSUER_ID: ${{ secrets.APPLE_ASC_ISSUER_ID }}
-          run: npx eas-cli@latest submit --profile preview --platform all --latest --non-interactive --wait
+  ```bash
+  mkdir -p ../../secrets
+  printf '%s\n' "$APPLE_ASC_KEY_P8" > ../../secrets/asc-api-key.p8
+  printf '%s\n' "$ANDROID_PLAY_SA" > ../../secrets/play-service-account.json
+  chmod 600 ../../secrets/asc-api-key.p8 ../../secrets/play-service-account.json
   ```
 
-  Notes:
-  - `--no-wait` on build lets the GH job finish fast; EAS continues the build in the cloud.
-  - `--wait` on submit means we wait for the build to finish + submit to complete; this is the slow step but it's what gives us pass/fail on submission.
-  - `concurrency: cancel-in-progress: false` because cancelling a half-finished store submission can leave a dangling upload.
-  - The path filter skips builds when only docs change.
-
-- [ ] **Step 2: Lint**
+- [ ] **Step 3: Lint**
 
   `actionlint .github/workflows/build-internal.yml`. Expected: no output.
 
-- [ ] **Step 3: Dry-run via `workflow_dispatch`**
+- [ ] **Step 4: First run after merge**
 
-  After the PR with this file merges to `main`, go to Actions → build-internal → "Run workflow" → run on `main`. Expected: validate passes; build kicks off in EAS; you see the EAS dashboard link in the logs; submit eventually succeeds, with the build appearing in TestFlight internal and Play internal.
+  After secrets are configured, go to Actions -> build-internal -> "Run workflow". Start with `platform=ios` or `platform=android` to smoke-test one credential path, then run `platform=all` once both paths are known-good.
 
-  If submit fails on iOS with "no API key": secret `APPLE_ASC_KEY_P8` is wrong format (missing `-----BEGIN`/`-----END` lines or stray whitespace).
-
-  If submit fails on Android with "no service account": secret `ANDROID_PLAY_SERVICE_ACCOUNT_JSON` is wrong format (not valid JSON, or missing newlines that `printf '%s'` would otherwise preserve).
-
-- [ ] **Step 4: Commit**
+- [ ] **Step 5: Commit**
 
   ```bash
   git add .github/workflows/build-internal.yml
-  git commit -s -m "ci(release): add internal build+submit workflow (preview profile, on push to main)"
+  git commit -s -m "ci(release): add internal build and explicit-id submit workflow"
   ```
 
----
+## Task 6: Production build + explicit-ID submit workflow
 
-## Task 6: Production build + submit workflow (tag `v*.*.*`)
-
-On every `v*.*.*` tag (created when release-please's PR merges), build the `production` EAS profile, submit to TestFlight external + Play production at 10% rollout, and finalize the Sentry release.
+Production builds run when release-please publishes a GitHub Release, with a manual `workflow_dispatch` path for re-runs. The workflow validates the release ref, builds selected platform(s), submits the exact EAS build IDs, and finalizes the Sentry release after at least one selected platform submits successfully.
 
 **Files:**
 
 - Create: `.github/workflows/build-production.yml`
 
-- [ ] **Step 1: Create `.github/workflows/build-production.yml`**
+- [ ] **Step 1: Create the workflow**
 
-  ```yaml
-  name: build-production
+  Key requirements:
+  - Triggers: `release: types: [published]` and manual `workflow_dispatch` with required `ref`.
+  - Manual input: `platform` choice of `all`, `ios`, or `android` for platform-specific re-runs.
+  - Validation: call `./.github/workflows/_release-validate.yml` with `inputs.ref || github.event.release.tag_name || github.ref`.
+  - Build: per-platform EAS build jobs with `--json` and no `--no-wait`.
+  - Submit: per-platform submit jobs with `--id`, not `--latest`.
+  - Android: use the `production` submit profile with `rollout: 0.1` from `eas.json`.
+  - Sentry: finalize/deploy only after selected platform submit jobs complete successfully.
 
-  on:
-    push:
-      tags: ["v*.*.*"]
-    workflow_dispatch:
-      inputs:
-        ref:
-          description: "Git ref to build (tag or commit SHA)"
-          required: true
-
-  concurrency:
-    group: build-production
-    cancel-in-progress: false
-
-  jobs:
-    validate:
-      uses: ./.github/workflows/_validate.yml
-
-    build-and-submit:
-      needs: validate
-      runs-on: ubuntu-latest
-      defaults:
-        run:
-          working-directory: apps/native-rd
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v6
-          with:
-            ref: ${{ inputs.ref || github.ref }}
-
-        - name: Setup Bun
-          uses: oven-sh/setup-bun@v2
-          with:
-            bun-version-file: "package.json"
-
-        - name: Setup Node
-          uses: actions/setup-node@v6
-          with:
-            node-version: 22
-
-        - name: Install dependencies
-          run: bun install --frozen-lockfile
-          working-directory: .
-
-        - name: Read version
-          id: version
-          run: echo "value=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
-
-        - name: Write credential files
-          run: |
-            mkdir -p ../../secrets
-            printf '%s' "${{ secrets.APPLE_ASC_KEY_P8 }}" > ../../secrets/asc-api-key.p8
-            printf '%s' "${{ secrets.ANDROID_PLAY_SERVICE_ACCOUNT_JSON }}" > ../../secrets/play-service-account.json
-            chmod 600 ../../secrets/asc-api-key.p8 ../../secrets/play-service-account.json
-
-        - name: Build (EAS, production profile, both platforms)
-          env:
-            EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-            SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          run: npx eas-cli@latest build --profile production --platform all --non-interactive --no-wait
-
-        - name: Submit (EAS, production profile, both platforms — 10% Android rollout)
-          env:
-            EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-            APPLE_ASC_KEY_ID: ${{ secrets.APPLE_ASC_KEY_ID }}
-            APPLE_ASC_ISSUER_ID: ${{ secrets.APPLE_ASC_ISSUER_ID }}
-          run: npx eas-cli@latest submit --profile production --platform all --latest --non-interactive --wait
-
-        - name: Finalize Sentry release
-          env:
-            SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-            SENTRY_ORG: rollercoaster-dev
-            SENTRY_PROJECT: native-rd
-            RELEASE_VERSION: ${{ steps.version.outputs.value }}
-          run: |
-            npx --yes @sentry/cli@latest releases finalize "$RELEASE_VERSION"
-            npx --yes @sentry/cli@latest releases deploys "$RELEASE_VERSION" new --env production
-  ```
-
-  Notes:
-  - The `SENTRY_ORG` and `SENTRY_PROJECT` values match what's already in `app.json`'s `@sentry/react-native/expo` plugin block. Verify by running `jq '.expo.plugins[] | select(.[0] == "@sentry/react-native/expo")' apps/native-rd/app.json` before committing. If they differ, update the workflow.
-  - The iOS App Store submission only uploads to App Store Connect; releasing the build to the App Store still requires manual "Submit for Review" + phased release in ASC. That's deliberate (research doc § Staged rollout).
-  - Android starts at 10% (`rollout: 0.1` in `eas.json`). Advancing to higher percentages is a manual `eas submit:rollout` (or Play Console) action after 24–48h of Sentry monitoring.
-
-- [ ] **Step 2: Lint**
-
-  `actionlint .github/workflows/build-production.yml`. Expected: no output.
-
-- [ ] **Step 3: Verify Sentry org/project before first production tag**
+- [ ] **Step 2: Verify Sentry org/project before first production run**
 
   Run from repo root:
 
@@ -615,118 +446,57 @@ On every `v*.*.*` tag (created when release-please's PR merges), build the `prod
   jq '.expo.plugins[] | select(type == "array" and .[0] == "@sentry/react-native/expo")' apps/native-rd/app.json
   ```
 
-  Expected output contains `"organization": "rollercoaster-dev"` and `"project": "native-rd"` (or similar). If different values appear, update the `SENTRY_ORG` / `SENTRY_PROJECT` env in `build-production.yml` to match before committing.
+  Expected values should match the workflow env, currently `SENTRY_ORG=rollercoasterdev` and `SENTRY_PROJECT=native-rd`.
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 3: Lint**
+
+  `actionlint .github/workflows/build-production.yml`. Expected: no output.
+
+- [ ] **Step 4: Manual smoke test after secrets land**
+
+  Use Actions -> build-production -> "Run workflow" against a safe test ref/tag only when you are ready for a real production-profile upload. Prefer `platform=ios` or `platform=android` first if only one store credential path needs verification.
+
+- [ ] **Step 5: Commit**
 
   ```bash
   git add .github/workflows/build-production.yml
-  git commit -s -m "ci(release): add production build+submit workflow (on v*.*.* tag, 10% Android rollout, Sentry release finalize)"
+  git commit -s -m "ci(release): add production build and explicit-id submit workflow"
   ```
-
-- [ ] **Step 5: Smoke-test via `workflow_dispatch` before relying on tags**
-
-  After merge to `main`: Actions → build-production → "Run workflow" → input `ref` = `main` (or a specific SHA). Watch validate → EAS build → submit. **Do not** run this against a real version if you're not ready to ship — `eas submit --profile production` will actually upload to App Store Connect and Play. If you want to dry-run, change `--profile production` to `--profile preview` temporarily, or use a dedicated `--profile production-dryrun` profile (out of scope for this plan).
-
----
 
 ## Task 7: Document the pipeline
 
-The pipeline isn't useful if the next person (you in three months) has to reverse-engineer it.
+Create the release runbook and link it from `apps/native-rd/CLAUDE.md`. The runbook should match the implemented click-only release path, not the original push/tag draft.
 
 **Files:**
 
 - Create: `apps/native-rd/docs/release.md`
-- Modify: `apps/native-rd/CLAUDE.md` (add one link line)
-- Modify: `apps/native-rd/docs/plans/index.md` (add this plan)
+- Modify: `apps/native-rd/CLAUDE.md`
+- Modify: `apps/native-rd/docs/plans/index.md`
 
-- [ ] **Step 1: Create `apps/native-rd/docs/release.md`**
+- [ ] **Step 1: Create the runbook**
 
-  ````markdown
-  # Release Runbook
+  Required content:
+  - Pipeline table for manual internal builds, published-Release production builds, and manual production re-runs.
+  - Internal build steps with `platform=all|ios|android`.
+  - Production release steps via release-please and GitHub Release publication.
+  - Android rollout advancement via Play Console or fastlane `supply`, not EAS CLI `submit:rollout`.
+  - First-run evidence table with date, workflow, ref/tag, platform, EAS build URL, result, and notes.
+  - Required GitHub secrets and common failure modes.
 
-  **Last verified:** 2026-05-14
+- [ ] **Step 2: Link the runbook**
 
-  ## Pipeline at a glance
+  Add a short `docs/release.md` pointer in `apps/native-rd/CLAUDE.md`.
 
-  | Track      | Trigger                               | Workflow               | EAS profile  | Destination                         |
-  | ---------- | ------------------------------------- | ---------------------- | ------------ | ----------------------------------- |
-  | Internal   | Push to `main`                        | `build-internal.yml`   | `preview`    | TestFlight internal + Play internal |
-  | Production | Tag `v*.*.*` (release-please merge)   | `build-production.yml` | `production` | TestFlight ext + Play prod (10%)    |
-  | Dev (rare) | `workflow_dispatch` on build-internal | `build-internal.yml`   | `preview`    | TestFlight internal                 |
+- [ ] **Step 3: Index the plan**
 
-  ## Cutting a production release
-
-  1. Wait for release-please to open or update the "chore(main): release native-rd X.Y.Z" PR.
-     - It's based on conventional-commit prefixes since the last tag: `feat:` → minor, `fix:` → patch, `BREAKING CHANGE:` → major.
-     - If the PR isn't there, no qualifying commits have landed.
-  2. Review the PR. The diff bumps `apps/native-rd/package.json`, `apps/native-rd/app.json` (`expo.version`), and `apps/native-rd/CHANGELOG.md`.
-  3. Merge the PR. release-please pushes the `vX.Y.Z` tag and creates a GitHub Release.
-  4. `build-production` workflow fires automatically on the tag. Watch it in Actions.
-  5. After EAS finishes:
-     - iOS: build appears in App Store Connect → TestFlight. External testers get it automatically (if the build is in a beta group with auto-distribution). The App Store release still requires manual "Submit for Review" + phased release in ASC.
-     - Android: build appears in Play Console → Production at 10% rollout. Watch Sentry for 24–48h, then advance via `npx eas-cli submit:rollout --platform android` or directly in Play Console.
-
-  ## Advancing the Android rollout
-
-  ```bash
-  cd apps/native-rd
-  # Bumps the current production rollout to the given fraction
-  npx eas-cli@latest submit:rollout --platform android --track production --rollout 0.5
-  npx eas-cli@latest submit:rollout --platform android --track production --rollout 1.0
-  ```
-  ````
-
-  Or use Play Console → Release management → Production → "Edit release".
-
-  ## Rolling back
-  - **Android:** Play Console → Production → halt rollout (keeps current users on the halted version; new installs continue to get the previous version). Then ship a fixed `v*.*.*` ASAP — Play doesn't allow shipping a lower versionCode.
-  - **iOS:** App Store Connect → "Remove from sale" only blocks new downloads; existing installs are unaffected. Ship a fixed `v*.*.*` and request expedited review if critical.
-
-  ## Manual build (any profile)
-
-  Actions → `build-internal` (preview) or `build-production` (prod) → "Run workflow". `build-production` accepts a `ref` input (tag or SHA).
-
-  ## Required secrets
-
-  See `docs/research/release-pipeline.md` § Secrets. All six are stored as GitHub repo secrets.
-
-  ## Failure modes
-  - **EAS build fails:** check the EAS dashboard link in the workflow log. Most failures are JS/native compile errors that reproduce locally with `npx expo run:ios --configuration Release`.
-  - **iOS submit fails with "no API key":** `APPLE_ASC_KEY_P8` secret is malformed (missing `-----BEGIN`/`-----END` lines).
-  - **Android submit fails with "no service account":** `ANDROID_PLAY_SERVICE_ACCOUNT_JSON` secret is malformed (not valid JSON).
-  - **Sentry finalize fails:** the build still shipped; finalize is metadata-only. Run `npx @sentry/cli releases finalize <version>` manually.
-
-  ```
-
-  ```
-
-- [ ] **Step 2: Add a link line to `apps/native-rd/CLAUDE.md`**
-
-  In the existing `Commands` section, after the table, add:
-
-  ```markdown
-  **Releasing?** See `docs/release.md` for the pipeline + runbook.
-  ```
-
-  Place it right above the existing `**Any build target?**` line.
-
-- [ ] **Step 3: Add this plan to `docs/plans/index.md`**
-
-  Append a row to the Active table (the table ends before the "## Reference" heading):
-
-  ```markdown
-  | [2026-05-14-release-pipeline.md](./2026-05-14-release-pipeline.md) | Build automated iOS+Android release pipeline (EAS + GH Actions + release-please) | 2026-05-14 |
-  ```
+  Add this release-pipeline plan to `apps/native-rd/docs/plans/index.md`.
 
 - [ ] **Step 4: Commit**
 
   ```bash
   git add apps/native-rd/docs/release.md apps/native-rd/CLAUDE.md apps/native-rd/docs/plans/index.md
-  git commit -s -m "docs(native-rd): release runbook + plan index entry"
+  git commit -s -m "docs(native-rd): add release pipeline runbook"
   ```
-
----
 
 ## Task 8 (optional, separate PR): Investigate dropping `buildReactNativeFromSource`
 
@@ -829,10 +599,14 @@ parted ways from the original text.
   `main` mid-execution and replaced the single monorepo-era `ci.yml` with
   three path-filtered workflows (`ci-native-rd.yml`, `ci-packages.yml`,
   `ci-docs.yml`). The original Task 4 step "make `ci.yml` a caller of
-  `_validate.yml`" no longer applies — there is no `ci.yml`. `_validate.yml`
-  still exists but services only the release workflows (`build-internal`,
-  `build-production`); the PR-time CI gates own their own (richer)
-  validation contract.
+  `_validate.yml`" no longer applies — there is no `ci.yml`.
+  `_release-validate.yml` services only the release workflows
+  (`build-internal`, `build-production`); the PR-time CI gates own their own
+  richer validation contract.
+- **Release build/submit split.** Initial workflow drafts queued `eas build
+--no-wait` and then submitted `--latest`, which could submit a previous
+  finished build. Final workflows build per platform, wait for EAS to finish,
+  parse the build ID from `--json`, and submit that exact ID.
 - **Task 6 Sentry org/project.** Plan placeholder used `rollercoaster-dev`
   for `SENTRY_ORG`. Verified against `app.json`'s `@sentry/react-native/expo`
   plugin block — actual value is `rollercoasterdev` (no dash). Workflow uses

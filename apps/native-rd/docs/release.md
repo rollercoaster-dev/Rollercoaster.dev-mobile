@@ -18,12 +18,15 @@ when merged, publishes a GitHub Release.
 ## Cutting an internal build (for testing / dogfood)
 
 1. Go to **Actions → build-internal → "Run workflow"**.
-2. Pick the ref you want to build. Defaults to `main`; can also be a feature
-   branch or a specific commit.
-3. Click **Run workflow**.
-4. Watch validate → EAS build → submit. The job streams an EAS dashboard
-   link. On success the build appears in TestFlight internal and Play
-   internal track.
+2. Pick the ref you want to build. Defaults to the branch selected in GitHub's
+   "Use workflow from" dropdown; can also be `main`, a feature branch, or a
+   specific commit.
+3. Pick `platform`: `all`, `ios`, or `android`. Use a single platform when
+   smoke-testing one credential path.
+4. Click **Run workflow**.
+5. Watch release validate → per-platform EAS build → per-platform submit. Each
+   submit job uses the explicit EAS build ID produced by its build job. On
+   success the build appears in TestFlight internal and/or Play internal track.
 
 ## Cutting a production release
 
@@ -44,12 +47,13 @@ when merged, publishes a GitHub Release.
      auto-distribution). The App Store release still requires manual
      "Submit for Review" + phased release in ASC.
    - Android: build appears in Play Console → Production at 10% rollout.
-     Watch Sentry for 24–48h, then advance via `npx eas-cli submit:rollout`
-     or directly in Play Console.
+     Watch Sentry for 24–48h, then advance directly in Play Console or via
+     Google Play Developer API tooling such as fastlane `supply`.
 
 If you need to re-run a production build against an existing tag (e.g.,
 because EAS failed transiently), use **Actions → build-production → "Run
-workflow"** and supply the tag (e.g., `v0.1.4`) as the `ref` input.
+workflow"** and supply the tag (e.g., `v0.1.4`) as the `ref` input. You can
+also choose `platform` = `ios` or `android` for a platform-specific re-run.
 
 ## Advancing the Android rollout
 
@@ -94,6 +98,16 @@ repo secrets:
 - `APPLE_ASC_ISSUER_ID`
 - `APPLE_ASC_KEY_P8`
 - `ANDROID_PLAY_SERVICE_ACCOUNT_JSON`
+
+## First-run evidence
+
+Fill this in after the first real runs so future release work has concrete
+breadcrumbs instead of folklore.
+
+| Date       | Workflow           | Ref/tag | Platform | EAS build URL | Result | Notes |
+| ---------- | ------------------ | ------- | -------- | ------------- | ------ | ----- |
+| YYYY-MM-DD | `build-internal`   |         |          |               |        |       |
+| YYYY-MM-DD | `build-production` |         |          |               |        |       |
 
 ## Failure modes
 

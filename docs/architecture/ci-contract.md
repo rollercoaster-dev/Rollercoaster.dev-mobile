@@ -7,14 +7,16 @@ checks that matter for the changed code.
 
 ## Workflows
 
-| Workflow                        | File                                 | Triggers on                                                                                                                                                                                                                                                                                                                                                                                              |
-| ------------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ci-native-rd`                  | `.github/workflows/ci-native-rd.yml` | Changes under `apps/native-rd/**` (excluding `docs/`, `research/`, `prototypes/` subdirs), `packages/design-tokens/**`, `packages/openbadges-core/**`, or root inputs that affect the gate (`bun.lock`, `bunfig.toml`, `turbo.json`, `package.json`, `.prettierignore`) / the workflow file. A blanket `**/*.md` exclusion is deliberately NOT applied — see "Why no blanket `**/*.md` exclusion" below. |
-| `ci-packages`                   | `.github/workflows/ci-packages.yml`  | Changes under `packages/**` (excluding `**/*.md` and `**/docs/**`), or root inputs that affect the gate (`bun.lock`, `bunfig.toml`, `turbo.json`, `package.json`, `tsconfig.json`, `eslint.config.mjs`, `.prettierignore`) / the workflow file.                                                                                                                                                          |
-| `ci-docs`                       | `.github/workflows/ci-docs.yml`      | Any `**/*.md` change, plus `.prettierignore` / the workflow file. Catches docs-only PRs that other workflows' path filters skip.                                                                                                                                                                                                                                                                         |
-| `codeql`                        | `.github/workflows/codeql.yml`       | Security scanning (JS/TS), weekly + on push/PR.                                                                                                                                                                                                                                                                                                                                                          |
-| `dco`                           | `.github/workflows/dco.yml`          | Verifies `Signed-off-by:` on commits touching app/package paths.                                                                                                                                                                                                                                                                                                                                         |
-| `claude` / `claude-code-review` | `.github/workflows/claude*.yml`      | Claude Code Review integration. Manual / comment-triggered.                                                                                                                                                                                                                                                                                                                                              |
+| Workflow                              | File                                   | Triggers on                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------------------------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ci-native-rd`                        | `.github/workflows/ci-native-rd.yml`   | Changes under `apps/native-rd/**` (excluding `docs/`, `research/`, `prototypes/` subdirs), `packages/design-tokens/**`, `packages/openbadges-core/**`, or root inputs that affect the gate (`bun.lock`, `bunfig.toml`, `turbo.json`, `package.json`, `.prettierignore`) / the workflow file. A blanket `**/*.md` exclusion is deliberately NOT applied — see "Why no blanket `**/*.md` exclusion" below. |
+| `ci-packages`                         | `.github/workflows/ci-packages.yml`    | Changes under `packages/**` (excluding `**/*.md` and `**/docs/**`), or root inputs that affect the gate (`bun.lock`, `bunfig.toml`, `turbo.json`, `package.json`, `tsconfig.json`, `eslint.config.mjs`, `.prettierignore`) / the workflow file.                                                                                                                                                          |
+| `ci-docs`                             | `.github/workflows/ci-docs.yml`        | Any `**/*.md` change, plus `.prettierignore` / the workflow file. Catches docs-only PRs that other workflows' path filters skip.                                                                                                                                                                                                                                                                         |
+| `codeql`                              | `.github/workflows/codeql.yml`         | Security scanning (JS/TS), weekly + on push/PR.                                                                                                                                                                                                                                                                                                                                                          |
+| `dco`                                 | `.github/workflows/dco.yml`            | Verifies `Signed-off-by:` on commits touching app/package paths.                                                                                                                                                                                                                                                                                                                                         |
+| `claude` / `claude-code-review`       | `.github/workflows/claude*.yml`        | Claude Code Review integration. Manual / comment-triggered.                                                                                                                                                                                                                                                                                                                                              |
+| `release-please`                      | `.github/workflows/release-please.yml` | Maintains the native-rd release PR from conventional commits on `main`.                                                                                                                                                                                                                                                                                                                                  |
+| `build-internal` / `build-production` | `.github/workflows/build-*.yml`        | Click-only EAS build and submit workflows. They call `.github/workflows/_release-validate.yml`, which is a release preflight gate, not a replacement for `ci-native-rd`.                                                                                                                                                                                                                                 |
 
 Both validation workflows use the same install + cache layout:
 
@@ -60,6 +62,23 @@ the `ci-native-rd` and `ci-packages` filters deliberately exclude
 docs-only paths, so a pure-docs PR can leave their `format:check`
 unexecuted. `ci-docs` runs only the format check (no node toolchain
 needed for Prettier), so the job is fast.
+
+## Release validation steps
+
+`_release-validate.yml` is intentionally scoped to release preflight. It runs
+before `build-internal` and `build-production`, checks out the exact ref being
+built, installs dependencies, then runs:
+
+| Step         | Command                |
+| ------------ | ---------------------- |
+| Format check | `bun run format:check` |
+| Typecheck    | `bun run type-check`   |
+| Lint         | `bun run lint`         |
+| Test         | `bun run test`         |
+
+This catches broad workspace breakage before an EAS build starts. It does not
+replace `ci-native-rd`, which remains the fuller PR/main validation gate with
+coverage upload, a11y artifacts, and Storybook build verification.
 
 ## Why no blanket `**/*.md` exclusion on ci-native-rd
 
