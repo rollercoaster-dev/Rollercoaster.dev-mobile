@@ -57,10 +57,31 @@ jest.mock("../../../hooks/useCreateBadge", () => ({
 // The default-design auto-capture in CompletionContent calls these. Stub the
 // renderer (avoid expensive SVG render in jsdom) and resolve captureBadge
 // immediately with a fake PNG so the `enabled: true` branch can be observed.
-jest.mock("../../../badges/BadgeRenderer", () => ({
-  BadgeRenderer: () => null,
-  getRendererLayoutOptions: () => ({ strokeWidth: 3, hasShadow: false }),
-}));
+// BadgeRenderer is forwardRef'd in production — the mock must also forward the
+// ref and attach a fake handle, otherwise fallbackRef.current stays null and
+// the offscreen capture effect never fires.
+jest.mock("../../../badges/BadgeRenderer", () => {
+  const ReactRuntime = require("react");
+  const { Buffer: BufferRuntime } = require("buffer");
+  return {
+    BadgeRenderer: ReactRuntime.forwardRef(
+      (_props: unknown, ref: React.Ref<unknown>) => {
+        ReactRuntime.useImperativeHandle(
+          ref,
+          () => ({
+            captureAsPng: () =>
+              Promise.resolve(
+                BufferRuntime.from([137, 80, 78, 71, 13, 10, 26, 10]),
+              ),
+          }),
+          [],
+        );
+        return null;
+      },
+    ),
+    getRendererLayoutOptions: () => ({ strokeWidth: 3, hasShadow: false }),
+  };
+});
 jest.mock("../../../badges/captureBadge", () => ({
   captureBadge: jest.fn(() =>
     Promise.resolve(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])),

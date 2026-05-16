@@ -1,31 +1,30 @@
 /**
  * captureBadge
  *
- * Rasterizes a mounted BadgeRenderer to a PNG Buffer using
- * react-native-view-shot's captureRef API.
+ * Rasterizes a mounted BadgeRenderer to a PNG Buffer via the renderer's
+ * imperative handle (which calls `react-native-svg`'s `Svg.toDataURL` under
+ * the hood — serializing the SVG model on the native side rather than
+ * snapshotting a view buffer).
  *
  * The caller must:
- *   1. Render the BadgeRenderer inside a native wrapper view, e.g.
- *        <View ref={ref} collapsable={false}><BadgeRenderer ... /></View>.
- *      `BadgeRenderer` is a function component without `forwardRef`, so the
- *      ref must target a real native view. The wrapper must be padding/border
- *      free or it will be captured along with the SVG and reintroduce
- *      stretching.
- *   2. Pass that wrapper ref to this function.
- *   3. Pass dimensions from `getCaptureDimensions(design, options)` —
- *      `captureRef` stretches the source view to the requested w/h, so a
- *      non-square viewBox needs matching non-square output. `options` must
- *      reflect the renderer's actual theme-derived `{ strokeWidth, hasShadow }`
- *      (see `getRendererLayoutOptions` in `BadgeRenderer`).
+ *   1. Render the BadgeRenderer with a ref of type `BadgeRendererHandle`:
+ *        const ref = useRef<BadgeRendererHandle | null>(null);
+ *        <BadgeRenderer ref={ref} design={...} />
+ *      The handle is exposed via `forwardRef` + `useImperativeHandle` from
+ *      BadgeRenderer itself, so there's no wrapper view in the capture loop.
+ *   2. Pass that ref to this function.
+ *   3. Pass dimensions from `getCaptureDimensions(design, options)`. The
+ *      `options` argument must reflect the renderer's actual theme-derived
+ *      `{ strokeWidth, hasShadow }` (see `getRendererLayoutOptions`).
  *
  * Returns a Buffer containing the PNG bytes, ready for bakePNG().
  */
 
-import { captureRef } from "react-native-view-shot";
 import { Buffer } from "buffer";
 import { isPNG } from "./png-baking";
 import { getBadgeLayoutBoxes, type LayoutBoxesOptions } from "./layoutBoxes";
 import type { BadgeDesign } from "./types";
+import type { BadgeRendererHandle } from "./BadgeRenderer";
 
 const DEFAULT_SIZE = 512;
 
@@ -39,10 +38,10 @@ export interface CaptureBadgeOptions {
  *
  * The BadgeRenderer's SVG viewBox is non-square whenever a top banner or
  * bottom label is present, and the shadow / stroke configuration shifts the
- * viewBox proportions further. `captureRef` stretches the source view to
- * whatever width/height it's given, so asking for a square output on a
- * non-square source produces a visually squashed PNG. Use this helper to pick
- * dimensions that match the source.
+ * viewBox proportions further. The capture path requests a target output
+ * width/height, so asking for a square output on a non-square source produces
+ * a visually squashed PNG. Use this helper to pick dimensions that match the
+ * source viewBox.
  *
  * Pass `layoutOptions` matching the renderer's actual theme (use
  * `getRendererLayoutOptions(theme)` from `BadgeRenderer`). Omitting it falls
@@ -65,17 +64,18 @@ export function getCaptureDimensions(
 }
 
 /**
- * Capture a mounted BadgeRenderer view as a PNG Buffer.
+ * Capture a mounted BadgeRenderer as a PNG Buffer.
  *
- * @param ref - React ref attached to the BadgeRenderer's wrapping View
+ * @param ref - React ref attached to the BadgeRenderer (BadgeRendererHandle)
  * @param options - Output dimensions (default 512x512)
  * @returns PNG Buffer suitable for bakePNG()
  */
 export async function captureBadge(
-  ref: React.RefObject<unknown>,
+  ref: React.RefObject<BadgeRendererHandle | null>,
   options?: CaptureBadgeOptions,
 ): Promise<Buffer> {
-  if (!ref.current) {
+  const handle = ref.current;
+  if (!handle) {
     throw new Error(
       "captureBadge: ref.current is null — ensure the BadgeRenderer is mounted before calling captureBadge",
     );
@@ -84,23 +84,15 @@ export async function captureBadge(
   const width = options?.width ?? DEFAULT_SIZE;
   const height = options?.height ?? DEFAULT_SIZE;
 
-  let base64: string;
+  let buffer: Buffer;
   try {
-    base64 = await captureRef(ref, {
-      format: "png",
-      quality: 1,
-      result: "base64",
-      width,
-      height,
-    });
+    buffer = await handle.captureAsPng({ width, height });
   } catch (err) {
     throw new Error(
-      `captureBadge: captureRef failed — ${err instanceof Error ? err.message : String(err)}`,
+      `captureBadge: capture failed — ${err instanceof Error ? err.message : String(err)}`,
       { cause: err },
     );
   }
-
-  const buffer = Buffer.from(base64, "base64");
 
   if (!isPNG(buffer)) {
     throw new Error("captureBadge: captured data is not a valid PNG");

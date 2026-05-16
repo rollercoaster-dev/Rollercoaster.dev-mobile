@@ -21,7 +21,10 @@ import { badgeWithGoalQuery, deleteBadge } from "../../db";
 import type { BadgeId } from "../../db";
 import { PLACEHOLDER_IMAGE_URI } from "../../hooks/useCreateBadge";
 import { useBadgeExport } from "../../hooks/useBadgeExport";
-import { BadgeRenderer } from "../../badges/BadgeRenderer";
+import {
+  BadgeRenderer,
+  type BadgeRendererHandle,
+} from "../../badges/BadgeRenderer";
 import { parseBadgeDesign } from "../../badges/types";
 import { formatDate } from "../../utils/format";
 import type {
@@ -125,7 +128,7 @@ function BadgeDetailContent({
     isExportingImage,
     isExportingJSON,
   } = useBadgeExport();
-  const badgeRendererRef = useRef<View>(null);
+  const badgeRendererRef = useRef<BadgeRendererHandle | null>(null);
 
   const handleDelete = () => {
     Alert.alert(
@@ -284,12 +287,12 @@ function BadgeDetailContent({
       >
         <View style={styles.previewContainer}>
           {design ? (
-            <View
-              ref={badgeRendererRef}
-              collapsable={false}
-              style={styles.badgeCanvas}
-            >
-              <BadgeRenderer design={design} size={160} />
+            <View collapsable={false} style={styles.badgeCanvas}>
+              <BadgeRenderer
+                ref={badgeRendererRef}
+                design={design}
+                size={160}
+              />
             </View>
           ) : hasRealImage ? (
             <Image

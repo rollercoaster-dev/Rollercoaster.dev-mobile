@@ -2,6 +2,13 @@ import { renderHook, act } from "@testing-library/react-native";
 import { Alert } from "react-native";
 import { Buffer } from "buffer";
 
+import * as Sharing from "expo-sharing";
+import * as FileSystem from "expo-file-system/legacy";
+import { captureBadge, getCaptureDimensions } from "../../badges/captureBadge";
+import type { BadgeRendererHandle } from "../../badges/BadgeRenderer";
+import { createDefaultBadgeDesign } from "../../badges/types";
+import { useBadgeExport } from "../useBadgeExport";
+
 jest.mock("../useCreateBadge", () => ({
   PLACEHOLDER_IMAGE_URI: "pending:baked-image",
 }));
@@ -26,12 +33,6 @@ jest.mock("../../badges/captureBadge", () => {
     getCaptureDimensions: jest.fn(),
   };
 });
-
-import * as Sharing from "expo-sharing";
-import * as FileSystem from "expo-file-system/legacy";
-import { captureBadge, getCaptureDimensions } from "../../badges/captureBadge";
-import { createDefaultBadgeDesign } from "../../badges/types";
-import { useBadgeExport } from "../useBadgeExport";
 
 jest.spyOn(Alert, "alert");
 
@@ -224,7 +225,11 @@ describe("useBadgeExport", () => {
   });
 
   describe("exportDesignImage", () => {
-    const mockRef = { current: {} } as React.RefObject<unknown>;
+    // `captureBadge` is mocked above, so the ref's shape doesn't matter at
+    // runtime — only the static type must satisfy the hook's signature.
+    const mockRef = {
+      current: { captureAsPng: jest.fn() },
+    } as unknown as React.RefObject<BadgeRendererHandle | null>;
     const design = createDefaultBadgeDesign("Test", "#4caf50");
 
     it("captures with dimensions from getCaptureDimensions(design, ...)", async () => {
@@ -281,7 +286,7 @@ describe("useBadgeExport", () => {
 
     it("cleans up the temp file even when captureBadge throws", async () => {
       (captureBadge as jest.Mock).mockRejectedValueOnce(
-        new Error("captureRef failed"),
+        new Error("capture failed"),
       );
       const { result } = renderHook(() => useBadgeExport());
 

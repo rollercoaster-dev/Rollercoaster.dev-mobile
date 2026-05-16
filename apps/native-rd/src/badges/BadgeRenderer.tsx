@@ -18,7 +18,14 @@
  *  - autismFriendly: no shadow
  */
 
-import React, { useMemo, useId } from "react";
+import React, {
+  forwardRef,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useId,
+} from "react";
+import { Buffer } from "buffer";
 import Svg, { G, Path } from "react-native-svg";
 import { useUnistyles } from "react-native-unistyles";
 import type { IconWeight } from "phosphor-react-native";
@@ -54,6 +61,22 @@ export interface BadgeRendererProps {
   testID?: string;
 }
 
+/**
+ * Imperative handle exposed via `forwardRef`. Use with `useRef<BadgeRendererHandle>`
+ * and pass the ref to `captureBadge(ref, options)`.
+ *
+ * `captureAsPng` serializes from the SVG model on the native side via
+ * `react-native-svg`'s `toDataURL`, sidestepping the view-buffer timing race
+ * that `react-native-view-shot`'s `captureRef` exhibited for non-trivial
+ * designs (see issue #60 emulator findings).
+ */
+export interface BadgeRendererHandle {
+  captureAsPng: (options?: {
+    width?: number;
+    height?: number;
+  }) => Promise<Buffer>;
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -61,9 +84,9 @@ export interface BadgeRendererProps {
 /**
  * Returns the `{ strokeWidth, hasShadow }` the renderer will actually use for
  * a given theme. Capture pipelines must consume this so `getCaptureDimensions`
- * sees the same viewBox the renderer mounts — otherwise a theme mismatch
- * (e.g. highContrast strokeWidth=4, shadowless variants) reintroduces
- * stretching when `captureRef` scales the source view.
+ * sees the same viewBox the renderer mounts — a theme mismatch (e.g.
+ * highContrast strokeWidth=4, shadowless variants) shifts the viewBox and the
+ * requested capture dimensions need to stay in sync.
  */
 export function getRendererLayoutOptions(
   theme: AppTheme,
@@ -76,14 +99,69 @@ export function getRendererLayoutOptions(
   return { strokeWidth, hasShadow };
 }
 
-export function BadgeRenderer({
-  design,
-  size = 256,
-  showShadow: showShadowProp,
-  testID = "badge-renderer",
-}: BadgeRendererProps) {
+export const BadgeRenderer = forwardRef<
+  BadgeRendererHandle,
+  BadgeRendererProps
+>(function BadgeRenderer(
+  { design, size = 256, showShadow: showShadowProp, testID = "badge-renderer" },
+  ref,
+) {
   const { theme } = useUnistyles();
   const pathTextId = useId();
+  const svgRef = useRef<Svg>(null);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      captureAsPng: ({ width, height } = {}) =>
+        new Promise<Buffer>((resolve, reject) => {
+          const node = svgRef.current;
+          if (!node) {
+            reject(
+              new Error(
+                "BadgeRenderer.captureAsPng: Svg is not mounted yet — attach the ref before calling capture",
+              ),
+            );
+            return;
+          }
+          // react-native-svg ships toDataURL on every <Svg> instance (see its
+          // type declaration). We guard for environments (older versions,
+          // alternate forks) that strip it.
+          if (typeof node.toDataURL !== "function") {
+            reject(
+              new Error(
+                "BadgeRenderer.captureAsPng: Svg.toDataURL is unavailable — check react-native-svg version",
+              ),
+            );
+            return;
+          }
+          const options =
+            typeof width === "number" && typeof height === "number"
+              ? { width, height }
+              : undefined;
+          try {
+            node.toDataURL((base64: string) => {
+              if (!base64) {
+                reject(
+                  new Error(
+                    "BadgeRenderer.captureAsPng: toDataURL returned an empty result",
+                  ),
+                );
+                return;
+              }
+              resolve(Buffer.from(base64, "base64"));
+            }, options);
+          } catch (err) {
+            reject(
+              err instanceof Error
+                ? err
+                : new Error(`BadgeRenderer.captureAsPng: ${String(err)}`),
+            );
+          }
+        }),
+    }),
+    [],
+  );
 
   const { strokeWidth, hasShadow } = getRendererLayoutOptions(
     theme,
@@ -123,6 +201,7 @@ export function BadgeRenderer({
 
   return (
     <Svg
+      ref={svgRef}
       width={viewBox.w}
       height={viewBox.h}
       viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`}
@@ -220,4 +299,4 @@ export function BadgeRenderer({
       />
     </Svg>
   );
-}
+});

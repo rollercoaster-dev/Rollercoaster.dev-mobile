@@ -33,6 +33,7 @@ import { BadgeEarnedModal } from "../BadgeEarnedModal";
 import {
   BadgeRenderer,
   getRendererLayoutOptions,
+  type BadgeRendererHandle,
 } from "../../badges/BadgeRenderer";
 import { captureBadge, getCaptureDimensions } from "../../badges/captureBadge";
 import { createDefaultBadgeDesign, parseBadgeDesign } from "../../badges/types";
@@ -138,8 +139,7 @@ function CompletionContent({
   }, [phase, isReCompletion, hasFreshEvidence, hasGoalEvidence]);
 
   // First-completion-only fallback: re-completion reuses the existing
-  // on-disk PNG via readBadgePNG, sidestepping the transparent-snapshot
-  // race in the offscreen capture host.
+  // on-disk PNG via readBadgePNG.
   //
   // Hydration precedence when there's no warm pendingCapturedPng:
   //   1. goal.design — the user's configured design persisted at designer save
@@ -156,14 +156,13 @@ function CompletionContent({
       ? (persistedGoalDesign ??
         createDefaultBadgeDesign(goalTitleForDefault, goalColorForDefault))
       : null;
-  const fallbackRef = useRef<View | null>(null);
+  const fallbackRef = useRef<BadgeRendererHandle | null>(null);
   const [fallbackPng, setFallbackPng] = useState<Buffer | null>(null);
-  const [fallbackHostLaidOut, setFallbackHostLaidOut] = useState(false);
   const fallbackCaptureStarted = useRef(false);
 
   useEffect(() => {
     if (pendingCapturedPng || !fallbackDesign || fallbackPng) return;
-    if (!fallbackHostLaidOut) return; // wait for the offscreen view to be attached + measured
+    if (!fallbackRef.current) return; // wait for BadgeRenderer to attach the handle
     if (fallbackCaptureStarted.current) return;
     fallbackCaptureStarted.current = true;
     const dimensions = getCaptureDimensions(
@@ -178,14 +177,7 @@ function CompletionContent({
         reportError(err, { area: "badge.create", kind: "bake" });
         fallbackCaptureStarted.current = false;
       });
-  }, [
-    pendingCapturedPng,
-    fallbackDesign,
-    fallbackPng,
-    fallbackHostLaidOut,
-    theme,
-    goalId,
-  ]);
+  }, [pendingCapturedPng, fallbackDesign, fallbackPng, theme, goalId]);
 
   const designJsonForBake =
     pendingDesignJson ??
@@ -376,22 +368,23 @@ function CompletionContent({
   };
 
   // Mounted in both phases so the PNG is ready before the user reaches celebration.
+  // The wrapper is purely an offscreen positioning host now — capture goes through
+  // the BadgeRenderer's imperative handle (Svg.toDataURL), not the view buffer.
   const fallbackHost = fallbackDesign ? (
     <View
-      ref={fallbackRef}
       collapsable={false}
       style={styles.fallbackCaptureHost}
       pointerEvents="none"
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
       testID="completion-fallback-capture-host"
-      onLayout={(e) => {
-        if (e.nativeEvent.layout.width > 0 && !fallbackHostLaidOut) {
-          setFallbackHostLaidOut(true);
-        }
-      }}
     >
-      <BadgeRenderer design={fallbackDesign} size={160} showShadow={false} />
+      <BadgeRenderer
+        ref={fallbackRef}
+        design={fallbackDesign}
+        size={160}
+        showShadow={false}
+      />
     </View>
   ) : null;
 

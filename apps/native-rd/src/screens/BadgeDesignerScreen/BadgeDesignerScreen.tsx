@@ -20,6 +20,7 @@ import { ScreenSubHeader } from "../../components/ScreenHeader";
 import {
   BadgeRenderer,
   getRendererLayoutOptions,
+  type BadgeRendererHandle,
 } from "../../badges/BadgeRenderer";
 import { BOTTOM_LABEL_INPUT_MAX_CHARS } from "../../badges/text/BottomLabel";
 import { ShapeSelector } from "../../badges/ShapeSelector";
@@ -92,8 +93,8 @@ interface DesignEditorProps {
   saveDisabled?: boolean;
   saveLoading?: boolean;
   extraFooter?: React.ReactNode;
-  /** Ref attached to the preview View — callers capture a PNG from it. */
-  previewRef?: React.RefObject<View | null>;
+  /** Ref attached to the BadgeRenderer — callers capture a PNG via its handle. */
+  previewRef?: React.RefObject<BadgeRendererHandle | null>;
 }
 
 function DesignEditor({
@@ -448,8 +449,8 @@ function DesignEditor({
           accessibilityRole="image"
           accessibilityLabel={previewLabel}
         >
-          <View ref={previewRef} collapsable={false} style={styles.badgeCanvas}>
-            <BadgeRenderer design={currentDesign} size={160} />
+          <View collapsable={false} style={styles.badgeCanvas}>
+            <BadgeRenderer ref={previewRef} design={currentDesign} size={160} />
           </View>
         </View>
       </Animated.View>
@@ -485,7 +486,7 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
   const currentDesign = design ?? initialDesign;
   const goalColor = badge?.goalColor as string | null | undefined;
   const goalIdForCapture = (badge?.goalId as string | null | undefined) ?? null;
-  const previewRef = useRef<View | null>(null);
+  const previewRef = useRef<BadgeRendererHandle | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   const derivedFrameParams = useFrameParamsForGoal(
@@ -629,7 +630,7 @@ function BadgeDesignerContentNewGoal({
     null,
   );
 
-  const previewRef = useRef<View | null>(null);
+  const previewRef = useRef<BadgeRendererHandle | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   const saveAndNavigate = useCallback(
