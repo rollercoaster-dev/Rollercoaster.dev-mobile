@@ -56,6 +56,7 @@ Rationale points the GH graph can't carry:
 
 - **#993 before #989.** The Hermes Intl spike (#993) decides whether `formatDate` needs a FormatJS polyfill. If we run #989 first we'll either re-discover the polyfill question or ship an unverified assumption. The blocked-by edge enforces this; the rationale lives here.
 - **#991 (testIDs) before screen migrations.** Migrating strings before adding testIDs would create two unrelated diffs in every screen-test PR (i18n + testID). Doing testIDs first decouples `git blame`.
+- **#990 (raw-string lint) should avoid a blanket inline-disable diff.** Recommendation from the 2026-05-16 review: run #991 and #993 next, then either land #990 with a clean baseline/allowlist before screen migrations, or land it immediately after #992 once shared-label patterns are established. Prefer a baseline/allowlist over hundreds of `eslint-disable-next-line` comments because the latter makes migration PRs noisier and harder to review.
 - **#992 (shared labels) before screen migrations.** Many screens reference `evidenceTypes.*`, `common.actions.*`, etc. Migrating shared labels first reduces churn in subsequent screen PRs.
 - **#1000 (permission-denied) is its own ticket, not folded into #998/#999.** Cross-cutting copy benefits from being centralized in one diff rather than smeared across two capture-cluster PRs.
 - **#1004 is back in scope.** German is now the approved second language, and German testers should not see a mix of translated runtime copy and English native permission dialogs.
