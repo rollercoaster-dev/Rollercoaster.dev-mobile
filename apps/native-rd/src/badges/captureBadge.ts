@@ -26,47 +26,56 @@ import { getBadgeLayoutBoxes, type LayoutBoxesOptions } from "./layoutBoxes";
 import type { BadgeDesign } from "./types";
 import type { BadgeRendererHandle, CaptureBadgeOptions } from "./BadgeRenderer";
 
-const DEFAULT_SIZE = 512;
+// Must match the `size` prop every capture-bearing BadgeRenderer is mounted
+// at (160 in BadgeDesignerScreen, CompletionFlowScreen fallback + preview,
+// and BadgeDetailScreen). iOS react-native-svg renders `toDataURL` content
+// at the Svg view's on-screen layout size and stamps it into the upper-left
+// of the requested PNG canvas — asking for a larger PNG than the view
+// leaves the rest of the canvas transparent. Android scales freely, so it
+// ignored the mismatch. If a new caller mounts BadgeRenderer at a different
+// size, pass that size explicitly to getCaptureDimensions rather than
+// editing this default.
+const DEFAULT_SIZE = 160;
 
 // Re-export so callers can `import { CaptureBadgeOptions } from "./captureBadge"`
 // without having to know it's declared alongside the handle type.
 export type { CaptureBadgeOptions };
 
 /**
- * Compute aspect-ratio-preserving capture dimensions for a badge design.
+ * Compute capture dimensions that match the BadgeRenderer's viewBox exactly.
  *
- * The BadgeRenderer's SVG viewBox is non-square whenever a top banner or
- * bottom label is present, and the shadow / stroke configuration shifts the
- * viewBox proportions further. The capture path requests a target output
- * width/height, so asking for a square output on a non-square source produces
- * a visually squashed PNG. Use this helper to pick dimensions that match the
- * source viewBox.
+ * iOS `react-native-svg.toDataURL` renders the SVG at the view's on-screen
+ * layout size (= viewBox.w × viewBox.h) and stamps it into a PNG canvas of
+ * the requested dimensions. Any mismatch leaves transparent margins or crops
+ * content: ask for less than viewBox and you crop the bottom-right (losing
+ * the badge shadow); ask for more and you get the badge stamped in the
+ * corner of a mostly-empty PNG. Returning the exact viewBox dimensions
+ * keeps the two sides aligned. Android scales freely, so the same numbers
+ * also produce a correctly-filled PNG there.
  *
  * Pass `layoutOptions` matching the renderer's actual theme (use
  * `getRendererLayoutOptions(theme)` from `BadgeRenderer`). Omitting it falls
  * back to `getBadgeLayoutBoxes` defaults, which only matches the
  * non-highContrast / shadowed render path.
  *
- * The longer side is `maxDimension`; the shorter side is scaled to preserve
- * `viewBox.w / viewBox.h`.
+ * `size` is the badge's core dimension (matches BadgeRenderer's `size` prop).
+ * The returned width/height extend it to cover shadow, banner, and label
+ * overflow exactly as the renderer's Svg view bounds do.
  */
 export function getCaptureDimensions(
   design: BadgeDesign,
-  maxDimension: number = DEFAULT_SIZE,
+  size: number = DEFAULT_SIZE,
   layoutOptions: LayoutBoxesOptions = {},
 ): { width: number; height: number } {
-  const { viewBox } = getBadgeLayoutBoxes(design, maxDimension, layoutOptions);
-  const ratio = viewBox.w / viewBox.h;
-  return ratio >= 1
-    ? { width: maxDimension, height: Math.round(maxDimension / ratio) }
-    : { width: Math.round(maxDimension * ratio), height: maxDimension };
+  const { viewBox } = getBadgeLayoutBoxes(design, size, layoutOptions);
+  return { width: Math.round(viewBox.w), height: Math.round(viewBox.h) };
 }
 
 /**
  * Capture a mounted BadgeRenderer as a PNG Buffer.
  *
  * @param ref - React ref attached to the BadgeRenderer (BadgeRendererHandle)
- * @param options - Output dimensions (default 512x512)
+ * @param options - Output dimensions (default 160x160 to match renderer mounts)
  * @returns PNG Buffer suitable for bakePNG()
  */
 export async function captureBadge(

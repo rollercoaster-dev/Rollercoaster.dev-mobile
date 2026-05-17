@@ -36,13 +36,13 @@ describe("captureBadge", () => {
     expect(isPNG(result)).toBe(true);
   });
 
-  it("uses default 512x512 dimensions when no options passed", async () => {
+  it("uses default 160x160 dimensions when no options passed", async () => {
     const captureAsPng = jest
       .fn()
       .mockResolvedValue(Buffer.from(MOCK_PNG_BASE64, "base64"));
     const ref = makeMockRef(captureAsPng);
     await captureBadge(ref);
-    expect(captureAsPng).toHaveBeenCalledWith({ width: 512, height: 512 });
+    expect(captureAsPng).toHaveBeenCalledWith({ width: 160, height: 160 });
   });
 
   it("accepts custom width/height options", async () => {
@@ -110,12 +110,14 @@ describe("getCaptureDimensions", () => {
     return w / h;
   }
 
-  it("returns the max dimension for a square design (no banner, no label)", () => {
+  it("returns viewBox dims for a square design (no banner, no label)", () => {
     const { width, height } = getCaptureDimensions(baseDesign, 512);
-    // With no banner/label/pathText, viewBox is (size + shadow) on both axes,
-    // so the aspect ratio is exactly 1 and both dimensions equal maxDimension.
-    expect(width).toBe(512);
-    expect(height).toBe(512);
+    const { viewBox } = getBadgeLayoutBoxes(baseDesign, 512);
+    // Dimensions must equal the renderer's viewBox so iOS's toDataURL fills
+    // the PNG canvas. With shadow, viewBox extends slightly beyond `size`.
+    expect(width).toBe(Math.round(viewBox.w));
+    expect(height).toBe(Math.round(viewBox.h));
+    expect(width).toBe(height); // square
   });
 
   it("returns portrait dims when a top banner is present", () => {
@@ -124,18 +126,16 @@ describe("getCaptureDimensions", () => {
       banner: { text: "ZIPPY!!!", position: BannerPosition.top },
     };
     const { width, height } = getCaptureDimensions(design, 512);
-    expect(height).toBe(512);
-    expect(width).toBeLessThan(512);
+    expect(height).toBeGreaterThan(width);
   });
 
   it("returns portrait dims when a bottom label is present", () => {
     const design = { ...baseDesign, bottomLabel: "Bam" };
     const { width, height } = getCaptureDimensions(design, 512);
-    expect(height).toBe(512);
-    expect(width).toBeLessThan(512);
+    expect(height).toBeGreaterThan(width);
   });
 
-  it("returns the same aspect ratio as the rendered viewBox", () => {
+  it("returns exactly the rendered viewBox dimensions", () => {
     const design = {
       ...baseDesign,
       banner: { text: "ZIPPY!!!", position: BannerPosition.top },
@@ -143,13 +143,11 @@ describe("getCaptureDimensions", () => {
     };
     const { width, height } = getCaptureDimensions(design, 512);
     const { viewBox } = getBadgeLayoutBoxes(design, 512);
-    expect(aspectRatio(width, height)).toBeCloseTo(
-      aspectRatio(viewBox.w, viewBox.h),
-      2,
-    );
+    expect(width).toBe(Math.round(viewBox.w));
+    expect(height).toBe(Math.round(viewBox.h));
   });
 
-  it("scales proportionally for non-default max dimensions", () => {
+  it("scales proportionally for non-default size", () => {
     const design = { ...baseDesign, bottomLabel: "Bam" };
     const big = getCaptureDimensions(design, 1024);
     const small = getCaptureDimensions(design, 256);
