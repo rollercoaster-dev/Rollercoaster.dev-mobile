@@ -83,7 +83,24 @@
           "url": "https://sentry.io/"
         }
       ],
-      "expo-font",
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "./assets/fonts/Anybody.ttf",
+            "./assets/fonts/Anybody_bold.ttf",
+            "./assets/fonts/Instrument Sans.ttf",
+            "./assets/fonts/Instrument Sans_bold.ttf",
+            "./assets/fonts/DM Mono.ttf",
+            "./assets/fonts/OpenDyslexic.otf",
+            "./assets/fonts/OpenDyslexic_bold.otf",
+            "./assets/fonts/Atkinson Hyperlegible.ttf",
+            "./assets/fonts/Atkinson Hyperlegible_bold.ttf",
+            "./assets/fonts/Lexend.ttf",
+            "./assets/fonts/Lexend_bold.ttf"
+          ]
+        }
+      ],
       "expo-localization"
     ],
     "extra": {
