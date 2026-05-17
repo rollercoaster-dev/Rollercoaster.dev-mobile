@@ -1,0 +1,251 @@
+name: build-production
+
+# Manual / click only:
+# - "release: published" fires when a GitHub Release is published from the
+#   Releases page (release-please does this automatically when its PR merges,
+#   or a human can click "Publish release" in the UI).
+# - "workflow_dispatch" lets us re-run a release against a specific tag/SHA.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref to build (tag or commit SHA)"
+        required: true
+      platform:
+        description: "Platform to build and submit."
+        required: false
+        default: all
+        type: choice
+        options:
+          - all
+          - ios
+          - android
+
+concurrency:
+  group: build-production-${{ inputs.ref || github.event.release.tag_name || github.ref }}-${{ inputs.platform || 'all' }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    uses: ./.github/workflows/_release-validate.yml
+    with:
+      ref: ${{ inputs.ref || github.event.release.tag_name || github.ref }}
+
+  build-ios:
+    needs: validate
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.platform == 'all' || inputs.platform == 'ios' }}
+    runs-on: ubuntu-latest
+    outputs:
+      build_id: ${{ steps.build.outputs.build_id }}
+    defaults:
+      run:
+        working-directory: apps/native-rd
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.event.release.tag_name || github.ref }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: "package.json"
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+        working-directory: .
+
+      - name: Build (EAS, production profile, iOS)
+        id: build
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: |
+          npx eas-cli@latest build --profile production --platform ios --non-interactive --json > eas-build-ios.json
+          build_id="$(jq -r 'if type == "array" then .[0].id else .id end' eas-build-ios.json)"
+          test -n "$build_id" && test "$build_id" != "null"
+          echo "build_id=$build_id" >> "$GITHUB_OUTPUT"
+
+  build-android:
+    needs: validate
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.platform == 'all' || inputs.platform == 'android' }}
+    runs-on: ubuntu-latest
+    outputs:
+      build_id: ${{ steps.build.outputs.build_id }}
+    defaults:
+      run:
+        working-directory: apps/native-rd
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.event.release.tag_name || github.ref }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: "package.json"
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+        working-directory: .
+
+      - name: Build (EAS, production profile, Android)
+        id: build
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: |
+          npx eas-cli@latest build --profile production --platform android --non-interactive --json > eas-build-android.json
+          build_id="$(jq -r 'if type == "array" then .[0].id else .id end' eas-build-android.json)"
+          test -n "$build_id" && test "$build_id" != "null"
+          echo "build_id=$build_id" >> "$GITHUB_OUTPUT"
+
+  submit-ios:
+    needs: build-ios
+    if: ${{ always() && needs.build-ios.result == 'success' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/native-rd
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.event.release.tag_name || github.ref }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: "package.json"
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+        working-directory: .
+
+      - name: Read version
+        id: version
+        run: echo "value=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Write credential files
+        # Pass secrets via env (not ${{ secrets.* }} inside the script body) so
+        # arbitrary content — newlines, quotes, backslashes — stays inside the
+        # shell variable instead of being expanded into the script source.
+        # Trailing newline is appended for the PEM key per Apple/OpenSSL
+        # parser expectations; harmless on the JSON.
+        env:
+          APPLE_ASC_KEY_P8: ${{ secrets.APPLE_ASC_KEY_P8 }}
+          ANDROID_PLAY_SA: ${{ secrets.ANDROID_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          mkdir -p ../../secrets
+          printf '%s\n' "$APPLE_ASC_KEY_P8" > ../../secrets/asc-api-key.p8
+          printf '%s\n' "$ANDROID_PLAY_SA" > ../../secrets/play-service-account.json
+          chmod 600 ../../secrets/asc-api-key.p8 ../../secrets/play-service-account.json
+
+      - name: Submit (EAS, production profile, iOS)
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          APPLE_ASC_KEY_ID: ${{ secrets.APPLE_ASC_KEY_ID }}
+          APPLE_ASC_ISSUER_ID: ${{ secrets.APPLE_ASC_ISSUER_ID }}
+        run: npx eas-cli@latest submit --profile production --platform ios --id "${{ needs.build-ios.outputs.build_id }}" --non-interactive --wait
+
+  submit-android:
+    needs: build-android
+    if: ${{ always() && needs.build-android.result == 'success' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/native-rd
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.event.release.tag_name || github.ref }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: "package.json"
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+        working-directory: .
+
+      - name: Read version
+        id: version
+        run: echo "value=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Write credential files
+        env:
+          APPLE_ASC_KEY_P8: ${{ secrets.APPLE_ASC_KEY_P8 }}
+          ANDROID_PLAY_SA: ${{ secrets.ANDROID_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          mkdir -p ../../secrets
+          printf '%s\n' "$APPLE_ASC_KEY_P8" > ../../secrets/asc-api-key.p8
+          printf '%s\n' "$ANDROID_PLAY_SA" > ../../secrets/play-service-account.json
+          chmod 600 ../../secrets/asc-api-key.p8 ../../secrets/play-service-account.json
+
+      - name: Submit (EAS, production profile, Android, 10% rollout)
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: npx eas-cli@latest submit --profile production --platform android --id "${{ needs.build-android.outputs.build_id }}" --non-interactive --wait
+
+  finalize-sentry:
+    needs:
+      - submit-ios
+      - submit-android
+    if: ${{ always() && !cancelled() && !contains(needs.*.result, 'failure') && (needs.submit-ios.result == 'success' || needs.submit-android.result == 'success') }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/native-rd
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.event.release.tag_name || github.ref }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: "package.json"
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+        working-directory: .
+
+      - name: Read version
+        id: version
+        run: echo "value=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Finalize Sentry release
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: rollercoasterdev
+          SENTRY_PROJECT: native-rd
+          RELEASE_VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          npx --yes @sentry/cli@latest releases finalize "$RELEASE_VERSION"
+          npx --yes @sentry/cli@latest releases deploys "$RELEASE_VERSION" new --env production

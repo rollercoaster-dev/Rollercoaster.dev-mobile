@@ -88,3 +88,7 @@ packages/claude-knowledge/.claude/
 !.superset/config.json
 !.superset/setup.sh
 !.superset/teardown.sh
+
+# CI-only secret material written at workflow runtime; never committed.
+/secrets/
+apps/native-rd/play-service-account.json

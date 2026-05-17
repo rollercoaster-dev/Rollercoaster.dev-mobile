@@ -1,0 +1,200 @@
+name: build-internal
+
+# Manual-only: internal builds run when a human (or scheduled call)
+# clicks "Run workflow" — they do not auto-trigger on push to main.
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref to build (branch, tag, or commit SHA). Leave blank to use the branch picked in the 'Use workflow from' dropdown."
+        required: false
+      platform:
+        description: "Platform to build and submit."
+        required: false
+        default: all
+        type: choice
+        options:
+          - all
+          - ios
+          - android
+
+concurrency:
+  group: build-internal-${{ inputs.ref || github.ref }}-${{ inputs.platform || 'all' }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    uses: ./.github/workflows/_release-validate.yml
+    with:
+      ref: ${{ inputs.ref || github.ref }}
+
+  build-ios:
+    needs: validate
+    if: ${{ inputs.platform == 'all' || inputs.platform == 'ios' }}
+    runs-on: ubuntu-latest
+    outputs:
+      build_id: ${{ steps.build.outputs.build_id }}
+    defaults:
+      run:
+        working-directory: apps/native-rd
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: "package.json"
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+        working-directory: .
+
+      - name: Build (EAS, preview profile, iOS)
+        id: build
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: |
+          npx eas-cli@latest build --profile preview --platform ios --non-interactive --json > eas-build-ios.json
+          build_id="$(jq -r 'if type == "array" then .[0].id else .id end' eas-build-ios.json)"
+          test -n "$build_id" && test "$build_id" != "null"
+          echo "build_id=$build_id" >> "$GITHUB_OUTPUT"
+
+  build-android:
+    needs: validate
+    if: ${{ inputs.platform == 'all' || inputs.platform == 'android' }}
+    runs-on: ubuntu-latest
+    outputs:
+      build_id: ${{ steps.build.outputs.build_id }}
+    defaults:
+      run:
+        working-directory: apps/native-rd
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: "package.json"
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+        working-directory: .
+
+      - name: Build (EAS, preview profile, Android)
+        id: build
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: |
+          npx eas-cli@latest build --profile preview --platform android --non-interactive --json > eas-build-android.json
+          build_id="$(jq -r 'if type == "array" then .[0].id else .id end' eas-build-android.json)"
+          test -n "$build_id" && test "$build_id" != "null"
+          echo "build_id=$build_id" >> "$GITHUB_OUTPUT"
+
+  submit-ios:
+    needs: build-ios
+    if: ${{ always() && needs.build-ios.result == 'success' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/native-rd
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: "package.json"
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+        working-directory: .
+
+      - name: Write credential files
+        # Pass secrets via env (not ${{ secrets.* }} inside the script body) so
+        # arbitrary content — newlines, quotes, backslashes — stays inside the
+        # shell variable instead of being expanded into the script source.
+        # Trailing newline is appended for the PEM key per Apple/OpenSSL
+        # parser expectations; harmless on the JSON.
+        env:
+          APPLE_ASC_KEY_P8: ${{ secrets.APPLE_ASC_KEY_P8 }}
+          ANDROID_PLAY_SA: ${{ secrets.ANDROID_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          mkdir -p ../../secrets
+          printf '%s\n' "$APPLE_ASC_KEY_P8" > ../../secrets/asc-api-key.p8
+          printf '%s\n' "$ANDROID_PLAY_SA" > ../../secrets/play-service-account.json
+          chmod 600 ../../secrets/asc-api-key.p8 ../../secrets/play-service-account.json
+
+      - name: Submit (EAS, preview profile, iOS)
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          APPLE_ASC_KEY_ID: ${{ secrets.APPLE_ASC_KEY_ID }}
+          APPLE_ASC_ISSUER_ID: ${{ secrets.APPLE_ASC_ISSUER_ID }}
+        run: npx eas-cli@latest submit --profile preview --platform ios --id "${{ needs.build-ios.outputs.build_id }}" --non-interactive --wait
+
+  submit-android:
+    needs: build-android
+    if: ${{ always() && needs.build-android.result == 'success' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/native-rd
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: "package.json"
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+        working-directory: .
+
+      - name: Write credential files
+        env:
+          APPLE_ASC_KEY_P8: ${{ secrets.APPLE_ASC_KEY_P8 }}
+          ANDROID_PLAY_SA: ${{ secrets.ANDROID_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          mkdir -p ../../secrets
+          printf '%s\n' "$APPLE_ASC_KEY_P8" > ../../secrets/asc-api-key.p8
+          printf '%s\n' "$ANDROID_PLAY_SA" > ../../secrets/play-service-account.json
+          chmod 600 ../../secrets/asc-api-key.p8 ../../secrets/play-service-account.json
+
+      - name: Submit (EAS, preview profile, Android)
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: npx eas-cli@latest submit --profile preview --platform android --id "${{ needs.build-android.outputs.build_id }}" --non-interactive --wait
