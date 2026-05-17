@@ -63,8 +63,11 @@ jobs:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: |
-          npx eas-cli@latest build --profile preview --platform ios --non-interactive --json > eas-build-ios.json
-          build_id="$(jq -r 'if type == "array" then .[0].id else .id end' eas-build-ios.json)"
+          # Write JSON outside the repo: `cmd > file` opens the file before
+          # eas-cli runs, and eas-cli aborts on a dirty working tree.
+          out="$RUNNER_TEMP/eas-build-ios.json"
+          npx eas-cli@latest build --profile preview --platform ios --non-interactive --json > "$out"
+          build_id="$(jq -r 'if type == "array" then .[0].id else .id end' "$out")"
           test -n "$build_id" && test "$build_id" != "null"
           echo "build_id=$build_id" >> "$GITHUB_OUTPUT"
 
@@ -103,8 +106,11 @@ jobs:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: |
-          npx eas-cli@latest build --profile preview --platform android --non-interactive --json > eas-build-android.json
-          build_id="$(jq -r 'if type == "array" then .[0].id else .id end' eas-build-android.json)"
+          # Write JSON outside the repo: `cmd > file` opens the file before
+          # eas-cli runs, and eas-cli aborts on a dirty working tree.
+          out="$RUNNER_TEMP/eas-build-android.json"
+          npx eas-cli@latest build --profile preview --platform android --non-interactive --json > "$out"
+          build_id="$(jq -r 'if type == "array" then .[0].id else .id end' "$out")"
           test -n "$build_id" && test "$build_id" != "null"
           echo "build_id=$build_id" >> "$GITHUB_OUTPUT"
 
