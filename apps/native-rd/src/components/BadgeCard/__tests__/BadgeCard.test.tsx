@@ -68,13 +68,6 @@ describe("BadgeCard", () => {
       expect(screen.queryByText(/Read/)).toBeNull();
     });
 
-    it("does not render description when null", () => {
-      renderWithProviders(<BadgeCard {...baseProps} description={null} />);
-      // No description element should exist. Title and date are the only Texts
-      // alongside the initials letter.
-      expect(screen.queryByText(/.{20,}/)).toBeNull();
-    });
-
     it("clamps description to 2 lines with tail ellipsis", () => {
       renderWithProviders(
         <BadgeCard {...baseProps} description="some long description text" />,
@@ -110,9 +103,6 @@ describe("BadgeCard", () => {
       expect(props.size).toBeGreaterThan(0);
     });
 
-    // Contract assertion: BadgeCard relies on getBadgeLayoutBoxes to expand
-    // its badge wrapper when a banner or bottom label overflows the square.
-    // If this contract ever breaks, the card will clip the banner/label.
     it("layout boxes grow viewBox.h when a banner is present", () => {
       const size = 100;
       const plain: BadgeDesign = {

@@ -58,7 +58,7 @@ function BadgeList() {
       renderItem={({ item }: { item: BadgeRow }) => (
         <BadgeCard
           title={(item.goalTitle as string) ?? "Untitled"}
-          description={item.goalDescription as string | null}
+          description={(item.goalDescription as string | null) ?? undefined}
           earnedDate={formatDate(
             (item.completedAt ?? item.createdAt) as string | null,
           )}

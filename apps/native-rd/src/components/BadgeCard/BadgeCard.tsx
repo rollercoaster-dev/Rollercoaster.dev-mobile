@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { View, Text, Pressable, PixelRatio } from "react-native";
 import { useUnistyles } from "react-native-unistyles";
 import { BadgeRenderer } from "../../badges/BadgeRenderer";
@@ -10,7 +11,7 @@ export type BadgeCardSize = "compact" | "normal" | "spacious";
 export interface BadgeCardProps {
   title: string;
   earnedDate: string;
-  description?: string | null;
+  description?: string;
   evidenceCount?: number;
   design?: BadgeDesign | null;
   size?: BadgeCardSize;
@@ -37,12 +38,11 @@ export function BadgeCard({
     caption.lineHeight;
   const badgeSize = Math.round(textColumnHeight * fontScale);
 
-  // When a design has a banner and/or a bottom label, the BadgeRenderer's
-  // viewBox is taller than the badge's square — let the wrapper match that
-  // natural height so the card grows instead of clipping.
-  const badgeViewBox = design ? getBadgeLayoutBoxes(design, badgeSize) : null;
-  const badgeRenderedHeight = badgeViewBox?.viewBox.h ?? badgeSize;
-  const badgeRenderedWidth = badgeViewBox?.viewBox.w ?? badgeSize;
+  // Banner/bottomLabel overflow the badge square — size to the SVG viewBox so the card grows instead of clipping.
+  const viewBox = useMemo(
+    () => (design ? getBadgeLayoutBoxes(design, badgeSize).viewBox : null),
+    [design, badgeSize],
+  );
 
   return (
     <Pressable
@@ -54,7 +54,10 @@ export function BadgeCard({
     >
       <View style={styles.container(size)}>
         <View
-          style={styles.badgeWrapper(badgeRenderedWidth, badgeRenderedHeight)}
+          style={styles.badgeWrapper(
+            viewBox?.w ?? badgeSize,
+            viewBox?.h ?? badgeSize,
+          )}
         >
           {design ? (
             <BadgeRenderer
