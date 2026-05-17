@@ -4,13 +4,11 @@ import Animated from "react-native-reanimated";
 import { Card } from "../Card";
 import { StatusBadge, type StatusBadgeVariant } from "../StatusBadge";
 import { Checkbox } from "../Checkbox";
-import { EvidenceTypePicker } from "../EvidenceTypePicker";
 import { useFlashOnIncrease } from "../../hooks/useFlashOnIncrease";
 import { formatEvidenceLabel } from "../../utils/formatEvidenceLabel";
 import {
   EVIDENCE_CAPTURE_OPTIONS,
   EVIDENCE_OPTIONS,
-  validateEvidenceType,
   type EvidenceCaptureOption,
   type QuickEvidenceType,
 } from "../../types/evidence";
@@ -114,9 +112,15 @@ export function StepCard({
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.container}
       >
-        <Text style={styles.stepNumber}>
-          Step {stepIndex + 1} of {totalSteps}
-        </Text>
+        <View style={styles.metaRow}>
+          <Text style={styles.stepNumber}>
+            Step {stepIndex + 1} of {totalSteps}
+          </Text>
+          <StatusBadge
+            variant={statusToVariant[step.status]}
+            label={statusToLabel[step.status]}
+          />
+        </View>
         <Text
           style={styles.title}
           numberOfLines={2}
@@ -125,43 +129,6 @@ export function StepCard({
         >
           {step.title}
         </Text>
-        <View style={styles.statusRow}>
-          <StatusBadge
-            variant={statusToVariant[step.status]}
-            label={statusToLabel[step.status]}
-          />
-        </View>
-
-        {hasPlannedTypes && (
-          <View style={styles.plannedTypesRow}>
-            <EvidenceTypePicker
-              compact
-              selectedTypes={plannedTypes.map(validateEvidenceType)}
-            />
-          </View>
-        )}
-
-        {isBlocked ? (
-          <Text
-            style={styles.addEvidencePromptText}
-            accessibilityRole="text"
-            accessibilityLabel={
-              blockerOption
-                ? `Add ${blockerOption.label} to complete this step`
-                : "Add evidence to complete"
-            }
-          >
-            Add evidence to complete
-          </Text>
-        ) : (
-          <View style={styles.checkboxRow}>
-            <Checkbox
-              checked={isCompleted}
-              onToggle={onToggleComplete}
-              label={checkboxLabel}
-            />
-          </View>
-        )}
 
         {onQuickEvidence && quickEvidenceOptions.length > 0 && (
           <View style={styles.quickActionsRow}>
@@ -184,6 +151,28 @@ export function StepCard({
                 <Text style={styles.quickActionText}>{option.label}</Text>
               </Pressable>
             ))}
+          </View>
+        )}
+
+        {isBlocked ? (
+          <Text
+            style={styles.addEvidencePromptText}
+            accessibilityRole="text"
+            accessibilityLabel={
+              blockerOption
+                ? `Add ${blockerOption.label} to complete this step`
+                : "Add evidence to complete"
+            }
+          >
+            Add evidence to complete
+          </Text>
+        ) : (
+          <View style={styles.checkboxRow}>
+            <Checkbox
+              checked={isCompleted}
+              onToggle={onToggleComplete}
+              label={checkboxLabel}
+            />
           </View>
         )}
 

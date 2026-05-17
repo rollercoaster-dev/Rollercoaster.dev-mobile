@@ -157,23 +157,13 @@ describe("StepCard", () => {
 
   // --- Planned evidence types ---
 
-  it("renders planned evidence type chips when plannedEvidenceTypes is set", () => {
+  it("does not render the planned-types chip row (collapsed into action buttons)", () => {
     renderWithProviders(
       <StepCard
         step={makeStep({
           plannedEvidenceTypes: ["photo", "text"],
           capturedEvidenceTypes: [],
         })}
-        {...defaultProps}
-      />,
-    );
-    expect(screen.getByLabelText("Planned evidence types")).toBeOnTheScreen();
-  });
-
-  it("does not render chips when plannedEvidenceTypes is null", () => {
-    renderWithProviders(
-      <StepCard
-        step={makeStep({ plannedEvidenceTypes: null })}
         {...defaultProps}
       />,
     );

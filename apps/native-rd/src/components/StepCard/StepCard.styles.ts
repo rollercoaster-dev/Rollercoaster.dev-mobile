@@ -5,6 +5,12 @@ export const styles = StyleSheet.create((theme) => ({
   container: {
     gap: theme.space[3],
   },
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: theme.space[2],
+  },
   stepNumber: {
     fontSize: theme.size.xs,
     fontWeight: theme.fontWeight.bold,
@@ -18,11 +24,6 @@ export const styles = StyleSheet.create((theme) => ({
     fontWeight: theme.fontWeight.black,
     color: theme.colors.text,
     fontFamily: theme.fontFamily.headline,
-  },
-  statusRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.space[2],
   },
   evidenceBadgeRow: {
     flexDirection: "row",
@@ -60,9 +61,6 @@ export const styles = StyleSheet.create((theme) => ({
     fontSize: theme.size.xs,
     fontFamily: theme.fontFamily.mono,
     color: theme.colors.text,
-  },
-  plannedTypesRow: {
-    marginTop: theme.space[1],
   },
   checkboxRow: {
     flexDirection: "row",
