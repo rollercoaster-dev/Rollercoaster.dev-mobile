@@ -6,10 +6,19 @@ import {
 } from "../../../__tests__/test-utils";
 import { BadgeCard } from "../BadgeCard";
 import type { BadgeDesign } from "../../../badges/types";
+import { getBadgeLayoutBoxes } from "../../../badges/layoutBoxes";
 
+const mockBadgeRenderer = jest.fn();
 jest.mock("../../../badges/BadgeRenderer", () => ({
-  BadgeRenderer: () => "BadgeRenderer",
+  BadgeRenderer: (props: { size: number }) => {
+    mockBadgeRenderer(props);
+    return "BadgeRenderer";
+  },
 }));
+
+beforeEach(() => {
+  mockBadgeRenderer.mockClear();
+});
 
 const baseProps = {
   title: "First Steps",
@@ -44,6 +53,102 @@ describe("BadgeCard", () => {
   it("renders initials fallback when design is not provided", () => {
     renderWithProviders(<BadgeCard {...baseProps} />);
     expect(screen.getByText("F")).toBeOnTheScreen();
+  });
+
+  describe("description", () => {
+    it("renders description when provided", () => {
+      renderWithProviders(
+        <BadgeCard {...baseProps} description="Read 30 books in 2025" />,
+      );
+      expect(screen.getByText("Read 30 books in 2025")).toBeOnTheScreen();
+    });
+
+    it("does not render description when omitted", () => {
+      renderWithProviders(<BadgeCard {...baseProps} />);
+      expect(screen.queryByText(/Read/)).toBeNull();
+    });
+
+    it("does not render description when null", () => {
+      renderWithProviders(<BadgeCard {...baseProps} description={null} />);
+      // No description element should exist. Title and date are the only Texts
+      // alongside the initials letter.
+      expect(screen.queryByText(/.{20,}/)).toBeNull();
+    });
+
+    it("clamps description to 2 lines with tail ellipsis", () => {
+      renderWithProviders(
+        <BadgeCard {...baseProps} description="some long description text" />,
+      );
+      const desc = screen.getByText("some long description text");
+      expect(desc.props.numberOfLines).toBe(2);
+      expect(desc.props.ellipsizeMode).toBe("tail");
+    });
+
+    it("clamps title to 1 line with tail ellipsis", () => {
+      renderWithProviders(<BadgeCard {...baseProps} />);
+      const title = screen.getByText("First Steps");
+      expect(title.props.numberOfLines).toBe(1);
+      expect(title.props.ellipsizeMode).toBe("tail");
+    });
+  });
+
+  describe("badge sizing", () => {
+    it("passes a positive size derived from the theme to BadgeRenderer", () => {
+      const design: BadgeDesign = {
+        shape: "circle",
+        frame: "none",
+        color: "#a78bfa",
+        iconName: "Trophy",
+        iconWeight: "regular",
+        title: "First Steps",
+        centerMode: "icon",
+      };
+      renderWithProviders(<BadgeCard {...baseProps} design={design} />);
+      expect(mockBadgeRenderer).toHaveBeenCalledTimes(1);
+      const props = mockBadgeRenderer.mock.calls[0][0];
+      expect(typeof props.size).toBe("number");
+      expect(props.size).toBeGreaterThan(0);
+    });
+
+    // Contract assertion: BadgeCard relies on getBadgeLayoutBoxes to expand
+    // its badge wrapper when a banner or bottom label overflows the square.
+    // If this contract ever breaks, the card will clip the banner/label.
+    it("layout boxes grow viewBox.h when a banner is present", () => {
+      const size = 100;
+      const plain: BadgeDesign = {
+        shape: "circle",
+        frame: "none",
+        color: "#a78bfa",
+        iconName: "Trophy",
+        iconWeight: "regular",
+        title: "T",
+        centerMode: "icon",
+      };
+      const withBanner: BadgeDesign = {
+        ...plain,
+        banner: { text: "ACHIEVED", position: "top" },
+      };
+      const plainBox = getBadgeLayoutBoxes(plain, size);
+      const bannerBox = getBadgeLayoutBoxes(withBanner, size);
+      expect(bannerBox.viewBox.h).toBeGreaterThan(plainBox.viewBox.h);
+    });
+
+    it("layout boxes grow viewBox.h when a bottom label is present", () => {
+      const size = 100;
+      const plain: BadgeDesign = {
+        shape: "circle",
+        frame: "none",
+        color: "#a78bfa",
+        iconName: "Trophy",
+        iconWeight: "regular",
+        title: "T",
+        centerMode: "icon",
+      };
+      const withLabel: BadgeDesign = { ...plain, bottomLabel: "v1" };
+      const plainBox = getBadgeLayoutBoxes(plain, size);
+      const labelBox = getBadgeLayoutBoxes(withLabel, size);
+      expect(labelBox.viewBox.h).toBeGreaterThan(plainBox.viewBox.h);
+    });
   });
 
   describe("evidence count", () => {

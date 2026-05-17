@@ -926,6 +926,7 @@ export const badgesWithGoalsQuery = evolu.createQuery((db) =>
       "badge.design",
       "badge.createdAt",
       "goal.title as goalTitle",
+      "goal.description as goalDescription",
       "goal.completedAt",
     ])
     .where("badge.isDeleted", "is", null)
