@@ -115,15 +115,15 @@ function FocusContent({ goalId }: { goalId: string }) {
   const { viewEvidence, viewerModals } = useEvidenceViewer();
   const { timelineHidden, setTimelineHidden } = useFocusModePrefs();
   const lifecycle = useRef({
-    completionFired: false,
     snappedToFirstPending: false,
+    snappedToGoalCard: false,
     // Tracks whether we observed an incomplete-state during this mount.
     // Without this, reopening a goal (which leaves all steps completed)
-    // lands FocusMode in allStepsComplete=true, fires the auto-nav, and
-    // bounces the user straight back to CompletionFlow + BadgeEarnedModal.
+    // lands FocusMode in allStepsComplete=true and snap-to-goal-card
+    // would fire immediately, looking like the old auto-nav just moved
+    // to the carousel instead of the navigator.
     sawIncomplete: false,
   });
-  const isMounted = useRef(true);
   const pendingFileDeletionRef = useRef<{
     id: string;
     uri: string | null;
@@ -135,7 +135,6 @@ function FocusContent({ goalId }: { goalId: string }) {
     breadcrumb({ category: "focus", message: "enter" });
     return () => {
       breadcrumb({ category: "focus", message: "exit" });
-      isMounted.current = false;
       if (pendingFileDeletionRef.current) {
         clearTimeout(pendingFileDeletionRef.current.timer);
       }
@@ -232,6 +231,15 @@ function FocusContent({ goalId }: { goalId: string }) {
     stepRows.length > 0 &&
     stepRows.every((s) => s.status === StepStatus.completed);
 
+  // Stepless goals (stepRows.length === 0) get the check enabled from
+  // mount — they're a goal expressed as "do the thing, then mark done"
+  // with no intermediate gating. Stepped goals must complete every step
+  // first, mirroring the contract the auto-nav previously enforced.
+  const canMarkComplete = stepRows.length === 0 || allStepsComplete;
+  const pendingStepCount = stepRows.filter(
+    (s) => s.status !== StepStatus.completed,
+  ).length;
+
   // Snap to first pending step on initial load. Dep is stepRows.length —
   // useQuery returns a fresh array each emission, so depending on stepRows
   // would re-fire pointlessly.
@@ -247,30 +255,25 @@ function FocusContent({ goalId }: { goalId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only fire on initial population
   }, [stepRowsLength]);
 
-  // Announce when all steps become complete and auto-navigate to completion flow.
-  // Only fires on the incomplete → complete transition, not on a fresh mount
-  // that lands already-complete (e.g. after Reopen Goal, where the step rows
-  // stay completed but the goal status is back to active).
+  // On the incomplete → complete transition, snap the carousel to the
+  // goal card and announce that the Mark Complete check is now tappable.
+  // No auto-navigation — the user enters CompletionFlow by tapping the
+  // check on the goal card. The sawIncomplete guard prevents this from
+  // firing on a mount that lands already-complete (Reopen Goal).
   useEffect(() => {
     if (!goal) return;
     if (!allStepsComplete) {
       lifecycle.current.sawIncomplete = true;
-      lifecycle.current.completionFired = false;
       return;
     }
     if (!lifecycle.current.sawIncomplete) return;
-    if (lifecycle.current.completionFired) return;
-    lifecycle.current.completionFired = true;
+    if (lifecycle.current.snappedToGoalCard) return;
+    lifecycle.current.snappedToGoalCard = true;
+    setCurrentCardIndex(stepRowsLength);
     AccessibilityInfo.announceForAccessibility(
-      `All steps completed for "${goal.title}". Goal is ready to complete!`,
+      `All steps complete for "${goal.title}". Mark Complete is now available on the goal card.`,
     );
-    const timer = setTimeout(() => {
-      if (isMounted.current) {
-        navigation.navigate("CompletionFlow", { goalId });
-      }
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [goal, allStepsComplete, goalId, navigation]);
+  }, [goal, allStepsComplete, stepRowsLength]);
 
   const handleUndoDelete = useCallback(() => {
     const pending = pendingFileDeletionRef.current;
@@ -303,6 +306,10 @@ function FocusContent({ goalId }: { goalId: string }) {
     setCurrentCardIndex(index);
     if (isDrawerOpen) setIsDrawerOpen(false);
     if (isFABMenuOpen) setIsFABMenuOpen(false);
+  };
+
+  const handleMarkComplete = () => {
+    navigation.navigate("CompletionFlow", { goalId });
   };
 
   const handleToggleStep = (stepId: string) => {
@@ -584,6 +591,9 @@ function FocusContent({ goalId }: { goalId: string }) {
               key="goal-evidence"
               evidenceCount={goalEvidenceCount}
               onEvidenceTap={handleEvidenceTap}
+              canMarkComplete={canMarkComplete}
+              onMarkComplete={handleMarkComplete}
+              pendingStepCount={pendingStepCount}
             />,
           ]}
         </CardCarousel>

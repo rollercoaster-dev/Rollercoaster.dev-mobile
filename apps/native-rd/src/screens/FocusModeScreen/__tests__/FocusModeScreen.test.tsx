@@ -483,12 +483,31 @@ describe("FocusModeScreen", () => {
     expect(screen.getByText("Focus Mode")).toBeOnTheScreen();
   });
 
-  it("auto-navigates to CompletionFlow on the pending→complete transition", () => {
-    jest.useFakeTimers();
-    // Start with one step pending so allStepsComplete=false on mount.
-    // The auto-nav only fires after we observe a transition from incomplete
-    // to complete — this prevents Reopen Goal from immediately bouncing the
-    // user back to CompletionFlow (since reopening leaves all steps completed).
+  // The goal card lives at the end of the CardCarousel, which sets
+  // accessibilityElementsHidden on every non-center card. Navigate to the
+  // goal card via the "Goal evidence" indicator before asserting on the
+  // Mark Complete check — that's what a real user does.
+  const navigateToGoalCard = () => {
+    fireEvent.press(screen.getAllByLabelText("Goal evidence")[0]);
+  };
+
+  it("Mark Complete check is locked while any step is pending", () => {
+    setupQueries({
+      steps: [
+        { id: "step-1", title: "Read docs", status: "completed", ordinal: 0 },
+        { id: "step-2", title: "Practice", status: "pending", ordinal: 1 },
+      ],
+    });
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+    navigateToGoalCard();
+
+    const check = screen.getByRole("checkbox", {
+      name: "Mark goal complete",
+    });
+    expect(check.props.accessibilityState.disabled).toBe(true);
+  });
+
+  it("Mark Complete check enables when all steps are complete", () => {
     setupQueries({
       steps: [
         { id: "step-1", title: "Read docs", status: "completed", ordinal: 0 },
@@ -496,13 +515,15 @@ describe("FocusModeScreen", () => {
       ],
     });
     const view = renderWithProviders(<FocusModeScreen {...routeProps} />);
+    navigateToGoalCard();
+    expect(
+      screen.getByRole("checkbox", { name: "Mark goal complete" }).props
+        .accessibilityState.disabled,
+    ).toBe(true);
 
-    jest.advanceTimersByTime(400);
-    expect(mockNavigate).not.toHaveBeenCalledWith("CompletionFlow", {
-      goalId: "goal-1",
-    });
-
-    // Now flip the pending step to completed and rerender.
+    // Flip the pending step to completed and rerender. The snap effect
+    // moves the carousel back to the goal card automatically on the
+    // incomplete → complete transition, so no manual navigation needed.
     setupQueries({
       steps: [
         { id: "step-1", title: "Read docs", status: "completed", ordinal: 0 },
@@ -511,15 +532,13 @@ describe("FocusModeScreen", () => {
     });
     view.rerender(<FocusModeScreen {...routeProps} />);
 
-    jest.advanceTimersByTime(400);
-    expect(mockNavigate).toHaveBeenCalledWith("CompletionFlow", {
-      goalId: "goal-1",
-    });
-    jest.useRealTimers();
+    expect(
+      screen.getByRole("checkbox", { name: "Mark goal complete" }).props
+        .accessibilityState.disabled,
+    ).toBe(false);
   });
 
-  it("does NOT auto-navigate on a fresh mount where every step is already completed (reopen-goal case)", () => {
-    jest.useFakeTimers();
+  it("tapping Mark Complete navigates to CompletionFlow", () => {
     setupQueries({
       steps: [
         { id: "step-1", title: "Read docs", status: "completed", ordinal: 0 },
@@ -527,12 +546,65 @@ describe("FocusModeScreen", () => {
       ],
     });
     renderWithProviders(<FocusModeScreen {...routeProps} />);
+    navigateToGoalCard();
 
-    jest.advanceTimersByTime(1000);
+    fireEvent.press(
+      screen.getByRole("checkbox", { name: "Mark goal complete" }),
+    );
+    expect(mockNavigate).toHaveBeenCalledWith("CompletionFlow", {
+      goalId: "goal-1",
+    });
+  });
+
+  it("does NOT auto-navigate to CompletionFlow on the pending→complete transition", () => {
+    jest.useFakeTimers();
+    // Regression guard for the removed auto-nav. The user must tap
+    // Mark Complete themselves; observing the transition alone must
+    // never trigger navigation.
+    setupQueries({
+      steps: [
+        { id: "step-1", title: "Read docs", status: "completed", ordinal: 0 },
+        { id: "step-2", title: "Practice", status: "pending", ordinal: 1 },
+      ],
+    });
+    const view = renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+    setupQueries({
+      steps: [
+        { id: "step-1", title: "Read docs", status: "completed", ordinal: 0 },
+        { id: "step-2", title: "Practice", status: "completed", ordinal: 1 },
+      ],
+    });
+    view.rerender(<FocusModeScreen {...routeProps} />);
+    // Drain any timers in case a future regression reintroduces deferred nav.
+    jest.advanceTimersByTime(2000);
+
     expect(mockNavigate).not.toHaveBeenCalledWith("CompletionFlow", {
       goalId: "goal-1",
     });
     jest.useRealTimers();
+  });
+
+  it("stepless goal: Mark Complete is enabled from first mount", () => {
+    setupQueries({ steps: [] });
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+    const check = screen.getByRole("checkbox", {
+      name: "Mark goal complete",
+    });
+    expect(check.props.accessibilityState.disabled).toBe(false);
+  });
+
+  it("stepless goal: tapping Mark Complete navigates to CompletionFlow", () => {
+    setupQueries({ steps: [] });
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+    fireEvent.press(
+      screen.getByRole("checkbox", { name: "Mark goal complete" }),
+    );
+    expect(mockNavigate).toHaveBeenCalledWith("CompletionFlow", {
+      goalId: "goal-1",
+    });
   });
 
   it("does not auto-navigate when steps are still pending", () => {
@@ -818,8 +890,7 @@ describe("FocusModeScreen", () => {
     ]);
   });
 
-  it("auto-navigates to CompletionFlow on the transition when all steps complete with evidence gate", () => {
-    jest.useFakeTimers();
+  it("Mark Complete stays locked while an evidence-gated step is incomplete, enables after it completes", () => {
     setupQueries({
       steps: [
         {
@@ -839,10 +910,11 @@ describe("FocusModeScreen", () => {
       ],
     });
     const view = renderWithProviders(<FocusModeScreen {...routeProps} />);
-    jest.advanceTimersByTime(400);
-    expect(mockNavigate).not.toHaveBeenCalledWith("CompletionFlow", {
-      goalId: "goal-1",
-    });
+    fireEvent.press(screen.getAllByLabelText("Goal evidence")[0]);
+    expect(
+      screen.getByRole("checkbox", { name: "Mark goal complete" }).props
+        .accessibilityState.disabled,
+    ).toBe(true);
 
     setupQueries({
       steps: [
@@ -863,11 +935,10 @@ describe("FocusModeScreen", () => {
       ],
     });
     view.rerender(<FocusModeScreen {...routeProps} />);
-    jest.advanceTimersByTime(400);
-    expect(mockNavigate).toHaveBeenCalledWith("CompletionFlow", {
-      goalId: "goal-1",
-    });
-    jest.useRealTimers();
+    expect(
+      screen.getByRole("checkbox", { name: "Mark goal complete" }).props
+        .accessibilityState.disabled,
+    ).toBe(false);
   });
 
   it("treats malformed plannedEvidenceTypes JSON as null (no gating)", () => {
@@ -920,7 +991,6 @@ describe("FocusModeScreen", () => {
   });
 
   describe("breadcrumbs", () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const {
       breadcrumb: mockBreadcrumb,
     } = require("../../../services/sentry-report");
