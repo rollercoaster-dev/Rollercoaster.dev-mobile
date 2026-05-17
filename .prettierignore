@@ -2,3 +2,7 @@ apps/openbadges-modular-server/keys/
 apps/openbadges-system/src/client/auto-imports.d.ts
 apps/native-rd/ios/
 apps/native-rd/android/
+
+# release-please generates these; its formatting doesn't match our Prettier config
+CHANGELOG.md
+**/CHANGELOG.md
