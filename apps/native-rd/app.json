@@ -95,7 +95,9 @@
             "./assets/fonts/OpenDyslexic.otf",
             "./assets/fonts/OpenDyslexic_bold.otf",
             "./assets/fonts/Atkinson Hyperlegible.ttf",
-            "./assets/fonts/Atkinson Hyperlegible_bold.ttf"
+            "./assets/fonts/Atkinson Hyperlegible_bold.ttf",
+            "./assets/fonts/Lexend.ttf",
+            "./assets/fonts/Lexend_bold.ttf"
           ]
         }
       ],

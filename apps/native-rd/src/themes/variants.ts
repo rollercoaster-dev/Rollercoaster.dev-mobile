@@ -104,7 +104,7 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
     surfaceBorder: surfaceBorderVariants.lowVision,
     shadows: { opacity: 0 },
     size: sizeL,
-    fontFamily: "AtkinsonHyperlegible",
+    fontFamily: "Atkinson Hyperlegible",
   },
 
   /**
@@ -132,11 +132,11 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
   },
 };
 
-export const variantOptions: Array<{
+export const variantOptions: {
   id: Variant;
   label: string;
   description: string;
-}> = [
+}[] = [
   { id: "default", label: "The Full Ride", description: "Standard theme" },
   {
     id: "highContrast",
