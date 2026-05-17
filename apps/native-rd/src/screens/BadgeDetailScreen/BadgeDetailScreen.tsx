@@ -16,7 +16,7 @@ import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { IconButton } from "../../components/IconButton";
-import { HeaderBand } from "../../components/ScreenHeader";
+import { BackArrowGlyph, HeaderBand } from "../../components/ScreenHeader";
 import { badgeWithGoalQuery, deleteBadge } from "../../db";
 import type { BadgeId } from "../../db";
 import { PLACEHOLDER_IMAGE_URI } from "../../hooks/useCreateBadge";
@@ -83,11 +83,7 @@ function DetailTopBar({
           any header text would peek out behind it. */}
       <HeaderBand>
         <IconButton
-          icon={
-            <Text variant="headline" style={styles.backIcon}>
-              {"\u2190"}
-            </Text>
-          }
+          icon={<BackArrowGlyph />}
           onPress={onBack}
           tone="chrome"
           accessibilityLabel="Go back"

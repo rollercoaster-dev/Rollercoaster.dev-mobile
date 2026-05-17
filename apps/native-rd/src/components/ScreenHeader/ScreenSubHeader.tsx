@@ -2,6 +2,7 @@ import React from "react";
 import { View } from "react-native";
 import { Text } from "../Text";
 import { IconButton } from "../IconButton";
+import { BackArrowGlyph } from "./BackArrowGlyph";
 import { HeaderBand } from "./HeaderBand";
 import { styles } from "./ScreenHeader.styles";
 
@@ -19,11 +20,7 @@ export function ScreenSubHeader({
   return (
     <HeaderBand>
       <IconButton
-        icon={
-          <Text variant="headline" style={styles.backIcon}>
-            {"\u2190"}
-          </Text>
-        }
+        icon={<BackArrowGlyph />}
         onPress={onBack}
         tone="chrome"
         accessibilityLabel="Go back"
