@@ -517,21 +517,23 @@ function FocusContent({ goalId }: { goalId: string }) {
         >
           {goal.title}
         </Text>
-        <IconButton
-          icon={
-            timelineHidden ? (
-              <EyeSlash size={20} weight="bold" />
-            ) : (
-              <Eye size={20} weight="bold" />
-            )
-          }
-          onPress={() => setTimelineHidden(!timelineHidden)}
-          tone="ghost"
-          accessibilityLabel={
-            timelineHidden ? "Show timeline" : "Hide timeline"
-          }
-          size="sm"
-        />
+        {stepRows.length > 0 && (
+          <IconButton
+            icon={
+              timelineHidden ? (
+                <EyeSlash size={20} weight="bold" />
+              ) : (
+                <Eye size={20} weight="bold" />
+              )
+            }
+            onPress={() => setTimelineHidden(!timelineHidden)}
+            tone="ghost"
+            accessibilityLabel={
+              timelineHidden ? "Show timeline" : "Hide timeline"
+            }
+            size="sm"
+          />
+        )}
         <IconButton
           icon={<Pencil size={20} weight="bold" />}
           onPress={handleEditPress}
@@ -541,8 +543,9 @@ function FocusContent({ goalId }: { goalId: string }) {
         />
       </View>
 
-      {/* MiniTimeline */}
-      {!timelineHidden && (
+      {/* MiniTimeline — hidden when there are no steps (one carousel
+          card has nothing to visualise) and when the user prefs hide it. */}
+      {!timelineHidden && stepRows.length > 0 && (
         <MiniTimeline
           steps={timelineSteps}
           currentIndex={currentCardIndex}

@@ -592,6 +592,21 @@ describe("FocusModeScreen", () => {
     ).toBeOnTheScreen();
   });
 
+  it("stepless goal: timeline toggle (eye icon) is hidden — nothing to toggle", () => {
+    setupQueries({ steps: [] });
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+    expect(screen.queryByLabelText("Hide timeline")).toBeNull();
+    expect(screen.queryByLabelText("Show timeline")).toBeNull();
+  });
+
+  it("stepped goal: timeline toggle (eye icon) is visible", () => {
+    setupQueries();
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+    expect(screen.getByLabelText("Hide timeline")).toBeOnTheScreen();
+  });
+
   it("stepless goal: tapping Mark Complete navigates to CompletionFlow", () => {
     setupQueries({ steps: [] });
     renderWithProviders(<FocusModeScreen {...routeProps} />);
