@@ -9,6 +9,7 @@
  * handles string and ArrayBuffer, not Uint8Array directly.
  */
 
+import { Buffer } from "buffer";
 import * as FileSystem from "expo-file-system/legacy";
 
 const BADGES_SUBDIR = "badges";
@@ -21,15 +22,6 @@ function generateBadgeFilename(): string {
   const timestamp = Date.now().toString(36);
   const random = Math.random().toString(36).slice(2, 8);
   return `${timestamp}-${random}.png`;
-}
-
-/** Convert a Uint8Array to a base64 string without relying on Node's Buffer */
-function toBase64(data: Uint8Array): string {
-  let binary = "";
-  for (let i = 0; i < data.length; i++) {
-    binary += String.fromCharCode(data[i]);
-  }
-  return btoa(binary);
 }
 
 /**
@@ -56,14 +48,41 @@ export async function saveBadgePNG(data: Uint8Array): Promise<string> {
 
   const uri = `${badgesDir}${generateBadgeFilename()}`;
   try {
-    await FileSystem.writeAsStringAsync(uri, toBase64(data), {
-      encoding: FileSystem.EncodingType.Base64,
-    });
+    await FileSystem.writeAsStringAsync(
+      uri,
+      Buffer.from(data).toString("base64"),
+      { encoding: FileSystem.EncodingType.Base64 },
+    );
   } catch (writeErr) {
     throw new Error(
       `Failed to write badge PNG to ${uri}: ${writeErr instanceof Error ? writeErr.message : String(writeErr)}`,
     );
   }
 
+  // Post-write verification — writeAsStringAsync has been observed to resolve
+  // without surfacing iOS storage errors (sandbox / quota), leaving us with a
+  // URI that points to nothing. If the file isn't there afterwards, treat the
+  // save as failed so the caller's placeholder fallback engages instead of
+  // shipping a broken URI into the badge row.
+  const verify = await FileSystem.getInfoAsync(uri);
+  if (!verify.exists) {
+    throw new Error(
+      `Badge PNG write completed but file is missing at ${uri}. Likely an iOS sandbox / quota issue.`,
+    );
+  }
+
   return uri;
+}
+
+/**
+ * Read a previously-saved badge PNG back into memory.
+ *
+ * Throws when the file is missing or unreadable — callers must decide whether
+ * to fall back to another bake source. No silent placeholder fallback.
+ */
+export async function readBadgePNG(uri: string): Promise<Buffer> {
+  const base64 = await FileSystem.readAsStringAsync(uri, {
+    encoding: FileSystem.EncodingType.Base64,
+  });
+  return Buffer.from(base64, "base64");
 }

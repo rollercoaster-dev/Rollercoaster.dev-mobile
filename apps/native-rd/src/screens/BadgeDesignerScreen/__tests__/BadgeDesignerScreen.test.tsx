@@ -38,10 +38,12 @@ jest.mock("@evolu/react", () => {
 });
 
 const mockUpdateBadge = jest.fn();
+const mockUpdateGoal = jest.fn();
 jest.mock("../../../db", () => ({
   badgeWithGoalQuery: jest.fn(() => ({ __brand: "badgeWithGoalQuery" })),
   goalsQuery: { __brand: "goalsQuery" },
   updateBadge: (...args: unknown[]) => mockUpdateBadge(...args),
+  updateGoal: (...args: unknown[]) => mockUpdateGoal(...args),
 }));
 
 const mockPendingDesignStore = {
@@ -126,6 +128,7 @@ jest.mock(
       "SoccerBall",
       "Airplane",
       "Sparkle",
+      "ArrowLeft",
     ];
     const exports: Record<string, unknown> = {
       IconContext: React.createContext({}),
@@ -242,20 +245,100 @@ describe("BadgeDesignerScreen", () => {
     expect(screen.getByLabelText("Save Design")).toBeOnTheScreen();
   });
 
-  it("calls updateBadge and goBack when Save is pressed", () => {
+  it("calls updateBadge and goBack when Save is pressed", async () => {
     mockUseQuery.mockReturnValue([makeRow()]);
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
 
     fireEvent.press(screen.getByLabelText("Save Design"));
-    expect(mockUpdateBadge).toHaveBeenCalledWith(
-      "badge-1",
+    // updateBadge runs after the capture promise resolves (capture-first
+    // ordering keeps the badge row and PNG in sync on capture failure).
+    await waitFor(() =>
+      expect(mockUpdateBadge).toHaveBeenCalledWith(
+        "badge-1",
+        expect.objectContaining({
+          design: expect.stringContaining('"shape":"circle"'),
+        }),
+      ),
+    );
+    await waitFor(() => expect(mockGoBack).toHaveBeenCalled());
+  });
+
+  it("captures PNG, writes pendingDesignStore entry on save (for downstream rebake)", async () => {
+    mockUseQuery.mockReturnValue([makeRow()]);
+    mockCaptureBadge.mockResolvedValue(Buffer.from("redesigned-png-bytes"));
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+
+    fireEvent.press(screen.getByLabelText("Save Design"));
+
+    await waitFor(() => expect(mockPendingDesignStore.set).toHaveBeenCalled());
+    expect(mockPendingDesignStore.set).toHaveBeenCalledWith(
+      "goal-1",
       expect.objectContaining({
-        design: expect.stringContaining('"shape":"circle"'),
+        designJson: expect.stringContaining('"shape":"circle"'),
+        pngBase64: Buffer.from("redesigned-png-bytes").toString("base64"),
       }),
     );
     expect(mockGoBack).toHaveBeenCalled();
+  });
+
+  it("fails loud (alerts) and does not navigate back when redesign-save capture fails", async () => {
+    // Without a fresh capture the rebake would silently embed the new
+    // credential into the previous design's PNG. Show an alert and keep the
+    // user in the designer so they can retry — mirrors the new-goal-mode
+    // saveAndNavigate pattern. Also: capture happens before updateBadge,
+    // so a capture failure must NOT have updated the badge row (otherwise
+    // the stored design and image drift apart on back-out).
+    mockUseQuery.mockReturnValue([makeRow()]);
+    mockCaptureBadge.mockRejectedValue(new Error("capture timeout"));
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+
+    fireEvent.press(screen.getByLabelText("Save Design"));
+
+    await waitFor(() =>
+      expect(alertSpy).toHaveBeenCalledWith(
+        "Save Failed",
+        expect.stringContaining("Could not capture"),
+      ),
+    );
+    expect(mockGoBack).not.toHaveBeenCalled();
+    expect(mockPendingDesignStore.set).not.toHaveBeenCalled();
+    expect(mockUpdateBadge).not.toHaveBeenCalled();
+    alertSpy.mockRestore();
+  });
+
+  it("guards Save against double-tap (only one updateBadge + capture per click run)", async () => {
+    // Async handleSave: without an isSaving guard, two rapid taps would
+    // launch two captures, write two pendingDesignStore entries, and call
+    // goBack twice.
+    mockUseQuery.mockReturnValue([makeRow()]);
+    let resolveCapture: ((buf: Buffer) => void) | undefined;
+    mockCaptureBadge.mockImplementation(
+      () =>
+        new Promise<Buffer>((resolve) => {
+          resolveCapture = resolve;
+        }),
+    );
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+
+    const saveBtn = screen.getByLabelText("Save Design");
+    fireEvent.press(saveBtn);
+    fireEvent.press(saveBtn);
+    fireEvent.press(saveBtn);
+
+    expect(mockCaptureBadge).toHaveBeenCalledTimes(1);
+    resolveCapture?.(Buffer.from("png-bytes"));
+    await waitFor(() => expect(mockGoBack).toHaveBeenCalledTimes(1));
+    expect(mockUpdateBadge).toHaveBeenCalledTimes(1);
+    expect(mockPendingDesignStore.set).toHaveBeenCalledTimes(1);
   });
 
   it("updates preview when a different shape is selected", () => {
@@ -278,7 +361,7 @@ describe("BadgeDesignerScreen", () => {
     expect(screen.getByLabelText(/Badge preview:.*#34d399/)).toBeOnTheScreen();
   });
 
-  it("persists modified design when Save is pressed after changes", () => {
+  it("persists modified design when Save is pressed after changes", async () => {
     mockUseQuery.mockReturnValue([makeRow()]);
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
@@ -288,11 +371,14 @@ describe("BadgeDesignerScreen", () => {
     fireEvent.press(screen.getByLabelText("Mint color"));
     fireEvent.press(screen.getByLabelText("Save Design"));
 
-    expect(mockUpdateBadge).toHaveBeenCalledWith(
-      "badge-1",
-      expect.objectContaining({
-        design: expect.stringContaining('"shape":"shield"'),
-      }),
+    // updateBadge runs after capture resolves (capture-first ordering).
+    await waitFor(() =>
+      expect(mockUpdateBadge).toHaveBeenCalledWith(
+        "badge-1",
+        expect.objectContaining({
+          design: expect.stringContaining('"shape":"shield"'),
+        }),
+      ),
     );
     expect(mockUpdateBadge).toHaveBeenCalledWith(
       "badge-1",
@@ -300,7 +386,7 @@ describe("BadgeDesignerScreen", () => {
         design: expect.stringContaining('"color":"#34d399"'),
       }),
     );
-    expect(mockGoBack).toHaveBeenCalled();
+    await waitFor(() => expect(mockGoBack).toHaveBeenCalled());
   });
 
   it("creates default design when badge has no existing design", () => {
@@ -374,7 +460,7 @@ describe("BadgeDesignerScreen", () => {
     expect(screen.getByLabelText("Bottom label")).toBeOnTheScreen();
   });
 
-  it("includes new fields in saved JSON after changes", () => {
+  it("includes new fields in saved JSON after changes", async () => {
     mockUseQuery.mockReturnValue([makeRow()]);
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
@@ -389,8 +475,9 @@ describe("BadgeDesignerScreen", () => {
     // Toggle banner on
     fireEvent.press(screen.getByLabelText("Enable banner"));
 
-    // Save
+    // Save (updateBadge runs after capture resolves — capture-first order).
     fireEvent.press(screen.getByLabelText("Save Design"));
+    await waitFor(() => expect(mockUpdateBadge).toHaveBeenCalled());
 
     const savedJson = mockUpdateBadge.mock.calls[0][1].design;
     expect(savedJson).toContain('"frame":"guilloche"');
@@ -398,7 +485,7 @@ describe("BadgeDesignerScreen", () => {
     expect(savedJson).toContain('"banner"');
   });
 
-  it("toggle-off clears path text and banner from saved JSON", () => {
+  it("toggle-off clears path text and banner from saved JSON", async () => {
     mockUseQuery.mockReturnValue([makeRow()]);
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
@@ -413,6 +500,7 @@ describe("BadgeDesignerScreen", () => {
     fireEvent.press(screen.getByLabelText("Enable banner"));
 
     fireEvent.press(screen.getByLabelText("Save Design"));
+    await waitFor(() => expect(mockUpdateBadge).toHaveBeenCalled());
 
     const savedJson = mockUpdateBadge.mock.calls[0][1].design;
     expect(savedJson).not.toContain('"pathText"');
@@ -439,7 +527,7 @@ describe("BadgeDesignerScreen", () => {
   // border at all. The designer currently ships exactly that bug:
   // handleFrameChange (BadgeDesignerScreen.tsx:119-124) sets only `frame`.
   // useFrameParamsForGoal exists for this purpose but is never wired in.
-  it("attaches frameParams when a non-none frame is selected", () => {
+  it("attaches frameParams when a non-none frame is selected", async () => {
     mockUseQuery.mockReturnValue([makeRow()]);
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
@@ -447,6 +535,7 @@ describe("BadgeDesignerScreen", () => {
 
     fireEvent.press(screen.getByLabelText("Guilloche frame"));
     fireEvent.press(screen.getByLabelText("Save Design"));
+    await waitFor(() => expect(mockUpdateBadge).toHaveBeenCalled());
 
     const savedJson = mockUpdateBadge.mock.calls[0][1].design as string;
     const parsed = JSON.parse(savedJson);
@@ -458,7 +547,7 @@ describe("BadgeDesignerScreen", () => {
     );
   });
 
-  it("clears frameParams when frame is set back to none", () => {
+  it("clears frameParams when frame is set back to none", async () => {
     mockUseQuery.mockReturnValue([
       makeRow({
         design: JSON.stringify({
@@ -486,6 +575,7 @@ describe("BadgeDesignerScreen", () => {
 
     fireEvent.press(screen.getByLabelText("None frame"));
     fireEvent.press(screen.getByLabelText("Save Design"));
+    await waitFor(() => expect(mockUpdateBadge).toHaveBeenCalled());
 
     const savedJson = mockUpdateBadge.mock.calls[0][1].design as string;
     const parsed = JSON.parse(savedJson);
@@ -570,6 +660,123 @@ describe("BadgeDesignerScreen — new-goal mode", () => {
     expect(mockReplace).toHaveBeenCalledWith("EditMode", { goalId: "goal-1" });
   });
 
+  // Regression: issue #60 — design must survive cold start. saveAndNavigate
+  // persists to goal.design alongside the warm pendingDesignStore write.
+  it("persists serialized design to goal.design on Use This Design", async () => {
+    mockUseQuery.mockReturnValue([makeGoalRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={newGoalRoute} navigation={{} as never} />,
+    );
+
+    fireEvent.press(screen.getByText("Use This Design"));
+
+    await waitFor(() => {
+      expect(mockUpdateGoal).toHaveBeenCalledWith("goal-1", {
+        design: expect.stringContaining('"shape"'),
+      });
+    });
+  });
+
+  it("persists default design to goal.design on Skip — Use Default", async () => {
+    mockUseQuery.mockReturnValue([makeGoalRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={newGoalRoute} navigation={{} as never} />,
+    );
+
+    fireEvent.press(screen.getByText("Skip — Use Default"));
+
+    // "I want the default" is a real user choice — also survives cold start.
+    await waitFor(() => {
+      expect(mockUpdateGoal).toHaveBeenCalledWith("goal-1", {
+        design: expect.stringContaining('"shape"'),
+      });
+    });
+  });
+
+  // Regression: cold-start re-entry to the designer (e.g. "Redesign First"
+  // after force-quit) used to read only pendingDesignStore and lose the
+  // configured design. initialDesign now falls through to goal.design.
+  it("hydrates initialDesign from goal.design when pendingDesignStore is empty", () => {
+    mockPendingDesignStore.get.mockReturnValueOnce(undefined);
+    const persistedDesignJson = JSON.stringify({
+      shape: "shield",
+      color: "#ff00ff",
+      iconName: "Heart",
+      iconWeight: "fill",
+      title: "Cold Start",
+      centerMode: "icon",
+      frame: "none",
+    });
+    mockUseQuery.mockReturnValue([
+      makeGoalRow({ design: persistedDesignJson }),
+    ]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={newGoalRoute} navigation={{} as never} />,
+    );
+    // Shield is the persisted shape; if the screen had fallen through to the
+    // default it would render circle. The shape selector exposes the chosen
+    // shape via a "selected" accessibilityState.
+    const shieldOption = screen.getByLabelText("Shield shape");
+    expect(shieldOption.props.accessibilityState?.checked).toBe(true);
+  });
+
+  it("pendingDesignStore wins over goal.design when both are present", () => {
+    const warmJson = JSON.stringify({
+      shape: "star",
+      color: "#0000ff",
+      iconName: "Heart",
+      iconWeight: "fill",
+      title: "Warm",
+      centerMode: "icon",
+      frame: "none",
+    });
+    const persistedJson = JSON.stringify({
+      shape: "shield",
+      color: "#ff00ff",
+      iconName: "Heart",
+      iconWeight: "fill",
+      title: "Persisted",
+      centerMode: "icon",
+      frame: "none",
+    });
+    mockPendingDesignStore.get.mockReturnValueOnce({
+      designJson: warmJson,
+      pngBase64: "",
+    });
+    mockUseQuery.mockReturnValue([makeGoalRow({ design: persistedJson })]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={newGoalRoute} navigation={{} as never} />,
+    );
+    // Star (warm) wins over shield (persisted) — preserves the warm PNG path.
+    const starOption = screen.getByLabelText("Star shape");
+    expect(starOption.props.accessibilityState?.checked).toBe(true);
+  });
+
+  it("with returnVia: 'back', save navigates goBack() instead of replace('EditMode')", async () => {
+    // Redesign-First round-trip from CompletionFlow: the screen owns the
+    // back navigation, so the designer must goBack() after save rather than
+    // replacing into EditMode (which would discard the CompletionFlow
+    // entry).
+    const backRoute = {
+      params: {
+        mode: "new-goal" as const,
+        goalId: "goal-1",
+        returnVia: "back" as const,
+      },
+      key: "BadgeDesigner-back",
+      name: "BadgeDesigner" as const,
+    } as unknown as BadgeDesignerScreenProps["route"];
+    mockUseQuery.mockReturnValue([makeGoalRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={backRoute} navigation={{} as never} />,
+    );
+
+    fireEvent.press(screen.getByText("Use This Design"));
+
+    await waitFor(() => expect(mockGoBack).toHaveBeenCalled());
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+
   it("alerts and does not navigate when capture fails", async () => {
     const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
     mockCaptureBadge.mockRejectedValueOnce(new Error("view not mounted"));
@@ -606,7 +813,7 @@ describe("BadgeDesignerScreen — new-goal mode", () => {
 // ---------------------------------------------------------------------------
 
 describe("BadgeDesignerScreen — integration", () => {
-  it("full happy path: frame + path text + banner → save → verify JSON", () => {
+  it("full happy path: frame + path text + banner → save → verify JSON", async () => {
     mockUseQuery.mockReturnValue([makeRow()]);
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
@@ -623,10 +830,10 @@ describe("BadgeDesignerScreen — integration", () => {
     fireEvent.press(screen.getByLabelText("Enable banner"));
     fireEvent.changeText(screen.getByLabelText("Banner text"), "WINNER");
 
-    // Save
+    // Save (updateBadge runs after capture resolves — capture-first order).
     fireEvent.press(screen.getByLabelText("Save Design"));
+    await waitFor(() => expect(mockUpdateBadge).toHaveBeenCalledTimes(1));
 
-    expect(mockUpdateBadge).toHaveBeenCalledTimes(1);
     const savedJson = mockUpdateBadge.mock.calls[0][1].design;
     const parsed = JSON.parse(savedJson);
     expect(parsed.frame).toBe("guilloche");

@@ -5,7 +5,10 @@ import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system/legacy";
 import { PLACEHOLDER_IMAGE_URI } from "./useCreateBadge";
 import { captureBadge, getCaptureDimensions } from "../badges/captureBadge";
-import { getRendererLayoutOptions } from "../badges/BadgeRenderer";
+import {
+  getRendererLayoutOptions,
+  type BadgeRendererHandle,
+} from "../badges/BadgeRenderer";
 import type { BadgeDesign } from "../badges/types";
 
 export function useBadgeExport() {
@@ -52,7 +55,10 @@ export function useBadgeExport() {
   }, []);
 
   const exportDesignImage = useCallback(
-    async (ref: React.RefObject<unknown>, design: BadgeDesign) => {
+    async (
+      ref: React.RefObject<BadgeRendererHandle | null>,
+      design: BadgeDesign,
+    ) => {
       const cacheDir = FileSystem.cacheDirectory;
       if (!cacheDir) {
         Alert.alert(

@@ -33,13 +33,6 @@ const stripeWidths: Record<ThemeName, [number, number]> = {
   "light-autismFriendly": [35, 30],
   "light-lowVision": [60, 20],
   "light-lowInfo": [40, 25],
-  "dark-highContrast": [50, 25],
-  "dark-dyslexia": [30, 25],
-  "dark-autismFriendly": [35, 30],
-  "dark-lowVision": [60, 20],
-  "dark-lowInfo": [40, 25],
-  "light-largeText": [30, 25],
-  "dark-largeText": [30, 25],
 };
 
 export function ThemeChipGrid() {

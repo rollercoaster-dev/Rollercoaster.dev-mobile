@@ -2,10 +2,8 @@ import React, { useEffect, useMemo } from "react";
 import {
   LayoutAnimation,
   type LayoutAnimationConfig,
-  Platform,
   Pressable,
   Text as RNText,
-  UIManager,
   View,
 } from "react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
@@ -38,13 +36,6 @@ export const PILL_HEIGHT = 64;
  * slot. Consumers (e.g. EvidenceDrawer, screen content padding) need the
  * same value to clear the lifted half. */
 export const PILL_LIFT = PILL_HEIGHT / 2 + borderWidth.medium;
-
-if (
-  Platform.OS === "android" &&
-  UIManager.setLayoutAnimationEnabledExperimental
-) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
 const morphConfig: LayoutAnimationConfig = {
   duration: MORPH_DURATION,

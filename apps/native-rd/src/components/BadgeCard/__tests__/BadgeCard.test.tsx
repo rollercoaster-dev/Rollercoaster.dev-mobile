@@ -6,10 +6,20 @@ import {
 } from "../../../__tests__/test-utils";
 import { BadgeCard } from "../BadgeCard";
 import type { BadgeDesign } from "../../../badges/types";
+import { getBadgeLayoutBoxes } from "../../../badges/layoutBoxes";
 
+const mockBadgeRenderer = jest.fn();
 jest.mock("../../../badges/BadgeRenderer", () => ({
-  BadgeRenderer: () => "BadgeRenderer",
+  BadgeRenderer: (props: { size: number }) => {
+    mockBadgeRenderer(props);
+    return "BadgeRenderer";
+  },
+  getRendererLayoutOptions: () => ({ strokeWidth: 3, hasShadow: false }),
 }));
+
+beforeEach(() => {
+  mockBadgeRenderer.mockClear();
+});
 
 const baseProps = {
   title: "First Steps",
@@ -46,6 +56,92 @@ describe("BadgeCard", () => {
     expect(screen.getByText("F")).toBeOnTheScreen();
   });
 
+  describe("description", () => {
+    it("renders description when provided", () => {
+      renderWithProviders(
+        <BadgeCard {...baseProps} description="Read 30 books in 2025" />,
+      );
+      expect(screen.getByText("Read 30 books in 2025")).toBeOnTheScreen();
+    });
+
+    it("does not render description when omitted", () => {
+      renderWithProviders(<BadgeCard {...baseProps} />);
+      expect(screen.queryByText(/Read/)).toBeNull();
+    });
+
+    it("clamps description to 2 lines with tail ellipsis", () => {
+      renderWithProviders(
+        <BadgeCard {...baseProps} description="some long description text" />,
+      );
+      const desc = screen.getByText("some long description text");
+      expect(desc.props.numberOfLines).toBe(2);
+      expect(desc.props.ellipsizeMode).toBe("tail");
+    });
+
+    it("clamps title to 1 line with tail ellipsis", () => {
+      renderWithProviders(<BadgeCard {...baseProps} />);
+      const title = screen.getByText("First Steps");
+      expect(title.props.numberOfLines).toBe(1);
+      expect(title.props.ellipsizeMode).toBe("tail");
+    });
+  });
+
+  describe("badge sizing", () => {
+    it("passes a positive size derived from the theme to BadgeRenderer", () => {
+      const design: BadgeDesign = {
+        shape: "circle",
+        frame: "none",
+        color: "#a78bfa",
+        iconName: "Trophy",
+        iconWeight: "regular",
+        title: "First Steps",
+        centerMode: "icon",
+      };
+      renderWithProviders(<BadgeCard {...baseProps} design={design} />);
+      expect(mockBadgeRenderer).toHaveBeenCalledTimes(1);
+      const props = mockBadgeRenderer.mock.calls[0][0];
+      expect(typeof props.size).toBe("number");
+      expect(props.size).toBeGreaterThan(0);
+    });
+
+    it("layout boxes grow viewBox.h when a banner is present", () => {
+      const size = 100;
+      const plain: BadgeDesign = {
+        shape: "circle",
+        frame: "none",
+        color: "#a78bfa",
+        iconName: "Trophy",
+        iconWeight: "regular",
+        title: "T",
+        centerMode: "icon",
+      };
+      const withBanner: BadgeDesign = {
+        ...plain,
+        banner: { text: "ACHIEVED", position: "top" },
+      };
+      const plainBox = getBadgeLayoutBoxes(plain, size);
+      const bannerBox = getBadgeLayoutBoxes(withBanner, size);
+      expect(bannerBox.viewBox.h).toBeGreaterThan(plainBox.viewBox.h);
+    });
+
+    it("layout boxes grow viewBox.h when a bottom label is present", () => {
+      const size = 100;
+      const plain: BadgeDesign = {
+        shape: "circle",
+        frame: "none",
+        color: "#a78bfa",
+        iconName: "Trophy",
+        iconWeight: "regular",
+        title: "T",
+        centerMode: "icon",
+      };
+      const withLabel: BadgeDesign = { ...plain, bottomLabel: "v1" };
+      const plainBox = getBadgeLayoutBoxes(plain, size);
+      const labelBox = getBadgeLayoutBoxes(withLabel, size);
+      expect(labelBox.viewBox.h).toBeGreaterThan(plainBox.viewBox.h);
+    });
+  });
+
   describe("evidence count", () => {
     it.each([
       [1, "1 piece of evidence"],
@@ -78,6 +174,24 @@ describe("BadgeCard", () => {
       expect(
         screen.getByLabelText("Badge: First Steps, earned Jan 1, 2025"),
       ).toBeOnTheScreen();
+    });
+
+    it("threads description into accessibilityHint", () => {
+      renderWithProviders(
+        <BadgeCard {...baseProps} description="Read 30 books in 2025" />,
+      );
+      const pressable = screen.getByLabelText(
+        "Badge: First Steps, earned Jan 1, 2025",
+      );
+      expect(pressable.props.accessibilityHint).toBe("Read 30 books in 2025");
+    });
+
+    it("omits accessibilityHint when no description", () => {
+      renderWithProviders(<BadgeCard {...baseProps} />);
+      const pressable = screen.getByLabelText(
+        "Badge: First Steps, earned Jan 1, 2025",
+      );
+      expect(pressable.props.accessibilityHint).toBeUndefined();
     });
   });
 });

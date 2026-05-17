@@ -70,11 +70,22 @@ describe("StepCard", () => {
     expect(screen.getByText("1 item")).toBeOnTheScreen();
   });
 
-  it('displays "add evidence" prompt when count is 0', () => {
+  it("does not render the evidence badge when count is 0", () => {
     renderWithProviders(
       <StepCard step={makeStep({ evidenceCount: 0 })} {...defaultProps} />,
     );
-    expect(screen.getByText("+ add evidence")).toBeOnTheScreen();
+    expect(screen.queryByText("+ add evidence")).toBeNull();
+    expect(screen.queryByLabelText(/evidence items, tap to view/)).toBeNull();
+  });
+
+  it("renders the evidence badge when count is > 0", () => {
+    renderWithProviders(
+      <StepCard step={makeStep({ evidenceCount: 2 })} {...defaultProps} />,
+    );
+    expect(screen.getByText("2 items")).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText("2 evidence items, tap to view"),
+    ).toBeOnTheScreen();
   });
 
   it("calls onToggleComplete when checkbox is pressed", () => {
@@ -146,23 +157,13 @@ describe("StepCard", () => {
 
   // --- Planned evidence types ---
 
-  it("renders planned evidence type chips when plannedEvidenceTypes is set", () => {
+  it("does not render the planned-types chip row (collapsed into action buttons)", () => {
     renderWithProviders(
       <StepCard
         step={makeStep({
           plannedEvidenceTypes: ["photo", "text"],
           capturedEvidenceTypes: [],
         })}
-        {...defaultProps}
-      />,
-    );
-    expect(screen.getByLabelText("Planned evidence types")).toBeOnTheScreen();
-  });
-
-  it("does not render chips when plannedEvidenceTypes is null", () => {
-    renderWithProviders(
-      <StepCard
-        step={makeStep({ plannedEvidenceTypes: null })}
         {...defaultProps}
       />,
     );
@@ -225,7 +226,7 @@ describe("StepCard", () => {
     ).toBeOnTheScreen();
   });
 
-  it("stays blocked when only some of multiple planned types are captured (regression: PR #987)", () => {
+  it("stays blocked when only some of multiple planned types are captured", () => {
     renderWithProviders(
       <StepCard
         step={makeStep({
@@ -374,5 +375,39 @@ describe("StepCard", () => {
     expect(
       screen.getByRole("checkbox").props.accessibilityState?.disabled,
     ).toBe(false);
+  });
+
+  // --- Reading order (locks in the row sequence the layout fix established) ---
+
+  it("renders rows in document order: meta → title → quick actions → prompt → badge", () => {
+    renderWithProviders(
+      <StepCard
+        step={makeStep({
+          title: "Review component architecture",
+          evidenceCount: 1,
+          plannedEvidenceTypes: ["photo"],
+          capturedEvidenceTypes: [],
+          status: "in-progress",
+        })}
+        {...defaultProps}
+      />,
+    );
+    const tree = JSON.stringify(screen.toJSON());
+    // "Step 1 of 5" is split into separate JSX children by interpolation, so it
+    // doesn't appear as one contiguous substring. Use the status badge label
+    // (a single Text child) to mark the metaRow's position instead — since
+    // the badge sits inside metaRow, locating it locates the row.
+    const positions = {
+      meta: tree.indexOf("In Progress"),
+      title: tree.indexOf("Review component architecture"),
+      quickActions: tree.indexOf("Add Photo evidence"),
+      prompt: tree.indexOf("Add evidence to complete"),
+      badge: tree.indexOf("1 item"),
+    };
+    Object.values(positions).forEach((idx) => expect(idx).toBeGreaterThan(-1));
+    expect(positions.meta).toBeLessThan(positions.title);
+    expect(positions.title).toBeLessThan(positions.quickActions);
+    expect(positions.quickActions).toBeLessThan(positions.prompt);
+    expect(positions.prompt).toBeLessThan(positions.badge);
   });
 });

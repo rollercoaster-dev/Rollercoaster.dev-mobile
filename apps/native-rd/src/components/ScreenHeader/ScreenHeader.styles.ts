@@ -22,11 +22,6 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.accentPurpleFg,
     fontWeight: theme.fontWeight.bold,
   },
-  backIcon: {
-    fontSize: 22,
-    fontWeight: theme.fontWeight.black,
-    color: theme.colors.accentPurpleFg,
-  },
   spacer: {
     width: SPACER_WIDTH,
   },

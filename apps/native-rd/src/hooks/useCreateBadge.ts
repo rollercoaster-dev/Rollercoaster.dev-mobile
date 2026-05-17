@@ -1,28 +1,8 @@
 /**
- * useCreateBadge
- *
- * Orchestrates OB3 credential creation when a goal is completed.
- * On first call (when no badge exists yet):
- *   1. Builds unsigned credential via buildUnsignedCredential
- *   2. Signs the JSON with the user's Ed25519 key via keyProvider.sign
- *   3. Generates a badge PNG from the goal color
- *   4. Bakes the signed credential into the PNG (OB3 iTXt chunk)
- *   5. Persists the PNG to disk and records the URI
- *   6. Calls createBadge (persists credential + image URI)
- *   7. Calls completeGoal (marks goal as completed)
- *
- * If image generation or baking fails, falls back to the placeholder URI
- * so badge creation still succeeds even without a baked image.
- *
- * Idempotent — returns 'done' immediately if a badge already exists.
- * Race-condition safe — once triggered, the ref guard is never reset,
- * preventing Strict Mode double-invocation or re-render loops from
- * unstable array refs returned by Evolu queries.
- *
- * goalId stability assumption: hasTriggered is keyed to the component
- * instance, not the goalId. If goalId changes while the component stays
- * mounted, no second badge will be created. In practice, CompletionFlowScreen
- * is only mounted for one goal at a time.
+ * Orchestrates OB3 credential creation on goal completion (first-time and
+ * rebake-after-reopen). Race-safe: once a mutating branch fires, the ref
+ * guard is never reset, so Strict-Mode double-invocation and Evolu's
+ * unstable array refs cannot re-enter.
  */
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@evolu/react";
@@ -34,8 +14,10 @@ import {
   canCompleteGoal,
   completeGoal,
   createBadge,
+  updateBadge,
+  GoalStatus,
 } from "../db";
-import type { GoalId } from "../db";
+import type { GoalId, BadgeId } from "../db";
 import { keyProvider } from "../crypto";
 import {
   buildUnsignedCredential,
@@ -43,6 +25,7 @@ import {
   bakePNG,
   isPNG,
   saveBadgePNG,
+  readBadgePNG,
 } from "../badges";
 import { Buffer } from "buffer";
 import { useUserKey } from "./useUserKey";
@@ -69,17 +52,27 @@ export interface UseCreateBadgeResult {
   error: string | null;
 }
 
-/** base64url-encode a Uint8Array without relying on Node's Buffer */
 function toBase64Url(bytes: Uint8Array): string {
-  let binary = "";
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+  return Buffer.from(bytes)
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=/g, "");
 }
 
 export interface UseCreateBadgeOptions {
-  /** Pre-captured 512x512 PNG from captureBadge(). When provided, replaces the solid-color fallback. */
+  /**
+   * Authoritative pre-captured PNG from the BadgeDesigner save (Redesign First
+   * round-trip via pendingDesignStore). Wins over both the existing on-disk
+   * PNG and the offscreen-host fallback — this is the design the user just
+   * committed to.
+   */
+  freshCapturedPng?: Buffer;
+  /**
+   * Opportunistic offscreen-host capture (first completion default-design path).
+   * Only used when neither freshCapturedPng nor a readable existing PNG is
+   * available.
+   */
   capturedPng?: Buffer;
   /** Serialized BadgeDesign JSON to persist on the badge record. */
   design?: string;
@@ -105,47 +98,44 @@ export function useCreateBadge(
   const [status, setStatus] = useState<BadgeCreationStatus>("idle");
   const [error, setError] = useState<string | null>(null);
 
-  // Capture latest evidence in a ref so the effect can read it without
-  // listing the arrays as deps (Evolu returns new refs every render).
+  // Refs let the effect read latest values without listing them as deps —
+  // Evolu queries return fresh array refs every render.
   const evidenceRef = useRef({ goalEvidence, stepEvidence });
   evidenceRef.current = { goalEvidence, stepEvidence };
-
-  // Same pattern for capturedPng and design — read latest value without adding to deps.
+  const freshCapturedPngRef = useRef(options?.freshCapturedPng);
+  freshCapturedPngRef.current = options?.freshCapturedPng;
   const capturedPngRef = useRef(options?.capturedPng);
   capturedPngRef.current = options?.capturedPng;
   const designRef = useRef(options?.design);
   designRef.current = options?.design;
 
-  // Once triggered, never reset — prevents re-entry after status state updates
-  // or after existingBadge reactively updates from null to a badge object.
+  // Never reset — prevents re-entry after status state updates or after
+  // existingBadge reactively flips from null to a row.
   const hasTriggered = useRef(false);
 
   useEffect(() => {
-    // Already done — badge exists (reactive update after createBadge)
-    if (existingBadge) {
+    if (!goal) return;
+
+    // Idempotent done — also catches the post-bake reactive tick where
+    // completeGoal has flipped status before the next render.
+    if (existingBadge && goal.status === GoalStatus.completed) {
       setStatus("done");
       return;
     }
 
-    // Key still initialising — transient state, not a user-visible problem
     if (!isReady) {
       setStatus("loading");
       return;
     }
 
-    // Key is ready but absent — permanent failure (generation failed)
+    // Key ready but absent → permanent failure (generation failed).
     if (!keyId) {
       setStatus("no-key");
       return;
     }
 
-    // Goal data not loaded yet
-    if (!goal) return;
-
-    // Caller requested to delay badge creation (e.g. waiting for evidence)
     if (!enabled) return;
 
-    // Guard against re-entry
     if (hasTriggered.current) return;
     hasTriggered.current = true;
 
@@ -219,22 +209,61 @@ export function useCreateBadge(
         setStatus("baking");
         breadcrumb({ category: "badge", message: "bake" });
 
-        // capturedPng is required — either a pending design's PNG or an
-        // auto-captured default-design PNG. The old solid-color fallback
-        // baked an unloved blue square into the credential and is gone
-        // for good.
-        if (!capturedPngRef.current) {
-          throw new Error(
-            "useCreateBadge: capturedPng is required — callers must provide a captured badge PNG (from a pending design or auto-captured default) before enabling badge creation",
-          );
+        // PNG source priority: designer redesign > existing on-disk PNG >
+        // offscreen capture. The middle source dodges the transparent-
+        // snapshot race in the capture host on iOS.
+        let pngBuffer: Buffer | null = null;
+
+        if (freshCapturedPngRef.current) {
+          if (!isPNG(freshCapturedPngRef.current)) {
+            throw new Error(
+              "useCreateBadge: freshCapturedPng is not a valid PNG buffer",
+            );
+          }
+          pngBuffer = freshCapturedPngRef.current;
         }
-        if (!isPNG(capturedPngRef.current)) {
-          throw new Error(
-            "useCreateBadge: capturedPng is not a valid PNG buffer",
-          );
+
+        if (!pngBuffer) {
+          const existingImageUri =
+            existingBadge?.imageUri &&
+            existingBadge.imageUri !== PLACEHOLDER_IMAGE_URI
+              ? (existingBadge.imageUri as string)
+              : null;
+          if (existingImageUri) {
+            let existing: Buffer;
+            try {
+              existing = await readBadgePNG(existingImageUri);
+            } catch (readErr) {
+              // Surface the URI so the user-visible badgeError points at the
+              // missing/unreadable file instead of a raw FileSystem message.
+              throw new Error(
+                `useCreateBadge: failed to read existing badge PNG at ${existingImageUri}: ${readErr instanceof Error ? readErr.message : String(readErr)}`,
+              );
+            }
+            if (!isPNG(existing)) {
+              throw new Error(
+                `useCreateBadge: existing badge PNG at ${existingImageUri} is not a valid PNG`,
+              );
+            }
+            pngBuffer = existing;
+          }
         }
-        const pngBuffer = capturedPngRef.current;
-        const bakedPng = bakePNG(pngBuffer, JSON.stringify(signedCredential));
+
+        if (!pngBuffer) {
+          if (!capturedPngRef.current) {
+            throw new Error(
+              "useCreateBadge: no PNG source available — callers must provide freshCapturedPng or capturedPng (or there must be a readable existing badge image)",
+            );
+          }
+          if (!isPNG(capturedPngRef.current)) {
+            throw new Error(
+              "useCreateBadge: capturedPng is not a valid PNG buffer",
+            );
+          }
+          pngBuffer = capturedPngRef.current;
+        }
+        const credentialJsonOut = JSON.stringify(signedCredential);
+        const bakedPng = bakePNG(pngBuffer, credentialJsonOut);
 
         // Save to disk — legitimately recoverable (filesystem errors). Fall back
         // to placeholder so badge creation still succeeds without a baked image.
@@ -265,15 +294,22 @@ export function useCreateBadge(
           );
         }
 
-        // createBadge first — it validates and can throw (non-empty credential required).
-        // If it throws, completeGoal has not yet fired, so no partial state occurs.
-        // Both are synchronous Evolu CRDT mutations — no await needed.
-        createBadge({
-          goalId,
-          credential: JSON.stringify(signedCredential),
-          imageUri,
-          ...(designRef.current ? { design: designRef.current } : {}),
-        });
+        // createBadge / updateBadge validate inputs and can throw before
+        // completeGoal — a failure leaves the goal active rather than
+        // completed-without-badge.
+        if (existingBadge) {
+          updateBadge(existingBadge.id as BadgeId, {
+            credential: credentialJsonOut,
+            imageUri,
+          });
+        } else {
+          createBadge({
+            goalId,
+            credential: credentialJsonOut,
+            imageUri,
+            ...(designRef.current ? { design: designRef.current } : {}),
+          });
+        }
         completeGoal(goalId, goalEvidenceForGating);
 
         setStatus("done");

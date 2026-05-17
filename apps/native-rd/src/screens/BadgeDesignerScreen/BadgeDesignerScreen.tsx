@@ -20,6 +20,7 @@ import { ScreenSubHeader } from "../../components/ScreenHeader";
 import {
   BadgeRenderer,
   getRendererLayoutOptions,
+  type BadgeRendererHandle,
 } from "../../badges/BadgeRenderer";
 import { BOTTOM_LABEL_INPUT_MAX_CHARS } from "../../badges/text/BottomLabel";
 import { ShapeSelector } from "../../badges/ShapeSelector";
@@ -45,10 +46,16 @@ import type {
   BadgeIconWeight,
   FrameDataParams,
 } from "../../badges/types";
-import { badgeWithGoalQuery, goalsQuery, updateBadge } from "../../db";
+import {
+  badgeWithGoalQuery,
+  goalsQuery,
+  updateBadge,
+  updateGoal,
+} from "../../db";
 import type { BadgeId, GoalId } from "../../db";
 import { pendingDesignStore } from "../../stores/pendingDesignStore";
 import { Logger } from "../../shims/rd-logger";
+import { reportError } from "../../services/sentry-report";
 import type {
   BadgeDesignerScreenProps,
   GoalsStackParamList,
@@ -86,8 +93,8 @@ interface DesignEditorProps {
   saveDisabled?: boolean;
   saveLoading?: boolean;
   extraFooter?: React.ReactNode;
-  /** Ref attached to the preview View — callers capture a PNG from it. */
-  previewRef?: React.RefObject<View | null>;
+  /** Ref attached to the BadgeRenderer — callers capture a PNG via its handle. */
+  previewRef?: React.RefObject<BadgeRendererHandle | null>;
 }
 
 function DesignEditor({
@@ -442,8 +449,8 @@ function DesignEditor({
           accessibilityRole="image"
           accessibilityLabel={previewLabel}
         >
-          <View ref={previewRef} collapsable={false} style={styles.badgeCanvas}>
-            <BadgeRenderer design={currentDesign} size={160} />
+          <View collapsable={false} style={styles.badgeCanvas}>
+            <BadgeRenderer ref={previewRef} design={currentDesign} size={160} />
           </View>
         </View>
       </Animated.View>
@@ -457,6 +464,7 @@ function DesignEditor({
 
 function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
   const navigation = useNavigation();
+  const { theme } = useUnistyles();
   const query = useMemo(
     () => badgeWithGoalQuery(badgeId as BadgeId),
     [badgeId],
@@ -477,6 +485,9 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
   const [design, setDesign] = useState<BadgeDesign | null>(null);
   const currentDesign = design ?? initialDesign;
   const goalColor = badge?.goalColor as string | null | undefined;
+  const goalIdForCapture = (badge?.goalId as string | null | undefined) ?? null;
+  const previewRef = useRef<BadgeRendererHandle | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const derivedFrameParams = useFrameParamsForGoal(
     (badge?.goalId as GoalId | null | undefined) ?? null,
@@ -484,22 +495,62 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
     (badge?.completedAt as string | null | undefined) ?? null,
   );
 
-  const handleSave = useCallback(() => {
-    if (!currentDesign) return;
+  const handleSave = useCallback(async () => {
+    if (!currentDesign || isSaving) return;
+    setIsSaving(true);
+    const designJson = JSON.stringify(currentDesign);
+
+    // Capture first, then persist. If updateBadge ran first and capture
+    // failed, the badge row would point at the old PNG with a new design —
+    // an out-of-sync state that survives the user backing out of the alert.
+    let pngBase64: string | null = null;
+    if (goalIdForCapture) {
+      try {
+        const pngBuffer = await captureBadge(
+          previewRef,
+          getCaptureDimensions(
+            currentDesign,
+            undefined,
+            getRendererLayoutOptions(theme),
+          ),
+        );
+        pngBase64 = pngBuffer.toString("base64");
+      } catch (captureErr) {
+        logger.error("Redesign-save capture failed", {
+          badgeId,
+          error: captureErr,
+        });
+        reportError(captureErr, { area: "badge.create", kind: "bake" });
+        Alert.alert(
+          "Save Failed",
+          "Could not capture your design preview. Please try again.",
+        );
+        setIsSaving(false);
+        return;
+      }
+    }
+
     try {
-      updateBadge(badgeId as BadgeId, {
-        design: JSON.stringify(currentDesign),
-      });
+      updateBadge(badgeId as BadgeId, { design: designJson });
     } catch (err) {
       logger.error("Failed to save badge design", { badgeId, error: err });
       Alert.alert(
         "Save Failed",
         "Could not save your badge design. Please try again.",
       );
+      setIsSaving(false);
       return;
     }
+
+    if (goalIdForCapture && pngBase64) {
+      pendingDesignStore.set(goalIdForCapture, {
+        designJson,
+        pngBase64,
+      });
+    }
+
     navigation.goBack();
-  }, [badgeId, currentDesign, navigation]);
+  }, [badgeId, currentDesign, goalIdForCapture, isSaving, navigation, theme]);
 
   if (!badge || !currentDesign) {
     return (
@@ -526,6 +577,9 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
       onDesignChange={setDesign}
       onSave={handleSave}
       onBack={() => navigation.goBack()}
+      previewRef={previewRef}
+      saveLoading={isSaving}
+      saveDisabled={isSaving}
     />
   );
 }
@@ -534,18 +588,36 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
 // GoalsStack: new-goal mode — no badge exists yet, design saved to store
 // ---------------------------------------------------------------------------
 
-function BadgeDesignerContentNewGoal({ goalId }: { goalId: string }) {
+function BadgeDesignerContentNewGoal({
+  goalId,
+  returnVia,
+}: {
+  goalId: string;
+  returnVia?: "back";
+}) {
   const navigation =
     useNavigation<NativeStackNavigationProp<GoalsStackParamList>>();
   const { theme } = useUnistyles();
   const goals = useQuery(goalsQuery);
   const goal = goals.find((g) => g.id === goalId) ?? null;
 
+  // Three-tier precedence so a Redesign-First return — warm session OR after
+  // cold start — opens with the user's configured design, not the default:
+  //   1. pendingDesignStore (warm session)
+  //   2. goal.design (persisted; survives cold start + Evolu sync)
+  //   3. createDefaultBadgeDesign (true fallback)
   const initialDesign = useMemo(() => {
+    const pending = pendingDesignStore.get(goalId);
+    if (pending) {
+      const parsed = parseBadgeDesign(pending.designJson);
+      if (parsed) return parsed;
+    }
+    const persisted = parseBadgeDesign((goal?.design as string | null) ?? null);
+    if (persisted) return persisted;
     const title = (goal?.title as string) ?? "Untitled";
     const color = (goal?.color as string | null) ?? null;
     return createDefaultBadgeDesign(title, color);
-  }, [goal]);
+  }, [goal, goalId]);
 
   const [design, setDesign] = useState<BadgeDesign | null>(null);
   const currentDesign = design ?? initialDesign;
@@ -558,7 +630,7 @@ function BadgeDesignerContentNewGoal({ goalId }: { goalId: string }) {
     null,
   );
 
-  const previewRef = useRef<View | null>(null);
+  const previewRef = useRef<BadgeRendererHandle | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   const saveAndNavigate = useCallback(
@@ -566,6 +638,7 @@ function BadgeDesignerContentNewGoal({ goalId }: { goalId: string }) {
       if (isSaving) return;
       setIsSaving(true);
       try {
+        const designJson = JSON.stringify(designToSave);
         const pngBuffer = await captureBadge(
           previewRef,
           getCaptureDimensions(
@@ -574,11 +647,19 @@ function BadgeDesignerContentNewGoal({ goalId }: { goalId: string }) {
             getRendererLayoutOptions(theme),
           ),
         );
+        // Persist to goal row first so a navigation that interrupts the
+        // pendingDesignStore write still leaves the configured design on
+        // disk — the source of truth across cold starts and device sync.
+        updateGoal(goalId as GoalId, { design: designJson });
         pendingDesignStore.set(goalId, {
-          designJson: JSON.stringify(designToSave),
+          designJson,
           pngBase64: pngBuffer.toString("base64"),
         });
-        navigation.replace("EditMode", { goalId });
+        if (returnVia === "back") {
+          navigation.goBack();
+        } else {
+          navigation.replace("EditMode", { goalId });
+        }
       } catch (err) {
         logger.error("Failed to save design and navigate", {
           goalId,
@@ -591,7 +672,7 @@ function BadgeDesignerContentNewGoal({ goalId }: { goalId: string }) {
         setIsSaving(false);
       }
     },
-    [goalId, isSaving, navigation, theme],
+    [goalId, isSaving, navigation, returnVia, theme],
   );
 
   const handleSave = useCallback(() => {
@@ -644,7 +725,7 @@ function BadgeDesignerContentNewGoal({ goalId }: { goalId: string }) {
 
 type ScreenParams =
   | { badgeId: string; mode?: undefined }
-  | { mode: "new-goal"; goalId: string }
+  | { mode: "new-goal"; goalId: string; returnVia?: "back" }
   | { mode: "redesign"; badgeId: string };
 
 export function BadgeDesignerScreen({
@@ -656,7 +737,12 @@ export function BadgeDesignerScreen({
 
   let content: React.ReactNode;
   if ("mode" in params && params.mode === "new-goal") {
-    content = <BadgeDesignerContentNewGoal goalId={params.goalId} />;
+    content = (
+      <BadgeDesignerContentNewGoal
+        goalId={params.goalId}
+        returnVia={params.returnVia}
+      />
+    );
   } else if ("badgeId" in params && params.badgeId) {
     content = <BadgeDesignerContentBadge badgeId={params.badgeId} />;
   } else {

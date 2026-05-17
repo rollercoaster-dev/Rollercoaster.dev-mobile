@@ -21,7 +21,6 @@ export interface BadgeEarnedModalProps {
   isFirstBadge: boolean;
   onViewBadge: () => void;
   onContinue: () => void;
-  onCustomize?: () => void;
 }
 
 export function BadgeEarnedModal({
@@ -30,7 +29,6 @@ export function BadgeEarnedModal({
   isFirstBadge,
   onViewBadge,
   onContinue,
-  onCustomize,
 }: BadgeEarnedModalProps) {
   const { theme } = useUnistyles();
   const { animationPref, shouldAnimate } = useAnimationPref();
@@ -81,7 +79,12 @@ export function BadgeEarnedModal({
           <Animated.View style={animatedStyle}>
             <View style={styles.card} {...cardA11yProps}>
               {hasImage ? (
+                // `key={imageUri}` forces a fresh native Image mount when the
+                // rebake flow swaps the badge row's imageUri mid-display.
+                // Without it, iOS's UIImageView occasionally hangs onto the
+                // previous fetch and skips loading the new URI.
                 <Image
+                  key={imageUri}
                   source={{ uri: imageUri }}
                   style={styles.badgeImage}
                   accessibilityLabel="Badge image"
@@ -108,13 +111,6 @@ export function BadgeEarnedModal({
                   onPress={onViewBadge}
                   variant="primary"
                 />
-                {onCustomize && (
-                  <Button
-                    label="Customize"
-                    onPress={onCustomize}
-                    variant="secondary"
-                  />
-                )}
                 <Button
                   label="Keep going"
                   onPress={onContinue}

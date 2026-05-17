@@ -167,26 +167,27 @@ design-tokens package
   src/themes/tokens.ts     ← re-exports space, size, radius, etc.
   src/themes/colorModes.ts ← wraps colors into ColorModeConfig shape
   src/themes/variants.ts   ← variant overrides + mood labels
-  src/themes/compose.ts    ← composeTheme() → 14 ComposedThemes
+  src/themes/compose.ts    ← composeTheme() + 7 registered product themes
 ```
 
 ---
 
 ## Theme Composition
 
-native-rd composes **2 color modes × 7 variants = 14 themes** via `compose.ts`:
+native-rd exposes **7 product themes** via `compose.ts`. `composeTheme(colorMode, variant)` can still build any color-mode/variant pair for previews and focused tests, but only the product themes are registered with Unistyles at runtime:
 
 ```typescript
 // compose.ts
 const themes = Object.fromEntries(
-  colorModeList.flatMap((cm) =>
-    variants.map((v) => [`${cm}-${v}`, composeTheme(cm, v)]),
-  ),
+  productThemeEntries.map(([name, colorMode, variant]) => [
+    name,
+    composeTheme(colorMode, variant),
+  ]),
 ) as Record<ThemeName, ComposedTheme>;
 ```
 
-Theme names follow the pattern `{colorMode}-{variant}`:
-`light-default`, `light-highContrast`, `dark-dyslexia`, `dark-lowVision`, etc.
+Registered theme names are:
+`light-default`, `dark-default`, `light-highContrast`, `light-dyslexia`, `light-autismFriendly`, `light-lowVision`, and `light-lowInfo`.
 
 See [ND Themes](../design/nd-themes.md) for the full theme reference.
 
@@ -212,5 +213,5 @@ The package includes HTML visual reference pages at `overview/` that render all 
 ## Related Documents
 
 - [Design Language](../design/design-language.md) — how tokens translate to React Native
-- [ND Themes](../design/nd-themes.md) — all 14 composed theme definitions
+- [ND Themes](../design/nd-themes.md) — neurodiversity theme definitions
 - [Design Principles](../vision/design-principles.md) — the themes as day-one requirements

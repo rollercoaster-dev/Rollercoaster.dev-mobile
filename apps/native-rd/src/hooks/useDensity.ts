@@ -4,12 +4,12 @@ import { updateUserSettings } from "../db";
 import { useUserSettingsRow } from "./useUserSettingsRow";
 import { scaleSpacing, type DensityLevel } from "../utils/density";
 import { space as baseSpace } from "../themes/tokens";
-import { themeNames, type ThemeName } from "../themes/compose";
+import { themeNames } from "../themes/compose";
 
 function applyDensityToAllThemes(level: DensityLevel) {
   const scaled = scaleSpacing(baseSpace, level);
   for (const name of themeNames) {
-    UnistylesRuntime.updateTheme(name as ThemeName, (current) => ({
+    UnistylesRuntime.updateTheme(name, (current) => ({
       ...current,
       space: scaled,
     }));

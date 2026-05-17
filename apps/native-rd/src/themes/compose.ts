@@ -1,10 +1,10 @@
 /**
- * Theme composition - combines colorModes with variants
- * Generates all 14 theme combinations (2 colorModes × 7 variants)
+ * Theme composition. composeTheme can build any pair for previews/tests, but
+ * the runtime registry includes only the seven exposed product themes.
  */
 
 import { colorModes, type ColorMode, type Colors } from "./colorModes";
-import { variantOverrides, variants, type Variant } from "./variants";
+import { variantOverrides, type Variant } from "./variants";
 import {
   space,
   size,
@@ -173,7 +173,6 @@ export function composeTheme(
 
   // Build typography presets using resolved scales
   const s = sizeScale as Record<string, number>;
-  const lh = lineHeightScale as Record<string, number>;
   const textStyles: TextStyles = {
     display: {
       fontSize: s["4xl"] ?? 40,
@@ -249,20 +248,14 @@ export function composeTheme(
   };
 }
 
-/**
- * Generate theme name from colorMode and variant
- */
 export function getThemeName(
   colorMode: ColorMode,
   variant: Variant,
-): ThemeName {
-  return `${colorMode}-${variant}` as ThemeName;
+): AllThemeName {
+  return `${colorMode}-${variant}` as AllThemeName;
 }
 
-/**
- * Parse theme name into colorMode and variant
- */
-export function parseThemeName(themeName: ThemeName): {
+export function parseThemeName(themeName: AllThemeName): {
   colorMode: ColorMode;
   variant: Variant;
 } {
@@ -272,20 +265,32 @@ export function parseThemeName(themeName: ThemeName): {
   return { colorMode, variant };
 }
 
-/** All possible theme names - derived from colorMode × variant */
-export type ThemeName = `${ColorMode}-${Variant}`;
+/** All possible generated theme names, including unsupported combinations. */
+export type AllThemeName = `${ColorMode}-${Variant}`;
 
-const colorModeList: ColorMode[] = ["light", "dark"];
+const productThemeEntries = [
+  ["light-default", "light", "default"],
+  ["dark-default", "dark", "default"],
+  ["light-highContrast", "light", "highContrast"],
+  ["light-dyslexia", "light", "dyslexia"],
+  ["light-autismFriendly", "light", "autismFriendly"],
+  ["light-lowVision", "light", "lowVision"],
+  ["light-lowInfo", "light", "lowInfo"],
+] as const satisfies readonly (readonly [AllThemeName, ColorMode, Variant])[];
 
-export const themeNames: ThemeName[] = colorModeList.flatMap((cm) =>
-  variants.map((v) => `${cm}-${v}` as ThemeName),
+/** Runtime-supported theme names exposed by product UI and persistence. */
+export type ThemeName = (typeof productThemeEntries)[number][0];
+
+export const themeNames: ThemeName[] = productThemeEntries.map(
+  ([name]) => name,
 );
 
-/** All 14 composed themes - derived from colorMode × variant */
+/** The seven composed themes registered with Unistyles at runtime. */
 export const themes = Object.fromEntries(
-  colorModeList.flatMap((cm) =>
-    variants.map((v) => [`${cm}-${v}`, composeTheme(cm, v)]),
-  ),
+  productThemeEntries.map(([name, colorMode, variant]) => [
+    name,
+    composeTheme(colorMode, variant),
+  ]),
 ) as Record<ThemeName, ComposedTheme>;
 
 export type Themes = typeof themes;

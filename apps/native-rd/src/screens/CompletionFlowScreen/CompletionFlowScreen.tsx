@@ -1,16 +1,25 @@
-import { Suspense, useState, useRef, useEffect, useCallback } from "react";
+import {
+  Suspense,
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
 import {
   View,
   ScrollView,
-  Image,
   ActivityIndicator,
   TextInput,
   KeyboardAvoidingView,
   AccessibilityInfo,
 } from "react-native";
-import type { ImageSourcePropType } from "react-native";
 import { Buffer } from "buffer";
-import { useNavigation, type NavigationProp } from "@react-navigation/native";
+import {
+  useNavigation,
+  useFocusEffect,
+  type NavigationProp,
+} from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@evolu/react";
 import { useUnistyles } from "react-native-unistyles";
@@ -24,9 +33,10 @@ import { BadgeEarnedModal } from "../BadgeEarnedModal";
 import {
   BadgeRenderer,
   getRendererLayoutOptions,
+  type BadgeRendererHandle,
 } from "../../badges/BadgeRenderer";
 import { captureBadge, getCaptureDimensions } from "../../badges/captureBadge";
-import { createDefaultBadgeDesign } from "../../badges/types";
+import { createDefaultBadgeDesign, parseBadgeDesign } from "../../badges/types";
 import type { BadgeDesign } from "../../badges/types";
 import {
   goalsQuery,
@@ -64,14 +74,6 @@ import { KEYBOARD_AVOIDING_PROPS } from "../../utils/keyboard";
 import { styles } from "./CompletionFlowScreen.styles";
 
 const logger = new Logger("CompletionFlowScreen");
-
-/**
- * Optional image override for the completion icon.
- * Set to an image source (e.g. require('../../../assets/icon.png')) to use an image,
- * or leave as undefined to use the default emoji.
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const COMPLETION_ICON: ImageSourcePropType | undefined = undefined;
 
 const EVIDENCE_ROUTE_MAP: Partial<
   Record<EvidenceTypeValue, CaptureScreenName>
@@ -112,40 +114,54 @@ function CompletionContent({
 
   const hasGoalEvidence = goalEvidenceRows.length > 0;
 
-  // Phase: start in celebration if evidence already exists, otherwise show prompt
-  const [phase, setPhase] = useState<CompletionPhase>(
-    hasGoalEvidence ? "celebration" : "evidence-prompt",
-  );
+  const isReCompletion =
+    Boolean(badgeRow) && goal?.status !== GoalStatus.completed;
 
-  // Transition to celebration when evidence appears (e.g. after inline save or returning from capture screen)
+  // Re-completion only advances on evidence added *this session* — the
+  // persisted rows are the previous bake's snapshot, not fresh proof.
+  const initialEvidenceCount = useRef(goalEvidenceRows.length);
+  const hasFreshEvidence =
+    goalEvidenceRows.length > initialEvidenceCount.current;
+
+  const [phase, setPhase] = useState<CompletionPhase>(() => {
+    if (isReCompletion) return "evidence-prompt";
+    return hasGoalEvidence ? "celebration" : "evidence-prompt";
+  });
+
   useEffect(() => {
-    if (hasGoalEvidence && phase === "evidence-prompt") {
-      setPhase("celebration");
-      AccessibilityInfo.announceForAccessibility(
-        "Evidence added! Generating your badge.",
-      );
-    }
-  }, [hasGoalEvidence, phase]);
+    if (phase !== "evidence-prompt") return;
+    const shouldAdvance = isReCompletion ? hasFreshEvidence : hasGoalEvidence;
+    if (!shouldAdvance) return;
+    setPhase("celebration");
+    AccessibilityInfo.announceForAccessibility(
+      "Evidence added! Generating your badge.",
+    );
+  }, [phase, isReCompletion, hasFreshEvidence, hasGoalEvidence]);
 
-  // Default-design fallback for goals with no pending design (typically goals
-  // whose New-Goal session expired before completion, since pendingDesignStore
-  // is in-memory). Render an offscreen BadgeRenderer with the design-system
-  // default (rounded-rectangle + first-letter monogram), capture once, and
-  // feed the PNG into useCreateBadge. Kills the old solid-blue fallback.
+  // First-completion-only fallback: re-completion reuses the existing
+  // on-disk PNG via readBadgePNG.
+  //
+  // Hydration precedence when there's no warm pendingCapturedPng:
+  //   1. goal.design — persisted source; survives cold start and Evolu sync,
+  //      unlike the in-memory pendingDesignStore.
+  //   2. createDefaultBadgeDesign — synthesized default (true last resort).
   const goalTitleForDefault = (goal?.title as string | null) ?? "";
   const goalColorForDefault = (goal?.color as string | null) ?? null;
+  const persistedGoalDesign = parseBadgeDesign(
+    (goal?.design as string | null) ?? null,
+  );
   const fallbackDesign: BadgeDesign | null =
-    !pendingCapturedPng && goal
-      ? createDefaultBadgeDesign(goalTitleForDefault, goalColorForDefault)
+    !pendingCapturedPng && goal && !badgeRow
+      ? (persistedGoalDesign ??
+        createDefaultBadgeDesign(goalTitleForDefault, goalColorForDefault))
       : null;
-  const fallbackRef = useRef<View | null>(null);
+  const fallbackRef = useRef<BadgeRendererHandle | null>(null);
   const [fallbackPng, setFallbackPng] = useState<Buffer | null>(null);
-  const [fallbackHostLaidOut, setFallbackHostLaidOut] = useState(false);
   const fallbackCaptureStarted = useRef(false);
 
   useEffect(() => {
     if (pendingCapturedPng || !fallbackDesign || fallbackPng) return;
-    if (!fallbackHostLaidOut) return; // wait for the offscreen view to be attached + measured
+    if (!fallbackRef.current) return; // wait for BadgeRenderer to attach the handle
     if (fallbackCaptureStarted.current) return;
     fallbackCaptureStarted.current = true;
     const dimensions = getCaptureDimensions(
@@ -160,29 +176,33 @@ function CompletionContent({
         reportError(err, { area: "badge.create", kind: "bake" });
         fallbackCaptureStarted.current = false;
       });
-  }, [
-    pendingCapturedPng,
-    fallbackDesign,
-    fallbackPng,
-    fallbackHostLaidOut,
-    theme,
-    goalId,
-  ]);
+  }, [pendingCapturedPng, fallbackDesign, fallbackPng, theme, goalId]);
 
-  const capturedPngForBake = pendingCapturedPng ?? fallbackPng ?? undefined;
   const designJsonForBake =
     pendingDesignJson ??
     (fallbackDesign && fallbackPng
       ? JSON.stringify(fallbackDesign)
       : undefined);
 
-  // Only create badge when evidence exists AND we have a PNG (pending or auto-captured)
+  // Bake never auto-fires — the user always taps Bake It explicitly, even
+  // when a fresh designer PNG is already in hand.
+  const [userConfirmedBake, setUserConfirmedBake] = useState(false);
+
+  const hasExistingBadgeImage = Boolean(
+    badgeRow?.imageUri && badgeRow.imageUri !== PLACEHOLDER_IMAGE_URI,
+  );
+  const hasAnyBakeSource =
+    pendingCapturedPng !== undefined ||
+    fallbackPng !== null ||
+    hasExistingBadgeImage;
+
   const { status: badgeStatus, error: badgeError } = useCreateBadge(
     goalId as GoalId,
     {
       ...(designJsonForBake ? { design: designJsonForBake } : {}),
-      ...(capturedPngForBake ? { capturedPng: capturedPngForBake } : {}),
-      enabled: phase === "celebration" && capturedPngForBake !== undefined,
+      ...(pendingCapturedPng ? { freshCapturedPng: pendingCapturedPng } : {}),
+      ...(fallbackPng ? { capturedPng: fallbackPng } : {}),
+      enabled: phase === "celebration" && hasAnyBakeSource && userConfirmedBake,
     },
   );
   const isBadgeCreating =
@@ -196,7 +216,6 @@ function CompletionContent({
   const hasShownModal = useRef(false);
   const capturedIsFirstBadge = useRef(false);
 
-  // Start confetti when entering celebration phase
   useEffect(() => {
     if (phase === "celebration") {
       setShowConfetti(true);
@@ -219,6 +238,36 @@ function CompletionContent({
   const trimmedNote = noteText.trim();
   const canSaveNote =
     trimmedNote.length > 0 && trimmedNote.length <= MAX_NOTE_LENGTH;
+
+  const badgeDesignJson = (badgeRow?.design as string | null) ?? null;
+  const goalDesignJson = (goal?.design as string | null) ?? null;
+  const previewDesign = useMemo<BadgeDesign | null>(() => {
+    if (pendingDesignJson) {
+      const parsed = parseBadgeDesign(pendingDesignJson);
+      if (parsed) return parsed;
+    }
+    // goal.design sits between warm pending and post-bake badge tiers:
+    // pre-bake the badge row doesn't exist yet, so goal.design is the only
+    // configured-design source after cold start. Post-bake, the badge row
+    // wins because it holds the bake-time snapshot.
+    if (goalDesignJson) {
+      const parsed = parseBadgeDesign(goalDesignJson);
+      if (parsed) return parsed;
+    }
+    if (badgeDesignJson) {
+      const parsed = parseBadgeDesign(badgeDesignJson);
+      if (parsed) return parsed;
+    }
+    if (!goal) return null;
+    return createDefaultBadgeDesign(goalTitleForDefault, goalColorForDefault);
+  }, [
+    pendingDesignJson,
+    goalDesignJson,
+    badgeDesignJson,
+    goal,
+    goalTitleForDefault,
+    goalColorForDefault,
+  ]);
 
   const handleSaveInlineNote = useCallback(() => {
     if (!canSaveNote || savingNote) return;
@@ -264,12 +313,36 @@ function CompletionContent({
     navigation.navigate("TimelineJourney", { goalId });
   };
 
+  const handleBakeIt = () => setUserConfirmedBake(true);
+
+  const handleRedesignFirst = () => {
+    if (badgeRow) {
+      navigation.navigate("BadgeDesigner", {
+        mode: "redesign",
+        badgeId: String(badgeRow.id),
+      });
+      return;
+    }
+    // Re-stash the consumed design so the designer pre-loads it on return.
+    if (pendingDesignJson && pendingCapturedPng) {
+      pendingDesignStore.set(goalId, {
+        designJson: pendingDesignJson,
+        pngBase64: pendingCapturedPng.toString("base64"),
+      });
+    }
+    navigation.navigate("BadgeDesigner", {
+      mode: "new-goal",
+      goalId,
+      returnVia: "back",
+    });
+  };
+
   const isCompleted = goal?.status === GoalStatus.completed;
+  const showBakeChoice = !userConfirmedBake && !isCompleted;
 
   const handleReopenGoal = () => {
     uncompleteGoal(goalId as GoalId);
-    // replace so a back gesture doesn't drop the user back into the
-    // just-left celebration screen (which would re-show BadgeEarnedModal).
+    // replace, not navigate — back to the celebration screen would re-show BadgeEarnedModal.
     navigation.replace("FocusMode", { goalId });
   };
 
@@ -289,46 +362,31 @@ function CompletionContent({
     }
   };
 
-  const handleCustomizeBadge = () => {
-    setShowBadgeModal(false);
-    if (!badgeRow) {
-      logger.warn(
-        "handleCustomizeBadge: badgeRow is null — cannot navigate to designer",
-      );
-      return;
-    }
-    navigation.navigate("BadgeDesigner", {
-      mode: "redesign",
-      badgeId: String(badgeRow.id),
-    });
-  };
-
   const handleDismissBadgeModal = () => {
     setShowBadgeModal(false);
   };
 
-  // Offscreen host for the default-design capture. Rendered in both phases
-  // so the PNG is ready by the time the user transitions to celebration.
+  // Mounted in both phases so the PNG is ready before the user reaches celebration.
+  // The wrapper is purely an offscreen positioning host now — capture goes through
+  // the BadgeRenderer's imperative handle (Svg.toDataURL), not the view buffer.
   const fallbackHost = fallbackDesign ? (
     <View
-      ref={fallbackRef}
       collapsable={false}
       style={styles.fallbackCaptureHost}
       pointerEvents="none"
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
       testID="completion-fallback-capture-host"
-      onLayout={(e) => {
-        if (e.nativeEvent.layout.width > 0 && !fallbackHostLaidOut) {
-          setFallbackHostLaidOut(true);
-        }
-      }}
     >
-      <BadgeRenderer design={fallbackDesign} size={160} showShadow={false} />
+      <BadgeRenderer
+        ref={fallbackRef}
+        design={fallbackDesign}
+        size={160}
+        showShadow={false}
+      />
     </View>
   ) : null;
 
-  // Evidence prompt phase — capture evidence before celebration
   if (phase === "evidence-prompt") {
     return (
       <KeyboardAvoidingView style={{ flex: 1 }} {...KEYBOARD_AVOIDING_PROPS}>
@@ -408,7 +466,6 @@ function CompletionContent({
     );
   }
 
-  // Celebration phase — evidence exists, badge being created
   return (
     <View style={{ flex: 1 }}>
       {fallbackHost}
@@ -424,15 +481,7 @@ function CompletionContent({
           accessibilityLabel={`Congratulations! All ${stepRows.length} steps completed for ${goal.title}`}
         >
           <View style={styles.iconContainer} accessibilityElementsHidden>
-            {COMPLETION_ICON ? (
-              <Image
-                source={COMPLETION_ICON}
-                style={styles.iconImage}
-                resizeMode="contain"
-              />
-            ) : (
-              <Text style={styles.iconEmoji}>{"\u{1F3AF}"}</Text>
-            )}
+            <Text style={styles.iconEmoji}>{"\u{1F3AF}"}</Text>
           </View>
           <Text
             variant="headline"
@@ -445,25 +494,64 @@ function CompletionContent({
             All {stepRows.length} steps completed for {goal.title}
           </Text>
 
-          <View style={styles.actions}>
-            <Button
-              label="Add Final Evidence"
-              onPress={handleAddEvidence}
-              variant={hasGoalEvidence ? "secondary" : "primary"}
-            />
-            <Button
-              label="View Your Journey →"
-              onPress={handleViewJourney}
-              variant={hasGoalEvidence ? "primary" : "secondary"}
-            />
-            {isCompleted && (
-              <Button
-                label="Reopen Goal"
-                onPress={handleReopenGoal}
-                variant="secondary"
+          {showBakeChoice && previewDesign && (
+            <View
+              style={styles.previewContainer}
+              accessible
+              accessibilityRole="image"
+              accessibilityLabel="Badge preview before baking"
+              testID="completion-bake-preview"
+            >
+              <BadgeRenderer
+                design={previewDesign}
+                size={160}
+                showShadow={false}
               />
-            )}
-          </View>
+            </View>
+          )}
+
+          {showBakeChoice ? (
+            <View style={styles.actions}>
+              <Button
+                label="Bake It"
+                onPress={handleBakeIt}
+                variant="primary"
+                testID="completion-bake-it-button"
+                // Prevents userConfirmedBake from flipping without a usable
+                // source: the choice UI would disappear and post-bake actions
+                // would render even though useCreateBadge is still disabled
+                // (no PNG → enabled=false), letting the user navigate away
+                // before the bake fires.
+                disabled={!hasAnyBakeSource}
+              />
+              <Button
+                label="Redesign First"
+                onPress={handleRedesignFirst}
+                variant="secondary"
+                testID="completion-redesign-first-button"
+              />
+            </View>
+          ) : (
+            <View style={styles.actions}>
+              <Button
+                label="Add Final Evidence"
+                onPress={handleAddEvidence}
+                variant={hasGoalEvidence ? "secondary" : "primary"}
+              />
+              <Button
+                label="View Your Journey →"
+                onPress={handleViewJourney}
+                variant={hasGoalEvidence ? "primary" : "secondary"}
+              />
+              {isCompleted && (
+                <Button
+                  label="Reopen Goal"
+                  onPress={handleReopenGoal}
+                  variant="secondary"
+                />
+              )}
+            </View>
+          )}
 
           {isBadgeCreating && (
             <View
@@ -543,7 +631,6 @@ function CompletionContent({
           imageUri={badgeRow.imageUri ?? PLACEHOLDER_IMAGE_URI}
           isFirstBadge={capturedIsFirstBadge.current}
           onViewBadge={handleViewBadge}
-          onCustomize={handleCustomizeBadge}
           onContinue={handleDismissBadgeModal}
         />
       )}
@@ -555,15 +642,26 @@ export function CompletionFlowScreen({ route }: CompletionFlowScreenProps) {
   const navigation = useNavigation();
   const { goalId } = route.params;
 
-  // Consume the pending design ONCE at this level — outside the inner Suspense
-  // boundary so the ref survives inner remounts when Evolu queries resolve.
-  // (An inner useRef inside CompletionContent was re-running consume() on every
-  // Suspense-triggered remount; the first remount ate the entry and the
-  // later mount whose useCreateBadge effect actually fires saw nothing.)
-  const pendingDesignRef = useRef(pendingDesignStore.consume(goalId));
-  const pendingDesign = pendingDesignRef.current;
-  const pendingCapturedPngRef = useRef(
+  // Consume outside the inner Suspense boundary so the entry survives
+  // Evolu-triggered remounts (inner consume() ate the entry on first remount
+  // before the bake-firing mount could see it). State, not ref, so a fresh
+  // BadgeDesigner save during the same stack visit can flow through.
+  const [pendingDesign, setPendingDesign] = useState(() =>
+    pendingDesignStore.consume(goalId),
+  );
+  const [pendingCapturedPng, setPendingCapturedPng] = useState<
+    Buffer | undefined
+  >(() =>
     pendingDesign ? Buffer.from(pendingDesign.pngBase64, "base64") : undefined,
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      const fresh = pendingDesignStore.consume(goalId);
+      if (!fresh) return;
+      setPendingDesign(fresh);
+      setPendingCapturedPng(Buffer.from(fresh.pngBase64, "base64"));
+    }, [goalId]),
   );
 
   return (
@@ -578,7 +676,7 @@ export function CompletionFlowScreen({ route }: CompletionFlowScreenProps) {
           <CompletionContent
             goalId={goalId}
             pendingDesignJson={pendingDesign?.designJson}
-            pendingCapturedPng={pendingCapturedPngRef.current}
+            pendingCapturedPng={pendingCapturedPng}
           />
         </Suspense>
       </ErrorBoundary>
