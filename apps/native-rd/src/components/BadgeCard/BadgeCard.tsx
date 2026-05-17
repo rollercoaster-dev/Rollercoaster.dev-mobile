@@ -1,7 +1,10 @@
 import { useMemo } from "react";
 import { View, Text, Pressable, PixelRatio } from "react-native";
 import { useUnistyles } from "react-native-unistyles";
-import { BadgeRenderer } from "../../badges/BadgeRenderer";
+import {
+  BadgeRenderer,
+  getRendererLayoutOptions,
+} from "../../badges/BadgeRenderer";
 import { getBadgeLayoutBoxes } from "../../badges/layoutBoxes";
 import type { BadgeDesign } from "../../badges/types";
 import { styles } from "./BadgeCard.styles";
@@ -39,9 +42,14 @@ export function BadgeCard({
   const badgeSize = Math.round(textColumnHeight * fontScale);
 
   // Banner/bottomLabel overflow the badge square — size to the SVG viewBox so the card grows instead of clipping.
+  // Pass the same layout options the renderer uses (no shadow, theme-aware strokeWidth) so the wrapper matches the mounted SVG.
+  const rendererOptions = getRendererLayoutOptions(theme, false);
   const viewBox = useMemo(
-    () => (design ? getBadgeLayoutBoxes(design, badgeSize).viewBox : null),
-    [design, badgeSize],
+    () =>
+      design
+        ? getBadgeLayoutBoxes(design, badgeSize, rendererOptions).viewBox
+        : null,
+    [design, badgeSize, rendererOptions.strokeWidth, rendererOptions.hasShadow],
   );
 
   return (
@@ -50,6 +58,7 @@ export function BadgeCard({
       accessible
       accessibilityRole={onPress ? "button" : undefined}
       accessibilityLabel={`Badge: ${title}, earned ${earnedDate}`}
+      accessibilityHint={description}
       style={styles.pressable}
     >
       <View style={styles.container(size)}>

@@ -14,6 +14,7 @@ jest.mock("../../../badges/BadgeRenderer", () => ({
     mockBadgeRenderer(props);
     return "BadgeRenderer";
   },
+  getRendererLayoutOptions: () => ({ strokeWidth: 3, hasShadow: false }),
 }));
 
 beforeEach(() => {
@@ -173,6 +174,24 @@ describe("BadgeCard", () => {
       expect(
         screen.getByLabelText("Badge: First Steps, earned Jan 1, 2025"),
       ).toBeOnTheScreen();
+    });
+
+    it("threads description into accessibilityHint", () => {
+      renderWithProviders(
+        <BadgeCard {...baseProps} description="Read 30 books in 2025" />,
+      );
+      const pressable = screen.getByLabelText(
+        "Badge: First Steps, earned Jan 1, 2025",
+      );
+      expect(pressable.props.accessibilityHint).toBe("Read 30 books in 2025");
+    });
+
+    it("omits accessibilityHint when no description", () => {
+      renderWithProviders(<BadgeCard {...baseProps} />);
+      const pressable = screen.getByLabelText(
+        "Badge: First Steps, earned Jan 1, 2025",
+      );
+      expect(pressable.props.accessibilityHint).toBeUndefined();
     });
   });
 });
