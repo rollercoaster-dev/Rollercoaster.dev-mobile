@@ -76,6 +76,9 @@
         "serviceAccountKeyPath": "../../secrets/play-service-account.json",
         "track": "internal"
       }
+    },
+    "play-internal": {
+      "extends": "preview"
     }
   }
 }
