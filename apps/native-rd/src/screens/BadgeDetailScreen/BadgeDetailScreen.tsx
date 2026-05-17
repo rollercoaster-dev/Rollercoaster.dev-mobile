@@ -15,8 +15,9 @@ import { Text } from "../../components/Text";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
+import { ArrowLeft } from "phosphor-react-native";
 import { IconButton } from "../../components/IconButton";
-import { BackArrowGlyph, HeaderBand } from "../../components/ScreenHeader";
+import { HeaderBand } from "../../components/ScreenHeader";
 import { badgeWithGoalQuery, deleteBadge } from "../../db";
 import type { BadgeId } from "../../db";
 import { PLACEHOLDER_IMAGE_URI } from "../../hooks/useCreateBadge";
@@ -83,7 +84,7 @@ function DetailTopBar({
           any header text would peek out behind it. */}
       <HeaderBand>
         <IconButton
-          icon={<BackArrowGlyph />}
+          icon={<ArrowLeft size={24} weight="bold" />}
           onPress={onBack}
           tone="chrome"
           accessibilityLabel="Go back"

@@ -25,14 +25,10 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.text,
     fontFamily: theme.fontFamily.headline,
   },
-  evidenceBadgeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: theme.space[1],
-  },
   evidenceBadgeWrapper: {
     position: "relative" as const,
     alignSelf: "flex-start",
+    marginTop: theme.space[1],
   },
   evidenceBadge: {
     flexDirection: "row",

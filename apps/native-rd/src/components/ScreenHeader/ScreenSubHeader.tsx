@@ -1,8 +1,8 @@
 import React from "react";
 import { View } from "react-native";
+import { ArrowLeft } from "phosphor-react-native";
 import { Text } from "../Text";
 import { IconButton } from "../IconButton";
-import { BackArrowGlyph } from "./BackArrowGlyph";
 import { HeaderBand } from "./HeaderBand";
 import { styles } from "./ScreenHeader.styles";
 
@@ -20,7 +20,7 @@ export function ScreenSubHeader({
   return (
     <HeaderBand>
       <IconButton
-        icon={<BackArrowGlyph />}
+        icon={<ArrowLeft size={24} weight="bold" />}
         onPress={onBack}
         tone="chrome"
         accessibilityLabel="Go back"

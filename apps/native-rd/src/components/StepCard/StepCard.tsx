@@ -177,24 +177,22 @@ export function StepCard({
         )}
 
         {step.evidenceCount > 0 && (
-          <View style={styles.evidenceBadgeRow}>
-            <View style={styles.evidenceBadgeWrapper}>
-              <Pressable
-                onPress={onEvidenceTap}
-                style={styles.evidenceBadge}
-                accessible
-                accessibilityRole="button"
-                accessibilityLabel={`${step.evidenceCount} evidence items, tap to view`}
-              >
-                <Text style={styles.evidenceText}>{evidenceLabel}</Text>
-              </Pressable>
-              <Animated.View
-                style={[styles.evidenceFlash, flashStyle]}
-                pointerEvents="none"
-                accessibilityElementsHidden
-                importantForAccessibility="no-hide-descendants"
-              />
-            </View>
+          <View style={styles.evidenceBadgeWrapper}>
+            <Pressable
+              onPress={onEvidenceTap}
+              style={styles.evidenceBadge}
+              accessible
+              accessibilityRole="button"
+              accessibilityLabel={`${step.evidenceCount} evidence items, tap to view`}
+            >
+              <Text style={styles.evidenceText}>{evidenceLabel}</Text>
+            </Pressable>
+            <Animated.View
+              style={[styles.evidenceFlash, flashStyle]}
+              pointerEvents="none"
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+            />
           </View>
         )}
       </ScrollView>
