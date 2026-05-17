@@ -30,9 +30,24 @@ export const styles = StyleSheet.create((theme) => ({
     fontFamily: theme.fontFamily.body,
     lineHeight: theme.lineHeight.sm,
   },
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.space[2],
+    flexWrap: "wrap",
+  },
   evidenceBadgeWrapper: {
     position: "relative" as const,
     alignSelf: "flex-start" as const,
+  },
+  lockedHint: {
+    fontSize: theme.size.xs,
+    color: theme.colors.textMuted,
+    fontFamily: theme.fontFamily.body,
+    fontStyle: "italic",
+  },
+  checkboxRow: {
+    marginTop: theme.space[1],
   },
   evidenceBadge: {
     flexDirection: "row",
