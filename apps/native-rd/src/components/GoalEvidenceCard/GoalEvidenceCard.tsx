@@ -55,9 +55,9 @@ export function GoalEvidenceCard({
 
   const fontScale = PixelRatio.getFontScale();
   const { headline, body } = theme.textStyles;
-  // Size the badge to the typical text content: 1 line of title + 2 lines of
-  // description. Title can wrap to 2 lines and description to 3; the row uses
-  // flex-start so the text just grows past the badge in those cases.
+  // Title can wrap to 2 lines and description to 3; the row uses flex-start so
+  // text just grows past the badge in those cases — don't widen the multiplier
+  // to "fix" the asymmetry between numberOfLines and this calc.
   const textColumnHeight =
     headline.lineHeight + theme.space[1] + body.lineHeight * 2;
   const badgeSize = Math.round(textColumnHeight * fontScale);

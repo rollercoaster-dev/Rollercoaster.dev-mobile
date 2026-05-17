@@ -1,4 +1,5 @@
 import React from "react";
+import { StyleSheet } from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -74,6 +75,47 @@ describe("GoalEvidenceCard", () => {
         "Badge preview for Run my first 5k, tap to edit design",
       ),
     ).toBeOnTheScreen();
+  });
+
+  it("sizes the badge wrapper to the SVG viewBox so banner/bottomLabel overflow grows the card horizontally", () => {
+    // Regression: a fully-decorated badge (banner + bottom label) used to push
+    // the card vertically because the wrapper was a fixed square. The wrapper
+    // must now adopt the viewBox dimensions, which exceed the rendered badge
+    // size when overflow text is present.
+    const designWithOverflow = JSON.stringify({
+      shape: "roundedRect",
+      frame: "none",
+      color: "#FFD400",
+      iconName: "Trophy",
+      iconWeight: "regular",
+      title: "Run my first 5k",
+      centerMode: "icon",
+      bottomLabel: "AND THE BOTTOM",
+      banner: { text: "WITH BANNER", position: "top" },
+    });
+
+    renderWithProviders(
+      <GoalEvidenceCard
+        {...defaultProps}
+        goalDesignJson={designWithOverflow}
+      />,
+    );
+
+    const renderedSize = (
+      mockBadgeRenderer.mock.calls[0]?.[0] as { size: number }
+    ).size;
+    const pressable = screen.getByLabelText(
+      "Badge preview for Run my first 5k, tap to edit design",
+    );
+    const flatStyle = StyleSheet.flatten(pressable.props.style) as {
+      width?: number;
+      height?: number;
+    };
+
+    // Banner + bottomLabel overflow is vertical (see buildViewBox in
+    // layoutBoxes.ts), so the height grows past renderedSize while width
+    // stays equal.
+    expect(flatStyle.height).toBeGreaterThan(renderedSize);
   });
 
   it("calls onBadgePress when the badge is tapped", () => {
