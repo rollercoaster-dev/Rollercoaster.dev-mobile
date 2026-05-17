@@ -5,6 +5,12 @@ export const styles = StyleSheet.create((theme) => ({
   container: {
     gap: theme.space[3],
   },
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: theme.space[2],
+  },
   stepNumber: {
     fontSize: theme.size.xs,
     fontWeight: theme.fontWeight.bold,
@@ -19,14 +25,13 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.text,
     fontFamily: theme.fontFamily.headline,
   },
-  statusRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: theme.space[2],
-  },
   evidenceBadgeWrapper: {
     position: "relative" as const,
+    alignSelf: "flex-start",
+    marginTop: theme.space[1],
+    // Hard shadow extends 2px below the pill; without this the shadow
+    // clips against the ScrollView contentContainer's bottom edge.
+    marginBottom: theme.space[1],
   },
   evidenceBadge: {
     flexDirection: "row",
@@ -55,9 +60,6 @@ export const styles = StyleSheet.create((theme) => ({
     fontSize: theme.size.xs,
     fontFamily: theme.fontFamily.mono,
     color: theme.colors.text,
-  },
-  plannedTypesRow: {
-    marginTop: theme.space[1],
   },
   checkboxRow: {
     flexDirection: "row",

@@ -1,5 +1,6 @@
 import React from "react";
 import { View } from "react-native";
+import { ArrowLeft } from "phosphor-react-native";
 import { Text } from "../Text";
 import { IconButton } from "../IconButton";
 import { HeaderBand } from "./HeaderBand";
@@ -19,11 +20,7 @@ export function ScreenSubHeader({
   return (
     <HeaderBand>
       <IconButton
-        icon={
-          <Text variant="headline" style={styles.backIcon}>
-            {"\u2190"}
-          </Text>
-        }
+        icon={<ArrowLeft size={24} weight="bold" />}
         onPress={onBack}
         tone="chrome"
         accessibilityLabel="Go back"
@@ -31,8 +28,7 @@ export function ScreenSubHeader({
       <Text variant="title" style={styles.subLabel} accessibilityRole="header">
         {label}
       </Text>
-      {/* Trailing slot: render `right` if provided, otherwise an empty
-          spacer matching the back-button width so the label stays centered. */}
+      {/* Empty spacer keeps the label optically centered when no trailing action. */}
       {right ?? <View style={styles.spacer} />}
     </HeaderBand>
   );

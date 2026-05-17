@@ -4,13 +4,11 @@ import Animated from "react-native-reanimated";
 import { Card } from "../Card";
 import { StatusBadge, type StatusBadgeVariant } from "../StatusBadge";
 import { Checkbox } from "../Checkbox";
-import { EvidenceTypePicker } from "../EvidenceTypePicker";
 import { useFlashOnIncrease } from "../../hooks/useFlashOnIncrease";
 import { formatEvidenceLabel } from "../../utils/formatEvidenceLabel";
 import {
   EVIDENCE_CAPTURE_OPTIONS,
   EVIDENCE_OPTIONS,
-  validateEvidenceType,
   type EvidenceCaptureOption,
   type QuickEvidenceType,
 } from "../../types/evidence";
@@ -114,9 +112,15 @@ export function StepCard({
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.container}
       >
-        <Text style={styles.stepNumber}>
-          Step {stepIndex + 1} of {totalSteps}
-        </Text>
+        <View style={styles.metaRow}>
+          <Text style={styles.stepNumber}>
+            Step {stepIndex + 1} of {totalSteps}
+          </Text>
+          <StatusBadge
+            variant={statusToVariant[step.status]}
+            label={statusToLabel[step.status]}
+          />
+        </View>
         <Text
           style={styles.title}
           numberOfLines={2}
@@ -125,36 +129,28 @@ export function StepCard({
         >
           {step.title}
         </Text>
-        <View style={styles.statusRow}>
-          <StatusBadge
-            variant={statusToVariant[step.status]}
-            label={statusToLabel[step.status]}
-          />
-          <View style={styles.evidenceBadgeWrapper}>
-            <Pressable
-              onPress={onEvidenceTap}
-              style={styles.evidenceBadge}
-              accessible
-              accessibilityRole="button"
-              accessibilityLabel={`${step.evidenceCount} evidence items, tap to view`}
-            >
-              <Text style={styles.evidenceText}>{evidenceLabel}</Text>
-            </Pressable>
-            <Animated.View
-              style={[styles.evidenceFlash, flashStyle]}
-              pointerEvents="none"
-              accessibilityElementsHidden
-              importantForAccessibility="no-hide-descendants"
-            />
-          </View>
-        </View>
 
-        {hasPlannedTypes && (
-          <View style={styles.plannedTypesRow}>
-            <EvidenceTypePicker
-              compact
-              selectedTypes={plannedTypes.map(validateEvidenceType)}
-            />
+        {onQuickEvidence && quickEvidenceOptions.length > 0 && (
+          <View style={styles.quickActionsRow}>
+            {quickEvidenceOptions.map((option) => (
+              <Pressable
+                key={option.type}
+                onPress={() => onQuickEvidence(option.type)}
+                style={styles.quickActionButton}
+                testID={`step-card-quick-evidence-${option.type}`}
+                accessible
+                accessibilityRole="button"
+                accessibilityLabel={`Add ${option.label} evidence`}
+              >
+                <Text
+                  style={styles.quickActionIcon}
+                  accessibilityElementsHidden
+                >
+                  {option.icon}
+                </Text>
+                <Text style={styles.quickActionText}>{option.label}</Text>
+              </Pressable>
+            ))}
           </View>
         )}
 
@@ -180,27 +176,23 @@ export function StepCard({
           </View>
         )}
 
-        {onQuickEvidence && quickEvidenceOptions.length > 0 && (
-          <View style={styles.quickActionsRow}>
-            {quickEvidenceOptions.map((option) => (
-              <Pressable
-                key={option.type}
-                onPress={() => onQuickEvidence(option.type)}
-                style={styles.quickActionButton}
-                testID={`step-card-quick-evidence-${option.type}`}
-                accessible
-                accessibilityRole="button"
-                accessibilityLabel={`Add ${option.label} evidence`}
-              >
-                <Text
-                  style={styles.quickActionIcon}
-                  accessibilityElementsHidden
-                >
-                  {option.icon}
-                </Text>
-                <Text style={styles.quickActionText}>{option.label}</Text>
-              </Pressable>
-            ))}
+        {step.evidenceCount > 0 && (
+          <View style={styles.evidenceBadgeWrapper}>
+            <Pressable
+              onPress={onEvidenceTap}
+              style={styles.evidenceBadge}
+              accessible
+              accessibilityRole="button"
+              accessibilityLabel={`${step.evidenceCount} evidence items, tap to view`}
+            >
+              <Text style={styles.evidenceText}>{evidenceLabel}</Text>
+            </Pressable>
+            <Animated.View
+              style={[styles.evidenceFlash, flashStyle]}
+              pointerEvents="none"
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+            />
           </View>
         )}
       </ScrollView>

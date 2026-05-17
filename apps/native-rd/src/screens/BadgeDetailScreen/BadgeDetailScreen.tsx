@@ -11,6 +11,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery } from "@evolu/react";
+import { ArrowLeft } from "phosphor-react-native";
 import { Text } from "../../components/Text";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
@@ -83,11 +84,7 @@ function DetailTopBar({
           any header text would peek out behind it. */}
       <HeaderBand>
         <IconButton
-          icon={
-            <Text variant="headline" style={styles.backIcon}>
-              {"\u2190"}
-            </Text>
-          }
+          icon={<ArrowLeft size={24} weight="bold" />}
           onPress={onBack}
           tone="chrome"
           accessibilityLabel="Go back"

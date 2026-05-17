@@ -111,9 +111,4 @@ export const styles = StyleSheet.create((theme) => ({
   loadingIndicator: {
     marginTop: theme.space[8],
   },
-  backIcon: {
-    fontSize: 22,
-    fontWeight: theme.fontWeight.black,
-    color: theme.colors.accentPurpleFg,
-  },
 }));
