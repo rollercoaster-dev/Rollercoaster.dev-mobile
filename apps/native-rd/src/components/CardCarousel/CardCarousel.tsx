@@ -210,12 +210,8 @@ export function CardCarousel({
           ))}
         </View>
 
-        {/* Arrows only render when there's somewhere to go. A single-card
-            carousel (e.g. stepless goal: only the goal evidence card)
-            has no navigation surface to expose. */}
         {children.length > 1 && (
           <>
-            {/* Prev arrow — overlays left edge */}
             <View style={[styles.arrowContainer, styles.arrowLeft]}>
               <Pressable
                 onPress={goLeft}
@@ -231,7 +227,6 @@ export function CardCarousel({
               </Pressable>
             </View>
 
-            {/* Next arrow — overlays right edge */}
             <View style={[styles.arrowContainer, styles.arrowRight]}>
               <Pressable
                 onPress={goRight}

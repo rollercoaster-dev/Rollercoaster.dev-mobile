@@ -133,9 +133,7 @@ describe("GoalEvidenceCard", () => {
   });
 
   describe("Mark Complete affordance", () => {
-    // The check is rendered only when canMarkComplete is true AND
-    // onMarkComplete is supplied. Hidden in every other case.
-    it("does not render the check when onMarkComplete is omitted", () => {
+    it("does not render the check or Ready badge when onMarkComplete is omitted", () => {
       renderWithProviders(<GoalEvidenceCard {...defaultProps} />);
       expect(
         screen.queryByRole("checkbox", { name: "Mark goal complete" }),
@@ -143,27 +141,9 @@ describe("GoalEvidenceCard", () => {
       expect(screen.queryByText("Ready")).toBeNull();
     });
 
-    it("does not render the check when canMarkComplete is false", () => {
+    it("renders the check and Ready badge when onMarkComplete is provided", () => {
       renderWithProviders(
-        <GoalEvidenceCard
-          {...defaultProps}
-          canMarkComplete={false}
-          onMarkComplete={jest.fn()}
-        />,
-      );
-      expect(
-        screen.queryByRole("checkbox", { name: "Mark goal complete" }),
-      ).toBeNull();
-      expect(screen.queryByText("Ready")).toBeNull();
-    });
-
-    it("renders the check and a Ready badge when canMarkComplete is true", () => {
-      renderWithProviders(
-        <GoalEvidenceCard
-          {...defaultProps}
-          canMarkComplete={true}
-          onMarkComplete={jest.fn()}
-        />,
+        <GoalEvidenceCard {...defaultProps} onMarkComplete={jest.fn()} />,
       );
       expect(
         screen.getByRole("checkbox", { name: "Mark goal complete" }),
@@ -174,11 +154,7 @@ describe("GoalEvidenceCard", () => {
     it("calls onMarkComplete when the check is tapped", () => {
       const onMarkComplete = jest.fn();
       renderWithProviders(
-        <GoalEvidenceCard
-          {...defaultProps}
-          canMarkComplete={true}
-          onMarkComplete={onMarkComplete}
-        />,
+        <GoalEvidenceCard {...defaultProps} onMarkComplete={onMarkComplete} />,
       );
       fireEvent.press(
         screen.getByRole("checkbox", { name: "Mark goal complete" }),

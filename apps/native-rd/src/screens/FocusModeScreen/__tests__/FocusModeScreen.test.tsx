@@ -1042,9 +1042,9 @@ describe("FocusModeScreen", () => {
   });
 
   describe("breadcrumbs", () => {
-    const {
-      breadcrumb: mockBreadcrumb,
-    } = require("../../../services/sentry-report");
+    const { breadcrumb: mockBreadcrumb } =
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      require("../../../services/sentry-report");
 
     it("emits focus/enter on mount and focus/exit on unmount", () => {
       setupQueries();

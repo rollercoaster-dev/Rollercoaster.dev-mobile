@@ -19,7 +19,6 @@ const meta: Meta<typeof GoalEvidenceCard> = {
   component: GoalEvidenceCard,
   argTypes: {
     evidenceCount: { control: "number" },
-    canMarkComplete: { control: "boolean" },
   },
 };
 
@@ -47,7 +46,6 @@ export const Empty: Story = {
   ),
 };
 
-// Goal with no description — card should render cleanly without an empty slot.
 export const NoDescription: Story = {
   render: () => (
     <GoalEvidenceCard
@@ -59,28 +57,22 @@ export const NoDescription: Story = {
   ),
 };
 
-// Steps still pending — the Mark Complete affordance is absent entirely,
-// mirroring how StepCard hides its checkbox when blocked.
 export const NotReady: Story = {
   render: () => (
     <GoalEvidenceCard
       {...SAMPLE_GOAL}
       evidenceCount={0}
       onEvidenceTap={() => {}}
-      canMarkComplete={false}
-      onMarkComplete={() => {}}
     />
   ),
 };
 
-// All steps complete (or stepless goal) — Mark Complete is shown.
 export const Ready: Story = {
   render: () => (
     <GoalEvidenceCard
       {...SAMPLE_GOAL}
       evidenceCount={2}
       onEvidenceTap={() => {}}
-      canMarkComplete={true}
       onMarkComplete={() => {}}
     />
   ),
@@ -96,8 +88,6 @@ export const AllStates: Story = {
         {...SAMPLE_GOAL}
         evidenceCount={0}
         onEvidenceTap={() => {}}
-        canMarkComplete={false}
-        onMarkComplete={() => {}}
       />
       <Text variant="label" style={storyStyles.label}>
         Ready (all steps complete, or stepless)
@@ -106,7 +96,6 @@ export const AllStates: Story = {
         {...SAMPLE_GOAL}
         evidenceCount={2}
         onEvidenceTap={() => {}}
-        canMarkComplete={true}
         onMarkComplete={() => {}}
       />
     </View>
@@ -118,7 +107,6 @@ export const Interactive: Story = {
     ...SAMPLE_GOAL,
     evidenceCount: 3,
     onEvidenceTap: () => {},
-    canMarkComplete: true,
     onMarkComplete: () => {},
   },
 };

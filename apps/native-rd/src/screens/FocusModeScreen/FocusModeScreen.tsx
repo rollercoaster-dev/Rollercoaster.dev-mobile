@@ -117,11 +117,9 @@ function FocusContent({ goalId }: { goalId: string }) {
   const lifecycle = useRef({
     snappedToFirstPending: false,
     snappedToGoalCard: false,
-    // Tracks whether we observed an incomplete-state during this mount.
-    // Without this, reopening a goal (which leaves all steps completed)
-    // lands FocusMode in allStepsComplete=true and snap-to-goal-card
-    // would fire immediately, looking like the old auto-nav just moved
-    // to the carousel instead of the navigator.
+    // Reopen Goal lands FocusMode with steps already completed; without this
+    // guard, the snap-to-goal effect fires on mount instead of only on a
+    // genuine pending → complete transition.
     sawIncomplete: false,
   });
   const pendingFileDeletionRef = useRef<{
@@ -231,11 +229,7 @@ function FocusContent({ goalId }: { goalId: string }) {
     stepRows.length > 0 &&
     stepRows.every((s) => s.status === StepStatus.completed);
 
-  // Stepless goals (stepRows.length === 0) get the check from mount —
-  // they're a goal expressed as "do the thing, then mark done" with no
-  // intermediate gating. Stepped goals must complete every step first.
-  // When false, the Mark Complete affordance isn't rendered at all,
-  // matching StepCard's hide-when-blocked pattern.
+  // Stepless goals are tappable from mount; stepped goals gate on all-complete.
   const canMarkComplete = stepRows.length === 0 || allStepsComplete;
 
   // Snap to first pending step on initial load. Dep is stepRows.length —
@@ -253,13 +247,11 @@ function FocusContent({ goalId }: { goalId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only fire on initial population
   }, [stepRowsLength]);
 
-  // On the incomplete → complete transition, snap the carousel to the
-  // goal card and announce that the Mark Complete check is now tappable.
-  // No auto-navigation — the user enters CompletionFlow by tapping the
-  // check on the goal card. The sawIncomplete guard prevents this from
-  // firing on a mount that lands already-complete (Reopen Goal).
+  // On the pending → complete transition, snap to the goal card so the
+  // user sees the Mark Complete affordance without scrolling.
+  const goalTitleForAnnouncement = goal?.title as string | undefined;
   useEffect(() => {
-    if (!goal) return;
+    if (!goalTitleForAnnouncement) return;
     if (!allStepsComplete) {
       lifecycle.current.sawIncomplete = true;
       return;
@@ -269,9 +261,9 @@ function FocusContent({ goalId }: { goalId: string }) {
     lifecycle.current.snappedToGoalCard = true;
     setCurrentCardIndex(stepRowsLength);
     AccessibilityInfo.announceForAccessibility(
-      `All steps complete for "${goal.title}". Mark Complete is now available on the goal card.`,
+      `All steps complete for "${goalTitleForAnnouncement}". Mark Complete is now available on the goal card.`,
     );
-  }, [goal, allStepsComplete, stepRowsLength]);
+  }, [goalTitleForAnnouncement, allStepsComplete, stepRowsLength]);
 
   const handleUndoDelete = useCallback(() => {
     const pending = pendingFileDeletionRef.current;
@@ -311,8 +303,6 @@ function FocusContent({ goalId }: { goalId: string }) {
   };
 
   const handleBadgePress = () => {
-    // Pre-bake redesign path — same params CompletionFlow's "Redesign First"
-    // uses; writes back to goal.design.
     navigation.navigate("BadgeDesigner", {
       mode: "new-goal",
       goalId,
@@ -553,8 +543,6 @@ function FocusContent({ goalId }: { goalId: string }) {
         />
       </View>
 
-      {/* MiniTimeline — hidden when there are no steps (one carousel
-          card has nothing to visualise) and when the user prefs hide it. */}
       {!timelineHidden && stepRows.length > 0 && (
         <MiniTimeline
           steps={timelineSteps}
@@ -607,8 +595,7 @@ function FocusContent({ goalId }: { goalId: string }) {
               onBadgePress={handleBadgePress}
               evidenceCount={goalEvidenceCount}
               onEvidenceTap={handleEvidenceTap}
-              canMarkComplete={canMarkComplete}
-              onMarkComplete={handleMarkComplete}
+              onMarkComplete={canMarkComplete ? handleMarkComplete : undefined}
             />,
           ]}
         </CardCarousel>

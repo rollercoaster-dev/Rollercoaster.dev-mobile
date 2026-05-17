@@ -44,12 +44,6 @@ export const styles = StyleSheet.create((theme) => ({
     fontFamily: theme.fontFamily.body,
     lineHeight: theme.lineHeight.sm,
   },
-  statusRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.space[2],
-    flexWrap: "wrap",
-  },
   evidenceBadgeWrapper: {
     position: "relative" as const,
     alignSelf: "flex-start" as const,

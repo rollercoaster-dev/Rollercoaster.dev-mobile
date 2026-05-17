@@ -22,14 +22,9 @@ export interface GoalEvidenceCardProps {
   evidenceCount: number;
   onEvidenceTap: () => void;
   /**
-   * Whether the goal is ready to be marked complete.
-   * Stepless goals: pass `true`. Stepped goals: pass `allStepsComplete`.
-   *
-   * When false (or when `onMarkComplete` is omitted), the entire
-   * Mark Complete affordance is absent — no badge, no checkbox.
-   * Mirrors how StepCard hides its checkbox when blocked.
+   * Pass a handler to expose the Mark Complete affordance.
+   * Omit to hide it entirely (no checkbox, no Ready badge).
    */
-  canMarkComplete?: boolean;
   onMarkComplete?: () => void;
 }
 
@@ -41,15 +36,11 @@ export function GoalEvidenceCard({
   onBadgePress,
   evidenceCount,
   onEvidenceTap,
-  canMarkComplete = false,
   onMarkComplete,
 }: GoalEvidenceCardProps) {
   const evidenceLabel = formatEvidenceLabel(evidenceCount);
   const flashStyle = useFlashOnIncrease(evidenceCount);
 
-  // Precedence mirrors CompletionFlowScreen.tsx:150-157 — goal.design is the
-  // pre-bake source of truth; createDefaultBadgeDesign synthesizes a placeholder
-  // from title + color when the user hasn't customized yet.
   const effectiveDesign = useMemo(
     () =>
       parseBadgeDesign(goalDesignJson) ??
@@ -57,18 +48,13 @@ export function GoalEvidenceCard({
     [goalDesignJson, goalTitle, goalColor],
   );
 
-  const showCompleteAffordance =
-    onMarkComplete !== undefined && canMarkComplete;
-
   return (
     <View style={styles.wrapper}>
       <Card>
         <View style={styles.container}>
           <View style={styles.metaRow}>
             <Text style={styles.metaLabel}>Goal</Text>
-            {showCompleteAffordance && (
-              <StatusBadge variant="active" label="Ready" />
-            )}
+            {onMarkComplete && <StatusBadge variant="active" label="Ready" />}
           </View>
           <View style={styles.badgeRow}>
             <Pressable
@@ -99,31 +85,29 @@ export function GoalEvidenceCard({
               {goalDescription}
             </Text>
           ) : null}
-          <View style={styles.statusRow}>
-            <View style={styles.evidenceBadgeWrapper}>
-              <Pressable
-                onPress={onEvidenceTap}
-                style={styles.evidenceBadge}
-                accessible
-                accessibilityRole="button"
-                accessibilityLabel={`${evidenceCount} goal evidence items, tap to view`}
-              >
-                <Text style={styles.evidenceText}>{evidenceLabel}</Text>
-              </Pressable>
-              <Animated.View
-                style={[styles.evidenceFlash, flashStyle]}
-                pointerEvents="none"
-                accessibilityElementsHidden
-                importantForAccessibility="no-hide-descendants"
-              />
-            </View>
+          <View style={styles.evidenceBadgeWrapper}>
+            <Pressable
+              onPress={onEvidenceTap}
+              style={styles.evidenceBadge}
+              accessible
+              accessibilityRole="button"
+              accessibilityLabel={`${evidenceCount} goal evidence items, tap to view`}
+            >
+              <Text style={styles.evidenceText}>{evidenceLabel}</Text>
+            </Pressable>
+            <Animated.View
+              style={[styles.evidenceFlash, flashStyle]}
+              pointerEvents="none"
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+            />
           </View>
 
-          {showCompleteAffordance && (
+          {onMarkComplete && (
             <View style={styles.checkboxRow}>
               <Checkbox
                 checked={false}
-                onToggle={onMarkComplete!}
+                onToggle={onMarkComplete}
                 label="Mark goal complete"
                 accessibilityHint="Opens completion flow to capture final evidence"
               />
