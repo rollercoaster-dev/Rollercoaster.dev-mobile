@@ -55,7 +55,7 @@
         "appleTeamId": "86VL756N99",
         "ascApiKeyPath": "../../secrets/asc-api-key.p8",
         "ascApiKeyId": "$APPLE_ASC_KEY_ID",
-        "ascApiIssuerId": "$APPLE_ASC_ISSUER_ID"
+        "ascApiKeyIssuerId": "$APPLE_ASC_ISSUER_ID"
       },
       "android": {
         "serviceAccountKeyPath": "../../secrets/play-service-account.json",
@@ -70,7 +70,7 @@
         "appleTeamId": "86VL756N99",
         "ascApiKeyPath": "../../secrets/asc-api-key.p8",
         "ascApiKeyId": "$APPLE_ASC_KEY_ID",
-        "ascApiIssuerId": "$APPLE_ASC_ISSUER_ID"
+        "ascApiKeyIssuerId": "$APPLE_ASC_ISSUER_ID"
       },
       "android": {
         "serviceAccountKeyPath": "../../secrets/play-service-account.json",
