@@ -40,12 +40,6 @@ export const styles = StyleSheet.create((theme) => ({
     position: "relative" as const,
     alignSelf: "flex-start" as const,
   },
-  lockedHint: {
-    fontSize: theme.size.xs,
-    color: theme.colors.textMuted,
-    fontFamily: theme.fontFamily.body,
-    fontStyle: "italic",
-  },
   checkboxRow: {
     marginTop: theme.space[1],
   },

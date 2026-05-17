@@ -83,16 +83,31 @@ describe("GoalEvidenceCard", () => {
   });
 
   describe("Mark Complete affordance", () => {
-    // The check is rendered only when onMarkComplete is supplied, so legacy
-    // callers (FocusModeScreen prior to wiring) see the original card.
+    // The check is rendered only when canMarkComplete is true AND
+    // onMarkComplete is supplied. Hidden in every other case.
     it("does not render the check when onMarkComplete is omitted", () => {
       renderWithProviders(<GoalEvidenceCard {...defaultProps} />);
       expect(
         screen.queryByRole("checkbox", { name: "Mark goal complete" }),
       ).toBeNull();
+      expect(screen.queryByText("Ready")).toBeNull();
     });
 
-    it("renders an enabled check when canMarkComplete is true", () => {
+    it("does not render the check when canMarkComplete is false", () => {
+      renderWithProviders(
+        <GoalEvidenceCard
+          {...defaultProps}
+          canMarkComplete={false}
+          onMarkComplete={jest.fn()}
+        />,
+      );
+      expect(
+        screen.queryByRole("checkbox", { name: "Mark goal complete" }),
+      ).toBeNull();
+      expect(screen.queryByText("Ready")).toBeNull();
+    });
+
+    it("renders the check and a Ready badge when canMarkComplete is true", () => {
       renderWithProviders(
         <GoalEvidenceCard
           {...defaultProps}
@@ -100,29 +115,13 @@ describe("GoalEvidenceCard", () => {
           onMarkComplete={jest.fn()}
         />,
       );
-      const check = screen.getByRole("checkbox", {
-        name: "Mark goal complete",
-      });
-      expect(check).toBeOnTheScreen();
-      expect(check.props.accessibilityState.disabled).toBe(false);
+      expect(
+        screen.getByRole("checkbox", { name: "Mark goal complete" }),
+      ).toBeOnTheScreen();
+      expect(screen.getByText("Ready")).toBeOnTheScreen();
     });
 
-    it("renders a disabled check when canMarkComplete is false", () => {
-      renderWithProviders(
-        <GoalEvidenceCard
-          {...defaultProps}
-          canMarkComplete={false}
-          onMarkComplete={jest.fn()}
-          pendingStepCount={2}
-        />,
-      );
-      const check = screen.getByRole("checkbox", {
-        name: "Mark goal complete",
-      });
-      expect(check.props.accessibilityState.disabled).toBe(true);
-    });
-
-    it("calls onMarkComplete when the enabled check is tapped", () => {
+    it("calls onMarkComplete when the check is tapped", () => {
       const onMarkComplete = jest.fn();
       renderWithProviders(
         <GoalEvidenceCard
@@ -135,84 +134,6 @@ describe("GoalEvidenceCard", () => {
         screen.getByRole("checkbox", { name: "Mark goal complete" }),
       );
       expect(onMarkComplete).toHaveBeenCalledTimes(1);
-    });
-
-    it("does not call onMarkComplete when the disabled check is tapped", () => {
-      const onMarkComplete = jest.fn();
-      renderWithProviders(
-        <GoalEvidenceCard
-          {...defaultProps}
-          canMarkComplete={false}
-          onMarkComplete={onMarkComplete}
-          pendingStepCount={1}
-        />,
-      );
-      fireEvent.press(
-        screen.getByRole("checkbox", { name: "Mark goal complete" }),
-      );
-      expect(onMarkComplete).not.toHaveBeenCalled();
-    });
-
-    it("shows a plural locked hint when multiple steps remain", () => {
-      renderWithProviders(
-        <GoalEvidenceCard
-          {...defaultProps}
-          canMarkComplete={false}
-          onMarkComplete={jest.fn()}
-          pendingStepCount={3}
-        />,
-      );
-      expect(
-        screen.getByText("Complete 3 remaining steps first"),
-      ).toBeOnTheScreen();
-    });
-
-    it("shows a singular locked hint when exactly one step remains", () => {
-      renderWithProviders(
-        <GoalEvidenceCard
-          {...defaultProps}
-          canMarkComplete={false}
-          onMarkComplete={jest.fn()}
-          pendingStepCount={1}
-        />,
-      );
-      expect(
-        screen.getByText("Complete 1 remaining step first"),
-      ).toBeOnTheScreen();
-    });
-
-    it("omits the locked hint when there are no pending steps (stepless case)", () => {
-      renderWithProviders(
-        <GoalEvidenceCard
-          {...defaultProps}
-          canMarkComplete={false}
-          onMarkComplete={jest.fn()}
-          pendingStepCount={0}
-        />,
-      );
-      expect(screen.queryByText(/Complete .* remaining/)).toBeNull();
-    });
-
-    it('shows a "Ready" status badge when canMarkComplete is true', () => {
-      renderWithProviders(
-        <GoalEvidenceCard
-          {...defaultProps}
-          canMarkComplete={true}
-          onMarkComplete={jest.fn()}
-        />,
-      );
-      expect(screen.getByText("Ready")).toBeOnTheScreen();
-    });
-
-    it('shows a "Locked" status badge when canMarkComplete is false', () => {
-      renderWithProviders(
-        <GoalEvidenceCard
-          {...defaultProps}
-          canMarkComplete={false}
-          onMarkComplete={jest.fn()}
-        />,
-      );
-      expect(screen.getByText("Locked")).toBeOnTheScreen();
     });
   });
 });

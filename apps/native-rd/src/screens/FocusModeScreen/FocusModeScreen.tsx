@@ -231,14 +231,12 @@ function FocusContent({ goalId }: { goalId: string }) {
     stepRows.length > 0 &&
     stepRows.every((s) => s.status === StepStatus.completed);
 
-  // Stepless goals (stepRows.length === 0) get the check enabled from
-  // mount — they're a goal expressed as "do the thing, then mark done"
-  // with no intermediate gating. Stepped goals must complete every step
-  // first, mirroring the contract the auto-nav previously enforced.
+  // Stepless goals (stepRows.length === 0) get the check from mount —
+  // they're a goal expressed as "do the thing, then mark done" with no
+  // intermediate gating. Stepped goals must complete every step first.
+  // When false, the Mark Complete affordance isn't rendered at all,
+  // matching StepCard's hide-when-blocked pattern.
   const canMarkComplete = stepRows.length === 0 || allStepsComplete;
-  const pendingStepCount = stepRows.filter(
-    (s) => s.status !== StepStatus.completed,
-  ).length;
 
   // Snap to first pending step on initial load. Dep is stepRows.length —
   // useQuery returns a fresh array each emission, so depending on stepRows
@@ -593,7 +591,6 @@ function FocusContent({ goalId }: { goalId: string }) {
               onEvidenceTap={handleEvidenceTap}
               canMarkComplete={canMarkComplete}
               onMarkComplete={handleMarkComplete}
-              pendingStepCount={pendingStepCount}
             />,
           ]}
         </CardCarousel>

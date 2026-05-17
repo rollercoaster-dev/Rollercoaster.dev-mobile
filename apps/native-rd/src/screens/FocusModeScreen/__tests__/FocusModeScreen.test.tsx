@@ -491,7 +491,7 @@ describe("FocusModeScreen", () => {
     fireEvent.press(screen.getAllByLabelText("Goal evidence")[0]);
   };
 
-  it("Mark Complete check is locked while any step is pending", () => {
+  it("Mark Complete check is hidden while any step is pending", () => {
     setupQueries({
       steps: [
         { id: "step-1", title: "Read docs", status: "completed", ordinal: 0 },
@@ -501,13 +501,12 @@ describe("FocusModeScreen", () => {
     renderWithProviders(<FocusModeScreen {...routeProps} />);
     navigateToGoalCard();
 
-    const check = screen.getByRole("checkbox", {
-      name: "Mark goal complete",
-    });
-    expect(check.props.accessibilityState.disabled).toBe(true);
+    expect(
+      screen.queryByRole("checkbox", { name: "Mark goal complete" }),
+    ).toBeNull();
   });
 
-  it("Mark Complete check enables when all steps are complete", () => {
+  it("Mark Complete check appears when all steps are complete", () => {
     setupQueries({
       steps: [
         { id: "step-1", title: "Read docs", status: "completed", ordinal: 0 },
@@ -517,13 +516,13 @@ describe("FocusModeScreen", () => {
     const view = renderWithProviders(<FocusModeScreen {...routeProps} />);
     navigateToGoalCard();
     expect(
-      screen.getByRole("checkbox", { name: "Mark goal complete" }).props
-        .accessibilityState.disabled,
-    ).toBe(true);
+      screen.queryByRole("checkbox", { name: "Mark goal complete" }),
+    ).toBeNull();
 
     // Flip the pending step to completed and rerender. The snap effect
-    // moves the carousel back to the goal card automatically on the
-    // incomplete → complete transition, so no manual navigation needed.
+    // moves the carousel back to the goal card on the incomplete →
+    // complete transition, so the check becomes queryable without a
+    // second manual navigation.
     setupQueries({
       steps: [
         { id: "step-1", title: "Read docs", status: "completed", ordinal: 0 },
@@ -533,9 +532,8 @@ describe("FocusModeScreen", () => {
     view.rerender(<FocusModeScreen {...routeProps} />);
 
     expect(
-      screen.getByRole("checkbox", { name: "Mark goal complete" }).props
-        .accessibilityState.disabled,
-    ).toBe(false);
+      screen.getByRole("checkbox", { name: "Mark goal complete" }),
+    ).toBeOnTheScreen();
   });
 
   it("tapping Mark Complete navigates to CompletionFlow", () => {
@@ -585,14 +583,13 @@ describe("FocusModeScreen", () => {
     jest.useRealTimers();
   });
 
-  it("stepless goal: Mark Complete is enabled from first mount", () => {
+  it("stepless goal: Mark Complete is visible from first mount", () => {
     setupQueries({ steps: [] });
     renderWithProviders(<FocusModeScreen {...routeProps} />);
 
-    const check = screen.getByRole("checkbox", {
-      name: "Mark goal complete",
-    });
-    expect(check.props.accessibilityState.disabled).toBe(false);
+    expect(
+      screen.getByRole("checkbox", { name: "Mark goal complete" }),
+    ).toBeOnTheScreen();
   });
 
   it("stepless goal: tapping Mark Complete navigates to CompletionFlow", () => {
@@ -890,7 +887,7 @@ describe("FocusModeScreen", () => {
     ]);
   });
 
-  it("Mark Complete stays locked while an evidence-gated step is incomplete, enables after it completes", () => {
+  it("Mark Complete stays hidden while an evidence-gated step is incomplete, appears after it completes", () => {
     setupQueries({
       steps: [
         {
@@ -912,9 +909,8 @@ describe("FocusModeScreen", () => {
     const view = renderWithProviders(<FocusModeScreen {...routeProps} />);
     fireEvent.press(screen.getAllByLabelText("Goal evidence")[0]);
     expect(
-      screen.getByRole("checkbox", { name: "Mark goal complete" }).props
-        .accessibilityState.disabled,
-    ).toBe(true);
+      screen.queryByRole("checkbox", { name: "Mark goal complete" }),
+    ).toBeNull();
 
     setupQueries({
       steps: [
@@ -936,9 +932,8 @@ describe("FocusModeScreen", () => {
     });
     view.rerender(<FocusModeScreen {...routeProps} />);
     expect(
-      screen.getByRole("checkbox", { name: "Mark goal complete" }).props
-        .accessibilityState.disabled,
-    ).toBe(false);
+      screen.getByRole("checkbox", { name: "Mark goal complete" }),
+    ).toBeOnTheScreen();
   });
 
   it("treats malformed plannedEvidenceTypes JSON as null (no gating)", () => {

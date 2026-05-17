@@ -11,7 +11,6 @@ const meta: Meta<typeof GoalEvidenceCard> = {
   argTypes: {
     evidenceCount: { control: "number" },
     canMarkComplete: { control: "boolean" },
-    pendingStepCount: { control: "number" },
   },
 };
 
@@ -27,6 +26,20 @@ export const Empty: Story = {
   render: () => <GoalEvidenceCard evidenceCount={0} onEvidenceTap={() => {}} />,
 };
 
+// Steps still pending — the Mark Complete affordance is absent entirely,
+// mirroring how StepCard hides its checkbox when blocked.
+export const NotReady: Story = {
+  render: () => (
+    <GoalEvidenceCard
+      evidenceCount={0}
+      onEvidenceTap={() => {}}
+      canMarkComplete={false}
+      onMarkComplete={() => {}}
+    />
+  ),
+};
+
+// All steps complete (or stepless goal) — Mark Complete is shown.
 export const Ready: Story = {
   render: () => (
     <GoalEvidenceCard
@@ -38,59 +51,26 @@ export const Ready: Story = {
   ),
 };
 
-export const Locked: Story = {
-  render: () => (
-    <GoalEvidenceCard
-      evidenceCount={0}
-      onEvidenceTap={() => {}}
-      canMarkComplete={false}
-      onMarkComplete={() => {}}
-      pendingStepCount={3}
-    />
-  ),
-};
-
-export const LockedSingleStep: Story = {
-  render: () => (
-    <GoalEvidenceCard
-      evidenceCount={0}
-      onEvidenceTap={() => {}}
-      canMarkComplete={false}
-      onMarkComplete={() => {}}
-      pendingStepCount={1}
-    />
-  ),
-};
-
 export const AllStates: Story = {
   render: () => (
     <View style={storyStyles.grid}>
       <Text variant="label" style={storyStyles.label}>
-        With Evidence (legacy — no check)
-      </Text>
-      <GoalEvidenceCard evidenceCount={5} onEvidenceTap={() => {}} />
-      <Text variant="label" style={storyStyles.label}>
-        Empty (legacy — no check)
-      </Text>
-      <GoalEvidenceCard evidenceCount={0} onEvidenceTap={() => {}} />
-      <Text variant="label" style={storyStyles.label}>
-        Ready
-      </Text>
-      <GoalEvidenceCard
-        evidenceCount={2}
-        onEvidenceTap={() => {}}
-        canMarkComplete={true}
-        onMarkComplete={() => {}}
-      />
-      <Text variant="label" style={storyStyles.label}>
-        Locked (3 pending)
+        Not Ready (steps still pending)
       </Text>
       <GoalEvidenceCard
         evidenceCount={0}
         onEvidenceTap={() => {}}
         canMarkComplete={false}
         onMarkComplete={() => {}}
-        pendingStepCount={3}
+      />
+      <Text variant="label" style={storyStyles.label}>
+        Ready (all steps complete, or stepless)
+      </Text>
+      <GoalEvidenceCard
+        evidenceCount={2}
+        onEvidenceTap={() => {}}
+        canMarkComplete={true}
+        onMarkComplete={() => {}}
       />
     </View>
   ),
