@@ -5,6 +5,15 @@ import { StyleSheet } from "react-native-unistyles";
 import { Text } from "../Text";
 import { GoalEvidenceCard } from "./GoalEvidenceCard";
 
+const SAMPLE_GOAL = {
+  goalTitle: "Run my first 5k",
+  goalDescription:
+    "Build up from couch-to-5k over 8 weeks without aggravating my knee.",
+  goalColor: "#FFD400",
+  goalDesignJson: null as string | null,
+  onBadgePress: () => {},
+};
+
 const meta: Meta<typeof GoalEvidenceCard> = {
   title: "GoalEvidenceCard",
   component: GoalEvidenceCard,
@@ -19,11 +28,35 @@ export default meta;
 type Story = StoryObj<typeof GoalEvidenceCard>;
 
 export const WithEvidence: Story = {
-  render: () => <GoalEvidenceCard evidenceCount={5} onEvidenceTap={() => {}} />,
+  render: () => (
+    <GoalEvidenceCard
+      {...SAMPLE_GOAL}
+      evidenceCount={5}
+      onEvidenceTap={() => {}}
+    />
+  ),
 };
 
 export const Empty: Story = {
-  render: () => <GoalEvidenceCard evidenceCount={0} onEvidenceTap={() => {}} />,
+  render: () => (
+    <GoalEvidenceCard
+      {...SAMPLE_GOAL}
+      evidenceCount={0}
+      onEvidenceTap={() => {}}
+    />
+  ),
+};
+
+// Goal with no description — card should render cleanly without an empty slot.
+export const NoDescription: Story = {
+  render: () => (
+    <GoalEvidenceCard
+      {...SAMPLE_GOAL}
+      goalDescription={null}
+      evidenceCount={2}
+      onEvidenceTap={() => {}}
+    />
+  ),
 };
 
 // Steps still pending — the Mark Complete affordance is absent entirely,
@@ -31,6 +64,7 @@ export const Empty: Story = {
 export const NotReady: Story = {
   render: () => (
     <GoalEvidenceCard
+      {...SAMPLE_GOAL}
       evidenceCount={0}
       onEvidenceTap={() => {}}
       canMarkComplete={false}
@@ -43,6 +77,7 @@ export const NotReady: Story = {
 export const Ready: Story = {
   render: () => (
     <GoalEvidenceCard
+      {...SAMPLE_GOAL}
       evidenceCount={2}
       onEvidenceTap={() => {}}
       canMarkComplete={true}
@@ -58,6 +93,7 @@ export const AllStates: Story = {
         Not Ready (steps still pending)
       </Text>
       <GoalEvidenceCard
+        {...SAMPLE_GOAL}
         evidenceCount={0}
         onEvidenceTap={() => {}}
         canMarkComplete={false}
@@ -67,6 +103,7 @@ export const AllStates: Story = {
         Ready (all steps complete, or stepless)
       </Text>
       <GoalEvidenceCard
+        {...SAMPLE_GOAL}
         evidenceCount={2}
         onEvidenceTap={() => {}}
         canMarkComplete={true}
@@ -78,6 +115,7 @@ export const AllStates: Story = {
 
 export const Interactive: Story = {
   args: {
+    ...SAMPLE_GOAL,
     evidenceCount: 3,
     onEvidenceTap: () => {},
     canMarkComplete: true,

@@ -202,7 +202,15 @@ export const MixedContent: Story = {
         onToggleComplete={() => {}}
         onEvidenceTap={() => {}}
       />
-      <GoalEvidenceCard evidenceCount={4} onEvidenceTap={() => {}} />
+      <GoalEvidenceCard
+        goalTitle="Sample goal"
+        goalDescription="An example goal description used in the carousel story."
+        goalColor="#FFD400"
+        goalDesignJson={null}
+        onBadgePress={() => {}}
+        evidenceCount={4}
+        onEvidenceTap={() => {}}
+      />
     </CarouselWrapper>
   ),
 };

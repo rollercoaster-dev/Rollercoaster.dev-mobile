@@ -11,31 +11,82 @@ jest.mock("expo-haptics", () => ({
   ImpactFeedbackStyle: { Light: "light", Medium: "medium", Heavy: "heavy" },
 }));
 
+const mockBadgeRenderer = jest.fn();
+jest.mock("../../../badges/BadgeRenderer", () => ({
+  BadgeRenderer: (props: { size: number }) => {
+    mockBadgeRenderer(props);
+    return null;
+  },
+  getRendererLayoutOptions: () => ({ strokeWidth: 3, hasShadow: false }),
+}));
+
 const defaultProps = {
+  goalTitle: "Run my first 5k",
+  goalDescription: "Build up from couch-to-5k over 8 weeks.",
+  goalColor: "#FFD400",
+  goalDesignJson: null,
+  onBadgePress: jest.fn(),
   evidenceCount: 0,
   onEvidenceTap: jest.fn(),
 };
 
 describe("GoalEvidenceCard", () => {
-  beforeEach(() => jest.clearAllMocks());
-
-  it("renders goal label", () => {
-    renderWithProviders(<GoalEvidenceCard {...defaultProps} />);
-    expect(screen.getByText("★ Goal")).toBeOnTheScreen();
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockBadgeRenderer.mockClear();
   });
 
-  it('renders "Goal Evidence" title', () => {
+  it("renders the goal title with header role", () => {
     renderWithProviders(<GoalEvidenceCard {...defaultProps} />);
-    expect(screen.getByText("Goal Evidence")).toBeOnTheScreen();
+    expect(screen.getByRole("header")).toHaveTextContent("Run my first 5k");
   });
 
-  it("renders description text", () => {
+  it("renders the goal description when non-null", () => {
     renderWithProviders(<GoalEvidenceCard {...defaultProps} />);
     expect(
-      screen.getByText(
-        "Evidence for the overall goal, not tied to a specific step",
+      screen.getByText("Build up from couch-to-5k over 8 weeks."),
+    ).toBeOnTheScreen();
+  });
+
+  it("does not render a description element when goalDescription is null", () => {
+    renderWithProviders(
+      <GoalEvidenceCard {...defaultProps} goalDescription={null} />,
+    );
+    // Title still present; no extra body text rendered.
+    expect(screen.queryByText(/Build up from/)).toBeNull();
+  });
+
+  it("renders a BadgeRenderer with a synthesized default design when goalDesignJson is null", () => {
+    renderWithProviders(<GoalEvidenceCard {...defaultProps} />);
+    expect(mockBadgeRenderer).toHaveBeenCalled();
+    const props = mockBadgeRenderer.mock.calls[0]?.[0] as {
+      design: { title: string };
+      size: number;
+    };
+    expect(props.design.title).toBe("Run my first 5k");
+    expect(props.size).toBeGreaterThan(0);
+  });
+
+  it("exposes the badge as a labeled button", () => {
+    renderWithProviders(<GoalEvidenceCard {...defaultProps} />);
+    expect(
+      screen.getByLabelText(
+        "Badge preview for Run my first 5k, tap to edit design",
       ),
     ).toBeOnTheScreen();
+  });
+
+  it("calls onBadgePress when the badge is tapped", () => {
+    const onBadgePress = jest.fn();
+    renderWithProviders(
+      <GoalEvidenceCard {...defaultProps} onBadgePress={onBadgePress} />,
+    );
+    fireEvent.press(
+      screen.getByLabelText(
+        "Badge preview for Run my first 5k, tap to edit design",
+      ),
+    );
+    expect(onBadgePress).toHaveBeenCalledTimes(1);
   });
 
   it("displays evidence count with plural label", () => {
@@ -60,7 +111,11 @@ describe("GoalEvidenceCard", () => {
   it("calls onEvidenceTap when evidence badge is pressed", () => {
     const onEvidenceTap = jest.fn();
     renderWithProviders(
-      <GoalEvidenceCard evidenceCount={3} onEvidenceTap={onEvidenceTap} />,
+      <GoalEvidenceCard
+        {...defaultProps}
+        evidenceCount={3}
+        onEvidenceTap={onEvidenceTap}
+      />,
     );
     fireEvent.press(
       screen.getByLabelText("3 goal evidence items, tap to view"),
@@ -75,11 +130,6 @@ describe("GoalEvidenceCard", () => {
     expect(
       screen.getByLabelText("7 goal evidence items, tap to view"),
     ).toBeOnTheScreen();
-  });
-
-  it("title has header accessibility role", () => {
-    renderWithProviders(<GoalEvidenceCard {...defaultProps} />);
-    expect(screen.getByRole("header")).toBeOnTheScreen();
   });
 
   describe("Mark Complete affordance", () => {

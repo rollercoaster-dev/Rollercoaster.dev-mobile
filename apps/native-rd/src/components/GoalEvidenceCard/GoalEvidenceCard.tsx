@@ -1,14 +1,24 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { View, Text, Pressable } from "react-native";
 import Animated from "react-native-reanimated";
 import { Card } from "../Card";
 import { Checkbox } from "../Checkbox";
 import { StatusBadge } from "../StatusBadge";
+import { BadgeRenderer } from "../../badges/BadgeRenderer";
+import { createDefaultBadgeDesign, parseBadgeDesign } from "../../badges/types";
 import { useFlashOnIncrease } from "../../hooks/useFlashOnIncrease";
 import { formatEvidenceLabel } from "../../utils/formatEvidenceLabel";
 import { styles } from "./GoalEvidenceCard.styles";
 
+const BADGE_PREVIEW_SIZE = 120;
+const BADGE_HIT_SLOP = { top: 8, bottom: 8, left: 8, right: 8 } as const;
+
 export interface GoalEvidenceCardProps {
+  goalTitle: string;
+  goalDescription: string | null;
+  goalColor: string | null;
+  goalDesignJson: string | null;
+  onBadgePress: () => void;
   evidenceCount: number;
   onEvidenceTap: () => void;
   /**
@@ -24,6 +34,11 @@ export interface GoalEvidenceCardProps {
 }
 
 export function GoalEvidenceCard({
+  goalTitle,
+  goalDescription,
+  goalColor,
+  goalDesignJson,
+  onBadgePress,
   evidenceCount,
   onEvidenceTap,
   canMarkComplete = false,
@@ -32,6 +47,16 @@ export function GoalEvidenceCard({
   const evidenceLabel = formatEvidenceLabel(evidenceCount);
   const flashStyle = useFlashOnIncrease(evidenceCount);
 
+  // Precedence mirrors CompletionFlowScreen.tsx:150-157 — goal.design is the
+  // pre-bake source of truth; createDefaultBadgeDesign synthesizes a placeholder
+  // from title + color when the user hasn't customized yet.
+  const effectiveDesign = useMemo(
+    () =>
+      parseBadgeDesign(goalDesignJson) ??
+      createDefaultBadgeDesign(goalTitle, goalColor),
+    [goalDesignJson, goalTitle, goalColor],
+  );
+
   const showCompleteAffordance =
     onMarkComplete !== undefined && canMarkComplete;
 
@@ -39,17 +64,42 @@ export function GoalEvidenceCard({
     <View style={styles.wrapper}>
       <Card>
         <View style={styles.container}>
-          <Text style={styles.goalLabel}>★ Goal</Text>
-          <Text style={styles.title} accessible accessibilityRole="header">
-            Goal Evidence
-          </Text>
-          <Text style={styles.description}>
-            Evidence for the overall goal, not tied to a specific step
-          </Text>
-          <View style={styles.statusRow}>
+          <View style={styles.metaRow}>
+            <Text style={styles.metaLabel}>Goal</Text>
             {showCompleteAffordance && (
               <StatusBadge variant="active" label="Ready" />
             )}
+          </View>
+          <View style={styles.badgeRow}>
+            <Pressable
+              onPress={onBadgePress}
+              hitSlop={BADGE_HIT_SLOP}
+              accessible
+              accessibilityRole="button"
+              accessibilityLabel={`Badge preview for ${goalTitle}, tap to edit design`}
+              style={styles.badgePressable}
+            >
+              <BadgeRenderer
+                design={effectiveDesign}
+                size={BADGE_PREVIEW_SIZE}
+                showShadow={false}
+              />
+            </Pressable>
+          </View>
+          <Text
+            style={styles.title}
+            accessible
+            accessibilityRole="header"
+            numberOfLines={2}
+          >
+            {goalTitle}
+          </Text>
+          {goalDescription ? (
+            <Text style={styles.description} numberOfLines={3}>
+              {goalDescription}
+            </Text>
+          ) : null}
+          <View style={styles.statusRow}>
             <View style={styles.evidenceBadgeWrapper}>
               <Pressable
                 onPress={onEvidenceTap}

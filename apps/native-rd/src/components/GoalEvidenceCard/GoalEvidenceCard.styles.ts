@@ -10,13 +10,27 @@ export const styles = StyleSheet.create((theme) => ({
   container: {
     gap: theme.space[3],
   },
-  goalLabel: {
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: theme.space[2],
+  },
+  metaLabel: {
     fontSize: theme.size.xs,
     fontWeight: theme.fontWeight.bold,
-    color: theme.colors.warning,
+    color: theme.colors.textMuted,
     textTransform: "uppercase",
     letterSpacing: theme.letterSpacing.wide,
     fontFamily: theme.fontFamily.body,
+  },
+  badgeRow: {
+    alignItems: "center",
+    paddingVertical: theme.space[1],
+  },
+  badgePressable: {
+    alignItems: "center",
+    justifyContent: "center",
   },
   title: {
     fontSize: theme.size["2xl"],
