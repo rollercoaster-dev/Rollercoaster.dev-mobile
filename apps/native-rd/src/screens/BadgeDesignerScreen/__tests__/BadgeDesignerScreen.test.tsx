@@ -128,6 +128,7 @@ jest.mock(
       "SoccerBall",
       "Airplane",
       "Sparkle",
+      "ArrowLeft",
     ];
     const exports: Record<string, unknown> = {
       IconContext: React.createContext({}),
