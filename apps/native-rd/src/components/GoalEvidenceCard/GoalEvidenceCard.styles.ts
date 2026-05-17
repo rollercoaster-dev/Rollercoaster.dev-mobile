@@ -24,25 +24,30 @@ export const styles = StyleSheet.create((theme) => ({
     letterSpacing: theme.letterSpacing.wide,
     fontFamily: theme.fontFamily.body,
   },
-  badgeRow: {
-    alignItems: "center",
-    paddingVertical: theme.space[1],
+  bodyRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: theme.space[3],
   },
-  badgePressable: {
+  badgePressable: (width: number, height: number) => ({
+    width,
+    height,
     alignItems: "center",
     justifyContent: "center",
+  }),
+  textColumn: {
+    flex: 1,
+    minWidth: 0,
   },
   title: {
-    fontSize: theme.size["2xl"],
+    ...theme.textStyles.headline,
     fontWeight: theme.fontWeight.black,
     color: theme.colors.text,
-    fontFamily: theme.fontFamily.headline,
   },
   description: {
-    fontSize: theme.size.sm,
+    ...theme.textStyles.body,
     color: theme.colors.textMuted,
-    fontFamily: theme.fontFamily.body,
-    lineHeight: theme.lineHeight.sm,
+    marginTop: theme.space[1],
   },
   evidenceBadgeWrapper: {
     position: "relative" as const,
