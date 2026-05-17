@@ -29,6 +29,9 @@ export const styles = StyleSheet.create((theme) => ({
     position: "relative" as const,
     alignSelf: "flex-start",
     marginTop: theme.space[1],
+    // Hard shadow extends 2px below the pill; without this the shadow
+    // clips against the ScrollView contentContainer's bottom edge.
+    marginBottom: theme.space[1],
   },
   evidenceBadge: {
     flexDirection: "row",
