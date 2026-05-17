@@ -310,6 +310,16 @@ function FocusContent({ goalId }: { goalId: string }) {
     navigation.navigate("CompletionFlow", { goalId });
   };
 
+  const handleBadgePress = () => {
+    // Pre-bake redesign path — same params CompletionFlow's "Redesign First"
+    // uses; writes back to goal.design.
+    navigation.navigate("BadgeDesigner", {
+      mode: "new-goal",
+      goalId,
+      returnVia: "back",
+    });
+  };
+
   const handleToggleStep = (stepId: string) => {
     const step = stepRows.find((s) => s.id === stepId);
     if (!step) {
@@ -590,6 +600,11 @@ function FocusContent({ goalId }: { goalId: string }) {
             )),
             <GoalEvidenceCard
               key="goal-evidence"
+              goalTitle={goal.title as string}
+              goalDescription={(goal.description as string | null) ?? null}
+              goalColor={(goal.color as string | null) ?? null}
+              goalDesignJson={(goal.design as string | null) ?? null}
+              onBadgePress={handleBadgePress}
               evidenceCount={goalEvidenceCount}
               onEvidenceTap={handleEvidenceTap}
               canMarkComplete={canMarkComplete}

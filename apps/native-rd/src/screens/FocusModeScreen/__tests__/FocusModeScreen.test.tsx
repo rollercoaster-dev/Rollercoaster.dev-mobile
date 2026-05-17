@@ -27,6 +27,14 @@ jest.mock("expo-haptics", () => ({
   ImpactFeedbackStyle: { Light: "light", Medium: "medium", Heavy: "heavy" },
 }));
 
+// GoalEvidenceCard now renders BadgeRenderer (react-native-svg). jsdom can't
+// render SVG, and there's no global RN-SVG mock — so stub the renderer the same
+// way BadgeCard.test.tsx and CompletionFlowScreen.test.tsx do.
+jest.mock("../../../badges/BadgeRenderer", () => ({
+  BadgeRenderer: () => null,
+  getRendererLayoutOptions: () => ({ strokeWidth: 3, hasShadow: false }),
+}));
+
 jest.mock("../../../utils/haptics", () => ({
   triggerDragStart: jest.fn(),
   triggerDragDrop: jest.fn(),
@@ -605,6 +613,39 @@ describe("FocusModeScreen", () => {
     renderWithProviders(<FocusModeScreen {...routeProps} />);
 
     expect(screen.getByLabelText("Hide timeline")).toBeOnTheScreen();
+  });
+
+  it("badge on goal card navigates to BadgeDesigner in new-goal mode", () => {
+    setupQueries({ steps: [] });
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+    fireEvent.press(
+      screen.getByLabelText(
+        "Badge preview for Learn TypeScript, tap to edit design",
+      ),
+    );
+    expect(mockNavigate).toHaveBeenCalledWith("BadgeDesigner", {
+      mode: "new-goal",
+      goalId: "goal-1",
+      returnVia: "back",
+    });
+  });
+
+  it("renders goal description on the goal card when present", () => {
+    setupQueries({ steps: [] });
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+    expect(screen.getByText("Master the type system")).toBeOnTheScreen();
+  });
+
+  it("omits goal description on the goal card when null", () => {
+    setupQueries({
+      goal: { ...GOAL, description: null },
+      steps: [],
+    });
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+    expect(screen.queryByText("Master the type system")).toBeNull();
   });
 
   it("stepless goal: tapping Mark Complete navigates to CompletionFlow", () => {
