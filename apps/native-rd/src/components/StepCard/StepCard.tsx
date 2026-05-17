@@ -130,23 +130,6 @@ export function StepCard({
             variant={statusToVariant[step.status]}
             label={statusToLabel[step.status]}
           />
-          <View style={styles.evidenceBadgeWrapper}>
-            <Pressable
-              onPress={onEvidenceTap}
-              style={styles.evidenceBadge}
-              accessible
-              accessibilityRole="button"
-              accessibilityLabel={`${step.evidenceCount} evidence items, tap to view`}
-            >
-              <Text style={styles.evidenceText}>{evidenceLabel}</Text>
-            </Pressable>
-            <Animated.View
-              style={[styles.evidenceFlash, flashStyle]}
-              pointerEvents="none"
-              accessibilityElementsHidden
-              importantForAccessibility="no-hide-descendants"
-            />
-          </View>
         </View>
 
         {hasPlannedTypes && (
@@ -201,6 +184,28 @@ export function StepCard({
                 <Text style={styles.quickActionText}>{option.label}</Text>
               </Pressable>
             ))}
+          </View>
+        )}
+
+        {step.evidenceCount > 0 && (
+          <View style={styles.evidenceBadgeRow}>
+            <View style={styles.evidenceBadgeWrapper}>
+              <Pressable
+                onPress={onEvidenceTap}
+                style={styles.evidenceBadge}
+                accessible
+                accessibilityRole="button"
+                accessibilityLabel={`${step.evidenceCount} evidence items, tap to view`}
+              >
+                <Text style={styles.evidenceText}>{evidenceLabel}</Text>
+              </Pressable>
+              <Animated.View
+                style={[styles.evidenceFlash, flashStyle]}
+                pointerEvents="none"
+                accessibilityElementsHidden
+                importantForAccessibility="no-hide-descendants"
+              />
+            </View>
           </View>
         )}
       </ScrollView>

@@ -70,11 +70,22 @@ describe("StepCard", () => {
     expect(screen.getByText("1 item")).toBeOnTheScreen();
   });
 
-  it('displays "add evidence" prompt when count is 0', () => {
+  it("does not render the evidence badge when count is 0", () => {
     renderWithProviders(
       <StepCard step={makeStep({ evidenceCount: 0 })} {...defaultProps} />,
     );
-    expect(screen.getByText("+ add evidence")).toBeOnTheScreen();
+    expect(screen.queryByText("+ add evidence")).toBeNull();
+    expect(screen.queryByLabelText(/evidence items, tap to view/)).toBeNull();
+  });
+
+  it("renders the evidence badge when count is > 0", () => {
+    renderWithProviders(
+      <StepCard step={makeStep({ evidenceCount: 2 })} {...defaultProps} />,
+    );
+    expect(screen.getByText("2 items")).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText("2 evidence items, tap to view"),
+    ).toBeOnTheScreen();
   });
 
   it("calls onToggleComplete when checkbox is pressed", () => {

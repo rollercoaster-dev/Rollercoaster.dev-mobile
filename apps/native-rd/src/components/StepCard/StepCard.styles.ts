@@ -22,11 +22,16 @@ export const styles = StyleSheet.create((theme) => ({
   statusRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     gap: theme.space[2],
+  },
+  evidenceBadgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: theme.space[1],
   },
   evidenceBadgeWrapper: {
     position: "relative" as const,
+    alignSelf: "flex-start",
   },
   evidenceBadge: {
     flexDirection: "row",
