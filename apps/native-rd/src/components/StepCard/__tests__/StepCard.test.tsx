@@ -226,7 +226,7 @@ describe("StepCard", () => {
     ).toBeOnTheScreen();
   });
 
-  it("stays blocked when only some of multiple planned types are captured (regression: PR #987)", () => {
+  it("stays blocked when only some of multiple planned types are captured", () => {
     renderWithProviders(
       <StepCard
         step={makeStep({
@@ -375,5 +375,39 @@ describe("StepCard", () => {
     expect(
       screen.getByRole("checkbox").props.accessibilityState?.disabled,
     ).toBe(false);
+  });
+
+  // --- Reading order (locks in the row sequence the layout fix established) ---
+
+  it("renders rows in document order: meta → title → quick actions → prompt → badge", () => {
+    renderWithProviders(
+      <StepCard
+        step={makeStep({
+          title: "Review component architecture",
+          evidenceCount: 1,
+          plannedEvidenceTypes: ["photo"],
+          capturedEvidenceTypes: [],
+          status: "in-progress",
+        })}
+        {...defaultProps}
+      />,
+    );
+    const tree = JSON.stringify(screen.toJSON());
+    // "Step 1 of 5" is split into separate JSX children by interpolation, so it
+    // doesn't appear as one contiguous substring. Use the status badge label
+    // (a single Text child) to mark the metaRow's position instead — since
+    // the badge sits inside metaRow, locating it locates the row.
+    const positions = {
+      meta: tree.indexOf("In Progress"),
+      title: tree.indexOf("Review component architecture"),
+      quickActions: tree.indexOf("Add Photo evidence"),
+      prompt: tree.indexOf("Add evidence to complete"),
+      badge: tree.indexOf("1 item"),
+    };
+    Object.values(positions).forEach((idx) => expect(idx).toBeGreaterThan(-1));
+    expect(positions.meta).toBeLessThan(positions.title);
+    expect(positions.title).toBeLessThan(positions.quickActions);
+    expect(positions.quickActions).toBeLessThan(positions.prompt);
+    expect(positions.prompt).toBeLessThan(positions.badge);
   });
 });
