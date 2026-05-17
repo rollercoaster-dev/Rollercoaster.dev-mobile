@@ -178,7 +178,7 @@ describe("GoalEvidenceCard", () => {
     it("does not render the check or Ready badge when onMarkComplete is omitted", () => {
       renderWithProviders(<GoalEvidenceCard {...defaultProps} />);
       expect(
-        screen.queryByRole("checkbox", { name: "Mark goal complete" }),
+        screen.queryByRole("button", { name: "Mark goal complete" }),
       ).toBeNull();
       expect(screen.queryByText("Ready")).toBeNull();
     });
@@ -188,7 +188,7 @@ describe("GoalEvidenceCard", () => {
         <GoalEvidenceCard {...defaultProps} onMarkComplete={jest.fn()} />,
       );
       expect(
-        screen.getByRole("checkbox", { name: "Mark goal complete" }),
+        screen.getByRole("button", { name: "Mark goal complete" }),
       ).toBeOnTheScreen();
       expect(screen.getByText("Ready")).toBeOnTheScreen();
     });
@@ -199,7 +199,7 @@ describe("GoalEvidenceCard", () => {
         <GoalEvidenceCard {...defaultProps} onMarkComplete={onMarkComplete} />,
       );
       fireEvent.press(
-        screen.getByRole("checkbox", { name: "Mark goal complete" }),
+        screen.getByRole("button", { name: "Mark goal complete" }),
       );
       expect(onMarkComplete).toHaveBeenCalledTimes(1);
     });

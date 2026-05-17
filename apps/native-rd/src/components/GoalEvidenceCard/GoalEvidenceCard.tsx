@@ -1,9 +1,9 @@
 import React, { useMemo } from "react";
 import { View, Text, Pressable, PixelRatio } from "react-native";
+import * as Haptics from "expo-haptics";
 import { useUnistyles } from "react-native-unistyles";
 import Animated from "react-native-reanimated";
 import { Card } from "../Card";
-import { Checkbox } from "../Checkbox";
 import { StatusBadge } from "../StatusBadge";
 import {
   BadgeRenderer,
@@ -63,7 +63,8 @@ export function GoalEvidenceCard({
   const badgeSize = Math.round(textColumnHeight * fontScale);
 
   // Banner / bottomLabel can overflow the badge square — size the wrapper to
-  // the SVG viewBox so the card grows horizontally instead of clipping.
+  // the full SVG viewBox so overflow grows the card (vertically for banners,
+  // potentially horizontally with shadow) instead of clipping.
   const rendererOptions = getRendererLayoutOptions(theme, false);
   const viewBox = useMemo(
     () =>
@@ -134,13 +135,26 @@ export function GoalEvidenceCard({
           </View>
 
           {onMarkComplete && (
-            <View style={styles.checkboxRow}>
-              <Checkbox
-                checked={false}
-                onToggle={onMarkComplete}
-                label="Mark goal complete"
+            <View style={styles.markCompleteRow}>
+              <Pressable
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(
+                    () => {},
+                  );
+                  onMarkComplete();
+                }}
+                accessible
+                accessibilityRole="button"
+                accessibilityLabel="Mark goal complete"
                 accessibilityHint="Opens completion flow to capture final evidence"
-              />
+                style={styles.markCompletePressable}
+              >
+                {/* Visually a checkbox affordance, but semantically a button —
+                    the tap navigates to CompletionFlow rather than toggling a
+                    persistent checked state, so we never render a checkmark. */}
+                <View style={styles.markCompleteBox} />
+                <Text style={styles.markCompleteLabel}>Mark goal complete</Text>
+              </Pressable>
             </View>
           )}
         </View>

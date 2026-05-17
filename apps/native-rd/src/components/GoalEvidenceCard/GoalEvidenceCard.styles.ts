@@ -53,8 +53,27 @@ export const styles = StyleSheet.create((theme) => ({
     position: "relative" as const,
     alignSelf: "flex-start" as const,
   },
-  checkboxRow: {
+  markCompleteRow: {
     marginTop: theme.space[1],
+  },
+  markCompletePressable: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.space[3],
+    minHeight: 48,
+  },
+  markCompleteBox: {
+    width: 24,
+    height: 24,
+    borderRadius: theme.radius.sm,
+    borderWidth: theme.borderWidth.medium,
+    borderColor: theme.colors.border,
+  },
+  markCompleteLabel: {
+    fontSize: theme.size.md,
+    lineHeight: theme.lineHeight.md,
+    fontFamily: theme.fontFamily.body,
+    color: theme.colors.text,
   },
   evidenceBadge: {
     flexDirection: "row",

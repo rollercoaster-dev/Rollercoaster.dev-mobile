@@ -510,7 +510,7 @@ describe("FocusModeScreen", () => {
     navigateToGoalCard();
 
     expect(
-      screen.queryByRole("checkbox", { name: "Mark goal complete" }),
+      screen.queryByRole("button", { name: "Mark goal complete" }),
     ).toBeNull();
   });
 
@@ -524,7 +524,7 @@ describe("FocusModeScreen", () => {
     const view = renderWithProviders(<FocusModeScreen {...routeProps} />);
     navigateToGoalCard();
     expect(
-      screen.queryByRole("checkbox", { name: "Mark goal complete" }),
+      screen.queryByRole("button", { name: "Mark goal complete" }),
     ).toBeNull();
 
     // Flip the pending step to completed and rerender. The snap effect
@@ -540,7 +540,7 @@ describe("FocusModeScreen", () => {
     view.rerender(<FocusModeScreen {...routeProps} />);
 
     expect(
-      screen.getByRole("checkbox", { name: "Mark goal complete" }),
+      screen.getByRole("button", { name: "Mark goal complete" }),
     ).toBeOnTheScreen();
   });
 
@@ -554,9 +554,7 @@ describe("FocusModeScreen", () => {
     renderWithProviders(<FocusModeScreen {...routeProps} />);
     navigateToGoalCard();
 
-    fireEvent.press(
-      screen.getByRole("checkbox", { name: "Mark goal complete" }),
-    );
+    fireEvent.press(screen.getByRole("button", { name: "Mark goal complete" }));
     expect(mockNavigate).toHaveBeenCalledWith("CompletionFlow", {
       goalId: "goal-1",
     });
@@ -596,7 +594,7 @@ describe("FocusModeScreen", () => {
     renderWithProviders(<FocusModeScreen {...routeProps} />);
 
     expect(
-      screen.getByRole("checkbox", { name: "Mark goal complete" }),
+      screen.getByRole("button", { name: "Mark goal complete" }),
     ).toBeOnTheScreen();
   });
 
@@ -652,9 +650,7 @@ describe("FocusModeScreen", () => {
     setupQueries({ steps: [] });
     renderWithProviders(<FocusModeScreen {...routeProps} />);
 
-    fireEvent.press(
-      screen.getByRole("checkbox", { name: "Mark goal complete" }),
-    );
+    fireEvent.press(screen.getByRole("button", { name: "Mark goal complete" }));
     expect(mockNavigate).toHaveBeenCalledWith("CompletionFlow", {
       goalId: "goal-1",
     });
@@ -965,7 +961,7 @@ describe("FocusModeScreen", () => {
     const view = renderWithProviders(<FocusModeScreen {...routeProps} />);
     fireEvent.press(screen.getAllByLabelText("Goal evidence")[0]);
     expect(
-      screen.queryByRole("checkbox", { name: "Mark goal complete" }),
+      screen.queryByRole("button", { name: "Mark goal complete" }),
     ).toBeNull();
 
     setupQueries({
@@ -988,7 +984,7 @@ describe("FocusModeScreen", () => {
     });
     view.rerender(<FocusModeScreen {...routeProps} />);
     expect(
-      screen.getByRole("checkbox", { name: "Mark goal complete" }),
+      screen.getByRole("button", { name: "Mark goal complete" }),
     ).toBeOnTheScreen();
   });
 
