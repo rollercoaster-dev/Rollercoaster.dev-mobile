@@ -1,0 +1,86 @@
+name: build-play-internal
+
+# Manual-only Android Play internal testing pipeline.
+# Builds a fresh store AAB with the production EAS build profile, then submits
+# that exact build to the existing Google Play "internal" test track.
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref to build (branch, tag, or commit SHA). Leave blank to use the branch picked in the 'Use workflow from' dropdown."
+        required: false
+
+concurrency:
+  group: build-play-internal-${{ inputs.ref || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    uses: ./.github/workflows/_release-validate.yml
+    with:
+      ref: ${{ inputs.ref || github.ref }}
+
+  build-android:
+    needs: validate
+    runs-on: ubuntu-latest
+    outputs:
+      build_id: ${{ steps.build.outputs.build_id }}
+    defaults:
+      run:
+        working-directory: apps/native-rd
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: "package.json"
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+        working-directory: .
+
+      - name: Build (EAS, production profile, Android)
+        id: build
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: |
+          out="$RUNNER_TEMP/eas-build-android.json"
+          npx eas-cli@latest build --profile production --platform android --non-interactive --json > "$out"
+          build_id="$(jq -r 'if type == "array" then .[0].id else .id end' "$out")"
+          test -n "$build_id" && test "$build_id" != "null"
+          echo "build_id=$build_id" >> "$GITHUB_OUTPUT"
+
+  submit-android:
+    needs: build-android
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/native-rd
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Write Google Play service account file
+        env:
+          ANDROID_PLAY_SA: ${{ secrets.ANDROID_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          mkdir -p ../../secrets
+          printf '%s\n' "$ANDROID_PLAY_SA" > ../../secrets/play-service-account.json
+          chmod 600 ../../secrets/play-service-account.json
+
+      - name: Submit (EAS, Google Play internal track)
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: npx eas-cli@latest submit --profile play-internal --platform android --id "${{ needs.build-android.outputs.build_id }}" --non-interactive --wait

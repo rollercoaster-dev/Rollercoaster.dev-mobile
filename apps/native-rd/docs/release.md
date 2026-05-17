@@ -4,18 +4,19 @@
 
 ## Pipeline at a glance
 
-| Track      | Trigger                                                                  | Workflow               | EAS profile  | Destination                         |
-| ---------- | ------------------------------------------------------------------------ | ---------------------- | ------------ | ----------------------------------- |
-| Internal   | Manual: Actions → `build-internal` → "Run workflow"                      | `build-internal.yml`   | `preview`    | TestFlight internal + Play internal |
-| Production | GitHub Release published (release-please PR merge, or manual UI publish) | `build-production.yml` | `production` | TestFlight ext + Play prod (10%)    |
-| Production | Manual: Actions → `build-production` → "Run workflow" with `ref` input   | `build-production.yml` | `production` | TestFlight ext + Play prod (10%)    |
+| Track                 | Trigger                                                                  | Workflow                  | EAS build profile | EAS submit profile | Destination                    |
+| --------------------- | ------------------------------------------------------------------------ | ------------------------- | ----------------- | ------------------ | ------------------------------ |
+| Direct install        | Manual: Actions → `build-internal` → "Run workflow"                      | `build-internal.yml`      | `preview`         | `preview`          | EAS internal distribution      |
+| Play internal testing | Manual: Actions → `build-play-internal` → "Run workflow"                 | `build-play-internal.yml` | `production`      | `play-internal`    | Google Play internal test      |
+| Production            | GitHub Release published (release-please PR merge, or manual UI publish) | `build-production.yml`    | `production`      | `production`       | TestFlight ext + Play prod 10% |
+| Production            | Manual: Actions → `build-production` → "Run workflow" with `ref` input   | `build-production.yml`    | `production`      | `production`       | TestFlight ext + Play prod 10% |
 
 Both build workflows are deliberately click-only — no auto-build on push to
 `main`. release-please runs on every push to `main` to keep the release PR up
 to date, but it never builds anything itself; it just opens/updates a PR and,
 when merged, publishes a GitHub Release.
 
-## Cutting an internal build (for testing / dogfood)
+## Cutting a direct-install build
 
 1. Go to **Actions → build-internal → "Run workflow"**.
 2. Pick the ref you want to build. Defaults to the branch selected in GitHub's
@@ -24,9 +25,38 @@ when merged, publishes a GitHub Release.
 3. Pick `platform`: `all`, `ios`, or `android`. Use a single platform when
    smoke-testing one credential path.
 4. Click **Run workflow**.
-5. Watch release validate → per-platform EAS build → per-platform submit. Each
-   submit job uses the explicit EAS build ID produced by its build job. On
-   success the build appears in TestFlight internal and/or Play internal track.
+5. Watch release validate → per-platform EAS build → per-platform submit.
+
+Use this workflow for EAS internal distribution / direct-install testing. Do not
+use the Android preview artifact for Play Store testing: `preview` builds Android
+as an APK and uses EAS internal distribution.
+
+## Cutting an Android Play internal test build
+
+Use this for the current Android tester channel in Play Console:
+**Interner Test** / Google Play internal testing.
+
+1. Merge the workflow/config changes to the branch you want to build.
+2. Go to **Actions → build-play-internal → "Run workflow"**.
+3. Pick the ref you want to build. Leave blank to use the selected branch, or
+   enter `main`, a release branch, a tag, or a commit SHA.
+4. Click **Run workflow**.
+5. The workflow runs release validation, builds a fresh Android store AAB with
+   EAS `production`, then submits that exact build with submit profile
+   `play-internal`.
+6. On success, the build appears in Play Console → Testing → Internal testing.
+
+Why this workflow exists:
+
+- Google Play version codes are single-use once uploaded anywhere in Play
+  Console.
+- Re-submitting the same EAS build can fail with
+  `Version code has already been used`.
+- This workflow always creates a fresh Android store build first, so EAS remote
+  auto-increment assigns the next version code before submit.
+- It targets Play `internal`, matching the current tester channel. Do not use
+  `alpha` / `beta` until the app is intentionally moved to a formal closed
+  testing track.
 
 ## Cutting a production release
 
