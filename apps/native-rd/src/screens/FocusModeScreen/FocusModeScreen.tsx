@@ -115,15 +115,13 @@ function FocusContent({ goalId }: { goalId: string }) {
   const { viewEvidence, viewerModals } = useEvidenceViewer();
   const { timelineHidden, setTimelineHidden } = useFocusModePrefs();
   const lifecycle = useRef({
-    completionFired: false,
     snappedToFirstPending: false,
-    // Tracks whether we observed an incomplete-state during this mount.
-    // Without this, reopening a goal (which leaves all steps completed)
-    // lands FocusMode in allStepsComplete=true, fires the auto-nav, and
-    // bounces the user straight back to CompletionFlow + BadgeEarnedModal.
+    snappedToGoalCard: false,
+    // Reopen Goal lands FocusMode with steps already completed; without this
+    // guard, the snap-to-goal effect fires on mount instead of only on a
+    // genuine pending → complete transition.
     sawIncomplete: false,
   });
-  const isMounted = useRef(true);
   const pendingFileDeletionRef = useRef<{
     id: string;
     uri: string | null;
@@ -135,7 +133,6 @@ function FocusContent({ goalId }: { goalId: string }) {
     breadcrumb({ category: "focus", message: "enter" });
     return () => {
       breadcrumb({ category: "focus", message: "exit" });
-      isMounted.current = false;
       if (pendingFileDeletionRef.current) {
         clearTimeout(pendingFileDeletionRef.current.timer);
       }
@@ -232,6 +229,9 @@ function FocusContent({ goalId }: { goalId: string }) {
     stepRows.length > 0 &&
     stepRows.every((s) => s.status === StepStatus.completed);
 
+  // Stepless goals are tappable from mount; stepped goals gate on all-complete.
+  const canMarkComplete = stepRows.length === 0 || allStepsComplete;
+
   // Snap to first pending step on initial load. Dep is stepRows.length —
   // useQuery returns a fresh array each emission, so depending on stepRows
   // would re-fire pointlessly.
@@ -247,30 +247,23 @@ function FocusContent({ goalId }: { goalId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only fire on initial population
   }, [stepRowsLength]);
 
-  // Announce when all steps become complete and auto-navigate to completion flow.
-  // Only fires on the incomplete → complete transition, not on a fresh mount
-  // that lands already-complete (e.g. after Reopen Goal, where the step rows
-  // stay completed but the goal status is back to active).
+  // On the pending → complete transition, snap to the goal card so the
+  // user sees the Mark Complete affordance without scrolling.
+  const goalTitleForAnnouncement = goal?.title as string | undefined;
   useEffect(() => {
-    if (!goal) return;
+    if (!goalTitleForAnnouncement) return;
     if (!allStepsComplete) {
       lifecycle.current.sawIncomplete = true;
-      lifecycle.current.completionFired = false;
       return;
     }
     if (!lifecycle.current.sawIncomplete) return;
-    if (lifecycle.current.completionFired) return;
-    lifecycle.current.completionFired = true;
+    if (lifecycle.current.snappedToGoalCard) return;
+    lifecycle.current.snappedToGoalCard = true;
+    setCurrentCardIndex(stepRowsLength);
     AccessibilityInfo.announceForAccessibility(
-      `All steps completed for "${goal.title}". Goal is ready to complete!`,
+      `All steps complete for "${goalTitleForAnnouncement}". Mark Complete is now available on the goal card.`,
     );
-    const timer = setTimeout(() => {
-      if (isMounted.current) {
-        navigation.navigate("CompletionFlow", { goalId });
-      }
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [goal, allStepsComplete, goalId, navigation]);
+  }, [goalTitleForAnnouncement, allStepsComplete, stepRowsLength]);
 
   const handleUndoDelete = useCallback(() => {
     const pending = pendingFileDeletionRef.current;
@@ -303,6 +296,18 @@ function FocusContent({ goalId }: { goalId: string }) {
     setCurrentCardIndex(index);
     if (isDrawerOpen) setIsDrawerOpen(false);
     if (isFABMenuOpen) setIsFABMenuOpen(false);
+  };
+
+  const handleMarkComplete = () => {
+    navigation.navigate("CompletionFlow", { goalId });
+  };
+
+  const handleBadgePress = () => {
+    navigation.navigate("BadgeDesigner", {
+      mode: "new-goal",
+      goalId,
+      returnVia: "back",
+    });
   };
 
   const handleToggleStep = (stepId: string) => {
@@ -512,21 +517,23 @@ function FocusContent({ goalId }: { goalId: string }) {
         >
           {goal.title}
         </Text>
-        <IconButton
-          icon={
-            timelineHidden ? (
-              <EyeSlash size={20} weight="bold" />
-            ) : (
-              <Eye size={20} weight="bold" />
-            )
-          }
-          onPress={() => setTimelineHidden(!timelineHidden)}
-          tone="ghost"
-          accessibilityLabel={
-            timelineHidden ? "Show timeline" : "Hide timeline"
-          }
-          size="sm"
-        />
+        {stepRows.length > 0 && (
+          <IconButton
+            icon={
+              timelineHidden ? (
+                <EyeSlash size={20} weight="bold" />
+              ) : (
+                <Eye size={20} weight="bold" />
+              )
+            }
+            onPress={() => setTimelineHidden(!timelineHidden)}
+            tone="ghost"
+            accessibilityLabel={
+              timelineHidden ? "Show timeline" : "Hide timeline"
+            }
+            size="sm"
+          />
+        )}
         <IconButton
           icon={<Pencil size={20} weight="bold" />}
           onPress={handleEditPress}
@@ -536,8 +543,7 @@ function FocusContent({ goalId }: { goalId: string }) {
         />
       </View>
 
-      {/* MiniTimeline */}
-      {!timelineHidden && (
+      {!timelineHidden && stepRows.length > 0 && (
         <MiniTimeline
           steps={timelineSteps}
           currentIndex={currentCardIndex}
@@ -582,8 +588,14 @@ function FocusContent({ goalId }: { goalId: string }) {
             )),
             <GoalEvidenceCard
               key="goal-evidence"
+              goalTitle={goal.title as string}
+              goalDescription={(goal.description as string | null) ?? null}
+              goalColor={(goal.color as string | null) ?? null}
+              goalDesignJson={(goal.design as string | null) ?? null}
+              onBadgePress={handleBadgePress}
               evidenceCount={goalEvidenceCount}
               onEvidenceTap={handleEvidenceTap}
+              onMarkComplete={canMarkComplete ? handleMarkComplete : undefined}
             />,
           ]}
         </CardCarousel>

@@ -10,29 +10,70 @@ export const styles = StyleSheet.create((theme) => ({
   container: {
     gap: theme.space[3],
   },
-  goalLabel: {
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: theme.space[2],
+  },
+  metaLabel: {
     fontSize: theme.size.xs,
     fontWeight: theme.fontWeight.bold,
-    color: theme.colors.warning,
+    color: theme.colors.textMuted,
     textTransform: "uppercase",
     letterSpacing: theme.letterSpacing.wide,
     fontFamily: theme.fontFamily.body,
   },
+  bodyRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: theme.space[3],
+  },
+  badgePressable: (width: number, height: number) => ({
+    width,
+    height,
+    alignItems: "center",
+    justifyContent: "center",
+  }),
+  textColumn: {
+    flex: 1,
+    minWidth: 0,
+  },
   title: {
-    fontSize: theme.size["2xl"],
+    ...theme.textStyles.headline,
     fontWeight: theme.fontWeight.black,
     color: theme.colors.text,
-    fontFamily: theme.fontFamily.headline,
   },
   description: {
-    fontSize: theme.size.sm,
+    ...theme.textStyles.body,
     color: theme.colors.textMuted,
-    fontFamily: theme.fontFamily.body,
-    lineHeight: theme.lineHeight.sm,
+    marginTop: theme.space[1],
   },
   evidenceBadgeWrapper: {
     position: "relative" as const,
     alignSelf: "flex-start" as const,
+  },
+  markCompleteRow: {
+    marginTop: theme.space[1],
+  },
+  markCompletePressable: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.space[3],
+    minHeight: 48,
+  },
+  markCompleteBox: {
+    width: 24,
+    height: 24,
+    borderRadius: theme.radius.sm,
+    borderWidth: theme.borderWidth.medium,
+    borderColor: theme.colors.border,
+  },
+  markCompleteLabel: {
+    fontSize: theme.size.md,
+    lineHeight: theme.lineHeight.md,
+    fontFamily: theme.fontFamily.body,
+    color: theme.colors.text,
   },
   evidenceBadge: {
     flexDirection: "row",

@@ -109,15 +109,15 @@ describe("CardCarousel", () => {
       expect(nextButton.props.accessibilityState?.disabled).toBe(true);
     });
 
-    it("disables both arrows for single card", () => {
+    it("hides both arrows entirely for single card (no navigation surface)", () => {
       const onIndexChange = jest.fn();
       renderWithProviders(
         <CardCarousel currentIndex={0} onIndexChange={onIndexChange}>
           <Card label="Solo" />
         </CardCarousel>,
       );
-      fireEvent.press(screen.getByLabelText("Previous card"));
-      fireEvent.press(screen.getByLabelText("Next card"));
+      expect(screen.queryByLabelText("Previous card")).toBeNull();
+      expect(screen.queryByLabelText("Next card")).toBeNull();
       expect(onIndexChange).not.toHaveBeenCalled();
     });
   });

@@ -210,37 +210,39 @@ export function CardCarousel({
           ))}
         </View>
 
-        {/* Prev arrow — overlays left edge */}
-        <View style={[styles.arrowContainer, styles.arrowLeft]}>
-          <Pressable
-            onPress={goLeft}
-            disabled={isFirst}
-            style={[styles.arrow, isFirst && styles.arrowDisabled]}
-            accessible
-            accessibilityRole="button"
-            accessibilityLabel="Previous card"
-            accessibilityHint={`Moves to the previous item in ${accessibilityLabel}`}
-            accessibilityState={{ disabled: isFirst }}
-          >
-            <Text style={styles.arrowText}>&#8249;</Text>
-          </Pressable>
-        </View>
+        {children.length > 1 && (
+          <>
+            <View style={[styles.arrowContainer, styles.arrowLeft]}>
+              <Pressable
+                onPress={goLeft}
+                disabled={isFirst}
+                style={[styles.arrow, isFirst && styles.arrowDisabled]}
+                accessible
+                accessibilityRole="button"
+                accessibilityLabel="Previous card"
+                accessibilityHint={`Moves to the previous item in ${accessibilityLabel}`}
+                accessibilityState={{ disabled: isFirst }}
+              >
+                <Text style={styles.arrowText}>&#8249;</Text>
+              </Pressable>
+            </View>
 
-        {/* Next arrow — overlays right edge */}
-        <View style={[styles.arrowContainer, styles.arrowRight]}>
-          <Pressable
-            onPress={goRight}
-            disabled={isLast}
-            style={[styles.arrow, isLast && styles.arrowDisabled]}
-            accessible
-            accessibilityRole="button"
-            accessibilityLabel="Next card"
-            accessibilityHint={`Moves to the next item in ${accessibilityLabel}`}
-            accessibilityState={{ disabled: isLast }}
-          >
-            <Text style={styles.arrowText}>&#8250;</Text>
-          </Pressable>
-        </View>
+            <View style={[styles.arrowContainer, styles.arrowRight]}>
+              <Pressable
+                onPress={goRight}
+                disabled={isLast}
+                style={[styles.arrow, isLast && styles.arrowDisabled]}
+                accessible
+                accessibilityRole="button"
+                accessibilityLabel="Next card"
+                accessibilityHint={`Moves to the next item in ${accessibilityLabel}`}
+                accessibilityState={{ disabled: isLast }}
+              >
+                <Text style={styles.arrowText}>&#8250;</Text>
+              </Pressable>
+            </View>
+          </>
+        )}
       </View>
 
       {/* Indicator (ProgressDots) below the track */}
