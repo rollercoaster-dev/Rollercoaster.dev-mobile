@@ -72,6 +72,22 @@ jobs:
         with:
           ref: ${{ inputs.ref || github.ref }}
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: "package.json"
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        # `eas submit` reads Expo app config before submitting. Config plugins
+        # such as react-native-edge-to-edge must be resolvable from node_modules.
+        run: bun install --frozen-lockfile
+        working-directory: .
+
       - name: Write Google Play service account file
         env:
           ANDROID_PLAY_SA: ${{ secrets.ANDROID_PLAY_SERVICE_ACCOUNT_JSON }}
