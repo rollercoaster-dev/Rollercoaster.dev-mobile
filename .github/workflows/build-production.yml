@@ -1,13 +1,9 @@
 name: build-production
 
-# Manual / click only:
-# - "release: published" fires when a GitHub Release is published from the
-#   Releases page (release-please does this automatically when its PR merges,
-#   or a human can click "Publish release" in the UI).
-# - "workflow_dispatch" lets us re-run a release against a specific tag/SHA.
+# Manual only. Production builds + store submits must be human-triggered:
+# click "Run workflow" from the Actions UI (or `gh workflow run`) and supply
+# a tag/SHA via the `ref` input.
 on:
-  release:
-    types: [published]
   workflow_dispatch:
     inputs:
       ref:
