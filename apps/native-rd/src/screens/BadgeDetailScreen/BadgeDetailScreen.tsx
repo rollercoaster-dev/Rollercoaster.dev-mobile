@@ -257,10 +257,11 @@ function BadgeDetailContent({
             />
             {/* Honest "lossy" path: messenger photo flows may re-encode the
                 PNG and drop the iTXt chunk. Kept available for users who
-                only want to share the visual. */}
+                only want to share the visual. Order + caption convey the
+                demotion; matched-weight buttons read better on this card. */}
             <Button
               label="Save as Image"
-              variant="ghost"
+              variant="secondary"
               onPress={() => exportImage(imageUri)}
               loading={isExportingImage}
               disabled={!hasRealImage}
