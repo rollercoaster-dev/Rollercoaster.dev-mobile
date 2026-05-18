@@ -228,14 +228,14 @@ function conformanceChecks(credential: Record<string, unknown>): CheckResult[] {
 
   // Gap 6: umbrella oneOf — passes when 1–5 all pass.
   const upstream = [gap1, gap2, gap3, gap4, gap5];
-  const gap6 = upstream.every((c) => c.pass)
+  const gap6 = upstream.every((c) => c.status === "pass")
     ? pass(
         "gap6.schemaOneOf",
         "all upstream checks pass, schema oneOf should resolve",
       )
     : fail(
         "gap6.schemaOneOf",
-        `${upstream.filter((c) => !c.pass).length} upstream gap(s) still open`,
+        `${upstream.filter((c) => c.status !== "pass").length} upstream gap(s) still open`,
       );
 
   // Gap 7: did:key must use multibase `z` prefix, not raw jwk.x.
