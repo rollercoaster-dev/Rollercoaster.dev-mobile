@@ -102,6 +102,11 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.textMuted,
     textTransform: "uppercase",
   },
+  exportCaption: {
+    ...theme.textStyles.caption,
+    color: theme.colors.textSecondary,
+    marginTop: theme.space[1],
+  },
   centered: {
     flex: 1,
     justifyContent: "center",

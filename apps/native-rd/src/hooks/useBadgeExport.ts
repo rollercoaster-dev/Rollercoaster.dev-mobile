@@ -1,20 +1,85 @@
 import { useState, useCallback } from "react";
-import { Alert } from "react-native";
-import { useUnistyles } from "react-native-unistyles";
+import { Alert, Platform } from "react-native";
 import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system/legacy";
 import { PLACEHOLDER_IMAGE_URI } from "./useCreateBadge";
-import { captureBadge, getCaptureDimensions } from "../badges/captureBadge";
-import {
-  getRendererLayoutOptions,
-  type BadgeRendererHandle,
-} from "../badges/BadgeRenderer";
-import type { BadgeDesign } from "../badges/types";
 
 export function useBadgeExport() {
-  const { theme } = useUnistyles();
   const [isExportingImage, setIsExportingImage] = useState(false);
   const [isExportingJSON, setIsExportingJSON] = useState(false);
+
+  /**
+   * Verifiable-badge export: writes the on-disk baked PNG (which carries
+   * the OB 3.0 `iTXt` credential chunk) through a byte-preserving channel.
+   *
+   * - iOS: routes via the share sheet. AirDrop / Save to Files / Mail /
+   *   iMessage / first-party tiles preserve the PNG bytes (and therefore
+   *   the iTXt chunk). 3rd-party messenger photo tiles will still transcode;
+   *   that is a receiver-side problem we cannot solve from here.
+   * - Android: bypasses the share sheet entirely via the Storage Access
+   *   Framework. The user picks a destination folder; the file lands
+   *   byte-for-byte. This avoids the dominant Android failure mode where
+   *   messengers re-encode "photo" attachments and strip ancillary chunks.
+   */
+  const exportVerifiableBadge = useCallback(async (imageUri: string | null) => {
+    if (!imageUri || imageUri === PLACEHOLDER_IMAGE_URI) {
+      Alert.alert(
+        "No image available",
+        "This badge does not have a baked image yet.",
+      );
+      return;
+    }
+
+    setIsExportingImage(true);
+    try {
+      if (Platform.OS === "android") {
+        const perm =
+          await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+        if (!perm.granted) {
+          // User cancelled the folder picker — not an error.
+          return;
+        }
+        const base64 = await FileSystem.readAsStringAsync(imageUri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        const filename = `badge-${Date.now()}.png`;
+        const destUri = await FileSystem.StorageAccessFramework.createFileAsync(
+          perm.directoryUri,
+          filename,
+          "image/png",
+        );
+        await FileSystem.writeAsStringAsync(destUri, base64, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        return;
+      }
+
+      const canShare = await Sharing.isAvailableAsync();
+      if (!canShare) {
+        Alert.alert(
+          "Sharing unavailable",
+          "Sharing is not available on this device.",
+        );
+        return;
+      }
+      await Sharing.shareAsync(imageUri, {
+        UTI: "public.png",
+        mimeType: "image/png",
+        dialogTitle: "Export Verifiable Badge",
+      });
+    } catch (error) {
+      console.error("[useBadgeExport] Failed to export verifiable badge", {
+        imageUri,
+        error,
+      });
+      Alert.alert(
+        "Export failed",
+        "Something went wrong exporting the verifiable badge.",
+      );
+    } finally {
+      setIsExportingImage(false);
+    }
+  }, []);
 
   const exportImage = useCallback(async (imageUri: string | null) => {
     if (!imageUri || imageUri === PLACEHOLDER_IMAGE_URI) {
@@ -53,76 +118,6 @@ export function useBadgeExport() {
       setIsExportingImage(false);
     }
   }, []);
-
-  const exportDesignImage = useCallback(
-    async (
-      ref: React.RefObject<BadgeRendererHandle | null>,
-      design: BadgeDesign,
-    ) => {
-      const cacheDir = FileSystem.cacheDirectory;
-      if (!cacheDir) {
-        Alert.alert(
-          "Export failed",
-          "Cannot access the device cache directory.",
-        );
-        return;
-      }
-
-      setIsExportingImage(true);
-      const tempUri = `${cacheDir}badge-export-${Date.now()}.png`;
-      try {
-        const canShare = await Sharing.isAvailableAsync();
-        if (!canShare) {
-          Alert.alert(
-            "Sharing unavailable",
-            "Sharing is not available on this device.",
-          );
-          return;
-        }
-
-        const pngBuffer = await captureBadge(
-          ref,
-          getCaptureDimensions(
-            design,
-            undefined,
-            getRendererLayoutOptions(theme),
-          ),
-        );
-        await FileSystem.writeAsStringAsync(
-          tempUri,
-          pngBuffer.toString("base64"),
-          {
-            encoding: FileSystem.EncodingType.Base64,
-          },
-        );
-
-        await Sharing.shareAsync(tempUri, {
-          UTI: "public.png",
-          mimeType: "image/png",
-          dialogTitle: "Save Badge Image",
-        });
-      } catch (error) {
-        console.error("[useBadgeExport] Failed to export design image", {
-          error,
-        });
-        Alert.alert(
-          "Export failed",
-          "Something went wrong exporting the badge image.",
-        );
-      } finally {
-        await FileSystem.deleteAsync(tempUri, { idempotent: true }).catch(
-          (cleanupErr) => {
-            console.warn("[useBadgeExport] Failed to clean up temp file", {
-              tempUri,
-              cleanupErr,
-            });
-          },
-        );
-        setIsExportingImage(false);
-      }
-    },
-    [theme],
-  );
 
   const exportJSON = useCallback(
     async (credential: string | null, goalTitle: string) => {
@@ -190,8 +185,8 @@ export function useBadgeExport() {
   );
 
   return {
+    exportVerifiableBadge,
     exportImage,
-    exportDesignImage,
     exportJSON,
     isExportingImage,
     isExportingJSON,

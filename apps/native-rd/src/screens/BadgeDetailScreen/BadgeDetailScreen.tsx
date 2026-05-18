@@ -118,8 +118,13 @@ function BadgeDetailContent({
   const [previewHeight, setPreviewHeight] = useState(
     PREVIEW_OVERLAY_INITIAL_HEIGHT,
   );
-  const { exportImage, exportJSON, isExportingImage, isExportingJSON } =
-    useBadgeExport();
+  const {
+    exportVerifiableBadge,
+    exportImage,
+    exportJSON,
+    isExportingImage,
+    isExportingJSON,
+  } = useBadgeExport();
   const badgeRendererRef = useRef<BadgeRendererHandle | null>(null);
 
   const handleDelete = () => {
@@ -230,10 +235,14 @@ function BadgeDetailContent({
         <Card>
           <View style={styles.infoBlock}>
             <Text style={styles.sectionLabel}>Export</Text>
+            {/* Primary: byte-preserving export of the baked PNG (carries the
+                OB 3.0 iTXt credential). On Android this bypasses the share
+                sheet entirely via SAF, so messengers can't transcode and
+                strip the credential. */}
             <Button
-              label="Save Image"
-              variant="secondary"
-              onPress={() => exportImage(imageUri)}
+              label="Export Verifiable Badge"
+              variant="primary"
+              onPress={() => exportVerifiableBadge(imageUri)}
               loading={isExportingImage}
               disabled={!hasRealImage}
             />
@@ -246,6 +255,21 @@ function BadgeDetailContent({
               loading={isExportingJSON}
               disabled={!badge.credential}
             />
+            {/* Honest "lossy" path: messenger photo flows may re-encode the
+                PNG and drop the iTXt chunk. Kept available for users who
+                only want to share the visual. */}
+            <Button
+              label="Save as Image"
+              variant="ghost"
+              onPress={() => exportImage(imageUri)}
+              loading={isExportingImage}
+              disabled={!hasRealImage}
+              accessibilityHint="Shares this badge as a picture. The credential may be lost when sent through messengers."
+            />
+            <Text style={styles.exportCaption}>
+              Export Verifiable Badge keeps the OpenBadge credential. Save as
+              Image is just a picture — some apps strip the proof when sharing.
+            </Text>
           </View>
         </Card>
 

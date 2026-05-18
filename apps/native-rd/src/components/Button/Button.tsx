@@ -12,6 +12,7 @@ export interface ButtonProps {
   disabled?: boolean;
   loading?: boolean;
   testID?: string;
+  accessibilityHint?: string;
 }
 
 const labelStyleMap = {
@@ -36,6 +37,7 @@ export function Button({
   disabled = false,
   loading = false,
   testID,
+  accessibilityHint,
 }: ButtonProps) {
   const isDisabled = disabled || loading;
 
@@ -46,6 +48,7 @@ export function Button({
       accessible
       accessibilityRole="button"
       accessibilityLabel={label}
+      accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled: isDisabled, busy: loading }}
       testID={testID}
       style={({ pressed }) => [
