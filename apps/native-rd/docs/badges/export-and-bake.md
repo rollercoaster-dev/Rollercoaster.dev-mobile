@@ -123,6 +123,21 @@ caption text under the buttons explains the trade-off plainly.
 
 ## How to verify a PNG is baked
 
+The fastest path is the workspace's badge verifier — it parses the iTXt
+chunk, verifies the Ed25519 signature under our Iteration-A scheme, and
+reports OB 3.0 conformance gap-by-gap:
+
+```sh
+bun run verify:badge <path-to-badge.png-or-.json>
+# System round-trip + 7 OB3 gap checks. Exits 0 if system OK,
+# 1 if our own signing is broken, 2 on load error.
+```
+
+Source: `apps/native-rd/scripts/verify-badge.ts`. Tracks the gap
+inventory in [../architecture/ob3-compliance-status.md](../architecture/ob3-compliance-status.md).
+
+If you just want the raw chunk list:
+
 ```sh
 pngcheck -t badge.png
 # Expect a chunk list including:

@@ -117,6 +117,19 @@ Local verification inside the app works because native-rd both signs and verifie
 
 ## How to re-test
 
+### Fast local check
+
+```sh
+bun run verify:badge <path-to-badge.png-or-.json>
+```
+
+Runs the 7 gap checks documented above without leaving the repo. Source
+at `apps/native-rd/scripts/verify-badge.ts`. Treat divergence between
+this tool's output and the table above as a doc bug; both should track
+together.
+
+### Full external re-test (replaces the snapshot)
+
 1. Earn or open a badge in the app.
 2. Use **Export → JSON** to share the credential off-device.
 3. Upload the `.json` to [verifybadge.org](https://verifybadge.org/validate) and select OB 3.0.
