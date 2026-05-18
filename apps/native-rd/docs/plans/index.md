@@ -20,6 +20,7 @@ Implementation plans and vision documents. Active plans are in progress; complet
 | [2026-05-14-release-pipeline.md](./2026-05-14-release-pipeline.md)                                                                                              | Build click-only iOS+Android release pipeline (EAS + GH Actions + release-please) | 2026-05-14    |
 | [2026-05-16-pr-28-release-pipeline-setup.md](./2026-05-16-pr-28-release-pipeline-setup.md)                                                                      | Review and setup walkthrough for PR #28 release pipeline                          | 2026-05-16    |
 | [2026-05-18-badge-export-fix.md](./2026-05-18-badge-export-fix.md)                                                                                              | Stop shipping un-baked badges: Tier 1 one-line fix + Tier 2 honest export UX      | 2026-05-18    |
+| [2026-05-18-expo-app-variants.md](./2026-05-18-expo-app-variants.md) ([#94](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/94))           | Adopt Expo multi-variant pattern to end \`INSTALL_FAILED_VERSION_DOWNGRADE\`      | 2026-05-18    |
 
 ## Reference
 
