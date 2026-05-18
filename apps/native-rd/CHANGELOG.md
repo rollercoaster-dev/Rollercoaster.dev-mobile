@@ -1,5 +1,12 @@
 # native-rd
 
+## [0.1.5](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/compare/v0.1.4...v0.1.5) (2026-05-18)
+
+
+### Bug Fixes
+
+* **native-rd:** bake-aware badge export + local verifier ([#96](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/96)) ([6d65787](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/6d65787a876fe86a8bbbd536a0e44de9c90a5555))
+
 ## [0.1.4](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/compare/v0.1.3...v0.1.4) (2026-05-17)
 
 
