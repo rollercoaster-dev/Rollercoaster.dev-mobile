@@ -6,9 +6,6 @@
  * starting with "_" (templates). For each file, parses the three marker-delimited
  * slices and asserts the trimmed body fits the per-store character budget.
  *
- * Limits are hard ceilings from Google Play / App Store Connect. See README.md
- * in the same directory for the source of those numbers.
- *
  * Exits 0 on success, 1 on any violation. Designed for CI.
  *
  * Run: bun run release-notes:lint
@@ -17,74 +14,27 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 
-type SliceName = "play" | "appstore" | "testflight";
+import {
+  APP_ROOT,
+  checkSlice,
+  extractSlice,
+  SLICES,
+  type SliceViolation,
+} from "./release-notes-shared";
 
-const LIMITS: Record<SliceName, number> = {
-  play: 500,
-  appstore: 4000,
-  testflight: 4000,
-};
+const NOTES_DIR = join(APP_ROOT, "docs", "release", "testing-notes");
 
-const SLICES: readonly SliceName[] = ["play", "appstore", "testflight"];
+type FileViolation = SliceViolation & { file: string };
 
-const NOTES_DIR = join(
-  import.meta.dir,
-  "..",
-  "docs",
-  "release",
-  "testing-notes",
-);
-
-type Violation = {
-  file: string;
-  slice: SliceName;
-  reason: string;
-};
-
-function extractSlice(source: string, slice: SliceName): string | null {
-  const start = `<!-- ${slice}:start -->`;
-  const end = `<!-- ${slice}:end -->`;
-  const startIdx = source.indexOf(start);
-  const endIdx = source.indexOf(end);
-  if (startIdx === -1 || endIdx === -1 || endIdx < startIdx) return null;
-  return source.slice(startIdx + start.length, endIdx).trim();
-}
-
-function lintFile(path: string): Violation[] {
+function lintFile(path: string): FileViolation[] {
   const source = readFileSync(path, "utf8");
   const file = basename(path);
-  const violations: Violation[] = [];
-
+  const violations: FileViolation[] = [];
   for (const slice of SLICES) {
     const body = extractSlice(source, slice);
-    if (body === null) {
-      violations.push({
-        file,
-        slice,
-        reason: `missing <!-- ${slice}:start --> / <!-- ${slice}:end --> markers`,
-      });
-      continue;
-    }
-    if (body.length === 0) {
-      violations.push({ file, slice, reason: "empty body between markers" });
-      continue;
-    }
-    if (body.includes("TODO")) {
-      violations.push({
-        file,
-        slice,
-        reason: "contains TODO — fill in before tagging the release",
-      });
-    }
-    if (body.length > LIMITS[slice]) {
-      violations.push({
-        file,
-        slice,
-        reason: `${body.length} chars exceeds limit of ${LIMITS[slice]}`,
-      });
-    }
+    const v = checkSlice(slice, body);
+    if (v) violations.push({ ...v, file });
   }
-
   return violations;
 }
 
@@ -98,9 +48,10 @@ function main(): number {
   }
 
   const files = entries
-    .filter((name) => name.endsWith(".md"))
-    .filter((name) => name !== "README.md")
-    .filter((name) => !name.startsWith("_"))
+    .filter(
+      (name) =>
+        name.endsWith(".md") && name !== "README.md" && !name.startsWith("_"),
+    )
     .map((name) => join(NOTES_DIR, name));
 
   if (files.length === 0) {
@@ -124,4 +75,6 @@ function main(): number {
   return 1;
 }
 
-process.exit(main());
+if (import.meta.main) {
+  process.exit(main());
+}

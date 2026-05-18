@@ -22,9 +22,9 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const APP_ROOT = join(import.meta.dir, "..");
+import { APP_ROOT, resolveVersion } from "./release-notes-shared";
+
 const CHANGELOG_PATH = join(APP_ROOT, "CHANGELOG.md");
-const PACKAGE_JSON_PATH = join(APP_ROOT, "package.json");
 const NOTES_DIR = join(APP_ROOT, "docs", "release", "testing-notes");
 
 type ChangelogEntry = {
@@ -41,17 +41,6 @@ type ChangelogSection = {
 // release-please chores). They stay in CHANGELOG.md but don't belong in any
 // user-facing or tester-facing release notes.
 const INTERNAL_SCOPES = new Set(["ci", "chore", "build", "deps", "release"]);
-
-function resolveVersion(arg: string | undefined): string {
-  if (arg && arg.length > 0) return arg;
-  const pkg = JSON.parse(readFileSync(PACKAGE_JSON_PATH, "utf8")) as {
-    version?: string;
-  };
-  if (!pkg.version) {
-    throw new Error(`No version in ${PACKAGE_JSON_PATH}`);
-  }
-  return pkg.version;
-}
 
 function parseBullet(line: string): ChangelogEntry {
   let text = line.replace(/^[*-]\s+/, "");
@@ -125,12 +114,19 @@ function isUserFacing(entry: ChangelogEntry): boolean {
   return !INTERNAL_SCOPES.has(entry.scope.toLowerCase());
 }
 
-function buildScaffold(version: string, section: ChangelogSection): string {
+type Scaffold = {
+  content: string;
+  userFacingFeatureCount: number;
+  userFacingFixCount: number;
+  internalFeatureCount: number;
+  internalFixCount: number;
+};
+
+function buildScaffold(version: string, section: ChangelogSection): Scaffold {
   const today = new Date().toISOString().slice(0, 10);
   const userFacingFeatures = section.features.filter(isUserFacing);
   const userFacingFixes = section.fixes.filter(isUserFacing);
-
-  return `---
+  const content = `---
 version: ${version}
 versionCode: TODO
 date: ${today}
@@ -190,6 +186,13 @@ ${todoList(userFacingFixes)}
 
 <!-- testflight:end -->
 `;
+  return {
+    content,
+    userFacingFeatureCount: userFacingFeatures.length,
+    userFacingFixCount: userFacingFixes.length,
+    internalFeatureCount: section.features.length - userFacingFeatures.length,
+    internalFixCount: section.fixes.length - userFacingFixes.length,
+  };
 }
 
 function main(): number {
@@ -210,23 +213,25 @@ function main(): number {
     );
     return 1;
   }
-  const content = buildScaffold(version, parsed);
-  writeFileSync(outPath, content);
-  const userFacingFeatures = parsed.features.filter(isUserFacing).length;
-  const userFacingFixes = parsed.fixes.filter(isUserFacing).length;
-  const filteredFeatures = parsed.features.length - userFacingFeatures;
-  const filteredFixes = parsed.fixes.length - userFacingFixes;
+  const scaffold = buildScaffold(version, parsed);
+  writeFileSync(outPath, scaffold.content);
+  const hiddenFeatures =
+    scaffold.internalFeatureCount > 0
+      ? ` (+${scaffold.internalFeatureCount} internal hidden)`
+      : "";
+  const hiddenFixes =
+    scaffold.internalFixCount > 0
+      ? ` (+${scaffold.internalFixCount} internal hidden)`
+      : "";
   console.log(
     `release-notes-generate: wrote ${outPath}\n` +
-      `  features: ${userFacingFeatures} user-facing` +
-      (filteredFeatures > 0 ? ` (+${filteredFeatures} internal hidden)` : "") +
-      `\n` +
-      `  fixes: ${userFacingFixes} user-facing` +
-      (filteredFixes > 0 ? ` (+${filteredFixes} internal hidden)` : "") +
-      `\n` +
+      `  features: ${scaffold.userFacingFeatureCount} user-facing${hiddenFeatures}\n` +
+      `  fixes: ${scaffold.userFacingFixCount} user-facing${hiddenFixes}\n` +
       `  next: edit the TODO lines, then \`bun run release-notes:lint\` to verify.`,
   );
   return 0;
 }
 
-process.exit(main());
+if (import.meta.main) {
+  process.exit(main());
+}
