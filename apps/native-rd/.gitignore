@@ -40,6 +40,13 @@ yarn-error.*
 # Google Play service account key (developer-local; required by `eas submit -p android`)
 play-service-account.json
 
+# EAS Metadata store config — generated per-release from
+# docs/release/testing-notes/<version>.md via release-notes:split
+store.config.json
+
+# Generated release artifacts (Play changelog, what-to-test text)
+.release-artifacts/
+
 # TypeScript
 *.tsbuildinfo
 

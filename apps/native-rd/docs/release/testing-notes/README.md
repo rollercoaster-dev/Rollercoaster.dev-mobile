@@ -60,14 +60,87 @@ The linter measures the **trimmed body between the markers**, in JavaScript `Str
 
 ## Localization
 
-Currently `en-US` only. When additional locales are added (see `apps/native-rd/docs/i18n.md`), this format will grow per-locale slices (`play:en-US:start`, `play:de-DE:start`, etc.) and the Fastlane metadata layout will mirror that.
+Currently `en-US` only. When additional locales are added (see `apps/native-rd/docs/i18n.md`), this format will grow per-locale slices (`play:en-US:start`, `play:de-DE:start`, etc.).
 
-## Flow into stores
+## End-to-end flow
 
-The hand-written notes here are the **source of truth**. Downstream automation (planned, not yet built — see `docs/release.md`) will:
+The hand-written notes here are the **source of truth**. Three scripts move them through the pipeline:
 
-1. Copy the `play` body into `fastlane/metadata/android/en-US/changelogs/<versionCode>.txt`.
-2. Copy the `appstore` body into `fastlane/metadata/ios/en-US/release_notes.txt`.
-3. Pass the `testflight` body to the App Store Connect API as the build's `whatToTest` localization.
+### 1. Scaffold a new version
 
-Until that automation lands, copy/paste manually when promoting a build.
+```sh
+bun run release-notes:generate 0.1.5
+```
+
+Parses `CHANGELOG.md` for the version, pre-fills each slice with `TODO: ` bullets, writes `0.1.5.md`. Internal-scope commits (`ci:`, `chore:`, `build:`, `deps:`, `release:`) are filtered out of user-facing slices.
+
+### 2. Edit each slice
+
+Open `0.1.5.md` and rewrite every line that starts with `TODO:`:
+
+- **play** / **appstore**: user-facing copy. No jargon, no PR numbers.
+- **testflight**: tester instructions. Steps to exercise → expected result.
+
+Internal terms and PR numbers are fine in `testflight` only.
+
+### 3. Validate length and absence of TODOs
+
+```sh
+bun run release-notes:lint
+```
+
+Fails if any slice exceeds its store limit, is missing markers, or still contains `TODO`. Wire this into CI on the release-please PR to gate merge.
+
+### 4. Split into store-bound artifacts
+
+```sh
+bun run release-notes:split 0.1.5
+```
+
+Produces:
+
+| Output                                                       | Purpose                                                                         |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| `apps/native-rd/store.config.json`                           | EAS Metadata config — read by `eas metadata:push` to set App Store "What's New" |
+| `apps/native-rd/.release-artifacts/play-changelog-en-US.txt` | Raw text for Play Console "What's new" (manual paste or future API push)        |
+| `apps/native-rd/.release-artifacts/what-to-test.txt`         | Raw text for `eas submit --what-to-test "$(cat ...)"`                           |
+
+The splitter refuses to write any output if the notes file still contains `TODO` markers — same check as `release-notes:lint`, enforced again here so CI can't sneak past it.
+
+### 5. Push to stores
+
+**iOS App Store + TestFlight:**
+
+```sh
+eas metadata:push --profile production
+eas submit --platform ios --profile production \
+  --what-to-test "$(cat apps/native-rd/.release-artifacts/what-to-test.txt)"
+```
+
+**Android Play "What's new":** there is no `eas submit` flag for this. Three options, in increasing order of automation:
+
+1. **Manual paste** — open Play Console → Production → "What's new in this version" → paste the contents of `play-changelog-en-US.txt`. Fine for now.
+2. **Fastlane Supply** — requires Ruby. Reads `fastlane/metadata/android/<locale>/changelogs/<versionCode>.txt`. Heavier dependency.
+3. **Play Developer API push** (planned) — a small Bun script using `googleapis` to call `androidpublisher.edits.tracks.update` with `releases[0].releaseNotes`. Same service account credentials as `eas submit --platform android`; no additional permissions needed.
+
+## Open blockers before the iOS half can actually run
+
+The `store.config.json` produced by the splitter currently contains only `apple.info.en-US.releaseNotes`. EAS Metadata's schema also requires:
+
+- `apple.info.en-US.title` — the app name as it appears on the App Store
+- `apple.info.en-US.privacyPolicyUrl` — a publicly-hosted privacy policy URL
+
+Neither is in the splitter output yet because:
+
+1. The privacy policy at `apps/native-rd/docs/launch/privacy-policy.md` is **not yet hosted at a public URL** (still an open item in `docs/launch/production-release-plan.md`).
+2. Pushing a placeholder URL via `eas metadata:push` would overwrite whatever's currently set in App Store Connect — including any URL that's already been entered manually.
+
+**Until those are resolved, run `eas metadata:push` only after manually verifying the static fields in App Store Connect, or extend the splitter to merge a committed `store.config.base.json` with the per-release release notes.**
+
+## Reference: store fields and limits
+
+| Section in this doc | Store field                                      | Limit             | API                                                                     |
+| ------------------- | ------------------------------------------------ | ----------------- | ----------------------------------------------------------------------- |
+| `play`              | Play Console → "What's new in this version"      | 500 chars/locale  | Play Developer API: `edits.tracks.update` → `releases[].releaseNotes[]` |
+| `appstore`          | App Store Connect → "What's New in This Version" | 4000 chars/locale | EAS Metadata: `apple.info.<locale>.releaseNotes`                        |
+| `testflight`        | TestFlight → "What to Test"                      | 4000 chars        | `eas submit --what-to-test`                                             |
