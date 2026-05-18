@@ -228,13 +228,12 @@ describe("BadgeDetailScreen", () => {
       expect(mockExportImage).toHaveBeenCalledWith("file:///badges/badge.png");
     });
 
-    // Regression: prior code branched on `design ?` and called a separate
-    // exportDesignImage path that re-rasterized the live renderer instead of
-    // using the baked PNG on disk. That bypassed bakePNG() entirely, so every
-    // export of a designer-saved badge shipped without the iTXt credential.
-    // The primary export ("Export Verifiable Badge") must always forward the
-    // on-disk imageUri, even when `design` is populated.
-    it("exports the baked PNG on disk even when a design is set (Tier 1 regression)", () => {
+    // Regression: prior code branched on `design ?` and re-rasterized the
+    // live renderer instead of using the baked PNG on disk, so every
+    // export of a designer-saved badge shipped without the iTXt
+    // credential. The primary export must always forward the on-disk
+    // imageUri, even when `design` is populated.
+    it("exports the baked PNG on disk even when a design is set", () => {
       const design = JSON.stringify(
         createDefaultBadgeDesign("Learn TypeScript", "#4caf50"),
       );
@@ -254,6 +253,32 @@ describe("BadgeDetailScreen", () => {
       expect(mockExportVerifiableBadge).toHaveBeenCalledWith(
         "file:///badges/badge.png",
       );
+    });
+
+    // Parallel guard on the lossy path: even though "Save as Image" is the
+    // documented-as-lossy export, it must still forward `imageUri` (the
+    // baked PNG) rather than fall back to a re-rasterized renderer capture
+    // when a design is present. Locks the broader "no path re-rasterizes"
+    // intent — without this test, a future refactor could re-introduce a
+    // softer version of the original bug here without breaking anything.
+    it("save-as-image forwards the baked PNG even when a design is set", () => {
+      const design = JSON.stringify(
+        createDefaultBadgeDesign("Learn TypeScript", "#4caf50"),
+      );
+      mockUseQuery.mockReturnValue([
+        makeRow({
+          imageUri: "file:///badges/badge.png",
+          design,
+        }),
+      ]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      fireEvent.press(screen.getByLabelText("Save as Image"));
+
+      expect(mockExportImage).toHaveBeenCalledTimes(1);
+      expect(mockExportImage).toHaveBeenCalledWith("file:///badges/badge.png");
     });
 
     it("surfaces a hint on Save as Image about messenger-stripped credentials", () => {

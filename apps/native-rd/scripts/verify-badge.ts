@@ -6,19 +6,9 @@
  *   bun scripts/verify-badge.ts <path-to-badge.png>
  *   bun scripts/verify-badge.ts <path-to-credential.json>
  *
- * Reports two things:
- *
- * 1. SYSTEM ROUND-TRIP — does the credential parse, and does the Ed25519
- *    signature verify under our own Iteration-A signing scheme
- *    (raw JSON.stringify, base64url proofValue)? If this fails, our own
- *    pipeline is broken.
- *
- * 2. OB 3.0 CONFORMANCE DELTA — runs the 7 documented gaps from
- *    docs/architecture/ob3-compliance-status.md. Pass/fail per gap so we
- *    can track progress as we close them (Iteration D).
- *
- * The two reports are complementary: a badge can pass (1) and fail (2)
- * — that's exactly the current Iteration-A state.
+ * The two reports are complementary: a badge can pass the system
+ * round-trip and fail OB3 conformance; that's the expected shape for a
+ * self-signed Iteration-A badge.
  */
 
 import { readFileSync } from "node:fs";
@@ -36,13 +26,17 @@ const YELLOW = "\x1b[33m";
 const DIM = "\x1b[2m";
 const BOLD = "\x1b[1m";
 
-type CheckResult = { name: string; pass: boolean; detail?: string };
+type CheckStatus = "pass" | "fail" | "skipped";
+type CheckResult = { name: string; status: CheckStatus; detail?: string };
 
 function pass(name: string, detail?: string): CheckResult {
-  return { name, pass: true, detail };
+  return { name, status: "pass", detail };
 }
 function fail(name: string, detail?: string): CheckResult {
-  return { name, pass: false, detail };
+  return { name, status: "fail", detail };
+}
+function skipped(name: string, detail?: string): CheckResult {
+  return { name, status: "skipped", detail };
 }
 
 function loadCredential(path: string): {
@@ -51,7 +45,6 @@ function loadCredential(path: string): {
 } {
   const buf = readFileSync(path);
   if (isPNG(buf)) {
-    // unbakePNG returns the already-parsed credential object (or null).
     const cred = unbakePNG(buf) as Record<string, unknown> | null;
     if (!cred) {
       throw new Error(
@@ -84,15 +77,27 @@ function getIterationADidX(did: string): string | null {
 function verifyIterationASignature(
   credential: Record<string, unknown>,
 ): CheckResult {
-  const proof = credential.proof as Record<string, unknown> | undefined;
-  if (!proof || typeof proof !== "object" || Array.isArray(proof)) {
-    return fail("signature.iterationA", "no single proof object on credential");
+  const rawProof = credential.proof;
+  if (rawProof === undefined || rawProof === null) {
+    return fail("signature.iterationA", "no proof on credential");
+  }
+  // OB3 spec form is `proof: [...]`; Iteration-A emits a bare object.
+  // Accept either so a spec-compliant credential routes through the
+  // skipped path below instead of a misleading "broken" failure.
+  const proof = (Array.isArray(rawProof) ? rawProof[0] : rawProof) as
+    | Record<string, unknown>
+    | undefined;
+  if (!proof || typeof proof !== "object") {
+    return fail("signature.iterationA", "malformed proof shape");
   }
   const cryptosuite = proof.cryptosuite;
   if (cryptosuite !== "eddsa-raw-json-iteration-a") {
-    return pass(
+    // We have no code to verify standard cryptosuites (eddsa-rdfc-2022
+    // etc.) yet — report skipped so the summary line and exit code don't
+    // claim a verification we didn't perform.
+    return skipped(
       "signature.iterationA",
-      `skipped — cryptosuite is '${String(cryptosuite)}', not the Iteration-A scheme`,
+      `cryptosuite is '${String(cryptosuite)}'; this verifier only checks the Iteration-A scheme`,
     );
   }
   const proofValue = proof.proofValue;
@@ -104,8 +109,10 @@ function verifyIterationASignature(
     );
   }
 
-  // Reproduce what useCreateBadge.ts:186-189 actually signed:
-  //   JSON.stringify(credential without the proof field).
+  // Reproduce the bytes that `useCreateBadge` signs: JSON.stringify of
+  // the credential without the proof field. Drift between this and the
+  // signing path is invisible until verification starts failing — when
+  // either side changes, factor the bytes-to-sign computation out.
   const { proof: _omit, ...unsigned } = credential;
   const dataBytes = new TextEncoder().encode(JSON.stringify(unsigned));
 
@@ -194,9 +201,10 @@ function conformanceChecks(credential: Record<string, unknown>): CheckResult[] {
       : fail("gap4.issuanceDate", "top-level issuanceDate is missing");
 
   // Gap 5: cryptosuite must be a standard one.
-  // `eddsa-2022` is the second OB3-accepted DataIntegrity cryptosuite but
-  // isn't in openbadges-core's enum yet — referenced as a literal until it
-  // is. The enum entry ensures we'll notice if `EddsaRdfc2022` gets renamed.
+  // `eddsa-2022` is the second OB3-accepted DataIntegrity cryptosuite;
+  // openbadges-core's enum currently only exports the rdfc variant. The
+  // enum reference catches a future rename of `EddsaRdfc2022` at compile
+  // time; the literal stays in sync by hand.
   const STANDARD_CRYPTOSUITES = new Set<string>([
     Cryptosuite.EddsaRdfc2022,
     "eddsa-2022",
@@ -252,7 +260,12 @@ function printSection(title: string) {
 }
 
 function printResult(r: CheckResult) {
-  const tag = r.pass ? `${GREEN}✓ PASS${RESET}` : `${RED}✗ FAIL${RESET}`;
+  const tag =
+    r.status === "pass"
+      ? `${GREEN}✓ PASS${RESET}`
+      : r.status === "fail"
+        ? `${RED}✗ FAIL${RESET}`
+        : `${YELLOW}~ SKIP${RESET}`;
   console.log(
     `  ${tag}  ${r.name}${r.detail ? `\n         ${DIM}${r.detail}${RESET}` : ""}`,
   );
@@ -294,7 +307,7 @@ async function main() {
   const conf = conformanceChecks(credential);
   conf.forEach(printResult);
 
-  const conformancePassed = conf.filter((c) => c.pass).length;
+  const conformancePassed = conf.filter((c) => c.status === "pass").length;
   const total = conf.length;
   const fraction = `${conformancePassed}/${total}`;
   const color =
@@ -304,15 +317,29 @@ async function main() {
         ? RED
         : YELLOW;
 
+  const systemTag =
+    sigResult.status === "pass"
+      ? `${GREEN}ok${RESET}`
+      : sigResult.status === "fail"
+        ? `${RED}broken${RESET}`
+        : `${YELLOW}not attempted${RESET}`;
+
   console.log(
     `\n${BOLD}Summary${RESET}  ` +
-      `system: ${sigResult.pass ? `${GREEN}ok${RESET}` : `${RED}broken${RESET}`}  ·  ` +
+      `system: ${systemTag}  ·  ` +
       `OB3 conformance: ${color}${fraction}${RESET} gaps closed`,
   );
 
-  // Exit non-zero only if our own system is broken. Conformance gaps are
-  // expected in Iteration A and should not fail CI.
-  process.exit(sigResult.pass ? 0 : 1);
+  // Exit non-zero only on a real signature mismatch — a broken pipeline. A
+  // skipped check (non-Iteration-A cryptosuite that we have no code to
+  // verify) is not a pipeline failure but also not a success: exit 0 but
+  // print to stderr so CI logs surface it.
+  if (sigResult.status === "skipped") {
+    console.error(
+      `${YELLOW}warning:${RESET} signature was not verified (${sigResult.detail ?? "no detail"})`,
+    );
+  }
+  process.exit(sigResult.status === "fail" ? 1 : 0);
 }
 
 main().catch((err) => {

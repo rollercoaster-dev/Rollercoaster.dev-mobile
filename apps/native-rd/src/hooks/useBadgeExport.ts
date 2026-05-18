@@ -4,6 +4,16 @@ import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system/legacy";
 import { PLACEHOLDER_IMAGE_URI } from "./useCreateBadge";
 
+// expo-sharing's `shareAsync` rejects with a generic Error when the user
+// dismisses the system share sheet on Android (iOS currently resolves
+// silently). Treat cancel-shaped rejections as not-an-error so the user
+// doesn't see "Export failed" for an action they took deliberately —
+// matches the silent-return SAF folder-picker behaviour.
+function isShareCancellation(error: unknown): boolean {
+  const msg = error instanceof Error ? error.message : String(error);
+  return /cancel/i.test(msg) || /did not share/i.test(msg);
+}
+
 export function useBadgeExport() {
   const [isExportingImage, setIsExportingImage] = useState(false);
   const [isExportingJSON, setIsExportingJSON] = useState(false);
@@ -54,20 +64,34 @@ export function useBadgeExport() {
         return;
       }
 
-      const canShare = await Sharing.isAvailableAsync();
-      if (!canShare) {
-        Alert.alert(
-          "Sharing unavailable",
-          "Sharing is not available on this device.",
-        );
+      if (Platform.OS === "ios") {
+        const canShare = await Sharing.isAvailableAsync();
+        if (!canShare) {
+          Alert.alert(
+            "Sharing unavailable",
+            "Sharing is not available on this device.",
+          );
+          return;
+        }
+        await Sharing.shareAsync(imageUri, {
+          UTI: "public.png",
+          mimeType: "image/png",
+          dialogTitle: "Export Verifiable Badge",
+        });
         return;
       }
-      await Sharing.shareAsync(imageUri, {
-        UTI: "public.png",
-        mimeType: "image/png",
-        dialogTitle: "Export Verifiable Badge",
+
+      // Web / macOS / windows / unknown — fall through to a clear alert
+      // rather than silently using the iOS share-sheet path.
+      console.error("[useBadgeExport] Unsupported platform", {
+        os: Platform.OS,
       });
+      Alert.alert(
+        "Export unavailable",
+        "Badge export is only supported on iOS and Android.",
+      );
     } catch (error) {
+      if (isShareCancellation(error)) return;
       console.error("[useBadgeExport] Failed to export verifiable badge", {
         imageUri,
         error,
@@ -106,6 +130,7 @@ export function useBadgeExport() {
         dialogTitle: "Save Badge Image",
       });
     } catch (error) {
+      if (isShareCancellation(error)) return;
       console.error("[useBadgeExport] Failed to export image", {
         imageUri,
         error,

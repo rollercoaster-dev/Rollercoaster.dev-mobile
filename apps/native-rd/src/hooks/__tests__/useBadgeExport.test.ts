@@ -32,11 +32,8 @@ jest.mock("expo-file-system/legacy", () => ({
 
 jest.spyOn(Alert, "alert");
 
-/**
- * Mutates `Platform.OS` for a single test. RN's Platform module is a plain
- * object at runtime; reassigning via defineProperty is the lightest-weight
- * way to exercise the iOS/Android branches without a full module re-mock.
- */
+// Platform.OS is a runtime property; defineProperty is lighter than
+// re-mocking react-native and is reset to "ios" in beforeEach.
 function setPlatform(os: "ios" | "android") {
   Object.defineProperty(Platform, "OS", {
     configurable: true,
@@ -200,6 +197,39 @@ describe("useBadgeExport", () => {
         expect.any(String),
       );
       expect(result.current.isExportingImage).toBe(false);
+    });
+
+    it("returns silently when the share sheet is cancelled (no Export failed alert)", async () => {
+      setPlatform("ios");
+      (Sharing.shareAsync as jest.Mock).mockRejectedValueOnce(
+        new Error("User cancelled the share action"),
+      );
+      const { result } = renderHook(() => useBadgeExport());
+
+      await act(async () => {
+        await result.current.exportVerifiableBadge("file:///badges/badge.png");
+      });
+
+      expect(Alert.alert).not.toHaveBeenCalled();
+      expect(result.current.isExportingImage).toBe(false);
+    });
+
+    it("alerts with an unavailable message on unsupported platforms", async () => {
+      setPlatform("web" as "ios");
+      const { result } = renderHook(() => useBadgeExport());
+
+      await act(async () => {
+        await result.current.exportVerifiableBadge("file:///badges/badge.png");
+      });
+
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "Export unavailable",
+        expect.stringContaining("iOS and Android"),
+      );
+      expect(Sharing.shareAsync).not.toHaveBeenCalled();
+      expect(
+        FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync,
+      ).not.toHaveBeenCalled();
     });
   });
 
