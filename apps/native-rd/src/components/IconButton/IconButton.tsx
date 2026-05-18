@@ -22,14 +22,6 @@ export interface IconButtonProps {
   testID?: string;
 }
 
-const toneStyleMap = {
-  chrome: styles.toneChrome,
-  ghost: styles.toneGhost,
-  surface: styles.toneSurface,
-  primary: styles.tonePrimary,
-  destructive: styles.toneDestructive,
-} as const;
-
 // Icon elements may receive a `color` prop (Phosphor) or a `style.color`
 // (RN <Text>). Inject both unconditionally so call sites stop passing
 // theme colors into icons.
@@ -62,6 +54,18 @@ export function IconButton({
   const iconColor = resolveIconColor(theme, tone);
   const tonedIcon = injectIconColor(icon, iconColor);
 
+  // Look up tone styles at render time. A module-level capture (the prior
+  // `toneStyleMap` const) breaks react-native-unistyles reactivity: the
+  // ref points at the theme's styles as of module load, not after a
+  // setTheme() update.
+  const toneStyle = {
+    chrome: styles.toneChrome,
+    ghost: styles.toneGhost,
+    surface: styles.toneSurface,
+    primary: styles.tonePrimary,
+    destructive: styles.toneDestructive,
+  }[tone];
+
   return (
     <Pressable
       onPress={onPress}
@@ -73,7 +77,7 @@ export function IconButton({
       accessibilityState={{ disabled }}
       style={({ pressed }) => [
         styles.pressable(size),
-        toneStyleMap[tone],
+        toneStyle,
         pressed && styles.pressed,
         disabled && styles.disabled,
       ]}
