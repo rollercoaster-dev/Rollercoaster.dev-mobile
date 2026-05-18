@@ -35,6 +35,7 @@ const APP_ROOT = join(import.meta.dir, "..");
 const NOTES_DIR = join(APP_ROOT, "docs", "release", "testing-notes");
 const ARTIFACTS_DIR = join(APP_ROOT, ".release-artifacts");
 const STORE_CONFIG_PATH = join(APP_ROOT, "store.config.json");
+const STORE_CONFIG_BASE_PATH = join(APP_ROOT, "store.config.base.json");
 const PACKAGE_JSON_PATH = join(APP_ROOT, "package.json");
 
 type SliceName = "play" | "appstore" | "testflight";
@@ -63,6 +64,28 @@ function extractSlice(source: string, slice: SliceName): string {
     throw new Error(`Missing ${slice} markers in testing-notes file`);
   }
   return source.slice(startIdx + start.length, endIdx).trim();
+}
+
+type StoreConfig = {
+  configVersion?: number;
+  apple?: {
+    info?: Record<string, Record<string, unknown> | undefined>;
+  };
+};
+
+function mergeStoreConfig(
+  base: unknown,
+  appstoreReleaseNotes: string,
+): StoreConfig {
+  const cloned = JSON.parse(JSON.stringify(base ?? {})) as StoreConfig;
+  cloned.apple ??= {};
+  cloned.apple.info ??= {};
+  const locale = cloned.apple.info["en-US"] ?? {};
+  cloned.apple.info["en-US"] = {
+    ...locale,
+    releaseNotes: appstoreReleaseNotes,
+  };
+  return cloned;
 }
 
 function validate(slice: SliceName, body: string): void {
@@ -111,16 +134,18 @@ function main(): number {
     }
   }
 
-  const storeConfig = {
-    configVersion: 0,
-    apple: {
-      info: {
-        "en-US": {
-          releaseNotes: slices.appstore,
-        },
-      },
-    },
-  };
+  let base: unknown;
+  try {
+    base = JSON.parse(readFileSync(STORE_CONFIG_BASE_PATH, "utf8"));
+  } catch {
+    console.error(
+      `release-notes-split: missing or unreadable ${STORE_CONFIG_BASE_PATH}. ` +
+        `This file holds the static EAS Metadata (title, privacyPolicyUrl, etc.) ` +
+        `that release notes get merged into.`,
+    );
+    return 1;
+  }
+  const storeConfig = mergeStoreConfig(base, slices.appstore);
   writeFileSync(STORE_CONFIG_PATH, JSON.stringify(storeConfig, null, 2) + "\n");
 
   mkdirSync(ARTIFACTS_DIR, { recursive: true });

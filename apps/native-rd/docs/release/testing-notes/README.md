@@ -123,19 +123,20 @@ eas submit --platform ios --profile production \
 2. **Fastlane Supply** — requires Ruby. Reads `fastlane/metadata/android/<locale>/changelogs/<versionCode>.txt`. Heavier dependency.
 3. **Play Developer API push** (planned) — a small Bun script using `googleapis` to call `androidpublisher.edits.tracks.update` with `releases[0].releaseNotes`. Same service account credentials as `eas submit --platform android`; no additional permissions needed.
 
-## Open blockers before the iOS half can actually run
+## Static App Store metadata
 
-The `store.config.json` produced by the splitter currently contains only `apple.info.en-US.releaseNotes`. EAS Metadata's schema also requires:
+EAS Metadata's `apple.info.en-US` block requires `title` and `privacyPolicyUrl` alongside `releaseNotes`. These stable values live in `apps/native-rd/store.config.base.json` (committed), and the splitter merges them with the per-release `releaseNotes` to produce the generated `store.config.json` that `eas metadata:push` consumes.
 
-- `apple.info.en-US.title` — the app name as it appears on the App Store
-- `apple.info.en-US.privacyPolicyUrl` — a publicly-hosted privacy policy URL
+Current values:
 
-Neither is in the splitter output yet because:
+| Field              | Value                               | Source of record                                      |
+| ------------------ | ----------------------------------- | ----------------------------------------------------- |
+| `title`            | `Rollercoaster.dev`                 | `apps/native-rd/app.json` (`expo.name`)               |
+| `privacyPolicyUrl` | `https://rollercoaster.dev/privacy` | `apps/native-rd/docs/launch/app-store-launch-plan.md` |
 
-1. The privacy policy at `apps/native-rd/docs/launch/privacy-policy.md` is **not yet hosted at a public URL** (still an open item in `docs/launch/production-release-plan.md`).
-2. Pushing a placeholder URL via `eas metadata:push` would overwrite whatever's currently set in App Store Connect — including any URL that's already been entered manually.
+Update `store.config.base.json` through a normal PR. Schema is validated by `eas metadata:lint --profile production`.
 
-**Until those are resolved, run `eas metadata:push` only after manually verifying the static fields in App Store Connect, or extend the splitter to merge a committed `store.config.base.json` with the per-release release notes.**
+> The privacy policy page must be live at the URL above before `eas metadata:push` runs in production. Follow the launch-readiness item in `apps/native-rd/docs/launch/production-release-plan.md` (issue #976).
 
 ## Reference: store fields and limits
 

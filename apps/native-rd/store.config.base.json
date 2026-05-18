@@ -1,0 +1,11 @@
+{
+  "configVersion": 0,
+  "apple": {
+    "info": {
+      "en-US": {
+        "title": "Rollercoaster.dev",
+        "privacyPolicyUrl": "https://rollercoaster.dev/privacy"
+      }
+    }
+  }
+}
