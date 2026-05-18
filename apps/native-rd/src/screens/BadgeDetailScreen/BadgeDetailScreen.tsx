@@ -267,7 +267,7 @@ function BadgeDetailContent({
               disabled={!hasRealImage}
               accessibilityHint="Shares this badge as a picture. The credential may be lost when sent through messengers."
             />
-            <Text style={styles.exportCaption}>
+            <Text variant="caption" style={styles.exportCaption}>
               Export Verifiable Badge keeps the OpenBadge credential. Save as
               Image is just a picture — some apps strip the proof when sharing.
             </Text>

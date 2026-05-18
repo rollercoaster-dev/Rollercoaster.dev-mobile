@@ -103,7 +103,6 @@ export const styles = StyleSheet.create((theme) => ({
     textTransform: "uppercase",
   },
   exportCaption: {
-    ...theme.textStyles.caption,
     color: theme.colors.textSecondary,
     marginTop: theme.space[1],
   },

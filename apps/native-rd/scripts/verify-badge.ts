@@ -23,7 +23,11 @@
 
 import { readFileSync } from "node:fs";
 import { createPublicKey, verify as cryptoVerify } from "node:crypto";
-import { isPNG, unbakePNG } from "@rollercoaster-dev/openbadges-core";
+import {
+  Cryptosuite,
+  isPNG,
+  unbakePNG,
+} from "@rollercoaster-dev/openbadges-core";
 
 const RESET = "\x1b[0m";
 const GREEN = "\x1b[32m";
@@ -190,7 +194,13 @@ function conformanceChecks(credential: Record<string, unknown>): CheckResult[] {
       : fail("gap4.issuanceDate", "top-level issuanceDate is missing");
 
   // Gap 5: cryptosuite must be a standard one.
-  const STANDARD_CRYPTOSUITES = new Set(["eddsa-rdfc-2022", "eddsa-2022"]);
+  // `eddsa-2022` is the second OB3-accepted DataIntegrity cryptosuite but
+  // isn't in openbadges-core's enum yet — referenced as a literal until it
+  // is. The enum entry ensures we'll notice if `EddsaRdfc2022` gets renamed.
+  const STANDARD_CRYPTOSUITES = new Set<string>([
+    Cryptosuite.EddsaRdfc2022,
+    "eddsa-2022",
+  ]);
   const proofObj = (Array.isArray(proof) ? proof[0] : proof) as
     | Record<string, unknown>
     | undefined;
