@@ -62,8 +62,10 @@ the resulting `file://` URI is stored on the badge row as `imageUri`.
 The export Card on `BadgeDetailScreen` must always read from
 `imageUri`. **Never** re-rasterize the live `BadgeRenderer` via
 `react-native-svg`'s `toDataURL` and ship those bytes — that path
-skips `bakePNG()` entirely. See the 2026-05-18 plan for the bug this
-caused and the regression test that locks the contract.
+skips `bakePNG()` entirely. The regression test at
+`src/screens/BadgeDetailScreen/__tests__/BadgeDetailScreen.test.tsx`
+("exports the baked PNG on disk even when a design is set") locks
+the contract.
 
 ---
 

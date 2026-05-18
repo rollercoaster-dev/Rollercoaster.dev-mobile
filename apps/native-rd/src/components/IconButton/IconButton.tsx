@@ -54,10 +54,8 @@ export function IconButton({
   const iconColor = resolveIconColor(theme, tone);
   const tonedIcon = injectIconColor(icon, iconColor);
 
-  // Look up tone styles at render time. A module-level capture (the prior
-  // `toneStyleMap` const) breaks react-native-unistyles reactivity: the
-  // ref points at the theme's styles as of module load, not after a
-  // setTheme() update.
+  // Render-time lookup — same unistyles reactivity reason documented on
+  // Button.tsx. A module-level const goes stale across setTheme().
   const toneStyle = {
     chrome: styles.toneChrome,
     ghost: styles.toneGhost,
