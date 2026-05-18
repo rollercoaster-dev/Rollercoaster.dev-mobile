@@ -6,6 +6,7 @@ import {
 } from "../../../__tests__/test-utils";
 import { BadgeDetailScreen } from "../BadgeDetailScreen";
 import type { BadgeDetailScreenProps } from "../../../navigation/types";
+import { createDefaultBadgeDesign } from "../../../badges/types";
 
 const mockNavigate = jest.fn();
 const mockGoBack = jest.fn();
@@ -43,8 +44,10 @@ jest.mock("../../../hooks/useCreateBadge", () => ({
 
 const mockExportImage = jest.fn();
 const mockExportJSON = jest.fn();
+const mockExportVerifiableBadge = jest.fn();
 jest.mock("../../../hooks/useBadgeExport", () => ({
   useBadgeExport: () => ({
+    exportVerifiableBadge: mockExportVerifiableBadge,
     exportImage: mockExportImage,
     exportJSON: mockExportJSON,
     isExportingImage: false,
@@ -150,19 +153,22 @@ describe("BadgeDetailScreen", () => {
   });
 
   describe("export buttons", () => {
-    it("renders export buttons when badge exists", () => {
+    it("renders all three export buttons when badge exists", () => {
       mockUseQuery.mockReturnValue([makeRow()]);
 
       renderWithProviders(
         <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
       );
-      expect(screen.getByLabelText("Save Image")).toBeOnTheScreen();
+      expect(
+        screen.getByLabelText("Export Verifiable Badge"),
+      ).toBeOnTheScreen();
       expect(
         screen.getByLabelText("Export Credential (JSON)"),
       ).toBeOnTheScreen();
+      expect(screen.getByLabelText("Save as Image")).toBeOnTheScreen();
     });
 
-    it('disables "Save Image" when image is placeholder', () => {
+    it('disables "Export Verifiable Badge" and "Save as Image" when image is placeholder', () => {
       mockUseQuery.mockReturnValue([
         makeRow({ imageUri: "pending:baked-image" }),
       ]);
@@ -170,13 +176,16 @@ describe("BadgeDetailScreen", () => {
       renderWithProviders(
         <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
       );
-      const saveImageBtn = screen.getByLabelText("Save Image");
-      expect(saveImageBtn.props.accessibilityState).toEqual(
-        expect.objectContaining({ disabled: true }),
-      );
+      expect(
+        screen.getByLabelText("Export Verifiable Badge").props
+          .accessibilityState,
+      ).toEqual(expect.objectContaining({ disabled: true }));
+      expect(
+        screen.getByLabelText("Save as Image").props.accessibilityState,
+      ).toEqual(expect.objectContaining({ disabled: true }));
     });
 
-    it('enables "Save Image" when badge has a real image', () => {
+    it("enables the image-export buttons when badge has a real image", () => {
       mockUseQuery.mockReturnValue([
         makeRow({ imageUri: "file:///badges/badge.png" }),
       ]);
@@ -184,13 +193,16 @@ describe("BadgeDetailScreen", () => {
       renderWithProviders(
         <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
       );
-      const saveImageBtn = screen.getByLabelText("Save Image");
-      expect(saveImageBtn.props.accessibilityState).toEqual(
-        expect.objectContaining({ disabled: false }),
-      );
+      expect(
+        screen.getByLabelText("Export Verifiable Badge").props
+          .accessibilityState,
+      ).toEqual(expect.objectContaining({ disabled: false }));
+      expect(
+        screen.getByLabelText("Save as Image").props.accessibilityState,
+      ).toEqual(expect.objectContaining({ disabled: false }));
     });
 
-    it('calls exportImage when "Save Image" is pressed', () => {
+    it('calls exportVerifiableBadge when "Export Verifiable Badge" is pressed', () => {
       mockUseQuery.mockReturnValue([
         makeRow({ imageUri: "file:///badges/badge.png" }),
       ]);
@@ -198,8 +210,87 @@ describe("BadgeDetailScreen", () => {
       renderWithProviders(
         <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
       );
-      fireEvent.press(screen.getByLabelText("Save Image"));
+      fireEvent.press(screen.getByLabelText("Export Verifiable Badge"));
+      expect(mockExportVerifiableBadge).toHaveBeenCalledWith(
+        "file:///badges/badge.png",
+      );
+    });
+
+    it('calls exportImage when "Save as Image" is pressed', () => {
+      mockUseQuery.mockReturnValue([
+        makeRow({ imageUri: "file:///badges/badge.png" }),
+      ]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      fireEvent.press(screen.getByLabelText("Save as Image"));
       expect(mockExportImage).toHaveBeenCalledWith("file:///badges/badge.png");
+    });
+
+    // Regression: prior code branched on `design ?` and re-rasterized the
+    // live renderer instead of using the baked PNG on disk, so every
+    // export of a designer-saved badge shipped without the iTXt
+    // credential. The primary export must always forward the on-disk
+    // imageUri, even when `design` is populated.
+    it("exports the baked PNG on disk even when a design is set", () => {
+      const design = JSON.stringify(
+        createDefaultBadgeDesign("Learn TypeScript", "#4caf50"),
+      );
+      mockUseQuery.mockReturnValue([
+        makeRow({
+          imageUri: "file:///badges/badge.png",
+          design,
+        }),
+      ]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      fireEvent.press(screen.getByLabelText("Export Verifiable Badge"));
+
+      expect(mockExportVerifiableBadge).toHaveBeenCalledTimes(1);
+      expect(mockExportVerifiableBadge).toHaveBeenCalledWith(
+        "file:///badges/badge.png",
+      );
+    });
+
+    // Parallel guard on the lossy path: even though "Save as Image" is the
+    // documented-as-lossy export, it must still forward `imageUri` (the
+    // baked PNG) rather than fall back to a re-rasterized renderer capture
+    // when a design is present. Locks the broader "no path re-rasterizes"
+    // intent — without this test, a future refactor could re-introduce a
+    // softer version of the original bug here without breaking anything.
+    it("save-as-image forwards the baked PNG even when a design is set", () => {
+      const design = JSON.stringify(
+        createDefaultBadgeDesign("Learn TypeScript", "#4caf50"),
+      );
+      mockUseQuery.mockReturnValue([
+        makeRow({
+          imageUri: "file:///badges/badge.png",
+          design,
+        }),
+      ]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      fireEvent.press(screen.getByLabelText("Save as Image"));
+
+      expect(mockExportImage).toHaveBeenCalledTimes(1);
+      expect(mockExportImage).toHaveBeenCalledWith("file:///badges/badge.png");
+    });
+
+    it("surfaces a hint on Save as Image about messenger-stripped credentials", () => {
+      mockUseQuery.mockReturnValue([
+        makeRow({ imageUri: "file:///badges/badge.png" }),
+      ]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      const btn = screen.getByLabelText("Save as Image");
+      expect(btn.props.accessibilityHint).toMatch(/credential may be lost/);
     });
 
     it('calls exportJSON when "Export Credential (JSON)" is pressed', () => {

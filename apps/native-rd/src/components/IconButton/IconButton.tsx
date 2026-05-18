@@ -22,14 +22,6 @@ export interface IconButtonProps {
   testID?: string;
 }
 
-const toneStyleMap = {
-  chrome: styles.toneChrome,
-  ghost: styles.toneGhost,
-  surface: styles.toneSurface,
-  primary: styles.tonePrimary,
-  destructive: styles.toneDestructive,
-} as const;
-
 // Icon elements may receive a `color` prop (Phosphor) or a `style.color`
 // (RN <Text>). Inject both unconditionally so call sites stop passing
 // theme colors into icons.
@@ -62,6 +54,16 @@ export function IconButton({
   const iconColor = resolveIconColor(theme, tone);
   const tonedIcon = injectIconColor(icon, iconColor);
 
+  // Render-time lookup — same unistyles reactivity reason documented on
+  // Button.tsx. A module-level const goes stale across setTheme().
+  const toneStyle = {
+    chrome: styles.toneChrome,
+    ghost: styles.toneGhost,
+    surface: styles.toneSurface,
+    primary: styles.tonePrimary,
+    destructive: styles.toneDestructive,
+  }[tone];
+
   return (
     <Pressable
       onPress={onPress}
@@ -73,7 +75,7 @@ export function IconButton({
       accessibilityState={{ disabled }}
       style={({ pressed }) => [
         styles.pressable(size),
-        toneStyleMap[tone],
+        toneStyle,
         pressed && styles.pressed,
         disabled && styles.disabled,
       ]}

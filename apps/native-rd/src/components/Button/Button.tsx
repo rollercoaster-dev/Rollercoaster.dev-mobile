@@ -12,21 +12,8 @@ export interface ButtonProps {
   disabled?: boolean;
   loading?: boolean;
   testID?: string;
+  accessibilityHint?: string;
 }
-
-const labelStyleMap = {
-  primary: styles.labelPrimary,
-  secondary: styles.labelSecondary,
-  ghost: styles.labelGhost,
-  destructive: styles.labelDestructive,
-} as const;
-
-const variantStyleMap = {
-  primary: styles.variantPrimary,
-  secondary: styles.variantSecondary,
-  ghost: styles.variantGhost,
-  destructive: styles.variantDestructive,
-} as const;
 
 export function Button({
   label,
@@ -36,8 +23,27 @@ export function Button({
   disabled = false,
   loading = false,
   testID,
+  accessibilityHint,
 }: ButtonProps) {
   const isDisabled = disabled || loading;
+
+  // Look up variant styles at render time. Module-level capture of
+  // `styles.variantX` / `styles.labelX` breaks react-native-unistyles
+  // reactivity: setTheme() updates the styles object, but a stale ref
+  // captured at module load keeps pointing at the previous theme's
+  // colors — visible as wrong-colored text after toggling themes.
+  const variantStyle = {
+    primary: styles.variantPrimary,
+    secondary: styles.variantSecondary,
+    ghost: styles.variantGhost,
+    destructive: styles.variantDestructive,
+  }[variant];
+  const labelStyle = {
+    primary: styles.labelPrimary,
+    secondary: styles.labelSecondary,
+    ghost: styles.labelGhost,
+    destructive: styles.labelDestructive,
+  }[variant];
 
   return (
     <Pressable
@@ -46,11 +52,12 @@ export function Button({
       accessible
       accessibilityRole="button"
       accessibilityLabel={label}
+      accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled: isDisabled, busy: loading }}
       testID={testID}
       style={({ pressed }) => [
         styles.pressable(size),
-        variantStyleMap[variant],
+        variantStyle,
         pressed && styles.pressed,
         isDisabled && styles.disabled,
       ]}
@@ -63,9 +70,7 @@ export function Button({
           }
         />
       ) : (
-        <Text style={[styles.label(size), labelStyleMap[variant]]}>
-          {label}
-        </Text>
+        <Text style={[styles.label(size), labelStyle]}>{label}</Text>
       )}
     </Pressable>
   );
