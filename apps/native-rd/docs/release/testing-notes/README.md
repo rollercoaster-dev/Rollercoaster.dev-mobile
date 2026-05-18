@@ -1,6 +1,6 @@
 # Release Testing Notes
 
-One file per released version, named `<version>.md` (e.g. `0.1.5.md`). Each file feeds **three different store fields**, each with its own audience and hard length limit. The linter (`bun run release-notes:lint`) enforces the limits in CI.
+One file per released version, named `<version>.md` (e.g. `0.1.5.md`). Each file feeds **three different store fields**, each with its own audience and hard length limit. The linter (`bun run release-notes:lint`) is designed to gate the release-please PR — wire it into CI when ready. It is not currently invoked by `ci-native-rd.yml` (which excludes `apps/native-rd/docs/**`); run it manually before tagging.
 
 ## The three fields
 

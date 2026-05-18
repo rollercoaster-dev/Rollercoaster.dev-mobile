@@ -48,10 +48,12 @@ export function checkSlice(
   if (body.length === 0) {
     return { slice, reason: "empty body between markers" };
   }
-  if (body.includes("TODO")) {
+  // Match the literal "TODO:" marker the scaffold emits, not any substring,
+  // so legitimate prose like "TODO list" doesn't false-positive.
+  if (/\bTODO:/.test(body)) {
     return {
       slice,
-      reason: "contains TODO — fill in before tagging the release",
+      reason: "contains TODO: marker — fill in before tagging the release",
     };
   }
   if (body.length > LIMITS[slice]) {

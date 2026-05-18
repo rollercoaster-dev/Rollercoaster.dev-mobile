@@ -62,19 +62,28 @@ function parseBullet(line: string): ChangelogEntry {
 }
 
 function extractVersionSection(changelog: string, version: string): string {
-  // Match heading lines: "## [X.Y.Z]..." or "## X.Y.Z..." — release-please uses the linked form.
+  // Match heading lines: "## [X.Y.Z]..." (release-please linked form) or
+  // "## X.Y.Z..." (older hand-written entries — CHANGELOG.md mixes both).
   const escaped = version.replace(/\./g, "\\.");
-  const headingRe = new RegExp(`^##\\s+\\[${escaped}\\][^\\n]*$`, "m");
+  // Use \b on the unlinked alternative so "## 0.1.4" does not match "## 0.1.41".
+  // The bracketed form is already self-delimiting via the closing "]".
+  const headingRe = new RegExp(
+    `^##\\s+(?:\\[${escaped}\\]|${escaped}\\b)[^\\n]*$`,
+    "m",
+  );
   const match = headingRe.exec(changelog);
   if (!match) {
     throw new Error(
-      `Could not find version ${version} in CHANGELOG.md (looked for "## [${version}]..."). ` +
+      `Could not find version ${version} in CHANGELOG.md ` +
+        `(looked for "## [${version}]..." or "## ${version}..."). ` +
         `If release-please has not run yet, pass the version explicitly.`,
     );
   }
   const start = match.index + match[0].length;
-  const nextHeadingRe = /^##\s+\[/m;
-  nextHeadingRe.lastIndex = 0;
+  // Next heading is the start of the previous (older) release section. Match
+  // both linked ("## [x.y.z]") and unlinked ("## x.y.z") forms so we stop at
+  // the first older entry regardless of which form CHANGELOG.md uses there.
+  const nextHeadingRe = /^##\s+(?:\[|\d)/m;
   const rest = changelog.slice(start);
   const nextMatch = nextHeadingRe.exec(rest);
   return nextMatch ? rest.slice(0, nextMatch.index) : rest;
