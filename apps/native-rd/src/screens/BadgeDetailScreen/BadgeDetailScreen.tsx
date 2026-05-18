@@ -118,13 +118,8 @@ function BadgeDetailContent({
   const [previewHeight, setPreviewHeight] = useState(
     PREVIEW_OVERLAY_INITIAL_HEIGHT,
   );
-  const {
-    exportImage,
-    exportDesignImage,
-    exportJSON,
-    isExportingImage,
-    isExportingJSON,
-  } = useBadgeExport();
+  const { exportImage, exportJSON, isExportingImage, isExportingJSON } =
+    useBadgeExport();
   const badgeRendererRef = useRef<BadgeRendererHandle | null>(null);
 
   const handleDelete = () => {
@@ -238,13 +233,9 @@ function BadgeDetailContent({
             <Button
               label="Save Image"
               variant="secondary"
-              onPress={() =>
-                design
-                  ? exportDesignImage(badgeRendererRef, design)
-                  : exportImage(imageUri)
-              }
+              onPress={() => exportImage(imageUri)}
               loading={isExportingImage}
-              disabled={!design && !hasRealImage}
+              disabled={!hasRealImage}
             />
             <Button
               label="Export Credential (JSON)"

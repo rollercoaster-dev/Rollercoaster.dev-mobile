@@ -6,6 +6,7 @@ import {
 } from "../../../__tests__/test-utils";
 import { BadgeDetailScreen } from "../BadgeDetailScreen";
 import type { BadgeDetailScreenProps } from "../../../navigation/types";
+import { createDefaultBadgeDesign } from "../../../badges/types";
 
 const mockNavigate = jest.fn();
 const mockGoBack = jest.fn();
@@ -199,6 +200,32 @@ describe("BadgeDetailScreen", () => {
         <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
       );
       fireEvent.press(screen.getByLabelText("Save Image"));
+      expect(mockExportImage).toHaveBeenCalledWith("file:///badges/badge.png");
+    });
+
+    // Regression: prior code branched on `design ?` and called a separate
+    // exportDesignImage path that re-rasterized the live renderer instead of
+    // using the baked PNG on disk. That bypassed bakePNG() entirely, so every
+    // export of a designer-saved badge shipped without the iTXt credential.
+    // Fixture intentionally includes BOTH a serialized design AND a real
+    // imageUri — the same shape every successfully-baked badge has.
+    it("exports the baked PNG on disk even when a design is set (Tier 1 regression)", () => {
+      const design = JSON.stringify(
+        createDefaultBadgeDesign("Learn TypeScript", "#4caf50"),
+      );
+      mockUseQuery.mockReturnValue([
+        makeRow({
+          imageUri: "file:///badges/badge.png",
+          design,
+        }),
+      ]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      fireEvent.press(screen.getByLabelText("Save Image"));
+
+      expect(mockExportImage).toHaveBeenCalledTimes(1);
       expect(mockExportImage).toHaveBeenCalledWith("file:///badges/badge.png");
     });
 
