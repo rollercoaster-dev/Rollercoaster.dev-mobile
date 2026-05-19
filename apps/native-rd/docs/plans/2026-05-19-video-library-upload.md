@@ -30,13 +30,13 @@ This plan adds a library-upload entry point to the video flow, mirroring the pho
 
 ## Decisions
 
-| Question | Choice | Rationale |
-| --- | --- | --- |
-| Duration cap on uploads | None — accept any length | Personal/learning app; deferring storage concerns to a later iteration. |
-| UX shape | Chooser-first Card (mirror photo) | Consistency with `CapturePhoto`. One extra tap for recorders is acceptable. |
-| Component shape | Extract `<VideoRecorder/>` child component | `CaptureVideoScreen.tsx` is already ~360 lines; adding a third state inline would push it past the comfortable comprehension threshold. |
-| Storage path | All videos → `evidence/videos/` via new `videoStorage.ts` util | Matches `evidence/photos/` pattern from `imageStorage.ts`. |
-| Source telemetry | Add `source: "camera" \| "library"` to evidence metadata for both flows | Costs nothing; lets future code distinguish entry points. |
+| Question                | Choice                                                                  | Rationale                                                                                                                               |
+| ----------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Duration cap on uploads | None — accept any length                                                | Personal/learning app; deferring storage concerns to a later iteration.                                                                 |
+| UX shape                | Chooser-first Card (mirror photo)                                       | Consistency with `CapturePhoto`. One extra tap for recorders is acceptable.                                                             |
+| Component shape         | Extract `<VideoRecorder/>` child component                              | `CaptureVideoScreen.tsx` is already ~360 lines; adding a third state inline would push it past the comfortable comprehension threshold. |
+| Storage path            | All videos → `evidence/videos/` via new `videoStorage.ts` util          | Matches `evidence/photos/` pattern from `imageStorage.ts`.                                                                              |
+| Source telemetry        | Add `source: "camera" \| "library"` to evidence metadata for both flows | Costs nothing; lets future code distinguish entry points.                                                                               |
 
 ---
 
@@ -110,7 +110,11 @@ Encapsulates the existing camera + preview + record-button + flip-button UI from
 
 ```ts
 type VideoRecorderProps = {
-  onRecorded: (uri: string, durationSeconds: number, facing: "front" | "back") => void;
+  onRecorded: (
+    uri: string,
+    durationSeconds: number,
+    facing: "front" | "back",
+  ) => void;
   onCancel: () => void;
 };
 ```
@@ -191,7 +195,12 @@ Both `VideoRecorder.onRecorded` and the library-preview "Use Video" button route
 
 ```ts
 type SaveArgs =
-  | { source: "camera"; uri: string; durationSeconds: number; facing: "front" | "back" }
+  | {
+      source: "camera";
+      uri: string;
+      durationSeconds: number;
+      facing: "front" | "back";
+    }
   | { source: "library"; uri: string; durationSeconds: number };
 
 async function handleSaveVideo(args: SaveArgs) {
@@ -245,14 +254,14 @@ This is a small change to a Sentry breadcrumb key. Verify nothing in `src/servic
 
 Mirror the photo test mocks. Add cases to `CaptureVideoScreen/__tests__/CaptureVideoScreen.test.tsx`:
 
-| Case | Expectation |
-| --- | --- |
-| Chooser renders both buttons | "Record Video" and "From Library" are present |
-| Tap "Record Video" → recorder mounts | Existing camera UI renders |
+| Case                                           | Expectation                                                                                    |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Chooser renders both buttons                   | "Record Video" and "From Library" are present                                                  |
+| Tap "Record Video" → recorder mounts           | Existing camera UI renders                                                                     |
 | Tap "From Library" → permission granted → save | `createEvidence` called with `type: video`, metadata includes `source: "library"`, no `facing` |
-| Tap "From Library" → permission denied | `Alert.alert` called; `createEvidence` not called |
-| Tap "From Library" → user cancels picker | Returns to chooser; `createEvidence` not called |
-| Existing record → save flow | Still creates evidence with `source: "camera"` and `facing` set |
+| Tap "From Library" → permission denied         | `Alert.alert` called; `createEvidence` not called                                              |
+| Tap "From Library" → user cancels picker       | Returns to chooser; `createEvidence` not called                                                |
+| Existing record → save flow                    | Still creates evidence with `source: "camera"` and `facing` set                                |
 
 Plus a new `src/utils/__tests__/videoStorage.test.ts` mirroring whatever `imageStorage` tests exist (check before writing — if there's no `imageStorage.test.ts`, this util doesn't need one either; consistency with the codebase wins over an arbitrary test target).
 
@@ -269,16 +278,16 @@ Per `apps/native-rd/CLAUDE.md` ND rules:
 
 ## Critical files
 
-| File | Change |
-| --- | --- |
-| `apps/native-rd/src/utils/videoStorage.ts` | **NEW** — `moveVideoToAppStorage`, `copyVideoToAppStorage`, `deleteVideo` |
-| `apps/native-rd/src/components/VideoRecorder/VideoRecorder.tsx` | **NEW** — extracted camera + preview UI |
-| `apps/native-rd/src/components/VideoRecorder/VideoRecorder.styles.ts` | **NEW** — moved from `CaptureVideoScreen.styles.ts` |
-| `apps/native-rd/src/components/VideoRecorder/index.ts` | **NEW** — barrel export |
-| `apps/native-rd/src/screens/CaptureVideoScreen/CaptureVideoScreen.tsx` | Restructure into chooser/recorder/library-preview state machine; add `handleChooseFromLibrary`, unified `handleSaveVideo` |
-| `apps/native-rd/src/screens/CaptureVideoScreen/CaptureVideoScreen.styles.ts` | Remove recorder-specific styles (moved to `VideoRecorder.styles.ts`); add chooser styles |
-| `apps/native-rd/src/screens/CaptureVideoScreen/__tests__/CaptureVideoScreen.test.tsx` | Add upload tests; update existing tests for new state machine |
-| `apps/native-rd/src/hooks/useEvidenceStartBreadcrumb.ts` | (Read-only) — confirm it accepts arbitrary strings, then pass `"video-camera"` / `"video-library"` |
+| File                                                                                  | Change                                                                                                                    |
+| ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `apps/native-rd/src/utils/videoStorage.ts`                                            | **NEW** — `moveVideoToAppStorage`, `copyVideoToAppStorage`, `deleteVideo`                                                 |
+| `apps/native-rd/src/components/VideoRecorder/VideoRecorder.tsx`                       | **NEW** — extracted camera + preview UI                                                                                   |
+| `apps/native-rd/src/components/VideoRecorder/VideoRecorder.styles.ts`                 | **NEW** — moved from `CaptureVideoScreen.styles.ts`                                                                       |
+| `apps/native-rd/src/components/VideoRecorder/index.ts`                                | **NEW** — barrel export                                                                                                   |
+| `apps/native-rd/src/screens/CaptureVideoScreen/CaptureVideoScreen.tsx`                | Restructure into chooser/recorder/library-preview state machine; add `handleChooseFromLibrary`, unified `handleSaveVideo` |
+| `apps/native-rd/src/screens/CaptureVideoScreen/CaptureVideoScreen.styles.ts`          | Remove recorder-specific styles (moved to `VideoRecorder.styles.ts`); add chooser styles                                  |
+| `apps/native-rd/src/screens/CaptureVideoScreen/__tests__/CaptureVideoScreen.test.tsx` | Add upload tests; update existing tests for new state machine                                                             |
+| `apps/native-rd/src/hooks/useEvidenceStartBreadcrumb.ts`                              | (Read-only) — confirm it accepts arbitrary strings, then pass `"video-camera"` / `"video-library"`                        |
 
 ## Open questions to resolve at implementation time
 
@@ -286,7 +295,7 @@ Per `apps/native-rd/CLAUDE.md` ND rules:
 2. **Library-preview "Retake" semantics.** Two reasonable options:
    - Return to chooser (consistent with camera-mode discard).
    - Re-open the picker immediately (faster to swap a wrong pick).
-   Defer to feel during implementation; default to "return to chooser" if no strong signal.
+     Defer to feel during implementation; default to "return to chooser" if no strong signal.
 3. **Tab bar inset on chooser mode.** The existing recorder uses `useTabScreenContentInset()` for bottom padding. The chooser Card should center vertically and probably doesn't need it, but verify on Android (where the pill tab bar overlap caused the 2026-05-14 fix).
 
 ## Risks
@@ -294,3 +303,7 @@ Per `apps/native-rd/CLAUDE.md` ND rules:
 - **State-machine refactor on a working screen.** The current recording flow is in production. The refactor moves recorder code into `<VideoRecorder/>` and adds a chooser around it. Mitigation: keep the recorder's external behavior identical (same `recordAsync` call, same metadata format for camera-sourced videos), and exercise the existing test cases against the refactored screen before adding upload cases.
 - **`expo-image-picker` video permission UX on Android 13+.** Newer Android versions split photo and video into separate granular permissions. `expo-image-picker` handles this internally but worth a manual test on an Android device once the build is up.
 - **No size limit means evidence can balloon.** Acknowledged and accepted for v1. If this becomes a real problem we can add a `MAX_UPLOAD_BYTES` check before the copy, using `File.size` from `expo-file-system` — additive, no migration.
+
+## Follow-ups
+
+- **Source telemetry (`camera` vs `library`)** — section 6 of this plan called this "low risk" but the breadcrumb API in `src/services/sentry-report.ts` is a deliberately closed union enforcing a privacy contract via the type system, and `useEvidenceStartBreadcrumb` is type-locked to `EvidenceTypeValue`. Adding a source dimension means widening a privacy-critical surface and should apply to **both** photo and video flows together. Tracked as [#107](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/107). Library upload landed without source telemetry; revisit when #107 has a design.

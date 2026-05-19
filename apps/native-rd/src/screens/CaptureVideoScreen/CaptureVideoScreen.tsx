@@ -1,7 +1,11 @@
 import React, { useCallback, useRef, useState } from "react";
-import { View, Alert } from "react-native";
+import { View, Alert, ActivityIndicator } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { Paths, File, Directory } from "expo-file-system";
+import * as ImagePicker from "expo-image-picker";
+import { useVideoPlayer, VideoView } from "expo-video";
+import { Text } from "../../components/Text";
+import { Card } from "../../components/Card";
+import { Button } from "../../components/Button";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
 import {
   VideoRecorder,
@@ -9,40 +13,88 @@ import {
 } from "../../components/VideoRecorder";
 import { createEvidence, EvidenceType } from "../../db";
 import type { GoalId, StepId } from "../../db";
+import {
+  moveVideoToAppStorage,
+  copyVideoToAppStorage,
+} from "../../utils/videoStorage";
 import { reportError } from "../../services/sentry-report";
 import { useEvidenceStartBreadcrumb } from "../../hooks/useEvidenceStartBreadcrumb";
 import type { CaptureVideoScreenProps } from "../../navigation/types";
+import { useTabScreenContentInset } from "../../navigation/useTabScreenContentInset";
 import { styles } from "./CaptureVideoScreen.styles";
 
+type Mode = "chooser" | "recorder" | "library-preview";
+
 type CameraFacing = "front" | "back";
+
+type SaveArgs =
+  | {
+      source: "camera";
+      uri: string;
+      durationSeconds: number;
+      facing: CameraFacing;
+    }
+  | { source: "library"; uri: string; durationSeconds: number };
+
+function formatDuration(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+}
+
+function LibraryPreview({
+  uri,
+  durationSeconds,
+}: {
+  uri: string;
+  durationSeconds: number;
+}) {
+  const player = useVideoPlayer(uri, (p) => {
+    p.loop = false;
+  });
+  return (
+    <VideoView
+      player={player}
+      style={styles.previewVideo}
+      fullscreenOptions={{ enable: true }}
+      nativeControls
+      contentFit="contain"
+      accessibilityLabel={`Selected video preview, ${formatDuration(durationSeconds)} long`}
+    />
+  );
+}
 
 export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
   const navigation = useNavigation();
   const { goalId, stepId } = route.params;
   const recorderRef = useRef<VideoRecorderHandle>(null);
+  const tabInset = useTabScreenContentInset();
 
+  const [mode, setMode] = useState<Mode>("chooser");
+  const [uploadedVideo, setUploadedVideo] = useState<{
+    uri: string;
+    durationSeconds: number;
+  } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPickerBusy, setIsPickerBusy] = useState(false);
 
   useEvidenceStartBreadcrumb("video");
 
-  const handleSaveRecording = useCallback(
-    async (uri: string, durationSeconds: number, facing: CameraFacing) => {
+  const handleSaveVideo = useCallback(
+    async (args: SaveArgs) => {
       if (isSaving) return;
       setIsSaving(true);
       try {
-        const filename = `video_${Date.now()}.mp4`;
-        const evidenceDir = new Directory(Paths.document, "evidence");
-        if (!evidenceDir.exists) {
-          evidenceDir.create();
-        }
-        const sourceFile = new File(uri);
-        const destFile = new File(evidenceDir, filename);
-        sourceFile.move(destFile);
+        const destUri =
+          args.source === "camera"
+            ? moveVideoToAppStorage(args.uri)
+            : copyVideoToAppStorage(args.uri);
 
         const metadata = JSON.stringify({
-          duration: durationSeconds,
-          facing,
+          duration: args.durationSeconds,
           capturedAt: new Date().toISOString(),
+          source: args.source,
+          ...(args.source === "camera" ? { facing: args.facing } : {}),
         });
 
         createEvidence({
@@ -50,7 +102,7 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
             ? { stepId: stepId as StepId }
             : { goalId: goalId as GoalId }),
           type: EvidenceType.video,
-          uri: destFile.uri,
+          uri: destUri,
           metadata,
         });
 
@@ -66,27 +118,157 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
     [isSaving, goalId, stepId, navigation],
   );
 
+  const handleRecorded = useCallback(
+    (uri: string, durationSeconds: number, facing: CameraFacing) => {
+      handleSaveVideo({
+        source: "camera",
+        uri,
+        durationSeconds,
+        facing,
+      });
+    },
+    [handleSaveVideo],
+  );
+
+  const handleUseUploaded = useCallback(() => {
+    if (!uploadedVideo) return;
+    handleSaveVideo({
+      source: "library",
+      uri: uploadedVideo.uri,
+      durationSeconds: uploadedVideo.durationSeconds,
+    });
+  }, [uploadedVideo, handleSaveVideo]);
+
+  const handleRetakeUploaded = useCallback(() => {
+    setUploadedVideo(null);
+    setMode("chooser");
+  }, []);
+
+  const handleRecorderCancel = useCallback(() => {
+    setMode("chooser");
+  }, []);
+
+  const handlePickFromLibrary = useCallback(async () => {
+    if (isPickerBusy) return;
+    setIsPickerBusy(true);
+    try {
+      const permission =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert(
+          "Photo library access needed",
+          "Please allow photo library access in your device settings to select videos.",
+        );
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["videos"],
+        allowsEditing: false,
+        videoQuality: 1,
+      });
+      if (!result.canceled) {
+        const asset = result.assets[0];
+        const durationSeconds = Math.round((asset.duration ?? 0) / 1000);
+        setUploadedVideo({ uri: asset.uri, durationSeconds });
+        setMode("library-preview");
+      }
+    } finally {
+      setIsPickerBusy(false);
+    }
+  }, [isPickerBusy]);
+
   const handleGoBack = useCallback(() => {
-    if (recorderRef.current) {
-      recorderRef.current.requestExit();
+    if (mode === "recorder") {
+      recorderRef.current?.requestExit();
+      return;
+    }
+    if (mode === "library-preview" && uploadedVideo) {
+      Alert.alert(
+        "Discard video?",
+        "You have an unsaved video. Going back will discard it.",
+        [
+          { text: "Keep", style: "cancel" },
+          {
+            text: "Discard",
+            style: "destructive",
+            onPress: () => {
+              setUploadedVideo(null);
+              navigation.goBack();
+            },
+          },
+        ],
+      );
       return;
     }
     navigation.goBack();
-  }, [navigation]);
-
-  const handleCancel = useCallback(() => {
-    navigation.goBack();
-  }, [navigation]);
+  }, [mode, uploadedVideo, navigation]);
 
   return (
     <View style={styles.container}>
-      <ScreenSubHeader label="Record Video" onBack={handleGoBack} />
-      <VideoRecorder
-        ref={recorderRef}
-        onRecorded={handleSaveRecording}
-        onCancel={handleCancel}
-        isSaving={isSaving}
-      />
+      <ScreenSubHeader label="Capture Video" onBack={handleGoBack} />
+      {isPickerBusy ? (
+        <View style={styles.busyContainer}>
+          <ActivityIndicator
+            size="large"
+            accessibilityLabel="Opening video library"
+          />
+        </View>
+      ) : mode === "chooser" ? (
+        <View style={styles.chooserContent}>
+          <Card>
+            <Text variant="headline" style={styles.chooserHeading}>
+              Add a video
+            </Text>
+            <View style={styles.chooserButtonGroup}>
+              <Button
+                label="Record Video"
+                variant="primary"
+                onPress={() => setMode("recorder")}
+              />
+              <Button
+                label="Choose from Library"
+                variant="secondary"
+                onPress={handlePickFromLibrary}
+              />
+            </View>
+          </Card>
+        </View>
+      ) : mode === "recorder" ? (
+        <VideoRecorder
+          ref={recorderRef}
+          onRecorded={handleRecorded}
+          onCancel={handleRecorderCancel}
+          isSaving={isSaving}
+        />
+      ) : uploadedVideo ? (
+        <View style={styles.previewWrapper}>
+          <View style={styles.previewContainer}>
+            <LibraryPreview
+              uri={uploadedVideo.uri}
+              durationSeconds={uploadedVideo.durationSeconds}
+            />
+          </View>
+          <Text variant="caption" style={styles.previewCaption}>
+            Duration: {formatDuration(uploadedVideo.durationSeconds)}
+          </Text>
+          <View style={[styles.previewControls, tabInset]}>
+            <View style={styles.previewButton}>
+              <Button
+                label="Retake"
+                variant="secondary"
+                onPress={handleRetakeUploaded}
+              />
+            </View>
+            <View style={styles.previewButton}>
+              <Button
+                label={isSaving ? "Saving..." : "Use Video"}
+                variant="primary"
+                onPress={handleUseUploaded}
+              />
+            </View>
+          </View>
+        </View>
+      ) : null}
     </View>
   );
 }

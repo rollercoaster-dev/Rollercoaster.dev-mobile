@@ -5,4 +5,49 @@ export const styles = StyleSheet.create((theme) => ({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
+  busyContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  chooserContent: {
+    flex: 1,
+    padding: theme.space[4],
+    gap: theme.space[4],
+    justifyContent: "center",
+  },
+  chooserHeading: {
+    textAlign: "center",
+    marginBottom: theme.space[2],
+  },
+  chooserButtonGroup: {
+    gap: theme.space[3],
+  },
+  previewWrapper: {
+    flex: 1,
+  },
+  previewContainer: {
+    flex: 1,
+    margin: theme.space[4],
+    borderRadius: theme.radius.md,
+    overflow: "hidden",
+    backgroundColor: theme.colors.backgroundTertiary,
+  },
+  previewVideo: {
+    flex: 1,
+  },
+  previewCaption: {
+    textAlign: "center",
+    color: theme.colors.textSecondary,
+    paddingVertical: theme.space[2],
+  },
+  previewControls: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    padding: theme.space[4],
+    gap: theme.space[3],
+  },
+  previewButton: {
+    flex: 1,
+  },
 }));
