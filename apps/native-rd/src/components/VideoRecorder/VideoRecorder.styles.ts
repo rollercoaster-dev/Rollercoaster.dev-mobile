@@ -90,9 +90,6 @@ export const styles = StyleSheet.create((theme) => ({
     overflow: "hidden",
     backgroundColor: theme.colors.backgroundTertiary,
   },
-  previewVideo: {
-    flex: 1,
-  },
   previewControls: {
     flexDirection: "row",
     justifyContent: "space-between",

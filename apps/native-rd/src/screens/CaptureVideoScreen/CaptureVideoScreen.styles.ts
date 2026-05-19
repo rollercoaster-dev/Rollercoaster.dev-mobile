@@ -5,11 +5,6 @@ export const styles = StyleSheet.create((theme) => ({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
-  busyContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   chooserContent: {
     flex: 1,
     padding: theme.space[4],
@@ -32,9 +27,6 @@ export const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius.md,
     overflow: "hidden",
     backgroundColor: theme.colors.backgroundTertiary,
-  },
-  previewVideo: {
-    flex: 1,
   },
   previewCaption: {
     textAlign: "center",

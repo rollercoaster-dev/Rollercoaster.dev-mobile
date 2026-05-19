@@ -1,12 +1,12 @@
 import React, { useCallback, useRef, useState } from "react";
-import { View, Alert, ActivityIndicator } from "react-native";
+import { View, Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
-import { useVideoPlayer, VideoView } from "expo-video";
 import { Text } from "../../components/Text";
 import { Card } from "../../components/Card";
 import { Button } from "../../components/Button";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
+import { VideoPreview } from "../../components/VideoPreview";
 import {
   VideoRecorder,
   type VideoRecorderHandle,
@@ -17,6 +17,7 @@ import {
   moveVideoToAppStorage,
   copyVideoToAppStorage,
 } from "../../utils/videoStorage";
+import { formatDuration } from "../../utils/format";
 import { reportError } from "../../services/sentry-report";
 import { useEvidenceStartBreadcrumb } from "../../hooks/useEvidenceStartBreadcrumb";
 import type { CaptureVideoScreenProps } from "../../navigation/types";
@@ -35,34 +36,6 @@ type SaveArgs =
       facing: CameraFacing;
     }
   | { source: "library"; uri: string; durationSeconds: number };
-
-function formatDuration(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-}
-
-function LibraryPreview({
-  uri,
-  durationSeconds,
-}: {
-  uri: string;
-  durationSeconds: number;
-}) {
-  const player = useVideoPlayer(uri, (p) => {
-    p.loop = false;
-  });
-  return (
-    <VideoView
-      player={player}
-      style={styles.previewVideo}
-      fullscreenOptions={{ enable: true }}
-      nativeControls
-      contentFit="contain"
-      accessibilityLabel={`Selected video preview, ${formatDuration(durationSeconds)} long`}
-    />
-  );
-}
 
 export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
   const navigation = useNavigation();
@@ -120,12 +93,7 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
 
   const handleRecorded = useCallback(
     (uri: string, durationSeconds: number, facing: CameraFacing) => {
-      handleSaveVideo({
-        source: "camera",
-        uri,
-        durationSeconds,
-        facing,
-      });
+      handleSaveVideo({ source: "camera", uri, durationSeconds, facing });
     },
     [handleSaveVideo],
   );
@@ -203,53 +171,30 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
     navigation.goBack();
   }, [mode, uploadedVideo, navigation]);
 
-  return (
-    <View style={styles.container}>
-      <ScreenSubHeader label="Capture Video" onBack={handleGoBack} />
-      {isPickerBusy ? (
-        <View style={styles.busyContainer}>
-          <ActivityIndicator
-            size="large"
-            accessibilityLabel="Opening video library"
-          />
-        </View>
-      ) : mode === "chooser" ? (
-        <View style={styles.chooserContent}>
-          <Card>
-            <Text variant="headline" style={styles.chooserHeading}>
-              Add a video
-            </Text>
-            <View style={styles.chooserButtonGroup}>
-              <Button
-                label="Record Video"
-                variant="primary"
-                onPress={() => setMode("recorder")}
-              />
-              <Button
-                label="Choose from Library"
-                variant="secondary"
-                onPress={handlePickFromLibrary}
-              />
-            </View>
-          </Card>
-        </View>
-      ) : mode === "recorder" ? (
+  function renderBody() {
+    if (mode === "recorder") {
+      return (
         <VideoRecorder
           ref={recorderRef}
           onRecorded={handleRecorded}
           onCancel={handleRecorderCancel}
           isSaving={isSaving}
         />
-      ) : uploadedVideo ? (
+      );
+    }
+
+    if (mode === "library-preview" && uploadedVideo) {
+      return (
         <View style={styles.previewWrapper}>
           <View style={styles.previewContainer}>
-            <LibraryPreview
+            <VideoPreview
               uri={uploadedVideo.uri}
               durationSeconds={uploadedVideo.durationSeconds}
+              accessibilityNoun="Selected video"
             />
           </View>
           <Text variant="caption" style={styles.previewCaption}>
-            Duration: {formatDuration(uploadedVideo.durationSeconds)}
+            Duration: {formatDuration(uploadedVideo.durationSeconds * 1000)}
           </Text>
           <View style={[styles.previewControls, tabInset]}>
             <View style={styles.previewButton}>
@@ -268,7 +213,37 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
             </View>
           </View>
         </View>
-      ) : null}
+      );
+    }
+
+    return (
+      <View style={styles.chooserContent}>
+        <Card>
+          <Text variant="headline" style={styles.chooserHeading}>
+            Add a video
+          </Text>
+          <View style={styles.chooserButtonGroup}>
+            <Button
+              label="Record Video"
+              variant="primary"
+              onPress={() => setMode("recorder")}
+            />
+            <Button
+              label="Choose from Library"
+              variant="secondary"
+              onPress={handlePickFromLibrary}
+              loading={isPickerBusy}
+            />
+          </View>
+        </Card>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <ScreenSubHeader label="Capture Video" onBack={handleGoBack} />
+      {renderBody()}
     </View>
   );
 }

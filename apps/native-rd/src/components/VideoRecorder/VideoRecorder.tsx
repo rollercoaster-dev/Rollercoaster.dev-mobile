@@ -12,41 +12,18 @@ import {
   useCameraPermissions,
   useMicrophonePermissions,
 } from "expo-camera";
-import { useVideoPlayer, VideoView } from "expo-video";
 import { Text } from "../Text";
 import { Card } from "../Card";
 import { Button } from "../Button";
+import { VideoPreview } from "../VideoPreview";
+import { formatDuration } from "../../utils/format";
 import { reportError } from "../../services/sentry-report";
 import { useTabScreenContentInset } from "../../navigation/useTabScreenContentInset";
 import { styles } from "./VideoRecorder.styles";
 
-/** Maximum recording duration in seconds */
 const MAX_DURATION_SECONDS = 60;
 
-/** Format seconds as MM:SS */
-function formatDuration(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-}
-
 type CameraFacing = "front" | "back";
-
-function Preview({ uri, elapsed }: { uri: string; elapsed: number }) {
-  const player = useVideoPlayer(uri, (p) => {
-    p.loop = false;
-  });
-  return (
-    <VideoView
-      player={player}
-      style={styles.previewVideo}
-      fullscreenOptions={{ enable: true }}
-      nativeControls
-      contentFit="contain"
-      accessibilityLabel={`Recorded video preview, ${formatDuration(elapsed)} long`}
-    />
-  );
-}
 
 export type VideoRecorderHandle = {
   /** Asks the recorder to exit. If a recording is in progress or unsaved,
@@ -81,7 +58,6 @@ export const VideoRecorder = forwardRef<
   const [elapsed, setElapsed] = useState(0);
   const [facing, setFacing] = useState<CameraFacing>("back");
 
-  // Clean up timer on unmount
   useEffect(() => {
     return () => {
       if (timerRef.current) {
@@ -247,10 +223,14 @@ export const VideoRecorder = forwardRef<
     return (
       <View style={styles.content}>
         <View style={styles.previewContainer}>
-          <Preview uri={recordedUri} elapsed={elapsed} />
+          <VideoPreview
+            uri={recordedUri}
+            durationSeconds={elapsed}
+            accessibilityNoun="Recorded video"
+          />
         </View>
         <Text variant="caption" style={styles.timer}>
-          Duration: {formatDuration(elapsed)}
+          Duration: {formatDuration(elapsed * 1000)}
         </Text>
         <View style={[styles.previewControls, tabInset]}>
           <View style={styles.previewButton}>
@@ -284,9 +264,9 @@ export const VideoRecorder = forwardRef<
         variant="caption"
         style={[styles.timer, isRecording && styles.timerRecording]}
         accessibilityLiveRegion="polite"
-        accessibilityLabel={`Recording time: ${formatDuration(elapsed)}`}
+        accessibilityLabel={`Recording time: ${formatDuration(elapsed * 1000)}`}
       >
-        {formatDuration(elapsed)}
+        {formatDuration(elapsed * 1000)}
       </Text>
       {elapsed >= MAX_DURATION_SECONDS - 10 && isRecording && (
         <Text
