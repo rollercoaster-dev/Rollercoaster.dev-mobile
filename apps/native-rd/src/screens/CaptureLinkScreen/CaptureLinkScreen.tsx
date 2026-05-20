@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import { Text } from "../../components/Text";
 import { Card } from "../../components/Card";
 import { Button } from "../../components/Button";
@@ -16,6 +17,7 @@ import { styles } from "./CaptureLinkScreen.styles";
 
 export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
   const navigation = useNavigation();
+  const { t } = useTranslation();
   const { goalId, stepId } = route.params;
 
   const [url, setUrl] = useState("");
@@ -135,7 +137,7 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
             loading={saving}
           />
           <Button
-            label="Cancel"
+            label={t("actions.cancel")}
             variant="secondary"
             onPress={() => navigation.goBack()}
             disabled={saving}

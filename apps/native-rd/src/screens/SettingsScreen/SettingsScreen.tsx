@@ -7,6 +7,7 @@ import {
   Platform,
 } from "react-native";
 import * as Sentry from "@sentry/react-native";
+import { useTranslation } from "react-i18next";
 import { Text } from "../../components/Text";
 import { useTabScreenContentInset } from "../../navigation/useTabScreenContentInset";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
@@ -55,6 +56,26 @@ function DensityPicker() {
   );
 }
 
+/** Dev-only language switcher. `__DEV__` gates this in production bundles so pseudo can't leak to users. */
+function LanguagePicker() {
+  const { i18n } = useTranslation();
+  const isPseudo = i18n.language === "pseudo";
+
+  return (
+    <SettingsSection title="Language (dev)">
+      <SettingsRow
+        label="Pseudo locale"
+        toggle={{
+          value: isPseudo,
+          onValueChange: (next) => {
+            void i18n.changeLanguage(next ? "pseudo" : "en");
+          },
+        }}
+      />
+    </SettingsSection>
+  );
+}
+
 export function SettingsScreen({
   sentryDebugToolsEnabled = SENTRY_DEBUG_TOOLS_ENABLED,
 }: {
@@ -76,6 +97,8 @@ export function SettingsScreen({
             <DensityPicker />
           </Suspense>
         </ErrorBoundary>
+
+        {__DEV__ && <LanguagePicker />}
 
         <SettingsSection title="About">
           <SettingsRow label="App" value="rollercoaster.dev" />

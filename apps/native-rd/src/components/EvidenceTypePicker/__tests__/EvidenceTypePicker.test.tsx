@@ -8,6 +8,11 @@ import { EvidenceTypePicker } from "../EvidenceTypePicker";
 import { EvidenceType } from "../../../db";
 import { EVIDENCE_OPTIONS } from "../../../types/evidence";
 import type { EvidenceTypeValue } from "../../../types/evidence";
+import { i18n } from "../../../i18n";
+import { evidenceLabel } from "../../../i18n/labels";
+
+const labelFor = (type: EvidenceTypeValue) =>
+  evidenceLabel(i18n.t.bind(i18n), type);
 
 describe("EvidenceTypePicker", () => {
   const defaultProps = {
@@ -24,7 +29,7 @@ describe("EvidenceTypePicker", () => {
       renderWithProviders(<EvidenceTypePicker {...defaultProps} />);
 
       for (const opt of EVIDENCE_OPTIONS) {
-        expect(screen.getByText(opt.label)).toBeOnTheScreen();
+        expect(screen.getByText(labelFor(opt.type))).toBeOnTheScreen();
       }
     });
 
@@ -46,7 +51,7 @@ describe("EvidenceTypePicker", () => {
         <EvidenceTypePicker {...defaultProps} onToggleType={onToggle} />,
       );
 
-      fireEvent.press(screen.getByLabelText("Take Photo"));
+      fireEvent.press(screen.getByLabelText(labelFor(EvidenceType.photo)));
       expect(onToggle).toHaveBeenCalledWith(EvidenceType.photo);
     });
 
@@ -61,13 +66,13 @@ describe("EvidenceTypePicker", () => {
         />,
       );
 
-      const textChip = screen.getByLabelText("Write a Note");
+      const textChip = screen.getByLabelText(labelFor(EvidenceType.text));
       expect(textChip.props.accessibilityState).toEqual({ checked: true });
 
-      const photoChip = screen.getByLabelText("Take Photo");
+      const photoChip = screen.getByLabelText(labelFor(EvidenceType.photo));
       expect(photoChip.props.accessibilityState).toEqual({ checked: true });
 
-      const videoChip = screen.getByLabelText("Record Video");
+      const videoChip = screen.getByLabelText(labelFor(EvidenceType.video));
       expect(videoChip.props.accessibilityState).toEqual({ checked: false });
     });
 
@@ -75,7 +80,7 @@ describe("EvidenceTypePicker", () => {
       renderWithProviders(<EvidenceTypePicker {...defaultProps} />);
 
       for (const opt of EVIDENCE_OPTIONS) {
-        const chip = screen.getByLabelText(opt.label);
+        const chip = screen.getByLabelText(labelFor(opt.type));
         expect(chip.props.accessibilityRole).toBe("checkbox");
       }
     });
@@ -84,18 +89,24 @@ describe("EvidenceTypePicker", () => {
       [
         "selected",
         [EvidenceType.photo as EvidenceTypeValue],
-        "Take Photo",
-        "Deselect Take Photo",
+        EvidenceType.photo as EvidenceTypeValue,
+        (label: string) => `Deselect ${label}`,
       ],
-      ["unselected", [], "Take Photo", "Select Take Photo"],
+      [
+        "unselected",
+        [],
+        EvidenceType.photo as EvidenceTypeValue,
+        (label: string) => `Select ${label}`,
+      ],
     ])(
       "shows correct hint for %s chip",
-      (_label, types, chipLabel, expectedHint) => {
+      (_label, types, chipType, expectedHint) => {
         renderWithProviders(
           <EvidenceTypePicker selectedTypes={types} onToggleType={jest.fn()} />,
         );
-        const chip = screen.getByLabelText(chipLabel);
-        expect(chip.props.accessibilityHint).toBe(expectedHint);
+        const label = labelFor(chipType);
+        const chip = screen.getByLabelText(label);
+        expect(chip.props.accessibilityHint).toBe(expectedHint(label));
       },
     );
   });
@@ -113,10 +124,12 @@ describe("EvidenceTypePicker", () => {
         />,
       );
 
-      expect(screen.getByText("Take Photo")).toBeOnTheScreen();
-      expect(screen.getByText("Record Voice Memo")).toBeOnTheScreen();
-      expect(screen.queryByText("Write a Note")).toBeNull();
-      expect(screen.queryByText("Record Video")).toBeNull();
+      expect(screen.getByText(labelFor(EvidenceType.photo))).toBeOnTheScreen();
+      expect(
+        screen.getByText(labelFor(EvidenceType.voice_memo)),
+      ).toBeOnTheScreen();
+      expect(screen.queryByText(labelFor(EvidenceType.text))).toBeNull();
+      expect(screen.queryByText(labelFor(EvidenceType.video))).toBeNull();
     });
 
     it("renders nothing when no types selected", () => {
@@ -129,7 +142,7 @@ describe("EvidenceTypePicker", () => {
       );
 
       for (const opt of EVIDENCE_OPTIONS) {
-        expect(screen.queryByText(opt.label)).toBeNull();
+        expect(screen.queryByText(labelFor(opt.type))).toBeNull();
       }
     });
   });

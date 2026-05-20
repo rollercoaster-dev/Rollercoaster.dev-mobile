@@ -15,43 +15,18 @@ import type { Variant } from "../themes/variants";
  * These are the seven product themes registered with Unistyles and accepted
  * by persistence. composeTheme can still build unsupported combinations for
  * previews/tests, but they are not runtime theme names.
+ *
+ * Display strings live in `common.theme.options.<id>` — consumers look them
+ * up via `t("theme.options.<id>.label")` and `.description`.
  */
-export const themeOptions: {
-  id: ThemeName;
-  label: string;
-  description: string;
-}[] = [
-  {
-    id: "light-default",
-    label: "The Full Ride",
-    description: "Standard theme",
-  },
-  { id: "dark-default", label: "Night Ride", description: "Dark mode" },
-  {
-    id: "light-highContrast",
-    label: "Bold Ink",
-    description: "High contrast (WCAG AAA)",
-  },
-  {
-    id: "light-dyslexia",
-    label: "Warm Studio",
-    description: "Dyslexia-friendly",
-  },
-  {
-    id: "light-autismFriendly",
-    label: "Still Water",
-    description: "Autism-friendly",
-  },
-  {
-    id: "light-lowVision",
-    label: "Loud & Clear",
-    description: "Low vision support",
-  },
-  {
-    id: "light-lowInfo",
-    label: "Clean Signal",
-    description: "Reduced visual noise",
-  },
+export const themeOptions: readonly { id: ThemeName }[] = [
+  { id: "light-default" },
+  { id: "dark-default" },
+  { id: "light-highContrast" },
+  { id: "light-dyslexia" },
+  { id: "light-autismFriendly" },
+  { id: "light-lowVision" },
+  { id: "light-lowInfo" },
 ];
 
 /** Supported theme names — the persistence layer's source of truth. */

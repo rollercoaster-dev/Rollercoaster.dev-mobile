@@ -6,6 +6,12 @@ import {
 } from "../../../__tests__/test-utils";
 import { themeOptions } from "../../../hooks/useTheme";
 import type { ThemeName } from "../../../themes/compose";
+import { i18n } from "../../../i18n";
+import { themeA11yLabel } from "../../../i18n/labels";
+
+import { ThemeChipGrid } from "../ThemeChipGrid";
+
+const themeLabelOf = (id: ThemeName) => themeA11yLabel(i18n.t.bind(i18n), id);
 
 const mockSetTheme = jest.fn();
 
@@ -19,8 +25,6 @@ jest.mock("../../../hooks/useTheme", () => {
     }),
   };
 });
-
-import { ThemeChipGrid } from "../ThemeChipGrid";
 
 beforeEach(() => {
   mockSetTheme.mockClear();
@@ -38,9 +42,7 @@ describe("ThemeChipGrid", () => {
     expect(radios.length).toBe(themeOptions.length);
 
     for (const option of themeOptions) {
-      expect(
-        screen.getByLabelText(`${option.label}. ${option.description}`),
-      ).toBeOnTheScreen();
+      expect(screen.getByLabelText(themeLabelOf(option.id))).toBeOnTheScreen();
     }
   });
 
@@ -57,9 +59,7 @@ describe("ThemeChipGrid", () => {
   it("calls setTheme with the correct theme ID when a chip is pressed", () => {
     renderWithProviders(<ThemeChipGrid />);
     const target = themeOptions[2]; // Bold Ink
-    fireEvent.press(
-      screen.getByLabelText(`${target.label}. ${target.description}`),
-    );
+    fireEvent.press(screen.getByLabelText(themeLabelOf(target.id)));
     expect(mockSetTheme).toHaveBeenCalledWith(target.id);
   });
 

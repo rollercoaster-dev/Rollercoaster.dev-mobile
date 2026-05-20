@@ -5,6 +5,12 @@ import {
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
+import { i18n } from "../../../i18n";
+
+import { isSentryDebugToolsEnabled, SettingsScreen } from "../SettingsScreen";
+
+// RN's jest setup sets __DEV__ as a runtime global; TS doesn't see it here.
+const devGlobal = global as unknown as { __DEV__: boolean };
 
 /**
  * SettingsScreen component tests.
@@ -36,6 +42,17 @@ jest.mock(
   },
 );
 
+// Switch reaches RN 0.81's spec_DEPRECATED ESM file via Libraries/Switch;
+// stub it the same way ScrollView is stubbed above so SettingsRow's toggle
+// branch renders under jest.
+jest.mock("react-native/Libraries/Components/Switch/Switch", () => {
+  const mockReact = require("react");
+  const { View: MockView } = require("react-native");
+  const MockSwitch = (props: Record<string, unknown>) =>
+    mockReact.createElement(MockView, { testID: "switch", ...props });
+  return { __esModule: true, default: MockSwitch };
+});
+
 const mockNativeCrash = jest.fn();
 jest.mock("@sentry/react-native", () => ({
   __esModule: true,
@@ -66,8 +83,6 @@ jest.mock("../../../hooks/useDensity", () => ({
   }),
 }));
 
-import { isSentryDebugToolsEnabled, SettingsScreen } from "../SettingsScreen";
-
 const originalPlatform = Platform.OS;
 const mockAlert = jest.spyOn(Alert, "alert").mockImplementation(() => {});
 const mockWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
@@ -97,14 +112,21 @@ describe("SettingsScreen", () => {
 
   it("renders the ThemeSwitcher with all theme options", () => {
     renderWithProviders(<SettingsScreen />);
-    expect(screen.getByText("Pick what feels right")).toBeOnTheScreen();
-    expect(screen.getByText("The Full Ride")).toBeOnTheScreen();
-    expect(screen.getByText("Night Ride")).toBeOnTheScreen();
-    expect(screen.getByText("Bold Ink")).toBeOnTheScreen();
-    expect(screen.getByText("Warm Studio")).toBeOnTheScreen();
-    expect(screen.getByText("Still Water")).toBeOnTheScreen();
-    expect(screen.getByText("Loud & Clear")).toBeOnTheScreen();
-    expect(screen.getByText("Clean Signal")).toBeOnTheScreen();
+    expect(screen.getByText(i18n.t("theme.picker.title"))).toBeOnTheScreen();
+    const themeIds = [
+      "light-default",
+      "dark-default",
+      "light-highContrast",
+      "light-dyslexia",
+      "light-autismFriendly",
+      "light-lowVision",
+      "light-lowInfo",
+    ] as const;
+    for (const id of themeIds) {
+      expect(
+        screen.getByText(i18n.t(`theme.options.${id}.label`)),
+      ).toBeOnTheScreen();
+    }
   });
 
   it("renders theme options with radio accessibility roles", () => {
@@ -115,7 +137,9 @@ describe("SettingsScreen", () => {
 
   it("calls setTheme when a theme option is pressed", () => {
     renderWithProviders(<SettingsScreen />);
-    fireEvent.press(screen.getByText("Night Ride"));
+    fireEvent.press(
+      screen.getByText(i18n.t("theme.options.dark-default.label")),
+    );
     expect(mockSetTheme).toHaveBeenCalledWith("dark-default");
   });
 
@@ -186,6 +210,44 @@ describe("SettingsScreen", () => {
       renderWithProviders(<SettingsScreen sentryDebugToolsEnabled={false} />);
       expect(screen.queryByRole("button", { name: "Version" })).toBeNull();
       expect(mockNativeCrash).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("LanguagePicker (dev-only)", () => {
+    const originalDev = devGlobal.__DEV__;
+
+    afterEach(async () => {
+      devGlobal.__DEV__ = originalDev;
+      // Restore default language so a stray pseudo state can't poison sibling tests.
+      if (i18n.language !== "en") await i18n.changeLanguage("en");
+    });
+
+    it("renders the dev language section when __DEV__ is true", () => {
+      devGlobal.__DEV__ = true;
+      renderWithProviders(<SettingsScreen />);
+      expect(screen.getByText("Language (dev)")).toBeOnTheScreen();
+      expect(screen.getByLabelText("Pseudo locale")).toBeOnTheScreen();
+    });
+
+    it("does not render the dev language section when __DEV__ is false", () => {
+      devGlobal.__DEV__ = false;
+      renderWithProviders(<SettingsScreen />);
+      expect(screen.queryByText("Language (dev)")).toBeNull();
+    });
+
+    it("switches language to pseudo and back when the toggle changes", async () => {
+      devGlobal.__DEV__ = true;
+      const changeSpy = jest.spyOn(i18n, "changeLanguage");
+      renderWithProviders(<SettingsScreen />);
+      const toggle = screen.getByLabelText("Pseudo locale");
+
+      fireEvent(toggle, "valueChange", true);
+      expect(changeSpy).toHaveBeenLastCalledWith("pseudo");
+
+      fireEvent(toggle, "valueChange", false);
+      expect(changeSpy).toHaveBeenLastCalledWith("en");
+
+      changeSpy.mockRestore();
     });
   });
 });

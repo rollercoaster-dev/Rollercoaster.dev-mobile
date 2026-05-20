@@ -6,6 +6,12 @@ import {
 } from "../../../__tests__/test-utils";
 import { themeOptions } from "../../../hooks/useTheme";
 import type { ThemeName } from "../../../themes/compose";
+import { i18n } from "../../../i18n";
+import { themeA11yLabel } from "../../../i18n/labels";
+
+import { ThemeSwitcher } from "../ThemeSwitcher";
+
+const themeLabelOf = (id: ThemeName) => themeA11yLabel(i18n.t.bind(i18n), id);
 
 const mockSetTheme = jest.fn();
 
@@ -19,8 +25,6 @@ jest.mock("../../../hooks/useTheme", () => {
     }),
   };
 });
-
-import { ThemeSwitcher } from "../ThemeSwitcher";
 
 beforeEach(() => {
   mockSetTheme.mockClear();
@@ -45,11 +49,7 @@ describe("ThemeSwitcher", () => {
   it("calls setTheme with the correct theme ID when a radio is pressed", () => {
     renderWithProviders(<ThemeSwitcher />);
     const secondOption = themeOptions[1];
-    fireEvent.press(
-      screen.getByLabelText(
-        `${secondOption.label}. ${secondOption.description}`,
-      ),
-    );
+    fireEvent.press(screen.getByLabelText(themeLabelOf(secondOption.id)));
     expect(mockSetTheme).toHaveBeenCalledWith(secondOption.id);
   });
 
@@ -64,9 +64,7 @@ describe("ThemeSwitcher", () => {
     expect(radios.length).toBe(themeOptions.length);
 
     for (const option of themeOptions) {
-      expect(
-        screen.getByLabelText(`${option.label}. ${option.description}`),
-      ).toBeOnTheScreen();
+      expect(screen.getByLabelText(themeLabelOf(option.id))).toBeOnTheScreen();
     }
   });
 

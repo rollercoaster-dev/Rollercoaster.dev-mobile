@@ -5,7 +5,9 @@ import {
   type TextStyle,
   type ViewStyle,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { useThemeContext, themeOptions } from "../../hooks/useTheme";
+import { themeA11yLabel } from "../../i18n/labels";
 import { themes, parseThemeName, type ThemeName } from "../../themes/compose";
 import { variantOverrides } from "../../themes/variants";
 import { size, lineHeight } from "../../themes/tokens";
@@ -119,6 +121,7 @@ function previewStyles(themeId: ThemeName) {
 
 export function ThemeSwitcher() {
   const { themeName, setTheme } = useThemeContext();
+  const { t } = useTranslation();
 
   // The radiogroup wrapper collapses descendant Pressables into a single
   // a11y node on iOS, which hides individual options from Maestro element
@@ -136,13 +139,15 @@ export function ThemeSwitcher() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Pick what feels right</Text>
+      <Text style={styles.title}>{t("theme.picker.title")}</Text>
 
       <View {...groupingA11y}>
         {themeOptions.map((option) => {
           const isSelected = themeName === option.id;
           const cardTheme = themes[option.id];
           const preview = previewStyles(option.id);
+          const label = t(`theme.options.${option.id}.label`);
+          const description = t(`theme.options.${option.id}.description`);
 
           return (
             <Pressable
@@ -151,7 +156,7 @@ export function ThemeSwitcher() {
               accessible
               accessibilityRole="radio"
               accessibilityState={{ checked: isSelected }}
-              accessibilityLabel={`${option.label}. ${option.description}`}
+              accessibilityLabel={themeA11yLabel(t, option.id)}
               testID={isSelected ? "selected-theme" : undefined}
               style={[
                 styles.option,
@@ -168,11 +173,14 @@ export function ThemeSwitcher() {
             >
               <View style={styles.headerRow}>
                 <View style={styles.headerText}>
-                  <Text style={preview.label}>{option.label}</Text>
-                  <Text style={preview.description}>{option.description}</Text>
+                  <Text style={preview.label}>{label}</Text>
+                  <Text style={preview.description}>{description}</Text>
                 </View>
                 {isSelected ? (
-                  <Text style={preview.checkmark} accessibilityLabel="Selected">
+                  <Text
+                    style={preview.checkmark}
+                    accessibilityLabel={t("theme.picker.selected")}
+                  >
                     ✓
                   </Text>
                 ) : null}
@@ -183,11 +191,15 @@ export function ThemeSwitcher() {
                   <Text style={preview.badgeText}>★</Text>
                 </View>
                 <View style={styles.sampleTextCol}>
-                  <Text style={preview.sampleTitle}>Daily reading</Text>
-                  <Text style={preview.sampleMeta}>3 of 5 done</Text>
+                  <Text style={preview.sampleTitle}>
+                    {t("theme.preview.title")}
+                  </Text>
+                  <Text style={preview.sampleMeta}>
+                    {t("theme.preview.progress")}
+                  </Text>
                 </View>
                 <View style={preview.ctaPill}>
-                  <Text style={preview.ctaText}>+ ADD</Text>
+                  <Text style={preview.ctaText}>{t("theme.preview.cta")}</Text>
                 </View>
               </View>
             </Pressable>

@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useUnistyles } from "react-native-unistyles";
+import { useTranslation } from "react-i18next";
 import { Text } from "../../components/Text";
 import { Card } from "../../components/Card";
 import { IconButton } from "../../components/IconButton";
@@ -20,6 +21,7 @@ export function NewGoalModal() {
   const [titleError, setTitleError] = useState("");
   // Subscribe to theme changes to trigger re-renders
   const { theme } = useUnistyles();
+  const { t } = useTranslation();
 
   function handleCreate() {
     const trimmed = title.trim();
@@ -55,7 +57,7 @@ export function NewGoalModal() {
           }
           onPress={() => navigation.goBack()}
           tone="ghost"
-          accessibilityLabel="Close"
+          accessibilityLabel={t("actions.close")}
           size="sm"
         />
       </View>

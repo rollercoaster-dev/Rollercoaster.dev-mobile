@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Pressable } from "react-native";
 import { useVideoPlayer, VideoView } from "expo-video";
+import { useTranslation } from "react-i18next";
 import { Text } from "../Text";
 import { Logger } from "../../shims/rd-logger";
 import { styles } from "./VideoContent.styles";
@@ -52,6 +53,7 @@ function PlayerContent({
 }
 
 export function VideoContent({ uri }: VideoContentProps) {
+  const { t } = useTranslation();
   const [error, setError] = useState(false);
   const [retryToken, setRetryToken] = useState(0);
 
@@ -80,7 +82,7 @@ export function VideoContent({ uri }: VideoContentProps) {
               accessibilityLabel="Retry loading video"
               style={styles.retryButton}
             >
-              <Text style={styles.retryLabel}>Retry</Text>
+              <Text style={styles.retryLabel}>{t("actions.retry")}</Text>
             </Pressable>
           </View>
         ) : (

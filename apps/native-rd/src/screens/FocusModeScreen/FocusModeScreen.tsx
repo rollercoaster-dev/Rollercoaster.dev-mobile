@@ -17,6 +17,7 @@ import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import { useQuery } from "@evolu/react";
 import { Pencil, Eye, EyeSlash } from "phosphor-react-native";
+import { useTranslation } from "react-i18next";
 import { Text } from "../../components/Text";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { IconButton } from "../../components/IconButton";
@@ -62,11 +63,11 @@ import type {
   CaptureScreenName,
 } from "../../navigation/types";
 import {
-  EVIDENCE_OPTIONS,
   validateEvidenceType,
   type EvidenceTypeValue,
   type QuickEvidenceType,
 } from "../../types/evidence";
+import { evidenceShortLabel } from "../../i18n/labels";
 import type { StepStatus as UIStepStatus } from "../../types/steps";
 import { deleteEvidenceFile } from "../../utils/evidenceCleanup";
 import { Logger } from "../../shims/rd-logger";
@@ -89,14 +90,8 @@ const EVIDENCE_ROUTE_MAP: Partial<
   [EvidenceType.file]: "CaptureFile",
 };
 
-function getEvidenceTypeLabel(type: EvidenceTypeValue): string {
-  return (
-    EVIDENCE_OPTIONS.find((option) => option.type === type)?.shortLabel ??
-    type.replace("_", " ")
-  );
-}
-
 function FocusContent({ goalId }: { goalId: string }) {
+  const { t } = useTranslation();
   const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
   const { showToast, hideToast } = useToast();
   const rows = useQuery(goalsQuery);
@@ -400,7 +395,7 @@ function FocusContent({ goalId }: { goalId: string }) {
     const routeName = EVIDENCE_ROUTE_MAP[type];
     if (!routeName) {
       logger.error("No capture route mapped for evidence type", { type });
-      const label = getEvidenceTypeLabel(type);
+      const label = evidenceShortLabel(t, type);
       showToast({
         message: `Could not open ${label} capture screen`,
         duration: 3000,
@@ -419,7 +414,7 @@ function FocusContent({ goalId }: { goalId: string }) {
     const routeName = EVIDENCE_ROUTE_MAP[type];
     if (!routeName) {
       logger.error("No capture route mapped for evidence type", { type });
-      const label = getEvidenceTypeLabel(type);
+      const label = evidenceShortLabel(t, type);
       showToast({
         message: `Could not open ${label} capture screen`,
         duration: 3000,

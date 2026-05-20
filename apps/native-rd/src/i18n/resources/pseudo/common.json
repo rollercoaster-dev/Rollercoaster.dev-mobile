@@ -1,1 +1,109 @@
-{}
+{
+  "actions": {
+    "save": "[Šàṽê··]",
+    "cancel": "[Çàñçêĺ··]",
+    "delete": "[Đêĺêţê··]",
+    "dismiss": "[Đïšɱïšš···]",
+    "confirm": "[Çøñƒïŕɱ···]",
+    "back": "[Ɓàçķ··]",
+    "next": "[Ñêẋţ··]",
+    "close": "[Çĺøšê··]",
+    "retry": "[Ŕêţŕý··]"
+  },
+  "evidenceTypes": {
+    "photo": {
+      "label": "[Ţàķê Þĥøţø····]",
+      "shortLabel": "[Þĥøţø··]"
+    },
+    "video": {
+      "label": "[Ŕêçøŕđ Ṽïđêø·····]",
+      "shortLabel": "[Ṽïđêø··]"
+    },
+    "voice_memo": {
+      "label": "[Ŕêçøŕđ Ṽøïçê Ɱêɱø·······]",
+      "shortLabel": "[Ṽøïçê Ɱêɱø····]"
+    },
+    "text": {
+      "label": "[Ŵŕïţê à Ñøţê·····]",
+      "shortLabel": "[Ñøţê··]"
+    },
+    "link": {
+      "label": "[Àđđ Ĺïñķ···]",
+      "shortLabel": "[Ĺïñķ··]"
+    },
+    "file": {
+      "label": "[Àţţàçĥ Ƒïĺê····]",
+      "shortLabel": "[Ƒïĺê··]"
+    }
+  },
+  "theme": {
+    "options": {
+      "light-default": {
+        "label": "[Ţĥê Ƒüĺĺ Ŕïđê·····]",
+        "description": "[Šţàñđàŕđ ţĥêɱê······]"
+      },
+      "dark-default": {
+        "label": "[Ñïğĥţ Ŕïđê····]",
+        "description": "[Đàŕķ ɱøđê····]"
+      },
+      "light-highContrast": {
+        "label": "[Ɓøĺđ Ïñķ···]",
+        "description": "[Ĥïğĥ çøñţŕàšţ (ŴÇÀĞ ÀÀÀ)··········]"
+      },
+      "light-dyslexia": {
+        "label": "[Ŵàŕɱ Šţüđïø····]",
+        "description": "[Đýšĺêẋïà-ƒŕïêñđĺý·······]"
+      },
+      "light-autismFriendly": {
+        "label": "[Šţïĺĺ Ŵàţêŕ····]",
+        "description": "[Àüţïšɱ-ƒŕïêñđĺý······]"
+      },
+      "light-lowVision": {
+        "label": "[Ĺøüđ & Çĺêàŕ·····]",
+        "description": "[Ĺøŵ ṽïšïøñ šüþþøŕţ·······]"
+      },
+      "light-lowInfo": {
+        "label": "[Çĺêàñ Šïğñàĺ·····]",
+        "description": "[Ŕêđüçêđ ṽïšüàĺ ñøïšê········]"
+      }
+    },
+    "picker": {
+      "title": "[Þïçķ ŵĥàţ ƒêêĺš ŕïğĥţ········]",
+      "selected": "[Šêĺêçţêđ···]"
+    },
+    "preview": {
+      "title": "[Đàïĺý ŕêàđïñğ·····]",
+      "progress": "[3 øƒ 5 đøñê····]",
+      "cta": "[+ ÀĐĐ··]"
+    }
+  },
+  "status": {},
+  "a11y": {
+    "evidenceTypeOptions": "[Êṽïđêñçê ţýþê øþţïøñš········]",
+    "plannedEvidenceTypes": "[Þĺàññêđ êṽïđêñçê ţýþêš·········]",
+    "selectEvidenceType": "[Šêĺêçţ {{label}}······]",
+    "deselectEvidenceType": "[Đêšêĺêçţ {{label}}·······]"
+  },
+  "stepCard": {
+    "status": {
+      "completed": "[Çøɱþĺêţêđ····]",
+      "in-progress": "[Ïñ Þŕøğŕêšš····]",
+      "pending": "[Þêñđïñğ···]"
+    },
+    "checkbox": {
+      "completed": "[Çøɱþĺêţêđ····]",
+      "markComplete": "[Ɱàŕķ çøɱþĺêţê·····]"
+    },
+    "progress": "[Šţêþ {{current}} øƒ {{total}}············]",
+    "blocker": {
+      "label": "[Àđđ êṽïđêñçê ţø çøɱþĺêţê··········]",
+      "a11yWithType": "[Àđđ {{label}} ţø çøɱþĺêţê ţĥïš šţêþ··············]"
+    },
+    "quickAction": {
+      "a11y": "[Àđđ {{label}} êṽïđêñçê·········]"
+    },
+    "evidenceBadge": {
+      "a11y": "[{{count}} êṽïđêñçê ïţêɱš, ţàþ ţø ṽïêŵ···············]"
+    }
+  }
+}

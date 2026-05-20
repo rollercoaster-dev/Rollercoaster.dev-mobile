@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import Animated from "react-native-reanimated";
+import { useTranslation } from "react-i18next";
 import { Card } from "../Card";
 import { StatusBadge, type StatusBadgeVariant } from "../StatusBadge";
 import { Checkbox } from "../Checkbox";
@@ -12,6 +13,10 @@ import {
   type EvidenceCaptureOption,
   type QuickEvidenceType,
 } from "../../types/evidence";
+import {
+  evidenceLabel as evidenceTypeLabel,
+  evidenceShortLabel,
+} from "../../i18n/labels";
 import { styles } from "./StepCard.styles";
 
 export type StepCardStatus = "completed" | "in-progress" | "pending";
@@ -38,12 +43,6 @@ const statusToVariant: Record<StepCardStatus, StatusBadgeVariant> = {
   completed: "completed",
   "in-progress": "active",
   pending: "locked",
-};
-
-const statusToLabel: Record<StepCardStatus, string> = {
-  completed: "Completed",
-  "in-progress": "In Progress",
-  pending: "Pending",
 };
 
 function getMissingEvidenceOption(
@@ -78,6 +77,7 @@ export function StepCard({
   onEvidenceTap,
   onQuickEvidence,
 }: StepCardProps) {
+  const { t } = useTranslation();
   const isCompleted = step.status === "completed";
   const evidenceLabel = formatEvidenceLabel(step.evidenceCount);
   const flashStyle = useFlashOnIncrease(step.evidenceCount);
@@ -103,7 +103,9 @@ export function StepCard({
       ? getMissingQuickEvidenceOptions(plannedTypes, capturedTypes)
       : [];
 
-  const checkboxLabel = isCompleted ? "Completed" : "Mark complete";
+  const checkboxLabel = isCompleted
+    ? t("stepCard.checkbox.completed")
+    : t("stepCard.checkbox.markComplete");
 
   return (
     <Card>
@@ -114,11 +116,14 @@ export function StepCard({
       >
         <View style={styles.metaRow}>
           <Text style={styles.stepNumber}>
-            Step {stepIndex + 1} of {totalSteps}
+            {t("stepCard.progress", {
+              current: stepIndex + 1,
+              total: totalSteps,
+            })}
           </Text>
           <StatusBadge
             variant={statusToVariant[step.status]}
-            label={statusToLabel[step.status]}
+            label={t(`stepCard.status.${step.status}`)}
           />
         </View>
         <Text
@@ -132,25 +137,30 @@ export function StepCard({
 
         {onQuickEvidence && quickEvidenceOptions.length > 0 && (
           <View style={styles.quickActionsRow}>
-            {quickEvidenceOptions.map((option) => (
-              <Pressable
-                key={option.type}
-                onPress={() => onQuickEvidence(option.type)}
-                style={styles.quickActionButton}
-                testID={`step-card-quick-evidence-${option.type}`}
-                accessible
-                accessibilityRole="button"
-                accessibilityLabel={`Add ${option.label} evidence`}
-              >
-                <Text
-                  style={styles.quickActionIcon}
-                  accessibilityElementsHidden
+            {quickEvidenceOptions.map((option) => {
+              const optionLabel = evidenceShortLabel(t, option.type);
+              return (
+                <Pressable
+                  key={option.type}
+                  onPress={() => onQuickEvidence(option.type)}
+                  style={styles.quickActionButton}
+                  testID={`step-card-quick-evidence-${option.type}`}
+                  accessible
+                  accessibilityRole="button"
+                  accessibilityLabel={t("stepCard.quickAction.a11y", {
+                    label: optionLabel,
+                  })}
                 >
-                  {option.icon}
-                </Text>
-                <Text style={styles.quickActionText}>{option.label}</Text>
-              </Pressable>
-            ))}
+                  <Text
+                    style={styles.quickActionIcon}
+                    accessibilityElementsHidden
+                  >
+                    {option.icon}
+                  </Text>
+                  <Text style={styles.quickActionText}>{optionLabel}</Text>
+                </Pressable>
+              );
+            })}
           </View>
         )}
 
@@ -160,11 +170,13 @@ export function StepCard({
             accessibilityRole="text"
             accessibilityLabel={
               blockerOption
-                ? `Add ${blockerOption.label} to complete this step`
-                : "Add evidence to complete"
+                ? t("stepCard.blocker.a11yWithType", {
+                    label: evidenceTypeLabel(t, blockerOption.type),
+                  })
+                : t("stepCard.blocker.label")
             }
           >
-            Add evidence to complete
+            {t("stepCard.blocker.label")}
           </Text>
         ) : (
           <View style={styles.checkboxRow}>
@@ -183,7 +195,9 @@ export function StepCard({
               style={styles.evidenceBadge}
               accessible
               accessibilityRole="button"
-              accessibilityLabel={`${step.evidenceCount} evidence items, tap to view`}
+              accessibilityLabel={t("stepCard.evidenceBadge.a11y", {
+                count: step.evidenceCount,
+              })}
             >
               <Text style={styles.evidenceText}>{evidenceLabel}</Text>
             </Pressable>

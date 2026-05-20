@@ -1,1 +1,91 @@
-{}
+{
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "dismiss": "Dismiss",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "close": "Close",
+    "retry": "Retry"
+  },
+  "evidenceTypes": {
+    "photo": { "label": "Take Photo", "shortLabel": "Photo" },
+    "video": { "label": "Record Video", "shortLabel": "Video" },
+    "voice_memo": { "label": "Record Voice Memo", "shortLabel": "Voice Memo" },
+    "text": { "label": "Write a Note", "shortLabel": "Note" },
+    "link": { "label": "Add Link", "shortLabel": "Link" },
+    "file": { "label": "Attach File", "shortLabel": "File" }
+  },
+  "theme": {
+    "options": {
+      "light-default": {
+        "label": "The Full Ride",
+        "description": "Standard theme"
+      },
+      "dark-default": {
+        "label": "Night Ride",
+        "description": "Dark mode"
+      },
+      "light-highContrast": {
+        "label": "Bold Ink",
+        "description": "High contrast (WCAG AAA)"
+      },
+      "light-dyslexia": {
+        "label": "Warm Studio",
+        "description": "Dyslexia-friendly"
+      },
+      "light-autismFriendly": {
+        "label": "Still Water",
+        "description": "Autism-friendly"
+      },
+      "light-lowVision": {
+        "label": "Loud & Clear",
+        "description": "Low vision support"
+      },
+      "light-lowInfo": {
+        "label": "Clean Signal",
+        "description": "Reduced visual noise"
+      }
+    },
+    "picker": {
+      "title": "Pick what feels right",
+      "selected": "Selected"
+    },
+    "preview": {
+      "title": "Daily reading",
+      "progress": "3 of 5 done",
+      "cta": "+ ADD"
+    }
+  },
+  "status": {},
+  "a11y": {
+    "evidenceTypeOptions": "Evidence type options",
+    "plannedEvidenceTypes": "Planned evidence types",
+    "selectEvidenceType": "Select {{label}}",
+    "deselectEvidenceType": "Deselect {{label}}"
+  },
+  "stepCard": {
+    "status": {
+      "completed": "Completed",
+      "in-progress": "In Progress",
+      "pending": "Pending"
+    },
+    "checkbox": {
+      "completed": "Completed",
+      "markComplete": "Mark complete"
+    },
+    "progress": "Step {{current}} of {{total}}",
+    "blocker": {
+      "label": "Add evidence to complete",
+      "a11yWithType": "Add {{label}} to complete this step"
+    },
+    "quickAction": {
+      "a11y": "Add {{label}} evidence"
+    },
+    "evidenceBadge": {
+      "a11y": "{{count}} evidence items, tap to view"
+    }
+  }
+}
