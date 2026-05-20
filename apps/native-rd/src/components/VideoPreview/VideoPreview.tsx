@@ -1,13 +1,7 @@
 import React from "react";
 import { useVideoPlayer, VideoView } from "expo-video";
-import { StyleSheet } from "react-native-unistyles";
 import { formatDuration } from "../../utils/format";
-
-const styles = StyleSheet.create(() => ({
-  video: {
-    flex: 1,
-  },
-}));
+import { styles } from "./VideoPreview.styles";
 
 export type VideoPreviewProps = {
   uri: string;
