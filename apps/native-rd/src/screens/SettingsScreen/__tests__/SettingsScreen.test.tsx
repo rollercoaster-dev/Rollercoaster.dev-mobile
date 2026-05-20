@@ -6,6 +6,8 @@ import {
   fireEvent,
 } from "../../../__tests__/test-utils";
 
+import { isSentryDebugToolsEnabled, SettingsScreen } from "../SettingsScreen";
+
 /**
  * SettingsScreen component tests.
  *
@@ -36,6 +38,17 @@ jest.mock(
   },
 );
 
+// Switch reaches RN 0.81's spec_DEPRECATED ESM file via Libraries/Switch;
+// stub it the same way ScrollView is stubbed above so SettingsRow's toggle
+// branch renders under jest.
+jest.mock("react-native/Libraries/Components/Switch/Switch", () => {
+  const mockReact = require("react");
+  const { View: MockView } = require("react-native");
+  const MockSwitch = (props: Record<string, unknown>) =>
+    mockReact.createElement(MockView, { testID: "switch", ...props });
+  return { __esModule: true, default: MockSwitch };
+});
+
 const mockNativeCrash = jest.fn();
 jest.mock("@sentry/react-native", () => ({
   __esModule: true,
@@ -65,8 +78,6 @@ jest.mock("../../../hooks/useDensity", () => ({
     setDensity: mockSetDensity,
   }),
 }));
-
-import { isSentryDebugToolsEnabled, SettingsScreen } from "../SettingsScreen";
 
 const originalPlatform = Platform.OS;
 const mockAlert = jest.spyOn(Alert, "alert").mockImplementation(() => {});

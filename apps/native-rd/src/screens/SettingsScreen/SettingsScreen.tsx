@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import {
   ScrollView,
   View,
@@ -16,6 +16,7 @@ import { SettingsRow } from "../../components/SettingsRow";
 import { ThemeSwitcher } from "../../components/ThemeSwitcher";
 import { useDensity } from "../../hooks/useDensity";
 import { densityOptions } from "../../utils/density";
+import { i18n } from "../../i18n";
 import { styles } from "./SettingsScreen.styles";
 
 export function isSentryDebugToolsEnabled(value: string | undefined): boolean {
@@ -55,6 +56,39 @@ function DensityPicker() {
   );
 }
 
+/**
+ * Dev-only language switcher. `__DEV__` gates this in production bundles so
+ * pseudo can't leak to users. Re-renders on i18next `languageChanged` so the
+ * toggle stays in sync if anything else flips the language.
+ */
+function LanguagePicker() {
+  const [language, setLanguage] = useState(i18n.language);
+
+  useEffect(() => {
+    const onChange = (lng: string) => setLanguage(lng);
+    i18n.on("languageChanged", onChange);
+    return () => {
+      i18n.off("languageChanged", onChange);
+    };
+  }, []);
+
+  const isPseudo = language === "pseudo";
+
+  return (
+    <SettingsSection title="Language (dev)">
+      <SettingsRow
+        label="Pseudo locale"
+        toggle={{
+          value: isPseudo,
+          onValueChange: (next) => {
+            void i18n.changeLanguage(next ? "pseudo" : "en");
+          },
+        }}
+      />
+    </SettingsSection>
+  );
+}
+
 export function SettingsScreen({
   sentryDebugToolsEnabled = SENTRY_DEBUG_TOOLS_ENABLED,
 }: {
@@ -76,6 +110,8 @@ export function SettingsScreen({
             <DensityPicker />
           </Suspense>
         </ErrorBoundary>
+
+        {__DEV__ && <LanguagePicker />}
 
         <SettingsSection title="About">
           <SettingsRow label="App" value="rollercoaster.dev" />
