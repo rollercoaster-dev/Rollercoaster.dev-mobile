@@ -9,9 +9,10 @@ import { EvidenceType } from "../../../db";
 import { EVIDENCE_OPTIONS } from "../../../types/evidence";
 import type { EvidenceTypeValue } from "../../../types/evidence";
 import { i18n } from "../../../i18n";
+import { evidenceLabel } from "../../../i18n/labels";
 
 const labelFor = (type: EvidenceTypeValue) =>
-  i18n.t(`evidenceTypes.${type}.label`);
+  evidenceLabel(i18n.t.bind(i18n), type);
 
 describe("EvidenceTypePicker", () => {
   const defaultProps = {

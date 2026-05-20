@@ -67,6 +67,7 @@ import {
   validateEvidenceType,
   type EvidenceTypeValue,
 } from "../../types/evidence";
+import { evidenceLabel } from "../../i18n/labels";
 import { EVIDENCE_TYPE_ICONS } from "../../constants/evidenceIcons";
 import { pendingDesignStore } from "../../stores/pendingDesignStore";
 import { Logger } from "../../shims/rd-logger";
@@ -454,7 +455,7 @@ function CompletionContent({
                 ).map((opt) => (
                   <Button
                     key={opt.type}
-                    label={`${opt.icon} ${t(`evidenceTypes.${opt.type}.label`)}`}
+                    label={`${opt.icon} ${evidenceLabel(t, opt.type)}`}
                     onPress={() => handleEvidenceTypePress(opt.type)}
                     variant="secondary"
                     size="sm"

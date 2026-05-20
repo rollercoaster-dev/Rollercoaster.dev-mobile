@@ -13,6 +13,10 @@ import {
   type EvidenceCaptureOption,
   type QuickEvidenceType,
 } from "../../types/evidence";
+import {
+  evidenceLabel as evidenceTypeLabel,
+  evidenceShortLabel,
+} from "../../i18n/labels";
 import { styles } from "./StepCard.styles";
 
 export type StepCardStatus = "completed" | "in-progress" | "pending";
@@ -135,7 +139,7 @@ export function StepCard({
         {onQuickEvidence && quickEvidenceOptions.length > 0 && (
           <View style={styles.quickActionsRow}>
             {quickEvidenceOptions.map((option) => {
-              const optionLabel = t(`evidenceTypes.${option.type}.shortLabel`);
+              const optionLabel = evidenceShortLabel(t, option.type);
               return (
                 <Pressable
                   key={option.type}
@@ -165,7 +169,7 @@ export function StepCard({
             accessibilityRole="text"
             accessibilityLabel={
               blockerOption
-                ? `Add ${t(`evidenceTypes.${blockerOption.type}.label`)} to complete this step`
+                ? `Add ${evidenceTypeLabel(t, blockerOption.type)} to complete this step`
                 : "Add evidence to complete"
             }
           >

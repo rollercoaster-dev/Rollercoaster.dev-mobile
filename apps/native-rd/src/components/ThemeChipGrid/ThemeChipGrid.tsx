@@ -3,6 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useThemeContext, themeOptions } from "../../hooks/useTheme";
 import { themes, type ThemeName } from "../../themes/compose";
+import { themeA11yLabel } from "../../i18n/labels";
 import { styles, COLUMN_COUNT } from "./ThemeChipGrid.styles";
 
 interface ChipSwatch {
@@ -70,7 +71,6 @@ export function ThemeChipGrid() {
               const swatch = getSwatch(option.id);
               const [w1, w2] = stripeWidths[option.id];
               const label = t(`theme.options.${option.id}.label`);
-              const description = t(`theme.options.${option.id}.description`);
 
               return (
                 <Pressable
@@ -79,7 +79,7 @@ export function ThemeChipGrid() {
                   accessible
                   accessibilityRole="radio"
                   accessibilityState={{ checked: isSelected }}
-                  accessibilityLabel={`${label}. ${description}`}
+                  accessibilityLabel={themeA11yLabel(t, option.id)}
                   style={[
                     styles.chip,
                     isSelected ? styles.chipSelected : styles.chipUnselected,

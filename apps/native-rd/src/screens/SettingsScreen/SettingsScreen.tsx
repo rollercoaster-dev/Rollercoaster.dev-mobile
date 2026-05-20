@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useState } from "react";
+import React, { Suspense } from "react";
 import {
   ScrollView,
   View,
@@ -7,6 +7,7 @@ import {
   Platform,
 } from "react-native";
 import * as Sentry from "@sentry/react-native";
+import { useTranslation } from "react-i18next";
 import { Text } from "../../components/Text";
 import { useTabScreenContentInset } from "../../navigation/useTabScreenContentInset";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
@@ -16,7 +17,6 @@ import { SettingsRow } from "../../components/SettingsRow";
 import { ThemeSwitcher } from "../../components/ThemeSwitcher";
 import { useDensity } from "../../hooks/useDensity";
 import { densityOptions } from "../../utils/density";
-import { i18n } from "../../i18n";
 import { styles } from "./SettingsScreen.styles";
 
 export function isSentryDebugToolsEnabled(value: string | undefined): boolean {
@@ -56,23 +56,10 @@ function DensityPicker() {
   );
 }
 
-/**
- * Dev-only language switcher. `__DEV__` gates this in production bundles so
- * pseudo can't leak to users. Re-renders on i18next `languageChanged` so the
- * toggle stays in sync if anything else flips the language.
- */
+/** Dev-only language switcher. `__DEV__` gates this in production bundles so pseudo can't leak to users. */
 function LanguagePicker() {
-  const [language, setLanguage] = useState(i18n.language);
-
-  useEffect(() => {
-    const onChange = (lng: string) => setLanguage(lng);
-    i18n.on("languageChanged", onChange);
-    return () => {
-      i18n.off("languageChanged", onChange);
-    };
-  }, []);
-
-  const isPseudo = language === "pseudo";
+  const { i18n } = useTranslation();
+  const isPseudo = i18n.language === "pseudo";
 
   return (
     <SettingsSection title="Language (dev)">

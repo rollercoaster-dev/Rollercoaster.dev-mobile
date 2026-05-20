@@ -7,13 +7,11 @@ import {
 import { themeOptions } from "../../../hooks/useTheme";
 import type { ThemeName } from "../../../themes/compose";
 import { i18n } from "../../../i18n";
+import { themeA11yLabel } from "../../../i18n/labels";
 
 import { ThemeChipGrid } from "../ThemeChipGrid";
 
-const themeLabelOf = (id: ThemeName) =>
-  `${i18n.t(`theme.options.${id}.label`)}. ${i18n.t(
-    `theme.options.${id}.description`,
-  )}`;
+const themeLabelOf = (id: ThemeName) => themeA11yLabel(i18n.t.bind(i18n), id);
 
 const mockSetTheme = jest.fn();
 

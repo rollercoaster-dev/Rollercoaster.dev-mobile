@@ -10,9 +10,10 @@ import {
   type EvidenceTypeValue,
 } from "../../../types/evidence";
 import { i18n } from "../../../i18n";
+import { evidenceShortLabel } from "../../../i18n/labels";
 
 const shortLabelFor = (type: EvidenceTypeValue) =>
-  i18n.t(`evidenceTypes.${type}.shortLabel`);
+  evidenceShortLabel(i18n.t.bind(i18n), type);
 
 const defaultProps = {
   isOpen: true,

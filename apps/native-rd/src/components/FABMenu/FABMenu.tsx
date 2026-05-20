@@ -5,6 +5,7 @@ import {
   EVIDENCE_CAPTURE_OPTIONS,
   type EvidenceTypeValue,
 } from "../../types/evidence";
+import { evidenceShortLabel } from "../../i18n/labels";
 import { Card } from "../Card";
 import { styles } from "./FABMenu.styles";
 
@@ -38,7 +39,7 @@ export function FABMenu({ isOpen, onSelectType }: FABMenuProps) {
       <Card>
         <View style={styles.itemList}>
           {EVIDENCE_CAPTURE_OPTIONS.map((item) => {
-            const label = t(`evidenceTypes.${item.type}.shortLabel`);
+            const label = evidenceShortLabel(t, item.type);
             return (
               <Pressable
                 key={item.type}

@@ -7,6 +7,7 @@ import {
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useThemeContext, themeOptions } from "../../hooks/useTheme";
+import { themeA11yLabel } from "../../i18n/labels";
 import { themes, parseThemeName, type ThemeName } from "../../themes/compose";
 import { variantOverrides } from "../../themes/variants";
 import { size, lineHeight } from "../../themes/tokens";
@@ -155,7 +156,7 @@ export function ThemeSwitcher() {
               accessible
               accessibilityRole="radio"
               accessibilityState={{ checked: isSelected }}
-              accessibilityLabel={`${label}. ${description}`}
+              accessibilityLabel={themeA11yLabel(t, option.id)}
               testID={isSelected ? "selected-theme" : undefined}
               style={[
                 styles.option,

@@ -18,7 +18,6 @@ import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import { useQuery } from "@evolu/react";
 import { Pencil, Eye, EyeSlash } from "phosphor-react-native";
 import { useTranslation } from "react-i18next";
-import type { TFunction } from "i18next";
 import { Text } from "../../components/Text";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { IconButton } from "../../components/IconButton";
@@ -68,6 +67,7 @@ import {
   type EvidenceTypeValue,
   type QuickEvidenceType,
 } from "../../types/evidence";
+import { evidenceShortLabel } from "../../i18n/labels";
 import type { StepStatus as UIStepStatus } from "../../types/steps";
 import { deleteEvidenceFile } from "../../utils/evidenceCleanup";
 import { Logger } from "../../shims/rd-logger";
@@ -89,15 +89,6 @@ const EVIDENCE_ROUTE_MAP: Partial<
   [EvidenceType.link]: "CaptureLink",
   [EvidenceType.file]: "CaptureFile",
 };
-
-function getEvidenceTypeLabel(t: TFunction, type: EvidenceTypeValue): string {
-  const translated = t(`evidenceTypes.${type}.shortLabel`);
-  // Fall back to a humanized type name if the key is missing — t() returns
-  // the key string itself when no translation is registered.
-  return translated.startsWith("evidenceTypes.")
-    ? type.replace("_", " ")
-    : translated;
-}
 
 function FocusContent({ goalId }: { goalId: string }) {
   const { t } = useTranslation();
@@ -404,7 +395,7 @@ function FocusContent({ goalId }: { goalId: string }) {
     const routeName = EVIDENCE_ROUTE_MAP[type];
     if (!routeName) {
       logger.error("No capture route mapped for evidence type", { type });
-      const label = getEvidenceTypeLabel(t, type);
+      const label = evidenceShortLabel(t, type);
       showToast({
         message: `Could not open ${label} capture screen`,
         duration: 3000,
@@ -423,7 +414,7 @@ function FocusContent({ goalId }: { goalId: string }) {
     const routeName = EVIDENCE_ROUTE_MAP[type];
     if (!routeName) {
       logger.error("No capture route mapped for evidence type", { type });
-      const label = getEvidenceTypeLabel(t, type);
+      const label = evidenceShortLabel(t, type);
       showToast({
         message: `Could not open ${label} capture screen`,
         duration: 3000,
