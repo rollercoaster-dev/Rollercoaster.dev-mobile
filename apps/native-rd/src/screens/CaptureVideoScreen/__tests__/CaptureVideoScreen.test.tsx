@@ -1,5 +1,9 @@
 import React from "react";
 import { render, screen, fireEvent, act } from "@testing-library/react-native";
+import { Alert } from "react-native";
+
+import { CaptureVideoScreen } from "../CaptureVideoScreen";
+import { useCameraPermissions, useMicrophonePermissions } from "expo-camera";
 
 // --- Mocks ---
 
@@ -16,6 +20,7 @@ const mockRecordAsync = jest.fn();
 const mockStopRecording = jest.fn();
 
 jest.mock("expo-camera", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const React = require("react");
   const MockCameraView = React.forwardRef(function MockCameraView(
     props: Record<string, unknown>,
@@ -25,6 +30,7 @@ jest.mock("expo-camera", () => {
       recordAsync: mockRecordAsync,
       stopRecording: mockStopRecording,
     }));
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { View } = require("react-native");
     return <View testID="camera-view" {...props} />;
   });
@@ -36,6 +42,7 @@ jest.mock("expo-camera", () => {
 });
 
 jest.mock("expo-video", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { View } = require("react-native");
   return {
     useVideoPlayer: jest.fn(() => ({
@@ -49,22 +56,26 @@ jest.mock("expo-video", () => {
   };
 });
 
-jest.mock("expo-file-system", () => ({
-  Paths: { document: "/mock/documents/" },
-  File: jest.fn().mockImplementation(() => ({
-    uri: "/mock/documents/evidence/video_123.mp4",
-    exists: true,
-    move: jest.fn(),
-  })),
-  Directory: jest.fn().mockImplementation(() => ({
-    uri: "/mock/documents/evidence/",
-    exists: true,
-    create: jest.fn(),
-  })),
+const mockRequestMediaLibraryPermissionsAsync = jest.fn();
+const mockLaunchImageLibraryAsync = jest.fn();
+
+jest.mock("expo-image-picker", () => ({
+  requestMediaLibraryPermissionsAsync: (...args: unknown[]) =>
+    mockRequestMediaLibraryPermissionsAsync(...args),
+  launchImageLibraryAsync: (...args: unknown[]) =>
+    mockLaunchImageLibraryAsync(...args),
 }));
 
+const mockMoveVideo = jest.fn();
+const mockCopyVideo = jest.fn();
+jest.mock("../../../utils/videoStorage", () => ({
+  moveVideoToAppStorage: (uri: string) => mockMoveVideo(uri),
+  copyVideoToAppStorage: (uri: string) => mockCopyVideo(uri),
+}));
+
+const mockCreateEvidence = jest.fn();
 jest.mock("../../../db", () => ({
-  createEvidence: jest.fn(),
+  createEvidence: (...args: unknown[]) => mockCreateEvidence(...args),
   EvidenceType: {
     photo: "photo",
     text: "text",
@@ -75,21 +86,24 @@ jest.mock("../../../db", () => ({
   },
 }));
 
-import { CaptureVideoScreen } from "../CaptureVideoScreen";
-import { useCameraPermissions, useMicrophonePermissions } from "expo-camera";
-
 const defaultRoute = {
   key: "CaptureVideo",
   name: "CaptureVideo" as const,
   params: { goalId: "goal-123" },
 };
 
-describe("CaptureVideoScreen", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockMoveVideo.mockReturnValue(
+    "file:///mock/documents/evidence/videos/cam.mp4",
+  );
+  mockCopyVideo.mockReturnValue(
+    "file:///mock/documents/evidence/videos/lib.mp4",
+  );
+});
 
-  it("renders camera view when permissions are granted", () => {
+describe("CaptureVideoScreen — chooser mode", () => {
+  it("renders both entry-point buttons", () => {
     render(
       <CaptureVideoScreen
         route={defaultRoute}
@@ -97,11 +111,38 @@ describe("CaptureVideoScreen", () => {
       />,
     );
 
+    expect(screen.getByText("Add a video")).toBeTruthy();
     expect(screen.getByText("Record Video")).toBeTruthy();
+    expect(screen.getByText("Choose from Library")).toBeTruthy();
+  });
+
+  it("navigates back when back button is pressed from chooser", () => {
+    render(
+      <CaptureVideoScreen
+        route={defaultRoute}
+        navigation={undefined as never}
+      />,
+    );
+
+    fireEvent.press(screen.getByLabelText("Go back"));
+    expect(mockGoBack).toHaveBeenCalled();
+  });
+
+  it("enters recorder mode when Record Video is tapped", () => {
+    render(
+      <CaptureVideoScreen
+        route={defaultRoute}
+        navigation={undefined as never}
+      />,
+    );
+
+    fireEvent.press(screen.getByText("Record Video"));
     expect(screen.getByTestId("camera-view")).toBeTruthy();
     expect(screen.getByLabelText("Start recording")).toBeTruthy();
   });
+});
 
+describe("CaptureVideoScreen — recorder mode", () => {
   it("shows permission request when camera permission not granted", () => {
     (useCameraPermissions as jest.Mock).mockReturnValueOnce([
       { granted: false },
@@ -115,6 +156,7 @@ describe("CaptureVideoScreen", () => {
       />,
     );
 
+    fireEvent.press(screen.getByText("Record Video"));
     expect(screen.getByText("Camera Access Needed")).toBeTruthy();
     expect(screen.getByText("Grant Access")).toBeTruthy();
   });
@@ -132,10 +174,11 @@ describe("CaptureVideoScreen", () => {
       />,
     );
 
+    fireEvent.press(screen.getByText("Record Video"));
     expect(screen.getByText("Camera Access Needed")).toBeTruthy();
   });
 
-  it("shows timer at 00:00 initially", () => {
+  it("shows timer at 00:00 initially in recorder", () => {
     render(
       <CaptureVideoScreen
         route={defaultRoute}
@@ -143,10 +186,13 @@ describe("CaptureVideoScreen", () => {
       />,
     );
 
+    fireEvent.press(screen.getByText("Record Video"));
     expect(screen.getByText("00:00")).toBeTruthy();
   });
 
-  it("has flip camera and record buttons", () => {
+  it("starts recording with 60s max duration", async () => {
+    mockRecordAsync.mockResolvedValueOnce({ uri: "/tmp/video.mp4" });
+
     render(
       <CaptureVideoScreen
         route={defaultRoute}
@@ -154,11 +200,18 @@ describe("CaptureVideoScreen", () => {
       />,
     );
 
-    expect(screen.getByLabelText("Switch to front camera")).toBeTruthy();
-    expect(screen.getByLabelText("Start recording")).toBeTruthy();
+    fireEvent.press(screen.getByText("Record Video"));
+
+    await act(async () => {
+      fireEvent.press(screen.getByLabelText("Start recording"));
+    });
+
+    expect(mockRecordAsync).toHaveBeenCalledWith({ maxDuration: 60 });
   });
 
-  it("navigates back when back button is pressed", () => {
+  it("saves recorded video with camera source metadata", async () => {
+    mockRecordAsync.mockResolvedValueOnce({ uri: "/tmp/video.mp4" });
+
     render(
       <CaptureVideoScreen
         route={defaultRoute}
@@ -166,74 +219,32 @@ describe("CaptureVideoScreen", () => {
       />,
     );
 
-    fireEvent.press(screen.getByLabelText("Go back"));
+    fireEvent.press(screen.getByText("Record Video"));
+
+    await act(async () => {
+      fireEvent.press(screen.getByLabelText("Start recording"));
+    });
+
+    await act(async () => {
+      fireEvent.press(screen.getByText("Use Video"));
+    });
+
+    expect(mockMoveVideo).toHaveBeenCalledWith("/tmp/video.mp4");
+    expect(mockCopyVideo).not.toHaveBeenCalled();
+
+    const evidenceCall = mockCreateEvidence.mock.calls[0][0];
+    expect(evidenceCall.type).toBe("video");
+    expect(evidenceCall.uri).toBe(
+      "file:///mock/documents/evidence/videos/cam.mp4",
+    );
+    const metadata = JSON.parse(evidenceCall.metadata);
+    expect(metadata.source).toBe("camera");
+    expect(metadata.facing).toBe("back");
+    expect(typeof metadata.capturedAt).toBe("string");
     expect(mockGoBack).toHaveBeenCalled();
   });
 
-  it("starts recording when record button is pressed", async () => {
-    mockRecordAsync.mockResolvedValueOnce({ uri: "/tmp/video.mp4" });
-
-    render(
-      <CaptureVideoScreen
-        route={defaultRoute}
-        navigation={undefined as never}
-      />,
-    );
-
-    await act(async () => {
-      fireEvent.press(screen.getByLabelText("Start recording"));
-    });
-
-    expect(mockRecordAsync).toHaveBeenCalledWith({
-      maxDuration: 60,
-    });
-  });
-
-  it("shows preview after recording completes", async () => {
-    mockRecordAsync.mockResolvedValueOnce({ uri: "/tmp/video.mp4" });
-
-    render(
-      <CaptureVideoScreen
-        route={defaultRoute}
-        navigation={undefined as never}
-      />,
-    );
-
-    await act(async () => {
-      fireEvent.press(screen.getByLabelText("Start recording"));
-    });
-
-    // After recording resolves, preview should be shown
-    expect(screen.getByText("Use Video")).toBeTruthy();
-    expect(screen.getByText("Retake")).toBeTruthy();
-    expect(screen.getByTestId("video-player")).toBeTruthy();
-  });
-
-  it("returns to camera view when retake is pressed", async () => {
-    mockRecordAsync.mockResolvedValueOnce({ uri: "/tmp/video.mp4" });
-
-    render(
-      <CaptureVideoScreen
-        route={defaultRoute}
-        navigation={undefined as never}
-      />,
-    );
-
-    await act(async () => {
-      fireEvent.press(screen.getByLabelText("Start recording"));
-    });
-
-    await act(async () => {
-      fireEvent.press(screen.getByText("Retake"));
-    });
-
-    expect(screen.getByTestId("camera-view")).toBeTruthy();
-  });
-
   it("disables flip camera while recording", async () => {
-    // Pending promise so we can observe the in-flight recording state.
-    // Switching cameras mid-record corrupts the file, so the disabled
-    // contract is load-bearing.
     mockRecordAsync.mockImplementationOnce(() => new Promise(() => {}));
 
     render(
@@ -242,6 +253,8 @@ describe("CaptureVideoScreen", () => {
         navigation={undefined as never}
       />,
     );
+
+    fireEvent.press(screen.getByText("Record Video"));
 
     expect(
       screen.getByLabelText("Switch to front camera").props.accessibilityState
@@ -256,5 +269,124 @@ describe("CaptureVideoScreen", () => {
       screen.getByLabelText("Switch to front camera").props.accessibilityState
         ?.disabled,
     ).toBe(true);
+  });
+});
+
+describe("CaptureVideoScreen — library upload", () => {
+  it("denies access when library permission is not granted", async () => {
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    mockRequestMediaLibraryPermissionsAsync.mockResolvedValueOnce({
+      granted: false,
+    });
+
+    render(
+      <CaptureVideoScreen
+        route={defaultRoute}
+        navigation={undefined as never}
+      />,
+    );
+
+    await act(async () => {
+      fireEvent.press(screen.getByText("Choose from Library"));
+    });
+
+    expect(alertSpy).toHaveBeenCalledWith(
+      "Photo library access needed",
+      expect.any(String),
+    );
+    expect(mockLaunchImageLibraryAsync).not.toHaveBeenCalled();
+    expect(mockCreateEvidence).not.toHaveBeenCalled();
+    alertSpy.mockRestore();
+  });
+
+  it("returns to chooser when user cancels the picker", async () => {
+    mockRequestMediaLibraryPermissionsAsync.mockResolvedValueOnce({
+      granted: true,
+    });
+    mockLaunchImageLibraryAsync.mockResolvedValueOnce({ canceled: true });
+
+    render(
+      <CaptureVideoScreen
+        route={defaultRoute}
+        navigation={undefined as never}
+      />,
+    );
+
+    await act(async () => {
+      fireEvent.press(screen.getByText("Choose from Library"));
+    });
+
+    // Still on chooser
+    expect(screen.getByText("Add a video")).toBeTruthy();
+    expect(mockCreateEvidence).not.toHaveBeenCalled();
+  });
+
+  it("saves picked video with library source metadata", async () => {
+    mockRequestMediaLibraryPermissionsAsync.mockResolvedValueOnce({
+      granted: true,
+    });
+    mockLaunchImageLibraryAsync.mockResolvedValueOnce({
+      canceled: false,
+      assets: [{ uri: "file:///library/clip.mov", duration: 12500 }],
+    });
+
+    render(
+      <CaptureVideoScreen
+        route={defaultRoute}
+        navigation={undefined as never}
+      />,
+    );
+
+    await act(async () => {
+      fireEvent.press(screen.getByText("Choose from Library"));
+    });
+
+    expect(screen.getByText("Duration: 00:13")).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.press(screen.getByText("Use Video"));
+    });
+
+    expect(mockCopyVideo).toHaveBeenCalledWith("file:///library/clip.mov");
+    expect(mockMoveVideo).not.toHaveBeenCalled();
+
+    const evidenceCall = mockCreateEvidence.mock.calls[0][0];
+    expect(evidenceCall.type).toBe("video");
+    expect(evidenceCall.uri).toBe(
+      "file:///mock/documents/evidence/videos/lib.mp4",
+    );
+    const metadata = JSON.parse(evidenceCall.metadata);
+    expect(metadata.source).toBe("library");
+    expect(metadata.duration).toBe(13);
+    expect(metadata.facing).toBeUndefined();
+    expect(mockGoBack).toHaveBeenCalled();
+  });
+
+  it("returns to chooser when retake is pressed in library preview", async () => {
+    mockRequestMediaLibraryPermissionsAsync.mockResolvedValueOnce({
+      granted: true,
+    });
+    mockLaunchImageLibraryAsync.mockResolvedValueOnce({
+      canceled: false,
+      assets: [{ uri: "file:///library/clip.mov", duration: 5000 }],
+    });
+
+    render(
+      <CaptureVideoScreen
+        route={defaultRoute}
+        navigation={undefined as never}
+      />,
+    );
+
+    await act(async () => {
+      fireEvent.press(screen.getByText("Choose from Library"));
+    });
+
+    await act(async () => {
+      fireEvent.press(screen.getByText("Retake"));
+    });
+
+    expect(screen.getByText("Add a video")).toBeTruthy();
+    expect(mockCreateEvidence).not.toHaveBeenCalled();
   });
 });

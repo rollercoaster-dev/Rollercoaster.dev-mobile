@@ -1,91 +1,25 @@
 import { StyleSheet } from "react-native-unistyles";
 
-const RECORD_BUTTON_SIZE = 72;
-const FLIP_BUTTON_SIZE = 44;
-const FLIP_BUTTON_GAP = 16;
-
 export const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
   },
-  content: {
-    flex: 1,
-  },
-  cameraContainer: {
-    flex: 1,
-    overflow: "hidden",
-    borderRadius: theme.radius.md,
-    margin: theme.space[4],
-  },
-  camera: {
-    flex: 1,
-  },
-  permissionContainer: {
+  chooserContent: {
     flex: 1,
     padding: theme.space[4],
-    justifyContent: "center",
-    alignItems: "center",
     gap: theme.space[4],
+    justifyContent: "center",
   },
-  permissionText: {
+  chooserHeading: {
     textAlign: "center",
-    color: theme.colors.textSecondary,
+    marginBottom: theme.space[2],
   },
-  controls: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingTop: theme.space[4],
-    paddingHorizontal: theme.space[4],
+  chooserButtonGroup: {
+    gap: theme.space[3],
   },
-  recordButton: {
-    width: RECORD_BUTTON_SIZE,
-    height: RECORD_BUTTON_SIZE,
-    borderRadius: RECORD_BUTTON_SIZE / 2,
-    borderWidth: 4,
-    borderColor: theme.colors.border,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.backgroundSecondary,
-  },
-  recordButtonInner: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: theme.colors.error,
-  },
-  recordingButtonInner: {
-    width: 28,
-    height: 28,
-    borderRadius: theme.radius.sm,
-    backgroundColor: theme.colors.error,
-  },
-  // Anchored at the row's center then nudged right so the flip sits
-  // adjacent to the record button. Absolute positioning keeps the record
-  // button at exact horizontal center regardless of flip presence.
-  // `top` accounts for the row's asymmetric vertical padding so the flip's
-  // vertical center matches the record button's center (alignItems on the
-  // parent doesn't apply to absolutely-positioned children).
-  flipButton: {
-    position: "absolute",
-    left: "50%",
-    marginLeft: RECORD_BUTTON_SIZE / 2 + FLIP_BUTTON_GAP,
-    top: theme.space[4] + (RECORD_BUTTON_SIZE - FLIP_BUTTON_SIZE) / 2,
-    width: FLIP_BUTTON_SIZE,
-    height: FLIP_BUTTON_SIZE,
-    borderRadius: FLIP_BUTTON_SIZE / 2,
-    backgroundColor: theme.colors.backgroundTertiary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  timer: {
-    textAlign: "center",
-    color: theme.colors.error,
-    paddingVertical: theme.space[2],
-  },
-  timerRecording: {
-    fontWeight: theme.fontWeight.bold,
+  previewWrapper: {
+    flex: 1,
   },
   previewContainer: {
     flex: 1,
@@ -94,8 +28,10 @@ export const styles = StyleSheet.create((theme) => ({
     overflow: "hidden",
     backgroundColor: theme.colors.backgroundTertiary,
   },
-  previewVideo: {
-    flex: 1,
+  previewCaption: {
+    textAlign: "center",
+    color: theme.colors.textSecondary,
+    paddingVertical: theme.space[2],
   },
   previewControls: {
     flexDirection: "row",
@@ -105,11 +41,5 @@ export const styles = StyleSheet.create((theme) => ({
   },
   previewButton: {
     flex: 1,
-  },
-  maxDurationWarning: {
-    textAlign: "center",
-    color: theme.colors.warning,
-    paddingBottom: theme.space[1],
-    fontSize: theme.size.xs,
   },
 }));

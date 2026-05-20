@@ -27,17 +27,25 @@ export function CapturePhoto({ route }: CapturePhotoScreenProps) {
 
   useEvidenceStartBreadcrumb("photo");
 
-  function savePhoto(result: ImagePicker.ImagePickerSuccessResult) {
+  function savePhoto(
+    result: ImagePicker.ImagePickerSuccessResult,
+    source: "camera" | "library",
+  ) {
     setBusy(true);
     try {
       const asset = result.assets[0];
       const savedUri = saveImageToAppStorage(asset.uri);
+      const metadata = JSON.stringify({
+        capturedAt: new Date().toISOString(),
+        source,
+      });
       createEvidence({
         ...(stepId
           ? { stepId: stepId as StepId }
           : { goalId: goalId as GoalId }),
         type: EvidenceType.photo,
         uri: savedUri,
+        metadata,
       });
       navigation.goBack();
     } catch (error) {
@@ -67,7 +75,7 @@ export function CapturePhoto({ route }: CapturePhotoScreenProps) {
       }
       const result = await ImagePicker.launchCameraAsync(PICKER_OPTIONS);
       if (!result.canceled) {
-        savePhoto(result);
+        savePhoto(result, "camera");
         return; // savePhoto manages busy state from here
       }
     } finally {
@@ -90,7 +98,7 @@ export function CapturePhoto({ route }: CapturePhotoScreenProps) {
       }
       const result = await ImagePicker.launchImageLibraryAsync(PICKER_OPTIONS);
       if (!result.canceled) {
-        savePhoto(result);
+        savePhoto(result, "library");
         return; // savePhoto manages busy state from here
       }
     } finally {

@@ -98,7 +98,7 @@ describe("CapturePhoto", () => {
     });
   });
 
-  it("creates evidence with goalId when photo taken", async () => {
+  it("creates evidence with goalId and camera source when photo taken", async () => {
     mockLaunchCameraAsync.mockResolvedValue({
       canceled: false,
       assets: [{ uri: "file:///tmp/photo.jpg" }],
@@ -111,13 +111,34 @@ describe("CapturePhoto", () => {
       expect(mockSaveImageToAppStorage).toHaveBeenCalledWith(
         "file:///tmp/photo.jpg",
       );
-      expect(mockCreateEvidence).toHaveBeenCalledWith({
-        goalId: "goal-123",
-        stepId: undefined,
-        type: "photo",
-        uri: "file:///saved/photo.jpg",
-      });
+      expect(mockCreateEvidence).toHaveBeenCalledWith(
+        expect.objectContaining({
+          goalId: "goal-123",
+          type: "photo",
+          uri: "file:///saved/photo.jpg",
+          metadata: expect.stringContaining('"source":"camera"'),
+        }),
+      );
       expect(mockGoBack).toHaveBeenCalled();
+    });
+  });
+
+  it("creates evidence with library source when picked from library", async () => {
+    mockLaunchImageLibraryAsync.mockResolvedValue({
+      canceled: false,
+      assets: [{ uri: "file:///tmp/lib.jpg" }],
+    });
+    renderScreen();
+
+    fireEvent.press(screen.getByText("Choose from Library"));
+
+    await waitFor(() => {
+      expect(mockCreateEvidence).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "photo",
+          metadata: expect.stringContaining('"source":"library"'),
+        }),
+      );
     });
   });
 
@@ -131,12 +152,13 @@ describe("CapturePhoto", () => {
     fireEvent.press(screen.getByText("Take Photo"));
 
     await waitFor(() => {
-      expect(mockCreateEvidence).toHaveBeenCalledWith({
-        goalId: undefined,
-        stepId: "step-456",
-        type: "photo",
-        uri: "file:///saved/photo.jpg",
-      });
+      expect(mockCreateEvidence).toHaveBeenCalledWith(
+        expect.objectContaining({
+          stepId: "step-456",
+          type: "photo",
+          uri: "file:///saved/photo.jpg",
+        }),
+      );
     });
   });
 
