@@ -1,5 +1,13 @@
 # native-rd
 
+## [0.1.6](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/compare/v0.1.5...v0.1.6) (2026-05-20)
+
+
+### Features
+
+* **native-rd:** add library upload for video evidence ([#109](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/109)) ([ce2feee](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/ce2feeeb6d22637c59917c6b9f6e5f7b0f29bd4d))
+* **native-rd:** release testing-notes pipeline ([#98](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/98)) ([4ac7fdf](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/4ac7fdfbb399f0fe2e1465f01d98d3ad343b0897))
+
 ## [0.1.5](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/compare/v0.1.4...v0.1.5) (2026-05-18)
 
 
