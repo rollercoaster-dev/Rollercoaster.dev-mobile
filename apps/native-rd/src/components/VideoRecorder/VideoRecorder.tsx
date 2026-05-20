@@ -49,6 +49,9 @@ export const VideoRecorder = forwardRef<
 
   const cameraRef = useRef<CameraView>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Guards setState in recordAsync's finally block when the parent unmounts
+  // the recorder (e.g. user cancels) before the in-flight promise resolves.
+  const isMountedRef = useRef(true);
 
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [micPermission, requestMicPermission] = useMicrophonePermissions();
@@ -60,6 +63,7 @@ export const VideoRecorder = forwardRef<
 
   useEffect(() => {
     return () => {
+      isMountedRef.current = false;
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
@@ -80,18 +84,22 @@ export const VideoRecorder = forwardRef<
       const result = await cameraRef.current.recordAsync({
         maxDuration: MAX_DURATION_SECONDS,
       });
-      if (result?.uri) {
+      if (result?.uri && isMountedRef.current) {
         setRecordedUri(result.uri);
       }
     } catch (error) {
       console.error("[VideoRecorder] Recording failed:", error);
       reportError(error, { area: "evidence.capture", kind: "video" });
-      Alert.alert(
-        "Recording Failed",
-        "Could not record video. Please try again.",
-      );
+      if (isMountedRef.current) {
+        Alert.alert(
+          "Recording Failed",
+          "Could not record video. Please try again.",
+        );
+      }
     } finally {
-      setIsRecording(false);
+      if (isMountedRef.current) {
+        setIsRecording(false);
+      }
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
@@ -234,13 +242,19 @@ export const VideoRecorder = forwardRef<
         </Text>
         <View style={[styles.previewControls, tabInset]}>
           <View style={styles.previewButton}>
-            <Button label="Retake" variant="secondary" onPress={handleRetake} />
+            <Button
+              label="Retake"
+              variant="secondary"
+              onPress={handleRetake}
+              disabled={isSaving}
+            />
           </View>
           <View style={styles.previewButton}>
             <Button
               label={isSaving ? "Saving..." : "Use Video"}
               variant="primary"
               onPress={handleUseVideo}
+              loading={isSaving}
             />
           </View>
         </View>

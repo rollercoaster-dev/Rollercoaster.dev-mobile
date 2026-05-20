@@ -202,6 +202,7 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
                 label="Retake"
                 variant="secondary"
                 onPress={handleRetakeUploaded}
+                disabled={isSaving}
               />
             </View>
             <View style={styles.previewButton}>
@@ -209,6 +210,7 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
                 label={isSaving ? "Saving..." : "Use Video"}
                 variant="primary"
                 onPress={handleUseUploaded}
+                loading={isSaving}
               />
             </View>
           </View>
