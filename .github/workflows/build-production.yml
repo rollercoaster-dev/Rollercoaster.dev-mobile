@@ -1,9 +1,15 @@
 name: build-production
 
-# Manual only. Production builds + store submits must be human-triggered:
-# click "Run workflow" from the Actions UI (or `gh workflow run`) and supply
-# a tag/SHA via the `ref` input.
+# Two triggers — both human-gated:
+#  - `release: published` — release-please creates GitHub Releases as drafts
+#    (see .github/release-please-config.json: "draft": true). The "ship button"
+#    is clicking **Publish release** on the draft in the Releases UI. That click
+#    is the moment you decide to ship; this workflow does the rest.
+#  - `workflow_dispatch` — escape hatch for rebuilding a past tag or shipping
+#    from a non-release ref. Supply `ref` via the Actions UI or `gh workflow run`.
 on:
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
       ref:
