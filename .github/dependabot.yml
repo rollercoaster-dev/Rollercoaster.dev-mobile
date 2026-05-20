@@ -33,6 +33,26 @@ updates:
         versions: ["30.4.x"]
       - dependency-name: "babel-jest"
         versions: ["30.4.x"]
+      # React Native ecosystem: must be bumped in coordination with the Expo SDK,
+      # not piecemeal by Dependabot. Expo's jest preset asserts exact-match peers
+      # (react / react-test-renderer) and the RN install layout changes between
+      # minor versions, breaking the jest setup path. Bump manually via SDK upgrades.
+      - dependency-name: "react-test-renderer"
+      - dependency-name: "react-native"
+      - dependency-name: "react-native-reanimated"
+      - dependency-name: "react-native-worklets"
+      - dependency-name: "react"
+        update-types:
+          ["version-update:semver-minor", "version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types:
+          ["version-update:semver-minor", "version-update:semver-major"]
+      - dependency-name: "expo"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "expo-*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@react-navigation/*"
+        update-types: ["version-update:semver-major"]
     labels:
       - "dependencies"
     commit-message:
