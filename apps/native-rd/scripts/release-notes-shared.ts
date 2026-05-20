@@ -65,8 +65,22 @@ export function checkSlice(
   return null;
 }
 
+// Strict semver shape (with optional prerelease/build) — see semver.org.
+// Used to sanitize `version` before it flows into a RegExp constructor in
+// release-notes-generate.ts, so CLI argv can't smuggle regex meta-chars in.
+const SEMVER_RE = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
+
 export function resolveVersion(arg: string | undefined): string {
-  if (arg && arg.length > 0) return arg;
+  const candidate = arg && arg.length > 0 ? arg : readPackageVersion();
+  if (!SEMVER_RE.test(candidate)) {
+    throw new Error(
+      `Invalid version "${candidate}" — expected semver like 0.1.4 or 0.1.4-rc.1.`,
+    );
+  }
+  return candidate;
+}
+
+function readPackageVersion(): string {
   const pkgPath = join(APP_ROOT, "package.json");
   const pkg = JSON.parse(readFileSync(pkgPath, "utf8")) as { version?: string };
   if (!pkg.version) throw new Error(`No version in ${pkgPath}`);

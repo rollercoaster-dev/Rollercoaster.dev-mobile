@@ -64,7 +64,10 @@ function parseBullet(line: string): ChangelogEntry {
 function extractVersionSection(changelog: string, version: string): string {
   // Match heading lines: "## [X.Y.Z]..." (release-please linked form) or
   // "## X.Y.Z..." (older hand-written entries — CHANGELOG.md mixes both).
-  const escaped = version.replace(/\./g, "\\.");
+  // `version` is already sanitized to strict semver by resolveVersion, but we
+  // still apply the MDN-canonical full regex-meta escape here so CodeQL's
+  // "incomplete string escaping" heuristic doesn't trip on a partial escape.
+  const escaped = version.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   // Use \b on the unlinked alternative so "## 0.1.4" does not match "## 0.1.41".
   // The bracketed form is already self-delimiting via the closing "]".
   const headingRe = new RegExp(
