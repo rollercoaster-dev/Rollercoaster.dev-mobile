@@ -1,5 +1,17 @@
 # native-rd
 
+## [0.1.7](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/compare/v0.1.6...v0.1.7) (2026-05-20)
+
+
+### Features
+
+* **native-rd:** i18n common namespace + pseudo locale dev tooling ([#113](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/113)) ([80c23b8](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/80c23b8766550a05e6f1e4a3659cbb12dbbb5305))
+
+
+### Bug Fixes
+
+* **native-rd:** close svg registry null race in CompletionFlow fallback capture ([#116](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/116)) ([0c7c949](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/0c7c9492e051a9be729100379d8696d10beeac64))
+
 ## [0.1.6](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/compare/v0.1.5...v0.1.6) (2026-05-20)
 
 
