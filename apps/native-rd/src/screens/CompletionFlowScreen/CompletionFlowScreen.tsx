@@ -147,35 +147,111 @@ function CompletionContent({
   //   2. createDefaultBadgeDesign — synthesized default (true last resort).
   const goalTitleForDefault = (goal?.title as string | null) ?? "";
   const goalColorForDefault = (goal?.color as string | null) ?? null;
-  const persistedGoalDesign = parseBadgeDesign(
-    (goal?.design as string | null) ?? null,
+  const goalDesignJsonForFallback = (goal?.design as string | null) ?? null;
+  // Canonical "we have a usable baked image" check. Hoisted so the fallback
+  // gate below can reuse it — a placeholder badge row counts as "no image"
+  // and must not block recovery.
+  const hasExistingBadgeImage = Boolean(
+    badgeRow?.imageUri && badgeRow.imageUri !== PLACEHOLDER_IMAGE_URI,
   );
-  const fallbackDesign: BadgeDesign | null =
-    !pendingCapturedPng && goal && !badgeRow
-      ? (persistedGoalDesign ??
-        createDefaultBadgeDesign(goalTitleForDefault, goalColorForDefault))
-      : null;
+  // Memoized so the effect below — and the pinnedHostDesignRef capture path —
+  // see a stable identity across re-renders. Parsing the JSON inline on every
+  // render produced a fresh object each time, which made the capture effect's
+  // dep array see spurious "changes" and cancel its own in-flight capture.
+  //
+  // Gate on `!hasExistingBadgeImage` rather than `!badgeRow`: a row created
+  // with PLACEHOLDER_IMAGE_URI by a previous failed bake attempt would
+  // otherwise lock the fallback capture path forever, leaving the user with
+  // a permanently disabled Bake button and no recovery path.
+  const shouldComputeFallbackDesign =
+    !pendingCapturedPng && Boolean(goal) && !hasExistingBadgeImage;
+  const fallbackDesign = useMemo<BadgeDesign | null>(() => {
+    if (!shouldComputeFallbackDesign) return null;
+    return (
+      parseBadgeDesign(goalDesignJsonForFallback) ??
+      createDefaultBadgeDesign(goalTitleForDefault, goalColorForDefault)
+    );
+  }, [
+    shouldComputeFallbackDesign,
+    goalDesignJsonForFallback,
+    goalTitleForDefault,
+    goalColorForDefault,
+  ]);
   const fallbackRef = useRef<BadgeRendererHandle | null>(null);
   const [fallbackPng, setFallbackPng] = useState<Buffer | null>(null);
-  const fallbackCaptureStarted = useRef(false);
+  const [captureInFlight, setCaptureInFlight] = useState(false);
+  // In-flight guard as a ref so the re-entry check doesn't itself trigger
+  // re-renders. The `captureInFlight` state above stays for UI (hostDesign
+  // switch) only — keeping it out of the effect's deps prevents the effect
+  // from cancelling the very capture it just kicked off, AND prevents the
+  // infinite-retry loop that would otherwise fire when .finally clears the
+  // flag and the effect re-runs with fallbackPng still null.
+  const captureInFlightRef = useRef(false);
+  // Pin the design driving an in-flight capture so reactive flips of
+  // fallbackDesign (badgeRow arriving via Evolu sync, pendingCapturedPng
+  // arriving via useFocusEffect) cannot unmount the offscreen <Svg> while
+  // the native toDataURL bridge call is still pending. Without this pin
+  // the view drops from the React tree → RCTViewRegistry returns nil →
+  // RNSVGSvgViewModule logs "Invalid svg returned from registry, expecting
+  // RNSVGSvgView, got: (null)" and never invokes the callback → JS hits
+  // the 5000ms timeout. See issue #93 / Sentry NATIVE-RD-B.
+  const pinnedHostDesignRef = useRef<BadgeDesign | null>(null);
 
   useEffect(() => {
     if (pendingCapturedPng || !fallbackDesign || fallbackPng) return;
     if (!fallbackRef.current) return; // wait for BadgeRenderer to attach the handle
-    if (fallbackCaptureStarted.current) return;
-    fallbackCaptureStarted.current = true;
+    if (captureInFlightRef.current) return;
+
+    let cancelled = false;
+    let raf1: number | null = null;
+    let raf2: number | null = null;
+
+    pinnedHostDesignRef.current = fallbackDesign;
+    captureInFlightRef.current = true;
+    setCaptureInFlight(true);
+    // Capture-time BadgeRenderer is mounted with showShadow={false} (see
+    // fallbackHost below). Pass the same override here so getCaptureDimensions
+    // doesn't pad for a shadow the rendered SVG won't draw — otherwise iOS
+    // toDataURL canvas dimensions exceed the painted content by the shadow
+    // offset.
     const dimensions = getCaptureDimensions(
       fallbackDesign,
       undefined,
-      getRendererLayoutOptions(theme),
+      getRendererLayoutOptions(theme, false),
     );
-    captureBadge(fallbackRef, dimensions)
-      .then((buf) => setFallbackPng(buf))
-      .catch((err) => {
-        logger.error("Default-design capture failed", { goalId, error: err });
-        reportError(err, { area: "badge.create", kind: "bake" });
-        fallbackCaptureStarted.current = false;
+    // Two animation frames let iOS run a layout pass and commit the view
+    // tree before the bridge dispatches toDataURL. JS ref attachment
+    // happens before the native view is registered in RCTViewRegistry on
+    // the same tick — dispatching synchronously races the registration.
+    raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        if (cancelled) return;
+        captureBadge(fallbackRef, dimensions)
+          .then((buf) => {
+            if (cancelled) return;
+            setFallbackPng(buf);
+          })
+          .catch((err) => {
+            logger.error("Default-design capture failed", {
+              goalId,
+              error: err,
+            });
+            reportError(err, { area: "badge.create", kind: "bake" });
+          })
+          .finally(() => {
+            captureInFlightRef.current = false;
+            pinnedHostDesignRef.current = null;
+            if (cancelled) return;
+            setCaptureInFlight(false);
+          });
       });
+    });
+
+    return () => {
+      cancelled = true;
+      if (raf1 != null) cancelAnimationFrame(raf1);
+      if (raf2 != null) cancelAnimationFrame(raf2);
+    };
   }, [pendingCapturedPng, fallbackDesign, fallbackPng, theme, goalId]);
 
   const designJsonForBake =
@@ -188,9 +264,6 @@ function CompletionContent({
   // when a fresh designer PNG is already in hand.
   const [userConfirmedBake, setUserConfirmedBake] = useState(false);
 
-  const hasExistingBadgeImage = Boolean(
-    badgeRow?.imageUri && badgeRow.imageUri !== PLACEHOLDER_IMAGE_URI,
-  );
   const hasAnyBakeSource =
     pendingCapturedPng !== undefined ||
     fallbackPng !== null ||
@@ -369,7 +442,13 @@ function CompletionContent({
   // Mounted in both phases so the PNG is ready before the user reaches celebration.
   // The wrapper is purely an offscreen positioning host now — capture goes through
   // the BadgeRenderer's imperative handle (Svg.toDataURL), not the view buffer.
-  const fallbackHost = fallbackDesign ? (
+  //
+  // While captureInFlight is true, we render with the pinned design even if the
+  // live fallbackDesign has gone null — see pinnedHostDesignRef.
+  const hostDesign = captureInFlight
+    ? pinnedHostDesignRef.current
+    : fallbackDesign;
+  const fallbackHost = hostDesign ? (
     <View
       collapsable={false}
       style={styles.fallbackCaptureHost}
@@ -380,7 +459,7 @@ function CompletionContent({
     >
       <BadgeRenderer
         ref={fallbackRef}
-        design={fallbackDesign}
+        design={hostDesign}
         size={160}
         showShadow={false}
       />

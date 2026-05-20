@@ -81,6 +81,26 @@ describe("captureBadge", () => {
     );
   });
 
+  // Documents the error chain Sentry observes when the
+  // RNSVGSvgViewModule.mm registry lookup returns nil — the native side
+  // logs and returns without invoking the callback, BadgeRenderer's 5000ms
+  // setTimeout fires, and the rejection bubbles through captureBadge.
+  // See issue #93 / NATIVE-RD-B.
+  it("prefixes handle timeout rejections with 'capture failed —'", async () => {
+    const ref = makeMockRef(
+      jest
+        .fn()
+        .mockRejectedValue(
+          new Error(
+            "BadgeRenderer.captureAsPng: toDataURL did not respond within 5000ms — native bridge may have dropped the call",
+          ),
+        ),
+    );
+    await expect(captureBadge(ref)).rejects.toThrow(
+      /capture failed — BadgeRenderer\.captureAsPng: toDataURL did not respond within 5000ms/,
+    );
+  });
+
   it("throws when captured data is not a valid PNG", async () => {
     const ref = makeMockRef(
       jest.fn().mockResolvedValue(Buffer.from("not a png")),
