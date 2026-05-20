@@ -45,12 +45,6 @@ const statusToVariant: Record<StepCardStatus, StatusBadgeVariant> = {
   pending: "locked",
 };
 
-const statusToLabel: Record<StepCardStatus, string> = {
-  completed: "Completed",
-  "in-progress": "In Progress",
-  pending: "Pending",
-};
-
 function getMissingEvidenceOption(
   plannedTypes: string[],
   capturedTypes: string[],
@@ -109,7 +103,9 @@ export function StepCard({
       ? getMissingQuickEvidenceOptions(plannedTypes, capturedTypes)
       : [];
 
-  const checkboxLabel = isCompleted ? "Completed" : "Mark complete";
+  const checkboxLabel = isCompleted
+    ? t("stepCard.checkbox.completed")
+    : t("stepCard.checkbox.markComplete");
 
   return (
     <Card>
@@ -120,11 +116,14 @@ export function StepCard({
       >
         <View style={styles.metaRow}>
           <Text style={styles.stepNumber}>
-            Step {stepIndex + 1} of {totalSteps}
+            {t("stepCard.progress", {
+              current: stepIndex + 1,
+              total: totalSteps,
+            })}
           </Text>
           <StatusBadge
             variant={statusToVariant[step.status]}
-            label={statusToLabel[step.status]}
+            label={t(`stepCard.status.${step.status}`)}
           />
         </View>
         <Text
@@ -148,7 +147,9 @@ export function StepCard({
                   testID={`step-card-quick-evidence-${option.type}`}
                   accessible
                   accessibilityRole="button"
-                  accessibilityLabel={`Add ${optionLabel} evidence`}
+                  accessibilityLabel={t("stepCard.quickAction.a11y", {
+                    label: optionLabel,
+                  })}
                 >
                   <Text
                     style={styles.quickActionIcon}
@@ -169,11 +170,13 @@ export function StepCard({
             accessibilityRole="text"
             accessibilityLabel={
               blockerOption
-                ? `Add ${evidenceTypeLabel(t, blockerOption.type)} to complete this step`
-                : "Add evidence to complete"
+                ? t("stepCard.blocker.a11yWithType", {
+                    label: evidenceTypeLabel(t, blockerOption.type),
+                  })
+                : t("stepCard.blocker.label")
             }
           >
-            Add evidence to complete
+            {t("stepCard.blocker.label")}
           </Text>
         ) : (
           <View style={styles.checkboxRow}>
@@ -192,7 +195,9 @@ export function StepCard({
               style={styles.evidenceBadge}
               accessible
               accessibilityRole="button"
-              accessibilityLabel={`${step.evidenceCount} evidence items, tap to view`}
+              accessibilityLabel={t("stepCard.evidenceBadge.a11y", {
+                count: step.evidenceCount,
+              })}
             >
               <Text style={styles.evidenceText}>{evidenceLabel}</Text>
             </Pressable>

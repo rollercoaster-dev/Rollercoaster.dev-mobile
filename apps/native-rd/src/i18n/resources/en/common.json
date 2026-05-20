@@ -60,5 +60,27 @@
     }
   },
   "status": {},
-  "a11y": {}
+  "a11y": {},
+  "stepCard": {
+    "status": {
+      "completed": "Completed",
+      "in-progress": "In Progress",
+      "pending": "Pending"
+    },
+    "checkbox": {
+      "completed": "Completed",
+      "markComplete": "Mark complete"
+    },
+    "progress": "Step {{current}} of {{total}}",
+    "blocker": {
+      "label": "Add evidence to complete",
+      "a11yWithType": "Add {{label}} to complete this step"
+    },
+    "quickAction": {
+      "a11y": "Add {{label}} evidence"
+    },
+    "evidenceBadge": {
+      "a11y": "{{count}} evidence items, tap to view"
+    }
+  }
 }
