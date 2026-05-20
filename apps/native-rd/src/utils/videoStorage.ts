@@ -10,10 +10,21 @@ export function getVideoStoragePath(): string {
   return getVideosDirectory().uri;
 }
 
-function generateFilename(): string {
+function extractExtension(uri: string): string {
+  // Strip the directory portion, then take everything from the last "." onward.
+  // Default to .mp4 if the source has no extension — iOS cameras and library
+  // picks are typically .mov, Android is .mp4, but some sources omit it.
+  const lastSlash = uri.lastIndexOf("/");
+  const tail = lastSlash >= 0 ? uri.slice(lastSlash + 1) : uri;
+  const dotIndex = tail.lastIndexOf(".");
+  if (dotIndex < 0) return ".mp4";
+  return tail.slice(dotIndex).toLowerCase();
+}
+
+function generateFilename(sourceUri: string): string {
   const timestamp = Date.now().toString(36);
   const random = Math.random().toString(36).slice(2, 8);
-  return `${timestamp}-${random}.mp4`;
+  return `${timestamp}-${random}${extractExtension(sourceUri)}`;
 }
 
 function ensureVideosDir(): Directory {
@@ -28,7 +39,7 @@ function ensureVideosDir(): Directory {
 export function moveVideoToAppStorage(sourceUri: string): string {
   const videosDir = ensureVideosDir();
   const source = new File(sourceUri);
-  const destination = new File(videosDir, generateFilename());
+  const destination = new File(videosDir, generateFilename(sourceUri));
   source.move(destination);
   return destination.uri;
 }
@@ -37,7 +48,7 @@ export function moveVideoToAppStorage(sourceUri: string): string {
 export function copyVideoToAppStorage(sourceUri: string): string {
   const videosDir = ensureVideosDir();
   const source = new File(sourceUri);
-  const destination = new File(videosDir, generateFilename());
+  const destination = new File(videosDir, generateFilename(sourceUri));
   source.copy(destination);
   return destination.uri;
 }

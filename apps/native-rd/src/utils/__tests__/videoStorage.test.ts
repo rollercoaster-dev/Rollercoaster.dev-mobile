@@ -14,6 +14,10 @@ const mockFileDelete = jest.fn();
 const mockDirUri = "file:///data/documents/evidence/videos/";
 const mockFileUri = "file:///data/documents/evidence/videos/test.mp4";
 
+// Captures the second argument passed to `new File(dir, filename)` so tests
+// can assert how the destination filename (and its extension) is derived.
+const fileConstructorCalls: { args: unknown[] }[] = [];
+
 jest.mock("expo-file-system", () => {
   return {
     Paths: {
@@ -28,23 +32,36 @@ jest.mock("expo-file-system", () => {
       },
       create: mockDirectoryCreate,
     })),
-    File: jest.fn().mockImplementation(() => ({
-      uri: mockFileUri,
-      copy: mockFileCopy,
-      move: mockFileMove,
-      get exists() {
-        return mockFileExists();
-      },
-      delete: mockFileDelete,
-    })),
+    File: jest.fn().mockImplementation((...args: unknown[]) => {
+      fileConstructorCalls.push({ args });
+      return {
+        uri: mockFileUri,
+        copy: mockFileCopy,
+        move: mockFileMove,
+        get exists() {
+          return mockFileExists();
+        },
+        delete: mockFileDelete,
+      };
+    }),
   };
 });
 
 beforeEach(() => {
   jest.clearAllMocks();
+  fileConstructorCalls.length = 0;
   mockDirectoryExists.mockReturnValue(true);
   mockFileExists.mockReturnValue(true);
 });
+
+// Reads the destination filename out of the captured constructor args.
+// The util calls `new File(sourceUri)` then `new File(videosDir, filename)`,
+// so the second invocation's second arg is the destination filename.
+function getDestinationFilename(): string {
+  const destCall = fileConstructorCalls[1];
+  expect(destCall).toBeDefined();
+  return destCall.args[1] as string;
+}
 
 describe("getVideoStoragePath", () => {
   it("returns the videos directory URI", () => {
@@ -105,6 +122,33 @@ describe("copyVideoToAppStorage", () => {
 
     expect(typeof result).toBe("string");
     expect(result).toContain("file://");
+  });
+});
+
+describe("destination filename extension", () => {
+  it("preserves .mp4 from the source URI", () => {
+    moveVideoToAppStorage("file:///tmp/clip.mp4");
+    expect(getDestinationFilename()).toMatch(/\.mp4$/);
+  });
+
+  it("preserves .mov from the source URI (iOS camera default)", () => {
+    moveVideoToAppStorage("file:///tmp/recording.mov");
+    expect(getDestinationFilename()).toMatch(/\.mov$/);
+  });
+
+  it("preserves .mov from a library pick", () => {
+    copyVideoToAppStorage("file:///var/mobile/library/IMG_1234.mov");
+    expect(getDestinationFilename()).toMatch(/\.mov$/);
+  });
+
+  it("lowercases the extension", () => {
+    moveVideoToAppStorage("file:///tmp/CLIP.MP4");
+    expect(getDestinationFilename()).toMatch(/\.mp4$/);
+  });
+
+  it("falls back to .mp4 when the source has no extension", () => {
+    moveVideoToAppStorage("file:///tmp/recording");
+    expect(getDestinationFilename()).toMatch(/\.mp4$/);
   });
 });
 
