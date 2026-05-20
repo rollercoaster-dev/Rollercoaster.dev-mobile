@@ -38,7 +38,7 @@
     "verify": "node scripts/verify-css.js"
   },
   "devDependencies": {
-    "style-dictionary": "^5.4.0"
+    "style-dictionary": "^5.4.1"
   },
   "keywords": [
     "design-tokens",
