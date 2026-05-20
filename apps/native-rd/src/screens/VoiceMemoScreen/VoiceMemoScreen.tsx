@@ -8,6 +8,7 @@ import React, { useState } from "react";
 import { View, TextInput, Alert, Pressable, Linking } from "react-native";
 import { useUnistyles } from "react-native-unistyles";
 import { useNavigation } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import { Text } from "../../components/Text";
 import { Card } from "../../components/Card";
 import { Button } from "../../components/Button";
@@ -30,6 +31,7 @@ function formatDuration(ms: number): string {
 export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
   const navigation = useNavigation();
   const { theme } = useUnistyles();
+  const { t } = useTranslation();
   const { goalId, stepId } = route.params;
   const [caption, setCaption] = useState("");
 
@@ -185,7 +187,11 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
             <Text variant="body" style={styles.errorText}>
               {error}
             </Text>
-            <Button label="Dismiss" variant="ghost" onPress={() => reset()} />
+            <Button
+              label={t("actions.dismiss")}
+              variant="ghost"
+              onPress={() => reset()}
+            />
           </Card>
         )}
 

@@ -5,6 +5,7 @@ import {
   Pressable,
   type NativeSyntheticEvent,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Text } from "../Text";
 import { Logger } from "../../shims/rd-logger";
 import { styles } from "./PhotoContent.styles";
@@ -17,6 +18,7 @@ export interface PhotoContentProps {
 }
 
 export function PhotoContent({ uri, description }: PhotoContentProps) {
+  const { t } = useTranslation();
   const [imageError, setImageError] = useState(false);
   const [retryToken, setRetryToken] = useState(0);
 
@@ -54,7 +56,7 @@ export function PhotoContent({ uri, description }: PhotoContentProps) {
               accessibilityLabel="Retry loading image"
               style={styles.retryButton}
             >
-              <Text style={styles.retryLabel}>Retry</Text>
+              <Text style={styles.retryLabel}>{t("actions.retry")}</Text>
             </Pressable>
           </View>
         ) : (
