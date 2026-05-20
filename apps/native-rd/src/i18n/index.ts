@@ -3,6 +3,7 @@ import { initReactI18next } from "react-i18next";
 import { getLocales } from "expo-localization";
 
 import { selectSupportedLanguage } from "./language";
+import { Logger } from "../shims/rd-logger";
 
 import enCommon from "./resources/en/common.json";
 import enWelcome from "./resources/en/welcome.json";
@@ -100,6 +101,13 @@ const resources = {
   },
 } as const;
 
+const logger = new Logger("i18n");
+
+// Warn in the dev client when a key is missing so refactors don't silently render
+// the key path as the UI string. Skipped under NODE_ENV=test to keep i18n.test.ts
+// (which intentionally exercises the missing-key path) quiet.
+const warnMissingKeys = __DEV__ && process.env.NODE_ENV !== "test";
+
 // eslint-disable-next-line import/no-named-as-default-member -- i18next.use() is the documented chainable init API
 i18n.use(initReactI18next).init({
   resources,
@@ -112,6 +120,14 @@ i18n.use(initReactI18next).init({
   initAsync: false,
   interpolation: { escapeValue: false },
   react: { useSuspense: false },
+  saveMissing: warnMissingKeys,
+  missingKeyHandler: warnMissingKeys
+    ? (lngs, ns, key) => {
+        logger.warn(
+          `Missing key "${key}" in namespace "${ns}" (${lngs.join(", ")})`,
+        );
+      }
+    : undefined,
 });
 
 export { i18n };
