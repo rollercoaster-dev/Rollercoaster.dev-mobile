@@ -24,15 +24,15 @@ End-user copy. Same voice as Play, but you have room for more detail. Group as F
 
 **New**
 
-- TODO
+- TODO: user-facing copy for a new feature
 
 **Improved**
 
-- TODO
+- TODO: user-facing copy for an enhancement
 
 **Fixed**
 
-- TODO
+- TODO: user-facing copy for a bug fix
 <!-- appstore:end -->
 
 ## TestFlight — What to test (max 4000 chars)
