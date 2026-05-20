@@ -82,10 +82,20 @@ jest.mock("../../../badges/BadgeRenderer", () => {
     getRendererLayoutOptions: () => ({ strokeWidth: 3, hasShadow: false }),
   };
 });
+// Per-test override for captureBadge resolution timing. Default: resolve
+// immediately with a valid PNG signature (preserves prior test behavior).
+// Set `mockCaptureBadgeImpl = () => new Promise(r => { resolveCapture = r; })`
+// in a test that needs to observe behavior *while* a capture is in flight —
+// see the "svg unmount-mid-flight race regression" suite for the pattern.
+// The `mock` prefix is required: jest.mock factories may only reference
+// outer-scope identifiers whose names start with `mock`.
+
+let mockCaptureBadgeImpl: (() => Promise<Buffer>) | undefined;
 jest.mock("../../../badges/captureBadge", () => ({
-  captureBadge: jest.fn(() =>
-    Promise.resolve(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])),
-  ),
+  captureBadge: jest.fn(() => {
+    if (mockCaptureBadgeImpl) return mockCaptureBadgeImpl();
+    return Promise.resolve(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+  }),
   getCaptureDimensions: jest.fn(() => ({ width: 512, height: 512 })),
 }));
 
@@ -191,6 +201,7 @@ describe("CompletionFlowScreen", () => {
     jest.clearAllMocks();
     mockUseQuery.mockReturnValue([]);
     mockUseCreateBadge.mockReturnValue({ status: "done", error: null });
+    mockCaptureBadgeImpl = undefined;
   });
 
   describe("evidence prompt phase (no goal evidence)", () => {
@@ -940,6 +951,142 @@ describe("CompletionFlowScreen", () => {
       expect(screen.queryByLabelText("Badge earned")).not.toBeOnTheScreen();
       rerender(<CompletionFlowScreen {...routeProps} />);
       expect(screen.queryByLabelText("Badge earned")).not.toBeOnTheScreen();
+    });
+  });
+
+  // Regression: issue #93 / Sentry NATIVE-RD-B —
+  // "Invalid svg returned from registry, expecting RNSVGSvgView, got: (null)".
+  //
+  // The fallback capture host owns the <Svg> that backs `Svg.toDataURL`. If a
+  // reactive event (Evolu landing badgeRow, useFocusEffect consuming
+  // pendingDesignStore) flips `fallbackDesign` to null between JS dispatching
+  // toDataURL and the main-thread block resolving the React tag, the native
+  // registry returns nil → RCTLogError "Invalid svg returned from registry…"
+  // → callback is never invoked → JS waits the full 5000ms timeout.
+  //
+  // The invariant these tests lock: while a capture is in flight, the host
+  // remains in the React tree regardless of pendingCapturedPng / badgeRow
+  // arrival. Once the deferred capture resolves, normal gating resumes.
+  describe("svg unmount-mid-flight race (regression: issue #93)", () => {
+    function deferCaptureBadge() {
+      let resolveCapture: ((b: Buffer) => void) | undefined;
+      let rejectCapture: ((err: unknown) => void) | undefined;
+      mockCaptureBadgeImpl = () =>
+        new Promise<Buffer>((resolve, reject) => {
+          resolveCapture = resolve;
+          rejectCapture = reject;
+        });
+      return {
+        resolve: (b: Buffer) => resolveCapture?.(b),
+        reject: (e: unknown) => rejectCapture?.(e),
+      };
+    }
+
+    it("keeps the fallback host mounted when badgeRow arrives mid-capture", async () => {
+      // The Sentry crash mode: Evolu sync lands the badge row in the brief
+      // window between JS dispatching toDataURL and the native main-thread
+      // block resolving the React tag. Without the fix, fallbackDesign goes
+      // null (badgeRow truthy) → host unmounts → registry returns nil →
+      // callback never fires → 5s timeout.
+      const deferred = deferCaptureBadge();
+      setupQueries({ goalEvidence: GOAL_EVIDENCE });
+      const { rerender } = renderWithProviders(
+        <CompletionFlowScreen {...routeProps} />,
+      );
+      // Sanity: host present before badgeRow arrives.
+      expect(
+        screen.getByTestId("completion-fallback-capture-host", {
+          includeHiddenElements: true,
+        }),
+      ).toBeOnTheScreen();
+      // Simulate Evolu landing badgeRow while capture is still pending.
+      setupQueries({ goalEvidence: GOAL_EVIDENCE, badge: BADGE_ROW });
+      rerender(<CompletionFlowScreen {...routeProps} />);
+      // Host MUST still be mounted — capture promise has not resolved.
+      expect(
+        screen.queryByTestId("completion-fallback-capture-host", {
+          includeHiddenElements: true,
+        }),
+      ).toBeOnTheScreen();
+      // After resolution, normal gating may unmount the host. The invariant
+      // we care about is that it survived the in-flight window.
+      await act(async () => {
+        deferred.resolve(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+      });
+    });
+
+    it("keeps the fallback host mounted when pendingCapturedPng arrives mid-capture via refocus", async () => {
+      // Second reactive source for the race: useFocusEffect re-consumes
+      // pendingDesignStore (a fresh BadgeDesigner save during the same stack
+      // visit). pendingCapturedPng flips from undefined to a Buffer →
+      // fallbackDesign goes null → unmount mid-flight.
+      const {
+        pendingDesignStore,
+      } = require("../../../stores/pendingDesignStore");
+      const deferred = deferCaptureBadge();
+      setupQueries({ goalEvidence: GOAL_EVIDENCE });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      expect(
+        screen.getByTestId("completion-fallback-capture-host", {
+          includeHiddenElements: true,
+        }),
+      ).toBeOnTheScreen();
+      // Simulate a fresh designer save followed by refocus.
+      pendingDesignStore.set("goal-1", {
+        designJson: '{"shape":"circle"}',
+        pngBase64: Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]).toString(
+          "base64",
+        ),
+      });
+      await act(async () => {
+        lastFocusCallback?.();
+      });
+      // Host MUST still be mounted while the prior capture is in flight.
+      expect(
+        screen.queryByTestId("completion-fallback-capture-host", {
+          includeHiddenElements: true,
+        }),
+      ).toBeOnTheScreen();
+      await act(async () => {
+        deferred.resolve(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+      });
+    });
+
+    it("waits two animation frames before calling captureBadge (pre-commit race guard)", async () => {
+      // The native registry needs the view to be committed before
+      // toDataURL can resolve the React tag. JS ref attachment runs before
+      // iOS commit on the same tick — calling captureBadge synchronously
+      // dispatches into the bridge before the view exists in the registry.
+      // Two animation frames give the layout + commit passes time to run.
+      const { captureBadge } = require("../../../badges/captureBadge");
+      (captureBadge as jest.Mock).mockClear();
+      const rafCallbacks: FrameRequestCallback[] = [];
+      const rafSpy = jest
+        .spyOn(global, "requestAnimationFrame")
+        .mockImplementation((cb) => {
+          rafCallbacks.push(cb);
+          return rafCallbacks.length as unknown as number;
+        });
+      try {
+        setupQueries({ goalEvidence: GOAL_EVIDENCE });
+        renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+        // Capture has not been dispatched yet — only the outer rAF is queued.
+        expect(captureBadge).not.toHaveBeenCalled();
+        // Flush frame 1 — the inner rAF is queued, capture still not called.
+        await act(async () => {
+          const batch = rafCallbacks.splice(0);
+          batch.forEach((cb) => cb(0));
+        });
+        expect(captureBadge).not.toHaveBeenCalled();
+        // Flush frame 2 — now captureBadge fires.
+        await act(async () => {
+          const batch = rafCallbacks.splice(0);
+          batch.forEach((cb) => cb(0));
+        });
+        expect(captureBadge).toHaveBeenCalledTimes(1);
+      } finally {
+        rafSpy.mockRestore();
+      }
     });
   });
 });

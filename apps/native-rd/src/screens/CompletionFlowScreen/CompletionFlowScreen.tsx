@@ -157,26 +157,57 @@ function CompletionContent({
       : null;
   const fallbackRef = useRef<BadgeRendererHandle | null>(null);
   const [fallbackPng, setFallbackPng] = useState<Buffer | null>(null);
-  const fallbackCaptureStarted = useRef(false);
+  const [captureInFlight, setCaptureInFlight] = useState(false);
+  // Pin the design driving an in-flight capture so reactive flips of
+  // fallbackDesign (badgeRow arriving via Evolu sync, pendingCapturedPng
+  // arriving via useFocusEffect) cannot unmount the offscreen <Svg> while
+  // the native toDataURL bridge call is still pending. Without this pin
+  // the view drops from the React tree → RCTViewRegistry returns nil →
+  // RNSVGSvgViewModule logs "Invalid svg returned from registry, expecting
+  // RNSVGSvgView, got: (null)" and never invokes the callback → JS hits
+  // the 5000ms timeout. See issue #93 / Sentry NATIVE-RD-B.
+  const pinnedHostDesignRef = useRef<BadgeDesign | null>(null);
 
   useEffect(() => {
     if (pendingCapturedPng || !fallbackDesign || fallbackPng) return;
     if (!fallbackRef.current) return; // wait for BadgeRenderer to attach the handle
-    if (fallbackCaptureStarted.current) return;
-    fallbackCaptureStarted.current = true;
+    if (captureInFlight) return;
+    pinnedHostDesignRef.current = fallbackDesign;
+    setCaptureInFlight(true);
     const dimensions = getCaptureDimensions(
       fallbackDesign,
       undefined,
       getRendererLayoutOptions(theme),
     );
-    captureBadge(fallbackRef, dimensions)
-      .then((buf) => setFallbackPng(buf))
-      .catch((err) => {
-        logger.error("Default-design capture failed", { goalId, error: err });
-        reportError(err, { area: "badge.create", kind: "bake" });
-        fallbackCaptureStarted.current = false;
+    // Two animation frames let iOS run a layout pass and commit the view
+    // tree before the bridge dispatches toDataURL. JS ref attachment
+    // happens before the native view is registered in RCTViewRegistry on
+    // the same tick — dispatching synchronously races the registration.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        captureBadge(fallbackRef, dimensions)
+          .then((buf) => setFallbackPng(buf))
+          .catch((err) => {
+            logger.error("Default-design capture failed", {
+              goalId,
+              error: err,
+            });
+            reportError(err, { area: "badge.create", kind: "bake" });
+          })
+          .finally(() => {
+            setCaptureInFlight(false);
+            pinnedHostDesignRef.current = null;
+          });
       });
-  }, [pendingCapturedPng, fallbackDesign, fallbackPng, theme, goalId]);
+    });
+  }, [
+    pendingCapturedPng,
+    fallbackDesign,
+    fallbackPng,
+    theme,
+    goalId,
+    captureInFlight,
+  ]);
 
   const designJsonForBake =
     pendingDesignJson ??
@@ -369,7 +400,13 @@ function CompletionContent({
   // Mounted in both phases so the PNG is ready before the user reaches celebration.
   // The wrapper is purely an offscreen positioning host now — capture goes through
   // the BadgeRenderer's imperative handle (Svg.toDataURL), not the view buffer.
-  const fallbackHost = fallbackDesign ? (
+  //
+  // While captureInFlight is true, we render with the pinned design even if the
+  // live fallbackDesign has gone null — see pinnedHostDesignRef.
+  const hostDesign = captureInFlight
+    ? pinnedHostDesignRef.current
+    : fallbackDesign;
+  const fallbackHost = hostDesign ? (
     <View
       collapsable={false}
       style={styles.fallbackCaptureHost}
@@ -380,7 +417,7 @@ function CompletionContent({
     >
       <BadgeRenderer
         ref={fallbackRef}
-        design={fallbackDesign}
+        design={hostDesign}
         size={160}
         showShadow={false}
       />
