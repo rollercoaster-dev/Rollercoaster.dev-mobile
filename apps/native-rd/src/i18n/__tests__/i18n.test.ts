@@ -1,8 +1,9 @@
-import { i18n } from "../index";
+import { i18n, NAMESPACES } from "../index";
 
-// With en.json = {} the typed t() rejects arbitrary string keys (a feature, not
-// a bug — real keys arrive in #992). Cast here so the smoke test exercises the
-// runtime fallback behavior: missing keys should return a string, not throw.
+// With every namespace JSON = {} the typed t() rejects arbitrary string keys
+// (a feature, not a bug — real keys arrive as each screen migrates). Cast here
+// so the smoke test exercises the runtime fallback behavior: missing keys should
+// return a string, not throw.
 const tUnsafe = i18n.t.bind(i18n) as unknown as (key: string) => string;
 
 describe("i18n bootstrap", () => {
@@ -29,5 +30,12 @@ describe("i18n bootstrap", () => {
     await expect(i18n.changeLanguage("en-GB")).resolves.toBeDefined();
     expect(i18n.languages).toContain("en");
     await i18n.changeLanguage("en");
+  });
+
+  test("every declared namespace is registered for en and pseudo", () => {
+    for (const ns of NAMESPACES) {
+      expect(i18n.hasResourceBundle("en", ns)).toBe(true);
+      expect(i18n.hasResourceBundle("pseudo", ns)).toBe(true);
+    }
   });
 });

@@ -1,8 +1,8 @@
-# Issue #991 — i18n Stable Test IDs
+# Issue #64 — i18n Stable Test IDs
 
-**Branch:** `feat/issue-991-i18n-testids`
+**Branch:** `feat/issue-64-i18n-testids`
 **Milestone:** #30 — native-rd i18n
-**Wave:** 1 (cross-cutting prereq) — should land before #992 and screen migrations
+**Wave:** 1 (cross-cutting prereq) — should land before #65 and screen migrations
 
 ## Goal
 
@@ -12,9 +12,9 @@ This is not a blanket "replace all text assertions" pass. Keep assertions agains
 
 ## Readiness
 
-- #988 foundation is closed.
-- The current branch has been renamed to repo convention: `feat/issue-991-i18n-testids`.
-- Existing worktree has unrelated theme/density changes; do not revert or mix with #991 except where a touched component is directly in scope.
+- rollercoaster-dev/monorepo#988 foundation is closed.
+- The current branch has been renamed to repo convention: `feat/issue-64-i18n-testids`.
+- Existing worktree has unrelated theme/density changes; do not revert or mix with #64 except where a touched component is directly in scope.
 
 ## Research Snapshot
 
@@ -41,7 +41,7 @@ Existing useful selector support:
 - `Button`, `IconButton`, and `Input` already accept `testID`.
 - `NewGoalModal` already exposes `new-goal-title` and `create-goal`.
 - `FocusPillTabBar` already uses `tab-*` IDs and `tab-fab-new-goal`.
-- `CompletionFlowScreen` has targeted completion IDs, but it is not primary #991 scope unless touched by Focus/Goals flows.
+- `CompletionFlowScreen` has targeted completion IDs, but it is not primary #64 scope unless touched by Focus/Goals flows.
 - `CaptureVideoScreen` tests already rely on mocked `camera-view` / `video-player` IDs.
 
 Selector gaps:

@@ -25,15 +25,15 @@ Everything outside `apps/native-rd` is paused unless it directly blocks native-r
 
 ### Release Readiness Priorities
 
-| Priority | Workstream                                       | Outcome                                                                                       | Tracking                                     |
-| -------- | ------------------------------------------------ | --------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| P0       | Observability + feedback                         | Crashes and tester reports can be captured, scrubbed, and converted into actionable issues    | #971 closed, #972 open, Android Sentry TBD   |
-| P0       | Known beta-blocking bugs                         | Core flows do not trap testers or make local data/badges feel unreliable                      | Create issues from Joe's bug list            |
-| P1       | Real-device validation                           | iPhone production-like build is tested against camera, mic, persistence, badge export, crash  | #975                                         |
-| P1       | Minimal German path                              | German testers can complete the main flow without hitting English-only critical UI everywhere | #988 foundation, narrower German slice TBD   |
-| P1       | Quality refresh                                  | We know which stale quality items block beta and which can wait                               | #977                                         |
-| P2       | Feature request intake                           | User requests are captured without derailing beta stabilization                               | New issue label/process, no default build-in |
-| Paused   | Broad i18n, OB3 verifier parity, non-native work | Valuable, but not required for first user testing unless a tester blocker proves otherwise    | Existing milestones/issues                   |
+| Priority | Workstream                                       | Outcome                                                                                       | Tracking                                                             |
+| -------- | ------------------------------------------------ | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| P0       | Observability + feedback                         | Crashes and tester reports can be captured, scrubbed, and converted into actionable issues    | #971 closed, #972 open, Android Sentry TBD                           |
+| P0       | Known beta-blocking bugs                         | Core flows do not trap testers or make local data/badges feel unreliable                      | Create issues from Joe's bug list                                    |
+| P1       | Real-device validation                           | iPhone production-like build is tested against camera, mic, persistence, badge export, crash  | #975                                                                 |
+| P1       | Minimal German path                              | German testers can complete the main flow without hitting English-only critical UI everywhere | rollercoaster-dev/monorepo#988 foundation, narrower German slice TBD |
+| P1       | Quality refresh                                  | We know which stale quality items block beta and which can wait                               | #977                                                                 |
+| P2       | Feature request intake                           | User requests are captured without derailing beta stabilization                               | New issue label/process, no default build-in                         |
+| Paused   | Broad i18n, OB3 verifier parity, non-native work | Valuable, but not required for first user testing unless a tester blocker proves otherwise    | Existing milestones/issues                                           |
 
 ### Serial Execution Queue
 
@@ -53,8 +53,8 @@ There is one active work slot. Work this queue from top to bottom; do not run th
 | 9     | #943 Persist theme switching                         | Avoids a visible personalization/settings regression across app restarts                      | Selected supported theme survives restart                                      |
 | 10    | #975 Physical iPhone validation                      | Confirms production-like iOS behavior on real hardware before external invites                | Camera/photo/mic/persistence/badge/export/crash paths are checked              |
 | 11    | #977 Quality dashboard refresh                       | Re-checks stale high-severity debt before widening the beta                                   | Open HIGH items are classified as blocker or acceptable beta risk              |
-| 12    | #988 i18n foundation                                 | Prepares translations without starting broad string migration prematurely                     | i18n infrastructure, language selection, pseudo locale, and tests are in place |
-| 13    | #1029 Minimal German first-test path                 | Makes the main beta flow usable for German testers                                            | German covers the first-test path; full app translation remains later          |
+| 12    | rollercoaster-dev/monorepo#988 i18n foundation       | Prepares translations without starting broad string migration prematurely                     | i18n infrastructure, language selection, pseudo locale, and tests are in place |
+| 13    | #76 Minimal German first-test path                   | Makes the main beta flow usable for German testers                                            | German covers the first-test path; full app translation remains later          |
 | 14    | #978 Google Play closed-test setup                   | Starts Android distribution only after crash visibility and core blockers are handled         | Closed-test setup is ready and the 14-day clock is started intentionally       |
 | 15    | #936 Remove dead chrome composition                  | Low-risk cleanup after beta blockers are under control                                        | Unused native-rd chrome wiring is removed                                      |
 | 16    | #983 Delete unrouted TestScreen                      | Removes dead code after tester-critical paths are stable                                      | TestScreen is gone and tests/type-check still pass                             |
@@ -83,7 +83,7 @@ Android testers wait until:
 
 German support is useful for local testing, but full app translation should not block the first beta. The recommended cut is:
 
-1. Land i18n foundation (#988): dependencies, `src/i18n/`, language selection, pseudo locale, tests.
+1. Land i18n foundation (rollercoaster-dev/monorepo#988): dependencies, `src/i18n/`, language selection, pseudo locale, tests.
 2. Translate only the first-test path:
    - onboarding / welcome
    - goals list and goal creation
