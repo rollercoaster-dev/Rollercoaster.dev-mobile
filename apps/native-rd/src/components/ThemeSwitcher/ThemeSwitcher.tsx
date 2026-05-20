@@ -5,6 +5,7 @@ import {
   type TextStyle,
   type ViewStyle,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { useThemeContext, themeOptions } from "../../hooks/useTheme";
 import { themes, parseThemeName, type ThemeName } from "../../themes/compose";
 import { variantOverrides } from "../../themes/variants";
@@ -119,6 +120,7 @@ function previewStyles(themeId: ThemeName) {
 
 export function ThemeSwitcher() {
   const { themeName, setTheme } = useThemeContext();
+  const { t } = useTranslation();
 
   // The radiogroup wrapper collapses descendant Pressables into a single
   // a11y node on iOS, which hides individual options from Maestro element
@@ -143,6 +145,8 @@ export function ThemeSwitcher() {
           const isSelected = themeName === option.id;
           const cardTheme = themes[option.id];
           const preview = previewStyles(option.id);
+          const label = t(`theme.options.${option.id}.label`);
+          const description = t(`theme.options.${option.id}.description`);
 
           return (
             <Pressable
@@ -151,7 +155,7 @@ export function ThemeSwitcher() {
               accessible
               accessibilityRole="radio"
               accessibilityState={{ checked: isSelected }}
-              accessibilityLabel={`${option.label}. ${option.description}`}
+              accessibilityLabel={`${label}. ${description}`}
               testID={isSelected ? "selected-theme" : undefined}
               style={[
                 styles.option,
@@ -168,8 +172,8 @@ export function ThemeSwitcher() {
             >
               <View style={styles.headerRow}>
                 <View style={styles.headerText}>
-                  <Text style={preview.label}>{option.label}</Text>
-                  <Text style={preview.description}>{option.description}</Text>
+                  <Text style={preview.label}>{label}</Text>
+                  <Text style={preview.description}>{description}</Text>
                 </View>
                 {isSelected ? (
                   <Text style={preview.checkmark} accessibilityLabel="Selected">

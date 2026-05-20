@@ -1,5 +1,6 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { useThemeContext, themeOptions } from "../../hooks/useTheme";
 import { themes, type ThemeName } from "../../themes/compose";
 import { styles, COLUMN_COUNT } from "./ThemeChipGrid.styles";
@@ -37,6 +38,7 @@ const stripeWidths: Record<ThemeName, [number, number]> = {
 
 export function ThemeChipGrid() {
   const { themeName, setTheme } = useThemeContext();
+  const { t } = useTranslation();
 
   const rows: (typeof themeOptions)[] = [];
   for (let i = 0; i < themeOptions.length; i += COLUMN_COUNT) {
@@ -67,6 +69,8 @@ export function ThemeChipGrid() {
               const isSelected = themeName === option.id;
               const swatch = getSwatch(option.id);
               const [w1, w2] = stripeWidths[option.id];
+              const label = t(`theme.options.${option.id}.label`);
+              const description = t(`theme.options.${option.id}.description`);
 
               return (
                 <Pressable
@@ -75,7 +79,7 @@ export function ThemeChipGrid() {
                   accessible
                   accessibilityRole="radio"
                   accessibilityState={{ checked: isSelected }}
-                  accessibilityLabel={`${option.label}. ${option.description}`}
+                  accessibilityLabel={`${label}. ${description}`}
                   style={[
                     styles.chip,
                     isSelected ? styles.chipSelected : styles.chipUnselected,
@@ -113,7 +117,7 @@ export function ThemeChipGrid() {
                       style={[styles.nameText, { color: swatch.nameBarText }]}
                       numberOfLines={1}
                     >
-                      {option.label}
+                      {label}
                     </Text>
                   </View>
                 </Pressable>
