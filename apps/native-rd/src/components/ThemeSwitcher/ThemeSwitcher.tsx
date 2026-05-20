@@ -138,7 +138,7 @@ export function ThemeSwitcher() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Pick what feels right</Text>
+      <Text style={styles.title}>{t("theme.picker.title")}</Text>
 
       <View {...groupingA11y}>
         {themeOptions.map((option) => {
@@ -176,7 +176,10 @@ export function ThemeSwitcher() {
                   <Text style={preview.description}>{description}</Text>
                 </View>
                 {isSelected ? (
-                  <Text style={preview.checkmark} accessibilityLabel="Selected">
+                  <Text
+                    style={preview.checkmark}
+                    accessibilityLabel={t("theme.picker.selected")}
+                  >
                     ✓
                   </Text>
                 ) : null}
@@ -187,11 +190,15 @@ export function ThemeSwitcher() {
                   <Text style={preview.badgeText}>★</Text>
                 </View>
                 <View style={styles.sampleTextCol}>
-                  <Text style={preview.sampleTitle}>Daily reading</Text>
-                  <Text style={preview.sampleMeta}>3 of 5 done</Text>
+                  <Text style={preview.sampleTitle}>
+                    {t("theme.preview.title")}
+                  </Text>
+                  <Text style={preview.sampleMeta}>
+                    {t("theme.preview.progress")}
+                  </Text>
                 </View>
                 <View style={preview.ctaPill}>
-                  <Text style={preview.ctaText}>+ ADD</Text>
+                  <Text style={preview.ctaText}>{t("theme.preview.cta")}</Text>
                 </View>
               </View>
             </Pressable>

@@ -48,6 +48,15 @@
         "label": "Clean Signal",
         "description": "Reduced visual noise"
       }
+    },
+    "picker": {
+      "title": "Pick what feels right",
+      "selected": "Selected"
+    },
+    "preview": {
+      "title": "Daily reading",
+      "progress": "3 of 5 done",
+      "cta": "+ ADD"
     }
   },
   "status": {},
