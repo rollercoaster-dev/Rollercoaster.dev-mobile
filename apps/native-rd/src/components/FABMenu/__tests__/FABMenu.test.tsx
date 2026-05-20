@@ -5,7 +5,14 @@ import {
   fireEvent,
 } from "../../../__tests__/test-utils";
 import { FABMenu } from "../FABMenu";
-import { EVIDENCE_CAPTURE_OPTIONS } from "../../../types/evidence";
+import {
+  EVIDENCE_CAPTURE_OPTIONS,
+  type EvidenceTypeValue,
+} from "../../../types/evidence";
+import { i18n } from "../../../i18n";
+
+const shortLabelFor = (type: EvidenceTypeValue) =>
+  i18n.t(`evidenceTypes.${type}.shortLabel`);
 
 const defaultProps = {
   isOpen: true,
@@ -15,11 +22,11 @@ const defaultProps = {
 describe("FABMenu", () => {
   beforeEach(() => jest.clearAllMocks());
 
-  test.each(EVIDENCE_CAPTURE_OPTIONS.map((o) => [o.type, o.label] as const))(
+  test.each(EVIDENCE_CAPTURE_OPTIONS.map((o) => [o.type] as const))(
     "renders capture option for %s",
-    (_type, label) => {
+    (type) => {
       renderWithProviders(<FABMenu {...defaultProps} />);
-      expect(screen.getByText(label)).toBeOnTheScreen();
+      expect(screen.getByText(shortLabelFor(type))).toBeOnTheScreen();
     },
   );
 
@@ -32,13 +39,13 @@ describe("FABMenu", () => {
 
   it("renders nothing when closed", () => {
     renderWithProviders(<FABMenu isOpen={false} onSelectType={jest.fn()} />);
-    expect(screen.queryByText("Photo")).not.toBeOnTheScreen();
+    expect(screen.queryByText(shortLabelFor("photo"))).not.toBeOnTheScreen();
   });
 
   it("calls onSelectType with correct type on press", () => {
     const onSelectType = jest.fn();
     renderWithProviders(<FABMenu isOpen onSelectType={onSelectType} />);
-    fireEvent.press(screen.getByLabelText("Note"));
+    fireEvent.press(screen.getByLabelText(shortLabelFor("text")));
     expect(onSelectType).toHaveBeenCalledWith("text");
   });
 

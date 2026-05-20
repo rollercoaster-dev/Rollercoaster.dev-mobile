@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Pressable, Text } from "react-native";
+import { useTranslation } from "react-i18next";
 import {
   EVIDENCE_CAPTURE_OPTIONS,
   type EvidenceTypeValue,
@@ -13,6 +14,8 @@ export interface FABMenuProps {
 }
 
 export function FABMenu({ isOpen, onSelectType }: FABMenuProps) {
+  const { t } = useTranslation();
+
   if (!isOpen) return null;
 
   // The menu wrapper's `accessible+role=menu` collapses descendants
@@ -34,24 +37,27 @@ export function FABMenu({ isOpen, onSelectType }: FABMenuProps) {
     <View style={styles.container} {...menuA11yProps}>
       <Card>
         <View style={styles.itemList}>
-          {EVIDENCE_CAPTURE_OPTIONS.map((item) => (
-            <Pressable
-              key={item.type}
-              onPress={() => onSelectType(item.type)}
-              accessible
-              accessibilityRole="menuitem"
-              accessibilityLabel={item.label}
-              style={({ pressed }) => [
-                styles.menuItem,
-                pressed && styles.menuItemPressed,
-              ]}
-            >
-              <Text style={styles.menuIcon} accessibilityElementsHidden>
-                {item.icon}
-              </Text>
-              <Text style={styles.menuLabel}>{item.label}</Text>
-            </Pressable>
-          ))}
+          {EVIDENCE_CAPTURE_OPTIONS.map((item) => {
+            const label = t(`evidenceTypes.${item.type}.shortLabel`);
+            return (
+              <Pressable
+                key={item.type}
+                onPress={() => onSelectType(item.type)}
+                accessible
+                accessibilityRole="menuitem"
+                accessibilityLabel={label}
+                style={({ pressed }) => [
+                  styles.menuItem,
+                  pressed && styles.menuItemPressed,
+                ]}
+              >
+                <Text style={styles.menuIcon} accessibilityElementsHidden>
+                  {item.icon}
+                </Text>
+                <Text style={styles.menuLabel}>{label}</Text>
+              </Pressable>
+            );
+          })}
         </View>
       </Card>
     </View>

@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import Animated from "react-native-reanimated";
+import { useTranslation } from "react-i18next";
 import { Card } from "../Card";
 import { StatusBadge, type StatusBadgeVariant } from "../StatusBadge";
 import { Checkbox } from "../Checkbox";
@@ -78,6 +79,7 @@ export function StepCard({
   onEvidenceTap,
   onQuickEvidence,
 }: StepCardProps) {
+  const { t } = useTranslation();
   const isCompleted = step.status === "completed";
   const evidenceLabel = formatEvidenceLabel(step.evidenceCount);
   const flashStyle = useFlashOnIncrease(step.evidenceCount);
@@ -132,25 +134,28 @@ export function StepCard({
 
         {onQuickEvidence && quickEvidenceOptions.length > 0 && (
           <View style={styles.quickActionsRow}>
-            {quickEvidenceOptions.map((option) => (
-              <Pressable
-                key={option.type}
-                onPress={() => onQuickEvidence(option.type)}
-                style={styles.quickActionButton}
-                testID={`step-card-quick-evidence-${option.type}`}
-                accessible
-                accessibilityRole="button"
-                accessibilityLabel={`Add ${option.label} evidence`}
-              >
-                <Text
-                  style={styles.quickActionIcon}
-                  accessibilityElementsHidden
+            {quickEvidenceOptions.map((option) => {
+              const optionLabel = t(`evidenceTypes.${option.type}.shortLabel`);
+              return (
+                <Pressable
+                  key={option.type}
+                  onPress={() => onQuickEvidence(option.type)}
+                  style={styles.quickActionButton}
+                  testID={`step-card-quick-evidence-${option.type}`}
+                  accessible
+                  accessibilityRole="button"
+                  accessibilityLabel={`Add ${optionLabel} evidence`}
                 >
-                  {option.icon}
-                </Text>
-                <Text style={styles.quickActionText}>{option.label}</Text>
-              </Pressable>
-            ))}
+                  <Text
+                    style={styles.quickActionIcon}
+                    accessibilityElementsHidden
+                  >
+                    {option.icon}
+                  </Text>
+                  <Text style={styles.quickActionText}>{optionLabel}</Text>
+                </Pressable>
+              );
+            })}
           </View>
         )}
 
@@ -160,7 +165,7 @@ export function StepCard({
             accessibilityRole="text"
             accessibilityLabel={
               blockerOption
-                ? `Add ${blockerOption.label} to complete this step`
+                ? `Add ${t(`evidenceTypes.${blockerOption.type}.label`)} to complete this step`
                 : "Add evidence to complete"
             }
           >

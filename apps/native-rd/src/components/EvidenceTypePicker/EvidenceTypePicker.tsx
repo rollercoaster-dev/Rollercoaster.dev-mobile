@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Pressable, Text as RNText } from "react-native";
+import { useTranslation } from "react-i18next";
 import { EVIDENCE_OPTIONS, type EvidenceTypeValue } from "../../types/evidence";
 import { styles } from "./EvidenceTypePicker.styles";
 
@@ -24,6 +25,8 @@ export function EvidenceTypePicker({
   compact = false,
   label,
 }: EvidenceTypePickerProps) {
+  const { t } = useTranslation();
+
   if (compact) {
     return (
       <View
@@ -33,18 +36,21 @@ export function EvidenceTypePicker({
         accessibilityLabel="Planned evidence types"
       >
         {EVIDENCE_OPTIONS.filter((opt) => selectedTypes.includes(opt.type)).map(
-          (opt) => (
-            <View
-              key={opt.type}
-              style={styles.compactChip}
-              accessible={true}
-              accessibilityRole="text"
-              accessibilityLabel={opt.label}
-            >
-              <RNText style={styles.compactChipIcon}>{opt.icon}</RNText>
-              <RNText style={styles.compactChipLabel}>{opt.label}</RNText>
-            </View>
-          ),
+          (opt) => {
+            const optLabel = t(`evidenceTypes.${opt.type}.label`);
+            return (
+              <View
+                key={opt.type}
+                style={styles.compactChip}
+                accessible={true}
+                accessibilityRole="text"
+                accessibilityLabel={optLabel}
+              >
+                <RNText style={styles.compactChipIcon}>{opt.icon}</RNText>
+                <RNText style={styles.compactChipLabel}>{optLabel}</RNText>
+              </View>
+            );
+          },
         )}
       </View>
     );
@@ -61,6 +67,7 @@ export function EvidenceTypePicker({
       >
         {EVIDENCE_OPTIONS.map((opt) => {
           const isSelected = selectedTypes.includes(opt.type);
+          const optLabel = t(`evidenceTypes.${opt.type}.label`);
           return (
             <Pressable
               key={opt.type}
@@ -68,9 +75,9 @@ export function EvidenceTypePicker({
               onPress={() => onToggleType?.(opt.type)}
               accessibilityRole="checkbox"
               accessibilityState={{ checked: isSelected }}
-              accessibilityLabel={opt.label}
+              accessibilityLabel={optLabel}
               accessibilityHint={
-                isSelected ? `Deselect ${opt.label}` : `Select ${opt.label}`
+                isSelected ? `Deselect ${optLabel}` : `Select ${optLabel}`
               }
             >
               <RNText style={styles.chipIcon}>{opt.icon}</RNText>
@@ -80,7 +87,7 @@ export function EvidenceTypePicker({
                   isSelected && styles.chipLabelSelected,
                 ]}
               >
-                {opt.label}
+                {optLabel}
               </RNText>
             </Pressable>
           );

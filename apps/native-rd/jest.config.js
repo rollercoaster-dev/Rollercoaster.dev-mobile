@@ -96,6 +96,7 @@ module.exports = {
     "./unistyles.ts",
     "./src/__tests__/setup-unistyles.ts",
     "./src/db/__tests__/setup.ts",
+    "./src/i18n/index.ts",
   ],
 
   // Tests colocated under src/__tests__/ mirroring the src/ directory structure

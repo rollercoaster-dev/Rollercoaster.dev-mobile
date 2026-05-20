@@ -23,6 +23,7 @@ import {
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@evolu/react";
 import { useUnistyles } from "react-native-unistyles";
+import { useTranslation } from "react-i18next";
 import { Text } from "../../components/Text";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { Button } from "../../components/Button";
@@ -103,6 +104,7 @@ function CompletionContent({
   const navigation =
     useNavigation<NativeStackNavigationProp<GoalsStackParamList>>();
   const { theme } = useUnistyles();
+  const { t } = useTranslation();
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
   const stepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
@@ -452,7 +454,7 @@ function CompletionContent({
                 ).map((opt) => (
                   <Button
                     key={opt.type}
-                    label={`${opt.icon} ${opt.label}`}
+                    label={`${opt.icon} ${t(`evidenceTypes.${opt.type}.label`)}`}
                     onPress={() => handleEvidenceTypePress(opt.type)}
                     variant="secondary"
                     size="sm"

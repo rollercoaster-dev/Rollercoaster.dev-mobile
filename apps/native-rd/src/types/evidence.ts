@@ -21,59 +21,19 @@ export function validateEvidenceType(type: string): EvidenceTypeValue {
 
 export interface EvidenceOption {
   readonly type: EvidenceTypeValue;
-  readonly label: string;
-  readonly shortLabel: string;
   readonly icon: string;
 }
 
 export const EVIDENCE_OPTIONS: readonly EvidenceOption[] = [
-  {
-    type: EvidenceType.photo,
-    label: "Take Photo",
-    shortLabel: "Photo",
-    icon: "\u{1F4F7}",
-  },
-  {
-    type: EvidenceType.video,
-    label: "Record Video",
-    shortLabel: "Video",
-    icon: "\u{1F3AC}",
-  },
-  {
-    type: EvidenceType.voice_memo,
-    label: "Record Voice Memo",
-    shortLabel: "Voice Memo",
-    icon: "\u{1F3A4}",
-  },
-  {
-    type: EvidenceType.text,
-    label: "Write a Note",
-    shortLabel: "Note",
-    icon: "\u{1F4DD}",
-  },
-  {
-    type: EvidenceType.link,
-    label: "Add Link",
-    shortLabel: "Link",
-    icon: "\u{1F517}",
-  },
-  {
-    type: EvidenceType.file,
-    label: "Attach File",
-    shortLabel: "File",
-    icon: "\u{1F4CE}",
-  },
+  { type: EvidenceType.photo, icon: "\u{1F4F7}" },
+  { type: EvidenceType.video, icon: "\u{1F3AC}" },
+  { type: EvidenceType.voice_memo, icon: "\u{1F3A4}" },
+  { type: EvidenceType.text, icon: "\u{1F4DD}" },
+  { type: EvidenceType.link, icon: "\u{1F517}" },
+  { type: EvidenceType.file, icon: "\u{1F4CE}" },
 ];
 
-export interface EvidenceCaptureOption {
-  readonly type: EvidenceTypeValue;
-  readonly label: string;
-  readonly icon: string;
-}
+export type EvidenceCaptureOption = EvidenceOption;
 
 export const EVIDENCE_CAPTURE_OPTIONS: readonly EvidenceCaptureOption[] =
-  EVIDENCE_OPTIONS.map(({ type, shortLabel, icon }) => ({
-    type,
-    label: shortLabel,
-    icon,
-  }));
+  EVIDENCE_OPTIONS;
