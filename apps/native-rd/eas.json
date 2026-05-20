@@ -55,7 +55,8 @@
         "appleTeamId": "86VL756N99",
         "ascApiKeyPath": "../../secrets/asc-api-key.p8",
         "ascApiKeyId": "$APPLE_ASC_KEY_ID",
-        "ascApiKeyIssuerId": "$APPLE_ASC_ISSUER_ID"
+        "ascApiKeyIssuerId": "$APPLE_ASC_ISSUER_ID",
+        "metadataPath": "./store.config.json"
       },
       "android": {
         "serviceAccountKeyPath": "../../secrets/play-service-account.json",
