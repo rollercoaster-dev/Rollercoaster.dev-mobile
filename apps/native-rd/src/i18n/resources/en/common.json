@@ -60,7 +60,12 @@
     }
   },
   "status": {},
-  "a11y": {},
+  "a11y": {
+    "evidenceTypeOptions": "Evidence type options",
+    "plannedEvidenceTypes": "Planned evidence types",
+    "selectEvidenceType": "Select {{label}}",
+    "deselectEvidenceType": "Deselect {{label}}"
+  },
   "stepCard": {
     "status": {
       "completed": "Completed",

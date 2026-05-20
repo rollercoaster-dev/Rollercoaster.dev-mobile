@@ -7,8 +7,14 @@ function flattenKeys(value: unknown, prefix = ""): string[] {
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
     return [prefix];
   }
+  const entries = Object.entries(value as Record<string, unknown>);
+  // Treat empty objects as leaves so structural drift (adding/removing an
+  // empty branch in one locale) fails parity instead of slipping past.
+  if (entries.length === 0) {
+    return [prefix];
+  }
   const result: string[] = [];
-  for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
+  for (const [key, child] of entries) {
     const path = prefix ? `${prefix}.${key}` : key;
     result.push(...flattenKeys(child, path));
   }
