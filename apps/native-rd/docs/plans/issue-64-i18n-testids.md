@@ -1,8 +1,10 @@
 # Issue #64 — i18n Stable Test IDs
 
-**Branch:** `feat/issue-64-i18n-testids`
-**Milestone:** #30 — native-rd i18n
-**Wave:** 1 (cross-cutting prereq) — should land before #65 and screen migrations
+> **Status: deferred (2026-05-18 strategy pivot).** Per `docs/plans/milestone-3-i18n.md`, #64 is post-ship cleanup, not a prereq for the German first-test path. Screen migrations (#67–#72) proceed without testIDs first; tests prefer accessibility-role queries over `getByText`. Re-activate this plan after #76 closes, refreshing the `getByText` counts and re-verifying the worktree drift section before starting work.
+
+**Branch (when reactivated):** `feat/issue-64-i18n-testids`
+**Milestone:** #3 — native-rd i18n
+**Original wave position:** 1 (superseded; see milestone doc for current strategy)
 
 ## Goal
 
