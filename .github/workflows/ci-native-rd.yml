@@ -77,7 +77,7 @@ jobs:
         run: bun run test:ci -- --coverage --coverageReporters=lcov
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         continue-on-error: true
         with:
           files: apps/native-rd/coverage/lcov.info
