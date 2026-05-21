@@ -1,1 +1,16 @@
-{}
+{
+  "title": "New Goal",
+  "fields": {
+    "title": {
+      "label": "Title",
+      "placeholder": "What do you want to learn?"
+    }
+  },
+  "errors": {
+    "titleRequired": "Title is required",
+    "createFailed": "Failed to create goal"
+  },
+  "cta": {
+    "create": "Create Goal"
+  }
+}
