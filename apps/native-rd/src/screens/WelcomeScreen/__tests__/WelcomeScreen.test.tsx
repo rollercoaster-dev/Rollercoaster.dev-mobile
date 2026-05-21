@@ -4,6 +4,9 @@ import {
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
+import { i18n } from "../../../i18n";
+
+import { WelcomeScreen } from "../WelcomeScreen";
 
 const mockSetTheme = jest.fn();
 
@@ -21,8 +24,6 @@ jest.mock("../../../hooks/useTheme", () => {
   };
 });
 
-import { WelcomeScreen } from "../WelcomeScreen";
-
 beforeEach(() => {
   jest.clearAllMocks();
 });
@@ -32,7 +33,7 @@ describe("WelcomeScreen", () => {
     it("renders the welcome greeting", () => {
       renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
       expect(screen.getByText(/Hey there/)).toBeOnTheScreen();
-      expect(screen.getByText("Welcome to your ride.")).toBeOnTheScreen();
+      expect(screen.getByText(i18n.t("welcome:hero.title"))).toBeOnTheScreen();
     });
 
     it("renders the body intro copy", () => {
@@ -44,36 +45,56 @@ describe("WelcomeScreen", () => {
 
     it("renders the picker label", () => {
       renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
-      expect(screen.getByText("Your look (tap to preview)")).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("welcome:themePicker.label")),
+      ).toBeOnTheScreen();
     });
 
     it("renders all 7 theme option labels", () => {
       renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
-      expect(screen.getByText("The Full Ride")).toBeOnTheScreen();
-      expect(screen.getByText("Night Ride")).toBeOnTheScreen();
-      expect(screen.getByText("Bold Ink")).toBeOnTheScreen();
-      expect(screen.getByText("Warm Studio")).toBeOnTheScreen();
-      expect(screen.getByText("Still Water")).toBeOnTheScreen();
-      expect(screen.getByText("Loud & Clear")).toBeOnTheScreen();
-      expect(screen.getByText("Clean Signal")).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("theme.options.light-default.label")),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("theme.options.dark-default.label")),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("theme.options.light-highContrast.label")),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("theme.options.light-dyslexia.label")),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("theme.options.light-autismFriendly.label")),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("theme.options.light-lowVision.label")),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("theme.options.light-lowInfo.label")),
+      ).toBeOnTheScreen();
     });
 
     it('renders "Get Started" button', () => {
       renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
-      expect(screen.getByText("Get Started")).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("welcome:cta.getStarted")),
+      ).toBeOnTheScreen();
     });
 
     it("renders the settings reminder text", () => {
       renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
       expect(
-        screen.getByText("You can change this anytime in Settings."),
+        screen.getByText(i18n.t("welcome:cta.footnote")),
       ).toBeOnTheScreen();
     });
 
     it("renders the sample card content", () => {
       renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
-      expect(screen.getByText("Daily reading")).toBeOnTheScreen();
-      expect(screen.getByText("3 of 5 days complete")).toBeOnTheScreen();
+      expect(screen.getByText(i18n.t("theme.preview.title"))).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("welcome:sample.progress")),
+      ).toBeOnTheScreen();
     });
   });
 
@@ -81,7 +102,7 @@ describe("WelcomeScreen", () => {
     it('calls onGetStarted when "Get Started" is pressed', () => {
       const onGetStarted = jest.fn();
       renderWithProviders(<WelcomeScreen onGetStarted={onGetStarted} />);
-      fireEvent.press(screen.getByText("Get Started"));
+      fireEvent.press(screen.getByText(i18n.t("welcome:cta.getStarted")));
       expect(onGetStarted).toHaveBeenCalledTimes(1);
     });
   });
