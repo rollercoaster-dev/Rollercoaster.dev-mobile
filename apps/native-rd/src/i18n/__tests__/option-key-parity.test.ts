@@ -35,4 +35,27 @@ describe("option array ↔ i18n key parity", () => {
       expect(i18n.t(key)).not.toBe(key);
     });
   });
+
+  // Reverse direction: orphan JSON entries (e.g. a key left behind after a
+  // union member was renamed) would otherwise go undetected — locale-parity
+  // would still see them as present in both en and pseudo, and the forward
+  // tests above only walk the TS union. Asserts the JSON subtree's key set
+  // matches the union exactly.
+  test("common:theme.options keyset matches themeOptions", () => {
+    const bundle = i18n.getResourceBundle("en", "common") as {
+      theme: { options: Record<string, unknown> };
+    };
+    const jsonKeys = new Set(Object.keys(bundle.theme.options));
+    const unionKeys = new Set(themeOptions.map((o) => o.id));
+    expect(jsonKeys).toEqual(unionKeys);
+  });
+
+  test("settings:density.options keyset matches densityOptions", () => {
+    const bundle = i18n.getResourceBundle("en", "settings") as {
+      density: { options: Record<string, unknown> };
+    };
+    const jsonKeys = new Set(Object.keys(bundle.density.options));
+    const unionKeys = new Set(densityOptions.map((o) => o.id));
+    expect(jsonKeys).toEqual(unionKeys);
+  });
 });

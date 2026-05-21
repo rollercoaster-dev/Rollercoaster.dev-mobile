@@ -118,23 +118,34 @@ describe("WelcomeScreen", () => {
   });
 
   // A pseudo-render smoke check catches reverts to hard-coded English that
-  // the en-mode assertions miss — under en, `i18n.t("welcome:hero.title")`
-  // returns "Welcome to your ride." and the assertion passes against either
-  // a t() call or a hard-coded literal. Under pseudo it returns bracketed
-  // text, so the assertion only passes if the component is actually
-  // routing through t().
+  // the en-mode assertions miss: in en, `i18n.t(...)` returns the same
+  // English literal a hard-coded `<Text>` would, so the assertion passes
+  // either way. Under pseudo it returns bracketed text, so the assertion
+  // only passes if the component is actually routing through t().
   describe("pseudo locale", () => {
     afterEach(async () => {
       if (i18n.language !== "en") await i18n.changeLanguage("en");
     });
 
-    it("renders bracketed copy under pseudo locale", async () => {
-      await i18n.changeLanguage("pseudo");
-      renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
-      const pseudoTitle = i18n.t("welcome:hero.title");
-      expect(pseudoTitle.startsWith("[")).toBe(true);
-      expect(screen.getByText(pseudoTitle)).toBeOnTheScreen();
-    });
+    // Multiple representative keys raise the cost of a partial-revert
+    // regression: a developer would have to revert ALL of these to escape
+    // detection. Covers hero/body/sample/picker/CTA axes.
+    it.each([
+      "welcome:hero.title",
+      "welcome:intro.body1",
+      "welcome:sample.progress",
+      "welcome:themePicker.label",
+      "welcome:cta.getStarted",
+    ] as const)(
+      "renders %s as bracketed copy under pseudo locale",
+      async (key) => {
+        await i18n.changeLanguage("pseudo");
+        renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
+        const pseudo = i18n.t(key);
+        expect(pseudo.startsWith("[")).toBe(true);
+        expect(screen.getByText(pseudo)).toBeOnTheScreen();
+      },
+    );
   });
 
   describe("accessibility", () => {

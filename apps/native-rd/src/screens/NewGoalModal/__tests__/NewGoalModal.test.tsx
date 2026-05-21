@@ -150,12 +150,31 @@ describe("NewGoalModal", () => {
       if (i18n.language !== "en") await i18n.changeLanguage("en");
     });
 
-    it("renders bracketed copy under pseudo locale", async () => {
+    // Multiple keys across title/field/CTA so a partial-revert regression
+    // can't escape detection by sneaking past a single asserted key.
+    // Placeholder text is a TextInput prop, not a Text node, so we cover it
+    // separately via getByPlaceholderText.
+    it.each([
+      "newGoal:title",
+      "newGoal:fields.title.label",
+      "newGoal:cta.create",
+    ] as const)(
+      "renders %s as bracketed copy under pseudo locale",
+      async (key) => {
+        await i18n.changeLanguage("pseudo");
+        renderWithProviders(<NewGoalModal />);
+        const pseudo = i18n.t(key);
+        expect(pseudo.startsWith("[")).toBe(true);
+        expect(screen.getByText(pseudo)).toBeOnTheScreen();
+      },
+    );
+
+    it("renders the title input placeholder as bracketed copy under pseudo locale", async () => {
       await i18n.changeLanguage("pseudo");
       renderWithProviders(<NewGoalModal />);
-      const pseudoTitle = i18n.t("newGoal:title");
-      expect(pseudoTitle.startsWith("[")).toBe(true);
-      expect(screen.getByText(pseudoTitle)).toBeOnTheScreen();
+      const pseudo = i18n.t("newGoal:fields.title.placeholder");
+      expect(pseudo.startsWith("[")).toBe(true);
+      expect(screen.getByPlaceholderText(pseudo)).toBeOnTheScreen();
     });
   });
 

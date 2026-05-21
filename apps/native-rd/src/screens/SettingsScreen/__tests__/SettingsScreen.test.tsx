@@ -126,7 +126,7 @@ describe("SettingsScreen", () => {
     ] as const;
     for (const id of themeIds) {
       expect(
-        screen.getByText(i18n.t(`theme.options.${id}.label`)),
+        screen.getByText(i18n.t(`common:theme.options.${id}.label`)),
       ).toBeOnTheScreen();
     }
   });
@@ -199,13 +199,24 @@ describe("SettingsScreen", () => {
       if (i18n.language !== "en") await i18n.changeLanguage("en");
     });
 
-    it("renders bracketed copy under pseudo locale", async () => {
-      await i18n.changeLanguage("pseudo");
-      renderWithProviders(<SettingsScreen />);
-      const pseudoTitle = i18n.t("settings:title");
-      expect(pseudoTitle.startsWith("[")).toBe(true);
-      expect(screen.getByText(pseudoTitle)).toBeOnTheScreen();
-    });
+    // Multiple keys across header/density/about so a partial-revert
+    // regression can't escape detection by sneaking past one asserted key.
+    it.each([
+      "settings:title",
+      "settings:density.title",
+      "settings:density.options.compact.label",
+      "settings:about.title",
+      "settings:about.builtWith",
+    ] as const)(
+      "renders %s as bracketed copy under pseudo locale",
+      async (key) => {
+        await i18n.changeLanguage("pseudo");
+        renderWithProviders(<SettingsScreen />);
+        const pseudo = i18n.t(key);
+        expect(pseudo.startsWith("[")).toBe(true);
+        expect(screen.getByText(pseudo)).toBeOnTheScreen();
+      },
+    );
   });
 
   describe("native crash trigger gating", () => {
