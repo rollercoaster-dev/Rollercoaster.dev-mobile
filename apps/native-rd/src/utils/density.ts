@@ -8,6 +8,10 @@ export const DENSITY_MULTIPLIERS: Record<DensityLevel, number> = {
   comfortable: 1.25,
 } as const;
 
+/**
+ * Display strings live in `settings.density.options.<id>` — consumers look them
+ * up via `t("settings:density.options.<id>.label")` and `.description`.
+ */
 export const densityOptions: readonly { id: DensityLevel }[] = [
   { id: "compact" },
   { id: "default" },

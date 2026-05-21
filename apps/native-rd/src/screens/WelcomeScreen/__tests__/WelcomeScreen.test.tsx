@@ -53,25 +53,29 @@ describe("WelcomeScreen", () => {
     it("renders all 7 theme option labels", () => {
       renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
       expect(
-        screen.getByText(i18n.t("theme.options.light-default.label")),
+        screen.getByText(i18n.t("common:theme.options.light-default.label")),
       ).toBeOnTheScreen();
       expect(
-        screen.getByText(i18n.t("theme.options.dark-default.label")),
+        screen.getByText(i18n.t("common:theme.options.dark-default.label")),
       ).toBeOnTheScreen();
       expect(
-        screen.getByText(i18n.t("theme.options.light-highContrast.label")),
+        screen.getByText(
+          i18n.t("common:theme.options.light-highContrast.label"),
+        ),
       ).toBeOnTheScreen();
       expect(
-        screen.getByText(i18n.t("theme.options.light-dyslexia.label")),
+        screen.getByText(i18n.t("common:theme.options.light-dyslexia.label")),
       ).toBeOnTheScreen();
       expect(
-        screen.getByText(i18n.t("theme.options.light-autismFriendly.label")),
+        screen.getByText(
+          i18n.t("common:theme.options.light-autismFriendly.label"),
+        ),
       ).toBeOnTheScreen();
       expect(
-        screen.getByText(i18n.t("theme.options.light-lowVision.label")),
+        screen.getByText(i18n.t("common:theme.options.light-lowVision.label")),
       ).toBeOnTheScreen();
       expect(
-        screen.getByText(i18n.t("theme.options.light-lowInfo.label")),
+        screen.getByText(i18n.t("common:theme.options.light-lowInfo.label")),
       ).toBeOnTheScreen();
     });
 
@@ -91,7 +95,9 @@ describe("WelcomeScreen", () => {
 
     it("renders the sample card content", () => {
       renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
-      expect(screen.getByText(i18n.t("theme.preview.title"))).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("common:theme.preview.title")),
+      ).toBeOnTheScreen();
       expect(
         screen.getByText(i18n.t("welcome:sample.progress")),
       ).toBeOnTheScreen();
@@ -102,8 +108,32 @@ describe("WelcomeScreen", () => {
     it('calls onGetStarted when "Get Started" is pressed', () => {
       const onGetStarted = jest.fn();
       renderWithProviders(<WelcomeScreen onGetStarted={onGetStarted} />);
-      fireEvent.press(screen.getByText(i18n.t("welcome:cta.getStarted")));
+      fireEvent.press(
+        screen.getByRole("button", {
+          name: i18n.t("welcome:cta.getStarted"),
+        }),
+      );
       expect(onGetStarted).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // A pseudo-render smoke check catches reverts to hard-coded English that
+  // the en-mode assertions miss — under en, `i18n.t("welcome:hero.title")`
+  // returns "Welcome to your ride." and the assertion passes against either
+  // a t() call or a hard-coded literal. Under pseudo it returns bracketed
+  // text, so the assertion only passes if the component is actually
+  // routing through t().
+  describe("pseudo locale", () => {
+    afterEach(async () => {
+      if (i18n.language !== "en") await i18n.changeLanguage("en");
+    });
+
+    it("renders bracketed copy under pseudo locale", async () => {
+      await i18n.changeLanguage("pseudo");
+      renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
+      const pseudoTitle = i18n.t("welcome:hero.title");
+      expect(pseudoTitle.startsWith("[")).toBe(true);
+      expect(screen.getByText(pseudoTitle)).toBeOnTheScreen();
     });
   });
 

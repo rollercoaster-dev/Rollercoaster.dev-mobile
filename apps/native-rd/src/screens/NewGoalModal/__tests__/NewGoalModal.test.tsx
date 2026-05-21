@@ -53,12 +53,14 @@ describe("NewGoalModal", () => {
 
   it("has close button with accessibility label", () => {
     renderWithProviders(<NewGoalModal />);
-    expect(screen.getByLabelText(i18n.t("actions.close"))).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText(i18n.t("common:actions.close")),
+    ).toBeOnTheScreen();
   });
 
   it("navigates back when close button is pressed", () => {
     renderWithProviders(<NewGoalModal />);
-    fireEvent.press(screen.getByLabelText(i18n.t("actions.close")));
+    fireEvent.press(screen.getByLabelText(i18n.t("common:actions.close")));
     expect(mockGoBack).toHaveBeenCalledTimes(1);
   });
 
@@ -103,7 +105,9 @@ describe("NewGoalModal", () => {
       screen.getByLabelText(i18n.t("newGoal:fields.title.label")),
       "Learn TypeScript",
     );
-    fireEvent.press(screen.getByText(i18n.t("newGoal:cta.create")));
+    fireEvent.press(
+      screen.getByRole("button", { name: i18n.t("newGoal:cta.create") }),
+    );
     expect(createGoal).toHaveBeenCalledWith("Learn TypeScript");
     expect(mockReplace).toHaveBeenCalledWith("BadgeDesigner", {
       mode: "new-goal",
@@ -118,7 +122,9 @@ describe("NewGoalModal", () => {
       screen.getByLabelText(i18n.t("newGoal:fields.title.label")),
       "  Learn Rust  ",
     );
-    fireEvent.press(screen.getByText(i18n.t("newGoal:cta.create")));
+    fireEvent.press(
+      screen.getByRole("button", { name: i18n.t("newGoal:cta.create") }),
+    );
     expect(createGoal).toHaveBeenCalledWith("Learn Rust");
   });
 
@@ -129,12 +135,28 @@ describe("NewGoalModal", () => {
       screen.getByLabelText(i18n.t("newGoal:fields.title.label")),
       "Learn Go",
     );
-    fireEvent.press(screen.getByText(i18n.t("newGoal:cta.create")));
+    fireEvent.press(
+      screen.getByRole("button", { name: i18n.t("newGoal:cta.create") }),
+    );
     expect(createGoal).toHaveBeenCalledWith("Learn Go");
     expect(mockReplace).not.toHaveBeenCalled();
     expect(
       screen.getByText(i18n.t("newGoal:errors.createFailed")),
     ).toBeOnTheScreen();
+  });
+
+  describe("pseudo locale", () => {
+    afterEach(async () => {
+      if (i18n.language !== "en") await i18n.changeLanguage("en");
+    });
+
+    it("renders bracketed copy under pseudo locale", async () => {
+      await i18n.changeLanguage("pseudo");
+      renderWithProviders(<NewGoalModal />);
+      const pseudoTitle = i18n.t("newGoal:title");
+      expect(pseudoTitle.startsWith("[")).toBe(true);
+      expect(screen.getByText(pseudoTitle)).toBeOnTheScreen();
+    });
   });
 
   it("clears validation error when typing after failed submit", () => {

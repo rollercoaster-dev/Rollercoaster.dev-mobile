@@ -112,7 +112,9 @@ describe("SettingsScreen", () => {
 
   it("renders the ThemeSwitcher with all theme options", () => {
     renderWithProviders(<SettingsScreen />);
-    expect(screen.getByText(i18n.t("theme.picker.title"))).toBeOnTheScreen();
+    expect(
+      screen.getByText(i18n.t("common:theme.picker.title")),
+    ).toBeOnTheScreen();
     const themeIds = [
       "light-default",
       "dark-default",
@@ -138,7 +140,7 @@ describe("SettingsScreen", () => {
   it("calls setTheme when a theme option is pressed", () => {
     renderWithProviders(<SettingsScreen />);
     fireEvent.press(
-      screen.getByText(i18n.t("theme.options.dark-default.label")),
+      screen.getByText(i18n.t("common:theme.options.dark-default.label")),
     );
     expect(mockSetTheme).toHaveBeenCalledWith("dark-default");
   });
@@ -190,6 +192,20 @@ describe("SettingsScreen", () => {
     expect(
       screen.getByText(i18n.t("settings:about.builtWith")),
     ).toBeOnTheScreen();
+  });
+
+  describe("pseudo locale", () => {
+    afterEach(async () => {
+      if (i18n.language !== "en") await i18n.changeLanguage("en");
+    });
+
+    it("renders bracketed copy under pseudo locale", async () => {
+      await i18n.changeLanguage("pseudo");
+      renderWithProviders(<SettingsScreen />);
+      const pseudoTitle = i18n.t("settings:title");
+      expect(pseudoTitle.startsWith("[")).toBe(true);
+      expect(screen.getByText(pseudoTitle)).toBeOnTheScreen();
+    });
   });
 
   describe("native crash trigger gating", () => {
