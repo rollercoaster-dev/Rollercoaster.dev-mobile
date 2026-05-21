@@ -107,12 +107,14 @@ afterAll(() => {
 describe("SettingsScreen", () => {
   it("renders the header", () => {
     renderWithProviders(<SettingsScreen />);
-    expect(screen.getByText("Settings")).toBeOnTheScreen();
+    expect(screen.getByText(i18n.t("settings:title"))).toBeOnTheScreen();
   });
 
   it("renders the ThemeSwitcher with all theme options", () => {
     renderWithProviders(<SettingsScreen />);
-    expect(screen.getByText(i18n.t("theme.picker.title"))).toBeOnTheScreen();
+    expect(
+      screen.getByText(i18n.t("common:theme.picker.title")),
+    ).toBeOnTheScreen();
     const themeIds = [
       "light-default",
       "dark-default",
@@ -124,7 +126,7 @@ describe("SettingsScreen", () => {
     ] as const;
     for (const id of themeIds) {
       expect(
-        screen.getByText(i18n.t(`theme.options.${id}.label`)),
+        screen.getByText(i18n.t(`common:theme.options.${id}.label`)),
       ).toBeOnTheScreen();
     }
   });
@@ -138,40 +140,83 @@ describe("SettingsScreen", () => {
   it("calls setTheme when a theme option is pressed", () => {
     renderWithProviders(<SettingsScreen />);
     fireEvent.press(
-      screen.getByText(i18n.t("theme.options.dark-default.label")),
+      screen.getByText(i18n.t("common:theme.options.dark-default.label")),
     );
     expect(mockSetTheme).toHaveBeenCalledWith("dark-default");
   });
 
   it("renders the Content Density section with all options", () => {
     renderWithProviders(<SettingsScreen />);
-    expect(screen.getByText("Content Density")).toBeOnTheScreen();
-    expect(screen.getByText("Compact")).toBeOnTheScreen();
-    expect(screen.getByText("Default")).toBeOnTheScreen();
-    expect(screen.getByText("Comfortable")).toBeOnTheScreen();
+    expect(
+      screen.getByText(i18n.t("settings:density.title")),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByText(i18n.t("settings:density.options.compact.label")),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByText(i18n.t("settings:density.options.default.label")),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByText(i18n.t("settings:density.options.comfortable.label")),
+    ).toBeOnTheScreen();
   });
 
   it("shows checkmark for current density level and descriptions for others", () => {
     renderWithProviders(<SettingsScreen />);
     // densityLevel is 'default', so Compact and Comfortable show descriptions
-    expect(screen.getByText("Tighter spacing (0.75\u00d7)")).toBeOnTheScreen();
-    expect(screen.getByText("Roomier spacing (1.25\u00d7)")).toBeOnTheScreen();
+    expect(
+      screen.getByText(i18n.t("settings:density.options.compact.description")),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        i18n.t("settings:density.options.comfortable.description"),
+      ),
+    ).toBeOnTheScreen();
   });
 
   it("renders the About section", () => {
     renderWithProviders(<SettingsScreen />);
-    expect(screen.getByText("About")).toBeOnTheScreen();
-    expect(screen.getByText("App")).toBeOnTheScreen();
+    expect(screen.getByText(i18n.t("settings:about.title"))).toBeOnTheScreen();
+    expect(
+      screen.getByText(i18n.t("settings:about.appLabel")),
+    ).toBeOnTheScreen();
     expect(screen.getByText("rollercoaster.dev")).toBeOnTheScreen();
-    expect(screen.getByText("Version")).toBeOnTheScreen();
+    expect(
+      screen.getByText(i18n.t("settings:about.versionLabel")),
+    ).toBeOnTheScreen();
     expect(screen.getByText("0.1.0")).toBeOnTheScreen();
   });
 
   it("renders the footer text", () => {
     renderWithProviders(<SettingsScreen />);
     expect(
-      screen.getByText("Built with Expo + Evolu + Unistyles"),
+      screen.getByText(i18n.t("settings:about.builtWith")),
     ).toBeOnTheScreen();
+  });
+
+  describe("pseudo locale", () => {
+    afterEach(async () => {
+      if (i18n.language !== "en") await i18n.changeLanguage("en");
+    });
+
+    // Multiple keys across header/density/about so a partial-revert
+    // regression can't escape detection by sneaking past one asserted key.
+    it.each([
+      "settings:title",
+      "settings:density.title",
+      "settings:density.options.compact.label",
+      "settings:about.title",
+      "settings:about.builtWith",
+    ] as const)(
+      "renders %s as bracketed copy under pseudo locale",
+      async (key) => {
+        await i18n.changeLanguage("pseudo");
+        renderWithProviders(<SettingsScreen />);
+        const pseudo = i18n.t(key);
+        expect(pseudo.startsWith("[")).toBe(true);
+        expect(screen.getByText(pseudo)).toBeOnTheScreen();
+      },
+    );
   });
 
   describe("native crash trigger gating", () => {
@@ -185,7 +230,12 @@ describe("SettingsScreen", () => {
 
     it("triggers Sentry.nativeCrash on Version long-press when debug tools enabled on iOS", () => {
       renderWithProviders(<SettingsScreen sentryDebugToolsEnabled />);
-      fireEvent(screen.getByRole("button", { name: "Version" }), "longPress");
+      fireEvent(
+        screen.getByRole("button", {
+          name: i18n.t("settings:about.versionLabel"),
+        }),
+        "longPress",
+      );
       expect(mockNativeCrash).toHaveBeenCalledTimes(1);
     });
 
@@ -195,7 +245,12 @@ describe("SettingsScreen", () => {
         value: "android",
       });
       renderWithProviders(<SettingsScreen sentryDebugToolsEnabled />);
-      fireEvent(screen.getByRole("button", { name: "Version" }), "longPress");
+      fireEvent(
+        screen.getByRole("button", {
+          name: i18n.t("settings:about.versionLabel"),
+        }),
+        "longPress",
+      );
       expect(mockNativeCrash).not.toHaveBeenCalled();
       expect(mockAlert).toHaveBeenCalledWith(
         "Native crash unavailable",
@@ -208,7 +263,11 @@ describe("SettingsScreen", () => {
 
     it("does not expose Version as a button when debug tools disabled", () => {
       renderWithProviders(<SettingsScreen sentryDebugToolsEnabled={false} />);
-      expect(screen.queryByRole("button", { name: "Version" })).toBeNull();
+      expect(
+        screen.queryByRole("button", {
+          name: i18n.t("settings:about.versionLabel"),
+        }),
+      ).toBeNull();
       expect(mockNativeCrash).not.toHaveBeenCalled();
     });
   });
@@ -225,21 +284,25 @@ describe("SettingsScreen", () => {
     it("renders the dev language section when __DEV__ is true", () => {
       devGlobal.__DEV__ = true;
       renderWithProviders(<SettingsScreen />);
-      expect(screen.getByText("Language (dev)")).toBeOnTheScreen();
-      expect(screen.getByLabelText("Pseudo locale")).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("settings:language.title")),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByLabelText(i18n.t("settings:language.pseudo")),
+      ).toBeOnTheScreen();
     });
 
     it("does not render the dev language section when __DEV__ is false", () => {
       devGlobal.__DEV__ = false;
       renderWithProviders(<SettingsScreen />);
-      expect(screen.queryByText("Language (dev)")).toBeNull();
+      expect(screen.queryByText(i18n.t("settings:language.title"))).toBeNull();
     });
 
     it("switches language to pseudo and back when the toggle changes", async () => {
       devGlobal.__DEV__ = true;
       const changeSpy = jest.spyOn(i18n, "changeLanguage");
       renderWithProviders(<SettingsScreen />);
-      const toggle = screen.getByLabelText("Pseudo locale");
+      const toggle = screen.getByLabelText(i18n.t("settings:language.pseudo"));
 
       fireEvent(toggle, "valueChange", true);
       expect(changeSpy).toHaveBeenLastCalledWith("pseudo");

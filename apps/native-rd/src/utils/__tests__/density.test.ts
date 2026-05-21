@@ -54,17 +54,13 @@ describe("density utilities", () => {
     }
   });
 
-  test("densityOptions covers all levels with labels", () => {
+  test("densityOptions covers all levels in canonical order", () => {
     expect(densityOptions).toHaveLength(3);
     expect(densityOptions.map((o) => o.id)).toEqual([
       "compact",
       "default",
       "comfortable",
     ]);
-    for (const option of densityOptions) {
-      expect(option.label).toBeTruthy();
-      expect(option.description).toBeTruthy();
-    }
   });
 
   test("DENSITY_MULTIPLIERS has positive entries for all levels", () => {

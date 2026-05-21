@@ -21,12 +21,12 @@ export function NewGoalModal() {
   const [titleError, setTitleError] = useState("");
   // Subscribe to theme changes to trigger re-renders
   const { theme } = useUnistyles();
-  const { t } = useTranslation();
+  const { t } = useTranslation(["newGoal", "common"]);
 
   function handleCreate() {
     const trimmed = title.trim();
     if (!trimmed) {
-      setTitleError("Title is required");
+      setTitleError(t("errors.titleRequired"));
       return;
     }
 
@@ -37,7 +37,7 @@ export function NewGoalModal() {
         goalId: result.value.id,
       });
     } else {
-      setTitleError("Failed to create goal");
+      setTitleError(t("errors.createFailed"));
     }
   }
 
@@ -48,7 +48,7 @@ export function NewGoalModal() {
     >
       <View style={styles.topBar}>
         <View style={styles.spacer} />
-        <Text variant="label">New Goal</Text>
+        <Text variant="label">{t("title")}</Text>
         <IconButton
           icon={
             <Text variant="body" style={styles.closeIcon}>
@@ -57,7 +57,7 @@ export function NewGoalModal() {
           }
           onPress={() => navigation.goBack()}
           tone="ghost"
-          accessibilityLabel={t("actions.close")}
+          accessibilityLabel={t("common:actions.close")}
           size="sm"
         />
       </View>
@@ -65,8 +65,8 @@ export function NewGoalModal() {
       <View style={styles.form}>
         <Card>
           <Input
-            label="Title"
-            placeholder="What do you want to learn?"
+            label={t("fields.title.label")}
+            placeholder={t("fields.title.placeholder")}
             value={title}
             onChangeText={(text) => {
               setTitle(text);
@@ -81,7 +81,7 @@ export function NewGoalModal() {
         </Card>
 
         <Button
-          label="Create Goal"
+          label={t("cta.create")}
           onPress={handleCreate}
           disabled={!title.trim()}
           testID="create-goal"

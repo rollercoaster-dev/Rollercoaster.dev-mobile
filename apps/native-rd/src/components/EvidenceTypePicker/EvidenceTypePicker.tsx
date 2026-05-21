@@ -34,7 +34,7 @@ export function EvidenceTypePicker({
         style={styles.compactChipsContainer}
         accessible
         accessibilityRole="none"
-        accessibilityLabel={t("a11y.plannedEvidenceTypes", { ns: "common" })}
+        accessibilityLabel={t("a11y.plannedEvidenceTypes")}
       >
         {EVIDENCE_OPTIONS.filter((opt) => selectedTypes.includes(opt.type)).map(
           (opt) => {
@@ -64,7 +64,7 @@ export function EvidenceTypePicker({
         style={styles.chipsContainer}
         accessible
         accessibilityRole="none"
-        accessibilityLabel={t("a11y.evidenceTypeOptions", { ns: "common" })}
+        accessibilityLabel={t("a11y.evidenceTypeOptions")}
       >
         {EVIDENCE_OPTIONS.map((opt) => {
           const isSelected = selectedTypes.includes(opt.type);
@@ -81,7 +81,7 @@ export function EvidenceTypePicker({
                 isSelected
                   ? "a11y.deselectEvidenceType"
                   : "a11y.selectEvidenceType",
-                { ns: "common", label: optLabel },
+                { label: optLabel },
               )}
             >
               <RNText style={styles.chipIcon}>{opt.icon}</RNText>

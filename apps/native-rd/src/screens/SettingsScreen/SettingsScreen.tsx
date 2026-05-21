@@ -41,14 +41,19 @@ export function triggerSentryNativeCrash(): void {
 
 function DensityPicker() {
   const { densityLevel, setDensity } = useDensity();
+  const { t } = useTranslation("settings");
 
   return (
-    <SettingsSection title="Content Density">
+    <SettingsSection title={t("density.title")}>
       {densityOptions.map((option) => (
         <SettingsRow
           key={option.id}
-          label={option.label}
-          value={densityLevel === option.id ? "✓" : option.description}
+          label={t(`density.options.${option.id}.label`)}
+          value={
+            densityLevel === option.id
+              ? "✓"
+              : t(`density.options.${option.id}.description`)
+          }
           onPress={() => setDensity(option.id)}
         />
       ))}
@@ -58,13 +63,13 @@ function DensityPicker() {
 
 /** Dev-only language switcher. `__DEV__` gates this in production bundles so pseudo can't leak to users. */
 function LanguagePicker() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation("settings");
   const isPseudo = i18n.language === "pseudo";
 
   return (
-    <SettingsSection title="Language (dev)">
+    <SettingsSection title={t("language.title")}>
       <SettingsRow
-        label="Pseudo locale"
+        label={t("language.pseudo")}
         toggle={{
           value: isPseudo,
           onValueChange: (next) => {
@@ -82,10 +87,11 @@ export function SettingsScreen({
   sentryDebugToolsEnabled?: boolean;
 } = {}) {
   const tabInset = useTabScreenContentInset();
+  const { t } = useTranslation("settings");
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader title="Settings" />
+      <ScreenHeader title={t("title")} />
       <ScrollView
         contentContainerStyle={[styles.scrollContent, tabInset]}
         style={styles.scrollContainer}
@@ -100,10 +106,10 @@ export function SettingsScreen({
 
         {__DEV__ && <LanguagePicker />}
 
-        <SettingsSection title="About">
-          <SettingsRow label="App" value="rollercoaster.dev" />
+        <SettingsSection title={t("about.title")}>
+          <SettingsRow label={t("about.appLabel")} value="rollercoaster.dev" />
           <SettingsRow
-            label="Version"
+            label={t("about.versionLabel")}
             value="0.1.0"
             onLongPress={
               sentryDebugToolsEnabled ? triggerSentryNativeCrash : undefined
@@ -111,7 +117,7 @@ export function SettingsScreen({
           />
         </SettingsSection>
 
-        <Text style={styles.version}>Built with Expo + Evolu + Unistyles</Text>
+        <Text style={styles.version}>{t("about.builtWith")}</Text>
       </ScrollView>
     </View>
   );
