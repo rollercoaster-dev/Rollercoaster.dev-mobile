@@ -8,18 +8,10 @@ export const DENSITY_MULTIPLIERS: Record<DensityLevel, number> = {
   comfortable: 1.25,
 } as const;
 
-export const densityOptions: {
-  id: DensityLevel;
-  label: string;
-  description: string;
-}[] = [
-  { id: "compact", label: "Compact", description: "Tighter spacing (0.75×)" },
-  { id: "default", label: "Default", description: "Standard spacing" },
-  {
-    id: "comfortable",
-    label: "Comfortable",
-    description: "Roomier spacing (1.25×)",
-  },
+export const densityOptions: readonly { id: DensityLevel }[] = [
+  { id: "compact" },
+  { id: "default" },
+  { id: "comfortable" },
 ];
 
 export function getDensityMultiplier(level: DensityLevel): number {
