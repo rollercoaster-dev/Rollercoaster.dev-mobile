@@ -11,3 +11,4 @@ Completed research documents. These informed ADRs but are not the decisions them
 | [native-rd-translations-research.md](./native-rd-translations-research.md)           | Recommended translation strategy for native-rd               | 2026-05-02    |
 | [release-pipeline.md](./release-pipeline.md)                                         | GH-Actions-orchestrated EAS pipeline for iOS + Android       | 2026-05-14    |
 | [badge-export.md](./badge-export.md)                                                 | OB 3.0 delivery formats, platform share mechanics, fix tiers | 2026-05-18    |
+| [iteration-b-learning-journey.md](./iteration-b-learning-journey.md)                 | Iteration B current state, user stories, sync/backend arch.  | 2026-05-18    |
