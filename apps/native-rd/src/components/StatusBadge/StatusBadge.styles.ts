@@ -1,7 +1,13 @@
 import { StyleSheet } from "react-native-unistyles";
 import { shadowStyle } from "../../styles/shadows";
 
-export type StatusBadgeVariant = "active" | "completed" | "locked" | "earned";
+export const STATUS_BADGE_VARIANTS = [
+  "active",
+  "completed",
+  "locked",
+  "earned",
+] as const;
+export type StatusBadgeVariant = (typeof STATUS_BADGE_VARIANTS)[number];
 
 export const styles = StyleSheet.create((theme) => ({
   badge: {

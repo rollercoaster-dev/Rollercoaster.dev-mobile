@@ -59,7 +59,13 @@
       "cta": "+ ADD"
     }
   },
-  "status": {},
+  "status": {
+    "active": "Active",
+    "completed": "Done",
+    "locked": "Locked",
+    "earned": "Earned",
+    "a11yPrefix": "Status: {{label}}"
+  },
   "a11y": {
     "evidenceTypeOptions": "Evidence type options",
     "plannedEvidenceTypes": "Planned evidence types",
