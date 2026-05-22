@@ -1,1 +1,22 @@
-{}
+{
+  "header": {
+    "title": "Goals"
+  },
+  "emptyState": {
+    "title": "No goals yet",
+    "body": "Add your first learning goal to get started.",
+    "cta": "Create Goal"
+  },
+  "confirmDelete": {
+    "title": "Delete this goal?",
+    "message": "\"{{title}}\" and all progress will be permanently deleted."
+  },
+  "card": {
+    "progressLabel": "{{completed}}/{{total}} steps",
+    "a11y": {
+      "hint": "Double-tap to view details",
+      "label": "{{title}}, {{stepsCompleted}} of {{stepsTotal}} steps completed, {{status}}",
+      "labelWithNextStep": "{{title}}, next: {{nextStep}}, {{stepsCompleted}} of {{stepsTotal}} steps completed, {{status}}"
+    }
+  }
+}

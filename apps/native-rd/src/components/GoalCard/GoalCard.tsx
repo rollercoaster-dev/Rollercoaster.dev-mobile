@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Card } from "../Card";
 import { ProgressBar } from "../ProgressBar";
 import { StatusBadge, type StatusBadgeVariant } from "../StatusBadge";
@@ -21,6 +22,7 @@ export interface GoalCardProps {
 }
 
 export function GoalCard({ goal, onPress, onLongPress }: GoalCardProps) {
+  const { t } = useTranslation(["goals", "common"]);
   const progress =
     goal.stepsTotal > 0 ? goal.stepsCompleted / goal.stepsTotal : 0;
 
@@ -29,21 +31,28 @@ export function GoalCard({ goal, onPress, onLongPress }: GoalCardProps) {
 
   const nextStep = goal.nextStepTitle?.trim() || null;
 
-  const accessibilityLabel = [
-    goal.title,
-    nextStep && `next: ${nextStep}`,
-    `${goal.stepsCompleted} of ${goal.stepsTotal} steps completed`,
-    goal.status,
-  ]
-    .filter(Boolean)
-    .join(", ");
+  const statusLabel = t(`common:status.${goal.status}`);
+  const accessibilityLabel = nextStep
+    ? t("card.a11y.labelWithNextStep", {
+        title: goal.title,
+        nextStep,
+        stepsCompleted: goal.stepsCompleted,
+        stepsTotal: goal.stepsTotal,
+        status: statusLabel,
+      })
+    : t("card.a11y.label", {
+        title: goal.title,
+        stepsCompleted: goal.stepsCompleted,
+        stepsTotal: goal.stepsTotal,
+        status: statusLabel,
+      });
 
   return (
     <Card
       onPress={onPress}
       onLongPress={onLongPress}
       accessibilityLabel={onPress ? accessibilityLabel : undefined}
-      accessibilityHint={onPress ? "Double-tap to view details" : undefined}
+      accessibilityHint={onPress ? t("card.a11y.hint") : undefined}
     >
       <View style={styles.header}>
         <Text
@@ -71,7 +80,10 @@ export function GoalCard({ goal, onPress, onLongPress }: GoalCardProps) {
             <ProgressBar progress={progress} />
           </View>
           <Text style={styles.progressLabel}>
-            {goal.stepsCompleted}/{goal.stepsTotal} steps
+            {t("card.progressLabel", {
+              completed: goal.stepsCompleted,
+              total: goal.stepsTotal,
+            })}
           </Text>
         </View>
       )}
