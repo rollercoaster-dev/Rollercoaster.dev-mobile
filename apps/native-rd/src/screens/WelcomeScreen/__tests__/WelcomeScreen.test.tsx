@@ -32,7 +32,9 @@ describe("WelcomeScreen", () => {
   describe("content", () => {
     it("renders the welcome greeting", () => {
       renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
-      expect(screen.getByText(/Hey there/)).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("welcome:hero.greeting")),
+      ).toBeOnTheScreen();
       expect(screen.getByText(i18n.t("welcome:hero.title"))).toBeOnTheScreen();
     });
 
@@ -131,6 +133,7 @@ describe("WelcomeScreen", () => {
     // regression: a developer would have to revert ALL of these to escape
     // detection. Covers hero/body/sample/picker/CTA axes.
     it.each([
+      "welcome:hero.greeting",
       "welcome:hero.title",
       "welcome:intro.body1",
       "welcome:sample.progress",
