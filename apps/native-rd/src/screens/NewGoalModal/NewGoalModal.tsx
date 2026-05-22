@@ -18,15 +18,18 @@ export function NewGoalModal() {
   const navigation =
     useNavigation<NativeStackNavigationProp<GoalsStackParamList, "NewGoal">>();
   const [title, setTitle] = useState("");
-  const [titleError, setTitleError] = useState("");
+  const [titleErrorKey, setTitleErrorKey] = useState<
+    "errors.titleRequired" | "errors.createFailed" | null
+  >(null);
   // Subscribe to theme changes to trigger re-renders
   const { theme } = useUnistyles();
   const { t } = useTranslation(["newGoal", "common"]);
+  const titleError = titleErrorKey ? t(titleErrorKey) : "";
 
   function handleCreate() {
     const trimmed = title.trim();
     if (!trimmed) {
-      setTitleError(t("errors.titleRequired"));
+      setTitleErrorKey("errors.titleRequired");
       return;
     }
 
@@ -37,7 +40,7 @@ export function NewGoalModal() {
         goalId: result.value.id,
       });
     } else {
-      setTitleError(t("errors.createFailed"));
+      setTitleErrorKey("errors.createFailed");
     }
   }
 
@@ -70,7 +73,7 @@ export function NewGoalModal() {
             value={title}
             onChangeText={(text) => {
               setTitle(text);
-              if (titleError) setTitleError("");
+              if (titleErrorKey) setTitleErrorKey(null);
             }}
             error={titleError}
             autoFocus
