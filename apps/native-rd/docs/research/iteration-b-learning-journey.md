@@ -24,6 +24,7 @@ Still to research:
 - **Goal journal** — no deep dive yet
 - **Factual nudges** — no deep dive yet
 - **Badge-to-goal linking** — under question; unclear what this gives the user that the goals list doesn't already provide. Needs a decision before any deep dive.
+- **Step model richness (the gap)** — separate doc. Failure scenarios drafted in [step-model-gap.md](./step-model-gap.md); success scenarios and PM-tool research still to come.
 
 ---
 
