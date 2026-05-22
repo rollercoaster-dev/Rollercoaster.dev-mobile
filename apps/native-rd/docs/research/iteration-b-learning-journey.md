@@ -80,7 +80,7 @@ That's it. No "you've been away!" No streak. Just: here's where you are. He taps
 
 Tomás finishes his practice panel and earns a badge: "Residential Wiring: Practice Panel." He opens his bigger goal — "Get journeyman cert" — and links the badge to it. It now shows up as a completed contribution to the journeyman goal. The big goal feels less empty. He's not starting from zero.
 
-**Features:** Badge-to-goal linking
+**Features:** Badge-to-goal linking — _under question (see top); this story is the value-case to weigh against cutting it._
 **ND pattern:** Making smaller wins visible as progress toward something larger
 
 ---
@@ -107,7 +107,7 @@ Later, when the proposal is submitted, Lina revokes the link.
 
 ### Sam's Private Badge
 
-Sam earns his 90-days badge. He doesn't share it with anyone. It lives on his phone, private, no URL — visible to nobody but him. He knows it's real because the evidence is real.
+Sam earns his 90-day badge. He doesn't share it with anyone. It lives on his phone, private, no URL — visible to nobody but him. He knows it's real because the evidence is real.
 
 Six months later he decides to share it with his sponsor. He generates a private link and sends it. His sponsor is the only person who can open it. When the conversation is done, Sam revokes the link.
 
@@ -130,7 +130,7 @@ All badges are private by default. The user explicitly changes visibility.
 | **Shared**  | Private link sent to specific people. Not publicly discoverable. Server stores the credential. | Yes — token URL  | Yes               |
 | **Public**  | Openly discoverable. Indexed. Anyone can find it.                                              | Yes — public URL | Yes (unpublishes) |
 
-Iteration D is where the recipient becomes an actor — verifying, attesting, their identity mattering to the badge. In B, sharing is purely a view access question.
+Iteration D is where the recipient becomes an actor — verifying, attesting, their identity mattering to the badge. In B, sharing is purely a view access question; any "verification" a viewer sees (e.g. in Lina's story) is the inline OB3 cryptographic check rendered by the hosting page, not a human attesting.
 
 ### What leaves the device and when
 
@@ -160,7 +160,7 @@ S3-compatible storage serving two purposes:
 | Badge sharing — shared (private link, revocable) | Yes                                 | —                           |
 | Badge sharing — public                           | Yes                                 | —                           |
 | Multi-device sync (CRDT metadata)                | Yes                                 | —                           |
-| Evidence file sync (photos, voice memos, video)  | No — local only                     | Yes — auto, threshold-based |
+| Evidence file sync (photos, voice memos, videos) | No — local only                     | Yes — auto, threshold-based |
 | Self-hosted relay + file storage                 | Yes — bring your own infrastructure | —                           |
 
 Evidence files on the free tier are local only. The upgrade moment is natural: switching phones and discovering your in-progress voice memos didn't follow you.
