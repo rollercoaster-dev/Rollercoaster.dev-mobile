@@ -14,7 +14,6 @@
     "play": "Play",
     "stop": "Stop",
     "reRecord": "Re-record",
-    "openSettings": "Open Settings",
     "tryAgain": "Try Again"
   },
   "caption": {
@@ -39,10 +38,6 @@
     "message": "This recording will be lost.",
     "keep": "Keep",
     "discard": "Discard"
-  },
-  "permission": {
-    "heading": "Microphone Access Needed",
-    "body": "Voice memos need microphone access. You can enable it in your device settings."
   },
   "errors": {
     "saveFailedTitle": "Could not save",
