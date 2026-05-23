@@ -1,7 +1,7 @@
 {
   "camera": {
     "title": "Camera Access Needed",
-    "message": "To record video or take photos, this app needs access to your camera and microphone.",
+    "message": "To take photos or record video, this app needs access to your camera.",
     "settingsCta": "Grant Access"
   },
   "microphone": {
