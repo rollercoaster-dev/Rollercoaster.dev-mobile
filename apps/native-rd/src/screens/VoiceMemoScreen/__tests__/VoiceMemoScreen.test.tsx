@@ -269,14 +269,14 @@ describe("VoiceMemoScreen", () => {
     it("shows permission denied heading", () => {
       renderScreen();
       expect(
-        screen.getByText(i18n.t("captureVoice:permission.heading")),
+        screen.getByText(i18n.t("permissions:microphone.title")),
       ).toBeOnTheScreen();
     });
 
     it("shows open settings button", () => {
       renderScreen();
       expect(
-        screen.getByText(i18n.t("captureVoice:actions.openSettings")),
+        screen.getByText(i18n.t("permissions:microphone.settingsCta")),
       ).toBeOnTheScreen();
     });
 

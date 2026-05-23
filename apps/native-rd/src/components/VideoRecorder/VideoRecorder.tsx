@@ -46,7 +46,7 @@ export const VideoRecorder = forwardRef<
   VideoRecorderHandle,
   VideoRecorderProps
 >(function VideoRecorder({ onRecorded, onCancel, isSaving = false }, ref) {
-  const { t } = useTranslation("captureVideo");
+  const { t } = useTranslation(["captureVideo", "permissions"]);
   const tabInset = useTabScreenContentInset();
 
   const cameraRef = useRef<CameraView>(null);
@@ -216,13 +216,13 @@ export const VideoRecorder = forwardRef<
       <View style={styles.permissionContainer}>
         <Card>
           <Text variant="headline" style={{ textAlign: "center" }}>
-            {t("recorder.permissionTitle")}
+            {t("permissions:camera.title")}
           </Text>
           <Text variant="body" style={styles.permissionText}>
-            {t("recorder.permissionBody")}
+            {t("permissions:camera.message")}
           </Text>
           <Button
-            label={t("recorder.grantAccess")}
+            label={t("permissions:camera.settingsCta")}
             variant="primary"
             onPress={handleRequestPermissions}
           />

@@ -17,19 +17,12 @@
     "keep": "Keep",
     "discard": "Discard"
   },
-  "permission": {
-    "libraryTitle": "Photo library access needed",
-    "libraryMessage": "Please allow photo library access in your device settings to select videos."
-  },
   "errors": {
     "saveFailedTitle": "Save Failed",
     "saveFailedMessage": "Could not save video. Please try again."
   },
   "recorder": {
     "loading": "Loading...",
-    "permissionTitle": "Camera Access Needed",
-    "permissionBody": "To record video evidence, this app needs access to your camera and microphone.",
-    "grantAccess": "Grant Access",
     "recordedVideoNoun": "Recorded video",
     "selectedVideoNoun": "Selected video",
     "countdown": "{{seconds}}s remaining",

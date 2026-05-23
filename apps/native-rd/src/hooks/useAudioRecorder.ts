@@ -17,6 +17,7 @@ import {
   RecordingPresets,
 } from "expo-audio";
 import { reportError } from "../services/sentry-report";
+import { i18n } from "../i18n";
 
 /** Recording status states */
 export type RecorderStatus =
@@ -123,7 +124,7 @@ export function useAudioRecorder(): AudioRecorderState & AudioRecorderActions {
       const permission = await requestRecordingPermissionsAsync();
       if (!permission.granted) {
         setStatus("permission-denied");
-        setError("Microphone permission is required to record voice memos.");
+        setError(i18n.t("permissions:microphone.message"));
         return;
       }
 
@@ -142,7 +143,7 @@ export function useAudioRecorder(): AudioRecorderState & AudioRecorderActions {
       setError(
         err instanceof Error
           ? err.message
-          : "Failed to start recording. Please try again.",
+          : i18n.t("captureVoice:errors.startFailed"),
       );
       reportError(err, { area: "audio.record", kind: "start" });
     }
@@ -168,7 +169,7 @@ export function useAudioRecorder(): AudioRecorderState & AudioRecorderActions {
       setError(
         err instanceof Error
           ? err.message
-          : "Failed to stop recording. Please try again.",
+          : i18n.t("captureVoice:errors.stopFailed"),
       );
       reportError(err, { area: "audio.record", kind: "stop" });
     }
@@ -181,7 +182,9 @@ export function useAudioRecorder(): AudioRecorderState & AudioRecorderActions {
       setStatus("paused");
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to pause recording.",
+        err instanceof Error
+          ? err.message
+          : i18n.t("captureVoice:errors.pauseFailed"),
       );
       reportError(err, { area: "audio.record" });
     }
@@ -193,7 +196,9 @@ export function useAudioRecorder(): AudioRecorderState & AudioRecorderActions {
       setStatus("recording");
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to resume recording.",
+        err instanceof Error
+          ? err.message
+          : i18n.t("captureVoice:errors.resumeFailed"),
       );
       reportError(err, { area: "audio.record" });
     }
@@ -213,7 +218,9 @@ export function useAudioRecorder(): AudioRecorderState & AudioRecorderActions {
     } catch (err) {
       setStatus("recorded");
       setError(
-        err instanceof Error ? err.message : "Failed to play recording.",
+        err instanceof Error
+          ? err.message
+          : i18n.t("captureVoice:errors.playFailed"),
       );
       reportError(err, { area: "audio.playback" });
     }
@@ -227,7 +234,11 @@ export function useAudioRecorder(): AudioRecorderState & AudioRecorderActions {
       wasPlayingRef.current = false;
     } catch (err) {
       setStatus("recorded");
-      setError(err instanceof Error ? err.message : "Failed to stop playback.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : i18n.t("captureVoice:errors.stopPlaybackFailed"),
+      );
     }
   }, [player]);
 

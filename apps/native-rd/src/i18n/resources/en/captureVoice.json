@@ -14,7 +14,6 @@
     "play": "Play",
     "stop": "Stop",
     "reRecord": "Re-record",
-    "openSettings": "Open Settings",
     "tryAgain": "Try Again"
   },
   "caption": {
@@ -40,12 +39,14 @@
     "keep": "Keep",
     "discard": "Discard"
   },
-  "permission": {
-    "heading": "Microphone Access Needed",
-    "body": "Voice memos need microphone access. You can enable it in your device settings."
-  },
   "errors": {
     "saveFailedTitle": "Could not save",
-    "saveFailedMessage": "Something went wrong saving the voice memo. Please try again."
+    "saveFailedMessage": "Something went wrong saving the voice memo. Please try again.",
+    "startFailed": "Failed to start recording. Please try again.",
+    "stopFailed": "Failed to stop recording. Please try again.",
+    "pauseFailed": "Failed to pause recording.",
+    "resumeFailed": "Failed to resume recording.",
+    "playFailed": "Failed to play recording.",
+    "stopPlaybackFailed": "Failed to stop playback."
   }
 }

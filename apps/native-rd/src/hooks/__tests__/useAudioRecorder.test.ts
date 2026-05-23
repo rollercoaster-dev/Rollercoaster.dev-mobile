@@ -10,6 +10,7 @@ import {
   setAudioModeAsync,
 } from "expo-audio";
 import { useAudioRecorder } from "../useAudioRecorder";
+import { i18n } from "../../i18n";
 
 // Access mock instances for assertions
 const {
@@ -86,7 +87,9 @@ describe("useAudioRecorder", () => {
       });
 
       expect(result.current.status).toBe("permission-denied");
-      expect(result.current.error).toContain("Microphone permission");
+      expect(result.current.error).toBe(
+        i18n.t("permissions:microphone.message"),
+      );
     });
 
     it("handles recording start failure gracefully", async () => {

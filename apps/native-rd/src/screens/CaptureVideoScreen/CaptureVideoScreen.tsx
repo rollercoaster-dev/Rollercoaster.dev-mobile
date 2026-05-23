@@ -40,7 +40,7 @@ type SaveArgs =
 
 export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
   const navigation = useNavigation();
-  const { t } = useTranslation("captureVideo");
+  const { t } = useTranslation(["captureVideo", "permissions"]);
   const { goalId, stepId } = route.params;
   const recorderRef = useRef<VideoRecorderHandle>(null);
   const tabInset = useTabScreenContentInset();
@@ -126,8 +126,8 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
         await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
         Alert.alert(
-          t("permission.libraryTitle"),
-          t("permission.libraryMessage"),
+          t("permissions:videoLibrary.title"),
+          t("permissions:videoLibrary.message"),
         );
         return;
       }
