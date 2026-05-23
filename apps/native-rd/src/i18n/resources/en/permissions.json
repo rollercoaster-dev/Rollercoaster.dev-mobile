@@ -1,1 +1,27 @@
-{}
+{
+  "camera": {
+    "title": "Camera Access Needed",
+    "message": "To record video or take photos, this app needs access to your camera and microphone.",
+    "settingsCta": "Grant Access"
+  },
+  "microphone": {
+    "title": "Microphone Access Needed",
+    "message": "Voice memos need microphone access. You can enable it in your device settings.",
+    "settingsCta": "Open Settings"
+  },
+  "photoLibrary": {
+    "title": "Photo Library Access Needed",
+    "message": "Please allow photo library access in your device settings to select photos.",
+    "settingsCta": "Open Settings"
+  },
+  "videoLibrary": {
+    "title": "Photo Library Access Needed",
+    "message": "Please allow photo library access in your device settings to select videos.",
+    "settingsCta": "Open Settings"
+  },
+  "location": {
+    "title": "Location Access Needed",
+    "message": "This feature needs location access. You can enable it in your device settings.",
+    "settingsCta": "Open Settings"
+  }
+}
