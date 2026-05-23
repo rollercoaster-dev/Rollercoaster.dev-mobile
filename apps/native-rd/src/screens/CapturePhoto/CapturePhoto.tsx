@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, Alert, ActivityIndicator } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
+import { useTranslation } from "react-i18next";
 import { Text } from "../../components/Text";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
@@ -22,6 +23,7 @@ const PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
 
 export function CapturePhoto({ route }: CapturePhotoScreenProps) {
   const navigation = useNavigation();
+  const { t } = useTranslation("capturePhoto");
   const { goalId, stepId } = route.params;
   const [busy, setBusy] = useState(false);
 
@@ -55,7 +57,7 @@ export function CapturePhoto({ route }: CapturePhotoScreenProps) {
         error,
       });
       reportError(error, { area: "evidence.capture", kind: "photo" });
-      Alert.alert("Save failed", "Could not save the photo. Please try again.");
+      Alert.alert(t("errors.saveFailedTitle"), t("errors.saveFailedMessage"));
     } finally {
       setBusy(false);
     }
@@ -67,10 +69,7 @@ export function CapturePhoto({ route }: CapturePhotoScreenProps) {
     try {
       const permission = await ImagePicker.requestCameraPermissionsAsync();
       if (!permission.granted) {
-        Alert.alert(
-          "Camera access needed",
-          "Please allow camera access in your device settings to take photos.",
-        );
+        Alert.alert(t("permission.cameraTitle"), t("permission.cameraMessage"));
         return;
       }
       const result = await ImagePicker.launchCameraAsync(PICKER_OPTIONS);
@@ -91,8 +90,8 @@ export function CapturePhoto({ route }: CapturePhotoScreenProps) {
         await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
         Alert.alert(
-          "Photo library access needed",
-          "Please allow photo library access in your device settings to select photos.",
+          t("permission.libraryTitle"),
+          t("permission.libraryMessage"),
         );
         return;
       }
@@ -110,7 +109,10 @@ export function CapturePhoto({ route }: CapturePhotoScreenProps) {
     return (
       <View style={styles.container}>
         <View style={styles.content}>
-          <ActivityIndicator size="large" accessibilityLabel="Saving photo" />
+          <ActivityIndicator
+            size="large"
+            accessibilityLabel={t("a11y.savingPhoto")}
+          />
         </View>
       </View>
     );
@@ -118,23 +120,20 @@ export function CapturePhoto({ route }: CapturePhotoScreenProps) {
 
   return (
     <View style={styles.container}>
-      <ScreenSubHeader
-        label="Capture Photo"
-        onBack={() => navigation.goBack()}
-      />
+      <ScreenSubHeader label={t("title")} onBack={() => navigation.goBack()} />
       <View style={styles.content}>
         <Card>
           <Text variant="headline" style={styles.heading}>
-            Add a photo
+            {t("heading")}
           </Text>
           <View style={styles.buttonGroup}>
             <Button
-              label="Take Photo"
+              label={t("actions.takePhoto")}
               variant="primary"
               onPress={handleTakePhoto}
             />
             <Button
-              label="Choose from Library"
+              label={t("actions.chooseFromLibrary")}
               variant="secondary"
               onPress={handleChooseFromLibrary}
             />

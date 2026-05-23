@@ -6,6 +6,7 @@ import {
   fireEvent,
   waitFor,
 } from "../../../__tests__/test-utils";
+import { i18n } from "../../../i18n";
 import { CapturePhoto } from "../CapturePhoto";
 
 const mockGoBack = jest.fn();
@@ -69,16 +70,20 @@ beforeEach(() => {
 describe("CapturePhoto", () => {
   it("renders title and both buttons", () => {
     renderScreen();
-    expect(screen.getByText("Capture Photo")).toBeTruthy();
-    expect(screen.getByText("Take Photo")).toBeTruthy();
-    expect(screen.getByText("Choose from Library")).toBeTruthy();
+    expect(screen.getByText(i18n.t("capturePhoto:title"))).toBeTruthy();
+    expect(
+      screen.getByText(i18n.t("capturePhoto:actions.takePhoto")),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(i18n.t("capturePhoto:actions.chooseFromLibrary")),
+    ).toBeTruthy();
   });
 
   it("launches camera when Take Photo pressed", async () => {
     mockLaunchCameraAsync.mockResolvedValue({ canceled: true });
     renderScreen();
 
-    fireEvent.press(screen.getByText("Take Photo"));
+    fireEvent.press(screen.getByText(i18n.t("capturePhoto:actions.takePhoto")));
 
     await waitFor(() => {
       expect(mockRequestCameraPermissionsAsync).toHaveBeenCalled();
@@ -90,7 +95,9 @@ describe("CapturePhoto", () => {
     mockLaunchImageLibraryAsync.mockResolvedValue({ canceled: true });
     renderScreen();
 
-    fireEvent.press(screen.getByText("Choose from Library"));
+    fireEvent.press(
+      screen.getByText(i18n.t("capturePhoto:actions.chooseFromLibrary")),
+    );
 
     await waitFor(() => {
       expect(mockRequestMediaLibraryPermissionsAsync).toHaveBeenCalled();
@@ -105,7 +112,7 @@ describe("CapturePhoto", () => {
     });
     renderScreen();
 
-    fireEvent.press(screen.getByText("Take Photo"));
+    fireEvent.press(screen.getByText(i18n.t("capturePhoto:actions.takePhoto")));
 
     await waitFor(() => {
       expect(mockSaveImageToAppStorage).toHaveBeenCalledWith(
@@ -130,7 +137,9 @@ describe("CapturePhoto", () => {
     });
     renderScreen();
 
-    fireEvent.press(screen.getByText("Choose from Library"));
+    fireEvent.press(
+      screen.getByText(i18n.t("capturePhoto:actions.chooseFromLibrary")),
+    );
 
     await waitFor(() => {
       expect(mockCreateEvidence).toHaveBeenCalledWith(
@@ -149,7 +158,7 @@ describe("CapturePhoto", () => {
     });
     renderScreen({ goalId: "goal-123", stepId: "step-456" });
 
-    fireEvent.press(screen.getByText("Take Photo"));
+    fireEvent.press(screen.getByText(i18n.t("capturePhoto:actions.takePhoto")));
 
     await waitFor(() => {
       expect(mockCreateEvidence).toHaveBeenCalledWith(
@@ -166,7 +175,7 @@ describe("CapturePhoto", () => {
     mockLaunchCameraAsync.mockResolvedValue({ canceled: true });
     renderScreen();
 
-    fireEvent.press(screen.getByText("Take Photo"));
+    fireEvent.press(screen.getByText(i18n.t("capturePhoto:actions.takePhoto")));
 
     await waitFor(() => {
       expect(mockLaunchCameraAsync).toHaveBeenCalled();
@@ -179,7 +188,7 @@ describe("CapturePhoto", () => {
     mockRequestCameraPermissionsAsync.mockResolvedValue({ granted: false });
     renderScreen();
 
-    fireEvent.press(screen.getByText("Take Photo"));
+    fireEvent.press(screen.getByText(i18n.t("capturePhoto:actions.takePhoto")));
 
     await waitFor(() => {
       expect(mockRequestCameraPermissionsAsync).toHaveBeenCalled();
@@ -193,7 +202,9 @@ describe("CapturePhoto", () => {
     });
     renderScreen();
 
-    fireEvent.press(screen.getByText("Choose from Library"));
+    fireEvent.press(
+      screen.getByText(i18n.t("capturePhoto:actions.chooseFromLibrary")),
+    );
 
     await waitFor(() => {
       expect(mockRequestMediaLibraryPermissionsAsync).toHaveBeenCalled();
@@ -212,12 +223,12 @@ describe("CapturePhoto", () => {
     });
     renderScreen();
 
-    fireEvent.press(screen.getByText("Take Photo"));
+    fireEvent.press(screen.getByText(i18n.t("capturePhoto:actions.takePhoto")));
 
     await waitFor(() => {
       expect(alertSpy).toHaveBeenCalledWith(
-        "Save failed",
-        "Could not save the photo. Please try again.",
+        i18n.t("capturePhoto:errors.saveFailedTitle"),
+        i18n.t("capturePhoto:errors.saveFailedMessage"),
       );
     });
     expect(mockGoBack).not.toHaveBeenCalled();
@@ -230,5 +241,24 @@ describe("CapturePhoto", () => {
     fireEvent.press(screen.getByLabelText("Go back"));
 
     expect(mockGoBack).toHaveBeenCalled();
+  });
+
+  describe("pseudo locale", () => {
+    beforeAll(async () => {
+      await i18n.changeLanguage("pseudo");
+    });
+    afterAll(async () => {
+      await i18n.changeLanguage("en");
+    });
+
+    it("renders pseudo-localized title and buttons", () => {
+      renderScreen();
+      const pseudoTitle = i18n.t("capturePhoto:title");
+      expect(pseudoTitle).not.toBe("Capture Photo");
+      expect(screen.getByText(pseudoTitle)).toBeTruthy();
+      expect(
+        screen.getByText(i18n.t("capturePhoto:actions.takePhoto")),
+      ).toBeTruthy();
+    });
   });
 });
