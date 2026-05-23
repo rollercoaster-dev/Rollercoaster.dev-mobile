@@ -32,10 +32,26 @@ describe("i18n bootstrap", () => {
     await i18n.changeLanguage("en");
   });
 
-  test("every declared namespace is registered for en and pseudo", () => {
+  test("every declared namespace is registered for en, pseudo, and de", () => {
     for (const ns of NAMESPACES) {
       expect(i18n.hasResourceBundle("en", ns)).toBe(true);
       expect(i18n.hasResourceBundle("pseudo", ns)).toBe(true);
+      expect(i18n.hasResourceBundle("de", ns)).toBe(true);
     }
+  });
+
+  test("de bundle is empty in this prototype — keys must fall back to en", async () => {
+    // Sanity check that #136 ships empty de namespaces. When #76 starts filling
+    // de translations, expand this into per-key assertions; the empty-bundle
+    // expectation can come out then.
+    for (const ns of NAMESPACES) {
+      expect(i18n.getResourceBundle("de", ns)).toEqual({});
+    }
+    await i18n.changeLanguage("de");
+    // Pick a known en key; with empty de + fallbackLng:"en" we should still
+    // resolve to the English string.
+    expect(tUnsafe("common:actions.save")).not.toBe("");
+    expect(tUnsafe("common:actions.save")).not.toBe("common:actions.save");
+    await i18n.changeLanguage("en");
   });
 });

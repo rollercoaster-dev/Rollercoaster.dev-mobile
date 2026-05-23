@@ -37,13 +37,30 @@ import pseudoPermissions from "./resources/pseudo/permissions.json";
 import pseudoBadges from "./resources/pseudo/badges.json";
 import pseudoBadgeDesigner from "./resources/pseudo/badgeDesigner.json";
 
+import deCommon from "./resources/de/common.json";
+import deWelcome from "./resources/de/welcome.json";
+import deNewGoal from "./resources/de/newGoal.json";
+import deSettings from "./resources/de/settings.json";
+import deGoals from "./resources/de/goals.json";
+import deFocusMode from "./resources/de/focusMode.json";
+import deCapturePhoto from "./resources/de/capturePhoto.json";
+import deCaptureVideo from "./resources/de/captureVideo.json";
+import deCaptureVoice from "./resources/de/captureVoice.json";
+import deCaptureText from "./resources/de/captureText.json";
+import deCaptureFile from "./resources/de/captureFile.json";
+import deCaptureLink from "./resources/de/captureLink.json";
+import dePermissions from "./resources/de/permissions.json";
+import deBadges from "./resources/de/badges.json";
+import deBadgeDesigner from "./resources/de/badgeDesigner.json";
+
 // Adding a namespace? Steps:
-//   1. Add the en + pseudo JSON files under resources/{en,pseudo}/<name>.json
+//   1. Add the en + pseudo + de JSON files under resources/{en,pseudo,de}/<name>.json
 //   2. Add imports above
-//   3. Add the entry to NAMESPACES and both resource bundles below
+//   3. Add the entry to NAMESPACES and all three resource bundles below
 //   4. Add the type alias in i18next.d.ts
 // The script in scripts/generate-pseudo-locale.ts auto-discovers files in
-// resources/en/ — no need to update it.
+// resources/en/ — no need to update it. The German bundles ship empty in this
+// prototype (#136); real strings arrive via Tolgee + #76.
 export const NAMESPACES = [
   "common",
   "welcome",
@@ -99,6 +116,27 @@ const resources = {
     badges: pseudoBadges,
     badgeDesigner: pseudoBadgeDesigner,
   },
+  // German bundles ship empty in this prototype. Missing keys fall back to `en`
+  // via `fallbackLng`. Real strings arrive through the Tolgee round-trip (#136)
+  // and the German first-test work in #76 — locale-parity intentionally does
+  // not include `de` so a sparse bundle isn't a test failure.
+  de: {
+    common: deCommon,
+    welcome: deWelcome,
+    newGoal: deNewGoal,
+    settings: deSettings,
+    goals: deGoals,
+    focusMode: deFocusMode,
+    capturePhoto: deCapturePhoto,
+    captureVideo: deCaptureVideo,
+    captureVoice: deCaptureVoice,
+    captureText: deCaptureText,
+    captureFile: deCaptureFile,
+    captureLink: deCaptureLink,
+    permissions: dePermissions,
+    badges: deBadges,
+    badgeDesigner: deBadgeDesigner,
+  },
 } as const;
 
 const logger = new Logger("i18n");
@@ -113,7 +151,7 @@ i18n.use(initReactI18next).init({
   resources,
   lng: selectSupportedLanguage(getLocales()),
   fallbackLng: "en",
-  supportedLngs: ["en", "pseudo"],
+  supportedLngs: ["en", "pseudo", "de"],
   nonExplicitSupportedLngs: true,
   defaultNS: "common",
   ns: NAMESPACES,
