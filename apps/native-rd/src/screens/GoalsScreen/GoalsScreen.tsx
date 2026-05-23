@@ -46,7 +46,7 @@ function buildGoalCardGoal(
 }
 
 function GoalList() {
-  const { t } = useTranslation(["goals", "common"]);
+  const { t } = useTranslation("goals");
   const navigation = useNavigation<Nav>();
   const rows = useQuery(activeGoalsQuery);
   const allSteps = useQuery(stepsForActiveGoalsQuery);
