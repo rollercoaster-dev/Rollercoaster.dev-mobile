@@ -92,7 +92,12 @@ Generate a project API key under **Project settings → API keys** with `keys.vi
 
 ## Initial import of English keys
 
-From `apps/native-rd/`:
+Two prereqs in the Tolgee UI before importing for the first time:
+
+1. **Project settings → Use namespaces:** toggle on. Tolgee defaults this off; importing a namespaced JSON file fails with `namespace_cannot_be_used_when_feature_is_disabled` otherwise.
+2. **Project settings → Languages:** confirm `en` is set as the base language.
+
+Then from `apps/native-rd/`:
 
 ```sh
 export TOLGEE_API_URL=http://<mac-mini-tailnet-name>:8085
@@ -102,7 +107,9 @@ bunx tolgee push
 
 The push uses the `push.files` map declared in `.tolgeerc.json`, which assigns each `resources/en/<ns>.json` to its matching Tolgee namespace.
 
-Re-running `tolgee push` is the way to add newly authored English keys (after a feature PR edits any `resources/en/<ns>.json`). The CLI's default is `OVERRIDE`-style upsert — read [Tolgee's push docs](https://docs.tolgee.io/tolgee-cli/usage/push) before pushing if you've also edited en in Tolgee directly, to avoid clobbering UI edits.
+> **Known CLI issue (`@tolgee/cli@2.16`).** The CLI's push flow uploads files and imports them successfully, then 401s on the final apply call with `invalid_project_api_key` — the CLI sends the key in `Authorization: Bearer` but the self-hosted server expects `X-API-Key`. As a workaround, do the initial import via the Tolgee UI (drag the 15 `resources/en/*.json` files into the project's Import view, map each to its namespace, then **Import** at the bottom). The pull path uses our own script that bypasses the CLI entirely — see below.
+
+Re-running `tolgee push` (once the upstream bug is fixed) is the way to add newly authored English keys after a feature PR edits any `resources/en/<ns>.json`. Read [Tolgee's push docs](https://docs.tolgee.io/tolgee-cli/usage/push) before pushing if you've also edited en in Tolgee directly, to avoid clobbering UI edits.
 
 ---
 
@@ -144,10 +151,14 @@ bun run i18n:pull
 
 The `i18n:pull` script does two things in sequence:
 
-1. `tolgee pull` exports the `de` translations into `src/i18n/resources/de/<ns>.json` using the path template from `.tolgeerc.json`.
+1. `scripts/tolgee-pull.ts` hits Tolgee's `/v2/projects/export` endpoint directly, asks for `de` + `JSON_I18NEXT` + the `{languageTag}/{namespace}.{extension}` layout, and unzips the result into `src/i18n/resources/`. The default `structureDelimiter` (`.`) gives nested JSON that mirrors the en namespace shape.
 2. `scripts/tolgee-prune-empty.ts` recursively removes `""` leaves and the empty branches they create.
 
 Step 2 is load-bearing. Without it, Tolgee writes `""` for every key the translator hasn't filled, and i18next resolves `""` as a literal empty string instead of falling back to `en`. The result would be a UI with blank labels for half-translated screens. Tests in `src/i18n/__tests__/pruneEmpty.test.ts` cover the recursion edge cases.
+
+If you're using a personal access token (`tgpat_*`) instead of a project API key (`tgpak_*`), also set `TOLGEE_PROJECT_ID` in the same shell. Project keys embed the project ID; PATs don't.
+
+> The official `tolgee pull` was used here originally, but `@tolgee/cli@2.16` sends API credentials in `Authorization: Bearer`, which the self-hosted server rejects (`invalid_project_api_key` / `invalid_pat`). Server-side this manifests as a 401 on the export call. Our `scripts/tolgee-pull.ts` calls the same export endpoint with the correct `X-API-Key` header. When the upstream CLI fixes its auth, we can swap back to `tolgee pull && tolgee-prune-empty.ts`.
 
 Commit the resulting diff like any other code change.
 
@@ -171,5 +182,5 @@ Pseudo takes precedence in `selectSupportedLanguage` if both env vars are on.
 - **`docker compose up` fails on the volume mount** — the `POSTGRES_DATA_DIR` path must exist. Run `mkdir -p ~/tolgee-data/postgres` and retry.
 - **Can't reach `<mac-mini>:8085` from laptop** — confirm both devices are on the same tailnet (`tailscale status`), and confirm the container is bound to `127.0.0.1:8085` plus reachable on the host's tailnet IP. The host's firewall must allow Tailscale traffic.
 - **Tolgee complains about i18next version on web** — `@tolgee/i18next@7` declares `peerDependencies.i18next: "*"`. If a future i18next major actually breaks the wrap, the fallback is to drop the SDK and rely on `bun run i18n:pull` for the round-trip (you lose live in-context but keep the editor).
-- **`bun run i18n:pull` errors with "no project found"** — `TOLGEE_API_URL` / `TOLGEE_API_KEY` must be set in the shell that runs the command. The CLI does not read `apps/native-rd/.env.local`.
+- **`bun run i18n:pull` errors with "Missing required env var"** — `TOLGEE_API_URL` / `TOLGEE_API_KEY` (and `TOLGEE_PROJECT_ID` when using a PAT) must be set in the shell that runs the command. The script does not read `apps/native-rd/.env.local`.
 - **Empty `de/*.json` after pull** — expected at this stage. The German bundles ship empty in this prototype; #76 is where they get filled.

@@ -1,7 +1,5 @@
 {
   "$schema": "https://docs.tolgee.io/cli-schema.json",
-  "apiUrl": "${TOLGEE_API_URL}",
-  "apiKey": "${TOLGEE_API_KEY}",
   "format": "JSON_I18NEXT",
   "pull": {
     "path": "./src/i18n/resources",
