@@ -8,6 +8,7 @@
 
 import React from "react";
 import { renderWithProviders, screen, fireEvent } from "./test-utils";
+import { i18n } from "../i18n";
 import { FocusPillTabBar } from "../navigation/FocusPillTabBar";
 import {
   expectAccessibleRole,
@@ -41,7 +42,7 @@ function buildProps({ activeIndex = 0 }: MockTabBarOpts = {}) {
 
   // The component only reads a small subset of BottomTabBarProps; we cast
   // because constructing the full shape would dwarf the test value.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const props: any = {
     state: {
       index: activeIndex,
@@ -173,5 +174,25 @@ describe("FocusPillTabBar", () => {
       ([action]) => action?.type === "NAVIGATE",
     );
     expect(navigateCalls).toHaveLength(0);
+  });
+
+  describe("pseudo locale", () => {
+    afterEach(async () => {
+      if (i18n.language !== "en") await i18n.changeLanguage("en");
+    });
+
+    it.each([
+      "common:navigation.tabs.goals",
+      "common:navigation.tabs.badges",
+      "common:navigation.tabs.settings",
+      "common:navigation.fab.newGoal",
+    ] as const)("renders %s under pseudo locale", async (key) => {
+      await i18n.changeLanguage("pseudo");
+      const { props } = buildProps();
+      renderWithProviders(<FocusPillTabBar {...props} />);
+      const pseudo = i18n.t(key);
+      expect(pseudo.startsWith("[")).toBe(true);
+      expect(screen.getByLabelText(pseudo)).toBeOnTheScreen();
+    });
   });
 });
