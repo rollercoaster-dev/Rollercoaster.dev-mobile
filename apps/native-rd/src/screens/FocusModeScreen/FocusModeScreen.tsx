@@ -210,12 +210,13 @@ function FocusContent({ goalId }: { goalId: string }) {
       : evidenceByGoalQuery(goalId as GoalId),
   );
 
+  const evidenceFallbackLabel = t("focusMode:evidenceFallback");
   const drawerEvidence: EvidenceItemData[] = (
     isGoalCard ? goalEvidenceRows : currentStepEvidenceRows
   ).map((row) => ({
     id: row.id,
     type: validateEvidenceType(row.type ?? "file"),
-    label: row.description ?? row.type ?? t("focusMode:evidenceFallback"),
+    label: row.description ?? row.type ?? evidenceFallbackLabel,
   }));
 
   const goalEvidenceCount = goalEvidenceRows.length;
@@ -487,7 +488,7 @@ function FocusContent({ goalId }: { goalId: string }) {
     if (!row) return;
     viewEvidence({
       id: row.id,
-      title: row.description ?? row.type ?? t("focusMode:evidenceFallback"),
+      title: row.description ?? row.type ?? evidenceFallbackLabel,
       type: validateEvidenceType(row.type ?? "file"),
       uri: row.uri ?? undefined,
       metadata: row.metadata ?? undefined,

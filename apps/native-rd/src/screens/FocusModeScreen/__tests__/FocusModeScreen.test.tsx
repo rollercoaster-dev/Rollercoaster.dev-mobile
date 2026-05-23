@@ -1043,32 +1043,22 @@ describe("FocusModeScreen", () => {
       if (i18n.language !== "en") await i18n.changeLanguage("en");
     });
 
-    it("renders the Focus Mode title under pseudo locale", async () => {
-      await i18n.changeLanguage("pseudo");
-      setupQueries();
-      renderWithProviders(<FocusModeScreen {...routeProps} />);
-      const pseudo = i18n.t("focusMode:title");
-      expect(pseudo.startsWith("[")).toBe(true);
-      expect(screen.getByText(pseudo)).toBeOnTheScreen();
-    });
-
-    it("renders the Edit goal a11y label under pseudo locale", async () => {
-      await i18n.changeLanguage("pseudo");
-      setupQueries();
-      renderWithProviders(<FocusModeScreen {...routeProps} />);
-      const pseudo = i18n.t("focusMode:header.editGoal");
-      expect(pseudo.startsWith("[")).toBe(true);
-      expect(screen.getByLabelText(pseudo)).toBeOnTheScreen();
-    });
-
-    it("renders the Hide timeline a11y label under pseudo locale", async () => {
-      await i18n.changeLanguage("pseudo");
-      setupQueries();
-      renderWithProviders(<FocusModeScreen {...routeProps} />);
-      const pseudo = i18n.t("focusMode:header.hideTimeline");
-      expect(pseudo.startsWith("[")).toBe(true);
-      expect(screen.getByLabelText(pseudo)).toBeOnTheScreen();
-    });
+    it.each([
+      { key: "focusMode:title", query: "text" },
+      { key: "focusMode:header.editGoal", query: "label" },
+      { key: "focusMode:header.hideTimeline", query: "label" },
+    ] as const)(
+      "renders $key as bracketed copy under pseudo locale",
+      async ({ key, query }) => {
+        await i18n.changeLanguage("pseudo");
+        setupQueries();
+        renderWithProviders(<FocusModeScreen {...routeProps} />);
+        const pseudo = i18n.t(key);
+        expect(pseudo.startsWith("[")).toBe(true);
+        const get = query === "text" ? screen.getByText : screen.getByLabelText;
+        expect(get(pseudo)).toBeOnTheScreen();
+      },
+    );
 
     it("renders the Goal not found error under pseudo locale", async () => {
       await i18n.changeLanguage("pseudo");
@@ -1080,9 +1070,7 @@ describe("FocusModeScreen", () => {
     });
 
     it("resolves interpolated step-uncompleted announcement under pseudo locale", async () => {
-      // Announcements go through AccessibilityInfo and aren't queryable in jsdom,
-      // so we assert resolution + interpolation directly. Pseudo brackets the
-      // template; the {{title}} value should pass through verbatim.
+      // Announcements fire through AccessibilityInfo and aren't queryable in jsdom.
       await i18n.changeLanguage("pseudo");
       const pseudo = i18n.t("focusMode:a11y.stepUncompleted", {
         title: "Read docs",

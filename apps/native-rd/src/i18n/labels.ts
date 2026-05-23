@@ -7,9 +7,8 @@ import type { ThemeName } from "../themes/compose";
  * Centralized lookups for the `common` namespace keys this app shares across
  * screens. Every call passes `{ ns: "common" }` so the helpers resolve against
  * the common namespace regardless of which namespace the caller's `t` is bound
- * to via `useTranslation(...)`. The `NS` generic widens acceptance to both
- * scalar (`useTranslation("foo")`) and array (`useTranslation(["foo", "common"])`)
- * hook forms — the runtime ns override makes the binding irrelevant.
+ * to via `useTranslation(...)`. The `NS` generic exists only to satisfy the
+ * type checker for callers using the array hook form.
  */
 
 const COMMON_NS = { ns: "common" } as const;
