@@ -23,7 +23,7 @@ const PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
 
 export function CapturePhoto({ route }: CapturePhotoScreenProps) {
   const navigation = useNavigation();
-  const { t } = useTranslation("capturePhoto");
+  const { t } = useTranslation(["capturePhoto", "permissions"]);
   const { goalId, stepId } = route.params;
   const [busy, setBusy] = useState(false);
 
@@ -69,7 +69,10 @@ export function CapturePhoto({ route }: CapturePhotoScreenProps) {
     try {
       const permission = await ImagePicker.requestCameraPermissionsAsync();
       if (!permission.granted) {
-        Alert.alert(t("permission.cameraTitle"), t("permission.cameraMessage"));
+        Alert.alert(
+          t("permissions:camera.title"),
+          t("permissions:camera.message"),
+        );
         return;
       }
       const result = await ImagePicker.launchCameraAsync(PICKER_OPTIONS);
@@ -90,8 +93,8 @@ export function CapturePhoto({ route }: CapturePhotoScreenProps) {
         await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
         Alert.alert(
-          t("permission.libraryTitle"),
-          t("permission.libraryMessage"),
+          t("permissions:photoLibrary.title"),
+          t("permissions:photoLibrary.message"),
         );
         return;
       }
