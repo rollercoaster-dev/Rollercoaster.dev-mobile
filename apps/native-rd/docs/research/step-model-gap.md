@@ -26,28 +26,31 @@ This is not a productivity product with neurodivergent skinning. It is a cogniti
 
 This frame is downstream of [product-vision.md §Core Principles](../vision/product-vision.md#core-principles) — _neurodivergent-first, not neurodivergent-friendly_ and _the journey is the product_ — sharpened by what the friend's testing exposed.
 
-## The A–G taxonomy
+## The A–H taxonomy
 
-Seven candidate enrichments. Each is sized by both its pedagogical frame and its ND-specific hit.
+Eight candidate enrichments. Each is sized by both its pedagogical frame and its ND-specific hit.
 
-| Letter        | What                                               | Pedagogical frame                                              | ND-specific hit                                                                                                                                                        |
-| ------------- | -------------------------------------------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **A**         | Granularity / nesting                              | Decomposition reveals your map of the work                     | Working-memory prosthesis. NT users hold "the project" as gestalt; ND users lose the holding. Substructure is offloaded cognition. ND bursts also need landing places. |
-| **B-soft**    | Soft scheduling ("for Tuesday", not "due Tuesday") | Practice non-commitment commitments                            | Atemporal time perception. Soft placement creates a Tuesday that wouldn't otherwise exist — a foothold in time itself.                                                 |
-| **C-order**   | Dependency graph as ordering                       | Sequence is the syllabus; the graph is the user-built textbook | EF gap means ND users cannot generate the order on demand. The graph stores it outside the brain. Autistic pattern-fluency meeting EF retrieval gap.                   |
-| **C-waiting** | Naming external blockers                           | Separates _stuck_ from _failing_                               | RSD interrupt. CBT-in-productivity-tool form. Mental-health intervention disguised as status.                                                                          |
-| **D**         | Per-step context (one-line note)                   | Where tacit knowledge becomes explicit                         | Encyclopedic context + retrieval gap = the note is an external retrieval system. Crystallizes associative thinking before it dissipates.                               |
-| **E**         | State vocabulary beyond `pending`/`completed`      | Names make experience namable and normal                       | ND users were pathologized — their _stuck_ was called laziness. Vocabulary that names states without pathologizing inverts their educational experience.               |
-| **F**         | Mid-work capture                                   | Frictionless capture teaches users their thoughts matter       | Lost-thought prosthesis. Meta-pedagogical: the capture surface is a referendum on whether the user's thoughts deserve to exist.                                        |
-| **G**         | Lessons from failure (opt-in per goal)             | Mistakes as data, not as verdict                               | Inverts the punishment-for-mistakes pattern many ND users grew up in. Strong anti-pathologizing and strong prosthesis (against repeating the same mistake for years).  |
+| Letter        | What                                                                           | Pedagogical frame                                                                                                                     | ND-specific hit                                                                                                                                                                                                                                                                        |
+| ------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **A**         | Granularity / nesting                                                          | Decomposition reveals your map of the work                                                                                            | Working-memory prosthesis. NT users hold "the project" as gestalt; ND users lose the holding. Substructure is offloaded cognition. ND bursts also need landing places.                                                                                                                 |
+| **B-soft**    | Soft scheduling ("for Tuesday", not "due Tuesday")                             | Practice non-commitment commitments                                                                                                   | Atemporal time perception. Soft placement creates a Tuesday that wouldn't otherwise exist — a foothold in time itself.                                                                                                                                                                 |
+| **C-order**   | Dependency graph as ordering                                                   | Sequence is the syllabus; the graph is the user-built textbook                                                                        | EF gap means ND users cannot generate the order on demand. The graph stores it outside the brain. Autistic pattern-fluency meeting EF retrieval gap.                                                                                                                                   |
+| **C-waiting** | Naming external blockers                                                       | Separates _stuck_ from _failing_                                                                                                      | RSD interrupt. CBT-in-productivity-tool form. Mental-health intervention disguised as status.                                                                                                                                                                                          |
+| **D**         | Per-step context (one-line note)                                               | Where tacit knowledge becomes explicit                                                                                                | Encyclopedic context + retrieval gap = the note is an external retrieval system. Crystallizes associative thinking before it dissipates.                                                                                                                                               |
+| **E**         | State vocabulary beyond `pending`/`completed`                                  | Names make experience namable and normal                                                                                              | ND users were pathologized — their _stuck_ was called laziness. Vocabulary that names states without pathologizing inverts their educational experience.                                                                                                                               |
+| **F**         | Mid-work capture                                                               | Frictionless capture teaches users their thoughts matter                                                                              | Lost-thought prosthesis. Meta-pedagogical: the capture surface is a referendum on whether the user's thoughts deserve to exist.                                                                                                                                                        |
+| **G**         | Lessons from failure (opt-in per goal)                                         | Mistakes as data, not as verdict                                                                                                      | Inverts the punishment-for-mistakes pattern many ND users grew up in. Strong anti-pathologizing and strong prosthesis (against repeating the same mistake for years).                                                                                                                  |
+| **H**         | Step-level hypothesis falsification — the misfired step persists as a learning | Every step is a small experiment; misfires are iteration, not failure. The step's record _is_ the artifact, not a note attached to it | RSD interrupt at step granularity. The structural distinction between _step's premise was wrong_ and _I failed_ inverts the lifetime ND pattern. Step-misfires happen ~10× more often than goal-level failure, so this is the highest-frequency anti-pathologizing surface in the set. |
 
 Three-register tagging:
 
-- **Cognitive prosthesis:** A, C-order, D, F, G
-- **Anti-pathologizing:** C-waiting, E, F, G
+- **Cognitive prosthesis:** A, C-order, D, F, G, H
+- **Anti-pathologizing:** C-waiting, E, F, G, H
 - **Time foothold:** B-soft
 
-(C-waiting, F, and G appear in two registers — that's not double-counting; it's why they're load-bearing.)
+(C-waiting, F, G, and H appear in two registers — that's not double-counting; it's why they're load-bearing.)
+
+**G vs H — the distinction that matters.** Both involve learning from misfires; the forward-reference target is what separates them. G fires forward to _future similar steps across goals_ (Tomás's 8-gauge learning surfacing at the journeyman exam six months later). H fires forward to the _immediately replacing step within the same goal_ (Tomás's 8-gauge step persisting as a learning while the corrected 6-gauge step follows from it during the practice panel work). G is retrospective and goal-completion-shaped; H is mid-stream recovery scaffolding. The 8-gauge moment is canonically both — H during the work, G at the exam.
 
 ## What does _not_ earn its way in
 
@@ -69,7 +72,7 @@ Four scenarios, each in five fields. Together they cover all seven letters. Pers
 
 ### Tomás and the practice panel
 
-**Letters:** A, C-order, D, G.
+**Letters:** A, C-order, D, G, H.
 
 **Narrative.** Tomás spent a week on each circuit of his practice panel — 15-amp lighting, then the 20-amp small-appliance run, then the 240V dryer circuit. Each weekend was research, sketch, and a small wiring exercise, each with its own evidence (a photo of the conductor sizing chart, a voice memo working through NEC 220.14, a clip of a multimeter reading on the test bench). Six months later, on test day, he sizes a 50-foot 240V run by reflex — because of one wrong turn earlier when he ran 8-gauge on a circuit that needed 6.
 
@@ -82,7 +85,8 @@ Four scenarios, each in five fields. Together they cover all seven letters. Pers
 - **A** — practice-panel work has natural substructure (per-circuit). Flat steps force the choice between one umbrella step that loses the circuits or three siblings that lose the umbrella.
 - **C-order** — the circuits had to be done in order; the 15-amp lighting was the entry to the 20-amp run was the entry to the 240V. Sequence was the lesson, not bookkeeping.
 - **D** — every circuit produced a one-line takeaway ("derating drops 12-gauge from 20A at 4+ in conduit"); nowhere to put it.
-- **G** — the 8-gauge moment is the canonical lesson-from-failure: hypothesis (8 is plenty), contradiction (voltage drop on the long run), updated model (size by NEC Annex D, not by gut), forward reference (the journeyman exam).
+- **H** — the 8-gauge moment is _first_ an H moment, during the practice panel itself: hypothesis (8 is plenty for the 240V run), contradiction (voltage drop on the long run), updated model (size by NEC Annex D, not by gut), replacement step (re-run in 6-gauge). The 8-gauge step persists as a learning; the 6-gauge step follows from it. The learning's structured fields are populated _then_, not at goal completion.
+- **G** — the same learning fires forward six months later at the journeyman exam's circuit-sizing section. Forward-reference target: future similar steps across goals, not the immediate replacement. H and G are temporally distinct moments of the same chain.
 
 **ND lens.** For an ADHD + dyslexic learner, the sequence-as-syllabus and the lesson-as-artifact are not bonuses — they are the only things that make a six-month gap between practice and test survivable. NT learners can re-derive the order from a textbook on demand; Tomás cannot, and shouldn't have to.
 
@@ -165,14 +169,16 @@ The gaps surfaced above are not uniform in severity:
 - **D** is a `step.note` (or `step.context`) free-text field. Cheap.
 - **F** is a UI / capture-surface concern, not a schema concern — until it isn't (a triage state for unsorted captures may need its own column).
 - **G** is the deepest schema change. A lesson is not media — `evidence` is media-typed and pointed at a step. A lesson has structure (hypothesis, contradiction, updated model, forward reference), attaches to past steps, and surfaces _forward_ when similar steps are started. There is no forward-reference mechanism today.
+- **H** lives partly in the state vocabulary (E gains `learning` as a named state) and partly in a new self-reference. The misfired step persists in `status: 'learning'`, carrying the four falsification fields (hypothesis, contradiction, updated model, pointer to the replacement step). The replacement step gains a nullable `followsFromStepId` self-reference — distinct from A's `parentStepId`, since H is a within-sibling pivot, not a nesting relationship. Universally applicable (unlike G); no per-goal opt-in needed, because step-level falsification is a structural reality of all work, not a goal-type pattern.
 
-Solution-shape design is deliberately not in this section. Per the iteration strategy, prototyping is the next move for A, C, E, and G; B-soft and D could ship without a prototype if the framing is right.
+Solution-shape design is deliberately not in this section. Per the iteration strategy, prototyping is the next move for A, C, E, G, and H; B-soft and D could ship without a prototype if the framing is right.
 
 ## Open questions
 
 - **G's forward-reference mechanism.** Does a lesson live as its own table (`lesson.fromStepId`, `lesson.targetTag` or `lesson.targetStepId`), or as a structured field on a completed step that gets surfaced by tag-matching against a new step's title at creation? The two answers point at very different UIs.
 - **Opt-in granularity for G.** Per goal (recommended), per goal-template, or per-user-setting? Per-goal makes sense only if goal type is explicit; the current schema has no goal-type field, so this is its own question.
-- **State vocabulary scope.** _pending, completed, missed, waiting-external, in-progress, abandoned_ is six. Five or six feels right; the friend's testing did not surface a seventh.
+- **State vocabulary scope.** With H added, the candidate set is _pending, completed, missed, waiting-external, in-progress, abandoned, learning_ — seven. Whether all seven are user-namable, or whether some are system-derived (e.g. `learning` only reachable via the H pivot flow, never set directly), is a UX question.
+- **H's UI treatment.** A learning step has two states worth surfacing: the original framing (the hypothesis the user committed to) and the learned outcome (what the falsification revealed). Does the UI show both side-by-side, fold the original under the learning, or surface only the learned outcome with the original available on tap? The original framing is preserved in the data (decided: titles are not rewritten); the question is how it's rendered. Deferred to prototyping.
 - **Substructure depth.** One level of nesting, or arbitrary? One level handles every scenario above; arbitrary opens the door to outline-tool drift away from the task view's "one next thing" promise.
 - **Where the success scenarios live.** A parallel section — the same four personas, written as what success looks like once the model holds — is queued but not yet shaped. May land in this doc; may land alongside.
 - **What this implies for the task view.** [The task view](../vision/product-vision.md#the-task-view--next-best-step) shows one next step per active goal. With substructure (A) and a richer state vocabulary (E), "next step" becomes ambiguous — the next leaf, the next umbrella, the next non-waiting step. Resolving this is part of any prototype.
