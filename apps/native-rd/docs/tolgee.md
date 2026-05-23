@@ -24,7 +24,7 @@ Tracked by [#136](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/
 
 ## One-time install (Mac mini)
 
-Prereqs: Docker Desktop running, Tailscale logged in.
+Prereqs: Docker (OrbStack or Docker Desktop) running, Tailscale logged in, MagicDNS enabled.
 
 ```sh
 cd apps/native-rd/tools/tolgee
@@ -34,7 +34,17 @@ mkdir -p ~/tolgee-data/postgres
 docker compose up -d
 ```
 
-Tolgee will be reachable on `http://<mac-mini-tailnet-name>:8085`. The first boot seeds the admin user from `TOLGEE_ADMIN_USERNAME` + `TOLGEE_ADMIN_PASSWORD`.
+Tolgee is now bound to `127.0.0.1:8085` on the mini. To make it reachable from other tailnet devices (your laptop), expose it via `tailscale serve`:
+
+```sh
+tailscale serve --bg http://localhost:8085
+```
+
+That maps the mini's MagicDNS hostname to the container over HTTPS. The serve config persists across reboots; tear it down with `tailscale serve --https=443 off`.
+
+Run `tailscale status --json | jq -r .Self.DNSName` on the mini to find the exact hostname — call it `<TS_HOST>` in the snippets below. Open `https://<TS_HOST>/` from any tailnet device to reach the Tolgee UI.
+
+The first container boot seeds the admin user from `TOLGEE_ADMIN_USERNAME` + `TOLGEE_ADMIN_PASSWORD`.
 
 Sign in, then in **Account settings → Password** change the admin password to something different from `.env` (Tolgee ignores the env var after the user exists, but rotating it once means the .env value is no longer a live credential).
 
@@ -49,14 +59,14 @@ docker image inspect tolgee/tolgee:latest --format='{{index .RepoDigests 0}}'
 
 ## Routine operation
 
-| Action               | Command                                                                               |
-| -------------------- | ------------------------------------------------------------------------------------- |
-| Start                | `docker compose up -d` (from `apps/native-rd/tools/tolgee/`)                          |
-| Stop                 | `docker compose down`                                                                 |
-| Logs                 | `docker compose logs -f tolgee`                                                       |
-| Restart after reboot | Docker Desktop auto-starts; containers come back via `restart: unless-stopped`        |
-| Update Tolgee        | `docker compose pull tolgee && docker compose up -d` (then re-pin digest as above)    |
-| Reach from laptop    | Open `http://<mac-mini-tailnet-name>:8085` while both devices are on the same tailnet |
+| Action               | Command                                                                                                           |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Start                | `docker compose up -d` (from `apps/native-rd/tools/tolgee/`)                                                      |
+| Stop                 | `docker compose down`                                                                                             |
+| Logs                 | `docker compose logs -f tolgee`                                                                                   |
+| Restart after reboot | Docker Desktop auto-starts; containers come back via `restart: unless-stopped`                                    |
+| Update Tolgee        | `docker compose pull tolgee && docker compose up -d` (then re-pin digest as above)                                |
+| Reach from laptop    | Open `https://<TS_HOST>/` while both devices are on the same tailnet (requires `tailscale serve` set up as above) |
 
 **Mac mini sleep caveat.** When the mini sleeps, Docker pauses. Wake it (e.g. open a Tailscale-routed Finder tab) before opening Tolgee from another device.
 
@@ -100,7 +110,7 @@ Two prereqs in the Tolgee UI before importing for the first time:
 Then from `apps/native-rd/`:
 
 ```sh
-export TOLGEE_API_URL=http://<mac-mini-tailnet-name>:8085
+export TOLGEE_API_URL=https://<TS_HOST>
 export TOLGEE_API_KEY=<your-project-api-key>
 bunx tolgee push
 ```
@@ -119,7 +129,7 @@ Three env vars enable the live editing loop. Add to `apps/native-rd/.env.local` 
 
 ```sh
 EXPO_PUBLIC_TOLGEE_ENABLED=true
-EXPO_PUBLIC_TOLGEE_API_URL=http://<mac-mini-tailnet-name>:8085
+EXPO_PUBLIC_TOLGEE_API_URL=https://<TS_HOST>
 EXPO_PUBLIC_TOLGEE_API_KEY=<your-project-api-key>
 # Optional — switches the running app to the de locale instead of en:
 EXPO_PUBLIC_I18N_DE=true
@@ -144,7 +154,7 @@ Tolgee's DevTools overlay appears in the running Expo web build; alt-clicking an
 From `apps/native-rd/`:
 
 ```sh
-export TOLGEE_API_URL=http://<mac-mini-tailnet-name>:8085
+export TOLGEE_API_URL=https://<TS_HOST>
 export TOLGEE_API_KEY=<your-project-api-key>
 bun run i18n:pull
 ```
@@ -180,7 +190,7 @@ Pseudo takes precedence in `selectSupportedLanguage` if both env vars are on.
 ## Troubleshooting
 
 - **`docker compose up` fails on the volume mount** — the `POSTGRES_DATA_DIR` path must exist. Run `mkdir -p ~/tolgee-data/postgres` and retry.
-- **Can't reach `<mac-mini>:8085` from laptop** — confirm both devices are on the same tailnet (`tailscale status`), and confirm the container is bound to `127.0.0.1:8085` plus reachable on the host's tailnet IP. The host's firewall must allow Tailscale traffic.
+- **Can't reach `https://<TS_HOST>/` from laptop** — confirm both devices are on the same tailnet (`tailscale status`), MagicDNS is on (`tailscale status --json | jq .MagicDNSSuffix`), and `tailscale serve status` on the mini shows a `/ proxy http://localhost:8085` line. If not, re-run `tailscale serve --bg http://localhost:8085`.
 - **Tolgee complains about i18next version on web** — `@tolgee/i18next@7` declares `peerDependencies.i18next: "*"`. If a future i18next major actually breaks the wrap, the fallback is to drop the SDK and rely on `bun run i18n:pull` for the round-trip (you lose live in-context but keep the editor).
 - **`bun run i18n:pull` errors with "Missing required env var"** — `TOLGEE_API_URL` / `TOLGEE_API_KEY` (and `TOLGEE_PROJECT_ID` when using a PAT) must be set in the shell that runs the command. The script does not read `apps/native-rd/.env.local`.
 - **Empty `de/*.json` after pull** — expected at this stage. The German bundles ship empty in this prototype; #76 is where they get filled.
