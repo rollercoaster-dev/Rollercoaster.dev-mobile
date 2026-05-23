@@ -300,6 +300,25 @@ describe("GoalsScreen", () => {
       },
     );
 
+    it("renders card.a11y.label (no next step) under pseudo locale", async () => {
+      const goals = [makeGoalRow({ id: "goal-1", title: "Learn TypeScript" })];
+      mockUseQuery.mockImplementation((query: { __brand?: string }) => {
+        if (query?.__brand === "activeGoalsQuery") return goals;
+        return [];
+      });
+
+      await i18n.changeLanguage("pseudo");
+      renderWithProviders(<GoalsScreen />);
+      const pseudo = i18n.t("goals:card.a11y.label", {
+        title: "Learn TypeScript",
+        stepsCompleted: 0,
+        stepsTotal: 0,
+        status: i18n.t("common:status.active"),
+      });
+      expect(pseudo.startsWith("[")).toBe(true);
+      expect(screen.getByLabelText(pseudo)).toBeOnTheScreen();
+    });
+
     it("renders interpolated card.a11y.labelWithNextStep under pseudo locale", async () => {
       const goals = [makeGoalRow({ id: "goal-1", title: "Learn TypeScript" })];
       const steps = [

@@ -118,9 +118,11 @@ function GoalList() {
         onCancel={() => setDeleteTarget(null)}
         onConfirm={confirmDelete}
         title={t("confirmDelete.title")}
-        message={t("confirmDelete.message", {
-          title: deleteTarget?.title ?? "",
-        })}
+        message={
+          deleteTarget
+            ? t("confirmDelete.message", { title: deleteTarget.title })
+            : ""
+        }
         confirmLabel={t("common:actions.delete")}
         cancelLabel={t("common:actions.cancel")}
       />
