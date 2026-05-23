@@ -5,6 +5,7 @@ import {
   fireEvent,
   waitFor,
 } from "../../../__tests__/test-utils";
+import { i18n } from "../../../i18n";
 import { CaptureLinkScreen } from "../CaptureLinkScreen";
 import { createEvidence, EvidenceType } from "../../../db";
 
@@ -59,30 +60,39 @@ describe("CaptureLinkScreen", () => {
   it("renders URL and caption input fields", () => {
     renderScreen();
 
-    expect(screen.getByText("Add Link")).toBeTruthy();
-    expect(screen.getByLabelText("URL")).toBeTruthy();
-    expect(screen.getByLabelText("Caption (optional)")).toBeTruthy();
-    expect(screen.getByText("Save Link")).toBeTruthy();
-    expect(screen.getByText("Cancel")).toBeTruthy();
+    expect(screen.getByText(i18n.t("captureLink:header"))).toBeTruthy();
+    expect(
+      screen.getByLabelText(i18n.t("captureLink:urlInput.label")),
+    ).toBeTruthy();
+    expect(
+      screen.getByLabelText(i18n.t("captureLink:captionInput.label")),
+    ).toBeTruthy();
+    expect(screen.getByText(i18n.t("captureLink:actions.save"))).toBeTruthy();
+    expect(screen.getByText(i18n.t("common:actions.cancel"))).toBeTruthy();
   });
 
   it("shows validation error for empty URL on save", () => {
     renderScreen();
 
-    fireEvent.press(screen.getByText("Save Link"));
+    fireEvent.press(screen.getByText(i18n.t("captureLink:actions.save")));
 
-    expect(screen.getByText("Please enter a URL")).toBeTruthy();
+    expect(
+      screen.getByText(i18n.t("captureLink:validation.urlRequired")),
+    ).toBeTruthy();
     expect(mockCreateEvidence).not.toHaveBeenCalled();
   });
 
   it("shows validation error for invalid URL", () => {
     renderScreen();
 
-    fireEvent.changeText(screen.getByLabelText("URL"), "not-a-url");
-    fireEvent.press(screen.getByText("Save Link"));
+    fireEvent.changeText(
+      screen.getByLabelText(i18n.t("captureLink:urlInput.label")),
+      "not-a-url",
+    );
+    fireEvent.press(screen.getByText(i18n.t("captureLink:actions.save")));
 
     expect(
-      screen.getByText("Please enter a valid URL (e.g. https://example.com)"),
+      screen.getByText(i18n.t("captureLink:validation.urlInvalid")),
     ).toBeTruthy();
     expect(mockCreateEvidence).not.toHaveBeenCalled();
   });
@@ -91,20 +101,30 @@ describe("CaptureLinkScreen", () => {
     renderScreen();
 
     // Trigger the error first
-    fireEvent.press(screen.getByText("Save Link"));
-    expect(screen.getByText("Please enter a URL")).toBeTruthy();
+    fireEvent.press(screen.getByText(i18n.t("captureLink:actions.save")));
+    expect(
+      screen.getByText(i18n.t("captureLink:validation.urlRequired")),
+    ).toBeTruthy();
 
     // Start typing to clear error
-    fireEvent.changeText(screen.getByLabelText("URL"), "h");
+    fireEvent.changeText(
+      screen.getByLabelText(i18n.t("captureLink:urlInput.label")),
+      "h",
+    );
 
-    expect(screen.queryByText("Please enter a URL")).toBeNull();
+    expect(
+      screen.queryByText(i18n.t("captureLink:validation.urlRequired")),
+    ).toBeNull();
   });
 
   it("saves link evidence with goalId and navigates back", () => {
     renderScreen();
 
-    fireEvent.changeText(screen.getByLabelText("URL"), "https://example.com");
-    fireEvent.press(screen.getByText("Save Link"));
+    fireEvent.changeText(
+      screen.getByLabelText(i18n.t("captureLink:urlInput.label")),
+      "https://example.com",
+    );
+    fireEvent.press(screen.getByText(i18n.t("captureLink:actions.save")));
 
     expect(mockCreateEvidence).toHaveBeenCalledWith({
       goalId: "goal_test_123",
@@ -120,14 +140,14 @@ describe("CaptureLinkScreen", () => {
     renderScreen();
 
     fireEvent.changeText(
-      screen.getByLabelText("URL"),
+      screen.getByLabelText(i18n.t("captureLink:urlInput.label")),
       "https://example.com/article",
     );
     fireEvent.changeText(
-      screen.getByLabelText("Caption (optional)"),
+      screen.getByLabelText(i18n.t("captureLink:captionInput.label")),
       "Great article",
     );
-    fireEvent.press(screen.getByText("Save Link"));
+    fireEvent.press(screen.getByText(i18n.t("captureLink:actions.save")));
 
     expect(mockCreateEvidence).toHaveBeenCalledWith({
       goalId: "goal_test_123",
@@ -141,8 +161,11 @@ describe("CaptureLinkScreen", () => {
   it("saves with stepId when provided (goal-level evidence omits goalId)", () => {
     renderScreen({ goalId: "goal_test_123", stepId: "step_test_456" });
 
-    fireEvent.changeText(screen.getByLabelText("URL"), "https://example.com");
-    fireEvent.press(screen.getByText("Save Link"));
+    fireEvent.changeText(
+      screen.getByLabelText(i18n.t("captureLink:urlInput.label")),
+      "https://example.com",
+    );
+    fireEvent.press(screen.getByText(i18n.t("captureLink:actions.save")));
 
     expect(mockCreateEvidence).toHaveBeenCalledWith({
       goalId: undefined,
@@ -156,7 +179,7 @@ describe("CaptureLinkScreen", () => {
   it("navigates back when Cancel is pressed", () => {
     renderScreen();
 
-    fireEvent.press(screen.getByText("Cancel"));
+    fireEvent.press(screen.getByText(i18n.t("common:actions.cancel")));
 
     expect(mockGoBack).toHaveBeenCalled();
   });
@@ -173,20 +196,69 @@ describe("CaptureLinkScreen", () => {
     renderScreen();
 
     fireEvent.changeText(
-      screen.getByLabelText("URL"),
+      screen.getByLabelText(i18n.t("captureLink:urlInput.label")),
       "https://example.com/path",
     );
 
     expect(
-      screen.getByLabelText("Link preview: https://example.com/path"),
+      screen.getByLabelText(
+        i18n.t("captureLink:preview.a11y", {
+          url: "https://example.com/path",
+        }),
+      ),
     ).toBeTruthy();
   });
 
   it("does not show link preview for invalid URL", () => {
     renderScreen();
 
-    fireEvent.changeText(screen.getByLabelText("URL"), "not-a-url");
+    fireEvent.changeText(
+      screen.getByLabelText(i18n.t("captureLink:urlInput.label")),
+      "not-a-url",
+    );
 
     expect(screen.queryByLabelText(/Link preview:/)).toBeNull();
+  });
+
+  describe("pseudo locale", () => {
+    afterEach(async () => {
+      if (i18n.language !== "en") await i18n.changeLanguage("en");
+    });
+
+    // Representative spread: header (text), URL input label (a11y), save
+    // button (text), and the cross-namespace Cancel button (text, common).
+    // A reverted t() call on any of these surfaces shows up as plain English
+    // under pseudo.
+    it.each([
+      { key: "captureLink:header", query: "text" },
+      { key: "captureLink:urlInput.label", query: "label" },
+      { key: "captureLink:actions.save", query: "text" },
+      { key: "common:actions.cancel", query: "text" },
+    ] as const)(
+      "renders $key as bracketed copy under pseudo locale",
+      async ({ key, query }) => {
+        await i18n.changeLanguage("pseudo");
+        renderScreen();
+        const pseudo = i18n.t(key);
+        expect(pseudo.startsWith("[")).toBe(true);
+        const get = query === "text" ? screen.getByText : screen.getByLabelText;
+        expect(get(pseudo)).toBeOnTheScreen();
+      },
+    );
+
+    it("renders interpolated preview.a11y under pseudo locale", async () => {
+      await i18n.changeLanguage("pseudo");
+      renderScreen();
+      fireEvent.changeText(
+        screen.getByLabelText(i18n.t("captureLink:urlInput.label")),
+        "https://example.com/path",
+      );
+      const pseudo = i18n.t("captureLink:preview.a11y", {
+        url: "https://example.com/path",
+      });
+      expect(pseudo.startsWith("[")).toBe(true);
+      expect(pseudo).toContain("https://example.com/path");
+      expect(screen.getByLabelText(pseudo)).toBeOnTheScreen();
+    });
   });
 });

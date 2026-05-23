@@ -4,6 +4,7 @@ import {
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
+import { i18n } from "../../../i18n";
 import { CaptureTextNote } from "../CaptureTextNote";
 
 const mockGoBack = jest.fn();
@@ -58,21 +59,25 @@ describe("CaptureTextNote", () => {
     renderWithProviders(
       <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
     );
-    expect(screen.getByText("Write a Note")).toBeOnTheScreen();
+    expect(screen.getByText(i18n.t("captureText:header"))).toBeOnTheScreen();
   });
 
   it("renders text input with placeholder", () => {
     renderWithProviders(
       <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
     );
-    expect(screen.getByLabelText("Note content")).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText(i18n.t("captureText:input.label")),
+    ).toBeOnTheScreen();
   });
 
   it("renders caption input", () => {
     renderWithProviders(
       <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
     );
-    expect(screen.getByText("Caption (optional)")).toBeOnTheScreen();
+    expect(
+      screen.getByText(i18n.t("captureText:caption.label")),
+    ).toBeOnTheScreen();
   });
 
   it("renders character counter starting at 0", () => {
@@ -101,7 +106,9 @@ describe("CaptureTextNote", () => {
     renderWithProviders(
       <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
     );
-    const saveButton = screen.getByLabelText("Save Note");
+    const saveButton = screen.getByLabelText(
+      i18n.t("captureText:actions.save"),
+    );
     expect(saveButton.props.accessibilityState?.disabled).toBe(true);
   });
 
@@ -110,10 +117,12 @@ describe("CaptureTextNote", () => {
       <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
     );
     fireEvent.changeText(
-      screen.getByLabelText("Note content"),
+      screen.getByLabelText(i18n.t("captureText:input.label")),
       "My first note",
     );
-    const saveButton = screen.getByLabelText("Save Note");
+    const saveButton = screen.getByLabelText(
+      i18n.t("captureText:actions.save"),
+    );
     expect(saveButton.props.accessibilityState?.disabled).not.toBe(true);
   });
 
@@ -121,7 +130,10 @@ describe("CaptureTextNote", () => {
     renderWithProviders(
       <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
     );
-    fireEvent.changeText(screen.getByLabelText("Note content"), "Hello");
+    fireEvent.changeText(
+      screen.getByLabelText(i18n.t("captureText:input.label")),
+      "Hello",
+    );
     expect(screen.getByText("5/1000")).toBeOnTheScreen();
   });
 
@@ -130,10 +142,10 @@ describe("CaptureTextNote", () => {
       <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
     );
     fireEvent.changeText(
-      screen.getByLabelText("Note content"),
+      screen.getByLabelText(i18n.t("captureText:input.label")),
       "My learning note",
     );
-    fireEvent.press(screen.getByText("Save Note"));
+    fireEvent.press(screen.getByText(i18n.t("captureText:actions.save")));
 
     expect(createEvidence).toHaveBeenCalledWith({
       goalId: "goal_test_123",
@@ -149,8 +161,11 @@ describe("CaptureTextNote", () => {
     renderWithProviders(
       <CaptureTextNote route={routeWithStep} navigation={{} as any} />,
     );
-    fireEvent.changeText(screen.getByLabelText("Note content"), "Step note");
-    fireEvent.press(screen.getByText("Save Note"));
+    fireEvent.changeText(
+      screen.getByLabelText(i18n.t("captureText:input.label")),
+      "Step note",
+    );
+    fireEvent.press(screen.getByText(i18n.t("captureText:actions.save")));
 
     expect(createEvidence).toHaveBeenCalledWith({
       goalId: undefined,
@@ -166,14 +181,14 @@ describe("CaptureTextNote", () => {
       <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
     );
     fireEvent.changeText(
-      screen.getByLabelText("Note content"),
+      screen.getByLabelText(i18n.t("captureText:input.label")),
       "My note content",
     );
     fireEvent.changeText(
-      screen.getByLabelText("Caption (optional)"),
+      screen.getByLabelText(i18n.t("captureText:caption.label")),
       "My caption",
     );
-    fireEvent.press(screen.getByText("Save Note"));
+    fireEvent.press(screen.getByText(i18n.t("captureText:actions.save")));
 
     expect(createEvidence).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -187,10 +202,10 @@ describe("CaptureTextNote", () => {
       <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
     );
     fireEvent.changeText(
-      screen.getByLabelText("Note content"),
+      screen.getByLabelText(i18n.t("captureText:input.label")),
       "  trimmed note  ",
     );
-    fireEvent.press(screen.getByText("Save Note"));
+    fireEvent.press(screen.getByText(i18n.t("captureText:actions.save")));
 
     expect(createEvidence).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -203,7 +218,10 @@ describe("CaptureTextNote", () => {
     renderWithProviders(
       <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
     );
-    fireEvent.changeText(screen.getByLabelText("Note content"), "   ");
+    fireEvent.changeText(
+      screen.getByLabelText(i18n.t("captureText:input.label")),
+      "   ",
+    );
     // Character counter should show 0 (trimmed)
     expect(screen.getByText("0/1000")).toBeOnTheScreen();
     expect(createEvidence).not.toHaveBeenCalled();
@@ -213,9 +231,58 @@ describe("CaptureTextNote", () => {
     renderWithProviders(
       <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
     );
-    fireEvent.changeText(screen.getByLabelText("Note content"), "Hello");
+    fireEvent.changeText(
+      screen.getByLabelText(i18n.t("captureText:input.label")),
+      "Hello",
+    );
     expect(
-      screen.getByLabelText("5 of 1000 characters used"),
+      screen.getByLabelText(
+        i18n.t("captureText:charCount.a11y", { count: 5, max: 1000 }),
+      ),
     ).toBeOnTheScreen();
+  });
+
+  describe("pseudo locale", () => {
+    afterEach(async () => {
+      if (i18n.language !== "en") await i18n.changeLanguage("en");
+    });
+
+    // Representative spread: header (text), input.label (a11y), and the
+    // save-button label (text). Covers the three visible surfaces a missed
+    // t() call would leave in plain English under pseudo.
+    it.each([
+      { key: "captureText:header", query: "text" },
+      { key: "captureText:input.label", query: "label" },
+      { key: "captureText:actions.save", query: "text" },
+    ] as const)(
+      "renders $key as bracketed copy under pseudo locale",
+      async ({ key, query }) => {
+        await i18n.changeLanguage("pseudo");
+        renderWithProviders(
+          <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
+        );
+        const pseudo = i18n.t(key);
+        expect(pseudo.startsWith("[")).toBe(true);
+        const get = query === "text" ? screen.getByText : screen.getByLabelText;
+        expect(get(pseudo)).toBeOnTheScreen();
+      },
+    );
+
+    it("renders interpolated charCount.a11y under pseudo locale", async () => {
+      await i18n.changeLanguage("pseudo");
+      renderWithProviders(
+        <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
+      );
+      fireEvent.changeText(
+        screen.getByLabelText(i18n.t("captureText:input.label")),
+        "Hello",
+      );
+      const pseudo = i18n.t("captureText:charCount.a11y", {
+        count: 5,
+        max: 1000,
+      });
+      expect(pseudo.startsWith("[")).toBe(true);
+      expect(screen.getByLabelText(pseudo)).toBeOnTheScreen();
+    });
   });
 });
