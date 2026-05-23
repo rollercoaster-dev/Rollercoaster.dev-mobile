@@ -3,6 +3,7 @@ import {
   renderWithProviders,
   screen,
   fireEvent,
+  act,
 } from "../../../__tests__/test-utils";
 import { i18n } from "../../../i18n";
 import { GoalsScreen } from "../GoalsScreen";
@@ -250,7 +251,11 @@ describe("GoalsScreen", () => {
 
   describe("pseudo locale", () => {
     afterEach(async () => {
-      if (i18n.language !== "en") await i18n.changeLanguage("en");
+      if (i18n.language !== "en") {
+        await act(async () => {
+          await i18n.changeLanguage("en");
+        });
+      }
     });
 
     // Representative spread across header / empty-state body / interpolated
