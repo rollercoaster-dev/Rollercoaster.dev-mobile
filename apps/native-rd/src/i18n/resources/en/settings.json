@@ -1,1 +1,30 @@
-{}
+{
+  "title": "Settings",
+  "density": {
+    "title": "Content Density",
+    "options": {
+      "compact": {
+        "label": "Compact",
+        "description": "Tighter spacing (0.75×)"
+      },
+      "default": {
+        "label": "Default",
+        "description": "Standard spacing"
+      },
+      "comfortable": {
+        "label": "Comfortable",
+        "description": "Roomier spacing (1.25×)"
+      }
+    }
+  },
+  "language": {
+    "title": "Language (dev)",
+    "pseudo": "Pseudo locale"
+  },
+  "about": {
+    "title": "About",
+    "appLabel": "App",
+    "versionLabel": "Version",
+    "builtWith": "Built with Expo + Evolu + Unistyles"
+  }
+}

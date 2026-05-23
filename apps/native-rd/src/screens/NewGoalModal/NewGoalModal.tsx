@@ -18,15 +18,18 @@ export function NewGoalModal() {
   const navigation =
     useNavigation<NativeStackNavigationProp<GoalsStackParamList, "NewGoal">>();
   const [title, setTitle] = useState("");
-  const [titleError, setTitleError] = useState("");
+  const [titleErrorKey, setTitleErrorKey] = useState<
+    "errors.titleRequired" | "errors.createFailed" | null
+  >(null);
   // Subscribe to theme changes to trigger re-renders
   const { theme } = useUnistyles();
-  const { t } = useTranslation();
+  const { t } = useTranslation(["newGoal", "common"]);
+  const titleError = titleErrorKey ? t(titleErrorKey) : "";
 
   function handleCreate() {
     const trimmed = title.trim();
     if (!trimmed) {
-      setTitleError("Title is required");
+      setTitleErrorKey("errors.titleRequired");
       return;
     }
 
@@ -37,7 +40,7 @@ export function NewGoalModal() {
         goalId: result.value.id,
       });
     } else {
-      setTitleError("Failed to create goal");
+      setTitleErrorKey("errors.createFailed");
     }
   }
 
@@ -48,7 +51,7 @@ export function NewGoalModal() {
     >
       <View style={styles.topBar}>
         <View style={styles.spacer} />
-        <Text variant="label">New Goal</Text>
+        <Text variant="label">{t("title")}</Text>
         <IconButton
           icon={
             <Text variant="body" style={styles.closeIcon}>
@@ -57,7 +60,7 @@ export function NewGoalModal() {
           }
           onPress={() => navigation.goBack()}
           tone="ghost"
-          accessibilityLabel={t("actions.close")}
+          accessibilityLabel={t("common:actions.close")}
           size="sm"
         />
       </View>
@@ -65,12 +68,12 @@ export function NewGoalModal() {
       <View style={styles.form}>
         <Card>
           <Input
-            label="Title"
-            placeholder="What do you want to learn?"
+            label={t("fields.title.label")}
+            placeholder={t("fields.title.placeholder")}
             value={title}
             onChangeText={(text) => {
               setTitle(text);
-              if (titleError) setTitleError("");
+              if (titleErrorKey) setTitleErrorKey(null);
             }}
             error={titleError}
             autoFocus
@@ -81,7 +84,7 @@ export function NewGoalModal() {
         </Card>
 
         <Button
-          label="Create Goal"
+          label={t("cta.create")}
           onPress={handleCreate}
           disabled={!title.trim()}
           testID="create-goal"

@@ -8,7 +8,18 @@
     "back": "Back",
     "next": "Next",
     "close": "Close",
-    "retry": "Retry"
+    "retry": "Retry",
+    "undo": "Undo"
+  },
+  "navigation": {
+    "tabs": {
+      "goals": "Goals",
+      "badges": "Badges",
+      "settings": "Settings"
+    },
+    "fab": {
+      "newGoal": "New goal"
+    }
   },
   "evidenceTypes": {
     "photo": { "label": "Take Photo", "shortLabel": "Photo" },

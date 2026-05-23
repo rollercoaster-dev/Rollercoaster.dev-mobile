@@ -2,6 +2,7 @@ import React from "react";
 import { ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useUnistyles } from "react-native-unistyles";
+import { useTranslation } from "react-i18next";
 import { Text } from "../../components/Text";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
@@ -17,6 +18,7 @@ export interface WelcomeScreenProps {
 export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
   const { theme } = useUnistyles();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation(["welcome", "common"]);
 
   return (
     <View
@@ -27,10 +29,10 @@ export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
           <BrandMark size={56} />
           <View style={styles.heroText}>
             <Text variant="label" style={styles.heroGreeting}>
-              Hey there 👋
+              {t("hero.greeting")}
             </Text>
             <Text variant="display" style={styles.heroTitle}>
-              Welcome to your ride.
+              {t("hero.title")}
             </Text>
           </View>
         </View>
@@ -41,13 +43,11 @@ export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
         contentContainerStyle={styles.bodyContent}
       >
         <Text variant="body" style={styles.copy}>
-          rollercoaster.dev is your personal goal tracker. Everything stays on
-          your phone — your data, your pace, your ride.
+          {t("intro.body1")}
         </Text>
 
         <Text variant="body" style={styles.copy}>
-          First, let&apos;s pick a look that fits your brain. Tap a swatch — the
-          whole app changes so you can see how it feels.
+          {t("intro.body2")}
         </Text>
 
         <Card size="compact">
@@ -56,16 +56,16 @@ export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
               <Text style={styles.sampleBadgeText}>★</Text>
             </View>
             <View style={styles.sampleText}>
-              <Text variant="title">Daily reading</Text>
+              <Text variant="title">{t("common:theme.preview.title")}</Text>
               <Text variant="caption" style={styles.sampleMeta}>
-                3 of 5 days complete
+                {t("sample.progress")}
               </Text>
             </View>
           </View>
         </Card>
 
         <Text variant="label" style={styles.pickerLabel}>
-          Your look (tap to preview)
+          {t("themePicker.label")}
         </Text>
         <ThemeChipGrid />
       </ScrollView>
@@ -76,9 +76,9 @@ export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
           { paddingBottom: theme.space[2] + insets.bottom },
         ]}
       >
-        <Button label="Get Started" onPress={onGetStarted} size="lg" />
+        <Button label={t("cta.getStarted")} onPress={onGetStarted} size="lg" />
         <Text variant="caption" style={styles.footnote}>
-          You can change this anytime in Settings.
+          {t("cta.footnote")}
         </Text>
       </View>
     </View>

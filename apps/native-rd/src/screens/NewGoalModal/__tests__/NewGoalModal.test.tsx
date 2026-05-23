@@ -4,6 +4,7 @@ import {
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
+import { i18n } from "../../../i18n";
 import { NewGoalModal } from "../NewGoalModal";
 
 const mockNavigate = jest.fn();
@@ -39,52 +40,74 @@ beforeEach(() => {
 describe("NewGoalModal", () => {
   it("renders form with title input", () => {
     renderWithProviders(<NewGoalModal />);
-    expect(screen.getByText("New Goal")).toBeOnTheScreen();
-    expect(screen.getByText("Title")).toBeOnTheScreen();
+    expect(screen.getByText(i18n.t("newGoal:title"))).toBeOnTheScreen();
+    expect(
+      screen.getByText(i18n.t("newGoal:fields.title.label")),
+    ).toBeOnTheScreen();
   });
 
   it("renders Create Goal button", () => {
     renderWithProviders(<NewGoalModal />);
-    expect(screen.getByText("Create Goal")).toBeOnTheScreen();
+    expect(screen.getByText(i18n.t("newGoal:cta.create"))).toBeOnTheScreen();
   });
 
   it("has close button with accessibility label", () => {
     renderWithProviders(<NewGoalModal />);
-    expect(screen.getByLabelText("Close")).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText(i18n.t("common:actions.close")),
+    ).toBeOnTheScreen();
   });
 
   it("navigates back when close button is pressed", () => {
     renderWithProviders(<NewGoalModal />);
-    fireEvent.press(screen.getByLabelText("Close"));
+    fireEvent.press(screen.getByLabelText(i18n.t("common:actions.close")));
     expect(mockGoBack).toHaveBeenCalledTimes(1);
   });
 
   it("disables Create Goal button when title is empty", () => {
     renderWithProviders(<NewGoalModal />);
-    const button = screen.getByLabelText("Create Goal");
+    const button = screen.getByLabelText(i18n.t("newGoal:cta.create"));
     expect(button.props.accessibilityState?.disabled).toBe(true);
   });
 
   it("shows validation error on submit editing with empty title", () => {
     renderWithProviders(<NewGoalModal />);
-    fireEvent(screen.getByLabelText("Title"), "submitEditing");
-    expect(screen.getByText("Title is required")).toBeOnTheScreen();
+    fireEvent(
+      screen.getByLabelText(i18n.t("newGoal:fields.title.label")),
+      "submitEditing",
+    );
+    expect(
+      screen.getByText(i18n.t("newGoal:errors.titleRequired")),
+    ).toBeOnTheScreen();
     expect(createGoal).not.toHaveBeenCalled();
   });
 
   it("shows validation error on submit editing with whitespace title", () => {
     renderWithProviders(<NewGoalModal />);
-    fireEvent.changeText(screen.getByLabelText("Title"), "   ");
-    fireEvent(screen.getByLabelText("Title"), "submitEditing");
-    expect(screen.getByText("Title is required")).toBeOnTheScreen();
+    fireEvent.changeText(
+      screen.getByLabelText(i18n.t("newGoal:fields.title.label")),
+      "   ",
+    );
+    fireEvent(
+      screen.getByLabelText(i18n.t("newGoal:fields.title.label")),
+      "submitEditing",
+    );
+    expect(
+      screen.getByText(i18n.t("newGoal:errors.titleRequired")),
+    ).toBeOnTheScreen();
     expect(createGoal).not.toHaveBeenCalled();
   });
 
   it("creates goal and navigates to BadgeDesigner on valid submit", () => {
     createGoal.mockReturnValue({ ok: true, value: { id: "goal-123" } });
     renderWithProviders(<NewGoalModal />);
-    fireEvent.changeText(screen.getByLabelText("Title"), "Learn TypeScript");
-    fireEvent.press(screen.getByText("Create Goal"));
+    fireEvent.changeText(
+      screen.getByLabelText(i18n.t("newGoal:fields.title.label")),
+      "Learn TypeScript",
+    );
+    fireEvent.press(
+      screen.getByRole("button", { name: i18n.t("newGoal:cta.create") }),
+    );
     expect(createGoal).toHaveBeenCalledWith("Learn TypeScript");
     expect(mockReplace).toHaveBeenCalledWith("BadgeDesigner", {
       mode: "new-goal",
@@ -95,29 +118,84 @@ describe("NewGoalModal", () => {
   it("trims title before creating goal", () => {
     createGoal.mockReturnValue({ ok: true, value: { id: "goal-456" } });
     renderWithProviders(<NewGoalModal />);
-    fireEvent.changeText(screen.getByLabelText("Title"), "  Learn Rust  ");
-    fireEvent.press(screen.getByText("Create Goal"));
+    fireEvent.changeText(
+      screen.getByLabelText(i18n.t("newGoal:fields.title.label")),
+      "  Learn Rust  ",
+    );
+    fireEvent.press(
+      screen.getByRole("button", { name: i18n.t("newGoal:cta.create") }),
+    );
     expect(createGoal).toHaveBeenCalledWith("Learn Rust");
   });
 
   it("shows error when createGoal fails", () => {
     createGoal.mockReturnValue({ ok: false });
     renderWithProviders(<NewGoalModal />);
-    fireEvent.changeText(screen.getByLabelText("Title"), "Learn Go");
-    fireEvent.press(screen.getByText("Create Goal"));
+    fireEvent.changeText(
+      screen.getByLabelText(i18n.t("newGoal:fields.title.label")),
+      "Learn Go",
+    );
+    fireEvent.press(
+      screen.getByRole("button", { name: i18n.t("newGoal:cta.create") }),
+    );
     expect(createGoal).toHaveBeenCalledWith("Learn Go");
     expect(mockReplace).not.toHaveBeenCalled();
-    expect(screen.getByText("Failed to create goal")).toBeOnTheScreen();
+    expect(
+      screen.getByText(i18n.t("newGoal:errors.createFailed")),
+    ).toBeOnTheScreen();
+  });
+
+  describe("pseudo locale", () => {
+    afterEach(async () => {
+      if (i18n.language !== "en") await i18n.changeLanguage("en");
+    });
+
+    // Multiple keys across title/field/CTA so a partial-revert regression
+    // can't escape detection by sneaking past a single asserted key.
+    // Placeholder text is a TextInput prop, not a Text node, so we cover it
+    // separately via getByPlaceholderText.
+    it.each([
+      "newGoal:title",
+      "newGoal:fields.title.label",
+      "newGoal:cta.create",
+    ] as const)(
+      "renders %s as bracketed copy under pseudo locale",
+      async (key) => {
+        await i18n.changeLanguage("pseudo");
+        renderWithProviders(<NewGoalModal />);
+        const pseudo = i18n.t(key);
+        expect(pseudo.startsWith("[")).toBe(true);
+        expect(screen.getByText(pseudo)).toBeOnTheScreen();
+      },
+    );
+
+    it("renders the title input placeholder as bracketed copy under pseudo locale", async () => {
+      await i18n.changeLanguage("pseudo");
+      renderWithProviders(<NewGoalModal />);
+      const pseudo = i18n.t("newGoal:fields.title.placeholder");
+      expect(pseudo.startsWith("[")).toBe(true);
+      expect(screen.getByPlaceholderText(pseudo)).toBeOnTheScreen();
+    });
   });
 
   it("clears validation error when typing after failed submit", () => {
     renderWithProviders(<NewGoalModal />);
     // Submit empty via keyboard
-    fireEvent(screen.getByLabelText("Title"), "submitEditing");
-    expect(screen.getByText("Title is required")).toBeOnTheScreen();
+    fireEvent(
+      screen.getByLabelText(i18n.t("newGoal:fields.title.label")),
+      "submitEditing",
+    );
+    expect(
+      screen.getByText(i18n.t("newGoal:errors.titleRequired")),
+    ).toBeOnTheScreen();
 
     // Then type something — error should clear
-    fireEvent.changeText(screen.getByLabelText("Title"), "L");
-    expect(screen.queryByText("Title is required")).not.toBeOnTheScreen();
+    fireEvent.changeText(
+      screen.getByLabelText(i18n.t("newGoal:fields.title.label")),
+      "L",
+    );
+    expect(
+      screen.queryByText(i18n.t("newGoal:errors.titleRequired")),
+    ).not.toBeOnTheScreen();
   });
 });

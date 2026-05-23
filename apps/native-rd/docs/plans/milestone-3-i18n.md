@@ -112,3 +112,5 @@ If you `/clear` and come back:
 ## Move to completed
 
 This plan moves to `docs/plans/completed/` when #76 closes. Post-epic tickets (#73, #74, #75) and post-ship cleanup tickets (#64, #66, #63, #62) carry on under their own per-issue plans if needed.
+
+When archiving this plan, also delete `apps/native-rd/.claude/skills/i18n-screen-migration/` — it exists to compress the recurring per-screen migration workflow (#67/#68/#69/#70/#71/#72) and has no payoff once the migrations are done. Its decision tree lives permanently in `docs/i18n.md`; the skill is just the trigger surface.

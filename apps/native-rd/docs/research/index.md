@@ -11,3 +11,5 @@ Completed research documents. These informed ADRs but are not the decisions them
 | [native-rd-translations-research.md](./native-rd-translations-research.md)           | Recommended translation strategy for native-rd               | 2026-05-02    |
 | [release-pipeline.md](./release-pipeline.md)                                         | GH-Actions-orchestrated EAS pipeline for iOS + Android       | 2026-05-14    |
 | [badge-export.md](./badge-export.md)                                                 | OB 3.0 delivery formats, platform share mechanics, fix tiers | 2026-05-18    |
+| [sync-and-backend-architecture.md](./sync-and-backend-architecture.md)               | Badge visibility, what-leaves-device, tiers, self-hosting    | 2026-05-22    |
+| [step-model-gap.md](./step-model-gap.md)                                             | A–G taxonomy, three-register thesis, four failure scenarios  | 2026-05-22    |

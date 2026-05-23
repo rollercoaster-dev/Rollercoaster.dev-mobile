@@ -7,7 +7,9 @@
  */
 
 import React from "react";
+import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { renderWithProviders, screen, fireEvent } from "./test-utils";
+import { i18n } from "../i18n";
 import { FocusPillTabBar } from "../navigation/FocusPillTabBar";
 import {
   expectAccessibleRole,
@@ -39,10 +41,10 @@ function buildProps({ activeIndex = 0 }: MockTabBarOpts = {}) {
     { key: "SettingsTab-1", name: "SettingsTab" as const, params: undefined },
   ];
 
-  // The component only reads a small subset of BottomTabBarProps; we cast
-  // because constructing the full shape would dwarf the test value.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const props: any = {
+  // The component only reads a small subset of BottomTabBarProps; the
+  // `unknown` cast acknowledges the partial shape without inviting `any`
+  // into the surrounding code.
+  const props = {
     state: {
       index: activeIndex,
       key: "tab",
@@ -55,7 +57,7 @@ function buildProps({ activeIndex = 0 }: MockTabBarOpts = {}) {
     navigation: { dispatch, emit, navigate },
     descriptors: {},
     insets: { top: 0, right: 0, bottom: 0, left: 0 },
-  };
+  } as unknown as BottomTabBarProps;
 
   return { props, dispatch, emit };
 }
@@ -173,5 +175,25 @@ describe("FocusPillTabBar", () => {
       ([action]) => action?.type === "NAVIGATE",
     );
     expect(navigateCalls).toHaveLength(0);
+  });
+
+  describe("pseudo locale", () => {
+    afterEach(async () => {
+      if (i18n.language !== "en") await i18n.changeLanguage("en");
+    });
+
+    it.each([
+      "common:navigation.tabs.goals",
+      "common:navigation.tabs.badges",
+      "common:navigation.tabs.settings",
+      "common:navigation.fab.newGoal",
+    ] as const)("renders %s under pseudo locale", async (key) => {
+      await i18n.changeLanguage("pseudo");
+      const { props } = buildProps();
+      renderWithProviders(<FocusPillTabBar {...props} />);
+      const pseudo = i18n.t(key);
+      expect(pseudo.startsWith("[")).toBe(true);
+      expect(screen.getByLabelText(pseudo)).toBeOnTheScreen();
+    });
   });
 });

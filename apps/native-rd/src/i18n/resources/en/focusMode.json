@@ -1,1 +1,30 @@
-{}
+{
+  "title": "Focus Mode",
+  "evidenceFallback": "Evidence",
+  "header": {
+    "showTimeline": "Show timeline",
+    "hideTimeline": "Hide timeline",
+    "editGoal": "Edit goal"
+  },
+  "a11y": {
+    "carousel": "Focus mode cards, {{count}} steps",
+    "allStepsComplete": "All steps complete for \"{{title}}\". Mark Complete is now available on the goal card.",
+    "stepCompleted": "Step \"{{title}}\" completed",
+    "stepUncompleted": "Step \"{{title}}\" marked as incomplete"
+  },
+  "toast": {
+    "evidenceRequired": "Add evidence before completing this step",
+    "evidenceDeleted": "Evidence deleted"
+  },
+  "confirmDelete": {
+    "title": "Delete evidence?",
+    "message": "You can undo this briefly after deleting."
+  },
+  "errors": {
+    "goalNotFound": "Goal not found.",
+    "somethingWrong": "Something went wrong. Please try again.",
+    "couldNotUpdateStep": "Could not update step: {{message}}",
+    "couldNotOpenCapture": "Could not open {{label}} capture screen",
+    "couldNotDeleteEvidenceTitle": "Could not delete evidence"
+  }
+}

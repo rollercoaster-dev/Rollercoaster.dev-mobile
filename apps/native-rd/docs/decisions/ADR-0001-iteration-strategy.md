@@ -1,7 +1,7 @@
 # ADR-0001: Iteration Strategy
 
 **Date:** 2026-02-02
-**Status:** Accepted
+**Status:** Accepted — Iteration B scope partially superseded by [ADR-0006](./ADR-0006-iteration-b-scope-amendment.md) (2026-05-23)
 **Owner:** Joe
 
 ---
@@ -100,7 +100,6 @@ A.5 (Phase 1) is complete — basic badge designer with shape, color, icon, and 
 - Reorganize steps between goals (move, copy)
 - Scope adjustment (shrink a goal, split into smaller goals)
 - Goal journal — dated, informal entries for capturing thinking along the way (not evidence, just notes: "I'm stuck," "changed approach because," "realized I should split this")
-- Learning stack — track what interrupted what, see the path back to paused goals
 - Factual nudges — "You have 3 goals active. Your last badge was linked to Goal X."
 - Badge-to-goal linking — when you earn a badge, link it to an active goal
 - Multi-device sync (via chosen sync layer — PowerSync or Evolu)
@@ -115,7 +114,6 @@ A.5 (Phase 1) is complete — basic badge designer with shape, color, icon, and 
 | Reopen completed goal        | Yes — `uncompleteGoal()` in queries.ts                                  | Yes — "Reopen Goal" button in `CompletionFlowScreen`                         | Reverts to `active`, not a distinct `paused` state                                                                              |
 | Step move between goals      | No                                                                      | No                                                                           | Drag-and-drop reorder within a goal exists                                                                                      |
 | Goal journal                 | No — no journal table                                                   | No                                                                           | —                                                                                                                               |
-| Learning stack               | No                                                                      | No                                                                           | —                                                                                                                               |
 | Factual nudges               | No                                                                      | No                                                                           | —                                                                                                                               |
 | Badge-to-goal linking        | Partial — badges reference goals via `goalId` FK                        | No                                                                           | No UI to link a badge to a different goal                                                                                       |
 | Multi-device sync            | Partial — Evolu chosen (ADR-0003), `ownerId` auto-added                 | No                                                                           | Sync not enabled or configured                                                                                                  |
@@ -123,6 +121,7 @@ A.5 (Phase 1) is complete — basic badge designer with shape, color, icon, and 
 
 **Not in scope:**
 
+- Learning stack — removed 2026-05-18. The goals list already shows all active goals; tracking which goal interrupted which adds complexity without adding user value. Visual relationships between goals belong in the skill tree (Iteration C).
 - Skill tree visualization
 - Peer verification or sharing
 - Mentor roles

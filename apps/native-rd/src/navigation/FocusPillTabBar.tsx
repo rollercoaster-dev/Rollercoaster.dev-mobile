@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { CommonActions } from "@react-navigation/native";
 import { GearSix, Medal, Target } from "phosphor-react-native";
+import { useTranslation } from "react-i18next";
 import { Text } from "../components/Text";
 import { shadowStyle } from "../styles/shadows";
 import { borderWidth } from "../themes/tokens";
@@ -19,12 +20,6 @@ import { useAnimationPref } from "../hooks/useAnimationPref";
 import type { RootTabParamList } from "./types";
 
 type RouteName = keyof RootTabParamList;
-
-const TAB_LABELS: Record<RouteName, string> = {
-  GoalsTab: "Goals",
-  BadgesTab: "Badges",
-  SettingsTab: "Settings",
-};
 
 const ICON_SIZE = 24;
 const ICON_WEIGHT = "bold" as const;
@@ -101,6 +96,16 @@ export function FocusPillTabBar({ state, navigation }: BottomTabBarProps) {
   const { theme } = useUnistyles();
   const insets = useSafeAreaInsets();
   const { shouldAnimate } = useAnimationPref();
+  const { t } = useTranslation();
+
+  const tabLabels = useMemo<Record<RouteName, string>>(
+    () => ({
+      GoalsTab: t("navigation.tabs.goals"),
+      BadgesTab: t("navigation.tabs.badges"),
+      SettingsTab: t("navigation.tabs.settings"),
+    }),
+    [t],
+  );
 
   const activeRoute = state.routes[state.index];
   const activeName = activeRoute.name as RouteName;
@@ -144,7 +149,7 @@ export function FocusPillTabBar({ state, navigation }: BottomTabBarProps) {
     return (
       <TabButton
         name={name}
-        label={TAB_LABELS[name]}
+        label={tabLabels[name]}
         isActive={state.index === entry.index}
         activeColor={activeColor}
         inactiveColor={inactiveColor}
@@ -176,7 +181,7 @@ export function FocusPillTabBar({ state, navigation }: BottomTabBarProps) {
             {showFab && goals ? (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="New goal"
+                accessibilityLabel={t("navigation.fab.newGoal")}
                 testID="tab-fab-new-goal"
                 onPress={() =>
                   navigation.dispatch({
