@@ -186,7 +186,7 @@ describe("SettingsScreen", () => {
       screen.getByText(i18n.t("settings:about.versionLabel")),
     ).toBeOnTheScreen();
     expect(
-      screen.getByText(Application.nativeApplicationVersion as string),
+      screen.getByText(Application.nativeApplicationVersion ?? "unknown"),
     ).toBeOnTheScreen();
   });
 
