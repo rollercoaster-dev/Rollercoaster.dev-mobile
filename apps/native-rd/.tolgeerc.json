@@ -1,0 +1,90 @@
+{
+  "$schema": "https://docs.tolgee.io/cli-schema.json",
+  "apiUrl": "${TOLGEE_API_URL}",
+  "apiKey": "${TOLGEE_API_KEY}",
+  "format": "JSON_I18NEXT",
+  "pull": {
+    "path": "./src/i18n/resources",
+    "languages": ["de"],
+    "fileStructureTemplate": "{languageTag}/{namespace}.{extension}"
+  },
+  "push": {
+    "files": [
+      {
+        "path": "./src/i18n/resources/en/common.json",
+        "language": "en",
+        "namespace": "common"
+      },
+      {
+        "path": "./src/i18n/resources/en/welcome.json",
+        "language": "en",
+        "namespace": "welcome"
+      },
+      {
+        "path": "./src/i18n/resources/en/newGoal.json",
+        "language": "en",
+        "namespace": "newGoal"
+      },
+      {
+        "path": "./src/i18n/resources/en/settings.json",
+        "language": "en",
+        "namespace": "settings"
+      },
+      {
+        "path": "./src/i18n/resources/en/goals.json",
+        "language": "en",
+        "namespace": "goals"
+      },
+      {
+        "path": "./src/i18n/resources/en/focusMode.json",
+        "language": "en",
+        "namespace": "focusMode"
+      },
+      {
+        "path": "./src/i18n/resources/en/capturePhoto.json",
+        "language": "en",
+        "namespace": "capturePhoto"
+      },
+      {
+        "path": "./src/i18n/resources/en/captureVideo.json",
+        "language": "en",
+        "namespace": "captureVideo"
+      },
+      {
+        "path": "./src/i18n/resources/en/captureVoice.json",
+        "language": "en",
+        "namespace": "captureVoice"
+      },
+      {
+        "path": "./src/i18n/resources/en/captureText.json",
+        "language": "en",
+        "namespace": "captureText"
+      },
+      {
+        "path": "./src/i18n/resources/en/captureFile.json",
+        "language": "en",
+        "namespace": "captureFile"
+      },
+      {
+        "path": "./src/i18n/resources/en/captureLink.json",
+        "language": "en",
+        "namespace": "captureLink"
+      },
+      {
+        "path": "./src/i18n/resources/en/permissions.json",
+        "language": "en",
+        "namespace": "permissions"
+      },
+      {
+        "path": "./src/i18n/resources/en/badges.json",
+        "language": "en",
+        "namespace": "badges"
+      },
+      {
+        "path": "./src/i18n/resources/en/badgeDesigner.json",
+        "language": "en",
+        "namespace": "badgeDesigner"
+      }
+    ]
+  }
+}
