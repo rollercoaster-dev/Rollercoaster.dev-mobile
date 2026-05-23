@@ -1,7 +1,7 @@
 # ADR-0001: Iteration Strategy
 
 **Date:** 2026-02-02
-**Status:** Accepted
+**Status:** Accepted — Iteration B scope partially superseded by [ADR-0006](./ADR-0006-iteration-b-scope-amendment.md) (2026-05-23)
 **Owner:** Joe
 
 ---
