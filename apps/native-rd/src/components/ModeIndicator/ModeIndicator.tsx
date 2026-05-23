@@ -1,16 +1,17 @@
 import React from "react";
 import { View, Image } from "react-native";
 import type { ImageSourcePropType } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Text } from "../Text";
 import { styles } from "./ModeIndicator.styles";
 
 export type LifecycleMode = "edit" | "focus" | "complete" | "timeline";
 
-const MODE_CONFIG: Record<LifecycleMode, { emoji: string; label: string }> = {
-  edit: { emoji: "📝", label: "Edit" },
-  focus: { emoji: "🎯", label: "Focus" },
-  complete: { emoji: "🎉", label: "Complete" },
-  timeline: { emoji: "📖", label: "Timeline" },
+const MODE_CONFIG: Record<LifecycleMode, { emoji: string }> = {
+  edit: { emoji: "📝" },
+  focus: { emoji: "🎯" },
+  complete: { emoji: "🎉" },
+  timeline: { emoji: "📖" },
 };
 
 export interface ModeIndicatorProps {
@@ -19,13 +20,15 @@ export interface ModeIndicatorProps {
 }
 
 export function ModeIndicator({ mode, icon }: ModeIndicatorProps) {
+  const { t } = useTranslation("common");
   const config = MODE_CONFIG[mode];
+  const label = t(`modeIndicator.${mode}` as const);
 
   return (
     <View
       style={styles.container}
       accessibilityRole="header"
-      accessibilityLabel={`Current mode: ${config.label}`}
+      accessibilityLabel={t("modeIndicator.a11y.current", { label })}
     >
       {icon ? (
         <Image source={icon} style={styles.iconImage} resizeMode="contain" />
@@ -35,7 +38,7 @@ export function ModeIndicator({ mode, icon }: ModeIndicatorProps) {
         </Text>
       )}
       <Text variant="label" style={styles.label}>
-        {config.label}
+        {label}
       </Text>
     </View>
   );
