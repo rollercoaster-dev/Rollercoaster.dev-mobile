@@ -4,8 +4,7 @@
 **Status:** In progress
 **Owner:** Joe
 
-**Scope reference:** [ADR-0001 §Iteration B](../decisions/ADR-0001-iteration-strategy.md)
-**Related research:** [Iteration B — Learning Journey](./iteration-b-learning-journey.md)
+**Scope reference:** [ADR-0001 §Iteration B](../decisions/ADR-0001-iteration-strategy.md) (amended by [ADR-0006](../decisions/ADR-0006-iteration-b-scope-amendment.md))
 
 ---
 
