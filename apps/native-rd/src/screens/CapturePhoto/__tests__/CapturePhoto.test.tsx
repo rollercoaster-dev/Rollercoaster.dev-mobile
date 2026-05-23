@@ -5,6 +5,7 @@ import {
   screen,
   fireEvent,
   waitFor,
+  act,
 } from "../../../__tests__/test-utils";
 import { i18n } from "../../../i18n";
 import { CapturePhoto } from "../CapturePhoto";
@@ -244,14 +245,16 @@ describe("CapturePhoto", () => {
   });
 
   describe("pseudo locale", () => {
-    beforeAll(async () => {
-      await i18n.changeLanguage("pseudo");
-    });
-    afterAll(async () => {
-      await i18n.changeLanguage("en");
+    afterEach(async () => {
+      if (i18n.language !== "en") {
+        await act(async () => {
+          await i18n.changeLanguage("en");
+        });
+      }
     });
 
-    it("renders pseudo-localized title and buttons", () => {
+    it("renders pseudo-localized title and buttons", async () => {
+      await i18n.changeLanguage("pseudo");
       renderScreen();
       const pseudoTitle = i18n.t("capturePhoto:title");
       expect(pseudoTitle).not.toBe("Capture Photo");

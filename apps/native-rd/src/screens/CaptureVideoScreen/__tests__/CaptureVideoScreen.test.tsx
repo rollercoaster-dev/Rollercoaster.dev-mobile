@@ -451,14 +451,16 @@ describe("CaptureVideoScreen — library upload", () => {
 });
 
 describe("CaptureVideoScreen — pseudo locale", () => {
-  beforeAll(async () => {
-    await i18n.changeLanguage("pseudo");
-  });
-  afterAll(async () => {
-    await i18n.changeLanguage("en");
+  afterEach(async () => {
+    if (i18n.language !== "en") {
+      await act(async () => {
+        await i18n.changeLanguage("en");
+      });
+    }
   });
 
-  it("renders chooser strings in pseudo locale", () => {
+  it("renders chooser strings in pseudo locale", async () => {
+    await i18n.changeLanguage("pseudo");
     const pseudoHeading = i18n.t("captureVideo:heading");
     expect(pseudoHeading).not.toBe("Add a video");
     render(

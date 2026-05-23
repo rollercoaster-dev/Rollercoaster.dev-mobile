@@ -12,6 +12,7 @@ import {
   renderWithProviders,
   screen,
   fireEvent,
+  act,
 } from "../../../__tests__/test-utils";
 import { i18n } from "../../../i18n";
 import { VoiceMemoScreen } from "../VoiceMemoScreen";
@@ -315,14 +316,16 @@ describe("VoiceMemoScreen", () => {
   });
 
   describe("pseudo locale", () => {
-    beforeAll(async () => {
-      await i18n.changeLanguage("pseudo");
-    });
-    afterAll(async () => {
-      await i18n.changeLanguage("en");
+    afterEach(async () => {
+      if (i18n.language !== "en") {
+        await act(async () => {
+          await i18n.changeLanguage("en");
+        });
+      }
     });
 
-    it("renders idle state strings in pseudo", () => {
+    it("renders idle state strings in pseudo", async () => {
+      await i18n.changeLanguage("pseudo");
       const pseudoTitle = i18n.t("captureVoice:title");
       expect(pseudoTitle).not.toBe("Voice Memo");
       renderScreen();
