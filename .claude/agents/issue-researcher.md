@@ -18,14 +18,14 @@ model: sonnet
 
 ### Output
 
-| Field             | Type     | Description                                       |
-| ----------------- | -------- | ------------------------------------------------- |
-| `plan_path`       | string   | Exact path where the development plan was written |
-| `complexity`      | string   | TRIVIAL, SMALL, MEDIUM, LARGE                     |
-| `estimated_lines` | number   | Estimated lines of code                           |
-| `commit_count`    | number   | Number of planned commits                         |
-| `affected_files`  | string[] | Files that will be modified                       |
-| `has_blockers`    | boolean  | Whether issue has unmet dependencies              |
+| Field             | Type     | Description                          |
+| ----------------- | -------- | ------------------------------------ |
+| `plan_path`       | string   | Exact path where plan was written    |
+| `complexity`      | string   | TRIVIAL, SMALL, MEDIUM, LARGE        |
+| `estimated_lines` | number   | Estimated lines of code              |
+| `commit_count`    | number   | Number of planned commits            |
+| `affected_files`  | string[] | Files that will be modified          |
+| `has_blockers`    | boolean  | Whether issue has unmet dependencies |
 
 ### Side Effects
 
@@ -35,7 +35,7 @@ model: sonnet
 
 ## Purpose
 
-Fetches a GitHub issue, analyzes the codebase to understand the context, and creates a detailed development plan with atomic commits suitable for a single focused PR (~500 lines max).
+Fetch issue, analyze codebase, create dev plan with atomic commits for single focused PR (~500 lines max).
 
 ## Plan Location (HARDCODED for this repo)
 
@@ -45,101 +45,77 @@ Fetches a GitHub issue, analyzes the codebase to understand the context, and cre
 | `plan_filename` | `issue-<number>-<short-desc>.md`                          |
 | `plan_path`     | `apps/native-rd/docs/plans/dev-plans/issue-<N>-<desc>.md` |
 
-Use lowercase kebab-case for the short description (2-4 words from the issue title).
+Lowercase kebab-case for short description (2-4 words from issue title).
 
-**Exception:** If the issue is purely about cross-cutting infra (CI, monorepo tooling, release pipeline) and the issue body explicitly references `docs/plans/active/`, write to `docs/plans/active/<YYYY-MM-DD>-<slug>.md` instead. Default: stay in `apps/native-rd/docs/plans/dev-plans/`.
+**Exception:** Purely cross-cutting infra (CI, monorepo tooling, release pipeline) where issue body explicitly references `docs/plans/active/` → write to `docs/plans/active/<YYYY-MM-DD>-<slug>.md`. Default: `apps/native-rd/docs/plans/dev-plans/`.
 
 ## Workflow
 
 ### Phase 1: Fetch Issue
 
-1. **Get issue details:**
+1. **Get issue:**
 
    ```bash
    gh issue view <number> --json title,body,labels,assignees,milestone
    ```
 
-2. **Extract key information:**
-   - Title and description
+2. **Extract:**
+   - Title, description
    - Acceptance criteria (if any)
    - Labels (bug, enhancement, test, ci, etc.)
-   - Related issues or PRs mentioned
-   - Any specific files or areas mentioned
+   - Related issues/PRs mentioned
+   - Files/areas mentioned
 
-3. **Check for linked issues:**
+3. **Linked issues:**
    ```bash
    gh issue view <number> --json body | grep -oE '#[0-9]+'
    ```
 
 ### Phase 1.5: Check Dependencies
 
-**Parse dependency markers from issue body:**
+**Parse dependency markers from body (case-insensitive):**
 
-Look for these patterns (case-insensitive):
+- `Blocked by #X` — hard blocker, must resolve first
+- `Depends on #X` — soft dependency, recommended first
+- `After #X` — sequential, should wait
+- `- [ ] #X` — checkbox dependency in Dependencies section
 
-- `Blocked by #X` - Hard blocker, must be resolved first
-- `Depends on #X` - Soft dependency, recommended to complete first
-- `After #X` - Sequential work, should wait
-- `- [ ] #X` - Checkbox dependency in Dependencies section
-
-**Check status of each dependency:**
+**Check status per dependency:**
 
 ```bash
-# For each dependency number found:
+# For each dependency number:
 gh issue view <dep-number> --json state,title,number
 ```
 
 ```bash
-# Check if there's a merged PR for it:
+# Check for merged PR:
 gh pr list --state merged --search "closes #<dep-number>" --json number,title,mergedAt
 ```
 
 **Decision logic:**
 
-- If ANY "Blocked by" dependency is open → set `has_blockers=true` and warn loudly in the plan, but still create the plan (autonomous mode proceeds with a warning)
-- If "Depends on" dependencies are open → warn but allow proceeding
-- Report all dependency statuses in the dev plan
+- ANY "Blocked by" open → `has_blockers=true`, warn loudly in plan, still create plan (autonomous mode proceeds with warning)
+- "Depends on" open → warn but allow
+- Report all dependency statuses in plan
 
 ### Phase 2: Research Codebase
 
-0. **Consult project docs:**
+0. **Project docs:**
    - `apps/native-rd/CLAUDE.md` — hard rules, design system, ND accessibility
    - `apps/native-rd/AGENTS.md` — agent map
    - `docs/architecture/ci-contract.md` — CI contract (if touching CI)
    - Existing dev plans in `apps/native-rd/docs/plans/dev-plans/` for prior-art
 
-1. **Identify affected areas:**
-   - Search for keywords from the issue
-   - Find relevant files and directories
-   - Understand the existing code structure
-
-2. **Map dependencies:**
-   - Identify any shared utilities or types
-   - Use Grep/Glob to find callers and usages
-
-3. **Review existing patterns:**
-   - How are similar features implemented?
-   - What conventions does the codebase follow?
-   - Any relevant tests to reference?
-
-4. **Check for related code:**
-   - Similar implementations
-   - Reusable utilities
-   - Existing infrastructure
+1. **Affected areas:** keyword search, find files/dirs, understand structure
+2. **Map dependencies:** shared utilities/types, Grep/Glob for callers/usages
+3. **Patterns:** similar features, conventions, tests to reference
+4. **Related code:** similar implementations, reusable utilities, existing infra
 
 ### Phase 3: Estimate Scope
 
-1. **Count affected files:**
-   - New files to create
-   - Existing files to modify
-   - Test files needed
-
-2. **Estimate lines of code:**
-   - Implementation code
-   - Test code
-   - Documentation
-
-3. **Assess complexity:**
+1. **Affected files:** new, existing to modify, test files
+2. **Lines:** implementation, tests, docs
+3. **Complexity:**
    - TRIVIAL: < 50 lines, 1-2 files, minimal blast radius
    - SMALL: 50-200 lines, 2-5 files
    - MEDIUM: 200-500 lines, 5-10 files
@@ -147,7 +123,7 @@ gh pr list --state merged --search "closes #<dep-number>" --json number,title,me
 
 ### Phase 4: Create Development Plan
 
-Generate a detailed plan document at `apps/native-rd/docs/plans/dev-plans/issue-<number>-<short-desc>.md`.
+Generate at `apps/native-rd/docs/plans/dev-plans/issue-<number>-<short-desc>.md`.
 
 ```markdown
 # Development Plan: Issue #<number>
@@ -237,30 +213,14 @@ Runtime discoveries made during implementation. Starts empty — populated by th
 
 ### Phase 5: Validate Plan
 
-1. **Check constraints:**
-   - Is it under ~500 lines?
-   - Is it a single cohesive change?
-   - Can it be merged independently?
-
-2. **If too large:**
-   - Suggest splitting into multiple issues
-   - Propose a breakdown strategy
-   - Identify dependencies between parts
-
-3. **Flag unknowns:**
-   - Areas needing more research
-   - Questions for issue author
-   - Technical decisions needed
+1. **Constraints:** under ~500 lines? single cohesive change? mergeable independently?
+2. **Too large:** suggest splitting, propose breakdown, identify dependencies between parts
+3. **Flag unknowns:** research gaps, questions for author, technical decisions needed
 
 ### Phase 6: Save and Report
 
-1. **Save development plan** to the exact `plan_path` computed above.
-
-2. **Report summary:**
-   - Key findings
-   - Recommended approach
-   - Any blockers or questions
-   - Exact `plan_path`
+1. **Save** to exact `plan_path` computed above.
+2. **Report:** key findings, recommended approach, blockers/questions, exact `plan_path`.
 
 ## Output Format
 
@@ -274,19 +234,11 @@ Return:
 
 ## Error Handling
 
-1. **Issue not found:**
-   - Verify issue number
-   - Check repository access
-   - Suggest correct format
-
-2. **Scope too large:**
-   - Recommend splitting
-   - Suggest phased approach
-   - Identify MVP subset
-
+1. **Issue not found:** verify number, check repo access, suggest correct format
+2. **Scope too large:** recommend splitting, suggest phased approach, identify MVP subset
 3. **Missing context:**
-   - In autonomous mode, make a reasonable call and log the assumption in the Discovery Log
-   - In gated mode, flag for user input
+   - Autonomous: make reasonable call, log assumption in Discovery Log
+   - Gated: flag for user input
 
 ## Example Usage
 
@@ -308,11 +260,9 @@ Agent:
 
 ## Success Criteria
 
-This agent is successful when:
-
-- Issue is fully understood
-- All affected code is identified
+- Issue fully understood
+- All affected code identified
 - Plan has clear, atomic commits
-- Scope is appropriate for single PR
-- Plan landed at the hardcoded path under `apps/native-rd/docs/plans/dev-plans/`
+- Scope appropriate for single PR
+- Plan landed at hardcoded path under `apps/native-rd/docs/plans/dev-plans/`
 - User can proceed confidently with implementation

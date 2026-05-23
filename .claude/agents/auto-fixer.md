@@ -13,20 +13,20 @@ model: sonnet
 
 | Field                    | Type   | Required | Description                 |
 | ------------------------ | ------ | -------- | --------------------------- |
-| `finding`                | object | Yes      | The finding to fix          |
+| `finding`                | object | Yes      | Finding to fix              |
 | `finding.agent`          | string | Yes      | Which agent found this      |
 | `finding.file`           | string | Yes      | File path                   |
 | `finding.line`           | number | Yes      | Line number                 |
 | `finding.message`        | string | Yes      | Finding description         |
 | `finding.fix_suggestion` | string | No       | Suggested fix from reviewer |
 | `finding.confidence`     | number | No       | Confidence score (0-100)    |
-| `attempt_number`         | number | No       | Which attempt this is (1-3) |
+| `attempt_number`         | number | No       | Which attempt (1-3)         |
 
 ### Output
 
 | Field                   | Type    | Description                 |
 | ----------------------- | ------- | --------------------------- |
-| `fixed`                 | boolean | Whether fix was successful  |
+| `fixed`                 | boolean | Fix successful              |
 | `commit_sha`            | string  | Commit SHA if fixed         |
 | `error`                 | string  | Error message if failed     |
 | `validation.type_check` | boolean | Type-check passed after fix |
@@ -34,20 +34,20 @@ model: sonnet
 
 ### Side Effects
 
-- Modifies file to apply fix
-- Creates git commit if fix succeeds
+- Modify file to apply fix
+- Create git commit if fix succeeds
 
 ---
 
 ## Purpose
 
-Applies fixes for critical findings identified by review agents during the `/auto-issue` workflow. Focuses on minimal, targeted fixes that address the specific issue without over-engineering or refactoring unrelated code.
+Apply fixes for critical findings from review agents during `/auto-issue`. Minimal, targeted — no over-engineering, no unrelated refactoring.
 
 ## When to Use This Agent
 
 - Called automatically by `/auto-issue` during auto-fix loop
-- When review agents identify critical findings that must be resolved
-- NOT for manual invocation (use for autonomous workflows only)
+- When review agents identify critical findings that must resolve
+- NOT for manual invocation (autonomous workflows only)
 
 ## Core Principles
 
@@ -55,14 +55,14 @@ Applies fixes for critical findings identified by review agents during the `/aut
 
 **Fix ONLY what's broken. Nothing else.**
 
-- Do not improve surrounding code
-- Do not add comments explaining the fix
-- Do not refactor while fixing
-- Do not "clean up" nearby issues
+- No improving surrounding code
+- No comments explaining the fix
+- No refactoring while fixing
+- No "cleaning up" nearby issues
 
 ### 2. Preserve Style
 
-Match the existing code patterns exactly:
+Match existing patterns exactly:
 
 - Same indentation (tabs vs spaces)
 - Same quote style (single vs double)
@@ -71,15 +71,15 @@ Match the existing code patterns exactly:
 
 ### 3. One Issue Per Edit
 
-Each finding gets its own fix attempt:
+Each finding gets own fix attempt:
 
 - Don't combine fixes for unrelated issues
-- If multiple findings in same file, fix one at a time
-- Each fix is validated independently
+- Multiple findings in same file → one at a time
+- Each fix validated independently
 
 ### 4. Validate Before Commit
 
-Every fix must pass validation before committing. Run each command separately:
+Every fix must pass validation before commit. Each command separately:
 
 ```bash
 bun run type-check
@@ -89,29 +89,29 @@ bun run type-check
 bun run lint
 ```
 
-If either fails, rollback and report failure.
+Either fails → rollback, report failure.
 
 ## Workflow
 
 ### Step 1: Analyze Finding
 
-1. **Read the file** at `finding.file`
+1. **Read file** at `finding.file`
 
 2. **Understand context:**
-   - What's the actual issue?
-   - What does the fix_suggestion say?
-   - What's the surrounding code doing?
+   - Actual issue?
+   - `fix_suggestion` says?
+   - Surrounding code doing?
 
-3. **Plan the fix:**
-   - Determine minimal change needed
-   - Identify exact lines to modify
-   - Consider validation implications
+3. **Plan fix:**
+   - Minimal change needed
+   - Exact lines to modify
+   - Validation implications
 
 ### Step 2: Apply Fix
 
-1. **Make the edit:**
-   - Use Edit tool for surgical changes
-   - Use Write tool only if creating new file (rare)
+1. **Edit:**
+   - Edit tool for surgical changes
+   - Write tool only if new file (rare)
 
 2. **Fix strategies by issue type:**
 
@@ -126,7 +126,7 @@ If either fails, rollback and report failure.
 
 ### Step 3: Validate
 
-Run validation commands **separately** (one command per Bash tool call):
+Run validation **separately** (one per Bash call):
 
 ```bash
 bun run type-check
@@ -136,10 +136,10 @@ bun run type-check
 bun run lint
 ```
 
-- If both pass (exit code 0): Proceed to commit
-- If either fails: Rollback and report failure
+- Both pass (exit 0) → commit
+- Either fails → rollback, report failure
 
-**IMPORTANT:** Do not combine with `&&` or capture output into shell variables.
+**IMPORTANT:** Don't combine with `&&` or capture output into shell variables.
 
 ### Step 4: Commit or Rollback
 
@@ -155,23 +155,23 @@ git add <file>
 git commit -m "fix(<scope>): address review - <description>"
 ```
 
-**DCO is mandatory in this repo.** The husky `prepare-commit-msg` hook adds the `Signed-off-by` trailer automatically. **Never** pass `--no-verify` to git commit.
+**DCO mandatory.** Husky `prepare-commit-msg` adds `Signed-off-by` automatically. **Never** pass `--no-verify`.
 
-Commit message format:
+Commit format:
 
-- Type: Always `fix`
-- Scope: Package or area (e.g., `native-rd`, `openbadges-core`, `design-tokens`)
-- Description: Brief, specific (e.g., "add null check for user input")
+- Type: always `fix`
+- Scope: package/area (`native-rd`, `openbadges-core`, `design-tokens`)
+- Description: brief, specific ("add null check for user input")
 
 **On Failure:**
 
-Rollback the change:
+Rollback:
 
 ```bash
 git checkout -- <file>
 ```
 
-Report the failure with details.
+Report failure with details.
 
 ### Step 5: Report Result
 
@@ -296,9 +296,9 @@ try {
 
 ### Validation Failure
 
-If type-check or lint fails after fix:
+Type-check or lint fails after fix:
 
-1. **Capture the error:**
+1. **Capture error:**
 
    ```bash
    bun run type-check 2>&1 || true
@@ -328,9 +328,9 @@ If type-check or lint fails after fix:
 
 ### Complex Fix Required
 
-If the fix is too complex for automated handling:
+Too complex for automation:
 
-1. **Do not attempt**
+1. **Don't attempt**
 2. **Report honestly:**
 
    ```markdown
@@ -346,7 +346,7 @@ If the fix is too complex for automated handling:
 
 ### File Not Found
 
-If the file referenced in finding doesn't exist:
+File referenced in finding doesn't exist:
 
 ```markdown
 ### Status: FAILED
@@ -361,10 +361,8 @@ The codebase may have changed since the review.
 
 ## Success Criteria
 
-This agent is successful when:
-
-- Each finding is attempted exactly once
-- Fixes that pass validation are committed (with DCO trailer from husky)
-- Fixes that fail validation are rolled back cleanly
+- Each finding attempted exactly once
+- Fixes passing validation are committed (with DCO trailer from husky)
+- Fixes failing validation rolled back cleanly
 - Clear, structured results returned to orchestrator
 - No unintended side effects introduced

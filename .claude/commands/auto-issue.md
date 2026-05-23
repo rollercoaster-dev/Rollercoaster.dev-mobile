@@ -10,13 +10,13 @@ Fully autonomous issue-to-PR workflow for Rollercoaster.dev-mobile.
 
 **YOU MUST follow all phases in sequence. YOU MUST NOT commit directly to main.**
 
-**Exception:** The `--skip-review` and `--dry-run` flags are explicitly permitted — they modify behavior within the workflow, not bypass it entirely.
+**Exception:** `--skip-review` and `--dry-run` flags are explicitly permitted — they modify behavior within the workflow, not bypass it.
 
 ### Why This Workflow Exists
 
-1. **Structured Progress** — Each phase produces artifacts (branch, plan, commits, PR) that can be reviewed.
-2. **Quality Gates** — Review phase catches bugs before the user ever sees them.
-3. **User Control** — The final PR gives the user a chance to approve or reject before merging.
+1. **Structured Progress** — each phase produces reviewable artifacts (branch, plan, commits, PR).
+2. **Quality Gates** — review phase catches bugs before user sees them.
+3. **User Control** — final PR gives user approve/reject before merge.
 
 ### What "Autonomous" Actually Means
 
@@ -53,13 +53,13 @@ WRONG understanding:
 
 **CRITICAL: When this workflow runs inside a team worker, sub-agents MUST NOT join the team.**
 
-All **Agent** calls in this workflow (issue-researcher, review agents, auto-fixer) are internal implementation details — they should be standalone background agents, not team members.
+All **Agent** calls (issue-researcher, review agents, auto-fixer) are internal implementation — standalone background agents, not team members.
 
-**Rules for all Agent calls in this workflow:**
+**Rules for all Agent calls:**
 
 - **Never** pass `team_name` to Agent calls
-- Always use `run_in_background: true` for sub-agents
-- The team lead should only see the worker running this workflow, not its internal sub-agents
+- Always `run_in_background: true` for sub-agents
+- Team lead sees only the worker running this workflow, not internal sub-agents
 
 These rules are **Agent-only**. `Task` calls use a different API and do not accept `team_name` or `run_in_background` — do not apply these options to Task.
 
@@ -164,13 +164,13 @@ Skill(setup):
   Output: { branch, issue }
 ```
 
-The setup skill will:
+Setup will:
 
-- Fetch issue details via `gh issue view`
+- Fetch issue via `gh issue view`
 - Create feature branch
 - Send notification via `telegram` skill
 
-**On error:** Report and exit.
+**On error:** Report, exit.
 
 ---
 
@@ -183,16 +183,16 @@ Agent(issue-researcher):
   Options: { run_in_background: true }  # standalone — no team_name
 ```
 
-The issue-researcher will:
+Researcher will:
 
-- Read `apps/native-rd/CLAUDE.md`, `apps/native-rd/AGENTS.md`, and prior dev plans for context
-- Analyze codebase using Glob, Grep, Read
+- Read `apps/native-rd/CLAUDE.md`, `apps/native-rd/AGENTS.md`, prior dev plans for context
+- Analyze codebase via Glob, Grep, Read
 - Check dependencies
-- Create dev plan at `apps/native-rd/docs/plans/dev-plans/issue-<N>-<short-desc>.md`
+- Create plan at `apps/native-rd/docs/plans/dev-plans/issue-<N>-<short-desc>.md`
 
-**If `--dry-run`:** Stop here, display plan, exit.
+**`--dry-run`:** Stop, display plan, exit.
 
-**If blockers found:** Warn but continue (autonomous mode).
+**Blockers found:** Warn, continue (autonomous mode).
 
 ---
 
@@ -204,14 +204,14 @@ Skill(implement):
   Output: { commits, validation }
 ```
 
-The implement skill will:
+Implement will:
 
-- Read the development plan from the `plan_path` returned by Phase 2
-- Implement each step in the plan
-- Make atomic commits (DCO trailer added automatically by husky)
-- Run validation after each commit
+- Read plan from `plan_path` returned by Phase 2
+- Implement each step
+- Atomic commits (DCO trailer added by husky)
+- Validation after each commit
 
-**On validation failure:** Attempt inline fix in a new commit, continue.
+**Validation failure:** Attempt inline fix in new commit, continue.
 
 ---
 
@@ -223,17 +223,17 @@ Skill(review):
   Output: { findings, summary }
 ```
 
-**If `--skip-review`:** Skip to Phase 5.
+**`--skip-review`:** Skip to Phase 5.
 
-The review skill will:
+Review will:
 
-- Run `/simplify` for code quality, reuse, and efficiency improvements
-- Spawn standalone background review agents in parallel (do not pass team_name)
+- Run `/simplify` for code quality, reuse, efficiency
+- Spawn standalone background review agents in parallel (no team_name)
 - Classify findings by severity
-- Auto-fix critical findings (up to 3 attempts each) via the `auto-fixer` agent
+- Auto-fix critical findings (up to 3 attempts each) via `auto-fixer` agent
 - Return summary with unresolved findings
 
-**If `summary.unresolved > 0`:** Escalate (see below).
+**`summary.unresolved > 0`:** Escalate (see below).
 
 ---
 
@@ -245,18 +245,18 @@ Skill(finalize):
   Output: { pr }
 ```
 
-The finalize skill will:
+Finalize will:
 
 - Run final validation (`type-check`, `lint`, `test`, `build`)
 - Push branch
-- Create PR (body includes Intent Verification, Key Decisions, Discovery Log from the plan)
+- Create PR (body includes Intent Verification, Key Decisions, Discovery Log from plan)
 - Send notification via `telegram` skill with PR link
 
 ---
 
 ## Escalation
 
-When Phase 4 returns unresolved critical findings, notify user via `telegram` skill:
+Phase 4 returns unresolved critical findings → notify user via `telegram` skill:
 
 ```text
 ESCALATION: Issue #<N>
@@ -273,9 +273,9 @@ Options:
 
 **Handle response:**
 
-- `continue` → Wait, then re-run Phase 4
-- `force-pr` → Proceed to Phase 5 with `force: true`
-- `abort` → Delete branch, mark workflow failed, exit
+- `continue` → wait, re-run Phase 4
+- `force-pr` → Phase 5 with `force: true`
+- `abort` → delete branch, mark failed, exit
 
 ---
 
@@ -304,7 +304,7 @@ Options:
 
 Workflow succeeds when:
 
-- PR is created
+- PR created
 - All commits carry `Signed-off-by` trailer (DCO check passes)
 - Notification sent via `telegram` skill
 - Workflow marked complete

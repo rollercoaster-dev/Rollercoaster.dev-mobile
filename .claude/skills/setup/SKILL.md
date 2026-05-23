@@ -6,17 +6,17 @@ allowed-tools: Bash, Read, Skill
 
 # Setup Skill
 
-Prepares everything needed before implementation work begins.
+Prep before implementation.
 
 ## Contract
 
 ### Input
 
-| Field          | Type    | Required | Description                                         |
-| -------------- | ------- | -------- | --------------------------------------------------- |
-| `issue_number` | number  | Yes      | GitHub issue number                                 |
-| `branch_name`  | string  | No       | Custom branch name (auto-generated if not provided) |
-| `skip_notify`  | boolean | No       | Skip Telegram notification (default: false)         |
+| Field          | Type    | Required | Description                                |
+| -------------- | ------- | -------- | ------------------------------------------ |
+| `issue_number` | number  | Yes      | GitHub issue number                        |
+| `branch_name`  | string  | No       | Custom branch name (auto-generated if not) |
+| `skip_notify`  | boolean | No       | Skip Telegram notification (default false) |
 
 ### Output
 
@@ -30,8 +30,8 @@ Prepares everything needed before implementation work begins.
 
 ### Side Effects
 
-1. Creates git branch (or checks out existing)
-2. Sends Telegram notification (unless skip_notify)
+1. Create git branch (or check out existing)
+2. Send Telegram notification (unless skip_notify)
 
 ## Workflow
 
@@ -41,47 +41,30 @@ Prepares everything needed before implementation work begins.
 gh issue view <issue_number> --json number,title,body,labels,milestone,assignees
 ```
 
-If issue not found: STOP, return error.
+If not found: STOP, return error.
 
-Extract and store:
-
-- `issue.number`
-- `issue.title`
-- `issue.body`
-- `issue.labels` (array of label names)
+Store `issue.number`, `issue.title`, `issue.body`, `issue.labels`.
 
 ### Step 2: Generate Branch Name
 
-If `branch_name` not provided:
+If `branch_name` absent:
 
-- Extract short description from issue title (lowercase, hyphenated, max 30 chars)
+- Short description from title (lowercase, hyphenated, max 30 chars)
 - Format: `feat/issue-<number>-<short-description>`
 
-Example: Issue "Add user authentication" → `feat/issue-123-add-user-auth`
+Example: "Add user authentication" → `feat/issue-123-add-user-auth`
 
 ### Step 3: Create Branch
-
-Check current branch:
 
 ```bash
 git branch --show-current
 ```
 
-If not on target branch:
+Not on target → `git checkout -b <branch_name>`. Exists → `git checkout <branch_name>`.
 
-```bash
-git checkout -b <branch_name>
-```
+### Step 4: Notify (unless skip_notify)
 
-If branch already exists:
-
-```bash
-git checkout <branch_name>
-```
-
-### Step 4: Send Notification (unless skip_notify)
-
-Use the `telegram` skill (via Skill tool) to send a notification:
+Via `telegram` skill:
 
 ```text
 Started: Issue #<number>
@@ -89,11 +72,9 @@ Title: <title>
 Branch: <branch>
 ```
 
-**If notification fails:** Log warning, continue (non-critical).
+Notification fail → warn, continue (non-critical).
 
-### Step 5: Return Output
-
-Return structured output:
+### Step 5: Return
 
 ```json
 {
@@ -117,13 +98,7 @@ Return structured output:
 
 ## Example
 
-**Input:**
-
-```json
-{
-  "issue_number": 487
-}
-```
+**Input:** `{ "issue_number": 487 }`
 
 **Output:**
 
@@ -140,8 +115,6 @@ Return structured output:
 ```
 
 ## Output Format
-
-After completing all steps, report:
 
 ```text
 SETUP COMPLETE

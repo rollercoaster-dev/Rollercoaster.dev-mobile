@@ -6,7 +6,7 @@ allowed-tools: Bash, Read, Skill
 
 # Finalize Skill
 
-Completes the workflow by creating PR and notifying.
+Push, create PR, notify.
 
 ## Contract
 
@@ -17,8 +17,8 @@ Completes the workflow by creating PR and notifying.
 | `issue_number`     | number  | Yes      | GitHub issue number                                                                                           |
 | `plan_path`        | string  | No       | Exact dev plan path to read for Intent Verification, Decisions, and Discovery Log extraction into the PR body |
 | `findings_summary` | object  | No       | Summary from review phase                                                                                     |
-| `force`            | boolean | No       | Create PR even with unresolved issues (default: false)                                                        |
-| `skip_notify`      | boolean | No       | Skip Telegram notification (default: false)                                                                   |
+| `force`            | boolean | No       | Create PR even with unresolved issues (default false)                                                         |
+| `skip_notify`      | boolean | No       | Skip Telegram notification (default false)                                                                    |
 
 ### Output
 
@@ -31,33 +31,33 @@ Completes the workflow by creating PR and notifying.
 
 ### Side Effects
 
-1. Pushes branch to remote
-2. Creates GitHub PR
-3. Sends Telegram notification with PR link
+1. Push branch to remote
+2. Create GitHub PR
+3. Send Telegram notification with PR link
 
 ## Workflow
 
 ### Step 1: Gather Context
 
-**Get issue title for PR:**
+**Issue title for PR:**
 
 ```bash
 gh issue view <issue_number> --json title -q .title
 ```
 
-**Get commit history:**
+**Commit history:**
 
 ```bash
 git log main..HEAD --oneline
 ```
 
-**Get diff stats:**
+**Diff stats:**
 
 ```bash
 git diff main --stat
 ```
 
-**Get branch name:**
+**Branch name:**
 
 ```bash
 git branch --show-current
@@ -65,7 +65,7 @@ git branch --show-current
 
 ### Step 2: Run Final Validation
 
-Run validation commands (each separately):
+Each separately:
 
 ```bash
 bun run type-check
@@ -83,11 +83,11 @@ bun test
 bun run build
 ```
 
-**Note:** `bun run build` is safe in this repo — native-rd's `build` script is a no-op (`echo 'Expo app — no build step'`). If this changes in the future, drop the build step rather than running a native compile.
+**Note:** `bun run build` safe — native-rd's `build` is `echo 'Expo app — no build step'`. If this changes, drop build step rather than running native compile.
 
-**If any validation fails and `force` is false:** Return error with failure details.
+**Validation fails + `force=false`:** Return error with details.
 
-**If validation fails but `force` is true:** Note in PR body, continue.
+**Validation fails + `force=true`:** Note in PR body, continue.
 
 ### Step 3: Push Branch
 
@@ -95,30 +95,28 @@ bun run build
 git push -u origin HEAD
 ```
 
-**If push fails:** Return error (critical).
+Push fail → return error (critical).
 
 ### Step 4: Read Dev Plan (if `plan_path` provided)
 
-Before creating the PR, extract structured sections from the dev plan to enrich the PR body.
+Extract structured sections for PR body. Read file, extract:
 
-If `plan_path` is provided, read the file. Extract:
+1. **Intent Verification** — every checkbox line (`- [ ]` or `- [x]`) between `## Intent Verification` heading and next `##`. Preserve check status verbatim.
+2. **Key Decisions** — markdown table under `## Decisions` (or `## Key Decisions`). Skip header/separator rows; re-emit as two-column `| Decision | Rationale |` in PR body. Empty/absent → omit section.
+3. **Discovery Log** — timestamped entries `- [YYYY-MM-DD HH:MM] <text>` under `## Discovery Log` (may be wrapped in `<!-- … -->`; strip delimiters before parsing). No entries → omit section.
 
-1. **Intent Verification** — every checkbox line (`- [ ]` or `- [x]`) between the `## Intent Verification` heading and the next `##` heading. Preserve check status verbatim.
-2. **Key Decisions** — the markdown table under `## Decisions` (or `## Key Decisions`). Skip the header and separator rows; re-emit as a two-column `| Decision | Rationale |` table in the PR body. If the table is empty or absent, omit the section.
-3. **Discovery Log** — timestamped entries of the form `- [YYYY-MM-DD HH:MM] <text>` under the `## Discovery Log` heading (entries may be wrapped in `<!-- … -->`; strip the delimiters before parsing). If no entries exist, omit the section.
-
-If no plan file exists, omit the Intent Verification, Key Decisions, and Discovery Log sections from the PR body.
+No plan file → omit Intent Verification, Key Decisions, Discovery Log sections.
 
 ### Step 5: Create PR
 
-Determine PR type from branch name or commits:
+PR type from branch/commits:
 
 - `feat/` → "feat"
 - `fix/` → "fix"
 - `refactor/` → "refactor"
 - etc.
 
-Determine scope from primary package affected (e.g., `native-rd`, `openbadges-core`, `design-tokens`, `ci`).
+Scope from primary package affected (`native-rd`, `openbadges-core`, `design-tokens`, `ci`).
 
 **Create PR:**
 
@@ -174,11 +172,11 @@ PRBODY
 
 Extract PR number and URL from output.
 
-**DCO:** All commits on the branch should already carry `Signed-off-by` trailers from the husky `prepare-commit-msg` hook. The DCO workflow check on GitHub will verify each commit. If any commit is missing the trailer, the PR will fail the DCO check — fix locally with new commits (do **not** force-push amended history that strips trailers).
+**DCO:** All branch commits should carry `Signed-off-by` from husky `prepare-commit-msg`. DCO workflow on GitHub verifies each commit. Missing trailer → PR fails DCO check. Fix locally with new commits (do **not** force-push amended history that strips trailers).
 
 ### Step 6: Send Notification (unless skip_notify)
 
-Use the `telegram` skill (via Skill tool) to send a notification:
+Via `telegram` skill:
 
 ```
 PR Created: #<pr_number>
@@ -188,7 +186,7 @@ Commits: <count>
 Status: Awaiting review
 ```
 
-**If notification fails:** Log warning, continue.
+Notification fail → warn, continue.
 
 ### Step 7: Return Output
 
@@ -237,8 +235,6 @@ Status: Awaiting review
 ```
 
 ## Output Format
-
-After completing all steps, report:
 
 ```
 FINALIZE COMPLETE

@@ -10,24 +10,24 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Skill
 
 ### Input
 
-| Field          | Type   | Required | Description                             |
-| -------------- | ------ | -------- | --------------------------------------- |
-| `issue_number` | number | Yes      | GitHub issue number                     |
-| `plan_path`    | string | Yes      | Exact path to the development plan file |
-| `start_step`   | number | No       | Resume from specific step               |
+| Field          | Type   | Required | Description               |
+| -------------- | ------ | -------- | ------------------------- |
+| `issue_number` | number | Yes      | GitHub issue number       |
+| `plan_path`    | string | Yes      | Exact dev plan path       |
+| `start_step`   | number | No       | Resume from specific step |
 
 ### Output
 
-| Field                   | Type     | Description          |
-| ----------------------- | -------- | -------------------- |
-| `commits`               | array    | List of commits made |
-| `commits[].sha`         | string   | Commit SHA           |
-| `commits[].message`     | string   | Commit message       |
-| `commits[].files`       | string[] | Files changed        |
-| `validation.type_check` | boolean  | Type-check passed    |
-| `validation.lint`       | boolean  | Lint passed          |
-| `validation.tests`      | boolean  | Tests passed         |
-| `validation.build`      | boolean  | Build passed         |
+| Field                   | Type     | Description       |
+| ----------------------- | -------- | ----------------- |
+| `commits`               | array    | Commits made      |
+| `commits[].sha`         | string   | Commit SHA        |
+| `commits[].message`     | string   | Commit message    |
+| `commits[].files`       | string[] | Files changed     |
+| `validation.type_check` | boolean  | Type-check passed |
+| `validation.lint`       | boolean  | Lint passed       |
+| `validation.tests`      | boolean  | Tests passed      |
+| `validation.build`      | boolean  | Build passed      |
 
 ### Side Effects
 
@@ -38,32 +38,32 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Skill
 
 ## Purpose
 
-Implements code changes following a development plan, making atomic commits that each represent a single logical change. Follows trunk-based development practices with small, focused changes.
+Implement changes per dev plan via atomic commits. Trunk-based, small focused changes.
 
 ## Core Principles
 
 ### MINIMAL Implementation
 
-**CRITICAL: Only implement the bare minimum to fulfill requirements.**
+**CRITICAL: Only the bare minimum to fulfill requirements.**
 
-1. **No "nice to have" features** - If it's not explicitly required, don't build it
-2. **No premature abstraction** - Don't create helpers/utilities for one-time operations
-3. **No extra options/parameters** - Add configuration only when explicitly needed
-4. **No defensive coding for impossible cases** - Trust internal code
+1. **No "nice to have"** — not required, don't build
+2. **No premature abstraction** — no helpers for one-time ops
+3. **No extra options/parameters** — config only when needed
+4. **No defensive coding for impossible cases** — trust internal code
 
-**Before writing ANY code, ask:**
+**Before writing code, ask:**
 
-- Is this explicitly required by the issue?
-- Would the feature work without this?
-- Am I adding this "just in case"?
+- Explicitly required by issue?
+- Works without this?
+- Adding "just in case"?
 
 ### Minimal Tests
 
 **Only test what matters:**
 
-1. **Happy path** - Does it work with valid input?
-2. **Key error cases** - What happens with obviously wrong input?
-3. **Edge cases only if likely** - Don't test impossible scenarios
+1. **Happy path** — works with valid input
+2. **Key error cases** — obviously wrong input
+3. **Edge cases only if likely** — skip impossible scenarios
 
 **Test count guideline:**
 
@@ -73,12 +73,12 @@ Implements code changes following a development plan, making atomic commits that
 
 ### Atomic Commits
 
-Each commit must be:
+Each commit:
 
-1. **Self-contained**: Works on its own
-2. **Single purpose**: One logical change
-3. **Buildable**: Code compiles/passes type-check
-4. **Testable**: Related tests included (when applicable)
+1. **Self-contained** — works on its own
+2. **Single purpose** — one logical change
+3. **Buildable** — compiles/type-checks
+4. **Testable** — related tests included (when applicable)
 
 #### Good vs Bad Atomic Commits
 
@@ -126,30 +126,24 @@ Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `build`, `ci`
    git status
    ```
 
-2. **Load development plan:**
-   - Read from the path provided by the caller (`plan_path` input)
+2. **Load dev plan** from caller's `plan_path` input.
 
 ### Phase 2: Execute Plan Step by Step
 
-For each step in the development plan:
+For each step:
 
-1. **Announce step:**
-   - "Step 1: <description>"
-   - Show expected commit message
+1. **Announce:** "Step 1: <description>" + expected commit message
 
-2. **Make changes:**
-   - Create/modify files as planned
-   - Follow existing code patterns
-   - Include inline comments where helpful
+2. **Make changes** — create/modify files, follow existing patterns, inline comments where helpful
 
-3. **Validate changes:**
+3. **Validate:**
 
    ```bash
-   bun run type-check  # TypeScript check
+   bun run type-check
    ```
 
    ```bash
-   bun run lint        # Linting
+   bun run lint
    ```
 
 4. **Run relevant tests:**
@@ -158,7 +152,7 @@ For each step in the development plan:
    bun test --testPathPatterns <pattern>
    ```
 
-   (Use `--testPathPatterns` plural per native-rd convention — see `apps/native-rd/CLAUDE.md`.)
+   (Plural `--testPathPatterns` per native-rd convention — see `apps/native-rd/CLAUDE.md`.)
 
 5. **Format changed files:**
 
@@ -173,48 +167,30 @@ For each step in the development plan:
    git commit -m "<type>(<scope>): <message>"
    ```
 
-   **DCO is mandatory in this repo.** The husky `prepare-commit-msg` hook adds the `Signed-off-by` trailer automatically. **Never** pass `--no-verify` to git commit, and never amend commits in a way that strips the trailer.
+   **DCO mandatory.** Husky `prepare-commit-msg` adds `Signed-off-by` automatically. **Never** pass `--no-verify`. Never amend in a way that strips the trailer.
 
-7. **Report progress:**
-   - Confirm commit made
-   - Show files changed
-   - Note any deviations from plan
+7. **Report:** commit confirmed, files changed, deviations noted
 
-8. **Update the dev plan (live plan maintenance):**
-   - Check off completed items in the Implementation Plan section (change `- [ ]` to `- [x]`)
-   - **On deviation:** Add a timestamped entry to the Discovery Log section:
+8. **Update dev plan (live plan maintenance):**
+   - Check off completed items in Implementation Plan (`- [ ]` → `- [x]`)
+   - **On deviation:** timestamped Discovery Log entry:
      ```markdown
      - [YYYY-MM-DD HH:MM] <what changed and why>
      ```
-   - **On new decision:** Add a row to the Decisions table with ID, decision, alternatives, rationale.
-   - **On explicit deferral:** Add to the Not in Scope table with item, reason, and follow-up issue (if any)
+   - **On new decision:** add row to Decisions table (ID, decision, alternatives, rationale)
+   - **On explicit deferral:** add to Not in Scope table (item, reason, follow-up issue)
 
 ### Phase 3: Handle Deviations
 
-If the plan needs adjustment:
-
-1. **Minor adjustments:**
-   - Make the change
-   - Note the deviation in the Discovery Log
-   - Continue with plan
-
-2. **Significant changes:**
-   - Stop and report
-   - Explain what's different
-   - Propose updated approach
-   - In autonomous mode (auto-issue): pick the most reasonable path and log the decision
-   - In gated mode: wait for user approval
-
-3. **Blockers:**
-   - Stop immediately
-   - Describe the blocker
-   - Suggest resolution
+1. **Minor:** make change, log in Discovery Log, continue
+2. **Significant:** stop, report, propose updated approach
+   - Autonomous (auto-issue): pick reasonable path, log decision
+   - Gated: wait for approval
+3. **Blockers:** stop immediately, describe blocker, suggest resolution
 
 ### Phase 4: Final Validation
 
-After all commits:
-
-1. **Run full validation (each command separately):**
+1. **Full validation (each command separately):**
 
    ```bash
    bun run type-check
@@ -232,7 +208,7 @@ After all commits:
    bun run build
    ```
 
-   **Note:** `bun run build` in this repo is safe — native-rd's `build` script is a no-op (`echo 'Expo app — no build step'`). It does NOT trigger an Expo prebuild or native compile. If a future change makes it non-trivial, drop the build step from this skill rather than running native builds.
+   **Note:** `bun run build` is safe — native-rd's `build` script is `echo 'Expo app — no build step'`. No prebuild, no native compile. If this changes, drop the build step rather than running native builds.
 
 2. **Review commit history:**
 
@@ -246,65 +222,40 @@ After all commits:
    git diff main --stat
    ```
 
-4. **Verify scope:**
-   - Is it under ~500 lines?
-   - Does each commit stand alone?
-   - Is the branch focused?
+4. **Verify scope:** under ~500 lines? each commit stands alone? branch focused?
 
 5. **Verify Intent (plan-aware check):**
-   - Read the dev plan's Intent Verification section
-   - For each criterion, verify it is met by the implementation
-   - Check off met criteria in the plan (change `- [ ]` to `- [x]`)
-   - If any criteria are NOT met, report which ones failed and why. In autonomous workflows (auto-issue), log the gap and proceed.
+   - Read plan's Intent Verification section
+   - Verify each criterion met by implementation
+   - Check off met criteria (`- [ ]` → `- [x]`)
+   - Unmet → report which failed and why. Autonomous (auto-issue): log gap, proceed.
 
 ### Phase 5: Report Completion
 
-1. **Summary:**
-   - Number of commits made
-   - Files changed
-   - Lines added/removed
-   - Tests added/passing
-
-2. **Ready for review:**
-   - Branch name
-   - Base branch
-   - Suggested PR title
-
-3. **Next step:**
-   - "Ready for review phase"
+1. **Summary:** commit count, files changed, lines added/removed, tests added/passing
+2. **Ready for review:** branch, base branch, suggested PR title
+3. **Next:** "Ready for review phase"
 
 ## Error Handling
 
 ### Build/Type Errors
 
-1. **Analyze error:**
-   - Read error message
-   - Identify root cause
-   - Plan fix
+1. **Analyze** — read error, identify root cause, plan fix
+2. **Fix in new commit (preferred)** — create fix commit, note deviation
 
-2. **Fix in new commit (preferred):**
-   - Create a fix commit
-   - Note deviation from plan
-
-   Prefer NEW commits over `git commit --amend` — amending past the husky hook can drop the DCO trailer.
+   Prefer NEW commits over `git commit --amend` — amending past husky can drop DCO trailer.
 
 ### Test Failures
 
-1. **Expected failures:**
-   - Update test expectations
-   - Include in same commit
-
-2. **Unexpected failures:**
-   - Stop and analyze
-   - Report to user
-   - Fix before continuing
+1. **Expected:** update test expectations, include in same commit
+2. **Unexpected:** stop, analyze, report, fix before continuing
 
 ### Merge Conflicts
 
-1. **Stop immediately**
-2. **Report conflict details**
-3. **Wait for user guidance**
-4. **Do not auto-resolve**
+1. Stop immediately
+2. Report conflict details
+3. Wait for user guidance
+4. Do not auto-resolve
 
 ## Output Format
 
@@ -343,11 +294,9 @@ Ready for review phase.
 
 ## Success Criteria
 
-This skill is successful when:
-
-- All planned commits are made
-- Each commit is atomic and buildable
+- All planned commits made
+- Each commit atomic, buildable
 - All validations pass
-- Branch is ready for review
-- Code follows project conventions
-- Every commit has a `Signed-off-by` trailer (DCO)
+- Branch ready for review
+- Follows project conventions
+- Every commit has `Signed-off-by` trailer (DCO)

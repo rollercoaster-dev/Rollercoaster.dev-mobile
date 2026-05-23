@@ -6,18 +6,18 @@ allowed-tools: Bash, Read, Glob, Grep, Skill, Agent
 
 # Review Skill
 
-Coordinates code review and manages the auto-fix cycle.
+Coordinate review + auto-fix cycle.
 
 ## Contract
 
 ### Input
 
-| Field         | Type     | Required | Description                                    |
-| ------------- | -------- | -------- | ---------------------------------------------- |
-| `workflow_id` | string   | Yes      | Workflow ID (`issue-<N>`) — used for log lines |
-| `skip_agents` | string[] | No       | Agents to skip (default: none)                 |
-| `max_retry`   | number   | No       | Max fix attempts per finding (default: 3)      |
-| `parallel`    | boolean  | No       | Run agents in parallel (default: true)         |
+| Field         | Type     | Required | Description                               |
+| ------------- | -------- | -------- | ----------------------------------------- |
+| `workflow_id` | string   | Yes      | Workflow ID (`issue-<N>`) — for log lines |
+| `skip_agents` | string[] | No       | Agents to skip (default: none)            |
+| `max_retry`   | number   | No       | Max fix attempts per finding (default: 3) |
+| `parallel`    | boolean  | No       | Run agents in parallel (default: true)    |
 
 ### Output
 
@@ -37,9 +37,9 @@ Coordinates code review and manages the auto-fix cycle.
 
 ### Side Effects
 
-1. Spawns review agents as standalone background agents (parallel or sequential, never as team members)
-2. Spawns auto-fixer as standalone background agent for critical findings
-3. Creates fix commits
+1. Spawn review agents as standalone background agents (parallel or sequential, never team members)
+2. Spawn auto-fixer as standalone background agent for critical findings
+3. Create fix commits
 
 ## Review Agents
 
@@ -53,34 +53,31 @@ Coordinates code review and manages the auto-fix cycle.
 
 ### Step 1: Detect Scope
 
-**Get changed files:**
+**Changed files:**
 
 ```bash
 git diff main --name-only
 ```
 
-**Read dev plan (if it exists):**
-
-Look for the dev plan in this repo's plan directory:
+**Read dev plan if exists:**
 
 ```bash
 ls apps/native-rd/docs/plans/dev-plans/issue-*.md 2>/dev/null
 ```
 
-If multiple files match, use the one whose filename contains the current issue number. If a plan exists for the current issue:
+Multiple matches → use filename containing current issue number. If plan exists for current issue:
 
-1. Read the **Intent Verification** section — these are the success criteria
-2. Read the **Not in Scope** section — these items should NOT have been implemented
-3. Store both for use in the output summary
+1. Read **Intent Verification** — success criteria
+2. Read **Not in Scope** — items that should NOT be implemented
+3. Store both for output summary
 
 ### Step 1.5: Run /simplify (Code Quality Pass)
 
-Run the built-in `/simplify` command for code quality, reuse, and efficiency improvements.
-This complements the review agents which focus on bugs, test gaps, and silent failures.
+Run built-in `/simplify` for code quality, reuse, efficiency. Complements review agents (bugs, test gaps, silent failures).
 
 1. Run: `/simplify`
-2. If `/simplify` makes changes:
-   a. Validate each command separately:
+2. If `/simplify` made changes:
+   a. Validate (each command separately):
    ```bash
    bun run type-check
    ```
@@ -90,17 +87,17 @@ This complements the review agents which focus on bugs, test gaps, and silent fa
    ```bash
    bun test
    ```
-   b. If all valid: commit with `git commit -m "refactor: apply simplify suggestions"` (husky adds DCO trailer)
-   c. If invalid: revert with `git reset --hard HEAD && git clean -fd` (resets tracked files and removes untracked artifacts created by `/simplify`)
-3. Continue to Step 2 regardless of outcome.
+   b. Valid: `git commit -m "refactor: apply simplify suggestions"` (husky adds DCO)
+   c. Invalid: revert via `git reset --hard HEAD && git clean -fd` (resets tracked, removes untracked `/simplify` artifacts)
+3. Continue to Step 2 regardless.
 
 ### Step 2: Spawn Review Agents
 
-**CRITICAL: Team isolation.** All review agents are internal sub-agents — they MUST be spawned as standalone background agents, never as team members. Do NOT pass `team_name` to any Agent call.
+**CRITICAL: Team isolation.** All review agents are internal sub-agents — MUST be standalone background agents, never team members. Do NOT pass `team_name`.
 
-**If parallel mode (default):**
+**Parallel mode (default):**
 
-Spawn all agents simultaneously using the Agent tool with `run_in_background: true` (no `team_name`):
+Spawn all agents simultaneously via Agent tool with `run_in_background: true` (no `team_name`):
 
 ```text
 Agent(pr-review-toolkit:code-reviewer, run_in_background: true): "Review code changes for issue workflow <workflow_id>"
@@ -108,13 +105,13 @@ Agent(pr-review-toolkit:pr-test-analyzer, run_in_background: true): "Analyze tes
 Agent(pr-review-toolkit:silent-failure-hunter, run_in_background: true): "Check for silent failures in changes"
 ```
 
-**If sequential mode:**
+**Sequential mode:**
 
-Spawn each agent one at a time using the Agent tool (no `team_name`), collecting results.
+Spawn one at a time via Agent tool (no `team_name`), collect results.
 
 ### Step 3: Collect and Normalize Findings
 
-Each agent returns findings in different formats. Normalize to:
+Each agent returns different formats. Normalize to:
 
 ```json
 {
@@ -155,9 +152,9 @@ while not fixed AND attempt < max_retry:
 
 ### Step 5: Re-Review After Fixes
 
-If any fixes were made:
+Any fixes made → validate:
 
-1. Run validation (each command separately):
+1. Validation (each command separately):
 
    ```bash
    bun run type-check
@@ -167,15 +164,15 @@ If any fixes were made:
    bun run lint
    ```
 
-2. If validation fails, revert last fix:
+2. Validation fails → revert last fix:
 
    ```bash
    git checkout -- <file>
    ```
 
-   Mark finding as not fixed.
+   Mark as not fixed.
 
-3. Optionally re-run review agents to verify fixes (if time permits).
+3. Optionally re-run review agents to verify fixes.
 
 ### Step 6: Calculate Summary
 
@@ -238,19 +235,15 @@ Summary: <unresolved> unresolved critical findings
 
 ## Escalation Trigger
 
-If `summary.unresolved > 0`:
-
-The calling workflow should escalate to user with:
+`summary.unresolved > 0` → calling workflow escalates with:
 
 - List of unresolved findings
 - Options: continue (manual fix), force-pr, abort
 
 ## Success Criteria
 
-This skill is successful when:
-
 - All review agents run (or gracefully skip on failure)
-- Findings are correctly classified by severity
+- Findings correctly classified by severity
 - Auto-fix attempted for all CRITICAL findings
-- Clear summary returned to orchestrator
+- Clear summary to orchestrator
 - Escalation triggered when appropriate
