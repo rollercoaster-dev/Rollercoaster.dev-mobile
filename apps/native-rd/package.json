@@ -54,6 +54,7 @@
     "@storybook/addon-ondevice-actions": "^10.4.4",
     "@storybook/addon-ondevice-controls": "^10.4.4",
     "@storybook/react-native": "^10.4.4",
+    "@tolgee/i18next": "^7.0.1",
     "buffer": "^6.0.3",
     "expo": "~55.0.25",
     "expo-asset": "~55.0.17",

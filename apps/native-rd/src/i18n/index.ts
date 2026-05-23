@@ -146,8 +146,18 @@ const logger = new Logger("i18n");
 // (which intentionally exercises the missing-key path) quiet.
 const warnMissingKeys = __DEV__ && process.env.NODE_ENV !== "test";
 
-// eslint-disable-next-line import/no-named-as-default-member -- i18next.use() is the documented chainable init API
-i18n.use(initReactI18next).init({
+// Dev-only Tolgee SDK wrap (#136). Gated on `__DEV__` + an explicit env var so
+// production bundles dead-code-strip the require and so the browser-targeted
+// @tolgee/web SDK never module-loads on iOS/Android. Setup lives in
+// `apps/native-rd/docs/tolgee.md`.
+let i18nForInit = i18n;
+if (__DEV__ && process.env.EXPO_PUBLIC_TOLGEE_ENABLED === "true") {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { wrapWithTolgee } = require("./tolgee") as typeof import("./tolgee");
+  i18nForInit = wrapWithTolgee(i18n);
+}
+
+i18nForInit.use(initReactI18next).init({
   resources,
   lng: selectSupportedLanguage(getLocales()),
   fallbackLng: "en",
