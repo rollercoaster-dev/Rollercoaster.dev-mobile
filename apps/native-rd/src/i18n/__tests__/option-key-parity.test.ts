@@ -12,36 +12,36 @@ const LIFECYCLE_MODES: LifecycleMode[] = [
 ];
 
 // Catches the gap that locale-parity.test.ts can't: a TS union member
-// (DensityLevel / ThemeName) added without a matching JSON copy entry.
-// Consumers build keys dynamically via `t(\`density.options.${id}.label\`)`,
-// and on miss i18next returns the key path verbatim — which renders as UI
-// in production because the missing-key handler is __DEV__-gated.
+// (DensityLevel / ThemeName / LifecycleMode) added without a matching JSON
+// copy entry. Consumers build keys dynamically via
+// `t(\`density.options.${id}.label\`)`, and on miss i18next returns the key
+// tail verbatim — which renders as UI in production because the missing-key
+// handler is __DEV__-gated.
 //
-// Drift is detected by checking that the returned value differs from the
-// fully-qualified key path. A real translation will, a missing key won't.
+// Use `i18n.exists(key)` for the forward check. `expect(t(key)).not.toBe(key)`
+// looks correct but is a no-op: when passed `"common:foo.bar"`, i18next strips
+// the namespace and returns `"foo.bar"` on miss, never equal to the full key.
 
 describe("option array ↔ i18n key parity", () => {
   describe.each(themeOptions)("themeOptions[$id]", ({ id }) => {
     test("common:theme.options.<id>.label resolves", () => {
-      const key = `common:theme.options.${id}.label` as const;
-      expect(i18n.t(key)).not.toBe(key);
+      expect(i18n.exists(`common:theme.options.${id}.label`)).toBe(true);
     });
 
     test("common:theme.options.<id>.description resolves", () => {
-      const key = `common:theme.options.${id}.description` as const;
-      expect(i18n.t(key)).not.toBe(key);
+      expect(i18n.exists(`common:theme.options.${id}.description`)).toBe(true);
     });
   });
 
   describe.each(densityOptions)("densityOptions[$id]", ({ id }) => {
     test("settings:density.options.<id>.label resolves", () => {
-      const key = `settings:density.options.${id}.label` as const;
-      expect(i18n.t(key)).not.toBe(key);
+      expect(i18n.exists(`settings:density.options.${id}.label`)).toBe(true);
     });
 
     test("settings:density.options.<id>.description resolves", () => {
-      const key = `settings:density.options.${id}.description` as const;
-      expect(i18n.t(key)).not.toBe(key);
+      expect(i18n.exists(`settings:density.options.${id}.description`)).toBe(
+        true,
+      );
     });
   });
 
@@ -49,8 +49,7 @@ describe("option array ↔ i18n key parity", () => {
     "STATUS_BADGE_VARIANTS[$variant]",
     ({ variant }) => {
       test("common:status.<variant> resolves", () => {
-        const key = `common:status.${variant}` as const;
-        expect(i18n.t(key)).not.toBe(key);
+        expect(i18n.exists(`common:status.${variant}`)).toBe(true);
       });
     },
   );
@@ -96,8 +95,7 @@ describe("option array ↔ i18n key parity", () => {
     "LIFECYCLE_MODES[$mode]",
     ({ mode }) => {
       test(`common:modeIndicator.${mode} resolves`, () => {
-        const key = `common:modeIndicator.${mode}` as const;
-        expect(i18n.t(key)).not.toBe(key);
+        expect(i18n.exists(`common:modeIndicator.${mode}`)).toBe(true);
       });
     },
   );
@@ -118,7 +116,6 @@ describe("option array ↔ i18n key parity", () => {
   // basis. The forward check guarantees the template-literal `t()` callsites
   // in MiniTimeline and ProgressDots resolve to a real translation.
   test("common:timeline.a11y.step resolves", () => {
-    const key = "common:timeline.a11y.step";
-    expect(i18n.t(key, { index: 1, status: "pending" })).not.toBe(key);
+    expect(i18n.exists("common:timeline.a11y.step")).toBe(true);
   });
 });
