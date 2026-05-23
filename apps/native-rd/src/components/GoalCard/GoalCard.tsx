@@ -31,21 +31,15 @@ export function GoalCard({ goal, onPress, onLongPress }: GoalCardProps) {
 
   const nextStep = goal.nextStepTitle?.trim() || null;
 
-  const statusLabel = t(`common:status.${goal.status}`);
+  const labelOpts = {
+    title: goal.title,
+    stepsCompleted: goal.stepsCompleted,
+    stepsTotal: goal.stepsTotal,
+    status: t(`common:status.${goal.status}`),
+  };
   const accessibilityLabel = nextStep
-    ? t("card.a11y.labelWithNextStep", {
-        title: goal.title,
-        nextStep,
-        stepsCompleted: goal.stepsCompleted,
-        stepsTotal: goal.stepsTotal,
-        status: statusLabel,
-      })
-    : t("card.a11y.label", {
-        title: goal.title,
-        stepsCompleted: goal.stepsCompleted,
-        stepsTotal: goal.stepsTotal,
-        status: statusLabel,
-      });
+    ? t("card.a11y.labelWithNextStep", { ...labelOpts, nextStep })
+    : t("card.a11y.label", labelOpts);
 
   return (
     <Card

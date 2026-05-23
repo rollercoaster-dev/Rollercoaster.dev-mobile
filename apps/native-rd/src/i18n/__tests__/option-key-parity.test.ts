@@ -72,8 +72,7 @@ describe("option array ↔ i18n key parity", () => {
 
   // Reverse direction for status: orphan JSON status entries (e.g. after a
   // variant was renamed) won't surface via the forward walk, which only
-  // iterates STATUS_BADGE_VARIANTS. `a11yPrefix` is an a11y template, not a
-  // variant — it's excluded from the variant comparison.
+  // iterates STATUS_BADGE_VARIANTS.
   test("common:status keyset matches STATUS_BADGE_VARIANTS", () => {
     const bundle = i18n.getResourceBundle("en", "common") as {
       status: Record<string, unknown>;
