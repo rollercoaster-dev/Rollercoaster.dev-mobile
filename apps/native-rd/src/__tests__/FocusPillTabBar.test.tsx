@@ -7,6 +7,7 @@
  */
 
 import React from "react";
+import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { renderWithProviders, screen, fireEvent } from "./test-utils";
 import { i18n } from "../i18n";
 import { FocusPillTabBar } from "../navigation/FocusPillTabBar";
@@ -40,10 +41,10 @@ function buildProps({ activeIndex = 0 }: MockTabBarOpts = {}) {
     { key: "SettingsTab-1", name: "SettingsTab" as const, params: undefined },
   ];
 
-  // The component only reads a small subset of BottomTabBarProps; we cast
-  // because constructing the full shape would dwarf the test value.
-
-  const props: any = {
+  // The component only reads a small subset of BottomTabBarProps; the
+  // `unknown` cast acknowledges the partial shape without inviting `any`
+  // into the surrounding code.
+  const props = {
     state: {
       index: activeIndex,
       key: "tab",
@@ -56,7 +57,7 @@ function buildProps({ activeIndex = 0 }: MockTabBarOpts = {}) {
     navigation: { dispatch, emit, navigate },
     descriptors: {},
     insets: { top: 0, right: 0, bottom: 0, left: 0 },
-  };
+  } as unknown as BottomTabBarProps;
 
   return { props, dispatch, emit };
 }
