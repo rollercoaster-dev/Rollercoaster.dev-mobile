@@ -4,6 +4,7 @@ import {
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
+import { i18n } from "../../../i18n";
 import { FocusModeScreen } from "../FocusModeScreen";
 
 // --- Mocks ---
@@ -1035,6 +1036,48 @@ describe("FocusModeScreen", () => {
     renderWithProviders(<FocusModeScreen {...routeProps} />);
     fireEvent.press(screen.getByText("Mark complete"));
     expect(mockCompleteStep).toHaveBeenCalledWith("step-1", null, []);
+  });
+
+  describe("pseudo locale", () => {
+    afterEach(async () => {
+      if (i18n.language !== "en") await i18n.changeLanguage("en");
+    });
+
+    it.each([
+      { key: "focusMode:title", query: "text" },
+      { key: "focusMode:header.editGoal", query: "label" },
+      { key: "focusMode:header.hideTimeline", query: "label" },
+    ] as const)(
+      "renders $key as bracketed copy under pseudo locale",
+      async ({ key, query }) => {
+        await i18n.changeLanguage("pseudo");
+        setupQueries();
+        renderWithProviders(<FocusModeScreen {...routeProps} />);
+        const pseudo = i18n.t(key);
+        expect(pseudo.startsWith("[")).toBe(true);
+        const get = query === "text" ? screen.getByText : screen.getByLabelText;
+        expect(get(pseudo)).toBeOnTheScreen();
+      },
+    );
+
+    it("renders the Goal not found error under pseudo locale", async () => {
+      await i18n.changeLanguage("pseudo");
+      setupQueries({ goal: null, steps: [] });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+      const pseudo = i18n.t("focusMode:errors.goalNotFound");
+      expect(pseudo.startsWith("[")).toBe(true);
+      expect(screen.getByText(pseudo)).toBeOnTheScreen();
+    });
+
+    it("resolves interpolated step-uncompleted announcement under pseudo locale", async () => {
+      // Announcements fire through AccessibilityInfo and aren't queryable in jsdom.
+      await i18n.changeLanguage("pseudo");
+      const pseudo = i18n.t("focusMode:a11y.stepUncompleted", {
+        title: "Read docs",
+      });
+      expect(pseudo.startsWith("[")).toBe(true);
+      expect(pseudo).toContain("Read docs");
+    });
   });
 
   describe("breadcrumbs", () => {
