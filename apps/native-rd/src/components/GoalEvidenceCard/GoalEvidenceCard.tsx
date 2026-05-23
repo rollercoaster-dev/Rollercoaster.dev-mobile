@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { View, Text, Pressable, PixelRatio } from "react-native";
 import * as Haptics from "expo-haptics";
+import { useTranslation } from "react-i18next";
 import { useUnistyles } from "react-native-unistyles";
 import Animated from "react-native-reanimated";
 import { Card } from "../Card";
@@ -43,6 +44,7 @@ export function GoalEvidenceCard({
   onMarkComplete,
 }: GoalEvidenceCardProps) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation("common");
   const evidenceLabel = formatEvidenceLabel(evidenceCount);
   const flashStyle = useFlashOnIncrease(evidenceCount);
 
@@ -82,8 +84,10 @@ export function GoalEvidenceCard({
       <Card>
         <View style={styles.container}>
           <View style={styles.metaRow}>
-            <Text style={styles.metaLabel}>Goal</Text>
-            {onMarkComplete && <StatusBadge variant="active" label="Ready" />}
+            <Text style={styles.metaLabel}>{t("goalCard.metaLabel")}</Text>
+            {onMarkComplete && (
+              <StatusBadge variant="active" label={t("goalCard.readyBadge")} />
+            )}
           </View>
           <View style={styles.bodyRow}>
             <Pressable
@@ -91,7 +95,9 @@ export function GoalEvidenceCard({
               hitSlop={BADGE_HIT_SLOP}
               accessible
               accessibilityRole="button"
-              accessibilityLabel={`Badge preview for ${goalTitle}, tap to edit design`}
+              accessibilityLabel={t("goalCard.a11y.badgePreview", {
+                title: goalTitle,
+              })}
               style={styles.badgePressable(viewBox.w, viewBox.h)}
             >
               <BadgeRenderer
@@ -122,7 +128,9 @@ export function GoalEvidenceCard({
               style={styles.evidenceBadge}
               accessible
               accessibilityRole="button"
-              accessibilityLabel={`${evidenceCount} goal evidence items, tap to view`}
+              accessibilityLabel={t("goalCard.a11y.evidenceCount", {
+                count: evidenceCount,
+              })}
             >
               <Text style={styles.evidenceText}>{evidenceLabel}</Text>
             </Pressable>
@@ -145,15 +153,17 @@ export function GoalEvidenceCard({
                 }}
                 accessible
                 accessibilityRole="button"
-                accessibilityLabel="Mark goal complete"
-                accessibilityHint="Opens completion flow to capture final evidence"
+                accessibilityLabel={t("goalCard.markComplete")}
+                accessibilityHint={t("goalCard.a11y.markCompleteHint")}
                 style={styles.markCompletePressable}
               >
                 {/* Visually a checkbox affordance, but semantically a button —
                     the tap navigates to CompletionFlow rather than toggling a
                     persistent checked state, so we never render a checkmark. */}
                 <View style={styles.markCompleteBox} />
-                <Text style={styles.markCompleteLabel}>Mark goal complete</Text>
+                <Text style={styles.markCompleteLabel}>
+                  {t("goalCard.markComplete")}
+                </Text>
               </Pressable>
             </View>
           )}

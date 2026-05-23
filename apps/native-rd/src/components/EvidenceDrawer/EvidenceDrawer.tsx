@@ -11,6 +11,7 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
 } from "react-native-reanimated";
+import { useTranslation } from "react-i18next";
 import { useUnistyles } from "react-native-unistyles";
 import { useAnimationPref } from "../../hooks/useAnimationPref";
 import { getTimingConfig } from "../../utils/animation";
@@ -51,6 +52,7 @@ export function EvidenceDrawer({
 }: EvidenceDrawerProps) {
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const { theme } = useUnistyles();
+  const { t } = useTranslation("common");
   const { animationPref } = useAnimationPref();
   const maxHeight = windowHeight * 0.6;
   const items = evidence ?? [];
@@ -99,7 +101,9 @@ export function EvidenceDrawer({
     : ({
         accessible: true,
         accessibilityRole: "summary" as const,
-        accessibilityLabel: isGoal ? "Goal evidence drawer" : "Evidence drawer",
+        accessibilityLabel: isGoal
+          ? t("evidenceDrawer.a11y.labelGoal")
+          : t("evidenceDrawer.a11y.label"),
       } as const);
 
   return (
@@ -114,7 +118,7 @@ export function EvidenceDrawer({
           style={styles.overlayPressable}
           accessible={isOpen}
           accessibilityRole="button"
-          accessibilityLabel="Close evidence drawer"
+          accessibilityLabel={t("evidenceDrawer.a11y.close")}
         />
       </Animated.View>
 
@@ -130,7 +134,7 @@ export function EvidenceDrawer({
             style={styles.handleLeft}
             accessible
             accessibilityRole="button"
-            accessibilityLabel="Toggle evidence drawer"
+            accessibilityLabel={t("evidenceDrawer.a11y.toggle")}
           >
             <View style={styles.handleBar(isGoal)} />
             <Text style={styles.handleLabel}>{drawerLabel}</Text>

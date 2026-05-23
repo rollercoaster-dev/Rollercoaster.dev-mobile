@@ -5,6 +5,7 @@ import {
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
+import { i18n } from "../../../i18n";
 import { GoalEvidenceCard } from "../GoalEvidenceCard";
 
 jest.mock("expo-haptics", () => ({
@@ -72,7 +73,9 @@ describe("GoalEvidenceCard", () => {
     renderWithProviders(<GoalEvidenceCard {...defaultProps} />);
     expect(
       screen.getByLabelText(
-        "Badge preview for Run my first 5k, tap to edit design",
+        i18n.t("common:goalCard.a11y.badgePreview", {
+          title: "Run my first 5k",
+        }),
       ),
     ).toBeOnTheScreen();
   });
@@ -105,7 +108,9 @@ describe("GoalEvidenceCard", () => {
       mockBadgeRenderer.mock.calls[0]?.[0] as { size: number }
     ).size;
     const pressable = screen.getByLabelText(
-      "Badge preview for Run my first 5k, tap to edit design",
+      i18n.t("common:goalCard.a11y.badgePreview", {
+        title: "Run my first 5k",
+      }),
     );
     const flatStyle = StyleSheet.flatten(pressable.props.style) as {
       width?: number;
@@ -125,7 +130,9 @@ describe("GoalEvidenceCard", () => {
     );
     fireEvent.press(
       screen.getByLabelText(
-        "Badge preview for Run my first 5k, tap to edit design",
+        i18n.t("common:goalCard.a11y.badgePreview", {
+          title: "Run my first 5k",
+        }),
       ),
     );
     expect(onBadgePress).toHaveBeenCalledTimes(1);
@@ -160,7 +167,9 @@ describe("GoalEvidenceCard", () => {
       />,
     );
     fireEvent.press(
-      screen.getByLabelText("3 goal evidence items, tap to view"),
+      screen.getByLabelText(
+        i18n.t("common:goalCard.a11y.evidenceCount", { count: 3 }),
+      ),
     );
     expect(onEvidenceTap).toHaveBeenCalledTimes(1);
   });
@@ -170,7 +179,9 @@ describe("GoalEvidenceCard", () => {
       <GoalEvidenceCard {...defaultProps} evidenceCount={7} />,
     );
     expect(
-      screen.getByLabelText("7 goal evidence items, tap to view"),
+      screen.getByLabelText(
+        i18n.t("common:goalCard.a11y.evidenceCount", { count: 7 }),
+      ),
     ).toBeOnTheScreen();
   });
 
@@ -178,9 +189,13 @@ describe("GoalEvidenceCard", () => {
     it("does not render the check or Ready badge when onMarkComplete is omitted", () => {
       renderWithProviders(<GoalEvidenceCard {...defaultProps} />);
       expect(
-        screen.queryByRole("button", { name: "Mark goal complete" }),
+        screen.queryByRole("button", {
+          name: i18n.t("common:goalCard.markComplete"),
+        }),
       ).toBeNull();
-      expect(screen.queryByText("Ready")).toBeNull();
+      expect(
+        screen.queryByText(i18n.t("common:goalCard.readyBadge")),
+      ).toBeNull();
     });
 
     it("renders the check and Ready badge when onMarkComplete is provided", () => {
@@ -188,9 +203,13 @@ describe("GoalEvidenceCard", () => {
         <GoalEvidenceCard {...defaultProps} onMarkComplete={jest.fn()} />,
       );
       expect(
-        screen.getByRole("button", { name: "Mark goal complete" }),
+        screen.getByRole("button", {
+          name: i18n.t("common:goalCard.markComplete"),
+        }),
       ).toBeOnTheScreen();
-      expect(screen.getByText("Ready")).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("common:goalCard.readyBadge")),
+      ).toBeOnTheScreen();
     });
 
     it("calls onMarkComplete when the check is tapped", () => {
@@ -199,7 +218,9 @@ describe("GoalEvidenceCard", () => {
         <GoalEvidenceCard {...defaultProps} onMarkComplete={onMarkComplete} />,
       );
       fireEvent.press(
-        screen.getByRole("button", { name: "Mark goal complete" }),
+        screen.getByRole("button", {
+          name: i18n.t("common:goalCard.markComplete"),
+        }),
       );
       expect(onMarkComplete).toHaveBeenCalledTimes(1);
     });

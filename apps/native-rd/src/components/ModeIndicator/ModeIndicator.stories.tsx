@@ -3,8 +3,7 @@ import React from "react";
 import { View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { Text } from "../Text";
-import { ModeIndicator } from "./ModeIndicator";
-import type { LifecycleMode } from "./ModeIndicator";
+import { ModeIndicator, LIFECYCLE_MODES } from "./ModeIndicator";
 
 // Minimal 1×1 transparent PNG for testing the icon prop code path
 const MOCK_ICON = { uri: "https://via.placeholder.com/32" };
@@ -18,12 +17,10 @@ export default meta;
 
 type Story = StoryObj<typeof ModeIndicator>;
 
-const ALL_MODES: LifecycleMode[] = ["edit", "focus", "complete", "timeline"];
-
 export const AllModes: Story = {
   render: () => (
     <View style={storyStyles.container}>
-      {ALL_MODES.map((mode) => (
+      {LIFECYCLE_MODES.map((mode) => (
         <View key={mode} style={storyStyles.row}>
           <Text variant="label" style={storyStyles.rowLabel}>
             {mode}

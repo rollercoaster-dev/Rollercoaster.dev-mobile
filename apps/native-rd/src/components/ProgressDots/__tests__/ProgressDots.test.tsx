@@ -4,6 +4,7 @@ import {
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
+import { i18n } from "../../../i18n";
 import {
   ProgressDots,
   type ProgressDotsStep,
@@ -17,6 +18,13 @@ const defaultProps = {
 
 const makeSteps = (...statuses: StepStatus[]): ProgressDotsStep[] =>
   statuses.map((status) => ({ status }));
+
+const stepLabel = (index: number, status: StepStatus) =>
+  i18n.t("common:timeline.a11y.step", { index, status });
+
+const goalLabel = () => i18n.t("common:timeline.a11y.goalEvidence");
+
+const navLabel = () => i18n.t("common:progressDots.a11y.label");
 
 describe("ProgressDots", () => {
   beforeEach(() => jest.clearAllMocks());
@@ -43,14 +51,14 @@ describe("ProgressDots", () => {
       );
       const tabs = screen.getAllByRole("tab");
       expect(tabs).toHaveLength(2); // 2 step dots only
-      expect(screen.queryByLabelText("Goal evidence")).toBeNull();
+      expect(screen.queryByLabelText(goalLabel())).toBeNull();
     });
 
     it("renders goal dot by default", () => {
       renderWithProviders(
         <ProgressDots steps={makeSteps("pending")} {...defaultProps} />,
       );
-      expect(screen.getByLabelText("Goal evidence")).toBeOnTheScreen();
+      expect(screen.getByLabelText(goalLabel())).toBeOnTheScreen();
     });
   });
 
@@ -64,7 +72,7 @@ describe("ProgressDots", () => {
           onDotTap={onDotTap}
         />,
       );
-      fireEvent.press(screen.getByLabelText("Step 2: in-progress"));
+      fireEvent.press(screen.getByLabelText(stepLabel(2, "in-progress")));
       expect(onDotTap).toHaveBeenCalledWith(1);
     });
 
@@ -75,7 +83,7 @@ describe("ProgressDots", () => {
         <ProgressDots steps={steps} currentIndex={0} onDotTap={onDotTap} />,
       );
 
-      fireEvent.press(screen.getByLabelText("Step 2: in-progress"));
+      fireEvent.press(screen.getByLabelText(stepLabel(2, "in-progress")));
       expect(onDotTap).toHaveBeenCalledWith(1);
 
       // Simulate parent updating currentIndex after tap
@@ -87,7 +95,7 @@ describe("ProgressDots", () => {
         />,
       );
 
-      const step2 = screen.getByLabelText("Step 2: completed");
+      const step2 = screen.getByLabelText(stepLabel(2, "completed"));
       expect(step2.props.accessibilityState).toEqual(
         expect.objectContaining({ selected: true }),
       );
@@ -102,25 +110,20 @@ describe("ProgressDots", () => {
           onDotTap={onDotTap}
         />,
       );
-      fireEvent.press(screen.getByLabelText("Goal evidence"));
+      fireEvent.press(screen.getByLabelText(goalLabel()));
       expect(onDotTap).toHaveBeenCalledWith(2);
     });
   });
 
   describe("accessibility", () => {
-    it.each([
-      ["completed", "Step 1: completed"],
-      ["in-progress", "Step 1: in-progress"],
-      ["pending", "Step 1: pending"],
-    ] satisfies [StepStatus, string][])(
-      "step dot has correct label for %s status",
-      (status, expectedLabel) => {
-        renderWithProviders(
-          <ProgressDots steps={makeSteps(status)} {...defaultProps} />,
-        );
-        expect(screen.getByLabelText(expectedLabel)).toBeOnTheScreen();
-      },
-    );
+    it.each([["completed"], ["in-progress"], ["pending"]] satisfies [
+      StepStatus,
+    ][])("step dot has correct label for %s status", (status) => {
+      renderWithProviders(
+        <ProgressDots steps={makeSteps(status)} {...defaultProps} />,
+      );
+      expect(screen.getByLabelText(stepLabel(1, status))).toBeOnTheScreen();
+    });
 
     it("current dot has selected state", () => {
       renderWithProviders(
@@ -130,7 +133,7 @@ describe("ProgressDots", () => {
           onDotTap={jest.fn()}
         />,
       );
-      const currentDot = screen.getByLabelText("Step 1: in-progress");
+      const currentDot = screen.getByLabelText(stepLabel(1, "in-progress"));
       expect(currentDot.props.accessibilityState).toEqual(
         expect.objectContaining({ selected: true }),
       );
@@ -144,7 +147,7 @@ describe("ProgressDots", () => {
           onDotTap={jest.fn()}
         />,
       );
-      const otherDot = screen.getByLabelText("Step 2: pending");
+      const otherDot = screen.getByLabelText(stepLabel(2, "pending"));
       expect(otherDot.props.accessibilityState).toEqual(
         expect.objectContaining({ selected: false }),
       );
@@ -158,7 +161,7 @@ describe("ProgressDots", () => {
           onDotTap={jest.fn()}
         />,
       );
-      const goalDot = screen.getByLabelText("Goal evidence");
+      const goalDot = screen.getByLabelText(goalLabel());
       expect(goalDot.props.accessibilityState).toEqual(
         expect.objectContaining({ selected: true }),
       );
@@ -172,7 +175,7 @@ describe("ProgressDots", () => {
           onDotTap={jest.fn()}
         />,
       );
-      const goalDot = screen.getByLabelText("Goal evidence");
+      const goalDot = screen.getByLabelText(goalLabel());
       expect(goalDot.props.accessibilityState).toEqual(
         expect.objectContaining({ selected: false }),
       );
@@ -182,7 +185,7 @@ describe("ProgressDots", () => {
       renderWithProviders(
         <ProgressDots steps={makeSteps("pending")} {...defaultProps} />,
       );
-      const container = screen.getByLabelText("Step navigation");
+      const container = screen.getByLabelText(navLabel());
       expect(container).toBeOnTheScreen();
       expect(container.props.accessibilityRole).toBe("tablist");
     });
@@ -191,7 +194,7 @@ describe("ProgressDots", () => {
   describe("edge cases", () => {
     it("renders only goal dot when steps array is empty", () => {
       renderWithProviders(<ProgressDots steps={[]} {...defaultProps} />);
-      expect(screen.getByLabelText("Goal evidence")).toBeOnTheScreen();
+      expect(screen.getByLabelText(goalLabel())).toBeOnTheScreen();
       expect(screen.getAllByRole("tab")).toHaveLength(1);
     });
 

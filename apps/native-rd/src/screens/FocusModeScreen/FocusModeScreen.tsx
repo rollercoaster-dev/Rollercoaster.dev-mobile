@@ -552,6 +552,7 @@ function FocusContent({ goalId }: { goalId: string }) {
           currentIndex={currentCardIndex}
           onStepTap={handleIndexChange}
           onTimelineTap={handleTimelineTap}
+          accessibilityLabel={t("common:timeline.a11y.label")}
         />
       )}
 
