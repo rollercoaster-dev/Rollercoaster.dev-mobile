@@ -170,11 +170,9 @@ describe("CaptureVideoScreen — recorder mode", () => {
     fireEvent.press(
       screen.getByText(i18n.t("captureVideo:actions.recordVideo")),
     );
+    expect(screen.getByText(i18n.t("permissions:camera.title"))).toBeTruthy();
     expect(
-      screen.getByText(i18n.t("captureVideo:recorder.permissionTitle")),
-    ).toBeTruthy();
-    expect(
-      screen.getByText(i18n.t("captureVideo:recorder.grantAccess")),
+      screen.getByText(i18n.t("permissions:camera.settingsCta")),
     ).toBeTruthy();
   });
 
@@ -194,9 +192,7 @@ describe("CaptureVideoScreen — recorder mode", () => {
     fireEvent.press(
       screen.getByText(i18n.t("captureVideo:actions.recordVideo")),
     );
-    expect(
-      screen.getByText(i18n.t("captureVideo:recorder.permissionTitle")),
-    ).toBeTruthy();
+    expect(screen.getByText(i18n.t("permissions:camera.title"))).toBeTruthy();
   });
 
   it("shows timer at 00:00 initially in recorder", () => {
@@ -338,7 +334,7 @@ describe("CaptureVideoScreen — library upload", () => {
     });
 
     expect(alertSpy).toHaveBeenCalledWith(
-      i18n.t("captureVideo:permission.libraryTitle"),
+      i18n.t("permissions:videoLibrary.title"),
       expect.any(String),
     );
     expect(mockLaunchImageLibraryAsync).not.toHaveBeenCalled();
