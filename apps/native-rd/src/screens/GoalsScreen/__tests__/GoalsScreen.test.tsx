@@ -241,6 +241,10 @@ describe("GoalsScreen", () => {
           i18n.t("goals:confirmDelete.message", { title: "Learn TypeScript" }),
         ),
       ).toBeOnTheScreen();
+
+      fireEvent.press(screen.getByText(i18n.t("common:actions.delete")));
+      expect(deleteGoal).toHaveBeenCalledWith("goal-1");
+      expect(deleteGoal).toHaveBeenCalledTimes(1);
     });
   });
 
