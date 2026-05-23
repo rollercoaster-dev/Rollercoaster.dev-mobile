@@ -75,30 +75,28 @@ function ThemedApp() {
     // First launch — show WelcomeScreen above NavigationContainer
     body = <WelcomeScreen onGetStarted={markSeen} />;
   } else {
+    // Outer view paints accentPurple; the inner view offsets the
+    // navigator by the top inset and paints the regular background.
+    // The exposed strip above the inner view = the device top inset,
+    // tinted purple to match HeaderBand. This keeps the inset painter
+    // strictly behind navigation content, so a screen with its own
+    // top inset (e.g. a fullScreen modal) can fully cover it.
     body = (
-      <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <View style={{ flex: 1, backgroundColor: theme.colors.accentPurple }}>
         <StatusBar style={isDark ? "light" : "dark"} />
-        <NavigationContainer theme={navTheme}>
-          <ToastProvider>
-            <TabNavigator />
-          </ToastProvider>
-        </NavigationContainer>
-        {/* Paint the top safe area at root so HeaderBand's purple
-            reaches the device edge regardless of how react-native-screens
-            propagates insets to inner screens (safe-area-context 5.7+
-            returns 0 inside a Screen, leaving HeaderBand's paddingTop
-            too short to cover the status bar). */}
         <View
-          pointerEvents="none"
           style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            height: insets.top,
-            backgroundColor: theme.colors.accentPurple,
+            flex: 1,
+            marginTop: insets.top,
+            backgroundColor: theme.colors.background,
           }}
-        />
+        >
+          <NavigationContainer theme={navTheme}>
+            <ToastProvider>
+              <TabNavigator />
+            </ToastProvider>
+          </NavigationContainer>
+        </View>
       </View>
     );
   }
