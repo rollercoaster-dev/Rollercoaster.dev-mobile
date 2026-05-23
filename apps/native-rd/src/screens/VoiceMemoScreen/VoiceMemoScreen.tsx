@@ -31,7 +31,7 @@ function formatDuration(ms: number): string {
 export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
   const navigation = useNavigation();
   const { theme } = useUnistyles();
-  const { t } = useTranslation();
+  const { t } = useTranslation(["captureVoice", "common"]);
   const { goalId, stepId } = route.params;
   const [caption, setCaption] = useState("");
 
@@ -58,12 +58,12 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
       status === "playing"
     ) {
       Alert.alert(
-        "Discard recording?",
-        "You have an unsaved recording. Going back will discard it.",
+        t("captureVoice:discardUnsaved.title"),
+        t("captureVoice:discardUnsaved.message"),
         [
-          { text: "Keep Recording", style: "cancel" },
+          { text: t("captureVoice:discardUnsaved.keep"), style: "cancel" },
           {
-            text: "Discard",
+            text: t("captureVoice:discardUnsaved.discard"),
             style: "destructive",
             onPress: async () => {
               await reset();
@@ -99,8 +99,8 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
       navigation.goBack();
     } catch (err) {
       Alert.alert(
-        "Could not save",
-        "Something went wrong saving the voice memo. Please try again.",
+        t("captureVoice:errors.saveFailedTitle"),
+        t("captureVoice:errors.saveFailedMessage"),
       );
     }
   }
@@ -114,7 +114,7 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
     return (
       <View style={styles.container}>
         <ScreenSubHeader
-          label="Voice Memo"
+          label={t("captureVoice:title")}
           onBack={() => navigation.goBack()}
         />
         <View style={styles.content}>
@@ -124,19 +124,18 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
                 {"\uD83C\uDF99\uFE0F"}
               </Text>
               <Text variant="headline" accessibilityRole="header">
-                Microphone Access Needed
+                {t("captureVoice:permission.heading")}
               </Text>
               <Text variant="body" style={styles.permissionText}>
-                Voice memos need microphone access. You can enable it in your
-                device settings.
+                {t("captureVoice:permission.body")}
               </Text>
               <Button
-                label="Open Settings"
+                label={t("captureVoice:actions.openSettings")}
                 variant="primary"
                 onPress={handleOpenSettings}
               />
               <Button
-                label="Try Again"
+                label={t("captureVoice:actions.tryAgain")}
                 variant="secondary"
                 onPress={startRecording}
               />
@@ -149,13 +148,17 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
 
   return (
     <View style={styles.container}>
-      <ScreenSubHeader label="Voice Memo" onBack={handleGoBack} />
+      <ScreenSubHeader label={t("captureVoice:title")} onBack={handleGoBack} />
 
       <View style={styles.content}>
         {/* Timer display */}
         <Text
           style={styles.timerText}
-          accessibilityLabel={`Recording duration: ${formatDuration(status === "playing" ? playbackPositionMs : durationMs)}`}
+          accessibilityLabel={t("captureVoice:a11y.timerLabel", {
+            time: formatDuration(
+              status === "playing" ? playbackPositionMs : durationMs,
+            ),
+          })}
           accessibilityLiveRegion="polite"
         >
           {formatDuration(
@@ -172,12 +175,13 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
             />
           )}
           <Text variant="caption" style={styles.statusText}>
-            {status === "idle" && "Tap to start recording"}
-            {status === "requesting-permission" && "Requesting permission..."}
-            {status === "recording" && "Recording"}
-            {status === "paused" && "Paused"}
-            {status === "recorded" && "Recording complete"}
-            {status === "playing" && "Playing"}
+            {status === "idle" && t("captureVoice:status.idle")}
+            {status === "requesting-permission" &&
+              t("captureVoice:status.requestingPermission")}
+            {status === "recording" && t("captureVoice:status.recording")}
+            {status === "paused" && t("captureVoice:status.paused")}
+            {status === "recorded" && t("captureVoice:status.recorded")}
+            {status === "playing" && t("captureVoice:status.playing")}
           </Text>
         </View>
 
@@ -188,7 +192,7 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
               {error}
             </Text>
             <Button
-              label={t("actions.dismiss")}
+              label={t("common:actions.dismiss")}
               variant="ghost"
               onPress={() => reset()}
             />
@@ -210,7 +214,7 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
                 }
                 onPress={pauseRecording}
                 tone="surface"
-                accessibilityLabel="Pause recording"
+                accessibilityLabel={t("captureVoice:a11y.pauseRecording")}
                 size="md"
               />
             )}
@@ -219,7 +223,7 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
                 icon={<View style={styles.playIcon} />}
                 onPress={resumeRecording}
                 tone="surface"
-                accessibilityLabel="Resume recording"
+                accessibilityLabel={t("captureVoice:a11y.resumeRecording")}
                 size="md"
               />
             )}
@@ -229,7 +233,9 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
               accessible
               accessibilityRole="button"
               accessibilityLabel={
-                status === "idle" ? "Start recording" : "Stop recording"
+                status === "idle"
+                  ? t("captureVoice:a11y.startRecording")
+                  : t("captureVoice:a11y.stopRecording")
               }
               style={({ pressed }) => [
                 styles.recordButton,
@@ -251,18 +257,22 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
             <View style={styles.playbackControls}>
               {status === "playing" ? (
                 <Button
-                  label="Stop"
+                  label={t("captureVoice:actions.stop")}
                   variant="secondary"
                   onPress={stopPlayback}
                 />
               ) : (
                 <Button
-                  label="Play"
+                  label={t("captureVoice:actions.play")}
                   variant="secondary"
                   onPress={startPlayback}
                 />
               )}
-              <Button label="Re-record" variant="ghost" onPress={reset} />
+              <Button
+                label={t("captureVoice:actions.reRecord")}
+                variant="ghost"
+                onPress={reset}
+              />
             </View>
 
             {/* Playback progress bar */}
@@ -292,35 +302,38 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
             <View style={styles.saveSection}>
               <TextInput
                 style={styles.captionInput}
-                placeholder="Add a caption (optional)"
+                placeholder={t("captureVoice:caption.placeholder")}
                 placeholderTextColor={theme.colors.textMuted}
                 value={caption}
                 onChangeText={setCaption}
                 maxLength={200}
                 returnKeyType="done"
                 accessible
-                accessibilityLabel="Caption for voice memo"
+                accessibilityLabel={t("captureVoice:caption.a11yLabel")}
               />
               <View style={styles.buttonRow}>
                 <View style={styles.buttonFlex}>
                   <Button
-                    label="Attach"
+                    label={t("captureVoice:actions.attach")}
                     variant="primary"
                     onPress={handleSave}
                   />
                 </View>
                 <View style={styles.buttonFlex}>
                   <Button
-                    label="Discard"
+                    label={t("captureVoice:actions.discard")}
                     variant="destructive"
                     onPress={() => {
                       Alert.alert(
-                        "Discard recording?",
-                        "This recording will be lost.",
+                        t("captureVoice:discardConfirm.title"),
+                        t("captureVoice:discardConfirm.message"),
                         [
-                          { text: "Keep", style: "cancel" },
                           {
-                            text: "Discard",
+                            text: t("captureVoice:discardConfirm.keep"),
+                            style: "cancel",
+                          },
+                          {
+                            text: t("captureVoice:discardConfirm.discard"),
                             style: "destructive",
                             onPress: () => {
                               reset();

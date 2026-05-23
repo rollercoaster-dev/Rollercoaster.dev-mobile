@@ -13,6 +13,7 @@ import {
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
+import { i18n } from "../../../i18n";
 import { VoiceMemoScreen } from "../VoiceMemoScreen";
 import type { CaptureVoiceMemoScreenProps } from "../../../navigation/types";
 
@@ -79,7 +80,7 @@ describe("VoiceMemoScreen", () => {
   describe("idle state", () => {
     it("renders the screen title", () => {
       renderScreen();
-      expect(screen.getByText("Voice Memo")).toBeOnTheScreen();
+      expect(screen.getByText(i18n.t("captureVoice:title"))).toBeOnTheScreen();
     });
 
     it("shows timer at 00:00", () => {
@@ -89,12 +90,16 @@ describe("VoiceMemoScreen", () => {
 
     it("shows start recording hint", () => {
       renderScreen();
-      expect(screen.getByText("Tap to start recording")).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("captureVoice:status.idle")),
+      ).toBeOnTheScreen();
     });
 
     it("renders the start recording button", () => {
       renderScreen();
-      expect(screen.getByLabelText("Start recording")).toBeOnTheScreen();
+      expect(
+        screen.getByLabelText(i18n.t("captureVoice:a11y.startRecording")),
+      ).toBeOnTheScreen();
     });
 
     it("renders the go back button", () => {
@@ -111,7 +116,9 @@ describe("VoiceMemoScreen", () => {
 
     it("shows recording status text", () => {
       renderScreen();
-      expect(screen.getByText("Recording")).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("captureVoice:status.recording")),
+      ).toBeOnTheScreen();
     });
 
     it("shows formatted duration", () => {
@@ -121,12 +128,16 @@ describe("VoiceMemoScreen", () => {
 
     it("shows stop recording button", () => {
       renderScreen();
-      expect(screen.getByLabelText("Stop recording")).toBeOnTheScreen();
+      expect(
+        screen.getByLabelText(i18n.t("captureVoice:a11y.stopRecording")),
+      ).toBeOnTheScreen();
     });
 
     it("shows pause button", () => {
       renderScreen();
-      expect(screen.getByLabelText("Pause recording")).toBeOnTheScreen();
+      expect(
+        screen.getByLabelText(i18n.t("captureVoice:a11y.pauseRecording")),
+      ).toBeOnTheScreen();
     });
   });
 
@@ -138,12 +149,16 @@ describe("VoiceMemoScreen", () => {
 
     it("shows paused status", () => {
       renderScreen();
-      expect(screen.getByText("Paused")).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("captureVoice:status.paused")),
+      ).toBeOnTheScreen();
     });
 
     it("shows resume button", () => {
       renderScreen();
-      expect(screen.getByLabelText("Resume recording")).toBeOnTheScreen();
+      expect(
+        screen.getByLabelText(i18n.t("captureVoice:a11y.resumeRecording")),
+      ).toBeOnTheScreen();
     });
   });
 
@@ -156,7 +171,9 @@ describe("VoiceMemoScreen", () => {
 
     it("shows recording complete status", () => {
       renderScreen();
-      expect(screen.getByText("Recording complete")).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("captureVoice:status.recorded")),
+      ).toBeOnTheScreen();
     });
 
     it("shows duration", () => {
@@ -166,38 +183,50 @@ describe("VoiceMemoScreen", () => {
 
     it("shows play button", () => {
       renderScreen();
-      expect(screen.getByText("Play")).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("captureVoice:actions.play")),
+      ).toBeOnTheScreen();
     });
 
     it("shows re-record button", () => {
       renderScreen();
-      expect(screen.getByText("Re-record")).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("captureVoice:actions.reRecord")),
+      ).toBeOnTheScreen();
     });
 
     it("shows caption input", () => {
       renderScreen();
-      expect(screen.getByLabelText("Caption for voice memo")).toBeOnTheScreen();
+      expect(
+        screen.getByLabelText(i18n.t("captureVoice:caption.a11yLabel")),
+      ).toBeOnTheScreen();
     });
 
     it("shows attach button", () => {
       renderScreen();
-      expect(screen.getByText("Attach")).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("captureVoice:actions.attach")),
+      ).toBeOnTheScreen();
     });
 
     it("shows discard button", () => {
       renderScreen();
-      expect(screen.getByText("Discard")).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("captureVoice:actions.discard")),
+      ).toBeOnTheScreen();
     });
 
     it("calls startPlayback when play is pressed", () => {
       renderScreen();
-      fireEvent.press(screen.getByText("Play"));
+      fireEvent.press(screen.getByText(i18n.t("captureVoice:actions.play")));
       expect(mockStartPlayback).toHaveBeenCalled();
     });
 
     it("calls reset when re-record is pressed", () => {
       renderScreen();
-      fireEvent.press(screen.getByText("Re-record"));
+      fireEvent.press(
+        screen.getByText(i18n.t("captureVoice:actions.reRecord")),
+      );
       expect(mockReset).toHaveBeenCalled();
     });
   });
@@ -212,12 +241,16 @@ describe("VoiceMemoScreen", () => {
 
     it("shows playing status", () => {
       renderScreen();
-      expect(screen.getByText("Playing")).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("captureVoice:status.playing")),
+      ).toBeOnTheScreen();
     });
 
     it("shows stop button instead of play", () => {
       renderScreen();
-      expect(screen.getByText("Stop")).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("captureVoice:actions.stop")),
+      ).toBeOnTheScreen();
     });
 
     it("shows playback progress bar", () => {
@@ -234,22 +267,30 @@ describe("VoiceMemoScreen", () => {
 
     it("shows permission denied heading", () => {
       renderScreen();
-      expect(screen.getByText("Microphone Access Needed")).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("captureVoice:permission.heading")),
+      ).toBeOnTheScreen();
     });
 
     it("shows open settings button", () => {
       renderScreen();
-      expect(screen.getByText("Open Settings")).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("captureVoice:actions.openSettings")),
+      ).toBeOnTheScreen();
     });
 
     it("shows try again button", () => {
       renderScreen();
-      expect(screen.getByText("Try Again")).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("captureVoice:actions.tryAgain")),
+      ).toBeOnTheScreen();
     });
 
     it("calls startRecording when try again is pressed", () => {
       renderScreen();
-      fireEvent.press(screen.getByText("Try Again"));
+      fireEvent.press(
+        screen.getByText(i18n.t("captureVoice:actions.tryAgain")),
+      );
       expect(mockStartRecording).toHaveBeenCalled();
     });
   });
@@ -267,7 +308,28 @@ describe("VoiceMemoScreen", () => {
 
     it("shows dismiss button", () => {
       renderScreen();
-      expect(screen.getByText("Dismiss")).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("common:actions.dismiss")),
+      ).toBeOnTheScreen();
+    });
+  });
+
+  describe("pseudo locale", () => {
+    beforeAll(async () => {
+      await i18n.changeLanguage("pseudo");
+    });
+    afterAll(async () => {
+      await i18n.changeLanguage("en");
+    });
+
+    it("renders idle state strings in pseudo", () => {
+      const pseudoTitle = i18n.t("captureVoice:title");
+      expect(pseudoTitle).not.toBe("Voice Memo");
+      renderScreen();
+      expect(screen.getByText(pseudoTitle)).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("captureVoice:status.idle")),
+      ).toBeOnTheScreen();
     });
   });
 
