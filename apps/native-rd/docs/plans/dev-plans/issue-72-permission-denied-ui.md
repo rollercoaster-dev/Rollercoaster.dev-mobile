@@ -13,7 +13,7 @@ Observable criteria derived from the issue. These describe what success looks li
 
 - [ ] When `CapturePhoto` denies camera permission, `Alert.alert` receives strings from `permissions:camera.{title,message}` (not `capturePhoto:permission.cameraTitle/cameraMessage`).
 - [ ] When `CapturePhoto` denies photo library permission, `Alert.alert` receives strings from `permissions:photoLibrary.{title,message}` (not `capturePhoto:permission.libraryTitle/libraryMessage`).
-- [ ] When `CaptureVideoScreen` denies photo library permission (video picker), `Alert.alert` receives strings from `permissions:photoLibrary.{title,message}` (not `captureVideo:permission.libraryTitle/libraryMessage`).
+- [ ] When `CaptureVideoScreen` denies photo library permission (video picker), `Alert.alert` receives strings from `permissions:videoLibrary.{title,message}` (not `captureVideo:permission.libraryTitle/libraryMessage`).
 - [ ] When `VideoRecorder` renders before camera+mic permissions are granted, it shows `permissions:camera.{title,message}` and a "Grant Access" button labeled `permissions:camera.settingsCta` (not `captureVideo:recorder.permissionTitle/permissionBody/grantAccess`).
 - [ ] When `VoiceMemoScreen` is in `permission-denied` status, it shows `permissions:microphone.{title,message}` and the "Open Settings" button uses `permissions:microphone.settingsCta` (not `captureVoice:permission.heading/body`).
 - [ ] No `permission.*` keys remain in `capturePhoto.json`, `captureVideo.json`, or `captureVoice.json` after the migration (including `recorder.permissionTitle`, `recorder.permissionBody`, `recorder.grantAccess` in `captureVideo.json`).
