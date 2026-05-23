@@ -102,7 +102,7 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
 
       navigation.goBack();
     } catch (err) {
-      logger.error("Failed to save voice memo", { err });
+      logger.error("Failed to save voice memo", { error: err });
       reportError(err, { area: "evidence.capture", kind: "voice_memo" });
       Alert.alert(
         t("captureVoice:errors.saveFailedTitle"),
