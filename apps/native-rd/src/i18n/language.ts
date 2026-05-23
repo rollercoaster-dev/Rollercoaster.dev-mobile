@@ -1,14 +1,17 @@
 import type { Locale } from "expo-localization";
 
-export type SupportedLanguage = "en" | "pseudo";
+export type SupportedLanguage = "en" | "pseudo" | "de";
 
 /**
  * Resolves the initial i18next language from the device's ordered locale list.
- * Pseudo is dev-only (gated by `__DEV__` AND `EXPO_PUBLIC_I18N_PSEUDO=true`);
- * production bundles cannot boot in pseudo.
  *
- * The `code === "en" ? "en" : "en"` is a deliberate extension marker. When a
- * second user-facing language ships (#1029), the false branch becomes "de".
+ * Two dev-only gates layer on top of the en default:
+ * - Pseudo: `__DEV__` AND `EXPO_PUBLIC_I18N_PSEUDO=true` (length/encoding QA).
+ * - German: `__DEV__` AND `EXPO_PUBLIC_I18N_DE=true` AND device locale `de*`.
+ *
+ * Production bundles cannot boot in pseudo or de regardless of env or device
+ * locale. `de` is a prototype lane for #136 (Tolgee in-context editing); real
+ * German shipping lives in #76.
  */
 export function selectSupportedLanguage(
   locales: readonly Locale[],
@@ -17,5 +20,8 @@ export function selectSupportedLanguage(
     return "pseudo";
   }
   const code = locales[0]?.languageCode ?? "en";
+  if (__DEV__ && process.env.EXPO_PUBLIC_I18N_DE === "true" && code === "de") {
+    return "de";
+  }
   return code === "en" ? "en" : "en";
 }

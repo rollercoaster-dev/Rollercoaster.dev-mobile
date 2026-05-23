@@ -15,6 +15,7 @@ const withLanguageCode = (code: string | null): Locale => ({
 describe("selectSupportedLanguage", () => {
   const originalDev = devGlobal.__DEV__;
   const originalPseudoEnv = process.env.EXPO_PUBLIC_I18N_PSEUDO;
+  const originalDeEnv = process.env.EXPO_PUBLIC_I18N_DE;
 
   afterEach(() => {
     devGlobal.__DEV__ = originalDev;
@@ -22,6 +23,11 @@ describe("selectSupportedLanguage", () => {
       delete process.env.EXPO_PUBLIC_I18N_PSEUDO;
     } else {
       process.env.EXPO_PUBLIC_I18N_PSEUDO = originalPseudoEnv;
+    }
+    if (originalDeEnv === undefined) {
+      delete process.env.EXPO_PUBLIC_I18N_DE;
+    } else {
+      process.env.EXPO_PUBLIC_I18N_DE = originalDeEnv;
     }
   });
 
@@ -65,6 +71,40 @@ describe("selectSupportedLanguage", () => {
       process.env.EXPO_PUBLIC_I18N_PSEUDO = "true";
       expect(selectSupportedLanguage([withLanguageCode("de")])).toBe("pseudo");
       expect(selectSupportedLanguage([])).toBe("pseudo");
+    });
+  });
+
+  describe("de activation", () => {
+    test("returns de when __DEV__ + EXPO_PUBLIC_I18N_DE=true + de locale", () => {
+      devGlobal.__DEV__ = true;
+      process.env.EXPO_PUBLIC_I18N_DE = "true";
+      expect(selectSupportedLanguage([withLanguageCode("de")])).toBe("de");
+    });
+
+    test("ignores de env var outside __DEV__", () => {
+      devGlobal.__DEV__ = false;
+      process.env.EXPO_PUBLIC_I18N_DE = "true";
+      expect(selectSupportedLanguage([withLanguageCode("de")])).toBe("en");
+    });
+
+    test("requires literal 'true' for the env var", () => {
+      devGlobal.__DEV__ = true;
+      process.env.EXPO_PUBLIC_I18N_DE = "1";
+      expect(selectSupportedLanguage([withLanguageCode("de")])).toBe("en");
+    });
+
+    test("requires device locale = de — other locales stay en even when env is on", () => {
+      devGlobal.__DEV__ = true;
+      process.env.EXPO_PUBLIC_I18N_DE = "true";
+      expect(selectSupportedLanguage([withLanguageCode("fr")])).toBe("en");
+      expect(selectSupportedLanguage([withLanguageCode("en")])).toBe("en");
+    });
+
+    test("pseudo wins over de when both env vars are set", () => {
+      devGlobal.__DEV__ = true;
+      process.env.EXPO_PUBLIC_I18N_PSEUDO = "true";
+      process.env.EXPO_PUBLIC_I18N_DE = "true";
+      expect(selectSupportedLanguage([withLanguageCode("de")])).toBe("pseudo");
     });
   });
 });
