@@ -2,6 +2,7 @@ import React, { useCallback, useRef, useState } from "react";
 import { View, Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
+import { useTranslation } from "react-i18next";
 import { Text } from "../../components/Text";
 import { Card } from "../../components/Card";
 import { Button } from "../../components/Button";
@@ -39,6 +40,7 @@ type SaveArgs =
 
 export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
   const navigation = useNavigation();
+  const { t } = useTranslation("captureVideo");
   const { goalId, stepId } = route.params;
   const recorderRef = useRef<VideoRecorderHandle>(null);
   const tabInset = useTabScreenContentInset();
@@ -83,12 +85,12 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
       } catch (error) {
         console.error("[CaptureVideoScreen] Save failed:", error);
         reportError(error, { area: "evidence.capture", kind: "video" });
-        Alert.alert("Save Failed", "Could not save video. Please try again.");
+        Alert.alert(t("errors.saveFailedTitle"), t("errors.saveFailedMessage"));
       } finally {
         setIsSaving(false);
       }
     },
-    [isSaving, goalId, stepId, navigation],
+    [isSaving, goalId, stepId, navigation, t],
   );
 
   const handleRecorded = useCallback(
@@ -124,8 +126,8 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
         await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
         Alert.alert(
-          "Photo library access needed",
-          "Please allow photo library access in your device settings to select videos.",
+          t("permission.libraryTitle"),
+          t("permission.libraryMessage"),
         );
         return;
       }
@@ -143,7 +145,7 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
     } finally {
       setIsPickerBusy(false);
     }
-  }, [isPickerBusy]);
+  }, [isPickerBusy, t]);
 
   const handleGoBack = useCallback(() => {
     if (mode === "recorder") {
@@ -151,25 +153,21 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
       return;
     }
     if (mode === "library-preview" && uploadedVideo) {
-      Alert.alert(
-        "Discard video?",
-        "You have an unsaved video. Going back will discard it.",
-        [
-          { text: "Keep", style: "cancel" },
-          {
-            text: "Discard",
-            style: "destructive",
-            onPress: () => {
-              setUploadedVideo(null);
-              navigation.goBack();
-            },
+      Alert.alert(t("discard.title"), t("discard.message"), [
+        { text: t("discard.keep"), style: "cancel" },
+        {
+          text: t("discard.discard"),
+          style: "destructive",
+          onPress: () => {
+            setUploadedVideo(null);
+            navigation.goBack();
           },
-        ],
-      );
+        },
+      ]);
       return;
     }
     navigation.goBack();
-  }, [mode, uploadedVideo, navigation]);
+  }, [mode, uploadedVideo, navigation, t]);
 
   function renderBody() {
     if (mode === "recorder") {
@@ -190,16 +188,18 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
             <VideoPreview
               uri={uploadedVideo.uri}
               durationSeconds={uploadedVideo.durationSeconds}
-              accessibilityNoun="Selected video"
+              accessibilityNoun={t("recorder.selectedVideoNoun")}
             />
           </View>
           <Text variant="caption" style={styles.previewCaption}>
-            Duration: {formatDuration(uploadedVideo.durationSeconds * 1000)}
+            {t("preview.durationLabel", {
+              duration: formatDuration(uploadedVideo.durationSeconds * 1000),
+            })}
           </Text>
           <View style={[styles.previewControls, tabInset]}>
             <View style={styles.previewButton}>
               <Button
-                label="Retake"
+                label={t("actions.retake")}
                 variant="secondary"
                 onPress={handleRetakeUploaded}
                 disabled={isSaving}
@@ -207,7 +207,7 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
             </View>
             <View style={styles.previewButton}>
               <Button
-                label={isSaving ? "Saving..." : "Use Video"}
+                label={isSaving ? t("actions.saving") : t("actions.useVideo")}
                 variant="primary"
                 onPress={handleUseUploaded}
                 loading={isSaving}
@@ -222,16 +222,16 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
       <View style={styles.chooserContent}>
         <Card>
           <Text variant="headline" style={styles.chooserHeading}>
-            Add a video
+            {t("heading")}
           </Text>
           <View style={styles.chooserButtonGroup}>
             <Button
-              label="Record Video"
+              label={t("actions.recordVideo")}
               variant="primary"
               onPress={() => setMode("recorder")}
             />
             <Button
-              label="Choose from Library"
+              label={t("actions.chooseFromLibrary")}
               variant="secondary"
               onPress={handlePickFromLibrary}
               loading={isPickerBusy}
@@ -244,7 +244,7 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
 
   return (
     <View style={styles.container}>
-      <ScreenSubHeader label="Capture Video" onBack={handleGoBack} />
+      <ScreenSubHeader label={t("title")} onBack={handleGoBack} />
       {renderBody()}
     </View>
   );

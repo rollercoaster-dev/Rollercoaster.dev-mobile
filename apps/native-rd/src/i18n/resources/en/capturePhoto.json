@@ -1,1 +1,21 @@
-{}
+{
+  "title": "Capture Photo",
+  "heading": "Add a photo",
+  "actions": {
+    "takePhoto": "Take Photo",
+    "chooseFromLibrary": "Choose from Library"
+  },
+  "a11y": {
+    "savingPhoto": "Saving photo"
+  },
+  "errors": {
+    "saveFailedTitle": "Save failed",
+    "saveFailedMessage": "Could not save the photo. Please try again."
+  },
+  "permission": {
+    "cameraTitle": "Camera access needed",
+    "cameraMessage": "Please allow camera access in your device settings to take photos.",
+    "libraryTitle": "Photo library access needed",
+    "libraryMessage": "Please allow photo library access in your device settings to select photos."
+  }
+}

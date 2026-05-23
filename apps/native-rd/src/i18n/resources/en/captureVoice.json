@@ -1,1 +1,51 @@
-{}
+{
+  "title": "Voice Memo",
+  "status": {
+    "idle": "Tap to start recording",
+    "requestingPermission": "Requesting permission...",
+    "recording": "Recording",
+    "paused": "Paused",
+    "recorded": "Recording complete",
+    "playing": "Playing"
+  },
+  "actions": {
+    "attach": "Attach",
+    "discard": "Discard",
+    "play": "Play",
+    "stop": "Stop",
+    "reRecord": "Re-record",
+    "openSettings": "Open Settings",
+    "tryAgain": "Try Again"
+  },
+  "caption": {
+    "placeholder": "Add a caption (optional)",
+    "a11yLabel": "Caption for voice memo"
+  },
+  "a11y": {
+    "timerLabel": "Recording duration: {{time}}",
+    "startRecording": "Start recording",
+    "stopRecording": "Stop recording",
+    "pauseRecording": "Pause recording",
+    "resumeRecording": "Resume recording"
+  },
+  "discardUnsaved": {
+    "title": "Discard recording?",
+    "message": "You have an unsaved recording. Going back will discard it.",
+    "keep": "Keep Recording",
+    "discard": "Discard"
+  },
+  "discardConfirm": {
+    "title": "Discard recording?",
+    "message": "This recording will be lost.",
+    "keep": "Keep",
+    "discard": "Discard"
+  },
+  "permission": {
+    "heading": "Microphone Access Needed",
+    "body": "Voice memos need microphone access. You can enable it in your device settings."
+  },
+  "errors": {
+    "saveFailedTitle": "Could not save",
+    "saveFailedMessage": "Something went wrong saving the voice memo. Please try again."
+  }
+}
