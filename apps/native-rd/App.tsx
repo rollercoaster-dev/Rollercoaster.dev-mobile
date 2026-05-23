@@ -1,7 +1,10 @@
 import { useMemo } from "react";
 import { StatusBar } from "expo-status-bar";
 import { View } from "react-native";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import {
   NavigationContainer,
   DefaultTheme,
@@ -39,6 +42,7 @@ function ThemedApp() {
   const { theme, isDark } = themeContext;
   const { isFirstLaunch, markSeen } = useFirstLaunch();
   const { setTheme: persistingSetTheme } = useThemePersistence();
+  const insets = useSafeAreaInsets();
   useDensity(); // Apply saved density to all themes on mount
   useAnimationPref(); // Initialize OS reduceMotion listener
 
@@ -79,6 +83,22 @@ function ThemedApp() {
             <TabNavigator />
           </ToastProvider>
         </NavigationContainer>
+        {/* Paint the top safe area at root so HeaderBand's purple
+            reaches the device edge regardless of how react-native-screens
+            propagates insets to inner screens (safe-area-context 5.7+
+            returns 0 inside a Screen, leaving HeaderBand's paddingTop
+            too short to cover the status bar). */}
+        <View
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: insets.top,
+            backgroundColor: theme.colors.accentPurple,
+          }}
+        />
       </View>
     );
   }
