@@ -9,7 +9,7 @@
  */
 
 import React from "react";
-import { Text as RNText } from "react-native";
+import { Modal, Text as RNText, View } from "react-native";
 import { renderWithProviders, screen, fireEvent } from "./test-utils";
 import {
   expectAccessible,
@@ -165,11 +165,11 @@ describe("Accessibility Contracts", () => {
 
   describe("Modals", () => {
     function assertModalA11y() {
-      const modal = screen.UNSAFE_getByType(require("react-native").Modal);
+      const modal = screen.UNSAFE_getByType(Modal);
       expectModalAccessibility(modal);
 
       const liveViews = screen
-        .UNSAFE_getAllByType(require("react-native").View)
+        .UNSAFE_getAllByType(View)
         .filter(
           (v: { props: { accessibilityLiveRegion?: string } }) =>
             v.props.accessibilityLiveRegion === "polite",
