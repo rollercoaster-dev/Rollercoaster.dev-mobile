@@ -2,6 +2,14 @@ import { i18n } from "../index";
 import { themeOptions } from "../../hooks/useTheme";
 import { densityOptions } from "../../utils/density";
 import { STATUS_BADGE_VARIANTS } from "../../components/StatusBadge/StatusBadge.styles";
+import type { LifecycleMode } from "../../components/ModeIndicator";
+
+const LIFECYCLE_MODES: LifecycleMode[] = [
+  "edit",
+  "focus",
+  "complete",
+  "timeline",
+];
 
 // Catches the gap that locale-parity.test.ts can't: a TS union member
 // (DensityLevel / ThemeName) added without a matching JSON copy entry.
@@ -82,5 +90,35 @@ describe("option array ↔ i18n key parity", () => {
     );
     const unionKeys = new Set<string>(STATUS_BADGE_VARIANTS);
     expect(jsonKeys).toEqual(unionKeys);
+  });
+
+  describe.each(LIFECYCLE_MODES.map((mode) => ({ mode })))(
+    "LIFECYCLE_MODES[$mode]",
+    ({ mode }) => {
+      test(`common:modeIndicator.${mode} resolves`, () => {
+        const key = `common:modeIndicator.${mode}` as const;
+        expect(i18n.t(key)).not.toBe(key);
+      });
+    },
+  );
+
+  test("common:modeIndicator keyset matches LifecycleMode union", () => {
+    const bundle = i18n.getResourceBundle("en", "common") as {
+      modeIndicator: Record<string, unknown>;
+    };
+    const jsonKeys = new Set(
+      Object.keys(bundle.modeIndicator).filter((k) => k !== "a11y"),
+    );
+    const unionKeys = new Set<string>(LIFECYCLE_MODES);
+    expect(jsonKeys).toEqual(unionKeys);
+  });
+
+  // Forward-only: `common:timeline.a11y.step` interpolates `{{status}}` as a
+  // string (not a TS union), so a reverse keyset assertion would have no
+  // basis. The forward check guarantees the template-literal `t()` callsites
+  // in MiniTimeline and ProgressDots resolve to a real translation.
+  test("common:timeline.a11y.step resolves", () => {
+    const key = "common:timeline.a11y.step";
+    expect(i18n.t(key, { index: 1, status: "pending" })).not.toBe(key);
   });
 });

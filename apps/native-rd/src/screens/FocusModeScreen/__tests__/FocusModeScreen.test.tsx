@@ -223,10 +223,13 @@ describe("FocusModeScreen", () => {
     setupQueries();
     renderWithProviders(<FocusModeScreen {...routeProps} />);
     // ProgressDots renders tab elements
-    expect(screen.getByLabelText("Step navigation")).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText(i18n.t("common:progressDots.a11y.label")),
+    ).toBeOnTheScreen();
     // "Goal evidence" label appears in both MiniTimeline and ProgressDots
     expect(
-      screen.getAllByLabelText("Goal evidence").length,
+      screen.getAllByLabelText(i18n.t("common:timeline.a11y.goalEvidence"))
+        .length,
     ).toBeGreaterThanOrEqual(2);
   });
 
@@ -497,7 +500,9 @@ describe("FocusModeScreen", () => {
   // goal card via the "Goal evidence" indicator before asserting on the
   // Mark Complete check — that's what a real user does.
   const navigateToGoalCard = () => {
-    fireEvent.press(screen.getAllByLabelText("Goal evidence")[0]);
+    fireEvent.press(
+      screen.getAllByLabelText(i18n.t("common:timeline.a11y.goalEvidence"))[0],
+    );
   };
 
   it("Mark Complete check is hidden while any step is pending", () => {
@@ -511,7 +516,9 @@ describe("FocusModeScreen", () => {
     navigateToGoalCard();
 
     expect(
-      screen.queryByRole("button", { name: "Mark goal complete" }),
+      screen.queryByRole("button", {
+        name: i18n.t("common:goalCard.markComplete"),
+      }),
     ).toBeNull();
   });
 
@@ -525,7 +532,9 @@ describe("FocusModeScreen", () => {
     const view = renderWithProviders(<FocusModeScreen {...routeProps} />);
     navigateToGoalCard();
     expect(
-      screen.queryByRole("button", { name: "Mark goal complete" }),
+      screen.queryByRole("button", {
+        name: i18n.t("common:goalCard.markComplete"),
+      }),
     ).toBeNull();
 
     // Flip the pending step to completed and rerender. The snap effect
@@ -541,7 +550,9 @@ describe("FocusModeScreen", () => {
     view.rerender(<FocusModeScreen {...routeProps} />);
 
     expect(
-      screen.getByRole("button", { name: "Mark goal complete" }),
+      screen.getByRole("button", {
+        name: i18n.t("common:goalCard.markComplete"),
+      }),
     ).toBeOnTheScreen();
   });
 
@@ -555,7 +566,11 @@ describe("FocusModeScreen", () => {
     renderWithProviders(<FocusModeScreen {...routeProps} />);
     navigateToGoalCard();
 
-    fireEvent.press(screen.getByRole("button", { name: "Mark goal complete" }));
+    fireEvent.press(
+      screen.getByRole("button", {
+        name: i18n.t("common:goalCard.markComplete"),
+      }),
+    );
     expect(mockNavigate).toHaveBeenCalledWith("CompletionFlow", {
       goalId: "goal-1",
     });
@@ -595,7 +610,9 @@ describe("FocusModeScreen", () => {
     renderWithProviders(<FocusModeScreen {...routeProps} />);
 
     expect(
-      screen.getByRole("button", { name: "Mark goal complete" }),
+      screen.getByRole("button", {
+        name: i18n.t("common:goalCard.markComplete"),
+      }),
     ).toBeOnTheScreen();
   });
 
@@ -651,7 +668,11 @@ describe("FocusModeScreen", () => {
     setupQueries({ steps: [] });
     renderWithProviders(<FocusModeScreen {...routeProps} />);
 
-    fireEvent.press(screen.getByRole("button", { name: "Mark goal complete" }));
+    fireEvent.press(
+      screen.getByRole("button", {
+        name: i18n.t("common:goalCard.markComplete"),
+      }),
+    );
     expect(mockNavigate).toHaveBeenCalledWith("CompletionFlow", {
       goalId: "goal-1",
     });
@@ -960,9 +981,13 @@ describe("FocusModeScreen", () => {
       ],
     });
     const view = renderWithProviders(<FocusModeScreen {...routeProps} />);
-    fireEvent.press(screen.getAllByLabelText("Goal evidence")[0]);
+    fireEvent.press(
+      screen.getAllByLabelText(i18n.t("common:timeline.a11y.goalEvidence"))[0],
+    );
     expect(
-      screen.queryByRole("button", { name: "Mark goal complete" }),
+      screen.queryByRole("button", {
+        name: i18n.t("common:goalCard.markComplete"),
+      }),
     ).toBeNull();
 
     setupQueries({
@@ -985,7 +1010,9 @@ describe("FocusModeScreen", () => {
     });
     view.rerender(<FocusModeScreen {...routeProps} />);
     expect(
-      screen.getByRole("button", { name: "Mark goal complete" }),
+      screen.getByRole("button", {
+        name: i18n.t("common:goalCard.markComplete"),
+      }),
     ).toBeOnTheScreen();
   });
 
