@@ -1,1 +1,25 @@
-{}
+{
+  "header": "Add Link",
+  "urlInput": {
+    "label": "URL",
+    "placeholder": "https://example.com"
+  },
+  "captionInput": {
+    "label": "Caption (optional)",
+    "placeholder": "What is this link about?"
+  },
+  "preview": {
+    "a11y": "Link preview: {{url}}"
+  },
+  "actions": {
+    "save": "Save Link"
+  },
+  "validation": {
+    "urlRequired": "Please enter a URL",
+    "urlInvalid": "Please enter a valid URL (e.g. https://example.com)"
+  },
+  "errors": {
+    "couldNotSaveTitle": "Could not save link",
+    "couldNotSaveMessage": "Something went wrong. Please try again."
+  }
+}
