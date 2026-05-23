@@ -6,6 +6,7 @@ import {
   fireEvent,
   waitFor,
 } from "../../../__tests__/test-utils";
+import { i18n } from "../../../i18n";
 import { CaptureFile } from "../CaptureFile";
 
 const mockGoBack = jest.fn();
@@ -63,9 +64,11 @@ beforeEach(() => {
 describe("CaptureFile", () => {
   it("renders title and Choose File button", () => {
     renderScreen();
-    expect(screen.getByText("Attach File")).toBeTruthy();
-    expect(screen.getByText("Choose File")).toBeTruthy();
-    expect(screen.getByText(/Select a PDF, image, or document/)).toBeTruthy();
+    expect(screen.getByText(i18n.t("captureFile:header"))).toBeTruthy();
+    expect(screen.getByText(i18n.t("captureFile:actions.choose"))).toBeTruthy();
+    expect(
+      screen.getByText(i18n.t("captureFile:description", { maxSize: "50 MB" })),
+    ).toBeTruthy();
   });
 
   it("picks file and creates evidence with goalId", async () => {
@@ -82,7 +85,7 @@ describe("CaptureFile", () => {
     });
     renderScreen();
 
-    fireEvent.press(screen.getByText("Choose File"));
+    fireEvent.press(screen.getByText(i18n.t("captureFile:actions.choose")));
 
     await waitFor(() => {
       expect(mockGetDocumentAsync).toHaveBeenCalled();
@@ -119,7 +122,7 @@ describe("CaptureFile", () => {
     });
     renderScreen({ goalId: "goal-123", stepId: "step-456" });
 
-    fireEvent.press(screen.getByText("Choose File"));
+    fireEvent.press(screen.getByText(i18n.t("captureFile:actions.choose")));
 
     await waitFor(() => {
       expect(mockCreateEvidence).toHaveBeenCalledWith({
@@ -136,7 +139,7 @@ describe("CaptureFile", () => {
     mockGetDocumentAsync.mockResolvedValue({ canceled: true });
     renderScreen();
 
-    fireEvent.press(screen.getByText("Choose File"));
+    fireEvent.press(screen.getByText(i18n.t("captureFile:actions.choose")));
 
     await waitFor(() => {
       expect(mockGetDocumentAsync).toHaveBeenCalled();
@@ -163,11 +166,11 @@ describe("CaptureFile", () => {
     });
     renderScreen();
 
-    fireEvent.press(screen.getByText("Choose File"));
+    fireEvent.press(screen.getByText(i18n.t("captureFile:actions.choose")));
 
     await waitFor(() => {
       expect(alertSpy).toHaveBeenCalledWith(
-        "Invalid file",
+        i18n.t("captureFile:errors.invalidFileTitle"),
         "File is too large. Maximum size is 50 MB.",
       );
     });
@@ -194,12 +197,12 @@ describe("CaptureFile", () => {
     });
     renderScreen();
 
-    fireEvent.press(screen.getByText("Choose File"));
+    fireEvent.press(screen.getByText(i18n.t("captureFile:actions.choose")));
 
     await waitFor(() => {
       expect(alertSpy).toHaveBeenCalledWith(
-        "Save failed",
-        "Could not save the file. Please try again.",
+        i18n.t("captureFile:errors.saveFailedTitle"),
+        i18n.t("captureFile:errors.saveFailedMessage"),
       );
     });
     expect(mockGoBack).not.toHaveBeenCalled();
@@ -212,5 +215,38 @@ describe("CaptureFile", () => {
     fireEvent.press(screen.getByLabelText("Go back"));
 
     expect(mockGoBack).toHaveBeenCalled();
+  });
+
+  describe("pseudo locale", () => {
+    afterEach(async () => {
+      if (i18n.language !== "en") await i18n.changeLanguage("en");
+    });
+
+    // Representative spread: header, headline body, CTA button, and the
+    // interpolated description. Catches missed t() calls on the four
+    // visible Card surfaces.
+    it.each([
+      "captureFile:header",
+      "captureFile:heading",
+      "captureFile:actions.choose",
+    ] as const)(
+      "renders %s as bracketed copy under pseudo locale",
+      async (key) => {
+        await i18n.changeLanguage("pseudo");
+        renderScreen();
+        const pseudo = i18n.t(key);
+        expect(pseudo.startsWith("[")).toBe(true);
+        expect(screen.getByText(pseudo)).toBeOnTheScreen();
+      },
+    );
+
+    it("renders interpolated description under pseudo locale", async () => {
+      await i18n.changeLanguage("pseudo");
+      renderScreen();
+      const pseudo = i18n.t("captureFile:description", { maxSize: "50 MB" });
+      expect(pseudo.startsWith("[")).toBe(true);
+      expect(pseudo).toContain("50 MB");
+      expect(screen.getByText(pseudo)).toBeOnTheScreen();
+    });
   });
 });

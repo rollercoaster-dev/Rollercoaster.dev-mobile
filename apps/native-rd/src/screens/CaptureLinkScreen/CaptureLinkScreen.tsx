@@ -17,7 +17,7 @@ import { styles } from "./CaptureLinkScreen.styles";
 
 export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
   const navigation = useNavigation();
-  const { t } = useTranslation();
+  const { t } = useTranslation(["captureLink", "common"]);
   const { goalId, stepId } = route.params;
 
   const [url, setUrl] = useState("");
@@ -40,11 +40,11 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
 
   function validateUrl(): boolean {
     if (!trimmedUrl) {
-      setUrlError("Please enter a URL");
+      setUrlError(t("captureLink:validation.urlRequired"));
       return false;
     }
     if (!hasValidUrl) {
-      setUrlError("Please enter a valid URL (e.g. https://example.com)");
+      setUrlError(t("captureLink:validation.urlInvalid"));
       return false;
     }
     return true;
@@ -70,8 +70,8 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
       });
       reportError(error, { area: "evidence.capture", kind: "link" });
       Alert.alert(
-        "Could not save link",
-        "Something went wrong. Please try again.",
+        t("captureLink:errors.couldNotSaveTitle"),
+        t("captureLink:errors.couldNotSaveMessage"),
       );
     } finally {
       setSaving(false);
@@ -80,13 +80,16 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
 
   return (
     <View style={styles.container}>
-      <ScreenSubHeader label="Add Link" onBack={() => navigation.goBack()} />
+      <ScreenSubHeader
+        label={t("captureLink:header")}
+        onBack={() => navigation.goBack()}
+      />
 
       <View style={styles.content}>
         <View style={styles.inputSection}>
           <Input
-            label="URL"
-            placeholder="https://example.com"
+            label={t("captureLink:urlInput.label")}
+            placeholder={t("captureLink:urlInput.placeholder")}
             value={url}
             onChangeText={handleUrlChange}
             error={urlError}
@@ -98,8 +101,8 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
           />
 
           <Input
-            label="Caption (optional)"
-            placeholder="What is this link about?"
+            label={t("captureLink:captionInput.label")}
+            placeholder={t("captureLink:captionInput.placeholder")}
             value={caption}
             onChangeText={setCaption}
             maxLength={1000}
@@ -117,7 +120,9 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
                 variant="body"
                 style={styles.previewUrl}
                 numberOfLines={2}
-                accessibilityLabel={`Link preview: ${trimmedUrl}`}
+                accessibilityLabel={t("captureLink:preview.a11y", {
+                  url: trimmedUrl,
+                })}
               >
                 {trimmedUrl}
               </Text>
@@ -130,14 +135,14 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
 
         <View style={styles.actions}>
           <Button
-            label="Save Link"
+            label={t("captureLink:actions.save")}
             variant="primary"
             onPress={handleSave}
             disabled={saving}
             loading={saving}
           />
           <Button
-            label={t("actions.cancel")}
+            label={t("common:actions.cancel")}
             variant="secondary"
             onPress={() => navigation.goBack()}
             disabled={saving}

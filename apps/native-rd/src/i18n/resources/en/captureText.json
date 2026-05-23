@@ -1,1 +1,25 @@
-{}
+{
+  "header": "Write a Note",
+  "input": {
+    "label": "Note content",
+    "placeholder": "What happened? What did you learn?",
+    "hint": "Write your text note here"
+  },
+  "caption": {
+    "label": "Caption (optional)",
+    "placeholder": "Add a short caption"
+  },
+  "charCount": {
+    "a11y": "{{count}} of {{max}} characters used"
+  },
+  "actions": {
+    "save": "Save Note"
+  },
+  "a11y": {
+    "noteSaved": "Text note saved"
+  },
+  "errors": {
+    "couldNotSaveTitle": "Could not save note",
+    "couldNotSaveMessage": "Something went wrong. Please try again."
+  }
+}

@@ -9,6 +9,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { KEYBOARD_AVOIDING_PROPS } from "../../utils/keyboard";
 import { useNavigation } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import { useUnistyles } from "react-native-unistyles";
 import { Text } from "../../components/Text";
 import { Button } from "../../components/Button";
@@ -29,6 +30,7 @@ const WARNING_THRESHOLD = 900;
 
 export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
   const navigation = useNavigation();
+  const { t } = useTranslation("captureText");
   const { theme } = useUnistyles();
   const { goalId, stepId } = route.params;
   const textInputRef = useRef<TextInput>(null);
@@ -61,7 +63,7 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
         description: caption.trim() || undefined,
       });
 
-      AccessibilityInfo.announceForAccessibility("Text note saved");
+      AccessibilityInfo.announceForAccessibility(t("a11y.noteSaved"));
       navigation.goBack();
     } catch (error) {
       console.error("[CaptureTextNote] Failed to save text note", {
@@ -71,8 +73,8 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
       });
       reportError(error, { area: "evidence.capture", kind: "text" });
       Alert.alert(
-        "Could not save note",
-        "Something went wrong. Please try again.",
+        t("errors.couldNotSaveTitle"),
+        t("errors.couldNotSaveMessage"),
       );
     } finally {
       setSaving(false);
@@ -81,16 +83,13 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
 
   return (
     <View style={styles.container}>
-      <ScreenSubHeader
-        label="Write a Note"
-        onBack={() => navigation.goBack()}
-      />
+      <ScreenSubHeader label={t("header")} onBack={() => navigation.goBack()} />
 
       <KeyboardAvoidingView style={styles.content} {...KEYBOARD_AVOIDING_PROPS}>
         <TextInput
           ref={textInputRef}
           style={[styles.textInput, isFocused && styles.textInputFocused]}
-          placeholder="What happened? What did you learn?"
+          placeholder={t("input.placeholder")}
           placeholderTextColor={theme.colors.textMuted}
           value={content}
           onChangeText={setContent}
@@ -101,14 +100,14 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
           autoFocus
           maxLength={MAX_CONTENT_LENGTH + 100}
           accessible
-          accessibilityLabel="Note content"
-          accessibilityHint="Write your text note here"
+          accessibilityLabel={t("input.label")}
+          accessibilityHint={t("input.hint")}
         />
 
         <View style={styles.captionContainer}>
           <Input
-            label="Caption (optional)"
-            placeholder="Add a short caption"
+            label={t("caption.label")}
+            placeholder={t("caption.placeholder")}
             value={caption}
             onChangeText={setCaption}
             maxLength={1000}
@@ -125,12 +124,15 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
               styles.charCount,
               (isNearLimit || isOverLimit) && styles.charCountWarning,
             ]}
-            accessibilityLabel={`${charCount} of ${MAX_CONTENT_LENGTH} characters used`}
+            accessibilityLabel={t("charCount.a11y", {
+              count: charCount,
+              max: MAX_CONTENT_LENGTH,
+            })}
           >
             {charCount}/{MAX_CONTENT_LENGTH}
           </Text>
           <Button
-            label="Save Note"
+            label={t("actions.save")}
             onPress={handleSave}
             disabled={!canSave}
             loading={saving}
