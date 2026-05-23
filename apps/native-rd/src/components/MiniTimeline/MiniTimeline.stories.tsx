@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import React, { useState } from "react";
 import { View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { StyleSheet } from "react-native-unistyles";
 import { Text } from "../Text";
 import { MiniTimeline, type MiniTimelineStep } from "./MiniTimeline";
@@ -21,6 +22,7 @@ function InteractiveWrapper({
   initialSteps: MiniTimelineStep[];
   initialIndex?: number;
 }) {
+  const { t } = useTranslation("common");
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   return (
     <View style={storyStyles.wrapper}>
@@ -29,6 +31,7 @@ function InteractiveWrapper({
         currentIndex={currentIndex}
         onStepTap={(index) => setCurrentIndex(index)}
         onTimelineTap={() => {}}
+        accessibilityLabel={t("timeline.a11y.label")}
       />
       <Text variant="caption" style={storyStyles.label}>
         Current:{" "}

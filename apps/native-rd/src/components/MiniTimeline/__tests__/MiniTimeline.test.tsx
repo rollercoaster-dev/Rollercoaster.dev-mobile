@@ -4,20 +4,29 @@ import {
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
+import { i18n } from "../../../i18n";
 import {
   MiniTimeline,
   type MiniTimelineStep,
   type StepStatus,
 } from "../MiniTimeline";
 
+const TIMELINE_LABEL = i18n.t("common:timeline.a11y.label");
+
 const defaultProps = {
   currentIndex: 0,
   onStepTap: jest.fn(),
   onTimelineTap: jest.fn(),
+  accessibilityLabel: TIMELINE_LABEL,
 };
 
 const makeSteps = (...statuses: StepStatus[]): MiniTimelineStep[] =>
   statuses.map((status) => ({ status }));
+
+const stepLabel = (index: number, status: StepStatus) =>
+  i18n.t("common:timeline.a11y.step", { index, status });
+
+const goalLabel = () => i18n.t("common:timeline.a11y.goalEvidence");
 
 describe("MiniTimeline", () => {
   beforeEach(() => jest.clearAllMocks());
@@ -39,14 +48,16 @@ describe("MiniTimeline", () => {
       renderWithProviders(
         <MiniTimeline steps={makeSteps("pending")} {...defaultProps} />,
       );
-      expect(screen.getByText("Tap to expand timeline")).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("common:timeline.hint")),
+      ).toBeOnTheScreen();
     });
 
     it("renders goal node", () => {
       renderWithProviders(
         <MiniTimeline steps={makeSteps("pending")} {...defaultProps} />,
       );
-      expect(screen.getByLabelText("Goal evidence")).toBeOnTheScreen();
+      expect(screen.getByLabelText(goalLabel())).toBeOnTheScreen();
     });
   });
 
@@ -60,7 +71,7 @@ describe("MiniTimeline", () => {
           onStepTap={onStepTap}
         />,
       );
-      fireEvent.press(screen.getByLabelText("Step 2: in-progress"));
+      fireEvent.press(screen.getByLabelText(stepLabel(2, "in-progress")));
       expect(onStepTap).toHaveBeenCalledWith(1);
     });
 
@@ -73,7 +84,7 @@ describe("MiniTimeline", () => {
           onStepTap={onStepTap}
         />,
       );
-      fireEvent.press(screen.getByLabelText("Goal evidence"));
+      fireEvent.press(screen.getByLabelText(goalLabel()));
       expect(onStepTap).toHaveBeenCalledWith(2);
     });
 
@@ -86,35 +97,26 @@ describe("MiniTimeline", () => {
           onTimelineTap={onTimelineTap}
         />,
       );
-      fireEvent.press(
-        screen.getByLabelText("Step progress timeline \u2014 tap to expand"),
-      );
+      fireEvent.press(screen.getByLabelText(TIMELINE_LABEL));
       expect(onTimelineTap).toHaveBeenCalled();
     });
   });
 
   describe("accessibility", () => {
-    it.each([
-      ["completed", "Step 1: completed"],
-      ["in-progress", "Step 1: in-progress"],
-      ["pending", "Step 1: pending"],
-    ] satisfies [StepStatus, string][])(
-      "step node has correct label for %s status",
-      (status, expectedLabel) => {
-        renderWithProviders(
-          <MiniTimeline steps={makeSteps(status)} {...defaultProps} />,
-        );
-        expect(screen.getByLabelText(expectedLabel)).toBeOnTheScreen();
-      },
-    );
+    it.each([["completed"], ["in-progress"], ["pending"]] satisfies [
+      StepStatus,
+    ][])("step node has correct label for %s status", (status) => {
+      renderWithProviders(
+        <MiniTimeline steps={makeSteps(status)} {...defaultProps} />,
+      );
+      expect(screen.getByLabelText(stepLabel(1, status))).toBeOnTheScreen();
+    });
 
     it("hint area has accessible role and label", () => {
       renderWithProviders(
         <MiniTimeline steps={makeSteps("pending")} {...defaultProps} />,
       );
-      const hintArea = screen.getByLabelText(
-        "Step progress timeline \u2014 tap to expand",
-      );
+      const hintArea = screen.getByLabelText(TIMELINE_LABEL);
       expect(hintArea).toBeOnTheScreen();
       expect(hintArea.props.accessibilityRole).toBe("button");
     });
@@ -123,10 +125,10 @@ describe("MiniTimeline", () => {
       renderWithProviders(
         <MiniTimeline steps={makeSteps("pending")} {...defaultProps} />,
       );
-      const hintArea = screen.getByLabelText(
-        "Step progress timeline \u2014 tap to expand",
+      const hintArea = screen.getByLabelText(TIMELINE_LABEL);
+      expect(hintArea.props.accessibilityHint).toBe(
+        i18n.t("common:timeline.a11y.hint"),
       );
-      expect(hintArea.props.accessibilityHint).toBe("Opens full timeline view");
     });
 
     it("supports custom accessibilityLabel", () => {
@@ -156,20 +158,19 @@ describe("MiniTimeline", () => {
       );
       // Under EXPO_PUBLIC_E2E_MODE=true the wrapping Pressable's
       // `accessible+role+label` props are dropped, so iOS no longer
-      // collapses the inner "Tap to expand timeline" Text into the
-      // composed parent label. Maestro can now match the inner text
-      // literally.
+      // collapses the inner hint Text into the composed parent label.
+      // Maestro can now match the inner text literally.
+      expect(screen.queryByLabelText(TIMELINE_LABEL)).toBeNull();
       expect(
-        screen.queryByLabelText("Step progress timeline — tap to expand"),
-      ).toBeNull();
-      expect(screen.getByText("Tap to expand timeline")).toBeOnTheScreen();
+        screen.getByText(i18n.t("common:timeline.hint")),
+      ).toBeOnTheScreen();
     });
   });
 
   describe("edge cases", () => {
     it("renders only goal node when steps array is empty", () => {
       renderWithProviders(<MiniTimeline steps={[]} {...defaultProps} />);
-      expect(screen.getByLabelText("Goal evidence")).toBeOnTheScreen();
+      expect(screen.getByLabelText(goalLabel())).toBeOnTheScreen();
       // Goal node + hint area = 2 buttons
       expect(screen.getAllByRole("button")).toHaveLength(2);
     });
@@ -178,8 +179,10 @@ describe("MiniTimeline", () => {
       renderWithProviders(
         <MiniTimeline steps={makeSteps("in-progress")} {...defaultProps} />,
       );
-      expect(screen.getByLabelText("Step 1: in-progress")).toBeOnTheScreen();
-      expect(screen.getByLabelText("Goal evidence")).toBeOnTheScreen();
+      expect(
+        screen.getByLabelText(stepLabel(1, "in-progress")),
+      ).toBeOnTheScreen();
+      expect(screen.getByLabelText(goalLabel())).toBeOnTheScreen();
     });
   });
 });

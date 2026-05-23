@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Pressable, Text } from "react-native";
+import { useTranslation } from "react-i18next";
 import { styles } from "./MiniTimeline.styles";
 import type { StepStatus } from "../../types/steps";
 
@@ -14,7 +15,7 @@ export interface MiniTimelineProps {
   currentIndex: number;
   onStepTap: (index: number) => void;
   onTimelineTap: () => void;
-  accessibilityLabel?: string;
+  accessibilityLabel: string;
 }
 
 export function MiniTimeline({
@@ -22,8 +23,9 @@ export function MiniTimeline({
   currentIndex,
   onStepTap,
   onTimelineTap,
-  accessibilityLabel = "Step progress timeline \u2014 tap to expand",
+  accessibilityLabel,
 }: MiniTimelineProps) {
+  const { t } = useTranslation("common");
   const allCompleted =
     steps.length > 0 && steps.every((s) => s.status === "completed");
 
@@ -44,7 +46,7 @@ export function MiniTimeline({
         accessible: true,
         accessibilityRole: "button" as const,
         accessibilityLabel,
-        accessibilityHint: "Opens full timeline view",
+        accessibilityHint: t("timeline.a11y.hint"),
       } as const);
 
   return (
@@ -59,7 +61,10 @@ export function MiniTimeline({
                 hitSlop={15}
                 accessible
                 accessibilityRole="button"
-                accessibilityLabel={`Step ${index + 1}: ${step.status}`}
+                accessibilityLabel={t("timeline.a11y.step", {
+                  index: index + 1,
+                  status: step.status,
+                })}
               >
                 <View
                   style={[
@@ -85,7 +90,7 @@ export function MiniTimeline({
           hitSlop={15}
           accessible
           accessibilityRole="button"
-          accessibilityLabel="Goal evidence"
+          accessibilityLabel={t("timeline.a11y.goalEvidence")}
         >
           <View
             style={[
@@ -97,7 +102,7 @@ export function MiniTimeline({
         </Pressable>
       </View>
       <Pressable onPress={onTimelineTap} {...expandA11y}>
-        <Text style={styles.hintText}>Tap to expand timeline</Text>
+        <Text style={styles.hintText}>{t("timeline.hint")}</Text>
       </Pressable>
     </View>
   );
