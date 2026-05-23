@@ -1,1 +1,62 @@
-{}
+{
+  "title": "Capture Video",
+  "heading": "Add a video",
+  "actions": {
+    "recordVideo": "Record Video",
+    "chooseFromLibrary": "Choose from Library",
+    "retake": "Retake",
+    "useVideo": "Use Video",
+    "saving": "Saving..."
+  },
+  "preview": {
+    "durationLabel": "Duration: {{duration}}"
+  },
+  "discard": {
+    "title": "Discard video?",
+    "message": "You have an unsaved video. Going back will discard it.",
+    "keep": "Keep",
+    "discard": "Discard"
+  },
+  "permission": {
+    "libraryTitle": "Photo library access needed",
+    "libraryMessage": "Please allow photo library access in your device settings to select videos."
+  },
+  "errors": {
+    "saveFailedTitle": "Save Failed",
+    "saveFailedMessage": "Could not save video. Please try again."
+  },
+  "recorder": {
+    "loading": "Loading...",
+    "permissionTitle": "Camera Access Needed",
+    "permissionBody": "To record video evidence, this app needs access to your camera and microphone.",
+    "grantAccess": "Grant Access",
+    "recordedVideoNoun": "Recorded video",
+    "selectedVideoNoun": "Selected video",
+    "countdown": "{{seconds}}s remaining",
+    "a11y": {
+      "startRecording": "Start recording",
+      "stopRecording": "Stop recording",
+      "switchToFrontCamera": "Switch to front camera",
+      "switchToBackCamera": "Switch to back camera",
+      "cameraViewfinderFront": "Camera viewfinder, front camera",
+      "cameraViewfinderBack": "Camera viewfinder, back camera",
+      "recordingTime": "Recording time: {{time}}"
+    },
+    "discardWhileRecording": {
+      "title": "Discard recording?",
+      "message": "You're still recording. Going back will stop and discard the video.",
+      "keep": "Keep Recording",
+      "discard": "Discard"
+    },
+    "discardRecorded": {
+      "title": "Discard recording?",
+      "message": "You have an unsaved video. Going back will discard it.",
+      "keep": "Keep",
+      "discard": "Discard"
+    },
+    "errors": {
+      "recordingFailedTitle": "Recording Failed",
+      "recordingFailedMessage": "Could not record video. Please try again."
+    }
+  }
+}

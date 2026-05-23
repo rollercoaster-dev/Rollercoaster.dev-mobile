@@ -12,6 +12,7 @@ import {
   useCameraPermissions,
   useMicrophonePermissions,
 } from "expo-camera";
+import { useTranslation } from "react-i18next";
 import { Text } from "../Text";
 import { Card } from "../Card";
 import { Button } from "../Button";
@@ -45,6 +46,7 @@ export const VideoRecorder = forwardRef<
   VideoRecorderHandle,
   VideoRecorderProps
 >(function VideoRecorder({ onRecorded, onCancel, isSaving = false }, ref) {
+  const { t } = useTranslation("captureVideo");
   const tabInset = useTabScreenContentInset();
 
   const cameraRef = useRef<CameraView>(null);
@@ -92,8 +94,8 @@ export const VideoRecorder = forwardRef<
       reportError(error, { area: "evidence.capture", kind: "video" });
       if (isMountedRef.current) {
         Alert.alert(
-          "Recording Failed",
-          "Could not record video. Please try again.",
+          t("recorder.errors.recordingFailedTitle"),
+          t("recorder.errors.recordingFailedMessage"),
         );
       }
     } finally {
@@ -105,7 +107,7 @@ export const VideoRecorder = forwardRef<
         timerRef.current = null;
       }
     }
-  }, [isRecording]);
+  }, [isRecording, t]);
 
   const handleStopRecording = useCallback(() => {
     if (!cameraRef.current || !isRecording) return;
@@ -152,12 +154,15 @@ export const VideoRecorder = forwardRef<
       requestExit() {
         if (isRecording) {
           Alert.alert(
-            "Discard recording?",
-            "You're still recording. Going back will stop and discard the video.",
+            t("recorder.discardWhileRecording.title"),
+            t("recorder.discardWhileRecording.message"),
             [
-              { text: "Keep Recording", style: "cancel" },
               {
-                text: "Discard",
+                text: t("recorder.discardWhileRecording.keep"),
+                style: "cancel",
+              },
+              {
+                text: t("recorder.discardWhileRecording.discard"),
                 style: "destructive",
                 onPress: () => {
                   cameraRef.current?.stopRecording();
@@ -174,12 +179,12 @@ export const VideoRecorder = forwardRef<
         }
         if (recordedUri) {
           Alert.alert(
-            "Discard recording?",
-            "You have an unsaved video. Going back will discard it.",
+            t("recorder.discardRecorded.title"),
+            t("recorder.discardRecorded.message"),
             [
-              { text: "Keep", style: "cancel" },
+              { text: t("recorder.discardRecorded.keep"), style: "cancel" },
               {
-                text: "Discard",
+                text: t("recorder.discardRecorded.discard"),
                 style: "destructive",
                 onPress: () => onCancel(),
               },
@@ -190,7 +195,7 @@ export const VideoRecorder = forwardRef<
         onCancel();
       },
     }),
-    [isRecording, recordedUri, onCancel],
+    [isRecording, recordedUri, onCancel, t],
   );
 
   const hasPermissions = cameraPermission?.granted && micPermission?.granted;
@@ -200,7 +205,7 @@ export const VideoRecorder = forwardRef<
     return (
       <View style={styles.permissionContainer}>
         <Text variant="body" style={styles.permissionText}>
-          Loading...
+          {t("recorder.loading")}
         </Text>
       </View>
     );
@@ -211,14 +216,13 @@ export const VideoRecorder = forwardRef<
       <View style={styles.permissionContainer}>
         <Card>
           <Text variant="headline" style={{ textAlign: "center" }}>
-            Camera Access Needed
+            {t("recorder.permissionTitle")}
           </Text>
           <Text variant="body" style={styles.permissionText}>
-            To record video evidence, this app needs access to your camera and
-            microphone.
+            {t("recorder.permissionBody")}
           </Text>
           <Button
-            label="Grant Access"
+            label={t("recorder.grantAccess")}
             variant="primary"
             onPress={handleRequestPermissions}
           />
@@ -234,16 +238,18 @@ export const VideoRecorder = forwardRef<
           <VideoPreview
             uri={recordedUri}
             durationSeconds={elapsed}
-            accessibilityNoun="Recorded video"
+            accessibilityNoun={t("recorder.recordedVideoNoun")}
           />
         </View>
         <Text variant="caption" style={styles.timer}>
-          Duration: {formatDuration(elapsed * 1000)}
+          {t("preview.durationLabel", {
+            duration: formatDuration(elapsed * 1000),
+          })}
         </Text>
         <View style={[styles.previewControls, tabInset]}>
           <View style={styles.previewButton}>
             <Button
-              label="Retake"
+              label={t("actions.retake")}
               variant="secondary"
               onPress={handleRetake}
               disabled={isSaving}
@@ -251,7 +257,7 @@ export const VideoRecorder = forwardRef<
           </View>
           <View style={styles.previewButton}>
             <Button
-              label={isSaving ? "Saving..." : "Use Video"}
+              label={isSaving ? t("actions.saving") : t("actions.useVideo")}
               variant="primary"
               onPress={handleUseVideo}
               loading={isSaving}
@@ -271,14 +277,20 @@ export const VideoRecorder = forwardRef<
           facing={facing}
           mode="video"
           accessible
-          accessibilityLabel={`Camera viewfinder, ${facing} camera`}
+          accessibilityLabel={
+            facing === "back"
+              ? t("recorder.a11y.cameraViewfinderBack")
+              : t("recorder.a11y.cameraViewfinderFront")
+          }
         />
       </View>
       <Text
         variant="caption"
         style={[styles.timer, isRecording && styles.timerRecording]}
         accessibilityLiveRegion="polite"
-        accessibilityLabel={`Recording time: ${formatDuration(elapsed * 1000)}`}
+        accessibilityLabel={t("recorder.a11y.recordingTime", {
+          time: formatDuration(elapsed * 1000),
+        })}
       >
         {formatDuration(elapsed * 1000)}
       </Text>
@@ -288,7 +300,7 @@ export const VideoRecorder = forwardRef<
           style={styles.maxDurationWarning}
           accessibilityLiveRegion="assertive"
         >
-          {MAX_DURATION_SECONDS - elapsed}s remaining
+          {t("recorder.countdown", { seconds: MAX_DURATION_SECONDS - elapsed })}
         </Text>
       )}
       <View style={[styles.controls, tabInset]}>
@@ -298,7 +310,9 @@ export const VideoRecorder = forwardRef<
           accessible
           accessibilityRole="button"
           accessibilityLabel={
-            isRecording ? "Stop recording" : "Start recording"
+            isRecording
+              ? t("recorder.a11y.stopRecording")
+              : t("recorder.a11y.startRecording")
           }
         >
           <View
@@ -315,7 +329,11 @@ export const VideoRecorder = forwardRef<
           disabled={isRecording}
           accessible
           accessibilityRole="button"
-          accessibilityLabel={`Switch to ${facing === "back" ? "front" : "back"} camera`}
+          accessibilityLabel={
+            facing === "back"
+              ? t("recorder.a11y.switchToFrontCamera")
+              : t("recorder.a11y.switchToBackCamera")
+          }
           accessibilityState={{ disabled: isRecording }}
         >
           <Text variant="body">{"↻"}</Text>

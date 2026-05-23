@@ -2,6 +2,7 @@ import React from "react";
 import { render, screen, fireEvent, act } from "@testing-library/react-native";
 import { Alert } from "react-native";
 
+import { i18n } from "../../../i18n";
 import { CaptureVideoScreen } from "../CaptureVideoScreen";
 import { useCameraPermissions, useMicrophonePermissions } from "expo-camera";
 
@@ -111,9 +112,13 @@ describe("CaptureVideoScreen — chooser mode", () => {
       />,
     );
 
-    expect(screen.getByText("Add a video")).toBeTruthy();
-    expect(screen.getByText("Record Video")).toBeTruthy();
-    expect(screen.getByText("Choose from Library")).toBeTruthy();
+    expect(screen.getByText(i18n.t("captureVideo:heading"))).toBeTruthy();
+    expect(
+      screen.getByText(i18n.t("captureVideo:actions.recordVideo")),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(i18n.t("captureVideo:actions.chooseFromLibrary")),
+    ).toBeTruthy();
   });
 
   it("navigates back when back button is pressed from chooser", () => {
@@ -136,9 +141,15 @@ describe("CaptureVideoScreen — chooser mode", () => {
       />,
     );
 
-    fireEvent.press(screen.getByText("Record Video"));
+    fireEvent.press(
+      screen.getByText(i18n.t("captureVideo:actions.recordVideo")),
+    );
     expect(screen.getByTestId("camera-view")).toBeTruthy();
-    expect(screen.getByLabelText("Start recording")).toBeTruthy();
+    expect(
+      screen.getByLabelText(
+        i18n.t("captureVideo:recorder.a11y.startRecording"),
+      ),
+    ).toBeTruthy();
   });
 });
 
@@ -156,9 +167,15 @@ describe("CaptureVideoScreen — recorder mode", () => {
       />,
     );
 
-    fireEvent.press(screen.getByText("Record Video"));
-    expect(screen.getByText("Camera Access Needed")).toBeTruthy();
-    expect(screen.getByText("Grant Access")).toBeTruthy();
+    fireEvent.press(
+      screen.getByText(i18n.t("captureVideo:actions.recordVideo")),
+    );
+    expect(
+      screen.getByText(i18n.t("captureVideo:recorder.permissionTitle")),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(i18n.t("captureVideo:recorder.grantAccess")),
+    ).toBeTruthy();
   });
 
   it("shows permission request when mic permission not granted", () => {
@@ -174,8 +191,12 @@ describe("CaptureVideoScreen — recorder mode", () => {
       />,
     );
 
-    fireEvent.press(screen.getByText("Record Video"));
-    expect(screen.getByText("Camera Access Needed")).toBeTruthy();
+    fireEvent.press(
+      screen.getByText(i18n.t("captureVideo:actions.recordVideo")),
+    );
+    expect(
+      screen.getByText(i18n.t("captureVideo:recorder.permissionTitle")),
+    ).toBeTruthy();
   });
 
   it("shows timer at 00:00 initially in recorder", () => {
@@ -186,7 +207,9 @@ describe("CaptureVideoScreen — recorder mode", () => {
       />,
     );
 
-    fireEvent.press(screen.getByText("Record Video"));
+    fireEvent.press(
+      screen.getByText(i18n.t("captureVideo:actions.recordVideo")),
+    );
     expect(screen.getByText("00:00")).toBeTruthy();
   });
 
@@ -200,10 +223,16 @@ describe("CaptureVideoScreen — recorder mode", () => {
       />,
     );
 
-    fireEvent.press(screen.getByText("Record Video"));
+    fireEvent.press(
+      screen.getByText(i18n.t("captureVideo:actions.recordVideo")),
+    );
 
     await act(async () => {
-      fireEvent.press(screen.getByLabelText("Start recording"));
+      fireEvent.press(
+        screen.getByLabelText(
+          i18n.t("captureVideo:recorder.a11y.startRecording"),
+        ),
+      );
     });
 
     expect(mockRecordAsync).toHaveBeenCalledWith({ maxDuration: 60 });
@@ -219,14 +248,22 @@ describe("CaptureVideoScreen — recorder mode", () => {
       />,
     );
 
-    fireEvent.press(screen.getByText("Record Video"));
+    fireEvent.press(
+      screen.getByText(i18n.t("captureVideo:actions.recordVideo")),
+    );
 
     await act(async () => {
-      fireEvent.press(screen.getByLabelText("Start recording"));
+      fireEvent.press(
+        screen.getByLabelText(
+          i18n.t("captureVideo:recorder.a11y.startRecording"),
+        ),
+      );
     });
 
     await act(async () => {
-      fireEvent.press(screen.getByText("Use Video"));
+      fireEvent.press(
+        screen.getByText(i18n.t("captureVideo:actions.useVideo")),
+      );
     });
 
     expect(mockMoveVideo).toHaveBeenCalledWith("/tmp/video.mp4");
@@ -254,20 +291,28 @@ describe("CaptureVideoScreen — recorder mode", () => {
       />,
     );
 
-    fireEvent.press(screen.getByText("Record Video"));
+    fireEvent.press(
+      screen.getByText(i18n.t("captureVideo:actions.recordVideo")),
+    );
 
     expect(
-      screen.getByLabelText("Switch to front camera").props.accessibilityState
-        ?.disabled,
+      screen.getByLabelText(
+        i18n.t("captureVideo:recorder.a11y.switchToFrontCamera"),
+      ).props.accessibilityState?.disabled,
     ).not.toBe(true);
 
     await act(async () => {
-      fireEvent.press(screen.getByLabelText("Start recording"));
+      fireEvent.press(
+        screen.getByLabelText(
+          i18n.t("captureVideo:recorder.a11y.startRecording"),
+        ),
+      );
     });
 
     expect(
-      screen.getByLabelText("Switch to front camera").props.accessibilityState
-        ?.disabled,
+      screen.getByLabelText(
+        i18n.t("captureVideo:recorder.a11y.switchToFrontCamera"),
+      ).props.accessibilityState?.disabled,
     ).toBe(true);
   });
 });
@@ -287,11 +332,13 @@ describe("CaptureVideoScreen — library upload", () => {
     );
 
     await act(async () => {
-      fireEvent.press(screen.getByText("Choose from Library"));
+      fireEvent.press(
+        screen.getByText(i18n.t("captureVideo:actions.chooseFromLibrary")),
+      );
     });
 
     expect(alertSpy).toHaveBeenCalledWith(
-      "Photo library access needed",
+      i18n.t("captureVideo:permission.libraryTitle"),
       expect.any(String),
     );
     expect(mockLaunchImageLibraryAsync).not.toHaveBeenCalled();
@@ -313,11 +360,13 @@ describe("CaptureVideoScreen — library upload", () => {
     );
 
     await act(async () => {
-      fireEvent.press(screen.getByText("Choose from Library"));
+      fireEvent.press(
+        screen.getByText(i18n.t("captureVideo:actions.chooseFromLibrary")),
+      );
     });
 
     // Still on chooser
-    expect(screen.getByText("Add a video")).toBeTruthy();
+    expect(screen.getByText(i18n.t("captureVideo:heading"))).toBeTruthy();
     expect(mockCreateEvidence).not.toHaveBeenCalled();
   });
 
@@ -338,13 +387,21 @@ describe("CaptureVideoScreen — library upload", () => {
     );
 
     await act(async () => {
-      fireEvent.press(screen.getByText("Choose from Library"));
+      fireEvent.press(
+        screen.getByText(i18n.t("captureVideo:actions.chooseFromLibrary")),
+      );
     });
 
-    expect(screen.getByText("Duration: 00:13")).toBeTruthy();
+    expect(
+      screen.getByText(
+        i18n.t("captureVideo:preview.durationLabel", { duration: "00:13" }),
+      ),
+    ).toBeTruthy();
 
     await act(async () => {
-      fireEvent.press(screen.getByText("Use Video"));
+      fireEvent.press(
+        screen.getByText(i18n.t("captureVideo:actions.useVideo")),
+      );
     });
 
     expect(mockCopyVideo).toHaveBeenCalledWith("file:///library/clip.mov");
@@ -379,14 +436,40 @@ describe("CaptureVideoScreen — library upload", () => {
     );
 
     await act(async () => {
-      fireEvent.press(screen.getByText("Choose from Library"));
+      fireEvent.press(
+        screen.getByText(i18n.t("captureVideo:actions.chooseFromLibrary")),
+      );
     });
 
     await act(async () => {
-      fireEvent.press(screen.getByText("Retake"));
+      fireEvent.press(screen.getByText(i18n.t("captureVideo:actions.retake")));
     });
 
-    expect(screen.getByText("Add a video")).toBeTruthy();
+    expect(screen.getByText(i18n.t("captureVideo:heading"))).toBeTruthy();
     expect(mockCreateEvidence).not.toHaveBeenCalled();
+  });
+});
+
+describe("CaptureVideoScreen — pseudo locale", () => {
+  beforeAll(async () => {
+    await i18n.changeLanguage("pseudo");
+  });
+  afterAll(async () => {
+    await i18n.changeLanguage("en");
+  });
+
+  it("renders chooser strings in pseudo locale", () => {
+    const pseudoHeading = i18n.t("captureVideo:heading");
+    expect(pseudoHeading).not.toBe("Add a video");
+    render(
+      <CaptureVideoScreen
+        route={defaultRoute}
+        navigation={undefined as never}
+      />,
+    );
+    expect(screen.getByText(pseudoHeading)).toBeTruthy();
+    expect(
+      screen.getByText(i18n.t("captureVideo:actions.recordVideo")),
+    ).toBeTruthy();
   });
 });
