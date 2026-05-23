@@ -104,5 +104,45 @@
     "evidenceBadge": {
       "a11y": "{{count}} evidence items, tap to view"
     }
+  },
+  "goalCard": {
+    "metaLabel": "Goal",
+    "markComplete": "Mark goal complete",
+    "a11y": {
+      "badgePreview": "Badge preview for {{title}}, tap to edit design",
+      "evidenceCount": "{{count}} goal evidence items, tap to view",
+      "markCompleteHint": "Opens completion flow to capture final evidence"
+    }
+  },
+  "evidenceDrawer": {
+    "a11y": {
+      "label": "Evidence drawer",
+      "labelGoal": "Goal evidence drawer",
+      "close": "Close evidence drawer",
+      "toggle": "Toggle evidence drawer"
+    }
+  },
+  "timeline": {
+    "hint": "Tap to expand timeline",
+    "a11y": {
+      "label": "Step progress timeline — tap to expand",
+      "hint": "Opens full timeline view",
+      "step": "Step {{index}}: {{status}}",
+      "goalEvidence": "Goal evidence"
+    }
+  },
+  "progressDots": {
+    "a11y": {
+      "label": "Step navigation"
+    }
+  },
+  "modeIndicator": {
+    "edit": "Edit",
+    "focus": "Focus",
+    "complete": "Complete",
+    "timeline": "Timeline",
+    "a11y": {
+      "current": "Current mode: {{label}}"
+    }
   }
 }
