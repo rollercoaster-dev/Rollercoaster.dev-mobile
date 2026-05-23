@@ -4,6 +4,7 @@ import {
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
+import { i18n } from "../../../i18n";
 import { FocusModeScreen } from "../FocusModeScreen";
 
 // --- Mocks ---
@@ -1035,6 +1036,60 @@ describe("FocusModeScreen", () => {
     renderWithProviders(<FocusModeScreen {...routeProps} />);
     fireEvent.press(screen.getByText("Mark complete"));
     expect(mockCompleteStep).toHaveBeenCalledWith("step-1", null, []);
+  });
+
+  describe("pseudo locale", () => {
+    afterEach(async () => {
+      if (i18n.language !== "en") await i18n.changeLanguage("en");
+    });
+
+    it("renders the Focus Mode title under pseudo locale", async () => {
+      await i18n.changeLanguage("pseudo");
+      setupQueries();
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+      const pseudo = i18n.t("focusMode:title");
+      expect(pseudo.startsWith("[")).toBe(true);
+      expect(screen.getByText(pseudo)).toBeOnTheScreen();
+    });
+
+    it("renders the Edit goal a11y label under pseudo locale", async () => {
+      await i18n.changeLanguage("pseudo");
+      setupQueries();
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+      const pseudo = i18n.t("focusMode:header.editGoal");
+      expect(pseudo.startsWith("[")).toBe(true);
+      expect(screen.getByLabelText(pseudo)).toBeOnTheScreen();
+    });
+
+    it("renders the Hide timeline a11y label under pseudo locale", async () => {
+      await i18n.changeLanguage("pseudo");
+      setupQueries();
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+      const pseudo = i18n.t("focusMode:header.hideTimeline");
+      expect(pseudo.startsWith("[")).toBe(true);
+      expect(screen.getByLabelText(pseudo)).toBeOnTheScreen();
+    });
+
+    it("renders the Goal not found error under pseudo locale", async () => {
+      await i18n.changeLanguage("pseudo");
+      setupQueries({ goal: null, steps: [] });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+      const pseudo = i18n.t("focusMode:errors.goalNotFound");
+      expect(pseudo.startsWith("[")).toBe(true);
+      expect(screen.getByText(pseudo)).toBeOnTheScreen();
+    });
+
+    it("resolves interpolated step-uncompleted announcement under pseudo locale", async () => {
+      // Announcements go through AccessibilityInfo and aren't queryable in jsdom,
+      // so we assert resolution + interpolation directly. Pseudo brackets the
+      // template; the {{title}} value should pass through verbatim.
+      await i18n.changeLanguage("pseudo");
+      const pseudo = i18n.t("focusMode:a11y.stepUncompleted", {
+        title: "Read docs",
+      });
+      expect(pseudo.startsWith("[")).toBe(true);
+      expect(pseudo).toContain("Read docs");
+    });
   });
 
   describe("breadcrumbs", () => {

@@ -91,7 +91,7 @@ const EVIDENCE_ROUTE_MAP: Partial<
 };
 
 function FocusContent({ goalId }: { goalId: string }) {
-  const { t } = useTranslation();
+  const { t } = useTranslation(["focusMode", "common"]);
   const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
   const { showToast, hideToast } = useToast();
   const rows = useQuery(goalsQuery);
@@ -215,7 +215,7 @@ function FocusContent({ goalId }: { goalId: string }) {
   ).map((row) => ({
     id: row.id,
     type: validateEvidenceType(row.type ?? "file"),
-    label: row.description ?? row.type ?? "Evidence",
+    label: row.description ?? row.type ?? t("focusMode:evidenceFallback"),
   }));
 
   const goalEvidenceCount = goalEvidenceRows.length;
@@ -256,9 +256,11 @@ function FocusContent({ goalId }: { goalId: string }) {
     lifecycle.current.snappedToGoalCard = true;
     setCurrentCardIndex(stepRowsLength);
     AccessibilityInfo.announceForAccessibility(
-      `All steps complete for "${goalTitleForAnnouncement}". Mark Complete is now available on the goal card.`,
+      t("focusMode:a11y.allStepsComplete", {
+        title: goalTitleForAnnouncement,
+      }),
     );
-  }, [goalTitleForAnnouncement, allStepsComplete, stepRowsLength]);
+  }, [goalTitleForAnnouncement, allStepsComplete, stepRowsLength, t]);
 
   const handleUndoDelete = useCallback(() => {
     const pending = pendingFileDeletionRef.current;
@@ -280,7 +282,7 @@ function FocusContent({ goalId }: { goalId: string }) {
   if (!goal) {
     return (
       <View style={styles.centered}>
-        <Text variant="body">Goal not found.</Text>
+        <Text variant="body">{t("focusMode:errors.goalNotFound")}</Text>
       </View>
     );
   }
@@ -318,7 +320,7 @@ function FocusContent({ goalId }: { goalId: string }) {
       if (step.status === StepStatus.completed) {
         uncompleteStep(stepId as StepId);
         AccessibilityInfo.announceForAccessibility(
-          `Step "${step.title}" marked as incomplete`,
+          t("focusMode:a11y.stepUncompleted", { title: step.title }),
         );
       } else {
         const stepEvidence = allStepEvidenceRows
@@ -329,7 +331,7 @@ function FocusContent({ goalId }: { goalId: string }) {
 
         if (!canCompleteStep(plannedTypes, stepEvidence)) {
           showToast({
-            message: "Add evidence before completing this step",
+            message: t("focusMode:toast.evidenceRequired"),
             duration: 3000,
           });
           return;
@@ -337,7 +339,7 @@ function FocusContent({ goalId }: { goalId: string }) {
 
         completeStep(stepId as StepId, plannedTypes, stepEvidence);
         AccessibilityInfo.announceForAccessibility(
-          `Step "${step.title}" completed`,
+          t("focusMode:a11y.stepCompleted", { title: step.title }),
         );
         // Advance past the just-completed step to the next pending one.
         // stepRows is the pre-completion snapshot, so skip stepId explicitly.
@@ -364,14 +366,14 @@ function FocusContent({ goalId }: { goalId: string }) {
       const message =
         error instanceof Error
           ? error.message
-          : "Something went wrong. Please try again.";
+          : t("focusMode:errors.somethingWrong");
       console.error("[FocusModeScreen] Failed to toggle step completion", {
         stepId,
         error,
       });
       reportError(error, { area: "focus.mode", kind: "step-toggle" });
       showToast({
-        message: `Could not update step: ${message}`,
+        message: t("focusMode:errors.couldNotUpdateStep", { message }),
         duration: 3000,
       });
     }
@@ -397,7 +399,7 @@ function FocusContent({ goalId }: { goalId: string }) {
       logger.error("No capture route mapped for evidence type", { type });
       const label = evidenceShortLabel(t, type);
       showToast({
-        message: `Could not open ${label} capture screen`,
+        message: t("focusMode:errors.couldNotOpenCapture", { label }),
         duration: 3000,
       });
       return;
@@ -416,7 +418,7 @@ function FocusContent({ goalId }: { goalId: string }) {
       logger.error("No capture route mapped for evidence type", { type });
       const label = evidenceShortLabel(t, type);
       showToast({
-        message: `Could not open ${label} capture screen`,
+        message: t("focusMode:errors.couldNotOpenCapture", { label }),
         duration: 3000,
       });
       return;
@@ -458,8 +460,11 @@ function FocusContent({ goalId }: { goalId: string }) {
       };
 
       showToast({
-        message: "Evidence deleted",
-        action: { label: "Undo", onPress: handleUndoDelete },
+        message: t("focusMode:toast.evidenceDeleted"),
+        action: {
+          label: t("common:actions.undo"),
+          onPress: handleUndoDelete,
+        },
         duration: 5000,
       });
     } catch (error) {
@@ -469,8 +474,8 @@ function FocusContent({ goalId }: { goalId: string }) {
       });
       reportError(error, { area: "focus.mode" });
       Alert.alert(
-        "Could not delete evidence",
-        "Something went wrong. Please try again.",
+        t("focusMode:errors.couldNotDeleteEvidenceTitle"),
+        t("focusMode:errors.somethingWrong"),
       );
     }
   };
@@ -482,7 +487,7 @@ function FocusContent({ goalId }: { goalId: string }) {
     if (!row) return;
     viewEvidence({
       id: row.id,
-      title: row.description ?? row.type ?? "Evidence",
+      title: row.description ?? row.type ?? t("focusMode:evidenceFallback"),
       type: validateEvidenceType(row.type ?? "file"),
       uri: row.uri ?? undefined,
       metadata: row.metadata ?? undefined,
@@ -524,7 +529,9 @@ function FocusContent({ goalId }: { goalId: string }) {
             onPress={() => setTimelineHidden(!timelineHidden)}
             tone="ghost"
             accessibilityLabel={
-              timelineHidden ? "Show timeline" : "Hide timeline"
+              timelineHidden
+                ? t("focusMode:header.showTimeline")
+                : t("focusMode:header.hideTimeline")
             }
             size="sm"
           />
@@ -533,7 +540,7 @@ function FocusContent({ goalId }: { goalId: string }) {
           icon={<Pencil size={20} weight="bold" />}
           onPress={handleEditPress}
           tone="ghost"
-          accessibilityLabel="Edit goal"
+          accessibilityLabel={t("focusMode:header.editGoal")}
           size="sm"
         />
       </View>
@@ -552,7 +559,9 @@ function FocusContent({ goalId }: { goalId: string }) {
         <CardCarousel
           currentIndex={currentCardIndex}
           onIndexChange={handleIndexChange}
-          accessibilityLabel={`Focus mode cards, ${stepRows.length} steps`}
+          accessibilityLabel={t("focusMode:a11y.carousel", {
+            count: stepRows.length,
+          })}
           renderIndicator={() => (
             <ProgressDots
               steps={dotSteps}
@@ -612,8 +621,8 @@ function FocusContent({ goalId }: { goalId: string }) {
       {/* Confirm delete evidence modal */}
       <ConfirmDeleteModal
         visible={!!pendingDeleteId}
-        title="Delete evidence?"
-        message="You can undo this briefly after deleting."
+        title={t("focusMode:confirmDelete.title")}
+        message={t("focusMode:confirmDelete.message")}
         onConfirm={handleConfirmDeleteEvidence}
         onCancel={() => setPendingDeleteId(null)}
       />
@@ -644,10 +653,11 @@ function useStepEvidenceCounts(
 
 export function FocusModeScreen({ route }: FocusModeNavProps) {
   const navigation = useNavigation();
+  const { t } = useTranslation("focusMode");
 
   return (
     <View style={styles.screen}>
-      <ScreenSubHeader label="Focus Mode" onBack={() => navigation.goBack()} />
+      <ScreenSubHeader label={t("title")} onBack={() => navigation.goBack()} />
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingView}
         {...KEYBOARD_AVOIDING_PROPS}
