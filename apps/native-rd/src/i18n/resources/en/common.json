@@ -107,6 +107,7 @@
   },
   "goalCard": {
     "metaLabel": "Goal",
+    "readyBadge": "Ready",
     "markComplete": "Mark goal complete",
     "a11y": {
       "badgePreview": "Badge preview for {{title}}, tap to edit design",

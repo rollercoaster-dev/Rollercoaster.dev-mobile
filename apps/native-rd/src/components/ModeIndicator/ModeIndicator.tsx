@@ -7,12 +7,18 @@ import { styles } from "./ModeIndicator.styles";
 
 export type LifecycleMode = "edit" | "focus" | "complete" | "timeline";
 
+// `Record<LifecycleMode, ...>` forces this object to stay exhaustive: adding
+// a new union member becomes a TS error here, not a runtime drift between the
+// union and the parity test. Treat this as the single source of truth — derive
+// `LIFECYCLE_MODES` from its keys instead of hand-listing them elsewhere.
 const MODE_CONFIG: Record<LifecycleMode, { emoji: string }> = {
   edit: { emoji: "📝" },
   focus: { emoji: "🎯" },
   complete: { emoji: "🎉" },
   timeline: { emoji: "📖" },
 };
+
+export const LIFECYCLE_MODES = Object.keys(MODE_CONFIG) as LifecycleMode[];
 
 export interface ModeIndicatorProps {
   mode: LifecycleMode;

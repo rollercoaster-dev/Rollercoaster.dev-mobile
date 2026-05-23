@@ -85,7 +85,9 @@ export function GoalEvidenceCard({
         <View style={styles.container}>
           <View style={styles.metaRow}>
             <Text style={styles.metaLabel}>{t("goalCard.metaLabel")}</Text>
-            {onMarkComplete && <StatusBadge variant="active" label="Ready" />}
+            {onMarkComplete && (
+              <StatusBadge variant="active" label={t("goalCard.readyBadge")} />
+            )}
           </View>
           <View style={styles.bodyRow}>
             <Pressable

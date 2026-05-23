@@ -2,14 +2,11 @@ import { i18n } from "../index";
 import { themeOptions } from "../../hooks/useTheme";
 import { densityOptions } from "../../utils/density";
 import { STATUS_BADGE_VARIANTS } from "../../components/StatusBadge/StatusBadge.styles";
-import type { LifecycleMode } from "../../components/ModeIndicator";
+import { LIFECYCLE_MODES } from "../../components/ModeIndicator";
 
-const LIFECYCLE_MODES: LifecycleMode[] = [
-  "edit",
-  "focus",
-  "complete",
-  "timeline",
-];
+// `LIFECYCLE_MODES` is derived from `MODE_CONFIG: Record<LifecycleMode, …>`
+// in ModeIndicator.tsx, so adding a union member without updating the config
+// fails type-check at the source — not silently here.
 
 // Catches the gap that locale-parity.test.ts can't: a TS union member
 // (DensityLevel / ThemeName / LifecycleMode) added without a matching JSON

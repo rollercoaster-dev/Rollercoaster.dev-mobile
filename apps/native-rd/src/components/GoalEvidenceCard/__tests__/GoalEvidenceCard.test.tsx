@@ -193,7 +193,9 @@ describe("GoalEvidenceCard", () => {
           name: i18n.t("common:goalCard.markComplete"),
         }),
       ).toBeNull();
-      expect(screen.queryByText("Ready")).toBeNull();
+      expect(
+        screen.queryByText(i18n.t("common:goalCard.readyBadge")),
+      ).toBeNull();
     });
 
     it("renders the check and Ready badge when onMarkComplete is provided", () => {
@@ -205,7 +207,9 @@ describe("GoalEvidenceCard", () => {
           name: i18n.t("common:goalCard.markComplete"),
         }),
       ).toBeOnTheScreen();
-      expect(screen.getByText("Ready")).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("common:goalCard.readyBadge")),
+      ).toBeOnTheScreen();
     });
 
     it("calls onMarkComplete when the check is tapped", () => {
