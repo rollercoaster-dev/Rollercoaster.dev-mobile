@@ -6,6 +6,7 @@ import {
   Alert,
   Platform,
 } from "react-native";
+import * as Application from "expo-application";
 import * as Sentry from "@sentry/react-native";
 import { useTranslation } from "react-i18next";
 import { Text } from "../../components/Text";
@@ -110,7 +111,7 @@ export function SettingsScreen({
           <SettingsRow label={t("about.appLabel")} value="rollercoaster.dev" />
           <SettingsRow
             label={t("about.versionLabel")}
-            value="0.1.0"
+            value={Application.nativeApplicationVersion ?? "unknown"}
             onLongPress={
               sentryDebugToolsEnabled ? triggerSentryNativeCrash : undefined
             }
