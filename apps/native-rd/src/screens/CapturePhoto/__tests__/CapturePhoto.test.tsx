@@ -68,6 +68,10 @@ beforeEach(() => {
   mockSaveImageToAppStorage.mockReturnValue("file:///saved/photo.jpg");
 });
 
+afterEach(() => {
+  jest.restoreAllMocks();
+});
+
 describe("CapturePhoto", () => {
   it("renders title and both buttons", () => {
     renderScreen();
@@ -200,7 +204,6 @@ describe("CapturePhoto", () => {
       i18n.t("permissions:camera.title"),
       i18n.t("permissions:camera.message"),
     );
-    alertSpy.mockRestore();
   });
 
   it("does not launch library when permission denied", async () => {
@@ -222,7 +225,6 @@ describe("CapturePhoto", () => {
       i18n.t("permissions:photoLibrary.title"),
       i18n.t("permissions:photoLibrary.message"),
     );
-    alertSpy.mockRestore();
   });
 
   it("shows alert and does not navigate when save fails", async () => {
@@ -245,7 +247,6 @@ describe("CapturePhoto", () => {
       );
     });
     expect(mockGoBack).not.toHaveBeenCalled();
-    alertSpy.mockRestore();
   });
 
   it("navigates back when back button pressed", () => {
