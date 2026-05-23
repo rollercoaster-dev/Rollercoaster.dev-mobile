@@ -46,7 +46,7 @@ function buildGoalCardGoal(
 }
 
 function GoalList() {
-  const { t } = useTranslation("goals");
+  const { t } = useTranslation(["goals", "common"]);
   const navigation = useNavigation<Nav>();
   const rows = useQuery(activeGoalsQuery);
   const allSteps = useQuery(stepsForActiveGoalsQuery);
@@ -121,6 +121,8 @@ function GoalList() {
         message={t("confirmDelete.message", {
           title: deleteTarget?.title ?? "",
         })}
+        confirmLabel={t("common:actions.delete")}
+        cancelLabel={t("common:actions.cancel")}
       />
     </>
   );
