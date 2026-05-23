@@ -4,6 +4,7 @@ import {
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
+import { i18n } from "../../../i18n";
 import { EvidenceDrawer } from "../EvidenceDrawer";
 import type { EvidenceItemData } from "../EvidenceDrawer";
 
@@ -56,7 +57,9 @@ describe("EvidenceDrawer", () => {
     renderWithProviders(
       <EvidenceDrawer {...defaultProps} onToggle={onToggle} />,
     );
-    fireEvent.press(screen.getByLabelText("Toggle evidence drawer"));
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("common:evidenceDrawer.a11y.toggle")),
+    );
     expect(onToggle).toHaveBeenCalledTimes(1);
   });
 
@@ -65,7 +68,9 @@ describe("EvidenceDrawer", () => {
     renderWithProviders(
       <EvidenceDrawer {...defaultProps} isOpen onToggle={onToggle} />,
     );
-    fireEvent.press(screen.getByLabelText("Close evidence drawer"));
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("common:evidenceDrawer.a11y.close")),
+    );
     expect(onToggle).toHaveBeenCalledTimes(1);
   });
 
@@ -76,12 +81,16 @@ describe("EvidenceDrawer", () => {
 
   it("has correct accessibility label for goal drawer", () => {
     renderWithProviders(<EvidenceDrawer {...defaultProps} isGoal />);
-    expect(screen.getByLabelText("Goal evidence drawer")).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText(i18n.t("common:evidenceDrawer.a11y.labelGoal")),
+    ).toBeOnTheScreen();
   });
 
   it("overlay is not accessible when closed", () => {
     renderWithProviders(<EvidenceDrawer {...defaultProps} />);
-    const overlay = screen.queryByLabelText("Close evidence drawer");
+    const overlay = screen.queryByLabelText(
+      i18n.t("common:evidenceDrawer.a11y.close"),
+    );
     expect(overlay).toHaveProp("accessible", false);
   });
 
@@ -180,8 +189,12 @@ describe("EvidenceDrawer", () => {
       // disabled so Maestro can resolve the FAB's `accessibilityLabel`
       // "Add evidence" without it being collapsed into the drawer's
       // "Evidence drawer" composed label.
-      expect(screen.queryByLabelText("Evidence drawer")).toBeNull();
-      expect(screen.queryByLabelText("Goal evidence drawer")).toBeNull();
+      expect(
+        screen.queryByLabelText(i18n.t("common:evidenceDrawer.a11y.label")),
+      ).toBeNull();
+      expect(
+        screen.queryByLabelText(i18n.t("common:evidenceDrawer.a11y.labelGoal")),
+      ).toBeNull();
       // FAB inside the drawer remains reachable via its own a11y label.
       expect(screen.getByLabelText("Add evidence")).toBeOnTheScreen();
     });
