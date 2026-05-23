@@ -1,0 +1,56 @@
+# Self-hosted Tolgee for the native-rd translation workflow (#136).
+# Runs on Joe's Mac mini, reachable only over Tailscale.
+# Full setup walkthrough: apps/native-rd/docs/tolgee.md
+#
+# Quick start (from this directory):
+#   cp .env.example .env  # then edit secrets
+#   docker compose up -d
+#   open http://<mac-mini-tailnet-name>:8085
+
+services:
+  tolgee:
+    # Pin to a digest after the first successful start (see docs/tolgee.md).
+    image: tolgee/tolgee:latest
+    container_name: tolgee
+    restart: unless-stopped
+    # Bind to loopback only; Tailscale routes cross-device access via the host
+    # tailnet IP — no public exposure needed.
+    ports:
+      - "127.0.0.1:8085:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      # Use the external Postgres container above, not Tolgee's embedded one.
+      TOLGEE_POSTGRES_AUTOSTART_ENABLED: "false"
+      # Lock down self-signup so only the seeded admin (and admin-invited users
+      # via in-app invite) can log in. Required for the Tailscale-only model.
+      TOLGEE_AUTHENTICATION_REGISTRATIONS_ALLOWED: "false"
+      TOLGEE_AUTHENTICATION_INITIAL_USERNAME: ${TOLGEE_ADMIN_USERNAME}
+      TOLGEE_AUTHENTICATION_INITIAL_PASSWORD: ${TOLGEE_ADMIN_PASSWORD}
+    volumes:
+      - tolgee-content:/data
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    container_name: tolgee-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      # Bind-mount to host so manual pg_dump backups have an obvious target.
+      # Path is documented in apps/native-rd/docs/tolgee.md.
+      - ${POSTGRES_DATA_DIR:-~/tolgee-data/postgres}:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  tolgee-content:
