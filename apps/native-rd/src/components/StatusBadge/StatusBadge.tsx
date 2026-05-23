@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text } from "react-native";
+import { useTranslation } from "react-i18next";
 import { styles, type StatusBadgeVariant } from "./StatusBadge.styles";
 
 export type { StatusBadgeVariant };
@@ -8,13 +9,6 @@ export interface StatusBadgeProps {
   variant: StatusBadgeVariant;
   label?: string;
 }
-
-const defaultLabels: Record<StatusBadgeVariant, string> = {
-  active: "Active",
-  completed: "Done",
-  locked: "Locked",
-  earned: "Earned",
-};
 
 const variantBgMap = {
   active: styles.variantActive,
@@ -31,13 +25,14 @@ const variantTextMap = {
 } as const;
 
 export function StatusBadge({ variant, label }: StatusBadgeProps) {
-  const displayLabel = label ?? defaultLabels[variant];
+  const { t } = useTranslation("common");
+  const displayLabel = label ?? t(`status.${variant}`);
 
   return (
     <View
       style={[styles.badge, variantBgMap[variant]]}
       accessible
-      accessibilityLabel={`Status: ${displayLabel}`}
+      accessibilityLabel={t("status.a11yPrefix", { label: displayLabel })}
       accessibilityRole="text"
     >
       <Text style={[styles.text, variantTextMap[variant]]}>{displayLabel}</Text>

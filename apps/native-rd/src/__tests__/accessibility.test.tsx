@@ -9,7 +9,7 @@
  */
 
 import React from "react";
-import { Text as RNText } from "react-native";
+import { Modal, Text as RNText, View } from "react-native";
 import { renderWithProviders, screen, fireEvent } from "./test-utils";
 import {
   expectAccessible,
@@ -19,6 +19,7 @@ import {
   expectModalAccessibility,
   expectLiveRegion,
 } from "./a11y-helpers";
+import { i18n } from "../i18n";
 import { GoalCard, type GoalCardGoal } from "../components/GoalCard";
 import { ProgressBar } from "../components/ProgressBar";
 import { Checkbox } from "../components/Checkbox";
@@ -48,15 +49,23 @@ const completedGoal: GoalCardGoal = {
   nextStepTitle: null,
 };
 
+const labelFor = (goal: GoalCardGoal) =>
+  i18n.t("goals:card.a11y.label", {
+    title: goal.title,
+    stepsCompleted: goal.stepsCompleted,
+    stepsTotal: goal.stepsTotal,
+    status: i18n.t(`common:status.${goal.status}`),
+  });
+
 describe("Accessibility Contracts", () => {
   describe("GoalCard", () => {
     it("has composite label with progress and status", () => {
       renderWithProviders(<GoalCard goal={activeGoal} onPress={jest.fn()} />);
       const card = screen.getByRole("button", {
-        name: "Learn TypeScript, 2 of 5 steps completed, active",
+        name: labelFor(activeGoal),
       });
       expect(card).toBeOnTheScreen();
-      expect(card.props.accessibilityHint).toBe("Double-tap to view details");
+      expect(card.props.accessibilityHint).toBe(i18n.t("goals:card.a11y.hint"));
     });
 
     it("title has header role and progressbar has correct value", () => {
@@ -70,9 +79,7 @@ describe("Accessibility Contracts", () => {
       renderWithProviders(
         <GoalCard goal={completedGoal} onPress={jest.fn()} />,
       );
-      screen.getByRole("button", {
-        name: "Read a book, 3 of 3 steps completed, completed",
-      });
+      screen.getByRole("button", { name: labelFor(completedGoal) });
     });
 
     it("has no button role when non-interactive", () => {
@@ -158,11 +165,11 @@ describe("Accessibility Contracts", () => {
 
   describe("Modals", () => {
     function assertModalA11y() {
-      const modal = screen.UNSAFE_getByType(require("react-native").Modal);
+      const modal = screen.UNSAFE_getByType(Modal);
       expectModalAccessibility(modal);
 
       const liveViews = screen
-        .UNSAFE_getAllByType(require("react-native").View)
+        .UNSAFE_getAllByType(View)
         .filter(
           (v: { props: { accessibilityLiveRegion?: string } }) =>
             v.props.accessibilityLiveRegion === "polite",

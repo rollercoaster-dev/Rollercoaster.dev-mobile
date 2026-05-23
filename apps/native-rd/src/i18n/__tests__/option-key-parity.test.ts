@@ -1,6 +1,7 @@
 import { i18n } from "../index";
 import { themeOptions } from "../../hooks/useTheme";
 import { densityOptions } from "../../utils/density";
+import { STATUS_BADGE_VARIANTS } from "../../components/StatusBadge/StatusBadge.styles";
 
 // Catches the gap that locale-parity.test.ts can't: a TS union member
 // (DensityLevel / ThemeName) added without a matching JSON copy entry.
@@ -36,6 +37,16 @@ describe("option array ↔ i18n key parity", () => {
     });
   });
 
+  describe.each(STATUS_BADGE_VARIANTS.map((variant) => ({ variant })))(
+    "STATUS_BADGE_VARIANTS[$variant]",
+    ({ variant }) => {
+      test("common:status.<variant> resolves", () => {
+        const key = `common:status.${variant}` as const;
+        expect(i18n.t(key)).not.toBe(key);
+      });
+    },
+  );
+
   // Reverse direction: orphan JSON entries (e.g. a key left behind after a
   // union member was renamed) would otherwise go undetected — locale-parity
   // would still see them as present in both en and pseudo, and the forward
@@ -56,6 +67,20 @@ describe("option array ↔ i18n key parity", () => {
     };
     const jsonKeys = new Set(Object.keys(bundle.density.options));
     const unionKeys = new Set(densityOptions.map((o) => o.id));
+    expect(jsonKeys).toEqual(unionKeys);
+  });
+
+  // Reverse direction for status: orphan JSON status entries (e.g. after a
+  // variant was renamed) won't surface via the forward walk, which only
+  // iterates STATUS_BADGE_VARIANTS.
+  test("common:status keyset matches STATUS_BADGE_VARIANTS", () => {
+    const bundle = i18n.getResourceBundle("en", "common") as {
+      status: Record<string, unknown>;
+    };
+    const jsonKeys = new Set(
+      Object.keys(bundle.status).filter((k) => k !== "a11yPrefix"),
+    );
+    const unionKeys = new Set<string>(STATUS_BADGE_VARIANTS);
     expect(jsonKeys).toEqual(unionKeys);
   });
 });

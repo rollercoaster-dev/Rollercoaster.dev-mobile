@@ -88,7 +88,13 @@
       "cta": "[+ ÀĐĐ··]"
     }
   },
-  "status": {},
+  "status": {
+    "active": "[Àçţïṽê··]",
+    "completed": "[Đøñê··]",
+    "locked": "[Ĺøçķêđ··]",
+    "earned": "[Êàŕñêđ··]",
+    "a11yPrefix": "[Šţàţüš: {{label}}·······]"
+  },
   "a11y": {
     "evidenceTypeOptions": "[Êṽïđêñçê ţýþê øþţïøñš········]",
     "plannedEvidenceTypes": "[Þĺàññêđ êṽïđêñçê ţýþêš·········]",

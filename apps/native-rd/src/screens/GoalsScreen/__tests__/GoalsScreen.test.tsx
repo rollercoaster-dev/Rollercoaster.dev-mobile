@@ -3,7 +3,9 @@ import {
   renderWithProviders,
   screen,
   fireEvent,
+  act,
 } from "../../../__tests__/test-utils";
+import { i18n } from "../../../i18n";
 import { GoalsScreen } from "../GoalsScreen";
 
 const mockNavigate = jest.fn();
@@ -61,20 +63,24 @@ describe("GoalsScreen", () => {
   describe("empty state", () => {
     it("renders empty state when no goals exist", () => {
       renderWithProviders(<GoalsScreen />);
-      expect(screen.getByText("No goals yet")).toBeOnTheScreen();
       expect(
-        screen.getByText("Add your first learning goal to get started."),
+        screen.getByText(i18n.t("goals:emptyState.title")),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("goals:emptyState.body")),
       ).toBeOnTheScreen();
     });
 
     it("renders Create Goal button in empty state", () => {
       renderWithProviders(<GoalsScreen />);
-      expect(screen.getByText("Create Goal")).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("goals:emptyState.cta")),
+      ).toBeOnTheScreen();
     });
 
     it("navigates to NewGoal when empty state action is pressed", () => {
       renderWithProviders(<GoalsScreen />);
-      fireEvent.press(screen.getByText("Create Goal"));
+      fireEvent.press(screen.getByText(i18n.t("goals:emptyState.cta")));
       expect(mockNavigate).toHaveBeenCalledWith("NewGoal");
     });
   });
@@ -82,7 +88,7 @@ describe("GoalsScreen", () => {
   describe("header", () => {
     it("renders Goals title", () => {
       renderWithProviders(<GoalsScreen />);
-      expect(screen.getByText("Goals")).toBeOnTheScreen();
+      expect(screen.getByText(i18n.t("goals:header.title"))).toBeOnTheScreen();
     });
 
     it("does not render an add button in the header", () => {
@@ -228,12 +234,128 @@ describe("GoalsScreen", () => {
       fireEvent(screen.getByText("Learn TypeScript"), "longPress");
 
       // Confirm modal should show the goal title
-      expect(screen.getByText("Delete this goal?")).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("goals:confirmDelete.title")),
+      ).toBeOnTheScreen();
       expect(
         screen.getByText(
-          '"Learn TypeScript" and all progress will be permanently deleted.',
+          i18n.t("goals:confirmDelete.message", { title: "Learn TypeScript" }),
         ),
       ).toBeOnTheScreen();
+
+      fireEvent.press(screen.getByText(i18n.t("common:actions.delete")));
+      expect(deleteGoal).toHaveBeenCalledWith("goal-1");
+      expect(deleteGoal).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("pseudo locale", () => {
+    afterEach(async () => {
+      if (i18n.language !== "en") {
+        await act(async () => {
+          await i18n.changeLanguage("en");
+        });
+      }
+    });
+
+    // Representative spread across header / empty-state body / interpolated
+    // confirm-modal message / interpolated a11y label. A revert that misses
+    // one screen surface won't pass by sneaking past a single asserted key.
+    it.each(["goals:header.title", "goals:emptyState.body"] as const)(
+      "renders %s as bracketed copy under pseudo locale",
+      async (key) => {
+        await i18n.changeLanguage("pseudo");
+        renderWithProviders(<GoalsScreen />);
+        const pseudo = i18n.t(key);
+        expect(pseudo.startsWith("[")).toBe(true);
+        expect(screen.getByText(pseudo)).toBeOnTheScreen();
+      },
+    );
+
+    it("renders interpolated confirmDelete.message under pseudo locale", async () => {
+      const goals = [makeGoalRow({ id: "goal-1", title: "Learn TypeScript" })];
+      mockUseQuery.mockImplementation((query: { __brand?: string }) => {
+        if (query?.__brand === "activeGoalsQuery") return goals;
+        return [];
+      });
+
+      await i18n.changeLanguage("pseudo");
+      renderWithProviders(<GoalsScreen />);
+      fireEvent(screen.getByText("Learn TypeScript"), "longPress");
+      const pseudo = i18n.t("goals:confirmDelete.message", {
+        title: "Learn TypeScript",
+      });
+      expect(pseudo.startsWith("[")).toBe(true);
+      expect(screen.getByText(pseudo)).toBeOnTheScreen();
+    });
+
+    it.each(["common:actions.delete", "common:actions.cancel"] as const)(
+      "renders confirm modal %s button under pseudo locale",
+      async (key) => {
+        const goals = [
+          makeGoalRow({ id: "goal-1", title: "Learn TypeScript" }),
+        ];
+        mockUseQuery.mockImplementation((query: { __brand?: string }) => {
+          if (query?.__brand === "activeGoalsQuery") return goals;
+          return [];
+        });
+
+        await i18n.changeLanguage("pseudo");
+        renderWithProviders(<GoalsScreen />);
+        fireEvent(screen.getByText("Learn TypeScript"), "longPress");
+        const pseudo = i18n.t(key);
+        expect(pseudo.startsWith("[")).toBe(true);
+        expect(screen.getByText(pseudo)).toBeOnTheScreen();
+      },
+    );
+
+    it("renders card.a11y.label (no next step) under pseudo locale", async () => {
+      const goals = [makeGoalRow({ id: "goal-1", title: "Learn TypeScript" })];
+      mockUseQuery.mockImplementation((query: { __brand?: string }) => {
+        if (query?.__brand === "activeGoalsQuery") return goals;
+        return [];
+      });
+
+      await i18n.changeLanguage("pseudo");
+      renderWithProviders(<GoalsScreen />);
+      const pseudo = i18n.t("goals:card.a11y.label", {
+        title: "Learn TypeScript",
+        stepsCompleted: 0,
+        stepsTotal: 0,
+        status: i18n.t("common:status.active"),
+      });
+      expect(pseudo.startsWith("[")).toBe(true);
+      expect(screen.getByLabelText(pseudo)).toBeOnTheScreen();
+    });
+
+    it("renders interpolated card.a11y.labelWithNextStep under pseudo locale", async () => {
+      const goals = [makeGoalRow({ id: "goal-1", title: "Learn TypeScript" })];
+      const steps = [
+        {
+          id: "step-1",
+          goalId: "goal-1",
+          title: "Open a savings account",
+          status: "pending",
+          ordinal: 0,
+        },
+      ];
+      mockUseQuery.mockImplementation((query: { __brand?: string }) => {
+        if (query?.__brand === "activeGoalsQuery") return goals;
+        if (query?.__brand === "stepsForActiveGoalsQuery") return steps;
+        return [];
+      });
+
+      await i18n.changeLanguage("pseudo");
+      renderWithProviders(<GoalsScreen />);
+      const pseudo = i18n.t("goals:card.a11y.labelWithNextStep", {
+        title: "Learn TypeScript",
+        nextStep: "Open a savings account",
+        stepsCompleted: 0,
+        stepsTotal: 1,
+        status: i18n.t("common:status.active"),
+      });
+      expect(pseudo.startsWith("[")).toBe(true);
+      expect(screen.getByLabelText(pseudo)).toBeOnTheScreen();
     });
   });
 });

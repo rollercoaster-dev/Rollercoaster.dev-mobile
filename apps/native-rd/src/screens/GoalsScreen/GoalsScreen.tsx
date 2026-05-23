@@ -1,5 +1,6 @@
 import React, { Suspense, useMemo, useState } from "react";
 import { View, FlatList, ActivityIndicator } from "react-native";
+import { useTranslation } from "react-i18next";
 import { useNavigation } from "@react-navigation/native";
 import { useTabScreenContentInset } from "../../navigation/useTabScreenContentInset";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -45,6 +46,7 @@ function buildGoalCardGoal(
 }
 
 function GoalList() {
+  const { t } = useTranslation(["goals", "common"]);
   const navigation = useNavigation<Nav>();
   const rows = useQuery(activeGoalsQuery);
   const allSteps = useQuery(stepsForActiveGoalsQuery);
@@ -83,10 +85,10 @@ function GoalList() {
   if (rows.length === 0) {
     return (
       <EmptyState
-        title="No goals yet"
-        body="Add your first learning goal to get started."
+        title={t("emptyState.title")}
+        body={t("emptyState.body")}
         action={{
-          label: "Create Goal",
+          label: t("emptyState.cta"),
           onPress: () => navigation.navigate("NewGoal"),
         }}
       />
@@ -115,23 +117,26 @@ function GoalList() {
         visible={deleteTarget !== null}
         onCancel={() => setDeleteTarget(null)}
         onConfirm={confirmDelete}
-        title="Delete this goal?"
+        title={t("confirmDelete.title")}
         message={
           deleteTarget
-            ? `"${deleteTarget.title}" and all progress will be permanently deleted.`
+            ? t("confirmDelete.message", { title: deleteTarget.title })
             : ""
         }
+        confirmLabel={t("common:actions.delete")}
+        cancelLabel={t("common:actions.cancel")}
       />
     </>
   );
 }
 
 export function GoalsScreen() {
+  const { t } = useTranslation("goals");
   const tabInset = useTabScreenContentInset();
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader title="Goals" />
+      <ScreenHeader title={t("header.title")} />
       <View style={[styles.scrollContent, tabInset]}>
         <ErrorBoundary>
           <Suspense
