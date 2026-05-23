@@ -17,8 +17,12 @@ import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { useAudioRecorder } from "../../hooks/useAudioRecorder";
 import { createEvidence, EvidenceType } from "../../db";
 import type { GoalId, StepId } from "../../db";
+import { reportError } from "../../services/sentry-report";
+import { Logger } from "../../shims/rd-logger";
 import type { CaptureVoiceMemoScreenProps } from "../../navigation/types";
 import { styles } from "./VoiceMemoScreen.styles";
+
+const logger = new Logger("VoiceMemoScreen");
 
 /** Format milliseconds as MM:SS */
 function formatDuration(ms: number): string {
@@ -98,6 +102,8 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
 
       navigation.goBack();
     } catch (err) {
+      logger.error("Failed to save voice memo", { err });
+      reportError(err, { area: "evidence.capture", kind: "voice_memo" });
       Alert.alert(
         t("captureVoice:errors.saveFailedTitle"),
         t("captureVoice:errors.saveFailedMessage"),
