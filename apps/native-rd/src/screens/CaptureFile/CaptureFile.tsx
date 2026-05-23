@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Alert, ActivityIndicator } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import * as DocumentPicker from "expo-document-picker";
 import { Text } from "../../components/Text";
 import { Button } from "../../components/Button";
@@ -42,6 +43,7 @@ function getFileIcon(mimeType: string | undefined): string {
 
 export function CaptureFile({ route }: CaptureFileScreenProps) {
   const navigation = useNavigation();
+  const { t } = useTranslation("captureFile");
   const { goalId, stepId } = route.params;
   const [busy, setBusy] = useState(false);
 
@@ -64,7 +66,7 @@ export function CaptureFile({ route }: CaptureFileScreenProps) {
       // Validate file
       const validationError = validateFile(mimeType, size);
       if (validationError) {
-        Alert.alert("Invalid file", validationError);
+        Alert.alert(t("errors.invalidFileTitle"), validationError);
         return;
       }
 
@@ -98,7 +100,7 @@ export function CaptureFile({ route }: CaptureFileScreenProps) {
         error,
       });
       reportError(error, { area: "evidence.capture", kind: "file" });
-      Alert.alert("Save failed", "Could not save the file. Please try again.");
+      Alert.alert(t("errors.saveFailedTitle"), t("errors.saveFailedMessage"));
     } finally {
       setBusy(false);
     }
@@ -108,7 +110,10 @@ export function CaptureFile({ route }: CaptureFileScreenProps) {
     return (
       <View style={styles.container}>
         <View style={styles.content}>
-          <ActivityIndicator size="large" accessibilityLabel="Saving file" />
+          <ActivityIndicator
+            size="large"
+            accessibilityLabel={t("a11y.saving")}
+          />
         </View>
       </View>
     );
@@ -116,18 +121,18 @@ export function CaptureFile({ route }: CaptureFileScreenProps) {
 
   return (
     <View style={styles.container}>
-      <ScreenSubHeader label="Attach File" onBack={() => navigation.goBack()} />
+      <ScreenSubHeader label={t("header")} onBack={() => navigation.goBack()} />
       <View style={styles.content}>
         <Card>
           <Text variant="headline" style={styles.heading}>
-            Attach a file
+            {t("heading")}
           </Text>
           <Text variant="body" style={styles.description}>
-            Select a PDF, image, or document (max {MAX_FILE_SIZE_LABEL}).
+            {t("description", { maxSize: MAX_FILE_SIZE_LABEL })}
           </Text>
           <View style={styles.buttonGroup}>
             <Button
-              label="Choose File"
+              label={t("actions.choose")}
               variant="primary"
               onPress={handlePickFile}
             />

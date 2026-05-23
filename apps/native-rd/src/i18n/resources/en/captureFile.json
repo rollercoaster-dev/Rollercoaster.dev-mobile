@@ -1,1 +1,16 @@
-{}
+{
+  "header": "Attach File",
+  "heading": "Attach a file",
+  "description": "Select a PDF, image, or document (max {{maxSize}}).",
+  "actions": {
+    "choose": "Choose File"
+  },
+  "a11y": {
+    "saving": "Saving file"
+  },
+  "errors": {
+    "invalidFileTitle": "Invalid file",
+    "saveFailedTitle": "Save failed",
+    "saveFailedMessage": "Could not save the file. Please try again."
+  }
+}
