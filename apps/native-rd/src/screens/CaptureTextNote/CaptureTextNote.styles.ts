@@ -20,7 +20,6 @@ export const styles = StyleSheet.create((theme) => ({
     paddingTop: theme.space[3],
     paddingBottom: theme.space[3],
     fontSize: theme.size.md,
-    lineHeight: theme.lineHeight.md,
     fontFamily: theme.fontFamily.body,
     color: theme.colors.text,
     backgroundColor: theme.colors.backgroundSecondary,
