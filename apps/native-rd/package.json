@@ -12,7 +12,7 @@
     "android": "bash scripts/run-android.sh",
     "android:device": "ANDROID_DEVICE_ID=\"${ANDROID_DEVICE_ID:?Set ANDROID_DEVICE_ID}\" bash scripts/run-android.sh",
     "web": "expo start --web",
-    "type-check": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json && tsc --noEmit -p tsconfig.scripts.json",
+    "type-check": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json && tsc --noEmit -p tsconfig.scripts.json && tsc --noEmit -p tsconfig.scripts-test.json",
     "build": "echo 'Expo app — no build step'",
     "eas-build-post-install": "cd ../.. && bun x turbo build --filter=native-rd^...",
     "lint": "expo lint",
@@ -101,7 +101,8 @@
     "set.prototype.issubsetof": "^1.1.4",
     "set.prototype.issupersetof": "^1.1.3",
     "set.prototype.symmetricdifference": "^1.1.3",
-    "set.prototype.union": "^1.1.3"
+    "set.prototype.union": "^1.1.3",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",
