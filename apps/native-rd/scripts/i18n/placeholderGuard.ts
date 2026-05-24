@@ -8,6 +8,10 @@
  *
  * Scope: i18next mustache only. ICU, nested, and named-capture forms are
  * out of scope until translator.ts needs them.
+ *
+ * TS/JS twin: scripts/i18n/promptfoo/asserts/placeholders.js mirrors the
+ * regex and `extractPlaceholders()` for the promptfoo CommonJS assert
+ * runtime. Update both or factor up — Jest parity test pins them.
  */
 
 const PLACEHOLDER_RE = /\{\{([^}]+)\}\}/g;

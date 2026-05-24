@@ -58,9 +58,11 @@ defaultTest:
         if (typeof output !== 'string') {
           return { pass: false, score: 0, reason: 'expected string output, got ' + typeof output };
         }
-        const source = String(context.vars.en || '');
-        // Regex must stay in sync with placeholderGuard.ts:13.
-        const expected = Array.from(source.matchAll(/\{\{([^}]+)\}\}/g), (m) => m[1].trim());
+        const path = require('path');
+        const { extractPlaceholders } = require(
+          path.resolve(process.cwd(), 'scripts/i18n/promptfoo/asserts/placeholders.js'),
+        );
+        const expected = extractPlaceholders(String(context.vars.en || ''));
         const missing = expected.filter((p) => !output.includes('{{' + p + '}}'));
         if (missing.length > 0) {
           return { pass: false, score: 0, reason: 'missing placeholders: ' + missing.join(', ') };
