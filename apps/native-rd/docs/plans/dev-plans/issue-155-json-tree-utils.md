@@ -49,6 +49,7 @@
 - [2026-05-24 13:50] Implemented the missing marker as an internal object rather than the raw source string so the utilities can distinguish a gap from an intentional existing English target value.
 - [2026-05-24 13:54] Final validation passed. `bun run lint` exits 0 with pre-existing warnings elsewhere in the app; `bun run test` passes 153 suites / 8277 tests with the existing worker open-handle warning. Raw `bun test` crashes in Bun before Jest runs, so validation uses the package script.
 - [2026-05-24 13:58] Review fixes added exact translation-key validation, stale path-map failure, source-shape snapshotting, target-only value validation, sparse-array checks, and stronger source-order tests.
+- [2026-05-24 14:00] Post-review validation passed: `bun run type-check`, `bun run lint` (0 errors, pre-existing warnings), `bun run test` (153 suites / 8281 tests), and `bun run build`.
 
 ## Not in Scope
 
