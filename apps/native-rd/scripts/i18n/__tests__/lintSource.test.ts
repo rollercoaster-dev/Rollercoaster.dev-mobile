@@ -1,4 +1,8 @@
-import { checkBareStrings, checkPlaceholderConsistency } from "../lintSource";
+import {
+  checkBannedPhrasings,
+  checkBareStrings,
+  checkPlaceholderConsistency,
+} from "../lintSource";
 
 describe("checkBareStrings", () => {
   test("flags every leaf when sidecar is absent", () => {
@@ -98,5 +102,52 @@ describe("checkPlaceholderConsistency", () => {
       "placeholder-conflict",
       "placeholder-conflict",
     ]);
+  });
+});
+
+describe("checkBannedPhrasings", () => {
+  test("flags an exit-aside phrase", () => {
+    const tree = { cta: { label: "Or don't — we'll be here" } };
+    const findings = checkBannedPhrasings("en/welcome.json", tree);
+    expect(findings.length).toBeGreaterThanOrEqual(1);
+    expect(findings[0].category).toBe("banned-phrasing");
+    expect(findings[0].keyPath).toBe("cta.label");
+  });
+
+  test("matching is case-insensitive", () => {
+    const tree = { error: { body: "Special Needs users should..." } };
+    const findings = checkBannedPhrasings("en/common.json", tree);
+    expect(findings).toHaveLength(1);
+    expect(findings[0].detail).toMatch(/special needs/);
+  });
+
+  test("returns no findings on clean copy", () => {
+    const tree = {
+      hero: { title: "Capture what worked today" },
+      cta: { label: "Save evidence" },
+    };
+    expect(checkBannedPhrasings("en/welcome.json", tree)).toHaveLength(0);
+  });
+
+  test.each([
+    ["you got this", "toxic positivity"],
+    ["it's so easy", "condescension"],
+    ["disrupting", "overpromise"],
+    ["high functioning", "reductive"],
+    ["suffers from", "deficit framing"],
+  ])("flags %p", (phrase) => {
+    const tree = { body: `The product is ${phrase} amazing` };
+    const findings = checkBannedPhrasings("en/test.json", tree);
+    expect(findings.length).toBeGreaterThanOrEqual(1);
+    expect(findings[0].detail).toContain(phrase);
+  });
+
+  test("one leaf matching two phrases yields one finding per phrase", () => {
+    const tree = { body: "Or don't — even you can do this" };
+    const findings = checkBannedPhrasings("en/welcome.json", tree);
+    expect(findings).toHaveLength(2);
+    const phrases = findings.map((f) => f.detail);
+    expect(phrases.some((d) => d.includes("or don't"))).toBe(true);
+    expect(phrases.some((d) => d.includes("even you can"))).toBe(true);
   });
 });
