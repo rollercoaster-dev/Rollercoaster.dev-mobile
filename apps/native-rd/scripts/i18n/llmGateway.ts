@@ -32,6 +32,13 @@ const openrouter = createOpenAI({
  * Throws synchronously if `OPENROUTER_API_KEY` is unset, before any network
  * call. Throws if `name` is not in the registry. Upstream API errors are
  * not caught — they propagate verbatim.
+ *
+ * Also throws if the SDK returns a non-"stop" `finishReason` (truncation by
+ * `maxOutputTokens`, content-filter refusal, tool-call return, or upstream
+ * error normalised into a non-throwing result). The SDK does not throw in
+ * these cases — it returns an empty or partial string. Surfacing them as
+ * errors keeps the fail-fast posture from ADR-0007 and prevents silent
+ * truncation from reaching the locale JSONs in PR #5.
  */
 export async function callModel(
   name: string,
@@ -51,6 +58,12 @@ export async function callModel(
     temperature: entry.temperature,
     maxOutputTokens: entry.maxTokens,
   });
+
+  if (result.finishReason !== "stop") {
+    throw new Error(
+      `callModel(${name}): non-stop finishReason="${result.finishReason}", textLength=${result.text.length}`,
+    );
+  }
 
   return result.text;
 }

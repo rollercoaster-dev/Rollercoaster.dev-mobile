@@ -71,6 +71,12 @@ jest.mock("ai", () => ({
   generateText: jest.fn(),
 }));
 
+jest.mock("@ai-sdk/openai", () => ({
+  createOpenAI: jest.fn((_opts: unknown) => (modelId: string) => ({
+    __modelId: modelId,
+  })),
+}));
+
 const mockGenerateText = generateText as jest.MockedFunction<
   typeof generateText
 >;
@@ -128,6 +134,7 @@ describe("callModel — error propagation + arg shape", () => {
   test("passes system + user as separate generateText params", async () => {
     mockGenerateText.mockResolvedValueOnce({
       text: "Hallo",
+      finishReason: "stop",
     } as Awaited<ReturnType<typeof generateText>>);
 
     const result = await callModel(
@@ -146,5 +153,88 @@ describe("callModel — error propagation + arg shape", () => {
     expect(args.system).toBe("you are a translator");
     expect(args.prompt).toBe("hello");
     expect(args.temperature).toBe(0.0);
+  });
+
+  test.each([
+    { name: "gpt-4o-mini", modelId: "openai/gpt-4o-mini" },
+    { name: "claude-haiku-4-5", modelId: "anthropic/claude-haiku-4-5" },
+    { name: "gemini-2.5-flash", modelId: "google/gemini-2.5-flash" },
+  ])(
+    "$name resolves to modelId $modelId on the generateText call",
+    async ({ name, modelId }) => {
+      mockGenerateText.mockResolvedValueOnce({
+        text: "ok",
+        finishReason: "stop",
+      } as Awaited<ReturnType<typeof generateText>>);
+
+      await callModel(name, "sys", "user");
+      const args = mockGenerateText.mock.calls[0][0] as unknown as {
+        model: { __modelId: string };
+      };
+      expect(args.model.__modelId).toBe(modelId);
+    },
+  );
+
+  test("forwards entry.maxTokens as maxOutputTokens (locks SDK param name)", async () => {
+    mockGenerateText.mockResolvedValueOnce({
+      text: "ok",
+      finishReason: "stop",
+    } as Awaited<ReturnType<typeof generateText>>);
+
+    await callModel("gpt-4o-mini", "sys", "user");
+    const args = mockGenerateText.mock.calls[0][0] as {
+      maxOutputTokens: number | undefined;
+    };
+    // No registry entry currently sets maxTokens; locking the SDK key name
+    // (renamed from `maxTokens` in AI SDK v6) and the passthrough wiring.
+    expect(args).toHaveProperty("maxOutputTokens");
+    expect(args.maxOutputTokens).toBeUndefined();
+  });
+});
+
+describe("callModel — finishReason guard", () => {
+  const originalKey = process.env.OPENROUTER_API_KEY;
+
+  beforeEach(() => {
+    process.env.OPENROUTER_API_KEY = "test-key";
+  });
+
+  afterEach(() => {
+    if (originalKey === undefined) {
+      delete process.env.OPENROUTER_API_KEY;
+    } else {
+      process.env.OPENROUTER_API_KEY = originalKey;
+    }
+    mockGenerateText.mockReset();
+  });
+
+  test.each([
+    { finishReason: "length" },
+    { finishReason: "content-filter" },
+    { finishReason: "tool-calls" },
+    { finishReason: "error" },
+  ])(
+    "throws when finishReason is $finishReason (non-stop)",
+    async ({ finishReason }) => {
+      mockGenerateText.mockResolvedValueOnce({
+        text: "partial",
+        finishReason,
+      } as Awaited<ReturnType<typeof generateText>>);
+
+      await expect(callModel("gpt-4o-mini", "sys", "user")).rejects.toThrow(
+        new RegExp(`non-stop finishReason="${finishReason}"`),
+      );
+    },
+  );
+
+  test("does not throw when finishReason is stop", async () => {
+    mockGenerateText.mockResolvedValueOnce({
+      text: "complete",
+      finishReason: "stop",
+    } as Awaited<ReturnType<typeof generateText>>);
+
+    await expect(callModel("gpt-4o-mini", "sys", "user")).resolves.toBe(
+      "complete",
+    );
   });
 });
