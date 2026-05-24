@@ -182,11 +182,57 @@ export function checkPlaceholderConsistency(
   return findings;
 }
 
-export function checkBannedPhrasings(
-  _nsPath: string,
-  _tree: unknown,
-): Finding[] {
-  return [];
+// Sourced from landing/docs/BRAND_LANGUAGE.md (v1.2, 2026-05-24). The doc is
+// authoritative; this list is a curated snapshot of the "Anti-Patterns" and
+// "We ARE NOT" sections. When BRAND_LANGUAGE.md changes, a human updates
+// this constant — the linter does not parse the markdown at runtime.
+const BANNED_PHRASES: readonly { phrase: string; reason: string }[] = [
+  { phrase: "or don't", reason: "exit-aside — dismissive" },
+  { phrase: "close the tab", reason: "exit-aside — dismissive" },
+  { phrase: "we'll be here", reason: "exit-aside — dismissive" },
+  { phrase: "drop out anytime", reason: "exit-aside — dismissive" },
+  { phrase: "you'll know if it's for you", reason: "exit-aside — dismissive" },
+  { phrase: "you got this", reason: "toxic positivity — empty encouragement" },
+  { phrase: "every day is a fresh start", reason: "toxic positivity" },
+  { phrase: "just believe in yourself", reason: "toxic positivity" },
+  { phrase: "even you can", reason: "condescension" },
+  { phrase: "it's so easy", reason: "condescension" },
+  {
+    phrase: "revolutionizing",
+    reason: "overpromise — forbidden in product copy",
+  },
+  { phrase: "disrupting", reason: "overpromise — forbidden in product copy" },
+  { phrase: "reimagining", reason: "overpromise — forbidden in product copy" },
+  { phrase: "transforming", reason: "overpromise — forbidden in product copy" },
+  { phrase: "special needs", reason: "othering — use 'neurodivergent'" },
+  {
+    phrase: "differently abled",
+    reason: "euphemistic — use direct ND language",
+  },
+  { phrase: "suffers from", reason: "deficit framing — omit 'suffers'" },
+  {
+    phrase: "high functioning",
+    reason: "reductive — avoid functioning labels",
+  },
+  { phrase: "low functioning", reason: "reductive — avoid functioning labels" },
+];
+
+export function checkBannedPhrasings(nsPath: string, tree: unknown): Finding[] {
+  const findings: Finding[] = [];
+  walkLeaves(tree, "", (keyPath, value) => {
+    const lower = value.toLowerCase();
+    for (const { phrase, reason } of BANNED_PHRASES) {
+      if (lower.includes(phrase)) {
+        findings.push({
+          category: "banned-phrasing",
+          file: nsPath,
+          keyPath,
+          detail: `matched banned phrase "${phrase}" (${reason}) — rephrase per BRAND_LANGUAGE.md`,
+        });
+      }
+    }
+  });
+  return findings;
 }
 
 export const EN_DIR_REL = "src/i18n/resources/en";
