@@ -107,19 +107,21 @@ Two prereqs in the Tolgee UI before importing for the first time:
 1. **Project settings → Use namespaces:** toggle on. Tolgee defaults this off; importing a namespaced JSON file fails with `namespace_cannot_be_used_when_feature_is_disabled` otherwise.
 2. **Project settings → Languages:** confirm `en` is set as the base language.
 
-Then from `apps/native-rd/`:
+**Current path — UI drag-and-drop (works today).** In the Tolgee UI for the project, open **Import** in the sidebar, drag the 15 `apps/native-rd/src/i18n/resources/en/*.json` files into the drop zone, map each file to its matching namespace, then **Import** at the bottom. Tolgee creates the keys and stores `en` translations in one pass.
+
+**Future path — CLI push (currently broken upstream).** Once `@tolgee/cli` ships a fix for #149, this becomes the way to add newly authored English keys after a feature PR edits any `resources/en/<ns>.json`:
 
 ```sh
 export TOLGEE_API_URL=https://<TS_HOST>
 export TOLGEE_API_KEY=<your-project-api-key>
-bunx tolgee push
+bunx tolgee push   # broken on @tolgee/cli@2.16, see below
 ```
 
-The push uses the `push.files` map declared in `.tolgeerc.json`, which assigns each `resources/en/<ns>.json` to its matching Tolgee namespace.
+The push would use the `push.files` map declared in `.tolgeerc.json`, which assigns each `resources/en/<ns>.json` to its matching Tolgee namespace.
 
-> **Known CLI issue (`@tolgee/cli@2.16`).** The CLI's push flow uploads files and imports them successfully, then 401s on the final apply call with `invalid_project_api_key` — the CLI sends the key in `Authorization: Bearer` but the self-hosted server expects `X-API-Key`. As a workaround, do the initial import via the Tolgee UI (drag the 15 `resources/en/*.json` files into the project's Import view, map each to its namespace, then **Import** at the bottom). The pull path uses our own script that bypasses the CLI entirely — see below.
+> **Known CLI issue (`@tolgee/cli@2.16`, tracked in [#149](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/149)).** The CLI's push flow uploads files and imports them successfully, then 401s on the final apply call with `invalid_project_api_key` — the CLI sends the key in `Authorization: Bearer` but the self-hosted server expects `X-API-Key`. Until that's fixed, the UI drag-and-drop above is the import path. The pull path uses our own script that bypasses the CLI entirely — see below.
 
-Re-running `tolgee push` (once the upstream bug is fixed) is the way to add newly authored English keys after a feature PR edits any `resources/en/<ns>.json`. Read [Tolgee's push docs](https://docs.tolgee.io/tolgee-cli/usage/push) before pushing if you've also edited en in Tolgee directly, to avoid clobbering UI edits.
+Once the upstream bug is fixed, read [Tolgee's push docs](https://docs.tolgee.io/tolgee-cli/usage/push) before pushing if you've also edited en in Tolgee directly, to avoid clobbering UI edits.
 
 ---
 
@@ -143,7 +145,7 @@ bun run web
 
 Tolgee's DevTools overlay appears in the running Expo web build; alt-clicking any translated string opens the in-context editor. Edits persist to the Tolgee server immediately. Reload the page to see them re-rendered.
 
-**Why Expo web and not iOS/Android?** `@tolgee/web` is browser-targeted (touches `window`, `document`, `fetch`). The SDK is loaded behind a lazy `require()` inside `__DEV__`-gated code so it never module-loads on native — see `src/i18n/index.ts` and `src/i18n/tolgee.ts`. Same env vars on iOS/Android are a no-op.
+**Why Expo web and not iOS/Android?** `@tolgee/web` is browser-targeted (touches `window`, `document`, `fetch`). The SDK is loaded behind a lazy `require()` triple-gated on `__DEV__` + `Platform.OS === "web"` + the env var, so it never module-loads on native even if `EXPO_PUBLIC_TOLGEE_ENABLED=true` ends up in `.env.local` while you run `bun run ios` — see `src/i18n/index.ts` and `src/i18n/tolgee.ts`. Same env vars on iOS/Android are a no-op.
 
 **Why a dev-only env var instead of always-on?** Production `__DEV__` is `false` and the env var is `undefined`, so the Tolgee branch dead-code-strips. Production bundles don't carry `@tolgee/*` code, don't reach the server, and resolve every key from the bundled `resources/`.
 

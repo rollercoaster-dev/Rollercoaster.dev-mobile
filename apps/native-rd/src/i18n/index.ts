@@ -1,5 +1,6 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
+import { Platform } from "react-native";
 import { getLocales } from "expo-localization";
 
 import { selectSupportedLanguage } from "./language";
@@ -146,12 +147,20 @@ const logger = new Logger("i18n");
 // (which intentionally exercises the missing-key path) quiet.
 const warnMissingKeys = __DEV__ && process.env.NODE_ENV !== "test";
 
-// Dev-only Tolgee SDK wrap (#136). Gated on `__DEV__` + an explicit env var so
-// production bundles dead-code-strip the require and so the browser-targeted
-// @tolgee/web SDK never module-loads on iOS/Android. Setup lives in
-// `apps/native-rd/docs/tolgee.md`.
+// Dev-only Tolgee SDK wrap (#136). Triple-gated:
+//   1. `__DEV__` — so production bundles dead-code-strip the require.
+//   2. `Platform.OS === "web"` — `@tolgee/web` targets browsers; loading it on
+//      iOS/Android crashes the bundle. The env var is honoured only on web so a
+//      dev who sets `EXPO_PUBLIC_TOLGEE_ENABLED=true` in `.env.local` and then
+//      runs `bun run ios` doesn't blow up.
+//   3. Explicit env var — opt-in only when a Tolgee instance is reachable.
+// Setup lives in `apps/native-rd/docs/tolgee.md`.
 let i18nForInit = i18n;
-if (__DEV__ && process.env.EXPO_PUBLIC_TOLGEE_ENABLED === "true") {
+if (
+  __DEV__ &&
+  Platform.OS === "web" &&
+  process.env.EXPO_PUBLIC_TOLGEE_ENABLED === "true"
+) {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { wrapWithTolgee } = require("./tolgee") as typeof import("./tolgee");
   i18nForInit = wrapWithTolgee(i18n);

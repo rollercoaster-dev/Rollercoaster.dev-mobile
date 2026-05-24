@@ -14,7 +14,9 @@
  * `{}` — so the import in src/i18n/index.ts continues to resolve and the
  * namespace registration test stays green.
  *
- * Run: bun run i18n:pull (which runs `tolgee pull` first and then this script).
+ * Run: bun run i18n:pull (which runs `scripts/tolgee-pull.ts` — our custom
+ *      export against `/v2/projects/export`, not the upstream `tolgee pull`
+ *      CLI which currently 401s; see #149 — and then this prune step).
  *      Or directly: bun run scripts/tolgee-prune-empty.ts
  */
 

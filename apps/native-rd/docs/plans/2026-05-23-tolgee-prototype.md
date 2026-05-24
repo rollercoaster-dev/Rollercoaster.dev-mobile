@@ -1,7 +1,7 @@
 # Tolgee Self-Hosted Translation Management Prototype
 
 **Date:** 2026-05-23
-**Status:** Planned
+**Status:** Implemented (PR [#148](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/pull/148))
 **Issue:** [#136](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/136)
 **Size estimate:** size:m (4–8h)
 

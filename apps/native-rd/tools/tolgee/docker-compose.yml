@@ -5,7 +5,9 @@
 # Quick start (from this directory):
 #   cp .env.example .env  # then edit secrets
 #   docker compose up -d
-#   open http://<mac-mini-tailnet-name>:8085
+#   open http://localhost:8085           # on the mini itself
+#   # Cross-device access goes through `tailscale serve --bg http://localhost:8085`;
+#   # see docs/tolgee.md for the resulting https://<tailnet-host>/ URL.
 
 services:
   tolgee:
@@ -45,7 +47,8 @@ services:
     volumes:
       # Bind-mount to host so manual pg_dump backups have an obvious target.
       # Path is documented in apps/native-rd/docs/tolgee.md.
-      - ${POSTGRES_DATA_DIR:-~/tolgee-data/postgres}:/var/lib/postgresql/data
+      # `${HOME}` expands inside Compose's env substitution; `~` would not.
+      - ${POSTGRES_DATA_DIR:-${HOME}/tolgee-data/postgres}:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
