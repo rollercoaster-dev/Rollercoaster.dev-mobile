@@ -20,10 +20,11 @@ export type ParseErrorReason =
   | "missing-keys"
   | "extra-keys";
 
-export type ParseError = {
-  reason: ParseErrorReason;
-  detail: string;
-};
+export type ParseError =
+  | { reason: "malformed-json"; detail: string }
+  | { reason: "schema-mismatch"; issues: z.ZodIssue[] }
+  | { reason: "missing-keys"; missingKeys: string[] }
+  | { reason: "extra-keys"; extraKeys: string[] };
 
 export type ParseResult =
   | { ok: true; data: Record<string, string> }
@@ -63,7 +64,7 @@ export function parseAndValidate(
       ok: false,
       error: {
         reason: "schema-mismatch",
-        detail: schemaResult.error.message,
+        issues: schemaResult.error.issues,
       },
     };
   }
@@ -73,25 +74,19 @@ export function parseAndValidate(
   const expectedSet = new Set(expectedKeys);
   const actualSet = new Set(actualKeys);
 
-  const missing = expectedKeys.filter((k) => !actualSet.has(k));
-  if (missing.length > 0) {
+  const missingKeys = expectedKeys.filter((k) => !actualSet.has(k));
+  if (missingKeys.length > 0) {
     return {
       ok: false,
-      error: {
-        reason: "missing-keys",
-        detail: `missing keys: ${missing.join(", ")}`,
-      },
+      error: { reason: "missing-keys", missingKeys },
     };
   }
 
-  const extra = actualKeys.filter((k) => !expectedSet.has(k));
-  if (extra.length > 0) {
+  const extraKeys = actualKeys.filter((k) => !expectedSet.has(k));
+  if (extraKeys.length > 0) {
     return {
       ok: false,
-      error: {
-        reason: "extra-keys",
-        detail: `extra keys: ${extra.join(", ")}`,
-      },
+      error: { reason: "extra-keys", extraKeys },
     };
   }
 
