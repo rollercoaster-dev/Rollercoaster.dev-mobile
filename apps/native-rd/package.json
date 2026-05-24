@@ -37,7 +37,7 @@
     "release-notes:generate": "bun run scripts/release-notes-generate.ts",
     "release-notes:split": "bun run scripts/release-notes-split.ts",
     "i18n:lint-source": "bun run scripts/i18n/lintSource.cli.ts",
-    "i18n:bakeoff": "test -n \"$OPENROUTER_API_KEY\" || (echo 'i18n:bakeoff requires OPENROUTER_API_KEY in env' && exit 1) && mkdir -p scripts/i18n/promptfoo/reports && promptfoo eval --config scripts/i18n/promptfoo/promptfooconfig.yaml --output scripts/i18n/promptfoo/reports/$(date +%Y%m%d-%H%M%S).html"
+    "i18n:bakeoff": "bash scripts/i18n/run-bakeoff.sh"
   },
   "dependencies": {
     "@evolu/common": "^7.4.1",
