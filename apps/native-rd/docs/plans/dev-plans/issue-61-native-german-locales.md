@@ -11,13 +11,13 @@
 
 Observable criteria derived from the issue. These describe what success looks like from a user/system perspective.
 
-- [ ] When the device language is set to German, iOS permission dialogs (camera, microphone, photo library) show German copy instead of English.
-- [ ] When the device language is set to German, the app display name in the home screen reads "Rollercoaster.dev" (name unchanged, but the `.lproj` directory is present and picked up).
-- [ ] `npx expo prebuild` completes without warnings about `expo-localization supportedLocales`, and the generated `ios/*/Supporting/de.lproj/InfoPlist.strings` file is present.
-- [ ] `npx expo prebuild` generates `android/app/src/main/res/xml/locales_config.xml` with `<locale android:name="en"/>` and `<locale android:name="de"/>`.
-- [ ] BCP 47 tags in `app.json` (`en`, `de`) match the language codes used in `src/i18n/language.ts` and `src/i18n/index.ts`.
-- [ ] `locales/en.json` mirrors the permission strings currently in `app.json` (verbatim English copy, no new content invented).
-- [ ] `locales/de.json` contains German equivalents for every key present in `locales/en.json`.
+- [ ] **Manual native-build gate** — when the device language is set to German, iOS permission dialogs (camera, microphone, photo library) show German copy. Verify on a simulator/device with language=Deutsch after the next `npx expo prebuild` + `expo run:ios` cycle.
+- [ ] **Manual native-build gate** — the `.lproj/de.lproj/` directory is generated and picked up. Verify after prebuild.
+- [ ] **Manual native-build gate** — `npx expo prebuild --platform ios` generates `ios/*/Supporting/de.lproj/InfoPlist.strings`.
+- [ ] **Manual native-build gate** — `npx expo prebuild --platform android` generates `android/app/src/main/res/xml/locales_config.xml` with both `en` and `de`.
+- [x] BCP 47 tags in `app.json` (`en`, `de`) match the language codes used in `src/i18n/language.ts` and `src/i18n/index.ts`.
+- [x] `locales/en.json` mirrors the permission strings currently in `app.json` (verbatim English copy, no new content invented).
+- [x] `locales/de.json` contains German equivalents for every key present in `locales/en.json`.
 
 ## Dependencies
 
