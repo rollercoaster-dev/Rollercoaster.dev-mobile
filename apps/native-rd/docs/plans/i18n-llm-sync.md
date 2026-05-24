@@ -8,7 +8,7 @@ This plan tracks the architectural decisions, PR sequence, and learnings for nat
 
 ## What this is
 
-native-rd authors edit `apps/native-rd/src/i18n/resources/en/*.json` (15 namespaces). A CLI sync fills `resources/de/*.json` idempotently using an LLM. Gap-only translation, placeholder guard, key-anonymised batches, register/intent/glossary-driven voice.
+native-rd authors edit `apps/native-rd/src/i18n/resources/en/*.json` (15 namespaces). A CLI sync fills `apps/native-rd/src/i18n/resources/de/*.json` idempotently using an LLM. Gap-only translation, placeholder guard, key-anonymised batches, register/intent/glossary-driven voice.
 
 Voice is the load-bearing constraint. native-rd's voice — named-maker stance, identity-first ND vocab, refusal-as-feature, parenthetical asides, banned dismissive verbs — is documented in `landing/docs/BRAND_LANGUAGE.md` (sibling repo). A flat target-locale glossary alone would not be enough.
 
@@ -32,11 +32,11 @@ TS-native, provider-swap is one line, Zod schemas validate response shape end-to
 
 Three layers, in decreasing strength:
 
-1. **Per-namespace register** — `src/i18n/resources/_register/<ns>.yml` carries the default voice register for the namespace (speaker, audience, formality, banned phrasings). Loaded into the system prompt per batch.
-2. **Per-string intent sidecar** — optional `src/i18n/resources/en/<ns>.intents.json` mirrors the namespace JSON shape, replacing string leaves with `{ intent, audience?, register? }` objects. Only authored for strings that override or sharpen the namespace register. ~80% of strings will not need a sidecar entry.
+1. **Per-namespace register** — one YAML file per namespace carries the default voice register (speaker, audience, formality, banned phrasings). Loaded into the system prompt per batch. Exact filesystem location is decision #2 in [Open decisions](#open-decisions).
+2. **Per-string intent sidecar** — optional `apps/native-rd/src/i18n/resources/en/<ns>.intents.json` mirrors the namespace JSON shape, replacing string leaves with `{ intent, audience?, register? }` objects. Only authored for strings that override or sharpen the namespace register. ~80% of strings will not need a sidecar entry.
 3. **Glossary** — thin reference for canonical wordings (brand tokens, app names). Not the primary voice mechanism.
 
-The runtime i18next JSON is untouched. The sync reads `en/`, `en/*.intents.json`, and `_register/` together; runtime reads only `en/*.json` and `de/*.json`. ADR lands with PR #8.
+The runtime i18next JSON is untouched. The sync reads `en/*.json`, optional `en/*.intents.json`, and the register YAMLs together; runtime reads only `en/*.json` and `de/*.json`. ADR lands with PR #8.
 
 ### PR cap: ~500 LOC hand-written
 
@@ -69,7 +69,7 @@ Clause 3 ensures the linter has been exercised against real sync output before b
 ## Architecture
 
 ```
-en/*.json (15 namespaces) + en/*.intents.json (optional) + _register/*.yml
+en/*.json (15 namespaces) + en/*.intents.json (optional) + <register>/<ns>.yml
         │
         │ (CI: only if en/ changed in PR diff)
         ▼
@@ -95,19 +95,19 @@ scripts/i18n/sync.ts (Bun CLI)
 
 ### Module layout
 
-| File                                      | Role                                                         |
-| ----------------------------------------- | ------------------------------------------------------------ |
-| `scripts/i18n/jsonTreeUtils.ts`           | Pure-function tree operations (the algorithm core)           |
-| `scripts/i18n/placeholderGuard.ts`        | Hard-fail validation of `{{name}}` placeholders              |
-| `scripts/i18n/responseParser.ts`          | Zod-validated LLM response → `{k0: ...}` dict                |
-| `scripts/i18n/promptBuilder.ts`           | System prompt assembly (register + intents + glossary)       |
-| `scripts/i18n/translator.ts`              | Tree → batched LLM call → write-back-by-path                 |
-| `scripts/i18n/sync.ts`                    | CLI entry point, orchestrates the pipeline                   |
-| `scripts/i18n/lintSource.ts`              | Source-side linter for `en/` (bare strings, missing intents) |
-| `scripts/i18n/models.ts`                  | Model registry (OpenRouter IDs + per-model defaults)         |
-| `src/i18n/resources/_register/<ns>.yml`   | Per-namespace voice register                                 |
-| `src/i18n/resources/en/<ns>.intents.json` | Optional per-string intent sidecar                           |
-| `.github/workflows/i18n-sync.yml`         | CI: diff-aware, runs sync, bot commits results to PR         |
+| File                                      | Role                                                          |
+| ----------------------------------------- | ------------------------------------------------------------- |
+| `scripts/i18n/jsonTreeUtils.ts`           | Pure-function tree operations (the algorithm core)            |
+| `scripts/i18n/placeholderGuard.ts`        | Hard-fail validation of `{{name}}` placeholders               |
+| `scripts/i18n/responseParser.ts`          | Zod-validated LLM response → `{k0: ...}` dict                 |
+| `scripts/i18n/promptBuilder.ts`           | System prompt assembly (register + intents + glossary)        |
+| `scripts/i18n/translator.ts`              | Tree → batched LLM call → write-back-by-path                  |
+| `scripts/i18n/sync.ts`                    | CLI entry point, orchestrates the pipeline                    |
+| `scripts/i18n/lintSource.ts`              | Source-side linter for `en/` (bare strings, missing intents)  |
+| `scripts/i18n/models.ts`                  | Model registry (OpenRouter IDs + per-model defaults)          |
+| `<register-dir>/<ns>.yml`                 | Per-namespace voice register (location: see open decision #2) |
+| `src/i18n/resources/en/<ns>.intents.json` | Optional per-string intent sidecar                            |
+| `.github/workflows/i18n-sync.yml`         | CI: diff-aware, runs sync, bot commits results to PR          |
 
 ### Key invariants
 
@@ -116,7 +116,7 @@ scripts/i18n/sync.ts (Bun CLI)
 3. **Key anonymisation.** Batches go to the LLM as `{k0, k1, ...}` — the model never sees real key names, only the strings. Prevents the model from "helpfully" inferring context from key paths.
 4. **Single JSON pipeline.** native-rd is one app, one runtime; no per-locale file format split.
 5. **Runtime untouched by sync metadata.** i18next loads `en/*.json` and `de/*.json` only — sidecars and registers are sync-only.
-6. **Batching at `temperature: 0.0`.** Same source string produces the same target string across runs (modulo model version drift).
+6. **Batching at `temperature: 0.0`.** Reduces variance across runs but is not a determinism guarantee — providers retain residual nondeterminism, and model/router updates change outputs. The real stability guarantee is invariant #1 (gap-only + never overwrite): once a `de/` string is written, the pipeline does not re-translate it. Re-translation requires deleting the target value first.
 
 ---
 
