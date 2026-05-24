@@ -1,0 +1,123 @@
+description: "native-rd i18n bake-off: en→de voice fidelity across 8 candidate models"
+
+# Translation prompt is deliberately minimal — the bake-off evaluates inherent
+# model voice quality, not prompt engineering. The production prompt (PR #8)
+# will add register YAMLs and intent sidecars on top.
+prompts:
+  - |
+    [
+      {
+        "role": "system",
+        "content": "You are translating UI strings from English to German for a personal learning tracker used by neurodivergent people. Translate accurately, briefly, and in a direct, non-patronizing tone. Preserve any double-curly-brace placeholders exactly as-is — do not translate the variable name inside them. Return only the German translation: no quotes, no commentary, no explanations, no leading or trailing whitespace."
+      },
+      {
+        "role": "user",
+        "content": "{{en}}"
+      }
+    ]
+
+# Eight candidate models from models.ts registry. Temperature 0 across the
+# board to match the registry default (single source of truth). The
+# `openrouter:` provider reads OPENROUTER_API_KEY directly — same env var as
+# llmGateway.ts.
+providers:
+  - id: openrouter:openai/gpt-4o-mini
+    config:
+      temperature: 0
+  - id: openrouter:openai/gpt-4o
+    config:
+      temperature: 0
+  - id: openrouter:openai/gpt-5-mini
+    config:
+      temperature: 0
+  - id: openrouter:anthropic/claude-haiku-4-5
+    config:
+      temperature: 0
+  - id: openrouter:anthropic/claude-sonnet-4-6
+    config:
+      temperature: 0
+  - id: openrouter:google/gemini-2.5-flash
+    config:
+      temperature: 0
+  - id: openrouter:deepseek/deepseek-chat
+    config:
+      temperature: 0
+  - id: openrouter:openai/gpt-oss-120b
+    config:
+      temperature: 0
+
+# Required env. promptfoo surfaces a clear error if unset.
+env:
+  OPENROUTER_API_KEY:
+    required: true
+
+# Fixture corpus lives in fixtures.json. Each entry contributes one test case
+# with vars { ns, key, en, categories, placeholders }.
+tests: file://./fixtures.json
+
+# Assertions applied to every fixture. Placeholder/length checks are
+# deterministic; the rubric uses claude-opus-4-5 (outside the candidate pool
+# to avoid self-grading bias) at temperature 0 for stable scoring.
+defaultTest:
+  options:
+    provider:
+      id: openrouter:anthropic/claude-opus-4-5
+      config:
+        temperature: 0
+  assert:
+    # 1. Placeholder preservation. Vacuously true for fixtures with no
+    #    placeholders (every() over an empty array returns true).
+    - type: javascript
+      value: |
+        const expected = context.vars.placeholders || [];
+        return expected.every((p) => output.includes('{{' + p + '}}'));
+
+    # 2. Banned-phrase absence. English anti-patterns from BRAND_LANGUAGE.md;
+    #    German list below is a researcher-drafted best-effort starting set —
+    #    TODO: review German equivalents before the first full eval run and
+    #    refine in a follow-up commit if needed.
+    - type: not-icontains-any
+      value:
+        - "special needs"
+        - "differently abled"
+        - "high-functioning"
+        - "low-functioning"
+        - "suffers from"
+        # German equivalents of the "(or don't)" exit-aside anti-pattern.
+        # TODO: review — researcher drafted; not authoritative.
+        - "oder nicht"
+        - "oder lass es"
+
+    # 3. Length bounds. German is structurally wordier than English, so the
+    #    band is intentionally wide (0.5×–2.5×) to avoid false failures on
+    #    short strings while catching runaway verbosity on long ones.
+    - type: javascript
+      value: |
+        const ratio = output.length / context.vars.en.length;
+        return ratio >= 0.5 && ratio <= 2.5;
+
+    # 4. LLM-as-judge voice rubric. Criteria are quoted inline from the
+    #    sibling landing/ repo's BRAND_LANGUAGE.md — that file is NOT in this
+    #    mobile repo, so referencing a relative path would dangle.
+    - type: llm-rubric
+      threshold: 0.5
+      value: |
+        Score the German translation of this UI string against the
+        Rollercoaster.dev brand voice. The source UI is a personal learning
+        tracker used by neurodivergent people. Rate PASS only if all
+        criteria hold; otherwise FAIL. Explain the rating in one sentence.
+
+        Criteria:
+        1. Direct and non-patronizing. No "Betroffene", no "Menschen mit
+           besonderen Bedürfnissen" or other euphemistic distancing, no
+           generic positivity ("jeder ist einzigartig").
+        2. Matter-of-fact tone. No exclamation points unless the source had
+           one. No motivational filler.
+        3. Identity-first ND vocabulary where the source implies it (e.g.
+           "autistische Person" not "Mensch mit Autismus" or "Betroffene").
+        4. Parenthetical asides, if present in the source, preserved as
+           recognition (the user is *known* to the system) — not as an
+           exit/dismissal ("oder lass es", "ist auch okay") that suggests
+           the user opt out.
+        5. Brevity. As concise as grammatically possible in German; no
+           padding, no over-explanation.
