@@ -25,38 +25,16 @@ reports_dir="scripts/i18n/promptfoo/reports"
 mkdir -p "$reports_dir"
 output="$reports_dir/$(date +%Y%m%d-%H%M%S).html"
 
-# bunfig.toml routes `#!/usr/bin/env node` shebangs through Bun, which
-# re-triggers the better-sqlite3 NAPI incompat that broke our first bake-off
-# attempt (full story in scripts/jest-node.sh). Strip Bun's node shim from
-# PATH and invoke real node directly.
-clean_path=""
-IFS=":"
-for path_entry in ${PATH:-}; do
-  case "$path_entry" in
-    */bun-node-*) continue ;;
-  esac
-
-  if [ -z "$clean_path" ]; then
-    clean_path="$path_entry"
-  else
-    clean_path="$clean_path:$path_entry"
-  fi
-done
-unset IFS
-
-export PATH="$clean_path"
-unset NODE npm_node_execpath
-
-node_bin="$(command -v node)"
-if command -v mise >/dev/null 2>&1; then
-  mise_node="$(mise which node 2>/dev/null || true)"
-  if [ -n "$mise_node" ]; then
-    node_bin="$mise_node"
-  fi
-fi
-
+# Run promptfoo via its `#!/usr/bin/env node` shebang and let PATH resolve
+# node. Under `bun run`, Bun's node shim is on PATH and its bundled node
+# version satisfies promptfoo's engines requirement; `mise which node`
+# can lag (v22.14 vs promptfoo's >=22.22), so don't override PATH here.
+# (Copilot review on PR #172 flagged a theoretical better-sqlite3 risk —
+# it doesn't fire in practice for promptfoo, and forcing real node broke
+# the script. Revisit if a NAPI failure actually appears.)
+#
 # --no-cache: each row runs fresh so stale judge verdicts don't leak across rubric edits.
-exec "$node_bin" node_modules/.bin/promptfoo eval \
+exec ./node_modules/.bin/promptfoo eval \
   --config scripts/i18n/promptfoo/promptfooconfig.skip-ci.yaml \
   --output "$output" \
   --no-cache
