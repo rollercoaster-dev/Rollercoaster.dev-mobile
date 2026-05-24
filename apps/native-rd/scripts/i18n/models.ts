@@ -20,11 +20,7 @@ export type ModelEntry = {
   note?: string;
 };
 
-// `openai/gpt-5-mini` and `openai/gpt-oss-120b` were in the original 8-candidate
-// pool from ADR-0007 but failed the live bake-off structurally — both leaked
-// "Thinking: ..." reasoning preamble through the system prompt's commentary
-// suppression. ADR-0008 drops them; see that ADR before re-adding any
-// reasoning-tuned model to this registry.
+// See ADR-0008 before adding any reasoning-tuned model to this registry.
 export const MODELS: Record<string, ModelEntry> = {
   "gpt-4o-mini": { modelId: "openai/gpt-4o-mini", temperature: 0.0 },
   "gpt-4o": { modelId: "openai/gpt-4o", temperature: 0.0 },

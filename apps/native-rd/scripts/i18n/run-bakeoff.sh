@@ -19,11 +19,7 @@ reports_dir="scripts/i18n/promptfoo/reports"
 mkdir -p "$reports_dir"
 output="$reports_dir/$(date +%Y%m%d-%H%M%S).html"
 
-# `--no-cache` so each row runs fresh — no risk of replaying a stale judge
-# verdict after the rubric or fixtures change. (promptfoo's `--retry-errors`
-# only re-runs ERRORed rows from a previous eval; there's no in-run retry
-# flag, so transient OpenRouter errors are handled by re-invoking with
-# `--retry-errors` as a follow-up step, not in this initial command.)
+# --no-cache: each row runs fresh so stale judge verdicts don't leak across rubric edits.
 exec ./node_modules/.bin/promptfoo eval \
   --config scripts/i18n/promptfoo/promptfooconfig.skip-ci.yaml \
   --output "$output" \

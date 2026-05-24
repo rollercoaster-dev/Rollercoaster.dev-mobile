@@ -16,12 +16,6 @@ prompts:
       }
     ]
 
-# Six candidate models from models.ts registry. The original 8-candidate pool
-# (ADR-0007) is reduced to 6 in ADR-0008: gpt-5-mini and gpt-oss-120b leaked
-# "Thinking: ..." reasoning preamble through the system prompt's commentary
-# suppression and were dropped from the registry. Temperature 0 across the
-# board to match the registry default. The `openrouter:` provider reads
-# OPENROUTER_API_KEY directly — same env var as llmGateway.ts.
 providers:
   - id: openrouter:openai/gpt-4o-mini
     config:
@@ -42,28 +36,11 @@ providers:
     config:
       temperature: 0
 
-# OPENROUTER_API_KEY is read from the shell environment by the openrouter:*
-# providers. The wrapper script `scripts/i18n/run-bakeoff.sh` sources
-# `.env.local` and validates the key before invoking promptfoo — promptfoo's
-# own `env:` schema is a key→value injection map, not a required-vars
-# validator, so any `required: true` style block here would be a silent no-op.
-#
-# Fixture corpus lives in fixtures.json. Each entry contributes ONE test case
-# with vars { ns, key, en }. Fixture metadata (categories, taxonomy tags) sits
-# in a sibling `metadata` block — promptfoo auto-fans arrays inside `vars`
-# into one test per element, so keeping arrays out of `vars` is what keeps
-# the run count = fixture count. Fixtures with prose voice content carry a
-# per-fixture `llm-rubric` assertion; defaultTest below holds only the
-# assertions that apply universally.
+# Fixture taxonomy lives in a sibling `metadata` block, not inside `vars` —
+# promptfoo auto-fans arrays inside `vars` into one test per element, which
+# would multiply the run count.
 tests: file://./fixtures.json
 
-# Universal assertions applied to every fixture. The llm-rubric voice check
-# moved into per-fixture `assert` arrays inside fixtures.json — short labels
-# and placeholder-dominated strings carry no voice signal for the rubric to
-# judge, and fanning out the rubric over them was responsible for a uniform
-# pass-rate floor across all candidate models in PR #171's live eval.
-# The grader provider stays at this level so per-fixture rubric assertions
-# inherit it.
 defaultTest:
   options:
     provider:
@@ -82,7 +59,8 @@ defaultTest:
           return { pass: false, score: 0, reason: 'expected string output, got ' + typeof output };
         }
         const source = String(context.vars.en || '');
-        const expected = Array.from(source.matchAll(/\{\{(\w+)\}\}/g), (m) => m[1]);
+        // Regex must stay in sync with placeholderGuard.ts:13.
+        const expected = Array.from(source.matchAll(/\{\{([^}]+)\}\}/g), (m) => m[1].trim());
         const missing = expected.filter((p) => !output.includes('{{' + p + '}}'));
         if (missing.length > 0) {
           return { pass: false, score: 0, reason: 'missing placeholders: ' + missing.join(', ') };
@@ -112,6 +90,9 @@ defaultTest:
       value: |
         if (typeof output !== 'string') {
           return { pass: false, score: 0, reason: 'expected string output, got ' + typeof output };
+        }
+        if (typeof context.vars.en !== 'string') {
+          return { pass: false, score: 0, reason: 'context.vars.en missing or non-string' };
         }
         const enLen = context.vars.en.length;
         if (enLen === 0) {
