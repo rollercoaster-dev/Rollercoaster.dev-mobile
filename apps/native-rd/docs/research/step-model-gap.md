@@ -10,7 +10,7 @@
 
 ## Provenance
 
-This section was prompted by user-testing feedback from a friend using the app on real work: _"the goal steps are nice but insufficient for real work."_ The complaint targets the Step itself, not the meta-features around goals. Iteration A shipped a flat `step.title` + `pending | completed` status (`schema.ts:107-115`); the existing canonical B story (Eva's Big Map) addresses scope at scale and shame-free abandonment but does not anchor the Step-richness gap. The friend's voice is cited here as the prompt; the scenarios below stay in the voice of existing personas from [user-stories.md](../vision/user-stories.md).
+This section was prompted by user-testing feedback from a friend using the app on real work: _"the goal steps are nice but insufficient for real work."_ The complaint targets the Step itself, not the meta-features around goals. Iteration A shipped a flat step: a title and a `pending`/`completed` toggle, with no nesting, no notes, and no substates beyond done-or-not. The existing canonical B story (Eva's Big Map) addresses scope at scale and shame-free abandonment but does not anchor the Step-richness gap. The friend's voice is cited here as the prompt; the scenarios below stay in the voice of existing personas from [user-stories.md](../vision/user-stories.md).
 
 ## The three-register thesis
 
@@ -62,7 +62,7 @@ Three-register tagging:
 
 G is the only enrichment in this set whose deployment is conditional on goal type.
 
-The same machinery that helps Tomás turn an 8-gauge wrong-turn into journeyman muscle memory becomes a shame-surveillance instrument when applied to a recovery goal. Sam's missed Tuesdays are not lessons-from-task-failure to mine; they are weeks of being a human being. Applying lesson-as-artifact machinery there inverts the anti-pathologizing register and weaponises it.
+The same machinery that helps Tomás turn an 8-gauge wrong-turn into journeyman muscle memory becomes a shame-surveillance instrument when applied to a recovery goal. Sam's unfilled Tuesdays are not lessons-from-task-failure to mine; they are weeks of being a human being. Applying lesson-as-artifact machinery there inverts the anti-pathologizing register and weaponises it.
 
 **Recommended embodiment:** craft and skill goals (Tomás's wiring, Malik's modelling, Lina's archiving) opt in to G by default; recovery and assessment goals (Sam, Ava) do not. The user can change this freely per goal. The opt-in is not a setting toggle — it _is_ the design.
 
@@ -76,7 +76,7 @@ Four scenarios, each in five fields. Together they cover all seven letters. Pers
 
 **Narrative.** Tomás spent a week on each circuit of his practice panel — 15-amp lighting, then the 20-amp small-appliance run, then the 240V dryer circuit. Each weekend was research, sketch, and a small wiring exercise, each with its own evidence (a photo of the conductor sizing chart, a voice memo working through NEC 220.14, a clip of a multimeter reading on the test bench). Six months later, on test day, he sizes a 50-foot 240V run by reflex — because of one wrong turn earlier when he ran 8-gauge on a circuit that needed 6.
 
-**Current behavior.** `step.title` is a single `NonEmptyString1000`; `step.status` is `'pending' | 'completed'` (`schema.ts:107-115`). `createStep()` takes `goalId, title, ordinal?, plannedEvidenceTypes?` — no parent, no notes field, no lesson attachment (`queries.ts:354`). Evidence attaches to a step via `evidence.stepId` (`schema.ts:127`), but the step has no place for the reflection that turned the 8-gauge wrong turn into muscle memory. `reorderSteps(goalId, stepIds)` shuffles ordinals within one goal only (`queries.ts:527`).
+**Current behavior.** Today, a step is a title and a `pending`/`completed` toggle — nothing more. Tomás cannot put a step inside a step, so the per-circuit work has nowhere to live below the umbrella. He can attach photos and recordings to a step as evidence, but there is no slot for the written reflection — the one-line takeaway that turned the 8-gauge wrong turn into muscle memory. Steps can be reordered within a single goal, but ordering is the only sequence information the model carries.
 
 **The gap.** What he wanted: each circuit as a sub-step under "Build practice panel," each carrying evidence-during-practice (notes-for-future-self, not completion proof), with the 8-gauge mistake preserved as a lesson that surfaces forward when he hits the journeyman exam's circuit-sizing section. What he got: one flat step titled "Build practice panel" that he eventually marked complete, with photos clustered under it and no way to encode either the sequence-as-syllabus or the wrong turn that taught him most. He keeps the 8-gauge story in his Notes app _(invented but plausible — not observed)_; the app loses the data entirely.
 
@@ -90,7 +90,7 @@ Four scenarios, each in five fields. Together they cover all seven letters. Pers
 
 **ND lens.** For an ADHD + dyslexic learner, the sequence-as-syllabus and the lesson-as-artifact are not bonuses — they are the only things that make a six-month gap between practice and test survivable. NT learners can re-derive the order from a textbook on demand; Tomás cannot, and shouldn't have to.
 
-**Research finding (load-bearing for downstream design).** _Evidence-during-practice ≠ evidence-at-completion._ The `evidence.stepId` model fits the latter — proof a step is done. Tomás's practice-panel work is the former — notes-for-future-self attached to in-progress sub-steps whose umbrella completes at an external event (the test). This pattern generalizes to anyone whose work has a discrete completion event preceded by distributed practice: defenses, performances, demos, code reviews, exams.
+**Research finding (load-bearing for downstream design).** _Evidence-during-practice ≠ evidence-at-completion._ The way evidence attaches to a step today fits the latter — proof a step is done. Tomás's practice-panel work is the former — notes-for-future-self attached to in-progress sub-steps whose umbrella completes at an external event (the test). This pattern generalizes to anyone whose work has a discrete completion event preceded by distributed practice: defenses, performances, demos, code reviews, exams.
 
 ### Ava and the four-month wait
 
@@ -98,7 +98,7 @@ Four scenarios, each in five fields. Together they cover all seven letters. Pers
 
 **Narrative.** Ava called the PIA in February and got an appointment four months out. The first intake is in June; the diagnostic sessions span July; the report is due back in October. Three of her five steps are not waiting on Ava — they are waiting on the PIA's calendar, the session window itself, and the clinic's report turnaround.
 
-**Current behavior.** `step.status` is `'pending' | 'completed'` (`schema.ts:112`). There is no waiting state, no expected-date metadata, no distinction between "I haven't done this yet" and "this cannot be done until someone else does something on a date I don't control." `goal.description` is editable post-creation, but step-level notes do not exist.
+**Current behavior.** Today, every step is either pending or completed in the app. There is no waiting state; there is no expected-date metadata; there is no way to distinguish _I haven't done this yet_ from _this cannot be done until someone else does something on a date I don't control_. Ava can edit the goal's description after creating it, but a step has no notes slot of its own.
 
 **The gap.** What she wanted: the three externally-blocked steps to read _waiting on PIA, expected June 12_ — not _pending_. What she got: five pending steps, indistinguishable from the two that are actually on her. She maintains the dates in her phone's calendar app _(invented but plausible — not observed)_; the goal screen erases the most load-bearing fact about three of five steps. The re-orientation tax every time she returns to the app is enormous, and the binary status invites the question _why haven't I done this yet?_ — to which the honest answer is _because the system has not_, but the app cannot show that.
 
@@ -116,69 +116,54 @@ Four scenarios, each in five fields. Together they cover all seven letters. Pers
 
 **Narrative.** Malik's goal is "Complete first fully-textured 3D scene." He has steps for modelling, UV unwrapping, texturing, lighting, render. Halfway through UV unwrapping he realizes UV unwrapping is itself five things — seams, projection, packing, checker-test, retopo-fix — and he keeps re-learning them each session because he doesn't write them down.
 
-**Current behavior.** `step.goalId` is a non-null foreign key (`schema.ts:109`); there is no `parentStepId`. `createStep(goalId, title, ordinal?, ...)` takes a goal, not a parent step (`queries.ts:354`). `reorderSteps(goalId, stepIds)` reshuffles within a single goal only (`queries.ts:527`). Capture flow exists for evidence types only — no inline "this is a sub-thing I'm learning right now" surface.
+**Current behavior.** Today, a step always belongs to a goal — there is no way to put a step inside another step. When Malik adds a step, he picks a goal, not a parent. Reordering shuffles steps within one goal. The mid-work capture flow accepts evidence (photos, recordings, links), but there is no inline surface for _this is a sub-thing I'm learning right now_.
 
 **The gap.** What he wanted: to add the five sub-steps under UV unwrapping, mid-session, in under five seconds, without leaving the texture he is working in his head. What he got: a choice between (a) keep the sub-tree mentally and lose it on the next context switch; (b) edit "UV unwrapping" into "UV: seams" and add four siblings, losing the parent concept and breaking the goal's coherence; (c) abandon the app for this and dump it in Notion _(invented but plausible — not observed)_. He picks (c) and the app loses the data.
 
 **A–G tags:**
 
-- **A** — substructure is _discoverable mid-work_, not knowable up front. A schema with no `parentStepId` forecloses the discovery.
+- **A** — substructure is _discoverable mid-work_, not knowable up front. A step model that can't hold a sub-step forecloses the discovery.
 - **F** — capture-flow friction is the killing constraint. If modelling the sub-tree costs a session, he won't do it; he'll do 3D work and write orgs in Notion.
 
 **ND lens.** ADHD bursts of insight ("oh, UV is _five things_") need a landing place closer to the burst than three taps and a goal-edit screen. If the landing place isn't here, it's somewhere else — and somewhere else is where the app's whole model of his learning evaporates.
 
-### Sam's Tuesdays — an arc, not a moment
+### Sam settles into a recovery practice
 
-**Letters:** B-soft-scheduling, E (missed-but-okay), D (one-line per week).
+**Letters:** A (nesting via step work), B-soft, D, E.
 
-**Narrative.** Sam has a recurring step pattern around his Tuesday meeting. Some weeks he goes; some weeks he doesn't. He wants the not-going weeks to be honourable — not erased, not flagged, not summed against him. He wants to write one line afterward ("Hard week. Didn't go. Called Marcus instead.") and the next Tuesday to still be there.
+**Narrative.** Sam's goal is "Build a recovery practice." A few months in, four sub-steps under it: a Tuesday home group, a sponsor-call cadence with Marcus, the program's step work, and the daily scaffolding (sleep, food, morning anchor) he keeps re-noticing he needs. The step work is itself nested — Steps 1, 2, 3 are known up front from the program's literature, not discovered mid-work the way Malik's UV sub-tree is.
 
-**Current behavior.** Steps are `pending` or `completed` (`schema.ts:112`). There is no missed state, no soft-date semantics, no per-week note slot. The only way a "didn't go this week" is captured in the current model is by not completing the step — which is indistinguishable from not having opened the app.
+Each Tuesday has its own slot in the app — a place that appears each week with the home group's name on it, where Sam can mark it checked, leave it blank, or add a one-line note.
 
-**The gap.** What he wanted: each Tuesday as a soft commitment (_for Tuesday_, not _due Tuesday_); each missed Tuesday as a _missed-but-okay_ state with one optional line attached; the arc visible as "you went 7 of the last 10 Tuesdays" without that being scored. What he got: a single repeating step where silence and failure look identical. After two missed Tuesdays in a row the easiest move is to close the app for a week, which makes the third missed Tuesday a foregone conclusion _(invented but plausible — closing the app makes re-entry harder)_.
+The Tuesday home group is the soft anchor; some weeks he goes and some weeks he doesn't. Two weeks in late March he doesn't go — once because a double shift left him on the couch by 6pm with nothing in him for the room, once because a migraine hit at 4pm and the room has fluorescent lights. The Tuesday after, the meeting is still where it always is. He goes. Afterward he taps Tuesday's slot and writes one line: "Back. Missed two. Just keep showing up."
+
+He does not see a count of unfilled Tuesdays; the app does not surface one; there is no notification about returning; the prior Tuesdays' slots sit there, with the home group's name on them and the note line empty.
+
+**Current behavior.** Today, a step is pending or completed in the app. There is no per-Tuesday slot — only the recurring step's checkbox. There are no soft-date semantics, no per-step note slot, no parent-step relation. The Tuesday meeting becomes a single repeating step whose checkbox toggles each week; attending and not attending produce the same surface from outside the app, and from inside as well unless Sam audits the step list himself. Step work that has its own internal sequence (1 → 2 → 3) cannot be modeled as sub-steps; it has to be either one flat step ("Do step work") that loses the sequence, or three siblings under the goal that lose the umbrella.
+
+**The gap.** What he wanted: each Tuesday preserved as its own soft commitment — a place that can be checked, left blank, or given a note. The two late-March Tuesdays remain visible as Tuesdays in the practice, but the app does not label them as failures, count them, explain them, or treat them as evidence about Sam's recovery. The step work nested under the goal so Step 1, 2, 3 are visible as a sequence without polluting the goal's top-level view.
+
+What he got: a single repeating step where attending and not attending produce the same surface, and the two late-March Tuesdays have nowhere to be — no slot to sit in named-and-unfilled, no place to receive a one-line note later if he wants to write one, no way for the practice to be _the Tuesdays_ rather than _the attendance_.
+
+The principle the structure has to honor: an unfilled Tuesday is only an unfilled Tuesday. Whether that absence matters is something Sam works out with Marcus, his group, and himself — not something the app interprets, counts, or surfaces.
 
 **A–G tags:**
 
-- **B-soft** — the soft "for Tuesday" framing creates a Tuesday in the app that wouldn't otherwise exist. Time foothold, not deadline accountability.
-- **E** — _missed-but-okay_ is a state the current vocabulary cannot name.
-- **D** — the one-line-per-week note is where the arc gets its texture; without it the arc is just a count.
+- **A** — the goal has natural sub-structure known up front (the program's step work decomposes predictably into Steps 1, 2, 3) rather than discovered mid-work as in Malik's UV unwrapping. Both shapes need nesting; they arrive at it differently. Sam is also the first scenario whose nesting goes two levels deep: the goal's top-level sub-steps include "Step work," and Step work's sub-steps are 1, 2, 3.
+- **B-soft** — the soft "for Tuesday" framing creates a Tuesday in the app that wouldn't otherwise exist. Time foothold, not deadline accountability. Load-bearing for the Tuesday home-group sub-step in particular.
+- **D** — the one-line slot attached to each Tuesday is where the practice gets its texture without the app having to score it. The slot is _optional_, _filled by Sam alone_, and never aggregated into a summary view.
+- **E** — the current pending/completed vocabulary erases the Tuesday slot itself. What Sam needs is a state vocabulary that can hold _the slot exists, it is blank_ as a real category distinct from _waiting to do_ — without naming the blank as a missed-attempt or aggregating blanks into a count. For Sam, the state vocabulary's job is to make presence-of-slot a real category that doesn't carry the productivity-software charge of "missed."
 
-**ND lens.** For an ADHD + anxiety user in early recovery, the gap between _I didn't go_ and _I failed_ is the gap between a hard week and a relapse story. The product vision's no-time-based-shame principle dies if the schema cannot tell those two states apart.
+**ND lens.** For an ADHD + anxiety user in early recovery, the gap between _I didn't go this Tuesday_ and _I failed at recovery_ is the gap between a hard week and a relapse story. The recovery tradition has its own answer to that gap — the white chip is given for starting and also for restarting; streaks are not the unit; chips are not revoked. An app that wipes to zero on an unfilled slot, or even surfaces a count of unfilled slots, is doing what the chip tradition explicitly refuses to do. The app's job here is _practical scaffolding_: a named Tuesday that stays named, an optional note slot, a sub-step structure that holds the program's shape. The recovery itself happens with Sam's sponsor, his home group, and the program. The app does not track sobriety, simulate sponsorship, verify clean time, or score attendance.
 
-**G drafting guardrail.** Sam's scenario deliberately includes no G slot. His missed Tuesdays are not lessons-from-task-failure to mine; they are weeks of being a human being. The same G machinery that helps Tomás turn an 8-gauge wrong turn into journeyman muscle memory becomes a shame-surveillance instrument applied to a recovery goal. This is the canonical case for G-opt-in-per-goal, and Sam is the persona whose presence in the doc most directly load-bears that constraint.
+**Framing status.** Articulated 2026-05-24: the structural fix is _slots, not missed-states_. The app holds Tuesday instances that can be checked, blank, or annotated; the absence of a check is not interpreted by the app as missed-attendance, scored against Sam, or surfaced as evidence about his recovery. Meaning lives outside the app — with Marcus, the group, and Sam himself. The non-recovery sketch (Cal building a drawing practice) used the same structural fix to verify the framing holds independent of recovery weight; if it's right for Cal it is right for Sam, and the higher stakes in Sam's case make the structural fix more load-bearing, not less.
 
-## Where this leaves the schema
-
-The Step today is:
-
-```ts
-step: {
-  id, goalId, title, ordinal,
-  status: 'pending' | 'completed',
-  completedAt,
-  plannedEvidenceTypes,
-}
-```
-
-The gaps surfaced above are not uniform in severity:
-
-- **A** wants a nullable `parentStepId` self-reference. Reorder logic extends to within a sub-tree.
-- **B-soft + E** want a richer `step.status` vocabulary plus an optional soft-date field. The shape of the vocabulary is itself a research question — what states exist beyond `pending`, `completed`, `missed`, `waiting`, `in-progress`, `abandoned`, and which of them are user-namable.
-- **C-order** as a user-built dependency graph is non-trivial — a separate join table — and its UX is probably the riskiest part of any prototype in this set.
-- **C-waiting** rides on the same state vocabulary as E (`status: 'waiting-external'`), plus a free-text "waiting on…" slot, with the expected-date supplied by D.
-- **D** is a `step.note` (or `step.context`) free-text field. Cheap.
-- **F** is a UI / capture-surface concern, not a schema concern — until it isn't (a triage state for unsorted captures may need its own column).
-- **G** is the deepest schema change. A lesson is not media — `evidence` is media-typed and pointed at a step. A lesson has structure (hypothesis, contradiction, updated model, forward reference), attaches to past steps, and surfaces _forward_ when similar steps are started. There is no forward-reference mechanism today.
-- **H** lives partly in the state vocabulary (E gains `learning` as a named state) and partly in a new self-reference. The misfired step persists in `status: 'learning'`, carrying the four falsification fields (hypothesis, contradiction, updated model, pointer to the replacement step). The replacement step gains a nullable `followsFromStepId` self-reference — distinct from A's `parentStepId`, since H is a within-sibling pivot, not a nesting relationship. Universally applicable (unlike G); no per-goal opt-in needed, because step-level falsification is a structural reality of all work, not a goal-type pattern.
-
-Solution-shape design is deliberately not in this section. Per the iteration strategy, prototyping is the next move for A, C, E, G, and H; B-soft and D could ship without a prototype if the framing is right.
+**G and H drafting guardrail.** Sam's scenario deliberately includes no G slot and no H slot. His unfilled Tuesdays are not lessons-from-task-failure to mine (G), nor are they a falsified hypothesis whose corrected replacement follows from them (H). The hypothesis _I should go to my Tuesday meeting_ is not contradicted by an unfilled Tuesday; the slot did not misfire, the slot was simply not filled that week. Applying either machinery to a recovery goal inverts the anti-pathologizing register — G via lesson-as-artifact, H via the framing of every misfire as a falsifiable premise — and turns the surface into shame surveillance. Sam is the canonical case for per-goal opt-out of both, and the persona whose presence in the doc most directly load-bears the constraint.
 
 ## Open questions
 
-- **G's forward-reference mechanism.** Does a lesson live as its own table (`lesson.fromStepId`, `lesson.targetTag` or `lesson.targetStepId`), or as a structured field on a completed step that gets surfaced by tag-matching against a new step's title at creation? The two answers point at very different UIs.
-- **Opt-in granularity for G.** Per goal (recommended), per goal-template, or per-user-setting? Per-goal makes sense only if goal type is explicit; the current schema has no goal-type field, so this is its own question.
-- **State vocabulary scope.** With H added, the candidate set is _pending, completed, missed, waiting-external, in-progress, abandoned, learning_ — seven. Whether all seven are user-namable, or whether some are system-derived (e.g. `learning` only reachable via the H pivot flow, never set directly), is a UX question.
-- **H's UI treatment.** A learning step has two states worth surfacing: the original framing (the hypothesis the user committed to) and the learned outcome (what the falsification revealed). Does the UI show both side-by-side, fold the original under the learning, or surface only the learned outcome with the original available on tap? The original framing is preserved in the data (decided: titles are not rewritten); the question is how it's rendered. Deferred to prototyping.
-- **Substructure depth.** One level of nesting, or arbitrary? One level handles every scenario above; arbitrary opens the door to outline-tool drift away from the task view's "one next thing" promise.
-- **Where the success scenarios live.** A parallel section — the same four personas, written as what success looks like once the model holds — is queued but not yet shaped. May land in this doc; may land alongside.
-- **What this implies for the task view.** [The task view](../vision/product-vision.md#the-task-view--next-best-step) shows one next step per active goal. With substructure (A) and a richer state vocabulary (E), "next step" becomes ambiguous — the next leaf, the next umbrella, the next non-waiting step. Resolving this is part of any prototype.
+- **State vocabulary scope.** With H added, the candidate set of named states the user might encounter is _pending, completed, missed, waiting-external, in-progress, abandoned, learning_ — seven. Whether all seven are user-namable, or whether some are system-derived (e.g. _learning_ only reachable via the H pivot flow, never chosen directly), is a UX question.
+- **H's UI treatment.** A learning step has two things worth surfacing: the original framing (the hypothesis the user committed to) and the learned outcome (what the falsification revealed). Does the UI show both side-by-side, fold the original under the learning, or surface only the learned outcome with the original available on tap?
+- **Substructure depth.** One level of nesting, or arbitrary? Sam's scenario lands at two levels (goal → step work → Steps 1/2/3); Malik, Tomás, and Ava each land at one. Two levels handles every scenario above; arbitrary opens the door to outline-tool drift away from the task view's "one next thing" promise. Sam's nesting is known up front (program literature); Malik's is discovered mid-work — the same structure, arrived at differently, and probably with different capture flows.
+- **Where the success scenarios live.** A parallel section — the same five personas, written as what success looks like once the model holds — is queued but not yet shaped. May land in this doc; may land alongside.
+- **What this implies for the task view.** [The task view](../vision/product-vision.md#the-task-view--next-best-step) shows one next step per active goal. With substructure (A) and a richer state vocabulary (E), "next step" becomes ambiguous — the next leaf, the next umbrella, the next non-waiting step. Resolving this is part of forming the success scenarios.
