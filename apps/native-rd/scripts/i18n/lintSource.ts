@@ -156,13 +156,11 @@ export function checkPlaceholderConsistency(
   const findings: Finding[] = [];
   for (const [name, keyPaths] of occurrences) {
     if (keyPaths.length < 2) continue;
-    const topLevels = new Set(keyPaths.map(topLevelKey));
-    if (topLevels.size < 2) continue;
 
     // Pick the first two key paths whose top-level prefixes differ, so the
     // detail line points at a real conflict pair rather than two siblings
     // that happen to be first in iteration order.
-    let a = keyPaths[0];
+    const a = keyPaths[0];
     let b: string | undefined;
     for (const kp of keyPaths.slice(1)) {
       if (topLevelKey(kp) !== topLevelKey(a)) {
