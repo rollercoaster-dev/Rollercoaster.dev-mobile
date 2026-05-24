@@ -1,4 +1,4 @@
-import { checkBareStrings } from "../lintSource";
+import { checkBareStrings, checkPlaceholderConsistency } from "../lintSource";
 
 describe("checkBareStrings", () => {
   test("flags every leaf when sidecar is absent", () => {
@@ -42,5 +42,61 @@ describe("checkBareStrings", () => {
     const tree = { hero: { title: "Hello" } };
     const sidecar = { hero: { title: null } };
     expect(checkBareStrings("en/welcome.json", tree, sidecar)).toHaveLength(1);
+  });
+});
+
+describe("checkPlaceholderConsistency", () => {
+  test("flags placeholder shared across different top-level keys", () => {
+    const tree = {
+      confirmDelete: { message: 'Delete "{{title}}" permanently?' },
+      card: { a11y: { label: "{{title}}, {{stepsCompleted}} steps" } },
+    };
+    const findings = checkPlaceholderConsistency("en/goals.json", tree);
+    expect(findings).toHaveLength(1);
+    expect(findings[0].category).toBe("placeholder-conflict");
+    expect(findings[0].detail).toMatch(/\{\{title\}\}/);
+  });
+
+  test("does not flag same placeholder under same top-level key", () => {
+    const tree = {
+      card: {
+        label: "{{title}}, active",
+        hint: "Double-tap {{title}}",
+      },
+    };
+    expect(checkPlaceholderConsistency("en/goals.json", tree)).toHaveLength(0);
+  });
+
+  test("returns no findings when there are no placeholders", () => {
+    const tree = { hero: { title: "Welcome" }, cta: { label: "Go" } };
+    expect(checkPlaceholderConsistency("en/welcome.json", tree)).toHaveLength(
+      0,
+    );
+  });
+
+  test("placeholder in 3+ leaves across 2 top-level keys yields exactly one finding", () => {
+    const tree = {
+      a: { x: "{{n}}", y: "step {{n}}" },
+      b: { z: "{{n}} more" },
+    };
+    expect(checkPlaceholderConsistency("en/count.json", tree)).toHaveLength(1);
+  });
+
+  test("ignores placeholder appearing only once", () => {
+    const tree = { card: { label: "Hi {{name}}" } };
+    expect(checkPlaceholderConsistency("en/x.json", tree)).toHaveLength(0);
+  });
+
+  test("multiple distinct placeholder conflicts in same namespace produce one finding each", () => {
+    const tree = {
+      header: { title: "{{a}}", subtitle: "{{b}}" },
+      footer: { caption: "{{a}}", note: "{{b}}" },
+    };
+    const findings = checkPlaceholderConsistency("en/mixed.json", tree);
+    expect(findings).toHaveLength(2);
+    expect(findings.map((f) => f.category)).toEqual([
+      "placeholder-conflict",
+      "placeholder-conflict",
+    ]);
   });
 });
