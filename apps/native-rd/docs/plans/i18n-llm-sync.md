@@ -145,18 +145,16 @@ PRs #1, #2, #3, #7 are independent and can land in any order. PR #5 is the integ
 
 ## promptfoo candidate models for first eval
 
-Tested against ~20 representative en strings (operational labels, `{{interp}}`, parenthetical asides, refusal phrasings):
+Tested against ~20 representative en strings (operational labels, `{{interp}}`, parenthetical asides, refusal phrasings). The pool was 8 models in the original plan; [ADR-0008](../decisions/ADR-0008-i18n-bakeoff-model-pool.md) drops `gpt-5-mini` and `gpt-oss-120b` after the live bake-off surfaced reasoning-preamble leakage in both.
 
-| Model                            | Why in the bake-off               |
-| -------------------------------- | --------------------------------- |
-| `openai/gpt-4o-mini`             | cheap baseline                    |
-| `openai/gpt-4o`                  | quality midpoint                  |
-| `openai/gpt-5-mini`              | newer same-tier candidate         |
-| `anthropic/claude-haiku-4-5`     | strong voice/register, cheap tier |
-| `anthropic/claude-sonnet-4-6`    | quality benchmark                 |
-| `google/gemini-2.5-flash`        | very cheap baseline               |
-| `deepseek/deepseek-chat`         | cheap wild card                   |
-| `openai/gpt-oss-120b` (via Groq) | open-weight workhorse             |
+| Model                         | Why in the bake-off               |
+| ----------------------------- | --------------------------------- |
+| `openai/gpt-4o-mini`          | cheap baseline                    |
+| `openai/gpt-4o`               | quality midpoint                  |
+| `anthropic/claude-haiku-4-5`  | strong voice/register, cheap tier |
+| `anthropic/claude-sonnet-4-6` | quality benchmark                 |
+| `google/gemini-2.5-flash`     | very cheap baseline               |
+| `deepseek/deepseek-chat`      | cheap wild card                   |
 
 ---
 

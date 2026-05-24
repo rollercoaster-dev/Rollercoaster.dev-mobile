@@ -8,15 +8,13 @@ describe("MODELS registry", () => {
   const expectedKeys = [
     "gpt-4o-mini",
     "gpt-4o",
-    "gpt-5-mini",
     "claude-haiku-4-5",
     "claude-sonnet-4-6",
     "gemini-2.5-flash",
     "deepseek-chat",
-    "gpt-oss-120b",
   ];
 
-  test("contains all 8 expected entry names", () => {
+  test("contains all 6 expected entry names", () => {
     expect(Object.keys(MODELS).sort()).toEqual([...expectedKeys].sort());
   });
 
@@ -28,12 +26,10 @@ describe("MODELS registry", () => {
   const entryCases: EntryCase[] = [
     { name: "gpt-4o-mini", modelId: "openai/gpt-4o-mini" },
     { name: "gpt-4o", modelId: "openai/gpt-4o" },
-    { name: "gpt-5-mini", modelId: "openai/gpt-5-mini" },
     { name: "claude-haiku-4-5", modelId: "anthropic/claude-haiku-4-5" },
     { name: "claude-sonnet-4-6", modelId: "anthropic/claude-sonnet-4-6" },
     { name: "gemini-2.5-flash", modelId: "google/gemini-2.5-flash" },
     { name: "deepseek-chat", modelId: "deepseek/deepseek-chat" },
-    { name: "gpt-oss-120b", modelId: "openai/gpt-oss-120b" },
   ];
 
   test.each(entryCases)(
