@@ -6,6 +6,8 @@
 
 **Scope reference:** [ADR-0001 §Iteration B](../decisions/ADR-0001-iteration-strategy.md) (amended by [ADR-0006](../decisions/ADR-0006-iteration-b-scope-amendment.md))
 
+**Domain vocabulary:** [`CONTEXT.md`](../../CONTEXT.md)
+
 ---
 
 ## Provenance
@@ -68,7 +70,7 @@ The same machinery that helps Tomás turn an 8-gauge wrong-turn into journeyman 
 
 ## Failure scenarios
 
-Four scenarios, each in five fields. Together they cover all seven letters. Personas are existing; persona behavior beyond what's in [user-stories.md](../vision/user-stories.md) is flagged as invented-but-plausible where relevant.
+Four scenarios, each in five fields. Together they cover all nine letters. Personas are existing; persona behavior beyond what's in [user-stories.md](../vision/user-stories.md) is flagged as invented-but-plausible where relevant.
 
 ### Tomás and the practice panel
 
@@ -80,7 +82,7 @@ Four scenarios, each in five fields. Together they cover all seven letters. Pers
 
 **The gap.** What he wanted: each circuit as a sub-step under "Build practice panel," each carrying evidence-during-practice (notes-for-future-self, not completion proof), with the 8-gauge mistake preserved as a lesson that surfaces forward when he hits the journeyman exam's circuit-sizing section. What he got: one flat step titled "Build practice panel" that he eventually marked complete, with photos clustered under it and no way to encode either the sequence-as-syllabus or the wrong turn that taught him most. He keeps the 8-gauge story in his Notes app _(invented but plausible — not observed)_; the app loses the data entirely.
 
-**A–G tags:**
+**A–H tags:**
 
 - **A** — practice-panel work has natural substructure (per-circuit). Flat steps force the choice between one umbrella step that loses the circuits or three siblings that lose the umbrella.
 - **C-order** — the circuits had to be done in order; the 15-amp lighting was the entry to the 20-amp run was the entry to the 240V. Sequence was the lesson, not bookkeeping.
@@ -102,7 +104,7 @@ Four scenarios, each in five fields. Together they cover all seven letters. Pers
 
 **The gap.** What she wanted: the three externally-blocked steps to read _waiting on PIA, expected June 12_ — not _pending_. What she got: five pending steps, indistinguishable from the two that are actually on her. She maintains the dates in her phone's calendar app _(invented but plausible — not observed)_; the goal screen erases the most load-bearing fact about three of five steps. The re-orientation tax every time she returns to the app is enormous, and the binary status invites the question _why haven't I done this yet?_ — to which the honest answer is _because the system has not_, but the app cannot show that.
 
-**A–G tags:**
+**A–H tags:**
 
 - **C-waiting** — externally blocked, not user-blocked. Naming the blocker separates _stuck_ from _failing_.
 - **D** — the expected date (June 12, late July, October) is the most important piece of metadata about each waiting step.
@@ -120,7 +122,7 @@ Four scenarios, each in five fields. Together they cover all seven letters. Pers
 
 **The gap.** What he wanted: to add the five sub-steps under UV unwrapping, mid-session, in under five seconds, without leaving the texture he is working in his head. What he got: a choice between (a) keep the sub-tree mentally and lose it on the next context switch; (b) edit "UV unwrapping" into "UV: seams" and add four siblings, losing the parent concept and breaking the goal's coherence; (c) abandon the app for this and dump it in Notion _(invented but plausible — not observed)_. He picks (c) and the app loses the data.
 
-**A–G tags:**
+**A–H tags:**
 
 - **A** — substructure is _discoverable mid-work_, not knowable up front. A step model that can't hold a sub-step forecloses the discovery.
 - **F** — capture-flow friction is the killing constraint. If modelling the sub-tree costs a session, he won't do it; he'll do 3D work and write orgs in Notion.
@@ -147,7 +149,7 @@ What he got: a single repeating step where attending and not attending produce t
 
 The principle the structure has to honor: an unfilled Tuesday is only an unfilled Tuesday. Whether that absence matters is something Sam works out with Marcus, his group, and himself — not something the app interprets, counts, or surfaces.
 
-**A–G tags:**
+**A–H tags:**
 
 - **A** — the goal has natural sub-structure known up front (the program's step work decomposes predictably into Steps 1, 2, 3) rather than discovered mid-work as in Malik's UV unwrapping. Both shapes need nesting; they arrive at it differently. Sam is also the first scenario whose nesting goes two levels deep: the goal's top-level sub-steps include "Step work," and Step work's sub-steps are 1, 2, 3.
 - **B-soft** — the soft "for Tuesday" framing creates a Tuesday in the app that wouldn't otherwise exist. Time foothold, not deadline accountability. Load-bearing for the Tuesday home-group sub-step in particular.
@@ -165,5 +167,4 @@ The principle the structure has to honor: an unfilled Tuesday is only an unfille
 - **State vocabulary scope.** With H added, the candidate set of named states the user might encounter is _pending, completed, missed, waiting-external, in-progress, abandoned, learning_ — seven. Whether all seven are user-namable, or whether some are system-derived (e.g. _learning_ only reachable via the H pivot flow, never chosen directly), is a UX question.
 - **H's UI treatment.** A learning step has two things worth surfacing: the original framing (the hypothesis the user committed to) and the learned outcome (what the falsification revealed). Does the UI show both side-by-side, fold the original under the learning, or surface only the learned outcome with the original available on tap?
 - **Substructure depth.** One level of nesting, or arbitrary? Sam's scenario lands at two levels (goal → step work → Steps 1/2/3); Malik, Tomás, and Ava each land at one. Two levels handles every scenario above; arbitrary opens the door to outline-tool drift away from the task view's "one next thing" promise. Sam's nesting is known up front (program literature); Malik's is discovered mid-work — the same structure, arrived at differently, and probably with different capture flows.
-- **Where the success scenarios live.** A parallel section — the same five personas, written as what success looks like once the model holds — is queued but not yet shaped. May land in this doc; may land alongside.
 - **What this implies for the task view.** [The task view](../vision/product-vision.md#the-task-view--next-best-step) shows one next step per active goal. With substructure (A) and a richer state vocabulary (E), "next step" becomes ambiguous — the next leaf, the next umbrella, the next non-waiting step. Resolving this is part of forming the success scenarios.
