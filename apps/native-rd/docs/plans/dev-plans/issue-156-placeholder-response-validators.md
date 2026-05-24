@@ -45,7 +45,7 @@ Ship the two hard-fail validation layers that sit between the raw LLM response a
 
 - `apps/native-rd/package.json`: add `"zod": "^3"` to `dependencies`
 - `apps/native-rd/jest.config.js`: extend `testMatch` to also cover `scripts/**/__tests__/**/*.test.ts`
-- `apps/native-rd/tsconfig.scripts-test.json`: new file — `types: ["jest"]`, includes `scripts/**/*.ts`, extends base tsconfig
+- `apps/native-rd/tsconfig.scripts-test.json`: new file — `types: ["jest"]`, includes `scripts/**/__tests__/**/*.ts` (scoped to tests; see Discovery Log for why), extends base tsconfig
 - `apps/native-rd/scripts/i18n/tsconfig.json`: (if preferred) — alternatively handled by `tsconfig.scripts-test.json` at the app root
 - `apps/native-rd/scripts/i18n/placeholderGuard.ts`: new module
 - `apps/native-rd/scripts/i18n/__tests__/placeholderGuard.test.ts`: new test file
@@ -76,10 +76,11 @@ Ship the two hard-fail validation layers that sit between the raw LLM response a
     "compilerOptions": {
       "types": ["jest"]
     },
-    "include": ["scripts/**/*.ts"],
+    "include": ["scripts/**/__tests__/**/*.ts"],
     "exclude": []
   }
   ```
+  (The `include` is scoped to `__tests__/` rather than all of `scripts/**/*.ts` to avoid type-checking bun-typed scripts under jest-only globals — see Discovery Log.)
 - [x] Update `type-check` script in `package.json` to also run `tsc --noEmit -p tsconfig.scripts-test.json` (alongside existing three tsconfig checks)
 
 **Note**: This step has no test output on its own — it only unlocks Steps 2 and 3. It is a single atomic commit because the three changes are a single coherent "wire-up" concern.
