@@ -1,0 +1,120 @@
+description: "native-rd i18n bake-off: en→de voice fidelity across 6 candidate models"
+
+# Translation prompt is deliberately minimal — the bake-off evaluates inherent
+# model voice quality, not prompt engineering. The production prompt (PR #8)
+# will add register YAMLs and intent sidecars on top.
+prompts:
+  - |
+    [
+      {
+        "role": "system",
+        "content": "You are translating UI strings from English to German for a personal learning tracker used by neurodivergent people. Translate accurately, briefly, and in a direct, non-patronizing tone. Preserve any double-curly-brace placeholders exactly as-is — do not translate the variable name inside them. Return only the German translation: no quotes, no commentary, no explanations, no leading or trailing whitespace."
+      },
+      {
+        "role": "user",
+        "content": "{{en}}"
+      }
+    ]
+
+# Six candidate models from models.ts registry. The original 8-candidate pool
+# (ADR-0007) is reduced to 6 in ADR-0008: gpt-5-mini and gpt-oss-120b leaked
+# "Thinking: ..." reasoning preamble through the system prompt's commentary
+# suppression and were dropped from the registry. Temperature 0 across the
+# board to match the registry default. The `openrouter:` provider reads
+# OPENROUTER_API_KEY directly — same env var as llmGateway.ts.
+providers:
+  - id: openrouter:openai/gpt-4o-mini
+    config:
+      temperature: 0
+  - id: openrouter:openai/gpt-4o
+    config:
+      temperature: 0
+  - id: openrouter:anthropic/claude-haiku-4-5
+    config:
+      temperature: 0
+  - id: openrouter:anthropic/claude-sonnet-4-6
+    config:
+      temperature: 0
+  - id: openrouter:google/gemini-2.5-flash
+    config:
+      temperature: 0
+  - id: openrouter:deepseek/deepseek-chat
+    config:
+      temperature: 0
+
+# OPENROUTER_API_KEY is read from the shell environment by the openrouter:*
+# providers. The wrapper script `scripts/i18n/run-bakeoff.sh` sources
+# `.env.local` and validates the key before invoking promptfoo — promptfoo's
+# own `env:` schema is a key→value injection map, not a required-vars
+# validator, so any `required: true` style block here would be a silent no-op.
+#
+# Fixture corpus lives in fixtures.json. Each entry contributes one test case
+# with vars { ns, key, en, categories, placeholders }. Fixtures with prose
+# voice content carry a per-fixture `llm-rubric` assertion; defaultTest below
+# holds only the assertions that apply universally.
+tests: file://./fixtures.json
+
+# Universal assertions applied to every fixture. The llm-rubric voice check
+# moved into per-fixture `assert` arrays inside fixtures.json — short labels
+# and placeholder-dominated strings carry no voice signal for the rubric to
+# judge, and fanning out the rubric over them was responsible for a uniform
+# pass-rate floor across all candidate models in PR #171's live eval.
+# The grader provider stays at this level so per-fixture rubric assertions
+# inherit it.
+defaultTest:
+  options:
+    provider:
+      id: openrouter:anthropic/claude-opus-4-5
+      config:
+        temperature: 0
+  assert:
+    # 1. Placeholder preservation. Vacuously true for fixtures with no
+    #    placeholders (every() over an empty array returns true). Returns
+    #    a {pass, score, reason} object so the report explains failures.
+    - type: javascript
+      value: |
+        if (typeof output !== 'string') {
+          return { pass: false, score: 0, reason: 'expected string output, got ' + typeof output };
+        }
+        const expected = context.vars.placeholders || [];
+        const missing = expected.filter((p) => !output.includes('{{' + p + '}}'));
+        if (missing.length > 0) {
+          return { pass: false, score: 0, reason: 'missing placeholders: ' + missing.join(', ') };
+        }
+        return { pass: true, score: 1, reason: expected.length === 0 ? 'no placeholders expected' : 'all placeholders preserved' };
+
+    # 2. Banned-phrase absence. English anti-patterns from BRAND_LANGUAGE.md;
+    #    German list below is a researcher-drafted best-effort starting set —
+    #    TODO: review German equivalents before the first full eval run and
+    #    refine in a follow-up commit if needed.
+    - type: not-icontains-any
+      value:
+        - "special needs"
+        - "differently abled"
+        - "high-functioning"
+        - "low-functioning"
+        - "suffers from"
+        # German equivalents of the "(or don't)" exit-aside anti-pattern.
+        # TODO: review — researcher drafted; not authoritative.
+        - "oder nicht"
+        - "oder lass es"
+
+    # 3. Length bounds. German is structurally wordier than English, so the
+    #    band is intentionally wide (0.5×–2.5×) to avoid false failures on
+    #    short strings while catching runaway verbosity on long ones.
+    - type: javascript
+      value: |
+        if (typeof output !== 'string') {
+          return { pass: false, score: 0, reason: 'expected string output, got ' + typeof output };
+        }
+        const enLen = context.vars.en.length;
+        if (enLen === 0) {
+          return { pass: false, score: 0, reason: 'en fixture is empty' };
+        }
+        const ratio = output.length / enLen;
+        const pass = ratio >= 0.5 && ratio <= 2.5;
+        return {
+          pass,
+          score: pass ? 1 : 0,
+          reason: 'length ratio ' + ratio.toFixed(2) + 'x (band 0.5–2.5)',
+        };

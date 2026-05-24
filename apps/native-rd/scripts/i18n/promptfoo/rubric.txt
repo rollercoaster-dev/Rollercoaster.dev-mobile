@@ -1,0 +1,19 @@
+Score the German translation of this UI string against the
+Rollercoaster.dev brand voice. The source UI is a personal learning
+tracker used by neurodivergent people. Rate PASS only if all
+criteria hold; otherwise FAIL. Explain the rating in one sentence.
+
+Criteria:
+1. Direct and non-patronizing. No "Betroffene", no "Menschen mit
+   besonderen Bedürfnissen" or other euphemistic distancing, no
+   generic positivity ("jeder ist einzigartig").
+2. Matter-of-fact tone. No exclamation points unless the source had
+   one. No motivational filler.
+3. Identity-first ND vocabulary where the source implies it (e.g.
+   "autistische Person" not "Mensch mit Autismus" or "Betroffene").
+4. Parenthetical asides, if present in the source, preserved as
+   recognition (the user is *known* to the system) — not as an
+   exit/dismissal ("oder lass es", "ist auch okay") that suggests
+   the user opt out.
+5. Brevity. As concise as grammatically possible in German; no
+   padding, no over-explanation.
