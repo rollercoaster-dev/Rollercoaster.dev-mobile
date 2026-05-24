@@ -1,0 +1,16 @@
+{
+  "_review_status": "generated — requires native-speaker review before #76 closes",
+  "CFBundleDisplayName": "Rollercoaster.dev",
+  "NSCameraUsageDescription": "Erlaube $(PRODUCT_NAME), die Kamera zu verwenden, um Fotos als Nachweise aufzunehmen.",
+  "NSMicrophoneUsageDescription": "Erlaube $(PRODUCT_NAME), Sprachnotizen als Nachweise für deine Ziele aufzunehmen.",
+  "NSPhotoLibraryUsageDescription": "Erlaube $(PRODUCT_NAME), auf deine Fotos zuzugreifen, um Nachweise zu erfassen.",
+  "ios": {
+    "CFBundleDisplayName": "Rollercoaster.dev",
+    "NSCameraUsageDescription": "Erlaube $(PRODUCT_NAME), die Kamera zu verwenden, um Fotos als Nachweise aufzunehmen.",
+    "NSMicrophoneUsageDescription": "Erlaube $(PRODUCT_NAME), Sprachnotizen als Nachweise für deine Ziele aufzunehmen.",
+    "NSPhotoLibraryUsageDescription": "Erlaube $(PRODUCT_NAME), auf deine Fotos zuzugreifen, um Nachweise zu erfassen."
+  },
+  "android": {
+    "app_name": "Rollercoaster.dev"
+  }
+}

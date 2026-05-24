@@ -140,7 +140,7 @@ Note: `allowDynamicLocaleChangesAndroid` defaults to `true` in the plugin. Leave
 
 **Changes**:
 
-- [ ] Create `apps/native-rd/locales/de.json` with German translations for every key in `locales/en.json`:
+- [x] Create `apps/native-rd/locales/de.json` with German translations for every key in `locales/en.json`:
 
   ```json
   {
@@ -165,7 +165,7 @@ Note: `allowDynamicLocaleChangesAndroid` defaults to `true` in the plugin. Leave
   - App display name stays "Rollercoaster.dev" (brand name, not translated).
   - `app_name` on Android is also "Rollercoaster.dev" (brand name).
 
-- [ ] Add a `"_review_status"` key to `de.json` with value `"generated — requires native-speaker review before #76 closes"` so it is visible in the file and in diffs.
+- [x] Add a `"_review_status"` key to `de.json` with value `"generated — requires native-speaker review before #76 closes"` so it is visible in the file and in diffs.
 
 ### Step 4: Wire "de" into the runtime i18n layer and extend tests
 
