@@ -48,10 +48,13 @@ providers:
 # own `env:` schema is a key→value injection map, not a required-vars
 # validator, so any `required: true` style block here would be a silent no-op.
 #
-# Fixture corpus lives in fixtures.json. Each entry contributes one test case
-# with vars { ns, key, en, categories, placeholders }. Fixtures with prose
-# voice content carry a per-fixture `llm-rubric` assertion; defaultTest below
-# holds only the assertions that apply universally.
+# Fixture corpus lives in fixtures.json. Each entry contributes ONE test case
+# with vars { ns, key, en }. Fixture metadata (categories, taxonomy tags) sits
+# in a sibling `metadata` block — promptfoo auto-fans arrays inside `vars`
+# into one test per element, so keeping arrays out of `vars` is what keeps
+# the run count = fixture count. Fixtures with prose voice content carry a
+# per-fixture `llm-rubric` assertion; defaultTest below holds only the
+# assertions that apply universally.
 tests: file://./fixtures.json
 
 # Universal assertions applied to every fixture. The llm-rubric voice check
@@ -68,15 +71,18 @@ defaultTest:
       config:
         temperature: 0
   assert:
-    # 1. Placeholder preservation. Vacuously true for fixtures with no
-    #    placeholders (every() over an empty array returns true). Returns
-    #    a {pass, score, reason} object so the report explains failures.
+    # 1. Placeholder preservation. Expected placeholders are derived from the
+    #    source `en` string via regex rather than read from a fixture var —
+    #    promptfoo flattens scalar vars during array expansion in ways that
+    #    are hard to defend against in-cell. The regex source-of-truth also
+    #    means new fixtures can't drift from their declared placeholder set.
     - type: javascript
       value: |
         if (typeof output !== 'string') {
           return { pass: false, score: 0, reason: 'expected string output, got ' + typeof output };
         }
-        const expected = context.vars.placeholders || [];
+        const source = String(context.vars.en || '');
+        const expected = Array.from(source.matchAll(/\{\{(\w+)\}\}/g), (m) => m[1]);
         const missing = expected.filter((p) => !output.includes('{{' + p + '}}'));
         if (missing.length > 0) {
           return { pass: false, score: 0, reason: 'missing placeholders: ' + missing.join(', ') };

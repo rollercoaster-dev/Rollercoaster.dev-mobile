@@ -4,9 +4,10 @@
     "vars": {
       "ns": "common",
       "key": "actions.save",
-      "en": "Save",
-      "categories": ["operational-label"],
-      "placeholders": []
+      "en": "Save"
+    },
+    "metadata": {
+      "categories": ["operational-label"]
     }
   },
   {
@@ -14,9 +15,10 @@
     "vars": {
       "ns": "common",
       "key": "actions.dismiss",
-      "en": "Dismiss",
-      "categories": ["operational-label"],
-      "placeholders": []
+      "en": "Dismiss"
+    },
+    "metadata": {
+      "categories": ["operational-label"]
     }
   },
   {
@@ -24,9 +26,10 @@
     "vars": {
       "ns": "common",
       "key": "modeIndicator.complete",
-      "en": "Complete",
-      "categories": ["operational-label"],
-      "placeholders": []
+      "en": "Complete"
+    },
+    "metadata": {
+      "categories": ["operational-label"]
     }
   },
   {
@@ -34,9 +37,10 @@
     "vars": {
       "ns": "goals",
       "key": "emptyState.title",
-      "en": "No goals yet",
-      "categories": ["operational-label"],
-      "placeholders": []
+      "en": "No goals yet"
+    },
+    "metadata": {
+      "categories": ["operational-label"]
     }
   },
   {
@@ -44,9 +48,10 @@
     "vars": {
       "ns": "settings",
       "key": "density.options.comfortable.label",
-      "en": "Comfortable",
-      "categories": ["operational-label"],
-      "placeholders": []
+      "en": "Comfortable"
+    },
+    "metadata": {
+      "categories": ["operational-label"]
     }
   },
   {
@@ -54,9 +59,10 @@
     "vars": {
       "ns": "common",
       "key": "stepCard.blocker.label",
-      "en": "Add evidence to complete",
-      "categories": ["operational-label"],
-      "placeholders": []
+      "en": "Add evidence to complete"
+    },
+    "metadata": {
+      "categories": ["operational-label"]
     },
     "assert": [
       { "type": "llm-rubric", "threshold": 0.5, "value": "file://./rubric.txt" }
@@ -67,9 +73,10 @@
     "vars": {
       "ns": "common",
       "key": "status.a11yPrefix",
-      "en": "Status: {{label}}",
-      "categories": ["interpolation"],
-      "placeholders": ["label"]
+      "en": "Status: {{label}}"
+    },
+    "metadata": {
+      "categories": ["interpolation"]
     }
   },
   {
@@ -77,9 +84,10 @@
     "vars": {
       "ns": "common",
       "key": "stepCard.progress",
-      "en": "Step {{current}} of {{total}}",
-      "categories": ["interpolation"],
-      "placeholders": ["current", "total"]
+      "en": "Step {{current}} of {{total}}"
+    },
+    "metadata": {
+      "categories": ["interpolation"]
     }
   },
   {
@@ -87,9 +95,10 @@
     "vars": {
       "ns": "goals",
       "key": "card.a11y.label",
-      "en": "{{title}}, {{stepsCompleted}} of {{stepsTotal}} steps completed, {{status}}",
-      "categories": ["interpolation"],
-      "placeholders": ["title", "stepsCompleted", "stepsTotal", "status"]
+      "en": "{{title}}, {{stepsCompleted}} of {{stepsTotal}} steps completed, {{status}}"
+    },
+    "metadata": {
+      "categories": ["interpolation"]
     }
   },
   {
@@ -97,9 +106,10 @@
     "vars": {
       "ns": "focusMode",
       "key": "errors.couldNotUpdateStep",
-      "en": "Could not update step: {{message}}",
-      "categories": ["interpolation"],
-      "placeholders": ["message"]
+      "en": "Could not update step: {{message}}"
+    },
+    "metadata": {
+      "categories": ["interpolation"]
     },
     "assert": [
       { "type": "llm-rubric", "threshold": 0.5, "value": "file://./rubric.txt" }
@@ -110,9 +120,10 @@
     "vars": {
       "ns": "captureText",
       "key": "charCount.a11y",
-      "en": "{{count}} of {{max}} characters used",
-      "categories": ["interpolation"],
-      "placeholders": ["count", "max"]
+      "en": "{{count}} of {{max}} characters used"
+    },
+    "metadata": {
+      "categories": ["interpolation"]
     }
   },
   {
@@ -120,9 +131,10 @@
     "vars": {
       "ns": "captureFile",
       "key": "description",
-      "en": "Select a PDF, image, or document (max {{maxSize}}).",
-      "categories": ["interpolation", "parenthetical"],
-      "placeholders": ["maxSize"]
+      "en": "Select a PDF, image, or document (max {{maxSize}})."
+    },
+    "metadata": {
+      "categories": ["interpolation", "parenthetical"]
     },
     "assert": [
       { "type": "llm-rubric", "threshold": 0.5, "value": "file://./rubric.txt" }
@@ -133,9 +145,10 @@
     "vars": {
       "ns": "welcome",
       "key": "cta.footnote",
-      "en": "You can change this anytime in Settings.",
-      "categories": ["parenthetical"],
-      "placeholders": []
+      "en": "You can change this anytime in Settings."
+    },
+    "metadata": {
+      "categories": ["parenthetical"]
     },
     "assert": [
       { "type": "llm-rubric", "threshold": 0.5, "value": "file://./rubric.txt" }
@@ -146,9 +159,10 @@
     "vars": {
       "ns": "welcome",
       "key": "intro.body2",
-      "en": "First, let’s pick a look that fits your brain. Tap a swatch — the whole app changes so you can see how it feels.",
-      "categories": ["parenthetical"],
-      "placeholders": []
+      "en": "First, let’s pick a look that fits your brain. Tap a swatch — the whole app changes so you can see how it feels."
+    },
+    "metadata": {
+      "categories": ["parenthetical"]
     },
     "assert": [
       { "type": "llm-rubric", "threshold": 0.5, "value": "file://./rubric.txt" }
@@ -159,9 +173,10 @@
     "vars": {
       "ns": "common",
       "key": "theme.picker.title",
-      "en": "Pick what feels right",
-      "categories": ["parenthetical"],
-      "placeholders": []
+      "en": "Pick what feels right"
+    },
+    "metadata": {
+      "categories": ["parenthetical"]
     },
     "assert": [
       { "type": "llm-rubric", "threshold": 0.5, "value": "file://./rubric.txt" }
@@ -172,9 +187,10 @@
     "vars": {
       "ns": "focusMode",
       "key": "toast.evidenceRequired",
-      "en": "Add evidence before completing this step",
-      "categories": ["refusal-affirming"],
-      "placeholders": []
+      "en": "Add evidence before completing this step"
+    },
+    "metadata": {
+      "categories": ["refusal-affirming"]
     },
     "assert": [
       { "type": "llm-rubric", "threshold": 0.5, "value": "file://./rubric.txt" }
@@ -185,9 +201,10 @@
     "vars": {
       "ns": "focusMode",
       "key": "confirmDelete.message",
-      "en": "You can undo this briefly after deleting.",
-      "categories": ["refusal-affirming"],
-      "placeholders": []
+      "en": "You can undo this briefly after deleting."
+    },
+    "metadata": {
+      "categories": ["refusal-affirming"]
     },
     "assert": [
       { "type": "llm-rubric", "threshold": 0.5, "value": "file://./rubric.txt" }
@@ -198,9 +215,10 @@
     "vars": {
       "ns": "goals",
       "key": "emptyState.body",
-      "en": "Add your first learning goal to get started.",
-      "categories": ["refusal-affirming"],
-      "placeholders": []
+      "en": "Add your first learning goal to get started."
+    },
+    "metadata": {
+      "categories": ["refusal-affirming"]
     },
     "assert": [
       { "type": "llm-rubric", "threshold": 0.5, "value": "file://./rubric.txt" }
@@ -211,9 +229,10 @@
     "vars": {
       "ns": "captureVoice",
       "key": "discardUnsaved.keep",
-      "en": "Keep Recording",
-      "categories": ["refusal-affirming"],
-      "placeholders": []
+      "en": "Keep Recording"
+    },
+    "metadata": {
+      "categories": ["refusal-affirming"]
     }
   },
   {
@@ -221,9 +240,10 @@
     "vars": {
       "ns": "focusMode",
       "key": "a11y.allStepsComplete",
-      "en": "All steps complete for \"{{title}}\". Mark Complete is now available on the goal card.",
-      "categories": ["refusal-affirming", "interpolation"],
-      "placeholders": ["title"]
+      "en": "All steps complete for \"{{title}}\". Mark Complete is now available on the goal card."
+    },
+    "metadata": {
+      "categories": ["refusal-affirming", "interpolation"]
     },
     "assert": [
       { "type": "llm-rubric", "threshold": 0.5, "value": "file://./rubric.txt" }
