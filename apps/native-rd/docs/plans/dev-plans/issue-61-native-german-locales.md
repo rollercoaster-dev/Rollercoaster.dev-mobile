@@ -69,7 +69,7 @@ This is the minimal set of changes for native permission dialogs to appear in Ge
 
 **Changes**:
 
-- [ ] Replace the bare `"expo-localization"` entry (line 104 of current `app.json`) with:
+- [x] Replace the bare `"expo-localization"` entry (line 104 of current `app.json`) with:
   ```json
   [
     "expo-localization",
@@ -78,7 +78,7 @@ This is the minimal set of changes for native permission dialogs to appear in Ge
     }
   ]
   ```
-- [ ] Add a top-level `"locales"` field inside `"expo"` (alongside `"plugins"`, `"extra"`, etc.):
+- [x] Add a top-level `"locales"` field inside `"expo"` (alongside `"plugins"`, `"extra"`, etc.):
   ```json
   "locales": {
     "en": "./locales/en.json",
@@ -99,8 +99,8 @@ Note: `allowDynamicLocaleChangesAndroid` defaults to `true` in the plugin. Leave
 
 **Changes**:
 
-- [ ] Create `apps/native-rd/locales/` directory.
-- [ ] Create `apps/native-rd/locales/en.json` with the following content, mirroring exactly the strings currently in `app.json` (plugin entries take precedence over `infoPlist` keys at prebuild time — the `locales` field writes to `InfoPlist.strings`, while `infoPlist` writes directly to `Info.plist`; both are needed for a complete baseline):
+- [x] Create `apps/native-rd/locales/` directory.
+- [x] Create `apps/native-rd/locales/en.json` with the following content, mirroring exactly the strings currently in `app.json` (plugin entries take precedence over `infoPlist` keys at prebuild time — the `locales` field writes to `InfoPlist.strings`, while `infoPlist` writes directly to `Info.plist`; both are needed for a complete baseline):
 
   ```json
   {
@@ -130,7 +130,7 @@ Note: `allowDynamicLocaleChangesAndroid` defaults to `true` in the plugin. Leave
 
   The exact top-level vs `ios`/`android` key structure should be validated against `@expo/config-plugins/build/utils/locales.js` behavior (reviewed in research). Top-level keys go into `InfoPlist.strings` (iOS) or `strings.xml` (Android). The `ios` sub-object keys also go into `InfoPlist.strings`. The `android` sub-object keys go into the Android `strings.xml` for that locale.
 
-- [ ] Add a brief `# locales/en.json` comment block at the top of the file (JSON doesn't support comments — add a `"_comment"` key instead, or document in a sibling `README.md` — see Discovery Log if this decision changes).
+- [x] ~~Add a brief `# locales/en.json` comment block at the top of the file~~ — skipped per Discovery Log (would clutter native build output).
 
 ### Step 3: Create locales/de.json (German native strings)
 
@@ -219,6 +219,12 @@ Note: `allowDynamicLocaleChangesAndroid` defaults to `true` in the plugin. Leave
 <!-- Entries added by implement skill:
 - [YYYY-MM-DD HH:MM] <discovery description>
 -->
+
+### Implementation deviations
+
+- [2026-05-24] Step 2 — dropped the `NSMicrophoneUsageDescription_video` key from the plan template. It is not a real iOS InfoPlist key (iOS uses a single `NSMicrophoneUsageDescription` for all microphone access contexts, including video capture audio). Including it would pollute `InfoPlist.strings` with a key iOS never reads.
+- [2026-05-24] Step 2 — duplicated the four real InfoPlist keys into the `ios` sub-object so the iOS branch is explicit. Top-level keys already cover iOS in the current `@expo/config-plugins` behavior, but the duplication is harmless and makes the file's iOS surface obvious to a future reader. Plan template had a partial subset (camera + mic only) in the `ios` sub-object.
+- [2026-05-24] Step 2 — skipped the `_comment` key suggested by the plan. A `_comment` would be emitted to `InfoPlist.strings` / `strings.xml` and clutter the generated native files. Plan documentation lives in this dev plan; the file itself is small and self-documenting.
 
 ### Pre-implementation research findings
 
