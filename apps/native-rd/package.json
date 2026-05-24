@@ -12,7 +12,7 @@
     "android": "bash scripts/run-android.sh",
     "android:device": "ANDROID_DEVICE_ID=\"${ANDROID_DEVICE_ID:?Set ANDROID_DEVICE_ID}\" bash scripts/run-android.sh",
     "web": "expo start --web",
-    "type-check": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json && tsc --noEmit -p tsconfig.scripts.json",
+    "type-check": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json && tsc --noEmit -p tsconfig.scripts.json && tsc --noEmit -p tsconfig.scripts-test.json",
     "build": "echo 'Expo app — no build step'",
     "eas-build-post-install": "cd ../.. && bun x turbo build --filter=native-rd^...",
     "lint": "expo lint",
