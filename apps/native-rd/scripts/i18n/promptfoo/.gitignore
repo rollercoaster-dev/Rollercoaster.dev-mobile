@@ -1,0 +1,4 @@
+# Generated eval reports. Each `bun run i18n:bakeoff` writes a timestamped
+# HTML file here; the winning report is attached to the PR description as
+# a file upload rather than committed.
+reports/

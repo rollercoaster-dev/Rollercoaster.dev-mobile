@@ -56,13 +56,13 @@ Clause 3 ensures the linter has been exercised against real sync output before b
 
 ## Open decisions
 
-| #   | Decision                                                                                                                                                               | Status                                                         |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| 1   | promptfoo location: `scripts/i18n/promptfoo/` (scoped to sync) vs. repo-root `promptfoo/` (if other LLM evals appear later)                                            | Open                                                           |
-| 2   | Register file location: `src/i18n/resources/_register/` (sits next to locale files for author affordance) vs. `scripts/i18n/registers/` (groups sync tooling together) | Open                                                           |
-| 3   | Bot identity for CI commit-back: reuse existing bot account vs. create `rd-i18n-bot`                                                                                   | Punted to PR #9                                                |
-| 4   | Identity-first German forms (Sie/du, gender-neutral patterns)                                                                                                          | Punted to first sync output review                             |
-| 5   | Concurrent batching vs. single-threaded for v1                                                                                                                         | Single-threaded for v1; revisit if sync time exceeds CI budget |
+| #   | Decision                                                                                                                                                               | Status                                                                                                    |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| 1   | promptfoo location: `scripts/i18n/promptfoo/` (scoped to sync) vs. repo-root `promptfoo/` (if other LLM evals appear later)                                            | Resolved 2026-05-24 — `apps/native-rd/scripts/i18n/promptfoo/` (Option A, scoped). See dev plan for #159. |
+| 2   | Register file location: `src/i18n/resources/_register/` (sits next to locale files for author affordance) vs. `scripts/i18n/registers/` (groups sync tooling together) | Open                                                                                                      |
+| 3   | Bot identity for CI commit-back: reuse existing bot account vs. create `rd-i18n-bot`                                                                                   | Punted to PR #9                                                                                           |
+| 4   | Identity-first German forms (Sie/du, gender-neutral patterns)                                                                                                          | Punted to first sync output review                                                                        |
+| 5   | Concurrent batching vs. single-threaded for v1                                                                                                                         | Single-threaded for v1; revisit if sync time exceeds CI budget                                            |
 
 ---
 
