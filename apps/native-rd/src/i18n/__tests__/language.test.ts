@@ -30,9 +30,9 @@ describe("selectSupportedLanguage", () => {
       delete process.env.EXPO_PUBLIC_I18N_PSEUDO;
     });
 
-    test.each<[string, Locale[], "en"]>([
+    test.each<[string, Locale[], "en" | "de"]>([
       ["en-US locale", [withLanguageCode("en")], "en"],
-      ["de-DE locale falls back to en", [withLanguageCode("de")], "en"],
+      ["de-DE locale", [withLanguageCode("de")], "de"],
       ["es-ES locale falls back to en", [withLanguageCode("es")], "en"],
       ["null languageCode falls back to en", [withLanguageCode(null)], "en"],
       ["empty locales array falls back to en", [], "en"],

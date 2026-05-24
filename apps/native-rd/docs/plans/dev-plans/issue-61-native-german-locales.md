@@ -175,25 +175,23 @@ Note: `allowDynamicLocaleChangesAndroid` defaults to `true` in the plugin. Leave
 
 **Changes**:
 
-- [ ] In `src/i18n/language.ts`:
+- [x] In `src/i18n/language.ts`:
   - Expand `SupportedLanguage` type: `export type SupportedLanguage = "en" | "de" | "pseudo";`
-  - Fix the identity stub: `return code === "en" ? "en" : code === "de" ? "de" : "en";`
-  - Update the comment to remove the `#1029` reference (that was the monorepo issue number; this is the implementation).
+  - Replace identity stub with explicit `de` branch (early-return form).
+  - Removed the `#1029` extension-marker comment.
 
-- [ ] In `src/i18n/index.ts`:
+- [x] In `src/i18n/index.ts`:
   - Add `"de"` to `supportedLngs`: `supportedLngs: ["en", "de", "pseudo"]`
-  - Add empty German namespace stubs to the `resources` object so i18next doesn't warn about missing bundles for `"de"`:
-    ```ts
-    import deCommon from "./resources/de/common.json"; // {} initially
-    // ... (one import per namespace, mirroring the en imports)
-    ```
-    And wire them into `resources.de`. The actual German string content for these JS namespaces is out of scope for this PR — they will be populated as part of the first German translation batch (step 4 in the milestone doc's operational order). The files must exist and be `{}` to avoid missing-bundle warnings.
+  - Add empty German namespace stubs to the `resources` object.
 
-- [ ] In `src/i18n/__tests__/i18n.test.ts`:
-  - Add a test asserting `changeLanguage("de")` resolves without error.
-  - Add a test asserting every declared namespace is registered for `"de"`.
+- [x] In `src/i18n/__tests__/i18n.test.ts`:
+  - Added `changeLanguage("de")` smoke test.
+  - Extended namespace-registered test to cover `"de"`.
 
-- [ ] Create `apps/native-rd/src/i18n/resources/de/` directory with one empty `{}`-content JSON file per namespace (15 files, mirroring `resources/en/`). These are stubs — parallel to how `en` namespaces were seeded empty at foundation.
+- [x] In `src/i18n/__tests__/language.test.ts`:
+  - Updated the existing `test.each` row: `"de-DE locale"` now expects `"de"` (was `"en"` under the identity stub).
+
+- [x] Create `apps/native-rd/src/i18n/resources/de/` directory with 15 `{}` namespace stub files.
 
 ## Testing Strategy
 

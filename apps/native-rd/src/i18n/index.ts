@@ -21,6 +21,22 @@ import enPermissions from "./resources/en/permissions.json";
 import enBadges from "./resources/en/badges.json";
 import enBadgeDesigner from "./resources/en/badgeDesigner.json";
 
+import deCommon from "./resources/de/common.json";
+import deWelcome from "./resources/de/welcome.json";
+import deNewGoal from "./resources/de/newGoal.json";
+import deSettings from "./resources/de/settings.json";
+import deGoals from "./resources/de/goals.json";
+import deFocusMode from "./resources/de/focusMode.json";
+import deCapturePhoto from "./resources/de/capturePhoto.json";
+import deCaptureVideo from "./resources/de/captureVideo.json";
+import deCaptureVoice from "./resources/de/captureVoice.json";
+import deCaptureText from "./resources/de/captureText.json";
+import deCaptureFile from "./resources/de/captureFile.json";
+import deCaptureLink from "./resources/de/captureLink.json";
+import dePermissions from "./resources/de/permissions.json";
+import deBadges from "./resources/de/badges.json";
+import deBadgeDesigner from "./resources/de/badgeDesigner.json";
+
 import pseudoCommon from "./resources/pseudo/common.json";
 import pseudoWelcome from "./resources/pseudo/welcome.json";
 import pseudoNewGoal from "./resources/pseudo/newGoal.json";
@@ -38,12 +54,13 @@ import pseudoBadges from "./resources/pseudo/badges.json";
 import pseudoBadgeDesigner from "./resources/pseudo/badgeDesigner.json";
 
 // Adding a namespace? Steps:
-//   1. Add the en + pseudo JSON files under resources/{en,pseudo}/<name>.json
+//   1. Add the en + de + pseudo JSON files under resources/{en,de,pseudo}/<name>.json
 //   2. Add imports above
-//   3. Add the entry to NAMESPACES and both resource bundles below
+//   3. Add the entry to NAMESPACES and all three resource bundles below
 //   4. Add the type alias in i18next.d.ts
 // The script in scripts/generate-pseudo-locale.ts auto-discovers files in
-// resources/en/ — no need to update it.
+// resources/en/ — no need to update it. German strings are populated per-screen
+// as part of milestone-3 (#67–#72); stub `{}` files keep i18next happy until then.
 export const NAMESPACES = [
   "common",
   "welcome",
@@ -82,6 +99,23 @@ const resources = {
     badges: enBadges,
     badgeDesigner: enBadgeDesigner,
   },
+  de: {
+    common: deCommon,
+    welcome: deWelcome,
+    newGoal: deNewGoal,
+    settings: deSettings,
+    goals: deGoals,
+    focusMode: deFocusMode,
+    capturePhoto: deCapturePhoto,
+    captureVideo: deCaptureVideo,
+    captureVoice: deCaptureVoice,
+    captureText: deCaptureText,
+    captureFile: deCaptureFile,
+    captureLink: deCaptureLink,
+    permissions: dePermissions,
+    badges: deBadges,
+    badgeDesigner: deBadgeDesigner,
+  },
   pseudo: {
     common: pseudoCommon,
     welcome: pseudoWelcome,
@@ -113,7 +147,7 @@ i18n.use(initReactI18next).init({
   resources,
   lng: selectSupportedLanguage(getLocales()),
   fallbackLng: "en",
-  supportedLngs: ["en", "pseudo"],
+  supportedLngs: ["en", "de", "pseudo"],
   nonExplicitSupportedLngs: true,
   defaultNS: "common",
   ns: NAMESPACES,
