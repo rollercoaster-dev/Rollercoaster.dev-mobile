@@ -37,15 +37,21 @@ describe("jsonTreeUtils", () => {
       ["status"],
     ]);
 
-    expect(
-      Object.keys(
-        mergeTranslations(
-          {},
-          { k0: "Speichern", k1: "Abbrechen", k2: "Bereit" },
-          pathMap,
-        ) as Record<string, unknown>,
-      ),
-    ).toEqual(["actions", "status"]);
+    const merged = mergeTranslations(
+      {},
+      { k0: "Speichern", k1: "Abbrechen", k2: "Bereit" },
+      pathMap,
+    ) as { actions: Record<string, unknown>; status: string };
+
+    expect(merged).toEqual({
+      actions: {
+        save: "Speichern",
+        cancel: "Abbrechen",
+      },
+      status: "Bereit",
+    });
+    expect(Object.keys(merged)).toEqual(["actions", "status"]);
+    expect(Object.keys(merged.actions)).toEqual(["save", "cancel"]);
   });
 
   test("preserves existing target values and only extracts missing leaves", () => {
@@ -108,6 +114,34 @@ describe("jsonTreeUtils", () => {
     expect(dict).toEqual({});
     expect(deepFillMissingStrings(source, target)).toEqual(target);
     expect(mergeTranslations(target, {}, pathMap)).toEqual(target);
+  });
+
+  test("reorders fully populated target leaves to match source order", () => {
+    const source = {
+      actions: {
+        save: "Save",
+        cancel: "Cancel",
+      },
+    };
+    const target = {
+      actions: {
+        cancel: "Abbrechen",
+        save: "Speichern",
+      },
+    };
+
+    const { pathMap } = translatableSubtree(source, target);
+    const merged = mergeTranslations(target, {}, pathMap) as {
+      actions: Record<string, unknown>;
+    };
+
+    expect(Object.keys(merged.actions)).toEqual(["save", "cancel"]);
+    expect(merged).toEqual({
+      actions: {
+        save: "Speichern",
+        cancel: "Abbrechen",
+      },
+    });
   });
 
   test("handles arrays of strings without overwriting populated indexes", () => {
@@ -178,6 +212,54 @@ describe("jsonTreeUtils", () => {
     expect(() =>
       translatableSubtree({ label: "Label" }, { label: { text: "Alt" } }),
     ).toThrow("Target shape conflict");
+  });
+
+  test("throws on stale path maps and unexpected translation keys", () => {
+    const { pathMap } = translatableSubtree({ label: "Label" }, {});
+
+    expect(() =>
+      mergeTranslations({ label: "Alt" }, { k0: "Neu" }, pathMap),
+    ).toThrow("is not missing");
+
+    expect(() =>
+      mergeTranslations({ label: "Alt" }, { k999: "Extra" }, pathMap),
+    ).toThrow("Unexpected translation key");
+  });
+
+  test("throws on malformed target-only values and sparse arrays", () => {
+    expect(() => deepFillMissingStrings({}, { stale: 1 })).toThrow(
+      "non-string leaf",
+    );
+
+    const sparseSource = ["Start", , "Finish"] as unknown as Parameters<
+      typeof translatableSubtree
+    >[0];
+
+    expect(() => translatableSubtree(sparseSource, [])).toThrow(
+      "sparse array hole",
+    );
+  });
+
+  test("path map keeps a snapshot of source shape", () => {
+    const source: { actions: Record<string, string> } = {
+      actions: {
+        save: "Save",
+      },
+    };
+    const { pathMap } = translatableSubtree(source, {});
+
+    source.actions = {
+      cancel: "Cancel",
+      save: "Save",
+    };
+
+    const merged = mergeTranslations({}, { k0: "Speichern" }, pathMap);
+
+    expect(merged).toEqual({
+      actions: {
+        save: "Speichern",
+      },
+    });
   });
 
   test("does not mutate source, target, dict, or path map", () => {

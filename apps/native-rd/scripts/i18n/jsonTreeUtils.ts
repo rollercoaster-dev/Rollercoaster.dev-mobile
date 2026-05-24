@@ -49,6 +49,59 @@ function hasIndex(value: readonly unknown[], index: number): boolean {
   return Object.prototype.hasOwnProperty.call(value, index);
 }
 
+function hasOwnKey(value: object, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(value, key);
+}
+
+function assertNoSparseArray(value: readonly unknown[], label: string): void {
+  for (let index = 0; index < value.length; index += 1) {
+    if (!hasIndex(value, index)) {
+      throw new Error(`${label} contains a sparse array hole`);
+    }
+  }
+}
+
+function assertFilledJsonTree(
+  value: unknown,
+  label: string,
+): asserts value is FilledJsonTree {
+  if (typeof value === "string" || isMissingTranslation(value)) {
+    return;
+  }
+
+  if (Array.isArray(value)) {
+    assertNoSparseArray(value, label);
+    value.forEach((child) => assertFilledJsonTree(child, label));
+    return;
+  }
+
+  if (isRecord(value)) {
+    Object.values(value).forEach((child) => assertFilledJsonTree(child, label));
+    return;
+  }
+
+  throw new Error(`${label} contains a non-string leaf`);
+}
+
+function cloneJsonTree(source: JsonTree): JsonTree {
+  if (typeof source === "string") {
+    return source;
+  }
+
+  if (Array.isArray(source)) {
+    assertNoSparseArray(source, "Source tree");
+    return source.map(cloneJsonTree);
+  }
+
+  const result: Record<string, JsonTree> = {};
+
+  for (const [key, child] of Object.entries(source)) {
+    result[key] = cloneJsonTree(child);
+  }
+
+  return result;
+}
+
 function fillMissing(source: JsonTree, target: unknown): FilledJsonTree {
   if (typeof source === "string") {
     if (target === undefined || isMissingTranslation(target)) {
@@ -63,11 +116,14 @@ function fillMissing(source: JsonTree, target: unknown): FilledJsonTree {
   }
 
   if (Array.isArray(source)) {
+    assertNoSparseArray(source, "Source tree");
+
     if (target !== undefined && !Array.isArray(target)) {
       throw new Error("Target shape conflict at array branch");
     }
 
     const targetArray = target ?? [];
+    assertNoSparseArray(targetArray, "Target tree");
     const result = source.map((child, index) =>
       fillMissing(
         child,
@@ -76,7 +132,9 @@ function fillMissing(source: JsonTree, target: unknown): FilledJsonTree {
     );
 
     for (let index = source.length; index < targetArray.length; index += 1) {
-      result.push(targetArray[index] as FilledJsonTree);
+      const extraTargetValue = targetArray[index];
+      assertFilledJsonTree(extraTargetValue, "Target tree");
+      result.push(extraTargetValue);
     }
 
     return result;
@@ -94,8 +152,9 @@ function fillMissing(source: JsonTree, target: unknown): FilledJsonTree {
   }
 
   for (const [key, value] of Object.entries(targetObject)) {
-    if (!(key in result)) {
-      result[key] = value as FilledJsonTree;
+    if (!hasOwnKey(result, key)) {
+      assertFilledJsonTree(value, "Target tree");
+      result[key] = value;
     }
   }
 
@@ -127,11 +186,14 @@ function collectMissing(
   }
 
   if (Array.isArray(source)) {
+    assertNoSparseArray(source, "Source tree");
+
     if (target !== undefined && !Array.isArray(target)) {
       throw new Error("Target shape conflict at array branch");
     }
 
     const targetArray = target ?? [];
+    assertNoSparseArray(targetArray, "Target tree");
     source.forEach((child, index) => {
       collectMissing(
         child,
@@ -227,7 +289,7 @@ export function translatableSubtree(
   return {
     dict,
     pathMap: {
-      source,
+      source: cloneJsonTree(source),
       paths,
       keys,
     },
@@ -240,6 +302,13 @@ export function mergeTranslations(
   pathMap: TranslationPathMap,
 ): FilledJsonTree {
   let result = deepFillMissingStrings(pathMap.source, target);
+  const expectedKeys = new Set(pathMap.keys);
+
+  for (const key of Object.keys(dict)) {
+    if (!expectedKeys.has(key)) {
+      throw new Error(`Unexpected translation key ${key}`);
+    }
+  }
 
   for (const key of pathMap.keys) {
     const path = pathMap.paths[key];
@@ -253,9 +322,11 @@ export function mergeTranslations(
       throw new Error(`Missing translation for key ${key}`);
     }
 
-    if (isMissingTranslation(getAtPath(result, path))) {
-      result = setAtPath(result, path, translation);
+    if (!isMissingTranslation(getAtPath(result, path))) {
+      throw new Error(`Translation path for key ${key} is not missing`);
     }
+
+    result = setAtPath(result, path, translation);
   }
 
   return result;
