@@ -36,7 +36,7 @@
     "release-notes:lint": "bun run scripts/release-notes-lint.ts",
     "release-notes:generate": "bun run scripts/release-notes-generate.ts",
     "release-notes:split": "bun run scripts/release-notes-split.ts",
-    "i18n:lint-source": "bun run scripts/i18n/lintSource.ts"
+    "i18n:lint-source": "bun run scripts/i18n/lintSource.cli.ts"
   },
   "dependencies": {
     "@evolu/common": "^7.4.1",

@@ -148,42 +148,33 @@ export function checkBannedPhrasings(
   return [];
 }
 
-const EN_DIR_REL = "src/i18n/resources/en";
+export const EN_DIR_REL = "src/i18n/resources/en";
 
-function discoverNamespaces(absEnDir: string): string[] {
+export function discoverNamespaces(absEnDir: string): string[] {
   return readdirSync(absEnDir)
     .filter((f) => f.endsWith(".json") && !f.endsWith(".intents.json"))
     .sort();
 }
 
-export function main(): void {
-  const appDir = join(import.meta.dir, "..", "..");
-  const absEnDir = join(appDir, EN_DIR_REL);
+/**
+ * Runs all three checks across every namespace file under `absEnDir` and
+ * returns the collected findings. Pure (no I/O beyond reading the en/ tree),
+ * exported for the CLI entrypoint at `lintSource.cli.ts` and for tests.
+ */
+export function lintEnDir(absEnDir: string): {
+  findings: Finding[];
+  namespaceCount: number;
+} {
   const namespaces = discoverNamespaces(absEnDir);
-
   const findings: Finding[] = [];
   for (const ns of namespaces) {
     const absPath = join(absEnDir, ns);
     const relPath = `apps/native-rd/${EN_DIR_REL}/${ns}`;
     const tree = loadNamespace(absPath);
     const sidecar = loadSidecar(absPath);
-
     findings.push(...checkBareStrings(relPath, tree, sidecar));
     findings.push(...checkPlaceholderConsistency(relPath, tree));
     findings.push(...checkBannedPhrasings(relPath, tree));
   }
-
-  for (const f of findings) {
-    console.log(formatFinding(f));
-  }
-  if (findings.length > 0) {
-    console.log(
-      `\n${findings.length} findings across ${namespaces.length} namespaces (warn-only).`,
-    );
-  }
-  process.exit(0);
-}
-
-if (import.meta.main) {
-  main();
+  return { findings, namespaceCount: namespaces.length };
 }
