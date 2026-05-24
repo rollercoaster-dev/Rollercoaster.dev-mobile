@@ -27,6 +27,8 @@
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
+import bannedPhrases from "./bannedPhrases.json";
+
 // Local copy of the placeholder regex — intentionally not imported from
 // `placeholderGuard.ts`. That module is a hard-fail sync-pipeline validator;
 // keeping the linter independent avoids coupling two tools with different
@@ -180,40 +182,13 @@ export function checkPlaceholderConsistency(
   return findings;
 }
 
-// Sourced from landing/docs/BRAND_LANGUAGE.md (v1.2, 2026-05-24). The doc is
-// authoritative; this list is a curated snapshot of the "Anti-Patterns" and
-// "We ARE NOT" sections. When BRAND_LANGUAGE.md changes, a human updates
-// this constant — the linter does not parse the markdown at runtime.
-const BANNED_PHRASES: readonly { phrase: string; reason: string }[] = [
-  { phrase: "or don't", reason: "exit-aside — dismissive" },
-  { phrase: "close the tab", reason: "exit-aside — dismissive" },
-  { phrase: "we'll be here", reason: "exit-aside — dismissive" },
-  { phrase: "drop out anytime", reason: "exit-aside — dismissive" },
-  { phrase: "you'll know if it's for you", reason: "exit-aside — dismissive" },
-  { phrase: "you got this", reason: "toxic positivity — empty encouragement" },
-  { phrase: "every day is a fresh start", reason: "toxic positivity" },
-  { phrase: "just believe in yourself", reason: "toxic positivity" },
-  { phrase: "even you can", reason: "condescension" },
-  { phrase: "it's so easy", reason: "condescension" },
-  {
-    phrase: "revolutionizing",
-    reason: "overpromise — forbidden in product copy",
-  },
-  { phrase: "disrupting", reason: "overpromise — forbidden in product copy" },
-  { phrase: "reimagining", reason: "overpromise — forbidden in product copy" },
-  { phrase: "transforming", reason: "overpromise — forbidden in product copy" },
-  { phrase: "special needs", reason: "othering — use 'neurodivergent'" },
-  {
-    phrase: "differently abled",
-    reason: "euphemistic — use direct ND language",
-  },
-  { phrase: "suffers from", reason: "deficit framing — omit 'suffers'" },
-  {
-    phrase: "high functioning",
-    reason: "reductive — avoid functioning labels",
-  },
-  { phrase: "low functioning", reason: "reductive — avoid functioning labels" },
-];
+// bannedPhrases.json is the shared corpus consumed by this linter and by the
+// bake-off YAML's banned-phrase JS assert. Source of truth: landing/docs/
+// BRAND_LANGUAGE.md v1.2 (2026-05-24, "Anti-Patterns" and "We ARE NOT"
+// sections). Update the JSON when BRAND_LANGUAGE.md changes — the linter
+// does not parse the markdown at runtime.
+const BANNED_PHRASES: readonly { phrase: string; reason: string }[] =
+  bannedPhrases.english;
 
 export function checkBannedPhrasings(nsPath: string, tree: unknown): Finding[] {
   const findings: Finding[] = [];

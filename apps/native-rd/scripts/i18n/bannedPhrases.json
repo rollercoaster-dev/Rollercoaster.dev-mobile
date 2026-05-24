@@ -1,0 +1,51 @@
+{
+  "english": [
+    { "phrase": "or don't", "reason": "exit-aside — dismissive" },
+    { "phrase": "close the tab", "reason": "exit-aside — dismissive" },
+    { "phrase": "we'll be here", "reason": "exit-aside — dismissive" },
+    { "phrase": "drop out anytime", "reason": "exit-aside — dismissive" },
+    {
+      "phrase": "you'll know if it's for you",
+      "reason": "exit-aside — dismissive"
+    },
+    {
+      "phrase": "you got this",
+      "reason": "toxic positivity — empty encouragement"
+    },
+    { "phrase": "every day is a fresh start", "reason": "toxic positivity" },
+    { "phrase": "just believe in yourself", "reason": "toxic positivity" },
+    { "phrase": "even you can", "reason": "condescension" },
+    { "phrase": "it's so easy", "reason": "condescension" },
+    {
+      "phrase": "revolutionizing",
+      "reason": "overpromise — forbidden in product copy"
+    },
+    {
+      "phrase": "disrupting",
+      "reason": "overpromise — forbidden in product copy"
+    },
+    {
+      "phrase": "reimagining",
+      "reason": "overpromise — forbidden in product copy"
+    },
+    {
+      "phrase": "transforming",
+      "reason": "overpromise — forbidden in product copy"
+    },
+    { "phrase": "special needs", "reason": "othering — use 'neurodivergent'" },
+    {
+      "phrase": "differently abled",
+      "reason": "euphemistic — use direct ND language"
+    },
+    { "phrase": "suffers from", "reason": "deficit framing — omit 'suffers'" },
+    {
+      "phrase": "high functioning",
+      "reason": "reductive — avoid functioning labels"
+    },
+    {
+      "phrase": "low functioning",
+      "reason": "reductive — avoid functioning labels"
+    }
+  ],
+  "german": ["oder nicht", "oder lass es"]
+}

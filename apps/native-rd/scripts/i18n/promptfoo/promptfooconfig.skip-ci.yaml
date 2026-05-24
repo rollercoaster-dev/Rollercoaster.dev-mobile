@@ -67,21 +67,24 @@ defaultTest:
         }
         return { pass: true, score: 1, reason: expected.length === 0 ? 'no placeholders expected' : 'all placeholders preserved' };
 
-    # 2. Banned-phrase absence. English anti-patterns from BRAND_LANGUAGE.md;
-    #    German list below is a researcher-drafted best-effort starting set —
-    #    TODO: review German equivalents before the first full eval run and
-    #    refine in a follow-up commit if needed.
-    - type: not-icontains-any
-      value:
-        - "special needs"
-        - "differently abled"
-        - "high-functioning"
-        - "low-functioning"
-        - "suffers from"
-        # German equivalents of the "(or don't)" exit-aside anti-pattern.
-        # TODO: review — researcher drafted; not authoritative.
-        - "oder nicht"
-        - "oder lass es"
+    # 2. Banned-phrase absence. Corpus shared with lintSource.ts via
+    #    bannedPhrases.json (sourced from BRAND_LANGUAGE.md v1.2). German
+    #    list is researcher-drafted — review before the first full eval run.
+    - type: javascript
+      value: |
+        const path = require('path');
+        const phrases = require(path.resolve(process.cwd(), 'scripts/i18n/bannedPhrases.json'));
+        const lower = String(output).toLowerCase();
+        const englishHits = phrases.english
+          .filter((p) => lower.includes(p.phrase.toLowerCase()))
+          .map((p) => p.phrase);
+        const germanHits = phrases.german.filter((p) =>
+          lower.includes(p.toLowerCase()),
+        );
+        const hits = [...englishHits, ...germanHits];
+        return hits.length === 0
+          ? { pass: true, score: 1, reason: 'no banned phrases' }
+          : { pass: false, score: 0, reason: 'banned phrases: ' + hits.join(', ') };
 
     # 3. Length bounds. German is structurally wordier than English, so the
     #    band is intentionally wide (0.5×–2.5×) to avoid false failures on
