@@ -11,7 +11,7 @@ Cross-cutting concerns that don't fit a domain slice.
 **In scope:**
 
 - i18n: `src/i18n/**`, `locales/*.json` (en/de), pseudo-locale generator
-- Sentry: `src/services/sentry.ts`, `sentry-filters.ts`, `sentry-report.ts`
+- Sentry: `src/services/sentry.ts`, `src/services/sentry-filters.ts`, `src/services/sentry-report.ts`
 - Build pipeline: `scripts/run-ios.sh`, `scripts/run-android.sh`, EAS profiles, `app.config.*`, native projects
 - Navigation primitives: `TabNavigator`, `FocusPillTabBar`, `useTabScreenContentInset`
 - Evolu: `src/db/evolu.ts`, `src/db/schema.ts`, `src/db/queries.ts`, `src/db/index.ts`

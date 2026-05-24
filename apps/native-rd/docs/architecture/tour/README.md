@@ -1,6 +1,6 @@
 # Codebase tour & review
 
-Evergreen walkthrough of `native-rd`, slice by slice. Doubles as React Native learning material and an audit log. The tour is intended to be read in order by a new contributor; the audit findings drive the linked GitHub milestone.
+Evergreen walkthrough of `native-rd`, slice by slice. Doubles as React Native learning material and an audit log. The tour is intended to be read in order by a new contributor; the audit findings are filed as a GitHub issue tree per slice (epic + sub-issues), tracked in-app as a Goal rather than as a GitHub milestone.
 
 ## Slices
 
@@ -31,7 +31,7 @@ Each slice runs the same protocol:
 
 1. **Prep** — enumerate files in scope, list RN concepts likely to need explanation, jot suspect findings to investigate during the walkthrough.
 2. **Live walkthrough** — file-by-file narration; questions drive depth; findings captured inline.
-3. **Writeup** — draft the chapter from the walkthrough; stage findings in [`checklist.md`](checklist.md); file findings as GH issues against the review milestone (epic + sub-issues + `blocked-by`, in one pass).
+3. **Writeup** — draft the chapter from the walkthrough; stage findings in [`checklist.md`](checklist.md); file findings as a GH issue tree (epic + sub-issues + `blocked-by`, in one pass). The epic per slice is linked from the in-app Goal step as evidence.
 
 ### Five lenses
 
@@ -63,7 +63,7 @@ Skim them or read deep — they don't gate the chapter narrative.
 
 ## Checklist staging
 
-[`checklist.md`](checklist.md) is the staging area for findings before they become GH issues. Once a slice's findings are filed against the review milestone, the staged entries are deleted (not archived). Filed issues are the source of truth; the staging file is ephemeral.
+[`checklist.md`](checklist.md) is the staging area for findings before they become GH issues. Once a slice's findings are filed as an epic + sub-issues, the staged entries are deleted (not archived). Filed issues are the source of truth; the staging file is ephemeral.
 
 ## Chapter template
 

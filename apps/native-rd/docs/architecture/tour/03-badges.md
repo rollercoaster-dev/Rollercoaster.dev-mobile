@@ -16,7 +16,7 @@ Badge creation, design, display, and the OpenBadges signing/baking pipeline.
 - `CompletionFlowScreen` (badge issuance entry point — co-reviewed with slice 1's goal-completion flow)
 - `src/badges/**` and the workspace package `@rollercoaster-dev/openbadges-core`
 - `src/crypto/**` (Ed25519 keys, PNG baking, hashing)
-- `KeyProvider` interface + `SecureStoreKeyProvider` integration plan
+- `KeyProvider` interface + `SecureStoreKeyProvider` implementation (`src/crypto/`)
 - `src/stores/pendingDesignStore.ts`
 
 **Deferred:**
