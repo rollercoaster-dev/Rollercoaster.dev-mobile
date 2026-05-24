@@ -85,12 +85,53 @@ export function loadSidecar(nsPath: string): Record<string, unknown> | null {
   return parsed as Record<string, unknown>;
 }
 
+/**
+ * `keyPath` resolves to a non-null value in `sidecar` (e.g. `"hero.title"`
+ * traverses `sidecar.hero.title`). The presence of any value at the leaf
+ * — shape ignored — counts as "intent documented" for v1; sidecar shape
+ * validation belongs in the register-YAML PR.
+ */
+function sidecarHasEntry(
+  sidecar: Record<string, unknown>,
+  keyPath: string,
+): boolean {
+  const segments = keyPath.split(".");
+  let cursor: unknown = sidecar;
+  for (const seg of segments) {
+    if (
+      cursor === null ||
+      typeof cursor !== "object" ||
+      Array.isArray(cursor)
+    ) {
+      return false;
+    }
+    cursor = (cursor as Record<string, unknown>)[seg];
+    if (cursor === undefined) {
+      return false;
+    }
+  }
+  return cursor !== null;
+}
+
 export function checkBareStrings(
-  _nsPath: string,
-  _tree: unknown,
-  _sidecar: Record<string, unknown> | null,
+  nsPath: string,
+  tree: unknown,
+  sidecar: Record<string, unknown> | null,
 ): Finding[] {
-  return [];
+  const findings: Finding[] = [];
+  walkLeaves(tree, "", (keyPath) => {
+    if (sidecar !== null && sidecarHasEntry(sidecar, keyPath)) {
+      return;
+    }
+    findings.push({
+      category: "bare-string",
+      file: nsPath,
+      keyPath,
+      detail:
+        "no intent sidecar entry — add to <ns>.intents.json to guide translation register",
+    });
+  });
+  return findings;
 }
 
 export function checkPlaceholderConsistency(
