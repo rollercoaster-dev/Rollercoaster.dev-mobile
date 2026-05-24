@@ -11,11 +11,11 @@
 
 Observable criteria derived from the issue. These describe what success looks like from a user/system perspective — not generic checklists.
 
-- [ ] `placeholderGuard.checkPlaceholders(source, candidate, key)` throws (or returns a structured error — see D1) when any `{{name}}` from the source is absent from the candidate, when the candidate adds a placeholder not in the source, or when a placeholder appears more than once in the candidate. Passes silently when sets match exactly.
-- [ ] `responseParser.parseAndValidate(raw, expectedKeys)` returns a typed `Record<string, string>` when `raw` is a valid JSON object whose keys exactly match `expectedKeys` and all values are non-empty strings. Returns a structured error (not throws) for wrong type, missing key, extra key, non-string value, empty string value, and non-JSON input.
-- [ ] Both modules are pure — importing them has no I/O side effects; the test suite runs with no network, filesystem, or LLM calls.
-- [ ] `bun run type-check` passes (covers scripts via `tsconfig.scripts.json`).
-- [ ] `bun run test` picks up and passes all tests in `scripts/i18n/__tests__/`.
+- [x] `placeholderGuard.checkPlaceholders(source, candidate, key)` throws (or returns a structured error — see D1) when any `{{name}}` from the source is absent from the candidate, when the candidate adds a placeholder not in the source, or when a placeholder appears more than once in the candidate. Passes silently when sets match exactly.
+- [x] `responseParser.parseAndValidate(raw, expectedKeys)` returns a typed `Record<string, string>` when `raw` is a valid JSON object whose keys exactly match `expectedKeys` and all values are non-empty strings. Returns a structured error (not throws) for wrong type, missing key, extra key, non-string value, empty string value, and non-JSON input.
+- [x] Both modules are pure — importing them has no I/O side effects; the test suite runs with no network, filesystem, or LLM calls.
+- [x] `bun run type-check` passes (covers scripts via `tsconfig.scripts.json` + new `tsconfig.scripts-test.json`).
+- [x] `bun run test` picks up and passes all tests in `scripts/i18n/__tests__/`.
 
 ## Dependencies
 
@@ -67,9 +67,9 @@ Ship the two hard-fail validation layers that sit between the raw LLM response a
 
 **Changes**:
 
-- [ ] Add `"zod": "^3"` to `dependencies` in `apps/native-rd/package.json` (no install needed — already in workspace lock at `3.25.76`)
-- [ ] Extend `testMatch` in `jest.config.js` from `["**/src/**/__tests__/**/*.test.{ts,tsx}"]` to `["**/src/**/__tests__/**/*.test.{ts,tsx}", "**/scripts/**/__tests__/**/*.test.ts"]`
-- [ ] Create `apps/native-rd/tsconfig.scripts-test.json`:
+- [x] Add `"zod": "^3"` to `dependencies` in `apps/native-rd/package.json` (no install needed — already in workspace lock at `3.25.76`)
+- [x] Extend `testMatch` in `jest.config.js` from `["**/src/**/__tests__/**/*.test.{ts,tsx}"]` to `["**/src/**/__tests__/**/*.test.{ts,tsx}", "**/scripts/**/__tests__/**/*.test.ts"]`
+- [x] Create `apps/native-rd/tsconfig.scripts-test.json`:
   ```json
   {
     "extends": "./tsconfig.json",
@@ -80,7 +80,7 @@ Ship the two hard-fail validation layers that sit between the raw LLM response a
     "exclude": []
   }
   ```
-- [ ] Update `type-check` script in `package.json` to also run `tsc --noEmit -p tsconfig.scripts-test.json` (alongside existing three tsconfig checks)
+- [x] Update `type-check` script in `package.json` to also run `tsc --noEmit -p tsconfig.scripts-test.json` (alongside existing three tsconfig checks)
 
 **Note**: This step has no test output on its own — it only unlocks Steps 2 and 3. It is a single atomic commit because the three changes are a single coherent "wire-up" concern.
 
@@ -97,25 +97,25 @@ Ship the two hard-fail validation layers that sit between the raw LLM response a
 
 **Changes**:
 
-- [ ] Define `PlaceholderError` type with fields: `key: string`, `missing: string[]`, `extra: string[]`, `duplicates: string[]` (where `missing` = in source but not candidate, `extra` = in candidate but not source, `duplicates` = appear >1× in candidate)
-- [ ] Implement `extractPlaceholders(str: string): string[]` — pure regex scan using `/\{\{([^}]+)\}\}/g`, returns array preserving duplicates (so the caller can detect them)
-- [ ] Implement `checkPlaceholders(source: string, candidate: string, key: string): { ok: true } | { ok: false; error: PlaceholderError }`:
+- [x] Define `PlaceholderError` type with fields: `key: string`, `missing: string[]`, `extra: string[]`, `duplicates: string[]` (where `missing` = in source but not candidate, `extra` = in candidate but not source, `duplicates` = appear >1× in candidate)
+- [x] Implement `extractPlaceholders(str: string): string[]` — pure regex scan using `/\{\{([^}]+)\}\}/g`, returns array preserving duplicates (so the caller can detect them)
+- [x] Implement `checkPlaceholders(source: string, candidate: string, key: string): { ok: true } | { ok: false; error: PlaceholderError }`:
   - Extract both sets
   - Detect `missing` (in source set, not in candidate set)
   - Detect `extra` (in candidate set, not in source set)
   - Detect `duplicates` (candidate array has same placeholder >1×)
   - Return `{ ok: true }` iff all three arrays are empty
-- [ ] Export `checkPlaceholders`, `PlaceholderError`, `extractPlaceholders`
-- [ ] Test cases (use `test.each` for the mismatch variants):
-  - [ ] Matching placeholders → ok
-  - [ ] Source has `{{name}}`, candidate omits it → error with `missing: ["name"]`
-  - [ ] Candidate adds `{{extra}}` not in source → error with `extra: ["extra"]`
-  - [ ] Candidate renames `{{name}}` → `{{nom}}` → error with both `missing` and `extra`
-  - [ ] Candidate duplicates `{{name}}` twice → error with `duplicates: ["name"]`
-  - [ ] Empty source + empty candidate (no placeholders) → ok
-  - [ ] Source has no placeholders, candidate has none → ok
-  - [ ] Source has no placeholders, candidate adds one → error with `extra`
-  - [ ] Multiple placeholders in source, all present exactly once in candidate → ok
+- [x] Export `checkPlaceholders`, `PlaceholderError`, `extractPlaceholders`
+- [x] Test cases (use `test.each` for the mismatch variants):
+  - [x] Matching placeholders → ok
+  - [x] Source has `{{name}}`, candidate omits it → error with `missing: ["name"]`
+  - [x] Candidate adds `{{extra}}` not in source → error with `extra: ["extra"]`
+  - [x] Candidate renames `{{name}}` → `{{nom}}` → error with both `missing` and `extra`
+  - [x] Candidate duplicates `{{name}}` twice → error with `duplicates: ["name"]`
+  - [x] Empty source + empty candidate (no placeholders) → ok
+  - [x] Source has no placeholders, candidate has none → ok
+  - [x] Source has no placeholders, candidate adds one → error with `extra`
+  - [x] Multiple placeholders in source, all present exactly once in candidate → ok
 
 ---
 
@@ -130,35 +130,35 @@ Ship the two hard-fail validation layers that sit between the raw LLM response a
 
 **Changes**:
 
-- [ ] Define `ParseError` type with fields: `reason: string`, `detail?: string` (human-readable, structured enough to surface the exact violation)
-- [ ] Define Zod schema `llmResponseSchema` as `z.record(z.string().min(1))` — a record where all values are non-empty strings
-- [ ] Implement `parseAndValidate(raw: unknown, expectedKeys: string[]): { ok: true; data: Record<string, string> } | { ok: false; error: ParseError }`:
+- [x] Define `ParseError` type with fields: `reason: string`, `detail?: string` (human-readable, structured enough to surface the exact violation)
+- [x] Define Zod schema `llmResponseSchema` as `z.record(z.string().min(1))` — a record where all values are non-empty strings
+- [x] Implement `parseAndValidate(raw: unknown, expectedKeys: string[]): { ok: true; data: Record<string, string> } | { ok: false; error: ParseError }`:
   - If `raw` is a string, attempt `JSON.parse` — on throw, return `{ ok: false, error: { reason: "malformed-json", detail: ... } }`
   - Parse through `llmResponseSchema.safeParse` — on failure, return `{ ok: false, error: { reason: "schema-mismatch", detail: ... } }`
   - Compute `actualKeys = Object.keys(data)`, compare with `expectedKeys`:
     - Missing keys (in expected but not actual) → `{ ok: false, error: { reason: "missing-keys", detail: ... } }`
     - Extra keys (in actual but not expected) → `{ ok: false, error: { reason: "extra-keys", detail: ... } }`
   - Return `{ ok: true, data }` only when schema + key set both pass
-- [ ] Export `parseAndValidate`, `ParseError`, `llmResponseSchema`
-- [ ] Test cases (use `test.each` for error variants):
-  - [ ] Valid response matching `expectedKeys` → ok with typed dict
-  - [ ] Response with extra key not in `expectedKeys` → error `reason: "extra-keys"`
-  - [ ] Response missing a key from `expectedKeys` → error `reason: "missing-keys"`
-  - [ ] Response with a non-string value (e.g. `{ k0: 42 }`) → error `reason: "schema-mismatch"`
-  - [ ] Response with an empty string value (`{ k0: "" }`) → error `reason: "schema-mismatch"`
-  - [ ] Malformed JSON string → error `reason: "malformed-json"`
-  - [ ] `raw` is a plain object (not string, already parsed) — `parseAndValidate` handles both pre-parsed and raw string inputs
-  - [ ] `raw` is `null` → error
-  - [ ] `raw` is an array → error
-  - [ ] `expectedKeys` is `[]` and response is `{}` → ok (empty-translation edge case)
+- [x] Export `parseAndValidate`, `ParseError`, `llmResponseSchema`
+- [x] Test cases (use `test.each` for error variants):
+  - [x] Valid response matching `expectedKeys` → ok with typed dict
+  - [x] Response with extra key not in `expectedKeys` → error `reason: "extra-keys"`
+  - [x] Response missing a key from `expectedKeys` → error `reason: "missing-keys"`
+  - [x] Response with a non-string value (e.g. `{ k0: 42 }`) → error `reason: "schema-mismatch"`
+  - [x] Response with an empty string value (`{ k0: "" }`) → error `reason: "schema-mismatch"`
+  - [x] Malformed JSON string → error `reason: "malformed-json"`
+  - [x] `raw` is a plain object (not string, already parsed) — `parseAndValidate` handles both pre-parsed and raw string inputs
+  - [x] `raw` is `null` → error
+  - [x] `raw` is an array → error
+  - [x] `expectedKeys` is `[]` and response is `{}` → ok (empty-translation edge case)
 
 ## Testing Strategy
 
-- [ ] Jest 30, no React Native environment needed — script tests run in the default Node environment (no `testEnvironment` override needed since they never touch RN globals)
-- [ ] Test files at `scripts/i18n/__tests__/placeholderGuard.test.ts` and `scripts/i18n/__tests__/responseParser.test.ts`
-- [ ] Use `test.each` for the mismatch/error-reason variant tables in both files
-- [ ] No mocks needed — both modules are pure functions with no I/O
-- [ ] Manual smoke: after writing files, run `bun test --testPathPatterns scripts/i18n` to confirm Jest picks them up and passes
+- [x] Jest 30, no React Native environment needed — script tests run in the default Node environment (no `testEnvironment` override needed since they never touch RN globals)
+- [x] Test files at `scripts/i18n/__tests__/placeholderGuard.test.ts` and `scripts/i18n/__tests__/responseParser.test.ts`
+- [x] Use `test.each` for the mismatch/error-reason variant tables in both files
+- [x] No mocks needed — both modules are pure functions with no I/O
+- [x] Manual smoke: after writing files, run `bun test --testPathPatterns scripts/i18n` to confirm Jest picks them up and passes
 
 ## Not in Scope
 
@@ -172,9 +172,8 @@ Ship the two hard-fail validation layers that sit between the raw LLM response a
 
 ## Discovery Log
 
-<!-- Entries added by implement skill:
-- [YYYY-MM-DD HH:MM] <discovery description>
--->
+- [2026-05-24] Tsconfig split: `tsconfig.scripts-test.json` `include` was narrowed from `scripts/**/*.ts` to `scripts/**/__tests__/**/*.ts`. The broader glob caused TS to type-check non-test scripts (e.g. `verify-badge.ts`) under jest-only types, which broke them since they rely on bun globals (`process`). Imports from test files transitively type-check the modules they consume, so scoping the include to tests is sufficient.
+- [2026-05-24] Step 1 commit moved the tsconfig-scripts-test wire-up out and into Step 2. Reason: an empty `__tests__` include yields TS18003 ("No inputs were found"), which would fail Step 1's atomic type-check gate. Step 2 creates the first test file and the tsconfig together, so the gate passes from commit #2 onward.
 
 ---
 
