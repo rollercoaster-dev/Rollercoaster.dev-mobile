@@ -131,11 +131,11 @@ The gateway and its tests land in one commit because the tests directly exercise
 **Gateway changes**:
 
 - [ ] Import `createOpenAI` from `@ai-sdk/openai` and `generateText` from `ai`
-- [ ] Construct the OpenRouter provider once (module scope) pointing at `baseURL: "https://openrouter.ai/api/v1"`; the API key is read from `process.env.OPENROUTER_API_KEY` at construction time
+- [ ] Construct the OpenRouter provider once (module scope) pointing at `baseURL: "https://openrouter.ai/api/v1"`; the SDK reads the API key lazily on each request via `loadApiKey()`, so module construction is safe even when the env var is unset at import time (a runtime guard in `callModel` still fails fast — see next bullet)
 - [ ] Implement `callModel(name: string, systemPrompt: string, userContent: string): Promise<string>` (signature locked per D10 — translator PR #5 needs system + user split):
   - Read `process.env.OPENROUTER_API_KEY` at the top of the function body; if falsy, throw synchronously with a clear message (`"OPENROUTER_API_KEY is not set"`)
   - Call `getModel(name)` to resolve the entry (re-throws on unknown name — propagates verbatim, per D5)
-  - Call `generateText({ model: provider(entry.modelId), system: systemPrompt, prompt: userContent, temperature: entry.temperature, maxTokens: entry.maxTokens })` — no try/catch, errors surface verbatim
+  - Call `generateText({ model: provider(entry.modelId), system: systemPrompt, prompt: userContent, temperature: entry.temperature, maxOutputTokens: entry.maxTokens })` — no try/catch, errors surface verbatim (AI SDK v6 renamed `maxTokens` → `maxOutputTokens`; see discovery log)
   - Return `result.text`
 - [ ] **No** OpenRouter attribution headers — provider constructor passes only `baseURL` and `apiKey`. Per D11, omit `HTTP-Referer` and `X-Title` entirely.
 - [ ] Export `callModel`
