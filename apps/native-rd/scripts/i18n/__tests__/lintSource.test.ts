@@ -2,6 +2,8 @@ import {
   checkBannedPhrasings,
   checkBareStrings,
   checkPlaceholderConsistency,
+  formatFinding,
+  type Finding,
 } from "../lintSource";
 
 describe("checkBareStrings", () => {
@@ -149,5 +151,19 @@ describe("checkBannedPhrasings", () => {
     const phrases = findings.map((f) => f.detail);
     expect(phrases.some((d) => d.includes("or don't"))).toBe(true);
     expect(phrases.some((d) => d.includes("even you can"))).toBe(true);
+  });
+});
+
+describe("formatFinding", () => {
+  test("renders the [category] file keyPath detail shape", () => {
+    const f: Finding = {
+      category: "bare-string",
+      file: "apps/native-rd/src/i18n/resources/en/welcome.json",
+      keyPath: "hero.title",
+      detail: "no intent sidecar entry",
+    };
+    expect(formatFinding(f)).toBe(
+      "[bare-string] apps/native-rd/src/i18n/resources/en/welcome.json hero.title no intent sidecar entry",
+    );
   });
 });

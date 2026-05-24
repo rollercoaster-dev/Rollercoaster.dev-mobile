@@ -418,8 +418,7 @@ The sidecar file (`<ns>.intents.json`) is described as mirroring the namespace J
 
 ## Discovery Log
 
-Runtime discoveries made during implementation. Starts empty — populated by the implement skill as work progresses.
-
-<!-- Entries added by implement skill:
-- [YYYY-MM-DD HH:MM] <discovery description>
--->
+- [2026-05-24] `lintSource.ts` originally placed `main()` with `import.meta.dir` / `import.meta.main` (matching `generate-pseudo-locale.ts`'s convention). When the test file was added, jest's babel pipeline (babel-preset-expo targeting Hermes) refused to parse `import.meta` because `unstable_transformImportMeta` isn't enabled. **Resolution:** the CLI bootstrap moved into `lintSource.cli.ts`; `lintSource.ts` is pure and exports `lintEnDir(absEnDir)` + helpers. Updated `package.json` script to the `.cli.ts` entry. Also added `"bun"` to `tsconfig.scripts-test.json`'s `types` so the test config could resolve `node:fs`/`node:path` transitively imported via `lintSource.ts`. Commit `db069eb`.
+- [2026-05-24] Real-world signal check on the placeholder-conflict heuristic (Ambiguity #1): 3 findings total against the 15 en/ files — `{{label}}`, `{{count}}`, `{{title}}` each flagged once. No flood; heuristic does not need tightening for v1.
+- [2026-05-24] Banned-phrasing check produces 0 findings against current en/ files — existing copy is consistent with `BRAND_LANGUAGE.md`, sanity-checks that the check isn't producing false positives.
+- [2026-05-24] Bare-string check produces 264 findings (every leaf flagged, since no `*.intents.json` sidecars exist yet). This is the intended v1 signal per the locked decision — surfaces every string that would benefit from intent overrides.
