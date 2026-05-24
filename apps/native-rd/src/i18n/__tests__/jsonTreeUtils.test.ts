@@ -226,6 +226,17 @@ describe("jsonTreeUtils", () => {
     ).toThrow("Unexpected translation key");
   });
 
+  test("throws on non-string translation values", () => {
+    const { pathMap } = translatableSubtree({ label: "Label" }, {});
+    const malformedDict = { k0: { text: "Neu" } } as unknown as Parameters<
+      typeof mergeTranslations
+    >[1];
+
+    expect(() => mergeTranslations({}, malformedDict, pathMap)).toThrow(
+      "must be a string",
+    );
+  });
+
   test("throws on malformed target-only values and sparse arrays", () => {
     expect(() => deepFillMissingStrings({}, { stale: 1 })).toThrow(
       "non-string leaf",

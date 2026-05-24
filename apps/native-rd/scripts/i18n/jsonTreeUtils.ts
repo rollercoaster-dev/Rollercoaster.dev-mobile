@@ -323,6 +323,10 @@ export function mergeTranslations(
       throw new Error(`Missing translation for key ${key}`);
     }
 
+    if (typeof translation !== "string") {
+      throw new Error(`Translation for key ${key} must be a string`);
+    }
+
     if (!isMissingTranslation(getAtPath(result, path))) {
       throw new Error(`Translation path for key ${key} is not missing`);
     }
