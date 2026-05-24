@@ -53,12 +53,13 @@ providers:
 # `required: true` style block here would be a silent no-op.
 #
 # Fixture corpus lives in fixtures.json. Each entry contributes one test case
-# with vars { ns, key, en, categories, placeholders }.
+# with vars { ns, key, en }. Keep arrays out of `vars`: promptfoo expands array
+# vars into multiple test rows, which corrupts placeholder assertions.
 tests: file://./fixtures.json
 
-# Assertions applied to every fixture. Placeholder/length checks are
-# deterministic; the rubric uses claude-opus-4-5 (outside the candidate pool
-# to avoid self-grading bias) at temperature 0 for stable scoring.
+# Assertions applied to every fixture. Placeholder, banned-phrase, and length
+# checks are deterministic. Voice rubric assertions live only on prose fixtures
+# in fixtures.json so operational labels are not judged for brand voice.
 defaultTest:
   options:
     provider:
@@ -66,75 +67,84 @@ defaultTest:
       config:
         temperature: 0
   assert:
-    # 1. Placeholder preservation. Vacuously true for fixtures with no
-    #    placeholders (every() over an empty array returns true). The typeof
-    #    guard converts a non-string output (null / object / array) into a
-    #    loud failure instead of a confusing TypeError or — for arrays —
-    #    a silent pass via Array.prototype.includes element-equality.
+    # 1. Placeholder preservation. Expected placeholders are derived from the
+    #    source string, not fixture metadata, so promptfoo var expansion cannot
+    #    turn an array into a scalar and break the check.
     - type: javascript
       value: |
         if (typeof output !== 'string') {
-          throw new Error('placeholder check: expected string output, got ' + typeof output);
+          return { pass: false, score: 0, reason: 'expected string output, got ' + typeof output };
         }
-        const expected = context.vars.placeholders || [];
-        return expected.every((p) => output.includes('{{' + p + '}}'));
+        const extract = (str) =>
+          Array.from(String(str).matchAll(/\{\{([^}]+)\}\}/g), (m) => m[1].trim());
+        const count = (arr) =>
+          arr.reduce((map, key) => ((map[key] = (map[key] || 0) + 1), map), {});
+        const expectedCounts = count(extract(context.vars.en || ''));
+        const actualCounts = count(extract(output));
+        const keys = new Set([...Object.keys(expectedCounts), ...Object.keys(actualCounts)]);
+        const missing = [];
+        const extra = [];
+        for (const key of keys) {
+          const expected = expectedCounts[key] || 0;
+          const actual = actualCounts[key] || 0;
+          if (actual < expected) missing.push(key);
+          if (actual > expected) extra.push(key);
+        }
+        if (missing.length || extra.length) {
+          const parts = [];
+          if (missing.length) parts.push('missing: ' + missing.join(', '));
+          if (extra.length) parts.push('extra: ' + extra.join(', '));
+          return { pass: false, score: 0, reason: parts.join('; ') };
+        }
+        const expectedTotal = Object.values(expectedCounts).reduce((sum, n) => sum + n, 0);
+        return {
+          pass: true,
+          score: 1,
+          reason: expectedTotal === 0 ? 'no placeholders expected' : 'all placeholders preserved',
+        };
 
     # 2. Banned-phrase absence. English anti-patterns from BRAND_LANGUAGE.md;
-    #    German list below is a researcher-drafted best-effort starting set —
-    #    TODO: review German equivalents before the first full eval run and
-    #    refine in a follow-up commit if needed.
-    - type: not-icontains-any
-      value:
-        - "special needs"
-        - "differently abled"
-        - "high-functioning"
-        - "low-functioning"
-        - "suffers from"
-        # German equivalents of the "(or don't)" exit-aside anti-pattern.
-        # TODO: review — researcher drafted; not authoritative.
-        - "oder nicht"
-        - "oder lass es"
+    #    German list is researcher-drafted and should be refined from real run
+    #    failures, not expanded speculatively.
+    - type: javascript
+      value: |
+        if (typeof output !== 'string') {
+          return { pass: false, score: 0, reason: 'expected string output, got ' + typeof output };
+        }
+        const phrases = [
+          'special needs',
+          'differently abled',
+          'high-functioning',
+          'low-functioning',
+          'suffers from',
+          'oder nicht',
+          'oder lass es',
+        ];
+        const lower = output.toLowerCase();
+        const hits = phrases.filter((phrase) => lower.includes(phrase.toLowerCase()));
+        return hits.length === 0
+          ? { pass: true, score: 1, reason: 'no banned phrases' }
+          : { pass: false, score: 0, reason: 'banned phrases: ' + hits.join(', ') };
 
     # 3. Length bounds. German is structurally wordier than English, so the
     #    band is intentionally wide (0.5×–2.5×) to avoid false failures on
     #    short strings while catching runaway verbosity on long ones.
-    #    Guards: non-string output would NaN-divide silently as "out of
-    #    range"; empty en would divide-by-zero. Both throw loud errors so
-    #    the failure mode is self-explanatory in the promptfoo report.
     - type: javascript
       value: |
         if (typeof output !== 'string') {
-          throw new Error('length check: expected string output, got ' + typeof output);
+          return { pass: false, score: 0, reason: 'expected string output, got ' + typeof output };
+        }
+        if (typeof context.vars.en !== 'string') {
+          return { pass: false, score: 0, reason: 'context.vars.en missing or non-string' };
         }
         const enLen = context.vars.en.length;
         if (enLen === 0) {
-          throw new Error('length check: en fixture is empty');
+          return { pass: false, score: 0, reason: 'en fixture is empty' };
         }
         const ratio = output.length / enLen;
-        return ratio >= 0.5 && ratio <= 2.5;
-
-    # 4. LLM-as-judge voice rubric. Criteria are quoted inline from the
-    #    sibling landing/ repo's BRAND_LANGUAGE.md — that file is NOT in this
-    #    mobile repo, so referencing a relative path would dangle.
-    - type: llm-rubric
-      threshold: 0.5
-      value: |
-        Score the German translation of this UI string against the
-        Rollercoaster.dev brand voice. The source UI is a personal learning
-        tracker used by neurodivergent people. Rate PASS only if all
-        criteria hold; otherwise FAIL. Explain the rating in one sentence.
-
-        Criteria:
-        1. Direct and non-patronizing. No "Betroffene", no "Menschen mit
-           besonderen Bedürfnissen" or other euphemistic distancing, no
-           generic positivity ("jeder ist einzigartig").
-        2. Matter-of-fact tone. No exclamation points unless the source had
-           one. No motivational filler.
-        3. Identity-first ND vocabulary where the source implies it (e.g.
-           "autistische Person" not "Mensch mit Autismus" or "Betroffene").
-        4. Parenthetical asides, if present in the source, preserved as
-           recognition (the user is *known* to the system) — not as an
-           exit/dismissal ("oder lass es", "ist auch okay") that suggests
-           the user opt out.
-        5. Brevity. As concise as grammatically possible in German; no
-           padding, no over-explanation.
+        const pass = ratio >= 0.5 && ratio <= 2.5;
+        return {
+          pass,
+          score: pass ? 1 : 0,
+          reason: 'length ratio ' + ratio.toFixed(2) + 'x (band 0.5-2.5)',
+        };
