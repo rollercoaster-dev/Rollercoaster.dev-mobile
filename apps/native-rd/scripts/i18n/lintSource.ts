@@ -134,11 +134,52 @@ export function checkBareStrings(
   return findings;
 }
 
+function topLevelKey(keyPath: string): string {
+  const dot = keyPath.indexOf(".");
+  return dot === -1 ? keyPath : keyPath.slice(0, dot);
+}
+
 export function checkPlaceholderConsistency(
-  _nsPath: string,
-  _tree: unknown,
+  nsPath: string,
+  tree: unknown,
 ): Finding[] {
-  return [];
+  const occurrences = new Map<string, string[]>();
+  walkLeaves(tree, "", (keyPath, value) => {
+    for (const m of value.matchAll(PLACEHOLDER_RE)) {
+      const name = m[1].trim();
+      const list = occurrences.get(name) ?? [];
+      list.push(keyPath);
+      occurrences.set(name, list);
+    }
+  });
+
+  const findings: Finding[] = [];
+  for (const [name, keyPaths] of occurrences) {
+    if (keyPaths.length < 2) continue;
+    const topLevels = new Set(keyPaths.map(topLevelKey));
+    if (topLevels.size < 2) continue;
+
+    // Pick the first two key paths whose top-level prefixes differ, so the
+    // detail line points at a real conflict pair rather than two siblings
+    // that happen to be first in iteration order.
+    let a = keyPaths[0];
+    let b: string | undefined;
+    for (const kp of keyPaths.slice(1)) {
+      if (topLevelKey(kp) !== topLevelKey(a)) {
+        b = kp;
+        break;
+      }
+    }
+    if (b === undefined) continue;
+
+    findings.push({
+      category: "placeholder-conflict",
+      file: nsPath,
+      keyPath: `${a} | ${b}`,
+      detail: `{{${name}}} appears in ${a} and ${b} — verify same semantic load`,
+    });
+  }
+  return findings;
 }
 
 export function checkBannedPhrasings(
