@@ -157,6 +157,11 @@ i18n.use(initReactI18next).init({
   saveMissing: warnMissingKeys,
   missingKeyHandler: warnMissingKeys
     ? (lngs, ns, key) => {
+        // de bundles are intentional `{}` stubs until per-screen German copy
+        // lands (#67–#72); falling back to en is expected, not a bug. Only
+        // warn when en is also missing the key — the real "refactor broke a
+        // key" signal.
+        if (lngs.every((l) => l === "de")) return;
         logger.warn(
           `Missing key "${key}" in namespace "${ns}" (${lngs.join(", ")})`,
         );

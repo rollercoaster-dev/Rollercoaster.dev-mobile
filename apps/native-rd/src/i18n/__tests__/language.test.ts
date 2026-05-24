@@ -36,6 +36,16 @@ describe("selectSupportedLanguage", () => {
       ["es-ES locale falls back to en", [withLanguageCode("es")], "en"],
       ["null languageCode falls back to en", [withLanguageCode(null)], "en"],
       ["empty locales array falls back to en", [], "en"],
+      [
+        "de first in multi-locale array selects de",
+        [withLanguageCode("de"), withLanguageCode("en")],
+        "de",
+      ],
+      [
+        "en first in multi-locale array wins over later de",
+        [withLanguageCode("en"), withLanguageCode("de")],
+        "en",
+      ],
     ])("%s → %s", (_label, locales, expected) => {
       expect(selectSupportedLanguage(locales)).toBe(expected);
     });
