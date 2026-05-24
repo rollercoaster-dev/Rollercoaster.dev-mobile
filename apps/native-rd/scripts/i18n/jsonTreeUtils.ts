@@ -102,6 +102,28 @@ function cloneJsonTree(source: JsonTree): JsonTree {
   return result;
 }
 
+function targetArrayForBranch(target: unknown): readonly unknown[] {
+  if (target !== undefined && !Array.isArray(target)) {
+    throw new Error("Target shape conflict at array branch");
+  }
+
+  const targetArray = target ?? [];
+  assertNoSparseArray(targetArray, "Target tree");
+  return targetArray;
+}
+
+function targetObjectForBranch(target: unknown): Record<string, unknown> {
+  if (target !== undefined && !isRecord(target)) {
+    throw new Error("Target shape conflict at object branch");
+  }
+
+  return target ?? {};
+}
+
+function targetChild(targetArray: readonly unknown[], index: number): unknown {
+  return hasIndex(targetArray, index) ? targetArray[index] : undefined;
+}
+
 function fillMissing(source: JsonTree, target: unknown): FilledJsonTree {
   if (typeof source === "string") {
     if (target === undefined || isMissingTranslation(target)) {
@@ -118,17 +140,9 @@ function fillMissing(source: JsonTree, target: unknown): FilledJsonTree {
   if (Array.isArray(source)) {
     assertNoSparseArray(source, "Source tree");
 
-    if (target !== undefined && !Array.isArray(target)) {
-      throw new Error("Target shape conflict at array branch");
-    }
-
-    const targetArray = target ?? [];
-    assertNoSparseArray(targetArray, "Target tree");
+    const targetArray = targetArrayForBranch(target);
     const result = source.map((child, index) =>
-      fillMissing(
-        child,
-        hasIndex(targetArray, index) ? targetArray[index] : undefined,
-      ),
+      fillMissing(child, targetChild(targetArray, index)),
     );
 
     for (let index = source.length; index < targetArray.length; index += 1) {
@@ -140,11 +154,7 @@ function fillMissing(source: JsonTree, target: unknown): FilledJsonTree {
     return result;
   }
 
-  if (target !== undefined && !isRecord(target)) {
-    throw new Error("Target shape conflict at object branch");
-  }
-
-  const targetObject = target ?? {};
+  const targetObject = targetObjectForBranch(target);
   const result: Record<string, FilledJsonTree> = {};
 
   for (const [key, child] of Object.entries(source)) {
@@ -188,16 +198,11 @@ function collectMissing(
   if (Array.isArray(source)) {
     assertNoSparseArray(source, "Source tree");
 
-    if (target !== undefined && !Array.isArray(target)) {
-      throw new Error("Target shape conflict at array branch");
-    }
-
-    const targetArray = target ?? [];
-    assertNoSparseArray(targetArray, "Target tree");
+    const targetArray = targetArrayForBranch(target);
     source.forEach((child, index) => {
       collectMissing(
         child,
-        hasIndex(targetArray, index) ? targetArray[index] : undefined,
+        targetChild(targetArray, index),
         [...path, index],
         dict,
         paths,
@@ -207,11 +212,7 @@ function collectMissing(
     return;
   }
 
-  if (target !== undefined && !isRecord(target)) {
-    throw new Error("Target shape conflict at object branch");
-  }
-
-  const targetObject = target ?? {};
+  const targetObject = targetObjectForBranch(target);
   for (const [key, child] of Object.entries(source)) {
     collectMissing(child, targetObject[key], [...path, key], dict, paths, keys);
   }
