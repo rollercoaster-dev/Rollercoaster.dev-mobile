@@ -46,11 +46,12 @@ providers:
     config:
       temperature: 0
 
-# Required env. promptfoo surfaces a clear error if unset.
-env:
-  OPENROUTER_API_KEY:
-    required: true
-
+# OPENROUTER_API_KEY is read from the shell environment by the openrouter:*
+# providers. The npm script `i18n:bakeoff` shells out a precheck so unset
+# fails fast with a clear message — promptfoo's own `env:` schema is a
+# key→value injection map, not a required-vars validator, so any
+# `required: true` style block here would be a silent no-op.
+#
 # Fixture corpus lives in fixtures.json. Each entry contributes one test case
 # with vars { ns, key, en, categories, placeholders }.
 tests: file://./fixtures.json
@@ -66,9 +67,15 @@ defaultTest:
         temperature: 0
   assert:
     # 1. Placeholder preservation. Vacuously true for fixtures with no
-    #    placeholders (every() over an empty array returns true).
+    #    placeholders (every() over an empty array returns true). The typeof
+    #    guard converts a non-string output (null / object / array) into a
+    #    loud failure instead of a confusing TypeError or — for arrays —
+    #    a silent pass via Array.prototype.includes element-equality.
     - type: javascript
       value: |
+        if (typeof output !== 'string') {
+          throw new Error('placeholder check: expected string output, got ' + typeof output);
+        }
         const expected = context.vars.placeholders || [];
         return expected.every((p) => output.includes('{{' + p + '}}'));
 
@@ -91,9 +98,19 @@ defaultTest:
     # 3. Length bounds. German is structurally wordier than English, so the
     #    band is intentionally wide (0.5×–2.5×) to avoid false failures on
     #    short strings while catching runaway verbosity on long ones.
+    #    Guards: non-string output would NaN-divide silently as "out of
+    #    range"; empty en would divide-by-zero. Both throw loud errors so
+    #    the failure mode is self-explanatory in the promptfoo report.
     - type: javascript
       value: |
-        const ratio = output.length / context.vars.en.length;
+        if (typeof output !== 'string') {
+          throw new Error('length check: expected string output, got ' + typeof output);
+        }
+        const enLen = context.vars.en.length;
+        if (enLen === 0) {
+          throw new Error('length check: en fixture is empty');
+        }
+        const ratio = output.length / enLen;
         return ratio >= 0.5 && ratio <= 2.5;
 
     # 4. LLM-as-judge voice rubric. Criteria are quoted inline from the
