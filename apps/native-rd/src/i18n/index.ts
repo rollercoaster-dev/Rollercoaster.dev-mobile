@@ -59,8 +59,8 @@ import pseudoBadgeDesigner from "./resources/pseudo/badgeDesigner.json";
 //   3. Add the entry to NAMESPACES and all three resource bundles below
 //   4. Add the type alias in i18next.d.ts
 // The script in scripts/generate-pseudo-locale.ts auto-discovers files in
-// resources/en/ — no need to update it. German strings are populated per-screen
-// as part of milestone-3 (#67–#72); stub `{}` files keep i18next happy until then.
+// resources/en/ — no need to update it. German `{}` stubs let i18next register
+// the bundle; entries fall back to `en` until per-screen German copy lands.
 export const NAMESPACES = [
   "common",
   "welcome",

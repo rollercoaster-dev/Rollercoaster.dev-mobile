@@ -224,6 +224,12 @@ Note: `allowDynamicLocaleChangesAndroid` defaults to `true` in the plugin. Leave
 - [2026-05-24] Step 2 — duplicated the four real InfoPlist keys into the `ios` sub-object so the iOS branch is explicit. Top-level keys already cover iOS in the current `@expo/config-plugins` behavior, but the duplication is harmless and makes the file's iOS surface obvious to a future reader. Plan template had a partial subset (camera + mic only) in the `ios` sub-object.
 - [2026-05-24] Step 2 — skipped the `_comment` key suggested by the plan. A `_comment` would be emitted to `InfoPlist.strings` / `strings.xml` and clutter the generated native files. Plan documentation lives in this dev plan; the file itself is small and self-documenting.
 
+### Review-pass corrections (2026-05-24)
+
+- [2026-05-24] Reverted the top-level-plus-`ios:` duplication in `locales/{en,de}.json` (deviation above). Re-reading `@expo/config-plugins@55.0.10/build/utils/locales.js` `getResolvedLocalesAsync` showed top-level keys are merged into BOTH `InfoPlist.strings` AND Android `strings.xml`. The "belt-and-suspenders" duplication was leaking iOS-shaped keys (`NSCameraUsageDescription`, etc.) into Android resources as no-op entries. Now using pure platform-scoped form: only `ios:` and `android:` sub-objects, no top-level InfoPlist keys.
+- [2026-05-24] Removed `_review_status` meta key from `locales/de.json`. The resolver does NOT strip `_`-prefixed keys; it would have been written verbatim into `de.lproj/InfoPlist.strings`. The native-speaker review gate is tracked in this dev plan and on issue #76 — that is the source of truth, not a file marker.
+- [2026-05-24] Corrects an earlier research entry that read the config-plugins behavior as "Android only reads the `android` sub-object." Android `strings.xml` is built from `{ ...topLevel, ...android }`, so top-level keys leak into Android unless the file is platform-scoped.
+
 ### Pre-implementation research findings
 
 - [2026-05-24] `expo-localization` is already registered as a bare plugin string in `app.json` line 104. It needs to be expanded to the array-with-options form to accept `supportedLocales`. The bare string form with no options currently skips all `withExpoLocalizationIos` and `withExpoLocalizationAndroid` platform logic (the plugin returns early if `supportedLocales == null` and RTL flags are not set).
