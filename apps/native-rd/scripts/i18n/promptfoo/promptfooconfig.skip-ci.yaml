@@ -62,21 +62,46 @@ defaultTest:
         const { extractPlaceholders } = require(
           path.resolve(process.cwd(), 'scripts/i18n/promptfoo/asserts/placeholders.js'),
         );
+        // Multiset compare so whitespace ({{ name }} vs {{name}}) matches via
+        // trim, and extras/duplicates fail the assert — production guard at
+        // placeholderGuard.ts behaves the same.
         const expected = extractPlaceholders(String(context.vars.en || ''));
-        const missing = expected.filter((p) => !output.includes('{{' + p + '}}'));
-        if (missing.length > 0) {
-          return { pass: false, score: 0, reason: 'missing placeholders: ' + missing.join(', ') };
+        const actual = extractPlaceholders(output);
+        const counts = (arr) => arr.reduce((m, k) => ((m[k] = (m[k] || 0) + 1), m), {});
+        const ec = counts(expected);
+        const ac = counts(actual);
+        const keys = new Set([...Object.keys(ec), ...Object.keys(ac)]);
+        const missing = [];
+        const extra = [];
+        for (const k of keys) {
+          const e = ec[k] || 0;
+          const a = ac[k] || 0;
+          if (a < e) missing.push(e - a > 1 ? k + ' (×' + (e - a) + ')' : k);
+          else if (a > e) extra.push(a - e > 1 ? k + ' (×' + (a - e) + ')' : k);
         }
-        return { pass: true, score: 1, reason: expected.length === 0 ? 'no placeholders expected' : 'all placeholders preserved' };
+        if (missing.length || extra.length) {
+          const parts = [];
+          if (missing.length) parts.push('missing: ' + missing.join(', '));
+          if (extra.length) parts.push('extra: ' + extra.join(', '));
+          return { pass: false, score: 0, reason: parts.join('; ') };
+        }
+        return {
+          pass: true,
+          score: 1,
+          reason: expected.length === 0 ? 'no placeholders expected' : 'all placeholders preserved',
+        };
 
     # 2. Banned-phrase absence. Corpus shared with lintSource.ts via
     #    bannedPhrases.json (sourced from BRAND_LANGUAGE.md v1.2). German
     #    list is researcher-drafted — review before the first full eval run.
     - type: javascript
       value: |
+        if (typeof output !== 'string') {
+          return { pass: false, score: 0, reason: 'expected string output, got ' + typeof output };
+        }
         const path = require('path');
         const phrases = require(path.resolve(process.cwd(), 'scripts/i18n/bannedPhrases.json'));
-        const lower = String(output).toLowerCase();
+        const lower = output.toLowerCase();
         const englishHits = phrases.english
           .filter((p) => lower.includes(p.phrase.toLowerCase()))
           .map((p) => p.phrase);
