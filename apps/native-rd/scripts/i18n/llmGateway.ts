@@ -19,11 +19,6 @@ import { getModel } from "./models";
 
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 
-const openrouter = createOpenAI({
-  baseURL: OPENROUTER_BASE_URL,
-  apiKey: process.env.OPENROUTER_API_KEY,
-});
-
 /**
  * Call an OpenRouter model via the Vercel AI SDK and return the raw text
  * response. The 3-arg (name, system, user) shape is locked from the start —
@@ -39,6 +34,12 @@ const openrouter = createOpenAI({
  * these cases — it returns an empty or partial string. Surfacing them as
  * errors keeps the fail-fast posture from ADR-0007 and prevents silent
  * truncation from reaching the locale JSONs in PR #5.
+ *
+ * The OpenRouter provider is constructed inside the function (not at module
+ * scope) so the `apiKey` is read at call time, not snapshotted at import.
+ * This matters when env vars are loaded lazily (dotenv) or rotated between
+ * import and call. The env-guard above is load-bearing for this — a stale
+ * snapshot can't sneak past, because there is no snapshot.
  */
 export async function callModel(
   name: string,
@@ -48,6 +49,11 @@ export async function callModel(
   if (!process.env.OPENROUTER_API_KEY) {
     throw new Error("OPENROUTER_API_KEY is not set");
   }
+
+  const openrouter = createOpenAI({
+    baseURL: OPENROUTER_BASE_URL,
+    apiKey: process.env.OPENROUTER_API_KEY,
+  });
 
   const entry = getModel(name);
 

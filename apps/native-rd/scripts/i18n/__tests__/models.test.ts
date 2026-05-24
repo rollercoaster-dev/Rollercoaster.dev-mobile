@@ -1,5 +1,6 @@
 import { MODELS, getModel, type ModelEntry } from "../models";
 
+import { createOpenAI } from "@ai-sdk/openai";
 import { generateText } from "ai";
 import { callModel } from "../llmGateway";
 
@@ -79,6 +80,9 @@ jest.mock("@ai-sdk/openai", () => ({
 
 const mockGenerateText = generateText as jest.MockedFunction<
   typeof generateText
+>;
+const mockCreateOpenAI = createOpenAI as jest.MockedFunction<
+  typeof createOpenAI
 >;
 
 describe("callModel — fail-fast", () => {
@@ -174,6 +178,29 @@ describe("callModel — error propagation + arg shape", () => {
       expect(args.model.__modelId).toBe(modelId);
     },
   );
+
+  test("reads OPENROUTER_API_KEY at call time (no module-load snapshot)", async () => {
+    // Module was imported with OPENROUTER_API_KEY unset (jest setup at module
+    // load) or whatever the harness had. Set it to a sentinel value here and
+    // verify the sentinel reaches createOpenAI on the call — proving the key
+    // is read at call time, not snapshotted at import.
+    process.env.OPENROUTER_API_KEY = "sentinel-key-set-after-import";
+    mockCreateOpenAI.mockClear();
+    mockGenerateText.mockResolvedValueOnce({
+      text: "ok",
+      finishReason: "stop",
+    } as Awaited<ReturnType<typeof generateText>>);
+
+    await callModel("gpt-4o-mini", "sys", "user");
+
+    expect(mockCreateOpenAI).toHaveBeenCalledTimes(1);
+    const opts = mockCreateOpenAI.mock.calls[0][0] as {
+      apiKey: string;
+      baseURL: string;
+    };
+    expect(opts.apiKey).toBe("sentinel-key-set-after-import");
+    expect(opts.baseURL).toBe("https://openrouter.ai/api/v1");
+  });
 
   test("forwards entry.maxTokens as maxOutputTokens (locks SDK param name)", async () => {
     mockGenerateText.mockResolvedValueOnce({
