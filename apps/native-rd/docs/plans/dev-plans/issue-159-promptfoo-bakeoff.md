@@ -41,14 +41,14 @@ User confirmed the three gating decisions before implementation. Implementation 
 
 Observable criteria derived from the issue. These describe what success looks like from a user/system perspective.
 
-- [ ] Running `bun run i18n:bakeoff` (or the chosen script entry) against a live `OPENROUTER_API_KEY` completes without error and writes a report to `apps/native-rd/scripts/i18n/promptfoo/reports/`.
-- [ ] The fixture corpus contains exactly the strings drawn from real `src/i18n/resources/en/` namespace files — no invented strings, no placeholder strings like "Hello World".
-- [ ] Every fixture string with a `{{interpolation}}` placeholder: the output translation preserves the exact same placeholder set (same names, same count). A model that drops or renames a placeholder fails its assertion row.
-- [ ] Every fixture string passes a banned-phrase check: none of the BRAND_LANGUAGE.md forbidden terms appear in the German output (e.g. "special needs", "differently abled", "high/low functioning", exit-aside phrasings).
-- [ ] Length bounds are checked for all strings: translated output is between 0.5× and 2.5× the source character length (German is structurally wordier than English; tighter bounds would produce false failures on short strings).
-- [ ] All 8 candidate models from the bake-off table are configured as separate providers.
-- [ ] The LLM-as-judge rubric is grounded in `landing/docs/BRAND_LANGUAGE.md` — specifically: direct/non-patronizing tone, identity-first ND vocabulary, absence of toxic positivity, and recognition-not-dismissal parenthetical voice when present.
-- [ ] The plan doc's open-decisions table is updated: decision #1 marked resolved.
+- [ ] Running `bun run i18n:bakeoff` (or the chosen script entry) against a live `OPENROUTER_API_KEY` completes without error and writes a report to `apps/native-rd/scripts/i18n/promptfoo/reports/`. _(Pending — requires live key. Config validates structurally via `npx promptfoo validate config`.)_
+- [x] The fixture corpus contains exactly the strings drawn from real `src/i18n/resources/en/` namespace files — no invented strings, no placeholder strings like "Hello World". _(Verified by reading each en/`<ns>`.json and copy-pasting via a verification script.)_
+- [x] Every fixture string with a `{{interpolation}}` placeholder: the output translation preserves the exact same placeholder set (same names, same count). A model that drops or renames a placeholder fails its assertion row. _(Assertion #1 in promptfooconfig.yaml, vacuously true for empty placeholder lists.)_
+- [x] Every fixture string passes a banned-phrase check: none of the BRAND*LANGUAGE.md forbidden terms appear in the German output (e.g. "special needs", "differently abled", "high/low functioning", exit-aside phrasings). *(Assertion #2 via `not-icontains-any` with English + researcher-drafted German equivalents.)\_
+- [x] Length bounds are checked for all strings: translated output is between 0.5× and 2.5× the source character length (German is structurally wordier than English; tighter bounds would produce false failures on short strings). _(Assertion #3 in promptfooconfig.yaml.)_
+- [x] All 8 candidate models from the bake-off table are configured as separate providers. _(8 `openrouter:` providers at temperature 0.)_
+- [x] The LLM-as-judge rubric is grounded in `landing/docs/BRAND_LANGUAGE.md` — specifically: direct/non-patronizing tone, identity-first ND vocabulary, absence of toxic positivity, and recognition-not-dismissal parenthetical voice when present. _(All 5 criteria inlined in the `llm-rubric` value, judged by claude-opus-4-5 outside the candidate pool.)_
+- [x] The plan doc's open-decisions table is updated: decision #1 marked resolved. _(Resolution row landed in commit #5.)_
 - [ ] PR description includes a one-line winner summary (which model, rough quality/cost tradeoff reasoning).
 
 ## Dependencies
@@ -242,10 +242,10 @@ The `openrouter:` prefix is the promptfoo native provider string. This does not 
 
 **Changes**:
 
-- [ ] Add `"promptfoo": "^0.x.y"` (pin to current latest stable) to `devDependencies` in the chosen `package.json`
-- [ ] Add `"i18n:bakeoff": "promptfoo eval --config scripts/i18n/promptfoo/promptfooconfig.yaml --output scripts/i18n/promptfoo/reports/$(date +%Y%m%d-%H%M%S).html"` (or equivalent for Option B paths) to `scripts`
-- [ ] Run `bun install` from repo root to update `bun.lock`
-- [ ] Confirm `bun run type-check` still passes
+- [x] Add `"promptfoo": "^0.x.y"` (pin to current latest stable) to `devDependencies` in the chosen `package.json` _(pinned `^0.121.12`)_
+- [x] Add `"i18n:bakeoff": "promptfoo eval --config scripts/i18n/promptfoo/promptfooconfig.yaml --output scripts/i18n/promptfoo/reports/$(date +%Y%m%d-%H%M%S).html"` (or equivalent for Option B paths) to `scripts`
+- [x] Run `bun install` from repo root to update `bun.lock`
+- [x] Confirm `bun run type-check` still passes
 
 ---
 
@@ -257,12 +257,12 @@ The `openrouter:` prefix is the promptfoo native provider string. This does not 
 
 **Changes**:
 
-- [ ] Create `fixtures.json` containing the 20 strings from the corpus table above
-- [ ] Shape: array of objects `{ "ns": string, "key": string, "en": string, "categories": string[], "placeholders": string[] }`
+- [x] Create `fixtures.json` containing the 20 strings from the corpus table above
+- [x] Shape: array of objects `{ "ns": string, "key": string, "en": string, "categories": string[], "placeholders": string[] }` _(actual shape is `{ description, vars: { ns, key, en, categories, placeholders } }` per promptfoo's TestCase format — see Discovery Log)_
   - `placeholders` is an empty array for strings #1–#6 and #13–#19; populated for #7–#12 and #20
   - `categories` uses values: `"operational-label"`, `"interpolation"`, `"parenthetical"`, `"refusal-affirming"`
-- [ ] Verify each `en` value by copy-paste from the actual JSON file — no transcription from memory
-- [ ] No invented strings, no lorem ipsum, no placeholders
+- [x] Verify each `en` value by copy-paste from the actual JSON file — no transcription from memory
+- [x] No invented strings, no lorem ipsum, no placeholders
 
 ---
 
@@ -274,17 +274,17 @@ The `openrouter:` prefix is the promptfoo native provider string. This does not 
 
 **Changes**:
 
-- [ ] `description:` field: `"native-rd i18n bake-off: en→de voice fidelity across 8 candidate models"`
-- [ ] `providers:` — all 8 entries from models config section above, `temperature: 0`
-- [ ] `prompt:` — inline system + user prompt. System: minimal translation instruction that names the target language (German) and requests brief, direct output without corporate language. User: `"Translate to German: {{en}}"`. The prompt is intentionally minimal — the bake-off tests model quality, not prompt quality.
-- [ ] `tests:` — references `fixtures.json` via `- file://./fixtures.json` and uses `vars.en`, `vars.ns`, `vars.key`
-- [ ] Per-test `assert:` block composed from:
-  - placeholder check (`javascript`, conditional on non-empty `placeholders` array)
+- [x] `description:` field: `"native-rd i18n bake-off: en→de voice fidelity across 8 candidate models"`
+- [x] `providers:` — all 8 entries from models config section above, `temperature: 0`
+- [x] `prompt:` — inline system + user prompt. System: minimal translation instruction that names the target language (German) and requests brief, direct output without corporate language. User: `"Translate to German: {{en}}"`. The prompt is intentionally minimal — the bake-off tests model quality, not prompt quality. _(System prompt avoids literal `{{...}}` in copy to prevent nunjucks substitution; placeholders described as "double-curly-brace" instead.)_
+- [x] `tests:` — references `fixtures.json` via `- file://./fixtures.json` and uses `vars.en`, `vars.ns`, `vars.key`
+- [x] Per-test `assert:` block composed from: _(moved to `defaultTest.assert` since every fixture takes the same assertion set)_
+  - placeholder check (`javascript`, conditional on non-empty `placeholders` array) _(unconditional — `(placeholders ?? []).every(...)` is vacuously true for empty arrays)_
   - banned-phrase check (`not-icontains-any`)
   - length bounds check (`javascript`)
-  - voice rubric (`llm-rubric`, provider TBD — see Open Questions)
-- [ ] `outputPath:` not set in config (report path is passed via CLI flag in the script entry — gives a timestamped file per run)
-- [ ] `env:` block confirming `OPENROUTER_API_KEY` is required (promptfoo surfaces a clear error if unset)
+  - voice rubric (`llm-rubric`, provider TBD — see Open Questions) _(judge resolved to `openrouter:anthropic/claude-opus-4-5`)_
+- [x] `outputPath:` not set in config (report path is passed via CLI flag in the script entry — gives a timestamped file per run)
+- [x] `env:` block confirming `OPENROUTER_API_KEY` is required (promptfoo surfaces a clear error if unset)
 
 ---
 
@@ -300,9 +300,9 @@ The `openrouter:` prefix is the promptfoo native provider string. This does not 
 
 **Changes**:
 
-- [ ] Create `apps/native-rd/scripts/i18n/promptfoo/.gitignore` with `reports/` to keep generated HTML/JSON reports out of the tree (reports are run artifacts, not source)
-  - **Exception**: if the first eval run is committed as a PR artifact (acceptance criterion says "PR description includes a one-line summary"), commit the HTML report in a separate commit or attach it as a PR file drop. Either approach satisfies the AC — clarify with user.
-- [ ] Update `i18n-llm-sync.md` open-decisions table: row #1 status from "Open" to "Resolved — Option A/B chosen, YYYY-MM-DD"
+- [x] Create `apps/native-rd/scripts/i18n/promptfoo/.gitignore` with `reports/` to keep generated HTML/JSON reports out of the tree (reports are run artifacts, not source)
+  - **Exception**: if the first eval run is committed as a PR artifact (acceptance criterion says "PR description includes a one-line summary"), commit the HTML report in a separate commit or attach it as a PR file drop. Either approach satisfies the AC — clarify with user. _(Locked to PR file-drop attachment per resolved decision #3.)_
+- [x] Update `i18n-llm-sync.md` open-decisions table: row #1 status from "Open" to "Resolved — Option A/B chosen, YYYY-MM-DD"
 
 ---
 
