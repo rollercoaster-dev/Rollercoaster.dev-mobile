@@ -229,3 +229,6 @@ Runtime discoveries made during research. Starts empty — populated by the impl
 <!-- Entries added by implement skill:
 - [YYYY-MM-DD HH:MM] <discovery description>
 -->
+
+- [2026-05-24] **AI SDK v6 renamed `maxTokens` → `maxOutputTokens`.** Plan referenced the older name. Registry field stays `maxTokens` (cross-provider convention) and the gateway maps to `maxOutputTokens` in the `generateText` call. Registry remains SDK-agnostic.
+- [2026-05-24] **`tsconfig.scripts-test.json` needed `"bun"` added to types array.** Existing tests didn't reference `process`, so the `["jest"]`-only types worked. New `models.test.ts` manipulates `process.env.OPENROUTER_API_KEY` for the fail-fast test; without `"bun"` in types, `process` was undeclared. Added `"bun"` to mirror the non-test scripts config. Jest still runs under Node at runtime — pure declarative fix.
