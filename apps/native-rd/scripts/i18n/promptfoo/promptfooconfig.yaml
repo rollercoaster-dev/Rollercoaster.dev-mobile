@@ -1,4 +1,4 @@
-description: "native-rd i18n bake-off: en→de voice fidelity across 8 candidate models"
+description: "native-rd i18n bake-off: en→de voice fidelity across 6 candidate models"
 
 # Translation prompt is deliberately minimal — the bake-off evaluates inherent
 # model voice quality, not prompt engineering. The production prompt (PR #8)
@@ -16,18 +16,14 @@ prompts:
       }
     ]
 
-# Eight candidate models from models.ts registry. Temperature 0 across the
-# board to match the registry default (single source of truth). The
-# `openrouter:` provider reads OPENROUTER_API_KEY directly — same env var as
-# llmGateway.ts.
+# Six candidate models from models.ts registry. Temperature 0 across the board
+# to match the registry default (single source of truth). The `openrouter:`
+# provider reads OPENROUTER_API_KEY directly — same env var as llmGateway.ts.
 providers:
   - id: openrouter:openai/gpt-4o-mini
     config:
       temperature: 0
   - id: openrouter:openai/gpt-4o
-    config:
-      temperature: 0
-  - id: openrouter:openai/gpt-5-mini
     config:
       temperature: 0
   - id: openrouter:anthropic/claude-haiku-4-5
@@ -40,9 +36,6 @@ providers:
     config:
       temperature: 0
   - id: openrouter:deepseek/deepseek-chat
-    config:
-      temperature: 0
-  - id: openrouter:openai/gpt-oss-120b
     config:
       temperature: 0
 
