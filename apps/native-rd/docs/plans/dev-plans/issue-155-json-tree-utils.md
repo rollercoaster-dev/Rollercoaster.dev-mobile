@@ -7,7 +7,7 @@
 - [x] `translatableSubtree` exposes only anonymized keys (`k0..kN`) in the LLM-facing dict; real paths live only in the returned path map.
 - [x] `mergeTranslations` round-trips via the path map without path drift; output source keys are emitted in source order.
 - [x] Tests cover nested objects, empty target, fully populated target, mixed target, arrays of strings, and identical English strings at different paths.
-- [ ] `bun run type-check && bun run lint && bun run test` are clean.
+- [x] `bun run type-check && bun run lint && bun run test` are clean.
 
 ## Implementation Plan
 
@@ -21,7 +21,7 @@
 - [x] Have `mergeTranslations(target, dict, pathMap)` return a new tree, write translated strings only into still-missing paths, preserve existing target strings, and throw if a dict key has no path-map entry or a path-map key has no translated string.
 - [x] Add tests in `apps/native-rd/src/i18n/__tests__/jsonTreeUtils.test.ts` importing `../../../scripts/i18n/jsonTreeUtils`; this fits the current Jest `testMatch` without config churn.
 - [x] Test immutability for all three exports: input source, target, dict, and path map are not mutated.
-- [ ] Run the focused test first with `bun run test --testPathPatterns src/i18n/__tests__/jsonTreeUtils.test.ts`, then run full `bun run type-check && bun run lint && bun run test`.
+- [x] Run the focused test first with `bun run test --testPathPatterns src/i18n/__tests__/jsonTreeUtils.test.ts`, then run full `bun run type-check && bun run lint && bun run test`.
 
 ## Decisions
 
@@ -47,6 +47,7 @@
 - Existing Jest discovery excludes `scripts/**` tests; test files should either live under `src/**/__tests__` or require a Jest config change. This plan chooses the former.
 - Local status showed untracked `apps/native-rd/scripts/i18n/jsonTreeUtils.ts` and `apps/native-rd/src/i18n/__tests__/jsonTreeUtils.test.ts` drafts during research; treat them as someone else's work unless ownership is confirmed.
 - [2026-05-24 13:50] Implemented the missing marker as an internal object rather than the raw source string so the utilities can distinguish a gap from an intentional existing English target value.
+- [2026-05-24 13:54] Final validation passed. `bun run lint` exits 0 with pre-existing warnings elsewhere in the app; `bun run test` passes 153 suites / 8277 tests with the existing worker open-handle warning. Raw `bun test` crashes in Bun before Jest runs, so validation uses the package script.
 
 ## Not in Scope
 
