@@ -30,12 +30,22 @@ describe("selectSupportedLanguage", () => {
       delete process.env.EXPO_PUBLIC_I18N_PSEUDO;
     });
 
-    test.each<[string, Locale[], "en"]>([
+    test.each<[string, Locale[], "en" | "de"]>([
       ["en-US locale", [withLanguageCode("en")], "en"],
-      ["de-DE locale falls back to en", [withLanguageCode("de")], "en"],
+      ["de-DE locale selects de", [withLanguageCode("de")], "de"],
       ["es-ES locale falls back to en", [withLanguageCode("es")], "en"],
       ["null languageCode falls back to en", [withLanguageCode(null)], "en"],
       ["empty locales array falls back to en", [], "en"],
+      [
+        "de first in multi-locale array selects de",
+        [withLanguageCode("de"), withLanguageCode("en")],
+        "de",
+      ],
+      [
+        "en first in multi-locale array wins over later de",
+        [withLanguageCode("en"), withLanguageCode("de")],
+        "en",
+      ],
     ])("%s → %s", (_label, locales, expected) => {
       expect(selectSupportedLanguage(locales)).toBe(expected);
     });
