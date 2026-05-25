@@ -115,6 +115,52 @@ describe("buildSystemPrompt", () => {
     expect(buildSystemPrompt(input)).toBe(buildSystemPrompt(input));
   });
 
+  test("preamble contains identity-first ND vocab instruction", () => {
+    const out = buildSystemPrompt({ register: BASE_REGISTER });
+    expect(out).toContain("autistisch");
+    expect(out).toContain("ADHS");
+    expect(out).toContain("identity-first");
+  });
+
+  test("preamble contains the placeholder-preservation contract", () => {
+    const out = buildSystemPrompt({ register: BASE_REGISTER });
+    expect(out).toMatch(/\{\{placeholder\}\}/);
+    expect(out).toContain("EXACTLY");
+  });
+
+  test("preamble names the banned dismissive exits", () => {
+    const out = buildSystemPrompt({ register: BASE_REGISTER });
+    expect(out).toContain("oder nicht");
+    expect(out).toContain("oder lass es");
+  });
+
+  test("register banned_phrasings are deduped against preamble exits", () => {
+    const out = buildSystemPrompt({
+      register: {
+        ...BASE_REGISTER,
+        banned_phrasings: [
+          "oder nicht",
+          "exclamation filler",
+          "oder lass es",
+          "exclamation filler",
+        ],
+      },
+    });
+    expect(out.match(/oder nicht/g)?.length).toBe(1);
+    expect(out.match(/oder lass es/g)?.length).toBe(1);
+    expect(out.match(/- exclamation filler/g)?.length).toBe(1);
+  });
+
+  test("register section falls back to '(none beyond preamble defaults)' when only preamble dups are listed", () => {
+    const out = buildSystemPrompt({
+      register: {
+        ...BASE_REGISTER,
+        banned_phrasings: ["oder nicht", "oder lass es"],
+      },
+    });
+    expect(out).toContain("(none beyond preamble defaults)");
+  });
+
   test("intent ordering is independent of object insertion order", () => {
     const a = buildSystemPrompt({
       register: BASE_REGISTER,
