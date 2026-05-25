@@ -11,14 +11,14 @@
 
 Observable criteria derived from the issue. A reviewer can verify these by running the code or reading tests.
 
-- [ ] `promptBuilder.buildSystemPrompt(register, intents, glossary)` is a pure function that returns a deterministic string given the same inputs. Same inputs in → same string out, no clock/random/I/O.
-- [ ] `translator.translateNamespace(enTree, deTree, ns, modelName)` returns a `de/` tree with only missing keys filled; existing `de/` values are untouched. Re-running on a fully-translated tree makes zero LLM calls and returns the same tree.
-- [ ] A placeholder mismatch (any single `{{name}}` dropped, added, or renamed in the LLM response) causes `translateNamespace` to throw. The error message identifies the offending anonymous key and the mismatch details.
-- [ ] A parse failure (LLM response not valid JSON, wrong key set, non-string values) causes `translateNamespace` to throw. The error message identifies the namespace and the parse-error reason.
-- [ ] When `translatableSubtree` returns an empty dict (namespace has no gaps), `translateNamespace` returns the target tree unchanged and makes zero LLM calls.
-- [ ] `callModel` is always invoked with `temperature: 0.0` (invariant #6). The test suite verifies this by asserting on mock call args, not just on the returned value.
-- [ ] The plan doc's open-decisions table row #2 (register file location) is updated to "Resolved" with the chosen path.
-- [ ] `bun run type-check` and `bun run lint` pass with no errors.
+- [x] `promptBuilder.buildSystemPrompt(register, intents, glossary)` is a pure function that returns a deterministic string given the same inputs. Same inputs in → same string out, no clock/random/I/O.
+- [x] `translator.translateNamespace(enTree, deTree, ns, modelName)` returns a `de/` tree with only missing keys filled; existing `de/` values are untouched. Re-running on a fully-translated tree makes zero LLM calls and returns the same tree.
+- [x] A placeholder mismatch (any single `{{name}}` dropped, added, or renamed in the LLM response) causes `translateNamespace` to throw. The error message identifies the offending anonymous key and the mismatch details.
+- [x] A parse failure (LLM response not valid JSON, wrong key set, non-string values) causes `translateNamespace` to throw. The error message identifies the namespace and the parse-error reason.
+- [x] When `translatableSubtree` returns an empty dict (namespace has no gaps), `translateNamespace` returns the target tree unchanged and makes zero LLM calls.
+- [x] `callModel` is always invoked with `temperature: 0.0` (invariant #6). The test suite verifies this by asserting on mock call args, not just on the returned value.
+- [x] The plan doc's open-decisions table row #2 (register file location) is updated to "Resolved" with the chosen path.
+- [x] `bun run type-check` and `bun run lint` pass with no errors.
 
 ## Dependencies
 
@@ -101,9 +101,9 @@ Optional (if extracted, reduces translator.ts line count):
 
 **Changes**:
 
-- [ ] Create `apps/native-rd/src/i18n/resources/_register/` with `common.yml` containing the four required fields (empty/minimal values, plus an empty `notes:` list) so `promptBuilder` has a schema to target.
-- [ ] Update `i18n-llm-sync.md` open-decisions table row #2: status from "Open" to "Resolved 2026-05-25 — Option A (`apps/native-rd/src/i18n/resources/_register/`)".
-- [ ] Update the module layout table in `i18n-llm-sync.md` to replace `<register-dir>/<ns>.yml` with the concrete Option A path.
+- [x] Create `apps/native-rd/src/i18n/resources/_register/` with `common.yml` containing the four required fields (empty/minimal values, plus an empty `notes:` list) so `promptBuilder` has a schema to target.
+- [x] Update `i18n-llm-sync.md` open-decisions table row #2: status from "Open" to "Resolved 2026-05-25 — Option A (`apps/native-rd/src/i18n/resources/_register/`)".
+- [x] Update the module layout table in `i18n-llm-sync.md` to replace `<register-dir>/<ns>.yml` with the concrete Option A path.
 
 **Note**: this is not wasted work even if PR #8 later fills in real register content. The stub establishes the YAML schema that `promptBuilder.ts` targets.
 
@@ -117,16 +117,16 @@ Optional (if extracted, reduces translator.ts line count):
 
 **Changes**:
 
-- [ ] Define `RegisterData` type per Resolved Decision #5: four required fields (`speaker`, `audience`, `formality`, `banned_phrasings`) plus optional `notes?: string[]`. No additional speculative fields — PR #8 evolves the type additively if needed.
-- [ ] Define `IntentEntry` type: `{ intent: string; audience?: string; register?: string }` — mirrors the sidecar shape from the plan.
-- [ ] Define `PromptBuilderInput` type: `{ register: RegisterData; intents?: Record<string, IntentEntry>; glossary?: string }`.
-- [ ] Implement `buildSystemPrompt(input: PromptBuilderInput): string` — assembles the system prompt as a **skeleton template** (Resolved Decision #3):
+- [x] Define `RegisterData` type per Resolved Decision #5: four required fields (`speaker`, `audience`, `formality`, `banned_phrasings`) plus optional `notes?: string[]`. No additional speculative fields — PR #8 evolves the type additively if needed.
+- [x] Define `IntentEntry` type: `{ intent: string; audience?: string; register?: string }` — mirrors the sidecar shape from the plan.
+- [x] Define `PromptBuilderInput` type: `{ register: RegisterData; intents?: Record<string, IntentEntry>; glossary?: string }`.
+- [x] Implement `buildSystemPrompt(input: PromptBuilderInput): string` — assembles the system prompt as a **skeleton template** (Resolved Decision #3):
   - Always includes: voice register (speaker/audience/formality/banned_phrasings, plus `notes` if present and non-empty).
   - Conditionally includes: per-string intent overrides (if `intents` provided and non-empty).
   - Conditionally includes: glossary section (if `glossary` provided).
   - Wording is minimal-but-structural — PR #8 owns the polished voice copy. Tests assert section presence/absence, not exact wording.
   - The prompt format is a plain-text block appropriate for use as the `system` parameter in `callModel`. No JSON, no role-wrapping — the system/user split is `callModel`'s concern.
-- [ ] No I/O anywhere in this file. No `readFileSync`, no `import.meta`, no Bun APIs. Pure function only.
+- [x] No I/O anywhere in this file. No `readFileSync`, no `import.meta`, no Bun APIs. Pure function only.
 
 ---
 
@@ -138,13 +138,13 @@ Optional (if extracted, reduces translator.ts line count):
 
 **Changes**:
 
-- [ ] Happy path: register + no intents + no glossary → produces a non-empty string containing voice register content.
-- [ ] Happy path: register + intents + glossary → output contains glossary and intent sections; same inputs → identical output (determinism).
-- [ ] Namespace with register but no intent sidecar: `intents` undefined → produces valid prompt without intent section (no exception).
-- [ ] Namespace with both register and intent sidecar → output contains both sections.
-- [ ] Glossary omitted (undefined) → output does not contain glossary section.
-- [ ] Output is a string (not null, not undefined, not empty). Covers the "at minimum does something" contract.
-- [ ] No I/O mocking required — purely import the module and call the function.
+- [x] Happy path: register + no intents + no glossary → produces a non-empty string containing voice register content.
+- [x] Happy path: register + intents + glossary → output contains glossary and intent sections; same inputs → identical output (determinism).
+- [x] Namespace with register but no intent sidecar: `intents` undefined → produces valid prompt without intent section (no exception).
+- [x] Namespace with both register and intent sidecar → output contains both sections.
+- [x] Glossary omitted (undefined) → output does not contain glossary section.
+- [x] Output is a string (not null, not undefined, not empty). Covers the "at minimum does something" contract.
+- [x] No I/O mocking required — purely import the module and call the function.
 
 **Test file location**: `apps/native-rd/scripts/i18n/__tests__/promptBuilder.test.ts`
 **No `.cli.ts` split needed**: `promptBuilder.ts` has no `import.meta` — it's pure. No Bun-specific APIs. Jest can import it directly.
@@ -159,9 +159,9 @@ Optional (if extracted, reduces translator.ts line count):
 
 **Changes**:
 
-- [ ] Add `js-yaml` and `@types/js-yaml` to `apps/native-rd/package.json` (Resolved Decision #2). Run `bun install` to update the lockfile.
-- [ ] Define `TranslateNamespaceOptions` type: `{ enTree: JsonTree; deTree: unknown; ns: string; modelName: string; registerText: string; intents?: Record<string, IntentEntry>; glossary?: string }`. `modelName` is **required** — `translator.ts` stays model-agnostic per Resolved Decision #4; `sync.ts` (PR #6) owns the default.
-- [ ] Implement `translateNamespace(opts: TranslateNamespaceOptions): Promise<FilledJsonTree>`:
+- [x] Add `js-yaml` and `@types/js-yaml` to `apps/native-rd/package.json` (Resolved Decision #2). Run `bun install` to update the lockfile.
+- [x] Define `TranslateNamespaceOptions` type: `{ enTree: JsonTree; deTree: unknown; ns: string; modelName: string; registerText: string; intents?: Record<string, IntentEntry>; glossary?: string }`. `modelName` is **required** — `translator.ts` stays model-agnostic per Resolved Decision #4; `sync.ts` (PR #6) owns the default.
+- [x] Implement `translateNamespace(opts: TranslateNamespaceOptions): Promise<FilledJsonTree>`:
   1. Call `translatableSubtree(enTree, deTree)` to get `{ dict, pathMap }`.
   2. If `dict` is empty (no gaps), return `deepFillMissingStrings(enTree, deTree)` immediately — no LLM call.
   3. Parse register text via `js-yaml`'s `load()` — assert the result matches `RegisterData` (cast or validate). Build `PromptBuilderInput`.
@@ -171,10 +171,10 @@ Optional (if extracted, reduces translator.ts line count):
   7. Call `parseAndValidate(rawResponse, pathMap.keys)` — throw on `ok: false` with a message identifying the namespace and parse-error reason.
   8. For each key in `pathMap.keys`, call `checkPlaceholders(dict[key], parsed[key], key)` — throw on `ok: false` with a message identifying the namespace and mismatch details.
   9. Call `mergeTranslations(deTree, parsed, pathMap)` and return the result.
-- [ ] Imports: `translatableSubtree`, `deepFillMissingStrings`, `mergeTranslations` from `./jsonTreeUtils`; `parseAndValidate` from `./responseParser`; `checkPlaceholders` from `./placeholderGuard`; `buildSystemPrompt` from `./promptBuilder`; `callModel` from `./llmGateway`; `load` from `js-yaml`.
-- [ ] No file-system I/O for reading register/intents in `translateNamespace` — callers pass pre-loaded text. This keeps the module testable without real files.
-- [ ] Register YAML parsing happens inside `translator.ts` before passing `RegisterData` to `promptBuilder`. If the YAML parse throws, surface it with namespace context (wrap and re-throw with `ns` in the message).
-- [ ] Export `translateNamespace` as the primary API. No default export.
+- [x] Imports: `translatableSubtree`, `deepFillMissingStrings`, `mergeTranslations` from `./jsonTreeUtils`; `parseAndValidate` from `./responseParser`; `checkPlaceholders` from `./placeholderGuard`; `buildSystemPrompt` from `./promptBuilder`; `callModel` from `./llmGateway`; `load` from `js-yaml`.
+- [x] No file-system I/O for reading register/intents in `translateNamespace` — callers pass pre-loaded text. This keeps the module testable without real files.
+- [x] Register YAML parsing happens inside `translator.ts` before passing `RegisterData` to `promptBuilder`. If the YAML parse throws, surface it with namespace context (wrap and re-throw with `ns` in the message). **Hardened in `53a65b4`: parse path now uses a Zod schema (`RegisterDataSchema`) — bad YAML surfaces a structured error with `ns` context instead of an unchecked cast.**
+- [x] Export `translateNamespace` as the primary API. No default export.
 
 ---
 
@@ -188,15 +188,15 @@ Optional (if extracted, reduces translator.ts line count):
 
 All tests mock `llmGateway.callModel` — no real API calls. Mock pattern follows `models.test.ts` pattern: `jest.mock('../llmGateway')`.
 
-- [ ] **Happy path — translation occurs**: `enTree` has gaps, `deTree` is empty. Mock `callModel` returns valid JSON with correct key set and matching placeholders. Assert returned tree has all keys filled and `callModel` was called exactly once.
-- [ ] **Happy path — correct args to callModel**: assert `callModel` receives the correct `modelName` (registry lookup), a non-empty system prompt string, and the serialized dict as user content. Assert `temperature: 0.0` is NOT passed directly (it comes from the registry) — or if the mock captures the `generateText` args, assert `temperature` is 0.
-- [ ] **Idempotency — no gaps**: `enTree` and `deTree` are identical (fully translated). Assert `callModel` is never called. Assert returned tree equals the de-tree.
-- [ ] **Placeholder mismatch abort**: Mock `callModel` returns a response where one translated value has a dropped `{{placeholder}}`. Assert `translateNamespace` throws. Assert the error message includes the offending key name and mismatch details.
-- [ ] **Parse failure abort**: Mock `callModel` returns malformed JSON. Assert `translateNamespace` throws. Assert error message identifies the namespace.
-- [ ] **Parse failure — wrong key set**: Mock `callModel` returns valid JSON but with wrong keys. Assert `translateNamespace` throws with reason `missing-keys` or `extra-keys` in message.
-- [ ] **Namespace with register but no intent sidecar**: `intents` omitted. Assert no exception, translation proceeds.
-- [ ] **Namespace with both register and intent sidecar**: `intents` provided. Assert no exception, translation proceeds. Does not assert on prompt content (that's `promptBuilder.test.ts`'s job).
-- [ ] **Error context**: thrown errors include the `ns` name so the caller can surface "namespace: common — parse failure: ..." messages.
+- [x] **Happy path — translation occurs**: `enTree` has gaps, `deTree` is empty. Mock `callModel` returns valid JSON with correct key set and matching placeholders. Assert returned tree has all keys filled and `callModel` was called exactly once.
+- [x] **Happy path — correct args to callModel**: assert `callModel` receives the correct `modelName` (registry lookup), a non-empty system prompt string, and the serialized dict as user content. Assert `temperature: 0.0` is NOT passed directly (it comes from the registry) — or if the mock captures the `generateText` args, assert `temperature` is 0.
+- [x] **Idempotency — no gaps**: `enTree` and `deTree` are identical (fully translated). Assert `callModel` is never called. Assert returned tree equals the de-tree.
+- [x] **Placeholder mismatch abort**: Mock `callModel` returns a response where one translated value has a dropped `{{placeholder}}`. Assert `translateNamespace` throws. Assert the error message includes the offending key name and mismatch details.
+- [x] **Parse failure abort**: Mock `callModel` returns malformed JSON. Assert `translateNamespace` throws. Assert error message identifies the namespace.
+- [x] **Parse failure — wrong key set**: Mock `callModel` returns valid JSON but with wrong keys. Assert `translateNamespace` throws with reason `missing-keys` or `extra-keys` in message.
+- [x] **Namespace with register but no intent sidecar**: `intents` omitted. Assert no exception, translation proceeds.
+- [x] **Namespace with both register and intent sidecar**: `intents` provided. Assert no exception, translation proceeds. Does not assert on prompt content (that's `promptBuilder.test.ts`'s job).
+- [x] **Error context**: thrown errors include the `ns` name so the caller can surface "namespace: common — parse failure: ..." messages.
 
 **Mock setup**:
 
@@ -277,3 +277,6 @@ PR A is small (pure function, ~100 LOC module + ~80 LOC tests). PR B is the heav
 - [2026-05-25] `lintSource.cli.ts` establishes the `import.meta` split pattern: logic in `.ts`, CLI bootstrap in `.cli.ts`. `promptBuilder.ts` and `translator.ts` should contain no `import.meta` — they are library modules, not CLI entry points. The CLI entry point (`sync.ts`) is PR #6.
 - [2026-05-25] No YAML library is currently imported in `scripts/i18n/`. `translator.ts` will be the first user. Resolved to `js-yaml` + `@types/js-yaml` in interactive review.
 - [2026-05-25] Interactive review with Joe resolved all 5 open questions: (1) register at `src/i18n/resources/_register/`, (2) `js-yaml`, (3) skeleton template now, polish in PR #8, (4) `translator.ts` model-agnostic, default lives in `sync.ts`, (5) `RegisterData` = 4 required + optional `notes`.
+- [2026-05-25] Silent-failure audit (post-implementation, before PR) flagged the manual `as RegisterData` cast in `translator.ts` as a boundary-validation gap. Replaced with a Zod schema (`53a65b4`) and tightened the surrounding error wrapping (`4734a17`) so bad register YAML now produces a structured `ns`-scoped error instead of propagating a cast through to the LLM prompt.
+- [2026-05-25] Final validation green: `bun run type-check` ✓, `bun run lint` ✓ (0 errors, 161 unrelated pre-existing warnings), `bun run test:ci` ✓ (8383 tests / 160 suites, includes both new test files). Build is a no-op for native-rd (`echo 'Expo app — no build step'`).
+- [2026-05-25] PR #177 opened: https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/pull/177 — 7 commits, +961/-14 across 9 files.
