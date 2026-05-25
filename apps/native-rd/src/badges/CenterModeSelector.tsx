@@ -1,6 +1,7 @@
 import React, { useCallback } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
+import { useTranslation } from "react-i18next";
 
 import { selectorStyles } from "./selectorStyles";
 import { BadgeCenterMode } from "./types";
@@ -24,11 +25,6 @@ export interface CenterModeSelectorProps {
 
 const MODES = Object.values(BadgeCenterMode) as BadgeCenterMode[];
 
-const MODE_LABELS: Record<BadgeCenterMode, string> = {
-  icon: "Icon",
-  monogram: "Monogram",
-};
-
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -42,6 +38,7 @@ export function CenterModeSelector({
   testID = "center-mode-selector",
 }: CenterModeSelectorProps) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation("badgeDesigner");
   const resolvedAccent = accentColor ?? theme.colors.accentPrimary;
 
   const handlePress = useCallback(
@@ -53,17 +50,18 @@ export function CenterModeSelector({
     <View
       testID={testID}
       accessibilityRole="radiogroup"
-      accessibilityLabel="Badge center mode"
+      accessibilityLabel={t("center.a11y")}
     >
       <View style={[selectorStyles.row, styles.row]}>
         {MODES.map((mode) => {
           const isSelected = mode === selectedMode;
+          const label = t(`center.options.${mode}`);
           return (
             <Pressable
               key={mode}
               onPress={() => handlePress(mode)}
               accessibilityRole="radio"
-              accessibilityLabel={`${MODE_LABELS[mode]} center`}
+              accessibilityLabel={t("center.optionA11y", { label })}
               accessibilityState={{ checked: isSelected }}
               style={[
                 styles.option,
@@ -84,7 +82,7 @@ export function CenterModeSelector({
                   },
                 ]}
               >
-                {MODE_LABELS[mode]}
+                {label}
               </Text>
             </Pressable>
           );
@@ -93,13 +91,13 @@ export function CenterModeSelector({
 
       {selectedMode === BadgeCenterMode.monogram && (
         <TextInput
-          accessibilityLabel="Monogram text"
+          accessibilityLabel={t("center.monogram.a11y")}
           value={monogram}
           onChangeText={onChangeMonogram}
           maxLength={3}
           autoCapitalize="characters"
           autoCorrect={false}
-          placeholder="ABC"
+          placeholder={t("center.monogram.placeholder")}
           placeholderTextColor={theme.colors.textSecondary}
           style={[
             styles.input,
