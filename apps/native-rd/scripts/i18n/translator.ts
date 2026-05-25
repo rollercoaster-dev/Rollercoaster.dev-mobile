@@ -33,13 +33,15 @@ import {
 } from "./promptBuilder";
 import { parseAndValidate, type ParseError } from "./responseParser";
 
-const registerSchema: z.ZodType<RegisterData> = z.object({
-  speaker: z.string(),
-  audience: z.string(),
-  formality: z.string(),
-  banned_phrasings: z.array(z.string()),
-  notes: z.array(z.string()).optional(),
-});
+const registerSchema: z.ZodType<RegisterData> = z
+  .object({
+    speaker: z.string(),
+    audience: z.string(),
+    formality: z.string(),
+    banned_phrasings: z.array(z.string()),
+    notes: z.array(z.string()).optional(),
+  })
+  .strict();
 
 export type TranslateNamespaceOptions = {
   enTree: JsonTree;
