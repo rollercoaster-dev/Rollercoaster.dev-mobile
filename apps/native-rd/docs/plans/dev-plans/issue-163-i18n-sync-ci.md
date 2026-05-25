@@ -26,7 +26,8 @@ user/system perspective — not generic checklists.
 - [ ] `OPENROUTER_API_KEY` is referenced only via `${{ secrets.OPENROUTER_API_KEY }}`; it
       does not appear in any log line.
 - [ ] A `workflow_dispatch` manual trigger runs the full-corpus sync (all 15 namespaces) and
-      commits results back to the dispatching branch.
+      opens a PR from a `bot/i18n-sync-*` branch against the dispatching branch with the
+      resulting `de/` diff (D5).
 - [ ] Running the workflow a second time with no `en/` changes since the last sync is a no-op
       (idempotency from `syncCore.ts` propagates through to CI: zero commits).
 - [ ] The `i18n-llm-sync.md` plan doc's open-decisions table shows decision #3 marked
@@ -50,15 +51,16 @@ on `main` for the first time.
 
 ## Decisions
 
-| ID  | Decision                                                                                                                                               | Alternatives Considered                                                       | Rationale                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| D1  | Use `github-actions[bot]` (default `GITHUB_TOKEN`) as the commit author, not a dedicated `rd-i18n-bot` account                                         | Create `rd-i18n-bot` with SSH key (clearer audit trail, more setup)           | Zero setup cost. The DCO workflow's `bot_re` exemption already covers `*[bot]@users.noreply.github.com`, so bot commits pass DCO as-is. The workflow's audit trail is clear enough for v1: commits show `i18n-sync` as the workflow source in the GitHub UI. **Resolved 2026-05-25 (HITL decision #3): `github-actions[bot]`.**                                                                                                                                                             |
-| D2  | Fork-PR safety via `if: github.event.pull_request.head.repo.full_name == github.repository`                                                            | Secrets-level guard via `if: github.event_name == 'push'` only                | The `pull_request` trigger is needed for the PR diff use case; fork check is the standard pattern to prevent secret exposure without disabling the trigger entirely.                                                                                                                                                                                                                                                                                                                        |
-| D3  | Loop prevention via committer-identity check on trigger, not `[skip ci]`                                                                               | Append `[skip ci]` to bot commit message; use `push` trigger on de/ path only | `[skip ci]` would skip the entire CI suite (including `ci-native-rd`) on the bot commit. Committer-identity guard (`if: github.actor != 'github-actions[bot]'`) re-skips only the sync job while letting other checks run. If using a PAT/app instead of GITHUB_TOKEN, use the bot account's login for the actor check instead.                                                                                                                                                             |
-| D4  | Use `actions/checkout@v6` with `persist-credentials: true` (the default) and `token: ${{ secrets.GITHUB_TOKEN }}` for push                             | Use a PAT stored as `SYNC_PAT`; use a GitHub App token                        | `GITHUB_TOKEN` can push to the PR branch on non-fork PRs. A PAT would be needed only if we want the commit-back to trigger downstream workflows (GITHUB_TOKEN-pushed commits intentionally do not re-trigger workflows — this is a GitHub safety mechanism, and for i18n sync it is the desired behavior). **Resolved 2026-05-25: GITHUB_TOKEN; accept that `ci-native-rd` does not re-run on the bot commit (de/ is generated output and does not affect type-check/lint/test outcomes).** |
-| D5  | `workflow_dispatch` opens a new PR (`bot/i18n-sync-YYYYMMDD-HHMMSS` branch + `gh pr create`) rather than committing directly to the dispatching branch | `workflow_dispatch` commits directly to `github.ref` (simpler)                | **Resolved 2026-05-25:** manual runs go through review. The first corpus seed (PR #10 — 15 brand-new German namespaces) deserves human eyes before landing on `main`. Direct-commit would bypass branch protection. Cost: ~15 extra YAML lines for the PR-creation step.                                                                                                                                                                                                                    |
-| D6  | DCO trailer injected inline via `git -c user.name=... -c user.email=... commit -s`                                                                     | Append trailer with `git interpret-trailers`; use `git commit --trailer`      | `-s` (`--signoff`) appends `Signed-off-by: <configured identity>` automatically. Combined with `-c user.name/email` overrides, it is a single idiomatic command. `git interpret-trailers` is more explicit but requires a second pipe step.                                                                                                                                                                                                                                                 |
-| D7  | Skip draft PRs via `if: !github.event.pull_request.draft` on the job                                                                                   | Run sync on every draft push too (simpler workflow)                           | **Resolved 2026-05-25:** avoids burning LLM calls on every force-push of a WIP draft. Once the author flips the PR to ready-for-review, the `ready_for_review` event fires and the sync runs once.                                                                                                                                                                                                                                                                                          |
+| ID  | Decision                                                                                                                                               | Alternatives Considered                                                       | Rationale                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | Use `github-actions[bot]` (default `GITHUB_TOKEN`) as the commit author, not a dedicated `rd-i18n-bot` account                                         | Create `rd-i18n-bot` with SSH key (clearer audit trail, more setup)           | Zero setup cost. The DCO workflow's `bot_re` exemption already covers `*[bot]@users.noreply.github.com`, so bot commits pass DCO as-is. The workflow's audit trail is clear enough for v1: commits show `i18n-sync` as the workflow source in the GitHub UI. **Resolved 2026-05-25 (HITL decision #3): `github-actions[bot]`.**                                                                                                                                                                                                                                             |
+| D2  | Fork-PR safety via `if: github.event.pull_request.head.repo.full_name == github.repository`                                                            | Secrets-level guard via `if: github.event_name == 'push'` only                | The `pull_request` trigger is needed for the PR diff use case; fork check is the standard pattern to prevent secret exposure without disabling the trigger entirely.                                                                                                                                                                                                                                                                                                                                                                                                        |
+| D3  | Loop prevention via committer-identity check on trigger, not `[skip ci]`                                                                               | Append `[skip ci]` to bot commit message; use `push` trigger on de/ path only | `[skip ci]` would skip the entire CI suite (including `ci-native-rd`) on the bot commit. Committer-identity guard (`if: github.actor != 'github-actions[bot]'`) re-skips only the sync job while letting other checks run. If using a PAT/app instead of GITHUB_TOKEN, use the bot account's login for the actor check instead.                                                                                                                                                                                                                                             |
+| D4  | Use `actions/checkout@v6` with `persist-credentials: true` (the default) and `token: ${{ secrets.GITHUB_TOKEN }}` for push                             | Use a PAT stored as `SYNC_PAT`; use a GitHub App token                        | `GITHUB_TOKEN` can push to the PR branch on non-fork PRs. A PAT would be needed only if we want the commit-back to trigger downstream workflows (GITHUB_TOKEN-pushed commits intentionally do not re-trigger workflows — this is a GitHub safety mechanism, and for i18n sync it is the desired behavior). **Resolved 2026-05-25: GITHUB_TOKEN; accept that `ci-native-rd` does not re-run on the bot commit (de/ is generated output and does not affect type-check/lint/test outcomes).**                                                                                 |
+| D5  | `workflow_dispatch` opens a new PR (`bot/i18n-sync-YYYYMMDD-HHMMSS` branch + `gh pr create`) rather than committing directly to the dispatching branch | `workflow_dispatch` commits directly to `github.ref` (simpler)                | **Resolved 2026-05-25:** manual runs go through review. The first corpus seed (PR #10 — 15 brand-new German namespaces) deserves human eyes before landing on `main`. Direct-commit would bypass branch protection. Cost: ~15 extra YAML lines for the PR-creation step.                                                                                                                                                                                                                                                                                                    |
+| D6  | DCO trailer injected inline via `git -c user.name=... -c user.email=... commit -s`                                                                     | Append trailer with `git interpret-trailers`; use `git commit --trailer`      | `-s` (`--signoff`) appends `Signed-off-by: <configured identity>` automatically. Combined with `-c user.name/email` overrides, it is a single idiomatic command. `git interpret-trailers` is more explicit but requires a second pipe step.                                                                                                                                                                                                                                                                                                                                 |
+| D7  | Skip draft PRs via `if: !github.event.pull_request.draft` on the job                                                                                   | Run sync on every draft push too (simpler workflow)                           | **Resolved 2026-05-25:** avoids burning LLM calls on every force-push of a WIP draft. Once the author flips the PR to ready-for-review, the `ready_for_review` event fires and the sync runs once.                                                                                                                                                                                                                                                                                                                                                                          |
+| D8  | Fail the sync job if a PR changes any file outside `apps/native-rd/src/i18n/resources/en/**`                                                           | Trust path filter alone; switch to `pull_request_target` + selective overlay  | **Resolved 2026-05-25 (Copilot review):** the `pull_request` trigger executes PR-checked-out code with `OPENROUTER_API_KEY` in env, so any PR that also touches `scripts/i18n/**`, `package.json`, `bun.lock`, or the workflow itself could exfiltrate the secret. A pre-`bun install` guard step diffs `base.sha..head.sha` and fails if any disallowed path is present. Trade-off: PRs that legitimately mix `en/` content and sync-script changes must be split into two PRs. Acceptable because en/ content and sync-script work are different workstreams in practice. |
 
 ## Affected Areas
 
@@ -88,18 +90,23 @@ on `main` for the first time.
      (full history lets git push work correctly on the PR branch). For `pull_request` events,
      also set `ref: ${{ github.event.pull_request.head.ref }}` so the checkout lands on the
      PR branch, not the merge commit.
-  2. `oven-sh/setup-bun@v2` with `bun-version-file: "package.json"` (matches CI contract).
-  3. `actions/setup-node@v6` with `node-version-file: "apps/native-rd/.nvmrc"` (matches CI contract).
-  4. Cache `~/.bun/install/cache` keyed on `bun.lock` (matches CI contract pattern).
-  5. `bun install --frozen-lockfile`
-  6. Run sync:
+  2. **Verify PR only changes allowed paths (D8)** — runs on `pull_request` events only,
+     before `bun install` (and therefore before any PR-controlled lifecycle script can execute
+     or any step exposes `OPENROUTER_API_KEY`). Diffs `github.event.pull_request.base.sha` vs
+     `head.sha`, greps out `apps/native-rd/src/i18n/resources/en/`, and `exit 1`s with a
+     `::error::` annotation if anything remains.
+  3. `oven-sh/setup-bun@v2` with `bun-version-file: "package.json"` (matches CI contract).
+  4. `actions/setup-node@v6` with `node-version-file: "apps/native-rd/.nvmrc"` (matches CI contract).
+  5. Cache `~/.bun/install/cache` keyed on `bun.lock` (matches CI contract pattern).
+  6. `bun install --frozen-lockfile`
+  7. Run sync:
      ```yaml
      - name: Run i18n sync
        env:
          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
        run: bun run i18n:sync
      ```
-  7. Detect de/ changes:
+  8. Detect de/ changes:
      ```yaml
      - name: Check for de/ diff
        id: diff
@@ -111,7 +118,7 @@ on `main` for the first time.
            echo "changed=true" >> "$GITHUB_OUTPUT"
          fi
      ```
-  8. Commit and push / open PR if changed — branches on event type (D5):
+  9. Commit and push / open PR if changed — branches on event type (D5):
 
      ```yaml
      - name: Commit de/ translations to PR branch
@@ -119,7 +126,7 @@ on `main` for the first time.
        run: |
          git -c user.name="github-actions[bot]" \
              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-             commit -s -m "chore(native-rd/i18n): sync de/ translations [skip ci]"
+             commit -s -m "chore(native-rd/i18n): sync de/ translations"
          git push
 
      - name: Open PR with de/ translations (manual run)
@@ -131,7 +138,7 @@ on `main` for the first time.
          git checkout -b "$BRANCH"
          git -c user.name="github-actions[bot]" \
              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-             commit -s -m "chore(native-rd/i18n): full-corpus sync de/ translations [skip ci]"
+             commit -s -m "chore(native-rd/i18n): full-corpus sync de/ translations"
          git push --set-upstream origin "$BRANCH"
          gh pr create \
            --base "${{ github.ref_name }}" \
@@ -140,7 +147,7 @@ on `main` for the first time.
            --body "Automated full-corpus sync triggered manually via \`workflow_dispatch\` on \`${{ github.ref_name }}\`. Review the diff and merge if the translations look right."
      ```
 
-     Note on `[skip ci]`: added to the commit message (not the job guard) as a belt-and-suspenders measure. The job-level `github.actor` guard already prevents re-trigger in most GH Actions implementations, but `[skip ci]` provides a universally-understood fallback that does not skip other workflow runs on the same push.
+     Note on loop prevention: do **not** add `[skip ci]` to the bot commit message. GitHub Actions' skip tokens (`[skip ci]`, `[ci skip]`, `[no ci]`, `[skip actions]`, `[actions skip]`) skip **all** workflows for that commit — there is no per-workflow scope, which directly contradicts D3. Loop prevention is already covered by two independent mechanisms: (a) commits pushed with the default `GITHUB_TOKEN` do not re-trigger workflows by design (a GitHub safety mechanism, see D4), and (b) the `github.actor != 'github-actions[bot]'` job-level guard re-skips only this sync job if a token strategy change ever makes (a) stop holding. That's belt-and-suspenders enough; `[skip ci]` would add a third "belt" that also cuts off your trousers.
 
 - [x] `concurrency` group on `pull_request.number || github.ref` with `cancel-in-progress: true`. **Revised 2026-05-25** during `/self-review`: original punt covered cross-PR independence only; both `code-reviewer` and CodeRabbit flagged the same-PR rapid-push and draft→ready race against an in-flight sync. Cancelling in-progress runs avoids two concurrent `git push` attempts on the same PR head.
 - [x] No caching of `.turbo` — sync script does not use Turbo.
