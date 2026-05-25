@@ -142,7 +142,7 @@ on `main` for the first time.
 
      Note on `[skip ci]`: added to the commit message (not the job guard) as a belt-and-suspenders measure. The job-level `github.actor` guard already prevents re-trigger in most GH Actions implementations, but `[skip ci]` provides a universally-understood fallback that does not skip other workflow runs on the same push.
 
-- [x] No `concurrency` group needed for v1 (sync is single-threaded and sequential; concurrent PRs touching `en/` are independent branches).
+- [x] `concurrency` group on `pull_request.number || github.ref` with `cancel-in-progress: true`. **Revised 2026-05-25** during `/self-review`: original punt covered cross-PR independence only; both `code-reviewer` and CodeRabbit flagged the same-PR rapid-push and draft→ready race against an in-flight sync. Cancelling in-progress runs avoids two concurrent `git push` attempts on the same PR head.
 - [x] No caching of `.turbo` — sync script does not use Turbo.
 
 **Important implementation note on D4 / token choice:** `GITHUB_TOKEN` cannot push to a fork's

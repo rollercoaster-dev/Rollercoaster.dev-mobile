@@ -8,6 +8,10 @@ on:
       - "apps/native-rd/src/i18n/resources/en/**"
   workflow_dispatch:
 
+concurrency:
+  group: i18n-sync-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
   pull-requests: write
