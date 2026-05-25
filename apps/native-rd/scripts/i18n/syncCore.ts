@@ -60,7 +60,10 @@ export function parseArgs(argv: readonly string[]): CliArgs {
   let modelName = DEFAULT_MODEL_NAME;
 
   function requireValue(flag: string, value: string | undefined): string {
-    if (value === undefined || value === "") {
+    // Reject the next-flag token too — otherwise `--model --dry-run` would
+    // silently bind `--dry-run` as the model name and leave dryRun=false,
+    // turning an intended dry run into a write.
+    if (value === undefined || value === "" || value.startsWith("--")) {
       throw new Error(`${flag} requires a value`);
     }
     return value;

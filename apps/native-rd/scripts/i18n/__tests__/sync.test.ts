@@ -109,6 +109,21 @@ describe("parseArgs", () => {
       /--namespace requires a value/,
     );
   });
+
+  test("flag followed by another flag throws — must not consume the next flag as a value", () => {
+    // Without this guard, `--model --dry-run --namespace common` would bind
+    // modelName="--dry-run" and leave dryRun=false, turning an intended
+    // dry-run into a real write.
+    expect(() =>
+      parseArgs(["--model", "--dry-run", "--namespace", "common"]),
+    ).toThrow(/--model requires a value/);
+    expect(() => parseArgs(["--target", "--dry-run"])).toThrow(
+      /--target requires a value/,
+    );
+    expect(() => parseArgs(["--namespace", "--dry-run"])).toThrow(
+      /--namespace requires a value/,
+    );
+  });
 });
 
 describe("target validation", () => {
