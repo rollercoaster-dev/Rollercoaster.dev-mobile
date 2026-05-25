@@ -11,13 +11,13 @@
 
 Observable criteria a reviewer can verify by running the code or reading the diff.
 
-- [ ] When a register YAML lists `"leidet an"`, `"anders begabt"`, or `"besondere Bedürfnisse"` in `banned_phrasings`, those phrases do NOT appear as register bullet points in the assembled prompt — they are deduplicated away as preamble defaults.
-- [ ] When a register YAML lists `"besonders"`, `"einzigartig"`, `"Du schaffst das!"`, or `"Großartig!"` in `banned_phrasings`, those phrases do NOT appear as register bullet points — deduplicated away.
-- [ ] When a register's `banned_phrasings` contains only phrases already covered by `PREAMBLE_BANNED_ALL` (exits + ND vocab + toxic-positive), the register section renders `(none beyond preamble defaults)`.
-- [ ] Dedup is case- and whitespace-insensitive for all three phrase groups (same normalization as the existing exit dedup).
-- [ ] The module docstring correctly says dedup is against `PREAMBLE_BANNED_ALL` (or equivalent), not just `PREAMBLE_BANNED_EXITS`.
-- [ ] `bun run type-check` and `bun run lint` pass clean.
-- [ ] All existing `promptBuilder.test.ts` tests continue to pass without modification.
+- [x] When a register YAML lists `"leidet an"`, `"anders begabt"`, or `"besondere Bedürfnisse"` in `banned_phrasings`, those phrases do NOT appear as register bullet points in the assembled prompt — they are deduplicated away as preamble defaults.
+- [x] When a register YAML lists `"besonders"`, `"einzigartig"`, `"Du schaffst das!"`, or `"Großartig!"` in `banned_phrasings`, those phrases do NOT appear as register bullet points — deduplicated away.
+- [x] When a register's `banned_phrasings` contains only phrases already covered by `PREAMBLE_BANNED_ALL` (exits + ND vocab + toxic-positive), the register section renders `(none beyond preamble defaults)`.
+- [x] Dedup is case- and whitespace-insensitive for all three phrase groups (same normalization as the existing exit dedup).
+- [x] The module docstring correctly says dedup is against `PREAMBLE_BANNED_ALL` (or equivalent), not just `PREAMBLE_BANNED_EXITS`.
+- [x] `bun run type-check` and `bun run lint` pass clean.
+- [x] All existing `promptBuilder.test.ts` tests continue to pass without modification.
 
 ## Dependencies
 
@@ -58,7 +58,7 @@ This closes the drift between the module docstring claim ("same phrase never app
 
 **Changes**:
 
-- [ ] After the existing `PREAMBLE_BANNED_EXITS` block (line 44–50), add:
+- [x] After the existing `PREAMBLE_BANNED_EXITS` block (line 44–50), add:
 
   ```ts
   export const PREAMBLE_BANNED_ND_VOCAB: readonly string[] = [
@@ -75,8 +75,8 @@ This closes the drift between the module docstring claim ("same phrase never app
   ];
   ```
 
-- [ ] Change `PREAMBLE_BANNED_EXITS` to `export const PREAMBLE_BANNED_EXITS` (so tests can reference it without hardcoding).
-- [ ] Replace the `PREAMBLE_BANNED_EXIT_SET` const with a combined set:
+- [x] Change `PREAMBLE_BANNED_EXITS` to `export const PREAMBLE_BANNED_EXITS` (so tests can reference it without hardcoding).
+- [x] Replace the `PREAMBLE_BANNED_EXIT_SET` const with a combined set:
   ```ts
   const PREAMBLE_BANNED_ALL: ReadonlySet<string> = new Set(
     [
@@ -86,9 +86,9 @@ This closes the drift between the module docstring claim ("same phrase never app
     ].map(normalizeBan),
   );
   ```
-- [ ] In `dedupedRegisterBans`, replace `PREAMBLE_BANNED_EXIT_SET` with `PREAMBLE_BANNED_ALL`.
-- [ ] Update the module docstring (line 13) from "deduped against `PREAMBLE_BANNED_EXITS`" to "deduped against `PREAMBLE_BANNED_ALL` (exits + ND vocab + toxic-positive phrases)".
-- [ ] Remove the now-unused `PREAMBLE_BANNED_EXIT_SET` const declaration (the combined set replaces it).
+- [x] In `dedupedRegisterBans`, replace `PREAMBLE_BANNED_EXIT_SET` with `PREAMBLE_BANNED_ALL`.
+- [x] Update the module docstring (line 13) from "deduped against `PREAMBLE_BANNED_EXITS`" to "deduped against `PREAMBLE_BANNED_ALL` (exits + ND vocab + toxic-positive phrases)".
+- [x] Remove the now-unused `PREAMBLE_BANNED_EXIT_SET` const declaration (the combined set replaces it).
 
 ### Step 2: Add tests covering the widened dedup set
 
@@ -98,17 +98,17 @@ This closes the drift between the module docstring claim ("same phrase never app
 
 **Changes**:
 
-- [ ] Import `PREAMBLE_BANNED_ND_VOCAB`, `PREAMBLE_BANNED_TOXIC_POSITIVE`, `PREAMBLE_BANNED_EXITS` from `../promptBuilder`.
-- [ ] Add test: `"register banned_phrasings are deduped against preamble ND vocab phrases"` — supply each phrase from `PREAMBLE_BANNED_ND_VOCAB` plus one novel phrase; assert the ND-vocab items do not appear as register bullets, the novel phrase does.
-- [ ] Add test: `"register banned_phrasings are deduped against preamble toxic-positive phrases"` — same pattern for `PREAMBLE_BANNED_TOXIC_POSITIVE`.
-- [ ] Add test: `"register section falls back to '(none beyond preamble defaults)' when all listed phrasings are preamble-covered (exits + ND + toxic)"` — supply a mix of one exit, one ND vocab, one toxic-positive; assert the fallback string is rendered.
+- [x] Import `PREAMBLE_BANNED_ND_VOCAB`, `PREAMBLE_BANNED_TOXIC_POSITIVE`, `PREAMBLE_BANNED_EXITS` from `../promptBuilder`.
+- [x] Add test: `"register banned_phrasings are deduped against preamble ND vocab phrases"` — supply each phrase from `PREAMBLE_BANNED_ND_VOCAB` plus one novel phrase; assert the ND-vocab items do not appear as register bullets, the novel phrase does.
+- [x] Add test: `"register banned_phrasings are deduped against preamble toxic-positive phrases"` — same pattern for `PREAMBLE_BANNED_TOXIC_POSITIVE`.
+- [x] Add test: `"register section falls back to '(none beyond preamble defaults)' when all listed phrasings are preamble-covered (exits + ND + toxic)"` — supply a mix of one exit, one ND vocab, one toxic-positive; assert the fallback string is rendered.
 
 ## Testing Strategy
 
-- [ ] Run `bun test --testPathPatterns promptBuilder` after Step 1 (all existing tests must pass before Step 2 adds new ones).
-- [ ] Run `bun test --testPathPatterns promptBuilder` after Step 2 (all tests including new ones must pass).
-- [ ] Run `bun run type-check` and `bun run lint` after Step 1.
-- [ ] No manual testing required — `promptBuilder` is a pure function with full unit coverage.
+- [x] Run `bun test --testPathPatterns promptBuilder` after Step 1 (all existing tests must pass before Step 2 adds new ones).
+- [x] Run `bun test --testPathPatterns promptBuilder` after Step 2 (all tests including new ones must pass).
+- [x] Run `bun run type-check` and `bun run lint` after Step 1.
+- [x] No manual testing required — `promptBuilder` is a pure function with full unit coverage.
 
 ## Not in Scope
 
