@@ -15,6 +15,7 @@
  */
 
 import { load as loadYaml } from "js-yaml";
+import { z } from "zod";
 
 import {
   deepFillMissingStrings,
@@ -31,6 +32,14 @@ import {
   type RegisterData,
 } from "./promptBuilder";
 import { parseAndValidate, type ParseError } from "./responseParser";
+
+const registerSchema: z.ZodType<RegisterData> = z.object({
+  speaker: z.string(),
+  audience: z.string(),
+  formality: z.string(),
+  banned_phrasings: z.array(z.string()),
+  notes: z.array(z.string()).optional(),
+});
 
 export type TranslateNamespaceOptions = {
   enTree: JsonTree;
@@ -57,47 +66,21 @@ function describeParseError(error: ParseError): string {
   }
 }
 
-function isRegisterData(value: unknown): value is RegisterData {
-  if (value === null || typeof value !== "object") {
-    return false;
-  }
-  const v = value as Record<string, unknown>;
-  if (
-    typeof v.speaker !== "string" ||
-    typeof v.audience !== "string" ||
-    typeof v.formality !== "string"
-  ) {
-    return false;
-  }
-  if (
-    !Array.isArray(v.banned_phrasings) ||
-    !v.banned_phrasings.every((p) => typeof p === "string")
-  ) {
-    return false;
-  }
-  if (
-    v.notes !== undefined &&
-    (!Array.isArray(v.notes) || !v.notes.every((n) => typeof n === "string"))
-  ) {
-    return false;
-  }
-  return true;
-}
-
 function parseRegister(text: string, ns: string): RegisterData {
-  let parsed: unknown;
+  let raw: unknown;
   try {
-    parsed = loadYaml(text);
+    raw = loadYaml(text);
   } catch (e) {
     const detail = e instanceof Error ? e.message : String(e);
     throw new Error(`namespace ${ns}: register YAML parse failed — ${detail}`);
   }
-  if (!isRegisterData(parsed)) {
+  const result = registerSchema.safeParse(raw);
+  if (!result.success) {
     throw new Error(
       `namespace ${ns}: register YAML missing required fields (speaker, audience, formality, banned_phrasings)`,
     );
   }
-  return parsed;
+  return result.data;
 }
 
 /**
@@ -135,14 +118,7 @@ export async function translateNamespace(
   }
 
   for (const key of pathMap.keys) {
-    const sourceStr = dict[key];
-    const candidateStr = parsed.data[key];
-    if (sourceStr === undefined || candidateStr === undefined) {
-      throw new Error(
-        `namespace ${ns}: internal — missing key ${key} after parse validation`,
-      );
-    }
-    const check = checkPlaceholders(sourceStr, candidateStr, key);
+    const check = checkPlaceholders(dict[key]!, parsed.data[key]!, key);
     if (!check.ok) {
       const { missing, extra, duplicates } = check.error;
       throw new Error(
