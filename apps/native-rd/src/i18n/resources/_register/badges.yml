@@ -1,0 +1,20 @@
+# badges — ND adult, badge collection view.
+# Source JSON is currently {}; register is authored ahead of content so the
+# sync pipeline has it ready.
+
+speaker: app
+audience: ND adult
+formality: informal
+banned_phrasings:
+  - Glückwunsch!
+  - Großartig!
+  - du hast es geschafft!
+  - dein Erfolg
+  - Achievement
+  - sammle sie alle
+  - besonders
+  - einzigartig
+  - leidet an
+notes:
+  - Badges are self-validation, not external approval — no achievement-porn.
+  - 'Matter-of-fact brevity. "verliehen." beats "Du hast erfolgreich einen Badge erhalten!".'

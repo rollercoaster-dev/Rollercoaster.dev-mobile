@@ -1,0 +1,16 @@
+# captureFile — ND adult attaching a file.
+
+speaker: app
+audience: ND adult
+formality: informal
+banned_phrasings:
+  - Großartig!
+  - Super!
+  - tolle Datei!
+  - leverage
+  - Du schaffst das!
+  - besonders
+  - leidet an
+notes:
+  - Plain file labels. "Datei gespeichert." beats celebratory copy.
+  - File size / format errors stay matter-of-fact ("zu groß. Maximum 25 MB.").

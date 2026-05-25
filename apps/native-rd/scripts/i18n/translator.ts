@@ -33,13 +33,15 @@ import {
 } from "./promptBuilder";
 import { parseAndValidate, type ParseError } from "./responseParser";
 
-const registerSchema: z.ZodType<RegisterData> = z.object({
-  speaker: z.string(),
-  audience: z.string(),
-  formality: z.string(),
-  banned_phrasings: z.array(z.string()),
-  notes: z.array(z.string()).optional(),
-});
+const registerSchema: z.ZodType<RegisterData> = z
+  .object({
+    speaker: z.string(),
+    audience: z.string(),
+    formality: z.string(),
+    banned_phrasings: z.array(z.string()),
+    notes: z.array(z.string()).optional(),
+  })
+  .strict();
 
 export type TranslateNamespaceOptions = {
   enTree: JsonTree;
@@ -121,6 +123,14 @@ export async function translateNamespace(
   }
 
   const register = parseRegister(registerText, ns);
+  // Known limitation (see #180): `intents` is keyed by source paths
+  // (e.g. "save.confirm"), but `dict` goes to the LLM keyed by synthetic
+  // `k{n}` keys synthesized in `collectMissing` (jsonTreeUtils.ts:174-188).
+  // The per-string intent override is therefore visible in the prompt but
+  // cannot bind to specific user-content strings until the keys are reconciled
+  // (either re-key intents through `pathMap.paths` before assembly, or drop
+  // the synthetic-key scheme entirely). The brand-voice preamble and per-
+  // namespace register are unaffected.
   const systemPrompt = buildSystemPrompt({ register, intents, glossary });
   const userContent = JSON.stringify(dict);
 

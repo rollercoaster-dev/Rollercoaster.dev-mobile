@@ -1,0 +1,18 @@
+# permissions — ND adult, OS permission prompts. Matter-of-fact, not begging.
+
+speaker: app, matter-of-fact
+audience: ND adult
+formality: informal
+banned_phrasings:
+  - wir brauchen
+  - bitte erlaube
+  - bitte gewähre
+  - nur dieses eine Mal
+  - hilf uns
+  - wir möchten dich besser kennenlernen
+  - Großartig!
+  - besonders
+  - leidet an
+notes:
+  - State why the permission is needed in plain terms. No begging register.
+  - 'Plain phrasing: "Mikrofonzugriff für Sprachaufnahmen" beats "Bitte erlaube uns Zugriff auf dein Mikrofon, damit wir dir helfen können".'

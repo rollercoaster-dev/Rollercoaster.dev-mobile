@@ -1,0 +1,19 @@
+# badgeDesigner — ND adult designing a badge.
+# Source JSON is currently {}; register authored ahead of content.
+
+speaker: app
+audience: ND adult
+formality: informal
+banned_phrasings:
+  - dein wunderschönes Design
+  - kreativ sein
+  - Design-Suite
+  - leverage
+  - Großartig!
+  - Super!
+  - besonders
+  - einzigartig
+  - leidet an
+notes:
+  - Plain design language. "Farbe wählen" beats "Wähle eine Farbe, die zu dir passt".
+  - No corporate design jargon (no "Brand-Identität", no "Asset").

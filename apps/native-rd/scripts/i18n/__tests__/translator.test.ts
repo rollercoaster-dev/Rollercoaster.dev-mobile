@@ -272,6 +272,25 @@ describe("translateNamespace — register/intent/glossary plumbing", () => {
     expect(mockCallModel).not.toHaveBeenCalled();
   });
 
+  test("throws on an unknown register key (e.g. a `banned_phrasing` typo)", async () => {
+    const enTree = { greeting: "Hello" };
+    const deTree = {};
+
+    await expect(
+      translateNamespace({
+        enTree,
+        deTree,
+        ns: "common",
+        modelName: "gpt-4o-mini",
+        registerText:
+          "speaker: app\naudience: nd-adults\nformality: informal\nbanned_phrasings: []\nbanned_phrasing: []\n",
+      }),
+    ).rejects.toThrow(
+      /namespace common.*register YAML schema invalid.*banned_phrasing/,
+    );
+    expect(mockCallModel).not.toHaveBeenCalled();
+  });
+
   test("preserves YAML parse error cause for debugging", async () => {
     const enTree = { greeting: "Hello" };
     const deTree = {};

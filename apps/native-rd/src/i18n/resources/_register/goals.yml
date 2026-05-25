@@ -1,0 +1,21 @@
+# goals — ND adult returning to goal tracking.
+# No streak language, no "you haven't yet" pressure. BRAND_LANGUAGE.md
+# Anti-Patterns → Gamification Punishments.
+
+speaker: app
+audience: ND adult returning to goals
+formality: informal
+banned_phrasings:
+  - Streak
+  - Tage ohne
+  - du hast noch nicht
+  - schon wieder verpasst
+  - dranbleiben!
+  - Großartig!
+  - Super!
+  - Du schaffst das!
+  - besonders
+  - leidet an
+notes:
+  - Non-linear progress is the point — never frame a gap as failure.
+  - 'Resume phrasing: "Pick up where you left off" → "Mach da weiter, wo du aufgehört hast." — no urgency, no streak math.'

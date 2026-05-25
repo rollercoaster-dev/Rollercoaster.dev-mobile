@@ -124,18 +124,18 @@ scripts/i18n/sync.ts (Bun CLI)
 
 Hand-written LOC only. Generated `de/*.json` (PR #10) doesn't count toward the cap.
 
-| #   | PR                                                                                                            | LOC            | Files       | Depends on   |
-| --- | ------------------------------------------------------------------------------------------------------------- | -------------- | ----------- | ------------ |
-| 1   | `jsonTreeUtils.ts` + tests                                                                                    | ~350           | 2           | —            |
-| 2   | `placeholderGuard.ts` + `responseParser.ts` (Zod) + tests                                                     | ~250           | 4           | —            |
-| 3   | `models.ts` registry + Vercel AI SDK + OpenRouter wrapper + tests + **ADR: gateway choice**                   | ~250           | 3 (+ ADR)   | —            |
-| 4   | promptfoo config + ~20 fixture en strings + brand-voice assertions                                            | ~250 yaml/json | 3–5         | #3           |
-| 5   | `translator.ts` + `promptBuilder.ts` + tests                                                                  | ~450           | 4           | #1, #2, #3   |
-| 6   | `sync.ts` CLI + integration test                                                                              | ~300           | 2           | #5           |
-| 7   | `lintSource.ts` warn-only + tests + strict-promotion criterion documented                                     | ~350           | 2           | — (parallel) |
-| 8   | Voice system prompt + per-namespace register YAMLs + sidecar intent loader + **ADR: voice enforcement shape** | ~250 md/yaml   | 2–3 (+ ADR) | #5           |
-| 9   | CI workflow + bot identity                                                                                    | ~100 yaml      | 1–2         | #6, #8       |
-| 10  | First sync output: `resources/de/*.json` × 15 namespaces                                                      | generated      | 15          | #9           |
+| #   | PR                                                                                                                                                  | LOC            | Files       | Depends on   |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ----------- | ------------ |
+| 1   | `jsonTreeUtils.ts` + tests                                                                                                                          | ~350           | 2           | —            |
+| 2   | `placeholderGuard.ts` + `responseParser.ts` (Zod) + tests                                                                                           | ~250           | 4           | —            |
+| 3   | `models.ts` registry + Vercel AI SDK + OpenRouter wrapper + tests + **ADR: gateway choice**                                                         | ~250           | 3 (+ ADR)   | —            |
+| 4   | promptfoo config + ~20 fixture en strings + brand-voice assertions                                                                                  | ~250 yaml/json | 3–5         | #3           |
+| 5   | `translator.ts` + `promptBuilder.ts` + tests                                                                                                        | ~450           | 4           | #1, #2, #3   |
+| 6   | `sync.ts` CLI + integration test                                                                                                                    | ~300           | 2           | #5           |
+| 7   | `lintSource.ts` warn-only + tests + strict-promotion criterion documented                                                                           | ~350           | 2           | — (parallel) |
+| 8   | Voice system prompt + per-namespace register YAMLs + sidecar intent loader + **ADR-0009: voice enforcement shape** (landed 2026-05-25 — issue #162) | ~250 md/yaml   | 2–3 (+ ADR) | #5           |
+| 9   | CI workflow + bot identity                                                                                                                          | ~100 yaml      | 1–2         | #6, #8       |
+| 10  | First sync output: `resources/de/*.json` × 15 namespaces                                                                                            | generated      | 15          | #9           |
 
 **Total hand-written: ~2,550 LOC across 9 code PRs.**
 
@@ -176,10 +176,11 @@ Strict-mode promotion of `lintSource` is post-v1.
 
 ADRs amending decisions in this plan use **supersession** (write a new ADR that supersedes the old one), not in-place amendment. See ADR-0006 (2026-05-23) for the pattern.
 
-| Date       | Change                                                                                                                   |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------ |
-| 2026-05-24 | Initial plan. OpenRouter gateway, Vercel AI SDK, sidecar+register voice shape, three-clause linter trip-wire all locked. |
-| 2026-05-25 | ADR-0008 drops reasoning-tuned models from the first bake-off pool after live evals showed reasoning preamble leakage.   |
+| Date       | Change                                                                                                                                                           |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-05-24 | Initial plan. OpenRouter gateway, Vercel AI SDK, sidecar+register voice shape, three-clause linter trip-wire all locked.                                         |
+| 2026-05-25 | ADR-0008 drops reasoning-tuned models from the first bake-off pool after live evals showed reasoning preamble leakage.                                           |
+| 2026-05-25 | PR #8 (issue #162) landed: brand-voice prompt copy, 15 register YAMLs, intent sidecar loader wired. ADR-0009 formalises the three-layer voice enforcement shape. |
 
 ---
 

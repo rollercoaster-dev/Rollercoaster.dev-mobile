@@ -106,6 +106,29 @@ describe("buildSystemPrompt", () => {
     expect(out).toContain("Notes:");
   });
 
+  test("three-layer composition surfaces register ban + intent metadata + glossary content", () => {
+    // Headers-only assertions would pass even if section content were dropped;
+    // this test guards the contract named in the dev plan Intent Verification.
+    const out = buildSystemPrompt({
+      register: {
+        ...BASE_REGISTER,
+        banned_phrasings: ["exclamation filler"],
+      },
+      intents: {
+        "save.confirm": {
+          intent: "matter-of-fact ack",
+          audience: "returning-nd-adult",
+        },
+      },
+      glossary: "Streak → (do not use)",
+    });
+    expect(out).toContain("- exclamation filler");
+    expect(out).toContain("save.confirm");
+    expect(out).toContain('intent="matter-of-fact ack"');
+    expect(out).toContain('audience="returning-nd-adult"');
+    expect(out).toContain("Streak → (do not use)");
+  });
+
   test("is deterministic — same input produces identical output", () => {
     const input = {
       register: { ...BASE_REGISTER, notes: ["a", "b"] },
@@ -113,6 +136,103 @@ describe("buildSystemPrompt", () => {
       glossary: "g",
     };
     expect(buildSystemPrompt(input)).toBe(buildSystemPrompt(input));
+  });
+
+  test("preamble contains identity-first ND vocab instruction", () => {
+    const out = buildSystemPrompt({ register: BASE_REGISTER });
+    expect(out).toContain("autistisch");
+    expect(out).toContain("ADHS");
+    expect(out).toContain("identity-first");
+  });
+
+  test("preamble contains the placeholder-preservation contract", () => {
+    const out = buildSystemPrompt({ register: BASE_REGISTER });
+    expect(out).toMatch(/\{\{placeholder\}\}/);
+    expect(out).toContain("EXACTLY");
+  });
+
+  test("preamble names the banned dismissive exits", () => {
+    const out = buildSystemPrompt({ register: BASE_REGISTER });
+    expect(out).toContain("oder nicht");
+    expect(out).toContain("oder lass es");
+  });
+
+  test("preamble states the translate-from-English-to-German task explicitly", () => {
+    // Defense-in-depth: don't rely on "Identity-first ND vocab in German"
+    // to imply translation. Make the verb explicit so the model can't
+    // drift into rewriting in English or doing non-translation transforms.
+    const out = buildSystemPrompt({ register: BASE_REGISTER });
+    expect(out).toMatch(/translate[\s\S]*English[\s\S]*German/i);
+  });
+
+  test("preamble describes input keys as opaque/anonymized, not as paths", () => {
+    // The pipeline anonymizes dotted paths to `k0`, `k1`, …
+    // (jsonTreeUtils.collectMissing). The prompt must match what the
+    // model actually receives, not the pre-anonymization shape.
+    const out = buildSystemPrompt({ register: BASE_REGISTER });
+    expect(out).toMatch(/k0/);
+    expect(out).not.toMatch(/path\s*→\s*English string/);
+  });
+
+  test("register banned_phrasings are deduped against preamble exits", () => {
+    const out = buildSystemPrompt({
+      register: {
+        ...BASE_REGISTER,
+        banned_phrasings: [
+          "oder nicht",
+          "exclamation filler",
+          "oder lass es",
+          "exclamation filler",
+        ],
+      },
+    });
+    expect(out.match(/oder nicht/g)?.length).toBe(1);
+    expect(out.match(/oder lass es/g)?.length).toBe(1);
+    expect(out.match(/- exclamation filler/g)?.length).toBe(1);
+  });
+
+  test("dedup is case- and whitespace-insensitive against preamble exits", () => {
+    const out = buildSystemPrompt({
+      register: {
+        ...BASE_REGISTER,
+        banned_phrasings: [
+          "  Oder Nicht  ",
+          "ODER LASS ES",
+          "exclamation filler",
+        ],
+      },
+    });
+    // Preamble dups appear once each in the preamble; no register-bullet copy.
+    expect(out.match(/oder nicht/gi)?.length).toBe(1);
+    expect(out.match(/oder lass es/gi)?.length).toBe(1);
+    // Non-preamble phrase still surfaces in the register bullet list.
+    expect(out).toContain("- exclamation filler");
+  });
+
+  test("dedup is case- and whitespace-insensitive across register entries", () => {
+    const out = buildSystemPrompt({
+      register: {
+        ...BASE_REGISTER,
+        banned_phrasings: [
+          "exclamation filler",
+          "Exclamation Filler",
+          "  exclamation filler  ",
+        ],
+      },
+    });
+    // The first author-written form is preserved; the dup variants are dropped.
+    expect(out.match(/- exclamation filler/g)?.length).toBe(1);
+    expect(out).not.toContain("- Exclamation Filler");
+  });
+
+  test("register section falls back to '(none beyond preamble defaults)' when only preamble dups are listed", () => {
+    const out = buildSystemPrompt({
+      register: {
+        ...BASE_REGISTER,
+        banned_phrasings: ["oder nicht", "oder lass es"],
+      },
+    });
+    expect(out).toContain("(none beyond preamble defaults)");
   });
 
   test("intent ordering is independent of object insertion order", () => {
