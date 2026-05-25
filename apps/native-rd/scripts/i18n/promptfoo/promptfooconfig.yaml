@@ -69,7 +69,7 @@ defaultTest:
           return { pass: false, score: 0, reason: 'expected string output, got ' + typeof output };
         }
         const extract = (str) =>
-          Array.from(String(str).matchAll(/\{\{([^}]+)\}\}/g), (m) => m[1].trim());
+          Array.from(String(str).matchAll(/\{\{([^}]+)\}\}/g), (m) => m[1]);
         const count = (arr) =>
           arr.reduce((map, key) => ((map[key] = (map[key] || 0) + 1), map), {});
         const expectedCounts = count(extract(context.vars.en || ''));

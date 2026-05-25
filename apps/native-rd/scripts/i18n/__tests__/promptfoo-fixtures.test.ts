@@ -34,9 +34,15 @@ describe("promptfoo fixture shape", () => {
       ),
     );
 
-    expect(rubricRows).toHaveLength(10);
+    expect(rubricRows).toHaveLength(9);
+    expect(
+      rubricRows.some((row) => row.description.includes("operational-label")),
+    ).toBe(false);
     expect(rubricRows.map((row) => row.description)).not.toContain(
       "common::actions.save (operational-label)",
+    );
+    expect(rubricRows.map((row) => row.description)).not.toContain(
+      "common::stepCard.blocker.label (operational-label)",
     );
     expect(rubricRows.map((row) => row.description)).not.toContain(
       "common::stepCard.progress (interpolation, 2 placeholders)",

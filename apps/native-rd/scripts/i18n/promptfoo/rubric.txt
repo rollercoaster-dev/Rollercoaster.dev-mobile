@@ -5,7 +5,7 @@ Explain the rating in one sentence.
 
 Criteria:
 1. Direct and non-patronizing. No "Betroffene", no "Menschen mit besonderen
-   Beduerfnissen" or other euphemistic distancing, no generic positivity
+   Bedürfnissen" or other euphemistic distancing, no generic positivity
    ("jeder ist einzigartig").
 2. Matter-of-fact tone. No exclamation points unless the source had one. No
    motivational filler.

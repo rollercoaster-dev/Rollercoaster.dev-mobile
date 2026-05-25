@@ -45,10 +45,7 @@
       "ns": "common",
       "key": "stepCard.blocker.label",
       "en": "Add evidence to complete"
-    },
-    "assert": [
-      { "type": "llm-rubric", "threshold": 0.5, "value": "file://./rubric.txt" }
-    ]
+    }
   },
   {
     "description": "common::status.a11yPrefix (interpolation, 1 placeholder)",

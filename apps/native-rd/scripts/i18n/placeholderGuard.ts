@@ -2,8 +2,9 @@
  * Hard-fail placeholder validation for i18next mustache-style interpolation.
  *
  * Verifies that every `{{name}}` placeholder in the source string appears
- * exactly once in the candidate translation. No additions, no drops, no
- * renames. This is key invariant #2 from the i18n-llm-sync plan: wrong
+ * exactly once in the candidate translation with the same token contents.
+ * No additions, no drops, no renames, no spacing changes. This is key
+ * invariant #2 from the i18n-llm-sync plan: wrong
  * placeholder shape aborts the batch — the candidate never ships.
  *
  * Scope: i18next mustache only. ICU, nested, and named-capture forms are
@@ -24,13 +25,14 @@ export type PlaceholderCheckResult =
   | { ok: false; error: PlaceholderError };
 
 /**
- * Extract all `{{name}}` placeholder names from `str` in source order,
- * preserving duplicates so the caller can detect repeated placeholders.
+ * Extract all `{{name}}` placeholder token contents from `str` in source
+ * order, preserving duplicates and whitespace exactly so the caller can detect
+ * repeated or reformatted placeholders.
  */
 export function extractPlaceholders(str: string): string[] {
   const matches: string[] = [];
   for (const m of str.matchAll(PLACEHOLDER_RE)) {
-    matches.push(m[1].trim());
+    matches.push(m[1]);
   }
   return matches;
 }
