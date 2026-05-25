@@ -45,7 +45,10 @@ export function loadIntentSidecar(
     if ((e as NodeJS.ErrnoException)?.code === "ENOENT") {
       return {};
     }
-    throw e;
+    const detail = e instanceof Error ? e.message : String(e);
+    throw new Error(`namespace ${ns}: intent sidecar read failed — ${detail}`, {
+      cause: e,
+    });
   }
   if (raw.trim().length === 0) {
     return {};

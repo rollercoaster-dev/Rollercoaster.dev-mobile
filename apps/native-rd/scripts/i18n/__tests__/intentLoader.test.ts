@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -108,6 +108,20 @@ describe("loadIntentSidecar", () => {
       );
       expect(() => loadIntentSidecar(dir, "permissions")).toThrow(
         /namespace permissions:.*shape invalid.*intent/,
+      );
+    } finally {
+      cleanup();
+    }
+  });
+
+  test("wraps non-ENOENT read errors with the namespace name", () => {
+    const { dir, cleanup } = makeTmpDir();
+    try {
+      // A directory at the sidecar path triggers EISDIR on readFileSync —
+      // any non-ENOENT errno that surfaces must carry the namespace.
+      mkdirSync(join(dir, "goals.intents.json"));
+      expect(() => loadIntentSidecar(dir, "goals")).toThrow(
+        /namespace goals:.*intent sidecar read failed/,
       );
     } finally {
       cleanup();
