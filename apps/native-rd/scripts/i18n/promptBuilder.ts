@@ -60,7 +60,9 @@ function formatRegister(register: RegisterData): string {
 }
 
 function formatIntents(intents: Record<string, IntentEntry>): string {
-  const entries = Object.entries(intents);
+  const entries = Object.entries(intents).sort(([a], [b]) =>
+    a < b ? -1 : a > b ? 1 : 0,
+  );
   if (entries.length === 0) {
     return "";
   }

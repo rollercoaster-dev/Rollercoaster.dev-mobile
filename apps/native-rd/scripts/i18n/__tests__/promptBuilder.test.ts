@@ -114,4 +114,24 @@ describe("buildSystemPrompt", () => {
     };
     expect(buildSystemPrompt(input)).toBe(buildSystemPrompt(input));
   });
+
+  test("intent ordering is independent of object insertion order", () => {
+    const a = buildSystemPrompt({
+      register: BASE_REGISTER,
+      intents: {
+        zeta: { intent: "z" },
+        alpha: { intent: "a" },
+        mu: { intent: "m" },
+      },
+    });
+    const b = buildSystemPrompt({
+      register: BASE_REGISTER,
+      intents: {
+        alpha: { intent: "a" },
+        mu: { intent: "m" },
+        zeta: { intent: "z" },
+      },
+    });
+    expect(a).toBe(b);
+  });
 });
