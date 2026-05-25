@@ -62,15 +62,17 @@ describe("syncOneNamespace — sidecar intent wiring", () => {
   test("passes loaded intents into the LLM system prompt when sidecar exists", async () => {
     writeFileSync(
       join(fixture.enDir, "welcome.json"),
-      JSON.stringify({ title: "still here?" }),
+      JSON.stringify({ hero: { title: "still here?" } }),
       "utf8",
     );
     writeFileSync(
       join(fixture.enDir, "welcome.intents.json"),
       JSON.stringify({
-        title: {
-          intent: "warm recognition, never expansive",
-          audience: "first-run-nd-adult",
+        hero: {
+          title: {
+            intent: "warm recognition, never expansive",
+            audience: "first-run-nd-adult",
+          },
         },
       }),
       "utf8",
@@ -95,9 +97,10 @@ describe("syncOneNamespace — sidecar intent wiring", () => {
     const systemPrompt = mockCallModel.mock.calls[0]![1];
     expect(systemPrompt).toContain("Per-string intents");
     // After #180, intents are re-keyed onto synthetic dict keys (`k{n}`)
-    // before reaching the prompt. The author-facing `title` source-path
-    // key must NOT appear in the intents section.
+    // before reaching the prompt. Neither the nested `hero.title` source
+    // path nor the bare `title` leaf segment may appear in the prompt.
     expect(systemPrompt).toContain("- k0:");
+    expect(systemPrompt).not.toContain("- hero.title:");
     expect(systemPrompt).not.toContain("- title:");
     expect(systemPrompt).toContain("warm recognition, never expansive");
     expect(systemPrompt).toContain('audience="first-run-nd-adult"');
@@ -106,7 +109,7 @@ describe("syncOneNamespace — sidecar intent wiring", () => {
   test("omits the intents section when no sidecar file is present", async () => {
     writeFileSync(
       join(fixture.enDir, "welcome.json"),
-      JSON.stringify({ title: "still here?" }),
+      JSON.stringify({ hero: { title: "still here?" } }),
       "utf8",
     );
     writeFileSync(
@@ -131,7 +134,7 @@ describe("syncOneNamespace — sidecar intent wiring", () => {
   test("surfaces a corrupt sidecar as a failed outcome with the namespace name", async () => {
     writeFileSync(
       join(fixture.enDir, "welcome.json"),
-      JSON.stringify({ title: "still here?" }),
+      JSON.stringify({ hero: { title: "still here?" } }),
       "utf8",
     );
     writeFileSync(

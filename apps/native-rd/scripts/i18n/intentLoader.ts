@@ -14,6 +14,14 @@
  *   - present, non-object → throws
  *   - present, bad shape  → throws (zod validation)
  *
+ * Author-facing format is nested JSON that mirrors `en/<ns>.json`, with
+ * string leaves replaced by `{ intent, audience?, register? }` objects.
+ * The loader flattens these to dotted source-path keys (`"hero.title"`)
+ * before returning, which is what `translator.ts` re-keys onto synthetic
+ * `k{n}` dict keys. The `lintSource.ts` sidecar walker already assumes
+ * the nested shape — this loader is what makes a correctly-authored
+ * sidecar actually load.
+ *
  * Pure sync `node:fs` I/O — no Bun-specific APIs, no `import.meta`. Jest can
  * import this module directly.
  */
@@ -33,7 +41,78 @@ const intentEntrySchema: z.ZodType<IntentEntry> = z
   })
   .strict();
 
-const intentRecordSchema = z.record(z.string(), intentEntrySchema);
+const INTENT_LEAF_KEYS = new Set(["intent", "audience", "register"]);
+
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+  return v !== null && typeof v === "object" && !Array.isArray(v);
+}
+
+/**
+ * A node is treated as a leaf when it's a plain object that declares at
+ * least one `IntentEntry` field (`intent`, `audience`, or `register`).
+ * That's enough signal: strict zod then either accepts it or produces a
+ * targeted error — "Required: intent" for `{ audience: "..." }`, or
+ * "Unrecognized key: 'audiance'" for typos. Pure branch objects (e.g.
+ * `{ hero: { title: { ... } } }`) have none of these keys at any given
+ * level, so the heuristic doesn't false-positive on namespace structure.
+ *
+ * Empty objects are not leaves — recursion bottoms out with zero output,
+ * and the loader's documented `{}` -> `{}` contract is preserved.
+ */
+function looksLikeLeaf(node: Record<string, unknown>): boolean {
+  for (const k of Object.keys(node)) {
+    if (INTENT_LEAF_KEYS.has(k)) return true;
+  }
+  return false;
+}
+
+function flattenIntoRecord(
+  node: unknown,
+  prefix: string,
+  ns: string,
+  out: Record<string, IntentEntry>,
+): void {
+  if (!isPlainObject(node)) {
+    throw new Error(
+      `namespace ${ns}: intent sidecar shape invalid — ${
+        prefix || "(root)"
+      }: expected object, got ${
+        Array.isArray(node) ? "array" : node === null ? "null" : typeof node
+      }`,
+    );
+  }
+
+  if (looksLikeLeaf(node)) {
+    const result = intentEntrySchema.safeParse(node);
+    if (!result.success) {
+      const details = result.error.issues
+        .map((i) => {
+          const leafPath = i.path.join(".");
+          const full =
+            prefix && leafPath
+              ? `${prefix}.${leafPath}`
+              : prefix || leafPath || "(root)";
+          return `${full}: ${i.message}`;
+        })
+        .join("; ");
+      throw new Error(
+        `namespace ${ns}: intent sidecar shape invalid — ${details}`,
+      );
+    }
+    if (prefix === "") {
+      throw new Error(
+        `namespace ${ns}: intent sidecar shape invalid — (root): leaf intent entry at root, expected nested object mirroring source namespace`,
+      );
+    }
+    out[prefix] = result.data;
+    return;
+  }
+
+  for (const [key, value] of Object.entries(node)) {
+    const next = prefix === "" ? key : `${prefix}.${key}`;
+    flattenIntoRecord(value, next, ns, out);
+  }
+}
 
 export function loadIntentSidecar(
   enDir: string,
@@ -79,14 +158,7 @@ export function loadIntentSidecar(
     );
   }
 
-  const result = intentRecordSchema.safeParse(parsed);
-  if (!result.success) {
-    const details = result.error.issues
-      .map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`)
-      .join("; ");
-    throw new Error(
-      `namespace ${ns}: intent sidecar shape invalid — ${details}`,
-    );
-  }
-  return result.data;
+  const out: Record<string, IntentEntry> = {};
+  flattenIntoRecord(parsed, "", ns, out);
+  return out;
 }
