@@ -56,13 +56,13 @@ Clause 3 ensures the linter has been exercised against real sync output before b
 
 ## Open decisions
 
-| #   | Decision                                                                                                                                                               | Status                                                                                                    |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| 1   | promptfoo location: `scripts/i18n/promptfoo/` (scoped to sync) vs. repo-root `promptfoo/` (if other LLM evals appear later)                                            | Resolved 2026-05-24 — `apps/native-rd/scripts/i18n/promptfoo/` (Option A, scoped). See dev plan for #159. |
-| 2   | Register file location: `src/i18n/resources/_register/` (sits next to locale files for author affordance) vs. `scripts/i18n/registers/` (groups sync tooling together) | Resolved 2026-05-25 — `apps/native-rd/src/i18n/resources/_register/` (Option A). See dev plan for #160.   |
-| 3   | Bot identity for CI commit-back: reuse existing bot account vs. create `rd-i18n-bot`                                                                                   | Punted to PR #9                                                                                           |
-| 4   | Identity-first German forms (Sie/du, gender-neutral patterns)                                                                                                          | Punted to first sync output review                                                                        |
-| 5   | Concurrent batching vs. single-threaded for v1                                                                                                                         | Single-threaded for v1; revisit if sync time exceeds CI budget                                            |
+| #   | Decision                                                                                                                                                               | Status                                                                                                                              |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | promptfoo location: `scripts/i18n/promptfoo/` (scoped to sync) vs. repo-root `promptfoo/` (if other LLM evals appear later)                                            | Resolved 2026-05-24 — `apps/native-rd/scripts/i18n/promptfoo/` (Option A, scoped). See dev plan for #159.                           |
+| 2   | Register file location: `src/i18n/resources/_register/` (sits next to locale files for author affordance) vs. `scripts/i18n/registers/` (groups sync tooling together) | Resolved 2026-05-25 — `apps/native-rd/src/i18n/resources/_register/` (Option A). See dev plan for #160.                             |
+| 3   | Bot identity for CI commit-back: reuse existing bot account vs. create `rd-i18n-bot`                                                                                   | Resolved 2026-05-25 — `github-actions[bot]` via `GITHUB_TOKEN`. Zero setup, DCO `bot_re` already exempts it. See dev plan for #163. |
+| 4   | Identity-first German forms (Sie/du, gender-neutral patterns)                                                                                                          | Punted to first sync output review                                                                                                  |
+| 5   | Concurrent batching vs. single-threaded for v1                                                                                                                         | Single-threaded for v1; revisit if sync time exceeds CI budget                                                                      |
 
 ---
 
@@ -176,11 +176,12 @@ Strict-mode promotion of `lintSource` is post-v1.
 
 ADRs amending decisions in this plan use **supersession** (write a new ADR that supersedes the old one), not in-place amendment. See ADR-0006 (2026-05-23) for the pattern.
 
-| Date       | Change                                                                                                                                                           |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-05-24 | Initial plan. OpenRouter gateway, Vercel AI SDK, sidecar+register voice shape, three-clause linter trip-wire all locked.                                         |
-| 2026-05-25 | ADR-0008 drops reasoning-tuned models from the first bake-off pool after live evals showed reasoning preamble leakage.                                           |
-| 2026-05-25 | PR #8 (issue #162) landed: brand-voice prompt copy, 15 register YAMLs, intent sidecar loader wired. ADR-0009 formalises the three-layer voice enforcement shape. |
+| Date       | Change                                                                                                                                                                             |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-05-24 | Initial plan. OpenRouter gateway, Vercel AI SDK, sidecar+register voice shape, three-clause linter trip-wire all locked.                                                           |
+| 2026-05-25 | ADR-0008 drops reasoning-tuned models from the first bake-off pool after live evals showed reasoning preamble leakage.                                                             |
+| 2026-05-25 | PR #8 (issue #162) landed: brand-voice prompt copy, 15 register YAMLs, intent sidecar loader wired. ADR-0009 formalises the three-layer voice enforcement shape.                   |
+| 2026-05-25 | PR for issue #163 landed: `.github/workflows/i18n-sync.yml` ships the diff-aware en→de sync with bot commit-back. Decision #3 resolved (`github-actions[bot]` via `GITHUB_TOKEN`). |
 
 ---
 
