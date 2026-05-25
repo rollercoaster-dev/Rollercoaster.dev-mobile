@@ -1,0 +1,32 @@
+# Brand-global glossary for the i18n batch translator.
+#
+# Format: one term per line. Lines starting with `#` are comments; blank
+# lines are ignored. Loaded by `scripts/i18n/glossaryLoader.ts` and rendered
+# under a `## Glossary` heading in the LLM system prompt.
+#
+# This file is the third voice-enforcement layer alongside the per-namespace
+# YAML registers (this directory) and per-string intent sidecars
+# (`en/<ns>.intents.json`). Keep it short — only true brand terms that must
+# pass through translation untouched. Per-string nuance lives in the sidecar,
+# not here.
+#
+# Every entry should be traceable to either `landing/docs/BRAND_LANGUAGE.md`
+# or to product copy in this app (docs/launch/store-listing-copy.md,
+# en/*.json values, AGENTS.md).
+
+# Brand name — do not translate, keep punctuation and casing
+Rollercoaster.dev
+
+# App identifier (hyphenated slug used in technical contexts)
+native-rd
+
+# Persona names — fictional ND user personas referenced in product copy
+Sam
+Cal
+
+# ND identity vocabulary — identity-first; never expand the abbreviation
+ND
+neurodivergent
+
+# Standards / proper nouns
+Open Badges
