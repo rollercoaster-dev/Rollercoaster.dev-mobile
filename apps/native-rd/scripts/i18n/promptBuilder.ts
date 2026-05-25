@@ -66,7 +66,9 @@ const PREAMBLE_BANNED_EXITS_INLINE = PREAMBLE_BANNED_EXITS.map(
   (p) => `"${p}"`,
 ).join(", ");
 
-const VOICE_PREAMBLE = `This is the rollercoaster.dev brand voice. The audience is neurodivergent adults (ADHD, autism, bipolar). The product is a personal goal tracker built by one person (Joe, bipolar + ADHD). Voice comes from inside the audience — not from outside it.
+const VOICE_PREAMBLE = `Task: translate each input value from English to German, applying the voice rules below. Keys are opaque identifiers — return them verbatim, do NOT interpret meaning from them.
+
+This is the rollercoaster.dev brand voice. The audience is neurodivergent adults (ADHD, autism, bipolar). The product is a personal goal tracker built by one person (Joe, bipolar + ADHD). Voice comes from inside the audience — not from outside it.
 
 Identity-first ND vocabulary in German:
 - "autistisch", "ADHS", "bipolar" — identity-first, not deficit-first.
@@ -93,8 +95,8 @@ Placeholders:
 - Preserve every \`{{placeholder}}\` token EXACTLY. Same name, same braces, same count. Do not translate placeholder names.
 
 Output contract:
-- Input is a flat JSON dictionary of \`path → English string\`.
-- Output is raw JSON with the IDENTICAL key set — no added keys, no dropped keys, no wrapper object.
+- Input is a flat JSON dictionary with anonymized string keys (e.g. \`k0\`, \`k1\`) mapping to English source values. The keys carry no semantic meaning — they are NOT paths or labels; do not translate, expand, or annotate them.
+- Output is raw JSON with the IDENTICAL key set — no added keys, no dropped keys, no wrapper object. Only the values change (English → German).
 - No markdown code fences. No prose before or after. JSON only.`;
 
 function formatList(items: readonly string[]): string {

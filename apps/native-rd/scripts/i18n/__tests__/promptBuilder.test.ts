@@ -157,6 +157,23 @@ describe("buildSystemPrompt", () => {
     expect(out).toContain("oder lass es");
   });
 
+  test("preamble states the translate-from-English-to-German task explicitly", () => {
+    // Defense-in-depth: don't rely on "Identity-first ND vocab in German"
+    // to imply translation. Make the verb explicit so the model can't
+    // drift into rewriting in English or doing non-translation transforms.
+    const out = buildSystemPrompt({ register: BASE_REGISTER });
+    expect(out).toMatch(/translate[\s\S]*English[\s\S]*German/i);
+  });
+
+  test("preamble describes input keys as opaque/anonymized, not as paths", () => {
+    // The pipeline anonymizes dotted paths to `k0`, `k1`, …
+    // (jsonTreeUtils.collectMissing). The prompt must match what the
+    // model actually receives, not the pre-anonymization shape.
+    const out = buildSystemPrompt({ register: BASE_REGISTER });
+    expect(out).toMatch(/k0/);
+    expect(out).not.toMatch(/path\s*→\s*English string/);
+  });
+
   test("register banned_phrasings are deduped against preamble exits", () => {
     const out = buildSystemPrompt({
       register: {
