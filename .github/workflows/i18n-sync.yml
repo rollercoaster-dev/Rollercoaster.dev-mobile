@@ -64,12 +64,17 @@ jobs:
       - name: Check for de/ diff
         id: diff
         run: |
+          set -euo pipefail
           git add apps/native-rd/src/i18n/resources/de/
-          if git diff --cached --quiet; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
+          set +e
+          git diff --cached --quiet
+          rc=$?
+          set -e
+          case "$rc" in
+            0) echo "changed=false" >> "$GITHUB_OUTPUT" ;;
+            1) echo "changed=true" >> "$GITHUB_OUTPUT" ;;
+            *) echo "::error::git diff --cached failed with exit $rc" >&2; exit "$rc" ;;
+          esac
 
       - name: Commit de/ translations to PR branch
         if: steps.diff.outputs.changed == 'true' && github.event_name == 'pull_request'
