@@ -10,7 +10,8 @@
  *
  * `VOICE_PREAMBLE` carries the brand-wide voice instructions sourced from
  * `landing/docs/BRAND_LANGUAGE.md`. Register `banned_phrasings` are deduped
- * against `PREAMBLE_BANNED_EXITS` at assembly time so the same phrase never
+ * against `PREAMBLE_BANNED_ALL` (dismissive exits + ND deficit-framing vocab
+ * + toxic-positive phrases) at assembly time so the same phrase never
  * appears twice in the assembled prompt.
  *
  * Pure: no I/O, no `import.meta`, no clock/random — same inputs in, same
@@ -41,12 +42,32 @@ export type PromptBuilderInput = {
 // into the preamble below AND used to dedup register `banned_phrasings` at
 // assembly time — keeping these in one constant avoids the two layers
 // drifting out of sync.
-const PREAMBLE_BANNED_EXITS: readonly string[] = [
+export const PREAMBLE_BANNED_EXITS: readonly string[] = [
   "oder nicht",
   "oder lass es",
   "oder mach's halt nicht",
   "schließ den Tab",
   "wir sind hier wenn du zurückkommst",
+];
+
+// ND deficit-framing phrases named inline in the preamble below. Not
+// rendered from this constant — the preamble lists them in prose. Used
+// only as dedup input so register YAMLs that repeat these don't surface
+// the same phrase twice in the assembled prompt.
+export const PREAMBLE_BANNED_ND_VOCAB: readonly string[] = [
+  "leidet an",
+  "anders begabt",
+  "besondere Bedürfnisse",
+];
+
+// Patronising / toxic-positive phrases named inline in the preamble below.
+// Same contract as PREAMBLE_BANNED_ND_VOCAB — dedup-only, not rendered
+// from this constant.
+export const PREAMBLE_BANNED_TOXIC_POSITIVE: readonly string[] = [
+  "besonders",
+  "einzigartig",
+  "Du schaffst das!",
+  "Großartig!",
 ];
 
 // Compare deduplication on a normalized form so 15 hand-authored YAML
@@ -58,8 +79,12 @@ function normalizeBan(phrase: string): string {
   return phrase.trim().toLowerCase();
 }
 
-const PREAMBLE_BANNED_EXIT_SET: ReadonlySet<string> = new Set(
-  PREAMBLE_BANNED_EXITS.map(normalizeBan),
+const PREAMBLE_BANNED_ALL: ReadonlySet<string> = new Set(
+  [
+    ...PREAMBLE_BANNED_EXITS,
+    ...PREAMBLE_BANNED_ND_VOCAB,
+    ...PREAMBLE_BANNED_TOXIC_POSITIVE,
+  ].map(normalizeBan),
 );
 
 const PREAMBLE_BANNED_EXITS_INLINE = PREAMBLE_BANNED_EXITS.map(
@@ -108,7 +133,7 @@ function dedupedRegisterBans(bans: readonly string[]): string[] {
   const out: string[] = [];
   for (const phrase of bans) {
     const norm = normalizeBan(phrase);
-    if (PREAMBLE_BANNED_EXIT_SET.has(norm) || seen.has(norm)) continue;
+    if (PREAMBLE_BANNED_ALL.has(norm) || seen.has(norm)) continue;
     seen.add(norm);
     out.push(phrase);
   }
