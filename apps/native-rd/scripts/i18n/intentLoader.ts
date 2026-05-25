@@ -18,7 +18,7 @@
  * import this module directly.
  */
 
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { z } from "zod";
@@ -38,11 +38,15 @@ export function loadIntentSidecar(
   ns: string,
 ): Record<string, IntentEntry> {
   const path = join(enDir, `${ns}.intents.json`);
-  if (!existsSync(path)) {
-    return {};
+  let raw: string;
+  try {
+    raw = readFileSync(path, "utf8");
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException)?.code === "ENOENT") {
+      return {};
+    }
+    throw e;
   }
-
-  const raw = readFileSync(path, "utf8");
   if (raw.trim().length === 0) {
     return {};
   }

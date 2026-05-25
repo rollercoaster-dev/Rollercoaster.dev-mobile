@@ -37,9 +37,10 @@ export type PromptBuilderInput = {
   glossary?: string;
 };
 
-// Banned dismissive exits already enumerated in the preamble. Register
-// `banned_phrasings` get subtracted against this set before rendering so an
-// exit phrase named in both layers doesn't appear twice in the prompt.
+// Single source of truth for banned dismissive exits. The list is rendered
+// into the preamble below AND used to dedup register `banned_phrasings` at
+// assembly time — keeping these in one constant avoids the two layers
+// drifting out of sync.
 const PREAMBLE_BANNED_EXITS: readonly string[] = [
   "oder nicht",
   "oder lass es",
@@ -47,6 +48,14 @@ const PREAMBLE_BANNED_EXITS: readonly string[] = [
   "schließ den Tab",
   "wir sind hier wenn du zurückkommst",
 ];
+
+const PREAMBLE_BANNED_EXIT_SET: ReadonlySet<string> = new Set(
+  PREAMBLE_BANNED_EXITS,
+);
+
+const PREAMBLE_BANNED_EXITS_INLINE = PREAMBLE_BANNED_EXITS.map(
+  (p) => `"${p}"`,
+).join(", ");
 
 const VOICE_PREAMBLE = `This is the rollercoaster.dev brand voice. The audience is neurodivergent adults (ADHD, autism, bipolar). The product is a personal goal tracker built by one person (Joe, bipolar + ADHD). Voice comes from inside the audience — not from outside it.
 
@@ -65,7 +74,7 @@ Parenthetical asides (recognition pattern):
 - Recognition asides only. NEVER dismissive / exit-asides.
 
 Banned dismissive exits in German (never emit these, even if the source seems to invite them):
-- "oder nicht", "oder lass es", "oder mach's halt nicht", "schließ den Tab", "wir sind hier wenn du zurückkommst" — these waved-off patterns contradict the founder energy of this project.
+- ${PREAMBLE_BANNED_EXITS_INLINE} — these waved-off patterns contradict the founder energy of this project.
 
 Punctuation:
 - No default exclamation points. Reserve for genuine celebration moments only.
@@ -84,11 +93,10 @@ function formatList(items: readonly string[]): string {
 }
 
 function dedupedRegisterBans(bans: readonly string[]): string[] {
-  const preambleSet = new Set(PREAMBLE_BANNED_EXITS);
   const seen = new Set<string>();
   const out: string[] = [];
   for (const phrase of bans) {
-    if (preambleSet.has(phrase) || seen.has(phrase)) continue;
+    if (PREAMBLE_BANNED_EXIT_SET.has(phrase) || seen.has(phrase)) continue;
     seen.add(phrase);
     out.push(phrase);
   }
