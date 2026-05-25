@@ -11,15 +11,15 @@
 
 Observable criteria derived from the issue. These describe what success looks like from a user/system perspective.
 
-- [ ] Running `bun run i18n:sync` with no flags walks all 15 namespaces in `src/i18n/resources/en/` and writes translated content to `src/i18n/resources/de/<ns>.json` for each namespace that has gaps.
-- [ ] Running `bun run i18n:sync --namespace common` translates only `common.json`; passing `--namespace nonexistent` exits non-zero with a clear error naming the unknown namespace.
-- [ ] Running `bun run i18n:sync --dry-run` calls `translateNamespace` (calls the LLM) but does not write any file to disk; the `de/` files remain unchanged.
-- [ ] Running `bun run i18n:sync --target fr` exits non-zero with a clear error naming `fr` as unsupported; `--target de` succeeds.
-- [ ] Running `bun run i18n:sync` twice in a row when nothing in `en/` has changed between runs results in zero file writes on the second run (idempotency verified by integration test).
-- [ ] An existing `de/` value is never overwritten: adding a new key to `en/<ns>.json` and running sync fills the new key; the existing German values remain verbatim (gap-only, verified by integration test).
-- [ ] When the LLM drops a `{{placeholder}}` token, the CLI exits non-zero and prints a clear error naming the offending key; no partial file is written (verified by integration test with mocked LLM).
-- [ ] Output JSON files preserve the same top-level key order as the `en/` source (deterministic git diffs, verified by integration test).
-- [ ] `bun run type-check` and `bun run lint` pass on the new files.
+- [x] Running `bun run i18n:sync` with no flags walks all 15 namespaces in `src/i18n/resources/en/` and writes translated content to `src/i18n/resources/de/<ns>.json` for each namespace that has gaps. _(14/15 will hard-fail today on missing register YAMLs — PR #8 scope; CLI itself is correct.)_
+- [x] Running `bun run i18n:sync --namespace common` translates only `common.json`; passing `--namespace nonexistent` exits non-zero with a clear error naming the unknown namespace.
+- [x] Running `bun run i18n:sync --dry-run` calls `translateNamespace` (calls the LLM) but does not write any file to disk; the `de/` files remain unchanged.
+- [x] Running `bun run i18n:sync --target fr` exits non-zero with a clear error naming `fr` as unsupported; `--target de` succeeds.
+- [x] Running `bun run i18n:sync` twice in a row when nothing in `en/` has changed between runs results in zero file writes on the second run (idempotency verified by integration test).
+- [x] An existing `de/` value is never overwritten: adding a new key to `en/<ns>.json` and running sync fills the new key; the existing German values remain verbatim (gap-only, verified by integration test).
+- [x] When the LLM drops a `{{placeholder}}` token, the CLI exits non-zero and prints a clear error naming the offending key; no partial file is written (verified by integration test with mocked LLM).
+- [x] Output JSON files preserve the same top-level key order as the `en/` source (deterministic git diffs, verified by integration test using string-position assertions).
+- [x] `bun run type-check` and `bun run lint` pass on the new files.
 
 ## Dependencies
 
@@ -35,51 +35,59 @@ Ship `apps/native-rd/scripts/i18n/sync.ts` — the Bun CLI entry point that orch
 
 ## Decisions
 
-| ID  | Decision                                                                                                                                                       | Alternatives Considered                                 | Rationale                                                                                                                                                                                                                                                               |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| D1  | `sync.ts` owns `import.meta` (file-system bootstrap, arg parsing, `.env.local` loading); no `.cli.ts` split needed                                             | Split to `sync.cli.ts` + `sync.ts` (lintSource pattern) | The lintSource split exists because lintSource.ts is imported by its own test; sync.ts's logic is thin orchestration glue — the integration test exercises it by mocking `llmGateway` rather than importing `sync.ts` as a pure module. A single-file CLI is fine here. |
-| D2  | `--model` flag defaults to `claude-haiku-4-5`                                                                                                                  | Any registry entry                                      | Cheapest strong-register model in the bakeoff pool; a sensible CI default before the bakeoff verdict is in. Callers can override.                                                                                                                                       |
-| D3  | Register file path: `<appDir>/src/i18n/resources/_register/<ns>.yml`; missing register is a hard error                                                         | Warn and skip namespace                                 | Locked decision #2 in i18n-llm-sync.md: register files live at `src/i18n/resources/_register/`. Missing register means the namespace cannot be synced safely (no voice context). Hard-fail keeps the pipeline honest.                                                   |
-| D4  | Only `de` is a supported `--target` locale for v1; unsupported locale = non-zero exit                                                                          | Accept any string, pass through                         | Matches locked decision in plan: "de only for v1, fr is near-trivial add later". Hard-fail prevents silent mis-targeting.                                                                                                                                               |
-| D5  | Integration test: single test file at `scripts/i18n/__tests__/sync.test.ts`; mocks `llmGateway` and `node:fs` write path                                       | Separate fixture files on disk                          | Consistent with `translator.test.ts` pattern (`jest.mock("../llmGateway")`). No disk I/O in test means no temp-dir teardown complexity.                                                                                                                                 |
-| D6  | `.env.local` loading via the same `set -a / source` pattern from `run-bakeoff.sh` — handled in a wrapper shell script OR inline `dotenv` at the top of sync.ts | Bash wrapper only                                       | `sync.ts` uses `import.meta` so it already must run under Bun. Inline dotenv (using `bun`'s built-in `Bun.env` + a manual `.env.local` read) keeps it as a pure Bun script entry without a bash shim. See open question Q1.                                             |
+| ID  | Decision                                                                                               | Alternatives Considered          | Rationale                                                                                                                                                                                                                                                                                                                    |
+| --- | ------------------------------------------------------------------------------------------------------ | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | ~~`sync.ts` owns `import.meta`~~ **SUPERSEDED → split `syncCore.ts` + `sync.cli.ts`**                  | Original D1 was single-file      | The lintSource split pattern is needed in practice: babel-jest leaves `import.meta.dir` undefined, so the integration test must import a module that doesn't reference it. `syncCore.ts` holds the pure orchestration, `sync.cli.ts` is the thin wrapper.                                                                    |
+| D2  | `--model` flag defaults to `claude-haiku-4-5`                                                          | Any registry entry               | Cheapest strong-register model in the bakeoff pool; a sensible CI default before the bakeoff verdict is in. Callers can override.                                                                                                                                                                                            |
+| D3  | Register file path: `<appDir>/src/i18n/resources/_register/<ns>.yml`; missing register is a hard error | Warn and skip namespace          | Locked decision #2 in i18n-llm-sync.md: register files live at `src/i18n/resources/_register/`. Missing register means the namespace cannot be synced safely (no voice context). Hard-fail keeps the pipeline honest.                                                                                                        |
+| D4  | Only `de` is a supported `--target` locale for v1; unsupported locale = non-zero exit                  | Accept any string, pass through  | Matches locked decision in plan: "de only for v1, fr is near-trivial add later". Hard-fail prevents silent mis-targeting.                                                                                                                                                                                                    |
+| D5  | ~~Mock `node:fs`~~ **SUPERSEDED → tmpdir fixtures via `mkdtempSync`**                                  | Mock `node:fs` writes            | Real fs I/O against `os.tmpdir()` gives byte-equality assertions (key-order test) and matches what the CLI actually does. Per-test cleanup via `rmSync` in `afterEach` is cheaper than fs-mock teardown complexity.                                                                                                          |
+| D6  | `.env.local` loading inline in `sync.cli.ts` via `node:fs` (no bash wrapper)                           | Bash wrapper                     | CI uses env directly; no `.env.local` in CI. Existing `process.env` values win — avoids stale `.env.local` clobbering exported secrets. Mirrors `set -a` ergonomically without a shim.                                                                                                                                       |
+| D7  | Per-namespace failures accumulate; one failing ns does not abort siblings                              | Abort on first failure           | Locked behavior per the plan: `runSync` runs all requested namespaces, collects outcomes, and exits 1 iff any failed. Lets a single bad register YAML not block the other 14 from progressing.                                                                                                                               |
+| D8  | `syncCore.discoverNamespaces` delegates to `lintSource.discoverNamespaces`                             | Local readdir/filter duplication | Simplify pass found 3 copies of the readdir+filter pattern in the repo. The dedup is a small import + extension-strip; reuses `EN_DIR_REL` constant from lintSource too. (Pure-utility coupling — does not couple failure semantics, which is what the lintSource→placeholderGuard decoupling rule actually guards against.) |
 
 ## Affected Areas
 
-- `apps/native-rd/scripts/i18n/sync.ts` — **new** — CLI entry point
-- `apps/native-rd/scripts/i18n/__tests__/sync.test.ts` — **new** — integration test
+- `apps/native-rd/scripts/i18n/syncCore.ts` — **new** — pure orchestration (parseArgs, discoverNamespaces, resolveNamespaces, syncOneNamespace, runSync, formatOutcome)
+- `apps/native-rd/scripts/i18n/sync.cli.ts` — **new** — thin CLI wrapper (paths, `.env.local`, exit codes)
+- `apps/native-rd/scripts/i18n/__tests__/sync.test.ts` — **new** — integration test (17 tests)
 - `apps/native-rd/package.json` — **modify** — add `"i18n:sync"` script entry
 
 ## Implementation Plan
 
-### Step 1: sync.ts CLI + package.json entry
+### Step 1: syncCore.ts + sync.cli.ts + package.json entry
 
 **Files**:
 
-- `apps/native-rd/scripts/i18n/sync.ts` (new, ~150 LOC)
+- `apps/native-rd/scripts/i18n/syncCore.ts` (new, 215 LOC after simplify pass)
+- `apps/native-rd/scripts/i18n/sync.cli.ts` (new, 129 LOC after review fixes)
 - `apps/native-rd/package.json` (modify, +1 line)
 
-**Commit**: `feat(native-rd/i18n): add sync.ts CLI — namespace walker + gap-only writer`
+**Commit**: `feat(native-rd/i18n): add sync.ts CLI — namespace walker + gap-only writer` (570fa23)
 
 **Changes**:
 
-- [ ] Load `.env.local` from `<appDir>/.env.local` using `node:fs` + split-on-newline dotenv parse (same guard as `llmGateway.ts`: throw if `OPENROUTER_API_KEY` absent before any LLM call). Use `import.meta.dir` to anchor the app root (same pattern as `lintSource.cli.ts`).
-- [ ] Parse CLI flags with `process.argv` slice (no third-party arg parser — consistent with existing scripts that use manual `process.argv` slicing):
+- [x] Load `.env.local` from `<appDir>/.env.local` using `node:fs` + split-on-newline dotenv parse. `llmGateway.ts` already guards `OPENROUTER_API_KEY` at call time, so no extra guard in `sync.cli.ts`. Uses `import.meta.dir` to anchor app root.
+- [x] Parse CLI flags with `process.argv` slice (`parseArgs` in `syncCore.ts`):
   - `--namespace <name>` — scope to one namespace; error on unknown name
   - `--dry-run` — skip disk writes, still call LLM
   - `--target <locale>` — default `de`; reject anything else with non-zero exit
   - `--model <name>` — default `claude-haiku-4-5`
-- [ ] Build namespace list: `readdirSync(<enDir>)` filtering `*.json`, strip `.json` extension → 15 names. If `--namespace` given, validate it is in this list.
-- [ ] Validate `--target`: only `"de"` accepted; print `"unsupported locale: <value>. Supported: de"` to stderr and `process.exit(1)`.
-- [ ] For each namespace in scope:
+- [x] Build namespace list: `discoverNamespaces` (delegates to `lintSource`) — strips `.json` extension. `--namespace` validated via `resolveNamespaces`.
+- [x] Validate `--target`: `isSupportedTarget` typeguard against the `SUPPORTED_TARGETS` allowlist (currently `["de"]`); exits 1 with clear error otherwise.
+- [x] For each namespace in scope (`syncOneNamespace`):
   - Read `en/<ns>.json` → `JSON.parse`
   - Read `de/<ns>.json` → `JSON.parse` (treat missing file as `{}`)
-  - Read `src/i18n/resources/_register/<ns>.yml` → string (missing register = throw with namespace name)
+  - **Idempotency short-circuit**: if `translatableSubtree(en, de).pathMap.keys.length === 0`, return `{ kind: "no-gaps" }` _before_ touching the register or the LLM
+  - Read `src/i18n/resources/_register/<ns>.yml` → string (missing register = throw with namespace name + PR #8 reference)
   - Call `translateNamespace({ enTree, deTree, ns, modelName, registerText })`
-  - If `--dry-run`, skip write; otherwise `writeFileSync` with `JSON.stringify(result, null, 2) + "\n"` (preserves key order from `mergeTranslations` which inherits source key order via `deepFillMissingStrings`)
-  - Catch errors per-namespace: print `"[sync] namespace <ns>: <message>"` to stderr, set exit code to 1 (accumulate failures — don't abort on first; write completed namespaces before exiting)
-- [ ] Exit 0 if all namespaces succeeded; exit 1 if any failed.
-- [ ] Add to `package.json` scripts: `"i18n:sync": "bun run scripts/i18n/sync.ts"`
+  - If `--dry-run`, skip write → `{ kind: "dry-run" }`
+  - Otherwise `writeFileSync` with `JSON.stringify(result, null, 2) + "\n"` → `{ kind: "wrote" }`
+  - Catch errors per-namespace: returns `{ kind: "failed", message }` (never throws from `syncOneNamespace`)
+- [x] `runSync` accumulates outcomes; exits 0 iff `outcomes.every(o => o.kind !== "failed")`.
+- [x] Empty namespace list (e.g. en/ exists but no `.json` files) exits 1 with clear error (review-pass addition).
+- [x] Outer `main().catch` preserves stack trace alongside the message (review-pass addition).
+- [x] Add to `package.json` scripts: `"i18n:sync": "bun run scripts/i18n/sync.cli.ts"`
 
 **Key order note**: `JSON.stringify` preserves insertion order of object keys. `mergeTranslations` (in `jsonTreeUtils.ts`) builds the result via `deepFillMissingStrings` which iterates `Object.entries(source)` first, then appends extra target keys — this naturally preserves `en/` key order in the output. No additional sorting needed.
 
@@ -87,39 +95,38 @@ Ship `apps/native-rd/scripts/i18n/sync.ts` — the Bun CLI entry point that orch
 
 **Files**:
 
-- `apps/native-rd/scripts/i18n/__tests__/sync.test.ts` (new, ~150 LOC)
+- `apps/native-rd/scripts/i18n/__tests__/sync.test.ts` (new, 380 LOC after review-pass additions)
 
-**Commit**: `test(native-rd/i18n): integration test for sync.ts — idempotency, gap-only, placeholder mismatch, key order`
+**Commits**: `test(native-rd/i18n): integration test for sync — idempotency, gap-only, placeholders, key order` (90c9ca6) + `test(native-rd/i18n): cover discoverNamespaces + idempotency-without-register` (7386796)
 
 **Changes**:
 
-- [ ] `jest.mock("../llmGateway", () => ({ callModel: jest.fn() }))` — same pattern as `translator.test.ts`
-- [ ] `jest.mock("node:fs", ...)` — spy on `writeFileSync` to capture writes without touching disk. Also spy on `readFileSync` to return fixture data.
-- [ ] Fixture: a two-namespace mini-tree:
-  - `en/alpha.json`: `{ "greet": "Hello", "farewell": "Goodbye {{name}}" }`
-  - `en/beta.json`: `{ "save": "Save" }`
-  - `de/alpha.json`: `{}` (initially empty)
-  - `de/beta.json`: `{}` (initially empty)
-  - `_register/alpha.yml` + `_register/beta.yml`: minimal YAML stubs matching `RegisterData` shape
-- [ ] Test: **idempotency** — pre-fill `de/alpha.json` with `{ "greet": "Hallo", "farewell": "Auf Wiedersehen {{name}}" }`. Mock `callModel` to throw if called. Run sync on `alpha`. Assert `writeFileSync` not called; `callModel` not called.
-- [ ] Test: **gap-only** — pre-fill `de/alpha.json` with `{ "greet": "Hallo" }` (one key present). Mock `callModel` to return `JSON.stringify({ k0: "Auf Wiedersehen {{name}}" })`. Run sync on `alpha`. Assert written output contains `"greet": "Hallo"` (preserved) and `"farewell": "Auf Wiedersehen {{name}}"` (filled).
-- [ ] Test: **placeholder mismatch exits non-zero** — pre-fill `de/alpha.json` as `{}`. Mock `callModel` to return `JSON.stringify({ k0: "Hallo", k1: "Auf Wiedersehen" })` (drops `{{name}}`). Run sync on `alpha`. Assert `process.exitCode` is 1 (or `process.exit` was called with 1); assert `writeFileSync` not called for `alpha`.
-- [ ] Test: **key order preserved** — `en/beta.json` has keys `{ z: "Z", a: "A", m: "M" }`. Mock `callModel` to return keys in same order (`{ k0: "Z_de", k1: "A_de", k2: "M_de" }`). Assert written JSON string has `z` before `a` before `m`.
-- [ ] Test: **`--namespace` unknown name** — call with `--namespace nonexistent`. Assert exits 1 with error message containing "nonexistent".
-- [ ] Test: **`--target fr` unsupported** — call with `--target fr`. Assert exits 1 with message containing "unsupported locale".
-- [ ] Test: **`--dry-run`** — call with `--dry-run`. Mock `callModel` to return valid translations. Assert `callModel` was called (LLM still invoked), `writeFileSync` never called.
+- [x] `jest.mock("../llmGateway", () => ({ callModel: jest.fn() }))` — same pattern as `translator.test.ts`.
+- [x] tmpdir fixture via `mkdtempSync(join(tmpdir(), "sync-test-"))` per test; `afterEach` cleans up via `rmSync`. (Replaced the original "mock `node:fs`" plan — see D5.)
+- [x] `parseArgs` tests: defaults, every supported flag, unknown-flag rejection, missing-value rejection.
+- [x] `isSupportedTarget` tests: `de` only; `fr`/empty rejected.
+- [x] `resolveNamespaces` tests: all/singleton/unknown.
+- [x] `discoverNamespaces` test: sorted bare names, excludes `.intents.json` sidecars (review-pass addition — pins AC #1).
+- [x] **Idempotency** — pre-fill de tree with full coverage. Assert `kind === "no-gaps"`, no LLM call, byte-equal file.
+- [x] **Idempotency short-circuits before register read** (review-pass addition) — no-gaps namespace succeeds even when its register YAML is absent. Pins the documented gap-check-before-register-read ordering.
+- [x] **Gap-only** — pre-fill de with one of two keys. Assert preserved + filled.
+- [x] **Placeholder mismatch** — LLM drops `{{name}}`. Assert `kind === "failed"`, message matches `/placeholder mismatch.*missing=\[name\]/`, file unwritten.
+- [x] **Key order preserved** — en has `{ z, a, m }`. Mocked LLM returns same order. String-position assertions (`indexOf`) — `toEqual` would not catch reorderings.
+- [x] **--dry-run** — LLM still called, file bytes unchanged.
+- [x] **Missing register → per-namespace failure** — message matches `/register file not found.*alpha/`, no LLM call.
+- [x] **Sibling namespaces not aborted by a failed peer** — alpha fails, beta succeeds, both outcomes captured.
 
-**Note on testing `sync.ts` as a module**: Because `sync.ts` uses `import.meta` (for path anchoring), it cannot be `require()`'d by Jest's Node/babel-jest pipeline directly. The integration test instead imports the sync pipeline's constituent functions (`translateNamespace` from `translator.ts` + the file-walking logic) and tests at that boundary — or invokes `sync.ts` with `spyOn(process, 'exit')` and mocked `fs` to simulate the CLI contract. The exact approach (import-core-logic vs. full-module-invoke) is the open question Q2 below.
+**Note on testing `sync.cli.ts` directly**: Because it owns `import.meta.dir`, it is not imported by the test. Q2 resolution: extract `syncCore.ts` and test there. `sync.cli.ts` is exercised only via manual smoke (see Testing Strategy below).
 
 ## Testing Strategy
 
-- [ ] Unit tests: covered by the integration test in Step 2 (no separate unit tests for sync.ts — it is thin orchestration glue)
-- [ ] Test file: `scripts/i18n/__tests__/sync.test.ts` (mirrors scripts path under `__tests__/`)
-- [ ] jest config: `jest.config.js` already includes `"**/scripts/**/__tests__/**/*.test.ts"` — no config change needed
-- [ ] `tsconfig.scripts-test.json` already has `"types": ["jest", "bun"]` — no change needed
-- [ ] `tsconfig.scripts.json` already includes `scripts/**/*.ts` and excludes `__tests__/` — sync.ts covered automatically
-- [ ] Manual smoke test (requires `OPENROUTER_API_KEY` in `.env.local`): `bun run i18n:sync --namespace common --dry-run`
-- [ ] Manual smoke test (writes): `bun run i18n:sync --namespace welcome`
+- [x] Unit tests: covered by the integration test in Step 2 (no separate unit tests for `sync.cli.ts` — it is thin glue with `import.meta`).
+- [x] Test file: `scripts/i18n/__tests__/sync.test.ts` — 17 tests, all passing.
+- [x] jest config: `jest.config.js` already includes `"**/scripts/**/__tests__/**/*.test.ts"` — no config change needed.
+- [x] `tsconfig.scripts-test.json` already has `"types": ["jest", "bun"]` — no change needed.
+- [x] `tsconfig.scripts.json` already includes `scripts/**/*.ts` and excludes `__tests__/` — both new files covered automatically.
+- [ ] Manual smoke test (requires `OPENROUTER_API_KEY` in `.env.local`): `bun run i18n:sync --namespace common --dry-run` — **deferred to merge-time human verification**.
+- [ ] Manual smoke test (writes): `bun run i18n:sync --namespace common` — **deferred**; only `common` will succeed today (the other 14 namespaces hard-fail on missing register YAMLs — PR #8 scope).
 
 ## Not in Scope
 
@@ -173,6 +180,9 @@ Open questions resolved before implementation:
 
 ## Discovery Log
 
-<!-- Entries added by implement skill:
-- [YYYY-MM-DD HH:MM] <discovery description>
--->
+- [2026-05-25 implement] D1 superseded: `import.meta.dir` doesn't survive babel-jest's transform, so the `syncCore` + `sync.cli` split (lintSource pattern) was required, not optional. Plan's original "single-file is fine" was wrong about jest's handling.
+- [2026-05-25 implement] D5 superseded: rather than `jest.mock("node:fs", ...)`, used `mkdtempSync` + real fs against a tmpdir. Lets the key-order test do a byte-level `indexOf` assertion that a mock would not have captured. Per-test setup is sub-ms.
+- [2026-05-25 simplify-pass] D8 added: `discoverNamespaces` in `syncCore.ts` was duplicated from `lintSource.ts`. Three simplify agents flagged it as the only material dup in the diff. Resolved by delegating to lintSource's version and stripping `.json` at this layer. Also imported `EN_DIR_REL` from lintSource to avoid hard-coding `"src/i18n/resources/en"` twice. Note: `generate-pseudo-locale.ts` has a third copy of the same readdir+filter — out of scope here, worth folding into the shared module if a follow-up touches that file.
+- [2026-05-25 review-pass] Two critical test gaps (gap rating 8) added: a direct `discoverNamespaces` test (pins the `.intents.json` exclusion) and a "no-gaps short-circuits before register read" test (pins the ordering inside `syncOneNamespace`). Both would only have surfaced as silent regressions otherwise.
+- [2026-05-25 review-pass] Two small `sync.cli.ts` hardenings landed: outer `main().catch` preserves stack trace; empty namespace-list exits 1 with a clear error rather than silent exit 0.
+- [2026-05-25 review-pass] Non-critical findings deliberately deferred (PR description lists them): `loadDotEnvLocal` malformed-line silence, shadowed-key silence, post-loop-only outcome logging, missing `formatOutcome` direct test.
