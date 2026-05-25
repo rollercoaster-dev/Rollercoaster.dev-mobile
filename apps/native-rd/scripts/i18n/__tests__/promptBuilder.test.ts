@@ -106,6 +106,29 @@ describe("buildSystemPrompt", () => {
     expect(out).toContain("Notes:");
   });
 
+  test("three-layer composition surfaces register ban + intent metadata + glossary content", () => {
+    // Headers-only assertions would pass even if section content were dropped;
+    // this test guards the contract named in the dev plan Intent Verification.
+    const out = buildSystemPrompt({
+      register: {
+        ...BASE_REGISTER,
+        banned_phrasings: ["exclamation filler"],
+      },
+      intents: {
+        "save.confirm": {
+          intent: "matter-of-fact ack",
+          audience: "returning-nd-adult",
+        },
+      },
+      glossary: "Streak → (do not use)",
+    });
+    expect(out).toContain("- exclamation filler");
+    expect(out).toContain("save.confirm");
+    expect(out).toContain('intent="matter-of-fact ack"');
+    expect(out).toContain('audience="returning-nd-adult"');
+    expect(out).toContain("Streak → (do not use)");
+  });
+
   test("is deterministic — same input produces identical output", () => {
     const input = {
       register: { ...BASE_REGISTER, notes: ["a", "b"] },
