@@ -151,6 +151,40 @@ describe("buildSystemPrompt", () => {
     expect(out.match(/- exclamation filler/g)?.length).toBe(1);
   });
 
+  test("dedup is case- and whitespace-insensitive against preamble exits", () => {
+    const out = buildSystemPrompt({
+      register: {
+        ...BASE_REGISTER,
+        banned_phrasings: [
+          "  Oder Nicht  ",
+          "ODER LASS ES",
+          "exclamation filler",
+        ],
+      },
+    });
+    // Preamble dups appear once each in the preamble; no register-bullet copy.
+    expect(out.match(/oder nicht/gi)?.length).toBe(1);
+    expect(out.match(/oder lass es/gi)?.length).toBe(1);
+    // Non-preamble phrase still surfaces in the register bullet list.
+    expect(out).toContain("- exclamation filler");
+  });
+
+  test("dedup is case- and whitespace-insensitive across register entries", () => {
+    const out = buildSystemPrompt({
+      register: {
+        ...BASE_REGISTER,
+        banned_phrasings: [
+          "exclamation filler",
+          "Exclamation Filler",
+          "  exclamation filler  ",
+        ],
+      },
+    });
+    // The first author-written form is preserved; the dup variants are dropped.
+    expect(out.match(/- exclamation filler/g)?.length).toBe(1);
+    expect(out).not.toContain("- Exclamation Filler");
+  });
+
   test("register section falls back to '(none beyond preamble defaults)' when only preamble dups are listed", () => {
     const out = buildSystemPrompt({
       register: {

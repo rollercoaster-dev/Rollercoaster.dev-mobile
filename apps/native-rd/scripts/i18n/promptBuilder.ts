@@ -49,8 +49,17 @@ const PREAMBLE_BANNED_EXITS: readonly string[] = [
   "wir sind hier wenn du zurückkommst",
 ];
 
+// Compare deduplication on a normalized form so 15 hand-authored YAML
+// register files can't slip past the filter with trailing whitespace or
+// stray capitalization (e.g. "  Oder Nicht  " vs "oder nicht"). The
+// preamble's canonical form is what ships — we only normalize for the
+// membership test.
+function normalizeBan(phrase: string): string {
+  return phrase.trim().toLowerCase();
+}
+
 const PREAMBLE_BANNED_EXIT_SET: ReadonlySet<string> = new Set(
-  PREAMBLE_BANNED_EXITS,
+  PREAMBLE_BANNED_EXITS.map(normalizeBan),
 );
 
 const PREAMBLE_BANNED_EXITS_INLINE = PREAMBLE_BANNED_EXITS.map(
@@ -96,8 +105,9 @@ function dedupedRegisterBans(bans: readonly string[]): string[] {
   const seen = new Set<string>();
   const out: string[] = [];
   for (const phrase of bans) {
-    if (PREAMBLE_BANNED_EXIT_SET.has(phrase) || seen.has(phrase)) continue;
-    seen.add(phrase);
+    const norm = normalizeBan(phrase);
+    if (PREAMBLE_BANNED_EXIT_SET.has(norm) || seen.has(norm)) continue;
+    seen.add(norm);
     out.push(phrase);
   }
   return out;
