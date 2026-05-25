@@ -1,1 +1,30 @@
-{}
+{
+  "title": "Fokus-Modus",
+  "evidenceFallback": "Nachweis",
+  "header": {
+    "showTimeline": "Zeitleiste anzeigen",
+    "hideTimeline": "Zeitleiste ausblenden",
+    "editGoal": "Ziel bearbeiten"
+  },
+  "a11y": {
+    "carousel": "Fokus-Modus-Karten, {{count}} Schritte",
+    "allStepsComplete": "Alle Schritte für \"{{title}}\" abgeschlossen. Abschließen ist jetzt auf der Zielkarte verfügbar.",
+    "stepCompleted": "Schritt \"{{title}}\" abgeschlossen",
+    "stepUncompleted": "Schritt \"{{title}}\" als unvollständig markiert"
+  },
+  "toast": {
+    "evidenceRequired": "Nachweis hinzufügen, bevor dieser Schritt abgeschlossen wird",
+    "evidenceDeleted": "Nachweis gelöscht"
+  },
+  "confirmDelete": {
+    "title": "Nachweis löschen?",
+    "message": "Du kannst das kurz nach dem Löschen rückgängig machen."
+  },
+  "errors": {
+    "goalNotFound": "Ziel nicht gefunden.",
+    "somethingWrong": "Etwas ist schiefgelaufen. Versuche es erneut.",
+    "couldNotUpdateStep": "Schritt konnte nicht aktualisiert werden: {{message}}",
+    "couldNotOpenCapture": "{{label}}-Aufnahme konnte nicht geöffnet werden",
+    "couldNotDeleteEvidenceTitle": "Nachweis konnte nicht gelöscht werden"
+  }
+}

@@ -1,1 +1,52 @@
-{}
+{
+  "title": "Sprachmemo",
+  "status": {
+    "idle": "Zum Aufnehmen tippen",
+    "requestingPermission": "Berechtigung wird angefordert...",
+    "recording": "Aufnahme",
+    "paused": "Pausiert",
+    "recorded": "Aufnahme abgeschlossen",
+    "playing": "Wiedergabe"
+  },
+  "actions": {
+    "attach": "Anhängen",
+    "discard": "Verwerfen",
+    "play": "Abspielen",
+    "stop": "Stoppen",
+    "reRecord": "Neu aufnehmen",
+    "tryAgain": "Erneut versuchen"
+  },
+  "caption": {
+    "placeholder": "Beschriftung hinzufügen (optional)",
+    "a11yLabel": "Beschriftung für Sprachmemo"
+  },
+  "a11y": {
+    "timerLabel": "Aufnahmedauer: {{time}}",
+    "startRecording": "Aufnahme starten",
+    "stopRecording": "Aufnahme stoppen",
+    "pauseRecording": "Aufnahme pausieren",
+    "resumeRecording": "Aufnahme fortsetzen"
+  },
+  "discardUnsaved": {
+    "title": "Aufnahme verwerfen?",
+    "message": "Du hast eine nicht gespeicherte Aufnahme. Zurückgehen verwirft sie.",
+    "keep": "Aufnahme behalten",
+    "discard": "Verwerfen"
+  },
+  "discardConfirm": {
+    "title": "Aufnahme verwerfen?",
+    "message": "Diese Aufnahme geht verloren.",
+    "keep": "Behalten",
+    "discard": "Verwerfen"
+  },
+  "errors": {
+    "saveFailedTitle": "Speichern fehlgeschlagen",
+    "saveFailedMessage": "Beim Speichern des Sprachmemos ist etwas schiefgelaufen. Versuche es erneut.",
+    "startFailed": "Aufnahme konnte nicht gestartet werden. Versuche es erneut.",
+    "stopFailed": "Aufnahme konnte nicht gestoppt werden. Versuche es erneut.",
+    "pauseFailed": "Aufnahme konnte nicht pausiert werden.",
+    "resumeFailed": "Aufnahme konnte nicht fortgesetzt werden.",
+    "playFailed": "Aufnahme konnte nicht wiedergegeben werden.",
+    "stopPlaybackFailed": "Wiedergabe konnte nicht gestoppt werden."
+  }
+}
