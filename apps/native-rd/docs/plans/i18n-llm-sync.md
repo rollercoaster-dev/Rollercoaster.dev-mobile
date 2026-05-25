@@ -59,7 +59,7 @@ Clause 3 ensures the linter has been exercised against real sync output before b
 | #   | Decision                                                                                                                                                               | Status                                                                                                    |
 | --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | 1   | promptfoo location: `scripts/i18n/promptfoo/` (scoped to sync) vs. repo-root `promptfoo/` (if other LLM evals appear later)                                            | Resolved 2026-05-24 — `apps/native-rd/scripts/i18n/promptfoo/` (Option A, scoped). See dev plan for #159. |
-| 2   | Register file location: `src/i18n/resources/_register/` (sits next to locale files for author affordance) vs. `scripts/i18n/registers/` (groups sync tooling together) | Open                                                                                                      |
+| 2   | Register file location: `src/i18n/resources/_register/` (sits next to locale files for author affordance) vs. `scripts/i18n/registers/` (groups sync tooling together) | Resolved 2026-05-25 — `apps/native-rd/src/i18n/resources/_register/` (Option A). See dev plan for #160.   |
 | 3   | Bot identity for CI commit-back: reuse existing bot account vs. create `rd-i18n-bot`                                                                                   | Punted to PR #9                                                                                           |
 | 4   | Identity-first German forms (Sie/du, gender-neutral patterns)                                                                                                          | Punted to first sync output review                                                                        |
 | 5   | Concurrent batching vs. single-threaded for v1                                                                                                                         | Single-threaded for v1; revisit if sync time exceeds CI budget                                            |
@@ -95,19 +95,19 @@ scripts/i18n/sync.ts (Bun CLI)
 
 ### Module layout
 
-| File                                      | Role                                                          |
-| ----------------------------------------- | ------------------------------------------------------------- |
-| `scripts/i18n/jsonTreeUtils.ts`           | Pure-function tree operations (the algorithm core)            |
-| `scripts/i18n/placeholderGuard.ts`        | Hard-fail validation of `{{name}}` placeholders               |
-| `scripts/i18n/responseParser.ts`          | Zod-validated LLM response → `{k0: ...}` dict                 |
-| `scripts/i18n/promptBuilder.ts`           | System prompt assembly (register + intents + glossary)        |
-| `scripts/i18n/translator.ts`              | Tree → batched LLM call → write-back-by-path                  |
-| `scripts/i18n/sync.ts`                    | CLI entry point, orchestrates the pipeline                    |
-| `scripts/i18n/lintSource.ts`              | Source-side linter for `en/` (bare strings, missing intents)  |
-| `scripts/i18n/models.ts`                  | Model registry (OpenRouter IDs + per-model defaults)          |
-| `<register-dir>/<ns>.yml`                 | Per-namespace voice register (location: see open decision #2) |
-| `src/i18n/resources/en/<ns>.intents.json` | Optional per-string intent sidecar                            |
-| `.github/workflows/i18n-sync.yml`         | CI: diff-aware, runs sync, bot commits results to PR          |
+| File                                      | Role                                                                       |
+| ----------------------------------------- | -------------------------------------------------------------------------- |
+| `scripts/i18n/jsonTreeUtils.ts`           | Pure-function tree operations (the algorithm core)                         |
+| `scripts/i18n/placeholderGuard.ts`        | Hard-fail validation of `{{name}}` placeholders                            |
+| `scripts/i18n/responseParser.ts`          | Zod-validated LLM response → `{k0: ...}` dict                              |
+| `scripts/i18n/promptBuilder.ts`           | System prompt assembly (register + intents + glossary)                     |
+| `scripts/i18n/translator.ts`              | Tree → batched LLM call → write-back-by-path                               |
+| `scripts/i18n/sync.ts`                    | CLI entry point, orchestrates the pipeline                                 |
+| `scripts/i18n/lintSource.ts`              | Source-side linter for `en/` (bare strings, missing intents)               |
+| `scripts/i18n/models.ts`                  | Model registry (OpenRouter IDs + per-model defaults)                       |
+| `src/i18n/resources/_register/<ns>.yml`   | Per-namespace voice register (sync-tooling YAML; i18next does not load it) |
+| `src/i18n/resources/en/<ns>.intents.json` | Optional per-string intent sidecar                                         |
+| `.github/workflows/i18n-sync.yml`         | CI: diff-aware, runs sync, bot commits results to PR                       |
 
 ### Key invariants
 

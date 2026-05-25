@@ -1,0 +1,11 @@
+# Per-namespace voice register for the `common` namespace.
+#
+# Loaded by scripts/i18n/translator.ts and passed to promptBuilder. The runtime
+# (i18next) never reads this file — only the sync tooling does. Schema must
+# match RegisterData in promptBuilder.ts. PR #8 fills in the real content.
+
+speaker: app
+audience: neurodivergent-adults
+formality: informal
+banned_phrasings: []
+notes: []
