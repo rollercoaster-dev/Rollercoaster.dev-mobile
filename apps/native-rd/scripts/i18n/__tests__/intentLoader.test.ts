@@ -149,12 +149,16 @@ describe("loadIntentSidecar", () => {
     }
   });
 
-  test("throws when `intent` is an empty string", () => {
+  test.each([
+    ["empty string", ""],
+    ["whitespace only (spaces)", "   "],
+    ["whitespace only (tab/newline)", "\t\n"],
+  ])("throws when `intent` is %s", (_label, intent) => {
     const { dir, cleanup } = makeTmpDir();
     try {
       writeFileSync(
         join(dir, "common.intents.json"),
-        JSON.stringify({ "save.confirm": { intent: "" } }),
+        JSON.stringify({ "save.confirm": { intent } }),
         "utf8",
       );
       expect(() => loadIntentSidecar(dir, "common")).toThrow(
@@ -164,6 +168,30 @@ describe("loadIntentSidecar", () => {
       cleanup();
     }
   });
+
+  test.each([
+    ["audience", "audience"],
+    ["register", "register"],
+  ])(
+    "throws when optional `%s` is present but whitespace-only",
+    (_label, field) => {
+      const { dir, cleanup } = makeTmpDir();
+      try {
+        writeFileSync(
+          join(dir, "common.intents.json"),
+          JSON.stringify({
+            "save.confirm": { intent: "matter-of-fact", [field]: "   " },
+          }),
+          "utf8",
+        );
+        expect(() => loadIntentSidecar(dir, "common")).toThrow(
+          new RegExp(`namespace common:.*shape invalid.*${field}`),
+        );
+      } finally {
+        cleanup();
+      }
+    },
+  );
 
   test("throws when an entry value is a string instead of an object", () => {
     const { dir, cleanup } = makeTmpDir();
