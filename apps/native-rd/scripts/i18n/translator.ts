@@ -23,6 +23,7 @@ import {
   translatableSubtree,
   type FilledJsonTree,
   type JsonTree,
+  type TranslationPathMap,
 } from "./jsonTreeUtils";
 import { callModel } from "./llmGateway";
 import { checkPlaceholders } from "./placeholderGuard";
@@ -79,6 +80,33 @@ function describeParseError(error: ParseError): string {
   }
 }
 
+/**
+ * Re-key the intent record from author-facing dotted source paths (e.g.
+ * "save.confirm") onto the synthetic `k{n}` keys the LLM actually sees in
+ * the user-content dict. Intents whose source path is not in `pathMap`
+ * (i.e. the target tree already has a translation for that key, so it
+ * never made it into the missing-keys dict) are silently dropped — they
+ * have no string to bind to.
+ */
+function rekeyIntents(
+  intents: Record<string, IntentEntry>,
+  pathMap: TranslationPathMap,
+): Record<string, IntentEntry> {
+  const sourceToKey: Record<string, string> = {};
+  for (const [syntheticKey, segments] of Object.entries(pathMap.paths)) {
+    sourceToKey[segments.join(".")] = syntheticKey;
+  }
+
+  const rekeyed: Record<string, IntentEntry> = {};
+  for (const [sourcePath, entry] of Object.entries(intents)) {
+    const syntheticKey = sourceToKey[sourcePath];
+    if (syntheticKey !== undefined) {
+      rekeyed[syntheticKey] = entry;
+    }
+  }
+  return rekeyed;
+}
+
 function parseRegister(text: string, ns: string): RegisterData {
   let raw: unknown;
   try {
@@ -123,15 +151,12 @@ export async function translateNamespace(
   }
 
   const register = parseRegister(registerText, ns);
-  // Known limitation (see #180): `intents` is keyed by source paths
-  // (e.g. "save.confirm"), but `dict` goes to the LLM keyed by synthetic
-  // `k{n}` keys synthesized in `collectMissing` (jsonTreeUtils.ts:174-188).
-  // The per-string intent override is therefore visible in the prompt but
-  // cannot bind to specific user-content strings until the keys are reconciled
-  // (either re-key intents through `pathMap.paths` before assembly, or drop
-  // the synthetic-key scheme entirely). The brand-voice preamble and per-
-  // namespace register are unaffected.
-  const systemPrompt = buildSystemPrompt({ register, intents, glossary });
+  const rekeyedIntents = intents ? rekeyIntents(intents, pathMap) : undefined;
+  const systemPrompt = buildSystemPrompt({
+    register,
+    intents: rekeyedIntents,
+    glossary,
+  });
   const userContent = JSON.stringify(dict);
 
   const rawResponse = await callModel(modelName, systemPrompt, userContent);

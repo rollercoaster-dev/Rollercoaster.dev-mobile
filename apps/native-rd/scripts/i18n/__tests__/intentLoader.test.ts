@@ -208,4 +208,75 @@ describe("loadIntentSidecar", () => {
       cleanup();
     }
   });
+
+  test("flattens a nested sidecar mirroring en/<ns>.json to dotted source-path keys", () => {
+    const { dir, cleanup } = makeTmpDir();
+    try {
+      writeFileSync(
+        join(dir, "welcome.intents.json"),
+        JSON.stringify({
+          hero: {
+            title: {
+              intent: "warm recognition, never expansive",
+              audience: "first-run-nd-adult",
+            },
+            subtitle: { intent: "plain orientation" },
+          },
+          permissions: {
+            mic: { body: { intent: "plain need", register: "matter-of-fact" } },
+          },
+        }),
+        "utf8",
+      );
+      expect(loadIntentSidecar(dir, "welcome")).toEqual({
+        "hero.title": {
+          intent: "warm recognition, never expansive",
+          audience: "first-run-nd-adult",
+        },
+        "hero.subtitle": { intent: "plain orientation" },
+        "permissions.mic.body": {
+          intent: "plain need",
+          register: "matter-of-fact",
+        },
+      });
+    } finally {
+      cleanup();
+    }
+  });
+
+  test("throws with the leaf path when a nested leaf is a bare string", () => {
+    const { dir, cleanup } = makeTmpDir();
+    try {
+      writeFileSync(
+        join(dir, "welcome.intents.json"),
+        JSON.stringify({
+          hero: { title: "warm recognition" },
+        }),
+        "utf8",
+      );
+      expect(() => loadIntentSidecar(dir, "welcome")).toThrow(
+        /namespace welcome:.*shape invalid.*hero\.title.*expected object.*string/,
+      );
+    } finally {
+      cleanup();
+    }
+  });
+
+  test("throws with the leaf path when a nested leaf is missing `intent`", () => {
+    const { dir, cleanup } = makeTmpDir();
+    try {
+      writeFileSync(
+        join(dir, "welcome.intents.json"),
+        JSON.stringify({
+          hero: { title: { audience: "first-run-nd-adult" } },
+        }),
+        "utf8",
+      );
+      expect(() => loadIntentSidecar(dir, "welcome")).toThrow(
+        /namespace welcome:.*shape invalid.*hero\.title\.intent/,
+      );
+    } finally {
+      cleanup();
+    }
+  });
 });
