@@ -15,6 +15,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
+import { loadIntentSidecar } from "./intentLoader";
 import { translatableSubtree, type JsonTree } from "./jsonTreeUtils";
 import { discoverNamespaces as discoverNamespaceFiles } from "./lintSource";
 import { translateNamespace } from "./translator";
@@ -171,12 +172,14 @@ export async function syncOneNamespace(opts: {
     }
 
     const registerText = readRegisterText(registerPath, ns);
+    const intents = loadIntentSidecar(paths.enDir, ns);
     const result = await translateNamespace({
       enTree,
       deTree: targetTree,
       ns,
       modelName,
       registerText,
+      intents,
     });
 
     if (dryRun) {
