@@ -1,5 +1,5 @@
 {
-  "title": "Design-Abzeichen",
+  "title": "Badge entwerfen",
   "sections": {
     "shape": "Form",
     "color": "Farbe",
@@ -21,20 +21,20 @@
     "placeholder": "Optionale Beschriftung"
   },
   "preview": {
-    "a11y": "Abzeichen-Vorschau: {{color}} {{shape}} {{frame}} Rahmen mit {{icon}} Symbol"
+    "a11y": "Badge-Vorschau: {{color}} {{shape}} {{frame}} Rahmen mit {{icon}} Symbol"
   },
   "errors": {
     "saveFailedTitle": "Speichern fehlgeschlagen",
-    "captureFailedMessage": "Deine Design-Vorschau konnte nicht erfasst werden. Versuche es nochmal.",
-    "saveFailedMessage": "Dein Abzeichen-Design konnte nicht gespeichert werden. Versuche es nochmal."
+    "captureFailedMessage": "Deine Design-Vorschau konnte nicht erfasst werden. Versuche es erneut.",
+    "saveFailedMessage": "Dein Badge-Design konnte nicht gespeichert werden. Versuche es erneut."
   },
   "fallback": {
     "goalTitle": "Ohne Titel",
-    "badgeNotFound": "Abzeichen nicht gefunden",
-    "invalidParams": "Ungültige Parameter für Abzeichen-Designer"
+    "badgeNotFound": "Badge nicht gefunden",
+    "invalidParams": "Ungültige Parameter für Badge-Designer"
   },
   "shape": {
-    "a11y": "Abzeichen-Form",
+    "a11y": "Badge-Form",
     "optionA11y": "{{label}} Form",
     "options": {
       "circle": "Kreis",
@@ -46,7 +46,7 @@
     }
   },
   "color": {
-    "a11y": "Abzeichen-Farbe",
+    "a11y": "Badge-Farbe",
     "optionA11y": "{{label}} Farbe",
     "options": {
       "purple": "Lila",
@@ -60,7 +60,7 @@
     }
   },
   "frame": {
-    "a11y": "Abzeichen-Rahmen",
+    "a11y": "Badge-Rahmen",
     "optionA11y": "{{label}} Rahmen",
     "options": {
       "none": "Keine",
@@ -72,7 +72,7 @@
     }
   },
   "center": {
-    "a11y": "Abzeichen-Mittenmodus",
+    "a11y": "Badge-Mittenmodus",
     "optionA11y": "{{label}} Mitte",
     "options": {
       "icon": "Symbol",
