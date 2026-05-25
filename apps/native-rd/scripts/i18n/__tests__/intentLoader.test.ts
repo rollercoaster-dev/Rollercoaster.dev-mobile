@@ -128,6 +128,43 @@ describe("loadIntentSidecar", () => {
     }
   });
 
+  test("throws on an unknown leaf key (e.g. an `audiance` typo)", () => {
+    const { dir, cleanup } = makeTmpDir();
+    try {
+      writeFileSync(
+        join(dir, "welcome.intents.json"),
+        JSON.stringify({
+          "welcome.title": {
+            intent: "named-maker warmth",
+            audiance: "first-run",
+          },
+        }),
+        "utf8",
+      );
+      expect(() => loadIntentSidecar(dir, "welcome")).toThrow(
+        /namespace welcome:.*shape invalid.*audiance/,
+      );
+    } finally {
+      cleanup();
+    }
+  });
+
+  test("throws when `intent` is an empty string", () => {
+    const { dir, cleanup } = makeTmpDir();
+    try {
+      writeFileSync(
+        join(dir, "common.intents.json"),
+        JSON.stringify({ "save.confirm": { intent: "" } }),
+        "utf8",
+      );
+      expect(() => loadIntentSidecar(dir, "common")).toThrow(
+        /namespace common:.*shape invalid.*intent/,
+      );
+    } finally {
+      cleanup();
+    }
+  });
+
   test("throws when an entry value is a string instead of an object", () => {
     const { dir, cleanup } = makeTmpDir();
     try {

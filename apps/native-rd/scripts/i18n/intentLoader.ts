@@ -25,11 +25,13 @@ import { z } from "zod";
 
 import type { IntentEntry } from "./promptBuilder";
 
-const intentEntrySchema: z.ZodType<IntentEntry> = z.object({
-  intent: z.string(),
-  audience: z.string().optional(),
-  register: z.string().optional(),
-});
+const intentEntrySchema: z.ZodType<IntentEntry> = z
+  .object({
+    intent: z.string().min(1),
+    audience: z.string().optional(),
+    register: z.string().optional(),
+  })
+  .strict();
 
 const intentRecordSchema = z.record(z.string(), intentEntrySchema);
 
