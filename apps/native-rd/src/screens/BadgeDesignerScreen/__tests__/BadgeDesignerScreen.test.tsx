@@ -983,31 +983,83 @@ describe("BadgeDesignerScreen — pseudo locale", () => {
     if (i18n.language !== "en") await i18n.changeLanguage("en");
   });
 
-  // Spread across header, fallback, error, dynamic-key (shape option),
-  // section label, and CTA so a single missed t() call can't slip through
-  // by leaving just one asserted string still bracketed.
+  // Each case sets up the render path that actually exercises the key, then
+  // asserts the bracketed pseudo string reaches the rendered UI. Asserting
+  // only `i18n.t(key).startsWith("[")` would pass even if the component
+  // hardcoded English and never called `t()` — defeating the migration guard.
+  // Spread across header, fallback, section label, and CTA so a single
+  // missed t() call can't slip through.
   it.each([
-    "badgeDesigner:title",
-    "badgeDesigner:sections.shape",
-    "badgeDesigner:actions.save",
-    "badgeDesigner:fallback.badgeNotFound",
-    "badgeDesigner:errors.saveFailedTitle",
-  ] as const)(
-    "renders %s as bracketed copy under pseudo locale",
-    async (key) => {
+    {
+      key: "badgeDesigner:title" as const,
+      setup: () => mockUseQuery.mockReturnValue([makeRow()]),
+    },
+    {
+      key: "badgeDesigner:sections.shape" as const,
+      setup: () => mockUseQuery.mockReturnValue([makeRow()]),
+    },
+    {
+      key: "badgeDesigner:actions.save" as const,
+      setup: () => mockUseQuery.mockReturnValue([makeRow()]),
+    },
+    {
+      key: "badgeDesigner:fallback.badgeNotFound" as const,
+      setup: () => mockUseQuery.mockReturnValue([]),
+    },
+  ])(
+    "renders $key as bracketed copy under pseudo locale",
+    async ({ key, setup }) => {
       await i18n.changeLanguage("pseudo");
-      mockUseQuery.mockReturnValue([]);
+      setup();
       renderWithProviders(
         <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
       );
       const pseudo = i18n.t(key);
       expect(pseudo.startsWith("[")).toBe(true);
+      expect(screen.getByText(pseudo)).toBeOnTheScreen();
     },
   );
 
-  it("dynamic shape-option keys resolve under pseudo locale", async () => {
+  it("passes errors.saveFailedTitle as the alert title under pseudo locale", async () => {
+    // saveFailedTitle is only ever passed to Alert.alert — it's never
+    // rendered to the DOM, so getByText can't see it. Spy on Alert.alert
+    // and trigger the capture-failure path so we assert the actual call
+    // site uses t(), not just that the resource happens to be bracketed.
     await i18n.changeLanguage("pseudo");
-    const pseudo = i18n.t("badgeDesigner:shape.options.circle");
-    expect(pseudo.startsWith("[")).toBe(true);
+    mockUseQuery.mockReturnValue([makeRow()]);
+    mockCaptureBadge.mockRejectedValue(new Error("capture timeout"));
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+
+    const pseudoTitle = i18n.t("badgeDesigner:errors.saveFailedTitle");
+    expect(pseudoTitle.startsWith("[")).toBe(true);
+
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:actions.save")),
+    );
+
+    await waitFor(() =>
+      expect(alertSpy).toHaveBeenCalledWith(pseudoTitle, expect.anything()),
+    );
+    alertSpy.mockRestore();
+  });
+
+  it("dynamic shape-option key reaches the rendered selector under pseudo locale", async () => {
+    // Goes through the `optionA11y` interpolation template the way
+    // ShapeSelector actually uses it — catches regressions where either
+    // the option key or the wrapping template gets hardcoded back to
+    // English.
+    await i18n.changeLanguage("pseudo");
+    mockUseQuery.mockReturnValue([makeRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+
+    const pseudoOption = i18n.t("badgeDesigner:shape.options.circle");
+    expect(pseudoOption.startsWith("[")).toBe(true);
+    expect(screen.getByLabelText(shapeLabel("circle"))).toBeOnTheScreen();
   });
 });
