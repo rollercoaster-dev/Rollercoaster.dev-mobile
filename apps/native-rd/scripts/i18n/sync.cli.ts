@@ -15,6 +15,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
+import { EN_DIR_REL } from "./lintSource";
 import {
   SUPPORTED_TARGETS,
   discoverNamespaces,
@@ -77,7 +78,7 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  const enDir = join(appDir, "src/i18n/resources/en");
+  const enDir = join(appDir, EN_DIR_REL);
   const targetDir = join(appDir, "src/i18n/resources", args.target);
   const registerDir = join(appDir, "src/i18n/resources/_register");
 

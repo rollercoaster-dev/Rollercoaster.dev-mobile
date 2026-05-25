@@ -12,10 +12,11 @@
  * path observably free of network traffic.
  */
 
-import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { translatableSubtree, type JsonTree } from "./jsonTreeUtils";
+import { discoverNamespaces as discoverNamespaceFiles } from "./lintSource";
 import { translateNamespace } from "./translator";
 
 export const SUPPORTED_TARGETS = ["de"] as const;
@@ -58,29 +59,27 @@ export function parseArgs(argv: readonly string[]): CliArgs {
   let target = "de";
   let modelName = DEFAULT_MODEL_NAME;
 
+  function requireValue(flag: string, value: string | undefined): string {
+    if (value === undefined || value === "") {
+      throw new Error(`${flag} requires a value`);
+    }
+    return value;
+  }
+
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     switch (arg) {
       case "--namespace":
-        namespace = argv[++i];
-        if (namespace === undefined) {
-          throw new Error("--namespace requires a value");
-        }
+        namespace = requireValue("--namespace", argv[++i]);
         break;
       case "--dry-run":
         dryRun = true;
         break;
       case "--target":
-        target = argv[++i] ?? "";
-        if (target === "") {
-          throw new Error("--target requires a value");
-        }
+        target = requireValue("--target", argv[++i]);
         break;
       case "--model":
-        modelName = argv[++i] ?? "";
-        if (modelName === "") {
-          throw new Error("--model requires a value");
-        }
+        modelName = requireValue("--model", argv[++i]);
         break;
       default:
         throw new Error(`unknown flag: ${arg}`);
@@ -95,10 +94,9 @@ export function isSupportedTarget(target: string): target is SupportedTarget {
 }
 
 export function discoverNamespaces(absEnDir: string): string[] {
-  return readdirSync(absEnDir)
-    .filter((f) => f.endsWith(".json") && !f.endsWith(".intents.json"))
-    .map((f) => f.slice(0, -".json".length))
-    .sort();
+  return discoverNamespaceFiles(absEnDir).map((f) =>
+    f.slice(0, -".json".length),
+  );
 }
 
 /**
