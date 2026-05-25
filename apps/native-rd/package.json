@@ -44,7 +44,7 @@
     "@evolu/common": "^7.4.1",
     "@evolu/react": "^10.4.0",
     "@evolu/react-native": "^14.3.0",
-    "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-async-storage/async-storage": "3.1.0",
     "@react-native-community/datetimepicker": "9.1.0",
     "@react-native-community/slider": "5.2.0",
     "@react-navigation/bottom-tabs": "^7.16.1",
