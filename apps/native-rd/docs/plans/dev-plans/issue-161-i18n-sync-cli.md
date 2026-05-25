@@ -11,7 +11,7 @@
 
 Observable criteria derived from the issue. These describe what success looks like from a user/system perspective.
 
-- [x] Running `bun run i18n:sync` with no flags walks all 15 namespaces in `src/i18n/resources/en/` and writes translated content to `src/i18n/resources/de/<ns>.json` for each namespace that has gaps. _(14/15 will hard-fail today on missing register YAMLs — PR #8 scope; CLI itself is correct.)_
+- [x] Running `bun run i18n:sync` with no flags walks all 15 namespaces in `src/i18n/resources/en/` and writes translated content to `src/i18n/resources/de/<ns>.json` for each namespace that has gaps. _(14/15 will hard-fail today on missing register YAMLs — wave 8 scope; CLI itself is correct.)_
 - [x] Running `bun run i18n:sync --namespace common` translates only `common.json`; passing `--namespace nonexistent` exits non-zero with a clear error naming the unknown namespace.
 - [x] Running `bun run i18n:sync --dry-run` calls `translateNamespace` (calls the LLM) but does not write any file to disk; the `de/` files remain unchanged.
 - [x] Running `bun run i18n:sync --target fr` exits non-zero with a clear error naming `fr` as unsupported; `--target de` succeeds.
@@ -79,7 +79,7 @@ Ship `apps/native-rd/scripts/i18n/sync.ts` — the Bun CLI entry point that orch
   - Read `en/<ns>.json` → `JSON.parse`
   - Read `de/<ns>.json` → `JSON.parse` (treat missing file as `{}`)
   - **Idempotency short-circuit**: if `translatableSubtree(en, de).pathMap.keys.length === 0`, return `{ kind: "no-gaps" }` _before_ touching the register or the LLM
-  - Read `src/i18n/resources/_register/<ns>.yml` → string (missing register = throw with namespace name + PR #8 reference)
+  - Read `src/i18n/resources/_register/<ns>.yml` → string (missing register = throw with namespace name + pointer to `apps/native-rd/docs/plans/i18n-llm-sync.md`)
   - Call `translateNamespace({ enTree, deTree, ns, modelName, registerText })`
   - If `--dry-run`, skip write → `{ kind: "dry-run" }`
   - Otherwise `writeFileSync` with `JSON.stringify(result, null, 2) + "\n"` → `{ kind: "wrote" }`
@@ -126,18 +126,18 @@ Ship `apps/native-rd/scripts/i18n/sync.ts` — the Bun CLI entry point that orch
 - [x] `tsconfig.scripts-test.json` already has `"types": ["jest", "bun"]` — no change needed.
 - [x] `tsconfig.scripts.json` already includes `scripts/**/*.ts` and excludes `__tests__/` — both new files covered automatically.
 - [ ] Manual smoke test (requires `OPENROUTER_API_KEY` in `.env.local`): `bun run i18n:sync --namespace common --dry-run` — **deferred to merge-time human verification**.
-- [ ] Manual smoke test (writes): `bun run i18n:sync --namespace common` — **deferred**; only `common` will succeed today (the other 14 namespaces hard-fail on missing register YAMLs — PR #8 scope).
+- [ ] Manual smoke test (writes): `bun run i18n:sync --namespace common` — **deferred**; only `common` will succeed today (the other 14 namespaces hard-fail on missing register YAMLs — wave 8 scope).
 
 ## Not in Scope
 
-| Item                                                | Reason                                                                                                                                                      | Follow-up                                            |
-| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| Register YAMLs for all 15 namespaces                | Only `common.yml` exists today; sync hard-fails on missing register — the remaining 14 must be authored. Authoring voice register content is PR #8's scope. | Issue for PR #8                                      |
-| `--target fr` support                               | Locked to `de` only for v1                                                                                                                                  | None (design doc notes fr as near-trivial add later) |
-| Concurrent batching (parallel namespace processing) | Locked decision #5 in i18n-llm-sync.md: single-threaded for v1                                                                                              | Post-v1                                              |
-| CI workflow invocation (`i18n-sync.yml`)            | PR #9's scope                                                                                                                                               | Issue for PR #9                                      |
-| Sidecar intent loader (`en/*.intents.json`)         | PR #8's scope; `translateNamespace` already accepts `intents` param, sync.ts passes `undefined` for now                                                     | Issue for PR #8                                      |
-| Glossary loading                                    | PR #8's scope                                                                                                                                               | Issue for PR #8                                      |
+| Item                                                | Reason                                                                                                                                                       | Follow-up                                            |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
+| Register YAMLs for all 15 namespaces                | Only `common.yml` exists today; sync hard-fails on missing register — the remaining 14 must be authored. Authoring voice register content is wave 8's scope. | Issue for wave 8                                     |
+| `--target fr` support                               | Locked to `de` only for v1                                                                                                                                   | None (design doc notes fr as near-trivial add later) |
+| Concurrent batching (parallel namespace processing) | Locked decision #5 in i18n-llm-sync.md: single-threaded for v1                                                                                               | Post-v1                                              |
+| CI workflow invocation (`i18n-sync.yml`)            | wave 9's scope                                                                                                                                               | Issue for wave 9                                     |
+| Sidecar intent loader (`en/*.intents.json`)         | wave 8's scope; `translateNamespace` already accepts `intents` param, sync.ts passes `undefined` for now                                                     | Issue for wave 8                                     |
+| Glossary loading                                    | wave 8's scope                                                                                                                                               | Issue for wave 8                                     |
 
 ## Open Questions — Joe to answer before implementation
 
@@ -165,10 +165,10 @@ The lintSource pattern (Option A / extract) is already proven in this codebase a
 Only `common.yml` exists in `src/i18n/resources/_register/`. Per Decision D3, a missing register is a hard error. This means `bun run i18n:sync` (all 15 namespaces) will fail for 14 of them until those files exist. Three options:
 
 - **Option A**: Stub the 14 missing registers with the same minimal content as `common.yml` in this PR so the CLI is immediately runnable.
-- **Option B**: The sync.ts hard-fails on missing register and prints a clear error per namespace; PR #8 authors the real register content. `bun run i18n:sync --namespace common` works immediately; full-sweep is gated on PR #8.
-- **Option C**: `--namespace` required if registers are missing; default "all 15" only works after PR #8 lands.
+- **Option B**: The sync.ts hard-fails on missing register and prints a clear error per namespace; wave 8 authors the real register content. `bun run i18n:sync --namespace common` works immediately; full-sweep is gated on wave 8.
+- **Option C**: `--namespace` required if registers are missing; default "all 15" only works after wave 8 lands.
 
-Option A (stub all registers now with placeholder content) makes the CLI immediately runnable for full-sweep smoke tests while making it clear the register content is a stub. Option B is cleaner but means the CLI is only useful for `--namespace common` until PR #8 lands.
+Option A (stub all registers now with placeholder content) makes the CLI immediately runnable for full-sweep smoke tests while making it clear the register content is a stub. Option B is cleaner but means the CLI is only useful for `--namespace common` until wave 8 lands.
 
 ## Resolutions (autonomous mode, 2026-05-25)
 
@@ -176,7 +176,7 @@ Open questions resolved before implementation:
 
 - **Q1 → Option A (inline `.env.local`)**: `sync.cli.ts` loads `.env.local` inline via `node:fs` + manual parse. CI injects secrets via env directly; no bash wrapper needed.
 - **Q2 → Option A (split: `syncCore.ts` + `sync.cli.ts`)**: Proven pattern in this codebase (`lintSource.ts` / `lintSource.cli.ts`). Overrides D1 — splitting is required to make the integration test importable without `import.meta` transform headaches. `syncCore.ts` exports pure functions taking absolute paths; `sync.cli.ts` is the thin CLI wrapper that owns `import.meta.dir` + arg parsing.
-- **Q3 → Option B (hard-fail on missing register)**: Authoring real register YAMLs is PR #8's scope. `bun run i18n:sync --namespace common` works end-to-end now; full-sweep is gated on PR #8. The integration test uses fixture registers so test coverage is unaffected. Each missing register produces a clear per-namespace error before exiting non-zero.
+- **Q3 → Option B (hard-fail on missing register)**: Authoring real register YAMLs is wave 8's scope. `bun run i18n:sync --namespace common` works end-to-end now; full-sweep is gated on wave 8. The integration test uses fixture registers so test coverage is unaffected. Each missing register produces a clear per-namespace error before exiting non-zero.
 
 ## Discovery Log
 

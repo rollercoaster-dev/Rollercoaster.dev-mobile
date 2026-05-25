@@ -136,7 +136,7 @@ function readJsonFileOrEmpty(absPath: string): unknown {
 function readRegisterText(absPath: string, ns: string): string {
   if (!existsSync(absPath)) {
     throw new Error(
-      `register file not found for namespace ${ns} at ${absPath} — see PR #8 (voice register authoring)`,
+      `register file not found for namespace ${ns} at ${absPath} — voice register authoring is tracked in apps/native-rd/docs/plans/i18n-llm-sync.md`,
     );
   }
   return readFileSync(absPath, "utf8");
