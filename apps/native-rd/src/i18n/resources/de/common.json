@@ -113,7 +113,7 @@
     },
     "progress": "Schritt {{current}} von {{total}}",
     "blocker": {
-      "label": "Nachweis hinzufügen zum Abschließen",
+      "label": "Nachweis hinzufügen, um abzuschließen",
       "a11yWithType": "Füge {{label}} hinzu, um diesen Schritt abzuschließen"
     },
     "quickAction": {

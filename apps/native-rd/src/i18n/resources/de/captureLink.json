@@ -20,6 +20,6 @@
   },
   "errors": {
     "couldNotSaveTitle": "Link konnte nicht gespeichert werden",
-    "couldNotSaveMessage": "Etwas ist schiefgelaufen. Versuche es nochmal."
+    "couldNotSaveMessage": "Etwas ist schiefgelaufen. Versuche es erneut."
   }
 }

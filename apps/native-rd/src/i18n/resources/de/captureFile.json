@@ -11,6 +11,6 @@
   "errors": {
     "invalidFileTitle": "Datei ungültig",
     "saveFailedTitle": "Speichern fehlgeschlagen",
-    "saveFailedMessage": "Datei konnte nicht gespeichert werden. Versuche es nochmal."
+    "saveFailedMessage": "Datei konnte nicht gespeichert werden. Versuche es erneut."
   }
 }

@@ -1,7 +1,7 @@
 {
   "camera": {
     "title": "Kamerazugriff erforderlich",
-    "message": "Zum Fotografieren oder Videoaufnahmen braucht die App Zugriff auf deine Kamera.",
+    "message": "Zum Fotografieren oder Filmen braucht die App Zugriff auf deine Kamera.",
     "settingsCta": "Zugriff gewähren"
   },
   "microphone": {

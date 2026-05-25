@@ -3,10 +3,10 @@
   "status": {
     "idle": "Zum Aufnehmen tippen",
     "requestingPermission": "Berechtigung wird angefordert...",
-    "recording": "Wird aufgenommen",
+    "recording": "Aufnahme",
     "paused": "Pausiert",
     "recorded": "Aufnahme abgeschlossen",
-    "playing": "Wird wiedergegeben"
+    "playing": "Wiedergabe"
   },
   "actions": {
     "attach": "Anhängen",
@@ -40,7 +40,7 @@
     "discard": "Verwerfen"
   },
   "errors": {
-    "saveFailedTitle": "Konnte nicht gespeichert werden",
+    "saveFailedTitle": "Speichern fehlgeschlagen",
     "saveFailedMessage": "Beim Speichern des Sprachmemos ist etwas schiefgelaufen. Versuche es erneut.",
     "startFailed": "Aufnahme konnte nicht gestartet werden. Versuche es erneut.",
     "stopFailed": "Aufnahme konnte nicht gestoppt werden. Versuche es erneut.",

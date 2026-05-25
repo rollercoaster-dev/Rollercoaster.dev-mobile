@@ -3,13 +3,13 @@
   "heading": "Foto hinzufügen",
   "actions": {
     "takePhoto": "Foto machen",
-    "chooseFromLibrary": "Aus Galerie wählen"
+    "chooseFromLibrary": "Aus Mediathek wählen"
   },
   "a11y": {
     "savingPhoto": "Foto wird gespeichert"
   },
   "errors": {
     "saveFailedTitle": "Speichern fehlgeschlagen",
-    "saveFailedMessage": "Foto konnte nicht gespeichert werden. Versuche es nochmal."
+    "saveFailedMessage": "Foto konnte nicht gespeichert werden. Versuche es erneut."
   }
 }

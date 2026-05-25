@@ -6,8 +6,8 @@
     "hint": "Text hier eingeben"
   },
   "caption": {
-    "label": "Überschrift (optional)",
-    "placeholder": "Kurze Überschrift hinzufügen"
+    "label": "Beschriftung (optional)",
+    "placeholder": "Kurze Beschriftung hinzufügen"
   },
   "charCount": {
     "a11y": "{{count}} von {{max}} Zeichen verwendet"
@@ -20,6 +20,6 @@
   },
   "errors": {
     "couldNotSaveTitle": "Notiz konnte nicht gespeichert werden",
-    "couldNotSaveMessage": "Etwas ist schiefgelaufen. Versuch es nochmal."
+    "couldNotSaveMessage": "Etwas ist schiefgelaufen. Versuche es erneut."
   }
 }

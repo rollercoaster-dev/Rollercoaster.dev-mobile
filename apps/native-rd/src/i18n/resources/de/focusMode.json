@@ -1,9 +1,9 @@
 {
   "title": "Fokus-Modus",
-  "evidenceFallback": "Beweise",
+  "evidenceFallback": "Nachweis",
   "header": {
-    "showTimeline": "Zeitstrahl anzeigen",
-    "hideTimeline": "Zeitstrahl ausblenden",
+    "showTimeline": "Zeitleiste anzeigen",
+    "hideTimeline": "Zeitleiste ausblenden",
     "editGoal": "Ziel bearbeiten"
   },
   "a11y": {
@@ -13,18 +13,18 @@
     "stepUncompleted": "Schritt \"{{title}}\" als unvollständig markiert"
   },
   "toast": {
-    "evidenceRequired": "Beweise hinzufügen, bevor dieser Schritt abgeschlossen wird",
-    "evidenceDeleted": "Beweise gelöscht"
+    "evidenceRequired": "Nachweis hinzufügen, bevor dieser Schritt abgeschlossen wird",
+    "evidenceDeleted": "Nachweis gelöscht"
   },
   "confirmDelete": {
-    "title": "Beweise löschen?",
+    "title": "Nachweis löschen?",
     "message": "Du kannst das kurz nach dem Löschen rückgängig machen."
   },
   "errors": {
     "goalNotFound": "Ziel nicht gefunden.",
     "somethingWrong": "Etwas ist schiefgelaufen. Versuche es erneut.",
     "couldNotUpdateStep": "Schritt konnte nicht aktualisiert werden: {{message}}",
-    "couldNotOpenCapture": "{{label}} Erfassungsbildschirm konnte nicht geöffnet werden",
-    "couldNotDeleteEvidenceTitle": "Beweise konnten nicht gelöscht werden"
+    "couldNotOpenCapture": "{{label}}-Aufnahme konnte nicht geöffnet werden",
+    "couldNotDeleteEvidenceTitle": "Nachweis konnte nicht gelöscht werden"
   }
 }
