@@ -219,6 +219,88 @@ describe("translateNamespace — register/intent/glossary plumbing", () => {
     const [, systemPrompt] = mockCallModel.mock.calls[0];
     expect(systemPrompt).toContain("Per-string intents");
     expect(systemPrompt).toContain("Glossary");
+    // Intent must be keyed by the synthetic key the LLM sees in user content,
+    // not the author-facing source path.
+    expect(systemPrompt).toContain("k0: ");
+    expect(systemPrompt).not.toContain("- greeting:");
+  });
+
+  test("re-keys source-path intent to synthetic key", async () => {
+    const enTree = { greeting: "Hello" };
+    const deTree = {};
+    mockCallModel.mockResolvedValueOnce(JSON.stringify({ k0: "Hallo" }));
+
+    await translateNamespace({
+      enTree,
+      deTree,
+      ns: "common",
+      modelName: "gpt-4o-mini",
+      registerText: STUB_REGISTER,
+      intents: { greeting: { intent: "warm welcome" } },
+    });
+
+    const [, systemPrompt] = mockCallModel.mock.calls[0];
+    expect(systemPrompt).toContain('- k0: intent="warm welcome"');
+    expect(systemPrompt).not.toContain("- greeting:");
+  });
+
+  test("drops intent whose source path is already translated (not in pathMap)", async () => {
+    const enTree = { greeting: "Hello", farewell: "Goodbye" };
+    const deTree = { farewell: "Auf Wiedersehen" };
+    mockCallModel.mockResolvedValueOnce(JSON.stringify({ k0: "Hallo" }));
+
+    await translateNamespace({
+      enTree,
+      deTree,
+      ns: "common",
+      modelName: "gpt-4o-mini",
+      registerText: STUB_REGISTER,
+      intents: {
+        greeting: { intent: "warm welcome" },
+        farewell: { intent: "closing" },
+      },
+    });
+
+    const [, systemPrompt] = mockCallModel.mock.calls[0];
+    expect(systemPrompt).toContain('- k0: intent="warm welcome"');
+    expect(systemPrompt).not.toContain("closing");
+    expect(systemPrompt).not.toContain("- farewell:");
+  });
+
+  test("re-keys nested-path intent to synthetic key", async () => {
+    const enTree = { save: { confirm: "Save?" } };
+    const deTree = {};
+    mockCallModel.mockResolvedValueOnce(JSON.stringify({ k0: "Speichern?" }));
+
+    await translateNamespace({
+      enTree,
+      deTree,
+      ns: "common",
+      modelName: "gpt-4o-mini",
+      registerText: STUB_REGISTER,
+      intents: { "save.confirm": { intent: "matter-of-fact ack" } },
+    });
+
+    const [, systemPrompt] = mockCallModel.mock.calls[0];
+    expect(systemPrompt).toContain('- k0: intent="matter-of-fact ack"');
+    expect(systemPrompt).not.toContain("- save.confirm:");
+  });
+
+  test("skips LLM when all intent keys are already translated (idempotent)", async () => {
+    const enTree = { greeting: "Hello" };
+    const deTree = { greeting: "Hallo" };
+
+    const result = await translateNamespace({
+      enTree,
+      deTree,
+      ns: "common",
+      modelName: "gpt-4o-mini",
+      registerText: STUB_REGISTER,
+      intents: { greeting: { intent: "warm welcome" } },
+    });
+
+    expect(result).toEqual(deTree);
+    expect(mockCallModel).not.toHaveBeenCalled();
   });
 
   test("throws on malformed register YAML with namespace context", async () => {
