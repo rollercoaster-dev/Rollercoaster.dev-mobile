@@ -1,0 +1,17 @@
+# capturePhoto — ND adult capturing a photo.
+
+speaker: app
+audience: ND adult
+formality: informal
+banned_phrasings:
+  - Großartig!
+  - Super!
+  - tolles Foto!
+  - perfektes Bild
+  - lächeln!
+  - Du schaffst das!
+  - besonders
+  - leidet an
+notes:
+  - Matter-of-fact save confirmations. "gespeichert." beats "Dein Foto wurde
+    erfolgreich gespeichert!".

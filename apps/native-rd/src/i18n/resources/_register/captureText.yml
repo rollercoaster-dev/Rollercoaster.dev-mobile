@@ -1,0 +1,18 @@
+# captureText — ND adult capturing a text note.
+
+speaker: app prompting
+audience: ND adult
+formality: informal
+banned_phrasings:
+  - Großartig!
+  - Super!
+  - tolle Notiz!
+  - schreib mehr!
+  - sei ausführlich
+  - erzähl uns alles
+  - Du schaffst das!
+  - besonders
+  - leidet an
+notes:
+  - Short answers are valid. "notiert." beats "Wir haben deine Notiz erfolgreich gespeichert!".
+  - Placeholder text stays low-pressure ("hier tippen…").

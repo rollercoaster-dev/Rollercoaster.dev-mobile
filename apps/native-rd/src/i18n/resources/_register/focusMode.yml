@@ -1,0 +1,18 @@
+# focusMode — ND adult in focus session. Quiet, no urgency.
+
+speaker: app, quiet
+audience: ND adult in focus
+formality: informal
+banned_phrasings:
+  - Achtung!
+  - dringend
+  - jetzt sofort
+  - bleib dran!
+  - Konzentrier dich!
+  - Du schaffst das!
+  - Großartig!
+  - besonders
+  - leidet an
+notes:
+  - Quiet register. No exclamations, no urgency cues.
+  - 'Plain labels: "Pause" beats "Mach jetzt eine Pause!".'

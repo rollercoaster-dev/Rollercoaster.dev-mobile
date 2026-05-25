@@ -1,0 +1,21 @@
+# newGoal — ND adult creating a new goal.
+# No FOMO, no "amazing" prompts.
+
+speaker: app prompting
+audience: ND adult creating a goal
+formality: informal
+banned_phrasings:
+  - Großartig!
+  - Super!
+  - Fantastisch!
+  - Toll!
+  - Du schaffst das!
+  - amazing goal
+  - dein bestes Selbst
+  - was möchtest du erreichen?
+  - besonders
+  - einzigartig
+  - leidet an
+notes:
+  - Plain prompts. "Was willst du tun?" beats "Was ist dein wunderbares Ziel?".
+  - No pressure to elaborate — short answers are valid.

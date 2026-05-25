@@ -1,0 +1,17 @@
+# captureVideo — ND adult capturing a video.
+
+speaker: app
+audience: ND adult
+formality: informal
+banned_phrasings:
+  - Großartig!
+  - Super!
+  - tolles Video!
+  - Action!
+  - Du schaffst das!
+  - jetzt aufnehmen!
+  - besonders
+  - leidet an
+notes:
+  - No urgency on the record button. "aufnehmen" beats "Jetzt aufnehmen!".
+  - Plain status. "gespeichert." beats celebratory wrap-up copy.
