@@ -1,6 +1,7 @@
 import React, { useCallback } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
+import { useTranslation } from "react-i18next";
 
 import { selectorStyles } from "./selectorStyles";
 import { BadgeFrame } from "./types";
@@ -21,15 +22,6 @@ export interface FrameSelectorProps {
 // ---------------------------------------------------------------------------
 
 const FRAMES = Object.values(BadgeFrame) as BadgeFrame[];
-
-const FRAME_LABELS: Record<BadgeFrame, string> = {
-  none: "None",
-  boldBorder: "Bold Border",
-  guilloche: "Guilloche",
-  crossHatch: "Cross Hatch",
-  microprint: "Microprint",
-  rosette: "Rosette",
-};
 
 /** Simple visual hint character per frame type */
 const FRAME_GLYPHS: Record<BadgeFrame, string> = {
@@ -54,6 +46,7 @@ export function FrameSelector({
   testID = "frame-selector",
 }: FrameSelectorProps) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation("badgeDesigner");
   const resolvedAccent = accentColor ?? theme.colors.accentPrimary;
 
   const handlePress = useCallback(
@@ -65,7 +58,7 @@ export function FrameSelector({
     <View
       testID={testID}
       accessibilityRole="radiogroup"
-      accessibilityLabel="Badge frame"
+      accessibilityLabel={t("frame.a11y")}
     >
       <ScrollView
         horizontal
@@ -74,12 +67,13 @@ export function FrameSelector({
       >
         {FRAMES.map((frame) => {
           const isSelected = frame === selectedFrame;
+          const label = t(`frame.options.${frame}`);
           return (
             <Pressable
               key={frame}
               onPress={() => handlePress(frame)}
               accessibilityRole="radio"
-              accessibilityLabel={`${FRAME_LABELS[frame]} frame`}
+              accessibilityLabel={t("frame.optionA11y", { label })}
               accessibilityState={{ checked: isSelected }}
               style={[
                 selectorStyles.cell,
@@ -110,7 +104,7 @@ export function FrameSelector({
                 ]}
                 numberOfLines={1}
               >
-                {FRAME_LABELS[frame]}
+                {label}
               </Text>
             </Pressable>
           );

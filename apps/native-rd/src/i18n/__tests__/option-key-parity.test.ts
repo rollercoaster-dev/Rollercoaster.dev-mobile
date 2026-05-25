@@ -3,6 +3,14 @@ import { themeOptions } from "../../hooks/useTheme";
 import { densityOptions } from "../../utils/density";
 import { STATUS_BADGE_VARIANTS } from "../../components/StatusBadge/StatusBadge.styles";
 import { LIFECYCLE_MODES } from "../../components/ModeIndicator";
+import { ACCENT_COLORS } from "../../badges/ColorPicker";
+import {
+  BadgeShape,
+  BadgeFrame,
+  BadgeCenterMode,
+  PathTextPosition,
+  BannerPosition,
+} from "../../badges/types";
 
 // `LIFECYCLE_MODES` is derived from `MODE_CONFIG: Record<LifecycleMode, …>`
 // in ModeIndicator.tsx, so adding a union member without updating the config
@@ -115,4 +123,131 @@ describe("option array ↔ i18n key parity", () => {
   test("common:timeline.a11y.step resolves", () => {
     expect(i18n.exists("common:timeline.a11y.step")).toBe(true);
   });
+
+  // --- BadgeDesigner: each enum union is the source of truth for a
+  // template-literal `t()` key family. Forward walks the union; reverse
+  // catches orphan JSON entries after a value is renamed in types.ts.
+
+  describe.each(Object.values(BadgeShape).map((shape) => ({ shape })))(
+    "BadgeShape[$shape]",
+    ({ shape }) => {
+      test(`badgeDesigner:shape.options.${shape} resolves`, () => {
+        expect(i18n.exists(`badgeDesigner:shape.options.${shape}`)).toBe(true);
+      });
+    },
+  );
+
+  test("badgeDesigner:shape.options keyset matches BadgeShape", () => {
+    const bundle = i18n.getResourceBundle("en", "badgeDesigner") as {
+      shape: { options: Record<string, unknown> };
+    };
+    expect(new Set(Object.keys(bundle.shape.options))).toEqual(
+      new Set(Object.values(BadgeShape)),
+    );
+  });
+
+  describe.each(Object.values(BadgeFrame).map((frame) => ({ frame })))(
+    "BadgeFrame[$frame]",
+    ({ frame }) => {
+      test(`badgeDesigner:frame.options.${frame} resolves`, () => {
+        expect(i18n.exists(`badgeDesigner:frame.options.${frame}`)).toBe(true);
+      });
+    },
+  );
+
+  test("badgeDesigner:frame.options keyset matches BadgeFrame", () => {
+    const bundle = i18n.getResourceBundle("en", "badgeDesigner") as {
+      frame: { options: Record<string, unknown> };
+    };
+    expect(new Set(Object.keys(bundle.frame.options))).toEqual(
+      new Set(Object.values(BadgeFrame)),
+    );
+  });
+
+  describe.each(Object.values(BadgeCenterMode).map((mode) => ({ mode })))(
+    "BadgeCenterMode[$mode]",
+    ({ mode }) => {
+      test(`badgeDesigner:center.options.${mode} resolves`, () => {
+        expect(i18n.exists(`badgeDesigner:center.options.${mode}`)).toBe(true);
+      });
+    },
+  );
+
+  test("badgeDesigner:center.options keyset matches BadgeCenterMode", () => {
+    const bundle = i18n.getResourceBundle("en", "badgeDesigner") as {
+      center: { options: Record<string, unknown> };
+    };
+    expect(new Set(Object.keys(bundle.center.options))).toEqual(
+      new Set(Object.values(BadgeCenterMode)),
+    );
+  });
+
+  describe.each(Object.values(PathTextPosition).map((pos) => ({ pos })))(
+    "PathTextPosition[$pos]",
+    ({ pos }) => {
+      test(`badgeDesigner:pathText.positions.${pos} resolves`, () => {
+        expect(i18n.exists(`badgeDesigner:pathText.positions.${pos}`)).toBe(
+          true,
+        );
+      });
+    },
+  );
+
+  test("badgeDesigner:pathText.positions keyset matches PathTextPosition", () => {
+    const bundle = i18n.getResourceBundle("en", "badgeDesigner") as {
+      pathText: { positions: Record<string, unknown> };
+    };
+    expect(new Set(Object.keys(bundle.pathText.positions))).toEqual(
+      new Set(Object.values(PathTextPosition)),
+    );
+  });
+
+  describe.each(Object.values(BannerPosition).map((pos) => ({ pos })))(
+    "BannerPosition[$pos]",
+    ({ pos }) => {
+      test(`badgeDesigner:banner.positions.${pos} resolves`, () => {
+        expect(i18n.exists(`badgeDesigner:banner.positions.${pos}`)).toBe(true);
+      });
+    },
+  );
+
+  test("badgeDesigner:banner.positions keyset matches BannerPosition", () => {
+    const bundle = i18n.getResourceBundle("en", "badgeDesigner") as {
+      banner: { positions: Record<string, unknown> };
+    };
+    expect(new Set(Object.keys(bundle.banner.positions))).toEqual(
+      new Set(Object.values(BannerPosition)),
+    );
+  });
+
+  // Color: `ACCENT_COLORS` is the source-of-truth array (like densityOptions);
+  // "goal" is a runtime-injected swatch when the goal has a custom color, so
+  // the JSON must contain ACCENT_COLORS ids + "goal", nothing else.
+  describe.each(ACCENT_COLORS)("ACCENT_COLORS[$id]", ({ id }) => {
+    test(`badgeDesigner:color.options.${id} resolves`, () => {
+      expect(i18n.exists(`badgeDesigner:color.options.${id}`)).toBe(true);
+    });
+  });
+
+  test("badgeDesigner:color.options.goal resolves", () => {
+    expect(i18n.exists("badgeDesigner:color.options.goal")).toBe(true);
+  });
+
+  test("badgeDesigner:color.options keyset matches ACCENT_COLORS + goal", () => {
+    const bundle = i18n.getResourceBundle("en", "badgeDesigner") as {
+      color: { options: Record<string, unknown> };
+    };
+    expect(new Set(Object.keys(bundle.color.options))).toEqual(
+      new Set([...ACCENT_COLORS.map((c) => c.id), "goal"]),
+    );
+  });
+
+  // CharCounter passes "top" / "bottom" as labels for the a11y counter — also
+  // template-literal driven, but the union is just "top" | "bottom".
+  test.each(["top", "bottom"] as const)(
+    "badgeDesigner:pathText.counter.%s resolves",
+    (label) => {
+      expect(i18n.exists(`badgeDesigner:pathText.counter.${label}`)).toBe(true);
+    },
+  );
 });

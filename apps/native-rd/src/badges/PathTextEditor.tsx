@@ -1,6 +1,8 @@
 import React, { useCallback } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 
 import { getPathTextMaxChars } from "./text/pathTextLimits";
 import { BadgeShape, PathTextPosition } from "./types";
@@ -30,12 +32,6 @@ export interface PathTextEditorProps {
 
 const POSITIONS = Object.values(PathTextPosition) as PathTextPosition[];
 
-const POSITION_LABELS: Record<PathTextPosition, string> = {
-  top: "Top",
-  bottom: "Bottom",
-  both: "Both",
-};
-
 /** Show the counter in warning color when fewer chars than this remain. */
 const COUNTER_WARNING_REMAINING = 3;
 
@@ -43,18 +39,36 @@ interface CharCounterProps {
   count: number;
   max: number;
   label: string;
+  a11y: string;
 }
 
-function CharCounter({ count, max, label }: CharCounterProps) {
+function CharCounter({ count, max, label, a11y }: CharCounterProps) {
   const isNearLimit = max - count <= COUNTER_WARNING_REMAINING;
   return (
     <Text
       style={[styles.counter, isNearLimit && styles.counterWarning]}
-      accessibilityLabel={`${label}: ${count} of ${max} characters used`}
+      accessibilityLabel={a11y}
     >
-      {count}/{max}
+      {label}
     </Text>
   );
+}
+
+function renderCounterLabel(count: number, max: number): string {
+  return `${count}/${max}`;
+}
+
+function counterA11y(
+  t: TFunction<"badgeDesigner">,
+  labelKey: "top" | "bottom",
+  count: number,
+  max: number,
+): string {
+  return t("pathText.counter.a11y", {
+    label: t(`pathText.counter.${labelKey}`),
+    count,
+    max,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -76,6 +90,7 @@ export function PathTextEditor({
   testID = "path-text-editor",
 }: PathTextEditorProps) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation("badgeDesigner");
   const resolvedAccent = accentColor ?? theme.colors.accentPrimary;
 
   const maxTop = getPathTextMaxChars(shape, "top");
@@ -96,7 +111,7 @@ export function PathTextEditor({
       <Pressable
         onPress={handleToggle}
         accessibilityRole="checkbox"
-        accessibilityLabel="Enable path text"
+        accessibilityLabel={t("pathText.toggleA11y")}
         accessibilityState={{ checked: enabled }}
         style={[
           styles.toggle,
@@ -115,7 +130,7 @@ export function PathTextEditor({
             },
           ]}
         >
-          Path Text
+          {t("sections.pathText")}
         </Text>
       </Pressable>
 
@@ -125,7 +140,7 @@ export function PathTextEditor({
             position === PathTextPosition.both) && (
             <>
               <TextInput
-                accessibilityLabel="Path text"
+                accessibilityLabel={t("pathText.topA11y")}
                 value={text}
                 onChangeText={onChangeText}
                 maxLength={maxTop}
@@ -142,23 +157,29 @@ export function PathTextEditor({
                   },
                 ]}
               />
-              <CharCounter count={text.length} max={maxTop} label="Top" />
+              <CharCounter
+                count={text.length}
+                max={maxTop}
+                label={renderCounterLabel(text.length, maxTop)}
+                a11y={counterA11y(t, "top", text.length, maxTop)}
+              />
             </>
           )}
 
           <View
             accessibilityRole="radiogroup"
-            accessibilityLabel="Path text position"
+            accessibilityLabel={t("pathText.positionA11y")}
             style={styles.row}
           >
             {POSITIONS.map((pos) => {
               const isSelected = pos === position;
+              const label = t(`pathText.positions.${pos}`);
               return (
                 <Pressable
                   key={pos}
                   onPress={() => handlePosition(pos)}
                   accessibilityRole="radio"
-                  accessibilityLabel={`${POSITION_LABELS[pos]} position`}
+                  accessibilityLabel={t("pathText.optionA11y", { label })}
                   accessibilityState={{ checked: isSelected }}
                   style={[
                     styles.option,
@@ -179,7 +200,7 @@ export function PathTextEditor({
                       },
                     ]}
                   >
-                    {POSITION_LABELS[pos]}
+                    {label}
                   </Text>
                 </Pressable>
               );
@@ -190,7 +211,7 @@ export function PathTextEditor({
             position === PathTextPosition.both) && (
             <>
               <TextInput
-                accessibilityLabel="Path text bottom"
+                accessibilityLabel={t("pathText.bottomA11y")}
                 value={textBottom}
                 onChangeText={onChangeTextBottom}
                 maxLength={maxBottom}
@@ -210,7 +231,8 @@ export function PathTextEditor({
               <CharCounter
                 count={textBottom.length}
                 max={maxBottom}
-                label="Bottom"
+                label={renderCounterLabel(textBottom.length, maxBottom)}
+                a11y={counterA11y(t, "bottom", textBottom.length, maxBottom)}
               />
             </>
           )}

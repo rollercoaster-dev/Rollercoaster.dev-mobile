@@ -1,6 +1,7 @@
 import React, { useCallback } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useUnistyles } from "react-native-unistyles";
+import { useTranslation } from "react-i18next";
 
 import { selectorStyles } from "./selectorStyles";
 import { BadgeShapeView } from "./shapes/BadgeShapeView";
@@ -23,15 +24,6 @@ export interface ShapeSelectorProps {
 
 const SHAPES = Object.values(BadgeShape) as BadgeShape[];
 
-const SHAPE_LABELS: Record<BadgeShape, string> = {
-  circle: "Circle",
-  shield: "Shield",
-  hexagon: "Hexagon",
-  roundedRect: "Rounded Rect",
-  star: "Star",
-  diamond: "Diamond",
-};
-
 const THUMBNAIL_SIZE = 56;
 
 // ---------------------------------------------------------------------------
@@ -45,6 +37,7 @@ export function ShapeSelector({
   testID = "shape-selector",
 }: ShapeSelectorProps) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation("badgeDesigner");
   const resolvedAccent = accentColor ?? theme.colors.accentPrimary;
 
   const handlePress = useCallback(
@@ -56,7 +49,7 @@ export function ShapeSelector({
     <View
       testID={testID}
       accessibilityRole="radiogroup"
-      accessibilityLabel="Badge shape"
+      accessibilityLabel={t("shape.a11y")}
     >
       <ScrollView
         horizontal
@@ -65,12 +58,13 @@ export function ShapeSelector({
       >
         {SHAPES.map((shape) => {
           const isSelected = shape === selectedShape;
+          const label = t(`shape.options.${shape}`);
           return (
             <Pressable
               key={shape}
               onPress={() => handlePress(shape)}
               accessibilityRole="radio"
-              accessibilityLabel={`${SHAPE_LABELS[shape]} shape`}
+              accessibilityLabel={t("shape.optionA11y", { label })}
               accessibilityState={{ checked: isSelected }}
               style={[
                 selectorStyles.cell,
@@ -96,7 +90,7 @@ export function ShapeSelector({
                 ]}
                 numberOfLines={1}
               >
-                {SHAPE_LABELS[shape]}
+                {label}
               </Text>
             </Pressable>
           );
