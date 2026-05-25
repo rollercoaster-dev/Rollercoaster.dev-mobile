@@ -15,6 +15,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
+import { loadGlossary } from "./glossaryLoader";
 import { loadIntentSidecar } from "./intentLoader";
 import { translatableSubtree, type JsonTree } from "./jsonTreeUtils";
 import { discoverNamespaces as discoverNamespaceFiles } from "./lintSource";
@@ -173,6 +174,9 @@ export async function syncOneNamespace(opts: {
 
     const registerText = readRegisterText(registerPath, ns);
     const intents = loadIntentSidecar(paths.enDir, ns);
+    const glossaryLines = loadGlossary(paths.registerDir);
+    const glossary =
+      glossaryLines.length > 0 ? glossaryLines.join("\n") : undefined;
     const result = await translateNamespace({
       enTree,
       deTree: targetTree,
@@ -180,6 +184,7 @@ export async function syncOneNamespace(opts: {
       modelName,
       registerText,
       intents,
+      glossary,
     });
 
     if (dryRun) {
