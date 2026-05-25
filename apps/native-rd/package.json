@@ -37,7 +37,8 @@
     "release-notes:generate": "bun run scripts/release-notes-generate.ts",
     "release-notes:split": "bun run scripts/release-notes-split.ts",
     "i18n:lint-source": "bun run scripts/i18n/lintSource.cli.ts",
-    "i18n:bakeoff": "bash scripts/i18n/run-bakeoff.sh"
+    "i18n:bakeoff": "bash scripts/i18n/run-bakeoff.sh",
+    "i18n:sync": "bun run scripts/i18n/sync.cli.ts"
   },
   "dependencies": {
     "@evolu/common": "^7.4.1",
