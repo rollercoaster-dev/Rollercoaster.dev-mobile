@@ -125,7 +125,7 @@
     "@types/react": "~19.2.10",
     "ai": "^6.0.191",
     "babel-jest": "^30.2.0",
-    "babel-preset-expo": "~55.0.22",
+    "babel-preset-expo": "~56.0.12",
     "eslint": "^9.39.4",
     "eslint-config-expo": "~55.0.1",
     "jest": "^30.2.0",
