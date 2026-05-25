@@ -1,4 +1,8 @@
-import { parseAndValidate, type ParseError } from "../responseParser";
+import {
+  parseAndValidate,
+  stripFencedCode,
+  type ParseError,
+} from "../responseParser";
 
 describe("parseAndValidate — ok cases", () => {
   test("valid response object matching expectedKeys → ok with typed dict", () => {
@@ -13,6 +17,65 @@ describe("parseAndValidate — ok cases", () => {
 
   test("empty expectedKeys with empty response → ok (empty-batch edge)", () => {
     expect(parseAndValidate({}, [])).toEqual({ ok: true, data: {} });
+  });
+
+  test("JSON wrapped in ```json fence parses successfully (Anthropic Haiku default)", () => {
+    const raw = '```json\n{"k0":"Hallo","k1":"Welt"}\n```';
+    expect(parseAndValidate(raw, ["k0", "k1"])).toEqual({
+      ok: true,
+      data: { k0: "Hallo", k1: "Welt" },
+    });
+  });
+
+  test("JSON wrapped in untagged ``` fence parses successfully", () => {
+    const raw = '```\n{"k0":"Hallo"}\n```';
+    expect(parseAndValidate(raw, ["k0"])).toEqual({
+      ok: true,
+      data: { k0: "Hallo" },
+    });
+  });
+
+  test("JSON wrapped in ~~~ fence parses successfully", () => {
+    const raw = '~~~json\n{"k0":"Hallo"}\n~~~';
+    expect(parseAndValidate(raw, ["k0"])).toEqual({
+      ok: true,
+      data: { k0: "Hallo" },
+    });
+  });
+
+  test("fenced JSON with surrounding whitespace parses", () => {
+    const raw = '\n\n  ```json\n{"k0":"Hallo"}\n```  \n';
+    expect(parseAndValidate(raw, ["k0"])).toEqual({
+      ok: true,
+      data: { k0: "Hallo" },
+    });
+  });
+});
+
+describe("stripFencedCode", () => {
+  test("strips ```json fence", () => {
+    expect(stripFencedCode('```json\n{"a":1}\n```')).toBe('{"a":1}');
+  });
+
+  test("strips untagged ``` fence", () => {
+    expect(stripFencedCode('```\n{"a":1}\n```')).toBe('{"a":1}');
+  });
+
+  test("strips ~~~ fence", () => {
+    expect(stripFencedCode('~~~\n{"a":1}\n~~~')).toBe('{"a":1}');
+  });
+
+  test("returns input unchanged when no fence", () => {
+    expect(stripFencedCode('{"a":1}')).toBe('{"a":1}');
+  });
+
+  test("does not strip mismatched fence delimiters", () => {
+    // ``` opening with ~~~ closing must NOT be treated as a single fence
+    expect(stripFencedCode('```\n{"a":1}\n~~~')).toBe('```\n{"a":1}\n~~~');
+  });
+
+  test("does not strip a single backtick that looks like a fence prefix", () => {
+    expect(stripFencedCode('`{"a":1}`')).toBe('`{"a":1}`');
   });
 });
 

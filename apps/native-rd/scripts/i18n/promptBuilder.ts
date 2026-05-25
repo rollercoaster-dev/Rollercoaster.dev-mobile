@@ -93,7 +93,7 @@ function formatGlossary(glossary: string): string {
  */
 export function buildSystemPrompt(input: PromptBuilderInput): string {
   const sections: string[] = [
-    "You translate UI strings from English to German. Preserve every `{{placeholder}}` token exactly. Return JSON with the same key set as the input.",
+    "You translate UI strings from English to German. Preserve every `{{placeholder}}` token exactly. Return JSON with the same key set as the input. Output raw JSON only — do not wrap the response in markdown code fences (no ```json, no ```).",
     formatRegister(input.register),
   ];
 
