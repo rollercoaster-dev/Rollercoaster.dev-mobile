@@ -33,9 +33,27 @@ export type ParseResult =
 export const llmResponseSchema = z.record(z.string(), z.string().min(1));
 
 /**
+ * Strip a single outer markdown code fence so models that wrap JSON in
+ * ```` ```json … ``` ```` (Anthropic Haiku's default for structured output,
+ * and a common default elsewhere) still parse. Untagged ``` and `~~~` work
+ * too. If the input is not fenced, returns it unchanged.
+ *
+ * Only the *outermost* fence is stripped. The body is whatever the model
+ * put inside it — if that body is still not valid JSON, we still surface
+ * malformed-json downstream.
+ */
+export function stripFencedCode(raw: string): string {
+  const trimmed = raw.trim();
+  const match = trimmed.match(
+    /^(```|~~~)(?:[a-zA-Z0-9_-]+)?\s*\n?([\s\S]*?)\n?\1\s*$/,
+  );
+  return match ? match[2].trim() : trimmed;
+}
+
+/**
  * Validate a raw LLM response (either a JSON string or pre-parsed value)
  * against `expectedKeys`. Returns the typed dict only when:
- *   - input parses as JSON (if a string)
+ *   - input parses as JSON (if a string; markdown code fences are stripped first)
  *   - shape is `Record<string, string>` with all values non-empty
  *   - key set matches `expectedKeys` exactly
  */
@@ -46,7 +64,7 @@ export function parseAndValidate(
   let parsed: unknown = raw;
   if (typeof raw === "string") {
     try {
-      parsed = JSON.parse(raw);
+      parsed = JSON.parse(stripFencedCode(raw));
     } catch (e) {
       return {
         ok: false,
