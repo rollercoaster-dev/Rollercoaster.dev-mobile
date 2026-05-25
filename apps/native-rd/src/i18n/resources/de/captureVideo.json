@@ -1,1 +1,55 @@
-{}
+{
+  "title": "Video aufnehmen",
+  "heading": "Video hinzufügen",
+  "actions": {
+    "recordVideo": "Video aufnehmen",
+    "chooseFromLibrary": "Aus Mediathek wählen",
+    "retake": "Erneut aufnehmen",
+    "useVideo": "Video verwenden",
+    "saving": "Wird gespeichert..."
+  },
+  "preview": {
+    "durationLabel": "Dauer: {{duration}}"
+  },
+  "discard": {
+    "title": "Video verwerfen?",
+    "message": "Du hast ein ungespeichertes Video. Zurückgehen verwirft es.",
+    "keep": "Behalten",
+    "discard": "Verwerfen"
+  },
+  "errors": {
+    "saveFailedTitle": "Speichern fehlgeschlagen",
+    "saveFailedMessage": "Video konnte nicht gespeichert werden. Versuche es erneut."
+  },
+  "recorder": {
+    "loading": "Wird geladen...",
+    "recordedVideoNoun": "Aufgenommenes Video",
+    "selectedVideoNoun": "Ausgewähltes Video",
+    "countdown": "{{seconds}}s verbleibend",
+    "a11y": {
+      "startRecording": "Aufnahme starten",
+      "stopRecording": "Aufnahme stoppen",
+      "switchToFrontCamera": "Zur Frontkamera wechseln",
+      "switchToBackCamera": "Zur Rückkamera wechseln",
+      "cameraViewfinderFront": "Kamera-Sucher, Frontkamera",
+      "cameraViewfinderBack": "Kamera-Sucher, Rückkamera",
+      "recordingTime": "Aufnahmezeit: {{time}}"
+    },
+    "discardWhileRecording": {
+      "title": "Aufnahme verwerfen?",
+      "message": "Du nimmst noch auf. Zurückgehen stoppt und verwirft das Video.",
+      "keep": "Aufnahme fortsetzen",
+      "discard": "Verwerfen"
+    },
+    "discardRecorded": {
+      "title": "Aufnahme verwerfen?",
+      "message": "Du hast ein ungespeichertes Video. Zurückgehen verwirft es.",
+      "keep": "Behalten",
+      "discard": "Verwerfen"
+    },
+    "errors": {
+      "recordingFailedTitle": "Aufnahme fehlgeschlagen",
+      "recordingFailedMessage": "Video konnte nicht aufgenommen werden. Versuche es erneut."
+    }
+  }
+}

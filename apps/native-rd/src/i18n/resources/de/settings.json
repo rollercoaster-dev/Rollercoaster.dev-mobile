@@ -1,1 +1,30 @@
-{}
+{
+  "title": "Einstellungen",
+  "density": {
+    "title": "Abstände",
+    "options": {
+      "compact": {
+        "label": "Eng",
+        "description": "Enger Abstand (0,75×)"
+      },
+      "default": {
+        "label": "Standard",
+        "description": "Normaler Abstand"
+      },
+      "comfortable": {
+        "label": "Großzügig",
+        "description": "Großzügiger Abstand (1,25×)"
+      }
+    }
+  },
+  "language": {
+    "title": "Sprache (dev)",
+    "pseudo": "Pseudo locale"
+  },
+  "about": {
+    "title": "Über",
+    "appLabel": "App",
+    "versionLabel": "Version",
+    "builtWith": "Gebaut mit Expo + Evolu + Unistyles"
+  }
+}

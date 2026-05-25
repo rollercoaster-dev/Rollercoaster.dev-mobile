@@ -1,1 +1,27 @@
-{}
+{
+  "camera": {
+    "title": "Kamerazugriff erforderlich",
+    "message": "Zum Fotografieren oder Videoaufnahmen braucht die App Zugriff auf deine Kamera.",
+    "settingsCta": "Zugriff gewähren"
+  },
+  "microphone": {
+    "title": "Mikrofon erforderlich",
+    "message": "Sprachmemos brauchen Mikrofon-Zugriff. Du kannst das in den Geräteeinstellungen aktivieren.",
+    "settingsCta": "Einstellungen öffnen"
+  },
+  "photoLibrary": {
+    "title": "Fotomediathek erforderlich",
+    "message": "Aktiviere Fotomediathek-Zugriff in den Geräteeinstellungen, um Fotos auszuwählen.",
+    "settingsCta": "Einstellungen öffnen"
+  },
+  "videoLibrary": {
+    "title": "Fotomediathek erforderlich",
+    "message": "Aktiviere Fotomediathek-Zugriff in den Geräteeinstellungen, um Videos auszuwählen.",
+    "settingsCta": "Einstellungen öffnen"
+  },
+  "location": {
+    "title": "Standortzugriff erforderlich",
+    "message": "Diese Funktion braucht Standortzugriff. Du kannst das in den Geräteeinstellungen aktivieren.",
+    "settingsCta": "Einstellungen öffnen"
+  }
+}

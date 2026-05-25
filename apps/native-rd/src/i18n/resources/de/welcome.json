@@ -1,1 +1,20 @@
-{}
+{
+  "hero": {
+    "greeting": "Hey 👋",
+    "title": "Willkommen auf deiner Fahrt."
+  },
+  "intro": {
+    "body1": "rollercoaster.dev ist dein persönlicher Goal Tracker. Alles bleibt auf deinem Handy — deine Daten, dein Tempo, deine Fahrt.",
+    "body2": "Erst mal: Such dir einen Look aus, der zu deinem Gehirn passt. Tipp auf eine Farbe — die ganze App ändert sich, damit du spürst, wie es sich anfühlt."
+  },
+  "sample": {
+    "progress": "3 von 5 Tagen geschafft"
+  },
+  "themePicker": {
+    "label": "Dein Look (antippen zum Vorschau)"
+  },
+  "cta": {
+    "getStarted": "Los geht's",
+    "footnote": "Du kannst das jederzeit in den Einstellungen ändern."
+  }
+}

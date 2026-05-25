@@ -1,1 +1,22 @@
-{}
+{
+  "header": {
+    "title": "Ziele"
+  },
+  "emptyState": {
+    "title": "Noch keine Ziele",
+    "body": "Füg dein erstes Lernziel hinzu, um zu starten.",
+    "cta": "Ziel erstellen"
+  },
+  "confirmDelete": {
+    "title": "Dieses Ziel löschen?",
+    "message": "\"{{title}}\" und alle Fortschritte werden dauerhaft gelöscht."
+  },
+  "card": {
+    "progressLabel": "{{completed}}/{{total}} Schritte",
+    "a11y": {
+      "hint": "Doppeltippen für Details",
+      "label": "{{title}}, {{stepsCompleted}} von {{stepsTotal}} Schritten abgeschlossen, {{status}}",
+      "labelWithNextStep": "{{title}}, nächster Schritt: {{nextStep}}, {{stepsCompleted}} von {{stepsTotal}} Schritten abgeschlossen, {{status}}"
+    }
+  }
+}

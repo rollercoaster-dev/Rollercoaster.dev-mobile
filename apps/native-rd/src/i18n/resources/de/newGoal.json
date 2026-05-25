@@ -1,1 +1,16 @@
-{}
+{
+  "title": "Neues Ziel",
+  "fields": {
+    "title": {
+      "label": "Titel",
+      "placeholder": "Was willst du lernen?"
+    }
+  },
+  "errors": {
+    "titleRequired": "Titel ist erforderlich",
+    "createFailed": "Ziel konnte nicht erstellt werden"
+  },
+  "cta": {
+    "create": "Ziel erstellen"
+  }
+}
