@@ -47,6 +47,11 @@ export type TranslateNamespaceOptions = {
   ns: string;
   modelName: string;
   registerText: string;
+  // intents/glossary are passed straight to buildSystemPrompt without runtime
+  // validation. The register YAML gets a zod schema (parseRegister); these
+  // sidecars don't yet because no CLI loader reads them from disk. PR #8 wires
+  // the sidecar loader — add zod schemas + hard-fail at that boundary then,
+  // mirroring registerSchema. Until then, callers are responsible for shape.
   intents?: Record<string, IntentEntry>;
   glossary?: string;
 };
@@ -63,6 +68,12 @@ function describeParseError(error: ParseError): string {
       return `missing-keys: ${error.missingKeys.join(", ")}`;
     case "extra-keys":
       return `extra-keys: ${error.extraKeys.join(", ")}`;
+    default: {
+      const _exhaustive: never = error;
+      throw new Error(
+        `describeParseError: unhandled ParseError variant ${JSON.stringify(_exhaustive)}`,
+      );
+    }
   }
 }
 
@@ -72,12 +83,17 @@ function parseRegister(text: string, ns: string): RegisterData {
     raw = loadYaml(text);
   } catch (e) {
     const detail = e instanceof Error ? e.message : String(e);
-    throw new Error(`namespace ${ns}: register YAML parse failed — ${detail}`);
+    throw new Error(`namespace ${ns}: register YAML parse failed — ${detail}`, {
+      cause: e,
+    });
   }
   const result = registerSchema.safeParse(raw);
   if (!result.success) {
+    const details = result.error.issues
+      .map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`)
+      .join("; ");
     throw new Error(
-      `namespace ${ns}: register YAML missing required fields (speaker, audience, formality, banned_phrasings)`,
+      `namespace ${ns}: register YAML schema invalid — ${details}`,
     );
   }
   return result.data;

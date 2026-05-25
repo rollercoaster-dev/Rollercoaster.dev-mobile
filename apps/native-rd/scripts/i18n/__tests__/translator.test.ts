@@ -249,7 +249,46 @@ describe("translateNamespace — register/intent/glossary plumbing", () => {
         modelName: "gpt-4o-mini",
         registerText: "speaker: app\n",
       }),
-    ).rejects.toThrow(/namespace common.*missing required fields/);
+    ).rejects.toThrow(
+      /namespace common.*register YAML schema invalid.*audience/,
+    );
     expect(mockCallModel).not.toHaveBeenCalled();
+  });
+
+  test("schema-invalid message surfaces wrong-type details, not generic 'missing'", async () => {
+    const enTree = { greeting: "Hello" };
+    const deTree = {};
+
+    await expect(
+      translateNamespace({
+        enTree,
+        deTree,
+        ns: "common",
+        modelName: "gpt-4o-mini",
+        registerText:
+          "speaker: app\naudience: nd-adults\nformality: 42\nbanned_phrasings: []\n",
+      }),
+    ).rejects.toThrow(/namespace common.*register YAML schema invalid/);
+    expect(mockCallModel).not.toHaveBeenCalled();
+  });
+
+  test("preserves YAML parse error cause for debugging", async () => {
+    const enTree = { greeting: "Hello" };
+    const deTree = {};
+
+    let caught: unknown;
+    try {
+      await translateNamespace({
+        enTree,
+        deTree,
+        ns: "common",
+        modelName: "gpt-4o-mini",
+        registerText: "speaker: app\n  bad indentation\n   :::",
+      });
+    } catch (e) {
+      caught = e;
+    }
+    expect(caught).toBeInstanceOf(Error);
+    expect((caught as Error).cause).toBeInstanceOf(Error);
   });
 });
