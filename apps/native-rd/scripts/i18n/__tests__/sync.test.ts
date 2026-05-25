@@ -12,6 +12,7 @@ import { join } from "node:path";
 import { callModel } from "../llmGateway";
 import {
   SUPPORTED_TARGETS,
+  discoverNamespaces,
   isSupportedTarget,
   parseArgs,
   resolveNamespaces,
@@ -119,6 +120,19 @@ describe("target validation", () => {
   });
 });
 
+describe("discoverNamespaces", () => {
+  test("returns sorted bare names, excludes .intents.json sidecars", () => {
+    writeJson(fixture.enPath("welcome"), {});
+    writeJson(fixture.enPath("common"), {});
+    // intents sidecar must not be discovered as a namespace
+    writeFileSync(join(fixture.paths.enDir, "common.intents.json"), "{}");
+    expect(discoverNamespaces(fixture.paths.enDir)).toEqual([
+      "common",
+      "welcome",
+    ]);
+  });
+});
+
 describe("resolveNamespaces", () => {
   test("returns all when requested is undefined", () => {
     expect(resolveNamespaces(["common", "welcome"], undefined)).toEqual([
@@ -167,6 +181,26 @@ describe("runSync — idempotency", () => {
     expect(readFileSync(fixture.targetPath("alpha"), "utf8")).toBe(
       `${JSON.stringify({ greet: "Hallo", farewell: "Auf Wiedersehen {{name}}" }, null, 2)}\n`,
     );
+  });
+});
+
+describe("runSync — idempotency short-circuits before register read", () => {
+  test("no-gaps namespace succeeds even when its register file is absent", async () => {
+    writeJson(fixture.enPath("alpha"), { greet: "Hello" });
+    writeJson(fixture.targetPath("alpha"), { greet: "Hallo" });
+    // intentionally NO writeRegister — if the gap check moved below
+    // readRegisterText, this would fail with "register file not found".
+
+    const summary = await runSync({
+      paths: fixture.paths,
+      namespaces: ["alpha"],
+      modelName: "claude-haiku-4-5",
+      dryRun: false,
+    });
+
+    expect(summary.hasFailures).toBe(false);
+    expect(summary.outcomes[0]).toEqual({ kind: "no-gaps", ns: "alpha" });
+    expect(mockCallModel).not.toHaveBeenCalled();
   });
 });
 

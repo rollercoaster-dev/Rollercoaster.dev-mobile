@@ -90,6 +90,11 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
+  if (namespaces.length === 0) {
+    console.error(`[sync] no namespaces found in ${enDir}`);
+    process.exit(1);
+  }
+
   const summary = await runSync({
     paths: { enDir, targetDir, registerDir },
     namespaces,
@@ -111,9 +116,14 @@ async function main(): Promise<void> {
 
 if (import.meta.main) {
   main().catch((e) => {
-    console.error(
-      `[sync] unexpected error: ${e instanceof Error ? e.message : String(e)}`,
-    );
+    // Preserve stack on unexpected errors — without it the operator gets
+    // a bare message ("EACCES" / "ENOENT") with no file:line to diagnose.
+    if (e instanceof Error) {
+      console.error(`[sync] unexpected error: ${e.message}`);
+      if (e.stack) console.error(e.stack);
+    } else {
+      console.error(`[sync] unexpected error: ${String(e)}`);
+    }
     process.exit(1);
   });
 }
