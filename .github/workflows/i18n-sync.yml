@@ -38,6 +38,27 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.ref || github.ref }}
 
+      # Refuse to expose OPENROUTER_API_KEY if the PR touches anything that could
+      # influence the executed sync tooling (scripts, lockfile, package.json,
+      # workflow itself). Only en/ resource JSONs are safe inputs.
+      - name: Verify PR only changes allowed paths
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          CHANGED=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+          echo "Changed files in PR:"
+          printf '%s\n' "$CHANGED"
+          DISALLOWED=$(printf '%s\n' "$CHANGED" | grep -v '^apps/native-rd/src/i18n/resources/en/' || true)
+          if [ -n "$DISALLOWED" ]; then
+            echo "::error::PR changes files outside apps/native-rd/src/i18n/resources/en/**. Refusing to run i18n sync to avoid exposing OPENROUTER_API_KEY to PR-controlled code."
+            echo "Disallowed paths:" >&2
+            printf '%s\n' "$DISALLOWED" >&2
+            exit 1
+          fi
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -85,7 +106,7 @@ jobs:
         run: |
           git -c user.name="github-actions[bot]" \
               -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-              commit -s -m "chore(native-rd/i18n): sync de/ translations [skip ci]"
+              commit -s -m "chore(native-rd/i18n): sync de/ translations"
           git push
 
       - name: Open PR with de/ translations (manual run)
@@ -97,7 +118,7 @@ jobs:
           git checkout -b "$BRANCH"
           git -c user.name="github-actions[bot]" \
               -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-              commit -s -m "chore(native-rd/i18n): full-corpus sync de/ translations [skip ci]"
+              commit -s -m "chore(native-rd/i18n): full-corpus sync de/ translations"
           git push --set-upstream origin "$BRANCH"
           gh pr create \
             --base "${{ github.ref_name }}" \
