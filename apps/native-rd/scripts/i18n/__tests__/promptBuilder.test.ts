@@ -1,5 +1,8 @@
 import {
   buildSystemPrompt,
+  PREAMBLE_BANNED_EXITS,
+  PREAMBLE_BANNED_ND_VOCAB,
+  PREAMBLE_BANNED_TOXIC_POSITIVE,
   type IntentEntry,
   type RegisterData,
 } from "../promptBuilder";
@@ -230,6 +233,52 @@ describe("buildSystemPrompt", () => {
       register: {
         ...BASE_REGISTER,
         banned_phrasings: ["oder nicht", "oder lass es"],
+      },
+    });
+    expect(out).toContain("(none beyond preamble defaults)");
+  });
+
+  test("register banned_phrasings are deduped against preamble ND deficit-framing vocab", () => {
+    const out = buildSystemPrompt({
+      register: {
+        ...BASE_REGISTER,
+        banned_phrasings: [...PREAMBLE_BANNED_ND_VOCAB, "novel ND filler"],
+      },
+    });
+    // Each ND-vocab phrase appears only in the preamble prose, not as a
+    // register bullet. The preamble lists them in prose context like
+    // "Never `leidet an` …", so a bullet-prefixed copy would be a dup.
+    for (const phrase of PREAMBLE_BANNED_ND_VOCAB) {
+      expect(out).not.toContain(`- ${phrase}`);
+    }
+    expect(out).toContain("- novel ND filler");
+  });
+
+  test("register banned_phrasings are deduped against preamble toxic-positive phrases", () => {
+    const out = buildSystemPrompt({
+      register: {
+        ...BASE_REGISTER,
+        banned_phrasings: [
+          ...PREAMBLE_BANNED_TOXIC_POSITIVE,
+          "novel positive filler",
+        ],
+      },
+    });
+    for (const phrase of PREAMBLE_BANNED_TOXIC_POSITIVE) {
+      expect(out).not.toContain(`- ${phrase}`);
+    }
+    expect(out).toContain("- novel positive filler");
+  });
+
+  test("register section falls back to '(none beyond preamble defaults)' across all three preamble phrase groups", () => {
+    const out = buildSystemPrompt({
+      register: {
+        ...BASE_REGISTER,
+        banned_phrasings: [
+          PREAMBLE_BANNED_EXITS[0],
+          PREAMBLE_BANNED_ND_VOCAB[0],
+          PREAMBLE_BANNED_TOXIC_POSITIVE[0],
+        ],
       },
     });
     expect(out).toContain("(none beyond preamble defaults)");
