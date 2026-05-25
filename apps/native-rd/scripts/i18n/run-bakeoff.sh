@@ -17,8 +17,9 @@ fi
 
 reports_dir="scripts/i18n/promptfoo/reports"
 mkdir -p "$reports_dir"
-output="$reports_dir/$(date +%Y%m%d-%H%M%S).html"
+output_base="$reports_dir/$(date +%Y%m%d-%H%M%S)"
 
 exec ./node_modules/.bin/promptfoo eval \
   --config scripts/i18n/promptfoo/promptfooconfig.yaml \
-  --output "$output"
+  --output "$output_base.html" "$output_base.json" \
+  --no-cache

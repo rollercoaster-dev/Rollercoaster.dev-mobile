@@ -145,18 +145,16 @@ PRs #1, #2, #3, #7 are independent and can land in any order. PR #5 is the integ
 
 ## promptfoo candidate models for first eval
 
-Tested against ~20 representative en strings (operational labels, `{{interp}}`, parenthetical asides, refusal phrasings):
+Tested against ~20 representative en strings (operational labels, `{{interp}}`, parenthetical asides, refusal phrasings). The original pool had 8 models; [ADR-0008](../decisions/ADR-0008-i18n-bakeoff-model-pool.md) drops the two reasoning-tuned candidates after live evals showed `Thinking:` preamble leakage.
 
-| Model                            | Why in the bake-off               |
-| -------------------------------- | --------------------------------- |
-| `openai/gpt-4o-mini`             | cheap baseline                    |
-| `openai/gpt-4o`                  | quality midpoint                  |
-| `openai/gpt-5-mini`              | newer same-tier candidate         |
-| `anthropic/claude-haiku-4-5`     | strong voice/register, cheap tier |
-| `anthropic/claude-sonnet-4-6`    | quality benchmark                 |
-| `google/gemini-2.5-flash`        | very cheap baseline               |
-| `deepseek/deepseek-chat`         | cheap wild card                   |
-| `openai/gpt-oss-120b` (via Groq) | open-weight workhorse             |
+| Model                         | Why in the bake-off               |
+| ----------------------------- | --------------------------------- |
+| `openai/gpt-4o-mini`          | cheap baseline                    |
+| `openai/gpt-4o`               | quality midpoint                  |
+| `anthropic/claude-haiku-4-5`  | strong voice/register, cheap tier |
+| `anthropic/claude-sonnet-4-6` | quality benchmark                 |
+| `google/gemini-2.5-flash`     | very cheap baseline               |
+| `deepseek/deepseek-chat`      | cheap wild card                   |
 
 ---
 
@@ -181,6 +179,7 @@ ADRs amending decisions in this plan use **supersession** (write a new ADR that 
 | Date       | Change                                                                                                                   |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------ |
 | 2026-05-24 | Initial plan. OpenRouter gateway, Vercel AI SDK, sidecar+register voice shape, three-clause linter trip-wire all locked. |
+| 2026-05-25 | ADR-0008 drops reasoning-tuned models from the first bake-off pool after live evals showed reasoning preamble leakage.   |
 
 ---
 

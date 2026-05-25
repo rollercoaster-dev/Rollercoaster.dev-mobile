@@ -20,10 +20,12 @@ export type ModelEntry = {
   note?: string;
 };
 
+// ADR-0008 drops reasoning-tuned candidates from the bake-off pool after live
+// evals showed "Thinking:" preamble leakage. Re-add them only with explicit
+// reasoning-suppression support in llmGateway.ts.
 export const MODELS: Record<string, ModelEntry> = {
   "gpt-4o-mini": { modelId: "openai/gpt-4o-mini", temperature: 0.0 },
   "gpt-4o": { modelId: "openai/gpt-4o", temperature: 0.0 },
-  "gpt-5-mini": { modelId: "openai/gpt-5-mini", temperature: 0.0 },
   "claude-haiku-4-5": {
     modelId: "anthropic/claude-haiku-4-5",
     temperature: 0.0,
@@ -37,11 +39,6 @@ export const MODELS: Record<string, ModelEntry> = {
     temperature: 0.0,
   },
   "deepseek-chat": { modelId: "deepseek/deepseek-chat", temperature: 0.0 },
-  "gpt-oss-120b": {
-    modelId: "openai/gpt-oss-120b",
-    temperature: 0.0,
-    note: "via Groq (OpenRouter routes transparently)",
-  },
 };
 
 /**

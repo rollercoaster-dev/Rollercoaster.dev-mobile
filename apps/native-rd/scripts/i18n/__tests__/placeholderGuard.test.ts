@@ -15,8 +15,8 @@ describe("extractPlaceholders", () => {
     ).toEqual(["name", "code", "name"]);
   });
 
-  test("trims whitespace inside the braces (i18next normalises this)", () => {
-    expect(extractPlaceholders("Hi {{ name }}")).toEqual(["name"]);
+  test("preserves whitespace inside the braces exactly", () => {
+    expect(extractPlaceholders("Hi {{ name }}")).toEqual([" name "]);
   });
 });
 
@@ -74,6 +74,12 @@ describe("checkPlaceholders — mismatch cases", () => {
       source: "Hello {{name}}",
       candidate: "Bonjour {{nom}}",
       expected: { missing: ["name"], extra: ["nom"], duplicates: [] },
+    },
+    {
+      label: "candidate changes placeholder spacing",
+      source: "Hello {{name}}",
+      candidate: "Hallo {{ name }}",
+      expected: { missing: ["name"], extra: [" name "], duplicates: [] },
     },
     {
       label: "candidate duplicates a placeholder",
