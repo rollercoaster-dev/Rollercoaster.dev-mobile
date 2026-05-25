@@ -64,12 +64,12 @@ Eight candidate enrichments for the Step. Letters are load-bearing — agents an
 
 **F**: Mid-work capture. Frictionless landing place for in-progress insight.
 
-**G**: Lessons from failure (opt-in per goal). Mistakes as data, not as verdict. Forward-reference target is _future similar steps across goals_.
+**G**: Per-goal review. The user attaches a review to a goal when they want one — including never; the review's existence is the opt-in, not a toggle. Free-form retrospective on the goal (wins and misfires both). Forward-reference target is _future similar steps across goals_.
 
 **H**: Step-level hypothesis falsification — the misfired step persists as a learning. Forward-reference target is _the immediately replacing step within the same goal_.
 
 **G vs H**:
-Both involve learning from misfires; the forward-reference target separates them. The 8-gauge moment is canonically _both_ — H during the practice panel work, G at the journeyman exam six months later.
+H is specifically the falsification pivot — a misfired step's record _is_ the artifact. G is broader: a free-form retrospective the user writes whenever they want. When a misfire is involved, both can apply; the forward-reference target separates them. The 8-gauge moment is canonically _both_ — H during the practice panel work, G at the journeyman exam six months later.
 
 ### Step states
 
@@ -116,7 +116,7 @@ _Avoid_: replaces, supersedes (those imply the original disappears; under H it p
 
 **Learning step**:
 The persisted form of a misfired step under H — the original framing visible, the contradiction recorded, the replacement step linked.
-_Avoid_: failed step, lesson (G uses _lesson_; H uses _learning_).
+_Avoid_: failed step, review (G uses _review_; H uses _learning_).
 
 ### Recovery vocabulary (used in Sam's scenario)
 
