@@ -94,7 +94,11 @@ describe("syncOneNamespace — sidecar intent wiring", () => {
     expect(mockCallModel).toHaveBeenCalledTimes(1);
     const systemPrompt = mockCallModel.mock.calls[0]![1];
     expect(systemPrompt).toContain("Per-string intents");
-    expect(systemPrompt).toContain("title");
+    // After #180, intents are re-keyed onto synthetic dict keys (`k{n}`)
+    // before reaching the prompt. The author-facing `title` source-path
+    // key must NOT appear in the intents section.
+    expect(systemPrompt).toContain("- k0:");
+    expect(systemPrompt).not.toContain("- title:");
     expect(systemPrompt).toContain("warm recognition, never expansive");
     expect(systemPrompt).toContain('audience="first-run-nd-adult"');
   });
