@@ -109,27 +109,13 @@ This PR set closes the two remaining classes of i18n loose ends identified in th
 **Commit**: `feat(native-rd/i18n): add evidenceViewer namespace`
 **Changes**:
 
-- [ ] Create `src/i18n/resources/en/evidenceViewer.json` with keys:
-  - `title`: "Evidence" (screen title — uses `title` key from birth to match D4 normalization)
-  - `errors.cannotOpenLink`: "Cannot open link"
-  - `errors.unableToOpen`: "Unable to open: {{uri}}"
-  - `errors.failedToOpen`: "Failed to open: {{uri}}"
-  - `errors.fileNotFound`: "File not found"
-  - `errors.fileMayBeDeleted`: "The file may have been deleted."
-  - `errors.cannotOpenFile`: "Cannot open file"
-  - `errors.sharingUnavailable`: "File sharing is not available on this device."
-  - `errors.openFileFailed`: "Something went wrong opening the file."
-  - `errors.cannotView`: "Cannot view"
-  - `errors.photoMissing`: "Photo file is missing."
-  - `errors.cannotPlay`: "Cannot play"
-  - `errors.videoMissing`: "Video file is missing."
-  - `errors.audioMissing`: "Audio file is missing."
-  - `errors.cannotOpen`: "Cannot open"
-  - `errors.fileMissing`: "File is missing."
-- [ ] Run `bun run gen:pseudo` to create `src/i18n/resources/pseudo/evidenceViewer.json`
-- [ ] Add `evidenceViewer` to `NAMESPACES` array in `src/i18n/index.ts`
-- [ ] Import and register `en/de/pseudo` evidenceViewer resources in `src/i18n/index.ts` (the `de/` import will resolve once the bot commits the file back)
-- [ ] Do NOT hand-write `de/evidenceViewer.json` — let the i18n-sync workflow generate it on PR open (per D10)
+- [x] Create `src/i18n/resources/en/evidenceViewer.json` with the 15 error keys + `title` (see commit)
+- [x] Run `bun run gen:pseudo` to create `src/i18n/resources/pseudo/evidenceViewer.json`
+- [x] Add `evidenceViewer` to `NAMESPACES` array in `src/i18n/index.ts`
+- [x] Import and register `en/de/pseudo` evidenceViewer resources in `src/i18n/index.ts`
+- [x] Add `evidenceViewer` to `src/i18n/i18next.d.ts` CustomTypeOptions.resources (required for typed `t()` calls — researcher's plan didn't list this but TS demanded it)
+- [x] Create `src/i18n/resources/_register/evidenceViewer.yml` voice register (required by i18n sync workflow)
+- [x] Create placeholder `de/evidenceViewer.json` as `{}` so the static TS import resolves; bot fills from `en/` on PR open (per D10)
 
 #### Step 2: Migrate `evidenceViewers.tsx`
 
@@ -257,11 +243,44 @@ This PR set closes the two remaining classes of i18n loose ends identified in th
 | `#63` raw-string ESLint rule                               | Separate issue, post-ship cleanup item                                                                       | #63                                                                                 |
 | `#62` locale-aware formatters                              | Separate issue, deferred                                                                                     | #62                                                                                 |
 
+## Resume Here (2026-05-26, second handoff)
+
+**Where we are:** PR-A Steps 1–3 are **committed on `feat/issue-144-i18n-cleanup-raw-strings`**. Steps 4–6 of PR-A and all of PR-B remain. Branch is local-only (not pushed).
+
+**Commits landed this session:**
+
+- `3f57d47` feat(native-rd/i18n): add evidenceViewer namespace
+- `78d723f` feat(native-rd/i18n): migrate evidenceViewers utility to t()
+- (pending — Step 3) feat(native-rd/i18n): migrate EvidenceViewerScreen header label
+
+**Note on the in-flight commit:** Step 3 (EvidenceViewerScreen header label) was kicked off via background bash but the pre-commit type-check is slow (~3–5 min per commit due to resource contention with stale tsc processes from earlier in the worktree). Before doing anything, verify with `git log --oneline -5` — if Step 3's commit didn't land, the file edit is still staged or unstaged; re-run the commit.
+
+**Next agent: do this in order:**
+
+1. `git log --oneline -5` — confirm Step 3's commit landed (`feat(native-rd/i18n): migrate EvidenceViewerScreen header label`). If not, `git status` will show whether the edit is staged/unstaged; re-commit.
+2. Continue with **Step 4** of PR-A (`SettingsScreen.tsx` — add `// i18n-skip` marker only, no source change; trivial per D11).
+3. Then **Step 5** (`ConfirmDeleteModal.tsx` + stories) per the plan above.
+4. Then **Step 6** (tests for PR-A).
+5. Then proceed with PR-B (key normalization) per the plan.
+
+**Useful state:**
+
+- `bun run type-check` was passing as of Step 1.
+- Two stale tsc processes from a prior session may still be running and slowing pre-commit hooks — Joe's memory rule `feedback_never_run_builds.md` says **never `pkill -f`**; just wait through it or commit fewer times at once.
+- Plan deviation re. `t("header")` vs `t("title")`: Step 1 shipped `evidenceViewer.json` with the canonical `title` key (per D4). The plan's Step 3 text still says `t("header")` — that's stale; use `t("title")`. Step 3 commit used `t("title")` correctly.
+
 ## Discovery Log
 
 <!-- Entries added by implement skill:
 - [YYYY-MM-DD HH:MM] <discovery description>
 -->
+
+- [2026-05-26 12:05] Step 1 done on disk (not committed). Two deviations vs. plan-as-written:
+  - Plan said "do NOT hand-write `de/evidenceViewer.json`" but TS static imports in `src/i18n/index.ts` require the file to exist. Shipped as `{}` placeholder per the pattern documented in `i18n/index.ts` lines 68–83 (`"German bundle starts as {}; the sync bot fills it from en/"`). D10 intent (no human German copy) is preserved.
+  - Added register YAML at `resources/_register/evidenceViewer.yml` and the type entry in `i18next.d.ts`. Both required by existing infra (i18n sync workflow + typed `t()`); the researcher's plan omitted them.
+- [2026-05-26 12:05] `bun run type-check` exit 0 after Step 1 changes; `bun run i18n:lint-source` is warn-only and shows 475 pre-existing findings — no new ones from this step.
+- [2026-05-26 12:45] Step 2 committed (`78d723f`). All 8 `Alert.alert(...)` calls in `evidenceViewers.tsx` now use `i18n.t("evidenceViewer:errors.*")`. Pre-commit hook (incl. type-check) passed.
+- [2026-05-26 12:45] Step 3 in flight (commit pending). Used `t("title")` not `t("header")` since Step 1's JSON shipped with the canonical key per D4. Spotted three additional raw strings in `EvidenceViewerScreen.tsx` that the researcher's "exactly one raw string" note missed: two `AccessibilityInfo.announceForAccessibility(...)` calls (lines 47, 50) and "No evidence to view." empty-state at line 59. Left out of scope — flag for a follow-up if Joe wants the screen fully clean.
 
 ### Pre-implementation discoveries (researcher, 2026-05-26)
 
