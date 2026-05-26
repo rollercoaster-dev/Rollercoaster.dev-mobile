@@ -1,1 +1,26 @@
-{}
+{
+  "header": "Badges",
+  "empty": {
+    "title": "Noch keine Badges",
+    "body": "Schließe Ziele ab, um Badges zu sammeln. Deine Sammlung wächst hier.",
+    "action": "Zu Zielen"
+  },
+  "card": {
+    "untitledFallback": "Ohne Titel"
+  },
+  "earned": {
+    "microcopy": {
+      "first": "Das erste. (notiert.)",
+      "subsequent": "Badge verliehen."
+    },
+    "a11y": {
+      "card": "Badge verliehen",
+      "image": "Badge-Bild",
+      "imagePlaceholder": "Badge-Bild-Platzhalter"
+    },
+    "actions": {
+      "view": "Badge ansehen",
+      "continue": "Weitermachen"
+    }
+  }
+}

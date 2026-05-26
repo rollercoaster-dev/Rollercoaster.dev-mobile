@@ -7,6 +7,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { useUnistyles } from "react-native-unistyles";
+import { useTranslation } from "react-i18next";
 import { Text } from "../../components/Text";
 import { Button } from "../../components/Button";
 import { useAnimationPref } from "../../hooks/useAnimationPref";
@@ -32,6 +33,7 @@ export function BadgeEarnedModal({
 }: BadgeEarnedModalProps) {
   const { theme } = useUnistyles();
   const { animationPref, shouldAnimate } = useAnimationPref();
+  const { t } = useTranslation("badges");
 
   const scale = useSharedValue(shouldAnimate ? 0.85 : 1);
 
@@ -51,13 +53,15 @@ export function BadgeEarnedModal({
   }));
 
   const hasImage = imageUri !== PLACEHOLDER_IMAGE_URI;
-  const microcopy = isFirstBadge ? "First one. (noted.)" : "Badge earned.";
+  const microcopy = isFirstBadge
+    ? t("earned.microcopy.first")
+    : t("earned.microcopy.subsequent");
   const isE2E = process.env.EXPO_PUBLIC_E2E_MODE === "true";
   const cardA11yProps = isE2E
     ? ({ accessible: false } as const)
     : ({
         accessible: true,
-        accessibilityLabel: "Badge earned",
+        accessibilityLabel: t("earned.a11y.card"),
         accessibilityLiveRegion: "polite" as const,
       } as const);
 
@@ -87,14 +91,14 @@ export function BadgeEarnedModal({
                   key={imageUri}
                   source={{ uri: imageUri }}
                   style={styles.badgeImage}
-                  accessibilityLabel="Badge image"
+                  accessibilityLabel={t("earned.a11y.image")}
                   resizeMode="contain"
                   testID="badge-earned-image"
                 />
               ) : (
                 <View
                   style={styles.badgePlaceholder}
-                  accessibilityLabel="Badge image placeholder"
+                  accessibilityLabel={t("earned.a11y.imagePlaceholder")}
                   testID="badge-earned-image-placeholder"
                 >
                   <Text variant="headline">🏅</Text>
@@ -107,12 +111,12 @@ export function BadgeEarnedModal({
 
               <View style={styles.actions}>
                 <Button
-                  label="View Badge"
+                  label={t("earned.actions.view")}
                   onPress={onViewBadge}
                   variant="primary"
                 />
                 <Button
-                  label="Keep going"
+                  label={t("earned.actions.continue")}
                   onPress={onContinue}
                   variant="secondary"
                 />

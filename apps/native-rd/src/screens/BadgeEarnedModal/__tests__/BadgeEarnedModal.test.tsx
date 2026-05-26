@@ -4,6 +4,7 @@ import {
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
+import { i18n } from "../../../i18n";
 import { BadgeEarnedModal } from "../BadgeEarnedModal";
 
 jest.mock("../../../hooks/useCreateBadge", () => ({
@@ -45,12 +46,16 @@ describe("BadgeEarnedModal", () => {
 
   it("renders nothing when not visible", () => {
     renderWithProviders(<BadgeEarnedModal {...defaultProps} visible={false} />);
-    expect(screen.queryByText("Badge earned.")).not.toBeOnTheScreen();
+    expect(
+      screen.queryByText(i18n.t("badges:earned.microcopy.subsequent")),
+    ).not.toBeOnTheScreen();
   });
 
   it("renders badge image when visible and imageUri is a real URI", () => {
     renderWithProviders(<BadgeEarnedModal {...defaultProps} />);
-    expect(screen.getByLabelText("Badge image")).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText(i18n.t("badges:earned.a11y.image")),
+    ).toBeOnTheScreen();
   });
 
   it("remounts the Image when imageUri changes (key={imageUri} guards iOS stale-fetch)", () => {
@@ -77,19 +82,25 @@ describe("BadgeEarnedModal", () => {
     renderWithProviders(
       <BadgeEarnedModal {...defaultProps} imageUri="pending:baked-image" />,
     );
-    expect(screen.getByLabelText("Badge image placeholder")).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText(i18n.t("badges:earned.a11y.imagePlaceholder")),
+    ).toBeOnTheScreen();
   });
 
   it("shows first-badge microcopy when isFirstBadge is true", () => {
     renderWithProviders(
       <BadgeEarnedModal {...defaultProps} isFirstBadge={true} />,
     );
-    expect(screen.getByText("First one. (noted.)")).toBeOnTheScreen();
+    expect(
+      screen.getByText(i18n.t("badges:earned.microcopy.first")),
+    ).toBeOnTheScreen();
   });
 
   it("shows neutral microcopy when isFirstBadge is false", () => {
     renderWithProviders(<BadgeEarnedModal {...defaultProps} />);
-    expect(screen.getByText("Badge earned.")).toBeOnTheScreen();
+    expect(
+      screen.getByText(i18n.t("badges:earned.microcopy.subsequent")),
+    ).toBeOnTheScreen();
   });
 
   it('calls onViewBadge when "View Badge" is pressed', () => {
@@ -97,7 +108,9 @@ describe("BadgeEarnedModal", () => {
     renderWithProviders(
       <BadgeEarnedModal {...defaultProps} onViewBadge={onViewBadge} />,
     );
-    fireEvent.press(screen.getByLabelText("View Badge"));
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badges:earned.actions.view")),
+    );
     expect(onViewBadge).toHaveBeenCalledTimes(1);
   });
 
@@ -106,13 +119,15 @@ describe("BadgeEarnedModal", () => {
     renderWithProviders(
       <BadgeEarnedModal {...defaultProps} onContinue={onContinue} />,
     );
-    fireEvent.press(screen.getByLabelText("Keep going"));
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badges:earned.actions.continue")),
+    );
     expect(onContinue).toHaveBeenCalledTimes(1);
   });
 
   it("has accessible card with label and polite live region", () => {
     renderWithProviders(<BadgeEarnedModal {...defaultProps} />);
-    const card = screen.getByLabelText("Badge earned");
+    const card = screen.getByLabelText(i18n.t("badges:earned.a11y.card"));
     expect(card).toBeOnTheScreen();
     expect(card.props.accessibilityLiveRegion).toBe("polite");
   });
@@ -131,7 +146,9 @@ describe("BadgeEarnedModal", () => {
     });
     // Should render without error — animation is skipped
     renderWithProviders(<BadgeEarnedModal {...defaultProps} />);
-    expect(screen.getByText("Badge earned.")).toBeOnTheScreen();
+    expect(
+      screen.getByText(i18n.t("badges:earned.microcopy.subsequent")),
+    ).toBeOnTheScreen();
   });
 
   describe("E2E mode gating", () => {
@@ -146,9 +163,58 @@ describe("BadgeEarnedModal", () => {
     it("drops the card a11y wrapper so nested testIDs are reachable", () => {
       renderWithProviders(<BadgeEarnedModal {...defaultProps} />);
       // Under E2E mode, the composed "Badge earned" label is not on the card
-      expect(screen.queryByLabelText("Badge earned")).toBeNull();
+      expect(
+        screen.queryByLabelText(i18n.t("badges:earned.a11y.card")),
+      ).toBeNull();
       // but the nested badge image testID is reachable
       expect(screen.getByTestId("badge-earned-image")).toBeOnTheScreen();
     });
+  });
+
+  describe("pseudo locale", () => {
+    afterEach(async () => {
+      if (i18n.language !== "en") await i18n.changeLanguage("en");
+    });
+
+    it.each([
+      {
+        key: "badges:earned.microcopy.subsequent" as const,
+        props: defaultProps,
+        finder: "text" as const,
+      },
+      {
+        key: "badges:earned.microcopy.first" as const,
+        props: { ...defaultProps, isFirstBadge: true },
+        finder: "text" as const,
+      },
+      {
+        key: "badges:earned.actions.view" as const,
+        props: defaultProps,
+        finder: "label" as const,
+      },
+      {
+        key: "badges:earned.a11y.image" as const,
+        props: defaultProps,
+        finder: "label" as const,
+      },
+      {
+        key: "badges:earned.a11y.imagePlaceholder" as const,
+        props: { ...defaultProps, imageUri: "pending:baked-image" },
+        finder: "label" as const,
+      },
+    ])(
+      "renders $key as bracketed copy under pseudo locale",
+      async ({ key, props, finder }) => {
+        await i18n.changeLanguage("pseudo");
+        renderWithProviders(<BadgeEarnedModal {...props} />);
+        const pseudo = i18n.t(key);
+        expect(pseudo.startsWith("[")).toBe(true);
+        if (finder === "text") {
+          expect(screen.getByText(pseudo)).toBeOnTheScreen();
+        } else {
+          expect(screen.getByLabelText(pseudo)).toBeOnTheScreen();
+        }
+      },
+    );
   });
 });

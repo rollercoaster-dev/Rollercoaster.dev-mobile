@@ -4,6 +4,7 @@ import {
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
+import { i18n } from "../../../i18n";
 import { BadgesScreen } from "../BadgesScreen";
 
 const mockNavigate = jest.fn();
@@ -58,22 +59,18 @@ describe("BadgesScreen", () => {
   describe("empty state", () => {
     it("renders empty state when no badges exist", () => {
       renderWithProviders(<BadgesScreen />);
-      expect(screen.getByText("No badges yet")).toBeOnTheScreen();
-      expect(
-        screen.getByText(
-          "Complete goals to earn badges. Your collection will grow here.",
-        ),
-      ).toBeOnTheScreen();
+      expect(screen.getByText(i18n.t("badges:empty.title"))).toBeOnTheScreen();
+      expect(screen.getByText(i18n.t("badges:empty.body"))).toBeOnTheScreen();
     });
 
     it("renders Go to Goals action button", () => {
       renderWithProviders(<BadgesScreen />);
-      expect(screen.getByText("Go to Goals")).toBeOnTheScreen();
+      expect(screen.getByText(i18n.t("badges:empty.action"))).toBeOnTheScreen();
     });
 
     it("navigates to Goals tab when Go to Goals is pressed", () => {
       renderWithProviders(<BadgesScreen />);
-      fireEvent.press(screen.getByText("Go to Goals"));
+      fireEvent.press(screen.getByText(i18n.t("badges:empty.action")));
       expect(mockNavigate).toHaveBeenCalledWith("GoalsTab", {
         screen: "Goals",
       });
@@ -83,7 +80,7 @@ describe("BadgesScreen", () => {
   describe("header", () => {
     it("renders Badges title", () => {
       renderWithProviders(<BadgesScreen />);
-      expect(screen.getByText("Badges")).toBeOnTheScreen();
+      expect(screen.getByText(i18n.t("badges:header"))).toBeOnTheScreen();
     });
   });
 
@@ -121,6 +118,37 @@ describe("BadgesScreen", () => {
 
       renderWithProviders(<BadgesScreen />);
       expect(screen.getByText("Jan 28, 2026")).toBeOnTheScreen();
+    });
+  });
+
+  describe("pseudo locale", () => {
+    afterEach(async () => {
+      if (i18n.language !== "en") await i18n.changeLanguage("en");
+    });
+
+    it.each([
+      "badges:header",
+      "badges:empty.title",
+      "badges:empty.body",
+      "badges:empty.action",
+    ] as const)(
+      "renders %s as bracketed copy under pseudo locale",
+      async (key) => {
+        await i18n.changeLanguage("pseudo");
+        renderWithProviders(<BadgesScreen />);
+        const pseudo = i18n.t(key);
+        expect(pseudo.startsWith("[")).toBe(true);
+        expect(screen.getByText(pseudo)).toBeOnTheScreen();
+      },
+    );
+
+    it("renders badges:card.untitledFallback as bracketed copy when goalTitle is null", async () => {
+      await i18n.changeLanguage("pseudo");
+      mockUseQuery.mockReturnValue([makeBadgeRow({ goalTitle: null })]);
+      renderWithProviders(<BadgesScreen />);
+      const pseudo = i18n.t("badges:card.untitledFallback");
+      expect(pseudo.startsWith("[")).toBe(true);
+      expect(screen.getByText(pseudo)).toBeOnTheScreen();
     });
   });
 });
