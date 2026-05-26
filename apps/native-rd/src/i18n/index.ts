@@ -67,7 +67,8 @@ import pseudoBadgeDetail from "./resources/pseudo/badgeDetail.json";
 
 // Adding a namespace? Steps:
 //   1. Add the en + de + pseudo JSON files under resources/{en,de,pseudo}/<name>.json
-//      (German bundle stays `{}` — the sync bot fills it from en/)
+//      (German bundle starts as `{}`; the sync bot fills it from en/.
+//       Bot output may be committed in this same PR or in a follow-up.)
 //   2. Add imports above
 //   3. Add the entry to NAMESPACES and all three resource bundles below
 //   4. Add the type alias in i18next.d.ts
@@ -77,8 +78,9 @@ import pseudoBadgeDetail from "./resources/pseudo/badgeDetail.json";
 //      not start with a double-quote (the parser breaks on multi-line items
 //      that lead with `"…"`).
 // The script in scripts/generate-pseudo-locale.ts auto-discovers files in
-// resources/en/ — no need to update it. German `{}` stubs let i18next register
-// the bundle; entries fall back to `en` until the sync bot lands German copy.
+// resources/en/ — no need to update it. Empty `{}` German bundles still let
+// i18next register the namespace and fall back to `en` until German copy
+// lands — either via a later sync-bot run or committed alongside this PR.
 export const NAMESPACES = [
   "common",
   "welcome",
@@ -191,10 +193,11 @@ i18n.use(initReactI18next).init({
   saveMissing: warnMissingKeys,
   missingKeyHandler: warnMissingKeys
     ? (lngs, ns, key) => {
-        // de bundles are intentional `{}` stubs until per-screen German copy
-        // lands (#67–#72); falling back to en is expected, not a bug. Only
-        // warn when en is also missing the key — the real "refactor broke a
-        // key" signal.
+        // German fallback to en is expected during the screen-by-screen
+        // migration: a namespace may be `{}` (waiting on the sync bot) or
+        // only partially populated. `lngs.every((l) => l === "de")` means the
+        // key wasn't authored in German yet — that's not a refactor signal.
+        // Only warn when en is also missing the key.
         if (lngs.every((l) => l === "de")) return;
         logger.warn(
           `Missing key "${key}" in namespace "${ns}" (${lngs.join(", ")})`,
