@@ -30,6 +30,7 @@ const SENTRY_DEBUG_TOOLS_ENABLED = isSentryDebugToolsEnabled(
 
 export function triggerSentryNativeCrash(): void {
   if (Platform.OS === "android" && __DEV__) {
+    // i18n-skip: dev-only, double-gated by __DEV__ && Platform.OS === "android"
     const message =
       "Android native crash verification requires a release-mode preview build.";
     Alert.alert("Native crash unavailable", message);
