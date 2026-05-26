@@ -24,6 +24,7 @@ import enEditGoal from "./resources/en/editGoal.json";
 import enTimelineJourney from "./resources/en/timelineJourney.json";
 import enCompletion from "./resources/en/completion.json";
 import enBadgeDetail from "./resources/en/badgeDetail.json";
+import enEvidenceViewer from "./resources/en/evidenceViewer.json";
 
 import deCommon from "./resources/de/common.json";
 import deWelcome from "./resources/de/welcome.json";
@@ -44,6 +45,7 @@ import deEditGoal from "./resources/de/editGoal.json";
 import deTimelineJourney from "./resources/de/timelineJourney.json";
 import deCompletion from "./resources/de/completion.json";
 import deBadgeDetail from "./resources/de/badgeDetail.json";
+import deEvidenceViewer from "./resources/de/evidenceViewer.json";
 
 import pseudoCommon from "./resources/pseudo/common.json";
 import pseudoWelcome from "./resources/pseudo/welcome.json";
@@ -64,6 +66,7 @@ import pseudoEditGoal from "./resources/pseudo/editGoal.json";
 import pseudoTimelineJourney from "./resources/pseudo/timelineJourney.json";
 import pseudoCompletion from "./resources/pseudo/completion.json";
 import pseudoBadgeDetail from "./resources/pseudo/badgeDetail.json";
+import pseudoEvidenceViewer from "./resources/pseudo/evidenceViewer.json";
 
 // Adding a namespace? Steps:
 //   1. Add the en + de + pseudo JSON files under resources/{en,de,pseudo}/<name>.json
@@ -101,6 +104,7 @@ export const NAMESPACES = [
   "timelineJourney",
   "completion",
   "badgeDetail",
+  "evidenceViewer",
 ] as const;
 
 export type Namespace = (typeof NAMESPACES)[number];
@@ -126,6 +130,7 @@ const resources = {
     timelineJourney: enTimelineJourney,
     completion: enCompletion,
     badgeDetail: enBadgeDetail,
+    evidenceViewer: enEvidenceViewer,
   },
   de: {
     common: deCommon,
@@ -147,6 +152,7 @@ const resources = {
     timelineJourney: deTimelineJourney,
     completion: deCompletion,
     badgeDetail: deBadgeDetail,
+    evidenceViewer: deEvidenceViewer,
   },
   pseudo: {
     common: pseudoCommon,
@@ -168,6 +174,7 @@ const resources = {
     timelineJourney: pseudoTimelineJourney,
     completion: pseudoCompletion,
     badgeDetail: pseudoBadgeDetail,
+    evidenceViewer: pseudoEvidenceViewer,
   },
 } as const;
 

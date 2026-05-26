@@ -1,0 +1,19 @@
+# evidenceViewer — strings shown when opening or playing back captured evidence.
+# Mostly Alert.alert error messages; one screen-header label ("Evidence").
+
+speaker: app
+audience: ND adult reviewing or opening captured evidence
+formality: informal
+banned_phrasings:
+  - Oh nein!
+  - Hoppla!
+  - Fehler aufgetreten
+  - leider
+  - leidet an
+  - dein wunderschönes
+notes:
+  - Errors describe what is wrong factually, not apologetically.
+  - Prefer "Datei nicht gefunden." over "Tut uns leid, deine Datei ist weg!".
+  - Keep wording short — these strings appear in modal Alerts on top of
+    the user's primary task. No "please try again later" filler.
+  - The "{{uri}}" placeholder is the raw URL or file path; do not localise it.
