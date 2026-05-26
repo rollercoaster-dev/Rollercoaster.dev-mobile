@@ -1,6 +1,6 @@
-# badges — ND adult, badge collection view.
-# Source JSON is currently {}; register is authored ahead of content so the
-# sync pipeline has it ready.
+# badges — ND adult, badge collection view + earned-celebration modal.
+# Covers BadgesScreen (list/empty chrome) and BadgeEarnedModal (microcopy,
+# a11y labels, CTA buttons).
 
 speaker: app
 audience: ND adult
@@ -18,3 +18,13 @@ banned_phrasings:
 notes:
   - Badges are self-validation, not external approval — no achievement-porn.
   - 'Matter-of-fact brevity. "verliehen." beats "Du hast erfolgreich einen Badge erhalten!".'
+  - The noun "badge" stays as the English loanword "Badge" / "Badges" to match
+    de/common.json and de/badgeDetail.json. Do not translate to "Abzeichen".
+  - "`earned.*` covers the celebration modal shown right after a badge is
+    minted. a11y labels (`earned.a11y.*`) are factual descriptions for screen
+    readers; microcopy (`earned.microcopy.*`) is the on-screen line under the
+    badge image; CTAs (`earned.actions.*`) are the two buttons."
+  - "`card.untitledFallback` is chrome shown when a badge's goalTitle is null
+    — not user-generated content. It mirrors `badgeDetail.fallback.untitled`."
+  - 'First-badge microcopy stays small. "Das erste. (notiert.)" beats
+    "Dein allererstes Badge — herzlichen Glückwunsch!".'
