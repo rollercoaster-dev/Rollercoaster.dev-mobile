@@ -121,7 +121,19 @@
       "labelGoal": "Goal evidence drawer",
       "close": "Close evidence drawer",
       "toggle": "Toggle evidence drawer"
-    }
+    },
+    "label": {
+      "goal_one": "Goal evidence: {{count}} item",
+      "goal_other": "Goal evidence: {{count}} items",
+      "step_one": "{{count}} evidence item",
+      "step_other": "{{count}} evidence items"
+    },
+    "emptyHint": "No evidence yet — tap + to add"
+  },
+  "evidenceCount": {
+    "addEvidence": "+ add evidence",
+    "items_one": "{{count}} item",
+    "items_other": "{{count}} items"
   },
   "timeline": {
     "hint": "Tap to expand timeline",

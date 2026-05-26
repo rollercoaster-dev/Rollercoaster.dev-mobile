@@ -2,6 +2,7 @@ import { Suspense, useMemo } from "react";
 import { View, ScrollView, ActivityIndicator } from "react-native";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import { useQuery } from "@evolu/react";
+import { useTranslation } from "react-i18next";
 import { Text } from "../../components/Text";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { Button } from "../../components/Button";
@@ -29,6 +30,7 @@ import { styles } from "./TimelineJourneyScreen.styles";
 
 function TimelineContent({ goalId }: { goalId: string }) {
   const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
+  const { t } = useTranslation("timelineJourney");
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
   const stepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
@@ -53,8 +55,14 @@ function TimelineContent({ goalId }: { goalId: string }) {
     evidenceCount: 0,
   }));
 
+  const evidenceFallbackLabel = t("evidenceFallbackLabel");
+
   // Query evidence per step
-  const stepEvidenceData = useStepEvidence(goalId as GoalId, stepRows);
+  const stepEvidenceData = useStepEvidence(
+    goalId as GoalId,
+    stepRows,
+    evidenceFallbackLabel,
+  );
 
   // Enrich counts
   const stepsWithEvidence = uiSteps.map((step, i) => ({
@@ -66,7 +74,7 @@ function TimelineContent({ goalId }: { goalId: string }) {
   const goalEvidence: EvidenceItemData[] = goalEvidenceRows.map((row) => ({
     id: row.id,
     type: validateEvidenceType(row.type ?? "file"),
-    label: row.description ?? row.type ?? "Evidence",
+    label: row.description ?? row.type ?? t("evidenceFallbackLabel"),
   }));
 
   const completedCount = stepRows.filter(
@@ -77,7 +85,7 @@ function TimelineContent({ goalId }: { goalId: string }) {
   if (!goal) {
     return (
       <View style={styles.centered}>
-        <Text variant="body">Goal not found.</Text>
+        <Text variant="body">{t("errors.goalNotFound")}</Text>
       </View>
     );
   }
@@ -111,7 +119,7 @@ function TimelineContent({ goalId }: { goalId: string }) {
             {goal.title}
           </Text>
           <Button
-            label="Back to Focus"
+            label={t("backToFocus")}
             onPress={handleBackToFocus}
             variant="secondary"
             size="sm"
@@ -125,7 +133,10 @@ function TimelineContent({ goalId }: { goalId: string }) {
         <View style={styles.progressContainer}>
           <ProgressBar progress={progress} />
           <Text style={styles.progressLabel}>
-            {completedCount} of {stepRows.length} steps completed
+            {t("progress", {
+              completed: completedCount,
+              total: stepRows.length,
+            })}
           </Text>
         </View>
       </View>
@@ -161,6 +172,7 @@ function TimelineContent({ goalId }: { goalId: string }) {
 function useStepEvidence(
   goalId: GoalId,
   stepRows: readonly { id: string }[],
+  fallbackLabel: string,
 ): EvidenceItemData[][] {
   const allStepEvidence = useQuery(stepEvidenceByGoalQuery(goalId));
   return useMemo(() => {
@@ -171,20 +183,21 @@ function useStepEvidence(
       list.push({
         id: ev.id as string,
         type: validateEvidenceType((ev.type ?? "file") as string),
-        label: (ev.description ?? ev.type ?? "Evidence") as string,
+        label: (ev.description ?? ev.type ?? fallbackLabel) as string,
       });
       grouped.set(ev.stepId, list);
     }
     return stepRows.map((s) => grouped.get(s.id) ?? []);
-  }, [allStepEvidence, stepRows]);
+  }, [allStepEvidence, stepRows, fallbackLabel]);
 }
 
 export function TimelineJourneyScreen({ route }: TimelineJourneyScreenProps) {
   const navigation = useNavigation();
+  const { t } = useTranslation("timelineJourney");
 
   return (
     <View style={styles.screen}>
-      <ScreenSubHeader label="Timeline" onBack={() => navigation.goBack()} />
+      <ScreenSubHeader label={t("header")} onBack={() => navigation.goBack()} />
       <View style={styles.body}>
         <ErrorBoundary>
           <Suspense

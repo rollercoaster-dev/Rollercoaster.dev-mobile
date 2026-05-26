@@ -20,6 +20,10 @@ import enCaptureLink from "./resources/en/captureLink.json";
 import enPermissions from "./resources/en/permissions.json";
 import enBadges from "./resources/en/badges.json";
 import enBadgeDesigner from "./resources/en/badgeDesigner.json";
+import enEditGoal from "./resources/en/editGoal.json";
+import enTimelineJourney from "./resources/en/timelineJourney.json";
+import enCompletion from "./resources/en/completion.json";
+import enBadgeDetail from "./resources/en/badgeDetail.json";
 
 import deCommon from "./resources/de/common.json";
 import deWelcome from "./resources/de/welcome.json";
@@ -36,6 +40,10 @@ import deCaptureLink from "./resources/de/captureLink.json";
 import dePermissions from "./resources/de/permissions.json";
 import deBadges from "./resources/de/badges.json";
 import deBadgeDesigner from "./resources/de/badgeDesigner.json";
+import deEditGoal from "./resources/de/editGoal.json";
+import deTimelineJourney from "./resources/de/timelineJourney.json";
+import deCompletion from "./resources/de/completion.json";
+import deBadgeDetail from "./resources/de/badgeDetail.json";
 
 import pseudoCommon from "./resources/pseudo/common.json";
 import pseudoWelcome from "./resources/pseudo/welcome.json";
@@ -52,6 +60,10 @@ import pseudoCaptureLink from "./resources/pseudo/captureLink.json";
 import pseudoPermissions from "./resources/pseudo/permissions.json";
 import pseudoBadges from "./resources/pseudo/badges.json";
 import pseudoBadgeDesigner from "./resources/pseudo/badgeDesigner.json";
+import pseudoEditGoal from "./resources/pseudo/editGoal.json";
+import pseudoTimelineJourney from "./resources/pseudo/timelineJourney.json";
+import pseudoCompletion from "./resources/pseudo/completion.json";
+import pseudoBadgeDetail from "./resources/pseudo/badgeDetail.json";
 
 // Adding a namespace? Steps:
 //   1. Add the en + de + pseudo JSON files under resources/{en,de,pseudo}/<name>.json
@@ -77,6 +89,10 @@ export const NAMESPACES = [
   "permissions",
   "badges",
   "badgeDesigner",
+  "editGoal",
+  "timelineJourney",
+  "completion",
+  "badgeDetail",
 ] as const;
 
 export type Namespace = (typeof NAMESPACES)[number];
@@ -98,6 +114,10 @@ const resources = {
     permissions: enPermissions,
     badges: enBadges,
     badgeDesigner: enBadgeDesigner,
+    editGoal: enEditGoal,
+    timelineJourney: enTimelineJourney,
+    completion: enCompletion,
+    badgeDetail: enBadgeDetail,
   },
   de: {
     common: deCommon,
@@ -115,6 +135,10 @@ const resources = {
     permissions: dePermissions,
     badges: deBadges,
     badgeDesigner: deBadgeDesigner,
+    editGoal: deEditGoal,
+    timelineJourney: deTimelineJourney,
+    completion: deCompletion,
+    badgeDetail: deBadgeDetail,
   },
   pseudo: {
     common: pseudoCommon,
@@ -132,6 +156,10 @@ const resources = {
     permissions: pseudoPermissions,
     badges: pseudoBadges,
     badgeDesigner: pseudoBadgeDesigner,
+    editGoal: pseudoEditGoal,
+    timelineJourney: pseudoTimelineJourney,
+    completion: pseudoCompletion,
+    badgeDetail: pseudoBadgeDetail,
   },
 } as const;
 
