@@ -7,6 +7,8 @@ import {
 } from "../../../__tests__/test-utils";
 import type { EvidenceViewerScreenProps } from "../../../navigation/types";
 
+import { EvidenceViewerScreen } from "../EvidenceViewerScreen";
+
 const mockGoBack = jest.fn();
 jest.mock("@react-navigation/native", () => {
   const actual = jest.requireActual("../../../__tests__/mocks/navigation");
@@ -24,8 +26,6 @@ jest.mock("../../../hooks/useAllEvidenceForGoal", () => ({
   useAllEvidenceForGoal: (...args: unknown[]) =>
     mockUseAllEvidenceForGoal(...args),
 }));
-
-import { EvidenceViewerScreen } from "../EvidenceViewerScreen";
 
 const baseRoute = {
   key: "EvidenceViewer-1",
@@ -71,6 +71,12 @@ describe("EvidenceViewerScreen", () => {
     mockUseAllEvidenceForGoal.mockReturnValue([]);
     renderWithProviders(<EvidenceViewerScreen {...routeProps} />);
     expect(screen.getByText("No evidence to view.")).toBeOnTheScreen();
+  });
+
+  it("renders the Evidence header label from the evidenceViewer namespace", () => {
+    mockUseAllEvidenceForGoal.mockReturnValue([]);
+    renderWithProviders(<EvidenceViewerScreen {...routeProps} />);
+    expect(screen.getByText("Evidence")).toBeOnTheScreen();
   });
 
   it("opens at the initial evidence id", () => {
