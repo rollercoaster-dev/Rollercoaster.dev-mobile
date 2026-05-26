@@ -1,0 +1,58 @@
+{
+  "header": "Ziel bearbeiten",
+  "fields": {
+    "title": {
+      "label": "Ziel-Titel",
+      "placeholder": "Ziel-Titel",
+      "a11yLabel": "Ziel-Titel",
+      "a11yHint": "Ziel-Titel bearbeiten"
+    },
+    "description": {
+      "label": "Beschreibung",
+      "placeholder": "Beschreibung hinzufügen...",
+      "a11yLabel": "Ziel-Beschreibung",
+      "a11yHint": "Ziel-Beschreibung bearbeiten"
+    }
+  },
+  "actions": {
+    "backToFocus": "Zurück zu Focus",
+    "startWorking": "Anfangen",
+    "deleteGoal": "Ziel löschen"
+  },
+  "confirmDelete": {
+    "title": "Ziel löschen?",
+    "message": "\"{{title}}\" und alle Fortschritte werden dauerhaft gelöscht."
+  },
+  "errors": {
+    "titleRequired": "Titel darf nicht leer sein.",
+    "updateTitleFailed": "Titel konnte nicht aktualisiert werden.",
+    "alertErrorTitle": "Fehler",
+    "updateDescriptionMessage": "Beschreibung konnte nicht aktualisiert werden.",
+    "updateStepMessage": "Schritt konnte nicht aktualisiert werden.",
+    "deleteStepMessage": "Schritt konnte nicht gelöscht werden.",
+    "createStepMessage": "Schritt konnte nicht erstellt werden.",
+    "reorderStepsMessage": "Schritte konnten nicht neu angeordnet werden.",
+    "deleteGoalTitle": "Ziel konnte nicht gelöscht werden.",
+    "deleteGoalMessage": "Etwas ist schiefgelaufen. Versuche es nochmal.",
+    "goalNotFound": "Ziel nicht gefunden."
+  },
+  "stepList": {
+    "header": "Schritte",
+    "count_one": "{{count}} Schritt",
+    "count_other": "{{count}} Schritte",
+    "addPlaceholder": "Schritt hinzufügen...",
+    "addA11yLabel": "Neuen Schritt hinzufügen",
+    "addA11yHint": "Schritt-Titel eingeben und Return drücken zum Hinzufügen",
+    "addButtonA11y": "Schritt hinzufügen",
+    "editA11yLabel": "Schritt bearbeiten: {{title}}",
+    "deleteA11yLabel": "\"{{title}}\" löschen",
+    "tapToEditHint": "Zum Bearbeiten des Schritt-Titels tippen",
+    "evidenceTypesLabel": "Evidenz-Typen",
+    "evidenceTypesForNewStepLabel": "Evidenz-Typen für neuen Schritt",
+    "a11y": {
+      "movedFromTo": "Schritt von Position {{from}} zu {{to}} verschoben",
+      "movedUp": "Schritt \"{{title}}\" nach oben zu Position {{position}} verschoben",
+      "movedDown": "Schritt \"{{title}}\" nach unten zu Position {{position}} verschoben"
+    }
+  }
+}

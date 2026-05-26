@@ -1,0 +1,36 @@
+{
+  "fallback": {
+    "untitled": "Untitled",
+    "badgeNotFound": "Badge not found",
+    "goBack": "Go back"
+  },
+  "earned": "Earned {{date}}",
+  "createdAt": "Created {{date}}",
+  "sections": {
+    "about": "About",
+    "howEarned": "How it was earned",
+    "details": "Details",
+    "export": "Export"
+  },
+  "identityA11y": {
+    "icon": "Goal identity: {{icon}}",
+    "color": "Goal color indicator"
+  },
+  "image": {
+    "a11y": "Badge image for {{title}}"
+  },
+  "actions": {
+    "exportVerifiable": "Export Verifiable Badge",
+    "exportCredential": "Export Credential (JSON)",
+    "saveAsImage": "Save as Image",
+    "saveAsImageHint": "Shares this badge as a picture. The credential may be lost when sent through messengers.",
+    "delete": "Delete Badge"
+  },
+  "exportCaption": "Export Verifiable Badge keeps the OpenBadge credential. Save as Image is just a picture — some apps strip the proof when sharing.",
+  "deleteConfirm": {
+    "title": "Delete Badge",
+    "message": "This will permanently remove this badge. This cannot be undone.",
+    "cancel": "Cancel",
+    "delete": "Delete"
+  }
+}

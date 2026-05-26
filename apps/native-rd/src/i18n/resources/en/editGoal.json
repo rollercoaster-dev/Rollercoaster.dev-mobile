@@ -1,0 +1,58 @@
+{
+  "header": "Edit Goal",
+  "fields": {
+    "title": {
+      "label": "Goal Title",
+      "placeholder": "Goal title",
+      "a11yLabel": "Goal title",
+      "a11yHint": "Edit the goal title"
+    },
+    "description": {
+      "label": "Description",
+      "placeholder": "Add a description...",
+      "a11yLabel": "Goal description",
+      "a11yHint": "Edit the goal description"
+    }
+  },
+  "actions": {
+    "backToFocus": "Back to Focus",
+    "startWorking": "Start Working",
+    "deleteGoal": "Delete Goal"
+  },
+  "confirmDelete": {
+    "title": "Delete this goal?",
+    "message": "\"{{title}}\" and all progress will be permanently deleted."
+  },
+  "errors": {
+    "titleRequired": "Title cannot be empty",
+    "updateTitleFailed": "Failed to update title",
+    "alertErrorTitle": "Error",
+    "updateDescriptionMessage": "Failed to update description.",
+    "updateStepMessage": "Could not update step.",
+    "deleteStepMessage": "Could not delete step.",
+    "createStepMessage": "Could not create step.",
+    "reorderStepsMessage": "Could not reorder steps.",
+    "deleteGoalTitle": "Could not delete goal",
+    "deleteGoalMessage": "Something went wrong. Please try again.",
+    "goalNotFound": "Goal not found."
+  },
+  "stepList": {
+    "header": "Steps",
+    "count_one": "{{count}} step",
+    "count_other": "{{count}} steps",
+    "addPlaceholder": "Add step...",
+    "addA11yLabel": "Add a new step",
+    "addA11yHint": "Type a step title and press return to add",
+    "addButtonA11y": "Add step",
+    "editA11yLabel": "Edit step: {{title}}",
+    "deleteA11yLabel": "Delete \"{{title}}\"",
+    "tapToEditHint": "Tap to edit step title",
+    "evidenceTypesLabel": "Evidence types",
+    "evidenceTypesForNewStepLabel": "Evidence types for new step",
+    "a11y": {
+      "movedFromTo": "Step moved from position {{from}} to {{to}}",
+      "movedUp": "Step \"{{title}}\" moved up to position {{position}}",
+      "movedDown": "Step \"{{title}}\" moved down to position {{position}}"
+    }
+  }
+}

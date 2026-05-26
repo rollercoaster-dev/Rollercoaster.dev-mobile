@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text } from "react-native";
+import { useTranslation } from "react-i18next";
 import { TimelineNode } from "../TimelineNode";
 import { TimelineEvidenceCard } from "../TimelineEvidenceCard";
 import type { EvidenceItemData } from "../EvidenceDrawer";
@@ -11,18 +12,19 @@ export interface FinishLineProps {
 }
 
 export function FinishLine({ goalEvidence, onEvidencePress }: FinishLineProps) {
+  const { t } = useTranslation("timelineJourney");
   return (
     <View style={styles.container}>
       <View style={styles.nodeColumn}>
         <TimelineNode
           status="completed"
           isGoalNode
-          accessibilityLabel="Goal finish line"
+          accessibilityLabel={t("finishLine.a11yNode")}
         />
       </View>
       <View style={styles.contentCard}>
         <Text style={styles.heading} accessible accessibilityRole="header">
-          Goal Evidence
+          {t("finishLine.title")}
         </Text>
         {goalEvidence.length > 0 ? (
           goalEvidence.map((ev) => (
@@ -34,7 +36,7 @@ export function FinishLine({ goalEvidence, onEvidencePress }: FinishLineProps) {
             />
           ))
         ) : (
-          <Text style={styles.noEvidence}>No goal evidence yet</Text>
+          <Text style={styles.noEvidence}>{t("finishLine.noEvidence")}</Text>
         )}
       </View>
     </View>

@@ -1,0 +1,27 @@
+# badgeDetail — ND adult viewing a single earned badge.
+# Detail view: about/criteria/export sections, delete confirm.
+
+speaker: app
+audience: ND adult reviewing an earned badge
+formality: informal
+banned_phrasings:
+  - Glückwunsch!
+  - Großartig!
+  - dein Erfolg
+  - Achievement
+  - dein wunderschönes Badge
+  - du hast verdient
+  - besonders
+  - einzigartig
+  - leidet an
+notes:
+  - The noun "badge" stays as the English loanword "Badge" / "Badges"
+    to match de/common.json. Do not translate to "Abzeichen".
+  - Section labels stay matter-of-fact. Use "Über" / "Details" /
+    "Export" — not "Mehr über dein wunderbares Badge".
+  - The "Earned {{date}}" string is factual. Prefer "Verliehen am
+    {{date}}." over "Du hast es am {{date}} verdient!".
+  - Export copy explains the trade-off plainly. The OpenBadge credential
+    is the technical artifact; copy stays technical.
+  - Delete-confirm copy is direct. Use "Badge löschen?" over "Bist du
+    sicher, dass du dieses besondere Badge löschen möchtest?".

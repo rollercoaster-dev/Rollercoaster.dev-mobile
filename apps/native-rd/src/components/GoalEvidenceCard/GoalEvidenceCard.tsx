@@ -45,7 +45,7 @@ export function GoalEvidenceCard({
 }: GoalEvidenceCardProps) {
   const { theme } = useUnistyles();
   const { t } = useTranslation("common");
-  const evidenceLabel = formatEvidenceLabel(evidenceCount);
+  const evidenceLabel = formatEvidenceLabel(t, evidenceCount);
   const flashStyle = useFlashOnIncrease(evidenceCount);
 
   const effectiveDesign = useMemo(

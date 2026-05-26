@@ -1,0 +1,23 @@
+{
+  "header": "Zeitstrahl",
+  "backToFocus": "Zurück zu Fokus",
+  "progress": "{{completed}} von {{total}} Schritten erledigt",
+  "errors": {
+    "goalNotFound": "Ziel nicht gefunden."
+  },
+  "evidenceFallbackLabel": "Belege",
+  "step": {
+    "a11yGoTo": "Zu Schritt {{number}}: {{title}}",
+    "status": {
+      "done": "Erledigt",
+      "active": "Aktiv",
+      "pending": "Ausstehend"
+    },
+    "noEvidence": "Noch keine Belege"
+  },
+  "finishLine": {
+    "title": "Ziel-Belege",
+    "noEvidence": "Noch keine Ziel-Belege",
+    "a11yNode": "Ziel-Zielgerade"
+  }
+}
