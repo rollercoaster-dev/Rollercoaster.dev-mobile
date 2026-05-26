@@ -139,7 +139,19 @@
       "labelGoal": "Ziel-Nachweisschublade",
       "close": "Nachweisschublade schließen",
       "toggle": "Nachweisschublade umschalten"
-    }
+    },
+    "label": {
+      "goal_one": "Zielbeleg: {{count}} Element",
+      "goal_other": "Zielbeleg: {{count}} Elemente",
+      "step_one": "{{count}} Belegelement",
+      "step_other": "{{count}} Belegelemente"
+    },
+    "emptyHint": "Noch kein Beleg — tippe + zum Hinzufügen"
+  },
+  "evidenceCount": {
+    "addEvidence": "+ Beleg hinzufügen",
+    "items_one": "{{count}} Element",
+    "items_other": "{{count}} Elemente"
   },
   "timeline": {
     "hint": "Tippen zum Erweitern der Zeitleiste",
