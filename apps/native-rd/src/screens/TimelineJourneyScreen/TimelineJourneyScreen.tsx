@@ -197,7 +197,7 @@ export function TimelineJourneyScreen({ route }: TimelineJourneyScreenProps) {
 
   return (
     <View style={styles.screen}>
-      <ScreenSubHeader label={t("header")} onBack={() => navigation.goBack()} />
+      <ScreenSubHeader label={t("title")} onBack={() => navigation.goBack()} />
       <View style={styles.body}>
         <ErrorBoundary>
           <Suspense

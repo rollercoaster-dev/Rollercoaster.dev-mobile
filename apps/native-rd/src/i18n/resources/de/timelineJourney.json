@@ -1,5 +1,5 @@
 {
-  "header": "Zeitstrahl",
+  "title": "Zeitstrahl",
   "backToFocus": "Zurück zu Fokus",
   "progress": "{{completed}} von {{total}} Schritten erledigt",
   "errors": {

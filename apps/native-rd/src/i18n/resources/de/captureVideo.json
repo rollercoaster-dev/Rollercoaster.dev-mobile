@@ -15,7 +15,7 @@
     "title": "Video verwerfen?",
     "message": "Du hast ein ungespeichertes Video. Zurückgehen verwirft es.",
     "keep": "Behalten",
-    "discard": "Verwerfen"
+    "confirmLabel": "Verwerfen"
   },
   "errors": {
     "saveFailedTitle": "Speichern fehlgeschlagen",

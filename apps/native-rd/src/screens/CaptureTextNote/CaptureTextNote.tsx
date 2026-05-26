@@ -83,7 +83,7 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
 
   return (
     <View style={styles.container}>
-      <ScreenSubHeader label={t("header")} onBack={() => navigation.goBack()} />
+      <ScreenSubHeader label={t("title")} onBack={() => navigation.goBack()} />
 
       <KeyboardAvoidingView style={styles.content} {...KEYBOARD_AVOIDING_PROPS}>
         <TextInput

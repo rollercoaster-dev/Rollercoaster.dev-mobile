@@ -1,5 +1,5 @@
 {
-  "header": "Notiz schreiben",
+  "title": "Notiz schreiben",
   "input": {
     "label": "Notizinhalt",
     "placeholder": "Was ist passiert? Was hast du gelernt?",

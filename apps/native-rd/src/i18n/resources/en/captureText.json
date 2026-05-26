@@ -1,5 +1,5 @@
 {
-  "header": "Write a Note",
+  "title": "Write a Note",
   "input": {
     "label": "Note content",
     "placeholder": "What happened? What did you learn?",

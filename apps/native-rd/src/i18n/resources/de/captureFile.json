@@ -1,5 +1,5 @@
 {
-  "header": "Datei anhängen",
+  "title": "Datei anhängen",
   "heading": "Datei anhängen",
   "description": "PDF, Bild oder Dokument wählen (max {{maxSize}}).",
   "actions": {

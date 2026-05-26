@@ -121,7 +121,7 @@ export function CaptureFile({ route }: CaptureFileScreenProps) {
 
   return (
     <View style={styles.container}>
-      <ScreenSubHeader label={t("header")} onBack={() => navigation.goBack()} />
+      <ScreenSubHeader label={t("title")} onBack={() => navigation.goBack()} />
       <View style={styles.content}>
         <Card>
           <Text variant="headline" style={styles.heading}>

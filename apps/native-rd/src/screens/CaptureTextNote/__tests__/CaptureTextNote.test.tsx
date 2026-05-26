@@ -59,7 +59,7 @@ describe("CaptureTextNote", () => {
     renderWithProviders(
       <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
     );
-    expect(screen.getByText(i18n.t("captureText:header"))).toBeOnTheScreen();
+    expect(screen.getByText(i18n.t("captureText:title"))).toBeOnTheScreen();
   });
 
   it("renders text input with placeholder", () => {
@@ -251,7 +251,7 @@ describe("CaptureTextNote", () => {
     // save-button label (text). Covers the three visible surfaces a missed
     // t() call would leave in plain English under pseudo.
     it.each([
-      { key: "captureText:header", query: "text" },
+      { key: "captureText:title", query: "text" },
       { key: "captureText:input.label", query: "label" },
       { key: "captureText:actions.save", query: "text" },
     ] as const)(

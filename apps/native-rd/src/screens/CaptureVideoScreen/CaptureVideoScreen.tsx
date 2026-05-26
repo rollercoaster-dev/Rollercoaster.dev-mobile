@@ -156,7 +156,7 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
       Alert.alert(t("discard.title"), t("discard.message"), [
         { text: t("discard.keep"), style: "cancel" },
         {
-          text: t("discard.discard"),
+          text: t("discard.confirmLabel"),
           style: "destructive",
           onPress: () => {
             setUploadedVideo(null);

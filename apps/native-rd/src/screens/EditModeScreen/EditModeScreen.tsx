@@ -349,7 +349,7 @@ export function EditModeScreen({ route }: EditModeScreenProps) {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <ScreenSubHeader label={t("header")} onBack={() => navigation.goBack()} />
+      <ScreenSubHeader label={t("title")} onBack={() => navigation.goBack()} />
       <ErrorBoundary>
         <Suspense
           fallback={

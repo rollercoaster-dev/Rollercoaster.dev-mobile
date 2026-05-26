@@ -1,7 +1,5 @@
 {
-  "header": {
-    "title": "Ziele"
-  },
+  "title": "Ziele",
   "emptyState": {
     "title": "Noch keine Ziele",
     "body": "Füge dein erstes Lernziel hinzu, um zu starten.",
