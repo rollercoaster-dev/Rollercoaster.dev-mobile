@@ -2,8 +2,8 @@
   "header": "Badges",
   "empty": {
     "title": "Noch keine Badges",
-    "body": "Schließe Goals ab, um Badges zu sammeln. Deine Sammlung wächst hier.",
-    "action": "Zu Goals"
+    "body": "Schließe Ziele ab, um Badges zu sammeln. Deine Sammlung wächst hier.",
+    "action": "Zu Zielen"
   },
   "card": {
     "untitledFallback": "Ohne Titel"
