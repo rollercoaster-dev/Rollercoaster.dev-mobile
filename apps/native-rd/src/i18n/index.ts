@@ -67,12 +67,18 @@ import pseudoBadgeDetail from "./resources/pseudo/badgeDetail.json";
 
 // Adding a namespace? Steps:
 //   1. Add the en + de + pseudo JSON files under resources/{en,de,pseudo}/<name>.json
+//      (German bundle stays `{}` — the sync bot fills it from en/)
 //   2. Add imports above
 //   3. Add the entry to NAMESPACES and all three resource bundles below
 //   4. Add the type alias in i18next.d.ts
+//   5. Add the voice register at resources/_register/<name>.yml — required by
+//      the i18n sync workflow (see apps/native-rd/docs/plans/i18n-llm-sync.md).
+//      Mirror an existing file like badgeDesigner.yml; YAML list items must
+//      not start with a double-quote (the parser breaks on multi-line items
+//      that lead with `"…"`).
 // The script in scripts/generate-pseudo-locale.ts auto-discovers files in
 // resources/en/ — no need to update it. German `{}` stubs let i18next register
-// the bundle; entries fall back to `en` until per-screen German copy lands.
+// the bundle; entries fall back to `en` until the sync bot lands German copy.
 export const NAMESPACES = [
   "common",
   "welcome",

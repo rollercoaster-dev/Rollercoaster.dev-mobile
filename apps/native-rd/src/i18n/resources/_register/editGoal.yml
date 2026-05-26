@@ -1,0 +1,24 @@
+# editGoal — ND adult editing an existing goal.
+# Form-shaped: labels, placeholders, error messages, delete confirm.
+
+speaker: app
+audience: ND adult editing a goal
+formality: informal
+banned_phrasings:
+  - Großartig!
+  - Super!
+  - Fantastisch!
+  - perfekt
+  - Achtung!
+  - Du schaffst das!
+  - besonders
+  - einzigartig
+  - leidet an
+notes:
+  - Plain form labels. Use "Titel" over "Wie soll dein Ziel heißen?".
+  - Error messages stay matter-of-fact. Prefer "Titel darf nicht leer
+    sein." over "Ups! Du hast den Titel vergessen.".
+  - Delete-confirm copy is direct, not dramatic. Use "Ziel löschen?"
+    over "Bist du sicher, dass du dein wunderbares Ziel löschen
+    möchtest?".
+  - The word "step" stays as "Schritt" (de/common.json convention).
