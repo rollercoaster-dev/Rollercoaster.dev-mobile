@@ -18,9 +18,9 @@
   },
   "celebration": {
     "title": "Geschafft.",
-    "summary_one": "Alle {{count}} Schritte für {{title}} abgeschlossen",
+    "summary_one": "Einen Schritt für {{title}} abgeschlossen",
     "summary_other": "Alle {{count}} Schritte für {{title}} abgeschlossen",
-    "summaryA11y_one": "Alle {{count}} Schritte für {{title}} abgeschlossen",
+    "summaryA11y_one": "Einen Schritt für {{title}} abgeschlossen",
     "summaryA11y_other": "Alle {{count}} Schritte für {{title}} abgeschlossen",
     "previewA11y": "Badge-Vorschau vor dem Fertigstellen",
     "bakeIt": "Badge fertigstellen",
