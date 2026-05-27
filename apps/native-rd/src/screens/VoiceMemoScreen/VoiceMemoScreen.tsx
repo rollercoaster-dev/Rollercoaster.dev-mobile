@@ -160,6 +160,7 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
         {/* Timer display */}
         <Text
           style={styles.timerText}
+          testID="voice-timer"
           accessibilityLabel={t("captureVoice:a11y.timerLabel", {
             time: formatDuration(
               status === "playing" ? playbackPositionMs : durationMs,
