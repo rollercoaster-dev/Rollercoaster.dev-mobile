@@ -98,6 +98,7 @@ export function BadgeCard({
           <Text style={styles.date}>{earnedDate}</Text>
           {evidenceCount !== undefined && (
             <Text style={styles.evidenceCount}>
+              {/* eslint-disable-next-line local/no-raw-jsx-strings -- pre-existing; migrate to formatEvidenceLabel() (#62) */}
               {evidenceCount} {evidenceCount === 1 ? "piece" : "pieces"} of
               evidence
             </Text>
