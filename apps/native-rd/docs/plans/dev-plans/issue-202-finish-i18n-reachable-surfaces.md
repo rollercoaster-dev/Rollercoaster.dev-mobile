@@ -99,28 +99,40 @@ added (all are function components except ErrorBoundary).
 Each well under 500 LOC; generated pseudo JSON called out as generated.
 Closing commit references #73 (per issue guidance, not reopening it).
 
-## Follow-ups discovered during implementation (NOT in the original audit)
+## Additional leaks found by code sweep — fixing in THIS PR (not deferring)
 
-These are real leaks found while editing the audit files, but outside this
-issue's verified audit scope. Deferred to a follow-up issue rather than
-expanding this PR (several belong to capture-\* namespaces with their own
-Milestone 3 tickets):
+A grep sweep of the full evidence-viewing chain (EvidenceContent family +
+AudioPlayer + the four viewer/player modals) turned up more reachable English
+literals beyond the original audit. Decision (per Joe, 2026-05-27): **fix them
+all here** rather than file follow-up tickets — they're the same domain and the
+issue's intent (AC#7: "no reachable surface renders English") covers them.
 
-- **Visible error text** — `VideoContent.tsx` "Failed to load video" (×2),
-  `PhotoContent.tsx` "Failed to load image" (×2). These sit next to the a11y
-  labels migrated here but are display strings; likely belong to
-  `captureVideo` / `capturePhoto` namespaces.
-- **Viewer-modal headings** — `TextNoteViewerModal` "Text Note",
-  `AudioPlayerModal` "Voice Memo" (and any sibling headings). Visible titles,
-  not a11y.
-- **EvidenceGrid display strings** — header "Evidence", "No evidence yet" empty
-  text, "Add Evidence" button. **Component is dead code** (no production
-  import) — lowest priority; migrate only if/when it's wired up, or delete the
-  component.
+| File                                          | Leak(s)                                                                                                           | Proposed key                                                                                        |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `EvidenceContent/VideoContent.tsx`            | "Failed to load video" (L76, L79)                                                                                 | `common:evidenceContent.errors.videoLoadFailed`                                                     |
+| `EvidenceContent/PhotoContent.tsx`            | "Failed to load image" (L49, L52)                                                                                 | `common:evidenceContent.errors.imageLoadFailed`                                                     |
+| `EvidenceContent/FileContent.tsx`             | `label="Open"` (L60) — needs `useTranslation`                                                                     | `common:evidenceContent.openFile`                                                                   |
+| `AudioPlayer/AudioPlayer.tsx`                 | "Audio player" (L38), "Play audio"/"Pause audio" (L43), `` `${cur} of ${total}` `` (L74) — needs `useTranslation` | `common:audioPlayer.a11y.{container,play,pause,progress}` (progress = `"{{current}} of {{total}}"`) |
+| `TextNoteViewerModal/TextNoteViewerModal.tsx` | "Text Note" heading (L42)                                                                                         | `common:viewerModals.heading.textNote`                                                              |
+| `AudioPlayerModal/AudioPlayerModal.tsx`       | "Voice Memo" heading (L42)                                                                                        | `common:viewerModals.heading.audio`                                                                 |
 
-## Scope contradictions vs. the issue (verified, surfaced in PR)
+Verified **clean** (no leaks): `AudioContent`, `TextContent`, `LinkContent`
+(migrated), `VideoPlayerModal`, `PhotoViewerModal` (no headings, close labels
+already migrated).
 
-- `en/badges.json` is **populated** (565 B), not `{}` — PR #199 already did it.
-- `EvidenceGrid` is **not** "reachable from many screens" — zero production
-  imports.
+de heading translations to match existing `de/common.json` evidenceTypes:
+text → "Notiz", voice_memo → "Sprachmemo".
+
+## Scope corrections vs. the issue (verified against code)
+
+- `en/badges.json` is **populated** (565 B), not `{}` — PR #199 already did it;
+  badge screens + tab label already routed through `t()`.
+- `EvidenceGrid` was **not** "reachable from many screens" — zero production
+  imports, orphaned since the original monorepo import. **Deleted** in this PR
+  rather than i18n-migrated (dead code); its `common:evidenceGrid.*` keys dropped.
 - `BadgesStack.tsx` `name="Badges"` is a route id, not a rendered label.
+- **Correction to an earlier claim:** the capture-migration tickets #70
+  (photo/video/voice), #71 (text/file/link), #72 (permissions) are **CLOSED**
+  and covered the capture **screens** — NOT the `EvidenceContent` _viewer_
+  components. The viewer-side leaks above had **no dedicated open ticket**
+  (#144 is the only catch-all), which is why they're folded into this PR.
