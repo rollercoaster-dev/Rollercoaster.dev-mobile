@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Modal, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 import { Text } from "../Text";
 import { PhotoContent } from "../EvidenceContent/PhotoContent";
 import { styles } from "./PhotoViewerModal.styles";
@@ -19,6 +20,7 @@ export function PhotoViewerModal({
   onClose,
 }: PhotoViewerModalProps) {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   if (!visible) return null;
 
@@ -42,7 +44,7 @@ export function PhotoViewerModal({
             onPress={onClose}
             accessible
             accessibilityRole="button"
-            accessibilityLabel="Close photo viewer"
+            accessibilityLabel={t("viewerModals.a11y.closePhoto")}
             hitSlop={16}
           >
             <Text style={styles.closeText}>{"\u2715"}</Text>

@@ -192,15 +192,17 @@
     }
   },
   "evidenceContent": {
+    "openInBrowser": "Im Browser öffnen",
     "a11y": {
-      "openInBrowser": "Im Browser öffnen",
       "videoPlayback": "Video-Nachweis-Wiedergabe",
       "retryVideo": "Video erneut laden",
-      "retryImage": "Bild erneut laden"
+      "retryImage": "Bild erneut laden",
+      "photoEvidence": "Foto-Nachweis"
     }
   },
   "cardCarousel": {
     "a11y": {
+      "label": "Kartenkarussell",
       "previous": "Vorherige Karte",
       "next": "Nächste Karte"
     }

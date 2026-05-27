@@ -53,7 +53,7 @@ export function PhotoContent({ uri, description }: PhotoContentProps) {
             <Pressable
               onPress={handleRetry}
               accessibilityRole="button"
-              accessibilityLabel="Retry loading image"
+              accessibilityLabel={t("evidenceContent.a11y.retryImage")}
               style={styles.retryButton}
             >
               <Text style={styles.retryLabel}>{t("actions.retry")}</Text>
@@ -67,7 +67,9 @@ export function PhotoContent({ uri, description }: PhotoContentProps) {
             }}
             style={styles.image}
             resizeMode="contain"
-            accessibilityLabel={description ?? "Photo evidence"}
+            accessibilityLabel={
+              description ?? t("evidenceContent.a11y.photoEvidence")
+            }
             onError={handleError}
           />
         )}

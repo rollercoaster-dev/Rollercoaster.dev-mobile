@@ -12,6 +12,7 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
 } from "react-native-reanimated";
+import { useTranslation } from "react-i18next";
 import { useAnimationPref } from "../../hooks/useAnimationPref";
 import { getTimingConfig } from "../../utils/animation";
 import { styles } from "./CardCarousel.styles";
@@ -116,8 +117,10 @@ export function CardCarousel({
   currentIndex,
   onIndexChange,
   renderIndicator,
-  accessibilityLabel = "Card carousel",
+  accessibilityLabel,
 }: CardCarouselProps) {
+  const { t } = useTranslation();
+  const carouselLabel = accessibilityLabel ?? t("cardCarousel.a11y.label");
   const children = Array.isArray(rawChildren) ? rawChildren : [rawChildren];
   const safeIndex = Math.max(0, Math.min(currentIndex, children.length - 1));
   const { width } = useWindowDimensions();
@@ -219,8 +222,8 @@ export function CardCarousel({
                 style={[styles.arrow, isFirst && styles.arrowDisabled]}
                 accessible
                 accessibilityRole="button"
-                accessibilityLabel="Previous card"
-                accessibilityHint={`Moves to the previous item in ${accessibilityLabel}`}
+                accessibilityLabel={t("cardCarousel.a11y.previous")}
+                accessibilityHint={`Moves to the previous item in ${carouselLabel}`}
                 accessibilityState={{ disabled: isFirst }}
               >
                 <Text style={styles.arrowText}>&#8249;</Text>
@@ -234,8 +237,8 @@ export function CardCarousel({
                 style={[styles.arrow, isLast && styles.arrowDisabled]}
                 accessible
                 accessibilityRole="button"
-                accessibilityLabel="Next card"
-                accessibilityHint={`Moves to the next item in ${accessibilityLabel}`}
+                accessibilityLabel={t("cardCarousel.a11y.next")}
+                accessibilityHint={`Moves to the next item in ${carouselLabel}`}
                 accessibilityState={{ disabled: isLast }}
               >
                 <Text style={styles.arrowText}>&#8250;</Text>

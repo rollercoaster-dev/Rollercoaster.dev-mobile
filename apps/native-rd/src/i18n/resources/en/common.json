@@ -174,15 +174,17 @@
     }
   },
   "evidenceContent": {
+    "openInBrowser": "Open in browser",
     "a11y": {
-      "openInBrowser": "Open in browser",
       "videoPlayback": "Video evidence playback",
       "retryVideo": "Retry loading video",
-      "retryImage": "Retry loading image"
+      "retryImage": "Retry loading image",
+      "photoEvidence": "Photo evidence"
     }
   },
   "cardCarousel": {
     "a11y": {
+      "label": "Card carousel",
       "previous": "Previous card",
       "next": "Next card"
     }
