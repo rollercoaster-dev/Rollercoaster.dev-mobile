@@ -209,7 +209,7 @@ export function runPluralResolutionProbe(
   return locales.map((locale) => {
     i18n.addResourceBundle(locale, PROBE_NS, allForms, true, true);
 
-    let engineCategories = "?";
+    let engineCategories: string;
     try {
       engineCategories = new Intl.PluralRules(locale)
         .resolvedOptions()
