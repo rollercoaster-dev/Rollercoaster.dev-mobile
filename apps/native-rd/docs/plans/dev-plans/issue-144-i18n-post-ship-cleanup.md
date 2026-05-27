@@ -115,7 +115,7 @@ This PR set closes the two remaining classes of i18n loose ends identified in th
 - [x] Import and register `en/de/pseudo` evidenceViewer resources in `src/i18n/index.ts`
 - [x] Add `evidenceViewer` to `src/i18n/i18next.d.ts` CustomTypeOptions.resources (required for typed `t()` calls — researcher's plan didn't list this but TS demanded it)
 - [x] Create `src/i18n/resources/_register/evidenceViewer.yml` voice register (required by i18n sync workflow)
-- [x] Create placeholder `de/evidenceViewer.json` as `{}` so the static TS import resolves; bot fills from `en/` on PR open (per D10)
+- [x] Create `de/evidenceViewer.json` with German translations, committed directly in this PR (the static TS import in `i18n/index.ts` requires the file to exist; rather than ship an empty `{}` for the bot to fill per D10, the German copy is authored here)
 
 #### Step 2: Migrate `evidenceViewers.tsx`
 
