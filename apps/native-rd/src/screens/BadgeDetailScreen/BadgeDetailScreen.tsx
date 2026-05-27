@@ -104,7 +104,7 @@ function BadgeDetailContent({
 }) {
   const navigation =
     useNavigation<NativeStackNavigationProp<BadgesStackParamList>>();
-  const { t } = useTranslation("badgeDetail");
+  const { t, i18n } = useTranslation("badgeDetail");
   const query = useMemo(
     () => badgeWithGoalQuery(badgeId as BadgeId),
     [badgeId],
@@ -162,6 +162,7 @@ function BadgeDetailContent({
   const goalColor = badge.goalColor as string | null;
   const earnedDate = formatDate(
     (badge.completedAt ?? badge.createdAt) as string | null,
+    i18n.language,
   );
   const design = parseBadgeDesign(badge.design as string | null);
   const criteriaNarrative = extractCriteriaNarrative(
@@ -227,7 +228,10 @@ function BadgeDetailContent({
               <Text style={styles.sectionLabel}>{t("sections.details")}</Text>
               <Text style={styles.bodyText}>
                 {t("createdAt", {
-                  date: formatDate(badge.createdAt as string | null),
+                  date: formatDate(
+                    badge.createdAt as string | null,
+                    i18n.language,
+                  ),
                 })}
               </Text>
             </View>

@@ -25,7 +25,7 @@ function BadgeList() {
   const navigation = useNavigation<Nav>();
   const tabInset = useTabScreenContentInset();
   const rows = useQuery(badgesWithGoalsQuery);
-  const { t } = useTranslation("badges");
+  const { t, i18n } = useTranslation("badges");
 
   if (rows.length === 0) {
     return (
@@ -63,6 +63,7 @@ function BadgeList() {
           description={(item.goalDescription as string | null) ?? undefined}
           earnedDate={formatDate(
             (item.completedAt ?? item.createdAt) as string | null,
+            i18n.language,
           )}
           design={parseBadgeDesign(item.design as string | null)}
           onPress={() =>
