@@ -48,8 +48,10 @@ Add a custom ESLint rule `local/no-raw-jsx-strings` that flags JSXText nodes con
 - `apps/native-rd/src/eslint-rules/no-raw-jsx-strings.js`: new rule file (~80 lines)
 - `apps/native-rd/eslint.config.js`: add `require` entry in plugin map and `"error"` activation (~3 lines changed)
 - `apps/native-rd/src/__tests__/eslint-rules/no-raw-jsx-strings.test.ts`: new RuleTester test file (~100 lines)
-- `apps/native-rd/src/screens/TestScreen/TestScreen.tsx`: add ~49 `eslint-disable-next-line` comments
-- `apps/native-rd/src/screens/CapturePlaceholder/CapturePlaceholder.tsx`: add 1 `eslint-disable-next-line` comment
+- `apps/native-rd/src/screens/TestScreen/TestScreen.tsx`: ONE file-level `/* eslint-disable local/no-raw-jsx-strings */` (62 offenders; see D7 — not per-line)
+- `apps/native-rd/src/screens/CapturePlaceholder/CapturePlaceholder.tsx`: 1 `eslint-disable-next-line` comment (#144)
+- `apps/native-rd/src/components/BadgeCard/BadgeCard.tsx`: 1 `eslint-disable-next-line` comment (#62; offender the original grep missed — see Discovery Log)
+- `apps/native-rd/src/screens/NewGoalModal/NewGoalModal.tsx`: 1 `eslint-disable-next-line` comment (close-button `X` glyph; surfaced by the D8 redesign)
 
 ## Implementation Plan
 
@@ -67,21 +69,20 @@ Add a custom ESLint rule `local/no-raw-jsx-strings` that flags JSXText nodes con
 - [x] In `create(context)`: extract and normalize filename using `context.filename || context.getFilename()`, replace backslashes
 - [x] Return `{}` early if file does not include `/screens/` or `/components/` in the path
 - [x] Return `{}` early if filename ends with `.stories.tsx`, `.stories.ts`, `.test.tsx`, `.test.ts`
-- [x] Visitor: `JSXText(node)` — the AST node type for direct text children of JSX elements (e.g. `<Text>hello</Text>`)
-- [x] In the visitor: extract `node.value` (the raw string content of the JSXText node)
-- [x] Apply allowlist checks in order:
-  1. Trim the value; if empty or whitespace-only → allowed
-  2. If the trimmed string is a single character → allowed (covers punctuation, separators, icon ligatures)
-  3. If the trimmed string matches `/^\d[\d\s.,]*$/` (numeric, possibly with separators) → allowed
-  4. If every character in the trimmed string is non-ASCII (`codePointAt > 127`) → allowed (icon font ranges)
-  5. Otherwise → `context.report({ node, messageId: "noRawJsxString" })`
-- [x] Message text: explain the rule, point to `docs/i18n.md`, give the escape hatch
+- [x] Visitors: `JSXText(node)` for direct text children (`<Text>hello</Text>`) AND `JSXExpressionContainer(node)` for string-literal children (`<Text>{"hello"}</Text>`); the latter only when the container's parent is a `JSXElement`/`JSXFragment` (so prop literals like `label={"x"}` stay out of scope — see D8)
+- [x] In the visitor: extract the raw string (`node.value` for JSXText, `expression.value` for the literal) and trim
+- [x] Apply allowlist checks in order (final D8 form — supersedes the original single-char + non-ASCII heuristics):
+  1. Empty / whitespace-only → allowed
+  2. Matches `/^\d[\d\s.,]*$/` (numeric, possibly with separators) → allowed
+  3. Contains NO `\p{L}` and NO `\p{N}` → allowed (punctuation, separators, icon-font/emoji/PUA glyphs)
+  4. Otherwise → `context.report({ node, messageId: "noRawJsxString", data: { value } })`
+- [x] Message text: explain the rule, point to `docs/i18n.md`, give both the JSX block-comment and plain-JS escape-hatch forms
 
-**Allowlist precision notes (D3 elaborated):**
+**Allowlist precision notes (D8):**
 
-- Single character check covers: `.`, `,`, `!`, `?`, `:`, `;`, `-`, `|`, `/`, `·`, and icon font single-codepoint characters
-- Numeric check uses a regex, not `isNaN`, to avoid accepting strings like `"  "` (which `isNaN` treats as 0)
-- Non-ASCII check handles multi-codepoint icon strings — iterate with `[...str]` to handle surrogate pairs
+- The letter/digit test (`/[\p{L}\p{N}]/u`) flags letters in ANY script (Latin, CJK, Cyrillic, …) and number+unit strings like `100%`, while allowing punctuation, separators, and icon glyphs (PUA/emoji/symbols are Unicode category `Co`/`So`, not `L`/`N`).
+- Numeric check uses a regex, not `isNaN`, to avoid accepting strings like `"  "` (which `isNaN` treats as 0).
+- The `{"literal"}` visitor closes the idiomatic-RN bypass where copy is wrapped in an expression container.
 
 ---
 
