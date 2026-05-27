@@ -9,7 +9,6 @@ import {
   useEvidenceViewer,
 } from "../evidenceViewers";
 import type { Evidence } from "../../components/EvidenceThumbnail/EvidenceThumbnail";
-import "../../i18n";
 
 let mockFileExists = true;
 jest.mock("expo-file-system", () => ({
