@@ -157,6 +157,24 @@ describe("CardCarousel", () => {
       );
     });
 
+    it("falls back to the keyed default label in hints when none is passed", () => {
+      // Exercises the t("cardCarousel.a11y.label") branch (no accessibilityLabel
+      // prop) — the one non-mechanical hunk of the #202 i18n migration.
+      renderWithProviders(
+        <CardCarousel {...defaultProps}>
+          <Card label="Card A" />
+          <Card label="Card B" />
+          <Card label="Card C" />
+        </CardCarousel>,
+      );
+      expect(
+        screen.getByLabelText("Previous card").props.accessibilityHint,
+      ).toBe("Moves to the previous item in Card carousel");
+      expect(screen.getByLabelText("Next card").props.accessibilityHint).toBe(
+        "Moves to the next item in Card carousel",
+      );
+    });
+
     it("has correct accessibility labels on arrows", () => {
       renderWithProviders(
         <CardCarousel {...defaultProps}>

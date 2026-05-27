@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef } from "react";
 import { FlatList, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import {
   ViewerStripThumb,
   VIEWER_STRIP_THUMB_WIDTH,
@@ -26,6 +27,7 @@ export function ViewerThumbnailStrip({
   activeIndex,
   onSelect,
 }: ViewerThumbnailStripProps) {
+  const { t } = useTranslation();
   const listRef = useRef<FlatList<ViewerEvidence>>(null);
 
   useEffect(() => {
@@ -87,7 +89,7 @@ export function ViewerThumbnailStrip({
           });
         }}
         accessibilityRole="tablist"
-        accessibilityLabel="Evidence items"
+        accessibilityLabel={t("viewerThumbnailStrip.a11y.items")}
       />
     </View>
   );

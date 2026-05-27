@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Modal, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 import { Text } from "../Text";
 import { AudioContent } from "../EvidenceContent/AudioContent";
 import { styles } from "./AudioPlayerModal.styles";
@@ -19,6 +20,7 @@ export function AudioPlayerModal({
   onClose,
 }: AudioPlayerModalProps) {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   if (!uri) return null;
 
@@ -37,12 +39,12 @@ export function AudioPlayerModal({
         ]}
       >
         <View style={styles.topBar}>
-          <Text style={styles.heading}>Voice Memo</Text>
+          <Text style={styles.heading}>{t("viewerModals.heading.audio")}</Text>
           <Pressable
             onPress={onClose}
             accessible
             accessibilityRole="button"
-            accessibilityLabel="Close audio player"
+            accessibilityLabel={t("viewerModals.a11y.closeAudio")}
             hitSlop={16}
           >
             <Text style={styles.closeText}>{"\u2715"}</Text>

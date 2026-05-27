@@ -71,7 +71,7 @@ describe("EvidenceViewerScreen", () => {
   it("renders empty state when no evidence exists", () => {
     mockUseAllEvidenceForGoal.mockReturnValue([]);
     renderWithProviders(<EvidenceViewerScreen {...routeProps} />);
-    expect(screen.getByText("No evidence to view.")).toBeOnTheScreen();
+    expect(screen.getByText(i18n.t("evidenceViewer:empty"))).toBeOnTheScreen();
   });
 
   it("renders the Evidence header label from the evidenceViewer namespace", () => {
@@ -140,7 +140,7 @@ describe("EvidenceViewerScreen", () => {
 
     // Strip is hidden for single-item lists, so just verify the announcement.
     expect(announce).toHaveBeenCalledWith(
-      "Evidence was removed. Showing the next available item.",
+      i18n.t("evidenceViewer:a11y.removedShowingNext"),
     );
     announce.mockRestore();
   });
@@ -157,8 +157,42 @@ describe("EvidenceViewerScreen", () => {
     mockUseAllEvidenceForGoal.mockReturnValue([]);
     rerender(<EvidenceViewerScreen {...routeProps} />);
 
-    expect(screen.getByText("No evidence to view.")).toBeOnTheScreen();
-    expect(announce).toHaveBeenCalledWith("All evidence was removed.");
+    expect(screen.getByText(i18n.t("evidenceViewer:empty"))).toBeOnTheScreen();
+    expect(announce).toHaveBeenCalledWith(
+      i18n.t("evidenceViewer:a11y.allRemoved"),
+    );
     announce.mockRestore();
+  });
+
+  describe("pseudo locale (proves i18n routing, guards empty-namespace regression)", () => {
+    afterEach(async () => {
+      if (i18n.language !== "en") await i18n.changeLanguage("en");
+    });
+
+    it("renders the empty state as bracketed pseudo copy", async () => {
+      await i18n.changeLanguage("pseudo");
+      mockUseAllEvidenceForGoal.mockReturnValue([]);
+      renderWithProviders(<EvidenceViewerScreen {...routeProps} />);
+      const pseudo = i18n.t("evidenceViewer:empty");
+      expect(pseudo.startsWith("[")).toBe(true);
+      expect(screen.getByText(pseudo)).toBeOnTheScreen();
+    });
+
+    it("announces removal with bracketed pseudo copy", async () => {
+      await i18n.changeLanguage("pseudo");
+      const announce = jest
+        .spyOn(AccessibilityInfo, "announceForAccessibility")
+        .mockImplementation(() => undefined);
+      mockUseAllEvidenceForGoal.mockReturnValue(ITEMS);
+      const { rerender } = renderWithProviders(
+        <EvidenceViewerScreen {...routeProps} />,
+      );
+      mockUseAllEvidenceForGoal.mockReturnValue([]);
+      rerender(<EvidenceViewerScreen {...routeProps} />);
+      const pseudo = i18n.t("evidenceViewer:a11y.allRemoved");
+      expect(pseudo.startsWith("[")).toBe(true);
+      expect(announce).toHaveBeenCalledWith(pseudo);
+      announce.mockRestore();
+    });
   });
 });

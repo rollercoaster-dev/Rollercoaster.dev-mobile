@@ -1,5 +1,10 @@
 {
   "title": "Nachweis",
+  "empty": "Kein Nachweis zum Ansehen.",
+  "a11y": {
+    "removedShowingNext": "Nachweis wurde entfernt. Zeige den nächsten verfügbaren Eintrag.",
+    "allRemoved": "Alle Nachweise wurden entfernt."
+  },
   "errors": {
     "cannotOpenLink": "Link lässt sich nicht öffnen",
     "unableToOpen": "Kann nicht öffnen: {{uri}}",

@@ -23,6 +23,7 @@ function ViewerContent({
   goalId: string;
   initialEvidenceId: string;
 }) {
+  const { t } = useTranslation("evidenceViewer");
   const evidence = useAllEvidenceForGoal(goalId as GoalId);
 
   const initialIndex = useMemo(() => {
@@ -44,20 +45,18 @@ function ViewerContent({
       evidence.length > 0
     ) {
       setActiveIndex(evidence.length - 1);
-      AccessibilityInfo.announceForAccessibility(
-        "Evidence was removed. Showing the next available item.",
-      );
+      AccessibilityInfo.announceForAccessibility(t("a11y.removedShowingNext"));
     } else if (evidence.length < prev && evidence.length === 0) {
-      AccessibilityInfo.announceForAccessibility("All evidence was removed.");
+      AccessibilityInfo.announceForAccessibility(t("a11y.allRemoved"));
     } else if (activeIndex >= evidence.length && evidence.length > 0) {
       setActiveIndex(evidence.length - 1);
     }
-  }, [evidence.length, activeIndex]);
+  }, [evidence.length, activeIndex, t]);
 
   if (evidence.length === 0) {
     return (
       <View style={styles.centered}>
-        <Text variant="body">No evidence to view.</Text>
+        <Text variant="body">{t("empty")}</Text>
       </View>
     );
   }

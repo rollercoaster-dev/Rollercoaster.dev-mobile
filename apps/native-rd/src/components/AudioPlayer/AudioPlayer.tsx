@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Pressable } from "react-native";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
+import { useTranslation } from "react-i18next";
 import { Text } from "../Text";
 import { formatDuration } from "../../utils/format";
 import { styles } from "./AudioPlayer.styles";
@@ -11,6 +12,7 @@ export interface AudioPlayerProps {
 }
 
 export function AudioPlayer({ uri, durationMs }: AudioPlayerProps) {
+  const { t } = useTranslation();
   const player = useAudioPlayer(uri);
   const status = useAudioPlayerStatus(player);
 
@@ -35,12 +37,18 @@ export function AudioPlayer({ uri, durationMs }: AudioPlayerProps) {
   }
 
   return (
-    <View style={styles.container} accessible accessibilityLabel="Audio player">
+    <View
+      style={styles.container}
+      accessible
+      accessibilityLabel={t("audioPlayer.a11y.container")}
+    >
       <Pressable
         onPress={handleToggle}
         accessible
         accessibilityRole="button"
-        accessibilityLabel={isPlaying ? "Pause audio" : "Play audio"}
+        accessibilityLabel={
+          isPlaying ? t("audioPlayer.a11y.pause") : t("audioPlayer.a11y.play")
+        }
         style={({ pressed }) => [
           styles.playButton,
           pressed && styles.playButtonPressed,
@@ -71,7 +79,10 @@ export function AudioPlayer({ uri, durationMs }: AudioPlayerProps) {
 
       <Text
         style={styles.timeText}
-        accessibilityLabel={`${formatDuration(currentMs)} of ${formatDuration(totalMs)}`}
+        accessibilityLabel={t("audioPlayer.a11y.progress", {
+          current: formatDuration(currentMs),
+          total: formatDuration(totalMs),
+        })}
         accessibilityLiveRegion="polite"
       >
         {formatDuration(currentMs)}
