@@ -39,12 +39,12 @@ Sourced from Hermes' own `doc/Features.md`, the callstack `agent-skills` referen
 | `Intl.NumberFormat`          | ⚠️ partial    | `formatToParts()` iOS gap — **on-device it is fully absent on iOS** (present on Android), not a degraded array (Section 7a) |
 | `Intl.PluralRules`           | ❌            | **Not implemented at the engine level**                                                                                     |
 | `Intl.RelativeTimeFormat`    | ❌            |                                                                                                                             |
-| `Intl.DisplayNames`          | ❌            | Desk research (`Features.md`); not used by i18next. Probe added in PR #207 review — **on-device row pending capture**       |
+| `Intl.DisplayNames`          | ❌            | Not used by i18next. Probe added in PR #207 review — **confirmed missing on-device, both platforms** (Section 7a)           |
 | `Intl.ListFormat`            | ❌            |                                                                                                                             |
 | `Intl.Locale`                | ❌            |                                                                                                                             |
 | `Intl.Segmenter`             | ❌            |                                                                                                                             |
 
-**Verdict:** Issue #66's matrix is **correct on the gaps that matter** — every API it marks ❌ _that the probe exercises_ (`PluralRules`, `RelativeTimeFormat`, `ListFormat`, `Locale`, `Segmenter`) is confirmed absent on-device. `DisplayNames` is also marked ❌, but i18next does not use it (Section 3); a `DisplayNames` probe was added during PR #207 review for matrix completeness, and its on-device row **post-dates the 2026-05-27 capture below, so it is pending** — until then its ❌ rests on Hermes `Features.md` (desk research), not an on-device measurement. The on-device probe corrected the desk matrix in **two places** (see Section 7a): `supportedValuesOf` is absent (desk research and the issue both assumed present), and `NumberFormat.formatToParts` is fully absent on iOS rather than a degraded array. Neither corrected API is used by the app today. The research doc's Open Decision (`native-rd-translations-research.md` line 326 — _"`Intl.RelativeTimeFormat` and `Intl.PluralRules` are present on both as of Hermes 0.12+"_) was **factually wrong** and contradicted the authoritative sources; it has been corrected to the verified matrix, not merely de-flagged.
+**Verdict:** Issue #66's matrix is **correct on the gaps that matter** — every API it marks ❌ _that the probe exercises_ (`PluralRules`, `RelativeTimeFormat`, `ListFormat`, `Locale`, `Segmenter`) is confirmed absent on-device. `DisplayNames` is also marked ❌, but i18next does not use it (Section 3); a `DisplayNames` probe was added during PR #207 review for matrix completeness, and it is **confirmed missing on-device on both platforms** (Section 7a). The on-device probe corrected the desk matrix in **two places** (see Section 7a): `supportedValuesOf` is absent (desk research and the issue both assumed present), and `NumberFormat.formatToParts` is fully absent on iOS rather than a degraded array. Neither corrected API is used by the app today. The research doc's Open Decision (`native-rd-translations-research.md` line 326 — _"`Intl.RelativeTimeFormat` and `Intl.PluralRules` are present on both as of Hermes 0.12+"_) was **factually wrong** and contradicted the authoritative sources; it has been corrected to the verified matrix, not merely de-flagged.
 
 ---
 
@@ -141,6 +141,7 @@ Captured by running the `src/dev` probe in the dev client. Engine: **Hermes 0.14
 | `PluralRules`                | ❌                        | ❌ (`Cannot read property 'prototype' of undefined`) | confirmed                                                       |
 | `PluralRules` (ordinal)      | ❌                        | ❌                                                   | confirmed                                                       |
 | `RelativeTimeFormat`         | ❌                        | ❌                                                   | confirmed                                                       |
+| `DisplayNames` (de)          | ❌                        | ❌ (`Cannot read property 'prototype' of undefined`) | confirmed (PR #207 capture)                                     |
 | `ListFormat`                 | ❌                        | ❌                                                   | confirmed                                                       |
 | `Locale`                     | ❌                        | ❌                                                   | confirmed                                                       |
 | `Segmenter`                  | ❌                        | ❌ (`not a function`)                                | confirmed                                                       |
@@ -165,7 +166,7 @@ Confirmed empirically:
 
 Two corrections to the source-based matrix (Section 2): on this iOS Hermes build, **`supportedValuesOf` is missing** and **`NumberFormat.formatToParts` is entirely absent** (not merely the partial array the "known iOS gap" implied). Neither is used by the app today.
 
-> **`DisplayNames` not in this capture.** A `DisplayNames (de)` probe was added during PR #207 review (i18next does not use it — included for matrix completeness). It post-dates this 2026-05-27 run, so there is no on-device row for it yet. Its ❌ in Section 2 rests on Hermes `Features.md`; capturing it on-device is a PR validation step (re-run the probe screen → record the `DisplayNames (de)` row for iOS + Android here).
+> **`DisplayNames (de)` captured 2026-05-27 (PR #207).** Confirmed **missing** on both iOS and Android (`Cannot read property 'prototype' of undefined` — identical to the other engine-missing APIs), matching the Hermes `Features.md` prediction. i18next does not use it; included for matrix completeness.
 
 ### Android — Pixel_6a emulator (API per AVD), 2026-05-27
 
@@ -181,6 +182,7 @@ Identical to iOS **except `formatToParts`**:
 | `NumberFormat.formatToParts` | ❌ absent | **✅ supported (5 parts)** |
 | `PluralRules` / ordinal      | ❌        | ❌                         |
 | `RelativeTimeFormat`         | ❌        | ❌                         |
+| `DisplayNames` (de)          | ❌        | ❌                         |
 | `ListFormat`                 | ❌        | ❌                         |
 | `Locale`                     | ❌        | ❌                         |
 | `Segmenter`                  | ❌        | ❌ `not a function`        |
