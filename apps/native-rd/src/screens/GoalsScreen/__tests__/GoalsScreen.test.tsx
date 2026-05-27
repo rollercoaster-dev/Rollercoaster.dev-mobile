@@ -121,7 +121,7 @@ describe("GoalsScreen", () => {
       });
 
       renderWithProviders(<GoalsScreen />);
-      fireEvent.press(screen.getByText("Learn TypeScript"));
+      fireEvent.press(screen.getByTestId("goal-card-goal-1"));
       expect(mockNavigate).toHaveBeenCalledWith("FocusMode", {
         goalId: "goal-1",
       });
@@ -231,7 +231,7 @@ describe("GoalsScreen", () => {
       renderWithProviders(<GoalsScreen />);
 
       // Long press to trigger delete
-      fireEvent(screen.getByText("Learn TypeScript"), "longPress");
+      fireEvent(screen.getByTestId("goal-card-goal-1"), "longPress");
 
       // Confirm modal should show the goal title
       expect(
@@ -281,7 +281,7 @@ describe("GoalsScreen", () => {
 
       await i18n.changeLanguage("pseudo");
       renderWithProviders(<GoalsScreen />);
-      fireEvent(screen.getByText("Learn TypeScript"), "longPress");
+      fireEvent(screen.getByTestId("goal-card-goal-1"), "longPress");
       const pseudo = i18n.t("goals:confirmDelete.message", {
         title: "Learn TypeScript",
       });
@@ -302,7 +302,7 @@ describe("GoalsScreen", () => {
 
         await i18n.changeLanguage("pseudo");
         renderWithProviders(<GoalsScreen />);
-        fireEvent(screen.getByText("Learn TypeScript"), "longPress");
+        fireEvent(screen.getByTestId("goal-card-goal-1"), "longPress");
         const pseudo = i18n.t(key);
         expect(pseudo.startsWith("[")).toBe(true);
         expect(screen.getByText(pseudo)).toBeOnTheScreen();
