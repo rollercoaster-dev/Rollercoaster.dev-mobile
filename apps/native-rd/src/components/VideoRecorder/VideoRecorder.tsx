@@ -287,6 +287,7 @@ export const VideoRecorder = forwardRef<
       <Text
         variant="caption"
         style={[styles.timer, isRecording && styles.timerRecording]}
+        testID="video-recorder-timer"
         accessibilityLiveRegion="polite"
         accessibilityLabel={t("recorder.a11y.recordingTime", {
           time: formatDuration(elapsed * 1000),
