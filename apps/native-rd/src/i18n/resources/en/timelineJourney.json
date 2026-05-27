@@ -1,5 +1,5 @@
 {
-  "header": "Timeline",
+  "title": "Timeline",
   "backToFocus": "Back to Focus",
   "progress": "{{completed}} of {{total}} steps completed",
   "errors": {

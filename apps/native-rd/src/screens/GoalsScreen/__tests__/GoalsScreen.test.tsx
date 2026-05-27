@@ -88,7 +88,7 @@ describe("GoalsScreen", () => {
   describe("header", () => {
     it("renders Goals title", () => {
       renderWithProviders(<GoalsScreen />);
-      expect(screen.getByText(i18n.t("goals:header.title"))).toBeOnTheScreen();
+      expect(screen.getByText(i18n.t("goals:title"))).toBeOnTheScreen();
     });
 
     it("does not render an add button in the header", () => {
@@ -261,7 +261,7 @@ describe("GoalsScreen", () => {
     // Representative spread across header / empty-state body / interpolated
     // confirm-modal message / interpolated a11y label. A revert that misses
     // one screen surface won't pass by sneaking past a single asserted key.
-    it.each(["goals:header.title", "goals:emptyState.body"] as const)(
+    it.each(["goals:title", "goals:emptyState.body"] as const)(
       "renders %s as bracketed copy under pseudo locale",
       async (key) => {
         await i18n.changeLanguage("pseudo");

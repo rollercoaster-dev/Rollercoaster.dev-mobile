@@ -770,7 +770,7 @@ export function CompletionFlowScreen({ route }: CompletionFlowScreenProps) {
 
   return (
     <View style={styles.container}>
-      <ScreenSubHeader label={t("header")} onBack={() => navigation.goBack()} />
+      <ScreenSubHeader label={t("title")} onBack={() => navigation.goBack()} />
       <ErrorBoundary>
         <Suspense
           fallback={

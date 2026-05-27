@@ -64,7 +64,7 @@ beforeEach(() => {
 describe("CaptureFile", () => {
   it("renders title and Choose File button", () => {
     renderScreen();
-    expect(screen.getByText(i18n.t("captureFile:header"))).toBeTruthy();
+    expect(screen.getByText(i18n.t("captureFile:title"))).toBeTruthy();
     expect(screen.getByText(i18n.t("captureFile:actions.choose"))).toBeTruthy();
     expect(
       screen.getByText(i18n.t("captureFile:description", { maxSize: "50 MB" })),
@@ -226,7 +226,7 @@ describe("CaptureFile", () => {
     // interpolated description. Catches missed t() calls on the four
     // visible Card surfaces.
     it.each([
-      "captureFile:header",
+      "captureFile:title",
       "captureFile:heading",
       "captureFile:actions.choose",
     ] as const)(

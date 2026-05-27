@@ -1,5 +1,5 @@
 {
-  "header": "Link hinzufügen",
+  "title": "Link hinzufügen",
   "urlInput": {
     "label": "URL",
     "placeholder": "https://example.com"

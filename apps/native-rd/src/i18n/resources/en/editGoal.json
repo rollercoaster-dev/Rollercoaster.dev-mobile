@@ -1,5 +1,5 @@
 {
-  "header": "Edit Goal",
+  "title": "Edit Goal",
   "fields": {
     "title": {
       "label": "Goal Title",
