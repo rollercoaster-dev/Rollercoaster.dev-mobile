@@ -2,6 +2,7 @@
   "title": "Evidence",
   "empty": "No evidence to view.",
   "a11y": {
+    "removedShowingNext": "Evidence was removed. Showing the next available item.",
     "allRemoved": "All evidence was removed."
   },
   "errors": {
