@@ -189,11 +189,24 @@
   },
   "evidenceContent": {
     "openInBrowser": "Im Browser öffnen",
+    "openFile": "Öffnen",
+    "errors": {
+      "videoLoadFailed": "Video konnte nicht geladen werden",
+      "imageLoadFailed": "Bild konnte nicht geladen werden"
+    },
     "a11y": {
       "videoPlayback": "Video-Nachweis-Wiedergabe",
       "retryVideo": "Video erneut laden",
       "retryImage": "Bild erneut laden",
       "photoEvidence": "Foto-Nachweis"
+    }
+  },
+  "audioPlayer": {
+    "a11y": {
+      "container": "Audio-Player",
+      "play": "Audio abspielen",
+      "pause": "Audio pausieren",
+      "progress": "{{current}} von {{total}}"
     }
   },
   "cardCarousel": {
@@ -214,6 +227,10 @@
       "closeAudio": "Audio-Player schließen",
       "closeVideo": "Video-Player schließen",
       "closePhoto": "Foto-Ansicht schließen"
+    },
+    "heading": {
+      "textNote": "Notiz",
+      "audio": "Sprachmemo"
     }
   }
 }

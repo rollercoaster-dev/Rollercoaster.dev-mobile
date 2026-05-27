@@ -39,7 +39,7 @@ export function AudioPlayerModal({
         ]}
       >
         <View style={styles.topBar}>
-          <Text style={styles.heading}>Voice Memo</Text>
+          <Text style={styles.heading}>{t("viewerModals.heading.audio")}</Text>
           <Pressable
             onPress={onClose}
             accessible

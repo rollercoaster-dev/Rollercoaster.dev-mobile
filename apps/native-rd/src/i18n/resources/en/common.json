@@ -171,11 +171,24 @@
   },
   "evidenceContent": {
     "openInBrowser": "Open in browser",
+    "openFile": "Open",
+    "errors": {
+      "videoLoadFailed": "Failed to load video",
+      "imageLoadFailed": "Failed to load image"
+    },
     "a11y": {
       "videoPlayback": "Video evidence playback",
       "retryVideo": "Retry loading video",
       "retryImage": "Retry loading image",
       "photoEvidence": "Photo evidence"
+    }
+  },
+  "audioPlayer": {
+    "a11y": {
+      "container": "Audio player",
+      "play": "Play audio",
+      "pause": "Pause audio",
+      "progress": "{{current}} of {{total}}"
     }
   },
   "cardCarousel": {
@@ -196,6 +209,10 @@
       "closeAudio": "Close audio player",
       "closeVideo": "Close video player",
       "closePhoto": "Close photo viewer"
+    },
+    "heading": {
+      "textNote": "Text Note",
+      "audio": "Voice Memo"
     }
   }
 }

@@ -73,10 +73,14 @@ export function VideoContent({ uri }: VideoContentProps) {
     <View style={styles.container}>
       <View style={styles.videoContainer}>
         {!uri ? (
-          <Text style={styles.errorText}>Failed to load video</Text>
+          <Text style={styles.errorText}>
+            {t("evidenceContent.errors.videoLoadFailed")}
+          </Text>
         ) : error ? (
           <View style={styles.errorBlock}>
-            <Text style={styles.errorText}>Failed to load video</Text>
+            <Text style={styles.errorText}>
+              {t("evidenceContent.errors.videoLoadFailed")}
+            </Text>
             <Pressable
               onPress={handleRetry}
               accessibilityRole="button"

@@ -39,7 +39,9 @@ export function TextNoteViewerModal({
         ]}
       >
         <View style={styles.topBar}>
-          <Text style={styles.heading}>Text Note</Text>
+          <Text style={styles.heading}>
+            {t("viewerModals.heading.textNote")}
+          </Text>
           <Pressable
             onPress={onClose}
             accessible
