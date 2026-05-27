@@ -136,3 +136,31 @@ text → "Notiz", voice_memo → "Sprachmemo".
   and covered the capture **screens** — NOT the `EvidenceContent` _viewer_
   components. The viewer-side leaks above had **no dedicated open ticket**
   (#144 is the only catch-all), which is why they're folded into this PR.
+
+## App-wide sweep result — what "all leaks" actually means (2026-05-27)
+
+A multi-pattern sweep across **all** `src/screens` + `src/components`
+(literal props, multi-line JSX text, `Alert.alert` / `announceForAccessibility`)
+confirmed the evidence-viewer chain above was **not** the whole picture, but the
+rest is small and already decided:
+
+- **All `Alert.alert` / `announceForAccessibility` call-sites** outside the
+  evidence chain already route through `t()` / `i18n.t()` — verified by reading
+  the arguments, not just the call name (the call name over-reports).
+- **`SettingsScreen.tsx:36` is NOT a leak.** It carries an explicit
+  `// i18n-skip: dev-only, double-gated by __DEV__ && Platform.OS === "android"`
+  annotation; the alert is unreachable in production. **Left as-is** — migrating
+  it would override a deliberate, reviewed skip.
+- **`IconPickerModal` (`src/badges/*`) deferred to #74**, not migrated here.
+  It's a badge-designer surface (~16 strings + composed-label refactors +
+  `iconIndex.ts` `CATEGORY_LABELS`/`WEIGHTS` constants), and #74
+  ("migrate badge designer surfaces") is open and explicitly scopes the
+  icon picker. #74's body was updated 2026-05-27 with the verified remaining
+  inventory (BadgeDesignerScreen itself is already clean).
+- **Dead/unreachable, out of scope (unchanged):** `TestScreen` (not registered
+  in any navigator), `CapturePlaceholder` (imported, never registered),
+  Storybook `stories/*`.
+
+Net: **#202's final scope = the evidence-viewer chain only.** The app has no
+other reachable, un-skipped English leaks outside the badge-designer surfaces
+owned by #74.
