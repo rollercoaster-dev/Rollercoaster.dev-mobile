@@ -36,7 +36,15 @@ describe("runIntlProbe", () => {
 describe("runPluralResolutionProbe", () => {
   function freshI18n() {
     const i18n = createInstance();
-    void i18n.init({ lng: "en", fallbackLng: "en", resources: {} });
+    // `initAsync: false` forces synchronous init (matching the app config in
+    // src/i18n/index.ts) so the instance is fully ready before the probe reads
+    // it — otherwise init resolves on a later tick and the tests race it.
+    i18n.init({
+      lng: "en",
+      fallbackLng: "en",
+      resources: {},
+      initAsync: false,
+    });
     return i18n;
   }
 

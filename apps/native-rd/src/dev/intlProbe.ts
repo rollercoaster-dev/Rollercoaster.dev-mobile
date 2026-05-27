@@ -91,16 +91,37 @@ export function runIntlProbe(): IntlProbeResult[] {
     ),
   );
 
-  // formatToParts is the known iOS gap: present but may return an empty/degraded
-  // array even when NumberFormat.format works.
+  // formatToParts is the iOS gap. On the tested iOS Hermes build the method is
+  // entirely absent (calling it throws `is not a function` → `missing`); on
+  // Android it works. The empty/degraded-array branch below classifies as
+  // `partial` (AMBER) — it guards the documented "present but degraded" shape in
+  // case a future build exposes the method without populating it, even though
+  // the 2026-05-27 probe saw absent-vs-working, never a degraded array.
   results.push(
-    probe("NumberFormat.formatToParts (de)", () => {
-      const parts = new Intl.NumberFormat("de").formatToParts(1234.5);
-      if (!Array.isArray(parts) || parts.length === 0) {
-        throw new Error("empty parts array (iOS gap)");
+    ((): IntlProbeResult => {
+      const api = "NumberFormat.formatToParts (de)";
+      try {
+        const nf = new Intl.NumberFormat("de");
+        if (typeof nf.formatToParts !== "function") {
+          return { api, status: "missing", detail: "not a function (iOS gap)" };
+        }
+        const parts = nf.formatToParts(1234.5);
+        if (!Array.isArray(parts) || parts.length === 0) {
+          return {
+            api,
+            status: "partial",
+            detail: "empty parts array (degraded)",
+          };
+        }
+        return { api, status: "supported", detail: `${parts.length} parts` };
+      } catch (err) {
+        return {
+          api,
+          status: "missing",
+          detail: err instanceof Error ? err.message : String(err),
+        };
       }
-      return `${parts.length} parts`;
-    }),
+    })(),
   );
 
   // The crux: i18next calls `new Intl.PluralRules(code, { type })` (line 1060).

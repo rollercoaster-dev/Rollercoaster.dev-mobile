@@ -87,8 +87,10 @@ function LanguagePicker() {
 }
 
 /**
- * Dev-only tools section. `__DEV__` gates this so probe screens never reach a
- * production bundle. Copy is intentionally untranslated (i18n-skip).
+ * Dev-only tools section. `__DEV__` gates rendering so the probe screens are
+ * unreachable in production (the modules are still bundled — gating controls
+ * reachability, not bundle exclusion). Copy is intentionally untranslated
+ * (i18n-skip).
  */
 function DevToolsSection() {
   const navigation =

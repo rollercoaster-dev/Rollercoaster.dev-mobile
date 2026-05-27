@@ -1,9 +1,12 @@
 import React, { useMemo } from "react";
 import { ScrollView, View, Platform } from "react-native";
 import { useTranslation } from "react-i18next";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Text } from "../components/Text";
-import { ScreenHeader } from "../components/ScreenHeader";
+import { ScreenSubHeader } from "../components/ScreenHeader";
 import { useTabScreenContentInset } from "../navigation/useTabScreenContentInset";
+import type { SettingsStackParamList } from "../navigation/types";
 import {
   runIntlProbe,
   runPluralResolutionProbe,
@@ -12,8 +15,9 @@ import {
 } from "./intlProbe";
 import { styles } from "./IntlProbeScreen.styles";
 
-// All copy here is i18n-skip: dev-only probe, never shipped to users, gated by
-// __DEV__ at the navigator. Translating it would add noise to the corpus.
+// All copy here is i18n-skip: dev-only probe, unreachable in production (the
+// navigator registers the screen only under __DEV__). Translating it would add
+// noise to the corpus.
 
 const BADGE_STYLE: Record<IntlProbeStatus, object> = {
   supported: styles.badgeSupported,
@@ -48,13 +52,18 @@ function ProbeRow({ result }: { result: IntlProbeResult }) {
 export function IntlProbeScreen() {
   const tabInset = useTabScreenContentInset();
   const { i18n } = useTranslation();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<SettingsStackParamList>>();
 
   const intlResults = useMemo(() => runIntlProbe(), []);
   const pluralProbes = useMemo(() => runPluralResolutionProbe(i18n), [i18n]);
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader title="Intl probe (#66)" />
+      <ScreenSubHeader
+        label="Intl probe (#66)"
+        onBack={() => navigation.goBack()}
+      />
       <ScrollView contentContainerStyle={[styles.scrollContent, tabInset]}>
         <Text style={styles.intro}>
           Engine: {Platform.OS} · Hermes{" "}

@@ -28,23 +28,23 @@ The drift matters because Hermes `Intl` support evolves between versions. The co
 
 ## 2. Verified `Intl.*` support matrix
 
-Sourced from Hermes' own `doc/Features.md`, the callstack `agent-skills` reference (March 2026, cited by the issue), and a cross-version search confirming the gaps persist through Hermes 0.14 / RN 0.83. **Not yet confirmed on-device** — desk-verified only.
+Sourced from Hermes' own `doc/Features.md`, the callstack `agent-skills` reference (March 2026, cited by the issue), and a cross-version search confirming the gaps persist through Hermes 0.14 / RN 0.83. This is the **desk-research matrix**; the on-device probe (Section 7a) has since confirmed it — with **two corrections** flagged inline below (`supportedValuesOf` and `formatToParts`).
 
-| API                          | Hermes native | Notes                                     |
-| ---------------------------- | ------------- | ----------------------------------------- |
-| `Intl.getCanonicalLocales()` | ✅            |                                           |
-| `Intl.supportedValuesOf()`   | ✅            |                                           |
-| `Intl.Collator`              | ✅            |                                           |
-| `Intl.DateTimeFormat`        | ✅            |                                           |
-| `Intl.NumberFormat`          | ⚠️ partial    | `formatToParts()` has a known **iOS** gap |
-| `Intl.PluralRules`           | ❌            | **Not implemented at the engine level**   |
-| `Intl.RelativeTimeFormat`    | ❌            |                                           |
-| `Intl.DisplayNames`          | ❌            |                                           |
-| `Intl.ListFormat`            | ❌            |                                           |
-| `Intl.Locale`                | ❌            |                                           |
-| `Intl.Segmenter`             | ❌            |                                           |
+| API                          | Hermes native | Notes                                                                                                                       |
+| ---------------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `Intl.getCanonicalLocales()` | ✅            |                                                                                                                             |
+| `Intl.supportedValuesOf()`   | ✅ → ❌       | Desk research said ✅; **on-device it is absent on both platforms** (Section 7a)                                            |
+| `Intl.Collator`              | ✅            |                                                                                                                             |
+| `Intl.DateTimeFormat`        | ✅            |                                                                                                                             |
+| `Intl.NumberFormat`          | ⚠️ partial    | `formatToParts()` iOS gap — **on-device it is fully absent on iOS** (present on Android), not a degraded array (Section 7a) |
+| `Intl.PluralRules`           | ❌            | **Not implemented at the engine level**                                                                                     |
+| `Intl.RelativeTimeFormat`    | ❌            |                                                                                                                             |
+| `Intl.DisplayNames`          | ❌            |                                                                                                                             |
+| `Intl.ListFormat`            | ❌            |                                                                                                                             |
+| `Intl.Locale`                | ❌            |                                                                                                                             |
+| `Intl.Segmenter`             | ❌            |                                                                                                                             |
 
-**Verdict:** Issue #66's matrix is **correct**. The research doc's Open Decision (`native-rd-translations-research.md` line 326 — _"`Intl.RelativeTimeFormat` and `Intl.PluralRules` are present on both as of Hermes 0.12+"_) is **factually wrong** and contradicts the authoritative sources. It must be corrected, not just have its provisional flag removed.
+**Verdict:** Issue #66's matrix is **correct on the gaps that matter** — every API it marks ❌ (`PluralRules`, `RelativeTimeFormat`, `DisplayNames`, `ListFormat`, `Locale`, `Segmenter`) is confirmed absent on-device. The on-device probe corrected it in **two places** (see Section 7a): `supportedValuesOf` is absent (desk research and the issue both assumed present), and `NumberFormat.formatToParts` is fully absent on iOS rather than a degraded array. Neither corrected API is used by the app today. The research doc's Open Decision (`native-rd-translations-research.md` line 326 — _"`Intl.RelativeTimeFormat` and `Intl.PluralRules` are present on both as of Hermes 0.12+"_) was **factually wrong** and contradicted the authoritative sources; it has been corrected to the verified matrix, not merely de-flagged.
 
 ---
 
@@ -119,7 +119,7 @@ import "@formatjs/intl-pluralrules/locale-data/de";
 
 ## 6. Recommended corrections to existing artifacts
 
-1. **`native-rd-translations-research.md` line 326** — replace the wrong "PluralRules present since Hermes 0.12+" claim with the verified matrix (Section 2). Keep the provisional flag until the on-device probe runs.
+1. **`native-rd-translations-research.md` line 326** — ✅ **done.** The wrong "PluralRules present since Hermes 0.12+" claim was replaced with the verified matrix (Section 2), including the two on-device corrections from Section 7a (`supportedValuesOf` absent, `formatToParts` iOS-absent). No provisional flag remains — the probe has run.
 2. **Issue #66 body** — correct the stack (`RN 0.83.6 / Hermes 0.14.1 / i18next 26.2.0`), the probe key (`common.evidence.item` → real keys in Section 4), and note that German cardinals won't demonstrate degradation; the probe should use **Arabic** (or an ordinal/`_zero` key) to actually exercise the dummy-rule gap.
 
 ---
@@ -199,7 +199,7 @@ Plural resolution is **identical to iOS** on Android — `ar` counts 2/3/6/11 al
 - [x] Dummy-rule degradation empirically confirmed (Arabic collapse to `one`/`other`)
 - [x] Polyfill shortlist documented (Section 5)
 
-**Note on the research doc's provisional flag:** the wrong matrix claim in `native-rd-translations-research.md` was corrected, but the flag wording ("on-device probe still pending before this flag is removed") should be tightened now that the probe has run — left for the PR review pass.
+**Note on the research doc's provisional flag:** resolved — the wrong matrix claim in `native-rd-translations-research.md` was corrected and the provisional "on-device probe still pending" wording removed, now that the probe has run (iOS sim + Android emulator, 2026-05-27).
 
 The probe was revised from the issue spec, which was based on the draft research doc: it calls a runtime-injected 6-category bundle and tests `en`/`de`/**`ar`** (the issue's `de`-on-`common.evidence.item` would not have shown degradation — that key doesn't exist and de cardinals match the dummy).
 
