@@ -23,9 +23,11 @@
   },
   "evidenceTypes": {
     "photo": {
+      "label": "Foto",
       "shortLabel": "Foto"
     },
     "video": {
+      "label": "Video",
       "shortLabel": "Video"
     },
     "voice_memo": {
@@ -33,12 +35,15 @@
       "shortLabel": "Audio"
     },
     "text": {
+      "label": "Notiz",
       "shortLabel": "Notiz"
     },
     "link": {
+      "label": "Link",
       "shortLabel": "Link"
     },
     "file": {
+      "label": "Datei",
       "shortLabel": "Datei"
     }
   },
