@@ -1,8 +1,10 @@
 import { formatDate, formatDuration } from "../format";
 
 describe("formatDate", () => {
-  // Fixed ISO instant so the assertions don't depend on the test runner's clock.
-  const ISO = "2026-01-28T12:00:00.000Z";
+  // Fixed local-time noon (no trailing `Z`) so the assertions depend on neither
+  // the runner's clock nor its timezone — a UTC instant could roll to Jan 29 in
+  // far-eastern zones (e.g. UTC+14) and break the `/28/` check.
+  const ISO = "2026-01-28T12:00:00";
 
   it("defaults to en-US short date", () => {
     expect(formatDate(ISO)).toBe("Jan 28, 2026");
@@ -25,6 +27,12 @@ describe("formatDate", () => {
 
   it("returns the raw string when parsing fails", () => {
     expect(formatDate("not-a-date")).toBe("not-a-date");
+  });
+
+  it("falls back to the default locale for a malformed BCP-47 tag", () => {
+    // "en_US" (underscore) is invalid and makes Intl throw RangeError; the
+    // result should match the en-US output rather than propagate the throw.
+    expect(formatDate(ISO, "en_US")).toBe(formatDate(ISO, "en-US"));
   });
 });
 

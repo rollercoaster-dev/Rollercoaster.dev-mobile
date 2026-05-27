@@ -8,7 +8,9 @@
  * localise rather than silently falling back. Defaults to `en-US` for callers
  * outside the React tree.
  *
- * Returns empty string for null/undefined, returns the raw string if parsing fails.
+ * Returns empty string for null/undefined, returns the raw string if parsing
+ * fails. A malformed `locale` tag (which makes `Intl` throw `RangeError`) falls
+ * back to the default locale rather than crashing the caller.
  */
 export function formatDate(
   dateStr: string | null | undefined,
@@ -17,11 +19,19 @@ export function formatDate(
   if (!dateStr) return "";
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return dateStr;
-  return d.toLocaleDateString(locale, {
+  const options: Intl.DateTimeFormatOptions = {
     month: "short",
     day: "numeric",
     year: "numeric",
-  });
+  };
+  try {
+    return d.toLocaleDateString(locale, options);
+  } catch (e) {
+    // Intl throws RangeError on a malformed BCP-47 tag — fall back to the
+    // default locale so a bad caller-supplied tag never crashes the UI.
+    if (e instanceof RangeError) return d.toLocaleDateString("en-US", options);
+    throw e;
+  }
 }
 
 /**
