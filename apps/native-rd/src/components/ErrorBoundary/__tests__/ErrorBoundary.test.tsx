@@ -3,6 +3,7 @@ import { render, fireEvent, screen } from "@testing-library/react-native";
 import { ErrorBoundary } from "../ErrorBoundary";
 import { Text } from "react-native";
 import { reportError } from "../../../services/sentry-report";
+import { i18n } from "../../../i18n";
 
 jest.mock("../../../services/sentry-report", () => ({
   reportError: jest.fn(),
@@ -49,9 +50,13 @@ describe("ErrorBoundary", () => {
       </ErrorBoundary>,
     );
 
-    expect(screen.getByText("Something went wrong")).toBeTruthy();
+    expect(screen.getByText(i18n.t("common:errorBoundary.title"))).toBeTruthy();
     expect(screen.getByText("Test error")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Try Again" })).toBeTruthy();
+    expect(
+      screen.getByRole("button", {
+        name: i18n.t("common:errorBoundary.retry"),
+      }),
+    ).toBeTruthy();
   });
 
   it("has accessible alert role and label on fallback container", () => {
@@ -61,7 +66,9 @@ describe("ErrorBoundary", () => {
       </ErrorBoundary>,
     );
 
-    expect(screen.getByLabelText("Error: something went wrong")).toBeTruthy();
+    expect(
+      screen.getByLabelText(i18n.t("common:errorBoundary.a11yAlert")),
+    ).toBeTruthy();
   });
 
   it("resets error state on Try Again press", () => {
@@ -71,7 +78,7 @@ describe("ErrorBoundary", () => {
       </ErrorBoundary>,
     );
 
-    expect(screen.getByText("Something went wrong")).toBeTruthy();
+    expect(screen.getByText(i18n.t("common:errorBoundary.title"))).toBeTruthy();
 
     // Re-render with non-throwing child before pressing reset
     rerender(
@@ -80,10 +87,14 @@ describe("ErrorBoundary", () => {
       </ErrorBoundary>,
     );
 
-    fireEvent.press(screen.getByRole("button", { name: "Try Again" }));
+    fireEvent.press(
+      screen.getByRole("button", {
+        name: i18n.t("common:errorBoundary.retry"),
+      }),
+    );
 
     expect(screen.getByText("Child content")).toBeTruthy();
-    expect(screen.queryByText("Something went wrong")).toBeNull();
+    expect(screen.queryByText(i18n.t("common:errorBoundary.title"))).toBeNull();
   });
 
   it("reports rendered errors via reportError with area=render", () => {
@@ -113,6 +124,26 @@ describe("ErrorBoundary", () => {
 
     expect(screen.getByTestId("custom-fallback")).toBeTruthy();
     expect(screen.getByText("Custom: Test error")).toBeTruthy();
-    expect(screen.queryByText("Something went wrong")).toBeNull();
+    expect(screen.queryByText(i18n.t("common:errorBoundary.title"))).toBeNull();
+  });
+
+  describe("pseudo locale (proves fallback routes through i18n singleton)", () => {
+    afterEach(async () => {
+      if (i18n.language !== "en") await i18n.changeLanguage("en");
+    });
+
+    it("renders the fallback title + retry as bracketed pseudo copy", async () => {
+      await i18n.changeLanguage("pseudo");
+      render(
+        <ErrorBoundary>
+          <ThrowingChild shouldThrow={true} />
+        </ErrorBoundary>,
+      );
+      const title = i18n.t("common:errorBoundary.title");
+      const retry = i18n.t("common:errorBoundary.retry");
+      expect(title.startsWith("[")).toBe(true);
+      expect(screen.getByText(title)).toBeTruthy();
+      expect(screen.getByRole("button", { name: retry })).toBeTruthy();
+    });
   });
 });

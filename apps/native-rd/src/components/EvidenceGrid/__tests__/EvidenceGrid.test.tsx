@@ -2,13 +2,14 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react-native";
 import { Alert } from "react-native";
 
+import { EvidenceGrid } from "../EvidenceGrid";
+import type { Evidence } from "../../EvidenceThumbnail";
+import { i18n } from "../../../i18n";
+
 jest.mock("expo-haptics", () => ({
   impactAsync: jest.fn(),
   ImpactFeedbackStyle: { Medium: "medium" },
 }));
-
-import { EvidenceGrid } from "../EvidenceGrid";
-import type { Evidence } from "../../EvidenceThumbnail";
 
 const mockEvidence: Evidence[] = [
   { id: "1", title: "Photo of progress", type: "photo", uri: "/photo.jpg" },
@@ -54,11 +55,14 @@ describe("EvidenceGrid", () => {
       "onLongPress",
     );
     expect(alertSpy).toHaveBeenCalledWith(
-      "Delete evidence?",
-      "This cannot be undone.",
+      i18n.t("evidenceGrid.deleteTitle"),
+      i18n.t("evidenceGrid.deleteMessage"),
       expect.arrayContaining([
-        expect.objectContaining({ text: "Cancel" }),
-        expect.objectContaining({ text: "Delete", style: "destructive" }),
+        expect.objectContaining({ text: i18n.t("actions.cancel") }),
+        expect.objectContaining({
+          text: i18n.t("actions.delete"),
+          style: "destructive",
+        }),
       ]),
     );
   });
@@ -87,5 +91,28 @@ describe("EvidenceGrid", () => {
   it("shows header without count when no evidence", () => {
     render(<EvidenceGrid evidences={[]} />);
     expect(screen.getByText("Evidence")).toBeTruthy();
+  });
+
+  describe("pseudo locale (proves delete dialog routes through i18n)", () => {
+    afterEach(async () => {
+      if (i18n.language !== "en") await i18n.changeLanguage("en");
+    });
+
+    it("uses bracketed pseudo copy for the delete confirmation", async () => {
+      await i18n.changeLanguage("pseudo");
+      const alertSpy = jest.spyOn(Alert, "alert");
+      render(<EvidenceGrid evidences={mockEvidence} onDelete={jest.fn()} />);
+      fireEvent(
+        screen.getByLabelText("photo evidence: Photo of progress"),
+        "onLongPress",
+      );
+      const title = i18n.t("evidenceGrid.deleteTitle");
+      expect(title.startsWith("[")).toBe(true);
+      expect(alertSpy).toHaveBeenCalledWith(
+        title,
+        i18n.t("evidenceGrid.deleteMessage"),
+        expect.any(Array),
+      );
+    });
   });
 });
