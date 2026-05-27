@@ -98,3 +98,29 @@ added (all are function components except ErrorBoundary).
 
 Each well under 500 LOC; generated pseudo JSON called out as generated.
 Closing commit references #73 (per issue guidance, not reopening it).
+
+## Follow-ups discovered during implementation (NOT in the original audit)
+
+These are real leaks found while editing the audit files, but outside this
+issue's verified audit scope. Deferred to a follow-up issue rather than
+expanding this PR (several belong to capture-\* namespaces with their own
+Milestone 3 tickets):
+
+- **Visible error text** — `VideoContent.tsx` "Failed to load video" (×2),
+  `PhotoContent.tsx` "Failed to load image" (×2). These sit next to the a11y
+  labels migrated here but are display strings; likely belong to
+  `captureVideo` / `capturePhoto` namespaces.
+- **Viewer-modal headings** — `TextNoteViewerModal` "Text Note",
+  `AudioPlayerModal` "Voice Memo" (and any sibling headings). Visible titles,
+  not a11y.
+- **EvidenceGrid display strings** — header "Evidence", "No evidence yet" empty
+  text, "Add Evidence" button. **Component is dead code** (no production
+  import) — lowest priority; migrate only if/when it's wired up, or delete the
+  component.
+
+## Scope contradictions vs. the issue (verified, surfaced in PR)
+
+- `en/badges.json` is **populated** (565 B), not `{}` — PR #199 already did it.
+- `EvidenceGrid` is **not** "reachable from many screens" — zero production
+  imports.
+- `BadgesStack.tsx` `name="Badges"` is a route id, not a rendered label.
