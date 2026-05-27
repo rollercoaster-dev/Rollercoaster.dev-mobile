@@ -176,10 +176,6 @@
       "current": "Aktueller Modus: {{label}}"
     }
   },
-  "evidenceGrid": {
-    "deleteTitle": "Nachweis löschen?",
-    "deleteMessage": "Das lässt sich nicht rückgängig machen."
-  },
   "errorBoundary": {
     "title": "Etwas ist schiefgelaufen",
     "message": "Ein unerwarteter Fehler ist aufgetreten.",

@@ -158,10 +158,6 @@
       "current": "Current mode: {{label}}"
     }
   },
-  "evidenceGrid": {
-    "deleteTitle": "Delete evidence?",
-    "deleteMessage": "This cannot be undone."
-  },
   "errorBoundary": {
     "title": "Something went wrong",
     "message": "An unexpected error occurred.",
