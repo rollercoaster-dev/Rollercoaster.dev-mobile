@@ -213,7 +213,9 @@
     "a11y": {
       "label": "Kartenkarussell",
       "previous": "Vorherige Karte",
-      "next": "Nächste Karte"
+      "next": "Nächste Karte",
+      "previousHint": "Wechselt zum vorherigen Element in {{label}}",
+      "nextHint": "Wechselt zum nächsten Element in {{label}}"
     }
   },
   "viewerThumbnailStrip": {

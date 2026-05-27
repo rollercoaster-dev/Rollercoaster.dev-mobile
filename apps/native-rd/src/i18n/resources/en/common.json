@@ -195,7 +195,9 @@
     "a11y": {
       "label": "Card carousel",
       "previous": "Previous card",
-      "next": "Next card"
+      "next": "Next card",
+      "previousHint": "Moves to the previous item in {{label}}",
+      "nextHint": "Moves to the next item in {{label}}"
     }
   },
   "viewerThumbnailStrip": {

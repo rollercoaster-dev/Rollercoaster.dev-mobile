@@ -223,7 +223,9 @@ export function CardCarousel({
                 accessible
                 accessibilityRole="button"
                 accessibilityLabel={t("cardCarousel.a11y.previous")}
-                accessibilityHint={`Moves to the previous item in ${carouselLabel}`}
+                accessibilityHint={t("cardCarousel.a11y.previousHint", {
+                  label: carouselLabel,
+                })}
                 accessibilityState={{ disabled: isFirst }}
               >
                 <Text style={styles.arrowText}>&#8249;</Text>
@@ -238,7 +240,9 @@ export function CardCarousel({
                 accessible
                 accessibilityRole="button"
                 accessibilityLabel={t("cardCarousel.a11y.next")}
-                accessibilityHint={`Moves to the next item in ${carouselLabel}`}
+                accessibilityHint={t("cardCarousel.a11y.nextHint", {
+                  label: carouselLabel,
+                })}
                 accessibilityState={{ disabled: isLast }}
               >
                 <Text style={styles.arrowText}>&#8250;</Text>
