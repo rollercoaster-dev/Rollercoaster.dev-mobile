@@ -23,27 +23,22 @@
   },
   "evidenceTypes": {
     "photo": {
-      "label": "Foto machen",
       "shortLabel": "Foto"
     },
     "video": {
-      "label": "Video aufnehmen",
       "shortLabel": "Video"
     },
     "voice_memo": {
-      "label": "Sprachmemo aufnehmen",
-      "shortLabel": "Sprachmemo"
+      "label": "Audio",
+      "shortLabel": "Audio"
     },
     "text": {
-      "label": "Notiz schreiben",
       "shortLabel": "Notiz"
     },
     "link": {
-      "label": "Link hinzufügen",
       "shortLabel": "Link"
     },
     "file": {
-      "label": "Datei anhängen",
       "shortLabel": "Datei"
     }
   },

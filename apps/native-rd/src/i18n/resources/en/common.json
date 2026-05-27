@@ -22,12 +22,12 @@
     }
   },
   "evidenceTypes": {
-    "photo": { "label": "Take Photo", "shortLabel": "Photo" },
-    "video": { "label": "Record Video", "shortLabel": "Video" },
-    "voice_memo": { "label": "Record Voice Memo", "shortLabel": "Voice Memo" },
-    "text": { "label": "Write a Note", "shortLabel": "Note" },
-    "link": { "label": "Add Link", "shortLabel": "Link" },
-    "file": { "label": "Attach File", "shortLabel": "File" }
+    "photo": { "label": "Photo", "shortLabel": "Photo" },
+    "video": { "label": "Video", "shortLabel": "Video" },
+    "voice_memo": { "label": "Audio", "shortLabel": "Audio" },
+    "text": { "label": "Note", "shortLabel": "Note" },
+    "link": { "label": "Link", "shortLabel": "Link" },
+    "file": { "label": "File", "shortLabel": "File" }
   },
   "theme": {
     "options": {
