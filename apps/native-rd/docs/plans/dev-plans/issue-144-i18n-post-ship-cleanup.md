@@ -60,7 +60,7 @@ This PR set closes the two remaining classes of i18n loose ends identified in th
 
 - `src/utils/evidenceViewers.tsx`: add `i18n.t()` calls for 8× `Alert.alert()` strings; add `evidenceViewer` namespace import
 - `src/screens/EvidenceViewerScreen/EvidenceViewerScreen.tsx`: add `useTranslation("evidenceViewer")`, replace `label="Evidence"`
-- `src/screens/SettingsScreen/SettingsScreen.tsx`: add `t()` for dev-only `Alert.alert("Native crash unavailable", …)`
+- `src/screens/SettingsScreen/SettingsScreen.tsx`: leave dev-only `Alert.alert("Native crash unavailable", …)` hardcoded with an `// i18n-skip:` marker (per D11)
 - `src/screens/ConfirmDeleteModal/ConfirmDeleteModal.tsx`: remove default prop values; all callers must supply translated strings
 - `src/screens/ConfirmDeleteModal/ConfirmDeleteModal.stories.tsx`: ensure `title`/`message` supplied in every variant (per D9)
 - (No source changes needed in `EditModeScreen` / `FocusModeScreen` / `GoalsScreen` — D9's internal-fallback design means call sites keep working as-is.)
@@ -115,7 +115,7 @@ This PR set closes the two remaining classes of i18n loose ends identified in th
 - [x] Import and register `en/de/pseudo` evidenceViewer resources in `src/i18n/index.ts`
 - [x] Add `evidenceViewer` to `src/i18n/i18next.d.ts` CustomTypeOptions.resources (required for typed `t()` calls — researcher's plan didn't list this but TS demanded it)
 - [x] Create `src/i18n/resources/_register/evidenceViewer.yml` voice register (required by i18n sync workflow)
-- [x] Create placeholder `de/evidenceViewer.json` as `{}` so the static TS import resolves; bot fills from `en/` on PR open (per D10)
+- [x] Create `de/evidenceViewer.json` with German translations, committed directly in this PR (the static TS import in `i18n/index.ts` requires the file to exist; rather than ship an empty `{}` for the bot to fill per D10, the German copy is authored here)
 
 #### Step 2: Migrate `evidenceViewers.tsx`
 
@@ -135,7 +135,7 @@ This PR set closes the two remaining classes of i18n loose ends identified in th
 **Changes**:
 
 - [ ] Add `import { useTranslation } from "react-i18next"` and `const { t } = useTranslation("evidenceViewer")` to the screen's root component
-- [ ] Replace `label="Evidence"` with `label={t("header")}`
+- [ ] Replace `label="Evidence"` with `label={t("title")}` (canonical key per D4)
 
 #### Step 4: Mark `SettingsScreen.tsx` dev-only alert as i18n-skip
 

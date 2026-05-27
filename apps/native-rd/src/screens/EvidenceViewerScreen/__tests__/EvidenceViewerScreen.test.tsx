@@ -8,6 +8,7 @@ import {
 import type { EvidenceViewerScreenProps } from "../../../navigation/types";
 
 import { EvidenceViewerScreen } from "../EvidenceViewerScreen";
+import { i18n } from "../../../i18n";
 
 const mockGoBack = jest.fn();
 jest.mock("@react-navigation/native", () => {
@@ -76,7 +77,7 @@ describe("EvidenceViewerScreen", () => {
   it("renders the Evidence header label from the evidenceViewer namespace", () => {
     mockUseAllEvidenceForGoal.mockReturnValue([]);
     renderWithProviders(<EvidenceViewerScreen {...routeProps} />);
-    expect(screen.getByText("Evidence")).toBeOnTheScreen();
+    expect(screen.getByText(i18n.t("evidenceViewer:title"))).toBeOnTheScreen();
   });
 
   it("opens at the initial evidence id", () => {
