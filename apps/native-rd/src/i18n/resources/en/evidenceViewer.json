@@ -1,0 +1,20 @@
+{
+  "title": "Evidence",
+  "errors": {
+    "cannotOpenLink": "Cannot open link",
+    "unableToOpen": "Unable to open: {{uri}}",
+    "failedToOpen": "Failed to open: {{uri}}",
+    "fileNotFound": "File not found",
+    "fileMayBeDeleted": "The file may have been deleted.",
+    "cannotOpenFile": "Cannot open file",
+    "sharingUnavailable": "File sharing is not available on this device.",
+    "openFileFailed": "Something went wrong opening the file.",
+    "cannotView": "Cannot view",
+    "photoMissing": "Photo file is missing.",
+    "cannotPlay": "Cannot play",
+    "videoMissing": "Video file is missing.",
+    "audioMissing": "Audio file is missing.",
+    "cannotOpen": "Cannot open",
+    "fileMissing": "File is missing."
+  }
+}

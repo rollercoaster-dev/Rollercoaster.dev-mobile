@@ -2,6 +2,7 @@ import React from "react";
 import { View, Modal } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUnistyles } from "react-native-unistyles";
+import { useTranslation } from "react-i18next";
 import { Text } from "../../components/Text";
 import { Card } from "../../components/Card";
 import { Button } from "../../components/Button";
@@ -11,8 +12,8 @@ export interface ConfirmDeleteModalProps {
   visible: boolean;
   onCancel: () => void;
   onConfirm: () => void;
-  title?: string;
-  message?: string;
+  title: string;
+  message: string;
   confirmLabel?: string;
   cancelLabel?: string;
 }
@@ -21,12 +22,15 @@ export function ConfirmDeleteModal({
   visible,
   onCancel,
   onConfirm,
-  title = "Delete this item?",
-  message = "This action cannot be undone.",
-  confirmLabel = "Delete",
-  cancelLabel = "Cancel",
+  title,
+  message,
+  confirmLabel,
+  cancelLabel,
 }: ConfirmDeleteModalProps) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation("common");
+  const finalConfirm = confirmLabel ?? t("actions.delete");
+  const finalCancel = cancelLabel ?? t("actions.cancel");
 
   return (
     <Modal
@@ -65,12 +69,12 @@ export function ConfirmDeleteModal({
 
             <View style={styles.actions}>
               <Button
-                label={confirmLabel}
+                label={finalConfirm}
                 onPress={onConfirm}
                 variant="destructive"
               />
               <Button
-                label={cancelLabel}
+                label={finalCancel}
                 onPress={onCancel}
                 variant="secondary"
               />

@@ -8,6 +8,7 @@ import { AudioPlayerModal } from "../components/AudioPlayerModal";
 import { TEXT_EVIDENCE_PREFIX } from "../db";
 import type { Evidence } from "../components/EvidenceThumbnail";
 import { Logger } from "../shims/rd-logger";
+import { i18n } from "../i18n";
 
 const logger = new Logger("evidenceViewers");
 
@@ -51,11 +52,17 @@ export async function openLinkInBrowser(uri: string): Promise<void> {
     if (canOpen) {
       await Linking.openURL(uri);
     } else {
-      Alert.alert("Cannot open link", `Unable to open: ${uri}`);
+      Alert.alert(
+        i18n.t("evidenceViewer:errors.cannotOpenLink"),
+        i18n.t("evidenceViewer:errors.unableToOpen", { uri }),
+      );
     }
   } catch (error) {
     logger.error("Failed to open link", { uri, error });
-    Alert.alert("Cannot open link", `Failed to open: ${uri}`);
+    Alert.alert(
+      i18n.t("evidenceViewer:errors.cannotOpenLink"),
+      i18n.t("evidenceViewer:errors.failedToOpen", { uri }),
+    );
   }
 }
 
@@ -64,15 +71,18 @@ export async function openFile(uri: string, metadata?: string) {
     const { File } = await import("expo-file-system");
     const file = new File(uri);
     if (!file.exists) {
-      Alert.alert("File not found", "The file may have been deleted.");
+      Alert.alert(
+        i18n.t("evidenceViewer:errors.fileNotFound"),
+        i18n.t("evidenceViewer:errors.fileMayBeDeleted"),
+      );
       return;
     }
 
     const canShare = await Sharing.isAvailableAsync();
     if (!canShare) {
       Alert.alert(
-        "Cannot open file",
-        "File sharing is not available on this device.",
+        i18n.t("evidenceViewer:errors.cannotOpenFile"),
+        i18n.t("evidenceViewer:errors.sharingUnavailable"),
       );
       return;
     }
@@ -88,7 +98,10 @@ export async function openFile(uri: string, metadata?: string) {
     await Sharing.shareAsync(uri, options);
   } catch (error) {
     logger.error("Failed to open file", { uri, error });
-    Alert.alert("Cannot open file", "Something went wrong opening the file.");
+    Alert.alert(
+      i18n.t("evidenceViewer:errors.cannotOpenFile"),
+      i18n.t("evidenceViewer:errors.openFileFailed"),
+    );
   }
 }
 
@@ -119,14 +132,20 @@ export function useEvidenceViewer() {
         if (evidence.uri) {
           setPhotoViewer({ uri: evidence.uri, description: evidence.title });
         } else {
-          Alert.alert("Cannot view", "Photo file is missing.");
+          Alert.alert(
+            i18n.t("evidenceViewer:errors.cannotView"),
+            i18n.t("evidenceViewer:errors.photoMissing"),
+          );
         }
         break;
       case "video":
         if (evidence.uri) {
           setVideoViewer(evidence.uri);
         } else {
-          Alert.alert("Cannot play", "Video file is missing.");
+          Alert.alert(
+            i18n.t("evidenceViewer:errors.cannotPlay"),
+            i18n.t("evidenceViewer:errors.videoMissing"),
+          );
         }
         break;
       case "text": {
@@ -150,7 +169,10 @@ export function useEvidenceViewer() {
                 : undefined,
           });
         } else {
-          Alert.alert("Cannot play", "Audio file is missing.");
+          Alert.alert(
+            i18n.t("evidenceViewer:errors.cannotPlay"),
+            i18n.t("evidenceViewer:errors.audioMissing"),
+          );
         }
         break;
       case "link":
@@ -162,7 +184,10 @@ export function useEvidenceViewer() {
         if (evidence.uri) {
           openFile(evidence.uri, evidence.metadata);
         } else {
-          Alert.alert("Cannot open", "File is missing.");
+          Alert.alert(
+            i18n.t("evidenceViewer:errors.cannotOpen"),
+            i18n.t("evidenceViewer:errors.fileMissing"),
+          );
         }
         break;
     }

@@ -2,6 +2,7 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { AccessibilityInfo, ActivityIndicator, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { Text } from "../../components/Text";
@@ -87,13 +88,14 @@ function ViewerContent({
 export function EvidenceViewerScreen({ route }: EvidenceViewerScreenProps) {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation("evidenceViewer");
   const { goalId, initialEvidenceId } = route.params;
 
   return (
     <View
       style={[styles.screen, { paddingBottom: TAB_BAR_HEIGHT + insets.bottom }]}
     >
-      <ScreenSubHeader label="Evidence" onBack={() => navigation.goBack()} />
+      <ScreenSubHeader label={t("title")} onBack={() => navigation.goBack()} />
       <ErrorBoundary>
         <Suspense
           fallback={

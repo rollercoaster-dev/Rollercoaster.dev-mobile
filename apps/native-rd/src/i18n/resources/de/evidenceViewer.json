@@ -1,0 +1,20 @@
+{
+  "title": "Nachweis",
+  "errors": {
+    "cannotOpenLink": "Link lässt sich nicht öffnen",
+    "unableToOpen": "Kann nicht öffnen: {{uri}}",
+    "failedToOpen": "Öffnen fehlgeschlagen: {{uri}}",
+    "fileNotFound": "Datei nicht gefunden",
+    "fileMayBeDeleted": "Die Datei wurde möglicherweise gelöscht.",
+    "cannotOpenFile": "Datei lässt sich nicht öffnen",
+    "sharingUnavailable": "Dateifreigabe auf diesem Gerät nicht verfügbar.",
+    "openFileFailed": "Fehler beim Öffnen der Datei.",
+    "cannotView": "Kann nicht anzeigen",
+    "photoMissing": "Fotodatei fehlt.",
+    "cannotPlay": "Kann nicht abspielen",
+    "videoMissing": "Videodatei fehlt.",
+    "audioMissing": "Audiodatei fehlt.",
+    "cannotOpen": "Kann nicht öffnen",
+    "fileMissing": "Datei fehlt."
+  }
+}

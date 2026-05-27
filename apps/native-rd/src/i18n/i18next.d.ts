@@ -19,6 +19,7 @@ import type editGoal from "./resources/en/editGoal.json";
 import type timelineJourney from "./resources/en/timelineJourney.json";
 import type completion from "./resources/en/completion.json";
 import type badgeDetail from "./resources/en/badgeDetail.json";
+import type evidenceViewer from "./resources/en/evidenceViewer.json";
 
 declare module "i18next" {
   interface CustomTypeOptions {
@@ -43,6 +44,7 @@ declare module "i18next" {
       timelineJourney: typeof timelineJourney;
       completion: typeof completion;
       badgeDetail: typeof badgeDetail;
+      evidenceViewer: typeof evidenceViewer;
     };
   }
 }

@@ -62,6 +62,7 @@ export function CustomLabels() {
           console.log("Removed");
         }}
         title="Remove evidence?"
+        message="This evidence will no longer be associated with the goal."
         confirmLabel="Remove"
         cancelLabel="Keep it"
       />
