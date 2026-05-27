@@ -222,7 +222,7 @@ describe("StepCard", () => {
       />,
     );
     expect(
-      screen.getByLabelText("Add Take Photo to complete this step"),
+      screen.getByLabelText("Add Photo to complete this step"),
     ).toBeOnTheScreen();
   });
 
