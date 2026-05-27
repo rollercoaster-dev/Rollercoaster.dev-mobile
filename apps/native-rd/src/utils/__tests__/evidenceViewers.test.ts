@@ -8,7 +8,8 @@ import {
   openFile,
   useEvidenceViewer,
 } from "../evidenceViewers";
-import type { Evidence } from "../../components/EvidenceThumbnail/EvidenceThumbnail";
+import type { Evidence } from "../../components/EvidenceThumbnail";
+import { i18n } from "../../i18n";
 
 let mockFileExists = true;
 jest.mock("expo-file-system", () => ({
@@ -64,8 +65,8 @@ describe("openLinkInBrowser i18n", () => {
     await openLinkInBrowser("bad://url");
 
     expect(alertSpy).toHaveBeenCalledWith(
-      "Cannot open link",
-      "Unable to open: bad://url",
+      i18n.t("evidenceViewer:errors.cannotOpenLink"),
+      i18n.t("evidenceViewer:errors.unableToOpen", { uri: "bad://url" }),
     );
 
     alertSpy.mockRestore();
@@ -83,8 +84,8 @@ describe("openLinkInBrowser i18n", () => {
     await openLinkInBrowser("ftp://broken");
 
     expect(alertSpy).toHaveBeenCalledWith(
-      "Cannot open link",
-      "Failed to open: ftp://broken",
+      i18n.t("evidenceViewer:errors.cannotOpenLink"),
+      i18n.t("evidenceViewer:errors.failedToOpen", { uri: "ftp://broken" }),
     );
 
     alertSpy.mockRestore();
@@ -110,8 +111,8 @@ describe("openFile i18n", () => {
     await openFile("file:///gone.pdf");
 
     expect(alertSpy).toHaveBeenCalledWith(
-      "File not found",
-      "The file may have been deleted.",
+      i18n.t("evidenceViewer:errors.fileNotFound"),
+      i18n.t("evidenceViewer:errors.fileMayBeDeleted"),
     );
   });
 
@@ -121,8 +122,8 @@ describe("openFile i18n", () => {
     await openFile("file:///doc.pdf");
 
     expect(alertSpy).toHaveBeenCalledWith(
-      "Cannot open file",
-      "File sharing is not available on this device.",
+      i18n.t("evidenceViewer:errors.cannotOpenFile"),
+      i18n.t("evidenceViewer:errors.sharingUnavailable"),
     );
   });
 
@@ -133,8 +134,8 @@ describe("openFile i18n", () => {
     await openFile("file:///doc.pdf");
 
     expect(alertSpy).toHaveBeenCalledWith(
-      "Cannot open file",
-      "Something went wrong opening the file.",
+      i18n.t("evidenceViewer:errors.cannotOpenFile"),
+      i18n.t("evidenceViewer:errors.openFileFailed"),
     );
   });
 });
@@ -151,10 +152,26 @@ describe("useEvidenceViewer.viewEvidence i18n — missing uri", () => {
   });
 
   const missingUriCases: readonly [Evidence["type"], string, string][] = [
-    ["photo", "Cannot view", "Photo file is missing."],
-    ["video", "Cannot play", "Video file is missing."],
-    ["voice_memo", "Cannot play", "Audio file is missing."],
-    ["file", "Cannot open", "File is missing."],
+    [
+      "photo",
+      i18n.t("evidenceViewer:errors.cannotView"),
+      i18n.t("evidenceViewer:errors.photoMissing"),
+    ],
+    [
+      "video",
+      i18n.t("evidenceViewer:errors.cannotPlay"),
+      i18n.t("evidenceViewer:errors.videoMissing"),
+    ],
+    [
+      "voice_memo",
+      i18n.t("evidenceViewer:errors.cannotPlay"),
+      i18n.t("evidenceViewer:errors.audioMissing"),
+    ],
+    [
+      "file",
+      i18n.t("evidenceViewer:errors.cannotOpen"),
+      i18n.t("evidenceViewer:errors.fileMissing"),
+    ],
   ];
 
   it.each(missingUriCases)(
