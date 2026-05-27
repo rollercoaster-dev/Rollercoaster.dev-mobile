@@ -27,6 +27,7 @@ export function CapturePlaceholder({ route }: { route: { name: string } }) {
           <Text variant="headline" style={styles.title}>
             {label}
           </Text>
+          {/* eslint-disable-next-line local/no-raw-jsx-strings -- pre-existing; migrate to t() (#144) */}
           <Text variant="body" style={styles.message}>
             This feature is coming soon.
           </Text>

@@ -1,3 +1,8 @@
+/* eslint-disable local/no-raw-jsx-strings --
+ * Dev-only design-token showcase screen; all 60+ JSX text nodes are token
+ * labels/demo copy, not shippable product strings. Disabled file-wide rather
+ * than per-line; the whole file gets migrated to t() or deleted as a unit when
+ * the design-system showcase work lands. */
 import { View, Text, ScrollView, Pressable } from "react-native";
 import { UnistylesRuntime, useUnistyles } from "react-native-unistyles";
 import { SafeAreaView } from "react-native-safe-area-context";
