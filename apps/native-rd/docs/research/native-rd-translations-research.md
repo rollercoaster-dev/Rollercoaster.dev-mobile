@@ -12,7 +12,7 @@ Add translations to `native-rd` with `expo-localization` for device locale data 
 
 This fits the current app because:
 
-- `native-rd` is Expo 54 / React Native 0.81 / React 19 and already uses config plugins in `app.json`.
+- `native-rd` is Expo 55 / React Native 0.83.6 / React 19 (the stack verified during the #66 spike) and already uses config plugins in `app.json`.
 - The app is local-first, so translations should work offline without fetching language bundles.
 - There are many hard-coded visible and accessibility strings across screens, components, constants, and tests.
 - Existing utilities hard-code locale behavior, for example `formatDate` uses `en-US`.
@@ -323,7 +323,7 @@ Bundle size impact: `i18next` ~28 KB minified, `react-i18next` ~12 KB. Acceptabl
 ## Open Decisions
 
 - **Live Android locale change.** Expo `useLocales()` updates while the app is foregrounded on Android. Decide before phase 1 whether to subscribe and call `i18n.changeLanguage(...)`, or require an app restart and document it in Settings. Recommend punting (require restart) until a real second language ships, since there is nothing to switch to in phase 1.
-- **Hermes Intl coverage.** RN 0.81 ships Hermes with `Intl.NumberFormat`, `DateTimeFormat`, and `Collator` on iOS and Android. `Intl.RelativeTimeFormat` and `Intl.PluralRules` are present on both as of Hermes 0.12+. Validate during phase 1 with a smoke test rather than adding polyfills speculatively.
+- **Hermes Intl coverage.** Hermes natively supports `Intl.Collator`, `DateTimeFormat`, and `getCanonicalLocales`. On-device probing corrected two desk-research assumptions: `Intl.supportedValuesOf` is **absent on both iOS and Android** (despite upstream sources listing it as present), and `NumberFormat.formatToParts()` is **entirely absent on iOS** (present on Android) — a full omission, not the degraded array the "known iOS gap" implied. `NumberFormat.format` itself works on both. Hermes does **not** implement `Intl.PluralRules`, `RelativeTimeFormat`, `DisplayNames`, `ListFormat`, `Locale`, or `Segmenter` at the engine level (verified against Hermes `Features.md` for the installed RN 0.83.6 / Hermes 0.14.1; the earlier "present since Hermes 0.12+" claim here was wrong). i18next 26 falls back to a `dummyRule` (`one`/`other`) when `Intl.PluralRules` is missing — which happens to match en/de cardinals exactly, so the current en+de release works without a polyfill. A `@formatjs/intl-pluralrules/polyfill-force` + locale data shortlist is a pre-req for the next locale with >2 plural categories (e.g. `ar`) or for ordinals/`_zero` keys. Verified on-device (iOS sim + Android emulator, Hermes 0.14.1, 2026-05-27) — full results in `hermes-intl-spike-66-findings.md` (#66).
 - **Test-id strategy.** Decide whether to add stable `testID` props to load-bearing UI before or during the migration. Adding them first decouples test churn from translation churn.
 
 ---
