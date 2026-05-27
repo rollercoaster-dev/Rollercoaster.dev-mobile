@@ -1,6 +1,6 @@
 import { Alert, Linking } from "react-native";
 import { tryParseJSON, mimeToUTI, openLinkInBrowser } from "../evidenceViewers";
-import { i18n } from "../../i18n";
+import "../../i18n";
 
 describe("tryParseJSON", () => {
   it("parses valid JSON", () => {
@@ -43,8 +43,8 @@ describe("openLinkInBrowser i18n", () => {
     await openLinkInBrowser("bad://url");
 
     expect(alertSpy).toHaveBeenCalledWith(
-      i18n.t("evidenceViewer:errors.cannotOpenLink"),
-      i18n.t("evidenceViewer:errors.unableToOpen", { uri: "bad://url" }),
+      "Cannot open link",
+      "Unable to open: bad://url",
     );
 
     alertSpy.mockRestore();
@@ -62,8 +62,8 @@ describe("openLinkInBrowser i18n", () => {
     await openLinkInBrowser("ftp://broken");
 
     expect(alertSpy).toHaveBeenCalledWith(
-      i18n.t("evidenceViewer:errors.cannotOpenLink"),
-      i18n.t("evidenceViewer:errors.failedToOpen", { uri: "ftp://broken" }),
+      "Cannot open link",
+      "Failed to open: ftp://broken",
     );
 
     alertSpy.mockRestore();
