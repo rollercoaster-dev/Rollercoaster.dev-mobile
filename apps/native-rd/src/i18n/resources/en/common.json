@@ -165,7 +165,8 @@
   "errorBoundary": {
     "title": "Something went wrong",
     "message": "An unexpected error occurred.",
-    "retry": "Try Again"
+    "retry": "Try Again",
+    "a11yAlert": "Error: something went wrong"
   },
   "screenHeader": {
     "a11y": {

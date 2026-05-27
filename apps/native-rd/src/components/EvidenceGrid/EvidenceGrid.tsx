@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, Alert } from "react-native";
+import { useTranslation } from "react-i18next";
 import * as Haptics from "expo-haptics";
 import { Button } from "../Button";
 import { EvidenceThumbnail, type Evidence } from "../EvidenceThumbnail";
@@ -18,17 +19,23 @@ export function EvidenceGrid({
   onDelete,
   onAdd,
 }: EvidenceGridProps) {
+  const { t } = useTranslation();
+
   function handleLongPress(evidence: Evidence) {
     if (!onDelete) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    Alert.alert("Delete evidence?", "This cannot be undone.", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: () => onDelete(evidence),
-      },
-    ]);
+    Alert.alert(
+      t("evidenceGrid.deleteTitle"),
+      t("evidenceGrid.deleteMessage"),
+      [
+        { text: t("actions.cancel"), style: "cancel" },
+        {
+          text: t("actions.delete"),
+          style: "destructive",
+          onPress: () => onDelete(evidence),
+        },
+      ],
+    );
   }
 
   return (

@@ -183,7 +183,8 @@
   "errorBoundary": {
     "title": "Etwas ist schiefgelaufen",
     "message": "Ein unerwarteter Fehler ist aufgetreten.",
-    "retry": "Erneut versuchen"
+    "retry": "Erneut versuchen",
+    "a11yAlert": "Fehler: Etwas ist schiefgelaufen"
   },
   "screenHeader": {
     "a11y": {
