@@ -100,7 +100,6 @@ function DevToolsSection() {
     <SettingsSection title="Dev tools">
       <SettingsRow
         label="Intl probe (#66)"
-        value="›"
         onPress={() => navigation.navigate("IntlProbe")}
       />
     </SettingsSection>

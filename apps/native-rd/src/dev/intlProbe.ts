@@ -150,6 +150,13 @@ export function runIntlProbe(): IntlProbeResult[] {
   );
 
   results.push(
+    probe("DisplayNames (de)", () => {
+      const dn = new Intl.DisplayNames(["de"], { type: "language" });
+      return `of('en') = ${dn.of("en")}`;
+    }),
+  );
+
+  results.push(
     probe("ListFormat (de)", () =>
       new Intl.ListFormat("de", { type: "conjunction" }).format([
         "a",
