@@ -28,19 +28,19 @@ jobs:
       # at PR time). Re-run Prettier on the release PR branch so the bumped file
       # lands already formatted.
       - name: Checkout release PR branch
-        if: ${{ steps.release.outputs.prs_created == 'true' }}
+        if: ${{ steps.release.outputs.pr }}
         uses: actions/checkout@v6
         with:
           ref: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
 
       - name: Setup Bun
-        if: ${{ steps.release.outputs.prs_created == 'true' }}
+        if: ${{ steps.release.outputs.pr }}
         uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: package.json
 
       - name: Re-format release files with Prettier
-        if: ${{ steps.release.outputs.prs_created == 'true' }}
+        if: ${{ steps.release.outputs.pr }}
         env:
           PR_BRANCH: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
         run: |
