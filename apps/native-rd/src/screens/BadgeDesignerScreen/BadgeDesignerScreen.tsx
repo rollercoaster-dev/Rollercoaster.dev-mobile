@@ -2,7 +2,7 @@ import React, { Suspense, useCallback, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Animated,
+  ScrollView,
   TextInput,
   View,
 } from "react-native";
@@ -117,8 +117,6 @@ function DesignEditor({
   const { t } = useTranslation("badgeDesigner");
   const resolvedSaveLabel = saveLabel ?? t("actions.save");
 
-  const scrollY = useRef(new Animated.Value(0)).current;
-  const [topBarHeight, setTopBarHeight] = useState(64);
   const insets = useSafeAreaInsets();
   const tabBarHeight = TAB_BAR_HEIGHT + insets.bottom;
 
@@ -298,20 +296,15 @@ function DesignEditor({
 
   return (
     <View style={styles.editorRoot}>
-      <Animated.ScrollView
+      <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
           {
-            paddingTop: topBarHeight + PREVIEW_OVERLAY_HEIGHT,
+            paddingTop: PREVIEW_OVERLAY_HEIGHT,
             paddingBottom: tabBarHeight + 16,
           },
         ]}
         keyboardShouldPersistTaps="handled"
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: true },
-        )}
-        scrollEventThrottle={16}
       >
         <View style={styles.sectionContainer}>
           <Text style={styles.sectionLabel}>{t("sections.shape")}</Text>
@@ -418,40 +411,16 @@ function DesignEditor({
           />
           {extraFooter}
         </View>
-      </Animated.ScrollView>
+      </ScrollView>
 
-      <View
-        style={styles.topBar}
-        onLayout={(e) => {
-          const next = e.nativeEvent.layout.height;
-          setTopBarHeight((prev) => (prev === next ? prev : next));
-        }}
-      >
+      <View style={styles.topBar}>
         <ScreenSubHeader label={t("title")} onBack={onBack} />
       </View>
 
-      <Animated.View
-        style={[
-          styles.previewOverlay,
-          {
-            top: topBarHeight,
-            transform: [
-              {
-                // Stop the upward slide at the bottom edge of the safe-area
-                // inset so the preview never crosses into the notch / dynamic
-                // island. `topBarHeight` (from onLayout) includes
-                // `paddingTop: insets.top` from HeaderBand, hence the subtract.
-                translateY: scrollY.interpolate({
-                  inputRange: [0, topBarHeight],
-                  outputRange: [0, -Math.max(0, topBarHeight - insets.top)],
-                  extrapolate: "clamp",
-                }),
-              },
-            ],
-          },
-        ]}
-        pointerEvents="none"
-      >
+      {/* Static badge preview pinned to the top of the content area (which
+          already sits below the safe-area inset via App.tsx's offset), drawn
+          over the header band. No scroll-linked motion. */}
+      <View style={[styles.previewOverlay, { top: 0 }]} pointerEvents="none">
         <View
           style={styles.previewContainer}
           accessibilityRole="image"
@@ -461,7 +430,7 @@ function DesignEditor({
             <BadgeRenderer ref={previewRef} design={currentDesign} size={160} />
           </View>
         </View>
-      </Animated.View>
+      </View>
     </View>
   );
 }

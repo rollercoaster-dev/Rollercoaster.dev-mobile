@@ -9,7 +9,6 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery } from "@evolu/react";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "phosphor-react-native";
@@ -106,10 +105,6 @@ function BadgeDetailContent({
   const navigation =
     useNavigation<NativeStackNavigationProp<BadgesStackParamList>>();
   const { t } = useTranslation("badgeDetail");
-  // Pin the floating preview right below the notch — matches the Designer's
-  // max-scroll resting position (top: insets.top) so both screens land on
-  // the same vertical anchor.
-  const insets = useSafeAreaInsets();
   const query = useMemo(
     () => badgeWithGoalQuery(badgeId as BadgeId),
     [badgeId],
@@ -179,7 +174,7 @@ function BadgeDetailContent({
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingTop: insets.top + previewHeight },
+          { paddingTop: previewHeight },
         ]}
       >
         <Text style={styles.title}>{goalTitle}</Text>
@@ -297,7 +292,7 @@ function BadgeDetailContent({
       />
 
       <View
-        style={[styles.previewOverlay, { top: insets.top }]}
+        style={[styles.previewOverlay, { top: 0 }]}
         pointerEvents="none"
         onLayout={(e) => {
           const next = e.nativeEvent.layout.height;
