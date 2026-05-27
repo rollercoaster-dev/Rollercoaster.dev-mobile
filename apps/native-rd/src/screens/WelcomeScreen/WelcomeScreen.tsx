@@ -24,7 +24,7 @@ export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
     <View
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <HeaderBand>
+      <HeaderBand safeAreaTop>
         <View style={styles.heroRow}>
           <BrandMark size={56} />
           <View style={styles.heroText}>

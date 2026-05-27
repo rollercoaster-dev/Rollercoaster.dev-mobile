@@ -508,6 +508,7 @@ function CompletionContent({
                 ref={textInputRef}
                 style={styles.inlineNoteInput}
                 placeholder={tCompletion("evidencePhase.notePlaceholder")}
+                placeholderTextColor={theme.colors.textMuted}
                 value={noteText}
                 onChangeText={setNoteText}
                 multiline
