@@ -1,6 +1,28 @@
 import { Alert, Linking } from "react-native";
-import { tryParseJSON, mimeToUTI, openLinkInBrowser } from "../evidenceViewers";
+import * as Sharing from "expo-sharing";
+import { renderHook, act } from "../../__tests__/test-utils";
+import {
+  tryParseJSON,
+  mimeToUTI,
+  openLinkInBrowser,
+  openFile,
+  useEvidenceViewer,
+} from "../evidenceViewers";
+import type { Evidence } from "../../components/EvidenceThumbnail/EvidenceThumbnail";
 import "../../i18n";
+
+let mockFileExists = true;
+jest.mock("expo-file-system", () => ({
+  File: jest.fn().mockImplementation(() => ({
+    get exists() {
+      return mockFileExists;
+    },
+  })),
+}));
+jest.mock("expo-sharing", () => ({
+  isAvailableAsync: jest.fn(() => Promise.resolve(true)),
+  shareAsync: jest.fn(() => Promise.resolve()),
+}));
 
 describe("tryParseJSON", () => {
   it("parses valid JSON", () => {
@@ -69,4 +91,88 @@ describe("openLinkInBrowser i18n", () => {
     alertSpy.mockRestore();
     canOpenSpy.mockRestore();
   });
+});
+
+describe("openFile i18n", () => {
+  let alertSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
+    mockFileExists = true;
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it("alerts fileNotFound when the file does not exist", async () => {
+    mockFileExists = false;
+
+    await openFile("file:///gone.pdf");
+
+    expect(alertSpy).toHaveBeenCalledWith(
+      "File not found",
+      "The file may have been deleted.",
+    );
+  });
+
+  it("alerts sharingUnavailable when sharing is not available", async () => {
+    jest.spyOn(Sharing, "isAvailableAsync").mockResolvedValue(false);
+
+    await openFile("file:///doc.pdf");
+
+    expect(alertSpy).toHaveBeenCalledWith(
+      "Cannot open file",
+      "File sharing is not available on this device.",
+    );
+  });
+
+  it("alerts openFileFailed when sharing throws", async () => {
+    jest.spyOn(Sharing, "isAvailableAsync").mockResolvedValue(true);
+    jest.spyOn(Sharing, "shareAsync").mockRejectedValue(new Error("boom"));
+
+    await openFile("file:///doc.pdf");
+
+    expect(alertSpy).toHaveBeenCalledWith(
+      "Cannot open file",
+      "Something went wrong opening the file.",
+    );
+  });
+});
+
+describe("useEvidenceViewer.viewEvidence i18n — missing uri", () => {
+  let alertSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  const missingUriCases: readonly [Evidence["type"], string, string][] = [
+    ["photo", "Cannot view", "Photo file is missing."],
+    ["video", "Cannot play", "Video file is missing."],
+    ["voice_memo", "Cannot play", "Audio file is missing."],
+    ["file", "Cannot open", "File is missing."],
+  ];
+
+  it.each(missingUriCases)(
+    "alerts translated strings when %s evidence has no uri",
+    (type, title, message) => {
+      const { result } = renderHook(() => useEvidenceViewer());
+
+      act(() => {
+        result.current.viewEvidence({
+          id: "1",
+          title: "x",
+          type,
+          uri: undefined,
+        });
+      });
+
+      expect(alertSpy).toHaveBeenCalledWith(title, message);
+    },
+  );
 });
