@@ -157,5 +157,46 @@
     "a11y": {
       "current": "Current mode: {{label}}"
     }
+  },
+  "evidenceGrid": {
+    "deleteTitle": "Delete evidence?",
+    "deleteMessage": "This cannot be undone."
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "message": "An unexpected error occurred.",
+    "retry": "Try Again"
+  },
+  "screenHeader": {
+    "a11y": {
+      "goBack": "Go back"
+    }
+  },
+  "evidenceContent": {
+    "a11y": {
+      "openInBrowser": "Open in browser",
+      "videoPlayback": "Video evidence playback",
+      "retryVideo": "Retry loading video",
+      "retryImage": "Retry loading image"
+    }
+  },
+  "cardCarousel": {
+    "a11y": {
+      "previous": "Previous card",
+      "next": "Next card"
+    }
+  },
+  "viewerThumbnailStrip": {
+    "a11y": {
+      "items": "Evidence items"
+    }
+  },
+  "viewerModals": {
+    "a11y": {
+      "closeTextNote": "Close text note viewer",
+      "closeAudio": "Close audio player",
+      "closeVideo": "Close video player",
+      "closePhoto": "Close photo viewer"
+    }
   }
 }

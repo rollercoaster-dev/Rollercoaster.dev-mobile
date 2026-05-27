@@ -175,5 +175,46 @@
     "a11y": {
       "current": "Aktueller Modus: {{label}}"
     }
+  },
+  "evidenceGrid": {
+    "deleteTitle": "Nachweis löschen?",
+    "deleteMessage": "Das lässt sich nicht rückgängig machen."
+  },
+  "errorBoundary": {
+    "title": "Etwas ist schiefgelaufen",
+    "message": "Ein unerwarteter Fehler ist aufgetreten.",
+    "retry": "Erneut versuchen"
+  },
+  "screenHeader": {
+    "a11y": {
+      "goBack": "Zurück"
+    }
+  },
+  "evidenceContent": {
+    "a11y": {
+      "openInBrowser": "Im Browser öffnen",
+      "videoPlayback": "Video-Nachweis-Wiedergabe",
+      "retryVideo": "Video erneut laden",
+      "retryImage": "Bild erneut laden"
+    }
+  },
+  "cardCarousel": {
+    "a11y": {
+      "previous": "Vorherige Karte",
+      "next": "Nächste Karte"
+    }
+  },
+  "viewerThumbnailStrip": {
+    "a11y": {
+      "items": "Nachweis-Elemente"
+    }
+  },
+  "viewerModals": {
+    "a11y": {
+      "closeTextNote": "Notiz-Ansicht schließen",
+      "closeAudio": "Audio-Player schließen",
+      "closeVideo": "Video-Player schließen",
+      "closePhoto": "Foto-Ansicht schließen"
+    }
   }
 }
