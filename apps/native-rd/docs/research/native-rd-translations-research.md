@@ -12,7 +12,7 @@ Add translations to `native-rd` with `expo-localization` for device locale data 
 
 This fits the current app because:
 
-- `native-rd` is Expo 54 / React Native 0.81 / React 19 and already uses config plugins in `app.json`.
+- `native-rd` is Expo 55 / React Native 0.83.6 / React 19 (the stack verified during the #66 spike) and already uses config plugins in `app.json`.
 - The app is local-first, so translations should work offline without fetching language bundles.
 - There are many hard-coded visible and accessibility strings across screens, components, constants, and tests.
 - Existing utilities hard-code locale behavior, for example `formatDate` uses `en-US`.

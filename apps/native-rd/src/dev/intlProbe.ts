@@ -207,9 +207,15 @@ const PROBE_NS = "common";
 const PROBE_KEY = "__intlProbe_box";
 
 /**
- * Demonstrate i18next's plural-suffix resolution per locale. Injects an
- * ephemeral resource bundle with every CLDR category so the resolved suffix is
- * observable regardless of whether the locale ships real copy.
+ * Demonstrate i18next's plural-suffix resolution per locale. Adds a resource
+ * bundle with every CLDR category so the resolved suffix is observable
+ * regardless of whether the locale ships real copy.
+ *
+ * Dev-only and not cleaned up: the bundle is merged into the passed instance's
+ * `common` namespace under prefixed keys (`__intlProbe_box_*`) and persists for
+ * the i18n instance's lifetime. We don't `removeResourceBundle` because that
+ * drops the *entire* `common` namespace, not just the probe keys; the prefixed
+ * keys are inert padding the app never looks up.
  *
  * When `Intl.PluralRules` is missing, i18next's `dummyRule` collapses *every*
  * locale to `one`/`other` — so `ar` count=3 renders `other` instead of `few`,
