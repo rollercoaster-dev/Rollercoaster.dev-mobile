@@ -39,30 +39,45 @@ module.exports = {
       return {};
     }
 
-    // Numeric-only text (optionally with separators) is not translatable copy.
+    // Numeric-only text (optionally with grouping/decimal separators).
     const NUMERIC_PATTERN = /^\d[\d\s.,]*$/;
 
     function isAllowed(trimmed) {
-      // Whitespace-only JSXText (indentation between elements).
+      // Whitespace-only (indentation between elements).
       if (trimmed.length === 0) return true;
-      // Single character: punctuation, separators (·, /, |), or an icon glyph.
-      if ([...trimmed].length === 1) return true;
-      // Pure numbers, e.g. "42" or "1,000".
+      // Pure numbers, e.g. "42" or "1,000.50".
       if (NUMERIC_PATTERN.test(trimmed)) return true;
-      // All non-ASCII: icon font ligatures / glyph strings, never display copy.
-      if ([...trimmed].every((ch) => ch.codePointAt(0) > 127)) return true;
+      // No letters AND no digits → punctuation, separators (·, /, |, …, → ←), or
+      // icon-font glyphs (emoji, dingbats, Private Use Area). Never translatable
+      // copy. Letters in ANY script (Latin, CJK, Cyrillic, …) and number+unit
+      // strings like "100%" contain \p{L}/\p{N} and fall through to be flagged.
+      if (!/[\p{L}\p{N}]/u.test(trimmed)) return true;
       return false;
+    }
+
+    function reportIfRaw(reportNode, raw) {
+      const trimmed = raw.trim();
+      if (isAllowed(trimmed)) return;
+      context.report({
+        node: reportNode,
+        messageId: "noRawJsxString",
+        data: { value: trimmed },
+      });
     }
 
     return {
       JSXText(node) {
-        const trimmed = node.value.trim();
-        if (isAllowed(trimmed)) return;
-        context.report({
-          node,
-          messageId: "noRawJsxString",
-          data: { value: trimmed },
-        });
+        reportIfRaw(node, node.value);
+      },
+      // Catch the {"literal"} bypass: a string literal used as a JSX *child*
+      // (parent is the element/fragment), not as a prop value (parent is a
+      // JSXAttribute, e.g. label={"Go Back"} — out of scope).
+      JSXExpressionContainer(node) {
+        const parentType = node.parent && node.parent.type;
+        if (parentType !== "JSXElement" && parentType !== "JSXFragment") return;
+        const expr = node.expression;
+        if (expr.type !== "Literal" || typeof expr.value !== "string") return;
+        reportIfRaw(expr, expr.value);
       },
     };
   },

@@ -14,20 +14,26 @@ const COMPONENT = "/src/components/Card/Card.tsx";
 
 ruleTester.run("no-raw-jsx-strings", rule, {
   valid: [
-    // Translated copy — expression child, not JSXText
+    // Translated copy — expression child, not a string literal
     { code: '<Text>{t("home.title")}</Text>', filename: SCREEN },
     // Bound variable — expression child
     { code: "<Text>{label}</Text>", filename: SCREEN },
     // Whitespace-only JSXText (indentation between elements)
     { code: "<View> </View>", filename: SCREEN },
-    // Single character: punctuation / separator
+    // Punctuation / separators: no letters and no digits → allowed
     { code: "<Text>.</Text>", filename: SCREEN },
-    { code: "<Text>·</Text>", filename: SCREEN },
+    { code: "<Text>·</Text>", filename: SCREEN }, // middot
+    { code: "<Text>...</Text>", filename: SCREEN },
+    { code: "<Text>→ ←</Text>", filename: SCREEN }, // → ←
     // Numeric-only, with and without separators
     { code: "<Text>42</Text>", filename: SCREEN },
     { code: "<Text>1,000.50</Text>", filename: SCREEN },
-    // All non-ASCII: icon-font glyph string, never display copy
-    { code: "<Text></Text>", filename: SCREEN },
+    // Icon-font glyphs as {"literal"} children: PUA / emoji / symbols, no \p{L}/\p{N}
+    { code: '<Text>{"\ue000"}</Text>', filename: SCREEN }, // U+E000 PUA glyph
+    { code: '<Text>{"✕"}</Text>', filename: COMPONENT }, // ✕ close glyph
+    { code: '<Text>{"\u{1F3C6}"}</Text>', filename: SCREEN }, // 🏆 emoji
+    // A string literal as a PROP value is out of scope — only children are checked
+    { code: '<Button label={"Go Back"} />', filename: SCREEN },
     // Raw string outside screens/ and components/ — rule does not apply
     { code: "<Text>Hello World</Text>", filename: "/src/utils/debug.ts" },
     // Stories and tests are fixture data — excluded
@@ -41,11 +47,11 @@ ruleTester.run("no-raw-jsx-strings", rule, {
     },
   ],
   invalid: [
-    // Multi-word copy in a screen
+    // Multi-word copy in a screen — asserts the reported value is trimmed
     {
       code: "<Text>Hello World</Text>",
       filename: SCREEN,
-      errors: [{ messageId: "noRawJsxString" }],
+      errors: [{ messageId: "noRawJsxString", data: { value: "Hello World" } }],
     },
     // Real placeholder copy in a screen
     {
@@ -70,6 +76,33 @@ ruleTester.run("no-raw-jsx-strings", rule, {
       code: "<Text>100%</Text>",
       filename: SCREEN,
       errors: [{ messageId: "noRawJsxString" }],
+    },
+    // Non-Latin script is real display copy, not an icon glyph — flagged
+    {
+      code: "<Text>你好</Text>", // 你好
+      filename: SCREEN,
+      errors: [{ messageId: "noRawJsxString" }],
+    },
+    // Single non-Latin letter (a one-character word) — flagged, not allowlisted
+    {
+      code: "<Text>是</Text>", // 是 ("yes")
+      filename: SCREEN,
+      errors: [{ messageId: "noRawJsxString" }],
+    },
+    // The {"literal"} bypass: copy wrapped in an expression container — flagged
+    {
+      code: '<Text>{"Coming soon"}</Text>',
+      filename: SCREEN,
+      errors: [{ messageId: "noRawJsxString", data: { value: "Coming soon" } }],
+    },
+    // Multiple offenders → one error per node (visitor does not bail early)
+    {
+      code: "<View><Text>One</Text><Text>Two</Text></View>",
+      filename: SCREEN,
+      errors: [
+        { messageId: "noRawJsxString" },
+        { messageId: "noRawJsxString" },
+      ],
     },
   ],
 });
