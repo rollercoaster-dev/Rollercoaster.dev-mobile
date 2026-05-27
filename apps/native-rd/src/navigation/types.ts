@@ -52,6 +52,8 @@ export type BadgesStackParamList = {
 
 export type SettingsStackParamList = {
   Settings: undefined;
+  /** Dev-only Hermes Intl coverage probe (#66); registered only when `__DEV__`. */
+  IntlProbe: undefined;
 };
 
 // ---------------------------------------------------------------------------
