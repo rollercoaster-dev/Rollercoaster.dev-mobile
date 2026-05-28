@@ -50,3 +50,12 @@ jobs:
 
       - name: Test
         run: bun run test
+
+      # Gate releases on tester-facing notes being authored. release-notes:lint
+      # fails if any docs/release/testing-notes/<version>.md still contains the
+      # `TODO:` scaffold lines that release-please writes when opening the
+      # release PR. No file (older tags re-validated via workflow_dispatch, or
+      # chore-only releases that skipped scaffold) is a deliberate no-op pass.
+      - name: Lint release notes
+        run: bun run release-notes:lint
+        working-directory: apps/native-rd
