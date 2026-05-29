@@ -34,6 +34,7 @@ jobs:
     uses: ./.github/workflows/_release-validate.yml
     with:
       ref: ${{ inputs.ref || github.event.release.tag_name || github.ref }}
+      lint-release-notes: true
 
   build-ios:
     needs: validate
