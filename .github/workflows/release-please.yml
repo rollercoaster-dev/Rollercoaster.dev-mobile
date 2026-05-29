@@ -58,3 +58,44 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -s -m "chore: prettier-format app.json after release bump" -- apps/native-rd/app.json
           git push origin "HEAD:${PR_BRANCH}"
+
+      # Scaffold docs/release/testing-notes/<version>.md from CHANGELOG.md so
+      # the release PR carries a tester-facing notes file from the moment it
+      # opens. The scaffold is full of `TODO:` lines — release-notes:lint
+      # (run by _release-validate.yml) fails until a human has rewritten each
+      # TODO into actual tester-facing language. That gate is what stops a
+      # release being Published with empty/placeholder notes.
+      - name: Scaffold testing notes for release PR
+        if: ${{ steps.release.outputs.pr }}
+        env:
+          PR_BRANCH: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
+        run: |
+          set -euo pipefail
+          VERSION="$(jq -r .version apps/native-rd/package.json)"
+          NOTES="apps/native-rd/docs/release/testing-notes/${VERSION}.md"
+          if [ -f "$NOTES" ]; then
+            echo "$NOTES already exists — leaving in place (subsequent release-please update)."
+            exit 0
+          fi
+          # release-notes-generate fails when CHANGELOG has no Features/Bug
+          # Fixes for this version (chore-only release). That's fine: no
+          # tester-facing changes → no notes file → release-notes:lint passes
+          # via its missing-file no-op path. Surface other failures as real
+          # errors.
+          GEN_STDERR=$(mktemp)
+          if ! bun apps/native-rd/scripts/release-notes-generate.ts "$VERSION" 2>"$GEN_STDERR"; then
+            if grep -q "no Features or Bug Fixes" "$GEN_STDERR"; then
+              echo "No tester-facing changes in CHANGELOG for ${VERSION} — skipping scaffold."
+              rm -f "$GEN_STDERR"
+              exit 0
+            fi
+            cat "$GEN_STDERR" >&2
+            rm -f "$GEN_STDERR"
+            exit 1
+          fi
+          rm -f "$GEN_STDERR"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$NOTES"
+          git commit -s -m "chore: scaffold testing notes for ${VERSION}"
+          git push origin "HEAD:${PR_BRANCH}"

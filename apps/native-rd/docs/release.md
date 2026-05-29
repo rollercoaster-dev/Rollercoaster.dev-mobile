@@ -66,12 +66,28 @@ Why this workflow exists:
      `feat:` → minor, `fix:` → patch, `BREAKING CHANGE:` → major.
    - If the PR isn't there, no qualifying commits have landed.
 2. Review the PR. The diff bumps `apps/native-rd/package.json`,
-   `apps/native-rd/app.json` (`expo.version`), and `apps/native-rd/CHANGELOG.md`.
-3. Merge the PR. release-please pushes the `vX.Y.Z` tag **and publishes a
-   GitHub Release**.
-4. `build-production` workflow fires automatically on the published Release.
-   Watch it in Actions.
-5. After EAS finishes:
+   `apps/native-rd/app.json` (`expo.version`), and `apps/native-rd/CHANGELOG.md`,
+   and includes a scaffolded `docs/release/testing-notes/<version>.md` (committed
+   to the PR branch by release-please.yml).
+3. **Fill in the testing notes _on the release PR branch_, before merging.** The
+   scaffold is full of `TODO:` lines; rewrite each into real copy — `play` /
+   `appstore` are user-facing (no jargon, no PR numbers), `testflight` is a QA
+   brief (steps to exercise → expected result). See
+   `docs/release/testing-notes/README.md` for the per-store length limits.
+   - **Why before merge:** release-please tags at the _merge commit_. Notes
+     filled after merge land in a commit _after_ the tag, so the tagged build
+     ships placeholder/empty notes. The `release-notes-lint` check enforces this
+     (see "Release-notes gate" below).
+   - Verify locally first: `bun run release-notes:lint`.
+   - A chore-only release (no Features/Bug Fixes) has no scaffold and nothing to
+     fill — `release-notes-lint` passes via its missing-file no-op path.
+4. Merge the PR. release-please pushes the `vX.Y.Z` tag **and publishes a
+   GitHub Release** (as a draft — `"draft": true` in the release-please config;
+   publishing is the manual "ship" click in the Releases UI).
+5. `build-production` workflow fires on the published Release. It re-runs
+   `release-notes-lint`, splits the notes into store artifacts, and passes
+   `--what-to-test` to `eas build`. Watch it in Actions.
+6. After EAS finishes:
    - iOS: build appears in App Store Connect → TestFlight. External testers
      get it automatically (if the build is in a beta group with
      auto-distribution). The App Store release still requires manual
@@ -84,6 +100,30 @@ If you need to re-run a production build against an existing tag (e.g.,
 because EAS failed transiently), use **Actions → build-production → "Run
 workflow"** and supply the tag (e.g., `v0.1.4`) as the `ref` input. You can
 also choose `platform` = `ios` or `android` for a platform-specific re-run.
+
+## Release-notes gate
+
+One markdown file per version (`docs/release/testing-notes/<version>.md`) is the
+single source for three store fields: Play "What's new", App Store "What's New",
+and TestFlight "What to Test". The slices are marker-delimited; the scripts under
+`scripts/release-notes-*.ts` generate, lint, and split them.
+
+Two checks run `release-notes:lint`, at two different moments:
+
+| Check                             | When                                 | Purpose                                                                |
+| --------------------------------- | ------------------------------------ | ---------------------------------------------------------------------- |
+| `release-notes-lint.yml`          | On the release PR (human push)       | Force `TODO:` lines to be filled **before** the tag is cut.            |
+| `_release-validate.yml` (publish) | When the GitHub Release is published | Last-resort gate — fails the build rather than ship placeholder notes. |
+
+The PR check is the one that matters for getting real notes into the tagged
+commit. **It does not run when the bot opens the PR** — commits pushed with the
+default `GITHUB_TOKEN` (the scaffold commit) don't trigger workflows. It runs the
+moment a human pushes to the release branch (i.e. when you fill the TODOs).
+
+**One-time setup:** add **"Release Notes Lint"** as a required status check on
+`main` in branch protection (Settings → Branches). A required check that hasn't
+reported is treated as pending and blocks merge, so this also catches the case
+where someone tries to merge the raw scaffold without ever pushing a fill.
 
 ## Advancing the Android rollout
 

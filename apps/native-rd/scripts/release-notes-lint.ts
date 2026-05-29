@@ -15,13 +15,13 @@ import { readdirSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 
 import {
-  APP_ROOT,
   checkSlice,
   extractSlice,
   SLICES,
   type SliceViolation,
 } from "./release-notes-shared";
 
+const APP_ROOT = join(import.meta.dir, "..");
 const NOTES_DIR = join(APP_ROOT, "docs", "release", "testing-notes");
 
 type FileViolation = SliceViolation & { file: string };

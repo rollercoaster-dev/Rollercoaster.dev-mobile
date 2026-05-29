@@ -8,3 +8,12 @@ apps/native-rd/android/
 # (e.g. packages/*/CHANGELOG.md) are not in release-please scope and stay
 # enforced.
 apps/native-rd/CHANGELOG.md
+
+# Tester/store release notes. The scaffold is generated from CHANGELOG.md by
+# release-notes-generate.ts and then hand-edited into store copy, so its
+# formatting is content-driven (Prettier escapes `*` in changelog titles, wants
+# blockquote-continuation `>` lines, etc.) and can't be kept Prettier-clean at
+# generation time. format:check scans **/*.md, and _release-validate.yml runs it
+# at publish — without this ignore, every release fails format:check on the notes
+# file before EAS even starts. release-notes:lint enforces the real contract here.
+apps/native-rd/docs/release/testing-notes/
