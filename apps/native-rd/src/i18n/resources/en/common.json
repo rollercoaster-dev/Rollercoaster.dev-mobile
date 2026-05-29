@@ -93,7 +93,7 @@
       "completed": "Completed",
       "markComplete": "Mark complete"
     },
-    "progress": "Step {{current}} of {{total}}",
+    "progress": "{{current}} of {{total}}",
     "blocker": {
       "label": "Add evidence to complete",
       "a11yWithType": "Add {{label}} to complete this step"
