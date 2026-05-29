@@ -9,8 +9,8 @@
     "untitledFallback": "Ohne Titel"
   },
   "credential": {
-    "narrative_one": "Alle Schritte für: {{title}} abgeschlossen. Nachweis: {{count}} Element.",
-    "narrative_other": "Alle Schritte für: {{title}} abgeschlossen. Nachweis: {{count}} Elemente.",
+    "narrative_one": "Alle Schritte für: {{title}} abgeschlossen. Nachweis: {{count}}.",
+    "narrative_other": "Alle Schritte für: {{title}} abgeschlossen. Nachweise: {{count}}.",
     "narrativeNoEvidence": "Alle Schritte für: {{title}} abgeschlossen."
   },
   "earned": {
