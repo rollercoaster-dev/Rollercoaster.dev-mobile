@@ -8,8 +8,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-export const APP_ROOT = join(import.meta.dir, "..");
-
 export type SliceName = "play" | "appstore" | "testflight";
 
 export const SLICES: readonly SliceName[] = ["play", "appstore", "testflight"];
@@ -70,8 +68,11 @@ export function checkSlice(
 // release-notes-generate.ts, so CLI argv can't smuggle regex meta-chars in.
 const SEMVER_RE = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
 
-export function resolveVersion(arg: string | undefined): string {
-  const candidate = arg && arg.length > 0 ? arg : readPackageVersion();
+export function resolveVersion(
+  arg: string | undefined,
+  appRoot: string,
+): string {
+  const candidate = arg && arg.length > 0 ? arg : readPackageVersion(appRoot);
   if (!SEMVER_RE.test(candidate)) {
     throw new Error(
       `Invalid version "${candidate}" — expected semver like 0.1.4 or 0.1.4-rc.1.`,
@@ -80,8 +81,8 @@ export function resolveVersion(arg: string | undefined): string {
   return candidate;
 }
 
-function readPackageVersion(): string {
-  const pkgPath = join(APP_ROOT, "package.json");
+function readPackageVersion(appRoot: string): string {
+  const pkgPath = join(appRoot, "package.json");
   const pkg = JSON.parse(readFileSync(pkgPath, "utf8")) as { version?: string };
   if (!pkg.version) throw new Error(`No version in ${pkgPath}`);
   return pkg.version;
