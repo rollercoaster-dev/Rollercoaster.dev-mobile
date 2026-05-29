@@ -268,6 +268,8 @@ jobs:
 
   finalize-sentry:
     needs:
+      - build-ios
+      - build-android
       - submit-ios
       - submit-android
     if: ${{ always() && !cancelled() && !contains(needs.*.result, 'failure') && (needs.submit-ios.result == 'success' || needs.submit-android.result == 'success') }}
@@ -290,16 +292,53 @@ jobs:
         run: bun install --frozen-lockfile
         working-directory: .
 
-      - name: Read version
-        id: version
-        run: echo "value=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
-
-      - name: Finalize Sentry release
+      # The Sentry React Native SDK names releases <bundleId>@<version>+<buildNumber>
+      # and creates them lazily on the first runtime event — so right after submit the
+      # release usually does not exist yet, and a bare "<version>" never matches. The
+      # iOS buildNumber and Android versionCode also differ, so there is no single name.
+      # Resolve each shipped build's real version + buildNumber from its EAS build record
+      # and create-or-finalize the correctly-named release per platform. `releases new`
+      # is idempotent; identical names (when build numbers are in sync) are deduped so we
+      # don't emit duplicate deploy markers.
+      #
+      # Note: this only writes the release + deploy marker. Symbolication depends on
+      # build-time sourcemap upload, which is tracked separately.
+      - name: Finalize Sentry releases
         env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: rollercoasterdev
           SENTRY_PROJECT: native-rd
-          RELEASE_VERSION: ${{ steps.version.outputs.value }}
+          IOS_BUILD_ID: ${{ needs.build-ios.outputs.build_id }}
+          ANDROID_BUILD_ID: ${{ needs.build-android.outputs.build_id }}
         run: |
-          npx --yes @sentry/cli@latest releases finalize "$RELEASE_VERSION"
-          npx --yes @sentry/cli@latest releases deploys "$RELEASE_VERSION" new --env production
+          set -euo pipefail
+          IOS_BUNDLE_ID="$(jq -r '.expo.ios.bundleIdentifier' app.json)"
+          ANDROID_BUNDLE_ID="$(jq -r '.expo.android.package' app.json)"
+          finalized=""
+
+          finalize() {
+            local build_id="$1" bundle_id="$2" info ver num rel
+            if [ -z "$build_id" ] || [ "$build_id" = "null" ]; then
+              echo "No build id for $bundle_id — skipping (platform not built this run)."
+              return 0
+            fi
+            info="$(npx --yes eas-cli@latest build:view "$build_id" --json)"
+            ver="$(echo "$info" | jq -r '.appVersion')"
+            num="$(echo "$info" | jq -r '.appBuildVersion')"
+            rel="${bundle_id}@${ver}+${num}"
+            case " $finalized " in
+              *" $rel "*)
+                echo "Already finalized $rel — skipping duplicate."
+                return 0
+                ;;
+            esac
+            finalized="$finalized $rel"
+            echo "Finalizing Sentry release: $rel"
+            npx --yes @sentry/cli@latest releases new "$rel"
+            npx --yes @sentry/cli@latest releases finalize "$rel"
+            npx --yes @sentry/cli@latest releases deploys "$rel" new --env production
+          }
+
+          finalize "${IOS_BUILD_ID:-}" "$IOS_BUNDLE_ID"
+          finalize "${ANDROID_BUILD_ID:-}" "$ANDROID_BUNDLE_ID"
