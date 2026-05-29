@@ -32,3 +32,11 @@ notes:
     `badgeDetail.fallback.untitled`.
   - 'First-badge microcopy stays small. "Das erste. (notiert.)" beats
     "Dein allererstes Badge — herzlichen Glückwunsch!".'
+  - The `credential.*` keys are the OB3 achievement criteria narrative baked
+    into the signed badge at creation time and shown on BadgeDetail under
+    "How it was earned". `{{title}}` is the user's goal title — do NOT
+    translate it, it interpolates verbatim. Use "Schritt"/"Schritte" for
+    steps (matches completion.json) and "Nachweis"/"Nachweise" for evidence
+    items (matches focusMode.json / common.json). `narrativeNoEvidence` is the
+    zero-evidence sentence and omits the evidence clause entirely. Plural
+    forms follow English's _one/_other.

@@ -46,6 +46,7 @@ const BASE_INPUT: CredentialInput = {
   publicKeyJwk: { kty: "OKP", crv: "Ed25519", x: "abc123" },
   credentialId: "urn:uuid:cred-01",
   issuedOn: "2026-02-18T00:00:00.000Z",
+  narrative: "Complete all steps for: Learn React Native",
 };
 
 describe("buildDid", () => {
@@ -223,44 +224,21 @@ describe("buildUnsignedCredential", () => {
     },
   );
 
-  it("includes evidence count in criteria narrative", () => {
+  // The narrative is composed + localized by the caller (useCreateBadge) and
+  // passed in as a plain string; this module is i18n-free and only forwards it
+  // verbatim into criteria.narrative. Plural/evidence-count/locale behavior is
+  // covered in useCreateBadge.test.ts where the composition actually lives.
+  it("forwards the caller-provided narrative into criteria.narrative verbatim", () => {
     const input: CredentialInput = {
       ...BASE_INPUT,
-      evidence: [
-        { id: "ev-01", type: "photo", uri: "file:///a.jpg", description: null },
-        { id: "ev-02", type: "text", uri: "content:text;x", description: null },
-        { id: "ev-03", type: "photo", uri: "file:///b.jpg", description: null },
-      ],
+      narrative: "Schließe alle Schritte ab für: React lernen. Nachweise: 3.",
     };
     const cred = buildUnsignedCredential(input);
-    const subject = cred["credentialSubject"] as Record<string, unknown>;
-    const achievement = subject["achievement"] as Record<string, unknown>;
-    const criteria = achievement["criteria"] as Record<string, unknown>;
-    expect(criteria["narrative"]).toContain("3 items");
-  });
-
-  it('uses singular "item" for single evidence entry', () => {
-    const input: CredentialInput = {
-      ...BASE_INPUT,
-      evidence: [
-        { id: "ev-01", type: "text", uri: "content:text;x", description: null },
-      ],
-    };
-    const cred = buildUnsignedCredential(input);
-    const subject = cred["credentialSubject"] as Record<string, unknown>;
-    const achievement = subject["achievement"] as Record<string, unknown>;
-    const criteria = achievement["criteria"] as Record<string, unknown>;
-    expect(criteria["narrative"]).toContain("1 item");
-    expect(criteria["narrative"]).not.toContain("1 items");
-  });
-
-  it("omits evidence count from narrative when evidence is empty (backwards compat)", () => {
-    const cred = buildUnsignedCredential(BASE_INPUT);
     const subject = cred["credentialSubject"] as Record<string, unknown>;
     const achievement = subject["achievement"] as Record<string, unknown>;
     const criteria = achievement["criteria"] as Record<string, unknown>;
     expect(criteria["narrative"]).toBe(
-      "Complete all steps for: Learn React Native",
+      "Schließe alle Schritte ab für: React lernen. Nachweise: 3.",
     );
   });
 

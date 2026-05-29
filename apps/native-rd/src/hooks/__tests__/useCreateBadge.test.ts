@@ -6,6 +6,7 @@ import { useQuery } from "@evolu/react";
 import { useCreateBadge } from "../useCreateBadge";
 import { completeGoal, createBadge, updateBadge, GoalStatus } from "../../db";
 import type { GoalId } from "../../db";
+import { i18n } from "../../i18n";
 
 // openbadges-core and jose are ESM-only — mock at module level
 jest.mock("@rollercoaster-dev/openbadges-core", () => ({
@@ -39,7 +40,7 @@ jest.mock("../../db", () => ({
   evidenceByGoalQuery: jest.fn(() => "mock-evidence-query"),
   stepEvidenceByGoalQuery: jest.fn(() => "mock-step-evidence-query"),
   badgeByGoalQuery: jest.fn(() => "mock-badge-query"),
-  canCompleteGoal: (evidence: Array<{ type: string | null }>) =>
+  canCompleteGoal: (evidence: { type: string | null }[]) =>
     evidence.some((e) => e.type !== null),
   completeGoal: jest.fn(),
   createBadge: jest.fn(),
@@ -570,10 +571,82 @@ describe("useCreateBadge", () => {
       await act(async () => {});
 
       const callArg = mockBadges.buildUnsignedCredential.mock.calls[0][0] as {
-        evidence: Array<Record<string, unknown>>;
+        evidence: Record<string, unknown>[];
       };
       const goalEvidence = callArg.evidence.find((e) => e.id === "ev-1");
       expect(goalEvidence).not.toHaveProperty("stepTitle");
+    });
+  });
+
+  // The criteria narrative is localized to the active UI language and composed
+  // here (not in the pure credentialBuilder) so it can reach i18next. Assert
+  // against i18n.t(key) rather than hardcoded English: the contract is "the
+  // hook used this key with this count/title", which survives copy edits and
+  // proves localization is wired (a reverted hardcoded literal would diverge
+  // under any non-en language).
+  describe("criteria narrative localization", () => {
+    const narrativeArg = () =>
+      (
+        mockBadges.buildUnsignedCredential.mock.calls[0][0] as {
+          narrative: string;
+        }
+      ).narrative;
+
+    it("composes the plural narrative with evidence count and goal title", async () => {
+      mockUseQuery.mockImplementation((query: string) => {
+        if (query === "mock-goals-query") return [MOCK_GOAL];
+        if (query === "mock-evidence-query")
+          return [
+            { id: "ev-1", type: "photo", goalId: GOAL_ID },
+            { id: "ev-2", type: "photo", goalId: GOAL_ID },
+            { id: "ev-3", type: "text", goalId: GOAL_ID },
+          ];
+        if (query === "mock-step-evidence-query") return [];
+        if (query === "mock-badge-query") return [];
+        return [];
+      });
+
+      renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
+      await act(async () => {});
+
+      expect(narrativeArg()).toBe(
+        i18n.t("badges:credential.narrative", {
+          count: 3,
+          title: "My Goal",
+        }),
+      );
+    });
+
+    it("uses the singular form for a single evidence item", async () => {
+      // Default mock returns exactly one goal-evidence row.
+      renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
+      await act(async () => {});
+
+      expect(narrativeArg()).toBe(
+        i18n.t("badges:credential.narrative", { count: 1, title: "My Goal" }),
+      );
+      expect(narrativeArg()).not.toContain("1 items");
+    });
+
+    it("uses the no-evidence narrative (no evidence clause) when there is none", async () => {
+      mockUseQuery.mockImplementation((query: string) => {
+        if (query === "mock-goals-query") return [MOCK_GOAL];
+        if (query === "mock-evidence-query") return [];
+        if (query === "mock-step-evidence-query") return [];
+        if (query === "mock-badge-query") return [];
+        return [];
+      });
+
+      // No evidence → the bake later throws at the canCompleteGoal gate, but
+      // buildUnsignedCredential is called first, so the narrative arg is still
+      // captured.
+      renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
+      await act(async () => {});
+
+      expect(narrativeArg()).toBe(
+        i18n.t("badges:credential.narrativeNoEvidence", { title: "My Goal" }),
+      );
+      expect(narrativeArg()).not.toContain("Evidence");
     });
   });
 
