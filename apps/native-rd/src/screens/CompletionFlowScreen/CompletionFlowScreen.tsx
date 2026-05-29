@@ -540,7 +540,8 @@ function CompletionContent({
                 ).map((opt) => (
                   <Button
                     key={opt.type}
-                    label={`${opt.icon} ${evidenceLabel(t, opt.type)}`}
+                    icon={opt.icon}
+                    label={evidenceLabel(t, opt.type)}
                     onPress={() => handleEvidenceTypePress(opt.type)}
                     variant="secondary"
                     size="sm"

@@ -52,6 +52,12 @@ export const styles = StyleSheet.create((theme) => ({
   disabled: {
     opacity: 0.4,
   },
+  // Leading emoji icon. Deliberately omits fontFamily so the glyph renders in
+  // the system emoji font on its own, rather than being pulled into the body
+  // font's run — the mixed-run case that drops trailing label glyphs on Android.
+  icon: (size: ButtonSize = "md") => ({
+    fontSize: theme.size[sizeMap[size].fontSize],
+  }),
   label: (size: ButtonSize = "md") => ({
     fontSize: theme.size[sizeMap[size].fontSize],
     fontWeight: theme.fontWeight.bold,

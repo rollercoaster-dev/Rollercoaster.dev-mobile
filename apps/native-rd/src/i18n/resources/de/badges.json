@@ -8,6 +8,11 @@
   "card": {
     "untitledFallback": "Ohne Titel"
   },
+  "credential": {
+    "narrative_one": "Alle Schritte für: {{title}} abgeschlossen. Nachweis: {{count}}.",
+    "narrative_other": "Alle Schritte für: {{title}} abgeschlossen. Nachweise: {{count}}.",
+    "narrativeNoEvidence": "Alle Schritte für: {{title}} abgeschlossen."
+  },
   "earned": {
     "microcopy": {
       "first": "Das erste. (notiert.)",

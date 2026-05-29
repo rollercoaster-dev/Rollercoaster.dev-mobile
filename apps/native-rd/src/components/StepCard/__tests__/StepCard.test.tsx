@@ -34,7 +34,7 @@ describe("StepCard", () => {
 
   it("renders step number label", () => {
     renderWithProviders(<StepCard step={makeStep()} {...defaultProps} />);
-    expect(screen.getByText("Step 1 of 5")).toBeOnTheScreen();
+    expect(screen.getByText("1 of 5")).toBeOnTheScreen();
   });
 
   it("renders step title", () => {
@@ -393,7 +393,7 @@ describe("StepCard", () => {
       />,
     );
     const tree = JSON.stringify(screen.toJSON());
-    // "Step 1 of 5" is split into separate JSX children by interpolation, so it
+    // "1 of 5" is split into separate JSX children by interpolation, so it
     // doesn't appear as one contiguous substring. Use the status badge label
     // (a single Text child) to mark the metaRow's position instead — since
     // the badge sits inside metaRow, locating it locates the row.

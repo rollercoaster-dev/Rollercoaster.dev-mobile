@@ -6,6 +6,7 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@evolu/react";
+import { useTranslation } from "react-i18next";
 import {
   goalsQuery,
   evidenceByGoalQuery,
@@ -86,6 +87,9 @@ export function useCreateBadge(
 ): UseCreateBadgeResult {
   const enabled = options?.enabled !== false;
   const { keyId, isReady } = useUserKey();
+  // Narrative is localized at bake time in the active UI language and frozen
+  // into the signed credential — single language, by design. See docs/i18n.md.
+  const { t } = useTranslation("badges");
 
   const goals = useQuery(goalsQuery);
   const goal = goals.find((g) => g.id === goalId) ?? null;
@@ -108,6 +112,11 @@ export function useCreateBadge(
   capturedPngRef.current = options?.capturedPng;
   const designRef = useRef(options?.design);
   designRef.current = options?.design;
+  // t() identity changes on language switch; ref it so the bake effect reads
+  // the current language without re-running on every render (matches the
+  // Evolu-ref pattern above). hasTriggered guards re-entry regardless.
+  const tRef = useRef(t);
+  tRef.current = t;
 
   // Never reset — prevents re-entry after status state updates or after
   // existingBadge reactively flips from null to a row.
@@ -167,10 +176,24 @@ export function useCreateBadge(
           })),
         ];
 
+        const goalTitle = goal.title as string;
+        // Compose the criteria narrative in the active UI language. Two forms:
+        // the evidence-count sentence (plural via i18next _one/_other) and the
+        // zero-evidence sentence, which drops the "Evidence:" clause entirely.
+        const narrative =
+          allEvidence.length > 0
+            ? tRef.current("credential.narrative", {
+                count: allEvidence.length,
+                title: goalTitle,
+              })
+            : tRef.current("credential.narrativeNoEvidence", {
+                title: goalTitle,
+              });
+
         const unsignedCredential = buildUnsignedCredential({
           goal: {
             id: goal.id as string,
-            title: goal.title as string,
+            title: goalTitle,
             description: (goal.description as string | null) ?? null,
           },
           evidence: allEvidence,
@@ -178,6 +201,7 @@ export function useCreateBadge(
           publicKeyJwk,
           credentialId,
           issuedOn,
+          narrative,
         });
 
         setStatus("signing");
