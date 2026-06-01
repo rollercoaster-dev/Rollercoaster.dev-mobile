@@ -42,7 +42,11 @@ jobs:
       - name: Re-format release files with Prettier
         if: ${{ steps.release.outputs.pr }}
         env:
-          PR_BRANCH: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
+          # GHA evaluates `env:` before `if:`, so a bare `fromJSON(...)` here
+          # throws on any merge to main that isn't a release-PR merge (the
+          # action emits an empty `pr` output). Short-circuit so fromJSON only
+          # runs when the output is non-empty.
+          PR_BRANCH: ${{ steps.release.outputs.pr && fromJSON(steps.release.outputs.pr).headBranchName || '' }}
         run: |
           set -euo pipefail
           # Pinned to the repo's Prettier major; app.json has no config/plugins,
@@ -68,7 +72,8 @@ jobs:
       - name: Scaffold testing notes for release PR
         if: ${{ steps.release.outputs.pr }}
         env:
-          PR_BRANCH: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
+          # See note on the Prettier step above re: env-before-if evaluation.
+          PR_BRANCH: ${{ steps.release.outputs.pr && fromJSON(steps.release.outputs.pr).headBranchName || '' }}
         run: |
           set -euo pipefail
           VERSION="$(jq -r .version apps/native-rd/package.json)"
