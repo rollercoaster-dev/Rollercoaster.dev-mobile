@@ -6,7 +6,7 @@ Evergreen walkthrough of `native-rd`, slice by slice. Doubles as React Native le
 
 | #   | Chapter                                            | Status      |
 | --- | -------------------------------------------------- | ----------- |
-| 1   | [App shell & observability](01-app-shell.md)       | not-started |
+| 1   | [App shell & observability](01-app-shell.md)       | started     |
 | 2   | [Navigation](02-navigation.md)                     | not-started |
 | 3   | [Data layer (Evolu)](03-data-layer.md)             | not-started |
 | 4   | [Theming + ND accessibility](04-theming-a11y.md)   | not-started |
