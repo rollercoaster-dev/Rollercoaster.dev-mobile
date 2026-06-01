@@ -17,14 +17,14 @@ Everything outside the running app: native build orchestration, EAS profiles, na
   - `scripts/worktree-boot.sh` — git worktree init helper for parallel agents
 - **EAS + Expo config**
   - `eas.json` — Build/Submit profiles (dev, preview, production)
-  - `app.json` / `app.config.*` — Expo runtime config (name, splash, plugins, permissions)
+  - `app.json` — Expo runtime config (name, splash, plugins, permissions)
   - `babel.config.js` — Babel transpiler (Unistyles plugin, Reanimated)
   - `metro.config.js` — Metro bundler config
-- **Native projects**
-  - `ios/Podfile` — CocoaPods dependency manifest
-  - `ios/Podfile.properties.json` — iOS native property overrides
+- **Native projects** (generated outputs from `expo prebuild`, gitignored — review only when present locally)
+  - `ios/**` — Xcode project, Podfile, Info.plist, native build settings
+  - `android/**` — Gradle project, AndroidManifest.xml, signing config
 - **Release tooling**
-  - `scripts/release-notes-generate.ts`, `release-notes-changelog.ts`, `release-notes-split.ts`, `release-notes-lint.ts`, `release-notes-store.ts`, `release-notes-shared.ts`
+  - `scripts/release-notes-generate.ts`, `scripts/release-notes-changelog.ts`, `scripts/release-notes-split.ts`, `scripts/release-notes-lint.ts`, `scripts/release-notes-store.ts`, `scripts/release-notes-shared.ts`
 - **Validation tooling**
   - `scripts/jest-node.sh` — Jest runner for Node-side tests
   - `scripts/run-e2e.sh` — E2E orchestration
