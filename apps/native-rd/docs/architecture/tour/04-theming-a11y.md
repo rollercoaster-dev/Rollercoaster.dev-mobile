@@ -16,6 +16,7 @@ The 14-theme × 6-a11y-variant matrix and everything that serves it.
 - `react-native-unistyles` v3 integration + Babel plugin
 - `src/utils/accessibility.ts` (contrast checker)
 - `src/components/ThemeChipGrid`, `src/components/ThemeSwitcher`
+- `src/screens/SettingsScreen/**` — the user-facing control surface for theme variant, density, animation preference, language, and Sentry debug tools
 - `src/__tests__/accessibility.test.tsx`, `src/themes/__tests__/contrast.test.ts`
 - Font stack: Anybody, Instrument Sans, DM Mono, Lexend, Atkinson Hyperlegible
 - ND variants: highContrast, largeText, dyslexia, lowVision, autismFriendly, lowInfo

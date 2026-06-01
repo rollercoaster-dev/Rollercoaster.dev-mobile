@@ -21,6 +21,10 @@ See [README.md](README.md) for the severity and lens rubrics.
   Optional. Links, related findings, blocked-by relationships.
 ```
 
+## Explicitly out of scope
+
+- `src/screens/TestScreen/**` — dev-only component sandbox. Not user-facing, not on any nav graph; reviewed only if it grows production responsibilities.
+
 ## Staged findings
 
 _(none yet)_

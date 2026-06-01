@@ -4,24 +4,32 @@ Evergreen walkthrough of `native-rd`, slice by slice. Doubles as React Native le
 
 ## Slices
 
-| #   | Chapter                                                             | Status      |
-| --- | ------------------------------------------------------------------- | ----------- |
-| 1   | [Goals domain](01-goals.md)                                         | not-started |
-| 2   | [Evidence & capture](02-evidence.md)                                | not-started |
-| 3   | [Badges + signing/baking](03-badges.md)                             | not-started |
-| 4   | [Theming + ND accessibility](04-theming-a11y.md)                    | not-started |
-| 5   | [Infra (i18n, Sentry, build, navigation, db, scripts)](05-infra.md) | not-started |
+| #   | Chapter                                            | Status      |
+| --- | -------------------------------------------------- | ----------- |
+| 1   | [App shell & observability](01-app-shell.md)       | not-started |
+| 2   | [Navigation](02-navigation.md)                     | not-started |
+| 3   | [Data layer (Evolu)](03-data-layer.md)             | not-started |
+| 4   | [Theming + ND accessibility](04-theming-a11y.md)   | not-started |
+| 5   | [Internationalization (runtime)](05-i18n.md)       | not-started |
+| 6   | [Goals domain](06-goals.md)                        | not-started |
+| 7   | [Evidence & capture](07-evidence.md)               | not-started |
+| 8   | [Build pipeline & tooling](08-build-tooling.md)    | not-started |
+| 9   | [Badges + signing/baking (capstone)](09-badges.md) | not-started |
 
 Chapter status is one of: `not-started` → `in-progress` → `drafted` → `reviewed`. Update the table when a chapter's status changes.
+
+### Why foundations-up
+
+The order is dependency-order, not product-narrative order. Every domain screen (Goals, Evidence, Badges) sits on top of the data layer, theming, navigation, and i18n — so the foundations are reviewed first, then domain features can be read with their substrate already on the page. The capstone (badges + signing/baking) stays last so the self-signed completion badge is the natural reward for finishing the tour.
 
 ## Tracked as a goal inside `native-rd`
 
 The review is itself a goal inside the app — dogfooding the goal / step / evidence / badge flow while auditing it.
 
 - **Goal:** _Tour & review the native-rd codebase_
-- **Steps:** one per slice (5 total — see table above)
+- **Steps:** one per slice (9 total — see table above)
 - **Evidence per step:** the filed GH issue tree for that slice (epic + sub-issues) plus any PRs that close them. Nothing else — GH artifacts are externally addressable, durable, and verifiable; chapter docs live in the repo as output but aren't evidence.
-- **Completion artifact:** a self-signed Open Badge, baked from a custom design (designed via `BadgeDesignerScreen` during or after slice 3), with the GH issue/PR URLs as evidence claims. The badge is the verifiable proof the review happened — the PNG carries it forever.
+- **Completion artifact:** a self-signed Open Badge, baked from a custom design (designed via `BadgeDesignerScreen` during or after slice 9), with the GH issue/PR URLs as evidence claims. The badge is the verifiable proof the review happened — the PNG carries it forever.
 
 The app goal is the primary progress tracker. GH issues are both work-output and evidence.
 

@@ -1,4 +1,4 @@
-# Slice 3 — Badges + signing/baking
+# Slice 9 — Badges + signing/baking (capstone)
 
 **Status:** not-started
 **Drafted:** —
@@ -12,8 +12,7 @@ Badge creation, design, display, and the OpenBadges signing/baking pipeline.
 
 - `BadgeDesignerScreen`, `BadgeDetailScreen`, `BadgeEarnedModal`, `BadgesScreen`
 - `src/components/BadgeCard`
-- `src/navigation/BadgesStack`
-- `CompletionFlowScreen` (badge issuance entry point — co-reviewed with slice 1's goal-completion flow)
+- `CompletionFlowScreen` (badge issuance entry point — co-reviewed with slice 6's goal-completion flow)
 - `src/badges/**` and the workspace package `@rollercoaster-dev/openbadges-core`
 - `src/crypto/**` (Ed25519 keys, PNG baking, hashing)
 - `KeyProvider` interface + `SecureStoreKeyProvider` implementation (`src/crypto/`)
@@ -21,6 +20,7 @@ Badge creation, design, display, and the OpenBadges signing/baking pipeline.
 
 **Deferred:**
 
+- `src/navigation/BadgesStack` — reviewed alongside other stacks in slice 2 (navigation)
 - Verification flow if it lives elsewhere (TBD at prep)
 
 ## File map
