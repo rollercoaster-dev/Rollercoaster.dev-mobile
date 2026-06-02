@@ -1,7 +1,7 @@
 # Tolgee Self-Hosted Translation Management Prototype
 
 **Date:** 2026-05-23
-**Status:** Implemented (PR [#148](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/pull/148))
+**Status:** Implemented (PR [#148](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/pull/148)) — verified partial, see verification notes below
 **Issue:** [#136](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/136)
 **Size estimate:** size:m (4–8h)
 
@@ -143,6 +143,26 @@ Issue #136 acceptance items:
 - [x] Dev-only in-context editing path → Step 3 (Expo web)
 - [x] Production startup unchanged, no Tolgee/network dependency → Step 3 (gated SDK) + Step 7 (verify)
 - [x] Type-check and i18n tests still pass → Step 7
+
+## Verification notes (2026-05-24)
+
+Verified during PR #148 review on hail-mary + czarnomorph.
+
+### Infrastructure
+
+- Tolgee container healthy on `127.0.0.1:8085`. Both services (tolgee, tolgee-db) up.
+- Tailscale serve was misconfigured pointing to port 8081 (Metro) instead of 8085. **Fixed** — re-ran `tailscale serve --bg http://localhost:8085`.
+- Tolgee reachable at `https://hail-mary.tail8b44a.ts.net/` from czarnomorph. ✅
+- Project "native-rd" (ID 2) exists, API key valid, languages en + de present. ✅
+- 6/15 namespaces imported (common, welcome, goals, settings, focusMode, newGoal). Remaining 9 not yet pushed — does not block step 6 or 7.
+
+### Step 5 — in-context editor: BLOCKED
+
+`bun run web` is not runnable: `@evolu/react-native/expo-sqlite` has no browser implementation, so the app crashes at the DB layer before any UI renders. This is a pre-existing limitation unrelated to this PR, but the test plan assumes web works.
+
+Filed [#150](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/150) — spike to prototype Evolu web deps (~2–3 h).
+
+### Steps 6 & 7 — see below
 
 ## Follow-ups (not in this PR)
 
