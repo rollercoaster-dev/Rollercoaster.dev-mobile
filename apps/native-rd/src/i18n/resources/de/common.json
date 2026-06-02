@@ -1,1 +1,9 @@
-{}
+{
+  "actions": {
+    "cancel": "Abbrechen",
+    "close": "Schließen",
+    "confirm": "Bestätigen",
+    "delete": "Löschen",
+    "save": "Speichern"
+  }
+}
