@@ -25,6 +25,9 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       # Use the external Postgres container above, not Tolgee's embedded one.
       TOLGEE_POSTGRES_AUTOSTART_ENABLED: "false"
+      # Authentication must be explicitly enabled; without it Tolgee runs in
+      # unauthenticated demo mode and skips the login screen entirely.
+      TOLGEE_AUTHENTICATION_ENABLED: "true"
       # Lock down self-signup so only the seeded admin (and admin-invited users
       # via in-app invite) can log in. Required for the Tailscale-only model.
       TOLGEE_AUTHENTICATION_REGISTRATIONS_ALLOWED: "false"
