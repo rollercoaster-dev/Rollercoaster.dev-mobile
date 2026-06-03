@@ -4,7 +4,7 @@
  * Provides a curated set of badge-relevant Phosphor icons organized by category,
  * with instant local keyword search. No network calls required.
  *
- * The full Phosphor library has ~1500 icons. We curate ~200 badge-relevant icons
+ * The full Phosphor library has ~1500 icons. We curate ~300 badge-relevant icons
  * into categories while still allowing search across the full set by name.
  */
 
@@ -135,6 +135,22 @@ const CURATED_ICONS: IconEntry[] = [
     name: "HandFist",
     keywords: ["fist", "power", "strength", "achievement"],
     categories: ["achievement"],
+  },
+  {
+    name: "BoxingGlove",
+    keywords: [
+      "boxing",
+      "glove",
+      "gloves",
+      "fight",
+      "fighter",
+      "punch",
+      "spar",
+      "strength",
+      "grit",
+      "perseverance",
+    ],
+    categories: ["achievement", "sport"],
   },
   {
     name: "Confetti",
@@ -813,6 +829,853 @@ const CURATED_ICONS: IconEntry[] = [
   {
     name: "Rocket",
     keywords: ["rocket", "space", "launch", "fly"],
+    categories: ["travel"],
+  },
+
+  // ---- Expansion: extended badge-relevant icons ----
+  {
+    name: "AddressBook",
+    keywords: ["address", "book", "contacts", "directory"],
+    categories: ["communication"],
+  },
+  {
+    name: "Alien",
+    keywords: ["alien", "ufo", "extraterrestrial"],
+    categories: ["achievement"],
+  },
+  {
+    name: "Ambulance",
+    keywords: ["ambulance", "emergency", "medical"],
+    categories: ["health"],
+  },
+  {
+    name: "Anchor",
+    keywords: ["anchor", "steadfast", "grounded", "stable"],
+    categories: ["achievement"],
+  },
+  {
+    name: "AngularLogo",
+    keywords: ["angular", "logo", "framework"],
+    categories: ["coding"],
+  },
+  {
+    name: "AppStoreLogo",
+    keywords: ["appstore", "app", "store", "ios"],
+    categories: ["coding"],
+  },
+  {
+    name: "AppWindow",
+    keywords: ["app", "window", "screen", "ui"],
+    categories: ["coding"],
+  },
+  {
+    name: "ApplePodcastsLogo",
+    keywords: ["apple", "podcasts", "podcast", "logo"],
+    categories: ["creativity", "communication"],
+  },
+  {
+    name: "Archive",
+    keywords: ["archive", "store", "box"],
+    categories: ["coding"],
+  },
+  {
+    name: "Armchair",
+    keywords: ["armchair", "chair", "rest", "relax"],
+    categories: ["health"],
+  },
+  {
+    name: "ArrowClockwise",
+    keywords: ["arrow", "clockwise", "refresh", "repeat"],
+    categories: ["achievement"],
+  },
+  {
+    name: "ArrowsClockwise",
+    keywords: ["arrows", "clockwise", "sync", "streak"],
+    categories: ["achievement"],
+  },
+  {
+    name: "Avocado",
+    keywords: ["avocado", "food", "fruit", "healthy"],
+    categories: ["health"],
+  },
+  {
+    name: "Axe",
+    keywords: ["axe", "chop", "wood", "outdoor"],
+    categories: ["nature"],
+  },
+  {
+    name: "Baby",
+    keywords: ["baby", "infant", "family"],
+    categories: ["health"],
+  },
+  {
+    name: "BabyCarriage",
+    keywords: ["baby", "carriage", "stroller", "pram", "family"],
+    categories: ["health"],
+  },
+  {
+    name: "Balloon",
+    keywords: ["balloon", "celebrate", "party"],
+    categories: ["achievement"],
+  },
+  {
+    name: "Bandaids",
+    keywords: ["bandaids", "bandage", "first aid", "heal"],
+    categories: ["health"],
+  },
+  {
+    name: "Bank",
+    keywords: ["bank", "money", "finance"],
+    categories: ["finance"],
+  },
+  {
+    name: "Barn",
+    keywords: ["barn", "farm", "rural"],
+    categories: ["nature"],
+  },
+  {
+    name: "BaseballCap",
+    keywords: ["baseball", "cap", "hat", "sport"],
+    categories: ["sport"],
+  },
+  {
+    name: "BaseballHelmet",
+    keywords: ["baseball", "helmet", "sport", "protect"],
+    categories: ["sport"],
+  },
+  {
+    name: "Basket",
+    keywords: ["basket", "carry", "pick"],
+    categories: ["nature"],
+  },
+  {
+    name: "Bathtub",
+    keywords: ["bathtub", "bath", "self care", "rest"],
+    categories: ["health"],
+  },
+  {
+    name: "BatteryCharging",
+    keywords: ["battery", "charging", "power", "energy"],
+    categories: ["coding"],
+  },
+  {
+    name: "BeachBall",
+    keywords: ["beach", "ball", "play", "summer"],
+    categories: ["sport", "travel"],
+  },
+  {
+    name: "Beanie",
+    keywords: ["beanie", "hat", "winter"],
+    categories: ["sport"],
+  },
+  {
+    name: "Blueprint",
+    keywords: ["blueprint", "plan", "design", "architecture"],
+    categories: ["coding"],
+  },
+  {
+    name: "Boat",
+    keywords: ["boat", "sail", "water", "travel"],
+    categories: ["travel"],
+  },
+  {
+    name: "Bone",
+    keywords: ["bone", "anatomy", "skeleton"],
+    categories: ["health"],
+  },
+  {
+    name: "Bookmark",
+    keywords: ["bookmark", "save", "mark", "reading"],
+    categories: ["learning"],
+  },
+  {
+    name: "Boot",
+    keywords: ["boot", "footwear", "hike", "travel"],
+    categories: ["travel"],
+  },
+  {
+    name: "Boules",
+    keywords: ["boules", "petanque", "lawn", "sport"],
+    categories: ["sport"],
+  },
+  {
+    name: "BowlSteam",
+    keywords: ["bowl", "steam", "soup", "ramen", "food"],
+    categories: ["health"],
+  },
+  {
+    name: "BowlingBall",
+    keywords: ["bowling", "ball", "strike", "sport"],
+    categories: ["sport"],
+  },
+  {
+    name: "Bread",
+    keywords: ["bread", "loaf", "bake", "food"],
+    categories: ["health"],
+  },
+  {
+    name: "Bridge",
+    keywords: ["bridge", "cross", "connect"],
+    categories: ["travel"],
+  },
+  {
+    name: "BriefcaseMetal",
+    keywords: ["briefcase", "metal", "work", "business"],
+    categories: ["coding"],
+  },
+  {
+    name: "Broom",
+    keywords: ["broom", "sweep", "clean", "tidy"],
+    categories: ["health"],
+  },
+  {
+    name: "Cactus",
+    keywords: ["cactus", "plant", "desert"],
+    categories: ["nature"],
+  },
+  {
+    name: "Cake",
+    keywords: ["cake", "birthday", "celebrate", "achievement"],
+    categories: ["achievement"],
+  },
+  {
+    name: "Calculator",
+    keywords: ["calculator", "math", "compute"],
+    categories: ["coding"],
+  },
+  {
+    name: "Calendar",
+    keywords: ["calendar", "date", "schedule"],
+    categories: ["achievement"],
+  },
+  {
+    name: "CalendarBlank",
+    keywords: ["calendar", "blank", "date"],
+    categories: ["achievement"],
+  },
+  {
+    name: "CalendarCheck",
+    keywords: ["calendar", "check", "done", "complete"],
+    categories: ["achievement"],
+  },
+  {
+    name: "CalendarHeart",
+    keywords: ["calendar", "heart", "wellness", "habit"],
+    categories: ["achievement", "health"],
+  },
+  {
+    name: "CallBell",
+    keywords: ["call", "bell", "service", "alert"],
+    categories: ["communication"],
+  },
+  {
+    name: "Campfire",
+    keywords: ["campfire", "fire", "camp", "outdoor"],
+    categories: ["nature", "travel"],
+  },
+  {
+    name: "Car",
+    keywords: ["car", "drive", "vehicle"],
+    categories: ["travel"],
+  },
+  {
+    name: "CarBattery",
+    keywords: ["car", "battery", "auto", "power"],
+    categories: ["travel"],
+  },
+  {
+    name: "Cardholder",
+    keywords: ["cardholder", "wallet", "card"],
+    categories: ["finance"],
+  },
+  {
+    name: "Carrot",
+    keywords: ["carrot", "vegetable", "food", "healthy"],
+    categories: ["health"],
+  },
+  {
+    name: "CashRegister",
+    keywords: ["cash", "register", "checkout", "money"],
+    categories: ["finance"],
+  },
+  {
+    name: "CassetteTape",
+    keywords: ["cassette", "tape", "music", "retro"],
+    categories: ["creativity"],
+  },
+  {
+    name: "CastleTurret",
+    keywords: ["castle", "turret", "fortress"],
+    categories: ["travel"],
+  },
+  {
+    name: "Cat",
+    keywords: ["cat", "animal", "pet", "feline"],
+    categories: ["nature"],
+  },
+  {
+    name: "Chair",
+    keywords: ["chair", "sit", "rest"],
+    categories: ["health"],
+  },
+  {
+    name: "ChalkboardSimple",
+    keywords: ["chalkboard", "simple", "teach", "class"],
+    categories: ["learning"],
+  },
+  {
+    name: "ChatCircleSlash",
+    keywords: ["chat", "circle", "slash", "mute", "silence"],
+    categories: ["communication"],
+  },
+  {
+    name: "ChatCircleText",
+    keywords: ["chat", "circle", "text", "message"],
+    categories: ["communication"],
+  },
+  {
+    name: "CheckSquare",
+    keywords: ["check", "square", "done", "task"],
+    categories: ["achievement"],
+  },
+  {
+    name: "Checks",
+    keywords: ["checks", "checkmarks", "completed", "tasks"],
+    categories: ["achievement"],
+  },
+  {
+    name: "CigaretteSlash",
+    keywords: ["cigarette", "slash", "quit", "smoking", "recovery"],
+    categories: ["health"],
+  },
+  {
+    name: "Circuitry",
+    keywords: ["circuitry", "circuit", "electronics", "hardware"],
+    categories: ["coding"],
+  },
+  {
+    name: "City",
+    keywords: ["city", "urban", "skyline"],
+    categories: ["travel"],
+  },
+  {
+    name: "Clock",
+    keywords: ["clock", "time", "hour"],
+    categories: ["achievement"],
+  },
+  {
+    name: "ClockClockwise",
+    keywords: ["clock", "clockwise", "rewind", "history"],
+    categories: ["achievement"],
+  },
+  {
+    name: "CloudFog",
+    keywords: ["cloud", "fog", "weather", "mist"],
+    categories: ["nature"],
+  },
+  {
+    name: "CloudLightning",
+    keywords: ["cloud", "lightning", "storm", "weather"],
+    categories: ["nature"],
+  },
+  {
+    name: "CloudMoon",
+    keywords: ["cloud", "moon", "night", "weather"],
+    categories: ["nature"],
+  },
+  {
+    name: "CloudRain",
+    keywords: ["cloud", "rain", "weather", "wet"],
+    categories: ["nature"],
+  },
+  {
+    name: "CloudSnow",
+    keywords: ["cloud", "snow", "winter", "weather"],
+    categories: ["nature"],
+  },
+  {
+    name: "Clover",
+    keywords: ["clover", "luck", "shamrock", "plant"],
+    categories: ["nature"],
+  },
+  {
+    name: "CompassRose",
+    keywords: ["compass", "rose", "navigate", "direction"],
+    categories: ["travel"],
+  },
+  {
+    name: "CompassTool",
+    keywords: ["compass", "tool", "draft", "measure"],
+    categories: ["coding"],
+  },
+  {
+    name: "Cookie",
+    keywords: ["cookie", "treat", "snack", "food"],
+    categories: ["health"],
+  },
+  {
+    name: "Cow",
+    keywords: ["cow", "animal", "farm"],
+    categories: ["nature"],
+  },
+  {
+    name: "CowboyHat",
+    keywords: ["cowboy", "hat", "western", "adventure"],
+    categories: ["travel"],
+  },
+  {
+    name: "Cross",
+    keywords: ["cross", "medical", "plus"],
+    categories: ["health"],
+  },
+  {
+    name: "Crosshair",
+    keywords: ["crosshair", "target", "aim", "focus"],
+    categories: ["achievement"],
+  },
+  {
+    name: "Detective",
+    keywords: ["detective", "investigate", "search", "mystery"],
+    categories: ["achievement"],
+  },
+  {
+    name: "DevToLogo",
+    keywords: ["devto", "dev", "logo", "developer"],
+    categories: ["coding"],
+  },
+  {
+    name: "DiscoBall",
+    keywords: ["disco", "ball", "party", "music"],
+    categories: ["creativity"],
+  },
+  {
+    name: "DiscordLogo",
+    keywords: ["discord", "logo", "chat", "community"],
+    categories: ["communication", "coding"],
+  },
+  {
+    name: "Dna",
+    keywords: ["dna", "genetics", "biology", "molecular"],
+    categories: ["health"],
+  },
+  {
+    name: "Dog",
+    keywords: ["dog", "animal", "pet", "canine"],
+    categories: ["nature"],
+  },
+  {
+    name: "Dress",
+    keywords: ["dress", "clothing", "outfit"],
+    categories: ["achievement"],
+  },
+  {
+    name: "Egg",
+    keywords: ["egg", "food", "breakfast"],
+    categories: ["health"],
+  },
+  {
+    name: "EggCrack",
+    keywords: ["egg", "crack", "hatch", "begin"],
+    categories: ["health"],
+  },
+  {
+    name: "Engine",
+    keywords: ["engine", "motor", "mechanic"],
+    categories: ["coding"],
+  },
+  {
+    name: "Eye",
+    keywords: ["eye", "see", "watch", "vision"],
+    categories: ["health"],
+  },
+  {
+    name: "EyeClosed",
+    keywords: ["eye", "closed", "rest", "sleep"],
+    categories: ["health"],
+  },
+  {
+    name: "EyeSlash",
+    keywords: ["eye", "slash", "hide", "invisible"],
+    categories: ["health"],
+  },
+  {
+    name: "Eyes",
+    keywords: ["eyes", "watch", "observe", "vision"],
+    categories: ["health"],
+  },
+  {
+    name: "Feather",
+    keywords: ["feather", "light", "write", "quill"],
+    categories: ["creativity"],
+  },
+  {
+    name: "FileArrowUp",
+    keywords: ["file", "arrow", "up", "upload"],
+    categories: ["coding"],
+  },
+  {
+    name: "FileAudio",
+    keywords: ["file", "audio", "sound", "music"],
+    categories: ["coding", "creativity"],
+  },
+  {
+    name: "FileC",
+    keywords: ["file", "c", "code", "language"],
+    categories: ["coding"],
+  },
+  {
+    name: "FileCSharp",
+    keywords: ["file", "csharp", "code", "dotnet"],
+    categories: ["coding"],
+  },
+  {
+    name: "FileCloud",
+    keywords: ["file", "cloud", "sync", "remote"],
+    categories: ["coding"],
+  },
+  {
+    name: "FileCode",
+    keywords: ["file", "code", "source"],
+    categories: ["coding"],
+  },
+  {
+    name: "FileCpp",
+    keywords: ["file", "cpp", "c++", "code"],
+    categories: ["coding"],
+  },
+  {
+    name: "FileCss",
+    keywords: ["file", "css", "style", "code"],
+    categories: ["coding"],
+  },
+  {
+    name: "FileCsv",
+    keywords: ["file", "csv", "data", "spreadsheet"],
+    categories: ["coding"],
+  },
+  {
+    name: "FileDoc",
+    keywords: ["file", "doc", "word", "document"],
+    categories: ["coding"],
+  },
+  {
+    name: "FileHtml",
+    keywords: ["file", "html", "web", "code"],
+    categories: ["coding"],
+  },
+  {
+    name: "FileJs",
+    keywords: ["file", "js", "javascript", "code"],
+    categories: ["coding"],
+  },
+  {
+    name: "FileJsx",
+    keywords: ["file", "jsx", "react", "code"],
+    categories: ["coding"],
+  },
+  {
+    name: "FileMd",
+    keywords: ["file", "md", "markdown", "docs"],
+    categories: ["coding"],
+  },
+  {
+    name: "FilePdf",
+    keywords: ["file", "pdf", "document"],
+    categories: ["coding"],
+  },
+  {
+    name: "FilePng",
+    keywords: ["file", "png", "image"],
+    categories: ["coding"],
+  },
+  {
+    name: "FilePpt",
+    keywords: ["file", "ppt", "powerpoint", "presentation"],
+    categories: ["coding"],
+  },
+  {
+    name: "FilePy",
+    keywords: ["file", "py", "python", "code"],
+    categories: ["coding"],
+  },
+  {
+    name: "FileRs",
+    keywords: ["file", "rs", "rust", "code"],
+    categories: ["coding"],
+  },
+  {
+    name: "FileSql",
+    keywords: ["file", "sql", "database", "query"],
+    categories: ["coding"],
+  },
+  {
+    name: "FileSvg",
+    keywords: ["file", "svg", "vector", "image"],
+    categories: ["coding"],
+  },
+  {
+    name: "FileTs",
+    keywords: ["file", "ts", "typescript", "code"],
+    categories: ["coding"],
+  },
+  {
+    name: "FileTsx",
+    keywords: ["file", "tsx", "typescript", "react", "code"],
+    categories: ["coding"],
+  },
+  {
+    name: "FinnTheHuman",
+    keywords: ["finn", "human", "adventure", "character"],
+    categories: ["achievement"],
+  },
+  {
+    name: "FireTruck",
+    keywords: ["fire", "truck", "emergency", "rescue"],
+    categories: ["travel"],
+  },
+  {
+    name: "FirstAidKit",
+    keywords: ["first", "aid", "kit", "medical", "emergency"],
+    categories: ["health"],
+  },
+  {
+    name: "FlyingSaucer",
+    keywords: ["flying", "saucer", "ufo", "space"],
+    categories: ["travel"],
+  },
+  {
+    name: "FootballHelmet",
+    keywords: ["football", "helmet", "sport", "protect"],
+    categories: ["sport"],
+  },
+  {
+    name: "Footprints",
+    keywords: ["footprints", "steps", "walk", "trail"],
+    categories: ["health"],
+  },
+  {
+    name: "ForkKnife",
+    keywords: ["fork", "knife", "eat", "meal", "food"],
+    categories: ["health"],
+  },
+  {
+    name: "GameController",
+    keywords: ["game", "controller", "play", "console"],
+    categories: ["creativity"],
+  },
+  {
+    name: "Ghost",
+    keywords: ["ghost", "spooky", "halloween"],
+    categories: ["achievement"],
+  },
+  {
+    name: "GithubLogo",
+    keywords: ["github", "logo", "git", "code"],
+    categories: ["coding"],
+  },
+  {
+    name: "GitlabLogo",
+    keywords: ["gitlab", "logo", "git", "code"],
+    categories: ["coding"],
+  },
+  {
+    name: "Graph",
+    keywords: ["graph", "network", "data", "nodes"],
+    categories: ["coding"],
+  },
+  {
+    name: "Hamburger",
+    keywords: ["hamburger", "burger", "food", "meal"],
+    categories: ["health"],
+  },
+  {
+    name: "Hammer",
+    keywords: ["hammer", "build", "fix", "tool"],
+    categories: ["coding"],
+  },
+  {
+    name: "Hand",
+    keywords: ["hand", "gesture", "wave"],
+    categories: ["communication"],
+  },
+  {
+    name: "HandArrowDown",
+    keywords: ["hand", "arrow", "down", "deposit"],
+    categories: ["communication"],
+  },
+  {
+    name: "HandEye",
+    keywords: ["hand", "eye", "mindful", "see"],
+    categories: ["health"],
+  },
+  {
+    name: "HandPeace",
+    keywords: ["hand", "peace", "calm", "victory"],
+    categories: ["health"],
+  },
+  {
+    name: "HandsClapping",
+    keywords: ["hands", "clapping", "applause", "celebrate"],
+    categories: ["achievement"],
+  },
+  {
+    name: "HandsPraying",
+    keywords: ["hands", "praying", "meditate", "gratitude", "mindful"],
+    categories: ["health"],
+  },
+  {
+    name: "HardHat",
+    keywords: ["hard", "hat", "construction", "safety"],
+    categories: ["coding"],
+  },
+  {
+    name: "Headphones",
+    keywords: ["headphones", "audio", "music", "listen"],
+    categories: ["creativity"],
+  },
+  {
+    name: "HeartStraight",
+    keywords: ["heart", "straight", "love", "wellness"],
+    categories: ["health"],
+  },
+  {
+    name: "HeartStraightBreak",
+    keywords: ["heart", "straight", "break", "broken"],
+    categories: ["health"],
+  },
+  {
+    name: "HighHeel",
+    keywords: ["high", "heel", "shoe", "fashion"],
+    categories: ["achievement"],
+  },
+  {
+    name: "Hoodie",
+    keywords: ["hoodie", "sweater", "clothing"],
+    categories: ["achievement"],
+  },
+  {
+    name: "Hourglass",
+    keywords: ["hourglass", "time", "wait", "patience"],
+    categories: ["achievement", "learning"],
+  },
+  {
+    name: "IceCream",
+    keywords: ["ice", "cream", "dessert", "treat"],
+    categories: ["health"],
+  },
+  {
+    name: "Infinity",
+    keywords: ["infinity", "forever", "streak", "endless"],
+    categories: ["achievement"],
+  },
+  {
+    name: "Joystick",
+    keywords: ["joystick", "game", "play", "arcade"],
+    categories: ["creativity"],
+  },
+  {
+    name: "Ladder",
+    keywords: ["ladder", "climb", "step", "progress"],
+    categories: ["achievement"],
+  },
+  {
+    name: "PersonArmsSpread",
+    keywords: ["person", "arms", "spread", "free", "joy"],
+    categories: ["health", "achievement"],
+  },
+  {
+    name: "PersonSimpleHike",
+    keywords: ["person", "hike", "trail", "walk"],
+    categories: ["health", "travel"],
+  },
+  {
+    name: "PersonSimpleSki",
+    keywords: ["person", "ski", "snow", "winter", "sport"],
+    categories: ["sport"],
+  },
+  {
+    name: "PicnicTable",
+    keywords: ["picnic", "table", "outdoor", "meal"],
+    categories: ["travel"],
+  },
+  {
+    name: "Pizza",
+    keywords: ["pizza", "food", "slice"],
+    categories: ["health"],
+  },
+  {
+    name: "Popsicle",
+    keywords: ["popsicle", "ice", "treat", "summer"],
+    categories: ["health"],
+  },
+  {
+    name: "PottedPlant",
+    keywords: ["potted", "plant", "houseplant", "green"],
+    categories: ["nature"],
+  },
+  {
+    name: "PuzzlePiece",
+    keywords: ["puzzle", "piece", "solve", "problem"],
+    categories: ["learning"],
+  },
+  {
+    name: "Rabbit",
+    keywords: ["rabbit", "animal", "bunny", "fast"],
+    categories: ["nature"],
+  },
+  {
+    name: "Ruler",
+    keywords: ["ruler", "measure", "design"],
+    categories: ["coding"],
+  },
+  {
+    name: "Scooter",
+    keywords: ["scooter", "ride", "travel"],
+    categories: ["travel"],
+  },
+  {
+    name: "Shrimp",
+    keywords: ["shrimp", "seafood", "food"],
+    categories: ["health"],
+  },
+  {
+    name: "SketchLogo",
+    keywords: ["sketch", "logo", "design", "app"],
+    categories: ["coding"],
+  },
+  {
+    name: "Skull",
+    keywords: ["skull", "danger", "death", "spooky"],
+    categories: ["achievement"],
+  },
+  {
+    name: "SpeakerHigh",
+    keywords: ["speaker", "high", "volume", "audio"],
+    categories: ["creativity"],
+  },
+  {
+    name: "Sword",
+    keywords: ["sword", "battle", "fight", "warrior"],
+    categories: ["achievement"],
+  },
+  {
+    name: "Tag",
+    keywords: ["tag", "label", "category", "name"],
+    categories: ["achievement"],
+  },
+  {
+    name: "Timer",
+    keywords: ["timer", "stopwatch", "time", "countdown"],
+    categories: ["achievement"],
+  },
+  {
+    name: "Toolbox",
+    keywords: ["toolbox", "tools", "fix", "kit"],
+    categories: ["coding"],
+  },
+  {
+    name: "Tractor",
+    keywords: ["tractor", "farm", "vehicle"],
     categories: ["travel"],
   },
 ];
