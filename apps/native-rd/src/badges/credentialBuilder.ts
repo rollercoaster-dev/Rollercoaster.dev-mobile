@@ -37,6 +37,15 @@ export interface CredentialInput {
   publicKeyJwk: JsonWebKey;
   credentialId: string;
   issuedOn: string;
+  /**
+   * The achievement criteria narrative, already localized to the user's UI
+   * language by the caller (see useCreateBadge). This module stays pure and
+   * i18n-free — the localized string is composed at the bake call site and
+   * frozen into the signed credential here, in whatever single language the
+   * badge was earned in. See docs/i18n.md → "Strings localized at bake time"
+   * for why this is single-language, not a multi-language LangString.
+   */
+  narrative: string;
 }
 
 /**
@@ -88,10 +97,8 @@ export function buildUnsignedCredential(
     name: input.goal.title,
     description: input.goal.description ?? `Achievement: ${input.goal.title}`,
     criteria: {
-      narrative:
-        input.evidence.length > 0
-          ? `Complete all steps for: ${input.goal.title}. Evidence: ${input.evidence.length} ${input.evidence.length === 1 ? "item" : "items"}.`
-          : `Complete all steps for: ${input.goal.title}`,
+      // Localized + composed by the caller; this module never touches i18n.
+      narrative: input.narrative,
     },
   } as unknown as BadgeClassData;
 

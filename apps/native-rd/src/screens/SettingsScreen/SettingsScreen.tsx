@@ -8,7 +8,10 @@ import {
 } from "react-native";
 import * as Application from "expo-application";
 import * as Sentry from "@sentry/react-native";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTranslation } from "react-i18next";
+import type { SettingsStackParamList } from "../../navigation/types";
 import { Text } from "../../components/Text";
 import { useTabScreenContentInset } from "../../navigation/useTabScreenContentInset";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
@@ -30,6 +33,7 @@ const SENTRY_DEBUG_TOOLS_ENABLED = isSentryDebugToolsEnabled(
 
 export function triggerSentryNativeCrash(): void {
   if (Platform.OS === "android" && __DEV__) {
+    // i18n-skip: dev-only, double-gated by __DEV__ && Platform.OS === "android"
     const message =
       "Android native crash verification requires a release-mode preview build.";
     Alert.alert("Native crash unavailable", message);
@@ -82,6 +86,26 @@ function LanguagePicker() {
   );
 }
 
+/**
+ * Dev-only tools section. `__DEV__` gates rendering so the probe screens are
+ * unreachable in production (the modules are still bundled — gating controls
+ * reachability, not bundle exclusion). Copy is intentionally untranslated
+ * (i18n-skip).
+ */
+function DevToolsSection() {
+  const navigation =
+    useNavigation<NativeStackNavigationProp<SettingsStackParamList>>();
+
+  return (
+    <SettingsSection title="Dev tools">
+      <SettingsRow
+        label="Intl probe (#66)"
+        onPress={() => navigation.navigate("IntlProbe")}
+      />
+    </SettingsSection>
+  );
+}
+
 export function SettingsScreen({
   sentryDebugToolsEnabled = SENTRY_DEBUG_TOOLS_ENABLED,
 }: {
@@ -106,6 +130,8 @@ export function SettingsScreen({
         </ErrorBoundary>
 
         {__DEV__ && <LanguagePicker />}
+
+        {__DEV__ && <DevToolsSection />}
 
         <SettingsSection title={t("about.title")}>
           <SettingsRow label={t("about.appLabel")} value="rollercoaster.dev" />

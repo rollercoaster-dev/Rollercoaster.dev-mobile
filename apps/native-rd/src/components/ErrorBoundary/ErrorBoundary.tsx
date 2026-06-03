@@ -3,6 +3,7 @@ import { View } from "react-native";
 import { Text } from "../Text";
 import { Button } from "../Button";
 import { reportError } from "../../services/sentry-report";
+import { i18n } from "../../i18n";
 import { styles } from "./ErrorBoundary.styles";
 
 interface ErrorBoundaryProps {
@@ -47,18 +48,18 @@ export class ErrorBoundary extends Component<
         <View
           style={styles.container}
           accessibilityRole="alert"
-          accessibilityLabel="Error: something went wrong"
+          accessibilityLabel={i18n.t("common:errorBoundary.a11yAlert")}
         >
           <View style={styles.card}>
             <Text variant="title" style={styles.title}>
-              Something went wrong
+              {i18n.t("common:errorBoundary.title")}
             </Text>
             <Text variant="body" style={styles.message}>
-              {error.message || "An unexpected error occurred."}
+              {error.message || i18n.t("common:errorBoundary.message")}
             </Text>
             <View style={styles.action}>
               <Button
-                label="Try Again"
+                label={i18n.t("common:errorBoundary.retry")}
                 onPress={this.handleReset}
                 variant="secondary"
               />

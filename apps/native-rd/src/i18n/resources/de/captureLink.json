@@ -1,1 +1,25 @@
-{}
+{
+  "title": "Link hinzufügen",
+  "urlInput": {
+    "label": "URL",
+    "placeholder": "https://example.com"
+  },
+  "captionInput": {
+    "label": "Beschriftung (optional)",
+    "placeholder": "Worum geht es bei diesem Link?"
+  },
+  "preview": {
+    "a11y": "Link-Vorschau: {{url}}"
+  },
+  "actions": {
+    "save": "Link speichern"
+  },
+  "validation": {
+    "urlRequired": "Gib eine URL ein",
+    "urlInvalid": "Gib eine gültige URL ein (z.B. https://example.com)"
+  },
+  "errors": {
+    "couldNotSaveTitle": "Link konnte nicht gespeichert werden",
+    "couldNotSaveMessage": "Etwas ist schiefgelaufen. Versuche es erneut."
+  }
+}

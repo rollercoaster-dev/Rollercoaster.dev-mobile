@@ -2,7 +2,7 @@ import React, { Suspense, useCallback, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Animated,
+  ScrollView,
   TextInput,
   View,
 } from "react-native";
@@ -12,6 +12,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useUnistyles } from "react-native-unistyles";
 import { useQuery } from "@evolu/react";
+import { useTranslation } from "react-i18next";
 
 import { Text } from "../../components/Text";
 import { Button } from "../../components/Button";
@@ -105,7 +106,7 @@ function DesignEditor({
   onDesignChange,
   onSave,
   onBack,
-  saveLabel = "Save Design",
+  saveLabel,
   saveTestID,
   saveDisabled,
   saveLoading,
@@ -113,9 +114,9 @@ function DesignEditor({
   previewRef,
 }: DesignEditorProps) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation("badgeDesigner");
+  const resolvedSaveLabel = saveLabel ?? t("actions.save");
 
-  const scrollY = useRef(new Animated.Value(0)).current;
-  const [topBarHeight, setTopBarHeight] = useState(64);
   const insets = useSafeAreaInsets();
   const tabBarHeight = TAB_BAR_HEIGHT + insets.bottom;
 
@@ -286,27 +287,27 @@ function DesignEditor({
   const bannerText = currentDesign.banner?.text ?? "";
   const bannerPosition = currentDesign.banner?.position ?? BannerPosition.top;
 
-  const previewLabel = `Badge preview: ${currentDesign.color} ${currentDesign.shape} ${frame} frame with ${currentDesign.iconName} icon`;
+  const previewLabel = t("preview.a11y", {
+    color: currentDesign.color,
+    shape: currentDesign.shape,
+    frame,
+    icon: currentDesign.iconName,
+  });
 
   return (
     <View style={styles.editorRoot}>
-      <Animated.ScrollView
+      <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
           {
-            paddingTop: topBarHeight + PREVIEW_OVERLAY_HEIGHT,
+            paddingTop: PREVIEW_OVERLAY_HEIGHT,
             paddingBottom: tabBarHeight + 16,
           },
         ]}
         keyboardShouldPersistTaps="handled"
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: true },
-        )}
-        scrollEventThrottle={16}
       >
         <View style={styles.sectionContainer}>
-          <Text style={styles.sectionLabel}>Shape</Text>
+          <Text style={styles.sectionLabel}>{t("sections.shape")}</Text>
           <ShapeSelector
             selectedShape={currentDesign.shape}
             onSelectShape={handleShapeChange}
@@ -315,7 +316,7 @@ function DesignEditor({
         </View>
 
         <View style={styles.sectionContainer}>
-          <Text style={styles.sectionLabel}>Color</Text>
+          <Text style={styles.sectionLabel}>{t("sections.color")}</Text>
           <ColorPicker
             selectedColor={currentDesign.color}
             onSelectColor={handleColorChange}
@@ -324,7 +325,7 @@ function DesignEditor({
         </View>
 
         <View style={styles.sectionContainer}>
-          <Text style={styles.sectionLabel}>Frame</Text>
+          <Text style={styles.sectionLabel}>{t("sections.frame")}</Text>
           <FrameSelector
             selectedFrame={frame}
             onSelectFrame={handleFrameChange}
@@ -333,7 +334,7 @@ function DesignEditor({
         </View>
 
         <View style={styles.sectionContainer}>
-          <Text style={styles.sectionLabel}>Center</Text>
+          <Text style={styles.sectionLabel}>{t("sections.center")}</Text>
           <CenterModeSelector
             selectedMode={centerMode}
             monogram={monogram}
@@ -345,7 +346,7 @@ function DesignEditor({
 
         {centerMode === BadgeCenterMode.icon && (
           <View style={styles.iconSection}>
-            <Text style={styles.sectionLabel}>Icon</Text>
+            <Text style={styles.sectionLabel}>{t("sections.icon")}</Text>
             <IconPicker
               selectedIcon={currentDesign.iconName}
               selectedWeight={currentDesign.iconWeight}
@@ -357,21 +358,21 @@ function DesignEditor({
         )}
 
         <View style={styles.sectionContainer}>
-          <Text style={styles.sectionLabel}>Bottom Label</Text>
+          <Text style={styles.sectionLabel}>{t("sections.bottomLabel")}</Text>
           <TextInput
             accessibilityRole="text"
-            accessibilityLabel="Bottom label"
+            accessibilityLabel={t("bottomLabel.a11y")}
             value={bottomLabel}
             onChangeText={handleBottomLabelChange}
             maxLength={BOTTOM_LABEL_INPUT_MAX_CHARS}
-            placeholder="Optional label"
+            placeholder={t("bottomLabel.placeholder")}
             placeholderTextColor={theme.colors.textSecondary}
             style={styles.bottomLabelInput}
           />
         </View>
 
         <View style={styles.sectionContainer}>
-          <Text style={styles.sectionLabel}>Path Text</Text>
+          <Text style={styles.sectionLabel}>{t("sections.pathText")}</Text>
           <PathTextEditor
             enabled={pathTextEnabled}
             text={pathText}
@@ -388,7 +389,7 @@ function DesignEditor({
         </View>
 
         <View style={styles.sectionContainer}>
-          <Text style={styles.sectionLabel}>Banner</Text>
+          <Text style={styles.sectionLabel}>{t("sections.banner")}</Text>
           <BannerEditor
             enabled={bannerEnabled}
             text={bannerText}
@@ -402,7 +403,7 @@ function DesignEditor({
 
         <View style={styles.footer}>
           <Button
-            label={saveLabel}
+            label={resolvedSaveLabel}
             onPress={onSave}
             testID={saveTestID}
             disabled={saveDisabled}
@@ -410,40 +411,16 @@ function DesignEditor({
           />
           {extraFooter}
         </View>
-      </Animated.ScrollView>
+      </ScrollView>
 
-      <View
-        style={styles.topBar}
-        onLayout={(e) => {
-          const next = e.nativeEvent.layout.height;
-          setTopBarHeight((prev) => (prev === next ? prev : next));
-        }}
-      >
-        <ScreenSubHeader label="Design Badge" onBack={onBack} />
+      <View style={styles.topBar}>
+        <ScreenSubHeader label={t("title")} onBack={onBack} />
       </View>
 
-      <Animated.View
-        style={[
-          styles.previewOverlay,
-          {
-            top: topBarHeight,
-            transform: [
-              {
-                // Stop the upward slide at the bottom edge of the safe-area
-                // inset so the preview never crosses into the notch / dynamic
-                // island. `topBarHeight` (from onLayout) includes
-                // `paddingTop: insets.top` from HeaderBand, hence the subtract.
-                translateY: scrollY.interpolate({
-                  inputRange: [0, topBarHeight],
-                  outputRange: [0, -Math.max(0, topBarHeight - insets.top)],
-                  extrapolate: "clamp",
-                }),
-              },
-            ],
-          },
-        ]}
-        pointerEvents="none"
-      >
+      {/* Static badge preview pinned to the top of the content area (which
+          already sits below the safe-area inset via App.tsx's offset), drawn
+          over the header band. No scroll-linked motion. */}
+      <View style={[styles.previewOverlay, { top: 0 }]} pointerEvents="none">
         <View
           style={styles.previewContainer}
           accessibilityRole="image"
@@ -453,7 +430,7 @@ function DesignEditor({
             <BadgeRenderer ref={previewRef} design={currentDesign} size={160} />
           </View>
         </View>
-      </Animated.View>
+      </View>
     </View>
   );
 }
@@ -465,6 +442,7 @@ function DesignEditor({
 function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
   const navigation = useNavigation();
   const { theme } = useUnistyles();
+  const { t } = useTranslation("badgeDesigner");
   const query = useMemo(
     () => badgeWithGoalQuery(badgeId as BadgeId),
     [badgeId],
@@ -474,13 +452,13 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
 
   const initialDesign = useMemo(() => {
     if (!badge) return null;
-    const goalTitle = (badge.goalTitle as string) ?? "Untitled";
+    const goalTitle = (badge.goalTitle as string) ?? t("fallback.goalTitle");
     const goalColor = badge.goalColor as string | null;
     return (
       parseBadgeDesign(badge.design as string | null) ??
       createDefaultBadgeDesign(goalTitle, goalColor)
     );
-  }, [badge]);
+  }, [badge, t]);
 
   const [design, setDesign] = useState<BadgeDesign | null>(null);
   const currentDesign = design ?? initialDesign;
@@ -522,8 +500,8 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
         });
         reportError(captureErr, { area: "badge.create", kind: "bake" });
         Alert.alert(
-          "Save Failed",
-          "Could not capture your design preview. Please try again.",
+          t("errors.saveFailedTitle"),
+          t("errors.captureFailedMessage"),
         );
         setIsSaving(false);
         return;
@@ -534,10 +512,7 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
       updateBadge(badgeId as BadgeId, { design: designJson });
     } catch (err) {
       logger.error("Failed to save badge design", { badgeId, error: err });
-      Alert.alert(
-        "Save Failed",
-        "Could not save your badge design. Please try again.",
-      );
+      Alert.alert(t("errors.saveFailedTitle"), t("errors.saveFailedMessage"));
       setIsSaving(false);
       return;
     }
@@ -550,14 +525,22 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
     }
 
     navigation.goBack();
-  }, [badgeId, currentDesign, goalIdForCapture, isSaving, navigation, theme]);
+  }, [
+    badgeId,
+    currentDesign,
+    goalIdForCapture,
+    isSaving,
+    navigation,
+    t,
+    theme,
+  ]);
 
   if (!badge || !currentDesign) {
     return (
       <View style={styles.centered}>
-        <Text variant="body">Badge not found</Text>
+        <Text variant="body">{t("fallback.badgeNotFound")}</Text>
         <Button
-          label="Go Back"
+          label={t("actions.goBack")}
           variant="secondary"
           onPress={() => navigation.goBack()}
         />
@@ -598,6 +581,7 @@ function BadgeDesignerContentNewGoal({
   const navigation =
     useNavigation<NativeStackNavigationProp<GoalsStackParamList>>();
   const { theme } = useUnistyles();
+  const { t } = useTranslation("badgeDesigner");
   const goals = useQuery(goalsQuery);
   const goal = goals.find((g) => g.id === goalId) ?? null;
 
@@ -614,10 +598,10 @@ function BadgeDesignerContentNewGoal({
     }
     const persisted = parseBadgeDesign((goal?.design as string | null) ?? null);
     if (persisted) return persisted;
-    const title = (goal?.title as string) ?? "Untitled";
+    const title = (goal?.title as string) ?? t("fallback.goalTitle");
     const color = (goal?.color as string | null) ?? null;
     return createDefaultBadgeDesign(title, color);
-  }, [goal, goalId]);
+  }, [goal, goalId, t]);
 
   const [design, setDesign] = useState<BadgeDesign | null>(null);
   const currentDesign = design ?? initialDesign;
@@ -665,14 +649,11 @@ function BadgeDesignerContentNewGoal({
           goalId,
           error: err,
         });
-        Alert.alert(
-          "Save Failed",
-          "Could not save your badge design. Please try again.",
-        );
+        Alert.alert(t("errors.saveFailedTitle"), t("errors.saveFailedMessage"));
         setIsSaving(false);
       }
     },
-    [goalId, isSaving, navigation, returnVia, theme],
+    [goalId, isSaving, navigation, returnVia, t, theme],
   );
 
   const handleSave = useCallback(() => {
@@ -702,13 +683,13 @@ function BadgeDesignerContentNewGoal({
       onDesignChange={setDesign}
       onSave={handleSave}
       onBack={() => navigation.goBack()}
-      saveLabel="Use This Design"
+      saveLabel={t("actions.useThisDesign")}
       saveTestID="use-this-design"
       saveLoading={isSaving}
       previewRef={previewRef}
       extraFooter={
         <Button
-          label="Skip — Use Default"
+          label={t("actions.skipDefault")}
           variant="secondary"
           onPress={handleSkip}
           testID="skip-default-design"
@@ -733,6 +714,7 @@ export function BadgeDesignerScreen({
 }: BadgeDesignerScreenProps | { route: { params: ScreenParams } }) {
   const navigation = useNavigation();
   const { theme } = useUnistyles();
+  const { t } = useTranslation("badgeDesigner");
   const params = route.params as ScreenParams;
 
   let content: React.ReactNode;
@@ -749,9 +731,9 @@ export function BadgeDesignerScreen({
     logger.error("BadgeDesignerScreen: unrecognized params", { params });
     content = (
       <View style={styles.centered}>
-        <Text variant="body">Invalid badge designer parameters</Text>
+        <Text variant="body">{t("fallback.invalidParams")}</Text>
         <Button
-          label="Go Back"
+          label={t("actions.goBack")}
           variant="secondary"
           onPress={() => navigation.goBack()}
         />

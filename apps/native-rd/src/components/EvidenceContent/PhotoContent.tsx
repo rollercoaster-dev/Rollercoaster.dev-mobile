@@ -46,14 +46,18 @@ export function PhotoContent({ uri, description }: PhotoContentProps) {
     <View style={styles.container}>
       <View style={styles.imageContainer}>
         {!uri ? (
-          <Text style={styles.errorText}>Failed to load image</Text>
+          <Text style={styles.errorText}>
+            {t("evidenceContent.errors.imageLoadFailed")}
+          </Text>
         ) : imageError ? (
           <View style={styles.errorBlock}>
-            <Text style={styles.errorText}>Failed to load image</Text>
+            <Text style={styles.errorText}>
+              {t("evidenceContent.errors.imageLoadFailed")}
+            </Text>
             <Pressable
               onPress={handleRetry}
               accessibilityRole="button"
-              accessibilityLabel="Retry loading image"
+              accessibilityLabel={t("evidenceContent.a11y.retryImage")}
               style={styles.retryButton}
             >
               <Text style={styles.retryLabel}>{t("actions.retry")}</Text>
@@ -67,7 +71,9 @@ export function PhotoContent({ uri, description }: PhotoContentProps) {
             }}
             style={styles.image}
             resizeMode="contain"
-            accessibilityLabel={description ?? "Photo evidence"}
+            accessibilityLabel={
+              description ?? t("evidenceContent.a11y.photoEvidence")
+            }
             onError={handleError}
           />
         )}

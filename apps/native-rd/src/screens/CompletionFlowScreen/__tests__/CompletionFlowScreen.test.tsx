@@ -236,17 +236,17 @@ describe("CompletionFlowScreen", () => {
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
       expect(screen.getByText("Or capture another way")).toBeOnTheScreen();
       // Text is excluded from chips (handled inline)
-      expect(screen.getByLabelText(/Take Photo/)).toBeOnTheScreen();
-      expect(screen.getByLabelText(/Record Video/)).toBeOnTheScreen();
-      expect(screen.getByLabelText(/Record Voice Memo/)).toBeOnTheScreen();
-      expect(screen.getByLabelText(/Add Link/)).toBeOnTheScreen();
-      expect(screen.getByLabelText(/Attach File/)).toBeOnTheScreen();
+      expect(screen.getByLabelText(/Photo/)).toBeOnTheScreen();
+      expect(screen.getByLabelText(/Video/)).toBeOnTheScreen();
+      expect(screen.getByLabelText(/Audio/)).toBeOnTheScreen();
+      expect(screen.getByLabelText(/Link/)).toBeOnTheScreen();
+      expect(screen.getByLabelText(/File/)).toBeOnTheScreen();
     });
 
     it("navigates to CapturePhoto when photo chip is tapped", () => {
       setupQueries();
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
-      fireEvent.press(screen.getByLabelText(/Take Photo/));
+      fireEvent.press(screen.getByLabelText(/Photo/));
       expect(mockNavigate).toHaveBeenCalledWith("CapturePhoto", {
         goalId: "goal-1",
       });
@@ -255,7 +255,7 @@ describe("CompletionFlowScreen", () => {
     it("navigates to CaptureVoiceMemo when voice memo chip is tapped", () => {
       setupQueries();
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
-      fireEvent.press(screen.getByLabelText(/Record Voice Memo/));
+      fireEvent.press(screen.getByLabelText(/Audio/));
       expect(mockNavigate).toHaveBeenCalledWith("CaptureVoiceMemo", {
         goalId: "goal-1",
       });

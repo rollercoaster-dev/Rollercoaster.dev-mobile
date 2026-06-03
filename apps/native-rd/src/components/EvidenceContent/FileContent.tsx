@@ -1,5 +1,6 @@
 import React from "react";
 import { View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Text } from "../Text";
 import { Button } from "../Button";
 import { openFile, tryParseJSON } from "../../utils/evidenceViewers";
@@ -33,6 +34,7 @@ function getMimeType(metadata?: string): string | null {
 }
 
 export function FileContent({ uri, description, metadata }: FileContentProps) {
+  const { t } = useTranslation();
   const filename = getFilename(uri, metadata);
   const mimeType = getMimeType(metadata);
 
@@ -57,7 +59,11 @@ export function FileContent({ uri, description, metadata }: FileContentProps) {
             {description}
           </Text>
         ) : null}
-        <Button label="Open" onPress={handleOpen} variant="primary" />
+        <Button
+          label={t("evidenceContent.openFile")}
+          onPress={handleOpen}
+          variant="primary"
+        />
       </View>
     </View>
   );

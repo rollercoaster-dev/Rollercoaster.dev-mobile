@@ -14,6 +14,93 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: googleapis/release-please-action@v5
+        id: release
         with:
           config-file: .github/release-please-config.json
           manifest-file: .github/.release-please-manifest.json
+
+      # release-please bumps $.expo.version in apps/native-rd/app.json via its
+      # generic JSON updater, which re-serialises the file with its own
+      # pretty-printer and expands short arrays (e.g. supportedLocales) onto
+      # multiple lines. Prettier's format:check then rejects the file, so every
+      # release commit turns ci-docs / ci-packages / ci-native-rd red on merge
+      # to main (release PRs are bot-opened, so pull_request CI never catches it
+      # at PR time). Re-run Prettier on the release PR branch so the bumped file
+      # lands already formatted.
+      - name: Checkout release PR branch
+        if: ${{ steps.release.outputs.pr }}
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
+
+      - name: Setup Bun
+        if: ${{ steps.release.outputs.pr }}
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+
+      - name: Re-format release files with Prettier
+        if: ${{ steps.release.outputs.pr }}
+        env:
+          # GHA evaluates `env:` before `if:`, so a bare `fromJSON(...)` here
+          # throws on any merge to main that isn't a release-PR merge (the
+          # action emits an empty `pr` output). Short-circuit so fromJSON only
+          # runs when the output is non-empty.
+          PR_BRANCH: ${{ steps.release.outputs.pr && fromJSON(steps.release.outputs.pr).headBranchName || '' }}
+        run: |
+          set -euo pipefail
+          # Pinned to the repo's Prettier major; app.json has no config/plugins,
+          # so output is stable across 3.x patch releases.
+          bunx prettier@3 --write apps/native-rd/app.json
+          if git diff --quiet -- apps/native-rd/app.json; then
+            echo "app.json already Prettier-clean — nothing to commit."
+            exit 0
+          fi
+          # Bot identity matches the DCO exemption in dco.yml; -s keeps the
+          # trailer valid even if a future DCO run inspects this commit.
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -s -m "chore: prettier-format app.json after release bump" -- apps/native-rd/app.json
+          git push origin "HEAD:${PR_BRANCH}"
+
+      # Scaffold docs/release/testing-notes/<version>.md from CHANGELOG.md so
+      # the release PR carries a tester-facing notes file from the moment it
+      # opens. The scaffold is full of `TODO:` lines — release-notes:lint
+      # (run by _release-validate.yml) fails until a human has rewritten each
+      # TODO into actual tester-facing language. That gate is what stops a
+      # release being Published with empty/placeholder notes.
+      - name: Scaffold testing notes for release PR
+        if: ${{ steps.release.outputs.pr }}
+        env:
+          # See note on the Prettier step above re: env-before-if evaluation.
+          PR_BRANCH: ${{ steps.release.outputs.pr && fromJSON(steps.release.outputs.pr).headBranchName || '' }}
+        run: |
+          set -euo pipefail
+          VERSION="$(jq -r .version apps/native-rd/package.json)"
+          NOTES="apps/native-rd/docs/release/testing-notes/${VERSION}.md"
+          if [ -f "$NOTES" ]; then
+            echo "$NOTES already exists — leaving in place (subsequent release-please update)."
+            exit 0
+          fi
+          # release-notes-generate fails when CHANGELOG has no Features/Bug
+          # Fixes for this version (chore-only release). That's fine: no
+          # tester-facing changes → no notes file → release-notes:lint passes
+          # via its missing-file no-op path. Surface other failures as real
+          # errors.
+          GEN_STDERR=$(mktemp)
+          if ! bun apps/native-rd/scripts/release-notes-generate.ts "$VERSION" 2>"$GEN_STDERR"; then
+            if grep -q "no Features or Bug Fixes" "$GEN_STDERR"; then
+              echo "No tester-facing changes in CHANGELOG for ${VERSION} — skipping scaffold."
+              rm -f "$GEN_STDERR"
+              exit 0
+            fi
+            cat "$GEN_STDERR" >&2
+            rm -f "$GEN_STDERR"
+            exit 1
+          fi
+          rm -f "$GEN_STDERR"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$NOTES"
+          git commit -s -m "chore: scaffold testing notes for ${VERSION}"
+          git push origin "HEAD:${PR_BRANCH}"

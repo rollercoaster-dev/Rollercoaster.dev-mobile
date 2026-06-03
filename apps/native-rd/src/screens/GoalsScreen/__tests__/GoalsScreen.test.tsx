@@ -88,7 +88,7 @@ describe("GoalsScreen", () => {
   describe("header", () => {
     it("renders Goals title", () => {
       renderWithProviders(<GoalsScreen />);
-      expect(screen.getByText(i18n.t("goals:header.title"))).toBeOnTheScreen();
+      expect(screen.getByText(i18n.t("goals:title"))).toBeOnTheScreen();
     });
 
     it("does not render an add button in the header", () => {
@@ -121,7 +121,7 @@ describe("GoalsScreen", () => {
       });
 
       renderWithProviders(<GoalsScreen />);
-      fireEvent.press(screen.getByText("Learn TypeScript"));
+      fireEvent.press(screen.getByTestId("goal-card-goal-1"));
       expect(mockNavigate).toHaveBeenCalledWith("FocusMode", {
         goalId: "goal-1",
       });
@@ -231,7 +231,7 @@ describe("GoalsScreen", () => {
       renderWithProviders(<GoalsScreen />);
 
       // Long press to trigger delete
-      fireEvent(screen.getByText("Learn TypeScript"), "longPress");
+      fireEvent(screen.getByTestId("goal-card-goal-1"), "longPress");
 
       // Confirm modal should show the goal title
       expect(
@@ -261,7 +261,7 @@ describe("GoalsScreen", () => {
     // Representative spread across header / empty-state body / interpolated
     // confirm-modal message / interpolated a11y label. A revert that misses
     // one screen surface won't pass by sneaking past a single asserted key.
-    it.each(["goals:header.title", "goals:emptyState.body"] as const)(
+    it.each(["goals:title", "goals:emptyState.body"] as const)(
       "renders %s as bracketed copy under pseudo locale",
       async (key) => {
         await i18n.changeLanguage("pseudo");
@@ -281,7 +281,7 @@ describe("GoalsScreen", () => {
 
       await i18n.changeLanguage("pseudo");
       renderWithProviders(<GoalsScreen />);
-      fireEvent(screen.getByText("Learn TypeScript"), "longPress");
+      fireEvent(screen.getByTestId("goal-card-goal-1"), "longPress");
       const pseudo = i18n.t("goals:confirmDelete.message", {
         title: "Learn TypeScript",
       });
@@ -302,7 +302,7 @@ describe("GoalsScreen", () => {
 
         await i18n.changeLanguage("pseudo");
         renderWithProviders(<GoalsScreen />);
-        fireEvent(screen.getByText("Learn TypeScript"), "longPress");
+        fireEvent(screen.getByTestId("goal-card-goal-1"), "longPress");
         const pseudo = i18n.t(key);
         expect(pseudo.startsWith("[")).toBe(true);
         expect(screen.getByText(pseudo)).toBeOnTheScreen();

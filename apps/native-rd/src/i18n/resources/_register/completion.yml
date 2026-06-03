@@ -1,0 +1,40 @@
+# completion — ND adult completing a goal.
+# Celebration phase + evidence-capture phase. Tone is warm but not
+# achievement-porn — completion is self-validation, not external approval.
+
+speaker: app
+audience: ND adult completing a goal
+formality: informal
+banned_phrasings:
+  - Glückwunsch!
+  - Großartig!
+  - Super!
+  - Fantastisch!
+  - Hervorragend!
+  - du hast es geschafft!
+  - dein Erfolg
+  - Achievement
+  - sammle sie alle
+  - Du bist ein Star!
+  - Du kannst stolz sein
+  - besonders
+  - einzigartig
+  - leidet an
+notes:
+  - Completion is matter-of-fact, not victorious. Prefer "Geschafft."
+    over "Du hast es geschafft!". Warmth comes from brevity, not
+    exclamations.
+  - No comparison to "what you should feel" — never tell the user they
+    should be proud or deserve to celebrate.
+  - The "Bake It" string is the imperative for finalizing the badge —
+    translate as "Badge fertigstellen" or similar verb phrase. The noun
+    "Badge" stays as the English loanword (de/common.json convention).
+  - The "Redesign First" string is offered as a low-stakes alternative —
+    use "Erst neu gestalten" over "Lieber nochmal designen".
+  - The "One last thing!" string is a friendly nudge, not pressure. Use
+    "Noch eine Sache." and avoid exclamation marks.
+  - Error messages around badge creation stay factual. Prefer
+    "Signaturschlüssel nicht verfügbar." over "Hoppla! Etwas ist
+    schiefgelaufen.".
+  - Plural forms follow English's _one/_other (e.g. "{{count}} Schritt"
+    vs "{{count}} Schritte").

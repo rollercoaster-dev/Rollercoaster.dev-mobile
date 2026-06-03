@@ -9,8 +9,8 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery } from "@evolu/react";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "phosphor-react-native";
 import { Text } from "../../components/Text";
 import { Button } from "../../components/Button";
@@ -78,6 +78,7 @@ function DetailTopBar({
   onBack: () => void;
   onLayout: (e: LayoutChangeEvent) => void;
 }) {
+  const { t } = useTranslation("badgeDetail");
   return (
     <View style={styles.topBar} onLayout={onLayout}>
       {/* Title intentionally omitted — the badge floats over the band and
@@ -87,7 +88,7 @@ function DetailTopBar({
           icon={<ArrowLeft size={24} weight="bold" />}
           onPress={onBack}
           tone="chrome"
-          accessibilityLabel="Go back"
+          accessibilityLabel={t("fallback.goBack")}
         />
       </HeaderBand>
     </View>
@@ -103,10 +104,7 @@ function BadgeDetailContent({
 }) {
   const navigation =
     useNavigation<NativeStackNavigationProp<BadgesStackParamList>>();
-  // Pin the floating preview right below the notch — matches the Designer's
-  // max-scroll resting position (top: insets.top) so both screens land on
-  // the same vertical anchor.
-  const insets = useSafeAreaInsets();
+  const { t, i18n } = useTranslation("badgeDetail");
   const query = useMemo(
     () => badgeWithGoalQuery(badgeId as BadgeId),
     [badgeId],
@@ -128,28 +126,24 @@ function BadgeDetailContent({
   const badgeRendererRef = useRef<BadgeRendererHandle | null>(null);
 
   const handleDelete = () => {
-    Alert.alert(
-      "Delete Badge",
-      "This will permanently remove this badge. This cannot be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            deleteBadge(badgeId as BadgeId);
-            navigation.goBack();
-          },
+    Alert.alert(t("deleteConfirm.title"), t("deleteConfirm.message"), [
+      { text: t("deleteConfirm.cancel"), style: "cancel" },
+      {
+        text: t("deleteConfirm.delete"),
+        style: "destructive",
+        onPress: () => {
+          deleteBadge(badgeId as BadgeId);
+          navigation.goBack();
         },
-      ],
-    );
+      },
+    ]);
   };
 
   if (!badge) {
     return (
       <>
         <View style={styles.centered}>
-          <Text variant="body">Badge not found</Text>
+          <Text variant="body">{t("fallback.badgeNotFound")}</Text>
         </View>
         <DetailTopBar
           onBack={() => navigation.goBack()}
@@ -162,12 +156,13 @@ function BadgeDetailContent({
   const imageUri = badge.imageUri as string | null;
   const hasRealImage =
     imageUri && imageUri !== PLACEHOLDER_IMAGE_URI && !imageLoadFailed;
-  const goalTitle = (badge.goalTitle as string) ?? "Untitled";
+  const goalTitle = (badge.goalTitle as string) ?? t("fallback.untitled");
   const goalDescription = badge.goalDescription as string | null;
   const goalIcon = badge.goalIcon as string | null;
   const goalColor = badge.goalColor as string | null;
   const earnedDate = formatDate(
     (badge.completedAt ?? badge.createdAt) as string | null,
+    i18n.language,
   );
   const design = parseBadgeDesign(badge.design as string | null);
   const criteriaNarrative = extractCriteriaNarrative(
@@ -180,7 +175,7 @@ function BadgeDetailContent({
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingTop: insets.top + previewHeight },
+          { paddingTop: previewHeight },
         ]}
       >
         <Text style={styles.title}>{goalTitle}</Text>
@@ -191,7 +186,9 @@ function BadgeDetailContent({
             accessible
             accessibilityRole="image"
             accessibilityLabel={
-              goalIcon ? `Goal identity: ${goalIcon}` : "Goal color indicator"
+              goalIcon
+                ? t("identityA11y.icon", { icon: goalIcon })
+                : t("identityA11y.color")
             }
           >
             {goalIcon ? <Text style={styles.chipIcon}>{goalIcon}</Text> : null}
@@ -204,29 +201,38 @@ function BadgeDetailContent({
         ) : null}
 
         {earnedDate ? (
-          <Text style={styles.description}>Earned {earnedDate}</Text>
+          <Text style={styles.description}>
+            {t("earned", { date: earnedDate })}
+          </Text>
         ) : null}
 
         <Card>
           <View style={styles.infoSection}>
             {goalDescription ? (
               <View style={styles.infoBlock}>
-                <Text style={styles.sectionLabel}>About</Text>
+                <Text style={styles.sectionLabel}>{t("sections.about")}</Text>
                 <Text style={styles.bodyText}>{goalDescription}</Text>
               </View>
             ) : null}
 
             {criteriaNarrative ? (
               <View style={styles.infoBlock}>
-                <Text style={styles.sectionLabel}>How it was earned</Text>
+                <Text style={styles.sectionLabel}>
+                  {t("sections.howEarned")}
+                </Text>
                 <Text style={styles.bodyText}>{criteriaNarrative}</Text>
               </View>
             ) : null}
 
             <View style={styles.infoBlock}>
-              <Text style={styles.sectionLabel}>Details</Text>
+              <Text style={styles.sectionLabel}>{t("sections.details")}</Text>
               <Text style={styles.bodyText}>
-                Created {formatDate(badge.createdAt as string | null)}
+                {t("createdAt", {
+                  date: formatDate(
+                    badge.createdAt as string | null,
+                    i18n.language,
+                  ),
+                })}
               </Text>
             </View>
           </View>
@@ -234,20 +240,20 @@ function BadgeDetailContent({
 
         <Card>
           <View style={styles.infoBlock}>
-            <Text style={styles.sectionLabel}>Export</Text>
+            <Text style={styles.sectionLabel}>{t("sections.export")}</Text>
             {/* Primary: byte-preserving export of the baked PNG (carries the
                 OB 3.0 iTXt credential). On Android this bypasses the share
                 sheet entirely via SAF, so messengers can't transcode and
                 strip the credential. */}
             <Button
-              label="Export Verifiable Badge"
+              label={t("actions.exportVerifiable")}
               variant="primary"
               onPress={() => exportVerifiableBadge(imageUri)}
               loading={isExportingImage}
               disabled={!hasRealImage}
             />
             <Button
-              label="Export Credential (JSON)"
+              label={t("actions.exportCredential")}
               variant="secondary"
               onPress={() =>
                 exportJSON(badge.credential as string | null, goalTitle)
@@ -260,22 +266,21 @@ function BadgeDetailContent({
                 only want to share the visual; the caption below explains
                 the trade-off. */}
             <Button
-              label="Save as Image"
+              label={t("actions.saveAsImage")}
               variant="secondary"
               onPress={() => exportImage(imageUri)}
               loading={isExportingImage}
               disabled={!hasRealImage}
-              accessibilityHint="Shares this badge as a picture. The credential may be lost when sent through messengers."
+              accessibilityHint={t("actions.saveAsImageHint")}
             />
             <Text variant="caption" style={styles.exportCaption}>
-              Export Verifiable Badge keeps the OpenBadge credential. Save as
-              Image is just a picture — some apps strip the proof when sharing.
+              {t("exportCaption")}
             </Text>
           </View>
         </Card>
 
         <Button
-          label="Delete Badge"
+          label={t("actions.delete")}
           variant="destructive"
           onPress={handleDelete}
         />
@@ -291,7 +296,7 @@ function BadgeDetailContent({
       />
 
       <View
-        style={[styles.previewOverlay, { top: insets.top }]}
+        style={[styles.previewOverlay, { top: 0 }]}
         pointerEvents="none"
         onLayout={(e) => {
           const next = e.nativeEvent.layout.height;
@@ -312,7 +317,7 @@ function BadgeDetailContent({
               source={{ uri: imageUri }}
               style={styles.badgeImage}
               resizeMode="contain"
-              accessibilityLabel={`Badge image for ${goalTitle}`}
+              accessibilityLabel={t("image.a11y", { title: goalTitle })}
               onError={() => setImageLoadFailed(true)}
             />
           ) : (

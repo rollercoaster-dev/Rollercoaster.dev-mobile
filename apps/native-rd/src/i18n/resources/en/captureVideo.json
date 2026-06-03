@@ -15,7 +15,7 @@
     "title": "Discard video?",
     "message": "You have an unsaved video. Going back will discard it.",
     "keep": "Keep",
-    "discard": "Discard"
+    "confirmLabel": "Discard"
   },
   "errors": {
     "saveFailedTitle": "Save Failed",

@@ -20,6 +20,11 @@ import enCaptureLink from "./resources/en/captureLink.json";
 import enPermissions from "./resources/en/permissions.json";
 import enBadges from "./resources/en/badges.json";
 import enBadgeDesigner from "./resources/en/badgeDesigner.json";
+import enEditGoal from "./resources/en/editGoal.json";
+import enTimelineJourney from "./resources/en/timelineJourney.json";
+import enCompletion from "./resources/en/completion.json";
+import enBadgeDetail from "./resources/en/badgeDetail.json";
+import enEvidenceViewer from "./resources/en/evidenceViewer.json";
 
 import deCommon from "./resources/de/common.json";
 import deWelcome from "./resources/de/welcome.json";
@@ -36,6 +41,11 @@ import deCaptureLink from "./resources/de/captureLink.json";
 import dePermissions from "./resources/de/permissions.json";
 import deBadges from "./resources/de/badges.json";
 import deBadgeDesigner from "./resources/de/badgeDesigner.json";
+import deEditGoal from "./resources/de/editGoal.json";
+import deTimelineJourney from "./resources/de/timelineJourney.json";
+import deCompletion from "./resources/de/completion.json";
+import deBadgeDetail from "./resources/de/badgeDetail.json";
+import deEvidenceViewer from "./resources/de/evidenceViewer.json";
 
 import pseudoCommon from "./resources/pseudo/common.json";
 import pseudoWelcome from "./resources/pseudo/welcome.json";
@@ -52,15 +62,28 @@ import pseudoCaptureLink from "./resources/pseudo/captureLink.json";
 import pseudoPermissions from "./resources/pseudo/permissions.json";
 import pseudoBadges from "./resources/pseudo/badges.json";
 import pseudoBadgeDesigner from "./resources/pseudo/badgeDesigner.json";
+import pseudoEditGoal from "./resources/pseudo/editGoal.json";
+import pseudoTimelineJourney from "./resources/pseudo/timelineJourney.json";
+import pseudoCompletion from "./resources/pseudo/completion.json";
+import pseudoBadgeDetail from "./resources/pseudo/badgeDetail.json";
+import pseudoEvidenceViewer from "./resources/pseudo/evidenceViewer.json";
 
 // Adding a namespace? Steps:
 //   1. Add the en + de + pseudo JSON files under resources/{en,de,pseudo}/<name>.json
+//      (German bundle starts as `{}`; the sync bot fills it from en/.
+//       Bot output may be committed in this same PR or in a follow-up.)
 //   2. Add imports above
 //   3. Add the entry to NAMESPACES and all three resource bundles below
 //   4. Add the type alias in i18next.d.ts
+//   5. Add the voice register at resources/_register/<name>.yml — required by
+//      the i18n sync workflow (see apps/native-rd/docs/plans/i18n-llm-sync.md).
+//      Mirror an existing file like badgeDesigner.yml; YAML list items must
+//      not start with a double-quote (the parser breaks on multi-line items
+//      that lead with `"…"`).
 // The script in scripts/generate-pseudo-locale.ts auto-discovers files in
-// resources/en/ — no need to update it. German `{}` stubs let i18next register
-// the bundle; entries fall back to `en` until per-screen German copy lands.
+// resources/en/ — no need to update it. Empty `{}` German bundles still let
+// i18next register the namespace and fall back to `en` until German copy
+// lands — either via a later sync-bot run or committed alongside this PR.
 export const NAMESPACES = [
   "common",
   "welcome",
@@ -77,6 +100,11 @@ export const NAMESPACES = [
   "permissions",
   "badges",
   "badgeDesigner",
+  "editGoal",
+  "timelineJourney",
+  "completion",
+  "badgeDetail",
+  "evidenceViewer",
 ] as const;
 
 export type Namespace = (typeof NAMESPACES)[number];
@@ -98,6 +126,11 @@ const resources = {
     permissions: enPermissions,
     badges: enBadges,
     badgeDesigner: enBadgeDesigner,
+    editGoal: enEditGoal,
+    timelineJourney: enTimelineJourney,
+    completion: enCompletion,
+    badgeDetail: enBadgeDetail,
+    evidenceViewer: enEvidenceViewer,
   },
   de: {
     common: deCommon,
@@ -115,6 +148,11 @@ const resources = {
     permissions: dePermissions,
     badges: deBadges,
     badgeDesigner: deBadgeDesigner,
+    editGoal: deEditGoal,
+    timelineJourney: deTimelineJourney,
+    completion: deCompletion,
+    badgeDetail: deBadgeDetail,
+    evidenceViewer: deEvidenceViewer,
   },
   pseudo: {
     common: pseudoCommon,
@@ -132,6 +170,11 @@ const resources = {
     permissions: pseudoPermissions,
     badges: pseudoBadges,
     badgeDesigner: pseudoBadgeDesigner,
+    editGoal: pseudoEditGoal,
+    timelineJourney: pseudoTimelineJourney,
+    completion: pseudoCompletion,
+    badgeDetail: pseudoBadgeDetail,
+    evidenceViewer: pseudoEvidenceViewer,
   },
 } as const;
 
@@ -157,10 +200,11 @@ i18n.use(initReactI18next).init({
   saveMissing: warnMissingKeys,
   missingKeyHandler: warnMissingKeys
     ? (lngs, ns, key) => {
-        // de bundles are intentional `{}` stubs until per-screen German copy
-        // lands (#67–#72); falling back to en is expected, not a bug. Only
-        // warn when en is also missing the key — the real "refactor broke a
-        // key" signal.
+        // German fallback to en is expected during the screen-by-screen
+        // migration: a namespace may be `{}` (waiting on the sync bot) or
+        // only partially populated. `lngs.every((l) => l === "de")` means the
+        // key wasn't authored in German yet — that's not a refactor signal.
+        // Only warn when en is also missing the key.
         if (lngs.every((l) => l === "de")) return;
         logger.warn(
           `Missing key "${key}" in namespace "${ns}" (${lngs.join(", ")})`,

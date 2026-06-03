@@ -81,7 +81,7 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
   return (
     <View style={styles.container}>
       <ScreenSubHeader
-        label={t("captureLink:header")}
+        label={t("captureLink:title")}
         onBack={() => navigation.goBack()}
       />
 

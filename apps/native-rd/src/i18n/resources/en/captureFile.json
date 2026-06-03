@@ -1,5 +1,5 @@
 {
-  "header": "Attach File",
+  "title": "Attach File",
   "heading": "Attach a file",
   "description": "Select a PDF, image, or document (max {{maxSize}}).",
   "actions": {

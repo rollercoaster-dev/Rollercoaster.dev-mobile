@@ -1,5 +1,6 @@
 import React from "react";
 import { View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "phosphor-react-native";
 import { Text } from "../Text";
 import { IconButton } from "../IconButton";
@@ -17,13 +18,15 @@ export function ScreenSubHeader({
   onBack,
   right,
 }: ScreenSubHeaderProps) {
+  const { t } = useTranslation();
+
   return (
     <HeaderBand>
       <IconButton
         icon={<ArrowLeft size={24} weight="bold" />}
         onPress={onBack}
         tone="chrome"
-        accessibilityLabel="Go back"
+        accessibilityLabel={t("screenHeader.a11y.goBack")}
       />
       <Text variant="title" style={styles.subLabel} accessibilityRole="header">
         {label}

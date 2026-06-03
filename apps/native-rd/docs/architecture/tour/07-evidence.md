@@ -1,4 +1,4 @@
-# Slice 2 — Evidence & capture
+# Slice 7 — Evidence & capture
 
 **Status:** not-started
 **Drafted:** —
@@ -8,19 +8,20 @@
 
 Evidence capture flows + evidence display.
 
-**In scope (provisional — may split into 2a capture / 2b display at prep time):**
+**In scope (provisional — may split into 7a capture / 7b display at prep time):**
 
 - Capture screens: `CapturePhoto`, `CaptureVideoScreen`, `CaptureFile`, `CaptureLinkScreen`, `CaptureTextNote`, `CapturePlaceholder`, `VoiceMemoScreen`
 - Evidence components: `EvidenceContent`, `EvidenceDrawer`, `EvidenceGrid`, `EvidenceItem`, `EvidenceThumbnail`, `EvidenceTypePicker`, `EvidenceViewerScreen`
 - Media playback: `AudioPlayer`, `AudioPlayerModal`, `VideoPlayer*`, `PhotoViewerModal`, `TextNoteViewerModal`, `VideoPreview`, `VideoRecorder`, `ViewerStripThumb`, `ViewerThumbnailStrip`
 - `TimelineJourneyScreen`, `TimelineEvidenceCard`, `TimelineStep`, `TimelineNode`, `MiniTimeline`
-- Evidence-related queries + schema
+- `src/hooks/useUserKey.ts` if it gates capture
 - Expo permissions surface: camera, microphone, media-library, document-picker
 
 **Deferred:**
 
-- Badge issuance from evidence — slice 3
-- Goal/step linkage UI — slice 1
+- Badge issuance from evidence — slice 9 (capstone)
+- Goal/step linkage UI — slice 6
+- Evidence-related queries + schema — reviewed alongside the rest of Evolu in slice 3 (data layer)
 
 ## File map
 

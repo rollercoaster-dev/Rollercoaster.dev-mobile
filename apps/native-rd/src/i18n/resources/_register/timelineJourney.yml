@@ -1,0 +1,24 @@
+# timelineJourney — ND adult viewing the timeline of a goal's progress.
+# Read-only view: step status, evidence list, finish-line node.
+
+speaker: app
+audience: ND adult reviewing progress
+formality: informal
+banned_phrasings:
+  - Großartig!
+  - Super!
+  - Du schaffst das!
+  - bleib dran
+  - schon fast geschafft
+  - besonders
+  - einzigartig
+  - leidet an
+notes:
+  - Status labels are short and neutral. Use "Erledigt" / "Aktiv" /
+    "Ausstehend" — not "Geschafft!" / "Du arbeitest dran!" / "Wartet
+    auf dich".
+  - Progress copy stays factual. Render "{{completed}} von {{total}}
+    Schritten erledigt." — no motivational framing.
+  - The word "step" stays as "Schritt" (de/common.json convention).
+  - Finish-line copy is matter-of-fact, not victorious. Use "Ziel-Belege"
+    over "Beweise deines Erfolgs".

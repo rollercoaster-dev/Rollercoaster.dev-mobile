@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Modal, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 import { Text } from "../Text";
 import { VideoContent } from "../EvidenceContent/VideoContent";
 import { styles } from "./VideoPlayerModal.styles";
@@ -17,6 +18,7 @@ export function VideoPlayerModal({
   onClose,
 }: VideoPlayerModalProps) {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   if (!visible) return null;
 
@@ -40,7 +42,7 @@ export function VideoPlayerModal({
             onPress={onClose}
             accessible
             accessibilityRole="button"
-            accessibilityLabel="Close video player"
+            accessibilityLabel={t("viewerModals.a11y.closeVideo")}
             hitSlop={16}
           >
             <Text style={styles.closeText}>{"\u2715"}</Text>

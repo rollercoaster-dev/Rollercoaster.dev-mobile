@@ -1,4 +1,4 @@
-# Slice 1 — Goals domain
+# Slice 6 — Goals domain
 
 **Status:** not-started
 **Drafted:** —
@@ -16,15 +16,15 @@ Tight scope: the core goal-tracking UI and its immediate data layer.
 - `src/components/GoalCard`
 - `src/components/StepCard`, `src/components/StepList`
 - `src/components/FAB`, `src/components/FABMenu`
-- `src/navigation/GoalsStack`
-- Goal-related queries in `src/db/queries.ts` and the relevant `src/db/schema.ts` tables
 
 **Deferred:**
 
-- `CompletionFlowScreen` — overlaps badge issuance (slice 3)
-- `EditModeScreen`, `FocusModeScreen` — separate UX modes, revisited after slice 1
-- `GoalEvidenceCard` — overlaps evidence rendering (slice 2)
-- `TimelineJourneyScreen` — primarily evidence-timeline, slice 2
+- `CompletionFlowScreen` — overlaps badge issuance (slice 9, capstone)
+- `EditModeScreen`, `FocusModeScreen` — separate UX modes, revisited after this slice
+- `GoalEvidenceCard` — overlaps evidence rendering (slice 7)
+- `TimelineJourneyScreen` — primarily evidence-timeline (slice 7)
+- `src/navigation/GoalsStack` — reviewed alongside other stacks in slice 2 (navigation)
+- Goal-related queries in `src/db/queries.ts` and the relevant `src/db/schema.ts` tables — reviewed alongside the rest of Evolu in slice 3 (data layer)
 
 ## File map
 

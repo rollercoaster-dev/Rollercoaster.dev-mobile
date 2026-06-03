@@ -1,0 +1,66 @@
+# Gate the release PR on tester-facing notes being authored.
+#
+# release-please opens the release PR and (via release-please.yml) commits a
+# docs/release/testing-notes/<version>.md scaffold full of `TODO:` lines. This
+# workflow runs `release-notes:lint`, which fails while any TODO remains — so
+# the notes must be rewritten into real copy BEFORE the release PR merges and
+# the tag freezes. (build-production.yml runs the same lint at publish time,
+# but that gate fires AFTER the tag is cut: too late to fix the tagged commit.)
+#
+# IMPORTANT — bot-authored commits don't trigger CI: commits pushed with the
+# default GITHUB_TOKEN (the scaffold commit, the release PR itself) do NOT
+# start workflow runs. So this check does NOT run when the bot opens the PR.
+# It runs the moment a human pushes a commit to the release branch — i.e. when
+# someone edits the TODO lines — which is exactly when we want to validate.
+# To make it BLOCK the merge, add "Release Notes Lint" as a required status
+# check in branch protection for `main` (a one-time repo-settings step; a
+# required check that has not reported is treated as pending and blocks merge,
+# forcing a human push that turns it green).
+name: release-notes-lint
+
+on:
+  pull_request:
+    paths:
+      - "apps/native-rd/docs/release/testing-notes/**"
+      - "apps/native-rd/scripts/release-notes-*.ts"
+      - ".github/workflows/release-notes-lint.yml"
+  push:
+    branches: [main]
+
+concurrency:
+  group: release-notes-lint-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Release Notes Lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/native-rd
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: "package.json"
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v5
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+        working-directory: .
+
+      - name: Lint release notes
+        run: bun run release-notes:lint

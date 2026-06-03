@@ -1,6 +1,9 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react-native";
 
+import { AudioPlayer } from "../AudioPlayer";
+import { i18n } from "../../../i18n";
+
 const mockPlay = jest.fn();
 const mockPause = jest.fn();
 const mockSeekTo = jest.fn();
@@ -20,8 +23,6 @@ jest.mock("expo-audio", () => ({
   useAudioPlayerStatus: jest.fn(() => mockPlayerStatus),
 }));
 
-import { AudioPlayer } from "../AudioPlayer";
-
 beforeEach(() => {
   jest.clearAllMocks();
   mockPlayerStatus.playing = false;
@@ -32,19 +33,25 @@ beforeEach(() => {
 describe("AudioPlayer", () => {
   it("renders play button initially", () => {
     render(<AudioPlayer uri="/audio.m4a" />);
-    expect(screen.getByLabelText("Play audio")).toBeTruthy();
+    expect(
+      screen.getByLabelText(i18n.t("common:audioPlayer.a11y.play")),
+    ).toBeTruthy();
   });
 
   it("calls player.play when play is pressed", () => {
     render(<AudioPlayer uri="/audio.m4a" />);
-    fireEvent.press(screen.getByLabelText("Play audio"));
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("common:audioPlayer.a11y.play")),
+    );
     expect(mockPlay).toHaveBeenCalled();
   });
 
   it("calls player.pause when paused", () => {
     mockPlayerStatus.playing = true;
     render(<AudioPlayer uri="/audio.m4a" />);
-    fireEvent.press(screen.getByLabelText("Pause audio"));
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("common:audioPlayer.a11y.pause")),
+    );
     expect(mockPause).toHaveBeenCalled();
   });
 
@@ -52,7 +59,9 @@ describe("AudioPlayer", () => {
     mockPlayerStatus.playing = false;
     mockPlayerStatus.didJustFinish = true;
     render(<AudioPlayer uri="/audio.m4a" />);
-    fireEvent.press(screen.getByLabelText("Play audio"));
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("common:audioPlayer.a11y.play")),
+    );
     expect(mockSeekTo).toHaveBeenCalledWith(0);
     expect(mockPlay).toHaveBeenCalled();
   });
@@ -61,7 +70,9 @@ describe("AudioPlayer", () => {
     mockPlayerStatus.playing = false;
     mockPlayerStatus.didJustFinish = false;
     render(<AudioPlayer uri="/audio.m4a" />);
-    fireEvent.press(screen.getByLabelText("Play audio"));
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("common:audioPlayer.a11y.play")),
+    );
     expect(mockSeekTo).not.toHaveBeenCalled();
     expect(mockPlay).toHaveBeenCalled();
   });
@@ -88,7 +99,14 @@ describe("AudioPlayer", () => {
   it("shows duration in accessibility label", () => {
     mockPlayerStatus.currentTime = 5;
     render(<AudioPlayer uri="/audio.m4a" durationMs={120000} />);
-    expect(screen.getByLabelText("00:05 of 02:00")).toBeTruthy();
+    expect(
+      screen.getByLabelText(
+        i18n.t("common:audioPlayer.a11y.progress", {
+          current: "00:05",
+          total: "02:00",
+        }),
+      ),
+    ).toBeTruthy();
   });
 
   it("shows progress bar", () => {
@@ -108,7 +126,14 @@ describe("AudioPlayer", () => {
     mockPlayerStatus.currentTime = 0;
     mockPlayerStatus.duration = 100; // 100 seconds from status
     render(<AudioPlayer uri="/audio.m4a" durationMs={60000} />); // 60s from prop
-    expect(screen.getByLabelText("00:00 of 01:00")).toBeTruthy();
+    expect(
+      screen.getByLabelText(
+        i18n.t("common:audioPlayer.a11y.progress", {
+          current: "00:00",
+          total: "01:00",
+        }),
+      ),
+    ).toBeTruthy();
   });
 
   it("handles playback error gracefully", () => {
@@ -117,11 +142,29 @@ describe("AudioPlayer", () => {
       throw new Error("Audio error");
     });
     render(<AudioPlayer uri="/audio.m4a" />);
-    fireEvent.press(screen.getByLabelText("Play audio"));
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("common:audioPlayer.a11y.play")),
+    );
     expect(consoleSpy).toHaveBeenCalledWith(
       "[AudioPlayer] Playback error",
       expect.objectContaining({ uri: "/audio.m4a" }),
     );
     consoleSpy.mockRestore();
+  });
+
+  describe("pseudo locale (proves i18n routing, guards empty-namespace regression)", () => {
+    afterEach(async () => {
+      if (i18n.language !== "en") await i18n.changeLanguage("en");
+    });
+
+    it("renders a11y labels as bracketed pseudo copy", async () => {
+      await i18n.changeLanguage("pseudo");
+      render(<AudioPlayer uri="/audio.m4a" durationMs={120000} />);
+      const play = i18n.t("common:audioPlayer.a11y.play");
+      const container = i18n.t("common:audioPlayer.a11y.container");
+      expect(play.startsWith("[")).toBe(true);
+      expect(screen.getByLabelText(play)).toBeTruthy();
+      expect(screen.getByLabelText(container)).toBeTruthy();
+    });
   });
 });

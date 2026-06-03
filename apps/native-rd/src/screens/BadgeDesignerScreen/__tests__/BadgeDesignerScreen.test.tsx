@@ -9,6 +9,30 @@ import {
 } from "../../../__tests__/test-utils";
 import { BadgeDesignerScreen } from "../BadgeDesignerScreen";
 import type { BadgeDesignerScreenProps } from "../../../navigation/types";
+import { i18n } from "../../../i18n";
+import type {
+  BadgeShape,
+  BadgeFrame,
+  BadgeCenterMode,
+} from "../../../badges/types";
+import type { AccentColorId } from "../../../badges/ColorPicker";
+
+const shapeLabel = (id: BadgeShape) =>
+  i18n.t("badgeDesigner:shape.optionA11y", {
+    label: i18n.t(`badgeDesigner:shape.options.${id}`),
+  });
+const colorLabel = (id: AccentColorId) =>
+  i18n.t("badgeDesigner:color.optionA11y", {
+    label: i18n.t(`badgeDesigner:color.options.${id}`),
+  });
+const frameLabel = (id: BadgeFrame) =>
+  i18n.t("badgeDesigner:frame.optionA11y", {
+    label: i18n.t(`badgeDesigner:frame.options.${id}`),
+  });
+const centerLabel = (id: BadgeCenterMode) =>
+  i18n.t("badgeDesigner:center.optionA11y", {
+    label: i18n.t(`badgeDesigner:center.options.${id}`),
+  });
 
 const mockGoBack = jest.fn();
 const mockReplace = jest.fn();
@@ -187,7 +211,9 @@ describe("BadgeDesignerScreen", () => {
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
-    expect(screen.getByText("Badge not found")).toBeOnTheScreen();
+    expect(
+      screen.getByText(i18n.t("badgeDesigner:fallback.badgeNotFound")),
+    ).toBeOnTheScreen();
   });
 
   it('renders top bar with "Design Badge" title', () => {
@@ -195,7 +221,7 @@ describe("BadgeDesignerScreen", () => {
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
-    expect(screen.getByText("Design Badge")).toBeOnTheScreen();
+    expect(screen.getByText(i18n.t("badgeDesigner:title"))).toBeOnTheScreen();
   });
 
   it("renders back button that calls goBack", () => {
@@ -222,9 +248,11 @@ describe("BadgeDesignerScreen", () => {
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
-    expect(screen.getByLabelText("Badge shape")).toBeOnTheScreen();
-    expect(screen.getByLabelText("Circle shape")).toBeOnTheScreen();
-    expect(screen.getByLabelText("Diamond shape")).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText(i18n.t("badgeDesigner:shape.a11y")),
+    ).toBeOnTheScreen();
+    expect(screen.getByLabelText(shapeLabel("circle"))).toBeOnTheScreen();
+    expect(screen.getByLabelText(shapeLabel("diamond"))).toBeOnTheScreen();
   });
 
   it("renders ColorPicker with accent swatches and goal color", () => {
@@ -232,9 +260,11 @@ describe("BadgeDesignerScreen", () => {
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
-    expect(screen.getByLabelText("Badge color")).toBeOnTheScreen();
-    expect(screen.getByLabelText("Purple color")).toBeOnTheScreen();
-    expect(screen.getByLabelText("Goal color")).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText(i18n.t("badgeDesigner:color.a11y")),
+    ).toBeOnTheScreen();
+    expect(screen.getByLabelText(colorLabel("purple"))).toBeOnTheScreen();
+    expect(screen.getByLabelText(colorLabel("goal"))).toBeOnTheScreen();
   });
 
   it("renders Save Design button", () => {
@@ -242,7 +272,9 @@ describe("BadgeDesignerScreen", () => {
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
-    expect(screen.getByLabelText("Save Design")).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText(i18n.t("badgeDesigner:actions.save")),
+    ).toBeOnTheScreen();
   });
 
   it("calls updateBadge and goBack when Save is pressed", async () => {
@@ -251,7 +283,9 @@ describe("BadgeDesignerScreen", () => {
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
 
-    fireEvent.press(screen.getByLabelText("Save Design"));
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:actions.save")),
+    );
     // updateBadge runs after the capture promise resolves (capture-first
     // ordering keeps the badge row and PNG in sync on capture failure).
     await waitFor(() =>
@@ -272,7 +306,9 @@ describe("BadgeDesignerScreen", () => {
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
 
-    fireEvent.press(screen.getByLabelText("Save Design"));
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:actions.save")),
+    );
 
     await waitFor(() => expect(mockPendingDesignStore.set).toHaveBeenCalled());
     expect(mockPendingDesignStore.set).toHaveBeenCalledWith(
@@ -299,11 +335,13 @@ describe("BadgeDesignerScreen", () => {
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
 
-    fireEvent.press(screen.getByLabelText("Save Design"));
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:actions.save")),
+    );
 
     await waitFor(() =>
       expect(alertSpy).toHaveBeenCalledWith(
-        "Save Failed",
+        i18n.t("badgeDesigner:errors.saveFailedTitle"),
         expect.stringContaining("Could not capture"),
       ),
     );
@@ -329,7 +367,7 @@ describe("BadgeDesignerScreen", () => {
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
 
-    const saveBtn = screen.getByLabelText("Save Design");
+    const saveBtn = screen.getByLabelText(i18n.t("badgeDesigner:actions.save"));
     fireEvent.press(saveBtn);
     fireEvent.press(saveBtn);
     fireEvent.press(saveBtn);
@@ -347,7 +385,7 @@ describe("BadgeDesignerScreen", () => {
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
 
-    fireEvent.press(screen.getByLabelText("Shield shape"));
+    fireEvent.press(screen.getByLabelText(shapeLabel("shield")));
     expect(screen.getByLabelText(/Badge preview:.*shield/i)).toBeOnTheScreen();
   });
 
@@ -357,7 +395,7 @@ describe("BadgeDesignerScreen", () => {
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
 
-    fireEvent.press(screen.getByLabelText("Mint color"));
+    fireEvent.press(screen.getByLabelText(colorLabel("mint")));
     expect(screen.getByLabelText(/Badge preview:.*#34d399/)).toBeOnTheScreen();
   });
 
@@ -367,9 +405,11 @@ describe("BadgeDesignerScreen", () => {
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
 
-    fireEvent.press(screen.getByLabelText("Shield shape"));
-    fireEvent.press(screen.getByLabelText("Mint color"));
-    fireEvent.press(screen.getByLabelText("Save Design"));
+    fireEvent.press(screen.getByLabelText(shapeLabel("shield")));
+    fireEvent.press(screen.getByLabelText(colorLabel("mint")));
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:actions.save")),
+    );
 
     // updateBadge runs after capture resolves (capture-first ordering).
     await waitFor(() =>
@@ -396,7 +436,9 @@ describe("BadgeDesignerScreen", () => {
     );
     // Should still render with default design
     expect(screen.getByLabelText(/Badge preview:/)).toBeOnTheScreen();
-    expect(screen.getByLabelText("Save Design")).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText(i18n.t("badgeDesigner:actions.save")),
+    ).toBeOnTheScreen();
   });
 
   // --- New controls from #190 ---
@@ -406,7 +448,9 @@ describe("BadgeDesignerScreen", () => {
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
-    expect(screen.getByLabelText("Badge frame")).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText(i18n.t("badgeDesigner:frame.a11y")),
+    ).toBeOnTheScreen();
   });
 
   it("renders CenterModeSelector", () => {
@@ -414,7 +458,9 @@ describe("BadgeDesignerScreen", () => {
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
-    expect(screen.getByLabelText("Badge center mode")).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText(i18n.t("badgeDesigner:center.a11y")),
+    ).toBeOnTheScreen();
   });
 
   it("renders PathTextEditor", () => {
@@ -422,7 +468,9 @@ describe("BadgeDesignerScreen", () => {
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
-    expect(screen.getByLabelText("Enable path text")).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText(i18n.t("badgeDesigner:pathText.toggleA11y")),
+    ).toBeOnTheScreen();
   });
 
   it("renders BannerEditor", () => {
@@ -430,7 +478,9 @@ describe("BadgeDesignerScreen", () => {
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
-    expect(screen.getByLabelText("Enable banner")).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText(i18n.t("badgeDesigner:banner.toggleA11y")),
+    ).toBeOnTheScreen();
   });
 
   it("shows icon picker by default (icon mode)", () => {
@@ -448,7 +498,7 @@ describe("BadgeDesignerScreen", () => {
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
-    fireEvent.press(screen.getByLabelText("Monogram center"));
+    fireEvent.press(screen.getByLabelText(centerLabel("monogram")));
     expect(screen.queryByLabelText(/Selected icon:.*Tap to change/)).toBeNull();
   });
 
@@ -457,7 +507,9 @@ describe("BadgeDesignerScreen", () => {
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
-    expect(screen.getByLabelText("Bottom label")).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText(i18n.t("badgeDesigner:bottomLabel.a11y")),
+    ).toBeOnTheScreen();
   });
 
   it("includes new fields in saved JSON after changes", async () => {
@@ -467,16 +519,22 @@ describe("BadgeDesignerScreen", () => {
     );
 
     // Select a frame
-    fireEvent.press(screen.getByLabelText("Guilloche frame"));
+    fireEvent.press(screen.getByLabelText(frameLabel("guilloche")));
 
     // Toggle path text on
-    fireEvent.press(screen.getByLabelText("Enable path text"));
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:pathText.toggleA11y")),
+    );
 
     // Toggle banner on
-    fireEvent.press(screen.getByLabelText("Enable banner"));
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:banner.toggleA11y")),
+    );
 
     // Save (updateBadge runs after capture resolves — capture-first order).
-    fireEvent.press(screen.getByLabelText("Save Design"));
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:actions.save")),
+    );
     await waitFor(() => expect(mockUpdateBadge).toHaveBeenCalled());
 
     const savedJson = mockUpdateBadge.mock.calls[0][1].design;
@@ -492,14 +550,24 @@ describe("BadgeDesignerScreen", () => {
     );
 
     // Enable path text, then disable
-    fireEvent.press(screen.getByLabelText("Enable path text"));
-    fireEvent.press(screen.getByLabelText("Enable path text"));
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:pathText.toggleA11y")),
+    );
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:pathText.toggleA11y")),
+    );
 
     // Enable banner, then disable
-    fireEvent.press(screen.getByLabelText("Enable banner"));
-    fireEvent.press(screen.getByLabelText("Enable banner"));
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:banner.toggleA11y")),
+    );
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:banner.toggleA11y")),
+    );
 
-    fireEvent.press(screen.getByLabelText("Save Design"));
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:actions.save")),
+    );
     await waitFor(() => expect(mockUpdateBadge).toHaveBeenCalled());
 
     const savedJson = mockUpdateBadge.mock.calls[0][1].design;
@@ -514,7 +582,7 @@ describe("BadgeDesignerScreen", () => {
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
 
-    fireEvent.press(screen.getByLabelText("Guilloche frame"));
+    fireEvent.press(screen.getByLabelText(frameLabel("guilloche")));
     expect(
       screen.getByLabelText(/Badge preview:.*guilloche.*frame/),
     ).toBeOnTheScreen();
@@ -533,8 +601,10 @@ describe("BadgeDesignerScreen", () => {
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
 
-    fireEvent.press(screen.getByLabelText("Guilloche frame"));
-    fireEvent.press(screen.getByLabelText("Save Design"));
+    fireEvent.press(screen.getByLabelText(frameLabel("guilloche")));
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:actions.save")),
+    );
     await waitFor(() => expect(mockUpdateBadge).toHaveBeenCalled());
 
     const savedJson = mockUpdateBadge.mock.calls[0][1].design as string;
@@ -573,8 +643,10 @@ describe("BadgeDesignerScreen", () => {
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
 
-    fireEvent.press(screen.getByLabelText("None frame"));
-    fireEvent.press(screen.getByLabelText("Save Design"));
+    fireEvent.press(screen.getByLabelText(frameLabel("none")));
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:actions.save")),
+    );
     await waitFor(() => expect(mockUpdateBadge).toHaveBeenCalled());
 
     const savedJson = mockUpdateBadge.mock.calls[0][1].design as string;
@@ -609,7 +681,9 @@ describe("BadgeDesignerScreen — new-goal mode", () => {
     renderWithProviders(
       <BadgeDesignerScreen route={newGoalRoute} navigation={{} as never} />,
     );
-    expect(screen.getByText("Use This Design")).toBeOnTheScreen();
+    expect(
+      screen.getByText(i18n.t("badgeDesigner:actions.useThisDesign")),
+    ).toBeOnTheScreen();
   });
 
   it('renders "Skip — Use Default" button', () => {
@@ -617,7 +691,9 @@ describe("BadgeDesignerScreen — new-goal mode", () => {
     renderWithProviders(
       <BadgeDesignerScreen route={newGoalRoute} navigation={{} as never} />,
     );
-    expect(screen.getByText("Skip — Use Default")).toBeOnTheScreen();
+    expect(
+      screen.getByText(i18n.t("badgeDesigner:actions.skipDefault")),
+    ).toBeOnTheScreen();
   });
 
   it("captures PNG, saves to pendingDesignStore, and navigates on save", async () => {
@@ -626,7 +702,9 @@ describe("BadgeDesignerScreen — new-goal mode", () => {
       <BadgeDesignerScreen route={newGoalRoute} navigation={{} as never} />,
     );
 
-    fireEvent.press(screen.getByText("Use This Design"));
+    fireEvent.press(
+      screen.getByText(i18n.t("badgeDesigner:actions.useThisDesign")),
+    );
 
     await waitFor(() => {
       expect(mockCaptureBadge).toHaveBeenCalledWith(
@@ -649,7 +727,9 @@ describe("BadgeDesignerScreen — new-goal mode", () => {
       <BadgeDesignerScreen route={newGoalRoute} navigation={{} as never} />,
     );
 
-    fireEvent.press(screen.getByText("Skip — Use Default"));
+    fireEvent.press(
+      screen.getByText(i18n.t("badgeDesigner:actions.skipDefault")),
+    );
 
     await waitFor(() => {
       expect(mockPendingDesignStore.set).toHaveBeenCalledWith("goal-1", {
@@ -668,7 +748,9 @@ describe("BadgeDesignerScreen — new-goal mode", () => {
       <BadgeDesignerScreen route={newGoalRoute} navigation={{} as never} />,
     );
 
-    fireEvent.press(screen.getByText("Use This Design"));
+    fireEvent.press(
+      screen.getByText(i18n.t("badgeDesigner:actions.useThisDesign")),
+    );
 
     await waitFor(() => {
       expect(mockUpdateGoal).toHaveBeenCalledWith("goal-1", {
@@ -683,7 +765,9 @@ describe("BadgeDesignerScreen — new-goal mode", () => {
       <BadgeDesignerScreen route={newGoalRoute} navigation={{} as never} />,
     );
 
-    fireEvent.press(screen.getByText("Skip — Use Default"));
+    fireEvent.press(
+      screen.getByText(i18n.t("badgeDesigner:actions.skipDefault")),
+    );
 
     // "I want the default" is a real user choice — also survives cold start.
     await waitFor(() => {
@@ -716,7 +800,7 @@ describe("BadgeDesignerScreen — new-goal mode", () => {
     // Shield is the persisted shape; if the screen had fallen through to the
     // default it would render circle. The shape selector exposes the chosen
     // shape via a "selected" accessibilityState.
-    const shieldOption = screen.getByLabelText("Shield shape");
+    const shieldOption = screen.getByLabelText(shapeLabel("shield"));
     expect(shieldOption.props.accessibilityState?.checked).toBe(true);
   });
 
@@ -748,7 +832,7 @@ describe("BadgeDesignerScreen — new-goal mode", () => {
       <BadgeDesignerScreen route={newGoalRoute} navigation={{} as never} />,
     );
     // Star (warm) wins over shield (persisted) — preserves the warm PNG path.
-    const starOption = screen.getByLabelText("Star shape");
+    const starOption = screen.getByLabelText(shapeLabel("star"));
     expect(starOption.props.accessibilityState?.checked).toBe(true);
   });
 
@@ -771,7 +855,9 @@ describe("BadgeDesignerScreen — new-goal mode", () => {
       <BadgeDesignerScreen route={backRoute} navigation={{} as never} />,
     );
 
-    fireEvent.press(screen.getByText("Use This Design"));
+    fireEvent.press(
+      screen.getByText(i18n.t("badgeDesigner:actions.useThisDesign")),
+    );
 
     await waitFor(() => expect(mockGoBack).toHaveBeenCalled());
     expect(mockReplace).not.toHaveBeenCalled();
@@ -785,11 +871,13 @@ describe("BadgeDesignerScreen — new-goal mode", () => {
       <BadgeDesignerScreen route={newGoalRoute} navigation={{} as never} />,
     );
 
-    fireEvent.press(screen.getByText("Use This Design"));
+    fireEvent.press(
+      screen.getByText(i18n.t("badgeDesigner:actions.useThisDesign")),
+    );
 
     await waitFor(() => {
       expect(alertSpy).toHaveBeenCalledWith(
-        "Save Failed",
+        i18n.t("badgeDesigner:errors.saveFailedTitle"),
         expect.stringContaining("Could not save"),
       );
     });
@@ -804,7 +892,9 @@ describe("BadgeDesignerScreen — new-goal mode", () => {
       <BadgeDesignerScreen route={newGoalRoute} navigation={{} as never} />,
     );
     // ActivityIndicator should render (no "Use This Design" button visible)
-    expect(screen.queryByText("Use This Design")).toBeNull();
+    expect(
+      screen.queryByText(i18n.t("badgeDesigner:actions.useThisDesign")),
+    ).toBeNull();
   });
 });
 
@@ -820,18 +910,30 @@ describe("BadgeDesignerScreen — integration", () => {
     );
 
     // Select guilloche frame
-    fireEvent.press(screen.getByLabelText("Guilloche frame"));
+    fireEvent.press(screen.getByLabelText(frameLabel("guilloche")));
 
     // Enable path text, type text
-    fireEvent.press(screen.getByLabelText("Enable path text"));
-    fireEvent.changeText(screen.getByLabelText("Path text"), "ACHIEVEMENT");
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:pathText.toggleA11y")),
+    );
+    fireEvent.changeText(
+      screen.getByLabelText(i18n.t("badgeDesigner:pathText.topA11y")),
+      "ACHIEVEMENT",
+    );
 
     // Enable banner, type text
-    fireEvent.press(screen.getByLabelText("Enable banner"));
-    fireEvent.changeText(screen.getByLabelText("Banner text"), "WINNER");
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:banner.toggleA11y")),
+    );
+    fireEvent.changeText(
+      screen.getByLabelText(i18n.t("badgeDesigner:banner.textA11y")),
+      "WINNER",
+    );
 
     // Save (updateBadge runs after capture resolves — capture-first order).
-    fireEvent.press(screen.getByLabelText("Save Design"));
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:actions.save")),
+    );
     await waitFor(() => expect(mockUpdateBadge).toHaveBeenCalledTimes(1));
 
     const savedJson = mockUpdateBadge.mock.calls[0][1].design;
@@ -857,7 +959,9 @@ describe("BadgeDesignerScreen — integration", () => {
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
     expect(screen.getByLabelText(/Badge preview:/)).toBeOnTheScreen();
-    expect(screen.getByLabelText("Save Design")).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText(i18n.t("badgeDesigner:actions.save")),
+    ).toBeOnTheScreen();
   });
 
   // Note: renderWithProviders uses mocked unistyles so we cannot switch
@@ -871,5 +975,91 @@ describe("BadgeDesignerScreen — integration", () => {
         <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
       );
     }).not.toThrow();
+  });
+});
+
+describe("BadgeDesignerScreen — pseudo locale", () => {
+  afterEach(async () => {
+    if (i18n.language !== "en") await i18n.changeLanguage("en");
+  });
+
+  // Each case sets up the render path that actually exercises the key, then
+  // asserts the bracketed pseudo string reaches the rendered UI. Asserting
+  // only `i18n.t(key).startsWith("[")` would pass even if the component
+  // hardcoded English and never called `t()` — defeating the migration guard.
+  // Spread across header, fallback, section label, and CTA so a single
+  // missed t() call can't slip through.
+  it.each([
+    {
+      key: "badgeDesigner:title" as const,
+      setup: () => mockUseQuery.mockReturnValue([makeRow()]),
+    },
+    {
+      key: "badgeDesigner:sections.shape" as const,
+      setup: () => mockUseQuery.mockReturnValue([makeRow()]),
+    },
+    {
+      key: "badgeDesigner:actions.save" as const,
+      setup: () => mockUseQuery.mockReturnValue([makeRow()]),
+    },
+    {
+      key: "badgeDesigner:fallback.badgeNotFound" as const,
+      setup: () => mockUseQuery.mockReturnValue([]),
+    },
+  ])(
+    "renders $key as bracketed copy under pseudo locale",
+    async ({ key, setup }) => {
+      await i18n.changeLanguage("pseudo");
+      setup();
+      renderWithProviders(
+        <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+      );
+      const pseudo = i18n.t(key);
+      expect(pseudo.startsWith("[")).toBe(true);
+      expect(screen.getByText(pseudo)).toBeOnTheScreen();
+    },
+  );
+
+  it("passes errors.saveFailedTitle as the alert title under pseudo locale", async () => {
+    // saveFailedTitle is only ever passed to Alert.alert — it's never
+    // rendered to the DOM, so getByText can't see it. Spy on Alert.alert
+    // and trigger the capture-failure path so we assert the actual call
+    // site uses t(), not just that the resource happens to be bracketed.
+    await i18n.changeLanguage("pseudo");
+    mockUseQuery.mockReturnValue([makeRow()]);
+    mockCaptureBadge.mockRejectedValue(new Error("capture timeout"));
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+
+    const pseudoTitle = i18n.t("badgeDesigner:errors.saveFailedTitle");
+    expect(pseudoTitle.startsWith("[")).toBe(true);
+
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:actions.save")),
+    );
+
+    await waitFor(() =>
+      expect(alertSpy).toHaveBeenCalledWith(pseudoTitle, expect.anything()),
+    );
+    alertSpy.mockRestore();
+  });
+
+  it("dynamic shape-option key reaches the rendered selector under pseudo locale", async () => {
+    // Goes through the `optionA11y` interpolation template the way
+    // ShapeSelector actually uses it — catches regressions where either
+    // the option key or the wrapping template gets hardcoded back to
+    // English.
+    await i18n.changeLanguage("pseudo");
+    mockUseQuery.mockReturnValue([makeRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+
+    const pseudoOption = i18n.t("badgeDesigner:shape.options.circle");
+    expect(pseudoOption.startsWith("[")).toBe(true);
+    expect(screen.getByLabelText(shapeLabel("circle"))).toBeOnTheScreen();
   });
 });

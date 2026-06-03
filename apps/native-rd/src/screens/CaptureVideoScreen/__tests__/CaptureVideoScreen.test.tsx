@@ -206,7 +206,9 @@ describe("CaptureVideoScreen — recorder mode", () => {
     fireEvent.press(
       screen.getByText(i18n.t("captureVideo:actions.recordVideo")),
     );
-    expect(screen.getByText("00:00")).toBeTruthy();
+    expect(screen.getByTestId("video-recorder-timer")).toHaveTextContent(
+      "00:00",
+    );
   });
 
   it("starts recording with 60s max duration", async () => {

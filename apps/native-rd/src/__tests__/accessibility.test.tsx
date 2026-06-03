@@ -184,6 +184,8 @@ describe("Accessibility Contracts", () => {
           visible
           onCancel={jest.fn()}
           onConfirm={jest.fn()}
+          title="Delete this item?"
+          message="This action cannot be undone."
         />,
       );
       assertModalA11y();
@@ -195,6 +197,8 @@ describe("Accessibility Contracts", () => {
           visible
           onCancel={jest.fn()}
           onConfirm={jest.fn()}
+          title="Delete this item?"
+          message="This action cannot be undone."
         />,
       );
       screen.getByRole("header", { name: "Delete this item?" });

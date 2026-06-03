@@ -1,0 +1,43 @@
+{
+  "title": "Complete",
+  "errors": {
+    "goalNotFound": "Goal not found."
+  },
+  "evidencePhase": {
+    "title": "One last thing!",
+    "summary": "Capture your achievement for {{title}}",
+    "summaryA11y": "Almost there! Capture evidence for {{title}}",
+    "noteLabel": "Write about what you accomplished",
+    "notePlaceholder": "What did you accomplish?",
+    "noteA11yLabel": "Write about your achievement",
+    "noteA11yHint": "Type a reflection about what you accomplished",
+    "saveNote": "Save Note",
+    "noteSavedA11y": "Text note saved",
+    "evidenceAddedA11y": "Evidence added! Generating your badge.",
+    "otherWays": "Or capture another way"
+  },
+  "celebration": {
+    "title": "You did it!",
+    "summary_one": "All {{count}} step completed for {{title}}",
+    "summary_other": "All {{count}} steps completed for {{title}}",
+    "summaryA11y_one": "Congratulations! All {{count}} step completed for {{title}}",
+    "summaryA11y_other": "Congratulations! All {{count}} steps completed for {{title}}",
+    "previewA11y": "Badge preview before baking",
+    "bakeIt": "Bake It",
+    "redesignFirst": "Redesign First",
+    "addFinalEvidence": "Add Final Evidence",
+    "viewJourney": "View Your Journey →",
+    "reopenGoal": "Reopen Goal",
+    "evidenceListTitle": "Goal Evidence Added",
+    "evidenceFallback": "Evidence",
+    "evidenceItemA11y": "{{type}} evidence: {{description}}"
+  },
+  "badge": {
+    "creating": "Creating your badge…",
+    "creatingA11y": "Creating your badge...",
+    "noKeyA11y": "Badge could not be created: signing key unavailable",
+    "noKeyMessage": "Badge signing key unavailable",
+    "errorA11y": "Badge creation failed: {{message}}",
+    "errorMessage": "Badge creation failed: {{message}}"
+  }
+}

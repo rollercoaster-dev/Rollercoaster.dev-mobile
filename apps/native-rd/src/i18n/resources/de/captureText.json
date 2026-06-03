@@ -1,1 +1,25 @@
-{}
+{
+  "title": "Notiz schreiben",
+  "input": {
+    "label": "Notizinhalt",
+    "placeholder": "Was ist passiert? Was hast du gelernt?",
+    "hint": "Text hier eingeben"
+  },
+  "caption": {
+    "label": "Beschriftung (optional)",
+    "placeholder": "Kurze Beschriftung hinzufügen"
+  },
+  "charCount": {
+    "a11y": "{{count}} von {{max}} Zeichen verwendet"
+  },
+  "actions": {
+    "save": "Notiz speichern"
+  },
+  "a11y": {
+    "noteSaved": "Notiz gespeichert"
+  },
+  "errors": {
+    "couldNotSaveTitle": "Notiz konnte nicht gespeichert werden",
+    "couldNotSaveMessage": "Etwas ist schiefgelaufen. Versuche es erneut."
+  }
+}

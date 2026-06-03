@@ -1,1 +1,238 @@
-{}
+{
+  "actions": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "dismiss": "Schließen",
+    "confirm": "Bestätigen",
+    "back": "Zurück",
+    "next": "Weiter",
+    "close": "Schließen",
+    "retry": "Erneut versuchen",
+    "undo": "Rückgängig"
+  },
+  "navigation": {
+    "tabs": {
+      "goals": "Ziele",
+      "badges": "Badges",
+      "settings": "Einstellungen"
+    },
+    "fab": {
+      "newGoal": "Neues Ziel"
+    }
+  },
+  "evidenceTypes": {
+    "photo": {
+      "label": "Foto",
+      "shortLabel": "Foto"
+    },
+    "video": {
+      "label": "Video",
+      "shortLabel": "Video"
+    },
+    "voice_memo": {
+      "label": "Audio",
+      "shortLabel": "Audio"
+    },
+    "text": {
+      "label": "Notiz",
+      "shortLabel": "Notiz"
+    },
+    "link": {
+      "label": "Link",
+      "shortLabel": "Link"
+    },
+    "file": {
+      "label": "Datei",
+      "shortLabel": "Datei"
+    }
+  },
+  "theme": {
+    "options": {
+      "light-default": {
+        "label": "The Full Ride",
+        "description": "Standard-Design"
+      },
+      "dark-default": {
+        "label": "Night Ride",
+        "description": "Dunkler Modus"
+      },
+      "light-highContrast": {
+        "label": "Bold Ink",
+        "description": "Hoher Kontrast (WCAG AAA)"
+      },
+      "light-dyslexia": {
+        "label": "Warm Studio",
+        "description": "Legastheniker-freundlich"
+      },
+      "light-autismFriendly": {
+        "label": "Still Water",
+        "description": "Autismusfreundlich"
+      },
+      "light-lowVision": {
+        "label": "Loud & Clear",
+        "description": "Unterstützung für Sehbehinderung"
+      },
+      "light-lowInfo": {
+        "label": "Clean Signal",
+        "description": "Reduzierte visuelle Störungen"
+      }
+    },
+    "picker": {
+      "title": "Wähle, was sich richtig anfühlt",
+      "selected": "Ausgewählt"
+    },
+    "preview": {
+      "title": "Tägliches Lesen",
+      "progress": "3 von 5 erledigt",
+      "cta": "+ HINZUFÜGEN"
+    }
+  },
+  "status": {
+    "active": "Aktiv",
+    "completed": "Erledigt",
+    "locked": "Gesperrt",
+    "earned": "Verdient",
+    "a11yPrefix": "Status: {{label}}"
+  },
+  "a11y": {
+    "evidenceTypeOptions": "Optionen für Nachweistyp",
+    "plannedEvidenceTypes": "Geplante Nachweistypen",
+    "selectEvidenceType": "Wähle {{label}}",
+    "deselectEvidenceType": "Deselektiere {{label}}"
+  },
+  "stepCard": {
+    "status": {
+      "completed": "Abgeschlossen",
+      "in-progress": "In Bearbeitung",
+      "pending": "Ausstehend"
+    },
+    "checkbox": {
+      "completed": "Abgeschlossen",
+      "markComplete": "Als erledigt markieren"
+    },
+    "progress": "{{current}} von {{total}}",
+    "blocker": {
+      "label": "Nachweis hinzufügen, um abzuschließen",
+      "a11yWithType": "Füge {{label}} hinzu, um diesen Schritt abzuschließen"
+    },
+    "quickAction": {
+      "a11y": "{{label}}-Nachweis hinzufügen"
+    },
+    "evidenceBadge": {
+      "a11y": "{{count}} Nachweiseinträge, tippen zum Anzeigen"
+    }
+  },
+  "goalCard": {
+    "metaLabel": "Ziel",
+    "readyBadge": "Bereit",
+    "markComplete": "Ziel als erledigt markieren",
+    "a11y": {
+      "badgePreview": "Badge-Vorschau für {{title}}, tippen zum Bearbeiten des Designs",
+      "evidenceCount": "{{count}} Ziel-Nachweiseinträge, tippen zum Anzeigen",
+      "markCompleteHint": "Öffnet Abschlussablauf zum Erfassen des finalen Nachweises"
+    }
+  },
+  "evidenceDrawer": {
+    "a11y": {
+      "label": "Nachweisschublade",
+      "labelGoal": "Ziel-Nachweisschublade",
+      "close": "Nachweisschublade schließen",
+      "toggle": "Nachweisschublade umschalten"
+    },
+    "label": {
+      "goal_one": "Zielbeleg: {{count}} Element",
+      "goal_other": "Zielbeleg: {{count}} Elemente",
+      "step_one": "{{count}} Belegelement",
+      "step_other": "{{count}} Belegelemente"
+    },
+    "emptyHint": "Noch kein Beleg — tippe + zum Hinzufügen"
+  },
+  "evidenceCount": {
+    "addEvidence": "+ Beleg hinzufügen",
+    "items_one": "{{count}} Element",
+    "items_other": "{{count}} Elemente"
+  },
+  "timeline": {
+    "hint": "Tippen zum Erweitern der Zeitleiste",
+    "a11y": {
+      "label": "Schritt-Fortschritts-Zeitleiste — tippen zum Erweitern",
+      "hint": "Öffnet Vollansicht der Zeitleiste",
+      "step": "Schritt {{index}}: {{status}}",
+      "goalEvidence": "Ziel-Nachweis"
+    }
+  },
+  "progressDots": {
+    "a11y": {
+      "label": "Schritt-Navigation"
+    }
+  },
+  "modeIndicator": {
+    "edit": "Bearbeiten",
+    "focus": "Fokus",
+    "complete": "Abschließen",
+    "timeline": "Zeitleiste",
+    "a11y": {
+      "current": "Aktueller Modus: {{label}}"
+    }
+  },
+  "errorBoundary": {
+    "title": "Etwas ist schiefgelaufen",
+    "message": "Ein unerwarteter Fehler ist aufgetreten.",
+    "retry": "Erneut versuchen",
+    "a11yAlert": "Fehler: Etwas ist schiefgelaufen"
+  },
+  "screenHeader": {
+    "a11y": {
+      "goBack": "Zurück"
+    }
+  },
+  "evidenceContent": {
+    "openInBrowser": "Im Browser öffnen",
+    "openFile": "Öffnen",
+    "errors": {
+      "videoLoadFailed": "Video konnte nicht geladen werden",
+      "imageLoadFailed": "Bild konnte nicht geladen werden"
+    },
+    "a11y": {
+      "videoPlayback": "Video-Nachweis-Wiedergabe",
+      "retryVideo": "Video erneut laden",
+      "retryImage": "Bild erneut laden",
+      "photoEvidence": "Foto-Nachweis"
+    }
+  },
+  "audioPlayer": {
+    "a11y": {
+      "container": "Audio-Player",
+      "play": "Audio abspielen",
+      "pause": "Audio pausieren",
+      "progress": "{{current}} von {{total}}"
+    }
+  },
+  "cardCarousel": {
+    "a11y": {
+      "label": "Kartenkarussell",
+      "previous": "Vorherige Karte",
+      "next": "Nächste Karte",
+      "previousHint": "Wechselt zum vorherigen Element in {{label}}",
+      "nextHint": "Wechselt zum nächsten Element in {{label}}"
+    }
+  },
+  "viewerThumbnailStrip": {
+    "a11y": {
+      "items": "Nachweis-Elemente"
+    }
+  },
+  "viewerModals": {
+    "a11y": {
+      "closeTextNote": "Notiz-Ansicht schließen",
+      "closeAudio": "Audio-Player schließen",
+      "closeVideo": "Video-Player schließen",
+      "closePhoto": "Foto-Ansicht schließen"
+    },
+    "heading": {
+      "textNote": "Notiz",
+      "audio": "Sprachmemo"
+    }
+  }
+}

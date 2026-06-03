@@ -22,12 +22,12 @@
     }
   },
   "evidenceTypes": {
-    "photo": { "label": "Take Photo", "shortLabel": "Photo" },
-    "video": { "label": "Record Video", "shortLabel": "Video" },
-    "voice_memo": { "label": "Record Voice Memo", "shortLabel": "Voice Memo" },
-    "text": { "label": "Write a Note", "shortLabel": "Note" },
-    "link": { "label": "Add Link", "shortLabel": "Link" },
-    "file": { "label": "Attach File", "shortLabel": "File" }
+    "photo": { "label": "Photo", "shortLabel": "Photo" },
+    "video": { "label": "Video", "shortLabel": "Video" },
+    "voice_memo": { "label": "Audio", "shortLabel": "Audio" },
+    "text": { "label": "Note", "shortLabel": "Note" },
+    "link": { "label": "Link", "shortLabel": "Link" },
+    "file": { "label": "File", "shortLabel": "File" }
   },
   "theme": {
     "options": {
@@ -93,7 +93,7 @@
       "completed": "Completed",
       "markComplete": "Mark complete"
     },
-    "progress": "Step {{current}} of {{total}}",
+    "progress": "{{current}} of {{total}}",
     "blocker": {
       "label": "Add evidence to complete",
       "a11yWithType": "Add {{label}} to complete this step"
@@ -121,7 +121,19 @@
       "labelGoal": "Goal evidence drawer",
       "close": "Close evidence drawer",
       "toggle": "Toggle evidence drawer"
-    }
+    },
+    "label": {
+      "goal_one": "Goal evidence: {{count}} item",
+      "goal_other": "Goal evidence: {{count}} items",
+      "step_one": "{{count}} evidence item",
+      "step_other": "{{count}} evidence items"
+    },
+    "emptyHint": "No evidence yet — tap + to add"
+  },
+  "evidenceCount": {
+    "addEvidence": "+ add evidence",
+    "items_one": "{{count}} item",
+    "items_other": "{{count}} items"
   },
   "timeline": {
     "hint": "Tap to expand timeline",
@@ -144,6 +156,65 @@
     "timeline": "Timeline",
     "a11y": {
       "current": "Current mode: {{label}}"
+    }
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "message": "An unexpected error occurred.",
+    "retry": "Try Again",
+    "a11yAlert": "Error: something went wrong"
+  },
+  "screenHeader": {
+    "a11y": {
+      "goBack": "Go back"
+    }
+  },
+  "evidenceContent": {
+    "openInBrowser": "Open in browser",
+    "openFile": "Open",
+    "errors": {
+      "videoLoadFailed": "Failed to load video",
+      "imageLoadFailed": "Failed to load image"
+    },
+    "a11y": {
+      "videoPlayback": "Video evidence playback",
+      "retryVideo": "Retry loading video",
+      "retryImage": "Retry loading image",
+      "photoEvidence": "Photo evidence"
+    }
+  },
+  "audioPlayer": {
+    "a11y": {
+      "container": "Audio player",
+      "play": "Play audio",
+      "pause": "Pause audio",
+      "progress": "{{current}} of {{total}}"
+    }
+  },
+  "cardCarousel": {
+    "a11y": {
+      "label": "Card carousel",
+      "previous": "Previous card",
+      "next": "Next card",
+      "previousHint": "Moves to the previous item in {{label}}",
+      "nextHint": "Moves to the next item in {{label}}"
+    }
+  },
+  "viewerThumbnailStrip": {
+    "a11y": {
+      "items": "Evidence items"
+    }
+  },
+  "viewerModals": {
+    "a11y": {
+      "closeTextNote": "Close text note viewer",
+      "closeAudio": "Close audio player",
+      "closeVideo": "Close video player",
+      "closePhoto": "Close photo viewer"
+    },
+    "heading": {
+      "textNote": "Text Note",
+      "audio": "Voice Memo"
     }
   }
 }

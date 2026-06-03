@@ -1,6 +1,7 @@
 import React, { useCallback } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
+import { useTranslation } from "react-i18next";
 
 import { BannerPosition } from "./types";
 
@@ -25,11 +26,6 @@ export interface BannerEditorProps {
 
 const POSITIONS = Object.values(BannerPosition) as BannerPosition[];
 
-const POSITION_LABELS: Record<BannerPosition, string> = {
-  top: "Top",
-  bottom: "Bottom",
-};
-
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -45,6 +41,7 @@ export function BannerEditor({
   testID = "banner-editor",
 }: BannerEditorProps) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation("badgeDesigner");
   const resolvedAccent = accentColor ?? theme.colors.accentPrimary;
 
   const handleToggle = useCallback(
@@ -62,7 +59,7 @@ export function BannerEditor({
       <Pressable
         onPress={handleToggle}
         accessibilityRole="checkbox"
-        accessibilityLabel="Enable banner"
+        accessibilityLabel={t("banner.toggleA11y")}
         accessibilityState={{ checked: enabled }}
         style={[
           styles.toggle,
@@ -81,19 +78,19 @@ export function BannerEditor({
             },
           ]}
         >
-          Banner
+          {t("sections.banner")}
         </Text>
       </Pressable>
 
       {enabled && (
         <>
           <TextInput
-            accessibilityLabel="Banner text"
+            accessibilityLabel={t("banner.textA11y")}
             value={text}
             onChangeText={onChangeText}
             autoCapitalize="characters"
             autoCorrect={false}
-            placeholder="BANNER TEXT"
+            placeholder={t("banner.textPlaceholder")}
             placeholderTextColor={theme.colors.textSecondary}
             style={[
               styles.input,
@@ -107,17 +104,18 @@ export function BannerEditor({
 
           <View
             accessibilityRole="radiogroup"
-            accessibilityLabel="Banner position"
+            accessibilityLabel={t("banner.positionA11y")}
             style={styles.row}
           >
             {POSITIONS.map((pos) => {
               const isSelected = pos === position;
+              const label = t(`banner.positions.${pos}`);
               return (
                 <Pressable
                   key={pos}
                   onPress={() => handlePosition(pos)}
                   accessibilityRole="radio"
-                  accessibilityLabel={`${POSITION_LABELS[pos]} position`}
+                  accessibilityLabel={t("banner.optionA11y", { label })}
                   accessibilityState={{ checked: isSelected }}
                   style={[
                     styles.option,
@@ -138,7 +136,7 @@ export function BannerEditor({
                       },
                     ]}
                   >
-                    {POSITION_LABELS[pos]}
+                    {label}
                   </Text>
                 </Pressable>
               );

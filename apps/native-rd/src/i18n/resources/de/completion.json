@@ -1,0 +1,43 @@
+{
+  "title": "Fertigstellen",
+  "errors": {
+    "goalNotFound": "Ziel nicht gefunden."
+  },
+  "evidencePhase": {
+    "title": "Noch eine Sache.",
+    "summary": "Erfasse deinen Erfolg für {{title}}",
+    "summaryA11y": "Fast geschafft. Erfasse einen Beleg für {{title}}",
+    "noteLabel": "Schreib auf, was du erreicht hast",
+    "notePlaceholder": "Was hast du erreicht?",
+    "noteA11yLabel": "Schreib über deinen Erfolg",
+    "noteA11yHint": "Schreib eine Reflexion über das, was du erreicht hast",
+    "saveNote": "Notiz speichern",
+    "noteSavedA11y": "Textnotiz gespeichert",
+    "evidenceAddedA11y": "Beleg hinzugefügt. Dein Badge wird erstellt.",
+    "otherWays": "Oder erfasse es anders"
+  },
+  "celebration": {
+    "title": "Geschafft.",
+    "summary_one": "Einen Schritt für {{title}} abgeschlossen",
+    "summary_other": "Alle {{count}} Schritte für {{title}} abgeschlossen",
+    "summaryA11y_one": "Einen Schritt für {{title}} abgeschlossen",
+    "summaryA11y_other": "Alle {{count}} Schritte für {{title}} abgeschlossen",
+    "previewA11y": "Badge-Vorschau vor dem Fertigstellen",
+    "bakeIt": "Badge fertigstellen",
+    "redesignFirst": "Erst neu gestalten",
+    "addFinalEvidence": "Finalen Beleg hinzufügen",
+    "viewJourney": "Deine Reise ansehen →",
+    "reopenGoal": "Ziel erneut öffnen",
+    "evidenceListTitle": "Zielbeleg hinzugefügt",
+    "evidenceFallback": "Beleg",
+    "evidenceItemA11y": "{{type}}-Beleg: {{description}}"
+  },
+  "badge": {
+    "creating": "Dein Badge wird erstellt…",
+    "creatingA11y": "Dein Badge wird erstellt…",
+    "noKeyA11y": "Badge konnte nicht erstellt werden: Signaturschlüssel nicht verfügbar.",
+    "noKeyMessage": "Badge-Signaturschlüssel nicht verfügbar.",
+    "errorA11y": "Badge-Erstellung fehlgeschlagen: {{message}}",
+    "errorMessage": "Badge-Erstellung fehlgeschlagen: {{message}}"
+  }
+}

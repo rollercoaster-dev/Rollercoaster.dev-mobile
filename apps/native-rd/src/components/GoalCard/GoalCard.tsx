@@ -47,6 +47,7 @@ export function GoalCard({ goal, onPress, onLongPress }: GoalCardProps) {
       onLongPress={onLongPress}
       accessibilityLabel={onPress ? accessibilityLabel : undefined}
       accessibilityHint={onPress ? t("card.a11y.hint") : undefined}
+      testID={`goal-card-${goal.id}`}
     >
       <View style={styles.header}>
         <Text
