@@ -31,6 +31,7 @@ import { formatDate } from "../../utils/format";
 import type {
   BadgeDetailScreenProps,
   BadgesStackParamList,
+  RootTabParamList,
 } from "../../navigation/types";
 import { styles } from "./BadgeDetailScreen.styles";
 
@@ -125,6 +126,18 @@ function BadgeDetailContent({
   } = useBadgeExport();
   const badgeRendererRef = useRef<BadgeRendererHandle | null>(null);
 
+  // The journey/timeline screen lives in the Goals stack (it's the same
+  // view a user sees while still working toward the goal). Hop tabs via the
+  // root parent — mirrors the empty-state navigation in BadgesScreen.
+  const handleViewTimeline = (targetGoalId: string) => {
+    const parent =
+      navigation.getParent<NativeStackNavigationProp<RootTabParamList>>();
+    parent?.navigate("GoalsTab", {
+      screen: "TimelineJourney",
+      params: { goalId: targetGoalId },
+    });
+  };
+
   const handleDelete = () => {
     Alert.alert(t("deleteConfirm.title"), t("deleteConfirm.message"), [
       { text: t("deleteConfirm.cancel"), style: "cancel" },
@@ -156,6 +169,7 @@ function BadgeDetailContent({
   const imageUri = badge.imageUri as string | null;
   const hasRealImage =
     imageUri && imageUri !== PLACEHOLDER_IMAGE_URI && !imageLoadFailed;
+  const goalId = badge.goalId as string | null;
   const goalTitle = (badge.goalTitle as string) ?? t("fallback.untitled");
   const goalDescription = badge.goalDescription as string | null;
   const goalIcon = badge.goalIcon as string | null;
@@ -237,6 +251,14 @@ function BadgeDetailContent({
             </View>
           </View>
         </Card>
+
+        {goalId ? (
+          <Button
+            label={t("actions.viewTimeline")}
+            variant="secondary"
+            onPress={() => handleViewTimeline(goalId)}
+          />
+        ) : null}
 
         <Card>
           <View style={styles.infoBlock}>

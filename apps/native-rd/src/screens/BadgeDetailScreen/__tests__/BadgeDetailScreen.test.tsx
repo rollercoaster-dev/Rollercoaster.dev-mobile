@@ -10,6 +10,7 @@ import { createDefaultBadgeDesign } from "../../../badges/types";
 
 const mockNavigate = jest.fn();
 const mockGoBack = jest.fn();
+const mockParentNavigate = jest.fn();
 
 jest.mock("@react-navigation/native", () => {
   const actual = jest.requireActual("@react-navigation/native");
@@ -21,6 +22,7 @@ jest.mock("@react-navigation/native", () => {
       setOptions: jest.fn(),
       addListener: jest.fn(() => jest.fn()),
       canGoBack: jest.fn(() => true),
+      getParent: () => ({ navigate: mockParentNavigate }),
     }),
   };
 });
@@ -304,6 +306,30 @@ describe("BadgeDetailScreen", () => {
         '{"type":"VC"}',
         "Learn TypeScript",
       );
+    });
+  });
+
+  describe("view timeline", () => {
+    it("hides the button when the badge has no goalId (orphaned)", () => {
+      mockUseQuery.mockReturnValue([makeRow({ goalId: null })]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      expect(screen.queryByLabelText("View timeline")).toBeNull();
+    });
+
+    it("hops to the Goals tab's TimelineJourney route with the badge's goalId", () => {
+      mockUseQuery.mockReturnValue([makeRow({ goalId: "goal-42" })]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      fireEvent.press(screen.getByLabelText("View timeline"));
+      expect(mockParentNavigate).toHaveBeenCalledWith("GoalsTab", {
+        screen: "TimelineJourney",
+        params: { goalId: "goal-42" },
+      });
     });
   });
 });

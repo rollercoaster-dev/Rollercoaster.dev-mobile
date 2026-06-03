@@ -24,6 +24,7 @@
     "exportCredential": "Credential exportieren (JSON)",
     "saveAsImage": "Als Bild speichern",
     "saveAsImageHint": "Teilt dieses Badge als Bild. Die Credential kann beim Versand über Messenger verloren gehen.",
+    "viewTimeline": "Verlauf ansehen",
     "delete": "Badge löschen"
   },
   "exportCaption": "Verifizierbares Badge exportieren behält die OpenBadge-Credential. Als Bild speichern ist nur ein Bild — manche Apps entfernen den Nachweis beim Teilen.",
