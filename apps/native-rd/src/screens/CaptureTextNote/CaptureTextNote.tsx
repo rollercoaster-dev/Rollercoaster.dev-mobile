@@ -1,5 +1,11 @@
 import React, { useState, useRef } from "react";
-import { View, TextInput, AccessibilityInfo, Alert } from "react-native";
+import {
+  View,
+  TextInput,
+  AccessibilityInfo,
+  Alert,
+  Platform,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useReanimatedKeyboardAnimation } from "react-native-keyboard-controller";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
@@ -35,11 +41,13 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
   // height.value: 0 when keyboard closed, -keyboardHeight when open.
   // Reanimated lets the padding interpolate in lockstep with the keyboard.
   const { height } = useReanimatedKeyboardAnimation();
+  // iOS folds the bottom safe area into the keyboard frame, so strip it to
+  // keep the footer flush. Android's keyboard-controller already subtracts
+  // the navigation-bar inset, so subtracting again would under-pad and let
+  // the keyboard cover the Save button on devices with a bottom inset.
+  const bottomInsetOffset = Platform.OS === "ios" ? insets.bottom : 0;
   const contentAnimatedStyle = useAnimatedStyle(() => {
-    // iOS folds the bottom safe area into the keyboard frame; strip it so
-    // the footer sits flush against the visible keyboard top instead of
-    // floating one home-indicator-height above it.
-    const keyboardPad = Math.max(0, -height.value - insets.bottom);
+    const keyboardPad = Math.max(0, -height.value - bottomInsetOffset);
     return {
       paddingBottom: Math.max(tabBarInset, keyboardPad),
     };

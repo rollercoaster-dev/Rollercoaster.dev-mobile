@@ -6,10 +6,7 @@ import React, {
   useState,
 } from "react";
 import { View, TextInput, ActivityIndicator, Alert } from "react-native";
-import {
-  KeyboardProvider,
-  KeyboardAwareScrollView,
-} from "react-native-keyboard-controller";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import { useQuery } from "@evolu/react";
 import { useTranslation } from "react-i18next";
@@ -243,7 +240,7 @@ function EditContent({
   const canDelete = stepRows.length > 1;
 
   return (
-    <KeyboardProvider>
+    <>
       <KeyboardAwareScrollView
         contentContainerStyle={[styles.scrollContent, tabInset]}
         bottomOffset={40}
@@ -337,7 +334,7 @@ function EditContent({
         title={t("confirmDelete.title")}
         message={t("confirmDelete.message", { title: goal.title })}
       />
-    </KeyboardProvider>
+    </>
   );
 }
 
