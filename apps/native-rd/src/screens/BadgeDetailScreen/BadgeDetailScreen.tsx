@@ -179,7 +179,7 @@ function BadgeDetailContent({
 }) {
   const navigation =
     useNavigation<NativeStackNavigationProp<BadgesStackParamList>>();
-  const { t, i18n } = useTranslation("badgeDetail");
+  const { t, i18n } = useTranslation(["badgeDetail", "common"]);
   const query = useMemo(
     () => badgeWithGoalQuery(badgeId as BadgeId),
     [badgeId],
@@ -218,7 +218,7 @@ function BadgeDetailContent({
     }
     parent.navigate("GoalsTab", {
       screen: "TimelineJourney",
-      params: { goalId: targetGoalId },
+      params: { goalId: targetGoalId, originBadgeId: badgeId },
     });
   };
 
@@ -253,6 +253,9 @@ function BadgeDetailContent({
   const imageUri = badge.imageUri as string | null;
   const hasRealImage =
     imageUri && imageUri !== PLACEHOLDER_IMAGE_URI && !imageLoadFailed;
+  // Nullable because badgeWithGoalQuery LEFT-JOINs on `goal.isDeleted IS
+  // NULL`: soft-deleted goals surface as a null join, masking goalId even
+  // though badges.goalId itself is non-null in the schema.
   const goalId = badge.goalId as string | null;
   const goalTitle = (badge.goalTitle as string) ?? t("fallback.untitled");
   const goalDescription = badge.goalDescription as string | null;
@@ -337,9 +340,7 @@ function BadgeDetailContent({
                     {evidenceItems.map((ev) => {
                       const icon = ev.type ? EVIDENCE_TYPE_ICONS[ev.type] : "•";
                       const typeLabel = ev.type
-                        ? i18n.t(`evidenceTypes.${ev.type}.label`, {
-                            ns: "common",
-                          })
+                        ? t(`evidenceTypes.${ev.type}.label`, { ns: "common" })
                         : null;
                       // For unknown/missing genres, still announce *some* type
                       // context so the row doesn't read as a bare proper noun.

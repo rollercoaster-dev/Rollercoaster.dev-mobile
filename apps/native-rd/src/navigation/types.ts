@@ -26,7 +26,15 @@ export type GoalsStackParamList = {
   Goals: undefined;
   FocusMode: { goalId: string };
   CompletionFlow: { goalId: string };
-  TimelineJourney: { goalId: string };
+  TimelineJourney: {
+    goalId: string;
+    /**
+     * Set when arriving from BadgeDetail (cross-tab hop). Presence retargets
+     * the screen's "back" affordances at BadgesTab/BadgeDetail so the user
+     * returns where they came from instead of landing in the Goals list.
+     */
+    originBadgeId?: string;
+  };
   EvidenceViewer: { goalId: string; initialEvidenceId: string };
   NewGoal: undefined;
   EditMode: { goalId: string; cameFromFocus?: boolean };

@@ -504,7 +504,10 @@ describe("BadgeDetailScreen", () => {
   });
 
   describe("view timeline", () => {
-    it("hides the button when the badge has no goalId (orphaned)", () => {
+    it("hides the button when the badge has no goalId (soft-deleted goal)", () => {
+      // badgeWithGoalQuery LEFT-JOINs on goal.isDeleted IS NULL, so a
+      // soft-deleted goal surfaces here as a null goalId even though
+      // badges.goalId itself is non-null in the schema.
       mockUseQuery.mockReturnValue([makeRow({ goalId: null })]);
 
       renderWithProviders(
@@ -522,7 +525,9 @@ describe("BadgeDetailScreen", () => {
       fireEvent.press(screen.getByLabelText("View timeline"));
       expect(mockParentNavigate).toHaveBeenCalledWith("GoalsTab", {
         screen: "TimelineJourney",
-        params: { goalId: "goal-42" },
+        // originBadgeId lets TimelineJourney route its "back" affordances
+        // back to this screen instead of leaving the user on the Goals tab.
+        params: { goalId: "goal-42", originBadgeId: "badge-1" },
       });
     });
 

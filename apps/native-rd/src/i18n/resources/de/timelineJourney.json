@@ -1,6 +1,7 @@
 {
   "title": "Zeitstrahl",
   "backToFocus": "Zurück zu Fokus",
+  "backToBadge": "Zurück zum Badge",
   "progress": "{{completed}} von {{total}} Schritten erledigt",
   "errors": {
     "goalNotFound": "Ziel nicht gefunden."
