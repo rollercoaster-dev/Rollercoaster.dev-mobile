@@ -108,7 +108,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@ai-sdk/openai": "^3.0.65",
+    "@ai-sdk/openai": "^3.0.67",
     "@babel/core": "^7.29.7",
     "@babel/plugin-transform-dynamic-import": "^7.29.7",
     "@babel/plugin-transform-explicit-resource-management": "^7.29.7",
@@ -123,15 +123,15 @@
     "@types/jest": "^30.0.0",
     "@types/js-yaml": "4.0.9",
     "@types/react": "~19.2.10",
-    "ai": "^6.0.191",
+    "ai": "^6.0.194",
     "babel-jest": "^30.2.0",
     "babel-preset-expo": "~55.0.22",
     "eslint": "^9.39.4",
     "eslint-config-expo": "~55.0.1",
     "jest": "^30.2.0",
     "jest-expo": "~55.0.18",
-    "js-yaml": "4.1.1",
-    "promptfoo": "^0.121.12",
+    "js-yaml": "4.2.0",
+    "promptfoo": "^0.121.13",
     "react-test-renderer": "19.2.0",
     "storybook": "10.4.1",
     "typescript": "~6.0.3"
