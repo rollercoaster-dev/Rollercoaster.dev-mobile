@@ -22,9 +22,11 @@ if (Platform.OS !== "web") {
 }
 
 // 2. Hermes polyfills (Set methods, AbortSignal, Promise.withResolvers)
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 require("./polyfills");
 
 // 3. Unistyles theme configuration
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 require("./unistyles");
 
 // 4. Initialise Sentry before any app code runs.
@@ -37,6 +39,7 @@ initSentry();
 // 5. Initialise i18next synchronously, after Sentry so any init throw is
 // captured by telemetry. Must run before the App require below so screen
 // module-level t() calls cannot race init.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 require("./src/i18n");
 
 // 6. Register the app (or Storybook when EXPO_PUBLIC_STORYBOOK_ENABLED is set)
