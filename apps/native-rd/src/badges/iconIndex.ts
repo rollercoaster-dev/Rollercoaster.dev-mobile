@@ -950,7 +950,7 @@ const CURATED_ICONS: IconEntry[] = [
   },
   {
     name: "Bathtub",
-    keywords: ["bathtub", "bath", "self care", "rest"],
+    keywords: ["bathtub", "bath", "self", "care", "rest"],
     categories: ["health"],
   },
   {
