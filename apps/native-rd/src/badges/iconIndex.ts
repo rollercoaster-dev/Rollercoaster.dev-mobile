@@ -920,7 +920,7 @@ const CURATED_ICONS: IconEntry[] = [
   },
   {
     name: "Bandaids",
-    keywords: ["bandaids", "bandage", "first aid", "heal"],
+    keywords: ["bandaids", "bandage", "first", "aid", "heal"],
     categories: ["health"],
   },
   {
