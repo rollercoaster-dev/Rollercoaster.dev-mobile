@@ -20,8 +20,10 @@
     "a11y": "Badge-Bild für {{title}}"
   },
   "evidenceList": {
-    "a11yLabel": "{{count}} Belege eingereicht",
-    "itemA11y": "{{name}}, eingereicht als {{type}}"
+    "a11yLabel_one": "{{count}} Beleg eingereicht",
+    "a11yLabel_other": "{{count}} Belege eingereicht",
+    "itemA11y": "{{name}}, eingereicht als {{type}}",
+    "fallbackType": "Beleg"
   },
   "actions": {
     "exportVerifiable": "Verifizierbares Badge exportieren",

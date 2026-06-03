@@ -30,6 +30,7 @@ import { parseBadgeDesign } from "../../badges/types";
 import { EVIDENCE_TYPE_ICONS } from "../../constants/evidenceIcons";
 import type { EvidenceTypeValue } from "../../types/evidence";
 import { formatDate } from "../../utils/format";
+import { Logger } from "../../shims/rd-logger";
 import type {
   BadgeDetailScreenProps,
   BadgesStackParamList,
@@ -44,6 +45,8 @@ import { styles } from "./BadgeDetailScreen.styles";
  * scroll content doesn't briefly flash on top of the badge during mount.
  */
 const PREVIEW_OVERLAY_INITIAL_HEIGHT = 280;
+
+const logger = new Logger("BadgeDetailScreen");
 
 /**
  * Pulls the achievement criteria narrative out of a stored OB3
@@ -203,7 +206,17 @@ function BadgeDetailContent({
   const handleViewTimeline = (targetGoalId: string) => {
     const parent =
       navigation.getParent<NativeStackNavigationProp<RootTabParamList>>();
-    parent?.navigate("GoalsTab", {
+    if (!parent) {
+      // If BadgeDetailScreen is ever hosted outside the bottom-tab navigator
+      // (deep link, modal stack, Storybook) the tab parent is missing and a
+      // silent no-op would leave the user tapping a dead button.
+      logger.warn("View timeline tapped without a tab navigator parent", {
+        badgeId,
+        goalId: targetGoalId,
+      });
+      return;
+    }
+    parent.navigate("GoalsTab", {
       screen: "TimelineJourney",
       params: { goalId: targetGoalId },
     });
@@ -310,9 +323,12 @@ function BadgeDetailContent({
                   <Text style={styles.bodyText}>{criteriaNarrative}</Text>
                 ) : null}
                 {evidenceItems ? (
+                  // No `accessible` here — would flatten descendants into a
+                  // single a11y node and prevent screen-reader users from
+                  // focusing individual rows. The list label is exposed via
+                  // accessibilityLabel + role="list" without merging.
                   <View
                     style={styles.evidenceList}
-                    accessible
                     accessibilityRole="list"
                     accessibilityLabel={t("evidenceList.a11yLabel", {
                       count: evidenceItems.length,
@@ -325,12 +341,14 @@ function BadgeDetailContent({
                             ns: "common",
                           })
                         : null;
-                      const a11yLabel = typeLabel
-                        ? t("evidenceList.itemA11y", {
-                            name: ev.name,
-                            type: typeLabel,
-                          })
-                        : ev.name;
+                      // For unknown/missing genres, still announce *some* type
+                      // context so the row doesn't read as a bare proper noun.
+                      const a11yTypeLabel =
+                        typeLabel ?? t("evidenceList.fallbackType");
+                      const a11yLabel = t("evidenceList.itemA11y", {
+                        name: ev.name,
+                        type: a11yTypeLabel,
+                      });
                       return (
                         <View
                           key={ev.id}

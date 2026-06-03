@@ -11,6 +11,9 @@ import { createDefaultBadgeDesign } from "../../../badges/types";
 const mockNavigate = jest.fn();
 const mockGoBack = jest.fn();
 const mockParentNavigate = jest.fn();
+// Controllable so individual tests can simulate "no tab parent" by calling
+// `mockGetParent.mockReturnValueOnce(undefined)`.
+const mockGetParent = jest.fn(() => ({ navigate: mockParentNavigate }));
 
 jest.mock("@react-navigation/native", () => {
   const actual = jest.requireActual("@react-navigation/native");
@@ -22,7 +25,7 @@ jest.mock("@react-navigation/native", () => {
       setOptions: jest.fn(),
       addListener: jest.fn(() => jest.fn()),
       canGoBack: jest.fn(() => true),
-      getParent: () => ({ navigate: mockParentNavigate }),
+      getParent: mockGetParent,
     }),
   };
 });
@@ -345,6 +348,78 @@ describe("BadgeDetailScreen", () => {
       expect(screen.getByText("Photo")).toBeOnTheScreen();
     });
 
+    it("exposes each row's accessibility label individually (parent must not flatten descendants)", () => {
+      // Regression: a previous version set `accessible` on the outer list
+      // View, which made React Native merge all rows into a single a11y node
+      // and prevented screen-reader users from focusing individual items.
+      const credential = credentialWith([
+        {
+          id: "urn:ulid:ev-1",
+          type: ["Evidence"],
+          name: "Watch intro video",
+          genre: "video",
+        },
+        {
+          id: "urn:ulid:ev-2",
+          type: ["Evidence"],
+          name: "Build a small app",
+          genre: "photo",
+        },
+      ]);
+      mockUseQuery.mockReturnValue([makeRow({ credential })]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      expect(
+        screen.getByLabelText("Watch intro video, submitted as Video"),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByLabelText("Build a small app, submitted as Photo"),
+      ).toBeOnTheScreen();
+    });
+
+    it("uses the singular plural form when exactly one evidence item is present", () => {
+      const credential = credentialWith([
+        {
+          id: "urn:ulid:ev-1",
+          type: ["Evidence"],
+          name: "Watch intro video",
+          genre: "video",
+        },
+      ]);
+      mockUseQuery.mockReturnValue([makeRow({ credential })]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      // Singular: "1 evidence item submitted", not "1 evidence items submitted".
+      expect(
+        screen.getByLabelText("1 evidence item submitted"),
+      ).toBeOnTheScreen();
+    });
+
+    it("labels unknown-genre rows with a generic 'evidence' type for screen readers", () => {
+      // Visually the type caption is dropped (verified above) — but a11y
+      // must still announce *something* so the row isn't read as a bare
+      // proper-noun-looking string.
+      const credential = credentialWith([
+        {
+          id: "urn:ulid:ev-1",
+          type: ["Evidence"],
+          name: "Mystery step",
+        },
+      ]);
+      mockUseQuery.mockReturnValue([makeRow({ credential })]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      expect(
+        screen.getByLabelText("Mystery step, submitted as evidence"),
+      ).toBeOnTheScreen();
+    });
+
     it("renders the row but no type label when the credential's genre is missing or unknown", () => {
       // An older / cross-version credential may omit `genre` entirely, or
       // carry a type the local app doesn't know yet. Either way the row must
@@ -449,6 +524,26 @@ describe("BadgeDetailScreen", () => {
         screen: "TimelineJourney",
         params: { goalId: "goal-42" },
       });
+    });
+
+    it("no-ops safely (no crash, no nav call) when the tab parent is unavailable", () => {
+      // If BadgeDetailScreen is ever hosted outside the bottom-tab navigator
+      // (deep link / modal host / Storybook), `getParent()` returns undefined.
+      // The handler must short-circuit rather than throw on `.navigate`.
+      // Cast: the default impl narrows the return type, but in production
+      // `getParent()` is explicitly typed `T | undefined` — this models that.
+      mockGetParent.mockReturnValueOnce(
+        undefined as unknown as ReturnType<typeof mockGetParent>,
+      );
+      mockUseQuery.mockReturnValue([makeRow({ goalId: "goal-42" })]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      expect(() =>
+        fireEvent.press(screen.getByLabelText("View timeline")),
+      ).not.toThrow();
+      expect(mockParentNavigate).not.toHaveBeenCalled();
     });
   });
 });

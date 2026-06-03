@@ -20,8 +20,10 @@
     "a11y": "Badge image for {{title}}"
   },
   "evidenceList": {
-    "a11yLabel": "{{count}} evidence items submitted",
-    "itemA11y": "{{name}}, submitted as {{type}}"
+    "a11yLabel_one": "{{count}} evidence item submitted",
+    "a11yLabel_other": "{{count}} evidence items submitted",
+    "itemA11y": "{{name}}, submitted as {{type}}",
+    "fallbackType": "evidence"
   },
   "actions": {
     "exportVerifiable": "Export Verifiable Badge",
