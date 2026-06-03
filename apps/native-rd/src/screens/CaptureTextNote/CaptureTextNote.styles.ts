@@ -8,7 +8,8 @@ export const styles = StyleSheet.create((theme) => ({
   },
   content: {
     flex: 1,
-    padding: theme.space[4],
+    paddingHorizontal: theme.space[4],
+    paddingTop: theme.space[4],
     gap: theme.space[3],
   },
   textInput: {
@@ -23,7 +24,6 @@ export const styles = StyleSheet.create((theme) => ({
     fontFamily: theme.fontFamily.body,
     color: theme.colors.text,
     backgroundColor: theme.colors.backgroundSecondary,
-    minHeight: 200,
     textAlignVertical: "top",
     ...shadowStyle(theme, "cardElevation"),
   },
@@ -34,8 +34,6 @@ export const styles = StyleSheet.create((theme) => ({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: theme.space[4],
-    paddingVertical: theme.space[3],
   },
   charCount: {
     color: theme.colors.textMuted,
