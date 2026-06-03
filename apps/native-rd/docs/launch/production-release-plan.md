@@ -106,7 +106,7 @@ formal closed testing track in Play Console.
 - [ ] Screenshots are current and match the app.
 - [ ] Privacy nutrition labels match shipped behavior, including Sentry crash
       reporting.
-- [ ] Privacy policy URL is live.
+- [x] Privacy policy URL is live — https://rollercoaster.dev/privacy
 - [ ] Support URL is live.
 - [ ] Age rating is complete.
 - [ ] Export compliance is set.
@@ -120,7 +120,7 @@ formal closed testing track in Play Console.
 - [ ] Screenshots are current and match the app.
 - [ ] Data safety form matches shipped behavior, including Sentry crash
       reporting.
-- [ ] Privacy policy URL is live.
+- [x] Privacy policy URL is live — https://rollercoaster.dev/privacy
 - [ ] Content rating is complete.
 - [ ] Target audience / families declarations are complete.
 - [ ] Internal testing track has the intended tester list.
