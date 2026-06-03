@@ -1,8 +1,10 @@
 /**
  * Mock for react-native-keyboard-controller
  *
- * Stubs the native keyboard event system. KeyboardProvider is a
- * passthrough; KeyboardAwareScrollView renders a standard ScrollView.
+ * Stubs the native keyboard event system. KeyboardProvider is a passthrough;
+ * KeyboardAwareScrollView renders a standard ScrollView;
+ * useReanimatedKeyboardAnimation returns SharedValue-shaped zeros so the
+ * keyboard appears permanently closed under jest/RNTL.
  */
 import React from "react";
 import { ScrollView } from "react-native";
@@ -17,3 +19,8 @@ export const KeyboardAwareScrollView = ({
   children: React.ReactNode;
   [key: string]: unknown;
 }) => React.createElement(ScrollView, rest, children);
+
+export const useReanimatedKeyboardAnimation = () => ({
+  height: { value: 0 },
+  progress: { value: 0 },
+});

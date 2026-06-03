@@ -5,6 +5,7 @@ import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import {
   NavigationContainer,
   DefaultTheme,
@@ -124,7 +125,9 @@ export function App() {
     <ThemeProvider value={themeState}>
       <EvoluAppProvider>
         <SafeAreaProvider>
-          <ThemedApp />
+          <KeyboardProvider>
+            <ThemedApp />
+          </KeyboardProvider>
         </SafeAreaProvider>
       </EvoluAppProvider>
     </ThemeProvider>

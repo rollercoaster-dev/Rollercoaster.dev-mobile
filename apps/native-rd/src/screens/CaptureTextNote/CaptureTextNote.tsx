@@ -1,13 +1,8 @@
 import React, { useState, useRef } from "react";
-import {
-  View,
-  TextInput,
-  KeyboardAvoidingView,
-  AccessibilityInfo,
-  Alert,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { KEYBOARD_AVOIDING_PROPS } from "../../utils/keyboard";
+import { View, TextInput, AccessibilityInfo, Alert } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useReanimatedKeyboardAnimation } from "react-native-keyboard-controller";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { useUnistyles } from "react-native-unistyles";
@@ -19,6 +14,7 @@ import { createEvidence, EvidenceType, TEXT_EVIDENCE_PREFIX } from "../../db";
 import type { GoalId, StepId } from "../../db";
 import { reportError } from "../../services/sentry-report";
 import { useEvidenceStartBreadcrumb } from "../../hooks/useEvidenceStartBreadcrumb";
+import { useTabScreenContentInset } from "../../navigation/useTabScreenContentInset";
 import type { CaptureTextNoteScreenProps } from "../../navigation/types";
 import { styles } from "./CaptureTextNote.styles";
 
@@ -34,6 +30,20 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
   const { theme } = useUnistyles();
   const { goalId, stepId } = route.params;
   const textInputRef = useRef<TextInput>(null);
+  const { paddingBottom: tabBarInset } = useTabScreenContentInset();
+  const insets = useSafeAreaInsets();
+  // height.value: 0 when keyboard closed, -keyboardHeight when open.
+  // Reanimated lets the padding interpolate in lockstep with the keyboard.
+  const { height } = useReanimatedKeyboardAnimation();
+  const contentAnimatedStyle = useAnimatedStyle(() => {
+    // iOS folds the bottom safe area into the keyboard frame; strip it so
+    // the footer sits flush against the visible keyboard top instead of
+    // floating one home-indicator-height above it.
+    const keyboardPad = Math.max(0, -height.value - insets.bottom);
+    return {
+      paddingBottom: Math.max(tabBarInset, keyboardPad),
+    };
+  });
 
   const [content, setContent] = useState("");
   const [caption, setCaption] = useState("");
@@ -85,7 +95,8 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
     <View style={styles.container}>
       <ScreenSubHeader label={t("title")} onBack={() => navigation.goBack()} />
 
-      <KeyboardAvoidingView style={styles.content} {...KEYBOARD_AVOIDING_PROPS}>
+      <Animated.View style={[styles.content, contentAnimatedStyle]}>
+        {/* eslint-disable-next-line local/no-shared-component-reimplementation */}
         <TextInput
           ref={textInputRef}
           style={[styles.textInput, isFocused && styles.textInputFocused]}
@@ -114,9 +125,7 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
             returnKeyType="done"
           />
         </View>
-      </KeyboardAvoidingView>
 
-      <SafeAreaView edges={["bottom"]}>
         <View style={styles.footer}>
           <Text
             variant="caption"
@@ -138,7 +147,7 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
             loading={saving}
           />
         </View>
-      </SafeAreaView>
+      </Animated.View>
     </View>
   );
 }
