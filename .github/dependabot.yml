@@ -47,6 +47,16 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "expo-*"
         update-types: ["version-update:semver-major"]
+      # Expo-SDK-aligned packages whose names don't match `expo-*` glob:
+      # these must bump in lockstep with the Expo SDK, not piecemeal.
+      - dependency-name: "babel-preset-expo"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "jest-expo"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "eslint-config-expo"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@react-native-async-storage/async-storage"
+        update-types: ["version-update:semver-major"]
       - dependency-name: "@react-navigation/*"
         update-types: ["version-update:semver-major"]
     labels:
