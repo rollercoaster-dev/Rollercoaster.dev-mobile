@@ -102,6 +102,26 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.textMuted,
     textTransform: "uppercase",
   },
+  evidenceList: {
+    gap: theme.space[2],
+    marginTop: theme.space[2],
+  },
+  evidenceRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: theme.space[3],
+  },
+  evidenceIcon: {
+    fontSize: theme.size.lg,
+    lineHeight: theme.size.lg * 1.4,
+  },
+  evidenceText: {
+    flex: 1,
+    gap: theme.space[1] / 2,
+  },
+  evidenceTypeLabel: {
+    color: theme.colors.textSecondary,
+  },
   exportCaption: {
     color: theme.colors.textSecondary,
     marginTop: theme.space[1],

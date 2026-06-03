@@ -19,6 +19,10 @@
   "image": {
     "a11y": "Badge-Bild für {{title}}"
   },
+  "evidenceList": {
+    "a11yLabel": "{{count}} Belege eingereicht",
+    "itemA11y": "{{name}}, eingereicht als {{type}}"
+  },
   "actions": {
     "exportVerifiable": "Verifizierbares Badge exportieren",
     "exportCredential": "Credential exportieren (JSON)",

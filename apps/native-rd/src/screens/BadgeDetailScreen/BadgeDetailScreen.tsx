@@ -27,6 +27,8 @@ import {
   type BadgeRendererHandle,
 } from "../../badges/BadgeRenderer";
 import { parseBadgeDesign } from "../../badges/types";
+import { EVIDENCE_TYPE_ICONS } from "../../constants/evidenceIcons";
+import type { EvidenceTypeValue } from "../../types/evidence";
 import { formatDate } from "../../utils/format";
 import type {
   BadgeDetailScreenProps,
@@ -60,6 +62,75 @@ function extractCriteriaNarrative(credential: string | null): string | null {
     return typeof narrative === "string" && narrative.length > 0
       ? narrative
       : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Shape rendered by the "how it was earned" evidence list. `type` is null when
+ * the credential's `genre` field is missing or unrecognised — the row still
+ * renders, but with a neutral bullet and no type label, so older or
+ * cross-version credentials degrade gracefully.
+ */
+type CredentialEvidence = {
+  id: string;
+  name: string;
+  type: EvidenceTypeValue | null;
+};
+
+// Mirrors EvidenceType in db/schema.ts. Kept as a literal set rather than
+// re-derived from the runtime enum so this module stays decoupled from the
+// db layer (the test suite mocks `../../db` and adding a member there for
+// just this check would couple test scaffolding to schema changes).
+const KNOWN_EVIDENCE_TYPES: ReadonlySet<EvidenceTypeValue> = new Set([
+  "photo",
+  "video",
+  "text",
+  "voice_memo",
+  "link",
+  "file",
+]);
+
+function isKnownEvidenceType(value: string | null): value is EvidenceTypeValue {
+  return (
+    value !== null && (KNOWN_EVIDENCE_TYPES as ReadonlySet<string>).has(value)
+  );
+}
+
+/**
+ * Reads the OB3 VC's top-level `evidence` array (serializer.ts:261 places it
+ * at the root, not under `credentialSubject`) and returns the per-step list
+ * the user submitted. Source of truth is the baked credential, not the live
+ * DB, so the section keeps working if the goal/step is later edited or
+ * deleted — and matches what a third party verifying the badge would see.
+ * Defensive: any parse / shape mismatch yields null so the section hides.
+ */
+function extractEvidenceItems(
+  credential: string | null,
+): CredentialEvidence[] | null {
+  if (!credential) return null;
+  try {
+    const parsed: unknown = JSON.parse(credential);
+    const rawList = (parsed as { evidence?: unknown })?.evidence;
+    if (!Array.isArray(rawList) || rawList.length === 0) return null;
+
+    const items: CredentialEvidence[] = [];
+    for (const raw of rawList) {
+      if (!raw || typeof raw !== "object") continue;
+      const entry = raw as {
+        id?: unknown;
+        name?: unknown;
+        genre?: unknown;
+      };
+      const id = typeof entry.id === "string" ? entry.id : null;
+      const name = typeof entry.name === "string" ? entry.name : null;
+      if (!id || !name) continue;
+      const genre = typeof entry.genre === "string" ? entry.genre : null;
+      const type = isKnownEvidenceType(genre) ? genre : null;
+      items.push({ id, name, type });
+    }
+    return items.length > 0 ? items : null;
   } catch {
     return null;
   }
@@ -182,6 +253,7 @@ function BadgeDetailContent({
   const criteriaNarrative = extractCriteriaNarrative(
     badge.credential as string | null,
   );
+  const evidenceItems = extractEvidenceItems(badge.credential as string | null);
   const hasIdentityChip = Boolean(goalIcon || goalColor);
 
   return (
@@ -229,12 +301,66 @@ function BadgeDetailContent({
               </View>
             ) : null}
 
-            {criteriaNarrative ? (
+            {criteriaNarrative || evidenceItems ? (
               <View style={styles.infoBlock}>
                 <Text style={styles.sectionLabel}>
                   {t("sections.howEarned")}
                 </Text>
-                <Text style={styles.bodyText}>{criteriaNarrative}</Text>
+                {criteriaNarrative ? (
+                  <Text style={styles.bodyText}>{criteriaNarrative}</Text>
+                ) : null}
+                {evidenceItems ? (
+                  <View
+                    style={styles.evidenceList}
+                    accessible
+                    accessibilityRole="list"
+                    accessibilityLabel={t("evidenceList.a11yLabel", {
+                      count: evidenceItems.length,
+                    })}
+                  >
+                    {evidenceItems.map((ev) => {
+                      const icon = ev.type ? EVIDENCE_TYPE_ICONS[ev.type] : "•";
+                      const typeLabel = ev.type
+                        ? i18n.t(`evidenceTypes.${ev.type}.label`, {
+                            ns: "common",
+                          })
+                        : null;
+                      const a11yLabel = typeLabel
+                        ? t("evidenceList.itemA11y", {
+                            name: ev.name,
+                            type: typeLabel,
+                          })
+                        : ev.name;
+                      return (
+                        <View
+                          key={ev.id}
+                          style={styles.evidenceRow}
+                          accessible
+                          accessibilityLabel={a11yLabel}
+                        >
+                          <Text
+                            style={styles.evidenceIcon}
+                            accessibilityElementsHidden
+                            importantForAccessibility="no"
+                          >
+                            {icon}
+                          </Text>
+                          <View style={styles.evidenceText}>
+                            <Text style={styles.bodyText}>{ev.name}</Text>
+                            {typeLabel ? (
+                              <Text
+                                variant="caption"
+                                style={styles.evidenceTypeLabel}
+                              >
+                                {typeLabel}
+                              </Text>
+                            ) : null}
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+                ) : null}
               </View>
             ) : null}
 
