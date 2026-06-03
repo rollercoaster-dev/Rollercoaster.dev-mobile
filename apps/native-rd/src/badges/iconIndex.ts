@@ -1747,11 +1747,16 @@ function buildInvertedIndex(): Map<string, Set<string>> {
   const index = new Map<string, Set<string>>();
   for (const entry of CURATED_ICONS) {
     for (const kw of entry.keywords) {
-      const existing = index.get(kw);
-      if (existing) {
-        existing.add(entry.name);
-      } else {
-        index.set(kw, new Set([entry.name]));
+      // Split multi-word keywords ("first aid" -> "first", "aid") so each
+      // word is independently prefix-matchable by searchIcons().
+      for (const token of kw.split(/\s+/)) {
+        if (!token) continue;
+        const existing = index.get(token);
+        if (existing) {
+          existing.add(entry.name);
+        } else {
+          index.set(token, new Set([entry.name]));
+        }
       }
     }
   }

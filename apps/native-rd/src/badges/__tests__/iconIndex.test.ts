@@ -62,6 +62,13 @@ describe("iconIndex", () => {
       const results = searchIcons("software");
       expect(results).toContain("Code");
     });
+
+    it("matches the second word of a multi-word keyword", () => {
+      // "Bandaids" has keyword "first aid" — searching "aid" must match.
+      expect(searchIcons("aid")).toContain("Bandaids");
+      // "Bathtub" has keyword "self care" — searching "care" must match.
+      expect(searchIcons("care")).toContain("Bathtub");
+    });
   });
 
   describe("getIconsByCategory", () => {
