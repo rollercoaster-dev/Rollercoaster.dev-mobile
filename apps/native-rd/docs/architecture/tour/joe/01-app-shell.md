@@ -30,6 +30,33 @@ The always-on runtime spine: how the app boots, how the first-launch gate works,
 
 ## File map
 
+- `index.ts` — entrypoint
+  - biggest take away is the ordering of the requires
+  - Order matters: crypto → polyfills → unistyles → sentry → i18n → app
+    - each step is kind of needed so the next step can depend on it
+    - all imports use require to ensure the order is preserved
+    - crypto is first because the following steps depend on it and it has a carve out for web where a browser native package replaces it
+    - Hermes is RN's JavaScript engine. It lags behind V8 and it pulls in a few polyfills to compensate
+    - Unistyles is the styling solution used in the app. Must be imported before any components that use it
+    - sentry, error tracking. as soon as its loaded we get error tracking enabled automatically. It also uses the polyfills and is crucial for catching if i18n throws
+    -
+- `App.tsx` — So storybook renders it's own app shell instead of a seperate instance.
+
+  ```typescript
+  const STORYBOOK_ENABLED =
+    process.env.EXPO_PUBLIC_STORYBOOK_ENABLED === "true";
+
+  let StorybookUI: React.ComponentType | null = null;
+  if (STORYBOOK_ENABLED) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    StorybookUI = require("./.storybook").default;
+  }
+  ```
+
+- `src/hooks/useTheme.ts` — theme context and persistence logic
+  - added an input guard to isValidThemeName
+  - deferring until 04 (theming)
+
 _(filled in during prep)_
 
 ## Mental model
