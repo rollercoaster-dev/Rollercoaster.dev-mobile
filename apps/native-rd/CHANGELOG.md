@@ -1,13 +1,11 @@
 # native-rd
 
-## [0.1.12](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/compare/v0.1.11...v0.1.12) (2026-06-04)
+## [0.1.12](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/compare/v0.1.10...v0.1.12) (2026-06-04)
 
-Release-engineering ship of v0.1.11's user-facing changes — the v0.1.11 tag was
-cut at a TODO-scaffold SHA before testing notes were filled, and re-tagging is
-blocked on this repo (see `apps/native-rd/docs/release.md` § "Tag rewriting is
-blocked"). No new user-facing changes since 0.1.11.
-
-## [0.1.11](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/compare/v0.1.10...v0.1.11) (2026-06-04)
+First public release of these changes. A v0.1.11 tag was cut earlier the same
+day but never reached a store (tag pointed at a TODO-scaffold SHA, and
+re-tagging is blocked on this repo — see `apps/native-rd/docs/release.md`
+§ "Tag rewriting is blocked"). 0.1.12 supersedes it.
 
 
 ### Features
