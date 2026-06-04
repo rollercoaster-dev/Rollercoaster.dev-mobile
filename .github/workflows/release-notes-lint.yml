@@ -7,23 +7,25 @@
 # the tag freezes. (build-production.yml runs the same lint at publish time,
 # but that gate fires AFTER the tag is cut: too late to fix the tagged commit.)
 #
+# This workflow intentionally has no `paths:` filter on pull_request — it fires
+# on every PR so the "Release Notes Lint" status context can serve as a
+# required status check (configured in repo ruleset `rulez` targeting `main`).
+# A required check that never reports blocks merge forever, so any required
+# check has to run on every PR. The lint is cheap (~30s, one bun script) and
+# is a no-op on PRs that don't touch testing-notes, so the cost is negligible.
+#
 # IMPORTANT — bot-authored commits don't trigger CI: commits pushed with the
 # default GITHUB_TOKEN (the scaffold commit, the release PR itself) do NOT
-# start workflow runs. So this check does NOT run when the bot opens the PR.
-# It runs the moment a human pushes a commit to the release branch — i.e. when
-# someone edits the TODO lines — which is exactly when we want to validate.
-# To make it BLOCK the merge, add "Release Notes Lint" as a required status
-# check in branch protection for `main` (a one-time repo-settings step; a
-# required check that has not reported is treated as pending and blocks merge,
-# forcing a human push that turns it green).
+# start workflow runs. When release-please opens the release PR, this check
+# therefore does NOT report — under the required-status-checks rule that shows
+# as "Expected — waiting for status to be reported" and blocks merge. The
+# block clears only after a HUMAN pushes a commit to the release PR branch
+# (i.e. when someone rewrites the TODO lines), which fires this workflow and
+# reports green or red. That is exactly the manual gate the bot PR is missing.
 name: release-notes-lint
 
 on:
   pull_request:
-    paths:
-      - "apps/native-rd/docs/release/testing-notes/**"
-      - "apps/native-rd/scripts/release-notes-*.ts"
-      - ".github/workflows/release-notes-lint.yml"
   push:
     branches: [main]
 
