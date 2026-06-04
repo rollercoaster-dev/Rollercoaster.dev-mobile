@@ -3,7 +3,7 @@
   "empty": {
     "title": "Noch keine Badges",
     "body": "Schließe Ziele ab, um Badges zu sammeln. Deine Sammlung wächst hier.",
-    "action": "Zu Zielen"
+    "action": "Zu deinen Zielen"
   },
   "card": {
     "untitledFallback": "Ohne Titel"

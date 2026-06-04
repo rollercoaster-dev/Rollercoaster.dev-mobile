@@ -7,7 +7,7 @@ import {
   Alert,
   type LayoutChangeEvent,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@evolu/react";
 import { useTranslation } from "react-i18next";
@@ -27,10 +27,14 @@ import {
   type BadgeRendererHandle,
 } from "../../badges/BadgeRenderer";
 import { parseBadgeDesign } from "../../badges/types";
+import { EVIDENCE_TYPE_ICONS } from "../../constants/evidenceIcons";
+import type { EvidenceTypeValue } from "../../types/evidence";
 import { formatDate } from "../../utils/format";
+import { Logger } from "../../shims/rd-logger";
 import type {
   BadgeDetailScreenProps,
   BadgesStackParamList,
+  RootTabParamList,
 } from "../../navigation/types";
 import { styles } from "./BadgeDetailScreen.styles";
 
@@ -41,6 +45,8 @@ import { styles } from "./BadgeDetailScreen.styles";
  * scroll content doesn't briefly flash on top of the badge during mount.
  */
 const PREVIEW_OVERLAY_INITIAL_HEIGHT = 280;
+
+const logger = new Logger("BadgeDetailScreen");
 
 /**
  * Pulls the achievement criteria narrative out of a stored OB3
@@ -59,6 +65,75 @@ function extractCriteriaNarrative(credential: string | null): string | null {
     return typeof narrative === "string" && narrative.length > 0
       ? narrative
       : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Shape rendered by the "how it was earned" evidence list. `type` is null when
+ * the credential's `genre` field is missing or unrecognised — the row still
+ * renders, but with a neutral bullet and no type label, so older or
+ * cross-version credentials degrade gracefully.
+ */
+type CredentialEvidence = {
+  id: string;
+  name: string;
+  type: EvidenceTypeValue | null;
+};
+
+// Mirrors EvidenceType in db/schema.ts. Kept as a literal set rather than
+// re-derived from the runtime enum so this module stays decoupled from the
+// db layer (the test suite mocks `../../db` and adding a member there for
+// just this check would couple test scaffolding to schema changes).
+const KNOWN_EVIDENCE_TYPES: ReadonlySet<EvidenceTypeValue> = new Set([
+  "photo",
+  "video",
+  "text",
+  "voice_memo",
+  "link",
+  "file",
+]);
+
+function isKnownEvidenceType(value: string | null): value is EvidenceTypeValue {
+  return (
+    value !== null && (KNOWN_EVIDENCE_TYPES as ReadonlySet<string>).has(value)
+  );
+}
+
+/**
+ * Reads the OB3 VC's top-level `evidence` array (serializer.ts:261 places it
+ * at the root, not under `credentialSubject`) and returns the per-step list
+ * the user submitted. Source of truth is the baked credential, not the live
+ * DB, so the section keeps working if the goal/step is later edited or
+ * deleted — and matches what a third party verifying the badge would see.
+ * Defensive: any parse / shape mismatch yields null so the section hides.
+ */
+function extractEvidenceItems(
+  credential: string | null,
+): CredentialEvidence[] | null {
+  if (!credential) return null;
+  try {
+    const parsed: unknown = JSON.parse(credential);
+    const rawList = (parsed as { evidence?: unknown })?.evidence;
+    if (!Array.isArray(rawList) || rawList.length === 0) return null;
+
+    const items: CredentialEvidence[] = [];
+    for (const raw of rawList) {
+      if (!raw || typeof raw !== "object") continue;
+      const entry = raw as {
+        id?: unknown;
+        name?: unknown;
+        genre?: unknown;
+      };
+      const id = typeof entry.id === "string" ? entry.id : null;
+      const name = typeof entry.name === "string" ? entry.name : null;
+      if (!id || !name) continue;
+      const genre = typeof entry.genre === "string" ? entry.genre : null;
+      const type = isKnownEvidenceType(genre) ? genre : null;
+      items.push({ id, name, type });
+    }
+    return items.length > 0 ? items : null;
   } catch {
     return null;
   }
@@ -104,7 +179,7 @@ function BadgeDetailContent({
 }) {
   const navigation =
     useNavigation<NativeStackNavigationProp<BadgesStackParamList>>();
-  const { t, i18n } = useTranslation("badgeDetail");
+  const { t, i18n } = useTranslation(["badgeDetail", "common"]);
   const query = useMemo(
     () => badgeWithGoalQuery(badgeId as BadgeId),
     [badgeId],
@@ -124,6 +199,27 @@ function BadgeDetailContent({
     isExportingJSON,
   } = useBadgeExport();
   const badgeRendererRef = useRef<BadgeRendererHandle | null>(null);
+
+  // The journey/timeline screen lives in the Goals stack (it's the same
+  // view a user sees while still working toward the goal). Hop tabs via the
+  // root parent — mirrors the empty-state navigation in BadgesScreen.
+  const handleViewTimeline = (targetGoalId: string) => {
+    const parent = navigation.getParent<NavigationProp<RootTabParamList>>();
+    if (!parent) {
+      // If BadgeDetailScreen is ever hosted outside the bottom-tab navigator
+      // (deep link, modal stack, Storybook) the tab parent is missing and a
+      // silent no-op would leave the user tapping a dead button.
+      logger.warn("View timeline tapped without a tab navigator parent", {
+        badgeId,
+        goalId: targetGoalId,
+      });
+      return;
+    }
+    parent.navigate("GoalsTab", {
+      screen: "TimelineJourney",
+      params: { goalId: targetGoalId, originBadgeId: badgeId },
+    });
+  };
 
   const handleDelete = () => {
     Alert.alert(t("deleteConfirm.title"), t("deleteConfirm.message"), [
@@ -156,6 +252,10 @@ function BadgeDetailContent({
   const imageUri = badge.imageUri as string | null;
   const hasRealImage =
     imageUri && imageUri !== PLACEHOLDER_IMAGE_URI && !imageLoadFailed;
+  // Nullable because badgeWithGoalQuery LEFT-JOINs on `goal.isDeleted IS
+  // NULL`: soft-deleted goals surface as a null join, masking goalId even
+  // though badges.goalId itself is non-null in the schema.
+  const goalId = badge.goalId as string | null;
   const goalTitle = (badge.goalTitle as string) ?? t("fallback.untitled");
   const goalDescription = badge.goalDescription as string | null;
   const goalIcon = badge.goalIcon as string | null;
@@ -168,6 +268,7 @@ function BadgeDetailContent({
   const criteriaNarrative = extractCriteriaNarrative(
     badge.credential as string | null,
   );
+  const evidenceItems = extractEvidenceItems(badge.credential as string | null);
   const hasIdentityChip = Boolean(goalIcon || goalColor);
 
   return (
@@ -215,12 +316,69 @@ function BadgeDetailContent({
               </View>
             ) : null}
 
-            {criteriaNarrative ? (
+            {criteriaNarrative || evidenceItems ? (
               <View style={styles.infoBlock}>
                 <Text style={styles.sectionLabel}>
                   {t("sections.howEarned")}
                 </Text>
-                <Text style={styles.bodyText}>{criteriaNarrative}</Text>
+                {criteriaNarrative ? (
+                  <Text style={styles.bodyText}>{criteriaNarrative}</Text>
+                ) : null}
+                {evidenceItems ? (
+                  // No `accessible` here — would flatten descendants into a
+                  // single a11y node and prevent screen-reader users from
+                  // focusing individual rows. The list label is exposed via
+                  // accessibilityLabel + role="list" without merging.
+                  <View
+                    style={styles.evidenceList}
+                    accessibilityRole="list"
+                    accessibilityLabel={t("evidenceList.a11yLabel", {
+                      count: evidenceItems.length,
+                    })}
+                  >
+                    {evidenceItems.map((ev) => {
+                      const icon = ev.type ? EVIDENCE_TYPE_ICONS[ev.type] : "•";
+                      const typeLabel = ev.type
+                        ? t(`evidenceTypes.${ev.type}.label`, { ns: "common" })
+                        : null;
+                      // For unknown/missing genres, still announce *some* type
+                      // context so the row doesn't read as a bare proper noun.
+                      const a11yTypeLabel =
+                        typeLabel ?? t("evidenceList.fallbackType");
+                      const a11yLabel = t("evidenceList.itemA11y", {
+                        name: ev.name,
+                        type: a11yTypeLabel,
+                      });
+                      return (
+                        <View
+                          key={ev.id}
+                          style={styles.evidenceRow}
+                          accessible
+                          accessibilityLabel={a11yLabel}
+                        >
+                          <Text
+                            style={styles.evidenceIcon}
+                            accessibilityElementsHidden
+                            importantForAccessibility="no"
+                          >
+                            {icon}
+                          </Text>
+                          <View style={styles.evidenceText}>
+                            <Text style={styles.bodyText}>{ev.name}</Text>
+                            {typeLabel ? (
+                              <Text
+                                variant="caption"
+                                style={styles.evidenceTypeLabel}
+                              >
+                                {typeLabel}
+                              </Text>
+                            ) : null}
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+                ) : null}
               </View>
             ) : null}
 
@@ -237,6 +395,14 @@ function BadgeDetailContent({
             </View>
           </View>
         </Card>
+
+        {goalId ? (
+          <Button
+            label={t("actions.viewTimeline")}
+            variant="secondary"
+            onPress={() => handleViewTimeline(goalId)}
+          />
+        ) : null}
 
         <Card>
           <View style={styles.infoBlock}>

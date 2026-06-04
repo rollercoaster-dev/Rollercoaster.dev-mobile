@@ -10,6 +10,11 @@ import { TimelineJourneyScreen } from "../TimelineJourneyScreen";
 
 const mockGoBack = jest.fn();
 const mockNavigate = jest.fn();
+const mockParentNavigate = jest.fn();
+// Controllable so a test can simulate "no tab parent" via
+// mockGetParent.mockReturnValueOnce(undefined) — matches the
+// BadgeDetailScreen test pattern for the same defensive branch.
+const mockGetParent = jest.fn(() => ({ navigate: mockParentNavigate }));
 jest.mock("@react-navigation/native", () => {
   const actual = jest.requireActual("../../../__tests__/mocks/navigation");
   return {
@@ -18,6 +23,7 @@ jest.mock("@react-navigation/native", () => {
       ...actual.useNavigation(),
       goBack: mockGoBack,
       navigate: mockNavigate,
+      getParent: mockGetParent,
     })),
   };
 });
@@ -198,6 +204,9 @@ describe("TimelineJourneyScreen", () => {
     renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
     fireEvent.press(screen.getByLabelText("Go back"));
     expect(mockGoBack).toHaveBeenCalled();
+    // Pin the no-origin baseline: a future refactor that inverts the
+    // `if (originBadgeId)` branch would otherwise still pass this test.
+    expect(mockParentNavigate).not.toHaveBeenCalled();
   });
 
   it("step node press navigates to FocusMode", () => {
@@ -213,6 +222,76 @@ describe("TimelineJourneyScreen", () => {
     setupQueries({ goal: null });
     renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
     expect(screen.getByText("Goal not found.")).toBeOnTheScreen();
+  });
+
+  describe("origin = badge", () => {
+    const badgeRouteProps = {
+      ...routeProps,
+      route: {
+        ...routeProps.route,
+        params: { goalId: "goal-1", originBadgeId: "badge-7" },
+      },
+    };
+
+    it('relabels the back button to "Back to Badge"', () => {
+      setupQueries();
+      renderWithProviders(<TimelineJourneyScreen {...badgeRouteProps} />);
+      expect(screen.getByLabelText("Back to Badge")).toBeOnTheScreen();
+      expect(screen.queryByLabelText("Back to Focus")).toBeNull();
+    });
+
+    it("back button hops to BadgesTab/BadgeDetail with the origin badgeId", () => {
+      setupQueries();
+      renderWithProviders(<TimelineJourneyScreen {...badgeRouteProps} />);
+      fireEvent.press(screen.getByLabelText("Back to Badge"));
+      expect(mockParentNavigate).toHaveBeenCalledWith("BadgesTab", {
+        screen: "BadgeDetail",
+        params: { badgeId: "badge-7" },
+      });
+      // Should NOT fall through to the FocusMode path.
+      expect(mockNavigate).not.toHaveBeenCalledWith(
+        "FocusMode",
+        expect.anything(),
+      );
+    });
+
+    it("header back arrow also hops to BadgesTab/BadgeDetail", () => {
+      setupQueries();
+      renderWithProviders(<TimelineJourneyScreen {...badgeRouteProps} />);
+      fireEvent.press(screen.getByLabelText("Go back"));
+      expect(mockParentNavigate).toHaveBeenCalledWith("BadgesTab", {
+        screen: "BadgeDetail",
+        params: { badgeId: "badge-7" },
+      });
+      expect(mockGoBack).not.toHaveBeenCalled();
+    });
+
+    it("falls back to FocusMode when no tab parent is available", () => {
+      // Deep link / modal host / Storybook: getParent() returns undefined and
+      // we must not leave the button inert.
+      mockGetParent.mockReturnValueOnce(
+        undefined as unknown as ReturnType<typeof mockGetParent>,
+      );
+      setupQueries();
+      renderWithProviders(<TimelineJourneyScreen {...badgeRouteProps} />);
+      fireEvent.press(screen.getByLabelText("Back to Badge"));
+      expect(mockNavigate).toHaveBeenCalledWith("FocusMode", {
+        goalId: "goal-1",
+      });
+    });
+
+    it("header back falls back to goBack() when no tab parent is available", () => {
+      // Same defensive branch as the in-body button, but the header arrow
+      // falls through to goBack() (not FocusMode) — pinning the divergence.
+      mockGetParent.mockReturnValueOnce(
+        undefined as unknown as ReturnType<typeof mockGetParent>,
+      );
+      setupQueries();
+      renderWithProviders(<TimelineJourneyScreen {...badgeRouteProps} />);
+      fireEvent.press(screen.getByLabelText("Go back"));
+      expect(mockGoBack).toHaveBeenCalled();
+      expect(mockParentNavigate).not.toHaveBeenCalled();
+    });
   });
 
   it("shows step evidence when expanded", () => {
