@@ -116,7 +116,7 @@ eas metadata:push --profile production
 eas submit --platform ios --profile production
 ```
 
-Then paste `apps/native-rd/.release-artifacts/what-to-test.txt` into App Store Connect → TestFlight → the build → "What to Test". `eas submit --what-to-test` is not used (the flag does not work on our EAS plan tier, so the pipeline stopped trying to send it automatically).
+Then paste `apps/native-rd/.release-artifacts/what-to-test.txt` into App Store Connect → TestFlight → the build → "What to Test". `eas submit --what-to-test` is not used: the flag is gated behind EAS's Enterprise plan (see [eas-cli #3023](https://github.com/expo/eas-cli/pull/3023): _"this consumes extra computing resources during the process so we're going to make this enabled only for enterprise plan"_), so the pipeline pastes manually instead of sending it on submit.
 
 **Android Play "What's new":** there is no `eas submit` flag for this. Three options, in increasing order of automation:
 
