@@ -1,5 +1,19 @@
 name: release-please
 
+# Two-phase to avoid a release-please-action race:
+#
+#   When the action runs both `github-release` (cut tag) and `release-pr`
+#   (open/update the next PR) in the same invocation, the next-PR phase can't
+#   see the tag it just minted — it anchors on the *previous* tag and emits a
+#   CHANGELOG that re-lists the just-released work. v0.1.11 → 0.1.12 PR #236
+#   was the empirical confirmation (commit 890dc7e, 2026-06-04).
+#
+# Split:
+#   1. Tag phase always runs here on push:main (skip-github-pull-request: true).
+#   2. Next-PR phase runs here only when no release was just cut. When a
+#      release IS cut, the GitHub `release: published` event triggers
+#      release-please-next-pr.yml, which runs the next-PR phase against the
+#      now-published tag (correct anchor → correct CHANGELOG).
 on:
   push:
     branches: [main]
@@ -9,15 +23,40 @@ permissions:
   pull-requests: write
   issues: write
 
+# Shared across release-please.yml and release-please-next-pr.yml so a
+# push-triggered run and a release-triggered run can't update the same PR in
+# parallel and clobber each other's API writes.
+concurrency:
+  group: release-please-${{ github.repository }}
+  cancel-in-progress: false
+
 jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
-      - uses: googleapis/release-please-action@v5
-        id: release
+      # Phase 1: cut the tag (if a release PR was just merged). Suppress the
+      # next-PR side of the action — if a release IS cut here, the next-PR
+      # generation must happen AFTER the tag is pushed (handled by
+      # release-please-next-pr.yml on release:published).
+      - name: Release-please — tag phase
+        id: tag
+        uses: googleapis/release-please-action@v5
         with:
           config-file: .github/release-please-config.json
           manifest-file: .github/.release-please-manifest.json
+          skip-github-pull-request: true
+
+      # Phase 2: next-PR generation, but ONLY when no release was just cut.
+      # When a release WAS cut, skip this and let release-please-next-pr.yml
+      # handle it after the release-published event lands.
+      - name: Release-please — next-PR phase (no-release-cut path)
+        id: pr
+        if: ${{ steps.tag.outputs.releases_created != 'true' }}
+        uses: googleapis/release-please-action@v5
+        with:
+          config-file: .github/release-please-config.json
+          manifest-file: .github/.release-please-manifest.json
+          skip-github-release: true
 
       # release-please bumps $.expo.version in apps/native-rd/app.json via its
       # generic JSON updater, which re-serialises the file with its own
@@ -28,25 +67,25 @@ jobs:
       # at PR time). Re-run Prettier on the release PR branch so the bumped file
       # lands already formatted.
       - name: Checkout release PR branch
-        if: ${{ steps.release.outputs.pr }}
+        if: ${{ steps.pr.outputs.pr }}
         uses: actions/checkout@v6
         with:
-          ref: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
+          ref: ${{ fromJSON(steps.pr.outputs.pr).headBranchName }}
 
       - name: Setup Bun
-        if: ${{ steps.release.outputs.pr }}
+        if: ${{ steps.pr.outputs.pr }}
         uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: package.json
 
       - name: Re-format release files with Prettier
-        if: ${{ steps.release.outputs.pr }}
+        if: ${{ steps.pr.outputs.pr }}
         env:
           # GHA evaluates `env:` before `if:`, so a bare `fromJSON(...)` here
           # throws on any merge to main that isn't a release-PR merge (the
           # action emits an empty `pr` output). Short-circuit so fromJSON only
           # runs when the output is non-empty.
-          PR_BRANCH: ${{ steps.release.outputs.pr && fromJSON(steps.release.outputs.pr).headBranchName || '' }}
+          PR_BRANCH: ${{ steps.pr.outputs.pr && fromJSON(steps.pr.outputs.pr).headBranchName || '' }}
         run: |
           set -euo pipefail
           # Pinned to the repo's Prettier major; app.json has no config/plugins,
@@ -70,10 +109,10 @@ jobs:
       # TODO into actual tester-facing language. That gate is what stops a
       # release being Published with empty/placeholder notes.
       - name: Scaffold testing notes for release PR
-        if: ${{ steps.release.outputs.pr }}
+        if: ${{ steps.pr.outputs.pr }}
         env:
           # See note on the Prettier step above re: env-before-if evaluation.
-          PR_BRANCH: ${{ steps.release.outputs.pr && fromJSON(steps.release.outputs.pr).headBranchName || '' }}
+          PR_BRANCH: ${{ steps.pr.outputs.pr && fromJSON(steps.pr.outputs.pr).headBranchName || '' }}
         run: |
           set -euo pipefail
           VERSION="$(jq -r .version apps/native-rd/package.json)"
