@@ -1,5 +1,19 @@
 # native-rd
 
+## [0.1.11](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/compare/v0.1.10...v0.1.11) (2026-06-04)
+
+
+### Features
+
+* **badge-detail:** wire View timeline button + cross-tab back routing ([#235](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/235)) ([e6a9773](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/e6a9773b1425ef68b0799866f89615c849306b90))
+* **badges:** expand icon picker from 152 to 321 phosphor icons ([#230](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/230)) ([15f0bd3](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/15f0bd3c4573078af374cd5725833310ac880cad))
+
+
+### Bug Fixes
+
+* **badges:** change button translation to to your goals ([2aacc1e](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/2aacc1e14d4fd2cf1650b56ce128da86ca4036da))
+* **native-rd:** keep Save button above keyboard on CaptureTextNote ([#232](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/232)) ([#233](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/233)) ([ac0102c](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/ac0102ce2362045130b90dcfa560b5e527fbe2eb))
+
 ## [0.1.10](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/compare/v0.1.9...v0.1.10) (2026-05-29)
 
 
