@@ -145,20 +145,17 @@ jobs:
         run: bun install --frozen-lockfile
         working-directory: .
 
-      - name: Write credential files
+      - name: Write Apple ASC key
         # Pass secrets via env (not ${{ secrets.* }} inside the script body) so
         # arbitrary content — newlines, quotes, backslashes — stays inside the
         # shell variable instead of being expanded into the script source.
-        # Trailing newline is appended for the PEM key per Apple/OpenSSL
-        # parser expectations; harmless on the JSON.
+        # Trailing newline is appended per Apple/OpenSSL PEM parser expectations.
         env:
           APPLE_ASC_KEY_P8: ${{ secrets.APPLE_ASC_KEY_P8 }}
-          ANDROID_PLAY_SA: ${{ secrets.ANDROID_PLAY_SERVICE_ACCOUNT_JSON }}
         run: |
           mkdir -p ../../secrets
           printf '%s\n' "$APPLE_ASC_KEY_P8" > ../../secrets/asc-api-key.p8
-          printf '%s\n' "$ANDROID_PLAY_SA" > ../../secrets/play-service-account.json
-          chmod 600 ../../secrets/asc-api-key.p8 ../../secrets/play-service-account.json
+          chmod 600 ../../secrets/asc-api-key.p8
 
       - name: Submit (EAS, preview profile, iOS)
         env:
@@ -194,15 +191,13 @@ jobs:
         run: bun install --frozen-lockfile
         working-directory: .
 
-      - name: Write credential files
+      - name: Write Google Play service account
         env:
-          APPLE_ASC_KEY_P8: ${{ secrets.APPLE_ASC_KEY_P8 }}
           ANDROID_PLAY_SA: ${{ secrets.ANDROID_PLAY_SERVICE_ACCOUNT_JSON }}
         run: |
           mkdir -p ../../secrets
-          printf '%s\n' "$APPLE_ASC_KEY_P8" > ../../secrets/asc-api-key.p8
           printf '%s\n' "$ANDROID_PLAY_SA" > ../../secrets/play-service-account.json
-          chmod 600 ../../secrets/asc-api-key.p8 ../../secrets/play-service-account.json
+          chmod 600 ../../secrets/play-service-account.json
 
       - name: Submit (EAS, preview profile, Android)
         env:
