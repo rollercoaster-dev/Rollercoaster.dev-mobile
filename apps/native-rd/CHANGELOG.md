@@ -1,5 +1,13 @@
 # native-rd
 
+## [0.1.13](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/compare/v0.1.12...v0.1.13) (2026-06-04)
+
+
+### Bug Fixes
+
+* **release:** drop --what-to-test, harden ref input, scope submit credentials ([#244](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/244)) ([8c941ff](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/8c941ff475fc2a9d9e7be26b14dbe8a55c078e3f))
+* **release:** move TestFlight notes to eas submit + pin eas-cli ([#242](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/242)) ([7467318](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/74673183ba8071b14d1e0cd01b5559c2ddbbe9e5))
+
 ## [0.1.12](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/compare/v0.1.10...v0.1.12) (2026-06-04)
 
 First public release of these changes. A v0.1.11 tag was cut earlier the same
