@@ -7,6 +7,7 @@ import {
   AccessibilityInfo,
 } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { useTranslation } from "react-i18next";
 import { useUnistyles } from "react-native-unistyles";
 import { useAnimationPref } from "../../hooks/useAnimationPref";
 import { triggerDragStart, triggerDragDrop } from "../../utils/haptics";
@@ -50,6 +51,7 @@ export function StepList({
   onReorderSteps,
 }: StepListProps) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation("editGoal");
   const { animationPref } = useAnimationPref();
 
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -178,7 +180,10 @@ export function StepList({
       onReorderSteps(newOrder.map((s) => s.id));
       triggerDragDrop();
       AccessibilityInfo.announceForAccessibility(
-        `Step moved from position ${draggedIndex + 1} to ${hoverIndex + 1}`,
+        t("stepList.a11y.movedFromTo", {
+          from: draggedIndex + 1,
+          to: hoverIndex + 1,
+        }),
       );
     }
     setDraggedIndex(null);
@@ -195,7 +200,10 @@ export function StepList({
     onReorderSteps(newOrder.map((s) => s.id));
     triggerDragDrop();
     AccessibilityInfo.announceForAccessibility(
-      `Step "${steps[index].title}" moved up to position ${index}`,
+      t("stepList.a11y.movedUp", {
+        title: steps[index].title,
+        position: index,
+      }),
     );
   }
 
@@ -209,18 +217,21 @@ export function StepList({
     onReorderSteps(newOrder.map((s) => s.id));
     triggerDragDrop();
     AccessibilityInfo.announceForAccessibility(
-      `Step "${steps[index].title}" moved down to position ${index + 2}`,
+      t("stepList.a11y.movedDown", {
+        title: steps[index].title,
+        position: index + 2,
+      }),
     );
   }
 
   const canDrag = onReorderSteps && steps.length > 1 && editingId === null;
-  const stepCountLabel = `${steps.length} step${steps.length !== 1 ? "s" : ""}`;
+  const stepCountLabel = t("stepList.count", { count: steps.length });
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <RNText style={styles.headerLabel} accessibilityRole="header">
-          Steps
+          {t("stepList.header")}
         </RNText>
         <RNText style={styles.count} accessibilityLabel={stepCountLabel}>
           {stepCountLabel}
@@ -250,7 +261,9 @@ export function StepList({
                     returnKeyType="done"
                     placeholderTextColor={theme.colors.textMuted}
                     selectTextOnFocus
-                    accessibilityLabel={`Edit step: ${step.title}`}
+                    accessibilityLabel={t("stepList.editA11yLabel", {
+                      title: step.title,
+                    })}
                   />
                   {onDeleteStep && (
                     <IconButton
@@ -258,7 +271,9 @@ export function StepList({
                       onPress={() => onDeleteStep(step.id)}
                       size="sm"
                       tone="ghost"
-                      accessibilityLabel={`Delete "${step.title}"`}
+                      accessibilityLabel={t("stepList.deleteA11yLabel", {
+                        title: step.title,
+                      })}
                     />
                   )}
                 </View>
@@ -266,7 +281,7 @@ export function StepList({
                   <EvidenceTypePicker
                     selectedTypes={editPlannedTypes}
                     onToggleType={toggleEditType}
-                    label="Evidence types"
+                    label={t("stepList.evidenceTypesLabel")}
                   />
                 </View>
               </View>
@@ -319,7 +334,7 @@ export function StepList({
                       accessibilityRole="button"
                       accessibilityLabel={step.title}
                       accessibilityHint={
-                        onUpdateStep ? "Tap to edit step title" : undefined
+                        onUpdateStep ? t("stepList.tapToEditHint") : undefined
                       }
                     >
                       <RNText style={styles.stepTitleText}>{step.title}</RNText>
@@ -330,7 +345,9 @@ export function StepList({
                         onPress={() => onDeleteStep(step.id)}
                         size="sm"
                         tone="ghost"
-                        accessibilityLabel={`Delete "${step.title}"`}
+                        accessibilityLabel={t("stepList.deleteA11yLabel", {
+                          title: step.title,
+                        })}
                       />
                     )}
                   </View>
@@ -357,7 +374,7 @@ export function StepList({
               <TextInput
                 ref={newStepInputRef}
                 style={styles.addStepInput}
-                placeholder="Add step..."
+                placeholder={t("stepList.addPlaceholder")}
                 placeholderTextColor={theme.colors.textMuted}
                 value={newStepTitle}
                 onChangeText={setNewStepTitle}
@@ -365,8 +382,8 @@ export function StepList({
                 returnKeyType="done"
                 blurOnSubmit={false}
                 testID="step-list-new-step-input"
-                accessibilityLabel="Add a new step"
-                accessibilityHint="Type a step title and press return to add"
+                accessibilityLabel={t("stepList.addA11yLabel")}
+                accessibilityHint={t("stepList.addA11yHint")}
               />
             </View>
             <Pressable
@@ -374,7 +391,7 @@ export function StepList({
               onPress={handleNewStepSubmit}
               testID="step-list-add-step-button"
               accessibilityRole="button"
-              accessibilityLabel="Add step"
+              accessibilityLabel={t("stepList.addButtonA11y")}
             >
               <RNText style={styles.addStepButtonText}>+</RNText>
             </Pressable>
@@ -382,7 +399,7 @@ export function StepList({
           <EvidenceTypePicker
             selectedTypes={newStepTypes}
             onToggleType={toggleNewStepType}
-            label="Evidence types for new step"
+            label={t("stepList.evidenceTypesForNewStepLabel")}
           />
         </View>
       )}

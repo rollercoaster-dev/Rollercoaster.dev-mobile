@@ -15,6 +15,11 @@ import type captureLink from "./resources/en/captureLink.json";
 import type permissions from "./resources/en/permissions.json";
 import type badges from "./resources/en/badges.json";
 import type badgeDesigner from "./resources/en/badgeDesigner.json";
+import type editGoal from "./resources/en/editGoal.json";
+import type timelineJourney from "./resources/en/timelineJourney.json";
+import type completion from "./resources/en/completion.json";
+import type badgeDetail from "./resources/en/badgeDetail.json";
+import type evidenceViewer from "./resources/en/evidenceViewer.json";
 
 declare module "i18next" {
   interface CustomTypeOptions {
@@ -35,6 +40,11 @@ declare module "i18next" {
       permissions: typeof permissions;
       badges: typeof badges;
       badgeDesigner: typeof badgeDesigner;
+      editGoal: typeof editGoal;
+      timelineJourney: typeof timelineJourney;
+      completion: typeof completion;
+      badgeDetail: typeof badgeDetail;
+      evidenceViewer: typeof evidenceViewer;
     };
   }
 }

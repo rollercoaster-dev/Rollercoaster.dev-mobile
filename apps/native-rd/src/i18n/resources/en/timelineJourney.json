@@ -1,0 +1,24 @@
+{
+  "title": "Timeline",
+  "backToFocus": "Back to Focus",
+  "backToBadge": "Back to Badge",
+  "progress": "{{completed}} of {{total}} steps completed",
+  "errors": {
+    "goalNotFound": "Goal not found."
+  },
+  "evidenceFallbackLabel": "Evidence",
+  "step": {
+    "a11yGoTo": "Go to step {{number}}: {{title}}",
+    "status": {
+      "done": "Done",
+      "active": "Active",
+      "pending": "Pending"
+    },
+    "noEvidence": "No evidence yet"
+  },
+  "finishLine": {
+    "title": "Goal Evidence",
+    "noEvidence": "No goal evidence yet",
+    "a11yNode": "Goal finish line"
+  }
+}

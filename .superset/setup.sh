@@ -4,18 +4,12 @@ set -euo pipefail
 echo "▶ Provisioning workspace: ${SUPERSET_WORKSPACE_NAME:-unknown}"
 
 if [ -n "${SUPERSET_ROOT_PATH:-}" ]; then
-  for env_file in \
-    ".env" \
-    ".env.local" \
-    "apps/native-rd/.env" \
-    "apps/native-rd/.env.local"
-  do
-    if [ -f "$SUPERSET_ROOT_PATH/$env_file" ]; then
-      mkdir -p "$(dirname "$env_file")"
-      cp "$SUPERSET_ROOT_PATH/$env_file" "$env_file"
-      echo "  copied $env_file"
-    fi
-  done
+  env_file="apps/native-rd/.env.local"
+  if [ -f "$SUPERSET_ROOT_PATH/$env_file" ]; then
+    mkdir -p "$(dirname "$env_file")"
+    cp "$SUPERSET_ROOT_PATH/$env_file" "$env_file"
+    echo "  copied $env_file"
+  fi
 fi
 
 echo "▶ bun install"

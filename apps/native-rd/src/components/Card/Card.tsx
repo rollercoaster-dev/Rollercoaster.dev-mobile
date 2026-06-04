@@ -11,6 +11,7 @@ export interface CardProps {
   onLongPress?: () => void;
   accessibilityLabel?: string;
   accessibilityHint?: string;
+  testID?: string;
 }
 
 export function Card({
@@ -20,6 +21,7 @@ export function Card({
   onLongPress,
   accessibilityLabel,
   accessibilityHint,
+  testID,
 }: CardProps) {
   if (onPress || onLongPress) {
     return (
@@ -30,6 +32,7 @@ export function Card({
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel}
         accessibilityHint={accessibilityHint}
+        testID={testID}
         style={({ pressed }) => [
           styles.pressable(size),
           pressed && styles.pressed,
@@ -40,5 +43,9 @@ export function Card({
     );
   }
 
-  return <View style={styles.container(size)}>{children}</View>;
+  return (
+    <View style={styles.container(size)} testID={testID}>
+      {children}
+    </View>
+  );
 }

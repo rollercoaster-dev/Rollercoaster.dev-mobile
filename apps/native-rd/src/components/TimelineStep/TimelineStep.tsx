@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, Pressable } from "react-native";
+import { useTranslation } from "react-i18next";
 import { TimelineNode } from "../TimelineNode";
 import { StatusBadge, type StatusBadgeVariant } from "../StatusBadge";
 import { TimelineEvidenceCard } from "../TimelineEvidenceCard";
@@ -29,10 +30,10 @@ const statusToVariant: Record<StepStatus, StatusBadgeVariant> = {
   pending: "locked",
 };
 
-const statusToLabel: Record<StepStatus, string> = {
-  completed: "Done",
-  "in-progress": "Active",
-  pending: "Pending",
+const statusToLabelKey: Record<StepStatus, "done" | "active" | "pending"> = {
+  completed: "done",
+  "in-progress": "active",
+  pending: "pending",
 };
 
 export function TimelineStep({
@@ -43,7 +44,9 @@ export function TimelineStep({
   onEvidencePress,
   defaultExpanded = false,
 }: TimelineStepProps) {
+  const { t } = useTranslation("timelineJourney");
   const [expanded, setExpanded] = useState(defaultExpanded);
+  const statusLabel = t(`step.status.${statusToLabelKey[step.status]}`);
 
   return (
     <View style={styles.container} accessibilityRole="none">
@@ -52,7 +55,10 @@ export function TimelineStep({
           status={step.status}
           stepNumber={stepIndex + 1}
           onPress={() => onNodePress(stepIndex)}
-          accessibilityLabel={`Go to step ${stepIndex + 1}: ${step.title}`}
+          accessibilityLabel={t("step.a11yGoTo", {
+            number: stepIndex + 1,
+            title: step.title,
+          })}
         />
       </View>
       <View style={styles.contentCard}>
@@ -60,13 +66,13 @@ export function TimelineStep({
           onPress={() => setExpanded((prev) => !prev)}
           accessible
           accessibilityRole="button"
-          accessibilityLabel={`${step.title}, ${statusToLabel[step.status]}`}
+          accessibilityLabel={`${step.title}, ${statusLabel}`}
           accessibilityState={{ expanded }}
           style={styles.header}
         >
           <StatusBadge
             variant={statusToVariant[step.status]}
-            label={statusToLabel[step.status]}
+            label={statusLabel}
           />
           <View style={styles.titleContainer}>
             <Text style={styles.title} numberOfLines={2}>
@@ -91,7 +97,7 @@ export function TimelineStep({
                 />
               ))
             ) : (
-              <Text style={styles.noEvidence}>No evidence yet</Text>
+              <Text style={styles.noEvidence}>{t("step.noEvidence")}</Text>
             )}
           </View>
         )}

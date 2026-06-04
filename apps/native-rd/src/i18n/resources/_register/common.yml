@@ -1,0 +1,28 @@
+# Per-namespace voice register for the `common` namespace.
+#
+# Loaded by scripts/i18n/translator.ts and passed to promptBuilder. The runtime
+# (i18next) never reads this file — only the sync tooling does. Schema must
+# match RegisterData in promptBuilder.ts. Brand-voice defaults sourced from
+# landing/docs/BRAND_LANGUAGE.md. Banned exits already in the system preamble
+# are deduped at prompt assembly — no need to repeat "oder nicht" etc. here.
+
+speaker: app
+audience: neurodivergent-adults
+formality: informal
+banned_phrasings:
+  - besonders
+  - einzigartig
+  - anders begabt
+  - besondere Bedürfnisse
+  - leidet an
+  - Großartig!
+  - Super!
+  - Du schaffst das!
+  - Fantastisch!
+  - Streak
+  - Tage ohne
+  - leverage
+  - Synergien
+notes:
+  - Identity-first ND vocab (autistisch, ADHS, bipolar — never deficit-first).
+  - Short sentences. Concrete verbs. No corporate filler.

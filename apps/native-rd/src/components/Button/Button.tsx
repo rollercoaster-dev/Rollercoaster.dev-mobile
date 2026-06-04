@@ -6,6 +6,15 @@ export type { ButtonVariant, ButtonSize };
 
 export interface ButtonProps {
   label: string;
+  /**
+   * Optional leading icon (typically an emoji). Rendered as its own <Text>
+   * run, separate from the label. Keeping the emoji in a distinct run avoids
+   * an Android glyph-rendering bug where an emoji + custom font in a single
+   * Text run can drop the trailing label glyphs on some devices (the "🔗 Link"
+   * chip rendered icon-only). Treated as decorative — excluded from the a11y
+   * label, which stays the human-readable `label` text.
+   */
+  icon?: string;
   onPress: () => void;
   variant?: ButtonVariant;
   size?: ButtonSize;
@@ -17,6 +26,7 @@ export interface ButtonProps {
 
 export function Button({
   label,
+  icon,
   onPress,
   variant = "primary",
   size = "md",
@@ -70,7 +80,14 @@ export function Button({
           }
         />
       ) : (
-        <Text style={[styles.label(size), labelStyle]}>{label}</Text>
+        <>
+          {icon ? (
+            <Text style={styles.icon(size)} accessibilityElementsHidden>
+              {icon}
+            </Text>
+          ) : null}
+          <Text style={[styles.label(size), labelStyle]}>{label}</Text>
+        </>
       )}
     </Pressable>
   );

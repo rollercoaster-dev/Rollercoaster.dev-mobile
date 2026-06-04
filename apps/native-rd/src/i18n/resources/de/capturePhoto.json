@@ -1,0 +1,15 @@
+{
+  "title": "Foto aufnehmen",
+  "heading": "Foto hinzufügen",
+  "actions": {
+    "takePhoto": "Foto machen",
+    "chooseFromLibrary": "Aus Mediathek wählen"
+  },
+  "a11y": {
+    "savingPhoto": "Foto wird gespeichert"
+  },
+  "errors": {
+    "saveFailedTitle": "Speichern fehlgeschlagen",
+    "saveFailedMessage": "Foto konnte nicht gespeichert werden. Versuche es erneut."
+  }
+}

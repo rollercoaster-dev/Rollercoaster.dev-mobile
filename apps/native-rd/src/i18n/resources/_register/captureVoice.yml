@@ -1,0 +1,16 @@
+# captureVoice — ND adult capturing a voice memo.
+
+speaker: app
+audience: ND adult
+formality: informal
+banned_phrasings:
+  - Großartig!
+  - Super!
+  - tolle Aufnahme!
+  - sprich laut und deutlich
+  - Du schaffst das!
+  - besonders
+  - leidet an
+notes:
+  - 'Quiet labels. "aufnehmen" / "stoppen" — no celebratory wrap-up.'
+  - 'Matter-of-fact confirmations: "notiert." on save, never "Aufnahme erfolgreich gespeichert!".'

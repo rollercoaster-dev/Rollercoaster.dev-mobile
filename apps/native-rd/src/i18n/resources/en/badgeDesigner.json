@@ -1,1 +1,114 @@
-{}
+{
+  "title": "Design Badge",
+  "sections": {
+    "shape": "Shape",
+    "color": "Color",
+    "frame": "Frame",
+    "center": "Center",
+    "icon": "Icon",
+    "bottomLabel": "Bottom Label",
+    "pathText": "Path Text",
+    "banner": "Banner"
+  },
+  "actions": {
+    "save": "Save Design",
+    "useThisDesign": "Use This Design",
+    "skipDefault": "Skip — Use Default",
+    "goBack": "Go Back"
+  },
+  "bottomLabel": {
+    "a11y": "Bottom label",
+    "placeholder": "Optional label"
+  },
+  "preview": {
+    "a11y": "Badge preview: {{color}} {{shape}} {{frame}} frame with {{icon}} icon"
+  },
+  "errors": {
+    "saveFailedTitle": "Save Failed",
+    "captureFailedMessage": "Could not capture your design preview. Please try again.",
+    "saveFailedMessage": "Could not save your badge design. Please try again."
+  },
+  "fallback": {
+    "goalTitle": "Untitled",
+    "badgeNotFound": "Badge not found",
+    "invalidParams": "Invalid badge designer parameters"
+  },
+  "shape": {
+    "a11y": "Badge shape",
+    "optionA11y": "{{label}} shape",
+    "options": {
+      "circle": "Circle",
+      "shield": "Shield",
+      "hexagon": "Hexagon",
+      "roundedRect": "Rounded Rect",
+      "star": "Star",
+      "diamond": "Diamond"
+    }
+  },
+  "color": {
+    "a11y": "Badge color",
+    "optionA11y": "{{label}} color",
+    "options": {
+      "purple": "Purple",
+      "mint": "Mint",
+      "yellow": "Yellow",
+      "emerald": "Emerald",
+      "teal": "Teal",
+      "orange": "Orange",
+      "sky": "Sky",
+      "goal": "Goal"
+    }
+  },
+  "frame": {
+    "a11y": "Badge frame",
+    "optionA11y": "{{label}} frame",
+    "options": {
+      "none": "None",
+      "boldBorder": "Bold Border",
+      "guilloche": "Guilloche",
+      "crossHatch": "Cross Hatch",
+      "microprint": "Microprint",
+      "rosette": "Rosette"
+    }
+  },
+  "center": {
+    "a11y": "Badge center mode",
+    "optionA11y": "{{label}} center",
+    "options": {
+      "icon": "Icon",
+      "monogram": "Monogram"
+    },
+    "monogram": {
+      "a11y": "Monogram text",
+      "placeholder": "ABC"
+    }
+  },
+  "pathText": {
+    "toggleA11y": "Enable path text",
+    "topA11y": "Path text",
+    "bottomA11y": "Path text bottom",
+    "positionA11y": "Path text position",
+    "optionA11y": "{{label}} position",
+    "positions": {
+      "top": "Top",
+      "bottom": "Bottom",
+      "both": "Both"
+    },
+    "counter": {
+      "a11y": "{{label}}: {{count}} of {{max}} characters used",
+      "top": "Top",
+      "bottom": "Bottom"
+    }
+  },
+  "banner": {
+    "toggleA11y": "Enable banner",
+    "textA11y": "Banner text",
+    "textPlaceholder": "BANNER TEXT",
+    "positionA11y": "Banner position",
+    "optionA11y": "{{label}} position",
+    "positions": {
+      "top": "Top",
+      "bottom": "Bottom"
+    }
+  }
+}

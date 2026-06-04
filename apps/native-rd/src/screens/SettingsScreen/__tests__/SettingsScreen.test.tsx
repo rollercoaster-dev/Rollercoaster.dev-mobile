@@ -1,5 +1,6 @@
 import React from "react";
 import { Alert, Platform } from "react-native";
+import * as Application from "expo-application";
 import {
   renderWithProviders,
   screen,
@@ -184,7 +185,9 @@ describe("SettingsScreen", () => {
     expect(
       screen.getByText(i18n.t("settings:about.versionLabel")),
     ).toBeOnTheScreen();
-    expect(screen.getByText("0.1.0")).toBeOnTheScreen();
+    expect(
+      screen.getByText(Application.nativeApplicationVersion ?? "unknown"),
+    ).toBeOnTheScreen();
   });
 
   it("renders the footer text", () => {

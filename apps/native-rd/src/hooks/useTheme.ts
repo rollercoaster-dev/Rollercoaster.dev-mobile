@@ -39,7 +39,8 @@ export const FALLBACK_THEME_NAME: ThemeName = "light-default";
 
 /** Type guard for persisted/runtime theme name validation. */
 export function isValidThemeName(name: unknown): name is ThemeName {
-  return typeof name === "string" && VALID_THEME_NAMES.has(name as ThemeName);
+  if (typeof name !== "string") return false;
+  return VALID_THEME_NAMES.has(name as ThemeName);
 }
 
 interface ThemeContextValue {

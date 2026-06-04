@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Badge icon explorer — phosphor-react-native</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css"
+    />
+    <style>
+      :root {
+        --bg: #fffbe8;
+        --fg: #1a1a1a;
+        --border: #1a1a1a;
+        --accent: #2563eb;
+        --accent-fg: #fffbe8;
+        --in-app: #16a34a;
+        --candidate: #d97706;
+        --selected: #db2777;
+        --shadow: 4px 4px 0 0 var(--border);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #1a1a1a;
+          --fg: #f5f5f5;
+          --border: #f5f5f5;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        font-family:
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          "Instrument Sans",
+          sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+        margin: 0;
+        padding: 0;
+      }
+      header {
+        position: sticky;
+        top: 0;
+        background: var(--bg);
+        border-bottom: 3px solid var(--border);
+        padding: 14px 20px;
+        z-index: 10;
+      }
+      h1 {
+        margin: 0 0 6px;
+        font-size: 18px;
+        letter-spacing: -0.01em;
+      }
+      .stats {
+        font-size: 12px;
+        opacity: 0.75;
+        margin-bottom: 10px;
+      }
+      .legend {
+        display: inline-flex;
+        gap: 14px;
+        font-size: 12px;
+        margin-bottom: 10px;
+      }
+      .dot {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border: 2px solid var(--border);
+        margin-right: 4px;
+        vertical-align: middle;
+      }
+      .dot.in-app { background: var(--in-app); }
+      .dot.candidate { background: var(--candidate); }
+      .dot.selected { background: var(--selected); }
+      .controls {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      input[type="search"] {
+        font-size: 14px;
+        padding: 8px 12px;
+        border: 2px solid var(--border);
+        background: var(--bg);
+        color: var(--fg);
+        min-width: 240px;
+        box-shadow: var(--shadow);
+      }
+      .filter {
+        display: inline-flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .chip {
+        padding: 6px 10px;
+        border: 2px solid var(--border);
+        background: var(--bg);
+        color: var(--fg);
+        cursor: pointer;
+        font-size: 12px;
+        font-family: inherit;
+      }
+      .chip.active {
+        background: var(--accent);
+        color: var(--accent-fg);
+      }
+      .selected-bar {
+        margin-top: 10px;
+        padding: 10px;
+        border: 2px solid var(--border);
+        background: var(--bg);
+        box-shadow: var(--shadow);
+        min-height: 38px;
+      }
+      .selected-bar .label {
+        font-size: 12px;
+        font-weight: bold;
+        margin-right: 8px;
+      }
+      .selected-bar .name-chip {
+        display: inline-block;
+        padding: 3px 8px;
+        margin: 2px;
+        border: 2px solid var(--border);
+        background: var(--selected);
+        color: white;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      .selected-bar button {
+        padding: 6px 10px;
+        border: 2px solid var(--border);
+        background: var(--fg);
+        color: var(--bg);
+        cursor: pointer;
+        font-size: 12px;
+        font-family: inherit;
+        margin-left: 8px;
+      }
+      main {
+        padding: 20px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        gap: 10px;
+      }
+      .tile {
+        border: 2px solid var(--border);
+        background: var(--bg);
+        padding: 10px 8px;
+        text-align: center;
+        cursor: pointer;
+        position: relative;
+        transition: transform 0.05s;
+      }
+      .tile:hover { transform: translate(-2px, -2px); box-shadow: var(--shadow); }
+      .tile.in-app { border-color: var(--in-app); border-width: 3px; }
+      .tile.candidate { border-color: var(--candidate); border-width: 3px; }
+      .tile.selected {
+        background: var(--selected);
+        color: white;
+        border-color: var(--selected);
+      }
+      .tile .ph,
+      .tile .ph-bold,
+      .tile .ph-duotone {
+        font-size: 36px;
+        display: block;
+        margin-bottom: 6px;
+      }
+      .tile .name {
+        font-size: 11px;
+        word-break: break-word;
+        line-height: 1.2;
+      }
+      .tile .tag {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        font-size: 9px;
+        padding: 1px 4px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        color: var(--fg);
+        text-transform: uppercase;
+      }
+      .tile.in-app .tag { background: var(--in-app); color: white; border-color: var(--in-app); }
+      .tile.candidate .tag { background: var(--candidate); color: white; border-color: var(--candidate); }
+      .empty {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 40px;
+        opacity: 0.6;
+      }
+      dialog {
+        border: 3px solid var(--border);
+        background: var(--bg);
+        color: var(--fg);
+        padding: 0;
+        box-shadow: 8px 8px 0 0 var(--border);
+        max-width: 600px;
+        width: 90vw;
+      }
+      dialog::backdrop {
+        background: rgba(0, 0, 0, 0.5);
+      }
+      dialog header {
+        padding: 12px;
+        border-bottom: 2px solid var(--border);
+        position: static;
+      }
+      dialog pre {
+        margin: 0;
+        padding: 14px;
+        font-size: 12px;
+        font-family: ui-monospace, "DM Mono", monospace;
+        white-space: pre-wrap;
+        word-break: break-all;
+        background: rgba(0, 0, 0, 0.05);
+        max-height: 60vh;
+        overflow: auto;
+      }
+      dialog footer {
+        padding: 10px;
+        text-align: right;
+        border-top: 2px solid var(--border);
+      }
+      dialog button {
+        padding: 6px 12px;
+        border: 2px solid var(--border);
+        background: var(--bg);
+        color: var(--fg);
+        cursor: pointer;
+        font-family: inherit;
+      }
+      dialog button.primary {
+        background: var(--accent);
+        color: var(--accent-fg);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Badge icon explorer</h1>
+      <div class="stats">
+        <span id="stat-total"></span> phosphor icons •
+        <span id="stat-in-app"></span> already in app •
+        <span id="stat-candidate"></span> suggested candidates •
+        <span class="legend">
+          <span><span class="dot in-app"></span>in app</span>
+          <span><span class="dot candidate"></span>suggested</span>
+          <span><span class="dot selected"></span>selected</span>
+        </span>
+      </div>
+      <div class="controls">
+        <input
+          type="search"
+          id="search"
+          placeholder="filter by name (e.g. boxing, gym, calendar)"
+          autocomplete="off"
+        />
+        <div class="filter" id="filter">
+          <button class="chip active" data-filter="all">All</button>
+          <button class="chip" data-filter="new">Not in app</button>
+          <button class="chip" data-filter="candidate">Suggested</button>
+          <button class="chip" data-filter="in-app">In app</button>
+          <button class="chip" data-filter="selected">Selected</button>
+        </div>
+        <div class="filter" id="weight">
+          <button class="chip active" data-weight="regular">Regular</button>
+          <button class="chip" data-weight="bold">Bold</button>
+          <button class="chip" data-weight="duotone">Duotone</button>
+        </div>
+      </div>
+      <div class="selected-bar" id="selected-bar">
+        <span class="label">Selected to add (0):</span>
+        <span id="selected-chips"></span>
+        <button id="export-btn" disabled>Export registry snippet</button>
+        <button id="clear-btn" disabled>Clear</button>
+      </div>
+    </header>
+    <main id="grid"></main>
+
+    <dialog id="export-dialog">
+      <header>
+        <strong>Paste this into your add-to-registry PR</strong>
+      </header>
+      <pre id="export-content"></pre>
+      <footer>
+        <button id="copy-btn" class="primary">Copy</button>
+        <button id="close-btn">Close</button>
+      </footer>
+    </dialog>
+
+    <script>
+      // ---- Data (regenerated from phosphor-react-native@3.0.6 + iconRegistry.ts) ----
+const ALL_ICONS = ["Acorn","AddressBook","AddressBookTabs","AirTrafficControl","Airplane","AirplaneInFlight","AirplaneLanding","AirplaneTakeoff","AirplaneTaxiing","AirplaneTilt","Airplay","Alarm","Alien","AlignBottom","AlignBottomSimple","AlignCenterHorizontal","AlignCenterHorizontalSimple","AlignCenterVertical","AlignCenterVerticalSimple","AlignLeft","AlignLeftSimple","AlignRight","AlignRightSimple","AlignTop","AlignTopSimple","AmazonLogo","Ambulance","Anchor","AnchorSimple","AndroidLogo","Angle","AngularLogo","Aperture","AppStoreLogo","AppWindow","AppleLogo","ApplePodcastsLogo","ApproximateEquals","Archive","Armchair","ArrowArcLeft","ArrowArcRight","ArrowBendDoubleUpLeft","ArrowBendDoubleUpRight","ArrowBendDownLeft","ArrowBendDownRight","ArrowBendLeftDown","ArrowBendLeftUp","ArrowBendRightDown","ArrowBendRightUp","ArrowBendUpLeft","ArrowBendUpRight","ArrowCircleDown","ArrowCircleDownLeft","ArrowCircleDownRight","ArrowCircleLeft","ArrowCircleRight","ArrowCircleUp","ArrowCircleUpLeft","ArrowCircleUpRight","ArrowClockwise","ArrowCounterClockwise","ArrowDown","ArrowDownLeft","ArrowDownRight","ArrowElbowDownLeft","ArrowElbowDownRight","ArrowElbowLeft","ArrowElbowLeftDown","ArrowElbowLeftUp","ArrowElbowRight","ArrowElbowRightDown","ArrowElbowRightUp","ArrowElbowUpLeft","ArrowElbowUpRight","ArrowFatDown","ArrowFatLeft","ArrowFatLineDown","ArrowFatLineLeft","ArrowFatLineRight","ArrowFatLineUp","ArrowFatLinesDown","ArrowFatLinesLeft","ArrowFatLinesRight","ArrowFatLinesUp","ArrowFatRight","ArrowFatUp","ArrowLeft","ArrowLineDown","ArrowLineDownLeft","ArrowLineDownRight","ArrowLineLeft","ArrowLineRight","ArrowLineUp","ArrowLineUpLeft","ArrowLineUpRight","ArrowRight","ArrowSquareDown","ArrowSquareDownLeft","ArrowSquareDownRight","ArrowSquareIn","ArrowSquareLeft","ArrowSquareOut","ArrowSquareRight","ArrowSquareUp","ArrowSquareUpLeft","ArrowSquareUpRight","ArrowUDownLeft","ArrowUDownRight","ArrowULeftDown","ArrowULeftUp","ArrowURightDown","ArrowURightUp","ArrowUUpLeft","ArrowUUpRight","ArrowUp","ArrowUpLeft","ArrowUpRight","ArrowsClockwise","ArrowsCounterClockwise","ArrowsDownUp","ArrowsHorizontal","ArrowsIn","ArrowsInCardinal","ArrowsInLineHorizontal","ArrowsInLineVertical","ArrowsInSimple","ArrowsLeftRight","ArrowsMerge","ArrowsOut","ArrowsOutCardinal","ArrowsOutLineHorizontal","ArrowsOutLineVertical","ArrowsOutSimple","ArrowsSplit","ArrowsVertical","Article","ArticleMedium","ArticleNyTimes","Asclepius","Asterisk","AsteriskSimple","At","Atom","Avocado","Axe","Baby","BabyCarriage","Backpack","Backspace","Bag","BagSimple","Balloon","Bandaids","Bank","Barbell","Barcode","Barn","Barricade","Baseball","BaseballCap","BaseballHelmet","Basket","Basketball","Bathtub","BatteryCharging","BatteryChargingVertical","BatteryEmpty","BatteryFull","BatteryHigh","BatteryLow","BatteryMedium","BatteryPlus","BatteryPlusVertical","BatteryVerticalEmpty","BatteryVerticalFull","BatteryVerticalHigh","BatteryVerticalLow","BatteryVerticalMedium","BatteryWarning","BatteryWarningVertical","BeachBall","Beanie","Bed","BeerBottle","BeerStein","BehanceLogo","Bell","BellRinging","BellSimple","BellSimpleRinging","BellSimpleSlash","BellSimpleZ","BellSlash","BellZ","Belt","BezierCurve","Bicycle","Binary","Binoculars","Biohazard","Bird","Blueprint","Bluetooth","BluetoothConnected","BluetoothSlash","BluetoothX","Boat","Bomb","Bone","Book","BookBookmark","BookOpen","BookOpenText","BookOpenUser","Bookmark","BookmarkSimple","Bookmarks","BookmarksSimple","Books","Boot","Boules","BoundingBox","BowlFood","BowlSteam","BowlingBall","BoxArrowDown","BoxArrowUp","BoxingGlove","BracketsAngle","BracketsCurly","BracketsRound","BracketsSquare","Brain","Brandy","Bread","Bridge","Briefcase","BriefcaseMetal","Broadcast","Broom","Browser","Browsers","Bug","BugBeetle","BugDroid","Building","BuildingApartment","BuildingOffice","Buildings","Bulldozer","Bus","Butterfly","CableCar","Cactus","Cake","Calculator","Calendar","CalendarBlank","CalendarCheck","CalendarDot","CalendarDots","CalendarHeart","CalendarMinus","CalendarPlus","CalendarSlash","CalendarStar","CalendarX","CallBell","Camera","CameraPlus","CameraRotate","CameraSlash","Campfire","Car","CarBattery","CarProfile","CarSimple","Cardholder","Cards","CardsThree","CaretCircleDoubleDown","CaretCircleDoubleLeft","CaretCircleDoubleRight","CaretCircleDoubleUp","CaretCircleDown","CaretCircleLeft","CaretCircleRight","CaretCircleUp","CaretCircleUpDown","CaretDoubleDown","CaretDoubleLeft","CaretDoubleRight","CaretDoubleUp","CaretDown","CaretLeft","CaretLineDown","CaretLineLeft","CaretLineRight","CaretLineUp","CaretRight","CaretUp","CaretUpDown","Carrot","CashRegister","CassetteTape","CastleTurret","Cat","CellSignalFull","CellSignalHigh","CellSignalLow","CellSignalMedium","CellSignalNone","CellSignalSlash","CellSignalX","CellTower","Certificate","Chair","Chalkboard","ChalkboardSimple","ChalkboardTeacher","Champagne","ChargingStation","ChartBar","ChartBarHorizontal","ChartDonut","ChartLine","ChartLineDown","ChartLineUp","ChartPie","ChartPieSlice","ChartPolar","ChartScatter","Chat","ChatCentered","ChatCenteredDots","ChatCenteredSlash","ChatCenteredText","ChatCircle","ChatCircleDots","ChatCircleSlash","ChatCircleText","ChatDots","ChatSlash","ChatTeardrop","ChatTeardropDots","ChatTeardropSlash","ChatTeardropText","ChatText","Chats","ChatsCircle","ChatsTeardrop","Check","CheckCircle","CheckFat","CheckSquare","CheckSquareOffset","Checkerboard","Checks","Cheers","Cheese","ChefHat","Cherries","Church","Cigarette","CigaretteSlash","Circle","CircleDashed","CircleHalf","CircleHalfTilt","CircleNotch","CirclesFour","CirclesThree","CirclesThreePlus","Circuitry","City","Clipboard","ClipboardText","Clock","ClockAfternoon","ClockClockwise","ClockCountdown","ClockCounterClockwise","ClockUser","ClosedCaptioning","Cloud","CloudArrowDown","CloudArrowUp","CloudCheck","CloudFog","CloudLightning","CloudMoon","CloudRain","CloudSlash","CloudSnow","CloudSun","CloudWarning","CloudX","Clover","Club","CoatHanger","CodaLogo","Code","CodeBlock","CodeSimple","CodepenLogo","CodesandboxLogo","Coffee","CoffeeBean","Coin","CoinVertical","Coins","Columns","ColumnsPlusLeft","ColumnsPlusRight","Command","Compass","CompassRose","CompassTool","ComputerTower","Confetti","ContactlessPayment","Control","Cookie","CookingPot","Copy","CopySimple","Copyleft","Copyright","CornersIn","CornersOut","Couch","CourtBasketball","Cow","CowboyHat","Cpu","Crane","CraneTower","CreditCard","Cricket","Crop","Cross","Crosshair","CrosshairSimple","Crown","CrownCross","CrownSimple","Cube","CubeFocus","CubeTransparent","CurrencyBtc","CurrencyCircleDollar","CurrencyCny","CurrencyDollar","CurrencyDollarSimple","CurrencyEth","CurrencyEur","CurrencyGbp","CurrencyInr","CurrencyJpy","CurrencyKrw","CurrencyKzt","CurrencyNgn","CurrencyRub","Cursor","CursorClick","CursorText","Cylinder","Database","Desk","Desktop","DesktopTower","Detective","DevToLogo","DeviceMobile","DeviceMobileCamera","DeviceMobileSlash","DeviceMobileSpeaker","DeviceRotate","DeviceTablet","DeviceTabletCamera","DeviceTabletSpeaker","Devices","Diamond","DiamondsFour","DiceFive","DiceFour","DiceOne","DiceSix","DiceThree","DiceTwo","Disc","DiscoBall","DiscordLogo","Divide","Dna","Dog","Door","DoorOpen","Dot","DotOutline","DotsNine","DotsSix","DotsSixVertical","DotsThree","DotsThreeCircle","DotsThreeCircleVertical","DotsThreeOutline","DotsThreeOutlineVertical","DotsThreeVertical","Download","DownloadSimple","Dress","Dresser","DribbbleLogo","Drone","Drop","DropHalf","DropHalfBottom","DropSimple","DropSlash","DropboxLogo","Ear","EarSlash","Egg","EggCrack","Eject","EjectSimple","Elevator","Empty","Engine","Envelope","EnvelopeOpen","EnvelopeSimple","EnvelopeSimpleOpen","Equalizer","Equals","Eraser","EscalatorDown","EscalatorUp","Exam","ExclamationMark","Exclude","ExcludeSquare","Export","Eye","EyeClosed","EyeSlash","Eyedropper","EyedropperSample","Eyeglasses","Eyes","FaceMask","FacebookLogo","Factory","Faders","FadersHorizontal","FalloutShelter","Fan","Farm","FastForward","FastForwardCircle","Feather","FediverseLogo","FigmaLogo","File","FileArchive","FileArrowDown","FileArrowUp","FileAudio","FileC","FileCSharp","FileCloud","FileCode","FileCpp","FileCss","FileCsv","FileDashed","FileDoc","FileHtml","FileImage","FileIni","FileJpg","FileJs","FileJsx","FileLock","FileMagnifyingGlass","FileMd","FileMinus","FilePdf","FilePlus","FilePng","FilePpt","FilePy","FileRs","FileSql","FileSvg","FileText","FileTs","FileTsx","FileTxt","FileVideo","FileVue","FileX","FileXls","FileZip","Files","FilmReel","FilmScript","FilmSlate","FilmStrip","Fingerprint","FingerprintSimple","FinnTheHuman","Fire","FireExtinguisher","FireSimple","FireTruck","FirstAid","FirstAidKit","Fish","FishSimple","Flag","FlagBanner","FlagBannerFold","FlagCheckered","FlagPennant","Flame","Flashlight","Flask","FlipHorizontal","FlipVertical","FloppyDisk","FloppyDiskBack","FlowArrow","Flower","FlowerLotus","FlowerTulip","FlyingSaucer","Folder","FolderDashed","FolderLock","FolderMinus","FolderOpen","FolderPlus","FolderSimple","FolderSimpleDashed","FolderSimpleLock","FolderSimpleMinus","FolderSimplePlus","FolderSimpleStar","FolderSimpleUser","FolderStar","FolderUser","Folders","Football","FootballHelmet","Footprints","ForkKnife","FourK","FrameCorners","FramerLogo","Function","Funnel","FunnelSimple","FunnelSimpleX","FunnelX","GameController","Garage","GasCan","GasPump","Gauge","Gavel","Gear","GearFine","GearSix","GenderFemale","GenderIntersex","GenderMale","GenderNeuter","GenderNonbinary","GenderTransgender","Ghost","Gif","Gift","GitBranch","GitCommit","GitDiff","GitFork","GitMerge","GitPullRequest","GithubLogo","GitlabLogo","GitlabLogoSimple","Globe","GlobeHemisphereEast","GlobeHemisphereWest","GlobeSimple","GlobeSimpleX","GlobeStand","GlobeX","Goggles","Golf","GoodreadsLogo","GoogleCardboardLogo","GoogleChromeLogo","GoogleDriveLogo","GoogleLogo","GooglePhotosLogo","GooglePlayLogo","GooglePodcastsLogo","Gps","GpsFix","GpsSlash","Gradient","GraduationCap","Grains","GrainsSlash","Graph","GraphicsCard","GreaterThan","GreaterThanOrEqual","GridFour","GridNine","Guitar","HairDryer","Hamburger","Hammer","Hand","HandArrowDown","HandArrowUp","HandCoins","HandDeposit","HandEye","HandFist","HandGrabbing","HandHeart","HandPalm","HandPeace","HandPointing","HandSoap","HandSwipeLeft","HandSwipeRight","HandTap","HandWaving","HandWithdraw","Handbag","HandbagSimple","HandsClapping","HandsPraying","Handshake","HardDrive","HardDrives","HardHat","Hash","HashStraight","HeadCircuit","Headlights","Headphones","Headset","Heart","HeartBreak","HeartHalf","HeartStraight","HeartStraightBreak","Heartbeat","Hexagon","HighDefinition","HighHeel","Highlighter","HighlighterCircle","Hockey","Hoodie","Horse","Hospital","Hourglass","HourglassHigh","HourglassLow","HourglassMedium","HourglassSimple","HourglassSimpleHigh","HourglassSimpleLow","HourglassSimpleMedium","House","HouseLine","HouseSimple","Hurricane","IceCream","IdentificationBadge","IdentificationCard","Image","ImageBroken","ImageSquare","Images","ImagesSquare","Infinity","Info","InstagramLogo","Intersect","IntersectSquare","IntersectThree","Intersection","Invoice","Island","Jar","JarLabel","Jeep","Joystick","Kanban","Key","KeyReturn","Keyboard","Keyhole","Knife","Ladder","LadderSimple","Lamp","LampPendant","Laptop","Lasso","LastfmLogo","Layout","Leaf","Lectern","Lego","LegoSmiley","LessThan","LessThanOrEqual","LetterCircleH","LetterCircleP","LetterCircleV","Lifebuoy","Lightbulb","LightbulbFilament","Lighthouse","Lightning","LightningA","LightningSlash","LineSegment","LineSegments","LineVertical","Link","LinkBreak","LinkSimple","LinkSimpleBreak","LinkSimpleHorizontal","LinkSimpleHorizontalBreak","LinkedinLogo","LinktreeLogo","LinuxLogo","List","ListBullets","ListChecks","ListDashes","ListHeart","ListMagnifyingGlass","ListNumbers","ListPlus","ListStar","Lock","LockKey","LockKeyOpen","LockLaminated","LockLaminatedOpen","LockOpen","LockSimple","LockSimpleOpen","Lockers","Log","MagicWand","Magnet","MagnetStraight","MagnifyingGlass","MagnifyingGlassMinus","MagnifyingGlassPlus","Mailbox","MapPin","MapPinArea","MapPinLine","MapPinPlus","MapPinSimple","MapPinSimpleArea","MapPinSimpleLine","MapTrifold","MarkdownLogo","MarkerCircle","Martini","MaskHappy","MaskSad","MastodonLogo","MathOperations","MatrixLogo","Medal","MedalMilitary","MediumLogo","Megaphone","MegaphoneSimple","MemberOf","Memory","MessengerLogo","MetaLogo","Meteor","Metronome","Microphone","MicrophoneSlash","MicrophoneStage","Microscope","MicrosoftExcelLogo","MicrosoftOutlookLogo","MicrosoftPowerpointLogo","MicrosoftTeamsLogo","MicrosoftWordLogo","Minus","MinusCircle","MinusSquare","Money","MoneyWavy","Monitor","MonitorArrowUp","MonitorPlay","Moon","MoonStars","Moped","MopedFront","Mosque","Motorcycle","Mountains","Mouse","MouseLeftClick","MouseMiddleClick","MouseRightClick","MouseScroll","MouseSimple","MusicNote","MusicNoteSimple","MusicNotes","MusicNotesMinus","MusicNotesPlus","MusicNotesSimple","NavigationArrow","Needle","Network","NetworkSlash","NetworkX","Newspaper","NewspaperClipping","NotEquals","NotMemberOf","NotSubsetOf","NotSupersetOf","Notches","Note","NoteBlank","NotePencil","Notebook","Notepad","Notification","NotionLogo","NuclearPlant","NumberCircleEight","NumberCircleFive","NumberCircleFour","NumberCircleNine","NumberCircleOne","NumberCircleSeven","NumberCircleSix","NumberCircleThree","NumberCircleTwo","NumberCircleZero","NumberEight","NumberFive","NumberFour","NumberNine","NumberOne","NumberSeven","NumberSix","NumberSquareEight","NumberSquareFive","NumberSquareFour","NumberSquareNine","NumberSquareOne","NumberSquareSeven","NumberSquareSix","NumberSquareThree","NumberSquareTwo","NumberSquareZero","NumberThree","NumberTwo","NumberZero","Numpad","Nut","NyTimesLogo","Octagon","OfficeChair","Onigiri","OpenAiLogo","Option","Orange","OrangeSlice","Oven","Package","PaintBrush","PaintBrushBroad","PaintBrushHousehold","PaintBucket","PaintRoller","Palette","Panorama","Pants","PaperPlane","PaperPlaneRight","PaperPlaneTilt","Paperclip","PaperclipHorizontal","Parachute","Paragraph","Parallelogram","Park","Password","Path","PatreonLogo","Pause","PauseCircle","PawPrint","PaypalLogo","Peace","Pen","PenNib","PenNibStraight","Pencil","PencilCircle","PencilLine","PencilRuler","PencilSimple","PencilSimpleLine","PencilSimpleSlash","PencilSlash","Pentagon","Pentagram","Pepper","Percent","Person","PersonArmsSpread","PersonSimple","PersonSimpleBike","PersonSimpleCircle","PersonSimpleHike","PersonSimpleRun","PersonSimpleSki","PersonSimpleSnowboard","PersonSimpleSwim","PersonSimpleTaiChi","PersonSimpleThrow","PersonSimpleWalk","Perspective","Phone","PhoneCall","PhoneDisconnect","PhoneIncoming","PhoneList","PhoneOutgoing","PhonePause","PhonePlus","PhoneSlash","PhoneTransfer","PhoneX","PhosphorLogo","Pi","PianoKeys","PicnicTable","PictureInPicture","PiggyBank","Pill","PingPong","PintGlass","PinterestLogo","Pinwheel","Pipe","PipeWrench","PixLogo","Pizza","Placeholder","Planet","Plant","Play","PlayCircle","PlayPause","Playlist","Plug","PlugCharging","Plugs","PlugsConnected","Plus","PlusCircle","PlusMinus","PlusSquare","PokerChip","PoliceCar","Polygon","Popcorn","Popsicle","PottedPlant","Power","Prescription","Presentation","PresentationChart","Printer","Prohibit","ProhibitInset","ProjectorScreen","ProjectorScreenChart","Pulse","PushPin","PushPinSimple","PushPinSimpleSlash","PushPinSlash","PuzzlePiece","QrCode","Question","QuestionMark","Queue","Quotes","Rabbit","Racquet","Radical","Radio","RadioButton","Radioactive","Rainbow","RainbowCloud","Ranking","ReadCvLogo","Receipt","ReceiptX","Record","Rectangle","RectangleDashed","Recycle","RedditLogo","Repeat","RepeatOnce","ReplitLogo","Resize","Rewind","RewindCircle","RoadHorizon","Robot","Rocket","RocketLaunch","Rows","RowsPlusBottom","RowsPlusTop","Rss","RssSimple","Rug","Ruler","Sailboat","Scales","Scan","ScanSmiley","Scissors","Scooter","Screencast","Screwdriver","Scribble","ScribbleLoop","Scroll","Seal","SealCheck","SealPercent","SealQuestion","SealWarning","Seat","Seatbelt","SecurityCamera","Selection","SelectionAll","SelectionBackground","SelectionForeground","SelectionInverse","SelectionPlus","SelectionSlash","Shapes","Share","ShareFat","ShareNetwork","Shield","ShieldCheck","ShieldCheckered","ShieldChevron","ShieldPlus","ShieldSlash","ShieldStar","ShieldWarning","ShippingContainer","ShirtFolded","ShootingStar","ShoppingBag","ShoppingBagOpen","ShoppingCart","ShoppingCartSimple","Shovel","Shower","Shrimp","Shuffle","ShuffleAngular","ShuffleSimple","Sidebar","SidebarSimple","Sigma","SignIn","SignOut","Signature","Signpost","SimCard","Siren","SketchLogo","SkipBack","SkipBackCircle","SkipForward","SkipForwardCircle","Skull","SkypeLogo","SlackLogo","Sliders","SlidersHorizontal","Slideshow","Smiley","SmileyAngry","SmileyBlank","SmileyMeh","SmileyMelting","SmileyNervous","SmileySad","SmileySticker","SmileyWink","SmileyXEyes","SnapchatLogo","Sneaker","SneakerMove","Snowflake","SoccerBall","Sock","SolarPanel","SolarRoof","SortAscending","SortDescending","SoundcloudLogo","Spade","Sparkle","SpeakerHifi","SpeakerHigh","SpeakerLow","SpeakerNone","SpeakerSimpleHigh","SpeakerSimpleLow","SpeakerSimpleNone","SpeakerSimpleSlash","SpeakerSimpleX","SpeakerSlash","SpeakerX","Speedometer","Sphere","Spinner","SpinnerBall","SpinnerGap","Spiral","SplitHorizontal","SplitVertical","SpotifyLogo","SprayBottle","Square","SquareHalf","SquareHalfBottom","SquareLogo","SquareSplitHorizontal","SquareSplitVertical","SquaresFour","Stack","StackMinus","StackOverflowLogo","StackPlus","StackSimple","Stairs","Stamp","StandardDefinition","Star","StarAndCrescent","StarFour","StarHalf","StarOfDavid","SteamLogo","SteeringWheel","Steps","Stethoscope","Sticker","Stool","Stop","StopCircle","Storefront","Strategy","StripeLogo","Student","SubsetOf","SubsetProperOf","Subtitles","SubtitlesSlash","Subtract","SubtractSquare","Subway","Suitcase","SuitcaseRolling","SuitcaseSimple","Sun","SunDim","SunHorizon","Sunglasses","SupersetOf","SupersetProperOf","Swap","Swatches","SwimmingPool","Sword","Synagogue","Syringe","TShirt","Table","Tabs","Tag","TagChevron","TagSimple","Target","Taxi","TeaBag","TelegramLogo","Television","TelevisionSimple","TennisBall","Tent","Terminal","TerminalWindow","TestTube","TextAUnderline","TextAa","TextAlignCenter","TextAlignJustify","TextAlignLeft","TextAlignRight","TextB","TextColumns","TextH","TextHFive","TextHFour","TextHOne","TextHSix","TextHThree","TextHTwo","TextIndent","TextItalic","TextOutdent","TextStrikethrough","TextSubscript","TextSuperscript","TextT","TextTSlash","TextUnderline","Textbox","Thermometer","ThermometerCold","ThermometerHot","ThermometerSimple","ThreadsLogo","ThreeD","ThumbsDown","ThumbsUp","Ticket","TidalLogo","TiktokLogo","Tilde","Timer","TipJar","Tipi","Tire","ToggleLeft","ToggleRight","Toilet","ToiletPaper","Toolbox","Tooth","Tornado","Tote","ToteSimple","Towel","Tractor","Trademark","TrademarkRegistered","TrafficCone","TrafficSign","TrafficSignal","Train","TrainRegional","TrainSimple","Tram","Translate","Trash","TrashSimple","Tray","TrayArrowDown","TrayArrowUp","TreasureChest","Tree","TreeEvergreen","TreePalm","TreeStructure","TreeView","TrendDown","TrendUp","Triangle","TriangleDashed","Trolley","TrolleySuitcase","Trophy","Truck","TruckTrailer","TumblrLogo","TwitchLogo","TwitterLogo","Umbrella","UmbrellaSimple","Union","Unite","UniteSquare","Upload","UploadSimple","Usb","User","UserCheck","UserCircle","UserCircleCheck","UserCircleDashed","UserCircleGear","UserCircleMinus","UserCirclePlus","UserFocus","UserGear","UserList","UserMinus","UserPlus","UserRectangle","UserSound","UserSquare","UserSwitch","Users","UsersFour","UsersThree","Van","Vault","VectorThree","VectorTwo","Vibrate","Video","VideoCamera","VideoCameraSlash","VideoConference","Vignette","VinylRecord","VirtualReality","Virus","Visor","Voicemail","Volleyball","Wall","Wallet","Warehouse","Warning","WarningCircle","WarningDiamond","WarningOctagon","WashingMachine","Watch","WaveSawtooth","WaveSine","WaveSquare","WaveTriangle","Waveform","WaveformSlash","Waves","Webcam","WebcamSlash","WebhooksLogo","WechatLogo","WhatsappLogo","Wheelchair","WheelchairMotion","WifiHigh","WifiLow","WifiMedium","WifiNone","WifiSlash","WifiX","Wind","Windmill","WindowsLogo","Wine","Wrench","X","XCircle","XLogo","XSquare","Yarn","YinYang","YoutubeLogo"];
+// Regenerated from src/badges/iconRegistry.ts ICON_REGISTRY keys.
+const IN_APP = new Set(["AddressBook","Airplane","Alien","Ambulance","Anchor","AngularLogo","Aperture","AppleLogo","ApplePodcastsLogo","AppStoreLogo","AppWindow","Archive","Armchair","ArrowClockwise","ArrowsClockwise","Atom","Avocado","Axe","Baby","BabyCarriage","Backpack","Balloon","Bandaids","Bank","Barbell","Barn","Baseball","BaseballCap","BaseballHelmet","Basket","Basketball","Bathtub","BatteryCharging","BeachBall","Beanie","Bicycle","Binoculars","Bird","Blueprint","Boat","Bone","Book","BookBookmark","Bookmark","BookOpen","Books","Boot","Boules","BowlFood","BowlingBall","BowlSteam","BoxingGlove","Brain","Bread","Bridge","BriefcaseMetal","Broom","Browsers","Bug","BugBeetle","Butterfly","Cactus","Cake","Calculator","Calendar","CalendarBlank","CalendarCheck","CalendarHeart","CallBell","Camera","Campfire","Car","CarBattery","Cardholder","Carrot","CashRegister","CassetteTape","CastleTurret","Cat","Certificate","Chair","Chalkboard","ChalkboardSimple","ChalkboardTeacher","Champagne","ChartBar","ChartLineUp","ChatCircle","ChatCircleSlash","ChatCircleText","ChatDots","Chats","Checks","CheckSquare","CigaretteSlash","Circuitry","City","Clock","ClockClockwise","CloudArrowUp","CloudFog","CloudLightning","CloudMoon","CloudRain","CloudSnow","CloudSun","Clover","Code","CodeBlock","Coin","Coins","Compass","CompassRose","CompassTool","Confetti","Cookie","Cow","CowboyHat","Cpu","Cross","Crosshair","Crown","CrownSimple","Cube","CurrencyDollar","Database","Desktop","Detective","DeviceMobile","DevToLogo","DiscoBall","DiscordLogo","Dna","Dog","Dress","Drop","Egg","EggCrack","Engine","EnvelopeSimple","Exam","Eye","EyeClosed","Eyes","EyeSlash","Feather","FileArrowUp","FileAudio","FileC","FileCloud","FileCode","FileCpp","FileCSharp","FileCss","FileCsv","FileDoc","FileHtml","FileJs","FileJsx","FileMd","FilePdf","FilePng","FilePpt","FilePy","FileRs","FileSql","FileSvg","FileTs","FileTsx","FilmStrip","FinnTheHuman","Fire","FireTruck","FirstAid","FirstAidKit","Fish","Flag","FlagBanner","FlagCheckered","Flask","Flower","FlowerLotus","FlyingSaucer","Football","FootballHelmet","Footprints","ForkKnife","GameController","Gear","GearSix","Ghost","GitBranch","GitCommit","GithubLogo","GitlabLogo","GitMerge","GitPullRequest","Globe","GraduationCap","Graph","Guitar","Hamburger","Hammer","Hand","HandArrowDown","HandEye","HandFist","HandHeart","HandPeace","HandsClapping","Handshake","HandsPraying","HardHat","Headphones","Heart","Heartbeat","HeartStraight","HeartStraightBreak","HighHeel","Hoodie","Hourglass","House","IceCream","Infinity","Joystick","Ladder","Layout","Leaf","Lightbulb","LightbulbFilament","Lightning","MagicWand","MagnifyingGlass","MapPin","MathOperations","Medal","MedalMilitary","Megaphone","Microphone","Moon","Mountains","MusicNote","MusicNotes","Notebook","PaintBrush","PaintRoller","Palette","PawPrint","Pen","Pencil","PencilSimple","PersonArmsSpread","PersonSimpleBike","PersonSimpleHike","PersonSimpleRun","PersonSimpleSki","PersonSimpleWalk","PianoKeys","PicnicTable","PiggyBank","Pill","Pizza","Plant","Plugs","Popsicle","PottedPlant","Presentation","PuzzlePiece","Rabbit","Rainbow","Robot","Rocket","RocketLaunch","Ruler","Scales","Scissors","Scooter","Seal","SealCheck","Shapes","ShareNetwork","ShieldCheck","ShieldStar","Shrimp","SketchLogo","Skull","Smiley","SmileyWink","Snowflake","SoccerBall","Sparkle","SpeakerHigh","Star","StarFour","Student","Sun","SunHorizon","SwimmingPool","Sword","Tag","Target","TennisBall","Tent","Terminal","TerminalWindow","TestTube","ThumbsUp","Timer","Toolbox","Tractor","Translate","Tree","TrendUp","Trophy","UserCircle","Users","VideoCamera","Wallet","Waves","Wrench","X","YinYang"]);
+const CANDIDATES = new Set(["Ranking","HandsClapping","Diamond","Crosshair","Sword","Anchor","Lighthouse","PersonSimpleSki","PersonSimpleHike","PersonArmsSpread","HandsPraying","Eye","EyeClosed","MaskHappy","MaskSad","Cookie","Pizza","Hamburger","Carrot","ForkKnife","Egg","Bread","IceCream","Coffee","Hamburger","Hammer","Toolbox","Ruler","Briefcase","Bandaids","Clock","ClockCountdown","ClockClockwise","Timer","Hourglass","CalendarCheck","ListChecks","CheckSquare","Checks","ArrowsClockwise","ArrowClockwise","Repeat","Infinity","Recycle","SmileyMeh","SmileySad","SmileyXEyes","SmileyNervous","SmileySticker","Headphones","SpeakerHigh","PuzzlePiece","Campfire","Ladder","Tag","Bookmark","BookmarkSimple","HeartStraight"]);
+
+      // ---- Helpers ----
+      function toKebab(name) {
+        return name
+          .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
+          .replace(/([A-Z])([A-Z][a-z])/g, "$1-$2")
+          .toLowerCase();
+      }
+
+      function classify(name) {
+        if (IN_APP.has(name)) return "in-app";
+        if (CANDIDATES.has(name)) return "candidate";
+        return "new";
+      }
+
+      // ---- State ----
+      const LS_KEY = "rd-icon-explorer.selected.v1";
+      const selected = new Set(JSON.parse(localStorage.getItem(LS_KEY) || "[]"));
+      let filter = "all";
+      let weight = "regular";
+      let search = "";
+
+      function persist() {
+        localStorage.setItem(LS_KEY, JSON.stringify([...selected]));
+      }
+
+      // ---- Rendering ----
+      const grid = document.getElementById("grid");
+      const tileMap = new Map(); // name -> element
+
+      function weightClass() {
+        if (weight === "bold") return "ph-bold";
+        if (weight === "duotone") return "ph-duotone";
+        return "ph";
+      }
+
+      function buildGrid() {
+        grid.innerHTML = "";
+        tileMap.clear();
+        const wc = weightClass();
+        for (const name of ALL_ICONS) {
+          const kind = classify(name);
+          const tile = document.createElement("div");
+          tile.className = "tile " + kind;
+          tile.dataset.name = name;
+          tile.dataset.kind = kind;
+          tile.dataset.nameLower = name.toLowerCase();
+          tile.title = name;
+          tile.innerHTML = `
+            <i class="${wc} ph-${toKebab(name)}"></i>
+            <div class="name">${name}</div>
+            ${kind !== "new" ? `<span class="tag">${kind === "in-app" ? "in app" : "suggest"}</span>` : ""}
+          `;
+          tile.addEventListener("click", () => toggle(name));
+          if (selected.has(name)) tile.classList.add("selected");
+          tileMap.set(name, tile);
+          grid.appendChild(tile);
+        }
+        applyFilter();
+        updateSelectedBar();
+        updateStats();
+      }
+
+      function applyFilter() {
+        const s = search.trim().toLowerCase();
+        let shown = 0;
+        for (const [name, tile] of tileMap) {
+          const kind = tile.dataset.kind;
+          const isSelected = selected.has(name);
+          let pass = true;
+          if (filter === "new" && kind !== "new") pass = false;
+          if (filter === "candidate" && kind !== "candidate") pass = false;
+          if (filter === "in-app" && kind !== "in-app") pass = false;
+          if (filter === "selected" && !isSelected) pass = false;
+          if (s && !tile.dataset.nameLower.includes(s)) pass = false;
+          tile.style.display = pass ? "" : "none";
+          if (pass) shown++;
+        }
+        let empty = document.querySelector(".empty");
+        if (shown === 0) {
+          if (!empty) {
+            empty = document.createElement("div");
+            empty.className = "empty";
+            empty.textContent = "No icons match.";
+            grid.appendChild(empty);
+          }
+        } else if (empty) {
+          empty.remove();
+        }
+      }
+
+      function toggle(name) {
+        if (IN_APP.has(name)) return; // Already in app — nothing to do
+        if (selected.has(name)) selected.delete(name);
+        else selected.add(name);
+        const tile = tileMap.get(name);
+        tile.classList.toggle("selected", selected.has(name));
+        persist();
+        updateSelectedBar();
+      }
+
+      function updateSelectedBar() {
+        const chips = document.getElementById("selected-chips");
+        const label = document.querySelector(".selected-bar .label");
+        const exportBtn = document.getElementById("export-btn");
+        const clearBtn = document.getElementById("clear-btn");
+        chips.innerHTML = "";
+        for (const name of [...selected].sort()) {
+          const c = document.createElement("span");
+          c.className = "name-chip";
+          c.textContent = name;
+          c.title = "Click to remove";
+          c.addEventListener("click", () => toggle(name));
+          chips.appendChild(c);
+        }
+        label.textContent = `Selected to add (${selected.size}):`;
+        exportBtn.disabled = selected.size === 0;
+        clearBtn.disabled = selected.size === 0;
+      }
+
+      function updateStats() {
+        document.getElementById("stat-total").textContent = ALL_ICONS.length;
+        document.getElementById("stat-in-app").textContent = IN_APP.size;
+        document.getElementById("stat-candidate").textContent = CANDIDATES.size;
+      }
+
+      // ---- Wire up controls ----
+      document.getElementById("search").addEventListener("input", (e) => {
+        search = e.target.value;
+        applyFilter();
+      });
+      document.getElementById("filter").addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-filter]");
+        if (!btn) return;
+        filter = btn.dataset.filter;
+        document
+          .querySelectorAll("#filter .chip")
+          .forEach((c) => c.classList.toggle("active", c === btn));
+        applyFilter();
+      });
+      document.getElementById("weight").addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-weight]");
+        if (!btn) return;
+        weight = btn.dataset.weight;
+        document
+          .querySelectorAll("#weight .chip")
+          .forEach((c) => c.classList.toggle("active", c === btn));
+        const wc = weightClass();
+        for (const tile of tileMap.values()) {
+          const i = tile.querySelector("i");
+          i.className = `${wc} ph-${toKebab(tile.dataset.name)}`;
+        }
+      });
+      document.getElementById("clear-btn").addEventListener("click", () => {
+        selected.clear();
+        persist();
+        for (const t of tileMap.values()) t.classList.remove("selected");
+        updateSelectedBar();
+        if (filter === "selected") applyFilter();
+      });
+
+      // ---- Export ----
+      const dialog = document.getElementById("export-dialog");
+      const exportContent = document.getElementById("export-content");
+
+      // phosphor-react-native exports some icons under aliased names because
+      // the bare name clashes with a JS global. Map local-registry name -> the
+      // actual export name in the package.
+      const EXPORT_ALIASES = { Infinity: "InfinityIcon" };
+      function importLineFor(name) {
+        const exportName = EXPORT_ALIASES[name];
+        return exportName ? `${exportName} as ${name}` : name;
+      }
+      function mockNameFor(name) {
+        return EXPORT_ALIASES[name] ?? name;
+      }
+
+      function buildSnippet() {
+        const names = [...selected].sort();
+        const importBlock = names.map(importLineFor).join(",\n  ");
+        const registryBlock = names.join(",\n  ");
+        const indexEntries = names
+          .map((n) => {
+            const words = n
+              .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+              .toLowerCase()
+              .split(" ");
+            const kw = JSON.stringify([
+              ...new Set([n.toLowerCase(), ...words]),
+            ]);
+            return `  {
+    name: "${n}",
+    keywords: ${kw},
+    categories: ["achievement"], // TODO: adjust
+  },`;
+          })
+          .join("\n");
+        return `// 1) src/badges/iconRegistry.ts — add to phosphor-react-native imports:
+import {
+  ${importBlock},
+} from "phosphor-react-native";
+
+// 2) src/badges/iconRegistry.ts — add to ICON_REGISTRY object:
+  ${registryBlock},
+
+// 3) src/badges/iconIndex.ts — add to CURATED_ICONS array (review categories!):
+${indexEntries}
+
+// 4) src/badges/__tests__/IconPicker.test.tsx — add to iconNames mock array:
+  ${names.map((n) => `"${mockNameFor(n)}"`).join(",\n  ")},
+`;
+      }
+
+      document.getElementById("export-btn").addEventListener("click", () => {
+        exportContent.textContent = buildSnippet();
+        dialog.showModal();
+      });
+      document.getElementById("close-btn").addEventListener("click", () =>
+        dialog.close(),
+      );
+      document.getElementById("copy-btn").addEventListener("click", async () => {
+        await navigator.clipboard.writeText(exportContent.textContent);
+        const btn = document.getElementById("copy-btn");
+        const t = btn.textContent;
+        btn.textContent = "Copied!";
+        setTimeout(() => (btn.textContent = t), 1200);
+      });
+
+      // ---- Init ----
+      buildGrid();
+    </script>
+  </body>
+</html>

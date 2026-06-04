@@ -136,7 +136,7 @@ export function GoalsScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader title={t("header.title")} />
+      <ScreenHeader title={t("title")} />
       <View style={[styles.scrollContent, tabInset]}>
         <ErrorBoundary>
           <Suspense

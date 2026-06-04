@@ -6,12 +6,10 @@ import React, {
   useState,
 } from "react";
 import { View, TextInput, ActivityIndicator, Alert } from "react-native";
-import {
-  KeyboardProvider,
-  KeyboardAwareScrollView,
-} from "react-native-keyboard-controller";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import { useQuery } from "@evolu/react";
+import { useTranslation } from "react-i18next";
 import { useUnistyles } from "react-native-unistyles";
 import { Text } from "../../components/Text";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
@@ -56,6 +54,7 @@ function EditContent({
 }) {
   const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
   const { theme } = useUnistyles();
+  const { t } = useTranslation("editGoal");
   const tabInset = useTabScreenContentInset();
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
@@ -82,7 +81,7 @@ function EditContent({
       titleTimer.current = setTimeout(() => {
         const trimmed = newTitle.trim();
         if (!trimmed) {
-          setTitleError("Title cannot be empty");
+          setTitleError(t("errors.titleRequired"));
           return;
         }
         setTitleError("");
@@ -95,11 +94,11 @@ function EditContent({
             error,
           });
           reportError(error, { area: "goal.mutate", kind: "update" });
-          setTitleError("Failed to update title");
+          setTitleError(t("errors.updateTitleFailed"));
         }
       }, DEBOUNCE_MS);
     },
-    [goalId],
+    [goalId, t],
   );
 
   const debouncedUpdateDescription = useCallback(
@@ -115,17 +114,20 @@ function EditContent({
             error,
           });
           reportError(error, { area: "goal.mutate", kind: "update" });
-          Alert.alert("Error", "Failed to update description.");
+          Alert.alert(
+            t("errors.alertErrorTitle"),
+            t("errors.updateDescriptionMessage"),
+          );
         }
       }, DEBOUNCE_MS);
     },
-    [goalId],
+    [goalId, t],
   );
 
   if (!goal) {
     return (
       <View style={styles.centered}>
-        <Text variant="body">Goal not found.</Text>
+        <Text variant="body">{t("errors.goalNotFound")}</Text>
       </View>
     );
   }
@@ -157,7 +159,7 @@ function EditContent({
         error,
       });
       reportError(error, { area: "step.mutate", kind: "update" });
-      Alert.alert("Error", "Could not update step.");
+      Alert.alert(t("errors.alertErrorTitle"), t("errors.updateStepMessage"));
     }
   }
 
@@ -172,7 +174,7 @@ function EditContent({
         error,
       });
       reportError(error, { area: "step.mutate", kind: "delete" });
-      Alert.alert("Error", "Could not delete step.");
+      Alert.alert(t("errors.alertErrorTitle"), t("errors.deleteStepMessage"));
     }
   }
 
@@ -198,7 +200,7 @@ function EditContent({
         error,
       });
       reportError(error, { area: "step.mutate", kind: "create" });
-      Alert.alert("Error", "Could not create step.");
+      Alert.alert(t("errors.alertErrorTitle"), t("errors.createStepMessage"));
     }
   }
 
@@ -211,7 +213,7 @@ function EditContent({
         error,
       });
       reportError(error, { area: "step.mutate", kind: "reorder" });
-      Alert.alert("Error", "Could not reorder steps.");
+      Alert.alert(t("errors.alertErrorTitle"), t("errors.reorderStepsMessage"));
     }
   }
 
@@ -227,10 +229,7 @@ function EditContent({
       });
       reportError(error, { area: "goal.mutate", kind: "delete" });
       setShowDeleteGoalModal(false);
-      Alert.alert(
-        "Could not delete goal",
-        "Something went wrong. Please try again.",
-      );
+      Alert.alert(t("errors.deleteGoalTitle"), t("errors.deleteGoalMessage"));
     }
   }
 
@@ -241,7 +240,7 @@ function EditContent({
   const canDelete = stepRows.length > 1;
 
   return (
-    <KeyboardProvider>
+    <>
       <KeyboardAwareScrollView
         contentContainerStyle={[styles.scrollContent, tabInset]}
         bottomOffset={40}
@@ -250,7 +249,7 @@ function EditContent({
         {/* Title */}
         <View style={styles.section}>
           <Text variant="label" style={styles.label}>
-            Goal Title
+            {t("fields.title.label")}
           </Text>
           <TextInput
             style={[
@@ -259,10 +258,10 @@ function EditContent({
             ]}
             value={title}
             onChangeText={handleTitleChange}
-            placeholder="Goal title"
+            placeholder={t("fields.title.placeholder")}
             placeholderTextColor={theme.colors.textMuted}
-            accessibilityLabel="Goal title"
-            accessibilityHint="Edit the goal title"
+            accessibilityLabel={t("fields.title.a11yLabel")}
+            accessibilityHint={t("fields.title.a11yHint")}
             returnKeyType="next"
           />
           {titleError ? (
@@ -275,17 +274,17 @@ function EditContent({
         {/* Description */}
         <View style={styles.section}>
           <Text variant="label" style={styles.label}>
-            Description
+            {t("fields.description.label")}
           </Text>
           <TextInput
             style={styles.descriptionInput}
             value={description}
             onChangeText={handleDescriptionChange}
-            placeholder="Add a description..."
+            placeholder={t("fields.description.placeholder")}
             placeholderTextColor={theme.colors.textMuted}
             multiline
-            accessibilityLabel="Goal description"
-            accessibilityHint="Edit the goal description"
+            accessibilityLabel={t("fields.description.a11yLabel")}
+            accessibilityHint={t("fields.description.a11yHint")}
           />
         </View>
 
@@ -309,7 +308,11 @@ function EditContent({
         {/* Navigate button */}
         <View style={styles.buttonSection}>
           <Button
-            label={cameFromFocus ? "Back to Focus" : "Start Working"}
+            label={
+              cameFromFocus
+                ? t("actions.backToFocus")
+                : t("actions.startWorking")
+            }
             onPress={handleNavigate}
             testID={cameFromFocus ? "back-to-focus" : "start-working"}
           />
@@ -318,7 +321,7 @@ function EditContent({
         {/* Delete goal */}
         <View style={styles.buttonSection}>
           <Button
-            label="Delete Goal"
+            label={t("actions.deleteGoal")}
             variant="destructive"
             onPress={() => setShowDeleteGoalModal(true)}
           />
@@ -328,21 +331,22 @@ function EditContent({
         visible={showDeleteGoalModal}
         onCancel={() => setShowDeleteGoalModal(false)}
         onConfirm={handleDeleteGoal}
-        title="Delete this goal?"
-        message={`"${goal.title}" and all progress will be permanently deleted.`}
+        title={t("confirmDelete.title")}
+        message={t("confirmDelete.message", { title: goal.title })}
       />
-    </KeyboardProvider>
+    </>
   );
 }
 
 export function EditModeScreen({ route }: EditModeScreenProps) {
   const navigation = useNavigation();
   const { theme } = useUnistyles();
+  const { t } = useTranslation("editGoal");
   const { goalId, cameFromFocus = false } = route.params;
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <ScreenSubHeader label="Edit Goal" onBack={() => navigation.goBack()} />
+      <ScreenSubHeader label={t("title")} onBack={() => navigation.goBack()} />
       <ErrorBoundary>
         <Suspense
           fallback={

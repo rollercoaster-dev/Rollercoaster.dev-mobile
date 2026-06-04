@@ -15,11 +15,7 @@
     "title": "Discard video?",
     "message": "You have an unsaved video. Going back will discard it.",
     "keep": "Keep",
-    "discard": "Discard"
-  },
-  "permission": {
-    "libraryTitle": "Photo library access needed",
-    "libraryMessage": "Please allow photo library access in your device settings to select videos."
+    "confirmLabel": "Discard"
   },
   "errors": {
     "saveFailedTitle": "Save Failed",
@@ -27,9 +23,6 @@
   },
   "recorder": {
     "loading": "Loading...",
-    "permissionTitle": "Camera Access Needed",
-    "permissionBody": "To record video evidence, this app needs access to your camera and microphone.",
-    "grantAccess": "Grant Access",
     "recordedVideoNoun": "Recorded video",
     "selectedVideoNoun": "Selected video",
     "countdown": "{{seconds}}s remaining",

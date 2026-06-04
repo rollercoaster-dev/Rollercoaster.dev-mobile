@@ -34,6 +34,7 @@ jobs:
     uses: ./.github/workflows/_release-validate.yml
     with:
       ref: ${{ inputs.ref || github.event.release.tag_name || github.ref }}
+      lint-release-notes: true
 
   build-ios:
     needs: validate
@@ -64,6 +65,25 @@ jobs:
         run: bun install --frozen-lockfile
         working-directory: .
 
+      # Generate TestFlight "What to Test" + App Store store.config.json from
+      # apps/native-rd/docs/release/testing-notes/<version>.md (scaffolded by
+      # release-please.yml, edited by humans, gated by release-notes:lint in
+      # _release-validate.yml). Missing notes file falls back to a copy of
+      # store.config.base.json so eas submit's metadataPath remains valid.
+      - name: Generate release-notes artifacts
+        run: |
+          set -euo pipefail
+          VERSION="$(jq -r .version package.json)"
+          NOTES="docs/release/testing-notes/${VERSION}.md"
+          mkdir -p .release-artifacts
+          if [ ! -f "$NOTES" ]; then
+            echo "::warning::No testing notes at $NOTES — TestFlight What-to-Test will be empty and store metadata will fall back to store.config.base.json."
+            printf '' > .release-artifacts/what-to-test.txt
+            cp store.config.base.json store.config.json
+            exit 0
+          fi
+          bun run release-notes:split
+
       - name: Build (EAS, production profile, iOS)
         id: build
         env:
@@ -72,8 +92,17 @@ jobs:
         run: |
           # Write JSON outside the repo: `cmd > file` opens the file before
           # eas-cli runs, and eas-cli aborts on a dirty working tree.
+          set -euo pipefail
           out="$RUNNER_TEMP/eas-build-ios.json"
-          npx eas-cli@latest build --profile production --platform ios --non-interactive --json > "$out"
+          args=(eas-cli@latest build --profile production --platform ios --non-interactive --json)
+          # --what-to-test is stored on the EAS build record and consumed by
+          # `eas submit --id <build_id>` when it creates the App Store Connect
+          # submission. Only pass it when the file has content — passing an
+          # empty string would overwrite TestFlight notes with blank.
+          if [ -s .release-artifacts/what-to-test.txt ]; then
+            args+=(--what-to-test "$(cat .release-artifacts/what-to-test.txt)")
+          fi
+          npx "${args[@]}" > "$out"
           build_id="$(jq -r 'if type == "array" then .[0].id else .id end' "$out")"
           test -n "$build_id" && test "$build_id" != "null"
           echo "build_id=$build_id" >> "$GITHUB_OUTPUT"
@@ -167,6 +196,23 @@ jobs:
           printf '%s\n' "$ANDROID_PLAY_SA" > ../../secrets/play-service-account.json
           chmod 600 ../../secrets/asc-api-key.p8 ../../secrets/play-service-account.json
 
+      # Regenerate store.config.json from this version's testing-notes file
+      # so the iOS submit profile's metadataPath (./store.config.json in
+      # eas.json) resolves. Same logic as the build-ios prepare step — kept
+      # local because jobs don't share filesystem state.
+      - name: Generate release-notes artifacts
+        run: |
+          set -euo pipefail
+          VERSION="$(jq -r .version package.json)"
+          NOTES="docs/release/testing-notes/${VERSION}.md"
+          mkdir -p .release-artifacts
+          if [ ! -f "$NOTES" ]; then
+            echo "::warning::No testing notes at $NOTES — store metadata falls back to store.config.base.json."
+            cp store.config.base.json store.config.json
+            exit 0
+          fi
+          bun run release-notes:split
+
       - name: Submit (EAS, production profile, iOS)
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
@@ -222,6 +268,8 @@ jobs:
 
   finalize-sentry:
     needs:
+      - build-ios
+      - build-android
       - submit-ios
       - submit-android
     if: ${{ always() && !cancelled() && !contains(needs.*.result, 'failure') && (needs.submit-ios.result == 'success' || needs.submit-android.result == 'success') }}
@@ -244,16 +292,53 @@ jobs:
         run: bun install --frozen-lockfile
         working-directory: .
 
-      - name: Read version
-        id: version
-        run: echo "value=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
-
-      - name: Finalize Sentry release
+      # The Sentry React Native SDK names releases <bundleId>@<version>+<buildNumber>
+      # and creates them lazily on the first runtime event — so right after submit the
+      # release usually does not exist yet, and a bare "<version>" never matches. The
+      # iOS buildNumber and Android versionCode also differ, so there is no single name.
+      # Resolve each shipped build's real version + buildNumber from its EAS build record
+      # and create-or-finalize the correctly-named release per platform. `releases new`
+      # is idempotent; identical names (when build numbers are in sync) are deduped so we
+      # don't emit duplicate deploy markers.
+      #
+      # Note: this only writes the release + deploy marker. Symbolication depends on
+      # build-time sourcemap upload, which is tracked separately.
+      - name: Finalize Sentry releases
         env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: rollercoasterdev
           SENTRY_PROJECT: native-rd
-          RELEASE_VERSION: ${{ steps.version.outputs.value }}
+          IOS_BUILD_ID: ${{ needs.build-ios.outputs.build_id }}
+          ANDROID_BUILD_ID: ${{ needs.build-android.outputs.build_id }}
         run: |
-          npx --yes @sentry/cli@latest releases finalize "$RELEASE_VERSION"
-          npx --yes @sentry/cli@latest releases deploys "$RELEASE_VERSION" new --env production
+          set -euo pipefail
+          IOS_BUNDLE_ID="$(jq -r '.expo.ios.bundleIdentifier' app.json)"
+          ANDROID_BUNDLE_ID="$(jq -r '.expo.android.package' app.json)"
+          finalized=""
+
+          finalize() {
+            local build_id="$1" bundle_id="$2" info ver num rel
+            if [ -z "$build_id" ] || [ "$build_id" = "null" ]; then
+              echo "No build id for $bundle_id — skipping (platform not built this run)."
+              return 0
+            fi
+            info="$(npx --yes eas-cli@latest build:view "$build_id" --json)"
+            ver="$(echo "$info" | jq -r '.appVersion')"
+            num="$(echo "$info" | jq -r '.appBuildVersion')"
+            rel="${bundle_id}@${ver}+${num}"
+            case " $finalized " in
+              *" $rel "*)
+                echo "Already finalized $rel — skipping duplicate."
+                return 0
+                ;;
+            esac
+            finalized="$finalized $rel"
+            echo "Finalizing Sentry release: $rel"
+            npx --yes @sentry/cli@latest releases new "$rel"
+            npx --yes @sentry/cli@latest releases finalize "$rel"
+            npx --yes @sentry/cli@latest releases deploys "$rel" new --env production
+          }
+
+          finalize "${IOS_BUILD_ID:-}" "$IOS_BUNDLE_ID"
+          finalize "${ANDROID_BUILD_ID:-}" "$ANDROID_BUNDLE_ID"

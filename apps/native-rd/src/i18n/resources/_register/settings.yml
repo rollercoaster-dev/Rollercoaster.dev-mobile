@@ -1,0 +1,18 @@
+# settings — ND adult configuring the app. Matter-of-fact.
+
+speaker: app, neutral
+audience: ND adult configuring
+formality: informal-neutral
+banned_phrasings:
+  - Konfiguration
+  - Präferenzen verwalten
+  - personalisiere dein Erlebnis
+  - leverage
+  - Synergien
+  - optimieren Sie Ihre Erfahrung
+  - Großartig!
+  - besonders
+  - leidet an
+notes:
+  - Plain UI labels. "Einstellungen" not "Konfigurationsoberfläche".
+  - Concrete verbs ("ändern", "speichern") over abstract ("verwalten", "konfigurieren").

@@ -86,7 +86,7 @@ describe("VoiceMemoScreen", () => {
 
     it("shows timer at 00:00", () => {
       renderScreen();
-      expect(screen.getByText("00:00")).toBeOnTheScreen();
+      expect(screen.getByTestId("voice-timer")).toHaveTextContent("00:00");
     });
 
     it("shows start recording hint", () => {
@@ -124,7 +124,7 @@ describe("VoiceMemoScreen", () => {
 
     it("shows formatted duration", () => {
       renderScreen();
-      expect(screen.getByText("00:03")).toBeOnTheScreen();
+      expect(screen.getByTestId("voice-timer")).toHaveTextContent("00:03");
     });
 
     it("shows stop recording button", () => {
@@ -179,7 +179,7 @@ describe("VoiceMemoScreen", () => {
 
     it("shows duration", () => {
       renderScreen();
-      expect(screen.getByText("00:10")).toBeOnTheScreen();
+      expect(screen.getByTestId("voice-timer")).toHaveTextContent("00:10");
     });
 
     it("shows play button", () => {
@@ -269,14 +269,14 @@ describe("VoiceMemoScreen", () => {
     it("shows permission denied heading", () => {
       renderScreen();
       expect(
-        screen.getByText(i18n.t("captureVoice:permission.heading")),
+        screen.getByText(i18n.t("permissions:microphone.title")),
       ).toBeOnTheScreen();
     });
 
     it("shows open settings button", () => {
       renderScreen();
       expect(
-        screen.getByText(i18n.t("captureVoice:actions.openSettings")),
+        screen.getByText(i18n.t("permissions:microphone.settingsCta")),
       ).toBeOnTheScreen();
     });
 
@@ -340,13 +340,13 @@ describe("VoiceMemoScreen", () => {
     it("formats seconds correctly", () => {
       mockDurationMs = 65000; // 1:05
       renderScreen();
-      expect(screen.getByText("01:05")).toBeOnTheScreen();
+      expect(screen.getByTestId("voice-timer")).toHaveTextContent("01:05");
     });
 
     it("formats zero correctly", () => {
       mockDurationMs = 0;
       renderScreen();
-      expect(screen.getByText("00:00")).toBeOnTheScreen();
+      expect(screen.getByTestId("voice-timer")).toHaveTextContent("00:00");
     });
   });
 });

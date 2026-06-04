@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["jest", "bun"]
+  },
+  "include": ["scripts/**/__tests__/**/*.ts"],
+  "exclude": []
+}

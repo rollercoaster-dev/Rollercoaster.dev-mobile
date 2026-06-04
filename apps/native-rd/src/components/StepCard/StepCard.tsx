@@ -77,9 +77,9 @@ export function StepCard({
   onEvidenceTap,
   onQuickEvidence,
 }: StepCardProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation("common");
   const isCompleted = step.status === "completed";
-  const evidenceLabel = formatEvidenceLabel(step.evidenceCount);
+  const evidenceLabel = formatEvidenceLabel(t, step.evidenceCount);
   const flashStyle = useFlashOnIncrease(step.evidenceCount);
 
   const plannedTypes = step.plannedEvidenceTypes ?? null;

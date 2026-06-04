@@ -1,7 +1,11 @@
 import { useMemo } from "react";
 import { StatusBar } from "expo-status-bar";
 import { View } from "react-native";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import {
   NavigationContainer,
   DefaultTheme,
@@ -39,6 +43,7 @@ function ThemedApp() {
   const { theme, isDark } = themeContext;
   const { isFirstLaunch, markSeen } = useFirstLaunch();
   const { setTheme: persistingSetTheme } = useThemePersistence();
+  const insets = useSafeAreaInsets();
   useDensity(); // Apply saved density to all themes on mount
   useAnimationPref(); // Initialize OS reduceMotion listener
 
@@ -71,14 +76,28 @@ function ThemedApp() {
     // First launch — show WelcomeScreen above NavigationContainer
     body = <WelcomeScreen onGetStarted={markSeen} />;
   } else {
+    // Outer view paints accentPurple; the inner view offsets the
+    // navigator by the top inset and paints the regular background.
+    // The exposed strip above the inner view = the device top inset,
+    // tinted purple to match HeaderBand. This keeps the inset painter
+    // strictly behind navigation content, so a screen with its own
+    // top inset (e.g. a fullScreen modal) can fully cover it.
     body = (
-      <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <View style={{ flex: 1, backgroundColor: theme.colors.accentPurple }}>
         <StatusBar style={isDark ? "light" : "dark"} />
-        <NavigationContainer theme={navTheme}>
-          <ToastProvider>
-            <TabNavigator />
-          </ToastProvider>
-        </NavigationContainer>
+        <View
+          style={{
+            flex: 1,
+            marginTop: insets.top,
+            backgroundColor: theme.colors.background,
+          }}
+        >
+          <NavigationContainer theme={navTheme}>
+            <ToastProvider>
+              <TabNavigator />
+            </ToastProvider>
+          </NavigationContainer>
+        </View>
       </View>
     );
   }
@@ -106,7 +125,9 @@ export function App() {
     <ThemeProvider value={themeState}>
       <EvoluAppProvider>
         <SafeAreaProvider>
-          <ThemedApp />
+          <KeyboardProvider>
+            <ThemedApp />
+          </KeyboardProvider>
         </SafeAreaProvider>
       </EvoluAppProvider>
     </ThemeProvider>

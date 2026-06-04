@@ -40,9 +40,7 @@ describe("WelcomeScreen", () => {
 
     it("renders the body intro copy", () => {
       renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
-      expect(
-        screen.getByText(/rollercoaster\.dev is your personal goal tracker\./),
-      ).toBeOnTheScreen();
+      expect(screen.getByText(i18n.t("welcome:intro.body1"))).toBeOnTheScreen();
     });
 
     it("renders the picker label", () => {

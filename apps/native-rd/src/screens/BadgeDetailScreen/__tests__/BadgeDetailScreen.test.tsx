@@ -10,6 +10,10 @@ import { createDefaultBadgeDesign } from "../../../badges/types";
 
 const mockNavigate = jest.fn();
 const mockGoBack = jest.fn();
+const mockParentNavigate = jest.fn();
+// Controllable so individual tests can simulate "no tab parent" by calling
+// `mockGetParent.mockReturnValueOnce(undefined)`.
+const mockGetParent = jest.fn(() => ({ navigate: mockParentNavigate }));
 
 jest.mock("@react-navigation/native", () => {
   const actual = jest.requireActual("@react-navigation/native");
@@ -21,6 +25,7 @@ jest.mock("@react-navigation/native", () => {
       setOptions: jest.fn(),
       addListener: jest.fn(() => jest.fn()),
       canGoBack: jest.fn(() => true),
+      getParent: mockGetParent,
     }),
   };
 });
@@ -304,6 +309,246 @@ describe("BadgeDetailScreen", () => {
         '{"type":"VC"}',
         "Learn TypeScript",
       );
+    });
+  });
+
+  describe("how it was earned — evidence list", () => {
+    const credentialWith = (evidence: unknown[], narrative = "Did it.") =>
+      JSON.stringify({
+        credentialSubject: {
+          achievement: { criteria: { narrative } },
+        },
+        evidence,
+      });
+
+    it("renders each evidence item's name and translated type label", () => {
+      const credential = credentialWith([
+        {
+          id: "urn:ulid:ev-1",
+          type: ["Evidence"],
+          name: "Watch intro video",
+          genre: "video",
+        },
+        {
+          id: "urn:ulid:ev-2",
+          type: ["Evidence"],
+          name: "Build a small app",
+          genre: "photo",
+        },
+      ]);
+      mockUseQuery.mockReturnValue([makeRow({ credential })]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      expect(screen.getByText("Watch intro video")).toBeOnTheScreen();
+      expect(screen.getByText("Build a small app")).toBeOnTheScreen();
+      // Translated type labels come from common.json "evidenceTypes.<type>.label"
+      expect(screen.getByText("Video")).toBeOnTheScreen();
+      expect(screen.getByText("Photo")).toBeOnTheScreen();
+    });
+
+    it("exposes each row's accessibility label individually (parent must not flatten descendants)", () => {
+      // Regression: a previous version set `accessible` on the outer list
+      // View, which made React Native merge all rows into a single a11y node
+      // and prevented screen-reader users from focusing individual items.
+      const credential = credentialWith([
+        {
+          id: "urn:ulid:ev-1",
+          type: ["Evidence"],
+          name: "Watch intro video",
+          genre: "video",
+        },
+        {
+          id: "urn:ulid:ev-2",
+          type: ["Evidence"],
+          name: "Build a small app",
+          genre: "photo",
+        },
+      ]);
+      mockUseQuery.mockReturnValue([makeRow({ credential })]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      expect(
+        screen.getByLabelText("Watch intro video, submitted as Video"),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByLabelText("Build a small app, submitted as Photo"),
+      ).toBeOnTheScreen();
+    });
+
+    it("uses the singular plural form when exactly one evidence item is present", () => {
+      const credential = credentialWith([
+        {
+          id: "urn:ulid:ev-1",
+          type: ["Evidence"],
+          name: "Watch intro video",
+          genre: "video",
+        },
+      ]);
+      mockUseQuery.mockReturnValue([makeRow({ credential })]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      // Singular: "1 evidence item submitted", not "1 evidence items submitted".
+      expect(
+        screen.getByLabelText("1 evidence item submitted"),
+      ).toBeOnTheScreen();
+    });
+
+    it("labels unknown-genre rows with a generic 'evidence' type for screen readers", () => {
+      // Visually the type caption is dropped (verified above) — but a11y
+      // must still announce *something* so the row isn't read as a bare
+      // proper-noun-looking string.
+      const credential = credentialWith([
+        {
+          id: "urn:ulid:ev-1",
+          type: ["Evidence"],
+          name: "Mystery step",
+        },
+      ]);
+      mockUseQuery.mockReturnValue([makeRow({ credential })]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      expect(
+        screen.getByLabelText("Mystery step, submitted as evidence"),
+      ).toBeOnTheScreen();
+    });
+
+    it("renders the row but no type label when the credential's genre is missing or unknown", () => {
+      // An older / cross-version credential may omit `genre` entirely, or
+      // carry a type the local app doesn't know yet. Either way the row must
+      // still render the step name — we just drop the icon/label chrome.
+      const credential = credentialWith([
+        {
+          id: "urn:ulid:ev-1",
+          type: ["Evidence"],
+          name: "Mystery step",
+          // no genre
+        },
+        {
+          id: "urn:ulid:ev-2",
+          type: ["Evidence"],
+          name: "Future step",
+          genre: "hologram", // unknown to this app version
+        },
+      ]);
+      mockUseQuery.mockReturnValue([makeRow({ credential })]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      expect(screen.getByText("Mystery step")).toBeOnTheScreen();
+      expect(screen.getByText("Future step")).toBeOnTheScreen();
+      // No "File" fallback should sneak in — unknown genres become null,
+      // not coerced into the catch-all "file" type that validateEvidenceType
+      // uses on the capture path.
+      expect(screen.queryByText("File")).toBeNull();
+    });
+
+    it("hides the section entirely when the credential has no narrative and no evidence", () => {
+      const credential = JSON.stringify({
+        credentialSubject: { achievement: { criteria: {} } },
+      });
+      mockUseQuery.mockReturnValue([makeRow({ credential })]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      expect(screen.queryByText("How it was earned")).toBeNull();
+    });
+
+    it("shows the section with just the narrative when evidence is absent (older badges)", () => {
+      const credential = JSON.stringify({
+        credentialSubject: {
+          achievement: {
+            criteria: { narrative: "Finished the thing." },
+          },
+        },
+      });
+      mockUseQuery.mockReturnValue([makeRow({ credential })]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      expect(screen.getByText("How it was earned")).toBeOnTheScreen();
+      expect(screen.getByText("Finished the thing.")).toBeOnTheScreen();
+    });
+
+    it("skips malformed evidence entries (missing id or name)", () => {
+      const credential = credentialWith([
+        {
+          id: "urn:ulid:ev-1",
+          type: ["Evidence"],
+          name: "Good",
+          genre: "text",
+        },
+        { id: "urn:ulid:ev-2", type: ["Evidence"], genre: "photo" }, // no name
+        { type: ["Evidence"], name: "No id", genre: "video" }, // no id
+        null,
+        "not-an-object",
+      ]);
+      mockUseQuery.mockReturnValue([makeRow({ credential })]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      expect(screen.getByText("Good")).toBeOnTheScreen();
+      expect(screen.queryByText("No id")).toBeNull();
+    });
+  });
+
+  describe("view timeline", () => {
+    it("hides the button when the badge has no goalId (soft-deleted goal)", () => {
+      // badgeWithGoalQuery LEFT-JOINs on goal.isDeleted IS NULL, so a
+      // soft-deleted goal surfaces here as a null goalId even though
+      // badges.goalId itself is non-null in the schema.
+      mockUseQuery.mockReturnValue([makeRow({ goalId: null })]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      expect(screen.queryByLabelText("View timeline")).toBeNull();
+    });
+
+    it("hops to the Goals tab's TimelineJourney route with the badge's goalId", () => {
+      mockUseQuery.mockReturnValue([makeRow({ goalId: "goal-42" })]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      fireEvent.press(screen.getByLabelText("View timeline"));
+      expect(mockParentNavigate).toHaveBeenCalledWith("GoalsTab", {
+        screen: "TimelineJourney",
+        // originBadgeId lets TimelineJourney route its "back" affordances
+        // back to this screen instead of leaving the user on the Goals tab.
+        params: { goalId: "goal-42", originBadgeId: "badge-1" },
+      });
+    });
+
+    it("no-ops safely (no crash, no nav call) when the tab parent is unavailable", () => {
+      // If BadgeDetailScreen is ever hosted outside the bottom-tab navigator
+      // (deep link / modal host / Storybook), `getParent()` returns undefined.
+      // The handler must short-circuit rather than throw on `.navigate`.
+      // Cast: the default impl narrows the return type, but in production
+      // `getParent()` is explicitly typed `T | undefined` — this models that.
+      mockGetParent.mockReturnValueOnce(
+        undefined as unknown as ReturnType<typeof mockGetParent>,
+      );
+      mockUseQuery.mockReturnValue([makeRow({ goalId: "goal-42" })]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      expect(() =>
+        fireEvent.press(screen.getByLabelText("View timeline")),
+      ).not.toThrow();
+      expect(mockParentNavigate).not.toHaveBeenCalled();
     });
   });
 });

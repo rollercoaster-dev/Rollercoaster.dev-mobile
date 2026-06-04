@@ -13,3 +13,4 @@ Completed research documents. These informed ADRs but are not the decisions them
 | [badge-export.md](./badge-export.md)                                                 | OB 3.0 delivery formats, platform share mechanics, fix tiers | 2026-05-18    |
 | [sync-and-backend-architecture.md](./sync-and-backend-architecture.md)               | Badge visibility, what-leaves-device, tiers, self-hosting    | 2026-05-22    |
 | [step-model-gap.md](./step-model-gap.md)                                             | A–G taxonomy, three-register thesis, four failure scenarios  | 2026-05-22    |
+| [web-privacy-local-first.md](./web-privacy-local-first.md)                           | Web feasibility, privacy parity, local-first stack, scope    | 2026-05-25    |

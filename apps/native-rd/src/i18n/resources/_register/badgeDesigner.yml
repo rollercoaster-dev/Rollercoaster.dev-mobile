@@ -1,0 +1,29 @@
+# badgeDesigner — ND adult designing a badge.
+# Source JSON is currently {}; register authored ahead of content.
+
+speaker: app
+audience: ND adult
+formality: informal
+banned_phrasings:
+  - dein wunderschönes Design
+  - kreativ sein
+  - Design-Suite
+  - leverage
+  - Großartig!
+  - Super!
+  - besonders
+  - einzigartig
+  - leidet an
+  - Abzeichen
+  - Versuche es nochmal
+notes:
+  - Plain design language. "Farbe wählen" beats "Wähle eine Farbe, die zu dir passt".
+  - No corporate design jargon (no "Brand-Identität", no "Asset").
+  - The noun "badge" stays as the English loanword "Badge" / "Badges" to match
+    de/common.json (e.g. "Badge-Vorschau"). Do not translate to "Abzeichen".
+  - The screen title "Design Badge" is an imperative verb phrase ("design the
+    badge"), not a compound noun. Translate as "Badge entwerfen", not
+    "Design-Abzeichen".
+  - Retry copy uses "Versuche es erneut" to match every other de/ namespace
+    (capturePhoto, captureFile, captureVideo, captureVoice, captureLink,
+    captureText, focusMode). Not "Versuche es nochmal".

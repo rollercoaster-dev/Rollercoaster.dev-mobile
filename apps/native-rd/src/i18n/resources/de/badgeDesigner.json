@@ -1,0 +1,114 @@
+{
+  "title": "Badge entwerfen",
+  "sections": {
+    "shape": "Form",
+    "color": "Farbe",
+    "frame": "Rahmen",
+    "center": "Mitte",
+    "icon": "Symbol",
+    "bottomLabel": "Unten-Beschriftung",
+    "pathText": "Pfad-Text",
+    "banner": "Banner"
+  },
+  "actions": {
+    "save": "Design speichern",
+    "useThisDesign": "Dieses Design verwenden",
+    "skipDefault": "Überspringen — Standard verwenden",
+    "goBack": "Zurück"
+  },
+  "bottomLabel": {
+    "a11y": "Unten-Beschriftung",
+    "placeholder": "Optionale Beschriftung"
+  },
+  "preview": {
+    "a11y": "Badge-Vorschau: {{color}} {{shape}} {{frame}} Rahmen mit {{icon}} Symbol"
+  },
+  "errors": {
+    "saveFailedTitle": "Speichern fehlgeschlagen",
+    "captureFailedMessage": "Deine Design-Vorschau konnte nicht erfasst werden. Versuche es erneut.",
+    "saveFailedMessage": "Dein Badge-Design konnte nicht gespeichert werden. Versuche es erneut."
+  },
+  "fallback": {
+    "goalTitle": "Ohne Titel",
+    "badgeNotFound": "Badge nicht gefunden",
+    "invalidParams": "Ungültige Parameter für Badge-Designer"
+  },
+  "shape": {
+    "a11y": "Badge-Form",
+    "optionA11y": "{{label}} Form",
+    "options": {
+      "circle": "Kreis",
+      "shield": "Schild",
+      "hexagon": "Sechseck",
+      "roundedRect": "Abgerundetes Rechteck",
+      "star": "Stern",
+      "diamond": "Raute"
+    }
+  },
+  "color": {
+    "a11y": "Badge-Farbe",
+    "optionA11y": "{{label}} Farbe",
+    "options": {
+      "purple": "Lila",
+      "mint": "Mint",
+      "yellow": "Gelb",
+      "emerald": "Smaragd",
+      "teal": "Türkis",
+      "orange": "Orange",
+      "sky": "Himmel",
+      "goal": "Ziel"
+    }
+  },
+  "frame": {
+    "a11y": "Badge-Rahmen",
+    "optionA11y": "{{label}} Rahmen",
+    "options": {
+      "none": "Keine",
+      "boldBorder": "Fetter Rand",
+      "guilloche": "Guilloche",
+      "crossHatch": "Kreuzschraffur",
+      "microprint": "Mikrodruck",
+      "rosette": "Rosette"
+    }
+  },
+  "center": {
+    "a11y": "Badge-Mittenmodus",
+    "optionA11y": "{{label}} Mitte",
+    "options": {
+      "icon": "Symbol",
+      "monogram": "Monogramm"
+    },
+    "monogram": {
+      "a11y": "Monogramm-Text",
+      "placeholder": "ABC"
+    }
+  },
+  "pathText": {
+    "toggleA11y": "Pfad-Text aktivieren",
+    "topA11y": "Pfad-Text",
+    "bottomA11y": "Pfad-Text unten",
+    "positionA11y": "Pfad-Text Position",
+    "optionA11y": "{{label}} Position",
+    "positions": {
+      "top": "Oben",
+      "bottom": "Unten",
+      "both": "Beides"
+    },
+    "counter": {
+      "a11y": "{{label}}: {{count}} von {{max}} Zeichen verwendet",
+      "top": "Oben",
+      "bottom": "Unten"
+    }
+  },
+  "banner": {
+    "toggleA11y": "Banner aktivieren",
+    "textA11y": "Banner-Text",
+    "textPlaceholder": "BANNER-TEXT",
+    "positionA11y": "Banner-Position",
+    "optionA11y": "{{label}} Position",
+    "positions": {
+      "top": "Oben",
+      "bottom": "Unten"
+    }
+  }
+}

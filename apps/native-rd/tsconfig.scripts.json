@@ -4,5 +4,5 @@
     "types": ["bun"]
   },
   "include": ["scripts/**/*.ts"],
-  "exclude": []
+  "exclude": ["scripts/**/__tests__/**"]
 }

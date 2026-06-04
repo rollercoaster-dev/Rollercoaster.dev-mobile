@@ -2,6 +2,7 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { AccessibilityInfo, ActivityIndicator, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { Text } from "../../components/Text";
@@ -22,6 +23,7 @@ function ViewerContent({
   goalId: string;
   initialEvidenceId: string;
 }) {
+  const { t } = useTranslation("evidenceViewer");
   const evidence = useAllEvidenceForGoal(goalId as GoalId);
 
   const initialIndex = useMemo(() => {
@@ -43,20 +45,18 @@ function ViewerContent({
       evidence.length > 0
     ) {
       setActiveIndex(evidence.length - 1);
-      AccessibilityInfo.announceForAccessibility(
-        "Evidence was removed. Showing the next available item.",
-      );
+      AccessibilityInfo.announceForAccessibility(t("a11y.removedShowingNext"));
     } else if (evidence.length < prev && evidence.length === 0) {
-      AccessibilityInfo.announceForAccessibility("All evidence was removed.");
+      AccessibilityInfo.announceForAccessibility(t("a11y.allRemoved"));
     } else if (activeIndex >= evidence.length && evidence.length > 0) {
       setActiveIndex(evidence.length - 1);
     }
-  }, [evidence.length, activeIndex]);
+  }, [evidence.length, activeIndex, t]);
 
   if (evidence.length === 0) {
     return (
       <View style={styles.centered}>
-        <Text variant="body">No evidence to view.</Text>
+        <Text variant="body">{t("empty")}</Text>
       </View>
     );
   }
@@ -87,13 +87,14 @@ function ViewerContent({
 export function EvidenceViewerScreen({ route }: EvidenceViewerScreenProps) {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation("evidenceViewer");
   const { goalId, initialEvidenceId } = route.params;
 
   return (
     <View
       style={[styles.screen, { paddingBottom: TAB_BAR_HEIGHT + insets.bottom }]}
     >
-      <ScreenSubHeader label="Evidence" onBack={() => navigation.goBack()} />
+      <ScreenSubHeader label={t("title")} onBack={() => navigation.goBack()} />
       <ErrorBoundary>
         <Suspense
           fallback={

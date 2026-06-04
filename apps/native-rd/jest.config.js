@@ -63,6 +63,7 @@ module.exports = {
     "^expo-video$": "<rootDir>/src/__tests__/mocks/expo-video.ts",
     "^expo-secure-store$": "<rootDir>/src/__tests__/mocks/expo-secure-store.ts",
     "^expo-localization$": "<rootDir>/src/__tests__/mocks/expo-localization.ts",
+    "^expo-application$": "<rootDir>/src/__tests__/mocks/expo-application.ts",
 
     // Navigation — native stack navigator
     "^@react-navigation/native$": "<rootDir>/src/__tests__/mocks/navigation.ts",
@@ -99,6 +100,10 @@ module.exports = {
     "./src/i18n/index.ts",
   ],
 
-  // Tests colocated under src/__tests__/ mirroring the src/ directory structure
-  testMatch: ["**/src/**/__tests__/**/*.test.{ts,tsx}"],
+  // Tests colocated under src/__tests__/ mirroring the src/ directory structure,
+  // plus pure script tests under scripts/**/__tests__/ (no RN globals needed).
+  testMatch: [
+    "**/src/**/__tests__/**/*.test.{ts,tsx}",
+    "**/scripts/**/__tests__/**/*.test.ts",
+  ],
 };

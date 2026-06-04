@@ -23,6 +23,12 @@ describe("i18n bootstrap", () => {
     await i18n.changeLanguage("en");
   });
 
+  test("changeLanguage to de does not throw with empty resources", async () => {
+    await expect(i18n.changeLanguage("de")).resolves.toBeDefined();
+    expect(i18n.language).toBe("de");
+    await i18n.changeLanguage("en");
+  });
+
   test("accepts regional tags via nonExplicitSupportedLngs", async () => {
     // With nonExplicitSupportedLngs: true, changeLanguage("en-GB") must not
     // reject as an unsupported language. We don't pin resolvedLanguage here —
@@ -32,9 +38,10 @@ describe("i18n bootstrap", () => {
     await i18n.changeLanguage("en");
   });
 
-  test("every declared namespace is registered for en and pseudo", () => {
+  test("every declared namespace is registered for en, de, and pseudo", () => {
     for (const ns of NAMESPACES) {
       expect(i18n.hasResourceBundle("en", ns)).toBe(true);
+      expect(i18n.hasResourceBundle("de", ns)).toBe(true);
       expect(i18n.hasResourceBundle("pseudo", ns)).toBe(true);
     }
   });

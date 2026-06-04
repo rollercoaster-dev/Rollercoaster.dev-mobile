@@ -6,6 +6,7 @@ import {
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
+import { i18n } from "../../../i18n";
 import { EditModeScreen } from "../EditModeScreen";
 
 // --- Mocks ---
@@ -167,31 +168,35 @@ describe("EditModeScreen", () => {
     it("renders step count", () => {
       setupQueries();
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
-      expect(screen.getByText("3 steps")).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("editGoal:stepList.count_other", { count: 3 })),
+      ).toBeOnTheScreen();
     });
 
     it('renders "Start Working" when cameFromFocus is false', () => {
       setupQueries();
       renderWithProviders(<EditModeScreen {...makeRouteProps(false)} />);
-      expect(screen.getByText("Start Working")).toBeOnTheScreen();
+      expect(screen.getByTestId("start-working")).toBeOnTheScreen();
     });
 
     it('renders "Back to Focus" when cameFromFocus is true', () => {
       setupQueries();
       renderWithProviders(<EditModeScreen {...makeRouteProps(true)} />);
-      expect(screen.getByText("Back to Focus")).toBeOnTheScreen();
+      expect(screen.getByTestId("back-to-focus")).toBeOnTheScreen();
     });
 
     it('shows "Goal not found." when goal does not exist', () => {
       setupQueries(null, []);
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
-      expect(screen.getByText("Goal not found.")).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("editGoal:errors.goalNotFound")),
+      ).toBeOnTheScreen();
     });
 
     it('renders "Edit Goal" header', () => {
       setupQueries();
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
-      expect(screen.getByText("Edit Goal")).toBeOnTheScreen();
+      expect(screen.getByText(i18n.t("editGoal:title"))).toBeOnTheScreen();
     });
   });
 
@@ -222,7 +227,9 @@ describe("EditModeScreen", () => {
       await act(async () => {
         jest.advanceTimersByTime(500);
       });
-      expect(screen.getByText("Title cannot be empty")).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("editGoal:errors.titleRequired")),
+      ).toBeOnTheScreen();
       expect(mockUpdateGoal).not.toHaveBeenCalled();
     });
 
@@ -261,7 +268,7 @@ describe("EditModeScreen", () => {
     it("navigates to FocusMode when button pressed", () => {
       setupQueries();
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
-      fireEvent.press(screen.getByText("Start Working"));
+      fireEvent.press(screen.getByTestId("start-working"));
       expect(mockNavigate).toHaveBeenCalledWith("FocusMode", {
         goalId: "goal-1",
       });
@@ -303,7 +310,9 @@ describe("EditModeScreen", () => {
       setupQueries();
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
       expect(
-        screen.getByRole("button", { name: "Start Working" }),
+        screen.getByRole("button", {
+          name: i18n.t("editGoal:actions.startWorking"),
+        }),
       ).toBeOnTheScreen();
     });
   });
@@ -321,7 +330,10 @@ describe("EditModeScreen", () => {
       fireEvent.changeText(addInput, "Bad step");
       fireEvent(addInput, "submitEditing");
 
-      expect(alertSpy).toHaveBeenCalledWith("Error", "Could not create step.");
+      expect(alertSpy).toHaveBeenCalledWith(
+        i18n.t("editGoal:errors.alertErrorTitle"),
+        i18n.t("editGoal:errors.createStepMessage"),
+      );
     });
 
     it("shows error text when updateGoal title fails", async () => {
@@ -337,7 +349,9 @@ describe("EditModeScreen", () => {
       await act(async () => {
         jest.advanceTimersByTime(500);
       });
-      expect(screen.getByText("Failed to update title")).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("editGoal:errors.updateTitleFailed")),
+      ).toBeOnTheScreen();
     });
   });
 });

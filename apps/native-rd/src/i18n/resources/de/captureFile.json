@@ -1,0 +1,16 @@
+{
+  "title": "Datei anhängen",
+  "heading": "Datei anhängen",
+  "description": "PDF, Bild oder Dokument wählen (max {{maxSize}}).",
+  "actions": {
+    "choose": "Datei wählen"
+  },
+  "a11y": {
+    "saving": "Datei wird gespeichert"
+  },
+  "errors": {
+    "invalidFileTitle": "Datei ungültig",
+    "saveFailedTitle": "Speichern fehlgeschlagen",
+    "saveFailedMessage": "Datei konnte nicht gespeichert werden. Versuche es erneut."
+  }
+}

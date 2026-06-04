@@ -22,43 +22,22 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import {
-  APP_ROOT,
   checkSlice,
   extractSlice,
   resolveVersion,
   SLICES,
   type SliceName,
 } from "./release-notes-shared";
+import { mergeStoreConfig } from "./release-notes-store";
 
+const APP_ROOT = join(import.meta.dir, "..");
 const NOTES_DIR = join(APP_ROOT, "docs", "release", "testing-notes");
 const ARTIFACTS_DIR = join(APP_ROOT, ".release-artifacts");
 const STORE_CONFIG_PATH = join(APP_ROOT, "store.config.json");
 const STORE_CONFIG_BASE_PATH = join(APP_ROOT, "store.config.base.json");
 
-type StoreConfig = {
-  configVersion?: number;
-  apple?: {
-    info?: Record<string, Record<string, unknown> | undefined>;
-  };
-};
-
-function mergeStoreConfig(
-  base: unknown,
-  appstoreReleaseNotes: string,
-): StoreConfig {
-  const cloned = JSON.parse(JSON.stringify(base ?? {})) as StoreConfig;
-  cloned.apple ??= {};
-  cloned.apple.info ??= {};
-  const locale = cloned.apple.info["en-US"] ?? {};
-  cloned.apple.info["en-US"] = {
-    ...locale,
-    releaseNotes: appstoreReleaseNotes,
-  };
-  return cloned;
-}
-
 function main(): number {
-  const version = resolveVersion(process.argv[2]);
+  const version = resolveVersion(process.argv[2], APP_ROOT);
   const notesPath = join(NOTES_DIR, `${version}.md`);
 
   let source: string;

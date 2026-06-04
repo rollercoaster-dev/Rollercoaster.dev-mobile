@@ -1,5 +1,6 @@
 import React from "react";
 import { View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Text } from "../Text";
 import { Button } from "../Button";
 import { openLinkInBrowser } from "../../utils/evidenceViewers";
@@ -14,6 +15,8 @@ export interface LinkContentProps {
 }
 
 export function LinkContent({ uri, description }: LinkContentProps) {
+  const { t } = useTranslation();
+
   function handleOpen() {
     openLinkInBrowser(uri).catch((error) => {
       logger.error("Unhandled rejection from openLinkInBrowser", {
@@ -40,7 +43,7 @@ export function LinkContent({ uri, description }: LinkContentProps) {
           {uri}
         </Text>
         <Button
-          label="Open in browser"
+          label={t("evidenceContent.openInBrowser")}
           onPress={handleOpen}
           variant="primary"
         />

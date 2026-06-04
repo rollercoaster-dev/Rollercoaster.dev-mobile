@@ -87,8 +87,8 @@ export function EvidenceDrawer({
   );
 
   const drawerLabel = isGoal
-    ? `Goal evidence: ${items.length} item${items.length !== 1 ? "s" : ""}`
-    : `${items.length} evidence item${items.length !== 1 ? "s" : ""}`;
+    ? t("evidenceDrawer.label.goal", { count: items.length })
+    : t("evidenceDrawer.label.step", { count: items.length });
 
   // The drawer's `accessible+role=summary` wrapper collapses descendants
   // (FAB, FABMenu, evidence items) into a single a11y node on iOS, hiding
@@ -160,7 +160,9 @@ export function EvidenceDrawer({
           contentContainerStyle={styles.grid}
         >
           {items.length === 0 ? (
-            <Text style={styles.emptyText}>No evidence yet — tap + to add</Text>
+            <Text style={styles.emptyText}>
+              {t("evidenceDrawer.emptyHint")}
+            </Text>
           ) : (
             items.map((item) => (
               <View key={item.id} style={styles.gridItem(itemWidth)}>

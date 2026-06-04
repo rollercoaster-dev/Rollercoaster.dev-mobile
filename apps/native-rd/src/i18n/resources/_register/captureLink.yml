@@ -1,0 +1,16 @@
+# captureLink — ND adult capturing a URL.
+
+speaker: app
+audience: ND adult
+formality: informal
+banned_phrasings:
+  - Großartig!
+  - Super!
+  - toller Link!
+  - leverage
+  - Du schaffst das!
+  - besonders
+  - leidet an
+notes:
+  - Plain URL handling. "Link gespeichert." beats "Dein Link wurde
+    erfolgreich hinzugefügt!".

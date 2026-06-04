@@ -40,8 +40,8 @@ New personal accounts must complete closed testing before production access:
 
 ### Legal Documents
 
-- [ ] **Privacy Policy** — See `docs/launch/privacy-policy.md`
-  - Host at https://rollercoaster.dev/privacy (or similar)
+- [x] **Privacy Policy** — See `docs/launch/privacy-policy.md`
+  - Live at https://rollercoaster.dev/privacy
   - Required by both Apple and Google before submission
 - [ ] **Terms of Service** (optional but recommended)
   - Can be added post-launch

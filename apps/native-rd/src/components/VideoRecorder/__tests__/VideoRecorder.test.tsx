@@ -75,9 +75,7 @@ describe("VideoRecorder", () => {
 
     render(<VideoRecorder onRecorded={jest.fn()} onCancel={jest.fn()} />);
 
-    expect(
-      screen.getByText(i18n.t("captureVideo:recorder.permissionTitle")),
-    ).toBeTruthy();
+    expect(screen.getByText(i18n.t("permissions:camera.title"))).toBeTruthy();
     expect(screen.queryByTestId("camera-view")).toBeNull();
   });
 

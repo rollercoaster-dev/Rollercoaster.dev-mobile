@@ -60,7 +60,7 @@ describe("CaptureLinkScreen", () => {
   it("renders URL and caption input fields", () => {
     renderScreen();
 
-    expect(screen.getByText(i18n.t("captureLink:header"))).toBeTruthy();
+    expect(screen.getByText(i18n.t("captureLink:title"))).toBeTruthy();
     expect(
       screen.getByLabelText(i18n.t("captureLink:urlInput.label")),
     ).toBeTruthy();
@@ -230,7 +230,7 @@ describe("CaptureLinkScreen", () => {
     // A reverted t() call on any of these surfaces shows up as plain English
     // under pseudo.
     it.each([
-      { key: "captureLink:header", query: "text" },
+      { key: "captureLink:title", query: "text" },
       { key: "captureLink:urlInput.label", query: "label" },
       { key: "captureLink:actions.save", query: "text" },
       { key: "common:actions.cancel", query: "text" },

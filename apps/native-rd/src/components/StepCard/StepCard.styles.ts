@@ -7,9 +7,15 @@ export const styles = StyleSheet.create((theme) => ({
   },
   metaRow: {
     flexDirection: "row",
+    // Wrap instead of clipping: long locales (e.g. German "IN BEARBEITUNG")
+    // and the largeText a11y scale can exceed one line. When that happens the
+    // StatusBadge drops to its own line rather than overflowing the card edge
+    // or forcing the step number to ellipsize. English still fits on one line.
+    flexWrap: "wrap",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: theme.space[2],
+    rowGap: theme.space[1],
+    columnGap: theme.space[2],
   },
   stepNumber: {
     fontSize: theme.size.xs,

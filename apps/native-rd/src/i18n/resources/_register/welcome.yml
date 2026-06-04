@@ -1,0 +1,26 @@
+# welcome — first-run user, named-maker warmth.
+# Sourced from landing/docs/BRAND_LANGUAGE.md Voice Pattern #8 (Named-Maker
+# Voice) and the recognition-aside pattern.
+
+speaker: app, first-person warmth (named-maker energy — Joe builds this solo)
+audience: first-run neurodivergent adult
+formality: informal
+banned_phrasings:
+  - besonders
+  - einzigartig
+  - Willkommen in unserer Familie
+  - Großartig!
+  - Super!
+  - Fantastisch!
+  - Du schaffst das!
+  - unser Team
+  - wir sind ein Unternehmen
+  - leidet an
+  - anders begabt
+notes:
+  - Named-maker stance — if the source uses first-person ("I built this"),
+    keep that in German ("Ich habe das gebaut, weil ich es selbst brauchte.").
+    Never collapse into faceless "wir".
+  - Identity-first ND vocab (autistisch, ADHS, bipolar).
+  - Recognition asides like "(noch da? gut.)" are preserved verbatim,
+    never expanded.

@@ -18,6 +18,7 @@ const localRules = {
         "no-validate-at-boundaries": require("./src/eslint-rules/no-validate-at-boundaries"),
         "no-shared-component-reimplementation": require("./src/eslint-rules/no-shared-component-reimplementation"),
         "require-barrel-export": require("./src/eslint-rules/require-barrel-export"),
+        "no-raw-jsx-strings": require("./src/eslint-rules/no-raw-jsx-strings"),
       },
     },
   },
@@ -28,6 +29,7 @@ const localRules = {
     "local/no-validate-at-boundaries": "warn",
     "local/no-shared-component-reimplementation": "warn",
     "local/require-barrel-export": "error",
+    "local/no-raw-jsx-strings": "error",
   },
 };
 

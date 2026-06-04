@@ -54,6 +54,7 @@ export function NewGoalModal() {
         <Text variant="label">{t("title")}</Text>
         <IconButton
           icon={
+            // eslint-disable-next-line local/no-raw-jsx-strings -- close-button glyph (a11y label below); not translatable copy. Could align with the ✕ convention used by the viewer modals.
             <Text variant="body" style={styles.closeIcon}>
               X
             </Text>

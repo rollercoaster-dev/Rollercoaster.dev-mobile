@@ -68,6 +68,10 @@ beforeEach(() => {
   mockSaveImageToAppStorage.mockReturnValue("file:///saved/photo.jpg");
 });
 
+afterEach(() => {
+  jest.restoreAllMocks();
+});
+
 describe("CapturePhoto", () => {
   it("renders title and both buttons", () => {
     renderScreen();
@@ -186,6 +190,7 @@ describe("CapturePhoto", () => {
   });
 
   it("does not launch camera when permission denied", async () => {
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
     mockRequestCameraPermissionsAsync.mockResolvedValue({ granted: false });
     renderScreen();
 
@@ -195,9 +200,14 @@ describe("CapturePhoto", () => {
       expect(mockRequestCameraPermissionsAsync).toHaveBeenCalled();
     });
     expect(mockLaunchCameraAsync).not.toHaveBeenCalled();
+    expect(alertSpy).toHaveBeenCalledWith(
+      i18n.t("permissions:camera.title"),
+      i18n.t("permissions:camera.message"),
+    );
   });
 
   it("does not launch library when permission denied", async () => {
+    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
     mockRequestMediaLibraryPermissionsAsync.mockResolvedValue({
       granted: false,
     });
@@ -211,6 +221,10 @@ describe("CapturePhoto", () => {
       expect(mockRequestMediaLibraryPermissionsAsync).toHaveBeenCalled();
     });
     expect(mockLaunchImageLibraryAsync).not.toHaveBeenCalled();
+    expect(alertSpy).toHaveBeenCalledWith(
+      i18n.t("permissions:photoLibrary.title"),
+      i18n.t("permissions:photoLibrary.message"),
+    );
   });
 
   it("shows alert and does not navigate when save fails", async () => {
@@ -233,7 +247,6 @@ describe("CapturePhoto", () => {
       );
     });
     expect(mockGoBack).not.toHaveBeenCalled();
-    alertSpy.mockRestore();
   });
 
   it("navigates back when back button pressed", () => {

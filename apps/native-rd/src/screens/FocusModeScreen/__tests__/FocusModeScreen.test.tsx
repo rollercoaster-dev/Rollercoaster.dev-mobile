@@ -204,7 +204,9 @@ describe("FocusModeScreen", () => {
   it('shows "Goal not found" when goal does not exist', () => {
     setupQueries({ goal: null, steps: [] });
     renderWithProviders(<FocusModeScreen {...routeProps} />);
-    expect(screen.getByText("Goal not found.")).toBeOnTheScreen();
+    expect(
+      screen.getByText(i18n.t("focusMode:errors.goalNotFound")),
+    ).toBeOnTheScreen();
   });
 
   it("renders MiniTimeline with step navigation", () => {
@@ -236,7 +238,11 @@ describe("FocusModeScreen", () => {
   it("renders StepCard for current step", () => {
     setupQueries();
     renderWithProviders(<FocusModeScreen {...routeProps} />);
-    expect(screen.getByText("Step 1 of 2")).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        i18n.t("common:stepCard.progress", { current: 1, total: 2 }),
+      ),
+    ).toBeOnTheScreen();
     expect(screen.getByText("Read docs")).toBeOnTheScreen();
   });
 
@@ -262,11 +268,23 @@ describe("FocusModeScreen", () => {
     });
     renderWithProviders(<FocusModeScreen {...routeProps} />);
     // Lands on step-1 (first pending). Mark it complete.
-    expect(screen.getByText("Step 1 of 2")).toBeOnTheScreen();
-    fireEvent.press(screen.getByText("Mark complete"));
+    expect(
+      screen.getByText(
+        i18n.t("common:stepCard.progress", { current: 1, total: 2 }),
+      ),
+    ).toBeOnTheScreen();
+    fireEvent.press(
+      screen.getByRole("checkbox", {
+        name: i18n.t("common:stepCard.checkbox.markComplete"),
+      }),
+    );
     expect(mockCompleteStep).toHaveBeenCalledWith("step-1", null, []);
     // Carousel should advance to step-2 instead of staying on the completed step.
-    expect(screen.getByText("Step 2 of 2")).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        i18n.t("common:stepCard.progress", { current: 2, total: 2 }),
+      ),
+    ).toBeOnTheScreen();
     expect(screen.getByText("Practice")).toBeOnTheScreen();
   });
 
@@ -281,7 +299,11 @@ describe("FocusModeScreen", () => {
     renderWithProviders(<FocusModeScreen {...routeProps} />);
     // The current step indicator reflects the snapped index, so users land on
     // the first pending step instead of swiping past completed ones.
-    expect(screen.getByText("Step 3 of 3")).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        i18n.t("common:stepCard.progress", { current: 3, total: 3 }),
+      ),
+    ).toBeOnTheScreen();
     expect(screen.getByText("Build it")).toBeOnTheScreen();
   });
 
@@ -293,7 +315,11 @@ describe("FocusModeScreen", () => {
       ],
     });
     renderWithProviders(<FocusModeScreen {...routeProps} />);
-    expect(screen.getByText("Step 1 of 2")).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        i18n.t("common:stepCard.progress", { current: 1, total: 2 }),
+      ),
+    ).toBeOnTheScreen();
     expect(screen.getByText("Read docs")).toBeOnTheScreen();
   });
 
@@ -311,12 +337,24 @@ describe("FocusModeScreen", () => {
     // step-3 (also pending), bypassing the completed step-2.
     fireEvent.press(screen.getByLabelText("Next card"));
     fireEvent.press(screen.getByLabelText("Next card"));
-    expect(screen.getByText("Step 3 of 3")).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        i18n.t("common:stepCard.progress", { current: 3, total: 3 }),
+      ),
+    ).toBeOnTheScreen();
     // Complete step-3. Forward search finds nothing pending, so the wrap
     // path must pull the carousel back to step-1.
-    fireEvent.press(screen.getByText("Mark complete"));
+    fireEvent.press(
+      screen.getByRole("checkbox", {
+        name: i18n.t("common:stepCard.checkbox.markComplete"),
+      }),
+    );
     expect(mockCompleteStep).toHaveBeenCalledWith("step-3", null, []);
-    expect(screen.getByText("Step 1 of 3")).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        i18n.t("common:stepCard.progress", { current: 1, total: 3 }),
+      ),
+    ).toBeOnTheScreen();
   });
 
   it("does not advance when the last pending step is completed", () => {
@@ -329,12 +367,24 @@ describe("FocusModeScreen", () => {
     });
     renderWithProviders(<FocusModeScreen {...routeProps} />);
     // Snap puts us on step-2 (the only pending one).
-    expect(screen.getByText("Step 2 of 2")).toBeOnTheScreen();
-    fireEvent.press(screen.getByText("Mark complete"));
+    expect(
+      screen.getByText(
+        i18n.t("common:stepCard.progress", { current: 2, total: 2 }),
+      ),
+    ).toBeOnTheScreen();
+    fireEvent.press(
+      screen.getByRole("checkbox", {
+        name: i18n.t("common:stepCard.checkbox.markComplete"),
+      }),
+    );
     expect(mockCompleteStep).toHaveBeenCalledWith("step-2", null, []);
     // No other pending steps — carousel stays put. The all-steps-complete
     // effect handles the navigation to CompletionFlow separately.
-    expect(screen.getByText("Step 2 of 2")).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        i18n.t("common:stepCard.progress", { current: 2, total: 2 }),
+      ),
+    ).toBeOnTheScreen();
   });
 
   it("closes the evidence drawer when auto-advancing after step completion", () => {
@@ -362,8 +412,16 @@ describe("FocusModeScreen", () => {
     ).toBe(true);
     // Complete step-1; advance to step-2 must also close the drawer so the
     // overlay doesn't persist over the next step's content.
-    fireEvent.press(screen.getByText("Mark complete"));
-    expect(screen.getByText("Step 2 of 2")).toBeOnTheScreen();
+    fireEvent.press(
+      screen.getByRole("checkbox", {
+        name: i18n.t("common:stepCard.checkbox.markComplete"),
+      }),
+    );
+    expect(
+      screen.getByText(
+        i18n.t("common:stepCard.progress", { current: 2, total: 2 }),
+      ),
+    ).toBeOnTheScreen();
     expect(
       screen.getByLabelText("Close evidence drawer").props.accessible,
     ).toBe(false);
@@ -381,19 +439,39 @@ describe("FocusModeScreen", () => {
       throw new Error("DB write failed");
     });
     renderWithProviders(<FocusModeScreen {...routeProps} />);
-    expect(screen.getByText("Step 1 of 2")).toBeOnTheScreen();
-    fireEvent.press(screen.getByText("Mark complete"));
+    expect(
+      screen.getByText(
+        i18n.t("common:stepCard.progress", { current: 1, total: 2 }),
+      ),
+    ).toBeOnTheScreen();
+    fireEvent.press(
+      screen.getByRole("checkbox", {
+        name: i18n.t("common:stepCard.checkbox.markComplete"),
+      }),
+    );
     // Error toast appears, carousel must NOT advance.
     expect(
-      screen.getByText("Could not update step: DB write failed"),
+      screen.getByText(
+        i18n.t("focusMode:errors.couldNotUpdateStep", {
+          message: "DB write failed",
+        }),
+      ),
     ).toBeOnTheScreen();
-    expect(screen.getByText("Step 1 of 2")).toBeOnTheScreen();
+    expect(
+      screen.getByText(
+        i18n.t("common:stepCard.progress", { current: 1, total: 2 }),
+      ),
+    ).toBeOnTheScreen();
   });
 
   it("calls completeStep when step checkbox is toggled", () => {
     setupQueries();
     renderWithProviders(<FocusModeScreen {...routeProps} />);
-    fireEvent.press(screen.getByText("Mark complete"));
+    fireEvent.press(
+      screen.getByRole("checkbox", {
+        name: i18n.t("common:stepCard.checkbox.markComplete"),
+      }),
+    );
     expect(mockCompleteStep).toHaveBeenCalledWith("step-1", null, [
       { type: "text" },
     ]);
@@ -410,11 +488,13 @@ describe("FocusModeScreen", () => {
     // FocusMode auto-snaps to the first pending step (step-2). Swipe back to
     // the completed step so its checkbox is the active card.
     fireEvent.press(screen.getByLabelText("Previous card"));
-    // "Completed" appears as both StatusBadge label and Checkbox label
-    // Target the checkbox specifically
-    const completedElements = screen.getAllByText("Completed");
-    // The checkbox's Completed text is the one we want to press
-    fireEvent.press(completedElements[completedElements.length - 1]);
+    // Role query scopes to the checkbox, skipping the StatusBadge that also
+    // shows "Completed" — no need to index into a getAllByText list.
+    fireEvent.press(
+      screen.getByRole("checkbox", {
+        name: i18n.t("common:stepCard.checkbox.completed"),
+      }),
+    );
     expect(mockUncompleteStep).toHaveBeenCalledWith("step-1");
   });
 
@@ -492,7 +572,7 @@ describe("FocusModeScreen", () => {
   it('renders "Focus Mode" label in top bar', () => {
     setupQueries();
     renderWithProviders(<FocusModeScreen {...routeProps} />);
-    expect(screen.getByText("Focus Mode")).toBeOnTheScreen();
+    expect(screen.getByText(i18n.t("focusMode:title"))).toBeOnTheScreen();
   });
 
   // The goal card lives at the end of the CardCarousel, which sets
@@ -703,10 +783,14 @@ describe("FocusModeScreen", () => {
     fireEvent(evidenceItem, "longPress");
 
     // Confirm dialog should appear
-    expect(screen.getByText("Delete evidence?")).toBeOnTheScreen();
+    expect(
+      screen.getByText(i18n.t("focusMode:confirmDelete.title")),
+    ).toBeOnTheScreen();
 
     // Confirm the deletion
-    fireEvent.press(screen.getByText("Delete"));
+    fireEvent.press(
+      screen.getByRole("button", { name: i18n.t("common:actions.delete") }),
+    );
     expect(mockDeleteEvidence).toHaveBeenCalledWith("ev-s1");
   });
 
@@ -722,7 +806,9 @@ describe("FocusModeScreen", () => {
     fireEvent(evidenceItem, "longPress");
 
     // Cancel the deletion
-    fireEvent.press(screen.getByText("Cancel"));
+    fireEvent.press(
+      screen.getByRole("button", { name: i18n.t("common:actions.cancel") }),
+    );
     expect(mockDeleteEvidence).not.toHaveBeenCalled();
   });
 
@@ -733,10 +819,14 @@ describe("FocusModeScreen", () => {
     // Open drawer → long-press → confirm
     fireEvent.press(screen.getByLabelText("Toggle evidence drawer"));
     fireEvent(screen.getByLabelText(/text evidence:/), "longPress");
-    fireEvent.press(screen.getByText("Delete"));
+    fireEvent.press(
+      screen.getByRole("button", { name: i18n.t("common:actions.delete") }),
+    );
 
     // Toast should appear with undo action
-    expect(screen.getByText("Evidence deleted")).toBeOnTheScreen();
+    expect(
+      screen.getByText(i18n.t("focusMode:toast.evidenceDeleted")),
+    ).toBeOnTheScreen();
     expect(screen.getByLabelText("Undo")).toBeOnTheScreen();
   });
 
@@ -747,7 +837,9 @@ describe("FocusModeScreen", () => {
     // Open drawer → long-press → confirm
     fireEvent.press(screen.getByLabelText("Toggle evidence drawer"));
     fireEvent(screen.getByLabelText(/text evidence:/), "longPress");
-    fireEvent.press(screen.getByText("Delete"));
+    fireEvent.press(
+      screen.getByRole("button", { name: i18n.t("common:actions.delete") }),
+    );
 
     // Press undo
     fireEvent.press(screen.getByLabelText("Undo"));
@@ -786,7 +878,11 @@ describe("FocusModeScreen", () => {
       ],
     });
     renderWithProviders(<FocusModeScreen {...routeProps} />);
-    fireEvent.press(screen.getByText("Mark complete"));
+    fireEvent.press(
+      screen.getByRole("checkbox", {
+        name: i18n.t("common:stepCard.checkbox.markComplete"),
+      }),
+    );
     expect(mockCompleteStep).not.toHaveBeenCalled();
   });
 
@@ -812,7 +908,11 @@ describe("FocusModeScreen", () => {
       stepEvidence: [],
     });
     renderWithProviders(<FocusModeScreen {...routeProps} />);
-    fireEvent.press(screen.getByText("Mark complete"));
+    fireEvent.press(
+      screen.getByRole("checkbox", {
+        name: i18n.t("common:stepCard.checkbox.markComplete"),
+      }),
+    );
     expect(mockCanCompleteStep).toHaveBeenCalledWith(null, []);
     expect(mockCompleteStep).toHaveBeenCalledWith("step-1", null, []);
   });
@@ -846,7 +946,11 @@ describe("FocusModeScreen", () => {
       ],
     });
     renderWithProviders(<FocusModeScreen {...routeProps} />);
-    fireEvent.press(screen.getByText("Mark complete"));
+    fireEvent.press(
+      screen.getByRole("checkbox", {
+        name: i18n.t("common:stepCard.checkbox.markComplete"),
+      }),
+    );
     expect(mockCompleteStep).toHaveBeenCalledWith("step-1", '["photo"]', [
       { type: "photo" },
     ]);
@@ -874,9 +978,12 @@ describe("FocusModeScreen", () => {
     renderWithProviders(<FocusModeScreen {...routeProps} />);
     // Auto-snap puts us on step-2 (pending); swipe back to the completed step.
     fireEvent.press(screen.getByLabelText("Previous card"));
-    // Target the checkbox — "Completed" appears in both StatusBadge and Checkbox
-    const completedElements = screen.getAllByText("Completed");
-    fireEvent.press(completedElements[completedElements.length - 1]);
+    // Role query scopes to the checkbox, skipping the StatusBadge "Completed".
+    fireEvent.press(
+      screen.getByRole("checkbox", {
+        name: i18n.t("common:stepCard.checkbox.completed"),
+      }),
+    );
     expect(mockUncompleteStep).toHaveBeenCalledWith("step-1");
     expect(mockCanCompleteStep).not.toHaveBeenCalled();
   });
@@ -954,7 +1061,11 @@ describe("FocusModeScreen", () => {
 
     view.unmount();
     renderWithProviders(<FocusModeScreen {...routeProps} />);
-    fireEvent.press(screen.getAllByLabelText("Mark complete")[0]);
+    fireEvent.press(
+      screen.getAllByRole("checkbox", {
+        name: i18n.t("common:stepCard.checkbox.markComplete"),
+      })[0],
+    );
 
     expect(mockCompleteStep).toHaveBeenCalledWith("step-1", '["text"]', [
       { type: "text" },
@@ -1037,7 +1148,11 @@ describe("FocusModeScreen", () => {
       stepEvidence: [],
     });
     renderWithProviders(<FocusModeScreen {...routeProps} />);
-    expect(screen.getByText("Mark complete")).toBeOnTheScreen();
+    expect(
+      screen.getByRole("checkbox", {
+        name: i18n.t("common:stepCard.checkbox.markComplete"),
+      }),
+    ).toBeOnTheScreen();
   });
 
   it("completes step without planned types even with no evidence", () => {
@@ -1061,7 +1176,11 @@ describe("FocusModeScreen", () => {
       stepEvidence: [],
     });
     renderWithProviders(<FocusModeScreen {...routeProps} />);
-    fireEvent.press(screen.getByText("Mark complete"));
+    fireEvent.press(
+      screen.getByRole("checkbox", {
+        name: i18n.t("common:stepCard.checkbox.markComplete"),
+      }),
+    );
     expect(mockCompleteStep).toHaveBeenCalledWith("step-1", null, []);
   });
 

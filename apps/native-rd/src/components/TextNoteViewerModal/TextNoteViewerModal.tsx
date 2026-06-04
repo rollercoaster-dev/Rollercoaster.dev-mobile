@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Modal, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 import { Text } from "../Text";
 import { TextContent } from "../EvidenceContent/TextContent";
 import { styles } from "./TextNoteViewerModal.styles";
@@ -19,6 +20,7 @@ export function TextNoteViewerModal({
   onClose,
 }: TextNoteViewerModalProps) {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   if (!text) return null;
 
@@ -37,12 +39,14 @@ export function TextNoteViewerModal({
         ]}
       >
         <View style={styles.topBar}>
-          <Text style={styles.heading}>Text Note</Text>
+          <Text style={styles.heading}>
+            {t("viewerModals.heading.textNote")}
+          </Text>
           <Pressable
             onPress={onClose}
             accessible
             accessibilityRole="button"
-            accessibilityLabel="Close text note viewer"
+            accessibilityLabel={t("viewerModals.a11y.closeTextNote")}
             hitSlop={16}
           >
             <Text style={styles.closeText}>{"\u2715"}</Text>

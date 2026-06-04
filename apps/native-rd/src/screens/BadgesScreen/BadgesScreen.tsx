@@ -1,6 +1,7 @@
 import React, { Suspense } from "react";
 import { View, FlatList, ActivityIndicator } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import { useTabScreenContentInset } from "../../navigation/useTabScreenContentInset";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@evolu/react";
@@ -24,14 +25,15 @@ function BadgeList() {
   const navigation = useNavigation<Nav>();
   const tabInset = useTabScreenContentInset();
   const rows = useQuery(badgesWithGoalsQuery);
+  const { t, i18n } = useTranslation("badges");
 
   if (rows.length === 0) {
     return (
       <EmptyState
-        title="No badges yet"
-        body="Complete goals to earn badges. Your collection will grow here."
+        title={t("empty.title")}
+        body={t("empty.body")}
         action={{
-          label: "Go to Goals",
+          label: t("empty.action"),
           onPress: () => {
             const parent =
               navigation.getParent<
@@ -57,10 +59,11 @@ function BadgeList() {
       scrollIndicatorInsets={{ right: 1 }}
       renderItem={({ item }: { item: BadgeRow }) => (
         <BadgeCard
-          title={(item.goalTitle as string) ?? "Untitled"}
+          title={(item.goalTitle as string) ?? t("card.untitledFallback")}
           description={(item.goalDescription as string | null) ?? undefined}
           earnedDate={formatDate(
             (item.completedAt ?? item.createdAt) as string | null,
+            i18n.language,
           )}
           design={parseBadgeDesign(item.design as string | null)}
           onPress={() =>
@@ -73,9 +76,10 @@ function BadgeList() {
 }
 
 export function BadgesScreen() {
+  const { t } = useTranslation("badges");
   return (
     <View style={styles.screen}>
-      <ScreenHeader title="Badges" />
+      <ScreenHeader title={t("header")} />
       <ErrorBoundary>
         <Suspense
           fallback={

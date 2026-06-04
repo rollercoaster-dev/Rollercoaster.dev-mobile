@@ -71,6 +71,7 @@ Thumbs.db
 .claude/settings.local.json
 .claude/*.local.md
 .claude/dev-plans/
+.claude/working/
 .claude/execution-state.db
 .claude/scheduled_tasks.lock
 # Note: .claude/settings.json should be committed (team-shared settings)

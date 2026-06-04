@@ -35,7 +35,7 @@ function formatDuration(ms: number): string {
 export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
   const navigation = useNavigation();
   const { theme } = useUnistyles();
-  const { t } = useTranslation(["captureVoice", "common"]);
+  const { t } = useTranslation(["captureVoice", "common", "permissions"]);
   const { goalId, stepId } = route.params;
   const [caption, setCaption] = useState("");
 
@@ -130,13 +130,13 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
                 {"\uD83C\uDF99\uFE0F"}
               </Text>
               <Text variant="headline" accessibilityRole="header">
-                {t("captureVoice:permission.heading")}
+                {t("permissions:microphone.title")}
               </Text>
               <Text variant="body" style={styles.permissionText}>
-                {t("captureVoice:permission.body")}
+                {t("permissions:microphone.message")}
               </Text>
               <Button
-                label={t("captureVoice:actions.openSettings")}
+                label={t("permissions:microphone.settingsCta")}
                 variant="primary"
                 onPress={handleOpenSettings}
               />
@@ -160,6 +160,7 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
         {/* Timer display */}
         <Text
           style={styles.timerText}
+          testID="voice-timer"
           accessibilityLabel={t("captureVoice:a11y.timerLabel", {
             time: formatDuration(
               status === "playing" ? playbackPositionMs : durationMs,

@@ -243,7 +243,7 @@ function IconPickerModalContent({
 
   return (
     <View style={styles.modalRoot} testID={testID}>
-      <HeaderBand>
+      <HeaderBand safeAreaTop>
         <Pressable
           onPress={onClose}
           accessibilityRole="button"

@@ -1,7 +1,8 @@
-import { Suspense, useMemo } from "react";
+import { Suspense, useCallback, useMemo } from "react";
 import { View, ScrollView, ActivityIndicator } from "react-native";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import { useQuery } from "@evolu/react";
+import { useTranslation } from "react-i18next";
 import { Text } from "../../components/Text";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { Button } from "../../components/Button";
@@ -20,15 +21,26 @@ import {
 import type { GoalId } from "../../db";
 import type {
   GoalsStackParamList,
+  RootTabParamList,
   TimelineJourneyScreenProps,
 } from "../../navigation/types";
 import type { StepStatus as UIStepStatus } from "../../types/steps";
 import type { EvidenceItemData } from "../../components/EvidenceDrawer";
 import { validateEvidenceType } from "../../types/evidence";
+import { Logger } from "../../shims/rd-logger";
 import { styles } from "./TimelineJourneyScreen.styles";
 
-function TimelineContent({ goalId }: { goalId: string }) {
+const logger = new Logger("TimelineJourneyScreen");
+
+function TimelineContent({
+  goalId,
+  originBadgeId,
+}: {
+  goalId: string;
+  originBadgeId?: string;
+}) {
   const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
+  const { t } = useTranslation("timelineJourney");
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
   const stepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
@@ -53,8 +65,14 @@ function TimelineContent({ goalId }: { goalId: string }) {
     evidenceCount: 0,
   }));
 
+  const evidenceFallbackLabel = t("evidenceFallbackLabel");
+
   // Query evidence per step
-  const stepEvidenceData = useStepEvidence(goalId as GoalId, stepRows);
+  const stepEvidenceData = useStepEvidence(
+    goalId as GoalId,
+    stepRows,
+    evidenceFallbackLabel,
+  );
 
   // Enrich counts
   const stepsWithEvidence = uiSteps.map((step, i) => ({
@@ -66,7 +84,7 @@ function TimelineContent({ goalId }: { goalId: string }) {
   const goalEvidence: EvidenceItemData[] = goalEvidenceRows.map((row) => ({
     id: row.id,
     type: validateEvidenceType(row.type ?? "file"),
-    label: row.description ?? row.type ?? "Evidence",
+    label: row.description ?? row.type ?? t("evidenceFallbackLabel"),
   }));
 
   const completedCount = stepRows.filter(
@@ -77,12 +95,31 @@ function TimelineContent({ goalId }: { goalId: string }) {
   if (!goal) {
     return (
       <View style={styles.centered}>
-        <Text variant="body">Goal not found.</Text>
+        <Text variant="body">{t("errors.goalNotFound")}</Text>
       </View>
     );
   }
 
-  const handleBackToFocus = () => {
+  // When originBadgeId is set the user arrived from BadgeDetail and the back
+  // affordance must hop tabs back to BadgesTab/BadgeDetail rather than stay in
+  // the Goals stack. handleHeaderBack mirrors this. Both fall through to
+  // in-stack navigation when the tab parent is missing (deep link / modal
+  // host / Storybook) — getParent() returns undefined in those hosts.
+  const handleBack = () => {
+    if (originBadgeId) {
+      const parent = navigation.getParent<NavigationProp<RootTabParamList>>();
+      if (parent) {
+        parent.navigate("BadgesTab", {
+          screen: "BadgeDetail",
+          params: { badgeId: originBadgeId },
+        });
+        return;
+      }
+      logger.warn("Timeline back tapped without a tab navigator parent", {
+        goalId,
+        originBadgeId,
+      });
+    }
     navigation.navigate("FocusMode", { goalId });
   };
 
@@ -111,8 +148,8 @@ function TimelineContent({ goalId }: { goalId: string }) {
             {goal.title}
           </Text>
           <Button
-            label="Back to Focus"
-            onPress={handleBackToFocus}
+            label={originBadgeId ? t("backToBadge") : t("backToFocus")}
+            onPress={handleBack}
             variant="secondary"
             size="sm"
           />
@@ -125,7 +162,10 @@ function TimelineContent({ goalId }: { goalId: string }) {
         <View style={styles.progressContainer}>
           <ProgressBar progress={progress} />
           <Text style={styles.progressLabel}>
-            {completedCount} of {stepRows.length} steps completed
+            {t("progress", {
+              completed: completedCount,
+              total: stepRows.length,
+            })}
           </Text>
         </View>
       </View>
@@ -161,6 +201,7 @@ function TimelineContent({ goalId }: { goalId: string }) {
 function useStepEvidence(
   goalId: GoalId,
   stepRows: readonly { id: string }[],
+  fallbackLabel: string,
 ): EvidenceItemData[][] {
   const allStepEvidence = useQuery(stepEvidenceByGoalQuery(goalId));
   return useMemo(() => {
@@ -171,20 +212,42 @@ function useStepEvidence(
       list.push({
         id: ev.id as string,
         type: validateEvidenceType((ev.type ?? "file") as string),
-        label: (ev.description ?? ev.type ?? "Evidence") as string,
+        label: (ev.description ?? ev.type ?? fallbackLabel) as string,
       });
       grouped.set(ev.stepId, list);
     }
     return stepRows.map((s) => grouped.get(s.id) ?? []);
-  }, [allStepEvidence, stepRows]);
+  }, [allStepEvidence, stepRows, fallbackLabel]);
 }
 
 export function TimelineJourneyScreen({ route }: TimelineJourneyScreenProps) {
   const navigation = useNavigation();
+  const { t } = useTranslation("timelineJourney");
+  const { goalId, originBadgeId } = route.params;
+
+  // Mirrors handleBack in TimelineContent — see comment there for the
+  // cross-tab retargeting rationale and the parent-missing fallback.
+  const handleHeaderBack = useCallback(() => {
+    if (originBadgeId) {
+      const parent = navigation.getParent<NavigationProp<RootTabParamList>>();
+      if (parent) {
+        parent.navigate("BadgesTab", {
+          screen: "BadgeDetail",
+          params: { badgeId: originBadgeId },
+        });
+        return;
+      }
+      logger.warn(
+        "Timeline header back tapped without a tab navigator parent",
+        { goalId, originBadgeId },
+      );
+    }
+    navigation.goBack();
+  }, [navigation, originBadgeId, goalId]);
 
   return (
     <View style={styles.screen}>
-      <ScreenSubHeader label="Timeline" onBack={() => navigation.goBack()} />
+      <ScreenSubHeader label={t("title")} onBack={handleHeaderBack} />
       <View style={styles.body}>
         <ErrorBoundary>
           <Suspense
@@ -192,7 +255,7 @@ export function TimelineJourneyScreen({ route }: TimelineJourneyScreenProps) {
               <ActivityIndicator style={styles.loadingIndicator} size="large" />
             }
           >
-            <TimelineContent goalId={route.params.goalId} />
+            <TimelineContent goalId={goalId} originBadgeId={originBadgeId} />
           </Suspense>
         </ErrorBoundary>
       </View>

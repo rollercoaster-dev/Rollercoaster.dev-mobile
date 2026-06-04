@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
+import { useTranslation } from "react-i18next";
 
 import { selectorStyles } from "./selectorStyles";
 
@@ -19,15 +20,21 @@ export interface ColorPickerProps {
 // Constants
 // ---------------------------------------------------------------------------
 
-const ACCENT_COLORS: { hex: string; label: string }[] = [
-  { hex: "#a78bfa", label: "Purple" },
-  { hex: "#34d399", label: "Mint" },
-  { hex: "#fbbf24", label: "Yellow" },
-  { hex: "#10b981", label: "Emerald" },
-  { hex: "#06b6d4", label: "Teal" },
-  { hex: "#f97316", label: "Orange" },
-  { hex: "#38bdf8", label: "Sky" },
-];
+/**
+ * `id` keys into `badgeDesigner:color.options.<id>` and is the i18n contract.
+ * Drift-guarded by `option-key-parity.test.ts`.
+ */
+export const ACCENT_COLORS = [
+  { id: "purple", hex: "#a78bfa" },
+  { id: "mint", hex: "#34d399" },
+  { id: "yellow", hex: "#fbbf24" },
+  { id: "emerald", hex: "#10b981" },
+  { id: "teal", hex: "#06b6d4" },
+  { id: "orange", hex: "#f97316" },
+  { id: "sky", hex: "#38bdf8" },
+] as const;
+
+export type AccentColorId = (typeof ACCENT_COLORS)[number]["id"] | "goal";
 
 const SWATCH_SIZE = 44;
 
@@ -42,34 +49,37 @@ export function ColorPicker({
   testID = "color-picker",
 }: ColorPickerProps) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation("badgeDesigner");
 
-  const swatches = useMemo(() => {
-    const list = [...ACCENT_COLORS];
+  const swatches = useMemo<
+    readonly { id: AccentColorId; hex: string }[]
+  >(() => {
     if (goalColor) {
-      list.unshift({ hex: goalColor, label: "Goal" });
+      return [{ id: "goal", hex: goalColor }, ...ACCENT_COLORS];
     }
-    return list;
+    return ACCENT_COLORS;
   }, [goalColor]);
 
   return (
     <View
       testID={testID}
       accessibilityRole="radiogroup"
-      accessibilityLabel="Badge color"
+      accessibilityLabel={t("color.a11y")}
     >
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={selectorStyles.row}
       >
-        {swatches.map(({ hex, label }) => {
+        {swatches.map(({ id, hex }) => {
           const isSelected = hex === selectedColor;
+          const label = t(`color.options.${id}`);
           return (
             <Pressable
-              key={`${label}-${hex}`}
+              key={`${id}-${hex}`}
               onPress={() => onSelectColor(hex)}
               accessibilityRole="radio"
-              accessibilityLabel={`${label} color`}
+              accessibilityLabel={t("color.optionA11y", { label })}
               accessibilityState={{ checked: isSelected }}
               style={styles.cell}
             >

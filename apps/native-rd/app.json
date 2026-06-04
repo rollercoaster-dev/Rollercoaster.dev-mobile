@@ -2,7 +2,7 @@
   "expo": {
     "name": "Rollercoaster.dev",
     "slug": "rollercoasterdev",
-    "version": "0.1.7",
+    "version": "0.1.11",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -101,8 +101,17 @@
           ]
         }
       ],
-      "expo-localization"
+      [
+        "expo-localization",
+        {
+          "supportedLocales": ["en", "de"]
+        }
+      ]
     ],
+    "locales": {
+      "en": "./locales/en.json",
+      "de": "./locales/de.json"
+    },
     "extra": {
       "eas": {
         "projectId": "d7a5b9b4-48b0-460b-ab51-912e11cebd10"
