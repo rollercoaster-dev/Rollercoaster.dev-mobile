@@ -1,6 +1,6 @@
 # Release Runbook
 
-**Last verified:** 2026-05-14
+**Last verified:** 2026-06-04
 
 ## Pipeline at a glance
 
@@ -66,38 +66,15 @@ Why this workflow exists:
      `feat:` → minor, `fix:` → patch, `BREAKING CHANGE:` → major.
    - If the PR isn't there, no qualifying commits have landed.
 2. Review the PR. The diff bumps `apps/native-rd/package.json`,
-   `apps/native-rd/app.json` (`expo.version`), and `apps/native-rd/CHANGELOG.md`,
-   and includes a scaffolded `docs/release/testing-notes/<version>.md` (committed
-   to the PR branch by release-please.yml).
-3. **Fill in the testing notes _on the release PR branch_, before merging.** The
-   scaffold is full of `TODO:` lines; rewrite each into real copy — `play` /
-   `appstore` are user-facing (no jargon, no PR numbers), `testflight` is a QA
-   brief (steps to exercise → expected result). See
-   `docs/release/testing-notes/README.md` for the per-store length limits.
-   - **Why before merge:** release-please tags at the _merge commit_. Notes
-     filled after merge land in a commit _after_ the tag, so the tagged build
-     ships placeholder/empty notes. `_release-validate.yml` runs
-     `release-notes:lint` at publish time as a backstop — it blocks the
-     production build from shipping `TODO:` placeholders, but it runs _after_
-     the tag is already cut, so it can't substitute for filling notes on the
-     release PR branch (see "Release-notes gate" below).
-   - Verify locally first: `bun run release-notes:lint`.
-   - A chore-only release (no Features/Bug Fixes) has no scaffold and nothing to
-     fill — `release-notes:lint` passes via its missing-file no-op path.
-4. Merge the PR. release-please pushes the `vX.Y.Z` tag **and publishes a
+   `apps/native-rd/app.json` (`expo.version`), and `apps/native-rd/CHANGELOG.md`.
+3. Merge the PR. release-please pushes the `vX.Y.Z` tag **and publishes a
    GitHub Release** (as a draft — `"draft": true` in the release-please config;
    publishing is the manual "ship" click in the Releases UI).
-5. `build-production` workflow fires on the published Release. It re-runs
-   `release-notes:lint` (via `_release-validate.yml`), splits the notes into
-   store artifacts, and runs
-   `eas submit` for iOS and Android. TestFlight "What to Test" is **not**
-   sent automatically — `eas submit --what-to-test` is gated behind EAS's
-   Enterprise plan (see [eas-cli #3023](https://github.com/expo/eas-cli/pull/3023):
-   _"this consumes extra computing resources during the process so we're going
-   to make this enabled only for enterprise plan"_), so paste the contents of
-   the iOS slice into App Store Connect → TestFlight by hand. Watch the
-   workflow in Actions.
-6. After EAS finishes:
+4. `build-production` workflow fires on the published Release. It runs
+   `eas submit` for iOS and Android using the static metadata in
+   `apps/native-rd/store.config.base.json` (title, privacy policy URL —
+   nothing version-specific). Watch the workflow in Actions.
+5. After EAS finishes:
    - iOS: build appears in App Store Connect → TestFlight. External testers
      get it automatically (if the build is in a beta group with
      auto-distribution). The App Store release still requires manual
@@ -106,45 +83,15 @@ Why this workflow exists:
      Watch Sentry for 24–48h, then advance directly in Play Console or via
      Google Play Developer API tooling such as fastlane `supply`.
 
+Store-facing release notes (Play "What's new", App Store "What's New",
+TestFlight "What to Test") are entered **by hand** in each console.
+There is no automated pipeline that pushes them — `eas submit` only pushes
+the static metadata from `store.config.base.json`.
+
 If you need to re-run a production build against an existing tag (e.g.,
 because EAS failed transiently), use **Actions → build-production → "Run
 workflow"** and supply the tag (e.g., `v0.1.4`) as the `ref` input. You can
 also choose `platform` = `ios` or `android` for a platform-specific re-run.
-
-## Release-notes gate
-
-One markdown file per version (`docs/release/testing-notes/<version>.md`) is the
-single source for three store fields: Play "What's new", App Store "What's New",
-and TestFlight "What to Test". The slices are marker-delimited; the scripts under
-`scripts/release-notes-*.ts` generate, lint, and split them.
-
-`release-notes:lint` runs at publish time inside `_release-validate.yml`. It
-fails the production build rather than shipping placeholder notes — so unfilled
-`TODO:` lines block the tagged release from going out, even though they don't
-block the release PR itself from merging. Fill the notes on the release PR
-branch before merging; run `bun run release-notes:lint` locally to confirm.
-
-### Frame each build as if the reader is seeing it fresh
-
-The three slices (Play, App Store, TestFlight) all reach an audience that may
-not have seen any prior build — TestFlight testers cycle in and out, and any
-**N+1 supersession ship** (see "Tag rewriting is blocked" below) means even
-returning testers are encountering the previous version's content for the
-first time under a new version number.
-
-Concretely, when writing or reviewing a `<version>.md`:
-
-- Don't use phrases like "recent fixes", "from the last build", "since the
-  previous release", or anything that implies a prior context the reader has
-  lived through. The scaffolder uses **"Fixes to verify in this build"** for
-  the TestFlight fixes group — keep that framing.
-- Don't lean on `versionCode` deltas or PR numbers to imply recency.
-- Each slice should read standalone: a tester opening TestFlight for the first
-  time should understand what to exercise without needing prior-build memory.
-
-This is a content rule, not a lint rule — `release-notes:lint` only checks
-length budgets and `TODO:` markers, so the human reviewing the release PR is
-the gate.
 
 ## Advancing the Android rollout
 
@@ -211,18 +158,12 @@ Personal tokens can't push v-pattern tags here; only `release-please-action`'s
 
 This means: **once a v-tag is deleted, you cannot put it back yourself.**
 
-If a tag was cut at the wrong SHA (e.g. before testing notes were filled), the
-recovery path is to ship N+1 with the corrected content, **not** to re-tag N:
+If a tag was cut at the wrong SHA (e.g. before a needed fix landed), the
+recovery path is to ship N+1, **not** to re-tag N:
 
-1. Rename `docs/release/testing-notes/<bad-version>.md` →
-   `<next-version>.md` and update the `version:` frontmatter field. (The bot's
-   autogenerated scaffold for N+1 will be near-empty if no new user-facing
-   commits landed; you want the real content carried forward.)
-2. Land that rename on `main` via a normal PR (`docs(release): carry forward
-testing notes to <next-version>`).
-3. release-please picks up the next bumping commit (`feat:` / `fix:`) and
-   opens a `chore(main): release <next-version>` PR.
-4. **Three manual edits on the bot's PR before merge:**
+1. Wait for release-please to pick up the next bumping commit (`feat:` /
+   `fix:`) and open a `chore(main): release <next-version>` PR.
+2. **Two manual edits on the bot's PR before merge:**
    - **CHANGELOG.md** — the bot will scaffold N+1 against the previous
      _existing_ tag (N-1, because the N tag is gone), which means every
      N-window entry is double-counted against N-1's section. Collapse N+1
@@ -234,12 +175,7 @@ testing notes to <next-version>`).
      so the PR body inherits the same problem. Replace it by hand with the
      collapsed N+1 list and a one-line note that N+1 supersedes the unshipped
      N.
-   - **Testing notes framing** — every reader of N+1's slices is seeing this
-     content for the first time under this version number. See
-     "Frame each build as if the reader is seeing it fresh" above; specifically,
-     do not carry over any "recent fixes" / "from the last build" wording from
-     the N draft.
-5. Merge it. Normal pipeline ships from N+1.
+3. Merge it. Normal pipeline ships from N+1.
 
 The asymmetry — bot can write v-tags, you can't — is the same shape as the
 Copilot Autofix DCO situation (see `.github/workflows/`): GitHub Apps with

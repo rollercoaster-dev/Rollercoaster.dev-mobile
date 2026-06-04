@@ -40,7 +40,6 @@ jobs:
     uses: ./.github/workflows/_release-validate.yml
     with:
       ref: ${{ inputs.ref || github.event.release.tag_name || github.ref }}
-      lint-release-notes: true
 
   build-ios:
     needs: validate
@@ -71,9 +70,7 @@ jobs:
         run: bun install --frozen-lockfile
         working-directory: .
 
-      # release-notes artifacts (what-to-test.txt, store.config.json) are only
-      # consumed by `eas submit`, so they live in the submit-ios job. Sentry
-      # sourcemaps for the build come from the Expo Sentry plugin via
+      # Sentry sourcemaps for the build come from the Expo Sentry plugin via
       # SENTRY_AUTH_TOKEN — no artifact files needed here.
 
       - name: Build (EAS, production profile, iOS)
@@ -161,10 +158,6 @@ jobs:
         run: bun install --frozen-lockfile
         working-directory: .
 
-      - name: Read version
-        id: version
-        run: echo "value=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
-
       - name: Write Apple ASC key
         # Pass secrets via env (not ${{ secrets.* }} inside the script body) so
         # arbitrary content — newlines, quotes, backslashes — stays inside the
@@ -177,33 +170,14 @@ jobs:
           printf '%s\n' "$APPLE_ASC_KEY_P8" > ../../secrets/asc-api-key.p8
           chmod 600 ../../secrets/asc-api-key.p8
 
-      # Regenerate store.config.json from this version's testing-notes file
-      # so the iOS submit profile's metadataPath (./store.config.json in
-      # eas.json) resolves. Same logic as the build-ios prepare step — kept
-      # local because jobs don't share filesystem state.
-      - name: Generate release-notes artifacts
-        run: |
-          set -euo pipefail
-          VERSION="$(jq -r .version package.json)"
-          NOTES="docs/release/testing-notes/${VERSION}.md"
-          mkdir -p .release-artifacts
-          if [ ! -f "$NOTES" ]; then
-            echo "::warning::No testing notes at $NOTES — store metadata falls back to store.config.base.json."
-            cp store.config.base.json store.config.json
-            exit 0
-          fi
-          bun run release-notes:split
-
       - name: Submit (EAS, production profile, iOS)
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           APPLE_ASC_KEY_ID: ${{ secrets.APPLE_ASC_KEY_ID }}
           APPLE_ASC_ISSUER_ID: ${{ secrets.APPLE_ASC_ISSUER_ID }}
-        # TestFlight "What to Test" must be entered manually in App Store
-        # Connect: EAS gates the equivalent --what-to-test / changelog field
-        # behind their Enterprise plan, so passing it fails the submission
-        # outright. The split notes still live in .release-artifacts/ for
-        # copy-paste; see docs/release.md.
+        # eas submit reads static App Store metadata from store.config.base.json
+        # (title, privacyPolicyUrl). Per-release "What's New" / TestFlight "What
+        # to Test" copy is typed into App Store Connect by hand.
         run: npx "eas-cli@$EAS_CLI_VERSION" submit --profile production --platform ios --id "${{ needs.build-ios.outputs.build_id }}" --non-interactive --wait
 
   submit-android:
@@ -232,10 +206,6 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
         working-directory: .
-
-      - name: Read version
-        id: version
-        run: echo "value=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
 
       - name: Write Google Play service account
         env:

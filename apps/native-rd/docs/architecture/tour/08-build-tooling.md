@@ -23,8 +23,6 @@ Everything outside the running app: native build orchestration, EAS profiles, na
 - **Native projects** (generated outputs from `expo prebuild`, gitignored — review only when present locally)
   - `ios/**` — Xcode project, Podfile, Info.plist, native build settings
   - `android/**` — Gradle project, AndroidManifest.xml, signing config
-- **Release tooling**
-  - `scripts/release-notes-generate.ts`, `scripts/release-notes-changelog.ts`, `scripts/release-notes-split.ts`, `scripts/release-notes-lint.ts`, `scripts/release-notes-store.ts`, `scripts/release-notes-shared.ts`
 - **Validation tooling**
   - `scripts/jest-node.sh` — Jest runner for Node-side tests
   - `scripts/run-e2e.sh` — E2E orchestration

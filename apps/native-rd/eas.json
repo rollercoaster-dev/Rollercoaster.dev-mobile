@@ -56,7 +56,7 @@
         "ascApiKeyPath": "../../secrets/asc-api-key.p8",
         "ascApiKeyId": "$APPLE_ASC_KEY_ID",
         "ascApiKeyIssuerId": "$APPLE_ASC_ISSUER_ID",
-        "metadataPath": "./store.config.json"
+        "metadataPath": "./store.config.base.json"
       },
       "android": {
         "serviceAccountKeyPath": "../../secrets/play-service-account.json",
