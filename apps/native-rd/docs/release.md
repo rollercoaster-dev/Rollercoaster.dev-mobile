@@ -76,8 +76,11 @@ Why this workflow exists:
    `docs/release/testing-notes/README.md` for the per-store length limits.
    - **Why before merge:** release-please tags at the _merge commit_. Notes
      filled after merge land in a commit _after_ the tag, so the tagged build
-     ships placeholder/empty notes. The publish-time lint in
-     `_release-validate.yml` enforces this (see "Release-notes gate" below).
+     ships placeholder/empty notes. `_release-validate.yml` runs
+     `release-notes:lint` at publish time as a backstop — it blocks the
+     production build from shipping `TODO:` placeholders, but it runs _after_
+     the tag is already cut, so it can't substitute for filling notes on the
+     release PR branch (see "Release-notes gate" below).
    - Verify locally first: `bun run release-notes:lint`.
    - A chore-only release (no Features/Bug Fixes) has no scaffold and nothing to
      fill — `release-notes:lint` passes via its missing-file no-op path.
@@ -85,7 +88,8 @@ Why this workflow exists:
    GitHub Release** (as a draft — `"draft": true` in the release-please config;
    publishing is the manual "ship" click in the Releases UI).
 5. `build-production` workflow fires on the published Release. It re-runs
-   `release-notes-lint`, splits the notes into store artifacts, and runs
+   `release-notes:lint` (via `_release-validate.yml`), splits the notes into
+   store artifacts, and runs
    `eas submit` for iOS and Android. TestFlight "What to Test" is **not**
    sent automatically — `eas submit --what-to-test` is gated behind EAS's
    Enterprise plan (see [eas-cli #3023](https://github.com/expo/eas-cli/pull/3023):
