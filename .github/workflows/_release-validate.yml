@@ -18,6 +18,26 @@ jobs:
     name: Release Format, Typecheck, Lint & Test
     runs-on: ubuntu-latest
     steps:
+      # Catch the workflow_dispatch paste mistake where the operator types
+      # `ref: v0.1.12` into the form field instead of `v0.1.12` — actions/checkout
+      # treats the whole string as a refspec and dies with an opaque
+      # "invalid refspec '+refs/heads/ref: v0.1.12*'" several jobs deep. Failing
+      # here keeps the error pointed at the actual cause.
+      - name: Validate ref input
+        if: ${{ inputs.ref != '' }}
+        env:
+          REF: ${{ inputs.ref }}
+        run: |
+          set -euo pipefail
+          if [[ "$REF" == ref:* || "$REF" == "ref "* ]]; then
+            echo "::error::ref input starts with a 'ref:' prefix. Pass the bare tag/branch/sha (e.g. 'v0.1.12'), not 'ref: v0.1.12'."
+            exit 1
+          fi
+          if [[ "$REF" == *[[:space:]]* ]]; then
+            echo "::error::ref input contains whitespace. Pass the bare tag/branch/sha with no surrounding text."
+            exit 1
+          fi
+
       - name: Checkout
         uses: actions/checkout@v6
         with:

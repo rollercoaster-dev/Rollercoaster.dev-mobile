@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
     inputs:
       ref:
-        description: "Git ref to build (tag or commit SHA)"
+        description: "Git ref to build — bare tag or commit SHA, e.g. `v0.1.12` (no `ref:` prefix, no quotes)."
         required: true
       platform:
         description: "Platform to build and submit."

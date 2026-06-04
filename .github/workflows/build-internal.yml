@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       ref:
-        description: "Git ref to build (branch, tag, or commit SHA). Leave blank to use the branch picked in the 'Use workflow from' dropdown."
+        description: "Git ref to build — bare branch, tag, or commit SHA, e.g. `main` or `v0.1.12` (no `ref:` prefix). Leave blank to use the branch picked in the 'Use workflow from' dropdown."
         required: false
       platform:
         description: "Platform to build and submit."
