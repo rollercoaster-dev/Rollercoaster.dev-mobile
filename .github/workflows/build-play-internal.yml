@@ -14,6 +14,10 @@ concurrency:
   group: build-play-internal-${{ inputs.ref || github.ref }}
   cancel-in-progress: false
 
+# Pinned to match build-production.yml — see comment there for rationale.
+env:
+  EAS_CLI_VERSION: "20.0.0"
+
 jobs:
   validate:
     uses: ./.github/workflows/_release-validate.yml
@@ -55,7 +59,7 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: |
           out="$RUNNER_TEMP/eas-build-android.json"
-          npx eas-cli@latest build --profile production --platform android --non-interactive --json > "$out"
+          npx "eas-cli@$EAS_CLI_VERSION" build --profile production --platform android --non-interactive --json > "$out"
           build_id="$(jq -r 'if type == "array" then .[0].id else .id end' "$out")"
           test -n "$build_id" && test "$build_id" != "null"
           echo "build_id=$build_id" >> "$GITHUB_OUTPUT"
@@ -99,4 +103,4 @@ jobs:
       - name: Submit (EAS, Google Play internal track)
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: npx eas-cli@latest submit --profile play-internal --platform android --id "${{ needs.build-android.outputs.build_id }}" --non-interactive --wait
+        run: npx "eas-cli@$EAS_CLI_VERSION" submit --profile play-internal --platform android --id "${{ needs.build-android.outputs.build_id }}" --non-interactive --wait
