@@ -86,7 +86,8 @@ Why this workflow exists:
    publishing is the manual "ship" click in the Releases UI).
 5. `build-production` workflow fires on the published Release. It re-runs
    `release-notes-lint`, splits the notes into store artifacts, and passes
-   `--what-to-test` to `eas build`. Watch it in Actions.
+   `--what-to-test` to `eas submit` so the TestFlight notes attach to the
+   App Store Connect submission. Watch it in Actions.
 6. After EAS finishes:
    - iOS: build appears in App Store Connect → TestFlight. External testers
      get it automatically (if the build is in a beta group with
