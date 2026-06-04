@@ -88,14 +88,11 @@ Why this workflow exists:
    `release-notes-lint`, splits the notes into store artifacts, and runs
    `eas submit` for iOS and Android. TestFlight "What to Test" is **not**
    sent automatically — `eas submit --what-to-test` is gated behind EAS's
-   Enterprise plan (see [eas-cli #3023][what-to-test-pr]: _"this consumes
-   extra computing resources during the process so we're going to make this
-   enabled only for enterprise plan"_), so paste the contents of the iOS
-   slice into App Store Connect → TestFlight by hand. Watch the workflow
-   in Actions.
-
-[what-to-test-pr]: https://github.com/expo/eas-cli/pull/3023
-
+   Enterprise plan (see [eas-cli #3023](https://github.com/expo/eas-cli/pull/3023):
+   _"this consumes extra computing resources during the process so we're going
+   to make this enabled only for enterprise plan"_), so paste the contents of
+   the iOS slice into App Store Connect → TestFlight by hand. Watch the
+   workflow in Actions.
 6. After EAS finishes:
    - iOS: build appears in App Store Connect → TestFlight. External testers
      get it automatically (if the build is in a beta group with
