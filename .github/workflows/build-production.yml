@@ -256,6 +256,12 @@ jobs:
       - build-android
       - submit-ios
       - submit-android
+    # Single-platform dispatch (platform=ios or platform=android) is supported:
+    # the unrequested platform's build/submit jobs resolve to `skipped`, which
+    # does not match `failure`, and the OR clause accepts one platform's
+    # `success`. The contains-failure guard is intentionally strict — if either
+    # platform's submit fails, this job sits out and the runbook's "Sentry
+    # finalize fails" entry documents the manual recovery.
     if: ${{ always() && !cancelled() && !contains(needs.*.result, 'failure') && (needs.submit-ios.result == 'success' || needs.submit-android.result == 'success') }}
     runs-on: ubuntu-latest
     defaults:
