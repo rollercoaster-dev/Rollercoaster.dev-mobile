@@ -103,7 +103,7 @@ Produces:
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------- |
 | `apps/native-rd/store.config.json`                           | EAS Metadata config — read by `eas metadata:push` to set App Store "What's New" |
 | `apps/native-rd/.release-artifacts/play-changelog-en-US.txt` | Raw text for Play Console "What's new" (manual paste or future API push)        |
-| `apps/native-rd/.release-artifacts/what-to-test.txt`         | Raw text for `eas submit --what-to-test "$(cat ...)"`                           |
+| `apps/native-rd/.release-artifacts/what-to-test.txt`         | Raw text to paste into App Store Connect → TestFlight → "What to Test"          |
 
 The splitter refuses to write any output if the notes file still contains `TODO` markers — same check as `release-notes:lint`, enforced again here so CI can't sneak past it.
 
@@ -113,9 +113,10 @@ The splitter refuses to write any output if the notes file still contains `TODO`
 
 ```sh
 eas metadata:push --profile production
-eas submit --platform ios --profile production \
-  --what-to-test "$(cat apps/native-rd/.release-artifacts/what-to-test.txt)"
+eas submit --platform ios --profile production
 ```
+
+Then paste `apps/native-rd/.release-artifacts/what-to-test.txt` into App Store Connect → TestFlight → the build → "What to Test". `eas submit --what-to-test` is not used (the flag does not work on our EAS plan tier, so the pipeline stopped trying to send it automatically).
 
 **Android Play "What's new":** there is no `eas submit` flag for this. Three options, in increasing order of automation:
 
@@ -144,4 +145,4 @@ Update `store.config.base.json` through a normal PR. Schema is validated by `eas
 | ------------------- | ------------------------------------------------ | ----------------- | ----------------------------------------------------------------------- |
 | `play`              | Play Console → "What's new in this version"      | 500 chars/locale  | Play Developer API: `edits.tracks.update` → `releases[].releaseNotes[]` |
 | `appstore`          | App Store Connect → "What's New in This Version" | 4000 chars/locale | EAS Metadata: `apple.info.<locale>.releaseNotes`                        |
-| `testflight`        | TestFlight → "What to Test"                      | 4000 chars        | `eas submit --what-to-test`                                             |
+| `testflight`        | TestFlight → "What to Test"                      | 4000 chars        | Manual paste into App Store Connect (no automated API on our plan)      |

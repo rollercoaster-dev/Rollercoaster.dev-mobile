@@ -202,16 +202,12 @@ jobs:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           APPLE_ASC_KEY_ID: ${{ secrets.APPLE_ASC_KEY_ID }}
           APPLE_ASC_ISSUER_ID: ${{ secrets.APPLE_ASC_ISSUER_ID }}
-        # --what-to-test rides on submit, not build (eas-cli ≥ 20 rejects it on
-        # build unless paired with --auto-submit). Skip the flag when the file
-        # has no content — passing an empty string blanks TestFlight notes.
-        run: |
-          set -euo pipefail
-          args=("eas-cli@$EAS_CLI_VERSION" submit --profile production --platform ios --id "${{ needs.build-ios.outputs.build_id }}" --non-interactive --wait)
-          if [ -s .release-artifacts/what-to-test.txt ]; then
-            args+=(--what-to-test "$(cat .release-artifacts/what-to-test.txt)")
-          fi
-          npx "${args[@]}"
+        # TestFlight "What to Test" must be entered manually in App Store
+        # Connect: EAS gates the equivalent --what-to-test / changelog field
+        # behind their Enterprise plan, so passing it fails the submission
+        # outright. The split notes still live in .release-artifacts/ for
+        # copy-paste; see docs/release.md.
+        run: npx "eas-cli@$EAS_CLI_VERSION" submit --profile production --platform ios --id "${{ needs.build-ios.outputs.build_id }}" --non-interactive --wait
 
   submit-android:
     needs: build-android

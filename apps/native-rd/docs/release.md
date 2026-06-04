@@ -85,9 +85,12 @@ Why this workflow exists:
    GitHub Release** (as a draft — `"draft": true` in the release-please config;
    publishing is the manual "ship" click in the Releases UI).
 5. `build-production` workflow fires on the published Release. It re-runs
-   `release-notes-lint`, splits the notes into store artifacts, and passes
-   `--what-to-test` to `eas submit` so the TestFlight notes attach to the
-   App Store Connect submission. Watch it in Actions.
+   `release-notes-lint`, splits the notes into store artifacts, and runs
+   `eas submit` for iOS and Android. TestFlight "What to Test" is **not**
+   sent automatically — EAS gates that field (`--what-to-test` /
+   `changelog`) behind their Enterprise plan, so paste the contents of the
+   iOS slice into App Store Connect → TestFlight by hand. Watch the
+   workflow in Actions.
 6. After EAS finishes:
    - iOS: build appears in App Store Connect → TestFlight. External testers
      get it automatically (if the build is in a beta group with
