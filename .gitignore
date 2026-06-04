@@ -93,3 +93,7 @@ packages/claude-knowledge/.claude/
 # CI-only secret material written at workflow runtime; never committed.
 /secrets/
 apps/native-rd/play-service-account.json
+
+# Stray scaffold dropped by `eas` subcommands when run from the repo root by
+# mistake — the real Expo config lives at apps/native-rd/app.json.
+/app.json

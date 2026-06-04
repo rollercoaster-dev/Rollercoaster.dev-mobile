@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
     inputs:
       ref:
-        description: "Git ref to build (tag or commit SHA)"
+        description: "Git ref to build — bare tag or commit SHA, e.g. `v0.1.12` (no `ref:` prefix, no quotes)."
         required: true
       platform:
         description: "Platform to build and submit."
@@ -165,20 +165,17 @@ jobs:
         id: version
         run: echo "value=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
 
-      - name: Write credential files
+      - name: Write Apple ASC key
         # Pass secrets via env (not ${{ secrets.* }} inside the script body) so
         # arbitrary content — newlines, quotes, backslashes — stays inside the
         # shell variable instead of being expanded into the script source.
-        # Trailing newline is appended for the PEM key per Apple/OpenSSL
-        # parser expectations; harmless on the JSON.
+        # Trailing newline is appended per Apple/OpenSSL PEM parser expectations.
         env:
           APPLE_ASC_KEY_P8: ${{ secrets.APPLE_ASC_KEY_P8 }}
-          ANDROID_PLAY_SA: ${{ secrets.ANDROID_PLAY_SERVICE_ACCOUNT_JSON }}
         run: |
           mkdir -p ../../secrets
           printf '%s\n' "$APPLE_ASC_KEY_P8" > ../../secrets/asc-api-key.p8
-          printf '%s\n' "$ANDROID_PLAY_SA" > ../../secrets/play-service-account.json
-          chmod 600 ../../secrets/asc-api-key.p8 ../../secrets/play-service-account.json
+          chmod 600 ../../secrets/asc-api-key.p8
 
       # Regenerate store.config.json from this version's testing-notes file
       # so the iOS submit profile's metadataPath (./store.config.json in
@@ -202,16 +199,12 @@ jobs:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           APPLE_ASC_KEY_ID: ${{ secrets.APPLE_ASC_KEY_ID }}
           APPLE_ASC_ISSUER_ID: ${{ secrets.APPLE_ASC_ISSUER_ID }}
-        # --what-to-test rides on submit, not build (eas-cli ≥ 20 rejects it on
-        # build unless paired with --auto-submit). Skip the flag when the file
-        # has no content — passing an empty string blanks TestFlight notes.
-        run: |
-          set -euo pipefail
-          args=("eas-cli@$EAS_CLI_VERSION" submit --profile production --platform ios --id "${{ needs.build-ios.outputs.build_id }}" --non-interactive --wait)
-          if [ -s .release-artifacts/what-to-test.txt ]; then
-            args+=(--what-to-test "$(cat .release-artifacts/what-to-test.txt)")
-          fi
-          npx "${args[@]}"
+        # TestFlight "What to Test" must be entered manually in App Store
+        # Connect: EAS gates the equivalent --what-to-test / changelog field
+        # behind their Enterprise plan, so passing it fails the submission
+        # outright. The split notes still live in .release-artifacts/ for
+        # copy-paste; see docs/release.md.
+        run: npx "eas-cli@$EAS_CLI_VERSION" submit --profile production --platform ios --id "${{ needs.build-ios.outputs.build_id }}" --non-interactive --wait
 
   submit-android:
     needs: build-android
@@ -244,15 +237,13 @@ jobs:
         id: version
         run: echo "value=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
 
-      - name: Write credential files
+      - name: Write Google Play service account
         env:
-          APPLE_ASC_KEY_P8: ${{ secrets.APPLE_ASC_KEY_P8 }}
           ANDROID_PLAY_SA: ${{ secrets.ANDROID_PLAY_SERVICE_ACCOUNT_JSON }}
         run: |
           mkdir -p ../../secrets
-          printf '%s\n' "$APPLE_ASC_KEY_P8" > ../../secrets/asc-api-key.p8
           printf '%s\n' "$ANDROID_PLAY_SA" > ../../secrets/play-service-account.json
-          chmod 600 ../../secrets/asc-api-key.p8 ../../secrets/play-service-account.json
+          chmod 600 ../../secrets/play-service-account.json
 
       - name: Submit (EAS, production profile, Android, 10% rollout)
         env:
@@ -265,6 +256,12 @@ jobs:
       - build-android
       - submit-ios
       - submit-android
+    # Single-platform dispatch (platform=ios or platform=android) is supported:
+    # the unrequested platform's build/submit jobs resolve to `skipped`, which
+    # does not match `failure`, and the OR clause accepts one platform's
+    # `success`. The contains-failure guard is intentionally strict — if either
+    # platform's submit fails, this job sits out and the runbook's "Sentry
+    # finalize fails" entry documents the manual recovery.
     if: ${{ always() && !cancelled() && !contains(needs.*.result, 'failure') && (needs.submit-ios.result == 'success' || needs.submit-android.result == 'success') }}
     runs-on: ubuntu-latest
     defaults:
