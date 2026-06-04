@@ -1,7 +1,6 @@
 import { Suspense, useCallback, useMemo } from "react";
 import { View, ScrollView, ActivityIndicator } from "react-native";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@evolu/react";
 import { useTranslation } from "react-i18next";
 import { Text } from "../../components/Text";
@@ -108,8 +107,7 @@ function TimelineContent({
   // host / Storybook) — getParent() returns undefined in those hosts.
   const handleBack = () => {
     if (originBadgeId) {
-      const parent =
-        navigation.getParent<NativeStackNavigationProp<RootTabParamList>>();
+      const parent = navigation.getParent<NavigationProp<RootTabParamList>>();
       if (parent) {
         parent.navigate("BadgesTab", {
           screen: "BadgeDetail",
@@ -231,8 +229,7 @@ export function TimelineJourneyScreen({ route }: TimelineJourneyScreenProps) {
   // cross-tab retargeting rationale and the parent-missing fallback.
   const handleHeaderBack = useCallback(() => {
     if (originBadgeId) {
-      const parent =
-        navigation.getParent<NativeStackNavigationProp<RootTabParamList>>();
+      const parent = navigation.getParent<NavigationProp<RootTabParamList>>();
       if (parent) {
         parent.navigate("BadgesTab", {
           screen: "BadgeDetail",

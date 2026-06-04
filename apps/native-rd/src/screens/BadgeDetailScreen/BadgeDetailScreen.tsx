@@ -7,7 +7,7 @@ import {
   Alert,
   type LayoutChangeEvent,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@evolu/react";
 import { useTranslation } from "react-i18next";
@@ -204,8 +204,7 @@ function BadgeDetailContent({
   // view a user sees while still working toward the goal). Hop tabs via the
   // root parent — mirrors the empty-state navigation in BadgesScreen.
   const handleViewTimeline = (targetGoalId: string) => {
-    const parent =
-      navigation.getParent<NativeStackNavigationProp<RootTabParamList>>();
+    const parent = navigation.getParent<NavigationProp<RootTabParamList>>();
     if (!parent) {
       // If BadgeDetailScreen is ever hosted outside the bottom-tab navigator
       // (deep link, modal stack, Storybook) the tab parent is missing and a
