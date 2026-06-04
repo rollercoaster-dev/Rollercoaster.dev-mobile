@@ -125,6 +125,28 @@ moment a human pushes to the release branch (i.e. when you fill the TODOs).
 reported is treated as pending and blocks merge, so this also catches the case
 where someone tries to merge the raw scaffold without ever pushing a fill.
 
+### Frame each build as if the reader is seeing it fresh
+
+The three slices (Play, App Store, TestFlight) all reach an audience that may
+not have seen any prior build — TestFlight testers cycle in and out, and any
+**N+1 supersession ship** (see "Tag rewriting is blocked" below) means even
+returning testers are encountering the previous version's content for the
+first time under a new version number.
+
+Concretely, when writing or reviewing a `<version>.md`:
+
+- Don't use phrases like "recent fixes", "from the last build", "since the
+  previous release", or anything that implies a prior context the reader has
+  lived through. The scaffolder uses **"Fixes to verify in this build"** for
+  the TestFlight fixes group — keep that framing.
+- Don't lean on `versionCode` deltas or PR numbers to imply recency.
+- Each slice should read standalone: a tester opening TestFlight for the first
+  time should understand what to exercise without needing prior-build memory.
+
+This is a content rule, not a lint rule — `release-notes:lint` only checks
+length budgets and `TODO:` markers, so the human reviewing the release PR is
+the gate.
+
 ## Advancing the Android rollout
 
 EAS CLI doesn't expose a rollout subcommand — rollout management happens
@@ -201,7 +223,24 @@ recovery path is to ship N+1 with the corrected content, **not** to re-tag N:
 testing notes to <next-version>`).
 3. release-please picks up the next bumping commit (`feat:` / `fix:`) and
    opens a `chore(main): release <next-version>` PR.
-4. Merge it. Normal pipeline ships from N+1.
+4. **Three manual edits on the bot's PR before merge:**
+   - **CHANGELOG.md** — the bot will scaffold N+1 against the previous
+     _existing_ tag (N-1, because the N tag is gone), which means every
+     N-window entry is double-counted against N-1's section. Collapse N+1
+     into a single section with the actual user-facing entries from the
+     N-window, and point the compare URL at `v<N-1>...v<N+1>`. Delete the
+     orphaned N section entirely — v-N doesn't exist on origin, so leaving
+     it in the public CHANGELOG is a lie.
+   - **PR body** — release-please re-uses the bloated CHANGELOG it computed,
+     so the PR body inherits the same problem. Replace it by hand with the
+     collapsed N+1 list and a one-line note that N+1 supersedes the unshipped
+     N.
+   - **Testing notes framing** — every reader of N+1's slices is seeing this
+     content for the first time under this version number. See
+     "Frame each build as if the reader is seeing it fresh" above; specifically,
+     do not carry over any "recent fixes" / "from the last build" wording from
+     the N draft.
+5. Merge it. Normal pipeline ships from N+1.
 
 The asymmetry — bot can write v-tags, you can't — is the same shape as the
 Copilot Autofix DCO situation (see `.github/workflows/`): GitHub Apps with

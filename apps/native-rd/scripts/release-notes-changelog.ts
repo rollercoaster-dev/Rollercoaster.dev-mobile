@@ -181,7 +181,7 @@ Tester-facing QA brief. Rewrite each line as: what to do → expected result.
 
 ${todoList(userFacingFeatures)}
 
-**Recent fixes worth a sanity check**
+**Fixes to verify in this build**
 
 ${todoList(userFacingFixes)}
 
