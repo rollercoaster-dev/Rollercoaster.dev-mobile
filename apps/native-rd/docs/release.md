@@ -76,16 +76,20 @@ Why this workflow exists:
    `docs/release/testing-notes/README.md` for the per-store length limits.
    - **Why before merge:** release-please tags at the _merge commit_. Notes
      filled after merge land in a commit _after_ the tag, so the tagged build
-     ships placeholder/empty notes. The `release-notes-lint` check enforces this
-     (see "Release-notes gate" below).
+     ships placeholder/empty notes. `_release-validate.yml` runs
+     `release-notes:lint` at publish time as a backstop — it blocks the
+     production build from shipping `TODO:` placeholders, but it runs _after_
+     the tag is already cut, so it can't substitute for filling notes on the
+     release PR branch (see "Release-notes gate" below).
    - Verify locally first: `bun run release-notes:lint`.
    - A chore-only release (no Features/Bug Fixes) has no scaffold and nothing to
-     fill — `release-notes-lint` passes via its missing-file no-op path.
+     fill — `release-notes:lint` passes via its missing-file no-op path.
 4. Merge the PR. release-please pushes the `vX.Y.Z` tag **and publishes a
    GitHub Release** (as a draft — `"draft": true` in the release-please config;
    publishing is the manual "ship" click in the Releases UI).
 5. `build-production` workflow fires on the published Release. It re-runs
-   `release-notes-lint`, splits the notes into store artifacts, and runs
+   `release-notes:lint` (via `_release-validate.yml`), splits the notes into
+   store artifacts, and runs
    `eas submit` for iOS and Android. TestFlight "What to Test" is **not**
    sent automatically — `eas submit --what-to-test` is gated behind EAS's
    Enterprise plan (see [eas-cli #3023](https://github.com/expo/eas-cli/pull/3023):
@@ -114,22 +118,11 @@ single source for three store fields: Play "What's new", App Store "What's New",
 and TestFlight "What to Test". The slices are marker-delimited; the scripts under
 `scripts/release-notes-*.ts` generate, lint, and split them.
 
-Two checks run `release-notes:lint`, at two different moments:
-
-| Check                             | When                                 | Purpose                                                                |
-| --------------------------------- | ------------------------------------ | ---------------------------------------------------------------------- |
-| `release-notes-lint.yml`          | On the release PR (human push)       | Force `TODO:` lines to be filled **before** the tag is cut.            |
-| `_release-validate.yml` (publish) | When the GitHub Release is published | Last-resort gate — fails the build rather than ship placeholder notes. |
-
-The PR check is the one that matters for getting real notes into the tagged
-commit. **It does not run when the bot opens the PR** — commits pushed with the
-default `GITHUB_TOKEN` (the scaffold commit) don't trigger workflows. It runs the
-moment a human pushes to the release branch (i.e. when you fill the TODOs).
-
-**One-time setup:** add **"Release Notes Lint"** as a required status check on
-`main` in branch protection (Settings → Branches). A required check that hasn't
-reported is treated as pending and blocks merge, so this also catches the case
-where someone tries to merge the raw scaffold without ever pushing a fill.
+`release-notes:lint` runs at publish time inside `_release-validate.yml`. It
+fails the production build rather than shipping placeholder notes — so unfilled
+`TODO:` lines block the tagged release from going out, even though they don't
+block the release PR itself from merging. Fill the notes on the release PR
+branch before merging; run `bun run release-notes:lint` locally to confirm.
 
 ### Frame each build as if the reader is seeing it fresh
 
