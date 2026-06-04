@@ -1,4 +1,4 @@
-import { Suspense, useMemo } from "react";
+import { Suspense, useCallback, useMemo } from "react";
 import { View, ScrollView, ActivityIndicator } from "react-native";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import { useQuery } from "@evolu/react";
@@ -21,14 +21,24 @@ import {
 import type { GoalId } from "../../db";
 import type {
   GoalsStackParamList,
+  RootTabParamList,
   TimelineJourneyScreenProps,
 } from "../../navigation/types";
 import type { StepStatus as UIStepStatus } from "../../types/steps";
 import type { EvidenceItemData } from "../../components/EvidenceDrawer";
 import { validateEvidenceType } from "../../types/evidence";
+import { Logger } from "../../shims/rd-logger";
 import { styles } from "./TimelineJourneyScreen.styles";
 
-function TimelineContent({ goalId }: { goalId: string }) {
+const logger = new Logger("TimelineJourneyScreen");
+
+function TimelineContent({
+  goalId,
+  originBadgeId,
+}: {
+  goalId: string;
+  originBadgeId?: string;
+}) {
   const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
   const { t } = useTranslation("timelineJourney");
   const rows = useQuery(goalsQuery);
@@ -90,7 +100,26 @@ function TimelineContent({ goalId }: { goalId: string }) {
     );
   }
 
-  const handleBackToFocus = () => {
+  // When originBadgeId is set the user arrived from BadgeDetail and the back
+  // affordance must hop tabs back to BadgesTab/BadgeDetail rather than stay in
+  // the Goals stack. handleHeaderBack mirrors this. Both fall through to
+  // in-stack navigation when the tab parent is missing (deep link / modal
+  // host / Storybook) — getParent() returns undefined in those hosts.
+  const handleBack = () => {
+    if (originBadgeId) {
+      const parent = navigation.getParent<NavigationProp<RootTabParamList>>();
+      if (parent) {
+        parent.navigate("BadgesTab", {
+          screen: "BadgeDetail",
+          params: { badgeId: originBadgeId },
+        });
+        return;
+      }
+      logger.warn("Timeline back tapped without a tab navigator parent", {
+        goalId,
+        originBadgeId,
+      });
+    }
     navigation.navigate("FocusMode", { goalId });
   };
 
@@ -119,8 +148,8 @@ function TimelineContent({ goalId }: { goalId: string }) {
             {goal.title}
           </Text>
           <Button
-            label={t("backToFocus")}
-            onPress={handleBackToFocus}
+            label={originBadgeId ? t("backToBadge") : t("backToFocus")}
+            onPress={handleBack}
             variant="secondary"
             size="sm"
           />
@@ -194,10 +223,31 @@ function useStepEvidence(
 export function TimelineJourneyScreen({ route }: TimelineJourneyScreenProps) {
   const navigation = useNavigation();
   const { t } = useTranslation("timelineJourney");
+  const { goalId, originBadgeId } = route.params;
+
+  // Mirrors handleBack in TimelineContent — see comment there for the
+  // cross-tab retargeting rationale and the parent-missing fallback.
+  const handleHeaderBack = useCallback(() => {
+    if (originBadgeId) {
+      const parent = navigation.getParent<NavigationProp<RootTabParamList>>();
+      if (parent) {
+        parent.navigate("BadgesTab", {
+          screen: "BadgeDetail",
+          params: { badgeId: originBadgeId },
+        });
+        return;
+      }
+      logger.warn(
+        "Timeline header back tapped without a tab navigator parent",
+        { goalId, originBadgeId },
+      );
+    }
+    navigation.goBack();
+  }, [navigation, originBadgeId, goalId]);
 
   return (
     <View style={styles.screen}>
-      <ScreenSubHeader label={t("title")} onBack={() => navigation.goBack()} />
+      <ScreenSubHeader label={t("title")} onBack={handleHeaderBack} />
       <View style={styles.body}>
         <ErrorBoundary>
           <Suspense
@@ -205,7 +255,7 @@ export function TimelineJourneyScreen({ route }: TimelineJourneyScreenProps) {
               <ActivityIndicator style={styles.loadingIndicator} size="large" />
             }
           >
-            <TimelineContent goalId={route.params.goalId} />
+            <TimelineContent goalId={goalId} originBadgeId={originBadgeId} />
           </Suspense>
         </ErrorBoundary>
       </View>
