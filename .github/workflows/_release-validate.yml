@@ -7,11 +7,6 @@ on:
         description: "Git ref to check out and validate. Defaults to the caller workflow's commit."
         required: false
         type: string
-      lint-release-notes:
-        description: "Run release-notes:lint as part of validation. Only the production publish path opts in — internal/play-internal builds skip it so they can build a release-please PR branch whose testing notes still carry TODO scaffold lines."
-        required: false
-        default: false
-        type: boolean
 
 jobs:
   validate:
@@ -75,20 +70,3 @@ jobs:
 
       - name: Test
         run: bun run test
-
-      # Publish-time backstop: gate releases on tester-facing notes being
-      # authored. release-notes:lint fails if any
-      # docs/release/testing-notes/<version>.md still contains the `TODO:`
-      # scaffold lines that release-please writes when opening the release PR.
-      # No file (older tags re-validated via workflow_dispatch, or chore-only
-      # releases that skipped scaffold) is a deliberate no-op pass.
-      #
-      # Gated on the caller: only build-production opts in (lint-release-notes:
-      # true). build-internal / build-play-internal leave it off so they can
-      # build a release-please PR branch whose notes still carry TODOs — those
-      # profiles never consume the notes, so the gate would only be a blocker.
-      # The merge-blocking PR-time gate lives in release-notes-lint.yml.
-      - name: Lint release notes
-        if: ${{ inputs.lint-release-notes }}
-        run: bun run release-notes:lint
-        working-directory: apps/native-rd
