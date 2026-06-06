@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Badge Designer A — Accordion + Grouped Colors</title>
+  <style>
+    /* ── Fonts (loaded from apps/native-rd/assets/fonts/) ── */
+    @font-face { font-family: 'Anybody'; src: url('../assets/fonts/anybody-700.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+    @font-face { font-family: 'Anybody'; src: url('../assets/fonts/anybody-900.woff2') format('woff2'); font-weight: 900; font-display: swap; }
+    @font-face { font-family: 'Instrument Sans'; src: url('../assets/fonts/instrument-sans-400.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+    @font-face { font-family: 'Instrument Sans'; src: url('../assets/fonts/instrument-sans-600.woff2') format('woff2'); font-weight: 600; font-display: swap; }
+    @font-face { font-family: 'Instrument Sans'; src: url('../assets/fonts/instrument-sans-700.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+    @font-face { font-family: 'DM Mono'; src: url('../assets/fonts/dm-mono-500.woff2') format('woff2'); font-weight: 500; font-display: swap; }
+
+    /* ── Reset ─────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    [hidden] { display: none !important; }   /* outranks .section-body-row { display: flex } */
+    body {
+      background: #e5e5e5;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 24px 0;
+      font-family: 'Instrument Sans', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /*
+     * light-default tokens, mirrored from packages/design-tokens/build/css/{tokens,themes}.css
+     * via apps/native-rd/src/themes/compose.ts.
+     */
+    .phone {
+      --bg: #fafafa;
+      --bg-secondary: #f0f0f0;
+      --card: #ffffff;
+      --card-fg: #262626;
+      --text: #262626;
+      --text-secondary: #737373;
+      --border: #262626;
+      --border-w: 2px;            /* aliases.border-width.bold */
+      --shadow: 3px 3px 0 rgba(10,10,10,0.8);
+      --shadow-sm: 2px 2px 0 rgba(10,10,10,0.8);
+      --radius: 8px;
+      --radius-sm: 4px;
+      --accent: #ffe50c;
+      --primary: #3b82f6;
+      --primary-fg: #fafafa;
+      --purple: #a78bfa;
+      --purple-fg: #0a0a0a;
+      --danger: #dc2626;
+      --font-body: 'Instrument Sans', system-ui, sans-serif;
+      --font-display: 'Anybody', 'Instrument Sans', system-ui, sans-serif;
+      --font-mono: 'DM Mono', ui-monospace, monospace;
+      --line-height: 1.6;
+      --size-display: 28px;
+      --size-body: 16px;
+      --size-small: 14px;
+      --size-tiny: 12px;
+    }
+
+    /* ── Phone frame ──────────────────────── */
+    .phone {
+      width: 390px;
+      height: min(844px, 92vh);   /* fixed height — required so .scroll can overflow */
+      border: 8px solid #0a0a0a;
+      border-radius: 36px;
+      overflow: hidden;
+      position: relative;
+      background: var(--bg);
+    }
+    .screen {
+      position: relative;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      line-height: var(--line-height);
+    }
+
+    /* ── Top bar ──────────────────────────── */
+    .topbar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 56px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg);
+      z-index: 20;
+      border-bottom: var(--border-w) solid var(--border);
+    }
+    .back {
+      all: unset;
+      cursor: pointer;
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      font-size: 22px;
+      color: var(--text);
+    }
+    .topbar-title {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 20px;
+      letter-spacing: -0.3px;
+    }
+
+    /* ── Fixed preview overlay (PREVIEW_OVERLAY_HEIGHT = 200) ── */
+    .preview {
+      position: absolute;
+      top: 56px;
+      left: 0;
+      right: 0;
+      height: 200px;
+      display: grid;
+      place-items: center;
+      background: var(--bg);
+      z-index: 10;
+    }
+    .preview-canvas {
+      width: 160px;
+      height: 176px;
+      background: var(--bg-secondary);
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      display: grid;
+      place-items: center;
+      padding: 8px;
+    }
+    .badge-svg { width: 100%; height: 100%; display: block; }
+
+    /* ── Scroll content ─────────────────────── */
+    .scroll {
+      flex: 1;
+      min-height: 0;               /* required for overflow-y to actually scroll inside flex */
+      overflow-y: auto;
+      padding: 256px 16px 32px;   /* topbar 56 + preview 200 */
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    /* Subtle scrollbar so this still feels native-ish */
+    .scroll::-webkit-scrollbar { width: 6px; }
+    .scroll::-webkit-scrollbar-thumb { background: var(--text-secondary); border-radius: 3px; }
+
+    /* ── Section card (native <details> styled as neo-brutalist card) ── */
+    details.section {
+      background: var(--card);
+      color: var(--card-fg);
+      border: var(--border-w) solid var(--border);
+      border-radius: 0;            /* neo-brutalist: hard corners */
+      box-shadow: var(--shadow);
+    }
+    details.section[open] { background: var(--card); }
+    details.section summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 44px;             /* a11y touch target */
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 15px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    details.section summary::-webkit-details-marker { display: none; }
+    details.section summary::after {
+      content: '▾';
+      font-family: var(--font-body);
+      font-size: 18px;
+      transition: transform 180ms ease;
+    }
+    details.section[open] summary::after { transform: rotate(180deg); }
+    @media (prefers-reduced-motion: reduce) {
+      details.section summary::after { transition: none; }
+    }
+    .section-meta {
+      margin-left: auto;
+      font-family: var(--font-body);
+      font-weight: 600;
+      font-size: var(--size-tiny);
+      color: var(--text-secondary);
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    .section-body {
+      padding: 0 16px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .section-body-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .section-body-row-label {
+      font-size: var(--size-tiny);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-secondary);
+    }
+
+    /* ── Swatches (color picker, frame picker, shape picker share this) ── */
+    .swatches {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .swatch {
+      all: unset;
+      cursor: pointer;
+      width: 44px;
+      height: 44px;
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-sm);
+      display: grid;
+      place-items: center;
+      position: relative;
+    }
+    .swatch[aria-pressed="true"]::after {
+      content: '';
+      position: absolute;
+      inset: -5px;
+      border: 3px solid var(--primary);
+      border-radius: var(--radius-sm);
+      pointer-events: none;
+    }
+    .swatch-c1 { background: #a78bfa; }
+    .swatch-c2 { background: #f59e0b; }
+    .swatch-c3 { background: #10b981; }
+    .swatch-c4 { background: #ef4444; }
+    .swatch-c5 { background: #3b82f6; }
+    .swatch-c6 { background: #ec4899; }
+    .swatch-c7 { background: #14b8a6; }
+    .swatch-c8 { background: var(--text); }
+    .swatch-c9 { background: var(--bg); border: 2px dashed var(--border); }
+
+    /* Match-theme chip (special swatch state) */
+    .chip-match {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      min-height: 44px;
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-secondary);
+      box-shadow: var(--shadow-sm);
+      font-size: var(--size-small);
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .chip-match[aria-pressed="true"] {
+      background: var(--accent);
+      color: #0a0a0a;
+    }
+
+    /* ── Segmented control (Apply-to sub-control + others) ── */
+    .segmented {
+      display: flex;
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .seg-btn {
+      all: unset;
+      cursor: pointer;
+      flex: 1;
+      text-align: center;
+      padding: 12px 8px;
+      font-size: var(--size-small);
+      font-weight: 700;
+      min-height: 44px;
+      display: grid;
+      place-items: center;
+      background: var(--card);
+      color: var(--text);
+      border-right: var(--border-w) solid var(--border);
+    }
+    .seg-btn:last-child { border-right: none; }
+    .seg-btn[aria-pressed="true"] {
+      background: var(--text);
+      color: var(--bg);
+    }
+
+    /* ── Shape selector row (horizontal scroll) ── */
+    .shape-row {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .shape-btn {
+      all: unset;
+      cursor: pointer;
+      flex: 0 0 auto;
+      width: 60px;
+      height: 60px;
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-sm);
+      display: grid;
+      place-items: center;
+      background: var(--card);
+    }
+    .shape-btn[aria-pressed="true"] {
+      background: var(--text);
+      color: var(--bg);
+    }
+    .shape-btn svg { width: 32px; height: 32px; }
+
+    /* ── Frame selector (uses shape-row pattern) ── */
+    .frame-row { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; }
+    .frame-btn {
+      all: unset;
+      cursor: pointer;
+      flex: 0 0 auto;
+      padding: 8px 12px;
+      min-height: 44px;
+      min-width: 72px;
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-sm);
+      background: var(--card);
+      text-align: center;
+      font-size: var(--size-small);
+      font-weight: 700;
+    }
+    .frame-btn[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+
+    /* ── Inputs ─────────────────────────────── */
+    .input {
+      width: 100%;
+      padding: 12px;
+      min-height: 44px;
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-sm) inset;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: var(--size-body);
+    }
+    .input:focus { outline: 3px solid var(--primary); outline-offset: 2px; }
+
+    /* ── Icon picker grid ─────────────────────── */
+    .icon-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+    }
+    .icon-btn {
+      all: unset;
+      cursor: pointer;
+      aspect-ratio: 1;
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-sm);
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      background: var(--card);
+    }
+    .icon-btn[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+
+    /* ── Center mode toggle ─────────────────────── */
+    .center-toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .center-toggle .seg-btn {
+      flex: none;
+      border-right: var(--border-w) solid var(--border);
+    }
+
+    /* ── Save footer (sticky-feel via bottom margin in the scroll) ── */
+    .save-section {
+      margin-top: 8px;
+    }
+    .save-btn {
+      all: unset;
+      cursor: pointer;
+      display: block;
+      text-align: center;
+      width: 100%;
+      padding: 18px;
+      background: var(--primary);
+      color: var(--primary-fg);
+      border: var(--border-w) solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      min-height: 44px;
+    }
+    .save-btn:active { transform: translate(2px, 2px); box-shadow: var(--shadow-sm); }
+
+    /* ── Custom color picker swatch ─────────── */
+    .swatch.swatch-custom {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, #ff0080 0%, #ffe50c 35%, #14b8a6 65%, #3b82f6 100%);
+    }
+    .swatch-custom input[type="color"] {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      padding: 0;
+      margin: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .swatch-custom .glyph {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font-size: 20px;
+      font-weight: 900;
+      color: #ffffff;
+      mix-blend-mode: difference;
+      pointer-events: none;
+    }
+
+    /* ── Helper text under sub-controls ── */
+    .hint {
+      font-size: var(--size-tiny);
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <div class="phone">
+    <div class="screen">
+      <!-- Top bar -->
+      <header class="topbar">
+        <button class="back" aria-label="Back">←</button>
+        <div class="topbar-title">Badge Designer</div>
+      </header>
+
+      <!-- Fixed preview overlay -->
+      <div class="preview" aria-hidden="true">
+        <div class="preview-canvas">
+          <!-- Mock badge SVG: shield, purple, bold border, "M" monogram, EARNED 2026 -->
+          <svg class="badge-svg" viewBox="0 0 200 220" aria-hidden="true">
+            <!-- Shield outer (shape stroke) -->
+            <path d="M100 8 L188 30 L188 110 Q188 178 100 212 Q12 178 12 110 L12 30 Z"
+                  fill="#a78bfa" stroke="#262626" stroke-width="6"/>
+            <!-- Frame inner ring (bold-border frame overlay) -->
+            <path d="M100 24 L172 44 L172 110 Q172 162 100 192 Q28 162 28 110 L28 44 Z"
+                  fill="none" stroke="#262626" stroke-width="3"/>
+            <!-- Monogram -->
+            <text x="100" y="118" text-anchor="middle" dominant-baseline="middle"
+                  font-family="Anybody, sans-serif" font-weight="900" font-size="84" fill="#ffffff">M</text>
+            <!-- Bottom label (DM Mono) -->
+            <text x="100" y="176" text-anchor="middle"
+                  font-family="DM Mono, monospace" font-weight="500" font-size="11"
+                  letter-spacing="2" fill="#ffffff">EARNED 2026</text>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Scrollable section stack -->
+      <div class="scroll">
+
+        <!-- SHAPE (open by default — top of the list, easiest first-touch) -->
+        <details class="section" open>
+          <summary>
+            Shape
+            <span class="section-meta">Shield</span>
+          </summary>
+          <div class="section-body">
+            <div class="shape-row" role="radiogroup" aria-label="Badge shape">
+              <button class="shape-btn" aria-pressed="true" aria-label="Shield">
+                <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2 L29 6 L29 18 Q29 27 16 31 Q3 27 3 18 L3 6 Z" fill="currentColor"/></svg>
+              </button>
+              <button class="shape-btn" aria-pressed="false" aria-label="Circle">
+                <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="13" fill="currentColor"/></svg>
+              </button>
+              <button class="shape-btn" aria-pressed="false" aria-label="Hexagon">
+                <svg viewBox="0 0 32 32" aria-hidden="true"><polygon points="16,2 28,9 28,23 16,30 4,23 4,9" fill="currentColor"/></svg>
+              </button>
+              <button class="shape-btn" aria-pressed="false" aria-label="Star">
+                <svg viewBox="0 0 32 32" aria-hidden="true"><polygon points="16,3 20,12 30,12 22,18 25,28 16,22 7,28 10,18 2,12 12,12" fill="currentColor"/></svg>
+              </button>
+              <button class="shape-btn" aria-pressed="false" aria-label="Square">
+                <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="4" y="4" width="24" height="24" fill="currentColor"/></svg>
+              </button>
+            </div>
+          </div>
+        </details>
+
+        <!-- FRAME -->
+        <details class="section">
+          <summary>
+            Frame
+            <span class="section-meta">Bold border</span>
+          </summary>
+          <div class="section-body">
+            <div class="frame-row" role="radiogroup" aria-label="Frame style">
+              <button class="frame-btn" aria-pressed="false">None</button>
+              <button class="frame-btn" aria-pressed="true">Bold border</button>
+              <button class="frame-btn" aria-pressed="false">Guilloche</button>
+              <button class="frame-btn" aria-pressed="false">Crosshatch</button>
+              <button class="frame-btn" aria-pressed="false">Laurels</button>
+            </div>
+          </div>
+        </details>
+
+        <!-- CENTER — mode toggle drives which sub-block is visible -->
+        <details class="section">
+          <summary>
+            Center
+            <span class="section-meta" id="center-meta">Monogram "M"</span>
+          </summary>
+          <div class="section-body">
+            <div class="section-body-row">
+              <div class="section-body-row-label">Mode</div>
+              <div class="center-toggle" role="radiogroup" aria-label="Center mode">
+                <button class="seg-btn" data-center-mode="icon" aria-pressed="false">Icon</button>
+                <button class="seg-btn" data-center-mode="monogram" aria-pressed="true">Monogram</button>
+              </div>
+            </div>
+
+            <!-- Monogram block — shown when mode = monogram -->
+            <div class="section-body-row" id="center-monogram">
+              <div class="section-body-row-label">Monogram</div>
+              <input class="input" type="text" maxlength="3" value="M" aria-label="Monogram text" />
+              <p class="hint">1–3 characters. Auto-scales to the shape.</p>
+            </div>
+
+            <!-- Icon block — shown when mode = icon -->
+            <div class="section-body-row" id="center-icon" hidden>
+              <div class="section-body-row-label">Icon</div>
+              <div class="icon-grid" role="radiogroup" aria-label="Icon">
+                <button class="icon-btn" aria-pressed="true" aria-label="Star">★</button>
+                <button class="icon-btn" aria-pressed="false" aria-label="Heart">♥</button>
+                <button class="icon-btn" aria-pressed="false" aria-label="Bolt">⚡</button>
+                <button class="icon-btn" aria-pressed="false" aria-label="Sparkle">✦</button>
+                <button class="icon-btn" aria-pressed="false" aria-label="Flag">⚑</button>
+                <button class="icon-btn" aria-pressed="false" aria-label="Anchor">⚓</button>
+                <button class="icon-btn" aria-pressed="false" aria-label="Shamrock">☘</button>
+                <button class="icon-btn" aria-pressed="false" aria-label="Plane">✈</button>
+                <button class="icon-btn" aria-pressed="false" aria-label="Sun">☀</button>
+                <button class="icon-btn" aria-pressed="false" aria-label="Crown">♛</button>
+                <button class="icon-btn" aria-pressed="false" aria-label="Command">⌘</button>
+                <button class="icon-btn" aria-pressed="false" aria-label="Flower">✿</button>
+              </div>
+              <div class="section-body-row-label" style="margin-top: 6px;">Weight</div>
+              <div class="segmented" role="radiogroup" aria-label="Icon weight">
+                <button class="seg-btn" aria-pressed="false">Light</button>
+                <button class="seg-btn" aria-pressed="true">Bold</button>
+                <button class="seg-btn" aria-pressed="false">Fill</button>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <!-- COLORS (sits below Center so icon/monogram is chosen first) -->
+        <details class="section">
+          <summary>
+            Colors
+            <span class="section-meta">Fill · Border · Icon</span>
+          </summary>
+          <div class="section-body">
+            <div class="section-body-row">
+              <div class="section-body-row-label">Fill</div>
+              <div class="swatches" role="radiogroup" aria-label="Fill color">
+                <button class="swatch swatch-c1" aria-pressed="true" aria-label="Purple"></button>
+                <button class="swatch swatch-c2" aria-pressed="false" aria-label="Amber"></button>
+                <button class="swatch swatch-c3" aria-pressed="false" aria-label="Green"></button>
+                <button class="swatch swatch-c4" aria-pressed="false" aria-label="Red"></button>
+                <button class="swatch swatch-c5" aria-pressed="false" aria-label="Blue"></button>
+                <button class="swatch swatch-c6" aria-pressed="false" aria-label="Pink"></button>
+                <button class="swatch swatch-c7" aria-pressed="false" aria-label="Teal"></button>
+                <button class="swatch swatch-custom" aria-pressed="false" aria-label="Custom fill color">
+                  <span class="glyph" aria-hidden="true">+</span>
+                  <input type="color" value="#a78bfa" aria-label="Pick custom fill color" />
+                </button>
+              </div>
+            </div>
+
+            <div class="section-body-row">
+              <div class="section-body-row-label">Border</div>
+              <div class="swatches" role="radiogroup" aria-label="Border color">
+                <button class="chip-match" aria-pressed="true" aria-label="Match theme">
+                  <span aria-hidden="true">✓</span> Match theme
+                </button>
+                <button class="swatch swatch-c8" aria-pressed="false" aria-label="Ink"></button>
+                <button class="swatch swatch-c2" aria-pressed="false" aria-label="Amber"></button>
+                <button class="swatch swatch-c5" aria-pressed="false" aria-label="Blue"></button>
+                <button class="swatch swatch-c4" aria-pressed="false" aria-label="Red"></button>
+                <button class="swatch swatch-c9" aria-pressed="false" aria-label="Transparent"></button>
+                <button class="swatch swatch-custom" aria-pressed="false" aria-label="Custom border color">
+                  <span class="glyph" aria-hidden="true">+</span>
+                  <input type="color" value="#262626" aria-label="Pick custom border color" />
+                </button>
+              </div>
+            </div>
+
+            <div class="section-body-row">
+              <div class="section-body-row-label">Icon / Monogram</div>
+              <div class="swatches" role="radiogroup" aria-label="Icon / Monogram color">
+                <button class="swatch" style="background: #ffffff" aria-pressed="true" aria-label="White"></button>
+                <button class="swatch swatch-c8" aria-pressed="false" aria-label="Ink"></button>
+                <button class="swatch" style="background: #ffe50c" aria-pressed="false" aria-label="Yellow"></button>
+                <button class="swatch swatch-c4" aria-pressed="false" aria-label="Red"></button>
+                <button class="swatch swatch-c5" aria-pressed="false" aria-label="Blue"></button>
+                <button class="swatch swatch-c3" aria-pressed="false" aria-label="Green"></button>
+                <button class="swatch swatch-custom" aria-pressed="false" aria-label="Custom icon color">
+                  <span class="glyph" aria-hidden="true">+</span>
+                  <input type="color" value="#ffffff" aria-label="Pick custom icon color" />
+                </button>
+              </div>
+              <p class="hint">Applies to the icon glyph in Icon mode and the monogram text in Monogram mode.</p>
+            </div>
+
+            <div class="section-body-row">
+              <div class="section-body-row-label">Border applies to</div>
+              <div class="segmented" role="radiogroup" aria-label="Border applies to">
+                <button class="seg-btn" aria-pressed="false">Shape</button>
+                <button class="seg-btn" aria-pressed="true">Shape + Frame</button>
+                <button class="seg-btn" aria-pressed="false">All</button>
+              </div>
+              <p class="hint">"All" includes the banner ribbon if one is shown.</p>
+            </div>
+          </div>
+        </details>
+
+        <!-- INSCRIPTIONS (combines Bottom Label + Path Text + Banner) -->
+        <details class="section">
+          <summary>
+            Inscriptions
+            <span class="section-meta">"EARNED 2026"</span>
+          </summary>
+          <div class="section-body">
+            <div class="section-body-row">
+              <div class="section-body-row-label">Bottom label</div>
+              <input class="input" type="text" maxlength="24" value="EARNED 2026" aria-label="Bottom label" />
+            </div>
+
+            <div class="section-body-row">
+              <div class="section-body-row-label">Path text</div>
+              <input class="input" type="text" placeholder="Curved along the top edge" aria-label="Path text" />
+              <div class="segmented" role="radiogroup" aria-label="Path position">
+                <button class="seg-btn" aria-pressed="true">Top</button>
+                <button class="seg-btn" aria-pressed="false">Bottom</button>
+                <button class="seg-btn" aria-pressed="false">Both</button>
+              </div>
+            </div>
+
+            <div class="section-body-row">
+              <div class="section-body-row-label">Banner ribbon</div>
+              <input class="input" type="text" placeholder="off" aria-label="Banner text" />
+              <div class="segmented" role="radiogroup" aria-label="Banner position">
+                <button class="seg-btn" aria-pressed="true">Top</button>
+                <button class="seg-btn" aria-pressed="false">Bottom</button>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <!-- Save -->
+        <div class="save-section">
+          <button class="save-btn">Save badge</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Center mode toggle — shows the Monogram OR Icon block (mutually exclusive).
+    const centerMonoBlock = document.getElementById('center-monogram');
+    const centerIconBlock = document.getElementById('center-icon');
+    const centerMeta = document.getElementById('center-meta');
+    document.querySelectorAll('[data-center-mode]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-center-mode]').forEach(b => b.setAttribute('aria-pressed', 'false'));
+        btn.setAttribute('aria-pressed', 'true');
+        const mode = btn.dataset.centerMode;
+        if (mode === 'icon') {
+          centerIconBlock.removeAttribute('hidden');
+          centerMonoBlock.setAttribute('hidden', '');
+          centerMeta.textContent = 'Icon ★';
+        } else {
+          centerMonoBlock.removeAttribute('hidden');
+          centerIconBlock.setAttribute('hidden', '');
+          const value = centerMonoBlock.querySelector('input').value || 'M';
+          centerMeta.textContent = `Monogram "${value}"`;
+        }
+      });
+    });
+
+    // Custom color picker — clicking the swatch opens the native color input;
+    // changing the color updates the swatch background and marks it pressed.
+    document.querySelectorAll('.swatch-custom').forEach((swatch) => {
+      const input = swatch.querySelector('input[type="color"]');
+      if (!input) return;
+      input.addEventListener('input', (e) => {
+        swatch.style.background = e.target.value;
+        const group = swatch.closest('[role="radiogroup"]');
+        if (group) {
+          group.querySelectorAll('[aria-pressed]').forEach(b => b.setAttribute('aria-pressed', 'false'));
+          swatch.setAttribute('aria-pressed', 'true');
+        }
+      });
+    });
+
+    // Generic radio-group behavior. Skip center-mode buttons (custom handler above).
+    document.querySelectorAll('[role="radiogroup"]').forEach((group) => {
+      group.addEventListener('click', (e) => {
+        const btn = e.target.closest('[aria-pressed]');
+        if (!btn || !group.contains(btn)) return;
+        if (btn.hasAttribute('data-center-mode')) return;
+        group.querySelectorAll('[aria-pressed]').forEach(b => b.setAttribute('aria-pressed', 'false'));
+        btn.setAttribute('aria-pressed', 'true');
+      });
+    });
+  </script>
+</body>
+</html>
