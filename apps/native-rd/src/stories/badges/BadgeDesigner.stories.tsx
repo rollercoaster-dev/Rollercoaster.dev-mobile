@@ -106,9 +106,7 @@ function BadgeDesignerComposer({
           summary={
             design.centerMode === BadgeCenterMode.icon
               ? `Icon · ${design.iconName}`
-              : design.monogram
-                ? `Monogram "${design.monogram}"`
-                : "Monogram"
+              : "Monogram"
           }
           expanded={expandedSection === "center"}
           onExpandedChange={handleSection("center")}

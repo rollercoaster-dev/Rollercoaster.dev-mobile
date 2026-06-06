@@ -132,10 +132,11 @@ describe("CollapsibleSection", () => {
       expect(screen.queryByText("Body")).toBeNull();
     });
 
-    it("calls onExpandedChange and follows parent — controlled caller can refuse to collapse", () => {
-      // Press always proposes a toggle; if the parent ignores it, the
-      // section stays open. This is the invariant the accordion relies on:
-      // pressing the open section does NOT collapse it.
+    it("calls onExpandedChange and reflects only the expanded prop in controlled mode", () => {
+      // Controlled-mode contract: pressing always proposes a toggle via
+      // onExpandedChange, and the rendered open/closed state is driven
+      // solely by the `expanded` prop. If the parent declines to update
+      // the prop, the section stays in its current state.
       const onExpandedChange = jest.fn();
       renderWithProviders(
         <CollapsibleSection
