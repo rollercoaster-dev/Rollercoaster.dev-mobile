@@ -1,8 +1,8 @@
 # Badge Designer Accordion Refactor
 
-**Status:** In progress — branch `feat/badge-border-color`, Steps 1-3 +
-3.5 committed; Step 4 tail (accordion-invariant screen tests, Storybook,
-e2e walk) remains.
+**Status:** Complete — branch `feat/badge-border-color`, Steps 1-4 landed.
+Step 4 tail (accordion-invariant screen tests, Storybook composer, e2e
+walk) finished in this pass.
 **Tracking issue:** [#247 — reorganize badge designer as single-open accordion](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/247)
 **Follow-up:** [#248 — support custom badge fill, border, and center colors](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/248)
 **Prototype:** `apps/native-rd/prototypes/badge-designer-a-accordion.html`
@@ -60,29 +60,38 @@ e2e walk) remains.
       against the fix. The Animated.View gained a stable
       `testID="collapsible-content"` so the assertion can locate it.
 
-- [ ] **Step 4 — Tests, Storybook, e2e** (partially landed in commit
-      `fcb6830`; further work outstanding). 47 of 47 `BadgeDesignerScreen`
-      jest tests pass. Done so far: - `openSection(id)` helper translates a section id into the
+- [x] **Step 4 — Tests, Storybook, e2e** (landed across commit `fcb6830`
+      for the initial test wiring and commit `1763533` for the
+      accordion-invariant tests, Storybook composer refactor, and e2e
+      walk). 50 of 50 `BadgeDesignerScreen` jest tests pass. Done so far: - `openSection(id)` helper translates a section id into the
       controlled CollapsibleSection's header a11y label and presses it. - 13 existing tests updated to open the relevant section before
       interacting with controls now mounted lazily. - `IconPickerModal` mocked in the screen test — its lazy `react-
-    native` `Modal` import was failing in the test bridge when first
+  native` `Modal` import was failing in the test bridge when first
       touched after a state update (was fine on initial render). Mock
-      is local to the screen test; primitive/unit tests untouched.
-
-      Still to do:
-      - Add accordion-invariant tests in the screen test (Shape opens on
-        entry; opening Frame closes Shape; pressing the open Frame header
-        does not collapse it; Center icon picker still toggles by mode).
-      - Update Storybook story to wrap the composer in card-variant
-        accordion sections (or add a parallel story).
-      - Walk `e2e/flows/badge-redesign.yaml` to open Frame / Colors before
-        tapping the controls inside them.
+      is local to the screen test; primitive/unit tests untouched. - Three accordion-invariant tests added: Shape is the only mounted
+      section on entry (every other inner-selector a11y label is
+      absent), opening Frame unmounts Shape's body, and pressing the
+      Frame header in its `collapse`-form a11y label is a no-op. The
+      icon-picker-by-mode invariant is already covered by the two
+      "icon picker" tests in the same suite. - `BadgeDesigner.stories.tsx` rewrote the `BadgeDesignerComposer`
+      around five card-variant `CollapsibleSection`s in Shape → Frame
+      → Center → Colors → Inscriptions order with single-open
+      coordination, matching the screen's grouping (Center holds the
+      icon picker in icon mode; Inscriptions holds bottom label + path
+      text + banner). The sticky `iconPickerContainer` was retired —
+      Storybook now mirrors the production layout rather than
+      flat-stacking the controls. - `e2e/flows/badge-redesign.yaml` opens `Colors` and `Frame` (via
+      their `"<Title>, expand"` a11y labels) before tapping `Mint color`
+      / `Guilloche frame`. Shape stays the entry section, so the
+      `Shield shape` tap runs unchanged. The persistence re-entry
+      assertion on the preview a11y label still works because the
+      sticky overlay renders regardless of which section is open.
 
 ## Test results (latest)
 
 ```
 CollapsibleSection            16 passed (3 original + 10 Step 1 + 3 regression)
-BadgeDesignerScreen           47 passed
+BadgeDesignerScreen           50 passed (47 prior + 3 accordion invariants)
 i18n locale-parity + pseudo   99 passed
 ```
 
