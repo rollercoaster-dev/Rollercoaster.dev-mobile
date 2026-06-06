@@ -18,8 +18,13 @@ export interface CollapsibleSectionProps {
   /** Controlled expansion. Leave undefined to use internal state. */
   expanded?: boolean;
   onExpandedChange?: (expanded: boolean) => void;
-  /** Trailing header content. Strings are wrapped in a Text node. */
-  summary?: React.ReactNode;
+  /**
+   * Trailing header content. Strings are wrapped in a Text node; elements
+   * render as-is. Narrowed away from full `React.ReactNode` so callers can't
+   * pass a raw number/boolean — those would slip past the `typeof === "string"`
+   * branch and try to render directly inside `<View>`, which RN rejects.
+   */
+  summary?: string | React.ReactElement;
   variant?: CollapsibleSectionVariant;
   /** Override the "expand"/"collapse" verb in the accessibilityLabel. */
   expandLabel?: string;
@@ -40,6 +45,7 @@ export function CollapsibleSection({
   const isControlled = expandedProp !== undefined;
   const [internalExpanded, setInternalExpanded] = useState(defaultExpanded);
   const expanded = isControlled ? expandedProp : internalExpanded;
+  const [focused, setFocused] = useState(false);
 
   const { animationPref } = useAnimationPref();
   const expandedValue = useSharedValue(expanded ? 1 : 0);
@@ -87,11 +93,17 @@ export function CollapsibleSection({
     <View style={v.container}>
       <Pressable
         onPress={handlePress}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
         accessible
         accessibilityRole="button"
         accessibilityLabel={`${title}, ${expanded ? collapseLabel : expandLabel}`}
         accessibilityState={{ expanded }}
-        style={({ pressed }) => [v.header, pressed && styles.headerPressed]}
+        style={({ pressed }) => [
+          v.header,
+          focused && styles.headerFocused,
+          pressed && styles.headerPressed,
+        ]}
       >
         <Text style={v.title}>{title}</Text>
         <View style={styles.headerRight}>

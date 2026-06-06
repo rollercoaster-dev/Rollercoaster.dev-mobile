@@ -31,6 +31,10 @@ export const styles = StyleSheet.create((theme) => ({
   headerPressed: {
     opacity: 0.7,
   },
+  headerFocused: {
+    borderWidth: theme.borderWidth.medium,
+    borderColor: theme.colors.focusRing,
+  },
   headerRight: {
     flexDirection: "row",
     alignItems: "center",

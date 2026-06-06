@@ -23,7 +23,7 @@ This plan covers building the prototype set, not picking a winner.
 
 ## Files to create
 
-```
+```text
 apps/native-rd/prototypes/
 ├── badge-designer-a-accordion.html        # individual
 ├── badge-designer-b-tabs.html             # individual
@@ -53,9 +53,9 @@ Shell totals ~370 LOC per file. Yes, repeated across files — that is the exist
 ### `badge-designer-a-accordion.html` (~250 LOC on top of shell)
 
 - Each section is a native `<details>` element styled as a neo-brutalist card (`border-width: 2px`, `border-radius: 0`, hard shadow, chevron via `summary::after`).
-- Initial open state: only **Colors** expanded; others closed.
-- Section order: **Colors** (Fill, Border, Match-theme chip, "Apply to: Shape / Shape+Frame / All" sub-control — same control shown in B and C for direct comparison) → **Shape** → **Frame** → **Center** → **Inscriptions** (combines Bottom Label + Path Text + Banner).
-- No JS needed for expand/collapse — native `<details>` is enough.
+- Initial open state: only **Shape** expanded; others closed.
+- Section order: **Shape** → **Frame** → **Center** → **Colors** (Fill, Border, Match-theme chip, "Apply to: Shape / Shape+Frame / All" sub-control — same control shown in B and C for direct comparison) → **Inscriptions** (combines Bottom Label + Path Text + Banner). Matches the RN `BadgeDesignerScreen` order so this prototype stays a faithful preview of production.
+- Small JS controller on the `<details>` elements enforces single-open (opening one closes the others); all-collapsed is permitted so the user can hide every section to see the preview unobstructed (mirrors commit `1d3fa09`).
 - `@media (prefers-reduced-motion: reduce)` disables the expand transition.
 
 ### `badge-designer-b-tabs.html` (~300 LOC on top of shell)

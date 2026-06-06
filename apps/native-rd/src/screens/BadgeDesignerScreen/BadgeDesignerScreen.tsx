@@ -256,12 +256,13 @@ function DesignEditor({
   const shapeSummary = t(`shape.options.${currentDesign.shape}` as const);
   const frameSummary = t(`frame.options.${frame}` as const);
 
+  // Monogram branch deliberately does NOT interpolate the user-entered value:
+  // accordion headers stay deterministic category-only summaries, no free-text
+  // echo. Same key used whether monogram is empty or filled.
   const centerSummary =
     centerMode === BadgeCenterMode.icon
       ? t("accordion.summary.centerIcon", { icon: currentDesign.iconName })
-      : monogram
-        ? t("accordion.summary.centerMonogram", { monogram })
-        : t("accordion.summary.centerMonogramEmpty");
+      : t("accordion.summary.centerMonogramEmpty");
 
   // Enumerate enabled inscription kinds without echoing user content.
   const inscriptionParts: string[] = [];
