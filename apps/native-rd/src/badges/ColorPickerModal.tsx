@@ -16,6 +16,7 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import { useUnistyles } from "react-native-unistyles";
+import { useTranslation } from "react-i18next";
 import ColorPicker, {
   HueSlider,
   Panel1,
@@ -68,11 +69,13 @@ function ColorPickerModalContent({
   initialColor,
   onConfirm,
   onClose,
-  title = "Choose Color",
+  title,
   testID = "color-picker-modal",
 }: Omit<ColorPickerModalProps, "visible">) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation("badgeDesigner");
   const insets = useSafeAreaInsets();
+  const resolvedTitle = title ?? t("colorPicker.title");
 
   // Track the live hex so Confirm can send the latest pick without
   // depending on a worklet-shared value. `onChangeJS` fires on every
@@ -96,7 +99,7 @@ function ColorPickerModalContent({
         <Pressable
           onPress={onClose}
           accessibilityRole="button"
-          accessibilityLabel="Close color picker"
+          accessibilityLabel={t("colorPicker.close")}
           style={styles.closeButton}
         >
           {XIcon ? (
@@ -110,7 +113,7 @@ function ColorPickerModalContent({
           )}
         </Pressable>
         <Text style={styles.headerTitle} accessibilityRole="header">
-          {title}
+          {resolvedTitle}
         </Text>
         <View style={styles.headerSpacer} />
       </HeaderBand>
@@ -135,7 +138,7 @@ function ColorPickerModalContent({
         >
           <View style={styles.footerButton}>
             <Button
-              label="Cancel"
+              label={t("colorPicker.cancel")}
               variant="secondary"
               onPress={onClose}
               testID={`${testID}-cancel`}
@@ -143,11 +146,13 @@ function ColorPickerModalContent({
           </View>
           <View style={styles.footerButton}>
             <Button
-              label="Confirm"
+              label={t("colorPicker.confirm")}
               variant="primary"
               onPress={handleConfirm}
               testID={`${testID}-confirm`}
-              accessibilityHint={`Use color ${currentColor}`}
+              accessibilityHint={t("colorPicker.confirmHint", {
+                hex: currentColor,
+              })}
             />
           </View>
         </View>

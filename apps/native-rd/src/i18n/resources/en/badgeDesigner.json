@@ -84,6 +84,31 @@
       "all": "All"
     }
   },
+  "iconColor": {
+    "a11y": "Icon color",
+    "optionA11y": "{{label}} icon color",
+    "matchAuto": "Auto",
+    "matchAutoHint": "Picks black or white based on fill contrast",
+    "custom": "Custom",
+    "customHint": "Opens the color picker",
+    "contrastWarning": "Low contrast — text may be hard to read",
+    "options": {
+      "purple": "Purple",
+      "mint": "Mint",
+      "yellow": "Yellow",
+      "emerald": "Emerald",
+      "teal": "Teal",
+      "orange": "Orange",
+      "sky": "Sky"
+    }
+  },
+  "colorPicker": {
+    "title": "Choose Color",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "close": "Close color picker",
+    "confirmHint": "Use color {{hex}}"
+  },
   "frame": {
     "a11y": "Badge frame",
     "optionA11y": "{{label}} frame",
@@ -149,6 +174,7 @@
     "summary": {
       "centerIcon": "Icon · {{icon}}",
       "centerMonogram": "Monogram",
+      "colorCustom": "Custom",
       "inscriptionsLabel": "Label",
       "inscriptionsPath": "Path",
       "inscriptionsBanner": "Banner",

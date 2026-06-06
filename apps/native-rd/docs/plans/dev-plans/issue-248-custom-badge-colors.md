@@ -241,33 +241,49 @@ Add custom fill, border, and icon/monogram color controls to the badge designer'
 
 ---
 
-### Step 7: Wire new controls into BadgeDesignerScreen
+### Step 7: Wire new controls into BadgeDesignerScreen ✅ DONE
 
-**Files**: `apps/native-rd/src/screens/BadgeDesignerScreen/BadgeDesignerScreen.tsx`
+**Files touched (final scope):**
+
+- `apps/native-rd/src/screens/BadgeDesignerScreen/BadgeDesignerScreen.tsx` — new imports, three handlers, `colorPickerTarget` state, resolved sentinel values, `colorSummary` "Custom" suffix, Colors accordion rebuild, modal mount, contrast warning render.
+- `apps/native-rd/src/screens/BadgeDesignerScreen/BadgeDesignerScreen.styles.ts` — added `contrastWarning` style.
+- `apps/native-rd/src/badges/ColorPicker.tsx` — added optional `onOpenCustomPicker` prop + trailing "Custom…" cell that previews the live custom hex. Keeps existing callers (Storybook, tests) working since the prop is optional.
+- `apps/native-rd/src/badges/ColorPickerModal.tsx` — replaced four hardcoded English strings (title/close/cancel/confirm hint) with `t()` calls under the new `colorPicker.*` namespace. Forced into this commit by the typed-i18n / modal-render pairing (modal is now mounted from a localized surface).
+- `apps/native-rd/src/badges/IconColorPicker.tsx` (NEW) — mirrors `BorderColorPicker` but the sentinel cell is "Auto" and previews `getSafeTextColor(fillColor)`. Stored value is `BADGE_COLOR_THEME_SENTINEL` for Auto (so the renderer continues to use `getSafeTextColor(design.color)`), hex for everything else.
+- `apps/native-rd/src/badges/index.ts` — export `IconColorPicker` + props type.
+- `apps/native-rd/src/i18n/resources/en/badgeDesigner.json` — added `iconColor.*`, `colorPicker.*`, and `accordion.summary.colorCustom` keys (DE/pseudo deferred to Step 8 per plan).
+
 **Commit**: `feat(badges): wire custom color pickers into Colors accordion`
+
+**Plan adjustment (2026-06-06):** Same forcing function as Step 6 — the typed-i18n setup makes `t("iconColor.*")` and `t("colorPicker.*")` a hard prerequisite for `tsc`. The wiring commit therefore folds in:
+
+1. EN keys for `iconColor` (a11y, optionA11y, matchAuto, matchAutoHint, custom, customHint, contrastWarning, options.<id>) plus `colorPicker` (title, confirm, cancel, close, confirmHint) plus `accordion.summary.colorCustom`.
+2. ColorPickerModal's English-string retirement (the modal already existed from Step 5; today it acquires its first real-world caller, so its strings can't stay hardcoded).
+
+DE/pseudo translations + the parity assertion still ship in Step 8 as planned.
+
+**Plan adjustment #2 — dedicated IconColorPicker (2026-06-06):** Step 7 originally said "third `<ColorPicker>`-style row OR a dedicated component". Chose dedicated. Rationale: the icon channel needs an "Auto" sentinel whose preview swatch is _computed_ (`getSafeTextColor(fillColor)`), not static like Border's `theme.colors.border`. Mirroring the BorderColorPicker shape keeps the UX consistent across both border + icon and gives a clean place to document the sentinel-semantics divergence.
+
 **Changes**:
 
-- [ ] Add handlers: `handleBorderColorChange`, `handleIconColorChange`, `handleBorderScopeChange`.
-- [ ] Add `colorPickerTarget` state: `'fill' | 'border' | 'icon' | null` to track which channel opened the modal.
-- [ ] Render `ColorPickerModal` once at the `DesignEditor` level; `onConfirm` dispatches to the correct design field based on `colorPickerTarget`.
-- [ ] In the `colors` accordion section, render:
-  1. Existing `<ColorPicker>` for fill (with `onOpenCustomPicker` prop added).
-  2. `<BorderColorPicker>` with `onOpenCustomPicker`.
-  3. `<BorderScopeSelector>` below the border picker (visible regardless of `borderColor` value — scope always applies).
-  4. A third `<ColorPicker>`-style row for icon/monogram color, or a dedicated `IconColorPicker` if the component needs the "Match theme" sentinel logic.
-- [ ] Update `colorSummary` string (shown in accordion header) to reflect custom color presence: e.g. append "· Custom border" if `borderColor !== 'theme'`.
-- [ ] Add contrast warning: when `iconColor` is explicitly set, compute `meetsWCAG(resolvedIconColor, design.color)` and render a small warning `<Text>` below the icon color row if it fails. No hard block.
-- [ ] **Update plan + commit** — check Step 7 boxes, commit the screen wiring and the plan update together.
+- [x] Added handlers: `handleBorderColorChange`, `handleIconColorChange`, `handleBorderScopeChange`. `handleIconColorChange` strips the field from the design when the user picks the sentinel, so parsed designs round-trip identically (Auto = field absent).
+- [x] Added `colorPickerTarget` state: `'fill' | 'border' | 'icon' | null`. One modal mount, three call sites.
+- [x] Rendered `ColorPickerModal` once inside `DesignEditor`, after the preview overlay. `onConfirm` dispatches to the appropriate handler based on the current target then resets the target to `null`. `initialColor` resolves sentinels (border `'theme'` → `theme.colors.border`; icon `'theme'` → `getSafeTextColor(design.color)`) so the picker always opens on a concrete starting hex.
+- [x] Colors accordion now contains, in order: fill `<ColorPicker onOpenCustomPicker>`, `<BorderColorPicker>`, `<BorderScopeSelector>`, `<IconColorPicker>`, conditional contrast warning. All inside the existing `sectionStack`.
+- [x] `colorSummary` now appends `· Custom` (via `accordion.summary.colorCustom`) when any of fill/border/icon is a non-preset hex. Falls back to the existing palette-label behavior otherwise.
+- [x] Contrast warning: when `iconColor` is explicitly set AND `meetsWCAG(resolvedIconColor, currentDesign.color)` fails AA 4.5:1, renders a `<Text variant="caption">` with `iconColor.contrastWarning`. The warning is gated on the sentinel-not-Auto check so the warning never shows for the auto-derived color (which `getSafeTextColor` already picked for max contrast — Resolved Decision #1).
+- [x] `bun run type-check` clean (4/4 turbo tasks).
+- [x] **Update plan + commit** — Step 7 boxes checked, single atomic commit.
 
-**Estimated LOC**: ~100 LOC
+**Estimated LOC**: ~100 LOC planned. Actual: ~70 LOC in `BadgeDesignerScreen.tsx`, ~5 LOC in styles, ~50 LOC in `ColorPicker.tsx` (Custom… cell + styles), ~10 LOC in `ColorPickerModal.tsx` (i18n swap), ~210 LOC in new `IconColorPicker.tsx`, ~32 LOC of EN i18n. Total ~377 LOC (the IconColorPicker shifted scope from Step 7 — was previously implied as part of "another ColorPicker row" — into a full mirror component).
 
 ---
 
 ### Step 8: Extend i18n resources
 
-**Scope reduced (2026-06-06):** EN keys for `borderColor` + `borderScope` were folded into Step 6's commit because the typed-i18n setup made them a hard prerequisite for type-check. This step now covers ONLY: (a) `iconColor` + `colorPicker` EN keys not yet added, (b) DE translations for all new keys, (c) pseudo translations, (d) parity-test assertions. Already-added EN keys are listed below for reference but won't be re-applied.
+**Scope reduced (2026-06-06):** EN keys for `borderColor` + `borderScope` were folded into Step 6 and EN keys for `iconColor` + `colorPicker` + `accordion.summary.colorCustom` were folded into Step 7 (both forced by typed-i18n). Step 8 now covers ONLY: (a) DE translations for the keys not yet covered by the LLM sync (`iconColor`, `colorPicker`, `accordion.summary.colorCustom`); the LLM sync commit `ac257ca` already populated DE `borderColor` + `borderScope`, (b) pseudo translations for everything new, (c) parity-test assertions for `BadgeBorderScope`.
 
-**Files**: `apps/native-rd/src/i18n/resources/en/badgeDesigner.json` (only `iconColor` + `colorPicker` blocks; `borderColor` + `borderScope` already added in Step 6), `de/badgeDesigner.json`, `pseudo/badgeDesigner.json`, `apps/native-rd/src/i18n/__tests__/option-key-parity.test.ts`
+**Files**: `apps/native-rd/src/i18n/resources/de/badgeDesigner.json` (add `iconColor` + `colorPicker` + `accordion.summary.colorCustom`), `pseudo/badgeDesigner.json` (add all new top-level keys), `apps/native-rd/src/i18n/__tests__/option-key-parity.test.ts`
 **Commit**: `feat(badges): add i18n keys for custom color controls`
 **Changes**:
 

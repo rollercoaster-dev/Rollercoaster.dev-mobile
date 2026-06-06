@@ -51,6 +51,9 @@ export type { BorderColorPickerProps } from "./BorderColorPicker";
 export { BorderScopeSelector } from "./BorderScopeSelector";
 export type { BorderScopeSelectorProps } from "./BorderScopeSelector";
 
+export { IconColorPicker } from "./IconColorPicker";
+export type { IconColorPickerProps } from "./IconColorPicker";
+
 export { PathTextEditor } from "./PathTextEditor";
 export type { PathTextEditorProps } from "./PathTextEditor";
 
