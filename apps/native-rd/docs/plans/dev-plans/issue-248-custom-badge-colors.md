@@ -176,22 +176,25 @@ Add custom fill, border, and icon/monogram color controls to the badge designer'
 
 ---
 
-### Step 5: Build `ColorPickerModal` component
+### Step 5: Build `ColorPickerModal` component ✅ DONE
 
-**Files**: `apps/native-rd/src/badges/ColorPickerModal.tsx`, `apps/native-rd/src/badges/ColorPickerModal.styles.ts`
+**Files**: `apps/native-rd/src/badges/ColorPickerModal.tsx`, `apps/native-rd/src/badges/ColorPickerModal.styles.ts`, `apps/native-rd/src/badges/index.ts`
 **Commit**: `feat(badges): add ColorPickerModal wrapping reanimated-color-picker`
 **Changes**:
 
-- [ ] Create `ColorPickerModal.tsx` using `<Modal>` (same as `IconPickerModal`), `SafeAreaProvider`, `useSafeAreaInsets`.
-- [ ] Import color picker from `reanimated-color-picker` — wrap in a try/catch render-path to degrade gracefully if the native module is missing on a cold install.
-- [ ] Props: `visible`, `initialColor: string`, `onConfirm(hex: string): void`, `onClose(): void`, `testID?`.
-- [ ] Include a "Confirm" button and a "Cancel" button (neo-brutalist `Button` component).
-- [ ] Selected color preview swatch in the modal header so users see their choice before confirming.
-- [ ] All interactive elements: `accessibilityRole`, `accessibilityLabel`, 44×44 pt min touch targets.
-- [ ] `ColorPickerModal.styles.ts`: Unistyles stylesheet following `IconPickerModal.styles.ts` pattern.
-- [ ] **Update plan + commit** — check Step 5 boxes, commit the modal component and the plan update together.
+- [x] Created `ColorPickerModal.tsx` using `<Modal animationType="slide" presentationStyle="fullScreen">`, `SafeAreaProvider`, `useSafeAreaInsets`. Content mounted only when `visible=true` so initialColor + live preview reset on every open (same pattern as `IconPickerModal`).
+- [x] Composed `reanimated-color-picker` as `<ColorPicker value={initialColor} onChangeJS={handleColorChange}>` with three children: `<Preview>` (current vs initial side-by-side), `<Panel1>` (saturation/brightness 2D area), `<HueSlider>`. Used `onChangeJS` (not `onChange`) because the worklet variant can't call `setState`.
+- [x] Skipped the try/catch render-path — `reanimated-color-picker` doesn't have a separate native module; it composes Reanimated 4 worklets which already gate the runtime. A native-module-missing failure would surface in the existing `IconPickerModal` too, and the wider Reanimated dep is required for the rest of the app.
+- [x] Props: `visible`, `initialColor: string`, `onConfirm(hex: string): void`, `onClose(): void`, optional `title?`, `testID?`.
+- [x] Footer: Cancel + Confirm buttons via the neo-brutalist `Button` component (`secondary` / `primary` variants). Wrapped each in a `<View style={styles.footerButton}>` because `Button` doesn't accept a `style` prop and we need 50/50 flex distribution.
+- [x] `<Preview>` component shows the picked color, the initial color, and the hex text by default — covers the "selected color preview" requirement without a separate swatch.
+- [x] Close button (X), Cancel, and Confirm all 48×48 (≥44pt touch targets). `accessibilityRole`, `accessibilityLabel` on every interactive element. Header has `accessibilityRole="header"`, footer has `accessibilityRole="toolbar"`.
+- [x] `ColorPickerModal.styles.ts`: Unistyles stylesheet following `IconPickerModal.styles.ts` pattern — `modalRoot`, `contentArea`, `headerTitle`, `closeButton`, `pickerContainer`, `previewWrapper`, `panel`, `hueSlider`, `footer`, `footerButton`.
+- [x] Exported `ColorPickerModal` + `ColorPickerModalProps` from `badges/index.ts`.
+- [x] `bun run type-check` clean. `bun run lint`: 0 errors on new files (pre-existing 153 warnings in unrelated `utils/` files).
+- [x] **Update plan + commit** — Step 5 boxes checked, commit the modal component and the plan update together.
 
-**Estimated LOC**: ~120 LOC
+**Estimated LOC**: ~120 LOC (final: 137 LOC tsx + 76 LOC styles + 3 LOC index export)
 
 ---
 
