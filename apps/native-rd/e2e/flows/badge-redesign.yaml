@@ -24,19 +24,29 @@ appId: dev.rollercoaster.app
 - assertVisible:
     id: "badge-renderer"
 
+# The designer renders its controls inside a single-open accordion. Shape
+# is the only section open on entry, so the shape tap below works directly;
+# every other section needs an explicit header press first. CollapsibleSection
+# composes its header a11y label as `"${title}, ${expandLabel}"`, so taps
+# below match that literal string.
+
 # ── State propagation: shape change reaches the preview a11y label ──────
 - tapOn: "Shield shape"
 - assertVisible:
     text: "Badge preview:.*shield.*"
 
 # ── State propagation: color change reaches the preview a11y label ──────
+# Opening Colors closes Shape (single-open invariant).
+- tapOn: "Colors, expand"
 - tapOn: "Mint color"
 - assertVisible:
     text: "Badge preview:.*#34d399.*"
 
 # ── State propagation: frame change reaches the preview a11y label ──────
 # The label updates regardless of whether the frame actually renders —
-# that visual bug is caught at the unit-test layer, not here.
+# that visual bug is caught at the unit-test layer, not here. Opening
+# Frame closes Colors.
+- tapOn: "Frame, expand"
 - tapOn: "Guilloche frame"
 - assertVisible:
     text: "Badge preview:.*guilloche frame.*"

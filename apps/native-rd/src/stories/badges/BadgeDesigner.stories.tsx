@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import React, { useState } from "react";
-import { ScrollView, View } from "react-native";
+import { ScrollView, TextInput, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 
 import { BadgeRenderer } from "../../badges/BadgeRenderer";
@@ -11,6 +11,7 @@ import { FrameSelector } from "../../badges/FrameSelector";
 import { CenterModeSelector } from "../../badges/CenterModeSelector";
 import { PathTextEditor } from "../../badges/PathTextEditor";
 import { BannerEditor } from "../../badges/BannerEditor";
+import { CollapsibleSection } from "../../components/CollapsibleSection";
 import {
   BadgeShape,
   BadgeFrame,
@@ -21,6 +22,7 @@ import {
   createDefaultBadgeDesign,
 } from "../../badges/types";
 import type { BadgeDesign } from "../../badges/types";
+import { BOTTOM_LABEL_INPUT_MAX_CHARS } from "../../badges/text/BottomLabel";
 import { BADGE_CANVAS_BACKGROUND } from "../../badges/constants";
 
 // ---------------------------------------------------------------------------
@@ -34,8 +36,21 @@ function makeDesign(overrides: Partial<BadgeDesign> = {}): BadgeDesign {
   };
 }
 
+type AccordionSectionId =
+  | "shape"
+  | "frame"
+  | "center"
+  | "colors"
+  | "inscriptions";
+
 // ---------------------------------------------------------------------------
-// Interactive composer (renders all sub-components wired together)
+// Interactive composer — mirrors BadgeDesignerScreen's single-open accordion
+// (section order Shape → Frame → Center → Colors → Inscriptions; opening
+// any closed section replaces the current one; pressing the open header is
+// rejected so the all-closed state never appears). Storybook callers don't
+// have the screen's i18n provider, so section titles and verbs are passed
+// as plain strings here — the production screen sources them from the
+// `badgeDesigner.accordion.*` namespace.
 // ---------------------------------------------------------------------------
 
 function BadgeDesignerComposer({
@@ -46,6 +61,12 @@ function BadgeDesignerComposer({
   goalColor?: string;
 }) {
   const [design, setDesign] = useState(initialDesign);
+  const [expandedSection, setExpandedSection] =
+    useState<AccordionSectionId>("shape");
+
+  const handleSection = (id: AccordionSectionId) => (next: boolean) => {
+    if (next) setExpandedSection(id);
+  };
 
   return (
     <View style={styles.container}>
@@ -54,116 +75,182 @@ function BadgeDesignerComposer({
           <BadgeRenderer design={design} size={160} />
         </View>
 
-        <ShapeSelector
-          selectedShape={design.shape}
-          onSelectShape={(shape) => setDesign((prev) => ({ ...prev, shape }))}
-          accentColor={design.color}
-        />
+        <CollapsibleSection
+          title="Shape"
+          variant="card"
+          summary={design.shape}
+          expanded={expandedSection === "shape"}
+          onExpandedChange={handleSection("shape")}
+        >
+          <ShapeSelector
+            selectedShape={design.shape}
+            onSelectShape={(shape) => setDesign((prev) => ({ ...prev, shape }))}
+            accentColor={design.color}
+          />
+        </CollapsibleSection>
 
-        <ColorPicker
-          selectedColor={design.color}
-          onSelectColor={(color) => setDesign((prev) => ({ ...prev, color }))}
-          goalColor={goalColor}
-        />
+        <CollapsibleSection
+          title="Frame"
+          variant="card"
+          summary={design.frame ?? "none"}
+          expanded={expandedSection === "frame"}
+          onExpandedChange={handleSection("frame")}
+        >
+          <FrameSelector
+            selectedFrame={design.frame}
+            onSelectFrame={(frame) => setDesign((prev) => ({ ...prev, frame }))}
+            accentColor={design.color}
+          />
+        </CollapsibleSection>
 
-        <FrameSelector
-          selectedFrame={design.frame}
-          onSelectFrame={(frame) => setDesign((prev) => ({ ...prev, frame }))}
-          accentColor={design.color}
-        />
+        <CollapsibleSection
+          title="Center"
+          variant="card"
+          summary={
+            design.centerMode === BadgeCenterMode.icon
+              ? `Icon · ${design.iconName}`
+              : design.monogram
+                ? `Monogram "${design.monogram}"`
+                : "Monogram"
+          }
+          expanded={expandedSection === "center"}
+          onExpandedChange={handleSection("center")}
+        >
+          <View style={styles.sectionStack}>
+            <CenterModeSelector
+              selectedMode={design.centerMode}
+              monogram={design.monogram ?? ""}
+              onSelectMode={(centerMode) =>
+                setDesign((prev) => ({ ...prev, centerMode }))
+              }
+              onChangeMonogram={(monogram: string) =>
+                setDesign((prev) => ({ ...prev, monogram }))
+              }
+              accentColor={design.color}
+            />
+            {design.centerMode === BadgeCenterMode.icon && (
+              <IconPicker
+                selectedIcon={design.iconName}
+                selectedWeight={design.iconWeight}
+                onSelectIcon={(iconName) =>
+                  setDesign((prev) => ({ ...prev, iconName }))
+                }
+                onSelectWeight={(iconWeight) =>
+                  setDesign((prev) => ({ ...prev, iconWeight }))
+                }
+                accentColor={design.color}
+              />
+            )}
+          </View>
+        </CollapsibleSection>
 
-        <CenterModeSelector
-          selectedMode={design.centerMode}
-          monogram={design.monogram ?? ""}
-          onSelectMode={(centerMode) =>
-            setDesign((prev) => ({ ...prev, centerMode }))
-          }
-          onChangeMonogram={(monogram: string) =>
-            setDesign((prev) => ({ ...prev, monogram }))
-          }
-          accentColor={design.color}
-        />
+        <CollapsibleSection
+          title="Colors"
+          variant="card"
+          summary={design.color === goalColor ? "Goal color" : design.color}
+          expanded={expandedSection === "colors"}
+          onExpandedChange={handleSection("colors")}
+        >
+          <ColorPicker
+            selectedColor={design.color}
+            onSelectColor={(color) => setDesign((prev) => ({ ...prev, color }))}
+            goalColor={goalColor}
+          />
+        </CollapsibleSection>
 
-        <PathTextEditor
-          enabled={design.pathText !== undefined}
-          text={design.pathText ?? ""}
-          textBottom={design.pathTextBottom ?? ""}
-          position={design.pathTextPosition ?? PathTextPosition.top}
-          shape={design.shape}
-          goalTitle={design.title}
-          onToggle={(enabled) =>
-            setDesign((prev) => ({
-              ...prev,
-              pathText: enabled ? "" : undefined,
-              pathTextPosition: enabled ? PathTextPosition.top : undefined,
-              pathTextBottom: enabled ? prev.pathTextBottom : undefined,
-            }))
+        <CollapsibleSection
+          title="Inscriptions"
+          variant="card"
+          summary={
+            [
+              design.bottomLabel ? "Label" : null,
+              design.pathText !== undefined ? "Path" : null,
+              design.banner != null ? "Banner" : null,
+            ]
+              .filter(Boolean)
+              .join(" · ") || "None"
           }
-          onChangeText={(pathText) =>
-            setDesign((prev) => ({ ...prev, pathText }))
-          }
-          onChangeTextBottom={(pathTextBottom) =>
-            setDesign((prev) => ({ ...prev, pathTextBottom }))
-          }
-          onChangePosition={(pathTextPosition) =>
-            setDesign((prev) => ({ ...prev, pathTextPosition }))
-          }
-          accentColor={design.color}
-        />
-
-        <BannerEditor
-          enabled={design.banner != null}
-          text={design.banner?.text ?? ""}
-          position={design.banner?.position ?? BannerPosition.top}
-          onToggle={(enabled) =>
-            setDesign((prev) => ({
-              ...prev,
-              banner: enabled
-                ? { text: "", position: BannerPosition.top }
-                : undefined,
-            }))
-          }
-          onChangeText={(text) =>
-            setDesign((prev) => ({
-              ...prev,
-              banner: {
-                ...(prev.banner ?? {
-                  text: "",
-                  position: BannerPosition.top,
-                }),
-                text,
-              },
-            }))
-          }
-          onChangePosition={(position) =>
-            setDesign((prev) => ({
-              ...prev,
-              banner: {
-                ...(prev.banner ?? {
-                  text: "",
-                  position: BannerPosition.top,
-                }),
-                position,
-              },
-            }))
-          }
-          accentColor={design.color}
-        />
+          expanded={expandedSection === "inscriptions"}
+          onExpandedChange={handleSection("inscriptions")}
+        >
+          <View style={styles.sectionStack}>
+            <TextInput
+              accessibilityLabel="Bottom label"
+              value={design.bottomLabel ?? ""}
+              onChangeText={(bottomLabel) =>
+                setDesign((prev) => ({ ...prev, bottomLabel }))
+              }
+              maxLength={BOTTOM_LABEL_INPUT_MAX_CHARS}
+              placeholder="Bottom label"
+              style={styles.bottomLabelInput}
+            />
+            <PathTextEditor
+              enabled={design.pathText !== undefined}
+              text={design.pathText ?? ""}
+              textBottom={design.pathTextBottom ?? ""}
+              position={design.pathTextPosition ?? PathTextPosition.top}
+              shape={design.shape}
+              goalTitle={design.title}
+              onToggle={(enabled) =>
+                setDesign((prev) => ({
+                  ...prev,
+                  pathText: enabled ? "" : undefined,
+                  pathTextPosition: enabled ? PathTextPosition.top : undefined,
+                  pathTextBottom: enabled ? prev.pathTextBottom : undefined,
+                }))
+              }
+              onChangeText={(pathText) =>
+                setDesign((prev) => ({ ...prev, pathText }))
+              }
+              onChangeTextBottom={(pathTextBottom) =>
+                setDesign((prev) => ({ ...prev, pathTextBottom }))
+              }
+              onChangePosition={(pathTextPosition) =>
+                setDesign((prev) => ({ ...prev, pathTextPosition }))
+              }
+              accentColor={design.color}
+            />
+            <BannerEditor
+              enabled={design.banner != null}
+              text={design.banner?.text ?? ""}
+              position={design.banner?.position ?? BannerPosition.top}
+              onToggle={(enabled) =>
+                setDesign((prev) => ({
+                  ...prev,
+                  banner: enabled
+                    ? { text: "", position: BannerPosition.top }
+                    : undefined,
+                }))
+              }
+              onChangeText={(text) =>
+                setDesign((prev) => ({
+                  ...prev,
+                  banner: {
+                    ...(prev.banner ?? {
+                      text: "",
+                      position: BannerPosition.top,
+                    }),
+                    text,
+                  },
+                }))
+              }
+              onChangePosition={(position) =>
+                setDesign((prev) => ({
+                  ...prev,
+                  banner: {
+                    ...(prev.banner ?? {
+                      text: "",
+                      position: BannerPosition.top,
+                    }),
+                    position,
+                  },
+                }))
+              }
+              accentColor={design.color}
+            />
+          </View>
+        </CollapsibleSection>
       </ScrollView>
-
-      <View style={styles.iconPickerContainer}>
-        <IconPicker
-          selectedIcon={design.iconName}
-          selectedWeight={design.iconWeight}
-          onSelectIcon={(iconName) =>
-            setDesign((prev) => ({ ...prev, iconName }))
-          }
-          onSelectWeight={(iconWeight) =>
-            setDesign((prev) => ({ ...prev, iconWeight }))
-          }
-          accentColor={design.color}
-        />
-      </View>
     </View>
   );
 }
@@ -266,10 +353,11 @@ const styles = StyleSheet.create((theme) => ({
   },
   scrollContent: {
     padding: theme.space[4],
-    gap: theme.space[4],
-    alignItems: "center",
+    gap: theme.space[3],
+    alignItems: "stretch",
   },
   previewContainer: {
+    alignSelf: "center",
     alignItems: "center",
     justifyContent: "center",
     padding: theme.space[4],
@@ -278,8 +366,18 @@ const styles = StyleSheet.create((theme) => ({
     borderColor: theme.colors.border,
     backgroundColor: BADGE_CANVAS_BACKGROUND,
   },
-  iconPickerContainer: {
-    flex: 1,
-    paddingHorizontal: theme.space[4],
+  sectionStack: {
+    gap: theme.space[3],
+  },
+  bottomLabelInput: {
+    minHeight: 44,
+    paddingHorizontal: theme.space[3],
+    borderWidth: theme.borderWidth.medium,
+    borderRadius: 0,
+    ...theme.textStyles.body,
+    fontWeight: "600" as const,
+    borderColor: theme.colors.border,
+    color: theme.colors.text,
+    backgroundColor: theme.colors.background,
   },
 }));

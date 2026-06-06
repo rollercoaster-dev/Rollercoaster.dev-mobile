@@ -654,6 +654,72 @@ describe("BadgeDesignerScreen", () => {
     );
   });
 
+  // ── Accordion invariants ────────────────────────────────────────────
+  // Single-open coordination lives in DesignEditor and the screen never
+  // enters an all-closed state. The icon-picker-by-mode invariant is
+  // covered by the two "icon picker" tests above; these three cover the
+  // single-open header behavior.
+  it("opens Shape on entry and leaves every other section collapsed", () => {
+    mockUseQuery.mockReturnValue([makeRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+
+    // Shape body mounted (its inner selector exposes a `shape.a11y` label).
+    expect(
+      screen.getByLabelText(i18n.t("badgeDesigner:shape.a11y")),
+    ).toBeOnTheScreen();
+    // Every other section's body is unmounted (the body sits behind
+    // `{expanded && children}`), so its inner-selector label is absent.
+    expect(
+      screen.queryByLabelText(i18n.t("badgeDesigner:frame.a11y")),
+    ).toBeNull();
+    expect(
+      screen.queryByLabelText(i18n.t("badgeDesigner:center.a11y")),
+    ).toBeNull();
+    expect(
+      screen.queryByLabelText(i18n.t("badgeDesigner:color.a11y")),
+    ).toBeNull();
+    expect(
+      screen.queryByLabelText(i18n.t("badgeDesigner:bottomLabel.a11y")),
+    ).toBeNull();
+  });
+
+  it("opening Frame closes Shape", () => {
+    mockUseQuery.mockReturnValue([makeRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+
+    openSection("frame");
+    expect(
+      screen.getByLabelText(i18n.t("badgeDesigner:frame.a11y")),
+    ).toBeOnTheScreen();
+    expect(
+      screen.queryByLabelText(i18n.t("badgeDesigner:shape.a11y")),
+    ).toBeNull();
+  });
+
+  it("pressing the open Frame header does not collapse it", () => {
+    mockUseQuery.mockReturnValue([makeRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+
+    openSection("frame");
+    // After expansion the header's a11y label flips from "expand" to
+    // "collapse" (CollapsibleSection.tsx:98). Pressing this collapse-form
+    // label is the only way a user can request all-closed; the screen
+    // must reject it so exactly one section stays open.
+    const title = i18n.t("badgeDesigner:accordion.sections.frame");
+    const collapseA11y = i18n.t("badgeDesigner:accordion.collapseA11y");
+    fireEvent.press(screen.getByLabelText(`${title}, ${collapseA11y}`));
+
+    expect(
+      screen.getByLabelText(i18n.t("badgeDesigner:frame.a11y")),
+    ).toBeOnTheScreen();
+  });
+
   it("clears frameParams when frame is set back to none", async () => {
     mockUseQuery.mockReturnValue([
       makeRow({
