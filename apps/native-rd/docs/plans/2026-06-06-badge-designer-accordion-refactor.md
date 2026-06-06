@@ -1,10 +1,90 @@
 # Badge Designer Accordion Refactor
 
-**Status:** Ready for implementation
+**Status:** In progress — branch `feat/badge-border-color`, 2 of 4 steps
+committed; Step 3 + Step 3.5 (regression fix) ready to commit; Step 4 tail
+remains.
 **Tracking issue:** [#247 — reorganize badge designer as single-open accordion](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/247)
 **Follow-up:** [#248 — support custom badge fill, border, and center colors](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/248)
 **Prototype:** `apps/native-rd/prototypes/badge-designer-a-accordion.html`
 **Last updated:** 2026-06-06
+
+## Progress
+
+- [x] **Step 1 — Extend the disclosure primitive** (commit `cbe86e9`).
+      Controlled `expanded` / `onExpandedChange`, header summary slot, card
+      variant, and translated expand/collapse verbs. 13 unit tests pass.
+      Existing uncontrolled callers and the accessibility-test suite are
+      unchanged.
+- [x] **Step 2 — i18n keys** (commit `516757f`). Added
+      `badgeDesigner.accordion.*` for the five section titles, expand /
+      collapse verbs, and deterministic summary fragments. Locale-parity
+      and pseudo-locale tests pass.
+- [x] **Step 3 — Extract & coordinate badge designer sections**
+      (uncommitted on `feat/badge-border-color`). `BadgeDesignerScreen.tsx`
+      now renders five card-variant `CollapsibleSection`s in Shape → Frame
+      → Center → Colors → Inscriptions order. `expandedSection` state lives
+      in `DesignEditor`, initialised to `shape`; the per-section
+      `onExpandedChange` handler only honours opens, never closes,
+      preserving the "exactly one open" invariant. Center groups
+      `CenterModeSelector` + the conditional `IconPicker`; Inscriptions
+      groups bottom label + path text + banner. Save / preview /
+      capture / back behaviour untouched. Type-check passes.
+- [x] **Step 3.5 — Fix opened-sections-stay-clipped bug**
+      (uncommitted on `feat/badge-border-color`). Step 3 shipped to the
+      simulator and surfaced a runtime defect: opened accordions only
+      revealed ~0-30px of content before the next header. Root cause was
+      the Step 1 worklet:
+      `maxHeight: expandedValue.value === 0 ? 0 : undefined`. Reanimated 3
+      does not reliably clear a previously-applied numeric style prop by
+      returning `undefined` from a worklet, so once `maxHeight: 0` landed
+      while collapsed it remained clamped after opening. Shape happened
+      to look fine because its `useSharedValue` initialised to `1`, so
+      no numeric `maxHeight` was ever applied.
+
+      Fix: drop the `maxHeight` animation from `CollapsibleSection`'s
+      content style. Opacity still fades; natural height comes from
+      `{expanded && children}` mounting and unmounting (mirroring the
+      HTML prototype's native `<details>` behaviour). Verified manually
+      in the iOS simulator after a full app relaunch — Fast Refresh
+      preserved old shared-value instances that were bound to the old
+      worklet, so a code-only reload was not enough.
+
+      Test gap caught in the same pass: the existing 60 jest tests
+      passed against the buggy worklet because RTL never runs the
+      Reanimated worklet on native and only checks whether children are
+      in the React tree. Added a regression suite in
+      `CollapsibleSection.test.tsx` that asserts the animated content
+      style never sets a numeric `maxHeight` (or `height`) in any state
+      — collapsed, expanded, or after a press-to-open. The test was
+      verified to fail against the original buggy worklet and pass
+      against the fix. The Animated.View gained a stable
+      `testID="collapsible-content"` so the assertion can locate it.
+
+- [ ] **Step 4 — Tests, Storybook, e2e** (uncommitted on
+      `feat/badge-border-color`). 47 of 47 `BadgeDesignerScreen` jest tests
+      pass. Done so far: - `openSection(id)` helper translates a section id into the
+      controlled CollapsibleSection's header a11y label and presses it. - 13 existing tests updated to open the relevant section before
+      interacting with controls now mounted lazily. - `IconPickerModal` mocked in the screen test — its lazy `react-
+      native` `Modal` import was failing in the test bridge when first
+      touched after a state update (was fine on initial render). Mock
+      is local to the screen test; primitive/unit tests untouched.
+
+      Still to do:
+      - Add accordion-invariant tests in the screen test (Shape opens on
+        entry; opening Frame closes Shape; pressing the open Frame header
+        does not collapse it; Center icon picker still toggles by mode).
+      - Update Storybook story to wrap the composer in card-variant
+        accordion sections (or add a parallel story).
+      - Walk `e2e/flows/badge-redesign.yaml` to open Frame / Colors before
+        tapping the controls inside them.
+
+## Test results (latest)
+
+```
+CollapsibleSection            16 passed (3 original + 10 Step 1 + 3 regression)
+BadgeDesignerScreen           47 passed
+i18n locale-parity + pseudo   99 passed
+```
 
 ## Objective
 
