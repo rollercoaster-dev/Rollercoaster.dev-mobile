@@ -30,11 +30,7 @@ import Svg, { G, Path } from "react-native-svg";
 import { useUnistyles } from "react-native-unistyles";
 import type { IconWeight } from "phosphor-react-native";
 
-import {
-  BADGE_COLOR_THEME_SENTINEL,
-  BadgeBorderScope,
-  type BadgeDesign,
-} from "./types";
+import { BADGE_COLOR_THEME_SENTINEL, type BadgeDesign } from "./types";
 import type { AppTheme } from "../themes";
 import { generateShapePath } from "./shapes/paths";
 import {
@@ -263,16 +259,19 @@ export const BadgeRenderer = forwardRef<
     return getSafeTextColor(design.color, "BadgeRenderer");
   }, [design.iconColor, design.color]);
 
-  const resolvedScope = design.borderScope ?? BadgeBorderScope.shape;
-  const frameStrokeColor =
-    resolvedScope === BadgeBorderScope.shapeAndFrame ||
-    resolvedScope === BadgeBorderScope.all
-      ? resolvedBorderColor
-      : theme.colors.border;
-  const bannerBorderColor =
-    resolvedScope === BadgeBorderScope.all
-      ? resolvedBorderColor
-      : theme.colors.border;
+  /**
+   * Resolve the saved `frameColor`. Explicit hex wins; `'theme'` sentinel and
+   * absent both fall back to `theme.colors.border`, matching the historical
+   * default for the frame ring before per-channel colors landed.
+   */
+  const frameStrokeColor = useMemo(() => {
+    const stored = design.frameColor;
+    if (stored && stored !== BADGE_COLOR_THEME_SENTINEL) {
+      return stored;
+    }
+    return theme.colors.border;
+  }, [design.frameColor, theme.colors.border]);
+  const bannerBorderColor = theme.colors.border;
 
   const iconSize = iconOrMonogram.size;
   const iconOffsetX = iconOrMonogram.cx - iconSize / 2;

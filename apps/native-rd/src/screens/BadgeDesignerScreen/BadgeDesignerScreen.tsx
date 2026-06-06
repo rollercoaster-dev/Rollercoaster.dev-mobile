@@ -26,11 +26,9 @@ import {
 } from "../../badges/BadgeRenderer";
 import { BOTTOM_LABEL_INPUT_MAX_CHARS } from "../../badges/text/BottomLabel";
 import { ShapeSelector } from "../../badges/ShapeSelector";
-import { ColorPicker, ACCENT_COLORS } from "../../badges/ColorPicker";
-import { BorderColorPicker } from "../../badges/BorderColorPicker";
-import { BorderScopeSelector } from "../../badges/BorderScopeSelector";
-import { IconColorPicker } from "../../badges/IconColorPicker";
+import { ACCENT_COLORS } from "../../badges/ColorPicker";
 import { ColorPickerModal } from "../../badges/ColorPickerModal";
+import { BadgeColorsAccordion } from "./BadgeColorsAccordion";
 import { IconPicker } from "../../badges/IconPicker";
 import { FrameSelector } from "../../badges/FrameSelector";
 import { useFrameParamsForGoal } from "../../badges/frames";
@@ -43,7 +41,6 @@ import {
   createDefaultBadgeDesign,
   BadgeFrame,
   BadgeCenterMode,
-  BadgeBorderScope,
   BADGE_COLOR_THEME_SENTINEL,
   PathTextPosition,
   BannerPosition,
@@ -54,7 +51,7 @@ import type {
   BadgeIconWeight,
   FrameDataParams,
 } from "../../badges/types";
-import { getSafeTextColor, meetsWCAG } from "../../utils/accessibility";
+import { getSafeTextColor } from "../../utils/accessibility";
 import {
   badgeWithGoalQuery,
   goalsQuery,
@@ -165,8 +162,21 @@ function DesignEditor({
     onDesignChange({ ...currentDesign, iconColor: value });
   };
 
-  const handleBorderScopeChange = (scope: BadgeBorderScope) =>
-    onDesignChange({ ...currentDesign, borderScope: scope });
+  // Frame color tracks the theme by default — when the user picks the "Match
+  // theme" sentinel the field is dropped from storage so the renderer's
+  // `theme.colors.border` fallback kicks in instead of saving a literal
+  // 'theme' string that's noise in the JSON.
+  const handleFrameColorChange = (
+    value: typeof BADGE_COLOR_THEME_SENTINEL | string,
+  ) => {
+    if (value === BADGE_COLOR_THEME_SENTINEL) {
+      const next = { ...currentDesign };
+      delete next.frameColor;
+      onDesignChange(next);
+      return;
+    }
+    onDesignChange({ ...currentDesign, frameColor: value });
+  };
 
   const handleIconChange = (iconName: string) =>
     onDesignChange({ ...currentDesign, iconName });
@@ -273,38 +283,36 @@ function DesignEditor({
   };
 
   // Channel currently editing through the full-screen color modal — null when
-  // closed. One modal per editor so we don't pay for three mounted instances.
+  // closed. One modal per editor so we don't pay for four mounted instances.
   const [colorPickerTarget, setColorPickerTarget] = useState<
-    "fill" | "border" | "icon" | null
+    "fill" | "border" | "frame" | "icon" | null
   >(null);
 
   const borderColor = currentDesign.borderColor ?? BADGE_COLOR_THEME_SENTINEL;
+  const frameColor = currentDesign.frameColor ?? BADGE_COLOR_THEME_SENTINEL;
   const iconColor = currentDesign.iconColor ?? BADGE_COLOR_THEME_SENTINEL;
-  const borderScope = currentDesign.borderScope ?? BadgeBorderScope.shape;
 
-  // Auto-resolved icon color when sentinel is selected — drives both the
-  // IconColorPicker preview swatch and the contrast warning input.
+  // Auto-resolved icon color when sentinel is selected — drives the accordion
+  // summary's "custom-vs-default" check; the accordion itself recomputes this
+  // for its own contrast warning.
   const resolvedIconColor =
     iconColor === BADGE_COLOR_THEME_SENTINEL
       ? getSafeTextColor(currentDesign.color, "BadgeDesigner")
       : iconColor;
-
-  // Show the contrast warning ONLY when the user has explicitly picked a hex
-  // (resolved decision #1): the Auto sentinel already chooses the high-contrast
-  // option, so warning on it would be noise.
-  const showIconContrastWarning =
-    iconColor !== BADGE_COLOR_THEME_SENTINEL &&
-    !meetsWCAG(resolvedIconColor, currentDesign.color).passes;
 
   const colorId = ACCENT_COLORS.find((c) => c.hex === currentDesign.color)?.id;
   const fillIsCustom = !colorId && currentDesign.color !== goalColor;
   const borderIsCustom =
     borderColor !== BADGE_COLOR_THEME_SENTINEL &&
     !ACCENT_COLORS.some((c) => c.hex === borderColor);
+  const frameIsCustom =
+    frameColor !== BADGE_COLOR_THEME_SENTINEL &&
+    !ACCENT_COLORS.some((c) => c.hex === frameColor);
   const iconIsCustom =
     iconColor !== BADGE_COLOR_THEME_SENTINEL &&
     !ACCENT_COLORS.some((c) => c.hex === iconColor);
-  const hasAnyCustom = fillIsCustom || borderIsCustom || iconIsCustom;
+  const hasAnyCustom =
+    fillIsCustom || borderIsCustom || frameIsCustom || iconIsCustom;
 
   const baseColorSummary =
     currentDesign.color === goalColor
@@ -323,15 +331,21 @@ function DesignEditor({
       ? borderColor === BADGE_COLOR_THEME_SENTINEL
         ? theme.colors.border
         : borderColor
-      : colorPickerTarget === "icon"
-        ? resolvedIconColor
-        : currentDesign.color;
+      : colorPickerTarget === "frame"
+        ? frameColor === BADGE_COLOR_THEME_SENTINEL
+          ? theme.colors.border
+          : frameColor
+        : colorPickerTarget === "icon"
+          ? resolvedIconColor
+          : currentDesign.color;
 
   const handleConfirmModalColor = (hex: string) => {
     if (colorPickerTarget === "fill") {
       handleColorChange(hex);
     } else if (colorPickerTarget === "border") {
       handleBorderColorChange(hex);
+    } else if (colorPickerTarget === "frame") {
+      handleFrameColorChange(hex);
     } else if (colorPickerTarget === "icon") {
       handleIconColorChange(hex);
     }
@@ -443,38 +457,15 @@ function DesignEditor({
           collapseLabel={collapseA11y}
           testID="badge-designer-colors"
         >
-          <View style={styles.sectionStack}>
-            <ColorPicker
-              selectedColor={currentDesign.color}
-              onSelectColor={handleColorChange}
-              goalColor={goalColor ?? undefined}
-              onOpenCustomPicker={() => setColorPickerTarget("fill")}
-            />
-            <BorderColorPicker
-              selectedBorderColor={borderColor}
-              onSelectBorderColor={handleBorderColorChange}
-              onOpenCustomPicker={() => setColorPickerTarget("border")}
-            />
-            <BorderScopeSelector
-              selectedScope={borderScope}
-              onSelectScope={handleBorderScopeChange}
-            />
-            <IconColorPicker
-              selectedIconColor={iconColor}
-              fillColor={currentDesign.color}
-              onSelectIconColor={handleIconColorChange}
-              onOpenCustomPicker={() => setColorPickerTarget("icon")}
-            />
-            {showIconContrastWarning && (
-              <Text
-                variant="caption"
-                style={styles.contrastWarning}
-                testID="icon-contrast-warning"
-              >
-                {t("iconColor.contrastWarning")}
-              </Text>
-            )}
-          </View>
+          <BadgeColorsAccordion
+            design={currentDesign}
+            goalColor={goalColor}
+            onChangeFill={handleColorChange}
+            onChangeBorder={handleBorderColorChange}
+            onChangeFrame={handleFrameColorChange}
+            onChangeIcon={handleIconColorChange}
+            onOpenCustomPicker={(channel) => setColorPickerTarget(channel)}
+          />
         </CollapsibleSection>
 
         <CollapsibleSection

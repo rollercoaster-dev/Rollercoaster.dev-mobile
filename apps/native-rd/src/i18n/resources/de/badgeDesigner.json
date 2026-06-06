@@ -75,15 +75,6 @@
       "sky": "Himmelblau"
     }
   },
-  "borderScope": {
-    "a11y": "Rahmenbereich",
-    "optionA11y": "{{label}} Bereich",
-    "options": {
-      "shape": "Form",
-      "shapeAndFrame": "Form + Rahmen",
-      "all": "Alles"
-    }
-  },
   "frame": {
     "a11y": "Badge-Rahmen",
     "optionA11y": "{{label}} Rahmen",

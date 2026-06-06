@@ -6,7 +6,6 @@ import {
   BadgeFrame,
   BadgeIconWeight,
   BadgeCenterMode,
-  BadgeBorderScope,
   BADGE_COLOR_THEME_SENTINEL,
   PathTextPosition,
   BannerPosition,
@@ -201,7 +200,7 @@ describe("parseBadgeDesign", () => {
         stepNames: ["Step 1", "Step 2"],
       },
       // Custom-color fields added in #248. Parser defaults missing
-      // borderColor → 'theme'; iconColor/borderScope stay absent.
+      // borderColor → 'theme'; iconColor/frameColor stay absent.
       borderColor: BADGE_COLOR_THEME_SENTINEL,
     };
     const result = parseBadgeDesign(JSON.stringify(fullDesign));
@@ -308,13 +307,6 @@ describe("BadgeDesign new type enums", () => {
     expect(Object.keys(BannerPosition)).toHaveLength(2);
   });
 
-  test("BadgeBorderScope has shape, shapeAndFrame, all", () => {
-    expect(BadgeBorderScope.shape).toBe("shape");
-    expect(BadgeBorderScope.shapeAndFrame).toBe("shapeAndFrame");
-    expect(BadgeBorderScope.all).toBe("all");
-    expect(Object.keys(BadgeBorderScope)).toHaveLength(3);
-  });
-
   test("BADGE_COLOR_THEME_SENTINEL is the literal 'theme'", () => {
     expect(BADGE_COLOR_THEME_SENTINEL).toBe("theme");
   });
@@ -369,18 +361,28 @@ describe("parseBadgeDesign — custom color fields", () => {
   });
 
   test.each([
-    ["shape", { borderScope: "shape" }, "shape"],
-    ["shapeAndFrame", { borderScope: "shapeAndFrame" }, "shapeAndFrame"],
-    ["all", { borderScope: "all" }, "all"],
-    ["invalid value → 'shape'", { borderScope: "everywhere" }, "shape"],
-  ])("sanitizes borderScope: %s", (_label, overrides, expected) => {
+    ["valid hex passes through", { frameColor: "#abcdef" }, "#abcdef"],
+    ["'theme' sentinel passes through", { frameColor: "theme" }, "theme"],
+    ["invalid string → undefined", { frameColor: "nope" }, undefined],
+    ["non-string → undefined", { frameColor: 99 }, undefined],
+  ])("sanitizes frameColor: %s", (_label, overrides, expected) => {
     const result = parseBadgeDesign(makeRaw(overrides));
-    expect(result!.borderScope).toBe(expected);
+    expect(result!.frameColor).toBe(expected);
   });
 
-  test("missing borderScope stays undefined (renderer treats as 'shape')", () => {
+  test("missing frameColor stays undefined (renderer falls back to theme.colors.border)", () => {
     const result = parseBadgeDesign(makeRaw({}));
-    expect(result!.borderScope).toBeUndefined();
+    expect(result!.frameColor).toBeUndefined();
+  });
+
+  test("strips retired borderScope field on read", () => {
+    // Pre-#248 designs may have `borderScope` stored. The renderer no longer
+    // reads it; the parser drops it so consumers can't accidentally branch on a
+    // value that has no effect.
+    const result = parseBadgeDesign(
+      makeRaw({ borderScope: "shapeAndFrame" }),
+    ) as Record<string, unknown> | null;
+    expect(result).not.toHaveProperty("borderScope");
   });
 
   test("round-trips a fully-customised design unchanged", () => {
@@ -388,7 +390,7 @@ describe("parseBadgeDesign — custom color fields", () => {
       ...createDefaultBadgeDesign("Round-trip"),
       borderColor: "#112233",
       iconColor: "#445566",
-      borderScope: BadgeBorderScope.all,
+      frameColor: "#778899",
     };
     const result = parseBadgeDesign(JSON.stringify(design));
     expect(result).toEqual(design);

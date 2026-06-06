@@ -20,7 +20,6 @@ export {
   BadgeFrame,
   BadgeIconWeight,
   BadgeCenterMode,
-  BadgeBorderScope,
   BADGE_COLOR_THEME_SENTINEL,
   PathTextPosition,
   BannerPosition,
@@ -44,15 +43,6 @@ export type { IconPickerProps } from "./IconPicker";
 
 export { ColorPickerModal } from "./ColorPickerModal";
 export type { ColorPickerModalProps } from "./ColorPickerModal";
-
-export { BorderColorPicker } from "./BorderColorPicker";
-export type { BorderColorPickerProps } from "./BorderColorPicker";
-
-export { BorderScopeSelector } from "./BorderScopeSelector";
-export type { BorderScopeSelectorProps } from "./BorderScopeSelector";
-
-export { IconColorPicker } from "./IconColorPicker";
-export type { IconColorPickerProps } from "./IconColorPicker";
 
 export { PathTextEditor } from "./PathTextEditor";
 export type { PathTextEditorProps } from "./PathTextEditor";

@@ -50,11 +50,6 @@ export const styles = StyleSheet.create((theme) => ({
   sectionStack: {
     gap: theme.space[3],
   },
-  contrastWarning: {
-    color: theme.colors.text,
-    fontWeight: "600" as const,
-    paddingHorizontal: theme.space[2],
-  },
   bottomLabelInput: {
     minHeight: 44,
     paddingHorizontal: theme.space[3],

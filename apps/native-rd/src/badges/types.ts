@@ -56,24 +56,6 @@ export const BadgeCenterMode = {
 export type BadgeCenterMode =
   (typeof BadgeCenterMode)[keyof typeof BadgeCenterMode];
 
-/**
- * Scope of a custom `borderColor` value within a rendered badge.
- *
- * - `shape`         → only the shape `<Path>` stroke uses `borderColor`.
- * - `shapeAndFrame` → shape stroke + `FrameOverlay` stroke use `borderColor`.
- * - `all`           → shape + frame + banner stroke all use `borderColor`
- *                     (banner hard shadow fill stays `#000000`).
- */
-export const BadgeBorderScope = {
-  shape: "shape",
-  shapeAndFrame: "shapeAndFrame",
-  all: "all",
-} as const;
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare -- intentional same-name type+const pattern
-export type BadgeBorderScope =
-  (typeof BadgeBorderScope)[keyof typeof BadgeBorderScope];
-
 /** Position for text rendered along the badge's circular path */
 export const PathTextPosition = {
   top: "top",
@@ -163,8 +145,12 @@ export type BadgeDesign = {
    * `getSafeTextColor(design.color)` — the prior auto-contrast behaviour.
    */
   iconColor?: typeof BADGE_COLOR_THEME_SENTINEL | string;
-  /** Which SVG layers a custom `borderColor` applies to. Absent → `shape`. */
-  borderScope?: BadgeBorderScope;
+  /**
+   * Frame ring color: `'theme'` sentinel or hex. Absent → renderer falls back
+   * to `theme.colors.border`. Only meaningful when `frame !== BadgeFrame.none`;
+   * stored values for `BadgeFrame.none` are harmless but ignored at render time.
+   */
+  frameColor?: typeof BADGE_COLOR_THEME_SENTINEL | string;
 };
 
 /** Default icon when none is specified */
@@ -212,10 +198,9 @@ export function createDefaultBadgeDesign(
 }
 
 const CENTER_MODE_VALUES = new Set(Object.values(BadgeCenterMode));
-const BORDER_SCOPE_VALUES = new Set(Object.values(BadgeBorderScope));
 
 /**
- * Sanitize a stored `borderColor` / `iconColor` value.
+ * Sanitize a stored `borderColor` / `iconColor` / `frameColor` value.
  *
  * - `'theme'` sentinel passes through.
  * - Valid hex string passes through.
@@ -228,12 +213,6 @@ function sanitizeBadgeColorField(
   if (raw === BADGE_COLOR_THEME_SENTINEL) return BADGE_COLOR_THEME_SENTINEL;
   if (typeof raw === "string" && isValidHexColor(raw)) return raw;
   return fallback;
-}
-
-function sanitizeBorderScope(raw: unknown): BadgeBorderScope {
-  return BORDER_SCOPE_VALUES.has(raw as BadgeBorderScope)
-    ? (raw as BadgeBorderScope)
-    : BadgeBorderScope.shape;
 }
 
 /** Validate and sanitize FrameDataParams, returning undefined if invalid. */
@@ -294,10 +273,7 @@ export function parseBadgeDesign(
       BADGE_COLOR_THEME_SENTINEL,
     );
     const iconColor = sanitizeBadgeColorField(parsed.iconColor, undefined);
-    const borderScope =
-      parsed.borderScope === undefined
-        ? undefined
-        : sanitizeBorderScope(parsed.borderScope);
+    const frameColor = sanitizeBadgeColorField(parsed.frameColor, undefined);
     const result: Record<string, unknown> = {
       ...parsed,
       centerMode,
@@ -305,11 +281,14 @@ export function parseBadgeDesign(
     };
     // Strip sanitized fields whose result is `undefined` so they don't appear
     // as `key: undefined` properties (which would break `toEqual` round-trip
-    // tests and make stored JSON noisier than it needs to be).
+    // tests and make stored JSON noisier than it needs to be). Also strip the
+    // retired `borderScope` field — designs from before per-channel colors
+    // may carry it; the renderer no longer reads it.
     if (iconColor === undefined) delete result.iconColor;
     else result.iconColor = iconColor;
-    if (borderScope === undefined) delete result.borderScope;
-    else result.borderScope = borderScope;
+    if (frameColor === undefined) delete result.frameColor;
+    else result.frameColor = frameColor;
+    delete result.borderScope;
     if (sanitizedFrameParams === undefined) delete result.frameParams;
     else result.frameParams = sanitizedFrameParams;
     return result as BadgeDesign;
