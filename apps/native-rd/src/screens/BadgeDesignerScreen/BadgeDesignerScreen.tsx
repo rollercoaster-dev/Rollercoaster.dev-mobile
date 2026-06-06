@@ -16,6 +16,7 @@ import { useTranslation } from "react-i18next";
 
 import { Text } from "../../components/Text";
 import { Button } from "../../components/Button";
+import { CollapsibleSection } from "../../components/CollapsibleSection";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
 import {
@@ -25,7 +26,7 @@ import {
 } from "../../badges/BadgeRenderer";
 import { BOTTOM_LABEL_INPUT_MAX_CHARS } from "../../badges/text/BottomLabel";
 import { ShapeSelector } from "../../badges/ShapeSelector";
-import { ColorPicker } from "../../badges/ColorPicker";
+import { ColorPicker, ACCENT_COLORS } from "../../badges/ColorPicker";
 import { IconPicker } from "../../badges/IconPicker";
 import { FrameSelector } from "../../badges/FrameSelector";
 import { useFrameParamsForGoal } from "../../badges/frames";
@@ -66,6 +67,21 @@ import { styles } from "./BadgeDesignerScreen.styles";
 const logger = new Logger("BadgeDesignerScreen");
 
 const DEFAULT_BANNER = { text: "", position: BannerPosition.top } as const;
+
+type AccordionSectionId =
+  | "shape"
+  | "frame"
+  | "center"
+  | "colors"
+  | "inscriptions";
+
+const SECTION_ORDER: readonly AccordionSectionId[] = [
+  "shape",
+  "frame",
+  "center",
+  "colors",
+  "inscriptions",
+] as const;
 
 /** Reserved space below topBar for the floating preview overlay at rest. */
 const PREVIEW_OVERLAY_HEIGHT = 200;
@@ -294,6 +310,73 @@ function DesignEditor({
     icon: currentDesign.iconName,
   });
 
+  // --- Accordion coordination ---
+  const [expandedSection, setExpandedSection] =
+    useState<AccordionSectionId>("shape");
+
+  // Opening any section replaces the current one; collapse requests (when the
+  // user presses the open header) are ignored so the screen never enters an
+  // all-closed state.
+  const makeSectionHandler = useCallback(
+    (id: AccordionSectionId) => (next: boolean) => {
+      if (next) setExpandedSection(id);
+    },
+    [],
+  );
+
+  // --- Section summaries (deterministic, localized, no user free text) ---
+  const colorId = ACCENT_COLORS.find((c) => c.hex === currentDesign.color)?.id;
+  const colorSummary =
+    currentDesign.color === goalColor
+      ? t("color.options.goal")
+      : colorId
+        ? t(`color.options.${colorId}` as const)
+        : currentDesign.color;
+
+  const shapeSummary = t(`shape.options.${currentDesign.shape}` as const);
+  const frameSummary = t(`frame.options.${frame}` as const);
+
+  const centerSummary =
+    centerMode === BadgeCenterMode.icon
+      ? t("accordion.summary.centerIcon", { icon: currentDesign.iconName })
+      : monogram
+        ? t("accordion.summary.centerMonogram", { monogram })
+        : t("accordion.summary.centerMonogramEmpty");
+
+  // Enumerate enabled inscription kinds without echoing user content.
+  const inscriptionParts: string[] = [];
+  if (bottomLabel)
+    inscriptionParts.push(t("accordion.summary.inscriptionsLabel"));
+  if (pathTextEnabled)
+    inscriptionParts.push(t("accordion.summary.inscriptionsPath"));
+  if (bannerEnabled)
+    inscriptionParts.push(t("accordion.summary.inscriptionsBanner"));
+  const inscriptionsSummary = inscriptionParts.length
+    ? inscriptionParts.join(" · ")
+    : t("accordion.summary.inscriptionsNone");
+
+  const expandA11y = t("accordion.expandA11y");
+  const collapseA11y = t("accordion.collapseA11y");
+
+  const renderSection = (
+    id: AccordionSectionId,
+    summary: string,
+    body: React.ReactNode,
+  ) => (
+    <CollapsibleSection
+      key={id}
+      title={t(`accordion.sections.${id}` as const)}
+      variant="card"
+      summary={summary}
+      expanded={expandedSection === id}
+      onExpandedChange={makeSectionHandler(id)}
+      expandLabel={expandA11y}
+      collapseLabel={collapseA11y}
+    >
+      {body}
+    </CollapsibleSection>
+  );
+
   return (
     <View style={styles.editorRoot}>
       <ScrollView
@@ -306,100 +389,102 @@ function DesignEditor({
         ]}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionLabel}>{t("sections.shape")}</Text>
-          <ShapeSelector
-            selectedShape={currentDesign.shape}
-            onSelectShape={handleShapeChange}
-            accentColor={currentDesign.color}
-          />
-        </View>
-
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionLabel}>{t("sections.color")}</Text>
-          <ColorPicker
-            selectedColor={currentDesign.color}
-            onSelectColor={handleColorChange}
-            goalColor={goalColor ?? undefined}
-          />
-        </View>
-
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionLabel}>{t("sections.frame")}</Text>
-          <FrameSelector
-            selectedFrame={frame}
-            onSelectFrame={handleFrameChange}
-            accentColor={currentDesign.color}
-          />
-        </View>
-
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionLabel}>{t("sections.center")}</Text>
-          <CenterModeSelector
-            selectedMode={centerMode}
-            monogram={monogram}
-            onSelectMode={handleCenterModeChange}
-            onChangeMonogram={handleMonogramChange}
-            accentColor={currentDesign.color}
-          />
-        </View>
-
-        {centerMode === BadgeCenterMode.icon && (
-          <View style={styles.iconSection}>
-            <Text style={styles.sectionLabel}>{t("sections.icon")}</Text>
-            <IconPicker
-              selectedIcon={currentDesign.iconName}
-              selectedWeight={currentDesign.iconWeight}
-              onSelectIcon={handleIconChange}
-              onSelectWeight={handleWeightChange}
-              accentColor={currentDesign.color}
-            />
-          </View>
-        )}
-
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionLabel}>{t("sections.bottomLabel")}</Text>
-          <TextInput
-            accessibilityRole="text"
-            accessibilityLabel={t("bottomLabel.a11y")}
-            value={bottomLabel}
-            onChangeText={handleBottomLabelChange}
-            maxLength={BOTTOM_LABEL_INPUT_MAX_CHARS}
-            placeholder={t("bottomLabel.placeholder")}
-            placeholderTextColor={theme.colors.textSecondary}
-            style={styles.bottomLabelInput}
-          />
-        </View>
-
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionLabel}>{t("sections.pathText")}</Text>
-          <PathTextEditor
-            enabled={pathTextEnabled}
-            text={pathText}
-            textBottom={pathTextBottom}
-            position={pathTextPosition}
-            shape={currentDesign.shape}
-            goalTitle={goalTitle ?? currentDesign.title}
-            onToggle={handlePathTextToggle}
-            onChangeText={handlePathTextChange}
-            onChangeTextBottom={handlePathTextBottomChange}
-            onChangePosition={handlePathTextPositionChange}
-            accentColor={currentDesign.color}
-          />
-        </View>
-
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionLabel}>{t("sections.banner")}</Text>
-          <BannerEditor
-            enabled={bannerEnabled}
-            text={bannerText}
-            position={bannerPosition}
-            onToggle={handleBannerToggle}
-            onChangeText={handleBannerTextChange}
-            onChangePosition={handleBannerPositionChange}
-            accentColor={currentDesign.color}
-          />
-        </View>
+        {SECTION_ORDER.map((id) => {
+          switch (id) {
+            case "shape":
+              return renderSection(
+                "shape",
+                shapeSummary,
+                <ShapeSelector
+                  selectedShape={currentDesign.shape}
+                  onSelectShape={handleShapeChange}
+                  accentColor={currentDesign.color}
+                />,
+              );
+            case "frame":
+              return renderSection(
+                "frame",
+                frameSummary,
+                <FrameSelector
+                  selectedFrame={frame}
+                  onSelectFrame={handleFrameChange}
+                  accentColor={currentDesign.color}
+                />,
+              );
+            case "center":
+              return renderSection(
+                "center",
+                centerSummary,
+                <View style={styles.sectionStack}>
+                  <CenterModeSelector
+                    selectedMode={centerMode}
+                    monogram={monogram}
+                    onSelectMode={handleCenterModeChange}
+                    onChangeMonogram={handleMonogramChange}
+                    accentColor={currentDesign.color}
+                  />
+                  {centerMode === BadgeCenterMode.icon && (
+                    <IconPicker
+                      selectedIcon={currentDesign.iconName}
+                      selectedWeight={currentDesign.iconWeight}
+                      onSelectIcon={handleIconChange}
+                      onSelectWeight={handleWeightChange}
+                      accentColor={currentDesign.color}
+                    />
+                  )}
+                </View>,
+              );
+            case "colors":
+              return renderSection(
+                "colors",
+                colorSummary,
+                <ColorPicker
+                  selectedColor={currentDesign.color}
+                  onSelectColor={handleColorChange}
+                  goalColor={goalColor ?? undefined}
+                />,
+              );
+            case "inscriptions":
+              return renderSection(
+                "inscriptions",
+                inscriptionsSummary,
+                <View style={styles.sectionStack}>
+                  <TextInput
+                    accessibilityRole="text"
+                    accessibilityLabel={t("bottomLabel.a11y")}
+                    value={bottomLabel}
+                    onChangeText={handleBottomLabelChange}
+                    maxLength={BOTTOM_LABEL_INPUT_MAX_CHARS}
+                    placeholder={t("bottomLabel.placeholder")}
+                    placeholderTextColor={theme.colors.textSecondary}
+                    style={styles.bottomLabelInput}
+                  />
+                  <PathTextEditor
+                    enabled={pathTextEnabled}
+                    text={pathText}
+                    textBottom={pathTextBottom}
+                    position={pathTextPosition}
+                    shape={currentDesign.shape}
+                    goalTitle={goalTitle ?? currentDesign.title}
+                    onToggle={handlePathTextToggle}
+                    onChangeText={handlePathTextChange}
+                    onChangeTextBottom={handlePathTextBottomChange}
+                    onChangePosition={handlePathTextPositionChange}
+                    accentColor={currentDesign.color}
+                  />
+                  <BannerEditor
+                    enabled={bannerEnabled}
+                    text={bannerText}
+                    position={bannerPosition}
+                    onToggle={handleBannerToggle}
+                    onChangeText={handleBannerTextChange}
+                    onChangePosition={handleBannerPositionChange}
+                    accentColor={currentDesign.color}
+                  />
+                </View>,
+              );
+          }
+        })}
 
         <View style={styles.footer}>
           <Button

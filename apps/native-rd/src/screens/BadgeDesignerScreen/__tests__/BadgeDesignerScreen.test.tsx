@@ -17,6 +17,18 @@ import type {
 } from "../../../badges/types";
 import type { AccentColorId } from "../../../badges/ColorPicker";
 
+// The screen now renders its controls inside a single-open accordion.
+// Shape opens on entry; every other section must be opened explicitly before
+// its controls become interactive. This helper translates a section id into
+// the CollapsibleSection's header a11y label and taps it.
+const openSection = (
+  id: "shape" | "frame" | "center" | "colors" | "inscriptions",
+) => {
+  const title = i18n.t(`badgeDesigner:accordion.sections.${id}`);
+  const expandA11y = i18n.t("badgeDesigner:accordion.expandA11y");
+  fireEvent.press(screen.getByLabelText(`${title}, ${expandA11y}`));
+};
+
 const shapeLabel = (id: BadgeShape) =>
   i18n.t("badgeDesigner:shape.optionA11y", {
     label: i18n.t(`badgeDesigner:shape.options.${id}`),
@@ -110,6 +122,15 @@ jest.mock("react-native-svg", () => {
     ClipPath: stub,
   };
 });
+
+// IconPickerModal pulls in react-native's `Modal`, whose lazy native-module
+// require fails when triggered mid-test (after a section's first expand)
+// instead of during the initial render. These screen tests assert on the
+// IconPicker trigger button, not on modal internals, so a stub keeps the
+// Icon mode subtree mountable.
+jest.mock("../../../badges/IconPickerModal", () => ({
+  IconPickerModal: () => null,
+}));
 
 // Mock phosphor-react-native (virtual — not installed in node_modules)
 jest.mock(
@@ -260,6 +281,7 @@ describe("BadgeDesignerScreen", () => {
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
+    openSection("colors");
     expect(
       screen.getByLabelText(i18n.t("badgeDesigner:color.a11y")),
     ).toBeOnTheScreen();
@@ -395,6 +417,7 @@ describe("BadgeDesignerScreen", () => {
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
 
+    openSection("colors");
     fireEvent.press(screen.getByLabelText(colorLabel("mint")));
     expect(screen.getByLabelText(/Badge preview:.*#34d399/)).toBeOnTheScreen();
   });
@@ -406,6 +429,7 @@ describe("BadgeDesignerScreen", () => {
     );
 
     fireEvent.press(screen.getByLabelText(shapeLabel("shield")));
+    openSection("colors");
     fireEvent.press(screen.getByLabelText(colorLabel("mint")));
     fireEvent.press(
       screen.getByLabelText(i18n.t("badgeDesigner:actions.save")),
@@ -448,6 +472,7 @@ describe("BadgeDesignerScreen", () => {
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
+    openSection("frame");
     expect(
       screen.getByLabelText(i18n.t("badgeDesigner:frame.a11y")),
     ).toBeOnTheScreen();
@@ -458,6 +483,7 @@ describe("BadgeDesignerScreen", () => {
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
+    openSection("center");
     expect(
       screen.getByLabelText(i18n.t("badgeDesigner:center.a11y")),
     ).toBeOnTheScreen();
@@ -468,6 +494,7 @@ describe("BadgeDesignerScreen", () => {
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
+    openSection("inscriptions");
     expect(
       screen.getByLabelText(i18n.t("badgeDesigner:pathText.toggleA11y")),
     ).toBeOnTheScreen();
@@ -478,6 +505,7 @@ describe("BadgeDesignerScreen", () => {
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
+    openSection("inscriptions");
     expect(
       screen.getByLabelText(i18n.t("badgeDesigner:banner.toggleA11y")),
     ).toBeOnTheScreen();
@@ -488,6 +516,7 @@ describe("BadgeDesignerScreen", () => {
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
+    openSection("center");
     expect(
       screen.getByLabelText(/Selected icon:.*Tap to change/),
     ).toBeOnTheScreen();
@@ -498,6 +527,7 @@ describe("BadgeDesignerScreen", () => {
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
+    openSection("center");
     fireEvent.press(screen.getByLabelText(centerLabel("monogram")));
     expect(screen.queryByLabelText(/Selected icon:.*Tap to change/)).toBeNull();
   });
@@ -507,6 +537,7 @@ describe("BadgeDesignerScreen", () => {
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
+    openSection("inscriptions");
     expect(
       screen.getByLabelText(i18n.t("badgeDesigner:bottomLabel.a11y")),
     ).toBeOnTheScreen();
@@ -519,14 +550,16 @@ describe("BadgeDesignerScreen", () => {
     );
 
     // Select a frame
+    openSection("frame");
     fireEvent.press(screen.getByLabelText(frameLabel("guilloche")));
 
     // Toggle path text on
+    openSection("inscriptions");
     fireEvent.press(
       screen.getByLabelText(i18n.t("badgeDesigner:pathText.toggleA11y")),
     );
 
-    // Toggle banner on
+    // Toggle banner on (Inscriptions is already open)
     fireEvent.press(
       screen.getByLabelText(i18n.t("badgeDesigner:banner.toggleA11y")),
     );
@@ -548,6 +581,8 @@ describe("BadgeDesignerScreen", () => {
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
+
+    openSection("inscriptions");
 
     // Enable path text, then disable
     fireEvent.press(
@@ -582,6 +617,7 @@ describe("BadgeDesignerScreen", () => {
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
 
+    openSection("frame");
     fireEvent.press(screen.getByLabelText(frameLabel("guilloche")));
     expect(
       screen.getByLabelText(/Badge preview:.*guilloche.*frame/),
@@ -601,6 +637,7 @@ describe("BadgeDesignerScreen", () => {
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
 
+    openSection("frame");
     fireEvent.press(screen.getByLabelText(frameLabel("guilloche")));
     fireEvent.press(
       screen.getByLabelText(i18n.t("badgeDesigner:actions.save")),
@@ -643,6 +680,7 @@ describe("BadgeDesignerScreen", () => {
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
 
+    openSection("frame");
     fireEvent.press(screen.getByLabelText(frameLabel("none")));
     fireEvent.press(
       screen.getByLabelText(i18n.t("badgeDesigner:actions.save")),
@@ -910,9 +948,11 @@ describe("BadgeDesignerScreen — integration", () => {
     );
 
     // Select guilloche frame
+    openSection("frame");
     fireEvent.press(screen.getByLabelText(frameLabel("guilloche")));
 
-    // Enable path text, type text
+    // Inscriptions: enable path text, type text
+    openSection("inscriptions");
     fireEvent.press(
       screen.getByLabelText(i18n.t("badgeDesigner:pathText.toggleA11y")),
     );
@@ -921,7 +961,7 @@ describe("BadgeDesignerScreen — integration", () => {
       "ACHIEVEMENT",
     );
 
-    // Enable banner, type text
+    // Enable banner, type text (Inscriptions stays open)
     fireEvent.press(
       screen.getByLabelText(i18n.t("badgeDesigner:banner.toggleA11y")),
     );
