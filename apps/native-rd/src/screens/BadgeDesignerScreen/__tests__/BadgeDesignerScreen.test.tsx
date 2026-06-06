@@ -467,48 +467,22 @@ describe("BadgeDesignerScreen", () => {
 
   // --- New controls from #190 ---
 
-  it("renders FrameSelector", () => {
+  // Each opens a section and confirms its primary control is mounted. The
+  // post-open interaction tests below implicitly re-cover queryability, so
+  // these only guard against the section→control wiring breaking.
+  it.each([
+    ["FrameSelector", "frame", "badgeDesigner:frame.a11y"],
+    ["CenterModeSelector", "center", "badgeDesigner:center.a11y"],
+    ["PathTextEditor", "inscriptions", "badgeDesigner:pathText.toggleA11y"],
+    ["BannerEditor", "inscriptions", "badgeDesigner:banner.toggleA11y"],
+    ["bottom label input", "inscriptions", "badgeDesigner:bottomLabel.a11y"],
+  ] as const)("renders %s in the %s section", (_name, section, a11yKey) => {
     mockUseQuery.mockReturnValue([makeRow()]);
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
-    openSection("frame");
-    expect(
-      screen.getByLabelText(i18n.t("badgeDesigner:frame.a11y")),
-    ).toBeOnTheScreen();
-  });
-
-  it("renders CenterModeSelector", () => {
-    mockUseQuery.mockReturnValue([makeRow()]);
-    renderWithProviders(
-      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
-    );
-    openSection("center");
-    expect(
-      screen.getByLabelText(i18n.t("badgeDesigner:center.a11y")),
-    ).toBeOnTheScreen();
-  });
-
-  it("renders PathTextEditor", () => {
-    mockUseQuery.mockReturnValue([makeRow()]);
-    renderWithProviders(
-      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
-    );
-    openSection("inscriptions");
-    expect(
-      screen.getByLabelText(i18n.t("badgeDesigner:pathText.toggleA11y")),
-    ).toBeOnTheScreen();
-  });
-
-  it("renders BannerEditor", () => {
-    mockUseQuery.mockReturnValue([makeRow()]);
-    renderWithProviders(
-      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
-    );
-    openSection("inscriptions");
-    expect(
-      screen.getByLabelText(i18n.t("badgeDesigner:banner.toggleA11y")),
-    ).toBeOnTheScreen();
+    openSection(section);
+    expect(screen.getByLabelText(i18n.t(a11yKey))).toBeOnTheScreen();
   });
 
   it("shows icon picker by default (icon mode)", () => {
@@ -530,17 +504,6 @@ describe("BadgeDesignerScreen", () => {
     openSection("center");
     fireEvent.press(screen.getByLabelText(centerLabel("monogram")));
     expect(screen.queryByLabelText(/Selected icon:.*Tap to change/)).toBeNull();
-  });
-
-  it("renders bottom label input", () => {
-    mockUseQuery.mockReturnValue([makeRow()]);
-    renderWithProviders(
-      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
-    );
-    openSection("inscriptions");
-    expect(
-      screen.getByLabelText(i18n.t("badgeDesigner:bottomLabel.a11y")),
-    ).toBeOnTheScreen();
   });
 
   it("includes new fields in saved JSON after changes", async () => {

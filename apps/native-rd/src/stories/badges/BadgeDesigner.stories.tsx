@@ -270,51 +270,6 @@ type Story = StoryObj;
 // Stories
 // ---------------------------------------------------------------------------
 
-export const Interactive: Story = {
-  render: () => <BadgeDesignerComposer initialDesign={makeDesign()} />,
-};
-
-export const DefaultDesign: Story = {
-  render: () => (
-    <BadgeDesignerComposer
-      initialDesign={makeDesign({
-        shape: BadgeShape.circle,
-        color: "#a78bfa",
-        iconName: "Trophy",
-        iconWeight: BadgeIconWeight.regular,
-      })}
-    />
-  ),
-};
-
-export const WithGoalColor: Story = {
-  render: () => (
-    <BadgeDesignerComposer
-      initialDesign={makeDesign({
-        shape: BadgeShape.hexagon,
-        color: "#06b6d4",
-        iconName: "Code",
-        iconWeight: BadgeIconWeight.bold,
-      })}
-      goalColor="#06b6d4"
-    />
-  ),
-};
-
-export const AllShapes: Story = {
-  render: () => (
-    <BadgeDesignerComposer
-      initialDesign={makeDesign({
-        shape: BadgeShape.star,
-        frame: BadgeFrame.none,
-        color: "#f97316",
-        iconName: "Fire",
-        iconWeight: BadgeIconWeight.fill,
-      })}
-    />
-  ),
-};
-
 export const WithAllControls: Story = {
   render: () => (
     <BadgeDesignerComposer
