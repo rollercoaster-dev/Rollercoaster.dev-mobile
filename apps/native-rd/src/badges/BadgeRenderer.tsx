@@ -30,7 +30,11 @@ import Svg, { G, Path } from "react-native-svg";
 import { useUnistyles } from "react-native-unistyles";
 import type { IconWeight } from "phosphor-react-native";
 
-import type { BadgeDesign } from "./types";
+import {
+  BADGE_COLOR_THEME_SENTINEL,
+  BadgeBorderScope,
+  type BadgeDesign,
+} from "./types";
 import type { AppTheme } from "../themes";
 import { generateShapePath } from "./shapes/paths";
 import {
@@ -233,10 +237,42 @@ export const BadgeRenderer = forwardRef<
     [design.shape, size, inset],
   );
 
-  const iconColor = useMemo(
-    () => getSafeTextColor(design.color, "BadgeRenderer"),
-    [design.color],
-  );
+  /**
+   * Resolve the saved `borderColor` to a concrete color string. The `'theme'`
+   * sentinel and a missing field both fall back to `theme.colors.border` so
+   * existing badges keep tracking the active theme.
+   */
+  const resolvedBorderColor = useMemo(() => {
+    const stored = design.borderColor;
+    if (!stored || stored === BADGE_COLOR_THEME_SENTINEL) {
+      return theme.colors.border;
+    }
+    return stored;
+  }, [design.borderColor, theme.colors.border]);
+
+  /**
+   * Resolve the saved `iconColor`. Explicit hex wins; `'theme'` sentinel and
+   * absent both fall back to the auto-contrast color so legacy designs keep
+   * the prior behaviour.
+   */
+  const resolvedIconColor = useMemo(() => {
+    const stored = design.iconColor;
+    if (stored && stored !== BADGE_COLOR_THEME_SENTINEL) {
+      return stored;
+    }
+    return getSafeTextColor(design.color, "BadgeRenderer");
+  }, [design.iconColor, design.color]);
+
+  const resolvedScope = design.borderScope ?? BadgeBorderScope.shape;
+  const frameStrokeColor =
+    resolvedScope === BadgeBorderScope.shapeAndFrame ||
+    resolvedScope === BadgeBorderScope.all
+      ? resolvedBorderColor
+      : theme.colors.border;
+  const bannerBorderColor =
+    resolvedScope === BadgeBorderScope.all
+      ? resolvedBorderColor
+      : theme.colors.border;
 
   const iconSize = iconOrMonogram.size;
   const iconOffsetX = iconOrMonogram.cx - iconSize / 2;
@@ -270,7 +306,7 @@ export const BadgeRenderer = forwardRef<
       <Path
         d={pathD}
         fill={design.color}
-        stroke={theme.colors.border}
+        stroke={resolvedBorderColor}
         strokeWidth={strokeWidth}
         strokeLinejoin="round"
       />
@@ -283,7 +319,7 @@ export const BadgeRenderer = forwardRef<
         inset={inset}
         innerInset={innerInset}
         params={design.frameParams}
-        strokeColor={theme.colors.border}
+        strokeColor={frameStrokeColor}
       />
 
       {/* Layer 4: PathText — coin-style inscriptions along shape contour */}
@@ -309,6 +345,7 @@ export const BadgeRenderer = forwardRef<
           fontFamily={theme.fontFamily.headline}
           scale={layout.centerContentScale}
           centerY={layout.centerY}
+          textColor={resolvedIconColor}
         />
       ) : (
         IconComponent && (
@@ -316,7 +353,7 @@ export const BadgeRenderer = forwardRef<
             <IconComponent
               size={iconSize}
               weight={(design.iconWeight ?? "regular") as IconWeight}
-              color={iconColor}
+              color={resolvedIconColor}
             />
           </G>
         )
@@ -338,7 +375,7 @@ export const BadgeRenderer = forwardRef<
         size={size}
         badgeColor={design.color}
         topVisibleRatio={bannerTopVisibleRatio}
-        borderColor={theme.colors.border}
+        borderColor={bannerBorderColor}
         fontFamily={theme.fontFamily.mono}
         showShadow={hasShadow}
         scale={layout.bannerScale}

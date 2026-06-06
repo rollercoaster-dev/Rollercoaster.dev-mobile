@@ -120,31 +120,24 @@ Add custom fill, border, and icon/monogram color controls to the badge designer'
 
 ---
 
-### Step 3: Update renderer color resolution
+### Step 3: Update renderer color resolution ✅ DONE
 
-**Files**: `apps/native-rd/src/badges/BadgeRenderer.tsx`
+**Files**: `apps/native-rd/src/badges/BadgeRenderer.tsx`, `apps/native-rd/src/badges/text/MonogramCenter.tsx`
 **Commit**: `feat(badges): resolve custom borderColor, iconColor, borderScope in renderer`
 **Changes**:
 
-- [ ] Add `resolvedBorderColor` computed value:
-  ```ts
-  const resolvedBorderColor = useMemo(() => {
-    if (!design.borderColor || design.borderColor === "theme") {
-      return theme.colors.border;
-    }
-    return design.borderColor;
-  }, [design.borderColor, theme.colors.border]);
-  ```
-- [ ] Add `resolvedIconColor` computed value: if `design.iconColor` is present and not `'theme'`, use it directly; otherwise use existing `getSafeTextColor(design.color, 'BadgeRenderer')`.
-- [ ] Derive `resolvedScope`: `design.borderScope ?? 'shape'`.
-- [ ] Update Layer 2 shape `<Path>` `stroke` to use `resolvedBorderColor` (always — shape border is always in scope).
-- [ ] Update `<FrameOverlay strokeColor>` to pass `resolvedScope === 'shapeAndFrame' || resolvedScope === 'all' ? resolvedBorderColor : theme.colors.border`.
-- [ ] Update `<Banner borderColor>` to pass `resolvedScope === 'all' ? resolvedBorderColor : theme.colors.border`. Note: banner `fill` (`getSafeTextColor(badgeColor)`) and shadow `fill="#000000"` are NOT touched.
-- [ ] Update icon `color` prop to use `resolvedIconColor`.
-- [ ] Update `MonogramCenter` — check if it accepts a color prop; if not, it currently derives from `fillColor` (which is `design.color`) internally. Assess whether `iconColor` should also govern monogram color — likely yes per issue ("icon/monogram color"). If `MonogramCenter` doesn't expose a `color` prop, add one. Flag this as a sub-task.
-- [ ] **Update plan + commit** — check Step 3 boxes, commit the renderer changes and the plan update together.
+- [x] Added `resolvedBorderColor` `useMemo` in `BadgeRenderer.tsx`. Falls back to `theme.colors.border` when value is missing OR equals `BADGE_COLOR_THEME_SENTINEL`.
+- [x] Added `resolvedIconColor` `useMemo`. Returns hex when explicitly set and not the sentinel; otherwise `getSafeTextColor(design.color)` (legacy behaviour preserved).
+- [x] Derived `resolvedScope = design.borderScope ?? BadgeBorderScope.shape` and split into `frameStrokeColor` / `bannerBorderColor` for prop-site clarity.
+- [x] Shape `<Path>` stroke now uses `resolvedBorderColor` (always in scope).
+- [x] `<FrameOverlay strokeColor>` uses `resolvedBorderColor` for `shapeAndFrame` and `all`, theme border otherwise.
+- [x] `<Banner borderColor>` uses `resolvedBorderColor` only for `all` scope. Banner `fill` and the `#000000` shadow are untouched.
+- [x] Icon `color` prop now reads `resolvedIconColor`.
+- [x] `MonogramCenter` gained an optional `textColor` prop; the renderer threads `resolvedIconColor` so monogram tracks icon color per Resolved Decision #2. When `textColor` is omitted the component still falls back to `getSafeTextColor(fillColor)` so existing call sites are unaffected.
+- [x] Verified: `bun run type-check` clean, `npx jest --testPathPatterns "badges/__tests__/BadgeRenderer"` → 37/37 pass. Pre-existing `IconPicker.test.tsx` Modal/native-bridge failures (21) reproduce on `main` without this diff and are unrelated.
+- [x] **Update plan + commit** — Step 3 boxes checked, committed as one atomic feat commit.
 
-**Estimated LOC**: ~40 LOC in `BadgeRenderer.tsx`; ~10 LOC in `MonogramCenter.tsx` if prop addition is needed.
+**Estimated LOC**: ~40 LOC in `BadgeRenderer.tsx`; ~10 LOC in `MonogramCenter.tsx`.
 
 ---
 
