@@ -1,8 +1,8 @@
 # Badge Designer Accordion Refactor
 
-**Status:** In progress — branch `feat/badge-border-color`, 2 of 4 steps
-committed; Step 3 + Step 3.5 (regression fix) ready to commit; Step 4 tail
-remains.
+**Status:** In progress — branch `feat/badge-border-color`, Steps 1-3 +
+3.5 committed; Step 4 tail (accordion-invariant screen tests, Storybook,
+e2e walk) remains.
 **Tracking issue:** [#247 — reorganize badge designer as single-open accordion](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/247)
 **Follow-up:** [#248 — support custom badge fill, border, and center colors](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/248)
 **Prototype:** `apps/native-rd/prototypes/badge-designer-a-accordion.html`
@@ -20,7 +20,7 @@ remains.
       collapse verbs, and deterministic summary fragments. Locale-parity
       and pseudo-locale tests pass.
 - [x] **Step 3 — Extract & coordinate badge designer sections**
-      (uncommitted on `feat/badge-border-color`). `BadgeDesignerScreen.tsx`
+      (commit `fcb6830`). `BadgeDesignerScreen.tsx`
       now renders five card-variant `CollapsibleSection`s in Shape → Frame
       → Center → Colors → Inscriptions order. `expandedSection` state lives
       in `DesignEditor`, initialised to `shape`; the per-section
@@ -30,7 +30,7 @@ remains.
       groups bottom label + path text + banner. Save / preview /
       capture / back behaviour untouched. Type-check passes.
 - [x] **Step 3.5 — Fix opened-sections-stay-clipped bug**
-      (uncommitted on `feat/badge-border-color`). Step 3 shipped to the
+      (commit `87fe547`). Step 3 shipped to the
       simulator and surfaced a runtime defect: opened accordions only
       revealed ~0-30px of content before the next header. Root cause was
       the Step 1 worklet:
@@ -60,12 +60,12 @@ remains.
       against the fix. The Animated.View gained a stable
       `testID="collapsible-content"` so the assertion can locate it.
 
-- [ ] **Step 4 — Tests, Storybook, e2e** (uncommitted on
-      `feat/badge-border-color`). 47 of 47 `BadgeDesignerScreen` jest tests
-      pass. Done so far: - `openSection(id)` helper translates a section id into the
+- [ ] **Step 4 — Tests, Storybook, e2e** (partially landed in commit
+      `fcb6830`; further work outstanding). 47 of 47 `BadgeDesignerScreen`
+      jest tests pass. Done so far: - `openSection(id)` helper translates a section id into the
       controlled CollapsibleSection's header a11y label and presses it. - 13 existing tests updated to open the relevant section before
       interacting with controls now mounted lazily. - `IconPickerModal` mocked in the screen test — its lazy `react-
-      native` `Modal` import was failing in the test bridge when first
+    native` `Modal` import was failing in the test bridge when first
       touched after a state update (was fine on initial render). Mock
       is local to the screen test; primitive/unit tests untouched.
 
