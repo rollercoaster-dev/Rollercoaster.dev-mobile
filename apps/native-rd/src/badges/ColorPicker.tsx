@@ -89,7 +89,7 @@ export function ColorPicker({
                   {
                     backgroundColor: hex,
                     borderColor: isSelected
-                      ? theme.colors.border
+                      ? theme.colors.accentPrimary
                       : "transparent",
                     borderWidth: isSelected ? 4 : 3,
                   },

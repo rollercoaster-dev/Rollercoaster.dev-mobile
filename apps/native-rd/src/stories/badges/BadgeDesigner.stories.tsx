@@ -84,7 +84,6 @@ function BadgeDesignerComposer({
           <ShapeSelector
             selectedShape={design.shape}
             onSelectShape={(shape) => setDesign((prev) => ({ ...prev, shape }))}
-            accentColor={design.color}
           />
         </CollapsibleSection>
 
@@ -97,7 +96,6 @@ function BadgeDesignerComposer({
           <FrameSelector
             selectedFrame={design.frame}
             onSelectFrame={(frame) => setDesign((prev) => ({ ...prev, frame }))}
-            accentColor={design.color}
           />
         </CollapsibleSection>
 
@@ -121,7 +119,6 @@ function BadgeDesignerComposer({
               onChangeMonogram={(monogram: string) =>
                 setDesign((prev) => ({ ...prev, monogram }))
               }
-              accentColor={design.color}
             />
             {design.centerMode === BadgeCenterMode.icon && (
               <IconPicker
@@ -201,7 +198,6 @@ function BadgeDesignerComposer({
               onChangePosition={(pathTextPosition) =>
                 setDesign((prev) => ({ ...prev, pathTextPosition }))
               }
-              accentColor={design.color}
             />
             <BannerEditor
               enabled={design.banner != null}
@@ -239,7 +235,6 @@ function BadgeDesignerComposer({
                   },
                 }))
               }
-              accentColor={design.color}
             />
           </View>
         </CollapsibleSection>

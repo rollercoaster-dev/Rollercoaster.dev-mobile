@@ -16,7 +16,6 @@ export interface BannerEditorProps {
   onToggle: (enabled: boolean) => void;
   onChangeText: (text: string) => void;
   onChangePosition: (position: BannerPosition) => void;
-  accentColor?: string;
   testID?: string;
 }
 
@@ -37,12 +36,10 @@ export function BannerEditor({
   onToggle,
   onChangeText,
   onChangePosition,
-  accentColor,
   testID = "banner-editor",
 }: BannerEditorProps) {
   const { theme } = useUnistyles();
   const { t } = useTranslation("badgeDesigner");
-  const resolvedAccent = accentColor ?? theme.colors.accentPrimary;
 
   const handleToggle = useCallback(
     () => onToggle(!enabled),
@@ -64,7 +61,9 @@ export function BannerEditor({
         style={[
           styles.toggle,
           {
-            borderColor: enabled ? resolvedAccent : theme.colors.border,
+            borderColor: enabled
+              ? theme.colors.accentPrimary
+              : theme.colors.border,
             borderWidth: enabled ? 4 : 3,
           },
         ]}
@@ -73,7 +72,7 @@ export function BannerEditor({
           style={[
             styles.toggleText,
             {
-              color: enabled ? resolvedAccent : theme.colors.text,
+              color: enabled ? theme.colors.accentPrimary : theme.colors.text,
               fontWeight: enabled ? "700" : "500",
             },
           ]}
@@ -121,7 +120,7 @@ export function BannerEditor({
                     styles.option,
                     {
                       borderColor: isSelected
-                        ? resolvedAccent
+                        ? theme.colors.accentPrimary
                         : theme.colors.border,
                       borderWidth: isSelected ? 4 : 3,
                     },
@@ -131,7 +130,9 @@ export function BannerEditor({
                     style={[
                       styles.optionText,
                       {
-                        color: isSelected ? resolvedAccent : theme.colors.text,
+                        color: isSelected
+                          ? theme.colors.accentPrimary
+                          : theme.colors.text,
                         fontWeight: isSelected ? "700" : "500",
                       },
                     ]}

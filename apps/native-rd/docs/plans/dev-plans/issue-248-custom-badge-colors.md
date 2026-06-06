@@ -141,17 +141,38 @@ Add custom fill, border, and icon/monogram color controls to the badge designer'
 
 ---
 
-### Step 4: Fix selection ring in `ColorPicker.tsx`
+### Step 4: Decouple active-selection ring from the badge fill color across all designer selectors ✅ DONE
 
-**Files**: `apps/native-rd/src/badges/ColorPicker.tsx`
-**Commit**: `fix(badges): move selected-swatch ring from border to primary token`
+**Scope expanded after Joe pushback (2026-06-06):** the original plan only patched `ColorPicker.tsx`. The real problem was bigger — `BadgeDesignerScreen` passed `accentColor={currentDesign.color}` into six selectors, and each one used `resolvedAccent = accentColor ?? theme.colors.accentPrimary` for its active-state border + label color. So when the user picked "purple" as the badge fill, every active selection ring across `ShapeSelector`, `FrameSelector`, `CenterModeSelector`, `BannerEditor`, `PathTextEditor`, and `IconPicker` also turned purple — that's the "tied to the badge" behaviour Joe flagged.
+
+**Files touched (final scope):**
+
+- `apps/native-rd/src/badges/ColorPicker.tsx` — selection ring `borderColor` swapped from `theme.colors.border` to `theme.colors.accentPrimary` (line 92).
+- `apps/native-rd/src/badges/ShapeSelector.tsx` — `accentColor` prop removed; `resolvedAccent` references replaced with `theme.colors.accentPrimary` (active ring + shape thumbnail `fillColor`).
+- `apps/native-rd/src/badges/FrameSelector.tsx` — same pattern; prop removed, active ring + label color use `accentPrimary`.
+- `apps/native-rd/src/badges/CenterModeSelector.tsx` — same pattern.
+- `apps/native-rd/src/badges/BannerEditor.tsx` — same pattern.
+- `apps/native-rd/src/badges/PathTextEditor.tsx` — same pattern.
+- `apps/native-rd/src/screens/BadgeDesignerScreen/BadgeDesignerScreen.tsx` — five `accentColor={currentDesign.color}` pass-sites removed (Shape, Frame, CenterMode, PathText, Banner). IconPicker's pass-site is deliberately left as-is — see follow-up note below.
+- `apps/native-rd/src/stories/badges/BadgeDesigner.stories.tsx` — same five storybook pass-sites removed.
+
+**Commit**: `fix(badges): decouple designer active-selection ring from badge fill`
 **Changes**:
 
-- [ ] At `ColorPicker.tsx:92` (approximately), change `borderColor: isSelected ? theme.colors.border : 'transparent'` to `borderColor: isSelected ? theme.colors.primary : 'transparent'`.
-- [ ] Update `ColorPicker.test.tsx` assertion if any test asserts the ring color token by name.
-- [ ] **Update plan + commit** — check Step 4 boxes, commit the fix and the plan update together.
+- [x] Confirmed in-repo that `theme.colors` does NOT expose a `primary` key. The `Colors` interface (`src/themes/colorModes.ts`) defines `accentPrimary`. The earlier ColorPicker edit (`theme.colors.primary`) compiled only because the swatch style is a plain inline object, not Unistyles-typed — it would have rendered `undefined` at runtime.
+- [x] Fixed ColorPicker.tsx:92 to use `theme.colors.accentPrimary`.
+- [x] Removed five `accentColor={currentDesign.color}` props in `BadgeDesignerScreen.tsx` (Shape, Frame, CenterMode, PathText, Banner). IconPicker's prop pass-through is kept — see deferred follow-up.
+- [x] **Decision**: `accentColor` prop deleted entirely from the five selectors. Joe confirmed on 2026-06-06 that no legitimate caller exists; defaulting to `theme.colors.accentPrimary` is the right behaviour. Removing the prop simplifies the API and prevents future re-introduction of the same bug. ShapeSelector's `fillColor={resolvedAccent}` thumbnail also defaults to `accentPrimary` now — the live BadgeRenderer preview at the top of the screen already shows the user's chosen fill, so the shape picker's role is purely type selection, not preview.
+- [x] **IconPicker / IconPickerModal**: deferred per Joe (2026-06-06). They use `resolvedAccent` for _content_ — the trigger icon-box background and selected-grid-item highlight — not just an active-state ring. That's plausibly a feature (live preview of fill colour in the icon area), not a bug. Decision is parked and flagged as Open Question for a later commit; for now the `accentColor` prop and pass-site remain.
+- [x] No test changes needed — no test file in `apps/native-rd/src` passes `accentColor` to any of the five selectors (verified via grep). All affected tests pass: `BadgeDesignerScreen` (50/50), badges selectors + renderer + types (178/178).
+- [x] `bun run type-check` clean (4/4 turbo tasks pass).
+- [x] **Update plan + commit** — boxes checked, commit fix + plan update together.
 
-**Estimated LOC**: ~5 LOC
+**Estimated LOC**: ~30 LOC across five selectors + designer screen + storybook; 0 LOC test updates.
+
+**Open follow-up (deferred from Step 4):**
+
+- IconPicker / IconPickerModal still receive `accentColor={currentDesign.color}` and use it for the trigger icon-box background and selected-grid-item highlight. Joe deferred the call on whether that's a desired live-preview behaviour or the same conflation bug. Revisit in a follow-up commit; if it's a bug, the fix mirrors this one (remove prop, default to `accentPrimary`).
 
 ---
 

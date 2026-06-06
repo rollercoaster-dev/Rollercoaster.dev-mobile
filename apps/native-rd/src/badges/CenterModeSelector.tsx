@@ -15,7 +15,6 @@ export interface CenterModeSelectorProps {
   monogram: string;
   onSelectMode: (mode: BadgeCenterMode) => void;
   onChangeMonogram: (text: string) => void;
-  accentColor?: string;
   testID?: string;
 }
 
@@ -34,12 +33,10 @@ export function CenterModeSelector({
   monogram,
   onSelectMode,
   onChangeMonogram,
-  accentColor,
   testID = "center-mode-selector",
 }: CenterModeSelectorProps) {
   const { theme } = useUnistyles();
   const { t } = useTranslation("badgeDesigner");
-  const resolvedAccent = accentColor ?? theme.colors.accentPrimary;
 
   const handlePress = useCallback(
     (mode: BadgeCenterMode) => onSelectMode(mode),
@@ -67,7 +64,7 @@ export function CenterModeSelector({
                 styles.option,
                 {
                   borderColor: isSelected
-                    ? resolvedAccent
+                    ? theme.colors.accentPrimary
                     : theme.colors.border,
                   borderWidth: isSelected ? 4 : 3,
                 },
@@ -77,7 +74,9 @@ export function CenterModeSelector({
                 style={[
                   styles.optionText,
                   {
-                    color: isSelected ? resolvedAccent : theme.colors.text,
+                    color: isSelected
+                      ? theme.colors.accentPrimary
+                      : theme.colors.text,
                     fontWeight: isSelected ? "700" : "500",
                   },
                 ]}

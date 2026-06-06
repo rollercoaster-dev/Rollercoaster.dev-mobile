@@ -304,7 +304,6 @@ function DesignEditor({
           <ShapeSelector
             selectedShape={currentDesign.shape}
             onSelectShape={handleShapeChange}
-            accentColor={currentDesign.color}
           />
         </CollapsibleSection>
 
@@ -320,7 +319,6 @@ function DesignEditor({
           <FrameSelector
             selectedFrame={frame}
             onSelectFrame={handleFrameChange}
-            accentColor={currentDesign.color}
           />
         </CollapsibleSection>
 
@@ -339,7 +337,6 @@ function DesignEditor({
               monogram={monogram}
               onSelectMode={handleCenterModeChange}
               onChangeMonogram={handleMonogramChange}
-              accentColor={currentDesign.color}
             />
             {centerMode === BadgeCenterMode.icon && (
               <IconPicker
@@ -399,7 +396,6 @@ function DesignEditor({
               onChangeText={handlePathTextChange}
               onChangeTextBottom={handlePathTextBottomChange}
               onChangePosition={handlePathTextPositionChange}
-              accentColor={currentDesign.color}
             />
             <BannerEditor
               enabled={bannerEnabled}
@@ -408,7 +404,6 @@ function DesignEditor({
               onToggle={handleBannerToggle}
               onChangeText={handleBannerTextChange}
               onChangePosition={handleBannerPositionChange}
-              accentColor={currentDesign.color}
             />
           </View>
         </CollapsibleSection>
