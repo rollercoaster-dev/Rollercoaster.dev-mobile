@@ -6,6 +6,8 @@ import {
 } from "../../__tests__/test-utils";
 import { ShapeSelector } from "../ShapeSelector";
 import { BadgeShape } from "../types";
+import { mockTheme } from "../../__tests__/mocks/unistyles";
+import { findRingBorderColor } from "./selector-test-helpers";
 
 // Mock react-native-svg — shapes render as views
 jest.mock("react-native-svg", () => {
@@ -102,5 +104,18 @@ describe("ShapeSelector", () => {
 
     fireEvent.press(screen.getByLabelText("Hexagon shape"));
     expect(onSelectShape).toHaveBeenCalledWith(BadgeShape.hexagon);
+  });
+
+  it("active-selection ring uses theme.accentPrimary, not design.color", () => {
+    // Regression guard for #248 review I4: the accentColor prop was removed
+    // so the editor chrome no longer adopts the badge's custom fill color.
+    renderWithProviders(
+      <ShapeSelector
+        selectedShape={BadgeShape.shield}
+        onSelectShape={onSelectShape}
+      />,
+    );
+    const ring = findRingBorderColor(screen.getByLabelText("Shield shape"));
+    expect(ring).toBe(mockTheme.colors.accentPrimary);
   });
 });

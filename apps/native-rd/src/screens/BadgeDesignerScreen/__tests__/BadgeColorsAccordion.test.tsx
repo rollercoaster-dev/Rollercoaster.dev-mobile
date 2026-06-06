@@ -2,7 +2,7 @@
  * Tests for BadgeColorsAccordion — the tabbed Fill/Border/Frame/Icon picker.
  *
  * Covers tab visibility (Frame gated on `design.frame !== 'none'`), the
- * useEffect redirect when the active tab disappears, sentinel + swatch +
+ * state redirect when the active tab disappears, sentinel + swatch +
  * custom-trigger callbacks per channel, and the icon contrast warning.
  */
 
@@ -106,9 +106,21 @@ describe("BadgeColorsAccordion", () => {
           {...handlers}
         />,
       );
-      // Frame body unmounts; Border body now visible from the useEffect redirect.
+      // The derived tab renders Border in the same commit, before the effect
+      // converges the stored tab state.
       expect(screen.queryByLabelText("Badge frame color")).toBeNull();
       expect(screen.getByLabelText("Badge border color")).toBeOnTheScreen();
+
+      rerender(
+        <BadgeColorsAccordion
+          design={createDesign({ frame: BadgeFrame.boldBorder })}
+          {...handlers}
+        />,
+      );
+      // The stored tab also converges to Border, so restoring a frame does not
+      // unexpectedly reopen the previously active Frame channel.
+      expect(screen.getByLabelText("Badge border color")).toBeOnTheScreen();
+      expect(screen.queryByLabelText("Badge frame color")).toBeNull();
     });
   });
 

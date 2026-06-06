@@ -15,21 +15,7 @@ import {
 } from "../../__tests__/test-utils";
 import { ColorPickerModal } from "../ColorPickerModal";
 
-// Override the RN auto-mock for Modal — the default mockComponent shim tries
-// to `requireActual` the real Modal to read its displayName, which fails in
-// our Jest env with "__fbBatchedBridgeConfig is not set". A passthrough that
-// gates on `visible` and re-emits children is all we need; RN's main module
-// imports Modal via `require('./Libraries/Modal/Modal').default`, so the
-// factory must shape itself as an ES module with a `default` export. Jest
-// hoists `jest.mock` calls above imports, so order in source doesn't matter.
-jest.mock("react-native/Libraries/Modal/Modal", () => {
-  const Modal = (props: { visible?: boolean; children?: React.ReactNode }) => {
-    if (!props.visible) return null;
-    return props.children;
-  };
-  Modal.displayName = "Modal";
-  return { __esModule: true, default: Modal };
-});
+// Modal mock is registered globally in src/__tests__/setup-modal-mock.ts.
 
 // Mock phosphor-react-native for the close-button X icon.
 jest.mock("phosphor-react-native", () => {
@@ -59,8 +45,9 @@ jest.mock("phosphor-react-native", () => {
 });
 
 // Mock reanimated-color-picker so tests don't depend on the native worklet
-// runtime. The mock exposes the `onChangeJS` callback through a Pressable
-// — pressing it simulates a user drag.
+// runtime. The mock exposes the `onChangeJS` callback through two Pressables:
+// one emits a valid hex, the other emits a malformed string so the modal's
+// validation guard can be driven deterministically.
 jest.mock("reanimated-color-picker", () => {
   const React = require("react");
   const { Pressable, View } = require("react-native");
@@ -76,6 +63,10 @@ jest.mock("reanimated-color-picker", () => {
         <Pressable
           testID="reanimated-color-picker-change"
           onPress={() => onChangeJS && onChangeJS({ hex: "#abcdef" })}
+        />
+        <Pressable
+          testID="reanimated-color-picker-change-invalid"
+          onPress={() => onChangeJS && onChangeJS({ hex: "not-a-hex" })}
         />
         {children}
       </View>
@@ -172,5 +163,24 @@ describe("ColorPickerModal", () => {
       />,
     );
     expect(screen.getByText("Pick Border Color")).toBeOnTheScreen();
+  });
+
+  it("ignores a malformed hex from the picker (keeps initial color)", () => {
+    const onConfirm = jest.fn();
+    renderWithProviders(
+      <ColorPickerModal
+        {...baseProps}
+        visible={true}
+        initialColor="#a78bfa"
+        onConfirm={onConfirm}
+      />,
+    );
+    // Drive a tick that emits an invalid hex; Confirm must still send the
+    // initial value, not the bogus payload.
+    fireEvent.press(
+      screen.getByTestId("reanimated-color-picker-change-invalid"),
+    );
+    fireEvent.press(screen.getByTestId("color-picker-modal-confirm"));
+    expect(onConfirm).toHaveBeenCalledWith("#a78bfa");
   });
 });

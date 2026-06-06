@@ -31,6 +31,7 @@ import type { EvidenceTypeValue } from "../types/evidence";
  */
 export type ReportContext =
   | { area: "badge.create"; kind?: "build" | "sign" | "bake" | "store" }
+  | { area: "badge.parse"; kind: "design-json" | "color-field" }
   | { area: "badge.storage"; kind?: "read" | "write" | "delete" }
   | { area: "key.generate" }
   | { area: "key.verify" }

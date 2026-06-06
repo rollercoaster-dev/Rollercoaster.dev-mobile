@@ -6,6 +6,8 @@ import {
 } from "../../__tests__/test-utils";
 import { CenterModeSelector } from "../CenterModeSelector";
 import { BadgeCenterMode } from "../types";
+import { mockTheme } from "../../__tests__/mocks/unistyles";
+import { findRingBorderColor } from "./selector-test-helpers";
 
 describe("CenterModeSelector", () => {
   const onSelectMode = jest.fn();
@@ -122,5 +124,11 @@ describe("CenterModeSelector", () => {
 
     fireEvent.changeText(screen.getByLabelText("Monogram text"), "ABC");
     expect(onChangeMonogram).toHaveBeenCalledWith("ABC");
+  });
+
+  it("active-selection ring uses theme.accentPrimary, not design.color", () => {
+    renderWithProviders(<CenterModeSelector {...defaultProps} />);
+    const ring = findRingBorderColor(screen.getByLabelText("Icon center"));
+    expect(ring).toBe(mockTheme.colors.accentPrimary);
   });
 });

@@ -96,6 +96,7 @@ module.exports = {
     require.resolve("react-native-unistyles/mocks"),
     "./unistyles.ts",
     "./src/__tests__/setup-unistyles.ts",
+    "./src/__tests__/setup-modal-mock.ts",
     "./src/db/__tests__/setup.ts",
     "./src/i18n/index.ts",
   ],

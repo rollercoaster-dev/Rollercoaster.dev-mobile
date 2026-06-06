@@ -14,6 +14,15 @@ import {
   parseBadgeDesign,
 } from "../types";
 import type { BadgeDesign } from "../types";
+import { reportError } from "../../services/sentry-report";
+
+jest.mock("../../services/sentry-report", () => ({
+  reportError: jest.fn(),
+}));
+
+const mockedReportError = reportError as jest.MockedFunction<
+  typeof reportError
+>;
 
 describe("BadgeDesign enums", () => {
   test("BadgeShape has all 6 shapes", () => {
@@ -394,5 +403,67 @@ describe("parseBadgeDesign — custom color fields", () => {
     };
     const result = parseBadgeDesign(JSON.stringify(design));
     expect(result).toEqual(design);
+  });
+});
+
+describe("parseBadgeDesign — diagnostics", () => {
+  let warnSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    mockedReportError.mockClear();
+    warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    warnSpy.mockRestore();
+  });
+
+  test("malformed hex on borderColor emits a dev warn naming the field", () => {
+    const raw = JSON.stringify({
+      shape: "circle",
+      frame: "none",
+      color: "#a78bfa",
+      iconName: "Trophy",
+      iconWeight: "regular",
+      title: "Bad",
+      centerMode: "icon",
+      borderColor: "#zzzzzz",
+    });
+    const result = parseBadgeDesign(raw);
+    expect(result!.borderColor).toBe(BADGE_COLOR_THEME_SENTINEL);
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("borderColor"),
+      expect.objectContaining({ raw: "#zzzzzz" }),
+    );
+    expect(mockedReportError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: "Invalid stored BadgeDesign borderColor",
+      }),
+      { area: "badge.parse", kind: "color-field" },
+    );
+  });
+
+  test("absent borderColor does NOT warn (documented fallback path)", () => {
+    const raw = JSON.stringify({
+      shape: "circle",
+      frame: "none",
+      color: "#a78bfa",
+      iconName: "Trophy",
+      iconWeight: "regular",
+      title: "Missing",
+      centerMode: "icon",
+    });
+    parseBadgeDesign(raw);
+    expect(warnSpy).not.toHaveBeenCalled();
+    expect(mockedReportError).not.toHaveBeenCalled();
+  });
+
+  test("JSON parse failure reports to Sentry with area=badge.parse", () => {
+    const result = parseBadgeDesign("{not valid json");
+    expect(result).toBeNull();
+    expect(mockedReportError).toHaveBeenCalledWith(expect.any(Error), {
+      area: "badge.parse",
+      kind: "design-json",
+    });
   });
 });

@@ -26,8 +26,12 @@ import ColorPicker, {
 
 import { Button } from "../components/Button";
 import { HeaderBand } from "../components/ScreenHeader";
+import { Logger } from "../shims/rd-logger";
 import { getIconComponent } from "./iconRegistry";
+import { isValidHexColor } from "./types";
 import { styles } from "./ColorPickerModal.styles";
+
+const logger = new Logger("ColorPickerModal");
 
 // ---------------------------------------------------------------------------
 // Types
@@ -84,6 +88,15 @@ function ColorPickerModalContent({
   const [currentColor, setCurrentColor] = useState<string>(initialColor);
 
   const handleColorChange = useCallback((color: ColorFormatsObject) => {
+    // reanimated-color-picker is third-party — defend against the picker
+    // emitting a malformed payload rather than corrupting downstream
+    // BadgeDesign state. Drop the tick; the previous value stays in place.
+    if (!isValidHexColor(color.hex)) {
+      logger.warn("ColorPicker emitted invalid hex; ignoring", {
+        hex: color.hex,
+      });
+      return;
+    }
     setCurrentColor(color.hex);
   }, []);
 

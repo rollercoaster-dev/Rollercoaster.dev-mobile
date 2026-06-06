@@ -1,34 +1,20 @@
-/**
- * Colors accordion body for the badge designer.
- *
- * Tabbed picker (Fill / Border / Frame / Icon) where each tab owns a full
- * channel: sentinel (when applicable) + palette swatches + custom-color
- * trigger. The Frame tab is only mounted when a frame is selected on the
- * design, mirroring the renderer's behaviour.
- *
- * Replaces the earlier stack of separate `ColorPicker` / `BorderColorPicker`
- * / `IconColorPicker` cards which read as duplicated palettes (issue #248).
- */
+// Tabbed channel picker for the badge designer's Colors accordion. The Frame
+// tab only mounts when a frame is selected on the design, mirroring the
+// renderer.
 
 import React, { useEffect, useState } from "react";
-import { Pressable, ScrollView, View } from "react-native";
-import { StyleSheet, useUnistyles } from "react-native-unistyles";
+import { Pressable, View } from "react-native";
+import { useUnistyles } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
 
 import { Text } from "../../components/Text";
-import { ColorPicker, ACCENT_COLORS } from "../../badges/ColorPicker";
+import { ColorPicker } from "../../badges/ColorPicker";
 import { BADGE_COLOR_THEME_SENTINEL, BadgeFrame } from "../../badges/types";
 import type { BadgeDesign } from "../../badges/types";
 import { getSafeTextColor, meetsWCAG } from "../../utils/accessibility";
+import { ChannelPalette } from "./ChannelPalette";
+import { styles } from "./BadgeColorsAccordion.styles";
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-/**
- * Source-of-truth list for tabs in the Colors accordion. Exported so the i18n
- * `colorChannels` parity test can reverse-walk this against the JSON keyset.
- */
 export const BADGE_COLOR_CHANNELS = [
   "fill",
   "border",
@@ -52,10 +38,6 @@ export interface BadgeColorsAccordionProps {
   onChangeIcon: (value: typeof BADGE_COLOR_THEME_SENTINEL | string) => void;
   onOpenCustomPicker: (channel: Channel) => void;
 }
-
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
 
 export function BadgeColorsAccordion({
   design,
@@ -85,9 +67,11 @@ export function BadgeColorsAccordion({
 
   const [tab, setTab] = useState<Channel>("fill");
 
-  // If the user removes the frame while the Frame tab is open, redirect to
-  // Border. Without this the tab body would unmount and leave an active tab
-  // header with no content rendered.
+  // Render Border immediately when Frame disappears; the effect then updates
+  // stored state so re-enabling a frame does not reopen the stale Frame tab.
+  const effectiveTab: Channel =
+    tab === "frame" && !frameEnabled ? "border" : tab;
+
   useEffect(() => {
     if (tab === "frame" && !frameEnabled) setTab("border");
   }, [frameEnabled, tab]);
@@ -102,7 +86,7 @@ export function BadgeColorsAccordion({
     <View style={styles.root}>
       <View style={styles.tabBar} accessibilityRole="tablist">
         <TabHeader
-          active={tab === "fill"}
+          active={effectiveTab === "fill"}
           onPress={() => setTab("fill")}
           label={t("colorChannels.fill")}
           preview={
@@ -110,7 +94,7 @@ export function BadgeColorsAccordion({
           }
         />
         <TabHeader
-          active={tab === "border"}
+          active={effectiveTab === "border"}
           onPress={() => setTab("border")}
           label={t("colorChannels.border")}
           preview={
@@ -125,7 +109,7 @@ export function BadgeColorsAccordion({
         />
         {frameEnabled && (
           <TabHeader
-            active={tab === "frame"}
+            active={effectiveTab === "frame"}
             onPress={() => setTab("frame")}
             label={t("colorChannels.frame")}
             preview={
@@ -140,7 +124,7 @@ export function BadgeColorsAccordion({
           />
         )}
         <TabHeader
-          active={tab === "icon"}
+          active={effectiveTab === "icon"}
           onPress={() => setTab("icon")}
           label={t("colorChannels.icon")}
           preview={
@@ -162,7 +146,7 @@ export function BadgeColorsAccordion({
         />
       </View>
 
-      {tab === "fill" && (
+      {effectiveTab === "fill" && (
         <ColorPicker
           selectedColor={design.color}
           onSelectColor={onChangeFill}
@@ -171,7 +155,7 @@ export function BadgeColorsAccordion({
         />
       )}
 
-      {tab === "border" && (
+      {effectiveTab === "border" && (
         <ChannelPalette
           a11yLabel={t("borderColor.a11y")}
           getSwatchLabel={(id) => t(`borderColor.options.${id}`)}
@@ -193,7 +177,7 @@ export function BadgeColorsAccordion({
         />
       )}
 
-      {tab === "frame" && frameEnabled && (
+      {effectiveTab === "frame" && frameEnabled && (
         <ChannelPalette
           a11yLabel={t("frameColor.a11y")}
           getSwatchLabel={(id) => t(`frameColor.options.${id}`)}
@@ -215,7 +199,7 @@ export function BadgeColorsAccordion({
         />
       )}
 
-      {tab === "icon" && (
+      {effectiveTab === "icon" && (
         <View style={styles.iconTabBody}>
           <ChannelPalette
             a11yLabel={t("iconColor.a11y")}
@@ -250,10 +234,6 @@ export function BadgeColorsAccordion({
     </View>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Tab header
-// ---------------------------------------------------------------------------
 
 interface TabHeaderProps {
   active: boolean;
@@ -292,266 +272,3 @@ function TabHeader({ active, label, onPress, preview }: TabHeaderProps) {
     </Pressable>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Generic channel palette (sentinel + accent swatches + custom)
-// ---------------------------------------------------------------------------
-
-interface SentinelConfig {
-  label: string;
-  previewColor: string;
-  /** Hollow ring preview (Border/Frame) vs filled disc (Icon Auto). */
-  hollow: boolean;
-  selected: boolean;
-  onPress: () => void;
-}
-
-type AccentSwatchId = (typeof ACCENT_COLORS)[number]["id"];
-
-interface ChannelPaletteProps {
-  a11yLabel: string;
-  /** Returns the visible label for a swatch id, e.g. `"Purple"`. */
-  getSwatchLabel: (id: AccentSwatchId) => string;
-  /** Returns the a11y label for a swatch, e.g. `"Purple border color"`. */
-  getSwatchA11y: (label: string) => string;
-  customLabel: string;
-  customHint: string;
-  sentinel: SentinelConfig;
-  selectedHex: string | null;
-  onSelectHex: (hex: string) => void;
-  onOpenCustom: () => void;
-}
-
-function ChannelPalette({
-  a11yLabel,
-  getSwatchLabel,
-  getSwatchA11y,
-  customLabel,
-  customHint,
-  sentinel,
-  selectedHex,
-  onSelectHex,
-  onOpenCustom,
-}: ChannelPaletteProps) {
-  const { theme } = useUnistyles();
-
-  const isCustomSelected =
-    selectedHex !== null && !ACCENT_COLORS.some((c) => c.hex === selectedHex);
-
-  return (
-    <View accessibilityRole="radiogroup" accessibilityLabel={a11yLabel}>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.paletteRow}
-      >
-        <Pressable
-          onPress={sentinel.onPress}
-          style={styles.cell}
-          accessibilityRole="radio"
-          accessibilityLabel={sentinel.label}
-          accessibilityState={{ checked: sentinel.selected }}
-        >
-          <View
-            style={[
-              styles.swatch,
-              sentinel.hollow
-                ? {
-                    backgroundColor: "transparent",
-                    borderColor: sentinel.selected
-                      ? theme.colors.accentPrimary
-                      : sentinel.previewColor,
-                    borderWidth: sentinel.selected ? 4 : 3,
-                  }
-                : {
-                    backgroundColor: sentinel.previewColor,
-                    borderColor: sentinel.selected
-                      ? theme.colors.accentPrimary
-                      : "transparent",
-                    borderWidth: sentinel.selected ? 4 : 3,
-                  },
-            ]}
-          />
-          <Text
-            variant="caption"
-            style={{
-              color: sentinel.selected
-                ? theme.colors.text
-                : theme.colors.textSecondary,
-              fontWeight: sentinel.selected ? "700" : "500",
-            }}
-            numberOfLines={1}
-          >
-            {sentinel.label}
-          </Text>
-        </Pressable>
-
-        {ACCENT_COLORS.map(({ id, hex }) => {
-          const isSelected = hex === selectedHex;
-          const label = getSwatchLabel(id);
-          return (
-            <Pressable
-              key={`${id}-${hex}`}
-              onPress={() => onSelectHex(hex)}
-              accessibilityRole="radio"
-              accessibilityLabel={getSwatchA11y(label)}
-              accessibilityState={{ checked: isSelected }}
-              style={styles.cell}
-            >
-              <View
-                style={[
-                  styles.swatch,
-                  {
-                    backgroundColor: hex,
-                    borderColor: isSelected
-                      ? theme.colors.accentPrimary
-                      : "transparent",
-                    borderWidth: isSelected ? 4 : 3,
-                  },
-                ]}
-              />
-              <Text
-                variant="caption"
-                style={{
-                  color: isSelected
-                    ? theme.colors.text
-                    : theme.colors.textSecondary,
-                  fontWeight: isSelected ? "700" : "500",
-                }}
-                numberOfLines={1}
-              >
-                {label}
-              </Text>
-            </Pressable>
-          );
-        })}
-
-        <Pressable
-          onPress={onOpenCustom}
-          style={styles.cell}
-          accessibilityRole="button"
-          accessibilityLabel={customLabel}
-          accessibilityHint={customHint}
-        >
-          <View
-            style={[
-              styles.swatch,
-              styles.customSwatch,
-              {
-                backgroundColor: isCustomSelected
-                  ? (selectedHex as string)
-                  : theme.colors.background,
-                borderColor: isCustomSelected
-                  ? theme.colors.accentPrimary
-                  : theme.colors.border,
-                borderWidth: isCustomSelected ? 4 : 3,
-              },
-            ]}
-          >
-            <Text
-              style={[
-                styles.customGlyph,
-                {
-                  color: isCustomSelected
-                    ? theme.colors.background
-                    : theme.colors.text,
-                },
-              ]}
-              accessibilityElementsHidden
-            >
-              +
-            </Text>
-          </View>
-          <Text
-            variant="caption"
-            style={{
-              color: isCustomSelected
-                ? theme.colors.text
-                : theme.colors.textSecondary,
-              fontWeight: isCustomSelected ? "700" : "500",
-            }}
-            numberOfLines={1}
-          >
-            {customLabel}
-          </Text>
-        </Pressable>
-      </ScrollView>
-    </View>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
-
-const SWATCH_SIZE = 44;
-const TAB_CHIP_SIZE = 22;
-
-const styles = StyleSheet.create((theme) => ({
-  root: {
-    gap: theme.space[3],
-  },
-  tabBar: {
-    flexDirection: "row",
-    gap: theme.space[2],
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  tab: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: theme.space[1],
-    paddingVertical: theme.space[2],
-    borderBottomWidth: 3,
-    minHeight: 56,
-  },
-  tabChip: {
-    width: TAB_CHIP_SIZE,
-    height: TAB_CHIP_SIZE,
-    borderRadius: TAB_CHIP_SIZE / 2,
-  },
-  tabChipRing: {
-    backgroundColor: "transparent",
-    borderWidth: 3,
-  },
-  tabChipIcon: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  tabChipGlyph: {
-    fontSize: 12,
-    fontWeight: "800",
-  },
-  paletteRow: {
-    gap: theme.space[3],
-    paddingHorizontal: theme.space[1],
-    alignItems: "flex-start",
-  },
-  cell: {
-    alignItems: "center",
-    minWidth: 56,
-    minHeight: 72,
-    gap: theme.space[1],
-  },
-  swatch: {
-    width: SWATCH_SIZE,
-    height: SWATCH_SIZE,
-    borderRadius: SWATCH_SIZE / 2,
-  },
-  customSwatch: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  customGlyph: {
-    fontSize: 22,
-    fontWeight: "700",
-    fontFamily: theme.fontFamily.body,
-  },
-  iconTabBody: {
-    gap: theme.space[2],
-  },
-  contrastWarning: {
-    color: theme.colors.error,
-  },
-}));

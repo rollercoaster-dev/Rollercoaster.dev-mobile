@@ -146,9 +146,20 @@ function DesignEditor({
   const handleColorChange = (color: string) =>
     onDesignChange({ ...currentDesign, color });
 
+  // All three custom-color channels drop the field when the sentinel is
+  // selected. Saved JSON stays minimal and the parser's "absent → 'theme'"
+  // fallback handles re-hydration uniformly.
   const handleBorderColorChange = (
     value: typeof BADGE_COLOR_THEME_SENTINEL | string,
-  ) => onDesignChange({ ...currentDesign, borderColor: value });
+  ) => {
+    if (value === BADGE_COLOR_THEME_SENTINEL) {
+      const next = { ...currentDesign };
+      delete next.borderColor;
+      onDesignChange(next);
+      return;
+    }
+    onDesignChange({ ...currentDesign, borderColor: value });
+  };
 
   const handleIconColorChange = (
     value: typeof BADGE_COLOR_THEME_SENTINEL | string,
@@ -186,7 +197,11 @@ function DesignEditor({
 
   const handleFrameChange = (frame: BadgeFrame) => {
     if (frame === BadgeFrame.none) {
-      onDesignChange({ ...currentDesign, frame, frameParams: undefined });
+      // Drop frameColor too — the picker UI for it is gated on a frame
+      // existing, so a stored hex left behind would be unreachable noise.
+      const next = { ...currentDesign, frame, frameParams: undefined };
+      delete next.frameColor;
+      onDesignChange(next);
       return;
     }
     // Fall back to the design's existing frameParams during the hydration
