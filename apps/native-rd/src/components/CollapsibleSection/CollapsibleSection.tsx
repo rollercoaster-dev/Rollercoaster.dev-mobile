@@ -63,10 +63,15 @@ export function CollapsibleSection({
     );
   }, [expanded, animationPref, expandedValue]);
 
+  // Reanimated 3 caveat: returning `undefined` for a previously-numeric prop
+  // (e.g. flipping maxHeight from 0 back to "auto") does not reliably clear
+  // the cached value on the native side, so opened sections stayed clamped
+  // at the closed maxHeight. Mirror the HTML prototype's <details> behaviour
+  // instead: fade opacity, but let the natural height come from whether the
+  // children are mounted (`expanded && children` below). The regression test
+  // in this file's `animated content style` block guards the rule.
   const contentStyle = useAnimatedStyle(() => ({
     opacity: expandedValue.value,
-    maxHeight: expandedValue.value === 0 ? 0 : undefined,
-    overflow: "hidden" as const,
   }));
 
   const handlePress = useCallback(() => {
@@ -110,6 +115,7 @@ export function CollapsibleSection({
         </View>
       </Pressable>
       <Animated.View
+        testID="collapsible-content"
         style={[expanded ? contentPaddingStyle : undefined, contentStyle]}
       >
         {expanded && children}

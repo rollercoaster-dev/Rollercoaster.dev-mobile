@@ -1,11 +1,23 @@
 import React, { useState } from "react";
-import { Text } from "react-native";
+import { StyleSheet, Text } from "react-native";
 import {
   renderWithProviders,
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
 import { CollapsibleSection } from "../CollapsibleSection";
+
+/** Flatten the Animated.View's style and pull just the keys we want to assert. */
+function getContentStyleKeys(keys: readonly string[]): Record<string, unknown> {
+  const node = screen.getByTestId("collapsible-content");
+  const flat = StyleSheet.flatten(node.props.style) as Record<
+    string,
+    unknown
+  > | null;
+  const out: Record<string, unknown> = {};
+  for (const k of keys) out[k] = flat?.[k];
+  return out;
+}
 
 jest.mock("../../../hooks/useAnimationPref", () => ({
   useAnimationPref: () => ({
@@ -199,6 +211,52 @@ describe("CollapsibleSection", () => {
         </CollapsibleSection>,
       );
       expect(screen.getByTestId("custom-summary")).toBeOnTheScreen();
+    });
+  });
+
+  describe("animated content style (regression)", () => {
+    // The original implementation tried to animate maxHeight between 0 (when
+    // collapsed) and `undefined` (when expanded). On native, Reanimated does
+    // not reliably clear a previously-applied numeric style prop by setting
+    // it back to `undefined`, so opened sections stayed clamped at 0px — the
+    // bug surfaced as "accordions open but show no content" in the badge
+    // designer. All previous tests still passed because RTL never runs the
+    // native layout engine and only checks whether children are in the React
+    // tree. This suite asserts the contract directly: the animated style
+    // must NEVER set a numeric `maxHeight` (or any other height clamp) on
+    // the content view in any state.
+    it.each([
+      ["collapsed", false],
+      ["expanded", true],
+    ] as const)("does not clamp height when %s", (_label, expanded) => {
+      renderWithProviders(
+        <CollapsibleSection title="Section" expanded={expanded}>
+          <Text>Body</Text>
+        </CollapsibleSection>,
+      );
+      const style = getContentStyleKeys(["maxHeight", "height"]);
+      expect(typeof style.maxHeight).not.toBe("number");
+      expect(typeof style.height).not.toBe("number");
+    });
+
+    it("does not clamp height after pressing the header to open", () => {
+      function Harness() {
+        const [open, setOpen] = useState(false);
+        return (
+          <CollapsibleSection
+            title="Section"
+            expanded={open}
+            onExpandedChange={setOpen}
+          >
+            <Text>Body</Text>
+          </CollapsibleSection>
+        );
+      }
+      renderWithProviders(<Harness />);
+      fireEvent.press(screen.getByLabelText("Section, expand"));
+      const style = getContentStyleKeys(["maxHeight", "height"]);
+      expect(typeof style.maxHeight).not.toBe("number");
+      expect(typeof style.height).not.toBe("number");
     });
   });
 
