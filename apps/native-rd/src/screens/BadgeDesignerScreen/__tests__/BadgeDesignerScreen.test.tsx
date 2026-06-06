@@ -672,8 +672,8 @@ describe("BadgeDesignerScreen", () => {
 
     openSection("frame");
     // After expansion the header's a11y label flips from "expand" to
-    // "collapse" (CollapsibleSection.tsx:98). Pressing this collapse-form
-    // label collapses the section, leaving the accordion fully closed.
+    // "collapse". Pressing this collapse-form label collapses the
+    // section, leaving the accordion fully closed.
     const title = i18n.t("badgeDesigner:accordion.sections.frame");
     const collapseA11y = i18n.t("badgeDesigner:accordion.collapseA11y");
     fireEvent.press(screen.getByLabelText(`${title}, ${collapseA11y}`));

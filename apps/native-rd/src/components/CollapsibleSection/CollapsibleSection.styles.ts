@@ -18,12 +18,15 @@ export const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[3],
     gap: theme.space[3],
+    // Reserve focus-ring space so focus gain/loss only swaps borderColor,
+    // never width — prevents a layout jump that would shift touch targets.
+    borderWidth: theme.borderWidth.medium,
+    borderColor: "transparent",
   },
   headerPressed: {
     opacity: 0.7,
   },
   headerFocused: {
-    borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.focusRing,
   },
   headerRight: {

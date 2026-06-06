@@ -123,7 +123,7 @@
     },
     "summary": {
       "centerIcon": "Icon · {{icon}}",
-      "centerMonogramEmpty": "Monogram",
+      "centerMonogram": "Monogram",
       "inscriptionsLabel": "Label",
       "inscriptionsPath": "Path",
       "inscriptionsBanner": "Banner",

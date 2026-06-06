@@ -263,7 +263,7 @@ function DesignEditor({
   const centerSummary =
     centerMode === BadgeCenterMode.icon
       ? t("accordion.summary.centerIcon", { icon: currentDesign.iconName })
-      : t("accordion.summary.centerMonogramEmpty");
+      : t("accordion.summary.centerMonogram");
 
   // Enumerate enabled inscription kinds without echoing user content.
   const inscriptionParts: string[] = [];
