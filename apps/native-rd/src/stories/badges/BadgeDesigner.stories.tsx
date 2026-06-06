@@ -5,12 +5,12 @@ import { StyleSheet } from "react-native-unistyles";
 
 import { BadgeRenderer } from "../../badges/BadgeRenderer";
 import { ShapeSelector } from "../../badges/ShapeSelector";
-import { ColorPicker } from "../../badges/ColorPicker";
 import { IconPicker } from "../../badges/IconPicker";
 import { FrameSelector } from "../../badges/FrameSelector";
 import { CenterModeSelector } from "../../badges/CenterModeSelector";
 import { PathTextEditor } from "../../badges/PathTextEditor";
 import { BannerEditor } from "../../badges/BannerEditor";
+import { BadgeColorsAccordion } from "../../screens/BadgeDesignerScreen/BadgeColorsAccordion";
 import { CollapsibleSection } from "../../components/CollapsibleSection";
 import {
   BadgeShape,
@@ -84,7 +84,6 @@ function BadgeDesignerComposer({
           <ShapeSelector
             selectedShape={design.shape}
             onSelectShape={(shape) => setDesign((prev) => ({ ...prev, shape }))}
-            accentColor={design.color}
           />
         </CollapsibleSection>
 
@@ -97,7 +96,6 @@ function BadgeDesignerComposer({
           <FrameSelector
             selectedFrame={design.frame}
             onSelectFrame={(frame) => setDesign((prev) => ({ ...prev, frame }))}
-            accentColor={design.color}
           />
         </CollapsibleSection>
 
@@ -121,7 +119,6 @@ function BadgeDesignerComposer({
               onChangeMonogram={(monogram: string) =>
                 setDesign((prev) => ({ ...prev, monogram }))
               }
-              accentColor={design.color}
             />
             {design.centerMode === BadgeCenterMode.icon && (
               <IconPicker
@@ -145,10 +142,41 @@ function BadgeDesignerComposer({
           expanded={expandedSection === "colors"}
           onExpandedChange={handleSection("colors")}
         >
-          <ColorPicker
-            selectedColor={design.color}
-            onSelectColor={(color) => setDesign((prev) => ({ ...prev, color }))}
+          <BadgeColorsAccordion
+            design={design}
             goalColor={goalColor}
+            onChangeFill={(color) => setDesign((prev) => ({ ...prev, color }))}
+            onChangeBorder={(value) =>
+              setDesign((prev) => {
+                if (value === "theme") {
+                  const { borderColor: _, ...rest } = prev;
+                  return rest as BadgeDesign;
+                }
+                return { ...prev, borderColor: value };
+              })
+            }
+            onChangeFrame={(value) =>
+              setDesign((prev) => {
+                if (value === "theme") {
+                  const { frameColor: _, ...rest } = prev;
+                  return rest as BadgeDesign;
+                }
+                return { ...prev, frameColor: value };
+              })
+            }
+            onChangeIcon={(value) =>
+              setDesign((prev) => {
+                if (value === "theme") {
+                  const { iconColor: _, ...rest } = prev;
+                  return rest as BadgeDesign;
+                }
+                return { ...prev, iconColor: value };
+              })
+            }
+            onOpenCustomPicker={() => {
+              // Storybook stub — the full-screen ColorPickerModal flow lives
+              // in BadgeDesignerScreen, outside the scope of this story.
+            }}
           />
         </CollapsibleSection>
 
@@ -201,7 +229,6 @@ function BadgeDesignerComposer({
               onChangePosition={(pathTextPosition) =>
                 setDesign((prev) => ({ ...prev, pathTextPosition }))
               }
-              accentColor={design.color}
             />
             <BannerEditor
               enabled={design.banner != null}
@@ -239,7 +266,6 @@ function BadgeDesignerComposer({
                   },
                 }))
               }
-              accentColor={design.color}
             />
           </View>
         </CollapsibleSection>

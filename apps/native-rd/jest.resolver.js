@@ -21,16 +21,49 @@
  */
 const path = require("path");
 
+const fs = require("fs");
+
 const rnResolver = require("react-native/jest/resolver");
 const stubPath = path.resolve(__dirname, "src/__tests__/mocks/rn-esm-stub.js");
 
+// Bun's symlink layout occasionally installs two copies of react-native@0.83.6
+// in separate `.bun/` slots (driven by peer-dep variance from packages like
+// reanimated-color-picker). RN's jest setup only mocks ONE copy, so the other
+// crashes any test that loads FlatList/ScrollView via virtualized-lists.
+// Canonicalize every react-native resolution to the copy that RN's resolver
+// points at, so both code paths share one mocked surface.
+const bunDir = path.resolve(__dirname, "../../node_modules/.bun");
+const canonicalRnSlot = (() => {
+  try {
+    const slots = fs
+      .readdirSync(bunDir)
+      .filter((entry) => /^react-native@/.test(entry));
+    if (slots.length <= 1) return null;
+    // Pick the one RN's own resolver would use — that's the slot whose
+    // mocks RN already registered via setup.js.
+    const probe = require.resolve("react-native/package.json");
+    const match = probe.match(/\.bun\/(react-native@[^/]+)/);
+    return match ? match[1] : slots[0];
+  } catch {
+    return null;
+  }
+})();
+
 module.exports = (request, options) => {
   const resolved = rnResolver(request, options);
-  if (
-    typeof resolved === "string" &&
-    resolved.includes("specs_DEPRECATED/components/")
-  ) {
-    return stubPath;
+  if (typeof resolved === "string") {
+    if (resolved.includes("specs_DEPRECATED/components/")) {
+      return stubPath;
+    }
+    if (canonicalRnSlot) {
+      const dupMatch = resolved.match(/\.bun\/(react-native@[^/]+)\//);
+      if (dupMatch && dupMatch[1] !== canonicalRnSlot) {
+        return resolved.replace(
+          `.bun/${dupMatch[1]}/`,
+          `.bun/${canonicalRnSlot}/`,
+        );
+      }
+    }
   }
   return resolved;
 };

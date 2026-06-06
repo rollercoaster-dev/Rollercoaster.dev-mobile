@@ -20,6 +20,7 @@ export {
   BadgeFrame,
   BadgeIconWeight,
   BadgeCenterMode,
+  BADGE_COLOR_THEME_SENTINEL,
   PathTextPosition,
   BannerPosition,
   createDefaultBadgeDesign,
@@ -39,6 +40,9 @@ export type { BadgeRendererProps } from "./BadgeRenderer";
 
 export { IconPicker } from "./IconPicker";
 export type { IconPickerProps } from "./IconPicker";
+
+export { ColorPickerModal } from "./ColorPickerModal";
+export type { ColorPickerModalProps } from "./ColorPickerModal";
 
 export { PathTextEditor } from "./PathTextEditor";
 export type { PathTextEditorProps } from "./PathTextEditor";

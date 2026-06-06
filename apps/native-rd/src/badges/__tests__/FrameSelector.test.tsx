@@ -6,6 +6,8 @@ import {
 } from "../../__tests__/test-utils";
 import { FrameSelector } from "../FrameSelector";
 import { BadgeFrame } from "../types";
+import { mockTheme } from "../../__tests__/mocks/unistyles";
+import { findRingBorderColor } from "./selector-test-helpers";
 
 const ALL_FRAMES = Object.values(BadgeFrame) as BadgeFrame[];
 
@@ -89,5 +91,18 @@ describe("FrameSelector", () => {
 
     fireEvent.press(screen.getByLabelText("Guilloche frame"));
     expect(onSelectFrame).toHaveBeenCalledWith(BadgeFrame.guilloche);
+  });
+
+  it("active-selection ring uses theme.accentPrimary, not design.color", () => {
+    renderWithProviders(
+      <FrameSelector
+        selectedFrame={BadgeFrame.boldBorder}
+        onSelectFrame={onSelectFrame}
+      />,
+    );
+    const ring = findRingBorderColor(
+      screen.getByLabelText("Bold Border frame"),
+    );
+    expect(ring).toBe(mockTheme.colors.accentPrimary);
   });
 });

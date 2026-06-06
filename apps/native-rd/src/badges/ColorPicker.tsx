@@ -13,6 +13,13 @@ export interface ColorPickerProps {
   selectedColor: string;
   onSelectColor: (hex: string) => void;
   goalColor?: string;
+  /**
+   * When provided, renders a trailing "Custom…" cell after the palette.
+   * Tapping it fires this callback (the parent opens the full picker
+   * modal). When omitted, the picker shows only palette swatches and
+   * behaves exactly as before.
+   */
+  onOpenCustomPicker?: () => void;
   testID?: string;
 }
 
@@ -46,6 +53,7 @@ export function ColorPicker({
   selectedColor,
   onSelectColor,
   goalColor,
+  onOpenCustomPicker,
   testID = "color-picker",
 }: ColorPickerProps) {
   const { theme } = useUnistyles();
@@ -59,6 +67,10 @@ export function ColorPicker({
     }
     return ACCENT_COLORS;
   }, [goalColor]);
+
+  const isCustomSelected =
+    onOpenCustomPicker !== undefined &&
+    !swatches.some((s) => s.hex === selectedColor);
 
   return (
     <View
@@ -89,7 +101,7 @@ export function ColorPicker({
                   {
                     backgroundColor: hex,
                     borderColor: isSelected
-                      ? theme.colors.border
+                      ? theme.colors.accentPrimary
                       : "transparent",
                     borderWidth: isSelected ? 4 : 3,
                   },
@@ -112,6 +124,61 @@ export function ColorPicker({
             </Pressable>
           );
         })}
+
+        {onOpenCustomPicker && (
+          <Pressable
+            onPress={onOpenCustomPicker}
+            accessibilityRole="button"
+            accessibilityLabel={t("borderColor.custom")}
+            accessibilityHint={t("borderColor.customHint")}
+            style={styles.cell}
+            testID={`${testID}-custom`}
+          >
+            <View
+              style={[
+                styles.swatch,
+                styles.customSwatch,
+                {
+                  borderColor: isCustomSelected
+                    ? theme.colors.accentPrimary
+                    : theme.colors.border,
+                  borderWidth: isCustomSelected ? 4 : 3,
+                  backgroundColor: isCustomSelected
+                    ? selectedColor
+                    : theme.colors.background,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.customGlyph,
+                  {
+                    color: isCustomSelected
+                      ? theme.colors.background
+                      : theme.colors.text,
+                  },
+                ]}
+                accessibilityElementsHidden
+              >
+                +
+              </Text>
+            </View>
+            <Text
+              style={[
+                selectorStyles.label,
+                {
+                  color: isCustomSelected
+                    ? theme.colors.text
+                    : theme.colors.textSecondary,
+                  fontWeight: isCustomSelected ? "700" : "500",
+                },
+              ]}
+              numberOfLines={1}
+            >
+              {t("borderColor.custom")}
+            </Text>
+          </Pressable>
+        )}
       </ScrollView>
     </View>
   );
@@ -132,5 +199,14 @@ const styles = StyleSheet.create((theme) => ({
     width: SWATCH_SIZE,
     height: SWATCH_SIZE,
     borderRadius: SWATCH_SIZE / 2,
+  },
+  customSwatch: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  customGlyph: {
+    fontSize: 22,
+    fontWeight: "700",
+    fontFamily: theme.fontFamily.body,
   },
 }));

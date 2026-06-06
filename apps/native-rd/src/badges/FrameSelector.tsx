@@ -13,7 +13,6 @@ import { BadgeFrame } from "./types";
 export interface FrameSelectorProps {
   selectedFrame: BadgeFrame;
   onSelectFrame: (frame: BadgeFrame) => void;
-  accentColor?: string;
   testID?: string;
 }
 
@@ -42,12 +41,10 @@ const THUMBNAIL_SIZE = 56;
 export function FrameSelector({
   selectedFrame,
   onSelectFrame,
-  accentColor,
   testID = "frame-selector",
 }: FrameSelectorProps) {
   const { theme } = useUnistyles();
   const { t } = useTranslation("badgeDesigner");
-  const resolvedAccent = accentColor ?? theme.colors.accentPrimary;
 
   const handlePress = useCallback(
     (frame: BadgeFrame) => onSelectFrame(frame),
@@ -79,7 +76,7 @@ export function FrameSelector({
                 selectorStyles.cell,
                 {
                   borderColor: isSelected
-                    ? resolvedAccent
+                    ? theme.colors.accentPrimary
                     : theme.colors.border,
                   borderWidth: isSelected ? 4 : 3,
                 },
@@ -91,7 +88,11 @@ export function FrameSelector({
                 <Text
                   style={[
                     styles.glyph,
-                    { color: isSelected ? resolvedAccent : theme.colors.text },
+                    {
+                      color: isSelected
+                        ? theme.colors.accentPrimary
+                        : theme.colors.text,
+                    },
                   ]}
                 >
                   {FRAME_GLYPHS[frame]}

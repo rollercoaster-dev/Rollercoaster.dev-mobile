@@ -18,6 +18,12 @@ export interface MonogramCenterProps {
   scale?: number;
   /** Center Y position from layout density system. Default size/2. */
   centerY?: number;
+  /**
+   * Explicit text color. When omitted, falls back to
+   * `getSafeTextColor(fillColor)` — the prior auto-contrast behaviour.
+   * Lets a user-chosen `iconColor` govern the monogram alongside the icon.
+   */
+  textColor?: string;
 }
 
 /** Font size as fraction of badge diameter — 1 character */
@@ -60,12 +66,14 @@ export function MonogramCenter({
   fontWeight = fontWeightTokens.bold,
   scale = 1,
   centerY,
+  textColor,
 }: MonogramCenterProps) {
   if (!monogram || monogram.trim().length === 0) return null;
 
   const chars = monogram.trim().slice(0, 3);
   const fontSize = getMonogramFontSize(monogram, size, scale);
-  const textColor = getSafeTextColor(fillColor, "MonogramCenter");
+  const resolvedTextColor =
+    textColor ?? getSafeTextColor(fillColor, "MonogramCenter");
   const cx = size / 2;
   const cy = centerY ?? size / 2;
 
@@ -78,7 +86,7 @@ export function MonogramCenter({
       fontFamily={fontFamily}
       fontWeight={fontWeight}
       fontSize={fontSize}
-      fill={textColor}
+      fill={resolvedTextColor}
     >
       {chars}
     </Text>

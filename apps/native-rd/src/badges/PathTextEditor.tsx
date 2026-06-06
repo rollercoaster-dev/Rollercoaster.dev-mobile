@@ -22,7 +22,6 @@ export interface PathTextEditorProps {
   onChangeText: (text: string) => void;
   onChangeTextBottom: (text: string) => void;
   onChangePosition: (position: PathTextPosition) => void;
-  accentColor?: string;
   testID?: string;
 }
 
@@ -86,12 +85,10 @@ export function PathTextEditor({
   onChangeText,
   onChangeTextBottom,
   onChangePosition,
-  accentColor,
   testID = "path-text-editor",
 }: PathTextEditorProps) {
   const { theme } = useUnistyles();
   const { t } = useTranslation("badgeDesigner");
-  const resolvedAccent = accentColor ?? theme.colors.accentPrimary;
 
   const maxTop = getPathTextMaxChars(shape, "top");
   const maxBottom = getPathTextMaxChars(shape, "bottom");
@@ -116,7 +113,9 @@ export function PathTextEditor({
         style={[
           styles.toggle,
           {
-            borderColor: enabled ? resolvedAccent : theme.colors.border,
+            borderColor: enabled
+              ? theme.colors.accentPrimary
+              : theme.colors.border,
             borderWidth: enabled ? 4 : 3,
           },
         ]}
@@ -125,7 +124,7 @@ export function PathTextEditor({
           style={[
             styles.toggleText,
             {
-              color: enabled ? resolvedAccent : theme.colors.text,
+              color: enabled ? theme.colors.accentPrimary : theme.colors.text,
               fontWeight: enabled ? "700" : "500",
             },
           ]}
@@ -185,7 +184,7 @@ export function PathTextEditor({
                     styles.option,
                     {
                       borderColor: isSelected
-                        ? resolvedAccent
+                        ? theme.colors.accentPrimary
                         : theme.colors.border,
                       borderWidth: isSelected ? 4 : 3,
                     },
@@ -195,7 +194,9 @@ export function PathTextEditor({
                     style={[
                       styles.optionText,
                       {
-                        color: isSelected ? resolvedAccent : theme.colors.text,
+                        color: isSelected
+                          ? theme.colors.accentPrimary
+                          : theme.colors.text,
                         fontWeight: isSelected ? "700" : "500",
                       },
                     ]}

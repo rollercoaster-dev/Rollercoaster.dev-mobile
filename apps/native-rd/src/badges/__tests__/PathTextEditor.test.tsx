@@ -7,6 +7,8 @@ import {
 import { PathTextEditor } from "../PathTextEditor";
 import { getPathTextMaxChars } from "../text/pathTextLimits";
 import { BadgeShape, PathTextPosition } from "../types";
+import { mockTheme } from "../../__tests__/mocks/unistyles";
+import { findRingBorderColor } from "./selector-test-helpers";
 
 describe("PathTextEditor", () => {
   const onToggle = jest.fn();
@@ -190,6 +192,18 @@ describe("PathTextEditor", () => {
 
     fireEvent.press(screen.getByLabelText("Bottom position"));
     expect(onChangePosition).toHaveBeenCalledWith(PathTextPosition.bottom);
+  });
+
+  it("active-selection ring uses theme.accentPrimary, not design.color", () => {
+    renderWithProviders(
+      <PathTextEditor
+        {...defaultProps}
+        enabled={true}
+        position={PathTextPosition.both}
+      />,
+    );
+    const ring = findRingBorderColor(screen.getByLabelText("Both position"));
+    expect(ring).toBe(mockTheme.colors.accentPrimary);
   });
 
   // ---------------------------------------------------------------------------

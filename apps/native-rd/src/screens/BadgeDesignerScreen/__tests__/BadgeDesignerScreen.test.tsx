@@ -132,6 +132,38 @@ jest.mock("../../../badges/IconPickerModal", () => ({
   IconPickerModal: () => null,
 }));
 
+// ColorPickerModal stub: exposes the Confirm path via a Pressable so we can
+// drive handleConfirmModalColor deterministically. Rendering the real
+// reanimated-color-picker is out of scope here.
+jest.mock("../../../badges/ColorPickerModal", () => {
+  const React = require("react");
+  const { Pressable, View } = require("react-native");
+  return {
+    ColorPickerModal: ({
+      visible,
+      initialColor,
+      onConfirm,
+    }: {
+      visible: boolean;
+      initialColor: string;
+      onConfirm: (hex: string) => void;
+    }) => {
+      if (!visible) return null;
+      return (
+        <View
+          testID="mock-color-picker-modal"
+          accessibilityLabel={initialColor}
+        >
+          <Pressable
+            testID="mock-color-picker-modal-confirm-fixed"
+            onPress={() => onConfirm("#deadbe")}
+          />
+        </View>
+      );
+    },
+  };
+});
+
 // Mock phosphor-react-native (virtual — not installed in node_modules)
 jest.mock(
   "phosphor-react-native",
@@ -1145,4 +1177,198 @@ describe("BadgeDesignerScreen — pseudo locale", () => {
     expect(pseudoOption.startsWith("[")).toBe(true);
     expect(screen.getByLabelText(shapeLabel("circle"))).toBeOnTheScreen();
   });
+
+  // -------------------------------------------------------------------------
+  // Custom-color channel handlers (issue #248 review-fix I3)
+  //
+  // The accordion drives onChangeBorder/Icon/Frame via the channel tab's
+  // "Match theme" / "Match auto" sentinel. The screen handlers must drop
+  // the field from saved JSON when the sentinel fires — anything else
+  // would leave a literal `"theme"` string in stored designs and silently
+  // diverge from icon/frame channels (issue #248 review I7).
+  // -------------------------------------------------------------------------
+
+  // Helper: read the design JSON from the most recent updateBadge call.
+  const lastSavedDesign = (): Record<string, unknown> => {
+    const call = mockUpdateBadge.mock.calls.at(-1);
+    if (!call) throw new Error("updateBadge was not called");
+    const payload = call[1] as { design: string };
+    return JSON.parse(payload.design) as Record<string, unknown>;
+  };
+
+  it("Border 'Match theme' drops borderColor from saved JSON", async () => {
+    mockUseQuery.mockReturnValue([
+      makeRow({
+        design: JSON.stringify(designWith({ borderColor: "#abcdef" })),
+      }),
+    ]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+
+    openSection("colors");
+    // Border tab is the default-second; tap the channel tab then the sentinel.
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:colorChannels.border")),
+    );
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:borderColor.matchTheme")),
+    );
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:actions.save")),
+    );
+
+    await waitFor(() => expect(mockUpdateBadge).toHaveBeenCalled());
+    const saved = lastSavedDesign();
+    expect(saved).not.toHaveProperty("borderColor");
+  });
+
+  it("Icon 'Auto' sentinel drops iconColor from saved JSON", async () => {
+    mockUseQuery.mockReturnValue([
+      makeRow({ design: JSON.stringify(designWith({ iconColor: "#abcdef" })) }),
+    ]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+
+    openSection("colors");
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:colorChannels.icon")),
+    );
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:iconColor.matchAuto")),
+    );
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:actions.save")),
+    );
+
+    await waitFor(() => expect(mockUpdateBadge).toHaveBeenCalled());
+    expect(lastSavedDesign()).not.toHaveProperty("iconColor");
+  });
+
+  it("Frame 'Match theme' drops frameColor from saved JSON", async () => {
+    mockUseQuery.mockReturnValue([
+      makeRow({
+        design: JSON.stringify(
+          designWith({
+            frame: "boldBorder",
+            frameColor: "#abcdef",
+            frameParams: {
+              variant: 1,
+              stepCount: 1,
+              evidenceCount: 1,
+              daysToComplete: 1,
+              evidenceTypes: 1,
+            },
+          }),
+        ),
+      }),
+    ]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+
+    openSection("colors");
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:colorChannels.frame")),
+    );
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:frameColor.matchTheme")),
+    );
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:actions.save")),
+    );
+
+    await waitFor(() => expect(mockUpdateBadge).toHaveBeenCalled());
+    expect(lastSavedDesign()).not.toHaveProperty("frameColor");
+  });
+
+  it("Custom-picker confirm routes the hex to the active channel", async () => {
+    // Border channel: opening the custom picker then confirming '#deadbe'
+    // (the mocked modal's fixed return) must store it as borderColor.
+    mockUseQuery.mockReturnValue([makeRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+
+    openSection("colors");
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:colorChannels.border")),
+    );
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:borderColor.custom")),
+    );
+    fireEvent.press(
+      screen.getByTestId("mock-color-picker-modal-confirm-fixed"),
+    );
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:actions.save")),
+    );
+
+    await waitFor(() => expect(mockUpdateBadge).toHaveBeenCalled());
+    expect(lastSavedDesign().borderColor).toBe("#deadbe");
+  });
+
+  it("changing frame to 'none' drops frameColor from saved JSON", async () => {
+    // Without this cleanup a stored frameColor would survive across a
+    // frame=none round-trip and the Colors-accordion Frame tab (gated on
+    // frame !== none) would have no UI to reach it.
+    mockUseQuery.mockReturnValue([
+      makeRow({
+        design: JSON.stringify(
+          designWith({
+            frame: "boldBorder",
+            frameColor: "#abcdef",
+            frameParams: {
+              variant: 1,
+              stepCount: 1,
+              evidenceCount: 1,
+              daysToComplete: 1,
+              evidenceTypes: 1,
+            },
+          }),
+        ),
+      }),
+    ]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+
+    openSection("frame");
+    fireEvent.press(screen.getByLabelText(frameLabel("none")));
+    fireEvent.press(
+      screen.getByLabelText(i18n.t("badgeDesigner:actions.save")),
+    );
+
+    await waitFor(() => expect(mockUpdateBadge).toHaveBeenCalled());
+    expect(lastSavedDesign()).not.toHaveProperty("frameColor");
+  });
+
+  it("Colors accordion summary shows 'Custom' chip when any channel has a custom hex", () => {
+    mockUseQuery.mockReturnValue([
+      makeRow({
+        // A non-accent hex on borderColor must light up the summary.
+        design: JSON.stringify(designWith({ borderColor: "#abcdef" })),
+      }),
+    ]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+
+    const customChip = i18n.t("badgeDesigner:accordion.summary.colorCustom");
+    expect(screen.getByText(new RegExp(`· ${customChip}$`))).toBeOnTheScreen();
+  });
 });
+
+function designWith(overrides: Record<string, unknown>) {
+  return {
+    shape: "circle",
+    frame: "none",
+    color: "#a78bfa",
+    iconName: "Trophy",
+    iconWeight: "regular",
+    title: "Learn TypeScript",
+    centerMode: "icon",
+    ...overrides,
+  };
+}

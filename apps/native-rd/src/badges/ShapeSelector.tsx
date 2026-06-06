@@ -14,7 +14,6 @@ import { BadgeShape } from "./types";
 export interface ShapeSelectorProps {
   selectedShape: BadgeShape;
   onSelectShape: (shape: BadgeShape) => void;
-  accentColor?: string;
   testID?: string;
 }
 
@@ -33,12 +32,10 @@ const THUMBNAIL_SIZE = 56;
 export function ShapeSelector({
   selectedShape,
   onSelectShape,
-  accentColor,
   testID = "shape-selector",
 }: ShapeSelectorProps) {
   const { theme } = useUnistyles();
   const { t } = useTranslation("badgeDesigner");
-  const resolvedAccent = accentColor ?? theme.colors.accentPrimary;
 
   const handlePress = useCallback(
     (shape: BadgeShape) => onSelectShape(shape),
@@ -70,7 +67,7 @@ export function ShapeSelector({
                 selectorStyles.cell,
                 {
                   borderColor: isSelected
-                    ? resolvedAccent
+                    ? theme.colors.accentPrimary
                     : theme.colors.border,
                   borderWidth: isSelected ? 4 : 3,
                 },
@@ -78,7 +75,7 @@ export function ShapeSelector({
             >
               <BadgeShapeView
                 shape={shape}
-                fillColor={resolvedAccent}
+                fillColor={theme.colors.accentPrimary}
                 size={THUMBNAIL_SIZE}
                 strokeWidth={2}
                 showShadow={false}

@@ -6,6 +6,8 @@ import {
 } from "../../__tests__/test-utils";
 import { BannerEditor } from "../BannerEditor";
 import { BannerPosition } from "../types";
+import { mockTheme } from "../../__tests__/mocks/unistyles";
+import { findRingBorderColor } from "./selector-test-helpers";
 
 describe("BannerEditor", () => {
   const onToggle = jest.fn();
@@ -148,5 +150,17 @@ describe("BannerEditor", () => {
 
     fireEvent.press(screen.getByLabelText("Bottom position"));
     expect(onChangePosition).toHaveBeenCalledWith(BannerPosition.bottom);
+  });
+
+  it("active-selection ring uses theme.accentPrimary, not design.color", () => {
+    renderWithProviders(
+      <BannerEditor
+        {...defaultProps}
+        enabled={true}
+        position={BannerPosition.bottom}
+      />,
+    );
+    const ring = findRingBorderColor(screen.getByLabelText("Bottom position"));
+    expect(ring).toBe(mockTheme.colors.accentPrimary);
   });
 });

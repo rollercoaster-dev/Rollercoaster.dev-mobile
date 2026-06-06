@@ -26,7 +26,9 @@ import {
 } from "../../badges/BadgeRenderer";
 import { BOTTOM_LABEL_INPUT_MAX_CHARS } from "../../badges/text/BottomLabel";
 import { ShapeSelector } from "../../badges/ShapeSelector";
-import { ColorPicker, ACCENT_COLORS } from "../../badges/ColorPicker";
+import { ACCENT_COLORS } from "../../badges/ColorPicker";
+import { ColorPickerModal } from "../../badges/ColorPickerModal";
+import { BadgeColorsAccordion } from "./BadgeColorsAccordion";
 import { IconPicker } from "../../badges/IconPicker";
 import { FrameSelector } from "../../badges/FrameSelector";
 import { useFrameParamsForGoal } from "../../badges/frames";
@@ -39,6 +41,7 @@ import {
   createDefaultBadgeDesign,
   BadgeFrame,
   BadgeCenterMode,
+  BADGE_COLOR_THEME_SENTINEL,
   PathTextPosition,
   BannerPosition,
 } from "../../badges/types";
@@ -48,6 +51,7 @@ import type {
   BadgeIconWeight,
   FrameDataParams,
 } from "../../badges/types";
+import { getSafeTextColor } from "../../utils/accessibility";
 import {
   badgeWithGoalQuery,
   goalsQuery,
@@ -142,6 +146,49 @@ function DesignEditor({
   const handleColorChange = (color: string) =>
     onDesignChange({ ...currentDesign, color });
 
+  // All three custom-color channels drop the field when the sentinel is
+  // selected. Saved JSON stays minimal and the parser's "absent → 'theme'"
+  // fallback handles re-hydration uniformly.
+  const handleBorderColorChange = (
+    value: typeof BADGE_COLOR_THEME_SENTINEL | string,
+  ) => {
+    if (value === BADGE_COLOR_THEME_SENTINEL) {
+      const next = { ...currentDesign };
+      delete next.borderColor;
+      onDesignChange(next);
+      return;
+    }
+    onDesignChange({ ...currentDesign, borderColor: value });
+  };
+
+  const handleIconColorChange = (
+    value: typeof BADGE_COLOR_THEME_SENTINEL | string,
+  ) => {
+    if (value === BADGE_COLOR_THEME_SENTINEL) {
+      const next = { ...currentDesign };
+      delete next.iconColor;
+      onDesignChange(next);
+      return;
+    }
+    onDesignChange({ ...currentDesign, iconColor: value });
+  };
+
+  // Frame color tracks the theme by default — when the user picks the "Match
+  // theme" sentinel the field is dropped from storage so the renderer's
+  // `theme.colors.border` fallback kicks in instead of saving a literal
+  // 'theme' string that's noise in the JSON.
+  const handleFrameColorChange = (
+    value: typeof BADGE_COLOR_THEME_SENTINEL | string,
+  ) => {
+    if (value === BADGE_COLOR_THEME_SENTINEL) {
+      const next = { ...currentDesign };
+      delete next.frameColor;
+      onDesignChange(next);
+      return;
+    }
+    onDesignChange({ ...currentDesign, frameColor: value });
+  };
+
   const handleIconChange = (iconName: string) =>
     onDesignChange({ ...currentDesign, iconName });
 
@@ -150,7 +197,11 @@ function DesignEditor({
 
   const handleFrameChange = (frame: BadgeFrame) => {
     if (frame === BadgeFrame.none) {
-      onDesignChange({ ...currentDesign, frame, frameParams: undefined });
+      // Drop frameColor too — the picker UI for it is gated on a frame
+      // existing, so a stored hex left behind would be unreachable noise.
+      const next = { ...currentDesign, frame, frameParams: undefined };
+      delete next.frameColor;
+      onDesignChange(next);
       return;
     }
     // Fall back to the design's existing frameParams during the hydration
@@ -246,13 +297,75 @@ function DesignEditor({
     setExpandedSection(next ? id : null);
   };
 
+  // Channel currently editing through the full-screen color modal — null when
+  // closed. One modal per editor so we don't pay for four mounted instances.
+  const [colorPickerTarget, setColorPickerTarget] = useState<
+    "fill" | "border" | "frame" | "icon" | null
+  >(null);
+
+  const borderColor = currentDesign.borderColor ?? BADGE_COLOR_THEME_SENTINEL;
+  const frameColor = currentDesign.frameColor ?? BADGE_COLOR_THEME_SENTINEL;
+  const iconColor = currentDesign.iconColor ?? BADGE_COLOR_THEME_SENTINEL;
+
+  // Auto-resolved icon color when sentinel is selected — drives the accordion
+  // summary's "custom-vs-default" check; the accordion itself recomputes this
+  // for its own contrast warning.
+  const resolvedIconColor =
+    iconColor === BADGE_COLOR_THEME_SENTINEL
+      ? getSafeTextColor(currentDesign.color, "BadgeDesigner")
+      : iconColor;
+
   const colorId = ACCENT_COLORS.find((c) => c.hex === currentDesign.color)?.id;
-  const colorSummary =
+  const fillIsCustom = !colorId && currentDesign.color !== goalColor;
+  const borderIsCustom =
+    borderColor !== BADGE_COLOR_THEME_SENTINEL &&
+    !ACCENT_COLORS.some((c) => c.hex === borderColor);
+  const frameIsCustom =
+    frameColor !== BADGE_COLOR_THEME_SENTINEL &&
+    !ACCENT_COLORS.some((c) => c.hex === frameColor);
+  const iconIsCustom =
+    iconColor !== BADGE_COLOR_THEME_SENTINEL &&
+    !ACCENT_COLORS.some((c) => c.hex === iconColor);
+  const hasAnyCustom =
+    fillIsCustom || borderIsCustom || frameIsCustom || iconIsCustom;
+
+  const baseColorSummary =
     currentDesign.color === goalColor
       ? t("color.options.goal")
       : colorId
         ? t(`color.options.${colorId}` as const)
         : currentDesign.color;
+  const colorSummary = hasAnyCustom
+    ? `${baseColorSummary} · ${t("accordion.summary.colorCustom")}`
+    : baseColorSummary;
+
+  // Initial hex passed to the modal when it opens — picks up the current value
+  // for that channel, resolving any sentinels to a concrete starting point.
+  const modalInitialColor =
+    colorPickerTarget === "border"
+      ? borderColor === BADGE_COLOR_THEME_SENTINEL
+        ? theme.colors.border
+        : borderColor
+      : colorPickerTarget === "frame"
+        ? frameColor === BADGE_COLOR_THEME_SENTINEL
+          ? theme.colors.border
+          : frameColor
+        : colorPickerTarget === "icon"
+          ? resolvedIconColor
+          : currentDesign.color;
+
+  const handleConfirmModalColor = (hex: string) => {
+    if (colorPickerTarget === "fill") {
+      handleColorChange(hex);
+    } else if (colorPickerTarget === "border") {
+      handleBorderColorChange(hex);
+    } else if (colorPickerTarget === "frame") {
+      handleFrameColorChange(hex);
+    } else if (colorPickerTarget === "icon") {
+      handleIconColorChange(hex);
+    }
+    setColorPickerTarget(null);
+  };
 
   const shapeSummary = t(`shape.options.${currentDesign.shape}` as const);
   const frameSummary = t(`frame.options.${frame}` as const);
@@ -304,7 +417,6 @@ function DesignEditor({
           <ShapeSelector
             selectedShape={currentDesign.shape}
             onSelectShape={handleShapeChange}
-            accentColor={currentDesign.color}
           />
         </CollapsibleSection>
 
@@ -320,7 +432,6 @@ function DesignEditor({
           <FrameSelector
             selectedFrame={frame}
             onSelectFrame={handleFrameChange}
-            accentColor={currentDesign.color}
           />
         </CollapsibleSection>
 
@@ -339,7 +450,6 @@ function DesignEditor({
               monogram={monogram}
               onSelectMode={handleCenterModeChange}
               onChangeMonogram={handleMonogramChange}
-              accentColor={currentDesign.color}
             />
             {centerMode === BadgeCenterMode.icon && (
               <IconPicker
@@ -362,10 +472,14 @@ function DesignEditor({
           collapseLabel={collapseA11y}
           testID="badge-designer-colors"
         >
-          <ColorPicker
-            selectedColor={currentDesign.color}
-            onSelectColor={handleColorChange}
-            goalColor={goalColor ?? undefined}
+          <BadgeColorsAccordion
+            design={currentDesign}
+            goalColor={goalColor}
+            onChangeFill={handleColorChange}
+            onChangeBorder={handleBorderColorChange}
+            onChangeFrame={handleFrameColorChange}
+            onChangeIcon={handleIconColorChange}
+            onOpenCustomPicker={(channel) => setColorPickerTarget(channel)}
           />
         </CollapsibleSection>
 
@@ -399,7 +513,6 @@ function DesignEditor({
               onChangeText={handlePathTextChange}
               onChangeTextBottom={handlePathTextBottomChange}
               onChangePosition={handlePathTextPositionChange}
-              accentColor={currentDesign.color}
             />
             <BannerEditor
               enabled={bannerEnabled}
@@ -408,7 +521,6 @@ function DesignEditor({
               onToggle={handleBannerToggle}
               onChangeText={handleBannerTextChange}
               onChangePosition={handleBannerPositionChange}
-              accentColor={currentDesign.color}
             />
           </View>
         </CollapsibleSection>
@@ -443,6 +555,13 @@ function DesignEditor({
           </View>
         </View>
       </View>
+
+      <ColorPickerModal
+        visible={colorPickerTarget !== null}
+        initialColor={modalInitialColor}
+        onConfirm={handleConfirmModalColor}
+        onClose={() => setColorPickerTarget(null)}
+      />
     </View>
   );
 }
