@@ -9,10 +9,16 @@ import React from "react";
 import { renderWithProviders, screen } from "../../__tests__/test-utils";
 import { BadgeRenderer } from "../BadgeRenderer";
 import type { BadgeDesign } from "../types";
-import { BadgeShape, BadgeFrame, BadgeIconWeight } from "../types";
+import {
+  BadgeShape,
+  BadgeFrame,
+  BadgeIconWeight,
+  BADGE_COLOR_THEME_SENTINEL,
+} from "../types";
 import { BANNER_HEIGHT_RATIO, BANNER_TOP_VISIBLE_RATIO } from "../text/Banner";
 import { getBottomLabelBottomOverflow } from "../text/BottomLabel";
 import { getSafeTextColor } from "../../utils/accessibility";
+import { mockTheme } from "../../__tests__/mocks/unistyles";
 
 // Mock the icon registry instead of phosphor-react-native directly.
 // phosphor-react-native v3 changed its export structure, so mocking the
@@ -412,6 +418,228 @@ describe("BadgeRenderer", () => {
       const tree = JSON.stringify(toJSON());
       expect(tree).toContain("X");
       expect(tree).toContain("Novice");
+    });
+  });
+
+  describe("custom color resolution", () => {
+    // react-native-svg converts hex color strings into a packed AARRGGBB
+    // integer wrapped as `{ type: 0, payload: <uint32> }` by the time props
+    // hit toJSON(). Normalise back to a lowercase `#rrggbb` so assertions
+    // stay readable.
+    function payloadToHex(value: unknown): string | null {
+      if (
+        typeof value === "object" &&
+        value !== null &&
+        "payload" in value &&
+        typeof (value as { payload: unknown }).payload === "number"
+      ) {
+        const rgb = (value as { payload: number }).payload & 0xffffff;
+        return "#" + rgb.toString(16).padStart(6, "0");
+      }
+      if (typeof value === "string") return value.toLowerCase();
+      return null;
+    }
+
+    type Json = ReturnType<ReturnType<typeof renderWithProviders>["toJSON"]>;
+
+    function walk(node: Json, visit: (props: Record<string, unknown>) => void) {
+      if (!node) return;
+      if (Array.isArray(node)) {
+        for (const child of node) walk(child, visit);
+        return;
+      }
+      if (typeof node === "string") return;
+      if (node.props) visit(node.props as Record<string, unknown>);
+      if (node.children) {
+        for (const child of node.children) walk(child as Json, visit);
+      }
+    }
+
+    function findShapeStrokeHex(json: Json): string | null {
+      // Shape Path is the unique node carrying both a fill (= design.color)
+      // and a stroke. The shadow Path has fill="#000000" without stroke;
+      // frame strokes have stroke without fill.
+      const hits: string[] = [];
+      walk(json, (props) => {
+        if ("fill" in props && "stroke" in props) {
+          const hex = payloadToHex(props.stroke);
+          if (hex) hits.push(hex);
+        }
+      });
+      return hits[0] ?? null;
+    }
+
+    function findAllStrokeHexes(json: Json): string[] {
+      const hexes: string[] = [];
+      walk(json, (props) => {
+        if ("stroke" in props) {
+          const hex = payloadToHex(props.stroke);
+          if (hex) hexes.push(hex);
+        }
+      });
+      return hexes;
+    }
+
+    function findAllFillHexes(json: Json): string[] {
+      const hexes: string[] = [];
+      walk(json, (props) => {
+        if ("fill" in props) {
+          const hex = payloadToHex(props.fill);
+          if (hex) hexes.push(hex);
+        }
+      });
+      return hexes;
+    }
+
+    it("shape stroke equals theme.colors.border when borderColor is the theme sentinel", () => {
+      const { toJSON } = renderWithProviders(
+        <BadgeRenderer
+          design={createDesign({ borderColor: BADGE_COLOR_THEME_SENTINEL })}
+          showShadow={false}
+        />,
+      );
+      expect(findShapeStrokeHex(toJSON())).toBe(
+        mockTheme.colors.border.toLowerCase(),
+      );
+    });
+
+    it("shape stroke equals theme.colors.border when borderColor is absent", () => {
+      const { toJSON } = renderWithProviders(
+        <BadgeRenderer design={createDesign()} showShadow={false} />,
+      );
+      expect(findShapeStrokeHex(toJSON())).toBe(
+        mockTheme.colors.border.toLowerCase(),
+      );
+    });
+
+    it("shape stroke uses the explicit hex when borderColor is a hex string", () => {
+      const { toJSON } = renderWithProviders(
+        <BadgeRenderer
+          design={createDesign({ borderColor: "#ff0000" })}
+          showShadow={false}
+        />,
+      );
+      expect(findShapeStrokeHex(toJSON())).toBe("#ff0000");
+    });
+
+    const FRAME_PARAMS = {
+      variant: 1,
+      stepCount: 2,
+      evidenceCount: 0,
+      daysToComplete: 0,
+      evidenceTypes: 0,
+    } as const;
+
+    it("frame strokes fall back to theme.colors.border when frameColor is absent", () => {
+      const { toJSON } = renderWithProviders(
+        <BadgeRenderer
+          design={createDesign({
+            frame: BadgeFrame.boldBorder,
+            frameParams: { ...FRAME_PARAMS },
+            borderColor: "#ff0000",
+          })}
+          showShadow={false}
+        />,
+      );
+      // Shape stroke is red; every frame stroke must be the theme border.
+      const strokes = findAllStrokeHexes(toJSON());
+      const themeBorder = mockTheme.colors.border.toLowerCase();
+      const frameStrokes = strokes.filter((s) => s !== "#ff0000");
+      expect(frameStrokes.length).toBeGreaterThan(0);
+      for (const s of frameStrokes) expect(s).toBe(themeBorder);
+    });
+
+    it("frame strokes use frameColor hex when provided, independent of borderColor", () => {
+      const { toJSON } = renderWithProviders(
+        <BadgeRenderer
+          design={createDesign({
+            frame: BadgeFrame.boldBorder,
+            frameParams: { ...FRAME_PARAMS },
+            borderColor: "#ff0000",
+            frameColor: "#00ff00",
+          })}
+          showShadow={false}
+        />,
+      );
+      const strokes = findAllStrokeHexes(toJSON());
+      expect(strokes).toContain("#ff0000"); // shape
+      expect(strokes).toContain("#00ff00"); // frame
+      // Frame paints multiple concentric rings; assert > 0 are green.
+      expect(strokes.filter((s) => s === "#00ff00").length).toBeGreaterThan(0);
+    });
+
+    it("banner stroke stays on theme.colors.border regardless of borderColor / frameColor", () => {
+      const { toJSON } = renderWithProviders(
+        <BadgeRenderer
+          design={createDesign({
+            banner: { text: "WINNER", position: "top" },
+            borderColor: "#ff0000",
+            frameColor: "#00ff00",
+          })}
+          showShadow={false}
+        />,
+      );
+      const strokes = findAllStrokeHexes(toJSON());
+      // Banner contributes a theme-border stroke even when the shape stroke
+      // is overridden — the banner is no longer scope-driven.
+      expect(strokes).toContain(mockTheme.colors.border.toLowerCase());
+    });
+
+    it("icon color uses an explicit iconColor hex when set", () => {
+      renderWithProviders(
+        <BadgeRenderer
+          design={createDesign({
+            iconName: "Trophy",
+            color: "#1a1a2e",
+            iconColor: "#abcdef",
+          })}
+        />,
+      );
+      const icon = screen.getByLabelText("Trophy icon");
+      expect(icon.props.accessibilityHint).toContain("color=#abcdef");
+    });
+
+    it("icon color falls back to getSafeTextColor when iconColor is absent", () => {
+      renderWithProviders(
+        <BadgeRenderer
+          design={createDesign({ iconName: "Trophy", color: "#1a1a2e" })}
+        />,
+      );
+      const icon = screen.getByLabelText("Trophy icon");
+      const expected = getSafeTextColor("#1a1a2e");
+      expect(icon.props.accessibilityHint).toContain(`color=${expected}`);
+    });
+
+    it("icon color falls back to getSafeTextColor when iconColor is the theme sentinel", () => {
+      renderWithProviders(
+        <BadgeRenderer
+          design={createDesign({
+            iconName: "Trophy",
+            color: "#1a1a2e",
+            iconColor: BADGE_COLOR_THEME_SENTINEL,
+          })}
+        />,
+      );
+      const icon = screen.getByLabelText("Trophy icon");
+      const expected = getSafeTextColor("#1a1a2e");
+      expect(icon.props.accessibilityHint).toContain(`color=${expected}`);
+    });
+
+    it("monogram text uses the same resolved iconColor", () => {
+      const { toJSON } = renderWithProviders(
+        <BadgeRenderer
+          design={createDesign({
+            centerMode: "monogram" as const,
+            monogram: "Z",
+            iconColor: "#abcdef",
+            color: "#1a1a2e",
+          })}
+          showShadow={false}
+        />,
+      );
+      // MonogramCenter renders <SvgText fill={textColor}> — find a node whose
+      // `fill` is the requested icon color.
+      expect(findAllFillHexes(toJSON())).toContain("#abcdef");
     });
   });
 

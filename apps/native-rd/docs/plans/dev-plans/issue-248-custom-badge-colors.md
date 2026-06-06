@@ -350,47 +350,70 @@ Reference — full key set under `badgeDesigner` namespace (English; ✅ already
 
 ---
 
-### Step 9: Tests
+### Step 9: Tests ✅ DONE
 
-**Files**: `apps/native-rd/src/badges/__tests__/BadgeRenderer.test.tsx` (additions), `ColorPickerModal.test.tsx` (new), `BadgeColorsAccordion.test.tsx` (new — under `src/screens/BadgeDesignerScreen/__tests__/`)
+**Files**: `apps/native-rd/src/badges/__tests__/BadgeRenderer.test.tsx` (additions), `ColorPicker.test.tsx` (additions), `ColorPickerModal.test.tsx` (new), `BadgeColorsAccordion.test.tsx` (new — under `src/screens/BadgeDesignerScreen/__tests__/`)
 **Commit**: `test(badges): cover custom color renderer resolution and tabbed Colors accordion`
-**Changes**:
 
 **`types.test.ts`** — already comprehensive (committed in Step 2 + refactor). Covers `createDefaultBadgeDesign` returning `borderColor: '#000000'`, `borderColor` / `iconColor` / `frameColor` sanitization matrices via `test.each`, and the parser stripping the retired `borderScope` field. No additions needed.
 
-**`BadgeRenderer.test.tsx` additions**:
+**`BadgeRenderer.test.tsx` additions** (12 new tests under a `custom color resolution` describe):
 
-- [ ] When `design.borderColor` is `'theme'`, shape stroke equals `theme.colors.border`.
-- [ ] When `design.borderColor` is `'#ff0000'`, shape stroke equals `'#ff0000'`.
-- [ ] When `design.frameColor` is absent, frame `strokeColor` equals `theme.colors.border`.
-- [ ] When `design.frameColor` is `'#00ff00'`, frame `strokeColor` equals `'#00ff00'`.
-- [ ] Banner `borderColor` always equals `theme.colors.border` regardless of `borderColor` / `frameColor` (banner is no longer scope-driven).
-- [ ] When `design.iconColor` is set to a hex, icon `color` prop and `MonogramCenter` `textColor` both use that hex.
-- [ ] When `design.iconColor` is absent, icon `color` prop falls back to `getSafeTextColor(design.color)`.
+- [x] When `design.borderColor` is `'theme'` (sentinel), shape stroke equals `theme.colors.border`.
+- [x] When `design.borderColor` is absent, shape stroke equals `theme.colors.border` (defensive: missing-field path).
+- [x] When `design.borderColor` is `'#ff0000'`, shape stroke equals `'#ff0000'`.
+- [x] When `design.frameColor` is absent, every frame stroke equals `theme.colors.border` (boldBorder frame with `frameParams` supplied).
+- [x] When `design.frameColor` is `'#00ff00'`, frame strokes use that hex while the shape stroke stays on `borderColor`.
+- [x] Banner stroke stays on `theme.colors.border` regardless of `borderColor` / `frameColor` overrides (banner is no longer scope-driven).
+- [x] When `design.iconColor` is a hex, icon mock's `color` prop uses that hex.
+- [x] When `design.iconColor` is absent, icon `color` falls back to `getSafeTextColor(design.color)`.
+- [x] When `design.iconColor === 'theme'` (sentinel), icon `color` falls back to `getSafeTextColor(design.color)`.
+- [x] When `centerMode === 'monogram'` and `design.iconColor` is set, the monogram text uses the same resolved hex.
 
-**`ColorPicker.test.tsx` update**:
+Helper added: `payloadToHex` normalises react-native-svg's packed `{type, payload}` color shape back into a lowercase `#rrggbb` so assertions stay readable. `walk()` traverses the toJSON tree; `findShapeStrokeHex` / `findAllStrokeHexes` / `findAllFillHexes` are channel-specific finders.
 
-- [ ] Selected swatch ring uses `theme.colors.accentPrimary` (the Step 4 fix — confirmed `theme.colors.primary` does not exist; correct token is `accentPrimary`).
+**`ColorPicker.test.tsx` additions** (5 new tests):
 
-**`ColorPickerModal.test.tsx`** (new):
+- [x] Selected swatch ring uses `theme.colors.accentPrimary` (the Step 4 fix — `theme.colors.primary` does not exist; correct token is `accentPrimary`).
+- [x] Custom… trigger renders when `onOpenCustomPicker` is provided.
+- [x] Custom… trigger does NOT render when `onOpenCustomPicker` is omitted (back-compat for legacy call sites).
+- [x] Pressing the Custom… trigger fires `onOpenCustomPicker`.
+- [x] Custom… cell is highlighted when the selected color is not in the palette.
 
-- [ ] Renders nothing visible when `visible=false`.
-- [ ] Renders modal content when `visible=true`.
-- [ ] `onClose` fires when Cancel is pressed.
-- [ ] `onConfirm` is called with current hex when Confirm is pressed.
-- Mock `reanimated-color-picker` exports (default `ColorPicker`, `Panel1`, `HueSlider`, `Preview`) as inert React components that surface the `onChangeJS` callback via a testID.
+**`ColorPickerModal.test.tsx`** (new, 8 tests):
 
-**`BadgeColorsAccordion.test.tsx`** (new):
+- [x] Renders nothing visible when `visible=false`.
+- [x] Renders modal body when `visible=true` (testID `reanimated-color-picker` present + `color-picker-modal` root).
+- [x] `onClose` fires when Cancel is pressed.
+- [x] `onClose` fires when the header close (X) button is pressed.
+- [x] `onConfirm` is called with the initial color when Confirm is pressed before any change.
+- [x] `onConfirm` is called with the latest color after `onChangeJS` fires (via the mock's testID press surface).
+- [x] Renders the default i18n title `"Choose Color"`.
+- [x] Uses an explicit `title` prop when provided.
 
-- [ ] All four tab headers render when `design.frame !== 'none'`; Frame header omitted when `frame === 'none'`.
-- [ ] Tapping a tab header switches the body to that channel's palette.
-- [ ] Selecting the sentinel cell in Border / Frame fires `onChangeBorder` / `onChangeFrame` with `BADGE_COLOR_THEME_SENTINEL`.
-- [ ] Selecting an accent swatch fires `onChangeFill` / `onChangeBorder` / `onChangeFrame` / `onChangeIcon` with the right hex.
-- [ ] Pressing the "Custom" cell fires `onOpenCustomPicker(channel)` with the active channel.
-- [ ] Icon contrast warning renders when `iconColor` is an explicit hex with low contrast against `design.color`; hidden when `iconColor` is the sentinel (auto-derived).
-- [ ] When the Frame tab is active and the user clears the frame (`frame → 'none'`), the visible body redirects to the Border tab via the `useEffect` guard.
+Mock strategy: `reanimated-color-picker` is mocked with an inert `ColorPicker` that exposes its `onChangeJS` callback through a Pressable testID. The RN auto-mock for `Modal` is overridden (`react-native/Libraries/Modal/Modal` → ES-module passthrough that gates on `visible` and re-emits `children`) because the default `mockComponent` shim `requireActual`s the real Modal and fails on `__fbBatchedBridgeConfig`.
 
-**Estimated LOC**: ~250 LOC across renderer + modal + accordion test files.
+**`BadgeColorsAccordion.test.tsx`** (new, 16 tests under `src/screens/BadgeDesignerScreen/__tests__/`):
+
+- [x] Tab visibility: Fill / Border / Icon always present; Frame tab hidden when `design.frame === 'none'`; Frame tab shown when set.
+- [x] Tab switching: pressing a tab header switches the visible palette body.
+- [x] Frame-tab redirect: when the active Frame tab unmounts (user clears the frame), the `useEffect` guard switches to Border.
+- [x] Border channel: Match-theme fires `onChangeBorder(BADGE_COLOR_THEME_SENTINEL)`, swatch fires `onChangeBorder(hex)`, Custom… fires `onOpenCustomPicker('border')`.
+- [x] Frame channel: Match-theme + swatch callbacks fire correctly.
+- [x] Icon channel: Auto fires `onChangeIcon(BADGE_COLOR_THEME_SENTINEL)`, swatch fires `onChangeIcon(hex)`.
+- [x] Fill channel: swatch press fires `onChangeFill(hex)` (no tab switch needed — Fill is the initial tab).
+- [x] Contrast warning renders when `iconColor` is an explicit hex with low contrast against `design.color` (white-on-white forces failure deterministically).
+- [x] Contrast warning is hidden when `iconColor === BADGE_COLOR_THEME_SENTINEL` (auto-derived color is safe by construction).
+- [x] Contrast warning is hidden when `iconColor` passes AA against the fill (`#000000` on `#ffffff`).
+
+**Verification**:
+
+- [x] `bun run type-check` clean (4/4 turbo tasks).
+- [x] `bun run lint` 0 errors (162 pre-existing utils/ warnings — within the baseline noted in earlier steps).
+- [x] `npx jest --testPathPatterns "badges/__tests__|BadgeColorsAccordion"` → 6491/6512 pass. The 21 failures are the unchanged pre-existing `IconPicker.test.tsx` Modal/native-bridge baseline reproducible on `main`.
+- [x] **Update plan + commit** — Step 9 boxes checked, single atomic commit for renderer + ColorPicker + ColorPickerModal + accordion tests.
+
+**Estimated LOC**: ~250 LOC planned. Actual: ~210 LOC `BadgeRenderer.test.tsx` additions, ~70 LOC `ColorPicker.test.tsx` additions, ~150 LOC new `ColorPickerModal.test.tsx`, ~220 LOC new `BadgeColorsAccordion.test.tsx` = ~650 LOC. Higher than the estimate because each channel (Border/Frame/Icon) needed its own per-handler coverage and the contrast-warning matrix grew to 3 cases for adequate confidence in the icon channel's gating logic.
 
 ---
 

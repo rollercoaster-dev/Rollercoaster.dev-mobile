@@ -5,6 +5,7 @@ import {
   fireEvent,
 } from "../../__tests__/test-utils";
 import { ColorPicker } from "../ColorPicker";
+import { mockTheme } from "../../__tests__/mocks/unistyles";
 
 describe("ColorPicker", () => {
   const onSelectColor = jest.fn();
@@ -92,5 +93,92 @@ describe("ColorPicker", () => {
 
     fireEvent.press(screen.getByLabelText("Orange color"));
     expect(onSelectColor).toHaveBeenCalledWith("#f97316");
+  });
+
+  // Locating the swatch ring directly is awkward — the inner <View> with the
+  // ring style is unlabelled. Walk the Pressable's children until we hit the
+  // node carrying `borderColor` and pull it off there. Keeps the test tied to
+  // the actual rendered style rather than the source code.
+  function getRingBorderColor(
+    swatchPressable: ReturnType<typeof screen.getByLabelText>,
+  ): unknown {
+    function find(node: unknown): Record<string, unknown> | null {
+      if (!node || typeof node !== "object") return null;
+      const n = node as { props?: Record<string, unknown>; children?: unknown };
+      if (n.props) {
+        const style = n.props.style;
+        const styles = Array.isArray(style) ? style : style ? [style] : [];
+        for (const s of styles) {
+          if (s && typeof s === "object" && "borderColor" in s) {
+            return s as Record<string, unknown>;
+          }
+        }
+      }
+      const children = n.children;
+      const list = Array.isArray(children)
+        ? children
+        : children
+          ? [children]
+          : [];
+      for (const c of list) {
+        const hit = find(c);
+        if (hit) return hit;
+      }
+      return null;
+    }
+    return find(swatchPressable)?.borderColor ?? null;
+  }
+
+  it("uses theme.colors.accentPrimary for the selected swatch ring", () => {
+    renderWithProviders(
+      <ColorPicker selectedColor="#34d399" onSelectColor={onSelectColor} />,
+    );
+    const ringColor = getRingBorderColor(screen.getByLabelText("Mint color"));
+    expect(ringColor).toBe(mockTheme.colors.accentPrimary);
+  });
+
+  it("renders the Custom… trigger when onOpenCustomPicker is provided", () => {
+    renderWithProviders(
+      <ColorPicker
+        selectedColor="#a78bfa"
+        onSelectColor={onSelectColor}
+        onOpenCustomPicker={jest.fn()}
+      />,
+    );
+    expect(screen.getByTestId("color-picker-custom")).toBeOnTheScreen();
+  });
+
+  it("does not render the Custom… trigger when onOpenCustomPicker is omitted", () => {
+    renderWithProviders(
+      <ColorPicker selectedColor="#a78bfa" onSelectColor={onSelectColor} />,
+    );
+    expect(screen.queryByTestId("color-picker-custom")).toBeNull();
+  });
+
+  it("calls onOpenCustomPicker when the Custom… trigger is pressed", () => {
+    const onOpenCustomPicker = jest.fn();
+    renderWithProviders(
+      <ColorPicker
+        selectedColor="#a78bfa"
+        onSelectColor={onSelectColor}
+        onOpenCustomPicker={onOpenCustomPicker}
+      />,
+    );
+    fireEvent.press(screen.getByTestId("color-picker-custom"));
+    expect(onOpenCustomPicker).toHaveBeenCalledTimes(1);
+  });
+
+  it("highlights the Custom… cell when the selected color is not in the palette", () => {
+    renderWithProviders(
+      <ColorPicker
+        selectedColor="#abcdef"
+        onSelectColor={onSelectColor}
+        onOpenCustomPicker={jest.fn()}
+      />,
+    );
+    const ringColor = getRingBorderColor(
+      screen.getByTestId("color-picker-custom"),
+    );
+    expect(ringColor).toBe(mockTheme.colors.accentPrimary);
   });
 });
