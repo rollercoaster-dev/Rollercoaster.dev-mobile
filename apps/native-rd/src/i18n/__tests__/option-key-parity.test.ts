@@ -11,6 +11,7 @@ import {
   PathTextPosition,
   BannerPosition,
 } from "../../badges/types";
+import { BADGE_COLOR_CHANNELS } from "../../screens/BadgeDesignerScreen/BadgeColorsAccordion";
 
 // `LIFECYCLE_MODES` is derived from `MODE_CONFIG: Record<LifecycleMode, …>`
 // in ModeIndicator.tsx, so adding a union member without updating the config
@@ -250,4 +251,61 @@ describe("option array ↔ i18n key parity", () => {
       expect(i18n.exists(`badgeDesigner:pathText.counter.${label}`)).toBe(true);
     },
   );
+
+  // BadgeColorsAccordion drives the Fill / Border / Frame / Icon tabs from the
+  // `BADGE_COLOR_CHANNELS` const tuple; each tab label resolves via a
+  // template-literal `t(\`colorChannels.${channel}\`)`. Forward + reverse walks
+  // catch a tab being added to the union without a matching label, or a stale
+  // label left behind after a tab is renamed/retired.
+  describe.each(BADGE_COLOR_CHANNELS.map((channel) => ({ channel })))(
+    "BADGE_COLOR_CHANNELS[$channel]",
+    ({ channel }) => {
+      test(`badgeDesigner:colorChannels.${channel} resolves`, () => {
+        expect(i18n.exists(`badgeDesigner:colorChannels.${channel}`)).toBe(
+          true,
+        );
+      });
+    },
+  );
+
+  test("badgeDesigner:colorChannels keyset matches BADGE_COLOR_CHANNELS", () => {
+    const bundle = i18n.getResourceBundle("en", "badgeDesigner") as {
+      colorChannels: Record<string, unknown>;
+    };
+    expect(new Set(Object.keys(bundle.colorChannels))).toEqual(
+      new Set<string>(BADGE_COLOR_CHANNELS),
+    );
+  });
+
+  // Border / Frame / Icon palettes reuse `ACCENT_COLORS` (no `"goal"` swatch —
+  // that's fill-only). The `ChannelPalette` helper in BadgeColorsAccordion
+  // calls `t(\`borderColor.options.${id}\`)` etc. for every accent id; the
+  // forward walks ensure each id has a label, the reverse walks catch orphan
+  // JSON entries left behind after an accent is renamed in `ACCENT_COLORS`.
+  describe.each([
+    ["borderColor", "border color"],
+    ["frameColor", "frame ring color"],
+    ["iconColor", "icon color"],
+  ] as const)("%s palette parity (%s)", (namespace, _humanLabel) => {
+    describe.each(ACCENT_COLORS)(
+      `${namespace} ACCENT_COLORS[$id]`,
+      ({ id }) => {
+        test(`badgeDesigner:${namespace}.options.${id} resolves`, () => {
+          expect(i18n.exists(`badgeDesigner:${namespace}.options.${id}`)).toBe(
+            true,
+          );
+        });
+      },
+    );
+
+    test(`badgeDesigner:${namespace}.options keyset matches ACCENT_COLORS`, () => {
+      const bundle = i18n.getResourceBundle("en", "badgeDesigner") as Record<
+        string,
+        { options: Record<string, unknown> }
+      >;
+      expect(new Set(Object.keys(bundle[namespace].options))).toEqual(
+        new Set(ACCENT_COLORS.map((c) => c.id)),
+      );
+    });
+  });
 });

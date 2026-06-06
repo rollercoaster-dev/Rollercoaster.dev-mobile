@@ -279,15 +279,37 @@ DE/pseudo translations + the parity assertion still ship in Step 8 as planned.
 
 ---
 
+### Step 7.5: Refactor Colors accordion into tabs + add Frame channel ✅ DONE
+
+**Commit**: `refactor(badges): collapse Colors accordion into tabs + add Frame channel` (8e9ca6e)
+
+**What changed and why:** Stacking three palettes (Fill / Border / Icon) inside one accordion read as duplicated swatches in the simulator — every channel reuses `ACCENT_COLORS`, so the same eight cells appeared three times. Folded into a tabbed picker (Fill / Border / Frame / Icon) where each tab owns the channel; one `ColorPickerModal` is shared across all four "Custom…" triggers.
+
+**Schema shift (greenfield, no migration needed — #248 hasn't shipped):**
+
+- Added optional `BadgeDesign.frameColor` (sentinel or hex). Absent → renderer falls back to `theme.colors.border`.
+- Dropped `BadgeBorderScope` const, `BadgeBorderScope` type, and `BadgeDesign.borderScope`. Parser strips the retired `borderScope` field on read so any pre-existing in-flight JSON re-serialises clean.
+- Renderer no longer reads `borderScope`. Frame stroke comes from `resolvedFrameColor`; banner border reverted to `theme.colors.border` always.
+
+**Components retired:** `BorderColorPicker.tsx`, `IconColorPicker.tsx`, `BorderScopeSelector.tsx`, and the throwaway `ColorsAccordionPrototype` scaffold. Replaced by a single `BadgeColorsAccordion.tsx` co-located in `screens/BadgeDesignerScreen/`, which internally renders `TabHeader` + `ChannelPalette` helpers.
+
+**Implications for Steps 8 + 9:**
+
+- No DE/pseudo translations for `borderScope.*` (the namespace is gone from EN).
+- DE/pseudo need to gain a `frameColor.*` namespace (new) alongside the rest.
+- Step 9 no longer tests separate `BorderColorPicker` / `BorderScopeSelector` components — testing concentrates on `BadgeColorsAccordion` (which is where the channel-switching, sentinel selection, custom-trigger, and Frame-tab gating logic now lives) and the unchanged renderer / types contracts.
+
+---
+
 ### Step 8: Extend i18n resources
 
-**Scope reduced (2026-06-06):** EN keys for `borderColor` + `borderScope` were folded into Step 6 and EN keys for `iconColor` + `colorPicker` + `accordion.summary.colorCustom` were folded into Step 7 (both forced by typed-i18n). Step 8 now covers ONLY: (a) DE translations for the keys not yet covered by the LLM sync (`iconColor`, `colorPicker`, `accordion.summary.colorCustom`); the LLM sync commit `ac257ca` already populated DE `borderColor` + `borderScope`, (b) pseudo translations for everything new, (c) parity-test assertions for `BadgeBorderScope`.
+**Scope (2026-06-06, post-refactor):** EN already has every new key (`borderColor`, `frameColor`, `iconColor`, `colorPicker`, `colorChannels`, `accordion.summary.colorCustom`) thanks to the typed-i18n forcing function in Steps 6 / 7. DE has `borderColor` only (synced via `ac257ca`); pseudo has nothing new. Step 8 fills DE + pseudo and adds the parity assertion for the new namespaces.
 
-**Files**: `apps/native-rd/src/i18n/resources/de/badgeDesigner.json` (add `iconColor` + `colorPicker` + `accordion.summary.colorCustom`), `pseudo/badgeDesigner.json` (add all new top-level keys), `apps/native-rd/src/i18n/__tests__/option-key-parity.test.ts`
+**Files**: `apps/native-rd/src/i18n/resources/de/badgeDesigner.json`, `pseudo/badgeDesigner.json`, `apps/native-rd/src/i18n/__tests__/option-key-parity.test.ts`
 **Commit**: `feat(badges): add i18n keys for custom color controls`
 **Changes**:
 
-Reference — full key set under `badgeDesigner` namespace (English; ✅ already in `en/badgeDesigner.json` after Step 6):
+Reference — full key set under `badgeDesigner` namespace (English; ✅ already in `en/badgeDesigner.json` after Steps 6 + 7):
 
 ```json
 "borderColor": {
@@ -295,104 +317,80 @@ Reference — full key set under `badgeDesigner` namespace (English; ✅ already
   "optionA11y": "{{label}} border color",
   "matchTheme": "Match theme",
   "custom": "Custom",
-  "options": {
-    "theme": "Match theme",
-    "purple": "Purple",
-    "mint": "Mint",
-    "yellow": "Yellow",
-    "emerald": "Emerald",
-    "teal": "Teal",
-    "orange": "Orange",
-    "sky": "Sky"
-  }
+  "customHint": "Opens the color picker",
+  "options": { "purple": "Purple", "mint": "Mint", "yellow": "Yellow", "emerald": "Emerald", "teal": "Teal", "orange": "Orange", "sky": "Sky" }
 },
+"frameColor": { /* same shape as borderColor */ },
 "iconColor": {
   "a11y": "Icon color",
   "optionA11y": "{{label}} icon color",
   "matchAuto": "Auto",
+  "matchAutoHint": "Picks black or white based on fill contrast",
   "custom": "Custom",
-  "contrastWarning": "Low contrast — text may be hard to read"
+  "customHint": "Opens the color picker",
+  "contrastWarning": "Low contrast — text may be hard to read",
+  "options": { /* same as borderColor */ }
 },
-"borderScope": {
-  "a11y": "Border scope",
-  "optionA11y": "{{label}} scope",
-  "options": {
-    "shape": "Shape",
-    "shapeAndFrame": "Shape + Frame",
-    "all": "All"
-  }
-},
-"colorPicker": {
-  "title": "Choose Color",
-  "confirm": "Confirm",
-  "cancel": "Cancel",
-  "preview": "Selected color preview"
-}
+"colorChannels": { "fill": "Fill", "border": "Border", "frame": "Frame", "icon": "Icon" },
+"colorPicker": { "title": "Choose Color", "confirm": "Confirm", "cancel": "Cancel", "close": "Close color picker", "confirmHint": "Use color {{hex}}" },
+"accordion": { "summary": { "colorCustom": "Custom" /* + existing keys */ } }
 ```
 
-- [ ] Add German and pseudo translations for the same keys.
-- [ ] In `option-key-parity.test.ts`: add `BadgeBorderScope` forward/reverse parity assertions mirroring the existing `BadgeShape` pattern. Note: `BorderColorPicker` uses the same `ACCENT_COLORS` array as fill — those keys are already covered; only `theme` sentinel key needs explicit assertion.
-- [ ] **Update plan + commit** — check Step 8 boxes, commit the i18n additions and the plan update together.
+- [x] DE: added `frameColor`, `iconColor`, `colorChannels`, `colorPicker`, and `accordion.summary.colorCustom` to `de/badgeDesigner.json`. (`borderColor` already populated by `ac257ca`.)
+- [x] Pseudo: added `borderColor`, `frameColor`, `iconColor`, `colorChannels`, `colorPicker`, and `accordion.summary.colorCustom` to `pseudo/badgeDesigner.json` following the existing pseudo-locale conventions (Latin-Extended-A characters + bracket padding).
+- [x] Exported `BADGE_COLOR_CHANNELS` (runtime const tuple) + `Channel` type from `BadgeColorsAccordion.tsx` so the parity test can reverse-walk the tab union.
+- [x] In `option-key-parity.test.ts`, added forward + reverse parity blocks following the existing `BadgeShape` / `BadgeFrame` patterns:
+  - `colorChannels` keyset matches `BADGE_COLOR_CHANNELS`.
+  - `borderColor.options`, `frameColor.options`, and `iconColor.options` keysets each match `ACCENT_COLORS` (single `describe.each` over the three namespaces — no duplicated test bodies).
+  - No `BadgeBorderScope` parity test — the enum no longer exists.
+- [x] Verified: `bun run type-check` clean (4/4 turbo tasks); `bun run lint` clean (0 errors, 158 pre-existing warnings in `utils/`); `npx jest --testPathPatterns "option-key-parity|locale-parity"` → 117/117 pass.
+- [x] **Update plan + commit** — Step 8 boxes checked, single atomic commit for DE + pseudo + parity + plan update.
 
-**Estimated LOC**: ~80 LOC across all JSON files; ~25 LOC test additions.
+**Estimated LOC**: ~120 LOC across DE + pseudo JSON; ~40 LOC test additions.
 
 ---
 
 ### Step 9: Tests
 
-**Files**: `apps/native-rd/src/badges/__tests__/types.test.ts`, `BadgeRenderer.test.tsx`, `ColorPicker.test.tsx`, `ColorPickerModal.test.tsx` (new), `BorderColorPicker.test.tsx` (new), `BorderScopeSelector.test.tsx` (new)
-**Commit**: `test(badges): cover custom color types, renderer resolution, and picker components`
+**Files**: `apps/native-rd/src/badges/__tests__/BadgeRenderer.test.tsx` (additions), `ColorPickerModal.test.tsx` (new), `BadgeColorsAccordion.test.tsx` (new — under `src/screens/BadgeDesignerScreen/__tests__/`)
+**Commit**: `test(badges): cover custom color renderer resolution and tabbed Colors accordion`
 **Changes**:
 
-**`types.test.ts` additions**:
-
-- [ ] `createDefaultBadgeDesign` returns `borderColor: '#000000'`.
-- [ ] `parseBadgeDesign` with missing `borderColor` → defaults to `'theme'`.
-- [ ] `parseBadgeDesign` with invalid `borderColor: 'not-valid'` → sanitizes to `'theme'`.
-- [ ] `parseBadgeDesign` with valid hex `borderColor: '#ff0000'` → passes through unchanged.
-- [ ] `parseBadgeDesign` with `borderScope: 'invalid'` → sanitizes to `'shape'`.
-- [ ] `parseBadgeDesign` with `iconColor: '#123456'` → passes through.
-- [ ] `BadgeBorderScope` has 3 values: `shape`, `shapeAndFrame`, `all`.
-- [ ] Use `test.each` for the sanitization cases.
+**`types.test.ts`** — already comprehensive (committed in Step 2 + refactor). Covers `createDefaultBadgeDesign` returning `borderColor: '#000000'`, `borderColor` / `iconColor` / `frameColor` sanitization matrices via `test.each`, and the parser stripping the retired `borderScope` field. No additions needed.
 
 **`BadgeRenderer.test.tsx` additions**:
 
 - [ ] When `design.borderColor` is `'theme'`, shape stroke equals `theme.colors.border`.
 - [ ] When `design.borderColor` is `'#ff0000'`, shape stroke equals `'#ff0000'`.
-- [ ] When `borderScope === 'shape'`, frame `strokeColor` equals `theme.colors.border`.
-- [ ] When `borderScope === 'shapeAndFrame'`, frame `strokeColor` equals `resolvedBorderColor`.
-- [ ] When `borderScope === 'all'`, banner `borderColor` prop equals `resolvedBorderColor`.
-- [ ] When `borderScope === 'all'`, banner shadow fill remains `#000000`.
-- [ ] When `design.iconColor` is set to a hex, icon `color` prop uses that hex.
-- [ ] When `design.iconColor` is absent, icon `color` prop uses `getSafeTextColor(design.color)`.
+- [ ] When `design.frameColor` is absent, frame `strokeColor` equals `theme.colors.border`.
+- [ ] When `design.frameColor` is `'#00ff00'`, frame `strokeColor` equals `'#00ff00'`.
+- [ ] Banner `borderColor` always equals `theme.colors.border` regardless of `borderColor` / `frameColor` (banner is no longer scope-driven).
+- [ ] When `design.iconColor` is set to a hex, icon `color` prop and `MonogramCenter` `textColor` both use that hex.
+- [ ] When `design.iconColor` is absent, icon `color` prop falls back to `getSafeTextColor(design.color)`.
 
 **`ColorPicker.test.tsx` update**:
 
-- [ ] Selected swatch `borderColor` uses `theme.colors.primary`, not `theme.colors.border`.
+- [ ] Selected swatch ring uses `theme.colors.accentPrimary` (the Step 4 fix — confirmed `theme.colors.primary` does not exist; correct token is `accentPrimary`).
 
 **`ColorPickerModal.test.tsx`** (new):
 
-- [ ] Renders nothing when `visible=false`.
+- [ ] Renders nothing visible when `visible=false`.
 - [ ] Renders modal content when `visible=true`.
 - [ ] `onClose` fires when Cancel is pressed.
 - [ ] `onConfirm` is called with current hex when Confirm is pressed.
+- Mock `reanimated-color-picker` exports (default `ColorPicker`, `Panel1`, `HueSlider`, `Preview`) as inert React components that surface the `onChangeJS` callback via a testID.
 
-**`BorderColorPicker.test.tsx`** (new):
+**`BadgeColorsAccordion.test.tsx`** (new):
 
-- [ ] "Match theme" swatch renders and is labeled correctly.
-- [ ] Palette swatches render (same count as `ACCENT_COLORS`).
-- [ ] "Custom…" cell renders and calls `onOpenCustomPicker` when pressed.
-- [ ] Selected state (`accessibilityState.checked`) tracks `selectedBorderColor`.
+- [ ] All four tab headers render when `design.frame !== 'none'`; Frame header omitted when `frame === 'none'`.
+- [ ] Tapping a tab header switches the body to that channel's palette.
+- [ ] Selecting the sentinel cell in Border / Frame fires `onChangeBorder` / `onChangeFrame` with `BADGE_COLOR_THEME_SENTINEL`.
+- [ ] Selecting an accent swatch fires `onChangeFill` / `onChangeBorder` / `onChangeFrame` / `onChangeIcon` with the right hex.
+- [ ] Pressing the "Custom" cell fires `onOpenCustomPicker(channel)` with the active channel.
+- [ ] Icon contrast warning renders when `iconColor` is an explicit hex with low contrast against `design.color`; hidden when `iconColor` is the sentinel (auto-derived).
+- [ ] When the Frame tab is active and the user clears the frame (`frame → 'none'`), the visible body redirects to the Border tab via the `useEffect` guard.
 
-**`BorderScopeSelector.test.tsx`** (new):
-
-- [ ] All three scope options render with correct labels.
-- [ ] Selected option has `checked: true`; others `checked: false`.
-- [ ] Pressing a scope option calls `onSelectScope` with the correct value.
-- [ ] Container has `radiogroup` role.
-- [ ] **Update plan + commit** — check Step 9 boxes, run final `bun run type-check` + `bun run lint`, commit the test additions and the plan update together. This is the last step before PR.
-
-**Estimated LOC**: ~180 LOC across all test files.
+**Estimated LOC**: ~250 LOC across renderer + modal + accordion test files.
 
 ---
 
@@ -402,7 +400,7 @@ Reference — full key set under `badgeDesigner` namespace (English; ✅ already
 - [ ] Use `test.each` for the parser sanitization matrix (valid hex / invalid hex / sentinel / missing → expected output).
 - [ ] `BadgeRenderer.test.tsx` color-resolution tests: use existing `createDesign()` helper with overrides for new fields; assert SVG prop values via RNTL queries on testID.
 - [ ] Mock `reanimated-color-picker` in jest (similar to `react-native-svg` mock pattern) — expose a controlled `onColorChange` callback so modal tests don't depend on native Reanimated internals.
-- [ ] Manual testing: open designer, pick all three channels through both palette swatches and the custom picker wheel; toggle border scope; save; reload badge; share/export PNG; verify visual in highContrast and autismFriendly themes.
+- [ ] Manual testing: open designer, switch through all four tabs (Fill / Border / Frame / Icon); for each, pick a sentinel, an accent swatch, and a custom hex via the modal; verify Frame tab disappears when frame is cleared and reappears when set; save; reload badge; share/export PNG; verify visual in highContrast and autismFriendly themes.
 - [ ] Run `bun run type-check` and `bun run lint` before opening PR.
 
 ## Not in Scope
@@ -437,3 +435,5 @@ All six items the researcher initially surfaced are settled by the issue body or
 **5. Icon/monogram color lives in the Colors accordion.** Literal reading of the issue: "Add custom color controls to the badge designer Colors section for: Fill, Border, Icon/monogram." Third color row in Colors, below Border.
 
 **6. Border palette parity test: reuse `ACCENT_COLORS` parity coverage + add a single assertion for the `'theme'` sentinel key.** No new `BORDER_COLOR_SWATCHES` constant. The existing parity test for `ACCENT_COLORS` already guarantees the palette swatches; we add one extra `expect(t('borderColor.options.theme')).toBeDefined()`-style check and stop. Keeps the test surface proportionate to what's actually new.
+
+**7. Border scope retired in favour of a separate `frameColor` channel (2026-06-06).** The original three-value `BadgeBorderScope` (`shape` / `shapeAndFrame` / `all`) collapsed under simulator review — three stacked palettes read as duplicates and the "All" scope's banner coupling never felt like a real product affordance. Replaced with a 4th channel (`frameColor`) so the user picks "what to color" by tab instead of layering a scope enum on top of border color. Banner border reverts to `theme.colors.border` always; if someone later wants colored banners, that's a separate channel.

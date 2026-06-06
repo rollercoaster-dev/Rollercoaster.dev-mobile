@@ -25,7 +25,18 @@ import { getSafeTextColor, meetsWCAG } from "../../utils/accessibility";
 // Types
 // ---------------------------------------------------------------------------
 
-type Channel = "fill" | "border" | "frame" | "icon";
+/**
+ * Source-of-truth list for tabs in the Colors accordion. Exported so the i18n
+ * `colorChannels` parity test can reverse-walk this against the JSON keyset.
+ */
+export const BADGE_COLOR_CHANNELS = [
+  "fill",
+  "border",
+  "frame",
+  "icon",
+] as const;
+
+export type Channel = (typeof BADGE_COLOR_CHANNELS)[number];
 
 // Decorative glyph painted in the Icon-tab preview chip so users can see the
 // resolved icon color against the fill. Hidden from screen readers; not user
