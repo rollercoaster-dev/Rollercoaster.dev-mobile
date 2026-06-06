@@ -59,6 +59,31 @@
       "goal": "Ziel"
     }
   },
+  "borderColor": {
+    "a11y": "Badge-Rahmenfarbe",
+    "optionA11y": "{{label}} Rahmenfarbe",
+    "matchTheme": "Design anpassen",
+    "custom": "Benutzerdefiniert",
+    "customHint": "Öffnet die Farbauswahl",
+    "options": {
+      "purple": "Violett",
+      "mint": "Mint",
+      "yellow": "Gelb",
+      "emerald": "Smaragd",
+      "teal": "Türkis",
+      "orange": "Orange",
+      "sky": "Himmelblau"
+    }
+  },
+  "borderScope": {
+    "a11y": "Rahmenbereich",
+    "optionA11y": "{{label}} Bereich",
+    "options": {
+      "shape": "Form",
+      "shapeAndFrame": "Form + Rahmen",
+      "all": "Alles"
+    }
+  },
   "frame": {
     "a11y": "Badge-Rahmen",
     "optionA11y": "{{label}} Rahmen",
