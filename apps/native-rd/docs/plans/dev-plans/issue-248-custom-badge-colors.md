@@ -75,9 +75,9 @@ Add custom fill, border, and icon/monogram color controls to the badge designer'
 
 ## Implementation Plan
 
-### Step 1: Add `reanimated-color-picker` dependency ✅ DONE (uncommitted)
+### Step 1: Add `reanimated-color-picker` dependency ✅ DONE (committed 74aab82)
 
-**Status**: Installed via `bun add reanimated-color-picker@~4.2.0` (pinned `~4.2.0`, resolves to 4.2.0). `apps/native-rd/package.json` + root `bun.lock` modified, not yet committed.
+**Status**: Installed via `bun add reanimated-color-picker@~4.2.0`. Committed alongside the dev plan as `chore(native-rd): add reanimated-color-picker dependency` (74aab82).
 
 **Files**: `apps/native-rd/package.json`
 **Commit**: `chore(native-rd): add reanimated-color-picker dependency`
@@ -87,30 +87,34 @@ Add custom fill, border, and icon/monogram color controls to the badge designer'
 - [x] Confirmed the package resolves without a lockfile conflict (bun install succeeded cleanly).
 - [ ] Re-evaluate version pin when the repo upgrades to Expo 56.
 - [x] Library ships its own types at `lib/typescript/index.d.ts` — no `vendor.d.ts` stub needed. Default export is `ColorPicker` (forwardRef → `ColorPickerRef.setColor`); panel/slider/swatch components are individual named exports (`Panel1`, `HueSlider`, `Preview`, etc.) composed as children.
+- [x] **Update plan + commit** — checked the Step 1 box, committed the dep + the plan doc together.
 
 **Estimated LOC**: ~2 LOC (package.json entry + optional ambient decl)
 
 ---
 
-### Step 2: Extend `BadgeDesign` types and parser
+### Step 2: Extend `BadgeDesign` types and parser ✅ DONE
 
-**Files**: `apps/native-rd/src/badges/types.ts`
+**Files**: `apps/native-rd/src/badges/types.ts`, `apps/native-rd/src/badges/index.ts`, `apps/native-rd/src/badges/__tests__/types.test.ts`
 **Commit**: `feat(badges): add borderColor, iconColor, borderScope fields to BadgeDesign`
 **Changes**:
 
-- [ ] Add `BadgeBorderScope` const + type following existing `BadgeCenterMode` pattern:
+- [x] Add `BadgeBorderScope` const + type following existing `BadgeCenterMode` pattern:
   ```
   shape | shapeAndFrame | all
   ```
-- [ ] Add to `BadgeDesign`:
+- [x] Add to `BadgeDesign`:
   ```ts
   borderColor?: 'theme' | string;  // hex or sentinel; default via parser = 'theme'
   iconColor?: 'theme' | string;    // hex or sentinel; absent = getSafeTextColor auto
   borderScope?: BadgeBorderScope;  // absent = 'shape'
   ```
-- [ ] Update `createDefaultBadgeDesign` to return `borderColor: '#000000'` (new badges default to black).
-- [ ] In `parseBadgeDesign`: add `sanitizeBorderColor()` helper (validates `'theme'` sentinel OR `isValidHexColor()`; falls back to `'theme'` on parse failure). Add `sanitizeBorderScope()` (validates against `BadgeBorderScope` values; falls back to `'shape'`). `iconColor` uses same sanitizer as `borderColor` but defaults to `undefined` (absent) not `'theme'`.
-- [ ] Export `BadgeBorderScope` from `types.ts` and from `badges/index.ts`.
+- [x] Added exported `BADGE_COLOR_THEME_SENTINEL` (`"theme"` as const) so call sites don't have to repeat the magic string.
+- [x] Update `createDefaultBadgeDesign` to return `borderColor: '#000000'` (new badges default to black).
+- [x] In `parseBadgeDesign`: added `sanitizeBadgeColorField()` (validates sentinel OR `isValidHexColor`; caller picks the fallback — `'theme'` for `borderColor`, `undefined` for `iconColor`) and `sanitizeBorderScope()` (validates against `BadgeBorderScope` values; falls back to `'shape'`). Parser now uses build-then-strip so sanitized-to-undefined fields don't appear as `key: undefined` properties.
+- [x] Export `BadgeBorderScope` + `BADGE_COLOR_THEME_SENTINEL` from `badges/index.ts`.
+- [x] Tests: 57/57 pass (`npx jest --no-coverage --testPathPatterns "badges/__tests__/types.test.ts"`); `bun run type-check` clean.
+- [x] **Update plan + commit** — Step 2 boxes checked, committed as one atomic feat commit.
 
 **Estimated LOC**: ~60 LOC
 
@@ -138,6 +142,7 @@ Add custom fill, border, and icon/monogram color controls to the badge designer'
 - [ ] Update `<Banner borderColor>` to pass `resolvedScope === 'all' ? resolvedBorderColor : theme.colors.border`. Note: banner `fill` (`getSafeTextColor(badgeColor)`) and shadow `fill="#000000"` are NOT touched.
 - [ ] Update icon `color` prop to use `resolvedIconColor`.
 - [ ] Update `MonogramCenter` — check if it accepts a color prop; if not, it currently derives from `fillColor` (which is `design.color`) internally. Assess whether `iconColor` should also govern monogram color — likely yes per issue ("icon/monogram color"). If `MonogramCenter` doesn't expose a `color` prop, add one. Flag this as a sub-task.
+- [ ] **Update plan + commit** — check Step 3 boxes, commit the renderer changes and the plan update together.
 
 **Estimated LOC**: ~40 LOC in `BadgeRenderer.tsx`; ~10 LOC in `MonogramCenter.tsx` if prop addition is needed.
 
@@ -151,6 +156,7 @@ Add custom fill, border, and icon/monogram color controls to the badge designer'
 
 - [ ] At `ColorPicker.tsx:92` (approximately), change `borderColor: isSelected ? theme.colors.border : 'transparent'` to `borderColor: isSelected ? theme.colors.primary : 'transparent'`.
 - [ ] Update `ColorPicker.test.tsx` assertion if any test asserts the ring color token by name.
+- [ ] **Update plan + commit** — check Step 4 boxes, commit the fix and the plan update together.
 
 **Estimated LOC**: ~5 LOC
 
@@ -169,6 +175,7 @@ Add custom fill, border, and icon/monogram color controls to the badge designer'
 - [ ] Selected color preview swatch in the modal header so users see their choice before confirming.
 - [ ] All interactive elements: `accessibilityRole`, `accessibilityLabel`, 44×44 pt min touch targets.
 - [ ] `ColorPickerModal.styles.ts`: Unistyles stylesheet following `IconPickerModal.styles.ts` pattern.
+- [ ] **Update plan + commit** — check Step 5 boxes, commit the modal component and the plan update together.
 
 **Estimated LOC**: ~120 LOC
 
@@ -194,6 +201,7 @@ Add custom fill, border, and icon/monogram color controls to the badge designer'
 - [ ] Three options: `shape` ("Shape"), `shapeAndFrame` ("Shape + Frame"), `all` ("All").
 - [ ] Layout mirrors `CenterModeSelector` — horizontal row of pressable chips.
 - [ ] `accessibilityRole="radiogroup"` on container.
+- [ ] **Update plan + commit** — check Step 6 boxes, commit the picker components and the plan update together.
 
 **Estimated LOC**: ~120 LOC
 
@@ -215,6 +223,7 @@ Add custom fill, border, and icon/monogram color controls to the badge designer'
   4. A third `<ColorPicker>`-style row for icon/monogram color, or a dedicated `IconColorPicker` if the component needs the "Match theme" sentinel logic.
 - [ ] Update `colorSummary` string (shown in accordion header) to reflect custom color presence: e.g. append "· Custom border" if `borderColor !== 'theme'`.
 - [ ] Add contrast warning: when `iconColor` is explicitly set, compute `meetsWCAG(resolvedIconColor, design.color)` and render a small warning `<Text>` below the icon color row if it fails. No hard block.
+- [ ] **Update plan + commit** — check Step 7 boxes, commit the screen wiring and the plan update together.
 
 **Estimated LOC**: ~100 LOC
 
@@ -271,6 +280,7 @@ New keys to add under `badgeDesigner` namespace (English):
 
 - [ ] Add German and pseudo translations for the same keys.
 - [ ] In `option-key-parity.test.ts`: add `BadgeBorderScope` forward/reverse parity assertions mirroring the existing `BadgeShape` pattern. Note: `BorderColorPicker` uses the same `ACCENT_COLORS` array as fill — those keys are already covered; only `theme` sentinel key needs explicit assertion.
+- [ ] **Update plan + commit** — check Step 8 boxes, commit the i18n additions and the plan update together.
 
 **Estimated LOC**: ~80 LOC across all JSON files; ~25 LOC test additions.
 
@@ -328,6 +338,7 @@ New keys to add under `badgeDesigner` namespace (English):
 - [ ] Selected option has `checked: true`; others `checked: false`.
 - [ ] Pressing a scope option calls `onSelectScope` with the correct value.
 - [ ] Container has `radiogroup` role.
+- [ ] **Update plan + commit** — check Step 9 boxes, run final `bun run type-check` + `bun run lint`, commit the test additions and the plan update together. This is the last step before PR.
 
 **Estimated LOC**: ~180 LOC across all test files.
 

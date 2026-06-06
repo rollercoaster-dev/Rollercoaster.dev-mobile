@@ -20,6 +20,8 @@ export {
   BadgeFrame,
   BadgeIconWeight,
   BadgeCenterMode,
+  BadgeBorderScope,
+  BADGE_COLOR_THEME_SENTINEL,
   PathTextPosition,
   BannerPosition,
   createDefaultBadgeDesign,

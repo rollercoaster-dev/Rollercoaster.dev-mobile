@@ -56,6 +56,24 @@ export const BadgeCenterMode = {
 export type BadgeCenterMode =
   (typeof BadgeCenterMode)[keyof typeof BadgeCenterMode];
 
+/**
+ * Scope of a custom `borderColor` value within a rendered badge.
+ *
+ * - `shape`         → only the shape `<Path>` stroke uses `borderColor`.
+ * - `shapeAndFrame` → shape stroke + `FrameOverlay` stroke use `borderColor`.
+ * - `all`           → shape + frame + banner stroke all use `borderColor`
+ *                     (banner hard shadow fill stays `#000000`).
+ */
+export const BadgeBorderScope = {
+  shape: "shape",
+  shapeAndFrame: "shapeAndFrame",
+  all: "all",
+} as const;
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare -- intentional same-name type+const pattern
+export type BadgeBorderScope =
+  (typeof BadgeBorderScope)[keyof typeof BadgeBorderScope];
+
 /** Position for text rendered along the badge's circular path */
 export const PathTextPosition = {
   top: "top",
@@ -107,6 +125,16 @@ export type BannerData = {
  * `monogram` (1-3 chars) and `bottomLabel` are constrained
  * at the renderer/UI layer, not here — this type represents stored data.
  */
+/**
+ * Sentinel string for `borderColor` / `iconColor` meaning "track the active theme".
+ *
+ * When a saved value equals this sentinel, the renderer resolves it to
+ * `theme.colors.border` (border) or the safe text color for `design.color`
+ * (icon) at render time. This keeps theme-tracking a first-class saved
+ * choice instead of overloading "field absent".
+ */
+export const BADGE_COLOR_THEME_SENTINEL = "theme" as const;
+
 export type BadgeDesign = {
   shape: BadgeShape;
   frame: BadgeFrame;
@@ -122,6 +150,21 @@ export type BadgeDesign = {
   pathTextBottom?: string; // bottom arc inscription
   banner?: BannerData;
   frameParams?: FrameDataParams;
+  /**
+   * Border color: `'theme'` sentinel → tracks `theme.colors.border`, hex
+   * string → used directly. Missing field sanitizes to `'theme'` so existing
+   * stored designs render unchanged; `createDefaultBadgeDesign` returns
+   * `'#000000'` so new badges show the intended neo-brutalist black border.
+   */
+  borderColor?: typeof BADGE_COLOR_THEME_SENTINEL | string;
+  /**
+   * Icon / monogram color: `'theme'` sentinel or hex. Absent (the default
+   * for legacy designs) means the renderer falls back to
+   * `getSafeTextColor(design.color)` — the prior auto-contrast behaviour.
+   */
+  iconColor?: typeof BADGE_COLOR_THEME_SENTINEL | string;
+  /** Which SVG layers a custom `borderColor` applies to. Absent → `shape`. */
+  borderScope?: BadgeBorderScope;
 };
 
 /** Default icon when none is specified */
@@ -164,10 +207,34 @@ export function createDefaultBadgeDesign(
     title,
     centerMode: BadgeCenterMode.monogram,
     monogram: firstLetter,
+    borderColor: "#000000",
   };
 }
 
 const CENTER_MODE_VALUES = new Set(Object.values(BadgeCenterMode));
+const BORDER_SCOPE_VALUES = new Set(Object.values(BadgeBorderScope));
+
+/**
+ * Sanitize a stored `borderColor` / `iconColor` value.
+ *
+ * - `'theme'` sentinel passes through.
+ * - Valid hex string passes through.
+ * - Anything else → `fallback` (caller decides between `'theme'` and `undefined`).
+ */
+function sanitizeBadgeColorField(
+  raw: unknown,
+  fallback: typeof BADGE_COLOR_THEME_SENTINEL | undefined,
+): typeof BADGE_COLOR_THEME_SENTINEL | string | undefined {
+  if (raw === BADGE_COLOR_THEME_SENTINEL) return BADGE_COLOR_THEME_SENTINEL;
+  if (typeof raw === "string" && isValidHexColor(raw)) return raw;
+  return fallback;
+}
+
+function sanitizeBorderScope(raw: unknown): BadgeBorderScope {
+  return BORDER_SCOPE_VALUES.has(raw as BadgeBorderScope)
+    ? (raw as BadgeBorderScope)
+    : BadgeBorderScope.shape;
+}
 
 /** Validate and sanitize FrameDataParams, returning undefined if invalid. */
 function sanitizeFrameParams(raw: unknown): FrameDataParams | undefined {
@@ -219,15 +286,33 @@ export function parseBadgeDesign(
       ? (parsed.centerMode as BadgeCenterMode)
       : BadgeCenterMode.icon;
     const sanitizedFrameParams = sanitizeFrameParams(parsed.frameParams);
-    return {
+    // Missing `borderColor` → 'theme' (existing designs continue to track
+    // the active theme). `iconColor` falls back to `undefined` so the
+    // renderer's prior auto-contrast path (getSafeTextColor) still kicks in.
+    const borderColor = sanitizeBadgeColorField(
+      parsed.borderColor,
+      BADGE_COLOR_THEME_SENTINEL,
+    );
+    const iconColor = sanitizeBadgeColorField(parsed.iconColor, undefined);
+    const borderScope =
+      parsed.borderScope === undefined
+        ? undefined
+        : sanitizeBorderScope(parsed.borderScope);
+    const result: Record<string, unknown> = {
       ...parsed,
       centerMode,
-      ...(sanitizedFrameParams !== undefined
-        ? { frameParams: sanitizedFrameParams }
-        : parsed.frameParams !== undefined
-          ? { frameParams: undefined }
-          : {}),
-    } as BadgeDesign;
+      borderColor,
+    };
+    // Strip sanitized fields whose result is `undefined` so they don't appear
+    // as `key: undefined` properties (which would break `toEqual` round-trip
+    // tests and make stored JSON noisier than it needs to be).
+    if (iconColor === undefined) delete result.iconColor;
+    else result.iconColor = iconColor;
+    if (borderScope === undefined) delete result.borderScope;
+    else result.borderScope = borderScope;
+    if (sanitizedFrameParams === undefined) delete result.frameParams;
+    else result.frameParams = sanitizedFrameParams;
+    return result as BadgeDesign;
   } catch (error) {
     if (__DEV__) {
       console.warn("[parseBadgeDesign] Failed to parse JSON", {
