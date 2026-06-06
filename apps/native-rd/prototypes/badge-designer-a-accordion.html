@@ -234,7 +234,7 @@
       place-items: center;
       position: relative;
     }
-    .swatch[role="radio" aria-checked="true"]::after {
+    .swatch[role="radio"][aria-checked="true"]::after {
       content: '';
       position: absolute;
       inset: -5px;
@@ -267,7 +267,7 @@
       font-weight: 700;
       cursor: pointer;
     }
-    .chip-match[role="radio" aria-checked="true"] {
+    .chip-match[role="radio"][aria-checked="true"] {
       background: var(--accent);
       color: #0a0a0a;
     }
@@ -296,7 +296,7 @@
       border-right: var(--border-w) solid var(--border);
     }
     .seg-btn:last-child { border-right: none; }
-    .seg-btn[role="radio" aria-checked="true"] {
+    .seg-btn[role="radio"][aria-checked="true"] {
       background: var(--text);
       color: var(--bg);
     }
@@ -321,7 +321,7 @@
       place-items: center;
       background: var(--card);
     }
-    .shape-btn[role="radio" aria-checked="true"] {
+    .shape-btn[role="radio"][aria-checked="true"] {
       background: var(--text);
       color: var(--bg);
     }
@@ -344,7 +344,7 @@
       font-size: var(--size-small);
       font-weight: 700;
     }
-    .frame-btn[role="radio" aria-checked="true"] { background: var(--text); color: var(--bg); }
+    .frame-btn[role="radio"][aria-checked="true"] { background: var(--text); color: var(--bg); }
 
     /* ── Inputs ─────────────────────────────── */
     .input {
@@ -393,7 +393,7 @@
       font-size: 18px;
       background: var(--card);
     }
-    .icon-btn[role="radio" aria-checked="true"] { background: var(--text); color: var(--bg); }
+    .icon-btn[role="radio"][aria-checked="true"] { background: var(--text); color: var(--bg); }
 
     /* ── Center mode toggle ─────────────────────── */
     .center-toggle {
