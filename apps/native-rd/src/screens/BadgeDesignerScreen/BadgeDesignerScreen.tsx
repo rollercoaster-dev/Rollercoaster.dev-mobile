@@ -299,6 +299,7 @@ function DesignEditor({
           onExpandedChange={openSection("shape")}
           expandLabel={expandA11y}
           collapseLabel={collapseA11y}
+          testID="badge-designer-shape"
         >
           <ShapeSelector
             selectedShape={currentDesign.shape}
@@ -314,6 +315,7 @@ function DesignEditor({
           onExpandedChange={openSection("frame")}
           expandLabel={expandA11y}
           collapseLabel={collapseA11y}
+          testID="badge-designer-frame"
         >
           <FrameSelector
             selectedFrame={frame}
@@ -329,6 +331,7 @@ function DesignEditor({
           onExpandedChange={openSection("center")}
           expandLabel={expandA11y}
           collapseLabel={collapseA11y}
+          testID="badge-designer-center"
         >
           <View style={styles.sectionStack}>
             <CenterModeSelector
@@ -357,6 +360,7 @@ function DesignEditor({
           onExpandedChange={openSection("colors")}
           expandLabel={expandA11y}
           collapseLabel={collapseA11y}
+          testID="badge-designer-colors"
         >
           <ColorPicker
             selectedColor={currentDesign.color}
@@ -372,6 +376,7 @@ function DesignEditor({
           onExpandedChange={openSection("inscriptions")}
           expandLabel={expandA11y}
           collapseLabel={collapseA11y}
+          testID="badge-designer-inscriptions"
         >
           <View style={styles.sectionStack}>
             <TextInput

@@ -11,18 +11,20 @@ walk) finished in this pass.
 ## Progress
 
 - [x] **Step 1 — Extend the disclosure primitive** (commit `cbe86e9`).
-      Controlled `expanded` / `onExpandedChange`, header summary slot, card
-      variant, and translated expand/collapse verbs. 13 unit tests pass.
-      Existing uncontrolled callers and the accessibility-test suite are
-      unchanged.
+      Controlled `expanded` / `onExpandedChange`, header summary slot,
+      default card-styled container (no variant prop — card styling is now
+      unconditional), and translated expand/collapse verbs. 13 unit tests
+      pass. Existing uncontrolled callers and the accessibility-test suite
+      are unchanged.
 - [x] **Step 2 — i18n keys** (commit `516757f`). Added
       `badgeDesigner.accordion.*` for the five section titles, expand /
       collapse verbs, and deterministic summary fragments. Locale-parity
       and pseudo-locale tests pass.
 - [x] **Step 3 — Extract & coordinate badge designer sections**
       (commit `fcb6830`). `BadgeDesignerScreen.tsx`
-      now renders five card-variant `CollapsibleSection`s in Shape → Frame
-      → Center → Colors → Inscriptions order. `expandedSection` state lives
+      now renders five card-styled `CollapsibleSection`s in Shape → Frame
+      → Center → Colors → Inscriptions order. (Card styling is the
+      component default — there is no `variant` prop.) `expandedSection` state lives
       in `DesignEditor`, initialised to `shape`; the per-section
       `onExpandedChange` handler only honours opens, never closes,
       preserving the "exactly one open" invariant. Center groups
@@ -71,11 +73,13 @@ native` `Modal` import was failing in the test bridge when first
       is local to the screen test; primitive/unit tests untouched. - Three accordion-invariant tests added: Shape is the only mounted
       section on entry (every other inner-selector a11y label is
       absent), opening Frame unmounts Shape's body, and pressing the
-      Frame header in its `collapse`-form a11y label is a no-op. The
+      Frame header in its `collapse`-form a11y label collapses the
+      section (allowing an all-closed state, per the 2026-06-06
+      addendum). The
       icon-picker-by-mode invariant is already covered by the two
       "icon picker" tests in the same suite. - `BadgeDesigner.stories.tsx` rewrote the `BadgeDesignerComposer`
-      around five card-variant `CollapsibleSection`s in Shape → Frame
-      → Center → Colors → Inscriptions order with single-open
+      around five card-styled `CollapsibleSection`s in Shape → Frame
+      → Center → Colors → Inscriptions order with at-most-one-open
       coordination, matching the screen's grouping (Center holds the
       icon picker in icon mode; Inscriptions holds bottom label + path
       text + banner). The sticky `iconPickerContainer` was retired —
@@ -180,8 +184,9 @@ is expanded.
 - related Storybook story
 
 Add controlled-state support without breaking existing callers. Add optional
-summary content and a card variant or equivalent styling API suitable for the
-designer. Preserve reduced-motion handling and 44pt minimum interaction size.
+summary content and apply card-styled container chrome (bordered, shadowed)
+as the default for all callers — no variant prop. Preserve reduced-motion
+handling and 44pt minimum interaction size.
 
 Add tests for controlled expansion, summary rendering, accessibility state,
 and the inability of a controlled caller to collapse without accepting the
@@ -233,7 +238,9 @@ Cover:
 - Shape starts expanded.
 - Other sections start collapsed.
 - Opening Frame closes Shape.
-- Pressing the already-open Frame header does not close it.
+- Pressing the already-open Frame header collapses it, leaving every
+  section closed (per the 2026-06-06 addendum — the original
+  "no-op" contract was superseded).
 - Center exposes the icon picker only in icon mode.
 - Existing edit and save round trips still work.
 - Accessibility state announces the active disclosure correctly.
@@ -282,7 +289,11 @@ reduce the header touch target.
 ## Risks
 
 - `CollapsibleSection` is shared. Controlled-state additions must remain
-  backward compatible and should not force card styling on existing consumers.
+  backward compatible. **What shipped:** card styling (border + shadow +
+  reserved focus-ring) is now applied unconditionally — no variant prop. All
+  existing uncontrolled callers (e.g. inside other screens) inherit the new
+  chrome; check those screens visually if any still exist outside the badge
+  designer.
 - Inscriptions is substantially taller than other sections. Keyboard and
   scroll-to-input behavior need simulator verification.
 - Summary values can become noisy or leak long user-authored text. Keep them

@@ -148,6 +148,7 @@ export const lightColors = {
   ...pkgLightColors,
   accentPrimary: pkgPalette.primaryDark,
   accentSecondary: pkgLightColors.accentMint,
+  transparent: "transparent",
   error: pkgPalette.error,
   warning: pkgPalette.warning,
   success: pkgPalette.success,
@@ -157,6 +158,7 @@ export const lightColors = {
 export const darkColors = {
   ...pkgDarkColors,
   accentSecondary: pkgDarkColors.accentMint,
+  transparent: "transparent",
   shadow: "#000000",
   textMuted: "#a89cc4",
   accentPurple: "#8d7eb0",

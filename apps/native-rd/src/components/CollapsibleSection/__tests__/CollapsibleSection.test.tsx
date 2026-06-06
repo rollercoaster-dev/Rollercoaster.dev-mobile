@@ -213,6 +213,68 @@ describe("CollapsibleSection", () => {
       );
       expect(screen.getByTestId("custom-summary")).toBeOnTheScreen();
     });
+
+    it("announces string summary via accessibilityHint", () => {
+      // Without a hint, the visual summary Text is silent because the
+      // Pressable header is `accessible` and only exposes its label.
+      renderWithProviders(
+        <CollapsibleSection title="Shape" summary="Shield">
+          <Text>Body</Text>
+        </CollapsibleSection>,
+      );
+      const header = screen.getByRole("button", { name: "Shape, collapse" });
+      expect(header.props.accessibilityHint).toBe("Shield");
+    });
+
+    it("respects explicit accessibilityHint over summary", () => {
+      renderWithProviders(
+        <CollapsibleSection
+          title="Shape"
+          summary="Shield"
+          accessibilityHint="Shield, with stars"
+        >
+          <Text>Body</Text>
+        </CollapsibleSection>,
+      );
+      const header = screen.getByRole("button", { name: "Shape, collapse" });
+      expect(header.props.accessibilityHint).toBe("Shield, with stars");
+    });
+
+    it("suppresses the auto hint when accessibilityHint is null", () => {
+      renderWithProviders(
+        <CollapsibleSection
+          title="Shape"
+          summary="Shield"
+          accessibilityHint={null}
+        >
+          <Text>Body</Text>
+        </CollapsibleSection>,
+      );
+      const header = screen.getByRole("button", { name: "Shape, collapse" });
+      expect(header.props.accessibilityHint).toBeUndefined();
+    });
+  });
+
+  describe("testID", () => {
+    it("does not emit a default content testID", () => {
+      // Multiple CollapsibleSections in a tree must not collide. Callers
+      // opt in by passing testID; default omits it entirely.
+      renderWithProviders(
+        <CollapsibleSection title="Section">
+          <Text>Body</Text>
+        </CollapsibleSection>,
+      );
+      expect(screen.queryByTestId("collapsible-content")).toBeNull();
+    });
+
+    it("derives content testID from the prop", () => {
+      renderWithProviders(
+        <CollapsibleSection title="Section" testID="shape">
+          <Text>Body</Text>
+        </CollapsibleSection>,
+      );
+      expect(screen.getByTestId("shape-content")).toBeOnTheScreen();
+    });
   });
 
   describe("animated content style (regression)", () => {
@@ -231,7 +293,11 @@ describe("CollapsibleSection", () => {
       ["expanded", true],
     ] as const)("does not clamp height when %s", (_label, expanded) => {
       renderWithProviders(
-        <CollapsibleSection title="Section" expanded={expanded}>
+        <CollapsibleSection
+          title="Section"
+          expanded={expanded}
+          testID="collapsible"
+        >
           <Text>Body</Text>
         </CollapsibleSection>,
       );
@@ -248,6 +314,7 @@ describe("CollapsibleSection", () => {
             title="Section"
             expanded={open}
             onExpandedChange={setOpen}
+            testID="collapsible"
           >
             <Text>Body</Text>
           </CollapsibleSection>

@@ -31,6 +31,10 @@ export interface Colors {
   border: string;
   shadow: string;
   focusRing: string;
+  /** CSS `transparent` keyword. Use for reserved focus-ring borders and
+   * other placeholder colors where the design token rule applies but a
+   * literal `"transparent"` would otherwise leak in. */
+  transparent: string;
   error: string;
   warning: string;
   success: string;

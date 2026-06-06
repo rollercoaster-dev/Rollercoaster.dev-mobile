@@ -26,6 +26,19 @@ export interface CollapsibleSectionProps {
   /** Override the "expand"/"collapse" verb in the accessibilityLabel. */
   expandLabel?: string;
   collapseLabel?: string;
+  /**
+   * Hint announced after the accessibilityLabel. Defaults to the string form
+   * of `summary` so screen readers can hear the trailing value (e.g. "Shape,
+   * collapse — Shield"). Pass an explicit string when `summary` is a custom
+   * React element, or `null` to suppress the default.
+   */
+  accessibilityHint?: string | null;
+  /**
+   * When set, the outer container receives this `testID` and the animated
+   * content view receives `${testID}-content`. Leave undefined to opt out of
+   * default testIDs — multiple instances in one tree must each pass their own.
+   */
+  testID?: string;
 }
 
 export function CollapsibleSection({
@@ -37,6 +50,8 @@ export function CollapsibleSection({
   summary,
   expandLabel = "expand",
   collapseLabel = "collapse",
+  accessibilityHint,
+  testID,
 }: CollapsibleSectionProps) {
   const isControlled = expandedProp !== undefined;
   const [internalExpanded, setInternalExpanded] = useState(defaultExpanded);
@@ -70,8 +85,18 @@ export function CollapsibleSection({
     onExpandedChange?.(next);
   }, [expanded, isControlled, onExpandedChange]);
 
+  // Default the hint to the string summary so VoiceOver/TalkBack announce
+  // the trailing value (otherwise the visual `<Text>` summary is silent —
+  // the Pressable is `accessible` and swallows nested text). `null` opts
+  // out; an explicit string wins over both.
+  const resolvedHint =
+    accessibilityHint === null
+      ? undefined
+      : (accessibilityHint ??
+        (typeof summary === "string" ? summary : undefined));
+
   return (
-    <View style={styles.container}>
+    <View style={styles.container} testID={testID}>
       <Pressable
         onPress={handlePress}
         onFocus={() => setFocused(true)}
@@ -79,6 +104,7 @@ export function CollapsibleSection({
         accessible
         accessibilityRole="button"
         accessibilityLabel={`${title}, ${expanded ? collapseLabel : expandLabel}`}
+        accessibilityHint={resolvedHint}
         accessibilityState={{ expanded }}
         style={({ pressed }) => [
           styles.header,
@@ -99,7 +125,7 @@ export function CollapsibleSection({
         </View>
       </Pressable>
       <Animated.View
-        testID="collapsible-content"
+        testID={testID ? `${testID}-content` : undefined}
         style={[expanded ? styles.content : undefined, contentStyle]}
       >
         {expanded && children}

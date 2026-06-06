@@ -21,7 +21,7 @@ export const styles = StyleSheet.create((theme) => ({
     // Reserve focus-ring space so focus gain/loss only swaps borderColor,
     // never width — prevents a layout jump that would shift touch targets.
     borderWidth: theme.borderWidth.medium,
-    borderColor: "transparent",
+    borderColor: theme.colors.transparent,
   },
   headerPressed: {
     opacity: 0.7,
