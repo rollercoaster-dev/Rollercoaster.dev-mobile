@@ -19,8 +19,8 @@ export const styles = StyleSheet.create((theme) => ({
     zIndex: 2,
   },
   scrollContent: {
-    gap: theme.space[4],
-    alignItems: "center",
+    gap: theme.space[3],
+    paddingHorizontal: theme.space[4],
   },
   previewOverlay: {
     position: "absolute",
@@ -47,22 +47,10 @@ export const styles = StyleSheet.create((theme) => ({
   badgeCanvas: {
     backgroundColor: BADGE_CANVAS_BACKGROUND,
   },
-  sectionContainer: {
-    width: "100%",
-    gap: theme.space[2],
-  },
-  sectionLabel: {
-    ...theme.textStyles.label,
-    color: theme.colors.textMuted,
-    textTransform: "uppercase",
-    paddingHorizontal: theme.space[4],
-  },
-  iconSection: {
-    width: "100%",
-    gap: theme.space[2],
+  sectionStack: {
+    gap: theme.space[3],
   },
   bottomLabelInput: {
-    marginHorizontal: theme.space[4],
     minHeight: 44,
     paddingHorizontal: theme.space[3],
     borderWidth: theme.borderWidth.medium,

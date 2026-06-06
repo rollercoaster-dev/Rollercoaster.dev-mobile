@@ -110,5 +110,24 @@
       "top": "[Ţøþ·]",
       "bottom": "[Ɓøţţøɱ··]"
     }
+  },
+  "accordion": {
+    "expandA11y": "[êẋþàñđ··]",
+    "collapseA11y": "[çøĺĺàþšê···]",
+    "sections": {
+      "shape": "[Šĥàþê··]",
+      "frame": "[Ƒŕàɱê··]",
+      "center": "[Çêñţêŕ··]",
+      "colors": "[Çøĺøŕš··]",
+      "inscriptions": "[Ïñšçŕïþţïøñš·····]"
+    },
+    "summary": {
+      "centerIcon": "[Ïçøñ · {{icon}}······]",
+      "centerMonogram": "[Ɱøñøğŕàɱ···]",
+      "inscriptionsLabel": "[Ĺàƀêĺ··]",
+      "inscriptionsPath": "[Þàţĥ··]",
+      "inscriptionsBanner": "[Ɓàññêŕ··]",
+      "inscriptionsNone": "[Ñøñê··]"
+    }
   }
 }

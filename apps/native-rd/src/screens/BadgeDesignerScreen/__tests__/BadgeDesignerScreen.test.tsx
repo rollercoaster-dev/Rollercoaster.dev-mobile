@@ -17,6 +17,18 @@ import type {
 } from "../../../badges/types";
 import type { AccentColorId } from "../../../badges/ColorPicker";
 
+// The screen now renders its controls inside a single-open accordion.
+// Shape opens on entry; every other section must be opened explicitly before
+// its controls become interactive. This helper translates a section id into
+// the CollapsibleSection's header a11y label and taps it.
+const openSection = (
+  id: "shape" | "frame" | "center" | "colors" | "inscriptions",
+) => {
+  const title = i18n.t(`badgeDesigner:accordion.sections.${id}`);
+  const expandA11y = i18n.t("badgeDesigner:accordion.expandA11y");
+  fireEvent.press(screen.getByLabelText(`${title}, ${expandA11y}`));
+};
+
 const shapeLabel = (id: BadgeShape) =>
   i18n.t("badgeDesigner:shape.optionA11y", {
     label: i18n.t(`badgeDesigner:shape.options.${id}`),
@@ -110,6 +122,15 @@ jest.mock("react-native-svg", () => {
     ClipPath: stub,
   };
 });
+
+// IconPickerModal pulls in react-native's `Modal`, whose lazy native-module
+// require fails when triggered mid-test (after a section's first expand)
+// instead of during the initial render. These screen tests assert on the
+// IconPicker trigger button, not on modal internals, so a stub keeps the
+// Icon mode subtree mountable.
+jest.mock("../../../badges/IconPickerModal", () => ({
+  IconPickerModal: () => null,
+}));
 
 // Mock phosphor-react-native (virtual — not installed in node_modules)
 jest.mock(
@@ -260,6 +281,7 @@ describe("BadgeDesignerScreen", () => {
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
+    openSection("colors");
     expect(
       screen.getByLabelText(i18n.t("badgeDesigner:color.a11y")),
     ).toBeOnTheScreen();
@@ -395,6 +417,7 @@ describe("BadgeDesignerScreen", () => {
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
 
+    openSection("colors");
     fireEvent.press(screen.getByLabelText(colorLabel("mint")));
     expect(screen.getByLabelText(/Badge preview:.*#34d399/)).toBeOnTheScreen();
   });
@@ -406,6 +429,7 @@ describe("BadgeDesignerScreen", () => {
     );
 
     fireEvent.press(screen.getByLabelText(shapeLabel("shield")));
+    openSection("colors");
     fireEvent.press(screen.getByLabelText(colorLabel("mint")));
     fireEvent.press(
       screen.getByLabelText(i18n.t("badgeDesigner:actions.save")),
@@ -443,44 +467,22 @@ describe("BadgeDesignerScreen", () => {
 
   // --- New controls from #190 ---
 
-  it("renders FrameSelector", () => {
+  // Each opens a section and confirms its primary control is mounted. The
+  // post-open interaction tests below implicitly re-cover queryability, so
+  // these only guard against the section→control wiring breaking.
+  it.each([
+    ["FrameSelector", "frame", "badgeDesigner:frame.a11y"],
+    ["CenterModeSelector", "center", "badgeDesigner:center.a11y"],
+    ["PathTextEditor", "inscriptions", "badgeDesigner:pathText.toggleA11y"],
+    ["BannerEditor", "inscriptions", "badgeDesigner:banner.toggleA11y"],
+    ["bottom label input", "inscriptions", "badgeDesigner:bottomLabel.a11y"],
+  ] as const)("renders %s in the %s section", (_name, section, a11yKey) => {
     mockUseQuery.mockReturnValue([makeRow()]);
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
-    expect(
-      screen.getByLabelText(i18n.t("badgeDesigner:frame.a11y")),
-    ).toBeOnTheScreen();
-  });
-
-  it("renders CenterModeSelector", () => {
-    mockUseQuery.mockReturnValue([makeRow()]);
-    renderWithProviders(
-      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
-    );
-    expect(
-      screen.getByLabelText(i18n.t("badgeDesigner:center.a11y")),
-    ).toBeOnTheScreen();
-  });
-
-  it("renders PathTextEditor", () => {
-    mockUseQuery.mockReturnValue([makeRow()]);
-    renderWithProviders(
-      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
-    );
-    expect(
-      screen.getByLabelText(i18n.t("badgeDesigner:pathText.toggleA11y")),
-    ).toBeOnTheScreen();
-  });
-
-  it("renders BannerEditor", () => {
-    mockUseQuery.mockReturnValue([makeRow()]);
-    renderWithProviders(
-      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
-    );
-    expect(
-      screen.getByLabelText(i18n.t("badgeDesigner:banner.toggleA11y")),
-    ).toBeOnTheScreen();
+    openSection(section);
+    expect(screen.getByLabelText(i18n.t(a11yKey))).toBeOnTheScreen();
   });
 
   it("shows icon picker by default (icon mode)", () => {
@@ -488,6 +490,7 @@ describe("BadgeDesignerScreen", () => {
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
+    openSection("center");
     expect(
       screen.getByLabelText(/Selected icon:.*Tap to change/),
     ).toBeOnTheScreen();
@@ -498,18 +501,9 @@ describe("BadgeDesignerScreen", () => {
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
+    openSection("center");
     fireEvent.press(screen.getByLabelText(centerLabel("monogram")));
     expect(screen.queryByLabelText(/Selected icon:.*Tap to change/)).toBeNull();
-  });
-
-  it("renders bottom label input", () => {
-    mockUseQuery.mockReturnValue([makeRow()]);
-    renderWithProviders(
-      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
-    );
-    expect(
-      screen.getByLabelText(i18n.t("badgeDesigner:bottomLabel.a11y")),
-    ).toBeOnTheScreen();
   });
 
   it("includes new fields in saved JSON after changes", async () => {
@@ -519,14 +513,16 @@ describe("BadgeDesignerScreen", () => {
     );
 
     // Select a frame
+    openSection("frame");
     fireEvent.press(screen.getByLabelText(frameLabel("guilloche")));
 
     // Toggle path text on
+    openSection("inscriptions");
     fireEvent.press(
       screen.getByLabelText(i18n.t("badgeDesigner:pathText.toggleA11y")),
     );
 
-    // Toggle banner on
+    // Toggle banner on (Inscriptions is already open)
     fireEvent.press(
       screen.getByLabelText(i18n.t("badgeDesigner:banner.toggleA11y")),
     );
@@ -548,6 +544,8 @@ describe("BadgeDesignerScreen", () => {
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
+
+    openSection("inscriptions");
 
     // Enable path text, then disable
     fireEvent.press(
@@ -582,6 +580,7 @@ describe("BadgeDesignerScreen", () => {
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
 
+    openSection("frame");
     fireEvent.press(screen.getByLabelText(frameLabel("guilloche")));
     expect(
       screen.getByLabelText(/Badge preview:.*guilloche.*frame/),
@@ -601,6 +600,7 @@ describe("BadgeDesignerScreen", () => {
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
 
+    openSection("frame");
     fireEvent.press(screen.getByLabelText(frameLabel("guilloche")));
     fireEvent.press(
       screen.getByLabelText(i18n.t("badgeDesigner:actions.save")),
@@ -615,6 +615,86 @@ describe("BadgeDesignerScreen", () => {
     expect(parsed.frameParams).toEqual(
       expect.objectContaining({ variant: expect.any(Number) }),
     );
+  });
+
+  // ── Accordion invariants ────────────────────────────────────────────
+  // Single-open coordination lives in DesignEditor: at most one section is
+  // open at a time, but the user can collapse the current section to leave
+  // every section closed. The icon-picker-by-mode invariant is covered by
+  // the two "icon picker" tests above; these three cover the single-open
+  // header behavior.
+  it("opens Shape on entry and leaves every other section collapsed", () => {
+    mockUseQuery.mockReturnValue([makeRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+
+    // Shape body mounted (its inner selector exposes a `shape.a11y` label).
+    expect(
+      screen.getByLabelText(i18n.t("badgeDesigner:shape.a11y")),
+    ).toBeOnTheScreen();
+    // Every other section's body is unmounted (the body sits behind
+    // `{expanded && children}`), so its inner-selector label is absent.
+    expect(
+      screen.queryByLabelText(i18n.t("badgeDesigner:frame.a11y")),
+    ).toBeNull();
+    expect(
+      screen.queryByLabelText(i18n.t("badgeDesigner:center.a11y")),
+    ).toBeNull();
+    expect(
+      screen.queryByLabelText(i18n.t("badgeDesigner:color.a11y")),
+    ).toBeNull();
+    expect(
+      screen.queryByLabelText(i18n.t("badgeDesigner:bottomLabel.a11y")),
+    ).toBeNull();
+  });
+
+  it("opening Frame closes Shape", () => {
+    mockUseQuery.mockReturnValue([makeRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+
+    openSection("frame");
+    expect(
+      screen.getByLabelText(i18n.t("badgeDesigner:frame.a11y")),
+    ).toBeOnTheScreen();
+    expect(
+      screen.queryByLabelText(i18n.t("badgeDesigner:shape.a11y")),
+    ).toBeNull();
+  });
+
+  it("pressing the open Frame header collapses it, leaving every section closed", () => {
+    mockUseQuery.mockReturnValue([makeRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+
+    openSection("frame");
+    // After expansion the header's a11y label flips from "expand" to
+    // "collapse". Pressing this collapse-form label collapses the
+    // section, leaving the accordion fully closed.
+    const title = i18n.t("badgeDesigner:accordion.sections.frame");
+    const collapseA11y = i18n.t("badgeDesigner:accordion.collapseA11y");
+    fireEvent.press(screen.getByLabelText(`${title}, ${collapseA11y}`));
+
+    // Frame body unmounts (it sits behind `{expanded && children}`), and
+    // no other section opens to take its place.
+    expect(
+      screen.queryByLabelText(i18n.t("badgeDesigner:frame.a11y")),
+    ).toBeNull();
+    expect(
+      screen.queryByLabelText(i18n.t("badgeDesigner:shape.a11y")),
+    ).toBeNull();
+    expect(
+      screen.queryByLabelText(i18n.t("badgeDesigner:center.a11y")),
+    ).toBeNull();
+    expect(
+      screen.queryByLabelText(i18n.t("badgeDesigner:color.a11y")),
+    ).toBeNull();
+    expect(
+      screen.queryByLabelText(i18n.t("badgeDesigner:bottomLabel.a11y")),
+    ).toBeNull();
   });
 
   it("clears frameParams when frame is set back to none", async () => {
@@ -643,6 +723,7 @@ describe("BadgeDesignerScreen", () => {
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
     );
 
+    openSection("frame");
     fireEvent.press(screen.getByLabelText(frameLabel("none")));
     fireEvent.press(
       screen.getByLabelText(i18n.t("badgeDesigner:actions.save")),
@@ -910,9 +991,11 @@ describe("BadgeDesignerScreen — integration", () => {
     );
 
     // Select guilloche frame
+    openSection("frame");
     fireEvent.press(screen.getByLabelText(frameLabel("guilloche")));
 
-    // Enable path text, type text
+    // Inscriptions: enable path text, type text
+    openSection("inscriptions");
     fireEvent.press(
       screen.getByLabelText(i18n.t("badgeDesigner:pathText.toggleA11y")),
     );
@@ -921,7 +1004,7 @@ describe("BadgeDesignerScreen — integration", () => {
       "ACHIEVEMENT",
     );
 
-    // Enable banner, type text
+    // Enable banner, type text (Inscriptions stays open)
     fireEvent.press(
       screen.getByLabelText(i18n.t("badgeDesigner:banner.toggleA11y")),
     );
