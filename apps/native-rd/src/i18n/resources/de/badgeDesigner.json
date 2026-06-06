@@ -110,5 +110,25 @@
       "top": "Oben",
       "bottom": "Unten"
     }
+  },
+  "accordion": {
+    "expandA11y": "öffnen",
+    "collapseA11y": "schließen",
+    "sections": {
+      "shape": "Form",
+      "frame": "Rahmen",
+      "center": "Mitte",
+      "colors": "Farben",
+      "inscriptions": "Beschriftungen"
+    },
+    "summary": {
+      "centerIcon": "Symbol · {{icon}}",
+      "centerMonogram": "Monogramm „{{monogram}}“",
+      "centerMonogramEmpty": "Monogramm",
+      "inscriptionsLabel": "Beschriftung",
+      "inscriptionsPath": "Pfad",
+      "inscriptionsBanner": "Banner",
+      "inscriptionsNone": "Keine"
+    }
   }
 }
