@@ -114,18 +114,13 @@
       letter-spacing: -0.3px;
     }
 
-    /*
-     * Fixed preview overlay. Native uses PREVIEW_OVERLAY_HEIGHT = 280 at top: 0,
-     * which draws OVER the header band. In this prototype the 56px topbar and
-     * the overlay are stacked (overlay at top: 56), so overlay height = 280 - 56
-     * to keep total coverage equal to native's 280px.
-     */
+    /* ── Fixed preview overlay (PREVIEW_OVERLAY_HEIGHT = 200) ── */
     .preview {
       position: absolute;
       top: 56px;
       left: 0;
       right: 0;
-      height: 224px;
+      height: 200px;
       display: grid;
       place-items: center;
       background: var(--bg);
@@ -149,7 +144,7 @@
       flex: 1;
       min-height: 0;               /* required for overflow-y to actually scroll inside flex */
       overflow-y: auto;
-      padding: 280px 16px 32px;   /* topbar 56 + preview 224 = native overlay 280 */
+      padding: 256px 16px 32px;   /* topbar 56 + preview 200 */
       display: flex;
       flex-direction: column;
       gap: 12px;
