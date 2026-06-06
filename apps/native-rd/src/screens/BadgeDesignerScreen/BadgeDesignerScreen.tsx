@@ -60,6 +60,7 @@ import { Logger } from "../../shims/rd-logger";
 import { reportError } from "../../services/sentry-report";
 import type {
   BadgeDesignerScreenProps,
+  GoalsBadgeDesignerScreenProps,
   GoalsStackParamList,
 } from "../../navigation/types";
 import { styles } from "./BadgeDesignerScreen.styles";
@@ -75,14 +76,6 @@ type AccordionSectionId =
   | "colors"
   | "inscriptions";
 
-const SECTION_ORDER: readonly AccordionSectionId[] = [
-  "shape",
-  "frame",
-  "center",
-  "colors",
-  "inscriptions",
-] as const;
-
 /** Reserved space below topBar for the floating preview overlay at rest. */
 const PREVIEW_OVERLAY_HEIGHT = 200;
 
@@ -92,10 +85,6 @@ const PREVIEW_OVERLAY_HEIGHT = 200;
  * extra Babel-transform whitelisting in the Jest config for marginal gain.
  */
 const TAB_BAR_HEIGHT = 56;
-
-// ---------------------------------------------------------------------------
-// Shared design editor UI (stateless — receives design + callbacks)
-// ---------------------------------------------------------------------------
 
 interface DesignEditorProps {
   currentDesign: BadgeDesign;
@@ -136,158 +125,95 @@ function DesignEditor({
   const insets = useSafeAreaInsets();
   const tabBarHeight = TAB_BAR_HEIGHT + insets.bottom;
 
-  // --- Existing handlers ---
-  const handleShapeChange = useCallback(
-    (shape: BadgeShape) => {
-      if (shape === currentDesign.shape) return;
-      const maxTop = getPathTextMaxChars(shape, "top");
-      const maxBottom = getPathTextMaxChars(shape, "bottom");
+  const handleShapeChange = (shape: BadgeShape) => {
+    if (shape === currentDesign.shape) return;
+    const maxTop = getPathTextMaxChars(shape, "top");
+    const maxBottom = getPathTextMaxChars(shape, "bottom");
+    onDesignChange({
+      ...currentDesign,
+      shape,
+      pathText: currentDesign.pathText?.slice(0, maxTop),
+      pathTextBottom: currentDesign.pathTextBottom?.slice(0, maxBottom),
+    });
+  };
+
+  const handleColorChange = (color: string) =>
+    onDesignChange({ ...currentDesign, color });
+
+  const handleIconChange = (iconName: string) =>
+    onDesignChange({ ...currentDesign, iconName });
+
+  const handleWeightChange = (iconWeight: BadgeIconWeight) =>
+    onDesignChange({ ...currentDesign, iconWeight });
+
+  const handleFrameChange = (frame: BadgeFrame) => {
+    if (frame === BadgeFrame.none) {
+      onDesignChange({ ...currentDesign, frame, frameParams: undefined });
+      return;
+    }
+    // Fall back to the design's existing frameParams during the hydration
+    // window so a re-selected frame doesn't regress to a params-less state
+    // and silently render no ring.
+    onDesignChange({
+      ...currentDesign,
+      frame,
+      frameParams: derivedFrameParams ?? currentDesign.frameParams,
+    });
+  };
+
+  const handleCenterModeChange = (centerMode: BadgeCenterMode) =>
+    onDesignChange({ ...currentDesign, centerMode });
+
+  const handleMonogramChange = (monogram: string) =>
+    onDesignChange({ ...currentDesign, monogram });
+
+  const handleBottomLabelChange = (bottomLabel: string) =>
+    onDesignChange({ ...currentDesign, bottomLabel });
+
+  const handlePathTextToggle = (enabled: boolean) => {
+    if (enabled) {
       onDesignChange({
         ...currentDesign,
-        shape,
-        pathText: currentDesign.pathText?.slice(0, maxTop),
-        pathTextBottom: currentDesign.pathTextBottom?.slice(0, maxBottom),
+        pathText: "",
+        pathTextPosition: PathTextPosition.top,
       });
-    },
-    [currentDesign, onDesignChange],
-  );
+      return;
+    }
+    onDesignChange({
+      ...currentDesign,
+      pathText: undefined,
+      pathTextPosition: undefined,
+      pathTextBottom: undefined,
+    });
+  };
 
-  const handleColorChange = useCallback(
-    (color: string) => {
-      onDesignChange({ ...currentDesign, color });
-    },
-    [currentDesign, onDesignChange],
-  );
+  const handlePathTextChange = (pathText: string) =>
+    onDesignChange({ ...currentDesign, pathText });
 
-  const handleIconChange = useCallback(
-    (iconName: string) => {
-      onDesignChange({ ...currentDesign, iconName });
-    },
-    [currentDesign, onDesignChange],
-  );
+  const handlePathTextBottomChange = (pathTextBottom: string) =>
+    onDesignChange({ ...currentDesign, pathTextBottom });
 
-  const handleWeightChange = useCallback(
-    (iconWeight: BadgeIconWeight) => {
-      onDesignChange({ ...currentDesign, iconWeight });
-    },
-    [currentDesign, onDesignChange],
-  );
+  const handlePathTextPositionChange = (pathTextPosition: PathTextPosition) =>
+    onDesignChange({ ...currentDesign, pathTextPosition });
 
-  // --- Frame + Center handlers ---
-  const handleFrameChange = useCallback(
-    (frame: BadgeFrame) => {
-      if (frame === BadgeFrame.none) {
-        onDesignChange({ ...currentDesign, frame, frameParams: undefined });
-      } else {
-        // Fall back to the design's existing frameParams during the
-        // hydration window so a re-selected frame doesn't regress to a
-        // params-less state and silently render no ring.
-        onDesignChange({
-          ...currentDesign,
-          frame,
-          frameParams: derivedFrameParams ?? currentDesign.frameParams,
-        });
-      }
-    },
-    [currentDesign, derivedFrameParams, onDesignChange],
-  );
+  const handleBannerToggle = (enabled: boolean) =>
+    onDesignChange({
+      ...currentDesign,
+      banner: enabled ? { ...DEFAULT_BANNER } : undefined,
+    });
 
-  const handleCenterModeChange = useCallback(
-    (centerMode: BadgeCenterMode) => {
-      onDesignChange({ ...currentDesign, centerMode });
-    },
-    [currentDesign, onDesignChange],
-  );
+  const handleBannerTextChange = (text: string) =>
+    onDesignChange({
+      ...currentDesign,
+      banner: { ...(currentDesign.banner ?? DEFAULT_BANNER), text },
+    });
 
-  const handleMonogramChange = useCallback(
-    (monogram: string) => {
-      onDesignChange({ ...currentDesign, monogram });
-    },
-    [currentDesign, onDesignChange],
-  );
+  const handleBannerPositionChange = (position: BannerPosition) =>
+    onDesignChange({
+      ...currentDesign,
+      banner: { ...(currentDesign.banner ?? DEFAULT_BANNER), position },
+    });
 
-  const handleBottomLabelChange = useCallback(
-    (bottomLabel: string) => {
-      onDesignChange({ ...currentDesign, bottomLabel });
-    },
-    [currentDesign, onDesignChange],
-  );
-
-  // --- Path text handlers ---
-  const handlePathTextToggle = useCallback(
-    (enabled: boolean) => {
-      if (enabled) {
-        onDesignChange({
-          ...currentDesign,
-          pathText: "",
-          pathTextPosition: PathTextPosition.top,
-        });
-      } else {
-        onDesignChange({
-          ...currentDesign,
-          pathText: undefined,
-          pathTextPosition: undefined,
-          pathTextBottom: undefined,
-        });
-      }
-    },
-    [currentDesign, onDesignChange],
-  );
-
-  const handlePathTextChange = useCallback(
-    (pathText: string) => {
-      onDesignChange({ ...currentDesign, pathText });
-    },
-    [currentDesign, onDesignChange],
-  );
-
-  const handlePathTextBottomChange = useCallback(
-    (pathTextBottom: string) => {
-      onDesignChange({ ...currentDesign, pathTextBottom });
-    },
-    [currentDesign, onDesignChange],
-  );
-
-  const handlePathTextPositionChange = useCallback(
-    (pathTextPosition: PathTextPosition) => {
-      onDesignChange({ ...currentDesign, pathTextPosition });
-    },
-    [currentDesign, onDesignChange],
-  );
-
-  // --- Banner handlers ---
-  const handleBannerToggle = useCallback(
-    (enabled: boolean) => {
-      if (enabled) {
-        onDesignChange({ ...currentDesign, banner: { ...DEFAULT_BANNER } });
-      } else {
-        onDesignChange({ ...currentDesign, banner: undefined });
-      }
-    },
-    [currentDesign, onDesignChange],
-  );
-
-  const handleBannerTextChange = useCallback(
-    (text: string) => {
-      onDesignChange({
-        ...currentDesign,
-        banner: { ...(currentDesign.banner ?? DEFAULT_BANNER), text },
-      });
-    },
-    [currentDesign, onDesignChange],
-  );
-
-  const handleBannerPositionChange = useCallback(
-    (position: BannerPosition) => {
-      onDesignChange({
-        ...currentDesign,
-        banner: { ...(currentDesign.banner ?? DEFAULT_BANNER), position },
-      });
-    },
-    [currentDesign, onDesignChange],
-  );
-
-  // --- Derived UI state ---
   const frame = currentDesign.frame ?? BadgeFrame.none;
   const centerMode = currentDesign.centerMode ?? BadgeCenterMode.icon;
   const monogram = currentDesign.monogram ?? "";
@@ -310,21 +236,15 @@ function DesignEditor({
     icon: currentDesign.iconName,
   });
 
-  // --- Accordion coordination ---
-  const [expandedSection, setExpandedSection] =
-    useState<AccordionSectionId>("shape");
-
   // Opening any section replaces the current one; collapse requests (when the
   // user presses the open header) are ignored so the screen never enters an
   // all-closed state.
-  const makeSectionHandler = useCallback(
-    (id: AccordionSectionId) => (next: boolean) => {
-      if (next) setExpandedSection(id);
-    },
-    [],
-  );
+  const [expandedSection, setExpandedSection] =
+    useState<AccordionSectionId>("shape");
+  const openSection = (id: AccordionSectionId) => (next: boolean) => {
+    if (next) setExpandedSection(id);
+  };
 
-  // --- Section summaries (deterministic, localized, no user free text) ---
   const colorId = ACCENT_COLORS.find((c) => c.hex === currentDesign.color)?.id;
   const colorSummary =
     currentDesign.color === goalColor
@@ -358,25 +278,6 @@ function DesignEditor({
   const expandA11y = t("accordion.expandA11y");
   const collapseA11y = t("accordion.collapseA11y");
 
-  const renderSection = (
-    id: AccordionSectionId,
-    summary: string,
-    body: React.ReactNode,
-  ) => (
-    <CollapsibleSection
-      key={id}
-      title={t(`accordion.sections.${id}` as const)}
-      variant="card"
-      summary={summary}
-      expanded={expandedSection === id}
-      onExpandedChange={makeSectionHandler(id)}
-      expandLabel={expandA11y}
-      collapseLabel={collapseA11y}
-    >
-      {body}
-    </CollapsibleSection>
-  );
-
   return (
     <View style={styles.editorRoot}>
       <ScrollView
@@ -389,102 +290,126 @@ function DesignEditor({
         ]}
         keyboardShouldPersistTaps="handled"
       >
-        {SECTION_ORDER.map((id) => {
-          switch (id) {
-            case "shape":
-              return renderSection(
-                "shape",
-                shapeSummary,
-                <ShapeSelector
-                  selectedShape={currentDesign.shape}
-                  onSelectShape={handleShapeChange}
-                  accentColor={currentDesign.color}
-                />,
-              );
-            case "frame":
-              return renderSection(
-                "frame",
-                frameSummary,
-                <FrameSelector
-                  selectedFrame={frame}
-                  onSelectFrame={handleFrameChange}
-                  accentColor={currentDesign.color}
-                />,
-              );
-            case "center":
-              return renderSection(
-                "center",
-                centerSummary,
-                <View style={styles.sectionStack}>
-                  <CenterModeSelector
-                    selectedMode={centerMode}
-                    monogram={monogram}
-                    onSelectMode={handleCenterModeChange}
-                    onChangeMonogram={handleMonogramChange}
-                    accentColor={currentDesign.color}
-                  />
-                  {centerMode === BadgeCenterMode.icon && (
-                    <IconPicker
-                      selectedIcon={currentDesign.iconName}
-                      selectedWeight={currentDesign.iconWeight}
-                      onSelectIcon={handleIconChange}
-                      onSelectWeight={handleWeightChange}
-                      accentColor={currentDesign.color}
-                    />
-                  )}
-                </View>,
-              );
-            case "colors":
-              return renderSection(
-                "colors",
-                colorSummary,
-                <ColorPicker
-                  selectedColor={currentDesign.color}
-                  onSelectColor={handleColorChange}
-                  goalColor={goalColor ?? undefined}
-                />,
-              );
-            case "inscriptions":
-              return renderSection(
-                "inscriptions",
-                inscriptionsSummary,
-                <View style={styles.sectionStack}>
-                  <TextInput
-                    accessibilityRole="text"
-                    accessibilityLabel={t("bottomLabel.a11y")}
-                    value={bottomLabel}
-                    onChangeText={handleBottomLabelChange}
-                    maxLength={BOTTOM_LABEL_INPUT_MAX_CHARS}
-                    placeholder={t("bottomLabel.placeholder")}
-                    placeholderTextColor={theme.colors.textSecondary}
-                    style={styles.bottomLabelInput}
-                  />
-                  <PathTextEditor
-                    enabled={pathTextEnabled}
-                    text={pathText}
-                    textBottom={pathTextBottom}
-                    position={pathTextPosition}
-                    shape={currentDesign.shape}
-                    goalTitle={goalTitle ?? currentDesign.title}
-                    onToggle={handlePathTextToggle}
-                    onChangeText={handlePathTextChange}
-                    onChangeTextBottom={handlePathTextBottomChange}
-                    onChangePosition={handlePathTextPositionChange}
-                    accentColor={currentDesign.color}
-                  />
-                  <BannerEditor
-                    enabled={bannerEnabled}
-                    text={bannerText}
-                    position={bannerPosition}
-                    onToggle={handleBannerToggle}
-                    onChangeText={handleBannerTextChange}
-                    onChangePosition={handleBannerPositionChange}
-                    accentColor={currentDesign.color}
-                  />
-                </View>,
-              );
-          }
-        })}
+        <CollapsibleSection
+          title={t("accordion.sections.shape")}
+          variant="card"
+          summary={shapeSummary}
+          expanded={expandedSection === "shape"}
+          onExpandedChange={openSection("shape")}
+          expandLabel={expandA11y}
+          collapseLabel={collapseA11y}
+        >
+          <ShapeSelector
+            selectedShape={currentDesign.shape}
+            onSelectShape={handleShapeChange}
+            accentColor={currentDesign.color}
+          />
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title={t("accordion.sections.frame")}
+          variant="card"
+          summary={frameSummary}
+          expanded={expandedSection === "frame"}
+          onExpandedChange={openSection("frame")}
+          expandLabel={expandA11y}
+          collapseLabel={collapseA11y}
+        >
+          <FrameSelector
+            selectedFrame={frame}
+            onSelectFrame={handleFrameChange}
+            accentColor={currentDesign.color}
+          />
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title={t("accordion.sections.center")}
+          variant="card"
+          summary={centerSummary}
+          expanded={expandedSection === "center"}
+          onExpandedChange={openSection("center")}
+          expandLabel={expandA11y}
+          collapseLabel={collapseA11y}
+        >
+          <View style={styles.sectionStack}>
+            <CenterModeSelector
+              selectedMode={centerMode}
+              monogram={monogram}
+              onSelectMode={handleCenterModeChange}
+              onChangeMonogram={handleMonogramChange}
+              accentColor={currentDesign.color}
+            />
+            {centerMode === BadgeCenterMode.icon && (
+              <IconPicker
+                selectedIcon={currentDesign.iconName}
+                selectedWeight={currentDesign.iconWeight}
+                onSelectIcon={handleIconChange}
+                onSelectWeight={handleWeightChange}
+                accentColor={currentDesign.color}
+              />
+            )}
+          </View>
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title={t("accordion.sections.colors")}
+          variant="card"
+          summary={colorSummary}
+          expanded={expandedSection === "colors"}
+          onExpandedChange={openSection("colors")}
+          expandLabel={expandA11y}
+          collapseLabel={collapseA11y}
+        >
+          <ColorPicker
+            selectedColor={currentDesign.color}
+            onSelectColor={handleColorChange}
+            goalColor={goalColor ?? undefined}
+          />
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title={t("accordion.sections.inscriptions")}
+          variant="card"
+          summary={inscriptionsSummary}
+          expanded={expandedSection === "inscriptions"}
+          onExpandedChange={openSection("inscriptions")}
+          expandLabel={expandA11y}
+          collapseLabel={collapseA11y}
+        >
+          <View style={styles.sectionStack}>
+            <TextInput
+              accessibilityLabel={t("bottomLabel.a11y")}
+              value={bottomLabel}
+              onChangeText={handleBottomLabelChange}
+              maxLength={BOTTOM_LABEL_INPUT_MAX_CHARS}
+              placeholder={t("bottomLabel.placeholder")}
+              placeholderTextColor={theme.colors.textSecondary}
+              style={styles.bottomLabelInput}
+            />
+            <PathTextEditor
+              enabled={pathTextEnabled}
+              text={pathText}
+              textBottom={pathTextBottom}
+              position={pathTextPosition}
+              shape={currentDesign.shape}
+              goalTitle={goalTitle ?? currentDesign.title}
+              onToggle={handlePathTextToggle}
+              onChangeText={handlePathTextChange}
+              onChangeTextBottom={handlePathTextBottomChange}
+              onChangePosition={handlePathTextPositionChange}
+              accentColor={currentDesign.color}
+            />
+            <BannerEditor
+              enabled={bannerEnabled}
+              text={bannerText}
+              position={bannerPosition}
+              onToggle={handleBannerToggle}
+              onChangeText={handleBannerTextChange}
+              onChangePosition={handleBannerPositionChange}
+              accentColor={currentDesign.color}
+            />
+          </View>
+        </CollapsibleSection>
 
         <View style={styles.footer}>
           <Button
@@ -789,18 +714,12 @@ function BadgeDesignerContentNewGoal({
 // Screen wrapper — detects mode from route params
 // ---------------------------------------------------------------------------
 
-type ScreenParams =
-  | { badgeId: string; mode?: undefined }
-  | { mode: "new-goal"; goalId: string; returnVia?: "back" }
-  | { mode: "redesign"; badgeId: string };
-
 export function BadgeDesignerScreen({
   route,
-}: BadgeDesignerScreenProps | { route: { params: ScreenParams } }) {
+}: BadgeDesignerScreenProps | GoalsBadgeDesignerScreenProps) {
   const navigation = useNavigation();
-  const { theme } = useUnistyles();
   const { t } = useTranslation("badgeDesigner");
-  const params = route.params as ScreenParams;
+  const params = route.params;
 
   let content: React.ReactNode;
   if ("mode" in params && params.mode === "new-goal") {

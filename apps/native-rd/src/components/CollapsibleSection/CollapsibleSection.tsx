@@ -15,23 +15,11 @@ export interface CollapsibleSectionProps {
   title: string;
   children: React.ReactNode;
   defaultExpanded?: boolean;
-  /**
-   * Controlled expansion. When provided, the component does not manage its
-   * own state — the parent owns the truth and must update it via
-   * `onExpandedChange`. Leave undefined for the legacy uncontrolled mode.
-   */
+  /** Controlled expansion. Leave undefined to use internal state. */
   expanded?: boolean;
   onExpandedChange?: (expanded: boolean) => void;
-  /**
-   * Optional trailing content rendered in the header (e.g. selection
-   * summary). Strings are wrapped in a Text node; ReactNodes render as-is.
-   */
+  /** Trailing header content. Strings are wrapped in a Text node. */
   summary?: React.ReactNode;
-  /**
-   * `plain` (default) preserves the historical flush styling used across
-   * existing consumers. `card` adds a bordered, shadowed container matching
-   * the badge designer prototype.
-   */
   variant?: CollapsibleSectionVariant;
   /** Override the "expand"/"collapse" verb in the accessibilityLabel. */
   expandLabel?: string;
@@ -80,29 +68,32 @@ export function CollapsibleSection({
     onExpandedChange?.(next);
   }, [expanded, isControlled, onExpandedChange]);
 
-  const containerStyle =
-    variant === "card" ? [styles.container, styles.card] : styles.container;
-  const headerStyleForVariant =
-    variant === "card" ? styles.headerCard : styles.header;
-  const titleStyleForVariant =
-    variant === "card" ? styles.titleCard : styles.title;
-  const contentPaddingStyle =
-    variant === "card" ? styles.contentCard : styles.content;
+  const v =
+    variant === "card"
+      ? {
+          container: [styles.container, styles.card],
+          header: styles.headerCard,
+          title: styles.titleCard,
+          content: styles.contentCard,
+        }
+      : {
+          container: styles.container,
+          header: styles.header,
+          title: styles.title,
+          content: styles.content,
+        };
 
   return (
-    <View style={containerStyle}>
+    <View style={v.container}>
       <Pressable
         onPress={handlePress}
         accessible
         accessibilityRole="button"
         accessibilityLabel={`${title}, ${expanded ? collapseLabel : expandLabel}`}
         accessibilityState={{ expanded }}
-        style={({ pressed }) => [
-          headerStyleForVariant,
-          pressed && styles.headerPressed,
-        ]}
+        style={({ pressed }) => [v.header, pressed && styles.headerPressed]}
       >
-        <Text style={titleStyleForVariant}>{title}</Text>
+        <Text style={v.title}>{title}</Text>
         <View style={styles.headerRight}>
           {typeof summary === "string" ? (
             <Text style={styles.summary} numberOfLines={1}>
@@ -116,7 +107,7 @@ export function CollapsibleSection({
       </Pressable>
       <Animated.View
         testID="collapsible-content"
-        style={[expanded ? contentPaddingStyle : undefined, contentStyle]}
+        style={[expanded ? v.content : undefined, contentStyle]}
       >
         {expanded && children}
       </Animated.View>
