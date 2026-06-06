@@ -66,7 +66,7 @@ walk) finished in this pass.
       walk). 50 of 50 `BadgeDesignerScreen` jest tests pass. Done so far: - `openSection(id)` helper translates a section id into the
       controlled CollapsibleSection's header a11y label and presses it. - 13 existing tests updated to open the relevant section before
       interacting with controls now mounted lazily. - `IconPickerModal` mocked in the screen test — its lazy `react-
-  native` `Modal` import was failing in the test bridge when first
+native` `Modal` import was failing in the test bridge when first
       touched after a state update (was fine on initial render). Mock
       is local to the screen test; primitive/unit tests untouched. - Three accordion-invariant tests added: Shape is the only mounted
       section on entry (every other inner-selector a11y label is
