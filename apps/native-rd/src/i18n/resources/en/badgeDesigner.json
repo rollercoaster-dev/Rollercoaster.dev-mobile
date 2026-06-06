@@ -59,6 +59,31 @@
       "goal": "Goal"
     }
   },
+  "borderColor": {
+    "a11y": "Badge border color",
+    "optionA11y": "{{label}} border color",
+    "matchTheme": "Match theme",
+    "custom": "Custom",
+    "customHint": "Opens the color picker",
+    "options": {
+      "purple": "Purple",
+      "mint": "Mint",
+      "yellow": "Yellow",
+      "emerald": "Emerald",
+      "teal": "Teal",
+      "orange": "Orange",
+      "sky": "Sky"
+    }
+  },
+  "borderScope": {
+    "a11y": "Border scope",
+    "optionA11y": "{{label}} scope",
+    "options": {
+      "shape": "Shape",
+      "shapeAndFrame": "Shape + Frame",
+      "all": "All"
+    }
+  },
   "frame": {
     "a11y": "Badge frame",
     "optionA11y": "{{label}} frame",

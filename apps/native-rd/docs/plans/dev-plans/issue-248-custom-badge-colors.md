@@ -198,29 +198,46 @@ Add custom fill, border, and icon/monogram color controls to the badge designer'
 
 ---
 
-### Step 6: Build `BorderColorPicker` and `BorderScopeSelector` components
+### Step 6: Build `BorderColorPicker` and `BorderScopeSelector` components ✅ DONE
 
-**Files**: `apps/native-rd/src/badges/BorderColorPicker.tsx`, `apps/native-rd/src/badges/BorderScopeSelector.tsx`
+**Files**: `apps/native-rd/src/badges/BorderColorPicker.tsx`, `apps/native-rd/src/badges/BorderScopeSelector.tsx`, `apps/native-rd/src/badges/index.ts`, `apps/native-rd/src/i18n/resources/en/badgeDesigner.json`
 **Commit**: `feat(badges): add BorderColorPicker and BorderScopeSelector UI components`
+
+**Status (2026-06-06):** Both components built and exported. EN i18n keys folded into this commit (see Plan adjustment below). DE/pseudo translations + parity test remain in Step 8.
+
+**Plan adjustment (2026-06-06):** The original plan said i18n keys would land in Step 8 and "until then the UI shows raw keys for one commit (acceptable trade-off for a clean i18n-only Step 8 commit)." That overlooked the typed-i18n setup — `t()`'s return type is a union of literal keys inferred from `en/badgeDesigner.json`, so 9 `t("borderColor.*")` / `t("borderScope.*")` call sites failed with TS2345 ("not assignable to ... `color.options.purple` etc."). Joe (2026-06-06) chose to fold the EN keys into this commit; DE/pseudo stay in Step 8 (translation-only, no type impact). Step 8 shrinks to DE/pseudo + parity assertion.
+
 **Changes**:
 
-**`BorderColorPicker.tsx`**:
+**`BorderColorPicker.tsx`** — committed:
 
-- [ ] Props: `selectedBorderColor: 'theme' | string`, `onSelectBorderColor(v: 'theme' | string): void`, `onOpenCustomPicker(): void`, `testID?`.
-- [ ] Renders a swatch row: first swatch is "Match theme" (sentinel `'theme'`), followed by `ACCENT_COLORS` palette presets, then a "Custom…" trigger cell.
-- [ ] "Match theme" swatch displays `theme.colors.border` as its fill but labels itself "Match theme" in i18n.
-- [ ] Selection ring uses `theme.colors.primary` (consistent with Step 4 fix).
-- [ ] `accessibilityRole="radiogroup"` on container; each swatch `accessibilityRole="radio"`.
+- [x] Props: `selectedBorderColor: typeof BADGE_COLOR_THEME_SENTINEL | string`, `onSelectBorderColor(value): void`, `onOpenCustomPicker(): void`, `testID?`.
+- [x] Renders horizontal `ScrollView` of swatches — matches `ColorPicker.tsx`'s layout, not `CenterModeSelector`'s chip-row, because 9 cells (1 sentinel + 7 palette + 1 custom) need horizontal scrolling rather than a static chip row.
+- [x] "Match theme" sentinel: first cell, fills with `theme.colors.border` (so users see the inherited color), stores `BADGE_COLOR_THEME_SENTINEL` when selected.
+- [x] Palette swatches: iterates over the existing exported `ACCENT_COLORS` from `ColorPicker.tsx` — no duplicated constant.
+- [x] "Custom…" cell: last cell, shows a `+` glyph inside the swatch when no custom value is selected, OR shows the currently-selected custom hex as the fill when `selectedBorderColor` is neither the sentinel nor a palette swatch. `accessibilityRole="button"` (not `radio`) because it opens the modal rather than committing a value directly.
+- [x] Selection ring uses `theme.colors.accentPrimary` (matches the Step 4 fix — `theme.colors.primary` does not exist; the correct token is `accentPrimary`).
+- [x] `accessibilityRole="radiogroup"` on container; the two value-setting swatch types are `accessibilityRole="radio"` with `accessibilityState.checked`.
+- [x] i18n keys: `borderColor.a11y`, `borderColor.optionA11y`, `borderColor.matchTheme`, `borderColor.custom`, `borderColor.customHint`, `borderColor.options.<id>` — all added to `en/badgeDesigner.json` this commit.
 
-**`BorderScopeSelector.tsx`**:
+**`BorderScopeSelector.tsx`** — committed:
 
-- [ ] Props: `selectedScope: BadgeBorderScope`, `onSelectScope(scope: BadgeBorderScope): void`, `testID?`.
-- [ ] Three options: `shape` ("Shape"), `shapeAndFrame` ("Shape + Frame"), `all` ("All").
-- [ ] Layout mirrors `CenterModeSelector` — horizontal row of pressable chips.
-- [ ] `accessibilityRole="radiogroup"` on container.
-- [ ] **Update plan + commit** — check Step 6 boxes, commit the picker components and the plan update together.
+- [x] Props: `selectedScope: BadgeBorderScope`, `onSelectScope(scope: BadgeBorderScope): void`, `testID?`.
+- [x] Three options: `shape` ("Shape"), `shapeAndFrame` ("Shape + Frame"), `all` ("All").
+- [x] Layout mirrors `CenterModeSelector` — horizontal row of pressable chips (3 options fit cleanly without scrolling).
+- [x] Options derived from `Object.values(BadgeBorderScope)` — same drift-protection as `CenterModeSelector`; adding a 4th enum value surfaces automatically.
+- [x] `accessibilityRole="radiogroup"` on container.
+- [x] i18n keys: `borderScope.a11y`, `borderScope.optionA11y`, `borderScope.options.<scope>` — all added to `en/badgeDesigner.json` this commit.
+- [x] Export from `badges/index.ts` (alongside `BorderColorPicker`).
+- [x] **Update plan + commit** — Step 6 boxes checked, commit both picker components + EN i18n keys + the plan update together.
 
-**Estimated LOC**: ~120 LOC
+**Verification**:
+
+- [x] `bun run type-check` clean (4/4 turbo tasks).
+- [x] `bun run lint`: 0 errors on new files (pre-existing 153 warnings in `utils/` files, baseline noted in Step 5).
+- [x] `npx jest --testPathPatterns "badges/__tests__"`: 6452/6473 pass; the 21 failures are the documented pre-existing `IconPicker.test.tsx` Modal/native-bridge failures unchanged from `main` (see Step 3 verification).
+
+**Estimated LOC**: ~120 LOC planned; actual ~120 LOC component + ~30 LOC EN i18n + ~6 LOC index exports = ~156 LOC.
 
 ---
 
@@ -248,11 +265,13 @@ Add custom fill, border, and icon/monogram color controls to the badge designer'
 
 ### Step 8: Extend i18n resources
 
-**Files**: `apps/native-rd/src/i18n/resources/en/badgeDesigner.json`, `de/badgeDesigner.json`, `pseudo/badgeDesigner.json`, `apps/native-rd/src/i18n/__tests__/option-key-parity.test.ts`
+**Scope reduced (2026-06-06):** EN keys for `borderColor` + `borderScope` were folded into Step 6's commit because the typed-i18n setup made them a hard prerequisite for type-check. This step now covers ONLY: (a) `iconColor` + `colorPicker` EN keys not yet added, (b) DE translations for all new keys, (c) pseudo translations, (d) parity-test assertions. Already-added EN keys are listed below for reference but won't be re-applied.
+
+**Files**: `apps/native-rd/src/i18n/resources/en/badgeDesigner.json` (only `iconColor` + `colorPicker` blocks; `borderColor` + `borderScope` already added in Step 6), `de/badgeDesigner.json`, `pseudo/badgeDesigner.json`, `apps/native-rd/src/i18n/__tests__/option-key-parity.test.ts`
 **Commit**: `feat(badges): add i18n keys for custom color controls`
 **Changes**:
 
-New keys to add under `badgeDesigner` namespace (English):
+Reference — full key set under `badgeDesigner` namespace (English; ✅ already in `en/badgeDesigner.json` after Step 6):
 
 ```json
 "borderColor": {
