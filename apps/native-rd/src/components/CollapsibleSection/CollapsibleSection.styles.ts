@@ -4,8 +4,6 @@ import { shadowStyle } from "../../styles/shadows";
 export const styles = StyleSheet.create((theme) => ({
   container: {
     gap: 0,
-  },
-  card: {
     backgroundColor: theme.colors.backgroundSecondary,
     borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.border,
@@ -13,13 +11,6 @@ export const styles = StyleSheet.create((theme) => ({
     ...shadowStyle(theme, "cardElevation"),
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    minHeight: 48,
-    paddingVertical: theme.space[3],
-  },
-  headerCard: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -43,14 +34,6 @@ export const styles = StyleSheet.create((theme) => ({
     marginLeft: theme.space[2],
   },
   title: {
-    fontSize: theme.size.xs,
-    fontWeight: theme.fontWeight.bold,
-    fontFamily: theme.fontFamily.body,
-    textTransform: "uppercase",
-    letterSpacing: theme.letterSpacing.wide,
-    color: theme.colors.textMuted,
-  },
-  titleCard: {
     fontSize: theme.size.sm,
     fontWeight: theme.fontWeight.bold,
     fontFamily: theme.fontFamily.headline,
@@ -69,9 +52,6 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.textMuted,
   },
   content: {
-    paddingTop: theme.space[2],
-  },
-  contentCard: {
     paddingHorizontal: theme.space[4],
     paddingTop: 0,
     paddingBottom: theme.space[4],

@@ -9,8 +9,6 @@ import { useAnimationPref } from "../../hooks/useAnimationPref";
 import { getTimingConfig } from "../../utils/animation";
 import { styles } from "./CollapsibleSection.styles";
 
-export type CollapsibleSectionVariant = "plain" | "card";
-
 export interface CollapsibleSectionProps {
   title: string;
   children: React.ReactNode;
@@ -25,7 +23,6 @@ export interface CollapsibleSectionProps {
    * branch and try to render directly inside `<View>`, which RN rejects.
    */
   summary?: string | React.ReactElement;
-  variant?: CollapsibleSectionVariant;
   /** Override the "expand"/"collapse" verb in the accessibilityLabel. */
   expandLabel?: string;
   collapseLabel?: string;
@@ -38,7 +35,6 @@ export function CollapsibleSection({
   expanded: expandedProp,
   onExpandedChange,
   summary,
-  variant = "plain",
   expandLabel = "expand",
   collapseLabel = "collapse",
 }: CollapsibleSectionProps) {
@@ -74,23 +70,8 @@ export function CollapsibleSection({
     onExpandedChange?.(next);
   }, [expanded, isControlled, onExpandedChange]);
 
-  const v =
-    variant === "card"
-      ? {
-          container: [styles.container, styles.card],
-          header: styles.headerCard,
-          title: styles.titleCard,
-          content: styles.contentCard,
-        }
-      : {
-          container: styles.container,
-          header: styles.header,
-          title: styles.title,
-          content: styles.content,
-        };
-
   return (
-    <View style={v.container}>
+    <View style={styles.container}>
       <Pressable
         onPress={handlePress}
         onFocus={() => setFocused(true)}
@@ -100,12 +81,12 @@ export function CollapsibleSection({
         accessibilityLabel={`${title}, ${expanded ? collapseLabel : expandLabel}`}
         accessibilityState={{ expanded }}
         style={({ pressed }) => [
-          v.header,
+          styles.header,
           focused && styles.headerFocused,
           pressed && styles.headerPressed,
         ]}
       >
-        <Text style={v.title}>{title}</Text>
+        <Text style={styles.title}>{title}</Text>
         <View style={styles.headerRight}>
           {typeof summary === "string" ? (
             <Text style={styles.summary} numberOfLines={1}>
@@ -119,7 +100,7 @@ export function CollapsibleSection({
       </Pressable>
       <Animated.View
         testID="collapsible-content"
-        style={[expanded ? v.content : undefined, contentStyle]}
+        style={[expanded ? styles.content : undefined, contentStyle]}
       >
         {expanded && children}
       </Animated.View>

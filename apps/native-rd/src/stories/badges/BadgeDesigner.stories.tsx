@@ -77,7 +77,6 @@ function BadgeDesignerComposer({
 
         <CollapsibleSection
           title="Shape"
-          variant="card"
           summary={design.shape}
           expanded={expandedSection === "shape"}
           onExpandedChange={handleSection("shape")}
@@ -91,7 +90,6 @@ function BadgeDesignerComposer({
 
         <CollapsibleSection
           title="Frame"
-          variant="card"
           summary={design.frame ?? "none"}
           expanded={expandedSection === "frame"}
           onExpandedChange={handleSection("frame")}
@@ -105,7 +103,6 @@ function BadgeDesignerComposer({
 
         <CollapsibleSection
           title="Center"
-          variant="card"
           summary={
             design.centerMode === BadgeCenterMode.icon
               ? `Icon · ${design.iconName}`
@@ -146,7 +143,6 @@ function BadgeDesignerComposer({
 
         <CollapsibleSection
           title="Colors"
-          variant="card"
           summary={design.color === goalColor ? "Goal color" : design.color}
           expanded={expandedSection === "colors"}
           onExpandedChange={handleSection("colors")}
@@ -160,7 +156,6 @@ function BadgeDesignerComposer({
 
         <CollapsibleSection
           title="Inscriptions"
-          variant="card"
           summary={
             [
               design.bottomLabel ? "Label" : null,

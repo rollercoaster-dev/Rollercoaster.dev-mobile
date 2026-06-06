@@ -293,7 +293,6 @@ function DesignEditor({
       >
         <CollapsibleSection
           title={t("accordion.sections.shape")}
-          variant="card"
           summary={shapeSummary}
           expanded={expandedSection === "shape"}
           onExpandedChange={openSection("shape")}
@@ -309,7 +308,6 @@ function DesignEditor({
 
         <CollapsibleSection
           title={t("accordion.sections.frame")}
-          variant="card"
           summary={frameSummary}
           expanded={expandedSection === "frame"}
           onExpandedChange={openSection("frame")}
@@ -325,7 +323,6 @@ function DesignEditor({
 
         <CollapsibleSection
           title={t("accordion.sections.center")}
-          variant="card"
           summary={centerSummary}
           expanded={expandedSection === "center"}
           onExpandedChange={openSection("center")}
@@ -354,7 +351,6 @@ function DesignEditor({
 
         <CollapsibleSection
           title={t("accordion.sections.colors")}
-          variant="card"
           summary={colorSummary}
           expanded={expandedSection === "colors"}
           onExpandedChange={openSection("colors")}
@@ -370,7 +366,6 @@ function DesignEditor({
 
         <CollapsibleSection
           title={t("accordion.sections.inscriptions")}
-          variant="card"
           summary={inscriptionsSummary}
           expanded={expandedSection === "inscriptions"}
           onExpandedChange={openSection("inscriptions")}

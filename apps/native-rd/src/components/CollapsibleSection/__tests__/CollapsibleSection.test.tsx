@@ -259,21 +259,4 @@ describe("CollapsibleSection", () => {
       expect(typeof style.height).not.toBe("number");
     });
   });
-
-  describe("variant", () => {
-    it("renders card variant without crashing and keeps the existing a11y contract", () => {
-      renderWithProviders(
-        <CollapsibleSection title="Card" variant="card" summary="Hello">
-          <Text>Card body</Text>
-        </CollapsibleSection>,
-      );
-      // The accessibility label, role, and state come from the same header,
-      // regardless of variant.
-      const header = screen.getByRole("button", { name: "Card, collapse" });
-      expect(header.props.accessibilityState).toEqual(
-        expect.objectContaining({ expanded: true }),
-      );
-      expect(screen.getByText("Card body")).toBeOnTheScreen();
-    });
-  });
 });
