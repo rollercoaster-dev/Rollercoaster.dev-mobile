@@ -76,9 +76,10 @@ type AccordionSectionId =
   | "colors"
   | "inscriptions";
 
-// Sized for the worst-case preview (banner + frame + bottom label). Sections
-// scroll under the overlay; `pointerEvents="none"` lets taps pass through.
-const PREVIEW_OVERLAY_HEIGHT = 280;
+// Reserved space below topBar for the floating preview overlay at rest.
+// Sections scroll under the overlay; `pointerEvents="none"` lets taps pass
+// through.
+const PREVIEW_OVERLAY_HEIGHT = 200;
 
 /**
  * Hardcoded rather than read via `useBottomTabBarHeight` from
