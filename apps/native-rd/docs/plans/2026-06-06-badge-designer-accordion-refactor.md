@@ -304,3 +304,44 @@ The separate custom-color issue should cover:
 - contrast and transparent-border policy
 - native custom-color picker UX
 - export/capture parity and tests
+
+## Addendum — 2026-06-06: All-closed state is now permitted (commit `1d3fa09`)
+
+**Supersedes:**
+
+- Step 3 note above ("only honours opens, never closes, preserving the
+  'exactly one open' invariant").
+- Issue #247 acceptance bullet "Pressing the active section does not
+  produce an all-collapsed state."
+
+**New contract.** Pressing the open section's header collapses it,
+leaving every section closed. Opening a different section still closes
+the previously-open one. The invariant is now "at most one section
+open," not "exactly one section open."
+
+**Why.** The fixed preview overlay sits above the section stack and
+covers a substantial portion of the viewport. With "exactly one open"
+enforced, the user could never see the preview unobstructed by an open
+section body — useful when comparing visual changes mid-edit. Allowing
+collapse-self gives the user a one-tap "hide all editor controls"
+gesture that mirrors the HTML prototype's native `<details>` behaviour
+(prototype: `badge-designer-a-accordion.html`).
+
+**Scope of the change.** Behaviour-only. `expandedSection` is now
+`AccordionSectionId | null` (initialised to `"shape"`). The screen and
+the Storybook composer share the same handler shape:
+
+```ts
+const openSection = (id) => (next) => {
+  setExpandedSection(next ? id : null);
+};
+```
+
+No prop changes on `CollapsibleSection`; the disclosure primitive
+already supported transitioning to closed.
+
+**Why PR #249 Copilot threads on this point are stale.** Copilot reviewed
+against #247's original AC and PR #249's pre-pivot body. The four
+threads asking for non-nullable state / ignored `next=false` are
+correctly reading the AC; they are not reading the design decision
+that supersedes it.
