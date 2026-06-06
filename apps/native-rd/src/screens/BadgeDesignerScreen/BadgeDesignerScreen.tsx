@@ -76,8 +76,9 @@ type AccordionSectionId =
   | "colors"
   | "inscriptions";
 
-/** Reserved space below topBar for the floating preview overlay at rest. */
-const PREVIEW_OVERLAY_HEIGHT = 200;
+// Sized for the worst-case preview (banner + frame + bottom label). Sections
+// scroll under the overlay; `pointerEvents="none"` lets taps pass through.
+const PREVIEW_OVERLAY_HEIGHT = 280;
 
 /**
  * Hardcoded rather than read via `useBottomTabBarHeight` from
@@ -236,13 +237,12 @@ function DesignEditor({
     icon: currentDesign.iconName,
   });
 
-  // Opening any section replaces the current one; collapse requests (when the
-  // user presses the open header) are ignored so the screen never enters an
-  // all-closed state.
+  // Single-open: opening any section replaces the current one; pressing the
+  // open header collapses it, leaving every section closed.
   const [expandedSection, setExpandedSection] =
-    useState<AccordionSectionId>("shape");
+    useState<AccordionSectionId | null>("shape");
   const openSection = (id: AccordionSectionId) => (next: boolean) => {
-    if (next) setExpandedSection(id);
+    setExpandedSection(next ? id : null);
   };
 
   const colorId = ACCENT_COLORS.find((c) => c.hex === currentDesign.color)?.id;

@@ -655,10 +655,11 @@ describe("BadgeDesignerScreen", () => {
   });
 
   // ── Accordion invariants ────────────────────────────────────────────
-  // Single-open coordination lives in DesignEditor and the screen never
-  // enters an all-closed state. The icon-picker-by-mode invariant is
-  // covered by the two "icon picker" tests above; these three cover the
-  // single-open header behavior.
+  // Single-open coordination lives in DesignEditor: at most one section is
+  // open at a time, but the user can collapse the current section to leave
+  // every section closed. The icon-picker-by-mode invariant is covered by
+  // the two "icon picker" tests above; these three cover the single-open
+  // header behavior.
   it("opens Shape on entry and leaves every other section collapsed", () => {
     mockUseQuery.mockReturnValue([makeRow()]);
     renderWithProviders(
@@ -700,7 +701,7 @@ describe("BadgeDesignerScreen", () => {
     ).toBeNull();
   });
 
-  it("pressing the open Frame header does not collapse it", () => {
+  it("pressing the open Frame header collapses it, leaving every section closed", () => {
     mockUseQuery.mockReturnValue([makeRow()]);
     renderWithProviders(
       <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
@@ -709,15 +710,28 @@ describe("BadgeDesignerScreen", () => {
     openSection("frame");
     // After expansion the header's a11y label flips from "expand" to
     // "collapse" (CollapsibleSection.tsx:98). Pressing this collapse-form
-    // label is the only way a user can request all-closed; the screen
-    // must reject it so exactly one section stays open.
+    // label collapses the section, leaving the accordion fully closed.
     const title = i18n.t("badgeDesigner:accordion.sections.frame");
     const collapseA11y = i18n.t("badgeDesigner:accordion.collapseA11y");
     fireEvent.press(screen.getByLabelText(`${title}, ${collapseA11y}`));
 
+    // Frame body unmounts (it sits behind `{expanded && children}`), and
+    // no other section opens to take its place.
     expect(
-      screen.getByLabelText(i18n.t("badgeDesigner:frame.a11y")),
-    ).toBeOnTheScreen();
+      screen.queryByLabelText(i18n.t("badgeDesigner:frame.a11y")),
+    ).toBeNull();
+    expect(
+      screen.queryByLabelText(i18n.t("badgeDesigner:shape.a11y")),
+    ).toBeNull();
+    expect(
+      screen.queryByLabelText(i18n.t("badgeDesigner:center.a11y")),
+    ).toBeNull();
+    expect(
+      screen.queryByLabelText(i18n.t("badgeDesigner:color.a11y")),
+    ).toBeNull();
+    expect(
+      screen.queryByLabelText(i18n.t("badgeDesigner:bottomLabel.a11y")),
+    ).toBeNull();
   });
 
   it("clears frameParams when frame is set back to none", async () => {

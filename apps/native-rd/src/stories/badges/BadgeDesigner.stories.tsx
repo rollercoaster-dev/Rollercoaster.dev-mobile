@@ -46,10 +46,10 @@ type AccordionSectionId =
 // ---------------------------------------------------------------------------
 // Interactive composer — mirrors BadgeDesignerScreen's single-open accordion
 // (section order Shape → Frame → Center → Colors → Inscriptions; opening
-// any closed section replaces the current one; pressing the open header is
-// rejected so the all-closed state never appears). Storybook callers don't
-// have the screen's i18n provider, so section titles and verbs are passed
-// as plain strings here — the production screen sources them from the
+// any closed section replaces the current one; pressing the open header
+// collapses it, leaving every section closed). Storybook callers don't have
+// the screen's i18n provider, so section titles and verbs are passed as
+// plain strings here — the production screen sources them from the
 // `badgeDesigner.accordion.*` namespace.
 // ---------------------------------------------------------------------------
 
@@ -62,10 +62,10 @@ function BadgeDesignerComposer({
 }) {
   const [design, setDesign] = useState(initialDesign);
   const [expandedSection, setExpandedSection] =
-    useState<AccordionSectionId>("shape");
+    useState<AccordionSectionId | null>("shape");
 
   const handleSection = (id: AccordionSectionId) => (next: boolean) => {
-    if (next) setExpandedSection(id);
+    setExpandedSection(next ? id : null);
   };
 
   return (
