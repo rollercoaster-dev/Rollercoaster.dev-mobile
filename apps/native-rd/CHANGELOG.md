@@ -1,5 +1,23 @@
 # native-rd
 
+## [0.1.14](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/compare/v0.1.13...v0.1.14) (2026-06-07)
+
+
+### Features
+
+* **native-rd:** add duotone icon opacity control ([#255](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/255)) ([8a56ba6](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/8a56ba6b89e41e0ecdea2318a5ab2a15143ba8ec))
+* **native-rd:** custom badge fill, border, and icon/monogram colors (closes [#248](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/248)) ([#250](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/250)) ([185e003](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/185e003d70cf11299c9dd66e55382346815d089d))
+
+
+### Bug Fixes
+
+* **native-rd:** guard Unistyles calls against backgrounded shadow tree (NATIVE-RD-4) ([#259](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/259)) ([d25fee8](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/d25fee8ee4613476ca86ab30dee0327a53701562))
+* **native-rd:** omit step count in completion summary for goals with no steps ([#257](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/257)) ([ae1bbc1](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/ae1bbc1db48dc94750b159dccc3038f384b9e6ee))
+* **native-rd:** remove icon contrast warning in badge designer ([#261](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/261)) ([8896d9b](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/8896d9b86701ca1ae96ceadc1c77a9caede34802))
+* **native-rd:** report createGoal failure to Sentry ([#124](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/124)) ([#263](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/263)) ([3c7786d](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/3c7786d099c91fde4abc538e255cf7b3f5458a0b))
+* **native-rd:** use 3:1 non-text contrast threshold for badge icon warning ([#254](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/254)) ([ad23121](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/ad23121bb3aecab12a21267a7007d39403d7659b))
+* **settings:** handle changeLanguage rejection in LanguagePicker ([#125](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/125)) ([#262](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/262)) ([64d401b](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/64d401bad7a5bd47f870bb09096ac0c0af9e2c54))
+
 ## [0.1.13](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/compare/v0.1.12...v0.1.13) (2026-06-04)
 
 
