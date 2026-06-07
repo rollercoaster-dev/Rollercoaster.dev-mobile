@@ -16,6 +16,30 @@ import { styles, THUMB_SIZE } from "./BrutalistSlider.styles";
 
 const TRACK_HORIZONTAL_INSET = THUMB_SIZE / 2;
 
+export interface A11ySliderValue {
+  min: number;
+  max: number;
+  now: number;
+  text: string;
+}
+
+export interface FormatA11yValueArg {
+  value: number;
+  minimumValue: number;
+  maximumValue: number;
+}
+
+const defaultFormatA11yValue = ({
+  value,
+  minimumValue,
+  maximumValue,
+}: FormatA11yValueArg): A11ySliderValue => ({
+  min: Math.round(minimumValue),
+  max: Math.round(maximumValue),
+  now: Math.round(value),
+  text: `${Math.round(value)}`,
+});
+
 export interface BrutalistSliderProps {
   value: number;
   minimumValue: number;
@@ -24,6 +48,7 @@ export interface BrutalistSliderProps {
   onValueChange: (value: number) => void;
   accessibilityLabel: string;
   accessibilityHint?: string;
+  formatA11yValue?: (arg: FormatA11yValueArg) => A11ySliderValue;
   testID?: string;
 }
 
@@ -101,6 +126,7 @@ export function BrutalistSlider({
   onValueChange,
   accessibilityLabel,
   accessibilityHint,
+  formatA11yValue,
   testID,
 }: BrutalistSliderProps) {
   const [trackWidth, setTrackWidth] = useState(0);
@@ -212,7 +238,14 @@ export function BrutalistSlider({
   };
 
   const handleAccessibilityAction = (event: AccessibilityActionEvent) => {
-    const direction = event.nativeEvent.actionName === "increment" ? 1 : -1;
+    let direction: 1 | -1;
+    if (event.nativeEvent.actionName === "increment") {
+      direction = 1;
+    } else if (event.nativeEvent.actionName === "decrement") {
+      direction = -1;
+    } else {
+      return;
+    }
     onValueChange(
       clampAndSnap(
         normalizedValue + direction * step,
@@ -223,6 +256,12 @@ export function BrutalistSlider({
     );
   };
 
+  const a11yValue = (formatA11yValue ?? defaultFormatA11yValue)({
+    value: normalizedValue,
+    minimumValue,
+    maximumValue,
+  });
+
   return (
     <GestureDetector gesture={pan}>
       <View
@@ -232,12 +271,7 @@ export function BrutalistSlider({
         accessibilityRole="adjustable"
         accessibilityLabel={accessibilityLabel}
         accessibilityHint={accessibilityHint}
-        accessibilityValue={{
-          min: Math.round(minimumValue * 100),
-          max: Math.round(maximumValue * 100),
-          now: Math.round(normalizedValue * 100),
-          text: `${Math.round(normalizedValue * 100)}%`,
-        }}
+        accessibilityValue={a11yValue}
         accessibilityActions={[{ name: "increment" }, { name: "decrement" }]}
         onAccessibilityAction={handleAccessibilityAction}
       >

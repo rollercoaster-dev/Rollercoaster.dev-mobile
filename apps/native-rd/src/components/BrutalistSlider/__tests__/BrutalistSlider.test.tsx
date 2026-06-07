@@ -28,13 +28,47 @@ describe("BrutalistSlider", () => {
     expect(positionToValue(0, 0.2, 1, 100, 0.1, true)).toBe(1);
   });
 
-  it("exposes percentage accessibility state and follows prop updates", () => {
+  it("exposes raw rounded accessibility state by default", () => {
+    const { getByLabelText } = render(
+      <BrutalistSlider
+        value={42}
+        minimumValue={0}
+        maximumValue={100}
+        step={1}
+        onValueChange={jest.fn()}
+        accessibilityLabel="Volume"
+      />,
+    );
+    expect(getByLabelText("Volume")).toHaveAccessibilityValue({
+      min: 0,
+      max: 100,
+      now: 42,
+      text: "42",
+    });
+  });
+
+  it("applies formatA11yValue and follows prop updates", () => {
+    const formatA11yValue = ({
+      value,
+      minimumValue,
+      maximumValue,
+    }: {
+      value: number;
+      minimumValue: number;
+      maximumValue: number;
+    }) => ({
+      min: Math.round(minimumValue * 100),
+      max: Math.round(maximumValue * 100),
+      now: Math.round(value * 100),
+      text: `${Math.round(value * 100)}%`,
+    });
     const props = {
       minimumValue: 0.2,
       maximumValue: 1,
       step: 0.1,
       onValueChange: jest.fn(),
       accessibilityLabel: "Fill opacity",
+      formatA11yValue,
     };
     const { getByLabelText, rerender } = render(
       <BrutalistSlider {...props} value={0.2} />,
@@ -52,6 +86,32 @@ describe("BrutalistSlider", () => {
       now: 100,
       text: "100%",
     });
+  });
+
+  it("ignores accessibility actions other than increment/decrement", () => {
+    const onValueChange = jest.fn();
+    const { getByLabelText } = render(
+      <BrutalistSlider
+        value={0.5}
+        minimumValue={0.2}
+        maximumValue={1}
+        step={0.1}
+        onValueChange={onValueChange}
+        accessibilityLabel="Fill opacity"
+      />,
+    );
+    fireEvent(getByLabelText("Fill opacity"), "accessibilityAction", {
+      nativeEvent: { actionName: "activate" },
+    });
+    fireEvent(getByLabelText("Fill opacity"), "accessibilityAction", {
+      nativeEvent: { actionName: "magicTap" },
+    });
+    expect(onValueChange).not.toHaveBeenCalled();
+
+    fireEvent(getByLabelText("Fill opacity"), "accessibilityAction", {
+      nativeEvent: { actionName: "decrement" },
+    });
+    expect(onValueChange).toHaveBeenLastCalledWith(0.4);
   });
 
   it("increments and decrements through the snapped range", () => {
