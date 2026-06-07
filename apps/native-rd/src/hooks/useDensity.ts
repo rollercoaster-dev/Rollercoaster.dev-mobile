@@ -32,8 +32,10 @@ export function useDensity() {
   // AppState guard.
   useEffect(() => {
     if (densityLevel !== appliedLevel.current) {
-      appliedLevel.current = densityLevel;
-      runWhenActive(() => applyDensityToAllThemes(densityLevel));
+      runWhenActive(() => {
+        applyDensityToAllThemes(densityLevel);
+        appliedLevel.current = densityLevel;
+      });
     }
   }, [densityLevel, runWhenActive]);
 
