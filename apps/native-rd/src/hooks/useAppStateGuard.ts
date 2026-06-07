@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import { AppState, type AppStateStatus } from "react-native";
+import { reportError } from "../services/sentry-report";
 
 /**
  * Defers callbacks that touch Unistyles' shadow tree until the app is in the
@@ -15,7 +16,7 @@ import { AppState, type AppStateStatus } from "react-native";
  */
 export function useAppStateGuard() {
   const isActiveRef = useRef<boolean>(AppState.currentState === "active");
-  const queueRef = useRef<Array<() => void>>([]);
+  const queueRef = useRef<(() => void)[]>([]);
   const mountedRef = useRef<boolean>(true);
 
   useEffect(() => {
@@ -30,7 +31,11 @@ export function useAppStateGuard() {
         const pending = queueRef.current;
         queueRef.current = [];
         for (const fn of pending) {
-          fn();
+          try {
+            fn();
+          } catch (err) {
+            reportError(err, { area: "render" });
+          }
         }
       }
     };
