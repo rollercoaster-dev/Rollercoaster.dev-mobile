@@ -93,7 +93,10 @@ export function valueToPosition(
   ) {
     return 0;
   }
-  const ratio = (value - minimumValue) / (maximumValue - minimumValue);
+  const ratio = Math.min(
+    1,
+    Math.max(0, (value - minimumValue) / (maximumValue - minimumValue)),
+  );
   return (isRTL ? 1 - ratio : ratio) * width;
 }
 
@@ -143,6 +146,7 @@ export function BrutalistSlider({
   sliderConfigRef.current = { minimumValue, maximumValue, step, isRTL };
   const trackWidthRef = useRef(trackWidth);
   trackWidthRef.current = trackWidth;
+  const lastEmittedValueRef = useRef<number | null>(null);
   const validConfiguration =
     Number.isFinite(minimumValue) &&
     Number.isFinite(maximumValue) &&
@@ -182,16 +186,17 @@ export function BrutalistSlider({
     const width = trackWidthRef.current;
     if (width <= 0) return;
     const config = sliderConfigRef.current;
-    valueChangeRef.current(
-      positionToValue(
-        nextPosition,
-        config.minimumValue,
-        config.maximumValue,
-        width,
-        config.step,
-        config.isRTL,
-      ),
+    const nextValue = positionToValue(
+      nextPosition,
+      config.minimumValue,
+      config.maximumValue,
+      width,
+      config.step,
+      config.isRTL,
     );
+    if (lastEmittedValueRef.current === nextValue) return;
+    lastEmittedValueRef.current = nextValue;
+    valueChangeRef.current(nextValue);
   });
 
   const pan = useMemo(

@@ -28,6 +28,13 @@ describe("BrutalistSlider", () => {
     expect(positionToValue(0, 0.2, 1, 100, 0.1, true)).toBe(1);
   });
 
+  it("clamps valueToPosition to the track when value drifts out of range", () => {
+    expect(valueToPosition(1.2, 0.2, 1, 100, false)).toBe(100);
+    expect(valueToPosition(0.1, 0.2, 1, 100, false)).toBe(0);
+    expect(valueToPosition(1.2, 0.2, 1, 100, true)).toBe(0);
+    expect(valueToPosition(0.1, 0.2, 1, 100, true)).toBe(100);
+  });
+
   it("exposes raw rounded accessibility state by default", () => {
     const { getByLabelText } = render(
       <BrutalistSlider
@@ -170,5 +177,32 @@ describe("BrutalistSlider", () => {
 
     fireGesture("update", { x: 112 });
     expect(onValueChange).toHaveBeenLastCalledWith(1);
+  });
+
+  it("does not emit onValueChange when the snapped pan value is unchanged", () => {
+    const onValueChange = jest.fn();
+    const { getByTestId } = render(
+      <BrutalistSlider
+        testID="opacity"
+        value={0.2}
+        minimumValue={0.2}
+        maximumValue={1}
+        step={0.1}
+        onValueChange={onValueChange}
+        accessibilityLabel="Fill opacity"
+      />,
+    );
+    fireEvent(getByTestId("opacity-track"), "layout", {
+      nativeEvent: { layout: { width: 100, height: 12, x: 0, y: 0 } },
+    });
+    fireGesture("begin", { x: 62 });
+    fireGesture("update", { x: 63 });
+    fireGesture("update", { x: 64 });
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+    expect(onValueChange).toHaveBeenLastCalledWith(0.6);
+
+    fireGesture("update", { x: 72 });
+    expect(onValueChange).toHaveBeenCalledTimes(2);
+    expect(onValueChange).toHaveBeenLastCalledWith(0.7);
   });
 });
