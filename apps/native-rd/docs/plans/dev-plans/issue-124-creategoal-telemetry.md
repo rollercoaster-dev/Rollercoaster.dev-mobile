@@ -11,11 +11,11 @@
 
 Observable criteria derived from the issue:
 
-- [ ] When `createGoal` returns `{ ok: false }`, a `reportError` call fires with `area: "goal.mutate", kind: "create"` before `setTitleErrorKey("errors.createFailed")` is called.
-- [ ] When `createGoal` throws (Evolu insert error bubbling past the re-throw in `queries.ts`), a `try/catch` in `handleCreate` catches it, calls `reportError`, and sets the user-facing error key.
-- [ ] The localized string shown to the user (`errors.createFailed`) is unchanged.
-- [ ] A Sentry breadcrumb is NOT added at the modal layer — `queries.ts` already emits `breadcrumb({ category: "goal", message: "create" })` before the insert, which is the right layer for intent tracking.
-- [ ] The existing test `"shows error when createGoal fails"` is extended to assert that `reportError` was called with the correct context.
+- [x] When `createGoal` returns `{ ok: false }`, a `reportError` call fires with `area: "goal.mutate", kind: "create"` before `setTitleErrorKey("errors.createFailed")` is called.
+- [x] When `createGoal` throws (Evolu insert error bubbling past the re-throw in `queries.ts`), a `try/catch` in `handleCreate` catches it, calls `reportError`, and sets the user-facing error key.
+- [x] The localized string shown to the user (`errors.createFailed`) is unchanged.
+- [x] A Sentry breadcrumb is NOT added at the modal layer — `queries.ts` already emits `breadcrumb({ category: "goal", message: "create" })` before the insert, which is the right layer for intent tracking.
+- [x] The existing test `"shows error when createGoal fails"` is extended to assert that `reportError` was called with the correct context.
 
 _"createGoal fails" in the current mock uses `{ ok: false }` with no error payload — the test extension should also cover the thrown-error path._
 
@@ -55,10 +55,10 @@ Add `reportError(error, { area: "goal.mutate", kind: "create" })` to `NewGoalMod
 **Commit**: `fix(native-rd): report createGoal failure to Sentry (#124)`
 **Changes**:
 
-- [ ] Import `reportError` from `../../services/sentry-report`
-- [ ] Wrap `createGoal(trimmed)` call in `try { ... } catch (error) { ... }`
-- [ ] In the catch block: call `reportError(error, { area: "goal.mutate", kind: "create" })`, then `setTitleErrorKey("errors.createFailed")`
-- [ ] In the existing `!result.ok` else branch: call `reportError(result.error, { area: "goal.mutate", kind: "create" })` before `setTitleErrorKey`
+- [x] Import `reportError` from `../../services/sentry-report`
+- [x] Wrap `createGoal(trimmed)` call in `try { ... } catch (error) { ... }`
+- [x] In the catch block: call `reportError(error, { area: "goal.mutate", kind: "create" })`, then `setTitleErrorKey("errors.createFailed")`
+- [x] In the existing `!result.ok` else branch: call `reportError(result.error, { area: "goal.mutate", kind: "create" })` before `setTitleErrorKey`
 
 The resulting `handleCreate` shape:
 
@@ -94,10 +94,10 @@ function handleCreate() {
 **Commit**: `test(native-rd): assert reportError on createGoal failure (#124)`
 **Changes**:
 
-- [ ] Mock `../../services/sentry-report` at the top of the file (alongside the existing `../../../db` mock): `jest.mock("../../services/sentry-report", () => ({ reportError: jest.fn() }))`
-- [ ] Capture the mock: `const { reportError } = require("../../services/sentry-report")`
-- [ ] Extend the existing `"shows error when createGoal fails"` test to assert `expect(reportError).toHaveBeenCalledWith(expect.anything(), { area: "goal.mutate", kind: "create" })`
-- [ ] Add a second test `"calls reportError when createGoal throws"` that sets `createGoal.mockImplementation(() => { throw new Error("db error") })`, submits the form, and asserts `reportError` was called and the error string is shown
+- [x] Mock `../../services/sentry-report` at the top of the file (alongside the existing `../../../db` mock): `jest.mock("../../services/sentry-report", () => ({ reportError: jest.fn() }))`
+- [x] Capture the mock: `const { reportError } = require("../../services/sentry-report")`
+- [x] Extend the existing `"shows error when createGoal fails"` test (renamed to `"shows error and reports to Sentry when createGoal returns !ok"`) to assert `reportError` was called with the exact `result.error` payload and `{ area: "goal.mutate", kind: "create" }`
+- [x] Add a second test `"shows error and reports to Sentry when createGoal throws"` that sets `createGoal.mockImplementation(() => { throw new Error("db locked") })`, submits the form, and asserts `reportError` was called with the thrown error and the error string is shown
 
 ## Testing Strategy
 
