@@ -112,10 +112,10 @@ gh issue list \
 If any match: check the dup's state.
 
 **Closed-but-stale (auto-resolve):**
-  IF dup.state == CLOSED AND Sentry lastSeen < dup.closedAt
-  THEN: the Sentry issue is just a stale `unresolved` row — the GH fix
-        already landed and Sentry has been silent since before the close.
-        Resolve it in Sentry.
+IF dup.state == CLOSED AND Sentry lastSeen < dup.closedAt
+THEN: the Sentry issue is just a stale `unresolved` row — the GH fix
+already landed and Sentry has been silent since before the close.
+Resolve it in Sentry.
 
 ```
 mcp__sentry__update_issue({
@@ -127,13 +127,13 @@ mcp__sentry__update_issue({
 })
 ```
 
-  Record action as `resolved:closed-dup:<N>`. If Sentry ever sees this
-  signature again, the resolved issue auto-reopens — so no information
-  is lost if the GH close was premature.
+Record action as `resolved:closed-dup:<N>`. If Sentry ever sees this
+signature again, the resolved issue auto-reopens — so no information
+is lost if the GH close was premature.
 
 **Plain dup:**
-  ELSE: skip create. Record action as `skipped:dup:<N>` and capture the
-        existing issue URL for the summary.
+ELSE: skip create. Record action as `skipped:dup:<N>` and capture the
+existing issue URL for the summary.
 
 If no match: create the issue.
 
