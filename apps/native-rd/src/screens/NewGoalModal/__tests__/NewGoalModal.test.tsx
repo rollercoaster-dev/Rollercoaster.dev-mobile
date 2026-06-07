@@ -85,6 +85,7 @@ describe("NewGoalModal", () => {
       screen.getByText(i18n.t("newGoal:errors.titleRequired")),
     ).toBeOnTheScreen();
     expect(createGoal).not.toHaveBeenCalled();
+    expect(reportError).not.toHaveBeenCalled();
   });
 
   it("shows validation error on submit editing with whitespace title", () => {
@@ -101,6 +102,7 @@ describe("NewGoalModal", () => {
       screen.getByText(i18n.t("newGoal:errors.titleRequired")),
     ).toBeOnTheScreen();
     expect(createGoal).not.toHaveBeenCalled();
+    expect(reportError).not.toHaveBeenCalled();
   });
 
   it("creates goal and navigates to BadgeDesigner on valid submit", () => {
@@ -118,6 +120,7 @@ describe("NewGoalModal", () => {
       mode: "new-goal",
       goalId: "goal-123",
     });
+    expect(reportError).not.toHaveBeenCalled();
   });
 
   it("trims title before creating goal", () => {
@@ -131,6 +134,7 @@ describe("NewGoalModal", () => {
       screen.getByRole("button", { name: i18n.t("newGoal:cta.create") }),
     );
     expect(createGoal).toHaveBeenCalledWith("Learn Rust");
+    expect(reportError).not.toHaveBeenCalled();
   });
 
   it("shows error and reports to Sentry when createGoal returns !ok", () => {
@@ -153,6 +157,7 @@ describe("NewGoalModal", () => {
       area: "goal.mutate",
       kind: "create",
     });
+    expect(reportError).toHaveBeenCalledTimes(1);
   });
 
   it("shows error and reports to Sentry when createGoal throws", () => {
@@ -177,6 +182,7 @@ describe("NewGoalModal", () => {
       area: "goal.mutate",
       kind: "create",
     });
+    expect(reportError).toHaveBeenCalledTimes(1);
   });
 
   describe("pseudo locale", () => {
