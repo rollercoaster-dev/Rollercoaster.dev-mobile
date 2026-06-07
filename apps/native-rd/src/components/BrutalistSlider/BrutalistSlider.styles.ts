@@ -1,5 +1,7 @@
 import { StyleSheet } from "react-native-unistyles";
 
+import { shadowStyle } from "../../styles/shadows";
+
 export const THUMB_SIZE = 24;
 
 export const styles = StyleSheet.create((theme) => ({
@@ -41,6 +43,6 @@ export const styles = StyleSheet.create((theme) => ({
     borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.background,
-    boxShadow: `3px 3px 0px ${theme.colors.border}`,
+    ...shadowStyle(theme, "hardMd"),
   },
 }));

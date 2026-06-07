@@ -1,7 +1,7 @@
 # Duotone-opacity slider — design research
 
 **Last verified:** 2026-06-07
-**Status:** Research only, no code committed
+**Status:** Implemented — `BrutalistSlider` wired into `BadgeColorsAccordion`, behind `design.iconWeight === "duotone"` (PR #255).
 **Scope:** Badge Designer → Colors accordion → Icon tab. Conditional on `design.iconWeight === "duotone"`.
 
 ## Problem
