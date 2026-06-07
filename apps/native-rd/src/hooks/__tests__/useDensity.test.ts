@@ -2,16 +2,19 @@ import { renderHook, act } from "@testing-library/react-native";
 import { AppState, type AppStateStatus } from "react-native";
 import { UnistylesRuntime } from "react-native-unistyles";
 
+import { useDensity } from "../useDensity";
+import { themeNames } from "../../themes/compose";
+import { __resetUserSettingsRowInitForTests } from "../useUserSettingsRow";
+
 type ChangeListener = (status: AppStateStatus) => void;
+type MutableAppState = { currentState: AppStateStatus | unknown };
 
 let appStateListeners: ChangeListener[] = [];
-let appStateSpy: jest.SpyInstance | undefined;
+const originalAppStateCurrent = (AppState as unknown as MutableAppState)
+  .currentState;
 
 function setAppState(status: AppStateStatus) {
-  if (appStateSpy) appStateSpy.mockRestore();
-  appStateSpy = jest
-    .spyOn(AppState, "currentState", "get")
-    .mockReturnValue(status);
+  (AppState as unknown as MutableAppState).currentState = status;
 }
 
 function emitAppState(status: AppStateStatus) {
@@ -35,10 +38,6 @@ jest.mock("../../db", () => ({
   createUserSettings: (...args: unknown[]) => mockCreateUserSettings(...args),
   updateUserSettings: (...args: unknown[]) => mockUpdateUserSettings(...args),
 }));
-
-import { useDensity } from "../useDensity";
-import { themeNames } from "../../themes/compose";
-import { __resetUserSettingsRowInitForTests } from "../useUserSettingsRow";
 
 const updateThemeSpy = jest.spyOn(UnistylesRuntime, "updateTheme");
 
@@ -76,8 +75,8 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  if (appStateSpy) appStateSpy.mockRestore();
-  appStateSpy = undefined;
+  (AppState as unknown as MutableAppState).currentState =
+    originalAppStateCurrent;
 });
 
 describe("useDensity", () => {

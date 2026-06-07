@@ -4,15 +4,14 @@ import { AppState, type AppStateStatus } from "react-native";
 import { useAppStateGuard } from "../useAppStateGuard";
 
 type ChangeListener = (status: AppStateStatus) => void;
+type MutableAppState = { currentState: AppStateStatus | unknown };
 
 let listeners: ChangeListener[] = [];
-let currentStateSpy: jest.SpyInstance | undefined;
+const originalCurrentState = (AppState as unknown as MutableAppState)
+  .currentState;
 
 function setCurrentState(status: AppStateStatus) {
-  if (currentStateSpy) currentStateSpy.mockRestore();
-  currentStateSpy = jest
-    .spyOn(AppState, "currentState", "get")
-    .mockReturnValue(status);
+  (AppState as unknown as MutableAppState).currentState = status;
 }
 
 function emit(status: AppStateStatus) {
@@ -39,7 +38,7 @@ beforeEach(() => {
 
 afterEach(() => {
   jest.restoreAllMocks();
-  currentStateSpy = undefined;
+  (AppState as unknown as MutableAppState).currentState = originalCurrentState;
 });
 
 describe("useAppStateGuard", () => {
