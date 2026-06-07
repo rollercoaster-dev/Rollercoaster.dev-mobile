@@ -60,13 +60,17 @@ Rule 2 — Stale single occurrence
   THEN: archive in Sentry. action = "archived:stale-single"
 
 Rule 3 — Known native-lib upstream noise
-  IF culprit matches any of:
+  IF (culprit OR title) matches any of:
      /margelo::nitro/, /folly::dynamic/,
      /_axDictionaryKeyReplacement/, /google::logging_fail/,
      /__pthread_kill/
   AND events <= 3
   THEN: file GH issue. labels = ["bug", "app:native-rd", "priority:low"]
         action = "filed:upstream"
+  NOTE: title is matched because Sentry sometimes places the upstream
+        frame in title only (e.g. NATIVE-RD-8 ax-dict 2026-05-16/27,
+        NATIVE-RD-4 margelo::nitro 2026-06-07) with culprit pointing at
+        the Swift `main` thunk. See memory `sentry-triage-rule3-drift`.
 
 Rule 4 — High signal
   IF seerActionability == "high" OR events >= 10 OR users >= 3
@@ -102,10 +106,34 @@ gh issue list \
   --repo rollercoaster-dev/Rollercoaster.dev-mobile \
   --state all \
   --search "in:body $shortId" \
-  --json number,title,state,url
+  --json number,title,state,closedAt,url
 ```
 
-If any match: skip create. Record action as `skipped:dup:<number>` and capture the existing issue URL for the summary.
+If any match: check the dup's state.
+
+**Closed-but-stale (auto-resolve):**
+  IF dup.state == CLOSED AND Sentry lastSeen < dup.closedAt
+  THEN: the Sentry issue is just a stale `unresolved` row — the GH fix
+        already landed and Sentry has been silent since before the close.
+        Resolve it in Sentry.
+
+```
+mcp__sentry__update_issue({
+  organizationSlug: "rollercoasterdev",
+  issueId: shortId,
+  regionUrl: "https://de.sentry.io",
+  status: "resolved",
+  reason: "Resolved via GH #<N> closed <closedAt>; lastSeen <lastSeen> (before close). Sentry status was stale."
+})
+```
+
+  Record action as `resolved:closed-dup:<N>`. If Sentry ever sees this
+  signature again, the resolved issue auto-reopens — so no information
+  is lost if the GH close was premature.
+
+**Plain dup:**
+  ELSE: skip create. Record action as `skipped:dup:<N>` and capture the
+        existing issue URL for the summary.
 
 If no match: create the issue.
 
@@ -163,6 +191,7 @@ Build a single message. Use markdown (`tg-send` supports it).
 Week of <ISO date>
 
 ✅ Archived: <count>
+✅ Resolved: <count> ([list as Sentry shortId → GH #num — closed-but-stale])
 🆕 Filed: <count> ([list as Sentry shortId → GH #num links])
 ♻️ Dedup-skipped: <count>
 ⚠️ Errors: <count if any>
