@@ -124,6 +124,9 @@ describe("useDensity", () => {
 
       act(() => emitAppState("active"));
       expect(updateThemeSpy).toHaveBeenCalledTimes(themeNames.length);
+      for (const name of themeNames) {
+        expect(updateThemeSpy).toHaveBeenCalledWith(name, expect.any(Function));
+      }
     });
   });
 });
