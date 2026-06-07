@@ -19,7 +19,7 @@ import {
   BadgeFrame,
 } from "../../badges/types";
 import type { BadgeDesign } from "../../badges/types";
-import { getContrastRatio, getSafeTextColor } from "../../utils/accessibility";
+import { getSafeTextColor } from "../../utils/accessibility";
 import { ChannelPalette } from "./ChannelPalette";
 import { styles } from "./BadgeColorsAccordion.styles";
 
@@ -36,10 +36,6 @@ export type Channel = (typeof BADGE_COLOR_CHANNELS)[number];
 // resolved icon color against the fill. Hidden from screen readers; not user
 // copy, so it lives outside i18n.
 const ICON_TAB_PREVIEW_GLYPH = "A";
-
-// WCAG 2.1 SC 1.4.11 — non-text UI components need 3:1, not the 4.5:1
-// text-grade ratio. The painted icon is a non-text component.
-const ICON_CONTRAST_MIN = 3;
 
 export interface BadgeColorsAccordionProps {
   design: BadgeDesign;
@@ -89,12 +85,6 @@ export function BadgeColorsAccordion({
   useEffect(() => {
     if (tab === "frame" && !frameEnabled) setTab("border");
   }, [frameEnabled, tab]);
-
-  // Only warn on explicit hex picks — the Auto sentinel already chooses the
-  // high-contrast color, so warning on it would be noise.
-  const showIconContrastWarning =
-    iconRaw !== BADGE_COLOR_THEME_SENTINEL &&
-    getContrastRatio(iconResolved, design.color) < ICON_CONTRAST_MIN;
 
   return (
     <View style={styles.root}>
@@ -269,15 +259,6 @@ export function BadgeColorsAccordion({
                 })}
               />
             </View>
-          )}
-          {showIconContrastWarning && (
-            <Text
-              variant="caption"
-              style={styles.contrastWarning}
-              testID="icon-contrast-warning"
-            >
-              {t("iconColor.contrastWarning")}
-            </Text>
           )}
         </View>
       )}
