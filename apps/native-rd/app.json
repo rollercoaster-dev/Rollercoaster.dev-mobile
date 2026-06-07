@@ -2,7 +2,7 @@
   "expo": {
     "name": "Rollercoaster.dev",
     "slug": "rollercoasterdev",
-    "version": "0.1.13",
+    "version": "0.1.14",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -104,7 +104,10 @@
       [
         "expo-localization",
         {
-          "supportedLocales": ["en", "de"]
+          "supportedLocales": [
+            "en",
+            "de"
+          ]
         }
       ]
     ],
