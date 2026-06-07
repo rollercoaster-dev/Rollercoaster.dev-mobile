@@ -224,12 +224,12 @@ export function BrutalistSlider({
 
   const marks = [];
   if (validConfiguration) {
-    for (
-      let mark = minimumValue;
-      mark <= maximumValue + step / 2;
-      mark += step
-    ) {
-      marks.push(mark);
+    // Use half-step tolerance to match the prior float-loop's inclusive
+    // upper bound — e.g. min=0.2/max=1.0/step=0.1 yields 9 ticks (0.2 → 1.0).
+    const tickCount =
+      Math.floor((maximumValue - minimumValue + step / 2) / step) + 1;
+    for (let i = 0; i < tickCount; i++) {
+      marks.push(Number((minimumValue + i * step).toFixed(10)));
     }
   }
 

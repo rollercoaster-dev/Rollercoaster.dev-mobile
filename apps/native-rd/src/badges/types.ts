@@ -123,6 +123,19 @@ export const BADGE_DUOTONE_OPACITY_MAX = 1 as const;
 export const BADGE_DUOTONE_OPACITY_STEP = 0.1 as const;
 export const BADGE_DUOTONE_OPACITY_DEFAULT = BADGE_DUOTONE_OPACITY_MIN;
 
+function snapDuotoneOpacityToStep(value: number): number {
+  const steps = Math.round(
+    (value - BADGE_DUOTONE_OPACITY_MIN) / BADGE_DUOTONE_OPACITY_STEP,
+  );
+  const snapped =
+    BADGE_DUOTONE_OPACITY_MIN + steps * BADGE_DUOTONE_OPACITY_STEP;
+  const clamped = Math.min(
+    BADGE_DUOTONE_OPACITY_MAX,
+    Math.max(BADGE_DUOTONE_OPACITY_MIN, snapped),
+  );
+  return Number(clamped.toFixed(10));
+}
+
 export type BadgeDesign = {
   shape: BadgeShape;
   frame: BadgeFrame;
@@ -308,8 +321,11 @@ export function parseBadgeDesign(
       Number.isFinite(parsed.iconDuotoneOpacity) &&
       parsed.iconDuotoneOpacity >= BADGE_DUOTONE_OPACITY_MIN &&
       parsed.iconDuotoneOpacity <= BADGE_DUOTONE_OPACITY_MAX;
+    // Snap in-range values to the configured step so the slider's snapped
+    // thumb can't drift from the persisted value (e.g. hand-edited designs
+    // or values that pre-date a step change).
     const iconDuotoneOpacity = hasValidIconDuotoneOpacity
-      ? (parsed.iconDuotoneOpacity as number)
+      ? snapDuotoneOpacityToStep(parsed.iconDuotoneOpacity as number)
       : undefined;
     if (
       parsed.iconDuotoneOpacity !== undefined &&
