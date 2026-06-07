@@ -329,6 +329,19 @@ describe("BadgeColorsAccordion", () => {
       fireEvent.press(screen.getByLabelText("Icon"));
       expect(screen.queryByTestId("icon-contrast-warning")).toBeNull();
     });
+
+    it("does not render at the non-text 3:1 threshold even when text 4.5:1 would fail", () => {
+      // #888888 on #ffffff ≈ 3.54:1 — passes 3:1, fails 4.5:1.
+      const handlers = makeHandlers();
+      renderWithProviders(
+        <BadgeColorsAccordion
+          design={createDesign({ color: "#ffffff", iconColor: "#888888" })}
+          {...handlers}
+        />,
+      );
+      fireEvent.press(screen.getByLabelText("Icon"));
+      expect(screen.queryByTestId("icon-contrast-warning")).toBeNull();
+    });
   });
 
   describe("fill channel", () => {

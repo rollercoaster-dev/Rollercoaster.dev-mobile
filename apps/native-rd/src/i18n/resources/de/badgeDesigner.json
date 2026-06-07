@@ -104,7 +104,7 @@
     "matchAutoHint": "Wählt Schwarz oder Weiß basierend auf dem Füllkontrast",
     "custom": "Benutzerdefiniert",
     "customHint": "Öffnet die Farbauswahl",
-    "contrastWarning": "Geringer Kontrast — Text könnte schwer lesbar sein",
+    "contrastWarning": "Geringer Kontrast — Symbol könnte schwer erkennbar sein",
     "opacityLabel": "Füllungsdeckkraft",
     "opacityA11y": "Deckkraft der Duoton-Füllung",
     "opacityHint": "Passt die Deckkraft der sekundären Symbolfüllung an",
