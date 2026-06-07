@@ -3,6 +3,7 @@ import { UnistylesRuntime } from "react-native-unistyles";
 import { updateUserSettings } from "../db";
 import { useUserSettingsRow } from "./useUserSettingsRow";
 import { FALLBACK_THEME_NAME, isValidThemeName } from "./useTheme";
+import { useAppStateGuard } from "./useAppStateGuard";
 import type { ThemeName } from "../themes/compose";
 import { Logger } from "../shims/rd-logger";
 
@@ -26,6 +27,7 @@ const logger = new Logger("useThemePersistence");
 export function useThemePersistence() {
   const { settings } = useUserSettingsRow();
   const lastAppliedRef = useRef<ThemeName | null>(null);
+  const { runWhenActive } = useAppStateGuard();
 
   const savedRaw = settings?.theme ?? null;
 
@@ -38,16 +40,19 @@ export function useThemePersistence() {
         fallback: FALLBACK_THEME_NAME,
       });
       if (lastAppliedRef.current !== FALLBACK_THEME_NAME) {
+        // Set the ref before queueing so re-runs of this effect with the
+        // same invalid value (e.g. a duplicate Evolu emission) are deduped
+        // even while the deferred call is still pending.
         lastAppliedRef.current = FALLBACK_THEME_NAME;
-        UnistylesRuntime.setTheme(FALLBACK_THEME_NAME);
+        runWhenActive(() => UnistylesRuntime.setTheme(FALLBACK_THEME_NAME));
       }
       return;
     }
 
     if (lastAppliedRef.current === savedRaw) return;
     lastAppliedRef.current = savedRaw;
-    UnistylesRuntime.setTheme(savedRaw);
-  }, [savedRaw]);
+    runWhenActive(() => UnistylesRuntime.setTheme(savedRaw));
+  }, [savedRaw, runWhenActive]);
 
   const setTheme = useCallback(
     (name: ThemeName) => {
@@ -55,8 +60,8 @@ export function useThemePersistence() {
         logger.warn("Refusing to set unsupported theme", { name });
         return;
       }
-      UnistylesRuntime.setTheme(name);
       lastAppliedRef.current = name;
+      runWhenActive(() => UnistylesRuntime.setTheme(name));
       if (!settings) return;
       try {
         updateUserSettings(settings.id, { theme: name });
@@ -64,7 +69,7 @@ export function useThemePersistence() {
         logger.error("Failed to persist theme", { name, error });
       }
     },
-    [settings],
+    [settings, runWhenActive],
   );
 
   return { setTheme };

@@ -1,5 +1,26 @@
 import { renderHook, act } from "@testing-library/react-native";
+import { AppState, type AppStateStatus } from "react-native";
 import { UnistylesRuntime } from "react-native-unistyles";
+
+import { useThemePersistence } from "../useThemePersistence";
+import { themeOptions } from "../useTheme";
+import { __resetUserSettingsRowInitForTests } from "../useUserSettingsRow";
+
+type ChangeListener = (status: AppStateStatus) => void;
+type MutableAppState = { currentState: AppStateStatus | unknown };
+
+let appStateListeners: ChangeListener[] = [];
+const originalAppStateCurrent = (AppState as unknown as MutableAppState)
+  .currentState;
+
+function setAppState(status: AppStateStatus) {
+  (AppState as unknown as MutableAppState).currentState = status;
+}
+
+function emitAppState(status: AppStateStatus) {
+  setAppState(status);
+  for (const fn of [...appStateListeners]) fn(status);
+}
 
 const mockUseQuery = jest.fn();
 jest.mock("@evolu/react", () => {
@@ -19,10 +40,6 @@ jest.mock("../../db", () => ({
   updateUserSettings: (...args: unknown[]) => mockUpdateUserSettings(...args),
 }));
 
-import { useThemePersistence } from "../useThemePersistence";
-import { themeOptions } from "../useTheme";
-import { __resetUserSettingsRowInitForTests } from "../useUserSettingsRow";
-
 const setThemeSpy = jest.spyOn(UnistylesRuntime, "setTheme");
 
 beforeEach(() => {
@@ -30,6 +47,25 @@ beforeEach(() => {
   setThemeSpy.mockClear();
   mockUseQuery.mockReturnValue([]);
   __resetUserSettingsRowInitForTests();
+
+  appStateListeners = [];
+  setAppState("active");
+  jest.spyOn(AppState, "addEventListener").mockImplementation(((
+    _: string,
+    cb: ChangeListener,
+  ) => {
+    appStateListeners.push(cb);
+    return {
+      remove: () => {
+        appStateListeners = appStateListeners.filter((l) => l !== cb);
+      },
+    };
+  }) as unknown as typeof AppState.addEventListener);
+});
+
+afterEach(() => {
+  (AppState as unknown as MutableAppState).currentState =
+    originalAppStateCurrent;
 });
 
 const makeSettings = (overrides: Record<string, unknown> = {}) => ({
@@ -151,6 +187,60 @@ describe("useThemePersistence", () => {
       rerender({});
       expect(setThemeSpy).toHaveBeenLastCalledWith("dark-default");
       expect(setThemeSpy).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe("AppState guard (NATIVE-RD-4 workaround)", () => {
+    it("does not call setTheme while backgrounded; flushes on resume", () => {
+      setAppState("background");
+      mockUseQuery.mockReturnValue([makeSettings({ theme: "dark-default" })]);
+      renderHook(() => useThemePersistence());
+      expect(setThemeSpy).not.toHaveBeenCalled();
+
+      act(() => emitAppState("active"));
+      expect(setThemeSpy).toHaveBeenCalledWith("dark-default");
+      expect(setThemeSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("defers a user-initiated setTheme() while backgrounded", () => {
+      setAppState("background");
+      mockUseQuery.mockReturnValue([makeSettings({ theme: null })]);
+      const { result } = renderHook(() => useThemePersistence());
+
+      act(() => result.current.setTheme("dark-default"));
+      // Evolu write happens immediately (preserves intent across restart)…
+      expect(mockUpdateUserSettings).toHaveBeenCalledWith("settings-1", {
+        theme: "dark-default",
+      });
+      // …but the Unistyles call is deferred to avoid the shadow-tree crash.
+      expect(setThemeSpy).not.toHaveBeenCalled();
+
+      act(() => emitAppState("active"));
+      expect(setThemeSpy).toHaveBeenCalledWith("dark-default");
+    });
+
+    it("dedupes a re-emitted same theme while a deferred call is pending", () => {
+      setAppState("background");
+      mockUseQuery.mockReturnValue([makeSettings({ theme: "dark-default" })]);
+      const { rerender } = renderHook(() => useThemePersistence());
+      // Same value re-emitted (e.g. Evolu sync echo).
+      rerender({});
+      rerender({});
+
+      act(() => emitAppState("active"));
+      // Only one flushed call, despite two re-renders while paused.
+      expect(setThemeSpy).toHaveBeenCalledTimes(1);
+      expect(setThemeSpy).toHaveBeenCalledWith("dark-default");
+    });
+
+    it("defers the invalid-theme fallback while backgrounded", () => {
+      setAppState("background");
+      mockUseQuery.mockReturnValue([makeSettings({ theme: "dark-dyslexia" })]);
+      renderHook(() => useThemePersistence());
+      expect(setThemeSpy).not.toHaveBeenCalled();
+
+      act(() => emitAppState("active"));
+      expect(setThemeSpy).toHaveBeenCalledWith("light-default");
     });
   });
 });

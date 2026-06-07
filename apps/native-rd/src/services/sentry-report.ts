@@ -132,7 +132,8 @@ export type BreadcrumbInput =
     }
   | { category: "badge"; message: "build" | "sign" | "bake" | "store" }
   | { category: "key"; message: "generate" | "verify" }
-  | { category: "focus"; message: "enter" | "exit" };
+  | { category: "focus"; message: "enter" | "exit" }
+  | { category: "appstate"; message: "defer" | "flush" | "drop" };
 
 // Hides Sentry.addBreadcrumb so call sites cannot pass arbitrary data — the
 // closed BreadcrumbInput is the privacy guarantee.
