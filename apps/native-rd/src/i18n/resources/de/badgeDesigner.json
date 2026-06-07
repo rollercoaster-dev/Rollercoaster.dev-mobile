@@ -105,6 +105,10 @@
     "custom": "Benutzerdefiniert",
     "customHint": "Öffnet die Farbauswahl",
     "contrastWarning": "Geringer Kontrast — Text könnte schwer lesbar sein",
+    "opacityLabel": "Füllungsdeckkraft",
+    "opacityA11y": "Deckkraft der Duoton-Füllung",
+    "opacityHint": "Passt die Deckkraft der sekundären Symbolfüllung an",
+    "opacityValue": "{{value}} %",
     "options": {
       "purple": "Violett",
       "mint": "Mint",

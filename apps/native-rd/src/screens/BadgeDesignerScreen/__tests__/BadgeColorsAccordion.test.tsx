@@ -40,6 +40,7 @@ function makeHandlers() {
     onChangeBorder: jest.fn(),
     onChangeFrame: jest.fn(),
     onChangeIcon: jest.fn(),
+    onChangeIconDuotoneOpacity: jest.fn(),
     onOpenCustomPicker: jest.fn(),
   };
 }
@@ -232,6 +233,59 @@ describe("BadgeColorsAccordion", () => {
       openIcon();
       fireEvent.press(screen.getByLabelText("Purple icon color"));
       expect(handlers.onChangeIcon).toHaveBeenCalledWith("#a78bfa");
+    });
+
+    it.each([
+      BadgeIconWeight.thin,
+      BadgeIconWeight.light,
+      BadgeIconWeight.regular,
+      BadgeIconWeight.bold,
+      BadgeIconWeight.fill,
+    ])("hides opacity for %s icons", (iconWeight) => {
+      renderWithProviders(
+        <BadgeColorsAccordion
+          design={createDesign({ iconWeight })}
+          {...makeHandlers()}
+        />,
+      );
+      openIcon();
+      expect(screen.queryByLabelText("Duotone fill opacity")).toBeNull();
+    });
+
+    it("shows the fallback percentage and changes duotone opacity", () => {
+      const handlers = makeHandlers();
+      renderWithProviders(
+        <BadgeColorsAccordion
+          design={createDesign({ iconWeight: BadgeIconWeight.duotone })}
+          {...handlers}
+        />,
+      );
+      openIcon();
+      expect(screen.getByTestId("duotone-opacity-value")).toHaveTextContent(
+        "20%",
+      );
+      fireEvent(
+        screen.getByLabelText("Duotone fill opacity"),
+        "accessibilityAction",
+        { nativeEvent: { actionName: "increment" } },
+      );
+      expect(handlers.onChangeIconDuotoneOpacity).toHaveBeenCalledWith(0.3);
+    });
+
+    it("displays the stored duotone percentage", () => {
+      renderWithProviders(
+        <BadgeColorsAccordion
+          design={createDesign({
+            iconWeight: BadgeIconWeight.duotone,
+            iconDuotoneOpacity: 0.6,
+          })}
+          {...makeHandlers()}
+        />,
+      );
+      openIcon();
+      expect(screen.getByTestId("duotone-opacity-value")).toHaveTextContent(
+        "60%",
+      );
     });
   });
 

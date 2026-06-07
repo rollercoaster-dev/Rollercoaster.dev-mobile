@@ -49,6 +49,8 @@ module.exports = {
 
     // Animation/styling — native thread integration
     "^react-native-reanimated$": "<rootDir>/src/__tests__/mocks/reanimated.ts",
+    "^react-native-gesture-handler$":
+      "<rootDir>/src/__tests__/mocks/gesture-handler.tsx",
 
     // Layout — native safe area insets
     "^react-native-safe-area-context$":

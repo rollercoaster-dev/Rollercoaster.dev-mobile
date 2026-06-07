@@ -8,8 +8,16 @@ import { useUnistyles } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
 
 import { Text } from "../../components/Text";
+import { BrutalistSlider } from "../../components/BrutalistSlider";
 import { ColorPicker } from "../../badges/ColorPicker";
-import { BADGE_COLOR_THEME_SENTINEL, BadgeFrame } from "../../badges/types";
+import {
+  BADGE_COLOR_THEME_SENTINEL,
+  BADGE_DUOTONE_OPACITY_DEFAULT,
+  BADGE_DUOTONE_OPACITY_MAX,
+  BADGE_DUOTONE_OPACITY_MIN,
+  BADGE_DUOTONE_OPACITY_STEP,
+  BadgeFrame,
+} from "../../badges/types";
 import type { BadgeDesign } from "../../badges/types";
 import { getSafeTextColor, meetsWCAG } from "../../utils/accessibility";
 import { ChannelPalette } from "./ChannelPalette";
@@ -36,6 +44,7 @@ export interface BadgeColorsAccordionProps {
   onChangeBorder: (value: typeof BADGE_COLOR_THEME_SENTINEL | string) => void;
   onChangeFrame: (value: typeof BADGE_COLOR_THEME_SENTINEL | string) => void;
   onChangeIcon: (value: typeof BADGE_COLOR_THEME_SENTINEL | string) => void;
+  onChangeIconDuotoneOpacity: (value: number) => void;
   onOpenCustomPicker: (channel: Channel) => void;
 }
 
@@ -46,6 +55,7 @@ export function BadgeColorsAccordion({
   onChangeBorder,
   onChangeFrame,
   onChangeIcon,
+  onChangeIconDuotoneOpacity,
   onOpenCustomPicker,
 }: BadgeColorsAccordionProps) {
   const { theme } = useUnistyles();
@@ -220,6 +230,42 @@ export function BadgeColorsAccordion({
             onSelectHex={onChangeIcon}
             onOpenCustom={() => onOpenCustomPicker("icon")}
           />
+          {design.iconWeight === "duotone" && (
+            <View style={styles.opacityControl}>
+              <View style={styles.opacityLabelRow}>
+                <Text variant="label">{t("iconColor.opacityLabel")}</Text>
+                <Text variant="label" testID="duotone-opacity-value">
+                  {t("iconColor.opacityValue", {
+                    value: Math.round(
+                      (design.iconDuotoneOpacity ??
+                        BADGE_DUOTONE_OPACITY_DEFAULT) * 100,
+                    ),
+                  })}
+                </Text>
+              </View>
+              <BrutalistSlider
+                value={
+                  design.iconDuotoneOpacity ?? BADGE_DUOTONE_OPACITY_DEFAULT
+                }
+                minimumValue={BADGE_DUOTONE_OPACITY_MIN}
+                maximumValue={BADGE_DUOTONE_OPACITY_MAX}
+                step={BADGE_DUOTONE_OPACITY_STEP}
+                onValueChange={onChangeIconDuotoneOpacity}
+                accessibilityLabel={t("iconColor.opacityA11y")}
+                accessibilityHint={t("iconColor.opacityHint")}
+                formatA11yValue={({
+                  value: v,
+                  minimumValue: lo,
+                  maximumValue: hi,
+                }) => ({
+                  min: Math.round(lo * 100),
+                  max: Math.round(hi * 100),
+                  now: Math.round(v * 100),
+                  text: `${Math.round(v * 100)}%`,
+                })}
+              />
+            </View>
+          )}
           {showIconContrastWarning && (
             <Text
               variant="caption"

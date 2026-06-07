@@ -7,6 +7,9 @@ import {
   BadgeIconWeight,
   BadgeCenterMode,
   BADGE_COLOR_THEME_SENTINEL,
+  BADGE_DUOTONE_OPACITY_DEFAULT,
+  BADGE_DUOTONE_OPACITY_MAX,
+  BADGE_DUOTONE_OPACITY_MIN,
   PathTextPosition,
   BannerPosition,
   createDefaultBadgeDesign,
@@ -66,6 +69,7 @@ describe("createDefaultBadgeDesign", () => {
       color: "#ffe50c",
       iconName: "Trophy",
       iconWeight: "regular",
+      iconDuotoneOpacity: BADGE_DUOTONE_OPACITY_DEFAULT,
       title: "Learn TypeScript",
       centerMode: "monogram",
       monogram: "L",
@@ -183,7 +187,55 @@ describe("parseBadgeDesign", () => {
     expect(result!.centerMode).toBe("icon");
     expect(result!.monogram).toBeUndefined();
     expect(result!.banner).toBeUndefined();
+    expect(result!.iconDuotoneOpacity).toBeUndefined();
   });
+
+  test.each([BADGE_DUOTONE_OPACITY_MIN, 0.6, BADGE_DUOTONE_OPACITY_MAX])(
+    "preserves valid duotone opacity %s",
+    (iconDuotoneOpacity) => {
+      const design = createDefaultBadgeDesign("Test");
+      design.iconDuotoneOpacity = iconDuotoneOpacity;
+      expect(parseBadgeDesign(JSON.stringify(design))?.iconDuotoneOpacity).toBe(
+        iconDuotoneOpacity,
+      );
+    },
+  );
+
+  test.each([
+    [0.65, 0.7],
+    [0.34, 0.3],
+    [0.21, 0.2],
+  ])(
+    "snaps in-range duotone opacity %s to nearest step (%s)",
+    (raw, snapped) => {
+      const design = {
+        ...createDefaultBadgeDesign("Test"),
+        iconDuotoneOpacity: raw,
+      };
+      expect(parseBadgeDesign(JSON.stringify(design))?.iconDuotoneOpacity).toBe(
+        snapped,
+      );
+    },
+  );
+
+  test.each([0.19, 1.01, Number.NaN, Number.POSITIVE_INFINITY, "0.6"])(
+    "drops invalid duotone opacity %s",
+    (iconDuotoneOpacity) => {
+      const design = {
+        ...createDefaultBadgeDesign("Test"),
+        iconDuotoneOpacity,
+      };
+      expect(
+        parseBadgeDesign(JSON.stringify(design))?.iconDuotoneOpacity,
+      ).toBeUndefined();
+      expect(mockedReportError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: "Invalid stored BadgeDesign iconDuotoneOpacity",
+        }),
+        { area: "badge.parse", kind: "opacity-field" },
+      );
+    },
+  );
 
   test("parses design with all new fields", () => {
     const fullDesign: BadgeDesign = {

@@ -46,7 +46,17 @@ const { registerRootComponent } = require("expo");
 if (process.env.EXPO_PUBLIC_STORYBOOK_ENABLED === "true") {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const StorybookUI = require("./.storybook").default;
-  registerRootComponent(StorybookUI);
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const React = require("react");
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { GestureHandlerRootView } = require("react-native-gesture-handler");
+  const StorybookRoot = () =>
+    React.createElement(
+      GestureHandlerRootView,
+      { style: { flex: 1 } },
+      React.createElement(StorybookUI),
+    );
+  registerRootComponent(StorybookRoot);
 } else {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { App } = require("./App");

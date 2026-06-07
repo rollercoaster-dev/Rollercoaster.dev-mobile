@@ -105,6 +105,10 @@
     "custom": "Custom",
     "customHint": "Opens the color picker",
     "contrastWarning": "Low contrast — text may be hard to read",
+    "opacityLabel": "Fill opacity",
+    "opacityA11y": "Duotone fill opacity",
+    "opacityHint": "Adjusts the icon's secondary fill opacity",
+    "opacityValue": "{{value}}%",
     "options": {
       "purple": "Purple",
       "mint": "Mint",

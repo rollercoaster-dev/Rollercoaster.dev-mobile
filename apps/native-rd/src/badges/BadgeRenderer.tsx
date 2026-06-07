@@ -353,6 +353,11 @@ export const BadgeRenderer = forwardRef<
               size={iconSize}
               weight={(design.iconWeight ?? "regular") as IconWeight}
               color={resolvedIconColor}
+              duotoneOpacity={
+                design.iconWeight === "duotone"
+                  ? design.iconDuotoneOpacity
+                  : undefined
+              }
             />
           </G>
         )

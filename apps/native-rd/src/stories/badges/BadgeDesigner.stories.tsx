@@ -173,6 +173,9 @@ function BadgeDesignerComposer({
                 return { ...prev, iconColor: value };
               })
             }
+            onChangeIconDuotoneOpacity={(iconDuotoneOpacity) =>
+              setDesign((prev) => ({ ...prev, iconDuotoneOpacity }))
+            }
             onOpenCustomPicker={() => {
               // Storybook stub — the full-screen ColorPickerModal flow lives
               // in BadgeDesignerScreen, outside the scope of this story.
