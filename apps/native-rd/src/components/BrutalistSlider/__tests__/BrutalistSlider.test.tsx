@@ -8,19 +8,6 @@ import {
   valueToPosition,
 } from "../BrutalistSlider";
 
-jest.mock("react-native-gesture-handler", () => ({
-  GestureDetector: ({ children }: { children: React.ReactNode }) => children,
-  Gesture: {
-    Pan: () => {
-      const gesture = {
-        onBegin: () => gesture,
-        onUpdate: () => gesture,
-      };
-      return gesture;
-    },
-  },
-}));
-
 describe("BrutalistSlider", () => {
   it("clamps and snaps values", () => {
     expect(clampAndSnap(0.14, 0.2, 1, 0.1)).toBe(0.2);

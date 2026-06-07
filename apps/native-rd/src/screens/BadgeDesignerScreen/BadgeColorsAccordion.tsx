@@ -8,6 +8,7 @@ import { useUnistyles } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
 
 import { Text } from "../../components/Text";
+import { BrutalistSlider } from "../../components/BrutalistSlider";
 import { ColorPicker } from "../../badges/ColorPicker";
 import { BADGE_COLOR_THEME_SENTINEL, BadgeFrame } from "../../badges/types";
 import type { BadgeDesign } from "../../badges/types";
@@ -36,6 +37,7 @@ export interface BadgeColorsAccordionProps {
   onChangeBorder: (value: typeof BADGE_COLOR_THEME_SENTINEL | string) => void;
   onChangeFrame: (value: typeof BADGE_COLOR_THEME_SENTINEL | string) => void;
   onChangeIcon: (value: typeof BADGE_COLOR_THEME_SENTINEL | string) => void;
+  onChangeIconDuotoneOpacity: (value: number) => void;
   onOpenCustomPicker: (channel: Channel) => void;
 }
 
@@ -46,6 +48,7 @@ export function BadgeColorsAccordion({
   onChangeBorder,
   onChangeFrame,
   onChangeIcon,
+  onChangeIconDuotoneOpacity,
   onOpenCustomPicker,
 }: BadgeColorsAccordionProps) {
   const { theme } = useUnistyles();
@@ -220,6 +223,27 @@ export function BadgeColorsAccordion({
             onSelectHex={onChangeIcon}
             onOpenCustom={() => onOpenCustomPicker("icon")}
           />
+          {design.iconWeight === "duotone" && (
+            <View style={styles.opacityControl}>
+              <View style={styles.opacityLabelRow}>
+                <Text variant="label">{t("iconColor.opacityLabel")}</Text>
+                <Text variant="label" testID="duotone-opacity-value">
+                  {t("iconColor.opacityValue", {
+                    value: Math.round((design.iconDuotoneOpacity ?? 0.2) * 100),
+                  })}
+                </Text>
+              </View>
+              <BrutalistSlider
+                value={design.iconDuotoneOpacity ?? 0.2}
+                minimumValue={0.2}
+                maximumValue={1}
+                step={0.1}
+                onValueChange={onChangeIconDuotoneOpacity}
+                accessibilityLabel={t("iconColor.opacityA11y")}
+                accessibilityHint={t("iconColor.opacityHint")}
+              />
+            </View>
+          )}
           {showIconContrastWarning && (
             <Text
               variant="caption"
