@@ -24,6 +24,10 @@ The always-on runtime spine: how the app boots, how the first-launch gate works,
 
 **Deferred:**
 
+_(filled in during prep)_
+
+**Notes**
+
 - Navigation primitives (TabNavigator, stacks, FocusPillTabBar) — slice 2
 - Theme bootstrap internals (`useTheme`, `useThemePersistence` persistence half) — slice 3 (data) + slice 4 (theming)
 - Build-pipeline Sentry plugin config (sourcemap upload, debug-id flow) — slice 8
@@ -39,25 +43,16 @@ The always-on runtime spine: how the app boots, how the first-launch gate works,
     - Hermes is RN's JavaScript engine. It lags behind V8 and it pulls in a few polyfills to compensate
     - Unistyles is the styling solution used in the app. Must be imported before any components that use it
     - sentry, error tracking. as soon as its loaded we get error tracking enabled automatically. It also uses the polyfills and is crucial for catching if i18n throws
-    -
-- `App.tsx` — So storybook renders it's own app shell instead of a seperate instance.
-
-  ```typescript
-  const STORYBOOK_ENABLED =
-    process.env.EXPO_PUBLIC_STORYBOOK_ENABLED === "true";
-
-  let StorybookUI: React.ComponentType | null = null;
-  if (STORYBOOK_ENABLED) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    StorybookUI = require("./.storybook").default;
-  }
-  ```
-
+    - c
+- `App.tsx`
+  - storybook renders it's own app shell instead of a seperate instance when env var is set.
 - `src/hooks/useTheme.ts` — theme context and persistence logic
   - added an input guard to isValidThemeName
   - deferring until 04 (theming)
-
-_(filled in during prep)_
+- `src/components/ErrorBoundary/**` still uses classes, never ported to hooks
+  - https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary
+  - no hook equivalent for componentDidCatch / getDerivedStateFromError
+- `src/components/Toast/**`
 
 ## Mental model
 
@@ -65,7 +60,7 @@ _(filled in after walkthrough)_
 
 ## RN concepts encountered
 
-_(filled in during walkthrough — expect: dev-client vs Expo Go, `expo-router` vs raw react-navigation root, SafeAreaProvider, Sentry React Native debug-ID sourcemap flow, top-level `registerRootComponent`)_
+Storybook rendering a wrapper and how providers work. very oniony.
 
 ## Lens scan
 
@@ -81,7 +76,8 @@ _(filled in during walkthrough — expect: dev-client vs Expo Go, `expo-router` 
 
 ## Findings
 
-- _(none yet)_
+- index.ts
+  - added // eslint-disable-next-line @typescript-eslint/no-require-imports where missing
 
 ## Open questions
 
