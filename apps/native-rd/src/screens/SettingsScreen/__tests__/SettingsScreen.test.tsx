@@ -5,10 +5,29 @@ import {
   renderWithProviders,
   screen,
   fireEvent,
+  waitFor,
 } from "../../../__tests__/test-utils";
 import { i18n } from "../../../i18n";
+import { Logger } from "../../../shims/rd-logger";
 
 import { isSentryDebugToolsEnabled, SettingsScreen } from "../SettingsScreen";
+
+// jest.config.js maps "../shims/rd-logger" to a mock that returns a fresh
+// `{ error, warn, info, debug }` instance per `new Logger(...)`. SettingsScreen
+// instantiates exactly one logger at module load. Capture that instance now —
+// `beforeEach(jest.clearAllMocks)` wipes the constructor's call history, but the
+// instance reference (and its `error` jest.fn() call history, also cleared) lives on.
+const MockLogger = Logger as unknown as jest.Mock;
+const settingsScreenLoggerIdx = MockLogger.mock.calls.findIndex(
+  (call: unknown[]) => call[0] === "SettingsScreen",
+);
+if (settingsScreenLoggerIdx < 0) {
+  throw new Error(
+    "SettingsScreen did not instantiate a Logger at module load — did the import order change?",
+  );
+}
+const settingsScreenLogger = MockLogger.mock.results[settingsScreenLoggerIdx]
+  .value as { error: jest.Mock };
 
 // RN's jest setup sets __DEV__ as a runtime global; TS doesn't see it here.
 const devGlobal = global as unknown as { __DEV__: boolean };
@@ -312,6 +331,28 @@ describe("SettingsScreen", () => {
 
       fireEvent(toggle, "valueChange", false);
       expect(changeSpy).toHaveBeenLastCalledWith("en");
+
+      changeSpy.mockRestore();
+    });
+
+    it("logs an error via the SettingsScreen logger when changeLanguage rejects", async () => {
+      devGlobal.__DEV__ = true;
+      const boom = new Error("loader exploded");
+      const changeSpy = jest
+        .spyOn(i18n, "changeLanguage")
+        .mockRejectedValueOnce(boom);
+
+      renderWithProviders(<SettingsScreen />);
+      const toggle = screen.getByLabelText(i18n.t("settings:language.pseudo"));
+
+      fireEvent(toggle, "valueChange", true);
+
+      await waitFor(() => {
+        expect(settingsScreenLogger.error).toHaveBeenCalledWith(
+          "changeLanguage failed",
+          { error: boom },
+        );
+      });
 
       changeSpy.mockRestore();
     });

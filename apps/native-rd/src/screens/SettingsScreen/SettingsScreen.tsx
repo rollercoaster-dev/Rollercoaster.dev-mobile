@@ -21,7 +21,10 @@ import { SettingsRow } from "../../components/SettingsRow";
 import { ThemeSwitcher } from "../../components/ThemeSwitcher";
 import { useDensity } from "../../hooks/useDensity";
 import { densityOptions } from "../../utils/density";
+import { Logger } from "../../shims/rd-logger";
 import { styles } from "./SettingsScreen.styles";
+
+const logger = new Logger("SettingsScreen");
 
 export function isSentryDebugToolsEnabled(value: string | undefined): boolean {
   return value === "true";
@@ -78,7 +81,13 @@ function LanguagePicker() {
         toggle={{
           value: isPseudo,
           onValueChange: (next) => {
-            void i18n.changeLanguage(next ? "pseudo" : "en");
+            i18n
+              .changeLanguage(next ? "pseudo" : "en")
+              .catch((err: unknown) => {
+                const error =
+                  err instanceof Error ? err : new Error(String(err));
+                logger.error("changeLanguage failed", { error });
+              });
           },
         }}
       />
