@@ -14,3 +14,4 @@ Completed research documents. These informed ADRs but are not the decisions them
 | [sync-and-backend-architecture.md](./sync-and-backend-architecture.md)               | Badge visibility, what-leaves-device, tiers, self-hosting    | 2026-05-22    |
 | [step-model-gap.md](./step-model-gap.md)                                             | A–G taxonomy, three-register thesis, four failure scenarios  | 2026-05-22    |
 | [web-privacy-local-first.md](./web-privacy-local-first.md)                           | Web feasibility, privacy parity, local-first stack, scope    | 2026-05-25    |
+| [duotone-opacity-slider.md](./duotone-opacity-slider.md)                             | Slider lib evaluation for duotone fill opacity in Icon tab   | 2026-06-07    |
