@@ -196,16 +196,9 @@ export function BrutalistSlider({
     [isRTL ? "right" : "left"]: 0,
   }));
 
-  const marks = [];
-  if (validConfiguration) {
-    for (
-      let mark = minimumValue;
-      mark <= maximumValue + step / 2;
-      mark += step
-    ) {
-      marks.push(mark);
-    }
-  }
+  const markCount = validConfiguration
+    ? Math.round((maximumValue - minimumValue) / step) + 1
+    : 0;
 
   const handleLayout = (event: LayoutChangeEvent) => {
     setTrackWidth(event.nativeEvent.layout.width);
@@ -248,8 +241,8 @@ export function BrutalistSlider({
         >
           <Animated.View style={[styles.fill, fillStyle]} />
           <View style={styles.marks} pointerEvents="none">
-            {marks.map((mark) => (
-              <View key={mark} style={styles.mark} />
+            {Array.from({ length: markCount }, (_, i) => (
+              <View key={i} style={styles.mark} />
             ))}
           </View>
           <Animated.View style={[styles.thumb, thumbStyle]} />
