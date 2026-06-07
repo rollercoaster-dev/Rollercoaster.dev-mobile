@@ -102,7 +102,13 @@ describe("BrutalistSlider", () => {
     fireEvent(getByTestId("opacity-track"), "layout", {
       nativeEvent: { layout: { width: 100, height: 12, x: 0, y: 0 } },
     });
-    fireGesture("update", { x: 50 });
+    fireGesture("update", { x: 62 });
     expect(onValueChange).toHaveBeenCalledWith(0.6);
+
+    fireGesture("begin", { x: 12 });
+    expect(onValueChange).toHaveBeenLastCalledWith(0.2);
+
+    fireGesture("update", { x: 112 });
+    expect(onValueChange).toHaveBeenLastCalledWith(1);
   });
 });
