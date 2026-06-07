@@ -31,7 +31,12 @@ jest.mock("../../../db", () => ({
   createGoal: jest.fn(),
 }));
 
+jest.mock("../../../services/sentry-report", () => ({
+  reportError: jest.fn(),
+}));
+
 const { createGoal } = require("../../../db");
+const { reportError } = require("../../../services/sentry-report");
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -80,6 +85,7 @@ describe("NewGoalModal", () => {
       screen.getByText(i18n.t("newGoal:errors.titleRequired")),
     ).toBeOnTheScreen();
     expect(createGoal).not.toHaveBeenCalled();
+    expect(reportError).not.toHaveBeenCalled();
   });
 
   it("shows validation error on submit editing with whitespace title", () => {
@@ -96,6 +102,7 @@ describe("NewGoalModal", () => {
       screen.getByText(i18n.t("newGoal:errors.titleRequired")),
     ).toBeOnTheScreen();
     expect(createGoal).not.toHaveBeenCalled();
+    expect(reportError).not.toHaveBeenCalled();
   });
 
   it("creates goal and navigates to BadgeDesigner on valid submit", () => {
@@ -113,6 +120,7 @@ describe("NewGoalModal", () => {
       mode: "new-goal",
       goalId: "goal-123",
     });
+    expect(reportError).not.toHaveBeenCalled();
   });
 
   it("trims title before creating goal", () => {
@@ -126,10 +134,12 @@ describe("NewGoalModal", () => {
       screen.getByRole("button", { name: i18n.t("newGoal:cta.create") }),
     );
     expect(createGoal).toHaveBeenCalledWith("Learn Rust");
+    expect(reportError).not.toHaveBeenCalled();
   });
 
-  it("shows error when createGoal fails", () => {
-    createGoal.mockReturnValue({ ok: false });
+  it("shows error and reports to Sentry when createGoal returns !ok", () => {
+    const evoluError = { type: "ValidMutationSizeError" };
+    createGoal.mockReturnValue({ ok: false, error: evoluError });
     renderWithProviders(<NewGoalModal />);
     fireEvent.changeText(
       screen.getByLabelText(i18n.t("newGoal:fields.title.label")),
@@ -143,6 +153,36 @@ describe("NewGoalModal", () => {
     expect(
       screen.getByText(i18n.t("newGoal:errors.createFailed")),
     ).toBeOnTheScreen();
+    expect(reportError).toHaveBeenCalledWith(evoluError, {
+      area: "goal.mutate",
+      kind: "create",
+    });
+    expect(reportError).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows error and reports to Sentry when createGoal throws", () => {
+    const thrown = new Error("db locked");
+    createGoal.mockImplementation(() => {
+      throw thrown;
+    });
+    renderWithProviders(<NewGoalModal />);
+    fireEvent.changeText(
+      screen.getByLabelText(i18n.t("newGoal:fields.title.label")),
+      "Learn Zig",
+    );
+    fireEvent.press(
+      screen.getByRole("button", { name: i18n.t("newGoal:cta.create") }),
+    );
+    expect(createGoal).toHaveBeenCalledWith("Learn Zig");
+    expect(mockReplace).not.toHaveBeenCalled();
+    expect(
+      screen.getByText(i18n.t("newGoal:errors.createFailed")),
+    ).toBeOnTheScreen();
+    expect(reportError).toHaveBeenCalledWith(thrown, {
+      area: "goal.mutate",
+      kind: "create",
+    });
+    expect(reportError).toHaveBeenCalledTimes(1);
   });
 
   describe("pseudo locale", () => {

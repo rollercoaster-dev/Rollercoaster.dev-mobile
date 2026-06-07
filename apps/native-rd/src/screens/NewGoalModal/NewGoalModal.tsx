@@ -11,6 +11,7 @@ import { IconButton } from "../../components/IconButton";
 import { Input } from "../../components/Input";
 import { Button } from "../../components/Button";
 import { createGoal } from "../../db";
+import { reportError } from "../../services/sentry-report";
 import type { GoalsStackParamList } from "../../navigation/types";
 import { styles } from "./NewGoalModal.styles";
 
@@ -33,13 +34,19 @@ export function NewGoalModal() {
       return;
     }
 
-    const result = createGoal(trimmed);
-    if (result.ok) {
-      navigation.replace("BadgeDesigner", {
-        mode: "new-goal",
-        goalId: result.value.id,
-      });
-    } else {
+    try {
+      const result = createGoal(trimmed);
+      if (result.ok) {
+        navigation.replace("BadgeDesigner", {
+          mode: "new-goal",
+          goalId: result.value.id,
+        });
+      } else {
+        reportError(result.error, { area: "goal.mutate", kind: "create" });
+        setTitleErrorKey("errors.createFailed");
+      }
+    } catch (error) {
+      reportError(error, { area: "goal.mutate", kind: "create" });
       setTitleErrorKey("errors.createFailed");
     }
   }
