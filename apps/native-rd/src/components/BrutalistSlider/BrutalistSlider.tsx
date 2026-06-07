@@ -12,7 +12,9 @@ import Animated, {
   useSharedValue,
 } from "react-native-reanimated";
 
-import { styles } from "./BrutalistSlider.styles";
+import { styles, THUMB_SIZE } from "./BrutalistSlider.styles";
+
+const TRACK_HORIZONTAL_INSET = THUMB_SIZE / 2;
 
 export interface BrutalistSliderProps {
   value: number;
@@ -170,11 +172,17 @@ export function BrutalistSlider({
     () =>
       Gesture.Pan()
         .onBegin((event) => {
-          position.value = Math.min(trackWidth, Math.max(0, event.x));
+          position.value = Math.min(
+            trackWidth,
+            Math.max(0, event.x - TRACK_HORIZONTAL_INSET),
+          );
           runOnJS(updateFromPositionRef.current)(position.value);
         })
         .onUpdate((event) => {
-          position.value = Math.min(trackWidth, Math.max(0, event.x));
+          position.value = Math.min(
+            trackWidth,
+            Math.max(0, event.x - TRACK_HORIZONTAL_INSET),
+          );
           runOnJS(updateFromPositionRef.current)(position.value);
         }),
     [position, trackWidth],

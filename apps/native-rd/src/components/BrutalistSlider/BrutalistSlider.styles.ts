@@ -1,6 +1,6 @@
 import { StyleSheet } from "react-native-unistyles";
 
-const THUMB_SIZE = 24;
+export const THUMB_SIZE = 24;
 
 export const styles = StyleSheet.create((theme) => ({
   touchTarget: {
