@@ -6,6 +6,7 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import { KeyboardProvider } from "react-native-keyboard-controller";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import {
   NavigationContainer,
   DefaultTheme,
@@ -122,14 +123,16 @@ export function App() {
   }
 
   return (
-    <ThemeProvider value={themeState}>
-      <EvoluAppProvider>
-        <SafeAreaProvider>
-          <KeyboardProvider>
-            <ThemedApp />
-          </KeyboardProvider>
-        </SafeAreaProvider>
-      </EvoluAppProvider>
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider value={themeState}>
+        <EvoluAppProvider>
+          <SafeAreaProvider>
+            <KeyboardProvider>
+              <ThemedApp />
+            </KeyboardProvider>
+          </SafeAreaProvider>
+        </EvoluAppProvider>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }
