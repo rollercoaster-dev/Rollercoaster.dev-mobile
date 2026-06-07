@@ -1,5 +1,23 @@
 import { renderHook, act } from "@testing-library/react-native";
+import { AppState, type AppStateStatus } from "react-native";
 import { UnistylesRuntime } from "react-native-unistyles";
+
+type ChangeListener = (status: AppStateStatus) => void;
+
+let appStateListeners: ChangeListener[] = [];
+let appStateSpy: jest.SpyInstance | undefined;
+
+function setAppState(status: AppStateStatus) {
+  if (appStateSpy) appStateSpy.mockRestore();
+  appStateSpy = jest
+    .spyOn(AppState, "currentState", "get")
+    .mockReturnValue(status);
+}
+
+function emitAppState(status: AppStateStatus) {
+  setAppState(status);
+  for (const fn of [...appStateListeners]) fn(status);
+}
 
 const mockUseQuery = jest.fn();
 jest.mock("@evolu/react", () => {
@@ -30,6 +48,25 @@ beforeEach(() => {
   setThemeSpy.mockClear();
   mockUseQuery.mockReturnValue([]);
   __resetUserSettingsRowInitForTests();
+
+  appStateListeners = [];
+  setAppState("active");
+  jest.spyOn(AppState, "addEventListener").mockImplementation(((
+    _: string,
+    cb: ChangeListener,
+  ) => {
+    appStateListeners.push(cb);
+    return {
+      remove: () => {
+        appStateListeners = appStateListeners.filter((l) => l !== cb);
+      },
+    };
+  }) as unknown as typeof AppState.addEventListener);
+});
+
+afterEach(() => {
+  if (appStateSpy) appStateSpy.mockRestore();
+  appStateSpy = undefined;
 });
 
 const makeSettings = (overrides: Record<string, unknown> = {}) => ({
@@ -151,6 +188,60 @@ describe("useThemePersistence", () => {
       rerender({});
       expect(setThemeSpy).toHaveBeenLastCalledWith("dark-default");
       expect(setThemeSpy).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe("AppState guard (NATIVE-RD-4 workaround)", () => {
+    it("does not call setTheme while backgrounded; flushes on resume", () => {
+      setAppState("background");
+      mockUseQuery.mockReturnValue([makeSettings({ theme: "dark-default" })]);
+      renderHook(() => useThemePersistence());
+      expect(setThemeSpy).not.toHaveBeenCalled();
+
+      act(() => emitAppState("active"));
+      expect(setThemeSpy).toHaveBeenCalledWith("dark-default");
+      expect(setThemeSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("defers a user-initiated setTheme() while backgrounded", () => {
+      setAppState("background");
+      mockUseQuery.mockReturnValue([makeSettings({ theme: null })]);
+      const { result } = renderHook(() => useThemePersistence());
+
+      act(() => result.current.setTheme("dark-default"));
+      // Evolu write happens immediately (preserves intent across restart)…
+      expect(mockUpdateUserSettings).toHaveBeenCalledWith("settings-1", {
+        theme: "dark-default",
+      });
+      // …but the Unistyles call is deferred to avoid the shadow-tree crash.
+      expect(setThemeSpy).not.toHaveBeenCalled();
+
+      act(() => emitAppState("active"));
+      expect(setThemeSpy).toHaveBeenCalledWith("dark-default");
+    });
+
+    it("dedupes a re-emitted same theme while a deferred call is pending", () => {
+      setAppState("background");
+      mockUseQuery.mockReturnValue([makeSettings({ theme: "dark-default" })]);
+      const { rerender } = renderHook(() => useThemePersistence());
+      // Same value re-emitted (e.g. Evolu sync echo).
+      rerender({});
+      rerender({});
+
+      act(() => emitAppState("active"));
+      // Only one flushed call, despite two re-renders while paused.
+      expect(setThemeSpy).toHaveBeenCalledTimes(1);
+      expect(setThemeSpy).toHaveBeenCalledWith("dark-default");
+    });
+
+    it("defers the invalid-theme fallback while backgrounded", () => {
+      setAppState("background");
+      mockUseQuery.mockReturnValue([makeSettings({ theme: "dark-dyslexia" })]);
+      renderHook(() => useThemePersistence());
+      expect(setThemeSpy).not.toHaveBeenCalled();
+
+      act(() => emitAppState("active"));
+      expect(setThemeSpy).toHaveBeenCalledWith("light-default");
     });
   });
 });
