@@ -17,7 +17,7 @@
     },
     "apps/native-rd": {
       "name": "native-rd",
-      "version": "0.1.13",
+      "version": "0.1.14",
       "dependencies": {
         "@evolu/common": "^7.4.1",
         "@evolu/react": "^10.4.0",
@@ -142,6 +142,7 @@
     },
   },
   "patchedDependencies": {
+    "react-native-unistyles@3.2.5": "patches/react-native-unistyles@3.2.5.patch",
     "ajv-formats@3.0.1": "patches/ajv-formats@3.0.1.patch",
   },
   "packages": {
