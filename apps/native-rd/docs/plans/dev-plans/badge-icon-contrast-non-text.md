@@ -11,7 +11,7 @@ AA 4.5:1 against the fill:
 Two things are wrong with this:
 
 1. **The threshold is wrong.** 4.5:1 is WCAG 2.1 SC 1.4.3, which governs
-   *text and images of text*. The painted icon/monogram is neither — it's a
+   _text and images of text_. The painted icon/monogram is neither — it's a
    non-text UI component, and the applicable clause is SC 1.4.11, which
    requires only **3:1**.
 2. **The copy is wrong.** The string literally says "text may be hard to
@@ -23,7 +23,7 @@ as if they'd broken text accessibility.
 ## Decision
 
 Keep the warning, fix both problems. The warning still serves a purpose at
-the *real* 3:1 floor — a white-on-white or near-tonal pick should still
+the _real_ 3:1 floor — a white-on-white or near-tonal pick should still
 surface a visibility hint — but the trigger and the copy need to match what
 we're actually checking.
 
@@ -127,11 +127,11 @@ existing `[ … ························]` padding patte
 
 ## Validation
 
-| Step           | Command                                               |
-| -------------- | ----------------------------------------------------- |
-| Typecheck      | `bun run type-check`                                  |
-| Lint           | `bun run lint`                                        |
-| Targeted tests | `bun test --testPathPatterns BadgeColorsAccordion`    |
+| Step           | Command                                                      |
+| -------------- | ------------------------------------------------------------ |
+| Typecheck      | `bun run type-check`                                         |
+| Lint           | `bun run lint`                                               |
+| Targeted tests | `bun test --testPathPatterns BadgeColorsAccordion`           |
 | Visual         | `npx expo run:ios` — badge designer → Colors → Icon → Custom |
 
 Visual checks:
