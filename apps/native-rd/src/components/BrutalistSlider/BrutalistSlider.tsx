@@ -16,6 +16,30 @@ import { styles, THUMB_SIZE } from "./BrutalistSlider.styles";
 
 const TRACK_HORIZONTAL_INSET = THUMB_SIZE / 2;
 
+export interface A11ySliderValue {
+  min: number;
+  max: number;
+  now: number;
+  text: string;
+}
+
+export interface FormatA11yValueArg {
+  value: number;
+  minimumValue: number;
+  maximumValue: number;
+}
+
+const defaultFormatA11yValue = ({
+  value,
+  minimumValue,
+  maximumValue,
+}: FormatA11yValueArg): A11ySliderValue => ({
+  min: Math.round(minimumValue),
+  max: Math.round(maximumValue),
+  now: Math.round(value),
+  text: `${Math.round(value)}`,
+});
+
 export interface BrutalistSliderProps {
   value: number;
   minimumValue: number;
@@ -24,6 +48,7 @@ export interface BrutalistSliderProps {
   onValueChange: (value: number) => void;
   accessibilityLabel: string;
   accessibilityHint?: string;
+  formatA11yValue?: (arg: FormatA11yValueArg) => A11ySliderValue;
   testID?: string;
 }
 
@@ -68,7 +93,10 @@ export function valueToPosition(
   ) {
     return 0;
   }
-  const ratio = (value - minimumValue) / (maximumValue - minimumValue);
+  const ratio = Math.min(
+    1,
+    Math.max(0, (value - minimumValue) / (maximumValue - minimumValue)),
+  );
   return (isRTL ? 1 - ratio : ratio) * width;
 }
 
@@ -101,6 +129,7 @@ export function BrutalistSlider({
   onValueChange,
   accessibilityLabel,
   accessibilityHint,
+  formatA11yValue,
   testID,
 }: BrutalistSliderProps) {
   const [trackWidth, setTrackWidth] = useState(0);
@@ -117,6 +146,7 @@ export function BrutalistSlider({
   sliderConfigRef.current = { minimumValue, maximumValue, step, isRTL };
   const trackWidthRef = useRef(trackWidth);
   trackWidthRef.current = trackWidth;
+  const lastEmittedValueRef = useRef<number | null>(null);
   const validConfiguration =
     Number.isFinite(minimumValue) &&
     Number.isFinite(maximumValue) &&
@@ -156,16 +186,17 @@ export function BrutalistSlider({
     const width = trackWidthRef.current;
     if (width <= 0) return;
     const config = sliderConfigRef.current;
-    valueChangeRef.current(
-      positionToValue(
-        nextPosition,
-        config.minimumValue,
-        config.maximumValue,
-        width,
-        config.step,
-        config.isRTL,
-      ),
+    const nextValue = positionToValue(
+      nextPosition,
+      config.minimumValue,
+      config.maximumValue,
+      width,
+      config.step,
+      config.isRTL,
     );
+    if (lastEmittedValueRef.current === nextValue) return;
+    lastEmittedValueRef.current = nextValue;
+    valueChangeRef.current(nextValue);
   });
 
   const pan = useMemo(
@@ -196,16 +227,30 @@ export function BrutalistSlider({
     [isRTL ? "right" : "left"]: 0,
   }));
 
-  const markCount = validConfiguration
-    ? Math.round((maximumValue - minimumValue) / step) + 1
-    : 0;
+  const marks = [];
+  if (validConfiguration) {
+    // Use half-step tolerance to match the prior float-loop's inclusive
+    // upper bound — e.g. min=0.2/max=1.0/step=0.1 yields 9 ticks (0.2 → 1.0).
+    const tickCount =
+      Math.floor((maximumValue - minimumValue + step / 2) / step) + 1;
+    for (let i = 0; i < tickCount; i++) {
+      marks.push(Number((minimumValue + i * step).toFixed(10)));
+    }
+  }
 
   const handleLayout = (event: LayoutChangeEvent) => {
     setTrackWidth(event.nativeEvent.layout.width);
   };
 
   const handleAccessibilityAction = (event: AccessibilityActionEvent) => {
-    const direction = event.nativeEvent.actionName === "increment" ? 1 : -1;
+    let direction: 1 | -1;
+    if (event.nativeEvent.actionName === "increment") {
+      direction = 1;
+    } else if (event.nativeEvent.actionName === "decrement") {
+      direction = -1;
+    } else {
+      return;
+    }
     onValueChange(
       clampAndSnap(
         normalizedValue + direction * step,
@@ -216,6 +261,12 @@ export function BrutalistSlider({
     );
   };
 
+  const a11yValue = (formatA11yValue ?? defaultFormatA11yValue)({
+    value: normalizedValue,
+    minimumValue,
+    maximumValue,
+  });
+
   return (
     <GestureDetector gesture={pan}>
       <View
@@ -225,12 +276,7 @@ export function BrutalistSlider({
         accessibilityRole="adjustable"
         accessibilityLabel={accessibilityLabel}
         accessibilityHint={accessibilityHint}
-        accessibilityValue={{
-          min: Math.round(minimumValue * 100),
-          max: Math.round(maximumValue * 100),
-          now: Math.round(normalizedValue * 100),
-          text: `${Math.round(normalizedValue * 100)}%`,
-        }}
+        accessibilityValue={a11yValue}
         accessibilityActions={[{ name: "increment" }, { name: "decrement" }]}
         onAccessibilityAction={handleAccessibilityAction}
       >
@@ -241,8 +287,8 @@ export function BrutalistSlider({
         >
           <Animated.View style={[styles.fill, fillStyle]} />
           <View style={styles.marks} pointerEvents="none">
-            {Array.from({ length: markCount }, (_, i) => (
-              <View key={i} style={styles.mark} />
+            {marks.map((mark) => (
+              <View key={mark} style={styles.mark} />
             ))}
           </View>
           <Animated.View style={[styles.thumb, thumbStyle]} />

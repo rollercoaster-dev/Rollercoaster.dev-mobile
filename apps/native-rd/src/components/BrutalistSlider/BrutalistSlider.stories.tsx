@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { BrutalistSlider } from "./BrutalistSlider";
+import { useEffect, useState } from "react";
+import { BrutalistSlider, type BrutalistSliderProps } from "./BrutalistSlider";
 
 const meta: Meta<typeof BrutalistSlider> = {
   title: "BrutalistSlider",
@@ -22,4 +23,26 @@ const meta: Meta<typeof BrutalistSlider> = {
 
 export default meta;
 type Story = StoryObj<typeof BrutalistSlider>;
-export const Interactive: Story = {};
+
+// Render component owns state so dragging actually moves the thumb. The
+// args panel can still drive `value` — useEffect re-syncs when args change.
+function InteractiveStory(args: BrutalistSliderProps) {
+  const [value, setValue] = useState(args.value);
+  useEffect(() => {
+    setValue(args.value);
+  }, [args.value]);
+  return (
+    <BrutalistSlider
+      {...args}
+      value={value}
+      onValueChange={(next) => {
+        setValue(next);
+        args.onValueChange?.(next);
+      }}
+    />
+  );
+}
+
+export const Interactive: Story = {
+  render: (args) => <InteractiveStory {...args} />,
+};

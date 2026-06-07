@@ -253,6 +253,16 @@ export function BadgeColorsAccordion({
                 onValueChange={onChangeIconDuotoneOpacity}
                 accessibilityLabel={t("iconColor.opacityA11y")}
                 accessibilityHint={t("iconColor.opacityHint")}
+                formatA11yValue={({
+                  value: v,
+                  minimumValue: lo,
+                  maximumValue: hi,
+                }) => ({
+                  min: Math.round(lo * 100),
+                  max: Math.round(hi * 100),
+                  now: Math.round(v * 100),
+                  text: `${Math.round(v * 100)}%`,
+                })}
               />
             </View>
           )}

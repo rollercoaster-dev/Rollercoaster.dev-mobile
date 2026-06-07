@@ -201,6 +201,23 @@ describe("parseBadgeDesign", () => {
     },
   );
 
+  test.each([
+    [0.65, 0.7],
+    [0.34, 0.3],
+    [0.21, 0.2],
+  ])(
+    "snaps in-range duotone opacity %s to nearest step (%s)",
+    (raw, snapped) => {
+      const design = {
+        ...createDefaultBadgeDesign("Test"),
+        iconDuotoneOpacity: raw,
+      };
+      expect(parseBadgeDesign(JSON.stringify(design))?.iconDuotoneOpacity).toBe(
+        snapped,
+      );
+    },
+  );
+
   test.each([0.19, 1.01, Number.NaN, Number.POSITIVE_INFINITY, "0.6"])(
     "drops invalid duotone opacity %s",
     (iconDuotoneOpacity) => {
