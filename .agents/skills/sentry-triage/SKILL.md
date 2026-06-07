@@ -109,7 +109,14 @@ gh issue list \
   --json number,title,state,closedAt,url
 ```
 
-If any match: check the dup's state.
+If matches exist, pick `dup` by precedence — open beats closed:
+
+- IF any match has `state == OPEN`: pick the most recently created open
+  match as `dup`, and treat it as a **Plain dup** below. Never
+  auto-resolve Sentry while an open GH issue is still tracking this
+  signature, even if a separate closed match also exists.
+- ELSE (all matches are closed): pick the match with the most recent
+  `closedAt` as `dup`, and continue to the **Closed-but-stale** check.
 
 **Closed-but-stale (auto-resolve):**
 IF dup.state == CLOSED AND Sentry lastSeen < dup.closedAt
