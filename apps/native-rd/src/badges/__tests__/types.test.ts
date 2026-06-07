@@ -66,6 +66,7 @@ describe("createDefaultBadgeDesign", () => {
       color: "#ffe50c",
       iconName: "Trophy",
       iconWeight: "regular",
+      iconDuotoneOpacity: 0.2,
       title: "Learn TypeScript",
       centerMode: "monogram",
       monogram: "L",
@@ -183,7 +184,32 @@ describe("parseBadgeDesign", () => {
     expect(result!.centerMode).toBe("icon");
     expect(result!.monogram).toBeUndefined();
     expect(result!.banner).toBeUndefined();
+    expect(result!.iconDuotoneOpacity).toBeUndefined();
   });
+
+  test.each([0.2, 0.6, 1])(
+    "preserves valid duotone opacity %s",
+    (iconDuotoneOpacity) => {
+      const design = createDefaultBadgeDesign("Test");
+      design.iconDuotoneOpacity = iconDuotoneOpacity;
+      expect(parseBadgeDesign(JSON.stringify(design))?.iconDuotoneOpacity).toBe(
+        iconDuotoneOpacity,
+      );
+    },
+  );
+
+  test.each([0.19, 1.01, Number.NaN, Number.POSITIVE_INFINITY, "0.6"])(
+    "drops invalid duotone opacity %s",
+    (iconDuotoneOpacity) => {
+      const design = {
+        ...createDefaultBadgeDesign("Test"),
+        iconDuotoneOpacity,
+      };
+      expect(
+        parseBadgeDesign(JSON.stringify(design))?.iconDuotoneOpacity,
+      ).toBeUndefined();
+    },
+  );
 
   test("parses design with all new fields", () => {
     const fullDesign: BadgeDesign = {

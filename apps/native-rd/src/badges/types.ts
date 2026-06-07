@@ -125,6 +125,7 @@ export type BadgeDesign = {
   color: string; // hex from accent palette
   iconName: string; // Phosphor icon identifier
   iconWeight: BadgeIconWeight;
+  iconDuotoneOpacity?: number;
   title: string; // display title (from goal, editable)
   centerMode: BadgeCenterMode;
   monogram?: string; // 1-3 chars, enforced at UI layer
@@ -193,6 +194,7 @@ export function createDefaultBadgeDesign(
     color: resolvedColor,
     iconName: DEFAULT_ICON_NAME,
     iconWeight: BadgeIconWeight.regular,
+    iconDuotoneOpacity: 0.2,
     title,
     centerMode: BadgeCenterMode.monogram,
     monogram: firstLetter,
@@ -296,6 +298,13 @@ export function parseBadgeDesign(
       parsed.frameColor,
       undefined,
     );
+    const iconDuotoneOpacity =
+      typeof parsed.iconDuotoneOpacity === "number" &&
+      Number.isFinite(parsed.iconDuotoneOpacity) &&
+      parsed.iconDuotoneOpacity >= 0.2 &&
+      parsed.iconDuotoneOpacity <= 1
+        ? parsed.iconDuotoneOpacity
+        : undefined;
     const result: Record<string, unknown> = {
       ...parsed,
       centerMode,
@@ -310,6 +319,8 @@ export function parseBadgeDesign(
     else result.iconColor = iconColor;
     if (frameColor === undefined) delete result.frameColor;
     else result.frameColor = frameColor;
+    if (iconDuotoneOpacity === undefined) delete result.iconDuotoneOpacity;
+    else result.iconDuotoneOpacity = iconDuotoneOpacity;
     delete result.borderScope;
     if (sanitizedFrameParams === undefined) delete result.frameParams;
     else result.frameParams = sanitizedFrameParams;
