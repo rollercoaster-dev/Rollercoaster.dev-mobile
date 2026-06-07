@@ -67,6 +67,14 @@ export const styles = StyleSheet.create((theme) => ({
   iconTabBody: {
     gap: theme.space[2],
   },
+  opacityControl: {
+    gap: theme.space[1],
+  },
+  opacityLabelRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   contrastWarning: {
     color: theme.colors.error,
   },

@@ -173,6 +173,9 @@ function DesignEditor({
     onDesignChange({ ...currentDesign, iconColor: value });
   };
 
+  const handleIconDuotoneOpacityChange = (iconDuotoneOpacity: number) =>
+    onDesignChange({ ...currentDesign, iconDuotoneOpacity });
+
   // Frame color tracks the theme by default — when the user picks the "Match
   // theme" sentinel the field is dropped from storage so the renderer's
   // `theme.colors.border` fallback kicks in instead of saving a literal
@@ -479,6 +482,7 @@ function DesignEditor({
             onChangeBorder={handleBorderColorChange}
             onChangeFrame={handleFrameColorChange}
             onChangeIcon={handleIconColorChange}
+            onChangeIconDuotoneOpacity={handleIconDuotoneOpacityChange}
             onOpenCustomPicker={(channel) => setColorPickerTarget(channel)}
           />
         </CollapsibleSection>
