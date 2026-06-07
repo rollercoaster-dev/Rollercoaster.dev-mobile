@@ -323,6 +323,16 @@ describe("CompletionFlowScreen", () => {
       ).toBeOnTheScreen();
     });
 
+    it("shows step-less summary text and a11y label when goal has zero steps", () => {
+      setupQueries({ steps: [], goalEvidence: GOAL_EVIDENCE });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      expect(screen.getByText("Learn TypeScript completed")).toBeOnTheScreen();
+      expect(
+        screen.getByLabelText("Congratulations! Learn TypeScript completed"),
+      ).toBeOnTheScreen();
+      expect(screen.queryByText(/All 0 steps completed/)).not.toBeOnTheScreen();
+    });
+
     it("shows both action buttons (post-bake state)", () => {
       setupQueries({ goal: POST_BAKE, goalEvidence: GOAL_EVIDENCE });
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);

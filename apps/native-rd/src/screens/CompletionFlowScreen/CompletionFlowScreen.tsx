@@ -567,10 +567,16 @@ function CompletionContent({
           style={styles.card}
           accessible={false}
           accessibilityRole="summary"
-          accessibilityLabel={tCompletion("celebration.summaryA11y", {
-            count: stepRows.length,
-            title: goal.title,
-          })}
+          accessibilityLabel={
+            stepRows.length === 0
+              ? tCompletion("celebration.summaryA11yNoSteps", {
+                  title: goal.title,
+                })
+              : tCompletion("celebration.summaryA11y", {
+                  count: stepRows.length,
+                  title: goal.title,
+                })
+          }
         >
           <View style={styles.iconContainer} accessibilityElementsHidden>
             <Text style={styles.iconEmoji}>{"\u{1F3AF}"}</Text>
@@ -583,10 +589,14 @@ function CompletionContent({
             {tCompletion("celebration.title")}
           </Text>
           <Text variant="body" style={styles.summary}>
-            {tCompletion("celebration.summary", {
-              count: stepRows.length,
-              title: goal.title,
-            })}
+            {stepRows.length === 0
+              ? tCompletion("celebration.summaryNoSteps", {
+                  title: goal.title,
+                })
+              : tCompletion("celebration.summary", {
+                  count: stepRows.length,
+                  title: goal.title,
+                })}
           </Text>
 
           {showBakeChoice && previewDesign && (
