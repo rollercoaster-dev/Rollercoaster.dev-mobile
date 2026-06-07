@@ -289,61 +289,6 @@ describe("BadgeColorsAccordion", () => {
     });
   });
 
-  describe("contrast warning", () => {
-    it("renders when iconColor is an explicit hex with low contrast", () => {
-      // Pure white icon on a pure white fill = ratio 1:1, fails AA 4.5:1.
-      const handlers = makeHandlers();
-      renderWithProviders(
-        <BadgeColorsAccordion
-          design={createDesign({ color: "#ffffff", iconColor: "#ffffff" })}
-          {...handlers}
-        />,
-      );
-      fireEvent.press(screen.getByLabelText("Icon"));
-      expect(screen.getByTestId("icon-contrast-warning")).toBeOnTheScreen();
-    });
-
-    it("does not render when iconColor is the Auto sentinel", () => {
-      const handlers = makeHandlers();
-      renderWithProviders(
-        <BadgeColorsAccordion
-          design={createDesign({
-            color: "#ffffff",
-            iconColor: BADGE_COLOR_THEME_SENTINEL,
-          })}
-          {...handlers}
-        />,
-      );
-      fireEvent.press(screen.getByLabelText("Icon"));
-      expect(screen.queryByTestId("icon-contrast-warning")).toBeNull();
-    });
-
-    it("does not render when iconColor passes AA against the fill", () => {
-      const handlers = makeHandlers();
-      renderWithProviders(
-        <BadgeColorsAccordion
-          design={createDesign({ color: "#ffffff", iconColor: "#000000" })}
-          {...handlers}
-        />,
-      );
-      fireEvent.press(screen.getByLabelText("Icon"));
-      expect(screen.queryByTestId("icon-contrast-warning")).toBeNull();
-    });
-
-    it("does not render at the non-text 3:1 threshold even when text 4.5:1 would fail", () => {
-      // #888888 on #ffffff ≈ 3.54:1 — passes 3:1, fails 4.5:1.
-      const handlers = makeHandlers();
-      renderWithProviders(
-        <BadgeColorsAccordion
-          design={createDesign({ color: "#ffffff", iconColor: "#888888" })}
-          {...handlers}
-        />,
-      );
-      fireEvent.press(screen.getByLabelText("Icon"));
-      expect(screen.queryByTestId("icon-contrast-warning")).toBeNull();
-    });
-  });
-
   describe("fill channel", () => {
     it("fires onChangeFill with the swatch hex when a swatch is pressed", () => {
       const handlers = makeHandlers();

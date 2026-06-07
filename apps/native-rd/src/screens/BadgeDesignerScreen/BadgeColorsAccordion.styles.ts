@@ -75,7 +75,4 @@ export const styles = StyleSheet.create((theme) => ({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  contrastWarning: {
-    color: theme.colors.error,
-  },
 }));

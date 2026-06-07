@@ -104,7 +104,6 @@
     "matchAutoHint": "Picks black or white based on fill contrast",
     "custom": "Custom",
     "customHint": "Opens the color picker",
-    "contrastWarning": "Low contrast — icon may be hard to see",
     "opacityLabel": "Fill opacity",
     "opacityA11y": "Duotone fill opacity",
     "opacityHint": "Adjusts the icon's secondary fill opacity",
