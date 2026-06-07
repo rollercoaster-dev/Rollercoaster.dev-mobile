@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import { AppState, type AppStateStatus } from "react-native";
-import { reportError } from "../services/sentry-report";
+import { breadcrumb, reportError } from "../services/sentry-report";
 
 /**
  * Defers callbacks that touch Unistyles' shadow tree until the app is in the
@@ -30,6 +30,14 @@ export function useAppStateGuard() {
       if (nowActive && !wasActive && mountedRef.current) {
         const pending = queueRef.current;
         queueRef.current = [];
+        if (pending.length > 0) {
+          breadcrumb({ category: "appstate", message: "flush" });
+          if (__DEV__) {
+            console.debug(
+              `[AppStateGuard] flush ${pending.length} callback(s)`,
+            );
+          }
+        }
         for (const fn of pending) {
           try {
             fn();
@@ -44,6 +52,14 @@ export function useAppStateGuard() {
 
     return () => {
       mountedRef.current = false;
+      if (queueRef.current.length > 0) {
+        breadcrumb({ category: "appstate", message: "drop" });
+        if (__DEV__) {
+          console.debug(
+            `[AppStateGuard] drop ${queueRef.current.length} pending callback(s) on unmount`,
+          );
+        }
+      }
       queueRef.current = [];
       subscription.remove();
     };
@@ -56,6 +72,10 @@ export function useAppStateGuard() {
       return;
     }
     queueRef.current.push(fn);
+    breadcrumb({ category: "appstate", message: "defer" });
+    if (__DEV__) {
+      console.debug("[AppStateGuard] defer callback while backgrounded");
+    }
   }, []);
 
   return { runWhenActive };
