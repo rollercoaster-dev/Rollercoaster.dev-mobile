@@ -7,12 +7,20 @@ import {
   positionToValue,
   valueToPosition,
 } from "../BrutalistSlider";
+import { fireGesture } from "../../../__tests__/mocks/gesture-handler";
 
 describe("BrutalistSlider", () => {
   it("clamps and snaps values", () => {
     expect(clampAndSnap(0.14, 0.2, 1, 0.1)).toBe(0.2);
     expect(clampAndSnap(0.64, 0.2, 1, 0.1)).toBe(0.6);
     expect(clampAndSnap(1.1, 0.2, 1, 0.1)).toBe(1);
+    expect(clampAndSnap(0.7, 0.2, 1, 0.1)).toBe(0.7);
+  });
+
+  it("returns a finite fallback for invalid numeric configuration", () => {
+    expect(clampAndSnap(Number.NaN, 0.2, 1, 0.1)).toBe(0.2);
+    expect(clampAndSnap(0.6, 0.2, 1, 0)).toBe(0.2);
+    expect(positionToValue(20, 0.2, 1, 0, 0.1, false)).toBe(0.2);
   });
 
   it("maps values and positions in RTL", () => {
@@ -76,5 +84,25 @@ describe("BrutalistSlider", () => {
       nativeEvent: { actionName: "increment" },
     });
     expect(onValueChange).toHaveBeenLastCalledWith(1);
+  });
+
+  it("updates from pan gestures after layout", () => {
+    const onValueChange = jest.fn();
+    const { getByTestId } = render(
+      <BrutalistSlider
+        testID="opacity"
+        value={0.2}
+        minimumValue={0.2}
+        maximumValue={1}
+        step={0.1}
+        onValueChange={onValueChange}
+        accessibilityLabel="Fill opacity"
+      />,
+    );
+    fireEvent(getByTestId("opacity-track"), "layout", {
+      nativeEvent: { layout: { width: 100, height: 12, x: 0, y: 0 } },
+    });
+    fireGesture("update", { x: 50 });
+    expect(onValueChange).toHaveBeenCalledWith(0.6);
   });
 });

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   I18nManager,
   type LayoutChangeEvent,
@@ -31,6 +31,16 @@ export function clampAndSnap(
   maximumValue: number,
   step: number,
 ): number {
+  if (
+    !Number.isFinite(value) ||
+    !Number.isFinite(minimumValue) ||
+    !Number.isFinite(maximumValue) ||
+    !Number.isFinite(step) ||
+    minimumValue >= maximumValue ||
+    step <= 0
+  ) {
+    return Number.isFinite(minimumValue) ? minimumValue : 0;
+  }
   const clamped = Math.min(maximumValue, Math.max(minimumValue, value));
   const snapped =
     minimumValue + Math.round((clamped - minimumValue) / step) * step;
@@ -46,6 +56,16 @@ export function valueToPosition(
   width: number,
   isRTL: boolean,
 ): number {
+  if (
+    !Number.isFinite(value) ||
+    !Number.isFinite(minimumValue) ||
+    !Number.isFinite(maximumValue) ||
+    !Number.isFinite(width) ||
+    minimumValue >= maximumValue ||
+    width <= 0
+  ) {
+    return 0;
+  }
   const ratio = (value - minimumValue) / (maximumValue - minimumValue);
   return (isRTL ? 1 - ratio : ratio) * width;
 }
@@ -58,6 +78,9 @@ export function positionToValue(
   step: number,
   isRTL: boolean,
 ): number {
+  if (!Number.isFinite(position) || !Number.isFinite(width) || width <= 0) {
+    return Number.isFinite(minimumValue) ? minimumValue : 0;
+  }
   const ratio = Math.min(1, Math.max(0, position / width));
   const directedRatio = isRTL ? 1 - ratio : ratio;
   return clampAndSnap(
@@ -81,7 +104,34 @@ export function BrutalistSlider({
   const [trackWidth, setTrackWidth] = useState(0);
   const position = useSharedValue(0);
   const isRTL = I18nManager.isRTL;
+  const valueChangeRef = useRef(onValueChange);
+  valueChangeRef.current = onValueChange;
+  const sliderConfigRef = useRef({
+    minimumValue,
+    maximumValue,
+    step,
+    isRTL,
+  });
+  sliderConfigRef.current = { minimumValue, maximumValue, step, isRTL };
+  const trackWidthRef = useRef(trackWidth);
+  trackWidthRef.current = trackWidth;
+  const validConfiguration =
+    Number.isFinite(minimumValue) &&
+    Number.isFinite(maximumValue) &&
+    Number.isFinite(step) &&
+    minimumValue < maximumValue &&
+    step > 0;
   const normalizedValue = clampAndSnap(value, minimumValue, maximumValue, step);
+
+  useEffect(() => {
+    if (__DEV__ && !validConfiguration) {
+      console.warn("[BrutalistSlider] Invalid numeric configuration", {
+        minimumValue,
+        maximumValue,
+        step,
+      });
+    }
+  }, [maximumValue, minimumValue, step, validConfiguration]);
 
   useEffect(() => {
     position.value = valueToPosition(
@@ -100,32 +150,34 @@ export function BrutalistSlider({
     trackWidth,
   ]);
 
-  const updateFromPosition = (nextPosition: number) => {
-    if (trackWidth === 0) return;
-    onValueChange(
+  const updateFromPositionRef = useRef((nextPosition: number) => {
+    const width = trackWidthRef.current;
+    if (width <= 0) return;
+    const config = sliderConfigRef.current;
+    valueChangeRef.current(
       positionToValue(
         nextPosition,
-        minimumValue,
-        maximumValue,
-        trackWidth,
-        step,
-        isRTL,
+        config.minimumValue,
+        config.maximumValue,
+        width,
+        config.step,
+        config.isRTL,
       ),
     );
-  };
+  });
 
   const pan = useMemo(
     () =>
       Gesture.Pan()
         .onBegin((event) => {
           position.value = Math.min(trackWidth, Math.max(0, event.x));
-          runOnJS(updateFromPosition)(position.value);
+          runOnJS(updateFromPositionRef.current)(position.value);
         })
         .onUpdate((event) => {
           position.value = Math.min(trackWidth, Math.max(0, event.x));
-          runOnJS(updateFromPosition)(position.value);
+          runOnJS(updateFromPositionRef.current)(position.value);
         }),
-    [position, trackWidth, updateFromPosition],
+    [position, trackWidth],
   );
 
   const thumbStyle = useAnimatedStyle(() => ({
@@ -137,8 +189,14 @@ export function BrutalistSlider({
   }));
 
   const marks = [];
-  for (let mark = minimumValue; mark <= maximumValue + step / 2; mark += step) {
-    marks.push(mark);
+  if (validConfiguration) {
+    for (
+      let mark = minimumValue;
+      mark <= maximumValue + step / 2;
+      mark += step
+    ) {
+      marks.push(mark);
+    }
   }
 
   const handleLayout = (event: LayoutChangeEvent) => {
@@ -175,7 +233,11 @@ export function BrutalistSlider({
         accessibilityActions={[{ name: "increment" }, { name: "decrement" }]}
         onAccessibilityAction={handleAccessibilityAction}
       >
-        <View style={styles.track} onLayout={handleLayout}>
+        <View
+          testID={testID ? `${testID}-track` : undefined}
+          style={styles.track}
+          onLayout={handleLayout}
+        >
           <Animated.View style={[styles.fill, fillStyle]} />
           <View style={styles.marks} pointerEvents="none">
             {marks.map((mark) => (
