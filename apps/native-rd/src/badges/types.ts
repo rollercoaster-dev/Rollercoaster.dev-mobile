@@ -118,6 +118,10 @@ export type BannerData = {
  * choice instead of overloading "field absent".
  */
 export const BADGE_COLOR_THEME_SENTINEL = "theme" as const;
+export const BADGE_DUOTONE_OPACITY_MIN = 0.2 as const;
+export const BADGE_DUOTONE_OPACITY_MAX = 1 as const;
+export const BADGE_DUOTONE_OPACITY_STEP = 0.1 as const;
+export const BADGE_DUOTONE_OPACITY_DEFAULT = BADGE_DUOTONE_OPACITY_MIN;
 
 export type BadgeDesign = {
   shape: BadgeShape;
@@ -125,6 +129,7 @@ export type BadgeDesign = {
   color: string; // hex from accent palette
   iconName: string; // Phosphor icon identifier
   iconWeight: BadgeIconWeight;
+  /** Secondary fill opacity for duotone icons, from 0.2 through 1. */
   iconDuotoneOpacity?: number;
   title: string; // display title (from goal, editable)
   centerMode: BadgeCenterMode;
@@ -194,7 +199,7 @@ export function createDefaultBadgeDesign(
     color: resolvedColor,
     iconName: DEFAULT_ICON_NAME,
     iconWeight: BadgeIconWeight.regular,
-    iconDuotoneOpacity: 0.2,
+    iconDuotoneOpacity: BADGE_DUOTONE_OPACITY_DEFAULT,
     title,
     centerMode: BadgeCenterMode.monogram,
     monogram: firstLetter,
@@ -298,13 +303,29 @@ export function parseBadgeDesign(
       parsed.frameColor,
       undefined,
     );
-    const iconDuotoneOpacity =
+    const hasValidIconDuotoneOpacity =
       typeof parsed.iconDuotoneOpacity === "number" &&
       Number.isFinite(parsed.iconDuotoneOpacity) &&
-      parsed.iconDuotoneOpacity >= 0.2 &&
-      parsed.iconDuotoneOpacity <= 1
-        ? parsed.iconDuotoneOpacity
-        : undefined;
+      parsed.iconDuotoneOpacity >= BADGE_DUOTONE_OPACITY_MIN &&
+      parsed.iconDuotoneOpacity <= BADGE_DUOTONE_OPACITY_MAX;
+    const iconDuotoneOpacity = hasValidIconDuotoneOpacity
+      ? (parsed.iconDuotoneOpacity as number)
+      : undefined;
+    if (
+      parsed.iconDuotoneOpacity !== undefined &&
+      !hasValidIconDuotoneOpacity
+    ) {
+      if (__DEV__) {
+        console.warn(
+          "[parseBadgeDesign] Invalid iconDuotoneOpacity; falling back",
+          { raw: parsed.iconDuotoneOpacity },
+        );
+      }
+      reportError(new Error("Invalid stored BadgeDesign iconDuotoneOpacity"), {
+        area: "badge.parse",
+        kind: "opacity-field",
+      });
+    }
     const result: Record<string, unknown> = {
       ...parsed,
       centerMode,

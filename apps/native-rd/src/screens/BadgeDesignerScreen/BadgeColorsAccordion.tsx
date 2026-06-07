@@ -10,7 +10,14 @@ import { useTranslation } from "react-i18next";
 import { Text } from "../../components/Text";
 import { BrutalistSlider } from "../../components/BrutalistSlider";
 import { ColorPicker } from "../../badges/ColorPicker";
-import { BADGE_COLOR_THEME_SENTINEL, BadgeFrame } from "../../badges/types";
+import {
+  BADGE_COLOR_THEME_SENTINEL,
+  BADGE_DUOTONE_OPACITY_DEFAULT,
+  BADGE_DUOTONE_OPACITY_MAX,
+  BADGE_DUOTONE_OPACITY_MIN,
+  BADGE_DUOTONE_OPACITY_STEP,
+  BadgeFrame,
+} from "../../badges/types";
 import type { BadgeDesign } from "../../badges/types";
 import { getSafeTextColor, meetsWCAG } from "../../utils/accessibility";
 import { ChannelPalette } from "./ChannelPalette";
@@ -229,15 +236,20 @@ export function BadgeColorsAccordion({
                 <Text variant="label">{t("iconColor.opacityLabel")}</Text>
                 <Text variant="label" testID="duotone-opacity-value">
                   {t("iconColor.opacityValue", {
-                    value: Math.round((design.iconDuotoneOpacity ?? 0.2) * 100),
+                    value: Math.round(
+                      (design.iconDuotoneOpacity ??
+                        BADGE_DUOTONE_OPACITY_DEFAULT) * 100,
+                    ),
                   })}
                 </Text>
               </View>
               <BrutalistSlider
-                value={design.iconDuotoneOpacity ?? 0.2}
-                minimumValue={0.2}
-                maximumValue={1}
-                step={0.1}
+                value={
+                  design.iconDuotoneOpacity ?? BADGE_DUOTONE_OPACITY_DEFAULT
+                }
+                minimumValue={BADGE_DUOTONE_OPACITY_MIN}
+                maximumValue={BADGE_DUOTONE_OPACITY_MAX}
+                step={BADGE_DUOTONE_OPACITY_STEP}
                 onValueChange={onChangeIconDuotoneOpacity}
                 accessibilityLabel={t("iconColor.opacityA11y")}
                 accessibilityHint={t("iconColor.opacityHint")}

@@ -7,6 +7,9 @@ import {
   BadgeIconWeight,
   BadgeCenterMode,
   BADGE_COLOR_THEME_SENTINEL,
+  BADGE_DUOTONE_OPACITY_DEFAULT,
+  BADGE_DUOTONE_OPACITY_MAX,
+  BADGE_DUOTONE_OPACITY_MIN,
   PathTextPosition,
   BannerPosition,
   createDefaultBadgeDesign,
@@ -66,7 +69,7 @@ describe("createDefaultBadgeDesign", () => {
       color: "#ffe50c",
       iconName: "Trophy",
       iconWeight: "regular",
-      iconDuotoneOpacity: 0.2,
+      iconDuotoneOpacity: BADGE_DUOTONE_OPACITY_DEFAULT,
       title: "Learn TypeScript",
       centerMode: "monogram",
       monogram: "L",
@@ -187,7 +190,7 @@ describe("parseBadgeDesign", () => {
     expect(result!.iconDuotoneOpacity).toBeUndefined();
   });
 
-  test.each([0.2, 0.6, 1])(
+  test.each([BADGE_DUOTONE_OPACITY_MIN, 0.6, BADGE_DUOTONE_OPACITY_MAX])(
     "preserves valid duotone opacity %s",
     (iconDuotoneOpacity) => {
       const design = createDefaultBadgeDesign("Test");
@@ -208,6 +211,12 @@ describe("parseBadgeDesign", () => {
       expect(
         parseBadgeDesign(JSON.stringify(design))?.iconDuotoneOpacity,
       ).toBeUndefined();
+      expect(mockedReportError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: "Invalid stored BadgeDesign iconDuotoneOpacity",
+        }),
+        { area: "badge.parse", kind: "opacity-field" },
+      );
     },
   );
 
