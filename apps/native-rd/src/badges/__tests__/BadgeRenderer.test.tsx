@@ -33,12 +33,13 @@ jest.mock("../iconRegistry", () => {
       size?: number;
       weight?: string;
       color?: string;
+      duotoneOpacity?: number;
       testID?: string;
-    }> = ({ size, weight, color, testID }) => (
+    }> = ({ size, weight, color, duotoneOpacity, testID }) => (
       <View
         testID={testID ?? `icon-${name}`}
         accessibilityLabel={`${name} icon`}
-        accessibilityHint={`size=${size} weight=${weight} color=${color}`}
+        accessibilityHint={`size=${size} weight=${weight} color=${color} duotoneOpacity=${duotoneOpacity}`}
       >
         <Text>{name}</Text>
       </View>
@@ -135,6 +136,32 @@ describe("BadgeRenderer", () => {
 
     const icon = screen.getByLabelText("Trophy icon");
     expect(icon.props.accessibilityHint).toContain("weight=bold");
+  });
+
+  it("passes opacity only to duotone icons", () => {
+    const { rerender } = renderWithProviders(
+      <BadgeRenderer
+        design={createDesign({
+          iconWeight: BadgeIconWeight.duotone,
+          iconDuotoneOpacity: 0.6,
+        })}
+      />,
+    );
+    expect(
+      screen.getByLabelText("Trophy icon").props.accessibilityHint,
+    ).toContain("duotoneOpacity=0.6");
+
+    rerender(
+      <BadgeRenderer
+        design={createDesign({
+          iconWeight: BadgeIconWeight.bold,
+          iconDuotoneOpacity: 0.6,
+        })}
+      />,
+    );
+    expect(
+      screen.getByLabelText("Trophy icon").props.accessibilityHint,
+    ).toContain("duotoneOpacity=undefined");
   });
 
   it("calculates icon color for WCAG AA contrast against dark fill", () => {
