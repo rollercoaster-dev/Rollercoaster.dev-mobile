@@ -123,7 +123,7 @@ mcp__sentry__update_issue({
   issueId: shortId,
   regionUrl: "https://de.sentry.io",
   status: "resolved",
-  reason: "Resolved via GH #<N> closed <closedAt>; lastSeen <lastSeen> (before close). Sentry status was stale."
+  reason: "Resolved via GH #$N closed $closedAt; lastSeen $lastSeen (before close). Sentry status was stale."
 })
 ```
 
