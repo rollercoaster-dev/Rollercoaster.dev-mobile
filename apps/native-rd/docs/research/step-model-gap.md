@@ -57,7 +57,7 @@ Three-register tagging:
 ## What does _not_ earn its way in
 
 - **B-deadlines as a missed-deadline ledger.** Out. A deadline remains a candidate temporal function for prototyping, but passing it must never change state, score the user, or accumulate an overdue ledger. Prototyping must establish whether it provides useful meaning without creating pressure that violates the no-time-shame principle ([product-vision.md §Core Principles](../vision/product-vision.md#core-principles), points 2 and 3).
-- **Dependency-as-constraint-engine** (the version of C where the app refuses an action because a prerequisite isn't met). Punitive, infantilizing. C earns its way in only via two specific shapes: C-order (graph as user-built syllabus) and C-waiting-on-external (naming an external blocker).
+- **Dependency-as-constraint-engine** (the version of C where the app refuses an action because a prerequisite isn't met). Punitive, infantilizing. C earns its way in only via two specific shapes: C-order (graph as user-built syllabus) and C-waiting (naming an external blocker).
 - **B-estimates** (per-step time estimates). Potentially useful as a self-knowledge instrument — but only if the framing is non-accusatory in every state the UI can land in. Time-blindness is core to ADHD; the wound is sensitive; the failure modes are easy and the success modes hard. Drafting deferred until that framing exists.
 
 ## G's opt-in is the existence of a review
@@ -85,7 +85,7 @@ Four scenarios, each in five fields. Together they cover all eight letters and a
 **A–H tags:**
 
 - **A** — practice-panel work has natural substructure (per-circuit). Flat steps force the choice between one umbrella step that loses the circuits or three siblings that lose the umbrella.
-- **C-order** — the circuits had to be done in order; the 15-amp lighting was the entry to the 20-amp run was the entry to the 240V. Sequence was the syllabus, not bookkeeping.
+- **C-order** — the circuits had to be done in order: the 15-amp lighting led to the 20-amp run, which led to the 240V circuit. Sequence was the syllabus, not bookkeeping.
 - **D** — every circuit produced a one-line takeaway ("derating drops 12-gauge from 20A at 4+ in conduit"); nowhere to put it.
 - **H** — the 8-gauge moment is _first_ an H moment, during the practice panel itself: hypothesis (8 is plenty for the 240V run), contradiction (voltage drop on the long run), updated model (size by NEC Annex D, not by gut), replacement step (re-run in 6-gauge). The 8-gauge step persists as a learning; the 6-gauge step follows from it. The learning's structured fields are populated _then_, not at goal completion.
 - **G** — the same learning fires forward six months later at the journeyman exam's circuit-sizing section. Forward-reference target: future similar steps across goals, not the immediate replacement. H and G are temporally distinct moments of the same chain.
@@ -96,7 +96,7 @@ Four scenarios, each in five fields. Together they cover all eight letters and a
 
 ### Ava and the four-month wait
 
-**Letters:** C-waiting-on-external, D (date-as-metadata, folds in soft-B), E (waiting ≠ pending).
+**Letters:** C-waiting, D (date-as-metadata, folds in soft-B), E (waiting ≠ pending).
 
 **Narrative.** Ava called the PIA in February and got an appointment four months out. The first intake is in June; the diagnostic sessions span July; the report is due back in October. Three of her five steps are not waiting on Ava — they are waiting on the PIA's calendar, the session window itself, and the clinic's report turnaround.
 
@@ -169,5 +169,5 @@ The current working hypothesis for prototyping is that a Step can carry a tempor
 - **State vocabulary scope.** With H added, the candidate set of named states the user might encounter is _pending, completed, missed, waiting-external, in-progress, abandoned, learning_ — seven. Whether all seven are user-namable, or whether some are system-derived (e.g. _learning_ only reachable via the H pivot flow, never chosen directly), is a UX question.
 - **Temporal functions and Slots.** Prototype a Step date as marker, deadline, or recurrence, with recurrence producing dated Slots as the current hypothesis. Resolve what remains visible after time passes, how recurring Slots persist, whether changing temporal function preserves history, and how each function appears in the task view. No option may introduce an automatic state change or evaluation when time passes.
 - **H's UI treatment.** A learning step has two things worth surfacing: the original framing (the hypothesis the user committed to) and the learned outcome (what the falsification revealed). Does the UI show both side-by-side, fold the original under the learning, or surface only the learned outcome with the original available on tap?
-- **Substructure depth.** One level of nesting, or arbitrary? Sam's scenario lands at two levels (goal → step work → Steps 1/2/3); Malik, Tomás, and Ava each land at one. Two levels handles every scenario above; arbitrary opens the door to outline-tool drift away from the task view's "one next thing" promise. Sam's nesting is known up front (program literature); Malik's is discovered mid-work — the same structure, arrived at differently, and probably with different capture flows.
+- **Substructure depth.** One level of nesting, or arbitrary? Sam's scenario lands at two levels (goal → step work → Steps 1/2/3); Malik, Tomás, and Ava each land at one. Two levels handle every scenario above; arbitrary opens the door to outline-tool drift away from the task view's "one next thing" promise. Sam's nesting is known up front (program literature); Malik's is discovered mid-work — the same structure, arrived at differently, and probably with different capture flows.
 - **What this implies for the task view.** [The task view](../vision/product-vision.md#the-task-view--next-best-step) shows one next step per active goal. With substructure (A) and a richer state vocabulary (E), "next step" becomes ambiguous — the next leaf, the next umbrella, the next non-waiting step. Resolving this is part of forming the success scenarios.
