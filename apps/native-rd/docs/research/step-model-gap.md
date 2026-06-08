@@ -18,11 +18,11 @@ This section was prompted by user-testing feedback from a friend using the app o
 
 The Step model is being asked to do three jobs at once. Most are invisible until a Step has to do more than mark a checkbox.
 
-| Register                          | What it is                                                                                  | What the Step has to carry                                                                 |
-| --------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Register                          | What it is                                                                                  | What the Step has to carry                                                                              |
+| --------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | **Cognitive prosthesis**          | Compensating for executive function, working memory, and retrieval gaps                     | Substructure, sequence-as-syllabus, per-step context, mid-work capture, persisted reviews and learnings |
-| **Anti-pathologizing instrument** | Interrupting internalized shame narratives (stuck = failing, missed = broken, mistake = me) | A vocabulary for waiting / missed / abandoned that names state without scoring it          |
-| **Time foothold**                 | Compensating for atemporal time perception                                                  | Soft "this is for Tuesday" placement that creates a Tuesday in the app                     |
+| **Anti-pathologizing instrument** | Interrupting internalized shame narratives (stuck = failing, missed = broken, mistake = me) | A vocabulary for waiting / missed / abandoned that names state without scoring it                       |
+| **Time foothold**                 | Compensating for atemporal time perception                                                  | Soft "this is for Tuesday" placement that creates a Tuesday in the app                                  |
 
 This is not a productivity product with neurodivergent skinning. It is a cognitive prosthesis and anti-pathologizing instrument that happens to look like a goal tracker. The Step model that ships at the end of Iteration B has to be load-bearing for all three registers, or the product is something else.
 
@@ -30,7 +30,7 @@ This frame is downstream of [product-vision.md §Core Principles](../vision/prod
 
 ## The A–H taxonomy
 
-Eight candidate enrichments. Each is sized by both its pedagogical frame and its ND-specific hit.
+Eight letters representing nine candidate enrichments: C has separate ordering and external-waiting forms. Each is sized by both its pedagogical frame and its ND-specific hit.
 
 | Letter        | What                                                                           | Pedagogical frame                                                                                                                     | ND-specific hit                                                                                                                                                                                                                                                                        |
 | ------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -52,11 +52,11 @@ Three-register tagging:
 
 (C-waiting, F, G, and H appear in two registers — that's not double-counting; it's why they're load-bearing.)
 
-**G vs H — the distinction that matters.** H is specifically the falsification pivot: a misfired step's record _is_ the artifact, with the corrected replacement following from it. Forward-reference target is _the immediately replacing step within the same goal_ (Tomás's 8-gauge step persists as a learning while the corrected 6-gauge step follows from it during the practice panel work). G is broader — a free-form retrospective the user attaches to a goal when they want one, covering wins and misfires both. Forward-reference target is _future similar steps across goals_ (Tomás's review of his exam-prep journey surfaces the 8-gauge learning at the journeyman exam six months later). H is mid-stream scaffolding; G is goal-completion-shaped. The 8-gauge moment is canonically both — H during the work, G at the exam.
+**G vs H — the distinction that matters.** H is specifically the falsification pivot: a misfired step's record _is_ the artifact, with the corrected replacement following from it. Forward-reference target is _the immediately replacing step within the same goal_ (Tomás's 8-gauge step persists as a learning while the corrected 6-gauge step follows from it during the practice panel work). G is broader — a free-form retrospective the user attaches to a goal whenever they want one, covering wins and misfires both. It is not tied to goal completion. Forward-reference target is _future similar steps across goals_ (Tomás's review of his exam-prep journey surfaces the 8-gauge learning at the journeyman exam six months later). H is mid-stream scaffolding; G is user-initiated reflection. The 8-gauge moment is canonically both — H during the work, G when Tomás chooses to reflect on the goal.
 
 ## What does _not_ earn its way in
 
-- **B-deadlines** (calendar-style due dates). Accumulates as a missed-deadline ledger; the friend's testing didn't surface a single moment that needed one; the product vision rules out time-based shame ([product-vision.md §Core Principles](../vision/product-vision.md#core-principles), points 2 and 3). Out.
+- **B-deadlines as a missed-deadline ledger.** Out. A deadline remains a candidate temporal function for prototyping, but passing it must never change state, score the user, or accumulate an overdue ledger. Prototyping must establish whether it provides useful meaning without creating pressure that violates the no-time-shame principle ([product-vision.md §Core Principles](../vision/product-vision.md#core-principles), points 2 and 3).
 - **Dependency-as-constraint-engine** (the version of C where the app refuses an action because a prerequisite isn't met). Punitive, infantilizing. C earns its way in only via two specific shapes: C-order (graph as user-built syllabus) and C-waiting-on-external (naming an external blocker).
 - **B-estimates** (per-step time estimates). Potentially useful as a self-knowledge instrument — but only if the framing is non-accusatory in every state the UI can land in. Time-blindness is core to ADHD; the wound is sensitive; the failure modes are easy and the success modes hard. Drafting deferred until that framing exists.
 
@@ -70,7 +70,7 @@ In practice this means craft and skill goals (Tomás's wiring, Malik's modelling
 
 ## Failure scenarios
 
-Four scenarios, each in five fields. Together they cover all nine letters. Personas are existing; persona behavior beyond what's in [user-stories.md](../vision/user-stories.md) is flagged as invented-but-plausible where relevant.
+Four scenarios, each in five fields. Together they cover all eight letters and all nine candidate enrichments. Personas are existing; persona behavior beyond what's in [user-stories.md](../vision/user-stories.md) is flagged as invented-but-plausible where relevant.
 
 ### Tomás and the practice panel
 
@@ -160,11 +160,14 @@ The principle the structure has to honor: an unfilled Tuesday is only an unfille
 
 **Framing status.** Articulated 2026-05-24: the structural fix is _slots, not missed-states_. The app holds Tuesday instances that can be checked, blank, or annotated; the absence of a check is not interpreted by the app as missed-attendance, scored against Sam, or surfaced as evidence about his recovery. Meaning lives outside the app — with Marcus, the group, and Sam himself. The non-recovery sketch (Cal building a drawing practice) used the same structural fix to verify the framing holds independent of recovery weight; if it's right for Cal it is right for Sam, and the higher stakes in Sam's case make the structural fix more load-bearing, not less.
 
+The current working hypothesis for prototyping is that a Step can carry a temporal function — marker, deadline, or recurrence — and that a recurring Step produces dated slots such as Sam's Tuesdays. The exact model and interaction behavior are not settled. The universal constraint is: time passing never changes state or causes the app to interpret, score, or aggregate an absence.
+
 **G and H drafting guardrail.** Sam's scenario deliberately includes no G review and no H pivot — and not because a recovery flag opts him out. G's opt-in is the existence of a review (the user attaches one when they want one, universally — Sam doesn't write one for his recovery practice, so there is none). H requires a falsifiable hypothesis to apply (the slot did not misfire; the slot was simply not filled that week — there is no contradicted premise to record). The hypothesis _I should go to my Tuesday meeting_ is not contradicted by an unfilled Tuesday. Both protections come from the structures themselves, not from a per-goal toggle; Sam is the canonical case that load-bears the constraint.
 
 ## Open questions
 
 - **State vocabulary scope.** With H added, the candidate set of named states the user might encounter is _pending, completed, missed, waiting-external, in-progress, abandoned, learning_ — seven. Whether all seven are user-namable, or whether some are system-derived (e.g. _learning_ only reachable via the H pivot flow, never chosen directly), is a UX question.
+- **Temporal functions and Slots.** Prototype a Step date as marker, deadline, or recurrence, with recurrence producing dated Slots as the current hypothesis. Resolve what remains visible after time passes, how recurring Slots persist, whether changing temporal function preserves history, and how each function appears in the task view. No option may introduce an automatic state change or evaluation when time passes.
 - **H's UI treatment.** A learning step has two things worth surfacing: the original framing (the hypothesis the user committed to) and the learned outcome (what the falsification revealed). Does the UI show both side-by-side, fold the original under the learning, or surface only the learned outcome with the original available on tap?
 - **Substructure depth.** One level of nesting, or arbitrary? Sam's scenario lands at two levels (goal → step work → Steps 1/2/3); Malik, Tomás, and Ava each land at one. Two levels handles every scenario above; arbitrary opens the door to outline-tool drift away from the task view's "one next thing" promise. Sam's nesting is known up front (program literature); Malik's is discovered mid-work — the same structure, arrived at differently, and probably with different capture flows.
 - **What this implies for the task view.** [The task view](../vision/product-vision.md#the-task-view--next-best-step) shows one next step per active goal. With substructure (A) and a richer state vocabulary (E), "next step" becomes ambiguous — the next leaf, the next umbrella, the next non-waiting step. Resolving this is part of forming the success scenarios.

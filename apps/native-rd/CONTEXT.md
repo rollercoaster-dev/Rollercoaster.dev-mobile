@@ -44,13 +44,13 @@ _Avoid_: scheduling, due date, reminder.
 
 ### The A–H taxonomy
 
-Eight candidate enrichments for the Step. Letters are load-bearing — agents and docs refer to them by letter.
+Eight letters representing nine candidate enrichments for the Step: C has separate ordering and external-waiting forms. Letters are load-bearing — agents and docs refer to them by letter.
 
 **A**: Granularity / nesting. Substructure as offloaded cognition; landing places for ND bursts.
 
-**B-soft**: Soft scheduling — _"for Tuesday"_, not _"due Tuesday"_. Creates the time foothold.
+**B-soft**: Soft scheduling — _"for Tuesday"_, not _"due Tuesday"_. Creates the time foothold. A working hypothesis for prototyping is that a Step can carry a temporal function — marker, deadline, or recurrence — while time passing never changes its state or evaluates the user.
 
-**B-deadlines**: Out. Calendar-style due dates. Rejected as a missed-deadline ledger that violates the no-time-shame principle.
+**B-deadlines**: A deadline is one candidate temporal function to prototype, not permission for a missed-deadline ledger. Passing it never changes state or evaluates the user. Whether a deadline can provide useful meaning without creating pressure that violates the no-time-shame principle remains open.
 
 **C-order**: Dependency graph as ordering — _sequence is the syllabus_.
 
@@ -64,7 +64,7 @@ Eight candidate enrichments for the Step. Letters are load-bearing — agents an
 
 **F**: Mid-work capture. Frictionless landing place for in-progress insight.
 
-**G**: Per-goal review. The user attaches a review to a goal when they want one — including never; the review's existence is the opt-in, not a toggle. Free-form retrospective on the goal (wins and misfires both). Forward-reference target is _future similar steps across goals_.
+**G**: Per-goal review. The user attaches a review to a goal whenever they want one — including never; it is not tied to goal completion, and the review's existence is the opt-in rather than a toggle. Free-form retrospective on the goal (wins and misfires both). Forward-reference target is _future similar steps across goals_.
 
 **H**: Step-level hypothesis falsification — the misfired step persists as a learning. Forward-reference target is _the immediately replacing step within the same goal_.
 
@@ -94,11 +94,14 @@ Candidate state, system-derived from the H pivot — a falsified step persists l
 _Avoid_: failed, wrong, redo.
 
 **Slot**:
-A named place that exists each occurrence — _this Tuesday_, _next Tuesday_ — and can be checked, left blank, or annotated. The absence of a check is not interpreted by the app. The slot is the unit; presence-or-absence is not aggregated, counted, or surfaced as evidence about the user.
+A dated occurrence produced by a recurring Step — _this Tuesday_, _next Tuesday_ — that can be checked, left blank, or annotated. The absence of a check is not interpreted by the app. The slot is the unit; presence-or-absence is not aggregated, counted, or surfaced as evidence about the user. This is a working hypothesis for prototyping, not yet a settled model.
 _Avoid_: occurrence, missed Tuesday, attendance record, instance.
 
-**Flagged ambiguity — `missed` and the slot principle**:
-The slot principle (the slot exists, blank is blank, the app does not interpret) generalises beyond Sam's recovery context. The app does not promote `pending` → anything else based on time passing, for any goal type. Whether E becomes a single vocabulary used differently per goal, or a fully opt-in-per-goal vocabulary set, is unresolved. Joe is considering base labels (`pending`, `completed`) the user can rename or extend per goal — that's a working direction, not a decision.
+**Universal no-auto-state rule**:
+Time passing never changes a Step's state or causes the app to interpret, score, or aggregate an absence. This applies whether a date functions as a marker, deadline, or recurrence. The precise behavior and presentation of those temporal functions — including whether recurrence produces a distinct Slot model — require prototyping.
+
+**Flagged ambiguity — state vocabulary**:
+Whether E becomes a single vocabulary used differently per goal, or a fully opt-in-per-goal vocabulary set, is unresolved. Joe is considering base labels (`pending`, `completed`) the user can rename or extend per goal — that's a working direction, not a decision.
 
 ### Misfire and learning (H)
 
@@ -181,5 +184,5 @@ The structural unit of `step-model-gap.md`. One persona, one goal, five fields (
 
 - **State vocabulary scope (E).** Whether E is one shared vocabulary used differently per goal type, or a fully opt-in-per-goal vocabulary (base labels the user can rename or extend), is unresolved. UI exploration for each candidate state is the likely next move.
 - **Substructure depth.** One level vs two vs arbitrary. Sam lands at two; the case for capping there is the task view's "one next thing" promise. The case against is that learning structures don't have a natural depth limit.
-- **`slot` scope.** Today the term is anchored to Sam's recurring Tuesdays. Whether it generalizes to every soft-scheduled (B-soft) step, or stays specific to recurring soft commitments in recovery-shaped goals, is open.
+- **Temporal functions and Slots.** A working hypothesis for prototyping is that a Step can carry a marker, deadline, or recurrence, and that recurrence produces dated Slots. The interaction model, persistence behavior, task-view treatment, and consequences of changing temporal function remain open. The universal constraint is settled: time passing never changes state or evaluates the user.
 - **`learning` as a user-choosable state.** H produces a learning step via the falsification pivot — but the doc hasn't resolved whether the user can directly mark a step as `learning` outside that flow.
