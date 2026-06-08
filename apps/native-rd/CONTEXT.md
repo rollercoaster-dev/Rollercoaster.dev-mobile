@@ -82,8 +82,8 @@ The current default state. Today erases most distinctions: _haven't done it yet_
 The current terminal state. Set by the checkbox.
 
 **missed**:
-Candidate state for craft / skill goals. **Banned for recovery goals.** The word is productivity-software default — slightly off for craft, actively harmful for recovery (see _abstinence-violation effect_). Whether the state vocabulary itself becomes opt-in per goal type is a live open question.
-_Avoid_: failed, skipped, overdue.
+Candidate state, if it exists at all — never applied by the app. Time passing does not promote `pending` → `missed`, for any goal type. If a step the user intended for Tuesday doesn't get done, the step stays `pending` (or its Tuesday slot stays blank); the app does not interpret the absence. An earlier draft singled out recovery goals as the place to ban `missed`; the constraint is universal — there is no time-based auto-state for any goal.
+_Avoid_: failed, skipped, overdue, auto-missed.
 
 **waiting-external**:
 Candidate state. The step is blocked by something the user does not control (the PIA's calendar, the clinic's report turnaround).
@@ -98,7 +98,7 @@ A named place that exists each occurrence — _this Tuesday_, _next Tuesday_ —
 _Avoid_: occurrence, missed Tuesday, attendance record, instance.
 
 **Flagged ambiguity — `missed` and the slot principle**:
-For craft goals (Tomás, Malik) a `missed` state may be coherent; for recovery goals (Sam) the principle is _no missed state at all; the slot exists, blank is blank, the app does not interpret_. Whether E becomes a single vocabulary used differently per goal, or a fully opt-in-per-goal vocabulary set, is unresolved. Joe is considering base labels (`pending`, `completed`, `missed`) the user can rename or extend per goal — that's a working direction, not a decision.
+The slot principle (the slot exists, blank is blank, the app does not interpret) generalises beyond Sam's recovery context. The app does not promote `pending` → anything else based on time passing, for any goal type. Whether E becomes a single vocabulary used differently per goal, or a fully opt-in-per-goal vocabulary set, is unresolved. Joe is considering base labels (`pending`, `completed`) the user can rename or extend per goal — that's a working direction, not a decision.
 
 ### Misfire and learning (H)
 
@@ -138,7 +138,7 @@ The principle: states can be named (waiting, slot-blank) without scoring the use
 _Avoid_: gentle framing, soft phrasing.
 
 **Recovery practice**:
-Sam's goal type. Distinct from craft / skill goals — the principles around G (opt-out by default), H (opt-out), and `missed` (banned) differ.
+Sam's goal type. Distinct from craft / skill goals in the kinds of structures that fit, not in goal-type-conditional defaults: G reviews are never prompted (universal — but the absence of the prompt is most load-bearing here, since a recovery review on Sam's behalf would be shame-surveillance); H does not apply because slot-shaped commitments do not carry a falsifiable hypothesis; the `missed` state never arises (universal — no time-based auto-state).
 _Avoid_: sobriety tracking, recovery program (the app does not track sobriety or simulate the program).
 
 ### Research-language
@@ -167,11 +167,11 @@ The structural unit of `step-model-gap.md`. One persona, one goal, five fields (
 
 > **Joe:** Sam's two missed Tuesdays — should the task view show them?
 >
-> **Agent:** Sam's Tuesdays aren't `missed` Tuesdays in the app's vocabulary; they're _unfilled slots_. The slot exists, it's blank, the app doesn't interpret. Under E, `missed` is a state that's probably appropriate for craft goals and banned for recovery goals — so for Sam's recovery practice, the task view shouldn't surface the unfilled slots as anything at all.
+> **Agent:** Sam's Tuesdays aren't `missed` Tuesdays in the app's vocabulary; they're _unfilled slots_. The slot exists, it's blank, the app doesn't interpret — and that's universal, not a recovery-specific carve-out: the app doesn't auto-promote a step to `missed` for any goal. So for Sam's recovery practice, the task view shouldn't surface the unfilled slots as anything at all.
 >
 > **Joe:** And if it were Tomás missing two practice-panel weekends?
 >
-> **Agent:** That's a craft goal, so `missed` is on the table — but it's a state question, not an H question. Tomás's 8-gauge run was a misfire — the step's premise was wrong, and the corrected step _follows from_ it. That's H. Missing a weekend is closer to E: a state vocabulary question about whether `missed` belongs in the set, and whether it's a system-set state or a user choice.
+> **Agent:** That's a state-vocabulary question (E), not an H question. Tomás's 8-gauge run was a misfire — the step's premise was wrong, and the corrected step _follows from_ it. That's H. Missing a weekend is different: a question about whether `missed` belongs in the set at all, and if so, whether the user marks it themselves. The app never auto-promotes by time, for any goal type.
 >
 > **Joe:** What about a sponsor-call cadence Sam didn't make for three weeks?
 >
