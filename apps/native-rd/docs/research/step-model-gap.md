@@ -4,7 +4,7 @@
 **Status:** In progress
 **Owner:** Joe
 
-**Scope reference:** [ADR-0001 §Iteration B](../decisions/ADR-0001-iteration-strategy.md) (amended by [ADR-0006](../decisions/ADR-0006-iteration-b-scope-amendment.md))
+**Scope reference:** [ADR-0001 §Iteration B](../decisions/ADR-0001-iteration-strategy.md) (amended by [ADR-0006](../decisions/ADR-0006-iteration-b-scope-amendment.md); Step-model scope superseded by [ADR-0010](../decisions/ADR-0010-phase-b-step-model-crosswalk.md))
 
 **Domain vocabulary:** [`CONTEXT.md`](../../CONTEXT.md)
 

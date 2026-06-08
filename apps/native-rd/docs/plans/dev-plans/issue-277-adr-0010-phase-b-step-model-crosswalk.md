@@ -59,31 +59,31 @@ questions, and ADR-0006 for the decision being superseded.
 
 These are inputs to ADR-0010, not decisions for ADR-0010 to reconsider.
 
-- [ ] State the universal no-auto-state rule: time passing never changes a
+- [x] State the universal no-auto-state rule: time passing never changes a
       Step's state.
-- [ ] State that the app never interprets, scores, or aggregates an absence.
-- [ ] Apply that rule across marker, deadline, and recurrence temporal
+- [x] State that the app never interprets, scores, or aggregates an absence.
+- [x] Apply that rule across marker, deadline, and recurrence temporal
       functions.
-- [ ] Preserve B-deadlines as a prototype candidate while excluding the
+- [x] Preserve B-deadlines as a prototype candidate while excluding the
       missed-deadline-ledger shape.
-- [ ] Preserve G's existence-as-opt-in: a review exists only when the user
+- [x] Preserve G's existence-as-opt-in: a review exists only when the user
       creates one.
-- [ ] Exclude prompts, scoring, completion triggers, nudges, and per-goal-type
+- [x] Exclude prompts, scoring, completion triggers, nudges, and per-goal-type
       review defaults from G.
-- [ ] Describe Slot as a working hypothesis whose final shape depends on
+- [x] Describe Slot as a working hypothesis whose final shape depends on
       prototyping.
-- [ ] Keep C-as-constraint out: ordering may inform the user, but the app does
+- [x] Keep C-as-constraint out: ordering may inform the user, but the app does
       not refuse actions because a prerequisite is incomplete.
 
 ## Decision Record Shape
 
 Use a compact crosswalk table as the core of ADR-0010. Each row should contain:
 
-| Column | Purpose |
-| --- | --- |
-| Enrichment | Canonical A-H identifier |
-| Phase B commitment | User-visible capability Phase B agrees to provide |
-| Explicit non-commitment | Nearby punitive, premature, or out-of-scope shape |
+| Column                    | Purpose                                             |
+| ------------------------- | --------------------------------------------------- |
+| Enrichment                | Canonical A-H identifier                            |
+| Phase B commitment        | User-visible capability Phase B agrees to provide   |
+| Explicit non-commitment   | Nearby punitive, premature, or out-of-scope shape   |
 | Guardrails and open edges | Locked constraints plus prototype-dependent details |
 
 Keep the table at story altitude. A row should be concrete enough to guide
@@ -93,141 +93,141 @@ later ADRs and tickets, but should not prescribe schema or UI.
 
 ### Step 1: Establish ADR Framing
 
-- [ ] Add ADR metadata: date, proposed status, owner, and a `Supersedes` link
+- [x] Add ADR metadata: date, proposed status, owner, and a `Supersedes` link
       to ADR-0006.
-- [ ] Explain that ADR-0006 admitted Step-model enrichment into Phase B at
+- [x] Explain that ADR-0006 admitted Step-model enrichment into Phase B at
       research altitude.
-- [ ] Explain that PR #219 froze the vocabulary and user-altitude framing.
-- [ ] Define ADR-0010's job as choosing Phase B commitments, not mechanisms.
-- [ ] Add a short section carrying the locked guardrails forward by reference.
+- [x] Explain that PR #219 froze the vocabulary and user-altitude framing.
+- [x] Define ADR-0010's job as choosing Phase B commitments, not mechanisms.
+- [x] Add a short section carrying the locked guardrails forward by reference.
 
 ### Step 2: Decide A - Granularity / Substructure
 
-- [ ] Commit Phase B to Steps containing Steps so users can preserve known or
+- [x] Commit Phase B to Steps containing Steps so users can preserve known or
       discovered substructure.
-- [ ] Cover both known-up-front structure and structure discovered mid-work.
-- [ ] Explicitly avoid deciding one-level, two-level, or arbitrary depth.
-- [ ] Note that task-view interpretation remains an open follow-up.
+- [x] Cover both known-up-front structure and structure discovered mid-work.
+- [x] Explicitly avoid deciding one-level, two-level, or arbitrary depth.
+- [x] Note that task-view interpretation remains an open follow-up.
 
 ### Step 3: Decide B-soft - Soft Temporal Placement
 
-- [ ] Commit Phase B to a soft temporal function that creates a time foothold,
+- [x] Commit Phase B to a soft temporal function that creates a time foothold,
       such as "for Tuesday."
-- [ ] Distinguish temporal placement from deadline accountability.
-- [ ] Apply the universal no-auto-state rule.
-- [ ] Leave marker interaction, persistence, and task-view treatment to
+- [x] Distinguish temporal placement from deadline accountability.
+- [x] Apply the universal no-auto-state rule.
+- [x] Leave marker interaction, persistence, and task-view treatment to
       prototyping.
 
 ### Step 4: Decide B-deadlines - Deadline Prototype
 
-- [ ] Keep deadline as a candidate temporal function Phase B will prototype.
-- [ ] Require the prototype to demonstrate useful meaning without automatic
+- [x] Keep deadline as a candidate temporal function Phase B will prototype.
+- [x] Require the prototype to demonstrate useful meaning without automatic
       state changes or user evaluation.
-- [ ] Explicitly exclude overdue status, missed-deadline ledgers, absence
+- [x] Explicitly exclude overdue status, missed-deadline ledgers, absence
       counts, and pressure-oriented accountability behavior.
-- [ ] Avoid deciding whether deadline survives prototyping into the final
+- [x] Avoid deciding whether deadline survives prototyping into the final
       interaction model.
 
 ### Step 5: Decide C-order - Sequence As Syllabus
 
-- [ ] Commit Phase B to user-authored ordering or dependency information that
+- [x] Commit Phase B to user-authored ordering or dependency information that
       preserves the sequence of learning and work.
-- [ ] Frame the relationship as informative structure rather than enforcement.
-- [ ] Explicitly exclude dependency-as-constraint-engine behavior.
-- [ ] Leave graph representation and editing UI to later design work.
+- [x] Frame the relationship as informative structure rather than enforcement.
+- [x] Explicitly exclude dependency-as-constraint-engine behavior.
+- [x] Leave graph representation and editing UI to later design work.
 
 ### Step 6: Decide C-waiting - External Waiting
 
-- [ ] Commit Phase B to representing that a Step is waiting on an external
+- [x] Commit Phase B to representing that a Step is waiting on an external
       person, organization, event, or condition.
-- [ ] Preserve the distinction between external waiting and user inaction.
-- [ ] Ensure the vocabulary names state without scoring the user.
-- [ ] Avoid locking whether waiting is modeled as a state, relation, metadata,
+- [x] Preserve the distinction between external waiting and user inaction.
+- [x] Ensure the vocabulary names state without scoring the user.
+- [x] Avoid locking whether waiting is modeled as a state, relation, metadata,
       or combination of those.
 
 ### Step 7: Decide D - Per-Step Context
 
-- [ ] Commit Phase B to a lightweight context surface attached to the relevant
+- [x] Commit Phase B to a lightweight context surface attached to the relevant
       Step or temporal unit.
-- [ ] Preserve the one-line retrieval-support intent.
-- [ ] Cover expected-date context and notes-for-future-self without merging D
+- [x] Preserve the one-line retrieval-support intent.
+- [x] Cover expected-date context and notes-for-future-self without merging D
       into evidence or review.
-- [ ] Avoid deciding field structure, length limits, or editor treatment.
+- [x] Avoid deciding field structure, length limits, or editor treatment.
 
 ### Step 8: Decide E - Richer State Vocabulary
 
-- [ ] Commit Phase B to vocabulary richer than `pending` / `completed`.
-- [ ] Require state names to describe experience without pathologizing or
+- [x] Commit Phase B to vocabulary richer than `pending` / `completed`.
+- [x] Require state names to describe experience without pathologizing or
       scoring it.
-- [ ] Preserve the universal rule that time never assigns a state.
-- [ ] Leave the final vocabulary, user-renaming behavior, per-goal scope, and
+- [x] Preserve the universal rule that time never assigns a state.
+- [x] Leave the final vocabulary, user-renaming behavior, per-goal scope, and
       system-derived states open.
 
 ### Step 9: Decide F - Mid-Work Capture
 
-- [ ] Commit Phase B to a low-friction landing place for structure or insight
+- [x] Commit Phase B to a low-friction landing place for structure or insight
       discovered during work.
-- [ ] Connect the commitment to preserving bursts of thought before a context
+- [x] Connect the commitment to preserving bursts of thought before a context
       switch.
-- [ ] Keep F distinct from completion evidence and from G reviews.
-- [ ] Avoid prescribing tap counts, navigation, modal structure, or capture
+- [x] Keep F distinct from completion evidence and from G reviews.
+- [x] Avoid prescribing tap counts, navigation, modal structure, or capture
       media.
 
 ### Step 10: Decide G - User-Created Goal Review
 
-- [ ] Commit Phase B to a free-form review that the user may attach to a goal
+- [x] Commit Phase B to a free-form review that the user may attach to a goal
       whenever they choose.
-- [ ] Define the review's existence as the opt-in.
-- [ ] Preserve its forward-reference target: future similar work across goals.
-- [ ] Explicitly exclude prompts, completion triggers, scores, nudges, required
+- [x] Define the review's existence as the opt-in.
+- [x] Preserve its forward-reference target: future similar work across goals.
+- [x] Explicitly exclude prompts, completion triggers, scores, nudges, required
       reviews, and per-goal-type defaults.
-- [ ] Keep G distinct from H's step-level learning artifact.
+- [x] Keep G distinct from H's step-level learning artifact.
 
 ### Step 11: Decide H - Misfire As Learning
 
-- [ ] Commit Phase B to preserving a falsified Step as a learning rather than
+- [x] Commit Phase B to preserving a falsified Step as a learning rather than
       replacing or deleting it.
-- [ ] Commit to a follows-from relationship to the immediately corrected Step
+- [x] Commit to a follows-from relationship to the immediately corrected Step
       within the same goal.
-- [ ] Preserve the structural distinction between a wrong premise and user
+- [x] Preserve the structural distinction between a wrong premise and user
       failure.
-- [ ] Keep H distinct from absence, incomplete work, and G's broader review.
-- [ ] Leave fields, transition mechanics, and UI treatment to later decisions.
+- [x] Keep H distinct from absence, incomplete work, and G's broader review.
+- [x] Leave fields, transition mechanics, and UI treatment to later decisions.
 
 ### Step 12: Record Consequences And Follow-Ups
 
-- [ ] State that later schema ADRs must implement these commitments without
+- [x] State that later schema ADRs must implement these commitments without
       weakening the guardrails.
-- [ ] Name the unresolved questions without attempting to close them.
-- [ ] Note that design and implementation tickets should be derived only after
+- [x] Name the unresolved questions without attempting to close them.
+- [x] Note that design and implementation tickets should be derived only after
       the crosswalk is accepted.
-- [ ] State that ADR-0010 replaces ADR-0006 as the current Phase B Step-model
+- [x] State that ADR-0010 replaces ADR-0006 as the current Phase B Step-model
       scope reference.
 
 ### Step 13: Apply Supersession Updates
 
-- [ ] Update ADR-0006's status line to point to ADR-0010 using the existing
+- [x] Update ADR-0006's status line to point to ADR-0010 using the existing
       ADR-0001 / ADR-0006 supersession pattern.
-- [ ] Keep ADR-0006's accepted body unchanged.
-- [ ] Add ADR-0010 to `docs/decisions/index.md` with the correct status and
+- [x] Keep ADR-0006's accepted body unchanged.
+- [x] Add ADR-0010 to `docs/decisions/index.md` with the correct status and
       verification date.
-- [ ] Check references that call ADR-0006 the current Step-model scope and
+- [x] Check references that call ADR-0006 the current Step-model scope and
       update only those that would otherwise become misleading.
 
 ### Step 14: Validate The Decision
 
-- [ ] Confirm all ten enrichment rows are present: A, B-soft, B-deadlines,
+- [x] Confirm all ten enrichment rows are present: A, B-soft, B-deadlines,
       C-order, C-waiting, D, E, F, G, and H.
-- [ ] Confirm every row has a commitment and an explicit non-commitment.
-- [ ] Confirm the no-auto-state rule applies to every temporal function.
-- [ ] Confirm B-deadlines is not accidentally removed from Phase B.
-- [ ] Confirm G has no prompt or implicit opt-in.
-- [ ] Confirm Slot remains explicitly prototype-dependent.
-- [ ] Confirm C-as-constraint remains out.
-- [ ] Search for schema-shaped commitments, UI prescriptions, or accidental
+- [x] Confirm every row has a commitment and an explicit non-commitment.
+- [x] Confirm the no-auto-state rule applies to every temporal function.
+- [x] Confirm B-deadlines is not accidentally removed from Phase B.
+- [x] Confirm G has no prompt or implicit opt-in.
+- [x] Confirm Slot remains explicitly prototype-dependent.
+- [x] Confirm C-as-constraint remains out.
+- [x] Search for schema-shaped commitments, UI prescriptions, or accidental
       resolution of the five open questions and remove them.
-- [ ] Run Markdown lint or the repository's relevant docs validation.
-- [ ] Run `git diff --check`.
+- [x] Run Markdown lint or the repository's relevant docs validation.
+- [x] Run `git diff --check`.
 
 ## Review Prompts
 
