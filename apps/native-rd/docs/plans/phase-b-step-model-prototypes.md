@@ -55,6 +55,27 @@ Some questions cannot be answered below a certain rung:
 Stage 0 records the medium menu; each stage's entry includes choosing the
 medium per prototype and noting it in the prototype record.
 
+## Evidence Sources
+
+Prototype evidence comes from two sources with different weight:
+
+- **Self-testing and living-with (continuous, weakest):** Joe builds, walks
+  the persona scenarios, and lives with on-device prototypes day to day. This
+  is the default evidence stream for every prototype and is enough to justify
+  the **revise**, **split**, and **more prototyping** decision-gate outcomes.
+- **Real ND users (required at gates):** a stage's findings cannot graduate
+  through a decision gate to a schema ADR, design decision, or implementation
+  issue on self-testing alone. At least one session with a real ND user on
+  that stage's prototypes is required evidence first.
+
+The reason for the gate requirement is structural, not procedural: this is an
+anti-pathologizing instrument, and the designer cannot surprise himself with a
+shame response he designed against. ADR-0006 exists because real user testing
+falsified the flat Step; the same channel is what validates its replacement.
+
+A prototype record based on self-testing only says so explicitly in its
+Observations section, so later readers can weigh the evidence correctly.
+
 ## Target Vision
 
 The integrated direction is a Step model where a user can decompose real work,
@@ -376,6 +397,10 @@ Prototype findings can graduate into one of these outputs:
   another pass.
 - **Removed from Phase B:** the capability violates a guardrail, fails to earn
   its complexity, or depends on a later iteration.
+
+Graduating to a schema ADR, design decision, or implementation issue requires
+real ND user evidence, not self-testing alone (see Evidence Sources). The
+other outcomes can rest on self-testing.
 
 ## Open Questions Register
 
