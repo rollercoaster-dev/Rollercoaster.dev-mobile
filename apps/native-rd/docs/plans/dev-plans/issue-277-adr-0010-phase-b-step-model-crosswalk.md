@@ -93,8 +93,8 @@ later ADRs and tickets, but should not prescribe schema or UI.
 
 ### Step 1: Establish ADR Framing
 
-- [x] Add ADR metadata: date, proposed status, owner, and a `Supersedes` link
-      to ADR-0006.
+- [x] Add ADR metadata: date, status (accepted in this PR), owner, and a
+      `Supersedes` link to ADR-0006.
 - [x] Explain that ADR-0006 admitted Step-model enrichment into Phase B at
       research altitude.
 - [x] Explain that PR #219 froze the vocabulary and user-altitude framing.
