@@ -44,7 +44,10 @@ _Avoid_: scheduling, due date, reminder.
 
 ### The A–H taxonomy
 
-Eight letters representing nine candidate enrichments for the Step: C has separate ordering and external-waiting forms. Letters are load-bearing — agents and docs refer to them by letter.
+Eight letters representing ten candidate enrichments for the Step: B has separate
+soft-placement and deadline forms, and C has separate ordering and
+external-waiting forms. Letters are load-bearing — agents and docs refer to them
+by letter.
 
 **A**: Granularity / nesting. Substructure as offloaded cognition; landing places for ND bursts.
 

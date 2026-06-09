@@ -105,6 +105,10 @@ Other Step-model capabilities this feature depends on or affects.
 The prototype sequence should move from simple Step richness toward integrated
 behavior. Do not launch ten independent feature tracks at once.
 
+**Next action:** complete Stage 0 before starting an enrichment prototype. Its
+baseline, evidence format, and guardrail checklist become shared inputs to every
+later stage.
+
 ### Stage 0: Baseline
 
 Purpose: establish what the current Step can and cannot hold before adding new
@@ -121,6 +125,13 @@ Exit criteria:
 - Current behavior is documented clearly enough to compare against prototypes.
 - Prototype evidence format is agreed.
 - Guardrail checklist is available for every prototype.
+
+Stage 0 deliverables:
+
+- A baseline record of the current Step behavior and task-view contract.
+- A reusable prototype record copied from the template below.
+- A reusable guardrail checklist covering no-auto-state, absence handling,
+  G opt-in, Slot uncertainty, and informative-only ordering.
 
 ### Stage 1: Step Richness
 

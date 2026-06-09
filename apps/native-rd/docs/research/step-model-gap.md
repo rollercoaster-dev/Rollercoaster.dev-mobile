@@ -30,7 +30,10 @@ This frame is downstream of [product-vision.md §Core Principles](../vision/prod
 
 ## The A–H taxonomy
 
-Eight letters representing nine candidate enrichments: C has separate ordering and external-waiting forms. Each is sized by both its pedagogical frame and its ND-specific hit.
+Eight letters representing ten candidate enrichments: B has separate
+soft-placement and deadline forms, and C has separate ordering and
+external-waiting forms. Each is sized by both its pedagogical frame and its
+ND-specific hit.
 
 | Letter        | What                                                                           | Pedagogical frame                                                                                                                     | ND-specific hit                                                                                                                                                                                                                                                                        |
 | ------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -70,7 +73,10 @@ In practice this means craft and skill goals (Tomás's wiring, Malik's modelling
 
 ## Failure scenarios
 
-Four scenarios, each in five fields. Together they cover all eight letters and all nine candidate enrichments. Personas are existing; persona behavior beyond what's in [user-stories.md](../vision/user-stories.md) is flagged as invented-but-plausible where relevant.
+Four scenarios, each in five fields. Together they cover all eight letters and
+all ten candidate enrichments. Personas are existing; persona behavior beyond
+what's in [user-stories.md](../vision/user-stories.md) is flagged as
+invented-but-plausible where relevant.
 
 ### Tomás and the practice panel
 

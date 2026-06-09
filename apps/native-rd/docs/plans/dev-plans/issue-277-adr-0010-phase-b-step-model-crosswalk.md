@@ -2,15 +2,15 @@
 
 ## Issue Summary
 
-**Title:** ADR-0010: per-letter A-H <-> Phase B crosswalk (supersedes ADR-0006)  
-**Type:** Documentation / architecture decision  
-**Complexity:** Medium  
+**Title:** ADR-0010: per-letter A-H <-> Phase B crosswalk (supersedes ADR-0006)
+**Type:** Documentation / architecture decision
+**Complexity:** Medium
 **Issue:** https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/277
 
 ## Objective
 
 Draft ADR-0010 as the Phase B commitment crosswalk for the Step model's A-H
-taxonomy. For each of the eight letters and nine candidate enrichments, record:
+taxonomy. For each of the eight letters and ten candidate enrichments, record:
 
 - what Phase B commits to building;
 - what Phase B explicitly does not commit to building;
