@@ -105,13 +105,14 @@ This is a direction for prototypes, not a production interaction contract.
 Filled feature-shape sections live in
 [phase-b-feature-shapes.md](./phase-b-feature-shapes.md), one section per
 enrichment. They are written just-in-time, not all up front: each stage begins
-by instantiating the template for that stage's letters, and a prototype does
-not start until its letter's feature shape exists.
+by instantiating the template for that stage's enrichments, and a prototype
+does not start until its own feature shape exists. (Most enrichments are single
+letters; some — like the Stage 3 recurrence/Slot spike — are not.)
 
 Each feature-shape section should use this template:
 
 ```markdown
-## <Letter>: <Feature Name>
+## <Identifier>: <Feature Name>
 
 ### User Need
 

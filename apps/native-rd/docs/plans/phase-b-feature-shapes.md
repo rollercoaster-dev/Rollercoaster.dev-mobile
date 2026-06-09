@@ -3,8 +3,9 @@
 Filled feature-shape sections for the ADR-0010 enrichments, written
 just-in-time per stage as described in
 [phase-b-step-model-prototypes.md](./phase-b-step-model-prototypes.md)
-(§Feature Shape Template). A prototype does not start until its letter's
-section exists here.
+(§Feature Shape Template). A prototype does not start until its own section
+exists here (most enrichments are single letters; some — like the recurrence/
+Slot spike — are not).
 
 Each section uses the template from the prototype plan: User Need, Smallest
 Useful Shape, Later Integrated Shape, Must Not Do, Prototype Questions,
