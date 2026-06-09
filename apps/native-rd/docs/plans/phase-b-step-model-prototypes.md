@@ -102,6 +102,12 @@ This is a direction for prototypes, not a production interaction contract.
 
 ## Feature Shape Template
 
+Filled feature-shape sections live in
+[phase-b-feature-shapes.md](./phase-b-feature-shapes.md), one section per
+enrichment. They are written just-in-time, not all up front: each stage begins
+by instantiating the template for that stage's letters, and a prototype does
+not start until its letter's feature shape exists.
+
 Each feature-shape section should use this template:
 
 ```markdown
