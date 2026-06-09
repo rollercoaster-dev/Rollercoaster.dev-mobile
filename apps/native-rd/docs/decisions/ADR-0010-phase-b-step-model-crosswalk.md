@@ -71,7 +71,9 @@ Phase B commits to the following Step-model crosswalk:
   must implement these commitments without weakening the structural guardrails.
 - The unresolved questions from `step-model-gap.md` remain unresolved here:
   substructure depth, state vocabulary scope, H's UI treatment, temporal
-  functions and Slots, and task-view implications.
+  functions and Slots, and task-view implications. Their status is tracked in
+  the prototype plan's
+  [Open Questions Register](../plans/phase-b-step-model-prototypes.md#open-questions-register).
 - Phase B follow-up work should be drafted per capability or tightly related
   group of capabilities. This ADR authorizes that follow-up work; it does not
   choose its schema or UI.

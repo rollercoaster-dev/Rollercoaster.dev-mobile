@@ -172,6 +172,11 @@ The current working hypothesis for prototyping is that a Step can carry a tempor
 
 ## Open questions
 
+> Status, hypotheses, and ownership for these questions are tracked
+> canonically in the prototype plan's
+> [Open Questions Register](../plans/phase-b-step-model-prototypes.md#open-questions-register).
+> This section records the research framing behind them.
+
 - **State vocabulary scope.** With H added, the candidate set of named states the user might encounter is _pending, completed, missed, waiting-external, in-progress, abandoned, learning_ — seven. Whether all seven are user-namable, or whether some are system-derived (e.g. _learning_ only reachable via the H pivot flow, never chosen directly), is a UX question.
 - **Temporal functions and Slots.** Prototype a Step date as marker, deadline, or recurrence, with recurrence producing dated Slots as the current hypothesis. Resolve what remains visible after time passes, how recurring Slots persist, whether changing temporal function preserves history, and how each function appears in the task view. No option may introduce an automatic state change or evaluation when time passes.
 - **H's UI treatment.** A learning step has two things worth surfacing: the original framing (the hypothesis the user committed to) and the learned outcome (what the falsification revealed). Does the UI show both side-by-side, fold the original under the learning, or surface only the learned outcome with the original available on tap?

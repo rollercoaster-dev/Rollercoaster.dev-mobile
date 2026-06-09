@@ -428,7 +428,11 @@ other outcomes can rest on self-testing.
 
 ## Open Questions Register
 
-Track unresolved questions in this table as prototypes produce evidence.
+This register is the canonical tracking home for the Step-model open
+questions. [step-model-gap.md](../research/step-model-gap.md) holds the
+research framing behind each question and ADR-0010 names them, but status,
+hypotheses, and ownership are updated here only, as prototypes produce
+evidence.
 
 | Question                     | Current Hypothesis                                                                                                 | Blocking Prototype            | Owner | Status |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------- | ----- | ------ |
