@@ -100,6 +100,27 @@ implementation planning, or removal from Phase B.
 Other Step-model capabilities this feature depends on or affects.
 ```
 
+## Priority And Cut Line
+
+The stage order below is also the priority order. If Phase B runs out of
+runway, the cut line is explicit rather than improvised:
+
+- **Must-have: Stages 0-2.** The baseline, Step richness (D, E, A), and
+  working-with-Steps (F, C-order, C-waiting) clusters are the Phase B core.
+  Phase B is not done without decision-gate outcomes for these.
+- **Committed but deferrable: Stages 3-4.** Time (B-soft, B-deadlines,
+  recurrence/Slot) and learning (H, G) remain ADR-0010 commitments, but their
+  prototype work may be deferred to a later phase if runway forces it. A
+  deferral is recorded as a decision-gate outcome, not left implicit.
+- **Removing a letter from Phase B entirely** still requires a new ADR
+  superseding ADR-0010 for that letter. The cut line governs prototype
+  sequencing and deferral; it does not quietly shrink the commitment.
+
+Each stage gets a timebox agreed when the stage starts (Stage 0 sets Stage 1's
+timebox, and so on). When a timebox expires, record a decision-gate outcome
+with the evidence in hand — continue, revise, defer, or escalate — instead of
+silently extending the stage.
+
 ## Prototype Sequence
 
 The prototype sequence should move from simple Step richness toward integrated
