@@ -27,10 +27,11 @@ this handoff verified. Where the outputs landed:
   Joe's call, blocking the Stage 1 D prototype's feature shape).
 - **Vocabulary boundary (item 4):** the D/F/evidence distinctions survive as
   semantic/retrieval distinctions, not storage ones — recorded in the baseline
-  record's "Vocabulary boundary in today's terms." `CONTEXT.md` itself was not
-  edited (frozen by PR #219; its "evidence-at-completion — the current
-  evidence shape" line describes the semantic register, not a mechanical
-  completion gate — the baseline record notes this).
+  record's "Vocabulary boundary in today's terms." `CONTEXT.md` was updated in
+  a follow-up pass (it was already edited in this PR, so not frozen): the Step
+  definition now names today's full surface, the D and F entries name the
+  existing evidence channel, and "evidence-at-completion" is corrected to a
+  semantic register rather than a mechanical completion gate.
 
 ## Why this session exists
 
