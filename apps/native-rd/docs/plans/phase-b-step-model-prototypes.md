@@ -331,6 +331,24 @@ Exit criteria:
   later ADR.
 - The next schema/design ADRs can be scoped from evidence, not speculation.
 
+## Data-Layer Feasibility Spike
+
+Schema decisions stay deferred, but feasibility should not be a surprise. A
+half-day, evidence-only spike runs alongside Stage 1 and answers, against the
+actual Evolu/SQLite stack (`src/db/schema.ts`):
+
+- Can Evolu represent recursive Steps (A: Steps containing Steps) without
+  fighting the sync model?
+- Can sibling ordering (C-order) survive local-first sync without conflict
+  pathologies?
+- Can the `pending` / `completed` state set widen (E) without a destructive
+  migration?
+
+The output is a short feasibility note, not a schema decision and not a
+migration. Its only job is to surface "the data layer cannot model this
+cheaply" before a prototype proves a behavior the stack cannot persist —
+that finding is dramatically cheaper during Stage 1 than after it.
+
 ## Integration Matrix
 
 | Features          | Question                                                                 |
