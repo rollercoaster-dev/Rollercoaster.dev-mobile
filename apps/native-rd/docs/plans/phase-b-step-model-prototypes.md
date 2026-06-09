@@ -232,6 +232,14 @@ Key questions:
 - Which state distinctions are meaningful without becoming labels of failure?
 - How much substructure can serve real work without breaking "one next step"?
 
+Deliberately left dangling — Stage 1 must not stall trying to close these:
+
+- **Substructure depth** is not resolved here. Stage 1's A prototype gathers
+  behavior evidence, but the depth question graduates only after Stage 5's
+  task-view composition (see the Open Questions Register).
+- **The `learning` state** is out of Stage 1's E scope. E will bump into it;
+  park it for Stage 4's H prototype rather than resolving it early.
+
 ### Stage 2: Working With Steps
 
 Purpose: test how Steps change while the user is doing real work.
@@ -303,6 +311,10 @@ Key questions:
 - How does the corrected Step follow from the learning without erasing it?
 - How does a prior learning become available during a later review?
 - Can G remain discoverable without prompts, nudges, or completion triggers?
+
+Stage 4 also closes the `learning`-state edge that Stage 1's E prototype
+deliberately parked: whether learning is a state, a transition result, or
+both (see the E + H row in the Integration Matrix).
 
 ### Stage 5: Integration
 
