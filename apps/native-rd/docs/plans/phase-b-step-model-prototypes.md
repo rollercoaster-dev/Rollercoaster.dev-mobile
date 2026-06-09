@@ -29,6 +29,32 @@ The goal is to learn the shape of the features in a controlled order:
 - Keep G review opt-in structural: the review exists only when the user creates
   one.
 
+## Prototype Medium
+
+The medium determines what evidence a prototype can produce, so it is chosen
+deliberately per cluster, not defaulted. The menu, roughly in order of cost:
+
+- **Paper or sketch:** vocabulary, naming, and presentation questions.
+- **Clickable flow (Figma or similar):** navigation, placement, and
+  composition questions.
+- **Throwaway screen in the app behind a dev flag:** interaction-feel
+  questions that need real input, real lists, and real device ergonomics.
+- **Lived-with build:** questions that only answer themselves across real
+  days of use.
+
+Some questions cannot be answered below a certain rung:
+
+- Stage 3's time questions — "what remains visible after a date passes,"
+  Slot persistence, recurrence behavior — require a lived-with build. Paper
+  cannot simulate a Tuesday passing.
+- F's friction question requires real mid-work conditions; a walkthrough of a
+  capture flow measures nothing about capture under load.
+- E's vocabulary and H's presentation can start on paper and only move up a
+  rung when naming stabilizes.
+
+Stage 0 records the medium menu; each stage's entry includes choosing the
+medium per prototype and noting it in the prototype record.
+
 ## Target Vision
 
 The integrated direction is a Step model where a user can decompose real work,
@@ -153,6 +179,8 @@ Stage 0 deliverables:
 - A reusable prototype record copied from the template below.
 - A reusable guardrail checklist covering no-auto-state, absence handling,
   G opt-in, Slot uncertainty, and informative-only ordering.
+- The prototype medium menu, with the medium chosen for each Stage 1
+  prototype.
 
 ### Stage 1: Step Richness
 
