@@ -21,6 +21,10 @@ Implementation plans and vision documents. Active plans are in progress; complet
 | [2026-05-16-pr-28-release-pipeline-setup.md](./2026-05-16-pr-28-release-pipeline-setup.md)                                                                      | Review and setup walkthrough for PR #28 release pipeline                          | 2026-05-16    |
 | [2026-05-18-badge-export-fix.md](./2026-05-18-badge-export-fix.md)                                                                                              | Stop shipping un-baked badges: Tier 1 one-line fix + Tier 2 honest export UX      | 2026-05-18    |
 | [2026-05-18-expo-app-variants.md](./2026-05-18-expo-app-variants.md) ([#94](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/94))           | Adopt Expo multi-variant pattern to end \`INSTALL_FAILED_VERSION_DOWNGRADE\`      | 2026-05-18    |
+| [phase-b-step-model-prototypes.md](./phase-b-step-model-prototypes.md)                                                                                          | Prototype sequence for ADR-0010 Step-model commitments                            | 2026-06-09    |
+| [phase-b-feature-shapes.md](./phase-b-feature-shapes.md)                                                                                                        | Per-enrichment feature shapes, filled just-in-time per prototype stage            | 2026-06-09    |
+| [2026-06-09-step-docs-anchoring-review-handoff.md](./2026-06-09-step-docs-anchoring-review-handoff.md)                                                          | Handoff: anchor ADR-0010/prototype docs in the app's actual Step implementation   | 2026-06-09    |
+| [phase-b-stage-0-baseline.md](./phase-b-stage-0-baseline.md)                                                                                                    | Stage 0 baseline record: what the current Step holds, per ADR-0010 letter         | 2026-06-09    |
 
 ## Reference
 

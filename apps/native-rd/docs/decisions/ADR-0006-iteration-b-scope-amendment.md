@@ -1,7 +1,7 @@
 # ADR-0006: Iteration B scope amendment — drop three orphans, add step-model enrichment
 
 **Date:** 2026-05-23
-**Status:** Accepted
+**Status:** Accepted — Step-model enrichment scope superseded by [ADR-0010](./ADR-0010-phase-b-step-model-crosswalk.md) (2026-06-08)
 **Owner:** Joe
 **Amends:** [ADR-0001](./ADR-0001-iteration-strategy.md) — Iteration B scope only
 

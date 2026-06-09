@@ -11,7 +11,7 @@ A user-named arc of work the app holds: "Build practice panel," "Build a recover
 _Avoid_: project, task list, objective.
 
 **Step**:
-The unit being elaborated in Iteration B — currently a title plus a `pending`/`completed` toggle; in the gap doc, the surface that has to carry substructure, state, notes, evidence, and (for some kinds) learning.
+The unit being elaborated in Iteration B — currently a title, a user-reorderable ordinal, a `pending`/`completed` toggle, optional planned evidence types, and evidence attachable at any time; in the gap doc, the surface that has to carry substructure, state, notes, evidence, and (for some kinds) learning. Full inventory with file refs: the [Stage 0 baseline record](docs/plans/phase-b-stage-0-baseline.md).
 _Avoid_: task, todo, item, action.
 
 **Sub-step**:
@@ -44,7 +44,10 @@ _Avoid_: scheduling, due date, reminder.
 
 ### The A–H taxonomy
 
-Eight letters representing nine candidate enrichments for the Step: C has separate ordering and external-waiting forms. Letters are load-bearing — agents and docs refer to them by letter.
+Eight letters representing ten candidate enrichments for the Step: B has separate
+soft-placement and deadline forms, and C has separate ordering and
+external-waiting forms. Letters are load-bearing — agents and docs refer to them
+by letter.
 
 **A**: Granularity / nesting. Substructure as offloaded cognition; landing places for ND bursts.
 
@@ -58,11 +61,11 @@ Eight letters representing nine candidate enrichments for the Step: C has separa
 
 **C-as-constraint**: Out. Dependency-as-constraint-engine (app refuses an action because a prerequisite isn't met). Punitive.
 
-**D**: Per-step context (one-line note). Tacit knowledge made explicit.
+**D**: Per-step context (one-line note). Tacit knowledge made explicit. Per-step free-form text already exists today — as text evidence, with evidence semantics; D's open question is whether context is a distinct thing (own retrieval surface, prominence at re-entry) or a presentation/retrieval layer over that channel.
 
 **E**: State vocabulary beyond `pending`/`completed`. Naming states without pathologizing them.
 
-**F**: Mid-work capture. Frictionless landing place for in-progress insight.
+**F**: Mid-work capture. Frictionless landing place for in-progress insight. A six-modality capture suite already ships and is reachable mid-work, but everything it captures lands as an evidence record; F's open questions are friction under real mid-work load and where captured _structure_ (a new sub-step, not evidence) lands.
 
 **G**: Per-goal review. The user attaches a review to a goal whenever they want one — including never; it is not tied to goal completion, and the review's existence is the opt-in rather than a toggle. Free-form retrospective on the goal (wins and misfires both). Forward-reference target is _future similar steps across goals_.
 
@@ -151,7 +154,7 @@ Notes-for-future-self attached to in-progress sub-steps whose umbrella completes
 _Avoid_: progress notes, journal entries.
 
 **Evidence-at-completion**:
-Proof-a-step-is-done. The current evidence shape. Distinct from evidence-during-practice.
+Proof-a-step-is-done. The current evidence channel's typical semantic register — but not a mechanical constraint: today's evidence attaches to a step at any time, not only at completion. Distinct from evidence-during-practice in register, not in mechanism.
 
 **The journey is the product**:
 Core principle from product-vision.md. The artifact preserved is the process, not just the outcome.
