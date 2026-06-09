@@ -188,9 +188,13 @@ later stage.
 Purpose: establish what the current Step can and cannot hold before adding new
 capabilities.
 
-- Document current Step behavior: title, order, evidence, and
-  `pending` / `completed`.
-- Reconfirm the task view promise: one next step per active goal.
+- Document current Step behavior — the full surface, not just the schema:
+  title, user-reorderable `ordinal` ordering, `pending` / `completed` plus the
+  UI-derived `in-progress`, `completedAt`, `plannedEvidenceTypes`, and the
+  six-modality evidence capture suite attachable to a Step at any time.
+- Reconfirm the task view promise: one next step per active goal. Its two
+  living implementations today: each goal card surfaces its first pending
+  step's title, and focus mode snaps to the first pending step on load.
 - Create a lightweight prototype shell or low-fidelity flow format if needed.
 - Define common evaluation criteria for all prototypes.
 
@@ -202,7 +206,9 @@ Exit criteria:
 
 Stage 0 deliverables:
 
-- A baseline record of the current Step behavior and task-view contract.
+- A baseline record of the current Step behavior and task-view contract —
+  seeded with file refs in
+  [phase-b-stage-0-baseline.md](./phase-b-stage-0-baseline.md).
 - A reusable prototype record copied from the template below.
 - A reusable guardrail checklist covering no-auto-state, absence handling,
   G opt-in, Slot uncertainty, and informative-only ordering.
@@ -446,13 +452,14 @@ research framing behind each question and ADR-0010 names them, but status,
 hypotheses, and ownership are updated here only, as prototypes produce
 evidence.
 
-| Question                     | Current Hypothesis                                                                                                 | Blocking Prototype            | Owner | Status |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------- | ----- | ------ |
-| Substructure depth           | Two levels may cover the current scenarios, but arbitrary depth may better match learning structures.              | A + task view prototype       | Joe   | Open   |
-| State vocabulary scope       | A base vocabulary with user-renamable or extendable labels may be enough, but per-goal scope is unresolved.        | E prototype                   | Joe   | Open   |
-| H UI treatment               | A learning may need to show both original framing and learned outcome, but exact presentation is unresolved.       | H prototype                   | Joe   | Open   |
-| Temporal functions and Slots | Recurrence may need dated Slots; marker and deadline may not.                                                      | Stage 3 time prototypes       | Joe   | Open   |
-| Task-view implications       | "Next Step" may mean next leaf, next umbrella, next non-waiting Step, or next dated unit depending on composition. | Stage 5 integration prototype | Joe   | Open   |
+| Question                     | Current Hypothesis                                                                                                                                                                                 | Blocking Prototype            | Owner | Status |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | ----- | ------ |
+| Substructure depth           | Two levels may cover the current scenarios, but arbitrary depth may better match learning structures.                                                                                              | A + task view prototype       | Joe   | Open   |
+| State vocabulary scope       | A base vocabulary with user-renamable or extendable labels may be enough, but per-goal scope is unresolved.                                                                                        | E prototype                   | Joe   | Open   |
+| H UI treatment               | A learning may need to show both original framing and learned outcome, but exact presentation is unresolved.                                                                                       | H prototype                   | Joe   | Open   |
+| Temporal functions and Slots | Recurrence may need dated Slots; marker and deadline may not.                                                                                                                                      | Stage 3 time prototypes       | Joe   | Open   |
+| Task-view implications       | "Next Step" may mean next leaf, next umbrella, next non-waiting Step, or next dated unit depending on composition.                                                                                 | Stage 5 integration prototype | Joe   | Open   |
+| D vs existing text evidence  | Per-step context exists today only as text evidence with evidence semantics; D may be a distinct surface (re-entry prominence, own retrieval) or a presentation/retrieval layer over that channel. | D prototype (Stage 1)         | Joe   | Open   |
 
 ## Relationship To ADRs
 
