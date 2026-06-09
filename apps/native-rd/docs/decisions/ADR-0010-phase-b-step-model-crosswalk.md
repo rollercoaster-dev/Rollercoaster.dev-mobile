@@ -17,7 +17,8 @@ research-level A-G taxonomy from
 
 PR #219 then froze the Step-model vocabulary and user-altitude framing in
 [`CONTEXT.md`](../../CONTEXT.md) and `step-model-gap.md`, including the current
-A-H taxonomy where C has separate ordering and external-waiting forms. That
+A-H taxonomy where B has separate soft-placement and deadline forms and C has
+separate ordering and external-waiting forms. That
 changed the work needed next. Phase B no longer needs another research pass
 deciding whether the Step model matters; it needs a per-letter crosswalk that
 says what Phase B is committed to building, what it explicitly refuses to
