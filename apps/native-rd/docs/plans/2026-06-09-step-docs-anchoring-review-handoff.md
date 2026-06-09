@@ -2,8 +2,35 @@
 
 **Date:** 2026-06-09
 **Owner:** Joe
-**Status:** Ready for review session
+**Status:** Carried out 2026-06-09, on the PR branch
 **Branch / PR:** `docs/issue-277-adr-0010-plan` / PR #278 (open, unmerged)
+
+## Outcome (review carried out 2026-06-09)
+
+All five checklist items completed against the code; every inventory claim in
+this handoff verified. Where the outputs landed:
+
+- **Per-letter walk + Stage 0 baseline record:**
+  [phase-b-stage-0-baseline.md](./phase-b-stage-0-baseline.md). Findings
+  beyond this handoff's inventory: the goals screen already surfaces each
+  goal's first pending step (`GoalsScreen.tsx:44` + `GoalCard`) — the closest
+  living "one next step per active goal"; user-authored flat ordering already
+  ships (drag-reorder via `reorderSteps`, `EditModeScreen.tsx:207-216`); the
+  UI layer derives an `in-progress` state (`src/types/steps.ts`) and renders
+  `pending` with a `"locked"` badge variant (`TimelineStep.tsx:27-36`) — both
+  relevant to E's baseline.
+- **ADR-0010 D and F rows** amended in place to define both letters relative
+  to the existing any-time evidence channel.
+- **Prototype plan** Stage 0 baseline list rewritten from the inventory; the
+  D-vs-text-evidence question added to the Open Questions Register as an
+  explicit open question (distinct surface vs presentation/retrieval layer —
+  Joe's call, blocking the Stage 1 D prototype's feature shape).
+- **Vocabulary boundary (item 4):** the D/F/evidence distinctions survive as
+  semantic/retrieval distinctions, not storage ones — recorded in the baseline
+  record's "Vocabulary boundary in today's terms." `CONTEXT.md` itself was not
+  edited (frozen by PR #219; its "evidence-at-completion — the current
+  evidence shape" line describes the semantic register, not a mechanical
+  completion gate — the baseline record notes this).
 
 ## Why this session exists
 
