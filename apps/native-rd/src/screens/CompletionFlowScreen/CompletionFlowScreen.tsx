@@ -105,8 +105,7 @@ function CompletionContent({
   const navigation =
     useNavigation<NativeStackNavigationProp<GoalsStackParamList>>();
   const { theme } = useUnistyles();
-  const { t } = useTranslation();
-  const { t: tCompletion } = useTranslation("completion");
+  const { t: tCompletion } = useTranslation(["completion"]);
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
   const stepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
@@ -138,7 +137,7 @@ function CompletionContent({
     if (!shouldAdvance) return;
     setPhase("celebration");
     AccessibilityInfo.announceForAccessibility(
-      tCompletion("evidencePhase.evidenceAddedA11y"),
+      tCompletion("completion:evidencePhase.evidenceAddedA11y"),
     );
   }, [phase, isReCompletion, hasFreshEvidence, hasGoalEvidence, tCompletion]);
 
@@ -358,7 +357,7 @@ function CompletionContent({
         description: undefined,
       });
       AccessibilityInfo.announceForAccessibility(
-        tCompletion("evidencePhase.noteSavedA11y"),
+        tCompletion("completion:evidencePhase.noteSavedA11y"),
       );
     } catch (error) {
       logger.error("Failed to save inline text note", { goalId, error });
@@ -371,7 +370,9 @@ function CompletionContent({
   if (!goal) {
     return (
       <View style={styles.centered}>
-        <Text variant="body">{tCompletion("errors.goalNotFound")}</Text>
+        <Text variant="body">
+          {tCompletion("completion:errors.goalNotFound")}
+        </Text>
       </View>
     );
   }
@@ -481,9 +482,12 @@ function CompletionContent({
             style={styles.card}
             accessible={false}
             accessibilityRole="summary"
-            accessibilityLabel={tCompletion("evidencePhase.summaryA11y", {
-              title: goal.title,
-            })}
+            accessibilityLabel={tCompletion(
+              "completion:evidencePhase.summaryA11y",
+              {
+                title: goal.title,
+              },
+            )}
           >
             <View style={styles.iconContainer} accessibilityElementsHidden>
               <Text style={styles.iconEmoji}>{"\u{1F3C6}"}</Text>
@@ -493,21 +497,25 @@ function CompletionContent({
               style={styles.headline}
               accessibilityRole="header"
             >
-              {tCompletion("evidencePhase.title")}
+              {tCompletion("completion:evidencePhase.title")}
             </Text>
             <Text variant="body" style={styles.summary}>
-              {tCompletion("evidencePhase.summary", { title: goal.title })}
+              {tCompletion("completion:evidencePhase.summary", {
+                title: goal.title,
+              })}
             </Text>
 
             {/* Inline text input — one-tap accessible */}
             <View style={styles.inlineNoteContainer} accessible={false}>
               <Text variant="label" style={styles.inlineNoteLabel}>
-                {tCompletion("evidencePhase.noteLabel")}
+                {tCompletion("completion:evidencePhase.noteLabel")}
               </Text>
               <TextInput
                 ref={textInputRef}
                 style={styles.inlineNoteInput}
-                placeholder={tCompletion("evidencePhase.notePlaceholder")}
+                placeholder={tCompletion(
+                  "completion:evidencePhase.notePlaceholder",
+                )}
                 placeholderTextColor={theme.colors.textMuted}
                 value={noteText}
                 onChangeText={setNoteText}
@@ -516,11 +524,15 @@ function CompletionContent({
                 maxLength={MAX_NOTE_LENGTH}
                 testID="completion-note-input"
                 accessible
-                accessibilityLabel={tCompletion("evidencePhase.noteA11yLabel")}
-                accessibilityHint={tCompletion("evidencePhase.noteA11yHint")}
+                accessibilityLabel={tCompletion(
+                  "completion:evidencePhase.noteA11yLabel",
+                )}
+                accessibilityHint={tCompletion(
+                  "completion:evidencePhase.noteA11yHint",
+                )}
               />
               <Button
-                label={tCompletion("evidencePhase.saveNote")}
+                label={tCompletion("completion:evidencePhase.saveNote")}
                 onPress={handleSaveInlineNote}
                 disabled={!canSaveNote}
                 loading={savingNote}
@@ -532,7 +544,7 @@ function CompletionContent({
             {/* Evidence type chips for other capture methods */}
             <View style={styles.evidenceChips}>
               <Text variant="label" style={styles.evidenceChipsLabel}>
-                {tCompletion("evidencePhase.otherWays")}
+                {tCompletion("completion:evidencePhase.otherWays")}
               </Text>
               <View style={styles.evidenceChipRow}>
                 {EVIDENCE_OPTIONS.filter(
@@ -541,7 +553,7 @@ function CompletionContent({
                   <Button
                     key={opt.type}
                     icon={opt.icon}
-                    label={evidenceLabel(t, opt.type)}
+                    label={evidenceLabel(tCompletion, opt.type)}
                     onPress={() => handleEvidenceTypePress(opt.type)}
                     variant="secondary"
                     size="sm"
@@ -569,10 +581,10 @@ function CompletionContent({
           accessibilityRole="summary"
           accessibilityLabel={
             stepRows.length === 0
-              ? tCompletion("celebration.summaryA11yNoSteps", {
+              ? tCompletion("completion:celebration.summaryA11yNoSteps", {
                   title: goal.title,
                 })
-              : tCompletion("celebration.summaryA11y", {
+              : tCompletion("completion:celebration.summaryA11y", {
                   count: stepRows.length,
                   title: goal.title,
                 })
@@ -586,14 +598,14 @@ function CompletionContent({
             style={styles.headline}
             accessibilityRole="header"
           >
-            {tCompletion("celebration.title")}
+            {tCompletion("completion:celebration.title")}
           </Text>
           <Text variant="body" style={styles.summary}>
             {stepRows.length === 0
-              ? tCompletion("celebration.summaryNoSteps", {
+              ? tCompletion("completion:celebration.summaryNoSteps", {
                   title: goal.title,
                 })
-              : tCompletion("celebration.summary", {
+              : tCompletion("completion:celebration.summary", {
                   count: stepRows.length,
                   title: goal.title,
                 })}
@@ -604,7 +616,9 @@ function CompletionContent({
               style={styles.previewContainer}
               accessible
               accessibilityRole="image"
-              accessibilityLabel={tCompletion("celebration.previewA11y")}
+              accessibilityLabel={tCompletion(
+                "completion:celebration.previewA11y",
+              )}
               testID="completion-bake-preview"
             >
               <BadgeRenderer
@@ -618,7 +632,7 @@ function CompletionContent({
           {showBakeChoice ? (
             <View style={styles.actions}>
               <Button
-                label={tCompletion("celebration.bakeIt")}
+                label={tCompletion("completion:celebration.bakeIt")}
                 onPress={handleBakeIt}
                 variant="primary"
                 testID="completion-bake-it-button"
@@ -630,7 +644,7 @@ function CompletionContent({
                 disabled={!hasAnyBakeSource}
               />
               <Button
-                label={tCompletion("celebration.redesignFirst")}
+                label={tCompletion("completion:celebration.redesignFirst")}
                 onPress={handleRedesignFirst}
                 variant="secondary"
                 testID="completion-redesign-first-button"
@@ -639,18 +653,18 @@ function CompletionContent({
           ) : (
             <View style={styles.actions}>
               <Button
-                label={tCompletion("celebration.addFinalEvidence")}
+                label={tCompletion("completion:celebration.addFinalEvidence")}
                 onPress={handleAddEvidence}
                 variant={hasGoalEvidence ? "secondary" : "primary"}
               />
               <Button
-                label={tCompletion("celebration.viewJourney")}
+                label={tCompletion("completion:celebration.viewJourney")}
                 onPress={handleViewJourney}
                 variant={hasGoalEvidence ? "primary" : "secondary"}
               />
               {isCompleted && (
                 <Button
-                  label={tCompletion("celebration.reopenGoal")}
+                  label={tCompletion("completion:celebration.reopenGoal")}
                   onPress={handleReopenGoal}
                   variant="secondary"
                 />
@@ -664,11 +678,11 @@ function CompletionContent({
               accessible
               accessibilityRole="none"
               accessibilityLiveRegion="polite"
-              accessibilityLabel={tCompletion("badge.creatingA11y")}
+              accessibilityLabel={tCompletion("completion:badge.creatingA11y")}
             >
               <ActivityIndicator size="small" />
               <Text variant="label" style={styles.badgeStatusText}>
-                {tCompletion("badge.creating")}
+                {tCompletion("completion:badge.creating")}
               </Text>
             </View>
           )}
@@ -678,10 +692,10 @@ function CompletionContent({
               style={styles.badgeStatus}
               accessible
               accessibilityRole="alert"
-              accessibilityLabel={tCompletion("badge.noKeyA11y")}
+              accessibilityLabel={tCompletion("completion:badge.noKeyA11y")}
             >
               <Text variant="label" style={styles.badgeStatusText}>
-                {tCompletion("badge.noKeyMessage")}
+                {tCompletion("completion:badge.noKeyMessage")}
               </Text>
             </View>
           )}
@@ -691,12 +705,14 @@ function CompletionContent({
               style={styles.badgeStatus}
               accessible
               accessibilityRole="alert"
-              accessibilityLabel={tCompletion("badge.errorA11y", {
+              accessibilityLabel={tCompletion("completion:badge.errorA11y", {
                 message: badgeError,
               })}
             >
               <Text variant="label" style={styles.badgeStatusText}>
-                {tCompletion("badge.errorMessage", { message: badgeError })}
+                {tCompletion("completion:badge.errorMessage", {
+                  message: badgeError,
+                })}
               </Text>
             </View>
           )}
@@ -704,7 +720,7 @@ function CompletionContent({
           {hasGoalEvidence && (
             <View style={styles.evidenceSection}>
               <Text variant="label" style={styles.evidenceSectionTitle}>
-                {tCompletion("celebration.evidenceListTitle")}
+                {tCompletion("completion:celebration.evidenceListTitle")}
               </Text>
               {goalEvidenceRows.map((ev) => {
                 const evType = validateEvidenceType(ev.type ?? "file");
@@ -731,7 +747,7 @@ function CompletionContent({
                     >
                       {ev.description ??
                         ev.type ??
-                        tCompletion("celebration.evidenceFallback")}
+                        tCompletion("completion:celebration.evidenceFallback")}
                     </Text>
                   </View>
                 );
@@ -755,7 +771,7 @@ function CompletionContent({
 
 export function CompletionFlowScreen({ route }: CompletionFlowScreenProps) {
   const navigation = useNavigation();
-  const { t } = useTranslation("completion");
+  const { t } = useTranslation(["completion"]);
   const { goalId } = route.params;
 
   // Consume outside the inner Suspense boundary so the entry survives
@@ -782,7 +798,10 @@ export function CompletionFlowScreen({ route }: CompletionFlowScreenProps) {
 
   return (
     <View style={styles.container}>
-      <ScreenSubHeader label={t("title")} onBack={() => navigation.goBack()} />
+      <ScreenSubHeader
+        label={t("completion:title")}
+        onBack={() => navigation.goBack()}
+      />
       <ErrorBoundary>
         <Suspense
           fallback={

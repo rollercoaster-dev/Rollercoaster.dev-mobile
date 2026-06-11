@@ -85,10 +85,10 @@ function GoalList() {
   if (rows.length === 0) {
     return (
       <EmptyState
-        title={t("emptyState.title")}
-        body={t("emptyState.body")}
+        title={t("goals:emptyState.title")}
+        body={t("goals:emptyState.body")}
         action={{
-          label: t("emptyState.cta"),
+          label: t("goals:emptyState.cta"),
           onPress: () => navigation.navigate("NewGoal"),
         }}
       />
@@ -117,10 +117,10 @@ function GoalList() {
         visible={deleteTarget !== null}
         onCancel={() => setDeleteTarget(null)}
         onConfirm={confirmDelete}
-        title={t("confirmDelete.title")}
+        title={t("goals:confirmDelete.title")}
         message={
           deleteTarget
-            ? t("confirmDelete.message", { title: deleteTarget.title })
+            ? t("goals:confirmDelete.message", { title: deleteTarget.title })
             : ""
         }
         confirmLabel={t("common:actions.delete")}
@@ -131,12 +131,12 @@ function GoalList() {
 }
 
 export function GoalsScreen() {
-  const { t } = useTranslation("goals");
+  const { t } = useTranslation(["goals"]);
   const tabInset = useTabScreenContentInset();
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader title={t("title")} />
+      <ScreenHeader title={t("goals:title")} />
       <View style={[styles.scrollContent, tabInset]}>
         <ErrorBoundary>
           <Suspense
