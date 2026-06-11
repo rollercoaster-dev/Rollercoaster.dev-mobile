@@ -156,15 +156,26 @@ describe("useDensity", () => {
 
   describe("unknown DB value fallback", () => {
     it("falls back to 'default' when density is an unrecognised string and logs an Error", () => {
-      mockUseQuery.mockReturnValue([
-        makeSettings({ density: "cozy" as unknown as null }),
-      ]);
+      mockUseQuery.mockReturnValue([makeSettings({ density: "cozy" })]);
       const { result } = renderHook(() => useDensity());
       expect(result.current.densityLevel).toBe("default");
       expect(getLoggerForScope("useDensity").error).toHaveBeenCalledTimes(1);
       const firstArg = getLoggerForScope("useDensity").error.mock.calls[0][0];
       expect(firstArg).toBeInstanceOf(Error);
       expect((firstArg as Error).message).toContain("cozy");
+    });
+
+    it("preserves the raw shape in the Error message for non-string corruption", () => {
+      // The rd-logger shim drops meta args at the Sentry boundary — the
+      // raw shape has to live in the Error message itself or it's lost.
+      // String(obj) would produce "[object Object]"; JSON.stringify keeps
+      // the shape recognisable.
+      mockUseQuery.mockReturnValue([
+        makeSettings({ density: { broken: true } }),
+      ]);
+      renderHook(() => useDensity());
+      const firstArg = getLoggerForScope("useDensity").error.mock.calls[0][0];
+      expect((firstArg as Error).message).toContain('{"broken":true}');
     });
 
     it("does not log when density is null", () => {

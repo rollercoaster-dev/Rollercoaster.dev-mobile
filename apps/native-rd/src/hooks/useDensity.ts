@@ -36,12 +36,16 @@ export function useDensity() {
   // Log corruption once per distinct unknown value, not once per render. The
   // narrowed memo is stable across re-renders that don't touch rawDensity,
   // so a steady bad row produces exactly one Sentry event.
+  //
+  // The raw shape goes in the Error message because the rd-logger shim only
+  // forwards the Error to Sentry — meta args are dropped. JSON.stringify keeps
+  // object/array/empty-string shapes legible (`{}`, `[]`, `""`); the typeof
+  // fallback catches values JSON can't serialise (undefined, functions, BigInt).
   useEffect(() => {
     if (narrowed.isUnknown) {
-      logger.error(
-        new Error(`Unknown density value in DB: ${String(narrowed.raw)}`),
-        { rawDensity: narrowed.raw },
-      );
+      const serialized =
+        JSON.stringify(narrowed.raw) ?? `<${typeof narrowed.raw}>`;
+      logger.error(new Error(`Unknown density value in DB: ${serialized}`));
     }
   }, [narrowed]);
 
