@@ -177,6 +177,98 @@ describe("useThemePersistence", () => {
     });
   });
 
+  describe("in-flight guard (rapid-tap shadow-tree race)", () => {
+    it("applies a single foreground call normally", () => {
+      mockUseQuery.mockReturnValue([makeSettings({ theme: null })]);
+      const { result } = renderHook(() => useThemePersistence());
+
+      act(() => result.current.setTheme("dark-default"));
+
+      expect(setThemeSpy).toHaveBeenCalledTimes(1);
+      expect(setThemeSpy).toHaveBeenCalledWith("dark-default");
+      expect(mockUpdateUserSettings).toHaveBeenCalledTimes(1);
+    });
+
+    it("clears the in-flight ref after the foreground callback runs, so a subsequent call applies", () => {
+      mockUseQuery.mockReturnValue([makeSettings({ theme: null })]);
+      const { result } = renderHook(() => useThemePersistence());
+
+      act(() => result.current.setTheme("dark-default"));
+      act(() => result.current.setTheme("light-default"));
+
+      // Foreground: runWhenActive fires synchronously, so each call clears
+      // the ref before the next one starts. Both calls apply.
+      expect(setThemeSpy).toHaveBeenNthCalledWith(1, "dark-default");
+      expect(setThemeSpy).toHaveBeenNthCalledWith(2, "light-default");
+      expect(setThemeSpy).toHaveBeenCalledTimes(2);
+    });
+
+    it("drops a rapid second tap while a backgrounded call is still pending — the second tap's intent is lost, not replayed on resume", () => {
+      setAppState("background");
+      mockUseQuery.mockReturnValue([makeSettings({ theme: null })]);
+      const { result } = renderHook(() => useThemePersistence());
+
+      act(() => result.current.setTheme("dark-default"));
+      // First call queues a deferred Unistyles update AND writes to Evolu.
+      expect(setThemeSpy).not.toHaveBeenCalled();
+      expect(mockUpdateUserSettings).toHaveBeenCalledTimes(1);
+      expect(mockUpdateUserSettings).toHaveBeenLastCalledWith("settings-1", {
+        theme: "dark-default",
+      });
+
+      // Second tap while first is in-flight: dropped entirely — no Unistyles
+      // call, no extra Evolu write.
+      act(() => result.current.setTheme("light-default"));
+      expect(setThemeSpy).not.toHaveBeenCalled();
+      expect(mockUpdateUserSettings).toHaveBeenCalledTimes(1);
+
+      // On resume, only the first call's queued callback runs.
+      act(() => emitAppState("active"));
+      expect(setThemeSpy).toHaveBeenCalledTimes(1);
+      expect(setThemeSpy).toHaveBeenCalledWith("dark-default");
+    });
+
+    it("does not queue a second deferred setTheme when Evolu re-emits the in-flight value after a dropped rapid tap", () => {
+      setAppState("background");
+      mockUseQuery.mockReturnValue([makeSettings({ theme: null })]);
+      const { result, rerender } = renderHook(() => useThemePersistence());
+
+      act(() => result.current.setTheme("dark-default"));
+      // Second tap while first is still in-flight (deferred) — dropped.
+      act(() => result.current.setTheme("light-default"));
+
+      // Simulate Evolu echoing the persisted value back through useQuery
+      // (cross-device sync, or just a re-emit of the row we just wrote).
+      mockUseQuery.mockReturnValue([makeSettings({ theme: "dark-default" })]);
+      rerender({});
+
+      // On resume, only the original tap's queued callback runs — the read
+      // effect must dedup the echo against the in-flight value, NOT queue a
+      // second setTheme that would race the first on resume.
+      act(() => emitAppState("active"));
+      expect(setThemeSpy).toHaveBeenCalledTimes(1);
+      expect(setThemeSpy).toHaveBeenCalledWith("dark-default");
+    });
+
+    it("clears the in-flight ref even when UnistylesRuntime.setTheme throws, so a subsequent call still applies", () => {
+      mockUseQuery.mockReturnValue([makeSettings({ theme: null })]);
+      // First call throws from the Unistyles bridge — exact failure class this
+      // hook is hardening against. The try/finally must still clear the ref.
+      setThemeSpy.mockImplementationOnce(() => {
+        throw new Error("simulated Unistyles bridge failure");
+      });
+      const { result } = renderHook(() => useThemePersistence());
+
+      expect(() => act(() => result.current.setTheme("dark-default"))).toThrow(
+        /simulated Unistyles bridge failure/,
+      );
+      // The throw propagated, but the ref must NOT remain latched.
+      act(() => result.current.setTheme("light-default"));
+      expect(setThemeSpy).toHaveBeenCalledTimes(2);
+      expect(setThemeSpy).toHaveBeenNthCalledWith(2, "light-default");
+    });
+  });
+
   describe("reactive sync (cross-device)", () => {
     it("re-applies when settings.theme changes from outside this device", () => {
       mockUseQuery.mockReturnValue([makeSettings({ theme: "light-default" })]);

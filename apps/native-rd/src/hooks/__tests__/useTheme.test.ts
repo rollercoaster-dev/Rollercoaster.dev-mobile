@@ -40,4 +40,12 @@ describe("useTheme", () => {
     expect(result.current.themeName).toBe("light-default");
     expect(result.current.theme).toBe(themes["light-default"]);
   });
+
+  it("throws when the outer-provider setTheme stub is invoked", () => {
+    const { result } = renderHook(() => useTheme());
+
+    expect(() => result.current.setTheme("dark-default")).toThrow(
+      /outer-provider stub/i,
+    );
+  });
 });

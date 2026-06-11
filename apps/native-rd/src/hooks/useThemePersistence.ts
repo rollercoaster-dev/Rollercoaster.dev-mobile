@@ -27,6 +27,7 @@ const logger = new Logger("useThemePersistence");
 export function useThemePersistence() {
   const { settings } = useUserSettingsRow();
   const lastAppliedRef = useRef<ThemeName | null>(null);
+  const inFlightThemeRef = useRef<ThemeName | null>(null);
   const { runWhenActive } = useAppStateGuard();
 
   const savedRaw = settings?.theme ?? null;
@@ -60,8 +61,33 @@ export function useThemePersistence() {
         logger.warn("Refusing to set unsupported theme", { name });
         return;
       }
+      // Drop the call when another setTheme is mid-flight. Rapid foreground
+      // taps used to dispatch back-to-back onPlatformDependenciesChange
+      // callbacks that raced inside the shadow-tree commit and triggered a
+      // double-free SIGABRT. The dropped tap's intent is lost; the user must
+      // re-tap once the in-flight call settles (foreground: next tick;
+      // backgrounded: after the AppState resume flushes the queued call).
+      //
+      // Do NOT touch lastAppliedRef here: it tracks what was actually
+      // committed to Unistyles, and leaving it pointing at the in-flight
+      // value lets the read-effect dedup a subsequent Evolu re-emit of that
+      // same value (sync echo) instead of queueing a second deferred
+      // setTheme that would fire alongside the original on resume.
+      if (inFlightThemeRef.current !== null) {
+        return;
+      }
+      inFlightThemeRef.current = name;
       lastAppliedRef.current = name;
-      runWhenActive(() => UnistylesRuntime.setTheme(name));
+      // try/finally is load-bearing: if UnistylesRuntime.setTheme throws the
+      // ref must still clear, or every subsequent setTheme call is silently
+      // dropped for the lifetime of this hook instance.
+      runWhenActive(() => {
+        try {
+          UnistylesRuntime.setTheme(name);
+        } finally {
+          inFlightThemeRef.current = null;
+        }
+      });
       if (!settings) return;
       try {
         updateUserSettings(settings.id, { theme: name });
