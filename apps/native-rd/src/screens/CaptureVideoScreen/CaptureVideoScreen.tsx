@@ -85,7 +85,10 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
       } catch (error) {
         console.error("[CaptureVideoScreen] Save failed:", error);
         reportError(error, { area: "evidence.capture", kind: "video" });
-        Alert.alert(t("errors.saveFailedTitle"), t("errors.saveFailedMessage"));
+        Alert.alert(
+          t("captureVideo:errors.saveFailedTitle"),
+          t("captureVideo:errors.saveFailedMessage"),
+        );
       } finally {
         setIsSaving(false);
       }
@@ -153,17 +156,21 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
       return;
     }
     if (mode === "library-preview" && uploadedVideo) {
-      Alert.alert(t("discard.title"), t("discard.message"), [
-        { text: t("discard.keep"), style: "cancel" },
-        {
-          text: t("discard.confirmLabel"),
-          style: "destructive",
-          onPress: () => {
-            setUploadedVideo(null);
-            navigation.goBack();
+      Alert.alert(
+        t("captureVideo:discard.title"),
+        t("captureVideo:discard.message"),
+        [
+          { text: t("captureVideo:discard.keep"), style: "cancel" },
+          {
+            text: t("captureVideo:discard.confirmLabel"),
+            style: "destructive",
+            onPress: () => {
+              setUploadedVideo(null);
+              navigation.goBack();
+            },
           },
-        },
-      ]);
+        ],
+      );
       return;
     }
     navigation.goBack();
@@ -188,18 +195,18 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
             <VideoPreview
               uri={uploadedVideo.uri}
               durationSeconds={uploadedVideo.durationSeconds}
-              accessibilityNoun={t("recorder.selectedVideoNoun")}
+              accessibilityNoun={t("captureVideo:recorder.selectedVideoNoun")}
             />
           </View>
           <Text variant="caption" style={styles.previewCaption}>
-            {t("preview.durationLabel", {
+            {t("captureVideo:preview.durationLabel", {
               duration: formatDuration(uploadedVideo.durationSeconds * 1000),
             })}
           </Text>
           <View style={[styles.previewControls, tabInset]}>
             <View style={styles.previewButton}>
               <Button
-                label={t("actions.retake")}
+                label={t("captureVideo:actions.retake")}
                 variant="secondary"
                 onPress={handleRetakeUploaded}
                 disabled={isSaving}
@@ -207,7 +214,11 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
             </View>
             <View style={styles.previewButton}>
               <Button
-                label={isSaving ? t("actions.saving") : t("actions.useVideo")}
+                label={
+                  isSaving
+                    ? t("captureVideo:actions.saving")
+                    : t("captureVideo:actions.useVideo")
+                }
                 variant="primary"
                 onPress={handleUseUploaded}
                 loading={isSaving}
@@ -222,16 +233,16 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
       <View style={styles.chooserContent}>
         <Card>
           <Text variant="headline" style={styles.chooserHeading}>
-            {t("heading")}
+            {t("captureVideo:heading")}
           </Text>
           <View style={styles.chooserButtonGroup}>
             <Button
-              label={t("actions.recordVideo")}
+              label={t("captureVideo:actions.recordVideo")}
               variant="primary"
               onPress={() => setMode("recorder")}
             />
             <Button
-              label={t("actions.chooseFromLibrary")}
+              label={t("captureVideo:actions.chooseFromLibrary")}
               variant="secondary"
               onPress={handlePickFromLibrary}
               loading={isPickerBusy}
@@ -244,7 +255,7 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
 
   return (
     <View style={styles.container}>
-      <ScreenSubHeader label={t("title")} onBack={handleGoBack} />
+      <ScreenSubHeader label={t("captureVideo:title")} onBack={handleGoBack} />
       {renderBody()}
     </View>
   );

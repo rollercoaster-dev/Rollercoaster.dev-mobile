@@ -29,10 +29,10 @@ export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
           <BrandMark size={56} />
           <View style={styles.heroText}>
             <Text variant="label" style={styles.heroGreeting}>
-              {t("hero.greeting")}
+              {t("welcome:hero.greeting")}
             </Text>
             <Text variant="display" style={styles.heroTitle}>
-              {t("hero.title")}
+              {t("welcome:hero.title")}
             </Text>
           </View>
         </View>
@@ -43,11 +43,11 @@ export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
         contentContainerStyle={styles.bodyContent}
       >
         <Text variant="body" style={styles.copy}>
-          {t("intro.body1")}
+          {t("welcome:intro.body1")}
         </Text>
 
         <Text variant="body" style={styles.copy}>
-          {t("intro.body2")}
+          {t("welcome:intro.body2")}
         </Text>
 
         <Card size="compact">
@@ -58,14 +58,14 @@ export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
             <View style={styles.sampleText}>
               <Text variant="title">{t("common:theme.preview.title")}</Text>
               <Text variant="caption" style={styles.sampleMeta}>
-                {t("sample.progress")}
+                {t("welcome:sample.progress")}
               </Text>
             </View>
           </View>
         </Card>
 
         <Text variant="label" style={styles.pickerLabel}>
-          {t("themePicker.label")}
+          {t("welcome:themePicker.label")}
         </Text>
         <ThemeChipGrid />
       </ScrollView>
@@ -76,9 +76,13 @@ export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
           { paddingBottom: theme.space[2] + insets.bottom },
         ]}
       >
-        <Button label={t("cta.getStarted")} onPress={onGetStarted} size="lg" />
+        <Button
+          label={t("welcome:cta.getStarted")}
+          onPress={onGetStarted}
+          size="lg"
+        />
         <Text variant="caption" style={styles.footnote}>
-          {t("cta.footnote")}
+          {t("welcome:cta.footnote")}
         </Text>
       </View>
     </View>

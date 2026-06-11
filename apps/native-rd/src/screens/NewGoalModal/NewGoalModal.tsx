@@ -58,7 +58,7 @@ export function NewGoalModal() {
     >
       <View style={styles.topBar}>
         <View style={styles.spacer} />
-        <Text variant="label">{t("title")}</Text>
+        <Text variant="label">{t("newGoal:title")}</Text>
         <IconButton
           icon={
             // eslint-disable-next-line local/no-raw-jsx-strings -- close-button glyph (a11y label below); not translatable copy. Could align with the ✕ convention used by the viewer modals.
@@ -76,8 +76,8 @@ export function NewGoalModal() {
       <View style={styles.form}>
         <Card>
           <Input
-            label={t("fields.title.label")}
-            placeholder={t("fields.title.placeholder")}
+            label={t("newGoal:fields.title.label")}
+            placeholder={t("newGoal:fields.title.placeholder")}
             value={title}
             onChangeText={(text) => {
               setTitle(text);
@@ -92,7 +92,7 @@ export function NewGoalModal() {
         </Card>
 
         <Button
-          label={t("cta.create")}
+          label={t("newGoal:cta.create")}
           onPress={handleCreate}
           disabled={!title.trim()}
           testID="create-goal"
