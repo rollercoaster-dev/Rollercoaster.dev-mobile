@@ -66,20 +66,20 @@ index aafbecedd3a209c25dcb6055acad19bf377cb2f3..2c952a566ccf40f006883e52431fad6f
  
      inline void setUpdates(shadow::ShadowLeafUpdates& newUpdates) {
 diff --git a/cxx/shadowTree/ShadowTreeManager.cpp b/cxx/shadowTree/ShadowTreeManager.cpp
-index 01026dc5751b00473ae878804cdae1b283fdbc57..f4e5cff69107c4e64b97ee8464654e53dbeb4af9 100644
+index 01026dc5751b00473ae878804cdae1b283fdbc57..2a3994b55ae053db4fe8040ba8293ce20538f651 100644
 --- a/cxx/shadowTree/ShadowTreeManager.cpp
 +++ b/cxx/shadowTree/ShadowTreeManager.cpp
-@@ -10,7 +10,19 @@ void shadow::ShadowTreeManager::updateShadowTree(jsi::Runtime& rt) {
+@@ -10,16 +10,39 @@
      auto& registry = core::UnistylesRegistry::get();
  
      registry.trafficController.withLock([&](){
 -        auto updates = registry.trafficController.getUpdates();
 +        auto updates = registry.trafficController.takeUpdates();
-+
-+        if (updates.empty()) {
-+            return;
-+        }
-+
+ 
+         if (updates.empty()) {
+             return;
+         }
+ 
 +        for (auto it = updates.begin(); it != updates.end();) {
 +            if (!registry.isActiveUnistylesFamily(it->first)) {
 +                it = updates.erase(it);
@@ -87,6 +87,53 @@ index 01026dc5751b00473ae878804cdae1b283fdbc57..f4e5cff69107c4e64b97ee8464654e53
 +                ++it;
 +            }
 +        }
++
++        if (updates.empty()) {
++            return;
++        }
++
+ #if REACT_NATIVE_VERSION_MINOR >= 81
+         std::unordered_map<Tag, folly::dynamic> tagToProps;
  
-         if (updates.empty()) {
-             return;
+         for (const auto& [family, props] : updates) {
++            // Belt-and-braces re-check inside the lock. The erasure pass above
++            // already filters non-active families, and every known mutator of
++            // _shadowRegistry / _suspendedFamilies takes trafficController's
++            // lock — so under today's invariants this branch is unreachable.
++            // Keeping it inline guards against any future mutation path that
++            // breaks the lock invariant and prevents writing nativeProps_DEPRECATED
++            // on a freed ShadowNodeFamily.
++            if (!registry.isActiveUnistylesFamily(family)) {
++                continue;
++            }
++
+             auto safeProps = props.isObject() ? props : folly::dynamic::object();
+ 
+             tagToProps.insert({family->getTag(), safeProps});
+@@ -37,14 +60,24 @@
+ #else
+         const auto& shadowTreeRegistry = UIManagerBinding::getBinding(rt)->getUIManager().getShadowTreeRegistry();
+ 
+-        shadowTreeRegistry.enumerate([&updates](const ShadowTree& shadowTree, bool& stop){
++        shadowTreeRegistry.enumerate([&updates, &registry](const ShadowTree& shadowTree, bool& stop){
+             // we could iterate via updates and create multiple commits
+             // but it can cause performance issues for hundreds of nodes
+             // so let's mutate Shadow Tree in single transaction
+-            auto transaction = [&updates](const RootShadowNode& oldRootShadowNode) {
++            auto transaction = [&updates, &registry](const RootShadowNode& oldRootShadowNode) {
+                 auto affectedNodes = shadow::ShadowTreeManager::findAffectedNodes(oldRootShadowNode, updates);
+ 
+                 for (const auto& [family, props] : updates) {
++                    // Belt-and-braces re-check; see the matching guard in the
++                    // RN >= 0.81 branch above. Skips the nativeProps_DEPRECATED
++                    // write only — cloneShadowTree below still consumes the
++                    // entry, so on this branch the erasure pass is the
++                    // load-bearing guard. The skip stays for symmetry and to
++                    // catch any future regression of the lock invariant.
++                    if (!registry.isActiveUnistylesFamily(family)) {
++                        continue;
++                    }
++
+                     // Merge props to fix glitches caused by REA updates
+                     auto* mutableFamily = const_cast<ShadowNodeFamily*>(family);
+                     auto safeProps = props.isObject() ? props : folly::dynamic::object();
