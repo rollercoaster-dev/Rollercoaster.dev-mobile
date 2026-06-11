@@ -34,7 +34,7 @@ function getMimeType(metadata?: string): string | null {
 }
 
 export function FileContent({ uri, description, metadata }: FileContentProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation(["common"]);
   const filename = getFilename(uri, metadata);
   const mimeType = getMimeType(metadata);
 
@@ -60,7 +60,7 @@ export function FileContent({ uri, description, metadata }: FileContentProps) {
           </Text>
         ) : null}
         <Button
-          label={t("evidenceContent.openFile")}
+          label={t("common:evidenceContent.openFile")}
           onPress={handleOpen}
           variant="primary"
         />

@@ -20,7 +20,7 @@ export function TextNoteViewerModal({
   onClose,
 }: TextNoteViewerModalProps) {
   const insets = useSafeAreaInsets();
-  const { t } = useTranslation();
+  const { t } = useTranslation(["common"]);
 
   if (!text) return null;
 
@@ -40,13 +40,13 @@ export function TextNoteViewerModal({
       >
         <View style={styles.topBar}>
           <Text style={styles.heading}>
-            {t("viewerModals.heading.textNote")}
+            {t("common:viewerModals.heading.textNote")}
           </Text>
           <Pressable
             onPress={onClose}
             accessible
             accessibilityRole="button"
-            accessibilityLabel={t("viewerModals.a11y.closeTextNote")}
+            accessibilityLabel={t("common:viewerModals.a11y.closeTextNote")}
             hitSlop={16}
           >
             <Text style={styles.closeText}>{"\u2715"}</Text>

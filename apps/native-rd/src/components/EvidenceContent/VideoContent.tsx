@@ -21,7 +21,7 @@ function PlayerContent({
   retryToken: number;
   onError: () => void;
 }) {
-  const { t } = useTranslation();
+  const { t } = useTranslation(["common"]);
   const player = useVideoPlayer(uri, (p) => {
     p.loop = false;
     p.play();
@@ -48,13 +48,13 @@ function PlayerContent({
       fullscreenOptions={{ enable: true }}
       nativeControls
       contentFit="contain"
-      accessibilityLabel={t("evidenceContent.a11y.videoPlayback")}
+      accessibilityLabel={t("common:evidenceContent.a11y.videoPlayback")}
     />
   );
 }
 
 export function VideoContent({ uri }: VideoContentProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation(["common"]);
   const [error, setError] = useState(false);
   const [retryToken, setRetryToken] = useState(0);
 
@@ -74,20 +74,20 @@ export function VideoContent({ uri }: VideoContentProps) {
       <View style={styles.videoContainer}>
         {!uri ? (
           <Text style={styles.errorText}>
-            {t("evidenceContent.errors.videoLoadFailed")}
+            {t("common:evidenceContent.errors.videoLoadFailed")}
           </Text>
         ) : error ? (
           <View style={styles.errorBlock}>
             <Text style={styles.errorText}>
-              {t("evidenceContent.errors.videoLoadFailed")}
+              {t("common:evidenceContent.errors.videoLoadFailed")}
             </Text>
             <Pressable
               onPress={handleRetry}
               accessibilityRole="button"
-              accessibilityLabel={t("evidenceContent.a11y.retryVideo")}
+              accessibilityLabel={t("common:evidenceContent.a11y.retryVideo")}
               style={styles.retryButton}
             >
-              <Text style={styles.retryLabel}>{t("actions.retry")}</Text>
+              <Text style={styles.retryLabel}>{t("common:actions.retry")}</Text>
             </Pressable>
           </View>
         ) : (

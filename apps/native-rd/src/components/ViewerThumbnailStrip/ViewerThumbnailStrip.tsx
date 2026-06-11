@@ -27,7 +27,7 @@ export function ViewerThumbnailStrip({
   activeIndex,
   onSelect,
 }: ViewerThumbnailStripProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation(["common"]);
   const listRef = useRef<FlatList<ViewerEvidence>>(null);
 
   useEffect(() => {
@@ -89,7 +89,7 @@ export function ViewerThumbnailStrip({
           });
         }}
         accessibilityRole="tablist"
-        accessibilityLabel={t("viewerThumbnailStrip.a11y.items")}
+        accessibilityLabel={t("common:viewerThumbnailStrip.a11y.items")}
       />
     </View>
   );

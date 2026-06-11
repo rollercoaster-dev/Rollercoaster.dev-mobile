@@ -18,7 +18,7 @@ export function VideoPlayerModal({
   onClose,
 }: VideoPlayerModalProps) {
   const insets = useSafeAreaInsets();
-  const { t } = useTranslation();
+  const { t } = useTranslation(["common"]);
 
   if (!visible) return null;
 
@@ -42,7 +42,7 @@ export function VideoPlayerModal({
             onPress={onClose}
             accessible
             accessibilityRole="button"
-            accessibilityLabel={t("viewerModals.a11y.closeVideo")}
+            accessibilityLabel={t("common:viewerModals.a11y.closeVideo")}
             hitSlop={16}
           >
             <Text style={styles.closeText}>{"\u2715"}</Text>

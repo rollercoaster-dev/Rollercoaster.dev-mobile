@@ -119,8 +119,9 @@ export function CardCarousel({
   renderIndicator,
   accessibilityLabel,
 }: CardCarouselProps) {
-  const { t } = useTranslation();
-  const carouselLabel = accessibilityLabel ?? t("cardCarousel.a11y.label");
+  const { t } = useTranslation(["common"]);
+  const carouselLabel =
+    accessibilityLabel ?? t("common:cardCarousel.a11y.label");
   const children = Array.isArray(rawChildren) ? rawChildren : [rawChildren];
   const safeIndex = Math.max(0, Math.min(currentIndex, children.length - 1));
   const { width } = useWindowDimensions();
@@ -222,8 +223,8 @@ export function CardCarousel({
                 style={[styles.arrow, isFirst && styles.arrowDisabled]}
                 accessible
                 accessibilityRole="button"
-                accessibilityLabel={t("cardCarousel.a11y.previous")}
-                accessibilityHint={t("cardCarousel.a11y.previousHint", {
+                accessibilityLabel={t("common:cardCarousel.a11y.previous")}
+                accessibilityHint={t("common:cardCarousel.a11y.previousHint", {
                   label: carouselLabel,
                 })}
                 accessibilityState={{ disabled: isFirst }}
@@ -239,8 +240,8 @@ export function CardCarousel({
                 style={[styles.arrow, isLast && styles.arrowDisabled]}
                 accessible
                 accessibilityRole="button"
-                accessibilityLabel={t("cardCarousel.a11y.next")}
-                accessibilityHint={t("cardCarousel.a11y.nextHint", {
+                accessibilityLabel={t("common:cardCarousel.a11y.next")}
+                accessibilityHint={t("common:cardCarousel.a11y.nextHint", {
                   label: carouselLabel,
                 })}
                 accessibilityState={{ disabled: isLast }}

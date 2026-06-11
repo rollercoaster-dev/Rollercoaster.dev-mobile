@@ -18,7 +18,7 @@ export interface PhotoContentProps {
 }
 
 export function PhotoContent({ uri, description }: PhotoContentProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation(["common"]);
   const [imageError, setImageError] = useState(false);
   const [retryToken, setRetryToken] = useState(0);
 
@@ -47,20 +47,20 @@ export function PhotoContent({ uri, description }: PhotoContentProps) {
       <View style={styles.imageContainer}>
         {!uri ? (
           <Text style={styles.errorText}>
-            {t("evidenceContent.errors.imageLoadFailed")}
+            {t("common:evidenceContent.errors.imageLoadFailed")}
           </Text>
         ) : imageError ? (
           <View style={styles.errorBlock}>
             <Text style={styles.errorText}>
-              {t("evidenceContent.errors.imageLoadFailed")}
+              {t("common:evidenceContent.errors.imageLoadFailed")}
             </Text>
             <Pressable
               onPress={handleRetry}
               accessibilityRole="button"
-              accessibilityLabel={t("evidenceContent.a11y.retryImage")}
+              accessibilityLabel={t("common:evidenceContent.a11y.retryImage")}
               style={styles.retryButton}
             >
-              <Text style={styles.retryLabel}>{t("actions.retry")}</Text>
+              <Text style={styles.retryLabel}>{t("common:actions.retry")}</Text>
             </Pressable>
           </View>
         ) : (
@@ -72,7 +72,7 @@ export function PhotoContent({ uri, description }: PhotoContentProps) {
             style={styles.image}
             resizeMode="contain"
             accessibilityLabel={
-              description ?? t("evidenceContent.a11y.photoEvidence")
+              description ?? t("common:evidenceContent.a11y.photoEvidence")
             }
             onError={handleError}
           />

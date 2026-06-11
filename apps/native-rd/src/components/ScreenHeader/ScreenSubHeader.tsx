@@ -18,7 +18,7 @@ export function ScreenSubHeader({
   onBack,
   right,
 }: ScreenSubHeaderProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation(["common"]);
 
   return (
     <HeaderBand>
@@ -26,7 +26,7 @@ export function ScreenSubHeader({
         icon={<ArrowLeft size={24} weight="bold" />}
         onPress={onBack}
         tone="chrome"
-        accessibilityLabel={t("screenHeader.a11y.goBack")}
+        accessibilityLabel={t("common:screenHeader.a11y.goBack")}
       />
       <Text variant="title" style={styles.subLabel} accessibilityRole="header">
         {label}
