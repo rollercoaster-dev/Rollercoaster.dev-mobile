@@ -148,7 +148,13 @@ describe("i18n namespace convention", () => {
         a.key.localeCompare(b.key),
     );
 
-    const report = violations.map((v) => `${v.file}:${v.line} → t("${v.key}")`);
+    // Template-literal violations arrive backtick-wrapped (e.g. `` `foo.${id}` ``)
+    // so the report stays copy-pasteable back into code: t(`foo.${id}`) for
+    // templates, t("foo.bar") for plain strings.
+    const report = violations.map((v) => {
+      const formatted = v.key.startsWith("`") ? v.key : `"${v.key}"`;
+      return `${v.file}:${v.line} → t(${formatted})`;
+    });
     expect(report).toEqual([]);
   });
 
