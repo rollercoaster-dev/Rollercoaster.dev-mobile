@@ -1,5 +1,5 @@
 import { createContext, useContext, useCallback } from "react";
-import { useUnistyles, UnistylesRuntime } from "react-native-unistyles";
+import { useUnistyles } from "react-native-unistyles";
 import {
   themes,
   parseThemeName,
@@ -84,8 +84,15 @@ export function useTheme() {
   const isDark = themeName.startsWith("dark");
   const { variant } = parseThemeName(themeName);
 
-  const setTheme = useCallback((name: ThemeName) => {
-    UnistylesRuntime.setTheme(name);
+  // Stub for the outer ThemeProvider. UI consumers reach setTheme via
+  // useThemeContext(), which resolves to an inner provider that re-supplies a
+  // persisting, in-flight-guarded setTheme. If this stub ever runs, the caller
+  // is using useTheme() directly instead of useThemeContext() — silently
+  // bypassing persistence and the shadow-tree race guard. Throwing fails loud.
+  const setTheme = useCallback((_name: ThemeName) => {
+    throw new Error(
+      "useTheme().setTheme is the outer-provider stub — consume via useThemeContext(), which resolves to the inner provider with the persisting, in-flight-guarded setTheme.",
+    );
   }, []);
 
   return { themeName, theme, isDark, variant, setTheme };
