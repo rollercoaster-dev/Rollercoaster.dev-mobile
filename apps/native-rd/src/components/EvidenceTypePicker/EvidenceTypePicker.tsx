@@ -77,12 +77,11 @@ export function EvidenceTypePicker({
               accessibilityRole="checkbox"
               accessibilityState={{ checked: isSelected }}
               accessibilityLabel={optLabel}
-              accessibilityHint={t(
+              accessibilityHint={
                 isSelected
-                  ? "a11y.deselectEvidenceType"
-                  : "a11y.selectEvidenceType",
-                { label: optLabel },
-              )}
+                  ? t("common:a11y.deselectEvidenceType", { label: optLabel })
+                  : t("common:a11y.selectEvidenceType", { label: optLabel })
+              }
             >
               <RNText style={styles.chipIcon}>{opt.icon}</RNText>
               <RNText

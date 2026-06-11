@@ -21,16 +21,30 @@ const SCAN_ROOTS = [
   path.resolve(__dirname, "../../components"),
 ];
 
-// Matches t("…") and t('…') with optional whitespace before the literal.
+// Matches t("…") / t('…'). The `\s*` between `t(` and the opening quote
+// tolerates whitespace including newlines, so a literal on the line after `t(`
+// is caught:
+//
+//   t(
+//     "common:foo",
+//     { label },
+//   )
+//
+// Strings can't contain raw newlines in JS, so the body class `[^"'\n]+` stays.
 const T_CALL_STRING = /\bt\(\s*["']([^"'\n]+)["']/g;
 
-// Matches t(`…`) template literals (single-line). The literal segment before
-// the first ${…} interpolation must contain the `ns:` prefix — that portion is
-// statically verifiable even when the suffix is dynamic.
+// Matches t(`…`) template literals. Same whitespace tolerance as the string
+// form. The literal segment before the first ${…} interpolation must contain
+// the `ns:` prefix — that portion is statically verifiable even when the
+// suffix is dynamic. Backticks delimit template bodies that don't contain
+// nested backticks (rare in t() calls), so [^`\n]* on the body is safe.
 const T_CALL_TEMPLATE = /\bt\(\s*`([^`\n]*)`/g;
 
-// Fully computed keys (e.g. `t(buildKey(x))`, `t(KEYS.foo)`) can't be checked
-// statically — out of scope for this regex pass.
+// Out of scope for this regex pass:
+//   - Fully computed keys: `t(buildKey(x))`, `t(KEYS.foo)`
+//   - Literals nested inside expressions: `t(cond ? "a" : "b")` — the call
+//     site is `t(<ternary>)`, not `t("a")`. Refactor to two `t()` calls so
+//     each site is verifiable.
 
 async function walk(dir: string): Promise<string[]> {
   const entries = await fs.readdir(dir, { withFileTypes: true });
@@ -60,41 +74,52 @@ function stripComments(source: string): string {
     .join("\n");
 }
 
+// Convert a character offset in `source` to a 1-indexed line number using
+// the prefix-sum of newline positions. Linear scan is fine — sources are <10k
+// lines and we run this a handful of times per file.
+function lineOf(source: string, offset: number): number {
+  let line = 1;
+  for (let i = 0; i < offset && i < source.length; i++) {
+    if (source[i] === "\n") line++;
+  }
+  return line;
+}
+
 type Violation = { file: string; line: number; key: string };
 
-function scanFile(file: string, source: string, repoRoot: string): Violation[] {
+export function scanFile(
+  file: string,
+  source: string,
+  repoRoot: string,
+): Violation[] {
   const cleaned = stripComments(source);
-  const lines = cleaned.split("\n");
   const violations: Violation[] = [];
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (!line.includes("t(")) continue;
 
-    const stringRegex = new RegExp(T_CALL_STRING.source, "g");
-    let match: RegExpExecArray | null;
-    while ((match = stringRegex.exec(line)) !== null) {
-      const key = match[1];
-      if (key.includes(":")) continue;
-      violations.push({
-        file: path.relative(repoRoot, file),
-        line: i + 1,
-        key,
-      });
-    }
-
-    const templateRegex = new RegExp(T_CALL_TEMPLATE.source, "g");
-    while ((match = templateRegex.exec(line)) !== null) {
-      const raw = match[1];
-      const interpIdx = raw.indexOf("${");
-      const prefix = interpIdx === -1 ? raw : raw.slice(0, interpIdx);
-      if (prefix.includes(":")) continue;
-      violations.push({
-        file: path.relative(repoRoot, file),
-        line: i + 1,
-        key: `\`${raw}\``,
-      });
-    }
+  const stringRegex = new RegExp(T_CALL_STRING.source, "g");
+  let match: RegExpExecArray | null;
+  while ((match = stringRegex.exec(cleaned)) !== null) {
+    const key = match[1];
+    if (key.includes(":")) continue;
+    violations.push({
+      file: path.relative(repoRoot, file),
+      line: lineOf(cleaned, match.index),
+      key,
+    });
   }
+
+  const templateRegex = new RegExp(T_CALL_TEMPLATE.source, "g");
+  while ((match = templateRegex.exec(cleaned)) !== null) {
+    const raw = match[1];
+    const interpIdx = raw.indexOf("${");
+    const prefix = interpIdx === -1 ? raw : raw.slice(0, interpIdx);
+    if (prefix.includes(":")) continue;
+    violations.push({
+      file: path.relative(repoRoot, file),
+      line: lineOf(cleaned, match.index),
+      key: `\`${raw}\``,
+    });
+  }
+
   return violations;
 }
 
@@ -102,6 +127,12 @@ describe("i18n namespace convention", () => {
   test("every t() call uses an explicit ns:key prefix", async () => {
     const repoRoot = path.resolve(__dirname, "../../..");
     const files = (await Promise.all(SCAN_ROOTS.map(walk))).flat();
+
+    // Floor against a silent walk-returns-nothing regression (renamed SCAN_ROOTS,
+    // broken recursion, etc). Tree had ~150 files at the time of writing; 50
+    // is comfortably below that and well above zero.
+    expect(files.length).toBeGreaterThan(50);
+
     const violations: Violation[] = [];
     await Promise.all(
       files.map(async (file) => {
@@ -119,5 +150,76 @@ describe("i18n namespace convention", () => {
 
     const report = violations.map((v) => `${v.file}:${v.line} → t("${v.key}")`);
     expect(report).toEqual([]);
+  });
+
+  // Unit tests pin scanner behavior so a regex tweak can't silently widen or
+  // narrow the rule. Each case is a small synthetic source — the integration
+  // test above is the load-bearing assertion against the real tree.
+  describe("scanFile", () => {
+    const repoRoot = "/repo";
+    const fake = "/repo/src/components/X.tsx";
+
+    const scan = (src: string) =>
+      scanFile(fake, src, repoRoot).map((v) => v.key);
+
+    test("flags bare double-quoted t() calls", () => {
+      expect(scan(`t("foo.bar")`)).toEqual(["foo.bar"]);
+    });
+
+    test("flags bare single-quoted t() calls", () => {
+      expect(scan(`t('foo.bar')`)).toEqual(["foo.bar"]);
+    });
+
+    test("flags bare template-literal t() calls", () => {
+      expect(scan("t(`foo.bar`)")).toEqual(["`foo.bar`"]);
+    });
+
+    test("flags template-literal prefix before ${} interpolation", () => {
+      expect(scan("t(`foo.${id}`)")).toEqual(["`foo.${id}`"]);
+    });
+
+    test("accepts prefixed string keys", () => {
+      expect(scan(`t("common:foo.bar")`)).toEqual([]);
+    });
+
+    test("accepts prefixed template-literal keys", () => {
+      expect(scan("t(`common:foo.${id}`)")).toEqual([]);
+    });
+
+    test("catches multi-line t() calls", () => {
+      expect(
+        scan(`t(
+  "foo.bar",
+  { count: 1 },
+)`),
+      ).toEqual(["foo.bar"]);
+    });
+
+    test("ignores t() calls inside pure-line // comments", () => {
+      expect(scan(`// t("foo.bar")`)).toEqual([]);
+    });
+
+    test("ignores t() calls inside /* */ block comments", () => {
+      expect(scan(`/* example: t("foo.bar") */`)).toEqual([]);
+    });
+
+    test("does not falsely match i18n.t() with prefixed key", () => {
+      expect(scan(`i18n.t("common:foo")`)).toEqual([]);
+    });
+
+    test("flags i18n.t() with bare key (matches word boundary)", () => {
+      // Word boundary between `.` and `t(` means this DOES match. Acceptable —
+      // bare i18n.t() outside helpers violates the same convention.
+      expect(scan(`i18n.t("foo")`)).toEqual(["foo"]);
+    });
+
+    test("reports correct line number for multi-line call", () => {
+      const src = `import x from "y";\nimport z from "w";\nt(\n  "foo.bar",\n)`;
+      const v = scanFile(fake, src, repoRoot);
+      // `t(` lives on line 3; the regex anchors there.
+      expect(v).toEqual([
+        { file: "src/components/X.tsx", line: 3, key: "foo.bar" },
+      ]);
+    });
   });
 });
