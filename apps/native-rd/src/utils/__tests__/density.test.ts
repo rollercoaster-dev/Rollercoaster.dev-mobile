@@ -10,20 +10,6 @@ import {
   type DensityLevel,
 } from "../density";
 
-type StubLogger = {
-  error: jest.Mock;
-  warn: jest.Mock;
-  info: jest.Mock;
-  debug: jest.Mock;
-};
-
-const makeStubLogger = (): StubLogger => ({
-  error: jest.fn(),
-  warn: jest.fn(),
-  info: jest.fn(),
-  debug: jest.fn(),
-});
-
 const mockSpace = {
   "0": 0,
   "1": 4,
@@ -117,44 +103,44 @@ describe("density utilities", () => {
   });
 
   describe("narrowDensity", () => {
-    test("returns 'default' for null without logging", () => {
-      const logger = makeStubLogger();
-      expect(narrowDensity(null, logger as never)).toBe("default");
-      expect(logger.error).not.toHaveBeenCalled();
+    test("returns known='default' for null", () => {
+      expect(narrowDensity(null)).toEqual({
+        isUnknown: false,
+        value: "default",
+      });
     });
 
-    test("returns 'default' for undefined without logging", () => {
-      const logger = makeStubLogger();
-      expect(narrowDensity(undefined, logger as never)).toBe("default");
-      expect(logger.error).not.toHaveBeenCalled();
+    test("returns known='default' for undefined", () => {
+      expect(narrowDensity(undefined)).toEqual({
+        isUnknown: false,
+        value: "default",
+      });
     });
 
     test.each(["compact", "default", "comfortable"] as const)(
-      "returns valid level '%s' as-is without logging",
+      "returns known='%s' for valid level",
       (level) => {
-        const logger = makeStubLogger();
-        expect(narrowDensity(level, logger as never)).toBe(level);
-        expect(logger.error).not.toHaveBeenCalled();
+        expect(narrowDensity(level)).toEqual({
+          isUnknown: false,
+          value: level,
+        });
       },
     );
 
-    test("falls back to 'default' and logs an Error for an unrecognised string", () => {
-      const logger = makeStubLogger();
-      expect(narrowDensity("cozy", logger as never)).toBe("default");
-      expect(logger.error).toHaveBeenCalledTimes(1);
-      const [firstArg, meta] = logger.error.mock.calls[0];
-      expect(firstArg).toBeInstanceOf(Error);
-      expect((firstArg as Error).message).toContain("cozy");
-      expect(meta).toEqual({ rawDensity: "cozy" });
+    test("returns unknown with raw='cozy' for an unrecognised string", () => {
+      expect(narrowDensity("cozy")).toEqual({
+        isUnknown: true,
+        value: "default",
+        raw: "cozy",
+      });
     });
 
-    test("falls back to 'default' and logs an Error for a non-string value", () => {
-      const logger = makeStubLogger();
-      expect(narrowDensity(42, logger as never)).toBe("default");
-      expect(logger.error).toHaveBeenCalledTimes(1);
-      const [firstArg, meta] = logger.error.mock.calls[0];
-      expect(firstArg).toBeInstanceOf(Error);
-      expect(meta).toEqual({ rawDensity: 42 });
+    test("returns unknown with raw=42 for a non-string value", () => {
+      expect(narrowDensity(42)).toEqual({
+        isUnknown: true,
+        value: "default",
+        raw: 42,
+      });
     });
   });
 });

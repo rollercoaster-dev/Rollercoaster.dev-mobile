@@ -1,5 +1,4 @@
 import type { Space } from "../themes/tokens";
-import { Logger } from "../shims/rd-logger";
 
 export type DensityLevel = "compact" | "default" | "comfortable";
 
@@ -17,13 +16,26 @@ export function isDensityLevel(value: unknown): value is DensityLevel {
   return typeof value === "string" && DENSITY_LEVELS.has(value as DensityLevel);
 }
 
-export function narrowDensity(raw: unknown, logger: Logger): DensityLevel {
-  if (raw === null || raw === undefined) return "default";
-  if (isDensityLevel(raw)) return raw;
-  logger.error(new Error(`Unknown density value in DB: ${String(raw)}`), {
-    rawDensity: raw,
-  });
-  return "default";
+/**
+ * Result of narrowing an arbitrary DB column value to a DensityLevel.
+ *
+ * `isUnknown: false` covers both the valid-enum case and the expected-null
+ * case (fresh row before settings have ever been written, or a missing
+ * column on an old schema). Callers fall back to "default" without alarm.
+ *
+ * `isUnknown: true` is the corruption case — an unrecognised string or a
+ * non-string value. Callers should report `raw` so the operator can trace
+ * which migration or write path produced it; the helper itself stays pure.
+ */
+export type NarrowedDensity =
+  | { isUnknown: false; value: DensityLevel }
+  | { isUnknown: true; value: "default"; raw: unknown };
+
+export function narrowDensity(raw: unknown): NarrowedDensity {
+  if (raw === null || raw === undefined)
+    return { isUnknown: false, value: "default" };
+  if (isDensityLevel(raw)) return { isUnknown: false, value: raw };
+  return { isUnknown: true, value: "default", raw };
 }
 
 /**
