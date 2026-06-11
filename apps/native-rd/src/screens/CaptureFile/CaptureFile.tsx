@@ -43,7 +43,7 @@ function getFileIcon(mimeType: string | undefined): string {
 
 export function CaptureFile({ route }: CaptureFileScreenProps) {
   const navigation = useNavigation();
-  const { t } = useTranslation("captureFile");
+  const { t } = useTranslation(["captureFile"]);
   const { goalId, stepId } = route.params;
   const [busy, setBusy] = useState(false);
 
@@ -66,7 +66,7 @@ export function CaptureFile({ route }: CaptureFileScreenProps) {
       // Validate file
       const validationError = validateFile(mimeType, size);
       if (validationError) {
-        Alert.alert(t("errors.invalidFileTitle"), validationError);
+        Alert.alert(t("captureFile:errors.invalidFileTitle"), validationError);
         return;
       }
 
@@ -100,7 +100,10 @@ export function CaptureFile({ route }: CaptureFileScreenProps) {
         error,
       });
       reportError(error, { area: "evidence.capture", kind: "file" });
-      Alert.alert(t("errors.saveFailedTitle"), t("errors.saveFailedMessage"));
+      Alert.alert(
+        t("captureFile:errors.saveFailedTitle"),
+        t("captureFile:errors.saveFailedMessage"),
+      );
     } finally {
       setBusy(false);
     }
@@ -112,7 +115,7 @@ export function CaptureFile({ route }: CaptureFileScreenProps) {
         <View style={styles.content}>
           <ActivityIndicator
             size="large"
-            accessibilityLabel={t("a11y.saving")}
+            accessibilityLabel={t("captureFile:a11y.saving")}
           />
         </View>
       </View>
@@ -121,18 +124,21 @@ export function CaptureFile({ route }: CaptureFileScreenProps) {
 
   return (
     <View style={styles.container}>
-      <ScreenSubHeader label={t("title")} onBack={() => navigation.goBack()} />
+      <ScreenSubHeader
+        label={t("captureFile:title")}
+        onBack={() => navigation.goBack()}
+      />
       <View style={styles.content}>
         <Card>
           <Text variant="headline" style={styles.heading}>
-            {t("heading")}
+            {t("captureFile:heading")}
           </Text>
           <Text variant="body" style={styles.description}>
-            {t("description", { maxSize: MAX_FILE_SIZE_LABEL })}
+            {t("captureFile:description", { maxSize: MAX_FILE_SIZE_LABEL })}
           </Text>
           <View style={styles.buttonGroup}>
             <Button
-              label={t("actions.choose")}
+              label={t("captureFile:actions.choose")}
               variant="primary"
               onPress={handlePickFile}
             />

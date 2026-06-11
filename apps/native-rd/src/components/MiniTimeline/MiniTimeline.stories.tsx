@@ -22,7 +22,7 @@ function InteractiveWrapper({
   initialSteps: MiniTimelineStep[];
   initialIndex?: number;
 }) {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation(["common"]);
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   return (
     <View style={storyStyles.wrapper}>
@@ -31,7 +31,7 @@ function InteractiveWrapper({
         currentIndex={currentIndex}
         onStepTap={(index) => setCurrentIndex(index)}
         onTimelineTap={() => {}}
-        accessibilityLabel={t("timeline.a11y.label")}
+        accessibilityLabel={t("common:timeline.a11y.label")}
       />
       <Text variant="caption" style={storyStyles.label}>
         Current:{" "}

@@ -23,7 +23,7 @@ export function ProgressDots({
   onDotTap,
   showGoalDot = true,
 }: ProgressDotsProps) {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation(["common"]);
   const maxIndex = steps.length + (showGoalDot ? 0 : -1);
   if (
     __DEV__ &&
@@ -39,7 +39,7 @@ export function ProgressDots({
     <View
       style={styles.container}
       accessibilityRole="tablist"
-      accessibilityLabel={t("progressDots.a11y.label")}
+      accessibilityLabel={t("common:progressDots.a11y.label")}
     >
       {steps.map((step, index) => {
         const isCurrent = index === currentIndex;
@@ -50,7 +50,7 @@ export function ProgressDots({
             hitSlop={16}
             accessible
             accessibilityRole="tab"
-            accessibilityLabel={t("timeline.a11y.step", {
+            accessibilityLabel={t("common:timeline.a11y.step", {
               index: index + 1,
               status: step.status,
             })}
@@ -73,7 +73,7 @@ export function ProgressDots({
           hitSlop={16}
           accessible
           accessibilityRole="tab"
-          accessibilityLabel={t("timeline.a11y.goalEvidence")}
+          accessibilityLabel={t("common:timeline.a11y.goalEvidence")}
           accessibilityState={{ selected: currentIndex === steps.length }}
         >
           <View

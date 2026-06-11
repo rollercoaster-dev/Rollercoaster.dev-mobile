@@ -33,7 +33,7 @@ export function BadgeEarnedModal({
 }: BadgeEarnedModalProps) {
   const { theme } = useUnistyles();
   const { animationPref, shouldAnimate } = useAnimationPref();
-  const { t } = useTranslation("badges");
+  const { t } = useTranslation(["badges"]);
 
   const scale = useSharedValue(shouldAnimate ? 0.85 : 1);
 
@@ -54,14 +54,14 @@ export function BadgeEarnedModal({
 
   const hasImage = imageUri !== PLACEHOLDER_IMAGE_URI;
   const microcopy = isFirstBadge
-    ? t("earned.microcopy.first")
-    : t("earned.microcopy.subsequent");
+    ? t("badges:earned.microcopy.first")
+    : t("badges:earned.microcopy.subsequent");
   const isE2E = process.env.EXPO_PUBLIC_E2E_MODE === "true";
   const cardA11yProps = isE2E
     ? ({ accessible: false } as const)
     : ({
         accessible: true,
-        accessibilityLabel: t("earned.a11y.card"),
+        accessibilityLabel: t("badges:earned.a11y.card"),
         accessibilityLiveRegion: "polite" as const,
       } as const);
 
@@ -91,14 +91,14 @@ export function BadgeEarnedModal({
                   key={imageUri}
                   source={{ uri: imageUri }}
                   style={styles.badgeImage}
-                  accessibilityLabel={t("earned.a11y.image")}
+                  accessibilityLabel={t("badges:earned.a11y.image")}
                   resizeMode="contain"
                   testID="badge-earned-image"
                 />
               ) : (
                 <View
                   style={styles.badgePlaceholder}
-                  accessibilityLabel={t("earned.a11y.imagePlaceholder")}
+                  accessibilityLabel={t("badges:earned.a11y.imagePlaceholder")}
                   testID="badge-earned-image-placeholder"
                 >
                   <Text variant="headline">🏅</Text>
@@ -111,12 +111,12 @@ export function BadgeEarnedModal({
 
               <View style={styles.actions}>
                 <Button
-                  label={t("earned.actions.view")}
+                  label={t("badges:earned.actions.view")}
                   onPress={onViewBadge}
                   variant="primary"
                 />
                 <Button
-                  label={t("earned.actions.continue")}
+                  label={t("badges:earned.actions.continue")}
                   onPress={onContinue}
                   variant="secondary"
                 />

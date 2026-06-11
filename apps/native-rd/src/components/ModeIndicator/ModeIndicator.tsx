@@ -26,7 +26,7 @@ export interface ModeIndicatorProps {
 }
 
 export function ModeIndicator({ mode, icon }: ModeIndicatorProps) {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation(["common"]);
   const config = MODE_CONFIG[mode];
   const label = t(`modeIndicator.${mode}` as const);
 
@@ -34,7 +34,7 @@ export function ModeIndicator({ mode, icon }: ModeIndicatorProps) {
     <View
       style={styles.container}
       accessibilityRole="header"
-      accessibilityLabel={t("modeIndicator.a11y.current", { label })}
+      accessibilityLabel={t("common:modeIndicator.a11y.current", { label })}
     >
       {icon ? (
         <Image source={icon} style={styles.iconImage} resizeMode="contain" />

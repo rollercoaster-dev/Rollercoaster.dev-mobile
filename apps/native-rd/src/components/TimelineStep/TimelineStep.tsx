@@ -44,7 +44,7 @@ export function TimelineStep({
   onEvidencePress,
   defaultExpanded = false,
 }: TimelineStepProps) {
-  const { t } = useTranslation("timelineJourney");
+  const { t } = useTranslation(["timelineJourney"]);
   const [expanded, setExpanded] = useState(defaultExpanded);
   const statusLabel = t(`step.status.${statusToLabelKey[step.status]}`);
 
@@ -55,7 +55,7 @@ export function TimelineStep({
           status={step.status}
           stepNumber={stepIndex + 1}
           onPress={() => onNodePress(stepIndex)}
-          accessibilityLabel={t("step.a11yGoTo", {
+          accessibilityLabel={t("timelineJourney:step.a11yGoTo", {
             number: stepIndex + 1,
             title: step.title,
           })}
@@ -97,7 +97,9 @@ export function TimelineStep({
                 />
               ))
             ) : (
-              <Text style={styles.noEvidence}>{t("step.noEvidence")}</Text>
+              <Text style={styles.noEvidence}>
+                {t("timelineJourney:step.noEvidence")}
+              </Text>
             )}
           </View>
         )}

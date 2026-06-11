@@ -40,7 +40,7 @@ function TimelineContent({
   originBadgeId?: string;
 }) {
   const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
-  const { t } = useTranslation("timelineJourney");
+  const { t } = useTranslation(["timelineJourney"]);
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
   const stepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
@@ -65,7 +65,7 @@ function TimelineContent({
     evidenceCount: 0,
   }));
 
-  const evidenceFallbackLabel = t("evidenceFallbackLabel");
+  const evidenceFallbackLabel = t("timelineJourney:evidenceFallbackLabel");
 
   // Query evidence per step
   const stepEvidenceData = useStepEvidence(
@@ -84,7 +84,8 @@ function TimelineContent({
   const goalEvidence: EvidenceItemData[] = goalEvidenceRows.map((row) => ({
     id: row.id,
     type: validateEvidenceType(row.type ?? "file"),
-    label: row.description ?? row.type ?? t("evidenceFallbackLabel"),
+    label:
+      row.description ?? row.type ?? t("timelineJourney:evidenceFallbackLabel"),
   }));
 
   const completedCount = stepRows.filter(
@@ -95,7 +96,7 @@ function TimelineContent({
   if (!goal) {
     return (
       <View style={styles.centered}>
-        <Text variant="body">{t("errors.goalNotFound")}</Text>
+        <Text variant="body">{t("timelineJourney:errors.goalNotFound")}</Text>
       </View>
     );
   }
@@ -148,7 +149,11 @@ function TimelineContent({
             {goal.title}
           </Text>
           <Button
-            label={originBadgeId ? t("backToBadge") : t("backToFocus")}
+            label={
+              originBadgeId
+                ? t("timelineJourney:backToBadge")
+                : t("timelineJourney:backToFocus")
+            }
             onPress={handleBack}
             variant="secondary"
             size="sm"
@@ -162,7 +167,7 @@ function TimelineContent({
         <View style={styles.progressContainer}>
           <ProgressBar progress={progress} />
           <Text style={styles.progressLabel}>
-            {t("progress", {
+            {t("timelineJourney:progress", {
               completed: completedCount,
               total: stepRows.length,
             })}
@@ -222,7 +227,7 @@ function useStepEvidence(
 
 export function TimelineJourneyScreen({ route }: TimelineJourneyScreenProps) {
   const navigation = useNavigation();
-  const { t } = useTranslation("timelineJourney");
+  const { t } = useTranslation(["timelineJourney"]);
   const { goalId, originBadgeId } = route.params;
 
   // Mirrors handleBack in TimelineContent — see comment there for the
@@ -247,7 +252,10 @@ export function TimelineJourneyScreen({ route }: TimelineJourneyScreenProps) {
 
   return (
     <View style={styles.screen}>
-      <ScreenSubHeader label={t("title")} onBack={handleHeaderBack} />
+      <ScreenSubHeader
+        label={t("timelineJourney:title")}
+        onBack={handleHeaderBack}
+      />
       <View style={styles.body}>
         <ErrorBoundary>
           <Suspense

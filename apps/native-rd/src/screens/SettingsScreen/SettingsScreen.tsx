@@ -49,10 +49,10 @@ export function triggerSentryNativeCrash(): void {
 
 function DensityPicker() {
   const { densityLevel, setDensity } = useDensity();
-  const { t } = useTranslation("settings");
+  const { t } = useTranslation(["settings"]);
 
   return (
-    <SettingsSection title={t("density.title")}>
+    <SettingsSection title={t("settings:density.title")}>
       {densityOptions.map((option) => (
         <SettingsRow
           key={option.id}
@@ -71,13 +71,13 @@ function DensityPicker() {
 
 /** Dev-only language switcher. `__DEV__` gates this in production bundles so pseudo can't leak to users. */
 function LanguagePicker() {
-  const { t, i18n } = useTranslation("settings");
+  const { t, i18n } = useTranslation(["settings"]);
   const isPseudo = i18n.language === "pseudo";
 
   return (
-    <SettingsSection title={t("language.title")}>
+    <SettingsSection title={t("settings:language.title")}>
       <SettingsRow
-        label={t("language.pseudo")}
+        label={t("settings:language.pseudo")}
         toggle={{
           value: isPseudo,
           onValueChange: (next) => {
@@ -121,11 +121,11 @@ export function SettingsScreen({
   sentryDebugToolsEnabled?: boolean;
 } = {}) {
   const tabInset = useTabScreenContentInset();
-  const { t } = useTranslation("settings");
+  const { t } = useTranslation(["settings"]);
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader title={t("title")} />
+      <ScreenHeader title={t("settings:title")} />
       <ScrollView
         contentContainerStyle={[styles.scrollContent, tabInset]}
         style={styles.scrollContainer}
@@ -142,10 +142,13 @@ export function SettingsScreen({
 
         {__DEV__ && <DevToolsSection />}
 
-        <SettingsSection title={t("about.title")}>
-          <SettingsRow label={t("about.appLabel")} value="rollercoaster.dev" />
+        <SettingsSection title={t("settings:about.title")}>
           <SettingsRow
-            label={t("about.versionLabel")}
+            label={t("settings:about.appLabel")}
+            value="rollercoaster.dev"
+          />
+          <SettingsRow
+            label={t("settings:about.versionLabel")}
             value={Application.nativeApplicationVersion ?? "unknown"}
             onLongPress={
               sentryDebugToolsEnabled ? triggerSentryNativeCrash : undefined
@@ -153,7 +156,7 @@ export function SettingsScreen({
           />
         </SettingsSection>
 
-        <Text style={styles.version}>{t("about.builtWith")}</Text>
+        <Text style={styles.version}>{t("settings:about.builtWith")}</Text>
       </ScrollView>
     </View>
   );

@@ -59,7 +59,7 @@ export function BadgeColorsAccordion({
   onOpenCustomPicker,
 }: BadgeColorsAccordionProps) {
   const { theme } = useUnistyles();
-  const { t } = useTranslation("badgeDesigner");
+  const { t } = useTranslation(["badgeDesigner"]);
 
   const frameEnabled = design.frame !== BadgeFrame.none;
 
@@ -92,7 +92,7 @@ export function BadgeColorsAccordion({
         <TabHeader
           active={effectiveTab === "fill"}
           onPress={() => setTab("fill")}
-          label={t("colorChannels.fill")}
+          label={t("badgeDesigner:colorChannels.fill")}
           preview={
             <View style={[styles.tabChip, { backgroundColor: design.color }]} />
           }
@@ -100,7 +100,7 @@ export function BadgeColorsAccordion({
         <TabHeader
           active={effectiveTab === "border"}
           onPress={() => setTab("border")}
-          label={t("colorChannels.border")}
+          label={t("badgeDesigner:colorChannels.border")}
           preview={
             <View
               style={[
@@ -115,7 +115,7 @@ export function BadgeColorsAccordion({
           <TabHeader
             active={effectiveTab === "frame"}
             onPress={() => setTab("frame")}
-            label={t("colorChannels.frame")}
+            label={t("badgeDesigner:colorChannels.frame")}
             preview={
               <View
                 style={[
@@ -130,7 +130,7 @@ export function BadgeColorsAccordion({
         <TabHeader
           active={effectiveTab === "icon"}
           onPress={() => setTab("icon")}
-          label={t("colorChannels.icon")}
+          label={t("badgeDesigner:colorChannels.icon")}
           preview={
             <View
               style={[
@@ -161,13 +161,15 @@ export function BadgeColorsAccordion({
 
       {effectiveTab === "border" && (
         <ChannelPalette
-          a11yLabel={t("borderColor.a11y")}
+          a11yLabel={t("badgeDesigner:borderColor.a11y")}
           getSwatchLabel={(id) => t(`borderColor.options.${id}`)}
-          getSwatchA11y={(label) => t("borderColor.optionA11y", { label })}
-          customLabel={t("borderColor.custom")}
-          customHint={t("borderColor.customHint")}
+          getSwatchA11y={(label) =>
+            t("badgeDesigner:borderColor.optionA11y", { label })
+          }
+          customLabel={t("badgeDesigner:borderColor.custom")}
+          customHint={t("badgeDesigner:borderColor.customHint")}
           sentinel={{
-            label: t("borderColor.matchTheme"),
+            label: t("badgeDesigner:borderColor.matchTheme"),
             previewColor: theme.colors.border,
             hollow: true,
             selected: borderRaw === BADGE_COLOR_THEME_SENTINEL,
@@ -183,13 +185,15 @@ export function BadgeColorsAccordion({
 
       {effectiveTab === "frame" && frameEnabled && (
         <ChannelPalette
-          a11yLabel={t("frameColor.a11y")}
+          a11yLabel={t("badgeDesigner:frameColor.a11y")}
           getSwatchLabel={(id) => t(`frameColor.options.${id}`)}
-          getSwatchA11y={(label) => t("frameColor.optionA11y", { label })}
-          customLabel={t("frameColor.custom")}
-          customHint={t("frameColor.customHint")}
+          getSwatchA11y={(label) =>
+            t("badgeDesigner:frameColor.optionA11y", { label })
+          }
+          customLabel={t("badgeDesigner:frameColor.custom")}
+          customHint={t("badgeDesigner:frameColor.customHint")}
           sentinel={{
-            label: t("frameColor.matchTheme"),
+            label: t("badgeDesigner:frameColor.matchTheme"),
             previewColor: theme.colors.border,
             hollow: true,
             selected: frameRaw === BADGE_COLOR_THEME_SENTINEL,
@@ -206,13 +210,15 @@ export function BadgeColorsAccordion({
       {effectiveTab === "icon" && (
         <View style={styles.iconTabBody}>
           <ChannelPalette
-            a11yLabel={t("iconColor.a11y")}
+            a11yLabel={t("badgeDesigner:iconColor.a11y")}
             getSwatchLabel={(id) => t(`iconColor.options.${id}`)}
-            getSwatchA11y={(label) => t("iconColor.optionA11y", { label })}
-            customLabel={t("iconColor.custom")}
-            customHint={t("iconColor.customHint")}
+            getSwatchA11y={(label) =>
+              t("badgeDesigner:iconColor.optionA11y", { label })
+            }
+            customLabel={t("badgeDesigner:iconColor.custom")}
+            customHint={t("badgeDesigner:iconColor.customHint")}
             sentinel={{
-              label: t("iconColor.matchAuto"),
+              label: t("badgeDesigner:iconColor.matchAuto"),
               previewColor: iconResolved,
               hollow: false,
               selected: iconRaw === BADGE_COLOR_THEME_SENTINEL,
@@ -227,9 +233,11 @@ export function BadgeColorsAccordion({
           {design.iconWeight === "duotone" && (
             <View style={styles.opacityControl}>
               <View style={styles.opacityLabelRow}>
-                <Text variant="label">{t("iconColor.opacityLabel")}</Text>
+                <Text variant="label">
+                  {t("badgeDesigner:iconColor.opacityLabel")}
+                </Text>
                 <Text variant="label" testID="duotone-opacity-value">
-                  {t("iconColor.opacityValue", {
+                  {t("badgeDesigner:iconColor.opacityValue", {
                     value: Math.round(
                       (design.iconDuotoneOpacity ??
                         BADGE_DUOTONE_OPACITY_DEFAULT) * 100,
@@ -245,8 +253,8 @@ export function BadgeColorsAccordion({
                 maximumValue={BADGE_DUOTONE_OPACITY_MAX}
                 step={BADGE_DUOTONE_OPACITY_STEP}
                 onValueChange={onChangeIconDuotoneOpacity}
-                accessibilityLabel={t("iconColor.opacityA11y")}
-                accessibilityHint={t("iconColor.opacityHint")}
+                accessibilityLabel={t("badgeDesigner:iconColor.opacityA11y")}
+                accessibilityHint={t("badgeDesigner:iconColor.opacityHint")}
                 formatA11yValue={({
                   value: v,
                   minimumValue: lo,

@@ -25,14 +25,16 @@ const variantTextMap = {
 } as const;
 
 export function StatusBadge({ variant, label }: StatusBadgeProps) {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation(["common"]);
   const displayLabel = label ?? t(`status.${variant}`);
 
   return (
     <View
       style={[styles.badge, variantBgMap[variant]]}
       accessible
-      accessibilityLabel={t("status.a11yPrefix", { label: displayLabel })}
+      accessibilityLabel={t("common:status.a11yPrefix", {
+        label: displayLabel,
+      })}
       accessibilityRole="text"
     >
       <Text style={[styles.text, variantTextMap[variant]]}>{displayLabel}</Text>
