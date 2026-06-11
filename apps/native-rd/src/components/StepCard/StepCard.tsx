@@ -77,7 +77,7 @@ export function StepCard({
   onEvidenceTap,
   onQuickEvidence,
 }: StepCardProps) {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation(["common"]);
   const isCompleted = step.status === "completed";
   const evidenceLabel = formatEvidenceLabel(t, step.evidenceCount);
   const flashStyle = useFlashOnIncrease(step.evidenceCount);
@@ -104,8 +104,8 @@ export function StepCard({
       : [];
 
   const checkboxLabel = isCompleted
-    ? t("stepCard.checkbox.completed")
-    : t("stepCard.checkbox.markComplete");
+    ? t("common:stepCard.checkbox.completed")
+    : t("common:stepCard.checkbox.markComplete");
 
   return (
     <Card>
@@ -116,14 +116,14 @@ export function StepCard({
       >
         <View style={styles.metaRow}>
           <Text style={styles.stepNumber}>
-            {t("stepCard.progress", {
+            {t("common:stepCard.progress", {
               current: stepIndex + 1,
               total: totalSteps,
             })}
           </Text>
           <StatusBadge
             variant={statusToVariant[step.status]}
-            label={t(`stepCard.status.${step.status}`)}
+            label={t(`common:stepCard.status.${step.status}`)}
           />
         </View>
         <Text
@@ -147,7 +147,7 @@ export function StepCard({
                   testID={`step-card-quick-evidence-${option.type}`}
                   accessible
                   accessibilityRole="button"
-                  accessibilityLabel={t("stepCard.quickAction.a11y", {
+                  accessibilityLabel={t("common:stepCard.quickAction.a11y", {
                     label: optionLabel,
                   })}
                 >
@@ -170,13 +170,13 @@ export function StepCard({
             accessibilityRole="text"
             accessibilityLabel={
               blockerOption
-                ? t("stepCard.blocker.a11yWithType", {
+                ? t("common:stepCard.blocker.a11yWithType", {
                     label: evidenceTypeLabel(t, blockerOption.type),
                   })
-                : t("stepCard.blocker.label")
+                : t("common:stepCard.blocker.label")
             }
           >
-            {t("stepCard.blocker.label")}
+            {t("common:stepCard.blocker.label")}
           </Text>
         ) : (
           <View style={styles.checkboxRow}>
@@ -195,7 +195,7 @@ export function StepCard({
               style={styles.evidenceBadge}
               accessible
               accessibilityRole="button"
-              accessibilityLabel={t("stepCard.evidenceBadge.a11y", {
+              accessibilityLabel={t("common:stepCard.evidenceBadge.a11y", {
                 count: step.evidenceCount,
               })}
             >

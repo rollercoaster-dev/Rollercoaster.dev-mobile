@@ -38,15 +38,15 @@ export function GoalCard({ goal, onPress, onLongPress }: GoalCardProps) {
     status: t(`common:status.${goal.status}`),
   };
   const accessibilityLabel = nextStep
-    ? t("card.a11y.labelWithNextStep", { ...labelOpts, nextStep })
-    : t("card.a11y.label", labelOpts);
+    ? t("goals:card.a11y.labelWithNextStep", { ...labelOpts, nextStep })
+    : t("goals:card.a11y.label", labelOpts);
 
   return (
     <Card
       onPress={onPress}
       onLongPress={onLongPress}
       accessibilityLabel={onPress ? accessibilityLabel : undefined}
-      accessibilityHint={onPress ? t("card.a11y.hint") : undefined}
+      accessibilityHint={onPress ? t("goals:card.a11y.hint") : undefined}
       testID={`goal-card-${goal.id}`}
     >
       <View style={styles.header}>
@@ -75,7 +75,7 @@ export function GoalCard({ goal, onPress, onLongPress }: GoalCardProps) {
             <ProgressBar progress={progress} />
           </View>
           <Text style={styles.progressLabel}>
-            {t("card.progressLabel", {
+            {t("goals:card.progressLabel", {
               completed: goal.stepsCompleted,
               total: goal.stepsTotal,
             })}

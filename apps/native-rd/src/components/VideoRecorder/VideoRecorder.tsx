@@ -94,8 +94,8 @@ export const VideoRecorder = forwardRef<
       reportError(error, { area: "evidence.capture", kind: "video" });
       if (isMountedRef.current) {
         Alert.alert(
-          t("recorder.errors.recordingFailedTitle"),
-          t("recorder.errors.recordingFailedMessage"),
+          t("captureVideo:recorder.errors.recordingFailedTitle"),
+          t("captureVideo:recorder.errors.recordingFailedMessage"),
         );
       }
     } finally {
@@ -154,15 +154,15 @@ export const VideoRecorder = forwardRef<
       requestExit() {
         if (isRecording) {
           Alert.alert(
-            t("recorder.discardWhileRecording.title"),
-            t("recorder.discardWhileRecording.message"),
+            t("captureVideo:recorder.discardWhileRecording.title"),
+            t("captureVideo:recorder.discardWhileRecording.message"),
             [
               {
-                text: t("recorder.discardWhileRecording.keep"),
+                text: t("captureVideo:recorder.discardWhileRecording.keep"),
                 style: "cancel",
               },
               {
-                text: t("recorder.discardWhileRecording.discard"),
+                text: t("captureVideo:recorder.discardWhileRecording.discard"),
                 style: "destructive",
                 onPress: () => {
                   cameraRef.current?.stopRecording();
@@ -179,12 +179,15 @@ export const VideoRecorder = forwardRef<
         }
         if (recordedUri) {
           Alert.alert(
-            t("recorder.discardRecorded.title"),
-            t("recorder.discardRecorded.message"),
+            t("captureVideo:recorder.discardRecorded.title"),
+            t("captureVideo:recorder.discardRecorded.message"),
             [
-              { text: t("recorder.discardRecorded.keep"), style: "cancel" },
               {
-                text: t("recorder.discardRecorded.discard"),
+                text: t("captureVideo:recorder.discardRecorded.keep"),
+                style: "cancel",
+              },
+              {
+                text: t("captureVideo:recorder.discardRecorded.discard"),
                 style: "destructive",
                 onPress: () => onCancel(),
               },
@@ -205,7 +208,7 @@ export const VideoRecorder = forwardRef<
     return (
       <View style={styles.permissionContainer}>
         <Text variant="body" style={styles.permissionText}>
-          {t("recorder.loading")}
+          {t("captureVideo:recorder.loading")}
         </Text>
       </View>
     );
@@ -238,18 +241,18 @@ export const VideoRecorder = forwardRef<
           <VideoPreview
             uri={recordedUri}
             durationSeconds={elapsed}
-            accessibilityNoun={t("recorder.recordedVideoNoun")}
+            accessibilityNoun={t("captureVideo:recorder.recordedVideoNoun")}
           />
         </View>
         <Text variant="caption" style={styles.timer}>
-          {t("preview.durationLabel", {
+          {t("captureVideo:preview.durationLabel", {
             duration: formatDuration(elapsed * 1000),
           })}
         </Text>
         <View style={[styles.previewControls, tabInset]}>
           <View style={styles.previewButton}>
             <Button
-              label={t("actions.retake")}
+              label={t("captureVideo:actions.retake")}
               variant="secondary"
               onPress={handleRetake}
               disabled={isSaving}
@@ -257,7 +260,11 @@ export const VideoRecorder = forwardRef<
           </View>
           <View style={styles.previewButton}>
             <Button
-              label={isSaving ? t("actions.saving") : t("actions.useVideo")}
+              label={
+                isSaving
+                  ? t("captureVideo:actions.saving")
+                  : t("captureVideo:actions.useVideo")
+              }
               variant="primary"
               onPress={handleUseVideo}
               loading={isSaving}
@@ -279,8 +286,8 @@ export const VideoRecorder = forwardRef<
           accessible
           accessibilityLabel={
             facing === "back"
-              ? t("recorder.a11y.cameraViewfinderBack")
-              : t("recorder.a11y.cameraViewfinderFront")
+              ? t("captureVideo:recorder.a11y.cameraViewfinderBack")
+              : t("captureVideo:recorder.a11y.cameraViewfinderFront")
           }
         />
       </View>
@@ -289,7 +296,7 @@ export const VideoRecorder = forwardRef<
         style={[styles.timer, isRecording && styles.timerRecording]}
         testID="video-recorder-timer"
         accessibilityLiveRegion="polite"
-        accessibilityLabel={t("recorder.a11y.recordingTime", {
+        accessibilityLabel={t("captureVideo:recorder.a11y.recordingTime", {
           time: formatDuration(elapsed * 1000),
         })}
       >
@@ -301,7 +308,9 @@ export const VideoRecorder = forwardRef<
           style={styles.maxDurationWarning}
           accessibilityLiveRegion="assertive"
         >
-          {t("recorder.countdown", { seconds: MAX_DURATION_SECONDS - elapsed })}
+          {t("captureVideo:recorder.countdown", {
+            seconds: MAX_DURATION_SECONDS - elapsed,
+          })}
         </Text>
       )}
       <View style={[styles.controls, tabInset]}>
@@ -312,8 +321,8 @@ export const VideoRecorder = forwardRef<
           accessibilityRole="button"
           accessibilityLabel={
             isRecording
-              ? t("recorder.a11y.stopRecording")
-              : t("recorder.a11y.startRecording")
+              ? t("captureVideo:recorder.a11y.stopRecording")
+              : t("captureVideo:recorder.a11y.startRecording")
           }
         >
           <View
@@ -332,8 +341,8 @@ export const VideoRecorder = forwardRef<
           accessibilityRole="button"
           accessibilityLabel={
             facing === "back"
-              ? t("recorder.a11y.switchToFrontCamera")
-              : t("recorder.a11y.switchToBackCamera")
+              ? t("captureVideo:recorder.a11y.switchToFrontCamera")
+              : t("captureVideo:recorder.a11y.switchToBackCamera")
           }
           accessibilityState={{ disabled: isRecording }}
         >

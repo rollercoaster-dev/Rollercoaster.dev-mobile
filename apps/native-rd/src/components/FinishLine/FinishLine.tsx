@@ -12,19 +12,19 @@ export interface FinishLineProps {
 }
 
 export function FinishLine({ goalEvidence, onEvidencePress }: FinishLineProps) {
-  const { t } = useTranslation("timelineJourney");
+  const { t } = useTranslation(["timelineJourney"]);
   return (
     <View style={styles.container}>
       <View style={styles.nodeColumn}>
         <TimelineNode
           status="completed"
           isGoalNode
-          accessibilityLabel={t("finishLine.a11yNode")}
+          accessibilityLabel={t("timelineJourney:finishLine.a11yNode")}
         />
       </View>
       <View style={styles.contentCard}>
         <Text style={styles.heading} accessible accessibilityRole="header">
-          {t("finishLine.title")}
+          {t("timelineJourney:finishLine.title")}
         </Text>
         {goalEvidence.length > 0 ? (
           goalEvidence.map((ev) => (
@@ -36,7 +36,9 @@ export function FinishLine({ goalEvidence, onEvidencePress }: FinishLineProps) {
             />
           ))
         ) : (
-          <Text style={styles.noEvidence}>{t("finishLine.noEvidence")}</Text>
+          <Text style={styles.noEvidence}>
+            {t("timelineJourney:finishLine.noEvidence")}
+          </Text>
         )}
       </View>
     </View>

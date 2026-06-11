@@ -12,7 +12,7 @@ export interface AudioPlayerProps {
 }
 
 export function AudioPlayer({ uri, durationMs }: AudioPlayerProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation(["common"]);
   const player = useAudioPlayer(uri);
   const status = useAudioPlayerStatus(player);
 
@@ -40,14 +40,16 @@ export function AudioPlayer({ uri, durationMs }: AudioPlayerProps) {
     <View
       style={styles.container}
       accessible
-      accessibilityLabel={t("audioPlayer.a11y.container")}
+      accessibilityLabel={t("common:audioPlayer.a11y.container")}
     >
       <Pressable
         onPress={handleToggle}
         accessible
         accessibilityRole="button"
         accessibilityLabel={
-          isPlaying ? t("audioPlayer.a11y.pause") : t("audioPlayer.a11y.play")
+          isPlaying
+            ? t("common:audioPlayer.a11y.pause")
+            : t("common:audioPlayer.a11y.play")
         }
         style={({ pressed }) => [
           styles.playButton,
@@ -79,7 +81,7 @@ export function AudioPlayer({ uri, durationMs }: AudioPlayerProps) {
 
       <Text
         style={styles.timeText}
-        accessibilityLabel={t("audioPlayer.a11y.progress", {
+        accessibilityLabel={t("common:audioPlayer.a11y.progress", {
           current: formatDuration(currentMs),
           total: formatDuration(totalMs),
         })}

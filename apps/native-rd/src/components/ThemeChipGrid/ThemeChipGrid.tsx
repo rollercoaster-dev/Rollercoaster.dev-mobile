@@ -39,7 +39,7 @@ const stripeWidths: Record<ThemeName, [number, number]> = {
 
 export function ThemeChipGrid() {
   const { themeName, setTheme } = useThemeContext();
-  const { t } = useTranslation();
+  const { t } = useTranslation(["common"]);
 
   const rows: (typeof themeOptions)[] = [];
   for (let i = 0; i < themeOptions.length; i += COLUMN_COUNT) {
@@ -70,7 +70,7 @@ export function ThemeChipGrid() {
               const isSelected = themeName === option.id;
               const swatch = getSwatch(option.id);
               const [w1, w2] = stripeWidths[option.id];
-              const label = t(`theme.options.${option.id}.label`);
+              const label = t(`common:theme.options.${option.id}.label`);
 
               return (
                 <Pressable

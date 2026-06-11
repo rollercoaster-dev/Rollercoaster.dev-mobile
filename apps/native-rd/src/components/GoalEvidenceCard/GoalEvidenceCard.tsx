@@ -44,7 +44,7 @@ export function GoalEvidenceCard({
   onMarkComplete,
 }: GoalEvidenceCardProps) {
   const { theme } = useUnistyles();
-  const { t } = useTranslation("common");
+  const { t } = useTranslation(["common"]);
   const evidenceLabel = formatEvidenceLabel(t, evidenceCount);
   const flashStyle = useFlashOnIncrease(evidenceCount);
 
@@ -84,9 +84,14 @@ export function GoalEvidenceCard({
       <Card>
         <View style={styles.container}>
           <View style={styles.metaRow}>
-            <Text style={styles.metaLabel}>{t("goalCard.metaLabel")}</Text>
+            <Text style={styles.metaLabel}>
+              {t("common:goalCard.metaLabel")}
+            </Text>
             {onMarkComplete && (
-              <StatusBadge variant="active" label={t("goalCard.readyBadge")} />
+              <StatusBadge
+                variant="active"
+                label={t("common:goalCard.readyBadge")}
+              />
             )}
           </View>
           <View style={styles.bodyRow}>
@@ -95,7 +100,7 @@ export function GoalEvidenceCard({
               hitSlop={BADGE_HIT_SLOP}
               accessible
               accessibilityRole="button"
-              accessibilityLabel={t("goalCard.a11y.badgePreview", {
+              accessibilityLabel={t("common:goalCard.a11y.badgePreview", {
                 title: goalTitle,
               })}
               style={styles.badgePressable(viewBox.w, viewBox.h)}
@@ -128,7 +133,7 @@ export function GoalEvidenceCard({
               style={styles.evidenceBadge}
               accessible
               accessibilityRole="button"
-              accessibilityLabel={t("goalCard.a11y.evidenceCount", {
+              accessibilityLabel={t("common:goalCard.a11y.evidenceCount", {
                 count: evidenceCount,
               })}
             >
@@ -153,8 +158,8 @@ export function GoalEvidenceCard({
                 }}
                 accessible
                 accessibilityRole="button"
-                accessibilityLabel={t("goalCard.markComplete")}
-                accessibilityHint={t("goalCard.a11y.markCompleteHint")}
+                accessibilityLabel={t("common:goalCard.markComplete")}
+                accessibilityHint={t("common:goalCard.a11y.markCompleteHint")}
                 style={styles.markCompletePressable}
               >
                 {/* Visually a checkbox affordance, but semantically a button —
@@ -162,7 +167,7 @@ export function GoalEvidenceCard({
                     persistent checked state, so we never render a checkmark. */}
                 <View style={styles.markCompleteBox} />
                 <Text style={styles.markCompleteLabel}>
-                  {t("goalCard.markComplete")}
+                  {t("common:goalCard.markComplete")}
                 </Text>
               </Pressable>
             </View>

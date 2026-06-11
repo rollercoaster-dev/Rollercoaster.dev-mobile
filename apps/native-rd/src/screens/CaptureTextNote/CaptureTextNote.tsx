@@ -32,7 +32,7 @@ const WARNING_THRESHOLD = 900;
 
 export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
   const navigation = useNavigation();
-  const { t } = useTranslation("captureText");
+  const { t } = useTranslation(["captureText"]);
   const { theme } = useUnistyles();
   const { goalId, stepId } = route.params;
   const textInputRef = useRef<TextInput>(null);
@@ -81,7 +81,9 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
         description: caption.trim() || undefined,
       });
 
-      AccessibilityInfo.announceForAccessibility(t("a11y.noteSaved"));
+      AccessibilityInfo.announceForAccessibility(
+        t("captureText:a11y.noteSaved"),
+      );
       navigation.goBack();
     } catch (error) {
       console.error("[CaptureTextNote] Failed to save text note", {
@@ -91,8 +93,8 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
       });
       reportError(error, { area: "evidence.capture", kind: "text" });
       Alert.alert(
-        t("errors.couldNotSaveTitle"),
-        t("errors.couldNotSaveMessage"),
+        t("captureText:errors.couldNotSaveTitle"),
+        t("captureText:errors.couldNotSaveMessage"),
       );
     } finally {
       setSaving(false);
@@ -101,14 +103,17 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
 
   return (
     <View style={styles.container}>
-      <ScreenSubHeader label={t("title")} onBack={() => navigation.goBack()} />
+      <ScreenSubHeader
+        label={t("captureText:title")}
+        onBack={() => navigation.goBack()}
+      />
 
       <Animated.View style={[styles.content, contentAnimatedStyle]}>
         {/* eslint-disable-next-line local/no-shared-component-reimplementation */}
         <TextInput
           ref={textInputRef}
           style={[styles.textInput, isFocused && styles.textInputFocused]}
-          placeholder={t("input.placeholder")}
+          placeholder={t("captureText:input.placeholder")}
           placeholderTextColor={theme.colors.textMuted}
           value={content}
           onChangeText={setContent}
@@ -119,14 +124,14 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
           autoFocus
           maxLength={MAX_CONTENT_LENGTH + 100}
           accessible
-          accessibilityLabel={t("input.label")}
-          accessibilityHint={t("input.hint")}
+          accessibilityLabel={t("captureText:input.label")}
+          accessibilityHint={t("captureText:input.hint")}
         />
 
         <View style={styles.captionContainer}>
           <Input
-            label={t("caption.label")}
-            placeholder={t("caption.placeholder")}
+            label={t("captureText:caption.label")}
+            placeholder={t("captureText:caption.placeholder")}
             value={caption}
             onChangeText={setCaption}
             maxLength={1000}
@@ -141,7 +146,7 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
               styles.charCount,
               (isNearLimit || isOverLimit) && styles.charCountWarning,
             ]}
-            accessibilityLabel={t("charCount.a11y", {
+            accessibilityLabel={t("captureText:charCount.a11y", {
               count: charCount,
               max: MAX_CONTENT_LENGTH,
             })}
@@ -149,7 +154,7 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
             {charCount}/{MAX_CONTENT_LENGTH}
           </Text>
           <Button
-            label={t("actions.save")}
+            label={t("captureText:actions.save")}
             onPress={handleSave}
             disabled={!canSave}
             loading={saving}

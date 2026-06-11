@@ -655,11 +655,14 @@ function useStepEvidenceCounts(
 
 export function FocusModeScreen({ route }: FocusModeNavProps) {
   const navigation = useNavigation();
-  const { t } = useTranslation("focusMode");
+  const { t } = useTranslation(["focusMode"]);
 
   return (
     <View style={styles.screen}>
-      <ScreenSubHeader label={t("title")} onBack={() => navigation.goBack()} />
+      <ScreenSubHeader
+        label={t("focusMode:title")}
+        onBack={() => navigation.goBack()}
+      />
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingView}
         {...KEYBOARD_AVOIDING_PROPS}

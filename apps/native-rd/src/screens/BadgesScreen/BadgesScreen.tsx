@@ -25,15 +25,15 @@ function BadgeList() {
   const navigation = useNavigation<Nav>();
   const tabInset = useTabScreenContentInset();
   const rows = useQuery(badgesWithGoalsQuery);
-  const { t, i18n } = useTranslation("badges");
+  const { t, i18n } = useTranslation(["badges"]);
 
   if (rows.length === 0) {
     return (
       <EmptyState
-        title={t("empty.title")}
-        body={t("empty.body")}
+        title={t("badges:empty.title")}
+        body={t("badges:empty.body")}
         action={{
-          label: t("empty.action"),
+          label: t("badges:empty.action"),
           onPress: () => {
             const parent =
               navigation.getParent<
@@ -59,7 +59,9 @@ function BadgeList() {
       scrollIndicatorInsets={{ right: 1 }}
       renderItem={({ item }: { item: BadgeRow }) => (
         <BadgeCard
-          title={(item.goalTitle as string) ?? t("card.untitledFallback")}
+          title={
+            (item.goalTitle as string) ?? t("badges:card.untitledFallback")
+          }
           description={(item.goalDescription as string | null) ?? undefined}
           earnedDate={formatDate(
             (item.completedAt ?? item.createdAt) as string | null,
@@ -76,10 +78,10 @@ function BadgeList() {
 }
 
 export function BadgesScreen() {
-  const { t } = useTranslation("badges");
+  const { t } = useTranslation(["badges"]);
   return (
     <View style={styles.screen}>
-      <ScreenHeader title={t("header")} />
+      <ScreenHeader title={t("badges:header")} />
       <ErrorBoundary>
         <Suspense
           fallback={

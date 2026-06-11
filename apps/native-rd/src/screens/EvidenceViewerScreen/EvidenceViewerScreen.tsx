@@ -23,7 +23,7 @@ function ViewerContent({
   goalId: string;
   initialEvidenceId: string;
 }) {
-  const { t } = useTranslation("evidenceViewer");
+  const { t } = useTranslation(["evidenceViewer"]);
   const evidence = useAllEvidenceForGoal(goalId as GoalId);
 
   const initialIndex = useMemo(() => {
@@ -45,9 +45,13 @@ function ViewerContent({
       evidence.length > 0
     ) {
       setActiveIndex(evidence.length - 1);
-      AccessibilityInfo.announceForAccessibility(t("a11y.removedShowingNext"));
+      AccessibilityInfo.announceForAccessibility(
+        t("evidenceViewer:a11y.removedShowingNext"),
+      );
     } else if (evidence.length < prev && evidence.length === 0) {
-      AccessibilityInfo.announceForAccessibility(t("a11y.allRemoved"));
+      AccessibilityInfo.announceForAccessibility(
+        t("evidenceViewer:a11y.allRemoved"),
+      );
     } else if (activeIndex >= evidence.length && evidence.length > 0) {
       setActiveIndex(evidence.length - 1);
     }
@@ -56,7 +60,7 @@ function ViewerContent({
   if (evidence.length === 0) {
     return (
       <View style={styles.centered}>
-        <Text variant="body">{t("empty")}</Text>
+        <Text variant="body">{t("evidenceViewer:empty")}</Text>
       </View>
     );
   }
@@ -87,14 +91,17 @@ function ViewerContent({
 export function EvidenceViewerScreen({ route }: EvidenceViewerScreenProps) {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const { t } = useTranslation("evidenceViewer");
+  const { t } = useTranslation(["evidenceViewer"]);
   const { goalId, initialEvidenceId } = route.params;
 
   return (
     <View
       style={[styles.screen, { paddingBottom: TAB_BAR_HEIGHT + insets.bottom }]}
     >
-      <ScreenSubHeader label={t("title")} onBack={() => navigation.goBack()} />
+      <ScreenSubHeader
+        label={t("evidenceViewer:title")}
+        onBack={() => navigation.goBack()}
+      />
       <ErrorBoundary>
         <Suspense
           fallback={

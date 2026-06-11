@@ -25,7 +25,7 @@ export function MiniTimeline({
   onTimelineTap,
   accessibilityLabel,
 }: MiniTimelineProps) {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation(["common"]);
   const allCompleted =
     steps.length > 0 && steps.every((s) => s.status === "completed");
 
@@ -46,7 +46,7 @@ export function MiniTimeline({
         accessible: true,
         accessibilityRole: "button" as const,
         accessibilityLabel,
-        accessibilityHint: t("timeline.a11y.hint"),
+        accessibilityHint: t("common:timeline.a11y.hint"),
       } as const);
 
   return (
@@ -61,7 +61,7 @@ export function MiniTimeline({
                 hitSlop={15}
                 accessible
                 accessibilityRole="button"
-                accessibilityLabel={t("timeline.a11y.step", {
+                accessibilityLabel={t("common:timeline.a11y.step", {
                   index: index + 1,
                   status: step.status,
                 })}
@@ -90,7 +90,7 @@ export function MiniTimeline({
           hitSlop={15}
           accessible
           accessibilityRole="button"
-          accessibilityLabel={t("timeline.a11y.goalEvidence")}
+          accessibilityLabel={t("common:timeline.a11y.goalEvidence")}
         >
           <View
             style={[
@@ -102,7 +102,7 @@ export function MiniTimeline({
         </Pressable>
       </View>
       <Pressable onPress={onTimelineTap} {...expandA11y}>
-        <Text style={styles.hintText}>{t("timeline.hint")}</Text>
+        <Text style={styles.hintText}>{t("common:timeline.hint")}</Text>
       </Pressable>
     </View>
   );

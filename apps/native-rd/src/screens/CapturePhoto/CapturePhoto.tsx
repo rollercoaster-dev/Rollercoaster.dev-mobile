@@ -57,7 +57,10 @@ export function CapturePhoto({ route }: CapturePhotoScreenProps) {
         error,
       });
       reportError(error, { area: "evidence.capture", kind: "photo" });
-      Alert.alert(t("errors.saveFailedTitle"), t("errors.saveFailedMessage"));
+      Alert.alert(
+        t("capturePhoto:errors.saveFailedTitle"),
+        t("capturePhoto:errors.saveFailedMessage"),
+      );
     } finally {
       setBusy(false);
     }
@@ -114,7 +117,7 @@ export function CapturePhoto({ route }: CapturePhotoScreenProps) {
         <View style={styles.content}>
           <ActivityIndicator
             size="large"
-            accessibilityLabel={t("a11y.savingPhoto")}
+            accessibilityLabel={t("capturePhoto:a11y.savingPhoto")}
           />
         </View>
       </View>
@@ -123,20 +126,23 @@ export function CapturePhoto({ route }: CapturePhotoScreenProps) {
 
   return (
     <View style={styles.container}>
-      <ScreenSubHeader label={t("title")} onBack={() => navigation.goBack()} />
+      <ScreenSubHeader
+        label={t("capturePhoto:title")}
+        onBack={() => navigation.goBack()}
+      />
       <View style={styles.content}>
         <Card>
           <Text variant="headline" style={styles.heading}>
-            {t("heading")}
+            {t("capturePhoto:heading")}
           </Text>
           <View style={styles.buttonGroup}>
             <Button
-              label={t("actions.takePhoto")}
+              label={t("capturePhoto:actions.takePhoto")}
               variant="primary"
               onPress={handleTakePhoto}
             />
             <Button
-              label={t("actions.chooseFromLibrary")}
+              label={t("capturePhoto:actions.chooseFromLibrary")}
               variant="secondary"
               onPress={handleChooseFromLibrary}
             />

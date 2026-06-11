@@ -15,7 +15,7 @@ export interface LinkContentProps {
 }
 
 export function LinkContent({ uri, description }: LinkContentProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation(["common"]);
 
   function handleOpen() {
     openLinkInBrowser(uri).catch((error) => {
@@ -43,7 +43,7 @@ export function LinkContent({ uri, description }: LinkContentProps) {
           {uri}
         </Text>
         <Button
-          label={t("evidenceContent.openInBrowser")}
+          label={t("common:evidenceContent.openInBrowser")}
           onPress={handleOpen}
           variant="primary"
         />

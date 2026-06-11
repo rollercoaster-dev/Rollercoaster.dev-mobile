@@ -28,9 +28,9 @@ export function ConfirmDeleteModal({
   cancelLabel,
 }: ConfirmDeleteModalProps) {
   const { theme } = useUnistyles();
-  const { t } = useTranslation("common");
-  const finalConfirm = confirmLabel ?? t("actions.delete");
-  const finalCancel = cancelLabel ?? t("actions.cancel");
+  const { t } = useTranslation(["common"]);
+  const finalConfirm = confirmLabel ?? t("common:actions.delete");
+  const finalCancel = cancelLabel ?? t("common:actions.cancel");
 
   return (
     <Modal

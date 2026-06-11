@@ -121,7 +121,7 @@ function previewStyles(themeId: ThemeName) {
 
 export function ThemeSwitcher() {
   const { themeName, setTheme } = useThemeContext();
-  const { t } = useTranslation();
+  const { t } = useTranslation(["common"]);
 
   // The radiogroup wrapper collapses descendant Pressables into a single
   // a11y node on iOS, which hides individual options from Maestro element
@@ -139,15 +139,17 @@ export function ThemeSwitcher() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{t("theme.picker.title")}</Text>
+      <Text style={styles.title}>{t("common:theme.picker.title")}</Text>
 
       <View {...groupingA11y}>
         {themeOptions.map((option) => {
           const isSelected = themeName === option.id;
           const cardTheme = themes[option.id];
           const preview = previewStyles(option.id);
-          const label = t(`theme.options.${option.id}.label`);
-          const description = t(`theme.options.${option.id}.description`);
+          const label = t(`common:theme.options.${option.id}.label`);
+          const description = t(
+            `common:theme.options.${option.id}.description`,
+          );
 
           return (
             <Pressable
@@ -179,7 +181,7 @@ export function ThemeSwitcher() {
                 {isSelected ? (
                   <Text
                     style={preview.checkmark}
-                    accessibilityLabel={t("theme.picker.selected")}
+                    accessibilityLabel={t("common:theme.picker.selected")}
                   >
                     ✓
                   </Text>
@@ -192,14 +194,16 @@ export function ThemeSwitcher() {
                 </View>
                 <View style={styles.sampleTextCol}>
                   <Text style={preview.sampleTitle}>
-                    {t("theme.preview.title")}
+                    {t("common:theme.preview.title")}
                   </Text>
                   <Text style={preview.sampleMeta}>
-                    {t("theme.preview.progress")}
+                    {t("common:theme.preview.progress")}
                   </Text>
                 </View>
                 <View style={preview.ctaPill}>
-                  <Text style={preview.ctaText}>{t("theme.preview.cta")}</Text>
+                  <Text style={preview.ctaText}>
+                    {t("common:theme.preview.cta")}
+                  </Text>
                 </View>
               </View>
             </Pressable>

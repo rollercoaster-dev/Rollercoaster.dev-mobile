@@ -54,7 +54,7 @@ function EditContent({
 }) {
   const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
   const { theme } = useUnistyles();
-  const { t } = useTranslation("editGoal");
+  const { t } = useTranslation(["editGoal"]);
   const tabInset = useTabScreenContentInset();
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
@@ -81,7 +81,7 @@ function EditContent({
       titleTimer.current = setTimeout(() => {
         const trimmed = newTitle.trim();
         if (!trimmed) {
-          setTitleError(t("errors.titleRequired"));
+          setTitleError(t("editGoal:errors.titleRequired"));
           return;
         }
         setTitleError("");
@@ -94,7 +94,7 @@ function EditContent({
             error,
           });
           reportError(error, { area: "goal.mutate", kind: "update" });
-          setTitleError(t("errors.updateTitleFailed"));
+          setTitleError(t("editGoal:errors.updateTitleFailed"));
         }
       }, DEBOUNCE_MS);
     },
@@ -115,8 +115,8 @@ function EditContent({
           });
           reportError(error, { area: "goal.mutate", kind: "update" });
           Alert.alert(
-            t("errors.alertErrorTitle"),
-            t("errors.updateDescriptionMessage"),
+            t("editGoal:errors.alertErrorTitle"),
+            t("editGoal:errors.updateDescriptionMessage"),
           );
         }
       }, DEBOUNCE_MS);
@@ -127,7 +127,7 @@ function EditContent({
   if (!goal) {
     return (
       <View style={styles.centered}>
-        <Text variant="body">{t("errors.goalNotFound")}</Text>
+        <Text variant="body">{t("editGoal:errors.goalNotFound")}</Text>
       </View>
     );
   }
@@ -159,7 +159,10 @@ function EditContent({
         error,
       });
       reportError(error, { area: "step.mutate", kind: "update" });
-      Alert.alert(t("errors.alertErrorTitle"), t("errors.updateStepMessage"));
+      Alert.alert(
+        t("editGoal:errors.alertErrorTitle"),
+        t("editGoal:errors.updateStepMessage"),
+      );
     }
   }
 
@@ -174,7 +177,10 @@ function EditContent({
         error,
       });
       reportError(error, { area: "step.mutate", kind: "delete" });
-      Alert.alert(t("errors.alertErrorTitle"), t("errors.deleteStepMessage"));
+      Alert.alert(
+        t("editGoal:errors.alertErrorTitle"),
+        t("editGoal:errors.deleteStepMessage"),
+      );
     }
   }
 
@@ -200,7 +206,10 @@ function EditContent({
         error,
       });
       reportError(error, { area: "step.mutate", kind: "create" });
-      Alert.alert(t("errors.alertErrorTitle"), t("errors.createStepMessage"));
+      Alert.alert(
+        t("editGoal:errors.alertErrorTitle"),
+        t("editGoal:errors.createStepMessage"),
+      );
     }
   }
 
@@ -213,7 +222,10 @@ function EditContent({
         error,
       });
       reportError(error, { area: "step.mutate", kind: "reorder" });
-      Alert.alert(t("errors.alertErrorTitle"), t("errors.reorderStepsMessage"));
+      Alert.alert(
+        t("editGoal:errors.alertErrorTitle"),
+        t("editGoal:errors.reorderStepsMessage"),
+      );
     }
   }
 
@@ -229,7 +241,10 @@ function EditContent({
       });
       reportError(error, { area: "goal.mutate", kind: "delete" });
       setShowDeleteGoalModal(false);
-      Alert.alert(t("errors.deleteGoalTitle"), t("errors.deleteGoalMessage"));
+      Alert.alert(
+        t("editGoal:errors.deleteGoalTitle"),
+        t("editGoal:errors.deleteGoalMessage"),
+      );
     }
   }
 
@@ -249,7 +264,7 @@ function EditContent({
         {/* Title */}
         <View style={styles.section}>
           <Text variant="label" style={styles.label}>
-            {t("fields.title.label")}
+            {t("editGoal:fields.title.label")}
           </Text>
           <TextInput
             style={[
@@ -258,10 +273,10 @@ function EditContent({
             ]}
             value={title}
             onChangeText={handleTitleChange}
-            placeholder={t("fields.title.placeholder")}
+            placeholder={t("editGoal:fields.title.placeholder")}
             placeholderTextColor={theme.colors.textMuted}
-            accessibilityLabel={t("fields.title.a11yLabel")}
-            accessibilityHint={t("fields.title.a11yHint")}
+            accessibilityLabel={t("editGoal:fields.title.a11yLabel")}
+            accessibilityHint={t("editGoal:fields.title.a11yHint")}
             returnKeyType="next"
           />
           {titleError ? (
@@ -274,17 +289,17 @@ function EditContent({
         {/* Description */}
         <View style={styles.section}>
           <Text variant="label" style={styles.label}>
-            {t("fields.description.label")}
+            {t("editGoal:fields.description.label")}
           </Text>
           <TextInput
             style={styles.descriptionInput}
             value={description}
             onChangeText={handleDescriptionChange}
-            placeholder={t("fields.description.placeholder")}
+            placeholder={t("editGoal:fields.description.placeholder")}
             placeholderTextColor={theme.colors.textMuted}
             multiline
-            accessibilityLabel={t("fields.description.a11yLabel")}
-            accessibilityHint={t("fields.description.a11yHint")}
+            accessibilityLabel={t("editGoal:fields.description.a11yLabel")}
+            accessibilityHint={t("editGoal:fields.description.a11yHint")}
           />
         </View>
 
@@ -310,8 +325,8 @@ function EditContent({
           <Button
             label={
               cameFromFocus
-                ? t("actions.backToFocus")
-                : t("actions.startWorking")
+                ? t("editGoal:actions.backToFocus")
+                : t("editGoal:actions.startWorking")
             }
             onPress={handleNavigate}
             testID={cameFromFocus ? "back-to-focus" : "start-working"}
@@ -321,7 +336,7 @@ function EditContent({
         {/* Delete goal */}
         <View style={styles.buttonSection}>
           <Button
-            label={t("actions.deleteGoal")}
+            label={t("editGoal:actions.deleteGoal")}
             variant="destructive"
             onPress={() => setShowDeleteGoalModal(true)}
           />
@@ -331,8 +346,8 @@ function EditContent({
         visible={showDeleteGoalModal}
         onCancel={() => setShowDeleteGoalModal(false)}
         onConfirm={handleDeleteGoal}
-        title={t("confirmDelete.title")}
-        message={t("confirmDelete.message", { title: goal.title })}
+        title={t("editGoal:confirmDelete.title")}
+        message={t("editGoal:confirmDelete.message", { title: goal.title })}
       />
     </>
   );
@@ -341,12 +356,15 @@ function EditContent({
 export function EditModeScreen({ route }: EditModeScreenProps) {
   const navigation = useNavigation();
   const { theme } = useUnistyles();
-  const { t } = useTranslation("editGoal");
+  const { t } = useTranslation(["editGoal"]);
   const { goalId, cameFromFocus = false } = route.params;
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <ScreenSubHeader label={t("title")} onBack={() => navigation.goBack()} />
+      <ScreenSubHeader
+        label={t("editGoal:title")}
+        onBack={() => navigation.goBack()}
+      />
       <ErrorBoundary>
         <Suspense
           fallback={

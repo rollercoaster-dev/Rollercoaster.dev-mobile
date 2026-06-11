@@ -153,7 +153,7 @@ function DetailTopBar({
   onBack: () => void;
   onLayout: (e: LayoutChangeEvent) => void;
 }) {
-  const { t } = useTranslation("badgeDetail");
+  const { t } = useTranslation(["badgeDetail"]);
   return (
     <View style={styles.topBar} onLayout={onLayout}>
       {/* Title intentionally omitted — the badge floats over the band and
@@ -163,7 +163,7 @@ function DetailTopBar({
           icon={<ArrowLeft size={24} weight="bold" />}
           onPress={onBack}
           tone="chrome"
-          accessibilityLabel={t("fallback.goBack")}
+          accessibilityLabel={t("badgeDetail:fallback.goBack")}
         />
       </HeaderBand>
     </View>
@@ -222,24 +222,28 @@ function BadgeDetailContent({
   };
 
   const handleDelete = () => {
-    Alert.alert(t("deleteConfirm.title"), t("deleteConfirm.message"), [
-      { text: t("deleteConfirm.cancel"), style: "cancel" },
-      {
-        text: t("deleteConfirm.delete"),
-        style: "destructive",
-        onPress: () => {
-          deleteBadge(badgeId as BadgeId);
-          navigation.goBack();
+    Alert.alert(
+      t("badgeDetail:deleteConfirm.title"),
+      t("badgeDetail:deleteConfirm.message"),
+      [
+        { text: t("badgeDetail:deleteConfirm.cancel"), style: "cancel" },
+        {
+          text: t("badgeDetail:deleteConfirm.delete"),
+          style: "destructive",
+          onPress: () => {
+            deleteBadge(badgeId as BadgeId);
+            navigation.goBack();
+          },
         },
-      },
-    ]);
+      ],
+    );
   };
 
   if (!badge) {
     return (
       <>
         <View style={styles.centered}>
-          <Text variant="body">{t("fallback.badgeNotFound")}</Text>
+          <Text variant="body">{t("badgeDetail:fallback.badgeNotFound")}</Text>
         </View>
         <DetailTopBar
           onBack={() => navigation.goBack()}
@@ -256,7 +260,8 @@ function BadgeDetailContent({
   // NULL`: soft-deleted goals surface as a null join, masking goalId even
   // though badges.goalId itself is non-null in the schema.
   const goalId = badge.goalId as string | null;
-  const goalTitle = (badge.goalTitle as string) ?? t("fallback.untitled");
+  const goalTitle =
+    (badge.goalTitle as string) ?? t("badgeDetail:fallback.untitled");
   const goalDescription = badge.goalDescription as string | null;
   const goalIcon = badge.goalIcon as string | null;
   const goalColor = badge.goalColor as string | null;
@@ -288,8 +293,8 @@ function BadgeDetailContent({
             accessibilityRole="image"
             accessibilityLabel={
               goalIcon
-                ? t("identityA11y.icon", { icon: goalIcon })
-                : t("identityA11y.color")
+                ? t("badgeDetail:identityA11y.icon", { icon: goalIcon })
+                : t("badgeDetail:identityA11y.color")
             }
           >
             {goalIcon ? <Text style={styles.chipIcon}>{goalIcon}</Text> : null}
@@ -303,7 +308,7 @@ function BadgeDetailContent({
 
         {earnedDate ? (
           <Text style={styles.description}>
-            {t("earned", { date: earnedDate })}
+            {t("badgeDetail:earned", { date: earnedDate })}
           </Text>
         ) : null}
 
@@ -311,7 +316,9 @@ function BadgeDetailContent({
           <View style={styles.infoSection}>
             {goalDescription ? (
               <View style={styles.infoBlock}>
-                <Text style={styles.sectionLabel}>{t("sections.about")}</Text>
+                <Text style={styles.sectionLabel}>
+                  {t("badgeDetail:sections.about")}
+                </Text>
                 <Text style={styles.bodyText}>{goalDescription}</Text>
               </View>
             ) : null}
@@ -319,7 +326,7 @@ function BadgeDetailContent({
             {criteriaNarrative || evidenceItems ? (
               <View style={styles.infoBlock}>
                 <Text style={styles.sectionLabel}>
-                  {t("sections.howEarned")}
+                  {t("badgeDetail:sections.howEarned")}
                 </Text>
                 {criteriaNarrative ? (
                   <Text style={styles.bodyText}>{criteriaNarrative}</Text>
@@ -332,20 +339,23 @@ function BadgeDetailContent({
                   <View
                     style={styles.evidenceList}
                     accessibilityRole="list"
-                    accessibilityLabel={t("evidenceList.a11yLabel", {
-                      count: evidenceItems.length,
-                    })}
+                    accessibilityLabel={t(
+                      "badgeDetail:evidenceList.a11yLabel",
+                      {
+                        count: evidenceItems.length,
+                      },
+                    )}
                   >
                     {evidenceItems.map((ev) => {
                       const icon = ev.type ? EVIDENCE_TYPE_ICONS[ev.type] : "•";
                       const typeLabel = ev.type
-                        ? t(`evidenceTypes.${ev.type}.label`, { ns: "common" })
+                        ? t(`common:evidenceTypes.${ev.type}.label`)
                         : null;
                       // For unknown/missing genres, still announce *some* type
                       // context so the row doesn't read as a bare proper noun.
                       const a11yTypeLabel =
-                        typeLabel ?? t("evidenceList.fallbackType");
-                      const a11yLabel = t("evidenceList.itemA11y", {
+                        typeLabel ?? t("badgeDetail:evidenceList.fallbackType");
+                      const a11yLabel = t("badgeDetail:evidenceList.itemA11y", {
                         name: ev.name,
                         type: a11yTypeLabel,
                       });
@@ -383,9 +393,11 @@ function BadgeDetailContent({
             ) : null}
 
             <View style={styles.infoBlock}>
-              <Text style={styles.sectionLabel}>{t("sections.details")}</Text>
+              <Text style={styles.sectionLabel}>
+                {t("badgeDetail:sections.details")}
+              </Text>
               <Text style={styles.bodyText}>
-                {t("createdAt", {
+                {t("badgeDetail:createdAt", {
                   date: formatDate(
                     badge.createdAt as string | null,
                     i18n.language,
@@ -398,7 +410,7 @@ function BadgeDetailContent({
 
         {goalId ? (
           <Button
-            label={t("actions.viewTimeline")}
+            label={t("badgeDetail:actions.viewTimeline")}
             variant="secondary"
             onPress={() => handleViewTimeline(goalId)}
           />
@@ -406,20 +418,22 @@ function BadgeDetailContent({
 
         <Card>
           <View style={styles.infoBlock}>
-            <Text style={styles.sectionLabel}>{t("sections.export")}</Text>
+            <Text style={styles.sectionLabel}>
+              {t("badgeDetail:sections.export")}
+            </Text>
             {/* Primary: byte-preserving export of the baked PNG (carries the
                 OB 3.0 iTXt credential). On Android this bypasses the share
                 sheet entirely via SAF, so messengers can't transcode and
                 strip the credential. */}
             <Button
-              label={t("actions.exportVerifiable")}
+              label={t("badgeDetail:actions.exportVerifiable")}
               variant="primary"
               onPress={() => exportVerifiableBadge(imageUri)}
               loading={isExportingImage}
               disabled={!hasRealImage}
             />
             <Button
-              label={t("actions.exportCredential")}
+              label={t("badgeDetail:actions.exportCredential")}
               variant="secondary"
               onPress={() =>
                 exportJSON(badge.credential as string | null, goalTitle)
@@ -432,21 +446,21 @@ function BadgeDetailContent({
                 only want to share the visual; the caption below explains
                 the trade-off. */}
             <Button
-              label={t("actions.saveAsImage")}
+              label={t("badgeDetail:actions.saveAsImage")}
               variant="secondary"
               onPress={() => exportImage(imageUri)}
               loading={isExportingImage}
               disabled={!hasRealImage}
-              accessibilityHint={t("actions.saveAsImageHint")}
+              accessibilityHint={t("badgeDetail:actions.saveAsImageHint")}
             />
             <Text variant="caption" style={styles.exportCaption}>
-              {t("exportCaption")}
+              {t("badgeDetail:exportCaption")}
             </Text>
           </View>
         </Card>
 
         <Button
-          label={t("actions.delete")}
+          label={t("badgeDetail:actions.delete")}
           variant="destructive"
           onPress={handleDelete}
         />
@@ -483,7 +497,9 @@ function BadgeDetailContent({
               source={{ uri: imageUri }}
               style={styles.badgeImage}
               resizeMode="contain"
-              accessibilityLabel={t("image.a11y", { title: goalTitle })}
+              accessibilityLabel={t("badgeDetail:image.a11y", {
+                title: goalTitle,
+              })}
               onError={() => setImageLoadFailed(true)}
             />
           ) : (

@@ -20,7 +20,7 @@ export function PhotoViewerModal({
   onClose,
 }: PhotoViewerModalProps) {
   const insets = useSafeAreaInsets();
-  const { t } = useTranslation();
+  const { t } = useTranslation(["common"]);
 
   if (!visible) return null;
 
@@ -44,7 +44,7 @@ export function PhotoViewerModal({
             onPress={onClose}
             accessible
             accessibilityRole="button"
-            accessibilityLabel={t("viewerModals.a11y.closePhoto")}
+            accessibilityLabel={t("common:viewerModals.a11y.closePhoto")}
             hitSlop={16}
           >
             <Text style={styles.closeText}>{"\u2715"}</Text>

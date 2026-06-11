@@ -52,7 +52,7 @@ export function EvidenceDrawer({
 }: EvidenceDrawerProps) {
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const { theme } = useUnistyles();
-  const { t } = useTranslation("common");
+  const { t } = useTranslation(["common"]);
   const { animationPref } = useAnimationPref();
   const maxHeight = windowHeight * 0.6;
   const items = evidence ?? [];
@@ -87,8 +87,8 @@ export function EvidenceDrawer({
   );
 
   const drawerLabel = isGoal
-    ? t("evidenceDrawer.label.goal", { count: items.length })
-    : t("evidenceDrawer.label.step", { count: items.length });
+    ? t("common:evidenceDrawer.label.goal", { count: items.length })
+    : t("common:evidenceDrawer.label.step", { count: items.length });
 
   // The drawer's `accessible+role=summary` wrapper collapses descendants
   // (FAB, FABMenu, evidence items) into a single a11y node on iOS, hiding
@@ -102,8 +102,8 @@ export function EvidenceDrawer({
         accessible: true,
         accessibilityRole: "summary" as const,
         accessibilityLabel: isGoal
-          ? t("evidenceDrawer.a11y.labelGoal")
-          : t("evidenceDrawer.a11y.label"),
+          ? t("common:evidenceDrawer.a11y.labelGoal")
+          : t("common:evidenceDrawer.a11y.label"),
       } as const);
 
   return (
@@ -118,7 +118,7 @@ export function EvidenceDrawer({
           style={styles.overlayPressable}
           accessible={isOpen}
           accessibilityRole="button"
-          accessibilityLabel={t("evidenceDrawer.a11y.close")}
+          accessibilityLabel={t("common:evidenceDrawer.a11y.close")}
         />
       </Animated.View>
 
@@ -134,7 +134,7 @@ export function EvidenceDrawer({
             style={styles.handleLeft}
             accessible
             accessibilityRole="button"
-            accessibilityLabel={t("evidenceDrawer.a11y.toggle")}
+            accessibilityLabel={t("common:evidenceDrawer.a11y.toggle")}
           >
             <View style={styles.handleBar(isGoal)} />
             <Text style={styles.handleLabel}>{drawerLabel}</Text>
@@ -161,7 +161,7 @@ export function EvidenceDrawer({
         >
           {items.length === 0 ? (
             <Text style={styles.emptyText}>
-              {t("evidenceDrawer.emptyHint")}
+              {t("common:evidenceDrawer.emptyHint")}
             </Text>
           ) : (
             items.map((item) => (

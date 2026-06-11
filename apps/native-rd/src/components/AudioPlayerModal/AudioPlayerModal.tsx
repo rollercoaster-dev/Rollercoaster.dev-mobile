@@ -20,7 +20,7 @@ export function AudioPlayerModal({
   onClose,
 }: AudioPlayerModalProps) {
   const insets = useSafeAreaInsets();
-  const { t } = useTranslation();
+  const { t } = useTranslation(["common"]);
 
   if (!uri) return null;
 
@@ -39,12 +39,14 @@ export function AudioPlayerModal({
         ]}
       >
         <View style={styles.topBar}>
-          <Text style={styles.heading}>{t("viewerModals.heading.audio")}</Text>
+          <Text style={styles.heading}>
+            {t("common:viewerModals.heading.audio")}
+          </Text>
           <Pressable
             onPress={onClose}
             accessible
             accessibilityRole="button"
-            accessibilityLabel={t("viewerModals.a11y.closeAudio")}
+            accessibilityLabel={t("common:viewerModals.a11y.closeAudio")}
             hitSlop={16}
           >
             <Text style={styles.closeText}>{"\u2715"}</Text>

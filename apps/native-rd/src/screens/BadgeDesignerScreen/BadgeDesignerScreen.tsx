@@ -125,8 +125,8 @@ function DesignEditor({
   previewRef,
 }: DesignEditorProps) {
   const { theme } = useUnistyles();
-  const { t } = useTranslation("badgeDesigner");
-  const resolvedSaveLabel = saveLabel ?? t("actions.save");
+  const { t } = useTranslation(["badgeDesigner"]);
+  const resolvedSaveLabel = saveLabel ?? t("badgeDesigner:actions.save");
 
   const insets = useSafeAreaInsets();
   const tabBarHeight = TAB_BAR_HEIGHT + insets.bottom;
@@ -285,7 +285,7 @@ function DesignEditor({
   const bannerText = currentDesign.banner?.text ?? "";
   const bannerPosition = currentDesign.banner?.position ?? BannerPosition.top;
 
-  const previewLabel = t("preview.a11y", {
+  const previewLabel = t("badgeDesigner:preview.a11y", {
     color: currentDesign.color,
     shape: currentDesign.shape,
     frame,
@@ -334,12 +334,12 @@ function DesignEditor({
 
   const baseColorSummary =
     currentDesign.color === goalColor
-      ? t("color.options.goal")
+      ? t("badgeDesigner:color.options.goal")
       : colorId
-        ? t(`color.options.${colorId}` as const)
+        ? t(`badgeDesigner:color.options.${colorId}` as const)
         : currentDesign.color;
   const colorSummary = hasAnyCustom
-    ? `${baseColorSummary} · ${t("accordion.summary.colorCustom")}`
+    ? `${baseColorSummary} · ${t("badgeDesigner:accordion.summary.colorCustom")}`
     : baseColorSummary;
 
   // Initial hex passed to the modal when it opens — picks up the current value
@@ -370,31 +370,41 @@ function DesignEditor({
     setColorPickerTarget(null);
   };
 
-  const shapeSummary = t(`shape.options.${currentDesign.shape}` as const);
-  const frameSummary = t(`frame.options.${frame}` as const);
+  const shapeSummary = t(
+    `badgeDesigner:shape.options.${currentDesign.shape}` as const,
+  );
+  const frameSummary = t(`badgeDesigner:frame.options.${frame}` as const);
 
   // Monogram branch deliberately does NOT interpolate the user-entered value:
   // accordion headers stay deterministic category-only summaries, no free-text
   // echo. Same key used whether monogram is empty or filled.
   const centerSummary =
     centerMode === BadgeCenterMode.icon
-      ? t("accordion.summary.centerIcon", { icon: currentDesign.iconName })
-      : t("accordion.summary.centerMonogram");
+      ? t("badgeDesigner:accordion.summary.centerIcon", {
+          icon: currentDesign.iconName,
+        })
+      : t("badgeDesigner:accordion.summary.centerMonogram");
 
   // Enumerate enabled inscription kinds without echoing user content.
   const inscriptionParts: string[] = [];
   if (bottomLabel)
-    inscriptionParts.push(t("accordion.summary.inscriptionsLabel"));
+    inscriptionParts.push(
+      t("badgeDesigner:accordion.summary.inscriptionsLabel"),
+    );
   if (pathTextEnabled)
-    inscriptionParts.push(t("accordion.summary.inscriptionsPath"));
+    inscriptionParts.push(
+      t("badgeDesigner:accordion.summary.inscriptionsPath"),
+    );
   if (bannerEnabled)
-    inscriptionParts.push(t("accordion.summary.inscriptionsBanner"));
+    inscriptionParts.push(
+      t("badgeDesigner:accordion.summary.inscriptionsBanner"),
+    );
   const inscriptionsSummary = inscriptionParts.length
     ? inscriptionParts.join(" · ")
-    : t("accordion.summary.inscriptionsNone");
+    : t("badgeDesigner:accordion.summary.inscriptionsNone");
 
-  const expandA11y = t("accordion.expandA11y");
-  const collapseA11y = t("accordion.collapseA11y");
+  const expandA11y = t("badgeDesigner:accordion.expandA11y");
+  const collapseA11y = t("badgeDesigner:accordion.collapseA11y");
 
   return (
     <View style={styles.editorRoot}>
@@ -409,7 +419,7 @@ function DesignEditor({
         keyboardShouldPersistTaps="handled"
       >
         <CollapsibleSection
-          title={t("accordion.sections.shape")}
+          title={t("badgeDesigner:accordion.sections.shape")}
           summary={shapeSummary}
           expanded={expandedSection === "shape"}
           onExpandedChange={openSection("shape")}
@@ -424,7 +434,7 @@ function DesignEditor({
         </CollapsibleSection>
 
         <CollapsibleSection
-          title={t("accordion.sections.frame")}
+          title={t("badgeDesigner:accordion.sections.frame")}
           summary={frameSummary}
           expanded={expandedSection === "frame"}
           onExpandedChange={openSection("frame")}
@@ -439,7 +449,7 @@ function DesignEditor({
         </CollapsibleSection>
 
         <CollapsibleSection
-          title={t("accordion.sections.center")}
+          title={t("badgeDesigner:accordion.sections.center")}
           summary={centerSummary}
           expanded={expandedSection === "center"}
           onExpandedChange={openSection("center")}
@@ -467,7 +477,7 @@ function DesignEditor({
         </CollapsibleSection>
 
         <CollapsibleSection
-          title={t("accordion.sections.colors")}
+          title={t("badgeDesigner:accordion.sections.colors")}
           summary={colorSummary}
           expanded={expandedSection === "colors"}
           onExpandedChange={openSection("colors")}
@@ -488,7 +498,7 @@ function DesignEditor({
         </CollapsibleSection>
 
         <CollapsibleSection
-          title={t("accordion.sections.inscriptions")}
+          title={t("badgeDesigner:accordion.sections.inscriptions")}
           summary={inscriptionsSummary}
           expanded={expandedSection === "inscriptions"}
           onExpandedChange={openSection("inscriptions")}
@@ -498,11 +508,11 @@ function DesignEditor({
         >
           <View style={styles.sectionStack}>
             <TextInput
-              accessibilityLabel={t("bottomLabel.a11y")}
+              accessibilityLabel={t("badgeDesigner:bottomLabel.a11y")}
               value={bottomLabel}
               onChangeText={handleBottomLabelChange}
               maxLength={BOTTOM_LABEL_INPUT_MAX_CHARS}
-              placeholder={t("bottomLabel.placeholder")}
+              placeholder={t("badgeDesigner:bottomLabel.placeholder")}
               placeholderTextColor={theme.colors.textSecondary}
               style={styles.bottomLabelInput}
             />
@@ -542,7 +552,7 @@ function DesignEditor({
       </ScrollView>
 
       <View style={styles.topBar}>
-        <ScreenSubHeader label={t("title")} onBack={onBack} />
+        <ScreenSubHeader label={t("badgeDesigner:title")} onBack={onBack} />
       </View>
 
       {/* Static badge preview pinned to the top of the content area (which
@@ -577,7 +587,7 @@ function DesignEditor({
 function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
   const navigation = useNavigation();
   const { theme } = useUnistyles();
-  const { t } = useTranslation("badgeDesigner");
+  const { t } = useTranslation(["badgeDesigner"]);
   const query = useMemo(
     () => badgeWithGoalQuery(badgeId as BadgeId),
     [badgeId],
@@ -587,7 +597,8 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
 
   const initialDesign = useMemo(() => {
     if (!badge) return null;
-    const goalTitle = (badge.goalTitle as string) ?? t("fallback.goalTitle");
+    const goalTitle =
+      (badge.goalTitle as string) ?? t("badgeDesigner:fallback.goalTitle");
     const goalColor = badge.goalColor as string | null;
     return (
       parseBadgeDesign(badge.design as string | null) ??
@@ -635,8 +646,8 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
         });
         reportError(captureErr, { area: "badge.create", kind: "bake" });
         Alert.alert(
-          t("errors.saveFailedTitle"),
-          t("errors.captureFailedMessage"),
+          t("badgeDesigner:errors.saveFailedTitle"),
+          t("badgeDesigner:errors.captureFailedMessage"),
         );
         setIsSaving(false);
         return;
@@ -647,7 +658,10 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
       updateBadge(badgeId as BadgeId, { design: designJson });
     } catch (err) {
       logger.error("Failed to save badge design", { badgeId, error: err });
-      Alert.alert(t("errors.saveFailedTitle"), t("errors.saveFailedMessage"));
+      Alert.alert(
+        t("badgeDesigner:errors.saveFailedTitle"),
+        t("badgeDesigner:errors.saveFailedMessage"),
+      );
       setIsSaving(false);
       return;
     }
@@ -673,9 +687,9 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
   if (!badge || !currentDesign) {
     return (
       <View style={styles.centered}>
-        <Text variant="body">{t("fallback.badgeNotFound")}</Text>
+        <Text variant="body">{t("badgeDesigner:fallback.badgeNotFound")}</Text>
         <Button
-          label={t("actions.goBack")}
+          label={t("badgeDesigner:actions.goBack")}
           variant="secondary"
           onPress={() => navigation.goBack()}
         />
@@ -716,7 +730,7 @@ function BadgeDesignerContentNewGoal({
   const navigation =
     useNavigation<NativeStackNavigationProp<GoalsStackParamList>>();
   const { theme } = useUnistyles();
-  const { t } = useTranslation("badgeDesigner");
+  const { t } = useTranslation(["badgeDesigner"]);
   const goals = useQuery(goalsQuery);
   const goal = goals.find((g) => g.id === goalId) ?? null;
 
@@ -733,7 +747,8 @@ function BadgeDesignerContentNewGoal({
     }
     const persisted = parseBadgeDesign((goal?.design as string | null) ?? null);
     if (persisted) return persisted;
-    const title = (goal?.title as string) ?? t("fallback.goalTitle");
+    const title =
+      (goal?.title as string) ?? t("badgeDesigner:fallback.goalTitle");
     const color = (goal?.color as string | null) ?? null;
     return createDefaultBadgeDesign(title, color);
   }, [goal, goalId, t]);
@@ -784,7 +799,10 @@ function BadgeDesignerContentNewGoal({
           goalId,
           error: err,
         });
-        Alert.alert(t("errors.saveFailedTitle"), t("errors.saveFailedMessage"));
+        Alert.alert(
+          t("badgeDesigner:errors.saveFailedTitle"),
+          t("badgeDesigner:errors.saveFailedMessage"),
+        );
         setIsSaving(false);
       }
     },
@@ -818,13 +836,13 @@ function BadgeDesignerContentNewGoal({
       onDesignChange={setDesign}
       onSave={handleSave}
       onBack={() => navigation.goBack()}
-      saveLabel={t("actions.useThisDesign")}
+      saveLabel={t("badgeDesigner:actions.useThisDesign")}
       saveTestID="use-this-design"
       saveLoading={isSaving}
       previewRef={previewRef}
       extraFooter={
         <Button
-          label={t("actions.skipDefault")}
+          label={t("badgeDesigner:actions.skipDefault")}
           variant="secondary"
           onPress={handleSkip}
           testID="skip-default-design"
@@ -843,7 +861,7 @@ export function BadgeDesignerScreen({
   route,
 }: BadgeDesignerScreenProps | GoalsBadgeDesignerScreenProps) {
   const navigation = useNavigation();
-  const { t } = useTranslation("badgeDesigner");
+  const { t } = useTranslation(["badgeDesigner"]);
   const params = route.params;
 
   let content: React.ReactNode;
@@ -860,9 +878,9 @@ export function BadgeDesignerScreen({
     logger.error("BadgeDesignerScreen: unrecognized params", { params });
     content = (
       <View style={styles.centered}>
-        <Text variant="body">{t("fallback.invalidParams")}</Text>
+        <Text variant="body">{t("badgeDesigner:fallback.invalidParams")}</Text>
         <Button
-          label={t("actions.goBack")}
+          label={t("badgeDesigner:actions.goBack")}
           variant="secondary"
           onPress={() => navigation.goBack()}
         />
