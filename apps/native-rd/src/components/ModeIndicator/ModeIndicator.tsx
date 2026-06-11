@@ -28,7 +28,7 @@ export interface ModeIndicatorProps {
 export function ModeIndicator({ mode, icon }: ModeIndicatorProps) {
   const { t } = useTranslation(["common"]);
   const config = MODE_CONFIG[mode];
-  const label = t(`modeIndicator.${mode}` as const);
+  const label = t(`common:modeIndicator.${mode}` as const);
 
   return (
     <View

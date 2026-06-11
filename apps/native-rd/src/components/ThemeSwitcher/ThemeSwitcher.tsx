@@ -146,8 +146,10 @@ export function ThemeSwitcher() {
           const isSelected = themeName === option.id;
           const cardTheme = themes[option.id];
           const preview = previewStyles(option.id);
-          const label = t(`theme.options.${option.id}.label`);
-          const description = t(`theme.options.${option.id}.description`);
+          const label = t(`common:theme.options.${option.id}.label`);
+          const description = t(
+            `common:theme.options.${option.id}.description`,
+          );
 
           return (
             <Pressable

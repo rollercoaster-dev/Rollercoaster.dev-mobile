@@ -56,11 +56,11 @@ function DensityPicker() {
       {densityOptions.map((option) => (
         <SettingsRow
           key={option.id}
-          label={t(`density.options.${option.id}.label`)}
+          label={t(`settings:density.options.${option.id}.label`)}
           value={
             densityLevel === option.id
               ? "✓"
-              : t(`density.options.${option.id}.description`)
+              : t(`settings:density.options.${option.id}.description`)
           }
           onPress={() => setDensity(option.id)}
         />

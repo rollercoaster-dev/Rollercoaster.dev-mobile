@@ -22,9 +22,15 @@ const SCAN_ROOTS = [
 ];
 
 // Matches t("…") and t('…') with optional whitespace before the literal.
-// Template literals (`…`) and computed keys are excluded by design — they
-// can't be statically verified.
-const T_CALL = /\bt\(\s*["']([^"'\n]+)["']/g;
+const T_CALL_STRING = /\bt\(\s*["']([^"'\n]+)["']/g;
+
+// Matches t(`…`) template literals (single-line). The literal segment before
+// the first ${…} interpolation must contain the `ns:` prefix — that portion is
+// statically verifiable even when the suffix is dynamic.
+const T_CALL_TEMPLATE = /\bt\(\s*`([^`\n]*)`/g;
+
+// Fully computed keys (e.g. `t(buildKey(x))`, `t(KEYS.foo)`) can't be checked
+// statically — out of scope for this regex pass.
 
 async function walk(dir: string): Promise<string[]> {
   const entries = await fs.readdir(dir, { withFileTypes: true });
@@ -63,15 +69,29 @@ function scanFile(file: string, source: string, repoRoot: string): Violation[] {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     if (!line.includes("t(")) continue;
-    const regex = new RegExp(T_CALL.source, "g");
+
+    const stringRegex = new RegExp(T_CALL_STRING.source, "g");
     let match: RegExpExecArray | null;
-    while ((match = regex.exec(line)) !== null) {
+    while ((match = stringRegex.exec(line)) !== null) {
       const key = match[1];
       if (key.includes(":")) continue;
       violations.push({
         file: path.relative(repoRoot, file),
         line: i + 1,
         key,
+      });
+    }
+
+    const templateRegex = new RegExp(T_CALL_TEMPLATE.source, "g");
+    while ((match = templateRegex.exec(line)) !== null) {
+      const raw = match[1];
+      const interpIdx = raw.indexOf("${");
+      const prefix = interpIdx === -1 ? raw : raw.slice(0, interpIdx);
+      if (prefix.includes(":")) continue;
+      violations.push({
+        file: path.relative(repoRoot, file),
+        line: i + 1,
+        key: `\`${raw}\``,
       });
     }
   }

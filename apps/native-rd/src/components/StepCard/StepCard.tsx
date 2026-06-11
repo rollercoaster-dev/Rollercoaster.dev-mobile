@@ -123,7 +123,7 @@ export function StepCard({
           </Text>
           <StatusBadge
             variant={statusToVariant[step.status]}
-            label={t(`stepCard.status.${step.status}`)}
+            label={t(`common:stepCard.status.${step.status}`)}
           />
         </View>
         <Text

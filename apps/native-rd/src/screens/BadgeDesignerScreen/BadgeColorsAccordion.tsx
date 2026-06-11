@@ -162,7 +162,7 @@ export function BadgeColorsAccordion({
       {effectiveTab === "border" && (
         <ChannelPalette
           a11yLabel={t("badgeDesigner:borderColor.a11y")}
-          getSwatchLabel={(id) => t(`borderColor.options.${id}`)}
+          getSwatchLabel={(id) => t(`badgeDesigner:borderColor.options.${id}`)}
           getSwatchA11y={(label) =>
             t("badgeDesigner:borderColor.optionA11y", { label })
           }
@@ -186,7 +186,7 @@ export function BadgeColorsAccordion({
       {effectiveTab === "frame" && frameEnabled && (
         <ChannelPalette
           a11yLabel={t("badgeDesigner:frameColor.a11y")}
-          getSwatchLabel={(id) => t(`frameColor.options.${id}`)}
+          getSwatchLabel={(id) => t(`badgeDesigner:frameColor.options.${id}`)}
           getSwatchA11y={(label) =>
             t("badgeDesigner:frameColor.optionA11y", { label })
           }
@@ -211,7 +211,7 @@ export function BadgeColorsAccordion({
         <View style={styles.iconTabBody}>
           <ChannelPalette
             a11yLabel={t("badgeDesigner:iconColor.a11y")}
-            getSwatchLabel={(id) => t(`iconColor.options.${id}`)}
+            getSwatchLabel={(id) => t(`badgeDesigner:iconColor.options.${id}`)}
             getSwatchA11y={(label) =>
               t("badgeDesigner:iconColor.optionA11y", { label })
             }

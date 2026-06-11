@@ -336,7 +336,7 @@ function DesignEditor({
     currentDesign.color === goalColor
       ? t("badgeDesigner:color.options.goal")
       : colorId
-        ? t(`color.options.${colorId}` as const)
+        ? t(`badgeDesigner:color.options.${colorId}` as const)
         : currentDesign.color;
   const colorSummary = hasAnyCustom
     ? `${baseColorSummary} · ${t("badgeDesigner:accordion.summary.colorCustom")}`
@@ -370,8 +370,10 @@ function DesignEditor({
     setColorPickerTarget(null);
   };
 
-  const shapeSummary = t(`shape.options.${currentDesign.shape}` as const);
-  const frameSummary = t(`frame.options.${frame}` as const);
+  const shapeSummary = t(
+    `badgeDesigner:shape.options.${currentDesign.shape}` as const,
+  );
+  const frameSummary = t(`badgeDesigner:frame.options.${frame}` as const);
 
   // Monogram branch deliberately does NOT interpolate the user-entered value:
   // accordion headers stay deterministic category-only summaries, no free-text

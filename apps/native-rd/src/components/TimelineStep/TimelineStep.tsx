@@ -46,7 +46,9 @@ export function TimelineStep({
 }: TimelineStepProps) {
   const { t } = useTranslation(["timelineJourney"]);
   const [expanded, setExpanded] = useState(defaultExpanded);
-  const statusLabel = t(`step.status.${statusToLabelKey[step.status]}`);
+  const statusLabel = t(
+    `timelineJourney:step.status.${statusToLabelKey[step.status]}`,
+  );
 
   return (
     <View style={styles.container} accessibilityRole="none">

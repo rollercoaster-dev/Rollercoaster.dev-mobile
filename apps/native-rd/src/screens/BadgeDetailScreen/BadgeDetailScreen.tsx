@@ -349,7 +349,7 @@ function BadgeDetailContent({
                     {evidenceItems.map((ev) => {
                       const icon = ev.type ? EVIDENCE_TYPE_ICONS[ev.type] : "•";
                       const typeLabel = ev.type
-                        ? t(`evidenceTypes.${ev.type}.label`, { ns: "common" })
+                        ? t(`common:evidenceTypes.${ev.type}.label`)
                         : null;
                       // For unknown/missing genres, still announce *some* type
                       // context so the row doesn't read as a bare proper noun.

@@ -26,7 +26,7 @@ const variantTextMap = {
 
 export function StatusBadge({ variant, label }: StatusBadgeProps) {
   const { t } = useTranslation(["common"]);
-  const displayLabel = label ?? t(`status.${variant}`);
+  const displayLabel = label ?? t(`common:status.${variant}`);
 
   return (
     <View
