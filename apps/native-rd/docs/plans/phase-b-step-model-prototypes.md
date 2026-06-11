@@ -35,8 +35,11 @@ The medium determines what evidence a prototype can produce, so it is chosen
 deliberately per cluster, not defaulted. The menu, roughly in order of cost:
 
 - **Paper or sketch:** vocabulary, naming, and presentation questions.
-- **Clickable flow (Figma or similar):** navigation, placement, and
-  composition questions.
+- **Clickable flow (HTML preferred; Figma or similar also fits):** navigation,
+  placement, and composition questions. HTML is the default on this rung — it
+  is quick, genuinely interactive, and makes generating several variants of
+  the same surface side by side cheap, which is exactly what
+  compare-the-presentations questions need.
 - **Throwaway screen in the app behind a dev flag:** interaction-feel
   questions that need real input, real lists, and real device ergonomics.
 - **Lived-with build:** questions that only answer themselves across real
@@ -216,6 +219,10 @@ Stage 0 deliverables:
 - The prototype medium menu, with the medium chosen for each Stage 1
   prototype.
 
+The last three deliverables are drafted in
+[phase-b-stage-0-deliverables.md](./phase-b-stage-0-deliverables.md), which
+also records the Stage 1 timebox and the deliberate A-first Stage 1 order.
+
 ### Stage 1: Step Richness
 
 Purpose: learn what a richer Step is before testing time, reviews, or learning
@@ -367,6 +374,10 @@ The output is a short feasibility note, not a schema decision and not a
 migration. Its only job is to surface "the data layer cannot model this
 cheaply" before a prototype proves a behavior the stack cannot persist —
 that finding is dramatically cheaper during Stage 1 than after it.
+
+**Status: done 2026-06-11.** Findings in
+[evolu-step-model-feasibility-spike.md](../research/evolu-step-model-feasibility-spike.md)
+— no blocker for any of the three questions.
 
 ## Integration Matrix
 

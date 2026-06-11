@@ -25,6 +25,7 @@ Implementation plans and vision documents. Active plans are in progress; complet
 | [phase-b-feature-shapes.md](./phase-b-feature-shapes.md)                                                                                                        | Per-enrichment feature shapes, filled just-in-time per prototype stage            | 2026-06-09    |
 | [2026-06-09-step-docs-anchoring-review-handoff.md](./2026-06-09-step-docs-anchoring-review-handoff.md)                                                          | Handoff: anchor ADR-0010/prototype docs in the app's actual Step implementation   | 2026-06-09    |
 | [phase-b-stage-0-baseline.md](./phase-b-stage-0-baseline.md)                                                                                                    | Stage 0 baseline record: what the current Step holds, per ADR-0010 letter         | 2026-06-09    |
+| [phase-b-stage-0-deliverables.md](./phase-b-stage-0-deliverables.md)                                                                                            | Stage 0 close-out: guardrail checklist, evidence format, media, Stage 1 timebox   | 2026-06-11    |
 
 ## Reference
 

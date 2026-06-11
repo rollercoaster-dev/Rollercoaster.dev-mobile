@@ -1,7 +1,7 @@
 # Phase B Stage 0 Baseline Record
 
 **Date:** 2026-06-09
-**Status:** Seeded from the [docs-anchoring review session](./2026-06-09-step-docs-anchoring-review-handoff.md); covers the Stage 0 "baseline record" deliverable. The other Stage 0 deliverables (evidence format, guardrail checklist, medium choices for Stage 1) are not in this document.
+**Status:** Seeded from the [docs-anchoring review session](./2026-06-09-step-docs-anchoring-review-handoff.md); covers the Stage 0 "baseline record" deliverable. The other Stage 0 deliverables (evidence format, guardrail checklist, medium choices for Stage 1) live in [phase-b-stage-0-deliverables.md](./phase-b-stage-0-deliverables.md).
 **Source of truth:** read directly from code on 2026-06-09. Every claim has a file ref; if a ref drifts, re-verify before relying on it.
 
 This is the record of what the current Step can and cannot hold, against which
