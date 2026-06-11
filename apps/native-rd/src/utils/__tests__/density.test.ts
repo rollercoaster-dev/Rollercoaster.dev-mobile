@@ -127,19 +127,37 @@ describe("density utilities", () => {
       },
     );
 
-    test("returns unknown with raw='cozy' for an unrecognised string", () => {
-      expect(narrowDensity("cozy")).toEqual({
-        isUnknown: true,
-        value: "default",
-        raw: "cozy",
-      });
-    });
+    // Plausible DB-rot shapes — an empty string from a partial write, a
+    // trimmed/cased value from a migration that normalised the column the
+    // wrong way, or a JSON-typed cell that was accidentally written object
+    // or array. All should land in the "isUnknown" branch with raw intact
+    // so Sentry sees the exact shape.
+    test.each([
+      ["cozy", "cozy"],
+      ["", ""],
+      [" compact ", " compact "],
+      ["Default", "Default"],
+    ])(
+      "returns unknown with raw=%p for unrecognised string",
+      (input, expectedRaw) => {
+        expect(narrowDensity(input)).toEqual({
+          isUnknown: true,
+          value: "default",
+          raw: expectedRaw,
+        });
+      },
+    );
 
-    test("returns unknown with raw=42 for a non-string value", () => {
-      expect(narrowDensity(42)).toEqual({
+    test.each([
+      [42, 42],
+      [0, 0],
+      [{}, {}],
+      [[], []],
+    ])("returns unknown with raw=%p for non-string", (input, expectedRaw) => {
+      expect(narrowDensity(input)).toEqual({
         isUnknown: true,
         value: "default",
-        raw: 42,
+        raw: expectedRaw,
       });
     });
   });
