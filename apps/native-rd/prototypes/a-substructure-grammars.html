@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROTOTYPE — A: Substructure grammars × five surfaces</title>
+<!--
+  PROTOTYPE — throwaway. Phase B Stage 1, enrichment A (granularity/substructure).
+
+  Question: is there ONE grammar for "a step inside a step" that survives all five
+  step surfaces (create, edit, goal card, focus + mini-timeline, journey), or do
+  authoring and reading need different expressions of the same language?
+  Feature shape: docs/plans/phase-b-feature-shapes.md §A
+  Record:        docs/plans/phase-b-prototype-records/A-substructure.md
+
+  Plan: three grammars × five surfaces × three datasets, switchable via URL params
+  (?grammar= ?surface= ?data= ?view=), on a single static page. Open directly:
+      open apps/native-rd/prototypes/a-substructure-grammars.html
+  ← / → cycle grammars (or surfaces in compare view).
+
+  Tokens mirrored from packages/design-tokens light-default composition so the file
+  is self-contained — comparison should measure the grammar, not HTML aesthetics.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wght@600;700;800;900&family=Instrument+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* light-default, resolved from packages/design-tokens */
+    --bg: #fafafa;
+    --card: #ffffff;
+    --bg2: #f0f0f0;
+    --input: #f5f5f5;
+    --text: #262626;
+    --muted: #737373;
+    --disabled: #a3a3a3;
+    --border: #0a0a0a;
+    --border-subtle: #d4d4d4;
+    --primary: #3b82f6;
+    --primary-dark: #2563eb;
+    --purple: #a78bfa;
+    --purple-light: #ede9fe;
+    --yellow: #ffe50c;
+    --mint: #d4f4e7;
+    --success: #059669;
+    --error: #dc2626;
+    --shadow-sm: 2px 2px 0 rgba(0,0,0,0.8);
+    --shadow-md: 3px 3px 0 rgba(0,0,0,0.8);
+    --shadow-lg: 4px 4px 0 rgba(0,0,0,0.8);
+    --headline: 'Anybody', system-ui, sans-serif;
+    --body: 'Instrument Sans', system-ui, sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: #e8e4da;
+    font-family: var(--body);
+    color: var(--text);
+    padding: 28px 20px 110px;
+    min-height: 100vh;
+  }
+
+  /* ============ page chrome (not part of the design under test) ============ */
+  .page-header { max-width: 1100px; margin: 0 auto 18px; }
+  .page-header h1 {
+    font-family: var(--headline); font-weight: 900; font-size: 26px;
+    letter-spacing: -0.02em; margin: 0 0 6px;
+  }
+  .page-header p { margin: 0 0 4px; font-size: 14px; color: #4a4a4a; max-width: 860px; }
+  .proto-tag {
+    display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; background: var(--error); color: #fff;
+    border: 2px solid var(--border); padding: 2px 8px; margin-bottom: 8px;
+  }
+
+  .controls {
+    max-width: 1100px; margin: 0 auto 26px; display: flex; flex-wrap: wrap;
+    gap: 10px 22px; align-items: center;
+  }
+  .ctl-group { display: flex; align-items: center; gap: 6px; }
+  .ctl-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #555; margin-right: 2px; }
+  .seg {
+    font-family: var(--body); font-size: 12.5px; font-weight: 600; cursor: pointer;
+    background: var(--card); color: var(--text); border: 2px solid var(--border);
+    padding: 5px 10px; box-shadow: var(--shadow-sm);
+  }
+  .seg.on { background: var(--yellow); }
+  .seg:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 rgba(0,0,0,0.8); }
+
+  .grammar-banner {
+    max-width: 1100px; margin: 0 auto 20px; background: var(--card);
+    border: 2.5px solid var(--border); box-shadow: var(--shadow-md); padding: 12px 16px;
+  }
+  .grammar-banner h2 { font-family: var(--headline); font-weight: 800; font-size: 18px; margin: 0 0 4px; }
+  .grammar-banner p { margin: 0; font-size: 13px; color: #444; }
+
+  .lab { display: flex; gap: 26px; overflow-x: auto; padding: 4px 4px 24px; }
+  .col { flex: 0 0 auto; width: 360px; display: flex; flex-direction: column; gap: 12px; }
+  .col-title {
+    font-family: var(--headline); font-weight: 800; font-size: 14px;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .meta {
+    background: var(--card); border: 2px solid var(--border); box-shadow: var(--shadow-sm);
+    padding: 10px 12px; font-size: 12px; line-height: 1.5; color: #333;
+  }
+  .meta .qs { font-family: var(--mono); font-size: 10.5px; color: var(--muted); display: block; margin-bottom: 4px; }
+  .meta .pinch {
+    display: inline-block; margin-top: 6px; background: var(--yellow);
+    border: 1.5px solid var(--border); font-size: 11px; font-weight: 700; padding: 2px 6px;
+  }
+
+  .switcher {
+    position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+    background: var(--border); color: #fff; border-radius: 999px;
+    display: flex; align-items: center; gap: 4px; padding: 8px 10px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.35); z-index: 50; user-select: none;
+  }
+  .switcher button {
+    background: none; border: none; color: #fff; font-size: 18px; cursor: pointer;
+    width: 34px; height: 34px; border-radius: 50%;
+  }
+  .switcher button:hover { background: rgba(255,255,255,0.15); }
+  .switcher .lbl { font-family: var(--body); font-weight: 600; font-size: 13px; padding: 0 8px; min-width: 220px; text-align: center; }
+
+  .footer-notes {
+    max-width: 1100px; margin: 24px auto 0; background: var(--card);
+    border: 2px solid var(--border); box-shadow: var(--shadow-sm); padding: 14px 18px;
+    font-size: 13px; line-height: 1.6;
+  }
+  .footer-notes h3 { font-family: var(--headline); font-size: 15px; margin: 0 0 6px; }
+  .footer-notes ol { margin: 0 0 10px; padding-left: 20px; }
+  .footer-notes li { margin-bottom: 2px; }
+
+  /* ============ phone frame ============ */
+  .phone {
+    width: 360px; height: 700px; background: var(--bg);
+    border: 2.5px solid var(--border); box-shadow: var(--shadow-lg);
+    border-radius: 26px; overflow: hidden; display: flex; flex-direction: column;
+  }
+  .screen { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+
+  /* ============ shared app components (mirroring native-rd) ============ */
+  .sub {
+    display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+    border-bottom: 2.5px solid var(--border); background: var(--card);
+    position: sticky; top: 0; z-index: 5;
+  }
+  .sub .back, .sub .icon-btn {
+    width: 30px; height: 30px; border: 2px solid var(--border); background: var(--card);
+    font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+    box-shadow: var(--shadow-sm); flex: 0 0 auto; border-radius: 4px;
+  }
+  .sub .title { font-family: var(--headline); font-weight: 800; font-size: 16px; flex: 1; line-height: 1.2; }
+  .sub .center-label { flex: 1; text-align: center; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+  .sub .spacer { width: 30px; flex: 0 0 auto; }
+
+  .pill {
+    display: inline-block; border: 1.5px solid var(--border); border-radius: 999px;
+    font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 2px 8px; box-shadow: 1.5px 1.5px 0 rgba(0,0,0,0.8); white-space: nowrap;
+  }
+  .pill.active { background: var(--yellow); }
+  .pill.done { background: var(--mint); }
+  .pill.pending { background: var(--bg2); color: var(--muted); }
+
+  .crumb {
+    display: inline-flex; align-items: center; gap: 4px;
+    border: 1.5px solid var(--border); background: var(--purple-light);
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+    padding: 2px 7px; border-radius: 3px;
+  }
+
+  .pbar { height: 8px; border: 1.5px solid var(--border); border-radius: 999px; background: var(--input); overflow: hidden; flex: 1; }
+  .pbar .fill { height: 100%; background: var(--primary); }
+  .pnum { font-family: var(--mono); font-size: 11px; color: var(--text); }
+
+  .cbx {
+    width: 22px; height: 22px; border: 2.5px solid var(--border); border-radius: 4px;
+    background: var(--card); display: inline-flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 900; flex: 0 0 auto; box-shadow: 1.5px 1.5px 0 rgba(0,0,0,0.8);
+  }
+  .cbx.on { background: var(--primary); color: #fff; }
+  .cbx.sm { width: 17px; height: 17px; font-size: 10px; border-width: 2px; }
+
+  .btn {
+    font-family: var(--body); font-weight: 700; font-size: 14px; text-align: center;
+    border: 2.5px solid var(--border); box-shadow: var(--shadow-md); padding: 11px 14px;
+    background: var(--primary); color: #fff; border-radius: 4px;
+  }
+  .btn.secondary { background: var(--card); color: var(--text); }
+  .btn.destructive { background: var(--card); color: var(--error); border-color: var(--error); box-shadow: 3px 3px 0 rgba(220,38,38,0.5); }
+  .btn.sm { font-size: 12px; padding: 6px 10px; box-shadow: var(--shadow-sm); }
+
+  .evb {
+    display: inline-block; background: var(--purple-light); border: 1.5px solid var(--border);
+    border-radius: 999px; font-family: var(--mono); font-size: 10px; padding: 1px 7px;
+  }
+
+  /* ---- edit / create step rows ---- */
+  .form-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin: 0 0 5px; }
+  .tinput {
+    background: var(--input); border: 2px solid var(--border); border-radius: 4px;
+    padding: 10px 12px; font-family: var(--headline); font-weight: 900; font-size: 20px;
+  }
+  .tinput.body { font-family: var(--body); font-weight: 400; font-size: 14px; color: var(--muted); min-height: 56px; }
+  .steps-head { display: flex; align-items: center; gap: 8px; margin: 4px 0 8px; }
+  .steps-head .h { font-family: var(--headline); font-weight: 800; font-size: 15px; }
+  .count-badge { font-family: var(--mono); font-size: 10.5px; border: 1.5px solid var(--border); background: var(--card); padding: 1px 7px; border-radius: 999px; }
+
+  .erow {
+    display: flex; align-items: center; gap: 9px; background: var(--card);
+    border: 2px solid var(--border); border-radius: 4px; padding: 9px 11px;
+    box-shadow: var(--shadow-sm); margin-bottom: 8px; min-height: 44px;
+  }
+  .erow .handle { color: var(--disabled); font-size: 14px; flex: 0 0 auto; }
+  .erow .t { flex: 1; font-size: 14px; font-weight: 500; line-height: 1.3; }
+  .erow .x { width: 22px; height: 22px; border: 1.5px solid var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 11px; flex: 0 0 auto; background: var(--card); }
+  .erow .dots { font-weight: 900; color: var(--muted); letter-spacing: 1px; flex: 0 0 auto; }
+  .erow.ghost { border-style: dashed; box-shadow: none; color: var(--muted); background: transparent; font-size: 13px; }
+  .erow.child { min-height: 40px; padding: 7px 10px; }
+  .erow.child .t { font-size: 13px; }
+  .chip-add {
+    font-size: 10px; font-weight: 700; border: 1.5px dashed var(--muted); color: var(--muted);
+    padding: 1px 6px; border-radius: 3px; flex: 0 0 auto;
+  }
+  .echildren { border-left: 3px solid var(--border); margin: -2px 0 8px 13px; padding-left: 12px; }
+  .econtain {
+    border: 2.5px solid var(--border); border-radius: 6px; background: var(--bg2);
+    box-shadow: var(--shadow-md); padding: 9px 10px 4px; margin-bottom: 10px;
+  }
+  .econtain .chead { display: flex; align-items: center; gap: 9px; padding: 2px 2px 8px; }
+  .econtain .chead .t { flex: 1; font-size: 14px; font-weight: 700; }
+  .addrow { display: flex; gap: 8px; margin-top: 4px; }
+  .addrow .ainput { flex: 1; background: var(--input); border: 2px solid var(--border); border-radius: 4px; padding: 9px 11px; font-size: 13px; color: var(--disabled); }
+  .addrow .plus { width: 42px; border: 2px solid var(--border); background: var(--yellow); font-size: 18px; font-weight: 900; display: flex; align-items: center; justify-content: center; border-radius: 4px; box-shadow: var(--shadow-sm); }
+
+  /* ---- goal card ---- */
+  .gcard {
+    background: var(--card); border: 2.5px solid var(--border); border-radius: 4px;
+    box-shadow: var(--shadow-md); padding: 14px; margin: 0 14px 14px;
+  }
+  .gcard .head { display: flex; align-items: flex-start; gap: 10px; }
+  .gcard .gtitle { font-family: var(--headline); font-weight: 700; font-size: 17px; flex: 1; line-height: 1.25; }
+  .gcard .next { font-family: var(--headline); font-weight: 800; font-size: 19px; line-height: 1.25; margin-top: 10px; }
+  .gcard .ctx { font-size: 11.5px; color: var(--muted); font-weight: 600; margin-top: 9px; }
+  .gcard .inset {
+    border: 1.5px solid var(--border); background: var(--bg2); border-radius: 4px;
+    padding: 7px 10px; margin-top: 9px; font-size: 13px; font-weight: 600;
+  }
+  .gcard .prow { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+
+  /* ---- mini timeline ---- */
+  .mtl {
+    border: 1.5px solid var(--border); background: var(--card); border-radius: 6px;
+    box-shadow: var(--shadow-sm); margin: 12px 14px 0; padding: 9px 13px 5px;
+  }
+  .mtl-track { display: flex; align-items: center; min-height: 30px; }
+  .node {
+    width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--disabled);
+    background: var(--card); flex: 0 0 auto;
+  }
+  .node.done { background: var(--primary); border-color: var(--primary); }
+  .node.cur { width: 19px; height: 19px; border-width: 3px; border-color: var(--border); }
+  .node.goal { border: 3px solid var(--yellow); background: var(--yellow); width: 15px; height: 15px; }
+  .node.child { width: 9px; height: 9px; }
+  .node.child.cur { width: 14px; height: 14px; }
+  .node.crumbchild { border-color: var(--purple); }
+  .node.crumbchild.done { background: var(--purple); }
+  .seg-line { flex: 1; min-width: 7px; border-top: 3px solid var(--primary); }
+  .seg-line.pend { border-top: 3px dashed var(--disabled); }
+  .seg-line.short { flex: 0 0 7px; }
+  .grp-indent { display: flex; align-items: center; gap: 0; padding: 0 3px 5px; border-bottom: 2.5px solid var(--border); }
+  .grp-contain { display: flex; align-items: center; border: 1.5px solid var(--border); border-radius: 999px; background: var(--bg2); padding: 4px 7px; }
+  .mtl .hint { text-align: center; font-size: 9.5px; color: var(--muted); padding: 3px 0 2px; }
+
+  /* ---- focus step card ---- */
+  .scard {
+    background: var(--card); border: 2.5px solid var(--border); border-radius: 6px;
+    box-shadow: var(--shadow-lg); margin: 14px; padding: 15px;
+  }
+  .scard .meta-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .scard .stepnum { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+  .scard .stitle { font-family: var(--headline); font-weight: 900; font-size: 23px; line-height: 1.15; margin: 10px 0 0; }
+  .scard .ctx-line { font-size: 11.5px; font-weight: 600; color: var(--muted); margin-top: 9px; }
+  .qa-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 13px; }
+  .qa {
+    display: inline-flex; align-items: center; gap: 6px; border: 2px solid var(--border);
+    background: var(--bg2); border-radius: 4px; box-shadow: var(--shadow-sm);
+    font-size: 12px; font-weight: 600; padding: 8px 11px; min-height: 40px;
+  }
+  .cbx-row { display: flex; align-items: center; gap: 10px; margin-top: 14px; font-size: 13.5px; font-weight: 600; }
+  .childlist { border: 2px solid var(--border); border-radius: 5px; background: var(--bg2); margin-top: 12px; overflow: hidden; }
+  .childlist .crow { display: flex; align-items: center; gap: 9px; padding: 9px 11px; border-bottom: 1.5px solid var(--border-subtle); font-size: 13px; font-weight: 500; background: var(--card); }
+  .childlist .crow:last-child { border-bottom: none; }
+  .childlist .crow.cur { background: var(--yellow); font-weight: 700; }
+  .childlist .crow .t { flex: 1; }
+  .dots-row { display: flex; justify-content: center; gap: 6px; margin: 2px 0 0; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--border); background: var(--card); }
+  .dot.on { background: var(--border); }
+  .drawer {
+    margin-top: auto; border-top: 2.5px solid var(--border); background: var(--card);
+    padding: 11px 16px; display: flex; align-items: center; justify-content: space-between;
+    font-size: 13px; font-weight: 700; position: sticky; bottom: 0;
+  }
+
+  /* ---- journey timeline ---- */
+  .jhead { padding: 13px 16px 11px; border-bottom: 2px solid var(--border); background: var(--card); }
+  .jhead .row1 { display: flex; align-items: center; gap: 10px; }
+  .jhead .gt { font-family: var(--headline); font-weight: 800; font-size: 18px; flex: 1; line-height: 1.2; }
+  .jhead .prow { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+  .jtl { position: relative; padding: 18px 14px 22px 14px; }
+  .jtl::before { content: ''; position: absolute; left: 31px; top: 24px; bottom: 30px; width: 3px; background: var(--border-subtle); }
+  .jrow { position: relative; display: flex; gap: 11px; margin-bottom: 13px; align-items: flex-start; }
+  .jnode {
+    width: 34px; height: 34px; border-radius: 50%; border: 2.5px solid var(--border);
+    background: var(--card); display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-weight: 700; font-size: 13px; flex: 0 0 auto;
+    box-shadow: var(--shadow-sm); z-index: 1;
+  }
+  .jnode.done { background: var(--primary-dark); border-color: var(--primary-dark); color: #fff; }
+  .jnode.cur { border: 3.5px solid var(--primary-dark); color: var(--primary-dark); }
+  .jnode.pend { border-color: var(--disabled); color: var(--muted); }
+  .jnode.goal { width: 40px; height: 40px; background: var(--yellow); border-color: var(--border); font-size: 17px; margin-left: -3px; }
+  .jnode.sm { width: 24px; height: 24px; font-size: 10px; border-width: 2px; }
+  .jcard {
+    flex: 1; background: var(--card); border: 2px solid var(--border); border-radius: 4px;
+    box-shadow: var(--shadow-sm); padding: 9px 11px; display: flex; align-items: center; gap: 8px;
+    min-height: 44px;
+  }
+  .jcard .t { flex: 1; font-size: 13px; font-weight: 700; line-height: 1.25; }
+  .jcard .chev { color: var(--muted); font-size: 10px; flex: 0 0 auto; }
+  .jcard.slim { min-height: 38px; padding: 7px 10px; }
+  .jcard.slim .t { font-size: 12.5px; font-weight: 600; }
+  .jchildren-indent { position: relative; margin-left: 46px; padding-left: 16px; }
+  .jchildren-indent::before { content: ''; position: absolute; left: 0; top: 0; bottom: 14px; width: 2.5px; background: var(--border); }
+  .jchildren-indent .jrow { margin-bottom: 9px; }
+  .jcontain-inner { margin-top: 8px; border-top: 1.5px solid var(--border-subtle); padding-top: 8px; display: flex; flex-direction: column; gap: 7px; }
+  .jcontain-inner .crow { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600; }
+  .jcontain-inner .crow .t { flex: 1; }
+  .jcard.parent-card { flex-direction: column; align-items: stretch; }
+  .jcard.parent-card .phead { display: flex; align-items: center; gap: 8px; }
+  .jcard.parent-card .phead .t { flex: 1; font-size: 13px; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <span class="proto-tag">Prototype — throwaway</span>
+  <h1>A: Substructure — one grammar across five surfaces?</h1>
+  <p><strong>Question (Q1):</strong> is there one grammar for "a step inside a step" that survives create, edit, goal card, focus mode + mini-timeline, and the journey view — or do authoring and reading surfaces need different expressions of the same language?</p>
+  <p>Three grammars × five surfaces × three datasets, switchable below. <kbd>←</kbd>/<kbd>→</kbd> cycle. Feature shape: <code>docs/plans/phase-b-feature-shapes.md §A</code> · Record: <code>docs/plans/phase-b-prototype-records/A-substructure.md</code></p>
+</div>
+
+<div class="controls">
+  <div class="ctl-group" id="ctl-view"><span class="ctl-label">View</span></div>
+  <div class="ctl-group" id="ctl-data"><span class="ctl-label">Data</span></div>
+  <div class="ctl-group" id="ctl-surface" style="display:none"><span class="ctl-label">Surface</span></div>
+</div>
+
+<div class="grammar-banner" id="banner"></div>
+<div class="lab" id="lab"></div>
+
+<div class="footer-notes">
+  <h3>Prototype questions exercised here (numbers from the feature shape)</h3>
+  <ol>
+    <li><strong>Q1</strong> one grammar across all five surfaces, or authoring vs reading split — compare per surface with the "Compare one surface" view.</li>
+    <li><strong>Q2</strong> goal card: umbrella title or next pending leaf — see Goals column.</li>
+    <li><strong>Q3</strong> focus snap-to-first-pending + what the MiniTimeline strip does with children — see Focus column.</li>
+    <li><strong>Q4</strong> journey rendering: inline nodes vs nested vs collapsed — see Journey column.</li>
+    <li><strong>Q5</strong> where "add sub-step" lives at create without pressuring structure — see Create column.</li>
+    <li><strong>Q6</strong> does one level hold — switch to the Sam dataset and note where it pinches (record, don't resolve).</li>
+    <li><strong>Q7</strong> "add sub-step" placement + tap count in edit — see Edit column meta notes.</li>
+    <li><strong>Q8</strong> does the step list stay legible with 3–5 children, or read as an outline.</li>
+    <li><strong>Q9</strong> parent invite when the last child completes — switch to "Tomás — circuits done"; completion stays manual everywhere.</li>
+    <li><strong>Q10</strong> where the umbrella shows a child's evidence — evidence badges on children; umbrella aggregation deliberately not designed here.</li>
+  </ol>
+  <p><strong>Guardrails honored in every state:</strong> nothing blocked/hidden by incomplete parents or siblings; no auto-completion of parents; flat steps stay first-class (second goal card); "one next step per active goal" resolves to exactly one thing in all grammars.</p>
+  <p><strong>Evidence weight:</strong> self-testing only unless an ND-user session happens within the stage. Screenshots per grammar × surface go to the prototype record.</p>
+</div>
+
+<div class="switcher" id="switcher">
+  <button id="sw-prev" aria-label="previous">←</button>
+  <span class="lbl" id="sw-label"></span>
+  <button id="sw-next" aria-label="next">→</button>
+</div>
+
+<script>
+/* ================= data ================= */
+const GRAMMARS = [
+  { key: 'indent', name: 'G1 — Indentation', blurb: 'Children are indented rows beneath their parent; hierarchy is layout (a left rail). Reading surfaces lead with the LEAF and show the parent as quiet context. Numbering: 1, 2 → 2a/2b/2c, 3.' },
+  { key: 'contain', name: 'G2 — Containment', blurb: 'A parent is a container card that physically holds its parts; hierarchy is enclosure. Reading surfaces lead with the UMBRELLA and show the active part inside it. Numbering: step 2, part 2 of 3.' },
+  { key: 'crumb', name: 'G3 — Breadcrumb', blurb: 'Every list stays flat; hierarchy lives in a parent chip carried by each child. Reading surfaces lead with the LEAF + chip. Numbering: continuous 1–6 (the parent is itself a row).' },
+];
+const SURFACES = [
+  { key: 'create',  name: 'Create — NewGoalModal',            qs: 'Q1 Q5' },
+  { key: 'edit',    name: 'Edit — EditModeScreen',            qs: 'Q1 Q7 Q8' },
+  { key: 'goals',   name: 'Goals — GoalCard',                 qs: 'Q1 Q2' },
+  { key: 'focus',   name: 'Focus — StepCard + MiniTimeline',  qs: 'Q1 Q3 Q9 Q10' },
+  { key: 'journey', name: 'Journey — TimelineJourneyScreen',  qs: 'Q1 Q4 Q10' },
+];
+const DATASETS = [
+  { key: 'tomas', name: 'Tomás — mid-work', goal: 'Build practice panel', steps: [
+      { id:'s1', title:'Plan layout & buy materials', status:'completed', ev:2 },
+      { id:'s2', title:'Wire the circuits', status:'pending', children: [
+        { id:'s2a', title:'15-amp lighting circuit', status:'completed', ev:1 },
+        { id:'s2b', title:'20-amp small-appliance circuit', status:'pending' },
+        { id:'s2c', title:'240V dryer circuit', status:'pending' },
+      ]},
+      { id:'s3', title:'Inspection & labels', status:'pending' },
+  ]},
+  { key: 'tomas-done', name: 'Tomás — circuits done', goal: 'Build practice panel', steps: [
+      { id:'s1', title:'Plan layout & buy materials', status:'completed', ev:2 },
+      { id:'s2', title:'Wire the circuits', status:'pending', children: [
+        { id:'s2a', title:'15-amp lighting circuit', status:'completed', ev:1 },
+        { id:'s2b', title:'20-amp small-appliance circuit', status:'completed', ev:1 },
+        { id:'s2c', title:'240V dryer circuit', status:'completed', ev:2 },
+      ]},
+      { id:'s3', title:'Inspection & labels', status:'pending' },
+  ]},
+  { key: 'sam', name: 'Sam — step work', goal: 'Work the program', steps: [
+      { id:'p1', title:'Find a home group', status:'completed', ev:1 },
+      { id:'p2', title:'Step work', status:'pending', children: [
+        { id:'p2a', title:'Step 1', status:'completed', ev:1 },
+        { id:'p2b', title:'Step 2', status:'pending' },
+        { id:'p2c', title:'Step 3', status:'pending' },
+        { id:'p2d', title:'Step 4 — inventory', status:'pending', pinch:true },
+      ]},
+      { id:'p3', title:'Service commitment', status:'pending' },
+  ]},
+];
+
+/* grammar-specific meta notes, per surface */
+const NOTES = {
+  create: {
+    indent:  'Every row carries a small "+ sub" chip — decomposition is 1 tap away, but its presence on every row is exactly the Q5 pressure to watch for.',
+    contain: '"Split into parts" lives on the row; only after splitting does the container + its "+ part" row appear. Flat-by-default, structure on demand.',
+    crumb:   '"Add sub-step" hides in the ⋯ overflow (2 taps). Least presence-pressure, least discoverable — the Q5 trade in its purest form.',
+  },
+  edit: {
+    indent:  'Children reorder among siblings inside the rail (ordinal semantics). Add sub-step: 1 tap on the ghost row. Watch Q8 — at 4–5 children this starts reading as an outline.',
+    contain: 'The container reorders as one block; parts reorder inside it. Add part: 1 tap inside the container. Heaviest visually, clearest ownership.',
+    crumb:   'List stays flat; chips mark membership. Reorder can silently move a child away from its parent — the grammar’s honest weakness in edit.',
+  },
+  goals: {
+    indent:  'Card leads with the LEAF ("20-amp…"), parent as quiet context line. Cold-return reads as a do-able action (Q2).',
+    contain: 'Card leads with the UMBRELLA, leaf in an inset. Cold-return reads as the project area, one more read to reach the action (Q2).',
+    crumb:   'Leaf + chip. Compact, but the chip adds a vocabulary item to the card. Progress counts every unit (children + parents) — counting rule is an open question, annotated not decided.',
+  },
+  focus: {
+    indent:  'Snap lands on the LEAF card; parent is a context line. Strip: children as small nodes on a shelf under the parent position (Q3).',
+    contain: 'Snap lands on the UMBRELLA card with parts listed inside; active part highlighted. Strip: children enclosed in a pill (Q3). Parent completion = the card’s own checkbox, manual, only plainly available — never demanded (Q9).',
+    crumb:   'Snap lands on the LEAF card with a breadcrumb chip. Strip is flat — structure disappears here, the grammar’s weakest surface (Q3).',
+  },
+  journey: {
+    indent:  'Children as smaller nodes on an indented sub-spine — structure visible at a glance, spine gets busy (Q4).',
+    contain: 'Spine shows parents only; the parent card expands to hold its parts. Calmest spine, structure costs a tap (Q4).',
+    crumb:   'One flat spine, continuous numbering; child cards carry the chip. Journey stays linear — but 6 nodes for "4 steps" may surprise (Q4).',
+  },
+};
+
+/* ================= helpers ================= */
+function progress(steps) {
+  let total = 0, done = 0;
+  for (const s of steps) {
+    total += 1; if (s.status === 'completed') done += 1;
+    if (s.children) for (const c of s.children) { total += 1; if (c.status === 'completed') done += 1; }
+  }
+  return { done, total };
+}
+function nextInfo(steps) {
+  for (const s of steps) {
+    if (s.status === 'completed') continue;
+    if (s.children) {
+      const pend = s.children.find(c => c.status !== 'completed');
+      if (pend) return { kind: 'leaf', parent: s, step: pend };
+      return { kind: 'invite', parent: s, step: s };
+    }
+    return { kind: 'flat', step: s };
+  }
+  return null;
+}
+/* flat sequence for crumb grammar: parents are rows too */
+function flatSeq(steps) {
+  const seq = [];
+  for (const s of steps) {
+    seq.push({ ...s, isParent: !!s.children });
+    if (s.children) for (const c of s.children) seq.push({ ...c, parent: s, isChild: true });
+  }
+  return seq;
+}
+function doneAll(children) { return children.every(c => c.status === 'completed'); }
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+
+/* ================= shared partials ================= */
+const subheader = (title, icons) => `
+  <div class="sub">
+    <div class="back">‹</div>
+    <div class="title">${esc(title)}</div>
+    ${icons ?? ''}
+  </div>`;
+const statusPill = st =>
+  st === 'completed' ? '<span class="pill done">Done</span>' :
+  st === 'active'    ? '<span class="pill active">Active</span>' :
+                       '<span class="pill pending">Pending</span>';
+const cbx = (on, sm) => `<span class="cbx${on?' on':''}${sm?' sm':''}">${on?'✓':''}</span>`;
+
+/* ================= step list (shared by create + edit) ================= */
+function stepsSection(g, d) {
+  const stepRow = (s, child) => `
+    <div class="erow${child?' child':''}">
+      <span class="handle">≡</span>
+      <span class="t">${esc(s.title)}</span>
+      ${g==='crumb' && child ? `<span class="crumb">${esc(s._parentTitle)}</span>` : ''}
+      ${g==='indent' && !child ? '<span class="chip-add">+ sub</span>' : ''}
+      ${g==='contain' && !child && !s.children ? '<span class="chip-add">▢ split</span>' : ''}
+      ${g==='crumb' ? '<span class="dots">⋯</span>' : ''}
+      <span class="x">✕</span>
+    </div>`;
+
+  let stepsHtml = '';
+  for (const s of d.steps) {
+    if (!s.children) { stepsHtml += stepRow(s); continue; }
+    if (g === 'indent') {
+      stepsHtml += stepRow(s);
+      stepsHtml += `<div class="echildren">${s.children.map(c=>stepRow(c,true)).join('')}
+        <div class="erow child ghost">+ sub-step</div></div>`;
+    } else if (g === 'contain') {
+      stepsHtml += `<div class="econtain">
+        <div class="chead"><span class="handle">≡</span><span class="t">${esc(s.title)}</span><span class="x">✕</span></div>
+        ${s.children.map(c=>stepRow(c,true)).join('')}
+        <div class="erow child ghost">+ part</div>
+      </div>`;
+    } else {
+      stepsHtml += stepRow(s);
+      stepsHtml += s.children.map(c=>stepRow({...c,_parentTitle:s.title},true)).join('');
+    }
+  }
+
+  return `
+    <div>
+      <div class="steps-head"><span class="h">Steps</span><span class="count-badge">${countLabel(g, d)}</span></div>
+      ${stepsHtml}
+      <div class="addrow"><div class="ainput">Add a step…</div><div class="plus">+</div></div>
+    </div>`;
+}
+
+/* ================= CREATE ================= */
+function renderCreate(g, d) {
+  return `
+    <div class="sub"><div class="spacer"></div><div class="center-label">New Goal</div><div class="icon-btn">✕</div></div>
+    <div style="padding:16px; display:flex; flex-direction:column; gap:14px;">
+      <div>
+        <p class="form-label">What's your goal?</p>
+        <div class="tinput">${esc(d.goal)}</div>
+      </div>
+      ${stepsSection(g, d)}
+      <div class="btn">Create Goal</div>
+    </div>`;
+}
+function countLabel(g, d) {
+  const p = progress(d.steps);
+  if (g === 'contain') {
+    const parents = d.steps.filter(s=>s.children);
+    return `${d.steps.length} steps · ${parents.map(s=>`1 with ${s.children.length} parts`).join(', ')}`;
+  }
+  return `${p.total} steps`;
+}
+
+/* ================= EDIT ================= */
+function renderEdit(g, d) {
+  return `
+    ${subheader('Edit Goal')}
+    <div style="padding:16px; display:flex; flex-direction:column; gap:14px;">
+      <div>
+        <p class="form-label">Title</p>
+        <div class="tinput">${esc(d.goal)}</div>
+      </div>
+      <div>
+        <p class="form-label">Description</p>
+        <div class="tinput body">Why this goal matters to you…</div>
+      </div>
+      ${stepsSection(g, d)}
+      <div class="btn secondary">Back to Focus</div>
+      <div class="btn destructive">Delete Goal</div>
+    </div>`;
+}
+
+/* ================= GOALS ================= */
+function renderGoals(g, d) {
+  const ni = nextInfo(d.steps);
+  const p = progress(d.steps);
+  let next = '';
+  if (ni.kind === 'flat') {
+    next = `<div class="next">${esc(ni.step.title)}</div>`;
+  } else if (ni.kind === 'invite') {
+    if (g === 'contain')
+      next = `<div class="next">${esc(ni.parent.title)}</div><div class="inset">${ni.parent.children.length} of ${ni.parent.children.length} parts done</div>`;
+    else if (g === 'indent')
+      next = `<div class="next">${esc(ni.parent.title)}</div><div class="ctx">all ${ni.parent.children.length} sub-steps done</div>`;
+    else
+      next = `<div class="next">${esc(ni.parent.title)}</div><div class="ctx">all ${ni.parent.children.length} sub-steps done</div>`;
+  } else {
+    if (g === 'indent')
+      next = `<div class="next">${esc(ni.step.title)}</div><div class="ctx">↳ in ${esc(ni.parent.title)}</div>`;
+    else if (g === 'contain')
+      next = `<div class="next">${esc(ni.parent.title)}</div><div class="inset">next: ${esc(ni.step.title)}</div>`;
+    else
+      next = `<div style="margin-top:10px"><span class="crumb">${esc(ni.parent.title)}</span></div><div class="next" style="margin-top:6px">${esc(ni.step.title)}</div>`;
+  }
+  return `
+    ${subheader('Goals')}
+    <div style="padding-top:14px;">
+      <div class="gcard">
+        <div class="head"><span class="gtitle">${esc(d.goal)}</span>${statusPill('active')}</div>
+        ${next}
+        <div class="prow"><div class="pbar"><div class="fill" style="width:${Math.round(p.done/p.total*100)}%"></div></div><span class="pnum">${p.done}/${p.total}</span></div>
+      </div>
+      <div class="gcard">
+        <div class="head"><span class="gtitle">Get garden beds ready</span>${statusPill('active')}</div>
+        <div class="next">Order soil &amp; compost</div>
+        <div class="prow"><div class="pbar"><div class="fill" style="width:25%"></div></div><span class="pnum">1/4</span></div>
+      </div>
+      <div style="margin:0 14px; font-size:11px; color:var(--muted);">↑ a flat goal stays first-class — no grammar applied, nothing invites decomposition.</div>
+    </div>`;
+}
+
+/* ================= FOCUS ================= */
+function miniTimeline(g, d) {
+  const ni = nextInfo(d.steps);
+  const curId = ni.kind === 'invite' ? ni.parent.id : ni.step.id;
+  const nodeFor = (s, extra='') => {
+    const cls = ['node'];
+    if (s.status === 'completed') cls.push('done');
+    if (s.id === curId) cls.push('cur');
+    if (extra) cls.push(extra);
+    return `<span class="${cls.join(' ')}"></span>`;
+  };
+  const seg = pend => `<span class="seg-line${pend?' pend':''}"></span>`;
+  const segDoneUpTo = s => s.status === 'completed';
+
+  let track = '';
+  const items = d.steps;
+  items.forEach((s, i) => {
+    if (i > 0) track += seg(!segDoneUpTo(items[i-1]));
+    if (!s.children) { track += nodeFor(s); return; }
+    if (g === 'indent') {
+      track += `<span class="grp-indent">${nodeFor(s)}${s.children.map(c =>
+        `<span class="seg-line short${c.status==='completed'?'':' pend'}"></span>${nodeFor(c,'child')}`).join('')}</span>`;
+    } else if (g === 'contain') {
+      track += `<span class="grp-contain">${nodeFor(s)}${s.children.map(c =>
+        `<span class="seg-line short${c.status==='completed'?'':' pend'}"></span>${nodeFor(c,'child')}`).join('')}</span>`;
+    } else {
+      track += nodeFor(s);
+      track += s.children.map(c => `${seg(c.status!=='completed')}${nodeFor(c,'crumbchild')}`).join('');
+    }
+  });
+  track += seg(true) + '<span class="node goal"></span>';
+  return `<div class="mtl"><div class="mtl-track">${track}</div><div class="hint">tap to expand timeline</div></div>`;
+}
+
+function renderFocus(g, d) {
+  const ni = nextInfo(d.steps);
+  const p = progress(d.steps);
+  let label = '', body = '';
+
+  if (ni.kind === 'invite') {
+    /* Q9 — all children done, parent completion is manual & merely available */
+    const par = ni.parent;
+    label = g === 'contain' ? `Step ${topIndex(d, par)} of ${d.steps.length}` : stepLabel(g, d, par, null);
+    body = `
+      <div class="stitle">${esc(par.title)}</div>
+      <div class="childlist">${par.children.map(c => `
+        <div class="crow">${cbx(true, true)}<span class="t">${esc(c.title)}</span>${c.ev?`<span class="evb">E ${c.ev}</span>`:''}</div>`).join('')}
+      </div>
+      <div class="cbx-row">${cbx(false)} Mark "${esc(par.title)}" complete</div>
+      <div class="ctx-line">completing the parts changed nothing by itself — this stays your call.</div>`;
+  } else if (g === 'contain' && ni.kind === 'leaf') {
+    const par = ni.parent, idx = par.children.indexOf(ni.step) + 1;
+    label = `Step ${topIndex(d, par)} of ${d.steps.length} · part ${idx} of ${par.children.length}`;
+    body = `
+      <div class="stitle">${esc(par.title)}</div>
+      <div class="childlist">${par.children.map(c => `
+        <div class="crow${c===ni.step?' cur':''}">${cbx(c.status==='completed', true)}<span class="t">${esc(c.title)}</span>${c.ev?`<span class="evb">E ${c.ev}</span>`:''}</div>`).join('')}
+      </div>
+      <div class="qa-row"><span class="qa">📷 Photo</span><span class="qa">🎙 Note</span></div>
+      <div class="cbx-row">${cbx(false)} Mark "${esc(ni.step.title)}" complete</div>`;
+  } else {
+    const s = ni.step;
+    label = stepLabel(g, d, ni.kind === 'leaf' ? ni.parent : null, s);
+    const ctx = ni.kind === 'leaf'
+      ? (g === 'indent'
+          ? `<div class="ctx-line">↳ in ${esc(ni.parent.title)}</div>`
+          : `<div style="margin-top:9px"><span class="crumb">${esc(ni.parent.title)}</span></div>`)
+      : '';
+    body = `
+      ${g === 'crumb' && ni.kind === 'leaf' ? ctx : ''}
+      <div class="stitle">${esc(s.title)}</div>
+      ${g === 'indent' && ni.kind === 'leaf' ? ctx : ''}
+      <div class="qa-row"><span class="qa">📷 Photo</span><span class="qa">🎙 Note</span></div>
+      <div class="cbx-row">${cbx(false)} Mark complete</div>`;
+  }
+
+  return `
+    ${subheader(d.goal, '<div class="icon-btn">👁</div><div class="icon-btn">✎</div>')}
+    ${miniTimeline(g, d)}
+    <div class="scard">
+      <div class="meta-row"><span class="stepnum">${label}</span>${statusPill('active')}</div>
+      ${body}
+    </div>
+    <div class="dots-row">${'<span class="dot"></span>'.repeat(2)}<span class="dot on"></span>${'<span class="dot"></span>'.repeat(2)}</div>
+    <div class="drawer"><span>Evidence <span class="evb">E ${p.done + 1}</span></span><span>▲</span></div>`;
+}
+function topIndex(d, s) { return d.steps.indexOf(s) + 1; }
+function stepLabel(g, d, parent, step) {
+  if (g === 'crumb') {
+    const seq = flatSeq(d.steps);
+    const i = seq.findIndex(x => x.id === (step ?? parent).id);
+    return `Step ${i + 1} of ${seq.length}`;
+  }
+  if (parent && step) {
+    const letter = String.fromCharCode(97 + parent.children.findIndex(c => c.id === step.id));
+    return `Step ${topIndex(d, parent)}${letter} of ${d.steps.length}`;
+  }
+  return `Step ${topIndex(d, step ?? parent)} of ${d.steps.length}`;
+}
+
+/* ================= JOURNEY ================= */
+function renderJourney(g, d) {
+  const ni = nextInfo(d.steps);
+  const curId = ni.kind === 'invite' ? ni.parent.id : ni.step.id;
+  const p = progress(d.steps);
+  const jnode = (s, num, sm) => {
+    const cls = ['jnode']; let inner = num;
+    if (s.status === 'completed') { cls.push('done'); inner = '✓'; }
+    else if (s.id === curId) cls.push('cur');
+    else cls.push('pend');
+    if (sm) cls.push('sm');
+    return `<div class="${cls.join(' ')}">${inner}</div>`;
+  };
+  const card = (s, opts={}) => `
+    <div class="jcard${opts.slim?' slim':''}">
+      ${statusPill(s.status==='completed'?'completed':(s.id===curId?'active':'pending'))}
+      <span class="t">${esc(s.title)}${opts.chip?` <span class="crumb" style="margin-left:4px">${esc(opts.chip)}</span>`:''}</span>
+      ${s.ev?`<span class="evb">E ${s.ev}</span>`:''}
+      <span class="chev">▼</span>
+    </div>`;
+
+  let rows = '';
+  if (g === 'crumb') {
+    flatSeq(d.steps).forEach((s, i) => {
+      rows += `<div class="jrow">${jnode(s, i+1)}${card(s, { chip: s.isChild ? s.parent.title : null })}</div>`;
+    });
+  } else {
+    d.steps.forEach((s, i) => {
+      if (!s.children) { rows += `<div class="jrow">${jnode(s, i+1)}${card(s)}</div>`; return; }
+      if (g === 'indent') {
+        rows += `<div class="jrow">${jnode(s, i+1)}${card(s)}</div>`;
+        rows += `<div class="jchildren-indent">${s.children.map((c, j) =>
+          `<div class="jrow">${jnode(c, String.fromCharCode(97+j), true)}${card(c, {slim:true})}</div>`).join('')}</div>`;
+      } else {
+        rows += `<div class="jrow">${jnode(s, i+1)}
+          <div class="jcard parent-card">
+            <div class="phead">${statusPill(s.id===curId&&doneAll(s.children)?'active':(s.status==='completed'?'completed':(s.id===curId||s.children.some(c=>c.id===curId)?'active':'pending')))}<span class="t">${esc(s.title)}</span><span class="chev">▲</span></div>
+            <div class="jcontain-inner">${s.children.map(c => `
+              <div class="crow">${cbx(c.status==='completed', true)}<span class="t">${esc(c.title)}</span>${c.ev?`<span class="evb">E ${c.ev}</span>`:''}</div>`).join('')}
+            </div>
+          </div>
+        </div>`;
+      }
+    });
+  }
+  rows += `<div class="jrow"><div class="jnode goal">★</div><div class="jcard slim"><span class="t">${esc(d.goal)}</span><span class="chev">▼</span></div></div>`;
+
+  return `
+    ${subheader('Timeline')}
+    <div class="jhead">
+      <div class="row1"><span class="gt">${esc(d.goal)}</span><span class="btn secondary sm">Back to Focus</span></div>
+      <div class="prow"><div class="pbar"><div class="fill" style="width:${Math.round(p.done/p.total*100)}%"></div></div><span class="pnum">${p.done} / ${p.total}</span></div>
+    </div>
+    <div class="jtl">${rows}</div>`;
+}
+
+/* ================= page wiring ================= */
+const RENDER = { create: renderCreate, edit: renderEdit, goals: renderGoals, focus: renderFocus, journey: renderJourney };
+const params = new URLSearchParams(location.search);
+const state = {
+  view: params.get('view') === 'surface' ? 'surface' : 'grammar',
+  grammar: GRAMMARS.some(x=>x.key===params.get('grammar')) ? params.get('grammar') : 'indent',
+  surface: SURFACES.some(x=>x.key===params.get('surface')) ? params.get('surface') : 'goals',
+  data: DATASETS.some(x=>x.key===params.get('data')) ? params.get('data') : 'tomas',
+};
+
+function syncUrl() {
+  const q = new URLSearchParams({ view: state.view, grammar: state.grammar, surface: state.surface, data: state.data });
+  history.replaceState(null, '', '?' + q.toString());
+}
+
+function segButtons(el, items, getKey, setKey) {
+  el.querySelectorAll('.seg').forEach(b => b.remove());
+  for (const it of items) {
+    const b = document.createElement('button');
+    b.className = 'seg' + (getKey() === it.key ? ' on' : '');
+    b.textContent = it.name;
+    b.onclick = () => { setKey(it.key); render(); };
+    el.appendChild(b);
+  }
+}
+
+function phoneCol(g, sKey, d) {
+  const s = SURFACES.find(x => x.key === sKey);
+  const note = NOTES[sKey][g];
+  const pinch = state.data === 'sam' && (sKey === 'edit' || sKey === 'focus' || sKey === 'journey')
+    ? '<span class="pinch">⚑ Q6: "Step 4 — inventory" already wants its own sub-parts — one level pinches here. Record, don’t resolve.</span>' : '';
+  return `
+    <div class="col">
+      <div class="col-title">${esc(state.view === 'grammar' ? s.name : GRAMMARS.find(x=>x.key===g).name)}</div>
+      <div class="phone"><div class="screen">${RENDER[sKey](g, d)}</div></div>
+      <div class="meta"><span class="qs">${s.qs} · ${GRAMMARS.find(x=>x.key===g).key}</span>${note}${pinch}</div>
+    </div>`;
+}
+
+function render() {
+  syncUrl();
+  const d = DATASETS.find(x => x.key === state.data);
+  const banner = document.getElementById('banner');
+  const lab = document.getElementById('lab');
+
+  segButtons(document.getElementById('ctl-view'),
+    [{key:'grammar',name:'All surfaces (one grammar)'},{key:'surface',name:'Compare one surface'}],
+    () => state.view, k => state.view = k);
+  segButtons(document.getElementById('ctl-data'), DATASETS, () => state.data, k => state.data = k);
+  const ctlSurface = document.getElementById('ctl-surface');
+  ctlSurface.style.display = state.view === 'surface' ? 'flex' : 'none';
+  segButtons(ctlSurface, SURFACES, () => state.surface, k => state.surface = k);
+
+  if (state.view === 'grammar') {
+    const gr = GRAMMARS.find(x => x.key === state.grammar);
+    banner.innerHTML = `<h2>${gr.name}</h2><p>${gr.blurb}</p>`;
+    lab.innerHTML = SURFACES.map(s => phoneCol(state.grammar, s.key, d)).join('');
+    document.getElementById('sw-label').textContent = gr.name;
+  } else {
+    const s = SURFACES.find(x => x.key === state.surface);
+    banner.innerHTML = `<h2>${s.name}</h2><p>The same surface in all three grammars — a grammar that fails one surface fails (feature shape rule). ${s.qs} live here.</p>`;
+    lab.innerHTML = GRAMMARS.map(g => phoneCol(g.key, state.surface, d)).join('');
+    document.getElementById('sw-label').textContent = s.name;
+  }
+}
+
+function cycle(dir) {
+  if (state.view === 'grammar') {
+    const i = GRAMMARS.findIndex(x => x.key === state.grammar);
+    state.grammar = GRAMMARS[(i + dir + GRAMMARS.length) % GRAMMARS.length].key;
+  } else {
+    const i = SURFACES.findIndex(x => x.key === state.surface);
+    state.surface = SURFACES[(i + dir + SURFACES.length) % SURFACES.length].key;
+  }
+  render();
+}
+document.getElementById('sw-prev').onclick = () => cycle(-1);
+document.getElementById('sw-next').onclick = () => cycle(1);
+document.addEventListener('keydown', e => {
+  if (/^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName) || document.activeElement?.isContentEditable) return;
+  if (e.key === 'ArrowLeft') cycle(-1);
+  if (e.key === 'ArrowRight') cycle(1);
+});
+
+render();
+</script>
+</body>
+</html>
