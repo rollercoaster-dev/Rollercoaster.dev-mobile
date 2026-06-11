@@ -5,25 +5,52 @@ import { UnistylesRuntime } from "react-native-unistyles";
 import { useDensity } from "../useDensity";
 import { themeNames } from "../../themes/compose";
 import { __resetUserSettingsRowInitForTests } from "../useUserSettingsRow";
-import { Logger } from "../../shims/rd-logger";
 
-// jest.config.js maps "../shims/rd-logger" to a mock that returns a fresh
-// `{ error, warn, info, debug }` instance per `new Logger(...)`. useDensity
-// instantiates one logger at module load — capture it here so
-// `beforeEach(jest.clearAllMocks)` can wipe the call history without losing
-// the reference.
-const MockLogger = Logger as unknown as jest.Mock;
-const useDensityLoggerIdx = MockLogger.mock.calls.findIndex(
-  (call: unknown[]) => call[0] === "useDensity",
-);
-if (useDensityLoggerIdx < 0) {
-  throw new Error(
-    "useDensity did not instantiate a Logger at module load — did the import order change?",
-  );
-}
-const useDensityLogger = MockLogger.mock.results[useDensityLoggerIdx].value as {
+// Replace the global rd-logger mock for this file so we can look up Logger
+// instances by scope regardless of when they're constructed (module load
+// vs. inside the hook body). The registry survives jest.clearAllMocks() —
+// only each instance's child mocks get reset, the entries themselves stay.
+//
+// `var` (not `const`) is deliberate: jest.mock is hoisted above all other
+// code AND `import { useDensity }` is also hoisted as a require, which
+// fires `new Logger("useDensity")` BEFORE any const body code runs. `var`
+// hoists the binding (as undefined) so the factory can lazy-init it; a
+// const would hit TDZ.
+type ScopedMockLogger = {
   error: jest.Mock;
+  warn: jest.Mock;
+  info: jest.Mock;
+  debug: jest.Mock;
 };
+// eslint-disable-next-line no-var
+var mockLoggersByScope: Map<string, ScopedMockLogger> | undefined;
+
+jest.mock("../../shims/rd-logger", () => ({
+  Logger: jest.fn().mockImplementation((scope: string) => {
+    mockLoggersByScope ??= new Map<string, ScopedMockLogger>();
+    let logger = mockLoggersByScope.get(scope);
+    if (!logger) {
+      logger = {
+        error: jest.fn(),
+        warn: jest.fn(),
+        info: jest.fn(),
+        debug: jest.fn(),
+      };
+      mockLoggersByScope.set(scope, logger);
+    }
+    return logger;
+  }),
+}));
+
+function getLoggerForScope(scope: string): ScopedMockLogger {
+  const logger = mockLoggersByScope?.get(scope);
+  if (!logger) {
+    throw new Error(
+      `No Logger constructed with scope "${scope}" yet. Did renderHook fail, or has the scope been renamed?`,
+    );
+  }
+  return logger;
+}
 
 type ChangeListener = (status: AppStateStatus) => void;
 type MutableAppState = { currentState: AppStateStatus | unknown };
@@ -134,8 +161,8 @@ describe("useDensity", () => {
       ]);
       const { result } = renderHook(() => useDensity());
       expect(result.current.densityLevel).toBe("default");
-      expect(useDensityLogger.error).toHaveBeenCalledTimes(1);
-      const firstArg = useDensityLogger.error.mock.calls[0][0];
+      expect(getLoggerForScope("useDensity").error).toHaveBeenCalledTimes(1);
+      const firstArg = getLoggerForScope("useDensity").error.mock.calls[0][0];
       expect(firstArg).toBeInstanceOf(Error);
       expect((firstArg as Error).message).toContain("cozy");
     });
@@ -144,7 +171,7 @@ describe("useDensity", () => {
       mockUseQuery.mockReturnValue([makeSettings({ density: null })]);
       const { result } = renderHook(() => useDensity());
       expect(result.current.densityLevel).toBe("default");
-      expect(useDensityLogger.error).not.toHaveBeenCalled();
+      expect(getLoggerForScope("useDensity").error).not.toHaveBeenCalled();
     });
   });
 
