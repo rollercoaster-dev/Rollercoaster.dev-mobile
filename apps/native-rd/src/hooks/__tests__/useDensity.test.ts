@@ -5,6 +5,25 @@ import { UnistylesRuntime } from "react-native-unistyles";
 import { useDensity } from "../useDensity";
 import { themeNames } from "../../themes/compose";
 import { __resetUserSettingsRowInitForTests } from "../useUserSettingsRow";
+import { Logger } from "../../shims/rd-logger";
+
+// jest.config.js maps "../shims/rd-logger" to a mock that returns a fresh
+// `{ error, warn, info, debug }` instance per `new Logger(...)`. useDensity
+// instantiates one logger at module load — capture it here so
+// `beforeEach(jest.clearAllMocks)` can wipe the call history without losing
+// the reference.
+const MockLogger = Logger as unknown as jest.Mock;
+const useDensityLoggerIdx = MockLogger.mock.calls.findIndex(
+  (call: unknown[]) => call[0] === "useDensity",
+);
+if (useDensityLoggerIdx < 0) {
+  throw new Error(
+    "useDensity did not instantiate a Logger at module load — did the import order change?",
+  );
+}
+const useDensityLogger = MockLogger.mock.results[useDensityLoggerIdx].value as {
+  error: jest.Mock;
+};
 
 type ChangeListener = (status: AppStateStatus) => void;
 type MutableAppState = { currentState: AppStateStatus | unknown };
@@ -105,6 +124,27 @@ describe("useDensity", () => {
       expect(mockUpdateUserSettings).toHaveBeenCalledWith("settings-1", {
         density: "compact",
       });
+    });
+  });
+
+  describe("unknown DB value fallback", () => {
+    it("falls back to 'default' when density is an unrecognised string and logs an Error", () => {
+      mockUseQuery.mockReturnValue([
+        makeSettings({ density: "cozy" as unknown as null }),
+      ]);
+      const { result } = renderHook(() => useDensity());
+      expect(result.current.densityLevel).toBe("default");
+      expect(useDensityLogger.error).toHaveBeenCalledTimes(1);
+      const firstArg = useDensityLogger.error.mock.calls[0][0];
+      expect(firstArg).toBeInstanceOf(Error);
+      expect((firstArg as Error).message).toContain("cozy");
+    });
+
+    it("does not log when density is null", () => {
+      mockUseQuery.mockReturnValue([makeSettings({ density: null })]);
+      const { result } = renderHook(() => useDensity());
+      expect(result.current.densityLevel).toBe("default");
+      expect(useDensityLogger.error).not.toHaveBeenCalled();
     });
   });
 
