@@ -3,9 +3,16 @@ import { UnistylesRuntime } from "react-native-unistyles";
 import { updateUserSettings } from "../db";
 import { useUserSettingsRow } from "./useUserSettingsRow";
 import { useAppStateGuard } from "./useAppStateGuard";
-import { scaleSpacing, type DensityLevel } from "../utils/density";
+import {
+  narrowDensity,
+  scaleSpacing,
+  type DensityLevel,
+} from "../utils/density";
 import { space as baseSpace } from "../themes/tokens";
 import { themeNames } from "../themes/compose";
+import { Logger } from "../shims/rd-logger";
+
+const logger = new Logger("useDensity");
 
 function applyDensityToAllThemes(level: DensityLevel) {
   const scaled = scaleSpacing(baseSpace, level);
@@ -22,8 +29,7 @@ export function useDensity() {
   const appliedLevel = useRef<DensityLevel>("default");
   const { runWhenActive } = useAppStateGuard();
 
-  const densityLevel: DensityLevel =
-    (settings?.density as DensityLevel) || "default";
+  const densityLevel: DensityLevel = narrowDensity(settings?.density, logger);
 
   // Apply density to Unistyles themes when level changes. The updateTheme
   // loop touches all 7 themes in tight succession, which is the same
