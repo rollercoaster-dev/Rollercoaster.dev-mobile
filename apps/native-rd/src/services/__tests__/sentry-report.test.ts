@@ -5,6 +5,13 @@
  * the SDK without pulling the real native module. Per Jest's hoisting rules,
  * variables referenced inside `jest.mock` factories must be prefixed `mock*`.
  */
+import {
+  breadcrumb,
+  reportError,
+  reportLoggerError,
+  type ReportContext,
+} from "../sentry-report";
+
 type CapturedScope = {
   tags: Record<string, string>;
   extras: Record<string, unknown>;
@@ -65,13 +72,6 @@ jest.mock("@sentry/react-native", () => ({
     mockState.setUserCalls += 1;
   },
 }));
-
-import {
-  breadcrumb,
-  reportError,
-  reportLoggerError,
-  type ReportContext,
-} from "../sentry-report";
 
 beforeEach(() => {
   mockState.captured = [];
@@ -229,6 +229,14 @@ describe("reportLoggerError", () => {
       expect(mockState.captured[0].scope.tags).toEqual({
         area: "evidence.view",
         kind,
+      });
+    });
+
+    it("routes useDensity to settings.density", () => {
+      reportLoggerError("useDensity", new Error("boom"));
+      expect(mockState.captured).toHaveLength(1);
+      expect(mockState.captured[0].scope.tags).toEqual({
+        area: "settings.density",
       });
     });
 
