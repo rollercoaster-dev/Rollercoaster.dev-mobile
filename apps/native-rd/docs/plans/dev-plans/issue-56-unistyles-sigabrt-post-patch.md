@@ -224,11 +224,11 @@ _Rationale: by App.tsx composition, `<ThemeProvider value={themeState}>` (outer)
 - [ ] Manual verification: on the `fix/issue-56-unistyles-double-free` branch, after `npx expo run:ios`, perform the documented repro:
   - Open Settings → Theme section
   - Tap theme options in rapid succession (10+ taps within ~2 seconds, alternating between at least two options)
-  - Confirm no SIGABRT; confirm final selected theme matches last tap
+  - Confirm no SIGABRT. Expected behaviour with the in-flight guard: the **first** tap of a rapid burst is the one that applies; subsequent taps that land while it is mid-flight are dropped. After the in-flight call settles (foreground: next tick; backgrounded: after AppState resume flushes the queued call), the next tap applies normally. The user must re-tap once the burst settles if they want a different theme — "last tap wins" is **not** the contract here.
   - Repeat from the Goals tab (navigation transition happening during theme tap)
 - [ ] Sentry: monitor NATIVE-RD-9 (and NATIVE-RD-4 as a group) for 72 hours after a production build ships
 
-**Note on determinism**: The crash rate has moved to 13 events / 8 users but the window for a single repro attempt is still probabilistic. The JS-layer debounce makes the race window microseconds wide; confirmation relies on Sentry silence rather than a guaranteed single-session repro.
+**Note on determinism**: The crash rate has moved to 13 events / 8 users but the window for a single repro attempt is still probabilistic. The JS-layer in-flight guard (no timer; synchronous ref) makes the race window microseconds wide; confirmation relies on Sentry silence rather than a guaranteed single-session repro.
 
 ## Decisions
 

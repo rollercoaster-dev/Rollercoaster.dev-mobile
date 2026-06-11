@@ -67,8 +67,13 @@ export function useThemePersistence() {
       // double-free SIGABRT. The dropped tap's intent is lost; the user must
       // re-tap once the in-flight call settles (foreground: next tick;
       // backgrounded: after the AppState resume flushes the queued call).
+      //
+      // Do NOT touch lastAppliedRef here: it tracks what was actually
+      // committed to Unistyles, and leaving it pointing at the in-flight
+      // value lets the read-effect dedup a subsequent Evolu re-emit of that
+      // same value (sync echo) instead of queueing a second deferred
+      // setTheme that would fire alongside the original on resume.
       if (inFlightThemeRef.current !== null) {
-        lastAppliedRef.current = name;
         return;
       }
       inFlightThemeRef.current = name;

@@ -228,6 +228,28 @@ describe("useThemePersistence", () => {
       expect(setThemeSpy).toHaveBeenCalledWith("dark-default");
     });
 
+    it("does not queue a second deferred setTheme when Evolu re-emits the in-flight value after a dropped rapid tap", () => {
+      setAppState("background");
+      mockUseQuery.mockReturnValue([makeSettings({ theme: null })]);
+      const { result, rerender } = renderHook(() => useThemePersistence());
+
+      act(() => result.current.setTheme("dark-default"));
+      // Second tap while first is still in-flight (deferred) — dropped.
+      act(() => result.current.setTheme("light-default"));
+
+      // Simulate Evolu echoing the persisted value back through useQuery
+      // (cross-device sync, or just a re-emit of the row we just wrote).
+      mockUseQuery.mockReturnValue([makeSettings({ theme: "dark-default" })]);
+      rerender({});
+
+      // On resume, only the original tap's queued callback runs — the read
+      // effect must dedup the echo against the in-flight value, NOT queue a
+      // second setTheme that would race the first on resume.
+      act(() => emitAppState("active"));
+      expect(setThemeSpy).toHaveBeenCalledTimes(1);
+      expect(setThemeSpy).toHaveBeenCalledWith("dark-default");
+    });
+
     it("clears the in-flight ref even when UnistylesRuntime.setTheme throws, so a subsequent call still applies", () => {
       mockUseQuery.mockReturnValue([makeSettings({ theme: null })]);
       // First call throws from the Unistyles bridge — exact failure class this
