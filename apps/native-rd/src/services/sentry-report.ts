@@ -55,6 +55,7 @@ export type ReportContext =
   | { area: "audio.playback" }
   | { area: "navigation" }
   | { area: "db.write" }
+  | { area: "settings.density" }
   | { area: "render" };
 
 // No-op in dev — `initSentry()` returns early before any client is installed,
@@ -94,6 +95,9 @@ const SCOPE_TO_AREA: Record<string, ReportContext> = {
   PhotoContent: { area: "evidence.view", kind: "photo" },
   LinkContent: { area: "evidence.view", kind: "link" },
   FileContent: { area: "evidence.view", kind: "file" },
+  // Error.message is `Unknown density value in DB: <raw>` — raw is the DB
+  // column value, an enum candidate, never user free-text.
+  useDensity: { area: "settings.density" },
 };
 
 // `map` parameter exists as a test seam — production callers always omit it.

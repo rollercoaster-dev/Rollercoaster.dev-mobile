@@ -4,6 +4,9 @@ import {
   scaleSpacing,
   densityOptions,
   DENSITY_MULTIPLIERS,
+  DENSITY_LEVELS,
+  isDensityLevel,
+  narrowDensity,
   type DensityLevel,
 } from "../density";
 
@@ -68,5 +71,94 @@ describe("density utilities", () => {
     for (const level of levels) {
       expect(DENSITY_MULTIPLIERS[level]).toBeGreaterThan(0);
     }
+  });
+
+  describe("isDensityLevel", () => {
+    test.each(["compact", "default", "comfortable"] as const)(
+      "returns true for valid level '%s'",
+      (level) => {
+        expect(isDensityLevel(level)).toBe(true);
+      },
+    );
+
+    test.each(["cozy", "large", "", "Default", " compact "])(
+      "returns false for invalid string '%s'",
+      (value) => {
+        expect(isDensityLevel(value)).toBe(false);
+      },
+    );
+
+    test.each([null, undefined, 42, 0, {}, []] as const)(
+      "returns false for non-string %p",
+      (value) => {
+        expect(isDensityLevel(value)).toBe(false);
+      },
+    );
+
+    test("DENSITY_LEVELS contains exactly the three canonical levels", () => {
+      expect([...DENSITY_LEVELS].sort()).toEqual(
+        ["comfortable", "compact", "default"].sort(),
+      );
+    });
+  });
+
+  describe("narrowDensity", () => {
+    test("returns known='default' for null", () => {
+      expect(narrowDensity(null)).toEqual({
+        isUnknown: false,
+        value: "default",
+      });
+    });
+
+    test("returns known='default' for undefined", () => {
+      expect(narrowDensity(undefined)).toEqual({
+        isUnknown: false,
+        value: "default",
+      });
+    });
+
+    test.each(["compact", "default", "comfortable"] as const)(
+      "returns known='%s' for valid level",
+      (level) => {
+        expect(narrowDensity(level)).toEqual({
+          isUnknown: false,
+          value: level,
+        });
+      },
+    );
+
+    // Plausible DB-rot shapes — an empty string from a partial write, a
+    // trimmed/cased value from a migration that normalised the column the
+    // wrong way, or a JSON-typed cell that was accidentally written object
+    // or array. All should land in the "isUnknown" branch with raw intact
+    // so Sentry sees the exact shape.
+    test.each([
+      ["cozy", "cozy"],
+      ["", ""],
+      [" compact ", " compact "],
+      ["Default", "Default"],
+    ])(
+      "returns unknown with raw=%p for unrecognised string",
+      (input, expectedRaw) => {
+        expect(narrowDensity(input)).toEqual({
+          isUnknown: true,
+          value: "default",
+          raw: expectedRaw,
+        });
+      },
+    );
+
+    test.each([
+      [42, 42],
+      [0, 0],
+      [{}, {}],
+      [[], []],
+    ])("returns unknown with raw=%p for non-string", (input, expectedRaw) => {
+      expect(narrowDensity(input)).toEqual({
+        isUnknown: true,
+        value: "default",
+        raw: expectedRaw,
+      });
+    });
   });
 });

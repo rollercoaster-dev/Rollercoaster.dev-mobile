@@ -1,11 +1,18 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { UnistylesRuntime } from "react-native-unistyles";
 import { updateUserSettings } from "../db";
 import { useUserSettingsRow } from "./useUserSettingsRow";
 import { useAppStateGuard } from "./useAppStateGuard";
-import { scaleSpacing, type DensityLevel } from "../utils/density";
+import {
+  narrowDensity,
+  scaleSpacing,
+  type DensityLevel,
+} from "../utils/density";
 import { space as baseSpace } from "../themes/tokens";
 import { themeNames } from "../themes/compose";
+import { Logger } from "../shims/rd-logger";
+
+const logger = new Logger("useDensity");
 
 function applyDensityToAllThemes(level: DensityLevel) {
   const scaled = scaleSpacing(baseSpace, level);
@@ -22,8 +29,25 @@ export function useDensity() {
   const appliedLevel = useRef<DensityLevel>("default");
   const { runWhenActive } = useAppStateGuard();
 
-  const densityLevel: DensityLevel =
-    (settings?.density as DensityLevel) || "default";
+  const rawDensity = settings?.density;
+  const narrowed = useMemo(() => narrowDensity(rawDensity), [rawDensity]);
+  const densityLevel: DensityLevel = narrowed.value;
+
+  // Log corruption once per distinct unknown value, not once per render. The
+  // narrowed memo is stable across re-renders that don't touch rawDensity,
+  // so a steady bad row produces exactly one Sentry event.
+  //
+  // The raw shape goes in the Error message because the rd-logger shim only
+  // forwards the Error to Sentry — meta args are dropped. JSON.stringify keeps
+  // object/array/empty-string shapes legible (`{}`, `[]`, `""`); the typeof
+  // fallback catches values JSON can't serialise (undefined, functions, BigInt).
+  useEffect(() => {
+    if (narrowed.isUnknown) {
+      const serialized =
+        JSON.stringify(narrowed.raw) ?? `<${typeof narrowed.raw}>`;
+      logger.error(new Error(`Unknown density value in DB: ${serialized}`));
+    }
+  }, [narrowed]);
 
   // Apply density to Unistyles themes when level changes. The updateTheme
   // loop touches all 7 themes in tight succession, which is the same
