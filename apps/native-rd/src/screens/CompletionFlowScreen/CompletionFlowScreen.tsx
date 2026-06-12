@@ -105,7 +105,11 @@ function CompletionContent({
   const navigation =
     useNavigation<NativeStackNavigationProp<GoalsStackParamList>>();
   const { theme } = useUnistyles();
-  const { t: tCompletion } = useTranslation(["completion"]);
+  // "common" is declared alongside "completion" so the retry button can use the
+  // shared common:actions.retry label (#39). react-i18next's types bind the key
+  // union to the namespaces passed here, so the namespace must be listed even
+  // though it is loaded globally and the key stays fully prefixed at the call site.
+  const { t: tCompletion } = useTranslation(["completion", "common"]);
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
   const stepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
@@ -272,15 +276,16 @@ function CompletionContent({
     fallbackPng !== null ||
     hasExistingBadgeImage;
 
-  const { status: badgeStatus, error: badgeError } = useCreateBadge(
-    goalId as GoalId,
-    {
-      ...(designJsonForBake ? { design: designJsonForBake } : {}),
-      ...(pendingCapturedPng ? { freshCapturedPng: pendingCapturedPng } : {}),
-      ...(fallbackPng ? { capturedPng: fallbackPng } : {}),
-      enabled: phase === "celebration" && hasAnyBakeSource && userConfirmedBake,
-    },
-  );
+  const {
+    status: badgeStatus,
+    error: badgeError,
+    retryBake,
+  } = useCreateBadge(goalId as GoalId, {
+    ...(designJsonForBake ? { design: designJsonForBake } : {}),
+    ...(pendingCapturedPng ? { freshCapturedPng: pendingCapturedPng } : {}),
+    ...(fallbackPng ? { capturedPng: fallbackPng } : {}),
+    enabled: phase === "celebration" && hasAnyBakeSource && userConfirmedBake,
+  });
   const isBadgeCreating =
     badgeStatus === "building" ||
     badgeStatus === "signing" ||
@@ -701,19 +706,29 @@ function CompletionContent({
           )}
 
           {badgeStatus === "error" && badgeError && (
-            <View
-              style={styles.badgeStatus}
-              accessible
-              accessibilityRole="alert"
-              accessibilityLabel={tCompletion("completion:badge.errorA11y", {
-                message: badgeError,
-              })}
-            >
-              <Text variant="label" style={styles.badgeStatusText}>
-                {tCompletion("completion:badge.errorMessage", {
+            <View style={styles.badgeErrorContainer}>
+              <View
+                style={styles.badgeStatus}
+                accessible
+                accessibilityRole="alert"
+                accessibilityLabel={tCompletion("completion:badge.errorA11y", {
                   message: badgeError,
                 })}
-              </Text>
+              >
+                <Text variant="label" style={styles.badgeStatusText}>
+                  {tCompletion("completion:badge.errorMessage", {
+                    message: badgeError,
+                  })}
+                </Text>
+              </View>
+              {/* Recovery from the terminal error state (#39): re-arms the
+                  bake pipeline in place without leaving the celebration. */}
+              <Button
+                label={tCompletion("common:actions.retry")}
+                onPress={retryBake}
+                variant="secondary"
+                testID="completion-retry-bake-button"
+              />
             </View>
           )}
 
