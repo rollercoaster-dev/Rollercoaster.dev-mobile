@@ -77,26 +77,52 @@ Parse the output for findings. CodeRabbit categories:
 
 ### Step 3: Agent Review (Parallel)
 
-Spawn review agents in parallel using the Agent tool:
+Spawn review agents in parallel using the Agent tool. Append the **No-hypotheticals
+rule** (below) verbatim to every agent prompt — it bars speculative findings at the
+source, before they're ever generated.
 
 ```text
 Agent(pr-review-toolkit:code-reviewer):
   "Review the diff on branch <branch> against main for issue #<N>.
    Focus on code quality, patterns, and correctness.
-   Report findings with confidence scores."
+   Report findings with confidence scores.
+   <NO-HYPOTHETICALS RULE>"
 
 Agent(pr-review-toolkit:pr-test-analyzer):
   "Analyze test coverage for changes on branch <branch> against main.
-   Report coverage gaps with gap ratings."
+   Report coverage gaps with gap ratings.
+   <NO-HYPOTHETICALS RULE>"
 
 Agent(pr-review-toolkit:silent-failure-hunter):
   "Check for silent failures, inadequate error handling, and inappropriate
-   fallback behavior in changes on branch <branch> against main."
+   fallback behavior in changes on branch <branch> against main.
+   <NO-HYPOTHETICALS RULE>"
 ```
+
+**No-hypotheticals rule** (substitute for `<NO-HYPOTHETICALS RULE>` in each prompt):
+
+> Report ONLY defects triggerable on the code as it stands in this diff. For every
+> finding, name the concrete input or call path — reachable today, from code that
+> exists in this PR or on main — that triggers it. If stating the bug requires "a
+> future caller", "if someone later refactors X", "if the button were hoisted", "if
+> a not-yet-existing failure mode", or any change to code not present in this PR, DO
+> NOT report it. Do not defend against callers, states, or refactors that do not
+> exist. A documented invariant that current code already upholds is not a finding.
+> Prefer reporting nothing over reporting a hypothetical.
 
 ### Step 4: Normalize Findings
 
-Normalize all findings to a common schema:
+**First, drop hypotheticals.** Before classifying, discard any finding that fails the
+trigger test: _"What concrete input, on the current diff as it stands, makes this
+happen?"_ If the answer names code that doesn't exist in this PR or on main — a future
+caller, a hypothetical refactor, a not-yet-existing failure mode, or a state the
+current code already prevents — drop it. Do not surface dropped findings, not even
+under "for reviewer awareness". A finding survives only if you can state its trigger in
+one sentence referencing code that exists right now. When in doubt, drop it. Count how
+many were dropped and report the count (not the contents) in the output so the filter's
+action is visible.
+
+Then normalize the survivors to a common schema:
 
 ```json
 {
@@ -180,6 +206,8 @@ CodeRabbit: <N> findings (<N> critical)
 Code Reviewer: <N> findings (<N> critical)
 Test Analyzer: <N> findings (<N> critical)
 Silent Failure Hunter: <N> findings (<N> critical)
+
+Hypotheticals dropped (Step 4 filter): <N>
 
 Auto-Fixed: <N>/<N> critical issues
 
