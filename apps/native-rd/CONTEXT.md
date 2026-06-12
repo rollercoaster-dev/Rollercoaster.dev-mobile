@@ -14,9 +14,9 @@ _Avoid_: project, task list, objective.
 The unit being elaborated in Iteration B — currently a title, a user-reorderable ordinal, a `pending`/`completed` toggle, optional planned evidence types, and evidence attachable at any time; in the gap doc, the surface that has to carry substructure, state, notes, evidence, and (for some kinds) learning. Full inventory with file refs: the [Stage 0 baseline record](docs/plans/phase-b-stage-0-baseline.md).
 _Avoid_: task, todo, item, action.
 
-**Sub-step**:
-A Step nested under a parent Step (not directly under a Goal). The substructure may be known up front (Sam's Steps 1/2/3 from program literature) or discovered mid-work (Malik realising UV unwrapping is five things).
-_Avoid_: child task, subtask.
+**Substep**:
+A Step nested under a parent Step (not directly under a Goal). Spelled _substep_, no hyphen (formerly "sub-step"). A step with substeps is just a step — there is no special word for the parent. The substeps may be known up front (Sam's Steps 1/2/3 from program literature) or discovered mid-work (Malik realising UV unwrapping is five things). You _break a step into substeps_ or _add substeps_.
+_Avoid_: child task, subtask, umbrella (for the parent).
 
 **Substructure**:
 The fact that Steps can contain Steps. Depth limit is currently open (one level handles Tomás/Malik/Ava; Sam lands at two; arbitrary is on the table).
@@ -28,7 +28,7 @@ _Avoid_: today view, dashboard, home.
 
 ### The three registers
 
-The Step model is asked to do three jobs at once. Every enrichment is sized against these.
+The Step model is asked to do three jobs at once. Each of the seven things is sized against these.
 
 **Cognitive prosthesis**:
 Compensating for executive function, working memory, and retrieval gaps. The app holds what the user cannot hold in their head.
@@ -42,37 +42,32 @@ _Avoid_: motivation, gentle nudge, positive reinforcement.
 Compensating for atemporal time perception. The app creates a Tuesday that wouldn't otherwise exist.
 _Avoid_: scheduling, due date, reminder.
 
-### The A–H taxonomy
+### The seven things (formerly the A–H taxonomy)
 
-Eight letters representing ten candidate enrichments for the Step: B has separate
-soft-placement and deadline forms, and C has separate ordering and
-external-waiting forms. Letters are load-bearing — agents and docs refer to them
-by letter.
+Seven candidate capabilities for the Step. They started as eight letters
+holding ten rows; [ADR-0011](docs/decisions/ADR-0011-step-model-names.md)
+consolidated and renamed them on 2026-06-12. Letters are still load-bearing —
+agents and docs refer to them by letter — and each entry below names what it
+was formerly called so the trail to the research docs stays readable.
 
-**A**: Granularity / nesting. Substructure as offloaded cognition; landing places for ND bursts.
+**A: Substeps** (formerly "Granularity / nesting"): Steps can contain Steps. Substeps as offloaded cognition; landing places for ND bursts. A step with substeps is just a step.
 
-**B-soft**: Soft scheduling — _"for Tuesday"_, not _"due Tuesday"_. Creates the time foothold. A working hypothesis for prototyping is that a Step can carry a temporal function — marker, deadline, or recurrence — while time passing never changes its state or evaluates the user.
+**B: Planning** (formerly "B-soft" + "B-deadlines" + the recurrence/Slot hypothesis): three time shapes — a **date** (one-off, _"for Tuesday"_, not _"due Tuesday"_), a **deadline**, and **repeating**. Simplest path for each, using the phone's built-in tools wherever possible: one-way calendar push (pre-fill a system calendar event from a step; never read the calendar back, never sync state) and user-set reminders (fire once at the time the user set; no re-ping, no follow-up). Time passing never changes a step's state or evaluates the user. A passed deadline stays factual — no red, no "overdue," no alarm state. **No app-icon badge counts, ever.** The calendar holds repetition; the step just _is_ the repeating thing.
 
-**B-deadlines**: A deadline is one candidate temporal function to prototype, not permission for a missed-deadline ledger. Passing it never changes state or evaluates the user. Whether a deadline can provide useful meaning without creating pressure that violates the no-time-shame principle remains open.
-
-**C-order**: Dependency graph as ordering — _sequence is the syllabus_.
-
-**C-waiting**: Naming external blockers — separates _stuck_ from _failing_.
+**C: Dependencies** (formerly "C-order" + "C-waiting"): one design language, two targets — a step can depend on another step (**internal**) or on a person, org, reply, or event (**external**). A dependency is a _relation_, not a state. It informs — never blocks, hides, or dims. Naming an external dependency separates _stuck_ from _failing_. List order itself already ships (`ordinal`, drag-to-reorder); the dependency marker is C's only new capability.
 
 **C-as-constraint**: Out. Dependency-as-constraint-engine (app refuses an action because a prerequisite isn't met). Punitive.
 
-**D**: Per-step context (one-line note). Tacit knowledge made explicit. Per-step free-form text already exists today — as text evidence, with evidence semantics; D's open question is whether context is a distinct thing (own retrieval surface, prominence at re-entry) or a presentation/retrieval layer over that channel.
+**Scratchpad** (formerly "D: Per-step context" + "F: Mid-work capture"): a freeform pad — Apple Freeform / a mini Miro board — holding finger-written ink, images, text, fragments; anything goes. Everything on it is draggable: arranged within the pad, or dragged out to _become_ something — a substep, evidence, a step note. Nothing lands anywhere automatically; you drag it. Not evidence's register, not a review, no required flow.
 
-**E**: State vocabulary beyond `pending`/`completed`. Naming states without pathologizing them.
+**E: Step states** (formerly "Richer state vocabulary"): states beyond `pending`/`completed`, named without pathologizing. Color is the state's identity — stable and clear. The label is a word from a small pool per state, picked randomly once when the state is set, then fixed. The word is always adjacent to the color, never replaced by it.
 
-**F**: Mid-work capture. Frictionless landing place for in-progress insight. A six-modality capture suite already ships and is reachable mid-work, but everything it captures lands as an evidence record; F's open questions are friction under real mid-work load and where captured _structure_ (a new sub-step, not evidence) lands.
+**G: Review**: the user attaches a review to a goal whenever they want one — including never; the review's existence is the opt-in rather than a toggle. The review is a final edit pass over the goal's scratchpad — the mess becomes the keepsake, gathering the steps as they actually went, H learnings, evidence, and the badge. The existing completion-flow text field is the doorway, not the whole feature; the review is reachable anytime from the goal, and skipping the doorway leaves no trace. Forward-reference target is _future similar steps across goals_.
 
-**G**: Per-goal review. The user attaches a review to a goal whenever they want one — including never; it is not tied to goal completion, and the review's existence is the opt-in rather than a toggle. Free-form retrospective on the goal (wins and misfires both). Forward-reference target is _future similar steps across goals_.
-
-**H**: Step-level hypothesis falsification — the misfired step persists as a learning. Forward-reference target is _the immediately replacing step within the same goal_.
+**H: Learnings** (formerly "Misfire as learning"): what didn't go to plan, kept. The step persists as a learning — the user assigns the label, with their own word from the state pool; the app never does. A combination, not a new feature: an E state + a C-style link + journey display. Forward-reference target is _the immediately replacing step within the same goal_.
 
 **G vs H**:
-H is specifically the falsification pivot — a misfired step's record _is_ the artifact. G is broader: a free-form retrospective the user writes whenever they want. When a misfire is involved, both can apply; the forward-reference target separates them. The 8-gauge moment is canonically _both_ — H during the practice panel work, G at the journeyman exam six months later.
+H is a single step that didn't go to plan, kept — the step's record _is_ the artifact. G is broader: a free-form review the user writes whenever they want. When a learning is involved, both can apply; the forward-reference target separates them. The 8-gauge moment is canonically _both_ — H during the practice panel work, G at the journeyman exam six months later.
 
 ### Step states
 
@@ -89,40 +84,35 @@ Candidate state, if it exists at all — never applied by the app. Time passing 
 _Avoid_: failed, skipped, overdue, auto-missed.
 
 **waiting-external**:
-Candidate state. The step is blocked by something the user does not control (the PIA's calendar, the clinic's report turnaround).
-_Avoid_: blocked (ambiguous — could mean user-blocked), pending-external.
+Formerly a candidate state; answered 2026-06-12 ([ADR-0011](docs/decisions/ADR-0011-step-model-names.md)) — waiting on something the user does not control (the PIA's calendar, the clinic's report turnaround) is an external **dependency relation** (C), not a state. The relation informs without scoring the user; what a step with an unsatisfied dependency shows is a prototype question.
+_Avoid_: blocked (ambiguous — could mean user-blocked), pending-external, blocked by ("depends on" is the working wording).
 
 **learning**:
-Candidate state, system-derived from the H pivot — a falsified step persists labelled this way, with the corrected replacement step _following from_ it. Probably not directly user-choosable.
+Candidate state from H — a step that didn't go to plan persists labelled this way, with the corrected replacement step _following from_ it. **The user sets it directly**, with their own word from the state pool; the app never assigns the label (answered 2026-06-12 — an earlier draft had it system-derived and probably not user-choosable).
 _Avoid_: failed, wrong, redo.
 
 **Slot**:
-A dated occurrence produced by a recurring Step — _this Tuesday_, _next Tuesday_ — that can be checked, left blank, or annotated. The absence of a check is not interpreted by the app. The slot is the unit; presence-or-absence is not aggregated, counted, or surfaced as evidence about the user. This is a working hypothesis for prototyping, not yet a settled model.
+A dated occurrence produced by a repeating Step — _this Tuesday_, _next Tuesday_. **Demoted to probably unnecessary, 2026-06-12:** the phone's calendar holds the repetition; the step just _is_ the repeating thing. Stage 3 verifies that calendar delegation covers the scenarios before any in-app Slot model is considered. What stays settled regardless of model: the absence of a check is never interpreted, aggregated, counted, or surfaced as evidence about the user.
 _Avoid_: occurrence, missed Tuesday, attendance record, instance.
 
 **Universal no-auto-state rule**:
-Time passing never changes a Step's state or causes the app to interpret, score, or aggregate an absence. This applies whether a date functions as a marker, deadline, or recurrence. The precise behavior and presentation of those temporal functions — including whether recurrence produces a distinct Slot model — require prototyping.
+Time passing never changes a Step's state or causes the app to interpret, score, or aggregate an absence. This applies to all three planning shapes — date, deadline, and repeating.
 
-**Flagged ambiguity — state vocabulary**:
-Whether E becomes a single vocabulary used differently per goal, or a fully opt-in-per-goal vocabulary set, is unresolved. Joe is considering base labels (`pending`, `completed`) the user can rename or extend per goal — that's a working direction, not a decision.
+**Flagged ambiguity — state words**:
+Color is the state's identity; the label is a word from a small pool per state, picked once when the state is set (decided 2026-06-12). Pools are authored during prototyping; whether the user can edit or extend the pools stays open. Whether `pending`/`completed` keep their names in the UI is also open — "pending reads like database-speak" was raised and not contested.
 
-### Misfire and learning (H)
+### Learnings (H) (formerly "Misfire and learning")
 
-**Misfire**:
-A step whose premise turned out to be wrong (Tomás's 8-gauge run on a circuit that needed 6). Distinct from _a step the user failed to do_. The structural distinction _the step's premise was wrong_ vs _I failed_ is the H register's whole point.
-_Avoid_: failed step, wrong turn (informal, not the canonical term), error.
+**Learning**:
+What didn't go to plan, kept. A step whose premise turned out to be wrong (Tomás's 8-gauge run on a circuit that needed 6) — distinct from _a step the user failed to do_. The structural distinction _the step's premise was wrong_ vs _I failed_ is H's whole point. The step's record _is_ the learning, not a note attached to it; the original framing stays visible, with the replacement step linked. Learnings display with pride in the goal journey — per-item, showable, **never counted or aggregated**.
+_Avoid_: misfire, falsification (both retired 2026-06-12), failed step, error, review (G uses _review_; H uses _learning_).
 
-**Falsification**:
-The H frame — every step is a small experiment; misfires are iteration. The misfired step's record _is_ the learning, not a note attached to it.
-_Avoid_: error correction, retry.
+**"What happened?" / "What does it change?"**:
+The two questions a learning invites when the state is set. The first becomes the learning's body; the second seeds a pre-filled corrected step, and the follows-from link comes free. A quiet **"not now"** sets the state anyway and leaves the questions on the step, answerable later — strong invitation, no gate.
 
 **Follows-from**:
-The relation between a falsified step and its replacement. Tomás's 6-gauge re-run _follows from_ the 8-gauge misfire; the chain is preserved.
+The relation between a learning and its replacement. Tomás's 6-gauge re-run _follows from_ the 8-gauge learning; the chain is preserved.
 _Avoid_: replaces, supersedes (those imply the original disappears; under H it persists as a learning).
-
-**Learning step**:
-The persisted form of a misfired step under H — the original framing visible, the contradiction recorded, the replacement step linked.
-_Avoid_: failed step, review (G uses _review_; H uses _learning_).
 
 ### Recovery vocabulary (used in Sam's scenario)
 
@@ -144,13 +134,13 @@ The principle: states can be named (waiting, slot-blank) without scoring the use
 _Avoid_: gentle framing, soft phrasing.
 
 **Recovery practice**:
-Sam's goal type. Distinct from craft / skill goals in the kinds of structures that fit, not in goal-type-conditional defaults: G reviews are never prompted (universal — but the absence of the prompt is most load-bearing here, since a recovery review on Sam's behalf would be shame-surveillance); H does not apply because slot-shaped commitments do not carry a falsifiable hypothesis; the `missed` state never arises (universal — no time-based auto-state).
+Sam's goal type. Distinct from craft / skill goals in the kinds of structures that fit, not in goal-type-conditional defaults: G reviews are never prompted (universal — but the absence of the prompt is most load-bearing here, since a recovery review on Sam's behalf would be shame-surveillance); H does not apply because a repeating commitment carries no premise that can turn out wrong; the `missed` state never arises (universal — no time-based auto-state).
 _Avoid_: sobriety tracking, recovery program (the app does not track sobriety or simulate the program).
 
 ### Research-language
 
 **Evidence-during-practice**:
-Notes-for-future-self attached to in-progress sub-steps whose umbrella completes at an external event (test, defense, demo). From the Tomás practice-panel finding.
+Notes-for-future-self attached to in-progress substeps whose parent step completes at an external event (test, defense, demo). From the Tomás practice-panel finding.
 _Avoid_: progress notes, journal entries.
 
 **Evidence-at-completion**:
@@ -173,19 +163,20 @@ The structural unit of `step-model-gap.md`. One persona, one goal, five fields (
 
 > **Joe:** Sam's two missed Tuesdays — should the task view show them?
 >
-> **Agent:** Sam's Tuesdays aren't `missed` Tuesdays in the app's vocabulary; they're _unfilled slots_. The slot exists, it's blank, the app doesn't interpret — and that's universal, not a recovery-specific carve-out: the app doesn't auto-promote a step to `missed` for any goal. So for Sam's recovery practice, the task view shouldn't surface the unfilled slots as anything at all.
+> **Agent:** Sam's Tuesdays aren't `missed` Tuesdays to the app. The Tuesday meeting is a repeating thing — the calendar holds the repetition — and a Tuesday that didn't happen is just a Tuesday the app doesn't interpret. That's universal, not a recovery-specific carve-out: the app doesn't auto-promote a step to `missed` for any goal. So for Sam's recovery practice, the task view shouldn't surface the two Tuesdays as anything at all.
 >
 > **Joe:** And if it were Tomás missing two practice-panel weekends?
 >
-> **Agent:** That's a state-vocabulary question (E), not an H question. Tomás's 8-gauge run was a misfire — the step's premise was wrong, and the corrected step _follows from_ it. That's H. Missing a weekend is different: a question about whether `missed` belongs in the set at all, and if so, whether the user marks it themselves. The app never auto-promotes by time, for any goal type.
+> **Agent:** That's a step-states question (E), not an H question. Tomás's 8-gauge run didn't go to plan — the step's premise was wrong, and the corrected step _follows from_ it. That's H, and Tomás is the one who'd label it. Missing a weekend is different: a question about whether `missed` belongs in the state set at all, and if so, whether the user marks it themselves. The app never auto-promotes by time, for any goal type.
 >
 > **Joe:** What about a sponsor-call cadence Sam didn't make for three weeks?
 >
-> **Agent:** Same shape as the Tuesdays. Each weekly cadence has a slot; blank slots stay blank; the app doesn't count or surface. The sponsor relationship — including whether the gap matters — is between Sam and Marcus, not between Sam and the app.
+> **Agent:** Same shape as the Tuesdays. The cadence repeats; the app keeps no record of made-versus-unmade calls to count or surface. The sponsor relationship — including whether the gap matters — is between Sam and Marcus, not between Sam and the app.
 
 ## Flagged ambiguities
 
-- **State vocabulary scope (E).** Whether E is one shared vocabulary used differently per goal type, or a fully opt-in-per-goal vocabulary (base labels the user can rename or extend), is unresolved. UI exploration for each candidate state is the likely next move.
-- **Substructure depth.** One level vs two vs arbitrary. Sam lands at two; the case for capping there is the task view's "one next thing" promise. The case against is that learning structures don't have a natural depth limit.
-- **Temporal functions and Slots.** A working hypothesis for prototyping is that a Step can carry a marker, deadline, or recurrence, and that recurrence produces dated Slots. The interaction model, persistence behavior, task-view treatment, and consequences of changing temporal function remain open. The universal constraint is settled: time passing never changes state or evaluates the user.
-- **`learning` as a user-choosable state.** H produces a learning step via the falsification pivot — but the doc hasn't resolved whether the user can directly mark a step as `learning` outside that flow.
+- **E word pools.** Color = state identity and word-from-a-pool are decided; pool contents are authored during prototyping. Whether the user can edit or extend the pools is open, and so is whether `pending`/`completed` keep their names in the UI.
+- **Substep depth.** One level vs two vs arbitrary. Sam lands at two; the case for capping there is the task view's "one next thing" promise. The case against is that learning structures don't have a natural depth limit.
+- **Calendar delegation (B).** The working direction is that the phone's calendar and user-set reminders cover all three planning shapes, making an in-app Slot model unnecessary. Stage 3 verifies this against the scenarios. The universal constraint is settled regardless: time passing never changes state or evaluates the user.
+- **Scratchpad scope.** Per-goal vs global pad (lean: probably per-goal), which drag-out targets exist (substep, evidence, step note), and whether the original stays in the pad after dragging out.
+- **Dependency display (C).** Marker wording ("depends on" — never "blocked by") and what a step with a not-yet-satisfied dependency shows.
