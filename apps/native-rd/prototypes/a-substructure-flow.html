@@ -3,20 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PROTOTYPE — A: Substructure clickable flow</title>
+<title>PROTOTYPE — A: Substeps — clickable flow</title>
 <!--
-  PROTOTYPE — throwaway. Phase B Stage 1, enrichment A (granularity/substructure).
-  Approach 2 of 2 — compare against a-substructure-grammars.html (static gallery).
+  PROTOTYPE — throwaway. Phase B Stage 1, A: Substeps.
+  Approach 2 of 2 — compare against a-substructure-layouts.html (static gallery).
 
-  The gallery answers "which grammar READS best per surface" (spatial, parallel).
-  This one answers "which grammar WORKS through a session" (temporal, sequential):
+  The gallery answers "which layout READS best per surface" (spatial, parallel).
+  This one answers "which layout WORKS through a session" (temporal, sequential):
   one clickable phone, in-memory state, driving Tomás's scenario end to end —
-  author the decomposition (real tap counts, Q5/Q7), work the next leaf (Q2/Q3),
+  author the substeps (real tap counts, Q5/Q7), work the next leaf (Q2/Q3),
   cold-return via the "next day" button, complete the last circuit and live the
   Q9 parent-invite moment, then read the journey (Q4).
 
-  Adds G4 — drill-in (parent opens its own focused sub-list; structure as
-  NAVIGATION rather than layout) — the grammar the static gallery couldn't show.
+  Adds Option 4 — drill-in (parent opens its own focused sub-list; structure as
+  NAVIGATION rather than layout) — the layout the static gallery couldn't show.
 
   Open directly:  open apps/native-rd/prototypes/a-substructure-flow.html
   Feature shape:  docs/plans/phase-b-feature-shapes.md §A
@@ -211,8 +211,8 @@
 
 <div class="page-header">
   <span class="proto-tag">Prototype — throwaway · approach 2 of 2</span>
-  <h1>A: Substructure — clickable flow (compare with the static gallery)</h1>
-  <p>The gallery (<code>a-substructure-grammars.html</code>) compares how grammars <em>read</em>; this one tests how a grammar <em>works through a session</em>: author Tomás's decomposition, work the next leaf, come back cold, finish the circuits, and live the parent-invite moment. Adds <strong>G4 — drill-in</strong> (structure as navigation), which a static page can't express. Everything is in-memory; refresh resets.</p>
+  <h1>A: Substeps — clickable flow (compare with the static gallery)</h1>
+  <p>The gallery (<code>a-substructure-layouts.html</code>) compares how layouts <em>read</em>; this one tests how a layout <em>works through a session</em>: break Tomás's panel into substeps, work the next leaf, come back cold, finish the circuits, and live the parent-invite moment. Adds <strong>Option 4 — drill-in</strong> (structure as navigation), which a static page can't express. Everything is in-memory; refresh resets.</p>
 </div>
 
 <div class="layout">
@@ -220,9 +220,9 @@
 
   <div class="side">
     <div class="panel">
-      <h3>Grammar</h3>
-      <div id="grammar-segs"></div>
-      <p id="grammar-blurb"></p>
+      <h3>Layout</h3>
+      <div id="layout-segs"></div>
+      <p id="layout-blurb"></p>
       <div style="margin-top:8px">
         <button class="seg warn" data-ctl="nextday">☀ Next day (cold return)</button>
         <button class="seg" data-ctl="reset">↺ Reset flow</button>
@@ -244,25 +244,25 @@
 
     <div class="panel">
       <h3>Guardrails honored</h3>
-      <p>Parent completion is always its own manual act — completing the last child changes nothing by itself. Nothing is blocked or hidden by incomplete siblings. The flat second goal stays first-class. Every grammar still resolves to one next thing per goal. Sam's depth pinch is out of scope here (gallery's Sam dataset covers Q6).</p>
+      <p>Parent completion is always its own manual act — completing the last child changes nothing by itself. Nothing is blocked or hidden by incomplete siblings. The flat second goal stays first-class. Every layout still resolves to one next thing per goal. Sam's depth pinch is out of scope here (gallery's Sam dataset covers Q6).</p>
     </div>
   </div>
 </div>
 
 <script>
-/* ================= grammars ================= */
-const GRAMMARS = [
-  { key: 'indent',  name: 'G1 — Indentation', blurb: 'Children are indented rows under a left rail. Add sub-step: 1 tap on the row chip. Reading leads with the leaf.' },
-  { key: 'contain', name: 'G2 — Containment', blurb: 'A parent is a container card holding its parts. First "split" a step (1 tap), then add parts inside. Reading leads with the umbrella.' },
-  { key: 'crumb',   name: 'G3 — Breadcrumb', blurb: 'Lists stay flat; hierarchy is a parent chip on each child. Add sub-step hides in the ⋯ menu (2 taps).' },
-  { key: 'drill',   name: 'G4 — Drill-in', blurb: 'Structure is NAVIGATION: a parent opens its own focused sub-list. Children are invisible until you enter. Only this interactive medium can show it.' },
+/* ================= layouts ================= */
+const LAYOUTS = [
+  { key: 'indent',  name: 'Option 1 — Indentation', blurb: 'Children are indented rows under a left rail. Add substep: 1 tap on the row chip. Reading leads with the leaf.' },
+  { key: 'contain', name: 'Option 2 — Containment', blurb: 'A parent is a container card holding its parts. First "split" a step (1 tap), then add parts inside. Reading leads with the parent.' },
+  { key: 'crumb',   name: 'Option 3 — Breadcrumb', blurb: 'Lists stay flat; hierarchy is a parent chip on each child. Add substep hides in the ⋯ menu (2 taps).' },
+  { key: 'drill',   name: 'Option 4 — Drill-in', blurb: 'Structure is NAVIGATION: a parent opens its own focused sub-list. Children are invisible until you enter. Only this interactive medium can show it.' },
 ];
 
 /* ================= state ================= */
 let state;
-function freshState(grammar) {
+function freshState(layout) {
   return {
-    grammar,
+    layout,
     screen: 'goals',           // goals | create | focus | journey | drill
     drillParent: null,         // step id (G4 sub-screens; also used by create-time drill)
     drillFrom: null,           // 'create' | 'focus' | 'journey'
@@ -328,7 +328,7 @@ const statusPill = st =>
 const MILESTONES = [
   { key: 'created-goal',  label: '1 · Create the goal (＋ on Goals, fill title)', test: s => !!s.goal },
   { key: 'three-steps',   label: '2 · Author the three steps', test: s => s.goal && s.goal.steps.length === 3 },
-  { key: 'decomposed',    label: '3 · Decompose "Wire the circuits" into 3 circuits (Q5/Q7 — watch taps)', test: s => { const w = s.goal && s.goal.steps.find(x => x.children); return w && w.children.length === 3; } },
+  { key: 'substeps-added', label: '3 · Break "Wire the circuits" into 3 circuits (Q5/Q7 — watch taps)', test: s => { const w = s.goal && s.goal.steps.find(x => x.children); return w && w.children.length === 3; } },
   { key: 'saved',         label: '4 · Create Goal → land on Goals (Q2: what reads as next?)', test: s => s.goal && s.goal.saved && s.screen !== 'create' },
   { key: 'focus',         label: '5 · Open the goal → Focus (Q3: where does it snap?)', test: s => s.visitedFocus },
   { key: 'first-done',    label: '6 · Complete "Plan layout" + first circuit, with evidence (Q10)', test: s => { if (!s.goal) return false; const p = s.goal.steps[0]; const w = s.goal.steps.find(x => x.children); return p && p.status === 'completed' && w && w.children.some(c => c.status === 'completed'); } },
@@ -349,13 +349,13 @@ function renderGoals() {
     if (!ni) next = '<div class="ctx">all steps done — goal completion is on the focus screen, when you choose</div>';
     else if (ni.kind === 'flat') next = `<div class="next">${esc(ni.step.title)}</div>`;
     else if (ni.kind === 'invite') {
-      next = state.grammar === 'contain'
+      next = state.layout === 'contain'
         ? `<div class="next">${esc(ni.parent.title)}</div><div class="inset">${ni.parent.children.length} of ${ni.parent.children.length} parts done</div>`
-        : `<div class="next">${esc(ni.parent.title)}</div><div class="ctx">all ${ni.parent.children.length} sub-steps done</div>`;
+        : `<div class="next">${esc(ni.parent.title)}</div><div class="ctx">all ${ni.parent.children.length} substeps done</div>`;
     } else {
-      if (state.grammar === 'indent') next = `<div class="next">${esc(ni.step.title)}</div><div class="ctx">↳ in ${esc(ni.parent.title)}</div>`;
-      else if (state.grammar === 'contain') next = `<div class="next">${esc(ni.parent.title)}</div><div class="inset">next: ${esc(ni.step.title)}</div>`;
-      else if (state.grammar === 'crumb') next = `<div style="margin-top:10px"><span class="crumb">${esc(ni.parent.title)}</span></div><div class="next" style="margin-top:6px">${esc(ni.step.title)}</div>`;
+      if (state.layout === 'indent') next = `<div class="next">${esc(ni.step.title)}</div><div class="ctx">↳ in ${esc(ni.parent.title)}</div>`;
+      else if (state.layout === 'contain') next = `<div class="next">${esc(ni.parent.title)}</div><div class="inset">next: ${esc(ni.step.title)}</div>`;
+      else if (state.layout === 'crumb') next = `<div style="margin-top:10px"><span class="crumb">${esc(ni.parent.title)}</span></div><div class="next" style="margin-top:6px">${esc(ni.step.title)}</div>`;
       else next = `<div class="next">${esc(ni.step.title)}</div><div class="ctx">in ${esc(ni.parent.title)} ›</div>`;
     }
     card = `
@@ -374,13 +374,13 @@ function renderGoals() {
         <div class="next">Order soil &amp; compost</div>
         <div class="prow"><div class="pbar"><div class="fill" style="width:25%"></div></div><span class="pnum">1/4</span></div>
       </div>
-      <div style="margin:0 14px; font-size:11px; color:var(--muted);">↑ flat goal, untouched by the grammar — decomposition is never required.</div>
+      <div style="margin:0 14px; font-size:11px; color:var(--muted);">↑ flat goal, untouched by the layout — breaking a step up is never required.</div>
       <div class="fab" data-act="new-goal">＋</div>
     </div>`;
 }
 
 function authoringRows() {
-  const g = state.grammar;
+  const g = state.layout;
   const steps = state.goal.steps;
   const canSub = state.subQueue.length > 0;
   const row = (s, child, parentTitle) => `
@@ -396,7 +396,7 @@ function authoringRows() {
           : (canSub ? `<span class="chip-add" data-act="drill-create" data-arg="${s.id}">parts ›</span>` : '')) : ''}
       <span class="x">✕</span>
     </div>
-    ${g==='crumb' && state.menuFor === s.id ? `<div class="minimenu"><div data-act="add-sub" data-arg="${s.id}">+ add sub-step</div><div>✎ rename</div></div>` : ''}`;
+    ${g==='crumb' && state.menuFor === s.id ? `<div class="minimenu"><div data-act="add-sub" data-arg="${s.id}">+ add substep</div><div>✎ rename</div></div>` : ''}`;
 
   let html = '';
   for (const s of steps) {
@@ -414,7 +414,7 @@ function authoringRows() {
     html += row(s);
     if (hasKids && g === 'indent') {
       html += `<div class="echildren">${s.children.map(c=>row(c,true)).join('')}
-        ${canSub ? `<div class="erow child ghost" data-act="add-sub" data-arg="${s.id}">+ sub-step</div>` : ''}</div>`;
+        ${canSub ? `<div class="erow child ghost" data-act="add-sub" data-arg="${s.id}">+ substep</div>` : ''}</div>`;
     } else if (hasKids && g === 'crumb') {
       html += s.children.map(c=>row(c,true,s.title)).join('');
     }
@@ -457,7 +457,7 @@ function renderDrillCreate() {
 }
 
 function miniTimeline() {
-  const g = state.grammar;
+  const g = state.layout;
   const ni = nextInfo(state.goal.steps);
   const curId = ni ? (ni.kind === 'invite' ? ni.parent.id : ni.step.id) : null;
   const nodeFor = (s, extra='') => {
@@ -482,7 +482,7 @@ function miniTimeline() {
 }
 
 function renderFocus() {
-  const g = state.grammar;
+  const g = state.layout;
   const steps = state.goal.steps;
   const ni = nextInfo(steps);
   const p = progress(steps);
@@ -574,7 +574,7 @@ function renderDrillFocus() {
 }
 
 function renderJourney() {
-  const g = state.grammar;
+  const g = state.layout;
   const steps = state.goal.steps;
   const ni = nextInfo(steps);
   const curId = ni ? (ni.kind === 'invite' ? ni.parent.id : ni.step.id) : null;
@@ -691,7 +691,7 @@ function renderScreen() {
   return '';
 }
 function stateSummary() {
-  const lines = [`grammar: ${state.grammar}   day: ${state.day}   screen: ${state.screen}`];
+  const lines = [`layout: ${state.layout}   day: ${state.day}   screen: ${state.screen}`];
   if (!state.goal) { lines.push('goal: (not created)'); return lines.join('\n'); }
   lines.push(`goal: ${state.goal.title}${state.goal.saved ? '' : ' (unsaved)'}`);
   for (const s of state.goal.steps) {
@@ -706,9 +706,9 @@ function stateSummary() {
 }
 function render() {
   document.getElementById('screen').innerHTML = renderScreen();
-  const segs = document.getElementById('grammar-segs');
-  segs.innerHTML = GRAMMARS.map(g => `<button class="seg${g.key===state.grammar?' on':''}" data-ctl="grammar" data-arg="${g.key}">${g.name}</button>`).join('');
-  document.getElementById('grammar-blurb').textContent = GRAMMARS.find(g => g.key === state.grammar).blurb;
+  const segs = document.getElementById('layout-segs');
+  segs.innerHTML = LAYOUTS.map(g => `<button class="seg${g.key===state.layout?' on':''}" data-ctl="layout" data-arg="${g.key}">${g.name}</button>`).join('');
+  document.getElementById('layout-blurb').textContent = LAYOUTS.find(g => g.key === state.layout).blurb;
   document.getElementById('tapcount').textContent = state.taps;
   const ml = document.getElementById('milestones');
   ml.innerHTML = MILESTONES.map(m => {
@@ -728,8 +728,8 @@ document.getElementById('screen').addEventListener('click', e => {
 document.body.addEventListener('click', e => {
   const el = e.target.closest('[data-ctl]');
   if (!el) return;
-  if (el.dataset.ctl === 'grammar') { state = freshState(el.dataset.arg); render(); }
-  if (el.dataset.ctl === 'reset') { state = freshState(state.grammar); render(); }
+  if (el.dataset.ctl === 'layout') { state = freshState(el.dataset.arg); render(); }
+  if (el.dataset.ctl === 'reset') { state = freshState(state.layout); render(); }
   if (el.dataset.ctl === 'nextday') { state.day += 1; state.screen = 'goals'; state.drillParent = null; render(); }
 });
 

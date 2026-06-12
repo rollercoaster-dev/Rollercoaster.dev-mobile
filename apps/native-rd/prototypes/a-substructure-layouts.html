@@ -3,23 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PROTOTYPE — A: Substructure grammars × five surfaces</title>
+<title>PROTOTYPE — A: Substeps — layouts × five surfaces</title>
 <!--
-  PROTOTYPE — throwaway. Phase B Stage 1, enrichment A (granularity/substructure).
+  PROTOTYPE — throwaway. Phase B Stage 1, A: Substeps.
 
-  Question: is there ONE grammar for "a step inside a step" that survives all five
+  Question: is there ONE layout for "a step inside a step" that survives all five
   step surfaces (create, edit, goal card, focus + mini-timeline, journey), or do
   authoring and reading need different expressions of the same language?
   Feature shape: docs/plans/phase-b-feature-shapes.md §A
   Record:        docs/plans/phase-b-prototype-records/A-substructure.md
 
-  Plan: three grammars × five surfaces × three datasets, switchable via URL params
-  (?grammar= ?surface= ?data= ?view=), on a single static page. Open directly:
-      open apps/native-rd/prototypes/a-substructure-grammars.html
-  ← / → cycle grammars (or surfaces in compare view).
+  Plan: three layouts × five surfaces × three datasets, switchable via URL params
+  (?layout= ?surface= ?data= ?view=), on a single static page. Open directly:
+      open apps/native-rd/prototypes/a-substructure-layouts.html
+  ← / → cycle layouts (or surfaces in compare view).
 
   Tokens mirrored from packages/design-tokens light-default composition so the file
-  is self-contained — comparison should measure the grammar, not HTML aesthetics.
+  is self-contained — comparison should measure the layout, not HTML aesthetics.
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -89,12 +89,12 @@
   .seg.on { background: var(--yellow); }
   .seg:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 rgba(0,0,0,0.8); }
 
-  .grammar-banner {
+  .layout-banner {
     max-width: 1100px; margin: 0 auto 20px; background: var(--card);
     border: 2.5px solid var(--border); box-shadow: var(--shadow-md); padding: 12px 16px;
   }
-  .grammar-banner h2 { font-family: var(--headline); font-weight: 800; font-size: 18px; margin: 0 0 4px; }
-  .grammar-banner p { margin: 0; font-size: 13px; color: #444; }
+  .layout-banner h2 { font-family: var(--headline); font-weight: 800; font-size: 18px; margin: 0 0 4px; }
+  .layout-banner p { margin: 0; font-size: 13px; color: #444; }
 
   .lab { display: flex; gap: 26px; overflow-x: auto; padding: 4px 4px 24px; }
   .col { flex: 0 0 auto; width: 360px; display: flex; flex-direction: column; gap: 12px; }
@@ -349,9 +349,9 @@
 
 <div class="page-header">
   <span class="proto-tag">Prototype — throwaway</span>
-  <h1>A: Substructure — one grammar across five surfaces?</h1>
-  <p><strong>Question (Q1):</strong> is there one grammar for "a step inside a step" that survives create, edit, goal card, focus mode + mini-timeline, and the journey view — or do authoring and reading surfaces need different expressions of the same language?</p>
-  <p>Three grammars × five surfaces × three datasets, switchable below. <kbd>←</kbd>/<kbd>→</kbd> cycle. Feature shape: <code>docs/plans/phase-b-feature-shapes.md §A</code> · Record: <code>docs/plans/phase-b-prototype-records/A-substructure.md</code></p>
+  <h1>A: Substeps — one layout across five surfaces?</h1>
+  <p><strong>Question (Q1):</strong> is there one layout for "a step inside a step" that survives create, edit, goal card, focus mode + mini-timeline, and the journey view — or do authoring and reading surfaces need different expressions of the same language?</p>
+  <p>Three layouts × five surfaces × three datasets, switchable below. <kbd>←</kbd>/<kbd>→</kbd> cycle. Feature shape: <code>docs/plans/phase-b-feature-shapes.md §A</code> · Record: <code>docs/plans/phase-b-prototype-records/A-substructure.md</code></p>
 </div>
 
 <div class="controls">
@@ -360,25 +360,25 @@
   <div class="ctl-group" id="ctl-surface" style="display:none"><span class="ctl-label">Surface</span></div>
 </div>
 
-<div class="grammar-banner" id="banner"></div>
+<div class="layout-banner" id="banner"></div>
 <div class="lab" id="lab"></div>
 
 <div class="footer-notes">
   <h3>Prototype questions exercised here (numbers from the feature shape)</h3>
   <ol>
-    <li><strong>Q1</strong> one grammar across all five surfaces, or authoring vs reading split — compare per surface with the "Compare one surface" view.</li>
-    <li><strong>Q2</strong> goal card: umbrella title or next pending leaf — see Goals column.</li>
+    <li><strong>Q1</strong> one layout across all five surfaces, or authoring vs reading split — compare per surface with the "Compare one surface" view.</li>
+    <li><strong>Q2</strong> goal card: parent title or next pending leaf — see Goals column.</li>
     <li><strong>Q3</strong> focus snap-to-first-pending + what the MiniTimeline strip does with children — see Focus column.</li>
     <li><strong>Q4</strong> journey rendering: inline nodes vs nested vs collapsed — see Journey column.</li>
-    <li><strong>Q5</strong> where "add sub-step" lives at create without pressuring structure — see Create column.</li>
+    <li><strong>Q5</strong> where "add substep" lives at create without pressuring structure — see Create column.</li>
     <li><strong>Q6</strong> does one level hold — switch to the Sam dataset and note where it pinches (record, don't resolve).</li>
-    <li><strong>Q7</strong> "add sub-step" placement + tap count in edit — see Edit column meta notes.</li>
+    <li><strong>Q7</strong> "add substep" placement + tap count in edit — see Edit column meta notes.</li>
     <li><strong>Q8</strong> does the step list stay legible with 3–5 children, or read as an outline.</li>
     <li><strong>Q9</strong> parent invite when the last child completes — switch to "Tomás — circuits done"; completion stays manual everywhere.</li>
-    <li><strong>Q10</strong> where the umbrella shows a child's evidence — evidence badges on children; umbrella aggregation deliberately not designed here.</li>
+    <li><strong>Q10</strong> where the parent shows a child's evidence — evidence badges on children; parent aggregation deliberately not designed here.</li>
   </ol>
-  <p><strong>Guardrails honored in every state:</strong> nothing blocked/hidden by incomplete parents or siblings; no auto-completion of parents; flat steps stay first-class (second goal card); "one next step per active goal" resolves to exactly one thing in all grammars.</p>
-  <p><strong>Evidence weight:</strong> self-testing only unless an ND-user session happens within the stage. Screenshots per grammar × surface go to the prototype record.</p>
+  <p><strong>Guardrails honored in every state:</strong> nothing blocked/hidden by incomplete parents or siblings; no auto-completion of parents; flat steps stay first-class (second goal card); "one next step per active goal" resolves to exactly one thing in all layouts.</p>
+  <p><strong>Evidence weight:</strong> self-testing only unless an ND-user session happens within the stage. Screenshots per layout × surface go to the prototype record.</p>
 </div>
 
 <div class="switcher" id="switcher">
@@ -389,10 +389,10 @@
 
 <script>
 /* ================= data ================= */
-const GRAMMARS = [
-  { key: 'indent', name: 'G1 — Indentation', blurb: 'Children are indented rows beneath their parent; hierarchy is layout (a left rail). Reading surfaces lead with the LEAF and show the parent as quiet context. Numbering: 1, 2 → 2a/2b/2c, 3.' },
-  { key: 'contain', name: 'G2 — Containment', blurb: 'A parent is a container card that physically holds its parts; hierarchy is enclosure. Reading surfaces lead with the UMBRELLA and show the active part inside it. Numbering: step 2, part 2 of 3.' },
-  { key: 'crumb', name: 'G3 — Breadcrumb', blurb: 'Every list stays flat; hierarchy lives in a parent chip carried by each child. Reading surfaces lead with the LEAF + chip. Numbering: continuous 1–6 (the parent is itself a row).' },
+const LAYOUTS = [
+  { key: 'indent', name: 'Option 1 — Indentation', blurb: 'Children are indented rows beneath their parent; hierarchy is layout (a left rail). Reading surfaces lead with the LEAF and show the parent as quiet context. Numbering: 1, 2 → 2a/2b/2c, 3.' },
+  { key: 'contain', name: 'Option 2 — Containment', blurb: 'A parent is a container card that physically holds its parts; hierarchy is enclosure. Reading surfaces lead with the PARENT and show the active part inside it. Numbering: step 2, part 2 of 3.' },
+  { key: 'crumb', name: 'Option 3 — Breadcrumb', blurb: 'Every list stays flat; hierarchy lives in a parent chip carried by each child. Reading surfaces lead with the LEAF + chip. Numbering: continuous 1–6 (the parent is itself a row).' },
 ];
 const SURFACES = [
   { key: 'create',  name: 'Create — NewGoalModal',            qs: 'Q1 Q5' },
@@ -432,27 +432,27 @@ const DATASETS = [
   ]},
 ];
 
-/* grammar-specific meta notes, per surface */
+/* layout-specific meta notes, per surface */
 const NOTES = {
   create: {
-    indent:  'Every row carries a small "+ sub" chip — decomposition is 1 tap away, but its presence on every row is exactly the Q5 pressure to watch for.',
+    indent:  'Every row carries a small "+ sub" chip — adding a substep is 1 tap away, but its presence on every row is exactly the Q5 pressure to watch for.',
     contain: '"Split into parts" lives on the row; only after splitting does the container + its "+ part" row appear. Flat-by-default, structure on demand.',
-    crumb:   '"Add sub-step" hides in the ⋯ overflow (2 taps). Least presence-pressure, least discoverable — the Q5 trade in its purest form.',
+    crumb:   '"Add substep" hides in the ⋯ overflow (2 taps). Least presence-pressure, least discoverable — the Q5 trade in its purest form.',
   },
   edit: {
-    indent:  'Children reorder among siblings inside the rail (ordinal semantics). Add sub-step: 1 tap on the ghost row. Watch Q8 — at 4–5 children this starts reading as an outline.',
+    indent:  'Children reorder among siblings inside the rail (ordinal semantics). Add substep: 1 tap on the ghost row. Watch Q8 — at 4–5 children this starts reading as an outline.',
     contain: 'The container reorders as one block; parts reorder inside it. Add part: 1 tap inside the container. Heaviest visually, clearest ownership.',
-    crumb:   'List stays flat; chips mark membership. Reorder can silently move a child away from its parent — the grammar’s honest weakness in edit.',
+    crumb:   'List stays flat; chips mark membership. Reorder can silently move a child away from its parent — the layout’s honest weakness in edit.',
   },
   goals: {
     indent:  'Card leads with the LEAF ("20-amp…"), parent as quiet context line. Cold-return reads as a do-able action (Q2).',
-    contain: 'Card leads with the UMBRELLA, leaf in an inset. Cold-return reads as the project area, one more read to reach the action (Q2).',
+    contain: 'Card leads with the PARENT, leaf in an inset. Cold-return reads as the project area, one more read to reach the action (Q2).',
     crumb:   'Leaf + chip. Compact, but the chip adds a vocabulary item to the card. Progress counts every unit (children + parents) — counting rule is an open question, annotated not decided.',
   },
   focus: {
     indent:  'Snap lands on the LEAF card; parent is a context line. Strip: children as small nodes on a shelf under the parent position (Q3).',
-    contain: 'Snap lands on the UMBRELLA card with parts listed inside; active part highlighted. Strip: children enclosed in a pill (Q3). Parent completion = the card’s own checkbox, manual, only plainly available — never demanded (Q9).',
-    crumb:   'Snap lands on the LEAF card with a breadcrumb chip. Strip is flat — structure disappears here, the grammar’s weakest surface (Q3).',
+    contain: 'Snap lands on the PARENT card with parts listed inside; active part highlighted. Strip: children enclosed in a pill (Q3). Parent completion = the card’s own checkbox, manual, only plainly available — never demanded (Q9).',
+    crumb:   'Snap lands on the LEAF card with a breadcrumb chip. Strip is flat — structure disappears here, the layout’s weakest surface (Q3).',
   },
   journey: {
     indent:  'Children as smaller nodes on an indented sub-spine — structure visible at a glance, spine gets busy (Q4).',
@@ -482,7 +482,7 @@ function nextInfo(steps) {
   }
   return null;
 }
-/* flat sequence for crumb grammar: parents are rows too */
+/* flat sequence for crumb layout: parents are rows too */
 function flatSeq(steps) {
   const seq = [];
   for (const s of steps) {
@@ -526,7 +526,7 @@ function stepsSection(g, d) {
     if (g === 'indent') {
       stepsHtml += stepRow(s);
       stepsHtml += `<div class="echildren">${s.children.map(c=>stepRow(c,true)).join('')}
-        <div class="erow child ghost">+ sub-step</div></div>`;
+        <div class="erow child ghost">+ substep</div></div>`;
     } else if (g === 'contain') {
       stepsHtml += `<div class="econtain">
         <div class="chead"><span class="handle">≡</span><span class="t">${esc(s.title)}</span><span class="x">✕</span></div>
@@ -599,9 +599,9 @@ function renderGoals(g, d) {
     if (g === 'contain')
       next = `<div class="next">${esc(ni.parent.title)}</div><div class="inset">${ni.parent.children.length} of ${ni.parent.children.length} parts done</div>`;
     else if (g === 'indent')
-      next = `<div class="next">${esc(ni.parent.title)}</div><div class="ctx">all ${ni.parent.children.length} sub-steps done</div>`;
+      next = `<div class="next">${esc(ni.parent.title)}</div><div class="ctx">all ${ni.parent.children.length} substeps done</div>`;
     else
-      next = `<div class="next">${esc(ni.parent.title)}</div><div class="ctx">all ${ni.parent.children.length} sub-steps done</div>`;
+      next = `<div class="next">${esc(ni.parent.title)}</div><div class="ctx">all ${ni.parent.children.length} substeps done</div>`;
   } else {
     if (g === 'indent')
       next = `<div class="next">${esc(ni.step.title)}</div><div class="ctx">↳ in ${esc(ni.parent.title)}</div>`;
@@ -623,7 +623,7 @@ function renderGoals(g, d) {
         <div class="next">Order soil &amp; compost</div>
         <div class="prow"><div class="pbar"><div class="fill" style="width:25%"></div></div><span class="pnum">1/4</span></div>
       </div>
-      <div style="margin:0 14px; font-size:11px; color:var(--muted);">↑ a flat goal stays first-class — no grammar applied, nothing invites decomposition.</div>
+      <div style="margin:0 14px; font-size:11px; color:var(--muted);">↑ a flat goal stays first-class — no layout applied, nothing invites breaking it up.</div>
     </div>`;
 }
 
@@ -787,14 +787,14 @@ function renderJourney(g, d) {
 const RENDER = { create: renderCreate, edit: renderEdit, goals: renderGoals, focus: renderFocus, journey: renderJourney };
 const params = new URLSearchParams(location.search);
 const state = {
-  view: params.get('view') === 'surface' ? 'surface' : 'grammar',
-  grammar: GRAMMARS.some(x=>x.key===params.get('grammar')) ? params.get('grammar') : 'indent',
+  view: params.get('view') === 'surface' ? 'surface' : 'layout',
+  layout: LAYOUTS.some(x=>x.key===params.get('layout')) ? params.get('layout') : 'indent',
   surface: SURFACES.some(x=>x.key===params.get('surface')) ? params.get('surface') : 'goals',
   data: DATASETS.some(x=>x.key===params.get('data')) ? params.get('data') : 'tomas',
 };
 
 function syncUrl() {
-  const q = new URLSearchParams({ view: state.view, grammar: state.grammar, surface: state.surface, data: state.data });
+  const q = new URLSearchParams({ view: state.view, layout: state.layout, surface: state.surface, data: state.data });
   history.replaceState(null, '', '?' + q.toString());
 }
 
@@ -816,9 +816,9 @@ function phoneCol(g, sKey, d) {
     ? '<span class="pinch">⚑ Q6: "Step 4 — inventory" already wants its own sub-parts — one level pinches here. Record, don’t resolve.</span>' : '';
   return `
     <div class="col">
-      <div class="col-title">${esc(state.view === 'grammar' ? s.name : GRAMMARS.find(x=>x.key===g).name)}</div>
+      <div class="col-title">${esc(state.view === 'layout' ? s.name : LAYOUTS.find(x=>x.key===g).name)}</div>
       <div class="phone"><div class="screen">${RENDER[sKey](g, d)}</div></div>
-      <div class="meta"><span class="qs">${s.qs} · ${GRAMMARS.find(x=>x.key===g).key}</span>${note}${pinch}</div>
+      <div class="meta"><span class="qs">${s.qs} · ${LAYOUTS.find(x=>x.key===g).key}</span>${note}${pinch}</div>
     </div>`;
 }
 
@@ -829,30 +829,30 @@ function render() {
   const lab = document.getElementById('lab');
 
   segButtons(document.getElementById('ctl-view'),
-    [{key:'grammar',name:'All surfaces (one grammar)'},{key:'surface',name:'Compare one surface'}],
+    [{key:'layout',name:'All surfaces (one layout)'},{key:'surface',name:'Compare one surface'}],
     () => state.view, k => state.view = k);
   segButtons(document.getElementById('ctl-data'), DATASETS, () => state.data, k => state.data = k);
   const ctlSurface = document.getElementById('ctl-surface');
   ctlSurface.style.display = state.view === 'surface' ? 'flex' : 'none';
   segButtons(ctlSurface, SURFACES, () => state.surface, k => state.surface = k);
 
-  if (state.view === 'grammar') {
-    const gr = GRAMMARS.find(x => x.key === state.grammar);
+  if (state.view === 'layout') {
+    const gr = LAYOUTS.find(x => x.key === state.layout);
     banner.innerHTML = `<h2>${gr.name}</h2><p>${gr.blurb}</p>`;
-    lab.innerHTML = SURFACES.map(s => phoneCol(state.grammar, s.key, d)).join('');
+    lab.innerHTML = SURFACES.map(s => phoneCol(state.layout, s.key, d)).join('');
     document.getElementById('sw-label').textContent = gr.name;
   } else {
     const s = SURFACES.find(x => x.key === state.surface);
-    banner.innerHTML = `<h2>${s.name}</h2><p>The same surface in all three grammars — a grammar that fails one surface fails (feature shape rule). ${s.qs} live here.</p>`;
-    lab.innerHTML = GRAMMARS.map(g => phoneCol(g.key, state.surface, d)).join('');
+    banner.innerHTML = `<h2>${s.name}</h2><p>The same surface in all three layouts — a layout that fails one surface fails (feature shape rule). ${s.qs} live here.</p>`;
+    lab.innerHTML = LAYOUTS.map(g => phoneCol(g.key, state.surface, d)).join('');
     document.getElementById('sw-label').textContent = s.name;
   }
 }
 
 function cycle(dir) {
-  if (state.view === 'grammar') {
-    const i = GRAMMARS.findIndex(x => x.key === state.grammar);
-    state.grammar = GRAMMARS[(i + dir + GRAMMARS.length) % GRAMMARS.length].key;
+  if (state.view === 'layout') {
+    const i = LAYOUTS.findIndex(x => x.key === state.layout);
+    state.layout = LAYOUTS[(i + dir + LAYOUTS.length) % LAYOUTS.length].key;
   } else {
     const i = SURFACES.findIndex(x => x.key === state.surface);
     state.surface = SURFACES[(i + dir + SURFACES.length) % SURFACES.length].key;

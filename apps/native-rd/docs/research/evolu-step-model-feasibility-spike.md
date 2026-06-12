@@ -44,7 +44,7 @@ affects single-device prototyping.
   (promote to root vs hide with parent). Both are read-time policies, not
   schema problems, and single-device self-testing cannot hit the first one.
 
-## Q2: Can sibling ordering (C-order) survive local-first sync?
+## Q2: Can sibling ordering (C) survive local-first sync?
 
 **Yes — converges, with a cosmetic caveat.**
 
@@ -75,6 +75,6 @@ affects single-device prototyping.
 
 ## Out of scope
 
-B-soft, B-deadlines, recurrence, and Slot persistence were not assessed —
-they are Stage 3 questions, and the plan scopes this spike to the three
-Stage 1 questions above.
+B: Planning (dates, deadlines, repeating) was not assessed — those are
+Stage 3 questions, and the plan scopes this spike to the three Stage 1
+questions above.
