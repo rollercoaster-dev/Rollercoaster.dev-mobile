@@ -26,6 +26,10 @@ if [ -f "${APP_DIR}/.env.local" ]; then
   done < "${APP_DIR}/.env.local"
 fi
 
+# Local dev installs the .dev bundle id (dev.rollercoaster.app.dev via app.config.js)
+# so it coexists with EAS builds on-device. Caller / .env.local can override APP_VARIANT.
+export APP_VARIANT="${APP_VARIANT:-development}"
+
 resolve_node_bin() {
   if [ -n "${NODE:-}" ] && [ -x "${NODE}" ] && [[ "${NODE}" != /private/tmp/bun-node-* ]]; then
     printf '%s\n' "${NODE}"
