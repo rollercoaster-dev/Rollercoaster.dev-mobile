@@ -556,10 +556,8 @@ describe("i18n namespace convention", () => {
     const bundles = {
       [ns]: {
         plural: { count_one: "{{count}} item", count_other: "{{count}} items" },
-        nested: {
-          plural_one: "one",
-          plural_other: "many",
-        },
+        items_one: "{{count}} item",
+        items_other: "{{count}} items",
       } as Record<string, unknown>,
     };
 
@@ -586,8 +584,8 @@ describe("i18n namespace convention", () => {
         classifyMatch(
           {
             ...baseMatch,
-            path: "nested.plural",
-            raw: `"common:nested.plural"`,
+            path: "items",
+            raw: `"common:items"`,
           },
           namespaces,
           bundles,
