@@ -44,10 +44,14 @@ jest.mock("../../../hooks/useAnimationPref", () => ({
   })),
 }));
 
+// retryBake is optional here (production always returns it) so the many
+// non-error lifecycle mocks below don't each have to spell it out — the screen
+// only invokes retryBake from the error-state Button, which those tests don't
+// render. The retry tests provide it explicitly.
 const mockUseCreateBadge = jest.fn<
-  { status: string; error: string | null },
+  { status: string; error: string | null; retryBake?: () => void },
   [string, { enabled?: boolean; design?: unknown }]
->(() => ({ status: "done", error: null }));
+>(() => ({ status: "done", error: null, retryBake: jest.fn() }));
 jest.mock("../../../hooks/useCreateBadge", () => ({
   PLACEHOLDER_IMAGE_URI: "pending:baked-image",
 
@@ -807,6 +811,41 @@ describe("CompletionFlowScreen", () => {
       expect(
         screen.getByLabelText("Badge creation failed: crypto unavailable"),
       ).toBeOnTheScreen();
+    });
+
+    it("shows a retry button when badge creation fails (#39)", () => {
+      mockUseCreateBadge.mockReturnValue({
+        status: "error",
+        error: "crypto unavailable",
+        retryBake: jest.fn(),
+      });
+      setupQueries({ goalEvidence: GOAL_EVIDENCE });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      expect(
+        screen.getByTestId("completion-retry-bake-button"),
+      ).toBeOnTheScreen();
+    });
+
+    it("invokes retryBake when the retry button is pressed (#39)", () => {
+      const retryBake = jest.fn();
+      mockUseCreateBadge.mockReturnValue({
+        status: "error",
+        error: "crypto unavailable",
+        retryBake,
+      });
+      setupQueries({ goalEvidence: GOAL_EVIDENCE });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      fireEvent.press(screen.getByTestId("completion-retry-bake-button"));
+      expect(retryBake).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not show the retry button outside the error state (#39)", () => {
+      mockUseCreateBadge.mockReturnValue({ status: "building", error: null });
+      setupQueries({ goalEvidence: GOAL_EVIDENCE });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      expect(
+        screen.queryByTestId("completion-retry-bake-button"),
+      ).not.toBeOnTheScreen();
     });
 
     it("shows loading indicator during storing phase", () => {
