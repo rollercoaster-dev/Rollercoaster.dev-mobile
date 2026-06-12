@@ -1,7 +1,7 @@
 /**
  * Tests for useCreateBadge hook
  */
-import { renderHook, act } from "@testing-library/react-native";
+import { renderHook, act, waitFor } from "@testing-library/react-native";
 import { useQuery } from "@evolu/react";
 import { useCreateBadge } from "../useCreateBadge";
 import { completeGoal, createBadge, updateBadge, GoalStatus } from "../../db";
@@ -693,6 +693,76 @@ describe("useCreateBadge", () => {
       // bake + store do not fire because the catch was hit first
       expect(messages).not.toContain("bake");
       expect(messages).not.toContain("store");
+    });
+  });
+
+  describe("retryBake (recovery from terminal error)", () => {
+    it("exposes a retryBake function on the result", async () => {
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
+      expect(typeof result.current.retryBake).toBe("function");
+      // Flush the on-mount bake pipeline so its async setState calls settle
+      // inside act rather than after the test body returns.
+      await act(async () => {});
+    });
+
+    it("resets status to idle and clears error after a bake failure", async () => {
+      mockBadges.bakePNG.mockImplementationOnce(() => {
+        throw new Error("corrupt PNG chunk");
+      });
+
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
+      await act(async () => {});
+
+      // Precondition: the pipeline reached the terminal error state.
+      expect(result.current.status).toBe("error");
+      expect(result.current.error).toContain("corrupt PNG chunk");
+
+      act(() => {
+        result.current.retryBake();
+      });
+
+      // The guard is cleared and the user-visible error is gone. With the
+      // default stable query mock the effect does not re-fire, so the hook
+      // rests at idle rather than immediately re-baking — isolating the reset.
+      expect(result.current.status).toBe("idle");
+      expect(result.current.error).toBeNull();
+    });
+
+    it("re-runs the bake pipeline after retry when the host re-renders", async () => {
+      // Mirror Evolu's fresh-ref-per-render behaviour (see hook comments): a new
+      // goal object each render means the guarded effect re-evaluates on every
+      // render, so clearing hasTriggered via retryBake lets the next render
+      // re-enter the pipeline — exactly the production recovery path.
+      mockUseQuery.mockImplementation((query: string) => {
+        if (query === "mock-goals-query") return [{ ...MOCK_GOAL }];
+        if (query === "mock-evidence-query")
+          return [
+            { id: "ev-1", type: "photo", uri: "file://x", goalId: GOAL_ID },
+          ];
+        if (query === "mock-step-evidence-query") return [];
+        if (query === "mock-badge-query") return [];
+        return [];
+      });
+      // First attempt fails at bake; the retry attempt then succeeds.
+      mockBadges.bakePNG.mockImplementationOnce(() => {
+        throw new Error("transient bake failure");
+      });
+
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
+      await act(async () => {});
+
+      expect(result.current.status).toBe("error");
+      expect(mockCreateBadge).not.toHaveBeenCalled();
+
+      act(() => {
+        result.current.retryBake();
+      });
+
+      // The pipeline ran again and completed: the badge was created and the
+      // hook reached done without the user leaving the screen. waitFor wraps the
+      // re-entered pipeline's trailing async setState calls in act as they land.
+      await waitFor(() => expect(result.current.status).toBe("done"));
+      expect(mockCreateBadge).toHaveBeenCalledTimes(1);
     });
   });
 });
