@@ -52,7 +52,29 @@ _(filled in during prep)_
 - `src/components/ErrorBoundary/**` still uses classes, never ported to hooks
   - https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary
   - no hook equivalent for componentDidCatch / getDerivedStateFromError
-- `src/components/Toast/**`
+  - Issues:
+    - #: #265 (https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/265)
+      Finding: Don't render raw error.message to users
+      Labels: accessibility, type:bug
+      Priority: medium
+    - #: #266 (https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/266)
+      Finding: "Try Again" is a no-op for deterministic errors
+      Labels: type:bug
+      Priority: medium
+    - #: #267 (https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/267)
+      Finding: No SR focus/announcement on fallback
+      Labels: accessibility, type:bug
+      Priority: medium
+    - #: #268 (https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/268)
+      Finding: Gate console.error to **DEV**
+      Labels: type:chore
+      Priority: low
+    - #: #269 (https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/269)
+      Finding: Capture componentStack via allowlisted arg
+      Labels: accessibility, enhancement
+      Priority: medium
+- `src/components/Toast/**` found multiple a11y issues https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/264
+- `src/hooks/useFirstLaunch.ts`
 
 ## Mental model
 
