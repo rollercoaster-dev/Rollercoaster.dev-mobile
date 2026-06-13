@@ -15,7 +15,7 @@ The unit being elaborated in Iteration B — currently a title, a user-reorderab
 _Avoid_: task, todo, item, action.
 
 **Substep**:
-A Step nested under a parent Step (not directly under a Goal). Spelled _substep_, no hyphen (formerly "sub-step"). A step with substeps is just a step — there is no special word for the parent. The substeps may be known up front (Sam's Steps 1/2/3 from program literature) or discovered mid-work (Malik realising UV unwrapping is five things). You _break a step into substeps_ or _add substeps_.
+A Step nested under a parent Step (not directly under a Goal). Spelled _substep_, no hyphen (formerly "sub-step"). A step with substeps is just a step — there is no special word for the parent. The substeps may be known up front (Sam's Steps 1/2/3 from program literature) or discovered mid-work (Malik realizing UV unwrapping is five things). You _break a step into substeps_ or _add substeps_.
 _Avoid_: child task, subtask, umbrella (for the parent).
 
 **Substructure**:
@@ -38,7 +38,7 @@ _Avoid_: productivity scaffolding, organisation aid.
 Interrupting internalised shame narratives — _stuck = failing_, _missed = broken_, _mistake = me_. The vocabulary names state without scoring it.
 _Avoid_: motivation, gentle nudge, positive reinforcement.
 
-**Time anchor**:
+**Time anchor** (formerly "Time foothold"):
 Compensating for atemporal time perception. The app creates a Tuesday that wouldn't otherwise exist.
 _Avoid_: scheduling, due date, reminder.
 
