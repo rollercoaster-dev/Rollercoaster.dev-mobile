@@ -32,7 +32,7 @@ This frame is downstream of [product-vision.md §Core Principles](../vision/prod
 
 > **Naming note (2026-06-12,
 > [ADR-0011](../decisions/ADR-0011-step-model-names.md)):** the ten rows
-> below were consolidated into seven things and renamed in the living docs —
+> below were consolidated into seven features and renamed in the living docs —
 > A → **A: Substeps**; B-soft + B-deadlines (+ the recurrence/Slot
 > hypothesis) → **B: Planning**; C-order + C-waiting → **C: Dependencies**;
 > D + F → **the Scratchpad**; E → **E: Step states**; G → **G: Review**;

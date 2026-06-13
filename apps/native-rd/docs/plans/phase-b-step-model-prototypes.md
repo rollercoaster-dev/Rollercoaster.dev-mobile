@@ -4,7 +4,7 @@
 
 This plan translates
 [ADR-0010](../decisions/ADR-0010-phase-b-step-model-crosswalk.md)'s Phase B
-Step-model commitments — renamed and consolidated into seven things by
+Step-model commitments — renamed and consolidated into seven features by
 [ADR-0011](../decisions/ADR-0011-step-model-names.md) — into prototype work.
 
 The goal is not to jump directly from the commitments to schema or production
@@ -16,17 +16,17 @@ UI. The goal is to learn the shape of the features in a controlled order:
 - work toward an integrated Step experience; and
 - produce evidence for later schema, design, and implementation decisions.
 
-## The seven things
+## The seven features
 
-| Thing               | Formerly (ADR-0010)                            |
-| ------------------- | ---------------------------------------------- |
-| **A: Substeps**     | A: Granularity / substructure                  |
+| Feature             | Formerly (ADR-0010)                              |
+| ------------------- | ------------------------------------------------ |
+| **A: Substeps**     | A: Granularity / substructure                    |
 | **B: Planning**     | B-soft + B-deadlines + the recurrence/Slot spike |
-| **C: Dependencies** | C-order + C-waiting                            |
-| **Scratchpad**      | D: Per-step context + F: Mid-work capture      |
-| **E: Step states**  | E: Richer state vocabulary                     |
-| **G: Review**       | G: User-created goal review                    |
-| **H: Learnings**    | H: Misfire as learning                         |
+| **C: Dependencies** | C-order + C-waiting                              |
+| **Scratchpad**      | D: Per-step context + F: Mid-work capture        |
+| **E: Step states**  | E: Richer state vocabulary                       |
+| **G: Review**       | G: User-created goal review                      |
+| **H: Learnings**    | H: Misfire as learning                           |
 
 What each one is lives in [`CONTEXT.md`](../../CONTEXT.md) (the living
 definitions) and ADR-0011 (the re-map and what it decided).
@@ -132,8 +132,8 @@ This is a direction for prototypes, not a production interaction contract.
 
 Filled feature-shape sections live in
 [phase-b-feature-shapes.md](./phase-b-feature-shapes.md), one section per
-thing. They are written just-in-time, not all up front: each stage begins by
-instantiating the template for that stage's things, and a prototype does not
+feature. They are written just-in-time, not all up front: each stage begins by
+instantiating the template for that stage's features, and a prototype does not
 start until its own feature shape exists.
 
 Each feature-shape section should use this template:
@@ -194,7 +194,7 @@ runway, the cut line is explicit rather than improvised:
   remain ADR-0010 commitments, but their prototype work may be deferred to a
   later phase if runway forces it. A deferral is recorded as a decision-gate
   outcome, not left implicit.
-- **Removing one of the seven things from Phase B entirely** still requires a
+- **Removing one of the seven features from Phase B entirely** still requires a
   new ADR superseding ADR-0010. The cut line governs prototype sequencing and
   deferral; it does not quietly shrink the commitment.
 
@@ -342,7 +342,7 @@ Prototype in this stage:
 Why this order:
 
 - H is a combination of things Stages 1-2 built: an E state + a C-style link
-  + journey display.
+  - journey display.
 - G depends on the Scratchpad existing — the review is an edit pass over the
   goal's pad and journey.
 
@@ -412,20 +412,20 @@ that finding is dramatically cheaper during Stage 1 than after it.
 
 ## Integration Matrix
 
-| Features            | Question                                                                                                     |
-| ------------------- | ------------------------------------------------------------------------------------------------------------ |
-| A + C               | Is order and dependency defined among siblings, leaves, parents, or some combination?                        |
-| A + task view       | What counts as the next Step?                                                                                |
-| A + Scratchpad      | When a pad item is dragged out to become a substep, where does it land under a parent?                       |
-| B + E               | How is planning information shown without implying a state change?                                           |
-| B + task view       | What remains visible after a date passes?                                                                    |
-| B + no counts       | Do passed dates stay factual on every surface — no red, no "overdue," no app-icon badge?                     |
-| C + task view       | Does "one next step" route around a step whose external dependency isn't satisfied, or name it and stay put? |
-| C + Scratchpad      | Does dragged-out structure enter the order immediately or later?                                             |
-| E + H               | A learning is an E state plus a follows-from link — does the journey display need anything beyond those two? |
-| G + Scratchpad      | What does the review's edit pass leave behind in the pad — does curating consume the mess or copy it?        |
-| G + H               | How does a learning become available during a later review?                                                  |
-| G + no prompts      | How is the review discoverable without being prompted — doorway plus anytime-entry, nothing else?            |
+| Features       | Question                                                                                                     |
+| -------------- | ------------------------------------------------------------------------------------------------------------ |
+| A + C          | Is order and dependency defined among siblings, leaves, parents, or some combination?                        |
+| A + task view  | What counts as the next Step?                                                                                |
+| A + Scratchpad | When a pad item is dragged out to become a substep, where does it land under a parent?                       |
+| B + E          | How is planning information shown without implying a state change?                                           |
+| B + task view  | What remains visible after a date passes?                                                                    |
+| B + no counts  | Do passed dates stay factual on every surface — no red, no "overdue," no app-icon badge?                     |
+| C + task view  | Does "one next step" route around a step whose external dependency isn't satisfied, or name it and stay put? |
+| C + Scratchpad | Does dragged-out structure enter the order immediately or later?                                             |
+| E + H          | A learning is an E state plus a follows-from link — does the journey display need anything beyond those two? |
+| G + Scratchpad | What does the review's edit pass leave behind in the pad — does curating consume the mess or copy it?        |
+| G + H          | How does a learning become available during a later review?                                                  |
+| G + no prompts | How is the review discoverable without being prompted — doorway plus anytime-entry, nothing else?            |
 
 ## Prototype Record Template
 
@@ -494,23 +494,23 @@ research framing behind each question and ADR-0010/ADR-0011 name them, but
 status, hypotheses, and ownership are updated here only, as prototypes
 produce evidence.
 
-| Question                      | Current Hypothesis                                                                                                                                                                                    | Blocking Prototype            | Owner | Status |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | ----- | ------ |
-| Substep depth                 | Two levels may cover the current scenarios, but arbitrary depth may better match learning structures.                                                                                                 | A + task view prototype       | Joe   | Open   |
-| Goal-card readout under A     | When the first pending step has substeps, the card shows either the parent's title or the next pending leaf's — which reads as "my next step" on a cold return is unknown.                            | A prototype (in flight)       | Joe   | Open   |
-| E word pools                  | Color = state identity and word-from-a-pool are decided; pool contents get authored during prototyping. User-editable pools, and whether `pending`/`completed` keep their UI names, are open.         | E prototype                   | Joe   | Open   |
-| Scratchpad scope              | Probably per-goal rather than global; drag-out targets (substep, evidence, step note) and whether the original stays in the pad are open.                                                             | Scratchpad prototype (Stage 2) | Joe   | Open   |
-| Scratchpad vs evidence        | The pad may absorb the re-entry role that per-step text evidence plays today, or sit beside it; what dragging out to "evidence" or "step note" does to the original is part of the same question.     | Scratchpad prototype (Stage 2) | Joe   | Open   |
-| Dependency display            | "Depends on" (never "blocked by") is the working wording; what a step with a not-yet-satisfied dependency shows is unresolved.                                                                        | C prototype (Stage 2)         | Joe   | Open   |
-| Calendar delegation           | The in-app Slot model is probably unnecessary — one-way calendar push plus user-set reminders may cover all repeating scenarios. Verify, don't assume.                                                | Stage 3 planning prototypes   | Joe   | Open   |
-| H invitation honesty          | The two-question path with a quiet "not now" should invite without gating — whether "not now" gets used honestly only shows up in real use.                                                           | H prototype (Stage 4)         | Joe   | Open   |
-| Task-view implications        | "Next Step" may mean next leaf, next parent, next step without an unsatisfied dependency, or next dated step depending on composition.                                                                | Stage 5 integration prototype | Joe   | Open   |
+| Question                  | Current Hypothesis                                                                                                                                                                                | Blocking Prototype             | Owner | Status |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | ----- | ------ |
+| Substep depth             | Two levels may cover the current scenarios, but arbitrary depth may better match learning structures.                                                                                             | A + task view prototype        | Joe   | Open   |
+| Goal-card readout under A | When the first pending step has substeps, the card shows either the parent's title or the next pending leaf's — which reads as "my next step" on a cold return is unknown.                        | A prototype (in flight)        | Joe   | Open   |
+| E word pools              | Color = state identity and word-from-a-pool are decided; pool contents get authored during prototyping. User-editable pools, and whether `pending`/`completed` keep their UI names, are open.     | E prototype                    | Joe   | Open   |
+| Scratchpad scope          | Probably per-goal rather than global; drag-out targets (substep, evidence, step note) and whether the original stays in the pad are open.                                                         | Scratchpad prototype (Stage 2) | Joe   | Open   |
+| Scratchpad vs evidence    | The pad may absorb the re-entry role that per-step text evidence plays today, or sit beside it; what dragging out to "evidence" or "step note" does to the original is part of the same question. | Scratchpad prototype (Stage 2) | Joe   | Open   |
+| Dependency display        | "Depends on" (never "blocked by") is the working wording; what a step with a not-yet-satisfied dependency shows is unresolved.                                                                    | C prototype (Stage 2)          | Joe   | Open   |
+| Calendar delegation       | The in-app Slot model is probably unnecessary — one-way calendar push plus user-set reminders may cover all repeating scenarios. Verify, don't assume.                                            | Stage 3 planning prototypes    | Joe   | Open   |
+| H invitation honesty      | The two-question path with a quiet "not now" should invite without gating — whether "not now" gets used honestly only shows up in real use.                                                       | H prototype (Stage 4)          | Joe   | Open   |
+| Task-view implications    | "Next Step" may mean next leaf, next parent, next step without an unsatisfied dependency, or next dated step depending on composition.                                                            | Stage 5 integration prototype  | Joe   | Open   |
 
 ## Relationship To ADRs
 
 - **ADR-0010** decides what Phase B commits to and refuses.
 - **ADR-0011** renames and consolidates the ten letter-rows into the seven
-  things, carrying every commitment and guardrail forward.
+  features, carrying every commitment and guardrail forward.
 - **This plan** defines how to learn the feature shape before production work.
 - **Later ADRs** should record durable schema, state, relationship, and
   interaction decisions that emerge from prototype evidence.

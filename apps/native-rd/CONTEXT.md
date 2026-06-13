@@ -28,7 +28,7 @@ _Avoid_: today view, dashboard, home.
 
 ### The three registers
 
-The Step model is asked to do three jobs at once. Each of the seven things is sized against these.
+The Step model is asked to do three jobs at once. Each of the seven features is sized against these.
 
 **Cognitive prosthesis**:
 Compensating for executive function, working memory, and retrieval gaps. The app holds what the user cannot hold in their head.
@@ -42,7 +42,7 @@ _Avoid_: motivation, gentle nudge, positive reinforcement.
 Compensating for atemporal time perception. The app creates a Tuesday that wouldn't otherwise exist.
 _Avoid_: scheduling, due date, reminder.
 
-### The seven things (formerly the A–H taxonomy)
+### The seven features (formerly the A–H taxonomy)
 
 Seven candidate capabilities for the Step. They started as eight letters
 holding ten rows; [ADR-0011](docs/decisions/ADR-0011-step-model-names.md)

@@ -1,6 +1,6 @@
 # Phase B Feature Shapes
 
-Filled feature-shape sections for the seven Step-model things (ADR-0010
+Filled feature-shape sections for the seven Step-model features (ADR-0010
 commitments, renamed and consolidated by
 [ADR-0011](../decisions/ADR-0011-step-model-names.md)), written just-in-time
 per stage as described in
@@ -14,10 +14,10 @@ Scenario, Evidence To Collect, Exit Criteria, Dependencies.
 
 ## Status
 
-| Thing                                                  | Stage   | Status                         |
-| ------------------------------------------------------ | ------- | ------------------------------ |
-| **A: Substeps** (formerly Granularity / substructure)  | Stage 1 | Drafted 2026-06-11 — in review |
-| **E: Step states** (formerly Richer state vocabulary)  | Stage 1 | Not started                    |
+| Feature                                                 | Stage   | Status                         |
+| ------------------------------------------------------- | ------- | ------------------------------ |
+| **A: Substeps** (formerly Granularity / Substructure)   | Stage 1 | Drafted 2026-06-11 — in review |
+| **E: Step states** (formerly Richer state vocabulary)   | Stage 1 | Not started                    |
 | **Scratchpad** (absorbs D + F)                          | Stage 2 | Not started                    |
 | **C: Dependencies** (merges C-order + C-waiting)        | Stage 2 | Not started                    |
 | **B: Planning** (merges B-soft, B-deadlines, repeating) | Stage 3 | Not started                    |
@@ -40,12 +40,18 @@ offloaded cognition ([step-model-gap.md](../research/step-model-gap.md),
 register table). Two scenario shapes need them:
 
 - **Known up front** — Tomás's practice panel has natural per-circuit
-  substeps. Flat steps force a choice between one "Build practice panel" step
+  substeps ([step-model-gap.md § Tomás and the practice panel](../research/step-model-gap.md#tomás-and-the-practice-panel)).
+  Flat steps force a choice between one "Build practice panel" step
   that loses the circuits or three siblings that lose the step they belong
   to. Sam's program step work breaks down predictably from the literature and
-  lands at two levels (goal → "Step work" → Steps 1/2/3).
-- **Discovered mid-work** — Malik's UV-unwrapping-is-five-things moment. The
-  *discovery and capture* of those substeps is the Scratchpad's question
+  lands at two levels (goal → "Step work" → Steps 1/2/3)
+  ([step-model-gap.md § Sam settles into a recovery practice](../research/step-model-gap.md#sam-settles-into-a-recovery-practice)).
+- **Discovered mid-work** — a step looks atomic until you're inside it. Malik
+  writes down one step, "UV unwrapping," and halfway through realizes it is
+  itself five things (seams, projection, packing, checker-test, retopo-fix)
+  he keeps re-learning each session
+  ([step-model-gap.md § Malik discovers UV unwrapping](../research/step-model-gap.md#malik-discovers-uv-unwrapping)).
+  The _discovery and capture_ of those substeps is the Scratchpad's question
   (Stage 2); this prototype only needs somewhere for a substep to exist once
   created.
 
