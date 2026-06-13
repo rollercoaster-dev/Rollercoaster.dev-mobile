@@ -14,7 +14,7 @@ expressions of the same language (feature shape Q1).
 
 ### What Was Built
 
-`prototypes/a-substructure-layouts.html` — a self-contained HTML page at
+`apps/native-rd/prototypes/a-substructure-layouts.html` — a self-contained HTML page at
 phone-viewport size rendering the same goal, broken into substeps, on all five surfaces,
 in the app's light-default token language (mirrored from
 `packages/design-tokens`).
