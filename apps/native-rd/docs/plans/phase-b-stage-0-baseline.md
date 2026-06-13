@@ -1,7 +1,7 @@
 # Phase B Stage 0 Baseline Record
 
 **Date:** 2026-06-09
-**Status:** Seeded from the [docs-anchoring review session](./2026-06-09-step-docs-anchoring-review-handoff.md); covers the Stage 0 "baseline record" deliverable. The other Stage 0 deliverables (evidence format, guardrail checklist, medium choices for Stage 1) are not in this document.
+**Status:** Seeded from the [docs-anchoring review session](./2026-06-09-step-docs-anchoring-review-handoff.md); covers the Stage 0 "baseline record" deliverable. The other Stage 0 deliverables (evidence format, guardrail checklist, medium choices for Stage 1) live in [phase-b-stage-0-deliverables.md](./phase-b-stage-0-deliverables.md).
 **Source of truth:** read directly from code on 2026-06-09. Every claim has a file ref; if a ref drifts, re-verify before relying on it.
 
 This is the record of what the current Step can and cannot hold, against which
@@ -59,20 +59,26 @@ The "one next step per active goal" promise has two living implementations:
 There is no dedicated cross-goal task view screen; the Goals screen list is
 the closest surface.
 
-## Per-letter baseline (ADR-0010 crosswalk)
+## Per-letter baseline (ADR-0010 letters)
+
+> Letter names below are ADR-0010's;
+> [ADR-0011](../decisions/ADR-0011-step-model-names.md) has since
+> consolidated and renamed them (B-soft/B-deadlines → B: Planning,
+> C-order/C-waiting → C: Dependencies, D + F → Scratchpad). The code reading
+> is unchanged; rows keep the letters the code was read against.
 
 | Letter          | Exists today?            | Evidence                                                                                                                                                                                                                                                                                                     |
 | --------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **A**           | No                       | `step` has only `goalId`; no parent-step field, no sub-step concept anywhere in `src/`.                                                                                                                                                                                                                      |
+| **A**           | No                       | `step` has only `goalId`; no parent-step field, no substep concept anywhere in `src/`.                                                                                                                                                                                                                       |
 | **B-soft**      | No                       | No marker/placement fields; the only Step date is `completedAt`.                                                                                                                                                                                                                                             |
 | **B-deadlines** | No                       | No deadline, due-date, or recurrence identifiers anywhere in `src/`.                                                                                                                                                                                                                                         |
 | **C-order**     | Partially — flat form    | User-authored ordering ships today: `ordinal` (`schema.ts:111`), queries order by it (`src/db/queries.ts:75,343`), drag-reorder in edit mode via `reorderSteps` (`src/screens/EditModeScreen/EditModeScreen.tsx:207-216`). Absent: dependency information, sequence-as-syllabus framing.                     |
 | **C-waiting**   | No                       | `StepStatus` is exactly `pending \| completed` (`schema.ts:43-46`); waiting collapses into `pending`.                                                                                                                                                                                                        |
 | **D**           | Only as evidence         | Free-form per-step text exists via `CaptureTextNote` → evidence row, attachable any time. It has evidence semantics: lives in the evidence table, rendered where evidence renders, no re-entry prominence. See the [D-vs-evidence register row](./phase-b-step-model-prototypes.md#open-questions-register). |
 | **E**           | No (persisted); UI hints | DB has two states. The UI layer already derives a third: `in-progress` from current selection (`src/types/steps.ts`), and `TimelineStep` renders `pending` with a `"locked"` badge variant (`src/components/TimelineStep/TimelineStep.tsx:27-36`) — presentation vocabulary to revisit under E.              |
-| **F**           | Only as evidence capture | The six-modality suite is reachable mid-work from focus mode without leaving the goal. Everything captured lands as an evidence record; captured _structure_ (a new sub-step) has nowhere to land. Friction under real mid-work load is unmeasured.                                                          |
+| **F**           | Only as evidence capture | The six-modality suite is reachable mid-work from focus mode without leaving the goal. Everything captured lands as an evidence record; captured _structure_ (a new substep) has nowhere to land. Friction under real mid-work load is unmeasured.                                                           |
 | **G**           | No                       | No review concept; `goal` has no review field, no review surface in `src/screens/`.                                                                                                                                                                                                                          |
-| **H**           | No                       | No misfire/learning/falsification concept; steps soft-delete only (Evolu `isDeleted`).                                                                                                                                                                                                                       |
+| **H**           | No                       | No learning concept (a step that didn’t go to plan has nowhere to persist); steps soft-delete only (Evolu `isDeleted`).                                                                                                                                                                                      |
 
 ## Vocabulary boundary in today's terms
 
@@ -86,7 +92,7 @@ survive only as _semantic and retrieval_ distinctions, not storage ones:
   re-entry (prominence when resuming a step), which the evidence channel does
   not provide.
 - **F capture** — landing place for discovered _structure_; would need the
-  captured thing to become a Step/sub-step, which the evidence channel cannot
+  captured thing to become a Step/substep, which the evidence channel cannot
   do.
 
 So the honest baseline framing is: per-step context exists today **only as
