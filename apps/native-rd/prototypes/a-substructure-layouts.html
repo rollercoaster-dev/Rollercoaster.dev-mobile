@@ -492,7 +492,7 @@ function flatSeq(steps) {
   return seq;
 }
 function doneAll(children) { return children.every(c => c.status === 'completed'); }
-const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
 /* ================= shared partials ================= */
 const subheader = (title, icons) => `

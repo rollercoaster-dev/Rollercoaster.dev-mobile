@@ -305,7 +305,7 @@ function nextInfo(steps) {
 function findStep(id) {
   for (const s of state.goal.steps) {
     if (s.id === id) return s;
-    if (s.children) for (const c of s.children) if (c.id === id) return { ...c, _ref: c }._ref ?? c;
+    if (s.children) for (const c of s.children) if (c.id === id) return c;
   }
   return null;
 }
@@ -317,7 +317,7 @@ function flatSeq(steps) {
   }
   return seq;
 }
-const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const cbx = (on, sm, act) => `<span class="cbx${on?' on':''}${sm?' sm':''}"${act?` data-act="${act}"`:''}>${on?'✓':''}</span>`;
 const statusPill = st =>
   st === 'completed' ? '<span class="pill done">Done</span>' :
