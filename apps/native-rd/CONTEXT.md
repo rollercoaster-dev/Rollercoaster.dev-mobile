@@ -38,7 +38,7 @@ _Avoid_: productivity scaffolding, organisation aid.
 Interrupting internalised shame narratives — _stuck = failing_, _missed = broken_, _mistake = me_. The vocabulary names state without scoring it.
 _Avoid_: motivation, gentle nudge, positive reinforcement.
 
-**Time foothold**:
+**Time anchor**:
 Compensating for atemporal time perception. The app creates a Tuesday that wouldn't otherwise exist.
 _Avoid_: scheduling, due date, reminder.
 
