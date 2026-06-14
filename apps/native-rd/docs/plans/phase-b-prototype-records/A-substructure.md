@@ -103,7 +103,7 @@ structure away where it matters and carries a correctness hazard.
   level holds Sam's Steps 1/2/3 cleanly, but **"Step 4 — inventory" is itself
   a multi-part thing that wants its own sub-structure** — that is where one
   level pinches. Matches the gap doc's prediction. Observed, not resolved;
-  depth stays open for post-Stage-5.
+  depth stays open for post-Stage-6.
 - **Q7 (add-substep in edit):** 1 tap in both indentation (ghost "+ substep"
   row) and containment ("+ part" inside the container) — below the friction
   threshold. Breadcrumb hides it in ⋯ (2 taps). True tap-count-under-load
@@ -168,7 +168,7 @@ graduate to a schema/design decision without the ND-user gate). Concretely:
 2. **Eliminate breadcrumb.** It loses the MiniTimeline strip (Q3), carries a
    silent-reorder hazard in edit, and inflates step numbering (Q4/Q8). It is
    the most uniform layout, but uniform in the wrong direction.
-3. **Depth stays open** (Q6) — graduates only after Stage 5 per the Open
+3. **Depth stays open** (Q6) — graduates only after Stage 6 per the Open
    Questions Register.
 
 ### New Questions
