@@ -24,7 +24,20 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const hideToast = useCallback(() => {
-    setToastState((prev) => (prev ? { ...prev, visible: false } : null));
+    // Only flip `visible: false`; keep `toastState` so the Toast stays in the
+    // tree and can play its slide-out exit animation. `toastState` is released
+    // in `handleExitComplete` once that animation finishes. No-op (same ref) if
+    // already hidden or absent, so redundant calls don't re-render the provider.
+    setToastState((prev) =>
+      prev?.visible ? { ...prev, visible: false } : prev,
+    );
+  }, []);
+
+  const handleExitComplete = useCallback(() => {
+    // Slide-out finished: drop the toast so its message/action closure isn't
+    // retained for the rest of the app's lifetime. Guarded on `!visible` so a
+    // re-show mid-exit (which flips `visible` back to true) isn't torn down.
+    setToastState((prev) => (prev && !prev.visible ? null : prev));
   }, []);
 
   return (
@@ -37,6 +50,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           action={toastState.action}
           duration={toastState.duration}
           onDismiss={hideToast}
+          onExitComplete={handleExitComplete}
         />
       )}
     </ToastContext.Provider>

@@ -27,6 +27,7 @@ Implementation plans and vision documents. Active plans are in progress; complet
 | [2026-06-09-step-docs-anchoring-review-handoff.md](./2026-06-09-step-docs-anchoring-review-handoff.md)                                                                                                    | Handoff: anchor ADR-0010/prototype docs in the app's actual Step implementation   | 2026-06-09    |
 | [phase-b-stage-0-baseline.md](./phase-b-stage-0-baseline.md)                                                                                                                                              | Stage 0 baseline record: what the current Step holds, per ADR-0010 letter         | 2026-06-12    |
 | [phase-b-stage-0-deliverables.md](./phase-b-stage-0-deliverables.md)                                                                                                                                      | Stage 0 close-out: guardrail checklist, evidence format, media, Stage 1 timebox   | 2026-06-12    |
+| [2026-06-14-toast-a11y-dismissal-fixes.md](./2026-06-14-toast-a11y-dismissal-fixes.md) ([#264](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/264))                                 | Toast a11y: iOS announce + exit animation; actionable-toast fixes dropped to #301 | 2026-06-14    |
 
 ## Reference
 
