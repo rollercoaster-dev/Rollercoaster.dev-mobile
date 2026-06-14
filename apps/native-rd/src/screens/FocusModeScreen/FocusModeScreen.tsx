@@ -425,7 +425,7 @@ function FocusContent({ goalId }: { goalId: string }) {
         evidenceId: id,
         error,
       });
-      reportError(error, { area: "focus.mode" });
+      reportError(error, { area: "focus.mode", kind: "evidence-delete" });
       Alert.alert(
         t("focusMode:errors.couldNotDeleteEvidenceTitle"),
         t("focusMode:errors.somethingWrong"),
