@@ -6,7 +6,7 @@
 // untouched, so app.json stays the single source of truth for static config and
 // for release-please's version bump.
 //
-// APP_VARIANT contract:
+// APP_VARIANT contract (Android only):
 //   "development" → dev.rollercoaster.app.dev   (LOCAL `expo run` only — set by the run scripts)
 //   anything else → dev.rollercoaster.app       (ALL EAS builds: development, preview, production)
 //
@@ -14,6 +14,13 @@
 // between a local debug build (versionCode 1) and an EAS build (remote counter).
 // EAS internal-test (preview) builds must keep the base package so they can still
 // be submitted to TestFlight / Play internal — see docs/plans/dev-plans/issue-94-expo-app-variants.md.
+//
+// Why iOS keeps the base bundle id unconditionally: iOS has no downgrade-collision
+// error class (the friction is Android-only), so a `.dev` suffix on iOS buys nothing
+// functional — and it would break the local Maestro E2E suite, which hardcodes
+// `dev.rollercoaster.app` in scripts/run-e2e.sh (UserDefaults seeding) and every
+// e2e/flows/*.yaml `appId`, plus the ASC/TestFlight record. So only `android.package`
+// is suffixed. See decision D3 in the dev plan.
 //
 // The `...config` spread is required: @expo/config tags the incoming static config
 // with a `hasBaseStaticConfig` symbol and warns ("unused static config") if the
@@ -31,5 +38,6 @@ const packageName =
 module.exports = ({ config }) => ({
   ...config,
   android: { ...config.android, package: packageName },
-  ios: { ...config.ios, bundleIdentifier: packageName },
+  // iOS unconditionally keeps the base bundle id — see header note.
+  ios: config.ios,
 });
