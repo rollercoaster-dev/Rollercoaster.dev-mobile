@@ -13,13 +13,17 @@ const mockGoBack = jest.fn();
 const mockNavigate = jest.fn();
 jest.mock("@react-navigation/native", () => {
   const actual = jest.requireActual("../../../__tests__/mocks/navigation");
+  let navigation: ReturnType<typeof actual.useNavigation> | undefined;
   return {
     ...actual,
-    useNavigation: jest.fn(() => ({
-      ...actual.useNavigation(),
-      goBack: mockGoBack,
-      navigate: mockNavigate,
-    })),
+    useNavigation: jest.fn(() => {
+      navigation ??= {
+        ...actual.useNavigation(),
+        goBack: mockGoBack,
+        navigate: mockNavigate,
+      };
+      return navigation;
+    }),
   };
 });
 
@@ -48,6 +52,11 @@ jest.mock("../../../hooks/useAnimationPref", () => ({
     shouldReduceMotion: false,
     setAnimationPref: jest.fn(),
   }),
+}));
+
+const mockUseFlashOnIncrease = jest.fn((_count: number) => ({}));
+jest.mock("../../../hooks/useFlashOnIncrease", () => ({
+  useFlashOnIncrease: (count: number) => mockUseFlashOnIncrease(count),
 }));
 
 const mockCompleteStep = jest.fn();
@@ -244,6 +253,25 @@ describe("FocusModeScreen", () => {
       ),
     ).toBeOnTheScreen();
     expect(screen.getByText("Read docs")).toBeOnTheScreen();
+  });
+
+  it("only re-renders the outgoing and incoming cards during navigation", () => {
+    setupQueries({
+      steps: [
+        { id: "step-1", title: "Read docs", status: "pending", ordinal: 0 },
+        { id: "step-2", title: "Practice", status: "pending", ordinal: 1 },
+        { id: "step-3", title: "Build it", status: "pending", ordinal: 2 },
+      ],
+      stepEvidence: [],
+    });
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+    mockUseFlashOnIncrease.mockClear();
+    fireEvent.press(screen.getByLabelText("Next card"));
+
+    // useFlashOnIncrease runs during each StepCard/GoalEvidenceCard render.
+    // Only the two StepCards whose derived status changed should render.
+    expect(mockUseFlashOnIncrease).toHaveBeenCalledTimes(2);
   });
 
   it("advances the carousel to the next pending step after completing one", () => {
