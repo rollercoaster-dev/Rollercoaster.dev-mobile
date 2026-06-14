@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import Animated from "react-native-reanimated";
 import { useTranslation } from "react-i18next";
@@ -34,9 +34,9 @@ export interface StepCardProps {
   step: StepCardStep;
   stepIndex: number;
   totalSteps: number;
-  onToggleComplete: () => void;
+  onToggleComplete: (stepId: string) => void;
   onEvidenceTap: () => void;
-  onQuickEvidence?: (type: QuickEvidenceType) => void;
+  onQuickEvidence?: (stepId: string, type: QuickEvidenceType) => void;
 }
 
 const statusToVariant: Record<StepCardStatus, StatusBadgeVariant> = {
@@ -69,7 +69,7 @@ function getMissingQuickEvidenceOptions(
   );
 }
 
-export function StepCard({
+function StepCardComponent({
   step,
   stepIndex,
   totalSteps,
@@ -142,7 +142,7 @@ export function StepCard({
               return (
                 <Pressable
                   key={option.type}
-                  onPress={() => onQuickEvidence(option.type)}
+                  onPress={() => onQuickEvidence(step.id, option.type)}
                   style={styles.quickActionButton}
                   testID={`step-card-quick-evidence-${option.type}`}
                   accessible
@@ -182,7 +182,7 @@ export function StepCard({
           <View style={styles.checkboxRow}>
             <Checkbox
               checked={isCompleted}
-              onToggle={onToggleComplete}
+              onToggle={() => onToggleComplete(step.id)}
               label={checkboxLabel}
             />
           </View>
@@ -213,3 +213,42 @@ export function StepCard({
     </Card>
   );
 }
+
+function equalStringArrays(
+  previous: readonly string[] | null | undefined,
+  next: readonly string[] | null | undefined,
+): boolean {
+  const previousValues = previous ?? [];
+  const nextValues = next ?? [];
+  return (
+    previousValues.length === nextValues.length &&
+    previousValues.every((value, index) => value === nextValues[index])
+  );
+}
+
+function areStepCardPropsEqual(
+  previous: StepCardProps,
+  next: StepCardProps,
+): boolean {
+  return (
+    previous.step.id === next.step.id &&
+    previous.step.title === next.step.title &&
+    previous.step.status === next.step.status &&
+    previous.step.evidenceCount === next.step.evidenceCount &&
+    equalStringArrays(
+      previous.step.plannedEvidenceTypes,
+      next.step.plannedEvidenceTypes,
+    ) &&
+    equalStringArrays(
+      previous.step.capturedEvidenceTypes,
+      next.step.capturedEvidenceTypes,
+    ) &&
+    previous.stepIndex === next.stepIndex &&
+    previous.totalSteps === next.totalSteps &&
+    previous.onToggleComplete === next.onToggleComplete &&
+    previous.onEvidenceTap === next.onEvidenceTap &&
+    previous.onQuickEvidence === next.onQuickEvidence
+  );
+}
+
+export const StepCard = memo(StepCardComponent, areStepCardPropsEqual);
