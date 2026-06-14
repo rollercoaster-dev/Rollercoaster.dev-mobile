@@ -5,6 +5,7 @@ import {
   fireEvent,
 } from "../../../__tests__/test-utils";
 import { i18n } from "../../../i18n";
+import { evidenceByStepQuery } from "../../../db";
 import { FocusModeScreen } from "../FocusModeScreen";
 
 // --- Mocks ---
@@ -13,13 +14,17 @@ const mockGoBack = jest.fn();
 const mockNavigate = jest.fn();
 jest.mock("@react-navigation/native", () => {
   const actual = jest.requireActual("../../../__tests__/mocks/navigation");
+  let navigation: ReturnType<typeof actual.useNavigation> | undefined;
   return {
     ...actual,
-    useNavigation: jest.fn(() => ({
-      ...actual.useNavigation(),
-      goBack: mockGoBack,
-      navigate: mockNavigate,
-    })),
+    useNavigation: jest.fn(() => {
+      navigation ??= {
+        ...actual.useNavigation(),
+        goBack: mockGoBack,
+        navigate: mockNavigate,
+      };
+      return navigation;
+    }),
   };
 });
 
@@ -50,6 +55,11 @@ jest.mock("../../../hooks/useAnimationPref", () => ({
   }),
 }));
 
+const mockUseFlashOnIncrease = jest.fn((_count: number) => ({}));
+jest.mock("../../../hooks/useFlashOnIncrease", () => ({
+  useFlashOnIncrease: (count: number) => mockUseFlashOnIncrease(count),
+}));
+
 const mockCompleteStep = jest.fn();
 const mockUncompleteStep = jest.fn();
 const mockDeleteEvidence = jest.fn();
@@ -57,13 +67,23 @@ const mockRestoreEvidence = jest.fn();
 const mockCreateEvidence = jest.fn();
 const mockCanCompleteStep = jest.fn().mockReturnValue(true);
 
+const mockDeleteEvidenceFile = jest.fn((_uri: string, _type: string) => {});
 jest.mock("../../../utils/evidenceCleanup", () => ({
-  deleteEvidenceFile: jest.fn(),
+  deleteEvidenceFile: (uri: string, type: string) =>
+    mockDeleteEvidenceFile(uri, type),
 }));
 
 jest.mock("../../../services/sentry-report", () => ({
   reportError: jest.fn(),
   breadcrumb: jest.fn(),
+}));
+
+const mockViewEvidence = jest.fn();
+jest.mock("../../../utils/evidenceViewers", () => ({
+  useEvidenceViewer: () => ({
+    viewEvidence: mockViewEvidence,
+    viewerModals: null,
+  }),
 }));
 
 jest.mock("../../../db", () => ({
@@ -244,6 +264,35 @@ describe("FocusModeScreen", () => {
       ),
     ).toBeOnTheScreen();
     expect(screen.getByText("Read docs")).toBeOnTheScreen();
+  });
+
+  it("never creates a per-step evidence query while navigating or opening the drawer", () => {
+    setupQueries();
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+    fireEvent.press(screen.getByLabelText("Next card"));
+    fireEvent.press(screen.getByLabelText("Toggle evidence drawer"));
+
+    expect(evidenceByStepQuery).not.toHaveBeenCalled();
+  });
+
+  it("only re-renders the outgoing and incoming cards during navigation", () => {
+    setupQueries({
+      steps: [
+        { id: "step-1", title: "Read docs", status: "pending", ordinal: 0 },
+        { id: "step-2", title: "Practice", status: "pending", ordinal: 1 },
+        { id: "step-3", title: "Build it", status: "pending", ordinal: 2 },
+      ],
+      stepEvidence: [],
+    });
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+    mockUseFlashOnIncrease.mockClear();
+    fireEvent.press(screen.getByLabelText("Next card"));
+
+    // useFlashOnIncrease runs during each StepCard/GoalEvidenceCard render.
+    // Only the two StepCards whose derived status changed should render.
+    expect(mockUseFlashOnIncrease).toHaveBeenCalledTimes(2);
   });
 
   it("advances the carousel to the next pending step after completing one", () => {
@@ -792,6 +841,63 @@ describe("FocusModeScreen", () => {
       screen.getByRole("button", { name: i18n.t("common:actions.delete") }),
     );
     expect(mockDeleteEvidence).toHaveBeenCalledWith("ev-s1");
+  });
+
+  it("uses the current step's goal-wide evidence row for view and delete", () => {
+    jest.useFakeTimers();
+    setupQueries({
+      steps: [
+        { id: "step-1", title: "Read docs", status: "pending", ordinal: 0 },
+        { id: "step-2", title: "Practice", status: "pending", ordinal: 1 },
+      ],
+      stepEvidence: [
+        {
+          id: "ev-s1",
+          type: "text",
+          uri: "content:text;First",
+          description: "First step note",
+          stepId: "step-1",
+        },
+        {
+          id: "ev-s2",
+          type: "photo",
+          uri: "/step-2.jpg",
+          description: "Second step photo",
+          metadata: '{"width":1200}',
+          stepId: "step-2",
+        },
+      ],
+    });
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+    fireEvent.press(screen.getByLabelText("Next card"));
+    fireEvent.press(screen.getByLabelText("Toggle evidence drawer"));
+
+    const evidenceItem = screen.getByLabelText(
+      "photo evidence: Second step photo",
+    );
+    expect(
+      screen.queryByLabelText(/text evidence: First step note/),
+    ).toBeNull();
+
+    fireEvent.press(evidenceItem);
+    expect(mockViewEvidence).toHaveBeenCalledWith({
+      id: "ev-s2",
+      title: "Second step photo",
+      type: "photo",
+      uri: "/step-2.jpg",
+      metadata: '{"width":1200}',
+    });
+
+    fireEvent(evidenceItem, "longPress");
+    fireEvent.press(
+      screen.getByRole("button", { name: i18n.t("common:actions.delete") }),
+    );
+    expect(mockDeleteEvidence).toHaveBeenCalledWith("ev-s2");
+
+    jest.advanceTimersByTime(5000);
+    expect(mockDeleteEvidenceFile).toHaveBeenCalledWith("/step-2.jpg", "photo");
+    jest.useRealTimers();
   });
 
   it("cancels evidence deletion when cancel is pressed", () => {

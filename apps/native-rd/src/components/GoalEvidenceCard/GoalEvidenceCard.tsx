@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { memo, useMemo } from "react";
 import { View, Text, Pressable, PixelRatio } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useTranslation } from "react-i18next";
@@ -33,7 +33,7 @@ export interface GoalEvidenceCardProps {
   onMarkComplete?: () => void;
 }
 
-export function GoalEvidenceCard({
+export const GoalEvidenceCard = memo(function GoalEvidenceCard({
   goalTitle,
   goalDescription,
   goalColor,
@@ -176,4 +176,4 @@ export function GoalEvidenceCard({
       </Card>
     </View>
   );
-}
+});
