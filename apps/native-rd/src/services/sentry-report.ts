@@ -48,7 +48,7 @@ export type ReportContext =
     }
   | {
       area: "focus.mode";
-      kind?: "enter" | "exit" | "step-toggle" | "evidence-restore";
+      kind?: "enter" | "exit" | "step-toggle" | "evidence-delete";
     }
   | { area: "completion.flow" }
   | { area: "audio.record"; kind?: "start" | "stop" | "permission" | "cleanup" }

@@ -18,6 +18,7 @@ import { Card } from "../../components/Card";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { IconButton } from "../../components/IconButton";
 import { HeaderBand } from "../../components/ScreenHeader";
+import { ConfirmDeleteModal } from "../ConfirmDeleteModal";
 import { badgeWithGoalQuery, deleteBadge } from "../../db";
 import type { BadgeId } from "../../db";
 import { PLACEHOLDER_IMAGE_URI } from "../../hooks/useCreateBadge";
@@ -30,6 +31,7 @@ import { parseBadgeDesign } from "../../badges/types";
 import { EVIDENCE_TYPE_ICONS } from "../../constants/evidenceIcons";
 import type { EvidenceTypeValue } from "../../types/evidence";
 import { formatDate } from "../../utils/format";
+import { reportError } from "../../services/sentry-report";
 import { Logger } from "../../shims/rd-logger";
 import type {
   BadgeDetailScreenProps,
@@ -188,6 +190,7 @@ function BadgeDetailContent({
   const badge = rows[0] ?? null;
 
   const [imageLoadFailed, setImageLoadFailed] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [previewHeight, setPreviewHeight] = useState(
     PREVIEW_OVERLAY_INITIAL_HEIGHT,
   );
@@ -222,21 +225,24 @@ function BadgeDetailContent({
   };
 
   const handleDelete = () => {
-    Alert.alert(
-      t("badgeDetail:deleteConfirm.title"),
-      t("badgeDetail:deleteConfirm.message"),
-      [
-        { text: t("badgeDetail:deleteConfirm.cancel"), style: "cancel" },
-        {
-          text: t("badgeDetail:deleteConfirm.delete"),
-          style: "destructive",
-          onPress: () => {
-            deleteBadge(badgeId as BadgeId);
-            navigation.goBack();
-          },
-        },
-      ],
-    );
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = () => {
+    setShowDeleteModal(false);
+    try {
+      deleteBadge(badgeId as BadgeId);
+      navigation.goBack();
+    } catch (error) {
+      // Soft-delete failed at the DB layer; keep the user on the screen and
+      // tell them, rather than dismissing the modal onto an unchanged screen.
+      logger.error("Failed to delete badge", { badgeId, error });
+      reportError(error, { area: "badge.storage", kind: "delete" });
+      Alert.alert(
+        t("badgeDetail:deleteError.title"),
+        t("badgeDetail:deleteError.message"),
+      );
+    }
   };
 
   if (!badge) {
@@ -511,6 +517,16 @@ function BadgeDetailContent({
           )}
         </View>
       </View>
+
+      <ConfirmDeleteModal
+        visible={showDeleteModal}
+        onCancel={() => setShowDeleteModal(false)}
+        onConfirm={handleConfirmDelete}
+        title={t("badgeDetail:deleteConfirm.title")}
+        message={t("badgeDetail:deleteConfirm.message")}
+        confirmLabel={t("badgeDetail:deleteConfirm.delete")}
+        cancelLabel={t("badgeDetail:deleteConfirm.cancel")}
+      />
     </>
   );
 }

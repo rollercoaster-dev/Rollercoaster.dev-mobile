@@ -47,7 +47,6 @@ import {
   completeStep,
   uncompleteStep,
   deleteEvidence,
-  restoreEvidence,
   canCompleteStep,
   isPendingStep,
   findFirstPendingIndex,
@@ -92,7 +91,7 @@ const EVIDENCE_ROUTE_MAP: Partial<
 function FocusContent({ goalId }: { goalId: string }) {
   const { t } = useTranslation(["focusMode", "common"]);
   const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
-  const { showToast, hideToast } = useToast();
+  const { showToast } = useToast();
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
   const stepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
@@ -116,20 +115,10 @@ function FocusContent({ goalId }: { goalId: string }) {
     // genuine pending → complete transition.
     sawIncomplete: false,
   });
-  const pendingFileDeletionRef = useRef<{
-    id: string;
-    uri: string | null;
-    type: string | null;
-    timer: ReturnType<typeof setTimeout>;
-  } | null>(null);
-
   useEffect(() => {
     breadcrumb({ category: "focus", message: "enter" });
     return () => {
       breadcrumb({ category: "focus", message: "exit" });
-      if (pendingFileDeletionRef.current) {
-        clearTimeout(pendingFileDeletionRef.current.timer);
-      }
     };
   }, []);
 
@@ -263,23 +252,6 @@ function FocusContent({ goalId }: { goalId: string }) {
       }),
     );
   }, [goalTitleForAnnouncement, allStepsComplete, stepRowsLength, t]);
-
-  const handleUndoDelete = useCallback(() => {
-    const pending = pendingFileDeletionRef.current;
-    if (!pending) return;
-    clearTimeout(pending.timer);
-    try {
-      restoreEvidence(pending.id as EvidenceId);
-    } catch (error) {
-      console.error("[FocusModeScreen] Failed to restore evidence", {
-        evidenceId: pending.id,
-        error,
-      });
-      reportError(error, { area: "focus.mode", kind: "evidence-restore" });
-    }
-    pendingFileDeletionRef.current = null;
-    hideToast();
-  }, [hideToast]);
 
   // --- Event Handlers ---
 
@@ -447,27 +419,14 @@ function FocusContent({ goalId }: { goalId: string }) {
     try {
       deleteEvidence(id as EvidenceId);
 
-      // Delay file deletion — allow undo via toast
-      const timer = setTimeout(() => {
-        if (row?.uri && row.type) {
-          deleteEvidenceFile(row.uri, row.type);
-        }
-        pendingFileDeletionRef.current = null;
-      }, 5000);
-
-      pendingFileDeletionRef.current = {
-        id,
-        uri: row?.uri ?? null,
-        type: row?.type ?? null,
-        timer,
-      };
+      // Soft-delete is committed on confirm; clean up the backing file
+      // immediately. There is no undo, so there is nothing to defer.
+      if (row?.uri && row.type) {
+        deleteEvidenceFile(row.uri, row.type);
+      }
 
       showToast({
         message: t("focusMode:toast.evidenceDeleted"),
-        action: {
-          label: t("common:actions.undo"),
-          onPress: handleUndoDelete,
-        },
         duration: 5000,
       });
     } catch (error) {
@@ -475,7 +434,7 @@ function FocusContent({ goalId }: { goalId: string }) {
         evidenceId: id,
         error,
       });
-      reportError(error, { area: "focus.mode" });
+      reportError(error, { area: "focus.mode", kind: "evidence-delete" });
       Alert.alert(
         t("focusMode:errors.couldNotDeleteEvidenceTitle"),
         t("focusMode:errors.somethingWrong"),
@@ -484,7 +443,6 @@ function FocusContent({ goalId }: { goalId: string }) {
   }, [
     currentStepEvidenceRows,
     goalEvidenceRows,
-    handleUndoDelete,
     pendingDeleteId,
     showToast,
     t,
