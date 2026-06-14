@@ -1,5 +1,23 @@
 # native-rd
 
+## [0.1.15](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/compare/v0.1.14...v0.1.15) (2026-06-14)
+
+
+### Features
+
+* **native-rd:** local builds use a .dev package to end INSTALL_FAILED_VERSION_DOWNGRADE (closes [#94](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/94)) ([#296](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/296)) ([e51a550](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/e51a5502b0c7e7e4156b41b69480f88f8af9433d))
+* **native-rd:** prefer explicit confirm-delete over transient undo ([#301](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/301)) ([#309](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/309)) ([1103e42](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/1103e42c27fa63be9563d57129c7177e74211575))
+* **native-rd:** retry affordance for failed badge-bake pipeline ([#39](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/39)) ([#295](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/295)) ([dffe790](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/dffe790be64b974269964f50b9ffe36286c733fa))
+
+
+### Bug Fixes
+
+* **native-rd/Toast:** iOS announce + exit animation ([#264](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/264)) ([#299](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/299)) ([7680320](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/7680320e359405dac1e16a2b1a6f54d8cafc4966))
+* **native-rd:** close NATIVE-RD-9 SIGABRT (post-PR-271) via C++ guard + JS in-flight guard ([#279](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/279)) ([eb700c4](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/eb700c455da405d8bec26cf8a184a2828b5d36dd))
+* **native-rd:** make Goals screen scroll when content overflows ([#304](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/304)) ([eceeaf5](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/eceeaf5bd4d69f66b61fa6370044c3f93de5e36a))
+* **native-rd:** smooth focus step navigation ([#306](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/306)) ([dfd262d](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/dfd262d354453158360eb016185279e757889e60))
+* **useDensity:** validate DB density value, route to Sentry (closes [#126](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/126)) ([#280](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/280)) ([8922705](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/89227050043f35954a9c71826b23ebb69a461aa7))
+
 ## [0.1.14](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/compare/v0.1.13...v0.1.14) (2026-06-07)
 
 
