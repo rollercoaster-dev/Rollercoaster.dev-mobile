@@ -24,6 +24,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const hideToast = useCallback(() => {
+    // Only flip `visible: false`; keep `toastState` so the Toast stays in the
+    // tree and can play its slide-out exit animation, then stop rendering once
+    // the animation finishes. The component instance isn't unmounted here — it
+    // just paints nothing while `toastState` lingers.
     setToastState((prev) => (prev ? { ...prev, visible: false } : null));
   }, []);
 

@@ -1,9 +1,10 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Pressable } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
+  runOnJS,
 } from "react-native-reanimated";
 import { useAnimationPref } from "../../hooks/useAnimationPref";
 import { Text } from "../Text";
@@ -34,12 +35,16 @@ export function Toast({
   const { shouldAnimate } = useAnimationPref();
   const translateY = useSharedValue(SLIDE_DISTANCE);
   const opacity = useSharedValue(0);
+  // `mounted` lags `visible`: it stays true through the slide-out so the exit
+  // animation can play, then flips false only once the animation completes.
+  const [mounted, setMounted] = useState(visible);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onDismissRef = useRef(onDismiss);
   onDismissRef.current = onDismiss;
 
   useEffect(() => {
     if (visible) {
+      setMounted(true);
       const dur = shouldAnimate ? 250 : 0;
       translateY.value = withTiming(0, { duration: dur });
       opacity.value = withTiming(1, { duration: dur });
@@ -49,7 +54,17 @@ export function Toast({
       }, duration);
     } else {
       const dur = shouldAnimate ? 150 : 0;
-      translateY.value = withTiming(SLIDE_DISTANCE, { duration: dur });
+      // Unmount only after the slide-out finishes, so the exit plays instead of
+      // the view vanishing the instant `visible` flips false. An interrupted
+      // exit reports finished === false, so the stale callback won't tear down a
+      // toast that's becoming visible again.
+      translateY.value = withTiming(
+        SLIDE_DISTANCE,
+        { duration: dur },
+        (finished) => {
+          if (finished) runOnJS(setMounted)(false);
+        },
+      );
       opacity.value = withTiming(0, { duration: dur });
     }
 
@@ -63,7 +78,11 @@ export function Toast({
     opacity: opacity.value,
   }));
 
-  if (!visible) return null;
+  // Render while visible, and keep rendering while `mounted` lingers after
+  // `visible` flips false so the slide-out can play. Gating on `mounted` alone
+  // would drop a frame on re-show: `visible` is already true but `mounted`
+  // hasn't caught up, so the view would be absent for one paint.
+  if (!visible && !mounted) return null;
 
   return (
     <Animated.View
