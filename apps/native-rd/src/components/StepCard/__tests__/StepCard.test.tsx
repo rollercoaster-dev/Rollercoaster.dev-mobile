@@ -98,7 +98,7 @@ describe("StepCard", () => {
       />,
     );
     fireEvent.press(screen.getByRole("checkbox"));
-    expect(onToggleComplete).toHaveBeenCalledTimes(1);
+    expect(onToggleComplete).toHaveBeenCalledWith("step-1");
   });
 
   it("calls onEvidenceTap when evidence badge is pressed", () => {
@@ -299,7 +299,7 @@ describe("StepCard", () => {
       />,
     );
     fireEvent.press(screen.getByLabelText("Add File evidence"));
-    expect(onQuickEvidence).toHaveBeenCalledWith("file");
+    expect(onQuickEvidence).toHaveBeenCalledWith("step-1", "file");
   });
 
   it("calls onQuickEvidence with 'text' when the Note quick action is pressed", () => {
@@ -315,7 +315,7 @@ describe("StepCard", () => {
       />,
     );
     fireEvent.press(screen.getByLabelText("Add Note evidence"));
-    expect(onQuickEvidence).toHaveBeenCalledWith("text");
+    expect(onQuickEvidence).toHaveBeenCalledWith("step-1", "text");
   });
 
   it("hides quick evidence actions when onQuickEvidence callback is not provided", () => {

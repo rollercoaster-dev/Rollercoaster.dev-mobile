@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROTOTYPE — A: Substeps — clickable flow</title>
+<!--
+  PROTOTYPE — throwaway. Phase B Stage 1, A: Substeps.
+  Approach 2 of 2 — compare against a-substructure-layouts.html (static gallery).
+
+  The gallery answers "which layout READS best per surface" (spatial, parallel).
+  This one answers "which layout WORKS through a session" (temporal, sequential):
+  one clickable phone, in-memory state, driving Tomás's scenario end to end —
+  author the substeps (real tap counts, Q5/Q7), work the next leaf (Q2/Q3),
+  cold-return via the "next day" button, complete the last circuit and live the
+  Q9 parent-invite moment, then read the journey (Q4).
+
+  Adds Option 4 — drill-in (parent opens its own focused sub-list; structure as
+  NAVIGATION rather than layout) — the layout the static gallery couldn't show.
+
+  Open directly:  open apps/native-rd/prototypes/a-substructure-flow.html
+  Feature shape:  docs/plans/phase-b-feature-shapes.md §A
+  Record:         docs/plans/phase-b-prototype-records/A-substructure.md
+  Tokens mirrored from packages/design-tokens light-default (same as approach 1).
+  No persistence — refresh resets everything.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wght@600;700;800;900&family=Instrument+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fafafa; --card: #ffffff; --bg2: #f0f0f0; --input: #f5f5f5;
+    --text: #262626; --muted: #737373; --disabled: #a3a3a3;
+    --border: #0a0a0a; --border-subtle: #d4d4d4;
+    --primary: #3b82f6; --primary-dark: #2563eb;
+    --purple: #a78bfa; --purple-light: #ede9fe;
+    --yellow: #ffe50c; --mint: #d4f4e7; --success: #059669; --error: #dc2626;
+    --shadow-sm: 2px 2px 0 rgba(0,0,0,0.8);
+    --shadow-md: 3px 3px 0 rgba(0,0,0,0.8);
+    --shadow-lg: 4px 4px 0 rgba(0,0,0,0.8);
+    --headline: 'Anybody', system-ui, sans-serif;
+    --body: 'Instrument Sans', system-ui, sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { background: #e8e4da; font-family: var(--body); color: var(--text); padding: 26px 20px 60px; }
+
+  .page-header { max-width: 1180px; margin: 0 auto 16px; }
+  .page-header h1 { font-family: var(--headline); font-weight: 900; font-size: 24px; letter-spacing: -0.02em; margin: 0 0 6px; }
+  .page-header p { margin: 0 0 4px; font-size: 13.5px; color: #4a4a4a; max-width: 900px; }
+  .proto-tag { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; background: var(--error); color: #fff; border: 2px solid var(--border); padding: 2px 8px; margin-bottom: 8px; }
+
+  .layout { max-width: 1180px; margin: 0 auto; display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap; }
+  .side { flex: 1 1 380px; min-width: 360px; display: flex; flex-direction: column; gap: 16px; }
+
+  .panel { background: var(--card); border: 2px solid var(--border); box-shadow: var(--shadow-sm); padding: 12px 14px; }
+  .panel h3 { font-family: var(--headline); font-size: 14px; margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .panel p { margin: 0 0 6px; font-size: 12.5px; line-height: 1.5; color: #333; }
+
+  .seg { font-family: var(--body); font-size: 12.5px; font-weight: 600; cursor: pointer; background: var(--card); color: var(--text); border: 2px solid var(--border); padding: 5px 10px; box-shadow: var(--shadow-sm); margin: 0 6px 6px 0; }
+  .seg.on { background: var(--yellow); }
+  .seg.warn { background: var(--mint); }
+  .seg:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 rgba(0,0,0,0.8); }
+
+  .counter { display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap; }
+  .counter .big { font-family: var(--mono); font-size: 26px; font-weight: 700; }
+  .counter .sub { font-size: 11px; color: var(--muted); }
+
+  .mlist { list-style: none; margin: 0; padding: 0; }
+  .mlist li { display: flex; gap: 8px; align-items: baseline; font-size: 12.5px; padding: 3px 0; border-bottom: 1px solid var(--border-subtle); }
+  .mlist li:last-child { border-bottom: none; }
+  .mlist .mk { font-family: var(--mono); width: 18px; flex: 0 0 auto; }
+  .mlist li.done { color: var(--success); font-weight: 600; }
+  .mlist .taps { margin-left: auto; font-family: var(--mono); font-size: 10.5px; color: var(--muted); flex: 0 0 auto; }
+
+  .statebox { font-family: var(--mono); font-size: 11px; line-height: 1.55; white-space: pre-wrap; background: var(--bg2); border: 1.5px solid var(--border); padding: 8px 10px; }
+
+  /* ============ phone ============ */
+  .phone { width: 370px; height: 720px; background: var(--bg); border: 2.5px solid var(--border); box-shadow: var(--shadow-lg); border-radius: 26px; overflow: hidden; display: flex; flex-direction: column; flex: 0 0 auto; }
+  .screen { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+  [data-act] { cursor: pointer; user-select: none; }
+
+  .sub { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 2.5px solid var(--border); background: var(--card); position: sticky; top: 0; z-index: 5; }
+  .sub .back, .sub .icon-btn { width: 30px; height: 30px; border: 2px solid var(--border); background: var(--card); font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-sm); flex: 0 0 auto; border-radius: 4px; }
+  .sub .title { font-family: var(--headline); font-weight: 800; font-size: 16px; flex: 1; line-height: 1.2; }
+  .sub .center-label { flex: 1; text-align: center; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+  .sub .spacer { width: 30px; flex: 0 0 auto; }
+
+  .pill { display: inline-block; border: 1.5px solid var(--border); border-radius: 999px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 8px; box-shadow: 1.5px 1.5px 0 rgba(0,0,0,0.8); white-space: nowrap; }
+  .pill.active { background: var(--yellow); }
+  .pill.done { background: var(--mint); }
+  .pill.pending { background: var(--bg2); color: var(--muted); }
+  .crumb { display: inline-flex; align-items: center; gap: 4px; border: 1.5px solid var(--border); background: var(--purple-light); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 7px; border-radius: 3px; }
+  .pbar { height: 8px; border: 1.5px solid var(--border); border-radius: 999px; background: var(--input); overflow: hidden; flex: 1; }
+  .pbar .fill { height: 100%; background: var(--primary); }
+  .pnum { font-family: var(--mono); font-size: 11px; }
+  .cbx { width: 22px; height: 22px; border: 2.5px solid var(--border); border-radius: 4px; background: var(--card); display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; flex: 0 0 auto; box-shadow: 1.5px 1.5px 0 rgba(0,0,0,0.8); }
+  .cbx.on { background: var(--primary); color: #fff; }
+  .cbx.sm { width: 17px; height: 17px; font-size: 10px; border-width: 2px; }
+  .btn { font-family: var(--body); font-weight: 700; font-size: 14px; text-align: center; border: 2.5px solid var(--border); box-shadow: var(--shadow-md); padding: 11px 14px; background: var(--primary); color: #fff; border-radius: 4px; }
+  .btn.secondary { background: var(--card); color: var(--text); }
+  .btn.sm { font-size: 12px; padding: 6px 10px; box-shadow: var(--shadow-sm); }
+  .btn.disabled { opacity: 0.4; pointer-events: none; }
+  .evb { display: inline-block; background: var(--purple-light); border: 1.5px solid var(--border); border-radius: 999px; font-family: var(--mono); font-size: 10px; padding: 1px 7px; }
+
+  .form-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin: 0 0 5px; }
+  .tinput { background: var(--input); border: 2px solid var(--border); border-radius: 4px; padding: 10px 12px; font-family: var(--headline); font-weight: 900; font-size: 19px; min-height: 46px; }
+  .tinput.empty { color: var(--disabled); font-weight: 400; font-family: var(--body); font-size: 14px; }
+  .steps-head { display: flex; align-items: center; gap: 8px; margin: 4px 0 8px; }
+  .steps-head .h { font-family: var(--headline); font-weight: 800; font-size: 15px; }
+  .count-badge { font-family: var(--mono); font-size: 10.5px; border: 1.5px solid var(--border); background: var(--card); padding: 1px 7px; border-radius: 999px; }
+
+  .erow { display: flex; align-items: center; gap: 9px; background: var(--card); border: 2px solid var(--border); border-radius: 4px; padding: 9px 11px; box-shadow: var(--shadow-sm); margin-bottom: 8px; min-height: 44px; }
+  .erow .handle { color: var(--disabled); font-size: 14px; flex: 0 0 auto; }
+  .erow .t { flex: 1; font-size: 14px; font-weight: 500; line-height: 1.3; }
+  .erow .x { width: 22px; height: 22px; border: 1.5px solid var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 11px; flex: 0 0 auto; background: var(--card); }
+  .erow .dots { font-weight: 900; color: var(--muted); letter-spacing: 1px; flex: 0 0 auto; padding: 0 4px; }
+  .erow .chev { font-weight: 900; flex: 0 0 auto; padding: 0 4px; }
+  .erow.ghost { border-style: dashed; box-shadow: none; color: var(--muted); background: transparent; font-size: 13px; }
+  .erow.child { min-height: 40px; padding: 7px 10px; }
+  .erow.child .t { font-size: 13px; }
+  .chip-add { font-size: 10px; font-weight: 700; border: 1.5px dashed var(--muted); color: var(--muted); padding: 2px 6px; border-radius: 3px; flex: 0 0 auto; }
+  .chip-info { font-size: 10px; font-weight: 700; border: 1.5px solid var(--border); background: var(--bg2); padding: 2px 6px; border-radius: 3px; flex: 0 0 auto; }
+  .echildren { border-left: 3px solid var(--border); margin: -2px 0 8px 13px; padding-left: 12px; }
+  .econtain { border: 2.5px solid var(--border); border-radius: 6px; background: var(--bg2); box-shadow: var(--shadow-md); padding: 9px 10px 4px; margin-bottom: 10px; }
+  .econtain .chead { display: flex; align-items: center; gap: 9px; padding: 2px 2px 8px; }
+  .econtain .chead .t { flex: 1; font-size: 14px; font-weight: 700; }
+  .addrow { display: flex; gap: 8px; margin-top: 4px; }
+  .addrow .ainput { flex: 1; background: var(--input); border: 2px solid var(--border); border-radius: 4px; padding: 9px 11px; font-size: 13px; color: var(--disabled); }
+  .addrow .plus { width: 42px; border: 2px solid var(--border); background: var(--yellow); font-size: 18px; font-weight: 900; display: flex; align-items: center; justify-content: center; border-radius: 4px; box-shadow: var(--shadow-sm); }
+  .addrow.disabled { opacity: 0.4; pointer-events: none; }
+  .minimenu { border: 2px solid var(--border); background: var(--card); box-shadow: var(--shadow-md); border-radius: 4px; margin: -4px 0 8px 28px; font-size: 12.5px; font-weight: 600; }
+  .minimenu div { padding: 8px 12px; border-bottom: 1.5px solid var(--border-subtle); }
+  .minimenu div:last-child { border-bottom: none; }
+
+  .gcard { background: var(--card); border: 2.5px solid var(--border); border-radius: 4px; box-shadow: var(--shadow-md); padding: 14px; margin: 0 14px 14px; }
+  .gcard .head { display: flex; align-items: flex-start; gap: 10px; }
+  .gcard .gtitle { font-family: var(--headline); font-weight: 700; font-size: 17px; flex: 1; line-height: 1.25; }
+  .gcard .next { font-family: var(--headline); font-weight: 800; font-size: 19px; line-height: 1.25; margin-top: 10px; }
+  .gcard .ctx { font-size: 11.5px; color: var(--muted); font-weight: 600; margin-top: 9px; }
+  .gcard .inset { border: 1.5px solid var(--border); background: var(--bg2); border-radius: 4px; padding: 7px 10px; margin-top: 9px; font-size: 13px; font-weight: 600; }
+  .gcard .prow { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+  .fab { position: sticky; bottom: 14px; align-self: flex-end; margin: auto 14px 0 0; width: 52px; height: 52px; border-radius: 50%; background: var(--yellow); border: 2.5px solid var(--border); box-shadow: var(--shadow-md); font-size: 24px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+
+  .mtl { border: 1.5px solid var(--border); background: var(--card); border-radius: 6px; box-shadow: var(--shadow-sm); margin: 12px 14px 0; padding: 9px 13px 5px; }
+  .mtl-track { display: flex; align-items: center; min-height: 30px; }
+  .node { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--disabled); background: var(--card); flex: 0 0 auto; position: relative; }
+  .node.done { background: var(--primary); border-color: var(--primary); }
+  .node.cur { width: 19px; height: 19px; border-width: 3px; border-color: var(--border); }
+  .node.goal { border: 3px solid var(--yellow); background: var(--yellow); width: 15px; height: 15px; }
+  .node.child { width: 9px; height: 9px; }
+  .node.child.cur { width: 14px; height: 14px; }
+  .node.crumbchild { border-color: var(--purple); }
+  .node.crumbchild.done { background: var(--purple); }
+  .node .nbadge { position: absolute; top: -9px; right: -7px; font-family: var(--mono); font-size: 8.5px; background: var(--bg2); border: 1px solid var(--border); border-radius: 999px; padding: 0 3px; line-height: 1.3; }
+  .seg-line { flex: 1; min-width: 7px; border-top: 3px solid var(--primary); }
+  .seg-line.pend { border-top: 3px dashed var(--disabled); }
+  .seg-line.short { flex: 0 0 7px; }
+  .grp-indent { display: flex; align-items: center; padding: 0 3px 5px; border-bottom: 2.5px solid var(--border); }
+  .grp-contain { display: flex; align-items: center; border: 1.5px solid var(--border); border-radius: 999px; background: var(--bg2); padding: 4px 7px; }
+  .mtl .hint { text-align: center; font-size: 9.5px; color: var(--muted); padding: 3px 0 2px; }
+
+  .scard { background: var(--card); border: 2.5px solid var(--border); border-radius: 6px; box-shadow: var(--shadow-lg); margin: 14px; padding: 15px; }
+  .scard .meta-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .scard .stepnum { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+  .scard .stitle { font-family: var(--headline); font-weight: 900; font-size: 22px; line-height: 1.15; margin: 10px 0 0; }
+  .scard .ctx-line { font-size: 11.5px; font-weight: 600; color: var(--muted); margin-top: 9px; }
+  .qa-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 13px; }
+  .qa { display: inline-flex; align-items: center; gap: 6px; border: 2px solid var(--border); background: var(--bg2); border-radius: 4px; box-shadow: var(--shadow-sm); font-size: 12px; font-weight: 600; padding: 8px 11px; min-height: 40px; }
+  .cbx-row { display: flex; align-items: center; gap: 10px; margin-top: 14px; font-size: 13.5px; font-weight: 600; }
+  .childlist { border: 2px solid var(--border); border-radius: 5px; background: var(--bg2); margin-top: 12px; overflow: hidden; }
+  .childlist .crow { display: flex; align-items: center; gap: 9px; padding: 9px 11px; border-bottom: 1.5px solid var(--border-subtle); font-size: 13px; font-weight: 500; background: var(--card); }
+  .childlist .crow:last-child { border-bottom: none; }
+  .childlist .crow.cur { background: var(--yellow); font-weight: 700; }
+  .childlist .crow .t { flex: 1; }
+  .drawer { margin-top: auto; border-top: 2.5px solid var(--border); background: var(--card); padding: 11px 16px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 700; position: sticky; bottom: 0; }
+
+  .jhead { padding: 13px 16px 11px; border-bottom: 2px solid var(--border); background: var(--card); }
+  .jhead .row1 { display: flex; align-items: center; gap: 10px; }
+  .jhead .gt { font-family: var(--headline); font-weight: 800; font-size: 18px; flex: 1; line-height: 1.2; }
+  .jhead .prow { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+  .jtl { position: relative; padding: 18px 14px 22px; }
+  .jtl::before { content: ''; position: absolute; left: 31px; top: 24px; bottom: 30px; width: 3px; background: var(--border-subtle); }
+  .jrow { position: relative; display: flex; gap: 11px; margin-bottom: 13px; align-items: flex-start; }
+  .jnode { width: 34px; height: 34px; border-radius: 50%; border: 2.5px solid var(--border); background: var(--card); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-weight: 700; font-size: 13px; flex: 0 0 auto; box-shadow: var(--shadow-sm); z-index: 1; }
+  .jnode.done { background: var(--primary-dark); border-color: var(--primary-dark); color: #fff; }
+  .jnode.cur { border: 3.5px solid var(--primary-dark); color: var(--primary-dark); }
+  .jnode.pend { border-color: var(--disabled); color: var(--muted); }
+  .jnode.goal { width: 40px; height: 40px; background: var(--yellow); border-color: var(--border); font-size: 17px; margin-left: -3px; }
+  .jnode.sm { width: 24px; height: 24px; font-size: 10px; border-width: 2px; }
+  .jcard { flex: 1; background: var(--card); border: 2px solid var(--border); border-radius: 4px; box-shadow: var(--shadow-sm); padding: 9px 11px; display: flex; align-items: center; gap: 8px; min-height: 44px; }
+  .jcard .t { flex: 1; font-size: 13px; font-weight: 700; line-height: 1.25; }
+  .jcard .chev { color: var(--muted); font-size: 10px; flex: 0 0 auto; }
+  .jcard.slim { min-height: 38px; padding: 7px 10px; }
+  .jcard.slim .t { font-size: 12.5px; font-weight: 600; }
+  .jchildren-indent { position: relative; margin-left: 46px; padding-left: 16px; }
+  .jchildren-indent::before { content: ''; position: absolute; left: 0; top: 0; bottom: 14px; width: 2.5px; background: var(--border); }
+  .jchildren-indent .jrow { margin-bottom: 9px; }
+  .jcontain-inner { margin-top: 8px; border-top: 1.5px solid var(--border-subtle); padding-top: 8px; display: flex; flex-direction: column; gap: 7px; }
+  .jcontain-inner .crow { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600; }
+  .jcontain-inner .crow .t { flex: 1; }
+  .jcard.parent-card { flex-direction: column; align-items: stretch; }
+  .jcard.parent-card .phead { display: flex; align-items: center; gap: 8px; }
+  .jcard.parent-card .phead .t { flex: 1; font-size: 13px; font-weight: 700; }
+
+  .crumbbar { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--purple-light); border-bottom: 2px solid var(--border); font-size: 11.5px; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <span class="proto-tag">Prototype — throwaway · approach 2 of 2</span>
+  <h1>A: Substeps — clickable flow (compare with the static gallery)</h1>
+  <p>The gallery (<code>a-substructure-layouts.html</code>) compares how layouts <em>read</em>; this one tests how a layout <em>works through a session</em>: break Tomás's panel into substeps, work the next leaf, come back cold, finish the circuits, and live the parent-invite moment. Adds <strong>Option 4 — drill-in</strong> (structure as navigation), which a static page can't express. Everything is in-memory; refresh resets.</p>
+</div>
+
+<div class="layout">
+  <div class="phone"><div class="screen" id="screen"></div></div>
+
+  <div class="side">
+    <div class="panel">
+      <h3>Layout</h3>
+      <div id="layout-segs"></div>
+      <p id="layout-blurb"></p>
+      <div style="margin-top:8px">
+        <button class="seg warn" data-ctl="nextday">☀ Next day (cold return)</button>
+        <button class="seg" data-ctl="reset">↺ Reset flow</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Session script <span style="font-weight:400;text-transform:none;font-size:11px;color:var(--muted)">— milestones auto-check; taps recorded at each</span></h3>
+      <div class="counter" style="margin-bottom:8px">
+        <span class="big" id="tapcount">0</span><span class="sub">effective taps inside the phone (typing is simulated — tapping an empty input fills the scripted text)</span>
+      </div>
+      <ul class="mlist" id="milestones"></ul>
+    </div>
+
+    <div class="panel">
+      <h3>State <span style="font-weight:400;text-transform:none;font-size:11px;color:var(--muted)">— surfaced after every action</span></h3>
+      <div class="statebox" id="statebox"></div>
+    </div>
+
+    <div class="panel">
+      <h3>Guardrails honored</h3>
+      <p>Parent completion is always its own manual act — completing the last child changes nothing by itself. Nothing is blocked or hidden by incomplete siblings. The flat second goal stays first-class. Every layout still resolves to one next thing per goal. Sam's depth pinch is out of scope here (gallery's Sam dataset covers Q6).</p>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= layouts ================= */
+const LAYOUTS = [
+  { key: 'indent',  name: 'Option 1 — Indentation', blurb: 'Children are indented rows under a left rail. Add substep: 1 tap on the row chip. Reading leads with the leaf.' },
+  { key: 'contain', name: 'Option 2 — Containment', blurb: 'A parent is a container card holding its parts. First "split" a step (1 tap), then add parts inside. Reading leads with the parent.' },
+  { key: 'crumb',   name: 'Option 3 — Breadcrumb', blurb: 'Lists stay flat; hierarchy is a parent chip on each child. Add substep hides in the ⋯ menu (2 taps).' },
+  { key: 'drill',   name: 'Option 4 — Drill-in', blurb: 'Structure is NAVIGATION: a parent opens its own focused sub-list. Children are invisible until you enter. Only this interactive medium can show it.' },
+];
+
+/* ================= state ================= */
+let state;
+function freshState(layout) {
+  return {
+    layout,
+    screen: 'goals',           // goals | create | focus | journey | drill
+    drillParent: null,         // step id (G4 sub-screens; also used by create-time drill)
+    drillFrom: null,           // 'create' | 'focus' | 'journey'
+    menuFor: null,             // step id with open ⋯ menu (G3)
+    taps: 0,
+    day: 1,
+    goal: null,                // { title, steps: [] }
+    titleFilled: false,
+    stepQueue: ['Plan layout & buy materials', 'Wire the circuits', 'Inspection & labels'],
+    subQueue: ['15-amp lighting circuit', '20-amp small-appliance circuit', '240V dryer circuit'],
+    visitedFocus: false,
+    visitedJourney: false,
+    milestoneTaps: {},
+  };
+}
+
+/* ================= model helpers ================= */
+let idSeq = 1;
+const newStep = title => ({ id: 's' + (idSeq++), title, status: 'pending', ev: 0, children: null });
+function progress(steps) {
+  let total = 0, done = 0;
+  for (const s of steps) {
+    total += 1; if (s.status === 'completed') done += 1;
+    if (s.children) for (const c of s.children) { total += 1; if (c.status === 'completed') done += 1; }
+  }
+  return { done, total };
+}
+function nextInfo(steps) {
+  for (const s of steps) {
+    if (s.status === 'completed') continue;
+    if (s.children && s.children.length) {
+      const pend = s.children.find(c => c.status !== 'completed');
+      if (pend) return { kind: 'leaf', parent: s, step: pend };
+      return { kind: 'invite', parent: s, step: s };
+    }
+    return { kind: 'flat', step: s };
+  }
+  return null;
+}
+function findStep(id) {
+  for (const s of state.goal.steps) {
+    if (s.id === id) return s;
+    if (s.children) for (const c of s.children) if (c.id === id) return c;
+  }
+  return null;
+}
+function flatSeq(steps) {
+  const seq = [];
+  for (const s of steps) {
+    seq.push(s);
+    if (s.children) for (const c of s.children) seq.push(c);
+  }
+  return seq;
+}
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+const cbx = (on, sm, act) => `<span class="cbx${on?' on':''}${sm?' sm':''}"${act?` data-act="${act}"`:''}>${on?'✓':''}</span>`;
+const statusPill = st =>
+  st === 'completed' ? '<span class="pill done">Done</span>' :
+  st === 'active'    ? '<span class="pill active">Active</span>' :
+                       '<span class="pill pending">Pending</span>';
+
+/* ================= milestones (Evidence To Collect, live) ================= */
+const MILESTONES = [
+  { key: 'created-goal',  label: '1 · Create the goal (＋ on Goals, fill title)', test: s => !!s.goal },
+  { key: 'three-steps',   label: '2 · Author the three steps', test: s => s.goal && s.goal.steps.length === 3 },
+  { key: 'substeps-added', label: '3 · Break "Wire the circuits" into 3 circuits (Q5/Q7 — watch taps)', test: s => { const w = s.goal && s.goal.steps.find(x => x.children); return w && w.children.length === 3; } },
+  { key: 'saved',         label: '4 · Create Goal → land on Goals (Q2: what reads as next?)', test: s => s.goal && s.goal.saved && s.screen !== 'create' },
+  { key: 'focus',         label: '5 · Open the goal → Focus (Q3: where does it snap?)', test: s => s.visitedFocus },
+  { key: 'first-done',    label: '6 · Complete "Plan layout" + first circuit, with evidence (Q10)', test: s => { if (!s.goal) return false; const p = s.goal.steps[0]; const w = s.goal.steps.find(x => x.children); return p && p.status === 'completed' && w && w.children.some(c => c.status === 'completed'); } },
+  { key: 'cold-return',   label: '7 · ☀ Next day → Goals (cold-return note: was "next" right?)', test: s => s.day >= 2 },
+  { key: 'circuits-done', label: '8 · Complete the remaining circuits', test: s => { const w = s.goal && s.goal.steps.find(x => x.children); return w && w.children.length === 3 && w.children.every(c => c.status === 'completed'); } },
+  { key: 'parent-manual', label: '9 · Mark "Wire the circuits" complete — your call, separately (Q9)', test: s => { const w = s.goal && s.goal.steps.find(x => x.children); return w && w.status === 'completed'; } },
+  { key: 'journey',       label: '10 · Read the Journey view (Q4)', test: s => s.visitedJourney },
+];
+
+/* ================= screens ================= */
+function renderGoals() {
+  const g = state.goal;
+  let card = '';
+  if (g && g.saved) {
+    const ni = nextInfo(g.steps);
+    const p = progress(g.steps);
+    let next = '';
+    if (!ni) next = '<div class="ctx">all steps done — goal completion is on the focus screen, when you choose</div>';
+    else if (ni.kind === 'flat') next = `<div class="next">${esc(ni.step.title)}</div>`;
+    else if (ni.kind === 'invite') {
+      next = state.layout === 'contain'
+        ? `<div class="next">${esc(ni.parent.title)}</div><div class="inset">${ni.parent.children.length} of ${ni.parent.children.length} parts done</div>`
+        : `<div class="next">${esc(ni.parent.title)}</div><div class="ctx">all ${ni.parent.children.length} substeps done</div>`;
+    } else {
+      if (state.layout === 'indent') next = `<div class="next">${esc(ni.step.title)}</div><div class="ctx">↳ in ${esc(ni.parent.title)}</div>`;
+      else if (state.layout === 'contain') next = `<div class="next">${esc(ni.parent.title)}</div><div class="inset">next: ${esc(ni.step.title)}</div>`;
+      else if (state.layout === 'crumb') next = `<div style="margin-top:10px"><span class="crumb">${esc(ni.parent.title)}</span></div><div class="next" style="margin-top:6px">${esc(ni.step.title)}</div>`;
+      else next = `<div class="next">${esc(ni.step.title)}</div><div class="ctx">in ${esc(ni.parent.title)} ›</div>`;
+    }
+    card = `
+      <div class="gcard" data-act="open-focus">
+        <div class="head"><span class="gtitle">${esc(g.title)}</span>${statusPill('active')}</div>
+        ${next}
+        <div class="prow"><div class="pbar"><div class="fill" style="width:${p.total?Math.round(p.done/p.total*100):0}%"></div></div><span class="pnum">${p.done}/${p.total}</span></div>
+      </div>`;
+  }
+  return `
+    <div class="sub"><div class="title">Goals</div></div>
+    <div style="padding-top:14px; display:flex; flex-direction:column; flex:1;">
+      ${card}
+      <div class="gcard">
+        <div class="head"><span class="gtitle">Get garden beds ready</span>${statusPill('active')}</div>
+        <div class="next">Order soil &amp; compost</div>
+        <div class="prow"><div class="pbar"><div class="fill" style="width:25%"></div></div><span class="pnum">1/4</span></div>
+      </div>
+      <div style="margin:0 14px; font-size:11px; color:var(--muted);">↑ flat goal, untouched by the layout — breaking a step up is never required.</div>
+      <div class="fab" data-act="new-goal">＋</div>
+    </div>`;
+}
+
+function authoringRows() {
+  const g = state.layout;
+  const steps = state.goal.steps;
+  const canSub = state.subQueue.length > 0;
+  const row = (s, child, parentTitle) => `
+    <div class="erow${child?' child':''}">
+      <span class="handle">≡</span>
+      <span class="t">${esc(s.title)}</span>
+      ${g==='crumb' && child ? `<span class="crumb">${esc(parentTitle)}</span>` : ''}
+      ${g==='indent' && !child && canSub ? `<span class="chip-add" data-act="add-sub" data-arg="${s.id}">+ sub</span>` : ''}
+      ${g==='contain' && !child && !s.children && canSub ? `<span class="chip-add" data-act="split" data-arg="${s.id}">▢ split</span>` : ''}
+      ${g==='crumb' && !child && canSub ? `<span class="dots" data-act="menu" data-arg="${s.id}">⋯</span>` : ''}
+      ${g==='drill' && !child ? (s.children && s.children.length
+          ? `<span class="chip-info" data-act="drill-create" data-arg="${s.id}">${s.children.length} parts ›</span>`
+          : (canSub ? `<span class="chip-add" data-act="drill-create" data-arg="${s.id}">parts ›</span>` : '')) : ''}
+      <span class="x">✕</span>
+    </div>
+    ${g==='crumb' && state.menuFor === s.id ? `<div class="minimenu"><div data-act="add-sub" data-arg="${s.id}">+ add substep</div><div>✎ rename</div></div>` : ''}`;
+
+  let html = '';
+  for (const s of steps) {
+    const hasKids = s.children && s.children.length;
+    if (g === 'drill') { html += row(s); continue; }
+    if (g === 'contain' && s.children) {
+      /* container (possibly freshly split and still empty) — parent row IS the header */
+      html += `<div class="econtain">
+        <div class="chead"><span class="handle">≡</span><span class="t">${esc(s.title)}</span><span class="x">✕</span></div>
+        ${(s.children).map(c=>row(c,true)).join('')}
+        ${canSub ? `<div class="erow child ghost" data-act="add-sub" data-arg="${s.id}">+ part</div>` : ''}
+      </div>`;
+      continue;
+    }
+    html += row(s);
+    if (hasKids && g === 'indent') {
+      html += `<div class="echildren">${s.children.map(c=>row(c,true)).join('')}
+        ${canSub ? `<div class="erow child ghost" data-act="add-sub" data-arg="${s.id}">+ substep</div>` : ''}</div>`;
+    } else if (hasKids && g === 'crumb') {
+      html += s.children.map(c=>row(c,true,s.title)).join('');
+    }
+  }
+  return html;
+}
+
+function renderCreate() {
+  const titled = state.titleFilled;
+  const queueLeft = state.stepQueue.length > 0;
+  return `
+    <div class="sub"><div class="spacer"></div><div class="center-label">${state.goal && state.goal.saved ? 'Edit Goal' : 'New Goal'}</div><div class="icon-btn" data-act="close-create">✕</div></div>
+    <div style="padding:16px; display:flex; flex-direction:column; gap:14px;">
+      <div>
+        <p class="form-label">What's your goal?</p>
+        <div class="tinput${titled?'':' empty'}" ${titled?'':'data-act="fill-title"'}>${titled ? esc(state.goal.title) : 'Tap to type the goal title…'}</div>
+      </div>
+      ${titled ? `
+      <div>
+        <div class="steps-head"><span class="h">Steps</span><span class="count-badge">${progress(state.goal.steps).total} steps</span></div>
+        ${authoringRows()}
+        <div class="addrow${queueLeft?'':' disabled'}" data-act="add-step"><div class="ainput">${queueLeft ? 'Add: “' + esc(state.stepQueue[0]) + '”' : 'Add a step…'}</div><div class="plus">＋</div></div>
+      </div>
+      <div class="btn${state.goal.steps.length?'':' disabled'}" data-act="create-goal">${state.goal.saved ? 'Done' : 'Create Goal'}</div>` : ''}
+    </div>`;
+}
+
+function renderDrillCreate() {
+  const par = findStep(state.drillParent);
+  const canSub = state.subQueue.length > 0;
+  return `
+    <div class="sub"><div class="back" data-act="drill-back">‹</div><div class="title">${esc(par.title)}</div></div>
+    <div class="crumbbar">${esc(state.goal.title)} / <strong>${esc(par.title)}</strong></div>
+    <div style="padding:16px;">
+      <div class="steps-head"><span class="h">Parts</span><span class="count-badge">${(par.children||[]).length}</span></div>
+      ${(par.children||[]).map(c => `
+        <div class="erow child"><span class="handle">≡</span><span class="t">${esc(c.title)}</span><span class="x">✕</span></div>`).join('')}
+      <div class="addrow${canSub?'':' disabled'}" data-act="add-sub" data-arg="${par.id}"><div class="ainput">${canSub ? 'Add: “' + esc(state.subQueue[0]) + '”' : 'Add a part…'}</div><div class="plus">＋</div></div>
+    </div>`;
+}
+
+function miniTimeline() {
+  const g = state.layout;
+  const ni = nextInfo(state.goal.steps);
+  const curId = ni ? (ni.kind === 'invite' ? ni.parent.id : ni.step.id) : null;
+  const nodeFor = (s, extra='') => {
+    const cls = ['node'];
+    if (s.status === 'completed') cls.push('done');
+    if (s.id === curId) cls.push('cur');
+    if (extra) cls.push(extra);
+    const badge = g === 'drill' && s.children && s.children.length ? `<span class="nbadge">${s.children.length}</span>` : '';
+    return `<span class="${cls.join(' ')}">${badge}</span>`;
+  };
+  const seg = pend => `<span class="seg-line${pend?' pend':''}"></span>`;
+  let track = '';
+  state.goal.steps.forEach((s, i) => {
+    if (i > 0) track += seg(state.goal.steps[i-1].status !== 'completed');
+    if (!s.children || !s.children.length || g === 'drill') { track += nodeFor(s); return; }
+    if (g === 'indent') track += `<span class="grp-indent">${nodeFor(s)}${s.children.map(c => `<span class="seg-line short${c.status==='completed'?'':' pend'}"></span>${nodeFor(c,'child')}`).join('')}</span>`;
+    else if (g === 'contain') track += `<span class="grp-contain">${nodeFor(s)}${s.children.map(c => `<span class="seg-line short${c.status==='completed'?'':' pend'}"></span>${nodeFor(c,'child')}`).join('')}</span>`;
+    else { track += nodeFor(s); track += s.children.map(c => `${seg(c.status!=='completed')}${nodeFor(c,'crumbchild')}`).join(''); }
+  });
+  track += seg(true) + '<span class="node goal"></span>';
+  return `<div class="mtl" data-act="open-journey"><div class="mtl-track">${track}</div><div class="hint">tap to expand timeline</div></div>`;
+}
+
+function renderFocus() {
+  const g = state.layout;
+  const steps = state.goal.steps;
+  const ni = nextInfo(steps);
+  let label = '', body = '';
+
+  if (!ni) {
+    label = 'All steps complete';
+    body = `<div class="stitle">${esc(state.goal.title)}</div>
+      <div class="ctx-line">every step is done — marking the goal complete stays your call.</div>
+      <div class="cbx-row">${cbx(false)} Mark goal complete</div>`;
+  } else if (ni.kind === 'invite') {
+    const par = ni.parent;
+    label = `Step ${steps.indexOf(par)+1} of ${steps.length}`;
+    body = `
+      <div class="stitle">${esc(par.title)}</div>
+      <div class="childlist">${par.children.map(c => `
+        <div class="crow">${cbx(true, true, `toggle:${c.id}`)}<span class="t">${esc(c.title)}</span>${c.ev?`<span class="evb">E ${c.ev}</span>`:''}</div>`).join('')}
+      </div>
+      <div class="cbx-row">${cbx(false, false, `toggle:${par.id}`)} Mark "${esc(par.title)}" complete</div>
+      <div class="ctx-line">completing the parts changed nothing by itself — this stays your call.</div>`;
+  } else if (ni.kind === 'flat') {
+    const s = ni.step;
+    label = `Step ${steps.indexOf(s)+1} of ${steps.length}`;
+    body = `
+      <div class="stitle">${esc(s.title)}</div>
+      <div class="qa-row"><span class="qa" data-act="evidence" data-arg="${s.id}">📷 Photo${s.ev?` <span class="evb">E ${s.ev}</span>`:''}</span></div>
+      <div class="cbx-row">${cbx(false, false, `toggle:${s.id}`)} Mark complete</div>`;
+  } else if (g === 'contain') {
+    const par = ni.parent, idx = par.children.indexOf(ni.step) + 1;
+    label = `Step ${steps.indexOf(par)+1} of ${steps.length} · part ${idx} of ${par.children.length}`;
+    body = `
+      <div class="stitle">${esc(par.title)}</div>
+      <div class="childlist">${par.children.map(c => `
+        <div class="crow${c===ni.step?' cur':''}">${cbx(c.status==='completed', true, `toggle:${c.id}`)}<span class="t">${esc(c.title)}</span>
+          ${c.status!=='completed'?`<span class="qa" style="min-height:28px;padding:3px 8px" data-act="evidence" data-arg="${c.id}">📷</span>`:''}
+          ${c.ev?`<span class="evb">E ${c.ev}</span>`:''}</div>`).join('')}
+      </div>`;
+  } else if (g === 'drill') {
+    const par = ni.parent;
+    label = `Step ${steps.indexOf(par)+1} of ${steps.length}`;
+    body = `
+      <div class="stitle">${esc(par.title)}</div>
+      <div class="ctx-line">${par.children.filter(c=>c.status==='completed').length} of ${par.children.length} parts done</div>
+      <div class="qa-row"><span class="qa" data-act="drill-focus" data-arg="${par.id}">Open parts ›</span></div>`;
+  } else {
+    const s = ni.step, par = ni.parent;
+    const letter = String.fromCharCode(97 + par.children.indexOf(s));
+    label = g === 'crumb'
+      ? `Step ${flatSeq(steps).indexOf(s)+1} of ${flatSeq(steps).length}`
+      : `Step ${steps.indexOf(par)+1}${letter} of ${steps.length}`;
+    const ctx = g === 'indent'
+      ? `<div class="ctx-line">↳ in ${esc(par.title)}</div>`
+      : `<div style="margin-top:9px"><span class="crumb">${esc(par.title)}</span></div>`;
+    body = `
+      ${g==='crumb'?ctx:''}
+      <div class="stitle">${esc(s.title)}</div>
+      ${g==='indent'?ctx:''}
+      <div class="qa-row"><span class="qa" data-act="evidence" data-arg="${s.id}">📷 Photo${s.ev?` <span class="evb">E ${s.ev}</span>`:''}</span></div>
+      <div class="cbx-row">${cbx(false, false, `toggle:${s.id}`)} Mark complete</div>`;
+  }
+
+  return `
+    <div class="sub"><div class="back" data-act="back-goals">‹</div><div class="title">${esc(state.goal.title)}</div><div class="icon-btn" data-act="edit-goal">✎</div></div>
+    ${miniTimeline()}
+    <div class="scard">
+      <div class="meta-row"><span class="stepnum">${label}</span>${statusPill(ni ? 'active' : 'completed')}</div>
+      ${body}
+    </div>
+    <div class="drawer"><span>Evidence <span class="evb">E ${flatSeq(steps).reduce((a,s)=>a+(s.ev||0),0)}</span></span><span>▲</span></div>`;
+}
+
+function renderDrillFocus() {
+  const par = findStep(state.drillParent);
+  const allDone = par.children.length && par.children.every(c => c.status === 'completed');
+  return `
+    <div class="sub"><div class="back" data-act="drill-back">‹</div><div class="title">${esc(par.title)}</div></div>
+    <div class="crumbbar">${esc(state.goal.title)} / <strong>${esc(par.title)}</strong></div>
+    <div class="scard">
+      <div class="meta-row"><span class="stepnum">${par.children.filter(c=>c.status==='completed').length} of ${par.children.length} parts done</span>${statusPill(par.status==='completed'?'completed':'active')}</div>
+      <div class="childlist">${par.children.map(c => `
+        <div class="crow">${cbx(c.status==='completed', true, `toggle:${c.id}`)}<span class="t">${esc(c.title)}</span>
+          ${c.status!=='completed'?`<span class="qa" style="min-height:28px;padding:3px 8px" data-act="evidence" data-arg="${c.id}">📷</span>`:''}
+          ${c.ev?`<span class="evb">E ${c.ev}</span>`:''}</div>`).join('')}
+      </div>
+      ${allDone && par.status !== 'completed' ? `
+        <div class="cbx-row">${cbx(false, false, `toggle:${par.id}`)} Mark "${esc(par.title)}" complete</div>
+        <div class="ctx-line">all parts are done — nothing happened on its own; this stays your call.</div>` : ''}
+    </div>`;
+}
+
+function renderJourney() {
+  const g = state.layout;
+  const steps = state.goal.steps;
+  const ni = nextInfo(steps);
+  const curId = ni ? (ni.kind === 'invite' ? ni.parent.id : ni.step.id) : null;
+  const p = progress(steps);
+  const jnode = (s, num, sm) => {
+    const cls = ['jnode']; let inner = num;
+    if (s.status === 'completed') { cls.push('done'); inner = '✓'; }
+    else if (s.id === curId) cls.push('cur'); else cls.push('pend');
+    if (sm) cls.push('sm');
+    return `<div class="${cls.join(' ')}">${inner}</div>`;
+  };
+  const card = (s, opts={}) => `
+    <div class="jcard${opts.slim?' slim':''}"${opts.act?` data-act="${opts.act}" data-arg="${s.id}"`:''}>
+      ${statusPill(s.status==='completed'?'completed':(s.id===curId?'active':'pending'))}
+      <span class="t">${esc(s.title)}${opts.chip?` <span class="crumb" style="margin-left:4px">${esc(opts.chip)}</span>`:''}</span>
+      ${s.ev?`<span class="evb">E ${s.ev}</span>`:''}
+      <span class="chev">${opts.chevText ?? '▼'}</span>
+    </div>`;
+
+  let rows = '';
+  if (g === 'crumb') {
+    flatSeq(steps).forEach((s, i) => {
+      const par = steps.find(x => x.children && x.children.includes(s));
+      rows += `<div class="jrow">${jnode(s, i+1)}${card(s, { chip: par ? par.title : null })}</div>`;
+    });
+  } else {
+    steps.forEach((s, i) => {
+      if (!s.children || !s.children.length) { rows += `<div class="jrow">${jnode(s, i+1)}${card(s)}</div>`; return; }
+      if (g === 'indent') {
+        rows += `<div class="jrow">${jnode(s, i+1)}${card(s)}</div>`;
+        rows += `<div class="jchildren-indent">${s.children.map((c, j) =>
+          `<div class="jrow">${jnode(c, String.fromCharCode(97+j), true)}${card(c, {slim:true})}</div>`).join('')}</div>`;
+      } else if (g === 'contain') {
+        rows += `<div class="jrow">${jnode(s, i+1)}
+          <div class="jcard parent-card">
+            <div class="phead">${statusPill(s.status==='completed'?'completed':(s.id===curId||s.children.some(c=>c.id===curId)?'active':'pending'))}<span class="t">${esc(s.title)}</span><span class="chev">▲</span></div>
+            <div class="jcontain-inner">${s.children.map(c => `
+              <div class="crow">${cbx(c.status==='completed', true)}<span class="t">${esc(c.title)}</span>${c.ev?`<span class="evb">E ${c.ev}</span>`:''}</div>`).join('')}
+            </div>
+          </div></div>`;
+      } else { /* drill: collapsed until opened */
+        rows += `<div class="jrow">${jnode(s, i+1)}${card(s, { act: 'drill-journey', chevText: `${s.children.length} parts ›` })}</div>`;
+      }
+    });
+  }
+  rows += `<div class="jrow"><div class="jnode goal">★</div><div class="jcard slim"><span class="t">${esc(state.goal.title)}</span><span class="chev">▼</span></div></div>`;
+
+  return `
+    ${'<div class="sub"><div class="back" data-act="back-focus">‹</div><div class="title">Timeline</div></div>'}
+    <div class="jhead">
+      <div class="row1"><span class="gt">${esc(state.goal.title)}</span><span class="btn secondary sm" data-act="back-focus">Back to Focus</span></div>
+      <div class="prow"><div class="pbar"><div class="fill" style="width:${p.total?Math.round(p.done/p.total*100):0}%"></div></div><span class="pnum">${p.done} / ${p.total}</span></div>
+    </div>
+    <div class="jtl">${rows}</div>`;
+}
+
+function renderDrillJourney() {
+  const par = findStep(state.drillParent);
+  let rows = par.children.map((c, j) => `
+    <div class="jrow"><div class="jnode sm ${c.status==='completed'?'done':'pend'}">${c.status==='completed'?'✓':String.fromCharCode(97+j)}</div>
+      <div class="jcard slim"><span class="t">${esc(c.title)}</span>${c.ev?`<span class="evb">E ${c.ev}</span>`:''}<span class="chev">▼</span></div></div>`).join('');
+  return `
+    <div class="sub"><div class="back" data-act="drill-back">‹</div><div class="title">${esc(par.title)}</div></div>
+    <div class="crumbbar">${esc(state.goal.title)} / <strong>${esc(par.title)}</strong></div>
+    <div class="jtl">${rows}</div>`;
+}
+
+/* ================= actions ================= */
+function toggleStep(id) {
+  const all = flatSeq(state.goal.steps);
+  const s = all.find(x => x.id === id);
+  if (!s) return;
+  s.status = s.status === 'completed' ? 'pending' : 'completed';
+  /* deliberately NO parent auto-completion and NO cascade */
+}
+function dispatch(act, arg) {
+  state.taps += 1;
+  state.menuFor = act === 'menu' ? (state.menuFor === arg ? null : arg) : null;
+  switch (act) {
+    case 'new-goal': state.screen = 'create'; state.goal = state.goal ?? null; break;
+    case 'fill-title': state.goal = state.goal ?? { title: 'Build practice panel', steps: [], saved: false }; state.titleFilled = true; break;
+    case 'add-step': if (state.stepQueue.length) state.goal.steps.push(newStep(state.stepQueue.shift())); break;
+    case 'split': { const s = findStep(arg); if (s && !s.children) s.children = []; break; }
+    case 'add-sub': { const s = findStep(arg); if (s && state.subQueue.length) { s.children = s.children ?? []; s.children.push(newStep(state.subQueue.shift())); } break; }
+    case 'menu': break;
+    case 'drill-create': state.drillParent = arg; state.drillFrom = 'create'; { const s = findStep(arg); if (s && !s.children) s.children = []; } state.screen = 'drill'; break;
+    case 'drill-focus': state.drillParent = arg; state.drillFrom = 'focus'; state.screen = 'drill'; break;
+    case 'drill-journey': state.drillParent = arg; state.drillFrom = 'journey'; state.screen = 'drill'; break;
+    case 'drill-back': state.screen = state.drillFrom === 'create' ? 'create' : state.drillFrom === 'journey' ? 'journey' : 'focus'; state.drillParent = null; break;
+    case 'create-goal': if (state.goal.steps.length) { state.goal.saved = true; state.screen = 'goals'; } break;
+    case 'close-create': state.screen = 'goals'; break;
+    case 'open-focus': if (state.goal && state.goal.saved) { state.screen = 'focus'; state.visitedFocus = true; } break;
+    case 'back-goals': state.screen = 'goals'; break;
+    case 'edit-goal': state.screen = 'create'; break;
+    case 'open-journey': state.screen = 'journey'; state.visitedJourney = true; break;
+    case 'back-focus': state.screen = 'focus'; break;
+    case 'evidence': { const s = flatSeq(state.goal.steps).find(x => x.id === arg); if (s) s.ev = (s.ev || 0) + 1; break; }
+    default: if (act.startsWith('toggle:')) toggleStep(act.slice(7)); else if (act === 'toggle') toggleStep(arg);
+  }
+  render();
+}
+
+/* ================= page render ================= */
+function renderScreen() {
+  if (state.screen === 'goals') return renderGoals();
+  if (state.screen === 'create') return renderCreate();
+  if (state.screen === 'drill') {
+    if (state.drillFrom === 'create') return renderDrillCreate();
+    if (state.drillFrom === 'journey') return renderDrillJourney();
+    return renderDrillFocus();
+  }
+  if (state.screen === 'focus') return renderFocus();
+  if (state.screen === 'journey') return renderJourney();
+  return '';
+}
+function stateSummary() {
+  const lines = [`layout: ${state.layout}   day: ${state.day}   screen: ${state.screen}`];
+  if (!state.goal) { lines.push('goal: (not created)'); return lines.join('\n'); }
+  lines.push(`goal: ${state.goal.title}${state.goal.saved ? '' : ' (unsaved)'}`);
+  for (const s of state.goal.steps) {
+    lines.push(`  [${s.status === 'completed' ? 'x' : ' '}] ${s.title}${s.ev ? ` (E${s.ev})` : ''}`);
+    if (s.children) for (const c of s.children) lines.push(`      [${c.status === 'completed' ? 'x' : ' '}] ${c.title}${c.ev ? ` (E${c.ev})` : ''}`);
+  }
+  const ni = nextInfo(state.goal.steps);
+  lines.push(ni
+    ? `next → ${ni.kind === 'invite' ? `"${ni.parent.title}" (manual parent completion available)` : `"${ni.step.title}"${ni.parent ? ` in "${ni.parent.title}"` : ''}`}`
+    : 'next → (none — all steps done)');
+  return lines.join('\n');
+}
+function render() {
+  document.getElementById('screen').innerHTML = renderScreen();
+  const segs = document.getElementById('layout-segs');
+  segs.innerHTML = LAYOUTS.map(g => `<button class="seg${g.key===state.layout?' on':''}" data-ctl="layout" data-arg="${g.key}">${g.name}</button>`).join('');
+  document.getElementById('layout-blurb').textContent = LAYOUTS.find(g => g.key === state.layout).blurb;
+  document.getElementById('tapcount').textContent = state.taps;
+  const ml = document.getElementById('milestones');
+  ml.innerHTML = MILESTONES.map(m => {
+    const done = m.test(state);
+    if (done && !(m.key in state.milestoneTaps)) state.milestoneTaps[m.key] = state.taps;
+    const taps = m.key in state.milestoneTaps ? `<span class="taps">@ ${state.milestoneTaps[m.key]} taps</span>` : '';
+    return `<li class="${done?'done':''}"><span class="mk">${done?'✓':'·'}</span>${m.label}${taps}</li>`;
+  }).join('');
+  document.getElementById('statebox').textContent = stateSummary();
+}
+
+document.getElementById('screen').addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  dispatch(el.dataset.act, el.dataset.arg);
+});
+document.body.addEventListener('click', e => {
+  const el = e.target.closest('[data-ctl]');
+  if (!el) return;
+  if (el.dataset.ctl === 'layout') { state = freshState(el.dataset.arg); render(); }
+  if (el.dataset.ctl === 'reset') { state = freshState(state.layout); render(); }
+  if (el.dataset.ctl === 'nextday') { state.day += 1; state.screen = 'goals'; state.drillParent = null; render(); }
+});
+
+state = freshState('indent');
+render();
+</script>
+</body>
+</html>

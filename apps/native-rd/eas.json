@@ -63,21 +63,11 @@
         "track": "internal"
       }
     },
-    "preview": {
-      "ios": {
-        "ascAppId": "6766029904",
-        "appleTeamId": "86VL756N99",
-        "ascApiKeyPath": "../../secrets/asc-api-key.p8",
-        "ascApiKeyId": "$APPLE_ASC_KEY_ID",
-        "ascApiKeyIssuerId": "$APPLE_ASC_ISSUER_ID"
-      },
+    "play-internal": {
       "android": {
         "serviceAccountKeyPath": "../../secrets/play-service-account.json",
         "track": "internal"
       }
-    },
-    "play-internal": {
-      "extends": "preview"
     }
   }
 }

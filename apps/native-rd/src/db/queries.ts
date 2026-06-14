@@ -812,22 +812,6 @@ export function deleteEvidence(id: EvidenceId) {
   }
 }
 
-/**
- * Restore soft-deleted evidence (clears isDeleted flag).
- * Evolu's update type doesn't expose null for isDeleted, but the DB column
- * is nullOr(SqliteBoolean) and all queries filter on `isDeleted IS NULL`.
- * @param id - Evidence ID
- * @returns Update command
- */
-export function restoreEvidence(id: EvidenceId) {
-  try {
-    return evolu.update("evidence", { id, isDeleted: null as never });
-  } catch (error) {
-    logger.error("Failed to restore evidence", { evidenceId: id, error });
-    throw new Error("Failed to restore evidence. Please try again.");
-  }
-}
-
 // Badge CRUD
 
 /**

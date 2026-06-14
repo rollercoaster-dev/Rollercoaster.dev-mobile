@@ -39,5 +39,9 @@
     "message": "This will permanently remove this badge. This cannot be undone.",
     "cancel": "Cancel",
     "delete": "Delete"
+  },
+  "deleteError": {
+    "title": "Couldn't delete badge",
+    "message": "Something went wrong. Please try again."
   }
 }

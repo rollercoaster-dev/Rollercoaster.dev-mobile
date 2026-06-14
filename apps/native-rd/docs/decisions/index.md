@@ -14,3 +14,5 @@ Decisions are immutable once accepted. To change a decision, write a new ADR tha
 | [ADR-0008](./ADR-0008-i18n-bakeoff-model-pool.md)      | i18n bake-off model pool - drop reasoning-tuned candidates                  | Accepted | 2026-05-25    |
 | [ADR-0009](./ADR-0009-i18n-voice-enforcement.md)       | i18n voice enforcement — three-layer register + intent sidecar + glossary   | Accepted | 2026-05-25    |
 | [ADR-0010](./ADR-0010-phase-b-step-model-crosswalk.md) | Phase B step-model crosswalk                                                | Accepted | 2026-06-08    |
+| [ADR-0011](./ADR-0011-step-model-names.md)             | Step-model names and letter consolidation — ten rows become seven features  | Proposed | 2026-06-12    |
+| [ADR-0012](./ADR-0012-no-auto-judgment.md)             | No-auto-judgment — reframe no-auto-state; allow auto-bookkeeping            | Proposed | 2026-06-14    |

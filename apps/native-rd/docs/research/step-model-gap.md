@@ -30,6 +30,17 @@ This frame is downstream of [product-vision.md §Core Principles](../vision/prod
 
 ## The A–H taxonomy
 
+> **Naming note (2026-06-12,
+> [ADR-0011](../decisions/ADR-0011-step-model-names.md)):** the ten rows
+> below were consolidated into seven features and renamed in the living docs —
+> A → **A: Substeps**; B-soft + B-deadlines (+ the recurrence/Slot
+> hypothesis) → **B: Planning**; C-order + C-waiting → **C: Dependencies**;
+> D + F → **the Scratchpad**; E → **E: Step states**; G → **G: Review**;
+> H → **H: Learnings**. This research doc keeps its original framing as the
+> historical record; current names and definitions live in
+> [`CONTEXT.md`](../../CONTEXT.md), and question status lives in the
+> prototype plan's Open Questions Register.
+
 Eight letters representing ten candidate enrichments: B has separate
 soft-placement and deadline forms, and C has separate ordering and
 external-waiting forms. Each is sized by both its pedagogical frame and its

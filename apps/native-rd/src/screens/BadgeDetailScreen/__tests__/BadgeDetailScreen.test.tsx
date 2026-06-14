@@ -1,4 +1,5 @@
 import React from "react";
+import { Alert } from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -39,8 +40,15 @@ jest.mock("@evolu/react", () => {
   };
 });
 
+const mockDeleteBadge = jest.fn();
 jest.mock("../../../db", () => ({
   badgeWithGoalQuery: jest.fn(() => ({ __brand: "badgeWithGoalQuery" })),
+  deleteBadge: (...args: unknown[]) => mockDeleteBadge(...args),
+}));
+
+const mockReportError = jest.fn();
+jest.mock("../../../services/sentry-report", () => ({
+  reportError: (...args: unknown[]) => mockReportError(...args),
 }));
 
 jest.mock("../../../hooks/useCreateBadge", () => ({
@@ -155,6 +163,72 @@ describe("BadgeDetailScreen", () => {
     );
     fireEvent.press(screen.getByLabelText("Go back"));
     expect(mockGoBack).toHaveBeenCalled();
+  });
+
+  describe("delete badge", () => {
+    it("opens the confirm-delete modal instead of deleting immediately", () => {
+      mockUseQuery.mockReturnValue([makeRow()]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      fireEvent.press(screen.getByRole("button", { name: "Delete Badge" }));
+
+      // Modal copy is visible; nothing has been deleted yet.
+      expect(
+        screen.getByText(
+          "This will permanently remove this badge. This cannot be undone.",
+        ),
+      ).toBeOnTheScreen();
+      expect(mockDeleteBadge).not.toHaveBeenCalled();
+    });
+
+    it("deletes the badge and navigates back on confirm", () => {
+      mockUseQuery.mockReturnValue([makeRow()]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      fireEvent.press(screen.getByRole("button", { name: "Delete Badge" }));
+      fireEvent.press(screen.getByRole("button", { name: "Delete" }));
+
+      expect(mockDeleteBadge).toHaveBeenCalledWith("badge-1");
+      expect(mockGoBack).toHaveBeenCalled();
+    });
+
+    it("does not delete when the modal is cancelled", () => {
+      mockUseQuery.mockReturnValue([makeRow()]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      fireEvent.press(screen.getByRole("button", { name: "Delete Badge" }));
+      fireEvent.press(screen.getByRole("button", { name: "Cancel" }));
+
+      expect(mockDeleteBadge).not.toHaveBeenCalled();
+      expect(mockGoBack).not.toHaveBeenCalled();
+    });
+
+    it("keeps the user on the screen and reports when delete fails", () => {
+      mockUseQuery.mockReturnValue([makeRow()]);
+      mockDeleteBadge.mockImplementationOnce(() => {
+        throw new Error("Failed to delete badge. Please try again.");
+      });
+      const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      fireEvent.press(screen.getByRole("button", { name: "Delete Badge" }));
+      fireEvent.press(screen.getByRole("button", { name: "Delete" }));
+
+      // Failure is surfaced and reported; the user is NOT navigated away.
+      expect(mockReportError).toHaveBeenCalled();
+      expect(alertSpy).toHaveBeenCalled();
+      expect(mockGoBack).not.toHaveBeenCalled();
+
+      alertSpy.mockRestore();
+    });
   });
 
   describe("export buttons", () => {

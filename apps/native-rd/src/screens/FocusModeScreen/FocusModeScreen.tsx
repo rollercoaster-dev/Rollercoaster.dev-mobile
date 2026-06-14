@@ -43,12 +43,10 @@ import {
   goalsQuery,
   stepsByGoalQuery,
   evidenceByGoalQuery,
-  evidenceByStepQuery,
   stepEvidenceByGoalQuery,
   completeStep,
   uncompleteStep,
   deleteEvidence,
-  restoreEvidence,
   canCompleteStep,
   isPendingStep,
   findFirstPendingIndex,
@@ -93,7 +91,7 @@ const EVIDENCE_ROUTE_MAP: Partial<
 function FocusContent({ goalId }: { goalId: string }) {
   const { t } = useTranslation(["focusMode", "common"]);
   const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
-  const { showToast, hideToast } = useToast();
+  const { showToast } = useToast();
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
   const stepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
@@ -117,20 +115,10 @@ function FocusContent({ goalId }: { goalId: string }) {
     // genuine pending → complete transition.
     sawIncomplete: false,
   });
-  const pendingFileDeletionRef = useRef<{
-    id: string;
-    uri: string | null;
-    type: string | null;
-    timer: ReturnType<typeof setTimeout>;
-  } | null>(null);
-
   useEffect(() => {
     breadcrumb({ category: "focus", message: "enter" });
     return () => {
       breadcrumb({ category: "focus", message: "exit" });
-      if (pendingFileDeletionRef.current) {
-        clearTimeout(pendingFileDeletionRef.current.timer);
-      }
     };
   }, []);
 
@@ -204,10 +192,12 @@ function FocusContent({ goalId }: { goalId: string }) {
 
   // Current evidence for the drawer
   const currentStepId = isGoalCard ? null : stepRows[currentCardIndex]?.id;
-  const currentStepEvidenceRows = useQuery(
-    currentStepId
-      ? evidenceByStepQuery(currentStepId as StepId)
-      : evidenceByGoalQuery(goalId as GoalId),
+  const currentStepEvidenceRows = useMemo(
+    () =>
+      currentStepId
+        ? allStepEvidenceRows.filter((row) => row.stepId === currentStepId)
+        : [],
+    [allStepEvidenceRows, currentStepId],
   );
 
   const evidenceFallbackLabel = t("focusMode:evidenceFallback");
@@ -263,179 +253,163 @@ function FocusContent({ goalId }: { goalId: string }) {
     );
   }, [goalTitleForAnnouncement, allStepsComplete, stepRowsLength, t]);
 
-  const handleUndoDelete = useCallback(() => {
-    const pending = pendingFileDeletionRef.current;
-    if (!pending) return;
-    clearTimeout(pending.timer);
-    try {
-      restoreEvidence(pending.id as EvidenceId);
-    } catch (error) {
-      console.error("[FocusModeScreen] Failed to restore evidence", {
-        evidenceId: pending.id,
-        error,
-      });
-      reportError(error, { area: "focus.mode", kind: "evidence-restore" });
-    }
-    pendingFileDeletionRef.current = null;
-    hideToast();
-  }, [hideToast]);
-
-  if (!goal) {
-    return (
-      <View style={styles.centered}>
-        <Text variant="body">{t("focusMode:errors.goalNotFound")}</Text>
-      </View>
-    );
-  }
-
   // --- Event Handlers ---
 
-  const handleIndexChange = (index: number) => {
+  const handleIndexChange = useCallback((index: number) => {
     setCurrentCardIndex(index);
-    if (isDrawerOpen) setIsDrawerOpen(false);
-    if (isFABMenuOpen) setIsFABMenuOpen(false);
-  };
+    setIsDrawerOpen(false);
+    setIsFABMenuOpen(false);
+  }, []);
 
-  const handleMarkComplete = () => {
+  const handleMarkComplete = useCallback(() => {
     navigation.navigate("CompletionFlow", { goalId });
-  };
+  }, [goalId, navigation]);
 
-  const handleBadgePress = () => {
+  const handleBadgePress = useCallback(() => {
     navigation.navigate("BadgeDesigner", {
       mode: "new-goal",
       goalId,
       returnVia: "back",
     });
-  };
+  }, [goalId, navigation]);
 
-  const handleToggleStep = (stepId: string) => {
-    const step = stepRows.find((s) => s.id === stepId);
-    if (!step) {
-      console.warn(
-        `[FocusModeScreen] handleToggleStep: step not found for id "${stepId}"`,
-      );
-      return;
-    }
-
-    try {
-      if (step.status === StepStatus.completed) {
-        uncompleteStep(stepId as StepId);
-        AccessibilityInfo.announceForAccessibility(
-          t("focusMode:a11y.stepUncompleted", { title: step.title }),
+  const handleToggleStep = useCallback(
+    (stepId: string) => {
+      const step = stepRows.find((s) => s.id === stepId);
+      if (!step) {
+        console.warn(
+          `[FocusModeScreen] handleToggleStep: step not found for id "${stepId}"`,
         );
-      } else {
-        const stepEvidence = allStepEvidenceRows
-          .filter((e) => e.stepId === stepId)
-          .map((e) => ({ type: (e.type as string | null) ?? null }));
-        const plannedTypes =
-          (step.plannedEvidenceTypes as string | null) ?? null;
-
-        if (!canCompleteStep(plannedTypes, stepEvidence)) {
-          showToast({
-            message: t("focusMode:toast.evidenceRequired"),
-            duration: 3000,
-          });
-          return;
-        }
-
-        completeStep(stepId as StepId, plannedTypes, stepEvidence);
-        AccessibilityInfo.announceForAccessibility(
-          t("focusMode:a11y.stepCompleted", { title: step.title }),
-        );
-        // Advance past the just-completed step to the next pending one.
-        // stepRows is the pre-completion snapshot, so skip stepId explicitly.
-        // Forward first, then wrap; if nothing remains pending, the
-        // all-steps-complete effect navigates to CompletionFlow.
-        const isOtherPending = (s: (typeof stepRows)[number]): boolean =>
-          s.id !== stepId && isPendingStep(s);
-        const completedIndex = stepRows.findIndex((s) => s.id === stepId);
-        const forwardIndex = stepRows.findIndex(
-          (s, i) => i > completedIndex && isOtherPending(s),
-        );
-        const nextIndex =
-          forwardIndex !== -1
-            ? forwardIndex
-            : stepRows.findIndex(isOtherPending);
-        if (nextIndex !== -1 && nextIndex !== currentCardIndex) {
-          // Use handleIndexChange (not setCurrentCardIndex) so the evidence
-          // drawer / FAB menu close — otherwise an open overlay would persist
-          // over the new step's content.
-          handleIndexChange(nextIndex);
-        }
+        return;
       }
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : t("focusMode:errors.somethingWrong");
-      console.error("[FocusModeScreen] Failed to toggle step completion", {
-        stepId,
-        error,
-      });
-      reportError(error, { area: "focus.mode", kind: "step-toggle" });
-      showToast({
-        message: t("focusMode:errors.couldNotUpdateStep", { message }),
-        duration: 3000,
-      });
-    }
-  };
 
-  const handleEvidenceTap = () => {
+      try {
+        if (step.status === StepStatus.completed) {
+          uncompleteStep(stepId as StepId);
+          AccessibilityInfo.announceForAccessibility(
+            t("focusMode:a11y.stepUncompleted", { title: step.title }),
+          );
+        } else {
+          const stepEvidence = allStepEvidenceRows
+            .filter((e) => e.stepId === stepId)
+            .map((e) => ({ type: (e.type as string | null) ?? null }));
+          const plannedTypes =
+            (step.plannedEvidenceTypes as string | null) ?? null;
+
+          if (!canCompleteStep(plannedTypes, stepEvidence)) {
+            showToast({
+              message: t("focusMode:toast.evidenceRequired"),
+              duration: 3000,
+            });
+            return;
+          }
+
+          completeStep(stepId as StepId, plannedTypes, stepEvidence);
+          AccessibilityInfo.announceForAccessibility(
+            t("focusMode:a11y.stepCompleted", { title: step.title }),
+          );
+          // Advance past the just-completed step to the next pending one.
+          // stepRows is the pre-completion snapshot, so skip stepId explicitly.
+          // Forward first, then wrap; if nothing remains pending, the
+          // all-steps-complete effect navigates to CompletionFlow.
+          const isOtherPending = (s: (typeof stepRows)[number]): boolean =>
+            s.id !== stepId && isPendingStep(s);
+          const completedIndex = stepRows.findIndex((s) => s.id === stepId);
+          const forwardIndex = stepRows.findIndex(
+            (s, i) => i > completedIndex && isOtherPending(s),
+          );
+          const nextIndex =
+            forwardIndex !== -1
+              ? forwardIndex
+              : stepRows.findIndex(isOtherPending);
+          if (nextIndex !== -1) {
+            // Use handleIndexChange (not setCurrentCardIndex) so the evidence
+            // drawer / FAB menu close — otherwise an open overlay would persist
+            // over the new step's content.
+            handleIndexChange(nextIndex);
+          }
+        }
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : t("focusMode:errors.somethingWrong");
+        console.error("[FocusModeScreen] Failed to toggle step completion", {
+          stepId,
+          error,
+        });
+        reportError(error, { area: "focus.mode", kind: "step-toggle" });
+        showToast({
+          message: t("focusMode:errors.couldNotUpdateStep", { message }),
+          duration: 3000,
+        });
+      }
+    },
+    [allStepEvidenceRows, handleIndexChange, showToast, stepRows, t],
+  );
+
+  const handleEvidenceTap = useCallback(() => {
     setIsDrawerOpen(true);
-  };
+  }, []);
 
-  const handleToggleDrawer = () => {
+  const handleToggleDrawer = useCallback(() => {
     setIsDrawerOpen((prev) => !prev);
-  };
+  }, []);
 
-  const handleToggleFABMenu = () => {
+  const handleToggleFABMenu = useCallback(() => {
     setIsFABMenuOpen((prev) => !prev);
     if (!isDrawerOpen) setIsDrawerOpen(true);
-  };
+  }, [isDrawerOpen]);
 
-  const handleSelectEvidenceType = (type: EvidenceTypeValue) => {
-    setIsFABMenuOpen(false);
-    const routeName = EVIDENCE_ROUTE_MAP[type];
-    if (!routeName) {
-      logger.error("No capture route mapped for evidence type", { type });
-      const label = evidenceShortLabel(t, type);
-      showToast({
-        message: t("focusMode:errors.couldNotOpenCapture", { label }),
-        duration: 3000,
+  const handleSelectEvidenceType = useCallback(
+    (type: EvidenceTypeValue) => {
+      setIsFABMenuOpen(false);
+      const routeName = EVIDENCE_ROUTE_MAP[type];
+      if (!routeName) {
+        logger.error("No capture route mapped for evidence type", { type });
+        const label = evidenceShortLabel(t, type);
+        showToast({
+          message: t("focusMode:errors.couldNotOpenCapture", { label }),
+          duration: 3000,
+        });
+        return;
+      }
+
+      navigation.navigate(routeName, {
+        goalId,
+        stepId: isGoalCard ? undefined : stepRows[currentCardIndex]?.id,
       });
-      return;
-    }
+    },
+    [currentCardIndex, goalId, isGoalCard, navigation, showToast, stepRows, t],
+  );
 
-    navigation.navigate(routeName, {
-      goalId,
-      stepId: isGoalCard ? undefined : stepRows[currentCardIndex]?.id,
-    });
-  };
+  const handleQuickEvidence = useCallback(
+    (stepId: string, type: QuickEvidenceType) => {
+      setIsFABMenuOpen(false);
+      const routeName = EVIDENCE_ROUTE_MAP[type];
+      if (!routeName) {
+        logger.error("No capture route mapped for evidence type", { type });
+        const label = evidenceShortLabel(t, type);
+        showToast({
+          message: t("focusMode:errors.couldNotOpenCapture", { label }),
+          duration: 3000,
+        });
+        return;
+      }
 
-  const handleQuickEvidence = (stepId: string, type: QuickEvidenceType) => {
-    setIsFABMenuOpen(false);
-    const routeName = EVIDENCE_ROUTE_MAP[type];
-    if (!routeName) {
-      logger.error("No capture route mapped for evidence type", { type });
-      const label = evidenceShortLabel(t, type);
-      showToast({
-        message: t("focusMode:errors.couldNotOpenCapture", { label }),
-        duration: 3000,
+      navigation.navigate(routeName, {
+        goalId,
+        stepId,
       });
-      return;
-    }
+    },
+    [goalId, navigation, showToast, t],
+  );
 
-    navigation.navigate(routeName, {
-      goalId,
-      stepId,
-    });
-  };
-
-  const handleRequestDeleteEvidence = (id: string) => {
+  const handleRequestDeleteEvidence = useCallback((id: string) => {
     setPendingDeleteId(id);
-  };
+  }, []);
 
-  const handleConfirmDeleteEvidence = () => {
+  const handleConfirmDeleteEvidence = useCallback(() => {
     if (!pendingDeleteId) return;
     const id = pendingDeleteId;
     setPendingDeleteId(null);
@@ -445,27 +419,14 @@ function FocusContent({ goalId }: { goalId: string }) {
     try {
       deleteEvidence(id as EvidenceId);
 
-      // Delay file deletion — allow undo via toast
-      const timer = setTimeout(() => {
-        if (row?.uri && row.type) {
-          deleteEvidenceFile(row.uri, row.type);
-        }
-        pendingFileDeletionRef.current = null;
-      }, 5000);
-
-      pendingFileDeletionRef.current = {
-        id,
-        uri: row?.uri ?? null,
-        type: row?.type ?? null,
-        timer,
-      };
+      // Soft-delete is committed on confirm; clean up the backing file
+      // immediately. There is no undo, so there is nothing to defer.
+      if (row?.uri && row.type) {
+        deleteEvidenceFile(row.uri, row.type);
+      }
 
       showToast({
         message: t("focusMode:toast.evidenceDeleted"),
-        action: {
-          label: t("common:actions.undo"),
-          onPress: handleUndoDelete,
-        },
         duration: 5000,
       });
     } catch (error) {
@@ -473,35 +434,57 @@ function FocusContent({ goalId }: { goalId: string }) {
         evidenceId: id,
         error,
       });
-      reportError(error, { area: "focus.mode" });
+      reportError(error, { area: "focus.mode", kind: "evidence-delete" });
       Alert.alert(
         t("focusMode:errors.couldNotDeleteEvidenceTitle"),
         t("focusMode:errors.somethingWrong"),
       );
     }
-  };
+  }, [
+    currentStepEvidenceRows,
+    goalEvidenceRows,
+    pendingDeleteId,
+    showToast,
+    t,
+  ]);
 
-  const handleViewEvidence = (id: string) => {
-    const row =
-      currentStepEvidenceRows.find((r) => r.id === id) ??
-      goalEvidenceRows.find((r) => r.id === id);
-    if (!row) return;
-    viewEvidence({
-      id: row.id,
-      title: row.description ?? row.type ?? evidenceFallbackLabel,
-      type: validateEvidenceType(row.type ?? "file"),
-      uri: row.uri ?? undefined,
-      metadata: row.metadata ?? undefined,
-    });
-  };
+  const handleViewEvidence = useCallback(
+    (id: string) => {
+      const row =
+        currentStepEvidenceRows.find((r) => r.id === id) ??
+        goalEvidenceRows.find((r) => r.id === id);
+      if (!row) return;
+      viewEvidence({
+        id: row.id,
+        title: row.description ?? row.type ?? evidenceFallbackLabel,
+        type: validateEvidenceType(row.type ?? "file"),
+        uri: row.uri ?? undefined,
+        metadata: row.metadata ?? undefined,
+      });
+    },
+    [
+      currentStepEvidenceRows,
+      evidenceFallbackLabel,
+      goalEvidenceRows,
+      viewEvidence,
+    ],
+  );
 
-  const handleTimelineTap = () => {
+  const handleTimelineTap = useCallback(() => {
     navigation.navigate("TimelineJourney", { goalId });
-  };
+  }, [goalId, navigation]);
 
-  const handleEditPress = () => {
+  const handleEditPress = useCallback(() => {
     navigation.navigate("EditMode", { goalId, cameFromFocus: true });
-  };
+  }, [goalId, navigation]);
+
+  if (!goal) {
+    return (
+      <View style={styles.centered}>
+        <Text variant="body">{t("focusMode:errors.goalNotFound")}</Text>
+      </View>
+    );
+  }
 
   // --- Render ---
 
@@ -587,9 +570,9 @@ function FocusContent({ goalId }: { goalId: string }) {
                 }}
                 stepIndex={index}
                 totalSteps={stepRows.length}
-                onToggleComplete={() => handleToggleStep(step.id)}
+                onToggleComplete={handleToggleStep}
                 onEvidenceTap={handleEvidenceTap}
-                onQuickEvidence={(type) => handleQuickEvidence(step.id, type)}
+                onQuickEvidence={handleQuickEvidence}
               />
             )),
             <GoalEvidenceCard
