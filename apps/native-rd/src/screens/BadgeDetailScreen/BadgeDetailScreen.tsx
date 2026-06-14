@@ -4,7 +4,6 @@ import {
   ScrollView,
   Image,
   ActivityIndicator,
-  Alert,
   type LayoutChangeEvent,
 } from "react-native";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
@@ -18,6 +17,7 @@ import { Card } from "../../components/Card";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { IconButton } from "../../components/IconButton";
 import { HeaderBand } from "../../components/ScreenHeader";
+import { ConfirmDeleteModal } from "../ConfirmDeleteModal";
 import { badgeWithGoalQuery, deleteBadge } from "../../db";
 import type { BadgeId } from "../../db";
 import { PLACEHOLDER_IMAGE_URI } from "../../hooks/useCreateBadge";
@@ -188,6 +188,7 @@ function BadgeDetailContent({
   const badge = rows[0] ?? null;
 
   const [imageLoadFailed, setImageLoadFailed] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [previewHeight, setPreviewHeight] = useState(
     PREVIEW_OVERLAY_INITIAL_HEIGHT,
   );
@@ -222,21 +223,13 @@ function BadgeDetailContent({
   };
 
   const handleDelete = () => {
-    Alert.alert(
-      t("badgeDetail:deleteConfirm.title"),
-      t("badgeDetail:deleteConfirm.message"),
-      [
-        { text: t("badgeDetail:deleteConfirm.cancel"), style: "cancel" },
-        {
-          text: t("badgeDetail:deleteConfirm.delete"),
-          style: "destructive",
-          onPress: () => {
-            deleteBadge(badgeId as BadgeId);
-            navigation.goBack();
-          },
-        },
-      ],
-    );
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = () => {
+    setShowDeleteModal(false);
+    deleteBadge(badgeId as BadgeId);
+    navigation.goBack();
   };
 
   if (!badge) {
@@ -511,6 +504,16 @@ function BadgeDetailContent({
           )}
         </View>
       </View>
+
+      <ConfirmDeleteModal
+        visible={showDeleteModal}
+        onCancel={() => setShowDeleteModal(false)}
+        onConfirm={handleConfirmDelete}
+        title={t("badgeDetail:deleteConfirm.title")}
+        message={t("badgeDetail:deleteConfirm.message")}
+        confirmLabel={t("badgeDetail:deleteConfirm.delete")}
+        cancelLabel={t("badgeDetail:deleteConfirm.cancel")}
+      />
     </>
   );
 }
