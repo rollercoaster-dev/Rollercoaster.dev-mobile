@@ -18,7 +18,7 @@
   },
   "confirmDelete": {
     "title": "Delete evidence?",
-    "message": "You can undo this briefly after deleting."
+    "message": "This cannot be undone."
   },
   "errors": {
     "goalNotFound": "Goal not found.",

@@ -18,7 +18,7 @@
   },
   "confirmDelete": {
     "title": "Nachweis löschen?",
-    "message": "Du kannst das kurz nach dem Löschen rückgängig machen."
+    "message": "Dies kann nicht rückgängig gemacht werden."
   },
   "errors": {
     "goalNotFound": "Ziel nicht gefunden.",
