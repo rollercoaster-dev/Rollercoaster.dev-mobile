@@ -43,7 +43,6 @@ import {
   goalsQuery,
   stepsByGoalQuery,
   evidenceByGoalQuery,
-  evidenceByStepQuery,
   stepEvidenceByGoalQuery,
   completeStep,
   uncompleteStep,
@@ -204,10 +203,12 @@ function FocusContent({ goalId }: { goalId: string }) {
 
   // Current evidence for the drawer
   const currentStepId = isGoalCard ? null : stepRows[currentCardIndex]?.id;
-  const currentStepEvidenceRows = useQuery(
-    currentStepId
-      ? evidenceByStepQuery(currentStepId as StepId)
-      : evidenceByGoalQuery(goalId as GoalId),
+  const currentStepEvidenceRows = useMemo(
+    () =>
+      currentStepId
+        ? allStepEvidenceRows.filter((row) => row.stepId === currentStepId)
+        : [],
+    [allStepEvidenceRows, currentStepId],
   );
 
   const evidenceFallbackLabel = t("focusMode:evidenceFallback");

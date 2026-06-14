@@ -84,7 +84,7 @@ right as the slide starts:
 Bottom-up; each commit leaves the tree green (type-check + lint + tests).
 
 - [x] Commit 1 — Stable callbacks + memoized cards
-- [ ] Commit 2 — Remove the redundant per-step evidence query
+- [x] Commit 2 — Remove the redundant per-step evidence query
 
 ### Commit 1 — Stable callbacks + memoized cards (highest leverage)
 
@@ -192,3 +192,6 @@ fix. First capture a before/after profile after commits 1-2.
 - [2026-06-14] Used `useFlashOnIncrease` as the render probe in the Focus-mode
   regression test. It runs once per card render and avoids altering production
   component APIs solely for instrumentation.
+- [2026-06-14] Confirmed `stepEvidenceByGoalQuery` selects every evidence
+  column, so filtered drawer rows retain `uri` and `metadata` for view and
+  delayed file deletion behavior.
