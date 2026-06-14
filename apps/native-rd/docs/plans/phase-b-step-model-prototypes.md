@@ -327,8 +327,8 @@ Key questions:
 
 ### Stage 4: Learning
 
-Purpose: test learning artifacts once Step identity, states, and the
-scratchpad are stable enough to support them.
+Purpose: test learning artifacts once Step identity and states are stable
+enough to support them.
 
 Prototype in this stage:
 
@@ -339,8 +339,11 @@ Why this order:
 
 - H is a combination of things Stages 1-2 built: an E state + a C-style link
   - journey display.
-- G depends on the Scratchpad existing — the review is an edit pass over the
-  goal's pad and journey.
+- G is **re-scoped to not require the Scratchpad** (which now lands at Stage
+  5). For this stage the review is an edit pass over the goal's **journey and
+  its H learnings** — both of which exist by now. The pad-curation facet of
+  the review (`G + Scratchpad`: does curating consume the mess or copy it?) is
+  deferred to the Scratchpad stage and its integration, not prototyped here.
 
 Key questions:
 
