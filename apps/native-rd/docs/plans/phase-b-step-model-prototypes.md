@@ -39,7 +39,8 @@ definitions) and ADR-0011 (the re-map and what it decided).
 - Use the existing personas and failure scenarios from
   [step-model-gap.md](../research/step-model-gap.md).
 - Judge features together only after understanding their isolated behavior.
-- Preserve the universal no-auto-state rule in every time experiment.
+- Preserve the universal no-auto-judgment rule in every time experiment (time
+  never authors a verdict; bookkeeping automation is fine — [ADR-0012](../decisions/ADR-0012-no-auto-judgment.md)).
 - Do not turn absence into a score, interpretation, count, prompt, or verdict.
 - Use the phone's built-in tools (calendar, reminders) before building an
   in-app equivalent; the in-app Slot model is probably unnecessary, and
@@ -244,7 +245,7 @@ Stage 0 deliverables:
   seeded with file refs in
   [phase-b-stage-0-baseline.md](./phase-b-stage-0-baseline.md).
 - A reusable prototype record copied from the template below.
-- A reusable guardrail checklist covering no-auto-state, absence handling,
+- A reusable guardrail checklist covering no-auto-judgment, absence handling,
   G opt-in, calendar-holds-repetition, no app-icon badge counts, and
   informative-only dependencies.
 - The prototype medium menu, with the medium chosen for each Stage 1

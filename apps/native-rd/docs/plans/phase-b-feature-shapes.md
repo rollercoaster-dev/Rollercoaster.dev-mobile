@@ -17,7 +17,7 @@ Scenario, Evidence To Collect, Exit Criteria, Dependencies.
 | Feature                                                 | Stage   | Status                         |
 | ------------------------------------------------------- | ------- | ------------------------------ |
 | **A: Substeps** (formerly Granularity / Substructure)   | Stage 1 | Drafted 2026-06-11 — in review |
-| **E: Step states** (formerly Richer state vocabulary)   | Stage 1 | Not started                    |
+| **E: Step states** (formerly Richer state vocabulary)   | Stage 1 | Drafted 2026-06-14             |
 | **Scratchpad** (absorbs D + F)                          | Stage 2 | Not started                    |
 | **C: Dependencies** (merges C-order + C-waiting)        | Stage 2 | Not started                    |
 | **B: Planning** (merges B-soft, B-deadlines, repeating) | Stage 3 | Not started                    |
@@ -190,3 +190,122 @@ of scope — his path is the Scratchpad's.
   [Evolu spike](../research/evolu-step-model-feasibility-spike.md): additive
   `parentStepId` column, no migration, recursive queries available if ever
   needed.
+
+## E: Step states (formerly Richer state vocabulary)
+
+### User Need
+
+A step today is `pending`, `completed`, or the UI-derived `in-progress` — one
+undone state that erases the difference between "haven't started," "set this
+aside," and "still chewing on it" ([CONTEXT.md § Step states](../../CONTEXT.md)).
+Users need a few more states, in words that feel like theirs. The user can set
+any state by hand; the app maintains the bookkeeping states (which step you're
+on) automatically, but never authors a judgment about the user — the
+no-auto-judgment line, not no-automation (CONTEXT.md § Step states).
+
+### Smallest Useful Shape
+
+Reuse the existing focus-mode state pill (`StatusBadge`, via
+[`StepCard.tsx`](../../src/components/StepCard/StepCard.tsx)) and let it carry a
+few colored states instead of the current three. Each state is **a color plus a
+base name**, and the user can **rename** any state — the renamed word stays
+next to the color. **The user can set any state by hand**, overriding whatever
+the app is showing. Color is the identity; the word rides alongside it and is
+never replaced by it.
+
+Candidate set, from CONTEXT.md, kept minimal:
+
+- `pending` and `completed` — the existing two.
+- `in-progress` — the step you're on. At most one per goal; it's an
+  app-maintained **pointer**, not a verdict — pure bookkeeping the user would
+  otherwise do by hand. When the in-progress step is paused or completed, the
+  app **auto-advances** in-progress to the next pending step (the "one next
+  step" the task view already promises). The user can also move it by hand —
+  setting in-progress on any step clears it from the one that had it. The auto
+  part is allowed precisely because it makes no claim about the user; it just
+  tracks where they are.
+- `paused` — user-set; it tells the goal view the step **can be skipped**, so
+  the "one next step" readout routes past it to the next pending step. The user
+  pauses and unpauses a step; the app never pauses one on its own. (Pausing the
+  in-progress step is the canonical trigger for the auto-advance above: you
+  start a step, realize you need the next one first, pause this one, and the
+  next becomes in-progress without a second tap.)
+- `missed` — present only as a state the **user** can set by hand; never
+  applied by the app, never by time passing. The prototype tests whether it
+  earns a place at all.
+
+Out of scope here: `waiting-external` (a C dependency relation, not a state),
+the `learning` state (parked for Stage 4's H), and Slot (the calendar holds
+repetition).
+
+### Later Integrated Shape
+
+- A step's state travels with substeps (A) and with learnings (H reuses an E
+  state plus a follows-from link).
+- The random-word-from-a-pool playfulness (ADR-0011) sits above this baseline —
+  prototyped only if colored, renameable states earn it.
+
+### Must Not Do
+
+- No auto-judgment: time never changes a state, and the app never authors a
+  verdict about the user — `missed`, `paused`, and `completed` are user-set, and
+  no state is ever derived from an absence or the clock. (App-maintained
+  `in-progress` is bookkeeping, not a verdict, and is exempt — see Smallest
+  Useful Shape.)
+- No counting, scoring, or aggregating states.
+- No "failed / overdue / skipped" base names (CONTEXT.md _Avoid_ list).
+- Color is never the sole carrier — the word is always visible beside it.
+
+### Prototype Questions
+
+1. Which states earn a place beyond `pending`/`completed` — does `missed`
+   belong, set by hand?
+2. Do the base names read right before anyone renames them, and does "pending"
+   still read like database-speak?
+3. Does color + word stay legible in highContrast and the muted autismFriendly
+   palette?
+4. Does letting a user rename a state make it feel like theirs, or just add a
+   step?
+5. When the goal view skips a `paused` step, what does the card show — the next
+   pending step — and what happens when every remaining step is paused? (Touches
+   the task-view promise; a paused step stays visible in the step list, it is
+   not hidden.)
+6. Does the pause → next-becomes-in-progress auto-advance read as the app being
+   helpful, or as the app deciding something for the user? Does it ever advance
+   to a step the user didn't want next — and is a hand-override enough to undo
+   it, or does the auto-advance need to be opt-in?
+
+### Scenario
+
+Tomás missing two practice-panel weekends
+([CONTEXT.md example dialogue](../../CONTEXT.md)) — the case that asks whether
+`missed` is a state and whether the user, not the app, sets it.
+
+### Evidence To Collect
+
+- Which base states got used, which got renamed, and to what.
+- Screenshots of the pills in highContrast and autismFriendly.
+- Whether any state read as a label of failure.
+
+### Exit Criteria
+
+- The prototype questions above have recorded answers (or recorded non-answers
+  with what blocked them).
+- Guardrail checklist from
+  [phase-b-stage-0-deliverables.md](./phase-b-stage-0-deliverables.md) passes —
+  especially no-auto-judgment and absence-uninterpreted.
+- A decision-gate outcome is recorded; graduation to a schema ADR or design
+  decision additionally requires real ND-user evidence (self-testing caps the
+  outcome at revise / split / more prototyping).
+
+### Dependencies
+
+- **Existing step pill** (`StatusBadge`) — the surface reused; the prototype
+  widens its state set.
+- **Task-view contract** — `paused` routes the "one next step" readout past the
+  step; the readout must still resolve to one next thing (baseline record
+  §Task-view contract).
+- **A: Substeps** — substeps will carry states too; this prototype keeps to
+  flat steps.
+- **H: Learnings** — H reuses an E state (Stage 4); the `learning` state is
+  parked until then.

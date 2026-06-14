@@ -79,6 +79,16 @@ The current default state. Today erases most distinctions: _haven't done it yet_
 **completed**:
 The current terminal state. Set by the checkbox.
 
+**in-progress**:
+The step you're on. Today it's UI-derived from the current focus selection (`src/types/steps.ts`); under E it becomes a real, app-maintained **pointer** — at most one per goal. The app advances it as bookkeeping: when the in-progress step is **paused** or **completed**, in-progress moves to the next pending step on its own (you start a step, realize you need the next one first, pause this one, and the next becomes in-progress without a second tap). This is auto-_bookkeeping_, not auto-_judgment_ — it tracks where the user is and asserts nothing about them, so it's exempt from the no-auto-judgment rule. The user can also move it by hand; setting in-progress on any step clears it from whichever step held it.
+_Avoid_: active (UI variant name only), locked (retired — see below).
+
+**locked**:
+Retired as a state. It survives today only as a `StatusBadge` variant that `TimelineStep` maps `pending` onto (`src/components/StatusBadge`, `TimelineStep.tsx`). "Locked" implies a gate the user can't pass — dependency framing (C), and failure-flavored. Under E, `pending` is just `pending`; an unsatisfied dependency is shown by C's relation, not by a "locked" state.
+
+**Hand-editable**:
+Every state can be set by hand, overriding whatever the app shows. The app's automation is a default the user can always correct — that is what keeps auto-bookkeeping (in-progress advancing) on the right side of the no-auto-judgment line.
+
 **missed**:
 Candidate state, if it exists at all — never applied by the app. Time passing does not promote `pending` → `missed`, for any goal type. If a step the user intended for Tuesday doesn't get done, the step stays `pending` (or its Tuesday slot stays blank); the app does not interpret the absence. An earlier draft singled out recovery goals as the place to ban `missed`; the constraint is universal — there is no time-based auto-state for any goal.
 _Avoid_: failed, skipped, overdue, auto-missed.
@@ -95,8 +105,15 @@ _Avoid_: failed, wrong, redo.
 A dated occurrence produced by a repeating Step — _this Tuesday_, _next Tuesday_. **Demoted to probably unnecessary, 2026-06-12:** the phone's calendar holds the repetition; the step just _is_ the repeating thing. Stage 3 verifies that calendar delegation covers the scenarios before any in-app Slot model is considered. What stays settled regardless of model: the absence of a check is never interpreted, aggregated, counted, or surfaced as evidence about the user.
 _Avoid_: occurrence, missed Tuesday, attendance record, instance.
 
-**Universal no-auto-state rule**:
-Time passing never changes a Step's state or causes the app to interpret, score, or aggregate an absence. This applies to all three planning shapes — date, deadline, and repeating.
+**Universal no-auto-judgment rule** (formerly "no-auto-state"):
+The app never authors a judgment about the user. Time passing never changes a Step's state, and the app never interprets, scores, or aggregates an absence — across all three planning shapes (date, deadline, repeating). What the rule guards against is _verdicts_ — `missed`, `overdue`, failed, behind, streak-broken — not _automation_. The line is judgment, not who pressed the button.
+
+The rule was renamed from "no-auto-state" because that wording had drifted into "the app never decides any state," which would forbid plain bookkeeping and reduce the app to digital paper. Two different things wore one name:
+
+- **Auto-judgment** (forbidden, always): the app decides the user failed, missed, fell behind, or broke a streak; the app counts/scores/aggregates an absence. This is the ADR-0006 anti-pathologizing core.
+- **Auto-bookkeeping** (allowed, and the point of building software): the app tracks which step you're on, advances it when you pause or complete one, shows 3-of-5-done, marks a parent done when every child is checked. Reversible, correctable, asserts nothing about the user's worth.
+
+Test for any automation: does it interpret _absence_ as failure, or count/score the user against a standard? Then it's forbidden. Is it reversible bookkeeping the user could have done by hand? Then do it — making the process easier is the job. Recorded in [ADR-0012](docs/decisions/ADR-0012-no-auto-judgment.md).
 
 **Flagged ambiguity — state words**:
 Color is the state's identity; the label is a word from a small pool per state, picked once when the state is set (decided 2026-06-12). Pools are authored during prototyping; whether the user can edit or extend the pools stays open. Whether `pending`/`completed` keep their names in the UI is also open — "pending reads like database-speak" was raised and not contested.
