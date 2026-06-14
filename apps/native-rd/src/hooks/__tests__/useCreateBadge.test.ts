@@ -728,6 +728,24 @@ describe("useCreateBadge", () => {
       expect(result.current.error).toBeNull();
     });
 
+    it("is inert when called outside the error state (does not reset a done bake)", async () => {
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
+      await act(async () => {});
+
+      // Precondition: the bake succeeded and the hook is at the terminal "done".
+      expect(result.current.status).toBe("done");
+      expect(mockCreateBadge).toHaveBeenCalledTimes(1);
+
+      // Calling retryBake from "done" must be a no-op — the gate returns early,
+      // so the guard isn't re-armed and the pipeline doesn't run a second time.
+      act(() => {
+        result.current.retryBake();
+      });
+
+      expect(result.current.status).toBe("done");
+      expect(mockCreateBadge).toHaveBeenCalledTimes(1);
+    });
+
     it("re-runs the bake pipeline after retry when the host re-renders", async () => {
       // Mirror Evolu's fresh-ref-per-render behaviour (see hook comments): a new
       // goal object each render means the guarded effect re-evaluates on every

@@ -18,9 +18,10 @@
  * preconditions and — assuming the caller's `enabled` is still `true` — re-runs
  * the full pipeline from the start. It does NOT touch `enabled`; the caller's
  * commit-to-bake state is unchanged, so retry is in-place rather than bouncing
- * the user back to a pre-bake choice. `retryBake` is only meaningful from the
- * `"error"` state; calling it from `"done"` or a permanent `"no-key"` failure
- * would re-arm the guard without changing the underlying cause.
+ * the user back to a pre-bake choice. The reset is gated to the `"error"`
+ * state — calling it from `"done"`, `"no-key"`, or any in-flight status returns
+ * early, so a stray call can't re-arm the guard or bounce a completed bake back
+ * through the pipeline.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery } from "@evolu/react";
@@ -72,7 +73,7 @@ export interface UseCreateBadgeResult {
   /**
    * Resets the terminal `"error"` state so the bake pipeline can re-run.
    * Clears the re-entry guard, returns status to `"idle"`, and clears `error`.
-   * No-op in effect unless the hook is currently in `"error"`. See the
+   * Returns early (no-op) unless the hook is currently in `"error"`. See the
    * "Terminal error state and recovery" note above.
    */
   retryBake: () => void;
@@ -382,11 +383,15 @@ export function useCreateBadge(
 
   // Recovery from the terminal "error" state: clear the never-reset guard and
   // return to "idle" so the guarded effect can re-run on the next render.
+  // Gated to "error" so a call from any other state can't re-arm the guard or
+  // bounce a completed/in-flight bake back through the pipeline — keeps the
+  // implementation in step with the documented contract.
   const retryBake = useCallback(() => {
+    if (status !== "error") return;
     hasTriggered.current = false;
     setStatus("idle");
     setError(null);
-  }, []);
+  }, [status]);
 
   return { status, error, retryBake };
 }
