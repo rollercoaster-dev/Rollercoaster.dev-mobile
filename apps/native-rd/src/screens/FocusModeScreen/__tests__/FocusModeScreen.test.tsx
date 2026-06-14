@@ -53,12 +53,12 @@ jest.mock("../../../hooks/useAnimationPref", () => ({
 const mockCompleteStep = jest.fn();
 const mockUncompleteStep = jest.fn();
 const mockDeleteEvidence = jest.fn();
-const mockRestoreEvidence = jest.fn();
 const mockCreateEvidence = jest.fn();
 const mockCanCompleteStep = jest.fn().mockReturnValue(true);
+const mockDeleteEvidenceFile = jest.fn();
 
 jest.mock("../../../utils/evidenceCleanup", () => ({
-  deleteEvidenceFile: jest.fn(),
+  deleteEvidenceFile: (...args: unknown[]) => mockDeleteEvidenceFile(...args),
 }));
 
 jest.mock("../../../services/sentry-report", () => ({
@@ -88,7 +88,6 @@ jest.mock("../../../db", () => ({
   completeStep: (...args: unknown[]) => mockCompleteStep(...args),
   uncompleteStep: (...args: unknown[]) => mockUncompleteStep(...args),
   deleteEvidence: (...args: unknown[]) => mockDeleteEvidence(...args),
-  restoreEvidence: (...args: unknown[]) => mockRestoreEvidence(...args),
   createEvidence: (...args: unknown[]) => mockCreateEvidence(...args),
   canCompleteStep: (...args: unknown[]) => mockCanCompleteStep(...args),
   createUserSettings: jest.fn(),
@@ -812,7 +811,7 @@ describe("FocusModeScreen", () => {
     expect(mockDeleteEvidence).not.toHaveBeenCalled();
   });
 
-  it("shows undo toast after confirming evidence deletion", () => {
+  it("shows a confirmation toast without an undo action after confirming", () => {
     setupQueries();
     renderWithProviders(<FocusModeScreen {...routeProps} />);
 
@@ -823,14 +822,14 @@ describe("FocusModeScreen", () => {
       screen.getByRole("button", { name: i18n.t("common:actions.delete") }),
     );
 
-    // Toast should appear with undo action
+    // The informational toast appears, but there is no undo action to chase.
     expect(
       screen.getByText(i18n.t("focusMode:toast.evidenceDeleted")),
     ).toBeOnTheScreen();
-    expect(screen.getByLabelText("Undo")).toBeOnTheScreen();
+    expect(screen.queryByLabelText("Undo")).toBeNull();
   });
 
-  it("restores evidence when undo is pressed in toast", () => {
+  it("cleans up the evidence file immediately on confirm (no deferred timer)", () => {
     setupQueries();
     renderWithProviders(<FocusModeScreen {...routeProps} />);
 
@@ -841,9 +840,12 @@ describe("FocusModeScreen", () => {
       screen.getByRole("button", { name: i18n.t("common:actions.delete") }),
     );
 
-    // Press undo
-    fireEvent.press(screen.getByLabelText("Undo"));
-    expect(mockRestoreEvidence).toHaveBeenCalledWith("ev-s1");
+    // Soft-delete and file cleanup both fire synchronously on confirm.
+    expect(mockDeleteEvidence).toHaveBeenCalledWith("ev-s1");
+    expect(mockDeleteEvidenceFile).toHaveBeenCalledWith(
+      "content:text;My notes",
+      "text",
+    );
   });
 
   // --- Evidence-gated completion ---
