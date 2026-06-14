@@ -22,8 +22,13 @@ prototype plan's principles. A "no" on any line is a finding, not a footnote —
 record it and stop the prototype until resolved.
 
 ```markdown
-- [ ] **No auto-state:** time passing never changed a Step's state anywhere in
-      this prototype (applies to date, deadline, and repeating alike).
+- [ ] **No auto-judgment:** time passing never changed a Step's state, and the
+      app never authored a verdict about the user (failed, missed, behind,
+      streak-broken) anywhere in this prototype — date, deadline, and repeating
+      alike. App-maintained bookkeeping that asserts nothing about the user
+      (advancing `in-progress` when a step is paused/completed) is allowed; the
+      forbidden thing is judgment, not automation. See
+      [ADR-0012](../decisions/ADR-0012-no-auto-judgment.md).
 - [ ] **Absence is uninterpreted:** no surface scored, counted, aggregated,
       prompted about, or drew a conclusion from an absence (a Tuesday that
       didn't happen, a passed date, a blank note).

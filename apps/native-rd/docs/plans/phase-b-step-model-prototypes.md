@@ -39,7 +39,8 @@ definitions) and ADR-0011 (the re-map and what it decided).
 - Use the existing personas and failure scenarios from
   [step-model-gap.md](../research/step-model-gap.md).
 - Judge features together only after understanding their isolated behavior.
-- Preserve the universal no-auto-state rule in every time experiment.
+- Preserve the universal no-auto-judgment rule in every time experiment (time
+  never authors a verdict; bookkeeping automation is fine — [ADR-0012](../decisions/ADR-0012-no-auto-judgment.md)).
 - Do not turn absence into a score, interpretation, count, prompt, or verdict.
 - Use the phone's built-in tools (calendar, reminders) before building an
   in-app equivalent; the in-app Slot model is probably unnecessary, and
@@ -187,13 +188,17 @@ The stage order below is also the priority order. If Phase B runs out of
 runway, the cut line is explicit rather than improvised:
 
 - **Must-have: Stages 0-2.** The baseline, Step richness (A: Substeps,
-  E: Step states), and working-with-Steps (Scratchpad, C: Dependencies)
-  stages are the Phase B core. Phase B is not done without decision-gate
-  outcomes for these.
-- **Committed but deferrable: Stages 3-4.** Planning (B) and learning (H, G)
-  remain ADR-0010 commitments, but their prototype work may be deferred to a
-  later phase if runway forces it. A deferral is recorded as a decision-gate
-  outcome, not left implicit.
+  E: Step states), and dependencies (C: Dependencies) stages are the Phase B
+  core. Phase B is not done without decision-gate outcomes for these.
+- **Committed but deferrable: Stages 3-5.** Planning (B), learning (H, G), and
+  the Scratchpad remain ADR-0010 commitments, but their prototype work may be
+  deferred to a later phase if runway forces it. A deferral is recorded as a
+  decision-gate outcome, not left implicit.
+- **The Scratchpad (Stage 5) is the deliberate tail of the cut line.** It
+  carries the most open conceptual and design questions, nothing upstream
+  depends on it, and it is sequenced last precisely so it can be deferred — or
+  spun out into its own iteration/phase — without disturbing any other
+  feature. Either outcome is recorded at its decision gate, not assumed now.
 - **Removing one of the seven features from Phase B entirely** still requires a
   new ADR superseding ADR-0010. The cut line governs prototype sequencing and
   deferral; it does not quietly shrink the commitment.
@@ -240,7 +245,7 @@ Stage 0 deliverables:
   seeded with file refs in
   [phase-b-stage-0-baseline.md](./phase-b-stage-0-baseline.md).
 - A reusable prototype record copied from the template below.
-- A reusable guardrail checklist covering no-auto-state, absence handling,
+- A reusable guardrail checklist covering no-auto-judgment, absence handling,
   G opt-in, calendar-holds-repetition, no app-icon badge counts, and
   informative-only dependencies.
 - The prototype medium menu, with the medium chosen for each Stage 1
@@ -278,32 +283,28 @@ Key questions:
 Deliberately left dangling — Stage 1 must not stall trying to close these:
 
 - **Substep depth** is not resolved here. Stage 1's A prototype gathers
-  behavior evidence, but the depth question graduates only after Stage 5's
+  behavior evidence, but the depth question graduates only after Stage 6's
   task-view composition (see the Open Questions Register).
 - **The `learning` state** is out of Stage 1's E scope. E will bump into it;
   park it for Stage 4's H prototype rather than resolving it early.
 
-### Stage 2: Working With Steps
+### Stage 2: Dependencies
 
-Purpose: test how Steps change while the user is doing real work.
+Purpose: test how Steps relate to each other and to the outside world while
+the user is doing real work.
 
 Prototype in this stage:
 
-- **Scratchpad**
 - **C: Dependencies**
 
-Why this order:
+Why C here:
 
-- The Scratchpad tests whether discovered structure and context can land
-  before they are lost — and whether drag-out is a real landing mechanism.
 - C tests whether the app can hold dependencies — internal and external —
-  that inform without scoring the user.
+  that inform without scoring the user. It needs only the richer Step from
+  Stage 1; it does not need the Scratchpad, which now lands last (Stage 5).
 
 Key questions:
 
-- Per-goal pad or one global pad?
-- Which drag-out targets exist (substep, evidence, step note), and does the
-  original stay in the pad?
 - What does the dependency marker say ("depends on" — never "blocked by"),
   and what does a step with a not-yet-satisfied dependency show?
 
@@ -331,8 +332,8 @@ Key questions:
 
 ### Stage 4: Learning
 
-Purpose: test learning artifacts once Step identity, states, and the
-scratchpad are stable enough to support them.
+Purpose: test learning artifacts once Step identity and states are stable
+enough to support them.
 
 Prototype in this stage:
 
@@ -343,8 +344,11 @@ Why this order:
 
 - H is a combination of things Stages 1-2 built: an E state + a C-style link
   - journey display.
-- G depends on the Scratchpad existing — the review is an edit pass over the
-  goal's pad and journey.
+- G is **re-scoped to not require the Scratchpad** (which now lands at Stage
+  5). For this stage the review is an edit pass over the goal's **journey and
+  its H learnings** — both of which exist by now. The pad-curation facet of
+  the review (`G + Scratchpad`: does curating consume the mess or copy it?) is
+  deferred to the Scratchpad stage and its integration, not prototyped here.
 
 Key questions:
 
@@ -360,7 +364,45 @@ Stage 4 also closes the `learning`-state edge that Stage 1's E prototype
 deliberately parked: the state is user-set with a pool word (ADR-0011); what
 remains open is presentation and the two-question flow around it.
 
-### Stage 5: Integration
+### Stage 5: Scratchpad
+
+Purpose: prototype the Scratchpad last, in isolation, once every surface it
+might touch already exists.
+
+Prototype in this stage:
+
+- **Scratchpad**
+
+Why last:
+
+- It is the feature with the most open conceptual and design questions while
+  everything else is comparatively clear; sequencing it last lets the simpler,
+  higher-priority features (Goals, Steps, dependencies, planning, learning)
+  land and work first, leaving room to fail on the Scratchpad without
+  jeopardizing them.
+- By Stage 5 every drag-out target already exists — substeps (A), evidence and
+  step notes, dependencies (C) — so the pad is prototyped against real
+  landing places rather than speculative ones, and its integration becomes a
+  defined question instead of a moving one.
+- Nothing upstream depends on it: A and C only meet it in integration
+  questions, and G's review has been re-scoped to not require the pad (Stage
+  4). So the Scratchpad blocks no other feature.
+
+Key questions:
+
+- Per-goal pad or one global pad?
+- Which drag-out targets exist (substep, evidence, step note), and does the
+  original stay in the pad?
+- Does the mid-work capture actually reduce friction under real mid-work
+  conditions (the question that needs a lived-with build)?
+
+> **Candidate to spin out (2026-06-14):** the Scratchpad may graduate into its
+> own iteration/phase rather than closing inside Phase B. Its conceptual and
+> design surface is large enough, and its isolation here clean enough, that
+> deferring it to a dedicated iteration is a legitimate decision-gate outcome —
+> recorded explicitly when the gate is reached, not assumed now.
+
+### Stage 6: Integration
 
 Purpose: verify that the features still work when composed.
 
@@ -494,17 +536,17 @@ research framing behind each question and ADR-0010/ADR-0011 name them, but
 status, hypotheses, and ownership are updated here only, as prototypes
 produce evidence.
 
-| Question                  | Current Hypothesis                                                                                                                                                                                | Blocking Prototype             | Owner | Status |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | ----- | ------ |
-| Substep depth             | Two levels may cover the current scenarios, but arbitrary depth may better match learning structures.                                                                                             | A + task view prototype        | Joe   | Open   |
-| Goal-card readout under A | When the first pending step has substeps, the card shows either the parent's title or the next pending leaf's — which reads as "my next step" on a cold return is unknown.                        | A prototype (in flight)        | Joe   | Open   |
-| E word pools              | Color = state identity and word-from-a-pool are decided; pool contents get authored during prototyping. User-editable pools, and whether `pending`/`completed` keep their UI names, are open.     | E prototype                    | Joe   | Open   |
-| Scratchpad scope          | Probably per-goal rather than global; drag-out targets (substep, evidence, step note) and whether the original stays in the pad are open.                                                         | Scratchpad prototype (Stage 2) | Joe   | Open   |
-| Scratchpad vs evidence    | The pad may absorb the re-entry role that per-step text evidence plays today, or sit beside it; what dragging out to "evidence" or "step note" does to the original is part of the same question. | Scratchpad prototype (Stage 2) | Joe   | Open   |
-| Dependency display        | "Depends on" (never "blocked by") is the working wording; what a step with a not-yet-satisfied dependency shows is unresolved.                                                                    | C prototype (Stage 2)          | Joe   | Open   |
-| Calendar delegation       | The in-app Slot model is probably unnecessary — one-way calendar push plus user-set reminders may cover all repeating scenarios. Verify, don't assume.                                            | Stage 3 planning prototypes    | Joe   | Open   |
-| H invitation honesty      | The two-question path with a quiet "not now" should invite without gating — whether "not now" gets used honestly only shows up in real use.                                                       | H prototype (Stage 4)          | Joe   | Open   |
-| Task-view implications    | "Next Step" may mean next leaf, next parent, next step without an unsatisfied dependency, or next dated step depending on composition.                                                            | Stage 5 integration prototype  | Joe   | Open   |
+| Question                  | Current Hypothesis                                                                                                                                                                                                                                                                | Blocking Prototype                       | Owner | Status |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ----- | ------ |
+| Substep depth             | Two levels may cover the current scenarios, but arbitrary depth may better match learning structures. A layout-pass pinch (2026-06-13): one level holds Sam's Steps 1/2/3, but "Step 4 — inventory" wants its own sub-structure. Observed, not resolved; graduates after Stage 6. | A + task view prototype                  | Joe   | Open   |
+| Goal-card readout under A | Layout pass (2026-06-13) leans **leaf-led**: a parent-led card surfaces the project area, costing an extra read to reach the action, and strains "one next step." Open until the real cold-return test on the dev-flag rung confirms it.                                          | A prototype (records: A-substructure.md) | Joe   | Open   |
+| E word pools              | Color = state identity and word-from-a-pool are decided; pool contents get authored during prototyping. User-editable pools, and whether `pending`/`completed` keep their UI names, are open.                                                                                     | E prototype                              | Joe   | Open   |
+| Scratchpad scope          | Probably per-goal rather than global; drag-out targets (substep, evidence, step note) and whether the original stays in the pad are open.                                                                                                                                         | Scratchpad prototype (Stage 5)           | Joe   | Open   |
+| Scratchpad vs evidence    | The pad may absorb the re-entry role that per-step text evidence plays today, or sit beside it; what dragging out to "evidence" or "step note" does to the original is part of the same question.                                                                                 | Scratchpad prototype (Stage 5)           | Joe   | Open   |
+| Dependency display        | "Depends on" (never "blocked by") is the working wording; what a step with a not-yet-satisfied dependency shows is unresolved.                                                                                                                                                    | C prototype (Stage 2)                    | Joe   | Open   |
+| Calendar delegation       | The in-app Slot model is probably unnecessary — one-way calendar push plus user-set reminders may cover all repeating scenarios. Verify, don't assume.                                                                                                                            | Stage 3 planning prototypes              | Joe   | Open   |
+| H invitation honesty      | The two-question path with a quiet "not now" should invite without gating — whether "not now" gets used honestly only shows up in real use.                                                                                                                                       | H prototype (Stage 4)                    | Joe   | Open   |
+| Task-view implications    | "Next Step" may mean next leaf, next parent, next step without an unsatisfied dependency, or next dated step depending on composition.                                                                                                                                            | Stage 6 integration prototype            | Joe   | Open   |
 
 ## Relationship To ADRs
 
