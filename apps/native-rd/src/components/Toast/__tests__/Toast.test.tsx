@@ -8,7 +8,13 @@ import {
 } from "../../../__tests__/test-utils";
 import { Toast } from "../Toast";
 import { ToastProvider, useToast } from "../ToastContext";
-import { Pressable, Text } from "react-native";
+import { AccessibilityInfo, Platform, Pressable, Text } from "react-native";
+
+// Platform.OS is a runtime property; defineProperty swaps it without re-mocking
+// the whole react-native module.
+function setPlatform(os: "ios" | "android") {
+  Object.defineProperty(Platform, "OS", { configurable: true, value: os });
+}
 
 jest.mock("../../../hooks/useAnimationPref", () => ({
   useAnimationPref: () => ({
@@ -151,6 +157,33 @@ describe("Toast", () => {
     } finally {
       slideOut.restore();
     }
+  });
+
+  it("announces the message for screen readers on show (iOS)", () => {
+    // accessibilityLiveRegion only fires on Android; iOS VoiceOver needs this.
+    const originalPlatform = Platform.OS;
+    setPlatform("ios");
+    const announce = jest
+      .spyOn(AccessibilityInfo, "announceForAccessibility")
+      .mockImplementation(() => {});
+    renderWithProviders(<Toast visible message="Evidence deleted" />);
+    expect(announce).toHaveBeenCalledWith("Evidence deleted");
+    announce.mockRestore();
+    setPlatform(originalPlatform as "ios" | "android");
+  });
+
+  it("does not explicitly announce on Android (live region handles it)", () => {
+    // accessibilityLiveRegion="assertive" already announces on Android;
+    // an explicit announceForAccessibility would double-speak in TalkBack.
+    const originalPlatform = Platform.OS;
+    setPlatform("android");
+    const announce = jest
+      .spyOn(AccessibilityInfo, "announceForAccessibility")
+      .mockImplementation(() => {});
+    renderWithProviders(<Toast visible message="Evidence deleted" />);
+    expect(announce).not.toHaveBeenCalled();
+    announce.mockRestore();
+    setPlatform(originalPlatform as "ios" | "android");
   });
 });
 

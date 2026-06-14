@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Pressable } from "react-native";
+import { AccessibilityInfo, Platform, Pressable } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -49,6 +49,14 @@ export function Toast({
       translateY.value = withTiming(0, { duration: dur });
       opacity.value = withTiming(1, { duration: dur });
 
+      // `accessibilityLiveRegion` (below) announces on Android; iOS VoiceOver
+      // has no live region, so it needs the explicit announce. Guarded to iOS
+      // to avoid double-speak in TalkBack. In the visible branch so a re-show
+      // re-announces.
+      if (Platform.OS === "ios") {
+        AccessibilityInfo.announceForAccessibility(message);
+      }
+
       timerRef.current = setTimeout(() => {
         onDismissRef.current?.();
       }, duration);
@@ -71,7 +79,7 @@ export function Toast({
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [visible, duration, shouldAnimate, translateY, opacity]);
+  }, [visible, message, duration, shouldAnimate, translateY, opacity]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
