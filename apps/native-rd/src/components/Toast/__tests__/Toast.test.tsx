@@ -221,10 +221,13 @@ describe("Toast", () => {
     const announce = jest
       .spyOn(AccessibilityInfo, "announceForAccessibility")
       .mockImplementation(() => {});
-    renderWithProviders(<Toast visible message="Evidence deleted" />);
-    expect(announce).toHaveBeenCalledWith("Evidence deleted");
-    announce.mockRestore();
-    setPlatform(originalPlatform as "ios" | "android");
+    try {
+      renderWithProviders(<Toast visible message="Evidence deleted" />);
+      expect(announce).toHaveBeenCalledWith("Evidence deleted");
+    } finally {
+      announce.mockRestore();
+      setPlatform(originalPlatform as "ios" | "android");
+    }
   });
 
   it("does not explicitly announce on Android (live region handles it)", () => {
@@ -235,10 +238,13 @@ describe("Toast", () => {
     const announce = jest
       .spyOn(AccessibilityInfo, "announceForAccessibility")
       .mockImplementation(() => {});
-    renderWithProviders(<Toast visible message="Evidence deleted" />);
-    expect(announce).not.toHaveBeenCalled();
-    announce.mockRestore();
-    setPlatform(originalPlatform as "ios" | "android");
+    try {
+      renderWithProviders(<Toast visible message="Evidence deleted" />);
+      expect(announce).not.toHaveBeenCalled();
+    } finally {
+      announce.mockRestore();
+      setPlatform(originalPlatform as "ios" | "android");
+    }
   });
 });
 
