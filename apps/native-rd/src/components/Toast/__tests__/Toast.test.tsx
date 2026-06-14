@@ -159,6 +159,61 @@ describe("Toast", () => {
     }
   });
 
+  it("fires onExitComplete once the slide-out finishes (finished === true)", () => {
+    // The owner releases its toast state on this callback, so it must fire only
+    // after the exit animation actually completes — not on `visible` flipping.
+    const slideOut = deferSlideOut();
+    const onExitComplete = jest.fn();
+    try {
+      const { rerender } = renderWithProviders(
+        <Toast visible message="Bye" onExitComplete={onExitComplete} />,
+      );
+      act(() => {
+        rerender(
+          <Toast
+            visible={false}
+            message="Bye"
+            onExitComplete={onExitComplete}
+          />,
+        );
+      });
+      expect(onExitComplete).not.toHaveBeenCalled();
+      act(() => {
+        slideOut.flush(true);
+      });
+      expect(onExitComplete).toHaveBeenCalledTimes(1);
+    } finally {
+      slideOut.restore();
+    }
+  });
+
+  it("does not fire onExitComplete when the slide-out is interrupted (finished === false)", () => {
+    // An interrupted exit (re-show mid-slide) reports finished === false; tearing
+    // down the toast state then would drop a toast that's becoming visible again.
+    const slideOut = deferSlideOut();
+    const onExitComplete = jest.fn();
+    try {
+      const { rerender } = renderWithProviders(
+        <Toast visible message="Bye" onExitComplete={onExitComplete} />,
+      );
+      act(() => {
+        rerender(
+          <Toast
+            visible={false}
+            message="Bye"
+            onExitComplete={onExitComplete}
+          />,
+        );
+      });
+      act(() => {
+        slideOut.flush(false);
+      });
+      expect(onExitComplete).not.toHaveBeenCalled();
+    } finally {
+      slideOut.restore();
+    }
+  });
+
   it("announces the message for screen readers on show (iOS)", () => {
     // accessibilityLiveRegion only fires on Android; iOS VoiceOver needs this.
     const originalPlatform = Platform.OS;

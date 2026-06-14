@@ -21,6 +21,9 @@ export interface ToastProps {
   action?: ToastAction;
   duration?: number;
   onDismiss?: () => void;
+  /** Fired once the slide-out completes (finished === true), so the owner can
+   * release the toast's state instead of holding it for the app's lifetime. */
+  onExitComplete?: () => void;
 }
 
 const SLIDE_DISTANCE = 100;
@@ -31,6 +34,7 @@ export function Toast({
   action,
   duration = 5000,
   onDismiss,
+  onExitComplete,
 }: ToastProps) {
   const { shouldAnimate } = useAnimationPref();
   const translateY = useSharedValue(SLIDE_DISTANCE);
@@ -41,6 +45,16 @@ export function Toast({
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onDismissRef = useRef(onDismiss);
   onDismissRef.current = onDismiss;
+  const onExitCompleteRef = useRef(onExitComplete);
+  onExitCompleteRef.current = onExitComplete;
+
+  // Runs on the JS thread when the slide-out finishes: drop `mounted` and let
+  // the owner release its toast state. Reads the latest callback via ref so the
+  // worklet doesn't need it in the effect's dependency list.
+  function finishExit() {
+    setMounted(false);
+    onExitCompleteRef.current?.();
+  }
 
   useEffect(() => {
     if (visible) {
@@ -70,7 +84,7 @@ export function Toast({
         SLIDE_DISTANCE,
         { duration: dur },
         (finished) => {
-          if (finished) runOnJS(setMounted)(false);
+          if (finished) runOnJS(finishExit)();
         },
       );
       opacity.value = withTiming(0, { duration: dur });
