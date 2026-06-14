@@ -182,7 +182,7 @@ of scope — his path is the Scratchpad's.
   A must not break; also where A's most interesting evidence lives.
 - **C: Dependencies** — sibling ordering reuses `ordinal`; the among-whom
   question (siblings vs leaves vs parents) is Integration Matrix A + C.
-- **Scratchpad (Stage 2)** — where discovered substeps land; out of scope
+- **Scratchpad (Stage 5)** — where discovered substeps land; out of scope
   here but shaped by what A builds.
 - **E: Step states** — substeps will eventually carry richer states; this
   prototype keeps `pending`/`completed`.
