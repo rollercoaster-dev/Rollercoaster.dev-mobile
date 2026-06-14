@@ -39,5 +39,9 @@
     "message": "Das entfernt dieses Badge dauerhaft. Das kann nicht rückgängig gemacht werden.",
     "cancel": "Abbrechen",
     "delete": "Löschen"
+  },
+  "deleteError": {
+    "title": "Badge konnte nicht gelöscht werden",
+    "message": "Etwas ist schiefgelaufen. Bitte versuche es erneut."
   }
 }

@@ -4,6 +4,7 @@ import {
   ScrollView,
   Image,
   ActivityIndicator,
+  Alert,
   type LayoutChangeEvent,
 } from "react-native";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
@@ -30,6 +31,7 @@ import { parseBadgeDesign } from "../../badges/types";
 import { EVIDENCE_TYPE_ICONS } from "../../constants/evidenceIcons";
 import type { EvidenceTypeValue } from "../../types/evidence";
 import { formatDate } from "../../utils/format";
+import { reportError } from "../../services/sentry-report";
 import { Logger } from "../../shims/rd-logger";
 import type {
   BadgeDetailScreenProps,
@@ -228,8 +230,19 @@ function BadgeDetailContent({
 
   const handleConfirmDelete = () => {
     setShowDeleteModal(false);
-    deleteBadge(badgeId as BadgeId);
-    navigation.goBack();
+    try {
+      deleteBadge(badgeId as BadgeId);
+      navigation.goBack();
+    } catch (error) {
+      // Soft-delete failed at the DB layer; keep the user on the screen and
+      // tell them, rather than dismissing the modal onto an unchanged screen.
+      logger.error("Failed to delete badge", { badgeId, error });
+      reportError(error, { area: "badge.storage", kind: "delete" });
+      Alert.alert(
+        t("badgeDetail:deleteError.title"),
+        t("badgeDetail:deleteError.message"),
+      );
+    }
   };
 
   if (!badge) {
