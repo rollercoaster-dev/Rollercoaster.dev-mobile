@@ -230,13 +230,11 @@ Candidate set, from CONTEXT.md, kept minimal:
   in-progress step is the canonical trigger for the auto-advance above: you
   start a step, realize you need the next one first, pause this one, and the
   next becomes in-progress without a second tap.)
-- `missed` — present only as a state the **user** can set by hand; never
-  applied by the app, never by time passing. The prototype tests whether it
-  earns a place at all.
-
-Out of scope here: `waiting-external` (a C dependency relation, not a state),
-the `learning` state (parked for Stage 4's H), and Slot (the calendar holds
-repetition).
+  Out of scope here: `missed` (considered, then cut — there are no temporal
+  states, so nothing can be "missed"; the user-set `paused` already covers
+  "set this aside"), `waiting-external` (a C dependency relation, not a state),
+  the `learning` state (parked for Stage 4's H), and Slot (the calendar holds
+  repetition).
 
 ### Later Integrated Shape
 
@@ -248,7 +246,7 @@ repetition).
 ### Must Not Do
 
 - No auto-judgment: time never changes a state, and the app never authors a
-  verdict about the user — `missed`, `paused`, and `completed` are user-set, and
+  verdict about the user — `paused` and `completed` are user-set, and
   no state is ever derived from an absence or the clock. (App-maintained
   `in-progress` is bookkeeping, not a verdict, and is exempt — see Smallest
   Useful Shape.)
@@ -258,8 +256,8 @@ repetition).
 
 ### Prototype Questions
 
-1. Which states earn a place beyond `pending`/`completed` — does `missed`
-   belong, set by hand?
+1. Which states earn a place beyond `pending`/`completed` — does the
+   four-state spine (`pending`, `in-progress`, `paused`, `completed`) hold?
 2. Do the base names read right before anyone renames them, and does "pending"
    still read like database-speak?
 3. Does color + word stay legible in highContrast and the muted autismFriendly
@@ -278,8 +276,9 @@ repetition).
 ### Scenario
 
 Tomás missing two practice-panel weekends
-([CONTEXT.md example dialogue](../../CONTEXT.md)) — the case that asks whether
-`missed` is a state and whether the user, not the app, sets it.
+([CONTEXT.md example dialogue](../../CONTEXT.md)) — the case that tempted a
+`missed` state; the test is whether the user-set `paused` covers "set this
+aside" without one, since nothing temporal can author "missed."
 
 ### Evidence To Collect
 

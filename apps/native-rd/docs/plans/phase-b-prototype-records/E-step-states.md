@@ -8,12 +8,14 @@ Conventions: [phase-b-stage-0-deliverables.md](../phase-b-stage-0-deliverables.m
 ### Hypothesis
 
 A short set of colored, renameable step states — `pending`, `in-progress`,
-`paused`, `completed`, and maybe `missed` — reads as the user's own vocabulary
+`paused`, `completed` — reads as the user's own vocabulary
 (not database-speak), stays legible across the ND palettes, and routes the "one
 next step" readout correctly, all **without the app ever authoring a judgment**:
-the only automation is the bookkeeping `in-progress` pointer; `paused`,
-`completed`, and `missed` are user-set, and time changes nothing (feature shape
+the only automation is the bookkeeping `in-progress` pointer; `paused` and
+`completed` are user-set, and time changes nothing (feature shape
 §E, the no-auto-judgment line of [ADR-0012](../decisions/ADR-0012-no-auto-judgment.md)).
+(A fifth candidate, `missed`, was prototyped behind a toggle and has since been
+**cut** — see Q1 below: there are no temporal states, so nothing can be "missed.")
 
 ### What Was Built
 
@@ -23,9 +25,9 @@ mirrored from `StatusBadge.styles.ts` and the palette tokens mirrored from
 `packages/design-tokens`.
 
 - **Palette & naming view** (`?view=palette`) — a **static parallel gallery**:
-  the candidate state set rendered as pills across **light-default /
-  highContrast / autismFriendly** side by side, with a shared inline rename row
-  and a `missed` include/exclude toggle. Built to answer Q1 (which states earn a
+  the state set rendered as pills across **light-default /
+  highContrast / autismFriendly** side by side, with a shared inline rename row.
+  Built to answer Q1 (which states earn a
   place), Q2 (do the base names read right), Q3 (color + word legibility across
   palettes), Q4 (does renaming make a state feel like the user's).
 - **Behavior view** (`?view=behavior`) — an **interactive clickable phone**
@@ -52,12 +54,12 @@ Run: `open apps/native-rd/prototypes/E-step-states.html`
 Tomás's practice panel — "Build practice panel" as four steps (plan & buy,
 wire lighting circuit, wire appliance circuit, inspection & labels). The
 behavior view exercises pausing the in-progress step, watching the next become
-in-progress, routing the readout past a paused step, marking `missed` by hand,
-and pausing/skipping every remaining step to hit the parked edge. The
-[CONTEXT.md missed-weekends dialogue](../../CONTEXT.md) — the case that asks
-whether `missed` belongs and who sets it — is **named but not lived**: the
-prototype has no time element, so the missed-weekends pressure is only ever
-applied by a hand-tap here, not felt.
+in-progress, routing the readout past a paused step, and pausing/skipping every
+remaining step to hit the parked edge. The
+[CONTEXT.md missed-weekends dialogue](../../CONTEXT.md) — the case that tempted
+a `missed` state — is **named but not lived**: the prototype has no time
+element, so that pressure is only ever applied by a hand-tap, never felt. (That
+absence is exactly why `missed` was cut — see Q1.)
 
 ### Observations
 
@@ -78,15 +80,16 @@ highContrast or autismFriendly override sets, so a state pill renders the
 identical color in all three palettes. Whether that constancy is the feature or
 the bug is the question E now has to answer.
 
-- **Q1 (which states earn a place; does `missed` belong, set by hand):** The
+- **Q1 (which states earn a place) — RESOLVED, `missed` cut:** The
   four-state spine is clearly load-bearing — `pending`, `in-progress`,
   `paused`, `completed` each carry a distinct, nameable meaning in the flow.
-  `missed` is the genuinely open one: the prototype gates it behind an
-  include-in-set toggle (default off) and only ever lets a hand-tap apply it. A
-  cold structural read can't decide whether it earns its place — that needs the
-  lived missed-weekends scenario, where the question is whether a user _reaches
-  for_ `missed` or whether `paused` already covers "set this aside." Carried
-  open.
+  `missed` was prototyped behind an include-in-set toggle (default off), set
+  only by hand. It is now **cut**: E has no temporal states — nothing advances
+  with the clock — so the app can never author "missed," and a hand-set
+  "missed" is indistinguishable in meaning from the user-set `paused` that
+  already says "set this aside." With no time element there is nothing to miss,
+  so the state earns no place. The four-state spine is the set; `missed` is not
+  in it (and not in the schema).
 - **Q2 (do the base names read right; is "pending" database-speak):**
   "in progress," "paused," and "completed" read as plain user words. **"pending"
   still reads like database-speak** — it's the one base name that sounds like a
@@ -114,9 +117,9 @@ the bug is the question E now has to answer.
   non-answer pending real use.
 - **Q5 (paused routing + the all-paused tail):** Works as the task-view contract
   requires. The "one next step" readout shows the `in-progress` step if one
-  exists, else the first `pending` step, **routing past `paused`, `missed`, and
-  `completed`**. When every remaining step is paused/missed it resolves to a
-  _parked_ readout — "No step is in progress. N paused, M missed — all still
+  exists, else the first `pending` step, **routing past `paused` and
+  `completed`**. When every remaining step is paused it resolves to a
+  _parked_ readout — "No step is in progress. N paused — all still
   here, none hidden" with "absence is left uninterpreted — no score, no nudge, no
   count on anything." A paused step stays visible in the list; nothing is hidden.
   This is the cleanest pass in the prototype.
@@ -136,8 +139,8 @@ the bug is the question E now has to answer.
 the outcome at revise / more prototyping. The Q3 token finding is verified
 against source and is the one strand close to a design/token decision, but even
 it wants on-device confirmation that palette-invariant state color is a real
-problem in highContrast/autismFriendly, and the felt questions (Q4, Q6) and the
-`missed` question (Q1) are all gated on a real ND-user session.
+problem in highContrast/autismFriendly, and the felt questions (Q4, Q6) are
+gated on a real ND-user session.
 
 ### Guardrail Check
 
@@ -147,8 +150,8 @@ Answered against the session. Source checklist:
 - [x] **No auto-judgment:** PASS — time changes no state (the prototype has no
       time element at all), and the app authors no verdict. The only automation
       is the `in-progress` pointer advancing on pause/complete — bookkeeping the
-      user would otherwise do by hand, exempt per ADR-0012. `paused`,
-      `completed`, and `missed` are set only by a user tap.
+      user would otherwise do by hand, exempt per ADR-0012. `paused` and
+      `completed` are set only by a user tap.
 - [x] **Absence is uninterpreted:** PASS — the all-paused parked readout
       explicitly leaves absence uninterpreted: "all still here, none hidden …
       no score, no nudge, no count on anything." Nothing scored or aggregated a
@@ -163,11 +166,11 @@ Answered against the session. Source checklist:
 - [x] **The calendar holds repetition:** PASS — the prototype deliberately bakes
       in **no** time/repetition/Slot model; nothing advances with the clock.
 - [x] **No app-icon badge counts:** N/A — no app icon in the prototype; and it
-      explicitly counts nothing (the parked readout names paused/missed totals as
+      explicitly counts nothing (the parked readout names the paused total as
       a sentence, not a ledger badge).
 - [x] **Task-view promise holds:** PASS — "one next step" always resolves to one
       thing (the in-progress step, else the first pending step, else a parked
-      "none — still here"), routing past paused/missed/completed (Q5).
+      "none — still here"), routing past paused/completed (Q5).
 - [x] **H preserves, never replaces:** N/A — not exercised (H is Stage 4); no
       step was deleted or overwritten.
 - [x] **No composed verdicts:** PASS — no surface combines states into a score,
@@ -176,16 +179,17 @@ Answered against the session. Source checklist:
 ### Decision
 
 **Continue + more prototyping** (self-testing caps the outcome here; the
-felt-experience and `missed` questions cannot graduate without the ND-user
+felt-experience questions cannot graduate without the ND-user
 gate). Concretely:
 
 1. **Carry the four-state spine forward** — `pending`, `in-progress`, `paused`,
    `completed` each earn their place; the pill mechanic (color = identity, word
    rides beside, user can set any state by hand) and the bookkeeping pointer all
    hold against the guardrails.
-2. **`missed` stays open** (Q1) — it survives only behind a toggle and only by
-   hand-tap; whether it earns a permanent place needs the lived missed-weekends
-   scenario, not a structural read. Do not commit it to the schema yet.
+2. **`missed` is cut** (Q1) — there are no temporal states, so nothing can be
+   "missed," and a hand-set "missed" is indistinguishable from the user-set
+   `paused` that already says "set this aside." Not in the state set, not in the
+   schema.
 3. **The Q3 color finding is the one strand ready to escalate** — state accent
    colors are palette-invariant today _by accident of the override sets_, not by
    decision. Decide deliberately: variant-aware state-color tokens, or
@@ -210,20 +214,18 @@ gate). Concretely:
   advances to a "wrong" next step, so the hazard — and the "hand-override enough
   vs. opt-in auto-advance" follow-up — is untested. Needs a non-linear scenario
   or A's substeps to stress.
-- **Does `missed` earn a place (Q1, carried):** deliberately left to real use
-  with the missed-weekends scenario; `paused` may already cover its job.
 - **Rename scope + editable pools (new, Q4 tail):** is a rename per-state-global
   or per-step, and are the word pools themselves user-editable? Not exercised.
 - **Color-only carriers — dots & mini-timeline nodes (new, from focus view):** a
-  ProgressDot / MiniTimeline node has no room for a word, so `paused`/`missed`
-  ride on color alone — the first real stress on "color is never the sole
+  ProgressDot / MiniTimeline node has no room for a word, so `paused`
+  rides on color alone — the first real stress on "color is never the sole
   carrier." Does a color-only paused dot read correctly at a glance? Felt /
   on-device; recorded as a non-answer. (The timeline color decision below means
   it's at least the _same_ color as the pill — but a dot still has no word.)
 - **Progress ratio vs. verdict (new, from timeline view):** `completed / total`
-  keeps every step in the denominator, but a `missed` step under a completion
+  keeps every step in the denominator, but a `paused` step under a completion
   ratio is where "no composed verdicts / absence uninterpreted" gets tested.
-  Does "X of Y complete" _feel_ like a judgment over the missed step? Felt read.
+  Does "X of Y complete" _feel_ like a judgment over the paused step? Felt read.
 - **RESOLVED — timeline node color language:** the `blue600`-vs-pill split is
   reconciled onto the state color language (a state is one color everywhere). No
   longer open; carried into the build and the Q3 color-as-identity answer.
@@ -247,17 +249,17 @@ CardCarousel (one step per card) + ProgressDots, snap-to-first-pending on entry
 
 - **Color becomes the sole carrier.** The pill always rode a word _beside_ the
   color; a ProgressDot and a MiniTimeline node have no room for a word, so
-  `paused`/`missed` are carried by **color alone**. This is the first real
+  `paused` is carried by **color alone**. This is the first real
   stress on the "color is never the sole carrier" guardrail. Whether a
   color-only paused dot reads correctly at a glance is a felt/on-device
   question — recorded as a non-answer.
 - **"Current card" vs. a paused pill collide.** Because current is the centred
-  card and not stored, you can park _on_ a paused/missed card: the pill says
+  card and not stored, you can park _on_ a paused card: the pill says
   paused, the ring/dot says current. The flat view never had two independent
   currency signals to disagree.
 
 **Timeline view** (mirrors `TimelineJourneyScreen.tsx`) — a progress bar +
-`completedCount / total` over a vertical run of big nodes (✓ / number / ⏸ / ⊘
+`completedCount / total` over a vertical run of big nodes (✓ / number / ⏸
 glyphs, ★ goal node). Two things it surfaces:
 
 - **The two color languages were reconciled (decision).** The real `TimelineNode`
@@ -269,13 +271,13 @@ glyphs, ★ goal node). Two things it surfaces:
   an accident of two components evolving separately, not a decision worth
   keeping. This now reinforces the color-as-identity answer to Q3.
 - **Progress bar vs. verdict.** `completed / total` keeps every step in the
-  denominator (nothing dropped or hidden), but a `missed` step sitting under a
+  denominator (nothing dropped or hidden), but a `paused` step sitting under a
   completion ratio is exactly where "no composed verdicts / absence
   uninterpreted" gets tested. Whether "X of Y complete" _feels_ like a judgment
-  over the missed step is the felt read.
+  over the paused step is the felt read.
 
 **Every status-rendering surface is still hardwired to 3 states in-app** (would
-all need `paused`/`missed` when this graduates): `TimelineNode.styles.ts`
+all need `paused` when this graduates): `TimelineNode.styles.ts`
 (`palette.blue600`), `MiniTimeline`, `ProgressDots`, `StepCard`
 (`statusToVariant`), `TimelineStep` (`statusToVariant` + `statusToLabelKey`
 i18n), `StatusBadge` (active/completed/locked/earned), `GoalCard`/`GoalsScreen`
@@ -286,9 +288,9 @@ i18n), `StatusBadge` (active/completed/locked/earned), `GoalCard`/`GoalsScreen`
 ### Recommended Follow-Up
 
 - Build a **dev-flag screen** and run a **real ND-user session** with the
-  missed-weekends scenario to answer the questions this tier can't: does `missed`
-  belong (Q1), does a rename feel like _theirs_ (Q4), does the auto-advance feel
-  helpful or presumptuous (Q6). Use a non-linear / substep composition so the
+  missed-weekends scenario to answer the felt questions this tier can't: does a
+  rename feel like _theirs_ (Q4), does the auto-advance feel helpful or
+  presumptuous (Q6). Use a non-linear / substep composition so the
   Q6 "unwanted next step" hazard is actually exercised.
 - Take the **Q3 color finding** to a decision after on-device confirmation:
   variant-aware state-color tokens vs. constant color-as-identity. This is the

@@ -12,16 +12,16 @@
     ?view=palette  — STATIC parallel gallery. The candidate state set as pills
                      rendered across light-default / highContrast / autismFriendly
                      side by side, with shared inline rename. Answers:
-                       Q1 which states earn a place (incl. `missed` toggle)
+                       Q1 which states earn a place (the four-state spine)
                        Q2 do the base names read right ("pending" = db-speak?)
                        Q3 does colour + word stay legible across the palettes
                        Q4 does renaming make a state feel like the user's
     ?view=behavior — INTERACTIVE clickable phone driving Tomás's practice panel.
                      Tap a step's pill to set its state; watch the app-maintained
                      in-progress POINTER auto-advance when you pause/complete; watch
-                     "one next step" route past a paused step; set `missed` by hand;
+                     "one next step" route past a paused step; pause a step by hand;
                      hit the all-paused edge. The no-auto-judgment guardrail E
-                     actually tests: `missed` is only ever user-set, never by the
+                     actually tests: `paused` is only ever user-set, never by the
                      app. (There is deliberately NO time element — dates/deadlines
                      are Stage 3 / B, and nothing here advances with the clock.)
                      Answers Q5 (paused routing) and Q6 (auto-advance reads as
@@ -38,7 +38,7 @@
                      use the STATE colour language (the pill's), NOT the real screen's
                      hard-wired palette.blue600 — so a state is ONE colour everywhere
                      (pill, dot, mini node, big node). Watch what "X of Y complete"
-                     reads like once a step is `missed`.
+                     reads like once a step is `paused`.
 
   Feature shape: docs/plans/phase-b-feature-shapes.md §E
   Record:        docs/plans/phase-b-prototype-records/E-step-states.md
@@ -73,7 +73,6 @@
     --c-progress-bg:#ffe50c; --c-progress-text:#0a0a0a;   /* accentYellow + climb.text */
     --c-paused-bg:#ede9fe;   --c-paused-text:#5b21b6;      /* accentPurpleLight */
     --c-done-bg:#d4f4e7;     --c-done-text:#0a0a0a;        /* accentMint + relief.text */
-    --c-missed-bg:#e7e2ef;   --c-missed-text:#4a4458;      /* neutral slate-violet — NOT red */
     --pal-name:"light-default · The Full Ride";
   }
   .pal-hc {
@@ -84,7 +83,6 @@
     --c-progress-bg:#ffe50c; --c-progress-text:#000000;    /* accentYellow PASSES THROUGH */
     --c-paused-bg:#ede9fe;   --c-paused-text:#000000;      /* accentPurpleLight PASSES THROUGH */
     --c-done-bg:#d4f4e7;     --c-done-text:#000000;        /* accentMint PASSES THROUGH */
-    --c-missed-bg:#e7e2ef;   --c-missed-text:#000000;      /* not overridden either */
     --pal-name:"light-highContrast · Bold Ink";
   }
   .pal-autism {
@@ -95,7 +93,6 @@
     --c-progress-bg:#ffe50c; --c-progress-text:#444444;    /* accentYellow PASSES THROUGH — neon in a muted palette */
     --c-paused-bg:#ede9fe;   --c-paused-text:#5d4d7d;      /* accentPurpleLight PASSES THROUGH */
     --c-done-bg:#d4f4e7;     --c-done-text:#444444;        /* accentMint PASSES THROUGH */
-    --c-missed-bg:#e7e2ef;   --c-missed-text:#444444;
     --pal-name:"light-autismFriendly · Still Water";
   }
 
@@ -138,7 +135,6 @@
   .pill.s-progress { background:var(--c-progress-bg); color:var(--c-progress-text); }
   .pill.s-paused   { background:var(--c-paused-bg);   color:var(--c-paused-text); }
   .pill.s-done     { background:var(--c-done-bg);     color:var(--c-done-text); }
-  .pill.s-missed   { background:var(--c-missed-bg);   color:var(--c-missed-text); }
 
   /* ===== PALETTE VIEW ===== */
   .pal-controls { max-width:1180px; margin:0 auto 18px; background:#fff; border:2.5px solid #0a0a0a; box-shadow:3px 3px 0 rgba(0,0,0,.8); padding:12px 16px; }
@@ -206,7 +202,7 @@
   /* ===== FOCUS VIEW (mirrors FocusModeScreen: MiniTimeline + CardCarousel + ProgressDots) ===== */
   /* MiniTimeline strip — small nodes + segments. Node colour = the step's state
      swatch (the SAME colour the pill uses). This is the colour-only carrier test:
-     a paused / missed node has no word beside it. */
+     a paused node has no word beside it. */
   .minitl { display:flex; align-items:center; padding:4px 2px 2px; }
   .minitl .mn { width:14px; height:14px; border-radius:50%; border:2px solid var(--border); flex:0 0 auto; }
   .minitl .mn.cur { width:19px; height:19px; border-width:3px; }
@@ -282,28 +278,26 @@ const PALETTES = [
   { key:'autism',  cls:'pal-autism', label:'autismFriendly' },
 ];
 
-/* Candidate state set (feature shape §E). `swatch` maps to a .s-* pill class.
+/* State set (feature shape §E). `swatch` maps to a .s-* pill class.
    `bookkeeping:true` marks the one app-maintained state (the in-progress
-   pointer) — allowed automation, never a verdict. `optional` = gated by toggle. */
+   pointer) — allowed automation, never a verdict. */
 const STATES = [
   { key:'pending',     base:'pending',     swatch:'pending'  },
   { key:'in-progress', base:'in progress', swatch:'progress', bookkeeping:true },
   { key:'paused',      base:'paused',      swatch:'paused'   },
   { key:'completed',   base:'completed',   swatch:'done'     },
-  { key:'missed',      base:'missed',      swatch:'missed', optional:true },
 ];
-const SWATCH_VAR = { pending:'--c-pending-bg', progress:'--c-progress-bg', paused:'--c-paused-bg', done:'--c-done-bg', missed:'--c-missed-bg' };
-const SWATCH_FG  = { pending:'--c-pending-text', progress:'--c-progress-text', paused:'--c-paused-text', done:'--c-done-text', missed:'--c-missed-text' };
-const VERB_ICON  = { 'in-progress':'▶', 'paused':'⏸', 'completed':'✓', 'pending':'↺', 'missed':'⊘' };
-/* Glyph shown INSIDE a big timeline node — completed/paused/missed get a mark,
+const SWATCH_VAR = { pending:'--c-pending-bg', progress:'--c-progress-bg', paused:'--c-paused-bg', done:'--c-done-bg' };
+const SWATCH_FG  = { pending:'--c-pending-text', progress:'--c-progress-text', paused:'--c-paused-text', done:'--c-done-text' };
+const VERB_ICON  = { 'in-progress':'▶', 'paused':'⏸', 'completed':'✓', 'pending':'↺' };
+/* Glyph shown INSIDE a big timeline node — completed/paused get a mark,
    pending/in-progress show the step number (set per-row at render). */
-const NODE_GLYPH = { 'completed':'✓', 'paused':'⏸', 'missed':'⊘' };
+const NODE_GLYPH = { 'completed':'✓', 'paused':'⏸' };
 
 let app = {
   view: 'palette',
   palette: 'default',          // behavior-view palette
   names: {},                   // key -> custom word (rename)
-  missedEnabled: false,
   menuFor: null,               // step id whose state menu is open (one at a time)
   cardIndex: 0,                // focus view: which card is centred (in-progress is NOT stored here — it's index===cardIndex, mirroring FocusModeScreen)
   focusSnapped: false,         // milestone: did entering focus snap to the first pending step?
@@ -319,7 +313,7 @@ let app = {
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const wordFor = k => app.names[k] || STATES.find(s => s.key === k).base;
 const swatchClass = k => 's-' + STATES.find(s => s.key === k).swatch;
-function activeStates() { return STATES.filter(s => s.key !== 'missed' || app.missedEnabled); }
+function activeStates() { return STATES; }
 
 /* ===================== shared bits ===================== */
 function pill(stateKey) {
@@ -331,9 +325,7 @@ function renderPaletteView() {
   // shared rename / toggle controls
   const nameRows = STATES.map(s => {
     const swVar = SWATCH_VAR[s.swatch];
-    const tog = s.optional
-      ? `<label class="tog"><input type="checkbox" data-toggle-missed ${app.missedEnabled?'checked':''}> include in set</label>`
-      : (s.bookkeeping ? `<label class="tog" style="color:#888">app-maintained pointer · not a verdict</label>` : '');
+    const tog = s.bookkeeping ? `<label class="tog" style="color:#888">app-maintained pointer · not a verdict</label>` : '';
     return `<div class="namerow">
       <span class="key">${s.key}</span>
       <span class="swatch pal-default" style="background:var(${swVar})"></span>
@@ -381,20 +373,19 @@ function renderPaletteView() {
 
 /* ===================== BEHAVIOR VIEW ===================== */
 /* The "one next step" the task view promises: the in-progress step if one
-   exists, else the first pending step (routing PAST paused / missed / completed). */
+   exists, else the first pending step (routing PAST paused / completed). */
 function readout() {
   const ip = app.steps.find(s => s.status === 'in-progress');
   if (ip) return { kind:'current', step:ip };
   const pend = app.steps.find(s => s.status === 'pending');
   if (pend) return { kind:'next', step:pend };
   const pausedCount = app.steps.filter(s => s.status === 'paused').length;
-  const missedCount = app.steps.filter(s => s.status === 'missed').length;
-  if (pausedCount || missedCount) return { kind:'parked', pausedCount, missedCount };
+  if (pausedCount) return { kind:'parked', pausedCount };
   return { kind:'done' };
 }
 
 /* Auto-advance the in-progress POINTER to the next pending step (skipping
-   paused / missed / completed). Bookkeeping only — asserts nothing about the user. */
+   paused / completed). Bookkeeping only — asserts nothing about the user. */
 function advancePointer() {
   const next = app.steps.find(s => s.status === 'pending');
   if (next) { next.status = 'in-progress'; app.log.push(`→ "${next.title}" auto-became in progress`); }
@@ -434,7 +425,7 @@ const MILESTONES = [
   { label:'1 · A step is in progress (the app-maintained pointer)', test:() => app.steps.some(s => s.status==='in-progress') },
   { label:'2 · Pause the in-progress step → the next pending step auto-becomes in progress (Q6)', test:() => app.log.some(l => l.includes('auto-became')) },
   { label:'3 · The “one next step” readout routes PAST a paused step (Q5)', test:() => app.steps.some((s,i)=> s.status==='paused' && app.steps.slice(i+1).some(x=>x.status==='pending'||x.status==='in-progress')) },
-  { label:'4 · Mark a step “missed” by hand — confirm nothing automatic set it (no-auto-judgment)', test:() => app.steps.some(s => s.status==='missed') },
+  { label:'4 · Pause a step by hand — confirm nothing automatic set it (no-auto-judgment)', test:() => app.steps.some(s => s.status==='paused') },
   { label:'5 · Pause / skip every remaining step → what does “one next step” show? (Q5 tail)', test:() => readout().kind === 'parked' },
   { label:'6 · Rename a state and watch the word ride beside its colour (Q4)', test:() => Object.values(app.names).some(Boolean) },
 ];
@@ -445,7 +436,7 @@ function renderBehaviorView() {
   let nextHtml;
   if (r.kind === 'current') nextHtml = `<div class="next">${esc(r.step.title)}</div><div class="sub">in progress · the step you're on</div>`;
   else if (r.kind === 'next') nextHtml = `<div class="next">${esc(r.step.title)}</div><div class="sub">next pending step</div>`;
-  else if (r.kind === 'parked') nextHtml = `<div class="none">No step is in progress.<br>${r.pausedCount} paused${r.missedCount?`, ${r.missedCount} missed`:''} — all still here, none hidden.</div><div class="sub">absence is left uninterpreted — no score, no nudge, no count on anything</div>`;
+  else if (r.kind === 'parked') nextHtml = `<div class="none">No step is in progress.<br>${r.pausedCount} paused — all still here, none hidden.</div><div class="sub">absence is left uninterpreted — no score, no nudge, no count on anything</div>`;
   else nextHtml = `<div class="none">Every step is done.</div><div class="sub">marking the goal complete stays the user's call</div>`;
 
   const stepRows = app.steps.map((s, i) => {
@@ -486,7 +477,7 @@ function renderBehaviorView() {
     ...(app.log.length ? ['', '— trail —', ...app.log.slice(-7)] : []),
   ].join('\n');
 
-  const renameStrip = STATES.filter(s => s.key !== 'missed' || app.missedEnabled).map(s =>
+  const renameStrip = STATES.map(s =>
     `<div class="namerow"><span class="key">${s.key}</span><input type="text" data-rename="${s.key}" value="${esc(app.names[s.key]||'')}" placeholder="“${s.base}”"></div>`
   ).join('');
 
@@ -504,7 +495,6 @@ function renderBehaviorView() {
         <div class="panel">
           <h3>Rename states <span class="dim">— reflected on the pills live (Q4)</span></h3>
           ${renameStrip}
-          <label class="tog" style="display:flex;align-items:center;gap:6px;font-size:12px;margin-top:8px"><input type="checkbox" data-toggle-missed ${app.missedEnabled?'checked':''}> include “missed” in the set (Q1)</label>
         </div>
         <div class="panel">
           <h3>State <span class="dim">— surfaced after every action</span></h3>
@@ -512,7 +502,7 @@ function renderBehaviorView() {
         </div>
         <div class="panel">
           <h3>Guardrails honored</h3>
-          <p>The only automation is the <b>in-progress pointer</b> advancing when you pause/complete the current step — bookkeeping the user would otherwise do by hand, asserting nothing about them. Every other state — <b>paused</b>, <b>completed</b>, <b>missed</b> — is set only by the user's tap, never by the app. A paused or missed step stays visible in the list; nothing is hidden, scored, counted, or aggregated.</p>
+          <p>The only automation is the <b>in-progress pointer</b> advancing when you pause/complete the current step — bookkeeping the user would otherwise do by hand, asserting nothing about them. Every other state — <b>paused</b>, <b>completed</b> — is set only by the user's tap, never by the app. A paused step stays visible in the list; nothing is hidden, scored, counted, or aggregated.</p>
         </div>
       </div>
     </div>`;
@@ -521,7 +511,7 @@ function renderBehaviorView() {
 /* ===================== FOCUS VIEW (FocusModeScreen) ===================== */
 /* Mirrors FocusModeScreen: MiniTimeline strip + swipeable CardCarousel + ProgressDots.
    Critically: in-progress is NOT stored here — the "current" card is index===cardIndex
-   (snap-to-first-pending on entry). So a step's STORED state (paused/missed/completed)
+   (snap-to-first-pending on entry). So a step's STORED state (paused/completed)
    and the carousel's notion of "where you are" are two independent signals: you can be
    parked ON a paused card — pill says paused, the ring says current. That collision is
    the thing the flat behavior view could never show. */
@@ -581,19 +571,19 @@ function renderFocusView() {
       </div>
     </div>`;
 
-  const parkedOnPaused = cur.status === 'paused' || cur.status === 'missed';
+  const parkedOnPaused = cur.status === 'paused';
   const milestones = [
     { label:'1 · On entry the carousel snaps to the first unfinished step (not always step 1) — findFirstPendingIndex', done: app.focusSnapped },
-    { label:'2 · A paused / missed step shows in the dots & mini-timeline with COLOUR ONLY — no word beside it (sole-carrier test)', done: app.steps.some(s => s.status==='paused'||s.status==='missed') },
+    { label:'2 · A paused step shows in the dots & mini-timeline with COLOUR ONLY — no word beside it (sole-carrier test)', done: app.steps.some(s => s.status==='paused') },
     { label:'3 · Pause the current step, then ›: the carousel moves past it (paused isn\'t "pending")', done: app.steps.some(s => s.status==='paused') && app.cardIndex>0 },
-    { label:'4 · Park ON a paused/missed card: the pill says paused, the ring/dot says "current" — the collision', done: parkedOnPaused },
+    { label:'4 · Park ON a paused card: the pill says paused, the ring/dot says "current" — the collision', done: parkedOnPaused },
     { label:'5 · Rename a state — the word rides beside its colour on the card pill (Q4)', done: Object.values(app.names).some(Boolean) },
   ].map(m => `<li class="${m.done?'done':''}"><span class="mk">${m.done?'✓':'·'}</span>${m.label}</li>`).join('');
 
   return `
     <div class="finding">
       <b>Focus view — the colour-only carrier test.</b> The pill always carried a <i>word beside</i> the colour; a
-      <code>ProgressDot</code> and a <code>MiniTimeline</code> node do not. Here <b>paused</b> and <b>missed</b> are
+      <code>ProgressDot</code> and a <code>MiniTimeline</code> node do not. Here <b>paused</b> is
       shown by colour alone — the stress on the "colour is never the sole carrier" guardrail. Also: in Focus the
       <b>current</b> step is <i>not stored</i> — it's the centred card — so you can park ON a paused card and the pill
       (paused) disagrees with the ring (current).
@@ -609,7 +599,6 @@ function renderFocusView() {
         <div class="panel">
           <h3>Rename states <span class="dim">— reflected on the card pill live (Q4)</span></h3>
           ${renameStripHtml()}
-          <label class="tog" style="display:flex;align-items:center;gap:6px;font-size:12px;margin-top:8px"><input type="checkbox" data-toggle-missed ${app.missedEnabled?'checked':''}> include "missed" in the set (Q1)</label>
         </div>
         <div class="panel">
           <h3>What this view can\'t answer</h3>
@@ -625,13 +614,12 @@ function renderFocusView() {
    run of big nodes. Per the design call, node colours use the STATE swatch (the pill's
    colour language) — NOT the old hard-wired palette.blue600 — so a state is the same
    colour wherever it appears. The progress bar's denominator is every step; what "X of Y"
-   reads like once a step is missed is the thing to look at. */
+   reads like once a step is paused is the thing to look at. */
 function renderTimelineView() {
   const pal = PALETTES.find(p => p.key === app.palette);
   const total = app.steps.length;
   const completed = app.steps.filter(s => s.status === 'completed').length;
   const pct = total ? Math.round((completed / total) * 100) : 0;
-  const missedN = app.steps.filter(s => s.status === 'missed').length;
   const pausedN = app.steps.filter(s => s.status === 'paused').length;
 
   const rows = app.steps.map((s, i) => {
@@ -663,7 +651,7 @@ function renderTimelineView() {
       <div class="ph-body">
         <div class="pbar-wrap">
           <div class="pbar"><div class="fill" style="width:${pct}%"></div></div>
-          <div class="pbar-label">${completed} of ${total} steps complete${missedN||pausedN?`  ·  ${pausedN} paused${missedN?`, ${missedN} missed`:''}`:''}</div>
+          <div class="pbar-label">${completed} of ${total} steps complete${pausedN?`  ·  ${pausedN} paused`:''}</div>
         </div>
         <div class="tlist">${rows}${goalRow}</div>
       </div>
@@ -671,9 +659,9 @@ function renderTimelineView() {
 
   const milestones = [
     { label:'1 · The big nodes use the STATE colour (pill language), not blue600 — a state is one colour everywhere', done:true },
-    { label:'2 · paused (⏸) and missed (⊘) render as nodes, not "fall through to pending"', done: app.steps.some(s=>s.status==='paused'||s.status==='missed') },
-    { label:'3 · Mark a step missed — does "X of Y complete" / the bar read as a verdict on the missed one? (look, don\'t assert)', done: missedN>0 },
-    { label:'4 · All five states present at once — legible as a vertical run?', done: new Set(app.steps.map(s=>s.status)).size >= 4 },
+    { label:'2 · paused (⏸) renders as a node, not "fall through to pending"', done: app.steps.some(s=>s.status==='paused') },
+    { label:'3 · Pause a step — does "X of Y complete" / the bar read as a verdict on the paused one? (look, don\'t assert)', done: pausedN>0 },
+    { label:'4 · All four states present at once — legible as a vertical run?', done: new Set(app.steps.map(s=>s.status)).size >= 4 },
   ].map(m => `<li class="${m.done?'done':''}"><span class="mk">${m.done?'✓':'·'}</span>${m.label}</li>`).join('');
 
   return `
@@ -683,7 +671,7 @@ function renderTimelineView() {
       and card surfaces don\'t even agree on <i>completed</i> today. Here the nodes carry the <b>state swatch</b>
       instead, so a state is the same colour in the pill, the dot, and the node. The open question that stays:
       the <b>progress bar</b> counts <code>completed / total</code> — watch what "X of Y complete" reads like once a
-      step is <b>missed</b>.
+      step is <b>paused</b>.
     </div>
     <div class="layout">
       ${phone}
@@ -696,11 +684,10 @@ function renderTimelineView() {
         <div class="panel">
           <h3>Rename states <span class="dim">— reflected on every pill live (Q4)</span></h3>
           ${renameStripHtml()}
-          <label class="tog" style="display:flex;align-items:center;gap:6px;font-size:12px;margin-top:8px"><input type="checkbox" data-toggle-missed ${app.missedEnabled?'checked':''}> include "missed" in the set (Q1)</label>
         </div>
         <div class="panel">
           <h3>Progress vs. verdict</h3>
-          <p>"<b>${completed} of ${total} complete</b>" is progress, not a score — but a <i>missed</i> step sitting under
+          <p>"<b>${completed} of ${total} complete</b>" is progress, not a score — but a <i>paused</i> step sitting under
           a completion ratio is exactly where "no composed verdicts / absence uninterpreted" gets tested. The bar keeps
           every step in its denominator; nothing is dropped or hidden. Whether that <i>feels</i> like a judgment is the felt read.</p>
         </div>
@@ -710,7 +697,7 @@ function renderTimelineView() {
 
 /* Shared rename strip (behavior / focus / timeline side panels) */
 function renameStripHtml() {
-  return STATES.filter(s => s.key !== 'missed' || app.missedEnabled).map(s =>
+  return STATES.map(s =>
     `<div class="namerow"><span class="key">${s.key}</span><input type="text" data-rename="${s.key}" value="${esc(app.names[s.key]||'')}" placeholder="“${s.base}”"></div>`
   ).join('');
 }
@@ -735,10 +722,10 @@ const TITLES = {
   timeline: 'E: Step states — timeline (vertical nodes + progress bar)',
 };
 const LEDES = {
-  palette:  'The candidate state set as pills, rendered across <strong>light-default / highContrast / autismFriendly</strong> at once. Rename a state (it rides beside its colour, never replaces it) and toggle whether <code>missed</code> earns a place. Pills mirror <code>StatusBadge.styles.ts</code>.',
-  behavior: 'Tomás\'s practice panel. Tap a step\'s pill to set its state, and watch the <strong>in-progress pointer auto-advance</strong> when you pause/complete and the <strong>“one next step” readout route past a paused step</strong>. The side panels instrument the prototype questions; the no-auto-judgment guardrail here is that <strong>missed is only ever set by hand</strong>.',
+  palette:  'The state set as pills, rendered across <strong>light-default / highContrast / autismFriendly</strong> at once. Rename a state (it rides beside its colour, never replaces it). Pills mirror <code>StatusBadge.styles.ts</code>.',
+  behavior: 'Tomás\'s practice panel. Tap a step\'s pill to set its state, and watch the <strong>in-progress pointer auto-advance</strong> when you pause/complete and the <strong>“one next step” readout route past a paused step</strong>. The side panels instrument the prototype questions; the no-auto-judgment guardrail here is that <strong>paused is only ever set by hand</strong>.',
   focus:    'The same steps in <strong>Focus mode</strong> — a swipeable card carousel with a mini-timeline strip and progress dots. Here the dots and mini-timeline nodes carry a state by <strong>colour alone</strong> (the sole-carrier test), and the centred card is the <strong>current</strong> step (not stored) — so it can disagree with a paused pill.',
-  timeline: 'The same steps in the <strong>Timeline journey</strong> — a vertical run of nodes under a progress bar. The big nodes use the <strong>state colour language</strong> (the pill\'s), not the old hard-wired <code>blue600</code>, so a state is one colour everywhere. Watch what <strong>“X of Y complete”</strong> reads like once a step is missed.',
+  timeline: 'The same steps in the <strong>Timeline journey</strong> — a vertical run of nodes under a progress bar. The big nodes use the <strong>state colour language</strong> (the pill\'s), not the old hard-wired <code>blue600</code>, so a state is one colour everywhere. Watch what <strong>“X of Y complete”</strong> reads like once a step is paused.',
 };
 
 function render() {
@@ -771,9 +758,6 @@ document.body.addEventListener('input', e => {
     else { render(); restoreFocus(e.target); }
   }
 });
-document.body.addEventListener('change', e => {
-  if (e.target.matches('[data-toggle-missed]')) { app.missedEnabled = e.target.checked; render(); }
-});
 function restoreFocus(prev) {
   const sel = `[data-rename="${prev.dataset.rename}"]`;
   const el = document.querySelector(sel);
@@ -801,11 +785,10 @@ document.addEventListener('keydown', e => {
   else if (e.key === 'ArrowRight') cyclePalette(1);
 });
 
-/* honor ?view= / ?palette= / ?missed= */
+/* honor ?view= / ?palette= */
 const qs = new URLSearchParams(location.search);
 if (['palette','behavior','focus','timeline'].includes(qs.get('view'))) app.view = qs.get('view');
 if (PALETTES.some(p => p.key === qs.get('palette'))) app.palette = qs.get('palette');
-if (qs.get('missed') === '1') app.missedEnabled = true;
 if (app.view === 'focus') snapFocus();
 render();
 </script>
