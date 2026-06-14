@@ -5,13 +5,11 @@ export const styles = StyleSheet.create((theme) => ({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
-  scrollContent: {
+  list: {
     flex: 1,
-    backgroundColor: theme.colors.background,
-    padding: theme.space[4],
-    gap: theme.space[4],
   },
   listContent: {
+    padding: theme.space[4],
     gap: theme.space[3],
   },
   loadingIndicator: {

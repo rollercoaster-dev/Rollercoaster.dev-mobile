@@ -45,7 +45,11 @@ function buildGoalCardGoal(
   };
 }
 
-function GoalList() {
+function GoalList({
+  contentInset,
+}: {
+  contentInset: { paddingBottom: number };
+}) {
   const { t } = useTranslation(["goals", "common"]);
   const navigation = useNavigation<Nav>();
   const rows = useQuery(activeGoalsQuery);
@@ -99,10 +103,9 @@ function GoalList() {
     <>
       <FlatList
         data={rows}
-        scrollEnabled={false}
         keyExtractor={(item) => item.id}
-        style={{ overflow: "visible" }}
-        contentContainerStyle={styles.listContent}
+        style={styles.list}
+        contentContainerStyle={[styles.listContent, contentInset]}
         renderItem={({ item }) => (
           <GoalCard
             goal={buildGoalCardGoal(item, stepsByGoalId.get(item.id) ?? [])}
@@ -137,17 +140,15 @@ export function GoalsScreen() {
   return (
     <View style={styles.screen}>
       <ScreenHeader title={t("goals:title")} />
-      <View style={[styles.scrollContent, tabInset]}>
-        <ErrorBoundary>
-          <Suspense
-            fallback={
-              <ActivityIndicator style={styles.loadingIndicator} size="large" />
-            }
-          >
-            <GoalList />
-          </Suspense>
-        </ErrorBoundary>
-      </View>
+      <ErrorBoundary>
+        <Suspense
+          fallback={
+            <ActivityIndicator style={styles.loadingIndicator} size="large" />
+          }
+        >
+          <GoalList contentInset={tabInset} />
+        </Suspense>
+      </ErrorBoundary>
     </View>
   );
 }
