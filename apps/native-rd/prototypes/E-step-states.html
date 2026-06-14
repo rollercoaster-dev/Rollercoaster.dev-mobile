@@ -365,7 +365,7 @@ function resetFlow() {
 const MILESTONES = [
   { label:'1 · A step is in progress (the app-maintained pointer)', test:() => app.steps.some(s => s.status==='in-progress') },
   { label:'2 · Pause the in-progress step → the next pending step auto-becomes in progress (Q6)', test:() => app.log.some(l => l.includes('auto-became')) },
-  { label:'3 · The “one next step” readout routes PAST a paused step (Q5)', test:() => { const ip = app.steps.find(s=>s.status==='in-progress'); const firstPending = app.steps.find(s=>s.status==='pending'); const anyPausedBefore = app.steps.some((s,i)=> s.status==='paused' && app.steps.slice(i+1).some(x=>x.status==='pending'||x.status==='in-progress')); return anyPausedBefore; } },
+  { label:'3 · The “one next step” readout routes PAST a paused step (Q5)', test:() => app.steps.some((s,i)=> s.status==='paused' && app.steps.slice(i+1).some(x=>x.status==='pending'||x.status==='in-progress')) },
   { label:'4 · Mark a step “missed” by hand — confirm nothing automatic set it (no-auto-judgment)', test:() => app.steps.some(s => s.status==='missed') },
   { label:'5 · Pause / skip every remaining step → what does “one next step” show? (Q5 tail)', test:() => readout().kind === 'parked' },
   { label:'6 · Rename a state and watch the word ride beside its colour (Q4)', test:() => Object.values(app.names).some(Boolean) },
