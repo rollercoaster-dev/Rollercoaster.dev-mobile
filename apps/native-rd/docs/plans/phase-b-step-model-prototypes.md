@@ -187,13 +187,17 @@ The stage order below is also the priority order. If Phase B runs out of
 runway, the cut line is explicit rather than improvised:
 
 - **Must-have: Stages 0-2.** The baseline, Step richness (A: Substeps,
-  E: Step states), and working-with-Steps (Scratchpad, C: Dependencies)
-  stages are the Phase B core. Phase B is not done without decision-gate
-  outcomes for these.
-- **Committed but deferrable: Stages 3-4.** Planning (B) and learning (H, G)
-  remain ADR-0010 commitments, but their prototype work may be deferred to a
-  later phase if runway forces it. A deferral is recorded as a decision-gate
-  outcome, not left implicit.
+  E: Step states), and dependencies (C: Dependencies) stages are the Phase B
+  core. Phase B is not done without decision-gate outcomes for these.
+- **Committed but deferrable: Stages 3-5.** Planning (B), learning (H, G), and
+  the Scratchpad remain ADR-0010 commitments, but their prototype work may be
+  deferred to a later phase if runway forces it. A deferral is recorded as a
+  decision-gate outcome, not left implicit.
+- **The Scratchpad (Stage 5) is the deliberate tail of the cut line.** It
+  carries the most open conceptual and design questions, nothing upstream
+  depends on it, and it is sequenced last precisely so it can be deferred — or
+  spun out into its own iteration/phase — without disturbing any other
+  feature. Either outcome is recorded at its decision gate, not assumed now.
 - **Removing one of the seven features from Phase B entirely** still requires a
   new ADR superseding ADR-0010. The cut line governs prototype sequencing and
   deferral; it does not quietly shrink the commitment.
