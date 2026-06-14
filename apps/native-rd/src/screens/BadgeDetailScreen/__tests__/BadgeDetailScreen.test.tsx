@@ -39,8 +39,10 @@ jest.mock("@evolu/react", () => {
   };
 });
 
+const mockDeleteBadge = jest.fn();
 jest.mock("../../../db", () => ({
   badgeWithGoalQuery: jest.fn(() => ({ __brand: "badgeWithGoalQuery" })),
+  deleteBadge: (...args: unknown[]) => mockDeleteBadge(...args),
 }));
 
 jest.mock("../../../hooks/useCreateBadge", () => ({
@@ -155,6 +157,51 @@ describe("BadgeDetailScreen", () => {
     );
     fireEvent.press(screen.getByLabelText("Go back"));
     expect(mockGoBack).toHaveBeenCalled();
+  });
+
+  describe("delete badge", () => {
+    it("opens the confirm-delete modal instead of deleting immediately", () => {
+      mockUseQuery.mockReturnValue([makeRow()]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      fireEvent.press(screen.getByRole("button", { name: "Delete Badge" }));
+
+      // Modal copy is visible; nothing has been deleted yet.
+      expect(
+        screen.getByText(
+          "This will permanently remove this badge. This cannot be undone.",
+        ),
+      ).toBeOnTheScreen();
+      expect(mockDeleteBadge).not.toHaveBeenCalled();
+    });
+
+    it("deletes the badge and navigates back on confirm", () => {
+      mockUseQuery.mockReturnValue([makeRow()]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      fireEvent.press(screen.getByRole("button", { name: "Delete Badge" }));
+      fireEvent.press(screen.getByRole("button", { name: "Delete" }));
+
+      expect(mockDeleteBadge).toHaveBeenCalledWith("badge-1");
+      expect(mockGoBack).toHaveBeenCalled();
+    });
+
+    it("does not delete when the modal is cancelled", () => {
+      mockUseQuery.mockReturnValue([makeRow()]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      fireEvent.press(screen.getByRole("button", { name: "Delete Badge" }));
+      fireEvent.press(screen.getByRole("button", { name: "Cancel" }));
+
+      expect(mockDeleteBadge).not.toHaveBeenCalled();
+      expect(mockGoBack).not.toHaveBeenCalled();
+    });
   });
 
   describe("export buttons", () => {
