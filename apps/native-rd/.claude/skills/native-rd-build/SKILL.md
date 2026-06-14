@@ -3,7 +3,7 @@ name: native-rd-build
 description: Build native-rd for any target — local iOS simulator/device, local Release builds, EAS development/preview/production, Android (when generated). Use when the user hits a build failure, asks how to produce a build of any kind, needs to diagnose runtime errors that look build-related ("No script URL provided", missing assets, signing issues), or wants to understand what `eas.json` / `app.json` / `Podfile.properties.json` settings actually do. Also use as a pre-flight checklist before starting a fresh build.
 metadata:
   author: rollercoaster.dev
-  version: "2.5.0"
+  version: "2.6.0"
 ---
 
 # native-rd Build Playbook
@@ -63,20 +63,20 @@ In Android Studio: wait for Gradle sync, pick an AVD from the device dropdown, h
 
 ## Build matrix
 
-| Target                         | Local command                                                       | EAS profile                                              | Status                                                                                                                                                                                                                                                                                                                                 |
-| ------------------------------ | ------------------------------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| iOS Simulator (dev client)     | `bun run ios` (with `IOS_DEVICE_ID` empty)                          | `eas build -p ios --profile development`                 | `[VERIFIED 2026-05-11]` local sim + EAS development profile (cloud build). `scripts/run-ios.sh` pins `REACT_NATIVE_PACKAGER_HOSTNAME=localhost` on the sim branch to avoid Gotcha 11                                                                                                                                                   |
-| iOS Device (dev client)        | `bun run ios` (or `IOS_DEVICE_ID=… bun run ios:device`)             | `eas build -p ios --profile development` (then sideload) | `[VERIFIED 2026-05-02]` local device                                                                                                                                                                                                                                                                                                   |
-| iOS Release (local sim)        | `npx expo run:ios --configuration Release`                          | n/a                                                      | `[VERIFIED 2026-05-02]` per `docs/plans/2026-05-02-expo-doctor-build-validation.md`                                                                                                                                                                                                                                                    |
-| iOS Release (local device)     | `npx expo run:ios --configuration Release --device <udid>`          | n/a                                                      | `[UNTESTED]`                                                                                                                                                                                                                                                                                                                           |
-| iOS preview build (signed IPA) | n/a                                                                 | `eas build -p ios --profile preview`                     | `[UNTESTED]`                                                                                                                                                                                                                                                                                                                           |
-| iOS production build           | n/a                                                                 | `eas build -p ios --profile production`                  | `[UNTESTED]`                                                                                                                                                                                                                                                                                                                           |
-| iOS App Store submit           | n/a                                                                 | `eas submit -p ios --profile production`                 | `[BROKEN]` `ascAppId` placeholder in `eas.json`                                                                                                                                                                                                                                                                                        |
-| Android Emulator (dev client)  | `bun run android`                                                   | `eas build -p android --profile development`             | `[VERIFIED 2026-05-07]` local emulator (Pixel 6a / API 35 / Google APIs / arm64-v8a). Now routes through `scripts/run-android.sh` which handles `adb reverse` + localhost pinning (Gotcha 11). Required: write `android/local.properties`, install NDK `27.1.12297006`, bump `react-native-nitro-modules` to `^0.35.6` (Gotchas 7/8/9) |
-| Android Device (dev client)    | `bun run android:device` (or `ANDROID_DEVICE_ID=… bun run android`) | same                                                     | `[UNTESTED]` should work once an Android device is paired and `adb devices` lists it; same Gotchas 7/8/9/11 apply                                                                                                                                                                                                                      |
-| Android preview APK            | n/a                                                                 | `eas build -p android --profile preview`                 | `[VERIFIED 2026-05-07]` ~33min cloud build, signed APK artifact downloadable from EAS dashboard. First attempt errored in POST_INSTALL_HOOK (Gotcha 10) — fix in commit 2d2e46b4 unblocked it                                                                                                                                          |
-| Android production AAB         | n/a                                                                 | `eas build -p android --profile production`              | `[UNTESTED]`                                                                                                                                                                                                                                                                                                                           |
-| Android Play Store submit      | n/a                                                                 | `eas submit -p android --profile production`             | `[BROKEN]` `play-service-account.json` not committed (rightfully so — needs developer-local copy)                                                                                                                                                                                                                                      |
+| Target                         | Local command                                                                | EAS profile                                              | Status                                                                                                                                                                                                                                                                                                                                  |
+| ------------------------------ | ---------------------------------------------------------------------------- | -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| iOS Simulator (dev client)     | `bun run ios` (with `IOS_DEVICE_ID` empty)                                   | `eas build -p ios --profile development`                 | `[VERIFIED 2026-05-11]` local sim + EAS development profile (cloud build). `scripts/run-ios.sh` pins `REACT_NATIVE_PACKAGER_HOSTNAME=localhost` on the sim branch to avoid Gotcha 11                                                                                                                                                    |
+| iOS Device (dev client)        | `bun run ios` (or `IOS_DEVICE_ID=… bun run ios:device`)                      | `eas build -p ios --profile development` (then sideload) | `[VERIFIED 2026-06-14]` local device — build + sign work, but **Expo's CLI installer can crash at `LockdowndClient.startSession` on a current paired iPhone** (Gotcha 13); install the built `.app` with `xcrun devicectl` + launch, run Metro separately                                                                               |
+| iOS Release (local sim)        | `npx expo run:ios --configuration Release`                                   | n/a                                                      | `[VERIFIED 2026-05-02]` per `docs/plans/2026-05-02-expo-doctor-build-validation.md`                                                                                                                                                                                                                                                     |
+| iOS Release (local device)     | `npx expo run:ios --configuration Release --device <udid>`                   | n/a                                                      | `[UNTESTED]`                                                                                                                                                                                                                                                                                                                            |
+| iOS preview build (signed IPA) | n/a                                                                          | `eas build -p ios --profile preview`                     | `[UNTESTED]`                                                                                                                                                                                                                                                                                                                            |
+| iOS production build           | n/a                                                                          | `eas build -p ios --profile production`                  | `[UNTESTED]`                                                                                                                                                                                                                                                                                                                            |
+| iOS App Store submit           | n/a                                                                          | `eas submit -p ios --profile production`                 | `[BROKEN]` `ascAppId` placeholder in `eas.json`                                                                                                                                                                                                                                                                                         |
+| Android Emulator (dev client)  | `bun run android`                                                            | `eas build -p android --profile development`             | `[VERIFIED 2026-05-07]` local emulator (Pixel 6a / API 35 / Google APIs / arm64-v8a). Now routes through `scripts/run-android.sh` which handles `adb reverse` + localhost pinning (Gotcha 11). Required: write `android/local.properties`, install NDK `27.1.12297006`, bump `react-native-nitro-modules` to `^0.35.6` (Gotchas 7/8/9)  |
+| Android Device (dev client)    | `bun run android` (single device — **NOT `android:device`**, see Gotcha 13b) | same                                                     | `[VERIFIED 2026-06-14]` local device (Samsung Galaxy A16 / SM-A165F, USB). Built + installed first try once the bogus `--device <serial>` was dropped. `bun run android:device` with `ANDROID_DEVICE_ID=<adb-serial>` is **broken** — Expo's `--device` wants a device _name_, not the serial (Gotcha 13b). Same Gotchas 7/8/9/11 apply |
+| Android preview APK            | n/a                                                                          | `eas build -p android --profile preview`                 | `[VERIFIED 2026-05-07]` ~33min cloud build, signed APK artifact downloadable from EAS dashboard. First attempt errored in POST_INSTALL_HOOK (Gotcha 10) — fix in commit 2d2e46b4 unblocked it                                                                                                                                           |
+| Android production AAB         | n/a                                                                          | `eas build -p android --profile production`              | `[UNTESTED]`                                                                                                                                                                                                                                                                                                                            |
+| Android Play Store submit      | n/a                                                                          | `eas submit -p android --profile production`             | `[BROKEN]` `play-service-account.json` not committed (rightfully so — needs developer-local copy)                                                                                                                                                                                                                                       |
 
 ---
 
@@ -199,7 +199,7 @@ First Gradle compile is slow (~6 min — RN core C++ + Hermes + native modules f
 
 ### What's still untested
 
-- **Physical Android device** — same flow should work once a device is paired (`adb devices` lists it). Likely needs USB debugging enabled on the device.
+- ~~**Physical Android device**~~ — `[VERIFIED 2026-06-14]` Samsung Galaxy A16 (SM-A165F) over USB. Needs USB debugging enabled + the "Allow USB debugging?" prompt accepted (so `adb devices` shows `device`, not `unauthorized`). Use plain `bun run android`, **not** `bun run android:device` (Gotcha 13b).
 - **Release configuration locally** — equivalent of `npx expo run:ios --configuration Release`. Try `npx expo run:android --variant release`.
 - **New architecture edge cases** — TurboModules, Fabric components specific to the app may behave differently from iOS. Ran without smoke-test; one warning observed: `setLayoutAnimationEnabledExperimental is currently a no-op in the New Architecture` (benign).
 
@@ -667,6 +667,83 @@ Often accompanied by `Failed to enable wireless functionality on the device` (co
 **Survives `expo prebuild`?** N/A — this is a device-side / Xcode-side issue, not project state.
 
 **Does this affect EAS?** No — EAS cloud builders use their own toolchain. The resulting IPA installs on the device fine; only the local debug-tether is broken.
+
+---
+
+## Gotcha 13 — iOS: Expo installer crashes at `LockdowndClient.startSession` on a current paired iPhone
+
+`[VERIFIED 2026-06-14]`
+
+**Symptom (build SUCCEEDS, then install-to-device fails):**
+
+```
+› Installing /Users/.../DerivedData/Rollercoasterdev-.../Build/Products/Debug-iphoneos/Rollercoasterdev.app
+TypeError: Cannot convert object to primitive value
+    at LockdowndClient.startSession (.../@expo/cli/src/run/ios/appleDevice/client/LockdowndClient.ts:119:28)
+    at LockdowndClient.doHandshake (.../LockdowndClient.ts:197:16)
+    at ClientManager.create (.../ClientManager.ts:37:26)
+    ...
+error: script "ios" exited with code 1
+```
+
+**Not Gotcha 12.** This fires on a _modern, fully paired_ device (verified on an iPhone 17 Pro running current iOS, `xcrun devicectl list devices` shows `available (paired)`) — no "developer disk image" message, no `build number ""`. The `.app` is built and signed and sitting in DerivedData; only Expo's homegrown lockdownd client chokes parsing the handshake response.
+
+**Cause:** Expo CLI ships its own pure-JS lockdownd client (`@expo/cli/.../appleDevice/`) to install on devices. Its session handshake throws `Cannot convert object to primitive value` against the response format current iOS returns. This is in Expo's installer, not your build.
+
+**Fix:** skip Expo's installer entirely and use Apple's own `devicectl` to push the already-built app, then run Metro separately (it's a Debug build, so it needs a bundle server):
+
+```bash
+# 1. Find the device's CoreDevice UUID (the F499…-format id, NOT the xctrace 00008…-format)
+xcrun devicectl list devices
+
+# 2. Install the built .app
+xcrun devicectl device install app --device <CoreDevice-UUID> \
+  "$HOME/Library/Developer/Xcode/DerivedData/Rollercoasterdev-<hash>/Build/Products/Debug-iphoneos/Rollercoasterdev.app"
+
+# 3. Launch it
+xcrun devicectl device process launch --device <CoreDevice-UUID> dev.rollercoaster.app
+
+# 4. Start Metro separately (background) so the dev client can fetch JS
+cd apps/native-rd && npx expo start --dev-client
+```
+
+`devicectl` uses the **CoreDevice UUID** (`F499DF16-…`), which is the _opposite_ of Gotcha 2 (where Expo CLI needs the legacy `xctrace` `00008…` UUID). The bundleID is `dev.rollercoaster.app` (the `.dev` suffix from PR #296). On first launch, accept the iOS "Local Network" permission prompt (Gotcha 4) so the dev client reaches Metro.
+
+**Survives `expo prebuild`?** N/A — Expo-CLI / device-side issue, not project state.
+
+**Does this affect EAS?** No — EAS builds embed the bundle (preview/production) or are installed by other tooling.
+
+---
+
+## Gotcha 13b — Android: `bun run android:device` can't find the device by adb serial
+
+`[VERIFIED 2026-06-14]`
+
+**Symptom (fails instantly, before any Gradle compile):**
+
+```
+Reversing tcp:8081 to host...
+Launching Android app with Expo...
+CommandError: Could not find device with name: RFGL414WR7T
+error: script "android:device" exited with code 1
+```
+
+`RFGL414WR7T` is the exact serial `adb devices` reports, and the `adb -s <serial> reverse` step in `run-android.sh` succeeded with it — so adb knows the device, but Expo doesn't.
+
+**Cause:** `scripts/run-android.sh` does `exec npx expo run:android --device "${ANDROID_DEVICE_ID}"`. Expo CLI's `--device` flag matches against a device _name_, not the adb serial number, so a valid serial is rejected. (Inconsistent with adb's own `-s <serial>`, which the same script uses two lines earlier.)
+
+**Fix:** with a **single** device/emulator connected, drop `--device` — plain `bun run android` routes through the same script (single-device branch → `exec npx expo run:android` with no `--device`) and Just Works. Reserve device-pinning for the multi-device case, and when you do need it, pass the **name** Expo expects, not the serial.
+
+```bash
+# Single device — the working path:
+cd apps/native-rd && bun run android
+```
+
+**Follow-up:** `run-android.sh` should translate `ANDROID_DEVICE_ID` (a serial) into what `expo run:android --device` wants, or pin via `adb -s` + a single-target invocation instead. Tracked separately.
+
+**Survives `expo prebuild`?** Yes — the bug is in the launcher script, not generated state.
+
+**Does this affect EAS?** No — EAS doesn't use `run-android.sh`.
 
 ---
 

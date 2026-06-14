@@ -1,7 +1,7 @@
 name: build-internal
 
-# Manual-only: internal builds run when a human (or scheduled call)
-# clicks "Run workflow" — they do not auto-trigger on push to main.
+# Manual-only direct-install builds. These create EAS internal-distribution
+# artifacts and never upload them to App Store Connect or Google Play.
 on:
   workflow_dispatch:
     inputs:
@@ -9,7 +9,7 @@ on:
         description: "Git ref to build — bare branch, tag, or commit SHA, e.g. `main` or `v0.1.12` (no `ref:` prefix). Leave blank to use the branch picked in the 'Use workflow from' dropdown."
         required: false
       platform:
-        description: "Platform to build and submit."
+        description: "Platform to build for direct installation."
         required: false
         default: all
         type: choice
@@ -117,89 +117,3 @@ jobs:
           build_id="$(jq -r 'if type == "array" then .[0].id else .id end' "$out")"
           test -n "$build_id" && test "$build_id" != "null"
           echo "build_id=$build_id" >> "$GITHUB_OUTPUT"
-
-  submit-ios:
-    needs: build-ios
-    if: ${{ always() && needs.build-ios.result == 'success' }}
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/native-rd
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ inputs.ref || github.ref }}
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version-file: "package.json"
-
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: 22
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-        working-directory: .
-
-      - name: Write Apple ASC key
-        # Pass secrets via env (not ${{ secrets.* }} inside the script body) so
-        # arbitrary content — newlines, quotes, backslashes — stays inside the
-        # shell variable instead of being expanded into the script source.
-        # Trailing newline is appended per Apple/OpenSSL PEM parser expectations.
-        env:
-          APPLE_ASC_KEY_P8: ${{ secrets.APPLE_ASC_KEY_P8 }}
-        run: |
-          mkdir -p ../../secrets
-          printf '%s\n' "$APPLE_ASC_KEY_P8" > ../../secrets/asc-api-key.p8
-          chmod 600 ../../secrets/asc-api-key.p8
-
-      - name: Submit (EAS, preview profile, iOS)
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          APPLE_ASC_KEY_ID: ${{ secrets.APPLE_ASC_KEY_ID }}
-          APPLE_ASC_ISSUER_ID: ${{ secrets.APPLE_ASC_ISSUER_ID }}
-        run: npx "eas-cli@$EAS_CLI_VERSION" submit --profile preview --platform ios --id "${{ needs.build-ios.outputs.build_id }}" --non-interactive --wait
-
-  submit-android:
-    needs: build-android
-    if: ${{ always() && needs.build-android.result == 'success' }}
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/native-rd
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ inputs.ref || github.ref }}
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version-file: "package.json"
-
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: 22
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-        working-directory: .
-
-      - name: Write Google Play service account
-        env:
-          ANDROID_PLAY_SA: ${{ secrets.ANDROID_PLAY_SERVICE_ACCOUNT_JSON }}
-        run: |
-          mkdir -p ../../secrets
-          printf '%s\n' "$ANDROID_PLAY_SA" > ../../secrets/play-service-account.json
-          chmod 600 ../../secrets/play-service-account.json
-
-      - name: Submit (EAS, preview profile, Android)
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: npx "eas-cli@$EAS_CLI_VERSION" submit --profile preview --platform android --id "${{ needs.build-android.outputs.build_id }}" --non-interactive --wait
