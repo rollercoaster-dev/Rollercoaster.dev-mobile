@@ -6,7 +6,7 @@
 
 > Historical design record. The implemented pipeline has changed since this
 > recommendation, especially Android's temporary Play internal destination.
-> Use `docs/release.md` as the operational source of truth.
+> Use `apps/native-rd/docs/release.md` as the operational source of truth.
 
 ## TL;DR
 
