@@ -826,7 +826,7 @@ describe("FocusModeScreen", () => {
     expect(
       screen.getByText(i18n.t("focusMode:toast.evidenceDeleted")),
     ).toBeOnTheScreen();
-    expect(screen.queryByLabelText("Undo")).toBeNull();
+    expect(screen.queryByLabelText(i18n.t("common:actions.undo"))).toBeNull();
   });
 
   it("cleans up the evidence file immediately on confirm (no deferred timer)", () => {
