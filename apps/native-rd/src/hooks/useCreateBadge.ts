@@ -3,8 +3,27 @@
  * rebake-after-reopen). Race-safe: once a mutating branch fires, the ref
  * guard is never reset, so Strict-Mode double-invocation and Evolu's
  * unstable array refs cannot re-enter.
+ *
+ * ## Terminal error state and recovery
+ *
+ * The bake pipeline is a single guarded effect: `hasTriggered` flips to `true`
+ * on the first mutating run and is *never* reset internally. If the pipeline
+ * throws (build/sign/bake/store), the hook lands on `status: "error"` with the
+ * guard still `true`, so the effect cannot re-fire — the error state is
+ * terminal until something resets the guard. Left alone, the caller is stuck
+ * showing an error with no path forward (issue #39).
+ *
+ * `retryBake()` is that path: it clears `hasTriggered`, returns `status` to
+ * `"idle"`, and clears `error`. On the next render the effect re-evaluates its
+ * preconditions and — assuming the caller's `enabled` is still `true` — re-runs
+ * the full pipeline from the start. It does NOT touch `enabled`; the caller's
+ * commit-to-bake state is unchanged, so retry is in-place rather than bouncing
+ * the user back to a pre-bake choice. The reset is gated to the `"error"`
+ * state — calling it from `"done"`, `"no-key"`, or any in-flight status returns
+ * early, so a stray call can't re-arm the guard or bounce a completed bake back
+ * through the pipeline.
  */
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery } from "@evolu/react";
 import { useTranslation } from "react-i18next";
 import {
@@ -51,6 +70,13 @@ export type BadgeCreationStatus =
 export interface UseCreateBadgeResult {
   status: BadgeCreationStatus;
   error: string | null;
+  /**
+   * Resets the terminal `"error"` state so the bake pipeline can re-run.
+   * Clears the re-entry guard, returns status to `"idle"`, and clears `error`.
+   * Returns early (no-op) unless the hook is currently in `"error"`. See the
+   * "Terminal error state and recovery" note above.
+   */
+  retryBake: () => void;
 }
 
 function toBase64Url(bytes: Uint8Array): string {
@@ -355,5 +381,17 @@ export function useCreateBadge(
     })();
   }, [existingBadge, isReady, keyId, goal, goalId, enabled]); // evidence read via ref, not deps
 
-  return { status, error };
+  // Recovery from the terminal "error" state: clear the never-reset guard and
+  // return to "idle" so the guarded effect can re-run on the next render.
+  // Gated to "error" so a call from any other state can't re-arm the guard or
+  // bounce a completed/in-flight bake back through the pipeline — keeps the
+  // implementation in step with the documented contract.
+  const retryBake = useCallback(() => {
+    if (status !== "error") return;
+    hasTriggered.current = false;
+    setStatus("idle");
+    setError(null);
+  }, [status]);
+
+  return { status, error, retryBake };
 }

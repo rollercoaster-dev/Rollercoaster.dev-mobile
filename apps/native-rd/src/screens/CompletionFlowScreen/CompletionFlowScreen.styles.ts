@@ -103,6 +103,13 @@ export const styles = StyleSheet.create((theme) => ({
   badgeStatusText: {
     color: theme.colors.textSecondary,
   },
+  // Stacks the bake error alert above its retry button (#39). The alert itself
+  // stays a row (badgeStatus) and keeps its own marginTop for separation from
+  // the content above; this column wrapper only adds the gap to the button.
+  badgeErrorContainer: {
+    width: "100%",
+    gap: theme.space[3],
+  },
   // Evidence prompt phase styles
   inlineNoteContainer: {
     width: "100%",
