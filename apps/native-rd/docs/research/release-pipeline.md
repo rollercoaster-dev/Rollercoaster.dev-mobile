@@ -4,6 +4,10 @@
 **Status:** Research — recommends an approach; implementation plan to follow.
 **Scope:** native-rd app only. Other workspace packages don't ship binaries.
 
+> Historical design record. The implemented pipeline has changed since this
+> recommendation, especially Android's temporary Play internal destination.
+> Use `docs/release.md` as the operational source of truth.
+
 ## TL;DR
 
 Recommend a **GitHub-Actions-orchestrated EAS** pipeline:

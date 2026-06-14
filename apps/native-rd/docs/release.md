@@ -1,20 +1,21 @@
 # Release Runbook
 
-**Last verified:** 2026-06-04
+**Last verified:** 2026-06-07
 
 ## Pipeline at a glance
 
-| Track                 | Trigger                                                                  | Workflow                  | EAS build profile | EAS submit profile | Destination                    |
-| --------------------- | ------------------------------------------------------------------------ | ------------------------- | ----------------- | ------------------ | ------------------------------ |
-| Direct install        | Manual: Actions → `build-internal` → "Run workflow"                      | `build-internal.yml`      | `preview`         | `preview`          | EAS internal distribution      |
-| Play internal testing | Manual: Actions → `build-play-internal` → "Run workflow"                 | `build-play-internal.yml` | `production`      | `play-internal`    | Google Play internal test      |
-| Production            | GitHub Release published (release-please PR merge, or manual UI publish) | `build-production.yml`    | `production`      | `production`       | TestFlight ext + Play prod 10% |
-| Production            | Manual: Actions → `build-production` → "Run workflow" with `ref` input   | `build-production.yml`    | `production`      | `production`       | TestFlight ext + Play prod 10% |
+| Track                 | Trigger                                                                  | Workflow                  | EAS build profile | EAS submit profile | Destination                  |
+| --------------------- | ------------------------------------------------------------------------ | ------------------------- | ----------------- | ------------------ | ---------------------------- |
+| Direct install        | Manual: Actions → `build-internal` → "Run workflow"                      | `build-internal.yml`      | `preview`         | None               | EAS internal distribution    |
+| Play internal testing | Manual: Actions → `build-play-internal` → "Run workflow"                 | `build-play-internal.yml` | `production`      | `play-internal`    | Google Play internal testing |
+| Tagged tester release | GitHub Release published (release-please PR merge, or manual UI publish) | `build-production.yml`    | `production`      | `production`       | TestFlight + Play internal   |
+| Tagged tester release | Manual: Actions → `build-production` → "Run workflow" with `ref` input   | `build-production.yml`    | `production`      | `production`       | TestFlight + Play internal   |
 
-Both build workflows are deliberately click-only — no auto-build on push to
-`main`. release-please runs on every push to `main` to keep the release PR up
-to date, but it never builds anything itself; it just opens/updates a PR and,
-when merged, publishes a GitHub Release.
+No release workflow auto-builds on a push to `main`. `build-internal` and
+`build-play-internal` are manual. `build-production` is human-gated either by
+publishing a draft GitHub Release or by manual dispatch. release-please runs on
+every push to `main` to keep the release PR up to date, but it never builds
+anything itself.
 
 ## Cutting a direct-install build
 
@@ -25,11 +26,12 @@ when merged, publishes a GitHub Release.
 3. Pick `platform`: `all`, `ios`, or `android`. Use a single platform when
    smoke-testing one credential path.
 4. Click **Run workflow**.
-5. Watch release validate → per-platform EAS build → per-platform submit.
+5. Watch release validation followed by the selected per-platform EAS build
+   jobs.
 
-Use this workflow for EAS internal distribution / direct-install testing. Do not
-use the Android preview artifact for Play Store testing: `preview` builds Android
-as an APK and uses EAS internal distribution.
+This workflow never submits to App Store Connect or Google Play. Its iOS
+artifact is ad-hoc provisioned and its Android artifact is an APK, both for
+direct installation only.
 
 ## Cutting an Android Play internal test build
 
@@ -58,7 +60,7 @@ Why this workflow exists:
   `alpha` / `beta` until the app is intentionally moved to a formal closed
   testing track.
 
-## Cutting a production release
+## Cutting a tagged tester release
 
 1. Wait for release-please to open or update the "chore(main): release
    native-rd X.Y.Z" PR.
@@ -70,65 +72,54 @@ Why this workflow exists:
 3. Merge the PR. release-please pushes the `vX.Y.Z` tag **and publishes a
    GitHub Release** (as a draft — `"draft": true` in the release-please config;
    publishing is the manual "ship" click in the Releases UI).
-4. `build-production` workflow fires on the published Release. It runs
-   `eas submit` for iOS and Android using the static metadata in
-   `apps/native-rd/store.config.base.json` (title, privacy policy URL —
+4. `build-production` fires on the published Release. It builds store-shaped
+   production artifacts, then runs `eas submit` for iOS and Android. The iOS
+   submit also uses the static metadata in
+   `apps/native-rd/store.config.base.json` (title and privacy policy URL —
    nothing version-specific). Watch the workflow in Actions.
 5. After EAS finishes:
-   - iOS: build appears in App Store Connect → TestFlight. External testers
-     get it automatically (if the build is in a beta group with
-     auto-distribution). The App Store release still requires manual
-     "Submit for Review" + phased release in ASC.
-   - Android: build appears in Play Console → Production at 10% rollout.
-     Watch Sentry for 24–48h, then advance directly in Play Console or via
-     Google Play Developer API tooling such as fastlane `supply`.
+   - iOS: the build appears in App Store Connect → TestFlight. Tester
+     distribution depends on the TestFlight groups configured in App Store
+     Connect. A public App Store release still requires a separate manual
+     review and release decision.
+   - Android: the build appears in Play Console → Testing → Internal testing.
+
+`production` is the EAS **build profile** name and produces store-shaped
+artifacts: an App Store-signed iOS build and an Android AAB. It does not
+currently mean that Android is released to the Play production track.
 
 Store-facing release notes (Play "What's new", App Store "What's New",
 TestFlight "What to Test") are entered **by hand** in each console.
 There is no automated pipeline that pushes them — `eas submit` only pushes
 the static metadata from `store.config.base.json`.
 
-If you need to re-run a production build against an existing tag (e.g.,
+If you need to re-run a tagged tester build against an existing tag (e.g.,
 because EAS failed transiently), use **Actions → build-production → "Run
 workflow"** and supply the tag (e.g., `v0.1.4`) as the `ref` input. You can
 also choose `platform` = `ios` or `android` for a platform-specific re-run.
 
-## Advancing the Android rollout
+## Enabling public store release later
 
-EAS CLI doesn't expose a rollout subcommand — rollout management happens
-in Play Console (or via the Google Play Developer API). Two supported paths:
+The automated pipeline does not currently release Android to Play production
+or submit an iOS version for App Store review. When production access is
+intentionally enabled:
 
-1. **Play Console (recommended for ad-hoc advancement):**
-   Release management → Production → open the active release → "Edit release" →
-   adjust the staged rollout percentage → review → start rollout.
-2. **Fastlane `supply` (if you want it scripted):**
-   ```bash
-   bundle exec fastlane supply \
-     --track production \
-     --rollout 0.5 \
-     --skip_upload_apk \
-     --skip_upload_aab \
-     --skip_upload_metadata \
-     --skip_upload_changelogs \
-     --skip_upload_images \
-     --skip_upload_screenshots
-   ```
-   Requires a Play Console service account JSON locally (do **not** commit it).
+1. Open a dedicated issue and review current store-account readiness.
+2. Change `submit.production.android.track` only in that reviewed change.
+3. Add an explicit rollout policy and rollback procedure before enabling it.
+4. Update this runbook and capture a successful production-track run.
 
 ## Rolling back
 
-- **Android:** Play Console → Production → halt rollout (keeps current users
-  on the halted version; new installs continue to get the previous version).
-  Then ship a fixed `v*.*.*` ASAP — Play doesn't allow shipping a lower
-  versionCode.
-- **iOS:** App Store Connect → "Remove from sale" only blocks new downloads;
-  existing installs are unaffected. Ship a fixed `v*.*.*` and request
-  expedited review if critical.
+- **Android internal testing:** stop distributing the affected release to
+  testers in Play Console and upload a fixed build with a higher versionCode.
+- **iOS TestFlight:** expire the affected build in App Store Connect and upload
+  a fixed build. If the version was also released publicly, removing it from
+  sale only blocks new downloads; existing installs are unaffected.
 
 ## Required secrets
 
-See `docs/research/release-pipeline.md` § Secrets. All are stored as GitHub
-repo secrets:
+The store and EAS workflows use these GitHub repository secrets:
 
 - `EXPO_TOKEN`
 - `SENTRY_AUTH_TOKEN`
@@ -139,13 +130,13 @@ repo secrets:
 
 ## First-run evidence
 
-Fill this in after the first real runs so future release work has concrete
-breadcrumbs instead of folklore.
+| Date       | Workflow           | Ref/tag   | Platform | Evidence                                                                                                                                                                                                                                                                                  | Result  | Notes                                            |
+| ---------- | ------------------ | --------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------ |
+| 2026-06-07 | `build-production` | `v0.1.14` | iOS      | [EAS build `01618bff-49be-4fe8-a748-7c9fc28e0163`](https://expo.dev/accounts/rollercoasterdev/projects/rollercoasterdev/builds/01618bff-49be-4fe8-a748-7c9fc28e0163); [Actions run `27096223782`](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/actions/runs/27096223782) | Success | Submitted to App Store Connect/TestFlight        |
+| 2026-06-07 | `build-production` | `v0.1.14` | Android  | [EAS build `22930d94-95b4-4039-9fd4-ceec910a81a5`](https://expo.dev/accounts/rollercoasterdev/projects/rollercoasterdev/builds/22930d94-95b4-4039-9fd4-ceec910a81a5); [Actions run `27096223782`](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/actions/runs/27096223782) | Success | Submitted to Play `internal`, status `COMPLETED` |
 
-| Date       | Workflow           | Ref/tag | Platform | EAS build URL | Result | Notes |
-| ---------- | ------------------ | ------- | -------- | ------------- | ------ | ----- |
-| YYYY-MM-DD | `build-internal`   |         |          |               |        |       |
-| YYYY-MM-DD | `build-production` |         |          |               |        |       |
+Issue #90 remains open until a current `build-play-internal` run is recorded
+here.
 
 ## Tag rewriting is blocked — ship as N+1 instead
 
@@ -202,5 +193,6 @@ this section.
   malformed (missing `-----BEGIN`/`-----END` lines).
 - **Android submit fails with "no service account":**
   `ANDROID_PLAY_SERVICE_ACCOUNT_JSON` secret is malformed (not valid JSON).
-- **Sentry finalize fails:** the build still shipped; finalize is
-  metadata-only. Run `npx @sentry/cli releases finalize <version>` manually.
+- **Sentry finalize fails:** the build still reached its tester destination;
+  finalize is metadata-only. Run
+  `npx @sentry/cli releases finalize <release-name>` manually.
