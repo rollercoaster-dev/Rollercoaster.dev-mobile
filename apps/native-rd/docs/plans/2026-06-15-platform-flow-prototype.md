@@ -63,7 +63,7 @@ Could be a single small worker/serverless function + a static page. **No Evolu s
 
 ## Caveats (do not paper over)
 
-- **Signing gap.** Standard OB3 validators will _reject_ `eddsa-raw-json-iteration-a`. Only _our_ verifier page accepts the proof until the `eddsa-rdfc-2022` upgrade lands (deferred to Iteration D; 6 gaps in [ob3-compliance-status.md](../architecture/ob3-compliance-status.md)). Don't claim "verifiable by any OB3 tool."
+- **Signing gap.** Standard OB3 validators will _reject_ `eddsa-raw-json-iteration-a`. Only _our_ verifier page accepts the proof until the `eddsa-rdfc-2022` upgrade lands (deferred to Iteration D — closes gaps 5 + 7 of the 7 tracked in [ob3-compliance-status.md](../architecture/ob3-compliance-status.md)). Don't claim "verifiable by any OB3 tool."
 - **Throwaway privacy.** The real model is local-first + E2E encrypted + revocable token links. The spike skips all of it. Test data only.
 - **Iteration boundary.** This is a spike, not B. Findings feed the B-vs-platform-flow decision; they don't become the B release as-is.
 
