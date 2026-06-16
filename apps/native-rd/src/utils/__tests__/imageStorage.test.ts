@@ -6,7 +6,7 @@ import {
 
 const mockDirectoryExists = jest.fn(() => true);
 const mockDirectoryCreate = jest.fn();
-const mockFileCopy = jest.fn();
+const mockFileCopySync = jest.fn();
 const mockFileExists = jest.fn(() => true);
 const mockFileDelete = jest.fn();
 const mockDirUri = "file:///data/documents/evidence/photos/";
@@ -28,7 +28,7 @@ jest.mock("expo-file-system", () => {
     })),
     File: jest.fn().mockImplementation(() => ({
       uri: mockFileUri,
-      copy: mockFileCopy,
+      copySync: mockFileCopySync,
       get exists() {
         return mockFileExists();
       },
@@ -70,7 +70,7 @@ describe("saveImageToAppStorage", () => {
   it("copies the source file", () => {
     saveImageToAppStorage("file:///tmp/photo.jpg");
 
-    expect(mockFileCopy).toHaveBeenCalled();
+    expect(mockFileCopySync).toHaveBeenCalled();
   });
 
   it("returns a file URI", () => {

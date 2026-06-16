@@ -25,7 +25,7 @@ export function saveImageToAppStorage(sourceUri: string): string {
   const filename = generateFilename();
   const source = new File(sourceUri);
   const destination = new File(photosDir, filename);
-  source.copy(destination);
+  source.copySync(destination);
   return destination.uri;
 }
 
