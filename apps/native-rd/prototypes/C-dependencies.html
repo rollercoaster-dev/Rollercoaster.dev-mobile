@@ -287,7 +287,7 @@
     border: 2px solid var(--border); border-radius: 4px; background: var(--amber);
     padding: 8px 10px;
   }
-  .gcard .allwait .sub { display: block; margin-top: 3px; font-size: 11px; font-weight: 500; color: #5a4a00; }
+  .gcard .allwait .soonest { display: block; margin-top: 3px; font-size: 11px; font-weight: 500; color: #5a4a00; }
   .gcard .prow { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
 
   /* ---- mini timeline ---- */
@@ -639,7 +639,7 @@ function renderGoals(t, d) {
     const soon = f.waiting[0]?.deps?.find(x => x.kind === 'external');
     nextBlock = `
       <div class="allwait">Everything here is waiting on other people right now — that's the system, not you.
-        <span class="sub">Soonest: ${esc(f.waiting[0].title)} — ${soon ? 'expected ' + esc(soon.date) : 'waiting'}.</span>
+        <span class="soonest">Soonest: ${esc(f.waiting[0].title)} — ${soon ? 'expected ' + esc(soon.date) : 'waiting'}.</span>
       </div>`;
   } else {
     nextBlock = `
