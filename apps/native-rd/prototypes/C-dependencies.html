@@ -553,7 +553,7 @@ function depMarkers(t, step, steps) {
     }
     /* connector */
     if (d.kind === 'internal')
-      return `<div class="dep-conn internal${met?' met':''}"><span class="ar">${met?'✓':'→'}</span><span>${met?'follows ':'needs '}${esc(d.title)}${met?'':' first'}</span></div>`;
+      return `<div class="dep-conn internal${met?' met':''}"><span class="ar">${met?'✓':'→'}</span><span>after ${esc(d.title)}</span></div>`;
     return `<div class="dep-conn external"><span class="ar">⤧</span><span>waiting on ${esc(d.on)} <span class="exp">· expected ${esc(d.date)}</span></span></div>`;
   }).join('');
 }
