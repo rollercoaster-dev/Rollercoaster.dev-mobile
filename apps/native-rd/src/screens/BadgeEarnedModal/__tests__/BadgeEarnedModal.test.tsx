@@ -33,6 +33,14 @@ const defaultProps = {
   onContinue: jest.fn(),
 };
 
+// RN 0.85 (SDK 56) normalizes the host Image node's `source` prop to an array
+// (`[{ uri }]`); earlier versions left a single `{ uri }` object. Flatten so the
+// assertion checks the resolved source regardless of RN's wrapping.
+const imageSource = (image: { props: Record<string, unknown> }): unknown =>
+  Array.isArray(image.props.source)
+    ? image.props.source[0]
+    : image.props.source;
+
 describe("BadgeEarnedModal", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -68,13 +76,13 @@ describe("BadgeEarnedModal", () => {
       <BadgeEarnedModal {...defaultProps} imageUri="file:///badges/v1.png" />,
     );
     const firstImage = screen.getByTestId("badge-earned-image");
-    expect(firstImage.props.source).toEqual({ uri: "file:///badges/v1.png" });
+    expect(imageSource(firstImage)).toEqual({ uri: "file:///badges/v1.png" });
 
     rerender(
       <BadgeEarnedModal {...defaultProps} imageUri="file:///badges/v2.png" />,
     );
     const secondImage = screen.getByTestId("badge-earned-image");
-    expect(secondImage.props.source).toEqual({ uri: "file:///badges/v2.png" });
+    expect(imageSource(secondImage)).toEqual({ uri: "file:///badges/v2.png" });
     expect(secondImage).not.toBe(firstImage);
   });
 

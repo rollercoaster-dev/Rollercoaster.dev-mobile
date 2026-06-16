@@ -22,7 +22,7 @@ module.exports = {
   },
 
   // RN's custom test environment patches global (ErrorUtils, __DEV__, etc.)
-  testEnvironment: "react-native/jest/react-native-env.js",
+  testEnvironment: "@react-native/jest-preset/jest/react-native-env.js",
 
   // Custom resolver that stubs RN 0.81 specs_DEPRECATED ESM files
   resolver: "./jest.resolver.js",
@@ -94,7 +94,9 @@ module.exports = {
   // under the .bun/ layout. The db setup file is inside rootDir so Jest
   // resolves it without needing require.resolve.
   setupFiles: [
-    require.resolve("react-native/jest/setup"),
+    // RN 0.85 (SDK 56) extracted the Jest preset/setup into the separate
+    // `@react-native/jest-preset` package; `react-native/jest/setup` is gone.
+    require.resolve("@react-native/jest-preset/jest/setup"),
     require.resolve("react-native-unistyles/mocks"),
     "./unistyles.ts",
     "./src/__tests__/setup-unistyles.ts",
