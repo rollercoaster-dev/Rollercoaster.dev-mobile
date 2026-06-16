@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROTOTYPE — C: Dependencies — treatments × five surfaces × task-view fork</title>
+<!--
+  PROTOTYPE — throwaway. Phase B Stage 2, C: Dependencies (merges C-order + C-waiting).
+
+  Questions:
+    - What does a step with a not-yet-satisfied dependency SHOW? ("depends on"/"after"
+      for internal, "waiting on … expected <date>" for external — never "blocked by".)
+    - Task-view fork: does "one next step" NAME the waiting step and stay put, or
+      ROUTE AROUND to the next actionable step? (Open Questions Register § C + task view)
+  Feature shape: docs/plans/phase-b-feature-shapes.md §C
+  Record:        docs/plans/phase-b-prototype-records/C-dependencies.md
+
+  Plan: three marker treatments × five surfaces × three scenarios, plus a task-view
+  variant toggle (stay / around), switchable via URL params
+  (?treatment= ?surface= ?data= ?taskview= ?view=), on a single static page. Open directly:
+      open apps/native-rd/prototypes/C-dependencies.html
+  ← / → cycle treatments (or surfaces in compare view).
+
+  Guardrail it must hold everywhere: dependencies INFORM, never enforce — nothing is
+  blocked, hidden, dimmed, disabled, or refused because a dependency is unsatisfied; a
+  passed expected date never changes state; waiting is never framed as user failure.
+
+  Tokens mirrored from packages/design-tokens light-default composition so the file is
+  self-contained — comparison should measure the treatment, not HTML aesthetics. CSS is
+  shared with a-substructure-layouts.html and extended with dependency-specific classes.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wght@600;700;800;900&family=Instrument+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* light-default, resolved from packages/design-tokens */
+    --bg: #fafafa;
+    --card: #ffffff;
+    --bg2: #f0f0f0;
+    --input: #f5f5f5;
+    --text: #262626;
+    --muted: #737373;
+    --disabled: #a3a3a3;
+    --border: #0a0a0a;
+    --border-subtle: #d4d4d4;
+    --primary: #3b82f6;
+    --primary-dark: #2563eb;
+    --purple: #a78bfa;
+    --purple-light: #ede9fe;
+    --yellow: #ffe50c;
+    --mint: #d4f4e7;
+    --amber: #fde68a;
+    --amber-line: #b45309;
+    --success: #059669;
+    --error: #dc2626;
+    --shadow-sm: 2px 2px 0 rgba(0,0,0,0.8);
+    --shadow-md: 3px 3px 0 rgba(0,0,0,0.8);
+    --shadow-lg: 4px 4px 0 rgba(0,0,0,0.8);
+    --headline: 'Anybody', system-ui, sans-serif;
+    --body: 'Instrument Sans', system-ui, sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: #e8e4da;
+    font-family: var(--body);
+    color: var(--text);
+    padding: 28px 20px 110px;
+    min-height: 100vh;
+  }
+
+  /* ============ page chrome (not part of the design under test) ============ */
+  .page-header { max-width: 1100px; margin: 0 auto 18px; }
+  .page-header h1 {
+    font-family: var(--headline); font-weight: 900; font-size: 26px;
+    letter-spacing: -0.02em; margin: 0 0 6px;
+  }
+  .page-header p { margin: 0 0 4px; font-size: 14px; color: #4a4a4a; max-width: 880px; }
+  .proto-tag {
+    display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; background: var(--error); color: #fff;
+    border: 2px solid var(--border); padding: 2px 8px; margin-bottom: 8px;
+  }
+
+  .controls {
+    max-width: 1100px; margin: 0 auto 26px; display: flex; flex-wrap: wrap;
+    gap: 10px 22px; align-items: center;
+  }
+  .ctl-group { display: flex; align-items: center; gap: 6px; }
+  .ctl-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #555; margin-right: 2px; }
+  .seg {
+    font-family: var(--body); font-size: 12.5px; font-weight: 600; cursor: pointer;
+    background: var(--card); color: var(--text); border: 2px solid var(--border);
+    padding: 5px 10px; box-shadow: var(--shadow-sm);
+  }
+  .seg.on { background: var(--yellow); }
+  .seg:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 rgba(0,0,0,0.8); }
+
+  .layout-banner {
+    max-width: 1100px; margin: 0 auto 20px; background: var(--card);
+    border: 2.5px solid var(--border); box-shadow: var(--shadow-md); padding: 12px 16px;
+  }
+  .layout-banner h2 { font-family: var(--headline); font-weight: 800; font-size: 18px; margin: 0 0 4px; }
+  .layout-banner p { margin: 0; font-size: 13px; color: #444; }
+  .layout-banner .tv { display: inline-block; margin-top: 7px; font-size: 11.5px; font-weight: 700; background: var(--amber); border: 1.5px solid var(--border); padding: 2px 8px; }
+
+  .lab { display: flex; gap: 26px; overflow-x: auto; padding: 4px 4px 24px; }
+  .col { flex: 0 0 auto; width: 360px; display: flex; flex-direction: column; gap: 12px; }
+  .col-title {
+    font-family: var(--headline); font-weight: 800; font-size: 14px;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .meta {
+    background: var(--card); border: 2px solid var(--border); box-shadow: var(--shadow-sm);
+    padding: 10px 12px; font-size: 12px; line-height: 1.5; color: #333;
+  }
+  .meta .qs { font-family: var(--mono); font-size: 10.5px; color: var(--muted); display: block; margin-bottom: 4px; }
+  .meta .pinch {
+    display: inline-block; margin-top: 6px; background: var(--yellow);
+    border: 1.5px solid var(--border); font-size: 11px; font-weight: 700; padding: 2px 6px;
+  }
+
+  .switcher {
+    position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+    background: var(--border); color: #fff; border-radius: 999px;
+    display: flex; align-items: center; gap: 4px; padding: 8px 10px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.35); z-index: 50; user-select: none;
+  }
+  .switcher button {
+    background: none; border: none; color: #fff; font-size: 18px; cursor: pointer;
+    width: 34px; height: 34px; border-radius: 50%;
+  }
+  .switcher button:hover { background: rgba(255,255,255,0.15); }
+  .switcher .lbl { font-family: var(--body); font-weight: 600; font-size: 13px; padding: 0 8px; min-width: 230px; text-align: center; }
+
+  .footer-notes {
+    max-width: 1100px; margin: 24px auto 0; background: var(--card);
+    border: 2px solid var(--border); box-shadow: var(--shadow-sm); padding: 14px 18px;
+    font-size: 13px; line-height: 1.6;
+  }
+  .footer-notes h3 { font-family: var(--headline); font-size: 15px; margin: 0 0 6px; }
+  .footer-notes ol { margin: 0 0 10px; padding-left: 20px; }
+  .footer-notes li { margin-bottom: 2px; }
+
+  /* ============ phone frame ============ */
+  .phone {
+    width: 360px; height: 700px; background: var(--bg);
+    border: 2.5px solid var(--border); box-shadow: var(--shadow-lg);
+    border-radius: 26px; overflow: hidden; display: flex; flex-direction: column;
+  }
+  .screen { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+
+  /* ============ shared app components (mirroring native-rd) ============ */
+  .sub {
+    display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+    border-bottom: 2.5px solid var(--border); background: var(--card);
+    position: sticky; top: 0; z-index: 5;
+  }
+  .sub .back, .sub .icon-btn {
+    width: 30px; height: 30px; border: 2px solid var(--border); background: var(--card);
+    font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+    box-shadow: var(--shadow-sm); flex: 0 0 auto; border-radius: 4px;
+  }
+  .sub .title { font-family: var(--headline); font-weight: 800; font-size: 16px; flex: 1; line-height: 1.2; }
+  .sub .center-label { flex: 1; text-align: center; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+  .sub .spacer { width: 30px; flex: 0 0 auto; }
+
+  .pill {
+    display: inline-block; border: 1.5px solid var(--border); border-radius: 999px;
+    font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 2px 8px; box-shadow: 1.5px 1.5px 0 rgba(0,0,0,0.8); white-space: nowrap;
+  }
+  .pill.active { background: var(--yellow); }
+  .pill.done { background: var(--mint); }
+  .pill.pending { background: var(--bg2); color: var(--muted); }
+  .pill.waiting { background: var(--amber); }
+
+  .pbar { height: 8px; border: 1.5px solid var(--border); border-radius: 999px; background: var(--input); overflow: hidden; flex: 1; }
+  .pbar .fill { height: 100%; background: var(--primary); }
+  .pnum { font-family: var(--mono); font-size: 11px; color: var(--text); }
+
+  .cbx {
+    width: 22px; height: 22px; border: 2.5px solid var(--border); border-radius: 4px;
+    background: var(--card); display: inline-flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 900; flex: 0 0 auto; box-shadow: 1.5px 1.5px 0 rgba(0,0,0,0.8);
+  }
+  .cbx.on { background: var(--primary); color: #fff; }
+  .cbx.sm { width: 17px; height: 17px; font-size: 10px; border-width: 2px; }
+
+  .btn {
+    font-family: var(--body); font-weight: 700; font-size: 14px; text-align: center;
+    border: 2.5px solid var(--border); box-shadow: var(--shadow-md); padding: 11px 14px;
+    background: var(--primary); color: #fff; border-radius: 4px;
+  }
+  .btn.secondary { background: var(--card); color: var(--text); }
+  .btn.sm { font-size: 12px; padding: 6px 10px; box-shadow: var(--shadow-sm); }
+
+  .evb {
+    display: inline-block; background: var(--purple-light); border: 1.5px solid var(--border);
+    border-radius: 999px; font-family: var(--mono); font-size: 10px; padding: 1px 7px;
+  }
+
+  /* ---- DEPENDENCY MARKERS — the three treatments under test ---- */
+
+  /* (1) inline: a quiet sub-line under the step title */
+  .dep-inline {
+    display: flex; align-items: baseline; gap: 5px; font-size: 11.5px; line-height: 1.4;
+    margin-top: 4px; color: var(--amber-line); font-weight: 600;
+  }
+  .dep-inline .ic { font-size: 11px; }
+  .dep-inline.internal { color: var(--muted); }
+  .dep-inline.met { color: var(--success); }
+  .dep-inline .exp { color: var(--muted); font-weight: 500; }
+
+  /* (2) chip: a tappable pill carrying the relation */
+  .dep-chip {
+    display: inline-flex; align-items: center; gap: 4px; border: 1.5px solid var(--border);
+    border-radius: 999px; font-size: 10px; font-weight: 700; padding: 2px 8px;
+    box-shadow: 1.5px 1.5px 0 rgba(0,0,0,0.8); white-space: nowrap; margin: 5px 5px 0 0;
+  }
+  .dep-chip.internal { background: var(--purple-light); }
+  .dep-chip.external { background: var(--amber); }
+  .dep-chip.met { background: var(--mint); box-shadow: none; border-color: var(--border-subtle); color: var(--success); }
+  .dep-chip .exp { font-family: var(--mono); font-weight: 500; font-size: 9.5px; }
+
+  /* (3) connector: an explicit arrow-led relation callout (+ tie line on journey) */
+  .dep-conn {
+    display: flex; align-items: center; gap: 7px; margin-top: 6px; padding: 5px 9px;
+    border: 2px solid var(--border); border-left-width: 5px; border-radius: 4px;
+    background: var(--card); font-size: 11.5px; font-weight: 600; line-height: 1.3;
+  }
+  .dep-conn.internal { border-left-color: var(--purple); }
+  .dep-conn.external { border-left-color: var(--amber-line); }
+  .dep-conn.met { border-left-color: var(--success); color: var(--success); background: var(--mint); }
+  .dep-conn .ar { font-size: 13px; font-weight: 900; flex: 0 0 auto; }
+  .dep-conn .exp { color: var(--muted); font-weight: 500; }
+
+  /* ---- create / edit step rows ---- */
+  .form-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin: 0 0 5px; }
+  .tinput {
+    background: var(--input); border: 2px solid var(--border); border-radius: 4px;
+    padding: 10px 12px; font-family: var(--headline); font-weight: 900; font-size: 20px;
+  }
+  .tinput.body { font-family: var(--body); font-weight: 400; font-size: 14px; color: var(--muted); min-height: 56px; }
+  .steps-head { display: flex; align-items: center; gap: 8px; margin: 4px 0 8px; }
+  .steps-head .h { font-family: var(--headline); font-weight: 800; font-size: 15px; }
+  .count-badge { font-family: var(--mono); font-size: 10.5px; border: 1.5px solid var(--border); background: var(--card); padding: 1px 7px; border-radius: 999px; }
+
+  .erow {
+    display: flex; align-items: flex-start; gap: 9px; background: var(--card);
+    border: 2px solid var(--border); border-radius: 4px; padding: 9px 11px;
+    box-shadow: var(--shadow-sm); margin-bottom: 8px; min-height: 44px;
+  }
+  .erow .handle { color: var(--disabled); font-size: 14px; flex: 0 0 auto; padding-top: 1px; }
+  .erow .body-col { flex: 1; min-width: 0; }
+  .erow .t { font-size: 14px; font-weight: 500; line-height: 1.3; }
+  .erow .x { width: 22px; height: 22px; border: 1.5px solid var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 11px; flex: 0 0 auto; background: var(--card); }
+  .erow.ghost { border-style: dashed; box-shadow: none; color: var(--muted); background: transparent; font-size: 13px; min-height: 0; align-items: center; }
+  .dep-add {
+    display: inline-block; margin-top: 6px; font-size: 10px; font-weight: 700;
+    border: 1.5px dashed var(--muted); color: var(--muted); padding: 2px 7px; border-radius: 3px;
+  }
+  .addrow { display: flex; gap: 8px; margin-top: 4px; }
+  .addrow .ainput { flex: 1; background: var(--input); border: 2px solid var(--border); border-radius: 4px; padding: 9px 11px; font-size: 13px; color: var(--disabled); }
+  .addrow .plus { width: 42px; border: 2px solid var(--border); background: var(--yellow); font-size: 18px; font-weight: 900; display: flex; align-items: center; justify-content: center; border-radius: 4px; box-shadow: var(--shadow-sm); }
+
+  /* ---- goal card ---- */
+  .gcard {
+    background: var(--card); border: 2.5px solid var(--border); border-radius: 4px;
+    box-shadow: var(--shadow-md); padding: 14px; margin: 0 14px 14px;
+  }
+  .gcard .head { display: flex; align-items: flex-start; gap: 10px; }
+  .gcard .gtitle { font-family: var(--headline); font-weight: 700; font-size: 17px; flex: 1; line-height: 1.25; }
+  .gcard .nextlbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-top: 11px; }
+  .gcard .next { font-family: var(--headline); font-weight: 800; font-size: 19px; line-height: 1.25; margin-top: 3px; }
+  .gcard .waitnote {
+    display: flex; align-items: center; gap: 6px; margin-top: 9px; font-size: 11.5px;
+    font-weight: 600; color: var(--amber-line); border: 1.5px solid var(--border);
+    border-left-width: 5px; border-left-color: var(--amber-line); background: var(--card);
+    border-radius: 4px; padding: 6px 9px;
+  }
+  .gcard .allwait {
+    margin-top: 9px; font-size: 12.5px; font-weight: 600; line-height: 1.4;
+    border: 2px solid var(--border); border-radius: 4px; background: var(--amber);
+    padding: 8px 10px;
+  }
+  .gcard .allwait .sub { display: block; margin-top: 3px; font-size: 11px; font-weight: 500; color: #5a4a00; }
+  .gcard .prow { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+
+  /* ---- mini timeline ---- */
+  .mtl {
+    border: 1.5px solid var(--border); background: var(--card); border-radius: 6px;
+    box-shadow: var(--shadow-sm); margin: 12px 14px 0; padding: 9px 13px 5px;
+  }
+  .mtl-track { display: flex; align-items: center; min-height: 30px; }
+  .node {
+    width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--disabled);
+    background: var(--card); flex: 0 0 auto; position: relative;
+  }
+  .node.done { background: var(--primary); border-color: var(--primary); }
+  .node.cur { width: 19px; height: 19px; border-width: 3px; border-color: var(--border); }
+  .node.wait { border-color: var(--amber-line); border-style: dashed; background: var(--amber); }
+  .node.goal { border: 3px solid var(--yellow); background: var(--yellow); width: 15px; height: 15px; }
+  .seg-line { flex: 1; min-width: 7px; border-top: 3px solid var(--primary); }
+  .seg-line.pend { border-top: 3px dashed var(--disabled); }
+  .mtl .hint { text-align: center; font-size: 9.5px; color: var(--muted); padding: 3px 0 2px; }
+  .mtl .legend { text-align: center; font-size: 9.5px; color: var(--amber-line); font-weight: 700; padding: 1px 0 2px; }
+
+  /* ---- focus step card ---- */
+  .scard {
+    background: var(--card); border: 2.5px solid var(--border); border-radius: 6px;
+    box-shadow: var(--shadow-lg); margin: 14px; padding: 15px;
+  }
+  .scard .meta-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .scard .stepnum { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+  .scard .stitle { font-family: var(--headline); font-weight: 900; font-size: 23px; line-height: 1.15; margin: 10px 0 0; }
+  .qa-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 13px; }
+  .qa {
+    display: inline-flex; align-items: center; gap: 6px; border: 2px solid var(--border);
+    background: var(--bg2); border-radius: 4px; box-shadow: var(--shadow-sm);
+    font-size: 12px; font-weight: 600; padding: 8px 11px; min-height: 40px;
+  }
+  .cbx-row { display: flex; align-items: center; gap: 10px; margin-top: 14px; font-size: 13.5px; font-weight: 600; }
+  .cbx-note { font-size: 11px; font-weight: 500; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+  .dots-row { display: flex; justify-content: center; gap: 6px; margin: 2px 0 0; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--border); background: var(--card); }
+  .dot.on { background: var(--border); }
+  .dot.wait { background: var(--amber); border-color: var(--amber-line); }
+  .drawer {
+    margin-top: auto; border-top: 2.5px solid var(--border); background: var(--card);
+    padding: 11px 16px; display: flex; align-items: center; justify-content: space-between;
+    font-size: 13px; font-weight: 700; position: sticky; bottom: 0;
+  }
+
+  /* ---- journey timeline ---- */
+  .jhead { padding: 13px 16px 11px; border-bottom: 2px solid var(--border); background: var(--card); }
+  .jhead .row1 { display: flex; align-items: center; gap: 10px; }
+  .jhead .gt { font-family: var(--headline); font-weight: 800; font-size: 18px; flex: 1; line-height: 1.2; }
+  .jhead .prow { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+  .jtl { position: relative; padding: 18px 14px 22px 14px; }
+  .jtl::before { content: ''; position: absolute; left: 31px; top: 24px; bottom: 30px; width: 3px; background: var(--border-subtle); }
+  .jrow { position: relative; display: flex; gap: 11px; margin-bottom: 13px; align-items: flex-start; }
+  .jnode {
+    width: 34px; height: 34px; border-radius: 50%; border: 2.5px solid var(--border);
+    background: var(--card); display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-weight: 700; font-size: 13px; flex: 0 0 auto;
+    box-shadow: var(--shadow-sm); z-index: 1;
+  }
+  .jnode.done { background: var(--primary-dark); border-color: var(--primary-dark); color: #fff; }
+  .jnode.cur { border: 3.5px solid var(--primary-dark); color: var(--primary-dark); }
+  .jnode.pend { border-color: var(--disabled); color: var(--muted); }
+  .jnode.wait { border-color: var(--amber-line); border-style: dashed; color: var(--amber-line); }
+  .jnode.goal { width: 40px; height: 40px; background: var(--yellow); border-color: var(--border); font-size: 17px; margin-left: -3px; }
+  .jcard {
+    flex: 1; background: var(--card); border: 2px solid var(--border); border-radius: 4px;
+    box-shadow: var(--shadow-sm); padding: 9px 11px; min-height: 44px;
+  }
+  .jcard .crow { display: flex; align-items: center; gap: 8px; }
+  .jcard .t { flex: 1; font-size: 13px; font-weight: 700; line-height: 1.25; }
+  .jcard .chev { color: var(--muted); font-size: 10px; flex: 0 0 auto; }
+  /* connector tie: a short link drawn from a dependent card up toward its prerequisite */
+  .jtie {
+    position: absolute; left: 17px; width: 16px; border-left: 2.5px solid var(--purple);
+    border-bottom: 2.5px solid var(--purple); border-bottom-left-radius: 6px;
+  }
+  .jtie.external { border-color: var(--amber-line); border-style: dashed; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <span class="proto-tag">Prototype — throwaway</span>
+  <h1>C: Dependencies — what does a waiting step show, and where does "next" go?</h1>
+  <p><strong>Marker question:</strong> what does a step with a not-yet-satisfied dependency show — "after / depends on ⟨step⟩" (internal) and "waiting on ⟨who⟩ · expected ⟨date⟩" (external), <em>never</em> "blocked by"? Three treatments below: <strong>inline</strong>, <strong>chip</strong>, <strong>connector</strong>.</p>
+  <p><strong>Task-view fork (toggle):</strong> when the next thing is waiting, does "one next step" <strong>name it &amp; stay</strong>, or <strong>route around</strong> to the next actionable step? Both built — the register leaves this open. Nothing is ever blocked, hidden, dimmed, or disabled.</p>
+  <p>Feature shape: <code>docs/plans/phase-b-feature-shapes.md §C</code> · Record: <code>docs/plans/phase-b-prototype-records/C-dependencies.md</code> · <kbd>←</kbd>/<kbd>→</kbd> cycle.</p>
+</div>
+
+<div class="controls">
+  <div class="ctl-group" id="ctl-view"><span class="ctl-label">View</span></div>
+  <div class="ctl-group" id="ctl-data"><span class="ctl-label">Scenario</span></div>
+  <div class="ctl-group" id="ctl-taskview"><span class="ctl-label">Task view</span></div>
+  <div class="ctl-group" id="ctl-surface" style="display:none"><span class="ctl-label">Surface</span></div>
+</div>
+
+<div class="layout-banner" id="banner"></div>
+<div class="lab" id="lab"></div>
+
+<div class="footer-notes">
+  <h3>Prototype questions exercised here (numbers from the feature shape §C)</h3>
+  <ol>
+    <li><strong>Q1</strong> what the marker says — "after / depends on" (internal), "waiting on … expected ⟨date⟩" (external), never "blocked by". Compare the three treatments.</li>
+    <li><strong>Q2</strong> what an unsatisfied dependency shows on each surface — compare per surface with "Compare one surface".</li>
+    <li><strong>Q3</strong> task-view fork — flip <em>Task view</em> between <em>name &amp; stay</em> and <em>route around</em>; the Ava scenario is the "everything is waiting" extreme.</li>
+    <li><strong>Q4</strong> one dependency language for internal + external, or two — internal (Tomás) vs external (Ava) side by side.</li>
+    <li><strong>Q5</strong> where setting a dependency lives at create/edit without pressuring every step — see Create / Edit columns.</li>
+    <li><strong>Q6</strong> journey rendering — inline note vs chip vs explicit connector tie between prerequisite and dependent.</li>
+    <li><strong>Q7</strong> two stacked markers on one step — see the Combined scenario's "Inspection &amp; labels".</li>
+    <li><strong>Q8</strong> MiniTimeline: a waiting node distinguished from a plain pending one (dashed amber) — and whether the strip can show the relation at all.</li>
+    <li><strong>Q9</strong> does route-around's de-emphasis cross into hiding/dimming? It must not — waiting steps stay fully visible in every list.</li>
+    <li><strong>Q10</strong> expected-date: C's metadata or B: Planning's? Recorded where C and B overlap, not resolved.</li>
+  </ol>
+  <p><strong>Guardrails honored in every state:</strong> dependencies inform, never enforce — nothing blocked, hidden, dimmed, disabled, or refused; a passed expected date never changes state; an external wait names the world's timing, never user fault; "one next step per active goal" resolves to exactly one featured thing under both task-view variants; no counts, no app-icon badge.</p>
+  <p><strong>Evidence weight:</strong> self-testing only unless an ND-user session happens within the stage. Screenshots per treatment × surface × scenario go to the prototype record.</p>
+</div>
+
+<div class="switcher" id="switcher">
+  <button id="sw-prev" aria-label="previous">←</button>
+  <span class="lbl" id="sw-label"></span>
+  <button id="sw-next" aria-label="next">→</button>
+</div>
+
+<script>
+/* ================= treatments / surfaces / task-view ================= */
+const TREATMENTS = [
+  { key: 'inline',    name: 'Treatment 1 — Inline',    blurb: 'The relation is a quiet sub-line under the step title. Lowest ink: it whispers. Internal "after ⟨step⟩"; external "waiting on ⟨who⟩ · expected ⟨date⟩". A met dependency reads as faint history.' },
+  { key: 'chip',      name: 'Treatment 2 — Chip',      blurb: 'The relation is a tappable pill carried by the step (tap → its target). Medium prominence; the chip adds a vocabulary item to every step that has one. Internal chip is purple, external (waiting) chip is amber + date.' },
+  { key: 'connector', name: 'Treatment 3 — Connector', blurb: 'The relation is an explicit arrow-led callout, and on the journey an actual tie line drawn between prerequisite and dependent. Most graph-like — the strongest at showing the relation, the most at risk of reading as a constraint engine.' },
+];
+const SURFACES = [
+  { key: 'create',  name: 'Create — NewGoalModal',           qs: 'Q1 Q5' },
+  { key: 'edit',    name: 'Edit — EditModeScreen',           qs: 'Q1 Q5 Q7' },
+  { key: 'goals',   name: 'Goals — GoalCard',                qs: 'Q2 Q3 Q9' },
+  { key: 'focus',   name: 'Focus — StepCard + MiniTimeline', qs: 'Q2 Q3 Q8' },
+  { key: 'journey', name: 'Journey — TimelineJourneyScreen', qs: 'Q2 Q6 Q7' },
+];
+const TASKVIEWS = [
+  { key: 'stay',   name: 'Name it & stay put' },
+  { key: 'around', name: 'Route around' },
+];
+
+/* ================= data =================
+   step: { id, title, status, ev?, deps?: [ dep ] }
+   dep (internal): { kind:'internal', targetId, title }
+   dep (external): { kind:'external', on, date } */
+const DATASETS = [
+  { key: 'tomas', name: 'Tomás — internal order', persona: 'internal (C-order)',
+    goal: 'Build practice panel', steps: [
+      { id:'s1', title:'Plan layout & buy materials', status:'completed', ev:2 },
+      { id:'s2', title:'Wire the circuits', status:'pending', ev:1,
+        deps:[ {kind:'internal', targetId:'s1', title:'Plan layout & buy materials'} ] },
+      { id:'s3', title:'Inspection & labels', status:'pending',
+        deps:[ {kind:'internal', targetId:'s2', title:'Wire the circuits'} ] },
+  ]},
+  { key: 'ava', name: 'Ava — everything waiting', persona: 'external (C-waiting)',
+    goal: 'Get an autism assessment', steps: [
+      { id:'a1', title:'Call PIA & book intake', status:'completed' },
+      { id:'a2', title:'Intake appointment', status:'pending',
+        deps:[ {kind:'external', on:'the PIA’s calendar', date:'Jun 12'} ] },
+      { id:'a3', title:'Diagnostic sessions', status:'pending',
+        deps:[ {kind:'external', on:'the assessment window', date:'late Jul'},
+               {kind:'internal', targetId:'a2', title:'Intake appointment'} ] },
+      { id:'a4', title:'Receive report', status:'pending',
+        deps:[ {kind:'external', on:'the clinic’s turnaround', date:'Oct'} ] },
+      { id:'a5', title:'Share report with my GP', status:'pending',
+        deps:[ {kind:'internal', targetId:'a4', title:'Receive report'} ] },
+  ]},
+  { key: 'combined', name: 'Combined — internal + external', persona: 'both, stacked',
+    goal: 'Build practice panel', steps: [
+      { id:'c1', title:'Plan layout & buy materials', status:'completed', ev:1 },
+      { id:'c2', title:'Book city inspector', status:'pending',
+        deps:[ {kind:'external', on:'the inspector’s office', date:'next week'} ] },
+      { id:'c3', title:'Wire the circuits', status:'pending',
+        deps:[ {kind:'internal', targetId:'c1', title:'Plan layout & buy materials'} ] },
+      { id:'c4', title:'Inspection & labels', status:'pending',
+        deps:[ {kind:'internal', targetId:'c3', title:'Wire the circuits'},
+               {kind:'external', on:'the city inspector', date:'after booking'} ] },
+  ]},
+];
+
+/* per-treatment meta notes, per surface */
+const NOTES = {
+  create: {
+    inline:    '"+ depends on…" lives under a step only after you add a step — flat by default, the relation is opt-in. Setting it shows the inline sub-line immediately. Lowest presence-pressure (Q5).',
+    chip:      'Adding a dependency drops a chip on the row. Visible and tappable, but every dependent row now carries an extra pill — watch whether it pressures structure (Q5).',
+    connector: 'Adding a dependency draws the bordered callout on the row — the heaviest authoring footprint. Clearest that a relation now exists; most likely to make a plain step feel "unfinished" (Q5).',
+  },
+  edit: {
+    inline:    'Dependencies edit in place via the "+ depends on…" affordance; the sub-line shows internal target or external who+date. A met dependency (Tomás s2 → s1 ✓) reads as faint history, not a blocker.',
+    chip:      'Chips are removable (×) and reorderable with the step. Combined "Inspection & labels" stacks two chips (internal + external) — Q7 legibility check.',
+    connector: 'Callouts make the relation explicit while editing, but two stacked callouts on one step (Combined) take real vertical room — Q7 is sharpest here.',
+  },
+  goals: {
+    inline:    'Card features the next step per the task-view variant; a waiting feature shows the inline wait-line as context. Route-around adds a quiet "N waiting" note — visible, never hidden (Q3/Q9).',
+    chip:      'The waiting chip rides next to the featured step. Route-around: actionable step is the hero, waiting chips listed below in a note. Ava: no actionable step → "everything is waiting" panel (Q3).',
+    connector: 'The callout under the featured step states the relation outright. Strongest at "why is this next / why is this waiting"; check it doesn’t read as the app refusing the step (Q3/Q9).',
+  },
+  focus: {
+    inline:    'Snap lands on the featured step (variant-dependent). If it’s waiting, the inline line gives the why; the complete action stays live — for an external wait, completing it IS "the event happened" (Q2). Strip marks waiting nodes dashed-amber (Q8).',
+    chip:      'Waiting chip sits under the step title; expected date in mono. Strip: a waiting node is dashed amber, distinct from plain pending — but the strip can’t show WHICH step it waits on (Q8).',
+    connector: 'The callout names the prerequisite right on the focus card. Richest context on the working surface; the strip still can’t draw the relation linearly (Q8).',
+  },
+  journey: {
+    inline:    'Each step’s inline line carries its relation down the spine — calm, but the relation is implied by text, not drawn (Q6).',
+    chip:      'Chips ride on each journey card; the relation is named but not connected node-to-node (Q6).',
+    connector: 'A tie line is drawn from a dependent card up toward its prerequisite node — the only treatment that shows the relation as a relation on the journey. Risk: it can start to look like a dependency graph rather than a story (Q6).',
+  },
+};
+
+/* ================= helpers ================= */
+function byId(steps, id) { return steps.find(s => s.id === id); }
+function depMet(dep, steps) {
+  return dep.kind === 'internal' ? byId(steps, dep.targetId)?.status === 'completed' : false;
+}
+function stepWaiting(step, steps) {
+  return (step.deps || []).some(d => !depMet(d, steps));
+}
+function progress(steps) {
+  let total = 0, done = 0;
+  for (const s of steps) { total += 1; if (s.status === 'completed') done += 1; }
+  return { done, total };
+}
+/* the featured "one next step", per task-view variant.
+   returns { step, bypassed:[waiting steps routed past], allWaiting:bool, waiting:[all waiting pending] } */
+function featured(steps, taskview) {
+  const pending = steps.filter(s => s.status !== 'completed');
+  const waiting = pending.filter(s => stepWaiting(s, steps));
+  if (!pending.length) return { step: null, bypassed: [], allWaiting: false, waiting };
+  if (taskview === 'stay') {
+    return { step: pending[0], bypassed: [], allWaiting: false, waiting };
+  }
+  /* route-around: first pending step with all deps satisfied */
+  const actionable = pending.find(s => !stepWaiting(s, steps));
+  if (actionable) {
+    const idx = steps.indexOf(actionable);
+    const bypassed = waiting.filter(s => steps.indexOf(s) < idx);
+    return { step: actionable, bypassed, allWaiting: false, waiting };
+  }
+  return { step: pending[0], bypassed: waiting.filter(s => s !== pending[0]), allWaiting: true, waiting };
+}
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+
+/* ================= dependency marker — the treatment under test ================= */
+/* renders all of a step's dependency markers in the chosen treatment.
+   `compact` trims it for tight surfaces (focus strip context lines etc.) */
+function depMarkers(t, step, steps) {
+  const deps = step.deps || [];
+  if (!deps.length) return '';
+  return deps.map(d => {
+    const met = depMet(d, steps);
+    if (t === 'inline') {
+      if (d.kind === 'internal')
+        return `<div class="dep-inline internal${met?' met':''}"><span class="ic">↳</span><span>${met?'after ':'after '}${esc(d.title)}${met?' ✓':''}</span></div>`;
+      return `<div class="dep-inline external"><span class="ic">⏳</span><span>waiting on ${esc(d.on)} <span class="exp">· expected ${esc(d.date)}</span></span></div>`;
+    }
+    if (t === 'chip') {
+      if (d.kind === 'internal')
+        return `<span class="dep-chip internal${met?' met':''}">${met?'✓ after':'↳ after'} ${esc(d.title)}</span>`;
+      return `<span class="dep-chip external">⏳ waiting · ${esc(d.on)} <span class="exp">${esc(d.date)}</span></span>`;
+    }
+    /* connector */
+    if (d.kind === 'internal')
+      return `<div class="dep-conn internal${met?' met':''}"><span class="ar">${met?'✓':'→'}</span><span>${met?'follows ':'needs '}${esc(d.title)}${met?'':' first'}</span></div>`;
+    return `<div class="dep-conn external"><span class="ar">⤧</span><span>waiting on ${esc(d.on)} <span class="exp">· expected ${esc(d.date)}</span></span></div>`;
+  }).join('');
+}
+/* chips need a wrapper so they flow; inline/connector are block-level already */
+function depBlock(t, step, steps) {
+  const m = depMarkers(t, step, steps);
+  if (!m) return '';
+  return t === 'chip' ? `<div style="margin-top:2px">${m}</div>` : m;
+}
+
+/* ================= shared partials ================= */
+const subheader = (title, icons) => `
+  <div class="sub">
+    <div class="back">‹</div>
+    <div class="title">${esc(title)}</div>
+    ${icons ?? ''}
+  </div>`;
+const statusPillFor = (s, steps) =>
+  s.status === 'completed' ? '<span class="pill done">Done</span>' :
+  stepWaiting(s, steps)    ? '<span class="pill waiting">Waiting</span>' :
+                             '<span class="pill pending">Pending</span>';
+const cbx = (on, sm) => `<span class="cbx${on?' on':''}${sm?' sm':''}">${on?'✓':''}</span>`;
+
+/* ================= step list (shared by create + edit) ================= */
+function stepsSection(t, d, editable) {
+  const rows = d.steps.map(s => `
+    <div class="erow">
+      <span class="handle">≡</span>
+      <div class="body-col">
+        <div class="t">${esc(s.title)}</div>
+        ${depBlock(t, s, d.steps)}
+        ${(s.deps && s.deps.length) ? '' : `<span class="dep-add">+ depends on…</span>`}
+      </div>
+      <span class="x">${editable ? '✕' : '⋯'}</span>
+    </div>`).join('');
+  return `
+    <div>
+      <div class="steps-head"><span class="h">Steps</span><span class="count-badge">${progress(d.steps).total} steps</span></div>
+      ${rows}
+      <div class="addrow"><div class="ainput">Add a step…</div><div class="plus">+</div></div>
+      <div class="erow ghost" style="margin-top:8px">A step with no dependency stays first-class — nothing here invites adding one.</div>
+    </div>`;
+}
+
+/* ================= CREATE ================= */
+function renderCreate(t, d) {
+  return `
+    <div class="sub"><div class="spacer"></div><div class="center-label">New Goal</div><div class="icon-btn">✕</div></div>
+    <div style="padding:16px; display:flex; flex-direction:column; gap:14px;">
+      <div>
+        <p class="form-label">What's your goal?</p>
+        <div class="tinput">${esc(d.goal)}</div>
+      </div>
+      ${stepsSection(t, d, false)}
+      <div class="btn">Create Goal</div>
+    </div>`;
+}
+
+/* ================= EDIT ================= */
+function renderEdit(t, d) {
+  return `
+    ${subheader('Edit Goal')}
+    <div style="padding:16px; display:flex; flex-direction:column; gap:14px;">
+      <div>
+        <p class="form-label">Title</p>
+        <div class="tinput">${esc(d.goal)}</div>
+      </div>
+      ${stepsSection(t, d, true)}
+      <div class="btn secondary">Back to Focus</div>
+    </div>`;
+}
+
+/* ================= GOALS ================= */
+function renderGoals(t, d) {
+  const p = progress(d.steps);
+  const f = featured(d.steps, state.taskview);
+
+  let nextBlock = '';
+  if (!f.step) {
+    nextBlock = `<div class="next">All steps done 🎉</div>`;
+  } else if (f.allWaiting) {
+    /* Ava under route-around: nothing actionable. Honest, non-pathologizing. */
+    const soon = f.waiting[0]?.deps?.find(x => x.kind === 'external');
+    nextBlock = `
+      <div class="allwait">Everything here is waiting on other people right now — that's the system, not you.
+        <span class="sub">Soonest: ${esc(f.waiting[0].title)} — ${soon ? 'expected ' + esc(soon.date) : 'waiting'}.</span>
+      </div>`;
+  } else {
+    nextBlock = `
+      <div class="nextlbl">Next step</div>
+      <div class="next">${esc(f.step.title)}</div>
+      ${stepWaiting(f.step, d.steps) ? depBlock(t, f.step, d.steps) : ''}`;
+    if (state.taskview === 'around' && f.waiting.length) {
+      const w = f.waiting[0];
+      const ext = w.deps.find(x => x.kind === 'external');
+      nextBlock += `
+        <div class="waitnote">⏳ ${f.waiting.length} waiting · ${esc(w.title)}${ext ? ' (expected ' + esc(ext.date) + ')' : ''}</div>`;
+    }
+  }
+
+  return `
+    ${subheader('Goals')}
+    <div style="padding-top:14px;">
+      <div class="gcard">
+        <div class="head"><span class="gtitle">${esc(d.goal)}</span><span class="pill active">Active</span></div>
+        ${nextBlock}
+        <div class="prow"><div class="pbar"><div class="fill" style="width:${Math.round(p.done/p.total*100)}%"></div></div><span class="pnum">${p.done}/${p.total}</span></div>
+      </div>
+      <div class="gcard">
+        <div class="head"><span class="gtitle">Get garden beds ready</span><span class="pill active">Active</span></div>
+        <div class="nextlbl">Next step</div>
+        <div class="next">Order soil &amp; compost</div>
+        <div class="prow"><div class="pbar"><div class="fill" style="width:25%"></div></div><span class="pnum">1/4</span></div>
+      </div>
+      <div style="margin:0 14px; font-size:11px; color:var(--muted);">↑ a goal with no dependencies looks exactly as it does today — C adds nothing where nothing waits.</div>
+    </div>`;
+}
+
+/* ================= FOCUS ================= */
+function miniTimeline(d, f) {
+  const curId = f.step?.id;
+  let anyWait = false;
+  const cells = d.steps.map((s, i) => {
+    const cls = ['node'];
+    if (s.status === 'completed') cls.push('done');
+    else if (stepWaiting(s, d.steps)) { cls.push('wait'); anyWait = true; }
+    if (s.id === curId) cls.push('cur');
+    const seg = i > 0 ? `<span class="seg-line${d.steps[i-1].status==='completed'?'':' pend'}"></span>` : '';
+    return seg + `<span class="${cls.join(' ')}"></span>`;
+  }).join('');
+  return `<div class="mtl">
+    <div class="mtl-track">${cells}<span class="seg-line pend"></span><span class="node goal"></span></div>
+    ${anyWait ? '<div class="legend">⏳ dashed amber = waiting on a dependency (still selectable)</div>' : ''}
+    <div class="hint">tap to expand timeline</div>
+  </div>`;
+}
+function renderFocus(t, d) {
+  const p = progress(d.steps);
+  const f = featured(d.steps, state.taskview);
+  const s = f.step;
+  const waiting = s && stepWaiting(s, d.steps);
+
+  let body;
+  if (!s) {
+    body = `<div class="stitle">All steps done 🎉</div>`;
+  } else {
+    const label = `Step ${d.steps.indexOf(s) + 1} of ${d.steps.length}`;
+    body = `
+      <div class="meta-row"><span class="stepnum">${label}</span>${statusPillFor(s, d.steps)}</div>
+      <div class="stitle">${esc(s.title)}</div>
+      ${depBlock(t, s, d.steps)}
+      <div class="qa-row"><span class="qa">📷 Photo</span><span class="qa">🎙 Note</span></div>
+      <div class="cbx-row">${cbx(false)} Mark "${esc(s.title)}" complete</div>
+      ${waiting ? `<div class="cbx-note">Still your call — if it happened, mark it done. Nothing here is locked.</div>` : ''}`;
+  }
+
+  const dots = d.steps.map(st =>
+    `<span class="dot${st.id===f.step?.id?' on':''}${st.status!=='completed'&&stepWaiting(st,d.steps)?' wait':''}"></span>`).join('');
+
+  return `
+    ${subheader(d.goal, '<div class="icon-btn">👁</div><div class="icon-btn">✎</div>')}
+    ${miniTimeline(d, f)}
+    <div class="scard">${body}</div>
+    <div class="dots-row">${dots}</div>
+    <div class="drawer"><span>Evidence <span class="evb">E ${p.done + 1}</span></span><span>▲</span></div>`;
+}
+
+/* ================= JOURNEY ================= */
+function renderJourney(t, d) {
+  const p = progress(d.steps);
+  const f = featured(d.steps, state.taskview);
+  const curId = f.step?.id;
+  const jnode = (s, num) => {
+    const cls = ['jnode']; let inner = num;
+    if (s.status === 'completed') { cls.push('done'); inner = '✓'; }
+    else if (stepWaiting(s, d.steps)) cls.push('wait');
+    else if (s.id === curId) cls.push('cur');
+    else cls.push('pend');
+    return `<div class="${cls.join(' ')}">${inner}</div>`;
+  };
+
+  const rows = d.steps.map((s, i) => {
+    /* connector treatment draws a tie from this card up toward its internal prerequisite */
+    let tie = '';
+    if (t === 'connector') {
+      const intDep = (s.deps || []).find(x => x.kind === 'internal');
+      if (intDep) {
+        const tgtIdx = d.steps.findIndex(x => x.id === intDep.targetId);
+        if (tgtIdx > -1 && tgtIdx < i) {
+          const span = (i - tgtIdx) * 60; /* approx row pitch */
+          tie = `<div class="jtie" style="top:-${span - 17}px; height:${span - 6}px;"></div>`;
+        }
+      }
+    }
+    return `<div class="jrow">${tie}${jnode(s, i + 1)}
+      <div class="jcard">
+        <div class="crow">${statusPillFor(s, d.steps)}<span class="t">${esc(s.title)}</span>${s.ev?`<span class="evb">E ${s.ev}</span>`:''}<span class="chev">▼</span></div>
+        ${depBlock(t, s, d.steps)}
+      </div></div>`;
+  }).join('');
+
+  return `
+    ${subheader('Timeline')}
+    <div class="jhead">
+      <div class="row1"><span class="gt">${esc(d.goal)}</span><span class="btn secondary sm">Back to Focus</span></div>
+      <div class="prow"><div class="pbar"><div class="fill" style="width:${Math.round(p.done/p.total*100)}%"></div></div><span class="pnum">${p.done} / ${p.total}</span></div>
+    </div>
+    <div class="jtl">${rows}
+      <div class="jrow"><div class="jnode goal">★</div><div class="jcard"><div class="crow"><span class="t">${esc(d.goal)}</span><span class="chev">▼</span></div></div></div>
+    </div>`;
+}
+
+/* ================= page wiring ================= */
+const RENDER = { create: renderCreate, edit: renderEdit, goals: renderGoals, focus: renderFocus, journey: renderJourney };
+const params = new URLSearchParams(location.search);
+const state = {
+  view: params.get('view') === 'surface' ? 'surface' : 'layout',
+  treatment: TREATMENTS.some(x=>x.key===params.get('treatment')) ? params.get('treatment') : 'inline',
+  surface: SURFACES.some(x=>x.key===params.get('surface')) ? params.get('surface') : 'goals',
+  data: DATASETS.some(x=>x.key===params.get('data')) ? params.get('data') : 'ava',
+  taskview: TASKVIEWS.some(x=>x.key===params.get('taskview')) ? params.get('taskview') : 'stay',
+};
+
+function syncUrl() {
+  const q = new URLSearchParams({ view: state.view, treatment: state.treatment, surface: state.surface, data: state.data, taskview: state.taskview });
+  history.replaceState(null, '', '?' + q.toString());
+}
+
+function segButtons(el, items, getKey, setKey) {
+  el.querySelectorAll('.seg').forEach(b => b.remove());
+  for (const it of items) {
+    const b = document.createElement('button');
+    b.className = 'seg' + (getKey() === it.key ? ' on' : '');
+    b.textContent = it.name;
+    b.onclick = () => { setKey(it.key); render(); };
+    el.appendChild(b);
+  }
+}
+
+function phoneCol(t, sKey, d) {
+  const s = SURFACES.find(x => x.key === sKey);
+  const note = NOTES[sKey][t];
+  const tvAffected = (sKey === 'goals' || sKey === 'focus');
+  const pinch = state.data === 'ava' && tvAffected && state.taskview === 'around'
+    ? '<span class="pinch">⚑ Q3: route-around has nothing to route to — every step waits externally. The honest fallback, not a verdict.</span>' : '';
+  const pinch2 = state.data === 'combined' && sKey === 'journey'
+    ? '<span class="pinch">⚑ Q7: "Inspection & labels" stacks an internal + external marker — legibility check.</span>' : '';
+  return `
+    <div class="col">
+      <div class="col-title">${esc(state.view === 'layout' ? s.name : TREATMENTS.find(x=>x.key===t).name)}</div>
+      <div class="phone"><div class="screen">${RENDER[sKey](t, d)}</div></div>
+      <div class="meta"><span class="qs">${s.qs} · ${t}${tvAffected ? ' · task-view: ' + state.taskview : ''}</span>${note}${pinch}${pinch2}</div>
+    </div>`;
+}
+
+function render() {
+  syncUrl();
+  const d = DATASETS.find(x => x.key === state.data);
+  const banner = document.getElementById('banner');
+  const lab = document.getElementById('lab');
+
+  segButtons(document.getElementById('ctl-view'),
+    [{key:'layout',name:'All surfaces (one treatment)'},{key:'surface',name:'Compare one surface'}],
+    () => state.view, k => state.view = k);
+  segButtons(document.getElementById('ctl-data'), DATASETS, () => state.data, k => state.data = k);
+  segButtons(document.getElementById('ctl-taskview'), TASKVIEWS, () => state.taskview, k => state.taskview = k);
+  const ctlSurface = document.getElementById('ctl-surface');
+  ctlSurface.style.display = state.view === 'surface' ? 'flex' : 'none';
+  segButtons(ctlSurface, SURFACES, () => state.surface, k => state.surface = k);
+
+  const tvName = TASKVIEWS.find(x => x.key === state.taskview).name;
+  if (state.view === 'layout') {
+    const tr = TREATMENTS.find(x => x.key === state.treatment);
+    banner.innerHTML = `<h2>${tr.name}</h2><p>${tr.blurb}</p><span class="tv">Task view: ${tvName} — affects Goals + Focus only; nothing is ever hidden or disabled.</span>`;
+    lab.innerHTML = SURFACES.map(s => phoneCol(state.treatment, s.key, d)).join('');
+    document.getElementById('sw-label').textContent = tr.name;
+  } else {
+    const s = SURFACES.find(x => x.key === state.surface);
+    banner.innerHTML = `<h2>${s.name}</h2><p>The same surface in all three marker treatments — a treatment that fails one surface fails. ${s.qs} live here.</p><span class="tv">Task view: ${tvName}</span>`;
+    lab.innerHTML = TREATMENTS.map(t => phoneCol(t.key, state.surface, d)).join('');
+    document.getElementById('sw-label').textContent = s.name;
+  }
+}
+
+function cycle(dir) {
+  if (state.view === 'layout') {
+    const i = TREATMENTS.findIndex(x => x.key === state.treatment);
+    state.treatment = TREATMENTS[(i + dir + TREATMENTS.length) % TREATMENTS.length].key;
+  } else {
+    const i = SURFACES.findIndex(x => x.key === state.surface);
+    state.surface = SURFACES[(i + dir + SURFACES.length) % SURFACES.length].key;
+  }
+  render();
+}
+document.getElementById('sw-prev').onclick = () => cycle(-1);
+document.getElementById('sw-next').onclick = () => cycle(1);
+document.addEventListener('keydown', e => {
+  if (/^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName) || document.activeElement?.isContentEditable) return;
+  if (e.key === 'ArrowLeft') cycle(-1);
+  if (e.key === 'ArrowRight') cycle(1);
+});
+
+render();
+</script>
+</body>
+</html>
