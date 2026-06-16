@@ -534,8 +534,7 @@ function featured(steps, taskview) {
 const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
 /* ================= dependency marker — the treatment under test ================= */
-/* renders all of a step's dependency markers in the chosen treatment.
-   `compact` trims it for tight surfaces (focus strip context lines etc.) */
+/* renders all of a step's dependency markers in the chosen treatment. */
 function depMarkers(t, step, steps) {
   const deps = step.deps || [];
   if (!deps.length) return '';
@@ -543,7 +542,7 @@ function depMarkers(t, step, steps) {
     const met = depMet(d, steps);
     if (t === 'inline') {
       if (d.kind === 'internal')
-        return `<div class="dep-inline internal${met?' met':''}"><span class="ic">↳</span><span>${met?'after ':'after '}${esc(d.title)}${met?' ✓':''}</span></div>`;
+        return `<div class="dep-inline internal${met?' met':''}"><span class="ic">↳</span><span>after ${esc(d.title)}${met?' ✓':''}</span></div>`;
       return `<div class="dep-inline external"><span class="ic">⏳</span><span>waiting on ${esc(d.on)} <span class="exp">· expected ${esc(d.date)}</span></span></div>`;
     }
     if (t === 'chip') {
