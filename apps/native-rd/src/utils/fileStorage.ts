@@ -87,7 +87,7 @@ export function saveFileToAppStorage(
   const filename = generateFilename(originalName);
   const source = new File(sourceUri);
   const destination = new File(filesDir, filename);
-  source.copy(destination);
+  source.copySync(destination);
   return destination.uri;
 }
 

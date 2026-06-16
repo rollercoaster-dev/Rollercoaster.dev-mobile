@@ -6,12 +6,6 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#fafafa"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "dev.rollercoaster.app",
@@ -40,6 +34,14 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#fafafa"
+        }
+      ],
       "react-native-edge-to-edge",
       "expo-sqlite",
       "expo-secure-store",
@@ -67,6 +69,7 @@
       ],
       "expo-asset",
       "@react-native-community/datetimepicker",
+      "./plugins/withResourceBundleDeploymentTarget",
       [
         "expo-build-properties",
         {

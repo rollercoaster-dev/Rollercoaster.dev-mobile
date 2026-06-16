@@ -7,8 +7,8 @@ import {
 
 const mockDirectoryExists = jest.fn(() => true);
 const mockDirectoryCreate = jest.fn();
-const mockFileCopy = jest.fn();
-const mockFileMove = jest.fn();
+const mockFileCopySync = jest.fn();
+const mockFileMoveSync = jest.fn();
 const mockFileExists = jest.fn(() => true);
 const mockFileDelete = jest.fn();
 const mockDirUri = "file:///data/documents/evidence/videos/";
@@ -36,8 +36,8 @@ jest.mock("expo-file-system", () => {
       fileConstructorCalls.push({ args });
       return {
         uri: mockFileUri,
-        copy: mockFileCopy,
-        move: mockFileMove,
+        copySync: mockFileCopySync,
+        moveSync: mockFileMoveSync,
         get exists() {
           return mockFileExists();
         },
@@ -89,8 +89,8 @@ describe("moveVideoToAppStorage", () => {
   it("moves the source file", () => {
     moveVideoToAppStorage("file:///tmp/video.mp4");
 
-    expect(mockFileMove).toHaveBeenCalled();
-    expect(mockFileCopy).not.toHaveBeenCalled();
+    expect(mockFileMoveSync).toHaveBeenCalled();
+    expect(mockFileCopySync).not.toHaveBeenCalled();
   });
 
   it("returns a file URI", () => {
@@ -113,8 +113,8 @@ describe("copyVideoToAppStorage", () => {
   it("copies the source file", () => {
     copyVideoToAppStorage("file:///library/video.mp4");
 
-    expect(mockFileCopy).toHaveBeenCalled();
-    expect(mockFileMove).not.toHaveBeenCalled();
+    expect(mockFileCopySync).toHaveBeenCalled();
+    expect(mockFileMoveSync).not.toHaveBeenCalled();
   });
 
   it("returns a file URI", () => {

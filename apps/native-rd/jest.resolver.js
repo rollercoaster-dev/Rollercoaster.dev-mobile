@@ -23,10 +23,11 @@ const path = require("path");
 
 const fs = require("fs");
 
-const rnResolver = require("react-native/jest/resolver");
+// RN 0.85 (SDK 56) moved the Jest resolver into `@react-native/jest-preset`.
+const rnResolver = require("@react-native/jest-preset/jest/resolver");
 const stubPath = path.resolve(__dirname, "src/__tests__/mocks/rn-esm-stub.js");
 
-// Bun's symlink layout occasionally installs two copies of react-native@0.83.6
+// Bun's symlink layout occasionally installs two copies of react-native@0.85.3
 // in separate `.bun/` slots (driven by peer-dep variance from packages like
 // reanimated-color-picker). RN's jest setup only mocks ONE copy, so the other
 // crashes any test that loads FlatList/ScrollView via virtualized-lists.

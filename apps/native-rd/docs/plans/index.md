@@ -29,6 +29,7 @@ Implementation plans and vision documents. Active plans are in progress; complet
 | [phase-b-stage-0-deliverables.md](./phase-b-stage-0-deliverables.md)                                                                                                                                      | Stage 0 close-out: guardrail checklist, evidence format, media, Stage 1 timebox   | 2026-06-12    |
 | [2026-06-14-toast-a11y-dismissal-fixes.md](./2026-06-14-toast-a11y-dismissal-fixes.md) ([#264](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/264))                                 | Toast a11y: iOS announce + exit animation; actionable-toast fixes dropped to #301 | 2026-06-14    |
 | [2026-06-15-platform-flow-prototype.md](./2026-06-15-platform-flow-prototype.md)                                                                                                                          | Horizontal spike: import → earn → share → validate, incl. minimal web verifier    | 2026-06-15    |
+| [2026-06-16-expo-sdk-55-to-56-upgrade.md](./2026-06-16-expo-sdk-55-to-56-upgrade.md)                                                                                                                      | Bump native-rd to Expo SDK 56; only real code change is FS copySync/moveSync      | 2026-06-16    |
 
 ## Reference
 

@@ -40,7 +40,7 @@ export function moveVideoToAppStorage(sourceUri: string): string {
   const videosDir = ensureVideosDir();
   const source = new File(sourceUri);
   const destination = new File(videosDir, generateFilename(sourceUri));
-  source.move(destination);
+  source.moveSync(destination);
   return destination.uri;
 }
 
@@ -49,7 +49,7 @@ export function copyVideoToAppStorage(sourceUri: string): string {
   const videosDir = ensureVideosDir();
   const source = new File(sourceUri);
   const destination = new File(videosDir, generateFilename(sourceUri));
-  source.copy(destination);
+  source.copySync(destination);
   return destination.uri;
 }
 
