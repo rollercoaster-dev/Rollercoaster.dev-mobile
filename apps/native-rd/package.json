@@ -54,7 +54,7 @@
     "@storybook/addon-ondevice-controls": "^10.4.4",
     "@storybook/react-native": "^10.4.4",
     "buffer": "^6.0.3",
-    "expo": "^56",
+    "expo": "~56.0.12",
     "expo-application": "~56.0.3",
     "expo-asset": "~56.0.17",
     "expo-audio": "~56.0.12",
