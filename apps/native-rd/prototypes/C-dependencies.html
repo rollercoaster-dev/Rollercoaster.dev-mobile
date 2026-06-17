@@ -548,7 +548,7 @@ function depMarkers(t, step, steps) {
     if (t === 'chip') {
       if (d.kind === 'internal')
         return `<span class="dep-chip internal${met?' met':''}">${met?'✓ after':'↳ after'} ${esc(d.title)}</span>`;
-      return `<span class="dep-chip external">⏳ waiting · ${esc(d.on)} <span class="exp">${esc(d.date)}</span></span>`;
+      return `<span class="dep-chip external">⏳ waiting on ${esc(d.on)} <span class="exp">· expected ${esc(d.date)}</span></span>`;
     }
     /* connector */
     if (d.kind === 'internal')
