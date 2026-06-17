@@ -19,7 +19,7 @@ Scenario, Evidence To Collect, Exit Criteria, Dependencies.
 | **A: Substeps** (formerly Granularity / Substructure)   | Stage 1 | Drafted 2026-06-11 — in review |
 | **E: Step states** (formerly Richer state vocabulary)   | Stage 1 | Drafted 2026-06-14             |
 | **Scratchpad** (absorbs D + F)                          | Stage 2 | Not started                    |
-| **C: Dependencies** (merges C-order + C-waiting)        | Stage 2 | Not started                    |
+| **C: Dependencies** (merges C-order + C-waiting)        | Stage 2 | Drafted 2026-06-16             |
 | **B: Planning** (merges B-soft, B-deadlines, repeating) | Stage 3 | Not started                    |
 | **H: Learnings** (formerly Misfire as learning)         | Stage 4 | Not started                    |
 | **G: Review**                                           | Stage 4 | Not started                    |
@@ -308,3 +308,191 @@ aside" without one, since nothing temporal can author "missed."
   flat steps.
 - **H: Learnings** — H reuses an E state (Stage 4); the `learning` state is
   parked until then.
+
+## C: Dependencies (merges C-order + C-waiting)
+
+### User Need
+
+Two real shapes the flat Step can't hold, both from
+[step-model-gap.md](../research/step-model-gap.md):
+
+- **Internal — sequence is the syllabus.** Tomás's panel work has an order
+  that _is_ the learning: inspection follows wiring, wiring follows layout and
+  materials
+  ([step-model-gap.md § C-order](../research/step-model-gap.md)). The EF gap
+  means an ND user often can't regenerate that order on demand; storing it
+  outside the brain is the point. List order already ships (`ordinal`,
+  drag-to-reorder); what's missing is naming _why_ one step waits on another.
+- **External — naming the blocker separates _stuck_ from _failing_.** Ava
+  called the PIA in February; three of her five steps wait on the PIA's
+  calendar, the session window, and the clinic's report turnaround, each with
+  an expected date she doesn't control
+  ([step-model-gap.md § Ava and the four-month wait](../research/step-model-gap.md#ava-and-the-four-month-wait)).
+  Today all five read `pending`, indistinguishable, and the binary status
+  invites _why haven't you done this yet?_ — to which the honest answer is
+  _because the system hasn't_. The difference between "I am late" and "they are
+  not ready yet" is months of internalized shame versus legitimate waiting.
+
+### Smallest Useful Shape
+
+The one **new** capability is an explicit **dependency marker** — and ADR-0011
+already settled that waiting is **a relation**, not a state or a metadata
+field. A step can carry one or more dependencies; each names a target that is
+either **another step** (internal) or **a person, org, reply, or event**
+(external, with an optional expected date). List order itself is out of scope
+here — it already works.
+
+The marker **informs only**. A step with an unsatisfied dependency is **never
+blocked, hidden, dimmed, disabled, or refused** — it stays fully visible and
+editable, and its complete action stays live (for an external wait, completing
+it _is_ "the event happened"). This is the C-as-constraint line from
+ADR-0010, carried forward verbatim.
+
+The first pass is a **presentation language** tested across the same five step
+surfaces as A — NewGoalModal, EditModeScreen, GoalsScreen/GoalCard,
+FocusModeScreen + MiniTimeline, TimelineJourneyScreen — with two or three
+candidate marker treatments (inline note, chip, explicit connector) as
+side-by-side variants in the app's neo-brutalist token language.
+
+Two **task-view behaviors** are built as switchable variants, because the
+register leaves the fork open (Open Questions Register § C + task view):
+
+- **name-and-stay** — the "one next step" surfaces feature the next pending
+  step even when it's waiting, showing the dependency as context;
+- **route-around** — they feature the next _actionable_ step (deps satisfied),
+  naming the waiting ones nearby; when _every_ pending step waits on something
+  external (Ava), the honest fallback is "everything here is waiting on others
+  right now," never a verdict about the user.
+
+In both variants, waiting steps stay visible in the list, and exactly one next
+thing is featured per active goal.
+
+Wording, per ADR-0011, is itself a prototype question: working candidates are
+"after" / "depends on" for internal and "waiting on … expected ⟨date⟩" for
+external — **never "blocked by."**
+
+Nothing else: no constraint engine, no cycle detection beyond keeping the
+prototype legible, no auto-satisfaction by time, no external/calendar
+integration, no counting or scoring of waits.
+
+### Later Integrated Shape
+
+- Internal dependencies may point among substeps (A) — siblings, leaves, or
+  parents (Integration Matrix A + C); this prototype keeps flat steps.
+- An external "waiting, expected Jun 12" sits beside a B date/deadline: C's
+  expected date names the world's timing, B's date names the user's intent
+  (Integration Matrix B + E; the overlap is Q10).
+- The journey display reuses E's pill where a waiting step also carries a
+  state; ADR-0011 keeps waiting a relation, so E and C compose rather than
+  collide.
+- A Scratchpad item dragged out could enter the order or a dependency
+  (Integration Matrix C + Scratchpad), out of scope until Stage 5.
+
+### Must Not Do
+
+- **No constraint engine** — never block, hide, dim, disable, or refuse an
+  action because a dependency is unsatisfied (ADR-0010 C-as-constraint-is-out).
+- **Waiting is never failure** — an external dependency names the world's
+  state, not user inaction; no "overdue," no "behind," no "why haven't you."
+- **No auto-satisfaction** — a passed expected date never marks a dependency
+  met or changes any state ([ADR-0012](../decisions/ADR-0012-no-auto-judgment.md)).
+- **No counting, scoring, or aggregating** waiting/blocked steps; no app-icon
+  badge count.
+- **"depends on," never "blocked by."**
+- **Don't break "one next step"** — both task-view variants still resolve to
+  exactly one featured next thing per active goal.
+- **Setting a dependency must not feel required** — a step with no dependencies
+  stays a first-class way to hold work; the affordance can't pressure every
+  step toward a graph.
+
+### Prototype Questions
+
+1. What does the marker say — does "after" / "depends on" (internal) and
+   "waiting on … expected ⟨date⟩" (external) read as informative, never as
+   "blocked by" or "you're late"? (register: Dependency display)
+2. What does a step with a not-yet-satisfied dependency show on each of the
+   five surfaces? (register)
+3. Task-view fork: does "one next step" name the waiting step and stay put, or
+   route around to the next actionable step? When every pending step waits
+   externally (Ava), what does route-around show — and does "everything here is
+   waiting" read as legitimate waiting rather than a verdict? (register: C +
+   task view)
+4. Do internal and external share one dependency language, or do step→step and
+   step→world want different expressions of it? (the C analog of A's
+   one-language question)
+5. Where does setting a dependency live at create/edit so it's available
+   without pressuring every step toward a graph? (analog of A's Q5)
+6. How does the journey render a dependency — inline note, chip, or an explicit
+   connector between prerequisite and dependent nodes — without reading as a
+   constraint graph?
+7. On the combined goal (one step waiting on both an internal step and an
+   external event), do two stacked markers stay legible, or does the step start
+   reading as blocked?
+8. Does the MiniTimeline strip show a waiting node differently from a plain
+   pending one without implying a verdict — and can it show the relation at
+   all?
+9. Does route-around's de-emphasis of waiting steps ever cross into hiding or
+   dimming (guardrail), and is the line defensible?
+10. Expected-date display (Ava) — is the date C's metadata here, or does it
+    belong to B: Planning? Record where C and B overlap; don't resolve.
+
+### Scenario
+
+- **Internal** — Tomás's panel: "Inspection & labels" after "Wire the
+  circuits," circuits after "Plan layout & buy materials." A satisfied
+  dependency (wiring, now that materials are bought) is in the set too, to see
+  whether a met dependency reads as quiet history rather than a blocker.
+- **External** — Ava's four-month wait: intake, diagnostic sessions, and report
+  waiting on the PIA's calendar, the session window, and the clinic's
+  turnaround, each with an expected date; the extreme where _every_ pending
+  step is waiting.
+- **Combined** — Tomás's panel reordered so "Book city inspector" (external,
+  booked early for lead time) sits before "Wire the circuits" (actionable), and
+  "Inspection & labels" depends on both the wiring (internal) and the inspector
+  (external). This is where the task-view fork bites cleanly and where two
+  markers stack on one step (Q7).
+
+### Evidence To Collect
+
+- Screenshots: each marker treatment on each of the five surfaces, per
+  scenario, so a treatment that fails one surface is visible.
+- The Ava "everything is waiting" goal card under both task-view variants —
+  verbatim what each said, and whether it read as legitimate waiting or as
+  failure.
+- Tap counts and friction notes for setting and clearing a dependency at
+  create/edit.
+- Where one dependency language pinched between internal and external (Q4),
+  verbatim, for the Dependency-display register row.
+- A cold-return note for Ava: after a day away, did the goal read as "they're
+  not ready yet"?
+- Evidence-weight flag: self-testing only, unless an ND-user session happens
+  within the stage.
+
+### Exit Criteria
+
+- The prototype questions above have recorded answers (or recorded non-answers
+  with what blocked them).
+- Guardrail checklist from
+  [phase-b-stage-0-deliverables.md](./phase-b-stage-0-deliverables.md) passes —
+  especially dependencies-inform-never-enforce, waiting-is-not-failure,
+  no-auto-judgment, and the task-view promise **under both variants**.
+- A decision-gate outcome is recorded in the prototype record. Graduation to a
+  schema/relationship ADR or a design decision additionally requires real
+  ND-user evidence; self-testing alone caps the outcome at revise / split /
+  more prototyping.
+- The **Dependency display** and **C + task view** register rows are updated
+  with evidence and left at their resolved-or-open status accordingly.
+
+### Dependencies
+
+- **Task-view contract** (baseline record §Task-view contract) — both variants
+  must still resolve to one next step; C's most interesting evidence lives here.
+- **A: Substeps** — internal dependencies may point among siblings/leaves/
+  parents (Integration Matrix A + C); this prototype keeps flat steps.
+- **B: Planning** — expected dates (Ava) border B's date/deadline; the overlap
+  is Q10, observed not resolved.
+- **E: Step states** — "waiting" is a relation per ADR-0011, not a state; the
+  journey display reuses E's pill where useful.
+- **Data layer** — a dependency is an additive relation, consistent with the
+  [Evolu spike](../research/evolu-step-model-feasibility-spike.md)'s
+  additive-column finding; schema stays deferred.
