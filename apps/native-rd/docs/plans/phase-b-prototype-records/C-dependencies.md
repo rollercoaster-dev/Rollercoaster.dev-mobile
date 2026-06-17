@@ -35,9 +35,10 @@ comparison measures the treatment, not HTML aesthetics).
 - **Task-view fork as a toggle** (`?taskview=`): **name-and-stay** vs
   **route-around**. Affects the Goals card and Focus snap only. In both, every
   waiting step stays fully visible — nothing is blocked, hidden, dimmed, or
-  disabled (guardrail). Route-around shows a "N waiting" note; when nothing is
-  actionable (Ava), it shows the honest "everything here is waiting on other
-  people — that's the system, not you" panel.
+  disabled (guardrail). Route-around names the soonest waiting step in a quiet
+  note — never a count (guardrail); when nothing is actionable (Ava), it shows
+  the honest "everything here is waiting on other people — that's the system,
+  not you" panel.
 - **Three scenarios** (`?data=`): **Tomás** (internal ordering, with one
   already-satisfied dependency to see whether a met dependency reads as quiet
   history), **Ava** (external — every pending step waiting, the route-around
@@ -91,8 +92,9 @@ filling it in):
 - **No auto-judgment** — confirm no passed expected date changed any state.
 - **Task-view promise holds** — confirm both variants still resolve to exactly
   one featured next step per active goal.
-- **No app-icon badge counts / no composed verdicts** — confirm the "N waiting"
-  note and waiting pills never read as a score or ledger.
+- **No app-icon badge counts / no composed verdicts** — confirm the
+  route-around waiting note names a specific step (never a count) and that
+  waiting pills never read as a score or ledger.
 
 ### Decision
 

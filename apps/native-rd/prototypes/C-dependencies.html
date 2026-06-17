@@ -484,7 +484,7 @@ const NOTES = {
     connector: 'Callouts make the relation explicit while editing, but two stacked callouts on one step (Combined) take real vertical room — Q7 is sharpest here.',
   },
   goals: {
-    inline:    'Card features the next step per the task-view variant; a waiting feature shows the inline wait-line as context. Route-around adds a quiet "N waiting" note — visible, never hidden (Q3/Q9).',
+    inline:    'Card features the next step per the task-view variant; a waiting feature shows the inline wait-line as context. Route-around adds a quiet note naming the soonest waiting step — visible, never hidden, never a count (Q3/Q9).',
     chip:      'The waiting chip rides next to the featured step. Route-around: actionable step is the hero, waiting chips listed below in a note. Ava: no actionable step → "everything is waiting" panel (Q3).',
     connector: 'The callout under the featured step states the relation outright. Strongest at "why is this next / why is this waiting"; check it doesn’t read as the app refusing the step (Q3/Q9).',
   },
@@ -649,7 +649,7 @@ function renderGoals(t, d) {
       const w = f.waiting[0];
       const ext = w.deps.find(x => x.kind === 'external');
       nextBlock += `
-        <div class="waitnote">⏳ ${f.waiting.length} waiting · ${esc(w.title)}${ext ? ' (expected ' + esc(ext.date) + ')' : ''}</div>`;
+        <div class="waitnote">⏳ Also waiting: ${esc(w.title)}${ext ? ' (expected ' + esc(ext.date) + ')' : ''}</div>`;
     }
   }
 
