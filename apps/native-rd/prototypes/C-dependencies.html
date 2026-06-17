@@ -677,7 +677,7 @@ function renderGoals(t, d) {
     nextBlock = `
       <div class="nextlbl">Next step</div>
       <div class="next">${esc(f.step.title)}</div>
-      ${state.tiledeps === 'off' && stepWaiting(f.step, d.steps) ? depBlock(t, f.step, d.steps) : ''}`;
+      ${state.tiledeps !== 'markers' && stepWaiting(f.step, d.steps) ? depBlock(t, f.step, d.steps) : ''}`;
     if (state.tiledeps === 'off' && state.taskview === 'around' && f.waiting.length) {
       const w = f.waiting[0];
       const ext = w.deps.find(x => x.kind === 'external');
