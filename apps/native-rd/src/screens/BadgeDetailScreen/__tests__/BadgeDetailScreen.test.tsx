@@ -292,6 +292,7 @@ describe("BadgeDetailScreen", () => {
       fireEvent.press(screen.getByLabelText("Export Verifiable Badge"));
       expect(mockExportVerifiableBadge).toHaveBeenCalledWith(
         "file:///badges/badge.png",
+        "Learn TypeScript",
       );
     });
 
@@ -331,6 +332,7 @@ describe("BadgeDetailScreen", () => {
       expect(mockExportVerifiableBadge).toHaveBeenCalledTimes(1);
       expect(mockExportVerifiableBadge).toHaveBeenCalledWith(
         "file:///badges/badge.png",
+        "Learn TypeScript",
       );
     });
 
