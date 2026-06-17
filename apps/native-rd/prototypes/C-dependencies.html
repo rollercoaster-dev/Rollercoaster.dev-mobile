@@ -288,13 +288,6 @@
     padding: 8px 10px;
   }
   .gcard .allwait .soonest { display: block; margin-top: 3px; font-size: 11px; font-weight: 500; color: #5a4a00; }
-  /* tile-level dependency display (Goals surface) */
-  .gcard .depsum {
-    margin-top: 10px; padding-top: 8px; border-top: 1.5px dashed var(--border-subtle);
-    font-size: 11.5px; font-weight: 600; color: var(--amber-line); line-height: 1.4;
-  }
-  .gcard .depmarks { margin-top: 9px; padding-top: 7px; border-top: 1.5px dashed var(--border-subtle); }
-  .gcard .depmarks .dep-inline:first-child, .gcard .depmarks .dep-conn:first-child { margin-top: 0; }
   .gcard .prow { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
 
   /* ---- mini timeline ---- */
@@ -390,7 +383,6 @@
   <div class="ctl-group" id="ctl-view"><span class="ctl-label">View</span></div>
   <div class="ctl-group" id="ctl-data"><span class="ctl-label">Scenario</span></div>
   <div class="ctl-group" id="ctl-taskview"><span class="ctl-label">Task view</span></div>
-  <div class="ctl-group" id="ctl-tiledeps"><span class="ctl-label">Goal tile deps</span></div>
   <div class="ctl-group" id="ctl-surface" style="display:none"><span class="ctl-label">Surface</span></div>
 </div>
 
@@ -438,12 +430,6 @@ const SURFACES = [
 const TASKVIEWS = [
   { key: 'stay',   name: 'Name it & stay put' },
   { key: 'around', name: 'Route around' },
-];
-/* Goals-surface only: how a goal tile surfaces its dependencies beyond the one featured step. */
-const TILEDEPS = [
-  { key: 'off',     name: 'Off (next step only)' },
-  { key: 'summary', name: 'Summary line' },
-  { key: 'markers', name: 'Per-step markers' },
 ];
 
 /* ================= data =================
@@ -577,25 +563,6 @@ function depBlock(t, step, steps) {
   return t === 'chip' ? `<div style="margin-top:2px">${m}</div>` : m;
 }
 
-/* Goals surface — the goal tile's own dependency display, beyond the one featured step.
-   'summary' = one quiet rollup line (treatment-independent);
-   'markers' = every waiting step's dependencies rendered in the active treatment. */
-function tileDepBlock(mode, t, steps) {
-  const waiting = steps.filter(s => s.status !== 'completed' && stepWaiting(s, steps));
-  if (!waiting.length) return '';
-  if (mode === 'summary') {
-    let ext = null;
-    for (const s of waiting) {
-      const e = (s.deps || []).find(x => x.kind === 'external' && !depMet(x, steps));
-      if (e) { ext = e; break; }
-    }
-    const n = waiting.length;
-    const tail = ext ? `soonest ${esc(ext.date)} · ${esc(ext.on)}` : 'waiting on earlier steps';
-    return `<div class="depsum">⏳ ${n} step${n > 1 ? 's' : ''} waiting · ${tail}</div>`;
-  }
-  return `<div class="depmarks">${waiting.map(s => depMarkers(t, s, steps)).join('')}</div>`;
-}
-
 /* ================= shared partials ================= */
 const subheader = (title, icons) => `
   <div class="sub">
@@ -677,8 +644,8 @@ function renderGoals(t, d) {
     nextBlock = `
       <div class="nextlbl">Next step</div>
       <div class="next">${esc(f.step.title)}</div>
-      ${state.tiledeps !== 'markers' && stepWaiting(f.step, d.steps) ? depBlock(t, f.step, d.steps) : ''}`;
-    if (state.tiledeps === 'off' && state.taskview === 'around' && f.waiting.length) {
+      ${stepWaiting(f.step, d.steps) ? depBlock(t, f.step, d.steps) : ''}`;
+    if (state.taskview === 'around' && f.waiting.length) {
       const w = f.waiting[0];
       const ext = w.deps.find(x => x.kind === 'external');
       nextBlock += `
@@ -686,17 +653,12 @@ function renderGoals(t, d) {
     }
   }
 
-  /* whole-goal dependency display on the tile (off = today's behaviour, marker on next step only) */
-  const tileDeps = (state.tiledeps === 'off' || f.allWaiting || !f.step)
-    ? '' : tileDepBlock(state.tiledeps, t, d.steps);
-
   return `
     ${subheader('Goals')}
     <div style="padding-top:14px;">
       <div class="gcard">
         <div class="head"><span class="gtitle">${esc(d.goal)}</span><span class="pill active">Active</span></div>
         ${nextBlock}
-        ${tileDeps}
         <div class="prow"><div class="pbar"><div class="fill" style="width:${Math.round(p.done/p.total*100)}%"></div></div><span class="pnum">${p.done}/${p.total}</span></div>
       </div>
       <div class="gcard">
@@ -812,11 +774,10 @@ const state = {
   surface: SURFACES.some(x=>x.key===params.get('surface')) ? params.get('surface') : 'goals',
   data: DATASETS.some(x=>x.key===params.get('data')) ? params.get('data') : 'ava',
   taskview: TASKVIEWS.some(x=>x.key===params.get('taskview')) ? params.get('taskview') : 'stay',
-  tiledeps: TILEDEPS.some(x=>x.key===params.get('tiledeps')) ? params.get('tiledeps') : 'summary',
 };
 
 function syncUrl() {
-  const q = new URLSearchParams({ view: state.view, treatment: state.treatment, surface: state.surface, data: state.data, taskview: state.taskview, tiledeps: state.tiledeps });
+  const q = new URLSearchParams({ view: state.view, treatment: state.treatment, surface: state.surface, data: state.data, taskview: state.taskview });
   history.replaceState(null, '', '?' + q.toString());
 }
 
@@ -843,7 +804,7 @@ function phoneCol(t, sKey, d) {
     <div class="col">
       <div class="col-title">${esc(state.view === 'layout' ? s.name : TREATMENTS.find(x=>x.key===t).name)}</div>
       <div class="phone"><div class="screen">${RENDER[sKey](t, d)}</div></div>
-      <div class="meta"><span class="qs">${s.qs} · ${t}${tvAffected ? ' · task-view: ' + state.taskview : ''}${sKey === 'goals' && state.tiledeps !== 'off' ? ' · tile-deps: ' + state.tiledeps : ''}</span>${note}${pinch}${pinch2}</div>
+      <div class="meta"><span class="qs">${s.qs} · ${t}${tvAffected ? ' · task-view: ' + state.taskview : ''}</span>${note}${pinch}${pinch2}</div>
     </div>`;
 }
 
@@ -858,7 +819,6 @@ function render() {
     () => state.view, k => state.view = k);
   segButtons(document.getElementById('ctl-data'), DATASETS, () => state.data, k => state.data = k);
   segButtons(document.getElementById('ctl-taskview'), TASKVIEWS, () => state.taskview, k => state.taskview = k);
-  segButtons(document.getElementById('ctl-tiledeps'), TILEDEPS, () => state.tiledeps, k => state.tiledeps = k);
   const ctlSurface = document.getElementById('ctl-surface');
   ctlSurface.style.display = state.view === 'surface' ? 'flex' : 'none';
   segButtons(ctlSurface, SURFACES, () => state.surface, k => state.surface = k);
