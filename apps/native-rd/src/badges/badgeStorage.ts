@@ -12,16 +12,22 @@
 import { Buffer } from "buffer";
 import * as FileSystem from "expo-file-system/legacy";
 
+import { slugifyBadgeName } from "./badgeFilename";
+
 const BADGES_SUBDIR = "badges";
 
 function getBadgesDirectory(): string {
   return `${FileSystem.documentDirectory}${BADGES_SUBDIR}/`;
 }
 
-function generateBadgeFilename(): string {
+// Name files after the badge so they're recognisable in the share sheet / Files
+// app, while keeping a short timestamp+random suffix to guarantee uniqueness
+// (multiple badges can share a title; re-bakes shouldn't collide).
+function generateBadgeFilename(badgeName?: string): string {
+  const slug = slugifyBadgeName(badgeName);
   const timestamp = Date.now().toString(36);
   const random = Math.random().toString(36).slice(2, 8);
-  return `${timestamp}-${random}.png`;
+  return `${slug}-${timestamp}-${random}.png`;
 }
 
 /**
@@ -30,9 +36,14 @@ function generateBadgeFilename(): string {
  * Creates the directory if it does not exist.
  *
  * @param data - PNG image bytes
+ * @param badgeName - Badge/goal title used to name the file (sanitised to a
+ *   slug). Omit to fall back to a generic name.
  * @returns Local file URI that can be stored in the badge row's imageUri field
  */
-export async function saveBadgePNG(data: Uint8Array): Promise<string> {
+export async function saveBadgePNG(
+  data: Uint8Array,
+  badgeName?: string,
+): Promise<string> {
   const badgesDir = getBadgesDirectory();
 
   try {
@@ -46,7 +57,7 @@ export async function saveBadgePNG(data: Uint8Array): Promise<string> {
     );
   }
 
-  const uri = `${badgesDir}${generateBadgeFilename()}`;
+  const uri = `${badgesDir}${generateBadgeFilename(badgeName)}`;
   try {
     await FileSystem.writeAsStringAsync(
       uri,

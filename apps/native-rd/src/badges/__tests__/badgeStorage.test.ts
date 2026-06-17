@@ -6,6 +6,8 @@
 
 import { Buffer } from "buffer";
 
+import { saveBadgePNG, readBadgePNG } from "../badgeStorage";
+
 jest.mock("expo-file-system/legacy", () => ({
   documentDirectory: "file:///data/user/0/app/files/",
   EncodingType: { Base64: "base64" },
@@ -17,8 +19,6 @@ jest.mock("expo-file-system/legacy", () => ({
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockFS = require("expo-file-system/legacy");
-
-import { saveBadgePNG, readBadgePNG } from "../badgeStorage";
 
 const MINIMAL_PNG = new Uint8Array([
   137, 80, 78, 71, 13, 10, 26, 10, 0, 1, 2, 3,
@@ -121,6 +121,17 @@ describe("saveBadgePNG", () => {
         /Failed to write badge PNG to file:.*\.png.*No space left on device/,
       );
     });
+  });
+
+  it("names the file after the badge title", async () => {
+    const uri = await saveBadgePNG(MINIMAL_PNG, "Learn TypeScript");
+    // Slug, then a uniqueness suffix, then .png.
+    expect(uri).toMatch(/\/badges\/Learn-TypeScript-[a-z0-9]+-[a-z0-9]+\.png$/);
+  });
+
+  it("falls back to a generic name when the title yields no usable slug", async () => {
+    const uri = await saveBadgePNG(MINIMAL_PNG, "🎉🎉🎉");
+    expect(uri).toMatch(/\/badges\/badge-[a-z0-9]+-[a-z0-9]+\.png$/);
   });
 
   it("each call generates a unique URI", async () => {

@@ -319,7 +319,7 @@ export function useCreateBadge(
         // to placeholder so badge creation still succeeds without a baked image.
         let imageUri = PLACEHOLDER_IMAGE_URI;
         try {
-          imageUri = await saveBadgePNG(bakedPng);
+          imageUri = await saveBadgePNG(bakedPng, goalTitle);
         } catch (imageErr) {
           logger.error("Badge image save failed, using placeholder", {
             goalId,
