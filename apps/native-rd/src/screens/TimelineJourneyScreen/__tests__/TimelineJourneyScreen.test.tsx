@@ -247,6 +247,7 @@ describe("TimelineJourneyScreen", () => {
       expect(mockParentNavigate).toHaveBeenCalledWith("BadgesTab", {
         screen: "BadgeDetail",
         params: { badgeId: "badge-7" },
+        initial: false,
       });
       // Should NOT fall through to the FocusMode path.
       expect(mockNavigate).not.toHaveBeenCalledWith(
@@ -262,6 +263,7 @@ describe("TimelineJourneyScreen", () => {
       expect(mockParentNavigate).toHaveBeenCalledWith("BadgesTab", {
         screen: "BadgeDetail",
         params: { badgeId: "badge-7" },
+        initial: false,
       });
       expect(mockGoBack).not.toHaveBeenCalled();
     });

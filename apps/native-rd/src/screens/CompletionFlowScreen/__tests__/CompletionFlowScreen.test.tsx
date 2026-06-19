@@ -982,6 +982,7 @@ describe("CompletionFlowScreen", () => {
       expect(mockParentNavigate).toHaveBeenCalledWith("BadgesTab", {
         screen: "BadgeDetail",
         params: { badgeId: "badge-1" },
+        initial: false,
       });
     });
 

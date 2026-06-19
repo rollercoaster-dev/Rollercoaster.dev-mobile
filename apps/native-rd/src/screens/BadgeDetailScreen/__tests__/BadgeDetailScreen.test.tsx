@@ -602,6 +602,7 @@ describe("BadgeDetailScreen", () => {
         // originBadgeId lets TimelineJourney route its "back" affordances
         // back to this screen instead of leaving the user on the Goals tab.
         params: { goalId: "goal-42", originBadgeId: "badge-1" },
+        initial: false,
       });
     });
 

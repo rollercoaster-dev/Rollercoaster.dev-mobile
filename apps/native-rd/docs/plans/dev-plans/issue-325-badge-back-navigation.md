@@ -53,7 +53,7 @@ We investigated unit-testing this fix and concluded Jest is the wrong tool for i
 - **Headless-core test (tried, rejected):** you _can_ assert the React Navigation contract by importing `@react-navigation/core` + `/routers` directly (they're unmocked) and building a trivial navigator — it runs without native deps and proved the mechanism (`initial: false` + `initialRouteName` → `[Badges, BadgeDetail]`). But because the test supplies `initial: false` itself, **it would still pass if production dropped `initial: false`** — it characterises the library, not our call sites. Low regression value for real config overhead (separate Jest config to drop the mock + transitive `core`/`routers` declared for `tsc`). Not worth shipping.
 - **Two real options for the follow-up:**
   1. **Maestro e2e** (`flows/`, `test:e2e`) — drive cold-launch → bake → View Badge → back/tab on a simulator. Highest fidelity; exercises the actual `initial: false` call site. The right guard for a "can the user navigate back" bug.
-  2. **Make the `@react-navigation/native` mock opt-in** (remove the global `moduleNameMapper` entry; have the 17 dependent specs `jest.mock` it explicitly). Unlocks real-navigator unit tests repo-wide, but it's a cross-cutting refactor with a 17-file blast radius — its own PR.
+  2. **Make the `@react-navigation/native` mock opt-in** (remove the global `moduleNameMapper` entry; have the 15 dependent specs `jest.mock` it explicitly). Unlocks real-navigator unit tests repo-wide, but it's a cross-cutting refactor with a 15-file blast radius — its own PR.
 - **Recommendation:** file as a follow-up issue; prefer the Maestro flow for this specific regression, track the mock-opt-in refactor separately.
 
 ## Verification
