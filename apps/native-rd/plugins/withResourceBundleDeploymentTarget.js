@@ -10,7 +10,7 @@ const path = require("path");
 // This plugin appends a loop to the generated Podfile's existing post_install
 // block that raises every Pods target below MIN_TARGET up to MIN_TARGET.
 const MARKER = "# rd: bump resource-bundle deployment targets";
-const MIN_TARGET = "15.1";
+const MIN_TARGET = "16.4";
 
 const SNIPPET = `
     ${MARKER}
