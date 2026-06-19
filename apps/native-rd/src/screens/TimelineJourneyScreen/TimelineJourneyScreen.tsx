@@ -113,6 +113,9 @@ function TimelineContent({
         parent.navigate("BadgesTab", {
           screen: "BadgeDetail",
           params: { badgeId: originBadgeId },
+          // Seed Badges beneath BadgeDetail (see #325) so the list stays
+          // reachable via back / the Badges tab on a cold BadgesTab.
+          initial: false,
         });
         return;
       }
@@ -239,6 +242,9 @@ export function TimelineJourneyScreen({ route }: TimelineJourneyScreenProps) {
         parent.navigate("BadgesTab", {
           screen: "BadgeDetail",
           params: { badgeId: originBadgeId },
+          // Seed Badges beneath BadgeDetail (see #325) so the list stays
+          // reachable via back / the Badges tab on a cold BadgesTab.
+          initial: false,
         });
         return;
       }

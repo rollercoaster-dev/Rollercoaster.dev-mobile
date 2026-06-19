@@ -439,6 +439,11 @@ function CompletionContent({
       parentNav.navigate("BadgesTab", {
         screen: "BadgeDetail",
         params: { badgeId: String(badgeRow.id) },
+        // initial: false seeds the stack's initialRouteName (Badges) beneath
+        // BadgeDetail so back / the Badges tab reach the list even on a cold,
+        // never-opened BadgesTab. Without it the stack is just [BadgeDetail]
+        // and there's nothing to pop to (#325).
+        initial: false,
       });
     } else {
       logger.warn(
