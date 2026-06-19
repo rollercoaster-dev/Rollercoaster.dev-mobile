@@ -208,7 +208,7 @@ Confirmed from the artifact and sharpened, plus new:
   session** per the plan's Evidence Sources — analytical and lived
   self-testing both cap below that gate.
 
-## Prototype: A — ND-user gate session (2026-06-11)
+### ND-user gate session (2026-06-11)
 
 **Session:** Joe — the app's primary-audience ND user — reviewed the three
 layouts (Indentation / Containment / Breadcrumb) in
