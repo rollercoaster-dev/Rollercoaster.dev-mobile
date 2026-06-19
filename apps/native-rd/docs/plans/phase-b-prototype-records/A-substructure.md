@@ -158,6 +158,11 @@ Answered against the session.
 
 ### Decision
 
+> **Superseded by the ND-user gate session (2026-06-11) below.** The ND-user
+> tier graduated indentation to implementation; the "split + more prototyping"
+> outcome here was the analytical-tier ceiling and no longer governs. The
+> structural observations above remain valid evidence.
+
 **Split + more prototyping** (self-testing caps the outcome here; cannot
 graduate to a schema/design decision without the ND-user gate). Concretely:
 
@@ -207,8 +212,9 @@ Confirmed from the artifact and sharpened, plus new:
 
 **Session:** Joe — the app's primary-audience ND user — reviewed the three
 layouts (Indentation / Containment / Breadcrumb) in
-`a-substructure-layouts.html` and **selected indentation**. Drill-in
-(`a-substructure-flow.html`) was not part of this evaluation.
+`apps/native-rd/prototypes/a-substructure-layouts.html` and **selected
+indentation**. Drill-in (`apps/native-rd/prototypes/a-substructure-flow.html`)
+was not part of this evaluation.
 
 **Decision: graduate to implementation.**
 
