@@ -221,6 +221,9 @@ function BadgeDetailContent({
     parent.navigate("GoalsTab", {
       screen: "TimelineJourney",
       params: { goalId: targetGoalId, originBadgeId: badgeId },
+      // Seed Goals beneath TimelineJourney (see #325) so the Goals list stays
+      // reachable via the Goals tab on a cold, never-opened GoalsTab.
+      initial: false,
     });
   };
 

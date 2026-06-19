@@ -22,7 +22,10 @@ const Stack = createNativeStackNavigator<GoalsStackParamList>();
 
 export function GoalsStack() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator
+      initialRouteName="Goals"
+      screenOptions={{ headerShown: false }}
+    >
       <Stack.Screen name="Goals" component={GoalsScreen} />
       <Stack.Screen name="FocusMode" component={FocusModeScreen} />
       <Stack.Screen name="CompletionFlow" component={CompletionFlowScreen} />

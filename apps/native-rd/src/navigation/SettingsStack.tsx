@@ -8,7 +8,10 @@ const Stack = createNativeStackNavigator<SettingsStackParamList>();
 
 export function SettingsStack() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator
+      initialRouteName="Settings"
+      screenOptions={{ headerShown: false }}
+    >
       <Stack.Screen name="Settings" component={SettingsScreen} />
       {__DEV__ && <Stack.Screen name="IntlProbe" component={IntlProbeScreen} />}
     </Stack.Navigator>

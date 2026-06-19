@@ -9,7 +9,10 @@ const Stack = createNativeStackNavigator<BadgesStackParamList>();
 
 export function BadgesStack() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator
+      initialRouteName="Badges"
+      screenOptions={{ headerShown: false }}
+    >
       <Stack.Screen name="Badges" component={BadgesScreen} />
       <Stack.Screen name="BadgeDetail" component={BadgeDetailScreen} />
       <Stack.Screen name="BadgeDesigner" component={BadgeDesignerScreen} />
