@@ -202,3 +202,74 @@ Confirmed from the artifact and sharpened, plus new:
 - Graduation to a schema ADR or design decision is gated on a **real ND-user
   session** per the plan's Evidence Sources — analytical and lived
   self-testing both cap below that gate.
+
+## Prototype: A — ND-user gate session (2026-06-11)
+
+### Hypothesis
+
+The ND-user gate resolves what self-testing cannot: with the three layouts in
+front of the app's primary-audience ND user, one of them reads as right across
+the surfaces — or, failing that, the gate names which split to build.
+
+### Session
+
+- **Who:** Joe — the app's primary-audience ND user. This is the decisive
+  evidence tier; it outranks the 2026-06-13 analytical walkthrough above.
+- **What was reviewed:** `apps/native-rd/prototypes/a-substructure-layouts.html`
+  — the three candidate layouts (Indentation / Containment / Breadcrumb) across
+  all five surfaces (create, edit, goal card, focus + MiniTimeline, journey
+  timeline). There was no fourth option in the gate; drill-in
+  (`a-substructure-flow.html`) was a later, separate medium and was not part of
+  this evaluation.
+- **Outcome:** **Indentation selected.** Containment and breadcrumb dropped.
+
+### Observations
+
+The selection was clear rather than agonized — indentation read as the right
+language across the surfaces, and nothing about containment or breadcrumb
+pulled hard enough to displace it. The decisive surface is the **goal card**:
+indentation's leaf-led treatment (the next pending leaf as hero, parent as
+quiet context) reads as one do-able next action, which is exactly the card's
+contract. The analytical walkthrough's worry — that the goal card might want a
+container — did not survive the ND-user read; the leaf-led card is simply
+right.
+
+This overrides the 2026-06-13 walkthrough's lean toward containment-as-base.
+That walkthrough's structural calls stand as analytical evidence, but on the
+one question that matters — what the primary-audience ND user reaches for — the
+answer is indentation. Per the gate, the ND-user tier is decisive.
+
+### Guardrail Check
+
+Answered against this session. The gate exercised the reading/authoring
+surfaces of a single chosen layout, not the dynamic behaviours, so most lines
+are not-exercised (N/A) here and remain governed by the analytical pass above.
+
+- [x] **No auto-state:** N/A — not exercised in the selection read.
+- [x] **Absence is uninterpreted:** N/A — not exercised.
+- [x] **Dependencies inform, never enforce:** N/A — not exercised.
+- [x] **Waiting is not failure:** N/A — not exercised.
+- [x] **G opt-in is structural:** N/A — not exercised.
+- [x] **The calendar holds repetition:** N/A — not exercised.
+- [x] **No app-icon badge counts:** N/A — not exercised.
+- [x] **Task-view promise holds:** **PASS** — the load-bearing line for this
+      session. Indentation's leaf-led goal card resolves to exactly one next
+      action, with the parent as quiet context. This is the surface the
+      analytical pass flagged as a containment wobble, and the ND-user read
+      settles it in indentation's favour.
+- [x] **H preserves, never replaces:** N/A — not exercised.
+- [x] **No composed verdicts:** N/A — not exercised.
+
+### Decision
+
+**Graduate to implementation.**
+
+- **Approved layout: indentation** — children indented under a left rail;
+  reading surfaces lead with the leaf, parent as quiet context. Containment and
+  breadcrumb are dropped.
+- **Evidence weight: ND-user evidence** — Joe is the app's primary-audience ND
+  user, the decisive tier per the gate. This is what lifts the outcome above
+  the analytical pass's "split + more prototyping" cap.
+- **Depth (Q6) stays open** — the Substep-depth row of the Open Questions
+  Register carries the 2026-06-13 Q6 verbatim and remains Open; depth graduates
+  only after Stage 6. This decision graduates the layout grammar, not depth.
