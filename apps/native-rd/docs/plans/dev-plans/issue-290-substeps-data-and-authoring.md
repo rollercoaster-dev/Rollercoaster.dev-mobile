@@ -220,28 +220,31 @@ export interface GroupedStep {
 
 **Changes**:
 
-- [ ] `groupStepsByParent` — flat goal (all null parentStepId) returns all
+- [x] `groupStepsByParent` — flat goal (all null parentStepId) returns all
       steps as roots with empty `children` arrays.
-- [ ] `groupStepsByParent` — mixed goal: top-level step A has children B and
+- [x] `groupStepsByParent` — mixed goal: top-level step A has children B and
       C; B and C appear in A.children, not at root level.
-- [ ] `groupStepsByParent` — ordinal tie-break: two children with the same
+- [x] `groupStepsByParent` — ordinal tie-break: two children with the same
       ordinal are ordered by `createdAt` ascending (fabricate two rows
       differing only in a mock createdAt string; confirm the earlier one
       comes first). Since `groupStepsByParent` is a pure JS function
       operating on the already-ordered query result, this test mocks the
       input array in the expected post-query order to confirm the grouper
       preserves it.
-- [ ] `groupStepsByParent` — orphan guard: a row whose `parentStepId` points
+- [x] `groupStepsByParent` — orphan guard: a row whose `parentStepId` points
       to a nonexistent root is promoted to root level rather than silently
       dropped.
-- [ ] `createSubStep` — throws on empty title (validation parity with
+- [x] `groupStepsByParent` — depth guard: a child-of-a-child (parent is itself
+      a non-root) is promoted to root, never nested two deep. _(Added beyond
+      plan — directly exercises the one-level cap.)_
+- [x] `createSubStep` — throws on empty title (validation parity with
       `createStep`).
-- [ ] `createSubStep` — succeeds with valid title and parentStepId.
-- [ ] `reorderSubSteps` — reorders three sibling IDs without throwing.
-- [ ] `reorderSubSteps` — empty child list does not throw.
-- [ ] `flattenGroupedSteps` — a parent with two children flattens to
+- [x] `createSubStep` — succeeds with valid title and parentStepId.
+- [x] `reorderSubSteps` — reorders three sibling IDs without throwing.
+- [x] `reorderSubSteps` — empty child list does not throw.
+- [x] `flattenGroupedSteps` — a parent with two children flattens to
       `[parent, childA, childB]` render order; a flat goal round-trips unchanged.
-- [ ] `updateStep` reparent — setting `parentStepId` to null and to a root id
+- [x] `updateStep` reparent — setting `parentStepId` to null and to a root id
       both call the Evolu update with the right payload (existing mock pattern).
 
 ### Step 4: StepList — parentStepId field, child indentation, "Add sub-step" affordance
@@ -412,9 +415,9 @@ parity + drag-to-reparent as a fast-follow.
 
 ## Testing Strategy
 
-- [ ] Unit tests: `groupStepsByParent` grouping + tie-break + orphan guard
+- [x] Unit tests: `groupStepsByParent` grouping + tie-break + orphan guard
       (Jest 30, pure function — no Evolu mock needed)
-- [ ] Unit tests: `createSubStep`, `reorderSubSteps` validation (existing
+- [x] Unit tests: `createSubStep`, `reorderSubSteps` validation (existing
       Evolu mock pattern from `queries.step.test.ts`)
 - [ ] Component tests: StepList indentation + affordance guard
       (`@testing-library/react-native` v13)
@@ -476,6 +479,18 @@ remain first-class._
   tests cover it. Also exported the `GroupedStep` type from `db/index.ts`.
   Commits: `a95380d7` (Step 1 schema), `6fe20ef4` (Step 2 queries).
 
-<!-- Entries added by implement skill:
-- [YYYY-MM-DD HH:MM] <discovery description>
--->
+- [2026-06-20 03:10] **Step 3 done** (commit `368c6f7`). 10 new tests across
+  `groupStepsByParent`, `flattenGroupedSteps`, `createSubStep`,
+  `reorderSubSteps`, and `updateStep` reparent; suite now 50/50 green.
+  Two gotchas worth recording for the remaining steps:
+  - **`bun test` segfaults** on this suite (Bun v1.3.13 native runner crashes
+    with a SIGSEGV). Use `npx jest --no-coverage <pattern>` — the project is
+    Jest-based; the CLAUDE.md `bun test --testPathPatterns` shorthand is not
+    usable here. Applies to all test steps (4, 8).
+  - **Mock vs. real type mismatch.** The Evolu mock (`setup.ts`) returns the
+    raw insert/update payload, but TypeScript sees Evolu's real `Result<…>`
+    return type. Asserting on the payload requires `as unknown as { … }`
+    (double cast) — a plain `as` fails type-check (TS2352, no overlap).
+  - Added one test beyond the plan: a **depth guard** case proving a
+    child-of-a-child is promoted to root (exercises the one-level cap, which
+    the original orphan-guard test only touched indirectly).
