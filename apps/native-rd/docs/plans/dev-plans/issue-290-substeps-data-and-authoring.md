@@ -92,6 +92,7 @@ contract pass remain deferred to #292, #293, and #294.
 | D9  | `updateStep` parentStepId field is **wired**, not just plumbed                                                                                                                                                                                                                                                                                              | Leave it type-only                                                                              | D8 needs it: reparenting on drop calls `updateStep(id, { parentStepId })`                                                                                                                                                                                                                                                                            |
 | D10 | `groupStepsByParent` returns the tree; separate `flattenGroupedSteps` produces render order                                                                                                                                                                                                                                                                 | One flat-output function                                                                        | Two named pure utilities, each unit-testable; resolves the tree-vs-flat naming mismatch (former Q6)                                                                                                                                                                                                                                                  |
 | D11 | Left rail = 2px (`borderWidth.thick`) in `theme.colors.border`                                                                                                                                                                                                                                                                                              | Softer textMuted hairline                                                                       | Matches the neo-brutalist design language; distinction is visible without colour-only reliance (former Q4)                                                                                                                                                                                                                                           |
+| D13 | **Interim: disable StepList drag when sub-steps are present** (`canDrag && !hasSubSteps`), until the D8 reparent-aware gesture lands.                                                                                                                                                                                                                       | Ship Step 5 + full D8 gesture together; leave drag on and accept ordinal corruption             | Current flat drag handler reorders the whole list via `onReorderSteps`, corrupting sibling-scoped ordinals once roots/children interleave. Guarding is the safe lever (no data loss); flat goals keep drag. D8 removes the guard. (Discovery 2026-06-20)                                                                                             |
 
 ## Affected Areas
 
@@ -325,29 +326,41 @@ without them. See Discovery Log [2026-06-20 04:xx].
 **Running total**: ~498
 
 **Files**: `src/screens/EditModeScreen/EditModeScreen.tsx`
-**Commit**: `feat(edit): wire createSubStep, reorderSubSteps, reparent in EditModeScreen`
+**Commit**: `feat(edit): wire createSubStep + grouped sub-step rendering in
+EditModeScreen` (`4010a9ad`). **Split**: the create + render half landed here;
+the reorder/reparent handlers are deferred with the D8 drag gesture (they wire
+to StepList props that don't exist yet). See Discovery Log [2026-06-20 06:xx].
 
 **Changes**:
 
-- [ ] Import `groupStepsByParent`, `createSubStep`, `reorderSubSteps` from
-      `../../db`.
-- [ ] After `stepRows = useQuery(stepsByGoalQuery(...))`, compute
+- [x] Import `groupStepsByParent`, `flattenGroupedSteps`, `createSubStep` from
+      `../../db`. _(`reorderSubSteps` not imported — deferred with the drag
+      handlers below.)_
+- [x] After `stepRows = useQuery(stepsByGoalQuery(...))`, compute
       `const flatGrouped = flattenGroupedSteps(groupStepsByParent(stepRows))`
       (parents first, each immediately followed by children) for passing to
       StepList.
-- [ ] Map `flatGrouped` to the `Step[]` shape StepList expects, including the
+- [x] Map `flatGrouped` to the `Step[]` shape StepList expects, including the
       new `parentStepId` field.
-- [ ] Add `handleCreateSubStep(parentStepId, title, plannedEvidenceTypes)`:
+- [x] Add `handleCreateSubStep(parentStepId, title, plannedEvidenceTypes)`:
       compute `maxChildOrdinal` among existing children of that parent from
-      `flatGrouped`; call `createSubStep(goalId, parentStepId, title, maxChildOrdinal + 1, plannedEvidenceTypes)`.
-- [ ] Add `handleReorderSubSteps(parentStepId, childStepIds)`: calls
+      `stepRows`; call `createSubStep(goalId, parentStepId, title, maxChildOrdinal + 1, plannedEvidenceTypes)`.
+- [x] Pass `onCreateSubStep={handleCreateSubStep}` to StepList.
+- [x] **(Beyond plan, correctness)** Scope `handleCreateStep`'s `maxOrdinal`
+      to top-level rows (`parentStepId == null`) so a new root step no longer
+      inherits a sub-step's ordinal now that the two sibling groups coexist.
+- [x] **(Beyond plan, safety)** Guard StepList drag: `canDrag` is now also
+      gated on `!hasSubSteps`. The current flat drag handler reorders the whole
+      list and would corrupt sibling-scoped ordinals once children interleave;
+      drag stays disabled for goals with sub-steps until the D8 reparent-aware
+      gesture lands. Flat goals are unaffected.
+- [ ] **DEFERRED (with D8 gesture).** Add `handleReorderSubSteps(parentStepId, childStepIds)`: calls
       `reorderSubSteps(goalId as GoalId, parentStepId as StepId, childStepIds as StepId[])`.
-- [ ] Pass `onCreateSubStep={handleCreateSubStep}` to StepList.
-- [ ] Add `handleReparentStep(stepId, newParentStepId)`: calls
+- [ ] **DEFERRED (with D8 gesture).** Add `handleReparentStep(stepId, newParentStepId)`: calls
       `updateStep(stepId as StepId, { parentStepId: newParentStepId as StepId | null })`,
       then recomputes sibling ordinals in the destination group (append to end).
       Pass as `onReparentStep` to StepList.
-- [ ] `onReorderSteps` stays wired to top-level reorder; sub-step reorder uses
+- [ ] **DEFERRED (with D8 gesture).** `onReorderSteps` stays wired to top-level reorder; sub-step reorder uses
       `handleReorderSubSteps`. StepList's `classifyDrop` decides which fires.
 
 ### Step 6: ~~NewGoalModal — create-time sub-step affordance~~ — DROPPED (2026-06-20)
@@ -582,3 +595,43 @@ remain first-class._
     classifier framing is dropped as overbuilt. Implementation not started — next
     session: Step 5 (EditModeScreen wiring) + this gesture in StepList, then the
     Step 8 tests (incl. a pure `classifyDrop` helper).
+
+- [2026-06-20 06:xx] **Step 5 split — create/render half shipped, drag handlers
+  deferred** (commit `4010a9ad`). EditModeScreen now groups + flattens the step
+  rows, passes `parentStepId` through to StepList (sub-steps render indented),
+  and wires `onCreateSubStep`. Three deviations from the plan as written:
+  - **`reorderSubSteps`/`reparent` handlers deferred.** Step 5's checklist
+    wired `handleReorderSubSteps` → `onReorderSubSteps` and `handleReparentStep`
+    → `onReparentStep`, but **those StepList props don't exist yet** — they're
+    part of the still-unbuilt D8 gesture (deferred half of Step 4). Adding the
+    handlers now would be dead code wired to nothing, so they move to the D8
+    gesture step. `reorderSubSteps` left unimported for the same reason.
+  - **Drag guarded off when sub-steps present.** Passing children into StepList
+    exposed a latent regression: the existing flat drag handler reorders the
+    whole list via `onReorderSteps`, which would corrupt the sibling-scoped
+    ordinals once roots and children interleave. Added `!hasSubSteps` to
+    `canDrag` as an interim guard. Flat goals keep drag; goals with sub-steps
+    lose drag-reorder (and the accessible ↑/↓ controls, which live inside the
+    draggable item) until the D8 gesture makes drag reparent-aware. This is the
+    safe lever — no data corruption — and the D8 step restores full reorder.
+  - **`handleCreateStep` ordinal scoped to roots.** Now that sub-steps coexist,
+    the new-root-step `maxOrdinal` excludes children (`parentStepId == null`)
+    so a new top-level step can't inherit a child's ordinal. Loose `== null` so
+    both real (`null`) and test-fixture (`undefined`) rows count as top-level.
+  - **`GroupedStep.goalId` relaxed to `GoalId | null`.** Evolu types every
+    `selectAll` column as nullable in query results, so the real `stepsByGoalQuery`
+    row's `goalId` is nullable — the original non-null declaration failed
+    `tsc` at the `groupStepsByParent(stepRows)` call site. The field was already
+    inconsistent (title/status/etc. were nullable, only goalId wasn't). Step 3's
+    test row builder assigns a non-null `goalId`, still valid against the looser
+    type; all 50 db tests stay green.
+  - **EditModeScreen test mock extended.** The test's `jest.mock("../../../db")`
+    predated the new exports; added `createSubStep` + faithful lightweight
+    `groupStepsByParent`/`flattenGroupedSteps` stand-ins so render works. This is
+    a mock fix to keep the existing suite green, **not** the Step 8 feature tests
+    (still pending). All 93 EditModeScreen/StepList/db-step tests pass.
+
+  **Next step:** the D8 drag-to-reparent gesture in StepList (vertical-only +
+  dwell-to-demote, per revised D8/D12) — adds `onReorderSubSteps`/`onReparentStep`
+  props + `classifyDrop`, which then unblocks the deferred Step 5 handlers and
+  re-enables drag for goals with sub-steps. Then Step 8 tests.
