@@ -464,6 +464,10 @@ export function StepList({
     if (armable) {
       dwellTimer.current = setTimeout(() => {
         dwellTimer.current = null;
+        // The drag may have ended while this timer was pending. Arming now would
+        // leave a dashed target border stuck on the row at rest, since handleDragEnd
+        // has already cleared armedTargetId. Bail if no drag is active.
+        if (draggedIndexRef.current === null) return;
         armedTargetIdRef.current = hovered.id;
         setArmedTargetId(hovered.id);
       }, DWELL_ARM_MS);
@@ -741,7 +745,10 @@ export function StepList({
               isFirst={index === 0}
               isLast={index === steps.length - 1}
               editContent={editContent}
-              isArmedTarget={armedTargetId === step.id}
+              // Gate on isDragging so the dashed "drop here to nest" border is
+              // strictly drag-scoped (like every other drag-feedback element) and
+              // can never linger at rest.
+              isArmedTarget={isDragging && armedTargetId === step.id}
               canNestUnder={canNestUnder}
               nestTargets={nestTargets}
               onNestUnder={
