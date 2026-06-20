@@ -133,5 +133,62 @@ export const styles = StyleSheet.create((theme) => {
       paddingLeft: 36,
       paddingTop: theme.space[1],
     },
+    // --- Sub-step (one-level child) rows -------------------------------
+    // A child row is indented behind a thick vertical "left rail" so the
+    // parent→child relationship reads without relying on colour alone (D11).
+    childRowWrapper: {
+      flexDirection: "row",
+      alignItems: "stretch",
+      paddingLeft: theme.space[4],
+      gap: theme.space[3],
+    },
+    leftRail: {
+      width: theme.borderWidth.thick,
+      backgroundColor: theme.colors.border,
+      borderRadius: theme.radius.sm,
+    },
+    childRowContent: {
+      flex: 1,
+    },
+    // "+ sub-step" ghost row: muted, no shadow — discoverable without
+    // pressuring structure (D5). Indented to align under its parent.
+    addSubStepGhost: {
+      minHeight: 44,
+      justifyContent: "center",
+      marginLeft: theme.space[4],
+      marginTop: theme.space[1],
+      paddingHorizontal: theme.space[3],
+      paddingVertical: theme.space[1],
+      borderWidth: theme.borderWidth.medium,
+      borderColor: theme.colors.border,
+      borderStyle: "dashed",
+      borderRadius: theme.radius.sm,
+    },
+    addSubStepText: {
+      fontSize: theme.size.sm,
+      fontFamily: theme.fontFamily.body,
+      color: theme.colors.textMuted,
+    },
+    addSubStepInputRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: theme.space[2],
+      minHeight: 44,
+      marginLeft: theme.space[4],
+      marginTop: theme.space[1],
+    },
+    addSubStepInputCard: {
+      flex: 1,
+      ...cardBase,
+    },
+    addSubStepInput: {
+      fontSize: theme.size.md,
+      fontFamily: theme.fontFamily.body,
+      color: theme.colors.text,
+    },
+    addSubStepPickerRow: {
+      marginLeft: theme.space[4],
+      marginTop: theme.space[1],
+    },
   };
 });

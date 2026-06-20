@@ -24,11 +24,21 @@ export interface Step {
   title: string;
   completed: boolean;
   plannedEvidenceTypes?: EvidenceTypeValue[] | null;
+  // One-level hierarchy: null/undefined = top-level step, set = sub-step
+  // whose parent is the referenced top-level step. The caller passes a flat
+  // list already in render order (parent immediately followed by its
+  // children) — StepList does not group internally.
+  parentStepId?: string | null;
 }
 
 export interface StepListProps {
   steps: Step[];
   onCreateStep?: (
+    title: string,
+    plannedEvidenceTypes: EvidenceTypeValue[],
+  ) => void;
+  onCreateSubStep?: (
+    parentStepId: string,
     title: string,
     plannedEvidenceTypes: EvidenceTypeValue[],
   ) => void;
@@ -46,6 +56,7 @@ const ITEM_HEIGHT = 48;
 export function StepList({
   steps,
   onCreateStep,
+  onCreateSubStep,
   onUpdateStep,
   onDeleteStep,
   onReorderSteps,
@@ -65,6 +76,16 @@ export function StepList({
     EvidenceType.text as EvidenceTypeValue,
   ]);
   const newStepInputRef = useRef<TextInput>(null);
+
+  // Inline "add sub-step" state: which parent's ghost row is expanded into an
+  // input, plus the draft title/types for that pending sub-step.
+  const [addingSubStepForId, setAddingSubStepForId] = useState<string | null>(
+    null,
+  );
+  const [subStepTitle, setSubStepTitle] = useState("");
+  const [subStepTypes, setSubStepTypes] = useState<EvidenceTypeValue[]>([
+    EvidenceType.text as EvidenceTypeValue,
+  ]);
 
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
@@ -149,6 +170,32 @@ export function StepList({
       setNewStepTitle("");
       setNewStepTypes([EvidenceType.text as EvidenceTypeValue]);
     }
+  }
+
+  function startAddingSubStep(parentStepId: string) {
+    setAddingSubStepForId(parentStepId);
+    setSubStepTitle("");
+    setSubStepTypes([EvidenceType.text as EvidenceTypeValue]);
+  }
+
+  function toggleSubStepType(type: EvidenceTypeValue) {
+    setSubStepTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type],
+    );
+  }
+
+  function handleSubStepSubmit(parentStepId: string) {
+    const trimmed = subStepTitle.trim();
+    if (trimmed && onCreateSubStep) {
+      const types =
+        subStepTypes.length > 0
+          ? subStepTypes
+          : [EvidenceType.text as EvidenceTypeValue];
+      onCreateSubStep(parentStepId, trimmed, types);
+    }
+    setAddingSubStepForId(null);
+    setSubStepTitle("");
+    setSubStepTypes([EvidenceType.text as EvidenceTypeValue]);
   }
 
   function handleDragStart(index: number) {
@@ -290,33 +337,30 @@ export function StepList({
               </View>
             ) : null;
 
-          if (canDrag) {
-            return (
-              <DraggableStepItem
-                key={step.id}
-                step={step}
-                index={index}
-                isBeingDragged={draggedIndex === index}
-                onLabelPress={onUpdateStep ? startEditing : undefined}
-                onDeleteStep={
-                  onDeleteStep ? () => onDeleteStep(step.id) : undefined
-                }
-                onDragStart={handleDragStart}
-                onDragMove={handleDragMove}
-                onDragEnd={handleDragEnd}
-                onMoveUp={() => handleMoveUp(index)}
-                onMoveDown={() => handleMoveDown(index)}
-                showAccessibleControls={showAccessibleControls}
-                animationPref={animationPref}
-                isFirst={index === 0}
-                isLast={index === steps.length - 1}
-                editContent={editContent}
-              />
-            );
-          }
+          const isChild = step.parentStepId != null;
 
-          return (
-            <View key={step.id} style={styles.draggableItem}>
+          const itemNode = canDrag ? (
+            <DraggableStepItem
+              step={step}
+              index={index}
+              isBeingDragged={draggedIndex === index}
+              onLabelPress={onUpdateStep ? startEditing : undefined}
+              onDeleteStep={
+                onDeleteStep ? () => onDeleteStep(step.id) : undefined
+              }
+              onDragStart={handleDragStart}
+              onDragMove={handleDragMove}
+              onDragEnd={handleDragEnd}
+              onMoveUp={() => handleMoveUp(index)}
+              onMoveDown={() => handleMoveDown(index)}
+              showAccessibleControls={showAccessibleControls}
+              animationPref={animationPref}
+              isFirst={index === 0}
+              isLast={index === steps.length - 1}
+              editContent={editContent}
+            />
+          ) : (
+            <View style={styles.draggableItem}>
               {editingId === step.id ? (
                 editContent
               ) : (
@@ -370,6 +414,85 @@ export function StepList({
                     )}
                 </View>
               )}
+            </View>
+          );
+
+          // Indent child rows behind a thick vertical left rail so the
+          // parent→child relationship reads without colour alone (D11).
+          const rowNode = isChild ? (
+            <View style={styles.childRowWrapper}>
+              <View
+                style={styles.leftRail}
+                accessibilityElementsHidden
+                importantForAccessibility="no"
+              />
+              <View style={styles.childRowContent}>{itemNode}</View>
+            </View>
+          ) : (
+            itemNode
+          );
+
+          // "Add sub-step" affordance: top-level steps only (one-level depth
+          // guard, D6) and not while this row is being edited — don't stack
+          // the ghost row with the inline edit input.
+          const showSubStepAffordance =
+            !isChild && !!onCreateSubStep && editingId !== step.id;
+
+          return (
+            <View key={step.id}>
+              {rowNode}
+              {showSubStepAffordance &&
+                (addingSubStepForId === step.id ? (
+                  <View>
+                    <View style={styles.addSubStepInputRow}>
+                      <View style={styles.addSubStepInputCard}>
+                        <TextInput
+                          style={styles.addSubStepInput}
+                          placeholder={t("editGoal:stepList.addSubStepLabel")}
+                          placeholderTextColor={theme.colors.textMuted}
+                          value={subStepTitle}
+                          onChangeText={setSubStepTitle}
+                          onSubmitEditing={() => handleSubStepSubmit(step.id)}
+                          onBlur={() => handleSubStepSubmit(step.id)}
+                          autoFocus
+                          returnKeyType="done"
+                          testID={`step-list-sub-step-input-${step.id}`}
+                          accessibilityLabel={t(
+                            "editGoal:stepList.addSubStepInputA11yLabel",
+                            { title: step.title },
+                          )}
+                        />
+                      </View>
+                    </View>
+                    <View style={styles.addSubStepPickerRow}>
+                      <EvidenceTypePicker
+                        selectedTypes={subStepTypes}
+                        onToggleType={toggleSubStepType}
+                        label={t(
+                          "editGoal:stepList.evidenceTypesForNewStepLabel",
+                        )}
+                      />
+                    </View>
+                  </View>
+                ) : (
+                  <Pressable
+                    style={styles.addSubStepGhost}
+                    onPress={() => startAddingSubStep(step.id)}
+                    testID={`step-list-add-sub-step-${step.id}`}
+                    accessibilityRole="button"
+                    accessibilityLabel={t(
+                      "editGoal:stepList.addSubStepA11yLabel",
+                      { title: step.title },
+                    )}
+                    accessibilityHint={t(
+                      "editGoal:stepList.addSubStepA11yHint",
+                    )}
+                  >
+                    <RNText style={styles.addSubStepText}>
+                      {`+ ${t("editGoal:stepList.addSubStepLabel")}`}
+                    </RNText>
+                  </Pressable>
+                ))}
             </View>
           );
         })}
