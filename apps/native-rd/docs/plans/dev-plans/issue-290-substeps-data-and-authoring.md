@@ -11,49 +11,62 @@
 **Complexity**: LARGE
 **Estimated Lines**: ~700–780 production lines (see per-commit breakdown)
 
-> **Scope note (user decision, 2026-06-20):** This PR knowingly exceeds the
-> epic's "one PR per child ≤500 LOC" guidance. The user chose to ship the
-> full A-authoring feature in a single device-testable PR: #290 data + #291
-> authoring with **full create parity** (sub-step affordance in NewGoalModal
-> _and_ EditModeScreen) and **drag-to-reparent** (promote/demote leaf steps
-> via drag, bounded by the one-level depth cap). Reading surfaces (#292/#293)
-> and the exhaustive a11y/test matrix (#294) remain deferred.
+> **Scope note (revised 2026-06-20, drag descoped):** This PR ships **#290
+> data + #291 authoring** — additive `parentStepId` + queries, plus the
+> sub-step affordance and indented rendering (create parity via EditMode).
+> **Drag-to-reparent (D8/D12) has been split into its own follow-up issue**
+> (#330) — it needs on-device gesture tuning that unit tests + a local build
+> can't validate, and its hardest piece (the `classifyDrop` decision logic)
+> already landed here (commit `0eb70aff`), so the follow-up starts de-risked.
+> Size: **~620 production insertions** (two issues — #290 data + #291
+> authoring — in one PR, as the epic contemplated). Over the strict ≤500
+> single-issue guidance but well under this plan's ~650 stop-gate, and fully
+> CI-verifiable (no device-only gesture code ships here).
+> Interim: goals **with** sub-steps can't be drag-reordered yet (D13 guard);
+> flat goals keep full drag. Reading surfaces (#292/#293) and the exhaustive
+> a11y/test matrix (#294) remain deferred.
+>
+> _Earlier (superseded) decision: ship #290+#291+drag in one device-testable
+> PR. Dropped 2026-06-20 — drag carved out to #330 so this PR can land now._
 
 ## Intent Verification
 
 Observable criteria derived from both issues. Verifiable by running the app
 or reading tests.
 
-- [ ] A step row in EditModeScreen has an "Add sub-step" affordance that is
+- [x] A step row in EditModeScreen has an "Add sub-step" affordance that is
       absent on any row that already has a parent (no depth beyond one level).
-- [ ] Tapping "Add sub-step" on a top-level step creates a new step with
+- [x] Tapping "Add sub-step" on a top-level step creates a new step with
       that step's id as `parentStepId` and appends it indented under its parent.
-- [ ] Children are rendered as visually indented rows under a left-rail cue;
+- [x] Children are rendered as visually indented rows under a left-rail cue;
       top-level steps are rendered without indentation — the distinction is
       visible without relying on colour alone.
-- [ ] Drag-reorder in EditModeScreen supports both reordering and reparenting,
-      bounded by the one-level depth cap: - Reorder within a sibling group (children among children, roots among roots). - **Promote**: drag a leaf child out to top-level → `parentStepId` cleared. - **Demote**: drag a top-level _leaf_ under another top-level step →
+- [ ] **DEFERRED → #330.** Drag-reorder in EditModeScreen supports both
+      reordering and reparenting, bounded by the one-level depth cap: - Reorder within a sibling group (children among children, roots among roots). - **Promote**: drag a leaf child out to top-level → `parentStepId` cleared. - **Demote**: drag a top-level _leaf_ under another top-level step →
       `parentStepId` set to that step. - **Refused drops** (one-level guard): demoting a step that itself has
       children (would create grandchildren); dropping under a non-root step.
-      Refused drops snap back with no data change.
-- [ ] "Add sub-step" control is absent on a step that already has a parent
+      Refused drops snap back with no data change. _(Decision logic landed
+      here as the tested `classifyDrop` helper; the gesture is #330.)_
+- [x] "Add sub-step" control is absent on a step that already has a parent
       (`parentStepId !== null`).
-- [ ] A flat step (no children) and a top-level step with no sub-step added
+- [x] A flat step (no children) and a top-level step with no sub-step added
       remain first-class — no standing nag toward structure.
-- [ ] Create parity holds via EditMode: a newly created goal (which routes
+- [x] Create parity holds via EditMode: a newly created goal (which routes
       NewGoalModal → BadgeDesigner → EditMode) exposes the same "Add sub-step"
       affordance on its steps; flat steps remain the default path. (Revised
       2026-06-20 — NewGoalModal itself is title-only, see Discovery Log.)
-- [ ] `stepsByGoalQuery` returns all steps for a goal in parent→children
+- [x] `stepsByGoalQuery` returns all steps for a goal in parent→children
       order: top-level steps ordered by `ordinal`, each immediately followed
       by its children ordered by `ordinal` (JS grouping after a single query).
-- [ ] Tie-break on `(ordinal ASC, createdAt ASC)` is applied in
+- [x] Tie-break on `(ordinal ASC, createdAt ASC)` is applied in
       `stepsByGoalQuery` so duplicate ordinals from concurrent writes produce
       a deterministic display order.
-- [ ] Type-check and lint pass with zero new errors.
-- [ ] New tests cover: grouping logic, tie-break, sibling reorder scoping,
-      no-depth-beyond-one guard, "Add sub-step" affordance visibility, child
-      row indentation rendered.
+- [x] Type-check and lint pass with zero new errors.
+- [~] New tests cover: grouping logic, tie-break, sibling reorder scoping,
+  no-depth-beyond-one guard ✅ (data-layer suite); `classifyDrop` ✅.
+  **"Add sub-step" affordance visibility + child row indentation
+  component tests not written** (user chose to open the PR as-is,
+  2026-06-20) — follow with the #330 component-test pass.
 
 ## Dependencies
 
@@ -459,14 +472,13 @@ can't compile until they exist — they had to land first. See Discovery Log.
 
 ### Step 9: LOC recount and check-in gate
 
-This step has no code. This PR is **knowingly over** the usual ≤500 cap (user
-decision — see Scope note). Expected: ~560 production lines + ~120 test lines.
-Before opening the PR, run `git diff --stat`. If production files exceed
-**~650** lines, stop and check in with the user rather than trimming silently
-— the in-scope features (create parity D7, drag-to-reparent D8) are all
-user-requested, so the lever is splitting the PR, not dropping scope. Candidate
-split if needed: land #290 data + EditMode authoring first, NewGoalModal create
-parity + drag-to-reparent as a fast-follow.
+This step has no code. **Resolved 2026-06-20: the candidate split was taken.**
+Drag-to-reparent (D8/D12) carved out to **#330**, so this PR is #290 data +
+#291 authoring (sub-step affordance + indented rendering + `classifyDrop`
+helper). `git diff main --stat`: **~620 production insertions** + ~299 test —
+two issues in one PR (as the epic contemplated), over the strict ≤500
+single-issue guidance but under this plan's ~650 stop-gate, and fully
+CI-verifiable since no device-only gesture code ships here.
 
 ## Testing Strategy
 
