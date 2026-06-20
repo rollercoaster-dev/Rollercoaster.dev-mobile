@@ -18,6 +18,7 @@ import {
   flattenGroupedSteps,
   type GroupedStep,
 } from "../queries";
+import { evolu } from "../evolu";
 import type { GoalId, StepId } from "../schema";
 
 const mockGoalId = "goal_test_123" as GoalId;
@@ -312,20 +313,35 @@ describe("Step CRUD Operations", () => {
 
   describe("reorderSubSteps", () => {
     const parentId = "step_parent_1" as StepId;
+    const updateMock = evolu.update as jest.Mock;
 
-    test("reorders three siblings without throwing", () => {
+    beforeEach(() => {
+      updateMock.mockClear();
+    });
+
+    test("assigns sequential ordinals (0..n-1) to children in order", () => {
       const childIds = [
         "child_1" as StepId,
         "child_2" as StepId,
         "child_3" as StepId,
       ];
-      expect(() =>
-        reorderSubSteps(mockGoalId, parentId, childIds),
-      ).not.toThrow();
+      reorderSubSteps(mockGoalId, parentId, childIds);
+
+      // One ordinal write per child, indexed from 0 — the zero-index value
+      // must be assigned, not skipped (Int.orNull guards 0 explicitly).
+      const stepUpdates = updateMock.mock.calls.filter(
+        ([table]) => table === "step",
+      );
+      expect(stepUpdates).toEqual([
+        ["step", { id: "child_1", ordinal: 0 }],
+        ["step", { id: "child_2", ordinal: 1 }],
+        ["step", { id: "child_3", ordinal: 2 }],
+      ]);
     });
 
-    test("empty child list does not throw", () => {
+    test("empty child list issues no updates and does not throw", () => {
       expect(() => reorderSubSteps(mockGoalId, parentId, [])).not.toThrow();
+      expect(updateMock).not.toHaveBeenCalled();
     });
   });
 

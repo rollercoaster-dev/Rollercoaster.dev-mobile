@@ -411,13 +411,14 @@ can't compile until they exist — they had to land first. See Discovery Log.
 
 **Commit**: `feat(i18n): add sub-step affordance strings to editGoal namespace`
 
-**New keys under `stepList`** (all six added):
+**New keys under `stepList`** (all seven added):
 
 ```json
 "addSubStepLabel": "Add sub-step",
 "addSubStepA11yLabel": "Add sub-step under \"{{title}}\"",
 "addSubStepA11yHint": "Type a sub-step title and press return to add",
 "addSubStepInputA11yLabel": "New sub-step title for \"{{title}}\"",
+"addSubStepButtonA11y": "Add sub-step under \"{{title}}\"",
 "subStepDeleteA11yLabel": "Delete sub-step \"{{title}}\"",
 "subStepEditA11yLabel": "Edit sub-step: {{title}}"
 ```
