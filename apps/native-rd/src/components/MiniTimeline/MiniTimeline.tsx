@@ -8,6 +8,13 @@ export type { StepStatus };
 
 export interface MiniTimelineStep {
   status: StepStatus;
+  /**
+   * Sub-step flag (#292). Child nodes render smaller and inline on the same
+   * track, joined to their parent by short connectors and grouped under a
+   * bottom-border "shelf" (the prototype's `grp-indent` indented sub-spine).
+   * Absent/false = a standard top-level node.
+   */
+  isChild?: boolean;
 }
 
 export interface MiniTimelineProps {
@@ -49,39 +56,92 @@ export function MiniTimeline({
         accessibilityHint: t("common:timeline.a11y.hint"),
       } as const);
 
+  // Group each run of child steps under its preceding top-level (lead) step.
+  // The flat `steps` array places each parent immediately before its children
+  // (#292 query order), so a run of `isChild` steps attaches to the last lead.
+  const groups: {
+    lead: { step: MiniTimelineStep; index: number };
+    children: { step: MiniTimelineStep; index: number }[];
+  }[] = [];
+  steps.forEach((step, index) => {
+    if (step.isChild && groups.length > 0) {
+      groups[groups.length - 1].children.push({ step, index });
+    } else {
+      groups.push({ lead: { step, index }, children: [] });
+    }
+  });
+
+  const renderNode = (
+    step: MiniTimelineStep,
+    index: number,
+    isChild: boolean,
+  ) => {
+    const isCurrent = index === currentIndex;
+    return (
+      <Pressable
+        onPress={() => onStepTap(index)}
+        // Child nodes are smaller; widen their hit area so the touch target
+        // stays at least 44pt (full sub-step a11y audit is #294).
+        hitSlop={isChild ? 17 : 15}
+        accessible
+        accessibilityRole="button"
+        accessibilityLabel={t("common:timeline.a11y.step", {
+          index: index + 1,
+          status: step.status,
+        })}
+      >
+        <View
+          style={[
+            styles.node,
+            step.status === "completed" && styles.nodeCompleted,
+            isChild && styles.nodeChild,
+            isCurrent &&
+              (isChild ? styles.nodeChildCurrent : styles.nodeCurrent),
+          ]}
+        />
+      </Pressable>
+    );
+  };
+
+  const renderSegment = (completed: boolean, short = false) => (
+    <View
+      style={[
+        styles.segment,
+        short && styles.segmentShort,
+        completed ? styles.segmentCompleted : styles.segmentPending,
+      ]}
+    />
+  );
+
   return (
     <View style={styles.container}>
       <View style={styles.track}>
-        {steps.map((step, index) => {
-          const isCurrent = index === currentIndex;
+        {groups.map((group) => {
+          // A top-level step's connector (and the goal-node-preceding segment)
+          // reflects the lead's own completion. A parent stays "pending" until
+          // manually completed, so its connector stays dashed even when all its
+          // children are done (#292 invite state — no auto-completion).
+          const leadCompleted = group.lead.step.status === "completed";
+          if (group.children.length === 0) {
+            return (
+              <React.Fragment key={group.lead.index}>
+                {renderNode(group.lead.step, group.lead.index, false)}
+                {renderSegment(leadCompleted)}
+              </React.Fragment>
+            );
+          }
           return (
-            <React.Fragment key={index}>
-              <Pressable
-                onPress={() => onStepTap(index)}
-                hitSlop={15}
-                accessible
-                accessibilityRole="button"
-                accessibilityLabel={t("common:timeline.a11y.step", {
-                  index: index + 1,
-                  status: step.status,
-                })}
-              >
-                <View
-                  style={[
-                    styles.node,
-                    step.status === "completed" && styles.nodeCompleted,
-                    isCurrent && styles.nodeCurrent,
-                  ]}
-                />
-              </Pressable>
-              <View
-                style={[
-                  styles.segment,
-                  step.status === "completed"
-                    ? styles.segmentCompleted
-                    : styles.segmentPending,
-                ]}
-              />
+            <React.Fragment key={group.lead.index}>
+              <View style={styles.groupIndent}>
+                {renderNode(group.lead.step, group.lead.index, false)}
+                {group.children.map((child) => (
+                  <React.Fragment key={child.index}>
+                    {renderSegment(child.step.status === "completed", true)}
+                    {renderNode(child.step, child.index, true)}
+                  </React.Fragment>
+                ))}
+              </View>
+              {renderSegment(leadCompleted)}
             </React.Fragment>
           );
         })}

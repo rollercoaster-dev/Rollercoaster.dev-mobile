@@ -36,6 +36,22 @@ export const styles = StyleSheet.create((theme) => ({
     borderWidth: 3,
     borderColor: theme.colors.accentPrimary,
   },
+  // Sub-step node: smaller than a top-level node, visually subordinate. Keeps
+  // the base node's border weight and (when completed) accent fill (#292).
+  nodeChild: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  // Current sub-step: bumps back up to the standard node size with the accent
+  // ring so the active leaf reads clearly within its group.
+  nodeChildCurrent: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 3,
+    borderColor: theme.colors.accentPrimary,
+  },
   nodeGoal: {
     width: 14,
     height: 14,
@@ -48,9 +64,27 @@ export const styles = StyleSheet.create((theme) => ({
   nodeGoalCompleted: {
     borderColor: theme.colors.border,
   },
+  // Parent + its children, grouped under a bottom-border "shelf" so the
+  // sub-spine reads as subordinate without offsetting children to a second row
+  // (#292, prototype `grp-indent`).
+  groupIndent: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    paddingHorizontal: 3,
+    paddingBottom: 4,
+    borderBottomWidth: theme.borderWidth.medium,
+    borderBottomColor: theme.colors.border,
+  },
   segment: {
     flex: 1,
     height: 3,
+  },
+  // Short connector between a parent and its inline children (vs the flex:1
+  // long segment between top-level steps).
+  segmentShort: {
+    flexGrow: 0,
+    flexShrink: 0,
+    flexBasis: 7,
   },
   segmentCompleted: {
     backgroundColor: theme.colors.accentPrimary,
