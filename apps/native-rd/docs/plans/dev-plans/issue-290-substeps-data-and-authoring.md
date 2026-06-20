@@ -313,8 +313,17 @@ without them. See Discovery Log [2026-06-20 04:xx].
   - **a11y (D12):** reduced-motion (`animationPref === "none"`) → static bold
     border highlight instead of grow+pulse; screen-reader → explicit
     "nest under…" / "un-nest" controls beside the existing ↑/↓ buttons.
-  - Keep the drop-decision in a small pure helper (`classifyDrop`) so it is
-    unit-testable without the gesture/animation layer (Step 8).
+  - [x] **DONE — `classifyDrop` pure helper landed** (commit `0eb70aff`).
+        Drop-decision isolated from the gesture/animation layer and unit-tested
+        (11 cases). Signature:
+        `classifyDrop(steps, draggedIndex, dropIndex, armedTargetId?) → DropResult`
+        where `DropResult` is `{kind:"none"}` | `{kind:"reorder", parentStepId,
+orderedIds}` | `{kind:"reparent", stepId, newParentStepId}`. The gesture
+        layer below feeds it `draggedIndex`/`dropIndex` from the existing
+        `translationY` math plus the dwell-armed target id, and dispatches its
+        result to `onReorderSteps` / `onReorderSubSteps` / `onReparentStep`.
+  - The remaining gesture/animation/dwell mechanics are still TODO (see
+    Discovery Log [2026-06-20 07:xx]).
 - [x] Add styles: `childRowWrapper` (indent), `leftRail` (thick vertical bar),
       `childRowContent`, `addSubStepGhost` (muted dashed row, no shadow),
       `addSubStepText` (textMuted), `addSubStepInputRow`, `addSubStepInputCard`,
@@ -433,9 +442,11 @@ can't compile until they exist — they had to land first. See Discovery Log.
       the correct `parentStepId`.
 - [ ] Child row has a left rail element in the rendered tree (test-id or
       a11y label).
-- [ ] `classifyDrop` pure helper: leaf-to-top-level → promote; leaf-into-root
+- [x] `classifyDrop` pure helper: leaf-to-top-level → promote; leaf-into-root
       → demote; parent-with-children demote → refused; non-root target →
-      refused. (Table-driven `test.each`.)
+      refused. (Landed early with the helper — commit `0eb70aff`, 11 cases:
+      no-op, root reorder, child reorder, positional promote, positional
+      demote into an existing group, dwell demote, and the four refusals.)
 
 **EditModeScreen tests (extend existing)**:
 
@@ -635,3 +646,45 @@ remain first-class._
   dwell-to-demote, per revised D8/D12) — adds `onReorderSubSteps`/`onReparentStep`
   props + `classifyDrop`, which then unblocks the deferred Step 5 handlers and
   re-enables drag for goals with sub-steps. Then Step 8 tests.
+
+- [2026-06-20 07:xx] **D8 first slice: `classifyDrop` pure helper shipped**
+  (commit `0eb70aff`). Took the one piece of the D8 gesture that is fully
+  verifiable without a device — the drop-decision logic the plan explicitly
+  carved out as "a small pure helper … unit-testable without the
+  gesture/animation layer." New `src/components/StepList/classifyDrop.ts` +
+  `__tests__/classifyDrop.test.ts` (11 cases, all green; type-check + lint
+  clean). It encodes the revised-D8 semantics precisely so the gesture layer
+  built on top has an unambiguous contract:
+  - **Positional** (no armed target): parent = parent of the row directly
+    above the drop slot (computed on the list with the dragged row removed —
+    same model as the existing `handleDragMove`/reorder). Same parent →
+    `reorder` with the new sibling-group order; different parent → `reparent`
+    (promote to root when above is a root/top, or join an existing group's
+    children).
+  - **Dwell-armed**: `reparent` under the armed root, gated by the one-level
+    cap (target must be a root, not self, and the dragged step must be a leaf).
+  - **Refusals** → `{kind:"none"}` (snap back, no write): armed non-root
+    target, armed self, demoting a parent-with-children (armed or positional).
+
+  **Deliberately stopped here** (user asked to implement the next step, then
+  stop + update the plan). What remains in D8 is one interdependent commit that
+  is **device-verification-dependent** and can't be meaningfully validated by
+  unit tests or a local build alone — so it is the right place to pause for a
+  human-on-device pass rather than land blind:
+  - StepList gesture wiring: thread the dwell timer (arm a hovered root after
+    ~200–250 ms; disarm on movement) and feed `draggedIndex`/`dropIndex`/
+    `armedTargetId` into `classifyDrop`, dispatching the result to the three
+    callbacks. Hide "+ sub-step" ghosts mid-drag so row heights stay uniform
+    for the index math.
+  - Animation (D8/D12): grow + pulse the armed target; **reduced-motion**
+    (`animationPref === "none"`) → static bold border highlight instead.
+  - **Screen-reader** (D12): explicit "nest under…" / "un-nest" controls beside
+    the existing ↑/↓ reorder buttons (dwell isn't reachable without sighted
+    drag). Re-enabling drag also restores the ↑/↓ controls for goals with
+    sub-steps, currently lost under the D13 `!hasSubSteps` guard.
+  - New props `onReorderSubSteps` / `onReparentStep`; remove the D13 interim
+    drag guard once the gesture is reparent-aware.
+  - EditModeScreen: wire the deferred `handleReorderSubSteps` /
+    `handleReparentStep` (Step 5) to the new props, import `reorderSubSteps`.
+  - Step 8: StepList component tests for the gesture-driven paths +
+    EditModeScreen promote/demote wiring tests.
