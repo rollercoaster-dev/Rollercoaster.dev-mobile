@@ -682,12 +682,24 @@ function applyStepOrdinals(
     // Check for null explicitly, not falsy (0 is valid!)
     if (ordinal !== null) {
       try {
-        evolu.update("step", { id: stepId, ordinal });
+        // Evolu mutations report validation/write failures via a { ok: false }
+        // Result instead of throwing, so the Result must be checked or a failed
+        // ordinal write would be silently dropped from `failures`.
+        const result = evolu.update("step", { id: stepId, ordinal });
+        if (!result.ok) {
+          logger.error("Failed to update step ordinal", {
+            ...context,
+            stepId,
+            ordinal,
+            error: result.error,
+          });
+          failures.push({ index, stepId });
+        }
       } catch (error) {
         logger.error("Failed to update step ordinal", {
           ...context,
           stepId,
-          ordinal: index,
+          ordinal,
           error,
         });
         failures.push({ index, stepId });

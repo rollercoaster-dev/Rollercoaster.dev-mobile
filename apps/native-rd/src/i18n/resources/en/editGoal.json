@@ -58,8 +58,15 @@
     "subStepEditA11yLabel": "Edit sub-step: {{title}}",
     "a11y": {
       "movedFromTo": "Step moved from position {{from}} to {{to}}",
+      "nestedUnder": "Step nested under \"{{title}}\"",
+      "promotedToTopLevel": "Step promoted to top level",
       "movedUp": "Step \"{{title}}\" moved up to position {{position}}",
-      "movedDown": "Step \"{{title}}\" moved down to position {{position}}"
+      "movedDown": "Step \"{{title}}\" moved down to position {{position}}",
+      "nestUnder": "Nest under \"{{title}}\"",
+      "nestUnderA11y": "Nest this step under {{title}}",
+      "unNestA11y": "Promote this step to top level",
+      "nestUnderTriggerA11y": "Nest this step under another step",
+      "nestUnderPickerTitle": "Choose a step to nest under"
     }
   }
 }

@@ -2,11 +2,23 @@ import React, {
   Suspense,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
-import { View, TextInput, ActivityIndicator, Alert } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
+import {
+  View,
+  TextInput,
+  ActivityIndicator,
+  Alert,
+  type LayoutChangeEvent,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+} from "react-native";
+import {
+  KeyboardAwareScrollView,
+  type KeyboardAwareScrollViewRef,
+} from "react-native-keyboard-controller";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import { useQuery } from "@evolu/react";
 import { useTranslation } from "react-i18next";
@@ -15,7 +27,11 @@ import { Text } from "../../components/Text";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { Button } from "../../components/Button";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
-import { StepList } from "../../components/StepList";
+import {
+  StepList,
+  type DragScrollController,
+  type DragScrollMetrics,
+} from "../../components/StepList";
 import { ConfirmDeleteModal } from "../ConfirmDeleteModal";
 import {
   goalsQuery,
@@ -27,6 +43,7 @@ import {
   updateStep,
   deleteStep,
   reorderSteps,
+  reorderSubSteps,
   groupStepsByParent,
   flattenGroupedSteps,
   StepStatus,
@@ -47,6 +64,12 @@ import { ModeIndicator } from "../../components/ModeIndicator";
 import { styles } from "./EditModeScreen.styles";
 
 const DEBOUNCE_MS = 500;
+
+type MeasurableScrollView = KeyboardAwareScrollViewRef & {
+  measureInWindow(
+    callback: (x: number, y: number, width: number, height: number) => void,
+  ): void;
+};
 
 function EditContent({
   goalId,
@@ -70,9 +93,48 @@ function EditContent({
   const [description, setDescription] = useState(goal?.description ?? "");
   const [titleError, setTitleError] = useState("");
   const [showDeleteGoalModal, setShowDeleteGoalModal] = useState(false);
+  const [isStepDragging, setIsStepDragging] = useState(false);
+  const isStepDraggingRef = useRef(false);
 
   const titleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const descTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrollRef = useRef<KeyboardAwareScrollViewRef>(null);
+  const scrollMetricsRef = useRef<DragScrollMetrics>({
+    offsetY: 0,
+    viewportTop: 0,
+    viewportHeight: 0,
+    contentHeight: 0,
+  });
+  const dragScrollController = useMemo<DragScrollController>(
+    () => ({
+      getMetrics: () => scrollMetricsRef.current,
+      scrollTo: (y) => {
+        scrollMetricsRef.current.offsetY = y;
+        scrollRef.current?.scrollTo({ y, animated: false });
+      },
+    }),
+    [],
+  );
+
+  function handleScrollLayout(event: LayoutChangeEvent) {
+    scrollMetricsRef.current.viewportHeight = event.nativeEvent.layout.height;
+    const measurable = scrollRef.current as MeasurableScrollView | null;
+    measurable?.measureInWindow((_x, y, _width, height) => {
+      scrollMetricsRef.current.viewportTop = y;
+      scrollMetricsRef.current.viewportHeight = height;
+    });
+  }
+
+  function handleScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
+    if (!isStepDraggingRef.current) {
+      scrollMetricsRef.current.offsetY = event.nativeEvent.contentOffset.y;
+    }
+  }
+
+  function handleStepDragStateChange(isDragging: boolean) {
+    isStepDraggingRef.current = isDragging;
+    setIsStepDragging(isDragging);
+  }
 
   useEffect(() => {
     return () => {
@@ -233,15 +295,9 @@ function EditContent({
         s.parentStepId === parentStepId ? Math.max(max, s.ordinal ?? -1) : max,
       -1,
     );
-    try {
-      createSubStep(
-        goalId as GoalId,
-        parentStepId as StepId,
-        subStepTitle,
-        maxChildOrdinal + 1,
-        plannedEvidenceTypes,
-      );
-    } catch (error) {
+    // Evolu reports validation/write failures via a { ok: false } Result rather
+    // than throwing, so a discarded Result would swallow the failure silently.
+    const reportFailure = (error: unknown) => {
       console.error("[EditModeScreen] Failed to create sub-step", {
         goalId,
         parentStepId,
@@ -253,6 +309,18 @@ function EditContent({
         t("editGoal:errors.alertErrorTitle"),
         t("editGoal:errors.createStepMessage"),
       );
+    };
+    try {
+      const result = createSubStep(
+        goalId as GoalId,
+        parentStepId as StepId,
+        subStepTitle,
+        maxChildOrdinal + 1,
+        plannedEvidenceTypes,
+      );
+      if (!result.ok) reportFailure(result.error);
+    } catch (error) {
+      reportFailure(error);
     }
   }
 
@@ -269,6 +337,75 @@ function EditContent({
         t("editGoal:errors.alertErrorTitle"),
         t("editGoal:errors.reorderStepsMessage"),
       );
+    }
+  }
+
+  function handleReorderSubSteps(parentStepId: string, childStepIds: string[]) {
+    try {
+      reorderSubSteps(
+        goalId as GoalId,
+        parentStepId as StepId,
+        childStepIds as StepId[],
+      );
+    } catch (error) {
+      console.error("[EditModeScreen] Failed to reorder sub-steps", {
+        goalId,
+        parentStepId,
+        error,
+      });
+      reportError(error, { area: "step.mutate", kind: "reorder" });
+      Alert.alert(
+        t("editGoal:errors.alertErrorTitle"),
+        t("editGoal:errors.reorderStepsMessage"),
+      );
+    }
+  }
+
+  function handleReparentStep(stepId: string, newParentStepId: string | null) {
+    // A step's ordinal is scoped to its current sibling group, so on reparent
+    // it would collide in the destination group. Append it to the end of the
+    // destination group in BOTH directions (promote → root group, demote →
+    // target's children) by recomputing the next ordinal there and setting it
+    // alongside parentStepId in one update. (Position-implied insert on demote
+    // is a Post-#330 follow-up — see Not in Scope.)
+    const nextOrdinal =
+      newParentStepId === null
+        ? stepRows.reduce(
+            (max, s) =>
+              s.parentStepId == null ? Math.max(max, s.ordinal ?? -1) : max,
+            -1,
+          ) + 1
+        : stepRows.reduce(
+            (max, s) =>
+              s.parentStepId === newParentStepId
+                ? Math.max(max, s.ordinal ?? -1)
+                : max,
+            -1,
+          ) + 1;
+    // Evolu reports validation/write failures via a { ok: false } Result rather
+    // than throwing, so a discarded Result would let a failed reparent snap the
+    // dragged step back with no feedback. Surface it like the catch does.
+    const reportFailure = (error: unknown) => {
+      console.error("[EditModeScreen] Failed to reparent step", {
+        goalId,
+        stepId,
+        newParentStepId,
+        error,
+      });
+      reportError(error, { area: "step.mutate", kind: "update" });
+      Alert.alert(
+        t("editGoal:errors.alertErrorTitle"),
+        t("editGoal:errors.updateStepMessage"),
+      );
+    };
+    try {
+      const result = updateStep(stepId as StepId, {
+        parentStepId: newParentStepId as StepId | null,
+        ordinal: nextOrdinal,
+      });
+      if (!result.ok) reportFailure(result.error);
+    } catch (error) {
+      reportFailure(error);
     }
   }
 
@@ -300,9 +437,17 @@ function EditContent({
   return (
     <>
       <KeyboardAwareScrollView
+        ref={scrollRef}
         contentContainerStyle={[styles.scrollContent, tabInset]}
         bottomOffset={40}
         keyboardShouldPersistTaps="handled"
+        scrollEnabled={!isStepDragging}
+        onLayout={handleScrollLayout}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        onContentSizeChange={(_width, height) => {
+          scrollMetricsRef.current.contentHeight = height;
+        }}
       >
         {/* Title */}
         <View style={styles.section}>
@@ -363,6 +508,10 @@ function EditContent({
           onUpdateStep={handleUpdateStep}
           onDeleteStep={canDelete ? handleDeleteStep : undefined}
           onReorderSteps={handleReorderSteps}
+          onReorderSubSteps={handleReorderSubSteps}
+          onReparentStep={handleReparentStep}
+          dragScrollController={dragScrollController}
+          onDragStateChange={handleStepDragStateChange}
         />
 
         {/* Navigate button */}

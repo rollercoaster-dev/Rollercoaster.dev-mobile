@@ -303,11 +303,10 @@ describe("Step CRUD Operations", () => {
         "Sub-step",
         2,
       ) as unknown as {
-        parentStepId: StepId;
-        title: string;
+        value: { parentStepId: StepId; title: string };
       };
-      expect(result.parentStepId).toBe(parentId);
-      expect(result.title).toBe("Sub-step");
+      expect(result.value.parentStepId).toBe(parentId);
+      expect(result.value.title).toBe("Sub-step");
     });
   });
 
@@ -350,9 +349,9 @@ describe("Step CRUD Operations", () => {
       const result = updateStep(mockStepId, {
         parentStepId: null,
       }) as unknown as {
-        parentStepId: StepId | null;
+        value: { parentStepId: StepId | null };
       };
-      expect(result.parentStepId).toBeNull();
+      expect(result.value.parentStepId).toBeNull();
     });
 
     test("demote: setting parentStepId to a root id is included in payload", () => {
@@ -360,9 +359,9 @@ describe("Step CRUD Operations", () => {
       const result = updateStep(mockStepId, {
         parentStepId: rootId,
       }) as unknown as {
-        parentStepId: StepId | null;
+        value: { parentStepId: StepId | null };
       };
-      expect(result.parentStepId).toBe(rootId);
+      expect(result.value.parentStepId).toBe(rootId);
     });
   });
 });

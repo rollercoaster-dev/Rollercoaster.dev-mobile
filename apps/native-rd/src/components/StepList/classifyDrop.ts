@@ -9,9 +9,13 @@
  * - The list is one flat vertical column in render order: each root step is
  *   immediately followed by its children.
  * - Reorder and promote fall out of the resting position — the dragged step's
- *   parent becomes the parent of the row directly above the drop slot.
- * - Demote under a *childless* root can't be expressed by position alone, so
- *   it is an explicit dwell: the armed target id is passed in.
+ *   new parent is the sibling group it lands in, read from the rows on either
+ *   side of the drop slot (the row above and the row at the slot). The current
+ *   group is kept whenever the slot is adjacent to it, so a within-group move
+ *   to the first or last position isn't misread as a promote/reparent.
+ * - Demote onto a root is an explicit dwell: the armed target id is passed in.
+ *   Existing parents remain valid targets so a root can receive more than one
+ *   child through the same gesture.
  * - One-level cap: a step that itself has children can never become a child
  *   (would create grandchildren); such drops are refused and snap back.
  */
@@ -60,19 +64,59 @@ export function classifyDrop(
       : { kind: "none" }; // refused: snap back, no data change
   }
 
+  const currentParent = parentOf(dragged);
+
+  // A root with children moves as one group. Hovering either another root or
+  // any of its children targets that whole root group; the child rows remain
+  // attached through parentStepId and need no individual reorder writes.
+  if (currentParent === null && draggedHasChildren) {
+    const hovered = steps[dropIndex];
+    if (!hovered) return { kind: "none" };
+
+    const targetRootId = parentOf(hovered) ?? hovered.id;
+    if (targetRootId === dragged.id) return { kind: "none" };
+
+    const rootIds = steps
+      .filter((step) => parentOf(step) === null)
+      .map((step) => step.id);
+    const draggedRootIndex = rootIds.indexOf(dragged.id);
+    const targetRootIndex = rootIds.indexOf(targetRootId);
+    if (draggedRootIndex < 0 || targetRootIndex < 0) return { kind: "none" };
+
+    const orderedIds = rootIds.filter((id) => id !== dragged.id);
+    const targetIndexAfterRemoval = orderedIds.indexOf(targetRootId);
+    const insertIndex =
+      targetIndexAfterRemoval + (targetRootIndex > draggedRootIndex ? 1 : 0);
+    orderedIds.splice(insertIndex, 0, dragged.id);
+
+    return { kind: "reorder", parentStepId: null, orderedIds };
+  }
+
   // --- Positional reorder / promote --------------------------------------
-  // Parent = parent of the row directly above the drop slot, computed on the
-  // list with the dragged row removed (same model as the existing reorder).
+  // The drop slot sits between two neighbours in the post-removal list: `above`
+  // (the row the dragged step lands after) and `atSlot` (the row it lands
+  // before). Each neighbour's sibling group is a candidate parent. Prefer
+  // KEEPING the dragged step's current group whenever the slot is adjacent to
+  // it — otherwise a within-group move to the LAST position would read as a
+  // promote when the next row is a root (`atSlot` is that root), and a move to
+  // the FIRST position would read the same when the row above is the parent
+  // root. Only when neither neighbour shares the current group is this a real
+  // reparent, in which case the group being inserted-into (`atSlot`, falling
+  // back to `above` at the end of the list) is the new parent.
   const working = steps.filter((_, i) => i !== draggedIndex);
+  const atSlot = working[dropIndex];
   const above = dropIndex > 0 ? working[dropIndex - 1] : null;
-  const positionalParent = above ? parentOf(above) : null;
+  const aboveParent = above ? parentOf(above) : null;
+  const atSlotParent = atSlot ? parentOf(atSlot) : aboveParent;
+  const positionalParent =
+    currentParent === aboveParent || currentParent === atSlotParent
+      ? currentParent
+      : atSlotParent;
 
   // One-level cap: a parent-with-children can't become someone's child.
   if (positionalParent !== null && draggedHasChildren) {
     return { kind: "none" };
   }
-
-  const currentParent = parentOf(dragged);
 
   if (positionalParent !== currentParent) {
     // Parent changed → promote (to null) or move into another group's children.

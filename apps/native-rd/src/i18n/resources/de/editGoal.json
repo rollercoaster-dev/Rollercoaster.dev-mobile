@@ -58,8 +58,15 @@
     "subStepEditA11yLabel": "Unterschritt bearbeiten: {{title}}",
     "a11y": {
       "movedFromTo": "Schritt von Position {{from}} zu {{to}} verschoben",
+      "nestedUnder": "Schritt unter \"{{title}}\" verschachtelt",
+      "promotedToTopLevel": "Schritt auf oberste Ebene verschoben",
       "movedUp": "Schritt \"{{title}}\" nach oben zu Position {{position}} verschoben",
-      "movedDown": "Schritt \"{{title}}\" nach unten zu Position {{position}} verschoben"
+      "movedDown": "Schritt \"{{title}}\" nach unten zu Position {{position}} verschoben",
+      "nestUnder": "Unter \"{{title}}\" verschachteln",
+      "nestUnderA11y": "Diesen Schritt unter {{title}} verschachteln",
+      "unNestA11y": "Diesen Schritt auf oberste Ebene setzen",
+      "nestUnderTriggerA11y": "Diesen Schritt unter einen anderen Schritt verschachteln",
+      "nestUnderPickerTitle": "Schritt zum Verschachteln auswählen"
     }
   }
 }
