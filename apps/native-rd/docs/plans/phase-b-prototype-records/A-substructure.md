@@ -158,6 +158,11 @@ Answered against the session.
 
 ### Decision
 
+> **Superseded by the ND-user gate session (2026-06-11) below.** The ND-user
+> tier graduated indentation to implementation; the "split + more prototyping"
+> outcome here was the analytical-tier ceiling and no longer governs. The
+> structural observations above remain valid evidence.
+
 **Split + more prototyping** (self-testing caps the outcome here; cannot
 graduate to a schema/design decision without the ND-user gate). Concretely:
 
@@ -202,3 +207,24 @@ Confirmed from the artifact and sharpened, plus new:
 - Graduation to a schema ADR or design decision is gated on a **real ND-user
   session** per the plan's Evidence Sources — analytical and lived
   self-testing both cap below that gate.
+
+### ND-user gate session (2026-06-11)
+
+**Session:** Joe — the app's primary-audience ND user — reviewed the three
+layouts (Indentation / Containment / Breadcrumb) in
+`apps/native-rd/prototypes/a-substructure-layouts.html` and **selected
+indentation**. Drill-in (`apps/native-rd/prototypes/a-substructure-flow.html`)
+was not part of this evaluation.
+
+**Decision: graduate to implementation.**
+
+- **Approved layout: indentation** — children indented under a left rail;
+  reading surfaces lead with the leaf, parent as quiet context. Containment and
+  breadcrumb dropped.
+- **Task-view promise:** PASS — indentation's leaf-led goal card resolves to one
+  next action, settling the wobble the 2026-06-13 analytical pass flagged for
+  containment.
+- **Evidence weight: ND-user.** This is the decisive tier and overrides the
+  2026-06-13 walkthrough's lean toward containment-as-base.
+- **Depth (Q6) stays open** — graduates only after Stage 6 per the Open
+  Questions Register. This graduates the layout, not depth.
