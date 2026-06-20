@@ -13,6 +13,13 @@ export interface GoalCardGoal {
   stepsTotal: number;
   stepsCompleted: number;
   nextStepTitle: string | null;
+  /**
+   * Quiet line rendered below the next-step hero. Pre-composed by the caller
+   * (#292): `"↳ in [parent]"` when the hero is a pending leaf, `"all N substeps
+   * done"` in the invite state, or null/absent for a flat top-level step.
+   * GoalCard stays presentational — it renders whatever string it is given.
+   */
+  nextStepContext?: string | null;
 }
 
 export interface GoalCardProps {
@@ -30,6 +37,7 @@ export function GoalCard({ goal, onPress, onLongPress }: GoalCardProps) {
     goal.status === "completed" ? "completed" : "active";
 
   const nextStep = goal.nextStepTitle?.trim() || null;
+  const nextStepContext = goal.nextStepContext?.trim() || null;
 
   const labelOpts = {
     title: goal.title,
@@ -67,6 +75,15 @@ export function GoalCard({ goal, onPress, onLongPress }: GoalCardProps) {
           testID="goal-card-next-step"
         >
           {nextStep}
+        </Text>
+      )}
+      {nextStep && nextStepContext && (
+        <Text
+          style={styles.nextStepContext}
+          numberOfLines={1}
+          testID="goal-card-next-step-context"
+        >
+          {nextStepContext}
         </Text>
       )}
       {goal.stepsTotal > 0 && (
