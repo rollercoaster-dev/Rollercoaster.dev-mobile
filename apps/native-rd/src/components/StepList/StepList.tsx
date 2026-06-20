@@ -68,6 +68,9 @@ const ITEM_HEIGHT = 48;
 // Q3). A named module constant so it can be tuned on device without hunting
 // through the gesture code; not a theme token (it's timing, not styling).
 const DWELL_ARM_MS = 220;
+// Only the middle of a row is a "nest under" target. Its outer bands remain
+// positional insertion zones, so dragging above the first root cannot arm it.
+const DWELL_TARGET_INSET_RATIO = 0.2;
 
 export function StepList({
   steps,
@@ -150,6 +153,7 @@ export function StepList({
   // Last hovered row id — change-detection that survives async setState so the
   // dwell timer is only (re)started when the hovered row actually changes.
   const hoverStepIdRef = useRef<string | null>(null);
+  const hoverInDwellZoneRef = useRef(false);
   const [screenReaderActive, setScreenReaderActive] = useState(false);
 
   useEffect(() => {
@@ -292,6 +296,7 @@ export function StepList({
       dragScrollController?.getMetrics().offsetY ?? 0;
     dragScrollCompensation.value = 0;
     hoverStepIdRef.current = steps[index]?.id ?? null;
+    hoverInDwellZoneRef.current = false;
     if (dwellTimer.current) clearTimeout(dwellTimer.current);
     armedTargetIdRef.current = null;
     setArmedTargetId(null);
@@ -318,11 +323,12 @@ export function StepList({
     if (activeDraggedIndex === null) return;
 
     const draggedLayout = rowLayoutsRef.current[activeDraggedIndex];
+    let dragCenterY: number | null = null;
     let newIndex: number;
     if (draggedLayout) {
       // Live centre of the dragged row = its resting top + how far it's moved.
-      const center = draggedLayout.y + translationY + draggedLayout.height / 2;
-      newIndex = rowIndexAtY(center, activeDraggedIndex);
+      dragCenterY = draggedLayout.y + translationY + draggedLayout.height / 2;
+      newIndex = rowIndexAtY(dragCenterY, activeDraggedIndex);
     } else {
       const offset = Math.round(translationY / ITEM_HEIGHT);
       newIndex = activeDraggedIndex + offset;
@@ -373,12 +379,25 @@ export function StepList({
     // timer on every pan frame would mean it never fires.
     const hovered = steps[newIndex];
     const hoveredId = hovered?.id ?? null;
-    if (hoveredId === hoverStepIdRef.current) return;
+    const hoveredLayout = rowLayoutsRef.current[newIndex];
+    const dwellInset = (hoveredLayout?.height ?? 0) * DWELL_TARGET_INSET_RATIO;
+    const inDwellZone =
+      dragCenterY !== null &&
+      hoveredLayout !== undefined &&
+      dragCenterY >= hoveredLayout.y + dwellInset &&
+      dragCenterY <= hoveredLayout.y + hoveredLayout.height - dwellInset;
+    if (
+      hoveredId === hoverStepIdRef.current &&
+      inDwellZone === hoverInDwellZoneRef.current
+    ) {
+      return;
+    }
     hoverStepIdRef.current = hoveredId;
+    hoverInDwellZoneRef.current = inDwellZone;
 
-    // Leaving the hovered row disarms immediately. Movement within the same
-    // row keeps the target armed so normal finger jitter cannot erase the
-    // sustained drop-under indicator before release.
+    // Leaving the row's central dwell zone disarms immediately. Movement
+    // within that zone keeps the target armed, while the outer bands remain
+    // unambiguous before/after insertion targets.
     if (dwellTimer.current) clearTimeout(dwellTimer.current);
     armedTargetIdRef.current = null;
     setArmedTargetId(null);
@@ -392,6 +411,7 @@ export function StepList({
       !!dragged &&
       hovered.id !== dragged.id &&
       hovered.parentStepId == null &&
+      inDwellZone &&
       !hasChildren(dragged.id);
     if (armable) {
       dwellTimer.current = setTimeout(() => {
@@ -516,6 +536,7 @@ export function StepList({
     lastDragAbsoluteYRef.current = null;
     dragScrollCompensation.value = 0;
     hoverStepIdRef.current = null;
+    hoverInDwellZoneRef.current = false;
     onDragStateChange?.(false);
   }
 
