@@ -23,15 +23,19 @@ export {
   deleteGoal,
   // Step
   stepsByGoalQuery,
+  groupStepsByParent,
+  flattenGroupedSteps,
   isPendingStep,
   findFirstPendingIndex,
   createStep,
+  createSubStep,
   updateStep,
   canCompleteStep,
   completeStep,
   uncompleteStep,
   deleteStep,
   reorderSteps,
+  reorderSubSteps,
   // Evidence gating
   canCompleteGoal,
   // Evidence
@@ -58,3 +62,4 @@ export {
   clearUserSettingsKey,
   markWelcomeSeen,
 } from "./queries";
+export type { GroupedStep } from "./queries";
