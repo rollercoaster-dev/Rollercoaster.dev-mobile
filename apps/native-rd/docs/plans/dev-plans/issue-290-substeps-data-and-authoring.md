@@ -258,40 +258,53 @@ export interface GroupedStep {
 - `src/components/StepList/StepList.styles.ts`
 
 **Commit**: `feat(ui): StepList child indentation and add-sub-step affordance`
+(`553ffaa7`). i18n strings (Step 7) were pulled forward to land first
+(`0221ef9d`) — the keys are type-checked, so the UI commit can't compile
+without them. See Discovery Log [2026-06-20 04:xx].
 
 **Changes**:
 
-- [ ] Extend the `Step` interface with `parentStepId?: string | null`.
-- [ ] Add `onCreateSubStep?: (parentStepId: string, title: string, plannedEvidenceTypes: EvidenceTypeValue[]) => void` to `StepListProps`.
-- [ ] Accept a flat `steps` list (already grouped by the caller via
+- [x] Extend the `Step` interface with `parentStepId?: string | null`.
+- [x] Add `onCreateSubStep?: (parentStepId: string, title: string, plannedEvidenceTypes: EvidenceTypeValue[]) => void` to `StepListProps`.
+- [x] Accept a flat `steps` list (already grouped by the caller via
       `groupStepsByParent`) where children immediately follow their parent.
       StepList does **not** call groupStepsByParent internally — the caller
-      (EditModeScreen) produces the ordered flat list.
-- [ ] For rendering: if a step has `parentStepId != null`, render it as a
-      child row: left rail (2px vertical bar in `theme.colors.border`, or a
-      theme token equivalent), `paddingLeft: theme.space[6]` (or equivalent)
-      for the indented content area.
-- [ ] For top-level steps: if `parentStepId == null` and `onCreateSubStep`
+      (EditModeScreen) produces the ordered flat list. _(Documented in the
+      `Step.parentStepId` doc-comment.)_
+- [x] For rendering: if a step has `parentStepId != null`, render it as a
+      child row: left rail (`theme.borderWidth.thick` vertical bar in
+      `theme.colors.border`), `paddingLeft: theme.space[4]` on the wrapper
+      for the indented content area. _(Used `space[4]`=16 not `space[6]`=24 —
+      the card already has its own horizontal padding; 16 reads as one clear
+      indent level without over-pushing.)_
+- [x] For top-level steps: if `parentStepId == null` and `onCreateSubStep`
       is defined, render a ghost "+ sub-step" row beneath the step row (only
       when `editingId !== step.id` — don't stack the ghost with the edit
       input). This affordance is absent on child rows (depth guard).
-- [ ] Tapping the ghost row sets a `addingSubStepForId` local state; renders
+- [x] Tapping the ghost row sets a `addingSubStepForId` local state; renders
       a TextInput inline (same style as the existing edit input); on submit
-      calls `onCreateSubStep(step.id, trimmedTitle, newSubStepTypes)`.
-- [ ] The new input has `accessibilityRole="none"` on the container,
-      `accessibilityLabel={t("editGoal:stepList.addSubStepA11yLabel", { title: step.title })}` on the TextInput, and meets the 44×44pt minimum touch target on the "Add sub-step" ghost row.
-- [ ] Drag-to-reparent (D8): on drop, classify the move from the drop position
-      in the flat list: - Same sibling group → reorder via `onReorderSteps` / `onReorderSubSteps`. - Leaf dropped at top-level (no parent above it) → **promote**: call
-      `onReparentStep(stepId, null)`. - Leaf dropped inside a root's child range → **demote**: call
-      `onReparentStep(stepId, thatRootId)`. - **Refuse** (snap back, optional haptic, no callback) when the one-level
-      cap would break: the moved step has its own children (can't demote a
-      parent), or the drop target/context is itself a child (non-root target).
-      Add `onReparentStep?: (stepId: string, newParentStepId: string | null) => void`
-      to `StepListProps`. Keep the classification in a small pure helper
-      (`classifyDrop`) so it is unit-testable without the gesture layer.
-- [ ] Add styles: `childRow` (left rail + indented padding), `leftRail`
-      (thin vertical border), `addSubStepGhost` (muted row, no shadow),
-      `addSubStepText` (textMuted colour), `addSubStepInputRow`.
+      calls `onCreateSubStep(step.id, trimmedTitle, subStepTypes)`. _(Inline
+      input also shows an EvidenceTypePicker for create-time type parity with
+      the new-step row; defaults to `[text]`.)_
+- [x] The "Add sub-step" ghost and inline input carry
+      `accessibilityLabel={t("editGoal:stepList.addSubStepA11yLabel", { title })}`
+      / `addSubStepInputA11yLabel`, an `addSubStepA11yHint`, and the ghost row
+      meets the 44pt minimum touch target (`minHeight: 44`). Both carry
+      stable `testID`s (`step-list-add-sub-step-<id>`,
+      `step-list-sub-step-input-<id>`) for Step 8 tests.
+- [ ] **DEFERRED — drag-to-reparent (D8).** Blocked on a UX decision, not
+      built in this commit. The existing drag gesture tracks **vertical
+      translation only** (`translationY` → `hoverIndex`); with that single
+      signal a drop position cannot distinguish "reorder a leaf root after the
+      preceding root" from "demote that leaf under the preceding root" — both
+      map to the same index. See Discovery Log [2026-06-20] and the new open
+      question; `classifyDrop` + `onReparentStep` + gesture wiring wait on the
+      chosen disambiguation (x-offset indent signal vs. explicit promote/demote
+      buttons vs. fast-follow). Pairs naturally with Step 5 wiring.
+- [x] Add styles: `childRowWrapper` (indent), `leftRail` (thick vertical bar),
+      `childRowContent`, `addSubStepGhost` (muted dashed row, no shadow),
+      `addSubStepText` (textMuted), `addSubStepInputRow`, `addSubStepInputCard`,
+      `addSubStepInput`, `addSubStepPickerRow`.
 
 ### Step 5: EditModeScreen — wire sub-step handlers, pass grouped flat list
 
@@ -333,7 +346,11 @@ sub-step affordance from Steps 4–5) happens in EditMode for both new and
 existing goals, so create parity holds with no NewGoalModal change.
 **Running total after drop**: ~498 (Step 5).
 
-### Step 7: i18n strings
+### Step 7: i18n strings — DONE (pulled forward ahead of Step 4)
+
+**Status**: DONE, committed `0221ef9d` **before** the Step 4 UI commit. The
+i18n keys are type-checked (typed resources), so the StepList UI in Step 4
+can't compile until they exist — they had to land first. See Discovery Log.
 
 **Estimated LOC**: ~18 lines (3 files, ~6 keys each)
 **Running total**: ~561
@@ -346,7 +363,7 @@ existing goals, so create parity holds with no NewGoalModal change.
 
 **Commit**: `feat(i18n): add sub-step affordance strings to editGoal namespace`
 
-**New keys under `stepList`**:
+**New keys under `stepList`** (all six added):
 
 ```json
 "addSubStepLabel": "Add sub-step",
@@ -357,11 +374,12 @@ existing goals, so create parity holds with no NewGoalModal change.
 "subStepEditA11yLabel": "Edit sub-step: {{title}}"
 ```
 
-German keys: identical English copy as placeholder (tagged `[NEEDS_TRANSLATION]`
-in the value string per existing convention, if that convention exists —
-otherwise plain English until a translation pass).
-
-Pseudo keys: `[` + English copy + `]` per the pseudoTransform pattern.
+- [x] German keys: real German translations ("Unterschritt …") to match the
+      existing fully-translated `de/editGoal.json` (no `[NEEDS_TRANSLATION]`
+      convention in this repo).
+- [x] Pseudo keys: generated via `bun run gen:pseudo` (not hand-written).
+      Reverted unrelated drift the generator surfaced in
+      `pseudo/completion.json`.
 
 ### Step 8: Tests — StepList, EditModeScreen, NewGoalModal
 
@@ -494,3 +512,41 @@ remain first-class._
   - Added one test beyond the plan: a **depth guard** case proving a
     child-of-a-child is promoted to root (exercises the one-level cap, which
     the original orphan-guard test only touched indirectly).
+
+- [2026-06-20 04:30] **Step 7 (i18n) pulled forward ahead of Step 4.** The
+  plan ordered i18n last, but the i18n resources are type-checked (typed
+  resource keys). Referencing `addSubStepLabel`/`addSubStepA11yLabel`/etc. from
+  StepList before the keys exist fails `tsc` (TS2345). So the keys had to land
+  first — committed `0221ef9d` (i18n), then `553ffaa7` (UI). German got real
+  translations (no `[NEEDS_TRANSLATION]` convention exists here); pseudo was
+  generated with `bun run gen:pseudo`, and an unrelated drift the generator
+  surfaced in `pseudo/completion.json` was reverted to keep the commit focused.
+
+- [2026-06-20 04:30] **Step 4 split: drag-to-reparent (D8) DEFERRED — blocked
+  on a UX decision.** Shipped the unambiguous, high-value half of Step 4
+  (parentStepId field, child indentation + left rail, "Add sub-step" ghost row
+  - inline input + a11y + styles). Did **not** wire drag-to-reparent. Reason:
+    the existing StepList drag gesture (`DraggableStepItem` → `handleDragMove`)
+    tracks **`translationY` only** — it converts vertical offset to a single
+    `hoverIndex`. With one positional signal, a drop cannot be classified
+    unambiguously: dropping a leaf root just below another root is **identical**
+    to demoting it under that root (same target index). Default-to-reorder breaks
+    the primary demote case ("nest B under a still-childless A"); default-to-demote
+    breaks leaf-root reordering. Y-only drag genuinely can't express reparent
+    intent. D8 assumed it could — that premise is wrong. **Open question for the
+    user (see below).** `classifyDrop` + `onReparentStep` + gesture wiring wait on
+    the chosen disambiguation. All 22 existing StepList tests still pass; the
+    shipped half is backward-compatible (new props are optional).
+
+  **Resolution options (recommend A):**
+  - **A — horizontal-offset indent signal.** Thread `translationX` through the
+    pan gesture; past a threshold right = demote intent, left = promote intent,
+    else reorder. Standard outliner-style reparent gesture; keeps the approved
+    grammar, adds one mechanic. ~1 small PR-worth on top of Step 5.
+  - **B — explicit promote/demote buttons.** Add ⇤/⇥ controls beside the
+    existing ↑/↓ reorder buttons (already shown for screen-reader / reduced-
+    motion users). Unambiguous, fully accessible, no gesture change — but two
+    affordances for movement.
+  - **C — descope drag-reparent to a fast-follow.** Ship #290/#291 with
+    add-sub-step authoring + sibling reorder only; reparenting becomes its own
+    issue. Smallest now, but loses D8's "just drag it" intent.
