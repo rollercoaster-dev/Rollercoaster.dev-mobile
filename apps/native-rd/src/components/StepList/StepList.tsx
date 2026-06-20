@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text as RNText,
@@ -84,6 +84,18 @@ export function StepList({
   const { theme } = useUnistyles();
   const { t } = useTranslation(["editGoal"]);
   const { animationPref } = useAnimationPref();
+
+  // Parent ids that have at least one child, computed once per `steps` change.
+  // `hasChildren` runs on every drag-hover frame and every rendered row, so a
+  // fresh `steps.some(...)` scan per call is O(n²) on long lists; this set
+  // makes each lookup O(1).
+  const parentsWithChildren = useMemo(() => {
+    const ids = new Set<string>();
+    for (const s of steps) {
+      if (s.parentStepId != null) ids.add(s.parentStepId);
+    }
+    return ids;
+  }, [steps]);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
@@ -276,7 +288,7 @@ export function StepList({
   }
 
   function hasChildren(id: string) {
-    return steps.some((s) => s.parentStepId === id);
+    return parentsWithChildren.has(id);
   }
 
   function stopAutoScroll() {
@@ -553,21 +565,33 @@ export function StepList({
         activeHoverIndex,
         armedTargetIdRef.current,
       );
+      // Only fire success feedback when a handler actually ran. A non-`none`
+      // result whose callback prop is missing (e.g. a child reorder without
+      // `onReorderSubSteps`) is a no-op — haptics + announcement here would
+      // imply a move that never dispatched.
+      let dispatched = false;
       switch (result.kind) {
         case "reorder":
           if (result.parentStepId === null) {
-            onReorderSteps?.(result.orderedIds);
-          } else {
-            onReorderSubSteps?.(result.parentStepId, result.orderedIds);
+            if (onReorderSteps) {
+              onReorderSteps(result.orderedIds);
+              dispatched = true;
+            }
+          } else if (onReorderSubSteps) {
+            onReorderSubSteps(result.parentStepId, result.orderedIds);
+            dispatched = true;
           }
           break;
         case "reparent":
-          onReparentStep?.(result.stepId, result.newParentStepId);
+          if (onReparentStep) {
+            onReparentStep(result.stepId, result.newParentStepId);
+            dispatched = true;
+          }
           break;
         case "none":
           break;
       }
-      if (result.kind !== "none") {
+      if (dispatched) {
         triggerDragDrop();
         AccessibilityInfo.announceForAccessibility(
           t("editGoal:stepList.a11y.movedFromTo", {
@@ -611,10 +635,15 @@ export function StepList({
       reordered[pos],
     ];
     const ids = reordered.map((s) => s.id);
+    // No dispatch without the matching callback — fall through as a no-op so
+    // the caller skips haptics + the "moved" announcement (children need
+    // `onReorderSubSteps`, which the keyboard handlers don't gate on).
     if (parent === null) {
-      onReorderSteps?.(ids);
+      if (!onReorderSteps) return null;
+      onReorderSteps(ids);
     } else {
-      onReorderSubSteps?.(parent, ids);
+      if (!onReorderSubSteps) return null;
+      onReorderSubSteps(parent, ids);
     }
     triggerDragDrop();
     return swapWith;

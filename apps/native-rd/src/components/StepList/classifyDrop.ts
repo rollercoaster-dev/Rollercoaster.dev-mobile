@@ -9,7 +9,10 @@
  * - The list is one flat vertical column in render order: each root step is
  *   immediately followed by its children.
  * - Reorder and promote fall out of the resting position — the dragged step's
- *   parent becomes the parent of the row directly above the drop slot.
+ *   new parent is the sibling group it lands in, read from the rows on either
+ *   side of the drop slot (the row above and the row at the slot). The current
+ *   group is kept whenever the slot is adjacent to it, so a within-group move
+ *   to the first or last position isn't misread as a promote/reparent.
  * - Demote onto a root is an explicit dwell: the armed target id is passed in.
  *   Existing parents remain valid targets so a root can receive more than one
  *   child through the same gesture.
