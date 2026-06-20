@@ -68,9 +68,6 @@ const ITEM_HEIGHT = 48;
 // Q3). A named module constant so it can be tuned on device without hunting
 // through the gesture code; not a theme token (it's timing, not styling).
 const DWELL_ARM_MS = 220;
-// Only the middle of a row is a "nest under" target. Its outer bands remain
-// positional insertion zones, so dragging above the first root cannot arm it.
-const DWELL_TARGET_INSET_RATIO = 0.2;
 
 export function StepList({
   steps,
@@ -380,12 +377,11 @@ export function StepList({
     const hovered = steps[newIndex];
     const hoveredId = hovered?.id ?? null;
     const hoveredLayout = rowLayoutsRef.current[newIndex];
-    const dwellInset = (hoveredLayout?.height ?? 0) * DWELL_TARGET_INSET_RATIO;
     const inDwellZone =
       dragCenterY !== null &&
       hoveredLayout !== undefined &&
-      dragCenterY >= hoveredLayout.y + dwellInset &&
-      dragCenterY <= hoveredLayout.y + hoveredLayout.height - dwellInset;
+      dragCenterY >= hoveredLayout.y &&
+      dragCenterY <= hoveredLayout.y + hoveredLayout.height;
     if (
       hoveredId === hoverStepIdRef.current &&
       inDwellZone === hoverInDwellZoneRef.current
@@ -395,9 +391,9 @@ export function StepList({
     hoverStepIdRef.current = hoveredId;
     hoverInDwellZoneRef.current = inDwellZone;
 
-    // Leaving the row's central dwell zone disarms immediately. Movement
-    // within that zone keeps the target armed, while the outer bands remain
-    // unambiguous before/after insertion targets.
+    // Leaving the measured row disarms immediately. Movement within its bounds
+    // keeps the target armed, while the gaps above/below remain unambiguous
+    // before/after insertion targets.
     if (dwellTimer.current) clearTimeout(dwellTimer.current);
     armedTargetIdRef.current = null;
     setArmedTargetId(null);
