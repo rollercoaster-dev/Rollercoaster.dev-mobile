@@ -15,11 +15,11 @@ import {
   activeGoalsQuery,
   stepsForActiveGoalsQuery,
   deleteGoal,
-  isPendingStep,
   GoalStatus,
   StepStatus,
 } from "../../db";
 import { GoalsStackParamList } from "../../navigation/types";
+import type { TFunction } from "i18next";
 import { styles } from "./GoalsScreen.styles";
 
 const logger = new Logger("GoalsScreen");
@@ -27,21 +27,74 @@ const logger = new Logger("GoalsScreen");
 type GoalRow = typeof activeGoalsQuery.Row;
 type StepRow = typeof stepsForActiveGoalsQuery.Row;
 type Nav = NativeStackNavigationProp<GoalsStackParamList>;
+type GoalsT = TFunction<["goals", "common"]>;
 
 function buildGoalCardGoal(
   goalRow: GoalRow,
   steps: readonly StepRow[],
+  t: GoalsT,
 ): GoalCardGoal {
+  // Every-unit progress (#292 R1): parents and children are all rows in
+  // `steps`, so counting every row is the every-unit rule with no filtering.
   const stepsCompleted = steps.filter(
     (s) => s.status === StepStatus.completed,
   ).length;
+
+  // Reconstruct the parent → children hierarchy by bucketing on parentStepId.
+  // Flat query order is preserved within each bucket so "first pending" is
+  // stable; it is not relied on for hierarchy (child ordinals are
+  // sibling-scoped and can collide with top-level ordinals).
+  const childrenByParent = new Map<string, StepRow[]>();
+  const topLevel: StepRow[] = [];
+  for (const step of steps) {
+    if (step.parentStepId != null) {
+      const list = childrenByParent.get(step.parentStepId);
+      if (list) list.push(step);
+      else childrenByParent.set(step.parentStepId, [step]);
+    } else {
+      topLevel.push(step);
+    }
+  }
+
+  // Resolve the single next-action line, mirroring the prototype's nextInfo():
+  // the first non-completed top-level step is a flat step (hero = its title),
+  // a pending leaf (hero = first pending child + "↳ in [parent]" context), or
+  // the invite state (all children done, parent still pending — hero = parent
+  // + "all N substeps done" readout, never a state change).
+  let nextStepTitle: string | null = null;
+  let nextStepContext: string | null = null;
+  for (const step of topLevel) {
+    if (step.status === StepStatus.completed) continue;
+    const children = childrenByParent.get(step.id) ?? [];
+    if (children.length === 0) {
+      nextStepTitle = step.title ?? null;
+    } else {
+      const pendingChild = children.find(
+        (c) => c.status !== StepStatus.completed,
+      );
+      if (pendingChild) {
+        nextStepTitle = pendingChild.title ?? null;
+        nextStepContext = t("goals:card.nextStepContext", {
+          parent: step.title ?? "",
+        });
+      } else {
+        nextStepTitle = step.title ?? null;
+        nextStepContext = t("goals:card.allSubstepsDone", {
+          count: children.length,
+        });
+      }
+    }
+    break;
+  }
+
   return {
     id: goalRow.id,
     title: goalRow.title ?? "",
     status: goalRow.status === GoalStatus.completed ? "completed" : "active",
     stepsTotal: steps.length,
     stepsCompleted,
-    nextStepTitle: steps.find(isPendingStep)?.title ?? null,
+    nextStepTitle,
+    nextStepContext,
   };
 }
 
@@ -108,7 +161,7 @@ function GoalList({
         contentContainerStyle={[styles.listContent, contentInset]}
         renderItem={({ item }) => (
           <GoalCard
-            goal={buildGoalCardGoal(item, stepsByGoalId.get(item.id) ?? [])}
+            goal={buildGoalCardGoal(item, stepsByGoalId.get(item.id) ?? [], t)}
             onPress={() =>
               navigation.navigate("FocusMode", { goalId: item.id })
             }
