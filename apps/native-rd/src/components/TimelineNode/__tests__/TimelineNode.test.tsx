@@ -41,6 +41,14 @@ describe("TimelineNode", () => {
     expect(screen.queryByText("a")).toBeNull();
   });
 
+  it("renders blank — not '0' or 'undefined' — when given no number or label", () => {
+    renderWithProviders(
+      <TimelineNode status="pending" accessibilityLabel="Empty node" />,
+    );
+    expect(screen.queryByText("0")).toBeNull();
+    expect(screen.queryByText("undefined")).toBeNull();
+  });
+
   it("renders a small lettered child node that stays interactive", () => {
     const onPress = jest.fn();
     renderWithProviders(

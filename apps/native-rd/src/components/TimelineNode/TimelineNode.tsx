@@ -26,7 +26,7 @@ export interface TimelineNodeProps {
 
 export function TimelineNode({
   status,
-  stepNumber = 0,
+  stepNumber,
   onPress,
   accessibilityLabel,
   isGoalNode = false,
@@ -51,11 +51,15 @@ export function TimelineNode({
     !isGoalNode && status === "in-progress" && styles.inProgressText,
   ];
 
+  // Interior precedence: goal star \u2192 done check \u2192 label \u2192 step number. The
+  // number/label fall through to "" (not "0" or "undefined") when a caller
+  // supplies neither, so a misconfigured node renders blank rather than a
+  // misleading glyph.
   const content = isGoalNode
     ? "\u2605"
     : status === "completed"
       ? "\u2713"
-      : (label ?? String(stepNumber));
+      : (label ?? (stepNumber != null ? String(stepNumber) : ""));
 
   // Expand touch target to meet 44×44pt minimum
   const nodeSize = isGoalNode
