@@ -57,8 +57,12 @@ export function MiniTimeline({
       } as const);
 
   // Group each run of child steps under its preceding top-level (lead) step.
-  // The flat `steps` array places each parent immediately before its children
-  // (#292 query order), so a run of `isChild` steps attaches to the last lead.
+  // Contract: callers pass `steps` in parent-then-children order — FocusMode
+  // flattens via groupStepsByParent before mapping (#292), since the raw query
+  // order interleaves sibling-scoped child ordinals among parents. A run of
+  // `isChild` steps therefore attaches to the last lead; a leading `isChild`
+  // with no prior lead falls back to its own lead node (the groups.length > 0
+  // guard below).
   const groups: {
     lead: { step: MiniTimelineStep; index: number };
     children: { step: MiniTimelineStep; index: number }[];

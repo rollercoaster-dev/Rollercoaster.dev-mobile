@@ -112,7 +112,7 @@ export const Schema = {
     // capped at one level — a step with a non-null parentStepId is a leaf.
     parentStepId: nullOr(StepId),
     title: NonEmptyString1000,
-    ordinal: nullOr(Int), // Ordering within goal
+    ordinal: nullOr(Int), // Sibling-scoped ordering: top-level steps within the goal, sub-steps within their parent
     status: NonEmptyString1000, // 'pending' | 'completed'
     completedAt: nullOr(DateIso),
     plannedEvidenceTypes: nullOr(NonEmptyString1000), // JSON-encoded string[] of EvidenceType values, null = no evidence requirement

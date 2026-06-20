@@ -43,11 +43,17 @@ function buildGoalCardGoal(
   // Reconstruct the parent → children hierarchy by bucketing on parentStepId.
   // Flat query order is preserved within each bucket so "first pending" is
   // stable; it is not relied on for hierarchy (child ordinals are
-  // sibling-scoped and can collide with top-level ordinals).
+  // sibling-scoped and can collide with top-level ordinals). A step counts as a
+  // child only when its parent is a present top-level step — a null parent or an
+  // orphan (parent soft-deleted) surfaces as top-level so its pending work stays
+  // reachable, mirroring groupStepsByParent's orphan promotion (#292).
+  const rootIds = new Set(
+    steps.filter((s) => s.parentStepId == null).map((s) => s.id),
+  );
   const childrenByParent = new Map<string, StepRow[]>();
   const topLevel: StepRow[] = [];
   for (const step of steps) {
-    if (step.parentStepId != null) {
+    if (step.parentStepId != null && rootIds.has(step.parentStepId)) {
       const list = childrenByParent.get(step.parentStepId);
       if (list) list.push(step);
       else childrenByParent.set(step.parentStepId, [step]);

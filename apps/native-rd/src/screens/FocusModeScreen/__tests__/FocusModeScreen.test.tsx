@@ -114,6 +114,41 @@ jest.mock("../../../db", () => ({
   isPendingStep: (s: { status: string | null }) => s.status === "pending",
   findFirstPendingIndex: (rows: { status: string | null }[]) =>
     rows.findIndex((s) => s.status === "pending"),
+  // Faithful copies of the real helpers (orphan/grandchild promotion + flatten)
+  // so the screen's parent-then-children reordering is exercised, not stubbed.
+  groupStepsByParent: (
+    rows: readonly { id: string; parentStepId: string | null }[],
+  ) => {
+    const rootIds = new Set(
+      rows.filter((r) => r.parentStepId == null).map((r) => r.id),
+    );
+    const nodes = new Map(
+      rows.map((r) => [r.id, { ...r, children: [] as unknown[] }]),
+    );
+    const roots: {
+      id: string;
+      parentStepId: string | null;
+      children: unknown[];
+    }[] = [];
+    for (const row of rows) {
+      const node = nodes.get(row.id)!;
+      const parentId = row.parentStepId;
+      if (parentId != null && rootIds.has(parentId)) {
+        (nodes.get(parentId)!.children as unknown[]).push(node);
+      } else {
+        roots.push(node);
+      }
+    }
+    return roots;
+  },
+  flattenGroupedSteps: (grouped: readonly { children: unknown[] }[]) => {
+    const out: unknown[] = [];
+    for (const root of grouped) {
+      out.push(root);
+      out.push(...root.children);
+    }
+    return out;
+  },
 }));
 
 const mockUseQuery = jest.fn();
@@ -1420,6 +1455,92 @@ describe("FocusModeScreen", () => {
       renderWithProviders(<FocusModeScreen {...routeProps} />);
       expect(nodeWidth(0)).toBe(14); // top-level step
       expect(nodeWidth(2)).toBe(10); // sub-step (child) node
+    });
+
+    // Real query order: `stepsByGoalQuery` is `(ordinal, createdAt)`-ordered and
+    // child ordinals are sibling-scoped, so a child of a later parent interleaves
+    // among the top-level steps — here `step-2a` (ord 0) sorts before its parent
+    // `step-2` (ord 1). The screen must flatten via groupStepsByParent before
+    // rendering; otherwise the leaf lands at the wrong carousel index and the
+    // MiniTimeline groups it under the wrong lead (#292).
+    const INTERLEAVED_STEPS = [
+      { id: "step-1", title: "Read docs", status: "completed", ordinal: 0, parentStepId: null }, // prettier-ignore
+      { id: "step-2a", title: "Drill A", status: "pending", ordinal: 0, parentStepId: "step-2" }, // prettier-ignore
+      { id: "step-2", title: "Practice", status: "pending", ordinal: 1, parentStepId: null }, // prettier-ignore
+      { id: "step-3", title: "Build it", status: "pending", ordinal: 2, parentStepId: null }, // prettier-ignore
+    ];
+
+    it("reorders interleaved (real-query-order) rows so the leaf snaps to its flattened position", () => {
+      setupQueries({ steps: INTERLEAVED_STEPS, stepEvidence: [] });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+      // After flatten: [step-1, step-2, step-2a, step-3] → leaf step-2a is at
+      // flat index 2 → "3 of 4". Without the flatten it would read "2 of 4"
+      // (step-2a at its interleaved index 1).
+      expect(
+        screen.getByText(
+          i18n.t("common:stepCard.progress", { current: 3, total: 4 }),
+        ),
+      ).toBeOnTheScreen();
+      expect(screen.getByText("Drill A")).toBeOnTheScreen();
+      // step-2a is the current leaf → child-current width (14), not the
+      // lead-current width (18). Proves it renders as a sub-step, not a lead.
+      expect(nodeWidth(2)).toBe(14);
+    });
+
+    // Parent step-2's first child is done, second pending → resolution must pick
+    // the first *pending* child via .find(pending), not children[0].
+    const PARTIAL_LEAF_STEPS = [
+      { id: "step-1", title: "Read docs", status: "completed", ordinal: 0, parentStepId: null }, // prettier-ignore
+      { id: "step-2", title: "Practice", status: "pending", ordinal: 1, parentStepId: null }, // prettier-ignore
+      { id: "step-2a", title: "Drill A", status: "completed", ordinal: 0, parentStepId: "step-2" }, // prettier-ignore
+      { id: "step-2b", title: "Drill B", status: "pending", ordinal: 1, parentStepId: "step-2" }, // prettier-ignore
+      { id: "step-3", title: "Build it", status: "pending", ordinal: 2, parentStepId: null }, // prettier-ignore
+    ];
+
+    it("snaps to the first pending child when an earlier sibling is complete", () => {
+      setupQueries({ steps: PARTIAL_LEAF_STEPS, stepEvidence: [] });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+      // step-2b (flat index 3) is the first pending leaf → "4 of 5". A children[0]
+      // resolution would wrongly land on the completed step-2a ("3 of 5").
+      expect(
+        screen.getByText(
+          i18n.t("common:stepCard.progress", { current: 4, total: 5 }),
+        ),
+      ).toBeOnTheScreen();
+      expect(screen.getByText("Drill B")).toBeOnTheScreen();
+      expect(
+        screen.getByText(
+          i18n.t("common:stepCard.parentContext", { parent: "Practice" }),
+        ),
+      ).toBeOnTheScreen();
+    });
+
+    // Orphan: step-2a's parent (step-2) was soft-deleted, so only the child
+    // survives carrying a dangling parentStepId. It must be promoted to a
+    // reachable top-level step, not hidden (#292 regression — the old flat
+    // find(isPendingStep) surfaced it; bucketed resolution dropped it).
+    const ORPHAN_STEPS = [
+      { id: "step-1", title: "Read docs", status: "completed", ordinal: 0, parentStepId: null }, // prettier-ignore
+      { id: "step-2a", title: "Drill A", status: "pending", ordinal: 0, parentStepId: "step-2" }, // prettier-ignore
+    ];
+
+    it("promotes an orphaned sub-step (deleted parent) to a reachable lead", () => {
+      setupQueries({ steps: ORPHAN_STEPS, stepEvidence: [] });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+      // The orphan is the only pending step → snap lands on it ("2 of 2").
+      // Old bucketed resolution returned -1 here and left the user on the
+      // completed step-1 ("1 of 2").
+      expect(
+        screen.getByText(
+          i18n.t("common:stepCard.progress", { current: 2, total: 2 }),
+        ),
+      ).toBeOnTheScreen();
+      expect(screen.getByText("Drill A")).toBeOnTheScreen();
+      // The orphan is the current step → lead-current width (18), not the
+      // child-current width (14). Proves it renders as a lead, not a sub-step.
+      // And no parent-context line, since its parent is gone.
+      expect(nodeWidth(1)).toBe(18);
+      expect(screen.queryByTestId("step-card-parent-context")).toBeNull();
     });
   });
 });

@@ -49,6 +49,8 @@ import {
   deleteEvidence,
   canCompleteStep,
   isPendingStep,
+  groupStepsByParent,
+  flattenGroupedSteps,
   EvidenceType,
   StepStatus,
 } from "../../db";
@@ -104,13 +106,20 @@ function findFirstPendingLeafIndex(
     status: string | null;
   }[],
 ): number {
+  // A row is a child only if its parent is a present top-level step. A null
+  // parent — or an orphan whose parent was soft-deleted — surfaces as top-level
+  // so its pending work stays reachable. Mirrors groupStepsByParent's orphan
+  // promotion (#292); without it a deleted parent would hide its children.
+  const rootIds = new Set(
+    rows.filter((r) => r.parentStepId == null).map((r) => r.id),
+  );
   const childrenByParent = new Map<
     string,
     { index: number; status: string | null }[]
   >();
   const topLevel: { id: string; index: number; status: string | null }[] = [];
   rows.forEach((row, index) => {
-    if (row.parentStepId != null) {
+    if (row.parentStepId != null && rootIds.has(row.parentStepId)) {
       const entry = { index, status: row.status };
       const list = childrenByParent.get(row.parentStepId);
       if (list) list.push(entry);
@@ -138,7 +147,23 @@ function FocusContent({ goalId }: { goalId: string }) {
   const { showToast } = useToast();
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
-  const stepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
+  const rawStepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
+  // Order rows parent-then-children (orphans promoted to top-level) so the
+  // carousel and MiniTimeline render the sub-spine correctly. The raw query is
+  // `(ordinal, createdAt)`-ordered with sibling-scoped child ordinals, which
+  // interleaves children among parents (#292) — flatten via groupStepsByParent
+  // as EditModeScreen does. All downstream indexing uses this ordered list.
+  const stepRows = useMemo(
+    () => flattenGroupedSteps(groupStepsByParent(rawStepRows)),
+    [rawStepRows],
+  );
+  // Ids of the present top-level steps — lets the UI tell a real sub-step from a
+  // promoted orphan (parent soft-deleted) so the orphan renders as a lead.
+  const stepRootIds = useMemo(
+    () =>
+      new Set(stepRows.filter((r) => r.parentStepId == null).map((r) => r.id)),
+    [stepRows],
+  );
   const goalEvidenceRows = useQuery(evidenceByGoalQuery(goalId as GoalId));
 
   const allStepEvidenceRows = useQuery(
@@ -172,10 +197,12 @@ function FocusContent({ goalId }: { goalId: string }) {
   const uiSteps = useMemo(
     () =>
       stepRows.map((row, index) => {
-        // `stepsByGoalQuery` uses selectAll, so parentStepId is present. A
-        // non-null parentStepId marks a sub-step (#292); resolve its parent's
-        // title for the StepCard / MiniTimeline context line.
-        const isChild = row.parentStepId != null;
+        // A sub-step is a row whose parent is a present top-level step (#292).
+        // An orphan (parent soft-deleted) is treated as top-level so it renders
+        // as a lead, not an indented child of whatever precedes it. Resolve the
+        // parent's title for the StepCard / MiniTimeline context line.
+        const isChild =
+          row.parentStepId != null && stepRootIds.has(row.parentStepId);
         return {
           id: row.id,
           title: row.title ?? "",
@@ -192,7 +219,7 @@ function FocusContent({ goalId }: { goalId: string }) {
             : null,
         };
       }),
-    [stepRows, currentCardIndex],
+    [stepRows, stepRootIds, currentCardIndex],
   );
 
   // Evidence counts per step (reuses allStepEvidenceRows to avoid duplicate query)

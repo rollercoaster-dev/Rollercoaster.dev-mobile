@@ -310,6 +310,23 @@ describe("GoalsScreen", () => {
       expect(screen.queryByTestId("goal-card-next-step")).toBeNull();
       expect(screen.queryByTestId("goal-card-next-step-context")).toBeNull();
     });
+
+    it("surfaces an orphaned sub-step (deleted parent) as the next step", () => {
+      // s2 was soft-deleted, leaving s2a with a dangling parentStepId. The
+      // orphan is promoted to top-level so its pending work stays visible —
+      // without the promotion it would bucket under the absent s2 and the card
+      // would wrongly read "nothing to do" (#292 regression).
+      mockSteps([
+        { id: "s1", goalId, parentStepId: null, title: "Plan layout", status: "completed" }, // prettier-ignore
+        { id: "s2a", goalId, parentStepId: "s2", title: "20-amp small-appliance circuit", status: "pending" }, // prettier-ignore
+      ]);
+      renderWithProviders(<GoalsScreen />);
+      expect(screen.queryByTestId("goal-card-next-step")).toHaveTextContent(
+        "20-amp small-appliance circuit",
+      );
+      // Treated as a flat hero (parent is gone), so no context line.
+      expect(screen.queryByTestId("goal-card-next-step-context")).toBeNull();
+    });
   });
 
   describe("delete flow", () => {
