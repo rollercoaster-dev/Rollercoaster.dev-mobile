@@ -11,6 +11,12 @@ import Animated, {
   withTiming,
   runOnJS,
 } from "react-native-reanimated";
+import {
+  ArrowUp,
+  ArrowDown,
+  ArrowBendDownRight,
+  ArrowBendUpLeft,
+} from "phosphor-react-native";
 import type { AnimationPref } from "../../hooks/useAnimationPref";
 import { getTimingConfig } from "../../utils/animation";
 import { IconButton } from "../IconButton";
@@ -176,7 +182,7 @@ export function DraggableStepItem({
                 <View style={styles.reorderButtons}>
                   {onMoveUp && !isFirst && (
                     <IconButton
-                      icon={<Text variant="body">↑</Text>}
+                      icon={<ArrowUp size={18} weight="bold" />}
                       onPress={onMoveUp}
                       size="sm"
                       accessibilityLabel={`Move "${step.title}" up`}
@@ -184,7 +190,7 @@ export function DraggableStepItem({
                   )}
                   {onMoveDown && !isLast && (
                     <IconButton
-                      icon={<Text variant="body">↓</Text>}
+                      icon={<ArrowDown size={18} weight="bold" />}
                       onPress={onMoveDown}
                       size="sm"
                       accessibilityLabel={`Move "${step.title}" down`}
@@ -192,7 +198,7 @@ export function DraggableStepItem({
                   )}
                   {canNestUnder && onNestUnder && (
                     <IconButton
-                      icon={<Text variant="body">⤵</Text>}
+                      icon={<ArrowBendDownRight size={18} weight="bold" />}
                       onPress={() => setPickerOpen(true)}
                       size="sm"
                       accessibilityLabel={t(
@@ -203,7 +209,7 @@ export function DraggableStepItem({
                   )}
                   {canUnNest && onUnNest && (
                     <IconButton
-                      icon={<Text variant="body">⤴</Text>}
+                      icon={<ArrowBendUpLeft size={18} weight="bold" />}
                       onPress={onUnNest}
                       size="sm"
                       accessibilityLabel={t(
