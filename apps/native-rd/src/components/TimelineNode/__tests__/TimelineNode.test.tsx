@@ -27,6 +27,37 @@ describe("TimelineNode", () => {
     expect(screen.getByText("\u2605")).toBeOnTheScreen();
   });
 
+  it("renders the label override instead of the step number", () => {
+    renderWithProviders(<TimelineNode {...baseProps} label="a" />);
+    expect(screen.getByText("a")).toBeOnTheScreen();
+    expect(screen.queryByText("1")).toBeNull();
+  });
+
+  it("completed check mark takes precedence over a label", () => {
+    renderWithProviders(
+      <TimelineNode {...baseProps} status="completed" label="a" />,
+    );
+    expect(screen.getByText("\u2713")).toBeOnTheScreen();
+    expect(screen.queryByText("a")).toBeNull();
+  });
+
+  it("renders a small lettered child node that stays interactive", () => {
+    const onPress = jest.fn();
+    renderWithProviders(
+      <TimelineNode
+        {...baseProps}
+        size="sm"
+        label="b"
+        status="in-progress"
+        accessibilityLabel="Go to step b"
+        onPress={onPress}
+      />,
+    );
+    expect(screen.getByText("b")).toBeOnTheScreen();
+    fireEvent.press(screen.getByLabelText("Go to step b"));
+    expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
   it("calls onPress when tapped", () => {
     const onPress = jest.fn();
     renderWithProviders(<TimelineNode {...baseProps} onPress={onPress} />);

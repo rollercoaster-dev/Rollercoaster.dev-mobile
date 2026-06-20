@@ -3,6 +3,7 @@ import {
   renderWithProviders,
   screen,
   fireEvent,
+  within,
 } from "../../../__tests__/test-utils";
 import { TimelineJourneyScreen } from "../TimelineJourneyScreen";
 
@@ -56,6 +57,33 @@ jest.mock("../../../db", () => ({
   ),
   findFirstPendingIndex: (rows: { status: string | null }[]) =>
     rows.findIndex((s) => s.status === "pending"),
+  // Faithful copy of the real helper (orphan/grandchild promotion) so the
+  // screen's grouping + current-leaf calc runs as real code, not stubbed.
+  groupStepsByParent: (
+    rows: readonly { id: string; parentStepId: string | null }[],
+  ) => {
+    const rootIds = new Set(
+      rows.filter((r) => r.parentStepId == null).map((r) => r.id),
+    );
+    const nodes = new Map(
+      rows.map((r) => [r.id, { ...r, children: [] as unknown[] }]),
+    );
+    const roots: {
+      id: string;
+      parentStepId: string | null;
+      children: unknown[];
+    }[] = [];
+    for (const row of rows) {
+      const node = nodes.get(row.id)!;
+      const parentId = row.parentStepId;
+      if (parentId != null && rootIds.has(parentId)) {
+        (nodes.get(parentId)!.children as unknown[]).push(node);
+      } else {
+        roots.push(node);
+      }
+    }
+    return roots;
+  },
 }));
 
 const mockUseQuery = jest.fn();
@@ -78,6 +106,32 @@ const MIXED_STEPS = [
   { id: "step-2", title: "Practice types", status: "completed", ordinal: 1 },
   { id: "step-3", title: "Build project", status: "pending", ordinal: 2 },
   { id: "step-4", title: "Write tests", status: "pending", ordinal: 3 },
+];
+
+// One parent with two sub-steps (the flat query order the screen groups). All
+// pending so the current leaf is the first child (#293).
+const STEPS_WITH_CHILDREN = [
+  {
+    id: "parent-1",
+    title: "Parent step",
+    status: "pending",
+    ordinal: 0,
+    parentStepId: null,
+  },
+  {
+    id: "child-1",
+    title: "First sub-step",
+    status: "pending",
+    ordinal: 0,
+    parentStepId: "parent-1",
+  },
+  {
+    id: "child-2",
+    title: "Second sub-step",
+    status: "pending",
+    ordinal: 1,
+    parentStepId: "parent-1",
+  },
 ];
 
 const STEP_EVIDENCE = [
@@ -302,5 +356,31 @@ describe("TimelineJourneyScreen", () => {
     // Expand first step
     fireEvent.press(screen.getByLabelText("Read docs, Done"));
     expect(screen.getByText("Photo proof")).toBeOnTheScreen();
+  });
+
+  describe("sub-steps", () => {
+    it("groups flat rows and renders the parent with its sub-steps", () => {
+      setupQueries({ steps: STEPS_WITH_CHILDREN });
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      expect(screen.getByText("Parent step")).toBeOnTheScreen();
+      expect(screen.getByText("First sub-step")).toBeOnTheScreen();
+      expect(screen.getByText("Second sub-step")).toBeOnTheScreen();
+    });
+
+    it("marks exactly one node in-progress — the first pending leaf", () => {
+      setupQueries({ steps: STEPS_WITH_CHILDREN });
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      // The in-progress accent surfaces as a single "Active" status badge.
+      expect(screen.getAllByText("Active")).toHaveLength(1);
+      // ...and it is the first child, not the parent or the second child.
+      const firstChild = screen.getByLabelText("Sub-step a: First sub-step");
+      expect(within(firstChild).getByText("Active")).toBeOnTheScreen();
+    });
+
+    it("counts every unit (parents + children) in the progress label", () => {
+      setupQueries({ steps: STEPS_WITH_CHILDREN });
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      expect(screen.getByText("0 of 3 steps completed")).toBeOnTheScreen();
+    });
   });
 });
