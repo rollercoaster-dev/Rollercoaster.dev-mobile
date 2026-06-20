@@ -7,6 +7,7 @@ import {
   AccessibilityInfo,
 } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { useSharedValue } from "react-native-reanimated";
 import { useTranslation } from "react-i18next";
 import { useUnistyles } from "react-native-unistyles";
 import { useAnimationPref } from "../../hooks/useAnimationPref";
@@ -18,6 +19,12 @@ import { EvidenceType } from "../../db";
 import type { EvidenceTypeValue } from "../../types/evidence";
 import { DraggableStepItem } from "./DraggableStepItem";
 import { classifyDrop } from "./classifyDrop";
+import {
+  clampScrollOffset,
+  getAutoScrollVelocity,
+  getEffectiveTranslationY,
+  type DragScrollController,
+} from "./dragAutoScroll";
 import { styles } from "./StepList.styles";
 
 export interface Step {
@@ -52,6 +59,8 @@ export interface StepListProps {
   onReorderSteps?: (stepIds: string[]) => void;
   onReorderSubSteps?: (parentStepId: string, childStepIds: string[]) => void;
   onReparentStep?: (stepId: string, newParentStepId: string | null) => void;
+  dragScrollController?: DragScrollController;
+  onDragStateChange?: (isDragging: boolean) => void;
 }
 
 const ITEM_HEIGHT = 48;
@@ -69,6 +78,8 @@ export function StepList({
   onReorderSteps,
   onReorderSubSteps,
   onReparentStep,
+  dragScrollController,
+  onDragStateChange,
 }: StepListProps) {
   const { theme } = useUnistyles();
   const { t } = useTranslation(["editGoal"]);
@@ -131,6 +142,11 @@ export function StepList({
     [],
   );
   const dwellTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastDragTranslationYRef = useRef(0);
+  const lastDragAbsoluteYRef = useRef<number | null>(null);
+  const dragStartScrollOffsetRef = useRef(0);
+  const autoScrollFrameRef = useRef<number | null>(null);
+  const dragScrollCompensation = useSharedValue(0);
   // Last hovered row id — change-detection that survives async setState so the
   // dwell timer is only (re)started when the hovered row actually changes.
   const hoverStepIdRef = useRef<string | null>(null);
@@ -139,6 +155,9 @@ export function StepList({
   useEffect(() => {
     return () => {
       if (dwellTimer.current) clearTimeout(dwellTimer.current);
+      if (autoScrollFrameRef.current !== null) {
+        cancelAnimationFrame(autoScrollFrameRef.current);
+      }
     };
   }, []);
 
@@ -253,6 +272,13 @@ export function StepList({
     return steps.some((s) => s.parentStepId === id);
   }
 
+  function stopAutoScroll() {
+    if (autoScrollFrameRef.current !== null) {
+      cancelAnimationFrame(autoScrollFrameRef.current);
+      autoScrollFrameRef.current = null;
+    }
+  }
+
   function handleDragStart(index: number) {
     draggedIndexRef.current = index;
     hoverIndexRef.current = index;
@@ -260,10 +286,16 @@ export function StepList({
     setIsDragging(true);
     setDropSlot(null);
     setNestedDropOutline(null);
+    lastDragTranslationYRef.current = 0;
+    lastDragAbsoluteYRef.current = null;
+    dragStartScrollOffsetRef.current =
+      dragScrollController?.getMetrics().offsetY ?? 0;
+    dragScrollCompensation.value = 0;
     hoverStepIdRef.current = steps[index]?.id ?? null;
     if (dwellTimer.current) clearTimeout(dwellTimer.current);
     armedTargetIdRef.current = null;
     setArmedTargetId(null);
+    onDragStateChange?.(true);
     triggerDragStart();
   }
 
@@ -281,7 +313,7 @@ export function StepList({
     return draggedFrom;
   }
 
-  function handleDragMove(translationY: number) {
+  function updateDragHover(translationY: number) {
     const activeDraggedIndex = draggedIndexRef.current;
     if (activeDraggedIndex === null) return;
 
@@ -370,7 +402,69 @@ export function StepList({
     }
   }
 
+  function runAutoScrollFrame() {
+    autoScrollFrameRef.current = null;
+    const pointerY = lastDragAbsoluteYRef.current;
+    if (!dragScrollController || pointerY === null) return;
+
+    const metrics = dragScrollController.getMetrics();
+    const velocity = getAutoScrollVelocity(pointerY, metrics);
+    if (velocity === 0) return;
+
+    const nextOffset = clampScrollOffset(metrics.offsetY + velocity, metrics);
+    if (nextOffset === metrics.offsetY) return;
+
+    dragScrollController.scrollTo(nextOffset);
+    const scrollDelta = nextOffset - dragStartScrollOffsetRef.current;
+    dragScrollCompensation.value = scrollDelta;
+    updateDragHover(
+      getEffectiveTranslationY(
+        lastDragTranslationYRef.current,
+        nextOffset,
+        dragStartScrollOffsetRef.current,
+      ),
+    );
+    autoScrollFrameRef.current = requestAnimationFrame(runAutoScrollFrame);
+  }
+
+  function syncAutoScroll() {
+    const pointerY = lastDragAbsoluteYRef.current;
+    if (!dragScrollController || pointerY === null) {
+      stopAutoScroll();
+      return;
+    }
+
+    const velocity = getAutoScrollVelocity(
+      pointerY,
+      dragScrollController.getMetrics(),
+    );
+    if (velocity === 0) {
+      stopAutoScroll();
+    } else if (autoScrollFrameRef.current === null) {
+      autoScrollFrameRef.current = requestAnimationFrame(runAutoScrollFrame);
+    }
+  }
+
+  function handleDragMove(translationY: number, absoluteY: number) {
+    lastDragTranslationYRef.current = translationY;
+    lastDragAbsoluteYRef.current = absoluteY;
+    const currentScrollY =
+      dragScrollController?.getMetrics().offsetY ??
+      dragStartScrollOffsetRef.current;
+    dragScrollCompensation.value =
+      currentScrollY - dragStartScrollOffsetRef.current;
+    updateDragHover(
+      getEffectiveTranslationY(
+        translationY,
+        currentScrollY,
+        dragStartScrollOffsetRef.current,
+      ),
+    );
+    syncAutoScroll();
+  }
+
   function handleDragEnd() {
+    stopAutoScroll();
     if (dwellTimer.current) {
       clearTimeout(dwellTimer.current);
       dwellTimer.current = null;
@@ -419,7 +513,10 @@ export function StepList({
     setArmedTargetId(null);
     setDropSlot(null);
     setNestedDropOutline(null);
+    lastDragAbsoluteYRef.current = null;
+    dragScrollCompensation.value = 0;
     hoverStepIdRef.current = null;
+    onDragStateChange?.(false);
   }
 
   // ↑/↓ are sibling-reorder only — they never change nesting level (Q2, WCAG
@@ -564,6 +661,9 @@ export function StepList({
               onDragStart={handleDragStart}
               onDragMove={handleDragMove}
               onDragEnd={handleDragEnd}
+              dragScrollCompensation={
+                draggedIndex === index ? dragScrollCompensation : undefined
+              }
               onMoveUp={() => handleMoveUp(index)}
               onMoveDown={() => handleMoveDown(index)}
               showAccessibleControls={showAccessibleControls}

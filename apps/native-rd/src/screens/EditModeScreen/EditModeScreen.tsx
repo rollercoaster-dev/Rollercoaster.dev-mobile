@@ -2,11 +2,23 @@ import React, {
   Suspense,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
-import { View, TextInput, ActivityIndicator, Alert } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
+import {
+  View,
+  TextInput,
+  ActivityIndicator,
+  Alert,
+  type LayoutChangeEvent,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+} from "react-native";
+import {
+  KeyboardAwareScrollView,
+  type KeyboardAwareScrollViewRef,
+} from "react-native-keyboard-controller";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import { useQuery } from "@evolu/react";
 import { useTranslation } from "react-i18next";
@@ -15,7 +27,11 @@ import { Text } from "../../components/Text";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { Button } from "../../components/Button";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
-import { StepList } from "../../components/StepList";
+import {
+  StepList,
+  type DragScrollController,
+  type DragScrollMetrics,
+} from "../../components/StepList";
 import { ConfirmDeleteModal } from "../ConfirmDeleteModal";
 import {
   goalsQuery,
@@ -49,6 +65,12 @@ import { styles } from "./EditModeScreen.styles";
 
 const DEBOUNCE_MS = 500;
 
+type MeasurableScrollView = KeyboardAwareScrollViewRef & {
+  measureInWindow(
+    callback: (x: number, y: number, width: number, height: number) => void,
+  ): void;
+};
+
 function EditContent({
   goalId,
   cameFromFocus,
@@ -71,9 +93,48 @@ function EditContent({
   const [description, setDescription] = useState(goal?.description ?? "");
   const [titleError, setTitleError] = useState("");
   const [showDeleteGoalModal, setShowDeleteGoalModal] = useState(false);
+  const [isStepDragging, setIsStepDragging] = useState(false);
+  const isStepDraggingRef = useRef(false);
 
   const titleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const descTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrollRef = useRef<KeyboardAwareScrollViewRef>(null);
+  const scrollMetricsRef = useRef<DragScrollMetrics>({
+    offsetY: 0,
+    viewportTop: 0,
+    viewportHeight: 0,
+    contentHeight: 0,
+  });
+  const dragScrollController = useMemo<DragScrollController>(
+    () => ({
+      getMetrics: () => scrollMetricsRef.current,
+      scrollTo: (y) => {
+        scrollMetricsRef.current.offsetY = y;
+        scrollRef.current?.scrollTo({ y, animated: false });
+      },
+    }),
+    [],
+  );
+
+  function handleScrollLayout(event: LayoutChangeEvent) {
+    scrollMetricsRef.current.viewportHeight = event.nativeEvent.layout.height;
+    const measurable = scrollRef.current as MeasurableScrollView | null;
+    measurable?.measureInWindow((_x, y, _width, height) => {
+      scrollMetricsRef.current.viewportTop = y;
+      scrollMetricsRef.current.viewportHeight = height;
+    });
+  }
+
+  function handleScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
+    if (!isStepDraggingRef.current) {
+      scrollMetricsRef.current.offsetY = event.nativeEvent.contentOffset.y;
+    }
+  }
+
+  function handleStepDragStateChange(isDragging: boolean) {
+    isStepDraggingRef.current = isDragging;
+    setIsStepDragging(isDragging);
+  }
 
   useEffect(() => {
     return () => {
@@ -363,9 +424,16 @@ function EditContent({
   return (
     <>
       <KeyboardAwareScrollView
+        ref={scrollRef}
         contentContainerStyle={[styles.scrollContent, tabInset]}
         bottomOffset={40}
         keyboardShouldPersistTaps="handled"
+        scrollEnabled={!isStepDragging}
+        onLayout={handleScrollLayout}
+        onScroll={handleScroll}
+        onContentSizeChange={(_width, height) => {
+          scrollMetricsRef.current.contentHeight = height;
+        }}
       >
         {/* Title */}
         <View style={styles.section}>
@@ -428,6 +496,8 @@ function EditContent({
           onReorderSteps={handleReorderSteps}
           onReorderSubSteps={handleReorderSubSteps}
           onReparentStep={handleReparentStep}
+          dragScrollController={dragScrollController}
+          onDragStateChange={handleStepDragStateChange}
         />
 
         {/* Navigate button */}

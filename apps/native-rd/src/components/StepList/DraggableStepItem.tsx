@@ -5,6 +5,7 @@ import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useTranslation } from "react-i18next";
 import { useUnistyles } from "react-native-unistyles";
 import Animated, {
+  type SharedValue,
   useSharedValue,
   useAnimatedStyle,
   withTiming,
@@ -25,8 +26,9 @@ export interface DraggableStepItemProps {
   isBeingDragged: boolean;
   onLabelPress?: (step: Step) => void;
   onDragStart: (index: number) => void;
-  onDragMove: (translationY: number) => void;
+  onDragMove: (translationY: number, absoluteY: number) => void;
   onDragEnd: () => void;
+  dragScrollCompensation?: SharedValue<number>;
   onDeleteStep?: () => void;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
@@ -56,6 +58,7 @@ export function DraggableStepItem({
   onDragStart,
   onDragMove,
   onDragEnd,
+  dragScrollCompensation,
   onDeleteStep,
   onMoveUp,
   onMoveDown,
@@ -111,14 +114,19 @@ export function DraggableStepItem({
     })
     .onUpdate((e) => {
       translateY.value = e.translationY;
-      runOnJS(onDragMove)(e.translationY);
+      runOnJS(onDragMove)(e.translationY, e.absoluteY);
     })
     .onFinalize(resetDragState);
 
   const composed = Gesture.Simultaneous(longPress, pan);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }, { scale: scale.value }],
+    transform: [
+      {
+        translateY: translateY.value + (dragScrollCompensation?.value ?? 0),
+      },
+      { scale: scale.value },
+    ],
     zIndex: isDragging.value ? 100 : 0,
   }));
 
