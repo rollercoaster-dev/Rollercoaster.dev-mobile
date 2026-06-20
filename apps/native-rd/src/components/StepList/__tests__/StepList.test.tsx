@@ -6,18 +6,19 @@ import {
 } from "../../../__tests__/test-utils";
 import { StepList, type Step } from "../StepList";
 
-jest.mock("react-native-gesture-handler", () => ({
-  GestureHandlerRootView: ({ children }: { children: React.ReactNode }) =>
-    children,
-  GestureDetector: ({ children }: { children: React.ReactNode }) => children,
-  Gesture: {
-    Pan: () => ({
-      onStart: () => ({}),
-      onUpdate: () => ({}),
-      onEnd: () => ({}),
-    }),
-  },
-}));
+jest.mock("react-native-gesture-handler", () => {
+  const chainable = () => new Proxy({}, { get: () => chainable });
+  return {
+    GestureHandlerRootView: ({ children }: { children: React.ReactNode }) =>
+      children,
+    GestureDetector: ({ children }: { children: React.ReactNode }) => children,
+    Gesture: {
+      Pan: chainable,
+      LongPress: chainable,
+      Simultaneous: chainable,
+    },
+  };
+});
 
 jest.mock("expo-haptics", () => ({
   impactAsync: jest.fn().mockResolvedValue(undefined),
@@ -29,11 +30,14 @@ jest.mock("../../../utils/haptics", () => ({
   triggerDragDrop: jest.fn(),
 }));
 
+// Mutable so a test can flip on "accessible controls" (which surface the
+// keyboard move-up/down buttons that only DraggableStepItem renders).
+let mockAnimationPref = "full";
 jest.mock("../../../hooks/useAnimationPref", () => ({
   useAnimationPref: () => ({
-    animationPref: "full",
-    shouldAnimate: true,
-    shouldReduceMotion: false,
+    animationPref: mockAnimationPref,
+    shouldAnimate: mockAnimationPref !== "none",
+    shouldReduceMotion: mockAnimationPref === "none",
     setAnimationPref: jest.fn(),
   }),
 }));
@@ -42,6 +46,10 @@ const mockSteps: Step[] = [
   { id: "1", title: "Step one", completed: false },
   { id: "2", title: "Step two", completed: true },
 ];
+
+afterEach(() => {
+  mockAnimationPref = "full";
+});
 
 describe("StepList", () => {
   it("renders steps with header and count", () => {
@@ -88,5 +96,102 @@ describe("StepList", () => {
     );
     expect(screen.getByLabelText('Delete "Step one"')).toBeOnTheScreen();
     expect(screen.getByLabelText('Delete "Step two"')).toBeOnTheScreen();
+  });
+
+  describe("sub-steps", () => {
+    const parentWithChildren: Step[] = [
+      { id: "p", title: "Parent", completed: false },
+      { id: "c1", title: "Child one", completed: false, parentStepId: "p" },
+      { id: "c2", title: "Child two", completed: false, parentStepId: "p" },
+    ];
+
+    it("renders the add-sub-step affordance once, after the last child of a group", () => {
+      renderWithProviders(
+        <StepList steps={parentWithChildren} onCreateSubStep={jest.fn()} />,
+      );
+      // A regression that placed the ghost after every child (or after the
+      // parent) would render more than one ghost keyed to the same parent.
+      expect(screen.getAllByTestId("step-list-add-sub-step-p")).toHaveLength(1);
+    });
+
+    it("renders an add-sub-step affordance under each top-level step", () => {
+      renderWithProviders(
+        <StepList steps={mockSteps} onCreateSubStep={jest.fn()} />,
+      );
+      expect(screen.getByTestId("step-list-add-sub-step-1")).toBeOnTheScreen();
+      expect(screen.getByTestId("step-list-add-sub-step-2")).toBeOnTheScreen();
+    });
+
+    it("does not render the affordance when onCreateSubStep is omitted", () => {
+      renderWithProviders(<StepList steps={parentWithChildren} />);
+      expect(screen.queryByTestId("step-list-add-sub-step-p")).toBeNull();
+    });
+
+    it("calls onCreateSubStep with the parent id, title, and evidence types", () => {
+      const onCreateSubStep = jest.fn();
+      renderWithProviders(
+        <StepList
+          steps={parentWithChildren}
+          onCreateSubStep={onCreateSubStep}
+        />,
+      );
+      fireEvent.press(screen.getByTestId("step-list-add-sub-step-p"));
+      fireEvent.changeText(
+        screen.getByTestId("step-list-sub-step-input-p"),
+        "New sub-step",
+      );
+      fireEvent.press(screen.getByTestId("step-list-add-sub-step-button-p"));
+      expect(onCreateSubStep).toHaveBeenCalledWith("p", "New sub-step", [
+        "text",
+      ]);
+    });
+
+    it("does not call onCreateSubStep for a blank title and collapses the input", () => {
+      const onCreateSubStep = jest.fn();
+      renderWithProviders(
+        <StepList
+          steps={parentWithChildren}
+          onCreateSubStep={onCreateSubStep}
+        />,
+      );
+      fireEvent.press(screen.getByTestId("step-list-add-sub-step-p"));
+      fireEvent.changeText(
+        screen.getByTestId("step-list-sub-step-input-p"),
+        "   ",
+      );
+      fireEvent.press(screen.getByTestId("step-list-add-sub-step-button-p"));
+      expect(onCreateSubStep).not.toHaveBeenCalled();
+      // Input collapses back to the ghost affordance.
+      expect(screen.getByTestId("step-list-add-sub-step-p")).toBeOnTheScreen();
+      expect(screen.queryByTestId("step-list-sub-step-input-p")).toBeNull();
+    });
+  });
+
+  describe("drag-disable guard", () => {
+    // Surfacing the keyboard move buttons (only DraggableStepItem renders them)
+    // is the observable proxy for "drag is enabled" once gestures are mocked.
+    beforeEach(() => {
+      mockAnimationPref = "none";
+    });
+
+    it("renders keyboard move controls for a flat list", () => {
+      renderWithProviders(
+        <StepList steps={mockSteps} onReorderSteps={jest.fn()} />,
+      );
+      expect(screen.getByLabelText('Move "Step one" down')).toBeOnTheScreen();
+      expect(screen.getByLabelText('Move "Step two" up')).toBeOnTheScreen();
+    });
+
+    it("disables reordering when any sub-step is present", () => {
+      const withSubStep: Step[] = [
+        { id: "p", title: "Parent", completed: false },
+        { id: "c1", title: "Child one", completed: false, parentStepId: "p" },
+      ];
+      renderWithProviders(
+        <StepList steps={withSubStep} onReorderSteps={jest.fn()} />,
+      );
+      expect(screen.queryByLabelText('Move "Parent" down')).toBeNull();
+      expect(screen.queryByLabelText('Move "Child one" up')).toBeNull();
+    });
   });
 });

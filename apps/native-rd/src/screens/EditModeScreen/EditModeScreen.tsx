@@ -23,9 +23,12 @@ import {
   deleteGoal,
   stepsByGoalQuery,
   createStep,
+  createSubStep,
   updateStep,
   deleteStep,
   reorderSteps,
+  groupStepsByParent,
+  flattenGroupedSteps,
   StepStatus,
 } from "../../db";
 import type { GoalId, StepId } from "../../db";
@@ -59,6 +62,9 @@ function EditContent({
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
   const stepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
+  // Group into a one-level parent→children tree, then flatten to render order
+  // (each parent immediately followed by its children) for StepList (D10).
+  const flatGrouped = flattenGroupedSteps(groupStepsByParent(stepRows));
 
   const [title, setTitle] = useState(goal?.title ?? "");
   const [description, setDescription] = useState(goal?.description ?? "");
@@ -188,8 +194,11 @@ function EditContent({
     stepTitle: string,
     plannedEvidenceTypes: EvidenceTypeValue[],
   ) {
+    // Top-level ordinals are their own sibling group — exclude sub-steps so a
+    // new root step doesn't inherit a child's ordinal.
     const maxOrdinal = stepRows.reduce(
-      (max, s) => Math.max(max, s.ordinal ?? -1),
+      (max, s) =>
+        s.parentStepId == null ? Math.max(max, s.ordinal ?? -1) : max,
       -1,
     );
     try {
@@ -203,6 +212,40 @@ function EditContent({
       console.error("[EditModeScreen] Failed to create step", {
         goalId,
         stepTitle,
+        error,
+      });
+      reportError(error, { area: "step.mutate", kind: "create" });
+      Alert.alert(
+        t("editGoal:errors.alertErrorTitle"),
+        t("editGoal:errors.createStepMessage"),
+      );
+    }
+  }
+
+  function handleCreateSubStep(
+    parentStepId: string,
+    subStepTitle: string,
+    plannedEvidenceTypes: EvidenceTypeValue[],
+  ) {
+    // Sub-step ordinals are scoped to their parent's sibling group.
+    const maxChildOrdinal = stepRows.reduce(
+      (max, s) =>
+        s.parentStepId === parentStepId ? Math.max(max, s.ordinal ?? -1) : max,
+      -1,
+    );
+    try {
+      createSubStep(
+        goalId as GoalId,
+        parentStepId as StepId,
+        subStepTitle,
+        maxChildOrdinal + 1,
+        plannedEvidenceTypes,
+      );
+    } catch (error) {
+      console.error("[EditModeScreen] Failed to create sub-step", {
+        goalId,
+        parentStepId,
+        subStepTitle,
         error,
       });
       reportError(error, { area: "step.mutate", kind: "create" });
@@ -305,16 +348,18 @@ function EditContent({
 
         {/* Steps — reuses StepList with drag-and-drop support */}
         <StepList
-          steps={stepRows.map((s) => ({
+          steps={flatGrouped.map((s) => ({
             id: s.id,
             title: s.title ?? "",
             completed: s.status === StepStatus.completed,
             plannedEvidenceTypes:
-              parsePlannedEvidenceTypes(
-                s.plannedEvidenceTypes as string | null,
-              )?.map(validateEvidenceType) ?? null,
+              parsePlannedEvidenceTypes(s.plannedEvidenceTypes)?.map(
+                validateEvidenceType,
+              ) ?? null,
+            parentStepId: s.parentStepId,
           }))}
           onCreateStep={handleCreateStep}
+          onCreateSubStep={handleCreateSubStep}
           onUpdateStep={handleUpdateStep}
           onDeleteStep={canDelete ? handleDeleteStep : undefined}
           onReorderSteps={handleReorderSteps}

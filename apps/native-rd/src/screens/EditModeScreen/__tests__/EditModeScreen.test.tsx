@@ -60,9 +60,16 @@ jest.mock("../../../hooks/useAnimationPref", () => ({
 
 const mockUpdateGoal = jest.fn();
 const mockCreateStep = jest.fn();
+const mockCreateSubStep = jest.fn();
 const mockUpdateStep = jest.fn();
 const mockDeleteStep = jest.fn();
 const mockReorderSteps = jest.fn();
+
+interface StepRow {
+  id: string;
+  parentStepId?: string | null;
+  [key: string]: unknown;
+}
 
 jest.mock("../../../db", () => ({
   GoalStatus: { active: "active", completed: "completed" },
@@ -79,9 +86,32 @@ jest.mock("../../../db", () => ({
   stepsByGoalQuery: jest.fn(() => "stepsByGoalQuery"),
   updateGoal: (...args: unknown[]) => mockUpdateGoal(...args),
   createStep: (...args: unknown[]) => mockCreateStep(...args),
+  createSubStep: (...args: unknown[]) => mockCreateSubStep(...args),
   updateStep: (...args: unknown[]) => mockUpdateStep(...args),
   deleteStep: (...args: unknown[]) => mockDeleteStep(...args),
   reorderSteps: (...args: unknown[]) => mockReorderSteps(...args),
+  // Faithful lightweight stand-ins for the pure grouping helpers.
+  groupStepsByParent: (rows: StepRow[]) => {
+    const rootIds = new Set(
+      rows.filter((r) => r.parentStepId == null).map((r) => r.id),
+    );
+    const nodes = new Map(
+      rows.map((r) => [r.id, { ...r, children: [] as StepRow[] }]),
+    );
+    const roots: (StepRow & { children: StepRow[] })[] = [];
+    for (const row of rows) {
+      const node = nodes.get(row.id)!;
+      const parentId = row.parentStepId;
+      if (parentId != null && rootIds.has(parentId)) {
+        nodes.get(parentId)!.children.push(node);
+      } else {
+        roots.push(node);
+      }
+    }
+    return roots;
+  },
+  flattenGroupedSteps: (grouped: (StepRow & { children: StepRow[] })[]) =>
+    grouped.flatMap((g) => [g, ...g.children]),
 }));
 
 const mockUseQuery = jest.fn();
@@ -107,6 +137,28 @@ const STEPS = [
 
 const SINGLE_STEP = [
   { id: "step-1", title: "Only step", status: "pending", ordinal: 0 },
+];
+
+// Two parents, each with one child. Child ordinals are deliberately higher
+// than every root ordinal so a goal-wide (un-scoped) max would pick the wrong
+// next ordinal — letting the tests distinguish sibling-scoped from goal-wide.
+const STEPS_TREE = [
+  { id: "p1", title: "Parent one", status: "pending", ordinal: 0 },
+  {
+    id: "p1c1",
+    title: "P1 child",
+    status: "pending",
+    ordinal: 0,
+    parentStepId: "p1",
+  },
+  { id: "p2", title: "Parent two", status: "pending", ordinal: 1 },
+  {
+    id: "p2c1",
+    title: "P2 child",
+    status: "pending",
+    ordinal: 7,
+    parentStepId: "p2",
+  },
 ];
 
 function makeRouteProps(cameFromFocus = false) {
@@ -293,6 +345,46 @@ describe("EditModeScreen", () => {
       setupQueries(GOAL, STEPS);
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
       expect(screen.getByLabelText('Delete "Read docs"')).toBeOnTheScreen();
+    });
+  });
+
+  describe("sub-step ordinal scoping", () => {
+    it("creates a sub-step with an ordinal scoped to its parent's children", () => {
+      setupQueries(GOAL, STEPS_TREE);
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+      // The affordance ghost for p1 sits after p1's last child.
+      fireEvent.press(screen.getByTestId("step-list-add-sub-step-p1"));
+      fireEvent.changeText(
+        screen.getByTestId("step-list-sub-step-input-p1"),
+        "New sub",
+      );
+      fireEvent.press(screen.getByTestId("step-list-add-sub-step-button-p1"));
+
+      // p1's only child has ordinal 0, so the next sibling ordinal is 1 —
+      // NOT 8 (which a goal-wide max over p2c1's ordinal 7 would yield).
+      expect(mockCreateSubStep).toHaveBeenCalledWith(
+        "goal-1",
+        "p1",
+        "New sub",
+        1,
+        ["text"],
+      );
+    });
+
+    it("creates a top-level step with an ordinal scoped to root steps only", () => {
+      setupQueries(GOAL, STEPS_TREE);
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+      const addInput = screen.getByLabelText("Add a new step");
+      fireEvent.changeText(addInput, "New root");
+      fireEvent(addInput, "submitEditing");
+
+      // Roots are ordinals 0 and 1, so the next root ordinal is 2 — NOT 8
+      // (a goal-wide max would inherit the child's ordinal 7).
+      expect(mockCreateStep).toHaveBeenCalledWith("goal-1", "New root", 2, [
+        "text",
+      ]);
     });
   });
 

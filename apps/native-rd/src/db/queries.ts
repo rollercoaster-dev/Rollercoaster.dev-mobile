@@ -329,9 +329,15 @@ export const findFirstPendingIndex = (
 ): number => rows.findIndex(isPendingStep);
 
 /**
- * Query all non-deleted steps for a goal, ordered by ordinal
+ * Query all non-deleted steps for a goal.
+ *
+ * Ordered by `(ordinal ASC, createdAt ASC)`. The createdAt tie-break makes the
+ * display order deterministic when two siblings share an ordinal (e.g. from
+ * concurrent CRDT writes). Results are flat — callers that need the parent →
+ * children hierarchy run them through {@link groupStepsByParent} (#290).
+ *
  * @param goalId - Goal ID
- * @returns Query for steps ordered by ordinal ascending
+ * @returns Query for steps ordered by ordinal then createdAt ascending
  */
 export const stepsByGoalQuery = (goalId: GoalId) =>
   evolu.createQuery((db) =>
@@ -340,8 +346,82 @@ export const stepsByGoalQuery = (goalId: GoalId) =>
       .selectAll()
       .where("isDeleted", "is", null)
       .where("goalId", "=", goalId)
-      .orderBy("ordinal", "asc"),
+      .orderBy("ordinal", "asc")
+      .orderBy("createdAt", "asc"),
   );
+
+/**
+ * A step row plus its sub-steps. Depth is capped at one level — child nodes
+ * always carry an empty `children` array (#290).
+ */
+export interface GroupedStep {
+  id: StepId;
+  // Evolu types every `selectAll` column as nullable in query results, so the
+  // flat row this is built from carries `goalId` as nullable too.
+  goalId: GoalId | null;
+  parentStepId: StepId | null;
+  title: string | null;
+  ordinal: number | null;
+  status: string | null;
+  completedAt: string | null;
+  plannedEvidenceTypes: string | null;
+  children: GroupedStep[];
+}
+
+/** Structural subset of a step query row that {@link groupStepsByParent} reads. */
+type StepRowLike = Omit<GroupedStep, "children">;
+
+/**
+ * Group a flat, already-ordered step list into a one-level parent → children
+ * tree (D1, D10). Pure — no Evolu calls.
+ *
+ * The one-level depth cap is enforced defensively: a row whose `parentStepId`
+ * does not point at a top-level (root) step is promoted to a root rather than
+ * being dropped. This guards against orphans (parent soft-deleted) and would-be
+ * grandchildren (parent is itself a child).
+ *
+ * Relative order within each sibling group is preserved from the input, so a
+ * `(ordinal, createdAt)`-ordered query yields a `(ordinal, createdAt)`-ordered
+ * tree.
+ */
+export function groupStepsByParent(
+  rows: readonly StepRowLike[],
+): GroupedStep[] {
+  const rootIds = new Set(
+    rows.filter((r) => r.parentStepId === null).map((r) => r.id),
+  );
+  const nodes = new Map<StepId, GroupedStep>(
+    rows.map((r) => [r.id, { ...r, children: [] }]),
+  );
+
+  const roots: GroupedStep[] = [];
+  for (const row of rows) {
+    const node = nodes.get(row.id)!;
+    const parentId = row.parentStepId;
+    if (parentId !== null && rootIds.has(parentId)) {
+      nodes.get(parentId)!.children.push(node);
+    } else {
+      // Root, orphan, or would-be grandchild — all surface at the top level.
+      roots.push(node);
+    }
+  }
+  return roots;
+}
+
+/**
+ * Flatten a grouped step tree into render order (D10): each root immediately
+ * followed by its children. This is the shape StepList consumes. Pure.
+ */
+export function flattenGroupedSteps(
+  grouped: readonly GroupedStep[],
+): GroupedStep[] {
+  const out: GroupedStep[] = [];
+  for (const root of grouped) {
+    out.push(root);
+    out.push(...root.children);
+  }
+  return out;
+}
 
 /**
  * Create a new step for a goal
@@ -391,6 +471,65 @@ export function createStep(
 }
 
 /**
+ * Create a sub-step under an existing top-level step (#290).
+ *
+ * Mirrors {@link createStep}'s validation but stamps `parentStepId`. The
+ * one-level depth cap is the caller's responsibility — `parentStepId` must be a
+ * top-level step. `ordinal` is sibling-scoped; the caller computes it from the
+ * parent's existing children (e.g. `maxChildOrdinal + 1`).
+ *
+ * @param goalId - Goal ID
+ * @param parentStepId - Top-level step this sub-step belongs to
+ * @param title - Sub-step title (trimmed and validated)
+ * @param ordinal - Optional sibling ordinal (defaults to null)
+ * @param plannedEvidenceTypes - Optional evidence requirement
+ * @returns Insert command
+ * @throws Error if validation fails
+ */
+export function createSubStep(
+  goalId: GoalId,
+  parentStepId: StepId,
+  title: string,
+  ordinal?: number,
+  plannedEvidenceTypes?: readonly string[] | null,
+) {
+  breadcrumb({ category: "step", message: "create" });
+  const parsedTitle = NonEmptyString1000.orNull(title.trim());
+  if (!parsedTitle) {
+    logger.error("Sub-step title validation failed", {
+      goalId,
+      parentStepId,
+      titleLength: title.length,
+    });
+    throw new Error(
+      `Step title must be 1-1000 characters (received ${title.length} characters)`,
+    );
+  }
+
+  const serializedTypes = serializePlannedTypes(plannedEvidenceTypes);
+
+  try {
+    return evolu.insert("step", {
+      goalId,
+      parentStepId,
+      title: parsedTitle,
+      status: StepStatus.pending,
+      ordinal: ordinal !== undefined ? Int.orNull(ordinal) : null,
+      plannedEvidenceTypes:
+        serializedTypes === undefined ? null : serializedTypes,
+    });
+  } catch (error) {
+    logger.error("Failed to insert sub-step", {
+      goalId,
+      parentStepId,
+      title: parsedTitle,
+      error,
+    });
+    throw new Error("Failed to create sub-step. Please try again.");
+  }
+}
+
+/**
  * Update step title and/or ordinal
  * @param id - Step ID
  * @param fields - Fields to update (title, ordinal)
@@ -403,6 +542,7 @@ export function updateStep(
     title?: string;
     ordinal?: number | null;
     plannedEvidenceTypes?: readonly string[] | null;
+    parentStepId?: StepId | null;
   },
 ) {
   breadcrumb({ category: "step", message: "update" });
@@ -425,6 +565,13 @@ export function updateStep(
   if (fields.ordinal !== undefined) {
     update.ordinal =
       fields.ordinal !== null ? Int.orNull(fields.ordinal) : null;
+  }
+
+  // Reparenting (#290, D9): null promotes a sub-step to top-level; a root
+  // step's id demotes a leaf under it. The one-level depth guard lives in the
+  // caller (StepList drag handler), not here.
+  if (fields.parentStepId !== undefined) {
+    update.parentStepId = fields.parentStepId;
   }
 
   const serializedTypes = serializePlannedTypes(fields.plannedEvidenceTypes);
@@ -519,24 +666,26 @@ export function deleteStep(id: StepId) {
 }
 
 /**
- * Batch update step ordinals for drag-and-drop reordering
- * @param goalId - Goal ID (for context/logging)
- * @param stepIds - Array of step IDs in desired order
+ * Assign sequential ordinals (0..n-1) to the supplied step IDs in order.
+ * Shared by {@link reorderSteps} (top-level) and {@link reorderSubSteps}
+ * (sibling-scoped). `context` is logging-only.
  * @throws Error if any ordinal update fails
  */
-export function reorderSteps(goalId: GoalId, stepIds: StepId[]) {
-  breadcrumb({ category: "step", message: "reorder" });
+function applyStepOrdinals(
+  context: { goalId: GoalId; parentStepId?: StepId },
+  stepIds: StepId[],
+) {
   const failures: { index: number; stepId: string }[] = [];
 
   stepIds.forEach((stepId, index) => {
     const ordinal = Int.orNull(index);
-    // Fixed: Check for null explicitly, not falsy (0 is valid!)
+    // Check for null explicitly, not falsy (0 is valid!)
     if (ordinal !== null) {
       try {
         evolu.update("step", { id: stepId, ordinal });
       } catch (error) {
         logger.error("Failed to update step ordinal", {
-          goalId,
+          ...context,
           stepId,
           ordinal: index,
           error,
@@ -545,7 +694,7 @@ export function reorderSteps(goalId: GoalId, stepIds: StepId[]) {
       }
     } else {
       logger.warn("Failed to parse ordinal for step", {
-        goalId,
+        ...context,
         stepId,
         index,
       });
@@ -555,7 +704,7 @@ export function reorderSteps(goalId: GoalId, stepIds: StepId[]) {
 
   if (failures.length > 0) {
     logger.error("Step reordering had failures", {
-      goalId,
+      ...context,
       totalSteps: stepIds.length,
       failureCount: failures.length,
       failures: failures.slice(0, 5), // Log first 5 to avoid huge payloads
@@ -564,6 +713,34 @@ export function reorderSteps(goalId: GoalId, stepIds: StepId[]) {
       `Failed to reorder ${failures.length} of ${stepIds.length} steps. Please try again.`,
     );
   }
+}
+
+/**
+ * Batch update top-level step ordinals for drag-and-drop reordering
+ * @param goalId - Goal ID (for context/logging)
+ * @param stepIds - Array of step IDs in desired order
+ * @throws Error if any ordinal update fails
+ */
+export function reorderSteps(goalId: GoalId, stepIds: StepId[]) {
+  breadcrumb({ category: "step", message: "reorder" });
+  applyStepOrdinals({ goalId }, stepIds);
+}
+
+/**
+ * Batch update sub-step ordinals within a single parent's sibling group (D4).
+ * Same mechanics as {@link reorderSteps}, scoped to one parent's children.
+ * @param goalId - Goal ID (for context/logging)
+ * @param parentStepId - Parent step whose children are being reordered
+ * @param childStepIds - Array of child step IDs in desired order
+ * @throws Error if any ordinal update fails
+ */
+export function reorderSubSteps(
+  goalId: GoalId,
+  parentStepId: StepId,
+  childStepIds: StepId[],
+) {
+  breadcrumb({ category: "step", message: "reorder" });
+  applyStepOrdinals({ goalId, parentStepId }, childStepIds);
 }
 
 // Evidence CRUD

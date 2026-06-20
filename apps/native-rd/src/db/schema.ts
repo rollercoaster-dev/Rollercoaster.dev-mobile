@@ -107,6 +107,10 @@ export const Schema = {
   step: {
     id: StepId,
     goalId: GoalId, // Foreign key to goal
+    // Optional parent step for one-level sub-steps (#290). Additive column:
+    // Evolu reads existing rows as null, so no migration is needed. Depth is
+    // capped at one level — a step with a non-null parentStepId is a leaf.
+    parentStepId: nullOr(StepId),
     title: NonEmptyString1000,
     ordinal: nullOr(Int), // Ordering within goal
     status: NonEmptyString1000, // 'pending' | 'completed'
