@@ -133,6 +133,12 @@ export function StepList({
     top: number;
     height: number;
   } | null>(null);
+  // Parent steps drag as a block with their children. Outline the complete
+  // destination group so the block-level reorder is explicit.
+  const [groupDropOutline, setGroupDropOutline] = useState<{
+    top: number;
+    height: number;
+  } | null>(null);
   // Measured vertical position + height of each rendered row, keyed by index,
   // captured via onLayout. The drag's landing slot is computed from these real
   // pixel bands instead of a fixed ITEM_HEIGHT, which drifts for variable-height
@@ -287,6 +293,7 @@ export function StepList({
     setIsDragging(true);
     setDropSlot(null);
     setNestedDropOutline(null);
+    setGroupDropOutline(null);
     lastDragTranslationYRef.current = 0;
     lastDragAbsoluteYRef.current = null;
     dragStartScrollOffsetRef.current =
@@ -337,21 +344,66 @@ export function StepList({
     // promises a landing the classifier would refuse. Suppressed when a nest
     // target is armed (that gets the dashed outline instead).
     const slotLayout = rowLayoutsRef.current[newIndex];
+    const hovered = steps[newIndex];
     if (newIndex === activeDraggedIndex || !slotLayout) {
       setDropSlot(null);
       setNestedDropOutline(null);
+      setGroupDropOutline(null);
     } else {
       const preview = classifyDrop(steps, activeDraggedIndex, newIndex, null);
       if (preview.kind === "none") {
         setDropSlot(null);
         setNestedDropOutline(null);
+        setGroupDropOutline(null);
       } else {
         const indent =
           preview.kind === "reparent"
             ? preview.newParentStepId !== null
             : preview.parentStepId !== null;
-        if (indent) {
+        const dragged = steps[activeDraggedIndex];
+        const targetRootId = hovered?.parentStepId ?? hovered?.id;
+        const isGroupReorder =
+          !!dragged &&
+          hasChildren(dragged.id) &&
+          preview.kind === "reorder" &&
+          preview.parentStepId === null &&
+          !!targetRootId &&
+          targetRootId !== dragged.id;
+
+        let groupOutline: { top: number; height: number } | null = null;
+        if (isGroupReorder) {
+          const groupStartIndex = steps.findIndex(
+            (step) => step.id === targetRootId,
+          );
+          let groupEndIndex = groupStartIndex;
+          while (
+            groupEndIndex + 1 < steps.length &&
+            steps[groupEndIndex + 1].parentStepId === targetRootId
+          ) {
+            groupEndIndex++;
+          }
+          const groupStart = rowLayoutsRef.current[groupStartIndex];
+          const groupEnd = rowLayoutsRef.current[groupEndIndex];
+          if (groupStart && groupEnd) {
+            groupOutline = {
+              top: groupStart.y,
+              height: groupEnd.y + groupEnd.height - groupStart.y,
+            };
+          }
+        }
+
+        if (groupOutline) {
           setDropSlot(null);
+          setNestedDropOutline(null);
+          setGroupDropOutline((prev) =>
+            prev?.top === groupOutline.top &&
+            prev.height === groupOutline.height
+              ? prev
+              : groupOutline,
+          );
+        } else if (indent) {
+          setDropSlot(null);
+          setGroupDropOutline(null);
           setNestedDropOutline((prev) =>
             prev &&
             prev.top === slotLayout.y &&
@@ -361,6 +413,7 @@ export function StepList({
           );
         } else {
           setNestedDropOutline(null);
+          setGroupDropOutline(null);
           // Below the row when dragging down, above it when dragging up; -1 so
           // the bar straddles the boundary rather than sitting just past it.
           const top =
@@ -374,7 +427,6 @@ export function StepList({
 
     // Only react to a genuine change of hovered row. Restarting the dwell
     // timer on every pan frame would mean it never fires.
-    const hovered = steps[newIndex];
     const hoveredId = hovered?.id ?? null;
     const hoveredLayout = rowLayoutsRef.current[newIndex];
     const inDwellZone =
@@ -529,6 +581,7 @@ export function StepList({
     setArmedTargetId(null);
     setDropSlot(null);
     setNestedDropOutline(null);
+    setGroupDropOutline(null);
     lastDragAbsoluteYRef.current = null;
     dragScrollCompensation.value = 0;
     hoverStepIdRef.current = null;
@@ -899,6 +952,20 @@ export function StepList({
               {
                 top: nestedDropOutline.top,
                 height: nestedDropOutline.height,
+              },
+            ]}
+          />
+        )}
+        {isDragging && armedTargetId === null && groupDropOutline && (
+          <View
+            pointerEvents="none"
+            accessibilityElementsHidden
+            importantForAccessibility="no"
+            style={[
+              styles.groupDropOutline,
+              {
+                top: groupDropOutline.top,
+                height: groupDropOutline.height,
               },
             ]}
           />

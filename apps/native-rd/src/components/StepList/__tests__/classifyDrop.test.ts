@@ -56,6 +56,29 @@ describe("classifyDrop", () => {
         orderedIds: ["c", "b"],
       });
     });
+
+    it("moves a root with children below another root group", () => {
+      const list = steps("a", ["a-child", "a"], "b", ["b-child", "b"]);
+      expect(classifyDrop(list, 0, 3)).toEqual({
+        kind: "reorder",
+        parentStepId: null,
+        orderedIds: ["b", "a"],
+      });
+    });
+
+    it("moves a root group when hovering the target root itself", () => {
+      const list = steps("a", ["a-child", "a"], "b", ["b-child", "b"]);
+      expect(classifyDrop(list, 0, 2)).toEqual({
+        kind: "reorder",
+        parentStepId: null,
+        orderedIds: ["b", "a"],
+      });
+    });
+
+    it("does not reorder a root group over one of its own children", () => {
+      const list = steps("a", ["a-child", "a"], "b");
+      expect(classifyDrop(list, 0, 1)).toEqual({ kind: "none" });
+    });
   });
 
   describe("promote (positional → root)", () => {
@@ -118,13 +141,6 @@ describe("classifyDrop", () => {
     it("armed target equal to dragged step is refused", () => {
       const list = steps("a", "b");
       expect(classifyDrop(list, 0, 0, "a")).toEqual({ kind: "none" });
-    });
-
-    it("positional demote of a parent-with-children is refused", () => {
-      // a {x}  b {y} — drag a (parent) to rest among b's children → refused
-      const list = steps("a", ["x", "a"], "b", ["y", "b"]);
-      // drop a at index 3 (row above in working = y, child of b)
-      expect(classifyDrop(list, 0, 3)).toEqual({ kind: "none" });
     });
   });
 });

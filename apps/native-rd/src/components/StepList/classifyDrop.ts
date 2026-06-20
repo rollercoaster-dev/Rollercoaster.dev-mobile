@@ -61,6 +61,34 @@ export function classifyDrop(
       : { kind: "none" }; // refused: snap back, no data change
   }
 
+  const currentParent = parentOf(dragged);
+
+  // A root with children moves as one group. Hovering either another root or
+  // any of its children targets that whole root group; the child rows remain
+  // attached through parentStepId and need no individual reorder writes.
+  if (currentParent === null && draggedHasChildren) {
+    const hovered = steps[dropIndex];
+    if (!hovered) return { kind: "none" };
+
+    const targetRootId = parentOf(hovered) ?? hovered.id;
+    if (targetRootId === dragged.id) return { kind: "none" };
+
+    const rootIds = steps
+      .filter((step) => parentOf(step) === null)
+      .map((step) => step.id);
+    const draggedRootIndex = rootIds.indexOf(dragged.id);
+    const targetRootIndex = rootIds.indexOf(targetRootId);
+    if (draggedRootIndex < 0 || targetRootIndex < 0) return { kind: "none" };
+
+    const orderedIds = rootIds.filter((id) => id !== dragged.id);
+    const targetIndexAfterRemoval = orderedIds.indexOf(targetRootId);
+    const insertIndex =
+      targetIndexAfterRemoval + (targetRootIndex > draggedRootIndex ? 1 : 0);
+    orderedIds.splice(insertIndex, 0, dragged.id);
+
+    return { kind: "reorder", parentStepId: null, orderedIds };
+  }
+
   // --- Positional reorder / promote --------------------------------------
   // A slot immediately before a row belongs to that row's sibling group. This
   // is essential for placing a child first: the row above is its root parent,
@@ -79,8 +107,6 @@ export function classifyDrop(
   if (positionalParent !== null && draggedHasChildren) {
     return { kind: "none" };
   }
-
-  const currentParent = parentOf(dragged);
 
   if (positionalParent !== currentParent) {
     // Parent changed → promote (to null) or move into another group's children.

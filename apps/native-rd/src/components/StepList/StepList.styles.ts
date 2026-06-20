@@ -66,6 +66,16 @@ export const styles = StyleSheet.create((theme) => {
       borderRadius: theme.radius.md,
       zIndex: 150,
     },
+    groupDropOutline: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      borderStyle: "dashed",
+      borderWidth: theme.borderWidth.thick + 1,
+      borderColor: theme.colors.success,
+      borderRadius: theme.radius.md,
+      zIndex: 150,
+    },
     stepRow: {
       flexDirection: "row",
       alignItems: "center",
