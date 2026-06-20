@@ -17,6 +17,7 @@ export const styles = StyleSheet.create((theme) => {
       gap: theme.space[2],
     },
     stepItems: {
+      position: "relative",
       gap: theme.space[2],
     },
     draggableItem: {
@@ -28,12 +29,42 @@ export const styles = StyleSheet.create((theme) => {
       ...shadowStyle(theme, "modalElevation"),
       elevation: 4,
     },
-    // Reduced-motion arm feedback (animationPref === "none"): a notably
-    // bolder accent border so a dwell target reads as armed without the
-    // grow-and-settle pulse that motion users get (D12/D16).
+    // Armed dwell-target feedback: a sustained dashed "success" outline that
+    // stays for the whole time the row is armed (D16 revised — the transient
+    // grow-and-settle pulse was imperceptible). Dashed + the success token make
+    // it read as a distinct "drop here to nest" target, separate from the
+    // dragged row's solid accent border. Same treatment for every motion
+    // setting (no separate reduced-motion path needed — it's static).
     armedTargetItem: {
+      borderStyle: "dashed",
       borderWidth: theme.borderWidth.thick + 1,
-      borderColor: theme.colors.accentPrimary,
+      borderColor: theme.colors.success,
+    },
+    // Reorder insertion indicator: a solid accent bar drawn at the real landing
+    // slot (positioned from measured row geometry, not a fixed row height) so a
+    // plain reorder shows exactly where the dragged row will come to rest. Uses
+    // accentPrimary to match the dragged row — "this is where I go".
+    dropLine: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      height: theme.borderWidth.thick + 1,
+      backgroundColor: theme.colors.accentPrimary,
+      borderRadius: theme.radius.sm,
+      zIndex: 50,
+    },
+    // Nested drop destination: outline the full target substep rather than
+    // relying on a small insertion line. It sits above the translated dragged
+    // card so the destination remains legible during overlap.
+    nestedDropOutline: {
+      position: "absolute",
+      left: theme.space[4] + theme.borderWidth.thick + theme.space[3],
+      right: 0,
+      borderStyle: "dashed",
+      borderWidth: theme.borderWidth.thick + 1,
+      borderColor: theme.colors.success,
+      borderRadius: theme.radius.md,
+      zIndex: 150,
     },
     stepRow: {
       flexDirection: "row",

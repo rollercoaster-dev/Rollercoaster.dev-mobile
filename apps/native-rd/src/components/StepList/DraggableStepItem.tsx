@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { View, Pressable, Text as RNText, Modal } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -8,7 +8,6 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
-  withSequence,
   runOnJS,
 } from "react-native-reanimated";
 import type { AnimationPref } from "../../hooks/useAnimationPref";
@@ -36,9 +35,11 @@ export interface DraggableStepItemProps {
   isFirst: boolean;
   isLast: boolean;
   editContent: React.ReactNode;
-  // Dwell-arm highlight: true while this row is the armed demote target.
+  // Dwell-arm highlight: true while this row is the armed demote target. Drives
+  // a sustained dashed "drop-here" outline (styles.armedTargetItem) for all
+  // motion settings — distinct from the dragged row's solid accent border.
   isArmedTarget?: boolean;
-  // Screen-reader reparent controls (Q1/Q2). A childless root with ≥1
+  // Screen-reader reparent controls (Q1/Q2). A leaf root with ≥1
   // eligible target can be nested via the picker; a child can be un-nested.
   canNestUnder?: boolean;
   nestTargets?: { id: string; title: string }[];
@@ -74,7 +75,6 @@ export function DraggableStepItem({
   const { t } = useTranslation(["editGoal", "common"]);
   const translateY = useSharedValue(0);
   const scale = useSharedValue(1);
-  const scaleArmed = useSharedValue(1);
   const isDragging = useSharedValue(false);
   const [pickerOpen, setPickerOpen] = useState(false);
 
@@ -83,32 +83,13 @@ export function DraggableStepItem({
 
   const noAnimation = animationPref === "none";
 
-  // Grow-and-settle pulse when this row arms as a dwell target (D16). Motion
-  // users get the animation; reduced-motion users get the static bold border
-  // applied via styles.armedTargetItem below.
-  useEffect(() => {
-    if (isArmedTarget) {
-      scaleArmed.value = noAnimation
-        ? 1
-        : withSequence(
-            withTiming(1.04, timingQuick),
-            withTiming(1, timingNormal),
-          );
-    } else {
-      scaleArmed.value = noAnimation ? 1 : withTiming(1, timingQuick);
-    }
-    // scaleArmed is a stable shared value and the timing configs derive from
-    // animationPref, which is constant for a mounted row — only the armed
-    // transition should retrigger the pulse.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isArmedTarget]);
-
   function resetDragState() {
     "worklet";
+    const wasDragging = isDragging.value;
     translateY.value = noAnimation ? 0 : withTiming(0, timingNormal);
     scale.value = noAnimation ? 1 : withTiming(1, timingQuick);
     isDragging.value = false;
-    runOnJS(onDragEnd)();
+    if (wasDragging) runOnJS(onDragEnd)();
   }
 
   const longPress = Gesture.LongPress()
@@ -132,16 +113,12 @@ export function DraggableStepItem({
       translateY.value = e.translationY;
       runOnJS(onDragMove)(e.translationY);
     })
-    .onEnd(resetDragState)
     .onFinalize(resetDragState);
 
   const composed = Gesture.Simultaneous(longPress, pan);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateY: translateY.value },
-      { scale: scale.value * scaleArmed.value },
-    ],
+    transform: [{ translateY: translateY.value }, { scale: scale.value }],
     zIndex: isDragging.value ? 100 : 0,
   }));
 
@@ -151,7 +128,7 @@ export function DraggableStepItem({
         style={[
           styles.draggableItem,
           isBeingDragged && styles.draggingItem,
-          isArmedTarget && noAnimation && styles.armedTargetItem,
+          isArmedTarget && styles.armedTargetItem,
           animatedStyle,
         ]}
       >

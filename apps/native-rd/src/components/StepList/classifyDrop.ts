@@ -10,8 +10,9 @@
  *   immediately followed by its children.
  * - Reorder and promote fall out of the resting position — the dragged step's
  *   parent becomes the parent of the row directly above the drop slot.
- * - Demote under a *childless* root can't be expressed by position alone, so
- *   it is an explicit dwell: the armed target id is passed in.
+ * - Demote onto a root is an explicit dwell: the armed target id is passed in.
+ *   Existing parents remain valid targets so a root can receive more than one
+ *   child through the same gesture.
  * - One-level cap: a step that itself has children can never become a child
  *   (would create grandchildren); such drops are refused and snap back.
  */
@@ -50,11 +51,9 @@ export function classifyDrop(
   // --- Dwell-to-demote: explicit nest under an armed root target ----------
   if (armedTargetId != null) {
     const target = steps.find((s) => s.id === armedTargetId);
-    const targetHasChildren = steps.some((s) => parentOf(s) === armedTargetId);
     const valid =
       !!target &&
       parentOf(target) === null && // target must be a root (one-level cap)
-      !targetHasChildren && // dwell targets are childless roots only (#330)
       target.id !== dragged.id &&
       !draggedHasChildren; // a parent-with-children can't be demoted
     return valid
@@ -63,11 +62,18 @@ export function classifyDrop(
   }
 
   // --- Positional reorder / promote --------------------------------------
-  // Parent = parent of the row directly above the drop slot, computed on the
-  // list with the dragged row removed (same model as the existing reorder).
+  // A slot immediately before a row belongs to that row's sibling group. This
+  // is essential for placing a child first: the row above is its root parent,
+  // but the child at the slot carries the intended parent. At the end of the
+  // list there is no row at the slot, so inherit from the row above instead.
   const working = steps.filter((_, i) => i !== draggedIndex);
+  const atSlot = working[dropIndex];
   const above = dropIndex > 0 ? working[dropIndex - 1] : null;
-  const positionalParent = above ? parentOf(above) : null;
+  const positionalParent = atSlot
+    ? parentOf(atSlot)
+    : above
+      ? parentOf(above)
+      : null;
 
   // One-level cap: a parent-with-children can't become someone's child.
   if (positionalParent !== null && draggedHasChildren) {

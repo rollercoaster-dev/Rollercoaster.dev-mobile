@@ -55,7 +55,7 @@ export interface StepListProps {
 }
 
 const ITEM_HEIGHT = 48;
-// Dwell duration before a hovered childless-root target arms for demote (D14,
+// Dwell duration before a hovered root target arms for demote (D14,
 // Q3). A named module constant so it can be tuned on device without hunting
 // through the gesture code; not a theme token (it's timing, not styling).
 const DWELL_ARM_MS = 220;
@@ -97,11 +97,39 @@ export function StepList({
   ]);
 
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
-  // Identity of the childless-root target currently armed by dwell (D15), and
+  // Active gesture callbacks may retain the render from before long-press
+  // state updates. Refs are the authoritative indices for gesture decisions;
+  // state mirrors them only to drive rendering.
+  const draggedIndexRef = useRef<number | null>(null);
+  const hoverIndexRef = useRef<number | null>(null);
+  // Identity of the root target currently armed by dwell (D15), and
   // whether a drag is in progress (used to hide the +sub-step ghost rows).
   const [armedTargetId, setArmedTargetId] = useState<string | null>(null);
+  // Gesture callbacks can outlive the render that created them. Keep the live
+  // armed identity in a ref so pan updates disarm immediately and drag-end
+  // dispatches the target that was actually shown to the user.
+  const armedTargetIdRef = useRef<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  // Reorder insertion indicator: the pixel y of the landing boundary and
+  // whether the landing level is nested. Computed in the drag handler from
+  // measured geometry (rowLayoutsRef) so it tracks the real drop, not a guess —
+  // pre-resolved to a number here so render never touches the ref.
+  const [dropSlot, setDropSlot] = useState<{ top: number } | null>(null);
+  // Nested destinations use a full dashed outline rather than the compact
+  // insertion line, making the destination substep visible beneath the
+  // translated dragged card.
+  const [nestedDropOutline, setNestedDropOutline] = useState<{
+    top: number;
+    height: number;
+  } | null>(null);
+  // Measured vertical position + height of each rendered row, keyed by index,
+  // captured via onLayout. The drag's landing slot is computed from these real
+  // pixel bands instead of a fixed ITEM_HEIGHT, which drifts for variable-height
+  // rows (evidence icons, wrapped titles, indented children) and made drops
+  // land unpredictably.
+  const rowLayoutsRef = useRef<({ y: number; height: number } | undefined)[]>(
+    [],
+  );
   const dwellTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Last hovered row id — change-detection that survives async setState so the
   // dwell timer is only (re)started when the hovered row actually changes.
@@ -226,23 +254,88 @@ export function StepList({
   }
 
   function handleDragStart(index: number) {
+    draggedIndexRef.current = index;
+    hoverIndexRef.current = index;
     setDraggedIndex(index);
-    setHoverIndex(index);
     setIsDragging(true);
+    setDropSlot(null);
+    setNestedDropOutline(null);
     hoverStepIdRef.current = steps[index]?.id ?? null;
     if (dwellTimer.current) clearTimeout(dwellTimer.current);
+    armedTargetIdRef.current = null;
     setArmedTargetId(null);
     triggerDragStart();
   }
 
+  // Which row's measured vertical band contains the given y. Falls back to the
+  // fixed-height estimate only when a row hasn't reported its layout yet.
+  function rowIndexAtY(centerY: number, draggedFrom: number): number {
+    const layouts = rowLayoutsRef.current;
+    for (let i = 0; i < steps.length; i++) {
+      const l = layouts[i];
+      if (!l) continue;
+      if (centerY < l.y + l.height) return i;
+    }
+    if (layouts.some(Boolean)) return steps.length - 1;
+    // No geometry at all — fall back to the (imprecise) fixed-height estimate.
+    return draggedFrom;
+  }
+
   function handleDragMove(translationY: number) {
-    if (draggedIndex === null) return;
-    const offset = Math.round(translationY / ITEM_HEIGHT);
-    const newIndex = Math.max(
-      0,
-      Math.min(steps.length - 1, draggedIndex + offset),
-    );
-    setHoverIndex(newIndex);
+    const activeDraggedIndex = draggedIndexRef.current;
+    if (activeDraggedIndex === null) return;
+
+    const draggedLayout = rowLayoutsRef.current[activeDraggedIndex];
+    let newIndex: number;
+    if (draggedLayout) {
+      // Live centre of the dragged row = its resting top + how far it's moved.
+      const center = draggedLayout.y + translationY + draggedLayout.height / 2;
+      newIndex = rowIndexAtY(center, activeDraggedIndex);
+    } else {
+      const offset = Math.round(translationY / ITEM_HEIGHT);
+      newIndex = activeDraggedIndex + offset;
+    }
+    newIndex = Math.max(0, Math.min(steps.length - 1, newIndex));
+    hoverIndexRef.current = newIndex;
+
+    // Reorder insertion line: preview the actual drop so the indicator never
+    // promises a landing the classifier would refuse. Suppressed when a nest
+    // target is armed (that gets the dashed outline instead).
+    const slotLayout = rowLayoutsRef.current[newIndex];
+    if (newIndex === activeDraggedIndex || !slotLayout) {
+      setDropSlot(null);
+      setNestedDropOutline(null);
+    } else {
+      const preview = classifyDrop(steps, activeDraggedIndex, newIndex, null);
+      if (preview.kind === "none") {
+        setDropSlot(null);
+        setNestedDropOutline(null);
+      } else {
+        const indent =
+          preview.kind === "reparent"
+            ? preview.newParentStepId !== null
+            : preview.parentStepId !== null;
+        if (indent) {
+          setDropSlot(null);
+          setNestedDropOutline((prev) =>
+            prev &&
+            prev.top === slotLayout.y &&
+            prev.height === slotLayout.height
+              ? prev
+              : { top: slotLayout.y, height: slotLayout.height },
+          );
+        } else {
+          setNestedDropOutline(null);
+          // Below the row when dragging down, above it when dragging up; -1 so
+          // the bar straddles the boundary rather than sitting just past it.
+          const top =
+            (newIndex > activeDraggedIndex
+              ? slotLayout.y + slotLayout.height
+              : slotLayout.y) - 1;
+          setDropSlot((prev) => (prev?.top === top ? prev : { top }));
+        }
+      }
+    }
 
     // Only react to a genuine change of hovered row. Restarting the dwell
     // timer on every pan frame would mean it never fires.
@@ -251,38 +344,47 @@ export function StepList({
     if (hoveredId === hoverStepIdRef.current) return;
     hoverStepIdRef.current = hoveredId;
 
-    // Any move to a new row disarms immediately (no unintended demote).
+    // Leaving the hovered row disarms immediately. Movement within the same
+    // row keeps the target armed so normal finger jitter cannot erase the
+    // sustained drop-under indicator before release.
     if (dwellTimer.current) clearTimeout(dwellTimer.current);
+    armedTargetIdRef.current = null;
     setArmedTargetId(null);
 
-    // Arm only when a release here would actually nest: target is a childless
-    // root, distinct from the dragged leaf, and the dragged step is itself a
-    // leaf (mirrors classifyDrop's dwell rule so the highlight never lies).
-    const dragged = steps[draggedIndex];
+    // Arm only when a release here would actually nest: target is a root,
+    // distinct from the dragged leaf, and the dragged step is itself a leaf
+    // (mirrors classifyDrop's dwell rule so the highlight never lies).
+    const dragged = steps[activeDraggedIndex];
     const armable =
       !!hovered &&
       !!dragged &&
       hovered.id !== dragged.id &&
       hovered.parentStepId == null &&
-      !hasChildren(hovered.id) &&
       !hasChildren(dragged.id);
     if (armable) {
-      dwellTimer.current = setTimeout(
-        () => setArmedTargetId(hovered.id),
-        DWELL_ARM_MS,
-      );
+      dwellTimer.current = setTimeout(() => {
+        dwellTimer.current = null;
+        armedTargetIdRef.current = hovered.id;
+        setArmedTargetId(hovered.id);
+      }, DWELL_ARM_MS);
     }
   }
 
   function handleDragEnd() {
-    if (dwellTimer.current) clearTimeout(dwellTimer.current);
+    if (dwellTimer.current) {
+      clearTimeout(dwellTimer.current);
+      dwellTimer.current = null;
+    }
 
-    if (draggedIndex !== null && hoverIndex !== null) {
+    const activeDraggedIndex = draggedIndexRef.current;
+    const activeHoverIndex = hoverIndexRef.current;
+
+    if (activeDraggedIndex !== null && activeHoverIndex !== null) {
       const result = classifyDrop(
         steps,
-        draggedIndex,
-        hoverIndex,
-        armedTargetId,
+        activeDraggedIndex,
+        activeHoverIndex,
+        armedTargetIdRef.current,
       );
       switch (result.kind) {
         case "reorder":
@@ -302,17 +404,21 @@ export function StepList({
         triggerDragDrop();
         AccessibilityInfo.announceForAccessibility(
           t("editGoal:stepList.a11y.movedFromTo", {
-            from: draggedIndex + 1,
-            to: hoverIndex + 1,
+            from: activeDraggedIndex + 1,
+            to: activeHoverIndex + 1,
           }),
         );
       }
     }
 
+    draggedIndexRef.current = null;
+    hoverIndexRef.current = null;
     setDraggedIndex(null);
-    setHoverIndex(null);
     setIsDragging(false);
+    armedTargetIdRef.current = null;
     setArmedTargetId(null);
+    setDropSlot(null);
+    setNestedDropOutline(null);
     hoverStepIdRef.current = null;
   }
 
@@ -367,10 +473,10 @@ export function StepList({
   }
 
   const canDrag = onReorderSteps && steps.length > 1 && editingId === null;
-  // Childless roots are the only eligible nest-under targets (mirror
-  // classifyDrop's dwell rule so the screen-reader picker and drag agree).
-  const childlessRootTargets = steps
-    .filter((s) => s.parentStepId == null && !hasChildren(s.id))
+  // Any root is an eligible nest-under target (mirror classifyDrop's dwell
+  // rule so the screen-reader picker and drag agree).
+  const rootTargets = steps
+    .filter((s) => s.parentStepId == null)
     .map((s) => ({ id: s.id, title: s.title }));
   const stepCountLabel = t("editGoal:stepList.count", { count: steps.length });
 
@@ -440,7 +546,7 @@ export function StepList({
           const isChild = step.parentStepId != null;
 
           const stepHasChildren = hasChildren(step.id);
-          const nestTargets = childlessRootTargets.filter(
+          const nestTargets = rootTargets.filter(
             (target) => target.id !== step.id,
           );
           const canNestUnder =
@@ -575,7 +681,15 @@ export function StepList({
             !isDragging;
 
           return (
-            <View key={step.id}>
+            <View
+              key={step.id}
+              onLayout={(e) => {
+                rowLayoutsRef.current[index] = {
+                  y: e.nativeEvent.layout.y,
+                  height: e.nativeEvent.layout.height,
+                };
+              }}
+            >
               {rowNode}
               {showSubStepAffordance &&
                 (addingSubStepForId === affordanceParent.id ? (
@@ -646,6 +760,32 @@ export function StepList({
             </View>
           );
         })}
+
+        {/* Root reorder insertion line: drawn at the real landing slot from
+            measured geometry. Nested destinations use the clearer dashed
+            outline below. Both are hidden while a nest target is armed. */}
+        {isDragging && armedTargetId === null && dropSlot && (
+          <View
+            pointerEvents="none"
+            accessibilityElementsHidden
+            importantForAccessibility="no"
+            style={[styles.dropLine, { top: dropSlot.top }]}
+          />
+        )}
+        {isDragging && armedTargetId === null && nestedDropOutline && (
+          <View
+            pointerEvents="none"
+            accessibilityElementsHidden
+            importantForAccessibility="no"
+            style={[
+              styles.nestedDropOutline,
+              {
+                top: nestedDropOutline.top,
+                height: nestedDropOutline.height,
+              },
+            ]}
+          />
+        )}
       </GestureHandlerRootView>
 
       {/* Only one create/edit context is active at a time: hide the

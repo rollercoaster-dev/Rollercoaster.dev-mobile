@@ -45,12 +45,23 @@ describe("classifyDrop", () => {
         orderedIds: ["c", "b"],
       });
     });
+
+    it("moves a child to the first position without promoting it", () => {
+      // a {b, c} — move c before b; the root row above the slot must not make
+      // the classifier interpret this as a promotion.
+      const list = steps("a", ["b", "a"], ["c", "a"]);
+      expect(classifyDrop(list, 2, 1)).toEqual({
+        kind: "reorder",
+        parentStepId: "a",
+        orderedIds: ["c", "b"],
+      });
+    });
   });
 
   describe("promote (positional → root)", () => {
     it("dragging a leaf child to the top promotes it", () => {
       const list = steps("a", ["b", "a"], "c");
-      // drag b (idx 1) to the top (idx 0): row above = none → root
+      // Drag b above its parent row (idx 0) to promote it.
       expect(classifyDrop(list, 1, 0)).toEqual({
         kind: "reparent",
         stepId: "b",
@@ -72,9 +83,18 @@ describe("classifyDrop", () => {
   });
 
   describe("dwell-to-demote (armed target)", () => {
-    it("nesting a leaf root under a childless root", () => {
+    it("nests a leaf root under a childless root", () => {
       const list = steps("a", "b");
       expect(classifyDrop(list, 1, 1, "a")).toEqual({
+        kind: "reparent",
+        stepId: "b",
+        newParentStepId: "a",
+      });
+    });
+
+    it("nests another leaf under a root that already has children", () => {
+      const list = steps("a", ["x", "a"], "b");
+      expect(classifyDrop(list, 2, 2, "a")).toEqual({
         kind: "reparent",
         stepId: "b",
         newParentStepId: "a",
@@ -98,13 +118,6 @@ describe("classifyDrop", () => {
     it("armed target equal to dragged step is refused", () => {
       const list = steps("a", "b");
       expect(classifyDrop(list, 0, 0, "a")).toEqual({ kind: "none" });
-    });
-
-    it("armed target that already has children is refused", () => {
-      // a {x}  b — dwell b on a, but a already parents x (#330: dwell targets
-      // must be childless roots; a positional drop into a's group handles this).
-      const list = steps("a", ["x", "a"], "b");
-      expect(classifyDrop(list, 2, 2, "a")).toEqual({ kind: "none" });
     });
 
     it("positional demote of a parent-with-children is refused", () => {
