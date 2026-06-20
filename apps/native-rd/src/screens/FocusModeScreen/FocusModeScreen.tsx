@@ -49,7 +49,6 @@ import {
   deleteEvidence,
   canCompleteStep,
   isPendingStep,
-  findFirstPendingIndex,
   EvidenceType,
   StepStatus,
 } from "../../db";
@@ -87,6 +86,51 @@ const EVIDENCE_ROUTE_MAP: Partial<
   [EvidenceType.link]: "CaptureLink",
   [EvidenceType.file]: "CaptureFile",
 };
+
+/**
+ * Index (into the flat `stepRows`) of the first pending *leaf* to snap to on
+ * mount (#292). Mirrors the goal card's resolution: walk top-level steps in
+ * order and, for the first non-completed one, return the first pending child
+ * (a leaf) — or the parent itself when it is flat or in the invite state (all
+ * children done, parent still pending). Returns -1 when nothing is pending.
+ *
+ * This skips a parent whose children are still pending so the carousel lands on
+ * the actionable leaf, not the container.
+ */
+function findFirstPendingLeafIndex(
+  rows: readonly {
+    id: string;
+    parentStepId: string | null;
+    status: string | null;
+  }[],
+): number {
+  const childrenByParent = new Map<
+    string,
+    { index: number; status: string | null }[]
+  >();
+  const topLevel: { id: string; index: number; status: string | null }[] = [];
+  rows.forEach((row, index) => {
+    if (row.parentStepId != null) {
+      const entry = { index, status: row.status };
+      const list = childrenByParent.get(row.parentStepId);
+      if (list) list.push(entry);
+      else childrenByParent.set(row.parentStepId, [entry]);
+    } else {
+      topLevel.push({ id: row.id, index, status: row.status });
+    }
+  });
+
+  for (const step of topLevel) {
+    if (step.status === StepStatus.completed) continue;
+    const children = childrenByParent.get(step.id) ?? [];
+    if (children.length === 0) return step.index; // flat
+    const pendingChild = children.find(
+      (c) => c.status !== StepStatus.completed,
+    );
+    return pendingChild ? pendingChild.index : step.index; // leaf, else invite
+  }
+  return -1;
+}
 
 function FocusContent({ goalId }: { goalId: string }) {
   const { t } = useTranslation(["focusMode", "common"]);
@@ -127,17 +171,27 @@ function FocusContent({ goalId }: { goalId: string }) {
   // Derive UI step status: current step is 'in-progress', others are mapped from DB
   const uiSteps = useMemo(
     () =>
-      stepRows.map((row, index) => ({
-        id: row.id,
-        title: row.title ?? "",
-        status:
-          row.status === StepStatus.completed
-            ? ("completed" as UIStepStatus)
-            : index === currentCardIndex
-              ? ("in-progress" as UIStepStatus)
-              : ("pending" as UIStepStatus),
-        evidenceCount: 0, // Will be enriched below
-      })),
+      stepRows.map((row, index) => {
+        // `stepsByGoalQuery` uses selectAll, so parentStepId is present. A
+        // non-null parentStepId marks a sub-step (#292); resolve its parent's
+        // title for the StepCard / MiniTimeline context line.
+        const isChild = row.parentStepId != null;
+        return {
+          id: row.id,
+          title: row.title ?? "",
+          status:
+            row.status === StepStatus.completed
+              ? ("completed" as UIStepStatus)
+              : index === currentCardIndex
+                ? ("in-progress" as UIStepStatus)
+                : ("pending" as UIStepStatus),
+          evidenceCount: 0, // Will be enriched below
+          isChild,
+          parentTitle: isChild
+            ? (stepRows.find((r) => r.id === row.parentStepId)?.title ?? null)
+            : null,
+        };
+      }),
     [stepRows, currentCardIndex],
   );
 
@@ -182,7 +236,8 @@ function FocusContent({ goalId }: { goalId: string }) {
 
   // Timeline + dot steps (memoized to prevent child re-renders on unrelated state changes)
   const timelineSteps = useMemo<MiniTimelineStep[]>(
-    () => stepsWithEvidence.map((s) => ({ status: s.status })),
+    () =>
+      stepsWithEvidence.map((s) => ({ status: s.status, isChild: s.isChild })),
     [stepsWithEvidence],
   );
   const dotSteps = useMemo<ProgressDotsStep[]>(
@@ -226,7 +281,7 @@ function FocusContent({ goalId }: { goalId: string }) {
     if (lifecycle.current.snappedToFirstPending) return;
     if (stepRowsLength === 0) return;
     lifecycle.current.snappedToFirstPending = true;
-    const firstPendingIndex = findFirstPendingIndex(stepRows);
+    const firstPendingIndex = findFirstPendingLeafIndex(stepRows);
     if (firstPendingIndex > 0) {
       setCurrentCardIndex(firstPendingIndex);
     }
@@ -567,6 +622,7 @@ function FocusContent({ goalId }: { goalId: string }) {
                   evidenceCount: step.evidenceCount,
                   plannedEvidenceTypes: step.plannedEvidenceTypes,
                   capturedEvidenceTypes: step.capturedEvidenceTypes,
+                  parentTitle: step.parentTitle,
                 }}
                 stepIndex={index}
                 totalSteps={stepRows.length}
