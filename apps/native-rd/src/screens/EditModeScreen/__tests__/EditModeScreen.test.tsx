@@ -64,6 +64,7 @@ const mockCreateSubStep = jest.fn();
 const mockUpdateStep = jest.fn();
 const mockDeleteStep = jest.fn();
 const mockReorderSteps = jest.fn();
+const mockReorderSubSteps = jest.fn();
 
 interface StepRow {
   id: string;
@@ -90,6 +91,7 @@ jest.mock("../../../db", () => ({
   updateStep: (...args: unknown[]) => mockUpdateStep(...args),
   deleteStep: (...args: unknown[]) => mockDeleteStep(...args),
   reorderSteps: (...args: unknown[]) => mockReorderSteps(...args),
+  reorderSubSteps: (...args: unknown[]) => mockReorderSubSteps(...args),
   // Faithful lightweight stand-ins for the pure grouping helpers.
   groupStepsByParent: (rows: StepRow[]) => {
     const rootIds = new Set(
@@ -444,6 +446,90 @@ describe("EditModeScreen", () => {
       expect(
         screen.getByText(i18n.t("editGoal:errors.updateTitleFailed")),
       ).toBeOnTheScreen();
+    });
+  });
+
+  describe("reparent wiring (#330)", () => {
+    // animationPref is mocked to "none" file-wide, so StepList renders its
+    // accessible reorder / nest / un-nest controls — the reachable entry point
+    // for exercising the reparent handlers without a live drag gesture.
+
+    // Two children under one parent so a sibling swap is observable. Child
+    // ordinals deliberately differ so a correct sibling-scoped reorder is the
+    // only way to produce the expected id order.
+    const TREE_TWO_CHILDREN = [
+      { id: "p1", title: "Parent one", status: "pending", ordinal: 0 },
+      {
+        id: "p1c1",
+        title: "Child A",
+        status: "pending",
+        ordinal: 0,
+        parentStepId: "p1",
+      },
+      {
+        id: "p1c2",
+        title: "Child B",
+        status: "pending",
+        ordinal: 1,
+        parentStepId: "p1",
+      },
+      { id: "p2", title: "Parent two", status: "pending", ordinal: 1 },
+    ];
+
+    // A leaf root ("lr") alongside a parent whose only child carries ordinal 3.
+    // lr's root ordinal (9) is deliberately HIGHER than every child ordinal so
+    // the demote "append to end" ordinal discriminates scope: child-scoped over
+    // p1's children {3} → 4, whereas a goal-wide max {0,3,9} would give 10. A
+    // correct sibling-scoped handler must produce 4.
+    const TREE_LEAF_ROOT = [
+      { id: "p1", title: "Parent one", status: "pending", ordinal: 0 },
+      {
+        id: "p1c1",
+        title: "P1 child",
+        status: "pending",
+        ordinal: 3,
+        parentStepId: "p1",
+      },
+      { id: "lr", title: "Lone root", status: "pending", ordinal: 9 },
+    ];
+
+    it("calls reorderSubSteps with the sibling-scoped order when a child is moved down", () => {
+      setupQueries(GOAL, TREE_TWO_CHILDREN);
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+      fireEvent.press(screen.getByLabelText('Move "Child A" down'));
+
+      expect(mockReorderSubSteps).toHaveBeenCalledWith("goal-1", "p1", [
+        "p1c2",
+        "p1c1",
+      ]);
+    });
+
+    it("promotes a child via updateStep with parentStepId null and a root-scoped ordinal", () => {
+      setupQueries(GOAL, STEPS_TREE);
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+      fireEvent.press(screen.getByTestId("step-un-nest-p1c1"));
+
+      // Roots p1(0)/p2(1) → next root ordinal is 2, NOT the child's old ordinal.
+      expect(mockUpdateStep).toHaveBeenCalledWith("p1c1", {
+        parentStepId: null,
+        ordinal: 2,
+      });
+    });
+
+    it("demotes a leaf root under a chosen parent with a child-scoped ordinal", () => {
+      setupQueries(GOAL, TREE_LEAF_ROOT);
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+      fireEvent.press(screen.getByTestId("step-nest-under-lr"));
+      fireEvent.press(screen.getByTestId("step-nest-target-lr-p1"));
+
+      // p1's only child has ordinal 3 → next child ordinal is 4.
+      expect(mockUpdateStep).toHaveBeenCalledWith("lr", {
+        parentStepId: "p1",
+        ordinal: 4,
+      });
     });
   });
 });
