@@ -28,6 +28,13 @@ export const styles = StyleSheet.create((theme) => {
       ...shadowStyle(theme, "modalElevation"),
       elevation: 4,
     },
+    // Reduced-motion arm feedback (animationPref === "none"): a notably
+    // bolder accent border so a dwell target reads as armed without the
+    // grow-and-settle pulse that motion users get (D12/D16).
+    armedTargetItem: {
+      borderWidth: theme.borderWidth.thick + 1,
+      borderColor: theme.colors.accentPrimary,
+    },
     stepRow: {
       flexDirection: "row",
       alignItems: "center",
@@ -189,6 +196,39 @@ export const styles = StyleSheet.create((theme) => {
     addSubStepPickerRow: {
       marginLeft: theme.space[4],
       marginTop: theme.space[1],
+    },
+    // --- "Nest under…" picker (screen-reader reparent path, Q1) ----------
+    pickerOverlay: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      padding: theme.space[4],
+    },
+    pickerContainer: {
+      width: "100%",
+      maxWidth: 400,
+    },
+    pickerCard: {
+      ...cardBase,
+      gap: theme.space[2],
+    },
+    pickerTitle: {
+      marginBottom: theme.space[2],
+    },
+    pickerRow: {
+      minHeight: 44,
+      justifyContent: "center",
+      paddingHorizontal: theme.space[3],
+      paddingVertical: theme.space[2],
+      borderWidth: theme.borderWidth.medium,
+      borderColor: theme.colors.border,
+      borderRadius: theme.radius.sm,
+      backgroundColor: theme.colors.backgroundSecondary,
+    },
+    pickerRowText: {
+      fontSize: theme.size.md,
+      fontFamily: theme.fontFamily.body,
+      color: theme.colors.text,
     },
   };
 });

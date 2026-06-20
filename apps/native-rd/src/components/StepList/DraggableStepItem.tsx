@@ -1,16 +1,20 @@
-import React from "react";
-import { View, Pressable, Text as RNText } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Pressable, Text as RNText, Modal } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { useTranslation } from "react-i18next";
 import { useUnistyles } from "react-native-unistyles";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
+  withSequence,
   runOnJS,
 } from "react-native-reanimated";
 import type { AnimationPref } from "../../hooks/useAnimationPref";
 import { getTimingConfig } from "../../utils/animation";
 import { IconButton } from "../IconButton";
+import { Button } from "../Button";
 import { Text } from "../Text";
 import { EvidenceTypePicker } from "../EvidenceTypePicker";
 import { styles } from "./StepList.styles";
@@ -32,6 +36,15 @@ export interface DraggableStepItemProps {
   isFirst: boolean;
   isLast: boolean;
   editContent: React.ReactNode;
+  // Dwell-arm highlight: true while this row is the armed demote target.
+  isArmedTarget?: boolean;
+  // Screen-reader reparent controls (Q1/Q2). A childless root with ≥1
+  // eligible target can be nested via the picker; a child can be un-nested.
+  canNestUnder?: boolean;
+  nestTargets?: { id: string; title: string }[];
+  onNestUnder?: (targetId: string) => void;
+  canUnNest?: boolean;
+  onUnNest?: () => void;
 }
 
 export function DraggableStepItem({
@@ -50,16 +63,45 @@ export function DraggableStepItem({
   isFirst,
   isLast,
   editContent,
+  isArmedTarget = false,
+  canNestUnder = false,
+  nestTargets = [],
+  onNestUnder,
+  canUnNest = false,
+  onUnNest,
 }: DraggableStepItemProps) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation(["editGoal", "common"]);
   const translateY = useSharedValue(0);
   const scale = useSharedValue(1);
+  const scaleArmed = useSharedValue(1);
   const isDragging = useSharedValue(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const timingQuick = getTimingConfig(animationPref, "quick");
   const timingNormal = getTimingConfig(animationPref, "normal");
 
   const noAnimation = animationPref === "none";
+
+  // Grow-and-settle pulse when this row arms as a dwell target (D16). Motion
+  // users get the animation; reduced-motion users get the static bold border
+  // applied via styles.armedTargetItem below.
+  useEffect(() => {
+    if (isArmedTarget) {
+      scaleArmed.value = noAnimation
+        ? 1
+        : withSequence(
+            withTiming(1.04, timingQuick),
+            withTiming(1, timingNormal),
+          );
+    } else {
+      scaleArmed.value = noAnimation ? 1 : withTiming(1, timingQuick);
+    }
+    // scaleArmed is a stable shared value and the timing configs derive from
+    // animationPref, which is constant for a mounted row — only the armed
+    // transition should retrigger the pulse.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isArmedTarget]);
 
   function resetDragState() {
     "worklet";
@@ -96,7 +138,10 @@ export function DraggableStepItem({
   const composed = Gesture.Simultaneous(longPress, pan);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }, { scale: scale.value }],
+    transform: [
+      { translateY: translateY.value },
+      { scale: scale.value * scaleArmed.value },
+    ],
     zIndex: isDragging.value ? 100 : 0,
   }));
 
@@ -106,6 +151,7 @@ export function DraggableStepItem({
         style={[
           styles.draggableItem,
           isBeingDragged && styles.draggingItem,
+          isArmedTarget && noAnimation && styles.armedTargetItem,
           animatedStyle,
         ]}
       >
@@ -159,6 +205,28 @@ export function DraggableStepItem({
                       accessibilityLabel={`Move "${step.title}" down`}
                     />
                   )}
+                  {canNestUnder && onNestUnder && (
+                    <IconButton
+                      icon={<Text variant="body">⤵</Text>}
+                      onPress={() => setPickerOpen(true)}
+                      size="sm"
+                      accessibilityLabel={t(
+                        "editGoal:stepList.a11y.nestUnderTriggerA11y",
+                      )}
+                      testID={`step-nest-under-${step.id}`}
+                    />
+                  )}
+                  {canUnNest && onUnNest && (
+                    <IconButton
+                      icon={<Text variant="body">⤴</Text>}
+                      onPress={onUnNest}
+                      size="sm"
+                      accessibilityLabel={t(
+                        "editGoal:stepList.a11y.unNestA11y",
+                      )}
+                      testID={`step-un-nest-${step.id}`}
+                    />
+                  )}
                 </View>
               )}
             </View>
@@ -172,6 +240,61 @@ export function DraggableStepItem({
                 </View>
               )}
           </View>
+        )}
+        {canNestUnder && onNestUnder && (
+          <Modal
+            visible={pickerOpen}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setPickerOpen(false)}
+            accessibilityViewIsModal
+          >
+            <View
+              style={[
+                styles.pickerOverlay,
+                { backgroundColor: `${theme.colors.shadow}80` },
+              ]}
+            >
+              <SafeAreaView edges={["bottom"]} style={styles.pickerContainer}>
+                <View style={styles.pickerCard}>
+                  <Text
+                    variant="headline"
+                    style={styles.pickerTitle}
+                    accessibilityRole="header"
+                  >
+                    {t("editGoal:stepList.a11y.nestUnderPickerTitle")}
+                  </Text>
+                  {nestTargets.map((target) => (
+                    <Pressable
+                      key={target.id}
+                      style={styles.pickerRow}
+                      onPress={() => {
+                        onNestUnder(target.id);
+                        setPickerOpen(false);
+                      }}
+                      accessibilityRole="button"
+                      accessibilityLabel={t(
+                        "editGoal:stepList.a11y.nestUnderA11y",
+                        { title: target.title },
+                      )}
+                      testID={`step-nest-target-${step.id}-${target.id}`}
+                    >
+                      <RNText style={styles.pickerRowText}>
+                        {t("editGoal:stepList.a11y.nestUnder", {
+                          title: target.title,
+                        })}
+                      </RNText>
+                    </Pressable>
+                  ))}
+                  <Button
+                    label={t("common:actions.cancel")}
+                    variant="secondary"
+                    onPress={() => setPickerOpen(false)}
+                  />
+                </View>
+              </SafeAreaView>
+            </View>
+          </Modal>
         )}
       </Animated.View>
     </GestureDetector>
