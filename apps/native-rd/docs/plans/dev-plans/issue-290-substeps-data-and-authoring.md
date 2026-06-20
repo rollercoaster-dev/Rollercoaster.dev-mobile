@@ -40,9 +40,10 @@ or reading tests.
       (`parentStepId !== null`).
 - [ ] A flat step (no children) and a top-level step with no sub-step added
       remain first-class — no standing nag toward structure.
-- [ ] NewGoalModal exposes the same "Add sub-step" affordance (full create
-      parity): a step created in the modal can have a sub-step added under it
-      before the goal is saved; flat steps remain the default path.
+- [ ] Create parity holds via EditMode: a newly created goal (which routes
+      NewGoalModal → BadgeDesigner → EditMode) exposes the same "Add sub-step"
+      affordance on its steps; flat steps remain the default path. (Revised
+      2026-06-20 — NewGoalModal itself is title-only, see Discovery Log.)
 - [ ] `stepsByGoalQuery` returns all steps for a goal in parent→children
       order: top-level steps ordered by `ordinal`, each immediately followed
       by its children ordered by `ordinal` (JS grouping after a single query).
@@ -77,19 +78,19 @@ contract pass remain deferred to #292, #293, and #294.
 
 ## Decisions
 
-| ID  | Decision                                                                                                  | Alternatives Considered                                   | Rationale                                                                                                                                                                  |
-| --- | --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| D1  | JS grouping after flat query, not a GROUP BY CTE                                                          | Recursive CTE; dedicated grouped query                    | Spike confirms JS grouping is trivial at this depth; avoids Evolu CTE complexity                                                                                           |
-| D2  | `stepsByGoalQuery` stays flat, grouping helper lives beside it                                            | Separate `groupedStepsByGoalQuery`                        | Consumers that don't need hierarchy (stepsForActiveGoalsQuery) are unaffected; backward compat                                                                             |
-| D3  | Tie-break on `(ordinal ASC, createdAt ASC)` in query ORDER BY                                             | Fractional indexing; random tiebreak                      | Spike explicitly recommends `(ordinal, createdAt)`; createdAt is an Evolu system column, always present                                                                    |
-| D4  | Sibling-scoped reorder via new `reorderSubSteps` function                                                 | Extend `reorderSteps` with a parent arg                   | Clean separation: `reorderSteps` stays for top-level, `reorderSubSteps` for children; call sites are obvious                                                               |
-| D5  | "Add sub-step" inline ghost row below parent (shared StepList)                                            | Bottom sheet; long-press menu; ⋯ overflow                 | Q7 from the prototype: 1 tap below the friction threshold; ghost row is discoverable without pressuring structure                                                          |
-| D6  | "Add sub-step" available only once a parent step exists                                                   | Available from the first/empty row                        | No step to parent onto until one exists; keeps the empty-state clean                                                                                                       |
-| D7  | **Full create parity** — NewGoalModal gets the same affordance as EditModeScreen (user decision)          | Defer create path to a follow-up                          | User chose one device-testable PR satisfying #291 as written; the shared StepList component makes the create affordance cheap (built once)                                 |
-| D8  | **Drag-to-reparent** — leaf promote/demote on drop; refuse only one-level-violating drops (user decision) | Sibling-only reorder with snap-back on any boundary cross | User wants the intuitive "just drag it" behaviour; the one-level cap forces refusing parent-with-children demotes and non-root targets, but leaf promote/demote is allowed |
-| D9  | `updateStep` parentStepId field is **wired**, not just plumbed                                            | Leave it type-only                                        | D8 needs it: reparenting on drop calls `updateStep(id, { parentStepId })`                                                                                                  |
-| D10 | `groupStepsByParent` returns the tree; separate `flattenGroupedSteps` produces render order               | One flat-output function                                  | Two named pure utilities, each unit-testable; resolves the tree-vs-flat naming mismatch (former Q6)                                                                        |
-| D11 | Left rail = 2px (`borderWidth.thick`) in `theme.colors.border`                                            | Softer textMuted hairline                                 | Matches the neo-brutalist design language; distinction is visible without colour-only reliance (former Q4)                                                                 |
+| ID  | Decision                                                                                                                                      | Alternatives Considered                                   | Rationale                                                                                                                                                                                                                                                                                                                                            |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | JS grouping after flat query, not a GROUP BY CTE                                                                                              | Recursive CTE; dedicated grouped query                    | Spike confirms JS grouping is trivial at this depth; avoids Evolu CTE complexity                                                                                                                                                                                                                                                                     |
+| D2  | `stepsByGoalQuery` stays flat, grouping helper lives beside it                                                                                | Separate `groupedStepsByGoalQuery`                        | Consumers that don't need hierarchy (stepsForActiveGoalsQuery) are unaffected; backward compat                                                                                                                                                                                                                                                       |
+| D3  | Tie-break on `(ordinal ASC, createdAt ASC)` in query ORDER BY                                                                                 | Fractional indexing; random tiebreak                      | Spike explicitly recommends `(ordinal, createdAt)`; createdAt is an Evolu system column, always present                                                                                                                                                                                                                                              |
+| D4  | Sibling-scoped reorder via new `reorderSubSteps` function                                                                                     | Extend `reorderSteps` with a parent arg                   | Clean separation: `reorderSteps` stays for top-level, `reorderSubSteps` for children; call sites are obvious                                                                                                                                                                                                                                         |
+| D5  | "Add sub-step" inline ghost row below parent (shared StepList)                                                                                | Bottom sheet; long-press menu; ⋯ overflow                 | Q7 from the prototype: 1 tap below the friction threshold; ghost row is discoverable without pressuring structure                                                                                                                                                                                                                                    |
+| D6  | "Add sub-step" available only once a parent step exists                                                                                       | Available from the first/empty row                        | No step to parent onto until one exists; keeps the empty-state clean                                                                                                                                                                                                                                                                                 |
+| D7  | **Create parity via EditMode** — affordance lives in the shared StepList, which the create flow reaches through EditMode (revised 2026-06-20) | Build a draft-step UI inside NewGoalModal                 | **Discovery (2026-06-20):** NewGoalModal is title-only and `createGoal()`s immediately, then routes through BadgeDesigner → `replace("EditMode")`. New goals are authored in EditMode, so the sub-step affordance (Steps 4–5) gives create parity for free. Original D7 (wire NewGoalModal) was built on a false premise; user chose to drop Step 6. |
+| D8  | **Drag-to-reparent** — leaf promote/demote on drop; refuse only one-level-violating drops (user decision)                                     | Sibling-only reorder with snap-back on any boundary cross | User wants the intuitive "just drag it" behaviour; the one-level cap forces refusing parent-with-children demotes and non-root targets, but leaf promote/demote is allowed                                                                                                                                                                           |
+| D9  | `updateStep` parentStepId field is **wired**, not just plumbed                                                                                | Leave it type-only                                        | D8 needs it: reparenting on drop calls `updateStep(id, { parentStepId })`                                                                                                                                                                                                                                                                            |
+| D10 | `groupStepsByParent` returns the tree; separate `flattenGroupedSteps` produces render order                                                   | One flat-output function                                  | Two named pure utilities, each unit-testable; resolves the tree-vs-flat naming mismatch (former Q6)                                                                                                                                                                                                                                                  |
+| D11 | Left rail = 2px (`borderWidth.thick`) in `theme.colors.border`                                                                                | Softer textMuted hairline                                 | Matches the neo-brutalist design language; distinction is visible without colour-only reliance (former Q4)                                                                                                                                                                                                                                           |
 
 ## Affected Areas
 
@@ -147,9 +148,9 @@ shared StepList sub-step affordance into the create draft flow.
 
 **Changes**:
 
-- [ ] Add `parentStepId: nullOr(StepId)` to the `step` table object in
+- [x] Add `parentStepId: nullOr(StepId)` to the `step` table object in
       `Schema`, immediately after `goalId`. No other change.
-- [ ] Confirm existing rows will read `null` for this column (Evolu additive
+- [x] Confirm existing rows will read `null` for this column (Evolu additive
       guarantee — no migration needed; document in the inline comment).
 
 ### Step 2: Queries — grouping helper, tie-break, sub-step CRUD, sibling reorder
@@ -162,32 +163,35 @@ shared StepList sub-step affordance into the create draft flow.
 
 **Changes**:
 
-- [ ] Update `stepsByGoalQuery` to order by `ordinal ASC, createdAt ASC`
+- [x] Update `stepsByGoalQuery` to order by `ordinal ASC, createdAt ASC`
       (replacing the existing single `ordinal ASC` ordering). This is the
       tie-break from the spike.
-- [ ] Add `groupStepsByParent` pure function (no Evolu calls) that takes the
+- [x] Add `groupStepsByParent` pure function (no Evolu calls) that takes the
       flat query result and returns `GroupedStep[]` where each top-level step
       carries a `children: GroupedStep[]` array. Depth is capped at one level —
       any row with a `parentStepId` that is itself not a root is treated as a
       root (guard for cycles and orphans from soft-deletes).
-- [ ] Add `flattenGroupedSteps(grouped: GroupedStep[]): GroupedStep[]` pure
+- [x] Add `flattenGroupedSteps(grouped: GroupedStep[]): GroupedStep[]` pure
       function: returns render order — each root immediately followed by its
       children. This is what StepList consumes (D10).
-- [ ] Add `createSubStep(goalId, parentStepId, title, ordinal?, plannedEvidenceTypes?)`:
+- [x] Add `createSubStep(goalId, parentStepId, title, ordinal?, plannedEvidenceTypes?)`:
       calls `evolu.insert("step", { ..., parentStepId })`. Follows the same
       validation pattern as `createStep`. `ordinal` defaults to
       `maxSiblingOrdinal + 1` when not supplied (caller is responsible for
       computing this from the grouped list).
-- [ ] Add `reorderSubSteps(goalId, parentStepId, childStepIds)`: same
+- [x] Add `reorderSubSteps(goalId, parentStepId, childStepIds)`: same
       implementation shape as `reorderSteps` but scoped to the supplied child
-      IDs.
-- [ ] Update `updateStep` to accept an optional `parentStepId?: StepId | null`
+      IDs. _(Implemented via shared private `applyStepOrdinals` helper that
+      `reorderSteps` now also uses — avoids ~40 lines of duplication; behaviour
+      of `reorderSteps` unchanged.)_
+- [x] Update `updateStep` to accept an optional `parentStepId?: StepId | null`
       field and **wire it** (D9) — used by drag-to-reparent (D8). Setting it to
       `null` promotes a child to top-level; setting it to a root step's id
       demotes a leaf under that step. The one-level guard lives in the caller
       (StepList drag handler), not here.
-- [ ] Export `groupStepsByParent`, `flattenGroupedSteps`, `createSubStep`,
-      `reorderSubSteps` from `src/db/index.ts`.
+- [x] Export `groupStepsByParent`, `flattenGroupedSteps`, `createSubStep`,
+      `reorderSubSteps` from `src/db/index.ts`. _(Also exported the
+      `GroupedStep` type.)_
 
 **Type shapes to add (in queries.ts, above the Step CRUD section)**:
 
@@ -317,29 +321,14 @@ export interface GroupedStep {
 - [ ] `onReorderSteps` stays wired to top-level reorder; sub-step reorder uses
       `handleReorderSubSteps`. StepList's `classifyDrop` decides which fires.
 
-### Step 6: NewGoalModal — create-time sub-step affordance (D7 full parity)
+### Step 6: ~~NewGoalModal — create-time sub-step affordance~~ — DROPPED (2026-06-20)
 
-**Estimated LOC**: ~45 lines
-**Running total**: ~543
-
-**Files**: `src/screens/NewGoalModal/NewGoalModal.tsx` (+ styles only if needed)
-**Commit**: `feat(create): sub-step affordance in NewGoalModal draft flow`
-
-**Changes**:
-
-- [ ] NewGoalModal builds steps in local draft state before the goal is
-      persisted. Extend the draft step shape with `parentStepId: string | null`
-      and a client-side draft id so children can reference a not-yet-saved
-      parent.
-- [ ] Render the draft steps through the same shared StepList with
-      `onCreateSubStep` wired to append a child draft under the given parent
-      draft id (mirrors EditMode, but against draft state, not Evolu).
-- [ ] On save, persist parents first (capturing their real `StepId`), then
-      persist children with the resolved `parentStepId`. Keep ordinals
-      sibling-scoped.
-- [ ] No drag-to-reparent in the create modal — reorder/restructure is the
-      EditMode job; create only needs add-sub-step. (Keeps the modal lean.)
-- [ ] a11y labels reuse the same `editGoal:stepList.*` keys.
+**Status**: DROPPED. See Discovery Log + revised D7. `NewGoalModal` is a
+title-only modal that persists the goal immediately and routes through
+BadgeDesigner → `replace("EditMode")`. Step authoring (and therefore the
+sub-step affordance from Steps 4–5) happens in EditMode for both new and
+existing goals, so create parity holds with no NewGoalModal change.
+**Running total after drop**: ~498 (Step 5).
 
 ### Step 7: i18n strings
 
@@ -380,9 +369,10 @@ Pseudo keys: `[` + English copy + `]` per the pseudoTransform pattern.
 
 - `src/components/StepList/__tests__/StepList.test.tsx` (new)
 - `src/screens/EditModeScreen/__tests__/EditModeScreen.test.tsx` (extend)
-- `src/screens/NewGoalModal/__tests__/NewGoalModal.test.tsx` (extend)
 
-**Commit**: `test(ui): StepList indentation + reparent classify + create/edit sub-step wiring`
+(NewGoalModal test dropped with Step 6 — see Discovery Log.)
+
+**Commit**: `test(ui): StepList indentation + reparent classify + edit sub-step wiring`
 
 **StepList tests (new file)**:
 
@@ -407,10 +397,7 @@ Pseudo keys: `[` + English copy + `]` per the pseudoTransform pattern.
 - [ ] `createSubStep` is called when the "Add sub-step" flow is completed.
 - [ ] A promote drop calls `updateStep` with `parentStepId: null`.
 
-**NewGoalModal tests (extend existing)**:
-
-- [ ] Adding a sub-step in the create draft and saving persists the child
-      with the resolved parent `StepId` (parents-first ordering).
+**NewGoalModal tests**: dropped with Step 6 (see Discovery Log).
 
 ### Step 9: LOC recount and check-in gate
 
@@ -448,26 +435,46 @@ parity + drag-to-reparent as a fast-follow.
 
 ## Not in Scope
 
-| Item                                                              | Reason                                   | Follow-up    |
-| ----------------------------------------------------------------- | ---------------------------------------- | ------------ |
-| GoalCard reading surface (next pending leaf vs parent)            | Deferred by user scope decision          | #292         |
-| FocusModeScreen + MiniTimeline sub-step rendering                 | Deferred by user scope decision          | #292         |
-| TimelineJourneyScreen sub-step rendering                          | Deferred by user scope decision          | #293         |
-| Exhaustive a11y contract pass (full 44pt + role audit)            | Deferred by user scope decision          | #294         |
-| Duplicate-ordinal interleave permutation test matrix              | Deferred by user scope decision          | #294         |
-| Full reorder permutation tests                                    | Deferred by user scope decision          | #294         |
-| Progress counting rule (leaf-only vs every-unit vs parent-satis.) | Prototype record open question           | Post-Stage-6 |
-| Cycle guard for concurrent parentStepId writes (CRDT edge)        | Single-device; spike flags for ADR       | Schema ADR   |
-| Orphan promotion policy on parent soft-delete                     | Single-device; read-time policy          | Schema ADR   |
-| Drag-to-reparent inside the create modal                          | Restructure is the EditMode job          | —            |
-| German translation of new i18n keys                               | Placeholder copy sufficient for dev      | Translation  |
-| `stepsForActiveGoalsQuery` extended for parentStepId              | Used only by GoalCard — deferred to #292 | #292         |
+| Item                                                              | Reason                                                                                                                  | Follow-up    |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ------------ |
+| GoalCard reading surface (next pending leaf vs parent)            | Deferred by user scope decision                                                                                         | #292         |
+| FocusModeScreen + MiniTimeline sub-step rendering                 | Deferred by user scope decision                                                                                         | #292         |
+| TimelineJourneyScreen sub-step rendering                          | Deferred by user scope decision                                                                                         | #293         |
+| Exhaustive a11y contract pass (full 44pt + role audit)            | Deferred by user scope decision                                                                                         | #294         |
+| Duplicate-ordinal interleave permutation test matrix              | Deferred by user scope decision                                                                                         | #294         |
+| Full reorder permutation tests                                    | Deferred by user scope decision                                                                                         | #294         |
+| Progress counting rule (leaf-only vs every-unit vs parent-satis.) | Prototype record open question                                                                                          | Post-Stage-6 |
+| Cycle guard for concurrent parentStepId writes (CRDT edge)        | Single-device; spike flags for ADR                                                                                      | Schema ADR   |
+| Orphan promotion policy on parent soft-delete                     | Single-device; read-time policy                                                                                         | Schema ADR   |
+| Drag-to-reparent inside the create modal                          | Restructure is the EditMode job                                                                                         | —            |
+| Sub-step affordance wired into NewGoalModal itself                | NewGoalModal is title-only; create flow routes through EditMode which already has the affordance (Discovery 2026-06-20) | —            |
+| German translation of new i18n keys                               | Placeholder copy sufficient for dev                                                                                     | Translation  |
+| `stepsForActiveGoalsQuery` extended for parentStepId              | Used only by GoalCard — deferred to #292                                                                                | #292         |
 
 _No items deferred from the Must-Not-Do list: no auto-complete, no depth
 beyond one level, no blocking/hiding of incomplete siblings, flat steps
 remain first-class._
 
 ## Discovery Log
+
+- [2026-06-20 02:27] **Step 6 dropped (D7 premise was wrong).** The plan
+  assumed `NewGoalModal` builds steps in local draft state, so a sub-step
+  affordance could be wired in "before the goal is saved." It does not:
+  `NewGoalModal` is a title-only modal that calls `createGoal()` immediately
+  and navigates to `BadgeDesigner`, which then `navigation.replace`s to
+  `EditMode`. `StepList` is used in exactly one place (EditModeScreen). Steps
+  and sub-steps are authored in EditMode for **both** new and existing goals,
+  so "full create parity" (D7's intent) is delivered for free by Steps 4–5 —
+  there is nothing to build in NewGoalModal. User decision (2026-06-20): drop
+  Step 6 and its NewGoalModal create-sub-step test; parity holds via the
+  EditMode authoring surface. See updated D7 and Not-in-Scope.
+
+- [2026-06-20 02:35] **Step 2 done.** `reorderSubSteps` and `reorderSteps`
+  now share a private `applyStepOrdinals(context, stepIds)` helper rather than
+  duplicating the ~40-line ordinal-update loop (D4 still holds — two public
+  functions, obvious call sites). `reorderSteps` behaviour unchanged; existing
+  tests cover it. Also exported the `GroupedStep` type from `db/index.ts`.
+  Commits: `a95380d7` (Step 1 schema), `6fe20ef4` (Step 2 queries).
 
 <!-- Entries added by implement skill:
 - [YYYY-MM-DD HH:MM] <discovery description>
