@@ -112,6 +112,7 @@
       "markComplete": "Als erledigt markieren"
     },
     "progress": "{{current}} von {{total}}",
+    "parentContext": "↳ in {{parent}}",
     "blocker": {
       "label": "Nachweis hinzufügen, um abzuschließen",
       "a11yWithType": "Füge {{label}} hinzu, um diesen Schritt abzuschließen"
