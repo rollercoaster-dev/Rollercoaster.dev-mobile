@@ -49,6 +49,12 @@
     "tapToEditHint": "[Ţàþ ţø êđïţ šţêþ ţïţĺê·········]",
     "evidenceTypesLabel": "[Êṽïđêñçê ţýþêš······]",
     "evidenceTypesForNewStepLabel": "[Êṽïđêñçê ţýþêš ƒøŕ ñêŵ šţêþ···········]",
+    "addSubStepLabel": "[Àđđ šüƀ-šţêþ·····]",
+    "addSubStepA11yLabel": "[Àđđ šüƀ-šţêþ üñđêŕ \"{{title}}\"············]",
+    "addSubStepA11yHint": "[Ţýþê à šüƀ-šţêþ ţïţĺê àñđ þŕêšš ŕêţüŕñ ţø àđđ··················]",
+    "addSubStepInputA11yLabel": "[Ñêŵ šüƀ-šţêþ ţïţĺê ƒøŕ \"{{title}}\"··············]",
+    "subStepDeleteA11yLabel": "[Đêĺêţê šüƀ-šţêþ \"{{title}}\"···········]",
+    "subStepEditA11yLabel": "[Êđïţ šüƀ-šţêþ: {{title}}··········]",
     "a11y": {
       "movedFromTo": "[Šţêþ ɱøṽêđ ƒŕøɱ þøšïţïøñ {{from}} ţø {{to}}·················]",
       "movedUp": "[Šţêþ \"{{title}}\" ɱøṽêđ üþ ţø þøšïţïøñ {{position}}····················]",

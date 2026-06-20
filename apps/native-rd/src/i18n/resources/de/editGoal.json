@@ -49,6 +49,12 @@
     "tapToEditHint": "Zum Bearbeiten des Schritt-Titels tippen",
     "evidenceTypesLabel": "Evidenz-Typen",
     "evidenceTypesForNewStepLabel": "Evidenz-Typen für neuen Schritt",
+    "addSubStepLabel": "Unterschritt hinzufügen",
+    "addSubStepA11yLabel": "Unterschritt unter \"{{title}}\" hinzufügen",
+    "addSubStepA11yHint": "Unterschritt-Titel eingeben und Return drücken zum Hinzufügen",
+    "addSubStepInputA11yLabel": "Neuer Unterschritt-Titel für \"{{title}}\"",
+    "subStepDeleteA11yLabel": "Unterschritt \"{{title}}\" löschen",
+    "subStepEditA11yLabel": "Unterschritt bearbeiten: {{title}}",
     "a11y": {
       "movedFromTo": "Schritt von Position {{from}} zu {{to}} verschoben",
       "movedUp": "Schritt \"{{title}}\" nach oben zu Position {{position}} verschoben",

@@ -49,6 +49,12 @@
     "tapToEditHint": "Tap to edit step title",
     "evidenceTypesLabel": "Evidence types",
     "evidenceTypesForNewStepLabel": "Evidence types for new step",
+    "addSubStepLabel": "Add sub-step",
+    "addSubStepA11yLabel": "Add sub-step under \"{{title}}\"",
+    "addSubStepA11yHint": "Type a sub-step title and press return to add",
+    "addSubStepInputA11yLabel": "New sub-step title for \"{{title}}\"",
+    "subStepDeleteA11yLabel": "Delete sub-step \"{{title}}\"",
+    "subStepEditA11yLabel": "Edit sub-step: {{title}}",
     "a11y": {
       "movedFromTo": "Step moved from position {{from}} to {{to}}",
       "movedUp": "Step \"{{title}}\" moved up to position {{position}}",
