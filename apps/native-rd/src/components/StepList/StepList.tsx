@@ -17,6 +17,7 @@ import { EvidenceTypePicker } from "../EvidenceTypePicker";
 import { EvidenceType } from "../../db";
 import type { EvidenceTypeValue } from "../../types/evidence";
 import { DraggableStepItem } from "./DraggableStepItem";
+import { classifyDrop } from "./classifyDrop";
 import { styles } from "./StepList.styles";
 
 export interface Step {
@@ -49,9 +50,15 @@ export interface StepListProps {
   ) => void;
   onDeleteStep?: (id: string) => void;
   onReorderSteps?: (stepIds: string[]) => void;
+  onReorderSubSteps?: (parentStepId: string, childStepIds: string[]) => void;
+  onReparentStep?: (stepId: string, newParentStepId: string | null) => void;
 }
 
 const ITEM_HEIGHT = 48;
+// Dwell duration before a hovered childless-root target arms for demote (D14,
+// Q3). A named module constant so it can be tuned on device without hunting
+// through the gesture code; not a theme token (it's timing, not styling).
+const DWELL_ARM_MS = 220;
 
 export function StepList({
   steps,
@@ -60,6 +67,8 @@ export function StepList({
   onUpdateStep,
   onDeleteStep,
   onReorderSteps,
+  onReorderSubSteps,
+  onReparentStep,
 }: StepListProps) {
   const { theme } = useUnistyles();
   const { t } = useTranslation(["editGoal"]);
@@ -89,7 +98,21 @@ export function StepList({
 
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  // Identity of the childless-root target currently armed by dwell (D15), and
+  // whether a drag is in progress (used to hide the +sub-step ghost rows).
+  const [armedTargetId, setArmedTargetId] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const dwellTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Last hovered row id — change-detection that survives async setState so the
+  // dwell timer is only (re)started when the hovered row actually changes.
+  const hoverStepIdRef = useRef<string | null>(null);
   const [screenReaderActive, setScreenReaderActive] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      if (dwellTimer.current) clearTimeout(dwellTimer.current);
+    };
+  }, []);
 
   useEffect(() => {
     AccessibilityInfo.isScreenReaderEnabled()
@@ -198,9 +221,17 @@ export function StepList({
     setSubStepTypes([EvidenceType.text as EvidenceTypeValue]);
   }
 
+  function hasChildren(id: string) {
+    return steps.some((s) => s.parentStepId === id);
+  }
+
   function handleDragStart(index: number) {
     setDraggedIndex(index);
     setHoverIndex(index);
+    setIsDragging(true);
+    hoverStepIdRef.current = steps[index]?.id ?? null;
+    if (dwellTimer.current) clearTimeout(dwellTimer.current);
+    setArmedTargetId(null);
     triggerDragStart();
   }
 
@@ -212,71 +243,135 @@ export function StepList({
       Math.min(steps.length - 1, draggedIndex + offset),
     );
     setHoverIndex(newIndex);
+
+    // Only react to a genuine change of hovered row. Restarting the dwell
+    // timer on every pan frame would mean it never fires.
+    const hovered = steps[newIndex];
+    const hoveredId = hovered?.id ?? null;
+    if (hoveredId === hoverStepIdRef.current) return;
+    hoverStepIdRef.current = hoveredId;
+
+    // Any move to a new row disarms immediately (no unintended demote).
+    if (dwellTimer.current) clearTimeout(dwellTimer.current);
+    setArmedTargetId(null);
+
+    // Arm only when a release here would actually nest: target is a childless
+    // root, distinct from the dragged leaf, and the dragged step is itself a
+    // leaf (mirrors classifyDrop's dwell rule so the highlight never lies).
+    const dragged = steps[draggedIndex];
+    const armable =
+      !!hovered &&
+      !!dragged &&
+      hovered.id !== dragged.id &&
+      hovered.parentStepId == null &&
+      !hasChildren(hovered.id) &&
+      !hasChildren(dragged.id);
+    if (armable) {
+      dwellTimer.current = setTimeout(
+        () => setArmedTargetId(hovered.id),
+        DWELL_ARM_MS,
+      );
+    }
   }
 
   function handleDragEnd() {
-    if (
-      draggedIndex !== null &&
-      hoverIndex !== null &&
-      draggedIndex !== hoverIndex &&
-      onReorderSteps
-    ) {
-      const newOrder = [...steps];
-      const [moved] = newOrder.splice(draggedIndex, 1);
-      newOrder.splice(hoverIndex, 0, moved);
-      onReorderSteps(newOrder.map((s) => s.id));
-      triggerDragDrop();
-      AccessibilityInfo.announceForAccessibility(
-        t("editGoal:stepList.a11y.movedFromTo", {
-          from: draggedIndex + 1,
-          to: hoverIndex + 1,
-        }),
+    if (dwellTimer.current) clearTimeout(dwellTimer.current);
+
+    if (draggedIndex !== null && hoverIndex !== null) {
+      const result = classifyDrop(
+        steps,
+        draggedIndex,
+        hoverIndex,
+        armedTargetId,
       );
+      switch (result.kind) {
+        case "reorder":
+          if (result.parentStepId === null) {
+            onReorderSteps?.(result.orderedIds);
+          } else {
+            onReorderSubSteps?.(result.parentStepId, result.orderedIds);
+          }
+          break;
+        case "reparent":
+          onReparentStep?.(result.stepId, result.newParentStepId);
+          break;
+        case "none":
+          break;
+      }
+      if (result.kind !== "none") {
+        triggerDragDrop();
+        AccessibilityInfo.announceForAccessibility(
+          t("editGoal:stepList.a11y.movedFromTo", {
+            from: draggedIndex + 1,
+            to: hoverIndex + 1,
+          }),
+        );
+      }
     }
+
     setDraggedIndex(null);
     setHoverIndex(null);
+    setIsDragging(false);
+    setArmedTargetId(null);
+    hoverStepIdRef.current = null;
+  }
+
+  // ↑/↓ are sibling-reorder only — they never change nesting level (Q2, WCAG
+  // 3.2 predictability). Reorder within the step's own sibling group; at a
+  // group boundary the move is a no-op (reparenting is the nest/un-nest job).
+  function moveWithinSiblingGroup(index: number, direction: 1 | -1) {
+    const step = steps[index];
+    if (!step) return null;
+    const parent = step.parentStepId ?? null;
+    const group = steps.filter((s) => (s.parentStepId ?? null) === parent);
+    const pos = group.findIndex((s) => s.id === step.id);
+    const swapWith = pos + direction;
+    if (swapWith < 0 || swapWith >= group.length) return null;
+    const reordered = [...group];
+    [reordered[pos], reordered[swapWith]] = [
+      reordered[swapWith],
+      reordered[pos],
+    ];
+    const ids = reordered.map((s) => s.id);
+    if (parent === null) {
+      onReorderSteps?.(ids);
+    } else {
+      onReorderSubSteps?.(parent, ids);
+    }
+    triggerDragDrop();
+    return swapWith;
   }
 
   function handleMoveUp(index: number) {
-    if (index <= 0 || !onReorderSteps) return;
-    const newOrder = [...steps];
-    [newOrder[index - 1], newOrder[index]] = [
-      newOrder[index],
-      newOrder[index - 1],
-    ];
-    onReorderSteps(newOrder.map((s) => s.id));
-    triggerDragDrop();
+    if (!onReorderSteps) return;
+    const newPos = moveWithinSiblingGroup(index, -1);
+    if (newPos === null) return;
     AccessibilityInfo.announceForAccessibility(
       t("editGoal:stepList.a11y.movedUp", {
         title: steps[index].title,
-        position: index,
+        position: newPos + 1,
       }),
     );
   }
 
   function handleMoveDown(index: number) {
-    if (index >= steps.length - 1 || !onReorderSteps) return;
-    const newOrder = [...steps];
-    [newOrder[index], newOrder[index + 1]] = [
-      newOrder[index + 1],
-      newOrder[index],
-    ];
-    onReorderSteps(newOrder.map((s) => s.id));
-    triggerDragDrop();
+    if (!onReorderSteps) return;
+    const newPos = moveWithinSiblingGroup(index, 1);
+    if (newPos === null) return;
     AccessibilityInfo.announceForAccessibility(
       t("editGoal:stepList.a11y.movedDown", {
         title: steps[index].title,
-        position: index + 2,
+        position: newPos + 1,
       }),
     );
   }
 
-  // The current drag handler reorders the whole flat list, which would corrupt
-  // sibling-scoped ordinals once children are interleaved. Disable drag while
-  // any sub-step is present until the reparent-aware gesture lands (D8).
-  const hasSubSteps = steps.some((s) => s.parentStepId != null);
-  const canDrag =
-    onReorderSteps && steps.length > 1 && editingId === null && !hasSubSteps;
+  const canDrag = onReorderSteps && steps.length > 1 && editingId === null;
+  // Childless roots are the only eligible nest-under targets (mirror
+  // classifyDrop's dwell rule so the screen-reader picker and drag agree).
+  const childlessRootTargets = steps
+    .filter((s) => s.parentStepId == null && !hasChildren(s.id))
+    .map((s) => ({ id: s.id, title: s.title }));
   const stepCountLabel = t("editGoal:stepList.count", { count: steps.length });
 
   return (
@@ -344,6 +439,13 @@ export function StepList({
 
           const isChild = step.parentStepId != null;
 
+          const stepHasChildren = hasChildren(step.id);
+          const nestTargets = childlessRootTargets.filter(
+            (target) => target.id !== step.id,
+          );
+          const canNestUnder =
+            !isChild && !stepHasChildren && nestTargets.length > 0;
+
           const itemNode = canDrag ? (
             <DraggableStepItem
               step={step}
@@ -363,6 +465,18 @@ export function StepList({
               isFirst={index === 0}
               isLast={index === steps.length - 1}
               editContent={editContent}
+              isArmedTarget={armedTargetId === step.id}
+              canNestUnder={canNestUnder}
+              nestTargets={nestTargets}
+              onNestUnder={
+                onReparentStep
+                  ? (targetId) => onReparentStep(step.id, targetId)
+                  : undefined
+              }
+              canUnNest={isChild}
+              onUnNest={
+                onReparentStep ? () => onReparentStep(step.id, null) : undefined
+              }
             />
           ) : (
             <View style={styles.draggableItem}>
@@ -453,9 +567,12 @@ export function StepList({
             isLastInGroup && onCreateSubStep
               ? steps.find((s) => s.id === groupId)
               : undefined;
-          // Don't stack the ghost row with the parent's inline edit input.
+          // Don't stack the ghost row with the parent's inline edit input, and
+          // hide it entirely mid-drag so it doesn't read as a drop target.
           const showSubStepAffordance =
-            !!affordanceParent && editingId !== affordanceParent.id;
+            !!affordanceParent &&
+            editingId !== affordanceParent.id &&
+            !isDragging;
 
           return (
             <View key={step.id}>

@@ -167,7 +167,7 @@ describe("StepList", () => {
     });
   });
 
-  describe("drag-disable guard", () => {
+  describe("drag-enable guard", () => {
     // Surfacing the keyboard move buttons (only DraggableStepItem renders them)
     // is the observable proxy for "drag is enabled" once gestures are mocked.
     beforeEach(() => {
@@ -182,7 +182,10 @@ describe("StepList", () => {
       expect(screen.getByLabelText('Move "Step two" up')).toBeOnTheScreen();
     });
 
-    it("disables reordering when any sub-step is present", () => {
+    it("enables reordering for goals with sub-steps (D13 guard removed)", () => {
+      // The old `!hasSubSteps` guard disabled drag whenever any child existed.
+      // With the reparent-aware gesture (#330) it is gone — hierarchical goals
+      // get the same ↑/↓ controls as flat ones.
       const withSubStep: Step[] = [
         { id: "p", title: "Parent", completed: false },
         { id: "c1", title: "Child one", completed: false, parentStepId: "p" },
@@ -190,8 +193,8 @@ describe("StepList", () => {
       renderWithProviders(
         <StepList steps={withSubStep} onReorderSteps={jest.fn()} />,
       );
-      expect(screen.queryByLabelText('Move "Parent" down')).toBeNull();
-      expect(screen.queryByLabelText('Move "Child one" up')).toBeNull();
+      expect(screen.getByLabelText('Move "Parent" down')).toBeOnTheScreen();
+      expect(screen.getByLabelText('Move "Child one" up')).toBeOnTheScreen();
     });
   });
 });
