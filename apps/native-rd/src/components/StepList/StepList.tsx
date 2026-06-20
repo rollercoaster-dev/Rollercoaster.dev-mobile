@@ -593,12 +593,29 @@ export function StepList({
       }
       if (dispatched) {
         triggerDragDrop();
-        AccessibilityInfo.announceForAccessibility(
-          t("editGoal:stepList.a11y.movedFromTo", {
-            from: activeDraggedIndex + 1,
-            to: activeHoverIndex + 1,
-          }),
-        );
+        // movedFromTo's positional `to` only holds for a same-group reorder. A
+        // reparent appends the step to the END of its destination group (the
+        // ordinal is recomputed in EditModeScreen), so the hover index would
+        // mis-state where the step actually landed — announce the nesting
+        // change instead of a misleading position.
+        if (result.kind === "reparent") {
+          AccessibilityInfo.announceForAccessibility(
+            result.newParentStepId === null
+              ? t("editGoal:stepList.a11y.promotedToTopLevel")
+              : t("editGoal:stepList.a11y.nestedUnder", {
+                  title:
+                    steps.find((s) => s.id === result.newParentStepId)?.title ??
+                    "",
+                }),
+          );
+        } else {
+          AccessibilityInfo.announceForAccessibility(
+            t("editGoal:stepList.a11y.movedFromTo", {
+              from: activeDraggedIndex + 1,
+              to: activeHoverIndex + 1,
+            }),
+          );
+        }
       }
     }
 

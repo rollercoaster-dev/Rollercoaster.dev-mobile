@@ -690,7 +690,7 @@ function applyStepOrdinals(
           logger.error("Failed to update step ordinal", {
             ...context,
             stepId,
-            ordinal: index,
+            ordinal,
             error: result.error,
           });
           failures.push({ index, stepId });
@@ -699,7 +699,7 @@ function applyStepOrdinals(
         logger.error("Failed to update step ordinal", {
           ...context,
           stepId,
-          ordinal: index,
+          ordinal,
           error,
         });
         failures.push({ index, stepId });

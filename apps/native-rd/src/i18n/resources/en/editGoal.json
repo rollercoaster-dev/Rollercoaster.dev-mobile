@@ -58,6 +58,8 @@
     "subStepEditA11yLabel": "Edit sub-step: {{title}}",
     "a11y": {
       "movedFromTo": "Step moved from position {{from}} to {{to}}",
+      "nestedUnder": "Step nested under \"{{title}}\"",
+      "promotedToTopLevel": "Step promoted to top level",
       "movedUp": "Step \"{{title}}\" moved up to position {{position}}",
       "movedDown": "Step \"{{title}}\" moved down to position {{position}}",
       "nestUnder": "Nest under \"{{title}}\"",
