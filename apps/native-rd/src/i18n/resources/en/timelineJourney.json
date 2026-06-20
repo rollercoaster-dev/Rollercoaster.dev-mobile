@@ -9,6 +9,7 @@
   "evidenceFallbackLabel": "Evidence",
   "step": {
     "a11yGoTo": "Go to step {{number}}: {{title}}",
+    "a11yChildExpand": "Sub-step {{ordinal}}: {{title}}",
     "status": {
       "done": "Done",
       "active": "Active",
