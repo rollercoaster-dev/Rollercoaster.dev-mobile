@@ -53,6 +53,7 @@
     "addSubStepA11yLabel": "Unterschritt unter \"{{title}}\" hinzufügen",
     "addSubStepA11yHint": "Unterschritt-Titel eingeben und Return drücken zum Hinzufügen",
     "addSubStepInputA11yLabel": "Neuer Unterschritt-Titel für \"{{title}}\"",
+    "addSubStepButtonA11y": "Unterschritt unter \"{{title}}\" hinzufügen",
     "subStepDeleteA11yLabel": "Unterschritt \"{{title}}\" löschen",
     "subStepEditA11yLabel": "Unterschritt bearbeiten: {{title}}",
     "a11y": {

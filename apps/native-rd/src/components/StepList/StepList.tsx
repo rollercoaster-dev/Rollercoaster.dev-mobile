@@ -437,17 +437,31 @@ export function StepList({
             itemNode
           );
 
-          // "Add sub-step" affordance: top-level steps only (one-level depth
-          // guard, D6) and not while this row is being edited — don't stack
-          // the ghost row with the inline edit input.
+          // "Add sub-step" affordance: render it after the LAST node of a
+          // parent's group (parent + its children) so it sits *below* all
+          // existing sub-steps, reading as "add another here" rather than a
+          // group header. The flat list is parent-then-children, so a step is
+          // the last in its group when the next step belongs to a different
+          // group (or there is no next step). The owning parent is the group's
+          // top-level ancestor. One-level depth guard (D6) still holds: groupId
+          // always resolves to a top-level step id.
+          const groupId = step.parentStepId ?? step.id;
+          const nextStep = steps[index + 1];
+          const isLastInGroup =
+            !nextStep || (nextStep.parentStepId ?? nextStep.id) !== groupId;
+          const affordanceParent =
+            isLastInGroup && onCreateSubStep
+              ? steps.find((s) => s.id === groupId)
+              : undefined;
+          // Don't stack the ghost row with the parent's inline edit input.
           const showSubStepAffordance =
-            !isChild && !!onCreateSubStep && editingId !== step.id;
+            !!affordanceParent && editingId !== affordanceParent.id;
 
           return (
             <View key={step.id}>
               {rowNode}
               {showSubStepAffordance &&
-                (addingSubStepForId === step.id ? (
+                (addingSubStepForId === affordanceParent.id ? (
                   <View>
                     <View style={styles.addSubStepInputRow}>
                       <View style={styles.addSubStepInputCard}>
@@ -457,17 +471,31 @@ export function StepList({
                           placeholderTextColor={theme.colors.textMuted}
                           value={subStepTitle}
                           onChangeText={setSubStepTitle}
-                          onSubmitEditing={() => handleSubStepSubmit(step.id)}
-                          onBlur={() => handleSubStepSubmit(step.id)}
+                          onSubmitEditing={() =>
+                            handleSubStepSubmit(affordanceParent.id)
+                          }
                           autoFocus
                           returnKeyType="done"
-                          testID={`step-list-sub-step-input-${step.id}`}
+                          blurOnSubmit={false}
+                          testID={`step-list-sub-step-input-${affordanceParent.id}`}
                           accessibilityLabel={t(
                             "editGoal:stepList.addSubStepInputA11yLabel",
-                            { title: step.title },
+                            { title: affordanceParent.title },
                           )}
                         />
                       </View>
+                      <Pressable
+                        style={styles.addStepButton}
+                        onPress={() => handleSubStepSubmit(affordanceParent.id)}
+                        testID={`step-list-add-sub-step-button-${affordanceParent.id}`}
+                        accessibilityRole="button"
+                        accessibilityLabel={t(
+                          "editGoal:stepList.addSubStepButtonA11y",
+                          { title: affordanceParent.title },
+                        )}
+                      >
+                        <RNText style={styles.addStepButtonText}>+</RNText>
+                      </Pressable>
                     </View>
                     <View style={styles.addSubStepPickerRow}>
                       <EvidenceTypePicker
@@ -482,12 +510,12 @@ export function StepList({
                 ) : (
                   <Pressable
                     style={styles.addSubStepGhost}
-                    onPress={() => startAddingSubStep(step.id)}
-                    testID={`step-list-add-sub-step-${step.id}`}
+                    onPress={() => startAddingSubStep(affordanceParent.id)}
+                    testID={`step-list-add-sub-step-${affordanceParent.id}`}
                     accessibilityRole="button"
                     accessibilityLabel={t(
                       "editGoal:stepList.addSubStepA11yLabel",
-                      { title: step.title },
+                      { title: affordanceParent.title },
                     )}
                     accessibilityHint={t(
                       "editGoal:stepList.addSubStepA11yHint",
@@ -503,7 +531,11 @@ export function StepList({
         })}
       </GestureHandlerRootView>
 
-      {onCreateStep && (
+      {/* Only one create/edit context is active at a time: hide the
+          top-level "add step" row (and its evidence picker) while a step is
+          being edited or a sub-step is being created, so the evidence pickers
+          are never doubled. */}
+      {onCreateStep && editingId === null && addingSubStepForId === null && (
         <View style={styles.addStepSection}>
           <View style={styles.addStepRow}>
             <View style={styles.addStepInputCard}>

@@ -53,6 +53,7 @@
     "addSubStepA11yLabel": "[Àđđ šüƀ-šţêþ üñđêŕ \"{{title}}\"············]",
     "addSubStepA11yHint": "[Ţýþê à šüƀ-šţêþ ţïţĺê àñđ þŕêšš ŕêţüŕñ ţø àđđ··················]",
     "addSubStepInputA11yLabel": "[Ñêŵ šüƀ-šţêþ ţïţĺê ƒøŕ \"{{title}}\"··············]",
+    "addSubStepButtonA11y": "[Àđđ šüƀ-šţêþ üñđêŕ \"{{title}}\"··········]",
     "subStepDeleteA11yLabel": "[Đêĺêţê šüƀ-šţêþ \"{{title}}\"···········]",
     "subStepEditA11yLabel": "[Êđïţ šüƀ-šţêþ: {{title}}··········]",
     "a11y": {

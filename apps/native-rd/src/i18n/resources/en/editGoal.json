@@ -53,6 +53,7 @@
     "addSubStepA11yLabel": "Add sub-step under \"{{title}}\"",
     "addSubStepA11yHint": "Type a sub-step title and press return to add",
     "addSubStepInputA11yLabel": "New sub-step title for \"{{title}}\"",
+    "addSubStepButtonA11y": "Add sub-step under \"{{title}}\"",
     "subStepDeleteA11yLabel": "Delete sub-step \"{{title}}\"",
     "subStepEditA11yLabel": "Edit sub-step: {{title}}",
     "a11y": {
