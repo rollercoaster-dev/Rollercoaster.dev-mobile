@@ -60,9 +60,16 @@ jest.mock("../../../hooks/useAnimationPref", () => ({
 
 const mockUpdateGoal = jest.fn();
 const mockCreateStep = jest.fn();
+const mockCreateSubStep = jest.fn();
 const mockUpdateStep = jest.fn();
 const mockDeleteStep = jest.fn();
 const mockReorderSteps = jest.fn();
+
+interface StepRow {
+  id: string;
+  parentStepId?: string | null;
+  [key: string]: unknown;
+}
 
 jest.mock("../../../db", () => ({
   GoalStatus: { active: "active", completed: "completed" },
@@ -79,9 +86,32 @@ jest.mock("../../../db", () => ({
   stepsByGoalQuery: jest.fn(() => "stepsByGoalQuery"),
   updateGoal: (...args: unknown[]) => mockUpdateGoal(...args),
   createStep: (...args: unknown[]) => mockCreateStep(...args),
+  createSubStep: (...args: unknown[]) => mockCreateSubStep(...args),
   updateStep: (...args: unknown[]) => mockUpdateStep(...args),
   deleteStep: (...args: unknown[]) => mockDeleteStep(...args),
   reorderSteps: (...args: unknown[]) => mockReorderSteps(...args),
+  // Faithful lightweight stand-ins for the pure grouping helpers.
+  groupStepsByParent: (rows: StepRow[]) => {
+    const rootIds = new Set(
+      rows.filter((r) => r.parentStepId == null).map((r) => r.id),
+    );
+    const nodes = new Map(
+      rows.map((r) => [r.id, { ...r, children: [] as StepRow[] }]),
+    );
+    const roots: (StepRow & { children: StepRow[] })[] = [];
+    for (const row of rows) {
+      const node = nodes.get(row.id)!;
+      const parentId = row.parentStepId;
+      if (parentId != null && rootIds.has(parentId)) {
+        nodes.get(parentId)!.children.push(node);
+      } else {
+        roots.push(node);
+      }
+    }
+    return roots;
+  },
+  flattenGroupedSteps: (grouped: (StepRow & { children: StepRow[] })[]) =>
+    grouped.flatMap((g) => [g, ...g.children]),
 }));
 
 const mockUseQuery = jest.fn();

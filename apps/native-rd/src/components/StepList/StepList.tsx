@@ -271,7 +271,12 @@ export function StepList({
     );
   }
 
-  const canDrag = onReorderSteps && steps.length > 1 && editingId === null;
+  // The current drag handler reorders the whole flat list, which would corrupt
+  // sibling-scoped ordinals once children are interleaved. Disable drag while
+  // any sub-step is present until the reparent-aware gesture lands (D8).
+  const hasSubSteps = steps.some((s) => s.parentStepId != null);
+  const canDrag =
+    onReorderSteps && steps.length > 1 && editingId === null && !hasSubSteps;
   const stepCountLabel = t("editGoal:stepList.count", { count: steps.length });
 
   return (

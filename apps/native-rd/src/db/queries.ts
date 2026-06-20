@@ -356,7 +356,9 @@ export const stepsByGoalQuery = (goalId: GoalId) =>
  */
 export interface GroupedStep {
   id: StepId;
-  goalId: GoalId;
+  // Evolu types every `selectAll` column as nullable in query results, so the
+  // flat row this is built from carries `goalId` as nullable too.
+  goalId: GoalId | null;
   parentStepId: StepId | null;
   title: string | null;
   ordinal: number | null;
