@@ -63,7 +63,10 @@
       "nestUnder": "Nest under \"{{title}}\"",
       "nestUnderA11y": "Nest this step under {{title}}",
       "unNest": "Un-nest",
-      "unNestA11y": "Promote this step to top level"
+      "unNestA11y": "Promote this step to top level",
+      "nestUnderTrigger": "Nest under…",
+      "nestUnderTriggerA11y": "Nest this step under another step",
+      "nestUnderPickerTitle": "Choose a step to nest under"
     }
   }
 }

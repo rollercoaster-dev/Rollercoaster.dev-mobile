@@ -63,7 +63,10 @@
       "nestUnder": "Unter \"{{title}}\" verschachteln",
       "nestUnderA11y": "Diesen Schritt unter {{title}} verschachteln",
       "unNest": "Verschachtelung aufheben",
-      "unNestA11y": "Diesen Schritt auf oberste Ebene setzen"
+      "unNestA11y": "Diesen Schritt auf oberste Ebene setzen",
+      "nestUnderTrigger": "Verschachteln unter…",
+      "nestUnderTriggerA11y": "Diesen Schritt unter einen anderen Schritt verschachteln",
+      "nestUnderPickerTitle": "Schritt zum Verschachteln auswählen"
     }
   }
 }
