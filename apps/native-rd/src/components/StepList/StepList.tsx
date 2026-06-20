@@ -308,8 +308,9 @@ export function StepList({
     triggerDragStart();
   }
 
-  // Which row's measured vertical band contains the given y. Falls back to the
-  // fixed-height estimate only when a row hasn't reported its layout yet.
+  // Which row's measured vertical band contains the given y. When no row has
+  // reported its layout yet, keeps the dragged row at its origin index — the
+  // caller (updateDragHover) owns the fixed-height fallback estimate.
   function rowIndexAtY(centerY: number, draggedFrom: number): number {
     const layouts = rowLayoutsRef.current;
     for (let i = 0; i < steps.length; i++) {
@@ -318,7 +319,7 @@ export function StepList({
       if (centerY < l.y + l.height) return i;
     }
     if (layouts.some(Boolean)) return steps.length - 1;
-    // No geometry at all — fall back to the (imprecise) fixed-height estimate.
+    // No geometry at all — keep the dragged row where it started (no move).
     return draggedFrom;
   }
 

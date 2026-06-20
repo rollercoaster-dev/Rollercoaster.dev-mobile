@@ -10,6 +10,12 @@ export interface DragScrollController {
   scrollTo(y: number): void;
 }
 
+// Auto-scroll tuning (px). EDGE_PX is the activation band at each viewport
+// edge: a drag pointer within this distance of the top/bottom edge triggers
+// scrolling. Speed ramps from MIN to MAX px/frame across that band, eased in
+// by `penetration ** 2` (see getAutoScrollVelocity) so a pointer grazing the
+// edge scrolls gently and only the extreme edge reaches full speed. Tuned on
+// device — adjust here, not per call site.
 export const AUTO_SCROLL_EDGE_PX = 72;
 export const AUTO_SCROLL_MIN_PX_PER_FRAME = 3;
 export const AUTO_SCROLL_MAX_PX_PER_FRAME = 14;

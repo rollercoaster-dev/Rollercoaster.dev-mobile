@@ -127,6 +127,19 @@ describe("classifyDrop", () => {
         newParentStepId: "a",
       });
     });
+
+    it("dropping a root leaf at the very end nests it into the trailing group", () => {
+      // a  b {b1} — drag a (idx 0) past the end. The post-removal list is
+      // [b, b1], so the drop slot has no row after it (atSlot is undefined) and
+      // the parent falls back to the row above (b1's parent, b). Regression for
+      // the end-of-list `?? aboveParent` fallback in atSlotParent.
+      const list = steps("a", "b", ["b1", "b"]);
+      expect(classifyDrop(list, 0, 2)).toEqual({
+        kind: "reparent",
+        stepId: "a",
+        newParentStepId: "b",
+      });
+    });
   });
 
   describe("dwell-to-demote (armed target)", () => {

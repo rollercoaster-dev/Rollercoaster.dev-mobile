@@ -60,8 +60,10 @@ jest.mock("../../../hooks/useAnimationPref", () => ({
 
 const mockUpdateGoal = jest.fn();
 const mockCreateStep = jest.fn();
-const mockCreateSubStep = jest.fn();
-const mockUpdateStep = jest.fn();
+// createSubStep/updateStep return an Evolu Result; the handlers now check
+// `result.ok`, so the mocks must hand back a success Result.
+const mockCreateSubStep = jest.fn((..._args: unknown[]) => ({ ok: true }));
+const mockUpdateStep = jest.fn((..._args: unknown[]) => ({ ok: true }));
 const mockDeleteStep = jest.fn();
 const mockReorderSteps = jest.fn();
 const mockReorderSubSteps = jest.fn();

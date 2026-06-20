@@ -295,15 +295,9 @@ function EditContent({
         s.parentStepId === parentStepId ? Math.max(max, s.ordinal ?? -1) : max,
       -1,
     );
-    try {
-      createSubStep(
-        goalId as GoalId,
-        parentStepId as StepId,
-        subStepTitle,
-        maxChildOrdinal + 1,
-        plannedEvidenceTypes,
-      );
-    } catch (error) {
+    // Evolu reports validation/write failures via a { ok: false } Result rather
+    // than throwing, so a discarded Result would swallow the failure silently.
+    const reportFailure = (error: unknown) => {
       console.error("[EditModeScreen] Failed to create sub-step", {
         goalId,
         parentStepId,
@@ -315,6 +309,18 @@ function EditContent({
         t("editGoal:errors.alertErrorTitle"),
         t("editGoal:errors.createStepMessage"),
       );
+    };
+    try {
+      const result = createSubStep(
+        goalId as GoalId,
+        parentStepId as StepId,
+        subStepTitle,
+        maxChildOrdinal + 1,
+        plannedEvidenceTypes,
+      );
+      if (!result.ok) reportFailure(result.error);
+    } catch (error) {
+      reportFailure(error);
     }
   }
 
@@ -376,12 +382,10 @@ function EditContent({
                 : max,
             -1,
           ) + 1;
-    try {
-      updateStep(stepId as StepId, {
-        parentStepId: newParentStepId as StepId | null,
-        ordinal: nextOrdinal,
-      });
-    } catch (error) {
+    // Evolu reports validation/write failures via a { ok: false } Result rather
+    // than throwing, so a discarded Result would let a failed reparent snap the
+    // dragged step back with no feedback. Surface it like the catch does.
+    const reportFailure = (error: unknown) => {
       console.error("[EditModeScreen] Failed to reparent step", {
         goalId,
         stepId,
@@ -393,6 +397,15 @@ function EditContent({
         t("editGoal:errors.alertErrorTitle"),
         t("editGoal:errors.updateStepMessage"),
       );
+    };
+    try {
+      const result = updateStep(stepId as StepId, {
+        parentStepId: newParentStepId as StepId | null,
+        ordinal: nextOrdinal,
+      });
+      if (!result.ok) reportFailure(result.error);
+    } catch (error) {
+      reportFailure(error);
     }
   }
 
@@ -431,6 +444,7 @@ function EditContent({
         scrollEnabled={!isStepDragging}
         onLayout={handleScrollLayout}
         onScroll={handleScroll}
+        scrollEventThrottle={16}
         onContentSizeChange={(_width, height) => {
           scrollMetricsRef.current.contentHeight = height;
         }}
