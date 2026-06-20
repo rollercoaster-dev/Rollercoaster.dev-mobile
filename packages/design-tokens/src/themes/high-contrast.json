@@ -38,7 +38,12 @@
       "warning": { "$value": "#cc5500" },
       "warning-light": { "$value": "#ffe0cc" },
       "info": { "$value": "#0055cc" },
-      "info-light": { "$value": "#cce0ff" }
+      "info-light": { "$value": "#cce0ff" },
+      "gray": {
+        "100": { "$value": "#eeeeee" },
+        "200": { "$value": "#e0e0e0" },
+        "300": { "$value": "#cccccc" }
+      }
     },
     "narrative": {
       "climb": {
