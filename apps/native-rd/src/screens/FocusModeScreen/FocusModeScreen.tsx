@@ -92,12 +92,14 @@ const EVIDENCE_ROUTE_MAP: Partial<
 /**
  * Index (into the flat `stepRows`) of the first pending *leaf* to snap to on
  * mount (#292). Mirrors the goal card's resolution: walk top-level steps in
- * order and, for the first non-completed one, return the first pending child
- * (a leaf) — or the parent itself when it is flat or in the invite state (all
- * children done, parent still pending). Returns -1 when nothing is pending.
+ * order and return the first pending child (a leaf) — or the parent itself when
+ * it is a flat pending step or in the invite state (all children done, parent
+ * still pending). Returns -1 when nothing is pending.
  *
- * This skips a parent whose children are still pending so the carousel lands on
- * the actionable leaf, not the container.
+ * Pending children are checked *before* the parent's own status, so a manually
+ * completed parent that still has pending sub-steps doesn't hide them — step
+ * completion is per-step, not cascaded (see completeStep), so this is reachable.
+ * A completed parent whose children are all done is skipped (subtree closed).
  */
 function findFirstPendingLeafIndex(
   rows: readonly {
@@ -130,13 +132,17 @@ function findFirstPendingLeafIndex(
   });
 
   for (const step of topLevel) {
-    if (step.status === StepStatus.completed) continue;
     const children = childrenByParent.get(step.id) ?? [];
-    if (children.length === 0) return step.index; // flat
     const pendingChild = children.find(
       (c) => c.status !== StepStatus.completed,
     );
-    return pendingChild ? pendingChild.index : step.index; // leaf, else invite
+    // A pending leaf wins even under a completed parent — its work isn't hidden.
+    if (pendingChild) return pendingChild.index;
+    // No pending child: skip once the step itself is complete (a flat step, or a
+    // parent whose subtree is fully done). Otherwise it's the next action — a
+    // flat pending step, or the invite state (children all done, parent pending).
+    if (step.status === StepStatus.completed) continue;
+    return step.index;
   }
   return -1;
 }
@@ -194,33 +200,35 @@ function FocusContent({ goalId }: { goalId: string }) {
   const isGoalCard = currentCardIndex >= stepRows.length;
 
   // Derive UI step status: current step is 'in-progress', others are mapped from DB
-  const uiSteps = useMemo(
-    () =>
-      stepRows.map((row, index) => {
-        // A sub-step is a row whose parent is a present top-level step (#292).
-        // An orphan (parent soft-deleted) is treated as top-level so it renders
-        // as a lead, not an indented child of whatever precedes it. Resolve the
-        // parent's title for the StepCard / MiniTimeline context line.
-        const isChild =
-          row.parentStepId != null && stepRootIds.has(row.parentStepId);
-        return {
-          id: row.id,
-          title: row.title ?? "",
-          status:
-            row.status === StepStatus.completed
-              ? ("completed" as UIStepStatus)
-              : index === currentCardIndex
-                ? ("in-progress" as UIStepStatus)
-                : ("pending" as UIStepStatus),
-          evidenceCount: 0, // Will be enriched below
-          isChild,
-          parentTitle: isChild
-            ? (stepRows.find((r) => r.id === row.parentStepId)?.title ?? null)
+  const uiSteps = useMemo(() => {
+    // id → title, built once so the per-row parent lookup below is O(1) rather
+    // than the O(n²) of re-scanning stepRows.find for every sub-step.
+    const titleById = new Map(stepRows.map((r) => [r.id, r.title ?? null] as const)); // prettier-ignore
+    return stepRows.map((row, index) => {
+      // A sub-step is a row whose parent is a present top-level step (#292).
+      // An orphan (parent soft-deleted) is treated as top-level so it renders
+      // as a lead, not an indented child of whatever precedes it. Resolve the
+      // parent's title for the StepCard / MiniTimeline context line.
+      const isChild =
+        row.parentStepId != null && stepRootIds.has(row.parentStepId);
+      return {
+        id: row.id,
+        title: row.title ?? "",
+        status:
+          row.status === StepStatus.completed
+            ? ("completed" as UIStepStatus)
+            : index === currentCardIndex
+              ? ("in-progress" as UIStepStatus)
+              : ("pending" as UIStepStatus),
+        evidenceCount: 0, // Will be enriched below
+        isChild,
+        parentTitle:
+          isChild && row.parentStepId != null
+            ? (titleById.get(row.parentStepId) ?? null)
             : null,
-        };
-      }),
-    [stepRows, stepRootIds, currentCardIndex],
-  );
+      };
+    });
+  }, [stepRows, stepRootIds, currentCardIndex]);
 
   // Evidence counts per step (reuses allStepEvidenceRows to avoid duplicate query)
   const stepEvidenceCounts = useStepEvidenceCounts(

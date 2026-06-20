@@ -70,25 +70,30 @@ function buildGoalCardGoal(
   let nextStepTitle: string | null = null;
   let nextStepContext: string | null = null;
   for (const step of topLevel) {
-    if (step.status === StepStatus.completed) continue;
     const children = childrenByParent.get(step.id) ?? [];
-    if (children.length === 0) {
-      nextStepTitle = step.title ?? null;
-    } else {
-      const pendingChild = children.find(
-        (c) => c.status !== StepStatus.completed,
-      );
-      if (pendingChild) {
-        nextStepTitle = pendingChild.title ?? null;
-        nextStepContext = t("goals:card.nextStepContext", {
-          parent: step.title ?? "",
-        });
-      } else {
-        nextStepTitle = step.title ?? null;
-        nextStepContext = t("goals:card.allSubstepsDone", {
-          count: children.length,
-        });
-      }
+    const pendingChild = children.find(
+      (c) => c.status !== StepStatus.completed,
+    );
+    // A pending leaf is the next action even under a manually completed parent
+    // — step completion is per-step, not cascaded, so a done parent must not
+    // hide pending sub-work.
+    if (pendingChild) {
+      nextStepTitle = pendingChild.title ?? null;
+      nextStepContext = t("goals:card.nextStepContext", {
+        parent: step.title ?? "",
+      });
+      break;
+    }
+    // No pending child: skip the step entirely once it's complete (a flat step,
+    // or a parent whose whole subtree is done).
+    if (step.status === StepStatus.completed) continue;
+    // Still pending: a flat step is its own hero (no context); a parent whose
+    // children are all done is the invite state.
+    nextStepTitle = step.title ?? null;
+    if (children.length > 0) {
+      nextStepContext = t("goals:card.allSubstepsDone", {
+        count: children.length,
+      });
     }
     break;
   }

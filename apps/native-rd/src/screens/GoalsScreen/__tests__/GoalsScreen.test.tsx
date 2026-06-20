@@ -327,6 +327,30 @@ describe("GoalsScreen", () => {
       // Treated as a flat hero (parent is gone), so no context line.
       expect(screen.queryByTestId("goal-card-next-step-context")).toBeNull();
     });
+
+    it("surfaces a pending leaf under a manually-completed parent", () => {
+      // Step completion is per-step, not cascaded (completeStep), so a user can
+      // mark the parent done while a child is still pending. The pending leaf
+      // must remain the next step — skipping the parent on its own status would
+      // hide live work and wrongly read "nothing to do" (#338 regression).
+      mockSteps([
+        { id: "s1", goalId, parentStepId: null, title: "Plan layout", status: "completed" }, // prettier-ignore
+        { id: "s2", goalId, parentStepId: null, title: "Wire the circuits", status: "completed" }, // prettier-ignore
+        { id: "s2a", goalId, parentStepId: "s2", title: "20-amp small-appliance circuit", status: "pending" }, // prettier-ignore
+      ]);
+      renderWithProviders(<GoalsScreen />);
+      expect(screen.queryByTestId("goal-card-next-step")).toHaveTextContent(
+        "20-amp small-appliance circuit",
+      );
+      // Still rendered as a leaf, so the parent stays the context line.
+      expect(
+        screen.getByText(
+          i18n.t("goals:card.nextStepContext", {
+            parent: "Wire the circuits",
+          }),
+        ),
+      ).toBeOnTheScreen();
+    });
   });
 
   describe("delete flow", () => {

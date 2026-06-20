@@ -1542,5 +1542,40 @@ describe("FocusModeScreen", () => {
       expect(nodeWidth(1)).toBe(18);
       expect(screen.queryByTestId("step-card-parent-context")).toBeNull();
     });
+
+    // Parent step-2 is manually completed while child step-2b is still pending.
+    // Step completion is per-step, not cascaded (completeStep), so this state is
+    // reachable. The snap must still land on the pending leaf — skipping the
+    // parent on its own status would return -1 and strand the user on step-1.
+    const COMPLETED_PARENT_PENDING_CHILD_STEPS = [
+      { id: "step-1", title: "Read docs", status: "completed", ordinal: 0, parentStepId: null }, // prettier-ignore
+      { id: "step-2", title: "Practice", status: "completed", ordinal: 1, parentStepId: null }, // prettier-ignore
+      { id: "step-2a", title: "Drill A", status: "completed", ordinal: 0, parentStepId: "step-2" }, // prettier-ignore
+      { id: "step-2b", title: "Drill B", status: "pending", ordinal: 1, parentStepId: "step-2" }, // prettier-ignore
+      { id: "step-3", title: "Build it", status: "completed", ordinal: 2, parentStepId: null }, // prettier-ignore
+    ];
+
+    it("snaps to a pending leaf even when its parent is manually completed", () => {
+      setupQueries({
+        steps: COMPLETED_PARENT_PENDING_CHILD_STEPS,
+        stepEvidence: [],
+      });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+      // step-2b (flat index 3) is the only pending work → "4 of 5". A resolution
+      // that skipped the completed parent first would return -1 and leave the
+      // carousel on the completed step-1 ("1 of 5").
+      expect(
+        screen.getByText(
+          i18n.t("common:stepCard.progress", { current: 4, total: 5 }),
+        ),
+      ).toBeOnTheScreen();
+      expect(screen.getByText("Drill B")).toBeOnTheScreen();
+      // Still a leaf, so the parent context line stays.
+      expect(
+        screen.getByText(
+          i18n.t("common:stepCard.parentContext", { parent: "Practice" }),
+        ),
+      ).toBeOnTheScreen();
+    });
   });
 });
