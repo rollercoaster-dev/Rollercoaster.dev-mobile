@@ -100,6 +100,13 @@ describe("classifyDrop", () => {
       expect(classifyDrop(list, 0, 0, "a")).toEqual({ kind: "none" });
     });
 
+    it("armed target that already has children is refused", () => {
+      // a {x}  b — dwell b on a, but a already parents x (#330: dwell targets
+      // must be childless roots; a positional drop into a's group handles this).
+      const list = steps("a", ["x", "a"], "b");
+      expect(classifyDrop(list, 2, 2, "a")).toEqual({ kind: "none" });
+    });
+
     it("positional demote of a parent-with-children is refused", () => {
       // a {x}  b {y} — drag a (parent) to rest among b's children → refused
       const list = steps("a", ["x", "a"], "b", ["y", "b"]);

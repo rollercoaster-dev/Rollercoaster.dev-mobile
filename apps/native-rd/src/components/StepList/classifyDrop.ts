@@ -50,9 +50,11 @@ export function classifyDrop(
   // --- Dwell-to-demote: explicit nest under an armed root target ----------
   if (armedTargetId != null) {
     const target = steps.find((s) => s.id === armedTargetId);
+    const targetHasChildren = steps.some((s) => parentOf(s) === armedTargetId);
     const valid =
       !!target &&
       parentOf(target) === null && // target must be a root (one-level cap)
+      !targetHasChildren && // dwell targets are childless roots only (#330)
       target.id !== dragged.id &&
       !draggedHasChildren; // a parent-with-children can't be demoted
     return valid
