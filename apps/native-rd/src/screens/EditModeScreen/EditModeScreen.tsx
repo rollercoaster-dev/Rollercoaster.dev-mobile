@@ -27,6 +27,7 @@ import {
   updateStep,
   deleteStep,
   reorderSteps,
+  reorderSubSteps,
   groupStepsByParent,
   flattenGroupedSteps,
   StepStatus,
@@ -272,6 +273,68 @@ function EditContent({
     }
   }
 
+  function handleReorderSubSteps(parentStepId: string, childStepIds: string[]) {
+    try {
+      reorderSubSteps(
+        goalId as GoalId,
+        parentStepId as StepId,
+        childStepIds as StepId[],
+      );
+    } catch (error) {
+      console.error("[EditModeScreen] Failed to reorder sub-steps", {
+        goalId,
+        parentStepId,
+        error,
+      });
+      reportError(error, { area: "step.mutate", kind: "reorder" });
+      Alert.alert(
+        t("editGoal:errors.alertErrorTitle"),
+        t("editGoal:errors.reorderStepsMessage"),
+      );
+    }
+  }
+
+  function handleReparentStep(stepId: string, newParentStepId: string | null) {
+    // A step's ordinal is scoped to its current sibling group, so on reparent
+    // it would collide in the destination group. Append it to the end of the
+    // destination group in BOTH directions (promote → root group, demote →
+    // target's children) by recomputing the next ordinal there and setting it
+    // alongside parentStepId in one update. (Position-implied insert on demote
+    // is a Post-#330 follow-up — see Not in Scope.)
+    const nextOrdinal =
+      newParentStepId === null
+        ? stepRows.reduce(
+            (max, s) =>
+              s.parentStepId == null ? Math.max(max, s.ordinal ?? -1) : max,
+            -1,
+          ) + 1
+        : stepRows.reduce(
+            (max, s) =>
+              s.parentStepId === newParentStepId
+                ? Math.max(max, s.ordinal ?? -1)
+                : max,
+            -1,
+          ) + 1;
+    try {
+      updateStep(stepId as StepId, {
+        parentStepId: newParentStepId as StepId | null,
+        ordinal: nextOrdinal,
+      });
+    } catch (error) {
+      console.error("[EditModeScreen] Failed to reparent step", {
+        goalId,
+        stepId,
+        newParentStepId,
+        error,
+      });
+      reportError(error, { area: "step.mutate", kind: "update" });
+      Alert.alert(
+        t("editGoal:errors.alertErrorTitle"),
+        t("editGoal:errors.updateStepMessage"),
+      );
+    }
+  }
+
   function handleDeleteGoal() {
     try {
       deleteGoal(goalId as GoalId);
@@ -363,6 +426,8 @@ function EditContent({
           onUpdateStep={handleUpdateStep}
           onDeleteStep={canDelete ? handleDeleteStep : undefined}
           onReorderSteps={handleReorderSteps}
+          onReorderSubSteps={handleReorderSubSteps}
+          onReparentStep={handleReparentStep}
         />
 
         {/* Navigate button */}
