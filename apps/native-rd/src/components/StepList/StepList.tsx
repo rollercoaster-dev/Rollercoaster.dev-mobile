@@ -593,11 +593,11 @@ export function StepList({
       }
       if (dispatched) {
         triggerDragDrop();
-        // movedFromTo's positional `to` only holds for a same-group reorder. A
-        // reparent appends the step to the END of its destination group (the
-        // ordinal is recomputed in EditModeScreen), so the hover index would
-        // mis-state where the step actually landed — announce the nesting
-        // change instead of a misleading position.
+        // The hover index is a FLAT-list position — it counts child rows
+        // between roots, and on a reparent the landing ordinal is recomputed
+        // in EditModeScreen — so it can't be the announced position. Report
+        // the nesting change for a reparent, and sibling-group-relative
+        // positions for a reorder.
         if (result.kind === "reparent") {
           AccessibilityInfo.announceForAccessibility(
             result.newParentStepId === null
@@ -608,11 +608,17 @@ export function StepList({
                     "",
                 }),
           );
-        } else {
+        } else if (result.kind === "reorder") {
+          // from/to are positions within the dragged step's sibling group,
+          // matching the ↑/↓ keyboard announcements (movedUp/movedDown).
+          const draggedId = steps[activeDraggedIndex].id;
+          const groupIds = steps
+            .filter((s) => (s.parentStepId ?? null) === result.parentStepId)
+            .map((s) => s.id);
           AccessibilityInfo.announceForAccessibility(
             t("editGoal:stepList.a11y.movedFromTo", {
-              from: activeDraggedIndex + 1,
-              to: activeHoverIndex + 1,
+              from: groupIds.indexOf(draggedId) + 1,
+              to: result.orderedIds.indexOf(draggedId) + 1,
             }),
           );
         }
