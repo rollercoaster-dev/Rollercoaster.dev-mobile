@@ -1,4 +1,5 @@
 import React from "react";
+import { StyleSheet } from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -164,6 +165,59 @@ describe("MiniTimeline", () => {
       expect(
         screen.getByText(i18n.t("common:timeline.hint")),
       ).toBeOnTheScreen();
+    });
+  });
+
+  describe("sub-spine child nodes", () => {
+    const nodeWidth = (index: number): number | undefined => {
+      const flat = StyleSheet.flatten(
+        screen.getByTestId(`timeline-node-${index}`).props.style,
+      ) as Record<string, unknown> | null;
+      return flat?.width as number | undefined;
+    };
+
+    it("renders a child step with the smaller nodeChild width", () => {
+      // Parent at index 0, its sub-step at index 1.
+      renderWithProviders(
+        <MiniTimeline
+          steps={[
+            { status: "completed" },
+            { status: "pending", isChild: true },
+          ]}
+          {...defaultProps}
+          currentIndex={5}
+        />,
+      );
+      // Standard top-level node is 14; sub-step node is 10.
+      expect(nodeWidth(0)).toBe(14);
+      expect(nodeWidth(1)).toBe(10);
+    });
+
+    it("renders a non-child step with the standard node width", () => {
+      renderWithProviders(
+        <MiniTimeline
+          steps={[{ status: "pending", isChild: false }]}
+          {...defaultProps}
+          currentIndex={5}
+        />,
+      );
+      expect(nodeWidth(0)).toBe(14);
+    });
+
+    it("keeps the node count unchanged when a child is present", () => {
+      // 1 parent + 1 child + 1 flat = 3 step nodes + goal node + hint = 5.
+      renderWithProviders(
+        <MiniTimeline
+          steps={[
+            { status: "completed" },
+            { status: "pending", isChild: true },
+            { status: "pending" },
+          ]}
+          {...defaultProps}
+        />,
+      );
+      expect(screen.getAllByRole("button")).toHaveLength(5);
+      expect(screen.getByLabelText(goalLabel())).toBeOnTheScreen();
     });
   });
 

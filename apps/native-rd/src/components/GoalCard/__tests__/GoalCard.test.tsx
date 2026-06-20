@@ -136,4 +136,51 @@ describe("GoalCard", () => {
       ).toBeOnTheScreen();
     });
   });
+
+  describe("next step context line", () => {
+    it("renders the context line below the hero when provided", () => {
+      renderWithProviders(
+        <GoalCard
+          goal={makeGoal({
+            nextStepTitle: "20-amp small-appliance circuit",
+            nextStepContext: "↳ in Wire the circuits",
+          })}
+        />,
+      );
+      expect(
+        screen.getByText("20-amp small-appliance circuit"),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByTestId("goal-card-next-step-context"),
+      ).toBeOnTheScreen();
+      expect(screen.getByText("↳ in Wire the circuits")).toBeOnTheScreen();
+    });
+
+    it("omits the context line when nextStepContext is null", () => {
+      renderWithProviders(
+        <GoalCard
+          goal={makeGoal({
+            nextStepTitle: "Open a savings account",
+            nextStepContext: null,
+          })}
+        />,
+      );
+      expect(screen.getByTestId("goal-card-next-step")).toBeOnTheScreen();
+      expect(screen.queryByTestId("goal-card-next-step-context")).toBeNull();
+    });
+
+    it("omits the context line when there is no next-step hero", () => {
+      // Context is subordinate to the hero — no hero, no context line.
+      renderWithProviders(
+        <GoalCard
+          goal={makeGoal({
+            nextStepTitle: null,
+            nextStepContext: "↳ in Wire the circuits",
+          })}
+        />,
+      );
+      expect(screen.queryByTestId("goal-card-next-step")).toBeNull();
+      expect(screen.queryByTestId("goal-card-next-step-context")).toBeNull();
+    });
+  });
 });

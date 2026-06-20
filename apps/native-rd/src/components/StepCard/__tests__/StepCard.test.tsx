@@ -410,4 +410,31 @@ describe("StepCard", () => {
     expect(positions.quickActions).toBeLessThan(positions.prompt);
     expect(positions.prompt).toBeLessThan(positions.badge);
   });
+
+  // --- Parent context line (sub-steps, #292) ---
+
+  describe("parent context line", () => {
+    it("renders the context line when parentTitle is set", () => {
+      renderWithProviders(
+        <StepCard
+          step={makeStep({ parentTitle: "Wire the circuits" })}
+          {...defaultProps}
+        />,
+      );
+      expect(screen.getByTestId("step-card-parent-context")).toBeOnTheScreen();
+      expect(screen.getByText("↳ in Wire the circuits")).toBeOnTheScreen();
+    });
+
+    it("omits the context line when parentTitle is null", () => {
+      renderWithProviders(
+        <StepCard step={makeStep({ parentTitle: null })} {...defaultProps} />,
+      );
+      expect(screen.queryByTestId("step-card-parent-context")).toBeNull();
+    });
+
+    it("omits the context line when parentTitle is absent", () => {
+      renderWithProviders(<StepCard step={makeStep()} {...defaultProps} />);
+      expect(screen.queryByTestId("step-card-parent-context")).toBeNull();
+    });
+  });
 });

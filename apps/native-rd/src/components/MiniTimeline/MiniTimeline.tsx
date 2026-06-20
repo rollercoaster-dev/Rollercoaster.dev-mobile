@@ -91,6 +91,7 @@ export function MiniTimeline({
         })}
       >
         <View
+          testID={`timeline-node-${index}`}
           style={[
             styles.node,
             step.status === "completed" && styles.nodeCompleted,

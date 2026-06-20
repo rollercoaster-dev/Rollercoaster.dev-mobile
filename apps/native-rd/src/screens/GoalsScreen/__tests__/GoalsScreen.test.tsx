@@ -220,6 +220,98 @@ describe("GoalsScreen", () => {
     });
   });
 
+  describe("sub-step next-step resolution", () => {
+    const goalId = "goal-1";
+    const goalRow = makeGoalRow({ id: goalId, title: "Build practice panel" });
+
+    const mockSteps = (steps: Record<string, unknown>[]) => {
+      mockUseQuery.mockImplementation((query: { __brand?: string }) => {
+        if (query?.__brand === "activeGoalsQuery") return [goalRow];
+        if (query?.__brand === "stepsForActiveGoalsQuery") return steps;
+        return [];
+      });
+    };
+
+    // `tomas-done` shape with one child still pending → leaf state.
+    const LEAF_STEPS = [
+      { id: "s1", goalId, parentStepId: null, title: "Plan layout", status: "completed" }, // prettier-ignore
+      { id: "s2", goalId, parentStepId: null, title: "Wire the circuits", status: "pending" }, // prettier-ignore
+      { id: "s2a", goalId, parentStepId: "s2", title: "15-amp lighting circuit", status: "completed" }, // prettier-ignore
+      { id: "s2b", goalId, parentStepId: "s2", title: "20-amp small-appliance circuit", status: "pending" }, // prettier-ignore
+      { id: "s2c", goalId, parentStepId: "s2", title: "240V dryer circuit", status: "pending" }, // prettier-ignore
+      { id: "s3", goalId, parentStepId: null, title: "Inspection & labels", status: "pending" }, // prettier-ignore
+    ];
+
+    // Same shape, but all of s2's children are completed (parent still pending)
+    // → invite state. 6 rows, 4 completed → 4/6.
+    const INVITE_STEPS = [
+      { id: "s1", goalId, parentStepId: null, title: "Plan layout", status: "completed" }, // prettier-ignore
+      { id: "s2", goalId, parentStepId: null, title: "Wire the circuits", status: "pending" }, // prettier-ignore
+      { id: "s2a", goalId, parentStepId: "s2", title: "15-amp lighting circuit", status: "completed" }, // prettier-ignore
+      { id: "s2b", goalId, parentStepId: "s2", title: "20-amp small-appliance circuit", status: "completed" }, // prettier-ignore
+      { id: "s2c", goalId, parentStepId: "s2", title: "240V dryer circuit", status: "completed" }, // prettier-ignore
+      { id: "s3", goalId, parentStepId: null, title: "Inspection & labels", status: "pending" }, // prettier-ignore
+    ];
+
+    it("leads with the pending leaf + parent context (leaf state)", () => {
+      mockSteps(LEAF_STEPS);
+      renderWithProviders(<GoalsScreen />);
+      expect(
+        screen.getByText("20-amp small-appliance circuit"),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByText(
+          i18n.t("goals:card.nextStepContext", {
+            parent: "Wire the circuits",
+          }),
+        ),
+      ).toBeOnTheScreen();
+      // The container parent is context, not the hero.
+      expect(screen.queryByTestId("goal-card-next-step")).toHaveTextContent(
+        "20-amp small-appliance circuit",
+      );
+    });
+
+    it("leads with the parent + 'all N substeps done' readout (invite state)", () => {
+      mockSteps(INVITE_STEPS);
+      renderWithProviders(<GoalsScreen />);
+      expect(screen.getByText("Wire the circuits")).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("goals:card.allSubstepsDone", { count: 3 })),
+      ).toBeOnTheScreen();
+    });
+
+    it("counts every unit (parents + children) for progress — 4/6", () => {
+      mockSteps(INVITE_STEPS);
+      renderWithProviders(<GoalsScreen />);
+      expect(
+        screen.getByText(
+          i18n.t("goals:card.progressLabel", { completed: 4, total: 6 }),
+        ),
+      ).toBeOnTheScreen();
+    });
+
+    it("shows a flat step as the hero with no context line", () => {
+      mockSteps([
+        { id: "s1", goalId, parentStepId: null, title: "Open a savings account", status: "pending" }, // prettier-ignore
+      ]);
+      renderWithProviders(<GoalsScreen />);
+      expect(screen.getByText("Open a savings account")).toBeOnTheScreen();
+      expect(screen.queryByTestId("goal-card-next-step-context")).toBeNull();
+    });
+
+    it("renders no next-step line when every step is completed", () => {
+      mockSteps([
+        { id: "s1", goalId, parentStepId: null, title: "Plan", status: "completed" }, // prettier-ignore
+        { id: "s2", goalId, parentStepId: null, title: "Wire", status: "completed" }, // prettier-ignore
+        { id: "s2a", goalId, parentStepId: "s2", title: "15-amp", status: "completed" }, // prettier-ignore
+      ]);
+      renderWithProviders(<GoalsScreen />);
+      expect(screen.queryByTestId("goal-card-next-step")).toBeNull();
+      expect(screen.queryByTestId("goal-card-next-step-context")).toBeNull();
+    });
+  });
+
   describe("delete flow", () => {
     it("shows confirm modal on long press and deletes on confirm", () => {
       const goals = [makeGoalRow({ id: "goal-1", title: "Learn TypeScript" })];

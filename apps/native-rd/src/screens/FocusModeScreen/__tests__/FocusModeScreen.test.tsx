@@ -1,4 +1,5 @@
 import React from "react";
+import { StyleSheet } from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -1358,6 +1359,67 @@ describe("FocusModeScreen", () => {
         category: "focus",
         message: "exit",
       });
+    });
+  });
+
+  describe("sub-steps (#292)", () => {
+    // Parent step-2 has a pending child → snap should resolve to the leaf, not
+    // the container parent.
+    const LEAF_STEPS = [
+      { id: "step-1", title: "Read docs", status: "completed", ordinal: 0, parentStepId: null }, // prettier-ignore
+      { id: "step-2", title: "Practice", status: "pending", ordinal: 1, parentStepId: null }, // prettier-ignore
+      { id: "step-2a", title: "Drill A", status: "pending", ordinal: 0, parentStepId: "step-2" }, // prettier-ignore
+      { id: "step-2b", title: "Drill B", status: "pending", ordinal: 1, parentStepId: "step-2" }, // prettier-ignore
+      { id: "step-3", title: "Build it", status: "pending", ordinal: 2, parentStepId: null }, // prettier-ignore
+    ];
+
+    // All of step-2's children done, parent still pending → invite state; snap
+    // resolves to the parent and the children are non-current child nodes.
+    const INVITE_STEPS = [
+      { id: "step-1", title: "Read docs", status: "completed", ordinal: 0, parentStepId: null }, // prettier-ignore
+      { id: "step-2", title: "Practice", status: "pending", ordinal: 1, parentStepId: null }, // prettier-ignore
+      { id: "step-2a", title: "Drill A", status: "completed", ordinal: 0, parentStepId: "step-2" }, // prettier-ignore
+      { id: "step-2b", title: "Drill B", status: "completed", ordinal: 1, parentStepId: "step-2" }, // prettier-ignore
+      { id: "step-3", title: "Build it", status: "pending", ordinal: 2, parentStepId: null }, // prettier-ignore
+    ];
+
+    const nodeWidth = (index: number): number | undefined => {
+      const flat = StyleSheet.flatten(
+        screen.getByTestId(`timeline-node-${index}`).props.style,
+      ) as Record<string, unknown> | null;
+      return flat?.width as number | undefined;
+    };
+
+    it("snaps to the first pending leaf, not the parent that contains it", () => {
+      setupQueries({ steps: LEAF_STEPS, stepEvidence: [] });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+      // step-2a is the first pending leaf at flat index 2 → 1-based "3 of 5"
+      // (not the parent at index 1, which would read "2 of 5").
+      expect(
+        screen.getByText(
+          i18n.t("common:stepCard.progress", { current: 3, total: 5 }),
+        ),
+      ).toBeOnTheScreen();
+      expect(screen.getByText("Drill A")).toBeOnTheScreen();
+    });
+
+    it("renders the parent context line on a leaf step card", () => {
+      setupQueries({ steps: LEAF_STEPS, stepEvidence: [] });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+      expect(
+        screen.getByText(
+          i18n.t("common:stepCard.parentContext", { parent: "Practice" }),
+        ),
+      ).toBeOnTheScreen();
+    });
+
+    it("passes isChild through to the MiniTimeline (smaller child node)", () => {
+      // Invite state snaps to the parent (index 1), so the children stay
+      // non-current — their nodes render at the smaller sub-step size.
+      setupQueries({ steps: INVITE_STEPS, stepEvidence: [] });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+      expect(nodeWidth(0)).toBe(14); // top-level step
+      expect(nodeWidth(2)).toBe(10); // sub-step (child) node
     });
   });
 });
