@@ -429,10 +429,14 @@ export function StepList({
           setGroupDropOutline(null);
           // Below the row when dragging down, above it when dragging up; -1 so
           // the bar straddles the boundary rather than sitting just past it.
-          const top =
+          // Clamp at 0 so inserting above the first row (slotLayout.y ≈ 0)
+          // never draws the bar outside the list — there's no overflow clip.
+          const top = Math.max(
+            0,
             (newIndex > activeDraggedIndex
               ? slotLayout.y + slotLayout.height
-              : slotLayout.y) - 1;
+              : slotLayout.y) - 1,
+          );
           setDropSlot((prev) => (prev?.top === top ? prev : { top }));
         }
       }
@@ -673,7 +677,10 @@ export function StepList({
   }
 
   function handleMoveUp(index: number) {
-    if (!onReorderSteps) return;
+    // No callback gate here — moveWithinSiblingGroup is the sole gate and picks
+    // the right callback per row (root → onReorderSteps, child → onReorderSubSteps),
+    // returning null when its callback is absent. Gating on onReorderSteps would
+    // wrongly block child moves in an onReorderSubSteps-only config.
     const newPos = moveWithinSiblingGroup(index, -1);
     if (newPos === null) return;
     AccessibilityInfo.announceForAccessibility(
@@ -685,7 +692,7 @@ export function StepList({
   }
 
   function handleMoveDown(index: number) {
-    if (!onReorderSteps) return;
+    // See handleMoveUp: moveWithinSiblingGroup is the sole callback gate.
     const newPos = moveWithinSiblingGroup(index, 1);
     if (newPos === null) return;
     AccessibilityInfo.announceForAccessibility(
