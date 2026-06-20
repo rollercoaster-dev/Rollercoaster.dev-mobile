@@ -6,17 +6,41 @@
 
 import {
   createStep,
+  createSubStep,
   updateStep,
   canCompleteStep,
   completeStep,
   uncompleteStep,
   deleteStep,
   reorderSteps,
+  reorderSubSteps,
+  groupStepsByParent,
+  flattenGroupedSteps,
+  type GroupedStep,
 } from "../queries";
 import type { GoalId, StepId } from "../schema";
 
 const mockGoalId = "goal_test_123" as GoalId;
 const mockStepId = "step_test_456" as StepId;
+
+/** Build a flat step-row (the post-query shape groupStepsByParent reads). */
+function row(
+  id: string,
+  parentStepId: string | null,
+  overrides: Partial<Omit<GroupedStep, "children">> = {},
+): Omit<GroupedStep, "children"> {
+  return {
+    id: id as StepId,
+    goalId: mockGoalId,
+    parentStepId: parentStepId as StepId | null,
+    title: id,
+    ordinal: 0,
+    status: "pending",
+    completedAt: null,
+    plannedEvidenceTypes: null,
+    ...overrides,
+  };
+}
 
 describe("Step CRUD Operations", () => {
   test.each([
@@ -188,6 +212,141 @@ describe("Step CRUD Operations", () => {
         (_, i) => `step_${i}` as StepId,
       );
       expect(() => reorderSteps(mockGoalId, stepIds)).not.toThrow();
+    });
+  });
+
+  describe("groupStepsByParent", () => {
+    test("flat goal: all rows become roots with empty children", () => {
+      const rows = [row("a", null), row("b", null), row("c", null)];
+      const grouped = groupStepsByParent(rows);
+      expect(grouped.map((g) => g.id)).toEqual(["a", "b", "c"]);
+      expect(grouped.every((g) => g.children.length === 0)).toBe(true);
+    });
+
+    test("mixed goal: children nest under their parent, not at root", () => {
+      const rows = [
+        row("a", null),
+        row("b", "a"),
+        row("c", "a"),
+        row("d", null),
+      ];
+      const grouped = groupStepsByParent(rows);
+      expect(grouped.map((g) => g.id)).toEqual(["a", "d"]);
+      expect(grouped[0].children.map((c) => c.id)).toEqual(["b", "c"]);
+      expect(grouped[1].children).toEqual([]);
+    });
+
+    test("preserves input order among siblings (ordinal/createdAt tie-break)", () => {
+      // groupStepsByParent is pure over an already-ordered query result; the
+      // (ordinal, createdAt) ORDER BY lives in stepsByGoalQuery. Two children
+      // with the same ordinal arrive pre-sorted by createdAt — confirm the
+      // grouper keeps that order rather than reshuffling.
+      const rows = [
+        row("a", null),
+        row("early", "a", { ordinal: 0 }),
+        row("late", "a", { ordinal: 0 }),
+      ];
+      const grouped = groupStepsByParent(rows);
+      expect(grouped[0].children.map((c) => c.id)).toEqual(["early", "late"]);
+    });
+
+    test("orphan guard: child of a missing root is promoted to root level", () => {
+      const rows = [row("a", null), row("orphan", "ghost")];
+      const grouped = groupStepsByParent(rows);
+      expect(grouped.map((g) => g.id)).toEqual(["a", "orphan"]);
+      expect(grouped.find((g) => g.id === "orphan")?.children).toEqual([]);
+    });
+
+    test("depth guard: a child-of-a-child is promoted, never nested two deep", () => {
+      const rows = [row("a", null), row("b", "a"), row("c", "b")];
+      const grouped = groupStepsByParent(rows);
+      // a -> b is valid; c points at b (a non-root), so c surfaces at root.
+      expect(grouped.map((g) => g.id)).toEqual(["a", "c"]);
+      expect(grouped[0].children.map((x) => x.id)).toEqual(["b"]);
+    });
+  });
+
+  describe("flattenGroupedSteps", () => {
+    test("parent with two children flattens to render order", () => {
+      const grouped = groupStepsByParent([
+        row("a", null),
+        row("b", "a"),
+        row("c", "a"),
+      ]);
+      expect(flattenGroupedSteps(grouped).map((s) => s.id)).toEqual([
+        "a",
+        "b",
+        "c",
+      ]);
+    });
+
+    test("flat goal round-trips unchanged", () => {
+      const grouped = groupStepsByParent([row("a", null), row("b", null)]);
+      expect(flattenGroupedSteps(grouped).map((s) => s.id)).toEqual(["a", "b"]);
+    });
+  });
+
+  describe("createSubStep", () => {
+    const parentId = "step_parent_1" as StepId;
+
+    test("throws on empty title (validation parity with createStep)", () => {
+      expect(() => createSubStep(mockGoalId, parentId, "")).toThrow(
+        "Step title must be 1-1000 characters",
+      );
+    });
+
+    test("succeeds with valid title and stamps parentStepId", () => {
+      const result = createSubStep(
+        mockGoalId,
+        parentId,
+        "Sub-step",
+        2,
+      ) as unknown as {
+        parentStepId: StepId;
+        title: string;
+      };
+      expect(result.parentStepId).toBe(parentId);
+      expect(result.title).toBe("Sub-step");
+    });
+  });
+
+  describe("reorderSubSteps", () => {
+    const parentId = "step_parent_1" as StepId;
+
+    test("reorders three siblings without throwing", () => {
+      const childIds = [
+        "child_1" as StepId,
+        "child_2" as StepId,
+        "child_3" as StepId,
+      ];
+      expect(() =>
+        reorderSubSteps(mockGoalId, parentId, childIds),
+      ).not.toThrow();
+    });
+
+    test("empty child list does not throw", () => {
+      expect(() => reorderSubSteps(mockGoalId, parentId, [])).not.toThrow();
+    });
+  });
+
+  describe("updateStep reparent", () => {
+    test("promote: setting parentStepId to null is included in payload", () => {
+      const result = updateStep(mockStepId, {
+        parentStepId: null,
+      }) as unknown as {
+        parentStepId: StepId | null;
+      };
+      expect(result.parentStepId).toBeNull();
+    });
+
+    test("demote: setting parentStepId to a root id is included in payload", () => {
+      const rootId = "step_root_1" as StepId;
+      const result = updateStep(mockStepId, {
+        parentStepId: rootId,
+      }) as unknown as {
+        parentStepId: StepId | null;
+      };
+      expect(result.parentStepId).toBe(rootId);
     });
   });
 });
