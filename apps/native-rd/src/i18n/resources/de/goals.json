@@ -11,6 +11,9 @@
   },
   "card": {
     "progressLabel": "{{completed}}/{{total}} Schritte",
+    "nextStepContext": "↳ in {{parent}}",
+    "allSubstepsDone_one": "{{count}} Teilschritt erledigt",
+    "allSubstepsDone_other": "alle {{count}} Teilschritte erledigt",
     "a11y": {
       "hint": "Doppeltippen für Details",
       "label": "{{title}}, {{stepsCompleted}} von {{stepsTotal}} Schritten abgeschlossen, {{status}}",

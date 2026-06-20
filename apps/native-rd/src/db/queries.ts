@@ -62,17 +62,31 @@ export const activeGoalsQuery = evolu.createQuery((db) =>
  * Steps for every active goal in a single subscription, grouped client-side
  * by goalId. Avoids the N+1 of calling stepsByGoalQuery per goal card on the
  * home screen.
+ *
+ * `parentStepId` is selected so the goal card can resolve the next pending
+ * *leaf* (a sub-step) rather than the parent that contains it (#292). The
+ * consumer (GoalsScreen) buckets the flat rows by `parentStepId`; flat order is
+ * not relied on for hierarchy. The `createdAt` tie-break mirrors
+ * {@link stepsByGoalQuery} so siblings sharing an ordinal (concurrent CRDT
+ * writes) still sort deterministically.
  */
 export const stepsForActiveGoalsQuery = evolu.createQuery((db) =>
   db
     .selectFrom("step")
     .innerJoin("goal", "goal.id", "step.goalId")
-    .select(["step.id", "step.goalId", "step.title", "step.status"])
+    .select([
+      "step.id",
+      "step.goalId",
+      "step.parentStepId",
+      "step.title",
+      "step.status",
+    ])
     .where("step.isDeleted", "is", null)
     .where("goal.isDeleted", "is", null)
     .where("goal.status", "=", GoalStatus.active)
     .orderBy("step.goalId", "asc")
-    .orderBy("step.ordinal", "asc"),
+    .orderBy("step.ordinal", "asc")
+    .orderBy("step.createdAt", "asc"),
 );
 
 /**

@@ -28,6 +28,12 @@ export interface StepCardStep {
   evidenceCount: number;
   plannedEvidenceTypes?: string[] | null;
   capturedEvidenceTypes?: string[];
+  /**
+   * Title of the parent step when this card is a sub-step (#292). Renders a
+   * quiet "↳ in [parent]" context line under the title so the user knows which
+   * parent the leaf belongs to. Null/absent for top-level steps.
+   */
+  parentTitle?: string | null;
 }
 
 export interface StepCardProps {
@@ -134,6 +140,15 @@ function StepCardComponent({
         >
           {step.title}
         </Text>
+        {step.parentTitle && (
+          <Text
+            style={styles.parentContext}
+            numberOfLines={1}
+            testID="step-card-parent-context"
+          >
+            {t("common:stepCard.parentContext", { parent: step.parentTitle })}
+          </Text>
+        )}
 
         {onQuickEvidence && quickEvidenceOptions.length > 0 && (
           <View style={styles.quickActionsRow}>
@@ -234,6 +249,7 @@ function areStepCardPropsEqual(
     previous.step.id === next.step.id &&
     previous.step.title === next.step.title &&
     previous.step.status === next.step.status &&
+    previous.step.parentTitle === next.step.parentTitle &&
     previous.step.evidenceCount === next.step.evidenceCount &&
     equalStringArrays(
       previous.step.plannedEvidenceTypes,

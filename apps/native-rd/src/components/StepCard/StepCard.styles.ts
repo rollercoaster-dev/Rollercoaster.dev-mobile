@@ -31,6 +31,13 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.text,
     fontFamily: theme.fontFamily.headline,
   },
+  // Quiet "↳ in [parent]" line for sub-step cards — muted and subordinate to
+  // the title, matching the GoalCard context line (#292).
+  parentContext: {
+    ...theme.textStyles.caption,
+    color: theme.colors.textMuted,
+    marginTop: theme.space[1],
+  },
   evidenceBadgeWrapper: {
     position: "relative" as const,
     alignSelf: "flex-start",

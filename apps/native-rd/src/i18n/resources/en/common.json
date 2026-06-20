@@ -94,6 +94,7 @@
       "markComplete": "Mark complete"
     },
     "progress": "{{current}} of {{total}}",
+    "parentContext": "↳ in {{parent}}",
     "blocker": {
       "label": "Add evidence to complete",
       "a11yWithType": "Add {{label}} to complete this step"

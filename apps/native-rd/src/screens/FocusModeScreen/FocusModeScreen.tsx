@@ -49,7 +49,8 @@ import {
   deleteEvidence,
   canCompleteStep,
   isPendingStep,
-  findFirstPendingIndex,
+  groupStepsByParent,
+  flattenGroupedSteps,
   EvidenceType,
   StepStatus,
 } from "../../db";
@@ -88,13 +89,87 @@ const EVIDENCE_ROUTE_MAP: Partial<
   [EvidenceType.file]: "CaptureFile",
 };
 
+/**
+ * Index (into the flat `stepRows`) of the first pending *leaf* to snap to on
+ * mount (#292). Mirrors the goal card's resolution: walk top-level steps in
+ * order and return the first pending child (a leaf) — or the parent itself when
+ * it is a flat pending step or in the invite state (all children done, parent
+ * still pending). Returns -1 when nothing is pending.
+ *
+ * Pending children are checked *before* the parent's own status, so a manually
+ * completed parent that still has pending sub-steps doesn't hide them — step
+ * completion is per-step, not cascaded (see completeStep), so this is reachable.
+ * A completed parent whose children are all done is skipped (subtree closed).
+ */
+function findFirstPendingLeafIndex(
+  rows: readonly {
+    id: string;
+    parentStepId: string | null;
+    status: string | null;
+  }[],
+): number {
+  // A row is a child only if its parent is a present top-level step. A null
+  // parent — or an orphan whose parent was soft-deleted — surfaces as top-level
+  // so its pending work stays reachable. Mirrors groupStepsByParent's orphan
+  // promotion (#292); without it a deleted parent would hide its children.
+  const rootIds = new Set(
+    rows.filter((r) => r.parentStepId == null).map((r) => r.id),
+  );
+  const childrenByParent = new Map<
+    string,
+    { index: number; status: string | null }[]
+  >();
+  const topLevel: { id: string; index: number; status: string | null }[] = [];
+  rows.forEach((row, index) => {
+    if (row.parentStepId != null && rootIds.has(row.parentStepId)) {
+      const entry = { index, status: row.status };
+      const list = childrenByParent.get(row.parentStepId);
+      if (list) list.push(entry);
+      else childrenByParent.set(row.parentStepId, [entry]);
+    } else {
+      topLevel.push({ id: row.id, index, status: row.status });
+    }
+  });
+
+  for (const step of topLevel) {
+    const children = childrenByParent.get(step.id) ?? [];
+    const pendingChild = children.find(
+      (c) => c.status !== StepStatus.completed,
+    );
+    // A pending leaf wins even under a completed parent — its work isn't hidden.
+    if (pendingChild) return pendingChild.index;
+    // No pending child: skip once the step itself is complete (a flat step, or a
+    // parent whose subtree is fully done). Otherwise it's the next action — a
+    // flat pending step, or the invite state (children all done, parent pending).
+    if (step.status === StepStatus.completed) continue;
+    return step.index;
+  }
+  return -1;
+}
+
 function FocusContent({ goalId }: { goalId: string }) {
   const { t } = useTranslation(["focusMode", "common"]);
   const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
   const { showToast } = useToast();
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
-  const stepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
+  const rawStepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
+  // Order rows parent-then-children (orphans promoted to top-level) so the
+  // carousel and MiniTimeline render the sub-spine correctly. The raw query is
+  // `(ordinal, createdAt)`-ordered with sibling-scoped child ordinals, which
+  // interleaves children among parents (#292) — flatten via groupStepsByParent
+  // as EditModeScreen does. All downstream indexing uses this ordered list.
+  const stepRows = useMemo(
+    () => flattenGroupedSteps(groupStepsByParent(rawStepRows)),
+    [rawStepRows],
+  );
+  // Ids of the present top-level steps — lets the UI tell a real sub-step from a
+  // promoted orphan (parent soft-deleted) so the orphan renders as a lead.
+  const stepRootIds = useMemo(
+    () =>
+      new Set(stepRows.filter((r) => r.parentStepId == null).map((r) => r.id)),
+    [stepRows],
+  );
   const goalEvidenceRows = useQuery(evidenceByGoalQuery(goalId as GoalId));
 
   const allStepEvidenceRows = useQuery(
@@ -125,9 +200,18 @@ function FocusContent({ goalId }: { goalId: string }) {
   const isGoalCard = currentCardIndex >= stepRows.length;
 
   // Derive UI step status: current step is 'in-progress', others are mapped from DB
-  const uiSteps = useMemo(
-    () =>
-      stepRows.map((row, index) => ({
+  const uiSteps = useMemo(() => {
+    // id → title, built once so the per-row parent lookup below is O(1) rather
+    // than the O(n²) of re-scanning stepRows.find for every sub-step.
+    const titleById = new Map(stepRows.map((r) => [r.id, r.title ?? null] as const)); // prettier-ignore
+    return stepRows.map((row, index) => {
+      // A sub-step is a row whose parent is a present top-level step (#292).
+      // An orphan (parent soft-deleted) is treated as top-level so it renders
+      // as a lead, not an indented child of whatever precedes it. Resolve the
+      // parent's title for the StepCard / MiniTimeline context line.
+      const isChild =
+        row.parentStepId != null && stepRootIds.has(row.parentStepId);
+      return {
         id: row.id,
         title: row.title ?? "",
         status:
@@ -137,9 +221,14 @@ function FocusContent({ goalId }: { goalId: string }) {
               ? ("in-progress" as UIStepStatus)
               : ("pending" as UIStepStatus),
         evidenceCount: 0, // Will be enriched below
-      })),
-    [stepRows, currentCardIndex],
-  );
+        isChild,
+        parentTitle:
+          isChild && row.parentStepId != null
+            ? (titleById.get(row.parentStepId) ?? null)
+            : null,
+      };
+    });
+  }, [stepRows, stepRootIds, currentCardIndex]);
 
   // Evidence counts per step (reuses allStepEvidenceRows to avoid duplicate query)
   const stepEvidenceCounts = useStepEvidenceCounts(
@@ -182,7 +271,8 @@ function FocusContent({ goalId }: { goalId: string }) {
 
   // Timeline + dot steps (memoized to prevent child re-renders on unrelated state changes)
   const timelineSteps = useMemo<MiniTimelineStep[]>(
-    () => stepsWithEvidence.map((s) => ({ status: s.status })),
+    () =>
+      stepsWithEvidence.map((s) => ({ status: s.status, isChild: s.isChild })),
     [stepsWithEvidence],
   );
   const dotSteps = useMemo<ProgressDotsStep[]>(
@@ -226,7 +316,7 @@ function FocusContent({ goalId }: { goalId: string }) {
     if (lifecycle.current.snappedToFirstPending) return;
     if (stepRowsLength === 0) return;
     lifecycle.current.snappedToFirstPending = true;
-    const firstPendingIndex = findFirstPendingIndex(stepRows);
+    const firstPendingIndex = findFirstPendingLeafIndex(stepRows);
     if (firstPendingIndex > 0) {
       setCurrentCardIndex(firstPendingIndex);
     }
@@ -567,6 +657,7 @@ function FocusContent({ goalId }: { goalId: string }) {
                   evidenceCount: step.evidenceCount,
                   plannedEvidenceTypes: step.plannedEvidenceTypes,
                   capturedEvidenceTypes: step.capturedEvidenceTypes,
+                  parentTitle: step.parentTitle,
                 }}
                 stepIndex={index}
                 totalSteps={stepRows.length}
