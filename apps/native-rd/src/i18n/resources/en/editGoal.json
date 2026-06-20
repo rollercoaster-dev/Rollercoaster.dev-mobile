@@ -59,7 +59,11 @@
     "a11y": {
       "movedFromTo": "Step moved from position {{from}} to {{to}}",
       "movedUp": "Step \"{{title}}\" moved up to position {{position}}",
-      "movedDown": "Step \"{{title}}\" moved down to position {{position}}"
+      "movedDown": "Step \"{{title}}\" moved down to position {{position}}",
+      "nestUnder": "Nest under \"{{title}}\"",
+      "nestUnderA11y": "Nest this step under {{title}}",
+      "unNest": "Un-nest",
+      "unNestA11y": "Promote this step to top level"
     }
   }
 }
