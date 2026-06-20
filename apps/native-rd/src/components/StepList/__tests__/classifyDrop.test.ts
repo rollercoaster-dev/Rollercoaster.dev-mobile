@@ -57,6 +57,30 @@ describe("classifyDrop", () => {
       });
     });
 
+    it("moves a child to the last position of a group when another root follows", () => {
+      // a {a1, a2}  b {b1} — drag a1 below a2. The slot's next row is root b,
+      // but a1 must stay a child of a (a within-group reorder), NOT promote to
+      // a root just because the row after the slot is a root. Regression for
+      // "can't move a substep from 2nd-to-last to last".
+      const list = steps("a", ["a1", "a"], ["a2", "a"], "b", ["b1", "b"]);
+      expect(classifyDrop(list, 1, 2)).toEqual({
+        kind: "reorder",
+        parentStepId: "a",
+        orderedIds: ["a2", "a1"],
+      });
+    });
+
+    it("moves a middle child to the last position of a non-terminal group", () => {
+      // a {a1, a2, a3}  b — drag a1 below a3 (hover a3, idx 3). a1 must land
+      // last in a's group, not promote to a root before b.
+      const list = steps("a", ["a1", "a"], ["a2", "a"], ["a3", "a"], "b");
+      expect(classifyDrop(list, 1, 3)).toEqual({
+        kind: "reorder",
+        parentStepId: "a",
+        orderedIds: ["a2", "a3", "a1"],
+      });
+    });
+
     it("moves a root with children below another root group", () => {
       const list = steps("a", ["a-child", "a"], "b", ["b-child", "b"]);
       expect(classifyDrop(list, 0, 3)).toEqual({

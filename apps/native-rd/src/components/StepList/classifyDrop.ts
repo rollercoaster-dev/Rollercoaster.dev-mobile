@@ -90,18 +90,25 @@ export function classifyDrop(
   }
 
   // --- Positional reorder / promote --------------------------------------
-  // A slot immediately before a row belongs to that row's sibling group. This
-  // is essential for placing a child first: the row above is its root parent,
-  // but the child at the slot carries the intended parent. At the end of the
-  // list there is no row at the slot, so inherit from the row above instead.
+  // The drop slot sits between two neighbours in the post-removal list: `above`
+  // (the row the dragged step lands after) and `atSlot` (the row it lands
+  // before). Each neighbour's sibling group is a candidate parent. Prefer
+  // KEEPING the dragged step's current group whenever the slot is adjacent to
+  // it — otherwise a within-group move to the LAST position would read as a
+  // promote when the next row is a root (`atSlot` is that root), and a move to
+  // the FIRST position would read the same when the row above is the parent
+  // root. Only when neither neighbour shares the current group is this a real
+  // reparent, in which case the group being inserted-into (`atSlot`, falling
+  // back to `above` at the end of the list) is the new parent.
   const working = steps.filter((_, i) => i !== draggedIndex);
   const atSlot = working[dropIndex];
   const above = dropIndex > 0 ? working[dropIndex - 1] : null;
-  const positionalParent = atSlot
-    ? parentOf(atSlot)
-    : above
-      ? parentOf(above)
-      : null;
+  const aboveParent = above ? parentOf(above) : null;
+  const atSlotParent = atSlot ? parentOf(atSlot) : aboveParent;
+  const positionalParent =
+    currentParent === aboveParent || currentParent === atSlotParent
+      ? currentParent
+      : atSlotParent;
 
   // One-level cap: a parent-with-children can't become someone's child.
   if (positionalParent !== null && draggedHasChildren) {
