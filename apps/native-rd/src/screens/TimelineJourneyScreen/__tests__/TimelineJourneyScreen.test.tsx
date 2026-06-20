@@ -382,5 +382,93 @@ describe("TimelineJourneyScreen", () => {
       renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
       expect(screen.getByText("0 of 3 steps completed")).toBeOnTheScreen();
     });
+
+    // A manually-completed parent does NOT hide a still-pending child — the
+    // pending leaf stays current (completion is per-step, not cascaded). This is
+    // the branch that makes findCurrentLeafId diverge from the prototype's
+    // nextInfo; it mirrors FocusMode's findFirstPendingLeafIndex (#292/#293).
+    it("keeps a pending child current even when its parent is completed", () => {
+      setupQueries({
+        steps: [
+          {
+            id: "p",
+            title: "Done parent",
+            status: "completed",
+            ordinal: 0,
+            parentStepId: null,
+          },
+          {
+            id: "c1",
+            title: "Still open",
+            status: "pending",
+            ordinal: 0,
+            parentStepId: "p",
+          },
+        ],
+      });
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      // Exactly one accent, and it is the child — not the completed parent.
+      expect(screen.getAllByText("Active")).toHaveLength(1);
+      const child = screen.getByLabelText("Sub-step a: Still open");
+      expect(within(child).getByText("Active")).toBeOnTheScreen();
+      expect(screen.getByLabelText("Done parent, Done")).toBeOnTheScreen();
+    });
+
+    // Invite state: all children done but the parent is still open, so the
+    // parent itself becomes the current accent (it is never auto-completed).
+    it("marks the parent current in the invite state (all children done)", () => {
+      setupQueries({
+        steps: [
+          {
+            id: "p",
+            title: "Open parent",
+            status: "pending",
+            ordinal: 0,
+            parentStepId: null,
+          },
+          {
+            id: "c1",
+            title: "Sub done",
+            status: "completed",
+            ordinal: 0,
+            parentStepId: "p",
+          },
+          {
+            id: "c2",
+            title: "Sub also done",
+            status: "completed",
+            ordinal: 1,
+            parentStepId: "p",
+          },
+        ],
+      });
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      // The single accent sits on the parent header, not on either done child.
+      expect(screen.getAllByText("Active")).toHaveLength(1);
+      expect(screen.getByLabelText("Open parent, Active")).toBeOnTheScreen();
+    });
+
+    it("shows no in-progress accent when every step is completed", () => {
+      setupQueries({
+        steps: [
+          {
+            id: "p",
+            title: "Done parent",
+            status: "completed",
+            ordinal: 0,
+            parentStepId: null,
+          },
+          {
+            id: "c1",
+            title: "Done child",
+            status: "completed",
+            ordinal: 0,
+            parentStepId: "p",
+          },
+        ],
+      });
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      expect(screen.queryAllByText("Active")).toHaveLength(0);
+    });
   });
 });

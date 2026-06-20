@@ -79,8 +79,9 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.textSecondary,
     fontStyle: "italic",
   },
-  // Indented sub-spine: a left rail descending from the parent node column
-  // (GOAL_NODE_SIZE / 2 ≈ the parent node's centerline), holding the child rows
+  // Indented sub-spine: a left rail descending from the parent node column.
+  // The node column is GOAL_NODE_SIZE wide with the node centered, so
+  // GOAL_NODE_SIZE / 2 lands the rail exactly on the parent node's centerline
   // (#293, prototype `.jchildren-indent`).
   childSpine: {
     marginLeft: GOAL_NODE_SIZE / 2,

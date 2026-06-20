@@ -176,6 +176,15 @@ describe("TimelineStep", () => {
       expect(screen.queryByText("Progress photo")).toBeNull();
     });
 
+    it("expanding one sub-step leaves its siblings collapsed", () => {
+      renderWithProviders(<TimelineStep {...baseProps} subSteps={subSteps} />);
+      fireEvent.press(screen.getByLabelText("Sub-step c: Third child"));
+      expect(screen.getByText("Child photo")).toBeOnTheScreen();
+      // Sibling "First child" (c1) has its own evidence ("Child link") and must
+      // stay collapsed — pins the per-child useState in ChildRow.
+      expect(screen.queryByText("Child link")).toBeNull();
+    });
+
     it("shows the empty-evidence message for a sub-step with no evidence", () => {
       renderWithProviders(<TimelineStep {...baseProps} subSteps={subSteps} />);
       fireEvent.press(screen.getByLabelText("Sub-step b: Second child"));
