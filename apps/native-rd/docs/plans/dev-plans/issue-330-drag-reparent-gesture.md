@@ -23,7 +23,8 @@ Observable criteria derived from the issue. Verifiable by running the app or rea
 - [x] Row-label i18n keys (`nestUnder`/`nestUnderA11y`/`unNest`/`unNestA11y`) are present in en/de/pseudo `editGoal.json` (landed in `901477b`).
 - [x] Picker-chrome i18n keys (trigger label + a11y + picker title) are added in en/de/pseudo `editGoal.json`. _(commit `d68d322`)_
 - [x] `StepList` accepts `onReorderSubSteps` and `onReparentStep` props; `EditModeScreen` wires `handleReorderSubSteps` (calling `reorderSubSteps`) and `handleReparentStep` (calling `updateStep`). _(commits `b5d6ab6`, `fa0684d`)_
-- [~] All tests in `classifyDrop.test.ts`, `StepList.test.tsx`, and `EditModeScreen.test.tsx` pass after the guard is removed and new paths are wired. _(classifyDrop ✅ + StepList guard-removal test ✅; **new dispatch / SR-control / ghost-hide / EditModeScreen-wiring test blocks still TODO — plan Step 5**)_
+- [ ] With a long edit form, holding a dragged row within 72 px of the visible scroll container's top or bottom edge continuously scrolls toward off-screen destinations; hover feedback remains aligned and scrolling stops on drop or at content boundaries.
+- [~] All tests in `classifyDrop.test.ts`, `StepList.test.tsx`, and `EditModeScreen.test.tsx` pass after the guard is removed and new paths are wired. _(classifyDrop ✅ + StepList guard-removal test ✅; **new auto-scroll / dispatch / SR-control / ghost-hide / EditModeScreen-wiring test blocks still TODO — plans Steps 5-6**)_
 
 ## Dependencies
 
@@ -37,7 +38,7 @@ Observable criteria derived from the issue. Verifiable by running the app or rea
 
 ## Objective
 
-Wire the `classifyDrop` decision layer into the existing `DraggableStepItem` gesture, add the dwell-arm mechanic (timer + animation), wire `onReorderSubSteps`/`onReparentStep` props all the way through `StepList` → `EditModeScreen`, remove the D13 guard, and add screen-reader nest/un-nest controls with i18n keys. After this PR, all goals — flat and hierarchical — have full drag-reorder plus explicit reparent affordances.
+Wire the `classifyDrop` decision layer into the existing `DraggableStepItem` gesture, add the dwell-arm mechanic, wire `onReorderSubSteps`/`onReparentStep` props all the way through `StepList` → `EditModeScreen`, remove the D13 guard, add screen-reader nest/un-nest controls, and auto-scroll the edit form while a dragged row is held near the visible container edges. After this PR, flat and hierarchical goals have full drag-reorder plus explicit reparent affordances even when the destination begins off-screen.
 
 ## Decisions
 
@@ -46,17 +47,20 @@ Wire the `classifyDrop` decision layer into the existing `DraggableStepItem` ges
 | D8  | Vertical-only drag + dwell-to-demote (settled in #290 plan)                                                                                                                                                       | x-axis indent; explicit buttons only            | Shipped vertical DnD before; dwelling directly on a root provides one consistent target for both first and subsequent children                                                |
 | D12 | `animationPref === "none"` → static bold border; screen-reader → explicit nest/un-nest buttons (settled in #290 plan)                                                                                             | Motion for everyone; drag-only                  | This app targets ND users day-one; both variants must be first-class                                                                                                          |
 | D14 | Dwell timer lives in `StepList` JS state, not on the worklet                                                                                                                                                      | Worklet-side timer via `runAfterAnimFrame`      | `setTimeout` on the JS side is simpler, testable, and the 200-250 ms latency is not perceptible vs. frame-level timing; matches the DEBOUNCE pattern already used in EditMode |
-| D15 | `armedTargetId` is rendered from React state and mirrored in a ref for gesture callbacks; passed to `DraggableStepItem` as a prop                                                                                 | State only; shared value only                   | State drives the highlight, while the ref prevents active gesture callbacks from reading a stale armed target and supports immediate movement-based disarming                 |
+| D15 | `armedTargetId` is rendered from React state and mirrored in a ref for gesture callbacks; passed to `DraggableStepItem` as a prop                                                                                 | State only; shared value only                   | State drives the highlight, while the ref prevents active gesture callbacks from reading a stale armed target and supports immediate disarming after leaving the target row   |
 | D16 | Grow+pulse animation on the armed target is implemented as `withSequence(withTiming(1.04, …), withTiming(1.0, …))` on a `scaleArmed` shared value in `DraggableStepItem`                                          | Full keyframe pulse loop                        | A single grow-then-settle is sufficient feedback and avoids a looping animation that reduced-motion users would need a separate code path to suppress                         |
 | D17 | `handleDragEnd` in `StepList` is replaced by a new handler that (1) calls `classifyDrop` and (2) dispatches `reorder`, `reparent`, or snap-back; existing `handleMoveUp`/`handleMoveDown` gain sub-step awareness | Leave the old handler, add a parallel path      | One handler, one dispatch point — avoids the current handler's silent reorder-all-flat-list bug for mixed lists                                                               |
 | D18 | `handleMoveUp`/`handleMoveDown` use `classifyDrop` with a virtual `dropIndex` (current index ± 1) so sibling-scoped reorder and promote/demote fall out of the same classifier                                    | Separate promote/demote logic for keyboard path | Single source of truth for reparent semantics; fewer code paths to test                                                                                                       |
+| D19 | `EditModeScreen` retains ownership of its existing `KeyboardAwareScrollView`; it passes a ref-backed drag-scroll controller into `StepList`                                                                       | Replace the form with `FlatList`; nest a list   | The screen already owns scrolling and keyboard avoidance. An imperative controller adds edge scrolling without introducing nested virtualized lists or moving form ownership  |
+| D20 | Auto-scroll runs in a cancellable JS `requestAnimationFrame` loop with progressive edge speed; hover geometry includes the accumulated scroll delta                                                               | Scroll only on pan events; constant-speed timer | The loop continues while the finger is stationary, progressive speed is controllable, and scroll-adjusted hit testing keeps the drop preview aligned with content             |
 
 ## Affected Areas
 
 - `apps/native-rd/src/components/StepList/StepList.tsx`: add `onReorderSubSteps` / `onReparentStep` props; replace `handleDragEnd` with a `classifyDrop`-dispatching version; add dwell timer (`armedTargetId` state); hide ghost rows mid-drag (`isDragging` state); update `canDrag` to remove the `!hasSubSteps` guard; make `handleMoveUp`/`handleMoveDown` sub-step-aware; pass `armedTargetId` and new SR-control props down to `DraggableStepItem`.
-- `apps/native-rd/src/components/StepList/DraggableStepItem.tsx`: accept `isArmedTarget` boolean prop + `animationPref`-conditioned highlight (grow-and-settle or static bold border); accept `onNestUnder` / `onUnNest` callbacks for SR controls; render nest/un-nest `IconButton`s when `showAccessibleControls` and the step is nestable/unnestable.
+- `apps/native-rd/src/components/StepList/DraggableStepItem.tsx`: accept `isArmedTarget`, `onNestUnder`, and `onUnNest` props; render nest/un-nest controls when appropriate; forward the pan event's `absoluteY` with `translationY` so `StepList` can detect the top/bottom viewport edge.
 - `apps/native-rd/src/components/StepList/StepList.styles.ts`: add `armedTargetItem` style (bold border for reduced-motion armed state).
-- `apps/native-rd/src/screens/EditModeScreen/EditModeScreen.tsx`: add `handleReorderSubSteps` (calls `reorderSubSteps`); add `handleReparentStep` (calls `updateStep({ parentStepId })`); pass both to `StepList`; remove the now-redundant `hasSubSteps`/`canDrag` guard comment.
+- `apps/native-rd/src/screens/EditModeScreen/EditModeScreen.tsx`: add `handleReorderSubSteps` (calls `reorderSubSteps`); add `handleReparentStep` (calls `updateStep({ parentStepId })`); pass both to `StepList`; own the `KeyboardAwareScrollViewRef` and ref-backed viewport/content/offset metrics used by drag auto-scroll; remove the now-redundant `hasSubSteps`/`canDrag` guard comment.
+- `apps/native-rd/src/components/StepList/dragAutoScroll.ts`: pure edge-velocity calculation and clamping helpers for deterministic unit tests.
 - `apps/native-rd/src/i18n/resources/en/editGoal.json`: **already done** — `nestUnder`, `nestUnderA11y`, `unNest`, `unNestA11y` landed under `stepList.a11y` in commit `901477b`. No change needed; consume the keys.
 - `apps/native-rd/src/i18n/resources/de/editGoal.json`: **already done** (`901477b`). No change needed.
 - `apps/native-rd/src/i18n/resources/pseudo/editGoal.json`: **already done** (`901477b`). No change needed.
@@ -213,7 +217,60 @@ _Implementation note_: `DraggableStepItem` currently calls `onDragMove(e.transla
 
 ---
 
-### Step 5: Tests — StepList gesture paths + EditModeScreen wiring
+### Step 5: Drag auto-scroll for off-screen destinations
+
+**Files**:
+
+- `src/screens/EditModeScreen/EditModeScreen.tsx`
+- `src/components/StepList/StepList.tsx`
+- `src/components/StepList/DraggableStepItem.tsx`
+- `src/components/StepList/dragAutoScroll.ts`
+- `src/components/StepList/__tests__/dragAutoScroll.test.ts`
+
+**Commit**: `feat(steplist): auto-scroll edit form during drag`
+
+**Changes**:
+
+- [ ] In `EditModeScreen`, attach a `KeyboardAwareScrollViewRef` to the existing `KeyboardAwareScrollView`. Track the following in refs so scroll events do not rerender the full edit form at 60 fps:
+  - current `contentOffset.y` (`onScroll`, `scrollEventThrottle={16}`),
+  - viewport height and absolute screen `pageY` (`onLayout` + `measureInWindow`),
+  - content height (`onContentSizeChange`).
+- [ ] Pass a stable optional `dragScrollController` into `StepList`:
+  ```ts
+  interface DragScrollController {
+    getMetrics(): {
+      offsetY: number;
+      viewportTop: number;
+      viewportHeight: number;
+      contentHeight: number;
+    };
+    scrollTo(y: number): void;
+  }
+  ```
+  `scrollTo` calls `scrollRef.current?.scrollTo({ y, animated: false })`.
+- [ ] Update `DraggableStepItem.onDragMove` to receive both `translationY` and `absoluteY`; forward `event.absoluteY` from the Gesture Handler pan update.
+- [ ] Add pure `getAutoScrollVelocity(pointerY, metrics)` in `dragAutoScroll.ts`:
+  - named constants `AUTO_SCROLL_EDGE_PX = 72`, `AUTO_SCROLL_MIN_PX_PER_FRAME = 3`, `AUTO_SCROLL_MAX_PX_PER_FRAME = 14`,
+  - zero velocity outside the edge zones or when already at the relevant scroll boundary,
+  - progressive (quadratic) speed based on penetration into the edge zone,
+  - negative velocity at the top and positive velocity at the bottom.
+- [ ] In `StepList`, store the latest `translationY`/`absoluteY`, scroll offset at drag start, and animation-frame id in refs. Start or maintain a `requestAnimationFrame` loop while velocity is non-zero; each frame:
+  1. re-read controller metrics,
+  2. calculate and clamp the next offset to `0...contentHeight - viewportHeight`,
+  3. call `scrollTo(nextOffset)`,
+  4. recompute hover/drop feedback using `effectiveTranslationY = gestureTranslationY + nextOffset - scrollOffsetAtDragStart`,
+  5. schedule the next frame while the pointer remains in an edge zone.
+- [ ] Continue the loop while the finger is stationary. Do not depend on receiving another pan update to advance scrolling.
+- [ ] Stop and clear the frame when the pointer leaves both edge zones, a scroll boundary is reached, the drag ends/finalizes, or `StepList` unmounts.
+- [ ] While a step drag is active, set the outer scroll view's `scrollEnabled={false}` through an `onDragStateChange` callback so native scrolling cannot compete with the manual pan; programmatic `scrollTo` remains the only scroll source until drop.
+- [ ] Keep auto-scroll independent of `animationPref`: this is functional navigation, not decorative motion. Do not use animated `scrollTo`, and do not emit per-frame haptics or accessibility announcements.
+- [ ] Unit-test velocity direction, progressive speed, dead zone, both boundaries, offset clamping, and effective-translation calculation.
+
+**Estimated LOC**: ~140 lines across controller wiring, gesture integration, helper, and tests.
+
+---
+
+### Step 6: Tests — StepList gesture paths + EditModeScreen wiring
 
 **Files**:
 
@@ -253,7 +310,8 @@ _Implementation note_: `DraggableStepItem` currently calls `onDragMove(e.transla
 
 ## Testing Strategy
 
-- [ ] Unit tests for `classifyDrop` — already complete (11 cases, `classifyDrop.test.ts`).
+- [x] Unit tests for `classifyDrop` — complete (13 cases, `classifyDrop.test.ts`).
+- [ ] Unit tests for `dragAutoScroll`: dead zone, top/bottom direction, progressive speed, boundary stops, clamping, and scroll-adjusted translation.
 - [ ] Component tests: StepList dispatch paths, SR controls, ghost-hiding (Jest 30, `@testing-library/react-native` v13).
 - [ ] Component tests: EditModeScreen promote/demote wiring (extend existing test).
 - [ ] Test file paths: adjacent `__tests__/` in component dirs (matches existing pattern).
@@ -265,6 +323,10 @@ _Implementation note_: `DraggableStepItem` currently calls `onDragMove(e.transla
   - Refused snap-back: attempt to demote a parent-with-children.
   - Reduced-motion (`animationPref = "none"`): bold border on arm, no scale animation.
   - Screen-reader (VoiceOver/TalkBack): nest/un-nest buttons appear and dispatch correctly.
+  - Long list: hold a dragged row inside the top/bottom 72 px edge zone; scrolling continues while the finger remains stationary.
+  - Auto-scroll boundaries: scrolling stops cleanly at content start/end without jitter or repeated work.
+  - Auto-scroll targeting: dashed outline/insertion indicator advances with scrolled content and the released row lands at the previewed destination.
+  - Drag cancellation/unmount: no continued scrolling after finalization or navigation away.
 
 ## Not in Scope
 
@@ -295,7 +357,7 @@ _No items deferred from the Must-Not-Do list._
 
 ## Implementation Progress (2026-06-20, `/implement`)
 
-**Commits landed on `feat/issue-330-drag-reparent-gesture` (5 of the planned steps + 1 pre-fix):**
+**Commits landed on `feat/issue-330-drag-reparent-gesture` (Steps 1-4 plus review/device fixes):**
 
 | #   | SHA       | Commit                                                                      | Maps to               |
 | --- | --------- | --------------------------------------------------------------------------- | --------------------- |
@@ -304,12 +366,14 @@ _No items deferred from the Must-Not-Do list._
 | 3   | `48f582e` | `feat(ui): DraggableStepItem arm highlight + SR nest/un-nest controls`      | Step 3                |
 | 4   | `b5d6ab6` | `feat(ui): StepList dwell-arm + classifyDrop dispatch for reparent gesture` | Step 2                |
 | 5   | `fa0684d` | `feat(edit): wire handleReorderSubSteps + handleReparentStep`               | Step 4                |
+| 6   | `d0aa17e` | `fix(steplist): clarify drag targets and preserve nesting`                  | Device/review fixes   |
 
-**Validation after each commit:** `bun run type-check` ✅, `bun run lint` ✅ (husky also re-runs type-check pre-commit). `classifyDrop.test.ts` 12/12 ✅ (via `bun test`). `StepList.test.tsx` 13/13 ✅ (via `bash scripts/jest-node.sh` — see tooling note).
+**Validation after each commit:** `bun run type-check` ✅, `bun run lint` ✅ (husky also re-runs type-check pre-commit). `classifyDrop.test.ts` 13/13 ✅ (via `bun test`). `StepList.test.tsx` 13/13 ✅ (via `bash scripts/jest-node.sh` — see tooling note).
 
-**REMAINING — plan Step 5 (tests), not yet started:**
+**REMAINING — plan Steps 5-6, not yet started:**
 
-- `StepList.test.tsx`: new describe blocks — `classifyDrop dispatch via handleDragEnd`, `SR nest/un-nest controls` (trigger renders, picker lists eligible targets, selecting dispatches, no-trigger when no targets, un-nest dispatches, ↑/↓ group-boundary no-op), `ghost rows hidden during drag`.
+- Step 5: wire edge-triggered auto-scroll through the existing `KeyboardAwareScrollView`, add scroll-adjusted hover hit testing, and add pure helper tests.
+- Step 6: `StepList.test.tsx` new describe blocks — `classifyDrop dispatch via handleDragEnd`, `SR nest/un-nest controls` (trigger renders, picker lists eligible targets, selecting dispatches, no-trigger when no targets, un-nest dispatches, ↑/↓ group-boundary no-op), `ghost rows hidden during drag`.
 - `EditModeScreen.test.tsx`: `reorderSubSteps` called on `onReorderSubSteps`; `updateStep` called with `parentStepId: null` (promote) and `parentStepId: <id>` (demote), using `STEPS_TREE`. NOTE: the mock `db` in this test file does **not** yet export `reorderSubSteps` — add it to the `jest.mock("../../db", …)` block.
 - Then run full `bun run type-check` / `lint` / `test` / `build`, complete the implement skill's Phase 4 intent re-check, and proceed to `/self-review` → `/finalize`.
 
