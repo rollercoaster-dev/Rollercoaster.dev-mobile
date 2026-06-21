@@ -203,7 +203,7 @@ describe("StepCard", () => {
     expect(screen.queryByText("Mark complete")).toBeNull();
   });
 
-  it("shows the 'Add evidence to complete' prompt when blocked", () => {
+  it("shows the blocker prompt (left) and the typed capture button (right) — no checkbox — when blocked", () => {
     renderWithProviders(
       <StepCard
         step={makeStep({
@@ -213,22 +213,32 @@ describe("StepCard", () => {
         {...defaultProps}
       />,
     );
+    // The blocked foot is a single row: the quiet completion prompt anchors the
+    // left, the typed capture button sits to its right. The completion checkbox
+    // stays hidden until every planned type lands.
     expect(screen.getByText("Add evidence to complete")).toBeOnTheScreen();
+    expect(screen.getByLabelText("Add Photo evidence")).toBeOnTheScreen();
+    expect(screen.queryByRole("checkbox")).toBeNull();
   });
 
-  it("exposes blocker reason via prompt accessibilityLabel when blocked", () => {
+  it("exposes the blocker reason via the prompt and omits the capture button when no handler is wired", () => {
+    const { onQuickEvidence: _omit, ...propsWithoutQuickEvidence } =
+      defaultProps;
     renderWithProviders(
       <StepCard
         step={makeStep({
           plannedEvidenceTypes: ["photo"],
           capturedEvidenceTypes: [],
         })}
-        {...defaultProps}
+        {...propsWithoutQuickEvidence}
       />,
     );
+    // The prompt always carries the blocker reason; with no onQuickEvidence
+    // there is no capture button to put on its right.
     expect(
       screen.getByLabelText("Add Photo to complete this step"),
     ).toBeOnTheScreen();
+    expect(screen.queryByLabelText("Add Photo evidence")).toBeNull();
   });
 
   it("stays blocked when only some of multiple planned types are captured", () => {
@@ -241,10 +251,13 @@ describe("StepCard", () => {
         {...defaultProps}
       />,
     );
-    // Earlier `some(...)` logic would have unblocked the step after the
-    // first capture; with `every` semantics it remains blocked until all
-    // planned types are present.
-    expect(screen.getByText("Add evidence to complete")).toBeOnTheScreen();
+    // Earlier `some(...)` logic would have unblocked the step after the first
+    // capture; with `every` semantics it stays blocked until all planned types
+    // are present — surfaced as the still-missing types' capture buttons (the
+    // captured type's button is gone), and no completion checkbox.
+    expect(screen.queryByLabelText("Add Photo evidence")).toBeNull();
+    expect(screen.getByLabelText("Add Video evidence")).toBeOnTheScreen();
+    expect(screen.getByLabelText("Add Note evidence")).toBeOnTheScreen();
     expect(screen.queryByRole("checkbox")).toBeNull();
   });
 
@@ -382,28 +395,18 @@ describe("StepCard", () => {
     ).toBe(false);
   });
 
-  // --- Evidence rail (Phase 2): always-visible add affordance + read-only
-  // summary of the pieces already captured. We never surface what is
-  // "missing" — adding evidence simply reveals the completion checkbox. ---
+  // --- Evidence rail (Phase 2): a read-only summary of the pieces already
+  // captured. The add affordance moved to the foot (typed capture buttons) and
+  // the screen FAB, so the rail carries no button of its own and stays hidden
+  // until something is captured. We never surface what is "missing" — adding
+  // evidence simply reveals the completion checkbox. ---
 
   describe("evidence rail", () => {
-    it("always shows the Add evidence button, even with no evidence", () => {
+    it("renders no rail (no label, no add button) when nothing is captured", () => {
       renderWithProviders(<StepCard step={makeStep()} {...defaultProps} />);
-      expect(screen.getByTestId("step-card-add-evidence")).toBeOnTheScreen();
-      expect(screen.getByText("+ Add evidence")).toBeOnTheScreen();
-    });
-
-    it("calls onEvidenceTap when the Add evidence button is pressed", () => {
-      const onEvidenceTap = jest.fn();
-      renderWithProviders(
-        <StepCard
-          step={makeStep()}
-          {...defaultProps}
-          onEvidenceTap={onEvidenceTap}
-        />,
-      );
-      fireEvent.press(screen.getByTestId("step-card-add-evidence"));
-      expect(onEvidenceTap).toHaveBeenCalledTimes(1);
+      expect(screen.queryByTestId("step-card-add-evidence")).toBeNull();
+      expect(screen.queryByText("+ Add evidence")).toBeNull();
+      expect(screen.queryByText("Evidence")).toBeNull();
     });
 
     it("renders a read-only chip for each captured evidence type", () => {
@@ -426,7 +429,7 @@ describe("StepCard", () => {
       ).toBe("text");
     });
 
-    it("shows the captured chip for a partially-captured step without any 'missing' marker", () => {
+    it("shows the captured chip for a partially-captured step, with the still-uncaptured type offered as a foot button and no 'missing' marker", () => {
       renderWithProviders(
         <StepCard
           step={makeStep({
@@ -436,10 +439,14 @@ describe("StepCard", () => {
           {...defaultProps}
         />,
       );
-      expect(screen.getByText("+ Add evidence")).toBeOnTheScreen();
+      // Captured type → read-only chip in the rail.
       expect(
         screen.getByTestId("step-card-evidence-chip-photo"),
       ).toBeOnTheScreen();
+      // Still-uncaptured type → a capture button in the foot (an invite, not a
+      // deficiency marker). No "+ Add evidence" button anywhere.
+      expect(screen.getByLabelText("Add Note evidence")).toBeOnTheScreen();
+      expect(screen.queryByText("+ Add evidence")).toBeNull();
     });
 
     // The rail never tells the user something is missing/needed — adding
@@ -495,19 +502,97 @@ describe("StepCard", () => {
       expect(screen.getByText("Photo")).toBeOnTheScreen();
     });
 
-    it("announces the Add evidence affordance as a button", () => {
-      renderWithProviders(<StepCard step={makeStep()} {...defaultProps} />);
+    // --- Caption chips (Joe 2026-06-21): when per-item evidence is supplied,
+    // the chip shows the item's caption instead of the bare type name. ---
+
+    it("shows the caption on a chip when the captured item has one", () => {
+      renderWithProviders(
+        <StepCard
+          step={makeStep({
+            capturedEvidence: [
+              { id: "ev-1", type: "photo", caption: "Beach cleanup" },
+            ],
+          })}
+          {...defaultProps}
+        />,
+      );
+      const chip = screen.getByTestId("step-card-evidence-chip-ev-1");
+      expect(chip).toBeOnTheScreen();
+      // Visible label is the caption, not "Photo"...
+      expect(screen.getByText("Beach cleanup")).toBeOnTheScreen();
+      expect(screen.queryByText("Photo")).toBeNull();
+      // ...and the a11y label keeps the type for context.
+      expect(chip.props.accessibilityLabel).toBe(
+        "Beach cleanup, Photo captured",
+      );
+    });
+
+    it("falls back to the type label on a chip when the item has no caption", () => {
+      renderWithProviders(
+        <StepCard
+          step={makeStep({
+            capturedEvidence: [{ id: "ev-2", type: "photo", caption: null }],
+          })}
+          {...defaultProps}
+        />,
+      );
+      expect(screen.getByText("Photo")).toBeOnTheScreen();
       expect(
-        screen.getByTestId("step-card-add-evidence").props.accessibilityRole,
+        screen.getByTestId("step-card-evidence-chip-ev-2").props
+          .accessibilityLabel,
+      ).toBe("Photo captured");
+    });
+
+    it("treats a blank caption as no caption", () => {
+      renderWithProviders(
+        <StepCard
+          step={makeStep({
+            capturedEvidence: [{ id: "ev-3", type: "text", caption: "   " }],
+          })}
+          {...defaultProps}
+        />,
+      );
+      expect(screen.getByText("Note")).toBeOnTheScreen();
+    });
+
+    it("renders one chip per captured item (not deduped by type) when items are supplied", () => {
+      renderWithProviders(
+        <StepCard
+          step={makeStep({
+            capturedEvidence: [
+              { id: "ev-1", type: "photo", caption: "Before" },
+              { id: "ev-2", type: "photo", caption: "After" },
+            ],
+          })}
+          {...defaultProps}
+        />,
+      );
+      expect(screen.getByText("Before")).toBeOnTheScreen();
+      expect(screen.getByText("After")).toBeOnTheScreen();
+    });
+
+    it("announces each typed capture button as a button", () => {
+      renderWithProviders(
+        <StepCard
+          step={makeStep({
+            plannedEvidenceTypes: ["photo"],
+            capturedEvidenceTypes: [],
+          })}
+          {...defaultProps}
+        />,
+      );
+      expect(
+        screen.getByTestId("step-card-quick-evidence-photo").props
+          .accessibilityRole,
       ).toBe("button");
     });
   });
 
   // --- Reading order (locks in the zoned scaffold: scrollable body, then the
-  // pinned foot). The completion prompt/checkbox moved out of the scroll body
-  // into the foot, so it now follows the evidence badge in document order. ---
+  // pinned foot). The typed capture buttons moved into the foot, so they now
+  // come last — after the evidence badge that stays in the scroll body. ---
 
-  it("renders rows in document order: band → title → quick actions → badge → foot prompt", () => {
+  it("renders rows in document order: band → title → badge → foot prompt → foot capture button", () => {
     renderWithProviders(
       <StepCard
         step={makeStep({
@@ -526,16 +611,18 @@ describe("StepCard", () => {
     const positions = {
       meta: tree.indexOf("In Progress"),
       title: tree.indexOf("Review component architecture"),
-      quickActions: tree.indexOf("Add Photo evidence"),
       badge: tree.indexOf("1 item"),
       prompt: tree.indexOf("Add evidence to complete"),
+      captureButton: tree.indexOf("Add Photo evidence"),
     };
     Object.values(positions).forEach((idx) => expect(idx).toBeGreaterThan(-1));
     expect(positions.meta).toBeLessThan(positions.title);
-    expect(positions.title).toBeLessThan(positions.quickActions);
-    // Evidence badge stays in the scroll body; the foot prompt comes last.
-    expect(positions.quickActions).toBeLessThan(positions.badge);
+    expect(positions.title).toBeLessThan(positions.badge);
+    // Evidence badge stays in the scroll body; the foot comes last as a single
+    // row — the completion prompt at the left, then the capture button at the
+    // right.
     expect(positions.badge).toBeLessThan(positions.prompt);
+    expect(positions.prompt).toBeLessThan(positions.captureButton);
   });
 
   // --- Parent band (sub-steps, #360): the purple "↳ [parent] · part N of M"
@@ -793,6 +880,97 @@ describe("StepCard", () => {
       const checkbox = screen.getByRole("checkbox");
       expect(checkbox.props.accessibilityState?.checked).toBe(true);
       expect(checkbox.props.accessibilityLabel).toBe("Completed");
+    });
+
+    // --- Parent evidence capture (#360, Joe 2026-06-21). A parent captures its
+    // own evidence via the same typed foot buttons as a leaf. Capture is a
+    // convenience — it never gates the parent's completion (parts do). ---
+
+    it("renders typed capture buttons for the parent's planned-but-uncaptured types", () => {
+      renderWithProviders(
+        <StepCard
+          step={makeStep({
+            title: "Wire the circuits",
+            plannedEvidenceTypes: ["photo", "text"],
+            capturedEvidenceTypes: [],
+          })}
+          parts={PARTS}
+          {...overviewProps}
+        />,
+      );
+      expect(screen.getByLabelText("Add Photo evidence")).toBeOnTheScreen();
+      expect(screen.getByLabelText("Add Note evidence")).toBeOnTheScreen();
+    });
+
+    it("calls onQuickEvidence with the parent's id from an overview capture button", () => {
+      const onQuickEvidence = jest.fn();
+      renderWithProviders(
+        <StepCard
+          step={makeStep({
+            id: "parent-1",
+            title: "Wire the circuits",
+            plannedEvidenceTypes: ["photo"],
+            capturedEvidenceTypes: [],
+          })}
+          parts={PARTS}
+          {...overviewProps}
+          onQuickEvidence={onQuickEvidence}
+        />,
+      );
+      fireEvent.press(screen.getByLabelText("Add Photo evidence"));
+      expect(onQuickEvidence).toHaveBeenCalledWith("parent-1", "photo");
+    });
+
+    it("hides a parent capture button once its type is captured", () => {
+      renderWithProviders(
+        <StepCard
+          step={makeStep({
+            title: "Wire the circuits",
+            plannedEvidenceTypes: ["photo", "text"],
+            capturedEvidenceTypes: ["photo"],
+          })}
+          parts={PARTS}
+          {...overviewProps}
+        />,
+      );
+      expect(screen.queryByLabelText("Add Photo evidence")).toBeNull();
+      expect(screen.getByLabelText("Add Note evidence")).toBeOnTheScreen();
+    });
+
+    it("shows parent capture buttons alongside the parts-pending prompt", () => {
+      renderWithProviders(
+        <StepCard
+          step={makeStep({
+            title: "Wire the circuits",
+            plannedEvidenceTypes: ["photo"],
+            capturedEvidenceTypes: [],
+          })}
+          parts={PARTS}
+          {...overviewProps}
+        />,
+      );
+      // Completion gates on parts (still pending) while the parent can still
+      // capture its own evidence — both live on the same foot row.
+      expect(
+        screen.getByTestId("overview-parts-pending-prompt"),
+      ).toBeOnTheScreen();
+      expect(screen.getByLabelText("Add Photo evidence")).toBeOnTheScreen();
+    });
+
+    it("renders no parent capture buttons when the parent is completed", () => {
+      renderWithProviders(
+        <StepCard
+          step={makeStep({
+            title: "Wire the circuits",
+            status: "completed",
+            plannedEvidenceTypes: ["photo"],
+            capturedEvidenceTypes: [],
+          })}
+          parts={PARTS}
+          {...overviewProps}
+        />,
+      );
+      expect(screen.queryByLabelText("Add Photo evidence")).toBeNull();
     });
   });
 });

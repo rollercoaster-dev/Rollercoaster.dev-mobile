@@ -3,8 +3,8 @@
   "evidenceFallback": "Nachweis",
   "evidenceRail": {
     "zoneLabel": "Nachweis",
-    "addButton": "+ Nachweis hinzufügen",
-    "capturedChip": "{{type}} erfasst"
+    "capturedChip": "{{type}} erfasst",
+    "capturedChipNamed": "{{caption}}, {{type}} erfasst"
   },
   "band": {
     "childContext": "↳ {{parent}} · Teil {{index}} von {{total}}"

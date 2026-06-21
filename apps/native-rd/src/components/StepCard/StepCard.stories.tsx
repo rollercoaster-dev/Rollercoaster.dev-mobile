@@ -71,6 +71,25 @@ export const WithEvidence: Story = {
   ),
 };
 
+export const WithCaptionedEvidence: Story = {
+  render: () => (
+    <StepCard
+      step={makeStep({
+        status: "in-progress",
+        evidenceCount: 2,
+        capturedEvidence: [
+          { id: "ev-1", type: "photo", caption: "Beach cleanup, 3 bags" },
+          { id: "ev-2", type: "text", caption: null },
+        ],
+      })}
+      stepIndex={0}
+      totalSteps={3}
+      onToggleComplete={() => {}}
+      onEvidenceTap={() => {}}
+    />
+  ),
+};
+
 export const WithoutEvidence: Story = {
   render: () => (
     <StepCard
@@ -106,6 +125,7 @@ export const BlockedRequiresText: Story = {
       totalSteps={3}
       onToggleComplete={() => {}}
       onEvidenceTap={() => {}}
+      onQuickEvidence={() => {}}
     />
   ),
 };
@@ -123,6 +143,7 @@ export const BlockedRequiresPhoto: Story = {
       totalSteps={3}
       onToggleComplete={() => {}}
       onEvidenceTap={() => {}}
+      onQuickEvidence={() => {}}
     />
   ),
 };
@@ -140,6 +161,7 @@ export const MultiplePlannedTypes: Story = {
       totalSteps={3}
       onToggleComplete={() => {}}
       onEvidenceTap={() => {}}
+      onQuickEvidence={() => {}}
     />
   ),
 };
@@ -186,6 +208,29 @@ export const OverviewAllPartsDone: Story = {
       totalSteps={5}
       onToggleComplete={() => {}}
       onEvidenceTap={() => {}}
+    />
+  ),
+};
+
+export const OverviewWithParentEvidence: Story = {
+  render: () => (
+    <StepCard
+      kind="overview"
+      step={makeStep({
+        title: "Wire the circuits",
+        status: "in-progress",
+        plannedEvidenceTypes: ["photo"],
+        capturedEvidenceTypes: [],
+      })}
+      parts={[
+        { id: "p1", title: "15-amp lighting circuit", status: "completed", evidenceCount: 1 }, // prettier-ignore
+        { id: "p2", title: "20-amp small-appliance circuit", status: "pending", evidenceCount: 0 }, // prettier-ignore
+      ]}
+      stepIndex={1}
+      totalSteps={5}
+      onToggleComplete={() => {}}
+      onEvidenceTap={() => {}}
+      onQuickEvidence={() => {}}
     />
   ),
 };

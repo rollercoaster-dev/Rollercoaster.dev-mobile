@@ -3,8 +3,8 @@
   "evidenceFallback": "[Êṽïđêñçê···]",
   "evidenceRail": {
     "zoneLabel": "[Êṽïđêñçê···]",
-    "addButton": "[+ Àđđ êṽïđêñçê······]",
-    "capturedChip": "[{{type}} çàþţüŕêđ······]"
+    "capturedChip": "[{{type}} çàþţüŕêđ······]",
+    "capturedChipNamed": "[{{caption}}, {{type}} çàþţüŕêđ······]"
   },
   "band": {
     "childContext": "[↳ {{parent}} · þàŕţ {{index}} øƒ {{total}}······]"

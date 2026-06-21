@@ -252,6 +252,15 @@ function FocusContent({ goalId }: { goalId: string }) {
             stepEvidence.map((e) => e.type).filter(Boolean) as string[],
           ),
         ];
+        // Per-item evidence for the rail chips — each carries its caption
+        // (evidence.description) so a chip can show it instead of the bare type.
+        const capturedEvidence = stepEvidence
+          .filter((e) => Boolean(e.type))
+          .map((e) => ({
+            id: e.id as string,
+            type: e.type as string,
+            caption: (e.description as string | null) ?? null,
+          }));
         const rawPlanned = stepRows[i]?.plannedEvidenceTypes as string | null;
         const plannedTypes = parsePlannedEvidenceTypes(rawPlanned);
         if (rawPlanned != null && plannedTypes == null) {
@@ -268,6 +277,7 @@ function FocusContent({ goalId }: { goalId: string }) {
           evidenceCount: stepEvidenceCounts[i] ?? 0,
           plannedEvidenceTypes: plannedTypes,
           capturedEvidenceTypes: capturedTypes,
+          capturedEvidence,
         };
       }),
     [uiSteps, stepRows, allStepEvidenceRows, stepEvidenceCounts],
@@ -718,6 +728,7 @@ function FocusContent({ goalId }: { goalId: string }) {
                     evidenceCount: step.evidenceCount,
                     plannedEvidenceTypes: step.plannedEvidenceTypes,
                     capturedEvidenceTypes: step.capturedEvidenceTypes,
+                    capturedEvidence: step.capturedEvidence,
                     parentTitle: step.parentTitle,
                     partIndex: partInfo?.index ?? null,
                     partTotal: partInfo?.total ?? null,

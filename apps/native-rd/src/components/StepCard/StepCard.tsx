@@ -6,9 +6,7 @@ import { Checkbox } from "../Checkbox";
 import { useFlashOnIncrease } from "../../hooks/useFlashOnIncrease";
 import { formatEvidenceLabel } from "../../utils/formatEvidenceLabel";
 import {
-  EVIDENCE_CAPTURE_OPTIONS,
   EVIDENCE_OPTIONS,
-  type EvidenceCaptureOption,
   type EvidenceTypeValue,
   type QuickEvidenceType,
 } from "../../types/evidence";
@@ -23,9 +21,25 @@ import {
 } from "./StepCard.shared";
 import { StepCardTopBand } from "./StepCardTopBand";
 import { StepOverviewCard } from "./StepOverviewCard";
+import {
+  EvidenceCaptureButtons,
+  getMissingQuickEvidenceOptions,
+} from "./StepCardEvidenceCapture";
 import { styles } from "./StepCard.styles";
 
 export type { StepCardStatus, StepCardKind, StepCardPart };
+
+/**
+ * A single captured piece of evidence, surfaced as a read-only rail chip (#360).
+ * The chip shows {@link caption} when present, otherwise the type's short label.
+ */
+export interface CapturedEvidenceItem {
+  /** Evidence row id — used as the chip key/testID; falls back to type+index. */
+  id?: string;
+  type: string;
+  /** User-entered caption (evidence.description). Null/blank → show the type. */
+  caption?: string | null;
+}
 
 export interface StepCardStep {
   id: string;
@@ -34,6 +48,13 @@ export interface StepCardStep {
   evidenceCount: number;
   plannedEvidenceTypes?: string[] | null;
   capturedEvidenceTypes?: string[];
+  /**
+   * Captured evidence items for the rail chips (#360). When supplied, each chip
+   * shows the item's caption (falling back to its type label) — one chip per
+   * item rather than one per type. Falls back to `capturedEvidenceTypes` when
+   * absent. Evidence-gating still keys off `capturedEvidenceTypes`, not this.
+   */
+  capturedEvidence?: readonly CapturedEvidenceItem[];
   /**
    * Title of the parent step when this card is a sub-step (#292). With
    * `partIndex`/`partTotal` it drives the purple "↳ [parent] · part N of M"
@@ -77,21 +98,6 @@ function getMissingEvidenceOption(
   return EVIDENCE_OPTIONS.find((o) => o.type === missing) ?? null;
 }
 
-type QuickEvidenceCaptureOption = EvidenceCaptureOption & {
-  readonly type: QuickEvidenceType;
-};
-
-function getMissingQuickEvidenceOptions(
-  plannedTypes: string[],
-  capturedTypes: string[],
-): readonly QuickEvidenceCaptureOption[] {
-  return EVIDENCE_CAPTURE_OPTIONS.filter(
-    (option): option is QuickEvidenceCaptureOption =>
-      plannedTypes.includes(option.type) &&
-      !capturedTypes.includes(option.type),
-  );
-}
-
 function StepCardLeaf({
   step,
   stepIndex,
@@ -130,6 +136,45 @@ function StepCardLeaf({
     ? t("common:stepCard.checkbox.completed")
     : t("common:stepCard.checkbox.markComplete");
 
+  // Read-only rail chips. With per-item evidence we show one chip per captured
+  // piece, labelled with its caption when it has one (richer than the type-only
+  // summary); without it we fall back to one chip per captured type. Either way
+  // a chip is a status pill, never an action.
+  const capturedChips =
+    step.capturedEvidence && step.capturedEvidence.length > 0
+      ? step.capturedEvidence.map((item, index) => {
+          const caption = item.caption?.trim();
+          const typeLabel = evidenceShortLabel(
+            t,
+            item.type as EvidenceTypeValue,
+          );
+          const hasCaption = caption != null && caption.length > 0;
+          return {
+            key: item.id ?? `${item.type}-${index}`,
+            testID: `step-card-evidence-chip-${item.id ?? item.type}`,
+            icon: EVIDENCE_OPTIONS.find((o) => o.type === item.type)?.icon,
+            label: hasCaption ? caption : typeLabel,
+            a11yLabel: hasCaption
+              ? t("focusMode:evidenceRail.capturedChipNamed", {
+                  caption,
+                  type: typeLabel,
+                })
+              : t("focusMode:evidenceRail.capturedChip", { type: typeLabel }),
+          };
+        })
+      : capturedTypes.map((type) => {
+          const typeLabel = evidenceShortLabel(t, type as EvidenceTypeValue);
+          return {
+            key: `captured-${type}`,
+            testID: `step-card-evidence-chip-${type}`,
+            icon: EVIDENCE_OPTIONS.find((o) => o.type === type)?.icon,
+            label: typeLabel,
+            a11yLabel: t("focusMode:evidenceRail.capturedChip", {
+              type: typeLabel,
+            }),
+          };
+        });
+
   return (
     <View style={styles.cardOuter}>
       <StepCardTopBand
@@ -155,35 +200,6 @@ function StepCardLeaf({
           {step.title}
         </Text>
 
-        {onQuickEvidence && quickEvidenceOptions.length > 0 && (
-          <View style={styles.quickActionsRow}>
-            {quickEvidenceOptions.map((option) => {
-              const optionLabel = evidenceShortLabel(t, option.type);
-              return (
-                <Pressable
-                  key={option.type}
-                  onPress={() => onQuickEvidence(step.id, option.type)}
-                  style={styles.quickActionButton}
-                  testID={`step-card-quick-evidence-${option.type}`}
-                  accessible
-                  accessibilityRole="button"
-                  accessibilityLabel={t("common:stepCard.quickAction.a11y", {
-                    label: optionLabel,
-                  })}
-                >
-                  <Text
-                    style={styles.quickActionIcon}
-                    accessibilityElementsHidden
-                  >
-                    {option.icon}
-                  </Text>
-                  <Text style={styles.quickActionText}>{optionLabel}</Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        )}
-
         {step.evidenceCount > 0 && (
           <View style={styles.evidenceBadgeWrapper}>
             <Pressable
@@ -206,58 +222,49 @@ function StepCardLeaf({
           </View>
         )}
 
-        {/* Evidence rail — always-visible add affordance plus a read-only
-            summary of the pieces already captured. We never surface what is
-            "missing": adding evidence simply reveals the completion checkbox. */}
-        <View style={styles.evidenceRail}>
-          <Text style={styles.evidenceRailLabel} accessibilityRole="text">
-            {t("focusMode:evidenceRail.zoneLabel")}
-          </Text>
-          <View style={styles.evidenceRailRow}>
-            {capturedTypes.map((type) => {
-              const option = EVIDENCE_OPTIONS.find((o) => o.type === type);
-              const label = evidenceShortLabel(t, type as EvidenceTypeValue);
-              return (
+        {/* Evidence rail — a read-only summary of the pieces already captured.
+            The add affordance lives in the foot now (typed capture buttons) and
+            in the screen FAB, so the rail carries no button of its own. We never
+            surface what is "missing": adding evidence simply reveals the
+            completion checkbox. Hidden until something is captured. */}
+        {capturedChips.length > 0 && (
+          <View style={styles.evidenceRail}>
+            <Text style={styles.evidenceRailLabel} accessibilityRole="text">
+              {t("focusMode:evidenceRail.zoneLabel")}
+            </Text>
+            <View style={styles.evidenceRailRow}>
+              {capturedChips.map((chip) => (
                 <View
-                  key={`captured-${type}`}
+                  key={chip.key}
                   style={styles.evidenceChip}
                   accessible
                   accessibilityRole="text"
-                  accessibilityLabel={t("focusMode:evidenceRail.capturedChip", {
-                    type: label,
-                  })}
-                  testID={`step-card-evidence-chip-${type}`}
+                  accessibilityLabel={chip.a11yLabel}
+                  testID={chip.testID}
                 >
-                  {option && (
+                  {chip.icon && (
                     <Text
                       style={styles.evidenceChipIcon}
                       accessibilityElementsHidden
                     >
-                      {option.icon}
+                      {chip.icon}
                     </Text>
                   )}
-                  <Text style={styles.evidenceChipText}>{label}</Text>
+                  <Text style={styles.evidenceChipText} numberOfLines={1}>
+                    {chip.label}
+                  </Text>
                 </View>
-              );
-            })}
-            <Pressable
-              onPress={onEvidenceTap}
-              style={styles.evidenceAddButton}
-              accessible
-              accessibilityRole="button"
-              accessibilityLabel={t("focusMode:evidenceRail.addButton")}
-              testID="step-card-add-evidence"
-            >
-              <Text style={styles.evidenceAddText}>
-                {t("focusMode:evidenceRail.addButton")}
-              </Text>
-            </Pressable>
+              ))}
+            </View>
           </View>
-        </View>
+        )}
       </ScrollView>
 
-      {/* Pinned foot — the completion action stays visible regardless of how far
-          the body scrolls, keeping the card envelope stable. */}
+      {/* Pinned foot — the completion control stays visible regardless of how
+          far the body scrolls, keeping the card envelope stable. It sits at the
+          left (the checkbox once evidence is in, otherwise the quiet blocker
+          prompt); the typed capture buttons are pushed to the right on the same
+          row, each disappearing as its type lands. */}
       <View style={styles.cardFoot}>
         {isBlocked ? (
           <Text
@@ -282,6 +289,13 @@ function StepCardLeaf({
             />
           </View>
         )}
+        {onQuickEvidence && quickEvidenceOptions.length > 0 && (
+          <EvidenceCaptureButtons
+            stepId={step.id}
+            options={quickEvidenceOptions}
+            onQuickEvidence={onQuickEvidence}
+          />
+        )}
       </View>
     </View>
   );
@@ -301,7 +315,10 @@ function StepCardComponent(props: StepCardProps) {
         stepIndex={props.stepIndex}
         totalSteps={props.totalSteps}
         parts={props.parts ?? []}
+        plannedEvidenceTypes={props.step.plannedEvidenceTypes}
+        capturedEvidenceTypes={props.step.capturedEvidenceTypes}
         onToggleComplete={props.onToggleComplete}
+        onQuickEvidence={props.onQuickEvidence}
         onOpenPart={props.onOpenPart}
       />
     );
@@ -318,6 +335,25 @@ function equalStringArrays(
   return (
     previousValues.length === nextValues.length &&
     previousValues.every((value, index) => value === nextValues[index])
+  );
+}
+
+function equalCapturedEvidence(
+  previous: readonly CapturedEvidenceItem[] | undefined,
+  next: readonly CapturedEvidenceItem[] | undefined,
+): boolean {
+  const previousItems = previous ?? [];
+  const nextItems = next ?? [];
+  return (
+    previousItems.length === nextItems.length &&
+    previousItems.every((item, index) => {
+      const other = nextItems[index];
+      return (
+        item.id === other.id &&
+        item.type === other.type &&
+        item.caption === other.caption
+      );
+    })
   );
 }
 
@@ -361,6 +397,10 @@ function areStepCardPropsEqual(
     equalStringArrays(
       previous.step.capturedEvidenceTypes,
       next.step.capturedEvidenceTypes,
+    ) &&
+    equalCapturedEvidence(
+      previous.step.capturedEvidence,
+      next.step.capturedEvidence,
     ) &&
     equalParts(previous.parts, next.parts) &&
     previous.stepIndex === next.stepIndex &&

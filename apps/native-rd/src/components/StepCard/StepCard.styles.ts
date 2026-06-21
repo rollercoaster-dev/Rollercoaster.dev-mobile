@@ -26,7 +26,14 @@ export const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[3],
     minHeight: 44,
-    justifyContent: "center",
+    // Single row: the completion control (checkbox or quiet prompt) sits at the
+    // left, the typed capture buttons are pushed all the way to the right on the
+    // same level (Joe 2026-06-21). When only the control is present it stays
+    // left, as before.
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: theme.space[3],
   },
   // Pinned, bordered header strip above the body (#360). Plain form (flat /
   // overview cards) and purple `topBandChild` form (sub-steps). Carries the
@@ -107,16 +114,21 @@ export const styles = StyleSheet.create((theme) => ({
     flexDirection: "row",
     alignItems: "center",
     gap: theme.space[3],
+    // Yield width to the right-aligned capture buttons sharing the foot row.
+    flexShrink: 1,
   },
   addEvidencePromptText: {
     fontSize: theme.size.sm,
     fontFamily: theme.fontFamily.body,
     color: theme.colors.textMuted,
     fontStyle: "italic",
+    // Yield width to the right-aligned capture buttons sharing the foot row.
+    flexShrink: 1,
   },
-  // Evidence rail — always-visible add affordance plus a read-only summary of
-  // captured pieces and still-needed planned types. Lives in the scrollable
-  // body zone above the pinned foot (D6). Mirrors the prototype `.ev-rail`.
+  // Evidence rail — read-only summary of the pieces already captured. The add
+  // affordance moved to the foot (typed capture buttons) and the screen FAB, so
+  // the rail carries no button. Lives in the scrollable body zone above the
+  // pinned foot (D6); hidden until something is captured.
   evidenceRail: {
     gap: theme.space[1],
   },
@@ -154,27 +166,12 @@ export const styles = StyleSheet.create((theme) => ({
     fontSize: theme.size.xs,
     fontFamily: theme.fontFamily.mono,
     color: theme.colors.text,
+    // Captions can be long; keep a chip to one line so the rail stays a tidy
+    // summary (the full text lives in the evidence drawer).
+    maxWidth: 180,
   },
-  // Always-visible "+ Add evidence" button — the explicit add affordance.
-  evidenceAddButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.space[1],
-    backgroundColor: theme.colors.backgroundSecondary,
-    borderWidth: theme.borderWidth.medium,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.pill,
-    paddingHorizontal: theme.space[3],
-    paddingVertical: theme.space[2],
-    minHeight: 44,
-    ...shadowStyle(theme, "cardElevationSmall"),
-  },
-  evidenceAddText: {
-    fontSize: theme.size.sm,
-    fontWeight: theme.fontWeight.bold,
-    fontFamily: theme.fontFamily.body,
-    color: theme.colors.text,
-  },
+  // Typed quick-capture buttons, pinned in the card foot (#360). One per
+  // planned-but-uncaptured evidence type; the row thins out as evidence lands.
   quickActionsRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -272,6 +269,13 @@ export const styles = StyleSheet.create((theme) => ({
     fontWeight: theme.fontWeight.bold,
     fontFamily: theme.fontFamily.body,
     color: theme.colors.text,
+  },
+  // The active cell paints itself accentYellow (#ffe50c, same in both modes).
+  // theme.colors.text flips to #fafafa in dark and gives ~1.1:1 white-on-yellow,
+  // so lock the title to the climb-narrative on-yellow foreground (dark in both
+  // modes) — the same token StatusBadge's active variant pairs with yellow.
+  spineCellActiveText: {
+    color: theme.narrative.climb.text,
   },
   spineEvidenceBadge: {
     backgroundColor: theme.colors.accentPurpleLight,

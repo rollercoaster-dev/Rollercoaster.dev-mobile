@@ -2,8 +2,13 @@ import React, { memo } from "react";
 import { View, Text, ScrollView, Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
 import { Checkbox } from "../Checkbox";
+import { type QuickEvidenceType } from "../../types/evidence";
 import { StepCardTopBand } from "./StepCardTopBand";
 import { type StepCardStatus, type StepCardPart } from "./StepCard.shared";
+import {
+  EvidenceCaptureButtons,
+  getMissingQuickEvidenceOptions,
+} from "./StepCardEvidenceCapture";
 import { styles } from "./StepCard.styles";
 
 export interface StepOverviewCardProps {
@@ -13,7 +18,18 @@ export interface StepOverviewCardProps {
   stepIndex: number;
   totalSteps: number;
   parts: readonly StepCardPart[];
+  /**
+   * Planned/captured evidence for the parent step itself (#360, Joe
+   * 2026-06-21). A parent can capture its own evidence via the foot's typed
+   * buttons, same as a leaf. Independent of completion — the parent's checkbox
+   * still gates on all parts done (ADR-0012), never on its own evidence — and
+   * note this evidence is not summed into the "evidence across parts" rollup.
+   */
+  plannedEvidenceTypes?: string[] | null;
+  capturedEvidenceTypes?: string[];
   onToggleComplete: (stepId: string) => void;
+  /** Capture a typed piece of evidence on the parent step (#360). */
+  onQuickEvidence?: (stepId: string, type: QuickEvidenceType) => void;
   /**
    * Jump the carousel to a part's own card (#360). When supplied, each spine
    * row becomes a button that opens that part; without it the rows stay
@@ -29,7 +45,10 @@ function StepOverviewCardComponent({
   stepIndex,
   totalSteps,
   parts,
+  plannedEvidenceTypes,
+  capturedEvidenceTypes,
   onToggleComplete,
+  onQuickEvidence,
   onOpenPart,
 }: StepOverviewCardProps) {
   const { t } = useTranslation(["common", "focusMode"]);
@@ -50,6 +69,16 @@ function StepOverviewCardComponent({
   const markCompleteLabel = isCompleted
     ? t("common:stepCard.checkbox.completed")
     : t("focusMode:overview.markComplete", { parent: title });
+
+  // Typed capture buttons for the parent's own planned-but-uncaptured evidence.
+  // Each disappears as its type lands. Purely a capture convenience — it does
+  // not gate the parent's completion (that stays parts-driven).
+  const planned = plannedEvidenceTypes ?? null;
+  const captured = capturedEvidenceTypes ?? [];
+  const quickEvidenceOptions =
+    !isCompleted && planned !== null && planned.length > 0 && onQuickEvidence
+      ? getMissingQuickEvidenceOptions(planned, captured)
+      : [];
 
   return (
     <View style={styles.cardOuter}>
@@ -123,7 +152,13 @@ function StepOverviewCardComponent({
                 <View
                   style={[styles.spineCell, isActive && styles.spineCellActive]}
                 >
-                  <Text style={styles.spineCellText} numberOfLines={2}>
+                  <Text
+                    style={[
+                      styles.spineCellText,
+                      isActive && styles.spineCellActiveText,
+                    ]}
+                    numberOfLines={2}
+                  >
                     {part.title}
                   </Text>
                   {part.evidenceCount > 0 && (
@@ -162,10 +197,12 @@ function StepOverviewCardComponent({
         </View>
       </ScrollView>
 
-      {/* Pinned foot — same shape as a leaf card: the Q9 complete invite once all
-          parts are done, otherwise a quiet prompt. No foot navigation control
-          (D10); parts are reached by tapping their spine row above or by
-          swiping, like every other card. */}
+      {/* Pinned foot — same shape as a leaf card. The completion control sits at
+          the left: the Q9 complete invite once all parts are done, otherwise a
+          quiet prompt. The parent's own typed capture buttons are pushed to the
+          right on the same row (each hides as its type lands). No foot
+          navigation control (D10); parts are reached by tapping their spine row
+          above or by swiping. */}
       <View style={styles.cardFoot}>
         {canMarkComplete ? (
           <View style={styles.checkboxRow}>
@@ -183,6 +220,13 @@ function StepOverviewCardComponent({
           >
             {t("focusMode:overview.partsPendingPrompt")}
           </Text>
+        )}
+        {onQuickEvidence && quickEvidenceOptions.length > 0 && (
+          <EvidenceCaptureButtons
+            stepId={stepId}
+            options={quickEvidenceOptions}
+            onQuickEvidence={onQuickEvidence}
+          />
         )}
       </View>
     </View>

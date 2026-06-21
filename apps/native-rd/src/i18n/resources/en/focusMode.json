@@ -3,8 +3,8 @@
   "evidenceFallback": "Evidence",
   "evidenceRail": {
     "zoneLabel": "Evidence",
-    "addButton": "+ Add evidence",
-    "capturedChip": "{{type}} captured"
+    "capturedChip": "{{type}} captured",
+    "capturedChipNamed": "{{caption}}, {{type}} captured"
   },
   "band": {
     "childContext": "↳ {{parent}} · part {{index}} of {{total}}"
