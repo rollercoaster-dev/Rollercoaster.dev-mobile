@@ -17,7 +17,7 @@ This is the native rollercoaster.dev app — a personal learning/goal tracker fo
 | --------- | -------------------------------------------------------------------------------- |
 | Typecheck | `bun run type-check`                                                             |
 | Lint      | `bun run lint`                                                                   |
-| Test      | `npx jest --no-coverage` or `bun test --testPathPatterns <pattern>`              |
+| Test      | `bun run test` (scope with `--testPathPatterns <pattern>`) — never `bun test`    |
 | CI test   | `bun run test:ci`                                                                |
 | Build iOS | `npx expo run:ios` (sim) or `bun run ios` (uses `.env.local` for device default) |
 
@@ -28,6 +28,7 @@ This is the native rollercoaster.dev app — a personal learning/goal tracker fo
 ## Tests
 
 - Jest 30, `@testing-library/react-native` v13
+- **Run with `bun run test`** — it goes through `scripts/jest-node.sh`, which runs Jest under real Node. Plain `jest`/`npx jest` and `bun test` (Bun's own runner) both reintroduce Bun/Jest runtime failures. See `README.md`.
 - Use `--testPathPatterns` (plural, not `--testPathPattern`)
 - Test files live in `src/__tests__/` mirroring `src/` structure
 - Use `test.each` instead of duplicating tests that follow the same pattern
@@ -106,8 +107,8 @@ Badge logic lives in `@rollercoaster-dev/openbadges-core` (workspace package at 
 
 ## After Making Changes
 
-| Changed           | Run                                     |
-| ----------------- | --------------------------------------- |
-| React Native code | `npx expo run:ios` (native build)       |
-| Test files        | `bun test --testPathPatterns <pattern>` |
-| Theme/style files | Build + visually verify on device       |
+| Changed           | Run                                         |
+| ----------------- | ------------------------------------------- |
+| React Native code | `npx expo run:ios` (native build)           |
+| Test files        | `bun run test --testPathPatterns <pattern>` |
+| Theme/style files | Build + visually verify on device           |
