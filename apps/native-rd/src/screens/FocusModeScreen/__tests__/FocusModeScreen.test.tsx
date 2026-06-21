@@ -152,6 +152,7 @@ jest.mock("../../../db", () => ({
   // Faithful copy of the real resolver (leaf/invite/flat/none + orphan
   // promotion) so findFirstPendingLeafIndex's delegation is exercised, not
   // stubbed — keeps the #292 snap behaviour under test after the #337 extract.
+  // Keep in sync with resolveNextActionableStep in src/db/queries.ts.
   resolveNextActionableStep: (
     rows: readonly {
       id: string;

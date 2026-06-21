@@ -44,6 +44,7 @@ jest.mock("../../../db", () => ({
   // Faithful copy of the real resolver (leaf/invite/flat/none + orphan
   // promotion) so buildGoalCardGoal's next-step resolution is exercised, not
   // stubbed — keeps the #292 sub-step cases under test after the #337 extract.
+  // Keep in sync with resolveNextActionableStep in src/db/queries.ts.
   resolveNextActionableStep: (
     rows: readonly {
       id: string;
