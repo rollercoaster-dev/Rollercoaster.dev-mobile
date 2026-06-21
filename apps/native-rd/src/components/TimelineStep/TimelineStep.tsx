@@ -6,6 +6,7 @@ import { StatusBadge, type StatusBadgeVariant } from "../StatusBadge";
 import { TimelineEvidenceCard } from "../TimelineEvidenceCard";
 import type { StepStatus } from "../../types/steps";
 import type { EvidenceItemData } from "../EvidenceDrawer";
+import { toLetterOrdinal } from "../../utils/format";
 import { styles } from "./TimelineStep.styles";
 
 export interface TimelineStepData {
@@ -128,7 +129,7 @@ export function TimelineStep({
             <ChildRow
               key={child.id}
               child={child}
-              ordinal={String.fromCharCode(97 + index)}
+              ordinal={toLetterOrdinal(index)}
               parentIndex={stepIndex}
               onNodePress={onNodePress}
               onEvidencePress={onEvidencePress}
