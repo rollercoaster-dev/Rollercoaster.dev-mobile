@@ -136,13 +136,13 @@
   .mtl .hint { text-align: center; font-size: 9.5px; color: var(--muted); padding: 3px 0 1px; }
 
   /* ---- THE CARD STAGE — fixed envelope (concern 1) ---- */
-  .stage { flex: 1; min-height: 0; position: relative; padding: 14px 14px 6px; display: flex; }
+  .stage { flex: 1; min-height: 0; min-width: 0; position: relative; padding: 14px 14px 6px; display: flex; }
   .stage .navarrow { position: absolute; top: 50%; transform: translateY(-50%); width: 30px; height: 44px; border: 2px solid var(--border); background: var(--bg2); box-shadow: var(--shadow-sm); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; z-index: 8; cursor: pointer; }
   .stage .navarrow.l { left: 2px; } .stage .navarrow.r { right: 2px; }
   .stage .navarrow.off { opacity: 0.25; }
 
   /* the card fills the stage — same height for every card → no jitter */
-  .scard { flex: 1; display: flex; flex-direction: column; min-height: 0; background: var(--card); border: 2.5px solid var(--border); border-radius: 6px; box-shadow: var(--shadow-lg); overflow: hidden; }
+  .scard { flex: 1; display: flex; flex-direction: column; min-height: 0; min-width: 0; background: var(--card); border: 2.5px solid var(--border); border-radius: 6px; box-shadow: var(--shadow-lg); overflow: hidden; }
   .scard .body { flex: 1; min-height: 0; overflow-y: auto; padding: 14px 15px 8px; display: flex; flex-direction: column; gap: 11px; }
   .scard .foot { border-top: 2px solid var(--border); padding: 11px 15px; display: flex; align-items: center; gap: 10px; background: var(--card); flex: 0 0 auto; }
 
@@ -150,7 +150,7 @@
   .stepnum { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
   .pill { display: inline-block; border: 1.5px solid var(--border); border-radius: 999px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 8px; box-shadow: 1.5px 1.5px 0 rgba(0,0,0,0.8); white-space: nowrap; }
   .pill.active { background: var(--yellow); } .pill.done { background: var(--mint); } .pill.pending { background: var(--bg2); color: var(--muted); }
-  .stitle { font-family: var(--headline); font-weight: 900; font-size: 22px; line-height: 1.15; }
+  .stitle { font-family: var(--headline); font-weight: 900; font-size: 22px; line-height: 1.15; overflow-wrap: break-word; min-width: 0; }
   .ctx-line { font-size: 11.5px; font-weight: 600; color: var(--muted); }
 
   /* unified top band — carries parent context (or step number) + the state badge,
@@ -177,7 +177,7 @@
   .zone-label { font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--disabled); }
 
   /* candidate B — sub-deck */
-  .deck { flex: 1; display: flex; flex-direction: column; min-height: 0; position: relative; padding-top: 11px; }
+  .deck { flex: 1; display: flex; flex-direction: column; min-height: 0; min-width: 0; position: relative; padding-top: 11px; }
   .deck .peek { position: absolute; left: 7px; right: 7px; top: 5px; height: 13px; border: 2.5px solid var(--border); border-bottom: none; border-radius: 6px 6px 0 0; background: var(--bg2); z-index: 0; }
   .deck .peek.p2 { top: 0; left: 13px; right: 13px; background: #e6e6e6; }
   .pstrip { background: var(--purple-light); border: 2.5px solid var(--border); border-bottom-width: 0; border-radius: 6px 6px 0 0; padding: 8px 12px; display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; }
@@ -201,6 +201,15 @@
   .ov-row.sub { padding-left: 30px; font-size: 12px; background: #fcfcfc; }
   .ov-row.sub .cbx.sm { width: 15px; height: 15px; font-size: 9px; }
   .rollup { display: flex; align-items: center; gap: 8px; background: var(--bg2); border: 1.5px solid var(--border); border-radius: 5px; padding: 8px 10px; font-size: 11.5px; font-weight: 600; }
+
+  /* candidate C — peek-stack behind every card in a parent's group (borrowed from B's deck).
+     The fan is an OVERLAY: peeks sit snug directly above the card's top edge (negative offset,
+     fanning up into the stage's top padding). The card keeps its full fixed envelope, so the
+     frame never jumps — only the deck above it thins. Count = real parts behind this card
+     (parent = all; each leaf one fewer; the last leaf has none). */
+  .cstack { flex: 1; display: flex; flex-direction: column; min-height: 0; min-width: 0; position: relative; }
+  .cstack > .scard { position: relative; z-index: 1; flex: 1; min-width: 0; }
+  .cpeek { position: absolute; height: 14px; border: 2.5px solid var(--border); border-bottom: none; border-radius: 6px 6px 0 0; z-index: 0; }
 
   /* ---- timeline-spine container (the "timeline styling" exploration) ----
      A compact vertical journey rendered INSIDE a card. C's parent overview and the
@@ -460,13 +469,30 @@ function cardB(x, d, seq, curIdx, stateOn) {
 }
 
 /* ================= CANDIDATE C — parent overview ================= */
+/* peek-stack fan behind a card (borrowed from B's deck). `count` peeks fan UP as an overlay
+   anchored just above the card's top edge (negative offset), so the card keeps its full fixed
+   height and the fan sits snug — no gap, no frame jump. Closest peek is widest; farther peeks
+   narrow + darken. count<=0 → plain card, no fan (the last leaf + flat steps). */
+function cardStack(count, innerHtml) {
+  if (!count || count <= 0) return innerHtml;
+  const GAP = 4, INSET = 7, STEP = 6;
+  const shades = ['var(--bg2)', '#eaeaea', '#e2e2e2', '#dadada', '#d2d2d2'];
+  let peeks = '';
+  for (let L = count; L >= 1; L--) {          // farthest first → closest (L=1) painted last, on top
+    const top = -(L * GAP);                    // L=1 sits just above the card; larger L fans higher
+    const inset = INSET + (L - 1) * STEP;      // farther back = more inset (narrower)
+    const shade = shades[Math.min(L - 1, shades.length - 1)];
+    peeks += `<span class="cpeek" style="top:${top}px;left:${inset}px;right:${inset}px;background:${shade}"></span>`;
+  }
+  return `<div class="cstack">${peeks}${innerHtml}</div>`;
+}
 function cardC(x, d, seq, curIdx, stateOn) {
   const status = curIdx === firstPendingIndex(seq) ? 'in-progress' : x.status;
   if (x.kind === 'parent') {
     const totalEv = x.children.reduce((s,c)=>s+(c.ev||0),0);
     const allDone = x.children.every(c=>c.status==='completed');
     const curId = allDone ? null : nextLeaf(x);
-    return `<div class="scard">
+    return cardStack(x.children.length, `<div class="scard">
       <div class="topband"><span class="tb-ctx">Step ${curIdx+1} of ${seq.length} · overview</span>${statePill(status, stateOn)}</div>
       <div class="body">
         <div class="stitle">${esc(x.title)}</div>
@@ -474,17 +500,24 @@ function cardC(x, d, seq, curIdx, stateOn) {
         <div class="rollup">🧾 Evidence across parts <span class="evb" style="font-family:var(--mono);font-size:9.5px;background:var(--purple-light);border:1px solid var(--border);border-radius:999px;padding:1px 6px">E ${totalEv}</span></div>
       </div>
       ${actionFoot({...x, status}, allDone ? `Mark "${esc(x.title)}" complete` : 'Open next part →')}
-    </div>`;
+    </div>`);
   }
-  // child / flat leaf — the unified band carries the parent line (concern 4); title leads
-  return `<div class="scard">
+  // child / flat leaf — the unified band carries the parent line (concern 4); title leads.
+  // A child shows the real number of parts still BEHIND it (last part → 0); a flat step → 0.
+  let count = 0;
+  if (x.kind === 'child') {
+    const N = x.parent.children.length;
+    const j = x.parent.children.findIndex(c => c.id === x.id);
+    count = N - j - 1;   // part 1 → N-1, last part → 0
+  }
+  return cardStack(count, `<div class="scard">
     ${topBand(x, seq, curIdx, status, stateOn)}
     <div class="body">
       <div class="stitle">${esc(x.title)}</div>
       ${evidenceRail(x)}
     </div>
     ${actionFoot({...x, status}, 'Mark complete')}
-  </div>`;
+  </div>`);
 }
 function nextLeaf(parent){ const p = parent.children.find(c=>c.status!=='completed'); return p?p.id:null; }
 
