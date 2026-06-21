@@ -50,7 +50,7 @@ export const styles = StyleSheet.create((theme) => ({
   },
   indicatorRow: {
     alignItems: "center" as const,
-    paddingVertical: theme.space[2],
+    paddingVertical: theme.space[1],
     paddingHorizontal: theme.space[2],
   },
 }));

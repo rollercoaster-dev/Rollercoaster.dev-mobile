@@ -1,6 +1,24 @@
 {
   "title": "Focus Mode",
   "evidenceFallback": "Evidence",
+  "evidenceRail": {
+    "zoneLabel": "Evidence",
+    "capturedChip": "{{type}} captured",
+    "capturedChipNamed": "{{caption}}, {{type}} captured"
+  },
+  "band": {
+    "childContext": "↳ {{parent}} · part {{index}} of {{total}}"
+  },
+  "overview": {
+    "metaLabel": "Overview",
+    "partsHeading": "Parts",
+    "evidenceRollupLabel": "Evidence across parts",
+    "evidenceRollupA11y": "Evidence across parts: {{count}}",
+    "partsPendingPrompt": "Complete the parts to finish",
+    "markComplete": "Mark \"{{parent}}\" complete",
+    "partA11y": "{{title}}, {{status}}",
+    "partOpenHint": "Opens this part"
+  },
   "header": {
     "showTimeline": "Show timeline",
     "hideTimeline": "Hide timeline",

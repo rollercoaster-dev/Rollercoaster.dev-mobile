@@ -228,3 +228,63 @@ was not part of this evaluation.
   2026-06-13 walkthrough's lean toward containment-as-base.
 - **Depth (Q6) stays open** — graduates only after Stage 6 per the Open
   Questions Register. This graduates the layout, not depth.
+
+## Prototype: A — focus-mode step-card frame (2026-06-21)
+
+### Hypothesis
+
+The shipped substep grammar (#292) left three focus-mode step-card ergonomics
+undecided: cards re-flow as content changes (carousel jitter), the evidence-add
+path is drawer-only rather than a first-class card affordance, and the
+parent ↔ substep tie in the focus carousel was never chosen. One prototype can
+answer all three before they are built.
+
+### What Was Built
+
+`apps/native-rd/prototypes/a-focus-card-substructure.html` (PR #355) — a
+self-contained phone-viewport page studying the focus-mode step cards in the
+app's token language. Toggles: candidate (`?cand=A/B/C`), dataset
+(`?data=mid` / `?data=done` for the Q9 invite state), and state words.
+
+- **Stable card frame** (shared by all candidates) — a fixed-height envelope;
+  body is a zoned scaffold (title · context · evidence) with the action pinned
+  to a `.foot`, so the frame holds shape across cards.
+- **Evidence rail** (shared) — a persistent "＋ Add evidence" affordance with
+  captured-evidence chips and a "needed" marker for missing planned evidence.
+- **Three parent-tie candidates:**
+  - **A — Anchored leaf:** shipped sibling-card model + a persistent parent band
+    pinned above each child card. No carousel-mechanic change; parent stays a
+    bare card.
+  - **B — Sub-deck:** a parent's substeps read as one grouped deck (shared left
+    rail + pinned parent strip with part-progress, siblings peeking behind).
+    Strongest parent tie; largest build surface (new carousel mechanic).
+  - **C — Parent overview:** the parent becomes its own overview card (parts
+    spine, evidence rollup, the manual "mark parent complete" Q9 invite); leaves
+    follow as their own cards. Answers parent rollup (Q10) + Q9 invite home;
+    costs two card archetypes and one extra read to a leaf's action.
+
+### ND-user gate session (2026-06-21)
+
+**Session:** Joe — the app's primary-audience ND user — reviewed the candidates
+in `a-focus-card-substructure.html` (`?cand=C`) and **selected candidate C —
+Parent overview.**
+
+**Decision: graduate to implementation (issue #360).**
+
+- **Approved parent-tie: C — Parent overview.** A and B dropped. C is chosen for
+  giving the Q9 manual-complete invite and the Q10 evidence rollup a clear home
+  on a dedicated overview card; the accepted costs are two card archetypes and
+  one extra read to reach a leaf's action.
+- **Stable frame and evidence rail** graduate as the shared (candidate-independent)
+  base, unchanged from the prototype.
+- **Sub-question calls (both confirmed to match the prototype, no deviation):**
+  - Blocked-step foot keeps the **italic prompt text** (not a disabled checkbox).
+  - Evidence rail sits in the **scrollable body zone** (not pinned above the foot).
+  - Overview spine active-cell uses the existing `accentYellow` in-progress token;
+    theme parity (`highContrast` / `autismFriendly`) to be verified at build.
+- **Evidence weight: ND-user.** Decisive tier, same as the 2026-06-11 layout gate.
+- **Depth (Q6)** remains out of scope — one level only, per #288.
+
+Implementation path and the resolved-decision table live in the dev plan:
+`apps/native-rd/docs/plans/dev-plans/issue-360-focus-step-card-frame.md`
+(Phase 0 → 1 → 2 → 3C → 4; candidates A/B not built).

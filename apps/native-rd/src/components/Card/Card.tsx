@@ -12,6 +12,12 @@ export interface CardProps {
   accessibilityLabel?: string;
   accessibilityHint?: string;
   testID?: string;
+  /**
+   * Fill the available height of a fixed-height parent (flex: 1) instead of
+   * shrink-wrapping to content. Used by the focus-mode carousel so every card
+   * keeps the same envelope as the user swipes between them.
+   */
+  fill?: boolean;
 }
 
 export function Card({
@@ -22,6 +28,7 @@ export function Card({
   accessibilityLabel,
   accessibilityHint,
   testID,
+  fill = false,
 }: CardProps) {
   if (onPress || onLongPress) {
     return (
@@ -35,6 +42,7 @@ export function Card({
         testID={testID}
         style={({ pressed }) => [
           styles.pressable(size),
+          fill && styles.fill,
           pressed && styles.pressed,
         ]}
       >
@@ -44,7 +52,7 @@ export function Card({
   }
 
   return (
-    <View style={styles.container(size)} testID={testID}>
+    <View style={[styles.container(size), fill && styles.fill]} testID={testID}>
       {children}
     </View>
   );

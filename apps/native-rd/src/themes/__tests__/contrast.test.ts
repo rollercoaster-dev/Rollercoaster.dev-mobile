@@ -4,7 +4,7 @@
  */
 
 import { getContrastRatio, meetsWCAG } from "../../utils/accessibility";
-import { lightColors, darkColors } from "../adapter";
+import { lightColors, darkColors, narrativeModes } from "../adapter";
 
 describe("WCAG AA Color Contrast Compliance", () => {
   test.each([
@@ -30,6 +30,23 @@ describe("WCAG AA Color Contrast Compliance", () => {
     expect(result.passes).toBe(true);
     expect(result.ratio).toBeGreaterThanOrEqual(3.0);
   });
+
+  // Any surface painted accentYellow (#ffe50c, identical in both modes) — the
+  // FAB, StatusBadge active variant, the focus overview's active part cell —
+  // must use the climb-narrative on-yellow foreground, NOT theme.colors.text.
+  // colors.text flips to #fafafa in dark and gives ~1.1:1 white-on-yellow; the
+  // overview spine cell regressed exactly this way (#360).
+  test.each([
+    ["light", lightColors.accentYellow, narrativeModes.light.climb.text],
+    ["dark", darkColors.accentYellow, narrativeModes.dark.climb.text],
+  ] as const)(
+    "%s in-progress text on accentYellow meets WCAG AA",
+    (_label, bg, fg) => {
+      const result = meetsWCAG(fg, bg, "AA", "normal");
+      expect(result.passes).toBe(true);
+      expect(result.ratio).toBeGreaterThanOrEqual(4.5);
+    },
+  );
 
   describe("Contrast Ratio Utility", () => {
     test("black on white = ~21 (perfect contrast)", () => {

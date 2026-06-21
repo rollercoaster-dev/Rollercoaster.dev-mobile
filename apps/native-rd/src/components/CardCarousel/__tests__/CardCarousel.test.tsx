@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -51,6 +51,29 @@ describe("CardCarousel", () => {
         </CardCarousel>,
       );
       expect(screen.getByText("Solo")).toBeOnTheScreen();
+    });
+
+    it("fills the track slot instead of vertically centering (stable frame)", () => {
+      // Regression guard for the frame-fill fix (#360): the animated card slot
+      // must stretch top→bottom so a flex:1 card child keeps the same envelope
+      // between cards, rather than shrink-wrapping + centring (which jittered
+      // the frame as content length changed).
+      const { UNSAFE_getByProps } = renderWithProviders(
+        <CardCarousel currentIndex={1} onIndexChange={jest.fn()}>
+          <Card label="Card A" />
+          <Card label="Card B" />
+          <Card label="Card C" />
+        </CardCarousel>,
+      );
+      // The center card's wrapper is the only one with importantForAccessibility
+      // "no" (peeks use "no-hide-descendants").
+      const centerWrapper = UNSAFE_getByProps({
+        accessible: false,
+        importantForAccessibility: "no",
+      });
+      const style = StyleSheet.flatten(centerWrapper.props.style);
+      expect(style.position).toBe("absolute");
+      expect(style.justifyContent).toBeUndefined();
     });
   });
 
@@ -219,6 +242,64 @@ describe("CardCarousel", () => {
       expect(
         screen.getByLabelText("Next card").props.accessibilityState?.disabled,
       ).toBe(true);
+    });
+  });
+
+  // --- A11y contract (#360 Phase 4 hardening). Locks in the nav-arrow
+  // guarantees from the issue's intent criteria so a future refactor can't
+  // silently drop the role, hide the arrows, shrink the touch target, or reduce
+  // the disabled state to a colour-only cue. ---
+  describe("a11y contract (#360 Phase 4)", () => {
+    const renderTrio = (currentIndex = 1) =>
+      renderWithProviders(
+        <CardCarousel currentIndex={currentIndex} onIndexChange={jest.fn()}>
+          <Card label="Card A" />
+          <Card label="Card B" />
+          <Card label="Card C" />
+        </CardCarousel>,
+      );
+
+    it.each(["Previous card", "Next card"])(
+      "%s arrow is a reachable button (role=button, not hidden from a11y)",
+      (label) => {
+        renderTrio();
+        const arrow = screen.getByLabelText(label);
+        expect(arrow.props.accessibilityRole).toBe("button");
+        expect(arrow.props.accessible).toBe(true);
+        expect(arrow.props.accessibilityElementsHidden).toBeFalsy();
+        expect(arrow.props.importantForAccessibility).not.toBe(
+          "no-hide-descendants",
+        );
+      },
+    );
+
+    it.each(["Previous card", "Next card"])(
+      "%s arrow meets the 44x44 minimum touch target",
+      (label) => {
+        renderTrio();
+        const style = StyleSheet.flatten(
+          screen.getByLabelText(label).props.style,
+        );
+        expect(style.width).toBeGreaterThanOrEqual(44);
+        expect(style.height).toBeGreaterThanOrEqual(44);
+      },
+    );
+
+    it("communicates the disabled arrow both programmatically and via a non-colour cue", () => {
+      // currentIndex 0 → Previous is disabled, Next is enabled.
+      renderTrio(0);
+      const prev = screen.getByLabelText("Previous card");
+      const next = screen.getByLabelText("Next card");
+
+      expect(prev.props.accessibilityState?.disabled).toBe(true);
+      expect(next.props.accessibilityState?.disabled).toBe(false);
+
+      // The disabled cue is dimmed opacity — a change beyond colour alone — so
+      // it still reads for users who can't distinguish the border colour.
+      const prevStyle = StyleSheet.flatten(prev.props.style);
+      const nextStyle = StyleSheet.flatten(next.props.style);
+      expect(prevStyle.opacity).toBeLessThan(1);
+      expect(nextStyle.opacity ?? 1).toBe(1);
     });
   });
 

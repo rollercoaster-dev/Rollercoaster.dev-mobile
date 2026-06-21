@@ -1,6 +1,24 @@
 {
   "title": "[Ƒøçüš Ɱøđê····]",
   "evidenceFallback": "[Êṽïđêñçê···]",
+  "evidenceRail": {
+    "zoneLabel": "[Êṽïđêñçê···]",
+    "capturedChip": "[{{type}} çàþţüŕêđ······]",
+    "capturedChipNamed": "[{{caption}}, {{type}} çàþţüŕêđ······]"
+  },
+  "band": {
+    "childContext": "[↳ {{parent}} · þàŕţ {{index}} øƒ {{total}}······]"
+  },
+  "overview": {
+    "metaLabel": "[Øṽêŕṽïêŵ····]",
+    "partsHeading": "[Þàŕţš···]",
+    "evidenceRollupLabel": "[Êṽïđêñçê àçŕøšš þàŕţš········]",
+    "evidenceRollupA11y": "[Êṽïđêñçê àçŕøšš þàŕţš: {{count}}··········]",
+    "partsPendingPrompt": "[Çøɱþĺêţê ţĥê þàŕţš ţø ƒïñïšĥ··········]",
+    "markComplete": "[Ɱàŕķ \"{{parent}}\" çøɱþĺêţê··········]",
+    "partA11y": "[{{title}}, {{status}}····]",
+    "partOpenHint": "[Øþêñš ţĥïš þàŕţ········]"
+  },
   "header": {
     "showTimeline": "[Šĥøŵ ţïɱêĺïñê·····]",
     "hideTimeline": "[Ĥïđê ţïɱêĺïñê·····]",

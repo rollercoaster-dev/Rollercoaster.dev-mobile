@@ -30,7 +30,11 @@ import {
   ProgressDots,
   type ProgressDotsStep,
 } from "../../components/ProgressDots";
-import { StepCard, type StepCardStatus } from "../../components/StepCard";
+import {
+  StepCard,
+  type StepCardStatus,
+  type StepCardPart,
+} from "../../components/StepCard";
 import { GoalEvidenceCard } from "../../components/GoalEvidenceCard";
 import {
   EvidenceDrawer,
@@ -209,6 +213,15 @@ function FocusContent({ goalId }: { goalId: string }) {
             stepEvidence.map((e) => e.type).filter(Boolean) as string[],
           ),
         ];
+        // Per-item evidence for the rail chips — each carries its caption
+        // (evidence.description) so a chip can show it instead of the bare type.
+        const capturedEvidence = stepEvidence
+          .filter((e) => Boolean(e.type))
+          .map((e) => ({
+            id: e.id as string,
+            type: e.type as string,
+            caption: (e.description as string | null) ?? null,
+          }));
         const rawPlanned = stepRows[i]?.plannedEvidenceTypes as string | null;
         const plannedTypes = parsePlannedEvidenceTypes(rawPlanned);
         if (rawPlanned != null && plannedTypes == null) {
@@ -225,10 +238,45 @@ function FocusContent({ goalId }: { goalId: string }) {
           evidenceCount: stepEvidenceCounts[i] ?? 0,
           plannedEvidenceTypes: plannedTypes,
           capturedEvidenceTypes: capturedTypes,
+          capturedEvidence,
         };
       }),
     [uiSteps, stepRows, allStepEvidenceRows, stepEvidenceCounts],
   );
+
+  // Candidate C (#360): a top-level step that has present children renders as an
+  // overview card. Bucket each parent's parts (id, title, status, evidence) so
+  // the overview can list them as a spine and roll up their evidence. Children
+  // and flat steps stay leaf cards.
+  const partsByParentId = useMemo(() => {
+    const map = new Map<string, StepCardPart[]>();
+    stepsWithEvidence.forEach((step, i) => {
+      const parentId = stepRows[i]?.parentStepId;
+      if (parentId != null && stepRootIds.has(parentId)) {
+        const part: StepCardPart = {
+          id: step.id,
+          title: step.title,
+          status: step.status as StepCardStatus,
+          evidenceCount: step.evidenceCount,
+        };
+        const list = map.get(parentId);
+        if (list) list.push(part);
+        else map.set(parentId, [part]);
+      }
+    });
+    return map;
+  }, [stepsWithEvidence, stepRows, stepRootIds]);
+
+  // Per-child part numbering for the purple "↳ parent · part N of M" band (#360).
+  const partInfoByChildId = useMemo(() => {
+    const map = new Map<string, { index: number; total: number }>();
+    for (const parts of partsByParentId.values()) {
+      parts.forEach((part, i) => {
+        map.set(part.id, { index: i + 1, total: parts.length });
+      });
+    }
+    return map;
+  }, [partsByParentId]);
 
   // Timeline + dot steps (memoized to prevent child re-renders on unrelated state changes)
   const timelineSteps = useMemo<MiniTimelineStep[]>(
@@ -311,6 +359,16 @@ function FocusContent({ goalId }: { goalId: string }) {
     setIsDrawerOpen(false);
     setIsFABMenuOpen(false);
   }, []);
+
+  // Overview spine rows link to their part's own card (#360): resolve the part's
+  // position in the flat stepRows and snap the carousel to it.
+  const handleOpenPart = useCallback(
+    (partId: string) => {
+      const index = stepRows.findIndex((s) => s.id === partId);
+      if (index !== -1) handleIndexChange(index);
+    },
+    [stepRows, handleIndexChange],
+  );
 
   const handleMarkComplete = useCallback(() => {
     navigation.navigate("CompletionFlow", { goalId });
@@ -608,25 +666,42 @@ function FocusContent({ goalId }: { goalId: string }) {
           )}
         >
           {[
-            ...stepsWithEvidence.map((step, index) => (
-              <StepCard
-                key={step.id}
-                step={{
-                  id: step.id,
-                  title: step.title,
-                  status: step.status as StepCardStatus,
-                  evidenceCount: step.evidenceCount,
-                  plannedEvidenceTypes: step.plannedEvidenceTypes,
-                  capturedEvidenceTypes: step.capturedEvidenceTypes,
-                  parentTitle: step.parentTitle,
-                }}
-                stepIndex={index}
-                totalSteps={stepRows.length}
-                onToggleComplete={handleToggleStep}
-                onEvidenceTap={handleEvidenceTap}
-                onQuickEvidence={handleQuickEvidence}
-              />
-            )),
+            ...stepsWithEvidence.map((step, index) => {
+              // A top-level step with present children renders as an overview
+              // card; children and flat steps stay leaf cards (#360).
+              const parts = step.isChild
+                ? undefined
+                : partsByParentId.get(step.id);
+              const isOverview = parts != null && parts.length > 0;
+              const partInfo = step.isChild
+                ? partInfoByChildId.get(step.id)
+                : undefined;
+              return (
+                <StepCard
+                  key={step.id}
+                  kind={isOverview ? "overview" : "leaf"}
+                  parts={parts}
+                  onOpenPart={isOverview ? handleOpenPart : undefined}
+                  step={{
+                    id: step.id,
+                    title: step.title,
+                    status: step.status as StepCardStatus,
+                    evidenceCount: step.evidenceCount,
+                    plannedEvidenceTypes: step.plannedEvidenceTypes,
+                    capturedEvidenceTypes: step.capturedEvidenceTypes,
+                    capturedEvidence: step.capturedEvidence,
+                    parentTitle: step.parentTitle,
+                    partIndex: partInfo?.index ?? null,
+                    partTotal: partInfo?.total ?? null,
+                  }}
+                  stepIndex={index}
+                  totalSteps={stepRows.length}
+                  onToggleComplete={handleToggleStep}
+                  onEvidenceTap={handleEvidenceTap}
+                  onQuickEvidence={handleQuickEvidence}
+                />
+              );
+            }),
             <GoalEvidenceCard
               key="goal-evidence"
               goalTitle={goal.title as string}
