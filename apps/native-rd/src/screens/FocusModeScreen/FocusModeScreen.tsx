@@ -51,6 +51,7 @@ import {
   isPendingStep,
   groupStepsByParent,
   flattenGroupedSteps,
+  resolveNextActionableStep,
   EvidenceType,
   StepStatus,
 } from "../../db";
@@ -91,15 +92,10 @@ const EVIDENCE_ROUTE_MAP: Partial<
 
 /**
  * Index (into the flat `stepRows`) of the first pending *leaf* to snap to on
- * mount (#292). Mirrors the goal card's resolution: walk top-level steps in
- * order and return the first pending child (a leaf) — or the parent itself when
- * it is a flat pending step or in the invite state (all children done, parent
- * still pending). Returns -1 when nothing is pending.
- *
- * Pending children are checked *before* the parent's own status, so a manually
- * completed parent that still has pending sub-steps doesn't hide them — step
- * completion is per-step, not cascaded (see completeStep), so this is reachable.
- * A completed parent whose children are all done is skipped (subtree closed).
+ * mount (#292), or -1 when nothing is pending. Thin adapter over the shared
+ * {@link resolveNextActionableStep}: leaf, invite, and flat all resolve to the
+ * actionable row's flat index, and the orphan-promotion rule lives in the
+ * resolver — so FocusMode and the goal card can't drift apart (#337).
  */
 function findFirstPendingLeafIndex(
   rows: readonly {
@@ -108,43 +104,8 @@ function findFirstPendingLeafIndex(
     status: string | null;
   }[],
 ): number {
-  // A row is a child only if its parent is a present top-level step. A null
-  // parent — or an orphan whose parent was soft-deleted — surfaces as top-level
-  // so its pending work stays reachable. Mirrors groupStepsByParent's orphan
-  // promotion (#292); without it a deleted parent would hide its children.
-  const rootIds = new Set(
-    rows.filter((r) => r.parentStepId == null).map((r) => r.id),
-  );
-  const childrenByParent = new Map<
-    string,
-    { index: number; status: string | null }[]
-  >();
-  const topLevel: { id: string; index: number; status: string | null }[] = [];
-  rows.forEach((row, index) => {
-    if (row.parentStepId != null && rootIds.has(row.parentStepId)) {
-      const entry = { index, status: row.status };
-      const list = childrenByParent.get(row.parentStepId);
-      if (list) list.push(entry);
-      else childrenByParent.set(row.parentStepId, [entry]);
-    } else {
-      topLevel.push({ id: row.id, index, status: row.status });
-    }
-  });
-
-  for (const step of topLevel) {
-    const children = childrenByParent.get(step.id) ?? [];
-    const pendingChild = children.find(
-      (c) => c.status !== StepStatus.completed,
-    );
-    // A pending leaf wins even under a completed parent — its work isn't hidden.
-    if (pendingChild) return pendingChild.index;
-    // No pending child: skip once the step itself is complete (a flat step, or a
-    // parent whose subtree is fully done). Otherwise it's the next action — a
-    // flat pending step, or the invite state (children all done, parent pending).
-    if (step.status === StepStatus.completed) continue;
-    return step.index;
-  }
-  return -1;
+  const result = resolveNextActionableStep(rows);
+  return result.kind === "none" ? -1 : result.index;
 }
 
 function FocusContent({ goalId }: { goalId: string }) {
