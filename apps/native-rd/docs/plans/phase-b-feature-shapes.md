@@ -362,6 +362,18 @@ Wording is itself a question (ADR-0011): candidates are "after" / "depends on"
 Nothing else: no constraint engine, no cycle detection, no auto-satisfaction by
 time, no calendar integration, no counting or scoring.
 
+### Later Integrated Shape
+
+- Internal dependencies may point among substeps (A) — siblings, leaves, or
+  parents (Integration Matrix A + C); this prototype keeps flat steps.
+- An external "waiting, expected ⟨date⟩" sits beside a B date/deadline: C's
+  expected date names the world's timing, B's date names the user's intent
+  (Integration Matrix B + E; the overlap is Q10).
+- The journey reuses E's pill where a waiting step also carries a state;
+  ADR-0011 keeps waiting a relation, so E and C compose rather than collide.
+- A Scratchpad item dragged out could enter the order or a dependency
+  (Integration Matrix C + Scratchpad), out of scope until Stage 5.
+
 ### Must Not Do
 
 - **No constraint engine** — never block/hide/dim/disable/refuse on an unsatisfied
