@@ -446,9 +446,10 @@ export interface NextActionableStepInput {
 
 /**
  * The single next actionable step, tagged by which of the four states it is.
- * `index` is the position of the actionable row in the input `rows` array.
+ * Both `index` and `parentIndex` are positions in the input `rows` array, so a
+ * caller maps either straight back to a row via `rows[...]`.
  *
- * - `leaf`   — first pending child under a top-level step; `parentId` is the
+ * - `leaf`   — first pending child under a top-level step; `parentIndex` is the
  *              container step (use it for the "↳ in [parent]" context line).
  * - `invite` — all of a pending parent's children are done; `childCount` is how
  *              many are done (use it for the "all N substeps done" readout).
@@ -456,7 +457,7 @@ export interface NextActionableStepInput {
  * - `none`   — nothing is pending.
  */
 export type NextActionableStep =
-  | { kind: "leaf"; index: number; parentId: string }
+  | { kind: "leaf"; index: number; parentIndex: number }
   | { kind: "invite"; index: number; childCount: number }
   | { kind: "flat"; index: number }
   | { kind: "none" };
@@ -510,7 +511,7 @@ export function resolveNextActionableStep(
     );
     // A pending leaf wins even under a completed parent — its work isn't hidden.
     if (pendingChild) {
-      return { kind: "leaf", index: pendingChild.index, parentId: step.id };
+      return { kind: "leaf", index: pendingChild.index, parentIndex: step.index }; // prettier-ignore
     }
     // No pending child: skip once the step itself is complete (a flat step, or
     // a parent whose subtree is fully done). Otherwise it's the next action.

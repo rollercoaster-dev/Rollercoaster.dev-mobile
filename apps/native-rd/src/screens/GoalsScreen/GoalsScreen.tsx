@@ -56,9 +56,8 @@ function buildGoalCardGoal(
   let nextStepContext: string | null = null;
   if (next.kind === "leaf") {
     nextStepTitle = steps[next.index]?.title ?? null;
-    const parent = steps.find((s) => s.id === next.parentId);
     nextStepContext = t("goals:card.nextStepContext", {
-      parent: parent?.title ?? "",
+      parent: steps[next.parentIndex]?.title ?? "",
     });
   } else if (next.kind === "invite") {
     nextStepTitle = steps[next.index]?.title ?? null;

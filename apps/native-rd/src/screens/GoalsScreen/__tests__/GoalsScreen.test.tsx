@@ -73,7 +73,7 @@ jest.mock("../../../db", () => ({
       const children = childrenByParent.get(step.id) ?? [];
       const pendingChild = children.find((c) => c.status !== "completed");
       if (pendingChild) {
-        return { kind: "leaf", index: pendingChild.index, parentId: step.id };
+        return { kind: "leaf", index: pendingChild.index, parentIndex: step.index }; // prettier-ignore
       }
       if (step.status === "completed") continue;
       if (children.length > 0) {

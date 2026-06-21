@@ -315,7 +315,7 @@ describe("Step CRUD Operations", () => {
           row("s2c", "s2"),
           row("s3", null),
         ],
-        { kind: "leaf", index: 3, parentId: "s2" },
+        { kind: "leaf", index: 3, parentIndex: 1 },
       ],
       [
         "invite state: all children done, parent still pending",
@@ -341,7 +341,7 @@ describe("Step CRUD Operations", () => {
           row("s1", null, { status: "completed" }),
           row("s2", null),
         ],
-        { kind: "leaf", index: 0, parentId: "s2" },
+        { kind: "leaf", index: 0, parentIndex: 2 },
       ],
       [
         "pending leaf under a manually-completed parent still wins",
@@ -350,7 +350,7 @@ describe("Step CRUD Operations", () => {
           row("s2", null, { status: "completed" }),
           row("s2a", "s2"),
         ],
-        { kind: "leaf", index: 2, parentId: "s2" },
+        { kind: "leaf", index: 2, parentIndex: 1 },
       ],
       [
         "all steps completed → none",
