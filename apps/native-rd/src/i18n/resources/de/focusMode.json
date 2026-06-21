@@ -1,6 +1,11 @@
 {
   "title": "Fokus-Modus",
   "evidenceFallback": "Nachweis",
+  "evidenceRail": {
+    "zoneLabel": "Nachweis",
+    "addButton": "+ Nachweis hinzufügen",
+    "capturedChip": "{{type}} erfasst"
+  },
   "header": {
     "showTimeline": "Zeitleiste anzeigen",
     "hideTimeline": "Zeitleiste ausblenden",

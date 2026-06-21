@@ -377,6 +377,103 @@ describe("StepCard", () => {
     ).toBe(false);
   });
 
+  // --- Evidence rail (Phase 2): always-visible add affordance + read-only
+  // summary of the pieces already captured. We never surface what is
+  // "missing" — adding evidence simply reveals the completion checkbox. ---
+
+  describe("evidence rail", () => {
+    it("always shows the Add evidence button, even with no evidence", () => {
+      renderWithProviders(<StepCard step={makeStep()} {...defaultProps} />);
+      expect(screen.getByTestId("step-card-add-evidence")).toBeOnTheScreen();
+      expect(screen.getByText("+ Add evidence")).toBeOnTheScreen();
+    });
+
+    it("calls onEvidenceTap when the Add evidence button is pressed", () => {
+      const onEvidenceTap = jest.fn();
+      renderWithProviders(
+        <StepCard
+          step={makeStep()}
+          {...defaultProps}
+          onEvidenceTap={onEvidenceTap}
+        />,
+      );
+      fireEvent.press(screen.getByTestId("step-card-add-evidence"));
+      expect(onEvidenceTap).toHaveBeenCalledTimes(1);
+    });
+
+    it("renders a read-only chip for each captured evidence type", () => {
+      renderWithProviders(
+        <StepCard
+          step={makeStep({ capturedEvidenceTypes: ["photo", "text"] })}
+          {...defaultProps}
+        />,
+      );
+      expect(
+        screen.getByTestId("step-card-evidence-chip-photo"),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByTestId("step-card-evidence-chip-text"),
+      ).toBeOnTheScreen();
+      // Chips are status, not actions.
+      expect(
+        screen.getByTestId("step-card-evidence-chip-photo").props
+          .accessibilityRole,
+      ).toBe("text");
+    });
+
+    it("shows the captured chip for a partially-captured step without any 'missing' marker", () => {
+      renderWithProviders(
+        <StepCard
+          step={makeStep({
+            plannedEvidenceTypes: ["photo", "text"],
+            capturedEvidenceTypes: ["photo"],
+          })}
+          {...defaultProps}
+        />,
+      );
+      expect(screen.getByText("+ Add evidence")).toBeOnTheScreen();
+      expect(
+        screen.getByTestId("step-card-evidence-chip-photo"),
+      ).toBeOnTheScreen();
+    });
+
+    // The rail never tells the user something is missing/needed — adding
+    // evidence simply unlocks the checkbox. Locks in Joe's directive
+    // (2026-06-21): no deficiency framing, ever.
+    it.each([
+      [
+        "partially captured",
+        {
+          plannedEvidenceTypes: ["photo", "text"],
+          capturedEvidenceTypes: ["photo"],
+        },
+      ],
+      [
+        "nothing captured",
+        { plannedEvidenceTypes: ["photo"], capturedEvidenceTypes: [] },
+      ],
+      [
+        "no planned types",
+        { plannedEvidenceTypes: null, capturedEvidenceTypes: [] },
+      ],
+      [
+        "completed",
+        {
+          status: "completed" as StepCardStatus,
+          plannedEvidenceTypes: ["photo"],
+          capturedEvidenceTypes: [],
+        },
+      ],
+    ])("never shows a 'needed'/'missing' marker (%s)", (_label, overrides) => {
+      renderWithProviders(
+        <StepCard step={makeStep(overrides)} {...defaultProps} />,
+      );
+      expect(screen.queryByText(/needed/i)).toBeNull();
+      expect(screen.queryByText(/missing/i)).toBeNull();
+      expect(screen.queryByText(/•/)).toBeNull();
+    });
+  });
+
   // --- Reading order (locks in the zoned scaffold: scrollable body, then the
   // pinned foot). The completion prompt/checkbox moved out of the scroll body
   // into the foot, so it now follows the evidence badge in document order. ---

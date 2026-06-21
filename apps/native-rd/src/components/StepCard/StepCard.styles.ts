@@ -108,6 +108,67 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.textMuted,
     fontStyle: "italic",
   },
+  // Evidence rail — always-visible add affordance plus a read-only summary of
+  // captured pieces and still-needed planned types. Lives in the scrollable
+  // body zone above the pinned foot (D6). Mirrors the prototype `.ev-rail`.
+  evidenceRail: {
+    gap: theme.space[1],
+  },
+  evidenceRailLabel: {
+    fontSize: theme.size.xs,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.textMuted,
+    textTransform: "uppercase",
+    letterSpacing: theme.letterSpacing.wide,
+    fontFamily: theme.fontFamily.body,
+  },
+  evidenceRailRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: theme.space[2],
+  },
+  // Captured-evidence chip: read-only status pill, one per captured type.
+  evidenceChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.space[1],
+    backgroundColor: theme.colors.accentPurpleLight,
+    borderWidth: theme.borderWidth.medium,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.pill,
+    paddingHorizontal: theme.space[2],
+    paddingVertical: theme.space[1],
+    ...shadowStyle(theme, "cardElevationSmall"),
+  },
+  evidenceChipIcon: {
+    fontSize: 14,
+  },
+  evidenceChipText: {
+    fontSize: theme.size.xs,
+    fontFamily: theme.fontFamily.mono,
+    color: theme.colors.text,
+  },
+  // Always-visible "+ Add evidence" button — the explicit add affordance.
+  evidenceAddButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.space[1],
+    backgroundColor: theme.colors.backgroundSecondary,
+    borderWidth: theme.borderWidth.medium,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.pill,
+    paddingHorizontal: theme.space[3],
+    paddingVertical: theme.space[2],
+    minHeight: 44,
+    ...shadowStyle(theme, "cardElevationSmall"),
+  },
+  evidenceAddText: {
+    fontSize: theme.size.sm,
+    fontWeight: theme.fontWeight.bold,
+    fontFamily: theme.fontFamily.body,
+    color: theme.colors.text,
+  },
   quickActionsRow: {
     flexDirection: "row",
     flexWrap: "wrap",

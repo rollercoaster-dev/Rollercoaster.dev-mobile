@@ -10,6 +10,7 @@ import {
   EVIDENCE_CAPTURE_OPTIONS,
   EVIDENCE_OPTIONS,
   type EvidenceCaptureOption,
+  type EvidenceTypeValue,
   type QuickEvidenceType,
 } from "../../types/evidence";
 import {
@@ -82,7 +83,7 @@ function StepCardComponent({
   onEvidenceTap,
   onQuickEvidence,
 }: StepCardProps) {
-  const { t } = useTranslation(["common"]);
+  const { t } = useTranslation(["common", "focusMode"]);
   const isCompleted = step.status === "completed";
   const evidenceLabel = formatEvidenceLabel(t, step.evidenceCount);
   const flashStyle = useFlashOnIncrease(step.evidenceCount);
@@ -200,6 +201,55 @@ function StepCardComponent({
             />
           </View>
         )}
+
+        {/* Evidence rail — always-visible add affordance plus a read-only
+            summary of the pieces already captured. We never surface what is
+            "missing": adding evidence simply reveals the completion checkbox. */}
+        <View style={styles.evidenceRail}>
+          <Text style={styles.evidenceRailLabel} accessibilityRole="text">
+            {t("focusMode:evidenceRail.zoneLabel")}
+          </Text>
+          <View style={styles.evidenceRailRow}>
+            {capturedTypes.map((type) => {
+              const option = EVIDENCE_OPTIONS.find((o) => o.type === type);
+              const label = evidenceShortLabel(t, type as EvidenceTypeValue);
+              return (
+                <View
+                  key={`captured-${type}`}
+                  style={styles.evidenceChip}
+                  accessible
+                  accessibilityRole="text"
+                  accessibilityLabel={t("focusMode:evidenceRail.capturedChip", {
+                    type: label,
+                  })}
+                  testID={`step-card-evidence-chip-${type}`}
+                >
+                  {option && (
+                    <Text
+                      style={styles.evidenceChipIcon}
+                      accessibilityElementsHidden
+                    >
+                      {option.icon}
+                    </Text>
+                  )}
+                  <Text style={styles.evidenceChipText}>{label}</Text>
+                </View>
+              );
+            })}
+            <Pressable
+              onPress={onEvidenceTap}
+              style={styles.evidenceAddButton}
+              accessible
+              accessibilityRole="button"
+              accessibilityLabel={t("focusMode:evidenceRail.addButton")}
+              testID="step-card-add-evidence"
+            >
+              <Text style={styles.evidenceAddText}>
+                {t("focusMode:evidenceRail.addButton")}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
       </ScrollView>
 
       {/* Pinned foot — the completion action stays visible regardless of how far

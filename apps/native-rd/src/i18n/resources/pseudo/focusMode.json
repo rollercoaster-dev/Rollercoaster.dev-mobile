@@ -1,6 +1,11 @@
 {
   "title": "[Ƒøçüš Ɱøđê····]",
   "evidenceFallback": "[Êṽïđêñçê···]",
+  "evidenceRail": {
+    "zoneLabel": "[Êṽïđêñçê···]",
+    "addButton": "[+ Àđđ êṽïđêñçê······]",
+    "capturedChip": "[{{type}} çàþţüŕêđ······]"
+  },
   "header": {
     "showTimeline": "[Šĥøŵ ţïɱêĺïñê·····]",
     "hideTimeline": "[Ĥïđê ţïɱêĺïñê·····]",

@@ -1,6 +1,11 @@
 {
   "title": "Focus Mode",
   "evidenceFallback": "Evidence",
+  "evidenceRail": {
+    "zoneLabel": "Evidence",
+    "addButton": "+ Add evidence",
+    "capturedChip": "{{type}} captured"
+  },
   "header": {
     "showTimeline": "Show timeline",
     "hideTimeline": "Hide timeline",

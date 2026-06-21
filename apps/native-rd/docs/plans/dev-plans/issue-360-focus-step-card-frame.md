@@ -41,10 +41,11 @@ apply regardless of which A / B / C is chosen:
 - [ ] When swiping between focus-mode step cards of different content lengths,
       the card envelope height does not change between cards — no visible jitter
       or frame resize.
-- [ ] Each step card that can accept evidence shows a persistent "Add evidence"
-      rail (always visible, not in a drawer) with chips for captured pieces and
-      a "needed" marker when a planned type is missing — the marker uses an icon
-      or label in addition to any colour cue.
+- [x] Each step card that can accept evidence shows a persistent "Add evidence"
+      rail (always visible, not in a drawer) with read-only chips naming the
+      pieces already captured. The rail **never** surfaces what is "missing" or
+      "needed" — adding evidence simply reveals the completion checkbox (Joe's
+      directive, 2026-06-21; see D8). No deficiency framing of any kind.
 - [ ] A flat step (no parent) renders the same stable frame and the same
       evidence rail, with no parent-context element shown.
 - [ ] The carousel navigation arrows carry `accessibilityRole`, a descriptive
@@ -119,15 +120,16 @@ prototype candidates Joe selects.
 
 ## Decisions
 
-| ID  | Decision                                                                          | Alternatives Considered                              | Rationale                                                                                                                                                                                                       |
-| --- | --------------------------------------------------------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| D1  | Candidate selection: **C — Parent overview** (chosen 2026-06-21)                  | A (anchored leaf), B (sub-deck), C (parent overview) | ND-user gate passed; Joe selected C from the prototype. Answers parent rollup (Q10) + gives the Q9 manual-complete invite a clear home. Cost accepted: two card archetypes + one extra read to a leaf's action. |
-| D2  | Stable envelope via `flex: 1` fill of the `AnimatedCard` track slot               | Fixed pixel height, min/max height                   | `AnimatedCard` already uses `top: 0 / bottom: 0` with `justifyContent: center`; the card just needs to fill its container rather than shrink-wrap. No new dimension logic needed.                               |
-| D3  | Evidence rail is always-visible on the card body, not in the existing drawer only | Drawer-only (current), FAB-only, toggle              | Issue requirement; drawer remains for view/delete; the rail is the add affordance                                                                                                                               |
-| D4  | i18n: new keys go in `focusMode` namespace                                        | `common` namespace                                   | Step-card-specific strings (evidence rail, parent band, overview labels) belong with the focus-mode surface, not the shared namespace                                                                           |
-| D5  | Blocked-step foot keeps the italic prompt text                                    | Disabled checkbox with `accessibilityState`          | Joe confirmed 2026-06-21 — match the reviewed prototype; no behavioural deviation                                                                                                                               |
-| D6  | Evidence rail lives in the scrollable body zone                                   | Pinned above the foot (always visible)               | Joe confirmed 2026-06-21 — match the reviewed prototype; on long steps the body scroll handles overflow                                                                                                         |
-| D7  | Overview spine active-cell uses the existing `accentYellow` in-progress token     | One-off yellow literal                               | Use the design-system token, not a hardcoded value; verify parity across `highContrast` / `autismFriendly` themes before build (default adopted, not separately gated)                                          |
+| ID  | Decision                                                                          | Alternatives Considered                              | Rationale                                                                                                                                                                                                                                                                                                    |
+| --- | --------------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| D1  | Candidate selection: **C — Parent overview** (chosen 2026-06-21)                  | A (anchored leaf), B (sub-deck), C (parent overview) | ND-user gate passed; Joe selected C from the prototype. Answers parent rollup (Q10) + gives the Q9 manual-complete invite a clear home. Cost accepted: two card archetypes + one extra read to a leaf's action.                                                                                              |
+| D2  | Stable envelope via `flex: 1` fill of the `AnimatedCard` track slot               | Fixed pixel height, min/max height                   | `AnimatedCard` already uses `top: 0 / bottom: 0` with `justifyContent: center`; the card just needs to fill its container rather than shrink-wrap. No new dimension logic needed.                                                                                                                            |
+| D3  | Evidence rail is always-visible on the card body, not in the existing drawer only | Drawer-only (current), FAB-only, toggle              | Issue requirement; drawer remains for view/delete; the rail is the add affordance                                                                                                                                                                                                                            |
+| D4  | i18n: new keys go in `focusMode` namespace                                        | `common` namespace                                   | Step-card-specific strings (evidence rail, parent band, overview labels) belong with the focus-mode surface, not the shared namespace                                                                                                                                                                        |
+| D5  | Blocked-step foot keeps the italic prompt text                                    | Disabled checkbox with `accessibilityState`          | Joe confirmed 2026-06-21 — match the reviewed prototype; no behavioural deviation                                                                                                                                                                                                                            |
+| D6  | Evidence rail lives in the scrollable body zone                                   | Pinned above the foot (always visible)               | Joe confirmed 2026-06-21 — match the reviewed prototype; on long steps the body scroll handles overflow                                                                                                                                                                                                      |
+| D7  | Overview spine active-cell uses the existing `accentYellow` in-progress token     | One-off yellow literal                               | Use the design-system token, not a hardcoded value; verify parity across `highContrast` / `autismFriendly` themes before build (default adopted, not separately gated)                                                                                                                                       |
+| D8  | The evidence rail **never** shows a "needed"/"missing" marker (chosen 2026-06-21) | "[type] • needed" marker (built, then removed)       | Joe's directive mid-Phase-2: surfacing what's missing is deficiency framing we never use. Adding evidence simply reveals the completion checkbox — that gating is the only signal. Aligns with the recovery-context "name without score" rule. Rail = captured chips + always-visible "+ Add evidence" only. |
 
 ---
 
@@ -231,29 +233,31 @@ Use both datasets (`?data=mid` and `?data=done`).
 - `apps/native-rd/src/i18n/resources/_register/focusMode.yml`
 - `apps/native-rd/src/components/StepCard/__tests__/StepCard.test.tsx`
 
-**Commit**: `feat(focus): always-visible evidence rail — add affordance, chips, needed marker`
+**Commit**: `feat(focus): always-visible evidence rail — add affordance + captured chips`
 
 **Changes**:
 
-- [ ] In the `StepCard` body zone (above the foot), add an `EvidenceRail`
-      section (inline, not a separate component unless reuse is obvious): - Captured-evidence chips: one pill per captured type, icon + label,
-      `backgroundColor: accentPurpleLight`. Icon selection reuses the existing
-      `EVIDENCE_OPTIONS` map already in scope. - "Add evidence" button: always visible (dashed border, "＋ Add evidence"
-      label), calls `onEvidenceTap` (existing handler that opens the drawer —
-      no new navigation needed). - "Needed" marker: when a planned type is not yet captured, show a chip
-      with icon + label `"[type] • needed"` using `error` colour combined with
-      an icon (not colour alone).
-- [ ] Ensure the rail section has `accessibilityRole="none"` wrapping with a
-      descriptive `accessibilityLabel` for the group; individual chips get
-      `accessibilityRole="text"` (read-only status) and the add button gets
-      `accessibilityRole="button"`.
-- [ ] Add i18n keys: `focusMode:evidenceRail.addButton`, `focusMode:evidenceRail.needed`,
-      `focusMode:evidenceRail.capturedChip` (with `{{type}}` interpolation).
-- [ ] Tests: render a `StepCard` with `capturedEvidenceTypes: ['photo']` and
-      `plannedEvidenceTypes: ['photo', 'note']` — assert the "＋ Add evidence"
-      button is present, a "photo" chip is present, a "note • needed" marker is
-      present. Render with no planned types — assert only the add button appears,
-      no needed marker.
+- [x] In the `StepCard` body zone (above the foot, inside the `ScrollView`),
+      add an evidence rail section (inline — no obvious reuse): - Captured-evidence chips: one read-only pill per captured type, icon + label,
+      `backgroundColor: accentPurpleLight`. Icon from the existing
+      `EVIDENCE_OPTIONS` map; label from `evidenceShortLabel`. - "Add evidence" button: always visible ("+ Add evidence" label), calls
+      `onEvidenceTap` (existing handler that opens the drawer — no new
+      navigation needed).
+- [x] **No "needed"/"missing" marker** (D8). It was built first, then removed
+      on Joe's directive: the rail must never surface what is missing. Adding
+      evidence reveals the completion checkbox; that gating is the only signal.
+- [x] Chips get `accessibilityRole="text"` (read-only status); the add button
+      gets `accessibilityRole="button"`. The "Evidence" zone label heads the
+      section so a screen reader reaches each chip individually (no opaque group
+      wrapper).
+- [x] Add i18n keys (en/de/pseudo): `focusMode:evidenceRail.zoneLabel`,
+      `focusMode:evidenceRail.addButton`, `focusMode:evidenceRail.capturedChip`
+      (with `{{type}}` interpolation). No `needed`/`neededA11y` keys (D8).
+- [x] Tests: always-visible "+ Add evidence" button (with no evidence); button
+      calls `onEvidenceTap`; one read-only chip per captured type; partially-
+      captured step shows the captured chip with **no** missing marker; a
+      `test.each` asserts no "needed"/"missing"/"•" text across partial, empty,
+      no-planned, and completed states (locks in D8).
 
 ---
 
@@ -493,6 +497,29 @@ needed"`. The "Add evidence" button is `accessibilityRole="button"`.
   foot, so it now follows the evidence badge in document order
   (was meta→title→quickActions→prompt→badge; now
   meta→title→quickActions→badge→foot-prompt). Kept as a layout regression test.
+
+**Phase 2 — evidence rail (2026-06-21):**
+
+- [2026-06-21] The rail was first built per the original plan with a read-only
+  "[type] • needed" marker for planned-but-uncaptured types. Joe stopped it
+  mid-build: **never surface what is "missing"/"needed" — ever.** Marker, its
+  styles (`evidenceNeeded*`), and its i18n keys (`needed`, `neededA11y`) were
+  removed. Recorded as D8 and reflected in the intent criteria. The rail is now
+  captured chips + an always-visible "+ Add evidence" button only.
+- [2026-06-21] **Redundancy left in place (not resolved here):** the card still
+  carries the older quick-action capture buttons (missing planned types,
+  tappable) and the evidence-count badge ("N items, tap to view") alongside the
+  new rail. Phase 2's plan said "add a rail," not "consolidate," so they coexist
+  for now. The approved prototype (`a-focus-card-substructure.html`) shows the
+  rail alone — consolidating the quick-actions/count-badge into the rail is a
+  candidate for a follow-up pass, flagged for Joe.
+- [2026-06-21] **Open for Joe (D5 wording):** the blocked-step foot still shows
+  the italic "Add evidence to complete" prompt (pre-existing, D5-approved). Left
+  untouched — it is an instruction, not a "missing X" score — but given the D8
+  directive, confirm whether that wording should change too.
+- [2026-06-21] `StepCard.tsx` is now 325 lines (lint soft cap 300, warning only).
+  Left inline per the plan ("no obvious reuse"); extract an `EvidenceRail`
+  sub-component if it grows or if candidate-C work pushes it further over.
 
 **Research findings (2026-06-21):**
 
