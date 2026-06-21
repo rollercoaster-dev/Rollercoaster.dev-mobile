@@ -3,117 +3,121 @@
 Feature shape: [phase-b-feature-shapes.md §C](../phase-b-feature-shapes.md#c-dependencies-merges-c-order--c-waiting)
 Conventions: [phase-b-stage-0-deliverables.md](../phase-b-stage-0-deliverables.md)
 
-## Prototype: C — dependency-marker treatments × task-view fork (2026-06-16)
+## Prototype: C — marker treatments × task-view fork (2026-06-16)
 
 ### Hypothesis
 
-There is one dependency-marker language that holds across all five step
-surfaces and across both targets — internal (step→step) and external
-(step→person/org/event) — that **informs without ever enforcing**; and the
-open task-view fork (does "one next step" name a waiting step and stay put, or
-route around to the next actionable step?) can be resolved by seeing both
-behaviors side by side, including the extreme where every pending step is
-waiting (Ava). Marker wording is "after / depends on" (internal) and "waiting
-on … expected ⟨date⟩" (external) — never "blocked by" (feature shape Q1–Q3).
+There is one dependency-marker language that holds across all five step surfaces
+and both targets — internal (step→step) and external (step→person/org/event) —
+that **informs without ever enforcing**: a step can say "after ⟨step⟩" or
+"waiting on ⟨person/event⟩ · expected ⟨date⟩", never "blocked by," and the marker
+never blocks, hides, dims, disables, or refuses anything. And the open task-view
+fork (does "one next step" name a waiting step and stay put, or route around to
+the next actionable step?) can be resolved by seeing both behaviors side by side,
+including the extreme where every pending step is waiting (Ava).
 
 ### What Was Built
 
-`apps/native-rd/prototypes/C-dependencies.html` — a self-contained HTML page at
-phone-viewport size, light-default token language mirrored from
-`packages/design-tokens` (CSS shared with `a-substructure-layouts.html` so the
-comparison measures the treatment, not HTML aesthetics).
+`apps/native-rd/prototypes/C-dependencies.html` — a phone-viewport HTML page in
+the app's token language, toggling 3 marker treatments (inline sub-line, chip,
+connector-with-tie-line) × 5 step surfaces × 3 scenarios × 2 task-view behaviors
+(name-and-stay vs route-around).
 
-- **Three candidate marker treatments**, switchable via `?treatment=` / arrow
-  keys:
-  - **Inline** — the relation as a quiet sub-line under the step title (lowest
-    ink; whispers).
-  - **Chip** — a tappable pill carrying the relation (internal = purple,
-    external/waiting = amber + expected date).
-  - **Connector** — an explicit arrow-led callout, plus an actual tie line on
-    the journey between prerequisite and dependent (most graph-like; the only
-    treatment that draws the relation as a relation).
-- **Task-view fork as a toggle** (`?taskview=`): **name-and-stay** vs
-  **route-around**. Affects the Goals card and Focus snap only. In both, every
-  waiting step stays fully visible — nothing is blocked, hidden, dimmed, or
-  disabled (guardrail). Route-around names the soonest waiting step in a quiet
-  note — never a count (guardrail); when nothing is actionable (Ava), it shows
-  the honest "everything here is waiting on other people — that's the system,
-  not you" panel.
-- **Three scenarios** (`?data=`): **Tomás** (internal ordering, with one
-  already-satisfied dependency to see whether a met dependency reads as quiet
-  history), **Ava** (external — every pending step waiting, the route-around
-  extreme), **Combined** (one step stacking an internal + external marker, the
-  Q7 legibility stressor).
-- **Two views** (`?view=`): all five surfaces under one treatment, or one
-  surface across all three treatments side by side.
-
-**Medium:** HTML clickable comparison — the lowest rung that can show 3
-treatments × 5 surfaces × 3 scenarios × 2 task-view behaviors side by side in
-the app's token language; chosen per the prototype plan's medium menu (C's
-first questions are marker-display and task-view-routing questions, which are
-exactly the "compare the presentations" case HTML serves cheaply). Tap-count
-friction for setting/clearing a dependency, cold-return reading of the Ava
-goal, and the ND-user gate still need the dev-flag app rung afterward.
+**Medium:** HTML clickable comparison — the lowest rung that can show all of
+those side by side in the app's token language. Tap-count friction, Ava's
+cold-return read, and the ND-user gate still need the dev-flag app rung
+afterward.
 
 Run: `open apps/native-rd/prototypes/C-dependencies.html`
 
 ### Scenario Tested
 
-See above — Tomás (internal), Ava's four-month wait (external), and a combined
-Tomás-panel goal. Grounded in
-[step-model-gap.md](../research/step-model-gap.md) (§ C-order, § Ava and the
-four-month wait).
+- **Tomás** — internal ordering, with one already-satisfied dependency (to see
+  whether a met dependency reads as quiet history).
+- **Ava** — external; every pending step waiting on an actor with an expected
+  date (the route-around extreme).
+- **Combined** — one step stacking an internal + external marker (the Q7
+  legibility stressor).
+
+Grounded in [step-model-gap.md](../research/step-model-gap.md) (§ C-order,
+§ Ava and the four-month wait).
 
 ### Observations
 
-**Pending — prototype built 2026-06-16, not yet walked.** The artifact exists;
-the analytical walkthrough (read every treatment × surface × scenario ×
-task-view state from rendered screenshots, as was done for A) is the next step,
-and Joe's own lived self-testing and the ND-user gate are ahead of that. Until
-the walkthrough runs, this section carries no findings.
+**Evidence:** analytical self-testing only (Claude reading rendered screenshots,
+2026-06-17) — the weakest tier, weaker than Joe's own lived use. Caps the outcome
+at revise / more prototyping; a schema/relationship ADR needs a real ND-user
+session.
 
-When the walkthrough happens, record per feature-shape question (Q1–Q10),
-calling the evidence tier explicitly (analytical self-testing is the weakest
-tier, weaker than lived self-testing, both below the ND-user gate).
+- **Wording holds everywhere.** "after ⟨step⟩" reads as ordering; a satisfied
+  internal dep flips green and reads as quiet history. "waiting on … expected
+  ⟨date⟩" names the world's actor and timing. Nothing produced "blocked by" or a
+  "you're late" register, on any surface, in any treatment. **Wording is
+  settled; treatment is not.**
+- **No treatment wins.** Inline is calmest and defect-free. Chip overflows the
+  360px card and clips the external date (Journey + Edit). Connector is the only
+  one that _draws_ the relation (a tie-line to the prerequisite) but that
+  tie-line is exactly the "constraint graph" feel the guardrail warns about, and
+  its ⤧ glyph reads as opaque next to inline/chip's clear ⏳.
+- **Both task-view variants render honestly** and both keep exactly one featured
+  thing per goal — including Ava's all-waiting case (route-around shows the
+  honest "everything here is waiting on other people — that's the system, not
+  you" panel; name-and-stay features the chronological next and names its wait).
+  Neither reads as a verdict. The fork is **not** decidable by reading — whether
+  name-and-stay's repeatedly-featured powerless step re-creates a self-blame
+  loop, or route-around feels like the app hiding the real next, is a lived/ND
+  question.
+- **One structure, two registers** (Q4): internal and external share the marker
+  shape and differ by verb ("after" / "waiting on") and palette (purple/green
+  vs amber + mono date). They cohere when stacked on one step — not two
+  languages, not one flattened one.
+- **Expected date (Q10) observed, not resolved:** it names the world's timing,
+  distinct from B's user-intended deadline; the two would co-exist where a
+  waiting step also carries a B date. Recorded for B + C integration.
 
 ### Guardrail Check
 
-To be answered against the walkthrough session. The lines this prototype most
-exercises (copy the full checklist from
-[phase-b-stage-0-deliverables.md](../phase-b-stage-0-deliverables.md) when
-filling it in):
-
-- **Dependencies inform, never enforce** — the load-bearing line for C: confirm
-  nothing was blocked, hidden, dimmed, disabled, or refused in any treatment or
-  task-view variant, and that route-around's de-emphasis stays on the right
-  side of "hidden" (Q9).
-- **Waiting is not failure** — confirm the external markers and the Ava
-  "everything is waiting" panel name the world's timing, never user fault.
-- **No auto-judgment** — confirm no passed expected date changed any state.
-- **Task-view promise holds** — confirm both variants still resolve to exactly
-  one featured next step per active goal.
-- **No app-icon badge counts / no composed verdicts** — confirm the
-  route-around waiting note names a specific step (never a count) and that
-  waiting pills never read as a score or ledger.
+All pass. Notable: Ava's "expected Jun 12" sits in the _past_ relative to the
+walkthrough (2026-06-17) and still reads "waiting · expected Jun 12" — not
+"overdue," not auto-met (no-auto-judgment, [ADR-0012](../decisions/ADR-0012-no-auto-judgment.md)).
+Nothing was blocked/hidden/dimmed in any treatment; the complete action stayed
+live on every waiting step. Route-around names a specific step ("Also waiting:
+Book city inspector"), never a count. N/A: G opt-in, calendar repetition, H —
+not exercised.
 
 ### Decision
 
-Pending the walkthrough. Self-testing caps the reachable outcome at revise /
-split / more prototyping; graduation to a schema/relationship ADR or a design
-decision requires the ND-user gate.
+**Revise / more prototyping.** Per Joe (2026-06-17), **eliminate nothing**: both
+task-view variants and all three treatments carry to the next rung; the ND gate
+decides.
+
+- Both task-view variants stay live — the read can't distinguish them.
+- All three treatments stay open, but fix two defects before the next rung so
+  the comparison stays clean: (a) chip external-marker overflow on the 360px
+  card; (b) connector's opaque ⤧ glyph and graph-feel tie-line.
+- Q10 (expected date C vs B) stays open for B + C integration.
 
 ### New Questions
 
-To be captured from the walkthrough.
+- **The fork (ND gate):** self-blame loop (name-and-stay) vs hiding-the-real-next
+  (route-around)? Only lived use separates them.
+- **Chip overflow:** salvageable on a 360px card (wrap / truncate / date on a
+  second line), or fatal for external markers?
+- **Connector graph-feel:** can the relation be drawn without reading as a
+  constraint graph, or is that tension inherent?
+- **Passed-date wording:** a passed expected date shows plain "expected Jun 12"
+  with no staleness cue. Is a neutral past-tense ("was expected Jun 12")
+  warranted, or does any past-tense lean toward "you're late"?
 
 ### Recommended Follow-Up
 
-- Run the analytical walkthrough and fill Observations + Guardrail Check +
-  Decision above.
-- Update the **Dependency display** and **C + task view** rows of the
+- Carry both variants + all three treatments (defects fixed) to a throwaway
+  dev-flag screen for: tap-count to set/clear a dependency, Ava's cold-return
+  read, and the fork's lived feel.
+- Update the **Dependency display** row of the
   [Open Questions Register](../phase-b-step-model-prototypes.md#open-questions-register)
-  with evidence once the walkthrough produces it.
-- Carry whatever survives to a throwaway dev-flag screen for tap-count friction
-  (set/clear a dependency) and the Ava cold-return test.
+  (done — wording settled, treatment open). The task-view fork is tracked in this
+  record and the Integration Matrix (C + task view); whether it earns its own
+  register row is still open.
 - Graduation to a schema/relationship ADR or design decision is gated on a real
   ND-user session per the plan's Evidence Sources.
