@@ -140,9 +140,9 @@
 
   /* ---- THE CARD STAGE — fixed envelope (concern 1) ---- */
   .stage { flex: 1; min-height: 0; min-width: 0; position: relative; padding: 14px 14px 6px; display: flex; }
-  .stage .navarrow { position: absolute; top: 50%; transform: translateY(-50%); width: 30px; height: 44px; border: 2px solid var(--border); background: var(--bg2); box-shadow: var(--shadow-sm); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; z-index: 8; cursor: pointer; }
+  .stage .navarrow { position: absolute; top: 50%; transform: translateY(-50%); width: 30px; height: 44px; border: 2px solid var(--border); background: var(--bg2); box-shadow: var(--shadow-sm); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: inherit; color: inherit; font-size: 18px; font-weight: 900; padding: 0; z-index: 8; cursor: pointer; }
   .stage .navarrow.l { left: 2px; } .stage .navarrow.r { right: 2px; }
-  .stage .navarrow.off { opacity: 0.25; }
+  .stage .navarrow.off, .stage .navarrow:disabled { opacity: 0.25; cursor: default; }
 
   /* the card fills the stage — same height for every card → no jitter */
   .scard { flex: 1; display: flex; flex-direction: column; min-height: 0; min-width: 0; background: var(--card); border: 2.5px solid var(--border); border-radius: 6px; box-shadow: var(--shadow-lg); overflow: hidden; }
@@ -383,17 +383,16 @@ function header(d) {
     <span class="ico">👁</span><span class="ico">✎</span></div>`;
 }
 function miniTimeline(d, curIdx, seq) {
-  // curIdx is index into seq; map to node rendering
+  // curIdx is index into seq; precompute id→index so node lookups stay O(1) (not seq.findIndex per node)
+  const idxById = new Map(seq.map((x, i) => [x.id, i]));
   let track = '';
   d.steps.forEach((s, i) => {
     if (i>0) track += `<span class="seg-line${d.steps[i-1].status==='completed'?'':' pend'}"></span>`;
-    const flatIndex = seq.findIndex(x => x.id === s.id);
-    const cur = flatIndex === curIdx;
+    const cur = idxById.get(s.id) === curIdx;
     if (!s.children) { track += `<span class="node${s.status==='completed'?' done':''}${cur?' cur':''}"></span>`; return; }
     track += `<span class="grp-indent"><span class="node${s.status==='completed'?' done':''}${cur?' cur':''}"></span>`;
     s.children.forEach(c => {
-      const ci = seq.findIndex(x => x.id === c.id);
-      track += `<span class="seg-line short${c.status==='completed'?'':' pend'}"></span><span class="node child${c.status==='completed'?' done':''}${ci===curIdx?' cur':''}"></span>`;
+      track += `<span class="seg-line short${c.status==='completed'?'':' pend'}"></span><span class="node child${c.status==='completed'?' done':''}${idxById.get(c.id)===curIdx?' cur':''}"></span>`;
     });
     track += `</span>`;
   });
@@ -409,14 +408,17 @@ function dots(seq, curIdx) {
 
 /* unified top band: parent context (child) or step number, + the state badge.
    Replaces the old separate purple strip + "Step N of M" meta row. */
-function topBand(x, seq, curIdx, status, stateOn) {
+function topBand(x, d, status, stateOn) {
   const pill = statePill(status, stateOn);
   if (x.kind === 'child') {
     const k = x.parent.children.findIndex(c => c.id === x.id) + 1;
     return `<div class="topband child"><span class="tb-ctx">↳ ${esc(x.parent.title)} · part ${k} of ${x.parent.children.length}</span>${pill}</div>`;
   }
+  // flat/parent cards number against the TOP-LEVEL steps, not the flattened seq (which counts
+  // substeps) — else a step after a substep group reads e.g. "Step 6 of 6" for step 3 of 3.
+  const ti = d.steps.findIndex(s => s.id === x.id) + 1;
   const extra = x.kind === 'parent' ? ` · ${x.children.length} parts` : '';
-  return `<div class="topband"><span class="tb-ctx">Step ${curIdx + 1} of ${seq.length}${extra}</span>${pill}</div>`;
+  return `<div class="topband"><span class="tb-ctx">Step ${ti} of ${d.steps.length}${extra}</span>${pill}</div>`;
 }
 
 /* evidence rail (concern 2) — explicit add + captured chips */
@@ -452,7 +454,7 @@ function cardA(x, d, seq, curIdx, stateOn) {
   }
   const label = x.kind==='parent' ? `Mark "${esc(x.title)}" complete` : 'Mark complete';
   return `<div class="scard">
-    ${topBand(x, seq, curIdx, status, stateOn)}
+    ${topBand(x, d, status, stateOn)}
     <div class="body">
       <div class="stitle">${esc(x.title)}</div>
       ${ctx}
@@ -491,7 +493,7 @@ function cardB(x, d, seq, curIdx, stateOn) {
   }
   // flat step — plain card with the unified band
   return `<div class="scard">
-    ${topBand(x, seq, curIdx, status, stateOn)}
+    ${topBand(x, d, status, stateOn)}
     <div class="body">
       <div class="stitle">${esc(x.title)}</div>
       ${evidenceRail(x)}
@@ -524,8 +526,9 @@ function cardC(x, d, seq, curIdx, stateOn) {
     const totalEv = x.children.reduce((s,c)=>s+(c.ev||0),0);
     const allDone = x.children.every(c=>c.status==='completed');
     const curId = allDone ? null : nextLeaf(x);
+    const ti = d.steps.findIndex(s => s.id === x.id) + 1; // top-level step number, not flattened seq
     return cardStack(x.children.length, `<div class="scard">
-      <div class="topband"><span class="tb-ctx">Step ${curIdx+1} of ${seq.length} · overview</span>${statePill(status, stateOn)}</div>
+      <div class="topband"><span class="tb-ctx">Step ${ti} of ${d.steps.length} · overview</span>${statePill(status, stateOn)}</div>
       <div class="body">
         <div class="stitle">${esc(x.title)}</div>
         ${spineList(x.children, curId)}
@@ -543,7 +546,7 @@ function cardC(x, d, seq, curIdx, stateOn) {
     count = N - j - 1;   // part 1 → N-1, last part → 0
   }
   return cardStack(count, `<div class="scard">
-    ${topBand(x, seq, curIdx, status, stateOn)}
+    ${topBand(x, d, status, stateOn)}
     <div class="body">
       <div class="stitle">${esc(x.title)}</div>
       ${evidenceRail(x)}
@@ -720,15 +723,15 @@ function render() {
   const x = isGoal ? null : seq[state.idx];
   const cardHtml = isGoal ? goalCard(d, state.stateW) : RENDER[state.cand](x, d, seq, state.idx, state.stateW);
 
-  const leftOff = state.idx <= 0 ? ' off' : '';
-  const rightOff = state.idx >= seq.length ? ' off' : '';
+  const atStart = state.idx <= 0;
+  const atEnd = state.idx >= seq.length;
   document.getElementById('screen').innerHTML = `
     ${header(d)}
     ${miniTimeline(d, state.idx, seq)}
     <div class="stage">
-      <div class="navarrow l${leftOff}" id="nav-l">‹</div>
+      <button type="button" class="navarrow l${atStart?' off':''}" id="nav-l" aria-label="Previous card"${atStart?' disabled':''}>‹</button>
       ${cardHtml}
-      <div class="navarrow r${rightOff}" id="nav-r">›</div>
+      <button type="button" class="navarrow r${atEnd?' off':''}" id="nav-r" aria-label="Next card"${atEnd?' disabled':''}>›</button>
     </div>
     ${dots(seq, state.idx)}
     <div class="drawer"><span>Evidence drawer</span><span>▲</span></div>`;
