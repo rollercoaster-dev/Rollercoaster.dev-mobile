@@ -25,6 +25,7 @@ export {
   stepsByGoalQuery,
   groupStepsByParent,
   flattenGroupedSteps,
+  resolveNextActionableStep,
   isPendingStep,
   findFirstPendingIndex,
   createStep,
@@ -62,4 +63,8 @@ export {
   clearUserSettingsKey,
   markWelcomeSeen,
 } from "./queries";
-export type { GroupedStep } from "./queries";
+export type {
+  GroupedStep,
+  NextActionableStep,
+  NextActionableStepInput,
+} from "./queries";
