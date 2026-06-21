@@ -16,7 +16,8 @@
     "evidenceRollupA11y": "Nachweise über alle Teile: {{count}}",
     "partsPendingPrompt": "Erst alle Teile abschließen",
     "markComplete": "\"{{parent}}\" abschließen",
-    "partA11y": "{{title}}, {{status}}"
+    "partA11y": "{{title}}, {{status}}",
+    "partOpenHint": "Öffnet diesen Teil"
   },
   "header": {
     "showTimeline": "Zeitleiste anzeigen",

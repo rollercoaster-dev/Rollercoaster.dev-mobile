@@ -16,7 +16,8 @@
     "evidenceRollupA11y": "[Êṽïđêñçê àçŕøšš þàŕţš: {{count}}··········]",
     "partsPendingPrompt": "[Çøɱþĺêţê ţĥê þàŕţš ţø ƒïñïšĥ··········]",
     "markComplete": "[Ɱàŕķ \"{{parent}}\" çøɱþĺêţê··········]",
-    "partA11y": "[{{title}}, {{status}}····]"
+    "partA11y": "[{{title}}, {{status}}····]",
+    "partOpenHint": "[Øþêñš ţĥïš þàŕţ········]"
   },
   "header": {
     "showTimeline": "[Šĥøŵ ţïɱêĺïñê·····]",

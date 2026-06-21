@@ -16,7 +16,8 @@
     "evidenceRollupA11y": "Evidence across parts: {{count}}",
     "partsPendingPrompt": "Complete the parts to finish",
     "markComplete": "Mark \"{{parent}}\" complete",
-    "partA11y": "{{title}}, {{status}}"
+    "partA11y": "{{title}}, {{status}}",
+    "partOpenHint": "Opens this part"
   },
   "header": {
     "showTimeline": "Show timeline",

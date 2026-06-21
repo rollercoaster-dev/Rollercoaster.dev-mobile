@@ -61,6 +61,11 @@ export interface StepCardProps {
   kind?: StepCardKind;
   /** Child parts for an overview card. Ignored for leaf cards. */
   parts?: readonly StepCardPart[];
+  /**
+   * Overview only: open a part's own card from its spine row (#360). Ignored by
+   * leaf cards.
+   */
+  onOpenPart?: (partId: string) => void;
 }
 
 function getMissingEvidenceOption(
@@ -297,6 +302,7 @@ function StepCardComponent(props: StepCardProps) {
         totalSteps={props.totalSteps}
         parts={props.parts ?? []}
         onToggleComplete={props.onToggleComplete}
+        onOpenPart={props.onOpenPart}
       />
     );
   }
@@ -361,7 +367,8 @@ function areStepCardPropsEqual(
     previous.totalSteps === next.totalSteps &&
     previous.onToggleComplete === next.onToggleComplete &&
     previous.onEvidenceTap === next.onEvidenceTap &&
-    previous.onQuickEvidence === next.onQuickEvidence
+    previous.onQuickEvidence === next.onQuickEvidence &&
+    previous.onOpenPart === next.onOpenPart
   );
 }
 

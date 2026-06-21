@@ -389,6 +389,16 @@ function FocusContent({ goalId }: { goalId: string }) {
     setIsFABMenuOpen(false);
   }, []);
 
+  // Overview spine rows link to their part's own card (#360): resolve the part's
+  // position in the flat stepRows and snap the carousel to it.
+  const handleOpenPart = useCallback(
+    (partId: string) => {
+      const index = stepRows.findIndex((s) => s.id === partId);
+      if (index !== -1) handleIndexChange(index);
+    },
+    [stepRows, handleIndexChange],
+  );
+
   const handleMarkComplete = useCallback(() => {
     navigation.navigate("CompletionFlow", { goalId });
   }, [goalId, navigation]);
@@ -700,6 +710,7 @@ function FocusContent({ goalId }: { goalId: string }) {
                   key={step.id}
                   kind={isOverview ? "overview" : "leaf"}
                   parts={parts}
+                  onOpenPart={isOverview ? handleOpenPart : undefined}
                   step={{
                     id: step.id,
                     title: step.title,

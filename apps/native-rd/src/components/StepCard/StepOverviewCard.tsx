@@ -1,5 +1,5 @@
 import React, { memo } from "react";
-import { View, Text, ScrollView } from "react-native";
+import { View, Text, ScrollView, Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
 import { Checkbox } from "../Checkbox";
 import { StepCardTopBand } from "./StepCardTopBand";
@@ -14,6 +14,12 @@ export interface StepOverviewCardProps {
   totalSteps: number;
   parts: readonly StepCardPart[];
   onToggleComplete: (stepId: string) => void;
+  /**
+   * Jump the carousel to a part's own card (#360). When supplied, each spine
+   * row becomes a button that opens that part; without it the rows stay
+   * read-only (parts remain reachable by swiping).
+   */
+  onOpenPart?: (partId: string) => void;
 }
 
 function StepOverviewCardComponent({
@@ -24,6 +30,7 @@ function StepOverviewCardComponent({
   totalSteps,
   parts,
   onToggleComplete,
+  onOpenPart,
 }: StepOverviewCardProps) {
   const { t } = useTranslation(["common", "focusMode"]);
 
@@ -79,15 +86,19 @@ function StepOverviewCardComponent({
             const isLast = index === parts.length - 1;
             const statusWord = t(`common:stepCard.status.${part.status}`);
             return (
-              <View
+              <Pressable
                 key={part.id}
                 style={styles.spineRow}
+                onPress={onOpenPart ? () => onOpenPart(part.id) : undefined}
                 accessible
-                accessibilityRole="text"
+                accessibilityRole={onOpenPart ? "button" : "text"}
                 accessibilityLabel={t("focusMode:overview.partA11y", {
                   title: part.title,
                   status: statusWord,
                 })}
+                accessibilityHint={
+                  onOpenPart ? t("focusMode:overview.partOpenHint") : undefined
+                }
                 testID={`overview-part-${part.id}`}
               >
                 <View style={styles.spineRail}>
@@ -126,7 +137,7 @@ function StepOverviewCardComponent({
                     </View>
                   )}
                 </View>
-              </View>
+              </Pressable>
             );
           })}
         </View>
@@ -152,8 +163,9 @@ function StepOverviewCardComponent({
       </ScrollView>
 
       {/* Pinned foot — same shape as a leaf card: the Q9 complete invite once all
-          parts are done, otherwise a quiet prompt (no bespoke navigation here;
-          parts are reached by swiping, like every other card). */}
+          parts are done, otherwise a quiet prompt. No foot navigation control
+          (D10); parts are reached by tapping their spine row above or by
+          swiping, like every other card. */}
       <View style={styles.cardFoot}>
         {canMarkComplete ? (
           <View style={styles.checkboxRow}>

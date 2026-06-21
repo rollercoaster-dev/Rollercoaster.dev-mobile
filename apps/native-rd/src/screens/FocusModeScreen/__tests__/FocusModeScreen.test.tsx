@@ -1470,6 +1470,16 @@ describe("FocusModeScreen", () => {
       expect(nodeWidth(2)).toBe(10); // sub-step (child) node
     });
 
+    it("opens a part's own card when its overview spine row is tapped (#360)", () => {
+      // Invite state snaps to the parent overview card (index 1). Drill A/B
+      // appear there only as spine rows, not headers, until their leaf is opened.
+      setupQueries({ steps: INVITE_STEPS, stepEvidence: [] });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+      fireEvent.press(screen.getByTestId("overview-part-step-2b"));
+      // step-2b's leaf is now the current card → its header is on screen.
+      expect(screen.getByRole("header", { name: "Drill B" })).toBeOnTheScreen();
+    });
+
     // Real query order: `stepsByGoalQuery` is `(ordinal, createdAt)`-ordered and
     // child ordinals are sibling-scoped, so a child of a later parent interleaves
     // among the top-level steps — here `step-2a` (ord 0) sorts before its parent

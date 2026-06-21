@@ -84,9 +84,9 @@ Candidate-specific observable criteria (fill in when candidate is chosen):
       ringed), an evidence rollup count, and a "mark parent complete" invite
       only when all parts are done.
 - [x] The overview card is announced as an overview (context), not as a leaf
-      action; each part's individual card is reachable by continuing to swipe.
-      (Announced via a readable "· Overview" meta label, not a card-level role —
-      see Phase 3C a11y note.)
+      action; each part's individual card is reachable by tapping its spine row
+      (#360 post-3C) or by continuing to swipe. (Announced via a readable
+      "· Overview" meta label, not a card-level role — see Phase 3C a11y note.)
 - [x] The overview card's evidence rollup count matches the sum of captured
       evidence across all child parts.
 
@@ -486,11 +486,12 @@ needed"`. The "Add evidence" button is `accessibilityRole="button"`.
 Review-skipped / deferred items, tracked here per AGENTS.md ("Handling
 Review-Skipped Findings") until filed or closed.
 
-| Item                                                                                                                | Why deferred                                                                                                                                                                                                                                       | Status                                                                                 |
-| ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| **Overview peek-stack fan** (sibling silhouettes fanning above the overview card top edge, prototype `cardStack()`) | Cosmetic; the absolute fan must paint _above_ the card into the carousel track, which `overflow: hidden` clips and which fights the Phase 1 stable-envelope inset. Parts count is already shown by the MiniTimeline sub-spine + the in-card spine. | Flagged for Joe — file as a polish issue only if the affordance is missed in real use. |
-| **Leaf-card redundancy** (quick-action capture buttons + count badge coexist with the Phase 2 rail)                 | Phase 2 said "add a rail," not "consolidate"; the approved prototype shows the rail alone.                                                                                                                                                         | Carried from Phase 2 — flagged for Joe.                                                |
-| **D5 blocked-foot wording** ("Add evidence to complete")                                                            | Pre-existing, D5-approved instruction (not a "missing X" score), but the D8 directive may extend to it.                                                                                                                                            | Carried from Phase 2 — confirm with Joe.                                               |
+| Item                                                                                                                | Why deferred                                                                                                                                                                                                                                       | Status                                                                                        |
+| ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| **Overview peek-stack fan** (sibling silhouettes fanning above the overview card top edge, prototype `cardStack()`) | Cosmetic; the absolute fan must paint _above_ the card into the carousel track, which `overflow: hidden` clips and which fights the Phase 1 stable-envelope inset. Parts count is already shown by the MiniTimeline sub-spine + the in-card spine. | Flagged for Joe — file as a polish issue only if the affordance is missed in real use.        |
+| **Leaf-card redundancy** (quick-action capture buttons + count badge coexist with the Phase 2 rail)                 | Phase 2 said "add a rail," not "consolidate"; the approved prototype shows the rail alone.                                                                                                                                                         | Carried from Phase 2 — flagged for Joe.                                                       |
+| **D5 blocked-foot wording** ("Add evidence to complete")                                                            | Pre-existing, D5-approved instruction (not a "missing X" score), but the D8 directive may extend to it.                                                                                                                                            | Carried from Phase 2 — confirm with Joe.                                                      |
+| **Checkbox label tap zone** (after dropping `Checkbox.container` `minHeight: 48` for the foot-height fix)           | The box keeps its 44px target via `hitSlop`; the label `Pressable` now hugs its text height. Not an a11y regression (the box is the labelled control), but the label tap may feel tight on device.                                                 | Add `hitSlop` to the label `Pressable` in `Checkbox.tsx` only if it feels tight in the build. |
 
 ---
 
@@ -604,6 +605,29 @@ Review-Skipped Findings") until filed or closed.
   Checkbox invite when all parts are done, else the quiet `partsPendingPrompt`.
 - [2026-06-21] Re-verified: full suite green (179 suites / 8983 tests),
   type-check + lint clean.
+
+**Post-3C polish — foot height + spine-row navigation (2026-06-21):**
+
+- [2026-06-21] **Checkbox foot too tall in the checkbox state.** The plain-text
+  foot states (blocked-leaf prompt, overview `partsPendingPrompt`) sit at the
+  `cardFoot` `minHeight: 44`, but the checkbox state grew to ~72px because the
+  shared `Checkbox` `container` carried its own `minHeight: 48`, stacking on top
+  of the foot's `paddingVertical`. Removed that `minHeight: 48` (in
+  `Checkbox.styles.ts`) — the foot already enforces 44px + vertical centering,
+  and the 24px box keeps its 44px touch target via `hitSlop={10}`, so the 48 was
+  redundant height only. `Checkbox` has exactly two consumers (`StepCard` and
+  `StepOverviewCard` foots), both inside `cardFoot`, so no standalone-control
+  regression. Checkbox foot now matches the plain-text foot (~48 vs ~44px).
+- [2026-06-21] **Overview spine rows now link to their part's card.** Each spine
+  row became a `Pressable` (`accessibilityRole="button"` + `overview.partOpenHint`
+  "Opens this part") that calls a new `onOpenPart(partId)`; `FocusModeScreen`
+  resolves the part's index in the flat `stepRows` and snaps the carousel via the
+  existing `handleIndexChange` (same path MiniTimeline / ProgressDots taps use).
+  This does **not** reintroduce the D10 foot button — the foot is unchanged; only
+  the body list is tappable. Rows stay read-only (`role="text"`) when no handler
+  is supplied (tests/stories). New keys: `focusMode:overview.partOpenHint`
+  (en/de/pseudo). Tests: spine-row press → `onOpenPart`, role flips with the
+  handler (StepCard); spine-row tap opens the leaf card (FocusModeScreen).
 
 **Research findings (2026-06-21):**
 

@@ -712,6 +712,49 @@ describe("StepCard", () => {
       expect(onToggleComplete).toHaveBeenCalledWith("parent-1");
     });
 
+    it("opens a part's card when its spine row is tapped", () => {
+      const onOpenPart = jest.fn();
+      renderWithProviders(
+        <StepCard
+          step={makeStep({ title: "Wire the circuits" })}
+          parts={PARTS}
+          {...overviewProps}
+          onOpenPart={onOpenPart}
+        />,
+      );
+      fireEvent.press(screen.getByTestId("overview-part-p2"));
+      expect(onOpenPart).toHaveBeenCalledWith("p2");
+    });
+
+    it("marks spine rows as buttons when navigable", () => {
+      renderWithProviders(
+        <StepCard
+          step={makeStep({ title: "Wire the circuits" })}
+          parts={PARTS}
+          {...overviewProps}
+          onOpenPart={jest.fn()}
+        />,
+      );
+      // The row keeps its title+status label; the button role + open hint signal
+      // it is now actionable (a part's own card).
+      expect(
+        screen.getByLabelText("Drill A, Completed").props.accessibilityRole,
+      ).toBe("button");
+    });
+
+    it("leaves spine rows read-only when no navigation handler is supplied", () => {
+      renderWithProviders(
+        <StepCard
+          step={makeStep({ title: "Wire the circuits" })}
+          parts={PARTS}
+          {...overviewProps}
+        />,
+      );
+      expect(
+        screen.getByLabelText("Drill A, Completed").props.accessibilityRole,
+      ).toBe("text");
+    });
+
     it("shows a checked, completed invite when the parent itself is complete", () => {
       renderWithProviders(
         <StepCard
