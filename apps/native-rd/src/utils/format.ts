@@ -35,6 +35,25 @@ export function formatDate(
 }
 
 /**
+ * Convert a zero-based index to a lowercase letter ordinal: 0→"a", 25→"z",
+ * 26→"aa", 27→"ab", … (bijective base-26, like spreadsheet column names).
+ *
+ * Used for sub-step labels on the timeline sub-spine (#293). Sub-step count
+ * isn't constrained at the data layer, so a naive `String.fromCharCode(97+i)`
+ * would emit non-letter glyphs past index 25 (e.g. 26→`{`); this wraps to
+ * multi-letter ordinals instead. Negative or non-integer indices clamp to 0.
+ */
+export function toLetterOrdinal(index: number): string {
+  let n = Math.max(0, Math.floor(index));
+  let result = "";
+  do {
+    result = String.fromCharCode(97 + (n % 26)) + result;
+    n = Math.floor(n / 26) - 1;
+  } while (n >= 0);
+  return result;
+}
+
+/**
  * Format milliseconds as MM:SS string.
  */
 export function formatDuration(ms: number): string {

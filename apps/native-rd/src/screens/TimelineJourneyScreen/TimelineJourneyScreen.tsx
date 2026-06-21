@@ -9,16 +9,17 @@ import { Button } from "../../components/Button";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { ProgressBar } from "../../components/ProgressBar";
 import { TimelineStep } from "../../components/TimelineStep";
+import type { TimelineStepChild } from "../../components/TimelineStep";
 import { FinishLine } from "../../components/FinishLine";
 import {
   goalsQuery,
   stepsByGoalQuery,
   evidenceByGoalQuery,
   stepEvidenceByGoalQuery,
-  findFirstPendingIndex,
+  groupStepsByParent,
   StepStatus,
 } from "../../db";
-import type { GoalId } from "../../db";
+import type { GoalId, GroupedStep } from "../../db";
 import type {
   GoalsStackParamList,
   RootTabParamList,
@@ -31,6 +32,27 @@ import { Logger } from "../../shims/rd-logger";
 import { styles } from "./TimelineJourneyScreen.styles";
 
 const logger = new Logger("TimelineJourneyScreen");
+
+/**
+ * Id of the leaf to highlight as the journey's single in-progress accent (#293).
+ * Mirrors FocusMode's findFirstPendingLeafIndex (#292) over the grouped tree so
+ * the accent lands on the same step FocusMode snaps to: walk roots in order; a
+ * root's first pending child wins (a pending leaf stays reachable even under a
+ * manually-completed parent — completion is per-step, not cascaded); otherwise a
+ * pending childless root is itself current, as is the invite state (all children
+ * done but the parent still open). Returns null when nothing is pending.
+ */
+function findCurrentLeafId(grouped: readonly GroupedStep[]): string | null {
+  for (const root of grouped) {
+    const pendingChild = root.children.find(
+      (c) => c.status !== StepStatus.completed,
+    );
+    if (pendingChild) return pendingChild.id;
+    if (root.status === StepStatus.completed) continue;
+    return root.id;
+  }
+  return null;
+}
 
 function TimelineContent({
   goalId,
@@ -46,39 +68,48 @@ function TimelineContent({
   const stepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
   const goalEvidenceRows = useQuery(evidenceByGoalQuery(goalId as GoalId));
 
-  // Build UI steps with status
-  const firstPendingIndex = findFirstPendingIndex(stepRows);
-  const uiSteps: {
-    id: string;
-    title: string;
-    status: UIStepStatus;
-    evidenceCount: number;
-  }[] = stepRows.map((row, index) => ({
-    id: row.id,
-    title: row.title ?? "",
-    status:
-      row.status === StepStatus.completed
-        ? "completed"
-        : index === firstPendingIndex
-          ? "in-progress"
-          : "pending",
-    evidenceCount: 0,
-  }));
-
   const evidenceFallbackLabel = t("timelineJourney:evidenceFallbackLabel");
 
-  // Query evidence per step
-  const stepEvidenceData = useStepEvidence(
+  // Group the flat rows into a one-level parent → children tree and resolve the
+  // current leaf — the journey's single in-progress accent (#293).
+  const groupedSteps = useMemo(() => groupStepsByParent(stepRows), [stepRows]);
+  const currentLeafId = useMemo(
+    () => findCurrentLeafId(groupedSteps),
+    [groupedSteps],
+  );
+
+  // Evidence keyed by step id — looked up for roots and children alike.
+  const evidenceByStepId = useStepEvidence(
     goalId as GoalId,
-    stepRows,
     evidenceFallbackLabel,
   );
 
-  // Enrich counts
-  const stepsWithEvidence = uiSteps.map((step, i) => ({
-    ...step,
-    evidenceCount: stepEvidenceData[i]?.length ?? 0,
-  }));
+  // A node (root or child) is in-progress iff it is the current leaf; otherwise
+  // completed/pending from its own DB status. currentLeafId never points at a
+  // completed step, so the in-progress check is safe to take first.
+  const statusFor = (id: string, dbStatus: string | null): UIStepStatus =>
+    id === currentLeafId
+      ? "in-progress"
+      : dbStatus === StepStatus.completed
+        ? "completed"
+        : "pending";
+
+  const stepsWithChildren = groupedSteps.map((root) => {
+    const evidence = evidenceByStepId.get(root.id) ?? [];
+    return {
+      id: root.id,
+      title: root.title ?? "",
+      status: statusFor(root.id, root.status),
+      evidenceCount: evidence.length,
+      evidence,
+      children: root.children.map<TimelineStepChild>((child) => ({
+        id: child.id,
+        title: child.title ?? "",
+        status: statusFor(child.id, child.status),
+        evidence: evidenceByStepId.get(child.id) ?? [],
+      })),
+    };
+  });
 
   // Goal evidence for FinishLine
   const goalEvidence: EvidenceItemData[] = goalEvidenceRows.map((row) => ({
@@ -88,6 +119,8 @@ function TimelineContent({
       row.description ?? row.type ?? t("timelineJourney:evidenceFallbackLabel"),
   }));
 
+  // Every-unit progress: stepRows already counts parents + children, matching
+  // #292's goal-card rule (the journey counts each step, parent or sub-step).
   const completedCount = stepRows.filter(
     (s) => s.status === StepStatus.completed,
   ).length;
@@ -181,12 +214,13 @@ function TimelineContent({
       {/* Timeline */}
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.timelineContainer}>
-          {stepsWithEvidence.map((step, index) => (
+          {stepsWithChildren.map((step, index) => (
             <TimelineStep
               key={step.id}
               step={step}
               stepIndex={index}
-              evidence={stepEvidenceData[index] ?? []}
+              evidence={step.evidence}
+              subSteps={step.children}
               onNodePress={handleNodePress}
               onEvidencePress={handleEvidencePress}
             />
@@ -202,15 +236,15 @@ function TimelineContent({
 }
 
 /**
- * Hook to get evidence grouped per step using a single joined query.
- * Avoids hooks-in-loop by fetching all step evidence for the goal at once,
- * then grouping into EvidenceItemData[][] with useMemo.
+ * Hook to get evidence grouped per step id using a single joined query.
+ * Avoids hooks-in-loop by fetching all step evidence for the goal at once, then
+ * grouping into a `Map<stepId, EvidenceItemData[]>` so both roots and children
+ * can look up their evidence by id (#293).
  */
 function useStepEvidence(
   goalId: GoalId,
-  stepRows: readonly { id: string }[],
   fallbackLabel: string,
-): EvidenceItemData[][] {
+): Map<string, EvidenceItemData[]> {
   const allStepEvidence = useQuery(stepEvidenceByGoalQuery(goalId));
   return useMemo(() => {
     const grouped = new Map<string, EvidenceItemData[]>();
@@ -224,8 +258,8 @@ function useStepEvidence(
       });
       grouped.set(ev.stepId, list);
     }
-    return stepRows.map((s) => grouped.get(s.id) ?? []);
-  }, [allStepEvidence, stepRows, fallbackLabel]);
+    return grouped;
+  }, [allStepEvidence, fallbackLabel]);
 }
 
 export function TimelineJourneyScreen({ route }: TimelineJourneyScreenProps) {

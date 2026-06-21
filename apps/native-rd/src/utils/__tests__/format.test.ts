@@ -1,4 +1,4 @@
-import { formatDate, formatDuration } from "../format";
+import { formatDate, formatDuration, toLetterOrdinal } from "../format";
 
 describe("formatDate", () => {
   // Fixed local-time noon (no trailing `Z`) so the assertions depend on neither
@@ -33,6 +33,30 @@ describe("formatDate", () => {
     // "en_US" (underscore) is invalid and makes Intl throw RangeError; the
     // result should match the en-US output rather than propagate the throw.
     expect(formatDate(ISO, "en_US")).toBe(formatDate(ISO, "en-US"));
+  });
+});
+
+describe("toLetterOrdinal", () => {
+  it.each([
+    [0, "a"],
+    [1, "b"],
+    [25, "z"],
+    // The boundary the naive `String.fromCharCode(97 + i)` got wrong: index 26
+    // emitted `{`. Bijective base-26 wraps to multi-letter ordinals instead.
+    [26, "aa"],
+    [27, "ab"],
+    [51, "az"],
+    [52, "ba"],
+    [701, "zz"],
+    [702, "aaa"],
+  ])("maps index %i to %s", (index, expected) => {
+    expect(toLetterOrdinal(index)).toBe(expected);
+  });
+
+  it("clamps negative and fractional indices to the first ordinal", () => {
+    expect(toLetterOrdinal(-1)).toBe("a");
+    expect(toLetterOrdinal(0.9)).toBe("a");
+    expect(toLetterOrdinal(26.4)).toBe("aa");
   });
 });
 
