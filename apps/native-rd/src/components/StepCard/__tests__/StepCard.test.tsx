@@ -483,7 +483,7 @@ describe("StepCard", () => {
   // pinned foot). The completion prompt/checkbox moved out of the scroll body
   // into the foot, so it now follows the evidence badge in document order. ---
 
-  it("renders rows in document order: meta → title → quick actions → badge → foot prompt", () => {
+  it("renders rows in document order: band → title → quick actions → badge → foot prompt", () => {
     renderWithProviders(
       <StepCard
         step={makeStep({
@@ -497,10 +497,8 @@ describe("StepCard", () => {
       />,
     );
     const tree = JSON.stringify(screen.toJSON());
-    // "1 of 5" is split into separate JSX children by interpolation, so it
-    // doesn't appear as one contiguous substring. Use the status badge label
-    // (a single Text child) to mark the metaRow's position instead — since
-    // the badge sits inside metaRow, locating it locates the row.
+    // The top band (carrying the status badge) is pinned above the scrollable
+    // body, so the badge label marks the band's position at the top of the tree.
     const positions = {
       meta: tree.indexOf("In Progress"),
       title: tree.indexOf("Review component architecture"),
@@ -516,30 +514,52 @@ describe("StepCard", () => {
     expect(positions.badge).toBeLessThan(positions.prompt);
   });
 
-  // --- Parent context line (sub-steps, #292) ---
+  // --- Parent band (sub-steps, #360): the purple "↳ [parent] · part N of M"
+  // top band replaces the former quiet in-body context line. ---
 
-  describe("parent context line", () => {
-    it("renders the context line when parentTitle is set", () => {
+  describe("parent band", () => {
+    it("renders the purple parent band when parentTitle + part info are set", () => {
+      renderWithProviders(
+        <StepCard
+          step={makeStep({
+            parentTitle: "Wire the circuits",
+            partIndex: 1,
+            partTotal: 3,
+          })}
+          {...defaultProps}
+        />,
+      );
+      expect(screen.getByTestId("step-card-parent-band")).toBeOnTheScreen();
+      expect(
+        screen.getByText("↳ Wire the circuits · part 1 of 3"),
+      ).toBeOnTheScreen();
+    });
+
+    it("shows the plain band (no parent band) when parentTitle is null", () => {
+      renderWithProviders(
+        <StepCard step={makeStep({ parentTitle: null })} {...defaultProps} />,
+      );
+      expect(screen.queryByTestId("step-card-parent-band")).toBeNull();
+      expect(screen.getByTestId("step-card-top-band")).toBeOnTheScreen();
+    });
+
+    it("shows the plain band when parentTitle is absent", () => {
+      renderWithProviders(<StepCard step={makeStep()} {...defaultProps} />);
+      expect(screen.queryByTestId("step-card-parent-band")).toBeNull();
+      expect(screen.getByTestId("step-card-top-band")).toBeOnTheScreen();
+    });
+
+    it("falls back to the plain band when part info is missing", () => {
+      // FocusModeScreen always supplies part numbers for real children, but a
+      // parentTitle without them must not render a malformed band.
       renderWithProviders(
         <StepCard
           step={makeStep({ parentTitle: "Wire the circuits" })}
           {...defaultProps}
         />,
       );
-      expect(screen.getByTestId("step-card-parent-context")).toBeOnTheScreen();
-      expect(screen.getByText("↳ in Wire the circuits")).toBeOnTheScreen();
-    });
-
-    it("omits the context line when parentTitle is null", () => {
-      renderWithProviders(
-        <StepCard step={makeStep({ parentTitle: null })} {...defaultProps} />,
-      );
-      expect(screen.queryByTestId("step-card-parent-context")).toBeNull();
-    });
-
-    it("omits the context line when parentTitle is absent", () => {
-      renderWithProviders(<StepCard step={makeStep()} {...defaultProps} />);
-      expect(screen.queryByTestId("step-card-parent-context")).toBeNull();
+      expect(screen.queryByTestId("step-card-parent-band")).toBeNull();
+      expect(screen.getByTestId("step-card-top-band")).toBeOnTheScreen();
     });
   });
 
@@ -558,7 +578,6 @@ describe("StepCard", () => {
     const overviewProps = {
       ...defaultProps,
       kind: "overview" as const,
-      onOpenNextPart: jest.fn(),
     };
 
     const PARTS: StepCardPart[] = [
@@ -580,7 +599,7 @@ describe("StepCard", () => {
       expect(screen.getByTestId("overview-part-p3")).toBeOnTheScreen();
     });
 
-    it("labels the overview meta row as an overview", () => {
+    it("labels the overview band as an overview", () => {
       renderWithProviders(
         <StepCard
           step={makeStep({ title: "Wire the circuits" })}
@@ -590,7 +609,6 @@ describe("StepCard", () => {
           onToggleComplete={jest.fn()}
           onEvidenceTap={jest.fn()}
           kind="overview"
-          onOpenNextPart={jest.fn()}
         />,
       );
       expect(screen.getByText("1 of 5 · Overview")).toBeOnTheScreen();
@@ -608,8 +626,8 @@ describe("StepCard", () => {
           {...overviewProps}
         />,
       );
-      // One done part → exactly one ✓. The pending foot is "Open next part" (a
-      // button, not a checkbox), so no stray checkmark leaks in. The icon is
+      // One done part → exactly one ✓. While parts remain the foot is a text
+      // prompt (no checkbox), so no stray checkmark leaks in. The icon is
       // accessibilityElementsHidden (the row carries the full label), so include
       // hidden elements to count the rendered glyph.
       expect(
@@ -642,20 +660,23 @@ describe("StepCard", () => {
       expect(rollup.props.accessibilityLabel).toBe("Evidence across parts: 3");
     });
 
-    it("shows the Open next part action and calls onOpenNextPart when parts are pending", () => {
-      const onOpenNextPart = jest.fn();
+    it("shows a quiet prompt (no completion control) while parts are pending", () => {
       renderWithProviders(
         <StepCard
           step={makeStep({ id: "parent-1", title: "Wire the circuits" })}
           parts={PARTS}
           {...overviewProps}
-          onOpenNextPart={onOpenNextPart}
         />,
       );
-      // No complete invite while parts remain.
+      // No complete invite, and no bespoke navigation action — just the prompt,
+      // mirroring a blocked leaf card's foot.
       expect(screen.queryByRole("checkbox")).toBeNull();
-      fireEvent.press(screen.getByTestId("overview-open-next-part"));
-      expect(onOpenNextPart).toHaveBeenCalledWith("parent-1");
+      expect(
+        screen.getByTestId("overview-parts-pending-prompt"),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByText("Complete the parts to finish"),
+      ).toBeOnTheScreen();
     });
 
     it("shows the mark-parent-complete invite once every part is done", () => {
@@ -669,7 +690,7 @@ describe("StepCard", () => {
           {...overviewProps}
         />,
       );
-      expect(screen.queryByTestId("overview-open-next-part")).toBeNull();
+      expect(screen.queryByTestId("overview-parts-pending-prompt")).toBeNull();
       expect(
         screen.getByRole("checkbox", {
           name: 'Mark "Wire the circuits" complete',

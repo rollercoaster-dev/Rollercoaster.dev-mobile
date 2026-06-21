@@ -163,7 +163,6 @@ export const OverviewPartsPending: Story = {
       totalSteps={5}
       onToggleComplete={() => {}}
       onEvidenceTap={() => {}}
-      onOpenNextPart={() => {}}
     />
   ),
 };
@@ -187,7 +186,25 @@ export const OverviewAllPartsDone: Story = {
       totalSteps={5}
       onToggleComplete={() => {}}
       onEvidenceTap={() => {}}
-      onOpenNextPart={() => {}}
+    />
+  ),
+};
+
+export const SubStepWithParentBand: Story = {
+  render: () => (
+    <StepCard
+      step={makeStep({
+        title: "15-amp lighting circuit",
+        status: "in-progress",
+        evidenceCount: 1,
+        parentTitle: "Wire the circuits",
+        partIndex: 1,
+        partTotal: 3,
+      })}
+      stepIndex={2}
+      totalSteps={5}
+      onToggleComplete={() => {}}
+      onEvidenceTap={() => {}}
     />
   ),
 };

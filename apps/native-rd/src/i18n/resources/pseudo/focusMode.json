@@ -6,12 +6,15 @@
     "addButton": "[+ Àđđ êṽïđêñçê······]",
     "capturedChip": "[{{type}} çàþţüŕêđ······]"
   },
+  "band": {
+    "childContext": "[↳ {{parent}} · þàŕţ {{index}} øƒ {{total}}······]"
+  },
   "overview": {
     "metaLabel": "[Øṽêŕṽïêŵ····]",
     "partsHeading": "[Þàŕţš···]",
     "evidenceRollupLabel": "[Êṽïđêñçê àçŕøšš þàŕţš········]",
     "evidenceRollupA11y": "[Êṽïđêñçê àçŕøšš þàŕţš: {{count}}··········]",
-    "openNextPart": "[Øþêñ ñêxţ þàŕţ······]",
+    "partsPendingPrompt": "[Çøɱþĺêţê ţĥê þàŕţš ţø ƒïñïšĥ··········]",
     "markComplete": "[Ɱàŕķ \"{{parent}}\" çøɱþĺêţê··········]",
     "partA11y": "[{{title}}, {{status}}····]"
   },

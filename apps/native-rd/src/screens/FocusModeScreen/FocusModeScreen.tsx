@@ -296,6 +296,17 @@ function FocusContent({ goalId }: { goalId: string }) {
     return map;
   }, [stepsWithEvidence, stepRows, stepRootIds]);
 
+  // Per-child part numbering for the purple "↳ parent · part N of M" band (#360).
+  const partInfoByChildId = useMemo(() => {
+    const map = new Map<string, { index: number; total: number }>();
+    for (const parts of partsByParentId.values()) {
+      parts.forEach((part, i) => {
+        map.set(part.id, { index: i + 1, total: parts.length });
+      });
+    }
+    return map;
+  }, [partsByParentId]);
+
   // Timeline + dot steps (memoized to prevent child re-renders on unrelated state changes)
   const timelineSteps = useMemo<MiniTimelineStep[]>(
     () =>
@@ -377,19 +388,6 @@ function FocusContent({ goalId }: { goalId: string }) {
     setIsDrawerOpen(false);
     setIsFABMenuOpen(false);
   }, []);
-
-  // Overview "open next part" (#360): jump the carousel to the parent's first
-  // pending child. No-op if the parent has no pending parts (the overview shows
-  // the complete invite in that case, not this action).
-  const handleOpenNextPart = useCallback(
-    (parentId: string) => {
-      const childIndex = stepRows.findIndex(
-        (r) => r.parentStepId === parentId && r.status !== StepStatus.completed,
-      );
-      if (childIndex !== -1) handleIndexChange(childIndex);
-    },
-    [stepRows, handleIndexChange],
-  );
 
   const handleMarkComplete = useCallback(() => {
     navigation.navigate("CompletionFlow", { goalId });
@@ -694,6 +692,9 @@ function FocusContent({ goalId }: { goalId: string }) {
                 ? undefined
                 : partsByParentId.get(step.id);
               const isOverview = parts != null && parts.length > 0;
+              const partInfo = step.isChild
+                ? partInfoByChildId.get(step.id)
+                : undefined;
               return (
                 <StepCard
                   key={step.id}
@@ -707,13 +708,14 @@ function FocusContent({ goalId }: { goalId: string }) {
                     plannedEvidenceTypes: step.plannedEvidenceTypes,
                     capturedEvidenceTypes: step.capturedEvidenceTypes,
                     parentTitle: step.parentTitle,
+                    partIndex: partInfo?.index ?? null,
+                    partTotal: partInfo?.total ?? null,
                   }}
                   stepIndex={index}
                   totalSteps={stepRows.length}
                   onToggleComplete={handleToggleStep}
                   onEvidenceTap={handleEvidenceTap}
                   onQuickEvidence={handleQuickEvidence}
-                  onOpenNextPart={handleOpenNextPart}
                 />
               );
             }),

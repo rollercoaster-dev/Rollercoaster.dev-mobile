@@ -6,12 +6,15 @@
     "addButton": "+ Add evidence",
     "capturedChip": "{{type}} captured"
   },
+  "band": {
+    "childContext": "↳ {{parent}} · part {{index}} of {{total}}"
+  },
   "overview": {
     "metaLabel": "Overview",
     "partsHeading": "Parts",
     "evidenceRollupLabel": "Evidence across parts",
     "evidenceRollupA11y": "Evidence across parts: {{count}}",
-    "openNextPart": "Open next part",
+    "partsPendingPrompt": "Complete the parts to finish",
     "markComplete": "Mark \"{{parent}}\" complete",
     "partA11y": "{{title}}, {{status}}"
   },

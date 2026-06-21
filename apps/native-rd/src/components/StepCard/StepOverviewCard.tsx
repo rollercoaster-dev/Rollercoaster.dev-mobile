@@ -1,13 +1,9 @@
 import React, { memo } from "react";
-import { View, Text, Pressable, ScrollView } from "react-native";
+import { View, Text, ScrollView } from "react-native";
 import { useTranslation } from "react-i18next";
-import { StatusBadge } from "../StatusBadge";
 import { Checkbox } from "../Checkbox";
-import {
-  statusToVariant,
-  type StepCardStatus,
-  type StepCardPart,
-} from "./StepCard.shared";
+import { StepCardTopBand } from "./StepCardTopBand";
+import { type StepCardStatus, type StepCardPart } from "./StepCard.shared";
 import { styles } from "./StepCard.styles";
 
 export interface StepOverviewCardProps {
@@ -18,8 +14,6 @@ export interface StepOverviewCardProps {
   totalSteps: number;
   parts: readonly StepCardPart[];
   onToggleComplete: (stepId: string) => void;
-  /** Advance the carousel to this parent's first pending part. */
-  onOpenNextPart?: (stepId: string) => void;
 }
 
 function StepOverviewCardComponent({
@@ -30,7 +24,6 @@ function StepOverviewCardComponent({
   totalSteps,
   parts,
   onToggleComplete,
-  onOpenNextPart,
 }: StepOverviewCardProps) {
   const { t } = useTranslation(["common", "focusMode"]);
 
@@ -44,7 +37,8 @@ function StepOverviewCardComponent({
 
   // The manual "mark parent complete" invite (Q9) appears only when every part
   // is done — never auto-judged (ADR-0012). A completed parent keeps the
-  // checkbox so it can be un-completed.
+  // checkbox so it can be un-completed. While parts remain, the foot mirrors a
+  // blocked leaf card: a quiet prompt, no completion control.
   const canMarkComplete = allPartsDone || isCompleted;
   const markCompleteLabel = isCompleted
     ? t("common:stepCard.checkbox.completed")
@@ -52,24 +46,18 @@ function StepOverviewCardComponent({
 
   return (
     <View style={styles.cardOuter}>
+      <StepCardTopBand
+        status={status}
+        stepIndex={stepIndex}
+        totalSteps={totalSteps}
+        isOverview
+      />
       <ScrollView
         style={styles.cardBody}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.cardBodyContent}
       >
-        <View style={styles.metaRow}>
-          <Text style={styles.stepNumber}>
-            {`${t("common:stepCard.progress", {
-              current: stepIndex + 1,
-              total: totalSteps,
-            })} · ${t("focusMode:overview.metaLabel")}`}
-          </Text>
-          <StatusBadge
-            variant={statusToVariant[status]}
-            label={t(`common:stepCard.status.${status}`)}
-          />
-        </View>
         <Text
           style={styles.title}
           numberOfLines={2}
@@ -163,8 +151,9 @@ function StepOverviewCardComponent({
         </View>
       </ScrollView>
 
-      {/* Pinned foot — the Q9 complete invite once all parts are done, otherwise
-          a quiet jump to the next open part. */}
+      {/* Pinned foot — same shape as a leaf card: the Q9 complete invite once all
+          parts are done, otherwise a quiet prompt (no bespoke navigation here;
+          parts are reached by swiping, like every other card). */}
       <View style={styles.cardFoot}>
         {canMarkComplete ? (
           <View style={styles.checkboxRow}>
@@ -175,18 +164,13 @@ function StepOverviewCardComponent({
             />
           </View>
         ) : (
-          <Pressable
-            onPress={() => onOpenNextPart?.(stepId)}
-            style={styles.overviewNextButton}
-            accessible
-            accessibilityRole="button"
-            accessibilityLabel={t("focusMode:overview.openNextPart")}
-            testID="overview-open-next-part"
+          <Text
+            style={styles.addEvidencePromptText}
+            accessibilityRole="text"
+            testID="overview-parts-pending-prompt"
           >
-            <Text style={styles.overviewNextText}>
-              {`${t("focusMode:overview.openNextPart")} →`}
-            </Text>
-          </Pressable>
+            {t("focusMode:overview.partsPendingPrompt")}
+          </Text>
         )}
       </View>
     </View>

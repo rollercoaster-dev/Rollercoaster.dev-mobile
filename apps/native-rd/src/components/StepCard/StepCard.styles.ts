@@ -28,19 +28,22 @@ export const styles = StyleSheet.create((theme) => ({
     minHeight: 44,
     justifyContent: "center",
   },
-  metaRow: {
+  // Pinned, bordered header strip above the body (#360). Plain form (flat /
+  // overview cards) and purple `topBandChild` form (sub-steps). Carries the
+  // card's context text + the status badge; replaces the former in-body meta
+  // row and the quiet "↳ in [parent]" line. Mirrors the prototype `.topband`.
+  topBand: {
     flexDirection: "row",
-    // Wrap instead of clipping: long locales (e.g. German "IN BEARBEITUNG")
-    // and the largeText a11y scale can exceed one line. When that happens the
-    // StatusBadge drops to its own line rather than overflowing the card edge
-    // or forcing the step number to ellipsize. English still fits on one line.
-    flexWrap: "wrap",
     alignItems: "center",
     justifyContent: "space-between",
-    rowGap: theme.space[1],
-    columnGap: theme.space[2],
+    gap: theme.space[2],
+    paddingHorizontal: theme.space[4],
+    paddingVertical: theme.space[3],
+    borderBottomWidth: theme.borderWidth.medium,
+    borderBottomColor: theme.colors.border,
   },
-  stepNumber: {
+  topBandText: {
+    flex: 1,
     fontSize: theme.size.xs,
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.textMuted,
@@ -48,18 +51,21 @@ export const styles = StyleSheet.create((theme) => ({
     letterSpacing: theme.letterSpacing.wide,
     fontFamily: theme.fontFamily.body,
   },
+  topBandChild: {
+    backgroundColor: theme.colors.accentPurpleLight,
+  },
+  topBandChildText: {
+    flex: 1,
+    fontSize: theme.size.sm,
+    fontWeight: theme.fontWeight.black,
+    color: theme.colors.text,
+    fontFamily: theme.fontFamily.headline,
+  },
   title: {
     fontSize: theme.size["2xl"],
     fontWeight: theme.fontWeight.black,
     color: theme.colors.text,
     fontFamily: theme.fontFamily.headline,
-  },
-  // Quiet "↳ in [parent]" line for sub-step cards — muted and subordinate to
-  // the title, matching the GoalCard context line (#292).
-  parentContext: {
-    ...theme.textStyles.caption,
-    color: theme.colors.textMuted,
-    marginTop: theme.space[1],
   },
   evidenceBadgeWrapper: {
     position: "relative" as const,
@@ -310,27 +316,6 @@ export const styles = StyleSheet.create((theme) => ({
   overviewRollupBadgeText: {
     fontSize: theme.size.xs,
     fontFamily: theme.fontFamily.mono,
-    color: theme.colors.text,
-  },
-  // Foot action when parts are still open — a quiet jump to the next part.
-  overviewNextButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: theme.space[1],
-    minHeight: 44,
-    paddingHorizontal: theme.space[4],
-    paddingVertical: theme.space[2],
-    backgroundColor: theme.colors.accentYellow,
-    borderWidth: theme.borderWidth.medium,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.sm,
-    ...shadowStyle(theme, "cardElevationSmall"),
-  },
-  overviewNextText: {
-    fontSize: theme.size.sm,
-    fontWeight: theme.fontWeight.bold,
-    fontFamily: theme.fontFamily.body,
     color: theme.colors.text,
   },
 }));

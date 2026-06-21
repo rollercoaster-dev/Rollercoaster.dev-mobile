@@ -1428,11 +1428,17 @@ describe("FocusModeScreen", () => {
     it("snaps to the first pending leaf, not the parent that contains it", () => {
       setupQueries({ steps: LEAF_STEPS, stepEvidence: [] });
       renderWithProviders(<FocusModeScreen {...routeProps} />);
-      // step-2a is the first pending leaf at flat index 2 → 1-based "3 of 5"
-      // (not the parent at index 1, which would read "2 of 5").
+      // step-2a is the first pending leaf (part 1 of 2). Child cards show the
+      // parent band, not a global "N of M" (#360); the band being on-screen
+      // (off-screen cards are hidden) confirms it is the current card. The
+      // carousel index itself is asserted via the MiniTimeline node tests.
       expect(
         screen.getByText(
-          i18n.t("common:stepCard.progress", { current: 3, total: 5 }),
+          i18n.t("focusMode:band.childContext", {
+            parent: "Practice",
+            index: 1,
+            total: 2,
+          }),
         ),
       ).toBeOnTheScreen();
       // The child title also appears in the parent's overview spine (#360), so
@@ -1440,12 +1446,17 @@ describe("FocusModeScreen", () => {
       expect(screen.getByRole("header", { name: "Drill A" })).toBeOnTheScreen();
     });
 
-    it("renders the parent context line on a leaf step card", () => {
+    it("renders the parent band on a leaf step card", () => {
       setupQueries({ steps: LEAF_STEPS, stepEvidence: [] });
       renderWithProviders(<FocusModeScreen {...routeProps} />);
+      expect(screen.getByTestId("step-card-parent-band")).toBeOnTheScreen();
       expect(
         screen.getByText(
-          i18n.t("common:stepCard.parentContext", { parent: "Practice" }),
+          i18n.t("focusMode:band.childContext", {
+            parent: "Practice",
+            index: 1,
+            total: 2,
+          }),
         ),
       ).toBeOnTheScreen();
     });
@@ -1475,12 +1486,16 @@ describe("FocusModeScreen", () => {
     it("reorders interleaved (real-query-order) rows so the leaf snaps to its flattened position", () => {
       setupQueries({ steps: INTERLEAVED_STEPS, stepEvidence: [] });
       renderWithProviders(<FocusModeScreen {...routeProps} />);
-      // After flatten: [step-1, step-2, step-2a, step-3] → leaf step-2a is at
-      // flat index 2 → "3 of 4". Without the flatten it would read "2 of 4"
-      // (step-2a at its interleaved index 1).
+      // After flatten: [step-1, step-2, step-2a, step-3] → leaf step-2a is the
+      // current card (the only child of step-2 → part 1 of 1). Without the
+      // flatten it would land on the wrong index and group under the wrong lead.
       expect(
         screen.getByText(
-          i18n.t("common:stepCard.progress", { current: 3, total: 4 }),
+          i18n.t("focusMode:band.childContext", {
+            parent: "Practice",
+            index: 1,
+            total: 1,
+          }),
         ),
       ).toBeOnTheScreen();
       expect(screen.getByRole("header", { name: "Drill A" })).toBeOnTheScreen();
@@ -1502,17 +1517,16 @@ describe("FocusModeScreen", () => {
     it("snaps to the first pending child when an earlier sibling is complete", () => {
       setupQueries({ steps: PARTIAL_LEAF_STEPS, stepEvidence: [] });
       renderWithProviders(<FocusModeScreen {...routeProps} />);
-      // step-2b (flat index 3) is the first pending leaf → "4 of 5". A children[0]
-      // resolution would wrongly land on the completed step-2a ("3 of 5").
-      expect(
-        screen.getByText(
-          i18n.t("common:stepCard.progress", { current: 4, total: 5 }),
-        ),
-      ).toBeOnTheScreen();
+      // step-2b is the first pending leaf (part 2 of 2). A children[0] resolution
+      // would wrongly land on the completed step-2a (part 1 of 2).
       expect(screen.getByRole("header", { name: "Drill B" })).toBeOnTheScreen();
       expect(
         screen.getByText(
-          i18n.t("common:stepCard.parentContext", { parent: "Practice" }),
+          i18n.t("focusMode:band.childContext", {
+            parent: "Practice",
+            index: 2,
+            total: 2,
+          }),
         ),
       ).toBeOnTheScreen();
     });
@@ -1540,9 +1554,10 @@ describe("FocusModeScreen", () => {
       expect(screen.getByText("Drill A")).toBeOnTheScreen();
       // The orphan is the current step → lead-current width (18), not the
       // child-current width (14). Proves it renders as a lead, not a sub-step.
-      // And no parent-context line, since its parent is gone.
+      // And the plain band (no purple parent band), since its parent is gone.
       expect(nodeWidth(1)).toBe(18);
-      expect(screen.queryByTestId("step-card-parent-context")).toBeNull();
+      expect(screen.queryByTestId("step-card-parent-band")).toBeNull();
+      expect(screen.getByTestId("step-card-top-band")).toBeOnTheScreen();
     });
 
     // Parent step-2 is manually completed while child step-2b is still pending.
@@ -1563,19 +1578,18 @@ describe("FocusModeScreen", () => {
         stepEvidence: [],
       });
       renderWithProviders(<FocusModeScreen {...routeProps} />);
-      // step-2b (flat index 3) is the only pending work → "4 of 5". A resolution
-      // that skipped the completed parent first would return -1 and leave the
-      // carousel on the completed step-1 ("1 of 5").
-      expect(
-        screen.getByText(
-          i18n.t("common:stepCard.progress", { current: 4, total: 5 }),
-        ),
-      ).toBeOnTheScreen();
+      // step-2b is the only pending work (part 2 of 2). A resolution that skipped
+      // the completed parent first would return -1 and leave the carousel on the
+      // completed step-1.
       expect(screen.getByRole("header", { name: "Drill B" })).toBeOnTheScreen();
-      // Still a leaf, so the parent context line stays.
+      // Still a leaf, so the parent band stays.
       expect(
         screen.getByText(
-          i18n.t("common:stepCard.parentContext", { parent: "Practice" }),
+          i18n.t("focusMode:band.childContext", {
+            parent: "Practice",
+            index: 2,
+            total: 2,
+          }),
         ),
       ).toBeOnTheScreen();
     });
@@ -1631,8 +1645,7 @@ describe("FocusModeScreen", () => {
     });
 
     // step-A is a flat pending step, so the snap stays on it (index 0), leaving
-    // the parent overview off-screen — pressing its "open next part" must jump
-    // the carousel to the parent's first pending child.
+    // the parent overview at index 1 — reachable by swiping forward.
     const PENDING_PARENT_STEPS = [
       { id: "step-A", title: "Gather parts", status: "pending", ordinal: 0, parentStepId: null }, // prettier-ignore
       { id: "step-B", title: "Wire it", status: "pending", ordinal: 1, parentStepId: null }, // prettier-ignore
@@ -1640,23 +1653,33 @@ describe("FocusModeScreen", () => {
       { id: "step-B2", title: "Test continuity", status: "pending", ordinal: 1, parentStepId: "step-B" }, // prettier-ignore
     ];
 
-    it("advances the carousel to the first pending part when 'open next part' is pressed", () => {
+    it("shows the complete-the-parts prompt (no completion control) while parts are pending", () => {
       setupQueries({ steps: PENDING_PARENT_STEPS, stepEvidence: [] });
       renderWithProviders(<FocusModeScreen {...routeProps} />);
-      // Snap stays on the flat step-A.
-      expect(
-        screen.getByText(
-          i18n.t("common:stepCard.progress", { current: 1, total: 4 }),
-        ),
-      ).toBeOnTheScreen();
-      // Move forward to the parent's overview card (index 1), then tap its
-      // action — the carousel should jump to step-B1 (the first pending part,
-      // flat index 2).
+      // Snap stays on the flat step-A; move to the parent overview (index 1).
       fireEvent.press(screen.getByLabelText("Next card"));
-      fireEvent.press(screen.getByTestId("overview-open-next-part"));
+      // The overview foot mirrors a blocked leaf card: a quiet prompt, no
+      // completion control and no bespoke navigation (parts are reached by
+      // swiping, like every other card).
+      expect(
+        screen.getByTestId("overview-parts-pending-prompt"),
+      ).toBeOnTheScreen();
+      expect(screen.queryByRole("checkbox")).toBeNull();
+    });
+
+    it("each child part is reachable by swiping past the overview", () => {
+      setupQueries({ steps: PENDING_PARENT_STEPS, stepEvidence: [] });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+      // step-A (0) → overview (1) → step-B1 (2): the first pending part.
+      fireEvent.press(screen.getByLabelText("Next card"));
+      fireEvent.press(screen.getByLabelText("Next card"));
       expect(
         screen.getByText(
-          i18n.t("common:stepCard.progress", { current: 3, total: 4 }),
+          i18n.t("focusMode:band.childContext", {
+            parent: "Wire it",
+            index: 1,
+            total: 2,
+          }),
         ),
       ).toBeOnTheScreen();
       expect(

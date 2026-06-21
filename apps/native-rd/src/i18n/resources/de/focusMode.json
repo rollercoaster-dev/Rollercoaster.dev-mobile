@@ -6,12 +6,15 @@
     "addButton": "+ Nachweis hinzufügen",
     "capturedChip": "{{type}} erfasst"
   },
+  "band": {
+    "childContext": "↳ {{parent}} · Teil {{index}} von {{total}}"
+  },
   "overview": {
     "metaLabel": "Übersicht",
     "partsHeading": "Teile",
     "evidenceRollupLabel": "Nachweise über alle Teile",
     "evidenceRollupA11y": "Nachweise über alle Teile: {{count}}",
-    "openNextPart": "Nächsten Teil öffnen",
+    "partsPendingPrompt": "Erst alle Teile abschließen",
     "markComplete": "\"{{parent}}\" abschließen",
     "partA11y": "{{title}}, {{status}}"
   },

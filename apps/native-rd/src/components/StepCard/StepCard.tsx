@@ -2,7 +2,6 @@ import React, { memo } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import Animated from "react-native-reanimated";
 import { useTranslation } from "react-i18next";
-import { StatusBadge } from "../StatusBadge";
 import { Checkbox } from "../Checkbox";
 import { useFlashOnIncrease } from "../../hooks/useFlashOnIncrease";
 import { formatEvidenceLabel } from "../../utils/formatEvidenceLabel";
@@ -18,11 +17,11 @@ import {
   evidenceShortLabel,
 } from "../../i18n/labels";
 import {
-  statusToVariant,
   type StepCardStatus,
   type StepCardKind,
   type StepCardPart,
 } from "./StepCard.shared";
+import { StepCardTopBand } from "./StepCardTopBand";
 import { StepOverviewCard } from "./StepOverviewCard";
 import { styles } from "./StepCard.styles";
 
@@ -36,11 +35,15 @@ export interface StepCardStep {
   plannedEvidenceTypes?: string[] | null;
   capturedEvidenceTypes?: string[];
   /**
-   * Title of the parent step when this card is a sub-step (#292). Renders a
-   * quiet "↳ in [parent]" context line under the title so the user knows which
-   * parent the leaf belongs to. Null/absent for top-level steps.
+   * Title of the parent step when this card is a sub-step (#292). With
+   * `partIndex`/`partTotal` it drives the purple "↳ [parent] · part N of M"
+   * top band (#360). Null/absent for top-level steps and promoted orphans.
    */
   parentTitle?: string | null;
+  /** 1-based position of this sub-step within its parent's parts (#360). */
+  partIndex?: number | null;
+  /** Total number of parts under this sub-step's parent (#360). */
+  partTotal?: number | null;
 }
 
 export interface StepCardProps {
@@ -58,8 +61,6 @@ export interface StepCardProps {
   kind?: StepCardKind;
   /** Child parts for an overview card. Ignored for leaf cards. */
   parts?: readonly StepCardPart[];
-  /** Overview-only: advance the carousel to the parent's first pending part. */
-  onOpenNextPart?: (stepId: string) => void;
 }
 
 function getMissingEvidenceOption(
@@ -126,24 +127,20 @@ function StepCardLeaf({
 
   return (
     <View style={styles.cardOuter}>
+      <StepCardTopBand
+        status={step.status}
+        stepIndex={stepIndex}
+        totalSteps={totalSteps}
+        parentTitle={step.parentTitle}
+        partIndex={step.partIndex}
+        partTotal={step.partTotal}
+      />
       <ScrollView
         style={styles.cardBody}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.cardBodyContent}
       >
-        <View style={styles.metaRow}>
-          <Text style={styles.stepNumber}>
-            {t("common:stepCard.progress", {
-              current: stepIndex + 1,
-              total: totalSteps,
-            })}
-          </Text>
-          <StatusBadge
-            variant={statusToVariant[step.status]}
-            label={t(`common:stepCard.status.${step.status}`)}
-          />
-        </View>
         <Text
           style={styles.title}
           numberOfLines={2}
@@ -152,15 +149,6 @@ function StepCardLeaf({
         >
           {step.title}
         </Text>
-        {step.parentTitle && (
-          <Text
-            style={styles.parentContext}
-            numberOfLines={1}
-            testID="step-card-parent-context"
-          >
-            {t("common:stepCard.parentContext", { parent: step.parentTitle })}
-          </Text>
-        )}
 
         {onQuickEvidence && quickEvidenceOptions.length > 0 && (
           <View style={styles.quickActionsRow}>
@@ -309,7 +297,6 @@ function StepCardComponent(props: StepCardProps) {
         totalSteps={props.totalSteps}
         parts={props.parts ?? []}
         onToggleComplete={props.onToggleComplete}
-        onOpenNextPart={props.onOpenNextPart}
       />
     );
   }
@@ -358,6 +345,8 @@ function areStepCardPropsEqual(
     previous.step.title === next.step.title &&
     previous.step.status === next.step.status &&
     previous.step.parentTitle === next.step.parentTitle &&
+    previous.step.partIndex === next.step.partIndex &&
+    previous.step.partTotal === next.step.partTotal &&
     previous.step.evidenceCount === next.step.evidenceCount &&
     equalStringArrays(
       previous.step.plannedEvidenceTypes,
@@ -372,8 +361,7 @@ function areStepCardPropsEqual(
     previous.totalSteps === next.totalSteps &&
     previous.onToggleComplete === next.onToggleComplete &&
     previous.onEvidenceTap === next.onEvidenceTap &&
-    previous.onQuickEvidence === next.onQuickEvidence &&
-    previous.onOpenNextPart === next.onOpenNextPart
+    previous.onQuickEvidence === next.onQuickEvidence
   );
 }
 
