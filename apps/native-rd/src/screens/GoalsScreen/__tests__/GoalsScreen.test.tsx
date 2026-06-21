@@ -41,6 +41,48 @@ jest.mock("../../../db", () => ({
   isPendingStep: (s: { status: string | null }) => s.status === "pending",
   GoalStatus: { active: "active", completed: "completed" },
   StepStatus: { pending: "pending", completed: "completed" },
+  // Faithful copy of the real resolver (leaf/invite/flat/none + orphan
+  // promotion) so buildGoalCardGoal's next-step resolution is exercised, not
+  // stubbed — keeps the #292 sub-step cases under test after the #337 extract.
+  resolveNextActionableStep: (
+    rows: readonly {
+      id: string;
+      parentStepId: string | null;
+      status: string | null;
+    }[],
+  ) => {
+    const rootIds = new Set(
+      rows.filter((r) => r.parentStepId == null).map((r) => r.id),
+    );
+    const childrenByParent = new Map<
+      string,
+      { index: number; status: string | null }[]
+    >();
+    const topLevel: { id: string; index: number; status: string | null }[] = [];
+    rows.forEach((row, index) => {
+      if (row.parentStepId != null && rootIds.has(row.parentStepId)) {
+        const entry = { index, status: row.status };
+        const list = childrenByParent.get(row.parentStepId);
+        if (list) list.push(entry);
+        else childrenByParent.set(row.parentStepId, [entry]);
+      } else {
+        topLevel.push({ id: row.id, index, status: row.status });
+      }
+    });
+    for (const step of topLevel) {
+      const children = childrenByParent.get(step.id) ?? [];
+      const pendingChild = children.find((c) => c.status !== "completed");
+      if (pendingChild) {
+        return { kind: "leaf", index: pendingChild.index, parentId: step.id };
+      }
+      if (step.status === "completed") continue;
+      if (children.length > 0) {
+        return { kind: "invite", index: step.index, childCount: children.length }; // prettier-ignore
+      }
+      return { kind: "flat", index: step.index };
+    }
+    return { kind: "none" };
+  },
 }));
 
 const { deleteGoal } = require("../../../db");
