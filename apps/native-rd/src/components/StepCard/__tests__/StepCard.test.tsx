@@ -477,6 +477,30 @@ describe("StepCard", () => {
       expect(screen.queryByText(/missing/i)).toBeNull();
       expect(screen.queryByText(/•/)).toBeNull();
     });
+
+    // --- A11y contract (#360 Phase 4 hardening). The chip must carry a readable
+    // text label alongside its icon (never icon/colour-only), and the add
+    // affordance must announce as a button. ---
+    it("captured chip carries a text label alongside its icon (not icon-only)", () => {
+      renderWithProviders(
+        <StepCard
+          step={makeStep({ capturedEvidenceTypes: ["photo"] })}
+          {...defaultProps}
+        />,
+      );
+      const chip = screen.getByTestId("step-card-evidence-chip-photo");
+      // Screen-reader text on the chip itself...
+      expect(chip.props.accessibilityLabel).toBe("Photo captured");
+      // ...and a visible text label rendered next to the (a11y-hidden) icon.
+      expect(screen.getByText("Photo")).toBeOnTheScreen();
+    });
+
+    it("announces the Add evidence affordance as a button", () => {
+      renderWithProviders(<StepCard step={makeStep()} {...defaultProps} />);
+      expect(
+        screen.getByTestId("step-card-add-evidence").props.accessibilityRole,
+      ).toBe("button");
+    });
   });
 
   // --- Reading order (locks in the zoned scaffold: scrollable body, then the

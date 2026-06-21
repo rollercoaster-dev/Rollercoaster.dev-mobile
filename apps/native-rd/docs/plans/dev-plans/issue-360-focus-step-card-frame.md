@@ -48,15 +48,19 @@ apply regardless of which A / B / C is chosen:
       pieces already captured. The rail **never** surfaces what is "missing" or
       "needed" — adding evidence simply reveals the completion checkbox (Joe's
       directive, 2026-06-21; see D8). No deficiency framing of any kind.
-- [ ] A flat step (no parent) renders the same stable frame and the same
-      evidence rail, with no parent-context element shown.
-- [ ] The carousel navigation arrows carry `accessibilityRole`, a descriptive
+- [x] A flat step (no parent) renders the same stable frame and the same
+      evidence rail, with no parent-context element shown. (Verified: the
+      parent-band tests assert a flat step shows the plain `step-card-top-band`,
+      not `step-card-parent-band`; the evidence-rail tests run on flat steps.)
+- [x] The carousel navigation arrows carry `accessibilityRole`, a descriptive
       `accessibilityLabel` (back / forward), and are no smaller than 44 × 44 pt;
       disabled state is communicated via `accessibilityState={{ disabled: true }}`
       and a non-colour-only visual change (opacity, label change, or icon change).
-- [ ] Flat steps remain first-class: they use the same card scaffold, the same
+      (Phase 4 — contract-tested in `CardCarousel.test.tsx`.)
+- [x] Flat steps remain first-class: they use the same card scaffold, the same
       evidence rail, the same foot action — no parent-tie element appears.
-- [ ] Type-check, lint, and focus-mode test suite pass.
+- [x] Type-check, lint, and focus-mode test suite pass. (Verified 2026-06-21:
+      type-check clean, lint 0 errors, 146 focus-mode tests green.)
 
 Candidate-specific observable criteria (fill in when candidate is chosen):
 
@@ -424,23 +428,33 @@ _Skip this phase if A or B is chosen._
 
 **Changes**:
 
-- [ ] Confirm carousel nav arrows: `accessibilityRole="button"`,
-      `accessibilityLabel` with direction ("Previous step card" / "Next step card"),
-      `accessibilityState={{ disabled: isFirst/isLast }}`, visual disabled state
-      uses opacity AND a change beyond colour (e.g., text opacity change is already
-      in `arrowDisabled` styles — verify this is sufficient for non-colour
-      discrimination). Minimum touch target: `minHeight: 44, minWidth: 44` (already
-      44 × 44 in existing `CardCarousel.styles.ts` — confirm no regression).
-- [ ] Confirm evidence chips: each chip has an icon (not colour-only) + a text
-      label. The "needed" marker carries `accessibilityLabel="[type] evidence
-needed"`. The "Add evidence" button is `accessibilityRole="button"`.
-- [ ] Confirm candidate-specific a11y (parent band / strip / overview) is
-      announced as context, not as the actionable step — verify with
-      `accessibilityElementsHidden` or `accessibilityLabel` patterns.
-- [ ] Contract tests: assert nav arrows have `accessibilityRole="button"` and are
-      not `accessibilityElementsHidden`; assert the disabled arrow has
-      `accessibilityState.disabled === true`; assert evidence chips have a text
-      label alongside any icon.
+- [x] Confirmed carousel nav arrows: `accessibilityRole="button"`,
+      `accessibilityLabel` with direction, `accessibilityState={{ disabled }}`,
+      and the disabled cue is dimmed `opacity` (a non-colour change), all already
+      present in `CardCarousel.tsx`/`.styles.ts`. Touch target is 44 × 44
+      (`arrow` style) — no regression. _The arrow labels stay the generic
+      "Previous card" / "Next card" (not "step card"): `CardCarousel` is a shared
+      component (also wraps the goal/destination card), so the direction lives in
+      the label and the carousel name in the hint._ No source change needed —
+      locked in with contract tests instead.
+- [x] Confirmed evidence chips: each chip carries an icon **plus** a visible text
+      label (not colour/icon-only) and an `accessibilityLabel` ("[type] captured");
+      the "+ Add evidence" affordance is `accessibilityRole="button"`. _The
+      original "needed" marker referenced here was removed under D8 — there is no
+      deficiency marker to a11y-label; the captured chips + the always-visible add
+      button are the only rail elements._ No source change needed.
+- [x] Confirmed candidate-specific a11y (overview): the card is announced as
+      context via the readable "· Overview" band meta + header (no card-level
+      `summary` role that would swallow the rows); spine rows announce
+      title + status; the rollup announces its summed count; the foot action
+      carries the parent-named complete invite or the quiet pending prompt.
+      Already in place from Phase 3C — re-verified, no change.
+- [x] Contract tests added (`CardCarousel.test.tsx` "a11y contract (#360 Phase 4)" + `StepCard.test.tsx` evidence-rail additions): nav arrows assert
+      `accessibilityRole="button"`, reachable (not `accessibilityElementsHidden`),
+      44 × 44 minimum, and the disabled arrow asserts both
+      `accessibilityState.disabled === true` and a sub-1 `opacity` cue; the
+      captured chip asserts a visible text label alongside its icon and the add
+      button asserts `accessibilityRole="button"`. 7 new tests; full gate green.
 
 ---
 
@@ -454,7 +468,7 @@ needed"`. The "Add evidence" button is `accessibilityRole="button"`.
 - [ ] Unit tests for `CardCarousel`: frame-fill geometry (no `justifyContent:center`
       on the animated card track slot)
 - [ ] Candidate-specific unit tests (see Phase 3A / 3B / 3C above)
-- [ ] A11y contract tests: nav arrow roles, disabled state, evidence chip labels
+- [x] A11y contract tests: nav arrow roles, disabled state, evidence chip labels
 - [ ] Test file paths mirror `src/` under `src/__tests__/` per project convention
 - [ ] Use `test.each` for status-variant tests (pending / in-progress / completed)
       across flat vs. child step types
@@ -628,6 +642,32 @@ Review-Skipped Findings") until filed or closed.
   is supplied (tests/stories). New keys: `focusMode:overview.partOpenHint`
   (en/de/pseudo). Tests: spine-row press → `onOpenPart`, role flips with the
   handler (StepCard); spine-row tap opens the leaf card (FocusModeScreen).
+
+**Phase 4 — a11y hardening (2026-06-21):**
+
+- [2026-06-21] **Verification pass, not a rebuild.** Every Phase 4 requirement
+  was already satisfied by the Phase 1–3C code: the nav arrows carry
+  `accessibilityRole="button"`, a direction label + carousel hint, the
+  `accessibilityState.disabled` flag, a dimmed-opacity disabled cue (non-colour),
+  and a 44 × 44 target; the evidence chips carry icon + visible text + a captured
+  a11y label; the add button is a button; the overview announces as context via
+  the "· Overview" band meta rather than a card-level `summary` role. No source
+  change was needed — the deliverable was the **contract tests** that lock these
+  guarantees against future drift.
+- [2026-06-21] **Dead plan reference corrected.** The Phase 4 checklist (written
+  pre-D8) said to a11y-label the "needed" evidence marker; that marker was
+  removed under D8, so there is nothing to label. The checklist item was reworded
+  to confirm the chips/add-button instead.
+- [2026-06-21] **Arrow labels stay generic on purpose.** The plan floated
+  "Previous step card" / "Next step card"; the labels stay "Previous card" /
+  "Next card" because `CardCarousel` is shared (it also wraps the goal card), so
+  the direction lives in the label and the specific carousel name in the hint.
+- [2026-06-21] 7 new contract tests (3 CardCarousel arrow + 1 disabled-cue, 2
+  StepCard chip/add-button; counts: CardCarousel 4, StepCard 2 — the disabled
+  test is one). Suite: 78 StepCard+CardCarousel tests; 146 across the focus-mode
+  components+screen. Type-check clean, lint 0 errors. The only intent criterion
+  left open is the swipe-jitter visual check, which needs an on-device pass (see
+  Testing Strategy → manual testing).
 
 **Research findings (2026-06-21):**
 

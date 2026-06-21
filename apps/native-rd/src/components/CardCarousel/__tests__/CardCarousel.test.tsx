@@ -245,6 +245,64 @@ describe("CardCarousel", () => {
     });
   });
 
+  // --- A11y contract (#360 Phase 4 hardening). Locks in the nav-arrow
+  // guarantees from the issue's intent criteria so a future refactor can't
+  // silently drop the role, hide the arrows, shrink the touch target, or reduce
+  // the disabled state to a colour-only cue. ---
+  describe("a11y contract (#360 Phase 4)", () => {
+    const renderTrio = (currentIndex = 1) =>
+      renderWithProviders(
+        <CardCarousel currentIndex={currentIndex} onIndexChange={jest.fn()}>
+          <Card label="Card A" />
+          <Card label="Card B" />
+          <Card label="Card C" />
+        </CardCarousel>,
+      );
+
+    it.each(["Previous card", "Next card"])(
+      "%s arrow is a reachable button (role=button, not hidden from a11y)",
+      (label) => {
+        renderTrio();
+        const arrow = screen.getByLabelText(label);
+        expect(arrow.props.accessibilityRole).toBe("button");
+        expect(arrow.props.accessible).toBe(true);
+        expect(arrow.props.accessibilityElementsHidden).toBeFalsy();
+        expect(arrow.props.importantForAccessibility).not.toBe(
+          "no-hide-descendants",
+        );
+      },
+    );
+
+    it.each(["Previous card", "Next card"])(
+      "%s arrow meets the 44x44 minimum touch target",
+      (label) => {
+        renderTrio();
+        const style = StyleSheet.flatten(
+          screen.getByLabelText(label).props.style,
+        );
+        expect(style.width).toBeGreaterThanOrEqual(44);
+        expect(style.height).toBeGreaterThanOrEqual(44);
+      },
+    );
+
+    it("communicates the disabled arrow both programmatically and via a non-colour cue", () => {
+      // currentIndex 0 → Previous is disabled, Next is enabled.
+      renderTrio(0);
+      const prev = screen.getByLabelText("Previous card");
+      const next = screen.getByLabelText("Next card");
+
+      expect(prev.props.accessibilityState?.disabled).toBe(true);
+      expect(next.props.accessibilityState?.disabled).toBe(false);
+
+      // The disabled cue is dimmed opacity — a change beyond colour alone — so
+      // it still reads for users who can't distinguish the border colour.
+      const prevStyle = StyleSheet.flatten(prev.props.style);
+      const nextStyle = StyleSheet.flatten(next.props.style);
+      expect(prevStyle.opacity).toBeLessThan(1);
+      expect(nextStyle.opacity ?? 1).toBe(1);
+    });
+  });
+
   describe("E2E mode gating", () => {
     const originalE2E = process.env.EXPO_PUBLIC_E2E_MODE;
     beforeAll(() => {
