@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROTOTYPE — A: Focus step card under feature load</title>
+<!--
+  PROTOTYPE — throwaway. Phase B Stage 1, A: Substeps — focus-card follow-up.
+
+  WHY THIS EXISTS
+  ---------------
+  a-substructure-layouts.html settled the LAYOUT GRAMMAR (indentation won the
+  ND-user gate, 2026-06-11) and shipped via epic #288. It deliberately parked
+  three focus-mode ergonomics questions that the shipped StepCard now hits:
+
+    1. STABLE FRAME — shipped cards shrink-wrap to content and are vertically
+       centred in the carousel track (CardCarousel AnimatedCard: top/bottom:0 +
+       justifyContent:center; Card is a plain shrink-wrap View). Moving through
+       steps jumps the frame. This prototype gives every card ONE fixed envelope.
+    2. EVIDENCE ON A SUBSTEP — a leaf is a full StepCard so it already captures
+       evidence; what's undesigned is an explicit add affordance + the PARENT's
+       rollup of its children's evidence (parked Q10).
+    3. PARENT <-> SUBSTEP TIE — shipped model is FLAT SIBLING CARDS (parent's own
+       bare card next to each child card) tied only by a "↳ in parent" line + the
+       MiniTimeline sub-spine. The three candidates below each answer the tie
+       differently.
+
+  (This study is scoped to substeps only. The ADR-10/11 future-feature placeholders
+   B/C/D-F/E/G/H that an earlier draft load-tested here have been stripped out.)
+
+  THREE CANDIDATES (the real fork: how the parent ties to its substeps)
+    A — Anchored leaf : sibling-card model kept; a persistent PARENT BAND pins
+        above child cards; fixed zoned scaffold.
+    B — Sub-deck      : a parent's substeps read as one grouped DECK (shared rail
+        + pinned parent strip, siblings peek behind).
+    C — Parent overview: the parent is its OWN overview card (lists parts, rolls
+        up evidence, holds the manual "complete parent" invite Q9); leaves follow.
+        Containment-in-focus, adapted into the shipped indentation app.
+
+  PARTS LIST MIRRORS THE TIMELINE (added later)
+    C's parent overview and the goal card render their parts list AS the timeline — a
+    compact vertical journey spine (node-on-a-connector, indented sub-spine for a
+    parent's substeps), the same grammar as the journey view / MiniTimeline. The goal
+    card mirrors the parent: it lists the whole journey (steps + substeps), not just
+    goal-evidence. No checklist/spine toggle — the timeline IS the list. Open question
+    it surfaces: this spine sits under the horizontal MiniTimeline — judge redundancy.
+
+  Open directly:  open apps/native-rd/prototypes/a-focus-card-substructure.html
+  Controls: candidate / dataset / state-word toggles.
+  In-phone ‹ › moves through cards — watch the FRAME stay put (concern 1).
+  ← / → cycle candidates.  Feature shape: docs/plans/phase-b-feature-shapes.md §A
+  Record: docs/plans/phase-b-prototype-records/A-substructure.md
+  ADR-0011 names: docs/decisions/ADR-0011-step-model-names.md
+  Tokens mirrored from packages/design-tokens light-default (self-contained).
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wght@600;700;800;900&family=Instrument+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fafafa; --card: #ffffff; --bg2: #f0f0f0; --input: #f5f5f5;
+    --text: #262626; --muted: #737373; --disabled: #a3a3a3;
+    --border: #0a0a0a; --border-subtle: #d4d4d4;
+    --primary: #3b82f6; --primary-dark: #2563eb;
+    --purple: #a78bfa; --purple-light: #ede9fe;
+    --yellow: #ffe50c; --mint: #d4f4e7; --success: #059669; --error: #dc2626;
+    --orange: #f59e0b; --orange-light: #fef3c7;
+    --shadow-sm: 2px 2px 0 rgba(0,0,0,0.8);
+    --shadow-md: 3px 3px 0 rgba(0,0,0,0.8);
+    --shadow-lg: 4px 4px 0 rgba(0,0,0,0.8);
+    --headline: 'Anybody', system-ui, sans-serif;
+    --body: 'Instrument Sans', system-ui, sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: #e8e4da; font-family: var(--body); color: var(--text);
+    padding: 28px 20px 110px; min-height: 100vh;
+  }
+
+  /* ---- page chrome (not under test) ---- */
+  .page-header { max-width: 1180px; margin: 0 auto 18px; }
+  .page-header h1 { font-family: var(--headline); font-weight: 900; font-size: 26px; letter-spacing: -0.02em; margin: 0 0 6px; }
+  .page-header p { margin: 0 0 4px; font-size: 14px; color: #4a4a4a; max-width: 920px; }
+  .proto-tag { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; background: var(--error); color: #fff; border: 2px solid var(--border); padding: 2px 8px; margin-bottom: 8px; }
+  .controls { max-width: 1180px; margin: 0 auto 20px; display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; }
+  .ctl-group { display: flex; align-items: center; gap: 6px; }
+  .ctl-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #555; margin-right: 2px; }
+  .seg { font-family: var(--body); font-size: 12.5px; font-weight: 600; cursor: pointer; background: var(--card); color: var(--text); border: 2px solid var(--border); padding: 5px 10px; box-shadow: var(--shadow-sm); }
+  .seg.on { background: var(--yellow); }
+  .seg:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 rgba(0,0,0,0.8); }
+
+  .layout-banner { max-width: 1180px; margin: 0 auto 20px; background: var(--card); border: 2.5px solid var(--border); box-shadow: var(--shadow-md); padding: 12px 16px; }
+  .layout-banner h2 { font-family: var(--headline); font-weight: 800; font-size: 18px; margin: 0 0 4px; }
+  .layout-banner p { margin: 0; font-size: 13px; color: #444; }
+  .layout-banner .tags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .layout-banner .tag { font-size: 10.5px; font-weight: 700; border: 1.5px solid var(--border); padding: 2px 7px; border-radius: 3px; background: var(--bg2); }
+  .layout-banner .tag.good { background: var(--mint); }
+  .layout-banner .tag.watch { background: var(--orange-light); }
+
+  .stage-row { max-width: 1180px; margin: 0 auto; display: flex; gap: 26px; align-items: flex-start; }
+  .stage-notes { flex: 1; min-width: 240px; background: var(--card); border: 2px solid var(--border); box-shadow: var(--shadow-sm); padding: 14px 16px; font-size: 13px; line-height: 1.55; }
+  .stage-notes h3 { font-family: var(--headline); font-size: 14px; margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .stage-notes h4 { font-family: var(--headline); font-size: 12.5px; margin: 12px 0 4px; }
+  .stage-notes ul { margin: 0; padding-left: 18px; }
+  .stage-notes li { margin-bottom: 5px; }
+  .stage-notes .concern { display: inline-block; font-family: var(--mono); font-size: 10px; background: var(--border); color: #fff; border-radius: 3px; padding: 0 4px; margin-right: 3px; }
+
+  .switcher { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--border); color: #fff; border-radius: 999px; display: flex; align-items: center; gap: 4px; padding: 8px 10px; box-shadow: 0 4px 14px rgba(0,0,0,0.35); z-index: 50; user-select: none; }
+  .switcher button { background: none; border: none; color: #fff; font-size: 18px; cursor: pointer; width: 34px; height: 34px; border-radius: 50%; }
+  .switcher button:hover { background: rgba(255,255,255,0.15); }
+  .switcher .lbl { font-family: var(--body); font-weight: 600; font-size: 13px; padding: 0 8px; min-width: 230px; text-align: center; }
+
+  /* ============ phone frame ============ */
+  .phone { width: 372px; flex: 0 0 auto; height: 760px; background: var(--bg); border: 2.5px solid var(--border); box-shadow: var(--shadow-lg); border-radius: 26px; overflow: hidden; display: flex; flex-direction: column; }
+  .screen { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+
+  .hdr { display: flex; align-items: center; gap: 8px; padding: 12px 14px 10px; border-bottom: 2.5px solid var(--border); background: var(--card); }
+  .hdr .gt { font-family: var(--headline); font-weight: 800; font-size: 16px; flex: 1; line-height: 1.15; }
+  .hdr .ico { width: 30px; height: 30px; border: 2px solid var(--border); background: var(--card); display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-sm); border-radius: 4px; font-size: 14px; flex: 0 0 auto; }
+
+  /* mini timeline with sub-spine (mirrors shipped MiniTimeline #292/#293) */
+  .mtl { border-bottom: 2.5px solid var(--border); background: var(--card); padding: 9px 14px 7px; }
+  .mtl-track { display: flex; align-items: center; min-height: 28px; }
+  .node { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--disabled); background: var(--card); flex: 0 0 auto; }
+  .node.done { background: var(--primary); border-color: var(--primary); }
+  .node.cur { width: 19px; height: 19px; border-width: 3px; border-color: var(--border); }
+  .node.child { width: 9px; height: 9px; }
+  .node.child.cur { width: 14px; height: 14px; }
+  .node.goal { border: 3px solid var(--yellow); background: var(--yellow); width: 15px; height: 15px; }
+  .seg-line { flex: 1; min-width: 7px; border-top: 3px solid var(--primary); }
+  .seg-line.pend { border-top: 3px dashed var(--disabled); }
+  .seg-line.short { flex: 0 0 7px; }
+  .grp-indent { display: flex; align-items: center; padding: 0 3px; }
+  .mtl .hint { text-align: center; font-size: 9.5px; color: var(--muted); padding: 3px 0 1px; }
+
+  /* ---- THE CARD STAGE — fixed envelope (concern 1) ---- */
+  .stage { flex: 1; min-height: 0; position: relative; padding: 14px 14px 6px; display: flex; }
+  .stage .navarrow { position: absolute; top: 50%; transform: translateY(-50%); width: 30px; height: 44px; border: 2px solid var(--border); background: var(--bg2); box-shadow: var(--shadow-sm); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; z-index: 8; cursor: pointer; }
+  .stage .navarrow.l { left: 2px; } .stage .navarrow.r { right: 2px; }
+  .stage .navarrow.off { opacity: 0.25; }
+
+  /* the card fills the stage — same height for every card → no jitter */
+  .scard { flex: 1; display: flex; flex-direction: column; min-height: 0; background: var(--card); border: 2.5px solid var(--border); border-radius: 6px; box-shadow: var(--shadow-lg); overflow: hidden; }
+  .scard .body { flex: 1; min-height: 0; overflow-y: auto; padding: 14px 15px 8px; display: flex; flex-direction: column; gap: 11px; }
+  .scard .foot { border-top: 2px solid var(--border); padding: 11px 15px; display: flex; align-items: center; gap: 10px; background: var(--card); flex: 0 0 auto; }
+
+  .meta-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .stepnum { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+  .pill { display: inline-block; border: 1.5px solid var(--border); border-radius: 999px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 8px; box-shadow: 1.5px 1.5px 0 rgba(0,0,0,0.8); white-space: nowrap; }
+  .pill.active { background: var(--yellow); } .pill.done { background: var(--mint); } .pill.pending { background: var(--bg2); color: var(--muted); }
+  .stitle { font-family: var(--headline); font-weight: 900; font-size: 22px; line-height: 1.15; }
+  .ctx-line { font-size: 11.5px; font-weight: 600; color: var(--muted); }
+
+  /* unified top band — carries parent context (or step number) + the state badge,
+     replacing the old purple strip + separate "Step N of M" meta row (concern: the
+     two stacked chrome strips ate the top third of the card). */
+  .topband { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 14px; border-bottom: 2.5px solid var(--border); flex: 0 0 auto; }
+  .topband .tb-ctx { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .topband.child { background: var(--purple-light); }
+  .topband.child .tb-ctx { font-family: var(--headline); font-weight: 800; font-size: 13px; text-transform: none; letter-spacing: 0; color: var(--text); }
+
+  .cbx { width: 22px; height: 22px; border: 2.5px solid var(--border); border-radius: 4px; background: var(--card); display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; flex: 0 0 auto; box-shadow: 1.5px 1.5px 0 rgba(0,0,0,0.8); }
+  .cbx.on { background: var(--primary); color: #fff; }
+  .cbx.sm { width: 17px; height: 17px; font-size: 10px; border-width: 2px; box-shadow: none; }
+  .cbx-label { font-size: 13.5px; font-weight: 700; }
+
+  /* evidence (concern 2) */
+  .ev-rail { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .ev-chip { display: inline-flex; align-items: center; gap: 5px; background: var(--purple-light); border: 1.5px solid var(--border); border-radius: 999px; font-family: var(--mono); font-size: 10px; padding: 3px 9px; box-shadow: 1.5px 1.5px 0 rgba(0,0,0,0.8); }
+  .ev-add { display: inline-flex; align-items: center; gap: 5px; border: 2px dashed var(--border); border-radius: 999px; font-size: 11px; font-weight: 700; padding: 4px 11px; background: var(--card); cursor: pointer; }
+  .ev-add.solid { border-style: solid; background: var(--bg2); box-shadow: var(--shadow-sm); }
+  .qa-row { display: flex; flex-wrap: wrap; gap: 7px; }
+  .qa { display: inline-flex; align-items: center; gap: 5px; border: 2px solid var(--border); background: var(--bg2); border-radius: 4px; box-shadow: var(--shadow-sm); font-size: 11.5px; font-weight: 600; padding: 6px 10px; }
+
+  .zone-label { font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--disabled); }
+
+  /* candidate B — sub-deck */
+  .deck { flex: 1; display: flex; flex-direction: column; min-height: 0; position: relative; padding-top: 11px; }
+  .deck .peek { position: absolute; left: 7px; right: 7px; top: 5px; height: 13px; border: 2.5px solid var(--border); border-bottom: none; border-radius: 6px 6px 0 0; background: var(--bg2); z-index: 0; }
+  .deck .peek.p2 { top: 0; left: 13px; right: 13px; background: #e6e6e6; }
+  .pstrip { background: var(--purple-light); border: 2.5px solid var(--border); border-bottom-width: 0; border-radius: 6px 6px 0 0; padding: 8px 12px; display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; }
+  .pstrip .pt { font-family: var(--headline); font-weight: 800; font-size: 13px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pstrip .ct { font-family: var(--mono); font-size: 10px; }
+  .pstrip .rail-prog { display: flex; gap: 3px; }
+  .pstrip .rp { width: 16px; height: 5px; border: 1px solid var(--border); border-radius: 2px; background: var(--card); }
+  .pstrip .rp.on { background: var(--primary); }
+  .scard.indeck { border-top-left-radius: 0; border-top-right-radius: 0; box-shadow: var(--shadow-md); }
+
+  /* candidate B left rail accent inside deck */
+  .deck-rail { border-left: 5px solid var(--purple); }
+
+  /* candidate C — parent overview */
+  .ov-list { border: 2px solid var(--border); border-radius: 5px; overflow: hidden; }
+  .ov-row { display: flex; align-items: center; gap: 9px; padding: 9px 11px; border-bottom: 1.5px solid var(--border-subtle); font-size: 13px; font-weight: 500; background: var(--card); }
+  .ov-row:last-child { border-bottom: none; }
+  .ov-row.cur { background: var(--yellow); font-weight: 700; }
+  .ov-row .t { flex: 1; } .ov-row .evb { font-family: var(--mono); font-size: 9.5px; background: var(--purple-light); border: 1px solid var(--border); border-radius: 999px; padding: 1px 6px; }
+  /* nested substep row (goal card checklist) — the indentation grammar, in a flat list */
+  .ov-row.sub { padding-left: 30px; font-size: 12px; background: #fcfcfc; }
+  .ov-row.sub .cbx.sm { width: 15px; height: 15px; font-size: 9px; }
+  .rollup { display: flex; align-items: center; gap: 8px; background: var(--bg2); border: 1.5px solid var(--border); border-radius: 5px; padding: 8px 10px; font-size: 11.5px; font-weight: 600; }
+
+  /* ---- timeline-spine container (the "timeline styling" exploration) ----
+     A compact vertical journey rendered INSIDE a card. C's parent overview and the
+     goal card share it via the Container toggle. This is a THIRD timeline expression
+     (cf. the horizontal MiniTimeline above + the full TimelineJourneyScreen) — the
+     toggle keeps the flat .ov-list checklist comparable so the redundancy can be judged. */
+  .spine { position: relative; padding: 2px 0; }
+  .spine::before { content: ''; position: absolute; left: 12px; top: 16px; bottom: 16px; width: 3px; background: var(--border-subtle); z-index: 0; }
+  .srow { position: relative; display: flex; align-items: center; gap: 10px; margin-bottom: 9px; z-index: 1; }
+  .srow:last-child { margin-bottom: 0; }
+  .snode { width: 24px; height: 24px; border-radius: 50%; border: 2.5px solid var(--disabled); background: var(--card); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-weight: 700; font-size: 11px; color: var(--muted); flex: 0 0 auto; box-shadow: 1.5px 1.5px 0 rgba(0,0,0,0.8); }
+  .snode.done { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .snode.cur { border: 3px solid var(--border); color: var(--text); }
+  .snode.sm { width: 18px; height: 18px; font-size: 9px; border-width: 2px; box-shadow: none; }
+  .scell { flex: 1; display: flex; align-items: center; gap: 8px; border: 2px solid var(--border); border-radius: 4px; background: var(--card); box-shadow: 1.5px 1.5px 0 rgba(0,0,0,0.8); padding: 7px 10px; min-height: 38px; }
+  .scell.cur { background: var(--yellow); }
+  .scell .t { flex: 1; font-size: 12.5px; font-weight: 700; line-height: 1.2; }
+  .scell .evb { font-family: var(--mono); font-size: 9.5px; background: var(--purple-light); border: 1px solid var(--border); border-radius: 999px; padding: 1px 6px; }
+  .scell.slim { min-height: 32px; padding: 5px 9px; }
+  .scell.slim .t { font-size: 12px; font-weight: 600; }
+  /* indented sub-spine for a parent's children (goal card) — branches off the main spine */
+  .spine .sub { position: relative; margin-left: 32px; padding-left: 6px; margin-top: 9px; margin-bottom: 9px; }
+  .spine .sub::before { content: ''; position: absolute; left: 0; top: -3px; bottom: 11px; width: 2.5px; background: var(--border); z-index: 0; }
+
+  .dots-row { display: flex; justify-content: center; gap: 6px; padding: 8px 0 4px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--border); background: var(--card); }
+  .dot.on { background: var(--border); }
+  .dot.done { background: var(--primary); border-color: var(--primary); }
+  .dot.goal { border-color: var(--yellow); }
+
+  .drawer { border-top: 2.5px solid var(--border); background: var(--card); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; font-weight: 700; }
+  .drawer .evb { font-family: var(--mono); font-size: 9.5px; background: var(--purple-light); border: 1px solid var(--border); border-radius: 999px; padding: 1px 6px; margin-left: 6px; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <span class="proto-tag">Prototype — throwaway</span>
+  <h1>A: The focus step card under feature load</h1>
+  <p>The substep <em>grammar</em> shipped (indentation, #288). This studies the focus-mode questions that grammar pass parked: a <strong>stable card frame</strong>, an explicit <strong>evidence-add</strong> affordance, and the <strong>parent↔substep tie</strong>. Three candidates differ on the tie; all share the frame and evidence. The parent overview and the goal card list their parts <strong>as the timeline</strong> (a compact vertical spine).</p>
+  <p>In-phone <kbd>‹</kbd>/<kbd>›</kbd> move through cards — watch the frame stay put. <kbd>←</kbd>/<kbd>→</kbd> cycle candidates.</p>
+</div>
+
+<div class="controls">
+  <div class="ctl-group" id="ctl-cand"><span class="ctl-label">Candidate</span></div>
+  <div class="ctl-group" id="ctl-data"><span class="ctl-label">Dataset</span></div>
+  <div class="ctl-group" id="ctl-state"><span class="ctl-label">State words (E)</span></div>
+</div>
+
+<div class="layout-banner" id="banner"></div>
+
+<div class="stage-row">
+  <div class="phone"><div class="screen" id="screen"></div></div>
+  <div class="stage-notes" id="notes"></div>
+</div>
+
+<div class="switcher" id="switcher">
+  <button id="sw-prev" aria-label="previous">←</button>
+  <span class="lbl" id="sw-label"></span>
+  <button id="sw-next" aria-label="next">→</button>
+</div>
+
+<script>
+/* ================= candidates ================= */
+const CANDS = [
+  { key:'A', name:'A — Anchored leaf',
+    blurb:'Keep the shipped sibling-card model. A persistent PARENT BAND pins above every child card to tie it to its parent; the card body is a fixed zoned scaffold.',
+    tags:[['good','no model change'],['watch','parent is still its own bare card']] },
+  { key:'B', name:'B — Sub-deck',
+    blurb:'A parent’s substeps read as ONE grouped deck: shared left rail + a pinned parent strip with part-progress, siblings peeking behind. Swiping within the parent moves through the deck.',
+    tags:[['good','strongest parent tie'],['watch','new carousel mechanic to build']] },
+  { key:'C', name:'C — Parent overview',
+    blurb:'The parent becomes its OWN overview card: lists its parts, rolls up their evidence, and holds the manual “mark parent complete” invite (Q9). Leaves follow as their own cards. Containment-in-focus, adapted into the indentation app.',
+    tags:[['good','answers parent rollup (Q10)'],['good','clear Q9 invite home'],['watch','two reads to reach a leaf’s action'],['watch','overview vs leaf = two card archetypes']] },
+];
+const DATASETS = [
+  { key:'mid', name:'Tomás — mid-work' },
+  { key:'done', name:'Tomás — circuits done (Q9)' },
+];
+
+/* goal + steps. children of s2; s2b/s2c flip with dataset. */
+function buildData(ds) {
+  const done = ds === 'done';
+  return {
+    goal: 'Build practice panel',
+    steps: [
+      { id:'s1', title:'Plan layout & buy materials', status:'completed', ev:2 },
+      { id:'s2', title:'Wire the circuits', status:'pending', isParent:true, children:[
+        { id:'s2a', title:'15-amp lighting circuit', status:'completed', ev:1 },
+        { id:'s2b', title:'20-amp small-appliance circuit', status: done?'completed':'pending', ev: done?1:0,
+          planned:['photo','note'], captured: done?['photo','note']:['photo'] },
+        { id:'s2c', title:'240V dryer circuit', status: done?'completed':'pending', ev: done?2:0 },
+      ]},
+      { id:'s3', title:'Inspection & labels', status:'pending' },
+    ],
+  };
+}
+
+/* flatten parent-then-children, like FocusModeScreen's groupStepsByParent */
+function flatten(d) {
+  const seq = [];
+  for (const s of d.steps) {
+    seq.push({ ...s, kind: s.isParent ? 'parent' : 'flat' });
+    if (s.children) for (const c of s.children) seq.push({ ...c, kind:'child', parent: s });
+  }
+  return seq;
+}
+function progress(d) {
+  let t=0, done=0;
+  for (const s of d.steps) { t++; if (s.status==='completed') done++; if (s.children) for (const c of s.children){ t++; if (c.status==='completed') done++; } }
+  return { done, total:t };
+}
+function firstPendingIndex(seq) {
+  // mirror findFirstPendingLeafIndex: pending child wins; else first pending lead
+  for (let i=0;i<seq.length;i++){
+    const x = seq[i];
+    if (x.kind==='child' && x.status!=='completed') return i;
+    if (x.kind==='flat' && x.status!=='completed') return i;
+    if (x.kind==='parent') {
+      const allDone = x.children.every(c=>c.status==='completed');
+      if (allDone && x.status!=='completed') return i; // invite state lands on parent
+    }
+  }
+  return 0;
+}
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const stateWord = (status, on) => {
+  if (!on) return status==='completed'?'Done':status==='in-progress'?'Active':'Pending';
+  return status==='completed'?'Nailed it':status==='in-progress'?'Wiring it up':'Up next';
+};
+const statePill = (status, on) => {
+  const cls = status==='completed'?'done':status==='in-progress'?'active':'pending';
+  return `<span class="pill ${cls}">${esc(stateWord(status,on))}</span>`;
+};
+
+/* ================= shared partials ================= */
+function header(d) {
+  return `<div class="hdr"><span class="gt">${esc(d.goal)}</span>
+    <span class="ico">👁</span><span class="ico">✎</span></div>`;
+}
+function miniTimeline(d, curIdx, seq) {
+  // curIdx is index into seq; map to node rendering
+  let track = '';
+  d.steps.forEach((s, i) => {
+    if (i>0) track += `<span class="seg-line${d.steps[i-1].status==='completed'?'':' pend'}"></span>`;
+    const flatIndex = seq.findIndex(x => x.id === s.id);
+    const cur = flatIndex === curIdx;
+    if (!s.children) { track += `<span class="node${s.status==='completed'?' done':''}${cur?' cur':''}"></span>`; return; }
+    track += `<span class="grp-indent"><span class="node${s.status==='completed'?' done':''}${cur?' cur':''}"></span>`;
+    s.children.forEach(c => {
+      const ci = seq.findIndex(x => x.id === c.id);
+      track += `<span class="seg-line short${c.status==='completed'?'':' pend'}"></span><span class="node child${c.status==='completed'?' done':''}${ci===curIdx?' cur':''}"></span>`;
+    });
+    track += `</span>`;
+  });
+  track += `<span class="seg-line pend"></span><span class="node goal${curIdx>=seq.length?' cur':''}"></span>`;
+  return `<div class="mtl"><div class="mtl-track">${track}</div><div class="hint">tap to expand timeline</div></div>`;
+}
+function dots(seq, curIdx) {
+  let h = '';
+  seq.forEach((x,i)=>{ h += `<span class="dot${x.status==='completed'?' done':''}${i===curIdx?' on':''}"></span>`; });
+  h += `<span class="dot goal${curIdx>=seq.length?' on':''}"></span>`;
+  return `<div class="dots-row">${h}</div>`;
+}
+
+/* unified top band: parent context (child) or step number, + the state badge.
+   Replaces the old separate purple strip + "Step N of M" meta row. */
+function topBand(x, seq, curIdx, status, stateOn) {
+  const pill = statePill(status, stateOn);
+  if (x.kind === 'child') {
+    const k = x.parent.children.findIndex(c => c.id === x.id) + 1;
+    return `<div class="topband child"><span class="tb-ctx">↳ ${esc(x.parent.title)} · part ${k} of ${x.parent.children.length}</span>${pill}</div>`;
+  }
+  const extra = x.kind === 'parent' ? ` · ${x.children.length} parts` : '';
+  return `<div class="topband"><span class="tb-ctx">Step ${curIdx + 1} of ${seq.length}${extra}</span>${pill}</div>`;
+}
+
+/* evidence rail (concern 2) — explicit add + captured chips */
+function evidenceRail(step) {
+  const cap = (step.captured || []);
+  const chips = cap.map(t => `<span class="ev-chip">${t==='photo'?'📷':t==='note'?'📝':'📎'} ${t}</span>`).join('');
+  const plannedLeft = (step.planned||[]).filter(t => !cap.includes(t));
+  const need = plannedLeft.length ? `<span class="qa">📷 ${esc(plannedLeft[0])} <span style="color:var(--error)">• needed</span></span>` : '';
+  return `<div><span class="zone-label">Evidence</span>
+    <div class="ev-rail" style="margin-top:5px">
+      ${chips}
+      <span class="ev-add solid">＋ Add evidence</span>
+      ${need}
+    </div></div>`;
+}
+
+/* the bottom action (checkbox or blocked) — pinned in .foot for a stable frame */
+function actionFoot(step, label) {
+  const blocked = step.planned && step.planned.some(t => !(step.captured||[]).includes(t)) && step.status!=='completed';
+  if (blocked) return `<div class="foot"><span style="font-style:italic;color:var(--muted);font-size:12.5px">Add the planned evidence to mark this complete.</span></div>`;
+  return `<div class="foot"><span class="cbx${step.status==='completed'?' on':''}">${step.status==='completed'?'✓':''}</span>
+    <span class="cbx-label">${label}</span></div>`;
+}
+
+/* ================= CANDIDATE A — anchored leaf ================= */
+function cardA(x, d, seq, curIdx, stateOn) {
+  const status = curIdx === firstPendingIndex(seq) ? 'in-progress' : x.status;
+  let ctx = '';
+  if (x.kind === 'parent') {
+    const allDone = x.children.every(c=>c.status==='completed');
+    ctx = allDone ? `<div class="ctx-line">all ${x.children.length} parts done — finishing is your call</div>`
+                  : `<div class="ctx-line">${x.children.filter(c=>c.status==='completed').length} of ${x.children.length} parts done</div>`;
+  }
+  const label = x.kind==='parent' ? `Mark "${esc(x.title)}" complete` : 'Mark complete';
+  return `<div class="scard">
+    ${topBand(x, seq, curIdx, status, stateOn)}
+    <div class="body">
+      <div class="stitle">${esc(x.title)}</div>
+      ${ctx}
+      ${evidenceRail(x)}
+    </div>
+    ${actionFoot({...x, status}, label)}
+  </div>`;
+}
+
+/* ================= CANDIDATE B — sub-deck ================= */
+function cardB(x, d, seq, curIdx, stateOn) {
+  const status = curIdx === firstPendingIndex(seq) ? 'in-progress' : x.status;
+  // is this card part of a parent's deck?
+  const par = x.kind==='child' ? x.parent : (x.kind==='parent' ? x : null);
+  if (par) {
+    const doneCount = par.children.filter(c=>c.status==='completed').length;
+    const rail = par.children.map(c=>`<span class="rp${c.status==='completed'?' on':''}"></span>`).join('');
+    const partLabel = x.kind==='child'
+      ? `part ${par.children.findIndex(c=>c.id===x.id)+1} of ${par.children.length}`
+      : `${doneCount} of ${par.children.length} parts`;
+    const inner = x.kind==='parent'
+      ? `<div class="ctx-line">${doneCount===par.children.length?'all parts done — finishing the step is your call':'pick up where you left off'}</div>`
+      : `${evidenceRail(x)}`;
+    const label = x.kind==='parent' ? `Mark "${esc(par.title)}" complete` : 'Mark complete';
+    // The pinned parent strip IS the band — it carries the parent, part-progress, and the state badge.
+    return `<div class="deck deck-rail">
+      <span class="peek p2"></span><span class="peek"></span>
+      <div class="pstrip" style="position:relative;z-index:1"><span class="pt">${esc(par.title)}</span><span class="ct">${partLabel}</span><span class="rail-prog">${rail}</span>${statePill(status, stateOn)}</div>
+      <div class="scard indeck" style="position:relative;z-index:1">
+        <div class="body">
+          <div class="stitle">${esc(x.title)}</div>
+          ${inner}
+        </div>
+        ${actionFoot({...x, status}, label)}
+      </div></div>`;
+  }
+  // flat step — plain card with the unified band
+  return `<div class="scard">
+    ${topBand(x, seq, curIdx, status, stateOn)}
+    <div class="body">
+      <div class="stitle">${esc(x.title)}</div>
+      ${evidenceRail(x)}
+    </div>
+    ${actionFoot({...x, status}, 'Mark complete')}
+  </div>`;
+}
+
+/* ================= CANDIDATE C — parent overview ================= */
+function cardC(x, d, seq, curIdx, stateOn) {
+  const status = curIdx === firstPendingIndex(seq) ? 'in-progress' : x.status;
+  if (x.kind === 'parent') {
+    const totalEv = x.children.reduce((s,c)=>s+(c.ev||0),0);
+    const allDone = x.children.every(c=>c.status==='completed');
+    const curId = allDone ? null : nextLeaf(x);
+    return `<div class="scard">
+      <div class="topband"><span class="tb-ctx">Step ${curIdx+1} of ${seq.length} · overview</span>${statePill(status, stateOn)}</div>
+      <div class="body">
+        <div class="stitle">${esc(x.title)}</div>
+        ${spineList(x.children, curId)}
+        <div class="rollup">🧾 Evidence across parts <span class="evb" style="font-family:var(--mono);font-size:9.5px;background:var(--purple-light);border:1px solid var(--border);border-radius:999px;padding:1px 6px">E ${totalEv}</span></div>
+      </div>
+      ${actionFoot({...x, status}, allDone ? `Mark "${esc(x.title)}" complete` : 'Open next part →')}
+    </div>`;
+  }
+  // child / flat leaf — the unified band carries the parent line (concern 4); title leads
+  return `<div class="scard">
+    ${topBand(x, seq, curIdx, status, stateOn)}
+    <div class="body">
+      <div class="stitle">${esc(x.title)}</div>
+      ${evidenceRail(x)}
+    </div>
+    ${actionFoot({...x, status}, 'Mark complete')}
+  </div>`;
+}
+function nextLeaf(parent){ const p = parent.children.find(c=>c.status!=='completed'); return p?p.id:null; }
+
+/* the parts list rendered AS the timeline — a compact vertical journey spine: node-on-a-
+   connector, ✓ for done, the active node ringed, a parent's substeps as an indented
+   sub-spine (the indentation grammar). Same grammar as the journey view / MiniTimeline,
+   sized to fit inside a card. C's parent overview AND the goal card render their parts
+   this way — this IS the list, not a toggle. `curId` rings the active node. */
+function spineList(items, curId) {
+  const node = (s, label, sm) => {
+    const cls = ['snode']; let inner = label;
+    if (s.status === 'completed') { cls.push('done'); inner = '✓'; }
+    else if (s.id === curId) cls.push('cur'); else cls.push('pend');
+    if (sm) cls.push('sm');
+    return `<span class="${cls.join(' ')}">${inner}</span>`;
+  };
+  const row = (s, label, sm) => `<div class="srow">${node(s, label, sm)}
+    <div class="scell${sm?' slim':''}${s.id===curId?' cur':''}"><span class="t">${esc(s.title)}</span>${s.ev?`<span class="evb">E ${s.ev}</span>`:''}</div></div>`;
+  let h = '';
+  items.forEach((s, i) => {
+    h += row(s, i + 1, false);
+    if (s.children) h += `<div class="sub">${s.children.map((c, j) => row(c, String.fromCharCode(97 + j), true)).join('')}</div>`;
+  });
+  return `<div class="spine">${h}</div>`;
+}
+
+/* goal card (the last card) — same in all candidates. MIRRORS the parent's parts list:
+   it shows the whole journey (top-level steps + substeps) as the timeline spine, instead
+   of jumping straight to goal-evidence. */
+function goalCard(d, stateOn) {
+  const p = progress(d);
+  const allDone = p.done === p.total;
+  const seq = flatten(d);
+  const curIdx = firstPendingIndex(seq);
+  const curId = allDone ? null : (seq[curIdx] ? seq[curIdx].id : null);
+  return `<div class="scard">
+    <div class="topband"><span class="tb-ctx">Goal · ${p.done} of ${p.total} steps</span>${statePill(allDone?'in-progress':'pending', stateOn)}</div>
+    <div class="body">
+      <div class="stitle">${esc(d.goal)}</div>
+      <div class="ctx-line">${allDone?'every step is done — ready when you are':'finish the steps to wrap up the goal'}</div>
+      <div><span class="zone-label">The whole journey</span><div style="margin-top:6px">${spineList(d.steps, curId)}</div></div>
+      <div><span class="zone-label">Goal evidence</span><div class="ev-rail" style="margin-top:5px"><span class="ev-add solid">＋ Add evidence</span></div></div>
+    </div>
+    <div class="foot"><span class="cbx${allDone?'':''}"></span><span class="cbx-label">${allDone?'Mark goal complete':'Steps left to finish'}</span></div>
+  </div>`;
+}
+
+const RENDER = { A: cardA, B: cardB, C: cardC };
+
+/* ================= notes per candidate ================= */
+function notesFor(cand) {
+  const four = `
+    <h4>The three questions</h4>
+    <ul>
+      <li><span class="concern">1</span><strong>Stable frame:</strong> the card fills a fixed stage; only the inner body scrolls. Step through with ‹ › — the frame never resizes. <em>(shared by all three)</em></li>
+      <li><span class="concern">2</span><strong>Evidence add:</strong> explicit “＋ Add evidence” on every leaf; captured pieces show as chips; a planned-but-missing type shows “• needed”. <em>(shared)</em></li>
+      <li><span class="concern">3</span><strong>Parent tie:</strong> differs per candidate — see below.</li>
+    </ul>`;
+  const per = {
+    A: `<h4>A — Anchored leaf</h4><ul>
+        <li>Tie = a <strong>parent band</strong> pinned above each child card + the MiniTimeline sub-spine. No carousel change.</li>
+        <li>The parent keeps its own bare card (still a sibling) — the band doesn’t fix that.</li></ul>`,
+    B: `<h4>B — Sub-deck</h4><ul>
+        <li>Tie is strongest: a parent’s parts are <strong>one deck</strong> — shared left rail, pinned parent strip with part-progress, siblings peeking behind.</li>
+        <li>Cost: a new carousel mechanic (deck-within-carousel) to build.</li></ul>`,
+    C: `<h4>C — Parent overview</h4><ul>
+        <li>The parent is its <strong>own overview card</strong>: parts list + checkmarks, an <strong>evidence rollup</strong> (answers Q10), and the manual <strong>complete-parent invite</strong> (Q9).</li>
+        <li>Leaves follow as their own cards with a quiet parent line.</li>
+        <li>Cost: two card archetypes (overview vs leaf) and one extra read to reach a leaf’s action.</li></ul>`,
+  };
+  const container = `<h4>Parts list mirrors the timeline</h4><ul>
+    <li>C's parent overview and the <strong>goal card</strong> render their parts <strong>as the timeline</strong> — node-on-a-connector, ✓ for done, the active node ringed, a parent's substeps as an indented sub-spine. This is the list; there's no checklist fallback.</li>
+    <li>The goal card mirrors the parent: under “The whole journey” it lists the whole journey (steps + substeps), not just goal-evidence.</li>
+    <li><span class="concern">!</span><strong>Judge:</strong> on the goal card this spine sits right under the horizontal MiniTimeline — both show the whole journey. Redundant, or index-then-contents (the spine carries titles + evidence the MiniTimeline can't)?</li>
+  </ul>`;
+  return `<h3>What to look for</h3>${four}${per[cand]}${container}
+    <h4>Still open after this</h4>
+    <ul>
+      <li>Progress counting (5/6 vs leaf-only) — unchanged from the grammar record.</li>
+      <li>Depth beyond one level (Q6) — out of scope, stays post-Stage-6.</li>
+    </ul>`;
+}
+
+/* ================= page wiring ================= */
+const params = new URLSearchParams(location.search);
+const state = {
+  cand: CANDS.some(c=>c.key===params.get('cand')) ? params.get('cand') : 'A',
+  data: DATASETS.some(c=>c.key===params.get('data')) ? params.get('data') : 'mid',
+  stateW: params.get('state') === '1',
+  idx: null,
+};
+function syncUrl(){ const q=new URLSearchParams({cand:state.cand,data:state.data,state:state.stateW?'1':'0'}); history.replaceState(null,'','?'+q.toString()); }
+
+function segButtons(el, items, getKey, setKey) {
+  el.querySelectorAll('.seg').forEach(b=>b.remove());
+  for (const it of items) {
+    const b=document.createElement('button');
+    b.className='seg'+(getKey()===it.key?' on':'');
+    b.textContent=it.name; b.onclick=()=>{ setKey(it.key); render(); };
+    el.appendChild(b);
+  }
+}
+function toggleButtons(el, on, set, labels) {
+  el.querySelectorAll('.seg').forEach(b=>b.remove());
+  [['off',labels[0],false],['on',labels[1],true]].forEach(([k,n,v])=>{
+    const b=document.createElement('button'); b.className='seg'+(on===v?' on':'');
+    b.textContent=n; b.onclick=()=>{ set(v); render(); }; el.appendChild(b);
+  });
+}
+
+function render() {
+  syncUrl();
+  const d = buildData(state.data);
+  const seq = flatten(d);
+  if (state.idx === null) state.idx = firstPendingIndex(seq);
+  state.idx = Math.max(0, Math.min(state.idx, seq.length)); // seq.length === goal card
+
+  segButtons(document.getElementById('ctl-cand'), CANDS, ()=>state.cand, k=>{state.cand=k;});
+  segButtons(document.getElementById('ctl-data'), DATASETS, ()=>state.data, k=>{state.data=k; state.idx=null;});
+  toggleButtons(document.getElementById('ctl-state'), state.stateW, v=>state.stateW=v, ['Done/Pending','playful pool']);
+
+  const c = CANDS.find(x=>x.key===state.cand);
+  const banner = document.getElementById('banner');
+  banner.innerHTML = `<h2>${c.name}</h2><p>${c.blurb}</p>
+    <div class="tags">${c.tags.map(([k,t])=>`<span class="tag ${k}">${k==='good'?'✓':'⚑'} ${t}</span>`).join('')}</div>`;
+
+  const isGoal = state.idx >= seq.length;
+  const x = isGoal ? null : seq[state.idx];
+  const cardHtml = isGoal ? goalCard(d, state.stateW) : RENDER[state.cand](x, d, seq, state.idx, state.stateW);
+
+  const leftOff = state.idx <= 0 ? ' off' : '';
+  const rightOff = state.idx >= seq.length ? ' off' : '';
+  document.getElementById('screen').innerHTML = `
+    ${header(d)}
+    ${miniTimeline(d, state.idx, seq)}
+    <div class="stage">
+      <div class="navarrow l${leftOff}" id="nav-l">‹</div>
+      ${cardHtml}
+      <div class="navarrow r${rightOff}" id="nav-r">›</div>
+    </div>
+    ${dots(seq, state.idx)}
+    <div class="drawer"><span>Evidence drawer</span><span>▲</span></div>`;
+
+  document.getElementById('nav-l').onclick = ()=>{ if(state.idx>0){state.idx--; render();} };
+  document.getElementById('nav-r').onclick = ()=>{ if(state.idx<seq.length){state.idx++; render();} };
+  document.getElementById('notes').innerHTML = notesFor(state.cand);
+  document.getElementById('sw-label').textContent = c.name;
+}
+
+function cycle(dir){ const i=CANDS.findIndex(x=>x.key===state.cand); state.cand=CANDS[(i+dir+CANDS.length)%CANDS.length].key; render(); }
+document.getElementById('sw-prev').onclick=()=>cycle(-1);
+document.getElementById('sw-next').onclick=()=>cycle(1);
+document.addEventListener('keydown', e=>{
+  if (e.key==='ArrowLeft') cycle(-1);
+  if (e.key==='ArrowRight') cycle(1);
+});
+render();
+</script>
+</body>
+</html>
