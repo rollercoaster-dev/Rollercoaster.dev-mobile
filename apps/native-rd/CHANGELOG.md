@@ -1,5 +1,23 @@
 # native-rd
 
+## [0.1.16](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/compare/v0.1.15...v0.1.16) (2026-06-21)
+
+
+### Features
+
+* **focus:** step-card frame — stable envelope + foot-pinned evidence + parent overview ([#360](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/360)) ([#361](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/361)) ([a36cfc6](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/a36cfc64fd904c73212a0189db429ed20469ce04))
+* **native-rd:** name saved & exported badge files after the goal title ([#358](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/358)) ([35b1d52](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/35b1d520c812f764512991d256f79a3e7ca6e233))
+* **native-rd:** timeline substructure rendering — sub-step sub-spine ([#293](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/293)) ([#354](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/354)) ([e39e39d](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/e39e39ddc40819fa124e506d705868f751d81dba))
+* **reading:** [#292](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/292) leaf-led next step — goal card, FocusMode snap, MiniTimeline sub-spine ([#338](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/338)) ([36809fc](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/36809fcb24d730008952d9cd6ec4871788690202))
+* **steplist:** drag-to-reparent gesture (vertical-only + dwell-to-demote) ([#330](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/330)) ([#333](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/333)) ([f063b47](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/f063b47bef1bf5825a8fa72e869a78de054bf1ad))
+* **steps:** sub-step data layer + authoring affordance ([#290](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/290), [#291](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/291)) ([#331](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/331)) ([6367fe5](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/6367fe5652af4035ad33397efd0fd54f03ca64af))
+
+
+### Bug Fixes
+
+* **native-rd:** high-contrast surface token + Phosphor reorder icons ([#336](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/336)) ([6f859c7](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/6f859c797b6f78e7e0ef7c9498851e20c4f46e15))
+* **native-rd:** seed list beneath cross-tab-deep-linked detail so back/tab work ([#325](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/325)) ([#326](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/326)) ([a1eb2f1](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/a1eb2f109eb036c1022989ff5a8acfd749aa2dfc))
+
 ## [0.1.15](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/compare/v0.1.14...v0.1.15) (2026-06-14)
 
 
