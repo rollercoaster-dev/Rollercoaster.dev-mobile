@@ -2,7 +2,6 @@ import React, { memo } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import Animated from "react-native-reanimated";
 import { useTranslation } from "react-i18next";
-import { Card } from "../Card";
 import { StatusBadge, type StatusBadgeVariant } from "../StatusBadge";
 import { Checkbox } from "../Checkbox";
 import { useFlashOnIncrease } from "../../hooks/useFlashOnIncrease";
@@ -114,11 +113,12 @@ function StepCardComponent({
     : t("common:stepCard.checkbox.markComplete");
 
   return (
-    <Card>
+    <View style={styles.cardOuter}>
       <ScrollView
+        style={styles.cardBody}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={styles.container}
+        contentContainerStyle={styles.cardBodyContent}
       >
         <View style={styles.metaRow}>
           <Text style={styles.stepNumber}>
@@ -179,6 +179,32 @@ function StepCardComponent({
           </View>
         )}
 
+        {step.evidenceCount > 0 && (
+          <View style={styles.evidenceBadgeWrapper}>
+            <Pressable
+              onPress={onEvidenceTap}
+              style={styles.evidenceBadge}
+              accessible
+              accessibilityRole="button"
+              accessibilityLabel={t("common:stepCard.evidenceBadge.a11y", {
+                count: step.evidenceCount,
+              })}
+            >
+              <Text style={styles.evidenceText}>{evidenceLabel}</Text>
+            </Pressable>
+            <Animated.View
+              style={[styles.evidenceFlash, flashStyle]}
+              pointerEvents="none"
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+            />
+          </View>
+        )}
+      </ScrollView>
+
+      {/* Pinned foot — the completion action stays visible regardless of how far
+          the body scrolls, keeping the card envelope stable. */}
+      <View style={styles.cardFoot}>
         {isBlocked ? (
           <Text
             style={styles.addEvidencePromptText}
@@ -202,30 +228,8 @@ function StepCardComponent({
             />
           </View>
         )}
-
-        {step.evidenceCount > 0 && (
-          <View style={styles.evidenceBadgeWrapper}>
-            <Pressable
-              onPress={onEvidenceTap}
-              style={styles.evidenceBadge}
-              accessible
-              accessibilityRole="button"
-              accessibilityLabel={t("common:stepCard.evidenceBadge.a11y", {
-                count: step.evidenceCount,
-              })}
-            >
-              <Text style={styles.evidenceText}>{evidenceLabel}</Text>
-            </Pressable>
-            <Animated.View
-              style={[styles.evidenceFlash, flashStyle]}
-              pointerEvents="none"
-              accessibilityElementsHidden
-              importantForAccessibility="no-hide-descendants"
-            />
-          </View>
-        )}
-      </ScrollView>
-    </Card>
+      </View>
+    </View>
   );
 }
 

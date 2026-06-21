@@ -26,11 +26,10 @@ the reviewed prototype — no deviation):
 **Implementation path: Phase 0 → Phase 1 → Phase 2 → Phase 3C → Phase 4.**
 Phases 3A and 3B are skipped (candidates not chosen).
 
-**Still outstanding before code (Phase 0 deliverable):** the candidate selection +
-session observations must be written into the prototype record at
+**Phase 0 deliverable — DONE** (commit `ede0cd9`): the candidate selection +
+session observations are recorded in the prototype record at
 `apps/native-rd/docs/plans/phase-b-prototype-records/A-substructure.md`
-(append a "focus-card gate session" section mirroring the 2026-06-11 ND-user gate
-entry). This has not been done yet.
+("ND-user gate session (2026-06-21)", lines 266–290).
 
 ---
 
@@ -202,19 +201,19 @@ Use both datasets (`?data=mid` and `?data=done`).
 
 **Changes**:
 
-- [ ] In `CardCarousel.tsx` `AnimatedCard`, change the animated style so the
+- [x] In `CardCarousel.tsx` `AnimatedCard`, change the animated style so the
       card fills its track slot: remove `justifyContent: "center"`, set children
       to `flex: 1` so they expand to the track height rather than shrink-wrapping.
       (Current: `top: 0, bottom: 0, justifyContent: center` → card is vertically
       centred and shrinks to content. Target: card fills the slot.)
-- [ ] In `StepCard.tsx`, restructure the layout to the zoned scaffold from the
+- [x] In `StepCard.tsx`, restructure the layout to the zoned scaffold from the
       prototype: - outer `View` fills the container (`flex: 1`) - `.body` zone: `flex: 1`, `ScrollView` for overflow (title, parent context,
       evidence zones) - `.foot` zone: `flex: 0`, pinned at bottom — the checkbox / blocked-state
       action (already at the bottom of `ScrollView`; move outside so it stays
       visible regardless of body height)
-- [ ] In `StepCard.styles.ts`, add `cardOuter`, `cardBody`, `cardFoot` styles
+- [x] In `StepCard.styles.ts`, add `cardOuter`, `cardBody`, `cardFoot` styles
       to support the above; ensure `minHeight: 44` on the foot row.
-- [ ] Add a `CardCarousel` test asserting cards fill the track (no shrink-wrap
+- [x] Add a `CardCarousel` test asserting cards fill the track (no shrink-wrap
       by verifying the style passed to `AnimatedCard` does not include
       `justifyContent: center`).
 
@@ -411,7 +410,7 @@ _Skip this phase if A or B is chosen._
       44 × 44 in existing `CardCarousel.styles.ts` — confirm no regression).
 - [ ] Confirm evidence chips: each chip has an icon (not colour-only) + a text
       label. The "needed" marker carries `accessibilityLabel="[type] evidence
-    needed"`. The "Add evidence" button is `accessibilityRole="button"`.
+needed"`. The "Add evidence" button is `accessibilityRole="button"`.
 - [ ] Confirm candidate-specific a11y (parent band / strip / overview) is
       announced as context, not as the actionable step — verify with
       `accessibilityElementsHidden` or `accessibilityLabel` patterns.
@@ -464,6 +463,36 @@ _Skip this phase if A or B is chosen._
 <!-- Entries added by implement skill:
 - [YYYY-MM-DD HH:MM] <discovery description>
 -->
+
+**Phase 1 — stable card frame (2026-06-21):**
+
+- [2026-06-21] `StepCard` dropped its `<Card>` wrapper in favour of a dedicated
+  `cardOuter` style (same neo-brutalist tokens: thick border, `radius.sm`,
+  `cardElevation` shadow, `backgroundSecondary`). The zoned scaffold needs a
+  full-bleed foot divider (`borderTop` edge-to-edge) and a body/foot split that
+  `Card`'s uniform padding fights, so `cardOuter` carries the envelope and the
+  body (`ScrollView`, `flex: 1`) + foot (`flex: 0`, pinned) carry their own
+  padding. Matches the prototype `.scard` / `.body` / `.foot`.
+- [2026-06-21] The fill mechanism for the carousel slot is a new opt-in `fill`
+  prop on the shared `Card` (adds `flex: 1`), not a forced change to all cards.
+  `GoalEvidenceCard` uses `<Card fill>` + `wrapper.flex: 1`; `StepCard`'s
+  `cardOuter` sets `flex: 1` directly.
+- [2026-06-21] **Scope touch (`GoalEvidenceCard`, not in the plan's Phase 1 file
+  list):** the shared `AnimatedCard` change (drop `justifyContent: center`)
+  would otherwise top-align the goal card while step cards fill, resizing the
+  frame on swipe to the last card. Made `GoalEvidenceCard` fill too so the frame
+  is stable across the whole carousel — the Phase 1 objective applied
+  carousel-wide. No content rework (badge-led / resume shortcut stays for
+  #356/#357).
+- [2026-06-21] `AnimatedCard` insets changed `top: 0, bottom: 0` →
+  `top: 4, bottom: 8` so the card's `hardMd` (3px) shadow is not clipped by the
+  track's `overflow: hidden` once the card fills the slot (the previous centred
+  shrink-wrap left shadow room; a flush fill did not).
+- [2026-06-21] Reading-order regression test in `StepCard.test.tsx` updated:
+  the completion prompt/checkbox moved out of the scroll body into the pinned
+  foot, so it now follows the evidence badge in document order
+  (was meta→title→quickActions→prompt→badge; now
+  meta→title→quickActions→badge→foot-prompt). Kept as a layout regression test.
 
 **Research findings (2026-06-21):**
 

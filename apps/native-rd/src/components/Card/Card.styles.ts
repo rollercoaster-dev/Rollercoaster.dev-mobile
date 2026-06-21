@@ -32,4 +32,10 @@ export const styles = StyleSheet.create((theme) => ({
     transform: [{ translateX: 2 }, { translateY: 2 }],
     shadowOffset: { width: 1, height: 1 },
   },
+  // Opt-in for cards that must fill a fixed-height parent (e.g. the focus-mode
+  // carousel slot) instead of shrink-wrapping to content — keeps the card
+  // envelope stable as the user swipes between cards of different lengths.
+  fill: {
+    flex: 1,
+  },
 }));

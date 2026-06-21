@@ -86,11 +86,14 @@ function AnimatedCard({
 
   const animatedStyle = useAnimatedStyle(() => ({
     position: "absolute" as const,
-    top: 0,
-    bottom: 0,
+    // Fill the track slot instead of centring + shrink-wrapping, so every card
+    // keeps the same envelope as the user swipes (the card child uses flex: 1).
+    // `top`/`bottom` leave room for the card's hard shadow, which the track's
+    // overflow:hidden would otherwise clip at the slot edges.
+    top: 4,
+    bottom: 8,
     left: 32,
     right: 32,
-    justifyContent: "center" as const,
     transform: [{ translateX: translateX.value }, { scale: scale.value }],
     opacity: opacity.value,
     zIndex: position === "center" ? 2 : position === "hidden" ? 0 : 1,

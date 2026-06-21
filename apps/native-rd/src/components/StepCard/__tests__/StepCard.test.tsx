@@ -377,9 +377,11 @@ describe("StepCard", () => {
     ).toBe(false);
   });
 
-  // --- Reading order (locks in the row sequence the layout fix established) ---
+  // --- Reading order (locks in the zoned scaffold: scrollable body, then the
+  // pinned foot). The completion prompt/checkbox moved out of the scroll body
+  // into the foot, so it now follows the evidence badge in document order. ---
 
-  it("renders rows in document order: meta → title → quick actions → prompt → badge", () => {
+  it("renders rows in document order: meta → title → quick actions → badge → foot prompt", () => {
     renderWithProviders(
       <StepCard
         step={makeStep({
@@ -401,14 +403,15 @@ describe("StepCard", () => {
       meta: tree.indexOf("In Progress"),
       title: tree.indexOf("Review component architecture"),
       quickActions: tree.indexOf("Add Photo evidence"),
-      prompt: tree.indexOf("Add evidence to complete"),
       badge: tree.indexOf("1 item"),
+      prompt: tree.indexOf("Add evidence to complete"),
     };
     Object.values(positions).forEach((idx) => expect(idx).toBeGreaterThan(-1));
     expect(positions.meta).toBeLessThan(positions.title);
     expect(positions.title).toBeLessThan(positions.quickActions);
-    expect(positions.quickActions).toBeLessThan(positions.prompt);
-    expect(positions.prompt).toBeLessThan(positions.badge);
+    // Evidence badge stays in the scroll body; the foot prompt comes last.
+    expect(positions.quickActions).toBeLessThan(positions.badge);
+    expect(positions.badge).toBeLessThan(positions.prompt);
   });
 
   // --- Parent context line (sub-steps, #292) ---

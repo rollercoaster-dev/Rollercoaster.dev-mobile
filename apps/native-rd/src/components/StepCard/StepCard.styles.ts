@@ -2,8 +2,31 @@ import { StyleSheet } from "react-native-unistyles";
 import { shadowStyle } from "../../styles/shadows";
 
 export const styles = StyleSheet.create((theme) => ({
-  container: {
+  // Zoned scaffold: the card fills its carousel slot (flex: 1) so the envelope
+  // stays the same height between cards; the body scrolls on overflow and the
+  // foot stays pinned at the bottom. Mirrors the prototype `.scard`.
+  cardOuter: {
+    flex: 1,
+    backgroundColor: theme.colors.backgroundSecondary,
+    borderWidth: theme.borderWidth.thick,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.sm,
+    ...shadowStyle(theme, "cardElevation"),
+  },
+  cardBody: {
+    flex: 1,
+  },
+  cardBodyContent: {
+    padding: theme.space[4],
     gap: theme.space[3],
+  },
+  cardFoot: {
+    borderTopWidth: theme.borderWidth.medium,
+    borderTopColor: theme.colors.border,
+    paddingHorizontal: theme.space[4],
+    paddingVertical: theme.space[3],
+    minHeight: 44,
+    justifyContent: "center",
   },
   metaRow: {
     flexDirection: "row",
@@ -78,10 +101,8 @@ export const styles = StyleSheet.create((theme) => ({
     flexDirection: "row",
     alignItems: "center",
     gap: theme.space[3],
-    marginTop: theme.space[1],
   },
   addEvidencePromptText: {
-    marginTop: theme.space[1],
     fontSize: theme.size.sm,
     fontFamily: theme.fontFamily.body,
     color: theme.colors.textMuted,

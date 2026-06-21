@@ -81,7 +81,7 @@ export const GoalEvidenceCard = memo(function GoalEvidenceCard({
 
   return (
     <View style={styles.wrapper}>
-      <Card>
+      <Card fill>
         <View style={styles.container}>
           <View style={styles.metaRow}>
             <Text style={styles.metaLabel}>

@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -51,6 +51,29 @@ describe("CardCarousel", () => {
         </CardCarousel>,
       );
       expect(screen.getByText("Solo")).toBeOnTheScreen();
+    });
+
+    it("fills the track slot instead of vertically centering (stable frame)", () => {
+      // Regression guard for the frame-fill fix (#360): the animated card slot
+      // must stretch top→bottom so a flex:1 card child keeps the same envelope
+      // between cards, rather than shrink-wrapping + centring (which jittered
+      // the frame as content length changed).
+      const { UNSAFE_getByProps } = renderWithProviders(
+        <CardCarousel currentIndex={1} onIndexChange={jest.fn()}>
+          <Card label="Card A" />
+          <Card label="Card B" />
+          <Card label="Card C" />
+        </CardCarousel>,
+      );
+      // The center card's wrapper is the only one with importantForAccessibility
+      // "no" (peeks use "no-hide-descendants").
+      const centerWrapper = UNSAFE_getByProps({
+        accessible: false,
+        importantForAccessibility: "no",
+      });
+      const style = StyleSheet.flatten(centerWrapper.props.style);
+      expect(style.position).toBe("absolute");
+      expect(style.justifyContent).toBeUndefined();
     });
   });
 

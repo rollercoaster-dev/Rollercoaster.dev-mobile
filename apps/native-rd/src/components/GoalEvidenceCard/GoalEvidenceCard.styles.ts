@@ -4,6 +4,9 @@ import { palette } from "../../themes/palette";
 
 export const styles = StyleSheet.create((theme) => ({
   wrapper: {
+    // Fill the carousel slot (with the Card's fill) so the goal card keeps the
+    // same envelope as the step cards — no frame resize when swiping to it.
+    flex: 1,
     borderTopWidth: 6,
     borderTopColor: palette.yellow300,
   },
