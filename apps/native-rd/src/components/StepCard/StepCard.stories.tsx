@@ -144,6 +144,54 @@ export const MultiplePlannedTypes: Story = {
   ),
 };
 
+export const OverviewPartsPending: Story = {
+  render: () => (
+    <StepCard
+      kind="overview"
+      step={makeStep({ title: "Wire the circuits", status: "in-progress" })}
+      parts={[
+        { id: "p1", title: "15-amp lighting circuit", status: "completed", evidenceCount: 1 }, // prettier-ignore
+        { id: "p2", title: "20-amp small-appliance circuit", status: "pending", evidenceCount: 0 }, // prettier-ignore
+        {
+          id: "p3",
+          title: "240V dryer circuit",
+          status: "pending",
+          evidenceCount: 0,
+        },
+      ]}
+      stepIndex={1}
+      totalSteps={5}
+      onToggleComplete={() => {}}
+      onEvidenceTap={() => {}}
+      onOpenNextPart={() => {}}
+    />
+  ),
+};
+
+export const OverviewAllPartsDone: Story = {
+  render: () => (
+    <StepCard
+      kind="overview"
+      step={makeStep({ title: "Wire the circuits", status: "in-progress" })}
+      parts={[
+        { id: "p1", title: "15-amp lighting circuit", status: "completed", evidenceCount: 1 }, // prettier-ignore
+        { id: "p2", title: "20-amp small-appliance circuit", status: "completed", evidenceCount: 2 }, // prettier-ignore
+        {
+          id: "p3",
+          title: "240V dryer circuit",
+          status: "completed",
+          evidenceCount: 2,
+        },
+      ]}
+      stepIndex={1}
+      totalSteps={5}
+      onToggleComplete={() => {}}
+      onEvidenceTap={() => {}}
+      onOpenNextPart={() => {}}
+    />
+  ),
+};
+
 const storyStyles = StyleSheet.create((theme) => ({
   grid: {
     gap: theme.space[4],

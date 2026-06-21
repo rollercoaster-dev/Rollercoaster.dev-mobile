@@ -1435,7 +1435,9 @@ describe("FocusModeScreen", () => {
           i18n.t("common:stepCard.progress", { current: 3, total: 5 }),
         ),
       ).toBeOnTheScreen();
-      expect(screen.getByText("Drill A")).toBeOnTheScreen();
+      // The child title also appears in the parent's overview spine (#360), so
+      // scope to the leaf card's header to confirm it is the current card.
+      expect(screen.getByRole("header", { name: "Drill A" })).toBeOnTheScreen();
     });
 
     it("renders the parent context line on a leaf step card", () => {
@@ -1481,7 +1483,7 @@ describe("FocusModeScreen", () => {
           i18n.t("common:stepCard.progress", { current: 3, total: 4 }),
         ),
       ).toBeOnTheScreen();
-      expect(screen.getByText("Drill A")).toBeOnTheScreen();
+      expect(screen.getByRole("header", { name: "Drill A" })).toBeOnTheScreen();
       // step-2a is the current leaf → child-current width (14), not the
       // lead-current width (18). Proves it renders as a sub-step, not a lead.
       expect(nodeWidth(2)).toBe(14);
@@ -1507,7 +1509,7 @@ describe("FocusModeScreen", () => {
           i18n.t("common:stepCard.progress", { current: 4, total: 5 }),
         ),
       ).toBeOnTheScreen();
-      expect(screen.getByText("Drill B")).toBeOnTheScreen();
+      expect(screen.getByRole("header", { name: "Drill B" })).toBeOnTheScreen();
       expect(
         screen.getByText(
           i18n.t("common:stepCard.parentContext", { parent: "Practice" }),
@@ -1569,12 +1571,96 @@ describe("FocusModeScreen", () => {
           i18n.t("common:stepCard.progress", { current: 4, total: 5 }),
         ),
       ).toBeOnTheScreen();
-      expect(screen.getByText("Drill B")).toBeOnTheScreen();
+      expect(screen.getByRole("header", { name: "Drill B" })).toBeOnTheScreen();
       // Still a leaf, so the parent context line stays.
       expect(
         screen.getByText(
           i18n.t("common:stepCard.parentContext", { parent: "Practice" }),
         ),
+      ).toBeOnTheScreen();
+    });
+  });
+
+  // Candidate C (#360): a parent with present children renders as an overview
+  // card — a spine of its parts, an evidence rollup, and the manual complete
+  // invite once all parts are done.
+  describe("parent overview (#360)", () => {
+    // step-2's children are all done → snap lands on the parent (invite state),
+    // so the overview is the current, visible card.
+    const INVITE_STEPS = [
+      { id: "step-1", title: "Read docs", status: "completed", ordinal: 0, parentStepId: null }, // prettier-ignore
+      { id: "step-2", title: "Practice", status: "pending", ordinal: 1, parentStepId: null }, // prettier-ignore
+      { id: "step-2a", title: "Drill A", status: "completed", ordinal: 0, parentStepId: "step-2" }, // prettier-ignore
+      { id: "step-2b", title: "Drill B", status: "completed", ordinal: 1, parentStepId: "step-2" }, // prettier-ignore
+      { id: "step-3", title: "Build it", status: "pending", ordinal: 2, parentStepId: null }, // prettier-ignore
+    ];
+
+    it("renders a parent as an overview card with a spine of its parts", () => {
+      setupQueries({ steps: INVITE_STEPS, stepEvidence: [] });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+      expect(screen.getByTestId("overview-part-step-2a")).toBeOnTheScreen();
+      expect(screen.getByTestId("overview-part-step-2b")).toBeOnTheScreen();
+    });
+
+    it("rolls up evidence as the sum across the parent's parts", () => {
+      setupQueries({
+        steps: INVITE_STEPS,
+        stepEvidence: [
+          { id: "e1", type: "photo", stepId: "step-2a" },
+          { id: "e2", type: "text", stepId: "step-2a" },
+          { id: "e3", type: "photo", stepId: "step-2b" },
+        ],
+      });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+      // 2 (step-2a) + 1 (step-2b) = 3
+      expect(
+        screen.getByLabelText("Evidence across parts: 3"),
+      ).toBeOnTheScreen();
+    });
+
+    it("offers the mark-parent-complete invite when all parts are done", () => {
+      setupQueries({ steps: INVITE_STEPS, stepEvidence: [] });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+      expect(
+        screen.getByRole("checkbox", {
+          name: i18n.t("focusMode:overview.markComplete", {
+            parent: "Practice",
+          }),
+        }),
+      ).toBeOnTheScreen();
+    });
+
+    // step-A is a flat pending step, so the snap stays on it (index 0), leaving
+    // the parent overview off-screen — pressing its "open next part" must jump
+    // the carousel to the parent's first pending child.
+    const PENDING_PARENT_STEPS = [
+      { id: "step-A", title: "Gather parts", status: "pending", ordinal: 0, parentStepId: null }, // prettier-ignore
+      { id: "step-B", title: "Wire it", status: "pending", ordinal: 1, parentStepId: null }, // prettier-ignore
+      { id: "step-B1", title: "Solder joints", status: "pending", ordinal: 0, parentStepId: "step-B" }, // prettier-ignore
+      { id: "step-B2", title: "Test continuity", status: "pending", ordinal: 1, parentStepId: "step-B" }, // prettier-ignore
+    ];
+
+    it("advances the carousel to the first pending part when 'open next part' is pressed", () => {
+      setupQueries({ steps: PENDING_PARENT_STEPS, stepEvidence: [] });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+      // Snap stays on the flat step-A.
+      expect(
+        screen.getByText(
+          i18n.t("common:stepCard.progress", { current: 1, total: 4 }),
+        ),
+      ).toBeOnTheScreen();
+      // Move forward to the parent's overview card (index 1), then tap its
+      // action — the carousel should jump to step-B1 (the first pending part,
+      // flat index 2).
+      fireEvent.press(screen.getByLabelText("Next card"));
+      fireEvent.press(screen.getByTestId("overview-open-next-part"));
+      expect(
+        screen.getByText(
+          i18n.t("common:stepCard.progress", { current: 3, total: 4 }),
+        ),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByRole("header", { name: "Solder joints" }),
       ).toBeOnTheScreen();
     });
   });

@@ -77,13 +77,15 @@ Candidate-specific observable criteria (fill in when candidate is chosen):
 
 **If C — Parent overview:**
 
-- [ ] Navigating to a parent step shows an overview card listing all its parts
+- [x] Navigating to a parent step shows an overview card listing all its parts
       as a timeline-spine list (node-on-connector, ✓ for done, active node
       ringed), an evidence rollup count, and a "mark parent complete" invite
       only when all parts are done.
-- [ ] The overview card is announced as an overview (context), not as a leaf
+- [x] The overview card is announced as an overview (context), not as a leaf
       action; each part's individual card is reachable by continuing to swipe.
-- [ ] The overview card's evidence rollup count matches the sum of captured
+      (Announced via a readable "· Overview" meta label, not a card-level role —
+      see Phase 3C a11y note.)
+- [x] The overview card's evidence rollup count matches the sum of captured
       evidence across all child parts.
 
 ---
@@ -361,33 +363,46 @@ _Skip this phase if A or B is chosen._
 
 **Changes**:
 
-- [ ] Add an `overview` mode to `StepCard` (via a `kind: 'leaf' | 'overview'` prop).
+- [x] Add an `overview` mode to `StepCard` (via a `kind: 'leaf' | 'overview'` prop).
       In overview mode, the card body renders: - Step title as hero (the parent name). - A vertical spine list of parts (node-on-connector, ✓ for done, ring for
       active) — mirrors the prototype's `spineList()`: each row is a bordered
       cell with the part title and an evidence count badge if evidence exists.
       The active part's cell has `accentYellow` background. - An "Evidence across parts" rollup row (summed evidence count across all
       children). - The foot action: `"Mark '[parent]' complete"` when all parts are done
       (the Q9 invite), `"Open next part →"` when parts are still pending.
-- [ ] The peek-stack fan (sibling cards visible behind the overview card) is
-      rendered with the number of parts fanning above the card top edge — using
-      the same absolute-positioned peek approach as the prototype `cardStack()`.
-      The card envelope itself does not change height; only the fan overlays above.
-- [ ] In `FocusModeScreen`, detect parent rows from the flattened `stepRows`
+      _Implemented as a dedicated `StepOverviewCard` dispatched from `StepCard`
+      (hook-free dispatcher → each archetype owns its hook order; shared
+      types/`statusToVariant` extracted to `StepCard.shared.ts`)._
+- [ ] **Deferred (cosmetic) — peek-stack fan.** The sibling-silhouette fan
+      above the overview card top edge (prototype `cardStack()`) was left out:
+      it requires absolute positioning fanning _above_ the card into the
+      carousel track, which the track's `overflow: hidden` clips and which
+      fights the stable-envelope guarantee Phase 1 established (`top: 4` inset on
+      `AnimatedCard`). The parts count is already communicated by the MiniTimeline
+      sub-spine (#293) and the in-card spine list, so the fan is redundant
+      affordance, not new information. See Follow-ups.
+- [x] In `FocusModeScreen`, detect parent rows from the flattened `stepRows`
       (rows where `parentStepId == null` and `stepRootIds` has matching children)
       and render them as `StepCard` with `kind="overview"`, passing the children
-      data for the spine list.
-- [ ] Child/leaf cards that follow the overview card still use `kind="leaf"` with
+      data for the spine list. _Done via a `partsByParentId` memo; the render map
+      picks `kind` per row._
+- [x] Child/leaf cards that follow the overview card still use `kind="leaf"` with
       the quiet `parentTitle` context line (existing `↳ in [parent]` rendering
       from #292). The overview is read-once; then each leaf is its own card.
-- [ ] A11y: the overview card has `accessibilityRole="summary"` (or `"none"` with
-      a descriptive `accessibilityLabel` identifying it as an overview). Each row
-      in the spine list is announced with its title and status. The foot action
-      button has a clear `accessibilityLabel` distinguishing "open next part" from
-      "mark complete".
-- [ ] Tests: render a parent step in overview mode — assert spine list renders
+- [x] A11y: each spine row is announced with its title and status
+      (`overview.partA11y`); the rollup announces its summed count
+      (`overview.evidenceRollupA11y`); the foot action carries a clear label
+      ("Open next part" vs. the parent-named complete invite). _The overview is
+      announced as an overview via a visible/readable "· Overview" meta label +
+      the header title — **not** a card-level `accessibilityRole="summary"`,
+      which would collapse the spine rows, rollup, and foot action into one
+      a11y node and break their individual interaction/announcement._
+- [x] Tests: render a parent step in overview mode — assert spine list renders
       all children with correct status icons, assert evidence rollup equals sum of
       children's evidence counts, assert foot action label changes between
-      "pending children" and "all done" states.
+      "pending children" and "all done" states. _9 StepCard overview tests + 4
+      FocusModeScreen integration tests; 4 #292 sub-step assertions updated to
+      role-scoped header queries (overview spine now also lists child titles)._
 
 ---
 
@@ -462,6 +477,19 @@ needed"`. The "Add evidence" button is `accessibilityRole="button"`.
 
 ---
 
+## Follow-ups
+
+Review-skipped / deferred items, tracked here per AGENTS.md ("Handling
+Review-Skipped Findings") until filed or closed.
+
+| Item                                                                                                                | Why deferred                                                                                                                                                                                                                                       | Status                                                                                 |
+| ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| **Overview peek-stack fan** (sibling silhouettes fanning above the overview card top edge, prototype `cardStack()`) | Cosmetic; the absolute fan must paint _above_ the card into the carousel track, which `overflow: hidden` clips and which fights the Phase 1 stable-envelope inset. Parts count is already shown by the MiniTimeline sub-spine + the in-card spine. | Flagged for Joe — file as a polish issue only if the affordance is missed in real use. |
+| **Leaf-card redundancy** (quick-action capture buttons + count badge coexist with the Phase 2 rail)                 | Phase 2 said "add a rail," not "consolidate"; the approved prototype shows the rail alone.                                                                                                                                                         | Carried from Phase 2 — flagged for Joe.                                                |
+| **D5 blocked-foot wording** ("Add evidence to complete")                                                            | Pre-existing, D5-approved instruction (not a "missing X" score), but the D8 directive may extend to it.                                                                                                                                            | Carried from Phase 2 — confirm with Joe.                                               |
+
+---
+
 ## Discovery Log
 
 <!-- Entries added by implement skill:
@@ -520,6 +548,36 @@ needed"`. The "Add evidence" button is `accessibilityRole="button"`.
 - [2026-06-21] `StepCard.tsx` is now 325 lines (lint soft cap 300, warning only).
   Left inline per the plan ("no obvious reuse"); extract an `EvidenceRail`
   sub-component if it grows or if candidate-C work pushes it further over.
+
+**Phase 3C — parent overview (2026-06-21):**
+
+- [2026-06-21] **File split (acted on the Phase 2 line-cap note).** Rather than
+  grow `StepCard.tsx` further, the overview is a sibling `StepOverviewCard.tsx`
+  dispatched from a hook-free `StepCard` dispatcher. Shared primitives
+  (`StepCardStatus` / `StepCardKind` / `StepCardPart` / `statusToVariant`) moved
+  to `StepCard.shared.ts` so leaf and overview import them without a module
+  cycle. The leaf body is unchanged (renamed `StepCardComponent` → `StepCardLeaf`).
+- [2026-06-21] **Carousel mounts all cards** (`CardCarousel` renders every child,
+  only the centre is visible / un-hidden). So an overview's spine — which lists
+  each child's title — duplicates that title in the render tree alongside the
+  child's own leaf card (never both on screen; off-screen cards are
+  `accessibilityElementsHidden`). Four #292 sub-step tests that asserted
+  `getByText("Drill A/B")` became ambiguous and were tightened to
+  `getByRole("header", { name })` (the leaf title is a header; the spine cell is
+  not), which also asserts the right card is current.
+- [2026-06-21] **A11y: no card-level `summary` role.** The plan offered
+  `accessibilityRole="summary"` (or accessible `"none"`) for the overview card,
+  but either makes the card one a11y node and swallows the spine rows, rollup,
+  and foot action. Instead the card stays a normal container; "overview" is
+  conveyed by the readable "· Overview" meta label + header, and each part
+  row / the rollup / the foot action carry their own labels.
+- [2026-06-21] **`onOpenNextPart` takes the parent id**, not a pre-bound thunk,
+  so `FocusModeScreen` can pass one stable `useCallback` (keeps the `StepCard`
+  memo intact instead of a fresh closure per render). It resolves the parent's
+  first pending child via `stepRows.findIndex` and calls `handleIndexChange`.
+- [2026-06-21] **Peek-stack fan deferred** (cosmetic) — see Phase 3C checklist +
+  Follow-ups. Everything else in Phase 3C shipped; full suite green (179 suites
+  / 8981 tests), type-check + lint clean.
 
 **Research findings (2026-06-21):**
 

@@ -2,7 +2,7 @@ import React, { memo } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import Animated from "react-native-reanimated";
 import { useTranslation } from "react-i18next";
-import { StatusBadge, type StatusBadgeVariant } from "../StatusBadge";
+import { StatusBadge } from "../StatusBadge";
 import { Checkbox } from "../Checkbox";
 import { useFlashOnIncrease } from "../../hooks/useFlashOnIncrease";
 import { formatEvidenceLabel } from "../../utils/formatEvidenceLabel";
@@ -17,9 +17,16 @@ import {
   evidenceLabel as evidenceTypeLabel,
   evidenceShortLabel,
 } from "../../i18n/labels";
+import {
+  statusToVariant,
+  type StepCardStatus,
+  type StepCardKind,
+  type StepCardPart,
+} from "./StepCard.shared";
+import { StepOverviewCard } from "./StepOverviewCard";
 import { styles } from "./StepCard.styles";
 
-export type StepCardStatus = "completed" | "in-progress" | "pending";
+export type { StepCardStatus, StepCardKind, StepCardPart };
 
 export interface StepCardStep {
   id: string;
@@ -43,13 +50,17 @@ export interface StepCardProps {
   onToggleComplete: (stepId: string) => void;
   onEvidenceTap: () => void;
   onQuickEvidence?: (stepId: string, type: QuickEvidenceType) => void;
+  /**
+   * Card archetype (#360). `leaf` (default) is the actionable step card;
+   * `overview` renders a parent's parts as a timeline spine with an evidence
+   * rollup and the manual complete-parent invite.
+   */
+  kind?: StepCardKind;
+  /** Child parts for an overview card. Ignored for leaf cards. */
+  parts?: readonly StepCardPart[];
+  /** Overview-only: advance the carousel to the parent's first pending part. */
+  onOpenNextPart?: (stepId: string) => void;
 }
-
-const statusToVariant: Record<StepCardStatus, StatusBadgeVariant> = {
-  completed: "completed",
-  "in-progress": "active",
-  pending: "locked",
-};
 
 function getMissingEvidenceOption(
   plannedTypes: string[],
@@ -75,7 +86,7 @@ function getMissingQuickEvidenceOptions(
   );
 }
 
-function StepCardComponent({
+function StepCardLeaf({
   step,
   stepIndex,
   totalSteps,
@@ -283,6 +294,28 @@ function StepCardComponent({
   );
 }
 
+/**
+ * Dispatcher: a parent renders the overview archetype, everything else the
+ * actionable leaf. Kept hook-free so each archetype owns its own hook order.
+ */
+function StepCardComponent(props: StepCardProps) {
+  if (props.kind === "overview") {
+    return (
+      <StepOverviewCard
+        stepId={props.step.id}
+        title={props.step.title}
+        status={props.step.status}
+        stepIndex={props.stepIndex}
+        totalSteps={props.totalSteps}
+        parts={props.parts ?? []}
+        onToggleComplete={props.onToggleComplete}
+        onOpenNextPart={props.onOpenNextPart}
+      />
+    );
+  }
+  return <StepCardLeaf {...props} />;
+}
+
 function equalStringArrays(
   previous: readonly string[] | null | undefined,
   next: readonly string[] | null | undefined,
@@ -295,11 +328,32 @@ function equalStringArrays(
   );
 }
 
+function equalParts(
+  previous: readonly StepCardPart[] | undefined,
+  next: readonly StepCardPart[] | undefined,
+): boolean {
+  const previousParts = previous ?? [];
+  const nextParts = next ?? [];
+  return (
+    previousParts.length === nextParts.length &&
+    previousParts.every((part, index) => {
+      const other = nextParts[index];
+      return (
+        part.id === other.id &&
+        part.title === other.title &&
+        part.status === other.status &&
+        part.evidenceCount === other.evidenceCount
+      );
+    })
+  );
+}
+
 function areStepCardPropsEqual(
   previous: StepCardProps,
   next: StepCardProps,
 ): boolean {
   return (
+    previous.kind === next.kind &&
     previous.step.id === next.step.id &&
     previous.step.title === next.step.title &&
     previous.step.status === next.step.status &&
@@ -313,11 +367,13 @@ function areStepCardPropsEqual(
       previous.step.capturedEvidenceTypes,
       next.step.capturedEvidenceTypes,
     ) &&
+    equalParts(previous.parts, next.parts) &&
     previous.stepIndex === next.stepIndex &&
     previous.totalSteps === next.totalSteps &&
     previous.onToggleComplete === next.onToggleComplete &&
     previous.onEvidenceTap === next.onEvidenceTap &&
-    previous.onQuickEvidence === next.onQuickEvidence
+    previous.onQuickEvidence === next.onQuickEvidence &&
+    previous.onOpenNextPart === next.onOpenNextPart
   );
 }
 

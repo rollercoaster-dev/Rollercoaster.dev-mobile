@@ -196,4 +196,141 @@ export const styles = StyleSheet.create((theme) => ({
     fontFamily: theme.fontFamily.body,
     color: theme.colors.text,
   },
+  // --- Overview card (candidate C, #360) ---
+  // The parent's parts rendered as a vertical timeline spine. Mirrors the
+  // prototype `.spine` / `.spineList()`: node-on-connector, ✓ for done, the
+  // active part ringed and its cell highlighted with the accentYellow
+  // in-progress token (D7).
+  overviewSpine: {
+    gap: theme.space[2],
+  },
+  spineRow: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: theme.space[2],
+  },
+  // Fixed-width left column carrying the node and the connector to the next row.
+  spineRail: {
+    width: 24,
+    alignItems: "center",
+  },
+  spineNode: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: theme.borderWidth.medium,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.backgroundSecondary,
+    alignItems: "center",
+    justifyContent: "center",
+    ...shadowStyle(theme, "cardElevationSmall"),
+  },
+  spineNodeDone: {
+    backgroundColor: theme.colors.accentPrimary,
+    borderColor: theme.colors.accentPrimary,
+  },
+  spineNodeActive: {
+    borderWidth: theme.borderWidth.thick,
+  },
+  spineNodeCheck: {
+    fontSize: 13,
+    fontWeight: theme.fontWeight.black,
+    color: theme.colors.background,
+  },
+  // The connector fills the gap between this row's node and the next.
+  spineConnector: {
+    flex: 1,
+    width: theme.borderWidth.medium,
+    backgroundColor: theme.colors.textMuted,
+  },
+  spineCell: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.space[2],
+    minHeight: 44,
+    paddingHorizontal: theme.space[3],
+    paddingVertical: theme.space[2],
+    borderWidth: theme.borderWidth.medium,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.sm,
+    backgroundColor: theme.colors.backgroundSecondary,
+    ...shadowStyle(theme, "cardElevationSmall"),
+  },
+  spineCellActive: {
+    backgroundColor: theme.colors.accentYellow,
+  },
+  spineCellText: {
+    flex: 1,
+    fontSize: theme.size.sm,
+    fontWeight: theme.fontWeight.bold,
+    fontFamily: theme.fontFamily.body,
+    color: theme.colors.text,
+  },
+  spineEvidenceBadge: {
+    backgroundColor: theme.colors.accentPurpleLight,
+    borderWidth: theme.borderWidth.thin,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.pill,
+    paddingHorizontal: theme.space[2],
+    paddingVertical: theme.space[1] / 2,
+  },
+  spineEvidenceBadgeText: {
+    fontSize: theme.size.xs,
+    fontFamily: theme.fontFamily.mono,
+    color: theme.colors.text,
+  },
+  // Evidence rollup row — sum of evidence across all parts (read-only count).
+  overviewRollup: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.space[2],
+    paddingHorizontal: theme.space[3],
+    paddingVertical: theme.space[2],
+    borderWidth: theme.borderWidth.medium,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.sm,
+    backgroundColor: theme.colors.backgroundTertiary,
+  },
+  overviewRollupLabel: {
+    flex: 1,
+    fontSize: theme.size.sm,
+    fontWeight: theme.fontWeight.bold,
+    fontFamily: theme.fontFamily.body,
+    color: theme.colors.text,
+  },
+  overviewRollupBadge: {
+    backgroundColor: theme.colors.accentPurpleLight,
+    borderWidth: theme.borderWidth.thin,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.pill,
+    paddingHorizontal: theme.space[2],
+    paddingVertical: theme.space[1] / 2,
+  },
+  overviewRollupBadgeText: {
+    fontSize: theme.size.xs,
+    fontFamily: theme.fontFamily.mono,
+    color: theme.colors.text,
+  },
+  // Foot action when parts are still open — a quiet jump to the next part.
+  overviewNextButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: theme.space[1],
+    minHeight: 44,
+    paddingHorizontal: theme.space[4],
+    paddingVertical: theme.space[2],
+    backgroundColor: theme.colors.accentYellow,
+    borderWidth: theme.borderWidth.medium,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.sm,
+    ...shadowStyle(theme, "cardElevationSmall"),
+  },
+  overviewNextText: {
+    fontSize: theme.size.sm,
+    fontWeight: theme.fontWeight.bold,
+    fontFamily: theme.fontFamily.body,
+    color: theme.colors.text,
+  },
 }));

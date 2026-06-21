@@ -4,7 +4,12 @@ import {
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
-import { StepCard, type StepCardStep, type StepCardStatus } from "../StepCard";
+import {
+  StepCard,
+  type StepCardStep,
+  type StepCardStatus,
+  type StepCardPart,
+} from "../StepCard";
 
 jest.mock("expo-haptics", () => ({
   impactAsync: jest.fn().mockResolvedValue(undefined),
@@ -535,6 +540,171 @@ describe("StepCard", () => {
     it("omits the context line when parentTitle is absent", () => {
       renderWithProviders(<StepCard step={makeStep()} {...defaultProps} />);
       expect(screen.queryByTestId("step-card-parent-context")).toBeNull();
+    });
+  });
+
+  // --- Overview mode (candidate C, #360): a parent card listing its parts as a
+  // timeline spine, an evidence rollup, and the manual complete-parent invite. ---
+
+  describe("overview mode", () => {
+    const makePart = (overrides: Partial<StepCardPart> = {}): StepCardPart => ({
+      id: "part-1",
+      title: "Part one",
+      status: "pending",
+      evidenceCount: 0,
+      ...overrides,
+    });
+
+    const overviewProps = {
+      ...defaultProps,
+      kind: "overview" as const,
+      onOpenNextPart: jest.fn(),
+    };
+
+    const PARTS: StepCardPart[] = [
+      { id: "p1", title: "Drill A", status: "completed", evidenceCount: 1 },
+      { id: "p2", title: "Drill B", status: "pending", evidenceCount: 2 },
+      { id: "p3", title: "Drill C", status: "pending", evidenceCount: 0 },
+    ];
+
+    it("renders a spine row for every part", () => {
+      renderWithProviders(
+        <StepCard
+          step={makeStep({ title: "Wire the circuits" })}
+          parts={PARTS}
+          {...overviewProps}
+        />,
+      );
+      expect(screen.getByTestId("overview-part-p1")).toBeOnTheScreen();
+      expect(screen.getByTestId("overview-part-p2")).toBeOnTheScreen();
+      expect(screen.getByTestId("overview-part-p3")).toBeOnTheScreen();
+    });
+
+    it("labels the overview meta row as an overview", () => {
+      renderWithProviders(
+        <StepCard
+          step={makeStep({ title: "Wire the circuits" })}
+          parts={PARTS}
+          stepIndex={0}
+          totalSteps={5}
+          onToggleComplete={jest.fn()}
+          onEvidenceTap={jest.fn()}
+          kind="overview"
+          onOpenNextPart={jest.fn()}
+        />,
+      );
+      expect(screen.getByText("1 of 5 · Overview")).toBeOnTheScreen();
+    });
+
+    it("shows a check icon only for completed parts", () => {
+      renderWithProviders(
+        <StepCard
+          step={makeStep({ title: "Wire the circuits" })}
+          parts={[
+            { id: "p1", title: "Drill A", status: "completed", evidenceCount: 0 }, // prettier-ignore
+            { id: "p2", title: "Drill B", status: "pending", evidenceCount: 0 },
+            { id: "p3", title: "Drill C", status: "pending", evidenceCount: 0 },
+          ]}
+          {...overviewProps}
+        />,
+      );
+      // One done part → exactly one ✓. The pending foot is "Open next part" (a
+      // button, not a checkbox), so no stray checkmark leaks in. The icon is
+      // accessibilityElementsHidden (the row carries the full label), so include
+      // hidden elements to count the rendered glyph.
+      expect(
+        screen.getAllByText("✓", { includeHiddenElements: true }),
+      ).toHaveLength(1);
+    });
+
+    it("announces each part with its title and status", () => {
+      renderWithProviders(
+        <StepCard
+          step={makeStep({ title: "Wire the circuits" })}
+          parts={PARTS}
+          {...overviewProps}
+        />,
+      );
+      expect(screen.getByLabelText("Drill A, Completed")).toBeOnTheScreen();
+      expect(screen.getByLabelText("Drill B, Pending")).toBeOnTheScreen();
+    });
+
+    it("rolls up evidence as the sum across all parts", () => {
+      renderWithProviders(
+        <StepCard
+          step={makeStep({ title: "Wire the circuits" })}
+          parts={PARTS}
+          {...overviewProps}
+        />,
+      );
+      // 1 + 2 + 0 = 3
+      const rollup = screen.getByTestId("overview-evidence-rollup");
+      expect(rollup.props.accessibilityLabel).toBe("Evidence across parts: 3");
+    });
+
+    it("shows the Open next part action and calls onOpenNextPart when parts are pending", () => {
+      const onOpenNextPart = jest.fn();
+      renderWithProviders(
+        <StepCard
+          step={makeStep({ id: "parent-1", title: "Wire the circuits" })}
+          parts={PARTS}
+          {...overviewProps}
+          onOpenNextPart={onOpenNextPart}
+        />,
+      );
+      // No complete invite while parts remain.
+      expect(screen.queryByRole("checkbox")).toBeNull();
+      fireEvent.press(screen.getByTestId("overview-open-next-part"));
+      expect(onOpenNextPart).toHaveBeenCalledWith("parent-1");
+    });
+
+    it("shows the mark-parent-complete invite once every part is done", () => {
+      renderWithProviders(
+        <StepCard
+          step={makeStep({ title: "Wire the circuits" })}
+          parts={[
+            makePart({ id: "p1", title: "Drill A", status: "completed" }),
+            makePart({ id: "p2", title: "Drill B", status: "completed" }),
+          ]}
+          {...overviewProps}
+        />,
+      );
+      expect(screen.queryByTestId("overview-open-next-part")).toBeNull();
+      expect(
+        screen.getByRole("checkbox", {
+          name: 'Mark "Wire the circuits" complete',
+        }),
+      ).toBeOnTheScreen();
+    });
+
+    it("calls onToggleComplete from the complete invite", () => {
+      const onToggleComplete = jest.fn();
+      renderWithProviders(
+        <StepCard
+          step={makeStep({ id: "parent-1", title: "Wire the circuits" })}
+          parts={[makePart({ id: "p1", status: "completed" })]}
+          {...overviewProps}
+          onToggleComplete={onToggleComplete}
+        />,
+      );
+      fireEvent.press(screen.getByRole("checkbox"));
+      expect(onToggleComplete).toHaveBeenCalledWith("parent-1");
+    });
+
+    it("shows a checked, completed invite when the parent itself is complete", () => {
+      renderWithProviders(
+        <StepCard
+          step={makeStep({ title: "Wire the circuits", status: "completed" })}
+          parts={[
+            makePart({ id: "p1", status: "completed" }),
+            makePart({ id: "p2", status: "pending" }),
+          ]}
+          {...overviewProps}
+        />,
+      );
+      const checkbox = screen.getByRole("checkbox");
+      expect(checkbox.props.accessibilityState?.checked).toBe(true);
+      expect(checkbox.props.accessibilityLabel).toBe("Completed");
     });
   });
 });

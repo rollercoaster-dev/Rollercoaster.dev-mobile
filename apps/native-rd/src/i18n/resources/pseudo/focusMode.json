@@ -6,6 +6,15 @@
     "addButton": "[+ Àđđ êṽïđêñçê······]",
     "capturedChip": "[{{type}} çàþţüŕêđ······]"
   },
+  "overview": {
+    "metaLabel": "[Øṽêŕṽïêŵ····]",
+    "partsHeading": "[Þàŕţš···]",
+    "evidenceRollupLabel": "[Êṽïđêñçê àçŕøšš þàŕţš········]",
+    "evidenceRollupA11y": "[Êṽïđêñçê àçŕøšš þàŕţš: {{count}}··········]",
+    "openNextPart": "[Øþêñ ñêxţ þàŕţ······]",
+    "markComplete": "[Ɱàŕķ \"{{parent}}\" çøɱþĺêţê··········]",
+    "partA11y": "[{{title}}, {{status}}····]"
+  },
   "header": {
     "showTimeline": "[Šĥøŵ ţïɱêĺïñê·····]",
     "hideTimeline": "[Ĥïđê ţïɱêĺïñê·····]",
