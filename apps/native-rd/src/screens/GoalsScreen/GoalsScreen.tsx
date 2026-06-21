@@ -14,6 +14,7 @@ import { Logger } from "../../shims/rd-logger";
 import {
   activeGoalsQuery,
   stepsForActiveGoalsQuery,
+  resolveNextActionableStep,
   deleteGoal,
   GoalStatus,
   StepStatus,
@@ -40,63 +41,33 @@ function buildGoalCardGoal(
     (s) => s.status === StepStatus.completed,
   ).length;
 
-  // Reconstruct the parent → children hierarchy by bucketing on parentStepId.
-  // Flat query order is preserved within each bucket so "first pending" is
-  // stable; it is not relied on for hierarchy (child ordinals are
-  // sibling-scoped and can collide with top-level ordinals). A step counts as a
-  // child only when its parent is a present top-level step — a null parent or an
-  // orphan (parent soft-deleted) surfaces as top-level so its pending work stays
-  // reachable, mirroring groupStepsByParent's orphan promotion (#292).
-  const rootIds = new Set(
-    steps.filter((s) => s.parentStepId == null).map((s) => s.id),
-  );
-  const childrenByParent = new Map<string, StepRow[]>();
-  const topLevel: StepRow[] = [];
-  for (const step of steps) {
-    if (step.parentStepId != null && rootIds.has(step.parentStepId)) {
-      const list = childrenByParent.get(step.parentStepId);
-      if (list) list.push(step);
-      else childrenByParent.set(step.parentStepId, [step]);
-    } else {
-      topLevel.push(step);
-    }
-  }
-
-  // Resolve the single next-action line, mirroring the prototype's nextInfo():
-  // the first non-completed top-level step is a flat step (hero = its title),
-  // a pending leaf (hero = first pending child + "↳ in [parent]" context), or
-  // the invite state (all children done, parent still pending — hero = parent
-  // + "all N substeps done" readout, never a state change).
+  // Resolve the single next-action line via the shared resolver (#337), which
+  // owns the leaf/invite/flat bucketing and orphan promotion (a soft-deleted
+  // parent surfaces its child as top-level so its pending work stays reachable,
+  // mirroring groupStepsByParent, #292). The resolver returns an index into
+  // `steps`, so the per-goal slice maps the result straight back to titles:
+  //   leaf   → the pending child is the hero, the container parent is context
+  //   invite → the pending parent is the hero, "all N substeps done" is context
+  //   flat   → a pending top-level step is its own hero (no context)
+  // A pending leaf wins even under a manually completed parent — completion is
+  // per-step, not cascaded, so a done parent must not hide live sub-work.
+  const next = resolveNextActionableStep(steps);
   let nextStepTitle: string | null = null;
   let nextStepContext: string | null = null;
-  for (const step of topLevel) {
-    const children = childrenByParent.get(step.id) ?? [];
-    const pendingChild = children.find(
-      (c) => c.status !== StepStatus.completed,
-    );
-    // A pending leaf is the next action even under a manually completed parent
-    // — step completion is per-step, not cascaded, so a done parent must not
-    // hide pending sub-work.
-    if (pendingChild) {
-      nextStepTitle = pendingChild.title ?? null;
-      nextStepContext = t("goals:card.nextStepContext", {
-        parent: step.title ?? "",
-      });
-      break;
-    }
-    // No pending child: skip the step entirely once it's complete (a flat step,
-    // or a parent whose whole subtree is done).
-    if (step.status === StepStatus.completed) continue;
-    // Still pending: a flat step is its own hero (no context); a parent whose
-    // children are all done is the invite state.
-    nextStepTitle = step.title ?? null;
-    if (children.length > 0) {
-      nextStepContext = t("goals:card.allSubstepsDone", {
-        count: children.length,
-      });
-    }
-    break;
+  if (next.kind === "leaf") {
+    nextStepTitle = steps[next.index]?.title ?? null;
+    nextStepContext = t("goals:card.nextStepContext", {
+      parent: steps[next.parentIndex]?.title ?? "",
+    });
+  } else if (next.kind === "invite") {
+    nextStepTitle = steps[next.index]?.title ?? null;
+    nextStepContext = t("goals:card.allSubstepsDone", {
+      count: next.childCount,
+    });
+  } else if (next.kind === "flat") {
+    nextStepTitle = steps[next.index]?.title ?? null;
   }
+  // kind === "none": no pending work, both lines stay null.
 
   return {
     id: goalRow.id,

@@ -16,6 +16,7 @@ import {
   reorderSubSteps,
   groupStepsByParent,
   flattenGroupedSteps,
+  resolveNextActionableStep,
   type GroupedStep,
 } from "../queries";
 import { evolu } from "../evolu";
@@ -284,6 +285,84 @@ describe("Step CRUD Operations", () => {
     test("flat goal round-trips unchanged", () => {
       const grouped = groupStepsByParent([row("a", null), row("b", null)]);
       expect(flattenGroupedSteps(grouped).map((s) => s.id)).toEqual(["a", "b"]);
+    });
+  });
+
+  describe("resolveNextActionableStep", () => {
+    // Cases mirror the named sub-step fixtures in FocusModeScreen.test.tsx and
+    // GoalsScreen.test.tsx so the unit-level resolver stays traceable to the
+    // #292 screen behaviour it now backs (#337). `index` is the position in the
+    // input array; the wiring (`s2a` shapes) matches those screen tests.
+    test.each([
+      ["empty goal → none", [], { kind: "none" }],
+      [
+        "flat goal, all pending → first step is the flat next action",
+        [row("a", null), row("b", null)],
+        { kind: "flat", index: 0 },
+      ],
+      [
+        "flat goal, first completed → next pending flat step",
+        [row("a", null, { status: "completed" }), row("b", null)],
+        { kind: "flat", index: 1 },
+      ],
+      [
+        "leaf state: first pending child (earlier sibling already done)",
+        [
+          row("s1", null, { status: "completed" }),
+          row("s2", null),
+          row("s2a", "s2", { status: "completed" }),
+          row("s2b", "s2"),
+          row("s2c", "s2"),
+          row("s3", null),
+        ],
+        { kind: "leaf", index: 3, parentIndex: 1 },
+      ],
+      [
+        "invite state: all children done, parent still pending",
+        [
+          row("s1", null, { status: "completed" }),
+          row("s2", null),
+          row("s2a", "s2", { status: "completed" }),
+          row("s2b", "s2", { status: "completed" }),
+          row("s2c", "s2", { status: "completed" }),
+          row("s3", null),
+        ],
+        { kind: "invite", index: 1, childCount: 3 },
+      ],
+      [
+        "orphan (parent absent) is promoted and read as a flat step",
+        [row("s1", null, { status: "completed" }), row("s2a", "s2")],
+        { kind: "flat", index: 1 },
+      ],
+      [
+        "interleaved query order: child before parent still indexes the child",
+        [
+          row("s2a", "s2"),
+          row("s1", null, { status: "completed" }),
+          row("s2", null),
+        ],
+        { kind: "leaf", index: 0, parentIndex: 2 },
+      ],
+      [
+        "pending leaf under a manually-completed parent still wins",
+        [
+          row("s1", null, { status: "completed" }),
+          row("s2", null, { status: "completed" }),
+          row("s2a", "s2"),
+        ],
+        { kind: "leaf", index: 2, parentIndex: 1 },
+      ],
+      [
+        "all steps completed → none",
+        [
+          row("s1", null, { status: "completed" }),
+          row("s2", null, { status: "completed" }),
+          row("s2a", "s2", { status: "completed" }),
+        ],
+        { kind: "none" },
+      ],
+    ])("%s", (_label, rows, expected) => {
+      expect(resolveNextActionableStep(rows)).toEqual(expected);
     });
   });
 

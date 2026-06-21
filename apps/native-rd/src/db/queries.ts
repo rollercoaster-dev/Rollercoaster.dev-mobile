@@ -437,6 +437,95 @@ export function flattenGroupedSteps(
   return out;
 }
 
+/** Minimal step shape {@link resolveNextActionableStep} reads. */
+export interface NextActionableStepInput {
+  id: string;
+  parentStepId: string | null;
+  status: string | null;
+}
+
+/**
+ * The single next actionable step, tagged by which of the four states it is.
+ * Both `index` and `parentIndex` are positions in the input `rows` array, so a
+ * caller maps either straight back to a row via `rows[...]`.
+ *
+ * - `leaf`   — first pending child under a top-level step; `parentIndex` is the
+ *              container step (use it for the "↳ in [parent]" context line).
+ * - `invite` — all of a pending parent's children are done; `childCount` is how
+ *              many are done (use it for the "all N substeps done" readout).
+ * - `flat`   — a pending top-level step with no children.
+ * - `none`   — nothing is pending.
+ */
+export type NextActionableStep =
+  | { kind: "leaf"; index: number; parentIndex: number }
+  | { kind: "invite"; index: number; childCount: number }
+  | { kind: "flat"; index: number }
+  | { kind: "none" };
+
+/**
+ * Resolve the single next actionable step for one goal from a flat row array.
+ * Pure — no Evolu calls. Shared by FocusModeScreen (which wants the carousel
+ * index) and GoalsScreen (which wants the next-step title + context), so the
+ * leaf/invite/flat bucketing and its orphan-promotion rule live in one place
+ * (#337) rather than being copy-pasted into each screen.
+ *
+ * Orphan promotion mirrors {@link groupStepsByParent}: a row whose
+ * `parentStepId` is not a present top-level step (parent null, soft-deleted, or
+ * itself a child) surfaces as top-level so its pending work stays reachable.
+ * Without it a deleted parent would hide its children (#292).
+ *
+ * A pending child wins *before* its parent's own status is checked, so a
+ * manually completed parent that still has pending sub-steps doesn't hide them
+ * — step completion is per-step, not cascaded (see {@link completeStep}). A
+ * completed top-level step with no pending child is skipped (subtree closed).
+ *
+ * @param rows Flat rows for a single goal, in the order callers want
+ *   "first pending" to mean (e.g. `(ordinal, createdAt)`-ordered).
+ */
+export function resolveNextActionableStep(
+  rows: readonly NextActionableStepInput[],
+): NextActionableStep {
+  const rootIds = new Set(
+    rows.filter((r) => r.parentStepId == null).map((r) => r.id),
+  );
+  const childrenByParent = new Map<
+    string,
+    { index: number; status: string | null }[]
+  >();
+  const topLevel: { id: string; index: number; status: string | null }[] = [];
+  rows.forEach((row, index) => {
+    if (row.parentStepId != null && rootIds.has(row.parentStepId)) {
+      const entry = { index, status: row.status };
+      const list = childrenByParent.get(row.parentStepId);
+      if (list) list.push(entry);
+      else childrenByParent.set(row.parentStepId, [entry]);
+    } else {
+      topLevel.push({ id: row.id, index, status: row.status });
+    }
+  });
+
+  for (const step of topLevel) {
+    const children = childrenByParent.get(step.id) ?? [];
+    const pendingChild = children.find(
+      (c) => c.status !== StepStatus.completed,
+    );
+    // A pending leaf wins even under a completed parent — its work isn't hidden.
+    if (pendingChild) {
+      return { kind: "leaf", index: pendingChild.index, parentIndex: step.index }; // prettier-ignore
+    }
+    // No pending child: skip once the step itself is complete (a flat step, or
+    // a parent whose subtree is fully done). Otherwise it's the next action.
+    if (step.status === StepStatus.completed) continue;
+    // Still pending: a parent whose children are all done is the invite state;
+    // a step with no children is a flat pending step.
+    if (children.length > 0) {
+      return { kind: "invite", index: step.index, childCount: children.length };
+    }
+    return { kind: "flat", index: step.index };
+  }
+  return { kind: "none" };
+}
+
 /**
  * Create a new step for a goal
  * @param goalId - Goal ID
