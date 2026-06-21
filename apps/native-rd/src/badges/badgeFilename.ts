@@ -12,9 +12,11 @@ const MAX_SLUG_LENGTH = 40;
 /**
  * Turn a badge/goal title into a filesystem- and share-sheet-safe slug.
  *
- * - Strips characters outside `[a-zA-Z0-9-_]` (so non-Latin scripts, emoji,
- *   and punctuation can't produce invalid filenames).
- * - Collapses runs of separators and trims leading/trailing dashes.
+ * - Replaces runs of characters outside `[a-zA-Z0-9-_]` with a single dash
+ *   (so non-Latin scripts, emoji, and punctuation can't produce invalid
+ *   filenames).
+ * - Collapses runs of dashes and trims leading/trailing dashes. Underscores
+ *   are valid filename characters and are kept as-is.
  * - Caps length so the full filename (slug + suffix + extension) stays short.
  * - Falls back to `"badge"` when nothing usable remains (e.g. emoji-only title).
  */
