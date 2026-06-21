@@ -49,13 +49,13 @@ src/
 
 ## Development Commands
 
-| Command              | Purpose                                       |
-| -------------------- | --------------------------------------------- |
-| `bun run type-check` | TypeScript type checking                      |
-| `bun run lint`       | ESLint                                        |
-| `bun test`           | Run Jest test suite                           |
-| `bun run test:ci`    | CI test run                                   |
-| `npx expo run:ios`   | Build and run on iOS (NEVER use `expo start`) |
+| Command              | Purpose                                              |
+| -------------------- | ---------------------------------------------------- |
+| `bun run type-check` | TypeScript type checking                             |
+| `bun run lint`       | ESLint                                               |
+| `bun run test`       | Run Jest test suite (Node-wrapped; never `bun test`) |
+| `bun run test:ci`    | CI test run                                          |
+| `npx expo run:ios`   | Build and run on iOS (NEVER use `expo start`)        |
 
 ## App Legibility Commands
 
