@@ -37,13 +37,16 @@
         up evidence, holds the manual "complete parent" invite Q9); leaves follow.
         Containment-in-focus, adapted into the shipped indentation app.
 
-  PARTS LIST MIRRORS THE TIMELINE (added later)
-    C's parent overview and the goal card render their parts list AS the timeline — a
-    compact vertical journey spine (node-on-a-connector, indented sub-spine for a
-    parent's substeps), the same grammar as the journey view / MiniTimeline. The goal
-    card mirrors the parent: it lists the whole journey (steps + substeps), not just
-    goal-evidence. No checklist/spine toggle — the timeline IS the list. Open question
-    it surfaces: this spine sits under the horizontal MiniTimeline — judge redundancy.
+  C'S OVERVIEW MIRRORS THE TIMELINE; THE GOAL CARD LEADS WITH THE BADGE (revised)
+    C's parent overview renders its parts list AS the timeline — a compact vertical
+    journey spine (node-on-a-connector, indented sub-spine for a parent's substeps),
+    the same grammar as the journey view / MiniTimeline.
+    The goal card no longer does this. It is THE DESTINATION: it leads with the BADGE
+    you're earning (locked medallion → earned when the goal completes), a slim progress
+    bar, a RESUME shortcut back to the active leaf (the card is LAST in focus view, so the
+    leaf sits behind it — the link points BACK, not forward), and an evidence rollup. The spine
+    was removed — it duplicated the horizontal MiniTimeline and grew unbounded with step
+    count, so the full journey now lives behind the MiniTimeline's "tap to expand".
 
   Open directly:  open apps/native-rd/prototypes/a-focus-card-substructure.html
   Controls: candidate / dataset / state-word toggles.
@@ -242,6 +245,35 @@
 
   .drawer { border-top: 2.5px solid var(--border); background: var(--card); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; font-weight: 700; }
   .drawer .evb { font-family: var(--mono); font-size: 9.5px; background: var(--purple-light); border: 1px solid var(--border); border-radius: 999px; padding: 1px 6px; margin-left: 6px; }
+
+  /* ---- goal / destination card — the BADGE is the hero ----
+     Replaces the inline whole-journey spine, which duplicated the horizontal
+     MiniTimeline and grew unbounded with step count. The card now answers: what am
+     I earning, how close am I, what's my next move. The full step tree lives behind
+     the MiniTimeline's "tap to expand". */
+  .gc-hero { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 2px 0 4px; }
+  .medal { width: 88px; height: 88px; border-radius: 50%; border: 3px solid var(--border-subtle); background: var(--card); display: flex; align-items: center; justify-content: center; position: relative; flex: 0 0 auto; }
+  .medal .ring { position: absolute; inset: 6px; border-radius: 50%; border: 2px dashed var(--border-subtle); }
+  .medal .mono { font-family: var(--headline); font-weight: 900; font-size: 40px; line-height: 1; color: var(--disabled); }
+  .medal.earned { border-color: var(--border); background: var(--yellow); box-shadow: var(--shadow-md); }
+  .medal.earned .ring { border-color: rgba(0,0,0,0.28); border-style: solid; }
+  .medal.earned .mono { color: var(--border); }
+  .medal.earned::after { content: '✓'; position: absolute; right: -7px; bottom: -7px; width: 28px; height: 28px; border-radius: 50%; background: var(--success); color: #fff; border: 2.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 900; }
+  .gc-name { font-family: var(--headline); font-weight: 900; font-size: 21px; line-height: 1.12; }
+  .gc-cap { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); }
+
+  .gc-prog { display: flex; align-items: center; gap: 9px; }
+  .gc-bar { flex: 1; height: 11px; border: 2px solid var(--border); border-radius: 999px; background: var(--card); overflow: hidden; }
+  .gc-bar > span { display: block; height: 100%; background: var(--primary); }
+  .gc-prog .lbl { font-size: 11px; font-weight: 700; color: var(--muted); white-space: nowrap; }
+
+  .gc-next { display: flex; align-items: center; gap: 10px; border: 2.5px solid var(--border); border-radius: 5px; background: var(--yellow); box-shadow: var(--shadow-sm); padding: 9px 11px; }
+  .gc-next .nx { flex: 1; min-width: 0; }
+  .gc-next .nx .pctx { font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text); opacity: 0.65; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .gc-next .nx .ttl { font-family: var(--headline); font-weight: 800; font-size: 14.5px; line-height: 1.15; }
+  .gc-next .go { flex: 0 0 auto; width: 34px; height: 34px; border: 2px solid var(--border); background: var(--card); border-radius: 4px; box-shadow: 1.5px 1.5px 0 rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 900; }
+
+  .gc-link { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; font-weight: 700; color: var(--muted); padding: 3px 0 1px; }
 </style>
 </head>
 <body>
@@ -249,7 +281,7 @@
 <div class="page-header">
   <span class="proto-tag">Prototype — throwaway</span>
   <h1>A: The focus step card under feature load</h1>
-  <p>The substep <em>grammar</em> shipped (indentation, #288). This studies the focus-mode questions that grammar pass parked: a <strong>stable card frame</strong>, an explicit <strong>evidence-add</strong> affordance, and the <strong>parent↔substep tie</strong>. Three candidates differ on the tie; all share the frame and evidence. The parent overview and the goal card list their parts <strong>as the timeline</strong> (a compact vertical spine).</p>
+  <p>The substep <em>grammar</em> shipped (indentation, #288). This studies the focus-mode questions that grammar pass parked: a <strong>stable card frame</strong>, an explicit <strong>evidence-add</strong> affordance, and the <strong>parent↔substep tie</strong>. Three candidates differ on the tie; all share the frame and evidence. The parent overview lists its parts <strong>as the timeline</strong> (a compact vertical spine); the goal card leads with <strong>the badge you’re earning</strong>.</p>
   <p>In-phone <kbd>‹</kbd>/<kbd>›</kbd> move through cards — watch the frame stay put. <kbd>←</kbd>/<kbd>→</kbd> cycle candidates.</p>
 </div>
 
@@ -544,24 +576,62 @@ function spineList(items, curId) {
   return `<div class="spine">${h}</div>`;
 }
 
-/* goal card (the last card) — same in all candidates. MIRRORS the parent's parts list:
-   it shows the whole journey (top-level steps + substeps) as the timeline spine, instead
-   of jumping straight to goal-evidence. */
+/* goal card (the last card) — same in all candidates. THE DESTINATION: leads with the
+   BADGE you're earning (locked medallion → earned when the goal completes), a slim
+   progress bar, a RESUME shortcut back to the active leaf (this card is last, so the leaf
+   sits behind it — the link points BACK, not forward), and an evidence rollup. No inline
+   whole-journey spine — it duplicated the horizontal MiniTimeline and grew unbounded with step count;
+   the full journey lives behind the MiniTimeline's "tap to expand". */
 function goalCard(d, stateOn) {
   const p = progress(d);
   const allDone = p.done === p.total;
   const seq = flatten(d);
-  const curIdx = firstPendingIndex(seq);
-  const curId = allDone ? null : (seq[curIdx] ? seq[curIdx].id : null);
+  const cur = allDone ? null : seq[firstPendingIndex(seq)];
+  const pct = Math.round((p.done / p.total) * 100);
+  const mono = esc(((d.goal.trim()[0]) || '★').toUpperCase());
+  const totalEv = d.steps.reduce((s, st) => s + (st.ev || 0) + (st.children ? st.children.reduce((a, c) => a + (c.ev || 0), 0) : 0), 0);
+
+  // resume shortcut — the goal card is the LAST card in focus view, so the active leaf
+  // sits BEHIND it. This is a direction-honest jump BACK to where the work is (‹ leads),
+  // not a forward "up next". Hidden once the goal is complete.
+  let nextHtml = '';
+  if (cur) {
+    let ctx;
+    if (cur.kind === 'child') {
+      const k = cur.parent.children.findIndex(c => c.id === cur.id) + 1;
+      ctx = `↳ ${esc(cur.parent.title)} · part ${k} of ${cur.parent.children.length}`;
+    } else {
+      const ti = d.steps.findIndex(s => s.id === cur.id) + 1;
+      ctx = cur.kind === 'parent' ? `Step ${ti} of ${d.steps.length} · ${cur.children.length} parts` : `Step ${ti} of ${d.steps.length}`;
+    }
+    nextHtml = `<div><span class="zone-label">Pick up where you left off</span>
+      <div class="gc-next" style="margin-top:5px">
+        <span class="go">‹</span>
+        <div class="nx"><div class="pctx">${ctx}</div><div class="ttl">${esc(cur.title)}</div></div>
+      </div></div>`;
+  }
+
   return `<div class="scard">
-    <div class="topband"><span class="tb-ctx">Goal · ${p.done} of ${p.total} steps</span>${statePill(allDone?'in-progress':'pending', stateOn)}</div>
+    <div class="topband"><span class="tb-ctx">Goal</span>${statePill(allDone?'completed':'in-progress', stateOn)}</div>
     <div class="body">
-      <div class="stitle">${esc(d.goal)}</div>
-      <div class="ctx-line">${allDone?'every step is done — ready when you are':'finish the steps to wrap up the goal'}</div>
-      <div><span class="zone-label">The whole journey</span><div style="margin-top:6px">${spineList(d.steps, curId)}</div></div>
-      <div><span class="zone-label">Goal evidence</span><div class="ev-rail" style="margin-top:5px"><span class="ev-add solid">＋ Add evidence</span></div></div>
+      <div class="gc-hero">
+        <div class="medal${allDone?' earned':''}"><span class="ring"></span><span class="mono">${mono}</span></div>
+        <div class="gc-name">${esc(d.goal)}</div>
+        <div class="gc-cap">${allDone?'Earned — ready to claim':'The badge you’ll earn'}</div>
+      </div>
+      <div class="gc-prog">
+        <div class="gc-bar"><span style="width:${pct}%"></span></div>
+        <span class="lbl">${p.done} of ${p.total} steps</span>
+      </div>
+      ${nextHtml}
+      <div><span class="zone-label">Goal evidence</span>
+        <div class="ev-rail" style="margin-top:5px">
+          ${totalEv?`<span class="ev-chip">🧾 ${totalEv} across the journey</span>`:''}
+          <span class="ev-add solid">＋ Add evidence</span>
+        </div></div>
+      ${allDone?'':'<div class="gc-link">↑ tap the timeline to see every step</div>'}
     </div>
-    <div class="foot"><span class="cbx${allDone?'':''}"></span><span class="cbx-label">${allDone?'Mark goal complete':'Steps left to finish'}</span></div>
+    <div class="foot"><span class="cbx"></span><span class="cbx-label">${allDone?'Mark goal complete':'Steps left to finish'}</span></div>
   </div>`;
 }
 
@@ -588,10 +658,12 @@ function notesFor(cand) {
         <li>Leaves follow as their own cards with a quiet parent line.</li>
         <li>Cost: two card archetypes (overview vs leaf) and one extra read to reach a leaf’s action.</li></ul>`,
   };
-  const container = `<h4>Parts list mirrors the timeline</h4><ul>
-    <li>C's parent overview and the <strong>goal card</strong> render their parts <strong>as the timeline</strong> — node-on-a-connector, ✓ for done, the active node ringed, a parent's substeps as an indented sub-spine. This is the list; there's no checklist fallback.</li>
-    <li>The goal card mirrors the parent: under “The whole journey” it lists the whole journey (steps + substeps), not just goal-evidence.</li>
-    <li><span class="concern">!</span><strong>Judge:</strong> on the goal card this spine sits right under the horizontal MiniTimeline — both show the whole journey. Redundant, or index-then-contents (the spine carries titles + evidence the MiniTimeline can't)?</li>
+  const container = `<h4>The goal card leads with the badge</h4><ul>
+    <li>The destination card now opens on <strong>the badge you’re earning</strong> — a medallion (locked → earned when the goal completes) + name — then a slim progress bar, a <strong>resume shortcut</strong> back to the active leaf, and an evidence rollup. The badge was missing before; now it’s the point.</li>
+    <li>This card is <strong>last</strong> in focus view, so the active leaf sits behind it — the resume link points <strong>back</strong> (‹ “pick up where you left off”), not forward. It’s a jump back to the work, not an “up next”.</li>
+    <li>The inline <strong>whole-journey spine is gone</strong> from this card: it duplicated the horizontal MiniTimeline and grew unbounded with step count. The full journey lives behind the MiniTimeline’s “tap to expand”.</li>
+    <li>C’s parent <strong>overview</strong> still renders its parts as a timeline spine — that’s a parent-level question, separate from the goal card.</li>
+    <li><span class="concern">✓</span><strong>Judge resolved:</strong> goal card = destination (badge + next move), not a second copy of the journey index.</li>
   </ul>`;
   return `<h3>What to look for</h3>${four}${per[cand]}${container}
     <h4>Still open after this</h4>
