@@ -7,7 +7,7 @@ import { useFlashOnIncrease } from "../../hooks/useFlashOnIncrease";
 import { formatEvidenceLabel } from "../../utils/formatEvidenceLabel";
 import {
   EVIDENCE_OPTIONS,
-  type EvidenceTypeValue,
+  validateEvidenceType,
   type QuickEvidenceType,
 } from "../../types/evidence";
 import {
@@ -144,15 +144,19 @@ function StepCardLeaf({
     step.capturedEvidence && step.capturedEvidence.length > 0
       ? step.capturedEvidence.map((item, index) => {
           const caption = item.caption?.trim();
-          const typeLabel = evidenceShortLabel(
-            t,
-            item.type as EvidenceTypeValue,
-          );
+          // Normalize before label/icon lookup: an unknown type would otherwise
+          // surface the raw i18n key and a missing icon. Falls back to `file`.
+          const safeType = validateEvidenceType(item.type);
+          const typeLabel = evidenceShortLabel(t, safeType);
           const hasCaption = caption != null && caption.length > 0;
+          // Same unique token for key and testID — `id ?? type` collides when
+          // two captionless, id-less items share a type; `id ?? type-index`
+          // stays unique per chip.
+          const token = item.id ?? `${item.type}-${index}`;
           return {
-            key: item.id ?? `${item.type}-${index}`,
-            testID: `step-card-evidence-chip-${item.id ?? item.type}`,
-            icon: EVIDENCE_OPTIONS.find((o) => o.type === item.type)?.icon,
+            key: token,
+            testID: `step-card-evidence-chip-${token}`,
+            icon: EVIDENCE_OPTIONS.find((o) => o.type === safeType)?.icon,
             label: hasCaption ? caption : typeLabel,
             a11yLabel: hasCaption
               ? t("focusMode:evidenceRail.capturedChipNamed", {
@@ -163,11 +167,12 @@ function StepCardLeaf({
           };
         })
       : capturedTypes.map((type) => {
-          const typeLabel = evidenceShortLabel(t, type as EvidenceTypeValue);
+          const safeType = validateEvidenceType(type);
+          const typeLabel = evidenceShortLabel(t, safeType);
           return {
             key: `captured-${type}`,
             testID: `step-card-evidence-chip-${type}`,
-            icon: EVIDENCE_OPTIONS.find((o) => o.type === type)?.icon,
+            icon: EVIDENCE_OPTIONS.find((o) => o.type === safeType)?.icon,
             label: typeLabel,
             a11yLabel: t("focusMode:evidenceRail.capturedChip", {
               type: typeLabel,
