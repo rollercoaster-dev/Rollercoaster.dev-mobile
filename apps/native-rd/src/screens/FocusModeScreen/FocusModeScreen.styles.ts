@@ -24,6 +24,9 @@ export const styles = StyleSheet.create((theme) => ({
   },
   carouselSection: {
     flex: 1,
+    // Breathing room between the MiniTimeline (or header) and the card's top
+    // edge — the track is otherwise flush, leaving the cards cramped up top.
+    paddingTop: theme.space[4],
     paddingBottom: DRAWER_CLOSED_HEIGHT + theme.space[3],
   },
   headerRow: {
