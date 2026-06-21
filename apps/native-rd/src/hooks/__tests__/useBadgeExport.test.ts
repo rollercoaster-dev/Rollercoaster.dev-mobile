@@ -95,7 +95,10 @@ describe("useBadgeExport", () => {
       const { result } = renderHook(() => useBadgeExport());
 
       await act(async () => {
-        await result.current.exportVerifiableBadge("file:///badges/badge.png");
+        await result.current.exportVerifiableBadge(
+          "file:///badges/badge.png",
+          "Learn TypeScript",
+        );
       });
 
       expect(
@@ -105,11 +108,12 @@ describe("useBadgeExport", () => {
         "file:///badges/badge.png",
         { encoding: FileSystem.EncodingType.Base64 },
       );
+      // File is named after the badge so it's recognisable in the picked folder.
       expect(
         FileSystem.StorageAccessFramework.createFileAsync,
       ).toHaveBeenCalledWith(
         "content:///picked",
-        expect.stringMatching(/^badge-\d+\.png$/),
+        "Learn-TypeScript.png",
         "image/png",
       );
       expect(FileSystem.writeAsStringAsync).toHaveBeenCalledWith(
@@ -320,7 +324,7 @@ describe("useBadgeExport", () => {
       });
 
       expect(FileSystem.writeAsStringAsync).toHaveBeenCalledWith(
-        expect.stringContaining("badge-Learn-TypeScript-"),
+        expect.stringContaining("Learn-TypeScript-"),
         credential,
         { encoding: FileSystem.EncodingType.UTF8 },
       );

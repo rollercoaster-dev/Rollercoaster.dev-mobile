@@ -437,7 +437,7 @@ function BadgeDetailContent({
             <Button
               label={t("badgeDetail:actions.exportVerifiable")}
               variant="primary"
-              onPress={() => exportVerifiableBadge(imageUri)}
+              onPress={() => exportVerifiableBadge(imageUri, goalTitle)}
               loading={isExportingImage}
               disabled={!hasRealImage}
             />

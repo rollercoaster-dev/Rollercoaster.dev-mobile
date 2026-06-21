@@ -3,6 +3,7 @@ import { Alert, Platform } from "react-native";
 import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system/legacy";
 import { PLACEHOLDER_IMAGE_URI } from "./useCreateBadge";
+import { slugifyBadgeName } from "../badges/badgeFilename";
 
 // expo-sharing's `shareAsync` rejects with a generic Error when the user
 // dismisses the system share sheet on Android (iOS currently resolves
@@ -31,79 +32,85 @@ export function useBadgeExport() {
    *   byte-for-byte. This avoids the dominant Android failure mode where
    *   messengers re-encode "photo" attachments and strip ancillary chunks.
    */
-  const exportVerifiableBadge = useCallback(async (imageUri: string | null) => {
-    if (!imageUri || imageUri === PLACEHOLDER_IMAGE_URI) {
-      Alert.alert(
-        "No image available",
-        "This badge does not have a baked image yet.",
-      );
-      return;
-    }
-
-    setIsExportingImage(true);
-    try {
-      if (Platform.OS === "android") {
-        const perm =
-          await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
-        if (!perm.granted) {
-          // User cancelled the folder picker — not an error.
-          return;
-        }
-        const base64 = await FileSystem.readAsStringAsync(imageUri, {
-          encoding: FileSystem.EncodingType.Base64,
-        });
-        const filename = `badge-${Date.now()}.png`;
-        const destUri = await FileSystem.StorageAccessFramework.createFileAsync(
-          perm.directoryUri,
-          filename,
-          "image/png",
+  const exportVerifiableBadge = useCallback(
+    async (imageUri: string | null, badgeName?: string) => {
+      if (!imageUri || imageUri === PLACEHOLDER_IMAGE_URI) {
+        Alert.alert(
+          "No image available",
+          "This badge does not have a baked image yet.",
         );
-        await FileSystem.writeAsStringAsync(destUri, base64, {
-          encoding: FileSystem.EncodingType.Base64,
-        });
         return;
       }
 
-      if (Platform.OS === "ios") {
-        const canShare = await Sharing.isAvailableAsync();
-        if (!canShare) {
-          Alert.alert(
-            "Sharing unavailable",
-            "Sharing is not available on this device.",
-          );
+      setIsExportingImage(true);
+      try {
+        if (Platform.OS === "android") {
+          const perm =
+            await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+          if (!perm.granted) {
+            // User cancelled the folder picker — not an error.
+            return;
+          }
+          const base64 = await FileSystem.readAsStringAsync(imageUri, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+          // SAF copies the bytes into a brand-new file, so we name it after the
+          // badge here rather than inheriting the on-disk filename.
+          const filename = `${slugifyBadgeName(badgeName)}.png`;
+          const destUri =
+            await FileSystem.StorageAccessFramework.createFileAsync(
+              perm.directoryUri,
+              filename,
+              "image/png",
+            );
+          await FileSystem.writeAsStringAsync(destUri, base64, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
           return;
         }
-        await Sharing.shareAsync(imageUri, {
-          UTI: "public.png",
-          mimeType: "image/png",
-          dialogTitle: "Export Verifiable Badge",
-        });
-        return;
-      }
 
-      // Web / macOS / windows / unknown — fall through to a clear alert
-      // rather than silently using the iOS share-sheet path.
-      console.error("[useBadgeExport] Unsupported platform", {
-        os: Platform.OS,
-      });
-      Alert.alert(
-        "Export unavailable",
-        "Badge export is only supported on iOS and Android.",
-      );
-    } catch (error) {
-      if (isShareCancellation(error)) return;
-      console.error("[useBadgeExport] Failed to export verifiable badge", {
-        imageUri,
-        error,
-      });
-      Alert.alert(
-        "Export failed",
-        "Something went wrong exporting the verifiable badge.",
-      );
-    } finally {
-      setIsExportingImage(false);
-    }
-  }, []);
+        if (Platform.OS === "ios") {
+          const canShare = await Sharing.isAvailableAsync();
+          if (!canShare) {
+            Alert.alert(
+              "Sharing unavailable",
+              "Sharing is not available on this device.",
+            );
+            return;
+          }
+          await Sharing.shareAsync(imageUri, {
+            UTI: "public.png",
+            mimeType: "image/png",
+            dialogTitle: "Export Verifiable Badge",
+          });
+          return;
+        }
+
+        // Web / macOS / windows / unknown — fall through to a clear alert
+        // rather than silently using the iOS share-sheet path.
+        console.error("[useBadgeExport] Unsupported platform", {
+          os: Platform.OS,
+        });
+        Alert.alert(
+          "Export unavailable",
+          "Badge export is only supported on iOS and Android.",
+        );
+      } catch (error) {
+        if (isShareCancellation(error)) return;
+        console.error("[useBadgeExport] Failed to export verifiable badge", {
+          imageUri,
+          error,
+        });
+        Alert.alert(
+          "Export failed",
+          "Something went wrong exporting the verifiable badge.",
+        );
+      } finally {
+        setIsExportingImage(false);
+      }
+    },
+    [],
+  );
 
   const exportImage = useCallback(async (imageUri: string | null) => {
     if (!imageUri || imageUri === PLACEHOLDER_IMAGE_URI) {
@@ -164,8 +171,8 @@ export function useBadgeExport() {
       }
 
       setIsExportingJSON(true);
-      const safeName = goalTitle.replace(/[^a-zA-Z0-9-_]/g, "-").slice(0, 40);
-      const tempUri = `${cacheDir}badge-${safeName}-${Date.now()}.json`;
+      const safeName = slugifyBadgeName(goalTitle);
+      const tempUri = `${cacheDir}${safeName}-${Date.now()}.json`;
       try {
         const canShare = await Sharing.isAvailableAsync();
         if (!canShare) {
