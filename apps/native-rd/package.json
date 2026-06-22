@@ -106,7 +106,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@ai-sdk/openai": "^3.0.73",
+    "@ai-sdk/openai": "^3.0.74",
     "@babel/core": "^7.29.7",
     "@babel/plugin-transform-dynamic-import": "^7.29.7",
     "@babel/plugin-transform-explicit-resource-management": "^7.29.7",
