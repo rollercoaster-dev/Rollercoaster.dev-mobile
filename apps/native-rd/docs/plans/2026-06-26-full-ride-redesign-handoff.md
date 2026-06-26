@@ -1,6 +1,6 @@
 # Full Ride redesign — bring the prototypes into the app
 
-**Date:** 2026-06-26 · **Milestone:** `native-rd: Iteration B` (#4) · **Status:** plan, issues not yet filed
+**Date:** 2026-06-26 · **Milestone:** `native-rd: Iteration B` (#4) · **Status:** filed — Epic [#384](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/384), children #375–#383 (see §5)
 
 A batch of finished design-exploration prototypes ("Simplify screen layout") has been saved to
 `apps/native-rd/prototypes/screen-redesign/`. This doc records what they are, how they map to the
@@ -139,3 +139,17 @@ create epic + children, attach **native sub-issues** (`POST /repos/:owner/:repo/
 -F sub_issue_id=<child>`), set blocked-by deps, and assign all to milestone #4 in one pass. Use the
 label set above. Per house rule, branch names get set at issue-setup time (`feat/issue-N-<desc>`),
 before the first commit.
+
+### Filed (2026-06-26)
+
+Manual one-pass, mirroring epic #288. Code → issue number:
+
+| Code | Issue                                                                            |
+| ---- | -------------------------------------------------------------------------------- |
+| Epic | [#384](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/384) |
+| F1   | #375 · F2 #376                                                                   |
+| S1   | #377 · S2 #378 · S3 #379 · S4 #380 · S5 #381 · S6 #382                           |
+| V1   | #383                                                                             |
+
+All 9 children attached to #384 as **native sub-issues**; blocked-by deps wired (S1–S6 ← F1 + F2;
+V1 ← S1–S6); the `order:4` label was created for V1; all 10 issues assigned to milestone #4.
