@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wght@700;800;900&family=Instrument+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+</style>
+</helmet>
+
+<div style="font-family:'Instrument Sans',system-ui,sans-serif; width:max-content; min-width:100%; min-height:100vh; box-sizing:border-box; padding:48px; background:#e5e5e5; color:#0a0a0a; display:flex; flex-direction:column; gap:46px;">
+
+  <!-- TITLE -->
+  <div style="max-width:760px;">
+    <div style="font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:#525252; margin-bottom:8px;">Setting B (planning dates) &amp; C (dependencies) &middot; audit + directions</div>
+    <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:30px; line-height:1.06; margin-bottom:10px;">How a step gets a dependency or a date &mdash; the authoring side</div>
+    <div style="font-size:14.5px; line-height:1.55; color:#404040;">The Timeline &amp; Focus already <em>render</em> <span style="font-family:'DM Mono',monospace; font-size:12.5px;">after&hellip;</span> / <span style="font-family:'DM Mono',monospace; font-size:12.5px;">waiting on&hellip; expected&hellip;</span> / <span style="font-family:'DM Mono',monospace; font-size:12.5px;">due&hellip;</span>. This is the input that produces those lines. Three directions for the affordance + picker, each holding the hard line: <strong>inform, never enforce; setting is always optional; a plain step stays first-class.</strong></div>
+  </div>
+
+  <!-- ============================ AUDIT ============================ -->
+  <div>
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:18px;">
+      <span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:13px; letter-spacing:0.04em; background:#0a0a0a; color:#fff; padding:4px 10px; border-radius:3px;">AUDIT</span>
+      <span style="font-size:15px; font-weight:700;">What a step can carry today &mdash; and what it can&rsquo;t</span>
+    </div>
+    <div style="display:flex; gap:36px; align-items:flex-start;">
+
+      <!-- Edit step list today -->
+      <div style="flex:none; width:332px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:10px;">EditModeScreen &middot; StepList (today)</div>
+        <div style="width:332px; height:560px; background:#fafafa; border:3px solid #0a0a0a; border-radius:34px; box-shadow:6px 6px 0 rgba(10,10,10,0.22); overflow:hidden; display:flex; flex-direction:column;">
+          <div style="height:28px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font-family:'DM Mono',monospace; font-size:11px; flex:none;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+          <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:10px 14px; flex:none;"><span style="font-size:18px;">&larr;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px;">Edit goal</span><span style="font-size:18px; font-weight:700;">&#8943;</span></div>
+          <div style="flex:1; padding:14px 15px; overflow:hidden;">
+            <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:11px;"><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">Steps</span><span style="font-family:'DM Mono',monospace; font-size:11px; color:#737373;">4</span></div>
+            <!-- normal row -->
+            <div style="background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:11px 12px; margin-bottom:9px;">
+              <div style="display:flex; align-items:center; gap:9px;"><span style="color:#a3a3a3; font-size:16px;">&#8801;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:13px;">1</span><span style="flex:1; font-size:13.5px;">Wire the circuits</span><span style="display:inline-flex; align-items:center; background:#ede9fe; border:2px solid #0a0a0a; border-radius:9999px; font-size:11px; padding:2px 7px;">&#128247;</span><span style="color:#a3a3a3; font-size:13px;">&times;</span></div>
+            </div>
+            <!-- editing row (open) -->
+            <div style="background:#fff; border:3px solid #2563eb; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:11px 12px; margin-bottom:9px;">
+              <div style="display:flex; align-items:center; gap:9px;"><span style="color:#a3a3a3; font-size:16px;">&#8801;</span><span style="flex:1; font-size:13.5px; border-bottom:2px solid #cfcfcf; padding-bottom:2px;">Inspection &amp; labels</span><span style="color:#a3a3a3; font-size:13px;">&times;</span></div>
+              <div style="margin-top:10px;">
+                <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.06em; text-transform:uppercase; color:#737373; margin-bottom:6px;">Evidence types</div>
+                <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                  <span style="background:#ede9fe; border:2px solid #0a0a0a; border-radius:9999px; font-size:11px; padding:3px 8px;">&#128247; Photo</span>
+                  <span style="background:#fff; border:2px solid #cfcfcf; border-radius:9999px; font-size:11px; padding:3px 8px; color:#9a9a9a;">&#127916; Video</span>
+                  <span style="background:#fff; border:2px solid #cfcfcf; border-radius:9999px; font-size:11px; padding:3px 8px; color:#9a9a9a;">&#128221; Note</span>
+                  <span style="background:#fff; border:2px solid #cfcfcf; border-radius:9999px; font-size:11px; padding:3px 8px; color:#9a9a9a;">&#128279; Link</span>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex; gap:9px; margin-top:4px;">
+              <div style="flex:1; background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:9px 11px;"><span style="font-size:13px; color:#9a9a9a;">Add step&hellip;</span></div>
+              <div style="flex:none; width:44px; background:#2563eb; border:3px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:20px; font-weight:700;">+</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- New goal today -->
+      <div style="flex:none; width:332px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:10px;">NewGoalModal (today)</div>
+        <div style="width:332px; height:560px; background:#fafafa; border:3px solid #0a0a0a; border-radius:34px; box-shadow:6px 6px 0 rgba(10,10,10,0.22); overflow:hidden; display:flex; flex-direction:column;">
+          <div style="height:28px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font-family:'DM Mono',monospace; font-size:11px; flex:none;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+          <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:10px 14px; flex:none;"><span style="width:14px;"></span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px;">New goal</span><span style="font-size:16px;">&times;</span></div>
+          <div style="flex:1; padding:22px 18px;">
+            <div style="background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:14px; margin-bottom:16px;">
+              <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:#737373; margin-bottom:8px;">Goal title</div>
+              <div style="font-size:15px; color:#0a0a0a; border-bottom:2px solid #cfcfcf; padding-bottom:4px;">Rewire the workshop</div>
+            </div>
+            <div style="height:48px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:15px; font-weight:700;">Create</div>
+            <div style="margin-top:20px; font-size:12.5px; line-height:1.5; color:#737373;">A goal is named here, then you land in the steps. There is no step-level detail at create time at all &mdash; dates and dependencies have no home on either surface.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gap callout -->
+      <div style="flex:none; width:300px; align-self:stretch; display:flex; flex-direction:column; gap:14px;">
+        <div style="background:#fff; border:3px solid #d97706; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:16px;">
+          <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:#d97706; margin-bottom:8px;">&#9888; The gap</div>
+          <div style="font-size:13.5px; line-height:1.55; color:#1a1a1a;">A step row carries exactly two things today: a <strong>title</strong> and <strong>planned evidence types</strong>. There is <strong>no field, chip, or sheet</strong> anywhere to set <em>after&nbsp;&lt;step&gt;</em>, <em>waiting&nbsp;on&nbsp;&lt;someone&gt;</em>, or a <em>due&nbsp;date</em> &mdash; the truth-lines the Timeline renders have no way to be authored.</div>
+        </div>
+        <div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:15px;">
+          <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:8px;">The brief</div>
+          <div style="font-size:13px; line-height:1.55; color:#404040;">Add a <strong>quiet, optional second gesture</strong> on a step you&rsquo;ve already named &mdash; one tap from the row, defaulting to nothing. It must <strong>never</strong> make a plain step feel unfinished, never block or dim the step, and produce <strong>exactly</strong> the inline lines Focus/Timeline already show.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================ DIRECTION A ============================ -->
+  <div>
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+      <span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:13px; letter-spacing:0.04em; background:#2563eb; color:#fff; padding:4px 10px; border-radius:3px;">DIRECTION A</span>
+      <span style="font-size:15px; font-weight:700;">One ghost affordance &rarr; a single &ldquo;Add detail&rdquo; sheet</span>
+    </div>
+    <div style="font-size:13.5px; color:#525252; max-width:680px; margin-bottom:18px; line-height:1.5;">Every step gets one dashed, skippable row: <em>＋ timing &amp; dependencies</em>. It opens a single bottom sheet with all three controls in one place. <strong>1 tap to open, set any combination, done.</strong> Best when a step often carries more than one line.</div>
+    <div style="display:flex; gap:36px; align-items:flex-start;">
+
+      <!-- A: row affordance -->
+      <div style="flex:none; width:332px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:10px;">Step row &middot; entry point</div>
+        <div style="width:332px; background:#fafafa; border:3px solid #0a0a0a; border-radius:34px; box-shadow:6px 6px 0 rgba(10,10,10,0.22); overflow:hidden;">
+          <div style="height:28px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font-family:'DM Mono',monospace; font-size:11px;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+          <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:10px 14px;"><span style="font-size:18px;">&larr;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px;">Edit goal</span><span style="font-size:18px; font-weight:700;">&#8943;</span></div>
+          <div style="padding:14px 15px;">
+            <!-- plain step, no detail -->
+            <div style="background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:11px 12px; margin-bottom:10px;">
+              <div style="display:flex; align-items:center; gap:9px;"><span style="color:#a3a3a3; font-size:16px;">&#8801;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:13px;">1</span><span style="flex:1; font-size:13.5px;">Wire the circuits</span><span style="background:#ede9fe; border:2px solid #0a0a0a; border-radius:9999px; font-size:11px; padding:2px 7px;">&#128247;</span></div>
+              <div style="margin-top:10px; border:1.5px dashed #c8c8c8; border-radius:6px; padding:7px 10px; display:flex; align-items:center; gap:7px; color:#9a9a9a;"><span style="font-size:13px;">+</span><span style="font-size:12px; font-weight:600;">timing &amp; dependencies</span></div>
+            </div>
+            <!-- step with detail set -->
+            <div style="background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:11px 12px;">
+              <div style="display:flex; align-items:center; gap:9px;"><span style="color:#a3a3a3; font-size:16px;">&#8801;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:13px;">2</span><span style="flex:1; font-size:13.5px;">Inspection &amp; labels</span><span style="background:#ede9fe; border:2px solid #0a0a0a; border-radius:9999px; font-size:11px; padding:2px 7px;">&#128247;</span></div>
+              <div style="margin-top:9px; display:flex; flex-direction:column; gap:5px; padding-top:9px; border-top:1.5px solid #efefef;">
+                <div style="display:flex; align-items:baseline; gap:6px;"><span style="font-size:12px; color:#d97706;">&#9203;</span><span style="font-size:12.5px; color:#1a1a1a;">waiting on city inspector</span><span style="font-family:'DM Mono',monospace; font-size:11px; color:#737373;">&middot; expected Jun 24</span></div>
+                <div style="display:flex; align-items:baseline; gap:6px;"><span style="font-size:12px; color:#525252;">&#9638;</span><span style="font-size:12.5px; color:#1a1a1a;">due Mon &middot; Jun 30</span><span style="font-family:'DM Mono',monospace; font-size:10px; color:#2563eb; font-weight:700; margin-left:auto; cursor:pointer;">edit</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:12px; line-height:1.5; color:#737373; margin-top:12px; max-width:332px;">A set step shows its lines inline on the row, exactly as they&rsquo;ll read in Focus/Timeline. A plain step shows only the faint dashed invite &mdash; never a filled control.</div>
+      </div>
+
+      <!-- A: sheet open -->
+      <div style="flex:none; width:332px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:10px;">Sheet open &middot; both dates coexist</div>
+        <div style="width:332px; background:#fafafa; border:3px solid #0a0a0a; border-radius:34px; box-shadow:6px 6px 0 rgba(10,10,10,0.22); overflow:hidden; position:relative;">
+          <div style="filter:brightness(0.96);">
+            <div style="height:28px; background:#ffe50c; border-bottom:3px solid #0a0a0a;"></div>
+            <div style="height:90px; background:#e9e9e9;"></div>
+          </div>
+          <div style="background:#fafafa; border-top:3px solid #0a0a0a; border-top-left-radius:16px; border-top-right-radius:16px; padding:16px; margin-top:-12px; position:relative;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:16px;">Add to this step</span><span style="font-size:18px; color:#737373;">&times;</span></div>
+            <div style="font-size:12px; color:#737373; margin-bottom:14px;">All optional. Set what helps, skip the rest.</div>
+
+            <div style="font-family:'DM Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.06em; color:#5a8a6a; margin-bottom:6px;">&#8617; Comes after a step</div>
+            <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:13px;">
+              <span style="background:#d4f4e7; border:2px solid #0a0a0a; border-radius:9999px; font-size:11px; padding:3px 9px; box-shadow:1.5px 1.5px 0 rgba(10,10,10,0.85);">Wire the circuits</span>
+              <span style="background:#fff; border:2px solid #cfcfcf; border-radius:9999px; font-size:11px; padding:3px 9px; color:#9a9a9a;">Plan layout</span>
+            </div>
+
+            <div style="font-family:'DM Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.06em; color:#d97706; margin-bottom:6px;">&#9203; Waiting on someone</div>
+            <div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; padding:7px 10px; font-size:12.5px; margin-bottom:6px;">city inspector</div>
+            <div style="display:flex; align-items:center; gap:7px; margin-bottom:13px;"><span style="font-family:'DM Mono',monospace; font-size:11px; color:#737373;">expected</span><span style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; padding:5px 10px; font-family:'DM Mono',monospace; font-size:12px;">Jun 24</span></div>
+
+            <div style="font-family:'DM Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.06em; color:#525252; margin-bottom:6px;">&#9638; Your due date</div>
+            <div style="display:flex; gap:6px; margin-bottom:14px;">
+              <span style="background:#fff; border:2px solid #cfcfcf; border-radius:9999px; font-size:11px; padding:4px 10px; color:#9a9a9a;">Sometime</span>
+              <span style="background:#dbe7ff; border:2px solid #0a0a0a; border-radius:9999px; font-size:11px; padding:4px 10px; box-shadow:1.5px 1.5px 0 rgba(10,10,10,0.85);">Mon &middot; Jun 30</span>
+            </div>
+
+            <div style="background:#f4f4f4; border:2px solid #0a0a0a; border-radius:6px; padding:10px 11px;">
+              <div style="font-family:'DM Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:0.06em; color:#737373; margin-bottom:7px;">How this will read</div>
+              <div style="display:flex; align-items:baseline; gap:6px; margin-bottom:4px;"><span style="font-size:11.5px; color:#d97706;">&#9203;</span><span style="font-size:12px;">waiting on city inspector</span><span style="font-family:'DM Mono',monospace; font-size:10.5px; color:#737373;">&middot; expected Jun 24</span></div>
+              <div style="display:flex; align-items:baseline; gap:6px;"><span style="font-size:11.5px; color:#525252;">&#9638;</span><span style="font-size:12px;">due Mon &middot; Jun 30</span></div>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:12px; line-height:1.5; color:#737373; margin-top:12px; max-width:332px;"><strong>Two-date case:</strong> the world&rsquo;s timing (<em>expected</em>) and your intent (<em>due</em>) sit in separate labelled blocks and preview as separate lines &mdash; neither implies the other is met.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================ DIRECTION B ============================ -->
+  <div>
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+      <span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:13px; letter-spacing:0.04em; background:#2563eb; color:#fff; padding:4px 10px; border-radius:3px;">DIRECTION B</span>
+      <span style="font-size:15px; font-weight:700;">Two tiny chips &rarr; focused mini-sheets</span>
+    </div>
+    <div style="font-size:13.5px; color:#525252; max-width:680px; margin-bottom:18px; line-height:1.5;">The row carries two faint ghost chips beside evidence: <em>＋ depends</em> and <em>＋ date</em>. Each opens its own small sheet. The dependency sheet makes <em>after a step</em> vs <em>waiting on someone</em> one segmented choice. <strong>Lowest friction per single intent;</strong> markers stack as visible chips.</div>
+    <div style="display:flex; gap:36px; align-items:flex-start;">
+
+      <!-- B: row chips -->
+      <div style="flex:none; width:332px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:10px;">Step row &middot; two chips</div>
+        <div style="width:332px; background:#fafafa; border:3px solid #0a0a0a; border-radius:34px; box-shadow:6px 6px 0 rgba(10,10,10,0.22); overflow:hidden;">
+          <div style="height:28px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font-family:'DM Mono',monospace; font-size:11px;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+          <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:10px 14px;"><span style="font-size:18px;">&larr;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px;">Edit goal</span><span style="font-size:18px; font-weight:700;">&#8943;</span></div>
+          <div style="padding:14px 15px;">
+            <!-- plain step with two ghost chips -->
+            <div style="background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:11px 12px; margin-bottom:10px;">
+              <div style="display:flex; align-items:center; gap:9px;"><span style="color:#a3a3a3; font-size:16px;">&#8801;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:13px;">1</span><span style="flex:1; font-size:13.5px;">Wire the circuits</span></div>
+              <div style="margin-top:9px; display:flex; flex-wrap:wrap; gap:6px;">
+                <span style="background:#ede9fe; border:2px solid #0a0a0a; border-radius:9999px; font-size:11px; padding:3px 8px;">&#128247; Photo</span>
+                <span style="background:#fff; border:1.5px dashed #c8c8c8; border-radius:9999px; font-size:11px; padding:3px 9px; color:#9a9a9a;">+ depends</span>
+                <span style="background:#fff; border:1.5px dashed #c8c8c8; border-radius:9999px; font-size:11px; padding:3px 9px; color:#9a9a9a;">+ date</span>
+              </div>
+            </div>
+            <!-- step with both set: chips become solid -->
+            <div style="background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:11px 12px;">
+              <div style="display:flex; align-items:center; gap:9px;"><span style="color:#a3a3a3; font-size:16px;">&#8801;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:13px;">2</span><span style="flex:1; font-size:13.5px;">Inspection &amp; labels</span></div>
+              <div style="margin-top:9px; display:flex; flex-wrap:wrap; gap:6px;">
+                <span style="background:#ede9fe; border:2px solid #0a0a0a; border-radius:9999px; font-size:11px; padding:3px 8px;">&#128247; Photo</span>
+                <span style="display:inline-flex; align-items:center; gap:4px; background:#fff; border:2px solid #d97706; border-radius:9999px; font-size:11px; padding:3px 9px; box-shadow:1.5px 1.5px 0 rgba(10,10,10,0.85);"><span style="color:#d97706;">&#9203;</span> inspector &middot; Jun 24</span>
+                <span style="display:inline-flex; align-items:center; gap:4px; background:#fff; border:2px solid #0a0a0a; border-radius:9999px; font-size:11px; padding:3px 9px; box-shadow:1.5px 1.5px 0 rgba(10,10,10,0.85);"><span>&#9638;</span> Jun 30</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:12px; line-height:1.5; color:#737373; margin-top:12px; max-width:332px;">Set chips read as compact pills on the row; unset chips are faint dashed invites. Internal-dep, external-wait, and date are three pills that can sit side by side without reading as &ldquo;blocked.&rdquo;</div>
+      </div>
+
+      <!-- B: dependency mini-sheet -->
+      <div style="flex:none; width:332px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:10px;">&ldquo;Depends&rdquo; sheet &middot; after a step</div>
+        <div style="width:332px; background:#fafafa; border:3px solid #0a0a0a; border-radius:34px; box-shadow:6px 6px 0 rgba(10,10,10,0.22); overflow:hidden;">
+          <div style="filter:brightness(0.96);"><div style="height:28px; background:#ffe50c; border-bottom:3px solid #0a0a0a;"></div><div style="height:120px; background:#e9e9e9;"></div></div>
+          <div style="background:#fafafa; border-top:3px solid #0a0a0a; border-top-left-radius:16px; border-top-right-radius:16px; padding:16px; margin-top:-12px; position:relative;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:16px;">This step depends on&hellip;</span><span style="font-size:18px; color:#737373;">&times;</span></div>
+            <!-- segmented -->
+            <div style="display:flex; border:2px solid #0a0a0a; border-radius:8px; overflow:hidden; margin-bottom:14px;">
+              <div style="flex:1; background:#d4f4e7; padding:9px 0; text-align:center; font-size:12.5px; font-weight:700; border-right:2px solid #0a0a0a;">&#8617; after a step</div>
+              <div style="flex:1; background:#fff; padding:9px 0; text-align:center; font-size:12.5px; font-weight:700; color:#737373;">&#9203; waiting on</div>
+            </div>
+            <div style="font-family:'DM Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.06em; color:#5a8a6a; margin-bottom:7px;">Which step?</div>
+            <div style="display:flex; flex-direction:column; gap:7px;">
+              <div style="display:flex; align-items:center; gap:8px; background:#d4f4e7; border:2px solid #0a0a0a; border-radius:6px; box-shadow:1.5px 1.5px 0 rgba(10,10,10,0.85); padding:9px 11px;"><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:12px;">1</span><span style="flex:1; font-size:13px;">Wire the circuits</span><span style="color:#059669; font-size:13px;">&#10003;</span></div>
+              <div style="display:flex; align-items:center; gap:8px; background:#fff; border:2px solid #cfcfcf; border-radius:6px; padding:9px 11px; color:#737373;"><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:12px;">P</span><span style="flex:1; font-size:13px;">Plan layout &amp; buy materials</span></div>
+            </div>
+            <div style="margin-top:14px; height:42px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px; font-weight:700;">Set &mdash; reads &ldquo;after Wire the circuits&rdquo;</div>
+            <div style="margin-top:9px; text-align:center; font-size:11px; color:#737373;">clear &middot; or just close to skip</div>
+          </div>
+        </div>
+        <div style="font-size:12px; line-height:1.5; color:#737373; margin-top:12px; max-width:332px;"><strong>Internal register.</strong> Picking another step makes this read <em>after &lt;step&gt;</em> &mdash; green, and when that step is done it quietly turns to history rather than a live wait.</div>
+      </div>
+
+      <!-- B: waiting-on mini-sheet -->
+      <div style="flex:none; width:332px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:10px;">&ldquo;Depends&rdquo; sheet &middot; waiting on someone</div>
+        <div style="width:332px; background:#fafafa; border:3px solid #0a0a0a; border-radius:34px; box-shadow:6px 6px 0 rgba(10,10,10,0.22); overflow:hidden;">
+          <div style="filter:brightness(0.96);"><div style="height:28px; background:#ffe50c; border-bottom:3px solid #0a0a0a;"></div><div style="height:120px; background:#e9e9e9;"></div></div>
+          <div style="background:#fafafa; border-top:3px solid #0a0a0a; border-top-left-radius:16px; border-top-right-radius:16px; padding:16px; margin-top:-12px; position:relative;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:16px;">This step depends on&hellip;</span><span style="font-size:18px; color:#737373;">&times;</span></div>
+            <!-- segmented, waiting active -->
+            <div style="display:flex; border:2px solid #0a0a0a; border-radius:8px; overflow:hidden; margin-bottom:14px;">
+              <div style="flex:1; background:#fff; padding:9px 0; text-align:center; font-size:12.5px; font-weight:700; color:#737373; border-right:2px solid #0a0a0a;">&#8617; after a step</div>
+              <div style="flex:1; background:#fde9c8; padding:9px 0; text-align:center; font-size:12.5px; font-weight:700;">&#9203; waiting on</div>
+            </div>
+            <div style="font-family:'DM Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.06em; color:#d97706; margin-bottom:7px;">Who or what?</div>
+            <div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:1.5px 1.5px 0 rgba(10,10,10,0.85); padding:9px 11px; font-size:13px; margin-bottom:12px;">city inspector</div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;"><span style="font-family:'DM Mono',monospace; font-size:11px; color:#737373;">expected</span><span style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; padding:6px 11px; font-family:'DM Mono',monospace; font-size:12px;">Jun 24</span><span style="font-size:11px; color:#9a9a9a;">&mdash; optional</span></div>
+            <div style="height:42px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:13.5px; font-weight:700;">Set &mdash; reads &ldquo;waiting on city inspector&rdquo;</div>
+            <div style="margin-top:9px; text-align:center; font-size:11px; color:#737373;">clear &middot; or just close to skip</div>
+          </div>
+        </div>
+        <div style="font-size:12px; line-height:1.5; color:#737373; margin-top:12px; max-width:332px;"><strong>External register.</strong> A name (amber) and an optional <em>expected</em> date in mono &mdash; completing the step stays live the whole time, since for an external wait, completing it <em>is</em> &ldquo;the event happened.&rdquo;</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================ DIRECTION C ============================ -->
+  <div>
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+      <span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:13px; letter-spacing:0.04em; background:#2563eb; color:#fff; padding:4px 10px; border-radius:3px;">DIRECTION C</span>
+      <span style="font-size:15px; font-weight:700;">Inline expander &mdash; no modal, stay in the list</span>
+    </div>
+    <div style="font-size:13.5px; color:#525252; max-width:680px; margin-bottom:18px; line-height:1.5;">A single quiet <em>＋ detail</em> toggle expands a panel <strong>inside the row</strong> &mdash; no sheet, no context switch. Best for setting several steps in one pass while scanning the whole list. Live preview sits at the foot of the panel.</div>
+    <div style="display:flex; gap:36px; align-items:flex-start;">
+
+      <!-- C: collapsed -->
+      <div style="flex:none; width:332px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:10px;">Collapsed &middot; quiet toggle</div>
+        <div style="width:332px; background:#fafafa; border:3px solid #0a0a0a; border-radius:34px; box-shadow:6px 6px 0 rgba(10,10,10,0.22); overflow:hidden;">
+          <div style="height:28px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font-family:'DM Mono',monospace; font-size:11px;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+          <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:10px 14px;"><span style="font-size:18px;">&larr;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px;">Edit goal</span><span style="font-size:18px; font-weight:700;">&#8943;</span></div>
+          <div style="padding:14px 15px; display:flex; flex-direction:column; gap:10px;">
+            <div style="background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:11px 12px;">
+              <div style="display:flex; align-items:center; gap:9px;"><span style="color:#a3a3a3; font-size:16px;">&#8801;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:13px;">1</span><span style="flex:1; font-size:13.5px;">Wire the circuits</span><span style="background:#ede9fe; border:2px solid #0a0a0a; border-radius:9999px; font-size:11px; padding:2px 7px;">&#128247;</span><span style="font-family:'DM Mono',monospace; font-size:10px; color:#9a9a9a; margin-left:2px;">+ detail</span></div>
+            </div>
+            <div style="background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:11px 12px;">
+              <div style="display:flex; align-items:center; gap:9px;"><span style="color:#a3a3a3; font-size:16px;">&#8801;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:13px;">2</span><span style="flex:1; font-size:13.5px;">Inspection &amp; labels</span><span style="background:#ede9fe; border:2px solid #0a0a0a; border-radius:9999px; font-size:11px; padding:2px 7px;">&#128247;</span><span style="font-family:'DM Mono',monospace; font-size:10px; color:#9a9a9a; margin-left:2px;">+ detail</span></div>
+              <div style="margin-top:8px; display:flex; flex-direction:column; gap:4px; padding-top:8px; border-top:1.5px solid #efefef;">
+                <div style="display:flex; align-items:baseline; gap:6px;"><span style="font-size:12px; color:#d97706;">&#9203;</span><span style="font-size:12px; color:#1a1a1a;">waiting on city inspector</span><span style="font-family:'DM Mono',monospace; font-size:10.5px; color:#737373;">&middot; expected Jun 24</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:12px; line-height:1.5; color:#737373; margin-top:12px; max-width:332px;">At rest the row is the row you know &mdash; the toggle is a mono <em>+ detail</em> hint. A set step keeps its lines visible without expanding.</div>
+      </div>
+
+      <!-- C: expanded inline -->
+      <div style="flex:none; width:332px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:10px;">Expanded &middot; waiting on someone</div>
+        <div style="width:332px; background:#fafafa; border:3px solid #0a0a0a; border-radius:34px; box-shadow:6px 6px 0 rgba(10,10,10,0.22); overflow:hidden;">
+          <div style="height:28px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font-family:'DM Mono',monospace; font-size:11px;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+          <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:10px 14px;"><span style="font-size:18px;">&larr;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px;">Edit goal</span><span style="font-size:18px; font-weight:700;">&#8943;</span></div>
+          <div style="padding:14px 15px;">
+            <div style="background:#fff; border:3px solid #2563eb; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:11px 12px;">
+              <div style="display:flex; align-items:center; gap:9px;"><span style="color:#a3a3a3; font-size:16px;">&#8801;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:13px;">2</span><span style="flex:1; font-size:13.5px;">Inspection &amp; labels</span><span style="font-family:'DM Mono',monospace; font-size:10px; color:#2563eb; font-weight:700;">&minus; close</span></div>
+              <div style="margin-top:11px; padding-top:11px; border-top:1.5px solid #efefef; display:flex; flex-direction:column; gap:11px;">
+                <div>
+                  <div style="font-family:'DM Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:0.06em; color:#737373; margin-bottom:6px;">Depends on</div>
+                  <div style="display:flex; border:2px solid #0a0a0a; border-radius:7px; overflow:hidden;">
+                    <div style="flex:1; background:#fff; padding:6px 0; text-align:center; font-size:11px; font-weight:700; color:#737373; border-right:2px solid #0a0a0a;">none</div>
+                    <div style="flex:1; background:#fff; padding:6px 0; text-align:center; font-size:11px; font-weight:700; color:#737373; border-right:2px solid #0a0a0a;">&#8617; after</div>
+                    <div style="flex:1; background:#fde9c8; padding:6px 0; text-align:center; font-size:11px; font-weight:700;">&#9203; waiting</div>
+                  </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:7px;"><div style="flex:1; background:#fff; border:2px solid #0a0a0a; border-radius:6px; padding:6px 9px; font-size:12px;">city inspector</div><span style="font-family:'DM Mono',monospace; font-size:10px; color:#737373;">exp.</span><div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; padding:6px 9px; font-family:'DM Mono',monospace; font-size:11px;">Jun 24</div></div>
+                <div>
+                  <div style="font-family:'DM Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:0.06em; color:#737373; margin-bottom:6px;">Your due date</div>
+                  <div style="display:flex; gap:6px;"><span style="background:#fff; border:2px solid #cfcfcf; border-radius:9999px; font-size:11px; padding:4px 10px; color:#9a9a9a;">none</span><span style="background:#fff; border:2px solid #cfcfcf; border-radius:9999px; font-size:11px; padding:4px 10px; color:#9a9a9a;">sometime</span><span style="background:#dbe7ff; border:2px solid #0a0a0a; border-radius:9999px; font-size:11px; padding:4px 10px; box-shadow:1.5px 1.5px 0 rgba(10,10,10,0.85);">Jun 30</span></div>
+                </div>
+                <div style="background:#f4f4f4; border:2px solid #0a0a0a; border-radius:6px; padding:9px 10px;">
+                  <div style="font-family:'DM Mono',monospace; font-size:8.5px; text-transform:uppercase; letter-spacing:0.06em; color:#737373; margin-bottom:6px;">Reads as</div>
+                  <div style="display:flex; align-items:baseline; gap:6px; margin-bottom:3px;"><span style="font-size:11px; color:#d97706;">&#9203;</span><span style="font-size:11.5px;">waiting on city inspector</span><span style="font-family:'DM Mono',monospace; font-size:10px; color:#737373;">&middot; expected Jun 24</span></div>
+                  <div style="display:flex; align-items:baseline; gap:6px;"><span style="font-size:11px; color:#525252;">&#9638;</span><span style="font-size:11.5px;">due Mon &middot; Jun 30</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:12px; line-height:1.5; color:#737373; margin-top:12px; max-width:332px;"><strong>External register.</strong> The <em>waiting</em> segment shows a name + expected date. A <em>none</em> segment is always first, so &ldquo;no dependency&rdquo; is the resting default and clearing is one tap.</div>
+      </div>
+
+      <!-- C: expanded after -->
+      <div style="flex:none; width:332px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:10px;">Expanded &middot; after a step</div>
+        <div style="width:332px; background:#fafafa; border:3px solid #0a0a0a; border-radius:34px; box-shadow:6px 6px 0 rgba(10,10,10,0.22); overflow:hidden;">
+          <div style="height:28px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font-family:'DM Mono',monospace; font-size:11px;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+          <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:10px 14px;"><span style="font-size:18px;">&larr;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px;">Edit goal</span><span style="font-size:18px; font-weight:700;">&#8943;</span></div>
+          <div style="padding:14px 15px;">
+            <div style="background:#fff; border:3px solid #2563eb; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:11px 12px;">
+              <div style="display:flex; align-items:center; gap:9px;"><span style="color:#a3a3a3; font-size:16px;">&#8801;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:13px;">4</span><span style="flex:1; font-size:13.5px;">Mount the panels</span><span style="font-family:'DM Mono',monospace; font-size:10px; color:#2563eb; font-weight:700;">&minus; close</span></div>
+              <div style="margin-top:11px; padding-top:11px; border-top:1.5px solid #efefef; display:flex; flex-direction:column; gap:11px;">
+                <div>
+                  <div style="font-family:'DM Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:0.06em; color:#737373; margin-bottom:6px;">Depends on</div>
+                  <div style="display:flex; border:2px solid #0a0a0a; border-radius:7px; overflow:hidden;">
+                    <div style="flex:1; background:#fff; padding:6px 0; text-align:center; font-size:11px; font-weight:700; color:#737373; border-right:2px solid #0a0a0a;">none</div>
+                    <div style="flex:1; background:#d4f4e7; padding:6px 0; text-align:center; font-size:11px; font-weight:700; border-right:2px solid #0a0a0a;">&#8617; after</div>
+                    <div style="flex:1; background:#fff; padding:6px 0; text-align:center; font-size:11px; font-weight:700; color:#737373;">&#9203; waiting</div>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-family:'DM Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:0.06em; color:#5a8a6a; margin-bottom:6px;">Which step?</div>
+                  <div style="display:flex; flex-direction:column; gap:6px;">
+                    <div style="display:flex; align-items:center; gap:7px; background:#d4f4e7; border:2px solid #0a0a0a; border-radius:6px; box-shadow:1.5px 1.5px 0 rgba(10,10,10,0.85); padding:7px 9px;"><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:11px;">3</span><span style="flex:1; font-size:12px;">Inspection &amp; labels</span><span style="color:#059669; font-size:12px;">&#10003;</span></div>
+                    <div style="display:flex; align-items:center; gap:7px; background:#fff; border:2px solid #cfcfcf; border-radius:6px; padding:7px 9px; color:#737373;"><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:11px;">1</span><span style="flex:1; font-size:12px;">Wire the circuits</span></div>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-family:'DM Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:0.06em; color:#737373; margin-bottom:6px;">Your due date</div>
+                  <div style="display:flex; gap:6px;"><span style="background:#fff; border:2px solid #cfcfcf; border-radius:9999px; font-size:11px; padding:4px 10px; color:#9a9a9a;">none</span><span style="background:#fff; border:2px solid #cfcfcf; border-radius:9999px; font-size:11px; padding:4px 10px; color:#9a9a9a;">sometime</span><span style="background:#dbe7ff; border:2px solid #0a0a0a; border-radius:9999px; font-size:11px; padding:4px 10px; box-shadow:1.5px 1.5px 0 rgba(10,10,10,0.85);">Jun 30</span></div>
+                </div>
+                <div style="background:#f4f4f4; border:2px solid #0a0a0a; border-radius:6px; padding:9px 10px;">
+                  <div style="font-family:'DM Mono',monospace; font-size:8.5px; text-transform:uppercase; letter-spacing:0.06em; color:#737373; margin-bottom:6px;">Reads as</div>
+                  <div style="display:flex; align-items:baseline; gap:6px; margin-bottom:3px;"><span style="font-size:11px; color:#5a8a6a;">&#8617;</span><span style="font-size:11.5px;">after Inspection &amp; labels</span></div>
+                  <div style="display:flex; align-items:baseline; gap:6px;"><span style="font-size:11px; color:#525252;">&#9638;</span><span style="font-size:11.5px;">due Mon &middot; Jun 30</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:12px; line-height:1.5; color:#737373; margin-top:12px; max-width:332px;"><strong>Internal register.</strong> Same panel, segment on <em>after</em> &mdash; the body becomes a one-tap step picker (done steps marked), and it reads <em>after &lt;step&gt;</em> in quiet green.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================ DECISIONS / OPEN ============================ -->
+  <div style="max-width:720px;">
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+      <span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:13px; letter-spacing:0.04em; background:#0a0a0a; color:#fff; padding:4px 10px; border-radius:3px;">CARRIED QUESTIONS</span>
+      <span style="font-size:15px; font-weight:700;">Resolved the same way in all three</span>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:11px;">
+      <div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:13px 15px; font-size:13px; line-height:1.55; color:#1a1a1a;"><strong>C-expected vs B-due (Q10).</strong> Always two separate controls, two separate lines, two palettes (amber <em>expected</em> = the world&rsquo;s timing; neutral <em>due</em> = your intent). Setting one never fills the other.</div>
+      <div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:13px 15px; font-size:13px; line-height:1.55; color:#1a1a1a;"><strong>Past expected date.</strong> Recommendation: a passed date reads neutral past-tense &mdash; <span style="font-family:'DM Mono',monospace; font-size:12px;">was expected Jun 12</span> &mdash; factual, never &ldquo;late&rdquo; / &ldquo;overdue,&rdquo; and the complete action stays live throughout. (Carried into the final to confirm.)</div>
+      <div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:13px 15px; font-size:13px; line-height:1.55; color:#1a1a1a;"><strong>B-soft vs B-firm.</strong> The date control offers <em>Sometime</em> (soft intent) vs a real date &mdash; the lightest split that expresses both. Repetition is noted as a later third option, not built now.</div>
+    </div>
+    <div style="margin-top:22px; font-size:14px; line-height:1.55; color:#404040;">Pick a direction (or a hybrid &mdash; e.g. B&rsquo;s chips with A&rsquo;s one-sheet) and I&rsquo;ll build the finished interactive prototype: set + clear, the type toggle, the two-date case, and a live truth-line that matches Focus/Timeline exactly.</div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

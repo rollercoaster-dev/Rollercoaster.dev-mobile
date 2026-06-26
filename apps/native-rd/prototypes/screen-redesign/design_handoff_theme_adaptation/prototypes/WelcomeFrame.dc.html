@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="min-height:100%; display:flex; flex-direction:column; background:{{ cur.bg }}; font-family:{{ cur.bodyFont }};">
+
+  <!-- HEADER BAND -->
+  <div style="flex:none; background:{{ cur.band }}; padding:20px 18px 22px; display:flex; align-items:center; gap:14px;">
+    <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="{{ cur.bandInk }}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M2 19 C5 7, 9 7, 12 15 S 18 20, 22 7"></path><circle cx="22" cy="7" r="1.6" fill="{{ cur.bandInk }}"></circle></svg>
+    <div>
+      <div style="font-family:{{ cur.monoFont }}; font-size:11px; letter-spacing:0.04em; color:{{ cur.bandInk }}; opacity:0.85;">Hey there 👋</div>
+      <div style="font-family:{{ cur.headFont }}; font-weight:{{ cur.headW }}; font-size:calc(26px * {{ cur.fs }}); line-height:1.04; color:{{ cur.bandInk }}; margin-top:3px;">Welcome to your ride.</div>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="sc-scroll" style="flex:1; overflow-y:auto; padding:18px 18px 14px; display:flex; flex-direction:column; gap:14px;">
+    <div style="font-size:calc(13.5px * {{ cur.fs }}); line-height:{{ cur.lineH }}; color:{{ cur.ink }};">rollercoaster.dev is your personal goal tracker. Everything stays on your phone — your data, your pace, your ride.</div>
+    <div style="font-size:calc(13.5px * {{ cur.fs }}); line-height:{{ cur.lineH }}; color:{{ cur.inkSoft }};">First, let’s pick a look that fits your brain. Tap a swatch — the whole app changes so you can see how it feels.</div>
+
+    <dc-import name="ThemeSampleCard" t="{{ cur }}" hint-size="100%,74px"></dc-import>
+
+    <div style="font-family:{{ cur.monoFont }}; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:{{ cur.muted }}; margin-top:6px;">Your look (tap to preview)</div>
+
+    <!-- CHIP GRID -->
+    <sc-if value="{{ isChips }}" hint-placeholder-val="{{ true }}">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:9px;">
+        <sc-for list="{{ themes }}" as="th" hint-placeholder-count="7">
+          <div onClick="{{ th.pick }}" style="position:relative; border:{{ th.chipBorder }}; border-radius:{{ cur.radius }}; overflow:hidden; cursor:pointer;">
+            <div style="display:flex; height:34px; background:{{ th.bg }};">
+              <div style="width:42%; background:{{ th.accent }};"></div>
+              <div style="width:24%; background:{{ th.ink }};"></div>
+            </div>
+            <div style="background:{{ th.surfaceAlt }}; border-top:1px solid {{ th.borderCol }}; padding:5px 8px; display:flex; align-items:center; justify-content:space-between; gap:4px;">
+              <span style="font-family:{{ th.headFont }}; font-weight:{{ th.headW }}; font-size:11px; color:{{ th.ink }}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ th.name }}</span>
+              <span style="font-size:12px; font-weight:900; color:{{ cur.check }}; flex:none;">{{ th.check }}</span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <!-- SWATCH RAIL + LIST -->
+    <sc-if value="{{ isRail }}" hint-placeholder-val="{{ false }}">
+      <div class="sc-scroll" style="display:flex; gap:11px; overflow-x:auto; padding:2px 0 8px;">
+        <sc-for list="{{ themes }}" as="th" hint-placeholder-count="7">
+          <div onClick="{{ th.pick }}" style="flex:none; width:62px; cursor:pointer; text-align:center;">
+            <div style="width:62px; height:62px; border-radius:50%; overflow:hidden; border:{{ th.railBorder }}; display:flex; flex-direction:column; box-shadow:{{ th.railShadow }};">
+              <div style="flex:1; background:{{ th.band }};"></div>
+              <div style="flex:1; background:{{ th.accent }};"></div>
+              <div style="flex:1; background:{{ th.bg }};"></div>
+            </div>
+            <div style="font-family:{{ cur.monoFont }}; font-size:8.5px; color:{{ cur.inkSoft }}; margin-top:5px; line-height:1.15; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ th.name }}</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="font-family:{{ cur.headFont }}; font-weight:{{ cur.headW }}; font-size:calc(15px * {{ cur.fs }}); color:{{ cur.ink }};">{{ cur.name }}</div>
+      <div style="font-size:calc(12px * {{ cur.fs }}); color:{{ cur.inkSoft }}; margin-top:-8px;">{{ cur.desc }}</div>
+    </sc-if>
+  </div>
+
+  <!-- FOOTER CTA -->
+  <div style="flex:none; padding:14px 18px 18px; background:{{ cur.bg }}; border-top:1px solid {{ cur.borderCol }};">
+    <div onClick="{{ onGetStarted }}" style="height:52px; border-radius:{{ cur.radius }}; background:{{ cur.primary }}; color:{{ cur.primaryFg }}; border:{{ cur.cardBorder }}; box-shadow:{{ cur.cardShadow }}; display:flex; align-items:center; justify-content:center; font-family:{{ cur.headFont }}; font-weight:{{ cur.headW }}; font-size:calc(16px * {{ cur.fs }}); cursor:pointer;">Get Started</div>
+    <div style="text-align:center; font-size:11px; color:{{ cur.muted }}; margin-top:9px;">You can change this anytime in Settings.</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:360,&quot;height&quot;:700},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;chips&quot;,&quot;rail&quot;],&quot;default&quot;:&quot;chips&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;cur&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;Record&lt;string,string&gt;&quot;},&quot;themes&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;any[]&quot;},&quot;onGetStarted&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const m = this.props.mode || "chips";
+    return { isChips: m === "chips", isRail: m === "rail" };
+  }
+}
+</script>
+</body>
+</html>

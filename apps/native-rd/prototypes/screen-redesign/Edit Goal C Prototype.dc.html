@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wght@700;800;900&family=Instrument+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  input::placeholder { color: #9a9a9a; }
+  input:focus { outline: none; }
+</style>
+</helmet>
+
+<div style="font-family:'Instrument Sans',system-ui,sans-serif; min-height:100vh; box-sizing:border-box; padding:40px; background:#e5e5e5; color:#0a0a0a; display:flex; flex-direction:column; align-items:center; gap:20px;">
+
+  <div style="text-align:center;">
+    <div style="font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:#525252; margin-bottom:6px;">Direction C &middot; interactive</div>
+    <div style="font-size:14px; color:#404040;">Tap through it &mdash; <strong>Next</strong> / <strong>Quick add</strong> to skip the guide / the <strong>&#9998;</strong> in Focus opens the edit view.</div>
+  </div>
+
+  <!-- DEVICE -->
+  <div style="width:344px; height:724px; background:#fafafa; border:3px solid #0a0a0a; border-radius:40px; box-shadow:8px 8px 0 rgba(10,10,10,0.22); overflow:hidden; display:flex; flex-direction:column; position:relative;">
+    <!-- status bar -->
+    <div style="height:30px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 18px; font-family:'DM Mono',monospace; font-size:12px; color:#0a0a0a; flex:none;"><span>17:40</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+
+    <!-- ============ NAME ============ -->
+    <sc-if value="{{ isName }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:1; display:flex; flex-direction:column;">
+        <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:11px 16px; flex:none;"><span style="width:16px;"></span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px; color:#0a0a0a;">New goal</span><span style="font-size:18px; color:#0a0a0a;">&times;</span></div>
+        <div style="display:flex; gap:6px; padding:14px 18px 0; flex:none;">
+          <div style="flex:1; height:6px; background:#ffe50c; border:2px solid #0a0a0a;"></div><div style="flex:1; height:6px; background:#fff; border:2px solid #0a0a0a;"></div><div style="flex:1; height:6px; background:#fff; border:2px solid #0a0a0a;"></div><div style="flex:1; height:6px; background:#fff; border:2px solid #0a0a0a;"></div>
+        </div>
+        <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:0 22px;">
+          <div style="font-family:'DM Mono',monospace; font-size:11px; color:#737373; text-transform:uppercase; margin-bottom:12px;">Step 1 of 4</div>
+          <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:25px; line-height:1.15; margin-bottom:18px;">What do you want to work toward?</div>
+          <input value="{{ title }}" onChange="{{ setTitle }}" placeholder="Name your goal" style="font-family:'Instrument Sans',sans-serif; font-size:16px; background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px 14px; margin-bottom:12px; width:100%;">
+          <div style="font-size:13px; line-height:1.5; color:#737373;">Something you&rsquo;ll show progress on.</div>
+        </div>
+        <div style="flex:none; padding:14px 18px 22px;">
+          <div onClick="{{ next }}" style="height:52px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px; font-weight:700; cursor:pointer;">Next &rarr;</div>
+          <div onClick="{{ quickAdd }}" style="text-align:center; margin-top:12px; font-size:13px; color:#525252; font-weight:700; cursor:pointer;">or <span style="color:#2563eb;">Quick add &mdash; skip to the list &rsaquo;</span></div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ FIRST STEP ============ -->
+    <sc-if value="{{ isStep }}">
+      <div style="flex:1; display:flex; flex-direction:column;">
+        <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:11px 16px; flex:none;"><span onClick="{{ back }}" style="font-size:20px; color:#0a0a0a; cursor:pointer;">&larr;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px; color:#0a0a0a;">New goal</span><span style="width:16px;"></span></div>
+        <div style="display:flex; gap:6px; padding:14px 18px 0; flex:none;">
+          <div style="flex:1; height:6px; background:#ffe50c; border:2px solid #0a0a0a;"></div><div style="flex:1; height:6px; background:#ffe50c; border:2px solid #0a0a0a;"></div><div style="flex:1; height:6px; background:#fff; border:2px solid #0a0a0a;"></div><div style="flex:1; height:6px; background:#fff; border:2px solid #0a0a0a;"></div>
+        </div>
+        <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:0 22px;">
+          <div style="font-family:'DM Mono',monospace; font-size:11px; color:#737373; text-transform:uppercase; margin-bottom:4px;">Goal</div>
+          <div style="font-size:14px; color:#525252; margin-bottom:24px;">{{ title }}</div>
+          <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:23px; line-height:1.15; margin-bottom:16px;">What&rsquo;s the first step?</div>
+          <input value="{{ first }}" onChange="{{ setFirst }}" placeholder="One small thing to start" style="font-family:'Instrument Sans',sans-serif; font-size:16px; background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px 14px; margin-bottom:14px; width:100%;">
+          <div style="display:flex; align-items:center; gap:8px;"><span style="font-family:'DM Mono',monospace; font-size:11px; color:#737373; text-transform:uppercase;">Evidence</span><span onClick="{{ firstOpenEv }}" style="display:inline-flex; align-items:center; gap:5px; background:#ede9fe; border:2px solid #0a0a0a; border-radius:9999px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); font-family:'DM Mono',monospace; font-size:12px; padding:3px 9px; cursor:pointer;">{{ firstEvIcon }} {{ firstEvLabel }}</span><span onClick="{{ firstOpenEv }}" style="font-size:12px; color:#2563eb; font-weight:700; cursor:pointer;">change</span></div>
+        </div>
+        <div style="flex:none; padding:14px 18px 22px;">
+          <div onClick="{{ next }}" style="height:52px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px; font-weight:700; cursor:pointer;">Next &rarr;</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ BUILD ============ -->
+    <sc-if value="{{ isBuild }}">
+      <div style="flex:1; display:flex; flex-direction:column;">
+        <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:11px 16px; flex:none;"><span onClick="{{ back }}" style="font-size:20px; color:#0a0a0a; cursor:pointer;">&larr;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px; color:#0a0a0a;">New goal</span><span style="width:16px;"></span></div>
+        <div style="display:flex; gap:6px; padding:14px 18px 0; flex:none;">
+          <div style="flex:1; height:6px; background:#ffe50c; border:2px solid #0a0a0a;"></div><div style="flex:1; height:6px; background:#ffe50c; border:2px solid #0a0a0a;"></div><div style="flex:1; height:6px; background:#ffe50c; border:2px solid #0a0a0a;"></div><div style="flex:1; height:6px; background:#fff; border:2px solid #0a0a0a;"></div>
+        </div>
+        <div style="flex:1; padding:16px 18px 0; overflow-y:auto;">
+          <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:12px;"><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:17px;">Your steps</span><span style="font-family:'DM Mono',monospace; font-size:12px; color:#737373;">{{ stepCount }}</span></div>
+          <sc-for list="{{ steps }}" as="step" hint-placeholder-count="2">
+            <div style="background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:12px; margin-bottom:10px;">
+              <div style="display:flex; align-items:center; gap:9px;"><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px;">{{ step.n }}</span><span style="flex:1; font-size:14px;">{{ step.t }}</span><span onClick="{{ step.openEv }}" style="display:inline-flex; align-items:center; background:#ede9fe; border:2px solid #0a0a0a; border-radius:9999px; font-size:11px; padding:2px 6px; cursor:pointer;">{{ step.evIcon }}</span></div>
+              <sc-if value="{{ step.sub }}">
+                <div style="margin-top:10px; padding-left:12px; border-left:3px solid #d4f4e7;">
+                  <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.08em; text-transform:uppercase; color:#5a8a6a; margin-bottom:6px;">Smaller steps</div>
+                  <div style="display:flex; align-items:center; gap:8px; color:#525252;"><span style="font-size:12px;">&#8627;</span><span style="flex:1; font-size:12px;">{{ step.sub }}</span><span style="font-size:11px;">&#128221;</span></div>
+                </div>
+              </sc-if>
+              <div style="margin-top:9px; font-size:11.5px; color:#5a8a6a; font-weight:700;">&#9866; break into smaller steps</div>
+            </div>
+          </sc-for>
+          <div onClick="{{ addStep }}" style="display:flex; align-items:center; gap:7px; color:#2563eb; font-weight:700; font-size:13px; cursor:pointer; padding:4px 0 12px;"><span style="font-size:15px;">+</span> add another step</div>
+        </div>
+        <div style="flex:none; padding:12px 18px 22px;">
+          <div onClick="{{ next }}" style="height:52px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px; font-weight:700; cursor:pointer;">I&rsquo;m ready &rarr;</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ READY ============ -->
+    <sc-if value="{{ isReady }}">
+      <div style="flex:1; display:flex; flex-direction:column;">
+        <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:11px 16px; flex:none;"><span onClick="{{ back }}" style="font-size:20px; color:#0a0a0a; cursor:pointer;">&larr;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px; color:#0a0a0a;">New goal</span><span style="width:16px;"></span></div>
+        <div style="display:flex; gap:6px; padding:14px 18px 0; flex:none;">
+          <div style="flex:1; height:6px; background:#ffe50c; border:2px solid #0a0a0a;"></div><div style="flex:1; height:6px; background:#ffe50c; border:2px solid #0a0a0a;"></div><div style="flex:1; height:6px; background:#ffe50c; border:2px solid #0a0a0a;"></div><div style="flex:1; height:6px; background:#ffe50c; border:2px solid #0a0a0a;"></div>
+        </div>
+        <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:0 22px;">
+          <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:32px; line-height:1.05; margin-bottom:20px;">You&rsquo;re set.</div>
+          <div style="background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:16px; margin-bottom:16px;">
+            <div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:17px; margin-bottom:6px;">{{ title }}</div>
+            <div style="font-family:'DM Mono',monospace; font-size:12px; color:#525252;">{{ stepCount }} steps &middot; evidence on each</div>
+          </div>
+          <div style="display:flex; gap:9px; align-items:flex-start; background:#ede9fe; border:2px solid #0a0a0a; border-radius:6px; padding:11px 12px;"><span style="font-size:15px;">&#127942;</span><span style="font-size:12.5px; line-height:1.45; color:#3b1f6b;">You&rsquo;ll design your badge when you finish.</span></div>
+        </div>
+        <div style="flex:none; padding:14px 18px 22px;">
+          <div onClick="{{ next }}" style="height:54px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:17px; font-weight:700; cursor:pointer;">Start Working</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ FOCUS ============ -->
+    <sc-if value="{{ isFocus }}">
+      <div style="flex:1; display:flex; flex-direction:column;">
+        <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:11px 16px; flex:none;"><span style="font-size:22px; color:#0a0a0a;">&lsaquo;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px; color:#0a0a0a;">Focus Mode</span><span onClick="{{ goEdit }}" style="font-size:16px; color:#0a0a0a; cursor:pointer;">&#9998;</span></div>
+        <div style="margin:14px 16px 0; border:2px solid #0a0a0a; border-radius:2px; background:#fff; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:9px 12px; display:flex; align-items:center; justify-content:center; gap:8px; flex:none;"><span style="font-family:'DM Mono',monospace; font-size:12px;">STEP 1 / {{ stepCount }}</span><span style="font-size:12px; color:#525252; font-weight:600;">&middot; See all steps &rsaquo;</span></div>
+        <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:0 26px;">
+          <div style="display:inline-flex; align-self:flex-start; background:#ede9fe; border:2px solid #0a0a0a; border-radius:9999px; font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; padding:4px 11px; margin-bottom:20px;">{{ title }}</div>
+          <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:34px; line-height:1.06; margin-bottom:24px;">{{ first }}</div>
+          <div style="display:inline-flex; align-self:flex-start; align-items:center; gap:6px; background:#ede9fe; border:2px solid #0a0a0a; border-radius:9999px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); font-family:'DM Mono',monospace; font-size:12px; padding:5px 11px;">{{ firstEvIcon }} {{ firstEvLabel }}</div>
+        </div>
+        <div style="flex:none; padding:16px 22px 24px;">
+          <div style="height:56px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; gap:10px; color:#fff; font-size:18px; font-weight:700;">&#10003; Mark complete</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ EDIT ============ -->
+    <sc-if value="{{ isEdit }}">
+      <div style="flex:1; display:flex; flex-direction:column;">
+        <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:11px 16px; flex:none;"><span onClick="{{ goFocus }}" style="font-size:22px; color:#0a0a0a; cursor:pointer;">&larr;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px; color:#0a0a0a;">Edit goal</span><span style="font-size:20px; color:#0a0a0a; font-weight:700;">&#8943;</span></div>
+        <div style="flex:1; padding:16px; overflow-y:auto;">
+          <div style="font-family:'DM Mono',monospace; font-size:11px; color:#737373; text-transform:uppercase; margin-bottom:6px;">Goal</div>
+          <div style="display:flex; align-items:center; gap:8px; background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:10px 14px; margin-bottom:18px;"><input value="{{ title }}" onChange="{{ setTitle }}" style="flex:1; font-family:'Anybody',sans-serif; font-weight:900; font-size:19px; border:none; background:transparent; padding:0; width:100%;"><span style="font-size:15px; color:#737373;">&#9998;</span></div>
+          <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:12px;"><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:17px;">Steps</span><span style="font-family:'DM Mono',monospace; font-size:12px; color:#737373;">{{ stepCount }}</span></div>
+          <sc-for list="{{ steps }}" as="step" hint-placeholder-count="2">
+            <div style="background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:11px 12px; margin-bottom:9px;">
+              <div style="display:flex; align-items:center; gap:9px;"><span style="color:#a3a3a3; font-size:16px;">&#8801;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px;">{{ step.n }}</span><span style="flex:1; font-size:14px;">{{ step.t }}</span><span onClick="{{ step.openEv }}" style="display:inline-flex; background:#ede9fe; border:2px solid #0a0a0a; border-radius:9999px; font-size:11px; padding:2px 6px; cursor:pointer;">{{ step.evIcon }}</span><span style="color:#a3a3a3; font-size:14px; margin-left:4px;">&times;</span></div>
+              <sc-if value="{{ step.sub }}">
+                <div style="margin-top:9px; padding-left:12px; border-left:3px solid #d4f4e7;"><div style="display:flex; align-items:center; gap:8px; color:#525252;"><span style="color:#a3a3a3; font-size:13px;">&#8801;</span><span style="flex:1; font-size:12px;">{{ step.sub }}</span><span style="font-size:11px;">&#128221;</span><span style="color:#a3a3a3; font-size:12px;">&times;</span></div></div>
+              </sc-if>
+            </div>
+          </sc-for>
+          <div style="display:flex; gap:10px; margin-top:4px;">
+            <div style="flex:1; background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:10px 12px;"><span style="font-size:14px; color:#9a9a9a;">Add step...</span></div>
+            <div onClick="{{ addStep }}" style="flex:none; width:48px; background:#2563eb; border:3px solid #0a0a0a; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:22px; font-weight:700; cursor:pointer;">+</div>
+          </div>
+        </div>
+        <div style="flex:none; padding:14px 16px 22px; border-top:2px solid #e5e5e5;">
+          <div onClick="{{ goFocus }}" style="height:52px; background:#fff; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#0a0a0a; font-size:16px; font-weight:700; cursor:pointer;">Done</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ pickerOpen }}">
+      <div style="position:absolute; inset:0; z-index:50; display:flex; flex-direction:column; justify-content:flex-end;">
+        <div onClick="{{ closePicker }}" style="position:absolute; inset:0; background:rgba(10,10,10,0.4);"></div>
+        <div style="position:relative; background:#fafafa; border-top:3px solid #0a0a0a; border-top-left-radius:16px; border-top-right-radius:16px; padding:18px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:16px;">Evidence type</span><span onClick="{{ closePicker }}" style="font-size:18px; cursor:pointer; color:#737373;">&times;</span></div>
+          <div style="display:flex; flex-wrap:wrap; gap:10px;">
+            <sc-for list="{{ evOptions }}" as="opt" hint-placeholder-count="6">
+              <div onClick="{{ opt.pick }}" style="display:flex; align-items:center; gap:7px; background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:10px 14px; font-size:14px; font-weight:700; cursor:pointer;">{{ opt.icon }} {{ opt.label }}</div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+
+  <!-- reset -->
+  <div onClick="{{ reset }}" style="font-family:'DM Mono',monospace; font-size:12px; color:#737373; cursor:pointer; text-decoration:underline;">&#8635; restart prototype</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    screen: "name",
+    stack: [],
+    title: "Build a birdhouse",
+    pickerOpen: false,
+    pickerIndex: 0,
+    steps: [
+      { t: "Sand the edges", ev: { icon: "\u{1F4DD}", label: "Note" }, sub: "Check by hand" },
+      { t: "Paint it", ev: { icon: "\u{1F4F7}", label: "Photo" }, sub: "" },
+    ],
+  };
+
+  go(s) {
+    this.setState((st) => ({ screen: s, stack: [...st.stack, st.screen] }));
+  }
+  back() {
+    this.setState((st) => {
+      if (!st.stack.length) return st;
+      const stack = [...st.stack];
+      const prev = stack.pop();
+      return { screen: prev, stack };
+    });
+  }
+  next() {
+    const map = { name: "step", step: "build", build: "ready", ready: "focus" };
+    const n = map[this.state.screen];
+    if (n) this.go(n);
+  }
+  quickAdd() {
+    this.go("build");
+  }
+  addStep() {
+    this.setState((st) => ({
+      steps: [...st.steps, { t: "New step", ev: { icon: "\u{1F4DD}", label: "Note" }, sub: "" }],
+    }));
+  }
+  openPicker(i) {
+    this.setState({ pickerOpen: true, pickerIndex: i });
+  }
+  closePicker() {
+    this.setState({ pickerOpen: false });
+  }
+  pickType(opt) {
+    this.setState((st) => {
+      const steps = [...st.steps];
+      const i = st.pickerIndex;
+      steps[i] = { ...steps[i], ev: { icon: opt.icon, label: opt.label } };
+      return { steps, pickerOpen: false };
+    });
+  }
+  reset() {
+    this.setState({ screen: "name", stack: [] });
+  }
+
+  renderVals() {
+    const s = this.state.screen;
+    const steps = this.state.steps.map((x, i) => ({
+      ...x,
+      n: i + 1,
+      evIcon: typeof x.ev === "string" ? x.ev : (x.ev && x.ev.icon) || "\u{1F4DD}",
+      openEv: () => this.openPicker(i),
+    }));
+    const EV = [
+      { icon: "\u{1F4F7}", label: "Photo" },
+      { icon: "\u{1F3AC}", label: "Video" },
+      { icon: "\u{1F3A4}", label: "Audio" },
+      { icon: "\u{1F4DD}", label: "Note" },
+      { icon: "\u{1F517}", label: "Link" },
+      { icon: "\u{1F4CE}", label: "File" },
+    ];
+    const first0 = this.state.steps[0];
+    return {
+      title: this.state.title,
+      first: first0 ? first0.t : "",
+      firstEvIcon: first0 ? (typeof first0.ev === "string" ? first0.ev : first0.ev.icon) : "",
+      firstEvLabel: first0 ? (typeof first0.ev === "string" ? "Note" : first0.ev.label) : "",
+      firstOpenEv: () => this.openPicker(0),
+      pickerOpen: this.state.pickerOpen,
+      closePicker: () => this.closePicker(),
+      evOptions: EV.map((o) => ({ ...o, pick: () => this.pickType(o) })),
+      steps,
+      stepCount: steps.length,
+      isName: s === "name",
+      isStep: s === "step",
+      isBuild: s === "build",
+      isReady: s === "ready",
+      isFocus: s === "focus",
+      isEdit: s === "edit",
+      setTitle: (e) => this.setState({ title: e.target.value }),
+      setFirst: (e) =>
+        this.setState((st) => {
+          const steps = [...st.steps];
+          steps[0] = { ...steps[0], t: e.target.value };
+          return { steps };
+        }),
+      next: () => this.next(),
+      back: () => this.back(),
+      quickAdd: () => this.quickAdd(),
+      goEdit: () => this.go("edit"),
+      goFocus: () => this.go("focus"),
+      addStep: () => this.addStep(),
+      reset: () => this.reset(),
+    };
+  }
+}
+</script>
+</body>
+</html>

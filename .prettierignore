@@ -17,3 +17,9 @@ apps/native-rd/CHANGELOG.md
 # at publish — without this ignore, every release fails format:check on the notes
 # file before EAS even starts. release-notes:lint enforces the real contract here.
 apps/native-rd/docs/release/testing-notes/
+
+# Design-exploration prototype bundles — HTML snapshots, copied-in stale screen
+# code, and as-received handoff markdown/CSS token dumps. Preserved as reference,
+# not maintained source, so keep Prettier (and format:check) off the whole tree.
+# Matches the eslint global ignore of **/prototypes/** in apps/native-rd/eslint.config.js.
+apps/native-rd/prototypes/

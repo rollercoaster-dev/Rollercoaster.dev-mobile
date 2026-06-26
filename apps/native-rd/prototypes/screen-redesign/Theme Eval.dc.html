@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wght@700;800;900&family=Instrument+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Lexend:wght@400;500;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./tokens/tokens.css">
+<link rel="stylesheet" href="./tokens/themes.css">
+</helmet>
+
+<div style="position:absolute; left:40px; top:36px; width:1480px; font-family:'Instrument Sans',sans-serif;">
+  <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:30px; color:#0a0a0a; letter-spacing:-0.01em;">Theme Evaluation — real <span style="font-family:'DM Mono',monospace; font-size:24px;">--ob-*</span> tokens</div>
+  <div style="font-size:13.5px; color:#525252; line-height:1.5; margin-top:6px; max-width:880px;">Triage view: the <b>divergence matrix</b> and <b>contrast audit</b> below summarise every theme at a glance; the 7 phone columns beneath render the full token vocabulary per theme, each scoped to its real <span style="font-family:'DM Mono',monospace; font-size:12px;">.ob-*-theme</span> class. Matrix/contrast are computed at runtime from the live <span style="font-family:'DM Mono',monospace; font-size:12px;">var(--ob-*)</span> values.</div>
+</div>
+
+<!-- ===== DIVERGENCE MATRIX ===== -->
+<div style="position:absolute; left:40px; top:150px; width:720px;">
+  <div data-drags-parent="1" style="margin-bottom:9px;">
+    <div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:17px; color:#0a0a0a;">Divergence matrix</div>
+    <div style="font-family:'DM Mono',monospace; font-size:10.5px; color:#737373; margin-top:2px;">shell <span style="color:#0a0a0a;">cur</span> ⟷ <span style="color:#0a0a0a;">var(--ob-*)</span> · ⚠ differ · ∅ unresolved · · match</div>
+  </div>
+  <div style="background:#fff; border-radius:2px; box-shadow:0 1px 3px rgba(0,0,0,.08); padding:14px;">
+    <div style="display:grid; grid-template-columns:166px repeat(7,1fr); font-family:'DM Mono',monospace; font-size:9px;">
+      <div style="display:contents">
+        <div style="padding:5px 6px; color:#999; font-size:8.5px; align-self:end;">token · cur</div>
+        <sc-for list="{{ cols }}" as="c" hint-placeholder-count="7">
+          <div style="padding:5px 2px; text-align:center; font-weight:600; color:#0a0a0a; border-bottom:2px solid #0a0a0a;">{{ c.short }}</div>
+        </sc-for>
+      </div>
+      <sc-for list="{{ matrixRows }}" as="r" hint-placeholder-count="17">
+        <div style="display:contents">
+          <div style="padding:5px 6px; border-bottom:1px solid #f0f0f0; line-height:1.25; word-break:break-all;"><span style="color:#222;">{{ r.cssVar }}</span><br><span style="color:#aaa;">{{ r.curKey }}</span></div>
+          <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="7">
+            <div style="display:flex; align-items:center; justify-content:center; border-bottom:1px solid #f0f0f0; border-left:1px solid #f7f7f7; font-size:11px; color:{{ c.color }}; background:{{ c.bgcol }};">{{ c.sym }}</div>
+          </sc-for>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CONTRAST AUDIT ===== -->
+<div style="position:absolute; left:800px; top:150px; width:720px;">
+  <div data-drags-parent="1" style="margin-bottom:9px;">
+    <div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:17px; color:#0a0a0a;">Contrast audit</div>
+    <div style="font-family:'DM Mono',monospace; font-size:10.5px; color:#737373; margin-top:2px;">WCAG ratio of fg/bg pairs · <span style="color:#c0392b;">red &lt;3</span> · <span style="color:#9a6700;">amber &lt;4.5</span> · <span style="color:#1a7a4a;">green ≥4.5</span></div>
+  </div>
+  <div style="background:#fff; border-radius:2px; box-shadow:0 1px 3px rgba(0,0,0,.08); padding:14px;">
+    <div style="display:grid; grid-template-columns:166px repeat(7,1fr); font-family:'DM Mono',monospace; font-size:9px;">
+      <div style="display:contents">
+        <div style="padding:5px 6px; color:#999; font-size:8.5px; align-self:end;">fg on bg</div>
+        <sc-for list="{{ cols }}" as="c" hint-placeholder-count="7">
+          <div style="padding:5px 2px; text-align:center; font-weight:600; color:#0a0a0a; border-bottom:2px solid #0a0a0a;">{{ c.short }}</div>
+        </sc-for>
+      </div>
+      <sc-for list="{{ contrastRows }}" as="r" hint-placeholder-count="14">
+        <div style="display:contents">
+          <div style="padding:5px 6px; border-bottom:1px solid #f0f0f0; line-height:1.25; color:#222;">{{ r.label }}</div>
+          <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="7">
+            <div style="display:flex; align-items:center; justify-content:center; padding:4px 0; border-bottom:1px solid #f0f0f0; border-left:1px solid #f7f7f7; font-weight:600; color:{{ c.color }}; background:{{ c.bgcol }};">{{ c.label }}</div>
+          </sc-for>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PER-THEME PHONE COLUMNS ===== -->
+<sc-for list="{{ frames }}" as="f" hint-placeholder-count="7">
+  <div style="position:absolute; left:{{ f.left }}px; top:760px; width:392px;">
+    <div data-drags-parent="1" style="margin-bottom:9px; font-family:'Instrument Sans',sans-serif;">
+      <div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:17px; color:#0a0a0a;">{{ f.name }}</div>
+      <div style="font-family:'DM Mono',monospace; font-size:10.5px; color:#737373; margin-top:2px;">{{ f.id }} · {{ f.clsLabel }}</div>
+    </div>
+    <div style="background:#fff; border-radius:2px; box-shadow:0 1px 3px rgba(0,0,0,.08); padding:16px; overflow:hidden;">
+      <dc-import name="TokenScreen" theme-class="{{ f.cls }}" theme-name="{{ f.name }}" theme-id="{{ f.id }}" cur="{{ f.cur }}" hint-size="360px,1400px"></dc-import>
+    </div>
+  </div>
+</sc-for>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { matrix: {}, contrast: {}, measured: false };
+
+  // cur map copied verbatim from App Shell.dc.html's THEMES (the lossy hand-derived map under test)
+  THEMES = {
+    "light-default": { id:"light-default", name:"The Full Ride",
+      bg:"#fafafa", surface:"#ffffff", surfaceAlt:"#f3f3f3", ink:"#0a0a0a", inkSoft:"#525252", muted:"#9a9a9a",
+      band:"#a78bfa", bandInk:"#0a0a0a", bandSub:"#3a2d6b", accent:"#a78bfa", accentFg:"#0a0a0a",
+      primary:"#2563eb", primaryFg:"#ffffff", check:"#7c5cff", sel:"#7c5cff",
+      cardBorder:"2.5px solid #0a0a0a", cardShadow:"3px 3px 0 rgba(10,10,10,0.85)", radius:"4px", borderCol:"#0a0a0a",
+      status:"#ffe50c", statusInk:"#0a0a0a", headFont:"'Anybody',sans-serif", headW:"900",
+      bodyFont:"'Instrument Sans',sans-serif", monoFont:"'DM Mono',monospace", lineH:"1.5", fs:"1" },
+    "dark-default": { id:"dark-default", name:"Night Ride",
+      bg:"#1a1033", surface:"#241845", surfaceAlt:"#2d1f52", ink:"#fafafa", inkSoft:"#cfc7e0", muted:"#a89cc4",
+      band:"#2a1d4e", bandInk:"#fafafa", bandSub:"#a89cc4", accent:"#c4b5fd", accentFg:"#1a1033",
+      primary:"#5eead4", primaryFg:"#0a1f1a", check:"#5eead4", sel:"#5eead4",
+      cardBorder:"2px solid #4e3f73", cardShadow:"none", radius:"6px", borderCol:"#4e3f73",
+      status:"#ffe50c", statusInk:"#0a0a0a", headFont:"'Anybody',sans-serif", headW:"900",
+      bodyFont:"'Instrument Sans',sans-serif", monoFont:"'DM Mono',monospace", lineH:"1.5", fs:"1" },
+    "light-highContrast": { id:"light-highContrast", name:"Bold Ink",
+      bg:"#ffffff", surface:"#ffffff", surfaceAlt:"#f0f0f0", ink:"#000000", inkSoft:"#000000", muted:"#2a2a2a",
+      band:"#000000", bandInk:"#ffffff", bandSub:"#cfcfcf", accent:"#000000", accentFg:"#ffffff",
+      primary:"#000000", primaryFg:"#ffffff", check:"#0055cc", sel:"#0055cc",
+      cardBorder:"3px solid #000000", cardShadow:"none", radius:"2px", borderCol:"#000000",
+      status:"#ffffff", statusInk:"#000000", headFont:"'Anybody',sans-serif", headW:"900",
+      bodyFont:"'Instrument Sans',sans-serif", monoFont:"'DM Mono',monospace", lineH:"1.45", fs:"1" },
+    "light-dyslexia": { id:"light-dyslexia", name:"Warm Studio",
+      bg:"#f8f5e4", surface:"#f8f5e4", surfaceAlt:"#f0edd8", ink:"#333333", inkSoft:"#555555", muted:"#7a755f",
+      band:"#8860a0", bandInk:"#f8f5e4", bandSub:"#e9ddf0", accent:"#8860a0", accentFg:"#ffffff",
+      primary:"#4e7d9e", primaryFg:"#ffffff", check:"#4e7d9e", sel:"#4e7d9e",
+      cardBorder:"2px solid #c8c3a9", cardShadow:"0 2px 5px rgba(80,60,20,0.12)", radius:"8px", borderCol:"#c8c3a9",
+      status:"#f5e6a0", statusInk:"#333333", headFont:"'Lexend',sans-serif", headW:"700",
+      bodyFont:"'Lexend',sans-serif", monoFont:"'DM Mono',monospace", lineH:"1.7", fs:"1" },
+    "light-autismFriendly": { id:"light-autismFriendly", name:"Still Water",
+      bg:"#f7f7f7", surface:"#ffffff", surfaceAlt:"#eeeeee", ink:"#333333", inkSoft:"#555555", muted:"#777777",
+      band:"#8a7a9a", bandInk:"#ffffff", bandSub:"#e6e0ee", accent:"#8a7a9a", accentFg:"#ffffff",
+      primary:"#4d6d7d", primaryFg:"#ffffff", check:"#4d6d7d", sel:"#4d6d7d",
+      cardBorder:"1px solid #dddddd", cardShadow:"none", radius:"6px", borderCol:"#dddddd",
+      status:"#d5c88a", statusInk:"#333333", headFont:"Arial,sans-serif", headW:"700",
+      bodyFont:"Arial,sans-serif", monoFont:"'DM Mono',monospace", lineH:"1.55", fs:"1" },
+    "light-lowVision": { id:"light-lowVision", name:"Loud & Clear",
+      bg:"#ffffff", surface:"#ffffff", surfaceAlt:"#f0f0f0", ink:"#111111", inkSoft:"#333333", muted:"#333333",
+      band:"#003d99", bandInk:"#ffffff", bandSub:"#bcd0f0", accent:"#003d99", accentFg:"#ffffff",
+      primary:"#003d99", primaryFg:"#ffffff", check:"#003d99", sel:"#003d99",
+      cardBorder:"3px solid #555555", cardShadow:"none", radius:"6px", borderCol:"#555555",
+      status:"#ffe50c", statusInk:"#000000", headFont:"'Atkinson Hyperlegible',sans-serif", headW:"700",
+      bodyFont:"'Atkinson Hyperlegible',sans-serif", monoFont:"'DM Mono',monospace", lineH:"1.6", fs:"1.2" },
+    "light-lowInfo": { id:"light-lowInfo", name:"Clean Signal",
+      bg:"#ffffff", surface:"#ffffff", surfaceAlt:"#f5f5f5", ink:"#222222", inkSoft:"#444444", muted:"#666666",
+      band:"#222222", bandInk:"#ffffff", bandSub:"#bbbbbb", accent:"#222222", accentFg:"#ffffff",
+      primary:"#222222", primaryFg:"#ffffff", check:"#222222", sel:"#222222",
+      cardBorder:"2px solid #cccccc", cardShadow:"none", radius:"2px", borderCol:"#cccccc",
+      status:"#ffffff", statusInk:"#222222", headFont:"'Atkinson Hyperlegible',sans-serif", headW:"700",
+      bodyFont:"'Atkinson Hyperlegible',sans-serif", monoFont:"'DM Mono',monospace", lineH:"1.6", fs:"1" },
+  };
+
+  CLS = {
+    "light-default": "",
+    "dark-default": "ob-dark-theme",
+    "light-highContrast": "ob-high-contrast-theme",
+    "light-dyslexia": "ob-dyslexia-friendly-theme",
+    "light-autismFriendly": "ob-autism-friendly-theme",
+    "light-lowVision": "ob-low-vision-theme",
+    "light-lowInfo": "ob-low-info-theme",
+  };
+
+  ORDER = ["light-default","dark-default","light-highContrast","light-dyslexia","light-autismFriendly","light-lowVision","light-lowInfo"];
+  SHORT = { "light-default":"Full","dark-default":"Night","light-highContrast":"Bold","light-dyslexia":"Warm","light-autismFriendly":"Still","light-lowVision":"Loud","light-lowInfo":"Clean" };
+
+  TOKENS = [
+    { key:'bg',        curKey:'bg',        cssVar:'--ob-background' },
+    { key:'surface',   curKey:'surface',   cssVar:'--ob-surface-card-bg' },
+    { key:'surfaceAlt',curKey:'surfaceAlt',cssVar:'--ob-surface-sunken-bg' },
+    { key:'ink',       curKey:'ink',       cssVar:'--ob-foreground' },
+    { key:'inkSoft',   curKey:'inkSoft',   cssVar:'--ob-text-secondary' },
+    { key:'muted',     curKey:'muted',     cssVar:'--ob-muted-foreground' },
+    { key:'band',      curKey:'band',      cssVar:'--ob-chrome-tab-bar-bg' },
+    { key:'bandInk',   curKey:'bandInk',   cssVar:'--ob-chrome-tab-bar-active-fg' },
+    { key:'status',    curKey:'status',    cssVar:'--ob-chrome-top-bar-bg' },
+    { key:'statusInk', curKey:'statusInk', cssVar:'--ob-chrome-top-bar-fg' },
+    { key:'primary',   curKey:'primary',   cssVar:'--ob-action-primary-bg' },
+    { key:'primaryFg', curKey:'primaryFg', cssVar:'--ob-action-primary-fg' },
+    { key:'accent',    curKey:'accent',    cssVar:'--ob-accent' },
+    { key:'accentFg',  curKey:'accentFg',  cssVar:'--ob-accent-foreground' },
+    { key:'borderCol', curKey:'borderCol', cssVar:'--ob-border-default' },
+    { key:'check',     curKey:'check',     cssVar:'--ob-action-selection-bg' },
+    { key:'sel',       curKey:'sel',       cssVar:'--ob-ring' },
+  ];
+
+  PAIRS = [
+    { key:'body',      label:'body',           fg:'--ob-foreground',                bg:'--ob-background' },
+    { key:'card',      label:'card',           fg:'--ob-card-foreground',           bg:'--ob-card' },
+    { key:'muted',     label:'muted',          fg:'--ob-muted-foreground',          bg:'--ob-background' },
+    { key:'primary',   label:'primary btn',    fg:'--ob-action-primary-fg',         bg:'--ob-action-primary-bg' },
+    { key:'secondary', label:'secondary btn',  fg:'--ob-action-secondary-fg',       bg:'--ob-action-secondary-bg' },
+    { key:'destruct',  label:'destructive',    fg:'--ob-action-destructive-fg',     bg:'--ob-action-destructive-bg' },
+    { key:'topbar',    label:'top bar',        fg:'--ob-chrome-top-bar-fg',         bg:'--ob-chrome-top-bar-bg' },
+    { key:'tabAct',    label:'tab active',     fg:'--ob-chrome-tab-bar-active-fg',  bg:'--ob-chrome-tab-bar-bg' },
+    { key:'tabIdle',   label:'tab idle',       fg:'--ob-chrome-tab-bar-fg',         bg:'--ob-chrome-tab-bar-bg' },
+    { key:'success',   label:'success',        fg:'--ob-success-foreground',        bg:'--ob-success' },
+    { key:'warning',   label:'warning',        fg:'--ob-warning-foreground',        bg:'--ob-warning' },
+    { key:'info',      label:'info',           fg:'--ob-info-foreground',           bg:'--ob-info' },
+    { key:'highlight', label:'highlight',      fg:'--ob-highlight-foreground',      bg:'--ob-highlight' },
+    { key:'goal',      label:'journey goal',   fg:'--ob-journey-goal-fg',           bg:'--ob-journey-goal-bg' },
+  ];
+
+  norm(v) {
+    try {
+      if (!this._ctx) this._ctx = document.createElement('canvas').getContext('2d');
+      this._ctx.fillStyle = '#000';
+      this._ctx.fillStyle = String(v).trim();
+      return this._ctx.fillStyle;
+    } catch (e) { return String(v).trim().toLowerCase(); }
+  }
+  parseRGB(s) {
+    const m = String(s).match(/rgba?\(([^)]+)\)/);
+    if (!m) return null;
+    const p = m[1].split(',').map((x) => parseFloat(x));
+    return { r: p[0], g: p[1], b: p[2], a: p[3] === undefined ? 1 : p[3] };
+  }
+  composite(top, base) {
+    const a = top.a;
+    return { r: top.r * a + base.r * (1 - a), g: top.g * a + base.g * (1 - a), b: top.b * a + base.b * (1 - a), a: 1 };
+  }
+  lum(c) {
+    const f = [c.r, c.g, c.b].map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+    return 0.2126 * f[0] + 0.7152 * f[1] + 0.0722 * f[2];
+  }
+  ratio(fg, bg) {
+    const L1 = this.lum(fg), L2 = this.lum(bg);
+    const hi = Math.max(L1, L2), lo = Math.min(L1, L2);
+    return (hi + 0.05) / (lo + 0.05);
+  }
+
+  componentDidMount() { this._tries = 0; this.tryMeasure(); }
+  tryMeasure() {
+    const ok = this.measureAll();
+    if (!ok && this._tries++ < 10) setTimeout(() => this.tryMeasure(), 130);
+  }
+  measureAll() {
+    const host = document.createElement('div');
+    host.style.cssText = 'position:fixed; left:-99999px; top:0; visibility:hidden;';
+    document.body.appendChild(host);
+    const matrix = {}, contrast = {};
+    let resolvedDefault = false;
+    this.ORDER.forEach((id) => {
+      const cls = this.CLS[id];
+      const wrap = document.createElement('div');
+      if (cls) wrap.className = cls;
+      host.appendChild(wrap);
+      const baseEl = document.createElement('div');
+      baseEl.style.background = 'var(--ob-background)';
+      wrap.appendChild(baseEl);
+      const base = this.parseRGB(getComputedStyle(baseEl).backgroundColor) || { r: 255, g: 255, b: 255, a: 1 };
+      if (id === 'light-default' && base.a !== 0) resolvedDefault = true;
+
+      matrix[id] = this.TOKENS.map((t) => {
+        const el = document.createElement('div');
+        el.style.background = 'var(' + t.cssVar + ')';
+        wrap.appendChild(el);
+        const real = getComputedStyle(el).backgroundColor;
+        const rp = this.parseRGB(real);
+        const cur = (this.THEMES[id] || {})[t.curKey];
+        const unresolved = !rp || rp.a === 0;
+        return { key: t.key, unresolved, bad: !unresolved && (this.norm(cur) !== this.norm(real)) };
+      });
+
+      contrast[id] = this.PAIRS.map((p) => {
+        const el = document.createElement('div');
+        el.style.color = 'var(' + p.fg + ')';
+        el.style.background = 'var(' + p.bg + ')';
+        wrap.appendChild(el);
+        const cs = getComputedStyle(el);
+        let fg = this.parseRGB(cs.color);
+        let bg = this.parseRGB(cs.backgroundColor);
+        if (bg && bg.a < 1) bg = this.composite(bg, base);
+        if (fg && fg.a < 1) fg = this.composite(fg, bg || base);
+        const r = (fg && bg) ? this.ratio(fg, bg) : 0;
+        return { key: p.key, ratio: r };
+      });
+    });
+    document.body.removeChild(host);
+    if (resolvedDefault) this.setState({ matrix, contrast, measured: true });
+    return resolvedDefault;
+  }
+
+  matrixCell(c) {
+    if (!c) return { sym: '', color: '#ccc', bgcol: '#fff' };
+    if (c.unresolved) return { sym: '∅', color: '#fff', bgcol: '#8a8a8a' };
+    if (c.bad) return { sym: '⚠', color: '#fff', bgcol: '#d9534f' };
+    return { sym: '·', color: '#7bbd8e', bgcol: '#f3faf4' };
+  }
+  contrastCell(c) {
+    if (!c || !c.ratio) return { label: '∅', color: '#fff', bgcol: '#8a8a8a' };
+    const r = c.ratio;
+    const label = r.toFixed(1);
+    if (r >= 4.5) return { label, color: '#1a7a4a', bgcol: '#eef9f1' };
+    if (r >= 3) return { label, color: '#9a6700', bgcol: '#fff6e0' };
+    return { label, color: '#ffffff', bgcol: '#c0392b' };
+  }
+
+  renderVals() {
+    const STEP = 470, START = 40;
+    const frames = this.ORDER.map((id, i) => {
+      const cls = this.CLS[id];
+      return {
+        id, cls,
+        clsLabel: cls ? "." + cls : ":root defaults",
+        name: this.THEMES[id].name,
+        cur: this.THEMES[id],
+        left: START + i * STEP,
+      };
+    });
+    const cols = this.ORDER.map((id) => ({ id, short: this.SHORT[id] }));
+    const matrixRows = this.TOKENS.map((t) => ({
+      cssVar: t.cssVar,
+      curKey: 'cur.' + t.curKey,
+      cells: this.ORDER.map((id) => {
+        const row = this.state.matrix[id];
+        const c = row ? row.find((x) => x.key === t.key) : null;
+        return this.matrixCell(c);
+      }),
+    }));
+    const contrastRows = this.PAIRS.map((p) => ({
+      label: p.label,
+      cells: this.ORDER.map((id) => {
+        const row = this.state.contrast[id];
+        const c = row ? row.find((x) => x.key === p.key) : null;
+        return this.contrastCell(c);
+      }),
+    }));
+    return { frames, cols, matrixRows, contrastRows };
+  }
+}
+</script>
+</body>
+</html>

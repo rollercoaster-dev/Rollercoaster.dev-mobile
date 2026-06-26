@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wght@700;800;900&family=Instrument+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  .scrl::-webkit-scrollbar { width: 0; height: 0; }
+</style>
+</helmet>
+
+<div style="font-family:'Instrument Sans',system-ui,sans-serif; min-height:100vh; box-sizing:border-box; padding:40px; background:#e5e5e5; color:#0a0a0a; display:flex; flex-direction:column; align-items:center; gap:18px;">
+
+  <div style="text-align:center;">
+    <div style="font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:#525252; margin-bottom:6px;">Timeline / Journey &middot; Direction A &middot; interactive</div>
+    <div style="font-size:14px; color:#404040;">Tap any node to drop into <strong>Focus</strong> on that step &middot; in Focus, <strong>See all steps</strong> returns here &middot; complete &amp; set-aside flow through both screens</div>
+  </div>
+
+  <!-- DEVICE -->
+  <div style="width:344px; height:736px; background:#fafafa; border:3px solid #0a0a0a; border-radius:40px; box-shadow:8px 8px 0 rgba(10,10,10,0.22); overflow:hidden; display:flex; flex-direction:column; position:relative;">
+    <!-- status bar -->
+    <div style="height:30px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 18px; font-family:'DM Mono',monospace; font-size:12px; color:#0a0a0a; flex:none;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+
+    <!-- ========================= TIMELINE (Direction A) ========================= -->
+    <sc-if value="{{ isTimeline }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:1; display:flex; flex-direction:column; min-height:0;">
+        <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:11px 16px; flex:none;"><span onClick="{{ backToFocus }}" style="font-size:20px; color:#0a0a0a; cursor:pointer;">&larr;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px; color:#0a0a0a;">All steps</span><a href="Edit Goal C Prototype.dc.html" style="font-size:12px; font-weight:700; color:#0a0a0a; text-decoration:none;">Edit &rsaquo;</a></div>
+        <div class="scrl" style="flex:1; overflow-y:auto; min-height:0; padding:16px 18px 18px;">
+          <!-- goal header -->
+          <div style="display:flex; align-items:flex-start; gap:10px; margin-bottom:14px;">
+            <span style="flex:1; font-family:'Anybody',sans-serif; font-weight:900; font-size:21px; line-height:1.08;">{{ goalTitle }}</span>
+            <span onClick="{{ backToFocus }}" style="flex:none; font-size:12px; font-weight:700; background:#fff; border:2px solid #0a0a0a; border-radius:4px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:6px 10px; cursor:pointer; white-space:nowrap;">&lsaquo; Focus</span>
+          </div>
+          <!-- progress -->
+          <div style="display:flex; align-items:center; gap:9px; margin-bottom:18px;"><div style="flex:1; height:10px; background:#fff; border:2px solid #0a0a0a; overflow:hidden;"><div style="height:100%; background:#2563eb; width:{{ progressPct }};"></div></div><span style="font-family:'DM Mono',monospace; font-size:12px; color:#737373; white-space:nowrap;">{{ doneCount }} / {{ totalCount }}</span></div>
+          <!-- spine -->
+          <sc-for list="{{ rows }}" as="s" hint-placeholder-count="5">
+            <div>
+              <div onClick="{{ s.tap }}" style="display:flex; gap:12px; cursor:pointer;">
+                <div style="display:flex; flex-direction:column; align-items:center; flex:none; width:28px;">
+                  <span style="width:28px; height:28px; border-radius:9999px; border:{{ s.no.bw }} solid {{ s.no.bc }}; background:{{ s.no.bg }}; color:{{ s.no.txt }}; display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:12px; font-weight:700; box-shadow:2px 2px 0 rgba(10,10,10,0.85);">{{ s.no.g }}</span>
+                  <span style="flex:1; width:3px; min-height:14px; background:{{ s.conn }};"></span>
+                </div>
+                <div style="flex:1; padding-bottom:13px;">
+                  <div style="background:{{ s.cell }}; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:10px 12px;">
+                    <div style="display:flex; align-items:center; gap:8px;"><span style="flex:1; font-size:14px; font-weight:700; line-height:1.15; color:{{ s.ink }};">{{ s.title }}</span><span style="flex:none; font-family:'DM Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:0.04em; color:{{ s.wordColor }};">{{ s.word }}</span></div>
+                    <sc-if value="{{ s.hasMeta }}">
+                      <div style="display:flex; flex-direction:column; gap:5px; margin-top:8px;">
+                        <sc-for list="{{ s.meta }}" as="m" hint-placeholder-count="1">
+                          <div style="display:flex; align-items:baseline; flex-wrap:wrap; gap:6px;"><span style="font-size:12px; color:{{ m.color }};">{{ m.glyph }}</span><span style="font-size:12.5px; color:#1a1a1a;">{{ m.text }}</span><span style="font-family:'DM Mono',monospace; font-size:11px; color:#737373;">{{ m.meta }}</span></div>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ s.hasEv }}">
+                      <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:9px;">
+                        <sc-for list="{{ s.ev }}" as="e" hint-placeholder-count="1">
+                          <span style="display:inline-flex; align-items:center; gap:5px; background:#d4f4e7; border:2px solid #0a0a0a; border-radius:9999px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); font-family:'DM Mono',monospace; font-size:10.5px; padding:2px 8px;">{{ e.icon }} {{ e.label }}</span>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+                  </div>
+                </div>
+              </div>
+              <sc-if value="{{ s.hasKids }}">
+                <div style="margin-left:38px; border-left:3px solid #e5e5e5; padding-left:14px; margin-top:-7px; margin-bottom:7px; display:flex; flex-direction:column; gap:8px;">
+                  <sc-for list="{{ s.kids }}" as="k" hint-placeholder-count="2">
+                    <div onClick="{{ k.tap }}" style="display:flex; gap:9px; align-items:center; cursor:pointer;">
+                      <span style="flex:none; width:22px; height:22px; border-radius:9999px; border:{{ k.no.bw }} solid {{ k.no.bc }}; background:{{ k.no.bg }}; color:{{ k.no.txt }}; display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:10px; font-weight:700; box-shadow:1.5px 1.5px 0 rgba(10,10,10,0.85);">{{ k.no.g }}</span>
+                      <div style="flex:1; background:{{ k.cell }}; border:2px solid #0a0a0a; border-radius:5px; box-shadow:1.5px 1.5px 0 rgba(10,10,10,0.85); padding:7px 10px; display:flex; align-items:center; gap:8px;"><span style="flex:1; font-size:12.5px; font-weight:600; color:{{ k.ink }};">{{ k.title }}</span><span style="flex:none; font-family:'DM Mono',monospace; font-size:8px; text-transform:uppercase; color:{{ k.wordColor }};">{{ k.word }}</span></div>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+          <!-- finish line -->
+          <div style="display:flex; gap:12px; margin-top:2px;">
+            <div style="flex:none; width:28px; display:flex; justify-content:center;"><span style="width:34px; height:34px; margin-left:-3px; border-radius:9999px; border:2px solid #0a0a0a; background:{{ goalNodeBg }}; display:flex; align-items:center; justify-content:center; font-size:16px; box-shadow:2px 2px 0 rgba(10,10,10,0.85);">&#9733;</span></div>
+            <div style="flex:1;"><div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:11px 12px;"><div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px;">Finish &amp; design badge</div><div style="font-size:12px; color:#737373; margin-top:3px;">The keepsake comes at the end &mdash; badge starts as &ldquo;R&rdquo; until you design it.</div></div></div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ========================= FOCUS ========================= -->
+    <sc-if value="{{ isFocus }}">
+      <div style="flex:1; display:flex; flex-direction:column; min-height:0;">
+        <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:11px 16px; flex:none;"><span onClick="{{ seeAll }}" style="font-size:20px; color:#0a0a0a; cursor:pointer;">&lsaquo;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px; color:#0a0a0a;">{{ goalTitle }}</span><span style="width:16px;"></span></div>
+        <div onClick="{{ seeAll }}" style="padding:13px 18px 0; flex:none; cursor:pointer;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;"><span style="font-family:'DM Mono',monospace; font-size:11px; color:#737373; white-space:nowrap;">{{ doneCount }} / {{ totalCount }} done</span><span style="font-size:12px; font-weight:700; color:#2563eb;">See all steps &rsaquo;</span></div>
+          <div style="height:9px; background:#fff; border:2px solid #0a0a0a; overflow:hidden;"><div style="height:100%; background:#2563eb; width:{{ progressPct }};"></div></div>
+        </div>
+
+        <sc-if value="{{ cur.isActive }}">
+          <div style="flex:1; display:flex; flex-direction:column; min-height:0;">
+            <div class="scrl" style="flex:1; overflow-y:auto; padding:18px 22px 6px; min-height:0;">
+              <sc-if value="{{ cur.parentLabel }}">
+                <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:#737373; margin-bottom:7px;">{{ cur.parentLabel }}</div>
+              </sc-if>
+              <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:29px; line-height:1.05; margin-bottom:14px;">{{ cur.title }}</div>
+              <sc-if value="{{ cur.hasMeta }}">
+                <div style="display:flex; flex-direction:column; gap:9px; margin-bottom:18px;">
+                  <sc-for list="{{ cur.metaLines }}" as="m" hint-placeholder-count="1">
+                    <div style="display:flex; align-items:baseline; flex-wrap:wrap; gap:7px;"><span style="font-size:13px; color:{{ m.color }};">{{ m.glyph }}</span><span style="font-size:13.5px; color:#1a1a1a;">{{ m.text }}</span><span style="font-family:'DM Mono',monospace; font-size:12px; color:#737373;">{{ m.meta }}</span></div>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:#737373; margin-bottom:8px;">Evidence &middot; required</div>
+              <div onClick="{{ openPicker }}" style="display:flex; align-items:center; gap:10px; background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:11px 13px; cursor:pointer;"><span style="font-size:18px;">{{ cur.plannedIcon }}</span><span style="flex:1; font-weight:700; font-size:14px;">{{ cur.plannedLabel }}</span><span style="font-size:12px; font-weight:700; color:#2563eb;">change</span></div>
+              <sc-if value="{{ cur.hasCaptured }}">
+                <div style="margin-top:14px;">
+                  <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:#5a8a6a; margin-bottom:7px;">Captured</div>
+                  <div style="display:flex; flex-wrap:wrap; gap:7px;">
+                    <sc-for list="{{ cur.captured }}" as="c" hint-placeholder-count="1">
+                      <span style="display:inline-flex; align-items:center; gap:5px; background:#d4f4e7; border:2px solid #0a0a0a; border-radius:9999px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); font-family:'DM Mono',monospace; font-size:11px; padding:3px 9px;">{{ c.icon }} {{ c.label }}</span>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-if>
+              <div onClick="{{ pause }}" style="margin-top:18px; display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:#737373; font-weight:600; cursor:pointer;"><span style="font-size:13px;">&#10073;&#10073;</span> Set this step aside</div>
+            </div>
+            <div style="flex:none; padding:10px 20px 12px;">
+              <sc-if value="{{ cur.blocked }}">
+                <div onClick="{{ addEvidence }}" style="height:54px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; gap:9px; color:#fff; font-size:17px; font-weight:700; cursor:pointer;">{{ cur.plannedIcon }} Add {{ cur.plannedLabel }}</div>
+                <div style="text-align:center; font-size:11.5px; color:#737373; margin-top:7px;">only evidence unlocks complete &mdash; nothing here blocks you</div>
+              </sc-if>
+              <sc-if value="{{ cur.ready }}">
+                <div onClick="{{ markComplete }}" style="height:54px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; gap:10px; color:#fff; font-size:18px; font-weight:700; cursor:pointer;">&#10003; Mark complete</div>
+              </sc-if>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ cur.isPaused }}">
+          <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:0 24px;">
+            <div style="display:inline-flex; align-self:flex-start; align-items:center; background:#ede9fe; border:2px solid #0a0a0a; border-radius:9999px; font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.04em; padding:4px 11px; margin-bottom:14px;">Set aside</div>
+            <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:29px; line-height:1.05; margin-bottom:12px;">{{ cur.title }}</div>
+            <div style="font-size:13.5px; line-height:1.5; color:#525252; margin-bottom:22px;">Still here, nothing lost. Your next step routes past it until you pick it back up.</div>
+          </div>
+          <div style="flex:none; padding:10px 20px 12px;">
+            <div onClick="{{ resume }}" style="height:54px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; gap:9px; color:#fff; font-size:17px; font-weight:700; cursor:pointer;">&#9658; Pick this back up</div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ cur.isCompleted }}">
+          <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:0 24px;">
+            <div style="display:inline-flex; align-self:flex-start; align-items:center; gap:6px; background:#d4f4e7; border:2px solid #0a0a0a; border-radius:9999px; font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.04em; padding:4px 11px; margin-bottom:14px;">&#10003; Completed</div>
+            <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:29px; line-height:1.05; margin-bottom:14px;">{{ cur.title }}</div>
+            <sc-if value="{{ cur.hasCaptured }}">
+              <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:#5a8a6a; margin-bottom:7px;">Evidence</div>
+              <div style="display:flex; flex-wrap:wrap; gap:7px; margin-bottom:22px;">
+                <sc-for list="{{ cur.captured }}" as="c" hint-placeholder-count="1">
+                  <span style="display:inline-flex; align-items:center; gap:5px; background:#d4f4e7; border:2px solid #0a0a0a; border-radius:9999px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); font-family:'DM Mono',monospace; font-size:11px; padding:3px 9px;">{{ c.icon }} {{ c.label }}</span>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+          <div style="flex:none; padding:10px 20px 12px;">
+            <div onClick="{{ undoComplete }}" style="height:50px; background:#fff; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; gap:9px; color:#0a0a0a; font-size:15px; font-weight:700; cursor:pointer;">Reopen this step</div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isParked }}">
+          <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:0 24px;">
+            <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:27px; line-height:1.08; margin-bottom:12px;">Nothing in progress.</div>
+            <div style="font-size:13.5px; line-height:1.5; color:#525252; margin-bottom:18px;">{{ pausedCount }} set aside &mdash; all still here, none hidden, nothing counted against you. Pick one back up when you&rsquo;re ready.</div>
+            <div style="display:flex; flex-direction:column; gap:9px;">
+              <sc-for list="{{ pausedList }}" as="p" hint-placeholder-count="1">
+                <div onClick="{{ p.resume }}" style="display:flex; align-items:center; gap:10px; background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:11px 13px; cursor:pointer;"><span style="display:inline-flex; align-items:center; background:#ede9fe; border:2px solid #0a0a0a; border-radius:9999px; font-family:'DM Mono',monospace; font-size:10px; padding:2px 7px;">set aside</span><span style="flex:1; font-size:14px; font-weight:700;">{{ p.title }}</span><span style="font-size:12px; font-weight:700; color:#2563eb;">resume &rsaquo;</span></div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isDone }}">
+          <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:0 24px;">
+            <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:34px; line-height:1.02; margin-bottom:16px;">Every step done.</div>
+            <div style="display:flex; gap:9px; align-items:flex-start; background:#ede9fe; border:2px solid #0a0a0a; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px 14px; margin-bottom:20px;"><span style="font-size:16px;">&#127942;</span><span style="font-size:13px; line-height:1.45; color:#3b1f6b;">Now design the badge that marks it &mdash; the keepsake comes at the end.</span></div>
+            <div style="height:54px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:17px; font-weight:700;">Design your badge</div>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <!-- ========================= NAV PILL ========================= -->
+    <div style="background:#a78bfa; border-top:2px solid #0a0a0a; padding:9px 12px 12px; flex:none; display:flex; align-items:center; gap:6px;">
+      <div style="flex:1; display:flex; align-items:center; gap:4px; background:#fff; border:2px solid #0a0a0a; border-radius:9999px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:5px 7px; min-height:46px;">
+        <span style="display:inline-flex; align-items:center; gap:6px; background:#a78bfa; border:2px solid #0a0a0a; border-radius:9999px; padding:5px 12px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/></svg><span style="font-size:13px; font-weight:700;">Goals</span></span>
+        <span style="flex:1;"></span>
+        <span style="width:44px; height:44px; flex:none; background:#ffe50c; border:2px solid #0a0a0a; border-radius:9999px; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:700; line-height:1; margin:0 2px;">+</span>
+        <span style="flex:1;"></span>
+        <span style="width:40px; height:40px; flex:none; display:flex; align-items:center; justify-content:center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#737373" stroke-width="2"><path d="M8.5 3l3.5 5 3.5-5"/><circle cx="12" cy="15" r="6"/></svg></span>
+      </div>
+      <div style="flex:none; width:48px; height:48px; background:#fff; border:2px solid #0a0a0a; border-radius:9999px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#737373" stroke-width="2"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></div>
+    </div>
+
+    <!-- ========================= PICKER SHEET ========================= -->
+    <sc-if value="{{ pickerOpen }}">
+      <div style="position:absolute; inset:0; z-index:50; display:flex; flex-direction:column; justify-content:flex-end;">
+        <div onClick="{{ closePicker }}" style="position:absolute; inset:0; background:rgba(10,10,10,0.4);"></div>
+        <div style="position:relative; background:#fafafa; border-top:3px solid #0a0a0a; border-top-left-radius:16px; border-top-right-radius:16px; padding:18px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:16px;">Evidence type</span><span onClick="{{ closePicker }}" style="font-size:18px; cursor:pointer; color:#737373;">&times;</span></div>
+          <div style="font-size:12.5px; color:#737373; margin-bottom:14px;">What will you show for this step? Note is the easy default.</div>
+          <div style="display:flex; flex-wrap:wrap; gap:10px;">
+            <sc-for list="{{ evOptions }}" as="opt" hint-placeholder-count="6">
+              <div onClick="{{ opt.pick }}" style="display:flex; align-items:center; gap:7px; background:{{ opt.bg }}; border:3px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:10px 14px; font-size:14px; font-weight:700; cursor:pointer;">{{ opt.icon }} {{ opt.label }}</div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+
+  <div onClick="{{ reset }}" style="font-family:'DM Mono',monospace; font-size:12px; color:#737373; cursor:pointer; text-decoration:underline;">&#8635; restart prototype</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  initial() {
+    return {
+      screen: "timeline",
+      currentId: "s3b",
+      pickerOpen: false,
+      goalTitle: "Rewire the workshop",
+      steps: [
+        { id: "s1", title: "Plan layout & buy materials", status: "completed",
+          planned: { icon: "\u{1F4F7}", label: "Photo" }, evidence: [{ icon: "\u{1F4F7}", label: "Photo" }] },
+        { id: "s2", title: "Wire the circuits", status: "completed",
+          planned: { icon: "\u{1F4F7}", label: "Photo" }, evidence: [{ icon: "\u{1F4F7}", label: "Photo" }, { icon: "\u{1F4DD}", label: "Note" }] },
+        { id: "s3", title: "Inspection & labels", status: "pending",
+          planned: { icon: "\u{1F4DD}", label: "Note" }, evidence: [],
+          dep: { ext: true, who: "city inspector", exp: "Jun 24" },
+          children: [
+            { id: "s3a", title: "Book the inspection", status: "completed", planned: { icon: "\u{1F4DD}", label: "Note" }, evidence: [{ icon: "\u{1F4DD}", label: "Note" }] },
+            { id: "s3b", title: "Walk the inspector through", status: "pending", planned: { icon: "\u{1F4F7}", label: "Photo" }, evidence: [], due: "Thu \u00b7 Jun 26" },
+            { id: "s3c", title: "Fix any call-outs", status: "pending", planned: { icon: "\u{1F4DD}", label: "Note" }, evidence: [] },
+          ] },
+        { id: "s4", title: "Mount the panels", status: "pending",
+          planned: { icon: "\u{1F4DD}", label: "Note" }, evidence: [],
+          after: "Inspection & labels", due: "Mon \u00b7 Jun 30" },
+        { id: "s5", title: "Final walkthrough", status: "paused",
+          planned: { icon: "\u{1F4F7}", label: "Photo" }, evidence: [] },
+      ],
+    };
+  }
+  state = this.initial();
+
+  EV() {
+    return [
+      { icon: "\u{1F4F7}", label: "Photo" }, { icon: "\u{1F3AC}", label: "Video" }, { icon: "\u{1F3A4}", label: "Audio" },
+      { icon: "\u{1F4DD}", label: "Note" }, { icon: "\u{1F517}", label: "Link" }, { icon: "\u{1F4CE}", label: "File" },
+    ];
+  }
+
+  // ---- tree helpers ----
+  leaves(steps) {
+    const out = [];
+    for (const r of steps) {
+      if (r.children && r.children.length) for (const c of r.children) out.push(c);
+      else out.push(r);
+    }
+    return out;
+  }
+  accentId(steps) {
+    for (const r of steps) {
+      if (r.children && r.children.length) {
+        const p = r.children.find((c) => c.status === "pending");
+        if (p) return p.id;
+      } else if (r.status === "pending") return r.id;
+    }
+    return null;
+  }
+  findStep(steps, id) {
+    for (const r of steps) {
+      if (r.id === id) return { step: r, parent: null };
+      if (r.children) for (const c of r.children) if (c.id === id) return { step: c, parent: r };
+    }
+    return { step: null, parent: null };
+  }
+  resolveLeaf(steps, id) {
+    const r = steps.find((x) => x.id === id);
+    if (r && r.children && r.children.length) {
+      const p = r.children.find((c) => c.status === "pending") || r.children.find((c) => c.status !== "completed") || r.children[0];
+      return p.id;
+    }
+    return id;
+  }
+  nextPendingLeaf(steps, fromId) {
+    const lv = this.leaves(steps);
+    const idx = lv.findIndex((s) => s.id === fromId);
+    const n = lv.length;
+    for (let k = 1; k <= n; k++) {
+      const s = lv[(idx + k) % n];
+      if (s && s.status === "pending") return s.id;
+    }
+    return null;
+  }
+  clone(steps) {
+    return steps.map((r) => ({ ...r, children: r.children ? r.children.map((c) => ({ ...c })) : undefined }));
+  }
+  mutate(steps, id, fn) {
+    const next = this.clone(steps);
+    for (const r of next) {
+      if (r.id === id) { Object.assign(r, fn(r)); return next; }
+      if (r.children) for (const c of r.children) if (c.id === id) { Object.assign(c, fn(c)); return next; }
+    }
+    return next;
+  }
+
+  // ---- one state-color language ----
+  nodeOne(status, g) {
+    if (status === "completed") return { bg: "#d4f4e7", bc: "#0a0a0a", bw: "2px", txt: "#0a0a0a", g: "\u2713" };
+    if (status === "in-progress") return { bg: "#ffe50c", bc: "#0a0a0a", bw: "2px", txt: "#0a0a0a", g };
+    if (status === "paused") return { bg: "#ede9fe", bc: "#0a0a0a", bw: "2px", txt: "#0a0a0a", g: "\u275A\u275A" };
+    return { bg: "#ffffff", bc: "#0a0a0a", bw: "2px", txt: "#0a0a0a", g };
+  }
+  word(status) {
+    return status === "completed" ? "Done" : status === "in-progress" ? "Working" : status === "paused" ? "Set aside" : "To do";
+  }
+  wordColor(status) {
+    return status === "completed" ? "#5a8a6a" : status === "in-progress" ? "#0a0a0a" : status === "paused" ? "#7c5fcf" : "#9a9a9a";
+  }
+  metaOf(s) {
+    const m = [];
+    if (s.dep && s.dep.ext) m.push({ glyph: "\u23F3", color: "#d97706", text: "waiting on " + s.dep.who, meta: "\u00b7 expected " + s.dep.exp });
+    if (s.after) m.push({ glyph: "\u21A9", color: "#5a8a6a", text: "after " + s.after, meta: "" });
+    if (s.due) m.push({ glyph: "\u25A6", color: "#525252", text: "due " + s.due, meta: "" });
+    return m;
+  }
+
+  // ---- actions ----
+  tapNode(id) { this.setState((st) => ({ currentId: this.resolveLeaf(st.steps, id), screen: "focus" })); }
+  seeAll() { this.setState({ screen: "timeline" }); }
+  backToFocus() { this.setState((st) => ({ screen: "focus", currentId: this.accentId(st.steps) || st.currentId })); }
+  addEvidence() { this.setState((st) => ({ steps: this.mutate(st.steps, st.currentId, (s) => ({ evidence: [...s.evidence, { ...s.planned }] })) })); }
+  markComplete() { this.setState((st) => { const steps = this.mutate(st.steps, st.currentId, () => ({ status: "completed" })); return { steps, currentId: this.nextPendingLeaf(steps, st.currentId) || st.currentId }; }); }
+  undoComplete() { this.setState((st) => ({ steps: this.mutate(st.steps, st.currentId, () => ({ status: "pending" })) })); }
+  pause() { this.setState((st) => { const steps = this.mutate(st.steps, st.currentId, () => ({ status: "paused" })); return { steps, currentId: this.nextPendingLeaf(steps, st.currentId) || st.currentId }; }); }
+  resumeId(id) { this.setState((st) => ({ steps: this.mutate(st.steps, id, () => ({ status: "pending" })), currentId: id, screen: "focus" })); }
+  openPicker() { this.setState({ pickerOpen: true }); }
+  closePicker() { this.setState({ pickerOpen: false }); }
+  pickType(opt) { this.setState((st) => ({ steps: this.mutate(st.steps, st.currentId, () => ({ planned: { ...opt } })), pickerOpen: false })); }
+  reset() { this.setState(this.initial()); }
+
+  renderVals() {
+    const st = this.state;
+    const steps = st.steps;
+    const accent = this.accentId(steps);
+
+    // counts over every unit (parents + children)
+    const units = [];
+    for (const r of steps) { units.push(r); if (r.children) for (const c of r.children) units.push(c); }
+    const total = units.length;
+    const done = units.filter((u) => u.status === "completed").length;
+    const paused = units.filter((u) => u.status === "paused").length;
+    const inMotion = accent ? 1 : 0;
+    const toCome = total - done - paused - inMotion;
+    const pct = (n) => (total ? (n / total) * 100 : 0) + "%";
+
+    const dispStatus = (s) => (s.status === "completed" ? "completed" : s.status === "paused" ? "paused" : s.id === accent ? "in-progress" : "pending");
+    const letters = ["a", "b", "c", "d", "e", "f"];
+
+    const rows = steps.map((r, ri) => {
+      const ds = dispStatus(r);
+      const kids = (r.children || []).map((c, ci) => {
+        const cds = dispStatus(c);
+        return {
+          title: c.title, no: this.nodeOne(cds, letters[ci]), word: this.word(cds), wordColor: this.wordColor(cds),
+          ink: cds === "paused" ? "#737373" : "#0a0a0a", cell: cds === "in-progress" ? "#fffbe0" : "#fff",
+          tap: () => this.tapNode(c.id),
+        };
+      });
+      const meta = this.metaOf(r);
+      return {
+        title: r.title, no: this.nodeOne(ds, String(ri + 1)), word: this.word(ds), wordColor: this.wordColor(ds),
+        ink: ds === "paused" ? "#737373" : "#0a0a0a", cell: ds === "in-progress" ? "#fffbe0" : "#fff",
+        conn: (ds === "completed" || ds === "in-progress") ? "#0a0a0a" : "#cfcfcf",
+        meta, hasMeta: meta.length > 0,
+        ev: r.evidence || [], hasEv: (r.evidence || []).length > 0,
+        kids, hasKids: kids.length > 0,
+        tap: () => this.tapNode(r.id),
+      };
+    });
+
+    // focus current step
+    const { step: cs, parent } = this.findStep(steps, st.currentId);
+    const meta = cs ? this.metaOf(cs) : [];
+    const hasCaptured = !!cs && cs.evidence.length > 0;
+    const isActive = !!cs && cs.status === "pending";
+    const cur = {
+      title: cs ? cs.title : "",
+      parentLabel: parent ? parent.title : "",
+      isActive, isPaused: !!cs && cs.status === "paused", isCompleted: !!cs && cs.status === "completed",
+      plannedIcon: cs ? cs.planned.icon : "", plannedLabel: cs ? cs.planned.label : "",
+      hasMeta: isActive && meta.length > 0, metaLines: meta,
+      hasCaptured, captured: cs ? cs.evidence.map((c) => ({ ...c })) : [],
+      blocked: isActive && !hasCaptured, ready: isActive && hasCaptured,
+    };
+
+    const lv = this.leaves(steps);
+    const noPending = lv.filter((s) => s.status === "pending").length === 0;
+    const isParked = st.screen === "focus" && noPending && paused > 0 && (!cs || cs.status !== "completed");
+    const isDone = st.screen === "focus" && noPending && paused === 0;
+    const pausedList = lv.filter((s) => s.status === "paused").map((s) => ({ title: s.title, resume: () => this.resumeId(s.id) }));
+
+    const EVbg = (label) => (cs && cs.planned.label === label ? "#dbe7ff" : "#fff");
+
+    return {
+      goalTitle: st.goalTitle,
+      isTimeline: st.screen === "timeline",
+      isFocus: st.screen === "focus",
+      doneCount: done, totalCount: total, progressPct: pct(done),
+      barSegs: [
+        { w: pct(done), color: "#d4f4e7" }, { w: pct(inMotion), color: "#ffe50c" },
+        { w: pct(toCome), color: "#ffffff" }, { w: pct(paused), color: "#ede9fe" },
+      ],
+      counts: [
+        { n: done, label: "done", color: "#d4f4e7" }, { n: inMotion, label: "in motion", color: "#ffe50c" },
+        { n: toCome, label: "to come", color: "#ffffff" }, { n: paused, label: "set aside", color: "#ede9fe" },
+      ],
+      rows,
+      goalNodeBg: done === total && total > 0 ? "#ffe50c" : "#fff",
+      cur, isParked, isDone, pausedCount: paused, pausedList,
+      pickerOpen: st.pickerOpen,
+      evOptions: this.EV().map((o) => ({ ...o, bg: EVbg(o.label), pick: () => this.pickType(o) })),
+      tapNode: (id) => this.tapNode(id),
+      seeAll: () => this.seeAll(),
+      backToFocus: () => this.backToFocus(),
+      addEvidence: () => this.addEvidence(),
+      markComplete: () => this.markComplete(),
+      undoComplete: () => this.undoComplete(),
+      pause: () => this.pause(),
+      resume: () => this.resumeId(st.currentId),
+      openPicker: () => this.openPicker(),
+      closePicker: () => this.closePicker(),
+      reset: () => this.reset(),
+    };
+  }
+}
+</script>
+</body>
+</html>

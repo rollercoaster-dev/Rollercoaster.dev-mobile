@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wght@700;800;900&family=Instrument+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  .bd-scroll::-webkit-scrollbar { width: 0; height: 0; }
+  .bd-scroll { scrollbar-width: none; }
+  @keyframes bd-toast-in { from { transform: translate(-50%, 14px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+  @keyframes bd-fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes bd-glow { 0%,100% { box-shadow: 0 0 0 0 rgba(255,229,12,0); } 50% { box-shadow: 0 0 26px 2px rgba(255,229,12,0.35); } }
+</style>
+</helmet>
+
+<div style="font-family:'Instrument Sans',system-ui,sans-serif; min-height:100vh; box-sizing:border-box; padding:40px; background:#e5e5e5; display:flex; justify-content:center; align-items:flex-start;">
+
+  <!-- PHONE FRAME -->
+  <div style="position:relative; width:360px; height:760px; background:#fafafa; border:3px solid #0a0a0a; border-radius:38px; box-shadow:8px 8px 0 rgba(10,10,10,0.22); overflow:hidden; display:flex; flex-direction:column;">
+
+    <!-- status bar -->
+    <div style="flex:none; height:30px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 18px; font-family:'DM Mono',monospace; font-size:12px; z-index:6;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+
+    <!-- CONTENT -->
+    <div class="bd-scroll" style="flex:1; overflow-y:auto; overflow-x:hidden; position:relative;">
+
+      <!-- ============ GOALS · COCKPIT ============ -->
+      <sc-if value="{{ isGoalsList }}" hint-placeholder-val="{{ true }}">
+        <div style="min-height:100%; background:#fafafa;">
+          <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; padding:14px 16px; display:flex; align-items:baseline; justify-content:space-between;">
+            <span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:23px;">Today</span>
+            <span style="font-family:'DM Mono',monospace; font-size:11px; color:#3a2d6b;">3 GOALS</span>
+          </div>
+          <div style="padding:18px 16px 24px; display:flex; flex-direction:column; gap:16px;">
+            <!-- giant next action -->
+            <div style="background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); padding:18px 16px; text-align:center;">
+              <div style="display:flex; justify-content:center; margin-bottom:14px;">
+                <div style="position:relative; width:104px; height:104px;">
+                  <svg width="104" height="104" viewBox="0 0 104 104"><circle cx="52" cy="52" r="45" fill="none" stroke="#ececec" stroke-width="10"></circle><circle cx="52" cy="52" r="45" fill="none" stroke="#2563eb" stroke-width="10" stroke-linecap="round" stroke-dasharray="283" stroke-dashoffset="127" transform="rotate(-90 52 52)"></circle></svg>
+                  <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:24px;">55%</span><span style="font-family:'DM Mono',monospace; font-size:9px; color:#737373; margin-top:1px;">5 / 9 STEPS</span></div>
+                </div>
+              </div>
+              <div style="font-family:'DM Mono',monospace; font-size:9.5px; letter-spacing:0.1em; color:#9a9a9a;">DO THIS NEXT &middot; REWIRE THE WORKSHOP</div>
+              <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:23px; line-height:1.08; margin-top:9px;">Wire the circuits</div>
+              <div onClick="{{ startFocus }}" style="margin-top:16px; height:50px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; gap:8px; color:#fff; font-size:15.5px; font-weight:700; cursor:pointer;"><span style="font-size:15px;">&#9654;</span> Start</div>
+            </div>
+            <!-- keep warm -->
+            <div>
+              <div style="font-family:'DM Mono',monospace; font-size:9.5px; letter-spacing:0.08em; color:#9a9a9a; margin-bottom:10px;">KEEP WARM</div>
+              <div style="display:flex; gap:11px;">
+                <div onClick="{{ startFocus }}" style="flex:1; background:#fff; border:2.5px solid #0a0a0a; border-radius:2px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:12px; cursor:pointer;"><div style="font-weight:700; font-size:13px; line-height:1.2;">Read 12 books</div><div style="font-size:10px; color:#737373; margin-top:3px;">Finish &ldquo;The Overstory&rdquo;</div><div style="height:7px; background:#ececec; border:1.5px solid #0a0a0a; border-radius:9999px; overflow:hidden; margin-top:10px;"><div style="width:33%; height:100%; background:#2563eb;"></div></div></div>
+                <div onClick="{{ startFocus }}" style="flex:1; background:#fff; border:2.5px solid #0a0a0a; border-radius:2px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:12px; cursor:pointer;"><div style="font-weight:700; font-size:13px; line-height:1.2;">Couch to 5K</div><div style="font-size:10px; color:#737373; margin-top:3px;">Week 3, run 2</div><div style="height:7px; background:#ececec; border:1.5px solid #0a0a0a; border-radius:9999px; overflow:hidden; margin-top:10px;"><div style="width:25%; height:100%; background:#2563eb;"></div></div></div>
+              </div>
+            </div>
+            <div onClick="{{ newGoal }}" style="height:44px; background:#fafafa; border:2.5px dashed #b0b0b0; border-radius:4px; display:flex; align-items:center; justify-content:center; gap:7px; color:#737373; font-size:13.5px; font-weight:600; cursor:pointer;">+ New goal</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ============ GOALS · EMPTY ============ -->
+      <sc-if value="{{ isGoalsEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="min-height:100%; background:#fafafa; display:flex; flex-direction:column;">
+          <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; padding:14px 16px;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:23px;">Goals</span></div>
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px;">
+            <div style="width:74px; height:74px; border:3px dashed #0a0a0a; border-radius:10px; display:flex; align-items:center; justify-content:center;"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.5"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="4"></circle></svg></div>
+            <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:22px; margin-top:18px;">Pick something to prove</div>
+            <div style="font-size:13px; color:#525252; line-height:1.55; margin-top:9px; max-width:250px;">A goal is anything you want to finish with evidence. Start small &mdash; one step counts.</div>
+            <div onClick="{{ newGoal }}" style="margin-top:22px; height:50px; padding:0 26px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:15px; font-weight:700; cursor:pointer;">+ New goal</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ============ BADGES · WALL OF PROOF ============ -->
+      <sc-if value="{{ isBadgesList }}" hint-placeholder-val="{{ false }}">
+        <div style="min-height:100%; background:#161616;">
+          <!-- header -->
+          <div style="padding:18px 16px 14px; border-bottom:3px solid #2563eb;">
+            <div style="display:flex; align-items:flex-end; justify-content:space-between;">
+              <div><div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:34px; color:#ffe50c; line-height:0.95;">24 badges</div><div style="font-family:'DM Mono',monospace; font-size:10px; color:#8a8a8a; margin-top:7px;">A WALL OF PROOF &middot; ALL VERIFIABLE</div></div>
+              <div onClick="{{ sortBadges }}" style="width:38px; height:38px; border:2px solid #555; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#bbb; font-size:15px; cursor:pointer;">&#9776;</div>
+            </div>
+          </div>
+          <div style="padding:16px;">
+            <!-- spotlight latest -->
+            <sc-if value="{{ spotlight }}" hint-placeholder-val="{{ true }}">
+              <div onClick="{{ openBadge }}" style="background:#222; border:2px solid #ffe50c; border-radius:4px; padding:12px; display:flex; gap:13px; align-items:center; margin-bottom:15px; animation:bd-glow 3.4s ease-in-out infinite; cursor:pointer;">
+                <div style="flex:none; width:60px; height:60px; border-radius:50%; background:#2563eb; border:2.5px solid #ffe50c; display:flex; align-items:center; justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="#fff"><path d="M13 2 L4 14 L11 14 L9 22 L20 9 L13 9 Z"></path></svg></div>
+                <div style="flex:1;"><div style="font-family:'DM Mono',monospace; font-size:8.5px; color:#ffe50c; letter-spacing:0.1em;">JUST EARNED</div><div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px; color:#fff; margin-top:4px;">Rewire the workshop</div><div style="font-family:'DM Mono',monospace; font-size:9px; color:#8a8a8a; margin-top:3px;">JUN 18, 2026</div></div>
+                <span style="color:#ffe50c; font-size:18px;">&rarr;</span>
+              </div>
+            </sc-if>
+            <!-- dense gallery -->
+            <div style="display:flex; flex-wrap:wrap; gap:12px; justify-content:center;">
+              <div onClick="{{ openBadge }}" style="width:60px; height:60px; border-radius:50%; background:#a78bfa; border:2.5px solid #0a0a0a; box-shadow:2px 2px 0 #000; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:25px; color:#161616;">R</span></div>
+              <div onClick="{{ openBadge }}" style="width:60px; height:60px; border-radius:50%; background:#059669; border:2.5px solid #0a0a0a; box-shadow:2px 2px 0 #000; display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13 L10 18 L20 6"></path></svg></div>
+              <div onClick="{{ openBadge }}" style="width:60px; height:60px; border-radius:7px; background:#d97706; border:2.5px solid #0a0a0a; box-shadow:2px 2px 0 #000; display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="28" height="28" viewBox="0 0 24 24" fill="#fff"><path d="M12 2 L14.9 8.6 L22 9.3 L16.7 14 L18.2 21 L12 17.3 L5.8 21 L7.3 14 L2 9.3 L9.1 8.6 Z"></path></svg></div>
+              <div onClick="{{ openBadge }}" style="width:60px; height:60px; border-radius:50%; background:#e0457b; border:2.5px solid #0a0a0a; box-shadow:2px 2px 0 #000; display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="26" height="26" viewBox="0 0 24 24" fill="#fff"><path d="M12 21 C12 21 3 14 3 8 C3 5 5 3 8 3 C10 3 12 5 12 5 C12 5 14 3 16 3 C19 3 21 5 21 8 C21 14 12 21 12 21 Z"></path></svg></div>
+              <div onClick="{{ openBadge }}" style="width:60px; height:60px; border-radius:7px; background:#0d9488; border:2.5px solid #0a0a0a; box-shadow:2px 2px 0 #000; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:25px; color:#fff;">G</span></div>
+              <div onClick="{{ openBadge }}" style="width:60px; height:60px; border-radius:50%; background:#2563eb; border:2.5px solid #0a0a0a; box-shadow:2px 2px 0 #000; display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="28" height="28" viewBox="0 0 24 24" fill="#fff"><path d="M12 2 L14.9 8.6 L22 9.3 L16.7 14 L18.2 21 L12 17.3 L5.8 21 L7.3 14 L2 9.3 L9.1 8.6 Z"></path></svg></div>
+              <div onClick="{{ openBadge }}" style="width:60px; height:60px; border-radius:50%; background:#7c3aed; border:2.5px solid #0a0a0a; box-shadow:2px 2px 0 #000; display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="26" height="26" viewBox="0 0 24 24" fill="#fff"><path d="M13 2 L4 14 L11 14 L9 22 L20 9 L13 9 Z"></path></svg></div>
+              <div onClick="{{ openBadge }}" style="width:60px; height:60px; border-radius:7px; background:#ca8a04; border:2.5px solid #0a0a0a; box-shadow:2px 2px 0 #000; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:25px; color:#161616;">B</span></div>
+              <div onClick="{{ openBadge }}" style="width:60px; height:60px; border-radius:50%; background:#dc2626; border:2.5px solid #0a0a0a; box-shadow:2px 2px 0 #000; display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13 L10 18 L20 6"></path></svg></div>
+              <div onClick="{{ openBadge }}" style="width:60px; height:60px; border-radius:50%; background:#0891b2; border:2.5px solid #0a0a0a; box-shadow:2px 2px 0 #000; display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="26" height="26" viewBox="0 0 24 24" fill="#fff"><path d="M12 2 L14.9 8.6 L22 9.3 L16.7 14 L18.2 21 L12 17.3 L5.8 21 L7.3 14 L2 9.3 L9.1 8.6 Z"></path></svg></div>
+              <div onClick="{{ openBadge }}" style="width:60px; height:60px; border-radius:7px; background:#9a3412; border:2.5px solid #0a0a0a; box-shadow:2px 2px 0 #000; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:25px; color:#fff;">M</span></div>
+              <div onClick="{{ openBadge }}" style="width:60px; height:60px; border-radius:50%; background:#65a30d; border:2.5px solid #0a0a0a; box-shadow:2px 2px 0 #000; display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13 L10 18 L20 6"></path></svg></div>
+              <div onClick="{{ openBadge }}" style="width:60px; height:60px; border-radius:50%; background:#7c3aed; border:2.5px solid #0a0a0a; box-shadow:2px 2px 0 #000; display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="26" height="26" viewBox="0 0 24 24" fill="#fff"><path d="M12 21 C12 21 3 14 3 8 C3 5 5 3 8 3 C10 3 12 5 12 5 C12 5 14 3 16 3 C19 3 21 5 21 8 C21 14 12 21 12 21 Z"></path></svg></div>
+              <div onClick="{{ openBadge }}" style="width:60px; height:60px; border-radius:7px; background:#2563eb; border:2.5px solid #0a0a0a; box-shadow:2px 2px 0 #000; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:25px; color:#fff;">P</span></div>
+              <div onClick="{{ openBadge }}" style="width:60px; height:60px; border-radius:50%; background:#059669; border:2.5px solid #0a0a0a; box-shadow:2px 2px 0 #000; display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="26" height="26" viewBox="0 0 24 24" fill="#fff"><path d="M12 2 L14.9 8.6 L22 9.3 L16.7 14 L18.2 21 L12 17.3 L5.8 21 L7.3 14 L2 9.3 L9.1 8.6 Z"></path></svg></div>
+            </div>
+            <div style="text-align:center; font-family:'DM Mono',monospace; font-size:9.5px; color:#6a6a6a; margin-top:18px;">+ 9 MORE</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ============ BADGES · EMPTY ============ -->
+      <sc-if value="{{ isBadgesEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="min-height:100%; background:#161616; display:flex; flex-direction:column;">
+          <div style="padding:18px 16px 14px; border-bottom:3px solid #2563eb;"><div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:28px; color:#ffe50c;">Badges</div></div>
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px;">
+            <div style="width:108px; height:108px; border-radius:50%; background:#1f1f1f; border:3px dashed #4a4a4a; display:flex; align-items:center; justify-content:center; animation:bd-glow 3.4s ease-in-out infinite;"><svg width="46" height="46" viewBox="0 0 24 24" fill="#3a3a3a"><path d="M13 2 L4 14 L11 14 L9 22 L20 9 L13 9 Z"></path></svg></div>
+            <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:22px; color:#fff; margin-top:20px;">Your first badge is waiting</div>
+            <div style="font-size:13px; color:#9a9a9a; line-height:1.55; margin-top:9px; max-width:255px;">Finish a goal and you&rsquo;ll design a badge to mark it &mdash; a verifiable credential that&rsquo;s yours to keep.</div>
+            <div onClick="{{ seeGoals }}" style="margin-top:22px; height:50px; padding:0 24px; background:#ffe50c; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; gap:7px; font-size:14.5px; font-weight:700; cursor:pointer;">See my goals &rarr;</div>
+          </div>
+        </div>
+      </sc-if>
+
+    </div>
+
+    <!-- ============ BOTTOM NAV (The Slide) ============ -->
+    <div style="flex:none; background:#0a0a0a; padding:11px 14px 15px; z-index:5;">
+      <!-- goals active -->
+      <sc-if value="{{ onGoals }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex; align-items:center; gap:7px; height:58px; border:3px solid #0a0a0a; border-radius:15px; background:#fafafa; box-shadow:3px 3px 0 rgba(255,255,255,0.12); padding:6px;">
+          <div onClick="{{ goGoals }}" style="flex:1.8; display:flex; align-items:center; justify-content:center; gap:8px; height:100%; border:2px solid #0a0a0a; border-radius:9px; background:#ffe50c; box-shadow:2px 2px 0 rgba(10,10,10,0.85); cursor:pointer;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.5"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="4"></circle></svg><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14.5px;">Goals</span></div>
+          <div onClick="{{ goBadges }}" style="flex:1; display:flex; align-items:center; justify-content:center; height:100%; cursor:pointer;"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#9a9a9a" stroke-width="2.5" stroke-linejoin="round"><path d="M8.5 3l2.4 6.6M15.5 3l-2.4 6.6"></path><circle cx="12" cy="15" r="6"></circle></svg></div>
+          <div onClick="{{ goSettings }}" style="flex:1; display:flex; align-items:center; justify-content:center; height:100%; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9a9a9a" stroke-width="2.5" stroke-linejoin="round"><circle cx="12" cy="12" r="3.4"></circle><path d="M12 2.6v3.2M12 18.2v3.2M21.4 12h-3.2M5.8 12H2.6M18.6 5.4l-2.3 2.3M7.7 16.3l-2.3 2.3M18.6 18.6l-2.3-2.3M7.7 7.7 5.4 5.4"></path></svg></div>
+        </div>
+      </sc-if>
+      <!-- badges active -->
+      <sc-if value="{{ onBadges }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; align-items:center; gap:7px; height:58px; border:3px solid #0a0a0a; border-radius:15px; background:#fafafa; box-shadow:3px 3px 0 rgba(255,255,255,0.12); padding:6px;">
+          <div onClick="{{ goGoals }}" style="flex:1; display:flex; align-items:center; justify-content:center; height:100%; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9a9a9a" stroke-width="2.5"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="4"></circle></svg></div>
+          <div onClick="{{ goBadges }}" style="flex:1.8; display:flex; align-items:center; justify-content:center; gap:8px; height:100%; border:2px solid #0a0a0a; border-radius:9px; background:#d4f4e7; box-shadow:2px 2px 0 rgba(10,10,10,0.85); cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.5" stroke-linejoin="round"><path d="M8.5 3l2.4 6.6M15.5 3l-2.4 6.6"></path><circle cx="12" cy="15" r="6"></circle></svg><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14.5px;">Badges</span></div>
+          <div onClick="{{ goSettings }}" style="flex:1; display:flex; align-items:center; justify-content:center; height:100%; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9a9a9a" stroke-width="2.5" stroke-linejoin="round"><circle cx="12" cy="12" r="3.4"></circle><path d="M12 2.6v3.2M12 18.2v3.2M21.4 12h-3.2M5.8 12H2.6M18.6 5.4l-2.3 2.3M7.7 16.3l-2.3 2.3M18.6 18.6l-2.3-2.3M7.7 7.7 5.4 5.4"></path></svg></div>
+        </div>
+      </sc-if>
+    </div>
+
+    <!-- toast -->
+    <sc-if value="{{ toast }}" hint-placeholder-val="">
+      <div style="position:absolute; left:50%; bottom:96px; z-index:14; transform:translateX(-50%); background:#0a0a0a; color:#fafafa; border:2px solid #fafafa; border-radius:9999px; padding:10px 20px; font-size:13px; font-weight:600; white-space:nowrap; animation:bd-toast-in 0.2s ease;">{{ toast }}</div>
+    </sc-if>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:440,&quot;height&quot;:840},&quot;goalsEmpty&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;badgesEmpty&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;spotlightLatest&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { tab: "goals", toast: "" };
+
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: "" }), 1900);
+  }
+
+  renderVals() {
+    const p = this.props;
+    const goalsEmpty = p.goalsEmpty ?? false;
+    const badgesEmpty = p.badgesEmpty ?? false;
+    const tab = this.state.tab;
+    return {
+      isGoalsList: tab === "goals" && !goalsEmpty,
+      isGoalsEmpty: tab === "goals" && goalsEmpty,
+      isBadgesList: tab === "badges" && !badgesEmpty,
+      isBadgesEmpty: tab === "badges" && badgesEmpty,
+      onGoals: tab === "goals",
+      onBadges: tab === "badges",
+      spotlight: p.spotlightLatest ?? true,
+      toast: this.state.toast,
+
+      goGoals: () => this.setState({ tab: "goals" }),
+      goBadges: () => this.setState({ tab: "badges" }),
+      goSettings: () => this.flash("Settings"),
+      startFocus: () => this.flash("Opening Focus Mode\u2026"),
+      newGoal: () => this.flash("New goal"),
+      openBadge: () => this.flash("Opening badge\u2026"),
+      sortBadges: () => this.flash("Sort \u00b7 newest first"),
+      seeGoals: () => this.setState({ tab: "goals" }),
+    };
+  }
+}
+</script>
+</body>
+</html>

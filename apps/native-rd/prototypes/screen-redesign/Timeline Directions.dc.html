@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wght@700;800;900&family=Instrument+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  .scrl::-webkit-scrollbar { width: 0; height: 0; }
+</style>
+</helmet>
+
+<div style="font-family:'Instrument Sans',system-ui,sans-serif; width:max-content; min-width:100%; min-height:100vh; box-sizing:border-box; padding:48px; background:#e5e5e5; color:#0a0a0a;">
+
+  <!-- TITLE -->
+  <div style="max-width:880px; margin-bottom:36px;">
+    <div style="font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:#525252; margin-bottom:8px;">Rollercoaster.dev &middot; Phase 2 &middot; Screen 3</div>
+    <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:38px; line-height:1.02; margin-bottom:12px;">Timeline / Journey</div>
+    <div style="font-size:15px; line-height:1.55; color:#404040;">An audit of today&rsquo;s screen with its friction flagged, then three directions for the calm single overview Focus now leans on. Each direction reconciles every node onto the <strong>one state-color language</strong> and finds room for the <strong>E&middot;C&middot;B</strong> truth-lines &mdash; they diverge on how much structure to show at once. Tapping a node still drops into Focus.</div>
+  </div>
+
+  <!-- ============ AUDIT ROW ============ -->
+  <div style="display:flex; align-items:flex-start; gap:32px; margin-bottom:48px;">
+    <div style="flex:none;">
+      <div style="font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color:#0a0a0a; margin-bottom:10px;">&#9632; Audit &middot; today&rsquo;s screen, faithfully</div>
+      <div style="width:344px; height:760px; background:#fafafa; border:3px solid #0a0a0a; border-radius:40px; box-shadow:8px 8px 0 rgba(10,10,10,0.22); overflow:hidden; display:flex; flex-direction:column; position:relative;">
+        <div style="height:30px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 18px; font-family:'DM Mono',monospace; font-size:12px; flex:none;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+        <!-- subheader -->
+        <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; gap:10px; padding:11px 16px; flex:none;"><span style="font-size:20px;">&larr;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">Timeline</span></div>
+        <!-- body -->
+        <div class="scrl" style="flex:1; overflow-y:auto; min-height:0;">
+          <!-- goal header -->
+          <div style="padding:16px 18px 14px; border-bottom:2px solid #e5e5e5;">
+            <div style="display:flex; align-items:flex-start; gap:10px; margin-bottom:12px;">
+              <span style="flex:1; font-family:'Anybody',sans-serif; font-weight:900; font-size:22px; line-height:1.08;">Rewire the workshop</span>
+              <span style="flex:none; font-size:12px; font-weight:700; background:#fff; border:2px solid #0a0a0a; border-radius:4px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:6px 10px;">&lsaquo; Back to Focus</span>
+            </div>
+            <div style="height:12px; background:#fff; border:2px solid #0a0a0a; overflow:hidden; margin-bottom:7px;"><div style="height:100%; background:#2563eb; width:37.5%;"></div></div>
+            <div style="font-family:'DM Mono',monospace; font-size:12px; color:#737373;">3 of 8 steps completed</div>
+          </div>
+          <!-- spine -->
+          <div style="padding:16px 18px 18px;">
+            <sc-for list="{{ rows }}" as="s" hint-placeholder-count="5">
+              <div>
+                <div style="display:flex; gap:12px;">
+                  <div style="display:flex; flex-direction:column; align-items:center; flex:none; width:28px;">
+                    <span style="width:28px; height:28px; border-radius:9999px; border:{{ s.na.bw }} solid {{ s.na.bc }}; background:{{ s.na.bg }}; color:{{ s.na.txt }}; display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:12px; font-weight:700; box-shadow:2px 2px 0 rgba(10,10,10,0.85);">{{ s.na.g }}</span>
+                    <span style="flex:1; width:3px; min-height:14px; background:{{ s.connAudit }};"></span>
+                  </div>
+                  <div style="flex:1; padding-bottom:12px;">
+                    <div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:9px 11px;">
+                      <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="flex:none; font-family:'DM Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:0.04em; background:{{ s.badge.bg }}; border:1.5px solid #0a0a0a; border-radius:9999px; padding:2px 7px;">{{ s.badge.label }}</span>
+                        <span style="flex:1; font-size:13.5px; font-weight:700; line-height:1.15;">{{ s.t }}</span>
+                        <span style="flex:none; font-size:11px; color:#9a9a9a;">&#9660;</span>
+                      </div>
+                      <sc-if value="{{ s.audOpen }}">
+                        <div style="display:flex; flex-direction:column; gap:6px; margin-top:9px;">
+                          <sc-for list="{{ s.ev }}" as="e" hint-placeholder-count="1">
+                            <div style="display:flex; align-items:center; gap:8px; background:#fafafa; border:1.5px solid #d4d4d4; border-radius:4px; padding:7px 9px;"><span style="font-size:14px;">{{ e.i }}</span><span style="font-size:12px; font-weight:600;">{{ e.l }}</span></div>
+                          </sc-for>
+                        </div>
+                      </sc-if>
+                    </div>
+                  </div>
+                </div>
+                <!-- substeps -->
+                <sc-if value="{{ s.hasKids }}">
+                  <div style="margin-left:38px; border-left:3px solid #e5e5e5; padding-left:14px; margin-top:-6px; margin-bottom:6px; display:flex; flex-direction:column; gap:8px;">
+                    <sc-for list="{{ s.kids }}" as="k" hint-placeholder-count="2">
+                      <div style="display:flex; gap:9px; align-items:center;">
+                        <span style="flex:none; width:22px; height:22px; border-radius:9999px; border:{{ k.na.bw }} solid {{ k.na.bc }}; background:{{ k.na.bg }}; color:{{ k.na.txt }}; display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:10px; font-weight:700; box-shadow:1.5px 1.5px 0 rgba(10,10,10,0.85);">{{ k.na.g }}</span>
+                        <div style="flex:1; background:#fff; border:2px solid #0a0a0a; border-radius:5px; box-shadow:1.5px 1.5px 0 rgba(10,10,10,0.85); padding:7px 9px; display:flex; align-items:center; gap:7px;">
+                          <span style="flex:none; font-family:'DM Mono',monospace; font-size:8px; text-transform:uppercase; background:{{ k.badge.bg }}; border:1.5px solid #0a0a0a; border-radius:9999px; padding:1px 6px;">{{ k.badge.label }}</span>
+                          <span style="flex:1; font-size:12px; font-weight:600;">{{ k.t }}</span>
+                          <span style="flex:none; font-size:10px; color:#9a9a9a;">&#9660;</span>
+                        </div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+            <!-- finish line -->
+            <div style="display:flex; gap:12px; margin-top:2px;">
+              <div style="flex:none; width:28px; display:flex; justify-content:center;"><span style="width:34px; height:34px; margin-left:-3px; border-radius:9999px; border:2px solid #0a0a0a; background:#fff; display:flex; align-items:center; justify-content:center; font-size:16px; box-shadow:2px 2px 0 rgba(10,10,10,0.85);">&#9733;</span></div>
+              <div style="flex:1;">
+                <div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:10px 12px;">
+                  <div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px; margin-bottom:4px;">Goal Evidence</div>
+                  <div style="font-size:12px; color:#9a9a9a;">No goal evidence yet</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- nav pill -->
+        <div style="background:#a78bfa; border-top:2px solid #0a0a0a; padding:9px 12px 12px; flex:none; display:flex; align-items:center; gap:6px;">
+          <div style="flex:1; display:flex; align-items:center; gap:4px; background:#fff; border:2px solid #0a0a0a; border-radius:9999px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:5px 7px; min-height:44px;">
+            <span style="display:inline-flex; align-items:center; gap:6px; background:#a78bfa; border:2px solid #0a0a0a; border-radius:9999px; padding:5px 12px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/></svg><span style="font-size:12.5px; font-weight:700;">Goals</span></span>
+            <span style="flex:1;"></span>
+            <span style="width:42px; height:42px; flex:none; background:#ffe50c; border:2px solid #0a0a0a; border-radius:9999px; display:flex; align-items:center; justify-content:center; font-size:23px; font-weight:700; line-height:1;">+</span>
+            <span style="flex:1;"></span>
+            <span style="width:38px; height:38px; flex:none; display:flex; align-items:center; justify-content:center;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#737373" stroke-width="2"><path d="M8.5 3l3.5 5 3.5-5"/><circle cx="12" cy="15" r="6"/></svg></span>
+          </div>
+          <div style="flex:none; width:46px; height:46px; background:#fff; border:2px solid #0a0a0a; border-radius:9999px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#737373" stroke-width="2"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- flags -->
+    <div style="flex:none; width:380px; padding-top:34px;">
+      <div style="font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color:#737373; margin-bottom:14px;">The friction &mdash; what to fix</div>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <sc-for list="{{ flags }}" as="f" hint-placeholder-count="4">
+          <div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:14px 16px;">
+            <div style="display:flex; align-items:center; gap:9px; margin-bottom:7px;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:14px; background:#ffe50c; border:2px solid #0a0a0a; border-radius:9999px; width:24px; height:24px; display:flex; align-items:center; justify-content:center; flex:none;">{{ f.n }}</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">{{ f.title }}</span></div>
+            <div style="font-size:13.5px; line-height:1.5; color:#404040;">{{ f.body }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ DIRECTIONS ROW ============ -->
+  <div style="font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color:#0a0a0a; margin-bottom:16px;">&#9632; Three directions</div>
+  <div style="display:flex; align-items:flex-start; gap:40px;">
+
+    <!-- DIR A -->
+    <div style="flex:none; width:344px;">
+      <div style="margin-bottom:10px;">
+        <div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:18px;">A &middot; Reconciled spine</div>
+        <div style="font-size:13px; line-height:1.45; color:#525252; margin-top:3px;">Today&rsquo;s structure, healed. One color language so node + pill always agree, plus the inline E&middot;C&middot;B band under each step. Lowest-risk evolution.</div>
+      </div>
+      <div style="width:344px; height:760px; background:#fafafa; border:3px solid #0a0a0a; border-radius:40px; box-shadow:8px 8px 0 rgba(10,10,10,0.22); overflow:hidden; display:flex; flex-direction:column; position:relative;">
+        <div style="height:30px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 18px; font-family:'DM Mono',monospace; font-size:12px; flex:none;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+        <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:11px 16px; flex:none;"><span style="font-size:20px;">&larr;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">All steps</span><span style="font-size:12px; font-weight:700;">Edit &rsaquo;</span></div>
+        <div class="scrl" style="flex:1; overflow-y:auto; min-height:0; padding:16px 18px 18px;">
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:6px;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:21px; line-height:1.08;">Rewire the workshop</span></div>
+          <div style="display:flex; align-items:center; gap:9px; margin-bottom:16px;"><div style="flex:1; height:10px; background:#fff; border:2px solid #0a0a0a; overflow:hidden;"><div style="height:100%; background:#2563eb; width:37.5%;"></div></div><span style="font-family:'DM Mono',monospace; font-size:12px; color:#737373; white-space:nowrap;">3 / 8</span></div>
+          <sc-for list="{{ rows }}" as="s" hint-placeholder-count="5">
+            <div>
+              <div style="display:flex; gap:12px;">
+                <div style="display:flex; flex-direction:column; align-items:center; flex:none; width:28px;">
+                  <span style="width:28px; height:28px; border-radius:9999px; border:{{ s.no.bw }} solid {{ s.no.bc }}; background:{{ s.no.bg }}; color:{{ s.no.txt }}; display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:12px; font-weight:700; box-shadow:2px 2px 0 rgba(10,10,10,0.85);">{{ s.no.g }}</span>
+                  <span style="flex:1; width:3px; min-height:14px; background:{{ s.connOne }};"></span>
+                </div>
+                <div style="flex:1; padding-bottom:13px;">
+                  <div style="background:{{ s.cellA }}; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:10px 12px;">
+                    <div style="display:flex; align-items:center; gap:8px;"><span style="flex:1; font-size:14px; font-weight:700; line-height:1.15;">{{ s.t }}</span><span style="flex:none; font-family:'DM Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:0.04em; color:#525252;">{{ s.word }}</span></div>
+                    <sc-if value="{{ s.hasMeta }}">
+                      <div style="display:flex; flex-direction:column; gap:5px; margin-top:8px;">
+                        <sc-for list="{{ s.meta }}" as="m" hint-placeholder-count="1">
+                          <div style="display:flex; align-items:baseline; flex-wrap:wrap; gap:6px;"><span style="font-size:12px; color:{{ m.color }};">{{ m.glyph }}</span><span style="font-size:12.5px; color:#1a1a1a;">{{ m.text }}</span><span style="font-family:'DM Mono',monospace; font-size:11px; color:#737373;">{{ m.meta }}</span></div>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ s.hasEv }}">
+                      <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:9px;">
+                        <sc-for list="{{ s.ev }}" as="e" hint-placeholder-count="1">
+                          <span style="display:inline-flex; align-items:center; gap:5px; background:#d4f4e7; border:2px solid #0a0a0a; border-radius:9999px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); font-family:'DM Mono',monospace; font-size:10.5px; padding:2px 8px;">{{ e.i }} {{ e.l }}</span>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+                  </div>
+                </div>
+              </div>
+              <sc-if value="{{ s.hasKids }}">
+                <div style="margin-left:38px; border-left:3px solid #e5e5e5; padding-left:14px; margin-top:-7px; margin-bottom:7px; display:flex; flex-direction:column; gap:8px;">
+                  <sc-for list="{{ s.kids }}" as="k" hint-placeholder-count="2">
+                    <div style="display:flex; gap:9px; align-items:center;">
+                      <span style="flex:none; width:22px; height:22px; border-radius:9999px; border:{{ k.no.bw }} solid {{ k.no.bc }}; background:{{ k.no.bg }}; color:{{ k.no.txt }}; display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:10px; font-weight:700; box-shadow:1.5px 1.5px 0 rgba(10,10,10,0.85);">{{ k.no.g }}</span>
+                      <div style="flex:1; background:{{ k.cellA }}; border:2px solid #0a0a0a; border-radius:5px; box-shadow:1.5px 1.5px 0 rgba(10,10,10,0.85); padding:7px 10px; display:flex; align-items:center; gap:8px;"><span style="flex:1; font-size:12.5px; font-weight:600;">{{ k.t }}</span><span style="flex:none; font-family:'DM Mono',monospace; font-size:8px; text-transform:uppercase; color:#737373;">{{ k.word }}</span></div>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+          <div style="display:flex; gap:12px; margin-top:2px;">
+            <div style="flex:none; width:28px; display:flex; justify-content:center;"><span style="width:34px; height:34px; margin-left:-3px; border-radius:9999px; border:2px solid #0a0a0a; background:#fff; display:flex; align-items:center; justify-content:center; font-size:16px; box-shadow:2px 2px 0 rgba(10,10,10,0.85);">&#9733;</span></div>
+            <div style="flex:1;"><div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:11px 12px;"><div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px;">Finish &amp; design badge</div><div style="font-size:12px; color:#737373; margin-top:3px;">The keepsake comes at the end.</div></div></div>
+          </div>
+        </div>
+        <div style="background:#a78bfa; border-top:2px solid #0a0a0a; padding:9px 12px 12px; flex:none; display:flex; align-items:center; gap:6px;">
+          <div style="flex:1; display:flex; align-items:center; gap:4px; background:#fff; border:2px solid #0a0a0a; border-radius:9999px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:5px 7px; min-height:44px;">
+            <span style="display:inline-flex; align-items:center; gap:6px; background:#a78bfa; border:2px solid #0a0a0a; border-radius:9999px; padding:5px 12px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/></svg><span style="font-size:12.5px; font-weight:700;">Goals</span></span>
+            <span style="flex:1;"></span>
+            <span style="width:42px; height:42px; flex:none; background:#ffe50c; border:2px solid #0a0a0a; border-radius:9999px; display:flex; align-items:center; justify-content:center; font-size:23px; font-weight:700; line-height:1;">+</span>
+            <span style="flex:1;"></span>
+            <span style="width:38px; height:38px; flex:none; display:flex; align-items:center; justify-content:center;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#737373" stroke-width="2"><path d="M8.5 3l3.5 5 3.5-5"/><circle cx="12" cy="15" r="6"/></svg></span>
+          </div>
+          <div style="flex:none; width:46px; height:46px; background:#fff; border:2px solid #0a0a0a; border-radius:9999px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#737373" stroke-width="2"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIR B -->
+    <div style="flex:none; width:344px;">
+      <div style="margin-bottom:10px;">
+        <div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:18px;">B &middot; Open ledger</div>
+        <div style="font-size:13px; line-height:1.45; color:#525252; margin-top:3px;">No cards, no chevrons to manage. Everything visible at once as calm rows &mdash; state dot + word, one truth-line, evidence inline. Lowest interaction load.</div>
+      </div>
+      <div style="width:344px; height:760px; background:#fafafa; border:3px solid #0a0a0a; border-radius:40px; box-shadow:8px 8px 0 rgba(10,10,10,0.22); overflow:hidden; display:flex; flex-direction:column; position:relative;">
+        <div style="height:30px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 18px; font-family:'DM Mono',monospace; font-size:12px; flex:none;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+        <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:11px 16px; flex:none;"><span style="font-size:20px;">&larr;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">All steps</span><span style="font-size:12px; font-weight:700;">Edit &rsaquo;</span></div>
+        <div class="scrl" style="flex:1; overflow-y:auto; min-height:0; padding:16px 18px 18px;">
+          <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:21px; line-height:1.08; margin-bottom:8px;">Rewire the workshop</div>
+          <div style="display:flex; align-items:center; gap:9px; margin-bottom:18px;"><div style="flex:1; height:10px; background:#fff; border:2px solid #0a0a0a; overflow:hidden;"><div style="height:100%; background:#2563eb; width:37.5%;"></div></div><span style="font-family:'DM Mono',monospace; font-size:12px; color:#737373; white-space:nowrap;">3 / 8</span></div>
+          <sc-for list="{{ rows }}" as="s" hint-placeholder-count="5">
+            <div>
+              <div style="display:flex; gap:11px;">
+                <div style="display:flex; flex-direction:column; align-items:center; flex:none; width:18px; padding-top:4px;">
+                  <span style="width:16px; height:16px; border-radius:9999px; border:2px solid #0a0a0a; background:{{ s.no.bg }}; flex:none; box-shadow:1.5px 1.5px 0 rgba(10,10,10,0.85);"></span>
+                  <span style="flex:1; width:2px; min-height:16px; background:{{ s.connOne }};"></span>
+                </div>
+                <div style="flex:1; padding-bottom:16px;">
+                  <div style="display:flex; align-items:baseline; gap:8px;"><span style="flex:1; font-size:14.5px; font-weight:700; line-height:1.2; color:{{ s.ledgerInk }};">{{ s.t }}</span><span style="flex:none; font-family:'DM Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:0.05em; color:{{ s.wordColor }};">{{ s.word }}</span></div>
+                  <sc-if value="{{ s.hasMeta }}">
+                    <div style="display:flex; flex-direction:column; gap:4px; margin-top:6px;">
+                      <sc-for list="{{ s.meta }}" as="m" hint-placeholder-count="1">
+                        <div style="display:flex; align-items:baseline; flex-wrap:wrap; gap:6px;"><span style="font-size:11.5px; color:{{ m.color }};">{{ m.glyph }}</span><span style="font-size:12px; color:#404040;">{{ m.text }}</span><span style="font-family:'DM Mono',monospace; font-size:10.5px; color:#9a9a9a;">{{ m.meta }}</span></div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ s.hasEv }}">
+                    <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:7px;">
+                      <sc-for list="{{ s.ev }}" as="e" hint-placeholder-count="1">
+                        <span style="display:inline-flex; align-items:center; gap:5px; background:#d4f4e7; border:1.5px solid #0a0a0a; border-radius:9999px; font-family:'DM Mono',monospace; font-size:10px; padding:2px 8px;">{{ e.i }} {{ e.l }}</span>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ s.hasKids }}">
+                    <div style="margin-top:10px; display:flex; flex-direction:column; gap:9px;">
+                      <sc-for list="{{ s.kids }}" as="k" hint-placeholder-count="2">
+                        <div style="display:flex; align-items:center; gap:9px;"><span style="width:11px; height:11px; flex:none; border-radius:9999px; border:1.5px solid #0a0a0a; background:{{ k.no.bg }};"></span><span style="flex:1; font-size:12.5px; font-weight:600; color:{{ k.ledgerInk }};">{{ k.t }}</span><span style="flex:none; font-family:'DM Mono',monospace; font-size:8px; text-transform:uppercase; color:{{ k.wordColor }};">{{ k.word }}</span></div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+          <div style="display:flex; gap:11px; margin-top:0;">
+            <div style="flex:none; width:18px; display:flex; justify-content:center;"><span style="width:24px; height:24px; margin-left:-4px; border-radius:9999px; border:2px solid #0a0a0a; background:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; box-shadow:1.5px 1.5px 0 rgba(10,10,10,0.85);">&#9733;</span></div>
+            <div style="flex:1; padding-top:2px;"><div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px;">Finish &amp; design badge</div><div style="font-size:12px; color:#737373; margin-top:2px;">The keepsake comes at the end.</div></div>
+          </div>
+        </div>
+        <div style="background:#a78bfa; border-top:2px solid #0a0a0a; padding:9px 12px 12px; flex:none; display:flex; align-items:center; gap:6px;">
+          <div style="flex:1; display:flex; align-items:center; gap:4px; background:#fff; border:2px solid #0a0a0a; border-radius:9999px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:5px 7px; min-height:44px;">
+            <span style="display:inline-flex; align-items:center; gap:6px; background:#a78bfa; border:2px solid #0a0a0a; border-radius:9999px; padding:5px 12px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/></svg><span style="font-size:12.5px; font-weight:700;">Goals</span></span>
+            <span style="flex:1;"></span>
+            <span style="width:42px; height:42px; flex:none; background:#ffe50c; border:2px solid #0a0a0a; border-radius:9999px; display:flex; align-items:center; justify-content:center; font-size:23px; font-weight:700; line-height:1;">+</span>
+            <span style="flex:1;"></span>
+            <span style="width:38px; height:38px; flex:none; display:flex; align-items:center; justify-content:center;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#737373" stroke-width="2"><path d="M8.5 3l3.5 5 3.5-5"/><circle cx="12" cy="15" r="6"/></svg></span>
+          </div>
+          <div style="flex:none; width:46px; height:46px; background:#fff; border:2px solid #0a0a0a; border-radius:9999px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#737373" stroke-width="2"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIR C -->
+    <div style="flex:none; width:344px;">
+      <div style="margin-bottom:10px;">
+        <div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:18px;">C &middot; Honest header</div>
+        <div style="font-size:13px; line-height:1.45; color:#525252; margin-top:3px;">Replaces the single ratio with a named breakdown so &ldquo;set aside&rdquo; is counted, never judged. Compact spine below carries the state word beside every node.</div>
+      </div>
+      <div style="width:344px; height:760px; background:#fafafa; border:3px solid #0a0a0a; border-radius:40px; box-shadow:8px 8px 0 rgba(10,10,10,0.22); overflow:hidden; display:flex; flex-direction:column; position:relative;">
+        <div style="height:30px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 18px; font-family:'DM Mono',monospace; font-size:12px; flex:none;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+        <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:11px 16px; flex:none;"><span style="font-size:20px;">&larr;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">All steps</span><span style="font-size:12px; font-weight:700;">Edit &rsaquo;</span></div>
+        <div class="scrl" style="flex:1; overflow-y:auto; min-height:0; padding:16px 18px 18px;">
+          <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:21px; line-height:1.08; margin-bottom:12px;">Rewire the workshop</div>
+          <!-- honest breakdown -->
+          <div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:12px 13px; margin-bottom:18px;">
+            <div style="display:flex; height:12px; border:2px solid #0a0a0a; overflow:hidden; margin-bottom:10px;"><div style="width:37.5%; background:#d4f4e7;"></div><div style="width:12.5%; background:#ffe50c;"></div><div style="width:37.5%; background:#fff;"></div><div style="width:12.5%; background:#ede9fe;"></div></div>
+            <div style="display:flex; flex-wrap:wrap; gap:7px 12px;">
+              <sc-for list="{{ counts }}" as="c" hint-placeholder-count="4">
+                <span style="display:inline-flex; align-items:center; gap:6px; font-family:'DM Mono',monospace; font-size:11px; color:#404040;"><span style="width:11px; height:11px; border-radius:3px; border:1.5px solid #0a0a0a; background:{{ c.color }};"></span>{{ c.n }} {{ c.label }}</span>
+              </sc-for>
+            </div>
+          </div>
+          <!-- compact spine -->
+          <sc-for list="{{ rows }}" as="s" hint-placeholder-count="5">
+            <div>
+              <div style="display:flex; gap:12px; align-items:flex-start;">
+                <div style="display:flex; flex-direction:column; align-items:center; flex:none; width:28px;">
+                  <span style="width:28px; height:28px; border-radius:9999px; border:{{ s.no.bw }} solid {{ s.no.bc }}; background:{{ s.no.bg }}; color:{{ s.no.txt }}; display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:12px; font-weight:700; box-shadow:2px 2px 0 rgba(10,10,10,0.85);">{{ s.no.g }}</span>
+                  <span style="flex:1; width:3px; min-height:12px; background:{{ s.connOne }};"></span>
+                </div>
+                <div style="flex:1; padding-bottom:12px; padding-top:2px;">
+                  <div style="display:flex; align-items:baseline; gap:8px;"><span style="flex:1; font-size:14px; font-weight:700; line-height:1.18; color:{{ s.ledgerInk }};">{{ s.t }}</span></div>
+                  <div style="display:inline-flex; align-items:center; margin-top:4px; background:{{ s.no.bg }}; border:1.5px solid #0a0a0a; border-radius:9999px; font-family:'DM Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:0.04em; padding:1px 8px;">{{ s.word }}</div>
+                  <sc-if value="{{ s.hasMeta }}">
+                    <div style="display:flex; flex-direction:column; gap:3px; margin-top:6px;">
+                      <sc-for list="{{ s.meta }}" as="m" hint-placeholder-count="1">
+                        <div style="display:flex; align-items:baseline; flex-wrap:wrap; gap:5px;"><span style="font-size:11px; color:{{ m.color }};">{{ m.glyph }}</span><span style="font-size:11.5px; color:#525252;">{{ m.text }}</span><span style="font-family:'DM Mono',monospace; font-size:10px; color:#9a9a9a;">{{ m.meta }}</span></div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                </div>
+              </div>
+              <sc-if value="{{ s.hasKids }}">
+                <div style="margin-left:38px; border-left:3px solid #e5e5e5; padding-left:13px; margin-top:-6px; margin-bottom:6px; display:flex; flex-direction:column; gap:7px;">
+                  <sc-for list="{{ s.kids }}" as="k" hint-placeholder-count="2">
+                    <div style="display:flex; gap:9px; align-items:center;"><span style="flex:none; width:20px; height:20px; border-radius:9999px; border:{{ k.no.bw }} solid {{ k.no.bc }}; background:{{ k.no.bg }}; color:{{ k.no.txt }}; display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:9px; font-weight:700;">{{ k.no.g }}</span><span style="flex:1; font-size:12.5px; font-weight:600; color:{{ k.ledgerInk }};">{{ k.t }}</span><span style="flex:none; font-family:'DM Mono',monospace; font-size:8px; text-transform:uppercase; color:{{ k.wordColor }};">{{ k.word }}</span></div>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+          <div style="display:flex; gap:12px; margin-top:2px;">
+            <div style="flex:none; width:28px; display:flex; justify-content:center;"><span style="width:34px; height:34px; margin-left:-3px; border-radius:9999px; border:2px solid #0a0a0a; background:#fff; display:flex; align-items:center; justify-content:center; font-size:16px; box-shadow:2px 2px 0 rgba(10,10,10,0.85);">&#9733;</span></div>
+            <div style="flex:1; padding-top:4px;"><div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px;">Finish &amp; design badge</div></div>
+          </div>
+        </div>
+        <div style="background:#a78bfa; border-top:2px solid #0a0a0a; padding:9px 12px 12px; flex:none; display:flex; align-items:center; gap:6px;">
+          <div style="flex:1; display:flex; align-items:center; gap:4px; background:#fff; border:2px solid #0a0a0a; border-radius:9999px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:5px 7px; min-height:44px;">
+            <span style="display:inline-flex; align-items:center; gap:6px; background:#a78bfa; border:2px solid #0a0a0a; border-radius:9999px; padding:5px 12px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/></svg><span style="font-size:12.5px; font-weight:700;">Goals</span></span>
+            <span style="flex:1;"></span>
+            <span style="width:42px; height:42px; flex:none; background:#ffe50c; border:2px solid #0a0a0a; border-radius:9999px; display:flex; align-items:center; justify-content:center; font-size:23px; font-weight:700; line-height:1;">+</span>
+            <span style="flex:1;"></span>
+            <span style="width:38px; height:38px; flex:none; display:flex; align-items:center; justify-content:center;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#737373" stroke-width="2"><path d="M8.5 3l3.5 5 3.5-5"/><circle cx="12" cy="15" r="6"/></svg></span>
+          </div>
+          <div style="flex:none; width:46px; height:46px; background:#fff; border:2px solid #0a0a0a; border-radius:9999px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#737373" stroke-width="2"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  // Shared scenario — continuity with Focus Mode's "Rewire the workshop".
+  base() {
+    return [
+      { num: "1", t: "Plan layout & buy materials", status: "completed", ev: [{ i: "\u{1F4F7}", l: "Photo" }], meta: [] },
+      { num: "2", t: "Wire the circuits", status: "completed", audOpen: true, ev: [{ i: "\u{1F4F7}", l: "Photo" }, { i: "\u{1F4DD}", l: "Note" }], meta: [] },
+      { num: "3", t: "Inspection & labels", status: "in-progress", ev: [],
+        meta: [{ glyph: "\u23F3", color: "#d97706", text: "waiting on city inspector", meta: "\u00b7 expected Jun 24" }],
+        kids: [
+          { let: "a", t: "Book the inspection", status: "completed" },
+          { let: "b", t: "Walk the inspector through", status: "in-progress" },
+          { let: "c", t: "Fix any call-outs", status: "pending" },
+        ] },
+      { num: "4", t: "Mount the panels", status: "pending", ev: [],
+        meta: [{ glyph: "\u21A9", color: "#5a8a6a", text: "after Inspection & labels", meta: "" },
+               { glyph: "\u25A6", color: "#525252", text: "due Mon \u00b7 Jun 30", meta: "" }] },
+      { num: "5", t: "Final walkthrough", status: "paused", ev: [], meta: [] },
+    ];
+  }
+
+  // ----- AUDIT node: hard-wired to blue600, paused collapses to pending -----
+  nodeAudit(status, g) {
+    if (status === "completed") return { bg: "#2563eb", bc: "#2563eb", bw: "2px", txt: "#ffffff", g: "\u2713" };
+    if (status === "in-progress") return { bg: "#ffffff", bc: "#2563eb", bw: "4px", txt: "#2563eb", g };
+    return { bg: "#ffffff", bc: "#0a0a0a", bw: "2px", txt: "#0a0a0a", g };
+  }
+  // ----- AUDIT status pill: the OTHER (state-palette) language -----
+  badgeAudit(status) {
+    if (status === "completed") return { bg: "#d4f4e7", label: "Done" };
+    if (status === "in-progress") return { bg: "#ffe50c", label: "Active" };
+    return { bg: "#e5e5e5", label: "Pending" }; // paused indistinguishable today
+  }
+  // ----- ONE language (the fix): node + word agree everywhere -----
+  nodeOne(status, g) {
+    if (status === "completed") return { bg: "#d4f4e7", bc: "#0a0a0a", bw: "2px", txt: "#0a0a0a", g: "\u2713" };
+    if (status === "in-progress") return { bg: "#ffe50c", bc: "#0a0a0a", bw: "2px", txt: "#0a0a0a", g };
+    if (status === "paused") return { bg: "#ede9fe", bc: "#0a0a0a", bw: "2px", txt: "#0a0a0a", g: "\u275A\u275A" };
+    return { bg: "#ffffff", bc: "#0a0a0a", bw: "2px", txt: "#0a0a0a", g };
+  }
+  word(status) {
+    if (status === "completed") return "Done";
+    if (status === "in-progress") return "Working";
+    if (status === "paused") return "Set aside";
+    return "To do";
+  }
+  wordColor(status) {
+    if (status === "completed") return "#5a8a6a";
+    if (status === "in-progress") return "#0a0a0a";
+    if (status === "paused") return "#7c5fcf";
+    return "#9a9a9a";
+  }
+  ledgerInk(status) {
+    return status === "paused" ? "#737373" : "#0a0a0a";
+  }
+
+  vm(s) {
+    const kids = (s.kids || []).map((k) => ({
+      t: k.t,
+      na: this.nodeAudit(k.status, k.let),
+      no: this.nodeOne(k.status, k.let),
+      badge: this.badgeAudit(k.status),
+      word: this.word(k.status),
+      wordColor: this.wordColor(k.status),
+      ledgerInk: this.ledgerInk(k.status),
+      cellA: k.status === "in-progress" ? "#fffbe0" : "#fff",
+    }));
+    const reached = s.status === "completed";
+    return {
+      t: s.t,
+      na: this.nodeAudit(s.status, s.num),
+      no: this.nodeOne(s.status, s.num),
+      badge: this.badgeAudit(s.status),
+      word: this.word(s.status),
+      wordColor: this.wordColor(s.status),
+      ledgerInk: this.ledgerInk(s.status),
+      connAudit: reached ? "#2563eb" : "#cfcfcf",
+      connOne: (s.status === "completed" || s.status === "in-progress") ? "#0a0a0a" : "#cfcfcf",
+      cellA: s.status === "in-progress" ? "#fffbe0" : "#fff",
+      audOpen: !!s.audOpen,
+      ev: s.ev || [],
+      hasEv: (s.ev || []).length > 0,
+      meta: s.meta || [],
+      hasMeta: (s.meta || []).length > 0,
+      kids,
+      hasKids: kids.length > 0,
+    };
+  }
+
+  renderVals() {
+    return {
+      rows: this.base().map((s) => this.vm(s)),
+      counts: [
+        { n: 3, label: "done", color: "#d4f4e7" },
+        { n: 1, label: "in motion", color: "#ffe50c" },
+        { n: 3, label: "to come", color: "#ffffff" },
+        { n: 1, label: "set aside", color: "#ede9fe" },
+      ],
+      flags: [
+        { n: "1", title: "Two color languages", body: "The node is hard-wired to blue \u2014 completed fills blue, in-progress rings blue \u2014 while the status pill speaks the state palette (green / yellow / grey). They don't even agree on \u201ccompleted.\u201d Reconcile onto the one state-color language." },
+        { n: "2", title: "A verdict over a set-aside step", body: "\u201c3 of 8 completed\u201d keeps every step in the denominator (good), but a paused step sitting under one ratio reads as a judgment on the step you deliberately set down. The progress read must stay honest, not punitive." },
+        { n: "3", title: "Set-aside is invisible", body: "Today the timeline has no \u201cpaused\u201d \u2014 a set-aside step renders as a plain numbered \u201cPending\u201d node, indistinguishable from work not yet started. The state needs a word, not colour alone." },
+        { n: "4", title: "No room for E\u00b7C\u00b7B", body: "Since Focus now delegates the overview here, this screen must hold states, dependencies (\u201cafter\u2026\u201d), and planning dates at a glance \u2014 but today a step shows only a pill, a title, and an evidence drawer. Nowhere for the truth-lines to ride." },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

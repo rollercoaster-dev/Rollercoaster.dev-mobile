@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wght@700;800;900&family=Instrument+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+</style>
+</helmet>
+
+<div style="font-family:'Instrument Sans',system-ui,sans-serif; width:max-content; min-width:100%; min-height:100vh; box-sizing:border-box; padding:48px; background:#e5e5e5; color:#0a0a0a; display:flex; flex-direction:column; gap:46px;">
+
+  <!-- TITLE -->
+  <div style="max-width:780px;">
+    <div style="font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:#525252; margin-bottom:8px;">Badge Detail &middot; audit + directions</div>
+    <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:30px; line-height:1.06; margin-bottom:10px;">The payoff screen for a finished goal &mdash; make the artifact the hero, the proof the spine</div>
+    <div style="font-size:14.5px; line-height:1.55; color:#404040;">Today the badge <em>floats</em> over a long utilitarian scroll: title, info card (About / How earned / Details), <strong>three</strong> export buttons + a caption, View timeline, Delete &mdash; all flat, same weight. Three directions that hold the same line: <strong>celebrate the badge, make the evidence the spine, collapse exports into one confident Share, demote Delete, keep the credential legible, and degrade gracefully.</strong></div>
+  </div>
+
+  <!-- ============================ AUDIT ============================ -->
+  <div>
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:18px;">
+      <span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:13px; letter-spacing:0.04em; background:#0a0a0a; color:#fff; padding:4px 10px; border-radius:3px;">AUDIT</span>
+      <span style="font-size:15px; font-weight:700;">The screen today &mdash; faithfully, both a decorated and a degraded badge</span>
+    </div>
+    <div style="display:flex; gap:36px; align-items:flex-start;">
+
+      <!-- AUDIT: decorated state -->
+      <div style="flex:none; width:316px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:10px;">BadgeDetailScreen (today) &middot; decorated</div>
+        <div style="width:316px; background:#fafafa; border:3px solid #0a0a0a; border-radius:34px; box-shadow:6px 6px 0 rgba(10,10,10,0.22); overflow:hidden; position:relative;">
+          <!-- status bar -->
+          <div style="height:28px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font-family:'DM Mono',monospace; font-size:11px;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+          <!-- purple band w/ only back arrow -->
+          <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; padding:10px 14px; height:46px; display:flex; align-items:center;"><span style="font-size:18px;">&larr;</span></div>
+          <!-- floating badge overlay -->
+          <div style="display:flex; justify-content:center; margin-top:-6px; padding:14px 0 6px;">
+            <div style="background:#fff; border:2px solid #0a0a0a; box-shadow:4px 4px 0 rgba(10,10,10,0.85); padding:14px;">
+              <div style="position:relative; width:104px; height:104px;">
+                <div style="width:104px; height:104px; border-radius:50%; background:#2563eb; border:3px solid #0a0a0a; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center;">
+                  <svg width="44" height="44" viewBox="0 0 24 24" fill="#fff"><path d="M13 2 L4 14 L11 14 L9 22 L20 9 L13 9 Z"/></svg>
+                </div>
+                <div style="position:absolute; left:50%; bottom:-7px; transform:translateX(-50%); background:#ffe50c; border:2px solid #0a0a0a; box-shadow:1.5px 1.5px 0 rgba(10,10,10,0.85); padding:2px 9px; font-family:'DM Mono',monospace; font-size:9px; font-weight:600; white-space:nowrap;">REWIRED</div>
+              </div>
+            </div>
+          </div>
+          <!-- scroll content -->
+          <div style="padding:8px 15px 16px; display:flex; flex-direction:column; gap:14px;">
+            <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:19px; text-align:center; line-height:1.1;">Rewire the workshop</div>
+            <div style="display:flex; align-items:center; justify-content:center; gap:8px;"><span style="font-size:15px;">&#9889;</span><span style="width:13px; height:13px; border-radius:50%; background:#a78bfa; border:1.5px solid #0a0a0a;"></span></div>
+            <div style="font-size:13px; color:#737373; text-align:center;">Earned Jun 18, 2026</div>
+            <!-- info card -->
+            <div style="background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:14px; display:flex; flex-direction:column; gap:18px;">
+              <div>
+                <div style="font-family:'DM Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.07em; color:#9a9a9a; margin-bottom:6px;">About</div>
+                <div style="font-size:12.5px; line-height:1.5;">Bring the whole shop up to code and finally run power to the bench.</div>
+              </div>
+              <div>
+                <div style="font-family:'DM Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.07em; color:#9a9a9a; margin-bottom:6px;">How it was earned</div>
+                <div style="font-size:12.5px; line-height:1.5; margin-bottom:9px;">Completed every step with evidence, from planning through final inspection.</div>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                  <div style="display:flex; align-items:flex-start; gap:9px;"><span style="font-size:15px; line-height:1.3;">&#128221;</span><div><div style="font-size:12.5px;">Plan layout &amp; load</div><div style="font-size:10.5px; color:#737373;">Note</div></div></div>
+                  <div style="display:flex; align-items:flex-start; gap:9px;"><span style="font-size:15px; line-height:1.3;">&#128247;</span><div><div style="font-size:12.5px;">Wire the circuits</div><div style="font-size:10.5px; color:#737373;">Photo</div></div></div>
+                  <div style="display:flex; align-items:flex-start; gap:9px;"><span style="font-size:15px; line-height:1.3;">&#127916;</span><div><div style="font-size:12.5px;">Inspection walk-through</div><div style="font-size:10.5px; color:#737373;">Video</div></div></div>
+                </div>
+              </div>
+              <div>
+                <div style="font-family:'DM Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.07em; color:#9a9a9a; margin-bottom:6px;">Details</div>
+                <div style="font-size:12.5px; line-height:1.5;">Created May 2, 2026</div>
+              </div>
+            </div>
+            <!-- view timeline -->
+            <div style="height:42px; background:#fff; border:3px solid #0a0a0a; border-radius:4px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:13.5px; font-weight:700;">View timeline</div>
+            <!-- export card -->
+            <div style="background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:14px; display:flex; flex-direction:column; gap:9px;">
+              <div style="font-family:'DM Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.07em; color:#9a9a9a; margin-bottom:1px;">Export</div>
+              <div style="height:40px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:12.5px; font-weight:700;">Export verifiable badge</div>
+              <div style="height:40px; background:#fff; border:3px solid #0a0a0a; border-radius:4px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:12.5px; font-weight:700;">Export credential</div>
+              <div style="height:40px; background:#fff; border:3px solid #0a0a0a; border-radius:4px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:12.5px; font-weight:700;">Save as image</div>
+              <div style="font-size:11px; line-height:1.45; color:#737373;">Saving as image may strip the verifiable credential. Use &ldquo;verifiable badge&rdquo; to keep it provable.</div>
+            </div>
+            <!-- delete -->
+            <div style="height:42px; background:#fff; border:3px solid #dc2626; border-radius:4px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#dc2626; font-size:13.5px; font-weight:700;">Delete badge</div>
+          </div>
+        </div>
+        <div style="font-size:12px; line-height:1.5; color:#737373; margin-top:12px; max-width:316px;">Faithful: badge floats over the band (no header title), then one flat column. The evidence list &mdash; the heart of the app &mdash; is a sub-block <em>below</em> About. Three exports + caption, then Delete sits at the same weight as everything else.</div>
+      </div>
+
+      <!-- AUDIT: degraded state -->
+      <div style="flex:none; width:316px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:10px;">Today &middot; degraded (undesigned + soft-deleted goal)</div>
+        <div style="width:316px; background:#fafafa; border:3px solid #0a0a0a; border-radius:34px; box-shadow:6px 6px 0 rgba(10,10,10,0.22); overflow:hidden;">
+          <div style="height:28px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font-family:'DM Mono',monospace; font-size:11px;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+          <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; padding:10px 14px; height:46px; display:flex; align-items:center;"><span style="font-size:18px;">&larr;</span></div>
+          <!-- fallback: initial on purple -->
+          <div style="display:flex; justify-content:center; margin-top:-6px; padding:14px 0 6px;">
+            <div style="background:#fff; border:2px solid #0a0a0a; box-shadow:4px 4px 0 rgba(10,10,10,0.85); padding:14px;">
+              <div style="width:104px; height:104px; border-radius:6px; background:#a78bfa; border:3px solid #0a0a0a; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center;">
+                <span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:52px; color:#fafafa;">S</span>
+              </div>
+            </div>
+          </div>
+          <div style="padding:8px 15px 16px; display:flex; flex-direction:column; gap:14px;">
+            <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:19px; text-align:center; line-height:1.1;">Sort the spare room</div>
+            <div style="font-size:13px; color:#737373; text-align:center;">Earned Jun 1, 2026</div>
+            <div style="background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:14px; display:flex; flex-direction:column; gap:14px;">
+              <div>
+                <div style="font-family:'DM Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.07em; color:#9a9a9a; margin-bottom:6px;">Details</div>
+                <div style="font-size:12.5px; line-height:1.5;">Created May 28, 2026</div>
+              </div>
+              <div style="font-size:11.5px; line-height:1.5; color:#a3a3a3; font-style:italic;">No description, no credential narrative, and no evidence list &mdash; the card collapses to a lone &ldquo;Details&rdquo; block.</div>
+            </div>
+            <!-- no view timeline (goal soft-deleted) -->
+            <div style="background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:14px; display:flex; flex-direction:column; gap:9px;">
+              <div style="font-family:'DM Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.07em; color:#9a9a9a;">Export</div>
+              <div style="height:40px; background:#dbe7ff; border:3px solid #b9c8e8; border-radius:4px; display:flex; align-items:center; justify-content:center; color:#9bb0d8; font-size:12.5px; font-weight:700;">Export verifiable badge</div>
+              <div style="height:40px; background:#f3f3f3; border:3px solid #d4d4d4; border-radius:4px; display:flex; align-items:center; justify-content:center; color:#b0b0b0; font-size:12.5px; font-weight:700;">Export credential</div>
+              <div style="height:40px; background:#f3f3f3; border:3px solid #d4d4d4; border-radius:4px; display:flex; align-items:center; justify-content:center; color:#b0b0b0; font-size:12.5px; font-weight:700;">Save as image</div>
+            </div>
+            <div style="height:42px; background:#fff; border:3px solid #dc2626; border-radius:4px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#dc2626; font-size:13.5px; font-weight:700;">Delete badge</div>
+          </div>
+        </div>
+        <div style="font-size:12px; line-height:1.5; color:#737373; margin-top:12px; max-width:316px;">No design &rarr; the goal&rsquo;s initial on a purple tile. Soft-deleted goal &rarr; <strong>no View timeline</strong>. No real image &rarr; exports disabled (greyed). The redesign must assume <em>any</em> of these can be missing.</div>
+      </div>
+
+      <!-- AUDIT: friction flags -->
+      <div style="flex:none; width:330px; display:flex; flex-direction:column; gap:13px;">
+        <div style="background:#fff; border:3px solid #d97706; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:15px;">
+          <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.07em; color:#d97706; margin-bottom:9px;">&#9888; Friction &middot; tied to the brief</div>
+          <div style="display:flex; flex-direction:column; gap:11px; font-size:12.5px; line-height:1.5; color:#1a1a1a;">
+            <div><strong>1 &middot; The hero is buried.</strong> The artifact floats, then a long utilitarian scroll follows. The payoff of a whole goal reads like a settings page.</div>
+            <div><strong>2 &middot; The proof is demoted.</strong> Evidence &mdash; the heart of the app &mdash; is one block <em>under</em> About inside a shared card, not the spine.</div>
+            <div><strong>3 &middot; Three exports + a caption.</strong> Near-identical actions = decision load for this audience. No single confident share.</div>
+            <div><strong>4 &middot; Flat hierarchy.</strong> View timeline, 3 exports, Delete are all stacked same-weight buttons. Delete shouldn&rsquo;t sit beside Share.</div>
+            <div><strong>5 &middot; Degraded states are bare.</strong> Undesigned, no narrative, soft-deleted goal &mdash; the page just drops blocks with no celebration left.</div>
+            <div><strong>6 &middot; The credential is invisible.</strong> &ldquo;Verifiable, portable&rdquo; &mdash; the real differentiator &mdash; lives only inside a button label and a caption.</div>
+          </div>
+        </div>
+        <div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:14px;">
+          <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.07em; color:#525252; margin-bottom:8px;">The frame</div>
+          <div style="font-size:12.5px; line-height:1.55; color:#404040;">Badge = celebrated hero. Evidence = the spine. Three exports &rarr; one confident <strong>Share</strong> (rest tucked away). <strong>Delete</strong> out of the primary set. Keep <strong>View timeline</strong> as the bridge back. Surface the credential as trust. Stay unmistakably Full Ride.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================ DIRECTION A ============================ -->
+  <div>
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+      <span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:13px; letter-spacing:0.04em; background:#2563eb; color:#fff; padding:4px 10px; border-radius:3px;">DIRECTION A</span>
+      <span style="font-size:15px; font-weight:700;">Trophy hero + proof spine, share-first</span>
+    </div>
+    <div style="font-size:13.5px; color:#525252; max-width:700px; margin-bottom:18px; line-height:1.5;">The badge sits on a <strong>celebration panel</strong> (purple, ink confetti) with a <em>verified-credential</em> chip right under it. Below, the evidence becomes <strong>THE PROOF</strong> &mdash; a vertical spine of evidence rows. One primary <strong>Share</strong> button; everything else (other exports, View timeline) is quiet, and <strong>Delete lives in the header &#8943; menu.</strong></div>
+    <div style="display:flex; gap:36px; align-items:flex-start;">
+
+      <!-- A1: the rethought scroll -->
+      <div style="flex:none; width:316px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:10px;">Hero &rarr; proof spine &rarr; share</div>
+        <div style="width:316px; background:#fafafa; border:3px solid #0a0a0a; border-radius:34px; box-shadow:6px 6px 0 rgba(10,10,10,0.22); overflow:hidden;">
+          <div style="height:28px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font-family:'DM Mono',monospace; font-size:11px;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+          <!-- celebration hero panel -->
+          <div style="position:relative; background:#a78bfa; border-bottom:3px solid #0a0a0a; padding:12px 14px 26px;">
+            <div style="display:flex; align-items:center; justify-content:space-between;"><span style="font-size:18px;">&larr;</span><span style="font-size:18px; font-weight:700; letter-spacing:1px;">&#8943;</span></div>
+            <!-- confetti ticks -->
+            <div style="position:absolute; top:44px; left:30px; font-size:13px; color:#0a0a0a; opacity:0.5;">&#10022;</div>
+            <div style="position:absolute; top:64px; right:38px; font-size:11px; color:#0a0a0a; opacity:0.5;">&#9670;</div>
+            <div style="position:absolute; top:120px; left:40px; font-size:10px; color:#0a0a0a; opacity:0.45;">&#10022;</div>
+            <div style="position:absolute; top:128px; right:34px; font-size:13px; color:#0a0a0a; opacity:0.45;">&#10022;</div>
+            <div style="display:flex; justify-content:center; margin-top:10px;">
+              <div style="position:relative; width:126px; height:126px;">
+                <div style="width:126px; height:126px; border-radius:50%; background:#2563eb; border:3px solid #0a0a0a; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center;">
+                  <svg width="52" height="52" viewBox="0 0 24 24" fill="#fff"><path d="M13 2 L4 14 L11 14 L9 22 L20 9 L13 9 Z"/></svg>
+                </div>
+                <div style="position:absolute; left:50%; bottom:-9px; transform:translateX(-50%); background:#ffe50c; border:2px solid #0a0a0a; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:3px 11px; font-family:'DM Mono',monospace; font-size:10px; font-weight:600; white-space:nowrap;">REWIRED</div>
+              </div>
+            </div>
+            <div style="text-align:center; margin-top:20px;">
+              <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:21px; line-height:1.1; color:#0a0a0a;">Rewire the workshop</div>
+              <div style="font-family:'DM Mono',monospace; font-size:11px; color:#0a0a0a; opacity:0.7; margin-top:5px;">EARNED JUN 18, 2026</div>
+            </div>
+            <!-- verified chip -->
+            <div style="display:flex; justify-content:center; margin-top:13px;">
+              <div style="display:inline-flex; align-items:center; gap:6px; background:#d4f4e7; border:2px solid #0a0a0a; border-radius:9999px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:4px 11px;"><span style="color:#059669; font-size:13px; font-weight:700;">&#10003;</span><span style="font-size:11.5px; font-weight:700;">Verifiable credential</span></div>
+            </div>
+          </div>
+          <!-- proof spine -->
+          <div style="padding:18px 16px 16px;">
+            <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:14px; letter-spacing:0.02em; margin-bottom:3px;">THE PROOF</div>
+            <div style="font-size:12px; color:#737373; line-height:1.5; margin-bottom:14px;">Every step, completed with evidence.</div>
+            <!-- spine -->
+            <div style="position:relative; padding-left:6px;">
+              <div style="display:flex; flex-direction:column; gap:0;">
+                <!-- row -->
+                <div style="display:flex; gap:12px;">
+                  <div style="display:flex; flex-direction:column; align-items:center; width:30px;">
+                    <div style="width:30px; height:30px; border-radius:50%; background:#fff; border:3px solid #0a0a0a; box-shadow:1.5px 1.5px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:14px;">&#128221;</div>
+                    <div style="width:3px; flex:1; background:#0a0a0a; margin:2px 0;"></div>
+                  </div>
+                  <div style="padding-bottom:14px;"><div style="font-size:13px; font-weight:600;">Plan layout &amp; load</div><div style="font-family:'DM Mono',monospace; font-size:10px; color:#737373; margin-top:2px;">NOTE</div></div>
+                </div>
+                <div style="display:flex; gap:12px;">
+                  <div style="display:flex; flex-direction:column; align-items:center; width:30px;">
+                    <div style="width:30px; height:30px; border-radius:50%; background:#fff; border:3px solid #0a0a0a; box-shadow:1.5px 1.5px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:14px;">&#128247;</div>
+                    <div style="width:3px; flex:1; background:#0a0a0a; margin:2px 0;"></div>
+                  </div>
+                  <div style="padding-bottom:14px;"><div style="font-size:13px; font-weight:600;">Wire the circuits</div><div style="font-family:'DM Mono',monospace; font-size:10px; color:#737373; margin-top:2px;">PHOTO</div></div>
+                </div>
+                <div style="display:flex; gap:12px;">
+                  <div style="display:flex; flex-direction:column; align-items:center; width:30px;">
+                    <div style="width:30px; height:30px; border-radius:50%; background:#ffe50c; border:3px solid #0a0a0a; box-shadow:1.5px 1.5px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:14px;">&#127916;</div>
+                  </div>
+                  <div><div style="font-size:13px; font-weight:600;">Inspection walk-through</div><div style="font-family:'DM Mono',monospace; font-size:10px; color:#737373; margin-top:2px;">VIDEO &middot; FINAL</div></div>
+                </div>
+              </div>
+            </div>
+            <!-- about, demoted to a quiet line -->
+            <div style="margin-top:18px; padding-top:14px; border-top:2px solid #ececec; font-size:12px; line-height:1.55; color:#525252;"><span style="font-family:'DM Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.07em; color:#9a9a9a;">About</span><br>Bring the whole shop up to code and finally run power to the bench.</div>
+          </div>
+          <!-- action zone -->
+          <div style="padding:4px 16px 18px; display:flex; flex-direction:column; gap:10px;">
+            <div style="height:48px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; gap:8px; color:#fff; font-size:15px; font-weight:700;"><span style="font-size:16px;">&#8682;</span> Share badge</div>
+            <div style="display:flex; gap:10px;">
+              <div style="flex:1; height:40px; background:#fff; border:3px solid #0a0a0a; border-radius:4px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:12.5px; font-weight:700;">View timeline</div>
+              <div style="flex:none; width:48px; height:40px; background:#fff; border:3px solid #0a0a0a; border-radius:4px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:700;">&#8943;</div>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:12px; line-height:1.5; color:#737373; margin-top:12px; max-width:316px;"><strong>1</strong> badge on a celebration panel; <strong>2</strong> evidence is the literal spine; <strong>3+4</strong> one Share, View timeline quiet, Delete gone from the column; <strong>6</strong> verified chip under the badge.</div>
+      </div>
+
+      <!-- A2: share sheet + overflow -->
+      <div style="flex:none; width:316px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:10px;">Share sheet &middot; the other exports live here</div>
+        <div style="width:316px; background:#fafafa; border:3px solid #0a0a0a; border-radius:34px; box-shadow:6px 6px 0 rgba(10,10,10,0.22); overflow:hidden; position:relative;">
+          <div style="filter:brightness(0.94);"><div style="height:28px; background:#ffe50c; border-bottom:3px solid #0a0a0a;"></div><div style="height:150px; background:#a78bfa;"></div></div>
+          <div style="background:#fafafa; border-top:3px solid #0a0a0a; border-top-left-radius:16px; border-top-right-radius:16px; padding:16px; margin-top:-14px; position:relative;">
+            <div style="width:40px; height:4px; background:#d4d4d4; border-radius:2px; margin:0 auto 14px;"></div>
+            <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:17px; margin-bottom:3px;">Share this badge</div>
+            <div style="font-size:12px; color:#737373; line-height:1.5; margin-bottom:15px;">The verifiable file keeps your proof provable. The others are for convenience.</div>
+            <!-- primary -->
+            <div style="background:#2563eb; border:3px solid #0a0a0a; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px 14px; margin-bottom:12px;">
+              <div style="display:flex; align-items:center; gap:9px; margin-bottom:5px;"><span style="font-size:16px;">&#9733;</span><span style="font-size:14px; font-weight:700; color:#fff;">Share verifiable badge</span></div>
+              <div style="font-size:11px; line-height:1.45; color:#dbe7ff;">A PNG that carries the OB&nbsp;3.0 credential &mdash; anyone can verify it.</div>
+            </div>
+            <!-- secondary group -->
+            <div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); overflow:hidden;">
+              <div style="display:flex; align-items:center; gap:10px; padding:12px 13px; border-bottom:2px solid #ececec;"><span style="font-size:15px;">&#123;&#125;</span><div style="flex:1;"><div style="font-size:13px; font-weight:600;">Export credential</div><div style="font-size:10.5px; color:#737373;">The raw JSON, for verifiers.</div></div></div>
+              <div style="display:flex; align-items:center; gap:10px; padding:12px 13px;"><span style="font-size:15px;">&#128247;</span><div style="flex:1;"><div style="font-size:13px; font-weight:600;">Save as image</div><div style="font-size:10.5px; color:#d97706;">Plain picture &mdash; may drop the credential.</div></div></div>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:12px; line-height:1.5; color:#737373; margin-top:12px; max-width:316px;"><strong>3</strong> One confident primary; the JSON + lossy paths drop into a sheet with the trade-off spelled out as a sentence, not a caption under three identical buttons.</div>
+      </div>
+
+      <!-- A: overflow menu detail -->
+      <div style="flex:none; width:280px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:10px;">Header &#8943; &middot; where Delete goes</div>
+        <div style="background:#fff; border:3px solid #0a0a0a; border-radius:8px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); overflow:hidden; width:230px;">
+          <div style="display:flex; align-items:center; gap:10px; padding:13px 14px; border-bottom:2px solid #ececec;"><span style="font-size:15px;">&#9733;</span><span style="font-size:13px; font-weight:600;">Share badge</span></div>
+          <div style="display:flex; align-items:center; gap:10px; padding:13px 14px; border-bottom:2px solid #ececec;"><span style="font-size:15px;">&#123;&#125;</span><span style="font-size:13px; font-weight:600;">Export credential</span></div>
+          <div style="display:flex; align-items:center; gap:10px; padding:13px 14px;"><span style="font-size:15px; color:#dc2626;">&#9851;</span><span style="font-size:13px; font-weight:700; color:#dc2626;">Delete badge</span></div>
+        </div>
+        <div style="font-size:12px; line-height:1.5; color:#737373; margin-top:12px; max-width:280px;"><strong>4</strong> Delete is demoted into the header overflow with a confirm &mdash; reachable, but never sitting at the same weight as Share. The undesigned/soft-deleted states keep the hero + proof spine; only the missing pieces drop, so it still feels like a payoff.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================ DIRECTION B ============================ -->
+  <div>
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+      <span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:13px; letter-spacing:0.04em; background:#2563eb; color:#fff; padding:4px 10px; border-radius:3px;">DIRECTION B</span>
+      <span style="font-size:15px; font-weight:700;">The verifiable certificate &mdash; evidence as the journey</span>
+    </div>
+    <div style="font-size:13.5px; color:#525252; max-width:700px; margin-bottom:18px; line-height:1.5;">The whole screen is the <strong>credential</strong>. The badge sits in a framed certificate card with a perforated tear edge; the evidence renders as the <strong>journey timeline</strong> (the same dotted spine users saw while working) &mdash; &ldquo;how it was earned&rdquo; <em>is</em> the journey. A <strong>verification seal</strong> footer makes the credential the loudest trust signal, and a single pinned <strong>Share</strong> bar sits at the bottom.</div>
+    <div style="display:flex; gap:36px; align-items:flex-start;">
+
+      <!-- B1: certificate scroll -->
+      <div style="flex:none; width:316px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:10px;">Certificate &rarr; journey &rarr; seal</div>
+        <div style="width:316px; background:#fafafa; border:3px solid #0a0a0a; border-radius:34px; box-shadow:6px 6px 0 rgba(10,10,10,0.22); overflow:hidden;">
+          <div style="height:28px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font-family:'DM Mono',monospace; font-size:11px;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+          <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; padding:10px 14px; height:46px; display:flex; align-items:center; justify-content:space-between;"><span style="font-size:18px;">&larr;</span><span style="font-size:18px; font-weight:700;">&#8943;</span></div>
+          <div style="padding:18px 16px 16px;">
+            <!-- certificate card -->
+            <div style="background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); overflow:hidden;">
+              <div style="padding:20px 16px 16px; text-align:center;">
+                <div style="font-family:'DM Mono',monospace; font-size:9.5px; letter-spacing:0.15em; color:#9a9a9a; margin-bottom:14px;">CERTIFICATE OF COMPLETION</div>
+                <div style="display:flex; justify-content:center; margin-bottom:16px;">
+                  <div style="position:relative; width:120px; height:120px;">
+                    <div style="width:120px; height:120px; border-radius:50%; background:#2563eb; border:3px solid #0a0a0a; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center;">
+                      <svg width="50" height="50" viewBox="0 0 24 24" fill="#fff"><path d="M13 2 L4 14 L11 14 L9 22 L20 9 L13 9 Z"/></svg>
+                    </div>
+                    <div style="position:absolute; left:50%; bottom:-8px; transform:translateX(-50%); background:#ffe50c; border:2px solid #0a0a0a; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:3px 11px; font-family:'DM Mono',monospace; font-size:10px; font-weight:600; white-space:nowrap;">REWIRED</div>
+                  </div>
+                </div>
+                <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:20px; line-height:1.1; margin-top:8px;">Rewire the workshop</div>
+                <div style="font-family:'DM Mono',monospace; font-size:11px; color:#737373; margin-top:6px;">EARNED JUN 18, 2026</div>
+              </div>
+              <!-- perforated tear edge -->
+              <div style="border-top:2px dashed #c8c8c8; margin:0 14px;"></div>
+              <!-- journey spine inside the certificate -->
+              <div style="padding:16px;">
+                <div style="font-family:'DM Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.07em; color:#9a9a9a; margin-bottom:13px;">How it was earned</div>
+                <div style="display:flex; flex-direction:column;">
+                  <div style="display:flex; gap:11px;">
+                    <div style="display:flex; flex-direction:column; align-items:center; width:18px;"><div style="width:14px; height:14px; border-radius:50%; background:#059669; border:2.5px solid #0a0a0a;"></div><div style="width:2.5px; flex:1; background:#0a0a0a;"></div></div>
+                    <div style="padding-bottom:13px;"><div style="font-size:12.5px; font-weight:600;">Plan layout &amp; load</div><div style="display:inline-flex; align-items:center; gap:4px; margin-top:3px; background:#ede9fe; border:1.5px solid #0a0a0a; border-radius:9999px; padding:1px 7px; font-size:10px;">&#128221; Note</div></div>
+                  </div>
+                  <div style="display:flex; gap:11px;">
+                    <div style="display:flex; flex-direction:column; align-items:center; width:18px;"><div style="width:14px; height:14px; border-radius:50%; background:#059669; border:2.5px solid #0a0a0a;"></div><div style="width:2.5px; flex:1; background:#0a0a0a;"></div></div>
+                    <div style="padding-bottom:13px;"><div style="font-size:12.5px; font-weight:600;">Wire the circuits</div><div style="display:inline-flex; align-items:center; gap:4px; margin-top:3px; background:#ede9fe; border:1.5px solid #0a0a0a; border-radius:9999px; padding:1px 7px; font-size:10px;">&#128247; Photo</div></div>
+                  </div>
+                  <div style="display:flex; gap:11px;">
+                    <div style="display:flex; flex-direction:column; align-items:center; width:18px;"><div style="width:14px; height:14px; border-radius:50%; background:#059669; border:2.5px solid #0a0a0a;"></div></div>
+                    <div><div style="font-size:12.5px; font-weight:600;">Inspection walk-through</div><div style="display:inline-flex; align-items:center; gap:4px; margin-top:3px; background:#ede9fe; border:1.5px solid #0a0a0a; border-radius:9999px; padding:1px 7px; font-size:10px;">&#127916; Video</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- verification seal footer -->
+            <div style="margin-top:14px; background:#d4f4e7; border:3px solid #0a0a0a; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px 14px; display:flex; align-items:center; gap:11px;">
+              <div style="flex:none; width:38px; height:38px; border-radius:50%; background:#fff; border:2.5px solid #059669; display:flex; align-items:center; justify-content:center; color:#059669; font-size:19px; font-weight:700;">&#10003;</div>
+              <div style="flex:1;"><div style="font-size:12.5px; font-weight:700;">Verifiable credential</div><div style="font-size:10.5px; color:#3d6b56; line-height:1.4;">Open Badges 3.0 &middot; provable, portable, yours.</div></div>
+              <span style="font-family:'DM Mono',monospace; font-size:10px; color:#059669; font-weight:700;">view</span>
+            </div>
+            <!-- view timeline link -->
+            <div style="margin-top:14px; text-align:center;"><span style="font-size:13px; font-weight:700; border-bottom:2px solid #0a0a0a; padding-bottom:2px;">View the full timeline &rarr;</span></div>
+          </div>
+          <!-- pinned share bar -->
+          <div style="border-top:3px solid #0a0a0a; background:#fafafa; padding:12px 16px;">
+            <div style="height:48px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; gap:8px; color:#fff; font-size:15px; font-weight:700;"><span style="font-size:16px;">&#8682;</span> Share certificate</div>
+          </div>
+        </div>
+        <div style="font-size:12px; line-height:1.5; color:#737373; margin-top:12px; max-width:316px;"><strong>1</strong> the badge is framed as a certificate; <strong>2</strong> evidence is the journey spine, inside the credential; <strong>6</strong> the green seal is the loudest element after the badge.</div>
+      </div>
+
+      <!-- B2: verification detail -->
+      <div style="flex:none; width:316px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:10px;">Tap the seal &middot; what&rsquo;s provable</div>
+        <div style="width:316px; background:#fafafa; border:3px solid #0a0a0a; border-radius:34px; box-shadow:6px 6px 0 rgba(10,10,10,0.22); overflow:hidden; position:relative;">
+          <div style="filter:brightness(0.94);"><div style="height:28px; background:#ffe50c; border-bottom:3px solid #0a0a0a;"></div><div style="height:120px; background:#a78bfa;"></div></div>
+          <div style="background:#fafafa; border-top:3px solid #0a0a0a; border-top-left-radius:16px; border-top-right-radius:16px; padding:16px; margin-top:-14px;">
+            <div style="width:40px; height:4px; background:#d4d4d4; border-radius:2px; margin:0 auto 14px;"></div>
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;"><div style="flex:none; width:38px; height:38px; border-radius:50%; background:#fff; border:2.5px solid #059669; display:flex; align-items:center; justify-content:center; color:#059669; font-size:19px; font-weight:700;">&#10003;</div><div><div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:16px;">Verifiable credential</div><div style="font-size:11px; color:#737373;">Anyone you send it to can confirm:</div></div></div>
+            <div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); overflow:hidden; margin-bottom:14px;">
+              <div style="display:flex; justify-content:space-between; padding:10px 13px; border-bottom:2px solid #ececec; font-size:12px;"><span style="color:#737373;">Achievement</span><span style="font-weight:600;">Rewire the workshop</span></div>
+              <div style="display:flex; justify-content:space-between; padding:10px 13px; border-bottom:2px solid #ececec; font-size:12px;"><span style="color:#737373;">Issued</span><span style="font-weight:600; font-family:'DM Mono',monospace; font-size:11px;">2026-06-18</span></div>
+              <div style="display:flex; justify-content:space-between; padding:10px 13px; border-bottom:2px solid #ececec; font-size:12px;"><span style="color:#737373;">Evidence</span><span style="font-weight:600;">3 items, all present</span></div>
+              <div style="display:flex; justify-content:space-between; padding:10px 13px; font-size:12px;"><span style="color:#737373;">Standard</span><span style="font-weight:600; font-family:'DM Mono',monospace; font-size:11px;">OB 3.0</span></div>
+            </div>
+            <div style="height:46px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; gap:8px; color:#fff; font-size:14px; font-weight:700;"><span style="font-size:15px;">&#8682;</span> Share verifiable badge</div>
+            <div style="margin-top:9px; text-align:center; font-size:11px; color:#737373;">or export the raw credential &middot; save as plain image</div>
+          </div>
+        </div>
+        <div style="font-size:12px; line-height:1.5; color:#737373; margin-top:12px; max-width:316px;"><strong>6</strong> The credential stops being a button label. The seal opens a plain-language &ldquo;what a verifier sees,&rdquo; and the same one Share + tucked-away exports live here. <strong>3</strong></div>
+      </div>
+
+      <!-- B: degraded note -->
+      <div style="flex:none; width:300px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:10px;">Degraded &middot; honest, not broken</div>
+        <div style="width:300px; background:#fafafa; border:3px solid #0a0a0a; border-radius:18px; box-shadow:4px 4px 0 rgba(10,10,10,0.18); overflow:hidden; padding:16px;">
+          <div style="background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:16px; text-align:center;">
+            <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.15em; color:#9a9a9a; margin-bottom:12px;">CERTIFICATE OF COMPLETION</div>
+            <div style="display:flex; justify-content:center; margin-bottom:12px;"><div style="width:96px; height:96px; border-radius:6px; background:#a78bfa; border:3px solid #0a0a0a; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:46px; color:#fafafa;">S</span></div></div>
+            <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:17px;">Sort the spare room</div>
+            <div style="font-family:'DM Mono',monospace; font-size:10px; color:#737373; margin-top:5px;">EARNED JUN 1, 2026</div>
+            <div style="margin-top:12px; padding-top:12px; border-top:2px dashed #c8c8c8; font-size:11.5px; color:#a3a3a3; font-style:italic; line-height:1.5;">No evidence recorded for this credential.</div>
+          </div>
+          <div style="margin-top:12px; background:#f4f4f4; border:2px solid #c8c8c8; border-radius:6px; padding:11px 13px; display:flex; align-items:center; gap:10px;"><span style="color:#9a9a9a; font-size:17px;">&#9673;</span><div style="font-size:11px; color:#737373; line-height:1.4;">Not independently verifiable &mdash; no baked credential.</div></div>
+        </div>
+        <div style="font-size:12px; line-height:1.5; color:#737373; margin-top:12px; max-width:300px;"><strong>5</strong> The certificate frame still holds. Undesigned &rarr; initial tile in the same frame; no credential &rarr; the seal becomes an honest grey &ldquo;not verifiable&rdquo; note instead of vanishing. Soft-deleted goal &rarr; the timeline link drops.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================ DIRECTION C ============================ -->
+  <div>
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+      <span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:13px; letter-spacing:0.04em; background:#2563eb; color:#fff; padding:4px 10px; border-radius:3px;">DIRECTION C</span>
+      <span style="font-size:15px; font-weight:700;">Celebration hero + a gallery of proof you can flick through</span>
+    </div>
+    <div style="font-size:13.5px; color:#525252; max-width:700px; margin-bottom:18px; line-height:1.5;">The loudest, most visual answer: a full yellow <strong>celebration</strong> top, the badge big, then the evidence as a <strong>horizontal gallery of proof cards</strong> &mdash; the photos/clips/notes you actually made, swipeable. One <strong>Share</strong> primary opens a sheet; <strong>View timeline</strong> is secondary; <strong>Delete</strong> is a faint text link at the very bottom.</div>
+    <div style="display:flex; gap:36px; align-items:flex-start;">
+
+      <!-- C1: celebration scroll -->
+      <div style="flex:none; width:316px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:10px;">Celebration &rarr; proof gallery</div>
+        <div style="width:316px; background:#fafafa; border:3px solid #0a0a0a; border-radius:34px; box-shadow:6px 6px 0 rgba(10,10,10,0.22); overflow:hidden;">
+          <div style="height:28px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font-family:'DM Mono',monospace; font-size:11px;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+          <!-- yellow celebration hero -->
+          <div style="position:relative; background:#ffe50c; border-bottom:3px solid #0a0a0a; padding:12px 14px 24px; overflow:hidden;">
+            <div style="display:flex; align-items:center; justify-content:space-between; position:relative; z-index:2;"><span style="font-size:18px;">&larr;</span><span style="font-size:18px; font-weight:700;">&#8943;</span></div>
+            <div style="position:absolute; top:40px; left:26px; font-size:15px; opacity:0.5;">&#10022;</div>
+            <div style="position:absolute; top:30px; right:40px; font-size:12px; opacity:0.55;">&#9670;</div>
+            <div style="position:absolute; bottom:60px; left:36px; font-size:12px; opacity:0.5;">&#9670;</div>
+            <div style="position:absolute; bottom:30px; right:28px; font-size:15px; opacity:0.5;">&#10022;</div>
+            <div style="display:flex; justify-content:center; margin-top:8px; position:relative; z-index:2;">
+              <div style="position:relative; width:134px; height:134px;">
+                <div style="width:134px; height:134px; border-radius:50%; background:#2563eb; border:3px solid #0a0a0a; box-shadow:5px 5px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center;">
+                  <svg width="56" height="56" viewBox="0 0 24 24" fill="#fff"><path d="M13 2 L4 14 L11 14 L9 22 L20 9 L13 9 Z"/></svg>
+                </div>
+                <div style="position:absolute; left:50%; bottom:-9px; transform:translateX(-50%); background:#fff; border:2px solid #0a0a0a; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:3px 11px; font-family:'DM Mono',monospace; font-size:10px; font-weight:600; white-space:nowrap;">REWIRED</div>
+              </div>
+            </div>
+            <div style="text-align:center; margin-top:20px; position:relative; z-index:2;">
+              <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:22px; line-height:1.08;">Rewire the workshop</div>
+              <div style="display:inline-flex; align-items:center; gap:6px; margin-top:10px; background:#fff; border:2px solid #0a0a0a; border-radius:9999px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:3px 10px;"><span style="color:#059669; font-size:12px; font-weight:700;">&#10003;</span><span style="font-size:10.5px; font-weight:700;">Verifiable &middot; earned Jun 18</span></div>
+            </div>
+          </div>
+          <!-- proof gallery -->
+          <div style="padding:16px 0 4px;">
+            <div style="display:flex; align-items:baseline; justify-content:space-between; padding:0 16px; margin-bottom:11px;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:14px;">THE PROOF</span><span style="font-family:'DM Mono',monospace; font-size:10px; color:#737373;">3 STEPS</span></div>
+            <div style="display:flex; gap:11px; padding:2px 16px 14px; overflow:hidden;">
+              <div style="flex:none; width:118px;">
+                <div style="width:118px; height:96px; background:#dbe7ff; border:3px solid #0a0a0a; border-radius:4px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:30px;">&#128247;</div>
+                <div style="font-size:11.5px; font-weight:600; margin-top:7px; line-height:1.25;">Wire the circuits</div>
+                <div style="font-family:'DM Mono',monospace; font-size:9px; color:#737373; margin-top:2px;">PHOTO</div>
+              </div>
+              <div style="flex:none; width:118px;">
+                <div style="width:118px; height:96px; background:#ede9fe; border:3px solid #0a0a0a; border-radius:4px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:30px;">&#127916;</div>
+                <div style="font-size:11.5px; font-weight:600; margin-top:7px; line-height:1.25;">Inspection walk</div>
+                <div style="font-family:'DM Mono',monospace; font-size:9px; color:#737373; margin-top:2px;">VIDEO</div>
+              </div>
+              <div style="flex:none; width:70px;">
+                <div style="width:70px; height:96px; background:#d4f4e7; border:3px solid #0a0a0a; border-radius:4px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:26px;">&#128221;</div>
+                <div style="font-size:11px; font-weight:600; margin-top:7px; line-height:1.2;">Plan</div>
+              </div>
+            </div>
+          </div>
+          <!-- about quiet -->
+          <div style="padding:6px 16px 4px;"><div style="font-size:12px; line-height:1.55; color:#525252;"><span style="font-family:'DM Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.07em; color:#9a9a9a;">About</span><br>Bring the whole shop up to code and finally run power to the bench.</div></div>
+          <!-- actions -->
+          <div style="padding:14px 16px 8px; display:flex; flex-direction:column; gap:10px;">
+            <div style="height:48px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; gap:8px; color:#fff; font-size:15px; font-weight:700;"><span style="font-size:16px;">&#8682;</span> Share badge</div>
+            <div style="height:42px; background:#fff; border:3px solid #0a0a0a; border-radius:4px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:13.5px; font-weight:700;">View timeline</div>
+          </div>
+          <!-- demoted delete -->
+          <div style="text-align:center; padding:8px 0 18px;"><span style="font-size:12px; color:#a3a3a3; border-bottom:1px solid #cfcfcf; padding-bottom:1px;">Delete badge</span></div>
+        </div>
+        <div style="font-size:12px; line-height:1.5; color:#737373; margin-top:12px; max-width:316px;"><strong>1</strong> a true celebration moment; <strong>2</strong> proof is a tactile gallery of what you made; <strong>4</strong> Share &gt; View timeline &gt; a faint Delete link, in clear order.</div>
+      </div>
+
+      <!-- C2: share sheet -->
+      <div style="flex:none; width:316px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:10px;">Share sheet &middot; one choice, then the rest</div>
+        <div style="width:316px; background:#fafafa; border:3px solid #0a0a0a; border-radius:34px; box-shadow:6px 6px 0 rgba(10,10,10,0.22); overflow:hidden; position:relative;">
+          <div style="filter:brightness(0.94);"><div style="height:28px; background:#ffe50c; border-bottom:3px solid #0a0a0a;"></div><div style="height:150px; background:#ffe50c; border-bottom:3px solid #0a0a0a;"></div></div>
+          <div style="background:#fafafa; border-top:3px solid #0a0a0a; border-top-left-radius:16px; border-top-right-radius:16px; padding:16px; margin-top:-14px;">
+            <div style="width:40px; height:4px; background:#d4d4d4; border-radius:2px; margin:0 auto 14px;"></div>
+            <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:17px; margin-bottom:3px;">Share &ldquo;Rewire the workshop&rdquo;</div>
+            <div style="font-size:12px; color:#737373; line-height:1.5; margin-bottom:15px;">Keep it provable, or just share the picture.</div>
+            <div style="background:#2563eb; border:3px solid #0a0a0a; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px 14px; margin-bottom:12px;">
+              <div style="display:flex; align-items:center; gap:9px; margin-bottom:5px;"><span style="font-size:16px;">&#9733;</span><span style="font-size:14px; font-weight:700; color:#fff;">Share verifiable badge</span><span style="margin-left:auto; background:#ffe50c; border:1.5px solid #0a0a0a; border-radius:9999px; font-family:'DM Mono',monospace; font-size:8.5px; font-weight:600; padding:1px 6px;">RECOMMENDED</span></div>
+              <div style="font-size:11px; line-height:1.45; color:#dbe7ff;">Carries the OB&nbsp;3.0 credential &mdash; provable forever.</div>
+            </div>
+            <div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); overflow:hidden;">
+              <div style="display:flex; align-items:center; gap:10px; padding:12px 13px; border-bottom:2px solid #ececec;"><span style="font-size:15px;">&#128247;</span><div style="flex:1;"><div style="font-size:13px; font-weight:600;">Save as image</div><div style="font-size:10.5px; color:#d97706;">Plain picture &mdash; may drop the credential.</div></div></div>
+              <div style="display:flex; align-items:center; gap:10px; padding:12px 13px;"><span style="font-size:15px;">&#123;&#125;</span><div style="flex:1;"><div style="font-size:13px; font-weight:600;">Export credential (JSON)</div><div style="font-size:10.5px; color:#737373;">For verifiers &amp; wallets.</div></div></div>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:12px; line-height:1.5; color:#737373; margin-top:12px; max-width:316px;"><strong>3</strong> The three exports become one recommended action + two clearly-labelled alternatives in a sheet &mdash; the trade-off is on each row, not in a caption.</div>
+      </div>
+
+      <!-- C: degraded note -->
+      <div style="flex:none; width:300px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:10px;">Degraded &middot; no proof to flick</div>
+        <div style="width:300px; background:#fafafa; border:3px solid #0a0a0a; border-radius:18px; box-shadow:4px 4px 0 rgba(10,10,10,0.18); overflow:hidden;">
+          <div style="background:#ffe50c; border-bottom:3px solid #0a0a0a; padding:18px 14px 22px; text-align:center;">
+            <div style="display:flex; justify-content:center;"><div style="width:96px; height:96px; border-radius:6px; background:#a78bfa; border:3px solid #0a0a0a; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:46px; color:#fafafa;">S</span></div></div>
+            <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:18px; margin-top:13px;">Sort the spare room</div>
+            <div style="font-family:'DM Mono',monospace; font-size:10px; color:#6b5e16; margin-top:5px;">EARNED JUN 1, 2026</div>
+          </div>
+          <div style="padding:16px;">
+            <div style="background:#f4f4f4; border:2px dashed #c8c8c8; border-radius:6px; padding:18px 14px; text-align:center; font-size:11.5px; color:#a3a3a3; font-style:italic; line-height:1.5;">No evidence was attached to this goal &mdash; nothing to show in the gallery.</div>
+            <div style="margin-top:14px; height:46px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px; font-weight:700;">Share badge</div>
+          </div>
+        </div>
+        <div style="font-size:12px; line-height:1.5; color:#737373; margin-top:12px; max-width:300px;"><strong>5</strong> Still a celebration. The gallery collapses to one honest empty card; the hero, the share, and (if the goal lives) View timeline carry the screen. Soft-deleted goal &rarr; no timeline link.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================ PICK ============================ -->
+  <div style="max-width:740px;">
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+      <span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:13px; letter-spacing:0.04em; background:#0a0a0a; color:#fff; padding:4px 10px; border-radius:3px;">PICK ONE</span>
+      <span style="font-size:15px; font-weight:700;">All three answer the brief &mdash; they differ in how loud, and what the badge &ldquo;is&rdquo;</span>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:11px;">
+      <div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:13px 15px; font-size:13px; line-height:1.55;"><strong>A &middot; Trophy hero + proof spine.</strong> A clean, calm payoff. Badge celebrated, evidence as a vertical spine, one Share, Delete in the &#8943; menu. The safest, most this-app-already evolution.</div>
+      <div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:13px 15px; font-size:13px; line-height:1.55;"><strong>B &middot; The verifiable certificate.</strong> The badge <em>is</em> a credential document; evidence is the journey; the green seal makes &ldquo;provable&rdquo; the headline. Best if the verifiable story is the point.</div>
+      <div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:13px 15px; font-size:13px; line-height:1.55;"><strong>C &middot; Celebration + proof gallery.</strong> The loudest, most joyful, most visual &mdash; proof you flick through. Best if the badge should feel like a reward you want to show off.</div>
+    </div>
+    <div style="margin-top:20px; font-size:14px; line-height:1.55; color:#404040;">Tell me a letter (or a hybrid &mdash; e.g. B&rsquo;s seal on A&rsquo;s layout, or C&rsquo;s gallery with B&rsquo;s certificate frame) and I&rsquo;ll build the finished interactive prototype: hero badge, the evidence spine/gallery, a working Share sheet, View timeline, and Delete behind a confirm &mdash; with the page scrolling so the hero behaviour reads in situ, and the degraded states handled.</div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

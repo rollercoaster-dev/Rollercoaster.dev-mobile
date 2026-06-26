@@ -36,6 +36,13 @@ const localRules = {
 module.exports = defineConfig([
   expoConfig,
   {
+    // Prototype bundles are design-exploration references — HTML snapshots plus
+    // copied-in stale screen code (deprecated APIs, unresolved imports). They are
+    // not maintained source, so exclude the whole tree from lint. (Standalone
+    // `ignores`-only object = global ignore.)
+    ignores: ["**/prototypes/**"],
+  },
+  {
     files: [
       "**/*.config.js",
       "**/jest.resolver.js",

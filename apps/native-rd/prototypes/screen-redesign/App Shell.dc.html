@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wght@700;800;900&family=Instrument+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Lexend:wght@400;500;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  .as-scroll::-webkit-scrollbar { width: 0; height: 0; }
+  .as-scroll { scrollbar-width: none; }
+  .as-input { font-family: 'Instrument Sans', sans-serif; outline: none; }
+  .as-input::placeholder { color: #9a9a9a; }
+  @keyframes as-toast { from { transform: translate(-50%, 14px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+  @keyframes as-glow { 0%,100% { box-shadow: 0 0 0 0 rgba(255,229,12,0); } 50% { box-shadow: 0 0 26px 2px rgba(255,229,12,0.35); } }
+  @keyframes as-sheet { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  @keyframes as-fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes as-pop { 0% { transform: scale(0.7); opacity: 0; } 60% { transform: scale(1.06); } 100% { transform: scale(1); opacity: 1; } }
+  @keyframes as-spin { to { transform: rotate(360deg); } }
+</style>
+</helmet>
+
+<div style="font-family:'Instrument Sans',system-ui,sans-serif; min-height:100vh; box-sizing:border-box; padding:40px; background:#e5e5e5; display:flex; justify-content:center; align-items:flex-start;">
+
+  <!-- PHONE FRAME -->
+  <div style="position:relative; width:360px; height:760px; background:{{ cur.bg }}; border:3px solid #0a0a0a; border-radius:38px; box-shadow:8px 8px 0 rgba(10,10,10,0.22); overflow:hidden; display:flex; flex-direction:column; font-family:{{ cur.bodyFont }};">
+
+    <!-- STATUS BAR -->
+    <div style="flex:none; height:30px; background:{{ cur.status }}; color:{{ cur.statusInk }}; border-bottom:3px solid {{ cur.borderCol }}; display:flex; align-items:center; justify-content:space-between; padding:0 18px; font-family:{{ cur.monoFont }}; font-size:12px; z-index:8;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+
+    <!-- CONTENT -->
+    <div class="as-scroll" style="flex:1; overflow-y:auto; overflow-x:hidden; position:relative; min-height:0;">
+
+      <!-- ========================= WELCOME (first run) ========================= -->
+      <sc-if value="{{ rWelcome }}" hint-placeholder-val="{{ false }}">
+        <div style="min-height:100%;">
+          <dc-import name="WelcomeFrame" mode="rail" cur="{{ cur }}" themes="{{ themesList }}" on-get-started="{{ goGetStarted }}" hint-size="100%,100%"></dc-import>
+        </div>
+      </sc-if>
+
+      <!-- ========================= GOALS · COCKPIT ========================= -->
+      <sc-if value="{{ rGoals }}" hint-placeholder-val="{{ true }}">
+        <div style="min-height:100%; background:{{ cur.bg }};">
+          <div style="background:{{ cur.band }}; border-bottom:3px solid {{ cur.borderCol }}; padding:14px 16px; display:flex; align-items:baseline; justify-content:space-between;">
+            <span style="font-family:{{ cur.headFont }}; font-weight:{{ cur.headW }}; font-size:23px; color:{{ cur.bandInk }};">Today</span>
+            <span style="font-family:{{ cur.monoFont }}; font-size:11px; color:{{ cur.bandSub }};">3 GOALS</span>
+          </div>
+          <div style="padding:18px 16px 24px; display:flex; flex-direction:column; gap:16px;">
+            <div style="background:{{ cur.surface }}; border:{{ cur.cardBorder }}; border-radius:{{ cur.radius }}; box-shadow:{{ cur.cardShadow }}; padding:18px 16px; text-align:center;">
+              <div style="display:flex; justify-content:center; margin-bottom:14px;">
+                <div style="position:relative; width:104px; height:104px;">
+                  <svg width="104" height="104" viewBox="0 0 104 104"><circle cx="52" cy="52" r="45" fill="none" stroke="{{ cur.surfaceAlt }}" stroke-width="10"></circle><circle cx="52" cy="52" r="45" fill="none" stroke="{{ cur.primary }}" stroke-width="10" stroke-linecap="round" stroke-dasharray="283" stroke-dashoffset="127" transform="rotate(-90 52 52)"></circle></svg>
+                  <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;"><span style="font-family:{{ cur.headFont }}; font-weight:{{ cur.headW }}; font-size:24px; color:{{ cur.ink }};">55%</span><span style="font-family:{{ cur.monoFont }}; font-size:9px; color:{{ cur.muted }}; margin-top:1px;">5 / 9 STEPS</span></div>
+                </div>
+              </div>
+              <div style="font-family:{{ cur.monoFont }}; font-size:9.5px; letter-spacing:0.1em; color:{{ cur.muted }};">DO THIS NEXT &middot; REWIRE THE WORKSHOP</div>
+              <div style="font-family:{{ cur.headFont }}; font-weight:{{ cur.headW }}; font-size:23px; line-height:1.08; margin-top:9px; color:{{ cur.ink }};">Inspection &amp; labels</div>
+              <div onClick="{{ startFocus }}" style="margin-top:16px; height:50px; background:{{ cur.primary }}; border:{{ cur.cardBorder }}; border-radius:{{ cur.radius }}; box-shadow:{{ cur.cardShadow }}; display:flex; align-items:center; justify-content:center; gap:8px; color:{{ cur.primaryFg }}; font-size:15.5px; font-weight:700; cursor:pointer;"><span style="font-size:15px;">&#9654;</span> Start</div>
+            </div>
+            <div>
+              <div style="font-family:{{ cur.monoFont }}; font-size:9.5px; letter-spacing:0.08em; color:{{ cur.muted }}; margin-bottom:10px;">KEEP WARM</div>
+              <div style="display:flex; gap:11px;">
+                <div onClick="{{ startFocus }}" style="flex:1; background:{{ cur.surface }}; border:{{ cur.cardBorder }}; border-radius:{{ cur.radius }}; box-shadow:{{ cur.cardShadow }}; padding:12px; cursor:pointer;"><div style="font-weight:700; font-size:13px; line-height:1.2; color:{{ cur.ink }};">Read 12 books</div><div style="font-size:10px; color:{{ cur.inkSoft }}; margin-top:3px;">Finish &ldquo;The Overstory&rdquo;</div><div style="height:7px; background:{{ cur.surfaceAlt }}; border:1.5px solid {{ cur.borderCol }}; border-radius:9999px; overflow:hidden; margin-top:10px;"><div style="width:33%; height:100%; background:{{ cur.primary }};"></div></div></div>
+                <div onClick="{{ startFocus }}" style="flex:1; background:{{ cur.surface }}; border:{{ cur.cardBorder }}; border-radius:{{ cur.radius }}; box-shadow:{{ cur.cardShadow }}; padding:12px; cursor:pointer;"><div style="font-weight:700; font-size:13px; line-height:1.2; color:{{ cur.ink }};">Couch to 5K</div><div style="font-size:10px; color:{{ cur.inkSoft }}; margin-top:3px;">Week 3, run 2</div><div style="height:7px; background:{{ cur.surfaceAlt }}; border:1.5px solid {{ cur.borderCol }}; border-radius:9999px; overflow:hidden; margin-top:10px;"><div style="width:25%; height:100%; background:{{ cur.primary }};"></div></div></div>
+              </div>
+            </div>
+            <div onClick="{{ openNewGoal }}" style="height:44px; background:{{ cur.bg }}; border:2.5px dashed {{ cur.muted }}; border-radius:{{ cur.radius }}; display:flex; align-items:center; justify-content:center; gap:7px; color:{{ cur.inkSoft }}; font-size:13.5px; font-weight:600; cursor:pointer;">+ New goal</div>
+            <div onClick="{{ toggleGoalsEmpty }}" style="text-align:center; font-family:{{ cur.monoFont }}; font-size:10px; color:{{ cur.muted }}; cursor:pointer;">view empty state &rsaquo;</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ========================= GOALS · EMPTY ========================= -->
+      <sc-if value="{{ rGoalsEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="min-height:100%; background:{{ cur.bg }}; display:flex; flex-direction:column;">
+          <div style="background:{{ cur.band }}; border-bottom:3px solid {{ cur.borderCol }}; padding:14px 16px;"><span style="font-family:{{ cur.headFont }}; font-weight:{{ cur.headW }}; font-size:23px; color:{{ cur.bandInk }};">Goals</span></div>
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px;">
+            <div style="width:74px; height:74px; border:3px dashed {{ cur.borderCol }}; border-radius:10px; display:flex; align-items:center; justify-content:center;"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="{{ cur.ink }}" stroke-width="2.5"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="4"></circle></svg></div>
+            <div style="font-family:{{ cur.headFont }}; font-weight:{{ cur.headW }}; font-size:22px; margin-top:18px; color:{{ cur.ink }};">Pick something to prove</div>
+            <div style="font-size:13px; color:{{ cur.inkSoft }}; line-height:1.55; margin-top:9px; max-width:250px;">A goal is anything you want to finish with evidence. Start small &mdash; one step counts.</div>
+            <div onClick="{{ openNewGoal }}" style="margin-top:22px; height:50px; padding:0 26px; background:{{ cur.primary }}; border:{{ cur.cardBorder }}; border-radius:{{ cur.radius }}; box-shadow:{{ cur.cardShadow }}; display:flex; align-items:center; justify-content:center; color:{{ cur.primaryFg }}; font-size:15px; font-weight:700; cursor:pointer;">+ New goal</div>
+            <div onClick="{{ toggleGoalsEmpty }}" style="margin-top:18px; font-family:{{ cur.monoFont }}; font-size:10px; color:{{ cur.muted }}; cursor:pointer;">&lsaquo; back to populated</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ========================= BADGES · WALL OF PROOF ========================= -->
+      <sc-if value="{{ rBadges }}" hint-placeholder-val="{{ false }}">
+        <div style="min-height:100%; background:#161616;">
+          <div style="padding:18px 16px 14px; border-bottom:3px solid #2563eb;">
+            <div style="display:flex; align-items:flex-end; justify-content:space-between;">
+              <div><div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:34px; color:#ffe50c; line-height:0.95;">{{ wall.count }} badges</div><div style="font-family:'DM Mono',monospace; font-size:10px; color:#8a8a8a; margin-top:7px;">A WALL OF PROOF &middot; ALL VERIFIABLE</div></div>
+              <div onClick="{{ wall.sort }}" style="width:38px; height:38px; border:2px solid #555; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#bbb; font-size:15px; cursor:pointer;">&#9776;</div>
+            </div>
+          </div>
+          <div style="padding:16px;">
+            <sc-if value="{{ wall.hasSpotlight }}" hint-placeholder-val="{{ true }}">
+              <div onClick="{{ wall.openSpotlight }}" style="background:#222; border:2px solid #ffe50c; border-radius:4px; padding:12px; display:flex; gap:13px; align-items:center; margin-bottom:15px; animation:as-glow 3.4s ease-in-out infinite; cursor:pointer;">
+                <div style="flex:none;">{{ wall.spotlightArt }}</div>
+                <div style="flex:1;"><div style="font-family:'DM Mono',monospace; font-size:8.5px; color:#ffe50c; letter-spacing:0.1em;">JUST EARNED</div><div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px; color:#fff; margin-top:4px;">{{ wall.spotlightTitle }}</div><div style="font-family:'DM Mono',monospace; font-size:9px; color:#8a8a8a; margin-top:3px;">{{ wall.spotlightDate }}</div></div>
+                <span style="color:#ffe50c; font-size:18px;">&rarr;</span>
+              </div>
+            </sc-if>
+            <div style="display:flex; flex-wrap:wrap; gap:12px; justify-content:center;">
+              <sc-for list="{{ wall.tiles }}" as="t" hint-placeholder-count="12">
+                <div onClick="{{ t.open }}" style="width:60px; height:60px; border-radius:{{ t.radius }}; background:{{ t.color }}; border:2.5px solid #0a0a0a; box-shadow:2px 2px 0 #000; display:flex; align-items:center; justify-content:center; cursor:pointer;">{{ t.art }}</div>
+              </sc-for>
+            </div>
+            <div onClick="{{ toggleBadgesEmpty }}" style="text-align:center; font-family:'DM Mono',monospace; font-size:9.5px; color:#6a6a6a; margin-top:18px; cursor:pointer;">view empty state &rsaquo;</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ========================= BADGES · EMPTY ========================= -->
+      <sc-if value="{{ rBadgesEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="min-height:100%; background:#161616; display:flex; flex-direction:column;">
+          <div style="padding:18px 16px 14px; border-bottom:3px solid #2563eb;"><div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:28px; color:#ffe50c;">Badges</div></div>
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px;">
+            <div style="width:108px; height:108px; border-radius:50%; background:#1f1f1f; border:3px dashed #4a4a4a; display:flex; align-items:center; justify-content:center; animation:as-glow 3.4s ease-in-out infinite;"><svg width="46" height="46" viewBox="0 0 24 24" fill="#3a3a3a"><path d="M13 2 L4 14 L11 14 L9 22 L20 9 L13 9 Z"></path></svg></div>
+            <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:22px; color:#fff; margin-top:20px;">Your first badge is waiting</div>
+            <div style="font-size:13px; color:#9a9a9a; line-height:1.55; margin-top:9px; max-width:255px;">Finish a goal and you&rsquo;ll design a badge to mark it &mdash; a verifiable credential that&rsquo;s yours to keep.</div>
+            <div onClick="{{ seeGoals }}" style="margin-top:22px; height:50px; padding:0 24px; background:#ffe50c; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; gap:7px; font-size:14.5px; font-weight:700; cursor:pointer;">See my goals &rarr;</div>
+            <div onClick="{{ toggleBadgesEmpty }}" style="margin-top:18px; font-family:'DM Mono',monospace; font-size:10px; color:#555; cursor:pointer;">&lsaquo; back to the wall</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ========================= SETTINGS ========================= -->
+      <sc-if value="{{ rSettings }}" hint-placeholder-val="{{ false }}">
+        <div style="min-height:100%;">
+          <dc-import name="SettingsFrame" mode="chips" cur="{{ cur }}" themes="{{ themesList }}" density-rows="{{ densList }}" on-replay="{{ goWelcome }}" hint-size="100%,100%"></dc-import>
+        </div>
+      </sc-if>
+
+      <!-- ========================= FOCUS MODE ========================= -->
+      <sc-if value="{{ rFocus }}" hint-placeholder-val="{{ false }}">
+        <div style="min-height:100%; display:flex; flex-direction:column;">
+          <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:11px 16px; flex:none;"><span onClick="{{ back }}" style="font-size:20px; color:#0a0a0a; cursor:pointer;">&lsaquo;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px; color:#0a0a0a;">{{ focus.goalTitle }}</span><span onClick="{{ focus.openEdit }}" style="font-size:16px; color:#0a0a0a; cursor:pointer;">&#9998;</span></div>
+          <div onClick="{{ focus.seeAll }}" style="padding:13px 18px 0; flex:none; cursor:pointer;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;"><span style="font-family:'DM Mono',monospace; font-size:11px; color:#737373; white-space:nowrap;">{{ focus.doneCount }} / {{ focus.totalCount }} done</span><span style="font-size:12px; font-weight:700; color:#2563eb;">See all steps &rsaquo;</span></div>
+            <div style="height:9px; background:#fff; border:2px solid #0a0a0a; overflow:hidden;"><div style="height:100%; background:#2563eb; width:{{ focus.progressPct }};"></div></div>
+          </div>
+
+          <sc-if value="{{ focus.cur.isActive }}">
+            <div style="flex:1; display:flex; flex-direction:column; min-height:0;">
+              <div style="flex:1; padding:18px 22px 6px;">
+                <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:29px; line-height:1.05; margin-bottom:14px;">{{ focus.cur.title }}</div>
+                <sc-if value="{{ focus.cur.hasMeta }}">
+                  <div style="display:flex; flex-direction:column; gap:9px; margin-bottom:18px;">
+                    <sc-for list="{{ focus.cur.metaLines }}" as="m" hint-placeholder-count="2">
+                      <div style="display:flex; align-items:baseline; flex-wrap:wrap; gap:7px;"><span style="font-size:13px; color:{{ m.color }};">{{ m.glyph }}</span><span style="font-size:13.5px; color:#1a1a1a;">{{ m.text }}</span><span style="font-family:'DM Mono',monospace; font-size:12px; color:#737373;">{{ m.meta }}</span></div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+                <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:#737373; margin-bottom:8px;">Evidence &middot; required</div>
+                <div onClick="{{ focus.openPicker }}" style="display:flex; align-items:center; gap:10px; background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:11px 13px; cursor:pointer;"><span style="font-size:18px;">{{ focus.cur.plannedIcon }}</span><span style="flex:1; font-weight:700; font-size:14px;">{{ focus.cur.plannedLabel }}</span><span style="font-size:12px; font-weight:700; color:#2563eb;">change</span></div>
+                <sc-if value="{{ focus.cur.hasCaptured }}">
+                  <div style="margin-top:14px;">
+                    <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:#5a8a6a; margin-bottom:7px;">Captured</div>
+                    <div style="display:flex; flex-wrap:wrap; gap:7px;">
+                      <sc-for list="{{ focus.cur.captured }}" as="c" hint-placeholder-count="1">
+                        <span onClick="{{ c.view }}" style="display:inline-flex; align-items:center; gap:5px; background:#d4f4e7; border:2px solid #0a0a0a; border-radius:9999px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); font-family:'DM Mono',monospace; font-size:11px; padding:3px 9px; cursor:pointer;">{{ c.icon }} {{ c.label }}</span>
+                      </sc-for>
+                    </div>
+                  </div>
+                </sc-if>
+                <div onClick="{{ focus.pause }}" style="margin-top:18px; display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:#737373; font-weight:600; cursor:pointer;"><span style="font-size:13px;">&#10073;&#10073;</span> Set this step aside</div>
+              </div>
+              <div style="flex:none; padding:10px 20px 16px;">
+                <sc-if value="{{ focus.cur.blocked }}">
+                  <div onClick="{{ focus.addEvidence }}" style="height:54px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; gap:9px; color:#fff; font-size:17px; font-weight:700; cursor:pointer;">{{ focus.cur.plannedIcon }} Add {{ focus.cur.plannedLabel }}</div>
+                  <div style="text-align:center; font-size:11.5px; color:#737373; margin-top:7px;">only evidence unlocks complete &mdash; nothing here blocks you</div>
+                </sc-if>
+                <sc-if value="{{ focus.cur.ready }}">
+                  <div onClick="{{ focus.markComplete }}" style="height:54px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; gap:10px; color:#fff; font-size:18px; font-weight:700; cursor:pointer;">&#10003; Mark complete</div>
+                </sc-if>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ focus.cur.isPaused }}">
+            <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:0 24px;">
+              <div style="display:inline-flex; align-self:flex-start; align-items:center; background:#ede9fe; border:2px solid #0a0a0a; border-radius:9999px; font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; padding:4px 11px; margin-bottom:14px;">Paused</div>
+              <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:29px; line-height:1.05; margin-bottom:12px;">{{ focus.cur.title }}</div>
+              <div style="font-size:13.5px; line-height:1.5; color:#525252; margin-bottom:22px;">Set aside &mdash; still here, nothing lost. Your next step routes past it until you pick it back up.</div>
+              <div onClick="{{ focus.resume }}" style="height:54px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; gap:9px; color:#fff; font-size:17px; font-weight:700; cursor:pointer;">&#9658; Pick this back up</div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ focus.cur.isCompleted }}">
+            <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:0 24px;">
+              <div style="display:inline-flex; align-self:flex-start; align-items:center; gap:6px; background:#d4f4e7; border:2px solid #0a0a0a; border-radius:9999px; font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; padding:4px 11px; margin-bottom:14px;">&#10003; Completed</div>
+              <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:29px; line-height:1.05; margin-bottom:14px;">{{ focus.cur.title }}</div>
+              <sc-if value="{{ focus.cur.hasCaptured }}">
+                <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:#5a8a6a; margin-bottom:7px;">Evidence</div>
+                <div style="display:flex; flex-wrap:wrap; gap:7px; margin-bottom:22px;">
+                  <sc-for list="{{ focus.cur.captured }}" as="c" hint-placeholder-count="1">
+                    <span onClick="{{ c.view }}" style="display:inline-flex; align-items:center; gap:5px; background:#d4f4e7; border:2px solid #0a0a0a; border-radius:9999px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); font-family:'DM Mono',monospace; font-size:11px; padding:3px 9px; cursor:pointer;">{{ c.icon }} {{ c.label }}</span>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <div onClick="{{ focus.undoComplete }}" style="height:50px; background:#fff; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; gap:9px; color:#0a0a0a; font-size:15px; font-weight:700; cursor:pointer;">Reopen this step</div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ focus.isParked }}">
+            <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:0 24px;">
+              <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:27px; line-height:1.08; margin-bottom:12px;">Nothing in progress.</div>
+              <div style="font-size:13.5px; line-height:1.5; color:#525252; margin-bottom:18px;">{{ focus.pausedCount }} set aside &mdash; all still here, none hidden, nothing counted. Pick one back up when you&rsquo;re ready.</div>
+              <div style="display:flex; flex-direction:column; gap:9px;">
+                <sc-for list="{{ focus.pausedList }}" as="p" hint-placeholder-count="1">
+                  <div onClick="{{ p.resume }}" style="display:flex; align-items:center; gap:10px; background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:11px 13px; cursor:pointer;"><span style="display:inline-flex; align-items:center; background:#ede9fe; border:2px solid #0a0a0a; border-radius:9999px; font-family:'DM Mono',monospace; font-size:10px; padding:2px 7px;">paused</span><span style="flex:1; font-size:14px; font-weight:700;">{{ p.title }}</span><span style="font-size:12px; font-weight:700; color:#2563eb;">resume &rsaquo;</span></div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ focus.isDone }}">
+            <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:0 24px;">
+              <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:34px; line-height:1.02; margin-bottom:16px;">Every step done.</div>
+              <div style="display:flex; gap:9px; align-items:flex-start; background:#ede9fe; border:2px solid #0a0a0a; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px 14px; margin-bottom:20px;"><span style="font-size:16px;">&#127942;</span><span style="font-size:13px; line-height:1.45; color:#3b1f6b;">Now design the badge that marks it &mdash; the keepsake comes at the end.</span></div>
+              <div onClick="{{ focus.designBadge }}" style="height:54px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:17px; font-weight:700; cursor:pointer;">Design your badge &rarr;</div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <!-- ========================= TIMELINE / JOURNEY ========================= -->
+      <sc-if value="{{ rTimeline }}" hint-placeholder-val="{{ false }}">
+        <div style="min-height:100%; display:flex; flex-direction:column;">
+          <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:11px 16px; flex:none;"><span onClick="{{ back }}" style="font-size:20px; color:#0a0a0a; cursor:pointer;">&larr;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px; color:#0a0a0a;">All steps</span><span onClick="{{ focus.openEdit }}" style="font-size:12px; font-weight:700; color:#0a0a0a; cursor:pointer;">Edit &rsaquo;</span></div>
+          <div style="flex:1; padding:16px 18px 18px;">
+            <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px;"><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:17px;">{{ focus.goalTitle }}</span><span style="font-family:'DM Mono',monospace; font-size:12px; color:#737373; white-space:nowrap;">{{ focus.doneCount }} / {{ focus.totalCount }}</span></div>
+            <div style="display:flex; align-items:center; gap:9px; margin-bottom:18px;"><div style="flex:1; height:10px; background:#fff; border:2px solid #0a0a0a; overflow:hidden;"><div style="height:100%; background:#2563eb; width:{{ focus.progressPct }};"></div></div></div>
+            <sc-for list="{{ focus.steps }}" as="s" hint-placeholder-count="5">
+              <div onClick="{{ s.tap }}" style="display:flex; gap:12px; cursor:pointer;">
+                <div style="display:flex; flex-direction:column; align-items:center; flex:none; width:28px;">
+                  <span style="width:28px; height:28px; border-radius:9999px; border:2px solid #0a0a0a; background:{{ s.nodeBg }}; display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:12px; font-weight:700; box-shadow:2px 2px 0 rgba(10,10,10,0.85);">{{ s.glyph }}</span>
+                  <span style="flex:1; width:3px; min-height:18px; background:{{ s.connBg }};"></span>
+                </div>
+                <div style="flex:1; padding-bottom:14px;">
+                  <div style="background:{{ s.cellBg }}; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:10px 12px;">
+                    <div style="display:flex; align-items:center; gap:8px;"><span style="flex:1; font-size:14px; font-weight:700; color:#0a0a0a;">{{ s.title }}</span><span style="font-family:'DM Mono',monospace; font-size:10px; color:#525252; white-space:nowrap;">{{ s.statusText }}</span></div>
+                    <sc-if value="{{ s.sub }}">
+                      <div style="display:flex; align-items:center; gap:7px; margin-top:6px;"><span style="font-size:12px; color:{{ s.subColor }};">{{ s.subGlyph }}</span><span style="font-size:12px; color:#525252;">{{ s.sub }}</span></div>
+                    </sc-if>
+                  </div>
+                </div>
+              </div>
+            </sc-for>
+            <div style="display:flex; gap:12px;">
+              <div style="flex:none; width:28px; display:flex; justify-content:center;"><span style="width:28px; height:28px; border-radius:9999px; border:2px solid #0a0a0a; background:{{ focus.goalNodeBg }}; display:flex; align-items:center; justify-content:center; font-size:14px; box-shadow:2px 2px 0 rgba(10,10,10,0.85);">&#9733;</span></div>
+              <div style="flex:1;"><div style="font-size:13px; font-weight:700; color:#525252; padding-top:4px;">Finish &amp; design badge</div></div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ========================= EDIT GOAL ========================= -->
+      <sc-if value="{{ rEdit }}" hint-placeholder-val="{{ false }}">
+        <div style="min-height:100%; display:flex; flex-direction:column;">
+          <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:11px 16px; flex:none;"><span onClick="{{ back }}" style="font-size:22px; color:#0a0a0a; cursor:pointer;">&larr;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px; color:#0a0a0a;">Edit goal</span><span style="font-size:20px; color:#0a0a0a; font-weight:700;">&#8943;</span></div>
+          <div style="flex:1; padding:16px;">
+            <div style="font-family:'DM Mono',monospace; font-size:11px; color:#737373; text-transform:uppercase; margin-bottom:6px;">Goal</div>
+            <div style="display:flex; align-items:center; gap:8px; background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:10px 14px; margin-bottom:18px;"><input class="as-input" value="{{ focus.goalTitle }}" onChange="{{ focus.setTitle }}" style="flex:1; font-family:'Anybody',sans-serif; font-weight:900; font-size:19px; border:none; background:transparent; padding:0; width:100%;"><span style="font-size:15px; color:#737373;">&#9998;</span></div>
+            <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:12px;"><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:17px;">Steps</span><span style="font-family:'DM Mono',monospace; font-size:12px; color:#737373;">{{ focus.totalCount }}</span></div>
+            <sc-for list="{{ focus.editSteps }}" as="step" hint-placeholder-count="3">
+              <div style="background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:11px 12px; margin-bottom:9px;">
+                <div style="display:flex; align-items:center; gap:9px;"><span style="color:#a3a3a3; font-size:16px;">&#8801;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px;">{{ step.n }}</span><span style="flex:1; font-size:14px;">{{ step.t }}</span><span onClick="{{ step.openEv }}" style="display:inline-flex; background:#ede9fe; border:2px solid #0a0a0a; border-radius:9999px; font-size:11px; padding:2px 6px; cursor:pointer;">{{ step.evIcon }}</span></div>
+                <sc-if value="{{ step.hasDates }}">
+                  <div style="margin-top:9px; display:flex; flex-wrap:wrap; gap:6px;">
+                    <sc-for list="{{ step.chips }}" as="ch" hint-placeholder-count="1">
+                      <span style="display:inline-flex; align-items:center; gap:5px; background:#fff; border:2px solid #0a0a0a; border-radius:9999px; font-family:'DM Mono',monospace; font-size:10px; padding:2px 8px; color:{{ ch.color }};">{{ ch.glyph }} {{ ch.text }}</span>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+            <div style="display:flex; gap:10px; margin-top:4px;">
+              <div style="flex:1; background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:10px 12px;"><span style="font-size:14px; color:#9a9a9a;">Add step...</span></div>
+              <div onClick="{{ focus.addStep }}" style="flex:none; width:48px; background:#2563eb; border:3px solid #0a0a0a; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:22px; font-weight:700; cursor:pointer;">+</div>
+            </div>
+            <div style="margin-top:18px; display:flex; gap:9px; align-items:flex-start; background:#ede9fe; border:2px solid #0a0a0a; border-radius:6px; padding:11px 12px;"><span style="font-size:14px;">&#128197;</span><span style="font-size:12px; line-height:1.45; color:#3b1f6b;">Dates &amp; dependencies live on each step &mdash; tap a step in the full planner to set &ldquo;after&rdquo; / &ldquo;waiting on&rdquo;.</span></div>
+          </div>
+          <div style="flex:none; padding:14px 16px 18px; border-top:2px solid #e5e5e5;">
+            <div onClick="{{ back }}" style="height:52px; background:#fff; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#0a0a0a; font-size:16px; font-weight:700; cursor:pointer;">Done</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ========================= CAPTURE EVIDENCE (stub) ========================= -->
+      <sc-if value="{{ rCapture }}" hint-placeholder-val="{{ false }}">
+        <div style="min-height:100%; display:flex; flex-direction:column; background:#fafafa;">
+          <div style="background:#ede9fe; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; gap:10px; padding:11px 16px; flex:none;"><span onClick="{{ back }}" style="font-size:20px; color:#3b1f6b; cursor:pointer;">&lsaquo;</span><div><div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:17px; color:#3b1f6b; line-height:1;">Capture {{ capture.label }}</div><div style="font-family:'DM Mono',monospace; font-size:10px; color:#6b4ba8; margin-top:3px;">for &ldquo;{{ capture.stepTitle }}&rdquo;</div></div><span style="margin-left:auto; font-family:'DM Mono',monospace; font-size:9px; background:#fff; border:2px solid #0a0a0a; padding:2px 7px;">STUB</span></div>
+          <div style="flex:1; padding:18px 18px 6px; display:flex; flex-direction:column;">
+            <div style="flex:1; border:3px dashed #0a0a0a; border-radius:8px; background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:24px; text-align:center; min-height:230px;">
+              <span style="width:72px; height:72px; border:3px solid #0a0a0a; border-radius:9999px; background:#ede9fe; display:flex; align-items:center; justify-content:center; box-shadow:3px 3px 0 rgba(10,10,10,0.85);">{{ capture.bigIcon }}</span>
+              <div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:18px;">{{ capture.actionLabel }}</div>
+              <div style="font-size:12.5px; color:#737373; line-height:1.5; max-width:230px;">{{ capture.hint }}</div>
+            </div>
+            <div style="margin-top:14px;">
+              <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:#737373; margin-bottom:7px;">Caption &middot; optional</div>
+              <input class="as-input" value="{{ capture.caption }}" onInput="{{ capture.setCaption }}" placeholder="Add a note about this evidence" style="width:100%; background:#fff; border:2.5px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:11px 13px; font-size:14px;">
+            </div>
+          </div>
+          <div style="flex:none; padding:12px 18px 18px;">
+            <div onClick="{{ capture.save }}" style="height:54px; background:#059669; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; gap:9px; color:#fff; font-size:17px; font-weight:700; cursor:pointer;">&#10003; Save evidence</div>
+            <div style="text-align:center; font-size:11px; color:#737373; margin-top:7px;">attaches to the step &amp; unlocks complete</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ========================= EVIDENCE VIEWER (stub) ========================= -->
+      <sc-if value="{{ rEvidence }}" hint-placeholder-val="{{ false }}">
+        <div style="min-height:100%; display:flex; flex-direction:column; background:#fafafa;">
+          <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:11px 16px; flex:none;"><span onClick="{{ back }}" style="font-size:20px; color:#0a0a0a; cursor:pointer;">&larr;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px; color:#0a0a0a;">Evidence</span><span style="font-family:'DM Mono',monospace; font-size:9px; background:#fff; border:2px solid #0a0a0a; padding:2px 7px;">STUB</span></div>
+          <div style="flex:1; padding:18px;">
+            <div style="width:100%; height:220px; background:{{ evidence.tint }}; border:3px solid #0a0a0a; border-radius:6px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:64px;">{{ evidence.glyph }}</div>
+            <div style="display:inline-flex; align-items:center; gap:6px; margin-top:16px; background:#d4f4e7; border:2px solid #0a0a0a; border-radius:9999px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); font-family:'DM Mono',monospace; font-size:11px; padding:4px 11px;">{{ evidence.icon }} {{ evidence.label }}</div>
+            <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:21px; line-height:1.1; margin-top:14px;">{{ evidence.stepTitle }}</div>
+            <div style="font-family:'DM Mono',monospace; font-size:11px; color:#737373; margin-top:8px;">CAPTURED JUN 18, 2026 &middot; 9:41</div>
+            <div style="margin-top:18px; background:#fff; border:2.5px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:14px;">
+              <div style="font-family:'DM Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.07em; color:#9a9a9a; margin-bottom:6px;">Caption</div>
+              <div style="font-size:13px; line-height:1.55; color:#3a3a3a;">Bench circuit wired and labelled &mdash; ready for the inspector walk-through.</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px; margin-top:14px; font-family:'DM Mono',monospace; font-size:10.5px; color:#5a8a6a;"><span style="color:#059669; font-size:13px;">&#10003;</span> SEALED INTO THIS GOAL&rsquo;S RECORD</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ========================= NEW GOAL (modal wizard) ========================= -->
+      <sc-if value="{{ rNewGoal }}" hint-placeholder-val="{{ false }}">
+        <div style="min-height:100%; display:flex; flex-direction:column; background:#fafafa;">
+          <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:11px 16px; flex:none;"><span onClick="{{ ng.back }}" style="font-size:20px; color:#0a0a0a; cursor:pointer; width:18px;">{{ ng.backGlyph }}</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px; color:#0a0a0a;">New goal</span><span onClick="{{ ng.close }}" style="font-size:18px; color:#0a0a0a; cursor:pointer;">&times;</span></div>
+          <div style="display:flex; gap:6px; padding:14px 18px 0; flex:none;">
+            <sc-for list="{{ ng.progress }}" as="p" hint-placeholder-count="4">
+              <div style="flex:1; height:6px; background:{{ p.bg }}; border:2px solid #0a0a0a;"></div>
+            </sc-for>
+          </div>
+
+          <sc-if value="{{ ng.isName }}">
+            <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:0 22px;">
+              <div style="font-family:'DM Mono',monospace; font-size:11px; color:#737373; text-transform:uppercase; margin-bottom:12px;">Step 1 of 4</div>
+              <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:25px; line-height:1.15; margin-bottom:18px;">What do you want to work toward?</div>
+              <input class="as-input" value="{{ ng.title }}" onChange="{{ ng.setTitle }}" placeholder="Name your goal" style="font-size:16px; background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px 14px; margin-bottom:12px; width:100%;">
+              <div style="font-size:13px; line-height:1.5; color:#737373;">Something you&rsquo;ll show progress on.</div>
+            </div>
+            <div style="flex:none; padding:14px 18px 22px;">
+              <div onClick="{{ ng.next }}" style="height:52px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px; font-weight:700; cursor:pointer;">Next &rarr;</div>
+              <div onClick="{{ ng.quickAdd }}" style="text-align:center; margin-top:12px; font-size:13px; color:#525252; font-weight:700; cursor:pointer;">or <span style="color:#2563eb;">Quick add &mdash; skip to the list &rsaquo;</span></div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ ng.isStep }}">
+            <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:0 22px;">
+              <div style="font-family:'DM Mono',monospace; font-size:11px; color:#737373; text-transform:uppercase; margin-bottom:4px;">Goal</div>
+              <div style="font-size:14px; color:#525252; margin-bottom:24px;">{{ ng.title }}</div>
+              <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:23px; line-height:1.15; margin-bottom:16px;">What&rsquo;s the first step?</div>
+              <input class="as-input" value="{{ ng.first }}" onChange="{{ ng.setFirst }}" placeholder="One small thing to start" style="font-size:16px; background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px 14px; margin-bottom:14px; width:100%;">
+              <div style="display:flex; align-items:center; gap:8px;"><span style="font-family:'DM Mono',monospace; font-size:11px; color:#737373; text-transform:uppercase;">Evidence</span><span onClick="{{ ng.openFirstEv }}" style="display:inline-flex; align-items:center; gap:5px; background:#ede9fe; border:2px solid #0a0a0a; border-radius:9999px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); font-family:'DM Mono',monospace; font-size:12px; padding:3px 9px; cursor:pointer;">{{ ng.firstEvIcon }} {{ ng.firstEvLabel }}</span><span onClick="{{ ng.openFirstEv }}" style="font-size:12px; color:#2563eb; font-weight:700; cursor:pointer;">change</span></div>
+            </div>
+            <div style="flex:none; padding:14px 18px 22px;">
+              <div onClick="{{ ng.next }}" style="height:52px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px; font-weight:700; cursor:pointer;">Next &rarr;</div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ ng.isBuild }}">
+            <div style="flex:1; padding:16px 18px 0;">
+              <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:12px;"><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:17px;">Your steps</span><span style="font-family:'DM Mono',monospace; font-size:12px; color:#737373;">{{ ng.stepCount }}</span></div>
+              <sc-for list="{{ ng.steps }}" as="step" hint-placeholder-count="2">
+                <div style="background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:12px; margin-bottom:10px;">
+                  <div style="display:flex; align-items:center; gap:9px;"><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px;">{{ step.n }}</span><span style="flex:1; font-size:14px;">{{ step.t }}</span><span onClick="{{ step.openEv }}" style="display:inline-flex; align-items:center; background:#ede9fe; border:2px solid #0a0a0a; border-radius:9999px; font-size:11px; padding:2px 6px; cursor:pointer;">{{ step.evIcon }}</span></div>
+                </div>
+              </sc-for>
+              <div onClick="{{ ng.addStep }}" style="display:flex; align-items:center; gap:7px; color:#2563eb; font-weight:700; font-size:13px; cursor:pointer; padding:4px 0 12px;"><span style="font-size:15px;">+</span> add another step</div>
+            </div>
+            <div style="flex:none; padding:12px 18px 22px;">
+              <div onClick="{{ ng.next }}" style="height:52px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px; font-weight:700; cursor:pointer;">I&rsquo;m ready &rarr;</div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ ng.isReady }}">
+            <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:0 22px;">
+              <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:32px; line-height:1.05; margin-bottom:20px;">You&rsquo;re set.</div>
+              <div style="background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:16px; margin-bottom:16px;">
+                <div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:17px; margin-bottom:6px;">{{ ng.title }}</div>
+                <div style="font-family:'DM Mono',monospace; font-size:12px; color:#525252;">{{ ng.stepCount }} steps &middot; evidence on each</div>
+              </div>
+              <div style="display:flex; gap:9px; align-items:flex-start; background:#ede9fe; border:2px solid #0a0a0a; border-radius:6px; padding:11px 12px;"><span style="font-size:15px;">&#127942;</span><span style="font-size:12.5px; line-height:1.45; color:#3b1f6b;">You&rsquo;ll design your badge when you finish.</span></div>
+            </div>
+            <div style="flex:none; padding:14px 18px 22px;">
+              <div onClick="{{ ng.startWorking }}" style="height:54px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:17px; font-weight:700; cursor:pointer;">Start Working</div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <!-- ========================= FINISH · BADGE CREATION ========================= -->
+      <sc-if value="{{ rFinish }}" hint-placeholder-val="{{ false }}">
+        <div style="min-height:100%; display:flex; flex-direction:column;">
+
+          <sc-if value="{{ finish.isCelebrate }}">
+            <div style="flex:1; display:flex; flex-direction:column; background:#fafafa;">
+              <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:0 26px;">
+                <div style="font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#5a8a6a; margin-bottom:14px;">Goal complete</div>
+                <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:42px; line-height:0.98; margin-bottom:14px;">You did it.</div>
+                <div style="font-size:14.5px; line-height:1.5; color:#404040; margin-bottom:24px;">All steps done for <strong>{{ finish.goalTitle }}</strong> &mdash; with evidence along the way.</div>
+              </div>
+              <div style="flex:none; padding:10px 22px 24px;">
+                <div onClick="{{ finish.goDesign }}" style="height:56px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; gap:9px; color:#fff; font-size:18px; font-weight:700; cursor:pointer;">Design your badge &rarr;</div>
+                <div style="text-align:center; font-size:11.5px; color:#737373; margin-top:9px;">the keepsake for this win &mdash; make it yours</div>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ finish.isDesign }}">
+            <div style="flex:1; display:flex; flex-direction:column; min-height:0;">
+              <div style="background:#ede9fe; border-bottom:3px solid #0a0a0a; padding:11px 18px; flex:none; display:flex; align-items:center; gap:10px;">
+                <span onClick="{{ finish.backToCelebrate }}" style="font-size:20px; color:#3b1f6b; cursor:pointer;">&lsaquo;</span>
+                <div><div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:17px; color:#3b1f6b; line-height:1;">Make your badge</div><div style="font-family:'DM Mono',monospace; font-size:10px; color:#6b4ba8; margin-top:3px;">{{ finish.goalTitle }}</div></div>
+              </div>
+              <div style="flex:none; display:flex; justify-content:center; padding:14px 0 12px; background:#f3f0fb; border-bottom:2px solid #ddd6f3;">{{ finish.badgePreviewMd }}</div>
+              <div class="as-scroll" style="flex:1; overflow-y:auto; padding:12px 16px 8px; min-height:0; display:flex; flex-direction:column; gap:9px;">
+                <div style="background:#fff; border:2px solid #0a0a0a; border-radius:7px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); overflow:hidden;">
+                  <div onClick="{{ finish.toggleShape }}" style="display:flex; align-items:center; justify-content:space-between; padding:11px 13px; cursor:pointer;"><span style="font-size:13.5px; font-weight:700;">Shape <span style="font-weight:400; color:#737373;">&middot; {{ finish.shapeSummary }}</span></span><span style="color:#737373; font-size:12px;">{{ finish.shapeChevron }}</span></div>
+                  <sc-if value="{{ finish.shapeOpen }}">
+                    <div style="display:flex; flex-wrap:wrap; gap:7px; padding:0 13px 13px;">
+                      <sc-for list="{{ finish.shapeOptions }}" as="o" hint-placeholder-count="4">
+                        <div onClick="{{ o.pick }}" style="display:flex; align-items:center; gap:6px; background:{{ o.bg }}; border:2px solid #0a0a0a; border-radius:6px; padding:7px 11px; font-size:12.5px; font-weight:700; cursor:pointer;">{{ o.label }}</div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                </div>
+                <div style="background:#fff; border:2px solid #0a0a0a; border-radius:7px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); overflow:hidden;">
+                  <div onClick="{{ finish.toggleColor }}" style="display:flex; align-items:center; justify-content:space-between; padding:11px 13px; cursor:pointer;"><span style="font-size:13.5px; font-weight:700;">Color</span><span style="display:flex; align-items:center; gap:8px;"><span style="width:18px; height:18px; border-radius:9999px; border:2px solid #0a0a0a; background:{{ finish.color }};"></span><span style="color:#737373; font-size:12px;">{{ finish.colorChevron }}</span></span></div>
+                  <sc-if value="{{ finish.colorOpen }}">
+                    <div style="display:flex; flex-wrap:wrap; gap:10px; padding:2px 13px 14px;">
+                      <sc-for list="{{ finish.colorOptions }}" as="c" hint-placeholder-count="5">
+                        <div onClick="{{ c.pick }}" style="width:34px; height:34px; border-radius:9999px; border:3px solid #0a0a0a; background:{{ c.hex }}; box-shadow:{{ c.shadow }}; cursor:pointer;"></div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                </div>
+                <div style="background:#fff; border:2px solid #0a0a0a; border-radius:7px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); overflow:hidden;">
+                  <div onClick="{{ finish.toggleCenter }}" style="display:flex; align-items:center; justify-content:space-between; padding:11px 13px; cursor:pointer;"><span style="font-size:13.5px; font-weight:700;">Center <span style="font-weight:400; color:#737373;">&middot; {{ finish.centerSummary }}</span></span><span style="color:#737373; font-size:12px;">{{ finish.centerChevron }}</span></div>
+                  <sc-if value="{{ finish.centerOpen }}">
+                    <div style="padding:2px 13px 14px;">
+                      <div style="display:flex; gap:7px; margin-bottom:11px;">
+                        <div onClick="{{ finish.useMonogram }}" style="flex:1; text-align:center; background:{{ finish.monoTabBg }}; border:2px solid #0a0a0a; border-radius:6px; padding:7px; font-size:12.5px; font-weight:700; cursor:pointer;">Monogram</div>
+                        <div onClick="{{ finish.useIcon }}" style="flex:1; text-align:center; background:{{ finish.iconTabBg }}; border:2px solid #0a0a0a; border-radius:6px; padding:7px; font-size:12.5px; font-weight:700; cursor:pointer;">Icon</div>
+                      </div>
+                      <sc-if value="{{ finish.isMonogram }}">
+                        <input class="as-input" value="{{ finish.monogram }}" onInput="{{ finish.setMonogram }}" maxlength="2" placeholder="R" style="width:100%; background:#fff; border:2px solid #0a0a0a; border-radius:6px; padding:9px 12px; font-size:14px; font-weight:700; text-transform:uppercase;">
+                      </sc-if>
+                      <sc-if value="{{ finish.isIcon }}">
+                        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                          <sc-for list="{{ finish.iconOptions }}" as="ic" hint-placeholder-count="6">
+                            <div onClick="{{ ic.pick }}" style="width:42px; height:42px; display:flex; align-items:center; justify-content:center; font-size:21px; background:{{ ic.bg }}; border:2px solid #0a0a0a; border-radius:6px; cursor:pointer;">{{ ic.glyph }}</div>
+                          </sc-for>
+                        </div>
+                      </sc-if>
+                    </div>
+                  </sc-if>
+                </div>
+                <div style="background:#fff; border:2px solid #0a0a0a; border-radius:7px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); overflow:hidden;">
+                  <div onClick="{{ finish.toggleText }}" style="display:flex; align-items:center; justify-content:space-between; padding:11px 13px; cursor:pointer;"><span style="font-size:13.5px; font-weight:700;">Bottom label</span><span style="color:#737373; font-size:12px;">{{ finish.textChevron }}</span></div>
+                  <sc-if value="{{ finish.textOpen }}">
+                    <div style="padding:2px 13px 14px;">
+                      <input class="as-input" value="{{ finish.bottomLabel }}" onInput="{{ finish.setLabel }}" maxlength="18" placeholder="EARNED 2026" style="width:100%; background:#fff; border:2px solid #0a0a0a; border-radius:6px; padding:9px 12px; font-size:13px; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; margin-bottom:10px;">
+                      <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                        <sc-for list="{{ finish.labelPresets }}" as="p" hint-placeholder-count="3">
+                          <div onClick="{{ p.pick }}" style="font-family:'DM Mono',monospace; font-size:10.5px; background:#f3f0fb; border:2px solid #0a0a0a; border-radius:9999px; padding:4px 10px; cursor:pointer;">{{ p.text }}</div>
+                        </sc-for>
+                      </div>
+                    </div>
+                  </sc-if>
+                </div>
+              </div>
+              <div style="flex:none; padding:10px 18px 16px; border-top:2px solid #eee; background:#fafafa;">
+                <div onClick="{{ finish.bake }}" style="height:52px; background:#059669; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; gap:8px; color:#fff; font-size:17px; font-weight:700; cursor:pointer;">&#10003; Bake my badge</div>
+                <div style="text-align:center; font-size:11px; color:#737373; margin-top:7px;">saves &amp; seals it into a verifiable badge</div>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ finish.isBaking }}">
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; padding:0 26px; background:#fafafa;">
+              <div style="opacity:0.5;">{{ finish.badgePreviewMd }}</div>
+              <div style="width:26px; height:26px; border:3px solid #0a0a0a; border-top-color:transparent; border-radius:9999px; animation:as-spin 0.7s linear infinite;"></div>
+              <div style="font-family:'DM Mono',monospace; font-size:13px; color:#525252;">Baking your badge&hellip;</div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ finish.isReveal }}">
+            <div style="flex:1; display:flex; flex-direction:column; background:#a78bfa;">
+              <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 26px;">
+                <div style="font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.16em; text-transform:uppercase; color:#3b1f6b; margin-bottom:22px;">Earned</div>
+                <div style="animation:as-pop 0.5s ease-out; margin-bottom:26px;">{{ finish.badgePreviewLg }}</div>
+                <div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:18px; text-align:center; color:#1f1147; margin-bottom:4px;">{{ finish.goalTitle }}</div>
+                <div style="font-family:'DM Mono',monospace; font-size:11px; color:#4c1d95;">Jun 23, 2026</div>
+              </div>
+              <div style="flex:none; padding:10px 22px 26px;">
+                <div onClick="{{ finish.viewBadge }}" style="height:54px; background:#fff; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:700; cursor:pointer; margin-bottom:12px;">View badge</div>
+                <div onClick="{{ finish.backToGoals }}" style="text-align:center; font-size:13px; font-weight:600; color:#3b1f6b; text-decoration:underline; cursor:pointer;">Back to goals</div>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <!-- ========================= BADGE DETAIL ========================= -->
+      <sc-if value="{{ rBadgeDetail }}" hint-placeholder-val="{{ false }}">
+        <div style="min-height:100%; background:#fafafa;">
+          <div style="position:relative; background:#ffe50c; border-bottom:3px solid #0a0a0a; padding:14px 16px 28px; overflow:hidden;">
+            <div style="display:flex; align-items:center; justify-content:space-between; position:relative; z-index:3;">
+              <div onClick="{{ back }}" style="width:34px; height:34px; display:flex; align-items:center; justify-content:center; font-size:22px; cursor:pointer;">&larr;</div>
+              <div onClick="{{ detail.toggleOverflow }}" style="width:34px; height:34px; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:700; cursor:pointer;">&#8943;</div>
+            </div>
+            <div style="position:absolute; inset:0; z-index:1; pointer-events:none;">
+              <span style="position:absolute; top:46px; left:30px; font-size:16px; opacity:0.5;">&#10022;</span>
+              <span style="position:absolute; top:34px; right:48px; font-size:13px; opacity:0.55;">&#9670;</span>
+              <span style="position:absolute; top:150px; left:26px; font-size:13px; opacity:0.5;">&#9670;</span>
+              <span style="position:absolute; top:168px; right:30px; font-size:16px; opacity:0.5;">&#10022;</span>
+            </div>
+            <div style="display:flex; justify-content:center; margin-top:10px; position:relative; z-index:3;">{{ detail.heroArt }}</div>
+            <div style="text-align:center; margin-top:24px; position:relative; z-index:3;">
+              <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:25px; line-height:1.06; color:#0a0a0a;">{{ detail.title }}</div>
+              <div style="display:inline-flex; align-items:center; gap:6px; margin-top:13px; background:#fff; border:2px solid #0a0a0a; border-radius:9999px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:4px 12px;">
+                <span style="color:#059669; font-size:13px; font-weight:700;">&#10003;</span>
+                <span style="font-size:11.5px; font-weight:700;">Verifiable &middot; earned {{ detail.date }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="padding:20px 0 6px;">
+            <div style="display:flex; align-items:baseline; justify-content:space-between; padding:0 18px; margin-bottom:13px;">
+              <span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:15px; letter-spacing:0.02em;">THE PROOF</span>
+              <span style="font-family:'DM Mono',monospace; font-size:10.5px; color:#737373;">3 STEPS &middot; SWIPE &rarr;</span>
+            </div>
+            <div class="as-scroll" style="display:flex; gap:12px; padding:2px 18px 16px; overflow-x:auto;">
+              <div onClick="{{ detail.viewProof }}" style="flex:none; width:132px; cursor:pointer;">
+                <div style="width:132px; height:108px; background:#dbe7ff; border:3px solid #0a0a0a; border-radius:4px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:34px;">&#128247;</div>
+                <div style="font-size:12.5px; font-weight:600; margin-top:8px; line-height:1.25;">Wire the circuits</div>
+                <div style="font-family:'DM Mono',monospace; font-size:9.5px; color:#737373; margin-top:2px;">PHOTO</div>
+              </div>
+              <div onClick="{{ detail.viewProof }}" style="flex:none; width:132px; cursor:pointer;">
+                <div style="width:132px; height:108px; background:#ede9fe; border:3px solid #0a0a0a; border-radius:4px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:34px;">&#127916;</div>
+                <div style="font-size:12.5px; font-weight:600; margin-top:8px; line-height:1.25;">Inspection walk-through</div>
+                <div style="font-family:'DM Mono',monospace; font-size:9.5px; color:#737373; margin-top:2px;">VIDEO &middot; FINAL</div>
+              </div>
+              <div onClick="{{ detail.viewProof }}" style="flex:none; width:132px; cursor:pointer;">
+                <div style="width:132px; height:108px; background:#d4f4e7; border:3px solid #0a0a0a; border-radius:4px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:34px;">&#128221;</div>
+                <div style="font-size:12.5px; font-weight:600; margin-top:8px; line-height:1.25;">Plan layout &amp; load</div>
+                <div style="font-family:'DM Mono',monospace; font-size:9.5px; color:#737373; margin-top:2px;">NOTE</div>
+              </div>
+              <div style="flex:none; width:6px;"></div>
+            </div>
+          </div>
+
+          <div style="padding:8px 18px 4px;">
+            <div style="font-family:'DM Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.07em; color:#9a9a9a; margin-bottom:5px;">About</div>
+            <div style="font-size:12.5px; line-height:1.55; color:#3a3a3a;">Bring the whole shop up to code and finally run power to the bench.</div>
+          </div>
+          <div style="padding:14px 18px 4px;">
+            <div style="font-family:'DM Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.07em; color:#9a9a9a; margin-bottom:5px;">Details</div>
+            <div style="font-size:12.5px; line-height:1.55; color:#3a3a3a;">Completed {{ detail.date }} &middot; OB&nbsp;3.0 credential</div>
+          </div>
+
+          <div style="padding:18px 18px 8px; display:flex; flex-direction:column; gap:11px;">
+            <div onClick="{{ detail.openSheet }}" style="height:50px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; gap:9px; color:#fff; font-size:15.5px; font-weight:700; cursor:pointer;"><span style="font-size:17px;">&#8682;</span> Share badge</div>
+            <div onClick="{{ detail.viewTimeline }}" style="height:44px; background:#fff; border:3px solid #0a0a0a; border-radius:4px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; cursor:pointer;">View timeline</div>
+          </div>
+          <div style="text-align:center; padding:10px 0 26px;"><span onClick="{{ detail.openConfirm }}" style="font-size:12.5px; color:#a3a3a3; border-bottom:1px solid #cfcfcf; padding-bottom:1px; cursor:pointer;">Delete badge</span></div>
+        </div>
+      </sc-if>
+
+    </div>
+
+    <!-- ========================= BOTTOM NAV · THE SLIDE ========================= -->
+    <sc-if value="{{ showTab }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:none; background:{{ cur.borderCol }}; padding:11px 14px 15px; z-index:6;">
+        <div style="display:flex; align-items:center; gap:7px; height:58px; border:3px solid {{ cur.borderCol }}; border-radius:15px; background:{{ cur.surface }}; box-shadow:3px 3px 0 rgba(255,255,255,0.12); padding:6px;">
+          <!-- GOALS slot -->
+          <sc-if value="{{ nav.goalsActive }}" hint-placeholder-val="{{ true }}">
+            <div onClick="{{ nav.goGoals }}" style="flex:1.8; display:flex; align-items:center; justify-content:center; gap:8px; height:100%; border:2px solid {{ cur.borderCol }}; border-radius:9px; background:{{ cur.accent }}; cursor:pointer;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="{{ cur.accentFg }}" stroke-width="2.5"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="4"></circle></svg><span style="font-family:{{ cur.headFont }}; font-weight:{{ cur.headW }}; font-size:14.5px; color:{{ cur.accentFg }};">Goals</span></div>
+          </sc-if>
+          <sc-if value="{{ nav.goalsInactive }}" hint-placeholder-val="{{ false }}">
+            <div onClick="{{ nav.goGoals }}" style="flex:1; display:flex; align-items:center; justify-content:center; height:100%; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{{ cur.muted }}" stroke-width="2.5"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="4"></circle></svg></div>
+          </sc-if>
+          <!-- BADGES slot -->
+          <sc-if value="{{ nav.badgesActive }}" hint-placeholder-val="{{ false }}">
+            <div onClick="{{ nav.goBadges }}" style="flex:1.8; display:flex; align-items:center; justify-content:center; gap:8px; height:100%; border:2px solid {{ cur.borderCol }}; border-radius:9px; background:{{ cur.accent }}; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{{ cur.accentFg }}" stroke-width="2.5" stroke-linejoin="round"><path d="M8.5 3l2.4 6.6M15.5 3l-2.4 6.6"></path><circle cx="12" cy="15" r="6"></circle></svg><span style="font-family:{{ cur.headFont }}; font-weight:{{ cur.headW }}; font-size:14.5px; color:{{ cur.accentFg }};">Badges</span></div>
+          </sc-if>
+          <sc-if value="{{ nav.badgesInactive }}" hint-placeholder-val="{{ true }}">
+            <div onClick="{{ nav.goBadges }}" style="flex:1; display:flex; align-items:center; justify-content:center; height:100%; cursor:pointer;"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="{{ cur.muted }}" stroke-width="2.5" stroke-linejoin="round"><path d="M8.5 3l2.4 6.6M15.5 3l-2.4 6.6"></path><circle cx="12" cy="15" r="6"></circle></svg></div>
+          </sc-if>
+          <!-- SETTINGS slot -->
+          <sc-if value="{{ nav.settingsActive }}" hint-placeholder-val="{{ false }}">
+            <div onClick="{{ nav.goSettings }}" style="flex:1.8; display:flex; align-items:center; justify-content:center; gap:8px; height:100%; border:2px solid {{ cur.borderCol }}; border-radius:9px; background:{{ cur.accent }}; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{{ cur.accentFg }}" stroke-width="2.5" stroke-linejoin="round"><circle cx="12" cy="12" r="3.4"></circle><path d="M12 2.6v3.2M12 18.2v3.2M21.4 12h-3.2M5.8 12H2.6M18.6 5.4l-2.3 2.3M7.7 16.3l-2.3 2.3M18.6 18.6l-2.3-2.3M7.7 7.7 5.4 5.4"></path></svg><span style="font-family:{{ cur.headFont }}; font-weight:{{ cur.headW }}; font-size:14.5px; color:{{ cur.accentFg }};">Settings</span></div>
+          </sc-if>
+          <sc-if value="{{ nav.settingsInactive }}" hint-placeholder-val="{{ true }}">
+            <div onClick="{{ nav.goSettings }}" style="flex:1; display:flex; align-items:center; justify-content:center; height:100%; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{{ cur.muted }}" stroke-width="2.5" stroke-linejoin="round"><circle cx="12" cy="12" r="3.4"></circle><path d="M12 2.6v3.2M12 18.2v3.2M21.4 12h-3.2M5.8 12H2.6M18.6 5.4l-2.3 2.3M7.7 16.3l-2.3 2.3M18.6 18.6l-2.3-2.3M7.7 7.7 5.4 5.4"></path></svg></div>
+          </sc-if>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ========================= OVERLAYS ========================= -->
+
+    <!-- evidence picker (focus) -->
+    <sc-if value="{{ focus.pickerOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute; inset:0; z-index:50; display:flex; flex-direction:column; justify-content:flex-end;">
+        <div onClick="{{ focus.closePicker }}" style="position:absolute; inset:0; background:rgba(10,10,10,0.4);"></div>
+        <div style="position:relative; background:#fafafa; border-top:3px solid #0a0a0a; border-top-left-radius:16px; border-top-right-radius:16px; padding:18px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:16px;">Evidence type</span><span onClick="{{ focus.closePicker }}" style="font-size:18px; cursor:pointer; color:#737373;">&times;</span></div>
+          <div style="font-size:12.5px; color:#737373; margin-bottom:14px;">What will you show for this step? Note is the easy default.</div>
+          <div style="display:flex; flex-wrap:wrap; gap:10px;">
+            <sc-for list="{{ focus.evOptions }}" as="opt" hint-placeholder-count="6">
+              <div onClick="{{ opt.pick }}" style="display:flex; align-items:center; gap:7px; background:{{ opt.bg }}; border:3px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:10px 14px; font-size:14px; font-weight:700; cursor:pointer;">{{ opt.icon }} {{ opt.label }}</div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- evidence picker (new goal) -->
+    <sc-if value="{{ ng.pickerOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute; inset:0; z-index:50; display:flex; flex-direction:column; justify-content:flex-end;">
+        <div onClick="{{ ng.closePicker }}" style="position:absolute; inset:0; background:rgba(10,10,10,0.4);"></div>
+        <div style="position:relative; background:#fafafa; border-top:3px solid #0a0a0a; border-top-left-radius:16px; border-top-right-radius:16px; padding:18px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:16px;">Evidence type</span><span onClick="{{ ng.closePicker }}" style="font-size:18px; cursor:pointer; color:#737373;">&times;</span></div>
+          <div style="display:flex; flex-wrap:wrap; gap:10px;">
+            <sc-for list="{{ ng.evOptions }}" as="opt" hint-placeholder-count="6">
+              <div onClick="{{ opt.pick }}" style="display:flex; align-items:center; gap:7px; background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:10px 14px; font-size:14px; font-weight:700; cursor:pointer;">{{ opt.icon }} {{ opt.label }}</div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- badge detail: overflow menu -->
+    <sc-if value="{{ detail.overflowOpen }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ detail.closeOverflow }}" style="position:absolute; inset:0; z-index:51; animation:as-fade 0.12s ease;"></div>
+      <div style="position:absolute; top:50px; right:14px; z-index:52; width:226px; background:#ffffff; border:3px solid #0a0a0a; border-radius:8px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); overflow:hidden; animation:as-pop 0.13s ease;">
+        <div onClick="{{ detail.openSheet }}" style="display:flex; align-items:center; gap:11px; padding:13px 15px; border-bottom:2px solid #ececec; cursor:pointer;"><span style="font-size:15px;">&#9733;</span><span style="font-size:13.5px; font-weight:600;">Share badge</span></div>
+        <div onClick="{{ detail.exportCredential }}" style="display:flex; align-items:center; gap:11px; padding:13px 15px; border-bottom:2px solid #ececec; cursor:pointer;"><span style="font-size:15px;">&#123;&#125;</span><span style="font-size:13.5px; font-weight:600;">Export credential</span></div>
+        <div onClick="{{ detail.openConfirm }}" style="display:flex; align-items:center; gap:11px; padding:13px 15px; cursor:pointer;"><span style="font-size:15px; color:#dc2626;">&#9851;</span><span style="font-size:13.5px; font-weight:700; color:#dc2626;">Delete badge</span></div>
+      </div>
+    </sc-if>
+
+    <!-- badge detail: share sheet -->
+    <sc-if value="{{ detail.sheetOpen }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ detail.closeSheet }}" style="position:absolute; inset:0; z-index:53; background:rgba(10,10,10,0.42); animation:as-fade 0.15s ease;"></div>
+      <div style="position:absolute; left:0; right:0; bottom:0; z-index:54; background:#fafafa; border-top:3px solid #0a0a0a; border-top-left-radius:18px; border-top-right-radius:18px; padding:14px 18px 22px; animation:as-sheet 0.22s cubic-bezier(0.16,0.84,0.44,1);">
+        <div style="width:42px; height:4px; background:#d4d4d4; border-radius:2px; margin:0 auto 15px;"></div>
+        <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:18px; margin-bottom:3px;">Share &ldquo;{{ detail.title }}&rdquo;</div>
+        <div style="font-size:12px; color:#737373; line-height:1.5; margin-bottom:16px;">Keep it provable, or just share the picture.</div>
+        <div onClick="{{ detail.shareVerifiable }}" style="background:#2563eb; border:3px solid #0a0a0a; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px 15px; margin-bottom:13px; cursor:pointer;">
+          <div style="display:flex; align-items:center; gap:9px; margin-bottom:5px;">
+            <span style="font-size:16px;">&#9733;</span>
+            <span style="font-size:14.5px; font-weight:700; color:#ffffff;">Share verifiable badge</span>
+            <span style="margin-left:auto; background:#ffe50c; border:1.5px solid #0a0a0a; border-radius:9999px; font-family:'DM Mono',monospace; font-size:8.5px; font-weight:600; padding:2px 7px;">RECOMMENDED</span>
+          </div>
+          <div style="font-size:11px; line-height:1.45; color:#dbe7ff;">A PNG carrying the OB&nbsp;3.0 credential &mdash; provable forever.</div>
+        </div>
+        <div style="background:#ffffff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); overflow:hidden;">
+          <div onClick="{{ detail.saveImage }}" style="display:flex; align-items:center; gap:11px; padding:13px 14px; border-bottom:2px solid #ececec; cursor:pointer;"><span style="font-size:15px;">&#128247;</span><div style="flex:1;"><div style="font-size:13px; font-weight:600;">Save as image</div><div style="font-size:10.5px; color:#d97706;">Plain picture &mdash; may drop the credential.</div></div></div>
+          <div onClick="{{ detail.exportCredential }}" style="display:flex; align-items:center; gap:11px; padding:13px 14px; cursor:pointer;"><span style="font-size:15px;">&#123;&#125;</span><div style="flex:1;"><div style="font-size:13px; font-weight:600;">Export credential (JSON)</div><div style="font-size:10.5px; color:#737373;">For verifiers &amp; wallets.</div></div></div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- badge detail: delete confirm -->
+    <sc-if value="{{ detail.confirmOpen }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ detail.closeConfirm }}" style="position:absolute; inset:0; z-index:55; background:rgba(10,10,10,0.42); display:flex; align-items:center; justify-content:center; padding:26px; animation:as-fade 0.15s ease;">
+        <div onClick="{{ detail.stop }}" style="width:100%; background:#fafafa; border:3px solid #0a0a0a; border-radius:8px; box-shadow:5px 5px 0 rgba(10,10,10,0.85); padding:20px 18px; animation:as-pop 0.16s ease;">
+          <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:19px; margin-bottom:8px;">Delete this badge?</div>
+          <div style="font-size:13px; line-height:1.55; color:#525252; margin-bottom:18px;">The badge will be removed. Your goal and its evidence stay in the timeline &mdash; only the credential artifact is deleted.</div>
+          <div style="display:flex; gap:10px;">
+            <div onClick="{{ detail.closeConfirm }}" style="flex:1; height:46px; background:#ffffff; border:3px solid #0a0a0a; border-radius:4px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; cursor:pointer;">Keep it</div>
+            <div onClick="{{ detail.confirmDelete }}" style="flex:1; height:46px; background:#dc2626; border:3px solid #0a0a0a; border-radius:4px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#ffffff; font-size:14px; font-weight:700; cursor:pointer;">Delete</div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- toast -->
+    <sc-if value="{{ toast }}" hint-placeholder-val="">
+      <div style="position:absolute; left:50%; bottom:96px; z-index:60; transform:translateX(-50%); background:#0a0a0a; color:#fafafa; border:2px solid #fafafa; border-radius:9999px; padding:10px 20px; font-size:13px; font-weight:600; white-space:nowrap; animation:as-toast 0.2s ease;">{{ toast }}</div>
+    </sc-if>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:440,&quot;height&quot;:840},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light-default&quot;,&quot;dark-default&quot;,&quot;light-highContrast&quot;,&quot;light-dyslexia&quot;,&quot;light-autismFriendly&quot;,&quot;light-lowVision&quot;,&quot;light-lowInfo&quot;],&quot;default&quot;:&quot;light-default&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;density&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;compact&quot;,&quot;default&quot;,&quot;comfortable&quot;],&quot;default&quot;:&quot;default&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  // ---------- theme system ----------
+  THEMES = {
+    "light-default":      { id:"light-default", name:"The Full Ride", desc:"Standard theme",
+      bg:"#fafafa", surface:"#ffffff", surfaceAlt:"#f3f3f3", ink:"#0a0a0a", inkSoft:"#525252", muted:"#9a9a9a",
+      band:"#a78bfa", bandInk:"#0a0a0a", bandSub:"#3a2d6b", accent:"#a78bfa", accentFg:"#0a0a0a",
+      primary:"#2563eb", primaryFg:"#ffffff", check:"#7c5cff", sel:"#7c5cff",
+      cardBorder:"2.5px solid #0a0a0a", cardShadow:"3px 3px 0 rgba(10,10,10,0.85)", radius:"4px", borderCol:"#0a0a0a",
+      status:"#ffe50c", statusInk:"#0a0a0a", headFont:"'Anybody',sans-serif", headW:"900",
+      bodyFont:"'Instrument Sans',sans-serif", monoFont:"'DM Mono',monospace", lineH:"1.5", fs:"1" },
+
+    "dark-default":       { id:"dark-default", name:"Night Ride", desc:"Dark mode",
+      bg:"#1a1033", surface:"#241845", surfaceAlt:"#2d1f52", ink:"#fafafa", inkSoft:"#cfc7e0", muted:"#a89cc4",
+      band:"#2a1d4e", bandInk:"#fafafa", bandSub:"#a89cc4", accent:"#c4b5fd", accentFg:"#1a1033",
+      primary:"#5eead4", primaryFg:"#0a1f1a", check:"#5eead4", sel:"#5eead4",
+      cardBorder:"2px solid #4e3f73", cardShadow:"none", radius:"6px", borderCol:"#4e3f73",
+      status:"#ffe50c", statusInk:"#0a0a0a", headFont:"'Anybody',sans-serif", headW:"900",
+      bodyFont:"'Instrument Sans',sans-serif", monoFont:"'DM Mono',monospace", lineH:"1.5", fs:"1" },
+
+    "light-highContrast": { id:"light-highContrast", name:"Bold Ink", desc:"High contrast (WCAG AAA)",
+      bg:"#ffffff", surface:"#ffffff", surfaceAlt:"#f0f0f0", ink:"#000000", inkSoft:"#000000", muted:"#2a2a2a",
+      band:"#000000", bandInk:"#ffffff", bandSub:"#cfcfcf", accent:"#000000", accentFg:"#ffffff",
+      primary:"#000000", primaryFg:"#ffffff", check:"#0055cc", sel:"#0055cc",
+      cardBorder:"3px solid #000000", cardShadow:"none", radius:"2px", borderCol:"#000000",
+      status:"#ffffff", statusInk:"#000000", headFont:"'Anybody',sans-serif", headW:"900",
+      bodyFont:"'Instrument Sans',sans-serif", monoFont:"'DM Mono',monospace", lineH:"1.45", fs:"1" },
+
+    "light-dyslexia":     { id:"light-dyslexia", name:"Warm Studio", desc:"Dyslexia-friendly",
+      bg:"#f8f5e4", surface:"#f8f5e4", surfaceAlt:"#f0edd8", ink:"#333333", inkSoft:"#555555", muted:"#7a755f",
+      band:"#8860a0", bandInk:"#f8f5e4", bandSub:"#e9ddf0", accent:"#8860a0", accentFg:"#ffffff",
+      primary:"#4e7d9e", primaryFg:"#ffffff", check:"#4e7d9e", sel:"#4e7d9e",
+      cardBorder:"2px solid #c8c3a9", cardShadow:"0 2px 5px rgba(80,60,20,0.12)", radius:"8px", borderCol:"#c8c3a9",
+      status:"#f5e6a0", statusInk:"#333333", headFont:"'Lexend',sans-serif", headW:"700",
+      bodyFont:"'Lexend',sans-serif", monoFont:"'DM Mono',monospace", lineH:"1.7", fs:"1" },
+
+    "light-autismFriendly": { id:"light-autismFriendly", name:"Still Water", desc:"Autism-friendly",
+      bg:"#f7f7f7", surface:"#ffffff", surfaceAlt:"#eeeeee", ink:"#333333", inkSoft:"#555555", muted:"#777777",
+      band:"#8a7a9a", bandInk:"#ffffff", bandSub:"#e6e0ee", accent:"#8a7a9a", accentFg:"#ffffff",
+      primary:"#4d6d7d", primaryFg:"#ffffff", check:"#4d6d7d", sel:"#4d6d7d",
+      cardBorder:"1px solid #dddddd", cardShadow:"none", radius:"6px", borderCol:"#dddddd",
+      status:"#d5c88a", statusInk:"#333333", headFont:"Arial,sans-serif", headW:"700",
+      bodyFont:"Arial,sans-serif", monoFont:"'DM Mono',monospace", lineH:"1.55", fs:"1" },
+
+    "light-lowVision":    { id:"light-lowVision", name:"Loud & Clear", desc:"Low vision support",
+      bg:"#ffffff", surface:"#ffffff", surfaceAlt:"#f0f0f0", ink:"#111111", inkSoft:"#333333", muted:"#333333",
+      band:"#003d99", bandInk:"#ffffff", bandSub:"#bcd0f0", accent:"#003d99", accentFg:"#ffffff",
+      primary:"#003d99", primaryFg:"#ffffff", check:"#003d99", sel:"#003d99",
+      cardBorder:"3px solid #555555", cardShadow:"none", radius:"6px", borderCol:"#555555",
+      status:"#ffe50c", statusInk:"#000000", headFont:"'Atkinson Hyperlegible',sans-serif", headW:"700",
+      bodyFont:"'Atkinson Hyperlegible',sans-serif", monoFont:"'DM Mono',monospace", lineH:"1.6", fs:"1.2" },
+
+    "light-lowInfo":      { id:"light-lowInfo", name:"Clean Signal", desc:"Reduced visual noise",
+      bg:"#ffffff", surface:"#ffffff", surfaceAlt:"#f5f5f5", ink:"#222222", inkSoft:"#444444", muted:"#666666",
+      band:"#222222", bandInk:"#ffffff", bandSub:"#bbbbbb", accent:"#222222", accentFg:"#ffffff",
+      primary:"#222222", primaryFg:"#ffffff", check:"#222222", sel:"#222222",
+      cardBorder:"2px solid #cccccc", cardShadow:"none", radius:"2px", borderCol:"#cccccc",
+      status:"#ffffff", statusInk:"#222222", headFont:"'Atkinson Hyperlegible',sans-serif", headW:"700",
+      bodyFont:"'Atkinson Hyperlegible',sans-serif", monoFont:"'DM Mono',monospace", lineH:"1.6", fs:"1" },
+  };
+  DENSITIES = [
+    { id:"compact", label:"Compact", desc:"Tighter spacing (0.75×)" },
+    { id:"default", label:"Default", desc:"Standard spacing" },
+    { id:"comfortable", label:"Comfortable", desc:"Roomier spacing (1.25×)" },
+  ];
+  bootState() {
+    let theme = "light-default", density = "default", seen = false;
+    try {
+      theme = localStorage.getItem("rd_theme") || theme;
+      density = localStorage.getItem("rd_density") || density;
+      seen = localStorage.getItem("rd_hasSeenWelcome") === "1";
+    } catch (e) {}
+    if (!this.THEMES[theme]) theme = "light-default";
+    return { theme, density, route: seen ? "goals" : "welcome", tab: "goals" };
+  }
+  setTheme(id) { try { localStorage.setItem("rd_theme", id); } catch (e) {} this.setState({ theme: id }); }
+  setDensity(id) { try { localStorage.setItem("rd_density", id); } catch (e) {} this.setState({ density: id }); }
+  buildThemesShell(activeId) {
+    const cur = this.THEMES[activeId];
+    return Object.values(this.THEMES).map((tk, i) => {
+      const selected = tk.id === activeId;
+      return { ...tk, check: selected ? "\u2713" : "", check2: tk.check, pick: () => this.setTheme(tk.id),
+        chipBorder: selected ? "3px solid " + tk.sel : "2px solid " + tk.borderCol,
+        rowBorder: selected ? "2.5px solid " + tk.sel : "2px solid " + tk.borderCol,
+        rowBg: selected ? tk.surfaceAlt : tk.surface, rowShadow: tk.cardShadow,
+        railBorder: selected ? "3px solid " + tk.sel : "2px solid " + tk.borderCol,
+        railShadow: selected ? "0 0 0 3px rgba(0,0,0,0.10)" : "none",
+        divider: i === 0 ? "none" : "1px solid " + cur.borderCol,
+        condBg: selected ? cur.surfaceAlt : "transparent" };
+    });
+  }
+  buildDensRowsShell(activeDensity, activeThemeId) {
+    const cur = this.THEMES[activeThemeId];
+    return this.DENSITIES.map((d, i) => ({ ...d, check: d.id === activeDensity ? "\u2713" : "",
+      rowBg: d.id === activeDensity ? cur.surfaceAlt : "transparent",
+      divider: i === 0 ? "none" : "1px solid " + cur.borderCol, pick: () => this.setDensity(d.id) }));
+  }
+
+  // ---------- initial data ----------
+  initFocus() {
+    return {
+      goalTitle: "Rewire the workshop",
+      current: 2,
+      pickerOpen: false,
+      steps: [
+        { t: "Plan layout & buy materials", planned: { icon: "\u{1F4F7}", label: "Photo" }, captured: [{ icon: "\u{1F4F7}", label: "Photo" }], status: "completed" },
+        { t: "Wire the circuits", planned: { icon: "\u{1F4F7}", label: "Photo" }, captured: [{ icon: "\u{1F4F7}", label: "Photo" }, { icon: "\u{1F4DD}", label: "Note" }], status: "completed" },
+        { t: "Inspection & labels", planned: { icon: "\u{1F4DD}", label: "Note" }, captured: [], status: "pending", dep: { who: "city inspector", exp: "Jun 24" }, after: "Wire the circuits", due: "Fri \u00b7 Jun 27" },
+        { t: "Mount the panels", planned: { icon: "\u{1F4DD}", label: "Note" }, captured: [], status: "pending", after: "Inspection & labels" },
+        { t: "Final walkthrough", planned: { icon: "\u{1F4F7}", label: "Photo" }, captured: [], status: "paused" },
+      ],
+    };
+  }
+  initNG() {
+    return {
+      screen: "name", stack: [], title: "Build a birdhouse", pickerOpen: false, pickerIndex: 0,
+      steps: [
+        { t: "Sand the edges", ev: { icon: "\u{1F4DD}", label: "Note" } },
+        { t: "Paint it", ev: { icon: "\u{1F4F7}", label: "Photo" } },
+      ],
+    };
+  }
+  initBD() {
+    return { stage: "celebrate", noteOpen: false, noteText: "", section: "shape",
+      design: { shape: "circle", color: "#2563eb", mode: "icon", monogram: "R", icon: "\u26A1", bottomLabel: "REWIRED" } };
+  }
+  seedBadges() {
+    return [
+      { title: "Soldering, level 2", color: "#a78bfa", shape: "circle", mode: "monogram", monogram: "S", date: "Jun 2, 2026" },
+      { title: "First circuit", color: "#059669", shape: "circle", mode: "icon", icon: "\u2713", date: "May 21, 2026" },
+      { title: "Bench rebuild", color: "#d97706", shape: "square", mode: "icon", icon: "\u2605", date: "May 9, 2026" },
+      { title: "Safety pass", color: "#e0457b", shape: "shield", mode: "icon", icon: "\u2764", date: "Apr 28, 2026" },
+      { title: "Grinder tune-up", color: "#0d9488", shape: "square", mode: "monogram", monogram: "G", date: "Apr 14, 2026" },
+      { title: "Power run", color: "#2563eb", shape: "circle", mode: "icon", icon: "\u2605", date: "Apr 2, 2026" },
+      { title: "Lathe basics", color: "#7c3aed", shape: "circle", mode: "icon", icon: "\u26A1", date: "Mar 20, 2026" },
+      { title: "Bandsaw cert", color: "#ca8a04", shape: "square", mode: "monogram", monogram: "B", date: "Mar 6, 2026" },
+      { title: "Fire drill", color: "#dc2626", shape: "circle", mode: "icon", icon: "\u2713", date: "Feb 22, 2026" },
+      { title: "Dust control", color: "#0891b2", shape: "circle", mode: "icon", icon: "\u2605", date: "Feb 8, 2026" },
+      { title: "Mentor month", color: "#9a3412", shape: "square", mode: "monogram", monogram: "M", date: "Jan 25, 2026" },
+      { title: "Green shop", color: "#65a30d", shape: "circle", mode: "icon", icon: "\u2713", date: "Jan 11, 2026" },
+      { title: "Paint booth", color: "#7c3aed", shape: "shield", mode: "icon", icon: "\u2764", date: "Dec 19, 2025" },
+      { title: "Prototype lab", color: "#059669", shape: "circle", mode: "icon", icon: "\u2605", date: "Dec 5, 2025" },
+    ];
+  }
+
+  state = {
+    ...this.bootState(), stack: [],
+    goalsEmpty: false, badgesEmpty: false, toast: "",
+    focus: this.initFocus(), ng: this.initNG(), bd: this.initBD(),
+    detail: { sheet: false, overflow: false, confirm: false, badge: null },
+    capture: { key: "photo", label: "Photo", caption: "" },
+    evidence: { icon: "\u{1F4F7}", label: "Photo", step: "" },
+    badges: this.seedBadges(), justEarned: false,
+    settings: { motion: false, reminder: true },
+  };
+
+  EV() {
+    return [
+      { icon: "\u{1F4F7}", label: "Photo" }, { icon: "\u{1F3AC}", label: "Video" }, { icon: "\u{1F3A4}", label: "Audio" },
+      { icon: "\u{1F4DD}", label: "Note" }, { icon: "\u{1F517}", label: "Link" }, { icon: "\u{1F4CE}", label: "File" },
+    ];
+  }
+
+  // ---------- navigation ----------
+  flash(msg) { this.setState({ toast: msg }); clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast: "" }), 1900); }
+  push(route) { this.setState((s) => ({ stack: [...s.stack, s.route], route })); }
+  pop() {
+    this.setState((s) => {
+      if (!s.stack.length) { const root = s.tab === "badges" ? (s.badgesEmpty ? "badgesEmpty" : "badges") : s.tab === "settings" ? "settings" : (s.goalsEmpty ? "goalsEmpty" : "goals"); return { route: root }; }
+      const stack = [...s.stack]; const prev = stack.pop(); return { stack, route: prev };
+    });
+  }
+  goTab(tab) {
+    const s = this.state;
+    const root = tab === "badges" ? (s.badgesEmpty ? "badgesEmpty" : "badges") : tab === "settings" ? "settings" : (s.goalsEmpty ? "goalsEmpty" : "goals");
+    this.setState({ tab, route: root, stack: [], detail: { ...s.detail, sheet: false, overflow: false, confirm: false } });
+  }
+
+  // ---------- focus machine ----------
+  fset(fn) { this.setState((s) => ({ focus: { ...s.focus, ...fn(s.focus) } })); }
+  advance(focus) {
+    const c = focus.current;
+    let n = focus.steps.findIndex((st, i) => i > c && st.status === "pending");
+    if (n === -1) n = focus.steps.findIndex((st) => st.status === "pending");
+    return n === -1 ? c : n;
+  }
+  enterFocus(goal) { this.setState({ tab: "goals", route: "focus", stack: ["goals"], focus: goal }); }
+  startDemoFocus() { this.enterFocus(this.initFocus()); }
+
+  // ---------- badge art ----------
+  contrast(hex) { const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16); return 0.299 * r + 0.587 * g + 0.114 * b > 150 ? "#0a0a0a" : "#ffffff"; }
+  shapeMarkup(shape, fill, stroke) {
+    const sw = 4;
+    if (shape === "square") return `<rect x="5" y="5" width="90" height="90" rx="16" fill="${fill}" stroke="#0a0a0a" stroke-width="${sw}"/><rect x="14" y="14" width="72" height="72" rx="10" fill="none" stroke="${stroke}" stroke-width="2.5" opacity="0.5"/>`;
+    if (shape === "hex") return `<polygon points="50,4 90,27 90,73 50,96 10,73 10,27" fill="${fill}" stroke="#0a0a0a" stroke-width="${sw}"/><polygon points="50,15 80,32 80,68 50,85 20,68 20,32" fill="none" stroke="${stroke}" stroke-width="2.5" opacity="0.5"/>`;
+    if (shape === "shield") return `<path d="M50 5 L88 17 V50 C88 73 70 88 50 95 C30 88 12 73 12 50 V17 Z" fill="${fill}" stroke="#0a0a0a" stroke-width="${sw}"/><path d="M50 15 L80 25 V51 C80 68 66 80 50 86 C34 80 20 68 20 51 V25 Z" fill="none" stroke="${stroke}" stroke-width="2.5" opacity="0.5"/>`;
+    return `<circle cx="50" cy="50" r="46" fill="${fill}" stroke="#0a0a0a" stroke-width="${sw}"/><circle cx="50" cy="50" r="38" fill="none" stroke="${stroke}" stroke-width="2.5" opacity="0.5"/>`;
+  }
+  badgeArt(d, size) {
+    const ink = this.contrast(d.color);
+    let center;
+    if (d.mode === "icon") center = `<text x="50" y="60" text-anchor="middle" font-size="40">${d.icon}</text>`;
+    else center = `<text x="50" y="63" text-anchor="middle" font-family="Anybody, sans-serif" font-weight="900" font-size="38" fill="${ink}">${(d.monogram || "R").toUpperCase()}</text>`;
+    const label = d.bottomLabel ? `<text x="50" y="84" text-anchor="middle" font-family="'DM Mono', monospace" font-weight="500" font-size="7" letter-spacing="1.2" fill="${ink}">${d.bottomLabel.toUpperCase()}</text>` : "";
+    const svg = `<svg width="${size}" height="${size}" viewBox="0 0 100 100" style="display:block; filter:drop-shadow(3px 3px 0 rgba(10,10,10,0.25));">${this.shapeMarkup(d.shape, d.color, ink)}${center}${label}</svg>`;
+    return React.createElement("div", { key: "art" + size, dangerouslySetInnerHTML: { __html: svg } });
+  }
+  tileArt(b) {
+    const ink = this.contrast(b.color);
+    if (b.mode === "icon") return React.createElement("span", { style: { color: ink, fontSize: "26px" } }, b.icon);
+    return React.createElement("span", { style: { fontFamily: "Anybody, sans-serif", fontWeight: 900, fontSize: "25px", color: ink } }, (b.monogram || "?").toUpperCase());
+  }
+
+  renderVals() {
+    const s = this.state;
+    const route = s.route;
+    const tabRoots = ["goals", "goalsEmpty", "badges", "badgesEmpty", "settings"];
+    const showTab = route !== "newgoal" && route !== "finish" && route !== "welcome";
+
+    // ----- theme / density -----
+    const themeId = this.props.theme || s.theme;
+    const densityId = this.props.density || s.density;
+    const curTheme = this.THEMES[themeId] || this.THEMES["light-default"];
+    const dScale = densityId === "compact" ? 0.75 : densityId === "comfortable" ? 1.25 : 1;
+    const themesList = this.buildThemesShell(themeId);
+    const densList = this.buildDensRowsShell(densityId, themeId);
+    const goWelcome = () => this.setState({ route: "welcome" });
+    const goGetStarted = () => { try { localStorage.setItem("rd_hasSeenWelcome", "1"); } catch (e) {} this.goTab("goals"); };
+
+    // ----- focus view model -----
+    const f = s.focus;
+    const steps = f.steps;
+    const total = steps.length;
+    const done = steps.filter((x) => x.status === "completed").length;
+    const pendingCount = steps.filter((x) => x.status === "pending").length;
+    const pausedCount = steps.filter((x) => x.status === "paused").length;
+    const cs = steps[f.current];
+    const metaLines = [];
+    if (cs && cs.dep) metaLines.push({ glyph: "\u23F3", color: "#d97706", text: "waiting on " + cs.dep.who, meta: "\u00b7 expected " + cs.dep.exp });
+    if (cs && cs.after && cs.status === "pending") metaLines.push({ glyph: "\u21A9", color: "#5a8a6a", text: "after " + cs.after, meta: "\u2713 done" });
+    if (cs && cs.due) metaLines.push({ glyph: "\u25A6", color: "#525252", text: "due " + cs.due, meta: "" });
+    const isActive = !!cs && cs.status === "pending";
+    const hasCaptured = !!cs && cs.captured.length > 0;
+    const viewChip = (c) => () => { this.setState({ evidence: { icon: c.icon, label: c.label, step: cs ? cs.t : "" } }); this.push("evidence"); };
+    const cur = {
+      title: cs ? cs.t : "", isActive, isPaused: !!cs && cs.status === "paused", isCompleted: !!cs && cs.status === "completed",
+      plannedIcon: cs ? cs.planned.icon : "", plannedLabel: cs ? cs.planned.label : "",
+      hasMeta: isActive && metaLines.length > 0, metaLines,
+      hasCaptured, captured: cs ? cs.captured.map((c) => ({ ...c, view: viewChip(c) })) : [],
+      blocked: isActive && !hasCaptured, ready: isActive && hasCaptured,
+    };
+    const noPending = pendingCount === 0;
+    const isParked = route === "focus" && noPending && pausedCount > 0 && (!cs || cs.status !== "completed");
+    const isDone = route === "focus" && noPending && pausedCount === 0;
+    const pausedList = steps.map((x, i) => ({ x, i })).filter((o) => o.x.status === "paused").map((o) => ({ title: o.x.t, resume: () => this.fset(() => ({ current: o.i, steps: steps.map((y, j) => (j === o.i ? { ...y, status: "pending" } : y)) })) }));
+    const nodeBg = (st, i) => st.status === "completed" ? "#d4f4e7" : st.status === "paused" ? "#ede9fe" : (i === f.current ? "#ffe50c" : "#fff");
+    const glyph = (st, i) => st.status === "completed" ? "\u2713" : st.status === "paused" ? "\u275A\u275A" : String(i + 1);
+    const statusText = (st, i) => st.status === "completed" ? "DONE" : st.status === "paused" ? "SET ASIDE" : (i === f.current ? "WORKING" : "UP NEXT");
+    const subOf = (st) => st.status === "completed" ? {} : st.dep ? { sub: "waiting on " + st.dep.who + " \u00b7 exp. " + st.dep.exp, subGlyph: "\u23F3", subColor: "#d97706" } : st.due ? { sub: "due " + st.due, subGlyph: "\u25A6", subColor: "#525252" } : {};
+    const stepsVm = steps.map((st, i) => { const sub = subOf(st); return { title: st.t, nodeBg: nodeBg(st, i), glyph: glyph(st, i), connBg: st.status === "completed" ? "#2563eb" : "#cfcfcf", cellBg: i === f.current && st.status === "pending" ? "#fffbe0" : "#fff", statusText: statusText(st, i), sub: sub.sub || "", subGlyph: sub.subGlyph || "", subColor: sub.subColor || "#525252", tap: () => this.setState((ss) => ({ focus: { ...ss.focus, current: i }, route: "focus", stack: ss.stack.filter((r) => r !== "timeline") })) }; });
+    const editSteps = steps.map((st, i) => ({ n: i + 1, t: st.t, evIcon: st.planned.icon, openEv: () => this.fset(() => ({ pickerOpen: true })), hasDates: !!(st.dep || st.due || st.after), chips: [
+      ...(st.after ? [{ glyph: "\u21A9", text: "after " + st.after, color: "#5a8a6a" }] : []),
+      ...(st.dep ? [{ glyph: "\u23F3", text: st.dep.who, color: "#d97706" }] : []),
+      ...(st.due ? [{ glyph: "\u25A6", text: st.due, color: "#525252" }] : []),
+    ] }));
+    const focusVal = {
+      goalTitle: f.goalTitle, doneCount: done, totalCount: total, progressPct: Math.round((done / total) * 100) + "%",
+      cur, isParked, isDone, pausedCount, pausedList, steps: stepsVm, editSteps,
+      goalNodeBg: done === total ? "#ffe50c" : "#fff",
+      pickerOpen: f.pickerOpen,
+      evOptions: this.EV().map((o) => ({ ...o, bg: cs && cs.planned.label === o.label ? "#dbe7ff" : "#fff", pick: () => this.fset((ff) => ({ steps: ff.steps.map((y, j) => (j === ff.current ? { ...y, planned: { ...o } } : y)), pickerOpen: false })) })),
+      seeAll: () => this.push("timeline"),
+      openEdit: () => this.push("edit"),
+      setTitle: (e) => this.fset(() => ({ goalTitle: e.target.value })),
+      addStep: () => this.fset((ff) => ({ steps: [...ff.steps, { t: "New step", planned: { icon: "\u{1F4DD}", label: "Note" }, captured: [], status: "pending" }] })),
+      openPicker: () => this.fset(() => ({ pickerOpen: true })),
+      closePicker: () => this.fset(() => ({ pickerOpen: false })),
+      addEvidence: () => { this.setState({ capture: { key: cs.planned.label.toLowerCase(), label: cs.planned.label, caption: "" } }); this.push("capture"); },
+      markComplete: () => this.fset((ff) => { const st2 = ff.steps.map((y, j) => (j === ff.current ? { ...y, status: "completed" } : y)); let n = st2.findIndex((y, i) => i > ff.current && y.status === "pending"); if (n === -1) n = st2.findIndex((y) => y.status === "pending"); return { steps: st2, current: n }; }),
+      undoComplete: () => this.fset((ff) => ({ steps: ff.steps.map((y, j) => (j === ff.current ? { ...y, status: "pending" } : y)) })),
+      pause: () => this.fset((ff) => { const st2 = ff.steps.map((y, j) => (j === ff.current ? { ...y, status: "paused" } : y)); let n = st2.findIndex((y, i) => i > ff.current && y.status === "pending"); if (n === -1) n = st2.findIndex((y) => y.status === "pending"); return { steps: st2, current: n }; }),
+      resume: () => this.fset((ff) => ({ steps: ff.steps.map((y, j) => (j === ff.current ? { ...y, status: "pending" } : y)) })),
+      designBadge: () => { this.setState({ bd: this.initBD() }); this.push("finish"); },
+    };
+
+    // ----- new goal -----
+    const ng = s.ng;
+    const ngStepsVm = ng.steps.map((x, i) => ({ n: i + 1, t: x.t, evIcon: x.ev.icon, openEv: () => this.setState((ss) => ({ ng: { ...ss.ng, pickerOpen: true, pickerIndex: i } })) }));
+    const ngProgOrder = ["name", "step", "build", "ready"];
+    const ngIdx = ngProgOrder.indexOf(ng.screen);
+    const ngNext = () => { const map = { name: "step", step: "build", build: "ready" }; const nx = map[ng.screen]; if (nx) this.setState((ss) => ({ ng: { ...ss.ng, screen: nx, stack: [...ss.ng.stack, ss.ng.screen] } })); };
+    const ngVal = {
+      isName: ng.screen === "name", isStep: ng.screen === "step", isBuild: ng.screen === "build", isReady: ng.screen === "ready",
+      title: ng.title, first: ng.steps[0] ? ng.steps[0].t : "", firstEvIcon: ng.steps[0] ? ng.steps[0].ev.icon : "", firstEvLabel: ng.steps[0] ? ng.steps[0].ev.label : "",
+      steps: ngStepsVm, stepCount: ng.steps.length,
+      progress: ngProgOrder.map((_, i) => ({ bg: i <= ngIdx ? "#ffe50c" : "#fff" })),
+      backGlyph: ng.screen === "name" ? "" : "\u2190",
+      pickerOpen: ng.pickerOpen,
+      evOptions: this.EV().map((o) => ({ ...o, pick: () => this.setState((ss) => { const st2 = ss.ng.steps.map((y, j) => (j === ss.ng.pickerIndex ? { ...y, ev: { ...o } } : y)); return { ng: { ...ss.ng, steps: st2, pickerOpen: false } }; }) })),
+      next: ngNext,
+      back: () => { if (ng.screen === "name") { this.pop(); return; } this.setState((ss) => { const stk = [...ss.ng.stack]; const prev = stk.pop() || "name"; return { ng: { ...ss.ng, screen: prev, stack: stk } }; }); },
+      close: () => { this.setState({ ng: this.initNG() }); this.pop(); },
+      quickAdd: () => this.setState((ss) => ({ ng: { ...ss.ng, screen: "build", stack: [...ss.ng.stack, ss.ng.screen] } })),
+      addStep: () => this.setState((ss) => ({ ng: { ...ss.ng, steps: [...ss.ng.steps, { t: "New step", ev: { icon: "\u{1F4DD}", label: "Note" } }] } })),
+      setTitle: (e) => this.setState((ss) => ({ ng: { ...ss.ng, title: e.target.value } })),
+      setFirst: (e) => this.setState((ss) => ({ ng: { ...ss.ng, steps: ss.ng.steps.map((y, j) => (j === 0 ? { ...y, t: e.target.value } : y)) } })),
+      openFirstEv: () => this.setState((ss) => ({ ng: { ...ss.ng, pickerOpen: true, pickerIndex: 0 } })),
+      closePicker: () => this.setState((ss) => ({ ng: { ...ss.ng, pickerOpen: false } })),
+      startWorking: () => { const built = { goalTitle: ng.title, current: 0, pickerOpen: false, steps: ng.steps.map((x) => ({ t: x.t, planned: { ...x.ev }, captured: [], status: "pending" })) }; this.setState({ ng: this.initNG() }); this.enterFocus(built); },
+    };
+
+    // ----- finish / badge designer -----
+    const bd = s.bd; const d = bd.design;
+    const SHAPES = [{ id: "circle", label: "Circle" }, { id: "shield", label: "Shield" }, { id: "hex", label: "Hexagon" }, { id: "square", label: "Square" }];
+    const COLORS = ["#2563eb", "#a78bfa", "#059669", "#d97706", "#e0457b"];
+    const ICONS = ["\u26A1", "\u{1F527}", "\u{1F3C6}", "\u{1F331}", "\u2B50", "\u{1F3AF}"];
+    const PRESETS = ["REWIRED", "EARNED 2026", "DONE", "SHIPPED"];
+    const sel = "#dbe7ff"; const chev = (o) => (o ? "\u25BE" : "\u25B8");
+    const bset = (patch) => this.setState((ss) => ({ bd: { ...ss.bd, design: { ...ss.bd.design, ...patch } } }));
+    const btoggle = (id) => this.setState((ss) => ({ bd: { ...ss.bd, section: ss.bd.section === id ? null : id } }));
+    const finishVal = {
+      isCelebrate: bd.stage === "celebrate", isDesign: bd.stage === "design", isBaking: bd.stage === "baking", isReveal: bd.stage === "reveal",
+      goalTitle: f.goalTitle, color: d.color,
+      badgePreviewMd: this.badgeArt(d, 150), badgePreviewLg: this.badgeArt(d, 208),
+      goDesign: () => this.setState((ss) => ({ bd: { ...ss.bd, stage: "design" } })),
+      backToCelebrate: () => this.setState((ss) => ({ bd: { ...ss.bd, stage: "celebrate" } })),
+      shapeOpen: bd.section === "shape", shapeChevron: chev(bd.section === "shape"), shapeSummary: (SHAPES.find((x) => x.id === d.shape) || {}).label,
+      toggleShape: () => btoggle("shape"), shapeOptions: SHAPES.map((o) => ({ label: o.label, bg: d.shape === o.id ? sel : "#fff", pick: () => bset({ shape: o.id }) })),
+      colorOpen: bd.section === "color", colorChevron: chev(bd.section === "color"), toggleColor: () => btoggle("color"),
+      colorOptions: COLORS.map((hex) => ({ hex, shadow: d.color === hex ? "0 0 0 3px #fff, 0 0 0 5px #0a0a0a" : "none", pick: () => bset({ color: hex }) })),
+      centerOpen: bd.section === "center", centerChevron: chev(bd.section === "center"), centerSummary: d.mode === "icon" ? "Icon" : "Monogram", toggleCenter: () => btoggle("center"),
+      isMonogram: d.mode === "monogram", isIcon: d.mode === "icon", monoTabBg: d.mode === "monogram" ? sel : "#fff", iconTabBg: d.mode === "icon" ? sel : "#fff",
+      useMonogram: () => bset({ mode: "monogram" }), useIcon: () => bset({ mode: "icon" }), monogram: d.monogram, setMonogram: (e) => bset({ monogram: e.target.value }),
+      iconOptions: ICONS.map((g) => ({ glyph: g, bg: d.icon === g && d.mode === "icon" ? sel : "#fff", pick: () => bset({ icon: g, mode: "icon" }) })),
+      textOpen: bd.section === "text", textChevron: chev(bd.section === "text"), toggleText: () => btoggle("text"), bottomLabel: d.bottomLabel, setLabel: (e) => bset({ bottomLabel: e.target.value }),
+      labelPresets: PRESETS.map((t) => ({ text: t, pick: () => bset({ bottomLabel: t }) })),
+      bake: () => { this.setState((ss) => ({ bd: { ...ss.bd, stage: "baking" } })); setTimeout(() => this.setState((ss) => ({ bd: { ...ss.bd, stage: "reveal" } })), 1100); },
+      viewBadge: () => { const nb = { title: f.goalTitle, color: d.color, shape: d.shape, mode: d.mode, monogram: d.monogram, icon: d.icon, date: "Jun 23, 2026" }; this.setState((ss) => ({ badges: [nb, ...ss.badges], justEarned: true, tab: "badges", route: "badgeDetail", stack: ["badges"], detail: { ...ss.detail, badge: nb } })); },
+      backToGoals: () => { const d2 = s.bd.design; const nb = { title: f.goalTitle, color: d2.color, shape: d2.shape, mode: d2.mode, monogram: d2.monogram, icon: d2.icon, date: "Jun 23, 2026" }; this.setState((ss) => ({ badges: [nb, ...ss.badges], justEarned: true, tab: "goals", route: "goals", stack: [], focus: this.initFocus(), bd: this.initBD() })); },
+    };
+
+    // ----- badge detail -----
+    const det = s.detail; const db = det.badge || s.badges[0] || { title: "Badge", color: "#2563eb", shape: "circle", mode: "icon", icon: "\u26A1", date: "Jun 23, 2026" };
+    const detailVal = {
+      heroArt: this.badgeArt({ ...db, bottomLabel: db.title === "Rewire the workshop" ? "REWIRED" : "" }, 132),
+      title: db.title, date: db.date,
+      sheetOpen: det.sheet, overflowOpen: det.overflow, confirmOpen: det.confirm,
+      toggleOverflow: () => this.setState((ss) => ({ detail: { ...ss.detail, overflow: !ss.detail.overflow } })),
+      closeOverflow: () => this.setState((ss) => ({ detail: { ...ss.detail, overflow: false } })),
+      openSheet: () => this.setState((ss) => ({ detail: { ...ss.detail, sheet: true, overflow: false } })),
+      closeSheet: () => this.setState((ss) => ({ detail: { ...ss.detail, sheet: false } })),
+      openConfirm: () => this.setState((ss) => ({ detail: { ...ss.detail, confirm: true, overflow: false, sheet: false } })),
+      closeConfirm: () => this.setState((ss) => ({ detail: { ...ss.detail, confirm: false } })),
+      stop: (e) => { if (e && e.stopPropagation) e.stopPropagation(); },
+      confirmDelete: () => { this.setState((ss) => ({ detail: { ...ss.detail, confirm: false }, badges: ss.badges.filter((b) => b !== db) })); this.flash("Badge deleted"); this.pop(); },
+      viewTimeline: () => this.push("timeline"),
+      viewProof: () => { this.setState({ evidence: { icon: "\u{1F4F7}", label: "Photo", step: "Wire the circuits" } }); this.push("evidence"); },
+      shareVerifiable: () => { this.setState((ss) => ({ detail: { ...ss.detail, sheet: false } })); this.flash("Verifiable badge shared \u2713"); },
+      saveImage: () => { this.setState((ss) => ({ detail: { ...ss.detail, sheet: false } })); this.flash("Saved as image"); },
+      exportCredential: () => { this.setState((ss) => ({ detail: { ...ss.detail, sheet: false, overflow: false } })); this.flash("Credential exported"); },
+    };
+
+    // ----- badges wall -----
+    const wall = {
+      count: s.badges.length,
+      hasSpotlight: s.justEarned && s.badges.length > 0,
+      spotlightArt: s.badges.length ? React.createElement("div", { style: { width: "60px", height: "60px", borderRadius: "50%", background: s.badges[0].color, border: "2.5px solid #ffe50c", display: "flex", alignItems: "center", justifyContent: "center" }, key: "spot" }, this.tileArt(s.badges[0])) : null,
+      spotlightTitle: s.badges.length ? s.badges[0].title : "",
+      spotlightDate: s.badges.length ? s.badges[0].date.toUpperCase() : "",
+      openSpotlight: () => { this.setState((ss) => ({ detail: { ...ss.detail, badge: ss.badges[0] } })); this.push("badgeDetail"); },
+      tiles: s.badges.map((b) => ({ color: b.color, radius: (b.shape === "square" || b.shape === "hex") ? "7px" : "50%", art: this.tileArt(b), open: () => { this.setState((ss) => ({ detail: { ...ss.detail, badge: b } })); this.push("badgeDetail"); } })),
+      sort: () => this.flash("Sort \u00b7 newest first"),
+    };
+
+    // ----- capture / evidence stubs -----
+    const cap = s.capture;
+    const capMeta = { Photo: { big: "\u{1F4F7}", action: "Take a photo", hint: "Snap proof of what you did. Tap to use the camera or pick from your library." }, Video: { big: "\u{1F3AC}", action: "Record a clip", hint: "A short video showing the step in action." }, Audio: { big: "\u{1F3A4}", action: "Record a voice memo", hint: "Talk through what you finished \u2014 hands-free proof." }, Note: { big: "\u{1F4DD}", action: "Write a note", hint: "Jot down what you did and how it went." }, Link: { big: "\u{1F517}", action: "Paste a link", hint: "Point to something online that shows your work." }, File: { big: "\u{1F4CE}", action: "Attach a file", hint: "Upload a document, PDF, or export as evidence." } };
+    const cm = capMeta[cap.label] || capMeta.Photo;
+    const captureVal = {
+      label: cap.label, stepTitle: cs ? cs.t : "", caption: cap.caption,
+      bigIcon: React.createElement("span", { style: { fontSize: "32px" }, key: "cap" }, cm.big),
+      actionLabel: cm.action, hint: cm.hint,
+      setCaption: (e) => this.setState((ss) => ({ capture: { ...ss.capture, caption: e.target.value } })),
+      save: () => { this.fset((ff) => ({ steps: ff.steps.map((y, j) => (j === ff.current ? { ...y, captured: [...y.captured, { ...y.planned }] } : y)) })); this.flash(cap.label + " added \u2713"); this.pop(); },
+    };
+    const ev = s.evidence;
+    const evTint = { Photo: "#dbe7ff", Video: "#ede9fe", Audio: "#ffe9d6", Note: "#d4f4e7", Link: "#e9e9ff", File: "#f0e9d6" };
+    const evGlyph = { Photo: "\u{1F5BC}\uFE0F", Video: "\u{1F3AC}", Audio: "\u{1F50A}", Note: "\u{1F4DD}", Link: "\u{1F517}", File: "\u{1F4C4}" };
+    const evidenceVal = { icon: ev.icon, label: ev.label, stepTitle: ev.step, tint: evTint[ev.label] || "#dbe7ff", glyph: evGlyph[ev.label] || "\u{1F5BC}\uFE0F" };
+
+    // ----- settings -----
+    const settingsVal = {
+      toggleMotion: () => this.setState((ss) => ({ settings: { ...ss.settings, motion: !ss.settings.motion } })),
+      toggleReminder: () => this.setState((ss) => ({ settings: { ...ss.settings, reminder: !ss.settings.reminder } })),
+      motionBg: s.settings.motion ? "#a78bfa" : "#e5e5e5", motionX: s.settings.motion ? "21px" : "1px",
+      reminderBg: s.settings.reminder ? "#a78bfa" : "#e5e5e5", reminderX: s.settings.reminder ? "21px" : "1px",
+    };
+
+    return {
+      rWelcome: route === "welcome", cur: curTheme, dScale, themesList, densList, goWelcome, goGetStarted,
+      rGoals: route === "goals", rGoalsEmpty: route === "goalsEmpty", rBadges: route === "badges", rBadgesEmpty: route === "badgesEmpty", rSettings: route === "settings",
+      rFocus: route === "focus", rTimeline: route === "timeline", rEdit: route === "edit", rCapture: route === "capture", rEvidence: route === "evidence",
+      rNewGoal: route === "newgoal", rFinish: route === "finish", rBadgeDetail: route === "badgeDetail",
+      showTab, toast: s.toast,
+      nav: {
+        goalsActive: s.tab === "goals", goalsInactive: s.tab !== "goals",
+        badgesActive: s.tab === "badges", badgesInactive: s.tab !== "badges",
+        settingsActive: s.tab === "settings", settingsInactive: s.tab !== "settings",
+        goGoals: () => this.goTab("goals"), goBadges: () => this.goTab("badges"), goSettings: () => this.goTab("settings"),
+      },
+      startFocus: () => this.startDemoFocus(),
+      openNewGoal: () => { this.setState({ ng: this.initNG() }); this.push("newgoal"); },
+      seeGoals: () => this.goTab("goals"),
+      toggleGoalsEmpty: () => this.setState((ss) => ({ goalsEmpty: !ss.goalsEmpty, route: ss.goalsEmpty ? "goals" : "goalsEmpty" })),
+      toggleBadgesEmpty: () => this.setState((ss) => ({ badgesEmpty: !ss.badgesEmpty, route: ss.badgesEmpty ? "badges" : "badgesEmpty" })),
+      back: () => this.pop(),
+      focus: focusVal, ng: ngVal, finish: finishVal, detail: detailVal, wall, capture: captureVal, evidence: evidenceVal, settings: settingsVal,
+    };
+  }
+}
+</script>
+</body>
+</html>

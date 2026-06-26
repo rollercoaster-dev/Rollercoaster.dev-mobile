@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wght@700;800;900&family=Instrument+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+</style>
+</helmet>
+
+<div style="font-family:'Instrument Sans',system-ui,sans-serif; width:max-content; min-width:100%; min-height:100vh; box-sizing:border-box; padding:48px; background:#e5e5e5; color:#0a0a0a;">
+
+  <!-- heading -->
+  <div style="max-width:920px; margin-bottom:34px;">
+    <div style="font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:#525252; margin-bottom:10px;">Phase 0 &middot; Evaluate the finishing flow</div>
+    <h1 style="font-family:'Anybody',sans-serif; font-weight:900; font-size:38px; line-height:1.02; letter-spacing:-0.02em; margin:0 0 14px;">FROM &ldquo;DONE&rdquo; TO A BAKED BADGE.</h1>
+    <p style="font-size:15px; line-height:1.6; margin:0; max-width:780px; color:#404040;">Every real screen and state between completing the last step and holding the badge &mdash; pulled straight from <span style="font-family:'DM Mono',monospace; font-size:12.5px;">CompletionFlowScreen</span>, <span style="font-family:'DM Mono',monospace; font-size:12.5px;">BadgeEarnedModal</span> and <span style="font-family:'DM Mono',monospace; font-size:12.5px;">BadgeDesignerScreen</span>, with the actual copy. Friction flagged <span style="background:#d97706; color:#fff; border:2px solid #0a0a0a; border-radius:9999px; width:18px; height:18px; font-size:11px; font-weight:700; text-align:center; line-height:14px; display:inline-block;">!</span>. The goal: agree what to cut before we redesign.</p>
+  </div>
+
+  <!-- ===== THE HAPPY PATH ===== -->
+  <div style="font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:#525252; margin-bottom:16px;">The path today &middot; last step &rarr; badge in hand</div>
+
+  <div style="display:flex; align-items:flex-start; gap:0; margin-bottom:8px;">
+
+    <!-- FRAME 1: Focus Mode trigger -->
+    <div style="flex:none; width:250px;">
+      <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; color:#737373; margin-bottom:7px;">1 &middot; FocusMode</div>
+      <div style="width:250px; height:430px; background:#fafafa; border:3px solid #0a0a0a; border-radius:28px; box-shadow:5px 5px 0 rgba(10,10,10,0.2); overflow:hidden; display:flex; flex-direction:column;">
+        <div style="height:24px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 14px; font-family:'DM Mono',monospace; font-size:10px;"><span>9:41</span><span>&#9679;&#9679;&#9679;</span></div>
+        <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:9px 13px;"><span style="font-size:16px;">&lsaquo;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:13px;">Rewire the workshop</span><span style="width:12px;"></span></div>
+        <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:0 18px;">
+          <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:23px; line-height:1.05; margin-bottom:14px;">Last step &mdash; mark it complete.</div>
+          <div style="height:46px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; gap:8px; color:#fff; font-size:15px; font-weight:700;">&#10003; Mark complete</div>
+          <div style="font-size:11px; color:#737373; text-align:center; margin-top:9px;">auto-leaves after 400ms</div>
+        </div>
+      </div>
+      <div style="width:250px; margin-top:10px; font-size:11.5px; line-height:1.45; color:#525252;">All steps done &rarr; <strong>auto-navigates</strong> to Completion. No confirm step.</div>
+    </div>
+
+    <div style="flex:none; width:46px; display:flex; align-items:center; justify-content:center; height:430px; font-size:26px; color:#0a0a0a;">&rarr;</div>
+
+    <!-- FRAME 2: Evidence prompt -->
+    <div style="flex:none; width:250px;">
+      <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; color:#737373; margin-bottom:7px; display:flex; align-items:center; gap:6px;">2 &middot; Completion &mdash; evidence <span style="background:#d97706; color:#fff; border:2px solid #0a0a0a; border-radius:9999px; width:16px; height:16px; font-size:10px; font-weight:700; text-align:center; line-height:12px;">!</span></div>
+      <div style="width:250px; height:430px; background:#fafafa; border:3px solid #0a0a0a; border-radius:28px; box-shadow:5px 5px 0 rgba(10,10,10,0.2); overflow:hidden; display:flex; flex-direction:column;">
+        <div style="height:24px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 14px; font-family:'DM Mono',monospace; font-size:10px;"><span>9:41</span><span>&#9679;&#9679;&#9679;</span></div>
+        <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:center; padding:9px 13px;"><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:13px;">Complete</span></div>
+        <div style="flex:1; overflow:hidden; padding:16px 16px 0;">
+          <div style="font-size:30px; text-align:center; margin-bottom:6px;">&#127942;</div>
+          <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:19px; text-align:center; margin-bottom:5px;">One last thing!</div>
+          <div style="font-size:11.5px; color:#525252; text-align:center; line-height:1.4; margin-bottom:13px;">Capture your achievement for Rewire the workshop</div>
+          <div style="font-family:'DM Mono',monospace; font-size:9px; text-transform:uppercase; color:#737373; margin-bottom:5px;">Write about what you accomplished</div>
+          <div style="height:52px; background:#fff; border:2px solid #0a0a0a; border-radius:5px; padding:7px 9px; font-size:11px; color:#a3a3a3; margin-bottom:9px;">What did you accomplish?</div>
+          <div style="height:38px; background:#2563eb; border:2px solid #0a0a0a; border-radius:4px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:13px; font-weight:700; margin-bottom:12px;">Save Note</div>
+          <div style="font-family:'DM Mono',monospace; font-size:9px; text-transform:uppercase; color:#737373; margin-bottom:6px;">Or capture another way</div>
+          <div style="display:flex; flex-wrap:wrap; gap:5px;">
+            <span style="font-size:10px; background:#fff; border:2px solid #0a0a0a; border-radius:9999px; padding:3px 8px;">&#128247; Photo</span>
+            <span style="font-size:10px; background:#fff; border:2px solid #0a0a0a; border-radius:9999px; padding:3px 8px;">&#127909; Video</span>
+            <span style="font-size:10px; background:#fff; border:2px solid #0a0a0a; border-radius:9999px; padding:3px 8px;">&#127908; Audio</span>
+            <span style="font-size:10px; background:#fff; border:2px solid #0a0a0a; border-radius:9999px; padding:3px 8px;">&#128279; Link</span>
+            <span style="font-size:10px; background:#fff; border:2px solid #0a0a0a; border-radius:9999px; padding:3px 8px;">&#128206; File</span>
+          </div>
+        </div>
+      </div>
+      <div style="width:250px; margin-top:10px; font-size:11.5px; line-height:1.45; color:#525252;"><strong>Skipped entirely</strong> if the goal already has any evidence. Many users never see it.</div>
+    </div>
+
+    <div style="flex:none; width:46px; display:flex; align-items:center; justify-content:center; height:430px; font-size:26px; color:#0a0a0a;">&rarr;</div>
+
+    <!-- FRAME 3: Celebration + bake choice -->
+    <div style="flex:none; width:250px;">
+      <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; color:#737373; margin-bottom:7px; display:flex; align-items:center; gap:6px;">3 &middot; Completion &mdash; celebrate <span style="background:#d97706; color:#fff; border:2px solid #0a0a0a; border-radius:9999px; width:16px; height:16px; font-size:10px; font-weight:700; text-align:center; line-height:12px;">!</span></div>
+      <div style="width:250px; height:430px; background:#fafafa; border:3px solid #0a0a0a; border-radius:28px; box-shadow:5px 5px 0 rgba(10,10,10,0.2); overflow:hidden; display:flex; flex-direction:column;">
+        <div style="height:24px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 14px; font-family:'DM Mono',monospace; font-size:10px;"><span>9:41</span><span>&#9679;&#9679;&#9679;</span></div>
+        <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:center; padding:9px 13px;"><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:13px;">Complete</span></div>
+        <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:14px 18px;">
+          <div style="font-size:28px; margin-bottom:4px;">&#127919;</div>
+          <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:22px; text-align:center; margin-bottom:4px;">You did it!</div>
+          <div style="font-size:11px; color:#525252; text-align:center; line-height:1.4; margin-bottom:14px;">All 5 steps completed for Rewire the workshop</div>
+          <svg width="84" height="84" viewBox="0 0 100 100" style="margin-bottom:16px;"><circle cx="50" cy="50" r="45" fill="#a78bfa" stroke="#0a0a0a" stroke-width="4"/><circle cx="50" cy="50" r="37" fill="none" stroke="#ffe50c" stroke-width="3"/><text x="50" y="62" text-anchor="middle" font-family="Anybody" font-weight="900" font-size="36" fill="#0a0a0a">R</text></svg>
+          <div style="width:100%; height:42px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px; font-weight:700; margin-bottom:9px;">Bake It</div>
+          <div style="width:100%; height:42px; background:#fff; border:3px solid #0a0a0a; border-radius:4px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700;">Redesign First</div>
+        </div>
+      </div>
+      <div style="width:250px; margin-top:10px; font-size:11.5px; line-height:1.45; color:#525252;">Second emoji moment in a row. Bake <strong>never auto-fires</strong> &mdash; always a manual tap.</div>
+    </div>
+
+    <div style="flex:none; width:46px; display:flex; align-items:center; justify-content:center; height:430px; font-size:26px; color:#0a0a0a;">&rarr;</div>
+
+    <!-- FRAME 4: Baking -->
+    <div style="flex:none; width:250px;">
+      <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; color:#737373; margin-bottom:7px; display:flex; align-items:center; gap:6px;">4 &middot; Completion &mdash; baking <span style="background:#d97706; color:#fff; border:2px solid #0a0a0a; border-radius:9999px; width:16px; height:16px; font-size:10px; font-weight:700; text-align:center; line-height:12px;">!</span></div>
+      <div style="width:250px; height:430px; background:#fafafa; border:3px solid #0a0a0a; border-radius:28px; box-shadow:5px 5px 0 rgba(10,10,10,0.2); overflow:hidden; display:flex; flex-direction:column;">
+        <div style="height:24px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 14px; font-family:'DM Mono',monospace; font-size:10px;"><span>9:41</span><span>&#9679;&#9679;&#9679;</span></div>
+        <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:center; padding:9px 13px;"><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:13px;">Complete</span></div>
+        <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:14px 18px;">
+          <div style="font-size:28px; margin-bottom:4px;">&#127919;</div>
+          <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:22px; text-align:center; margin-bottom:14px;">You did it!</div>
+          <svg width="84" height="84" viewBox="0 0 100 100" style="margin-bottom:18px; opacity:0.55;"><circle cx="50" cy="50" r="45" fill="#a78bfa" stroke="#0a0a0a" stroke-width="4"/><circle cx="50" cy="50" r="37" fill="none" stroke="#ffe50c" stroke-width="3"/><text x="50" y="62" text-anchor="middle" font-family="Anybody" font-weight="900" font-size="36" fill="#0a0a0a">R</text></svg>
+          <div style="width:22px; height:22px; border:3px solid #0a0a0a; border-top-color:transparent; border-radius:9999px; margin-bottom:11px;"></div>
+          <div style="font-family:'DM Mono',monospace; font-size:12px; color:#525252;">Creating your badge&hellip;</div>
+        </div>
+      </div>
+      <div style="width:250px; margin-top:10px; font-size:11.5px; line-height:1.45; color:#525252;">Spinner, <span style="font-family:'DM Mono',monospace; font-size:10.5px;">no-key</span>, error + <strong>Retry</strong> all render inside the celebration card.</div>
+    </div>
+
+    <div style="flex:none; width:46px; display:flex; align-items:center; justify-content:center; height:430px; font-size:26px; color:#0a0a0a;">&rarr;</div>
+
+    <!-- FRAME 5: Badge Earned Modal -->
+    <div style="flex:none; width:250px;">
+      <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; color:#737373; margin-bottom:7px; display:flex; align-items:center; gap:6px;">5 &middot; BadgeEarnedModal <span style="background:#d97706; color:#fff; border:2px solid #0a0a0a; border-radius:9999px; width:16px; height:16px; font-size:10px; font-weight:700; text-align:center; line-height:12px;">!</span></div>
+      <div style="width:250px; height:430px; background:#7c6db0; border:3px solid #0a0a0a; border-radius:28px; box-shadow:5px 5px 0 rgba(10,10,10,0.2); overflow:hidden; display:flex; flex-direction:column;">
+        <div style="height:24px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 14px; font-family:'DM Mono',monospace; font-size:10px;"><span>9:41</span><span>&#9679;&#9679;&#9679;</span></div>
+        <div style="flex:1; display:flex; align-items:center; justify-content:center; padding:18px;">
+          <div style="width:100%; background:#fafafa; border:3px solid #0a0a0a; border-radius:14px; box-shadow:4px 4px 0 rgba(10,10,10,0.5); padding:22px 18px; display:flex; flex-direction:column; align-items:center;">
+            <svg width="92" height="92" viewBox="0 0 100 100" style="margin-bottom:14px;"><circle cx="50" cy="50" r="45" fill="#a78bfa" stroke="#0a0a0a" stroke-width="4"/><circle cx="50" cy="50" r="37" fill="none" stroke="#ffe50c" stroke-width="3"/><text x="50" y="62" text-anchor="middle" font-family="Anybody" font-weight="900" font-size="36" fill="#0a0a0a">R</text></svg>
+            <div style="font-size:13px; font-weight:600; margin-bottom:16px;">First one. (noted.)</div>
+            <div style="width:100%; height:40px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:13px; font-weight:700; margin-bottom:9px;">View Badge</div>
+            <div style="width:100%; height:40px; background:#fff; border:3px solid #0a0a0a; border-radius:4px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700;">Keep going</div>
+          </div>
+        </div>
+      </div>
+      <div style="width:250px; margin-top:10px; font-size:11.5px; line-height:1.45; color:#525252;">A modal that <strong>repeats</strong> the celebration screen &mdash; badge again, &ldquo;View&rdquo; again. 3rd time the badge is shown.</div>
+    </div>
+
+    <div style="flex:none; width:46px; display:flex; align-items:center; justify-content:center; height:430px; font-size:26px; color:#0a0a0a;">&rarr;</div>
+
+    <!-- FRAME 6: Post-bake actions -->
+    <div style="flex:none; width:250px;">
+      <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; color:#737373; margin-bottom:7px; display:flex; align-items:center; gap:6px;">6 &middot; Completion &mdash; after <span style="background:#d97706; color:#fff; border:2px solid #0a0a0a; border-radius:9999px; width:16px; height:16px; font-size:10px; font-weight:700; text-align:center; line-height:12px;">!</span></div>
+      <div style="width:250px; height:430px; background:#fafafa; border:3px solid #0a0a0a; border-radius:28px; box-shadow:5px 5px 0 rgba(10,10,10,0.2); overflow:hidden; display:flex; flex-direction:column;">
+        <div style="height:24px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 14px; font-family:'DM Mono',monospace; font-size:10px;"><span>9:41</span><span>&#9679;&#9679;&#9679;</span></div>
+        <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:center; padding:9px 13px;"><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:13px;">Complete</span></div>
+        <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:14px 18px;">
+          <div style="font-size:24px; margin-bottom:4px;">&#127919;</div>
+          <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:20px; text-align:center; margin-bottom:14px;">You did it!</div>
+          <svg width="68" height="68" viewBox="0 0 100 100" style="margin-bottom:16px;"><circle cx="50" cy="50" r="45" fill="#a78bfa" stroke="#0a0a0a" stroke-width="4"/><circle cx="50" cy="50" r="37" fill="none" stroke="#ffe50c" stroke-width="3"/><text x="50" y="62" text-anchor="middle" font-family="Anybody" font-weight="900" font-size="36" fill="#0a0a0a">R</text></svg>
+          <div style="width:100%; height:38px; background:#fff; border:3px solid #0a0a0a; border-radius:4px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; margin-bottom:8px;">Add Final Evidence</div>
+          <div style="width:100%; height:38px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:13px; font-weight:700; margin-bottom:8px;">View Your Journey &rarr;</div>
+          <div style="width:100%; height:38px; background:#fff; border:3px solid #0a0a0a; border-radius:4px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700;">Reopen Goal</div>
+        </div>
+      </div>
+      <div style="width:250px; margin-top:10px; font-size:11.5px; line-height:1.45; color:#525252;">Behind the dismissed modal: 3 more CTAs. <strong>&ldquo;Add Final Evidence&rdquo; returns</strong> &mdash; same job as screen 2.</div>
+    </div>
+
+    <div style="flex:none; width:46px; display:flex; align-items:center; justify-content:center; height:430px; font-size:26px; color:#0a0a0a;">&rarr;</div>
+
+    <!-- FRAME 7: Badge Detail -->
+    <div style="flex:none; width:250px;">
+      <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; color:#737373; margin-bottom:7px;">7 &middot; BadgeDetail &middot; Badges tab</div>
+      <div style="width:250px; height:430px; background:#fafafa; border:3px solid #0a0a0a; border-radius:28px; box-shadow:5px 5px 0 rgba(10,10,10,0.2); overflow:hidden; display:flex; flex-direction:column;">
+        <div style="height:24px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 14px; font-family:'DM Mono',monospace; font-size:10px;"><span>9:41</span><span>&#9679;&#9679;&#9679;</span></div>
+        <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:9px 13px;"><span style="font-size:16px;">&lsaquo;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:13px;">Badge</span><span style="width:12px;"></span></div>
+        <div style="flex:1; display:flex; flex-direction:column; align-items:center; padding:18px;">
+          <svg width="100" height="100" viewBox="0 0 100 100" style="margin-bottom:12px;"><circle cx="50" cy="50" r="45" fill="#a78bfa" stroke="#0a0a0a" stroke-width="4"/><circle cx="50" cy="50" r="37" fill="none" stroke="#ffe50c" stroke-width="3"/><text x="50" y="62" text-anchor="middle" font-family="Anybody" font-weight="900" font-size="36" fill="#0a0a0a">R</text></svg>
+          <div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:16px; text-align:center; margin-bottom:3px;">Rewire the workshop</div>
+          <div style="font-family:'DM Mono',monospace; font-size:11px; color:#737373; margin-bottom:16px;">Earned Jun 23, 2026</div>
+          <div style="width:100%; height:40px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:13px; font-weight:700; margin-bottom:8px;">Export Verifiable Badge</div>
+          <div style="display:flex; gap:8px; width:100%;">
+            <div style="flex:1; height:36px; background:#fff; border:2px solid #0a0a0a; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700;">Credential</div>
+            <div style="flex:1; height:36px; background:#fff; border:2px solid #0a0a0a; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700;">Save Image</div>
+          </div>
+        </div>
+      </div>
+      <div style="width:250px; margin-top:10px; font-size:11.5px; line-height:1.45; color:#525252;">The real home for the badge. Where the journey actually ends.</div>
+    </div>
+
+  </div>
+
+  <!-- ===== DETOUR ===== -->
+  <div style="margin:40px 0 16px; font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:#525252;">Detour from screen 3 &middot; &ldquo;Redesign First&rdquo;</div>
+  <div style="display:flex; gap:22px; align-items:flex-start;">
+    <div style="flex:none; width:250px;">
+      <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; color:#737373; margin-bottom:7px; display:flex; align-items:center; gap:6px;">BadgeDesigner <span style="background:#d97706; color:#fff; border:2px solid #0a0a0a; border-radius:9999px; width:16px; height:16px; font-size:10px; font-weight:700; text-align:center; line-height:12px;">!</span></div>
+      <div style="width:250px; height:430px; background:#fafafa; border:3px dashed #5b21b6; border-radius:28px; box-shadow:5px 5px 0 rgba(91,33,182,0.18); overflow:hidden; display:flex; flex-direction:column;">
+        <div style="height:24px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 14px; font-family:'DM Mono',monospace; font-size:10px;"><span>9:41</span><span>&#9679;&#9679;&#9679;</span></div>
+        <div style="background:#ede9fe; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:9px 13px;"><span style="font-size:16px;">&lsaquo;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:13px;">Badge</span><span style="width:12px;"></span></div>
+        <div style="display:flex; justify-content:center; padding:14px 0 10px; border-bottom:2px solid #e5e5e5;"><svg width="74" height="74" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#a78bfa" stroke="#0a0a0a" stroke-width="4"/><circle cx="50" cy="50" r="37" fill="none" stroke="#ffe50c" stroke-width="3"/><text x="50" y="62" text-anchor="middle" font-family="Anybody" font-weight="900" font-size="36" fill="#0a0a0a">R</text></svg></div>
+        <div style="flex:1; padding:10px 14px; display:flex; flex-direction:column; gap:7px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; background:#fff; border:2px solid #0a0a0a; border-radius:5px; padding:9px 11px; font-size:12px; font-weight:700;">Shape <span style="color:#737373;">&#9662;</span></div>
+          <div style="display:flex; align-items:center; justify-content:space-between; background:#fff; border:2px solid #0a0a0a; border-radius:5px; padding:9px 11px; font-size:12px; font-weight:700;">Frame <span style="color:#737373;">&#9656;</span></div>
+          <div style="display:flex; align-items:center; justify-content:space-between; background:#fff; border:2px solid #0a0a0a; border-radius:5px; padding:9px 11px; font-size:12px; font-weight:700;">Center <span style="color:#737373;">&#9656;</span></div>
+          <div style="display:flex; align-items:center; justify-content:space-between; background:#fff; border:2px solid #0a0a0a; border-radius:5px; padding:9px 11px; font-size:12px; font-weight:700;">Colors <span style="color:#737373;">&#9656;</span></div>
+          <div style="display:flex; align-items:center; justify-content:space-between; background:#fff; border:2px solid #0a0a0a; border-radius:5px; padding:9px 11px; font-size:12px; font-weight:700;">Inscriptions <span style="color:#737373;">&#9656;</span></div>
+        </div>
+        <div style="padding:0 14px 14px;"><div style="height:38px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:13px; font-weight:700;">Save</div></div>
+      </div>
+    </div>
+
+    <div style="flex:none; width:560px; background:#ede9fe; border:3px solid #0a0a0a; border-radius:2px; box-shadow:5px 5px 0 rgba(10,10,10,0.85); padding:22px;">
+      <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:16px; text-transform:uppercase; color:#4c1d95; margin-bottom:14px;">The designer is reached 4 ways &mdash; this is just one</div>
+      <div style="display:flex; flex-direction:column; gap:10px; font-size:13px; line-height:1.5; color:#3b1f6b;">
+        <div style="display:flex; gap:10px;"><span style="font-family:'DM Mono',monospace; flex:none;">1</span><span>Right after <strong>creating</strong> a goal (before any steps exist).</span></div>
+        <div style="display:flex; gap:10px;"><span style="font-family:'DM Mono',monospace; flex:none;">2</span><span>The goal badge in <strong>Focus Mode</strong>.</span></div>
+        <div style="display:flex; gap:10px;"><span style="font-family:'DM Mono',monospace; flex:none;">3</span><span><strong>Here</strong> &mdash; &ldquo;Redesign First&rdquo;, a full context switch mid-celebration, then back to screen 3.</span></div>
+        <div style="display:flex; gap:10px;"><span style="font-family:'DM Mono',monospace; flex:none;">4</span><span>A baked badge in the <strong>Badges tab</strong>.</span></div>
+      </div>
+      <div style="border-top:2px solid #c4b5e8; margin-top:16px; padding-top:14px; font-size:13px; line-height:1.55; color:#4c1d95;">The same 5-section accordion (Shape / Frame / Center / Colors / Inscriptions) every time. Dropping it into the celebration asks the user to design in the exact moment they want to celebrate.</div>
+    </div>
+  </div>
+
+  <!-- ===== WHAT NEEDS CLEANING ===== -->
+  <div style="margin:48px 0 18px; font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:#525252;">What needs cleaning</div>
+
+  <div style="display:flex; gap:18px; flex-wrap:wrap; max-width:1180px;">
+
+    <div style="flex:none; width:370px; background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); padding:18px;">
+      <div style="display:flex; align-items:center; gap:9px; margin-bottom:10px;"><span style="background:#d97706; color:#fff; border:2px solid #0a0a0a; border-radius:9999px; width:22px; height:22px; font-family:'Anybody',sans-serif; font-weight:900; font-size:13px; text-align:center; line-height:18px; flex:none;">1</span><div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">Two &ldquo;moments&rdquo; back to back</div></div>
+      <div style="font-size:13px; line-height:1.5; color:#525252;">&#127942; &ldquo;One last thing!&rdquo; then &#127919; &ldquo;You did it!&rdquo; &mdash; two emoji, two headlines, two screens for one finish. The evidence prompt isn&rsquo;t a celebration; it dilutes the one that follows.</div>
+    </div>
+
+    <div style="flex:none; width:370px; background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); padding:18px;">
+      <div style="display:flex; align-items:center; gap:9px; margin-bottom:10px;"><span style="background:#d97706; color:#fff; border:2px solid #0a0a0a; border-radius:9999px; width:22px; height:22px; font-family:'Anybody',sans-serif; font-weight:900; font-size:13px; text-align:center; line-height:18px; flex:none;">2</span><div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">The badge appears 4 times</div></div>
+      <div style="font-size:13px; line-height:1.5; color:#525252;">Preview on celebrate &rarr; dimmed while baking &rarr; again in the earned modal &rarr; again in Badge Detail. The reveal loses its punch by the third repeat.</div>
+    </div>
+
+    <div style="flex:none; width:370px; background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); padding:18px;">
+      <div style="display:flex; align-items:center; gap:9px; margin-bottom:10px;"><span style="background:#d97706; color:#fff; border:2px solid #0a0a0a; border-radius:9999px; width:22px; height:22px; font-family:'Anybody',sans-serif; font-weight:900; font-size:13px; text-align:center; line-height:18px; flex:none;">3</span><div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">Modal duplicates the screen</div></div>
+      <div style="font-size:13px; line-height:1.5; color:#525252;"><span style="font-family:'DM Mono',monospace; font-size:11.5px;">BadgeEarnedModal</span> shows the badge and a &ldquo;View Badge&rdquo; button &mdash; the celebration screen behind it does the same job. One of them should go.</div>
+    </div>
+
+    <div style="flex:none; width:370px; background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); padding:18px;">
+      <div style="display:flex; align-items:center; gap:9px; margin-bottom:10px;"><span style="background:#d97706; color:#fff; border:2px solid #0a0a0a; border-radius:9999px; width:22px; height:22px; font-family:'Anybody',sans-serif; font-weight:900; font-size:13px; text-align:center; line-height:18px; flex:none;">4</span><div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">&ldquo;Add evidence&rdquo; twice</div></div>
+      <div style="font-size:13px; line-height:1.5; color:#525252;">Screen 2 is entirely about capturing evidence; screen 6 brings back &ldquo;Add Final Evidence.&rdquo; Same action, two places, opposite sides of the celebration.</div>
+    </div>
+
+    <div style="flex:none; width:370px; background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); padding:18px;">
+      <div style="display:flex; align-items:center; gap:9px; margin-bottom:10px;"><span style="background:#d97706; color:#fff; border:2px solid #0a0a0a; border-radius:9999px; width:22px; height:22px; font-family:'Anybody',sans-serif; font-weight:900; font-size:13px; text-align:center; line-height:18px; flex:none;">5</span><div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">System status in the moment</div></div>
+      <div style="font-size:13px; line-height:1.5; color:#525252;">Baking spinner, &ldquo;signing key unavailable,&rdquo; error text and a Retry button all live inside the same celebratory card. Failure and confetti shouldn&rsquo;t share a frame.</div>
+    </div>
+
+    <div style="flex:none; width:370px; background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); padding:18px;">
+      <div style="display:flex; align-items:center; gap:9px; margin-bottom:10px;"><span style="background:#d97706; color:#fff; border:2px solid #0a0a0a; border-radius:9999px; width:22px; height:22px; font-family:'Anybody',sans-serif; font-weight:900; font-size:13px; text-align:center; line-height:18px; flex:none;">6</span><div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">Manual bake + redesign branch</div></div>
+      <div style="font-size:13px; line-height:1.5; color:#525252;">Bake never auto-fires, and &ldquo;Redesign First&rdquo; throws the user into the full 5-section designer mid-celebration. Both add taps and a decision exactly when momentum should carry them.</div>
+    </div>
+
+    <div style="flex:none; width:370px; background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); padding:18px;">
+      <div style="display:flex; align-items:center; gap:9px; margin-bottom:10px;"><span style="background:#d97706; color:#fff; border:2px solid #0a0a0a; border-radius:9999px; width:22px; height:22px; font-family:'Anybody',sans-serif; font-weight:900; font-size:13px; text-align:center; line-height:18px; flex:none;">7</span><div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">Too many exits, no clear one</div></div>
+      <div style="font-size:13px; line-height:1.5; color:#525252;">Across the modal and screen 6: View Badge, Keep going, Add Final Evidence, View Your Journey, Reopen Goal. Five ways out, no obvious single next step.</div>
+    </div>
+
+    <div style="flex:none; width:370px; background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); padding:18px;">
+      <div style="display:flex; align-items:center; gap:9px; margin-bottom:10px;"><span style="background:#d97706; color:#fff; border:2px solid #0a0a0a; border-radius:9999px; width:22px; height:22px; font-family:'Anybody',sans-serif; font-weight:900; font-size:13px; text-align:center; line-height:18px; flex:none;">8</span><div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">Unpredictable entry</div></div>
+      <div style="font-size:13px; line-height:1.5; color:#525252;">Whether you land on the evidence prompt or jump straight to celebrate depends on whether evidence already exists. The first thing you see changes run to run.</div>
+    </div>
+
+  </div>
+
+  <!-- ===== CALLS TO MAKE ===== -->
+  <div style="margin-top:34px; max-width:820px; background:#ffe50c; border:3px solid #0a0a0a; border-radius:2px; box-shadow:5px 5px 0 rgba(10,10,10,0.85); padding:22px;">
+    <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:17px; text-transform:uppercase; margin-bottom:14px;">Calls to make before we redesign</div>
+    <div style="display:flex; flex-direction:column; gap:11px; font-size:13.5px; line-height:1.5; color:#262626;">
+      <div><strong>1. One screen or two?</strong> &mdash; Fold the evidence prompt into the celebration (optional &ldquo;add a note&rdquo; inline), or keep a distinct &ldquo;capture proof&rdquo; step before the reveal?</div>
+      <div><strong>2. Keep the earned modal?</strong> &mdash; The celebration screen and the modal overlap. Drop the modal and let the screen be the moment, or drop the screen and let bake &rarr; modal &rarr; Badge Detail carry it?</div>
+      <div><strong>3. Auto-bake?</strong> &mdash; Bake silently the instant they finish (badge just appears), or keep an explicit &ldquo;Bake It&rdquo; tap?</div>
+      <div><strong>4. Where does redesign live?</strong> &mdash; Remove &ldquo;Redesign First&rdquo; from completion and let people tweak from Badge Detail afterward, or keep an in-the-moment edit?</div>
+      <div><strong>5. The single next step</strong> &mdash; after the badge is earned, what is <em>the</em> button? View Badge, See your journey, or back to Goals?</div>
+    </div>
+    <div style="margin-top:16px; font-size:13px; color:#262626;">Decide these and the redesign collapses to a much shorter flow &mdash; likely <strong>one celebration screen &rarr; Badge Detail</strong>, with evidence and redesign as optional side-doors rather than mandatory stops.</div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>
