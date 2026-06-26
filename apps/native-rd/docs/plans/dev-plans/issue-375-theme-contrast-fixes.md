@@ -4,7 +4,7 @@
 >
 > **This issue pivoted from a narrow contrast patch to a harness-first big-bang cleanup of `packages/design-tokens` (Decision A — strip to unistyles-only).** Build the validation gate first, then refactor against it. Original handoff: `/tmp/handoff-design-tokens-cleanup-2026-06-26.md`.
 >
-> **Phase 0 — the gate — is DONE (uncommitted, branch `feat/issue-375-theme-contrast-fixes`).** Shipped:
+> **Phase 0 — the gate — is DONE (committed, branch `feat/issue-375-theme-contrast-fixes`).** Shipped:
 >
 > - `apps/native-rd/src/themes/contrastPairs.ts` — 10 canonical fg/bg pairs as `ComposedTheme` accessors (the shared source of truth).
 > - `apps/native-rd/src/themes/__tests__/contrast.test.ts` — extended with a list-driven audit (7 themes × 10 pairs) gated by a **shrinking `KNOWN_FAILURES` allowlist** (8 reds today). CI-green; each fix PR deletes its line(s). 91 tests pass.
@@ -19,7 +19,14 @@
 > - `large-text` is not a registered product theme (`themeNames` = 7; it inherits light colors), so the researcher's rows 19–20 collapse into rows 1–2.
 > - Source-JSON edits (e.g. darkening `color.primary`) feed BOTH paths, so those recipes still apply; feedback-token edits only reach unistyles after the `build-unistyles.js` change.
 >
-> **Next: Phase 1.** See "Phase plan" below.
+> **Phase 1 — feedback foregrounds — is DONE (committed, 2 commits).** Shipped:
+>
+> - `build-unistyles.js` now resolves themed `success`/`warning`/`info` bg **and** fg per theme — backgrounds via `{color.*}` through each theme's `color` overrides; foregrounds via a `theme.semantic[*-foreground]` override or the base semantic ref resolved through the theme's colors, so `{color.white}`/`{color.gray.800}` invert per theme exactly as the CSS path does. Emitted into the generated `Colors` interface, light/dark maps, and variant diffs.
+> - `adapter.ts` drops the flat-palette `success/warning/info` re-adds (they now flow per-theme); `error` stays palette-flat (no contrast pair).
+> - native-rd `Colors` gained `successForeground`/`warningForeground`/`infoForeground`; `contrastPairs.ts` gained the 3 feedback pairs → gate is now **7 themes × 13 pairs = 91 cells**, same 8 reds.
+> - Recipes applied + re-verified against the live gate: D2 (base success), D3 (dark warning-fg), D4/D5 (Bold Ink warning+success), D8 (Warm Studio success), D10-warning/D11/D12 (Still Water warning-fg/success/info), D13 (Loud & Clear + Clean Signal warning-fg). Full suite green (9120).
+>
+> **Next: Phase 2 — clear the remaining 8 `KNOWN_FAILURES`** (primary / destructive-amber / dyslexia highlight / autism tab bars) via D1/D6/D7/D9/D10-destructive + Bold-Ink destructive. See "Phase plan" below.
 
 ## Issue Summary
 
@@ -53,13 +60,13 @@ Build a CI-enforced contrast validation gate (done — Phase 0), then drive ever
 ## Phase plan (harness-first; reviewable PRs ~≤500 LOC each)
 
 - **Phase 0 — the gate. ✅ DONE.** `contrastPairs.ts` + list-driven `contrast.test.ts` (KNOWN_FAILURES ratchet) + `ContrastAudit` story. See status banner.
-- **Phase 1 — theme the feedback foregrounds (root-cause).** Teach `build-unistyles.js` to emit `success/warning/info` (+`-foreground`) per-theme into the unistyles `Colors`; replace the bg-only palette re-adds in `adapter.ts`; add `successForeground/warningForeground/infoForeground` to native-rd `Colors`; add the 3 pairs to `contrastPairs.ts`; theme them green per the researcher's D2/D3/D4/D11/D12/D13 recipes. Each new pair lands red→green within this PR.
+- **Phase 1 — theme the feedback foregrounds (root-cause). ✅ DONE.** `build-unistyles.js` emits themed `success/warning/info` (+`-foreground`) per-theme into the unistyles `Colors`; `adapter.ts` lets them flow (dropped the bg-only palette re-adds); native-rd `Colors` + `contrastPairs.ts` carry the 3 pairs; themed green per D2/D3/D4/D5/D8/D10-warning/D11/D12/D13. See status banner.
 - **Phase 2 — remaining contrast cells.** Clear the 8 current `KNOWN_FAILURES` (primary, destructive-amber, dyslexia highlight, autism tab bars) via the source-JSON edits in the researcher's recipes (D1/D6/D7/D9/D10 + Bold-Ink destructive). Delete each line from KNOWN_FAILURES as it goes green.
 - **Phase 3+ — Decision A strip.** Delete the dead Style Dictionary platforms (css/js/tailwind/tamagui), `build-themes.js`, `css/narrative.css`; reduce `bun run build` to `build-unistyles.js`; drop dead `exports` subpaths + vestigial `publishConfig`/`verify-css.js`; reconcile naming; update `packages/design-tokens/CLAUDE.md`. Pre-deletion: confirm the separate `~/Code/rollercoaster.dev/landing` repo isn't vendoring `/css*`.
 
 ## Ground Truth — the gate (unistyles path, 8 reds, 2026-06-26)
 
-These are the live `KNOWN_FAILURES` from the gate (7 product themes × 10 pairs = 70 cells; 8 fail). All are in the primary / destructive-amber / tab-bar family — none are feedback foregrounds (those aren't yet in the RN theme; see banner).
+These are the live `KNOWN_FAILURES` from the gate (7 product themes × 13 pairs = 91 cells; 8 fail after Phase 1). All are in the primary / destructive-amber / tab-bar family — the feedback foregrounds (success/warning/info) were surfaced and themed green in Phase 1.
 
 | themeName            | pair        | ratio | fg → bg               |
 | -------------------- | ----------- | ----- | --------------------- |
