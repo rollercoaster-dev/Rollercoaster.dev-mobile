@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wght@700;800;900&family=Instrument+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="./theme-fixes.js"></script>
+</helmet>
+
+<div style="position:absolute; left:40px; top:36px; width:900px; font-family:'Instrument Sans',sans-serif;">
+  <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:30px; color:#0a0a0a; letter-spacing:-0.01em;">Contrast fixes — before / after</div>
+  <div style="font-size:13.5px; color:#525252; line-height:1.5; margin-top:6px; max-width:840px;">Every fg/bg pair below currently scores under 4.5:1. The <b>after</b> chip is a minimal, hue-preserving nudge to the fill that clears AA, with the new ratio. These are proposed <span style="font-family:'DM Mono',monospace; font-size:12px;">themes.css</span> source values — paste the new hex into the theme JSON and rebuild.</div>
+</div>
+
+<sc-for list="{{ frames }}" as="f" hint-placeholder-count="7">
+  <div style="position:absolute; left:{{ f.left }}px; top:170px; width:330px;">
+    <div data-drags-parent="1" style="margin-bottom:9px;">
+      <div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:17px; color:#0a0a0a;">{{ f.theme }}</div>
+      <div style="font-family:'DM Mono',monospace; font-size:10.5px; color:#737373; margin-top:2px;">{{ f.count }} pair(s) below AA</div>
+    </div>
+    <div style="background:#fff; border-radius:2px; box-shadow:0 1px 3px rgba(0,0,0,.08); padding:16px; display:flex; flex-direction:column; gap:16px;">
+      <sc-for list="{{ f.rows }}" as="r" hint-placeholder-count="2">
+        <div>
+          <div style="font-family:'DM Mono',monospace; font-size:10px; color:#0a0a0a; font-weight:600;">{{ r.pair }}</div>
+          <div style="font-family:'DM Mono',monospace; font-size:8px; color:#aaa; margin:1px 0 8px; word-break:break-all;">{{ r.bgVar }}</div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="flex:1; height:46px; border-radius:5px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; background:{{ r.curBg }}; color:{{ r.curFg }};">Aa</div>
+            <div style="font-size:16px; color:#bbb;">→</div>
+            <div style="flex:1; height:46px; border-radius:5px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; background:{{ r.newBg }}; color:{{ r.curFg }};">Aa</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; margin-top:5px; font-family:'DM Mono',monospace; font-size:9px;">
+            <div style="flex:1; text-align:center; color:#c0392b;">{{ r.curBg }} · {{ r.curRatio }}✗</div>
+            <div style="width:16px;"></div>
+            <div style="flex:1; text-align:center; color:#1a7a4a;">{{ r.newBg }} · {{ r.newRatio }}✓</div>
+          </div>
+          <sc-if value="{{ r.shared }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:7px; background:#fff6e0; border:1px solid #f0d9a0; border-radius:4px; padding:6px 8px; font-family:'Instrument Sans',sans-serif; font-size:10px; line-height:1.4; color:#7a5a00;">⚠ Shares <span style="font-family:'DM Mono',monospace;">--ob-chrome-tab-bar-bg</span> with the other tab state — a light and a dark label can't both pass on one fill. Pick a single label color and signal active by weight/indicator instead.</div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</sc-for>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { ready: false };
+  componentDidMount() {
+    if (window.THEME_FIXES) this.setState({ ready: true });
+    else { this._n = 0; const t = () => { if (window.THEME_FIXES) this.setState({ ready: true }); else if (this._n++ < 20) setTimeout(t, 80); }; t(); }
+  }
+  renderVals() {
+    const all = window.THEME_FIXES || [];
+    const order = ["light-default","dark-default","light-highContrast","light-dyslexia","light-autismFriendly","light-lowVision","light-lowInfo"];
+    const byId = {};
+    all.forEach((f) => { (byId[f.id] = byId[f.id] || []).push(f); });
+    const present = order.filter((id) => byId[id]);
+    const STEP = 360, START = 40;
+    const frames = present.map((id, i) => {
+      const rows = byId[id].map((r) => ({
+        pair: r.pair, bgVar: r.bgVar,
+        curBg: r.curBg, curFg: r.curFg, curRatio: r.curRatio,
+        newBg: r.newBg, newRatio: r.newRatio,
+        shared: r.pair === 'tab active' || r.pair === 'tab idle',
+      }));
+      return { id, theme: byId[id][0].theme, count: rows.length, rows, left: START + i * STEP };
+    });
+    return { frames };
+  }
+}
+</script>
+</body>
+</html>

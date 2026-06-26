@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wght@700;800;900&family=Instrument+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+</style>
+</helmet>
+
+<div style="font-family:'Instrument Sans',system-ui,sans-serif; width:max-content; min-width:100%; min-height:100vh; box-sizing:border-box; padding:48px; background:#e5e5e5; color:#0a0a0a; display:flex; flex-direction:column; gap:46px;">
+
+  <!-- TITLE -->
+  <div style="max-width:820px;">
+    <div style="font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:#525252; margin-bottom:8px;">Goals tab &amp; Badges tab &middot; audit + directions</div>
+    <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:30px; line-height:1.06; margin-bottom:10px;">Two tabs, one screen &mdash; pull them apart by their jobs</div>
+    <div style="font-size:14.5px; line-height:1.55; color:#404040;">In the source, <span style="font-family:'DM Mono',monospace; font-size:12.5px;">GoalsScreen</span> and <span style="font-family:'DM Mono',monospace; font-size:12.5px;">BadgesScreen</span> are the <strong>same component</strong>: purple <span style="font-family:'DM Mono',monospace; font-size:12.5px;">ScreenHeader</span> &rarr; <span style="font-family:'DM Mono',monospace; font-size:12.5px;">FlatList</span> &rarr; <span style="font-family:'DM Mono',monospace; font-size:12.5px;">EmptyState</span>. Only the row differs. But their jobs are opposite: <strong>Goals = a living worklist</strong> (few, in progress, &ldquo;what do I do next&rdquo;) and <strong>Badges = a trophy collection</strong> (potentially many, finished, &ldquo;look what I made&rdquo;). Three directions, escalating in boldness &mdash; we can always dial back.</div>
+  </div>
+
+  <!-- ============================ AUDIT ============================ -->
+  <div>
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:18px;">
+      <span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:13px; letter-spacing:0.04em; background:#0a0a0a; color:#fff; padding:4px 10px; border-radius:3px;">AUDIT</span>
+      <span style="font-size:15px; font-weight:700;">Today &mdash; the same shell, twice</span>
+    </div>
+    <div style="display:flex; gap:36px; align-items:flex-start;">
+
+      <!-- Goals today -->
+      <div style="flex:none; width:316px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:10px;">GoalsScreen (today)</div>
+        <div style="width:316px; height:560px; background:#fafafa; border:3px solid #0a0a0a; border-radius:34px; box-shadow:6px 6px 0 rgba(10,10,10,0.22); overflow:hidden; display:flex; flex-direction:column;">
+          <div style="flex:none; height:28px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font-family:'DM Mono',monospace; font-size:11px;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+          <div style="flex:none; background:#a78bfa; border-bottom:3px solid #0a0a0a; padding:13px 16px;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:22px;">Goals</span></div>
+          <div style="flex:1; padding:15px; display:flex; flex-direction:column; gap:12px; overflow:hidden;">
+            <!-- goal card -->
+            <div style="background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;"><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">Rewire the workshop</span><span style="background:#dbe7ff; border:2px solid #0a0a0a; border-radius:9999px; font-size:9px; font-weight:700; padding:2px 7px;">ACTIVE</span></div>
+              <div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px; margin-top:11px;">Wire the circuits</div>
+              <div style="font-size:11px; color:#9a9a9a; margin-top:3px;">&#8627; in Rough-in</div>
+              <div style="display:flex; align-items:center; gap:10px; margin-top:11px;"><div style="flex:1; height:10px; background:#ececec; border:2px solid #0a0a0a; border-radius:9999px; overflow:hidden;"><div style="width:55%; height:100%; background:#2563eb;"></div></div><span style="font-family:'DM Mono',monospace; font-size:10px;">5/9</span></div>
+            </div>
+            <div style="background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;"><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">Read 12 books</span><span style="background:#dbe7ff; border:2px solid #0a0a0a; border-radius:9999px; font-size:9px; font-weight:700; padding:2px 7px;">ACTIVE</span></div>
+              <div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px; margin-top:11px;">Finish &ldquo;The Overstory&rdquo;</div>
+              <div style="display:flex; align-items:center; gap:10px; margin-top:11px;"><div style="flex:1; height:10px; background:#ececec; border:2px solid #0a0a0a; border-radius:9999px; overflow:hidden;"><div style="width:33%; height:100%; background:#2563eb;"></div></div><span style="font-family:'DM Mono',monospace; font-size:10px;">4/12</span></div>
+            </div>
+            <div style="background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;"><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">Couch to 5K</span><span style="background:#dbe7ff; border:2px solid #0a0a0a; border-radius:9999px; font-size:9px; font-weight:700; padding:2px 7px;">ACTIVE</span></div>
+              <div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px; margin-top:11px;">Week 3, run 2</div>
+              <div style="display:flex; align-items:center; gap:10px; margin-top:11px;"><div style="flex:1; height:10px; background:#ececec; border:2px solid #0a0a0a; border-radius:9999px; overflow:hidden;"><div style="width:25%; height:100%; background:#2563eb;"></div></div><span style="font-family:'DM Mono',monospace; font-size:10px;">2/8</span></div>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:12px; line-height:1.5; color:#737373; margin-top:12px; max-width:316px;">Title + status pill + next-step + progress. Solid &mdash; but it&rsquo;s a flat list of equal cards. Nothing says &ldquo;here&rsquo;s the <em>one</em> thing to do next,&rdquo; and momentum isn&rsquo;t felt.</div>
+      </div>
+
+      <!-- Badges today -->
+      <div style="flex:none; width:316px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:10px;">BadgesScreen (today)</div>
+        <div style="width:316px; height:560px; background:#fafafa; border:3px solid #0a0a0a; border-radius:34px; box-shadow:6px 6px 0 rgba(10,10,10,0.22); overflow:hidden; display:flex; flex-direction:column;">
+          <div style="flex:none; height:28px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font-family:'DM Mono',monospace; font-size:11px;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+          <div style="flex:none; background:#a78bfa; border-bottom:3px solid #0a0a0a; padding:13px 16px;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:22px;">Badges</span></div>
+          <div style="flex:1; padding:15px; display:flex; flex-direction:column; gap:12px; overflow:hidden;">
+            <!-- badge row -->
+            <div style="background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px; display:flex; gap:13px; align-items:flex-start;">
+              <div style="flex:none; width:54px; height:54px; border-radius:50%; background:#2563eb; border:2.5px solid #0a0a0a; display:flex; align-items:center; justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M13 2 L4 14 L11 14 L9 22 L20 9 L13 9 Z"></path></svg></div>
+              <div style="flex:1; min-width:0;"><div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px;">Rewire the workshop</div><div style="font-size:11.5px; color:#3a3a3a; margin-top:2px;">Up to code, power to the bench.</div><div style="font-size:10.5px; color:#9a9a9a; margin-top:6px;">Jun 18, 2026</div></div>
+            </div>
+            <div style="background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px; display:flex; gap:13px; align-items:flex-start;">
+              <div style="flex:none; width:54px; height:54px; border-radius:6px; background:#a78bfa; border:2.5px solid #0a0a0a; display:flex; align-items:center; justify-content:center;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:24px; color:#fafafa;">R</span></div>
+              <div style="flex:1; min-width:0;"><div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px;">Read 30 books</div><div style="font-size:11.5px; color:#3a3a3a; margin-top:2px;">A year of reading, done.</div><div style="font-size:10.5px; color:#9a9a9a; margin-top:6px;">Mar 2, 2026</div></div>
+            </div>
+            <div style="background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px; display:flex; gap:13px; align-items:flex-start;">
+              <div style="flex:none; width:54px; height:54px; border-radius:50%; background:#059669; border:2.5px solid #0a0a0a; display:flex; align-items:center; justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13 L10 18 L20 6"></path></svg></div>
+              <div style="flex:1; min-width:0;"><div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px;">Couch to 5K</div><div style="font-size:11.5px; color:#3a3a3a; margin-top:2px;">Ran the whole thing.</div><div style="font-size:10.5px; color:#9a9a9a; margin-top:6px;">Jan 20, 2026</div></div>
+            </div>
+            <div style="background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px; display:flex; gap:13px; align-items:flex-start;">
+              <div style="flex:none; width:54px; height:54px; border-radius:50%; background:#d97706; border:2.5px solid #0a0a0a; display:flex; align-items:center; justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M12 2 L14.9 8.6 L22 9.3 L16.7 14 L18.2 21 L12 17.3 L5.8 21 L7.3 14 L2 9.3 L9.1 8.6 Z"></path></svg></div>
+              <div style="flex:1; min-width:0;"><div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px;">Learn to solder</div><div style="font-size:11.5px; color:#3a3a3a; margin-top:2px;">First clean joint.</div><div style="font-size:10.5px; color:#9a9a9a; margin-top:6px;">Dec 9, 2025</div></div>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:12px; line-height:1.5; color:#737373; margin-top:12px; max-width:316px;">The badge artwork &mdash; the thing we just made the hero on Detail &mdash; is a 54px thumbnail in a text row. No sense of a <em>collection</em>, no count, the verifiable signal is gone, and it won&rsquo;t feel special at 2 badges or scale at 40.</div>
+      </div>
+
+      <!-- friction -->
+      <div style="flex:none; width:330px; display:flex; flex-direction:column; gap:13px;">
+        <div style="background:#fff; border:3px solid #d97706; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:15px;">
+          <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.07em; color:#d97706; margin-bottom:9px;">&#9888; Friction</div>
+          <div style="display:flex; flex-direction:column; gap:11px; font-size:12.5px; line-height:1.5; color:#1a1a1a;">
+            <div><strong>1 &middot; Twins.</strong> Same header, same list, same card silhouette. The two primary tabs are visually interchangeable.</div>
+            <div><strong>2 &middot; Opposite jobs, same shape.</strong> Goals is <em>do</em>; Badges is <em>done</em>. One should feel like work in motion, the other like a shelf of trophies.</div>
+            <div><strong>3 &middot; The artifact is demoted.</strong> After the celebratory Detail screen, the list shows the badge as a tiny thumbnail &mdash; the payoff deflates on the way back.</div>
+            <div><strong>4 &middot; No scale, no collection.</strong> Many badges are coming. A flat equal-weight list has no count, no grouping, no &ldquo;wall&rdquo; &mdash; and no verifiable signal.</div>
+            <div><strong>5 &middot; No momentum.</strong> Goals doesn&rsquo;t surface the <em>one</em> next action, so the worklist doesn&rsquo;t actually drive the next move.</div>
+            <div><strong>6 &middot; Generic empty states.</strong> The first-goal and first-badge moments &mdash; huge for this audience &mdash; are a shared title/body/button.</div>
+          </div>
+        </div>
+        <div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:14px;">
+          <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.07em; color:#525252; margin-bottom:8px;">The frame</div>
+          <div style="font-size:12.5px; line-height:1.55; color:#404040;">Make <strong>Goals</strong> feel like momentum &mdash; surface the next move. Make <strong>Badges</strong> feel like a growing, celebratory <strong>collection</strong> that scales and carries the verifiable signal. Keep them siblings in the Full Ride language, but never confusable.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================ DIRECTION A ============================ -->
+  <div>
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+      <span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:13px; letter-spacing:0.04em; background:#2563eb; color:#fff; padding:4px 10px; border-radius:3px;">DIRECTION A</span>
+      <span style="font-size:15px; font-weight:700;">Same DNA, opposite energy &mdash; both stay lists</span>
+    </div>
+    <div style="font-size:13.5px; color:#525252; max-width:720px; margin-bottom:18px; line-height:1.5;">The lightest split, easiest to dial back: <strong>both remain vertical lists</strong>, but each card gets a clear identity. Goals leads with the <strong>next action</strong> (cool, in-motion) under a &ldquo;3 in progress&rdquo; count. Badges becomes a <strong>celebratory artifact card</strong> &mdash; bigger badge, warm tint, earned-date in mono, a green verifiable tick &mdash; under a &ldquo;12 earned&rdquo; count. They rhyme; you never confuse them.</div>
+    <div style="display:flex; gap:36px; align-items:flex-start;">
+
+      <!-- A: Goals -->
+      <div style="flex:none; width:316px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:10px;">Goals &middot; next-action forward</div>
+        <div style="width:316px; height:560px; background:#fafafa; border:3px solid #0a0a0a; border-radius:34px; box-shadow:6px 6px 0 rgba(10,10,10,0.22); overflow:hidden; display:flex; flex-direction:column;">
+          <div style="flex:none; height:28px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font-family:'DM Mono',monospace; font-size:11px;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+          <div style="flex:none; background:#a78bfa; border-bottom:3px solid #0a0a0a; padding:13px 16px; display:flex; align-items:baseline; justify-content:space-between;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:22px;">Goals</span><span style="font-family:'DM Mono',monospace; font-size:11px; color:#3a2d6b;">3 IN PROGRESS</span></div>
+          <div style="flex:1; padding:15px; display:flex; flex-direction:column; gap:12px; overflow:hidden;">
+            <div style="background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px;">
+              <div style="font-family:'DM Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.06em; color:#9a9a9a;">Rewire the workshop &middot; 5/9</div>
+              <div style="display:flex; align-items:center; gap:9px; margin-top:9px;"><span style="flex:none; width:8px; height:8px; border-radius:50%; background:#2563eb; border:2px solid #0a0a0a;"></span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:16px;">Wire the circuits</span></div>
+              <div style="height:8px; background:#ececec; border:2px solid #0a0a0a; border-radius:9999px; overflow:hidden; margin-top:11px;"><div style="width:55%; height:100%; background:#2563eb;"></div></div>
+            </div>
+            <div style="background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px;">
+              <div style="font-family:'DM Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.06em; color:#9a9a9a;">Read 12 books &middot; 4/12</div>
+              <div style="display:flex; align-items:center; gap:9px; margin-top:9px;"><span style="flex:none; width:8px; height:8px; border-radius:50%; background:#2563eb; border:2px solid #0a0a0a;"></span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:16px;">Finish &ldquo;The Overstory&rdquo;</span></div>
+              <div style="height:8px; background:#ececec; border:2px solid #0a0a0a; border-radius:9999px; overflow:hidden; margin-top:11px;"><div style="width:33%; height:100%; background:#2563eb;"></div></div>
+            </div>
+            <div style="background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px;">
+              <div style="font-family:'DM Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.06em; color:#9a9a9a;">Couch to 5K &middot; 2/8</div>
+              <div style="display:flex; align-items:center; gap:9px; margin-top:9px;"><span style="flex:none; width:8px; height:8px; border-radius:50%; background:#2563eb; border:2px solid #0a0a0a;"></span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:16px;">Week 3, run 2</span></div>
+              <div style="height:8px; background:#ececec; border:2px solid #0a0a0a; border-radius:9999px; overflow:hidden; margin-top:11px;"><div style="width:25%; height:100%; background:#2563eb;"></div></div>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:12px; line-height:1.5; color:#737373; margin-top:12px; max-width:316px;"><strong>5</strong> The next action is the headline; the goal title shrinks to a mono context line. Cool blue = in motion.</div>
+      </div>
+
+      <!-- A: Badges -->
+      <div style="flex:none; width:316px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:10px;">Badges &middot; celebratory artifact rows</div>
+        <div style="width:316px; height:560px; background:#fafafa; border:3px solid #0a0a0a; border-radius:34px; box-shadow:6px 6px 0 rgba(10,10,10,0.22); overflow:hidden; display:flex; flex-direction:column;">
+          <div style="flex:none; height:28px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font-family:'DM Mono',monospace; font-size:11px;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+          <div style="flex:none; background:#a78bfa; border-bottom:3px solid #0a0a0a; padding:13px 16px; display:flex; align-items:baseline; justify-content:space-between;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:22px;">Badges</span><span style="font-family:'DM Mono',monospace; font-size:11px; color:#3a2d6b;">12 EARNED</span></div>
+          <div style="flex:1; padding:15px; display:flex; flex-direction:column; gap:12px; overflow:hidden;">
+            <div style="background:#fffbe6; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px; display:flex; gap:14px; align-items:center;">
+              <div style="flex:none; width:64px; height:64px; border-radius:50%; background:#2563eb; border:2.5px solid #0a0a0a; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center;"><svg width="28" height="28" viewBox="0 0 24 24" fill="#fff"><path d="M13 2 L4 14 L11 14 L9 22 L20 9 L13 9 Z"></path></svg></div>
+              <div style="flex:1; min-width:0;"><div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">Rewire the workshop</div><div style="font-family:'DM Mono',monospace; font-size:10px; color:#737373; margin-top:4px;">EARNED JUN 18, 2026</div><div style="display:inline-flex; align-items:center; gap:4px; margin-top:7px; background:#d4f4e7; border:1.5px solid #0a0a0a; border-radius:9999px; padding:1px 8px;"><span style="color:#059669; font-size:10px; font-weight:700;">&#10003;</span><span style="font-size:9.5px; font-weight:700;">Verifiable</span></div></div>
+            </div>
+            <div style="background:#fffbe6; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px; display:flex; gap:14px; align-items:center;">
+              <div style="flex:none; width:64px; height:64px; border-radius:6px; background:#a78bfa; border:2.5px solid #0a0a0a; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:28px; color:#fafafa;">R</span></div>
+              <div style="flex:1; min-width:0;"><div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">Read 30 books</div><div style="font-family:'DM Mono',monospace; font-size:10px; color:#737373; margin-top:4px;">EARNED MAR 2, 2026</div><div style="display:inline-flex; align-items:center; gap:4px; margin-top:7px; background:#d4f4e7; border:1.5px solid #0a0a0a; border-radius:9999px; padding:1px 8px;"><span style="color:#059669; font-size:10px; font-weight:700;">&#10003;</span><span style="font-size:9.5px; font-weight:700;">Verifiable</span></div></div>
+            </div>
+            <div style="background:#fffbe6; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px; display:flex; gap:14px; align-items:center;">
+              <div style="flex:none; width:64px; height:64px; border-radius:50%; background:#059669; border:2.5px solid #0a0a0a; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center;"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13 L10 18 L20 6"></path></svg></div>
+              <div style="flex:1; min-width:0;"><div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">Couch to 5K</div><div style="font-family:'DM Mono',monospace; font-size:10px; color:#737373; margin-top:4px;">EARNED JAN 20, 2026</div><div style="display:inline-flex; align-items:center; gap:4px; margin-top:7px; background:#d4f4e7; border:1.5px solid #0a0a0a; border-radius:9999px; padding:1px 8px;"><span style="color:#059669; font-size:10px; font-weight:700;">&#10003;</span><span style="font-size:9.5px; font-weight:700;">Verifiable</span></div></div>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:12px; line-height:1.5; color:#737373; margin-top:12px; max-width:316px;"><strong>3+4</strong> Same row shape, warm celebratory skin: bigger lifted badge, mono earned-date, a verifiable tick. <strong>Dial-back:</strong> nothing but restyled cards &mdash; no new layout system.</div>
+      </div>
+
+      <!-- A: notes -->
+      <div style="flex:none; width:300px; align-self:stretch; display:flex; flex-direction:column; gap:13px;">
+        <div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:15px;">
+          <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.07em; color:#525252; margin-bottom:9px;">Why this</div>
+          <div style="font-size:12.5px; line-height:1.55; color:#1a1a1a;">Lowest-risk. Ships as two card restyles + a count in each header. They read as a family (both lists, both Full Ride) but the eye instantly knows &ldquo;work&rdquo; (cool, action-led) from &ldquo;trophies&rdquo; (warm, artifact-led).</div>
+        </div>
+        <div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:15px;">
+          <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.07em; color:#525252; margin-bottom:9px;">Watch-outs</div>
+          <div style="font-size:12.5px; line-height:1.55; color:#1a1a1a;">At 40 badges a single-column row list is a long scroll &mdash; doesn&rsquo;t exploit the &ldquo;wall&rdquo; feeling. If Badges should <em>scale</em> visually, B or C do more.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================ DIRECTION B ============================ -->
+  <div>
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+      <span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:13px; letter-spacing:0.04em; background:#2563eb; color:#fff; padding:4px 10px; border-radius:3px;">DIRECTION B</span>
+      <span style="font-size:15px; font-weight:700;">Worklist vs. trophy grid &mdash; different shapes for different jobs</span>
+    </div>
+    <div style="font-size:13.5px; color:#525252; max-width:720px; margin-bottom:18px; line-height:1.5;">Commit to the difference. <strong>Goals</strong> stays a worklist but gains a <strong>&ldquo;NEXT UP&rdquo;</strong> hero &mdash; the single most actionable step, front and center &mdash; over compact goal rows. <strong>Badges</strong> becomes a <strong>2-up grid trophy wall</strong> under a big count + verifiable-streak header, scaling cleanly to dozens. The tabs now look like different <em>kinds of place</em>.</div>
+    <div style="display:flex; gap:36px; align-items:flex-start;">
+
+      <!-- B: Goals worklist -->
+      <div style="flex:none; width:316px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:10px;">Goals &middot; &ldquo;Next up&rdquo; hero + rows</div>
+        <div style="width:316px; height:560px; background:#fafafa; border:3px solid #0a0a0a; border-radius:34px; box-shadow:6px 6px 0 rgba(10,10,10,0.22); overflow:hidden; display:flex; flex-direction:column;">
+          <div style="flex:none; height:28px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font-family:'DM Mono',monospace; font-size:11px;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+          <div style="flex:none; background:#a78bfa; border-bottom:3px solid #0a0a0a; padding:13px 16px;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:22px;">Goals</span></div>
+          <div style="flex:1; padding:15px; display:flex; flex-direction:column; gap:12px; overflow:hidden;">
+            <!-- NEXT UP hero -->
+            <div style="background:#2563eb; border:3px solid #0a0a0a; border-radius:2px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); padding:15px;">
+              <div style="font-family:'DM Mono',monospace; font-size:9.5px; letter-spacing:0.1em; color:#bcd0fb;">NEXT UP</div>
+              <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:20px; color:#fff; line-height:1.1; margin-top:7px;">Wire the circuits</div>
+              <div style="font-size:11px; color:#cfddff; margin-top:5px;">Rewire the workshop &middot; step 5 of 9</div>
+              <div style="margin-top:13px; height:40px; background:#ffe50c; border:2.5px solid #0a0a0a; border-radius:4px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:13.5px; font-weight:700;">Open focus mode &rarr;</div>
+            </div>
+            <div style="font-family:'DM Mono',monospace; font-size:9.5px; letter-spacing:0.08em; color:#9a9a9a; margin-top:2px;">ALSO IN PROGRESS</div>
+            <div style="background:#fff; border:2.5px solid #0a0a0a; border-radius:2px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:11px 13px; display:flex; align-items:center; gap:11px;"><div style="flex:1;"><div style="font-weight:700; font-size:13.5px;">Read 12 books</div><div style="font-size:10.5px; color:#737373; margin-top:1px;">Finish &ldquo;The Overstory&rdquo;</div></div><span style="font-family:'DM Mono',monospace; font-size:10px; color:#737373;">4/12</span></div>
+            <div style="background:#fff; border:2.5px solid #0a0a0a; border-radius:2px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:11px 13px; display:flex; align-items:center; gap:11px;"><div style="flex:1;"><div style="font-weight:700; font-size:13.5px;">Couch to 5K</div><div style="font-size:10.5px; color:#737373; margin-top:1px;">Week 3, run 2</div></div><span style="font-family:'DM Mono',monospace; font-size:10px; color:#737373;">2/8</span></div>
+          </div>
+        </div>
+        <div style="font-size:12px; line-height:1.5; color:#737373; margin-top:12px; max-width:316px;"><strong>5</strong> One hero answers &ldquo;what do I do now&rdquo; with a direct CTA into Focus Mode. The rest collapse to quiet rows &mdash; present, not competing.</div>
+      </div>
+
+      <!-- B: Badges grid -->
+      <div style="flex:none; width:316px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:10px;">Badges &middot; trophy grid</div>
+        <div style="width:316px; height:560px; background:#fafafa; border:3px solid #0a0a0a; border-radius:34px; box-shadow:6px 6px 0 rgba(10,10,10,0.22); overflow:hidden; display:flex; flex-direction:column;">
+          <div style="flex:none; height:28px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font-family:'DM Mono',monospace; font-size:11px;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+          <!-- celebratory count header -->
+          <div style="flex:none; background:#ffe50c; border-bottom:3px solid #0a0a0a; padding:14px 16px;">
+            <div style="display:flex; align-items:baseline; gap:9px;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:34px; line-height:1;">12</span><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:18px;">earned</span></div>
+            <div style="display:inline-flex; align-items:center; gap:5px; margin-top:8px; background:#fff; border:2px solid #0a0a0a; border-radius:9999px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:2px 9px;"><span style="color:#059669; font-size:11px; font-weight:700;">&#10003;</span><span style="font-size:10px; font-weight:700;">All 12 verifiable</span></div>
+          </div>
+          <div style="flex:1; padding:15px; overflow:hidden;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:13px;">
+              <!-- cell -->
+              <div style="display:flex; flex-direction:column; align-items:center; text-align:center;">
+                <div style="width:74px; height:74px; border-radius:50%; background:#2563eb; border:3px solid #0a0a0a; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center;"><svg width="32" height="32" viewBox="0 0 24 24" fill="#fff"><path d="M13 2 L4 14 L11 14 L9 22 L20 9 L13 9 Z"></path></svg></div>
+                <div style="font-size:11.5px; font-weight:700; margin-top:8px; line-height:1.2;">Rewire the workshop</div>
+                <div style="font-family:'DM Mono',monospace; font-size:8.5px; color:#9a9a9a; margin-top:2px;">JUN 2026</div>
+              </div>
+              <div style="display:flex; flex-direction:column; align-items:center; text-align:center;">
+                <div style="width:74px; height:74px; border-radius:6px; background:#a78bfa; border:3px solid #0a0a0a; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:32px; color:#fafafa;">R</span></div>
+                <div style="font-size:11.5px; font-weight:700; margin-top:8px; line-height:1.2;">Read 30 books</div>
+                <div style="font-family:'DM Mono',monospace; font-size:8.5px; color:#9a9a9a; margin-top:2px;">MAR 2026</div>
+              </div>
+              <div style="display:flex; flex-direction:column; align-items:center; text-align:center;">
+                <div style="width:74px; height:74px; border-radius:50%; background:#059669; border:3px solid #0a0a0a; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center;"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13 L10 18 L20 6"></path></svg></div>
+                <div style="font-size:11.5px; font-weight:700; margin-top:8px; line-height:1.2;">Couch to 5K</div>
+                <div style="font-family:'DM Mono',monospace; font-size:8.5px; color:#9a9a9a; margin-top:2px;">JAN 2026</div>
+              </div>
+              <div style="display:flex; flex-direction:column; align-items:center; text-align:center;">
+                <div style="width:74px; height:74px; border-radius:50%; background:#d97706; border:3px solid #0a0a0a; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center;"><svg width="32" height="32" viewBox="0 0 24 24" fill="#fff"><path d="M12 2 L14.9 8.6 L22 9.3 L16.7 14 L18.2 21 L12 17.3 L5.8 21 L7.3 14 L2 9.3 L9.1 8.6 Z"></path></svg></div>
+                <div style="font-size:11.5px; font-weight:700; margin-top:8px; line-height:1.2;">Learn to solder</div>
+                <div style="font-family:'DM Mono',monospace; font-size:8.5px; color:#9a9a9a; margin-top:2px;">DEC 2025</div>
+              </div>
+              <div style="display:flex; flex-direction:column; align-items:center; text-align:center;">
+                <div style="width:74px; height:74px; border-radius:50%; background:#e0457b; border:3px solid #0a0a0a; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center;"><svg width="30" height="30" viewBox="0 0 24 24" fill="#fff"><path d="M12 21 C12 21 3 14 3 8 C3 5 5 3 8 3 C10 3 12 5 12 5 C12 5 14 3 16 3 C19 3 21 5 21 8 C21 14 12 21 12 21 Z"></path></svg></div>
+                <div style="font-size:11.5px; font-weight:700; margin-top:8px; line-height:1.2;">30 days sober</div>
+                <div style="font-family:'DM Mono',monospace; font-size:8.5px; color:#9a9a9a; margin-top:2px;">NOV 2025</div>
+              </div>
+              <div style="display:flex; flex-direction:column; align-items:center; text-align:center;">
+                <div style="width:74px; height:74px; border-radius:6px; background:#0d9488; border:3px solid #0a0a0a; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:32px; color:#fafafa;">G</span></div>
+                <div style="font-size:11.5px; font-weight:700; margin-top:8px; line-height:1.2;">Grow tomatoes</div>
+                <div style="font-family:'DM Mono',monospace; font-size:8.5px; color:#9a9a9a; margin-top:2px;">SEP 2025</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:12px; line-height:1.5; color:#737373; margin-top:12px; max-width:316px;"><strong>1+2+4</strong> Now unmistakably a different place: a yellow celebration header with the running count + verifiable streak, then an artifact grid that scales to dozens by just adding rows.</div>
+      </div>
+
+      <!-- B: notes + empty -->
+      <div style="flex:none; width:300px; align-self:stretch; display:flex; flex-direction:column; gap:13px;">
+        <div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:15px;">
+          <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.07em; color:#525252; margin-bottom:9px;">Why this</div>
+          <div style="font-size:12.5px; line-height:1.55; color:#1a1a1a;">The honest answer to &ldquo;they&rsquo;re the same.&rdquo; A worklist optimised for <em>few + action</em>, a grid optimised for <em>many + admiring</em>. The grid is the natural home for the celebratory badge language and grows without redesign.</div>
+        </div>
+        <div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:15px;">
+          <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.07em; color:#525252; margin-bottom:9px;">Options on top</div>
+          <div style="font-size:12.5px; line-height:1.55; color:#1a1a1a;">Grid could group by year or theme as the wall grows; the &ldquo;Next up&rdquo; hero could rotate to whichever step is most overdue/closest. Both are additive later.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================ DIRECTION C ============================ -->
+  <div>
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+      <span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:13px; letter-spacing:0.04em; background:#2563eb; color:#fff; padding:4px 10px; border-radius:3px;">DIRECTION C</span>
+      <span style="font-size:15px; font-weight:700;">Go nuts &mdash; a momentum cockpit vs. a wall of proof</span>
+    </div>
+    <div style="font-size:13.5px; color:#525252; max-width:720px; margin-bottom:18px; line-height:1.5;">The most divergent. <strong>Goals</strong> becomes a <strong>cockpit</strong>: one giant next-action with a progress ring and a Start CTA, the rest reduced to a momentum strip. <strong>Badges</strong> becomes an immersive, full-bleed <strong>wall of proof</strong> &mdash; a dense, varied gallery on a bold dark surface with a huge count and the latest badge spotlit. Browse your collection like a trophy room.</div>
+    <div style="display:flex; gap:36px; align-items:flex-start;">
+
+      <!-- C: Goals cockpit -->
+      <div style="flex:none; width:316px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:10px;">Goals &middot; momentum cockpit</div>
+        <div style="width:316px; height:560px; background:#fafafa; border:3px solid #0a0a0a; border-radius:34px; box-shadow:6px 6px 0 rgba(10,10,10,0.22); overflow:hidden; display:flex; flex-direction:column;">
+          <div style="flex:none; height:28px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font-family:'DM Mono',monospace; font-size:11px;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+          <div style="flex:none; background:#a78bfa; border-bottom:3px solid #0a0a0a; padding:13px 16px; display:flex; align-items:baseline; justify-content:space-between;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:22px;">Today</span><span style="font-family:'DM Mono',monospace; font-size:11px; color:#3a2d6b;">3 GOALS</span></div>
+          <div style="flex:1; padding:16px 15px; display:flex; flex-direction:column; gap:14px; overflow:hidden;">
+            <!-- giant next action w/ ring -->
+            <div style="background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); padding:16px; text-align:center;">
+              <div style="display:flex; justify-content:center; margin-bottom:13px;">
+                <div style="position:relative; width:92px; height:92px;">
+                  <svg width="92" height="92" viewBox="0 0 92 92"><circle cx="46" cy="46" r="40" fill="none" stroke="#ececec" stroke-width="9"></circle><circle cx="46" cy="46" r="40" fill="none" stroke="#2563eb" stroke-width="9" stroke-linecap="round" stroke-dasharray="251" stroke-dashoffset="113" transform="rotate(-90 46 46)"></circle></svg>
+                  <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:20px;">55%</span><span style="font-family:'DM Mono',monospace; font-size:8px; color:#737373;">5/9</span></div>
+                </div>
+              </div>
+              <div style="font-family:'DM Mono',monospace; font-size:9.5px; letter-spacing:0.1em; color:#9a9a9a;">DO THIS NEXT &middot; REWIRE THE WORKSHOP</div>
+              <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:21px; line-height:1.1; margin-top:8px;">Wire the circuits</div>
+              <div style="margin-top:14px; height:46px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; gap:7px; color:#fff; font-size:14.5px; font-weight:700;"><span style="font-size:15px;">&#9654;</span> Start</div>
+            </div>
+            <!-- momentum strip -->
+            <div>
+              <div style="font-family:'DM Mono',monospace; font-size:9.5px; letter-spacing:0.08em; color:#9a9a9a; margin-bottom:9px;">KEEP WARM</div>
+              <div style="display:flex; gap:10px;">
+                <div style="flex:1; background:#fff; border:2.5px solid #0a0a0a; border-radius:2px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:11px;"><div style="font-weight:700; font-size:12.5px; line-height:1.2;">Read 12 books</div><div style="height:6px; background:#ececec; border:1.5px solid #0a0a0a; border-radius:9999px; overflow:hidden; margin-top:9px;"><div style="width:33%; height:100%; background:#2563eb;"></div></div></div>
+                <div style="flex:1; background:#fff; border:2.5px solid #0a0a0a; border-radius:2px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:11px;"><div style="font-weight:700; font-size:12.5px; line-height:1.2;">Couch to 5K</div><div style="height:6px; background:#ececec; border:1.5px solid #0a0a0a; border-radius:9999px; overflow:hidden; margin-top:9px;"><div style="width:25%; height:100%; background:#2563eb;"></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:12px; line-height:1.5; color:#737373; margin-top:12px; max-width:316px;"><strong>5</strong> A cockpit, not a list. The progress ring + one action + Start is the whole point; other goals stay &ldquo;warm&rdquo; below. Best when there are <em>few</em> goals.</div>
+      </div>
+
+      <!-- C: Badges wall of proof -->
+      <div style="flex:none; width:316px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:10px;">Badges &middot; wall of proof</div>
+        <div style="width:316px; height:560px; background:#161616; border:3px solid #0a0a0a; border-radius:34px; box-shadow:6px 6px 0 rgba(10,10,10,0.22); overflow:hidden; display:flex; flex-direction:column;">
+          <div style="flex:none; height:28px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font-family:'DM Mono',monospace; font-size:11px;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+          <!-- header on dark -->
+          <div style="flex:none; padding:16px 16px 13px; border-bottom:3px solid #2563eb;">
+            <div style="display:flex; align-items:flex-end; justify-content:space-between;">
+              <div><div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:30px; color:#ffe50c; line-height:1;">24 badges</div><div style="font-family:'DM Mono',monospace; font-size:10px; color:#8a8a8a; margin-top:6px;">A WALL OF PROOF &middot; ALL VERIFIABLE</div></div>
+              <div style="width:34px; height:34px; border:2px solid #555; border-radius:6px; display:flex; align-items:center; justify-content:center; color:#bbb; font-size:14px;">&#9776;</div>
+            </div>
+          </div>
+          <div style="flex:1; padding:14px; overflow:hidden;">
+            <!-- spotlight latest -->
+            <div style="background:#222; border:2px solid #ffe50c; border-radius:4px; padding:11px; display:flex; gap:12px; align-items:center; margin-bottom:13px;">
+              <div style="flex:none; width:56px; height:56px; border-radius:50%; background:#2563eb; border:2.5px solid #ffe50c; display:flex; align-items:center; justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M13 2 L4 14 L11 14 L9 22 L20 9 L13 9 Z"></path></svg></div>
+              <div style="flex:1;"><div style="font-family:'DM Mono',monospace; font-size:8.5px; color:#ffe50c; letter-spacing:0.08em;">JUST EARNED</div><div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px; color:#fff; margin-top:3px;">Rewire the workshop</div></div>
+            </div>
+            <!-- dense varied gallery -->
+            <div style="display:flex; flex-wrap:wrap; gap:11px; justify-content:center;">
+              <div style="width:58px; height:58px; border-radius:50%; background:#a78bfa; border:2.5px solid #0a0a0a; display:flex; align-items:center; justify-content:center;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:24px; color:#161616;">R</span></div>
+              <div style="width:58px; height:58px; border-radius:50%; background:#059669; border:2.5px solid #0a0a0a; display:flex; align-items:center; justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13 L10 18 L20 6"></path></svg></div>
+              <div style="width:58px; height:58px; border-radius:6px; background:#d97706; border:2.5px solid #0a0a0a; display:flex; align-items:center; justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="#fff"><path d="M12 2 L14.9 8.6 L22 9.3 L16.7 14 L18.2 21 L12 17.3 L5.8 21 L7.3 14 L2 9.3 L9.1 8.6 Z"></path></svg></div>
+              <div style="width:58px; height:58px; border-radius:50%; background:#e0457b; border:2.5px solid #0a0a0a; display:flex; align-items:center; justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M12 21 C12 21 3 14 3 8 C3 5 5 3 8 3 C10 3 12 5 12 5 C12 5 14 3 16 3 C19 3 21 5 21 8 C21 14 12 21 12 21 Z"></path></svg></div>
+              <div style="width:58px; height:58px; border-radius:6px; background:#0d9488; border:2.5px solid #0a0a0a; display:flex; align-items:center; justify-content:center;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:24px; color:#fff;">G</span></div>
+              <div style="width:58px; height:58px; border-radius:50%; background:#2563eb; border:2.5px solid #0a0a0a; display:flex; align-items:center; justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="#fff"><path d="M12 2 L14.9 8.6 L22 9.3 L16.7 14 L18.2 21 L12 17.3 L5.8 21 L7.3 14 L2 9.3 L9.1 8.6 Z"></path></svg></div>
+              <div style="width:58px; height:58px; border-radius:50%; background:#7c3aed; border:2.5px solid #0a0a0a; display:flex; align-items:center; justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M13 2 L4 14 L11 14 L9 22 L20 9 L13 9 Z"></path></svg></div>
+              <div style="width:58px; height:58px; border-radius:6px; background:#ca8a04; border:2.5px solid #0a0a0a; display:flex; align-items:center; justify-content:center;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:24px; color:#161616;">B</span></div>
+              <div style="width:58px; height:58px; border-radius:50%; background:#dc2626; border:2.5px solid #0a0a0a; display:flex; align-items:center; justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13 L10 18 L20 6"></path></svg></div>
+              <div style="width:58px; height:58px; border-radius:50%; background:#0891b2; border:2.5px solid #0a0a0a; display:flex; align-items:center; justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M12 2 L14.9 8.6 L22 9.3 L16.7 14 L18.2 21 L12 17.3 L5.8 21 L7.3 14 L2 9.3 L9.1 8.6 Z"></path></svg></div>
+              <div style="width:58px; height:58px; border-radius:6px; background:#9a3412; border:2.5px solid #0a0a0a; display:flex; align-items:center; justify-content:center;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:24px; color:#fff;">M</span></div>
+              <div style="width:58px; height:58px; border-radius:50%; background:#65a30d; border:2.5px solid #0a0a0a; display:flex; align-items:center; justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13 L10 18 L20 6"></path></svg></div>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:12px; line-height:1.5; color:#737373; margin-top:12px; max-width:316px;"><strong>1+3+4</strong> A dark, immersive room: huge count in yellow, the latest spotlit, then a dense gallery that reads as a <em>haul</em>. Tap any to its Detail. Built for many.</div>
+      </div>
+
+      <!-- C: notes -->
+      <div style="flex:none; width:300px; align-self:stretch; display:flex; flex-direction:column; gap:13px;">
+        <div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:15px;">
+          <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.07em; color:#525252; margin-bottom:9px;">Why this</div>
+          <div style="font-size:12.5px; line-height:1.55; color:#1a1a1a;">Maximum contrast between the tabs. Goals is a focus tool; Badges is a place you go to <em>feel good</em> about what you&rsquo;ve done. The dark wall makes the colourful artifacts pop and signals &ldquo;this is the trophy room, not a list.&rdquo;</div>
+        </div>
+        <div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:15px;">
+          <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.07em; color:#d97706; margin-bottom:9px;">&#9888; Cost</div>
+          <div style="font-size:12.5px; line-height:1.55; color:#1a1a1a;">A dark surface departs from the app&rsquo;s light Full Ride board &mdash; it&rsquo;s the boldest, least &ldquo;dial-back&rdquo; move, and the cockpit assumes few goals (3+ gets busy). Verify both against the rest of the app.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================ EMPTY STATES ============================ -->
+  <div>
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:18px;">
+      <span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:13px; letter-spacing:0.04em; background:#0a0a0a; color:#fff; padding:4px 10px; border-radius:3px;">EMPTY STATES</span>
+      <span style="font-size:15px; font-weight:700;">The first-goal and first-badge moments deserve their own treatment</span>
+    </div>
+    <div style="display:flex; gap:36px; align-items:flex-start;">
+      <!-- first goal -->
+      <div style="flex:none; width:316px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:10px;">Goals &middot; no goals yet</div>
+        <div style="width:316px; height:400px; background:#fafafa; border:3px solid #0a0a0a; border-radius:34px; box-shadow:6px 6px 0 rgba(10,10,10,0.22); overflow:hidden; display:flex; flex-direction:column;">
+          <div style="flex:none; height:28px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font-family:'DM Mono',monospace; font-size:11px;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+          <div style="flex:none; background:#a78bfa; border-bottom:3px solid #0a0a0a; padding:13px 16px;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:22px;">Goals</span></div>
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px;">
+            <div style="width:64px; height:64px; border:3px dashed #0a0a0a; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:30px;">&#9678;</div>
+            <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:19px; margin-top:16px;">Pick something to prove</div>
+            <div style="font-size:12.5px; color:#525252; line-height:1.55; margin-top:8px; max-width:230px;">A goal is anything you want to finish with evidence. Start small &mdash; one step counts.</div>
+            <div style="margin-top:18px; height:46px; padding:0 22px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px; font-weight:700;">+ New goal</div>
+          </div>
+        </div>
+      </div>
+      <!-- first badge -->
+      <div style="flex:none; width:316px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#525252; margin-bottom:10px;">Badges &middot; none earned yet</div>
+        <div style="width:316px; height:400px; background:#fafafa; border:3px solid #0a0a0a; border-radius:34px; box-shadow:6px 6px 0 rgba(10,10,10,0.22); overflow:hidden; display:flex; flex-direction:column;">
+          <div style="flex:none; height:28px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font-family:'DM Mono',monospace; font-size:11px;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+          <div style="flex:none; background:#ffe50c; border-bottom:3px solid #0a0a0a; padding:14px 16px;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:24px;">Badges</span></div>
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px;">
+            <div style="position:relative; width:96px; height:96px;">
+              <div style="width:96px; height:96px; border-radius:50%; background:#f0f0f0; border:3px dashed #b0b0b0; display:flex; align-items:center; justify-content:center;"><svg width="40" height="40" viewBox="0 0 24 24" fill="#c8c8c8"><path d="M13 2 L4 14 L11 14 L9 22 L20 9 L13 9 Z"></path></svg></div>
+            </div>
+            <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:19px; margin-top:16px;">Your first badge is waiting</div>
+            <div style="font-size:12.5px; color:#525252; line-height:1.55; margin-top:8px; max-width:240px;">Finish a goal and you&rsquo;ll design a badge to mark it &mdash; a verifiable credential that&rsquo;s yours to keep.</div>
+            <div style="margin-top:18px; height:46px; padding:0 22px; background:#fff; border:3px solid #0a0a0a; border-radius:4px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700;">See my goals &rarr;</div>
+          </div>
+        </div>
+      </div>
+      <div style="flex:none; width:300px; align-self:center;">
+        <div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:15px;">
+          <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.07em; color:#525252; margin-bottom:9px;">6 &middot; The first moments</div>
+          <div style="font-size:12.5px; line-height:1.55; color:#1a1a1a;">Goals empty = an encouraging invitation (&ldquo;start small&rdquo;). Badges empty = a <em>ghost</em> of a badge you&rsquo;re working toward, pointing back to Goals &mdash; so the two tabs explain each other. Carries into whichever direction you pick.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================ PICK ============================ -->
+  <div style="max-width:760px;">
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+      <span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:13px; letter-spacing:0.04em; background:#0a0a0a; color:#fff; padding:4px 10px; border-radius:3px;">PICK</span>
+      <span style="font-size:15px; font-weight:700;">How far do you want to pull them apart?</span>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:11px;">
+      <div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:13px 15px; font-size:13px; line-height:1.55;"><strong>A &middot; Same DNA, opposite energy.</strong> Both stay lists; each card gets a clear identity (cool/action vs. warm/artifact) + a count. Safest, fastest, easiest to dial back.</div>
+      <div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:13px 15px; font-size:13px; line-height:1.55;"><strong>B &middot; Worklist vs. trophy grid.</strong> Goals gets a &ldquo;Next up&rdquo; hero; Badges becomes a celebratory grid that scales to dozens. The honest, balanced answer to &ldquo;they&rsquo;re the same.&rdquo;</div>
+      <div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:13px 15px; font-size:13px; line-height:1.55;"><strong>C &middot; Cockpit vs. wall of proof.</strong> Goals = a single-focus momentum cockpit; Badges = an immersive dark gallery. Boldest; built for few goals + many badges.</div>
+    </div>
+    <div style="margin-top:20px; font-size:14px; line-height:1.55; color:#404040;">My lean given &ldquo;many badges, few goals&rdquo;: <strong>B</strong> as the base (the grid is the right home for a growing collection), optionally borrowing <strong>C&rsquo;s count header / latest-spotlight</strong> for Badges. Pick a letter (or a hybrid) and tell me whether to build <strong>both</strong> tabs as a connected prototype or one at a time &mdash; I&rsquo;ll take it to finished fidelity with the live scroll, the empty states, and the verifiable signal.</div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

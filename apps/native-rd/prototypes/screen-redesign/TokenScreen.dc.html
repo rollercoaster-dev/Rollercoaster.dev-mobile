@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wght@700;800;900&family=Instrument+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Lexend:wght@400;500;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./tokens/tokens.css">
+<link rel="stylesheet" href="./tokens/themes.css">
+</helmet>
+
+<div class="{{ themeClass }}" ref="{{ rootRef }}" style="width:360px; font-family:var(--ob-font-family); font-size:13px;">
+
+  <!-- ===== THEMED EVALUATION SURFACE ===== -->
+  <div style="background:var(--ob-background); color:var(--ob-foreground); padding:18px 16px 26px;">
+
+    <!-- A · SURFACES & TEXT -->
+    <div style="font-family:'DM Mono',monospace; font-size:10px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--ob-muted-foreground); margin:0 0 10px; padding-bottom:5px; border-bottom:1px solid var(--ob-border-subtle);">A · Surfaces &amp; text</div>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <div style="background:var(--ob-card); color:var(--ob-card-foreground); border:1px solid var(--ob-border-default); border-radius:var(--ob-radius-md); padding:11px 12px;">
+        <div>Card surface — body text</div>
+        <div style="font-family:'DM Mono',monospace; font-size:9px; color:var(--ob-muted-foreground); margin-top:4px;">--ob-card · --ob-card-foreground</div>
+      </div>
+      <div style="background:var(--ob-surface-sunken-bg); border-radius:var(--ob-radius-md); padding:11px 12px;">
+        <div>Sunken panel</div>
+        <div style="font-family:'DM Mono',monospace; font-size:9px; color:var(--ob-muted-foreground); margin-top:4px;">--ob-surface-sunken-bg</div>
+      </div>
+      <div style="background:var(--ob-surface-sheet-bg); border:1px solid var(--ob-border-subtle); border-radius:var(--ob-radius-md); padding:11px 12px;">
+        <div>Sheet / popover</div>
+        <div style="font-family:'DM Mono',monospace; font-size:9px; color:var(--ob-muted-foreground); margin-top:4px;">--ob-surface-sheet-bg</div>
+      </div>
+      <div style="background:var(--ob-surface-elevated-bg); box-shadow:var(--ob-shadow-md); border-radius:var(--ob-radius-md); padding:11px 12px;">
+        <div>Elevated surface</div>
+        <div style="font-family:'DM Mono',monospace; font-size:9px; color:var(--ob-muted-foreground); margin-top:4px;">--ob-surface-elevated-bg</div>
+      </div>
+      <div style="background:var(--ob-surface-input-bg); border:1px solid var(--ob-border-input); border-radius:var(--ob-radius-md); padding:11px 12px;">
+        <div style="color:var(--ob-muted-foreground);">Input field placeholder</div>
+        <div style="font-family:'DM Mono',monospace; font-size:9px; color:var(--ob-muted-foreground); margin-top:4px;">--ob-surface-input-bg · --ob-border-input</div>
+      </div>
+      <div>
+        <span style="color:var(--ob-muted-foreground); font-size:var(--ob-typo-caption-size);">Muted caption on background — --ob-muted-foreground</span>
+      </div>
+    </div>
+
+    <!-- B · TYPOGRAPHY ROLES -->
+    <div style="font-family:'DM Mono',monospace; font-size:10px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--ob-muted-foreground); margin:24px 0 10px; padding-bottom:5px; border-bottom:1px solid var(--ob-border-subtle);">B · Typography roles</div>
+    <div style="display:flex; flex-direction:column; gap:9px;">
+      <div style="overflow:hidden;">
+        <div style="font-family:var(--ob-typo-display-family); font-weight:var(--ob-typo-display-weight); font-size:var(--ob-typo-display-size); letter-spacing:var(--ob-typo-display-tracking); line-height:1; white-space:nowrap;">Aa</div>
+        <div style="font-family:'DM Mono',monospace; font-size:9px; color:var(--ob-muted-foreground);">--ob-typo-display-*</div>
+      </div>
+      <div>
+        <div style="font-family:var(--ob-font-headline); font-weight:var(--ob-typo-heading-1-weight); font-size:var(--ob-typo-heading-1-size); line-height:1.05;">Heading 1</div>
+        <div style="font-family:'DM Mono',monospace; font-size:9px; color:var(--ob-muted-foreground);">--ob-typo-heading-1-*</div>
+      </div>
+      <div>
+        <div style="font-family:var(--ob-font-headline); font-weight:var(--ob-typo-heading-2-weight); font-size:var(--ob-typo-heading-2-size); line-height:1.1;">Heading 2</div>
+        <div style="font-family:'DM Mono',monospace; font-size:9px; color:var(--ob-muted-foreground);">--ob-typo-heading-2-*</div>
+      </div>
+      <div>
+        <div style="font-weight:var(--ob-typo-heading-3-weight); font-size:var(--ob-typo-heading-3-size); line-height:1.2;">Heading 3</div>
+        <div style="font-family:'DM Mono',monospace; font-size:9px; color:var(--ob-muted-foreground);">--ob-typo-heading-3-*</div>
+      </div>
+      <div>
+        <div style="font-size:var(--ob-typo-body-size); font-weight:var(--ob-typo-body-weight); line-height:var(--ob-typo-body-line-height);">Body copy renders at the real body size and line-height so type-scale and font swaps show through.</div>
+        <div style="font-family:'DM Mono',monospace; font-size:9px; color:var(--ob-muted-foreground); margin-top:3px;">--ob-typo-body-* · --ob-font-family</div>
+      </div>
+      <div>
+        <div style="font-size:var(--ob-typo-body-sm-size); color:var(--ob-text-secondary);">Small body — secondary text</div>
+        <div style="font-family:'DM Mono',monospace; font-size:9px; color:var(--ob-muted-foreground);">--ob-typo-body-sm-size · --ob-text-secondary</div>
+      </div>
+      <div>
+        <div style="font-size:var(--ob-typo-label-size); font-weight:var(--ob-typo-label-weight); letter-spacing:var(--ob-typo-label-tracking); text-transform:uppercase;">Label text</div>
+        <div style="font-family:'DM Mono',monospace; font-size:9px; color:var(--ob-muted-foreground);">--ob-typo-label-*</div>
+      </div>
+      <div>
+        <div style="font-size:var(--ob-typo-caption-size); color:var(--ob-typo-caption-color);">Caption text</div>
+        <div style="font-family:'DM Mono',monospace; font-size:9px; color:var(--ob-muted-foreground);">--ob-typo-caption-*</div>
+      </div>
+      <div>
+        <div style="font-family:var(--ob-typo-mono-family); font-size:var(--ob-typo-mono-size);">mono 0123 →</div>
+        <div style="font-family:'DM Mono',monospace; font-size:9px; color:var(--ob-muted-foreground);">--ob-typo-mono-* · --ob-font-mono</div>
+      </div>
+    </div>
+
+    <!-- C · CHROME -->
+    <div style="font-family:'DM Mono',monospace; font-size:10px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--ob-muted-foreground); margin:24px 0 10px; padding-bottom:5px; border-bottom:1px solid var(--ob-border-subtle);">C · Chrome</div>
+    <div style="border:1px solid var(--ob-border-subtle); border-radius:var(--ob-radius-md); overflow:hidden;">
+      <div style="background:var(--ob-chrome-top-bar-bg); color:var(--ob-chrome-top-bar-fg); height:26px; display:flex; align-items:center; justify-content:space-between; padding:0 12px; font-size:11px; font-weight:600;">
+        <span>9:41</span><span>▦ ▦ ▰</span>
+      </div>
+      <div style="background:var(--ob-chrome-header-bg); color:var(--ob-chrome-header-fg); border-bottom:1px solid var(--ob-chrome-header-border); padding:10px 12px; font-family:var(--ob-font-headline); font-weight:700;">Header</div>
+      <div style="background:var(--ob-background); padding:8px 12px;">
+        <div style="font-family:'DM Mono',monospace; font-size:9px; color:var(--ob-muted-foreground);">--ob-chrome-top-bar-* · --ob-chrome-header-*</div>
+      </div>
+      <div style="display:flex; background:var(--ob-chrome-tab-bar-bg);">
+        <div style="flex:1; text-align:center; padding:9px 0; color:var(--ob-chrome-tab-bar-active-fg); font-size:11px; font-weight:700; border-top:3px solid var(--ob-chrome-tab-bar-indicator);">Goals</div>
+        <div style="flex:1; text-align:center; padding:9px 0; color:var(--ob-chrome-tab-bar-fg); font-size:11px; border-top:3px solid transparent;">Badges</div>
+        <div style="flex:1; text-align:center; padding:9px 0; color:var(--ob-chrome-tab-bar-fg); font-size:11px; border-top:3px solid transparent;">Settings</div>
+      </div>
+    </div>
+    <div style="margin-top:10px; background:var(--ob-chrome-modal-overlay); border-radius:var(--ob-radius-md); padding:16px;">
+      <div style="background:var(--ob-chrome-modal-bg); color:var(--ob-chrome-modal-fg); border:1px solid var(--ob-chrome-modal-border); border-radius:var(--ob-radius-md); padding:12px;">
+        <div style="font-weight:600;">Modal</div>
+        <div style="font-family:'DM Mono',monospace; font-size:9px; color:var(--ob-muted-foreground); margin-top:4px;">--ob-chrome-modal-* on --ob-chrome-modal-overlay</div>
+      </div>
+    </div>
+
+    <!-- D · ACTIONS -->
+    <div style="font-family:'DM Mono',monospace; font-size:10px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--ob-muted-foreground); margin:24px 0 10px; padding-bottom:5px; border-bottom:1px solid var(--ob-border-subtle);">D · Actions &amp; selection</div>
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <div style="background:var(--ob-action-primary-bg); color:var(--ob-action-primary-fg); border-radius:var(--ob-radius-md); padding:11px; text-align:center; font-weight:600;">Primary</div>
+      <div style="background:var(--ob-action-secondary-bg); color:var(--ob-action-secondary-fg); border:1px solid var(--ob-border-default); border-radius:var(--ob-radius-md); padding:11px; text-align:center; font-weight:600;">Secondary</div>
+      <div style="background:var(--ob-action-destructive-bg); color:var(--ob-action-destructive-fg); border-radius:var(--ob-radius-md); padding:11px; text-align:center; font-weight:600;">Destructive</div>
+      <div style="background:var(--ob-action-disabled-bg); color:var(--ob-action-disabled-fg); border:1px solid var(--ob-action-disabled-border); border-radius:var(--ob-radius-md); padding:11px; text-align:center; font-weight:600;">Disabled</div>
+      <div style="background:var(--ob-action-selection-bg); color:var(--ob-action-selection-fg); border:1px solid var(--ob-action-selection-border); border-radius:var(--ob-radius-md); padding:11px; display:flex; align-items:center; gap:8px;">
+        <span style="font-weight:700;">✓</span><span>Selected list row</span>
+      </div>
+      <div style="font-family:'DM Mono',monospace; font-size:9px; color:var(--ob-muted-foreground);">--ob-action-primary / secondary / destructive / disabled / selection</div>
+    </div>
+
+    <!-- E · BORDERS & FOCUS -->
+    <div style="font-family:'DM Mono',monospace; font-size:10px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--ob-muted-foreground); margin:24px 0 10px; padding-bottom:5px; border-bottom:1px solid var(--ob-border-subtle);">E · Borders &amp; focus</div>
+    <div style="display:flex; flex-direction:column; gap:7px;">
+      <div style="border:var(--ob-border-width) solid var(--ob-border-default); border-radius:var(--ob-radius-md); padding:8px; font-family:'DM Mono',monospace; font-size:9px;">--ob-border-default · width</div>
+      <div style="border:var(--ob-border-width) solid var(--ob-border-strong); border-radius:var(--ob-radius-md); padding:8px; font-family:'DM Mono',monospace; font-size:9px;">--ob-border-strong</div>
+      <div style="border:var(--ob-border-width) solid var(--ob-border-subtle); border-radius:var(--ob-radius-md); padding:8px; font-family:'DM Mono',monospace; font-size:9px;">--ob-border-subtle</div>
+      <div style="border:var(--ob-border-width-medium) solid var(--ob-border-focus); box-shadow:var(--ob-shadow-focus); border-radius:var(--ob-radius-md); padding:8px; font-family:'DM Mono',monospace; font-size:9px;">--ob-border-focus + --ob-shadow-focus</div>
+      <div style="display:flex; gap:7px;">
+        <div style="flex:1; border:2px solid var(--ob-border-destructive); border-radius:var(--ob-radius-md); padding:8px; font-family:'DM Mono',monospace; font-size:8.5px;">destructive</div>
+        <div style="flex:1; border:2px solid var(--ob-border-success); border-radius:var(--ob-radius-md); padding:8px; font-family:'DM Mono',monospace; font-size:8.5px;">success</div>
+      </div>
+      <div style="display:flex; gap:7px; align-items:center;">
+        <div style="width:34px;height:34px;background:var(--ob-muted); border:1px solid var(--ob-border-default); border-radius:var(--ob-radius-sm);"></div>
+        <div style="width:34px;height:34px;background:var(--ob-muted); border:1px solid var(--ob-border-default); border-radius:var(--ob-radius-md);"></div>
+        <div style="width:34px;height:34px;background:var(--ob-muted); border:1px solid var(--ob-border-default); border-radius:var(--ob-radius-lg);"></div>
+        <div style="width:34px;height:34px;background:var(--ob-muted); border:1px solid var(--ob-border-default); border-radius:var(--ob-radius-xl);"></div>
+        <span style="font-family:'DM Mono',monospace; font-size:8.5px; color:var(--ob-muted-foreground);">--ob-radius sm→xl</span>
+      </div>
+    </div>
+
+    <!-- F · SHADOWS -->
+    <div style="font-family:'DM Mono',monospace; font-size:10px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--ob-muted-foreground); margin:24px 0 10px; padding-bottom:5px; border-bottom:1px solid var(--ob-border-subtle);">F · Shadows / elevation</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; padding:6px 4px 10px;">
+      <div style="background:var(--ob-card); border-radius:var(--ob-radius-md); box-shadow:var(--ob-shadow-sm); padding:14px 8px; text-align:center; font-family:'DM Mono',monospace; font-size:9px;">shadow-sm</div>
+      <div style="background:var(--ob-card); border-radius:var(--ob-radius-md); box-shadow:var(--ob-shadow-md); padding:14px 8px; text-align:center; font-family:'DM Mono',monospace; font-size:9px;">shadow-md</div>
+      <div style="background:var(--ob-card); border-radius:var(--ob-radius-md); box-shadow:var(--ob-shadow-lg); padding:14px 8px; text-align:center; font-family:'DM Mono',monospace; font-size:9px;">shadow-lg</div>
+      <div style="background:var(--ob-card); border-radius:var(--ob-radius-md); box-shadow:var(--ob-shadow-focus); padding:14px 8px; text-align:center; font-family:'DM Mono',monospace; font-size:9px;">shadow-focus</div>
+    </div>
+
+    <!-- G · FEEDBACK -->
+    <div style="font-family:'DM Mono',monospace; font-size:10px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--ob-muted-foreground); margin:24px 0 10px; padding-bottom:5px; border-bottom:1px solid var(--ob-border-subtle);">G · Feedback / status</div>
+    <div style="display:flex; flex-direction:column; gap:7px;">
+      <div style="background:var(--ob-success); color:var(--ob-success-foreground); border-radius:var(--ob-radius-pill); padding:7px 12px; font-size:11px; font-weight:600;">Success — --ob-success</div>
+      <div style="background:var(--ob-warning); color:var(--ob-warning-foreground); border-radius:var(--ob-radius-pill); padding:7px 12px; font-size:11px; font-weight:600;">Warning — --ob-warning</div>
+      <div style="background:var(--ob-info); color:var(--ob-info-foreground); border-radius:var(--ob-radius-pill); padding:7px 12px; font-size:11px; font-weight:600;">Info — --ob-info</div>
+      <div style="background:var(--ob-destructive); color:var(--ob-destructive-foreground); border-radius:var(--ob-radius-pill); padding:7px 12px; font-size:11px; font-weight:600;">Destructive — --ob-destructive</div>
+      <div style="background:var(--ob-highlight); color:var(--ob-highlight-foreground); border-radius:var(--ob-radius-pill); padding:7px 12px; font-size:11px; font-weight:600;">Highlight — --ob-highlight</div>
+    </div>
+
+    <!-- H · JOURNEY -->
+    <div style="font-family:'DM Mono',monospace; font-size:10px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--ob-muted-foreground); margin:24px 0 10px; padding-bottom:5px; border-bottom:1px solid var(--ob-border-subtle);">H · Journey</div>
+    <div style="background:var(--ob-journey-goal-bg); color:var(--ob-journey-goal-fg); border:1px solid var(--ob-journey-goal-border); border-radius:var(--ob-radius-md); padding:11px 12px;">
+      <div style="font-family:var(--ob-font-headline); font-weight:700;">Goal card</div>
+      <div style="font-family:'DM Mono',monospace; font-size:9px; opacity:0.8; margin-top:3px;">--ob-journey-goal-*</div>
+    </div>
+    <div style="display:flex; gap:8px; align-items:center; margin-top:10px;">
+      <div style="width:38px;height:38px;border-radius:50%; display:flex;align-items:center;justify-content:center; background:var(--ob-journey-step-bg); color:var(--ob-journey-step-fg); font-size:12px; font-weight:700;">1</div>
+      <div style="width:38px;height:38px;border-radius:50%; display:flex;align-items:center;justify-content:center; background:var(--ob-journey-step-active-bg); color:var(--ob-journey-step-active-fg); font-size:12px; font-weight:700;">2</div>
+      <div style="width:38px;height:38px;border-radius:50%; display:flex;align-items:center;justify-content:center; background:var(--ob-journey-step-complete-bg); color:var(--ob-journey-step-complete-fg); font-size:14px; font-weight:700;">✓</div>
+      <span style="font-family:'DM Mono',monospace; font-size:8.5px; color:var(--ob-muted-foreground);">step default / active / complete</span>
+    </div>
+    <div style="margin-top:12px;">
+      <div style="height:10px; border-radius:var(--ob-radius-pill); background:var(--ob-journey-progress-track); overflow:hidden;">
+        <div style="width:62%; height:100%; background:var(--ob-journey-progress-fill);"></div>
+      </div>
+      <div style="font-family:'DM Mono',monospace; font-size:8.5px; color:var(--ob-muted-foreground); margin-top:4px;">--ob-journey-progress-track / fill</div>
+    </div>
+    <div style="margin-top:12px; display:flex; flex-direction:column; gap:0;">
+      <div style="display:flex; gap:10px; align-items:flex-start;">
+        <div style="display:flex; flex-direction:column; align-items:center;">
+          <div style="width:20px;height:20px;border-radius:50%; background:var(--ob-journey-timeline-node-bg); color:var(--ob-journey-timeline-node-fg); border:2px solid var(--ob-journey-timeline-line); display:flex;align-items:center;justify-content:center; font-size:10px;">●</div>
+          <div style="width:2px; height:26px; background:var(--ob-journey-timeline-line);"></div>
+          <div style="width:20px;height:20px;border-radius:50%; background:var(--ob-journey-timeline-node-bg); color:var(--ob-journey-timeline-node-fg); border:2px solid var(--ob-journey-timeline-line); display:flex;align-items:center;justify-content:center; font-size:10px;">●</div>
+        </div>
+        <div style="font-family:'DM Mono',monospace; font-size:8.5px; color:var(--ob-muted-foreground); padding-top:2px;">--ob-journey-timeline-*</div>
+      </div>
+    </div>
+    <div style="margin-top:12px; background:var(--ob-journey-completion-bg); color:var(--ob-journey-completion-fg); border-radius:var(--ob-radius-md); padding:11px 12px; display:flex; align-items:center; justify-content:space-between;">
+      <span style="font-weight:700;">Completed!</span>
+      <span style="color:var(--ob-journey-completion-accent); font-weight:700;">★</span>
+    </div>
+    <div style="font-family:'DM Mono',monospace; font-size:8.5px; color:var(--ob-muted-foreground); margin-top:4px;">--ob-journey-completion-bg / fg / accent</div>
+
+    <!-- I · REWARD -->
+    <div style="font-family:'DM Mono',monospace; font-size:10px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--ob-muted-foreground); margin:24px 0 10px; padding-bottom:5px; border-bottom:1px solid var(--ob-border-subtle);">I · Reward / badges</div>
+    <div style="background:var(--ob-reward-badge-chrome-bg); color:var(--ob-reward-badge-chrome-fg); border:2px solid var(--ob-reward-badge-chrome-border); border-radius:var(--ob-radius-md); padding:12px; text-align:center;">
+      <div style="font-family:var(--ob-font-headline); font-weight:800;">◆ Badge</div>
+      <span style="display:inline-block; margin-top:6px; background:var(--ob-reward-badge-label-bg); color:var(--ob-reward-badge-label-fg); border-radius:var(--ob-radius-pill); padding:2px 9px; font-size:10px; font-weight:700;">LABEL</span>
+    </div>
+    <div style="font-family:'DM Mono',monospace; font-size:8.5px; color:var(--ob-muted-foreground); margin-top:6px;">--ob-reward-badge-accent-1…5</div>
+    <div style="display:flex; gap:5px; margin-top:5px;">
+      <div style="flex:1; height:22px; border-radius:3px; background:var(--ob-reward-badge-accent-1);"></div>
+      <div style="flex:1; height:22px; border-radius:3px; background:var(--ob-reward-badge-accent-2);"></div>
+      <div style="flex:1; height:22px; border-radius:3px; background:var(--ob-reward-badge-accent-3);"></div>
+      <div style="flex:1; height:22px; border-radius:3px; background:var(--ob-reward-badge-accent-4);"></div>
+      <div style="flex:1; height:22px; border-radius:3px; background:var(--ob-reward-badge-accent-5);"></div>
+    </div>
+    <div style="font-family:'DM Mono',monospace; font-size:8.5px; color:var(--ob-muted-foreground); margin-top:8px;">--ob-reward-celebration-burst-1…6</div>
+    <div style="display:flex; gap:5px; margin-top:5px;">
+      <div style="flex:1; height:18px; border-radius:3px; background:var(--ob-reward-celebration-burst-1);"></div>
+      <div style="flex:1; height:18px; border-radius:3px; background:var(--ob-reward-celebration-burst-2);"></div>
+      <div style="flex:1; height:18px; border-radius:3px; background:var(--ob-reward-celebration-burst-3);"></div>
+      <div style="flex:1; height:18px; border-radius:3px; background:var(--ob-reward-celebration-burst-4);"></div>
+      <div style="flex:1; height:18px; border-radius:3px; background:var(--ob-reward-celebration-burst-5);"></div>
+      <div style="flex:1; height:18px; border-radius:3px; background:var(--ob-reward-celebration-burst-6);"></div>
+    </div>
+    <div style="font-family:'DM Mono',monospace; font-size:8.5px; color:var(--ob-muted-foreground); margin-top:8px;">--ob-reward-level-{novice,intermediate,advanced,expert}-bg</div>
+    <div style="display:flex; gap:5px; margin-top:5px;">
+      <div style="flex:1; text-align:center; padding:6px 0; border-radius:var(--ob-radius-pill); background:var(--ob-reward-level-novice-bg); color:#0a0a0a; font-size:9px; font-weight:700;">Nov</div>
+      <div style="flex:1; text-align:center; padding:6px 0; border-radius:var(--ob-radius-pill); background:var(--ob-reward-level-intermediate-bg); color:#0a0a0a; font-size:9px; font-weight:700;">Int</div>
+      <div style="flex:1; text-align:center; padding:6px 0; border-radius:var(--ob-radius-pill); background:var(--ob-reward-level-advanced-bg); color:#0a0a0a; font-size:9px; font-weight:700;">Adv</div>
+      <div style="flex:1; text-align:center; padding:6px 0; border-radius:var(--ob-radius-pill); background:var(--ob-reward-level-expert-bg); color:#0a0a0a; font-size:9px; font-weight:700;">Exp</div>
+    </div>
+
+    <!-- J · NARRATIVE -->
+    <div style="font-family:'DM Mono',monospace; font-size:10px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--ob-muted-foreground); margin:24px 0 10px; padding-bottom:5px; border-bottom:1px solid var(--ob-border-subtle);">J · Narrative sections</div>
+    <div style="display:flex; flex-direction:column; gap:7px;">
+      <div style="background:var(--ob-narrative-climb-bg); color:var(--ob-narrative-climb-text); border-radius:var(--ob-radius-md); padding:11px 12px; font-weight:600;">Climb<span style="display:block; font-family:'DM Mono',monospace; font-size:8.5px; font-weight:400; opacity:0.7;">--ob-narrative-climb-*</span></div>
+      <div style="background:var(--ob-narrative-drop-bg); color:var(--ob-narrative-drop-text); border-radius:var(--ob-radius-md); padding:11px 12px; font-weight:600;">Drop <span style="color:var(--ob-narrative-drop-accent);">●</span><span style="display:block; font-family:'DM Mono',monospace; font-size:8.5px; font-weight:400; opacity:0.7;">--ob-narrative-drop-* + accent</span></div>
+      <div style="background:var(--ob-narrative-stories-bg); color:var(--ob-narrative-stories-text); border-radius:var(--ob-radius-md); padding:11px 12px; font-weight:600;">Stories <span style="color:var(--ob-narrative-stories-accent-1);">●</span><span style="color:var(--ob-narrative-stories-accent-2);">●</span><span style="color:var(--ob-narrative-stories-accent-3);">●</span><span style="color:var(--ob-narrative-stories-accent-4);">●</span><span style="display:block; font-family:'DM Mono',monospace; font-size:8.5px; font-weight:400; opacity:0.7;">--ob-narrative-stories-* + accent-1…4</span></div>
+      <div style="background:var(--ob-narrative-relief-bg); color:var(--ob-narrative-relief-text); border-radius:var(--ob-radius-md); padding:11px 12px; font-weight:600;">Relief <span style="color:var(--ob-narrative-relief-accent);">●</span><span style="display:block; font-family:'DM Mono',monospace; font-size:8.5px; font-weight:400; opacity:0.7;">--ob-narrative-relief-* + accent</span></div>
+    </div>
+
+    <!-- K · COMPONENT OVERRIDES -->
+    <div style="font-family:'DM Mono',monospace; font-size:10px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--ob-muted-foreground); margin:24px 0 10px; padding-bottom:5px; border-bottom:1px solid var(--ob-border-subtle);">K · Component overrides</div>
+    <div style="background:var(--ob-badge-background); border:var(--ob-component-badge-border-width,var(--ob-border-width)) solid var(--ob-badge-border-color); border-radius:var(--ob-badge-border-radius); box-shadow:var(--ob-badge-shadow); padding:11px 12px;">
+      <div style="color:var(--ob-badge-title-color); font-weight:600;">Badge component</div>
+      <div style="color:var(--ob-badge-text-color); font-size:11px;">--ob-badge-* (border-width / shadow override)</div>
+    </div>
+    <div style="margin-top:8px; background:var(--ob-form-background); border:1px solid var(--ob-form-input-border); border-radius:var(--ob-radius-md); padding:11px 12px;">
+      <div style="color:var(--ob-form-label-color); font-family:'DM Mono',monospace; font-size:9px;">--ob-form-label-color</div>
+      <div style="color:var(--ob-form-text-color);">Form field text</div>
+    </div>
+    <div style="margin-top:8px; background:var(--ob-dashboard-background); border:1px solid var(--ob-dashboard-border-color); border-radius:var(--ob-radius-md); padding:11px 12px;">
+      <div style="color:var(--ob-dashboard-accent-color); font-weight:700;">Dashboard accent</div>
+      <div style="color:var(--ob-dashboard-secondary-color); font-size:11px;">--ob-dashboard-*</div>
+    </div>
+
+  </div>
+
+  <!-- ===== DIVERGENCE PANEL (neutral chrome; swatches still resolve under theme class) ===== -->
+  <div style="background:#ffffff; color:#111111; border-top:2px solid #111; padding:14px 14px 18px; font-family:'DM Mono',monospace;">
+    <div style="font-size:10px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:#111; margin-bottom:4px;">cur map ⟷ real token</div>
+    <div style="font-size:9px; color:#777; margin-bottom:10px;">left = shell <span style="color:#111;">cur</span> swatch · right = <span style="color:#111;">var(--ob-*)</span> · ⚠ = differ</div>
+
+    <div style="display:flex; align-items:center; gap:6px; font-size:8px; color:#999; padding-bottom:6px; border-bottom:1px dashed #ddd; margin-bottom:6px;">
+      <div style="width:20px; text-align:center;">cur</div>
+      <div style="width:20px; text-align:center;">real</div>
+      <div style="flex:1;">token</div>
+      <div style="width:14px;"></div>
+    </div>
+
+    <sc-for list="{{ divRows }}" as="r" hint-placeholder-count="8">
+      <div style="display:flex; align-items:center; gap:6px; padding:3px 0;">
+        <div style="width:20px; height:20px; border-radius:3px; border:1px solid #ccc; flex:none; background:{{ r.curVal }};"></div>
+        <div data-real="{{ r.key }}" style="width:20px; height:20px; border-radius:3px; border:1px solid #ccc; flex:none; background:{{ r.realStyle }};"></div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:9px; color:#111; line-height:1.25; word-break:break-all;">{{ r.cssVar }}</div>
+          <div style="font-size:8px; color:#999; line-height:1.25;">{{ r.curVal }} → {{ r.realResolved }}</div>
+        </div>
+        <div style="width:14px; text-align:center; color:#c0392b; font-size:12px;">{{ r.flag }}</div>
+      </div>
+    </sc-for>
+
+    <div style="font-size:9px; font-weight:600; color:#111; margin:12px 0 4px;">non-color</div>
+    <sc-for list="{{ textRows }}" as="t" hint-placeholder-count="3">
+      <div style="padding:4px 0; border-top:1px dashed #eee;">
+        <div style="font-size:9px; color:#111;">{{ t.cssVar }} <span style="color:#c0392b;">{{ t.flag }}</span></div>
+        <div style="font-size:8px; color:#999; word-break:break-all;">cur: {{ t.curVal }}</div>
+        <div style="font-size:8px; color:#999; word-break:break-all;">real: {{ t.realResolved }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:360,&quot;height&quot;:1400},&quot;themeClass&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;themeName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;The Full Ride&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;themeId&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;light-default&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;cur&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;Record&lt;string,string&gt;&quot;}}">
+class Component extends DCLogic {
+  state = { flags: {}, resolved: {}, textResolved: {}, textFlags: {} };
+
+  COLOR_ROWS = [
+    { key: 'bg',        curKey: 'bg',        cssVar: '--ob-background' },
+    { key: 'surface',   curKey: 'surface',   cssVar: '--ob-surface-card-bg' },
+    { key: 'surfaceAlt',curKey: 'surfaceAlt',cssVar: '--ob-surface-sunken-bg' },
+    { key: 'ink',       curKey: 'ink',       cssVar: '--ob-foreground' },
+    { key: 'inkSoft',   curKey: 'inkSoft',   cssVar: '--ob-text-secondary' },
+    { key: 'muted',     curKey: 'muted',     cssVar: '--ob-muted-foreground' },
+    { key: 'band',      curKey: 'band',      cssVar: '--ob-chrome-tab-bar-bg' },
+    { key: 'bandInk',   curKey: 'bandInk',   cssVar: '--ob-chrome-tab-bar-active-fg' },
+    { key: 'status',    curKey: 'status',    cssVar: '--ob-chrome-top-bar-bg' },
+    { key: 'statusInk', curKey: 'statusInk', cssVar: '--ob-chrome-top-bar-fg' },
+    { key: 'primary',   curKey: 'primary',   cssVar: '--ob-action-primary-bg' },
+    { key: 'primaryFg', curKey: 'primaryFg', cssVar: '--ob-action-primary-fg' },
+    { key: 'accent',    curKey: 'accent',    cssVar: '--ob-accent' },
+    { key: 'accentFg',  curKey: 'accentFg',  cssVar: '--ob-accent-foreground' },
+    { key: 'borderCol', curKey: 'borderCol', cssVar: '--ob-border-default' },
+    { key: 'check',     curKey: 'check',     cssVar: '--ob-action-selection-bg' },
+    { key: 'sel',       curKey: 'sel',       cssVar: '--ob-ring' },
+  ];
+
+  TEXT_ROWS = [
+    { key: 'headFont',   curKey: 'headFont',   cssVar: '--ob-font-headline' },
+    { key: 'bodyFont',   curKey: 'bodyFont',   cssVar: '--ob-font-family' },
+    { key: 'cardShadow', curKey: 'cardShadow', cssVar: '--ob-shadow-md' },
+  ];
+
+  rootRef = (el) => { this._root = el; };
+
+  norm(v) {
+    try {
+      if (!this._ctx) this._ctx = document.createElement('canvas').getContext('2d');
+      this._ctx.fillStyle = '#000';
+      this._ctx.fillStyle = String(v).trim();
+      return this._ctx.fillStyle;
+    } catch (e) { return String(v).trim().toLowerCase(); }
+  }
+
+  componentDidMount() { setTimeout(() => this.measure(), 60); }
+  componentDidUpdate(prev) {
+    if (prev.themeClass !== this.props.themeClass) setTimeout(() => this.measure(), 60);
+  }
+
+  measure() {
+    if (!this._root) return;
+    const cur = this.props.cur || {};
+    const flags = {}, resolved = {};
+    this.COLOR_ROWS.forEach((r) => {
+      const el = this._root.querySelector('[data-real="' + r.key + '"]');
+      if (!el) return;
+      const real = getComputedStyle(el).backgroundColor;
+      resolved[r.key] = real;
+      flags[r.key] = this.norm(cur[r.curKey]) !== this.norm(real);
+    });
+    const cs = getComputedStyle(this._root);
+    const textResolved = {}, textFlags = {};
+    this.TEXT_ROWS.forEach((t) => {
+      const real = (cs.getPropertyValue(t.cssVar) || '').trim();
+      textResolved[t.key] = real || '(unset)';
+      const a = String(cur[t.curKey] || '').replace(/['"]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
+      const b = real.replace(/['"]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
+      textFlags[t.key] = a && b ? a !== b : false;
+    });
+    this.setState({ flags, resolved, textResolved, textFlags });
+  }
+
+  renderVals() {
+    const cur = this.props.cur || {};
+    const divRows = this.COLOR_ROWS.map((r) => ({
+      key: r.key,
+      cssVar: r.cssVar,
+      curVal: cur[r.curKey] || '—',
+      realStyle: 'var(' + r.cssVar + ')',
+      realResolved: this.state.resolved[r.key] || '…',
+      flag: this.state.flags[r.key] ? '⚠' : '',
+    }));
+    const textRows = this.TEXT_ROWS.map((t) => ({
+      key: t.key,
+      cssVar: t.cssVar,
+      curVal: cur[t.curKey] || '—',
+      realResolved: this.state.textResolved[t.key] || '…',
+      flag: this.state.textFlags[t.key] ? '⚠' : '',
+    }));
+    return {
+      themeClass: this.props.themeClass || '',
+      themeName: this.props.themeName || '',
+      themeId: this.props.themeId || '',
+      rootRef: this.rootRef,
+      divRows,
+      textRows,
+    };
+  }
+}
+</script>
+</body>
+</html>

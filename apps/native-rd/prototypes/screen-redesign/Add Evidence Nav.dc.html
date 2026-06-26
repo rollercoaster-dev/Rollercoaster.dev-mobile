@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wght@700;800;900&family=Instrument+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  @keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes popIn { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+</style>
+</helmet>
+
+<div style="font-family:'Instrument Sans',system-ui,sans-serif; width:max-content; min-width:100%; min-height:100vh; box-sizing:border-box; padding:48px; background:#e5e5e5; color:#0a0a0a;">
+
+  <!-- INTRO -->
+  <div style="max-width:760px; margin-bottom:30px;">
+    <div style="font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:#525252; margin-bottom:10px;">Reworked A &middot; the slide, cleaned &middot; + = add evidence</div>
+    <h1 style="font-family:'Anybody',sans-serif; font-weight:900; font-size:38px; line-height:0.98; letter-spacing:-0.02em; margin:0 0 14px;">SWITCH STAYS A SWITCH. + IS FOR CAPTURE.</h1>
+    <p style="font-size:15px; line-height:1.6; margin:0; max-width:680px; color:#404040;">The bar is the clean three-slot slide. The <strong>+ add-evidence</strong> button lives only where a goal &mdash; and a step &mdash; is in context, and it <strong>pre-targets your active step</strong> so capture is one decision: pick a type. Slide to Badges or Settings and the + disappears, because there&rsquo;s nothing to attach to. Tap + below &rarr; pick a type &rarr; it saves to the active step, count ticks up.</p>
+  </div>
+
+  <!-- PHONE -->
+  <div style="width:376px;">
+    <div style="width:376px; height:768px; background:#fafafa; border:3px solid #0a0a0a; border-radius:40px; box-shadow:10px 10px 0 rgba(10,10,10,0.16); overflow:hidden; display:flex; flex-direction:column; position:relative;">
+
+      <!-- status bar -->
+      <div style="height:32px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 20px; font-family:'DM Mono',monospace; font-size:12px; color:#0a0a0a; flex:none;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+
+      <!-- header -->
+      <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; padding:13px 18px; display:flex; align-items:center; gap:12px; flex:none;">
+        <span style="width:30px; height:30px; border:2px solid #0a0a0a; border-radius:2px; background:#fff; display:flex; align-items:center; justify-content:center; box-shadow:2px 2px 0 rgba(10,10,10,0.85);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></span>
+        <span style="flex:1; font-family:'Anybody',sans-serif; font-weight:800; font-size:18px; color:#0a0a0a;">{{ headerTitle }}</span>
+      </div>
+
+      <!-- ===== CONTENT: GOALS (goal focus) ===== -->
+      <sc-if value="{{ isGoals }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:1; min-height:0; overflow:hidden; display:flex; flex-direction:column;">
+        <div style="padding:16px 18px 8px; display:flex; align-items:center; justify-content:space-between;">
+          <span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:22px; letter-spacing:-0.02em;">Rewire the workshop</span>
+          <span style="font-family:'DM Mono',monospace; font-size:11px; background:#ffe50c; border:2px solid #0a0a0a; padding:3px 8px;">{{ progressPct }}%</span>
+        </div>
+        <div style="padding:0 18px; font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#737373; margin-bottom:8px;">Steps</div>
+        <div style="flex:1; min-height:0; overflow-y:auto; padding:0 18px 18px; display:flex; flex-direction:column; gap:11px;">
+          <sc-for list="{{ steps }}" as="step" hint-placeholder-count="3">
+            <div onClick="{{ step.pickIfActive }}" style="background:{{ step.bg }}; border:3px solid #0a0a0a; border-radius:3px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px 14px;">
+              <div style="display:flex; align-items:center; gap:11px;">
+                <span style="width:30px; height:30px; border:2px solid #0a0a0a; border-radius:2px; background:{{ step.numBg }}; display:flex; align-items:center; justify-content:center; font-family:'Anybody',sans-serif; font-weight:900; font-size:13px; flex:none;">{{ step.num }}</span>
+                <div style="flex:1; min-width:0;">
+                  <div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px; line-height:1.1;">{{ step.title }}</div>
+                  <div style="font-family:'DM Mono',monospace; font-size:10.5px; letter-spacing:0.04em; color:#737373; margin-top:3px; text-transform:uppercase;">{{ step.statusLabel }}</div>
+                </div>
+                <span style="display:inline-flex; align-items:center; gap:4px; font-family:'DM Mono',monospace; font-size:11px; font-weight:500; border:2px solid #0a0a0a; border-radius:999px; padding:3px 9px; background:{{ step.countBg }}; color:{{ step.countColor }};">{{ step.countLabel }}</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===== CONTENT: BADGES ===== -->
+      <sc-if value="{{ isBadges }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:1; min-height:0; overflow-y:auto; padding:18px; display:flex; flex-direction:column; gap:12px;">
+        <span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:22px; letter-spacing:-0.02em; margin-bottom:2px;">Your badges</span>
+        <div style="background:#fff; border:3px solid #0a0a0a; border-radius:3px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:14px; display:flex; align-items:center; gap:13px;">
+          <span style="width:46px; height:46px; border:3px solid #0a0a0a; border-radius:999px; background:#d4f4e7; display:flex; align-items:center; justify-content:center; flex:none;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.4" stroke-linejoin="round"><path d="M8.5 3l2.4 6.6M15.5 3l-2.4 6.6"/><circle cx="12" cy="15" r="6"/></svg></span>
+          <div><div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">Soldering, level 1</div><div style="font-family:'DM Mono',monospace; font-size:11px; color:#737373; margin-top:3px;">Earned &middot; 4 evidence</div></div>
+        </div>
+        <div style="background:#fff; border:3px solid #0a0a0a; border-radius:3px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:14px; display:flex; align-items:center; gap:13px;">
+          <span style="width:46px; height:46px; border:3px solid #0a0a0a; border-radius:999px; background:#d4f4e7; display:flex; align-items:center; justify-content:center; flex:none;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.4" stroke-linejoin="round"><path d="M8.5 3l2.4 6.6M15.5 3l-2.4 6.6"/><circle cx="12" cy="15" r="6"/></svg></span>
+          <div><div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">First circuit</div><div style="font-family:'DM Mono',monospace; font-size:11px; color:#737373; margin-top:3px;">Earned &middot; 2 evidence</div></div>
+        </div>
+        <div style="font-family:'DM Mono',monospace; font-size:11.5px; line-height:1.5; color:#737373; background:#ececec; border:2px dashed #b8b8b8; border-radius:3px; padding:12px 13px; margin-top:4px;">No + here &mdash; nothing to attach evidence to on this tab. Capture lives inside a goal.</div>
+      </div>
+      </sc-if>
+
+      <!-- ===== CONTENT: SETTINGS ===== -->
+      <sc-if value="{{ isSettings }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:1; min-height:0; overflow-y:auto; padding:18px; display:flex; flex-direction:column; gap:11px;">
+        <span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:22px; letter-spacing:-0.02em; margin-bottom:2px;">Settings</span>
+        <div style="background:#fff; border:3px solid #0a0a0a; border-radius:3px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:14px; display:flex; align-items:center; justify-content:space-between;"><span style="font-weight:600; font-size:15px;">Reduce motion</span><span style="width:46px; height:26px; border:2px solid #0a0a0a; border-radius:999px; background:#e5e5e5; position:relative;"><span style="position:absolute; top:1px; left:1px; width:20px; height:20px; border:2px solid #0a0a0a; border-radius:999px; background:#fff;"></span></span></div>
+        <div style="background:#fff; border:3px solid #0a0a0a; border-radius:3px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:14px; display:flex; align-items:center; justify-content:space-between;"><span style="font-weight:600; font-size:15px;">Daily reminder</span><span style="width:46px; height:26px; border:2px solid #0a0a0a; border-radius:999px; background:#a78bfa; position:relative;"><span style="position:absolute; top:1px; left:21px; width:20px; height:20px; border:2px solid #0a0a0a; border-radius:999px; background:#fff;"></span></span></div>
+        <div style="background:#fff; border:3px solid #0a0a0a; border-radius:3px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:14px; display:flex; align-items:center; justify-content:space-between;"><span style="font-weight:600; font-size:15px;">Account</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></div>
+      </div>
+      </sc-if>
+
+      <!-- ===== FOOTER NAV ===== -->
+      <div style="background:#a78bfa; border-top:3px solid #0a0a0a; padding:30px 14px 14px; flex:none; position:relative;">
+
+        <!-- + add-evidence FAB (Goals only) -->
+        <sc-if value="{{ isGoals }}" hint-placeholder-val="{{ true }}">
+        <div onClick="{{ openAdd }}" style="position:absolute; top:-2px; left:50%; transform:translateX(-50%); width:56px; height:56px; border:3px solid #0a0a0a; border-radius:999px; background:#ffe50c; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; cursor:pointer;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        </div>
+        <div style="position:absolute; top:50px; left:50%; transform:translateX(-50%); font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.06em; text-transform:uppercase; color:#0a0a0a; opacity:0; ">add</div>
+        </sc-if>
+
+        <!-- slide track -->
+        <div style="display:flex; align-items:center; gap:6px; height:60px; border:3px solid #0a0a0a; border-radius:16px; background:#fafafa; box-shadow:4px 4px 0 rgba(10,10,10,0.85); padding:6px;">
+          <!-- GOALS -->
+          <sc-if value="{{ isGoals }}" hint-placeholder-val="{{ true }}">
+            <div onClick="{{ goGoals }}" style="flex:1.6; display:flex; align-items:center; justify-content:center; gap:8px; height:100%; border:2px solid #0a0a0a; border-radius:10px; background:#ffe50c; box-shadow:2px 2px 0 rgba(10,10,10,0.85); cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">Goals</span></div>
+          </sc-if>
+          <sc-if value="{{ notGoals }}" hint-placeholder-val="{{ false }}">
+            <div onClick="{{ goGoals }}" style="flex:1; display:flex; align-items:center; justify-content:center; height:100%; cursor:pointer;"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#9a9a9a" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg></div>
+          </sc-if>
+          <!-- BADGES -->
+          <sc-if value="{{ isBadges }}" hint-placeholder-val="{{ false }}">
+            <div onClick="{{ goBadges }}" style="flex:1.6; display:flex; align-items:center; justify-content:center; gap:8px; height:100%; border:2px solid #0a0a0a; border-radius:10px; background:#d4f4e7; box-shadow:2px 2px 0 rgba(10,10,10,0.85); cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.5" stroke-linejoin="round"><path d="M8.5 3l2.4 6.6M15.5 3l-2.4 6.6"/><circle cx="12" cy="15" r="6"/></svg><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">Badges</span></div>
+          </sc-if>
+          <sc-if value="{{ notBadges }}" hint-placeholder-val="{{ true }}">
+            <div onClick="{{ goBadges }}" style="flex:1; display:flex; align-items:center; justify-content:center; height:100%; cursor:pointer;"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#9a9a9a" stroke-width="2.5" stroke-linejoin="round"><path d="M8.5 3l2.4 6.6M15.5 3l-2.4 6.6"/><circle cx="12" cy="15" r="6"/></svg></div>
+          </sc-if>
+          <!-- SETTINGS -->
+          <sc-if value="{{ isSettings }}" hint-placeholder-val="{{ false }}">
+            <div onClick="{{ goSettings }}" style="flex:1.6; display:flex; align-items:center; justify-content:center; gap:8px; height:100%; border:2px solid #0a0a0a; border-radius:10px; background:#ffffff; box-shadow:2px 2px 0 rgba(10,10,10,0.85); cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.5" stroke-linejoin="round"><circle cx="12" cy="12" r="3.4"/><path d="M12 2.6v3.2M12 18.2v3.2M21.4 12h-3.2M5.8 12H2.6M18.6 5.4l-2.3 2.3M7.7 16.3l-2.3 2.3M18.6 18.6l-2.3-2.3M7.7 7.7 5.4 5.4"/></svg><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">Settings</span></div>
+          </sc-if>
+          <sc-if value="{{ notSettings }}" hint-placeholder-val="{{ true }}">
+            <div onClick="{{ goSettings }}" style="flex:1; display:flex; align-items:center; justify-content:center; height:100%; cursor:pointer;"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#9a9a9a" stroke-width="2.5" stroke-linejoin="round"><circle cx="12" cy="12" r="3.4"/><path d="M12 2.6v3.2M12 18.2v3.2M21.4 12h-3.2M5.8 12H2.6M18.6 5.4l-2.3 2.3M7.7 16.3l-2.3 2.3M18.6 18.6l-2.3-2.3M7.7 7.7 5.4 5.4"/></svg></div>
+          </sc-if>
+        </div>
+      </div>
+
+      <!-- ===== ADD-EVIDENCE SHEET ===== -->
+      <sc-if value="{{ sheetOpen }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ closeSheet }}" style="position:absolute; inset:0; background:rgba(10,10,10,0.4); animation:fadeIn 0.18s ease;"></div>
+        <div style="position:absolute; left:0; right:0; bottom:0; background:#fafafa; border-top:3px solid #0a0a0a; border-radius:22px 22px 0 0; box-shadow:0 -6px 0 rgba(10,10,10,0.12); padding:16px 18px 22px; animation:sheetUp 0.26s cubic-bezier(0.18,0.9,0.3,1.2);">
+          <div style="width:44px; height:5px; border-radius:999px; background:#0a0a0a; margin:0 auto 14px;"></div>
+
+          <!-- STAGE: pick type -->
+          <sc-if value="{{ stageType }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:4px;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:20px;">Add evidence</span></div>
+            <div style="font-family:'DM Mono',monospace; font-size:11px; color:#737373; margin-bottom:14px;">Saving to your active step &middot; <span style="color:#0a0a0a; font-weight:500;">{{ activeStepTitle }}</span></div>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+              <div onClick="{{ choose.photo }}" style="background:#fff; border:3px solid #0a0a0a; border-radius:3px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:14px 8px; display:flex; flex-direction:column; align-items:center; gap:7px; cursor:pointer;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.2" stroke-linejoin="round"><path d="M8 6l1.6-3h4.8L16 6"/><rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="4"/></svg><span style="font-family:'DM Mono',monospace; font-size:11px; font-weight:500;">Photo</span></div>
+              <div onClick="{{ choose.video }}" style="background:#fff; border:3px solid #0a0a0a; border-radius:3px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:14px 8px; display:flex; flex-direction:column; align-items:center; gap:7px; cursor:pointer;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3"/></svg><span style="font-family:'DM Mono',monospace; font-size:11px; font-weight:500;">Video</span></div>
+              <div onClick="{{ choose.voice }}" style="background:#fff; border:3px solid #0a0a0a; border-radius:3px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:14px 8px; display:flex; flex-direction:column; align-items:center; gap:7px; cursor:pointer;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span style="font-family:'DM Mono',monospace; font-size:11px; font-weight:500;">Voice</span></div>
+              <div onClick="{{ choose.note }}" style="background:#fff; border:3px solid #0a0a0a; border-radius:3px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:14px 8px; display:flex; flex-direction:column; align-items:center; gap:7px; cursor:pointer;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg><span style="font-family:'DM Mono',monospace; font-size:11px; font-weight:500;">Note</span></div>
+              <div onClick="{{ choose.link }}" style="background:#fff; border:3px solid #0a0a0a; border-radius:3px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:14px 8px; display:flex; flex-direction:column; align-items:center; gap:7px; cursor:pointer;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 14.5l5-5"/><path d="M11 7l1.5-1.5a3.5 3.5 0 0 1 5 5L17 11M13 17l-1.5 1.5a3.5 3.5 0 0 1-5-5L7 13"/></svg><span style="font-family:'DM Mono',monospace; font-size:11px; font-weight:500;">Link</span></div>
+              <div onClick="{{ choose.file }}" style="background:#fff; border:3px solid #0a0a0a; border-radius:3px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:14px 8px; display:flex; flex-direction:column; align-items:center; gap:7px; cursor:pointer;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 8l-7 7a2.5 2.5 0 0 0 3.5 3.5l7-7a4.5 4.5 0 0 0-6.4-6.4l-7 7a6.5 6.5 0 0 0 9.2 9.2"/></svg><span style="font-family:'DM Mono',monospace; font-size:11px; font-weight:500;">File</span></div>
+            </div>
+          </sc-if>
+
+          <!-- STAGE: confirm / save to step -->
+          <sc-if value="{{ stageConfirm }}" hint-placeholder-val="{{ false }}">
+            <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:20px; margin-bottom:14px;">{{ pendingLabel }}</div>
+            <div style="display:flex; align-items:center; gap:12px; background:#fff; border:3px solid #0a0a0a; border-radius:3px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px 14px; margin-bottom:14px;">
+              <span style="width:42px; height:42px; border:2px solid #0a0a0a; border-radius:3px; background:#f3eaff; display:flex; align-items:center; justify-content:center; flex:none;">{{ pendingIcon }}</span>
+              <div style="flex:1; min-width:0;"><div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:#737373;">Save to step</div><div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px; line-height:1.15; margin-top:2px;">{{ targetTitle }}</div></div>
+              <span onClick="{{ toggleChange }}" style="font-family:'DM Mono',monospace; font-size:11px; font-weight:500; border:2px solid #0a0a0a; border-radius:999px; padding:4px 11px; background:#fafafa; cursor:pointer;">Change</span>
+            </div>
+            <sc-if value="{{ changing }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px;">
+                <sc-for list="{{ steps }}" as="step" hint-placeholder-count="3">
+                  <div onClick="{{ step.choose }}" style="display:flex; align-items:center; gap:10px; background:{{ step.pickBg }}; border:2px solid #0a0a0a; border-radius:3px; padding:10px 12px; cursor:pointer;"><span style="width:24px; height:24px; border:2px solid #0a0a0a; border-radius:2px; background:{{ step.numBg }}; display:flex; align-items:center; justify-content:center; font-family:'Anybody',sans-serif; font-weight:900; font-size:11px; flex:none;">{{ step.num }}</span><span style="flex:1; font-weight:600; font-size:14px;">{{ step.title }}</span><span style="font-family:'DM Mono',monospace; font-size:10px; color:#737373;">{{ step.countLabel }}</span></div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <div onClick="{{ saveNow }}" style="background:#0a0a0a; border:3px solid #0a0a0a; border-radius:3px; box-shadow:3px 3px 0 rgba(167,139,250,0.9); padding:14px; text-align:center; cursor:pointer;"><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:16px; color:#fff;">Save evidence</span></div>
+          </sc-if>
+
+          <!-- STAGE: done -->
+          <sc-if value="{{ stageDone }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; flex-direction:column; align-items:center; text-align:center; padding:8px 0 4px;">
+              <span style="width:62px; height:62px; border:3px solid #0a0a0a; border-radius:999px; background:#d4f4e7; display:flex; align-items:center; justify-content:center; box-shadow:3px 3px 0 rgba(10,10,10,0.85); margin-bottom:14px; animation:popIn 0.3s cubic-bezier(0.18,0.9,0.3,1.4);"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span>
+              <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:19px; margin-bottom:6px;">{{ pendingLabel }} added</div>
+              <div style="font-size:13.5px; color:#525252; line-height:1.45; max-width:260px; margin-bottom:18px;">Saved to <strong>{{ targetTitle }}</strong>. Your evidence count just ticked up.</div>
+              <div onClick="{{ closeSheet }}" style="background:#ffe50c; border:3px solid #0a0a0a; border-radius:3px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:12px 30px; cursor:pointer;"><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">Done</span></div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:472,&quot;height&quot;:864}}">
+class Component extends DCLogic {
+  state = {
+    tab: "goals",
+    stage: "idle", // idle | type | confirm | done
+    pending: null, // { key, label }
+    targetId: "s2",
+    changing: false,
+    steps: [
+      { id: "s1", num: "1", title: "Sketch the layout", status: "done", count: 2 },
+      { id: "s2", num: "2", title: "Wire the relay panel", status: "active", count: 0 },
+      { id: "s3", num: "3", title: "Test the circuit", status: "pending", count: 0 },
+    ],
+  };
+
+  TYPES = {
+    photo: "Photo", video: "Video", voice: "Voice memo",
+    note: "Note", link: "Link", file: "File",
+  };
+
+  icon(key) {
+    const p = { width: 22, height: 22, viewBox: "0 0 24 24", fill: "none", stroke: "#0a0a0a", strokeWidth: 2.3, strokeLinecap: "round", strokeLinejoin: "round" };
+    const paths = {
+      photo: [["path", { d: "M8 6l1.6-3h4.8L16 6" }], ["rect", { x: 3, y: 6, width: 18, height: 14, rx: 2 }], ["circle", { cx: 12, cy: 13, r: 4 }]],
+      video: [["rect", { x: 3, y: 6, width: 13, height: 12, rx: 2 }], ["path", { d: "M16 10l5-3v10l-5-3" }]],
+      voice: [["rect", { x: 9, y: 3, width: 6, height: 11, rx: 3 }], ["path", { d: "M5 11a7 7 0 0 0 14 0M12 18v3" }]],
+      note: [["rect", { x: 5, y: 3, width: 14, height: 18, rx: 2 }], ["path", { d: "M9 8h6M9 12h6M9 16h4" }]],
+      link: [["path", { d: "M9.5 14.5l5-5" }], ["path", { d: "M11 7l1.5-1.5a3.5 3.5 0 0 1 5 5L17 11M13 17l-1.5 1.5a3.5 3.5 0 0 1-5-5L7 13" }]],
+      file: [["path", { d: "M16.5 8l-7 7a2.5 2.5 0 0 0 3.5 3.5l7-7a4.5 4.5 0 0 0-6.4-6.4l-7 7a6.5 6.5 0 0 0 9.2 9.2" }]],
+    };
+    return React.createElement("svg", p, (paths[key] || []).map((c, i) => React.createElement(c[0], { key: i, ...c[1] })));
+  }
+
+  renderVals() {
+    const { tab, stage, steps, targetId, pending, changing } = this.state;
+    const isGoals = tab === "goals", isBadges = tab === "badges", isSettings = tab === "settings";
+    const target = steps.find((s) => s.id === targetId) || steps[0];
+    const active = steps.find((s) => s.status === "active") || steps[0];
+
+    const decorate = (s) => {
+      const statusLabel = s.status === "done" ? "Complete" : s.status === "active" ? "In progress" : "Up next";
+      return {
+        ...s,
+        statusLabel,
+        bg: s.status === "active" ? "#fffbe0" : "#fff",
+        numBg: s.status === "done" ? "#d4f4e7" : s.status === "active" ? "#ffe50c" : "#fff",
+        countLabel: s.count > 0 ? "\u2713 " + s.count : "0",
+        countBg: s.count > 0 ? "#d4f4e7" : "#fafafa",
+        countColor: s.count > 0 ? "#0a0a0a" : "#9a9a9a",
+        pickBg: s.id === targetId ? "#ffe50c" : "#fff",
+        pickIfActive: () => {},
+        choose: () => this.setState({ targetId: s.id, changing: false }),
+      };
+    };
+
+    return {
+      headerTitle: isGoals ? "Goals" : isBadges ? "Badges" : "Settings",
+      isGoals, isBadges, isSettings,
+      notGoals: !isGoals, notBadges: !isBadges, notSettings: !isSettings,
+      progressPct: Math.round((steps.filter((s) => s.status === "done").length / steps.length) * 100),
+      steps: steps.map(decorate),
+      activeStepTitle: active.title,
+      targetTitle: target.title,
+      pendingLabel: pending ? pending.label : "",
+      pendingIcon: pending ? this.icon(pending.key) : null,
+      changing,
+      sheetOpen: stage !== "idle",
+      stageType: stage === "type",
+      stageConfirm: stage === "confirm",
+      stageDone: stage === "done",
+      goGoals: () => this.setState({ tab: "goals" }),
+      goBadges: () => this.setState({ tab: "badges", stage: "idle" }),
+      goSettings: () => this.setState({ tab: "settings", stage: "idle" }),
+      openAdd: () => this.setState({ stage: "type", changing: false, targetId: active.id }),
+      closeSheet: () => this.setState({ stage: "idle", pending: null, changing: false }),
+      toggleChange: () => this.setState((s) => ({ changing: !s.changing })),
+      choose: Object.fromEntries(Object.keys(this.TYPES).map((k) => [k, () => this.setState({ pending: { key: k, label: this.TYPES[k] }, stage: "confirm" })])),
+      saveNow: () => this.setState((s) => ({
+        steps: s.steps.map((st) => (st.id === s.targetId ? { ...st, count: st.count + 1 } : st)),
+        stage: "done",
+      })),
+    };
+  }
+}
+</script>
+</body>
+</html>

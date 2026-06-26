@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wght@700;800;900&family=Instrument+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  .bd-scroll::-webkit-scrollbar { width: 0; height: 0; }
+  .bd-scroll { scrollbar-width: none; }
+  @keyframes bd-sheet-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  @keyframes bd-pop { from { transform: scale(0.94); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  @keyframes bd-toast-in { from { transform: translate(-50%, 14px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+  @keyframes bd-fade { from { opacity: 0; } to { opacity: 1; } }
+</style>
+</helmet>
+
+<div style="font-family:'Instrument Sans',system-ui,sans-serif; min-height:100vh; box-sizing:border-box; padding:40px; background:#e5e5e5; display:flex; justify-content:center; align-items:flex-start;">
+
+  <!-- PHONE FRAME -->
+  <div style="position:relative; width:360px; height:760px; background:#fafafa; border:3px solid #0a0a0a; border-radius:38px; box-shadow:8px 8px 0 rgba(10,10,10,0.22); overflow:hidden; display:flex; flex-direction:column;">
+
+    <!-- status bar -->
+    <div style="flex:none; height:30px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 18px; font-family:'DM Mono',monospace; font-size:12px; z-index:5;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+
+    <!-- SCROLL AREA -->
+    <div class="bd-scroll" style="flex:1; overflow-y:auto; overflow-x:hidden;">
+
+      <!-- YELLOW CELEBRATION HERO -->
+      <div style="position:relative; background:#ffe50c; border-bottom:3px solid #0a0a0a; padding:14px 16px 28px; overflow:hidden;">
+        <div style="display:flex; align-items:center; justify-content:space-between; position:relative; z-index:3;">
+          <div onClick="{{ noop }}" style="width:34px; height:34px; display:flex; align-items:center; justify-content:center; font-size:22px; cursor:pointer;">&larr;</div>
+          <div onClick="{{ toggleOverflow }}" style="width:34px; height:34px; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:700; cursor:pointer;">&#8943;</div>
+        </div>
+
+        <!-- confetti -->
+        <sc-if value="{{ showConfetti }}" hint-placeholder-val="{{ true }}">
+          <div style="position:absolute; inset:0; z-index:1; pointer-events:none;">
+            <span style="position:absolute; top:46px; left:30px; font-size:16px; opacity:0.5;">&#10022;</span>
+            <span style="position:absolute; top:34px; right:48px; font-size:13px; opacity:0.55;">&#9670;</span>
+            <span style="position:absolute; top:150px; left:26px; font-size:13px; opacity:0.5;">&#9670;</span>
+            <span style="position:absolute; top:168px; right:30px; font-size:16px; opacity:0.5;">&#10022;</span>
+            <span style="position:absolute; top:120px; left:54px; font-size:11px; opacity:0.4;">&#10022;</span>
+            <span style="position:absolute; top:110px; right:60px; font-size:10px; opacity:0.45;">&#9670;</span>
+          </div>
+        </sc-if>
+
+        <!-- badge -->
+        <div style="display:flex; justify-content:center; margin-top:10px; position:relative; z-index:3;">
+          <div style="position:relative; width:146px; height:146px;">
+            <div style="width:146px; height:146px; border-radius:50%; background:#2563eb; border:3px solid #0a0a0a; box-shadow:5px 5px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center;">
+              <svg width="62" height="62" viewBox="0 0 24 24" fill="#ffffff"><path d="M13 2 L4 14 L11 14 L9 22 L20 9 L13 9 Z"></path></svg>
+            </div>
+            <div style="position:absolute; left:50%; bottom:-10px; transform:translateX(-50%); background:#ffffff; border:2px solid #0a0a0a; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:3px 13px; font-family:'DM Mono',monospace; font-size:11px; font-weight:600; white-space:nowrap;">REWIRED</div>
+          </div>
+        </div>
+
+        <!-- title + verified chip -->
+        <div style="text-align:center; margin-top:24px; position:relative; z-index:3;">
+          <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:25px; line-height:1.06; color:#0a0a0a;">Rewire the workshop</div>
+          <div style="display:inline-flex; align-items:center; gap:6px; margin-top:13px; background:#ffffff; border:2px solid #0a0a0a; border-radius:9999px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:4px 12px;">
+            <span style="color:#059669; font-size:13px; font-weight:700;">&#10003;</span>
+            <span style="font-size:11.5px; font-weight:700;">Verifiable &middot; earned Jun 18, 2026</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- THE PROOF -->
+      <div style="padding:20px 0 6px;">
+        <div style="display:flex; align-items:baseline; justify-content:space-between; padding:0 18px; margin-bottom:13px;">
+          <span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:15px; letter-spacing:0.02em;">THE PROOF</span>
+          <sc-if value="{{ showProof }}" hint-placeholder-val="{{ true }}"><span style="font-family:'DM Mono',monospace; font-size:10.5px; color:#737373;">3 STEPS &middot; SWIPE &rarr;</span></sc-if>
+        </div>
+
+        <sc-if value="{{ showProof }}" hint-placeholder-val="{{ true }}">
+          <div class="bd-scroll" style="display:flex; gap:12px; padding:2px 18px 16px; overflow-x:auto;">
+            <div style="flex:none; width:132px;">
+              <div style="width:132px; height:108px; background:#dbe7ff; border:3px solid #0a0a0a; border-radius:4px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:34px;">&#128247;</div>
+              <div style="font-size:12.5px; font-weight:600; margin-top:8px; line-height:1.25;">Wire the circuits</div>
+              <div style="font-family:'DM Mono',monospace; font-size:9.5px; color:#737373; margin-top:2px;">PHOTO</div>
+            </div>
+            <div style="flex:none; width:132px;">
+              <div style="width:132px; height:108px; background:#ede9fe; border:3px solid #0a0a0a; border-radius:4px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:34px;">&#127916;</div>
+              <div style="font-size:12.5px; font-weight:600; margin-top:8px; line-height:1.25;">Inspection walk-through</div>
+              <div style="font-family:'DM Mono',monospace; font-size:9.5px; color:#737373; margin-top:2px;">VIDEO &middot; FINAL</div>
+            </div>
+            <div style="flex:none; width:132px;">
+              <div style="width:132px; height:108px; background:#d4f4e7; border:3px solid #0a0a0a; border-radius:4px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:34px;">&#128221;</div>
+              <div style="font-size:12.5px; font-weight:600; margin-top:8px; line-height:1.25;">Plan layout &amp; load</div>
+              <div style="font-family:'DM Mono',monospace; font-size:9.5px; color:#737373; margin-top:2px;">NOTE</div>
+            </div>
+            <div style="flex:none; width:14px;"></div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ emptyProof }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:2px 18px 14px;">
+            <div style="background:#f4f4f4; border:2px dashed #c8c8c8; border-radius:6px; padding:20px 16px; text-align:center; font-size:12px; color:#a3a3a3; font-style:italic; line-height:1.5;">No evidence was attached to this goal &mdash; nothing to show in the gallery.</div>
+          </div>
+        </sc-if>
+      </div>
+
+      <!-- ABOUT -->
+      <div style="padding:8px 18px 4px;">
+        <div style="font-family:'DM Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.07em; color:#9a9a9a; margin-bottom:5px;">About</div>
+        <div style="font-size:12.5px; line-height:1.55; color:#3a3a3a;">Bring the whole shop up to code and finally run power to the bench.</div>
+      </div>
+
+      <!-- DETAILS -->
+      <div style="padding:14px 18px 4px;">
+        <div style="font-family:'DM Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.07em; color:#9a9a9a; margin-bottom:5px;">Details</div>
+        <div style="font-size:12.5px; line-height:1.55; color:#3a3a3a;">Created May 2, 2026 &middot; completed Jun 18, 2026</div>
+      </div>
+
+      <!-- ACTIONS -->
+      <div style="padding:18px 18px 8px; display:flex; flex-direction:column; gap:11px;">
+        <div onClick="{{ openSheet }}" style="height:50px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; gap:9px; color:#ffffff; font-size:15.5px; font-weight:700; cursor:pointer;"><span style="font-size:17px;">&#8682;</span> Share badge</div>
+        <sc-if value="{{ goalLive }}" hint-placeholder-val="{{ true }}">
+          <div onClick="{{ viewTimeline }}" style="height:44px; background:#ffffff; border:3px solid #0a0a0a; border-radius:4px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; cursor:pointer;">View timeline</div>
+        </sc-if>
+      </div>
+
+      <!-- DEMOTED DELETE -->
+      <div style="text-align:center; padding:10px 0 26px;"><span onClick="{{ openConfirm }}" style="font-size:12.5px; color:#a3a3a3; border-bottom:1px solid #cfcfcf; padding-bottom:1px; cursor:pointer;">Delete badge</span></div>
+
+    </div>
+
+    <!-- ===================== OVERLAYS ===================== -->
+
+    <!-- overflow menu -->
+    <sc-if value="{{ overflowOpen }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ closeOverflow }}" style="position:absolute; inset:0; z-index:8; animation:bd-fade 0.12s ease;"></div>
+      <div style="position:absolute; top:50px; right:14px; z-index:9; width:226px; background:#ffffff; border:3px solid #0a0a0a; border-radius:8px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); overflow:hidden; animation:bd-pop 0.13s ease;">
+        <div onClick="{{ openSheet }}" style="display:flex; align-items:center; gap:11px; padding:13px 15px; border-bottom:2px solid #ececec; cursor:pointer;"><span style="font-size:15px;">&#9733;</span><span style="font-size:13.5px; font-weight:600;">Share badge</span></div>
+        <div onClick="{{ exportCredential }}" style="display:flex; align-items:center; gap:11px; padding:13px 15px; border-bottom:2px solid #ececec; cursor:pointer;"><span style="font-size:15px;">&#123;&#125;</span><span style="font-size:13.5px; font-weight:600;">Export credential</span></div>
+        <div onClick="{{ openConfirm }}" style="display:flex; align-items:center; gap:11px; padding:13px 15px; cursor:pointer;"><span style="font-size:15px; color:#dc2626;">&#9851;</span><span style="font-size:13.5px; font-weight:700; color:#dc2626;">Delete badge</span></div>
+      </div>
+    </sc-if>
+
+    <!-- share sheet -->
+    <sc-if value="{{ sheetOpen }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ closeSheet }}" style="position:absolute; inset:0; z-index:10; background:rgba(10,10,10,0.42); animation:bd-fade 0.15s ease;"></div>
+      <div style="position:absolute; left:0; right:0; bottom:0; z-index:11; background:#fafafa; border-top:3px solid #0a0a0a; border-top-left-radius:18px; border-top-right-radius:18px; padding:14px 18px 22px; animation:bd-sheet-up 0.22s cubic-bezier(0.16,0.84,0.44,1);">
+        <div style="width:42px; height:4px; background:#d4d4d4; border-radius:2px; margin:0 auto 15px;"></div>
+        <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:18px; margin-bottom:3px;">Share &ldquo;Rewire the workshop&rdquo;</div>
+        <div style="font-size:12px; color:#737373; line-height:1.5; margin-bottom:16px;">Keep it provable, or just share the picture.</div>
+
+        <div onClick="{{ shareVerifiable }}" style="background:#2563eb; border:3px solid #0a0a0a; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px 15px; margin-bottom:13px; cursor:pointer;">
+          <div style="display:flex; align-items:center; gap:9px; margin-bottom:5px;">
+            <span style="font-size:16px;">&#9733;</span>
+            <span style="font-size:14.5px; font-weight:700; color:#ffffff;">Share verifiable badge</span>
+            <span style="margin-left:auto; background:#ffe50c; border:1.5px solid #0a0a0a; border-radius:9999px; font-family:'DM Mono',monospace; font-size:8.5px; font-weight:600; padding:2px 7px;">RECOMMENDED</span>
+          </div>
+          <div style="font-size:11px; line-height:1.45; color:#dbe7ff;">A PNG carrying the OB&nbsp;3.0 credential &mdash; provable forever.</div>
+        </div>
+
+        <div style="background:#ffffff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); overflow:hidden;">
+          <div onClick="{{ saveImage }}" style="display:flex; align-items:center; gap:11px; padding:13px 14px; border-bottom:2px solid #ececec; cursor:pointer;"><span style="font-size:15px;">&#128247;</span><div style="flex:1;"><div style="font-size:13px; font-weight:600;">Save as image</div><div style="font-size:10.5px; color:#d97706;">Plain picture &mdash; may drop the credential.</div></div></div>
+          <div onClick="{{ exportCredential }}" style="display:flex; align-items:center; gap:11px; padding:13px 14px; cursor:pointer;"><span style="font-size:15px;">&#123;&#125;</span><div style="flex:1;"><div style="font-size:13px; font-weight:600;">Export credential (JSON)</div><div style="font-size:10.5px; color:#737373;">For verifiers &amp; wallets.</div></div></div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- delete confirm -->
+    <sc-if value="{{ confirmOpen }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ closeConfirm }}" style="position:absolute; inset:0; z-index:12; background:rgba(10,10,10,0.42); display:flex; align-items:center; justify-content:center; padding:26px; animation:bd-fade 0.15s ease;">
+        <div onClick="{{ stop }}" style="width:100%; background:#fafafa; border:3px solid #0a0a0a; border-radius:8px; box-shadow:5px 5px 0 rgba(10,10,10,0.85); padding:20px 18px; animation:bd-pop 0.16s ease;">
+          <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:19px; margin-bottom:8px;">Delete this badge?</div>
+          <div style="font-size:13px; line-height:1.55; color:#525252; margin-bottom:18px;">The badge will be removed. Your goal and its evidence stay in the timeline &mdash; only the credential artifact is deleted.</div>
+          <div style="display:flex; gap:10px;">
+            <div onClick="{{ closeConfirm }}" style="flex:1; height:46px; background:#ffffff; border:3px solid #0a0a0a; border-radius:4px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; cursor:pointer;">Keep it</div>
+            <div onClick="{{ confirmDelete }}" style="flex:1; height:46px; background:#dc2626; border:3px solid #0a0a0a; border-radius:4px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#ffffff; font-size:14px; font-weight:700; cursor:pointer;">Delete</div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- toast -->
+    <sc-if value="{{ toast }}" hint-placeholder-val="">
+      <div style="position:absolute; left:50%; bottom:30px; z-index:14; transform:translateX(-50%); background:#0a0a0a; color:#fafafa; border-radius:9999px; padding:11px 20px; font-size:13px; font-weight:600; white-space:nowrap; box-shadow:3px 3px 0 rgba(10,10,10,0.3); animation:bd-toast-in 0.2s ease;">{{ toast }}</div>
+    </sc-if>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:440,&quot;height&quot;:840},&quot;emptyProof&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;goalLive&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;showConfetti&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { sheet: false, overflow: false, confirm: false, toast: "" };
+
+  flash(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: "" }), 2000);
+  }
+
+  renderVals() {
+    const p = this.props;
+    return {
+      showConfetti: p.showConfetti ?? true,
+      showProof: !(p.emptyProof ?? false),
+      emptyProof: p.emptyProof ?? false,
+      goalLive: p.goalLive ?? true,
+
+      sheetOpen: this.state.sheet,
+      overflowOpen: this.state.overflow,
+      confirmOpen: this.state.confirm,
+      toast: this.state.toast,
+
+      noop: () => {},
+      stop: (e) => { if (e && e.stopPropagation) e.stopPropagation(); },
+      toggleOverflow: () => this.setState((s) => ({ overflow: !s.overflow })),
+      closeOverflow: () => this.setState({ overflow: false }),
+      openSheet: () => this.setState({ sheet: true, overflow: false }),
+      closeSheet: () => this.setState({ sheet: false }),
+      openConfirm: () => this.setState({ confirm: true, overflow: false, sheet: false }),
+      closeConfirm: () => this.setState({ confirm: false }),
+      confirmDelete: () => { this.setState({ confirm: false }); this.flash("Badge deleted"); },
+      viewTimeline: () => this.flash("Opening timeline\u2026"),
+      shareVerifiable: () => { this.setState({ sheet: false }); this.flash("Verifiable badge shared \u2713"); },
+      saveImage: () => { this.setState({ sheet: false }); this.flash("Saved as image"); },
+      exportCredential: () => { this.setState({ sheet: false, overflow: false }); this.flash("Credential exported"); },
+    };
+  }
+}
+</script>
+</body>
+</html>

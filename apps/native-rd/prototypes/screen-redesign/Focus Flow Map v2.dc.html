@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wght@700;800;900&family=Instrument+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+</style>
+</helmet>
+
+<div style="font-family: 'Instrument Sans', system-ui, sans-serif; width: max-content; min-width: 100%; min-height: 100vh; box-sizing: border-box; padding: 48px; background: #e5e5e5; color: #0a0a0a;">
+
+  <!-- heading -->
+  <div style="max-width: 900px; margin-bottom: 26px;">
+    <div style="font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:#525252; margin-bottom:10px;">Phase 0 &middot; v2 &middot; revised flow</div>
+    <h1 style="font-family:'Anybody',sans-serif; font-weight:900; font-size:38px; line-height:1.02; letter-spacing:-0.02em; margin:0 0 14px;">REVISED FLOW &mdash; BADGE AT THE END.</h1>
+    <p style="font-size:15px; line-height:1.6; margin:0; max-width:760px; color:#404040;">Creating a goal now goes straight to building steps; the badge is designed when it&rsquo;s <em>earned</em>, at completion. One change to react to before we start screens.</p>
+  </div>
+
+  <!-- decisions banner -->
+  <div style="display:flex; gap:14px; flex-wrap:wrap; max-width:980px; margin-bottom:34px;">
+    <div style="flex:1; min-width:220px; background:#0a0a0a; color:#fafafa; border:3px solid #0a0a0a; border-radius:2px; box-shadow:4px 4px 0 rgba(10,10,10,0.4); padding:14px 16px;">
+      <div style="font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:#ffe50c; margin-bottom:5px;">&#10003; Locked</div>
+      <div style="font-size:13.5px; line-height:1.45;"><strong>Theme: The Full Ride.</strong> Reevaluate all themes later.</div>
+    </div>
+    <div style="flex:1; min-width:220px; background:#ede9fe; border:3px solid #0a0a0a; border-radius:2px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); padding:14px 16px;">
+      <div style="font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:#5b21b6; margin-bottom:5px;">&#8635; Trying</div>
+      <div style="font-size:13.5px; line-height:1.45; color:#3b1f6b;"><strong>Badge Designer &rarr; the end.</strong> Designed at completion, not on create.</div>
+    </div>
+    <div style="flex:1; min-width:220px; background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); padding:14px 16px;">
+      <div style="font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:#737373; margin-bottom:5px;">&#9208; Deferred</div>
+      <div style="font-size:13.5px; line-height:1.45; color:#525252;"><strong>Two timelines &amp; evidence capture.</strong> Decide during their screens.</div>
+    </div>
+  </div>
+
+  <!-- ===== ARC A: CREATE ===== -->
+  <div style="font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:#525252; margin-bottom:14px;">Arc 1 &middot; Creating a goal <span style="color:#a3a3a3;">&mdash; straight to building</span></div>
+  <div style="display:flex; align-items:center; gap:12px; margin-bottom:32px;">
+    <div style="flex:none; width:166px; background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px;">
+      <div style="font-family:'DM Mono',monospace; font-size:10px; color:#737373; text-transform:uppercase;">Goals</div>
+      <div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px; margin:4px 0 5px;">Goal list</div>
+      <div style="font-size:11.5px; line-height:1.4; color:#525252;">Tap ＋ to start.</div>
+    </div>
+    <div style="flex:none; font-size:24px;">&rarr;</div>
+    <div style="flex:none; width:166px; background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px;">
+      <div style="font-family:'DM Mono',monospace; font-size:10px; color:#737373; text-transform:uppercase;">NewGoal &middot; modal</div>
+      <div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px; margin:4px 0 5px;">Name it</div>
+      <div style="font-size:11.5px; line-height:1.4; color:#525252;">Just a title, then Create.</div>
+    </div>
+    <div style="flex:none; font-size:24px;">&rarr;</div>
+    <div style="flex:none; width:166px; background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px;">
+      <div style="font-family:'DM Mono',monospace; font-size:10px; color:#737373; text-transform:uppercase;">EditMode</div>
+      <div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px; margin:4px 0 5px;">Add steps</div>
+      <div style="font-size:11.5px; line-height:1.4; color:#525252;">Build the step list first.</div>
+    </div>
+    <div style="flex:none; font-size:24px;">&rarr;</div>
+    <div style="flex:none; width:170px; background:#ffe50c; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px;">
+      <div style="font-family:'DM Mono',monospace; font-size:10px; color:#0a0a0a; text-transform:uppercase;">FocusMode &#9733; hub</div>
+      <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:16px; margin:4px 0 5px;">Focus Mode</div>
+      <div style="font-size:11.5px; line-height:1.4; color:#262626;">Work the goal.</div>
+    </div>
+    <!-- removed badge designer marker -->
+    <div style="flex:none; margin-left:8px; max-width:150px; display:flex; align-items:center; gap:8px;">
+      <span style="font-size:22px; color:#a3a3a3;">&times;</span>
+      <span style="font-size:11.5px; line-height:1.4; color:#737373;">No badge step here anymore.</span>
+    </div>
+  </div>
+
+  <!-- ===== ARC B: WORK & FINISH ===== -->
+  <div style="font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:#525252; margin-bottom:14px;">Arc 2 &middot; Working &amp; finishing <span style="color:#a3a3a3;">&mdash; badge is the reward</span></div>
+  <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+    <div style="flex:none; width:166px; background:#ffe50c; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px;">
+      <div style="font-family:'DM Mono',monospace; font-size:10px; color:#0a0a0a; text-transform:uppercase;">FocusMode &#9733; hub</div>
+      <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:16px; margin:4px 0 5px;">Focus Mode</div>
+      <div style="font-size:11.5px; line-height:1.4; color:#262626;">Complete every step.</div>
+    </div>
+    <div style="flex:none; font-size:24px;">&rarr;</div>
+    <div style="flex:none; width:166px; background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px;">
+      <div style="font-family:'DM Mono',monospace; font-size:10px; color:#737373; text-transform:uppercase;">CompletionFlow</div>
+      <div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px; margin:4px 0 5px;">Completion</div>
+      <div style="font-size:11.5px; line-height:1.4; color:#525252;">Final evidence, celebrate.</div>
+    </div>
+    <div style="flex:none; font-size:24px;">&rarr;</div>
+    <div style="flex:none; width:178px; background:#ede9fe; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px;">
+      <div style="font-family:'DM Mono',monospace; font-size:10px; color:#5b21b6; text-transform:uppercase;">BadgeDesigner &#9733; NEW spot</div>
+      <div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px; margin:4px 0 5px;">Design the badge</div>
+      <div style="font-size:11.5px; line-height:1.4; color:#4c1d95;">Now the main moment &mdash; design what you just earned.</div>
+    </div>
+    <div style="flex:none; font-size:24px;">&rarr;</div>
+    <div style="flex:none; width:166px; background:#d4f4e7; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px;">
+      <div style="font-family:'DM Mono',monospace; font-size:10px; color:#065f46; text-transform:uppercase;">Badges tab</div>
+      <div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px; margin:4px 0 5px;">Badge baked</div>
+      <div style="font-size:11.5px; line-height:1.4; color:#0a5c43;">Earned &amp; shown in Badges.</div>
+    </div>
+  </div>
+
+  <!-- what changed + open questions -->
+  <div style="display:flex; gap:18px; align-items:stretch; margin-top:20px; max-width:820px;">
+    <div style="flex:1; background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); padding:18px;">
+      <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:15px; text-transform:uppercase; margin-bottom:11px;">Why this could be better</div>
+      <div style="display:flex; flex-direction:column; gap:8px; font-size:13px; line-height:1.5; color:#404040;">
+        <div>&bull; Nothing heavy before any steps exist &mdash; create &rarr; build &rarr; go.</div>
+        <div>&bull; The badge becomes a <strong>reward</strong> you design when earned, not homework up front.</div>
+        <div>&bull; A clear <strong>primary moment</strong> at the end &mdash; with an optional &ldquo;design early&rdquo; tap kept on the Focus badge.</div>
+      </div>
+    </div>
+    <div style="flex:1; background:#d4f4e7; border:3px solid #0a0a0a; border-radius:2px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); padding:18px;">
+      <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:15px; text-transform:uppercase; color:#065f46; margin-bottom:11px;">Decided</div>
+      <div style="display:flex; flex-direction:column; gap:10px; font-size:13px; line-height:1.5; color:#0a3a2c;">
+        <div style="display:flex; align-items:center; gap:10px;"><span style="flex:none; width:34px; height:34px; border-radius:9999px; background:#ede9fe; border:2px solid #0a0a0a; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-family:'Anybody',sans-serif; font-weight:900; font-size:16px; color:#4c1d95;">B</span><span>Before it&rsquo;s designed, the badge shows the <strong>first letter of the title</strong>.</span></div>
+        <div>&bull; The Focus badge <strong>keeps its link</strong> to the designer &mdash; design early if you want.</div>
+        <div>&bull; Redesign-from-Badges-tab stays as-is.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PLAN ===== -->
+  <div style="margin:42px 0 16px; font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:#525252;">The plan &mdash; next: Phase 2</div>
+  <div style="display:flex; gap:18px; align-items:stretch;">
+    <div style="flex:none; width:236px; background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); padding:18px; opacity:0.55;">
+      <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:30px; color:#a78bfa; line-height:1;">0</div>
+      <div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px; margin:8px 0 6px;">Evaluate the flow</div>
+      <div style="font-size:12.5px; line-height:1.5; color:#525252;">Done &mdash; spine agreed, badge moved to the end.</div>
+    </div>
+    <div style="flex:none; width:236px; background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); padding:18px; opacity:0.55;">
+      <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:30px; color:#2563eb; line-height:1;">1</div>
+      <div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px; margin:8px 0 6px;">Lock the foundation</div>
+      <div style="font-size:12.5px; line-height:1.5; color:#525252;">Theme locked: Full Ride. Fonts + primitives already reproduced.</div>
+    </div>
+    <div style="flex:none; width:236px; background:#ffe50c; border:3px solid #0a0a0a; border-radius:2px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); padding:18px;">
+      <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:30px; color:#0a0a0a; line-height:1;">2</div>
+      <div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px; margin:8px 0 6px;">Screen by screen &#9664;</div>
+      <div style="font-size:12.5px; line-height:1.5; color:#262626;">Audit &rarr; 2&ndash;3 variations &rarr; you pick &rarr; finalize. <strong>Pick the first screen.</strong></div>
+    </div>
+    <div style="flex:none; width:236px; background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); padding:18px;">
+      <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:30px; color:#d97706; line-height:1;">3</div>
+      <div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px; margin:8px 0 6px;">Stitch &amp; walk</div>
+      <div style="font-size:12.5px; line-height:1.5; color:#525252;">Walk the whole redesigned flow end-to-end.</div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

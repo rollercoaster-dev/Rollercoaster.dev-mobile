@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wght@700;800;900&family=Instrument+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  .scrl::-webkit-scrollbar { width: 0; height: 0; }
+  input::placeholder { color: #9a9a9a; }
+  input:focus { outline: none; }
+</style>
+</helmet>
+
+<div style="font-family:'Instrument Sans',system-ui,sans-serif; min-height:100vh; box-sizing:border-box; padding:40px; background:#e5e5e5; color:#0a0a0a; display:flex; flex-direction:column; align-items:center; gap:18px;">
+
+  <div style="text-align:center; max-width:560px;">
+    <div style="font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:#525252; margin-bottom:6px;">Set B &amp; C &middot; Direction B &middot; interactive</div>
+    <div style="font-size:14px; color:#404040; line-height:1.5;">Tap a step&rsquo;s faint <strong>+ depends</strong> or <strong>+ date</strong> chip. Flip <strong>after / waiting on</strong>, set, clear. Step 3 carries an external wait + a due date and has sub-steps &mdash; chips work on those too.</div>
+  </div>
+
+  <!-- DEVICE -->
+  <div style="width:344px; height:740px; background:#fafafa; border:3px solid #0a0a0a; border-radius:40px; box-shadow:8px 8px 0 rgba(10,10,10,0.22); overflow:hidden; display:flex; flex-direction:column; position:relative;">
+    <!-- status bar -->
+    <div style="height:30px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 18px; font-family:'DM Mono',monospace; font-size:12px; color:#0a0a0a; flex:none;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+    <!-- header -->
+    <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:11px 16px; flex:none;"><span style="font-size:20px; color:#0a0a0a;">&larr;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px; color:#0a0a0a;">Edit goal</span><span style="font-size:20px; color:#0a0a0a; font-weight:700;">&#8943;</span></div>
+
+    <!-- list -->
+    <div class="scrl" style="flex:1; overflow-y:auto; min-height:0; padding:15px 16px 8px;">
+      <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:#737373; margin-bottom:4px;">Goal</div>
+      <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:19px; margin-bottom:16px;">{{ goalTitle }}</div>
+      <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:11px;"><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:16px;">Steps</span><span style="font-family:'DM Mono',monospace; font-size:12px; color:#737373;">{{ stepCount }}</span></div>
+
+      <sc-for list="{{ steps }}" as="s" hint-placeholder-count="5">
+        <div style="background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:11px 12px; margin-bottom:9px;">
+          <div style="display:flex; align-items:center; gap:9px;">
+            <span style="color:#a3a3a3; font-size:16px;">&#8801;</span>
+            <span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px;">{{ s.badge }}</span>
+            <span style="flex:1; font-size:14px; line-height:1.2;">{{ s.title }}</span>
+            <span style="display:inline-flex; background:#ede9fe; border:2px solid #0a0a0a; border-radius:9999px; font-size:11px; padding:2px 6px;">{{ s.evIcon }}</span>
+            <span style="color:#a3a3a3; font-size:14px; margin-left:4px;">&times;</span>
+          </div>
+          <div style="margin-top:9px; display:flex; flex-wrap:wrap; gap:6px; align-items:center;">
+            <sc-if value="{{ s.dep.set }}">
+              <span onClick="{{ s.dep.tap }}" style="display:inline-flex; align-items:center; gap:4px; background:#fff; border:2px solid {{ s.dep.borderColor }}; border-radius:9999px; box-shadow:1.5px 1.5px 0 rgba(10,10,10,0.85); font-size:11px; padding:3px 9px; cursor:pointer; white-space:nowrap;"><span style="color:{{ s.dep.glyphColor }};">{{ s.dep.glyph }}</span> {{ s.dep.text }}</span>
+            </sc-if>
+            <sc-if value="{{ s.dep.unset }}">
+              <span onClick="{{ s.dep.tap }}" style="display:inline-flex; align-items:center; gap:3px; background:#fff; border:1.5px dashed #c8c8c8; border-radius:9999px; font-size:11px; padding:3px 9px; color:#9a9a9a; cursor:pointer;">+ depends</span>
+            </sc-if>
+            <sc-if value="{{ s.due.set }}">
+              <span onClick="{{ s.due.tap }}" style="display:inline-flex; align-items:center; gap:4px; background:#fff; border:2px solid #0a0a0a; border-radius:9999px; box-shadow:1.5px 1.5px 0 rgba(10,10,10,0.85); font-size:11px; padding:3px 9px; cursor:pointer; white-space:nowrap;"><span style="color:#525252;">&#9638;</span> {{ s.due.text }}</span>
+            </sc-if>
+            <sc-if value="{{ s.due.unset }}">
+              <span onClick="{{ s.due.tap }}" style="display:inline-flex; align-items:center; gap:3px; background:#fff; border:1.5px dashed #c8c8c8; border-radius:9999px; font-size:11px; padding:3px 9px; color:#9a9a9a; cursor:pointer;">+ date</span>
+            </sc-if>
+          </div>
+
+          <sc-if value="{{ s.hasKids }}">
+            <div style="margin-top:10px; padding-left:12px; border-left:3px solid #d4f4e7; display:flex; flex-direction:column; gap:11px;">
+              <sc-for list="{{ s.kids }}" as="k" hint-placeholder-count="2">
+                <div>
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="color:#a3a3a3; font-size:13px;">&#8801;</span>
+                    <span style="flex:1; font-size:12.5px; line-height:1.2; color:#0a0a0a;">{{ k.title }}</span>
+                    <span style="display:inline-flex; background:#ede9fe; border:2px solid #0a0a0a; border-radius:9999px; font-size:10px; padding:2px 6px;">{{ k.evIcon }}</span>
+                    <span style="color:#a3a3a3; font-size:12px;">&times;</span>
+                  </div>
+                  <div style="margin-top:7px; display:flex; flex-wrap:wrap; gap:6px; align-items:center;">
+                    <sc-if value="{{ k.dep.set }}">
+                      <span onClick="{{ k.dep.tap }}" style="display:inline-flex; align-items:center; gap:4px; background:#fff; border:2px solid {{ k.dep.borderColor }}; border-radius:9999px; box-shadow:1.5px 1.5px 0 rgba(10,10,10,0.85); font-size:11px; padding:3px 9px; cursor:pointer; white-space:nowrap;"><span style="color:{{ k.dep.glyphColor }};">{{ k.dep.glyph }}</span> {{ k.dep.text }}</span>
+                    </sc-if>
+                    <sc-if value="{{ k.dep.unset }}">
+                      <span onClick="{{ k.dep.tap }}" style="display:inline-flex; align-items:center; gap:3px; background:#fff; border:1.5px dashed #c8c8c8; border-radius:9999px; font-size:11px; padding:3px 9px; color:#9a9a9a; cursor:pointer;">+ depends</span>
+                    </sc-if>
+                    <sc-if value="{{ k.due.set }}">
+                      <span onClick="{{ k.due.tap }}" style="display:inline-flex; align-items:center; gap:4px; background:#fff; border:2px solid #0a0a0a; border-radius:9999px; box-shadow:1.5px 1.5px 0 rgba(10,10,10,0.85); font-size:11px; padding:3px 9px; cursor:pointer; white-space:nowrap;"><span style="color:#525252;">&#9638;</span> {{ k.due.text }}</span>
+                    </sc-if>
+                    <sc-if value="{{ k.due.unset }}">
+                      <span onClick="{{ k.due.tap }}" style="display:inline-flex; align-items:center; gap:3px; background:#fff; border:1.5px dashed #c8c8c8; border-radius:9999px; font-size:11px; padding:3px 9px; color:#9a9a9a; cursor:pointer;">+ date</span>
+                    </sc-if>
+                  </div>
+                </div>
+              </sc-for>
+              <div style="font-size:11.5px; color:#2563eb; font-weight:700; cursor:pointer;">&#65291; add a smaller step</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ s.noKids }}">
+            <div style="margin-top:9px; font-size:11.5px; color:#5a8a6a; font-weight:700; cursor:pointer;">&#9866; break into smaller steps</div>
+          </sc-if>
+        </div>
+      </sc-for>
+
+      <div style="display:flex; gap:9px; margin-top:2px; margin-bottom:6px;">
+        <div style="flex:1; background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:10px 12px;"><span style="font-size:13px; color:#9a9a9a;">Add step&hellip;</span></div>
+        <div style="flex:none; width:46px; background:#2563eb; border:3px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:22px; font-weight:700;">+</div>
+      </div>
+    </div>
+
+    <!-- footer -->
+    <div style="flex:none; padding:11px 16px 16px; border-top:2px solid #e5e5e5;">
+      <div style="height:50px; background:#fff; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#0a0a0a; font-size:15px; font-weight:700;">Done</div>
+    </div>
+
+    <!-- ===================== DEPENDS SHEET ===================== -->
+    <sc-if value="{{ depOpen }}">
+      <div style="position:absolute; inset:0; z-index:50; display:flex; flex-direction:column; justify-content:flex-end;">
+        <div onClick="{{ closeSheet }}" style="position:absolute; inset:0; background:rgba(10,10,10,0.4);"></div>
+        <div style="position:relative; background:#fafafa; border-top:3px solid #0a0a0a; border-top-left-radius:16px; border-top-right-radius:16px; padding:17px 17px 19px; max-height:88%; overflow-y:auto;" class="scrl">
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:3px;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:16px; line-height:1.1;">&ldquo;{{ editTitle }}&rdquo; depends on&hellip;</span><span onClick="{{ closeSheet }}" style="font-size:18px; cursor:pointer; color:#737373; margin-left:8px;">&times;</span></div>
+          <div style="font-size:12px; color:#737373; margin-bottom:13px;">Optional. This never blocks the step &mdash; complete stays live.</div>
+
+          <!-- segmented -->
+          <div style="display:flex; border:2px solid #0a0a0a; border-radius:8px; overflow:hidden; margin-bottom:15px;">
+            <div onClick="{{ setKindAfter }}" style="flex:1; background:{{ seg.afterBg }}; padding:9px 0; text-align:center; font-size:12.5px; font-weight:700; color:{{ seg.afterInk }}; border-right:2px solid #0a0a0a; cursor:pointer;">&#8617; after a step</div>
+            <div onClick="{{ setKindWaiting }}" style="flex:1; background:{{ seg.waitingBg }}; padding:9px 0; text-align:center; font-size:12.5px; font-weight:700; color:{{ seg.waitingInk }}; cursor:pointer;">&#9203; waiting on</div>
+          </div>
+
+          <!-- AFTER body -->
+          <sc-if value="{{ depAfter }}">
+            <div style="font-family:'DM Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.06em; color:#5a8a6a; margin-bottom:7px;">Which step comes first?</div>
+            <div style="display:flex; flex-direction:column; gap:7px; margin-bottom:14px;">
+              <sc-for list="{{ afterOptions }}" as="o" hint-placeholder-count="3">
+                <div onClick="{{ o.pick }}" style="display:flex; align-items:center; gap:8px; margin-left:{{ o.pad }}; background:{{ o.bg }}; border:2px solid {{ o.bc }}; border-radius:6px; box-shadow:{{ o.shadow }}; padding:8px 10px; cursor:pointer;"><span style="flex:none; width:20px; height:20px; border-radius:9999px; border:2px solid #0a0a0a; background:{{ o.badgeBg }}; display:flex; align-items:center; justify-content:center; font-family:'Anybody',sans-serif; font-weight:800; font-size:10px;">{{ o.badge }}</span><span style="flex:1; font-size:13px; color:{{ o.ink }};">{{ o.title }}</span><span style="font-size:12px; color:{{ o.markColor }};">{{ o.mark }}</span></div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <!-- WAITING body -->
+          <sc-if value="{{ depWaiting }}">
+            <div style="font-family:'DM Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.06em; color:#d97706; margin-bottom:7px;">Who or what are you waiting on?</div>
+            <input value="{{ whoValue }}" onChange="{{ setWho }}" placeholder="e.g. city inspector, the parts supplier&hellip;" style="font-family:'Instrument Sans',sans-serif; font-size:13.5px; background:#fff; border:2px solid #0a0a0a; border-radius:6px; box-shadow:1.5px 1.5px 0 rgba(10,10,10,0.85); padding:9px 11px; width:100%; margin-bottom:13px;">
+            <div style="font-family:'DM Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.06em; color:#737373; margin-bottom:7px;">Expected when? <span style="text-transform:none; letter-spacing:0; color:#9a9a9a;">&mdash; optional, the world&rsquo;s timing</span></div>
+            <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px;">
+              <sc-for list="{{ expOptions }}" as="e" hint-placeholder-count="3">
+                <span onClick="{{ e.pick }}" style="display:inline-flex; align-items:center; gap:4px; background:{{ e.bg }}; border:2px solid {{ e.bc }}; border-radius:9999px; font-family:'DM Mono',monospace; font-size:11px; padding:4px 10px; color:{{ e.ink }}; cursor:pointer; white-space:nowrap;">{{ e.label }}{{ e.tag }}</span>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <div style="display:flex; gap:9px;">
+            <div onClick="{{ clearDep }}" style="flex:none; padding:0 16px; height:46px; background:#fff; border:3px solid #0a0a0a; border-radius:4px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:13.5px; font-weight:700; color:#737373; cursor:pointer;">Clear</div>
+            <div onClick="{{ commitDep }}" style="flex:1; height:46px; background:{{ depSetBg }}; border:3px solid #0a0a0a; border-radius:4px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:{{ depSetInk }}; font-size:14.5px; font-weight:700; cursor:pointer;">Set</div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ===================== DATE SHEET ===================== -->
+    <sc-if value="{{ dateOpen }}">
+      <div style="position:absolute; inset:0; z-index:50; display:flex; flex-direction:column; justify-content:flex-end;">
+        <div onClick="{{ closeSheet }}" style="position:absolute; inset:0; background:rgba(10,10,10,0.4);"></div>
+        <div style="position:relative; background:#fafafa; border-top:3px solid #0a0a0a; border-top-left-radius:16px; border-top-right-radius:16px; padding:17px 17px 19px;">
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:3px;"><span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:16px; line-height:1.1;">When do you want &ldquo;{{ editTitle }}&rdquo; done?</span><span onClick="{{ closeSheet }}" style="font-size:18px; cursor:pointer; color:#737373; margin-left:8px;">&times;</span></div>
+          <div style="font-size:12px; color:#737373; margin-bottom:13px;">Your intent, not a deadline. A passed date never reads as &ldquo;late.&rdquo;</div>
+
+          <div style="display:flex; border:2px solid #0a0a0a; border-radius:8px; overflow:hidden; margin-bottom:14px;">
+            <div onClick="{{ setModeSoft }}" style="flex:1; background:{{ dseg.softBg }}; padding:9px 0; text-align:center; font-size:12.5px; font-weight:700; color:{{ dseg.softInk }}; border-right:2px solid #0a0a0a; cursor:pointer;">Sometime</div>
+            <div onClick="{{ setModeDate }}" style="flex:1; background:{{ dseg.dateBg }}; padding:9px 0; text-align:center; font-size:12.5px; font-weight:700; color:{{ dseg.dateInk }}; cursor:pointer;">On a date</div>
+          </div>
+
+          <sc-if value="{{ dateModeDate }}">
+            <div style="font-family:'DM Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.06em; color:#525252; margin-bottom:7px;">Pick a day</div>
+            <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px;">
+              <sc-for list="{{ dueOptions }}" as="d" hint-placeholder-count="3">
+                <span onClick="{{ d.pick }}" style="background:{{ d.bg }}; border:2px solid {{ d.bc }}; border-radius:9999px; font-family:'DM Mono',monospace; font-size:11px; padding:4px 11px; box-shadow:{{ d.shadow }}; cursor:pointer;">{{ d.label }}</span>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ dateModeSoft }}">
+            <div style="background:#fff; border:2px solid #0a0a0a; border-radius:6px; padding:11px 12px; margin-bottom:14px; font-size:12.5px; color:#525252; line-height:1.45;">A loose &ldquo;I&rsquo;ll get to this&rdquo; &mdash; no day attached. Reads simply as <strong>sometime</strong>.</div>
+          </sc-if>
+
+          <div style="display:flex; gap:9px;">
+            <div onClick="{{ clearDue }}" style="flex:none; padding:0 16px; height:46px; background:#fff; border:3px solid #0a0a0a; border-radius:4px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:13.5px; font-weight:700; color:#737373; cursor:pointer;">Clear</div>
+            <div onClick="{{ commitDue }}" style="flex:1; height:46px; background:{{ dueSetBg }}; border:3px solid #0a0a0a; border-radius:4px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:{{ dueSetInk }}; font-size:14.5px; font-weight:700; cursor:pointer;">Set</div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+
+  <div onClick="{{ reset }}" style="font-family:'DM Mono',monospace; font-size:12px; color:#737373; cursor:pointer; text-decoration:underline;">&#8635; restart prototype</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  initial() {
+    return {
+      goalTitle: "Rewire the workshop",
+      openSheet: null,        // null | "dep" | "date"
+      editId: null,
+      depDraft: null,         // { kind, stepId, who, exp }
+      dateDraft: null,        // { mode, date }
+      steps: [
+        { id: "s1", title: "Plan layout & buy materials", status: "completed", ev: { icon: "\u{1F4F7}", label: "Photo" }, dep: null, due: null, children: [] },
+        { id: "s2", title: "Wire the circuits", status: "completed", ev: { icon: "\u{1F4F7}", label: "Photo" }, dep: null, due: null, children: [] },
+        { id: "s3", title: "Inspection & labels", status: "pending", ev: { icon: "\u{1F4DD}", label: "Note" },
+          dep: { kind: "waiting", who: "city inspector", exp: { label: "Jun 24", past: false } },
+          due: { date: "Mon \u00b7 Jun 30" },
+          children: [
+            { id: "s3a", title: "Book the inspection", status: "completed", ev: { icon: "\u{1F4DD}", label: "Note" }, dep: null, due: null },
+            { id: "s3b", title: "Walk the inspector through", status: "pending", ev: { icon: "\u{1F4F7}", label: "Photo" }, dep: null, due: { date: "Thu \u00b7 Jun 26" } },
+            { id: "s3c", title: "Fix any call-outs", status: "pending", ev: { icon: "\u{1F4DD}", label: "Note" }, dep: null, due: null },
+          ] },
+        { id: "s4", title: "Mount the panels", status: "pending", ev: { icon: "\u{1F4DD}", label: "Note" },
+          dep: { kind: "after", stepId: "s3" }, due: null, children: [] },
+        { id: "s5", title: "Final walkthrough", status: "pending", ev: { icon: "\u{1F4F7}", label: "Photo" }, dep: null, due: null, children: [] },
+      ],
+    };
+  }
+  state = this.initial();
+
+  WHO = ["city inspector", "parts supplier", "landlord"];
+  EXP = [{ label: "Jun 12", past: true }, { label: "Jun 24", past: false }, { label: "Jul 1", past: false }];
+  DUE = ["This Fri \u00b7 Jun 27", "Mon \u00b7 Jun 30", "Sun \u00b7 Jul 6"];
+
+  cloneStep(s) { return { ...s, dep: s.dep ? { ...s.dep, exp: s.dep.exp ? { ...s.dep.exp } : null } : null, due: s.due ? { ...s.due } : null, children: s.children ? s.children.map((k) => this.cloneStep(k)) : [] }; }
+  clone(steps) { return steps.map((s) => this.cloneStep(s)); }
+  mutate(id, fn) {
+    this.setState((st) => { const steps = this.clone(st.steps); const t = this.findStep(steps, id); if (t) Object.assign(t, fn(t)); return { steps }; });
+  }
+  findStep(steps, id) {
+    for (const s of steps) { if (s.id === id) return s; if (s.children) { for (const k of s.children) if (k.id === id) return k; } }
+    return null;
+  }
+
+  // ---- shared truth-line builder (matches Focus/Timeline metaOf exactly) ----
+  buildMeta(dep, due, steps) {
+    const lines = [];
+    if (dep && dep.kind === "waiting" && dep.who && dep.who.trim()) {
+      const m = dep.exp ? (dep.exp.past ? "\u00b7 was expected " + dep.exp.label : "\u00b7 expected " + dep.exp.label) : "";
+      lines.push({ glyph: "\u23F3", glyphColor: "#d97706", text: "waiting on " + dep.who.trim(), meta: m });
+    }
+    if (dep && dep.kind === "after" && dep.stepId) {
+      const tgt = this.findStep(steps, dep.stepId);
+      if (tgt) lines.push({ glyph: "\u21A9", glyphColor: "#5a8a6a", text: "after " + tgt.title, meta: tgt.status === "completed" ? "\u00b7 done \u2713" : "" });
+    }
+    if (due) {
+      if (due.soft) lines.push({ glyph: "\u25A6", glyphColor: "#525252", text: "sometime", meta: "" });
+      else if (due.date) lines.push({ glyph: "\u25A6", glyphColor: "#525252", text: "due " + due.date, meta: "" });
+    }
+    return lines;
+  }
+
+  // ---- open / close ----
+  openDep(id) {
+    const s = this.findStep(this.state.steps, id);
+    const d = s.dep
+      ? { kind: s.dep.kind, stepId: s.dep.stepId || null, who: s.dep.who || "", exp: s.dep.exp ? { ...s.dep.exp } : null }
+      : { kind: "after", stepId: null, who: "", exp: null };
+    this.setState({ openSheet: "dep", editId: id, depDraft: d });
+  }
+  openDate(id) {
+    const s = this.findStep(this.state.steps, id);
+    const d = s.due
+      ? (s.due.soft ? { mode: "soft", date: null } : { mode: "date", date: s.due.date })
+      : { mode: "date", date: null };
+    this.setState({ openSheet: "date", editId: id, dateDraft: d });
+  }
+  closeSheet() { this.setState({ openSheet: null, editId: null, depDraft: null, dateDraft: null }); }
+
+  // ---- dep draft edits ----
+  setDepKind(kind) { this.setState((st) => ({ depDraft: { ...st.depDraft, kind } })); }
+  pickAfter(stepId) { this.setState((st) => ({ depDraft: { ...st.depDraft, kind: "after", stepId } })); }
+  setWho(e) { const v = e.target.value; this.setState((st) => ({ depDraft: { ...st.depDraft, who: v } })); }
+  pickWho(name) { this.setState((st) => ({ depDraft: { ...st.depDraft, who: name } })); }
+  pickExp(opt) { this.setState((st) => { const cur = st.depDraft.exp; const same = cur && cur.label === opt.label; return { depDraft: { ...st.depDraft, exp: same ? null : { ...opt } } }; }); }
+  depValid(d) { return d && ((d.kind === "after" && d.stepId) || (d.kind === "waiting" && d.who && d.who.trim())); }
+  commitDep() {
+    const d = this.state.depDraft;
+    if (!this.depValid(d)) return;
+    const id = this.state.editId;
+    const dep = d.kind === "after" ? { kind: "after", stepId: d.stepId } : { kind: "waiting", who: d.who.trim(), exp: d.exp ? { ...d.exp } : null };
+    this.mutate(id, () => ({ dep }));
+    this.closeSheet();
+  }
+  clearDep() { const id = this.state.editId; this.mutate(id, () => ({ dep: null })); this.closeSheet(); }
+
+  // ---- date draft edits ----
+  setDateMode(mode) { this.setState((st) => ({ dateDraft: { ...st.dateDraft, mode, date: mode === "soft" ? null : st.dateDraft.date } })); }
+  pickDue(label) { this.setState((st) => ({ dateDraft: { ...st.dateDraft, mode: "date", date: label } })); }
+  dueValid(d) { return d && (d.mode === "soft" || (d.mode === "date" && d.date)); }
+  commitDue() {
+    const d = this.state.dateDraft;
+    if (!this.dueValid(d)) return;
+    const id = this.state.editId;
+    const due = d.mode === "soft" ? { soft: true } : { date: d.date };
+    this.mutate(id, () => ({ due }));
+    this.closeSheet();
+  }
+  clearDue() { const id = this.state.editId; this.mutate(id, () => ({ due: null })); this.closeSheet(); }
+
+  reset() { this.setState(this.initial()); }
+
+  renderVals() {
+    const st = this.state;
+    const steps = st.steps;
+
+    // ---- step rows (parents + one level of sub-steps) ----
+    const LET = ["a", "b", "c", "d", "e", "f"];
+    const chipsFor = (s) => {
+      let dep = { set: false, unset: true, tap: () => this.openDep(s.id) };
+      if (s.dep && s.dep.kind === "waiting") {
+        const exp = s.dep.exp ? " \u00b7 " + (s.dep.exp.past ? "was " : "") + s.dep.exp.label : "";
+        dep = { set: true, unset: false, glyph: "\u23F3", glyphColor: "#d97706", borderColor: "#d97706", text: (s.dep.who || "someone") + exp, tap: () => this.openDep(s.id) };
+      } else if (s.dep && s.dep.kind === "after" && s.dep.stepId) {
+        const tgt = this.findStep(steps, s.dep.stepId);
+        const done = tgt && tgt.status === "completed";
+        dep = { set: true, unset: false, glyph: "\u21A9", glyphColor: "#5a8a6a", borderColor: "#5a8a6a", text: "after " + (tgt ? tgt.title : "?") + (done ? " \u2713" : ""), tap: () => this.openDep(s.id) };
+      }
+      let due = { set: false, unset: true, tap: () => this.openDate(s.id) };
+      if (s.due) due = { set: true, unset: false, text: s.due.soft ? "sometime" : s.due.date, tap: () => this.openDate(s.id) };
+      return { dep, due };
+    };
+    const mkRow = (s, label) => {
+      const c = chipsFor(s);
+      return { id: s.id, title: s.title, badge: label,
+        evIcon: s.ev.icon, evLabel: s.ev.label, dep: c.dep, due: c.due };
+    };
+    const stepsVm = steps.map((s, i) => {
+      const row = mkRow(s, String(i + 1));
+      const kids = (s.children || []).map((k, ci) => mkRow(k, LET[ci]));
+      return { ...row, kids, hasKids: kids.length > 0, noKids: kids.length === 0 };
+    });
+    const totalUnits = steps.reduce((n, s) => n + 1 + ((s.children || []).length), 0);
+
+    // ---- dep sheet vm ----
+    const dd = st.depDraft;
+    const editStep = st.editId ? this.findStep(steps, st.editId) : null;
+    const depAfter = !!dd && dd.kind === "after";
+    const depWaiting = !!dd && dd.kind === "waiting";
+    const flat = [];
+    steps.forEach((s, i) => { flat.push({ s, label: String(i + 1), child: false }); (s.children || []).forEach((k, ci) => flat.push({ s: k, label: LET[ci], child: true })); });
+    const afterOptions = (dd ? flat.filter((x) => x.s.id !== st.editId) : []).map((x) => {
+      const s = x.s; const sel = dd && dd.stepId === s.id; const done = s.status === "completed";
+      return {
+        title: s.title, badge: done ? "\u2713" : x.label, badgeBg: done ? "#d4f4e7" : "#fff", pad: x.child ? "15px" : "0px",
+        bg: sel ? "#dbe7ff" : "#fff", bc: sel ? "#0a0a0a" : "#cfcfcf", shadow: sel ? "1.5px 1.5px 0 rgba(10,10,10,0.85)" : "none",
+        ink: sel ? "#0a0a0a" : "#525252", mark: done ? "\u2713" : (sel ? "\u25CF" : ""), markColor: done ? "#059669" : "#2563eb",
+        pick: () => this.pickAfter(s.id),
+      };
+    });
+    const whoSuggestions = this.WHO.map((name) => ({ name, bg: dd && dd.who === name ? "#dbe7ff" : "#fff", pick: () => this.pickWho(name) }));
+    const expOptions = this.EXP.map((o) => {
+      const sel = dd && dd.exp && dd.exp.label === o.label;
+      return { label: o.label, tag: o.past ? " \u00b7 past" : "", bg: sel ? "#fde9c8" : "#fff", bc: sel ? "#d97706" : "#cfcfcf", ink: o.past ? "#9a6a1a" : "#0a0a0a", pick: () => this.pickExp(o) };
+    });
+    const seg = {
+      afterBg: depAfter ? "#d4f4e7" : "#fff", afterInk: depAfter ? "#0a0a0a" : "#737373",
+      waitingBg: depWaiting ? "#fde9c8" : "#fff", waitingInk: depWaiting ? "#0a0a0a" : "#737373",
+    };
+    const depCanSet = this.depValid(dd);
+
+    // ---- date sheet vm ----
+    const td = st.dateDraft;
+    const dateModeSoft = !!td && td.mode === "soft";
+    const dateModeDate = !!td && td.mode === "date";
+    const dueOptions = this.DUE.map((label) => {
+      const sel = td && td.date === label;
+      return { label, bg: sel ? "#dbe7ff" : "#fff", bc: sel ? "#0a0a0a" : "#cfcfcf", shadow: sel ? "1.5px 1.5px 0 rgba(10,10,10,0.85)" : "none", pick: () => this.pickDue(label) };
+    });
+    const dseg = {
+      softBg: dateModeSoft ? "#dbe7ff" : "#fff", softInk: dateModeSoft ? "#0a0a0a" : "#737373",
+      dateBg: dateModeDate ? "#dbe7ff" : "#fff", dateInk: dateModeDate ? "#0a0a0a" : "#737373",
+    };
+    const dueCanSet = this.dueValid(td);
+
+    // ---- live preview (combines draft of the open kind with the OTHER stored value) ----
+    let previewLines = [];
+    if (st.openSheet === "dep" && editStep) previewLines = this.buildMeta(dd, editStep.due, steps);
+    else if (st.openSheet === "date" && editStep) previewLines = this.buildMeta(editStep.dep, td && td.mode === "soft" ? { soft: true } : (td && td.date ? { date: td.date } : null), steps);
+
+    return {
+      goalTitle: st.goalTitle, stepCount: totalUnits, steps: stepsVm,
+      depOpen: st.openSheet === "dep", dateOpen: st.openSheet === "date",
+      editTitle: editStep ? editStep.title : "",
+      // dep sheet
+      depAfter, depWaiting, seg, afterOptions, whoSuggestions, expOptions,
+      whoValue: dd ? dd.who : "",
+      depSetBg: depCanSet ? "#2563eb" : "#cfcfcf", depSetInk: depCanSet ? "#fff" : "#fafafa",
+      setKindAfter: () => this.setDepKind("after"), setKindWaiting: () => this.setDepKind("waiting"),
+      setWho: (e) => this.setWho(e),
+      commitDep: () => this.commitDep(), clearDep: () => this.clearDep(),
+      // date sheet
+      dateModeSoft, dateModeDate, dseg, dueOptions,
+      setModeSoft: () => this.setDateMode("soft"), setModeDate: () => this.setDateMode("date"),
+      dueSetBg: dueCanSet ? "#2563eb" : "#cfcfcf", dueSetInk: dueCanSet ? "#fff" : "#fafafa",
+      commitDue: () => this.commitDue(), clearDue: () => this.clearDue(),
+      // shared
+      previewLines, previewHas: previewLines.length > 0, previewEmpty: previewLines.length === 0,
+      closeSheet: () => this.closeSheet(), reset: () => this.reset(),
+    };
+  }
+}
+</script>
+</body>
+</html>

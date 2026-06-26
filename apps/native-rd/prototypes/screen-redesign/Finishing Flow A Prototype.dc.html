@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wght@700;800;900&family=Instrument+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  .scrl::-webkit-scrollbar { width: 0; height: 0; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pop { 0% { transform: scale(0.7); opacity: 0; } 60% { transform: scale(1.06); } 100% { transform: scale(1); opacity: 1; } }
+  .nf-input { font-family: 'Instrument Sans', sans-serif; outline: none; }
+  .nf-input:focus { box-shadow: 3px 3px 0 rgba(37,99,235,0.5); }
+</style>
+</helmet>
+
+<div style="font-family:'Instrument Sans',system-ui,sans-serif; min-height:100vh; box-sizing:border-box; padding:40px; background:#e5e5e5; color:#0a0a0a; display:flex; flex-direction:column; align-items:center; gap:18px;">
+
+  <div style="text-align:center;">
+    <div style="font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:#525252; margin-bottom:6px;">Finishing Flow &middot; Direction A &middot; interactive</div>
+    <div style="font-size:14px; color:#404040;">Celebrate &rarr; <strong>craft the badge</strong> (try every control) &rarr; reveal. Baking is the save &mdash; no extra tap.</div>
+  </div>
+
+  <!-- DEVICE -->
+  <div style="width:344px; height:736px; background:#fafafa; border:3px solid #0a0a0a; border-radius:40px; box-shadow:8px 8px 0 rgba(10,10,10,0.22); overflow:hidden; display:flex; flex-direction:column; position:relative;">
+    <div style="height:30px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 18px; font-family:'DM Mono',monospace; font-size:12px; color:#0a0a0a; flex:none;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+
+    <!-- ===================== CELEBRATE ===================== -->
+    <sc-if value="{{ isCelebrate }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:1; display:flex; flex-direction:column; min-height:0;">
+        <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:0 26px;">
+          <div style="font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#5a8a6a; margin-bottom:14px;">Goal complete</div>
+          <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:42px; line-height:0.98; margin-bottom:14px;">You did it.</div>
+          <div style="font-size:14.5px; line-height:1.5; color:#404040; margin-bottom:24px;">All <strong>5 steps</strong> done for <strong>Rewire the workshop</strong> &mdash; with 3 pieces of evidence along the way.</div>
+
+          <!-- optional closing note -->
+          <sc-if value="{{ noteClosed }}">
+            <div onClick="{{ openNote }}" style="display:flex; align-items:center; gap:9px; background:#fff; border:2px dashed #a3a3a3; border-radius:8px; padding:12px 13px; cursor:pointer; margin-bottom:14px;"><span style="font-size:15px;">&#9997;</span><span style="font-size:13px; color:#737373;">Add a closing note <span style="color:#bbb;">&middot; optional</span></span></div>
+          </sc-if>
+          <sc-if value="{{ noteOpen }}">
+            <div style="margin-bottom:14px;">
+              <textarea class="nf-input" oninput="{{ setNote }}" placeholder="What did finishing this feel like?" style="width:100%; height:74px; resize:none; background:#fff; border:2px solid #0a0a0a; border-radius:8px; padding:10px 12px; font-size:13px; line-height:1.4;">{{ noteText }}</textarea>
+            </div>
+          </sc-if>
+        </div>
+
+        <div style="flex:none; padding:10px 22px 22px;">
+          <div onClick="{{ goDesign }}" style="height:56px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; gap:9px; color:#fff; font-size:18px; font-weight:700; cursor:pointer;">Design your badge &rarr;</div>
+          <div style="text-align:center; font-size:11.5px; color:#737373; margin-top:9px;">the keepsake for this win &mdash; make it yours</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ===================== DESIGN ===================== -->
+    <sc-if value="{{ isDesign }}">
+      <div style="flex:1; display:flex; flex-direction:column; min-height:0;">
+        <!-- header + context -->
+        <div style="background:#ede9fe; border-bottom:3px solid #0a0a0a; padding:11px 18px; flex:none; display:flex; align-items:center; gap:10px;">
+          <span onClick="{{ backToCelebrate }}" style="font-size:20px; color:#3b1f6b; cursor:pointer;">&lsaquo;</span>
+          <div><div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:17px; color:#3b1f6b; line-height:1;">Make your badge</div><div style="font-family:'DM Mono',monospace; font-size:10px; color:#6b4ba8; margin-top:3px;">Rewire the workshop &middot; 5 steps &middot; 3 evidence</div></div>
+        </div>
+
+        <!-- live preview -->
+        <div style="flex:none; display:flex; justify-content:center; padding:14px 0 12px; background:#f3f0fb; border-bottom:2px solid #ddd6f3;">{{ badgePreviewMd }}</div>
+
+        <!-- controls -->
+        <div class="scrl" style="flex:1; overflow-y:auto; padding:12px 16px 8px; min-height:0; display:flex; flex-direction:column; gap:9px;">
+
+          <!-- SHAPE -->
+          <div style="background:#fff; border:2px solid #0a0a0a; border-radius:7px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); overflow:hidden;">
+            <div onClick="{{ toggleShape }}" style="display:flex; align-items:center; justify-content:space-between; padding:11px 13px; cursor:pointer;"><span style="font-size:13.5px; font-weight:700;">Shape <span style="font-weight:400; color:#737373;">&middot; {{ shapeSummary }}</span></span><span style="color:#737373; font-size:12px;">{{ shapeChevron }}</span></div>
+            <sc-if value="{{ shapeOpen }}">
+              <div style="display:flex; flex-wrap:wrap; gap:7px; padding:0 13px 13px;">
+                <sc-for list="{{ shapeOptions }}" as="o" hint-placeholder-count="4">
+                  <div onClick="{{ o.pick }}" style="display:flex; align-items:center; gap:6px; background:{{ o.bg }}; border:2px solid #0a0a0a; border-radius:6px; padding:7px 11px; font-size:12.5px; font-weight:700; cursor:pointer;">{{ o.label }}</div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+
+          <!-- COLOR -->
+          <div style="background:#fff; border:2px solid #0a0a0a; border-radius:7px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); overflow:hidden;">
+            <div onClick="{{ toggleColor }}" style="display:flex; align-items:center; justify-content:space-between; padding:11px 13px; cursor:pointer;"><span style="font-size:13.5px; font-weight:700;">Color</span><span style="display:flex; align-items:center; gap:8px;"><span style="width:18px; height:18px; border-radius:9999px; border:2px solid #0a0a0a; background:{{ color }};"></span><span style="color:#737373; font-size:12px;">{{ colorChevron }}</span></span></div>
+            <sc-if value="{{ colorOpen }}">
+              <div style="display:flex; flex-wrap:wrap; gap:10px; padding:2px 13px 14px;">
+                <sc-for list="{{ colorOptions }}" as="c" hint-placeholder-count="5">
+                  <div onClick="{{ c.pick }}" style="width:34px; height:34px; border-radius:9999px; border:3px solid #0a0a0a; background:{{ c.hex }}; box-shadow:{{ c.shadow }}; cursor:pointer;"></div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+
+          <!-- CENTER -->
+          <div style="background:#fff; border:2px solid #0a0a0a; border-radius:7px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); overflow:hidden;">
+            <div onClick="{{ toggleCenter }}" style="display:flex; align-items:center; justify-content:space-between; padding:11px 13px; cursor:pointer;"><span style="font-size:13.5px; font-weight:700;">Center <span style="font-weight:400; color:#737373;">&middot; {{ centerSummary }}</span></span><span style="color:#737373; font-size:12px;">{{ centerChevron }}</span></div>
+            <sc-if value="{{ centerOpen }}">
+              <div style="padding:2px 13px 14px;">
+                <div style="display:flex; gap:7px; margin-bottom:11px;">
+                  <div onClick="{{ useMonogram }}" style="flex:1; text-align:center; background:{{ monoTabBg }}; border:2px solid #0a0a0a; border-radius:6px; padding:7px; font-size:12.5px; font-weight:700; cursor:pointer;">Monogram</div>
+                  <div onClick="{{ useIcon }}" style="flex:1; text-align:center; background:{{ iconTabBg }}; border:2px solid #0a0a0a; border-radius:6px; padding:7px; font-size:12.5px; font-weight:700; cursor:pointer;">Icon</div>
+                </div>
+                <sc-if value="{{ isMonogram }}">
+                  <input class="nf-input" value="{{ monogram }}" oninput="{{ setMonogram }}" maxlength="2" placeholder="R" style="width:100%; background:#fff; border:2px solid #0a0a0a; border-radius:6px; padding:9px 12px; font-size:14px; font-weight:700; text-transform:uppercase;" />
+                </sc-if>
+                <sc-if value="{{ isIcon }}">
+                  <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                    <sc-for list="{{ iconOptions }}" as="ic" hint-placeholder-count="6">
+                      <div onClick="{{ ic.pick }}" style="width:42px; height:42px; display:flex; align-items:center; justify-content:center; font-size:21px; background:{{ ic.bg }}; border:2px solid #0a0a0a; border-radius:6px; cursor:pointer;">{{ ic.glyph }}</div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+          </div>
+
+          <!-- TEXT -->
+          <div style="background:#fff; border:2px solid #0a0a0a; border-radius:7px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); overflow:hidden;">
+            <div onClick="{{ toggleText }}" style="display:flex; align-items:center; justify-content:space-between; padding:11px 13px; cursor:pointer;"><span style="font-size:13.5px; font-weight:700;">Bottom label</span><span style="color:#737373; font-size:12px;">{{ textChevron }}</span></div>
+            <sc-if value="{{ textOpen }}">
+              <div style="padding:2px 13px 14px;">
+                <input class="nf-input" value="{{ bottomLabel }}" oninput="{{ setLabel }}" maxlength="18" placeholder="EARNED 2026" style="width:100%; background:#fff; border:2px solid #0a0a0a; border-radius:6px; padding:9px 12px; font-size:13px; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; margin-bottom:10px;" />
+                <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                  <sc-for list="{{ labelPresets }}" as="p" hint-placeholder-count="3">
+                    <div onClick="{{ p.pick }}" style="font-family:'DM Mono',monospace; font-size:10.5px; background:#f3f0fb; border:2px solid #0a0a0a; border-radius:9999px; padding:4px 10px; cursor:pointer;">{{ p.text }}</div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+
+        </div>
+
+        <!-- bake -->
+        <div style="flex:none; padding:10px 18px 16px; border-top:2px solid #eee; background:#fafafa;">
+          <div onClick="{{ bake }}" style="height:52px; background:#059669; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; gap:8px; color:#fff; font-size:17px; font-weight:700; cursor:pointer;">&#10003; Bake my badge</div>
+          <div style="text-align:center; font-size:11px; color:#737373; margin-top:7px;">saves &amp; seals it into a verifiable badge</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ===================== BAKING ===================== -->
+    <sc-if value="{{ isBaking }}">
+      <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; padding:0 26px;">
+        <div style="opacity:0.5;">{{ badgePreviewMd }}</div>
+        <div style="width:26px; height:26px; border:3px solid #0a0a0a; border-top-color:transparent; border-radius:9999px; animation:spin 0.7s linear infinite;"></div>
+        <div style="font-family:'DM Mono',monospace; font-size:13px; color:#525252;">Baking your badge&hellip;</div>
+      </div>
+    </sc-if>
+
+    <!-- ===================== REVEAL ===================== -->
+    <sc-if value="{{ isReveal }}">
+      <div style="flex:1; display:flex; flex-direction:column; min-height:0; background:#a78bfa;">
+        <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 26px;">
+          <div style="font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.16em; text-transform:uppercase; color:#3b1f6b; margin-bottom:22px;">Earned</div>
+          <div style="animation:pop 0.5s ease-out; margin-bottom:26px;">{{ badgePreviewLg }}</div>
+          <div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:18px; text-align:center; color:#1f1147; margin-bottom:4px;">Rewire the workshop</div>
+          <div style="font-family:'DM Mono',monospace; font-size:11px; color:#4c1d95;">Jun 23, 2026</div>
+        </div>
+        <div style="flex:none; padding:10px 22px 24px;">
+          <div onClick="{{ viewBadge }}" style="height:54px; background:#fff; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:700; cursor:pointer; margin-bottom:12px;">View badge</div>
+          <div onClick="{{ reset }}" style="text-align:center; font-size:13px; font-weight:600; color:#3b1f6b; text-decoration:underline; cursor:pointer;">Back to goals</div>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+
+  <div onClick="{{ reset }}" style="font-family:'DM Mono',monospace; font-size:12px; color:#737373; cursor:pointer; text-decoration:underline;">&#8635; restart prototype</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    screen: "celebrate",
+    noteOpen: false,
+    noteText: "",
+    section: "shape",
+    design: {
+      shape: "circle",
+      color: "#a78bfa",
+      mode: "monogram",
+      monogram: "R",
+      icon: "\u{1F527}",
+      bottomLabel: "EARNED 2026",
+    },
+  };
+
+  SHAPES = [
+    { id: "circle", label: "Circle" },
+    { id: "shield", label: "Shield" },
+    { id: "hex", label: "Hexagon" },
+    { id: "square", label: "Square" },
+  ];
+  COLORS = ["#a78bfa", "#60a5fa", "#34d399", "#fbbf24", "#f472b6"];
+  ICONS = ["\u{1F527}", "\u26A1", "\u{1F3C6}", "\u{1F331}", "\u2B50", "\u{1F3AF}"];
+  PRESETS = ["EARNED 2026", "DONE", "LEVEL UP", "SHIPPED"];
+
+  contrast(hex) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return 0.299 * r + 0.587 * g + 0.114 * b > 150 ? "#0a0a0a" : "#ffffff";
+  }
+
+  shapeMarkup(shape, fill, stroke) {
+    const sw = 4;
+    if (shape === "circle") {
+      return `<circle cx="50" cy="50" r="46" fill="${fill}" stroke="#0a0a0a" stroke-width="${sw}"/><circle cx="50" cy="50" r="38" fill="none" stroke="${stroke}" stroke-width="2.5" opacity="0.5"/>`;
+    }
+    if (shape === "square") {
+      return `<rect x="5" y="5" width="90" height="90" rx="16" fill="${fill}" stroke="#0a0a0a" stroke-width="${sw}"/><rect x="14" y="14" width="72" height="72" rx="10" fill="none" stroke="${stroke}" stroke-width="2.5" opacity="0.5"/>`;
+    }
+    if (shape === "hex") {
+      return `<polygon points="50,4 90,27 90,73 50,96 10,73 10,27" fill="${fill}" stroke="#0a0a0a" stroke-width="${sw}"/><polygon points="50,15 80,32 80,68 50,85 20,68 20,32" fill="none" stroke="${stroke}" stroke-width="2.5" opacity="0.5"/>`;
+    }
+    // shield
+    return `<path d="M50 5 L88 17 V50 C88 73 70 88 50 95 C30 88 12 73 12 50 V17 Z" fill="${fill}" stroke="#0a0a0a" stroke-width="${sw}"/><path d="M50 15 L80 25 V51 C80 68 66 80 50 86 C34 80 20 68 20 51 V25 Z" fill="none" stroke="${stroke}" stroke-width="2.5" opacity="0.5"/>`;
+  }
+
+  badgeSvg(size) {
+    const d = this.state.design;
+    const ink = this.contrast(d.color);
+    let center;
+    if (d.mode === "icon") {
+      center = `<text x="50" y="60" text-anchor="middle" font-size="40">${d.icon}</text>`;
+    } else {
+      const m = (d.monogram || "R").toUpperCase();
+      center = `<text x="50" y="63" text-anchor="middle" font-family="Anybody, sans-serif" font-weight="900" font-size="38" fill="${ink}">${m}</text>`;
+    }
+    const label = d.bottomLabel
+      ? `<text x="50" y="84" text-anchor="middle" font-family="'DM Mono', monospace" font-weight="500" font-size="7" letter-spacing="1.2" fill="${ink}">${d.bottomLabel.toUpperCase()}</text>`
+      : "";
+    const svg = `<svg width="${size}" height="${size}" viewBox="0 0 100 100" style="display:block; filter:drop-shadow(3px 3px 0 rgba(10,10,10,0.25));">${this.shapeMarkup(d.shape, d.color, ink)}${center}${label}</svg>`;
+    return React.createElement("div", {
+      key: "badge",
+      dangerouslySetInnerHTML: { __html: svg },
+    });
+  }
+
+  set(patch) {
+    this.setState((s) => ({ design: { ...s.design, ...patch } }));
+  }
+  toggle(id) {
+    this.setState((s) => ({ section: s.section === id ? null : id }));
+  }
+
+  renderVals() {
+    const s = this.state;
+    const d = s.design;
+    const sel = "#dbe7ff";
+    const chev = (open) => (open ? "\u25BE" : "\u25B8");
+
+    return {
+      isCelebrate: s.screen === "celebrate",
+      isDesign: s.screen === "design",
+      isBaking: s.screen === "baking",
+      isReveal: s.screen === "reveal",
+
+      // celebrate
+      noteClosed: !s.noteOpen,
+      noteOpen: s.noteOpen,
+      noteText: s.noteText,
+      openNote: () => this.setState({ noteOpen: true }),
+      setNote: (e) => this.setState({ noteText: e.target.value }),
+      goDesign: () => this.setState({ screen: "design" }),
+
+      // preview
+      badgePreviewMd: this.badgeSvg(150),
+      badgePreviewLg: this.badgeSvg(208),
+
+      // design nav
+      backToCelebrate: () => this.setState({ screen: "celebrate" }),
+      color: d.color,
+
+      // shape
+      shapeOpen: s.section === "shape",
+      shapeChevron: chev(s.section === "shape"),
+      shapeSummary: (this.SHAPES.find((x) => x.id === d.shape) || {}).label,
+      toggleShape: () => this.toggle("shape"),
+      shapeOptions: this.SHAPES.map((o) => ({
+        label: o.label,
+        bg: d.shape === o.id ? sel : "#fff",
+        pick: () => this.set({ shape: o.id }),
+      })),
+
+      // color
+      colorOpen: s.section === "color",
+      colorChevron: chev(s.section === "color"),
+      toggleColor: () => this.toggle("color"),
+      colorOptions: this.COLORS.map((hex) => ({
+        hex,
+        shadow: d.color === hex ? "0 0 0 3px #fff, 0 0 0 5px #0a0a0a" : "none",
+        pick: () => this.set({ color: hex }),
+      })),
+
+      // center
+      centerOpen: s.section === "center",
+      centerChevron: chev(s.section === "center"),
+      centerSummary: d.mode === "icon" ? "Icon" : "Monogram",
+      toggleCenter: () => this.toggle("center"),
+      isMonogram: d.mode === "monogram",
+      isIcon: d.mode === "icon",
+      monoTabBg: d.mode === "monogram" ? sel : "#fff",
+      iconTabBg: d.mode === "icon" ? sel : "#fff",
+      useMonogram: () => this.set({ mode: "monogram" }),
+      useIcon: () => this.set({ mode: "icon" }),
+      monogram: d.monogram,
+      setMonogram: (e) => this.set({ monogram: e.target.value }),
+      iconOptions: this.ICONS.map((g) => ({
+        glyph: g,
+        bg: d.icon === g && d.mode === "icon" ? sel : "#fff",
+        pick: () => this.set({ icon: g, mode: "icon" }),
+      })),
+
+      // text
+      textOpen: s.section === "text",
+      textChevron: chev(s.section === "text"),
+      toggleText: () => this.toggle("text"),
+      bottomLabel: d.bottomLabel,
+      setLabel: (e) => this.set({ bottomLabel: e.target.value }),
+      labelPresets: this.PRESETS.map((t) => ({
+        text: t,
+        pick: () => this.set({ bottomLabel: t }),
+      })),
+
+      // bake
+      bake: () => {
+        this.setState({ screen: "baking" });
+        setTimeout(() => this.setState({ screen: "reveal" }), 1100);
+      },
+
+      // reveal
+      viewBadge: () => this.setState({ screen: "reveal" }),
+      reset: () =>
+        this.setState({
+          screen: "celebrate",
+          noteOpen: false,
+          noteText: "",
+          section: "shape",
+          design: {
+            shape: "circle",
+            color: "#a78bfa",
+            mode: "monogram",
+            monogram: "R",
+            icon: "\u{1F527}",
+            bottomLabel: "EARNED 2026",
+          },
+        }),
+    };
+  }
+}
+</script>
+</body>
+</html>

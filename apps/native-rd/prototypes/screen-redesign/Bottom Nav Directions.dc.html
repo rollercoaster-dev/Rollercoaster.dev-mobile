@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wght@700;800;900&family=Instrument+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+</style>
+</helmet>
+
+<div style="font-family:'Instrument Sans',system-ui,sans-serif; width:max-content; min-width:100%; min-height:100vh; box-sizing:border-box; padding:48px; background:#e5e5e5; color:#0a0a0a;">
+
+  <!-- ===================== HEADING ===================== -->
+  <div style="max-width:980px; margin-bottom:40px;">
+    <div style="font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:#525252; margin-bottom:10px;">Global navigation &middot; rethink &middot; The Full Ride</div>
+    <h1 style="font-family:'Anybody',sans-serif; font-weight:900; font-size:42px; line-height:0.98; letter-spacing:-0.02em; margin:0 0 14px;">THE BOTTOM BAR, RECONSIDERED.</h1>
+    <p style="font-size:15px; line-height:1.6; margin:0 0 12px; max-width:820px; color:#404040;">Today&rsquo;s <strong>FocusPillTabBar</strong> reproduced from the real source &mdash; the half-lifted pill, the label morph, the yellow &ldquo;+&rdquo; FAB that hides on Settings, the detached Settings pill &mdash; with the friction flagged. Then <strong>three directions</strong> that lead with <em>resume the goal I&rsquo;m already working</em>, demote &ldquo;+ new goal,&rdquo; and hold the bar stable. Pick one (or a mix) and I&rsquo;ll build the finished interactive prototype.</p>
+    <div style="font-family:'DM Mono',monospace; font-size:12px; color:#737373; line-height:1.7;">Tensions in play &mdash; <strong style="color:#0a0a0a;">1</strong> wrong thing is loudest &middot; <strong style="color:#0a0a0a;">2</strong> no global &ldquo;resume&rdquo; &middot; <strong style="color:#0a0a0a;">3</strong> badges weighting &middot; <strong style="color:#0a0a0a;">4</strong> detached settings &middot; <strong style="color:#0a0a0a;">5</strong> morph + lift complexity &middot; <strong style="color:#0a0a0a;">6</strong> adapt vs stay stable</div>
+  </div>
+
+  <!-- ===================== TODAY / AUDIT ===================== -->
+  <div style="display:flex; align-items:center; gap:12px; margin-bottom:18px;">
+    <span style="font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:#525252;">Today &mdash; reproduced from FocusPillTabBar.tsx</span>
+    <span style="height:2px; flex:1; max-width:240px; background:#a3a3a3;"></span>
+  </div>
+
+  <div style="display:flex; gap:36px; align-items:flex-start; margin-bottom:30px;">
+
+    <!-- AUDIT PHONE 1: Goals active -->
+    <div style="flex:none; width:340px;">
+      <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#737373; margin-bottom:10px;">Active: Goals &mdash; FAB visible</div>
+      <div style="width:340px; height:600px; background:#fafafa; border:3px solid #0a0a0a; border-radius:36px; box-shadow:8px 8px 0 rgba(10,10,10,0.18); overflow:hidden; display:flex; flex-direction:column; position:relative;">
+        <div style="height:30px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 18px; font-family:'DM Mono',monospace; font-size:12px; color:#0a0a0a; flex:none;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+        <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; padding:12px 16px; flex:none;"><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:18px; color:#0a0a0a;">Your goals</span></div>
+        <div style="flex:1; padding:16px 16px 26px; display:flex; flex-direction:column; gap:12px; min-height:0; opacity:0.9;">
+          <div style="background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px 14px;">
+            <div style="display:flex; align-items:center; gap:10px;"><span style="width:34px; height:34px; border:2px solid #0a0a0a; border-radius:2px; background:#ffe50c; display:flex; align-items:center; justify-content:center; font-family:'Anybody',sans-serif; font-weight:900; font-size:18px;">R</span><span style="flex:1; font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">Rewire the workshop</span></div>
+            <div style="height:8px; margin-top:11px; background:#e5e5e5; border:2px solid #0a0a0a;"><div style="height:100%; width:40%; background:#2563eb;"></div></div>
+            <div style="font-family:'DM Mono',monospace; font-size:11px; color:#737373; margin-top:6px;">2 / 5 steps</div>
+          </div>
+          <div style="background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px 14px;">
+            <div style="display:flex; align-items:center; gap:10px;"><span style="width:34px; height:34px; border:2px solid #0a0a0a; border-radius:2px; background:#d4f4e7; display:flex; align-items:center; justify-content:center; font-family:'Anybody',sans-serif; font-weight:900; font-size:18px;">B</span><span style="flex:1; font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">Build a birdhouse</span></div>
+            <div style="height:8px; margin-top:11px; background:#e5e5e5; border:2px solid #0a0a0a;"><div style="height:100%; width:75%; background:#2563eb;"></div></div>
+            <div style="font-family:'DM Mono',monospace; font-size:11px; color:#737373; margin-top:6px;">3 / 4 steps</div>
+          </div>
+        </div>
+        <!-- BAR: purple band + lifted pill, Goals active -->
+        <div style="background:#a78bfa; border-top:2px solid #0a0a0a; padding:0 14px 12px; flex:none;">
+          <div style="display:flex; align-items:center; gap:8px; margin-top:-34px;">
+            <div style="flex:1; display:flex; align-items:center; height:64px; padding:0 8px; border:2px solid #0a0a0a; border-radius:999px; background:#fafafa; box-shadow:3px 3px 0 rgba(10,10,10,0.85);">
+              <div style="flex:1; display:flex; align-items:center;">
+                <div style="display:flex; align-items:center; gap:8px; height:48px; padding:0 16px; border:2px solid #0a0a0a; border-radius:999px; background:#a78bfa;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg><span style="font-weight:700; font-size:14px; color:#0a0a0a; letter-spacing:-0.01em;">Goals</span></div>
+              </div>
+              <div style="width:56px; display:flex; align-items:center; justify-content:center;">
+                <div style="width:48px; height:48px; border-radius:24px; background:#ffe50c; border:2px solid #0a0a0a; display:flex; align-items:center; justify-content:center; font-size:30px; line-height:1; color:#0a0a0a; font-weight:700;">+</div>
+              </div>
+              <div style="flex:1; display:flex; align-items:center; justify-content:flex-end;">
+                <div style="width:48px; height:48px; border-radius:999px; display:flex; align-items:center; justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#737373" stroke-width="2.5" stroke-linejoin="round"><path d="M8.5 3l2.4 6.6M15.5 3l-2.4 6.6"/><circle cx="12" cy="15" r="6"/></svg></div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; height:64px; padding:0 8px; border:2px solid #0a0a0a; border-radius:999px; background:#fafafa; box-shadow:3px 3px 0 rgba(10,10,10,0.85);">
+              <div style="width:48px; height:48px; border-radius:999px; display:flex; align-items:center; justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#737373" stroke-width="2.5" stroke-linejoin="round"><circle cx="12" cy="12" r="3.4"/><path d="M12 2.6v3.2M12 18.2v3.2M21.4 12h-3.2M5.8 12H2.6M18.6 5.4l-2.3 2.3M7.7 16.3l-2.3 2.3M18.6 18.6l-2.3-2.3M7.7 7.7 5.4 5.4"/></svg></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUDIT PHONE 2: Settings active -->
+    <div style="flex:none; width:340px;">
+      <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#737373; margin-bottom:10px;">Active: Settings &mdash; FAB hidden, label morphs</div>
+      <div style="width:340px; height:600px; background:#fafafa; border:3px solid #0a0a0a; border-radius:36px; box-shadow:8px 8px 0 rgba(10,10,10,0.18); overflow:hidden; display:flex; flex-direction:column; position:relative;">
+        <div style="height:30px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 18px; font-family:'DM Mono',monospace; font-size:12px; color:#0a0a0a; flex:none;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+        <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; padding:12px 16px; flex:none;"><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:18px; color:#0a0a0a;">Settings</span></div>
+        <div style="flex:1; padding:16px 16px 26px; display:flex; flex-direction:column; gap:10px; min-height:0; opacity:0.9;">
+          <div style="display:flex; align-items:center; justify-content:space-between; background:#fff; border:2px solid #0a0a0a; border-radius:2px; padding:13px 14px; box-shadow:2px 2px 0 rgba(10,10,10,0.85);"><span style="font-weight:600; font-size:14px;">Theme</span><span style="font-family:'DM Mono',monospace; font-size:12px; color:#737373;">The Full Ride</span></div>
+          <div style="display:flex; align-items:center; justify-content:space-between; background:#fff; border:2px solid #0a0a0a; border-radius:2px; padding:13px 14px; box-shadow:2px 2px 0 rgba(10,10,10,0.85);"><span style="font-weight:600; font-size:14px;">Reduce motion</span><span style="width:42px; height:24px; border:2px solid #0a0a0a; border-radius:999px; background:#d4f4e7; position:relative;"><span style="position:absolute; top:1px; right:1px; width:18px; height:18px; border:2px solid #0a0a0a; border-radius:999px; background:#fff;"></span></span></div>
+          <div style="display:flex; align-items:center; justify-content:space-between; background:#fff; border:2px solid #0a0a0a; border-radius:2px; padding:13px 14px; box-shadow:2px 2px 0 rgba(10,10,10,0.85);"><span style="font-weight:600; font-size:14px;">Text size</span><span style="font-family:'DM Mono',monospace; font-size:12px; color:#737373;">Large</span></div>
+        </div>
+        <!-- BAR: Settings active -->
+        <div style="background:#a78bfa; border-top:2px solid #0a0a0a; padding:0 14px 12px; flex:none;">
+          <div style="display:flex; align-items:center; gap:8px; margin-top:-34px;">
+            <div style="flex:1; display:flex; align-items:center; height:64px; padding:0 8px; border:2px solid #0a0a0a; border-radius:999px; background:#fafafa; box-shadow:3px 3px 0 rgba(10,10,10,0.85);">
+              <div style="flex:1; display:flex; align-items:center;">
+                <div style="width:48px; height:48px; border-radius:999px; display:flex; align-items:center; justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#737373" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg></div>
+              </div>
+              <div style="width:56px; display:flex; align-items:center; justify-content:center;"></div>
+              <div style="flex:1; display:flex; align-items:center; justify-content:flex-end;">
+                <div style="width:48px; height:48px; border-radius:999px; display:flex; align-items:center; justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#737373" stroke-width="2.5" stroke-linejoin="round"><path d="M8.5 3l2.4 6.6M15.5 3l-2.4 6.6"/><circle cx="12" cy="15" r="6"/></svg></div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; height:64px; padding:0 8px; border:2px solid #0a0a0a; border-radius:999px; background:#fafafa; box-shadow:3px 3px 0 rgba(10,10,10,0.85);">
+              <div style="display:flex; align-items:center; gap:8px; height:48px; padding:0 16px; border:2px solid #0a0a0a; border-radius:999px; background:#a78bfa;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.5" stroke-linejoin="round"><circle cx="12" cy="12" r="3.4"/><path d="M12 2.6v3.2M12 18.2v3.2M21.4 12h-3.2M5.8 12H2.6M18.6 5.4l-2.3 2.3M7.7 16.3l-2.3 2.3M18.6 18.6l-2.3-2.3M7.7 7.7 5.4 5.4"/></svg><span style="font-weight:700; font-size:14px; color:#0a0a0a; letter-spacing:-0.01em;">Settings</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FRICTION FLAGS -->
+    <div style="flex:none; width:360px;">
+      <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#737373; margin-bottom:10px;">Friction, flagged</div>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div style="background:#fff; border:2px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px 14px;"><div style="display:flex; align-items:center; gap:8px; margin-bottom:5px;"><span style="font-family:'DM Mono',monospace; font-size:11px; font-weight:700; background:#ffe50c; border:2px solid #0a0a0a; border-radius:999px; padding:1px 8px;">1</span><span style="font-weight:700; font-size:14px;">The loudest control is the rarest action</span></div><div style="font-size:13px; line-height:1.5; color:#525252;">The brightest, most central target is the yellow &ldquo;+&rdquo; &mdash; <strong>new goal</strong>. The daily loop is <em>resume</em>, not create.</div></div>
+        <div style="background:#fff; border:2px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px 14px;"><div style="display:flex; align-items:center; gap:8px; margin-bottom:5px;"><span style="font-family:'DM Mono',monospace; font-size:11px; font-weight:700; background:#ffe50c; border:2px solid #0a0a0a; border-radius:999px; padding:1px 8px;">2</span><span style="font-weight:700; font-size:14px;">No global &ldquo;resume&rdquo;</span></div><div style="font-size:13px; line-height:1.5; color:#525252;">Focus Mode only opens by drilling Goals&nbsp;list &rarr; a goal. No one-tap path back into what you were doing.</div></div>
+        <div style="background:#fff; border:2px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px 14px;"><div style="display:flex; align-items:center; gap:8px; margin-bottom:5px;"><span style="font-family:'DM Mono',monospace; font-size:11px; font-weight:700; background:#ffe50c; border:2px solid #0a0a0a; border-radius:999px; padding:1px 8px;">3</span><span style="font-weight:700; font-size:14px;">Badges sits as a full peer</span></div><div style="font-size:13px; line-height:1.5; color:#525252;">It&rsquo;s the reward/after axis, yet weighted equal to Goals.</div></div>
+        <div style="background:#fff; border:2px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px 14px;"><div style="display:flex; align-items:center; gap:8px; margin-bottom:5px;"><span style="font-family:'DM Mono',monospace; font-size:11px; font-weight:700; background:#ffe50c; border:2px solid #0a0a0a; border-radius:999px; padding:1px 8px;">4</span><span style="font-weight:700; font-size:14px;">Detached Settings pill</span></div><div style="font-size:13px; line-height:1.5; color:#525252;">A second small pill bolted to the right reads as an afterthought, not a peer.</div></div>
+        <div style="background:#fff; border:2px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px 14px;"><div style="display:flex; align-items:center; gap:8px; margin-bottom:5px;"><span style="font-family:'DM Mono',monospace; font-size:11px; font-weight:700; background:#ffe50c; border:2px solid #0a0a0a; border-radius:999px; padding:1px 8px;">5</span><span style="font-weight:700; font-size:14px;">Morph + half-lift = motion &amp; odd hit-shape</span></div><div style="font-size:13px; line-height:1.5; color:#525252;">A 220ms label morph and a pill that breaks above the slot &mdash; charming, but motion and an unusual target for a low-load audience.</div></div>
+        <div style="background:#fff; border:2px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px 14px;"><div style="display:flex; align-items:center; gap:8px; margin-bottom:5px;"><span style="font-family:'DM Mono',monospace; font-size:11px; font-weight:700; background:#a78bfa; border:2px solid #0a0a0a; border-radius:999px; padding:1px 8px;">&#9888;</span><span style="font-weight:700; font-size:14px;">PILL_LIFT is load-bearing</span></div><div style="font-size:13px; line-height:1.5; color:#525252;"><code style="font-family:'DM Mono',monospace; font-size:12px;">PILL_LIFT&nbsp;=&nbsp;34px</code> feeds <code style="font-family:'DM Mono',monospace; font-size:12px;">EvidenceDrawer</code> + <code style="font-family:'DM Mono',monospace; font-size:12px;">useTabScreenContentInset</code>. Any height/lift change ripples into both.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- divider -->
+  <div style="height:3px; background:#0a0a0a; max-width:1180px; margin:18px 0 38px;"></div>
+
+  <!-- ===================== DIRECTIONS ===================== -->
+
+  <!-- ---------- DIRECTION 1 ---------- -->
+  <div style="margin-bottom:46px;">
+    <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:6px;">
+      <span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:13px; background:#2563eb; color:#fff; border:2px solid #0a0a0a; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:5px 11px;">DIRECTION 1</span>
+      <h2 style="font-family:'Anybody',sans-serif; font-weight:900; font-size:28px; line-height:1; letter-spacing:-0.02em; margin:0;">Resume in the center</h2>
+    </div>
+    <p style="font-size:14px; line-height:1.55; margin:0 0 18px; max-width:760px; color:#404040;">Smallest change. Keep the pill, the morph, the geometry &mdash; just <strong>recolor the center action</strong>: the yellow &ldquo;+&rdquo; becomes a blue <strong>&#9658;&nbsp;Resume</strong> that drops you into your current goal&rsquo;s Focus Mode. &ldquo;+ new goal&rdquo; moves into the Goals list. Lowest engineering risk &mdash; geometry and <code style="font-family:'DM Mono',monospace; font-size:12px;">PILL_LIFT</code> are untouched.</p>
+    <div style="display:flex; gap:36px; align-items:flex-start;">
+      <!-- resting phone -->
+      <div style="flex:none; width:340px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#737373; margin-bottom:10px;">Resting &mdash; Goals active</div>
+        <div style="width:340px; height:560px; background:#fafafa; border:3px solid #0a0a0a; border-radius:36px; box-shadow:8px 8px 0 rgba(10,10,10,0.18); overflow:hidden; display:flex; flex-direction:column; position:relative;">
+          <div style="height:30px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 18px; font-family:'DM Mono',monospace; font-size:12px; color:#0a0a0a; flex:none;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+          <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; flex:none;"><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:18px; color:#0a0a0a;">Your goals</span><span style="display:inline-flex; align-items:center; gap:5px; background:#fff; border:2px solid #0a0a0a; border-radius:4px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); font-size:12px; font-weight:700; padding:4px 9px;">+ New</span></div>
+          <div style="flex:1; padding:16px 16px 26px; display:flex; flex-direction:column; gap:12px; min-height:0; opacity:0.9;">
+            <div style="background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px 14px;"><div style="display:flex; align-items:center; gap:10px;"><span style="width:34px; height:34px; border:2px solid #0a0a0a; border-radius:2px; background:#ffe50c; display:flex; align-items:center; justify-content:center; font-family:'Anybody',sans-serif; font-weight:900; font-size:18px;">R</span><span style="flex:1; font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">Rewire the workshop</span></div><div style="height:8px; margin-top:11px; background:#e5e5e5; border:2px solid #0a0a0a;"><div style="height:100%; width:40%; background:#2563eb;"></div></div><div style="font-family:'DM Mono',monospace; font-size:11px; color:#737373; margin-top:6px;">2 / 5 steps</div></div>
+            <div style="background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px 14px;"><div style="display:flex; align-items:center; gap:10px;"><span style="width:34px; height:34px; border:2px solid #0a0a0a; border-radius:2px; background:#d4f4e7; display:flex; align-items:center; justify-content:center; font-family:'Anybody',sans-serif; font-weight:900; font-size:18px;">B</span><span style="flex:1; font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">Build a birdhouse</span></div><div style="height:8px; margin-top:11px; background:#e5e5e5; border:2px solid #0a0a0a;"><div style="height:100%; width:75%; background:#2563eb;"></div></div><div style="font-family:'DM Mono',monospace; font-size:11px; color:#737373; margin-top:6px;">3 / 4 steps</div></div>
+          </div>
+          <!-- BAR: D1 -->
+          <div style="background:#a78bfa; border-top:2px solid #0a0a0a; padding:0 14px 12px; flex:none;">
+            <div style="display:flex; align-items:center; gap:8px; margin-top:-34px;">
+              <div style="flex:1; display:flex; align-items:center; height:64px; padding:0 8px; border:2px solid #0a0a0a; border-radius:999px; background:#fafafa; box-shadow:3px 3px 0 rgba(10,10,10,0.85);">
+                <div style="flex:1; display:flex; align-items:center;"><div style="display:flex; align-items:center; gap:8px; height:48px; padding:0 16px; border:2px solid #0a0a0a; border-radius:999px; background:#a78bfa;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg><span style="font-weight:700; font-size:14px; color:#0a0a0a;">Goals</span></div></div>
+                <div style="width:64px; display:flex; align-items:center; justify-content:center; position:relative;">
+                  <div style="width:52px; height:52px; border-radius:26px; background:#2563eb; border:2px solid #0a0a0a; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M8 5l12 7-12 7z"/></svg></div>
+                  <span style="position:absolute; top:-3px; right:4px; width:20px; height:20px; background:#ffe50c; border:2px solid #0a0a0a; border-radius:2px; display:flex; align-items:center; justify-content:center; font-family:'Anybody',sans-serif; font-weight:900; font-size:11px;">R</span>
+                </div>
+                <div style="flex:1; display:flex; align-items:center; justify-content:flex-end;"><div style="width:48px; height:48px; border-radius:999px; display:flex; align-items:center; justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#737373" stroke-width="2.5" stroke-linejoin="round"><path d="M8.5 3l2.4 6.6M15.5 3l-2.4 6.6"/><circle cx="12" cy="15" r="6"/></svg></div></div>
+              </div>
+              <div style="display:flex; align-items:center; height:64px; padding:0 8px; border:2px solid #0a0a0a; border-radius:999px; background:#fafafa; box-shadow:3px 3px 0 rgba(10,10,10,0.85);"><div style="width:48px; height:48px; border-radius:999px; display:flex; align-items:center; justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#737373" stroke-width="2.5" stroke-linejoin="round"><circle cx="12" cy="12" r="3.4"/><path d="M12 2.6v3.2M12 18.2v3.2M21.4 12h-3.2M5.8 12H2.6M18.6 5.4l-2.3 2.3M7.7 16.3l-2.3 2.3M18.6 18.6l-2.3-2.3M7.7 7.7 5.4 5.4"/></svg></div></div>
+            </div>
+            <div style="text-align:center; font-family:'DM Mono',monospace; font-size:10px; color:#0a0a0a; margin-top:6px;">&#9658; jumps into <strong>Rewire the workshop</strong></div>
+          </div>
+        </div>
+      </div>
+      <!-- state strips + answers -->
+      <div style="flex:none; width:340px; display:flex; flex-direction:column; gap:16px;">
+        <div>
+          <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#737373; margin-bottom:8px;">Badges active &mdash; Resume persists</div>
+          <div style="background:#a78bfa; border:2px solid #0a0a0a; padding:18px 12px 12px; border-radius:8px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <div style="flex:1; display:flex; align-items:center; height:60px; padding:0 8px; border:2px solid #0a0a0a; border-radius:999px; background:#fafafa; box-shadow:3px 3px 0 rgba(10,10,10,0.85);">
+                <div style="flex:1; display:flex; align-items:center;"><div style="width:44px; height:44px; border-radius:999px; display:flex; align-items:center; justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#737373" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg></div></div>
+                <div style="width:58px; display:flex; align-items:center; justify-content:center;"><div style="width:48px; height:48px; border-radius:24px; background:#2563eb; border:2px solid #0a0a0a; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M8 5l12 7-12 7z"/></svg></div></div>
+                <div style="flex:1; display:flex; align-items:center; justify-content:flex-end;"><div style="display:flex; align-items:center; gap:7px; height:44px; padding:0 14px; border:2px solid #0a0a0a; border-radius:999px; background:#a78bfa;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.5" stroke-linejoin="round"><path d="M8.5 3l2.4 6.6M15.5 3l-2.4 6.6"/><circle cx="12" cy="15" r="6"/></svg><span style="font-weight:700; font-size:13px;">Badges</span></div></div>
+              </div>
+              <div style="display:flex; align-items:center; height:60px; padding:0 8px; border:2px solid #0a0a0a; border-radius:999px; background:#fafafa; box-shadow:3px 3px 0 rgba(10,10,10,0.85);"><div style="width:44px; height:44px; border-radius:999px; display:flex; align-items:center; justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#737373" stroke-width="2.5" stroke-linejoin="round"><circle cx="12" cy="12" r="3.4"/><path d="M12 2.6v3.2M12 18.2v3.2M21.4 12h-3.2M5.8 12H2.6M18.6 5.4l-2.3 2.3M7.7 16.3l-2.3 2.3M18.6 18.6l-2.3-2.3M7.7 7.7 5.4 5.4"/></svg></div></div>
+            </div>
+            <div style="text-align:center; font-family:'DM Mono',monospace; font-size:10px; color:#0a0a0a; margin-top:8px;">Resume stays on every tab (old FAB hid on Settings)</div>
+          </div>
+        </div>
+        <div style="background:#fff; border:2px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:14px 15px;">
+          <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:#737373; margin-bottom:9px;">Answers the tensions</div>
+          <div style="font-size:13px; line-height:1.65; color:#333;">
+            <div><strong>1&middot;2</strong> &#9658; Resume is now the prime, central, global action; &ldquo;+&rdquo; demoted into the Goals header.</div>
+            <div><strong>3</strong> Badges unchanged &mdash; still a full peer tab.</div>
+            <div><strong>4</strong> Settings <em>stays</em> its own small pill (unresolved &mdash; trade for low risk).</div>
+            <div><strong>5</strong> Morph + lift <em>kept</em> &mdash; familiar, gated by the motion pref.</div>
+            <div><strong>6</strong> Stable; Resume no longer hides on any tab.</div>
+          </div>
+          <div style="margin-top:10px; padding-top:10px; border-top:2px solid #e5e5e5; font-size:12.5px; line-height:1.5; color:#059669;"><strong>&#9888; Lift:</strong> unchanged &mdash; <code style="font-family:'DM Mono',monospace; font-size:11.5px;">PILL_LIFT</code>, EvidenceDrawer &amp; inset untouched.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ---------- DIRECTION 2 ---------- -->
+  <div style="margin-bottom:46px;">
+    <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:6px;">
+      <span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:13px; background:#2563eb; color:#fff; border:2px solid #0a0a0a; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:5px 11px;">DIRECTION 2</span>
+      <h2 style="font-family:'Anybody',sans-serif; font-weight:900; font-size:28px; line-height:1; letter-spacing:-0.02em; margin:0;">The Continue bar</h2>
+    </div>
+    <p style="font-size:14px; line-height:1.55; margin:0 0 18px; max-width:760px; color:#404040;">Boldest reframe. The bar <strong>is</strong> the resume control: a wide <strong>Continue</strong> strip carries the live goal + step count + &#9658;, flanked by two quiet icon targets. Flat &mdash; <strong>no morph, no lift</strong> &mdash; the calmest motion profile, honouring reduce-motion by default. Settings moves to a profile avatar; Badges shrinks to an icon.</p>
+    <div style="display:flex; gap:36px; align-items:flex-start;">
+      <!-- resting phone -->
+      <div style="flex:none; width:340px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#737373; margin-bottom:10px;">Resting &mdash; a goal in progress</div>
+        <div style="width:340px; height:560px; background:#fafafa; border:3px solid #0a0a0a; border-radius:36px; box-shadow:8px 8px 0 rgba(10,10,10,0.18); overflow:hidden; display:flex; flex-direction:column; position:relative;">
+          <div style="height:30px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 18px; font-family:'DM Mono',monospace; font-size:12px; color:#0a0a0a; flex:none;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+          <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; padding:12px 16px; display:flex; align-items:center; gap:10px; flex:none;"><span style="width:30px; height:30px; border:2px solid #0a0a0a; border-radius:999px; background:#fff; display:flex; align-items:center; justify-content:center; font-family:'Anybody',sans-serif; font-weight:900; font-size:13px;">A</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:18px; color:#0a0a0a;">Your goals</span></div>
+          <div style="flex:1; padding:16px; display:flex; flex-direction:column; gap:12px; min-height:0; opacity:0.9;">
+            <div style="background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px 14px;"><div style="display:flex; align-items:center; gap:10px;"><span style="width:34px; height:34px; border:2px solid #0a0a0a; border-radius:2px; background:#ffe50c; display:flex; align-items:center; justify-content:center; font-family:'Anybody',sans-serif; font-weight:900; font-size:18px;">R</span><span style="flex:1; font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">Rewire the workshop</span></div><div style="height:8px; margin-top:11px; background:#e5e5e5; border:2px solid #0a0a0a;"><div style="height:100%; width:40%; background:#2563eb;"></div></div></div>
+            <div style="background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px 14px;"><div style="display:flex; align-items:center; gap:10px;"><span style="width:34px; height:34px; border:2px solid #0a0a0a; border-radius:2px; background:#d4f4e7; display:flex; align-items:center; justify-content:center; font-family:'Anybody',sans-serif; font-weight:900; font-size:18px;">B</span><span style="flex:1; font-family:'Anybody',sans-serif; font-weight:800; font-size:15px;">Build a birdhouse</span></div><div style="height:8px; margin-top:11px; background:#e5e5e5; border:2px solid #0a0a0a;"><div style="height:100%; width:75%; background:#2563eb;"></div></div></div>
+          </div>
+          <!-- BAR: D2 flat continue -->
+          <div style="background:#a78bfa; border-top:3px solid #0a0a0a; padding:10px 12px 12px; flex:none; display:flex; align-items:center; gap:8px;">
+            <div style="width:46px; height:46px; flex:none; border:2px solid #0a0a0a; border-radius:999px; background:#fafafa; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg></div>
+            <div style="flex:1; min-width:0; display:flex; align-items:center; gap:9px; height:54px; padding:0 8px 0 13px; border:2px solid #0a0a0a; border-radius:12px; background:#2563eb; box-shadow:3px 3px 0 rgba(10,10,10,0.85);">
+              <div style="flex:1; min-width:0;"><div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.1em; text-transform:uppercase; color:#bcd0fb;">Continue</div><div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Rewire the workshop</div><div style="font-family:'DM Mono',monospace; font-size:10px; color:#cfe0fd;">step 3 of 5 &middot; Inspection</div></div>
+              <div style="width:40px; height:40px; flex:none; border:2px solid #0a0a0a; border-radius:999px; background:#ffe50c; display:flex; align-items:center; justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="#0a0a0a"><path d="M8 5l12 7-12 7z"/></svg></div>
+            </div>
+            <div style="width:46px; height:46px; flex:none; border:2px solid #0a0a0a; border-radius:999px; background:#fafafa; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#737373" stroke-width="2.5" stroke-linejoin="round"><path d="M8.5 3l2.4 6.6M15.5 3l-2.4 6.6"/><circle cx="12" cy="15" r="6"/></svg></div>
+          </div>
+        </div>
+      </div>
+      <!-- state strips + answers -->
+      <div style="flex:none; width:340px; display:flex; flex-direction:column; gap:16px;">
+        <div>
+          <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#737373; margin-bottom:8px;">No current goal &mdash; this is where &ldquo;+ new&rdquo; lives</div>
+          <div style="background:#a78bfa; border:3px solid #0a0a0a; padding:10px 12px 12px; border-radius:8px; display:flex; align-items:center; gap:8px;">
+            <div style="width:46px; height:46px; flex:none; border:2px solid #0a0a0a; border-radius:999px; background:#fafafa; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg></div>
+            <div style="flex:1; min-width:0; display:flex; align-items:center; gap:9px; height:54px; padding:0 13px; border:2px solid #0a0a0a; border-radius:12px; background:#ffe50c; box-shadow:3px 3px 0 rgba(10,10,10,0.85);"><span style="font-size:26px; font-weight:700; line-height:1;">+</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:15px; color:#0a0a0a;">Start a goal</span></div>
+            <div style="width:46px; height:46px; flex:none; border:2px solid #0a0a0a; border-radius:999px; background:#fafafa; box-shadow:2px 2px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#737373" stroke-width="2.5" stroke-linejoin="round"><path d="M8.5 3l2.4 6.6M15.5 3l-2.4 6.6"/><circle cx="12" cy="15" r="6"/></svg></div>
+          </div>
+        </div>
+        <div style="background:#fff; border:2px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:14px 15px;">
+          <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:#737373; margin-bottom:9px;">Answers the tensions</div>
+          <div style="font-size:13px; line-height:1.65; color:#333;">
+            <div><strong>1&middot;2</strong> The widest target IS resume &mdash; goal, progress &amp; &#9658; in one strip.</div>
+            <div><strong>3</strong> Badges demoted to a small icon.</div>
+            <div><strong>4</strong> Settings leaves the bar &rarr; profile avatar (top-left).</div>
+            <div><strong>5</strong> Morph gone, lift gone &mdash; flat, static, calmest motion.</div>
+            <div><strong>6</strong> Stable; empty state swaps the strip to &ldquo;+ Start a goal.&rdquo;</div>
+          </div>
+          <div style="margin-top:10px; padding-top:10px; border-top:2px solid #e5e5e5; font-size:12.5px; line-height:1.5; color:#d97706;"><strong>&#9888; Lift:</strong> drops to <code style="font-family:'DM Mono',monospace; font-size:11.5px;">0</code>. Must update <code style="font-family:'DM Mono',monospace; font-size:11.5px;">useTabScreenContentInset</code> + EvidenceDrawer (no lifted half). Biggest change.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ---------- DIRECTION 3 ---------- -->
+  <div style="margin-bottom:20px;">
+    <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:6px;">
+      <span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:13px; background:#059669; color:#fff; border:2px solid #0a0a0a; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:5px 11px;">DIRECTION 3</span>
+      <h2 style="font-family:'Anybody',sans-serif; font-weight:900; font-size:28px; line-height:1; letter-spacing:-0.02em; margin:0;">Three calm targets</h2>
+      <span style="font-family:'DM Mono',monospace; font-size:11px; background:#d4f4e7; border:2px solid #0a0a0a; padding:3px 9px; align-self:center;">recommended</span>
+    </div>
+    <p style="font-size:14px; line-height:1.55; margin:0 0 18px; max-width:760px; color:#404040;">The canonical low-load answer. One clean pill, three equal segments: <strong>Focus</strong> (home &mdash; resume your current goal), <strong>Goals</strong> (all goals; &ldquo;+ new&rdquo; lives here), <strong>Badges</strong>. <strong>Labels always visible</strong> &mdash; no morph, no surprise. No center FAB, no detached Settings pill (it folds into the profile). Active = a static fill; Focus carries a blue &#9658; so resume reads instantly.</p>
+    <div style="display:flex; gap:36px; align-items:flex-start;">
+      <!-- resting phone -->
+      <div style="flex:none; width:340px;">
+        <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#737373; margin-bottom:10px;">Resting &mdash; Focus is home</div>
+        <div style="width:340px; height:560px; background:#fafafa; border:3px solid #0a0a0a; border-radius:36px; box-shadow:8px 8px 0 rgba(10,10,10,0.18); overflow:hidden; display:flex; flex-direction:column; position:relative;">
+          <div style="height:30px; background:#ffe50c; border-bottom:3px solid #0a0a0a; display:flex; align-items:center; justify-content:space-between; padding:0 18px; font-family:'DM Mono',monospace; font-size:12px; color:#0a0a0a; flex:none;"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+          <div style="background:#a78bfa; border-bottom:3px solid #0a0a0a; padding:11px 16px; display:flex; align-items:center; justify-content:space-between; flex:none;"><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:16px; color:#0a0a0a;">Rewire the workshop</span><span style="width:30px; height:30px; border:2px solid #0a0a0a; border-radius:999px; background:#fff; display:flex; align-items:center; justify-content:center; font-family:'Anybody',sans-serif; font-weight:900; font-size:13px;">A</span></div>
+          <div style="flex:1; padding:16px; display:flex; flex-direction:column; min-height:0; opacity:0.92;">
+            <div style="font-family:'DM Mono',monospace; font-size:11px; color:#737373; margin-bottom:8px;">2 / 5 done</div>
+            <div style="height:9px; background:#fff; border:2px solid #0a0a0a; margin-bottom:18px;"><div style="height:100%; width:40%; background:#2563eb;"></div></div>
+            <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:#737373; margin-bottom:7px;">Working on this</div>
+            <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:26px; line-height:1.06; margin-bottom:16px;">Inspection &amp; labels</div>
+            <div style="display:flex; align-items:center; gap:10px; background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:11px 13px;"><span style="font-size:18px;">&#128247;</span><span style="flex:1; font-weight:700; font-size:14px;">Photo</span><span style="font-size:12px; font-weight:700; color:#2563eb;">change</span></div>
+          </div>
+          <!-- BAR: D3 three calm targets -->
+          <div style="background:#a78bfa; border-top:3px solid #0a0a0a; padding:10px 12px 12px; flex:none;">
+            <div style="display:flex; align-items:stretch; height:58px; border:2px solid #0a0a0a; border-radius:14px; background:#fafafa; box-shadow:3px 3px 0 rgba(10,10,10,0.85); overflow:hidden;">
+              <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; background:#2563eb;"><div style="width:26px; height:26px; border-radius:999px; background:#fff; border:2px solid #0a0a0a; display:flex; align-items:center; justify-content:center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="#2563eb"><path d="M8 5l12 7-12 7z"/></svg></div><span style="font-weight:700; font-size:11.5px; color:#fff;">Focus</span></div>
+              <div style="width:2px; background:#0a0a0a;"></div>
+              <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#525252" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg><span style="font-weight:600; font-size:11.5px; color:#525252;">Goals</span></div>
+              <div style="width:2px; background:#0a0a0a;"></div>
+              <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#525252" stroke-width="2.5" stroke-linejoin="round"><path d="M8.5 3l2.4 6.6M15.5 3l-2.4 6.6"/><circle cx="12" cy="15" r="6"/></svg><span style="font-weight:600; font-size:11.5px; color:#525252;">Badges</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- state strips + answers -->
+      <div style="flex:none; width:340px; display:flex; flex-direction:column; gap:14px;">
+        <div>
+          <div style="font-family:'DM Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#737373; margin-bottom:8px;">Goals active &mdash; &ldquo;+ new&rdquo; lives in the list</div>
+          <div style="background:#a78bfa; border:3px solid #0a0a0a; padding:11px 12px; border-radius:8px;">
+            <div style="display:flex; align-items:stretch; height:54px; border:2px solid #0a0a0a; border-radius:14px; background:#fafafa; box-shadow:3px 3px 0 rgba(10,10,10,0.85); overflow:hidden;">
+              <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;"><div style="width:24px; height:24px; border-radius:999px; background:#fff; border:2px solid #0a0a0a; display:flex; align-items:center; justify-content:center;"><svg width="12" height="12" viewBox="0 0 24 24" fill="#2563eb"><path d="M8 5l12 7-12 7z"/></svg></div><span style="font-weight:600; font-size:11px; color:#525252;">Focus</span></div>
+              <div style="width:2px; background:#0a0a0a;"></div>
+              <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; background:#a78bfa;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg><span style="font-weight:700; font-size:11px; color:#0a0a0a;">Goals</span></div>
+              <div style="width:2px; background:#0a0a0a;"></div>
+              <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#525252" stroke-width="2.5" stroke-linejoin="round"><path d="M8.5 3l2.4 6.6M15.5 3l-2.4 6.6"/><circle cx="12" cy="15" r="6"/></svg><span style="font-weight:600; font-size:11px; color:#525252;">Badges</span></div>
+            </div>
+            <div style="display:flex; align-items:center; gap:9px; background:#ffe50c; border:2px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:9px 12px; margin-top:10px;"><span style="font-size:20px; font-weight:700; line-height:1;">+</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px;">New goal</span></div>
+          </div>
+        </div>
+        <div style="background:#fff; border:2px solid #0a0a0a; border-radius:2px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:14px 15px;">
+          <div style="font-family:'DM Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:#737373; margin-bottom:9px;">Answers the tensions</div>
+          <div style="font-size:13px; line-height:1.65; color:#333;">
+            <div><strong>1&middot;2</strong> Focus is home &amp; leftmost &mdash; one tap resumes from anywhere.</div>
+            <div><strong>3</strong> Badges is the quiet 3rd target &mdash; equal slot, last.</div>
+            <div><strong>4</strong> Settings leaves the bar &rarr; profile / overflow. Detached pill gone.</div>
+            <div><strong>5</strong> No morph; labels always shown; active = static fill.</div>
+            <div><strong>6</strong> Fully stable &mdash; never adapts per context. &ldquo;+&rdquo; atop Goals.</div>
+          </div>
+          <div style="margin-top:10px; padding-top:10px; border-top:2px solid #e5e5e5; font-size:12.5px; line-height:1.5; color:#d97706;"><strong>&#9888; Lift:</strong> reduced to a low resting pill (~0&ndash;12px). Re-tune <code style="font-family:'DM Mono',monospace; font-size:11.5px;">PILL_LIFT</code> &rarr; inset + EvidenceDrawer.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

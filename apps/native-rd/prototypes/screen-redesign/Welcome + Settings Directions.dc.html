@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wght@700;800;900&family=Instrument+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Lexend:wght@400;500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  .sc-scroll::-webkit-scrollbar { width: 0; height: 0; }
+  .sc-scroll { scrollbar-width: none; }
+</style>
+</helmet>
+
+<!-- ============ REFERENCE STRIP: ALL 7 THEMES ============ -->
+<div style="position:absolute; left:0; top:0; width:2200px;">
+  <div data-drags-parent="1" style="font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.06em; color:#5a5a5a; margin-bottom:11px; cursor:grab;">THE 7 THEMES &middot; one sample card, seven looks — each renders in its own colors, border, shadow &amp; font</div>
+  <div style="background:#fff; border-radius:2px; box-shadow:0 1px 3px rgba(0,0,0,.08); padding:28px 30px; display:flex; flex-wrap:wrap; gap:24px;">
+    <sc-for list="{{ allThemes }}" as="th" hint-placeholder-count="7">
+      <div style="width:308px;">
+        <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:9px;">
+          <span style="font-family:{{ th.headFont }}; font-weight:{{ th.headW }}; font-size:15px; color:#0a0a0a;">{{ th.name }}</span>
+          <span style="font-family:'DM Mono',monospace; font-size:10px; color:#9a9a9a;">{{ th.id }}</span>
+        </div>
+        <div style="font-family:'DM Mono',monospace; font-size:10.5px; color:#8a8a8a; margin-bottom:9px;">{{ th.desc }}</div>
+        <dc-import name="ThemeSampleCard" t="{{ th }}" hint-size="308px,74px"></dc-import>
+      </div>
+    </sc-for>
+  </div>
+</div>
+
+<!-- ============ WELCOME · CHIP GRID ============ -->
+<div style="position:absolute; left:0px; top:600px; width:360px;">
+  <div data-drags-parent="1" style="font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.05em; color:#5a5a5a; margin-bottom:10px; cursor:grab;">WELCOME &middot; A — chip grid <span style="color:#9a9a9a;">(as shipped)</span></div>
+  <div style="width:360px; height:740px; background:#0a0a0a; border:3px solid #0a0a0a; border-radius:38px; box-shadow:0 1px 3px rgba(0,0,0,.18); overflow:hidden; display:flex; flex-direction:column;">
+    <div style="flex:none; height:28px; background:{{ curWA.status }}; border-bottom:2px solid {{ curWA.borderCol }}; display:flex; align-items:center; justify-content:space-between; padding:0 18px; font-family:'DM Mono',monospace; font-size:11px; color:{{ curWA.statusInk }};"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9095;</span></div>
+    <div style="flex:1; min-height:0;">
+      <dc-import name="WelcomeFrame" mode="chips" cur="{{ curWA }}" themes="{{ listWA }}" hint-size="100%,100%"></dc-import>
+    </div>
+  </div>
+</div>
+
+<!-- ============ WELCOME · SWATCH RAIL ============ -->
+<div style="position:absolute; left:460px; top:600px; width:360px;">
+  <div data-drags-parent="1" style="font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.05em; color:#5a5a5a; margin-bottom:10px; cursor:grab;">WELCOME &middot; B — swatch rail + live preview</div>
+  <div style="width:360px; height:740px; background:#0a0a0a; border:3px solid #0a0a0a; border-radius:38px; box-shadow:0 1px 3px rgba(0,0,0,.18); overflow:hidden; display:flex; flex-direction:column;">
+    <div style="flex:none; height:28px; background:{{ curWB.status }}; border-bottom:2px solid {{ curWB.borderCol }}; display:flex; align-items:center; justify-content:space-between; padding:0 18px; font-family:'DM Mono',monospace; font-size:11px; color:{{ curWB.statusInk }};"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9095;</span></div>
+    <div style="flex:1; min-height:0;">
+      <dc-import name="WelcomeFrame" mode="rail" cur="{{ curWB }}" themes="{{ listWB }}" hint-size="100%,100%"></dc-import>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SETTINGS · SAMPLE-CARD ROWS ============ -->
+<div style="position:absolute; left:920px; top:600px; width:360px;">
+  <div data-drags-parent="1" style="font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.05em; color:#5a5a5a; margin-bottom:10px; cursor:grab;">SETTINGS &middot; A — sample-card rows <span style="color:#9a9a9a;">(as shipped)</span></div>
+  <div style="width:360px; height:740px; background:#0a0a0a; border:3px solid #0a0a0a; border-radius:38px; box-shadow:0 1px 3px rgba(0,0,0,.18); overflow:hidden; display:flex; flex-direction:column;">
+    <div style="flex:none; height:28px; background:{{ curSA.status }}; border-bottom:2px solid {{ curSA.borderCol }}; display:flex; align-items:center; justify-content:space-between; padding:0 18px; font-family:'DM Mono',monospace; font-size:11px; color:{{ curSA.statusInk }};"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9095;</span></div>
+    <div style="flex:1; min-height:0;">
+      <dc-import name="SettingsFrame" mode="rows" cur="{{ curSA }}" themes="{{ listSA }}" density-rows="{{ densSA }}" on-replay="{{ noop }}" hint-size="100%,100%"></dc-import>
+    </div>
+    <div style="flex:none; background:#0a0a0a; padding:9px 12px 13px;">
+      <div style="display:flex; gap:6px; height:50px; border:2.5px solid {{ curSA.borderCol }}; border-radius:14px; background:{{ curSA.surface }}; padding:5px;">
+        <div style="flex:1; display:flex; align-items:center; justify-content:center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{ curSA.muted }}" stroke-width="2.5"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="4"></circle></svg></div>
+        <div style="flex:1; display:flex; align-items:center; justify-content:center;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="{{ curSA.muted }}" stroke-width="2.5" stroke-linejoin="round"><path d="M8.5 3l2.4 6.6M15.5 3l-2.4 6.6"></path><circle cx="12" cy="15" r="6"></circle></svg></div>
+        <div style="flex:1.9; display:flex; align-items:center; justify-content:center; gap:7px; border:2px solid {{ curSA.borderCol }}; border-radius:9px; background:{{ curSA.accent }};"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="{{ curSA.accentFg }}" stroke-width="2.5" stroke-linejoin="round"><circle cx="12" cy="12" r="3.4"></circle><path d="M12 2.6v3.2M12 18.2v3.2M21.4 12h-3.2M5.8 12H2.6M18.6 5.4l-2.3 2.3M7.7 16.3l-2.3 2.3M18.6 18.6l-2.3-2.3M7.7 7.7 5.4 5.4"></path></svg><span style="font-family:{{ curSA.headFont }}; font-weight:{{ curSA.headW }}; font-size:13px; color:{{ curSA.accentFg }};">Settings</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SETTINGS · CHIP GRID ============ -->
+<div style="position:absolute; left:1380px; top:600px; width:360px;">
+  <div data-drags-parent="1" style="font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.05em; color:#5a5a5a; margin-bottom:10px; cursor:grab;">SETTINGS &middot; B — chip grid <span style="color:#9a9a9a;">(unify w/ Welcome A)</span></div>
+  <div style="width:360px; height:740px; background:#0a0a0a; border:3px solid #0a0a0a; border-radius:38px; box-shadow:0 1px 3px rgba(0,0,0,.18); overflow:hidden; display:flex; flex-direction:column;">
+    <div style="flex:none; height:28px; background:{{ curSB.status }}; border-bottom:2px solid {{ curSB.borderCol }}; display:flex; align-items:center; justify-content:space-between; padding:0 18px; font-family:'DM Mono',monospace; font-size:11px; color:{{ curSB.statusInk }};"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9095;</span></div>
+    <div style="flex:1; min-height:0;">
+      <dc-import name="SettingsFrame" mode="chips" cur="{{ curSB }}" themes="{{ listSB }}" density-rows="{{ densSB }}" on-replay="{{ noop }}" hint-size="100%,100%"></dc-import>
+    </div>
+    <div style="flex:none; background:#0a0a0a; padding:9px 12px 13px;">
+      <div style="display:flex; gap:6px; height:50px; border:2.5px solid {{ curSB.borderCol }}; border-radius:14px; background:{{ curSB.surface }}; padding:5px;">
+        <div style="flex:1; display:flex; align-items:center; justify-content:center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{ curSB.muted }}" stroke-width="2.5"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="4"></circle></svg></div>
+        <div style="flex:1; display:flex; align-items:center; justify-content:center;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="{{ curSB.muted }}" stroke-width="2.5" stroke-linejoin="round"><path d="M8.5 3l2.4 6.6M15.5 3l-2.4 6.6"></path><circle cx="12" cy="15" r="6"></circle></svg></div>
+        <div style="flex:1.9; display:flex; align-items:center; justify-content:center; gap:7px; border:2px solid {{ curSB.borderCol }}; border-radius:9px; background:{{ curSB.accent }};"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="{{ curSB.accentFg }}" stroke-width="2.5" stroke-linejoin="round"><circle cx="12" cy="12" r="3.4"></circle><path d="M12 2.6v3.2M12 18.2v3.2M21.4 12h-3.2M5.8 12H2.6M18.6 5.4l-2.3 2.3M7.7 16.3l-2.3 2.3M18.6 18.6l-2.3-2.3M7.7 7.7 5.4 5.4"></path></svg><span style="font-family:{{ curSB.headFont }}; font-weight:{{ curSB.headW }}; font-size:13px; color:{{ curSB.accentFg }};">Settings</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SETTINGS · CONDENSED LIST ============ -->
+<div style="position:absolute; left:1840px; top:600px; width:360px;">
+  <div data-drags-parent="1" style="font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.05em; color:#5a5a5a; margin-bottom:10px; cursor:grab;">SETTINGS &middot; C — condensed list <span style="color:#9a9a9a;">(scannable)</span></div>
+  <div style="width:360px; height:740px; background:#0a0a0a; border:3px solid #0a0a0a; border-radius:38px; box-shadow:0 1px 3px rgba(0,0,0,.18); overflow:hidden; display:flex; flex-direction:column;">
+    <div style="flex:none; height:28px; background:{{ curSC.status }}; border-bottom:2px solid {{ curSC.borderCol }}; display:flex; align-items:center; justify-content:space-between; padding:0 18px; font-family:'DM Mono',monospace; font-size:11px; color:{{ curSC.statusInk }};"><span>9:41</span><span>&#9679;&#9679;&#9679; &#9095;</span></div>
+    <div style="flex:1; min-height:0;">
+      <dc-import name="SettingsFrame" mode="condensed" cur="{{ curSC }}" themes="{{ listSC }}" density-rows="{{ densSC }}" on-replay="{{ noop }}" hint-size="100%,100%"></dc-import>
+    </div>
+    <div style="flex:none; background:#0a0a0a; padding:9px 12px 13px;">
+      <div style="display:flex; gap:6px; height:50px; border:2.5px solid {{ curSC.borderCol }}; border-radius:14px; background:{{ curSC.surface }}; padding:5px;">
+        <div style="flex:1; display:flex; align-items:center; justify-content:center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{ curSC.muted }}" stroke-width="2.5"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="4"></circle></svg></div>
+        <div style="flex:1; display:flex; align-items:center; justify-content:center;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="{{ curSC.muted }}" stroke-width="2.5" stroke-linejoin="round"><path d="M8.5 3l2.4 6.6M15.5 3l-2.4 6.6"></path><circle cx="12" cy="15" r="6"></circle></svg></div>
+        <div style="flex:1.9; display:flex; align-items:center; justify-content:center; gap:7px; border:2px solid {{ curSC.borderCol }}; border-radius:9px; background:{{ curSC.accent }};"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="{{ curSC.accentFg }}" stroke-width="2.5" stroke-linejoin="round"><circle cx="12" cy="12" r="3.4"></circle><path d="M12 2.6v3.2M12 18.2v3.2M21.4 12h-3.2M5.8 12H2.6M18.6 5.4l-2.3 2.3M7.7 16.3l-2.3 2.3M18.6 18.6l-2.3-2.3M7.7 7.7 5.4 5.4"></path></svg><span style="font-family:{{ curSC.headFont }}; font-weight:{{ curSC.headW }}; font-size:13px; color:{{ curSC.accentFg }};">Settings</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ CONTENT DENSITY · THREE STATES LIVE ============ -->
+<div style="position:absolute; left:0px; top:1430px; width:1180px;">
+  <div data-drags-parent="1" style="font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.06em; color:#5a5a5a; margin-bottom:11px; cursor:grab;">CONTENT DENSITY &middot; a separate axis — scales spacing &amp; type, independent of theme (shown on The Full Ride)</div>
+  <div style="background:#fff; border-radius:2px; box-shadow:0 1px 3px rgba(0,0,0,.08); padding:28px 30px; display:flex; gap:22px;">
+    <sc-for list="{{ densDemo }}" as="d" hint-placeholder-count="3">
+      <div style="flex:1;">
+        <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:12px;">
+          <span style="font-family:'Anybody',sans-serif; font-weight:900; font-size:16px; color:#0a0a0a;">{{ d.label }}</span>
+          <span style="font-family:'DM Mono',monospace; font-size:11px; color:#9a9a9a;">{{ d.mult }}</span>
+        </div>
+        <div style="background:#fafafa; border:2px solid #e2e2e2; border-radius:6px; padding:calc(16px * {{ d.s }}); display:flex; flex-direction:column; gap:calc(12px * {{ d.s }});">
+          <div style="display:flex; align-items:center; gap:calc(12px * {{ d.s }}); background:#fff; border:2.5px solid #0a0a0a; border-radius:4px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:calc(12px * {{ d.s }});">
+            <div style="width:calc(34px * {{ d.s }}); height:calc(34px * {{ d.s }}); flex:none; border-radius:50%; background:#a78bfa; border:2.5px solid #0a0a0a; display:flex; align-items:center; justify-content:center; color:#0a0a0a; font-size:calc(15px * {{ d.s }});">★</div>
+            <div style="flex:1; min-width:0;">
+              <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:calc(14px * {{ d.s }}); color:#0a0a0a; line-height:1.12;">Daily reading</div>
+              <div style="font-family:'DM Mono',monospace; font-size:calc(10px * {{ d.s }}); color:#525252; margin-top:3px;">3 of 5 done</div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between; background:#fff; border:2.5px solid #0a0a0a; border-radius:4px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:calc(12px * {{ d.s }}) calc(13px * {{ d.s }});">
+            <span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:calc(13px * {{ d.s }}); color:#0a0a0a;">Comfortable</span>
+            <span style="font-family:'DM Mono',monospace; font-size:calc(10px * {{ d.s }}); color:#525252;">spacing</span>
+          </div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+class Component extends DCLogic {
+  THEMES = {
+    "light-default": {
+      id: "light-default", name: "The Full Ride", desc: "Standard theme",
+      bg: "#fafafa", surface: "#ffffff", surfaceAlt: "#f3f3f3",
+      ink: "#0a0a0a", inkSoft: "#525252", muted: "#9a9a9a",
+      band: "#a78bfa", bandInk: "#0a0a0a", bandSub: "#3a2d6b",
+      accent: "#a78bfa", accentFg: "#0a0a0a", primary: "#2563eb", primaryFg: "#ffffff",
+      check: "#7c5cff", sel: "#7c5cff",
+      cardBorder: "2.5px solid #0a0a0a", cardShadow: "3px 3px 0 rgba(10,10,10,0.85)",
+      radius: "4px", borderCol: "#0a0a0a", status: "#ffe50c", statusInk: "#0a0a0a",
+      headFont: "'Anybody',sans-serif", headW: "900", bodyFont: "'Instrument Sans',sans-serif",
+      monoFont: "'DM Mono',monospace", lineH: "1.5", fs: "1",
+    },
+    "dark-default": {
+      id: "dark-default", name: "Night Ride", desc: "Dark mode",
+      bg: "#1a1033", surface: "#241845", surfaceAlt: "#2d1f52",
+      ink: "#fafafa", inkSoft: "#cfc7e0", muted: "#a89cc4",
+      band: "#2a1d4e", bandInk: "#fafafa", bandSub: "#a89cc4",
+      accent: "#c4b5fd", accentFg: "#1a1033", primary: "#5eead4", primaryFg: "#0a1f1a",
+      check: "#5eead4", sel: "#5eead4",
+      cardBorder: "2px solid #4e3f73", cardShadow: "none",
+      radius: "6px", borderCol: "#4e3f73", status: "#ffe50c", statusInk: "#0a0a0a",
+      headFont: "'Anybody',sans-serif", headW: "900", bodyFont: "'Instrument Sans',sans-serif",
+      monoFont: "'DM Mono',monospace", lineH: "1.5", fs: "1",
+    },
+    "light-highContrast": {
+      id: "light-highContrast", name: "Bold Ink", desc: "High contrast (WCAG AAA)",
+      bg: "#ffffff", surface: "#ffffff", surfaceAlt: "#f0f0f0",
+      ink: "#000000", inkSoft: "#000000", muted: "#2a2a2a",
+      band: "#000000", bandInk: "#ffffff", bandSub: "#cfcfcf",
+      accent: "#000000", accentFg: "#ffffff", primary: "#000000", primaryFg: "#ffffff",
+      check: "#0055cc", sel: "#0055cc",
+      cardBorder: "3px solid #000000", cardShadow: "none",
+      radius: "2px", borderCol: "#000000", status: "#ffffff", statusInk: "#000000",
+      headFont: "'Anybody',sans-serif", headW: "900", bodyFont: "'Instrument Sans',sans-serif",
+      monoFont: "'DM Mono',monospace", lineH: "1.45", fs: "1",
+    },
+    "light-dyslexia": {
+      id: "light-dyslexia", name: "Warm Studio", desc: "Dyslexia-friendly",
+      bg: "#f8f5e4", surface: "#f8f5e4", surfaceAlt: "#f0edd8",
+      ink: "#333333", inkSoft: "#555555", muted: "#7a755f",
+      band: "#8860a0", bandInk: "#f8f5e4", bandSub: "#e9ddf0",
+      accent: "#8860a0", accentFg: "#ffffff", primary: "#4e7d9e", primaryFg: "#ffffff",
+      check: "#4e7d9e", sel: "#4e7d9e",
+      cardBorder: "2px solid #c8c3a9", cardShadow: "0 2px 5px rgba(80,60,20,0.12)",
+      radius: "8px", borderCol: "#c8c3a9", status: "#f5e6a0", statusInk: "#333333",
+      headFont: "'Lexend',sans-serif", headW: "700", bodyFont: "'Lexend',sans-serif",
+      monoFont: "'DM Mono',monospace", lineH: "1.7", fs: "1",
+    },
+    "light-autismFriendly": {
+      id: "light-autismFriendly", name: "Still Water", desc: "Autism-friendly",
+      bg: "#f7f7f7", surface: "#ffffff", surfaceAlt: "#eeeeee",
+      ink: "#333333", inkSoft: "#555555", muted: "#777777",
+      band: "#8a7a9a", bandInk: "#ffffff", bandSub: "#e6e0ee",
+      accent: "#8a7a9a", accentFg: "#ffffff", primary: "#4d6d7d", primaryFg: "#ffffff",
+      check: "#4d6d7d", sel: "#4d6d7d",
+      cardBorder: "1px solid #dddddd", cardShadow: "none",
+      radius: "6px", borderCol: "#dddddd", status: "#d5c88a", statusInk: "#333333",
+      headFont: "Arial,sans-serif", headW: "700", bodyFont: "Arial,sans-serif",
+      monoFont: "'DM Mono',monospace", lineH: "1.55", fs: "1",
+    },
+    "light-lowVision": {
+      id: "light-lowVision", name: "Loud & Clear", desc: "Low vision support",
+      bg: "#ffffff", surface: "#ffffff", surfaceAlt: "#f0f0f0",
+      ink: "#111111", inkSoft: "#333333", muted: "#333333",
+      band: "#003d99", bandInk: "#ffffff", bandSub: "#bcd0f0",
+      accent: "#003d99", accentFg: "#ffffff", primary: "#003d99", primaryFg: "#ffffff",
+      check: "#003d99", sel: "#003d99",
+      cardBorder: "3px solid #555555", cardShadow: "none",
+      radius: "6px", borderCol: "#555555", status: "#ffe50c", statusInk: "#000000",
+      headFont: "'Atkinson Hyperlegible',sans-serif", headW: "700", bodyFont: "'Atkinson Hyperlegible',sans-serif",
+      monoFont: "'DM Mono',monospace", lineH: "1.6", fs: "1.2",
+    },
+    "light-lowInfo": {
+      id: "light-lowInfo", name: "Clean Signal", desc: "Reduced visual noise",
+      bg: "#ffffff", surface: "#ffffff", surfaceAlt: "#f5f5f5",
+      ink: "#222222", inkSoft: "#444444", muted: "#666666",
+      band: "#222222", bandInk: "#ffffff", bandSub: "#bbbbbb",
+      accent: "#222222", accentFg: "#ffffff", primary: "#222222", primaryFg: "#ffffff",
+      check: "#222222", sel: "#222222",
+      cardBorder: "2px solid #cccccc", cardShadow: "none",
+      radius: "2px", borderCol: "#cccccc", status: "#ffffff", statusInk: "#222222",
+      headFont: "'Atkinson Hyperlegible',sans-serif", headW: "700", bodyFont: "'Atkinson Hyperlegible',sans-serif",
+      monoFont: "'DM Mono',monospace", lineH: "1.6", fs: "1",
+    },
+  };
+
+  DENSITIES = [
+    { id: "compact", label: "Compact", desc: "Tighter spacing (0.75×)" },
+    { id: "default", label: "Default", desc: "Standard spacing" },
+    { id: "comfortable", label: "Comfortable", desc: "Roomier spacing (1.25×)" },
+  ];
+
+  state = {
+    wA: "light-default", wB: "light-dyslexia",
+    sA: "dark-default", sB: "light-highContrast", sC: "light-lowVision",
+    dA: "default", dB: "default", dC: "default",
+  };
+
+  pick(frame, id) { this.setState({ [frame]: id }); }
+  pickD(frame, id) { this.setState({ [frame]: id }); }
+
+  buildThemes(frameKey) {
+    const sel = this.state[frameKey];
+    const cur = this.THEMES[sel];
+    return Object.values(this.THEMES).map((tk, i) => {
+      const selected = tk.id === sel;
+      return {
+        ...tk,
+        check: selected ? "✓" : "",
+        check2: tk.check,
+        pick: () => this.pick(frameKey, tk.id),
+        chipBorder: selected ? "3px solid " + tk.sel : "2px solid " + tk.borderCol,
+        rowBorder: selected ? "2.5px solid " + tk.sel : "2px solid " + tk.borderCol,
+        rowBg: selected ? tk.surfaceAlt : tk.surface,
+        rowShadow: tk.cardShadow,
+        railBorder: selected ? "3px solid " + tk.sel : "2px solid " + tk.borderCol,
+        railShadow: selected ? "0 0 0 3px rgba(0,0,0,0.10)" : "none",
+        divider: i === 0 ? "none" : "1px solid " + cur.borderCol,
+        condBg: selected ? cur.surfaceAlt : "transparent",
+      };
+    });
+  }
+
+  renderVals() {
+    const s = this.state;
+    const T = this.THEMES;
+    return {
+      allThemes: Object.values(T),
+      noop: () => {},
+      curWA: T[s.wA], listWA: this.buildThemes("wA"),
+      curWB: T[s.wB], listWB: this.buildThemes("wB"),
+      curSA: T[s.sA], listSA: this.buildThemes("sA"), densSA: this.buildDensRows("dA", s.sA),
+      curSB: T[s.sB], listSB: this.buildThemes("sB"), densSB: this.buildDensRows("dB", s.sB),
+      curSC: T[s.sC], listSC: this.buildThemes("sC"), densSC: this.buildDensRows("dC", s.sC),
+      densDemo: [
+        { label: "Compact", mult: "0.75×", s: "0.75" },
+        { label: "Default", mult: "1.0×", s: "1" },
+        { label: "Comfortable", mult: "1.25×", s: "1.25" },
+      ],
+    };
+  }
+
+  buildDensRows(frameKey, themeId) {
+    const sel = this.state[frameKey];
+    const cur = this.THEMES[themeId];
+    return this.DENSITIES.map((d, i) => ({
+      ...d,
+      check: d.id === sel ? "✓" : "",
+      rowBg: d.id === sel ? cur.surfaceAlt : "transparent",
+      divider: i === 0 ? "none" : "1px solid " + cur.borderCol,
+      pick: () => this.pickD(frameKey, d.id),
+    }));
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wght@700;800;900&family=Instrument+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+</style>
+</helmet>
+
+<div style="font-family: 'Instrument Sans', system-ui, sans-serif; width: max-content; min-width: 100%; min-height: 100vh; box-sizing: border-box; padding: 48px; background: #e5e5e5; color: #0a0a0a;">
+
+  <!-- heading -->
+  <div style="max-width: 900px; margin-bottom: 30px;">
+    <div style="font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:#525252; margin-bottom:10px;">Direction C &middot; create flow + edit view</div>
+    <h1 style="font-family:'Anybody',sans-serif; font-weight:900; font-size:37px; line-height:1.03; letter-spacing:-0.02em; margin:0 0 14px;">CREATE WALKS YOU THROUGH IT. EDITING DROPS YOU IN.</h1>
+    <p style="font-size:15px; line-height:1.6; margin:0; max-width:770px; color:#404040;">Guided creation is a short, calm sequence &mdash; one ask per screen. Coming back later to adjust skips the wizard and lands straight in the step list. Both share the same building blocks.</p>
+  </div>
+
+  <!-- ===== CREATE FLOW ===== -->
+  <div style="font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:#525252; margin-bottom:16px;">Creating a goal &mdash; 4 calm screens</div>
+  <div style="display:flex; gap:26px; align-items:flex-start; margin-bottom:56px;">
+
+    <!-- 1 NAME -->
+    <div style="flex:none; width:296px;">
+      <div style="font-family:'DM Mono',monospace; font-size:11px; color:#737373; margin-bottom:12px;">1 &middot; Name it</div>
+      <div style="width:296px; height:640px; background:#fafafa; border:3px solid #0a0a0a; border-radius:36px; box-shadow:8px 8px 0 rgba(10,10,10,0.18); overflow:hidden; display:flex; flex-direction:column;">
+        <div style="background:#a78bfa; flex:none;">
+          <div style="height:26px; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font-family:'DM Mono',monospace; font-size:11px; color:#0a0a0a;"><span>17:40</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px;"><span style="width:16px;"></span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px; color:#0a0a0a;">New goal</span><span style="font-size:18px; color:#0a0a0a;">&times;</span></div>
+        </div>
+        <div style="display:flex; gap:6px; padding:14px 18px 0; flex:none;">
+          <div style="flex:1; height:6px; background:#ffe50c; border:2px solid #0a0a0a;"></div>
+          <div style="flex:1; height:6px; background:#fff; border:2px solid #0a0a0a;"></div>
+          <div style="flex:1; height:6px; background:#fff; border:2px solid #0a0a0a;"></div>
+          <div style="flex:1; height:6px; background:#fff; border:2px solid #0a0a0a;"></div>
+        </div>
+        <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:0 22px;">
+          <div style="font-family:'DM Mono',monospace; font-size:11px; color:#737373; text-transform:uppercase; margin-bottom:12px;">Step 1 of 4</div>
+          <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:24px; line-height:1.15; margin-bottom:18px;">What do you want to work toward?</div>
+          <div style="background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px 14px; margin-bottom:12px;"><span style="font-size:16px;">Build a birdhouse</span><span style="color:#2563eb; font-weight:700;">|</span></div>
+          <div style="font-size:13px; line-height:1.5; color:#737373;">Something you&rsquo;ll show progress on.</div>
+        </div>
+        <div style="flex:none; padding:14px 18px 22px;">
+          <div style="height:52px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px; font-weight:700;">Next &rarr;</div>
+          <div style="text-align:center; margin-top:12px; font-size:13px; color:#525252; font-weight:700;">or <span style="color:#2563eb;">Quick add &mdash; skip to the list &rsaquo;</span></div>
+        </div>
+      </div>
+      <div style="font-size:12.5px; line-height:1.5; color:#404040; margin-top:12px;">The name, on its own. (Your current New&nbsp;Goal modal &mdash; barely changed.)</div>
+    </div>
+
+    <div style="flex:none; align-self:center; font-size:26px; color:#0a0a0a;">&rarr;</div>
+
+    <!-- 2 FIRST STEP -->
+    <div style="flex:none; width:296px;">
+      <div style="font-family:'DM Mono',monospace; font-size:11px; color:#737373; margin-bottom:12px;">2 &middot; First step</div>
+      <div style="width:296px; height:640px; background:#fafafa; border:3px solid #0a0a0a; border-radius:36px; box-shadow:8px 8px 0 rgba(10,10,10,0.18); overflow:hidden; display:flex; flex-direction:column;">
+        <div style="background:#a78bfa; flex:none;">
+          <div style="height:26px; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font-family:'DM Mono',monospace; font-size:11px; color:#0a0a0a;"><span>17:40</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px;"><span style="font-size:20px; color:#0a0a0a;">&larr;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px; color:#0a0a0a;">New goal</span><span style="width:16px;"></span></div>
+        </div>
+        <div style="display:flex; gap:6px; padding:14px 18px 0; flex:none;">
+          <div style="flex:1; height:6px; background:#ffe50c; border:2px solid #0a0a0a;"></div>
+          <div style="flex:1; height:6px; background:#ffe50c; border:2px solid #0a0a0a;"></div>
+          <div style="flex:1; height:6px; background:#fff; border:2px solid #0a0a0a;"></div>
+          <div style="flex:1; height:6px; background:#fff; border:2px solid #0a0a0a;"></div>
+        </div>
+        <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:0 22px;">
+          <div style="font-family:'DM Mono',monospace; font-size:11px; color:#737373; text-transform:uppercase; margin-bottom:4px;">Goal</div>
+          <div style="font-size:14px; color:#525252; margin-bottom:24px;">Build a birdhouse</div>
+          <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:23px; line-height:1.15; margin-bottom:16px;">What&rsquo;s the first step?</div>
+          <div style="background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:13px 14px; margin-bottom:14px;"><span style="font-size:16px;">Sand the edges</span></div>
+          <div style="display:flex; align-items:center; gap:8px;"><span style="font-family:'DM Mono',monospace; font-size:11px; color:#737373; text-transform:uppercase;">Evidence</span><span style="display:inline-flex; align-items:center; gap:5px; background:#ede9fe; border:2px solid #0a0a0a; border-radius:9999px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); font-family:'DM Mono',monospace; font-size:12px; padding:3px 9px;">&#128221; Note</span><span style="font-size:12px; color:#2563eb; font-weight:700;">change</span></div>
+        </div>
+        <div style="flex:none; padding:14px 18px 22px;">
+          <div style="height:52px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px; font-weight:700;">Next &rarr;</div>
+        </div>
+      </div>
+      <div style="font-size:12.5px; line-height:1.5; color:#404040; margin-top:12px;">One step + its required evidence type. Note is the default; tap to change.</div>
+    </div>
+
+    <div style="flex:none; align-self:center; font-size:26px; color:#0a0a0a;">&rarr;</div>
+
+    <!-- 3 BUILD -->
+    <div style="flex:none; width:296px;">
+      <div style="font-family:'DM Mono',monospace; font-size:11px; color:#737373; margin-bottom:12px;">3 &middot; Build it up</div>
+      <div style="width:296px; height:640px; background:#fafafa; border:3px solid #0a0a0a; border-radius:36px; box-shadow:8px 8px 0 rgba(10,10,10,0.18); overflow:hidden; display:flex; flex-direction:column;">
+        <div style="background:#a78bfa; flex:none;">
+          <div style="height:26px; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font-family:'DM Mono',monospace; font-size:11px; color:#0a0a0a;"><span>17:40</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px;"><span style="font-size:20px; color:#0a0a0a;">&larr;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px; color:#0a0a0a;">New goal</span><span style="width:16px;"></span></div>
+        </div>
+        <div style="display:flex; gap:6px; padding:14px 18px 0; flex:none;">
+          <div style="flex:1; height:6px; background:#ffe50c; border:2px solid #0a0a0a;"></div>
+          <div style="flex:1; height:6px; background:#ffe50c; border:2px solid #0a0a0a;"></div>
+          <div style="flex:1; height:6px; background:#ffe50c; border:2px solid #0a0a0a;"></div>
+          <div style="flex:1; height:6px; background:#fff; border:2px solid #0a0a0a;"></div>
+        </div>
+        <div style="flex:1; padding:16px 18px 0; overflow:hidden;">
+          <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:12px;"><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:17px;">Your steps</span><span style="font-family:'DM Mono',monospace; font-size:12px; color:#737373;">2</span></div>
+          <div style="background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:12px; margin-bottom:10px;">
+            <div style="display:flex; align-items:center; gap:9px;"><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px;">1</span><span style="flex:1; font-size:14px;">Sand the edges</span><span style="display:inline-flex; align-items:center; background:#ede9fe; border:2px solid #0a0a0a; border-radius:9999px; font-size:11px; padding:2px 6px;">&#128221;</span></div>
+            <div style="margin-top:10px; padding-left:12px; border-left:3px solid #d4f4e7;">
+              <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.08em; text-transform:uppercase; color:#5a8a6a; margin-bottom:6px;">Smaller steps</div>
+              <div style="display:flex; align-items:center; gap:8px; color:#525252;"><span style="font-size:12px;">&#8627;</span><span style="flex:1; font-size:12px;">Check by hand</span><span style="font-size:11px;">&#128221;</span></div>
+            </div>
+            <div style="margin-top:9px; font-size:11.5px; color:#2563eb; font-weight:700;">&#65291; add a smaller step</div>
+          </div>
+          <div style="background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:12px; margin-bottom:12px;">
+            <div style="display:flex; align-items:center; gap:9px;"><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px;">2</span><span style="flex:1; font-size:14px;">Paint it</span><span style="display:inline-flex; align-items:center; background:#ede9fe; border:2px solid #0a0a0a; border-radius:9999px; font-size:11px; padding:2px 6px;">&#128247;</span></div>
+            <div style="margin-top:9px; font-size:11.5px; color:#5a8a6a; font-weight:700;">&#9866; feeling big? break it into smaller steps</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:7px; color:#2563eb; font-weight:700; font-size:13px;"><span style="font-size:15px;">+</span> add another step</div>
+        </div>
+        <div style="flex:none; padding:12px 18px 22px;">
+          <div style="height:52px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px; font-weight:700;">I&rsquo;m ready &rarr;</div>
+        </div>
+      </div>
+      <div style="font-size:12.5px; line-height:1.5; color:#404040; margin-top:12px;">Add more, or break a big step into smaller ones. This is the shared step list.</div>
+    </div>
+
+    <div style="flex:none; align-self:center; font-size:26px; color:#0a0a0a;">&rarr;</div>
+
+    <!-- 4 READY -->
+    <div style="flex:none; width:296px;">
+      <div style="font-family:'DM Mono',monospace; font-size:11px; color:#737373; margin-bottom:12px;">4 &middot; You&rsquo;re set</div>
+      <div style="width:296px; height:640px; background:#fafafa; border:3px solid #0a0a0a; border-radius:36px; box-shadow:8px 8px 0 rgba(10,10,10,0.18); overflow:hidden; display:flex; flex-direction:column;">
+        <div style="background:#a78bfa; flex:none;">
+          <div style="height:26px; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font-family:'DM Mono',monospace; font-size:11px; color:#0a0a0a;"><span>17:40</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px;"><span style="font-size:20px; color:#0a0a0a;">&larr;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px; color:#0a0a0a;">New goal</span><span style="width:16px;"></span></div>
+        </div>
+        <div style="display:flex; gap:6px; padding:14px 18px 0; flex:none;">
+          <div style="flex:1; height:6px; background:#ffe50c; border:2px solid #0a0a0a;"></div>
+          <div style="flex:1; height:6px; background:#ffe50c; border:2px solid #0a0a0a;"></div>
+          <div style="flex:1; height:6px; background:#ffe50c; border:2px solid #0a0a0a;"></div>
+          <div style="flex:1; height:6px; background:#ffe50c; border:2px solid #0a0a0a;"></div>
+        </div>
+        <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:0 22px;">
+          <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:32px; line-height:1.05; margin-bottom:20px;">You&rsquo;re set.</div>
+          <div style="background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:16px; margin-bottom:16px;">
+            <div style="font-family:'Anybody',sans-serif; font-weight:800; font-size:17px; margin-bottom:6px;">Build a birdhouse</div>
+            <div style="font-family:'DM Mono',monospace; font-size:12px; color:#525252;">2 steps &middot; evidence on each</div>
+          </div>
+          <div style="display:flex; gap:9px; align-items:flex-start; background:#ede9fe; border:2px solid #0a0a0a; border-radius:6px; padding:11px 12px;"><span style="font-size:15px;">&#127942;</span><span style="font-size:12.5px; line-height:1.45; color:#3b1f6b;">You&rsquo;ll design your badge when you finish.</span></div>
+        </div>
+        <div style="flex:none; padding:14px 18px 22px;">
+          <div style="height:54px; background:#2563eb; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:17px; font-weight:700;">Start Working</div>
+        </div>
+      </div>
+      <div style="font-size:12.5px; line-height:1.5; color:#404040; margin-top:12px;">A calm hand-off into Focus Mode. Badge comes later, at completion.</div>
+    </div>
+
+  </div>
+
+  <!-- ===== EDIT VIEW ===== -->
+  <div style="font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:#525252; margin-bottom:16px;">Adjusting later &mdash; no wizard, straight into the list</div>
+  <div style="display:flex; gap:40px; align-items:flex-start;">
+
+    <!-- edit phone -->
+    <div style="flex:none; width:330px;">
+      <div style="width:330px; height:700px; background:#fafafa; border:3px solid #0a0a0a; border-radius:38px; box-shadow:8px 8px 0 rgba(10,10,10,0.18); overflow:hidden; display:flex; flex-direction:column;">
+        <div style="background:#a78bfa; flex:none;">
+          <div style="height:28px; display:flex; align-items:center; justify-content:space-between; padding:0 18px; font-family:'DM Mono',monospace; font-size:12px; color:#0a0a0a;"><span>17:41</span><span>&#9679;&#9679;&#9679; &#9923;</span></div>
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:11px 16px;"><span style="font-size:22px; color:#0a0a0a;">&larr;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:16px; color:#0a0a0a;">Edit goal</span><span style="font-size:20px; color:#0a0a0a; font-weight:700;">&#8943;</span></div>
+        </div>
+        <div style="flex:1; padding:16px; overflow:hidden;">
+          <!-- editable title -->
+          <div style="font-family:'DM Mono',monospace; font-size:11px; color:#737373; text-transform:uppercase; margin-bottom:6px;">Goal</div>
+          <div style="display:flex; align-items:center; gap:8px; background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:12px 14px; margin-bottom:18px;"><span style="flex:1; font-family:'Anybody',sans-serif; font-weight:900; font-size:20px;">Build a birdhouse</span><span style="font-size:15px; color:#737373;">&#9998;</span></div>
+
+          <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:12px;"><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:17px;">Steps</span><span style="font-family:'DM Mono',monospace; font-size:12px; color:#737373;">2</span></div>
+          <!-- step 1 with smaller steps -->
+          <div style="background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:11px 12px; margin-bottom:9px;">
+            <div style="display:flex; align-items:center; gap:9px;"><span style="color:#a3a3a3; font-size:16px;">&#8801;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px;">1</span><span style="flex:1; font-size:14px;">Sand the edges</span><span style="display:inline-flex; background:#ede9fe; border:2px solid #0a0a0a; border-radius:9999px; font-size:11px; padding:2px 6px;">&#128221;</span><span style="color:#a3a3a3; font-size:14px; margin-left:4px;">&times;</span></div>
+            <div style="margin-top:9px; padding-left:12px; border-left:3px solid #d4f4e7;">
+              <div style="display:flex; align-items:center; gap:8px; color:#525252;"><span style="color:#a3a3a3; font-size:13px;">&#8801;</span><span style="flex:1; font-size:12px;">Check by hand</span><span style="font-size:11px;">&#128221;</span><span style="color:#a3a3a3; font-size:12px;">&times;</span></div>
+              <div style="margin-top:8px; font-size:11.5px; color:#2563eb; font-weight:700;">&#65291; add a smaller step</div>
+            </div>
+          </div>
+          <!-- step 2 -->
+          <div style="background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:2px 2px 0 rgba(10,10,10,0.85); padding:11px 12px; margin-bottom:9px;">
+            <div style="display:flex; align-items:center; gap:9px;"><span style="color:#a3a3a3; font-size:16px;">&#8801;</span><span style="font-family:'Anybody',sans-serif; font-weight:800; font-size:14px;">2</span><span style="flex:1; font-size:14px;">Paint it</span><span style="display:inline-flex; background:#ede9fe; border:2px solid #0a0a0a; border-radius:9999px; font-size:11px; padding:2px 6px;">&#128247;</span><span style="color:#a3a3a3; font-size:14px; margin-left:4px;">&times;</span></div>
+            <div style="margin-top:9px; font-size:11.5px; color:#5a8a6a; font-weight:700;">&#9866; break into smaller steps</div>
+          </div>
+          <div style="display:flex; gap:10px; margin-top:4px;">
+            <div style="flex:1; background:#fff; border:3px solid #0a0a0a; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); padding:10px 12px;"><span style="font-size:14px; color:#9a9a9a;">Add step...</span></div>
+            <div style="flex:none; width:48px; background:#2563eb; border:3px solid #0a0a0a; border-radius:6px; box-shadow:3px 3px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#fff; font-size:22px; font-weight:700;">+</div>
+          </div>
+        </div>
+        <div style="flex:none; padding:14px 16px 22px; border-top:2px solid #e5e5e5;">
+          <div style="height:52px; background:#fff; border:3px solid #0a0a0a; border-radius:4px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); display:flex; align-items:center; justify-content:center; color:#0a0a0a; font-size:16px; font-weight:700;">Done</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- explainer -->
+    <div style="flex:none; width:320px; align-self:flex-start; display:flex; flex-direction:column; gap:18px;">
+      <div style="background:#fff; border:3px solid #0a0a0a; border-radius:2px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); padding:20px;">
+        <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:15px; text-transform:uppercase; margin-bottom:12px;">How it differs</div>
+        <div style="display:flex; flex-direction:column; gap:11px; font-size:13px; line-height:1.5; color:#404040;">
+          <div>&bull; Reached from the <strong>pencil in Focus Mode</strong> &mdash; no wizard, no progress bar.</div>
+          <div>&bull; The <strong>same step list</strong> as create-screen 3, but persistent: drag <span style="font-family:'DM Mono',monospace;">&#8801;</span> to reorder, tap to rename, &times; to remove.</div>
+          <div>&bull; Title is editable inline; <strong>Delete goal lives in the &#8943; menu</strong>, off the main surface.</div>
+          <div>&bull; <strong>Done</strong> returns you to Focus &mdash; no &ldquo;Start working&rdquo; commitment.</div>
+        </div>
+      </div>
+      <div style="background:#d4f4e7; border:3px solid #0a0a0a; border-radius:2px; box-shadow:4px 4px 0 rgba(10,10,10,0.85); padding:18px;">
+        <div style="font-family:'Anybody',sans-serif; font-weight:900; font-size:14px; text-transform:uppercase; color:#065f46; margin-bottom:10px;">&#10003; Quick add</div>
+        <div style="font-size:13px; line-height:1.5; color:#0a3a2c;">From the name screen, confident users tap <strong>Quick add</strong> to skip the guide and land in the full list (this edit view) &mdash; build every step at once. The guided path stays the default.</div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>
