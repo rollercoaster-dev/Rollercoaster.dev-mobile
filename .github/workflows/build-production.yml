@@ -52,7 +52,7 @@ jobs:
         working-directory: apps/native-rd
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.event.release.tag_name || github.ref }}
 
@@ -99,7 +99,7 @@ jobs:
         working-directory: apps/native-rd
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.event.release.tag_name || github.ref }}
 
@@ -140,7 +140,7 @@ jobs:
         working-directory: apps/native-rd
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.event.release.tag_name || github.ref }}
 
@@ -189,7 +189,7 @@ jobs:
         working-directory: apps/native-rd
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.event.release.tag_name || github.ref }}
 
@@ -242,7 +242,7 @@ jobs:
         working-directory: apps/native-rd
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.event.release.tag_name || github.ref }}
 
