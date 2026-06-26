@@ -143,6 +143,7 @@
       "action-destructive-bg": { "$value": "#fbbf24" },
       "action-destructive-fg": { "$value": "#0a0a0a" },
       "action-destructive-hover-bg": { "$value": "#fbbf24" },
+      "warning-foreground": { "$value": "#0a0a0a" },
       "action-disabled-bg": { "$value": "#3a2d5c" },
       "action-disabled-fg": { "$value": "#737373" },
       "action-disabled-border": { "$value": "#524573" },

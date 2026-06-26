@@ -106,18 +106,6 @@ const KNOWN_FAILURES = new Set<string>([
   "light-autismFriendly:destructive", // 3.02 — #333333 on #8a7a5a
   "light-autismFriendly:tabActive", // 3.94 — #ffffff on #8a7a9a
   "light-autismFriendly:tabIdle", // 3.21 — #333333 on #8a7a9a
-  // Feedback fg/bg pairs surfaced by the issue-375 root-cause fix. Themed green
-  // in the following commit, which deletes each line below as it lands.
-  "light-default:success", // 3.61 — #fafafa on #059669
-  "dark-default:warning", // 1.60 — #fafafa on #fbbf24
-  "light-highContrast:success", // 4.27 — #fafafa on #008866
-  "light-highContrast:warning", // 3.51 — #262626 on #cc5500
-  "light-dyslexia:success", // 3.94 — #fafafa on #4a8a62
-  "light-autismFriendly:success", // 3.81 — #fafafa on #5a8a6a
-  "light-autismFriendly:warning", // 3.02 — #333333 on #8a7a5a
-  "light-autismFriendly:info", // 4.29 — #fafafa on #5a7a9a
-  "light-lowVision:warning", // 2.63 — #262626 on #995500
-  "light-lowInfo:warning", // 2.77 — #222222 on #995500
 ]);
 
 describe("Theme contrast audit (all themes × canonical pairs)", () => {

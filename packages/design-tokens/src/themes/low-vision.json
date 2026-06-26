@@ -156,6 +156,7 @@
       "action-secondary-fg": { "$value": "#111111" },
       "action-destructive-bg": { "$value": "#995500" },
       "action-destructive-fg": { "$value": "#ffffff" },
+      "warning-foreground": { "$value": "#ffffff" },
       "action-disabled-fg": { "$value": "#555555" },
       "action-selection-bg": { "$value": "#003d99" },
       "action-selection-fg": { "$value": "#ffffff" },
