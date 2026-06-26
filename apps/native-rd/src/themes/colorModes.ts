@@ -42,8 +42,15 @@ export interface Colors {
   transparent: string;
   error: string;
   warning: string;
+  /** On-`warning` text. Themed per variant; emitted by the design-tokens
+   * unistyles output and present at runtime via the adapter. */
+  warningForeground: string;
   success: string;
+  /** On-`success` text. Themed per variant. */
+  successForeground: string;
   info: string;
+  /** On-`info` text. Themed per variant. */
+  infoForeground: string;
 }
 
 export const lightColors: Colors = _lightColors;

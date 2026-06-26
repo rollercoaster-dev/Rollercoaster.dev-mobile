@@ -144,15 +144,15 @@ export const lineHeightL = computeLineHeights(
 // Add semantic colors to both modes
 // ---------------------------------------------------------------------------
 
+// Feedback colors (success/warning/info + their on-colors) now flow per-theme
+// from the package's unistyles output — see build-unistyles.js. `error` has no
+// contrast pair and stays a flat palette value.
 export const lightColors = {
   ...pkgLightColors,
   accentPrimary: pkgPalette.primaryDark,
   accentSecondary: pkgLightColors.accentMint,
   transparent: "transparent",
   error: pkgPalette.error,
-  warning: pkgPalette.warning,
-  success: pkgPalette.success,
-  info: pkgPalette.info,
 };
 
 export const darkColors = {
@@ -163,9 +163,6 @@ export const darkColors = {
   textMuted: "#a89cc4",
   accentPurple: "#8d7eb0",
   error: pkgPalette.error,
-  warning: pkgPalette.warning,
-  success: pkgPalette.success,
-  info: pkgPalette.info,
 };
 
 export const colorModeConfigs = {

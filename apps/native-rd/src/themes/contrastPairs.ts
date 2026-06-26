@@ -12,12 +12,12 @@
  *
  * NOTE ON COVERAGE — these audit pairs from Theme Eval are NOT yet expressible
  * against the RN `ComposedTheme` and are intentionally absent:
- *   - `success` / `warning` / `info` foregrounds: the RN theme exposes the
- *     feedback *backgrounds* (`colors.success` etc.) but no themed on-color.
- *     Surfacing + theming those foregrounds is the issue-375 root-cause fix;
- *     each pair lands here in the same PR that introduces its token.
  *   - `journey goal`: the package emits a `journey*` token group, but it is not
  *     wired into `compose.ts`, so it cannot be read off a `ComposedTheme` here.
+ *
+ * The `success` / `warning` / `info` feedback foregrounds were surfaced in the
+ * issue-375 root-cause fix: `build-unistyles.js` now themes the on-colors
+ * per variant and the adapter flows them onto `colors.*Foreground`.
  */
 
 import type { ComposedTheme } from "./compose";
@@ -104,6 +104,30 @@ export const contrastPairs: ContrastPair[] = [
     getColors: (t) => ({
       fg: t.colors.highlightForeground,
       bg: t.colors.highlight,
+    }),
+  },
+  {
+    key: "success",
+    label: "success",
+    getColors: (t) => ({
+      fg: t.colors.successForeground,
+      bg: t.colors.success,
+    }),
+  },
+  {
+    key: "warning",
+    label: "warning",
+    getColors: (t) => ({
+      fg: t.colors.warningForeground,
+      bg: t.colors.warning,
+    }),
+  },
+  {
+    key: "info",
+    label: "info",
+    getColors: (t) => ({
+      fg: t.colors.infoForeground,
+      bg: t.colors.info,
     }),
   },
 ];
