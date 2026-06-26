@@ -42,6 +42,14 @@ jobs:
           languages: javascript-typescript
           # Use default query suite for balanced coverage
           # queries: security-extended  # Uncomment for more comprehensive scanning (may increase false positives)
+          # Design-exploration prototype bundles are HTML snapshots + copied-in stale
+          # screen code, not maintained/shipped source. Their custom {{ }} template DSL
+          # trips CodeQL's embedded-JS extractor (false-positive "expression has no
+          # effect" on onClick bindings). Excluded here to mirror the eslint + prettier
+          # ignores of the same tree (apps/native-rd/eslint.config.js, .prettierignore).
+          config: |
+            paths-ignore:
+              - 'apps/native-rd/prototypes/**'
 
       - name: Build workspace
         run: bun run build
