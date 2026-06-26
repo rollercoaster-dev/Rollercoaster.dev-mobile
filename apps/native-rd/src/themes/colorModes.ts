@@ -28,6 +28,11 @@ export interface Colors {
   accentPurpleLight: string;
   accentMint: string;
   accentYellow: string;
+  /** Attention surface (yellow band today). Themed per variant; emitted by
+   * design-tokens unistyles output and present at runtime via the adapter. */
+  highlight: string;
+  /** On-`highlight` text. Themed per variant. */
+  highlightForeground: string;
   border: string;
   shadow: string;
   focusRing: string;

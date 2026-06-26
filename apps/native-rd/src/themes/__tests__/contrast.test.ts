@@ -5,6 +5,8 @@
 
 import { getContrastRatio, meetsWCAG } from "../../utils/accessibility";
 import { lightColors, darkColors, narrativeModes } from "../adapter";
+import { themes, themeNames } from "../compose";
+import { contrastPairs, AA_NORMAL } from "../contrastPairs";
 
 describe("WCAG AA Color Contrast Compliance", () => {
   test.each([
@@ -76,5 +78,61 @@ describe("WCAG AA Color Contrast Compliance", () => {
   ] as const)("meetsWCAG %s %s requires %f ratio", (level, size, required) => {
     const result = meetsWCAG("#000000", "#ffffff", level, size);
     expect(result.required).toBe(required);
+  });
+});
+
+/**
+ * Theme-wide contrast gate — the React Native port of the "Contrast audit" in
+ * `prototypes/screen-redesign/Theme Eval.dc.html`. Loops every product theme
+ * over the canonical fg/bg pairs in `contrastPairs.ts` (the same constant the
+ * `ContrastAudit` Storybook story renders), asserting WCAG AA (4.5:1).
+ *
+ * KNOWN_FAILURES is a *shrinking* allowlist of cells that do not yet pass,
+ * captured from a fresh design-tokens build on 2026-06-26. The issue-375 theme
+ * cleanup turns these green one PR at a time. The gate enforces two invariants:
+ *   1. Any pair × theme NOT listed must pass (≥4.5) — catches new regressions.
+ *   2. Any listed entry must STILL fail — the moment a fix lands, its line must
+ *      be deleted here in the same PR or this test goes red. That keeps the
+ *      allowlist honest instead of letting fixed entries rot in place.
+ *
+ * Key format: `${themeName}:${pairKey}`.
+ */
+const KNOWN_FAILURES = new Set<string>([
+  "light-default:primary", // 3.52 — #fafafa on blue #3b82f6
+  "light-dyslexia:primary", // 4.23 — #fafafa on #4e7d9e
+  "light-dyslexia:destructive", // 4.26 — #333333 on #b5913a
+  "light-dyslexia:highlight", // 4.42 — #ffffff on #4e7d9e
+  "light-highContrast:destructive", // 4.31 — #ffffff on #cc5500
+  "light-autismFriendly:destructive", // 3.02 — #333333 on #8a7a5a
+  "light-autismFriendly:tabActive", // 3.94 — #ffffff on #8a7a9a
+  "light-autismFriendly:tabIdle", // 3.21 — #333333 on #8a7a9a
+]);
+
+describe("Theme contrast audit (all themes × canonical pairs)", () => {
+  const cases = themeNames.flatMap((name) =>
+    contrastPairs.map((pair) => [name, pair.key, pair] as const),
+  );
+
+  test.each(cases)("%s · %s meets WCAG AA", (name, _key, pair) => {
+    const { fg, bg } = pair.getColors(themes[name]);
+    const ratio = getContrastRatio(fg, bg);
+    const failKey = `${name}:${pair.key}`;
+
+    if (KNOWN_FAILURES.has(failKey)) {
+      // Ratchet: if this now passes, delete the entry from KNOWN_FAILURES.
+      expect(ratio).toBeLessThan(AA_NORMAL);
+    } else {
+      expect(ratio).toBeGreaterThanOrEqual(AA_NORMAL);
+    }
+  });
+
+  test("KNOWN_FAILURES contains no stale (unknown) keys", () => {
+    const valid = new Set(
+      themeNames.flatMap((name) =>
+        contrastPairs.map((pair) => `${name}:${pair.key}`),
+      ),
+    );
+    const stale = [...KNOWN_FAILURES].filter((k) => !valid.has(k));
+    expect(stale).toEqual([]);
   });
 });
