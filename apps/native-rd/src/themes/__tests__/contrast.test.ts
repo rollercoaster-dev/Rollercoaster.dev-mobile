@@ -97,11 +97,7 @@ describe("WCAG AA Color Contrast Compliance", () => {
  *
  * Key format: `${themeName}:${pairKey}`.
  */
-const KNOWN_FAILURES = new Set<string>([
-  "light-autismFriendly:destructive", // 3.02 — #333333 on #8a7a5a
-  "light-autismFriendly:tabActive", // 3.94 — #ffffff on #8a7a9a
-  "light-autismFriendly:tabIdle", // 3.21 — #333333 on #8a7a9a
-]);
+const KNOWN_FAILURES = new Set<string>([]);
 
 describe("Theme contrast audit (all themes × canonical pairs)", () => {
   const cases = themeNames.flatMap((name) =>
