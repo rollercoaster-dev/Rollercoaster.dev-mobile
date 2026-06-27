@@ -87,9 +87,9 @@ describe("WCAG AA Color Contrast Compliance", () => {
  * over the canonical fg/bg pairs in `contrastPairs.ts` (the same constant the
  * `ContrastAudit` Storybook story renders), asserting WCAG AA (4.5:1).
  *
- * KNOWN_FAILURES is a *shrinking* allowlist of cells that do not yet pass,
- * captured from a fresh design-tokens build on 2026-06-26. The issue-375 theme
- * cleanup turns these green one PR at a time. The gate enforces two invariants:
+ * KNOWN_FAILURES is an optional ratchet for staged contrast fixes. It should
+ * usually stay empty; only add a cell when intentionally landing the gate before
+ * its paired token recipe. The gate enforces two invariants:
  *   1. Any pair × theme NOT listed must pass (≥4.5) — catches new regressions.
  *   2. Any listed entry must STILL fail — the moment a fix lands, its line must
  *      be deleted here in the same PR or this test goes red. That keeps the
@@ -97,16 +97,7 @@ describe("WCAG AA Color Contrast Compliance", () => {
  *
  * Key format: `${themeName}:${pairKey}`.
  */
-const KNOWN_FAILURES = new Set<string>([
-  "light-default:primary", // 3.52 — #fafafa on blue #3b82f6
-  "light-dyslexia:primary", // 4.23 — #fafafa on #4e7d9e
-  "light-dyslexia:destructive", // 4.26 — #333333 on #b5913a
-  "light-dyslexia:highlight", // 4.42 — #ffffff on #4e7d9e
-  "light-highContrast:destructive", // 4.31 — #ffffff on #cc5500
-  "light-autismFriendly:destructive", // 3.02 — #333333 on #8a7a5a
-  "light-autismFriendly:tabActive", // 3.94 — #ffffff on #8a7a9a
-  "light-autismFriendly:tabIdle", // 3.21 — #333333 on #8a7a9a
-]);
+const KNOWN_FAILURES = new Set<string>([]);
 
 describe("Theme contrast audit (all themes × canonical pairs)", () => {
   const cases = themeNames.flatMap((name) =>
