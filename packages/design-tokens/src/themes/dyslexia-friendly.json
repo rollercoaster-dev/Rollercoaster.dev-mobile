@@ -48,7 +48,7 @@
     "interactive": {
       "primary": { "$value": "#4e7d9e" },
       "primary-foreground": { "$value": "#ffffff" },
-      "highlight": { "$value": "#4e7d9e" },
+      "highlight": { "$value": "#3a6280" },
       "highlight-foreground": { "$value": "#ffffff" }
     },
     "color": {
@@ -149,12 +149,12 @@
       "chrome-modal-bg": { "$value": "#f8f5e4" },
       "chrome-modal-border": { "$value": "#c8c3a9" },
       "chrome-top-bar-bg": { "$value": "#f8f5e4" },
-      "action-primary-bg": { "$value": "#4e7d9e" },
+      "action-primary-bg": { "$value": "#3a6280" },
       "action-primary-hover-bg": { "$value": "#3a6280" },
       "action-secondary-bg": { "$value": "#f8f5e4" },
       "action-secondary-fg": { "$value": "#333333" },
       "action-destructive-bg": { "$value": "#b5913a" },
-      "action-destructive-fg": { "$value": "#333333" },
+      "action-destructive-fg": { "$value": "#1a1a1a" },
       "action-selection-bg": { "$value": "#4e7d9e" },
       "action-selection-fg": { "$value": "#ffffff" },
       "surface-card-bg": { "$value": "#f8f5e4" },

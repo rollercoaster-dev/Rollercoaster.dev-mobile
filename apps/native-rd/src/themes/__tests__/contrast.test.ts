@@ -98,9 +98,6 @@ describe("WCAG AA Color Contrast Compliance", () => {
  * Key format: `${themeName}:${pairKey}`.
  */
 const KNOWN_FAILURES = new Set<string>([
-  "light-dyslexia:primary", // 4.23 — #fafafa on #4e7d9e
-  "light-dyslexia:destructive", // 4.26 — #333333 on #b5913a
-  "light-dyslexia:highlight", // 4.42 — #ffffff on #4e7d9e
   "light-autismFriendly:destructive", // 3.02 — #333333 on #8a7a5a
   "light-autismFriendly:tabActive", // 3.94 — #ffffff on #8a7a9a
   "light-autismFriendly:tabIdle", // 3.21 — #333333 on #8a7a9a
