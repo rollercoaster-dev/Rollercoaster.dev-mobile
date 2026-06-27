@@ -144,7 +144,6 @@
       "chrome-tab-bar-fg": { "$value": "#f8f5e4" },
       "chrome-tab-bar-active-fg": { "$value": "#ffffff" },
       "chrome-tab-bar-indicator": { "$value": "#ffffff" },
-      "chrome-top-bar-bg": { "$value": "#f5e6a0" },
       "chrome-top-bar-fg": { "$value": "#333333" },
       "chrome-modal-bg": { "$value": "#f8f5e4" },
       "chrome-modal-border": { "$value": "#c8c3a9" },
