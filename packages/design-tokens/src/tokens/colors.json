@@ -28,9 +28,9 @@
       "$type": "color"
     },
     "success": {
-      "$value": "#059669",
+      "$value": "#047857",
       "$type": "color",
-      "$description": "Emerald - from relief accent"
+      "$description": "Emerald-700 - darkened from #059669 for AA on off-white (#fafafa → 5.25:1)"
     },
     "success-light": {
       "$value": "#d4f4e7",

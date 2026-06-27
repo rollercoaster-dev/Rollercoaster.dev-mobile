@@ -28,6 +28,11 @@ export interface Colors {
   accentPurpleLight: string;
   accentMint: string;
   accentYellow: string;
+  /** Attention surface (yellow band today). Themed per variant; emitted by
+   * design-tokens unistyles output and present at runtime via the adapter. */
+  highlight: string;
+  /** On-`highlight` text. Themed per variant. */
+  highlightForeground: string;
   border: string;
   shadow: string;
   focusRing: string;
@@ -37,8 +42,15 @@ export interface Colors {
   transparent: string;
   error: string;
   warning: string;
+  /** On-`warning` text. Themed per variant; emitted by the design-tokens
+   * unistyles output and present at runtime via the adapter. */
+  warningForeground: string;
   success: string;
+  /** On-`success` text. Themed per variant. */
+  successForeground: string;
   info: string;
+  /** On-`info` text. Themed per variant. */
+  infoForeground: string;
 }
 
 export const lightColors: Colors = _lightColors;

@@ -90,6 +90,71 @@ function toTSObject(entries) {
 }
 
 /**
+ * Look up a dotted color path (e.g. ["gray", "800"]) in a `color` object,
+ * returning the resolved `$value` or undefined when any segment is absent.
+ */
+function lookupColor(colorObj, parts) {
+  let cursor = colorObj;
+  for (const p of parts) {
+    if (cursor == null) return undefined;
+    cursor = cursor[p];
+  }
+  return val(cursor);
+}
+
+/**
+ * Resolve a `{color.*}` reference against a theme's `color` overrides first,
+ * then the base palette. Mirrors the CSS path, where semantic refs like
+ * `{color.white}` re-resolve through each theme's `color.white` override
+ * (e.g. dark inverts it to near-black). Non-color refs / literals pass through.
+ */
+function resolveThemeColorRef(ref, themeColor, baseColorData) {
+  if (typeof ref !== "string" || !ref.startsWith("{")) return ref;
+  const path = ref.slice(1, -1);
+  if (!path.startsWith("color.")) return ref;
+  const parts = path.slice(6).split(".");
+  const fromTheme = lookupColor(themeColor, parts);
+  if (fromTheme !== undefined) return fromTheme;
+  return lookupColor(baseColorData.color, parts);
+}
+
+/**
+ * Resolve the themed feedback fg/bg pairs (success/warning/info) for a theme.
+ *
+ * Backgrounds resolve the base `semantic` ref (`{color.success}` etc.) through
+ * the theme's `color` overrides. Foregrounds take an explicit
+ * `theme.semantic[*-foreground]` override when present (the contrast-fix knob),
+ * otherwise resolve the base `semantic` foreground ref through the theme's
+ * `color` overrides — so `{color.white}` / `{color.gray.800}` follow each
+ * theme's inversions exactly as the CSS path does.
+ */
+function extractThemeFeedback(theme, baseColorData, baseSemantic) {
+  const themeColor = theme.color ?? {};
+  const themeSemantic = theme.semantic ?? {};
+
+  const bg = (key) =>
+    resolveThemeColorRef(val(baseSemantic[key]), themeColor, baseColorData);
+  const fg = (key) => {
+    const override = val(themeSemantic[key]);
+    if (override !== undefined) return override;
+    return resolveThemeColorRef(
+      val(baseSemantic[key]),
+      themeColor,
+      baseColorData,
+    );
+  };
+
+  return {
+    success: bg("success"),
+    successForeground: fg("success-foreground"),
+    warning: bg("warning"),
+    warningForeground: fg("warning-foreground"),
+    info: bg("info"),
+    infoForeground: fg("info-foreground"),
+  };
+}
+
+/**
  * Build the canonical light-mode color map from semantic.json + colors.json.
  * Shared by buildColorModes (as the light mode) and buildVariants (as the diff baseline).
  */
@@ -135,14 +200,34 @@ function buildLightColorMap(semantic, colorData) {
     ),
     textInverse: resolveRef(val(semantic["text-inverse"]), colorData, semantic),
     bgDisabled: resolveRef(val(semantic["bg-disabled"]), colorData, semantic),
+    success: resolveRef(val(semantic.success), colorData, semantic),
+    successForeground: resolveRef(
+      val(semantic["success-foreground"]),
+      colorData,
+      semantic,
+    ),
+    warning: resolveRef(val(semantic.warning), colorData, semantic),
+    warningForeground: resolveRef(
+      val(semantic["warning-foreground"]),
+      colorData,
+      semantic,
+    ),
+    info: resolveRef(val(semantic.info), colorData, semantic),
+    infoForeground: resolveRef(
+      val(semantic["info-foreground"]),
+      colorData,
+      semantic,
+    ),
   };
 }
 
 /**
  * Extract a theme file's color values into the Colors interface shape.
- * Used for dark mode and all accessibility variant themes.
+ * Used for dark mode and all accessibility variant themes. `baseColorData` /
+ * `baseSemantic` back the feedback resolver (it follows base semantic refs
+ * through this theme's `color` overrides).
  */
-function extractThemeColors(theme) {
+function extractThemeColors(theme, baseColorData, baseSemantic) {
   return {
     background: val(theme.surface?.background),
     backgroundSecondary: val(theme.surface?.muted),
@@ -166,6 +251,7 @@ function extractThemeColors(theme) {
     textDisabled: val(theme.typography?.["text-disabled"]),
     textInverse: val(theme.typography?.["text-inverse"]),
     bgDisabled: val(theme.aliases?.["bg-disabled"]),
+    ...extractThemeFeedback(theme, baseColorData, baseSemantic),
   };
 }
 
@@ -570,7 +656,7 @@ async function buildColorModes() {
   const dark = await readJSON("themes/dark.json");
 
   const lightMap = buildLightColorMap(semantic, colorData);
-  const darkMap = extractThemeColors(dark.theme);
+  const darkMap = extractThemeColors(dark.theme, colorData, semantic);
 
   return `// Auto-generated from design-tokens. DO NOT EDIT.
 export interface Colors {
@@ -594,6 +680,12 @@ export interface Colors {
   textDisabled: string;
   textInverse: string;
   bgDisabled: string;
+  success: string;
+  successForeground: string;
+  warning: string;
+  warningForeground: string;
+  info: string;
+  infoForeground: string;
 }
 
 export const lightColors: Colors = {
@@ -709,7 +801,7 @@ async function buildVariants() {
 
   for (const { file, name } of variantFiles) {
     const data = await readJSON(`themes/${file}.json`);
-    const themeColors = extractThemeColors(data.theme);
+    const themeColors = extractThemeColors(data.theme, colorData, semantic);
 
     // Only emit properties that differ from base light
     const overrides = {};

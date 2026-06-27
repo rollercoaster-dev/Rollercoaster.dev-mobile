@@ -31,11 +31,11 @@
       "secondary": { "$value": "#606060" },
       "secondary-dark": { "$value": "#404040" },
       "secondary-light": { "$value": "#808080" },
-      "success": { "$value": "#008866" },
+      "success": { "$value": "#007755" },
       "success-light": { "$value": "#ccffee" },
       "error": { "$value": "#cc0000" },
       "error-light": { "$value": "#ffcccc" },
-      "warning": { "$value": "#cc5500" },
+      "warning": { "$value": "#c25000" },
       "warning-light": { "$value": "#ffe0cc" },
       "info": { "$value": "#0055cc" },
       "info-light": { "$value": "#cce0ff" },
@@ -73,8 +73,8 @@
     },
     "feedback": {
       "destructive": { "$value": "#cc0000" },
-      "success": { "$value": "#008866" },
-      "warning": { "$value": "#cc5500" },
+      "success": { "$value": "#007755" },
+      "warning": { "$value": "#c25000" },
       "info": { "$value": "#0055cc" }
     },
     "form": {
@@ -139,6 +139,7 @@
       "action-secondary-fg": { "$value": "#000000" },
       "action-destructive-bg": { "$value": "#cc5500" },
       "action-destructive-fg": { "$value": "#ffffff" },
+      "warning-foreground": { "$value": "#ffffff" },
       "action-disabled-bg": { "$value": "#d0d0d0" },
       "action-disabled-fg": { "$value": "#606060" },
       "action-disabled-border": { "$value": "#606060" },

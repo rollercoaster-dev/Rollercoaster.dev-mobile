@@ -58,7 +58,7 @@
       "secondary": { "$value": "#8860a0" },
       "secondary-dark": { "$value": "#6d4a85" },
       "secondary-light": { "$value": "#a080b8" },
-      "success": { "$value": "#4a8a62" },
+      "success": { "$value": "#3a7050" },
       "error": { "$value": "#b54942" },
       "warning": { "$value": "#b5913a" }
     },
@@ -90,7 +90,7 @@
     },
     "feedback": {
       "destructive": { "$value": "#b54942" },
-      "success": { "$value": "#4a8a62" },
+      "success": { "$value": "#3a7050" },
       "warning": { "$value": "#b5913a" }
     },
     "form": {
