@@ -79,7 +79,7 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
     chrome: chromeVariants.highContrast,
     action: actionVariants.highContrast,
     surfaceBorder: surfaceBorderVariants.highContrast,
-    shadows: { opacity: 1 },
+    shadows: { opacity: 0 },
     shadow: shadowVariants.highContrast,
   },
 
@@ -115,7 +115,7 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
     chrome: chromeVariants.lowVision,
     action: actionVariants.lowVision,
     surfaceBorder: surfaceBorderVariants.lowVision,
-    shadows: { opacity: 1 },
+    shadows: { opacity: 0 },
     shadow: shadowVariants.lowVision,
     size: sizeL,
     fontFamily: "Atkinson Hyperlegible",
@@ -130,7 +130,7 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
     chrome: chromeVariants.autismFriendly,
     action: actionVariants.autismFriendly,
     surfaceBorder: surfaceBorderVariants.autismFriendly,
-    shadows: { opacity: 1 },
+    shadows: { opacity: 0 },
     shadow: shadowVariants.autismFriendly,
   },
 

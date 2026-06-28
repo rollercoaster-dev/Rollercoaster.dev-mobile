@@ -20,7 +20,6 @@ import {
   transition,
   shadow,
   darkShadow,
-  shadowVariants,
 } from "./tokens";
 import {
   narrativeModes,
