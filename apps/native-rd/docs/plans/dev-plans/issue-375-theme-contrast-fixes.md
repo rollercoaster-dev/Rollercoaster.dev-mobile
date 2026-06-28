@@ -327,7 +327,7 @@ Check whether CI runs the build before tests: if `bun run test` in CI references
 - [ ] Unit: new `test.each` in `contrast.test.ts` covering all 20 post-fix pairs, >= 4.5:1 each
 - [ ] Unit: existing `contrast.test.ts` tests must stay green (no regressions to button/tab tests already there)
 - [ ] Build verification: `bun run build` in `packages/design-tokens/` must succeed after each step
-- [ ] Manual: open Storybook `Design System/Contrast Audit / Matrix` after the full build — summary should show 91 cells, 0 fail, 0 amber
+- [x] Manual: open Storybook `Design System/Contrast Audit / Matrix` after the full build — summary shows 91 cells, 0 fail, 0 amber
 - [ ] Type-check: `bun run type-check` from repo root must pass (unistyles types regenerated correctly)
 
 ## Not in Scope
