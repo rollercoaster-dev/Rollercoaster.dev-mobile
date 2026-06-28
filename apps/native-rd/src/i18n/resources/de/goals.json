@@ -5,6 +5,9 @@
     "body": "Füge dein erstes Lernziel hinzu, um zu starten.",
     "cta": "Ziel erstellen"
   },
+  "actions": {
+    "newGoal": "Neues Ziel"
+  },
   "confirmDelete": {
     "title": "Dieses Ziel löschen?",
     "message": "\"{{title}}\" und alle Fortschritte werden dauerhaft gelöscht."

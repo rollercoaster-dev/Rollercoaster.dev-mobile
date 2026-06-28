@@ -134,9 +134,17 @@ describe("GoalsScreen", () => {
       expect(screen.getByText(i18n.t("goals:title"))).toBeOnTheScreen();
     });
 
-    it("does not render an add button in the header", () => {
+    it("renders a new-goal button in the header", () => {
       renderWithProviders(<GoalsScreen />);
-      expect(screen.queryByLabelText("Create new goal")).toBeNull();
+      expect(
+        screen.getByLabelText(i18n.t("goals:actions.newGoal")),
+      ).toBeOnTheScreen();
+    });
+
+    it("navigates to NewGoal when the header new-goal button is pressed", () => {
+      renderWithProviders(<GoalsScreen />);
+      fireEvent.press(screen.getByTestId("goals-header-new-goal"));
+      expect(mockNavigate).toHaveBeenCalledWith("NewGoal");
     });
   });
 

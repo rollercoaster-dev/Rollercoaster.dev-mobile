@@ -99,46 +99,6 @@ describe("FocusPillTabBar", () => {
   });
 
   it.each([
-    { activeIndex: 0, activeTab: "Goals", visible: true },
-    { activeIndex: 1, activeTab: "Badges", visible: true },
-    { activeIndex: 2, activeTab: "Settings", visible: false },
-  ])(
-    "FAB is $visible when $activeTab is active",
-    ({ activeIndex, visible }) => {
-      const { props } = buildProps({ activeIndex });
-      renderWithProviders(<FocusPillTabBar {...props} />);
-      const fab = screen.queryByTestId("tab-fab-new-goal");
-      if (visible) {
-        expect(fab).toBeOnTheScreen();
-      } else {
-        expect(fab).toBeNull();
-      }
-    },
-  );
-
-  it("FAB has the correct accessibility label", () => {
-    const { props } = buildProps();
-    renderWithProviders(<FocusPillTabBar {...props} />);
-    const fab = screen.getByTestId("tab-fab-new-goal");
-    expectAccessibleLabel(fab, "New goal");
-    expectAccessibleRole(fab, "button");
-  });
-
-  it("FAB navigates to NewGoal inside GoalsTab even when on a different tab", () => {
-    const { props, dispatch } = buildProps({ activeIndex: 1 });
-    renderWithProviders(<FocusPillTabBar {...props} />);
-
-    fireEvent.press(screen.getByTestId("tab-fab-new-goal"));
-
-    expect(dispatch).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: "NAVIGATE",
-        payload: { name: "GoalsTab", params: { screen: "NewGoal" } },
-      }),
-    );
-  });
-
-  it.each([
     { from: 0, to: "BadgesTab", testId: "tab-BadgesTab" },
     { from: 0, to: "SettingsTab", testId: "tab-SettingsTab" },
     { from: 2, to: "GoalsTab", testId: "tab-GoalsTab" },
@@ -186,7 +146,6 @@ describe("FocusPillTabBar", () => {
       "common:navigation.tabs.goals",
       "common:navigation.tabs.badges",
       "common:navigation.tabs.settings",
-      "common:navigation.fab.newGoal",
     ] as const)("renders %s under pseudo locale", async (key) => {
       await i18n.changeLanguage("pseudo");
       const { props } = buildProps();

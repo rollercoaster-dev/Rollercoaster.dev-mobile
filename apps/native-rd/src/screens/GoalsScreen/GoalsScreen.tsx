@@ -2,10 +2,12 @@ import React, { Suspense, useMemo, useState } from "react";
 import { View, FlatList, ActivityIndicator } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useNavigation } from "@react-navigation/native";
+import { Plus } from "phosphor-react-native";
 import { useTabScreenContentInset } from "../../navigation/useTabScreenContentInset";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@evolu/react";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
+import { IconButton } from "../../components/IconButton";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { GoalCard, type GoalCardGoal } from "../../components/GoalCard";
 import { EmptyState } from "../../components/EmptyState";
@@ -171,10 +173,21 @@ function GoalList({
 export function GoalsScreen() {
   const { t } = useTranslation(["goals"]);
   const tabInset = useTabScreenContentInset();
+  const navigation = useNavigation<Nav>();
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader title={t("goals:title")} />
+      <ScreenHeader
+        title={t("goals:title")}
+        right={
+          <IconButton
+            icon={<Plus size={24} weight="bold" />}
+            onPress={() => navigation.navigate("NewGoal")}
+            accessibilityLabel={t("goals:actions.newGoal")}
+            testID="goals-header-new-goal"
+          />
+        }
+      />
       <ErrorBoundary>
         <Suspense
           fallback={

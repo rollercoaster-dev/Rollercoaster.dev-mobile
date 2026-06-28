@@ -12,7 +12,6 @@ import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { CommonActions } from "@react-navigation/native";
 import { GearSix, Medal, Target } from "phosphor-react-native";
 import { useTranslation } from "react-i18next";
-import { Text } from "../components/Text";
 import { shadowStyle } from "../styles/shadows";
 import { borderWidth } from "../themes/tokens";
 import { useAnimationPref } from "../hooks/useAnimationPref";
@@ -106,10 +105,6 @@ export function FocusPillTabBar({ state, navigation }: BottomTabBarProps) {
     [t],
   );
 
-  const activeRoute = state.routes[state.index];
-  const activeName = activeRoute.name as RouteName;
-  const showFab = activeName !== "SettingsTab";
-
   const activeColor = theme.chrome.brandAccentFg;
   const inactiveColor = theme.colors.textSecondary;
   useEffect(() => {
@@ -171,30 +166,6 @@ export function FocusPillTabBar({ state, navigation }: BottomTabBarProps) {
       <View style={styles.bar}>
         <View style={styles.pill}>
           <View style={styles.leftGroup}>{renderTab(goals, "GoalsTab")}</View>
-
-          <View style={styles.center}>
-            {showFab && goals ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={t("navigation.fab.newGoal")}
-                testID="tab-fab-new-goal"
-                onPress={() =>
-                  navigation.dispatch({
-                    ...CommonActions.navigate(goals.route.name, {
-                      screen: "NewGoal",
-                    }),
-                    target: state.key,
-                  })
-                }
-                style={styles.fab}
-              >
-                <Text variant="headline" style={styles.plusIcon}>
-                  +
-                </Text>
-              </Pressable>
-            ) : null}
-          </View>
-
           <View style={styles.rightGroup}>
             {renderTab(badges, "BadgesTab")}
           </View>
@@ -243,11 +214,6 @@ const styles = StyleSheet.create((theme) => {
       alignItems: "center" as const,
       gap: 6,
     },
-    center: {
-      width: 56,
-      alignItems: "center" as const,
-      justifyContent: "center" as const,
-    },
     rightGroup: {
       flex: 1,
       flexDirection: "row" as const,
@@ -276,24 +242,6 @@ const styles = StyleSheet.create((theme) => {
       fontWeight: theme.fontWeight.bold,
       fontSize: theme.size.sm,
       letterSpacing: theme.letterSpacing.tight,
-    },
-    fab: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      backgroundColor: theme.colors.accentYellow,
-      borderColor: theme.colors.border,
-      borderWidth: theme.borderWidth.medium,
-      alignItems: "center" as const,
-      justifyContent: "center" as const,
-    },
-    plusIcon: {
-      fontSize: 32,
-      lineHeight: 36,
-      // FAB bg is accentYellow (#ffe50c) in both modes; dark fg pairs with
-      // it at ~17:1. theme.colors.text would flip to #fafafa in dark and
-      // give ~1.1:1, so we lock the contrast value here.
-      color: "#0a0a0a",
     },
   };
 });
