@@ -182,8 +182,10 @@ function buildLightColorMap(semantic, colorData) {
       semantic,
     ),
     accentMint: val(colorData.color["accent-mint"]),
+    accentMintFg: val(colorData.color["accent-mint-foreground"]),
     accentPurpleLight: val(colorData.color["accent-purple-light"]),
     accentYellow: val(colorData.color["accent-yellow"]),
+    accentYellowFg: val(colorData.color["accent-yellow-foreground"]),
     border: resolveRef(val(semantic.border), colorData, semantic),
     shadow: val(colorData.color.black),
     focusRing: resolveRef(val(semantic.ring), colorData, semantic),
@@ -241,8 +243,10 @@ function extractThemeColors(theme, baseColorData, baseSemantic) {
       val(theme.color?.secondary) ?? val(theme.interactive?.secondary),
     accentPurpleFg: val(theme.interactive?.["secondary-foreground"]),
     accentMint: val(theme.color?.["accent-mint"]),
+    accentMintFg: val(theme.color?.["accent-mint-foreground"]),
     accentPurpleLight: val(theme.color?.["accent-purple-light"]),
     accentYellow: val(theme.color?.["accent-yellow"]),
+    accentYellowFg: val(theme.color?.["accent-yellow-foreground"]),
     border: val(theme.form?.border),
     shadow: val(theme.color?.black),
     focusRing: val(theme.form?.ring),
@@ -717,8 +721,10 @@ export interface Colors {
   accentPurple: string;
   accentPurpleFg: string;
   accentMint: string;
+  accentMintFg: string;
   accentPurpleLight: string;
   accentYellow: string;
+  accentYellowFg: string;
   border: string;
   shadow: string;
   focusRing: string;
