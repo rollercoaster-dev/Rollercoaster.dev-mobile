@@ -104,6 +104,7 @@ build/unistyles/
   colorModes.ts
   variants.ts
   narrative.ts
+  semanticColors.ts
   index.ts
 ```
 
@@ -118,9 +119,9 @@ bun run build:unistyles # same as build
 
 ## Exports
 
-| Import path                                  | What                                  | Consumer                 |
-| -------------------------------------------- | ------------------------------------- | ------------------------ |
-| `@rollercoaster-dev/design-tokens/unistyles` | Palette, tokens, colorModes, variants | native-rd (React Native) |
+| Import path                                  | What                                                                                                                                                  | Consumer                 |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| `@rollercoaster-dev/design-tokens/unistyles` | Palette, tokens, colorModes, variants, narrative modes, and semantic color groups (chrome/action/journey/badge-reward/typography-role/surface-border) | native-rd (React Native) |
 
 ---
 
@@ -128,14 +129,15 @@ bun run build:unistyles # same as build
 
 The `build/unistyles/` directory contains auto-generated TypeScript consumed by native-rd:
 
-| File            | Exports                                                                                 |
-| --------------- | --------------------------------------------------------------------------------------- |
-| `palette.ts`    | `palette` — 30+ raw color constants                                                     |
-| `tokens.ts`     | `space`, `size`, `sizeL`, `radius`, `zIndex`, `fontWeight`, `lineHeight`, `lineHeightL` |
-| `colorModes.ts` | `Colors` interface, `lightColors`, `darkColors`, `colorModes`                           |
-| `variants.ts`   | `VariantOverride` type, 5 variant color override objects                                |
-| `narrative.ts`  | `Narrative` interface, light/dark narrative modes, 5 variant narrative overrides        |
-| `index.ts`      | Re-exports everything above                                                             |
+| File                | Exports                                                                                                                                                                                            |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `palette.ts`        | `palette` — 30+ raw color constants                                                                                                                                                                |
+| `tokens.ts`         | `space`, `size`, `sizeL`, `radius`, `zIndex`, `fontWeight`, `lineHeight`, `lineHeightL`                                                                                                            |
+| `colorModes.ts`     | `Colors` interface, `lightColors`, `darkColors`, `colorModes`                                                                                                                                      |
+| `variants.ts`       | `VariantOverride` type, 5 variant color override objects                                                                                                                                           |
+| `narrative.ts`      | `Narrative` interface, light/dark narrative modes, 5 variant narrative overrides                                                                                                                   |
+| `semanticColors.ts` | `ChromeColors`/`ActionColors`/`SurfaceBorderColors`/`JourneyColors`/`BadgeRewardColors`/`TypographyRoleColors` interfaces + light/dark maps, per-group variant overrides, and `semanticColorModes` |
+| `index.ts`          | Re-exports everything above                                                                                                                                                                        |
 
 ---
 

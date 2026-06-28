@@ -24,14 +24,15 @@ build/unistyles/
   colorModes.ts
   variants.ts
   narrative.ts
+  semanticColors.ts
   index.ts
 ```
 
 ## Exports
 
-| Import path                                  | What                                  | Consumer                 |
-| -------------------------------------------- | ------------------------------------- | ------------------------ |
-| `@rollercoaster-dev/design-tokens/unistyles` | Palette, tokens, colorModes, variants | native-rd (React Native) |
+| Import path                                  | What                                                                                                                                                  | Consumer                 |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| `@rollercoaster-dev/design-tokens/unistyles` | Palette, tokens, colorModes, variants, narrative modes, and semantic color groups (chrome/action/journey/badge-reward/typography-role/surface-border) | native-rd (React Native) |
 
 ## Build
 
