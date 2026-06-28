@@ -1,5 +1,8 @@
 {
   "title": "Ziele",
+  "todayTitle": "Heute",
+  "goalCount_one": "{{count}} Ziel",
+  "goalCount_other": "{{count}} Ziele",
   "emptyState": {
     "title": "Noch keine Ziele",
     "body": "Füge dein erstes Lernziel hinzu, um zu starten.",
@@ -11,6 +14,15 @@
   "confirmDelete": {
     "title": "Dieses Ziel löschen?",
     "message": "\"{{title}}\" und alle Fortschritte werden dauerhaft gelöscht."
+  },
+  "cockpit": {
+    "doThisNext": "Mach das nächste · {{title}}",
+    "ringSteps": "{{completed}} / {{total}} Schritte",
+    "start": "Start",
+    "resume": "Weitermachen",
+    "resumeHint": "Öffnet {{title}} im Fokus-Modus",
+    "keepWarm": "Warm halten",
+    "newGoal": "Neues Ziel"
   },
   "card": {
     "progressLabel": "{{completed}}/{{total}} Schritte",
