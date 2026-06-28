@@ -82,7 +82,14 @@ export function Button({
       ) : (
         <>
           {icon ? (
-            <Text style={styles.icon(size)} accessibilityElementsHidden>
+            // labelStyle carries only the variant's color (no fontFamily), so
+            // the icon tracks the label color instead of falling back to the
+            // default text color — which is invisible on the primary button's
+            // dark fill (the "▶" glyph that matched the background).
+            <Text
+              style={[styles.icon(size), labelStyle]}
+              accessibilityElementsHidden
+            >
               {icon}
             </Text>
           ) : null}
