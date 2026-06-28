@@ -22,6 +22,7 @@ import { useDensity } from "./src/hooks/useDensity";
 import { useAnimationPref } from "./src/hooks/useAnimationPref";
 import { useFirstLaunch } from "./src/hooks/useFirstLaunch";
 import { WelcomeScreen } from "./src/screens/WelcomeScreen";
+import { getContrastRatio } from "./src/utils/accessibility";
 
 const STORYBOOK_ENABLED = process.env.EXPO_PUBLIC_STORYBOOK_ENABLED === "true";
 
@@ -77,15 +78,25 @@ function ThemedApp() {
     // First launch — show WelcomeScreen above NavigationContainer
     body = <WelcomeScreen onGetStarted={markSeen} />;
   } else {
-    // Outer view paints accentPurple; the inner view offsets the
-    // navigator by the top inset and paints the regular background.
-    // The exposed strip above the inner view = the device top inset,
-    // tinted purple to match HeaderBand. This keeps the inset painter
-    // strictly behind navigation content, so a screen with its own
-    // top inset (e.g. a fullScreen modal) can fully cover it.
+    // Outer view paints the device top-inset strip; the inner view offsets the
+    // navigator by that inset and paints the regular background. The exposed
+    // strip above the inner view must read as a continuation of the header
+    // band, so it uses the same token the band does (chrome.screenHeaderBg).
+    // accentPurple only coincided with the header in light-default and diverged
+    // in every other theme. Keeping the inset painter strictly behind
+    // navigation content lets a screen with its own top inset (e.g. a
+    // fullScreen modal) fully cover it.
+    //
+    // Status-bar icon polarity follows the header foreground so the
+    // clock/wifi/battery glyphs read as part of the header on every theme —
+    // light glyphs on the near-black high-contrast/low-info headers, dark
+    // glyphs on the light default header.
+    const headerFgIsLight =
+      getContrastRatio(theme.chrome.screenHeaderFg, "#000000") >
+      getContrastRatio(theme.chrome.screenHeaderFg, "#ffffff");
     body = (
-      <View style={{ flex: 1, backgroundColor: theme.colors.accentPurple }}>
-        <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={{ flex: 1, backgroundColor: theme.chrome.screenHeaderBg }}>
+        <StatusBar style={headerFgIsLight ? "light" : "dark"} />
         <View
           style={{
             flex: 1,
