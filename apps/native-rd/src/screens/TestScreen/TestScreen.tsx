@@ -660,7 +660,7 @@ export function TestScreen() {
                 Energy builds. Yellow warmth, dark ink. The opening statement.
               </Text>
               <Text style={styles.overviewCode(theme)}>
-                --ob-narrative-climb-bg / --ob-narrative-climb-text
+                narrative.climb.bg / narrative.climb.text
               </Text>
             </View>
             <View
@@ -684,7 +684,7 @@ export function TestScreen() {
                 Deep black to indigo. The moment of impact. Purple accents glow.
               </Text>
               <Text style={styles.overviewCode(theme)}>
-                --ob-narrative-drop-bg / --ob-narrative-drop-text
+                narrative.drop.bg / narrative.drop.text
               </Text>
             </View>
             <View
@@ -709,7 +709,7 @@ export function TestScreen() {
                 stories.
               </Text>
               <Text style={styles.overviewCode(theme)}>
-                --ob-narrative-stories-bg / --ob-narrative-stories-text
+                narrative.stories.bg / narrative.stories.text
               </Text>
             </View>
             <View
@@ -733,7 +733,7 @@ export function TestScreen() {
                 Mint calm. The landing zone. Footer, CTA, resolution.
               </Text>
               <Text style={styles.overviewCode(theme)}>
-                --ob-narrative-relief-bg / --ob-narrative-relief-text
+                narrative.relief.bg / narrative.relief.text
               </Text>
             </View>
           </View>

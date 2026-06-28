@@ -7,7 +7,7 @@
 
 ## Purpose
 
-Single source of truth for the rollercoaster.dev design language across web and mobile. JSON token definitions produce CSS variables, JS objects, Tailwind config, and Unistyles theme objects for React Native.
+Single source of truth for the rollercoaster.dev design language on mobile. JSON token definitions produce Unistyles theme objects for React Native. (The legacy CSS/JS/Tailwind/Tamagui Style Dictionary platforms were removed in issue #375, Phase 3 — Decision A: unistyles-only.)
 
 ---
 
@@ -95,41 +95,33 @@ src/tokens/          JSON primitives (colors, spacing, typography, narrative)
 src/themes/          JSON theme overrides (dark, high-contrast, dyslexia, etc.)
         |
         v
-style-dictionary     build-themes.js     build-unistyles.js
-        |                  |                     |
-        v                  v                     v
-build/css/           build/css/           build/unistyles/
-  tokens.css           themes.css           palette.ts
-build/js/                                    tokens.ts
-build/tailwind/                              colorModes.ts
-build/tamagui/                               variants.ts
-                                             narrative.ts
-                                             index.ts
-css/
-  narrative.css      (hand-authored, exportable design language classes)
+build-unistyles.js   (reads JSON directly — no Style Dictionary dependency)
+        |
+        v
+build/unistyles/
+  palette.ts
+  tokens.ts
+  colorModes.ts
+  variants.ts
+  narrative.ts
+  semanticColors.ts
+  index.ts
 ```
 
 Build commands:
 
 ```bash
-bun run build           # Full pipeline: style-dictionary + themes + unistyles
-bun run build:tokens    # Style Dictionary only
-bun run build:themes    # Theme CSS only
-bun run build:unistyles # Unistyles JS only
+bun run build           # node build-unistyles.js → build/unistyles/*.ts
+bun run build:unistyles # same as build
 ```
 
 ---
 
 ## Exports
 
-| Import path                                      | What                                    | Consumer                 |
-| ------------------------------------------------ | --------------------------------------- | ------------------------ |
-| `@rollercoaster-dev/design-tokens/css`           | CSS custom properties (`:root`)         | Web apps                 |
-| `@rollercoaster-dev/design-tokens/css/themes`    | Theme class overrides                   | Web apps                 |
-| `@rollercoaster-dev/design-tokens/css/narrative` | Narrative section + badge label classes | Web apps, landing page   |
-| `@rollercoaster-dev/design-tokens/unistyles`     | Palette, tokens, colorModes, variants   | native-rd (React Native) |
-| `@rollercoaster-dev/design-tokens/tailwind`      | Tailwind config preset                  | Tailwind projects        |
-| `@rollercoaster-dev/design-tokens/tamagui`       | Tamagui token config                    | Tamagui projects         |
+| Import path                                  | What                                                                                                                                                  | Consumer                 |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| `@rollercoaster-dev/design-tokens/unistyles` | Palette, tokens, colorModes, variants, narrative modes, and semantic color groups (chrome/action/journey/badge-reward/typography-role/surface-border) | native-rd (React Native) |
 
 ---
 
@@ -137,14 +129,15 @@ bun run build:unistyles # Unistyles JS only
 
 The `build/unistyles/` directory contains auto-generated TypeScript consumed by native-rd:
 
-| File            | Exports                                                                                 |
-| --------------- | --------------------------------------------------------------------------------------- |
-| `palette.ts`    | `palette` — 30+ raw color constants                                                     |
-| `tokens.ts`     | `space`, `size`, `sizeL`, `radius`, `zIndex`, `fontWeight`, `lineHeight`, `lineHeightL` |
-| `colorModes.ts` | `Colors` interface, `lightColors`, `darkColors`, `colorModes`                           |
-| `variants.ts`   | `VariantOverride` type, 5 variant color override objects                                |
-| `narrative.ts`  | `Narrative` interface, light/dark narrative modes, 5 variant narrative overrides        |
-| `index.ts`      | Re-exports everything above                                                             |
+| File                | Exports                                                                                                                                                                                            |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `palette.ts`        | `palette` — 30+ raw color constants                                                                                                                                                                |
+| `tokens.ts`         | `space`, `size`, `sizeL`, `radius`, `zIndex`, `fontWeight`, `lineHeight`, `lineHeightL`                                                                                                            |
+| `colorModes.ts`     | `Colors` interface, `lightColors`, `darkColors`, `colorModes`                                                                                                                                      |
+| `variants.ts`       | `VariantOverride` type, 5 variant color override objects                                                                                                                                           |
+| `narrative.ts`      | `Narrative` interface, light/dark narrative modes, 5 variant narrative overrides                                                                                                                   |
+| `semanticColors.ts` | `ChromeColors`/`ActionColors`/`SurfaceBorderColors`/`JourneyColors`/`BadgeRewardColors`/`TypographyRoleColors` interfaces + light/dark maps, per-group variant overrides, and `semanticColorModes` |
+| `index.ts`          | Re-exports everything above                                                                                                                                                                        |
 
 ---
 
@@ -193,18 +186,10 @@ See [ND Themes](../design/nd-themes.md) for the full theme reference.
 
 ---
 
-## Overview Pages
-
-The package includes HTML visual reference pages at `overview/` that render all themes side-by-side. These can be viewed locally to verify theme appearance.
-
----
-
 ## Conventions
 
 - Token JSON uses DTCG `$value`/`$type` format
-- CSS vars prefixed `--ob-`
 - Theme JSON uses structured groups: `surface`, `interactive`, `color`, `narrative`, `form`, `typography`, `aliases`
-- `narrative.css` is hand-authored — reusable CSS classes referencing token vars
 - `build/unistyles/` files are auto-generated — never edit directly
 - All token additions require running `bun run build` to regenerate outputs
 

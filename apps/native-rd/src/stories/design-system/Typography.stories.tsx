@@ -75,7 +75,7 @@ const usageExamples = [
     styleKey: "label",
     tokens:
       "fontFamily.body + size.sm + fontWeight.medium + letterSpacing.wide",
-    note: "Uppercase with wide tracking. See badge-label class in narrative.css.",
+    note: "Uppercase with wide tracking. Badge label / tag treatment.",
   },
   {
     context: "Code / Token Names",
