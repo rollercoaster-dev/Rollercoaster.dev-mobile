@@ -10,6 +10,7 @@ import React from "react";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { renderWithProviders, screen, fireEvent } from "./test-utils";
 import { i18n } from "../i18n";
+import { composeTheme } from "../themes/compose";
 import { FocusPillTabBar } from "../navigation/FocusPillTabBar";
 import {
   expectAccessibleRole,
@@ -93,9 +94,19 @@ describe("FocusPillTabBar", () => {
       selected: false,
     });
 
-    expect(screen.getByText("Badges")).toBeOnTheScreen();
-    expect(screen.queryByText("Goals")).toBeNull();
-    expect(screen.queryByText("Settings")).toBeNull();
+    // The active label rides the slide knob, which is decorative (hidden from
+    // the a11y tree — each slot already exposes role/label/selected), so the
+    // visible-label assertions must opt into hidden elements. Only the active
+    // destination renders a label; the idle slots are icon-only.
+    expect(
+      screen.getByText("Badges", { includeHiddenElements: true }),
+    ).toBeOnTheScreen();
+    expect(
+      screen.queryByText("Goals", { includeHiddenElements: true }),
+    ).toBeNull();
+    expect(
+      screen.queryByText("Settings", { includeHiddenElements: true }),
+    ).toBeNull();
   });
 
   it.each([
@@ -135,6 +146,56 @@ describe("FocusPillTabBar", () => {
       ([action]) => action?.type === "NAVIGATE",
     );
     expect(navigateCalls).toHaveLength(0);
+  });
+
+  describe("slide knob colour through-line (D9)", () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const unistylesMock = require("react-native-unistyles");
+
+    const knobBg = (): string => {
+      const knob = screen.getByTestId("tab-slide-knob", {
+        includeHiddenElements: true,
+      });
+      const flat = Array.isArray(knob.props.style)
+        ? Object.assign({}, ...knob.props.style.flat(Infinity).filter(Boolean))
+        : knob.props.style;
+      return flat.backgroundColor;
+    };
+
+    afterEach(() => {
+      unistylesMock.useUnistyles.mockReturnValue({
+        theme: unistylesMock.mockTheme,
+      });
+    });
+
+    // Through-line themes carry a per-destination hue on the active knob.
+    it.each([
+      { activeIndex: 0, token: "accentYellow" },
+      { activeIndex: 1, token: "accentMint" },
+      { activeIndex: 2, token: "accentPurple" },
+    ] as const)(
+      "through-line theme: active knob uses $token",
+      ({ activeIndex, token }) => {
+        const theme = composeTheme("light", "default");
+        unistylesMock.useUnistyles.mockReturnValue({ theme });
+        const { props } = buildProps({ activeIndex });
+        renderWithProviders(<FocusPillTabBar {...props} />);
+        expect(knobBg()).toBe(theme.colors[token]);
+      },
+    );
+
+    // Calm variants drop the through-line for one muted brandAccent fill,
+    // identical for every destination.
+    it.each([0, 1, 2])(
+      "calm variant (dyslexia): knob uses brandAccent for slot %i",
+      (activeIndex) => {
+        const theme = composeTheme("light", "dyslexia");
+        unistylesMock.useUnistyles.mockReturnValue({ theme });
+        const { props } = buildProps({ activeIndex });
+        renderWithProviders(<FocusPillTabBar {...props} />);
+        expect(knobBg()).toBe(theme.chrome.brandAccentBg);
+      },
+    );
   });
 
   describe("pseudo locale", () => {
