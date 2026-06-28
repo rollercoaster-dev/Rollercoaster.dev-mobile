@@ -71,7 +71,7 @@ Build a CI-enforced contrast validation gate (done — Phase 0), then drive ever
 - **Phase 0 — the gate. ✅ DONE.** `contrastPairs.ts` + list-driven `contrast.test.ts` (KNOWN_FAILURES ratchet) + `ContrastAudit` story. See status banner.
 - **Phase 1 — theme the feedback foregrounds (root-cause). ✅ DONE.** `build-unistyles.js` emits themed `success/warning/info` (+`-foreground`) per-theme into the unistyles `Colors`; `adapter.ts` lets them flow (dropped the bg-only palette re-adds); native-rd `Colors` + `contrastPairs.ts` carry the 3 pairs; themed green per D2/D3/D4/D5/D8/D10-warning/D11/D12/D13. See status banner.
 - **Phase 2 — remaining contrast cells. ✅ DONE.** Clear the 8 current `KNOWN_FAILURES` (primary, destructive-amber, dyslexia highlight, autism tab bars) via the source-JSON edits in the researcher's recipes (D1/D6/D7/D9/D10 + Bold-Ink destructive). Delete each line from KNOWN_FAILURES as it goes green. — `KNOWN_FAILURES` now empty; 91/91 cells pass.
-- **Phase 3+ — Decision A strip.** Delete the dead Style Dictionary platforms (css/js/tailwind/tamagui), `build-themes.js`, `css/narrative.css`; reduce `bun run build` to `build-unistyles.js`; drop dead `exports` subpaths + vestigial `publishConfig`/`verify-css.js`; reconcile naming; update `packages/design-tokens/CLAUDE.md`. Pre-deletion: confirm the separate `~/Code/rollercoaster.dev/landing` repo isn't vendoring `/css*`.
+- **Phase 3+ — Decision A strip.** Delete the dead Style Dictionary platforms (css/js/tailwind/tamagui), `build-themes.js`, `css/narrative.css`; reduce `bun run build` to `build-unistyles.js`; drop dead `exports` subpaths + vestigial `publishConfig`/`verify-css.js`; reconcile naming; update `packages/design-tokens/CLAUDE.md`. Pre-deletion: confirm the separate `~/Code/rollercoaster.dev/landing` repo isn't vendoring `/css*`. Preserve `apps/native-rd/prototypes/` as historical design documentation; do not treat prototype-local token CSS or `Theme Eval.dc.html` as current validation surfaces.
 
 ## Ground Truth — the gate (unistyles path, 8 reds, 2026-06-26)
 
@@ -332,13 +332,14 @@ Check whether CI runs the build before tests: if `bun run test` in CI references
 
 ## Not in Scope
 
-| Item                                                   | Reason                                                                                  | Follow-up                                 |
-| ------------------------------------------------------ | --------------------------------------------------------------------------------------- | ----------------------------------------- |
-| §2 divergence fixes (43 mismatched cells in App Shell) | Separate PR B scope                                                                     | Issue to be filed                         |
-| `action-destructive-bg` amber vs red redesign decision | Already documented as design intent (`action.json` comment); not a contrast issue       | none                                      |
-| `large-text.json` explicit color overrides             | Not needed; inherits all fixes from Step 1                                              | none                                      |
-| CI build-before-test plumbing                          | Investigate separately; if CI caches stale build outputs this is a separate CI issue    | Check `.github/workflows/` for build step |
-| Still Water `chrome-tab-bar-indicator`                 | Not a text-on-background pair; visual indicator only, not subject to WCAG text contrast | none                                      |
+| Item                                                   | Reason                                                                                                                         | Follow-up                                 |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------- |
+| §2 divergence fixes (43 mismatched cells in App Shell) | Separate PR B scope                                                                                                            | Issue to be filed                         |
+| `action-destructive-bg` amber vs red redesign decision | Already documented as design intent (`action.json` comment); not a contrast issue                                              | none                                      |
+| `large-text.json` explicit color overrides             | Not needed; inherits all fixes from Step 1                                                                                     | none                                      |
+| CI build-before-test plumbing                          | Investigate separately; if CI caches stale build outputs this is a separate CI issue                                           | Check `.github/workflows/` for build step |
+| Still Water `chrome-tab-bar-indicator`                 | Not a text-on-background pair; visual indicator only, not subject to WCAG text contrast                                        | none                                      |
+| Prototype HTML/token snapshots                         | Historical design docs stay in `apps/native-rd/prototypes/`; Storybook `Contrast Audit` + `contrast.test.ts` are authoritative | none                                      |
 
 ## Discovery Log
 
