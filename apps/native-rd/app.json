@@ -108,10 +108,7 @@
       [
         "expo-localization",
         {
-          "supportedLocales": [
-            "en",
-            "de"
-          ]
+          "supportedLocales": ["en", "de"]
         }
       ]
     ],
