@@ -16,6 +16,8 @@ import {
   fontFamily as _fontFamily,
   transition as _transition,
   shadow as _shadow,
+  darkShadow as _darkShadow,
+  shadowVariants as _shadowVariants,
 } from "./adapter";
 
 export const space = _space;
@@ -43,26 +45,29 @@ type SemanticShadowKey =
   | "cardElevationSmall"
   | "modalElevation";
 
-type AppShadow = Record<keyof typeof _shadow | SemanticShadowKey, ShadowSpec>;
+type BaseShadow = Record<keyof typeof _shadow, ShadowSpec>;
+type AppShadow = Record<keyof BaseShadow | SemanticShadowKey, ShadowSpec>;
 
-// Semantic shadow roles. Tier-1 (sits on page) uses cardElevation /
-// cardElevationSmall — composed to zero in dark so borders carry depth.
-// Tier-2 (lifts off page: modals, sheets, FABs, drag-active items) uses
-// modalElevation, which keeps the hard offset in dark via the adapter's
-// black shadow color.
-const cardEmpty: ShadowSpec = { offsetX: 0, offsetY: 0, radius: 0, opacity: 0 };
-export const shadow: AppShadow = {
-  ..._shadow,
-  cardElevation: _shadow.hardMd,
-  cardElevationSmall: _shadow.hardSm,
-  modalElevation: _shadow.hardLg,
-};
-export const darkShadowOverrides: Partial<
-  Record<SemanticShadowKey, ShadowSpec>
-> = {
-  cardElevation: cardEmpty,
-  cardElevationSmall: cardEmpty,
-};
+// Semantic shadow roles are now sourced from design-tokens per theme. Themes
+// that opt out of elevation set their hard* tokens to `none`; Night Ride maps
+// hard* to its authored lg cutout shadow.
+function withSemanticShadows(base: BaseShadow): AppShadow {
+  return {
+    ...base,
+    cardElevation: base.hardMd,
+    cardElevationSmall: base.hardSm,
+    modalElevation: base.hardLg,
+  };
+}
+
+export const shadow: AppShadow = withSemanticShadows(_shadow);
+export const darkShadow: AppShadow = withSemanticShadows(_darkShadow);
+export const shadowVariants = Object.fromEntries(
+  Object.entries(_shadowVariants).map(([key, value]) => [
+    key,
+    withSemanticShadows(value),
+  ]),
+) as Record<keyof typeof _shadowVariants, AppShadow>;
 
 export type Space = typeof space;
 export type Size = typeof size;

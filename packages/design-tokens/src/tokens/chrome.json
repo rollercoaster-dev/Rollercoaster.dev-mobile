@@ -15,6 +15,36 @@
     "$type": "color",
     "$description": "App header bottom border"
   },
+  "screen-header-bg": {
+    "$value": "{color.accent-purple}",
+    "$type": "color",
+    "$description": "Redesign screen header band background — theme-authored brand surface"
+  },
+  "screen-header-fg": {
+    "$value": "{color.black}",
+    "$type": "color",
+    "$description": "Text on the redesign screen header band"
+  },
+  "screen-header-border": {
+    "$value": "{border}",
+    "$type": "color",
+    "$description": "Redesign screen header band bottom border"
+  },
+  "brand-accent-bg": {
+    "$value": "{color.accent-purple}",
+    "$type": "color",
+    "$description": "Brand accent surface for nav and selected chrome; intentionally not neutral accent"
+  },
+  "brand-accent-fg": {
+    "$value": "{color.black}",
+    "$type": "color",
+    "$description": "Text/icons on brand accent surfaces"
+  },
+  "brand-accent-border": {
+    "$value": "{border}",
+    "$type": "color",
+    "$description": "Border for brand accent surfaces"
+  },
   "chrome-tab-bar-bg": {
     "$value": "{color.accent-purple}",
     "$type": "color",

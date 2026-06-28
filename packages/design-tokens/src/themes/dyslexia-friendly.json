@@ -119,6 +119,9 @@
       "sm": { "$value": "0 1px 2px rgba(0, 0, 0, 0.1)" },
       "md": { "$value": "0 2px 4px rgba(0, 0, 0, 0.1)" },
       "lg": { "$value": "0 3px 6px rgba(0, 0, 0, 0.1)" },
+      "hard-sm": { "$value": "0 1px 2px rgba(0, 0, 0, 0.1)" },
+      "hard-md": { "$value": "0 2px 4px rgba(0, 0, 0, 0.1)" },
+      "hard-lg": { "$value": "0 3px 6px rgba(0, 0, 0, 0.1)" },
       "focus": { "$value": "0 0 0 4px rgba(78, 125, 158, 0.4)" }
     },
     "transition": {
@@ -140,6 +143,12 @@
     "semantic": {
       "chrome-header-bg": { "$value": "#f8f5e4" },
       "chrome-header-border": { "$value": "#c8c3a9" },
+      "screen-header-bg": { "$value": "#8860a0" },
+      "screen-header-fg": { "$value": "#f8f5e4" },
+      "screen-header-border": { "$value": "#c8c3a9" },
+      "brand-accent-bg": { "$value": "#8860a0" },
+      "brand-accent-fg": { "$value": "#ffffff" },
+      "brand-accent-border": { "$value": "#c8c3a9" },
       "chrome-tab-bar-bg": { "$value": "#8860a0" },
       "chrome-tab-bar-fg": { "$value": "#f8f5e4" },
       "chrome-tab-bar-active-fg": { "$value": "#ffffff" },

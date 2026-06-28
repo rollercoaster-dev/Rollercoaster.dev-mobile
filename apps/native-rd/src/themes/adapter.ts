@@ -17,6 +17,8 @@ import {
   fontFamily as pkgFontFamily,
   transition as pkgTransition,
   shadow as pkgShadow,
+  darkShadow as pkgDarkShadow,
+  shadowVariants as pkgShadowVariants,
   lightColors as pkgLightColors,
   darkColors as pkgDarkColors,
   variants as pkgVariants,
@@ -227,3 +229,5 @@ export const letterSpacing = pkgLetterSpacing;
 export const fontFamily = pkgFontFamily;
 export const transition = pkgTransition;
 export const shadow = pkgShadow;
+export const darkShadow = pkgDarkShadow;
+export const shadowVariants = pkgShadowVariants;

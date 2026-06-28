@@ -3,7 +3,14 @@
  * Each variant defines what it changes from the base colorMode
  */
 
-import { size, sizeL, lineHeight, lineHeightL } from "./tokens";
+import {
+  size,
+  sizeL,
+  lineHeight,
+  lineHeightL,
+  shadowVariants,
+  type Shadow,
+} from "./tokens";
 import {
   variantColors,
   narrativeVariants,
@@ -43,6 +50,10 @@ interface VariantOverride {
   action?: ActionOverride;
   surfaceBorder?: SurfaceBorderOverride;
   shadows?: { opacity: number };
+  // A complete per-theme shadow map (already carries the semantic elevation
+  // roles via withSemanticShadows). Sourced from `shadowVariants`, but typed as
+  // the full Shadow shape since compose.ts consumes it as a whole-map override.
+  shadow?: Shadow;
   size?: typeof size | typeof sizeL;
   lineHeight?: typeof lineHeight | typeof lineHeightL;
   fontFamily?: string;
@@ -69,6 +80,7 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
     action: actionVariants.highContrast,
     surfaceBorder: surfaceBorderVariants.highContrast,
     shadows: { opacity: 0 },
+    shadow: shadowVariants.highContrast,
   },
 
   /**
@@ -88,6 +100,7 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
     chrome: chromeVariants.dyslexiaFriendly,
     action: actionVariants.dyslexiaFriendly,
     surfaceBorder: surfaceBorderVariants.dyslexiaFriendly,
+    shadow: shadowVariants.dyslexiaFriendly,
     lineHeight: lineHeightL,
     fontFamily: "Lexend",
   },
@@ -103,6 +116,7 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
     action: actionVariants.lowVision,
     surfaceBorder: surfaceBorderVariants.lowVision,
     shadows: { opacity: 0 },
+    shadow: shadowVariants.lowVision,
     size: sizeL,
     fontFamily: "Atkinson Hyperlegible",
   },
@@ -117,6 +131,7 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
     action: actionVariants.autismFriendly,
     surfaceBorder: surfaceBorderVariants.autismFriendly,
     shadows: { opacity: 0 },
+    shadow: shadowVariants.autismFriendly,
   },
 
   /**
@@ -129,6 +144,7 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
     chrome: chromeVariants.lowInfo,
     action: actionVariants.lowInfo,
     surfaceBorder: surfaceBorderVariants.lowInfo,
+    shadow: shadowVariants.lowInfo,
   },
 };
 

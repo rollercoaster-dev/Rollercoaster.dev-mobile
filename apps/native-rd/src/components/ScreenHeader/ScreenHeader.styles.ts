@@ -13,7 +13,9 @@ export const styles = StyleSheet.create((theme) => ({
     paddingTop: theme.space[4],
     paddingBottom: theme.space[4],
     paddingHorizontal: theme.space[4],
-    backgroundColor: theme.colors.accentPurple,
+    backgroundColor: theme.chrome.screenHeaderBg,
+    borderBottomColor: theme.chrome.screenHeaderBorder,
+    borderBottomWidth: theme.borderWidth.medium,
     zIndex: 1,
     ...shadowStyle(theme, "cardElevation"),
   },
@@ -24,10 +26,10 @@ export const styles = StyleSheet.create((theme) => ({
     paddingTop: insetTop + theme.space[4],
   }),
   title: {
-    color: theme.colors.accentPurpleFg,
+    color: theme.chrome.screenHeaderFg,
   },
   subLabel: {
-    color: theme.colors.accentPurpleFg,
+    color: theme.chrome.screenHeaderFg,
     fontWeight: theme.fontWeight.bold,
   },
   spacer: {

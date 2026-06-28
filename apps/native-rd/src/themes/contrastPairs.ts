@@ -83,6 +83,22 @@ export const contrastPairs: ContrastPair[] = [
     }),
   },
   {
+    key: "screenHeader",
+    label: "screen header",
+    getColors: (t) => ({
+      fg: t.chrome.screenHeaderFg,
+      bg: t.chrome.screenHeaderBg,
+    }),
+  },
+  {
+    key: "brandAccent",
+    label: "brand accent",
+    getColors: (t) => ({
+      fg: t.chrome.brandAccentFg,
+      bg: t.chrome.brandAccentBg,
+    }),
+  },
+  {
     key: "tabActive",
     label: "tab active",
     getColors: (t) => ({

@@ -140,6 +140,12 @@
     },
     "semantic": {
       "chrome-header-border": { "$value": "#cccccc" },
+      "screen-header-bg": { "$value": "#222222" },
+      "screen-header-fg": { "$value": "#ffffff" },
+      "screen-header-border": { "$value": "#cccccc" },
+      "brand-accent-bg": { "$value": "#222222" },
+      "brand-accent-fg": { "$value": "#ffffff" },
+      "brand-accent-border": { "$value": "#cccccc" },
       "chrome-tab-bar-bg": { "$value": "#666666" },
       "chrome-tab-bar-fg": { "$value": "#ffffff" },
       "chrome-tab-bar-active-fg": { "$value": "#ffffff" },

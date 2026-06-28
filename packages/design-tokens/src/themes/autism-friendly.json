@@ -114,6 +114,9 @@
       "sm": { "$value": "none" },
       "md": { "$value": "none" },
       "lg": { "$value": "none" },
+      "hard-sm": { "$value": "none" },
+      "hard-md": { "$value": "none" },
+      "hard-lg": { "$value": "none" },
       "focus": { "$value": "0 0 0 2px rgba(77, 109, 125, 0.4)" }
     },
     "transition": {
@@ -140,6 +143,12 @@
       "chrome-header-bg": { "$value": "#f7f7f7" },
       "chrome-header-fg": { "$value": "#333333" },
       "chrome-header-border": { "$value": "#dddddd" },
+      "screen-header-bg": { "$value": "#6d5d7d" },
+      "screen-header-fg": { "$value": "#ffffff" },
+      "screen-header-border": { "$value": "#dddddd" },
+      "brand-accent-bg": { "$value": "#6d5d7d" },
+      "brand-accent-fg": { "$value": "#ffffff" },
+      "brand-accent-border": { "$value": "#dddddd" },
       "chrome-tab-bar-bg": { "$value": "#6d5d7d" },
       "chrome-tab-bar-fg": { "$value": "#eeeeee" },
       "chrome-tab-bar-active-fg": { "$value": "#ffffff" },
