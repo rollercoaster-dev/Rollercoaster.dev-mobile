@@ -164,14 +164,18 @@ To use any of this from native-rd, the wiring needed is at minimum: `compose.ts`
 
 Light mode communicates depth with a hard offset shadow on a black-ish surface. Dark mode can't reuse the same recipe — a shadow drawn against a dark indigo bg either disappears (matching shadow color) or blooms outward (light shadow color). The fix is mode-specific encodings of the same conceptual elevation.
 
-> **Updated 2026-06-28 (#376):** shadow values are now authored **per-theme** in
-> `packages/design-tokens/src/themes/*.json` (`theme.shadow`) and emitted by
+> **Authored per-theme since 2026-06-28 (#376):** shadow values live **per-theme**
+> in `packages/design-tokens/src/themes/*.json` (`theme.shadow`) and are emitted by
 > `build-unistyles.js` as `shadow` (light base), `darkShadow`, and
 > `shadowVariants`. native-rd no longer infers dark/variant shadow policy
-> app-side — the old `darkShadowOverrides` / `cardEmpty` are removed. As part of
-> that change Night Ride now authors its `hard*` tokens to the `lg` cutout, so
-> dark tier-1 surfaces carry the cutout shadow **in addition to** the bold
-> border (previously tier-1 was shadow-less in dark).
+> app-side — the old `darkShadowOverrides` / `cardEmpty` are removed. Night Ride
+> authors its `hard*` tokens to the `lg` cutout, so dark tier-1 surfaces carry the
+> black cutout shadow **in addition to** the bold border. This is the intended
+> dark-mode depth treatment: the cutout reads as a void against the dark surface
+> (not a glow), adding depth without the white-bloom problem. It supersedes the
+> earlier border-only tier-1 stance proposed in the
+> [#934 dark rework plan](../plans/2026-04-29-dark-mode-rework.md) (see that plan's
+> superseded R4/D4).
 
 | Tier   | Surfaces                                       | Light mode               | Dark mode                                            |
 | ------ | ---------------------------------------------- | ------------------------ | ---------------------------------------------------- |

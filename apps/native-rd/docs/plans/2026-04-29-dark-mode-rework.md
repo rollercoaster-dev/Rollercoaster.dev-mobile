@@ -6,6 +6,18 @@
 **Scope:** `packages/design-tokens/src/themes/dark.json`, `apps/native-rd/src/themes/adapter.ts`, `apps/native-rd/src/styles/shadows.ts`, dark-mode visuals across all top-level screens
 **Out of scope:** the 6 accessibility variants (`highContrast`, `largeText`, `dyslexia`, `lowVision`, `autismFriendly`, `lowInfo`) — they stay; this plan touches only the `dark` color mode
 
+> **Superseded in part — 2026-06-28 (#376 / PR #393).** Rule **R4** and decision
+> **D4** below specify that dark-mode tier-1 surfaces (cards, list rows, buttons,
+> pills, inputs) carry **no shadow** — border-only depth. That is no longer the
+> shipped behavior. Under the #376 token-contract redesign, Night Ride authors
+> its `hard*` shadow tokens to the `lg` cutout (`0 6px 0 0 rgba(0,0,0,1)`), so
+> dark tier-1 now carries the **black cutout shadow in addition to** the bold
+> border. This is a deliberate, confirmed choice: the cutout reads as a void
+> against the dark surface (not a glow), so it adds depth without the white-bloom
+> problem. The rest of this plan (borders, surface ladder, text hierarchy, chrome
+> bands) still holds. Current policy of record:
+> [`design-token-system-map.md` → Shadow & border policy](../architecture/design-token-system-map.md#shadow--border-policy-post-2026-04-29-dark-rework).
+
 ## Problem (issue #934)
 
 > Shadows have bad colors. Borders have bad colors. Contrast is an issue.
@@ -47,7 +59,7 @@ Hard shadows depend on the shadow being _darker_ than the surrounding surface. O
 
 **Native-rd's neo-brutalist constraint:** the visual identity is hard-edged blocks with offset shadows. Pure Material elevation (lighter surface, no border, no offset) is too soft. Adapt:
 
-- **Tier 1 — sits on the page (cards, list rows, buttons, pills, inputs):** elevated surface (`#241845`) **+ bold border** (high-contrast, see R5). **No shadow.** This is the dark-mode replacement for "card with hard offset shadow."
+- **Tier 1 — sits on the page (cards, list rows, buttons, pills, inputs):** elevated surface (`#241845`) **+ bold border** (high-contrast, see R5). **No shadow.** This is the dark-mode replacement for "card with hard offset shadow." _(Superseded 2026-06-28 / #376 — tier-1 now also carries the black cutout shadow; see banner at top.)_
 - **Tier 2 — lifts off the page (modals, sheets, FAB, EvidenceDrawer):** more elevated surface (`#2d1f52`) **+ bold border + near-black hard shadow.** Black shadow on dark bg reads as a void/cutout, which IS depth, so the neo-brutalist offset shape survives.
 - **Tier 3 — chrome bands (top header, tab bar):** lavender (`accentPurple #c4b5fd`). No shadow, no border. Already correct in the current build (post-#935).
 
@@ -87,16 +99,16 @@ Dark mode is not universal accessibility. Some readers prefer light, especially 
 
 ## Decisions
 
-| ID  | Decision                                                                                                                                                                                                   | Drives         |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
-| D1  | Keep `#1a1033` as base bg. Don't introduce pure black or true gray.                                                                                                                                        | R1, brand      |
-| D2  | Keep `#fafafa` as primary text. Step `textSecondary` and `textMuted` down for real hierarchy.                                                                                                              | R2, R3         |
-| D3  | Replace dim indigo borders with high-contrast near-white lavender (`#cfc7e0`) as the default.                                                                                                              | R3, R5         |
-| D4  | Tier-1 cards in dark: bold border, **no shadow**. Tier-2 modals/sheets: bold border + black shadow. Encode via semantic shadow tokens (`cardElevation`, `modalElevation`), not per-component conditionals. | R4             |
-| D5  | Surface ladder gets more luminance step between rungs to make the elevation system carry meaning.                                                                                                          | R4             |
-| D6  | Yellow vibration: out-of-scope for v1; content pills stay as-is. Logged as follow-up if backgrounds-of-yellow surface in QA.                                                                               | R6             |
-| D7  | No changes to the 6 accessibility variants.                                                                                                                                                                | scope          |
-| D8  | Chrome bands (header + tab bar) darken from `#c4b5fd` → `#8d7eb0`. Black text/icons stay (4.7:1, AA pass).                                                                                                 | prototype eval |
+| ID  | Decision                                                                                                                                                                                                                                                                                                       | Drives         |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| D1  | Keep `#1a1033` as base bg. Don't introduce pure black or true gray.                                                                                                                                                                                                                                            | R1, brand      |
+| D2  | Keep `#fafafa` as primary text. Step `textSecondary` and `textMuted` down for real hierarchy.                                                                                                                                                                                                                  | R2, R3         |
+| D3  | Replace dim indigo borders with high-contrast near-white lavender (`#cfc7e0`) as the default.                                                                                                                                                                                                                  | R3, R5         |
+| D4  | Tier-1 cards in dark: bold border, **no shadow**. Tier-2 modals/sheets: bold border + black shadow. Encode via semantic shadow tokens (`cardElevation`, `modalElevation`), not per-component conditionals. **Superseded 2026-06-28 (#376):** tier-1 now also carries the black cutout shadow — see top banner. | R4             |
+| D5  | Surface ladder gets more luminance step between rungs to make the elevation system carry meaning.                                                                                                                                                                                                              | R4             |
+| D6  | Yellow vibration: out-of-scope for v1; content pills stay as-is. Logged as follow-up if backgrounds-of-yellow surface in QA.                                                                                                                                                                                   | R6             |
+| D7  | No changes to the 6 accessibility variants.                                                                                                                                                                                                                                                                    | scope          |
+| D8  | Chrome bands (header + tab bar) darken from `#c4b5fd` → `#8d7eb0`. Black text/icons stay (4.7:1, AA pass).                                                                                                                                                                                                     | prototype eval |
 
 ## Token changes
 
