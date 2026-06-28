@@ -358,6 +358,56 @@ export type Palette = typeof palette;
 // tokens.ts — non-color primitives (spacing, typography, radius, zIndex)
 // ---------------------------------------------------------------------------
 
+/** Parse CSS shadow strings into the RN shadow object shape emitted for Unistyles. */
+function parseShadowValue(raw, key) {
+  if (raw === "none") {
+    return { offsetX: 0, offsetY: 0, radius: 0, opacity: 0 };
+  }
+
+  const s = String(raw);
+  const rgbaMatch = s.match(
+    /rgba\(\s*[\d.]+,\s*[\d.]+,\s*[\d.]+,\s*([\d.]+)\s*\)/,
+  );
+  if (!rgbaMatch) {
+    console.warn(`Could not parse shadow "${raw}" for key "${key}", skipping`);
+    return null;
+  }
+
+  const beforeRgba = s.slice(0, s.indexOf("rgba")).trim();
+  const nums = beforeRgba.match(/-?\d+/g);
+  if (!nums || nums.length < 3) {
+    console.warn(
+      `Could not parse shadow offsets "${raw}" for key "${key}", skipping`,
+    );
+    return null;
+  }
+
+  return {
+    offsetX: parseInt(nums[0], 10),
+    offsetY: parseInt(nums[1], 10),
+    radius: parseInt(nums[2], 10),
+    opacity: parseFloat(rgbaMatch[1]),
+  };
+}
+
+function extractShadowMap(shadowTokens) {
+  return Object.fromEntries(
+    Object.entries(shadowTokens ?? {})
+      .filter(([k]) => !k.startsWith("$"))
+      .map(([k, t]) => [camel(k), parseShadowValue(val(t), k)])
+      .filter(([, v]) => v !== null),
+  );
+}
+
+function formatShadowObject(name, value) {
+  const lines = Object.entries(value)
+    .map(([k, v]) => {
+      return `  ${safeKey(k)}: { offsetX: ${v.offsetX}, offsetY: ${v.offsetY}, radius: ${v.radius}, opacity: ${v.opacity} },`;
+    })
+    .join("\n");
+  return `export const ${name} = {\n${lines}\n} as const;\n`;
+}
+
 async function buildTokens() {
   const spacing = await readJSON("tokens/spacing.json");
   const typo = await readJSON("tokens/typography.json");
@@ -407,47 +457,22 @@ async function buildTokens() {
       return [camel(k), ms ? parseInt(ms[1], 10) : parseInt(v, 10)];
     });
 
-  // shadow: parse CSS shadow strings into RN shadow objects
-  const shadowEntries = Object.entries(spacing.shadow)
-    .filter(([k]) => !k.startsWith("$"))
-    .map(([k, t]) => {
-      const raw = val(t);
-      if (raw === "none") {
-        return [camel(k), { offsetX: 0, offsetY: 0, radius: 0, opacity: 0 }];
-      }
-      // Parse CSS box-shadow: supports "X Y blur [spread] rgba(...)" with px or unitless 0
-      // Match numeric values (with optional px) before the rgba part
-      const s = String(raw);
-      const rgbaMatch = s.match(
-        /rgba\(\s*[\d.]+,\s*[\d.]+,\s*[\d.]+,\s*([\d.]+)\s*\)/,
-      );
-      if (!rgbaMatch) {
-        console.warn(
-          `Could not parse shadow "${raw}" for key "${k}", skipping`,
-        );
-        return [camel(k), null];
-      }
-      const opacity = parseFloat(rgbaMatch[1]);
-      // Extract the numeric parts before rgba
-      const beforeRgba = s.slice(0, s.indexOf("rgba")).trim();
-      const nums = beforeRgba.match(/-?\d+/g);
-      if (!nums || nums.length < 3) {
-        console.warn(
-          `Could not parse shadow offsets "${raw}" for key "${k}", skipping`,
-        );
-        return [camel(k), null];
-      }
-      return [
-        camel(k),
-        {
-          offsetX: parseInt(nums[0], 10),
-          offsetY: parseInt(nums[1], 10),
-          radius: parseInt(nums[2], 10),
-          opacity,
-        },
-      ];
-    })
-    .filter(([, v]) => v !== null);
+  const baseShadow = extractShadowMap(spacing.shadow);
+  const darkTheme = await readJSON("themes/dark.json");
+  const darkShadow = {
+    ...baseShadow,
+    ...extractShadowMap(darkTheme.theme.shadow),
+  };
+  const variantShadows = [];
+  for (const { file, name } of VARIANT_THEMES) {
+    const data = await readJSON(`themes/${file}.json`);
+    const themed = { ...baseShadow, ...extractShadowMap(data.theme.shadow) };
+    const differs = Object.entries(themed).some(
+      ([key, value]) =>
+        JSON.stringify(value) !== JSON.stringify(baseShadow[key]),
+    );
+    if (differs) variantShadows.push({ name, shadow: themed });
+  }
 
   // letterSpacing: em → px (base 16px)
   const letterSpacingEntries = Object.entries(typo.font.letterSpacing)
@@ -575,15 +600,13 @@ ${toTSObject(transitionEntries)}
 } as const;
 `;
 
-  // shadow — needs special formatting (nested objects)
-  const shadowLines = shadowEntries
-    .map(([k, v]) => {
-      return `  ${safeKey(k)}: { offsetX: ${v.offsetX}, offsetY: ${v.offsetY}, radius: ${v.radius}, opacity: ${v.opacity} },`;
-    })
-    .join("\n");
   out += `
-export const shadow = {
-${shadowLines}
+${formatShadowObject("shadow", baseShadow)}
+${formatShadowObject("darkShadow", darkShadow)}
+export const shadowVariants = {
+${variantShadows
+  .map(({ name, shadow }) => `  ${name}: ${JSON.stringify(shadow)},`)
+  .join("\n")}
 } as const;
 `;
 
@@ -599,6 +622,8 @@ export type LetterSpacing = typeof letterSpacing;
 export type FontFamily = typeof fontFamily;
 export type Transition = typeof transition;
 export type Shadow = typeof shadow;
+export type ShadowOverride = Partial<Shadow>;
+export type ShadowVariants = typeof shadowVariants;
 `;
 
   return out;
@@ -858,6 +883,8 @@ function buildIndex(hasSizeL, hasLineHeightL) {
     "fontFamily",
     "transition",
     "shadow",
+    "darkShadow",
+    "shadowVariants",
   ].join(", ");
 
   const typeExports = [
@@ -874,6 +901,8 @@ function buildIndex(hasSizeL, hasLineHeightL) {
     "FontFamily",
     "Transition",
     "Shadow",
+    "ShadowOverride",
+    "ShadowVariants",
   ].join(", ");
 
   return `// Auto-generated from design-tokens. DO NOT EDIT.
@@ -929,6 +958,12 @@ const SEMANTIC_CATEGORIES = [
       "chrome-header-bg",
       "chrome-header-fg",
       "chrome-header-border",
+      "screen-header-bg",
+      "screen-header-fg",
+      "screen-header-border",
+      "brand-accent-bg",
+      "brand-accent-fg",
+      "brand-accent-border",
       "chrome-tab-bar-bg",
       "chrome-tab-bar-fg",
       "chrome-tab-bar-active-fg",
