@@ -12,24 +12,26 @@
 Observable criteria derived from the issue. These describe what success looks like from a
 user/system perspective — not generic checklists.
 
-- [ ] The yellow circular FAB (`testID="tab-fab-new-goal"`) no longer occupies the center slot
-      of the main pill; the center slot is either empty or used for a different affordance.
-- [ ] `+ new goal` is still reachable (e.g. via an icon in Goals tab header, overflow menu, or
-      relocated button) with an appropriate accessibility label.
-- [ ] SettingsTab destination is visible in the nav bar without a detached separate pill, OR the
-      detachment is explicitly retained as a settled decision (see Open Questions).
-- [ ] The bar is visually and functionally identical across Goals, Badges, and Settings contexts
-      (no per-context mutations beyond the active-knob slide / colour through-line on the active tab).
-- [ ] No duplicate global resume control. The bar does NOT add a "resume goal" action — that
-      belongs to S5 (Goals/Badges cockpit, issue #381).
-- [ ] All 7 themes render correctly: no hardcoded hex in the nav bar's own styles (one pre-existing
-      exception documented — see Decisions D1).
-- [ ] `PILL_LIFT` constant and `useTabScreenContentInset` are unchanged (or any change is
-      propagated to all 11 consumers listed in Affected Areas).
-- [ ] `EvidenceDrawer` still aligns: `DRAWER_CLOSED_HEIGHT = PEEK_HEIGHT + PILL_LIFT` remains
-      correct; no transparent strip visible between drawer peek and pill.
-- [ ] All existing `FocusPillTabBar` a11y contract tests pass; new/changed behavior has test
-      coverage in `src/__tests__/FocusPillTabBar.test.tsx`.
+- [x] The yellow circular FAB (`testID="tab-fab-new-goal"`) no longer occupies the center slot
+      of the main pill — the FAB is removed outright and the slot reclaimed by the 3-slot track.
+- [x] `+ new goal` is still reachable — relocated to the Goals list header as an `IconButton`
+      (`testID="goals-header-new-goal"`, a11y label `goals:actions.newGoal`).
+- [x] SettingsTab is visible in the nav bar without a detached separate pill — folded into the
+      single pill as an equal third slot (D5).
+- [x] The bar is visually and functionally identical across Goals, Badges, and Settings contexts
+      (only the active-knob slide + colour through-line change on the active tab).
+- [x] No duplicate global resume control. The bar adds no "resume goal" action — that stays with
+      S5 (#381).
+- [x] No hardcoded hex in the nav bar's own styles — verified (`#0a0a0a` plus-ink left with the
+      FAB; the knob ink is token-driven). Contrast gate is green across all 7 themes. _On-device /
+      Storybook visual sweep across the 7 themes remains as a manual pre-merge check._
+- [x] `PILL_LIFT` constant and `useTabScreenContentInset` are unchanged — neither was touched.
+- [x] `EvidenceDrawer` coupling holds: the bar's outer geometry (container bg, `marginTop:
+    -PILL_LIFT`, pill `PILL_HEIGHT`) is unchanged, so `DRAWER_CLOSED_HEIGHT = PEEK_HEIGHT +
+    PILL_LIFT` stays correct. _On-device peek-alignment confirmation remains a manual check._
+- [x] All existing `FocusPillTabBar` a11y contract tests pass; new behavior (D9 colour matrix,
+      Settings reachable, header new-goal) has coverage in `FocusPillTabBar.test.tsx` /
+      `GoalsScreen.test.tsx`.
 
 ## Dependencies
 
@@ -204,10 +206,12 @@ default/highContrast/lowVision, a single calm `brandAccent` fill in dyslexia/aut
 Output = the locked per-theme colour spec below. No app code changes (probe test computed the
 spec, then deleted). See **Phase 2 — Results**.
 
-**Phase 3 — integration.** Land the tokens (using the Phase-2 spec) and port The Slide into the
-real `FocusPillTabBar.tsx`: demote the FAB, fold Settings into the pill, replace the morph with
-the snapping knob, update tests, final 7-theme verification, delete the prototype story. Steps 0–5
-below assume locked decisions D4–D9, treatment B, and the Phase-2 colour spec.
+**Phase 3 — integration (DONE, 2026-06-28).** Landed the tokens (Phase-2 spec) and ported The
+Slide into the real `FocusPillTabBar.tsx`: demoted the FAB, relocated `+ new goal` to the Goals
+header, folded Settings into the pill, replaced the morph with the snapping knob, added the D9
+colour matrix tests, deleted the prototype story. Shipped as three commits (token addition →
+FAB relocation → bar redesign). Steps 0–5 below assumed locked decisions D4–D9, treatment B, and
+the Phase-2 colour spec. Full suite green (9153 tests); contrast gate green ×7. See Discovery Log.
 
 ---
 
@@ -473,3 +477,26 @@ Items explicitly deferred from this issue.
   `brandAccent` fill in dyslexia/autismFriendly/lowInfo. Phase-3 tokens reduced to **2 fg tokens**
   (`accentYellowFg`, `accentMintFg`); `accentPurpleFg` already correct; **no** muted-bg tokens. No
   sub-issue needed. Computed via a throwaway probe test (deleted), not screenshots.
+- [2026-06-28] **Phase 3 shipped.** Three commits:
+  1. `feat(design-tokens)` — added `accentYellowFg`/`accentMintFg` (colors.json + dark.json flip +
+     build-unistyles wiring) and locked them into the contrast gate (`knobGoals`/`knobBadges`,
+     green ×7). The build emits the Phase-2 values exactly (light `#0a0a0a`; dark mint-fg `#fafafa`).
+  2. `feat(native-rd/nav)` relocation — FAB removed; `+ new goal` moved to the Goals `ScreenHeader`
+     right slot as an `IconButton`. The `newGoal` label moved `common:navigation.fab` →
+     `goals:actions` across en/de + regenerated pseudo. FAB tests dropped; GoalsScreen header-button
+     tests added.
+  3. `feat(native-rd/nav)` redesign — Settings folded into one pill; morph replaced by the slide
+     knob (native `Animated` translateX, `useNativeDriver`, gated by `useAnimationPref`); D9
+     conditional colour; prototype story deleted.
+- [2026-06-28] **Two implementation discoveries vs the plan:**
+  (a) D4's relocation was load-bearing, not optional — the FAB was the **only** new-goal entry from
+  a _populated_ Goals list (the empty state has its own CTA), so a `GoalsScreen` header button had
+  to be built, not just "the FAB removed."
+  (b) The slide knob is correctly **hidden from the a11y tree** (the slots own role/label/selected),
+  so RNTL's `getByText` can't see the knob's visible label by default — the active-label test opts
+  into `includeHiddenElements: true`. `gen:pseudo` also surfaced pre-existing padding-dot drift in
+  three unrelated pseudo files; reverted those to keep the diff scoped.
+- [2026-06-28] **Remaining manual check (not blocking the code):** on-device / Storybook visual
+  sweep of the bar across all 7 themes + EvidenceDrawer peek alignment. Code-level coupling
+  (`PILL_LIFT`/`PILL_HEIGHT`/outer geometry) is provably untouched; the visual confirmation is a
+  pre-merge eyeball, not a code change.
