@@ -51,6 +51,35 @@ export const Populated: Story = {
   args: { hero, keepWarm },
 };
 
+// Five keep-warm goals exercise the two-up wrap: cards cap at two per row and
+// wrap to a new line, never compressing a third onto the same row.
+export const ManyKeepWarm: Story = {
+  args: {
+    hero,
+    keepWarm: [
+      ...keepWarm,
+      {
+        id: "kw-3",
+        title: "Ship the offline-first prototype",
+        nextStepTitle: "Wire up the sync queue",
+        progress: 0.4,
+      },
+      {
+        id: "kw-4",
+        title: "Write the accessibility audit",
+        nextStepTitle: "Run the contrast checker",
+        progress: 0.6,
+      },
+      {
+        id: "kw-5",
+        title: "Draft the launch checklist",
+        nextStepTitle: null,
+        progress: 0.1,
+      },
+    ],
+  },
+};
+
 export const HeroOnly: Story = {
   args: { hero, keepWarm: [] },
 };

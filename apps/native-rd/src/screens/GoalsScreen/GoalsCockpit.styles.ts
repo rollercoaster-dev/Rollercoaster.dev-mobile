@@ -43,18 +43,20 @@ export const styles = StyleSheet.create((theme) => ({
     textTransform: "uppercase",
     letterSpacing: 1,
   },
-  // Two-up row of compact cards (prototype layout). Cards grow to fill the row
-  // and wrap to the next line beyond two.
+  // Fixed two-column grid (prototype layout): every card is a uniform half-width
+  // tile that wraps to the next row after two.
   keepWarmGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: theme.space[3],
+    justifyContent: "space-between",
+    rowGap: theme.space[3],
   },
   keepWarmCard: {
-    flexGrow: 1,
-    flexShrink: 1,
-    flexBasis: "45%",
-    minWidth: 0,
+    // Fixed width (not flex): each card is exactly half the row so two fit per
+    // line and a third wraps. No flexGrow/flexShrink — grow would stretch a lone
+    // trailing card to full width (reads as a list) and shrink would let a third
+    // compress onto the same line. space-between on the row supplies the gutter.
+    width: "48%",
     backgroundColor: theme.surfaceBorder.surfaceCardBg,
     borderWidth: theme.borderWidth.thick,
     borderColor: theme.colors.border,

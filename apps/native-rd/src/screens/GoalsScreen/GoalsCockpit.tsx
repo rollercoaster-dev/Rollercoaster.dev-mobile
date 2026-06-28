@@ -124,7 +124,7 @@ export function GoalsCockpit({
       >
         <ProgressRing
           progress={hero.progress}
-          size={104}
+          size={124}
           strokeWidth={10}
           centerLabel={`${percent}%`}
           centerSublabel={ringSublabel}
