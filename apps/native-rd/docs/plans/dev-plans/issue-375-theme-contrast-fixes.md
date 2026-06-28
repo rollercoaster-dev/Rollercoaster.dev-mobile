@@ -27,6 +27,15 @@
 > - Recipes applied + re-verified against the live gate: D2 (base success), D3 (dark warning-fg), D4/D5 (Bold Ink warning+success), D8 (Warm Studio success), D10-warning/D11/D12 (Still Water warning-fg/success/info), D13 (Loud & Clear + Clean Signal warning-fg). Full suite green (9120).
 >
 > **Next: Phase 2 — clear the remaining 8 `KNOWN_FAILURES`** (primary / destructive-amber / dyslexia highlight / autism tab bars) via D1/D6/D7/D9/D10-destructive + Bold-Ink destructive. See "Phase plan" below.
+>
+> **Phase 2 — remaining contrast cells — is DONE (committed, branch `feat/issue-375-phase2-contrast-cells`, 4 commits).** Shipped:
+>
+> - D1 (`colors.json` `color.primary` `#3b82f6` → `#2563eb`, blue-600) — light-default primary 3.52 → 4.95; large-text inherits.
+> - Step 3 high-contrast `semantic.action-destructive-bg` `#cc5500` → `#c25000` — Bold Ink destructive 4.31 → 4.73.
+> - Step 4 dyslexia: `interactive.highlight` + `semantic.action-primary-bg` `#4e7d9e` → `#3a6280` (primary 4.23 → 6.48, highlight 4.42 → 6.48); `semantic.action-destructive-fg` `#333333` → `#1a1a1a` (destructive 4.26 → 5.86, gold bg preserved).
+> - Step 5 autism: `semantic.chrome-tab-bar-bg` `#8a7a9a` → `#6d5d7d` + `semantic.chrome-tab-bar-fg` `#333333` → `#eeeeee` (tabActive 3.94 → 5.98, tabIdle 3.21 → 5.15); `semantic.action-destructive-fg` `#333333` → `#111111` (destructive 3.02 → 4.51).
+>
+> **The `KNOWN_FAILURES` allowlist is now empty** — every theme × canonical pair (7 × 13 = 91 cells) meets WCAG AA (4.5:1). Verified: `bun run type-check` ✓, `eslint` ✓, full `bun run test` ✓ (9120), design-tokens `bun run build` regenerates unistyles cleanly. **Next: Phase 3+ — Decision A strip** of the dead CSS/Style-Dictionary platforms.
 
 ## Issue Summary
 
@@ -37,11 +46,11 @@
 
 ## Intent Verification
 
-- [ ] Every fg/bg pair in the §1 table measures >= 4.5:1 when computed by the regression test script.
-- [ ] `bun run build` (from `packages/design-tokens/`) completes without error; `build/css/themes.css` and `build/unistyles/*.ts` are regenerated.
-- [ ] `bun run type-check` and `bun run test` are both green from the repo root.
-- [ ] Re-opening `Theme Eval.dc.html` in a browser (after build) shows no red cells in §1 across all 7 themes.
-- [ ] The new regression test in `apps/native-rd/src/themes/__tests__/contrast.test.ts` asserts all 20 resolved pairs >= 4.5:1 and would have caught the pre-fix failures.
+- [x] Every fg/bg pair in the §1 table measures >= 4.5:1 when computed by the regression test script.
+- [x] `bun run build` (from `packages/design-tokens/`) completes without error; `build/css/themes.css` and `build/unistyles/*.ts` are regenerated.
+- [x] `bun run type-check` and `bun run test` are both green from the repo root.
+- [x] Storybook `Design System/Contrast Audit` renders the same `contrastPairs.ts` data as the CI gate. This supersedes the original `Theme Eval.dc.html` manual check because that prototype reads stale CSS-path tokens and is no longer the authoritative validation surface.
+- [x] The regression test in `apps/native-rd/src/themes/__tests__/contrast.test.ts` asserts all canonical pairs >= 4.5:1 (allowlist empty) and would have caught the pre-fix failures.
 
 ## Dependencies
 
@@ -61,8 +70,8 @@ Build a CI-enforced contrast validation gate (done — Phase 0), then drive ever
 
 - **Phase 0 — the gate. ✅ DONE.** `contrastPairs.ts` + list-driven `contrast.test.ts` (KNOWN_FAILURES ratchet) + `ContrastAudit` story. See status banner.
 - **Phase 1 — theme the feedback foregrounds (root-cause). ✅ DONE.** `build-unistyles.js` emits themed `success/warning/info` (+`-foreground`) per-theme into the unistyles `Colors`; `adapter.ts` lets them flow (dropped the bg-only palette re-adds); native-rd `Colors` + `contrastPairs.ts` carry the 3 pairs; themed green per D2/D3/D4/D5/D8/D10-warning/D11/D12/D13. See status banner.
-- **Phase 2 — remaining contrast cells.** Clear the 8 current `KNOWN_FAILURES` (primary, destructive-amber, dyslexia highlight, autism tab bars) via the source-JSON edits in the researcher's recipes (D1/D6/D7/D9/D10 + Bold-Ink destructive). Delete each line from KNOWN_FAILURES as it goes green.
-- **Phase 3+ — Decision A strip.** Delete the dead Style Dictionary platforms (css/js/tailwind/tamagui), `build-themes.js`, `css/narrative.css`; reduce `bun run build` to `build-unistyles.js`; drop dead `exports` subpaths + vestigial `publishConfig`/`verify-css.js`; reconcile naming; update `packages/design-tokens/CLAUDE.md`. Pre-deletion: confirm the separate `~/Code/rollercoaster.dev/landing` repo isn't vendoring `/css*`.
+- **Phase 2 — remaining contrast cells. ✅ DONE.** Clear the 8 current `KNOWN_FAILURES` (primary, destructive-amber, dyslexia highlight, autism tab bars) via the source-JSON edits in the researcher's recipes (D1/D6/D7/D9/D10 + Bold-Ink destructive). Delete each line from KNOWN_FAILURES as it goes green. — `KNOWN_FAILURES` now empty; 91/91 cells pass.
+- **Phase 3+ — Decision A strip.** Delete the dead Style Dictionary platforms (css/js/tailwind/tamagui), `build-themes.js`, `css/narrative.css`; reduce `bun run build` to `build-unistyles.js`; drop dead `exports` subpaths + vestigial `publishConfig`/`verify-css.js`; reconcile naming; update `packages/design-tokens/CLAUDE.md`. Pre-deletion: confirm the separate `~/Code/rollercoaster.dev/landing` repo isn't vendoring `/css*`. Preserve `apps/native-rd/prototypes/` as historical design documentation; do not treat prototype-local token CSS or `Theme Eval.dc.html` as current validation surfaces.
 
 ## Ground Truth — the gate (unistyles path, 8 reds, 2026-06-26)
 
@@ -318,18 +327,19 @@ Check whether CI runs the build before tests: if `bun run test` in CI references
 - [ ] Unit: new `test.each` in `contrast.test.ts` covering all 20 post-fix pairs, >= 4.5:1 each
 - [ ] Unit: existing `contrast.test.ts` tests must stay green (no regressions to button/tab tests already there)
 - [ ] Build verification: `bun run build` in `packages/design-tokens/` must succeed after each step
-- [ ] Manual: re-open `apps/native-rd/prototypes/screen-redesign/Theme Eval.dc.html` in a browser after the full build — §1 table should show all green
+- [x] Manual: open Storybook `Design System/Contrast Audit / Matrix` after the full build — summary shows 91 cells, 0 fail, 0 amber
 - [ ] Type-check: `bun run type-check` from repo root must pass (unistyles types regenerated correctly)
 
 ## Not in Scope
 
-| Item                                                   | Reason                                                                                  | Follow-up                                 |
-| ------------------------------------------------------ | --------------------------------------------------------------------------------------- | ----------------------------------------- |
-| §2 divergence fixes (43 mismatched cells in App Shell) | Separate PR B scope                                                                     | Issue to be filed                         |
-| `action-destructive-bg` amber vs red redesign decision | Already documented as design intent (`action.json` comment); not a contrast issue       | none                                      |
-| `large-text.json` explicit color overrides             | Not needed; inherits all fixes from Step 1                                              | none                                      |
-| CI build-before-test plumbing                          | Investigate separately; if CI caches stale build outputs this is a separate CI issue    | Check `.github/workflows/` for build step |
-| Still Water `chrome-tab-bar-indicator`                 | Not a text-on-background pair; visual indicator only, not subject to WCAG text contrast | none                                      |
+| Item                                                   | Reason                                                                                                                         | Follow-up                                 |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------- |
+| §2 divergence fixes (43 mismatched cells in App Shell) | Separate PR B scope                                                                                                            | Issue to be filed                         |
+| `action-destructive-bg` amber vs red redesign decision | Already documented as design intent (`action.json` comment); not a contrast issue                                              | none                                      |
+| `large-text.json` explicit color overrides             | Not needed; inherits all fixes from Step 1                                                                                     | none                                      |
+| CI build-before-test plumbing                          | Investigate separately; if CI caches stale build outputs this is a separate CI issue                                           | Check `.github/workflows/` for build step |
+| Still Water `chrome-tab-bar-indicator`                 | Not a text-on-background pair; visual indicator only, not subject to WCAG text contrast                                        | none                                      |
+| Prototype HTML/token snapshots                         | Historical design docs stay in `apps/native-rd/prototypes/`; Storybook `Contrast Audit` + `contrast.test.ts` are authoritative | none                                      |
 
 ## Discovery Log
 
@@ -341,4 +351,6 @@ Check whether CI runs the build before tests: if `bun run test` in CI references
 - [2026-06-26 00:00] build/ directory is gitignored (root .gitignore `build/`). Build artifacts are not committed. PR diff is JSON source + test only.
 - [2026-06-26 00:00] Existing contrast.test.ts has 20 tests that all pass; none of them cover the §1 token-source pairs — they test lightColors/darkColors adapter properties and the WCAG utility, not the resolved semantic token pairs.
 - [2026-06-26 00:00] scripts/verify-css.js compares build output against a reference path that no longer exists (openbadges-ui). It exits cleanly with "verification skipped" when the reference file is absent. Not relevant to this PR.
+- [2026-06-27 00:00] Phase 2 complete (branch feat/issue-375-phase2-contrast-cells, 4 atomic commits). Applied D1 (base color.primary #3b82f6 → #2563eb), high-contrast destructive-bg #cc5500 → #c25000, dyslexia highlight+action-primary-bg #4e7d9e → #3a6280 and action-destructive-fg #333333 → #1a1a1a, autism chrome-tab-bar-bg #8a7a9a → #6d5d7d + chrome-tab-bar-fg #333333 → #eeeeee + action-destructive-fg #333333 → #111111. Each commit deleted its KNOWN_FAILURES lines in the same commit (ratchet invariant). Final state: KNOWN_FAILURES set is empty, 91/91 cells ≥4.5, full suite 9120 green, type-check + eslint clean.
+- [2026-06-27 00:00] Note: darkening base color.primary to #2563eb makes palette.primary equal palette.primaryDark (#2563eb). action-primary-hover-bg ({color.primary-dark}) now resolves to the same blue as rest — a minor visual hover flattening accepted by D1's rationale (no new color introduced). Flagged for the Phase 3+ design review.
 -->

@@ -137,7 +137,7 @@
       "action-primary-hover-bg": { "$value": "#000000" },
       "action-secondary-bg": { "$value": "#ffffff" },
       "action-secondary-fg": { "$value": "#000000" },
-      "action-destructive-bg": { "$value": "#cc5500" },
+      "action-destructive-bg": { "$value": "#c25000" },
       "action-destructive-fg": { "$value": "#ffffff" },
       "warning-foreground": { "$value": "#ffffff" },
       "action-disabled-bg": { "$value": "#d0d0d0" },

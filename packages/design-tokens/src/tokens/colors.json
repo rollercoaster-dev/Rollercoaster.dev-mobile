@@ -2,9 +2,9 @@
   "color": {
     "$description": "Foundational color palette - rollercoaster.dev design language",
     "primary": {
-      "$value": "#3b82f6",
+      "$value": "#2563eb",
       "$type": "color",
-      "$description": "Primary action color - blue-500"
+      "$description": "Primary action color - blue-600 (darkened from blue-500 #3b82f6 for AA on off-white: #fafafa → 4.95:1)"
     },
     "primary-dark": {
       "$value": "#2563eb",
