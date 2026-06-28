@@ -71,16 +71,16 @@ plain `jest` or `bun test`; that reintroduces Bun/Jest runtime failures.
 
 ## Tech Stack
 
-| Layer         | Technology                                                                           |
-| ------------- | ------------------------------------------------------------------------------------ |
-| Framework     | Expo 54 (React Native 0.81)                                                          |
-| Language      | TypeScript                                                                           |
-| Database      | [Evolu](https://www.evolu.dev/) — local-first SQLite with CRDT sync                  |
-| Styling       | [react-native-unistyles](https://www.unistyles.io/) — zero re-render theme switching |
-| Navigation    | React Navigation (bottom tabs + native stacks)                                       |
-| Design Tokens | `@rollercoaster-dev/design-tokens` (shared with web)                                 |
-| Testing       | Jest + React Native Testing Library                                                  |
-| Storybook     | Storybook for React Native                                                           |
+| Layer         | Technology                                                                                                                            |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Framework     | Expo 54 (React Native 0.81)                                                                                                           |
+| Language      | TypeScript                                                                                                                            |
+| Database      | [Evolu](https://www.evolu.dev/) — local-first SQLite with CRDT sync                                                                   |
+| Styling       | [react-native-unistyles](https://www.unistyles.io/) — zero re-render theme switching                                                  |
+| Navigation    | React Navigation (bottom tabs + native stacks)                                                                                        |
+| Design Tokens | `@rollercoaster-dev/design-tokens` (shared with web)                                                                                  |
+| Testing       | Jest + React Native Testing Library                                                                                                   |
+| Storybook     | [Storybook](https://rollercoaster-dev.github.io/Rollercoaster.dev-mobile/) — on-device (native) + web build published to GitHub Pages |
 
 ---
 
