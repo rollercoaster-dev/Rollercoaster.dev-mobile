@@ -134,14 +134,12 @@ function PairRow({
   );
 }
 
-function ThemeCard({ name }: { name: ThemeName }) {
-  const audit = buildThemeAudit(name);
-
+function ThemeCard({ audit }: { audit: ThemeAudit }) {
   return (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
         <Text style={styles.cardTitle}>{audit.label}</Text>
-        <Text style={styles.cardSubtitle}>{name}</Text>
+        <Text style={styles.cardSubtitle}>{audit.name}</Text>
         <Text style={styles.cardCount}>
           {audit.failCount + audit.amberCount === 0
             ? "all pass"
@@ -174,7 +172,7 @@ function ContrastAuditContent() {
       <SummaryBanner totals={totals} />
       <View style={styles.list}>
         {audit.map((themeAudit) => (
-          <ThemeCard key={themeAudit.name} name={themeAudit.name} />
+          <ThemeCard key={themeAudit.name} audit={themeAudit} />
         ))}
       </View>
     </View>
@@ -186,19 +184,29 @@ function SummaryBanner({
 }: {
   totals: { total: number; fail: number; amber: number };
 }) {
-  const allPass = totals.fail + totals.amber === 0;
+  const borderColor =
+    totals.fail > 0
+      ? VERDICT_COLOR.fail
+      : totals.amber > 0
+        ? VERDICT_COLOR.amber
+        : VERDICT_COLOR.pass;
+  const title =
+    totals.fail > 0
+      ? "Contrast audit has failures"
+      : totals.amber > 0
+        ? "Contrast audit has amber findings"
+        : "All audited pairs pass AA";
+
   return (
     <View
       style={[
         styles.summary,
         {
-          borderColor: allPass ? VERDICT_COLOR.pass : VERDICT_COLOR.fail,
+          borderColor,
         },
       ]}
     >
-      <Text style={styles.summaryTitle}>
-        {allPass ? "All audited pairs pass AA" : "Contrast audit has findings"}
-      </Text>
+      <Text style={styles.summaryTitle}>{title}</Text>
       <Text style={styles.summaryText}>
         {totals.total} cells · {totals.fail} fail · {totals.amber} amber ·{" "}
         {totals.total - totals.fail - totals.amber} AA

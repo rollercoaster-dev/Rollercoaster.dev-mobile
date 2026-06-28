@@ -49,7 +49,7 @@
 - [x] Every fg/bg pair in the §1 table measures >= 4.5:1 when computed by the regression test script.
 - [x] `bun run build` (from `packages/design-tokens/`) completes without error; `build/css/themes.css` and `build/unistyles/*.ts` are regenerated.
 - [x] `bun run type-check` and `bun run test` are both green from the repo root.
-- [x] Storybook `Design System/Contrast Audit` renders the same `contrastPairs.ts` data as the CI gate, replacing the stale `Theme Eval.dc.html` prototype as the manual visual audit surface.
+- [x] Storybook `Design System/Contrast Audit` renders the same `contrastPairs.ts` data as the CI gate. This supersedes the original `Theme Eval.dc.html` manual check because that prototype reads stale CSS-path tokens and is no longer the authoritative validation surface.
 - [x] The regression test in `apps/native-rd/src/themes/__tests__/contrast.test.ts` asserts all canonical pairs >= 4.5:1 (allowlist empty) and would have caught the pre-fix failures.
 
 ## Dependencies
