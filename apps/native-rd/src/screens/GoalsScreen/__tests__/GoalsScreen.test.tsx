@@ -160,7 +160,10 @@ describe("GoalsScreen", () => {
 
     it("does not render an add button in the header", () => {
       renderWithProviders(<GoalsScreen />);
-      expect(screen.queryByLabelText("Create new goal")).toBeNull();
+      // The header's old "New goal" IconButton (testID goals-header-new-goal)
+      // was removed in the cockpit redesign — the single create affordance now
+      // lives in the cockpit body, not the header (#381 S3 coherence).
+      expect(screen.queryByTestId("goals-header-new-goal")).toBeNull();
     });
   });
 
