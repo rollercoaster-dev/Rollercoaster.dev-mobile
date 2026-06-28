@@ -109,14 +109,14 @@ Steps 1–3 are **PR A (Goals)**; Steps 4–7 are **PR B (Badges)**. They're ind
 
 **Changes**:
 
-- [ ] `GoalsCockpit.tsx` — pure component, **no `useQuery`/`useNavigation`**. Props: `hero` (title, nextStepTitle, progress 0–1, stepsCompleted, stepsTotal), `keepWarm[]` (title, nextStep, progress), `onStartResume(goalId)`, `onOpenGoal(goalId)`, `onNewGoal()`.
-- [ ] Hero card: `ProgressRing` centered; "DO THIS NEXT · <title>" overline (DM Mono caps); next-step headline; single Start/Resume `Pressable`. **Label: `stepsCompleted === 0` → "Start" (incl. no-steps), else "Resume"** (D6). Card bg `theme.surfaceBorder.surfaceCardBg`; shadow `shadowStyle(theme, 'hardLg')` (valid keys `hardSm`/`hardMd`/`hardLg` — **no `cardElevation`**).
-- [ ] Hero is the ONLY start/resume affordance — no FAB, no header button (S3 coherence; inline comment `// S3 coherence: single resume affordance — see #381`).
-- [ ] "KEEP WARM" section: compact cards for `keepWarm[]` (title + next-step snippet + mini `ProgressBar`); tap → `onOpenGoal`. "+ New goal" ghost button → `onNewGoal`.
-- [ ] Empty state (no hero): reuse `EmptyState` with existing `goals:emptyState.*` keys.
-- [ ] i18n: add `cockpit.doThisNext`/`start`/`resume`/`keepWarm` to **`en/goals.json` only**; register in `_register/goals.yml`. `de/` + `pseudo/` are generated (D11).
-- [ ] `GoalsCockpit.stories.tsx` (CSF3, mock props): `Populated` (hero + 2 keep-warm), `HeroOnly`, `ResumeState` (stepsCompleted>0), `Empty`. Viewable across all 7 themes.
-- [ ] Tests: Start vs Resume by `stepsCompleted`; keep-warm renders N−1; callbacks fire; empty state. All colors from theme tokens.
+- [x] `GoalsCockpit.tsx` — pure component, **no `useQuery`/`useNavigation`**. Props: `hero` (title, nextStepTitle, progress 0–1, stepsCompleted, stepsTotal), `keepWarm[]` (title, nextStep, progress), `onStartResume(goalId)`, `onOpenGoal(goalId)`, `onNewGoal()`.
+- [x] Hero card: `ProgressRing` centered; "DO THIS NEXT · <title>" overline (DM Mono caps via `textTransform`); next-step headline; single Start/Resume `Button`. **Label: `stepsCompleted === 0` → "Start" (incl. no-steps), else "Resume"** (D6). Card bg `theme.surfaceBorder.surfaceCardBg`; shadow `shadowStyle(theme, 'hardLg')` (confirmed: `cardElevation`/`cardElevationSmall`/`modalElevation` ARE real semantic aliases — see Discovery Log; `hardLg` chosen for hero emphasis).
+- [x] Hero is the ONLY start/resume affordance — no FAB, no header button (S3 coherence; inline comment `// S3 coherence: single resume affordance — see #381`).
+- [x] "KEEP WARM" section: compact cards for `keepWarm[]` (title + next-step snippet + mini `ProgressBar`); tap → `onOpenGoal`. "+ New goal" ghost button → `onNewGoal`.
+- [x] Empty state (no hero): reuse `EmptyState` with existing `goals:emptyState.*` keys.
+- [x] i18n: add `cockpit.doThisNext`/`start`/`resume`/`keepWarm` (+ `resumeHint`/`newGoal` — see Discovery Log) to **`en/goals.json` only**; register in `_register/goals.yml`. `de/` + `pseudo/` are generated (D11).
+- [x] `GoalsCockpit.stories.tsx` (CSF3, mock props): `Populated` (hero + 2 keep-warm), `HeroOnly`, `ResumeState` (stepsCompleted>0), `StartState`, `Empty`. Viewable across all 7 themes.
+- [x] Tests: Start vs Resume by `stepsCompleted`; keep-warm renders all given; callbacks fire; empty state (8 tests pass). All colors from theme tokens.
 
 ### Step 3: GoalsScreen thin container (PR A)
 
@@ -220,3 +220,5 @@ Steps 1–3 are **PR A (Goals)**; Steps 4–7 are **PR B (Badges)**. They're ind
 -->
 
 - [2026-06-28] **Step 1 — ProgressRing center-text token deviation.** Plan specified `theme.chrome.screenHeaderFg` for the ring's center text. Used `theme.colors.text` (label) / `theme.colors.textMuted` (sublabel) instead. Rationale: `ProgressRing` is a generic `src/components/` primitive and must not couple to a chrome/header-specific token; it renders inside the hero _card_ (surface `surfaceCardBg`), where `colors.text` is the intended, contrast-guaranteed foreground pairing across all 7 themes. Still zero hardcoded hex.
+- [2026-06-28] **Step 2 — `cardElevation` shadow key is real (plan note was over-cautious).** The plan's Step 2 warned "no `cardElevation`" (a research-phase doubt). Verified against `src/themes/__tests__/compose.test.ts:39-46`: `withSemanticShadows` wires `cardElevation←hardMd`, `cardElevationSmall←hardSm`, `modalElevation←hardLg` for every theme, and `Card.styles.ts`/`ScreenHeader.styles.ts` already consume `cardElevation`. So all six keys are valid. Kept the plan's prescription of `hardLg` for the hero (heavier than a regular `Card`'s `cardElevation`/`hardMd`, marking it as the focal point) and used `cardElevationSmall` for the lighter keep-warm cards.
+- [2026-06-28] **Step 2 — added `cockpit.resumeHint` + `cockpit.newGoal` beyond the plan's enumerated keys.** `resumeHint` is the `accessibilityHint` on the Start/Resume button (a bare "Start"/"Resume" label is ambiguous for screen-reader users); `newGoal` is the "+ New goal" ghost-button label, which the plan described but did not enumerate. English stored in natural case; `textTransform: "uppercase"` applies the DM-Mono caps for `doThisNext`/`keepWarm` in styles so generated `de/`+`pseudo/` stay clean. Register notes added for the "Keep warm" idiom + cockpit voice.

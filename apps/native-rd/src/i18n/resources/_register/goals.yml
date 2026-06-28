@@ -19,3 +19,7 @@ banned_phrasings:
 notes:
   - Non-linear progress is the point — never frame a gap as failure.
   - 'Resume phrasing: "Pick up where you left off" → "Mach da weiter, wo du aufgehört hast." — no urgency, no streak math.'
+  - "cockpit.* drives the Goals cockpit (single hero goal + secondary cards)."
+  - '"Do this next" (cockpit.doThisNext) is a calm pointer to the next step, not a command — avoid imperative urgency ("Jetzt!", "Sofort").'
+  - '"Keep warm" (cockpit.keepWarm) labels the secondary goals you are keeping active without pressure. Translate for the sense of "still simmering / not dropped", not the literal temperature ("warm halten" is acceptable; avoid "heiß").'
+  - "cockpit.start vs cockpit.resume mirror the same Start/Resume distinction as the Resume phrasing above (start = no steps done yet, resume = some done)."
