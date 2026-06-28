@@ -94,12 +94,12 @@ Steps 1–3 are **PR A (Goals)**; Steps 4–7 are **PR B (Badges)**. They're ind
 
 **Changes**:
 
-- [ ] `ProgressRing.tsx`: SVG circle pair (track + fill), `stroke-dasharray`/`stroke-dashoffset` from `progress` (0–1) via `react-native-svg` (`Svg`, `Circle`). Props: `size`, `strokeWidth`, `progress`, `centerLabel` (percent), `centerSublabel` (steps). `accessibilityRole="progressbar"` + `accessibilityValue`.
-- [ ] Colors from theme tokens only: track = `theme.colors.backgroundSecondary`, fill = `theme.action.actionPrimaryBg`, center text via `theme.chrome.screenHeaderFg`. No hardcoded hex.
-- [ ] `ProgressRing.styles.ts`: wrapper `position: relative`; overlay text centered via `position: absolute; inset: 0`.
-- [ ] `ProgressRing.stories.tsx` (CSF3): `args`-driven story with a `progress` control + an `AllStates` story (0 / 50 / 100%). Relies on the global `ThemeDecorator` → viewable across all 7 themes.
-- [ ] `index.ts`: `export { ProgressRing } from './ProgressRing'`.
-- [ ] Tests: 0/50/100% via `test.each`; a11y role + value; center labels rendered.
+- [x] `ProgressRing.tsx`: SVG circle pair (track + fill), `stroke-dasharray`/`stroke-dashoffset` from `progress` (0–1) via `react-native-svg` (`Svg`, `Circle`). Props: `size`, `strokeWidth`, `progress`, `centerLabel` (percent), `centerSublabel` (steps). `accessibilityRole="progressbar"` + `accessibilityValue`.
+- [x] Colors from theme tokens only: track = `theme.colors.backgroundSecondary`, fill = `theme.action.actionPrimaryBg`, center text via `theme.colors.text` / `theme.colors.textMuted` (deviated from `screenHeaderFg` — see Discovery Log). No hardcoded hex.
+- [x] `ProgressRing.styles.ts`: wrapper `position: relative`; overlay text centered via `StyleSheet.absoluteFillObject`.
+- [x] `ProgressRing.stories.tsx` (CSF3): `args`-driven `Interactive` story with `progress`/`size`/`strokeWidth` controls + an `AllStates` story (0 / 50 / 100%). Relies on the global `ThemeDecorator` → viewable across all 7 themes.
+- [x] `index.ts`: `export { ProgressRing } from './ProgressRing'`.
+- [x] Tests: 0/50/100% via `test.each`; clamping; a11y role + value; center labels rendered (7 tests pass).
 
 ### Step 2: GoalsCockpit presentational view + story (PR A)
 
@@ -218,3 +218,5 @@ Steps 1–3 are **PR A (Goals)**; Steps 4–7 are **PR B (Badges)**. They're ind
 <!-- Entries added by implement skill:
 - [YYYY-MM-DD HH:MM] <discovery description>
 -->
+
+- [2026-06-28] **Step 1 — ProgressRing center-text token deviation.** Plan specified `theme.chrome.screenHeaderFg` for the ring's center text. Used `theme.colors.text` (label) / `theme.colors.textMuted` (sublabel) instead. Rationale: `ProgressRing` is a generic `src/components/` primitive and must not couple to a chrome/header-specific token; it renders inside the hero _card_ (surface `surfaceCardBg`), where `colors.text` is the intended, contrast-guaranteed foreground pairing across all 7 themes. Still zero hardcoded hex.
