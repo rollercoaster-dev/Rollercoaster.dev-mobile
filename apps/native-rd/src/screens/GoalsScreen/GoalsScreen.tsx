@@ -1,5 +1,5 @@
 import React, { Suspense, useMemo, useState } from "react";
-import { View, FlatList, ActivityIndicator } from "react-native";
+import { View, ScrollView, ActivityIndicator } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useNavigation } from "@react-navigation/native";
 import { useTabScreenContentInset } from "../../navigation/useTabScreenContentInset";
@@ -7,8 +7,6 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@evolu/react";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { ScreenHeader } from "../../components/ScreenHeader";
-import { GoalCard, type GoalCardGoal } from "../../components/GoalCard";
-import { EmptyState } from "../../components/EmptyState";
 import { ConfirmDeleteModal } from "../ConfirmDeleteModal";
 import { Logger } from "../../shims/rd-logger";
 import {
@@ -16,11 +14,10 @@ import {
   stepsForActiveGoalsQuery,
   resolveNextActionableStep,
   deleteGoal,
-  GoalStatus,
   StepStatus,
 } from "../../db";
 import { GoalsStackParamList } from "../../navigation/types";
-import type { TFunction } from "i18next";
+import { GoalsCockpit, type CockpitHeroGoal } from "./GoalsCockpit";
 import { styles } from "./GoalsScreen.styles";
 
 const logger = new Logger("GoalsScreen");
@@ -28,59 +25,63 @@ const logger = new Logger("GoalsScreen");
 type GoalRow = typeof activeGoalsQuery.Row;
 type StepRow = typeof stepsForActiveGoalsQuery.Row;
 type Nav = NativeStackNavigationProp<GoalsStackParamList>;
-type GoalsT = TFunction<["goals", "common"]>;
 
-function buildGoalCardGoal(
+/**
+ * Evolu stamps `createdAt`/`updatedAt` on every row as ISO-8601 DateIso
+ * (branded) strings. Same-format UTC ISO strings sort chronologically by simple
+ * lexical comparison, so the cockpit's recency ranking compares them as strings.
+ */
+function isoOrNull(value: unknown): string | null {
+  return typeof value === "string" && value.length > 0 ? value : null;
+}
+
+/**
+ * Recency key for a goal = the newest of its own `updatedAt` (falling back to
+ * `createdAt`) and the `updatedAt` of any of its steps. "Most recently worked on
+ * the goal or any of its steps" (#381 D2). Returns "" only if a row carries no
+ * timestamps at all, which sorts it last.
+ */
+function goalActivityKey(goalRow: GoalRow, steps: readonly StepRow[]): string {
+  let latest =
+    isoOrNull(goalRow.updatedAt) ?? isoOrNull(goalRow.createdAt) ?? "";
+  for (const step of steps) {
+    const stepUpdated = isoOrNull(step.updatedAt);
+    if (stepUpdated && stepUpdated > latest) latest = stepUpdated;
+  }
+  return latest;
+}
+
+function buildCockpitGoal(
   goalRow: GoalRow,
   steps: readonly StepRow[],
-  t: GoalsT,
-): GoalCardGoal {
+): CockpitHeroGoal {
   // Every-unit progress (#292 R1): parents and children are all rows in
   // `steps`, so counting every row is the every-unit rule with no filtering.
   const stepsCompleted = steps.filter(
     (s) => s.status === StepStatus.completed,
   ).length;
+  const stepsTotal = steps.length;
+  const progress = stepsTotal > 0 ? stepsCompleted / stepsTotal : 0;
 
-  // Resolve the single next-action line via the shared resolver (#337), which
-  // owns the leaf/invite/flat bucketing and orphan promotion (a soft-deleted
-  // parent surfaces its child as top-level so its pending work stays reachable,
-  // mirroring groupStepsByParent, #292). The resolver returns an index into
-  // `steps`, so the per-goal slice maps the result straight back to titles:
-  //   leaf   → the pending child is the hero, the container parent is context
-  //   invite → the pending parent is the hero, "all N substeps done" is context
-  //   flat   → a pending top-level step is its own hero (no context)
-  // A pending leaf wins even under a manually completed parent — completion is
-  // per-step, not cascaded, so a done parent must not hide live sub-work.
+  // Resolve the single next-action title via the shared resolver (#337), which
+  // owns the leaf/invite/flat bucketing and orphan promotion. The cockpit hero
+  // shows only the title — no "↳ in parent" / "all N substeps done" context
+  // line (that detail lives in FocusMode, not on the home cockpit).
   const next = resolveNextActionableStep(steps);
-  let nextStepTitle: string | null = null;
-  let nextStepContext: string | null = null;
-  if (next.kind === "leaf") {
-    nextStepTitle = steps[next.index]?.title ?? null;
-    nextStepContext = t("goals:card.nextStepContext", {
-      parent: steps[next.parentIndex]?.title ?? "",
-    });
-  } else if (next.kind === "invite") {
-    nextStepTitle = steps[next.index]?.title ?? null;
-    nextStepContext = t("goals:card.allSubstepsDone", {
-      count: next.childCount,
-    });
-  } else if (next.kind === "flat") {
-    nextStepTitle = steps[next.index]?.title ?? null;
-  }
-  // kind === "none": no pending work, both lines stay null.
+  const nextStepTitle =
+    next.kind === "none" ? null : (steps[next.index]?.title ?? null);
 
   return {
     id: goalRow.id,
     title: goalRow.title ?? "",
-    status: goalRow.status === GoalStatus.completed ? "completed" : "active",
-    stepsTotal: steps.length,
-    stepsCompleted,
     nextStepTitle,
-    nextStepContext,
+    progress,
+    stepsCompleted,
+    stepsTotal,
   };
 }
 
-function GoalList({
+function GoalsCockpitContainer({
   contentInset,
 }: {
   contentInset: { paddingBottom: number };
@@ -110,9 +111,35 @@ function GoalList({
     return map;
   }, [allSteps]);
 
-  function handleDelete(row: GoalRow) {
-    setDeleteTarget(row);
-  }
+  // Rank by latest activity so the hero is the most-recently-worked goal (D2).
+  // `rows` arrive `createdAt DESC`; ties keep that order via the index tie-break
+  // (an explicit stable sort, independent of the engine's sort stability).
+  const ranked = useMemo(
+    () =>
+      rows
+        .map((row, index) => ({
+          row,
+          index,
+          activity: goalActivityKey(row, stepsByGoalId.get(row.id) ?? []),
+        }))
+        .sort((a, b) =>
+          a.activity < b.activity
+            ? 1
+            : a.activity > b.activity
+              ? -1
+              : a.index - b.index,
+        )
+        .map((entry) => entry.row),
+    [rows, stepsByGoalId],
+  );
+
+  const heroRow = ranked[0] ?? null;
+  const hero: CockpitHeroGoal | null = heroRow
+    ? buildCockpitGoal(heroRow, stepsByGoalId.get(heroRow.id) ?? [])
+    : null;
+  const keepWarm = ranked
+    .slice(1)
+    .map((row) => buildCockpitGoal(row, stepsByGoalId.get(row.id) ?? []));
 
   function confirmDelete() {
     if (deleteTarget) {
@@ -121,36 +148,22 @@ function GoalList({
     }
   }
 
-  if (rows.length === 0) {
-    return (
-      <EmptyState
-        title={t("goals:emptyState.title")}
-        body={t("goals:emptyState.body")}
-        action={{
-          label: t("goals:emptyState.cta"),
-          onPress: () => navigation.navigate("NewGoal"),
-        }}
-      />
-    );
-  }
-
   return (
     <>
-      <FlatList
-        data={rows}
-        keyExtractor={(item) => item.id}
-        style={styles.list}
-        contentContainerStyle={[styles.listContent, contentInset]}
-        renderItem={({ item }) => (
-          <GoalCard
-            goal={buildGoalCardGoal(item, stepsByGoalId.get(item.id) ?? [], t)}
-            onPress={() =>
-              navigation.navigate("FocusMode", { goalId: item.id })
-            }
-            onLongPress={() => handleDelete(item)}
-          />
-        )}
-      />
+      <ScrollView contentContainerStyle={[styles.listContent, contentInset]}>
+        <GoalsCockpit
+          hero={hero}
+          keepWarm={keepWarm}
+          onStartResume={(goalId) =>
+            navigation.navigate("FocusMode", { goalId })
+          }
+          onOpenGoal={(goalId) => navigation.navigate("FocusMode", { goalId })}
+          onNewGoal={() => navigation.navigate("NewGoal")}
+          onDeleteGoal={(goalId) =>
+            setDeleteTarget(rows.find((r) => r.id === goalId) ?? null)
+          }
+        />
+      </ScrollView>
       <ConfirmDeleteModal
         visible={deleteTarget !== null}
         onCancel={() => setDeleteTarget(null)}
@@ -181,7 +194,7 @@ export function GoalsScreen() {
             <ActivityIndicator style={styles.loadingIndicator} size="large" />
           }
         >
-          <GoalList contentInset={tabInset} />
+          <GoalsCockpitContainer contentInset={tabInset} />
         </Suspense>
       </ErrorBoundary>
     </View>

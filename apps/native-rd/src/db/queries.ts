@@ -69,6 +69,13 @@ export const activeGoalsQuery = evolu.createQuery((db) =>
  * not relied on for hierarchy. The `createdAt` tie-break mirrors
  * {@link stepsByGoalQuery} so siblings sharing an ordinal (concurrent CRDT
  * writes) still sort deterministically.
+ *
+ * `step.updatedAt` is selected so the home screen can rank goals by latest
+ * activity — the cockpit hero is the most-recently-worked goal (#381 D2). Evolu
+ * bumps `updatedAt` on every write (incl. `completeStep`), so it is the activity
+ * proxy. Additive only: the `orderBy` is unchanged because
+ * {@link resolveNextActionableStep} depends on the (goalId, ordinal, createdAt)
+ * order to resolve the next step.
  */
 export const stepsForActiveGoalsQuery = evolu.createQuery((db) =>
   db
@@ -80,6 +87,7 @@ export const stepsForActiveGoalsQuery = evolu.createQuery((db) =>
       "step.parentStepId",
       "step.title",
       "step.status",
+      "step.updatedAt",
     ])
     .where("step.isDeleted", "is", null)
     .where("goal.isDeleted", "is", null)
