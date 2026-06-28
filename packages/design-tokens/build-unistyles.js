@@ -474,7 +474,10 @@ async function buildTokens() {
       return [camel(k), ms ? parseInt(ms[1], 10) : parseInt(v, 10)];
     });
 
-  const baseShadow = extractShadowMap(spacing.shadow, "tokens/spacing.json shadow");
+  const baseShadow = extractShadowMap(
+    spacing.shadow,
+    "tokens/spacing.json shadow",
+  );
   const darkTheme = await readJSON("themes/dark.json");
   const darkShadow = {
     ...baseShadow,
