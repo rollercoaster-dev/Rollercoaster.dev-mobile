@@ -34,6 +34,8 @@ export interface GoalsCockpitProps {
   onStartResume: (goalId: string) => void;
   onOpenGoal: (goalId: string) => void;
   onNewGoal: () => void;
+  /** Long-press a hero or keep-warm card to delete its goal (D14). */
+  onDeleteGoal: (goalId: string) => void;
 }
 
 /**
@@ -48,6 +50,7 @@ export function GoalsCockpit({
   onStartResume,
   onOpenGoal,
   onNewGoal,
+  onDeleteGoal,
 }: GoalsCockpitProps) {
   const { t } = useTranslation(["goals", "common"]);
 
@@ -77,7 +80,16 @@ export function GoalsCockpit({
 
   return (
     <View style={styles.container}>
-      <View style={styles.hero} testID="goals-cockpit-hero">
+      {/* Hero has no onPress: tap = the explicit Start/Resume button below,
+          long-press = delete (mirrors the old GoalCard shortcut, D14).
+          accessible={false} keeps the inner Button independently focusable for
+          screen readers instead of collapsing the card into one a11y node. */}
+      <Pressable
+        style={styles.hero}
+        accessible={false}
+        onLongPress={() => onDeleteGoal(hero.id)}
+        testID="goals-cockpit-hero"
+      >
         <Text variant="mono" style={styles.overline} numberOfLines={1}>
           {t("goals:cockpit.doThisNext", { title: hero.title })}
         </Text>
@@ -87,7 +99,12 @@ export function GoalsCockpit({
           centerSublabel={ringSublabel}
         />
         {hero.nextStepTitle ? (
-          <Text variant="headline" style={styles.nextStep} numberOfLines={2}>
+          <Text
+            variant="headline"
+            style={styles.nextStep}
+            numberOfLines={2}
+            testID="goals-cockpit-next-step"
+          >
             {hero.nextStepTitle}
           </Text>
         ) : null}
@@ -104,7 +121,7 @@ export function GoalsCockpit({
             })}
           />
         </View>
-      </View>
+      </Pressable>
 
       {keepWarm.length > 0 ? (
         <View style={styles.keepWarmSection}>
@@ -115,6 +132,7 @@ export function GoalsCockpit({
             <Pressable
               key={goal.id}
               onPress={() => onOpenGoal(goal.id)}
+              onLongPress={() => onDeleteGoal(goal.id)}
               accessible
               accessibilityRole="button"
               accessibilityLabel={goal.title}

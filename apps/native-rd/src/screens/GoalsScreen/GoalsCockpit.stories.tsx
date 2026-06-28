@@ -39,6 +39,7 @@ const meta: Meta<typeof GoalsCockpit> = {
     onStartResume: noop,
     onOpenGoal: noop,
     onNewGoal: noop,
+    onDeleteGoal: noop,
   },
 };
 

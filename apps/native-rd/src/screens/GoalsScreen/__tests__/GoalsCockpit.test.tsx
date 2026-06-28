@@ -40,6 +40,7 @@ const handlers = () => ({
   onStartResume: jest.fn(),
   onOpenGoal: jest.fn(),
   onNewGoal: jest.fn(),
+  onDeleteGoal: jest.fn(),
 });
 
 describe("GoalsCockpit", () => {
@@ -100,6 +101,24 @@ describe("GoalsCockpit", () => {
     );
     fireEvent.press(screen.getByTestId("keep-warm-kw-2"));
     expect(h.onOpenGoal).toHaveBeenCalledWith("kw-2");
+  });
+
+  it("fires onDeleteGoal with the hero id on long-press", () => {
+    const h = handlers();
+    renderWithProviders(
+      <GoalsCockpit hero={makeHero()} keepWarm={[]} {...h} />,
+    );
+    fireEvent(screen.getByTestId("goals-cockpit-hero"), "onLongPress");
+    expect(h.onDeleteGoal).toHaveBeenCalledWith("hero");
+  });
+
+  it("fires onDeleteGoal with the keep-warm id on long-press", () => {
+    const h = handlers();
+    renderWithProviders(
+      <GoalsCockpit hero={makeHero()} keepWarm={keepWarm} {...h} />,
+    );
+    fireEvent(screen.getByTestId("keep-warm-kw-1"), "onLongPress");
+    expect(h.onDeleteGoal).toHaveBeenCalledWith("kw-1");
   });
 
   it("fires onNewGoal from the ghost button", () => {
