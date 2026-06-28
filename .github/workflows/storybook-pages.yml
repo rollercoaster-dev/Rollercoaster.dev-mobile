@@ -61,6 +61,14 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      # design-tokens emits build/unistyles/index.ts (gitignored), which
+      # adapter.ts imports as "@rollercoaster-dev/design-tokens/unistyles".
+      # ci-native-rd.yml gets this for free via turbo type-check's ^build dep;
+      # this workflow calls storybook:web:build directly, so build it explicitly
+      # or Rollup fails to resolve the import.
+      - name: Build design-tokens
+        run: bun run turbo build --filter=@rollercoaster-dev/design-tokens
+
       - name: Build web Storybook
         working-directory: apps/native-rd
         run: bun run storybook:web:build
