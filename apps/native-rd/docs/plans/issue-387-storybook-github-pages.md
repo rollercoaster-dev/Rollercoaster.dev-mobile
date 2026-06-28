@@ -41,12 +41,15 @@ name: storybook-pages
 on:
   push:
     branches: [main]
+    # Mirror ci-native-rd.yml's native-rd surface so any input to the
+    # Storybook build (components, stories, assets/fonts, tokens) redeploys.
     paths:
-      - "apps/native-rd/src/**"
-      - "apps/native-rd/.storybook-web/**"
-      - "apps/native-rd/public/**"
-      - "apps/native-rd/package.json"
+      - "apps/native-rd/**"
+      - "!apps/native-rd/docs/**"
+      - "!apps/native-rd/research/**"
+      - "!apps/native-rd/prototypes/**"
       - "packages/design-tokens/**"
+      - "packages/openbadges-core/**"
       - "bun.lock"
       - ".github/workflows/storybook-pages.yml"
   workflow_dispatch:
