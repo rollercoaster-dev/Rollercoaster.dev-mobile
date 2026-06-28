@@ -2,59 +2,29 @@
   "name": "@rollercoaster-dev/design-tokens",
   "version": "0.2.0",
   "private": true,
-  "description": "Design tokens for Rollercoaster.dev OpenBadges ecosystem - CSS, JS, Tailwind, and Tamagui outputs",
+  "description": "Design tokens for Rollercoaster.dev — Unistyles theme objects for React Native",
   "type": "module",
   "exports": {
-    ".": {
-      "import": "./build/js/index.js",
-      "types": "./build/js/index.d.ts"
-    },
-    "./css": "./build/css/tokens.css",
-    "./css/themes": "./build/css/themes.css",
-    "./tailwind": {
-      "import": "./build/tailwind/tailwind.config.js",
-      "require": "./build/tailwind/tailwind.config.js",
-      "types": "./build/tailwind/tailwind.config.d.ts"
-    },
-    "./tamagui": {
-      "import": "./build/tamagui/tokens.js",
-      "types": "./build/tamagui/tokens.d.ts"
-    },
-    "./css/narrative": "./css/narrative.css",
     "./unistyles": "./build/unistyles/index.ts"
   },
   "files": [
-    "build",
-    "css",
-    "src"
+    "build"
   ],
   "scripts": {
-    "build": "style-dictionary build --config style-dictionary.config.js && node build-themes.js && node build-unistyles.js",
-    "build:tokens": "style-dictionary build --config style-dictionary.config.js",
-    "build:themes": "node build-themes.js",
+    "build": "node build-unistyles.js",
     "build:unistyles": "node build-unistyles.js",
-    "build:watch": "style-dictionary build --config style-dictionary.config.js --watch",
-    "clean": "rm -rf build/*",
-    "verify": "node scripts/verify-css.js"
-  },
-  "devDependencies": {
-    "style-dictionary": "^5.4.4"
+    "clean": "rm -rf build/*"
   },
   "keywords": [
     "design-tokens",
     "openbadges",
     "accessibility",
     "neurodiversity",
-    "css-variables",
-    "tailwind",
-    "tamagui",
-    "react-native"
+    "react-native",
+    "unistyles"
   ],
   "author": "Rollercoaster.dev",
   "license": "MIT",
-  "publishConfig": {
-    "access": "public"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile.git",
