@@ -1,10 +1,11 @@
 import React from "react";
 import { Pressable, View } from "react-native";
 import { useTranslation } from "react-i18next";
+import { useUnistyles } from "react-native-unistyles";
+import Svg, { Circle } from "react-native-svg";
 import { ProgressRing } from "../../components/ProgressRing";
 import { ProgressBar } from "../../components/ProgressBar";
 import { Button } from "../../components/Button";
-import { EmptyState } from "../../components/EmptyState";
 import { Text } from "../../components/Text";
 import { styles } from "./GoalsCockpit.styles";
 
@@ -38,6 +39,17 @@ export interface GoalsCockpitProps {
   onDeleteGoal: (goalId: string) => void;
 }
 
+/** Concentric-circle "target" reticle for the empty state (matches the Goals
+ * nav glyph + the prototype's empty illustration). */
+function TargetIcon({ color }: { color: string }) {
+  return (
+    <Svg width={34} height={34} viewBox="0 0 24 24" fill="none">
+      <Circle cx={12} cy={12} r={9} stroke={color} strokeWidth={2.5} />
+      <Circle cx={12} cy={12} r={4} stroke={color} strokeWidth={2.5} />
+    </Svg>
+  );
+}
+
 /**
  * Pure, prop-driven Goals cockpit. The container (GoalsScreen) owns the Evolu
  * query + navigation and feeds this view data as props, which is what makes the
@@ -53,14 +65,34 @@ export function GoalsCockpit({
   onDeleteGoal,
 }: GoalsCockpitProps) {
   const { t } = useTranslation(["goals", "common"]);
+  const { theme } = useUnistyles();
 
   if (!hero) {
     return (
-      <EmptyState
-        title={t("goals:emptyState.title")}
-        body={t("goals:emptyState.body")}
-        action={{ label: t("goals:emptyState.cta"), onPress: onNewGoal }}
-      />
+      <View style={styles.empty}>
+        <View style={styles.emptyIconBox}>
+          <TargetIcon color={theme.colors.text} />
+        </View>
+        <Text
+          variant="display"
+          style={styles.emptyTitle}
+          accessibilityRole="header"
+        >
+          {t("goals:emptyState.title")}
+        </Text>
+        <Text variant="body" style={styles.emptyBody}>
+          {t("goals:emptyState.body")}
+        </Text>
+        <View style={styles.emptyAction}>
+          <Button
+            label={t("goals:emptyState.cta")}
+            icon="+"
+            size="lg"
+            onPress={onNewGoal}
+            testID="goals-cockpit-new-goal"
+          />
+        </View>
+      </View>
     );
   }
 
@@ -72,7 +104,7 @@ export function GoalsCockpit({
       : t("goals:cockpit.resume");
   const ringSublabel =
     hero.stepsTotal > 0
-      ? t("goals:card.progressLabel", {
+      ? t("goals:cockpit.ringSteps", {
           completed: hero.stepsCompleted,
           total: hero.stepsTotal,
         })
@@ -90,14 +122,16 @@ export function GoalsCockpit({
         onLongPress={() => onDeleteGoal(hero.id)}
         testID="goals-cockpit-hero"
       >
-        <Text variant="mono" style={styles.overline} numberOfLines={1}>
-          {t("goals:cockpit.doThisNext", { title: hero.title })}
-        </Text>
         <ProgressRing
           progress={hero.progress}
+          size={104}
+          strokeWidth={10}
           centerLabel={`${percent}%`}
           centerSublabel={ringSublabel}
         />
+        <Text variant="mono" style={styles.overline} numberOfLines={1}>
+          {t("goals:cockpit.doThisNext", { title: hero.title })}
+        </Text>
         {hero.nextStepTitle ? (
           <Text
             variant="headline"
@@ -113,6 +147,7 @@ export function GoalsCockpit({
         <View style={styles.heroAction}>
           <Button
             label={resumeLabel}
+            icon="▶"
             size="lg"
             onPress={() => onStartResume(hero.id)}
             testID="goals-cockpit-start-resume"
@@ -128,49 +163,62 @@ export function GoalsCockpit({
           <Text variant="mono" style={styles.sectionLabel}>
             {t("goals:cockpit.keepWarm")}
           </Text>
-          {keepWarm.map((goal) => (
-            <Pressable
-              key={goal.id}
-              onPress={() => onOpenGoal(goal.id)}
-              onLongPress={() => onDeleteGoal(goal.id)}
-              accessible
-              accessibilityRole="button"
-              accessibilityLabel={goal.title}
-              accessibilityHint={t("goals:card.a11y.hint")}
-              testID={`keep-warm-${goal.id}`}
-              style={({ pressed }) => [
-                styles.keepWarmCard,
-                pressed && styles.keepWarmPressed,
-              ]}
-            >
-              <Text
-                variant="title"
-                style={styles.keepWarmTitle}
-                numberOfLines={1}
+          <View style={styles.keepWarmGrid}>
+            {keepWarm.map((goal) => (
+              <Pressable
+                key={goal.id}
+                onPress={() => onOpenGoal(goal.id)}
+                onLongPress={() => onDeleteGoal(goal.id)}
+                accessible
+                accessibilityRole="button"
+                accessibilityLabel={goal.title}
+                accessibilityHint={t("goals:card.a11y.hint")}
+                testID={`keep-warm-${goal.id}`}
+                style={({ pressed }) => [
+                  styles.keepWarmCard,
+                  pressed && styles.keepWarmPressed,
+                ]}
               >
-                {goal.title}
-              </Text>
-              {goal.nextStepTitle ? (
                 <Text
-                  variant="caption"
-                  style={styles.keepWarmNextStep}
+                  variant="title"
+                  style={styles.keepWarmTitle}
                   numberOfLines={1}
                 >
-                  {goal.nextStepTitle}
+                  {goal.title}
                 </Text>
-              ) : null}
-              <ProgressBar progress={goal.progress} />
-            </Pressable>
-          ))}
+                {goal.nextStepTitle ? (
+                  <Text
+                    variant="caption"
+                    style={styles.keepWarmNextStep}
+                    numberOfLines={1}
+                  >
+                    {goal.nextStepTitle}
+                  </Text>
+                ) : null}
+                <ProgressBar progress={goal.progress} />
+              </Pressable>
+            ))}
+          </View>
         </View>
       ) : null}
 
-      <Button
-        label={t("goals:cockpit.newGoal")}
-        variant="ghost"
+      {/* Dashed "+ New goal" affordance — a quiet ghost box, not a loud CTA
+          (the hero owns the screen's emphasis). */}
+      <Pressable
         onPress={onNewGoal}
+        accessible
+        accessibilityRole="button"
+        accessibilityLabel={t("goals:cockpit.newGoal")}
         testID="goals-cockpit-new-goal"
-      />
+        style={({ pressed }) => [
+          styles.newGoal,
+          pressed && styles.newGoalPressed,
+        ]}
+      >
+        <Text variant="body" style={styles.newGoalLabel}>
+          + {t("goals:cockpit.newGoal")}
+        </Text>
+      </Pressable>
     </View>
   );
 }

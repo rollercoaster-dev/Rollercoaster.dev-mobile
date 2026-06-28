@@ -6,7 +6,13 @@ import type { Preview } from "@storybook/react";
 import React from "react";
 import { ScrollView } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { I18nextProvider } from "react-i18next";
 import { themeNames, type ThemeName } from "../src/themes";
+// Real app i18n so stories resolve `t()` keys instead of rendering raw key
+// paths ("goals:cockpit.resume"). Without this the web Storybook — the
+// published 7-theme design-review surface — misrepresents every translated
+// component.
+import { i18n } from "../src/i18n";
 
 StyleSheet.configure({
   themes,
@@ -55,14 +61,16 @@ const ThemeDecorator = (Story: React.ComponentType, context: any) => {
   }, [selectedTheme]);
 
   return (
-    <SafeAreaProvider>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.content}
-      >
-        <Story />
-      </ScrollView>
-    </SafeAreaProvider>
+    <I18nextProvider i18n={i18n}>
+      <SafeAreaProvider>
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.content}
+        >
+          <Story />
+        </ScrollView>
+      </SafeAreaProvider>
+    </I18nextProvider>
   );
 };
 

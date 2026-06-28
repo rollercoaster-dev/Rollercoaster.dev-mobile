@@ -1,9 +1,12 @@
 {
   "title": "Goals",
+  "todayTitle": "Today",
+  "goalCount_one": "{{count}} goal",
+  "goalCount_other": "{{count}} goals",
   "emptyState": {
-    "title": "No goals yet",
-    "body": "Add your first learning goal to get started.",
-    "cta": "Create Goal"
+    "title": "Pick something to prove",
+    "body": "A goal is anything you want to finish with evidence. Start small — one step counts.",
+    "cta": "New goal"
   },
   "confirmDelete": {
     "title": "Delete this goal?",
@@ -11,6 +14,7 @@
   },
   "cockpit": {
     "doThisNext": "Do this next · {{title}}",
+    "ringSteps": "{{completed}} / {{total}} steps",
     "start": "Start",
     "resume": "Resume",
     "resumeHint": "Opens {{title}} in focus mode",

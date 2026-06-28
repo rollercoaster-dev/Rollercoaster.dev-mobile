@@ -15,4 +15,10 @@ export const styles = StyleSheet.create((theme) => ({
   loadingIndicator: {
     marginTop: theme.space[8],
   },
+  headerCount: {
+    color: theme.chrome.screenHeaderFg,
+    fontSize: 11,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
 }));

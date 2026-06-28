@@ -140,9 +140,22 @@ describe("GoalsScreen", () => {
   });
 
   describe("header", () => {
-    it("renders Goals title", () => {
+    it("renders the Goals title when empty", () => {
       renderWithProviders(<GoalsScreen />);
       expect(screen.getByText(i18n.t("goals:title"))).toBeOnTheScreen();
+    });
+
+    it("renders the Today title and goal count when goals exist", () => {
+      mockData([
+        makeGoalRow({ id: "goal-1", title: "Learn TypeScript" }),
+        makeGoalRow({ id: "goal-2", title: "Learn Rust" }),
+      ]);
+
+      renderWithProviders(<GoalsScreen />);
+      expect(screen.getByText(i18n.t("goals:todayTitle"))).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("goals:goalCount", { count: 2 })),
+      ).toBeOnTheScreen();
     });
 
     it("does not render an add button in the header", () => {
@@ -337,7 +350,7 @@ describe("GoalsScreen", () => {
       // The ring sublabel carries the every-unit progress count.
       expect(
         screen.getByText(
-          i18n.t("goals:card.progressLabel", { completed: 4, total: 6 }),
+          i18n.t("goals:cockpit.ringSteps", { completed: 4, total: 6 }),
         ),
       ).toBeOnTheScreen();
     });

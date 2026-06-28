@@ -36,6 +36,12 @@ export function ProgressRing({
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const dashOffset = circumference * (1 - clamped);
+  // Scale the centered label to the ring instead of a fixed display size, so it
+  // stays inside the stroke on small rings (104px cockpit hero) as well as large
+  // ones. innerDiameter caps width; adjustsFontSizeToFit shrinks wider values
+  // like "100%" the rest of the way.
+  const innerDiameter = size - strokeWidth * 2;
+  const labelFontSize = Math.round(size * 0.25);
 
   return (
     <View
@@ -49,7 +55,9 @@ export function ProgressRing({
           cx={center}
           cy={center}
           r={radius}
-          stroke={theme.colors.backgroundSecondary}
+          // Surface-aware subtle border, not backgroundSecondary — the latter
+          // equals the card bg in dark mode, making the track invisible.
+          stroke={theme.surfaceBorder.borderSubtle}
           strokeWidth={strokeWidth}
           fill="none"
         />
@@ -70,12 +78,25 @@ export function ProgressRing({
       {(centerLabel || centerSublabel) && (
         <View style={styles.center} pointerEvents="none">
           {centerLabel ? (
-            <Text variant="display" style={styles.centerLabel}>
+            <Text
+              variant="display"
+              style={[
+                styles.centerLabel,
+                {
+                  fontSize: labelFontSize,
+                  lineHeight: Math.round(labelFontSize * 1.05),
+                  maxWidth: innerDiameter,
+                },
+              ]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.6}
+            >
               {centerLabel}
             </Text>
           ) : null}
           {centerSublabel ? (
-            <Text variant="caption" style={styles.centerSublabel}>
+            <Text variant="mono" style={styles.centerSublabel}>
               {centerSublabel}
             </Text>
           ) : null}

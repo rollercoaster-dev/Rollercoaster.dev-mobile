@@ -7,6 +7,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@evolu/react";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { ScreenHeader } from "../../components/ScreenHeader";
+import { Text } from "../../components/Text";
 import { ConfirmDeleteModal } from "../ConfirmDeleteModal";
 import { Logger } from "../../shims/rd-logger";
 import {
@@ -140,6 +141,7 @@ function GoalsCockpitContainer({
   const keepWarm = ranked
     .slice(1)
     .map((row) => buildCockpitGoal(row, stepsByGoalId.get(row.id) ?? []));
+  const goalCount = ranked.length;
 
   function confirmDelete() {
     if (deleteTarget) {
@@ -150,6 +152,18 @@ function GoalsCockpitContainer({
 
   return (
     <>
+      {/* "Today" framing + live goal count when goals exist; falls back to the
+          plain "Goals" title when empty (prototype: Goals · Cockpit vs Empty). */}
+      <ScreenHeader
+        title={hero ? t("goals:todayTitle") : t("goals:title")}
+        right={
+          goalCount > 0 ? (
+            <Text variant="mono" style={styles.headerCount}>
+              {t("goals:goalCount", { count: goalCount })}
+            </Text>
+          ) : undefined
+        }
+      />
       <ScrollView contentContainerStyle={[styles.listContent, contentInset]}>
         <GoalsCockpit
           hero={hero}
@@ -182,12 +196,10 @@ function GoalsCockpitContainer({
 }
 
 export function GoalsScreen() {
-  const { t } = useTranslation(["goals"]);
   const tabInset = useTabScreenContentInset();
 
   return (
     <View style={styles.screen}>
-      <ScreenHeader title={t("goals:title")} />
       <ErrorBoundary>
         <Suspense
           fallback={
