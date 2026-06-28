@@ -94,6 +94,20 @@ describe("GoalsCockpit", () => {
     expect(h.onStartResume).toHaveBeenCalledWith("hero");
   });
 
+  // A keep-warm tap opens FocusMode, so its hint must describe that — not
+  // card.a11y.hint's "view details", which would misdescribe the destination.
+  it("hints keep-warm cards with the focus-mode resume hint", () => {
+    renderWithProviders(
+      <GoalsCockpit hero={makeHero()} keepWarm={keepWarm} {...handlers()} />,
+    );
+    const card = screen.getByTestId("keep-warm-kw-1");
+    expect(card.props.accessibilityHint).toBe(
+      i18n.t("goals:cockpit.resumeHint", {
+        title: "Build a component library",
+      }),
+    );
+  });
+
   it("fires onOpenGoal with the tapped keep-warm id", () => {
     const h = handlers();
     renderWithProviders(

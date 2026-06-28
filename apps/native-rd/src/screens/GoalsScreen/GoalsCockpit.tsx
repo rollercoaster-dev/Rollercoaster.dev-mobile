@@ -172,7 +172,12 @@ export function GoalsCockpit({
                 accessible
                 accessibilityRole="button"
                 accessibilityLabel={goal.title}
-                accessibilityHint={t("goals:card.a11y.hint")}
+                // Tapping opens the goal in FocusMode (same as the hero's
+                // Start/Resume), so reuse resumeHint — not card.a11y.hint's
+                // "view details", which would misdescribe the destination.
+                accessibilityHint={t("goals:cockpit.resumeHint", {
+                  title: goal.title,
+                })}
                 testID={`keep-warm-${goal.id}`}
                 style={({ pressed }) => [
                   styles.keepWarmCard,

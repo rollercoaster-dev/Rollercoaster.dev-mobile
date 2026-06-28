@@ -33,14 +33,16 @@ export function ProgressRing({
   const { theme } = useUnistyles();
   const clamped = Math.max(0, Math.min(1, progress));
   const center = size / 2;
-  const radius = (size - strokeWidth) / 2;
+  // Clamp to 0 so a caller passing strokeWidth >= size can't produce a negative
+  // radius, which renders an invalid SVG Circle (blank ring + RN warnings).
+  const radius = Math.max(0, (size - strokeWidth) / 2);
   const circumference = 2 * Math.PI * radius;
   const dashOffset = circumference * (1 - clamped);
   // Scale the centered label to the ring instead of a fixed display size, so it
   // stays inside the stroke on small rings (104px cockpit hero) as well as large
   // ones. innerDiameter caps width; adjustsFontSizeToFit shrinks wider values
   // like "100%" the rest of the way.
-  const innerDiameter = size - strokeWidth * 2;
+  const innerDiameter = Math.max(0, size - strokeWidth * 2);
   const labelFontSize = Math.round(size * 0.25);
 
   return (

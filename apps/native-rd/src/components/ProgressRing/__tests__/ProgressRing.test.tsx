@@ -71,4 +71,21 @@ describe("ProgressRing", () => {
     expect(flattened.fontSize).toBe(Math.round(104 * 0.25));
     expect(flattened.maxWidth).toBe(104 - 10 * 2);
   });
+
+  // Regression: strokeWidth >= size made (size - strokeWidth) / 2 negative,
+  // producing an invalid SVG radius (blank ring + RN warnings). Both the radius
+  // and the label's maxWidth (innerDiameter) must clamp to 0 instead.
+  it("clamps geometry to non-negative when strokeWidth >= size", () => {
+    renderWithProviders(
+      <ProgressRing
+        progress={0.5}
+        size={40}
+        strokeWidth={60}
+        centerLabel="50%"
+      />,
+    );
+    expect(screen.getByRole("progressbar")).toBeOnTheScreen();
+    const flattened = StyleSheet.flatten(screen.getByText("50%").props.style);
+    expect(flattened.maxWidth).toBe(0);
+  });
 });
