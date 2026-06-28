@@ -26,9 +26,10 @@ user/system perspective — not generic checklists.
       FAB; the knob ink is token-driven). Contrast gate is green across all 7 themes. _On-device /
       Storybook visual sweep across the 7 themes remains as a manual pre-merge check._
 - [x] `PILL_LIFT` constant and `useTabScreenContentInset` are unchanged — neither was touched.
-- [x] `EvidenceDrawer` coupling holds: the bar's outer geometry (container bg, `marginTop:
-    -PILL_LIFT`, pill `PILL_HEIGHT`) is unchanged, so `DRAWER_CLOSED_HEIGHT = PEEK_HEIGHT +
-    PILL_LIFT` stays correct. _On-device peek-alignment confirmation remains a manual check._
+- [x] `EvidenceDrawer` coupling holds: the bar's outer geometry (container bg,
+      `marginTop: -PILL_LIFT`, pill `PILL_HEIGHT`) is unchanged, so
+      `DRAWER_CLOSED_HEIGHT = PEEK_HEIGHT + PILL_LIFT` stays correct. _On-device
+      peek-alignment confirmation remains a manual check._
 - [x] All existing `FocusPillTabBar` a11y contract tests pass; new behavior (D9 colour matrix,
       Settings reachable, header new-goal) has coverage in `FocusPillTabBar.test.tsx` /
       `GoalsScreen.test.tsx`.
