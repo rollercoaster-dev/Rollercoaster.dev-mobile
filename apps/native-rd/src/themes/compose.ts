@@ -147,6 +147,14 @@ export function composeTheme(
   // Determine shadow opacity
   const shadowOpacity = variantDef.shadows?.opacity ?? base.shadows.opacity;
 
+  // Shadow base is colorMode-specific; variant shadow maps are light-authored
+  // deltas. Variants are a light-only product axis — dark ships solely as
+  // dark-default (see productThemeEntries), which carries no variant.shadow, so
+  // this overlay only ever fires in light mode for the seven real themes. A
+  // dark-<variant> pair is composable for previews/tests but is NOT a product
+  // theme, and the overlay there is intentionally cosmetic, not coherent — do
+  // not "fix" it by gating on colorMode (that would split shadow from the
+  // colors/chrome/etc. overlays above, which are light-authored the same way).
   let composedShadow = colorMode === "dark" ? darkShadow : shadow;
   if (variantDef.shadow) {
     composedShadow = variantDef.shadow;
