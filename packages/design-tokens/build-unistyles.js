@@ -358,8 +358,16 @@ export type Palette = typeof palette;
 // tokens.ts — non-color primitives (spacing, typography, radius, zIndex)
 // ---------------------------------------------------------------------------
 
-/** Parse CSS shadow strings into the RN shadow object shape emitted for Unistyles. */
-function parseShadowValue(raw, key) {
+/**
+ * Parse a CSS shadow string into the RN shadow object shape emitted for
+ * Unistyles. Returns `null` for an unparseable value; `extractShadowMap` turns
+ * that into a hard build failure.
+ *
+ * Only the first three numbers (offsetX, offsetY, blur → radius) are read. A
+ * 4th value (CSS spread, e.g. the `3px` in `0 0 0 3px rgba(...)` focus rings)
+ * is intentionally dropped — RN shadows have no spread equivalent.
+ */
+function parseShadowValue(raw) {
   if (raw === "none") {
     return { offsetX: 0, offsetY: 0, radius: 0, opacity: 0 };
   }
@@ -368,19 +376,11 @@ function parseShadowValue(raw, key) {
   const rgbaMatch = s.match(
     /rgba\(\s*[\d.]+,\s*[\d.]+,\s*[\d.]+,\s*([\d.]+)\s*\)/,
   );
-  if (!rgbaMatch) {
-    console.warn(`Could not parse shadow "${raw}" for key "${key}", skipping`);
-    return null;
-  }
+  if (!rgbaMatch) return null;
 
   const beforeRgba = s.slice(0, s.indexOf("rgba")).trim();
   const nums = beforeRgba.match(/-?\d+/g);
-  if (!nums || nums.length < 3) {
-    console.warn(
-      `Could not parse shadow offsets "${raw}" for key "${key}", skipping`,
-    );
-    return null;
-  }
+  if (!nums || nums.length < 3) return null;
 
   return {
     offsetX: parseInt(nums[0], 10),
@@ -390,13 +390,30 @@ function parseShadowValue(raw, key) {
   };
 }
 
-function extractShadowMap(shadowTokens) {
-  return Object.fromEntries(
-    Object.entries(shadowTokens ?? {})
-      .filter(([k]) => !k.startsWith("$"))
-      .map(([k, t]) => [camel(k), parseShadowValue(val(t), k)])
-      .filter(([, v]) => v !== null),
-  );
+// A token that was authored but won't parse is an authoring error, not a
+// "skip me" signal — fail the build loudly (like readJSON / main().catch do)
+// rather than silently inheriting the base shadow for that role. "none" still
+// parses to a real zero-shadow object, so opting out of elevation is unaffected.
+function extractShadowMap(shadowTokens, sourceLabel) {
+  const failures = [];
+  const entries = Object.entries(shadowTokens ?? {})
+    .filter(([k]) => !k.startsWith("$"))
+    .map(([k, t]) => {
+      const raw = val(t);
+      const parsed = parseShadowValue(raw);
+      if (parsed === null) {
+        failures.push(`${sourceLabel}.${k} = ${JSON.stringify(raw)}`);
+      }
+      return [camel(k), parsed];
+    });
+  if (failures.length > 0) {
+    throw new Error(
+      `Unparseable shadow token(s) — fix the source value or set it to "none":\n  ${failures.join(
+        "\n  ",
+      )}`,
+    );
+  }
+  return Object.fromEntries(entries);
 }
 
 function formatShadowObject(name, value) {
@@ -457,16 +474,19 @@ async function buildTokens() {
       return [camel(k), ms ? parseInt(ms[1], 10) : parseInt(v, 10)];
     });
 
-  const baseShadow = extractShadowMap(spacing.shadow);
+  const baseShadow = extractShadowMap(spacing.shadow, "tokens/spacing.json shadow");
   const darkTheme = await readJSON("themes/dark.json");
   const darkShadow = {
     ...baseShadow,
-    ...extractShadowMap(darkTheme.theme.shadow),
+    ...extractShadowMap(darkTheme.theme.shadow, "themes/dark.json shadow"),
   };
   const variantShadows = [];
   for (const { file, name } of VARIANT_THEMES) {
     const data = await readJSON(`themes/${file}.json`);
-    const themed = { ...baseShadow, ...extractShadowMap(data.theme.shadow) };
+    const themed = {
+      ...baseShadow,
+      ...extractShadowMap(data.theme.shadow, `themes/${file}.json shadow`),
+    };
     const differs = Object.entries(themed).some(
       ([key, value]) =>
         JSON.stringify(value) !== JSON.stringify(baseShadow[key]),
@@ -622,7 +642,6 @@ export type LetterSpacing = typeof letterSpacing;
 export type FontFamily = typeof fontFamily;
 export type Transition = typeof transition;
 export type Shadow = typeof shadow;
-export type ShadowOverride = Partial<Shadow>;
 export type ShadowVariants = typeof shadowVariants;
 `;
 
@@ -901,7 +920,6 @@ function buildIndex(hasSizeL, hasLineHeightL) {
     "FontFamily",
     "Transition",
     "Shadow",
-    "ShadowOverride",
     "ShadowVariants",
   ].join(", ");
 

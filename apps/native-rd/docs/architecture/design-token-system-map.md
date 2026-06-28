@@ -164,27 +164,36 @@ To use any of this from native-rd, the wiring needed is at minimum: `compose.ts`
 
 Light mode communicates depth with a hard offset shadow on a black-ish surface. Dark mode can't reuse the same recipe — a shadow drawn against a dark indigo bg either disappears (matching shadow color) or blooms outward (light shadow color). The fix is mode-specific encodings of the same conceptual elevation.
 
-| Tier   | Surfaces                                       | Light mode               | Dark mode                                    |
-| ------ | ---------------------------------------------- | ------------------------ | -------------------------------------------- |
-| Tier 1 | cards, list rows, buttons, pills, inputs       | hard offset shadow       | bold border (~10:1), **no shadow**           |
-| Tier 2 | modals, sheets, FABs, toasts, drag-active rows | hard offset shadow       | bold border + **black hard shadow** (cutout) |
-| Tier 3 | chrome bands (top header, tab bar)             | flat lavender, no shadow | flat darker lavender (`#8d7eb0`), no shadow  |
+> **Updated 2026-06-28 (#376):** shadow values are now authored **per-theme** in
+> `packages/design-tokens/src/themes/*.json` (`theme.shadow`) and emitted by
+> `build-unistyles.js` as `shadow` (light base), `darkShadow`, and
+> `shadowVariants`. native-rd no longer infers dark/variant shadow policy
+> app-side — the old `darkShadowOverrides` / `cardEmpty` are removed. As part of
+> that change Night Ride now authors its `hard*` tokens to the `lg` cutout, so
+> dark tier-1 surfaces carry the cutout shadow **in addition to** the bold
+> border (previously tier-1 was shadow-less in dark).
 
-Why this works: in dark mode a black shadow against a dark surface reads as a _void cutout_, not a glow. That preserves the brutalist offset shape on tier-2 elements that need to lift off the page. Tier-1 surfaces lose shadows entirely — the new high-contrast lavender border (`#cfc7e0`, ~10:1 vs bg) carries the depth instead.
+| Tier   | Surfaces                                       | Light mode               | Dark mode                                            |
+| ------ | ---------------------------------------------- | ------------------------ | ---------------------------------------------------- |
+| Tier 1 | cards, list rows, buttons, pills, inputs       | hard offset shadow       | bold border (~10:1) + **black hard shadow** (cutout) |
+| Tier 2 | modals, sheets, FABs, toasts, drag-active rows | hard offset shadow       | bold border + **black hard shadow** (cutout)         |
+| Tier 3 | chrome bands (top header, tab bar)             | flat lavender, no shadow | flat darker lavender (`#8d7eb0`), no shadow          |
+
+Why this works: in dark mode a black shadow against a dark surface reads as a _void cutout_, not a glow. That preserves the brutalist offset shape on elements that lift off the page. The high-contrast lavender border (`#cfc7e0`, ~10:1 vs bg) carries the primary depth cue; the cutout reinforces it.
 
 ### Semantic shadow tokens
 
-Components consume role-named tokens, not the underlying primitives:
+Components consume role-named tokens, not the underlying primitives. Each theme authors its own `hard*` values; native-rd's `withSemanticShadows` (`tokens.ts`) maps them to the semantic roles:
 
-| Role                        | Light              | Dark         | Used by                                            |
-| --------------------------- | ------------------ | ------------ | -------------------------------------------------- |
-| `shadow.cardElevation`      | `hardMd` (3,3,0.8) | zero opacity | tier-1 standard surfaces                           |
-| `shadow.cardElevationSmall` | `hardSm` (2,2,0.8) | zero opacity | tier-1 small surfaces (chips, icon buttons, nodes) |
-| `shadow.modalElevation`     | `hardLg` (4,4,0.8) | `hardLg`     | tier-2 surfaces (modal/FAB/toast/drag)             |
+| Role                        | Light              | Dark (Night Ride)      | Used by                                            |
+| --------------------------- | ------------------ | ---------------------- | -------------------------------------------------- |
+| `shadow.cardElevation`      | `hardMd` (3,3,0.8) | `hardMd` = `lg` cutout | tier-1 standard surfaces                           |
+| `shadow.cardElevationSmall` | `hardSm` (2,2,0.8) | `hardSm` = `lg` cutout | tier-1 small surfaces (chips, icon buttons, nodes) |
+| `shadow.modalElevation`     | `hardLg` (4,4,0.8) | `hardLg` = `lg` cutout | tier-2 surfaces (modal/FAB/toast/drag)             |
 
-Wired in `apps/native-rd/src/themes/tokens.ts` and overridden per-mode in `compose.ts` (`darkShadowOverrides`). The shadow's _color_ (`theme.colors.shadow`) flips per mode in the adapter: `#0a0a0a` in light, `#000000` in dark — never white-on-dark, which is what the pre-#934 build did.
+Accessibility variants that opt out of elevation (Bold Ink, Still Water, Loud & Clear) author `hard* = none`, so all three roles resolve to zero opacity for those themes. Wired in `apps/native-rd/src/themes/{tokens,compose,variants}.ts`: `compose.ts` selects `darkShadow` for dark mode and `variantDef.shadow` for variants that author one. The shadow's _color_ (`theme.colors.shadow`) flips per mode in the adapter: `#0a0a0a` in light, `#000000` in dark — never white-on-dark, which is what the pre-#934 build did.
 
-The raw `hardSm` / `hardMd` / `hardLg` tokens still exist in the design-tokens package and remain referenced by design-system stories that document the primitives. Product code does not call them directly.
+The raw `hardSm` / `hardMd` / `hardLg` tokens still exist in the design-tokens package and remain referenced by design-system stories that document the primitives. Product code consumes the semantic roles, not these directly.
 
 ### Border policy in dark
 

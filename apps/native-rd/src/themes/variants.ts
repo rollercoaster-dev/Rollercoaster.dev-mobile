@@ -3,7 +3,14 @@
  * Each variant defines what it changes from the base colorMode
  */
 
-import { size, sizeL, lineHeight, lineHeightL, shadowVariants } from "./tokens";
+import {
+  size,
+  sizeL,
+  lineHeight,
+  lineHeightL,
+  shadowVariants,
+  type Shadow,
+} from "./tokens";
 import {
   variantColors,
   narrativeVariants,
@@ -43,7 +50,10 @@ interface VariantOverride {
   action?: ActionOverride;
   surfaceBorder?: SurfaceBorderOverride;
   shadows?: { opacity: number };
-  shadow?: (typeof shadowVariants)[keyof typeof shadowVariants];
+  // A complete per-theme shadow map (already carries the semantic elevation
+  // roles via withSemanticShadows). Sourced from `shadowVariants`, but typed as
+  // the full Shadow shape since compose.ts consumes it as a whole-map override.
+  shadow?: Shadow;
   size?: typeof size | typeof sizeL;
   lineHeight?: typeof lineHeight | typeof lineHeightL;
   fontFamily?: string;

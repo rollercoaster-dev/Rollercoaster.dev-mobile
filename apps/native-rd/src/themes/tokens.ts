@@ -65,7 +65,7 @@ export const darkShadow: AppShadow = withSemanticShadows(_darkShadow);
 export const shadowVariants = Object.fromEntries(
   Object.entries(_shadowVariants).map(([key, value]) => [
     key,
-    withSemanticShadows(value as BaseShadow),
+    withSemanticShadows(value),
   ]),
 ) as Record<keyof typeof _shadowVariants, AppShadow>;
 
