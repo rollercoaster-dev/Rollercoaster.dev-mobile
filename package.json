@@ -29,6 +29,8 @@
     "native:android": "cd apps/native-rd && bun run android",
     "emulator:ios": "cd apps/native-rd && IOS_DEVICE_ID= bash scripts/run-ios.sh",
     "emulator:android": "cd apps/native-rd && ANDROID_DEVICE_ID= bash scripts/run-android.sh",
+    "storybook:web": "cd apps/native-rd && bun run storybook:web",
+    "storybook:native": "cd apps/native-rd && bun run storybook:native",
     "native:test": "cd apps/native-rd && bun run test",
     "clean": "bun run turbo clean && rm -rf node_modules .turbo .bun-cache",
     "prepare": "husky"

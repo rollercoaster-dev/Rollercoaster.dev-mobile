@@ -123,6 +123,26 @@ export const contrastPairs: ContrastPair[] = [
     }),
   },
   {
+    // Bottom-nav Slide knob, Goals destination (#379). accentYellow never
+    // flips across modes, so its ink is locked dark in every theme.
+    key: "knobGoals",
+    label: "nav knob · goals",
+    getColors: (t) => ({
+      fg: t.colors.accentYellowFg,
+      bg: t.colors.accentYellow,
+    }),
+  },
+  {
+    // Bottom-nav Slide knob, Badges destination (#379). accentMint becomes a
+    // dark surface in dark mode, so its ink flips to off-white there.
+    key: "knobBadges",
+    label: "nav knob · badges",
+    getColors: (t) => ({
+      fg: t.colors.accentMintFg,
+      bg: t.colors.accentMint,
+    }),
+  },
+  {
     key: "success",
     label: "success",
     getColors: (t) => ({
