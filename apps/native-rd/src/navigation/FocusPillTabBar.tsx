@@ -15,7 +15,6 @@ import { useTranslation } from "react-i18next";
 import { Text } from "../components/Text";
 import { shadowStyle } from "../styles/shadows";
 import { borderWidth } from "../themes/tokens";
-import { getRecommendedTextColor } from "../utils/accessibility";
 import { useAnimationPref } from "../hooks/useAnimationPref";
 import type { RootTabParamList } from "./types";
 
@@ -111,12 +110,8 @@ export function FocusPillTabBar({ state, navigation }: BottomTabBarProps) {
   const activeName = activeRoute.name as RouteName;
   const showFab = activeName !== "SettingsTab";
 
-  const activeColor = useMemo(
-    () => getRecommendedTextColor(theme.colors.accentPurple),
-    [theme.colors.accentPurple],
-  );
+  const activeColor = theme.chrome.brandAccentFg;
   const inactiveColor = theme.colors.textSecondary;
-
   useEffect(() => {
     if (shouldAnimate) LayoutAnimation.configureNext(morphConfig);
   }, [state.index, shouldAnimate]);
@@ -229,9 +224,9 @@ const styles = StyleSheet.create((theme) => {
   };
   return {
     container: {
-      backgroundColor: theme.colors.accentPurple,
+      backgroundColor: theme.chrome.brandAccentBg,
       borderTopWidth: theme.borderWidth.medium,
-      borderTopColor: theme.colors.border,
+      borderTopColor: theme.chrome.brandAccentBorder,
       overflow: "visible" as const,
     },
     bar: {
@@ -270,8 +265,8 @@ const styles = StyleSheet.create((theme) => {
       width: 48,
     },
     tabActive: {
-      backgroundColor: theme.colors.accentPurple,
-      borderColor: theme.colors.border,
+      backgroundColor: theme.chrome.brandAccentBg,
+      borderColor: theme.chrome.brandAccentBorder,
       borderWidth: theme.borderWidth.medium,
       paddingHorizontal: 16,
       gap: 8,
