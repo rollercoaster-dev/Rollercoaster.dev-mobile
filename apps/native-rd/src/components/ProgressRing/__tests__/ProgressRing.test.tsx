@@ -54,12 +54,13 @@ describe("ProgressRing", () => {
 
   // Regression: on small rings the fixed 40px display label overflowed the
   // stroke. The label must auto-shrink (numberOfLines=1 + adjustsFontSizeToFit)
-  // and its base size must scale with the ring rather than stay fixed.
+  // and its base size must scale with the ring rather than stay fixed. Mirrors
+  // the cockpit hero geometry (size 124 / strokeWidth 10).
   it("scales the center label to the ring and lets it shrink to fit", () => {
     renderWithProviders(
       <ProgressRing
         progress={0.5}
-        size={104}
+        size={124}
         strokeWidth={10}
         centerLabel="100%"
       />,
@@ -68,8 +69,8 @@ describe("ProgressRing", () => {
     expect(label.props.numberOfLines).toBe(1);
     expect(label.props.adjustsFontSizeToFit).toBe(true);
     const flattened = StyleSheet.flatten(label.props.style);
-    expect(flattened.fontSize).toBe(Math.round(104 * 0.25));
-    expect(flattened.maxWidth).toBe(104 - 10 * 2);
+    expect(flattened.fontSize).toBe(Math.round(124 * 0.25));
+    expect(flattened.maxWidth).toBe(124 - 10 * 2);
   });
 
   // Regression: strokeWidth >= size made (size - strokeWidth) / 2 negative,

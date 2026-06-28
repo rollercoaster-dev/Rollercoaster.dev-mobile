@@ -39,7 +39,7 @@ export function ProgressRing({
   const circumference = 2 * Math.PI * radius;
   const dashOffset = circumference * (1 - clamped);
   // Scale the centered label to the ring instead of a fixed display size, so it
-  // stays inside the stroke on small rings (104px cockpit hero) as well as large
+  // stays inside the stroke on small rings (124px cockpit hero) as well as large
   // ones. innerDiameter caps width; adjustsFontSizeToFit shrinks wider values
   // like "100%" the rest of the way.
   const innerDiameter = Math.max(0, size - strokeWidth * 2);
