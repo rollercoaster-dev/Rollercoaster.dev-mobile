@@ -38,12 +38,10 @@ jest.mock("../../../db", () => ({
   activeGoalsQuery: { __brand: "activeGoalsQuery" },
   stepsForActiveGoalsQuery: { __brand: "stepsForActiveGoalsQuery" },
   deleteGoal: jest.fn(),
-  isPendingStep: (s: { status: string | null }) => s.status === "pending",
-  GoalStatus: { active: "active", completed: "completed" },
   StepStatus: { pending: "pending", completed: "completed" },
   // Faithful copy of the real resolver (leaf/invite/flat/none + orphan
-  // promotion) so buildGoalCardGoal's next-step resolution is exercised, not
-  // stubbed — keeps the #292 sub-step cases under test after the #337 extract.
+  // promotion) so buildCockpitGoal's next-step resolution is exercised, not
+  // stubbed — keeps the #292/#337/#338 sub-step cases under test.
   // Keep in sync with resolveNextActionableStep in src/db/queries.ts.
   resolveNextActionableStep: (
     rows: readonly {
@@ -99,8 +97,21 @@ const makeGoalRow = (overrides: Record<string, unknown> = {}) => ({
   title: "Learn TypeScript",
   status: "active",
   createdAt: "2026-01-01T00:00:00.000Z",
+  updatedAt: "2026-01-01T00:00:00.000Z",
   ...overrides,
 });
+
+/** Route both home queries: goals to activeGoalsQuery, steps to the steps query. */
+const mockData = (
+  goals: Record<string, unknown>[],
+  steps: Record<string, unknown>[] = [],
+) => {
+  mockUseQuery.mockImplementation((query: { __brand?: string }) => {
+    if (query?.__brand === "activeGoalsQuery") return goals;
+    if (query?.__brand === "stepsForActiveGoalsQuery") return steps;
+    return [];
+  });
+};
 
 describe("GoalsScreen", () => {
   describe("empty state", () => {
@@ -129,144 +140,167 @@ describe("GoalsScreen", () => {
   });
 
   describe("header", () => {
-    it("renders Goals title", () => {
+    it("renders the Goals title when empty", () => {
       renderWithProviders(<GoalsScreen />);
       expect(screen.getByText(i18n.t("goals:title"))).toBeOnTheScreen();
     });
 
-    it("renders a new-goal button in the header", () => {
+    it("renders the Today title and goal count when goals exist", () => {
+      mockData([
+        makeGoalRow({ id: "goal-1", title: "Learn TypeScript" }),
+        makeGoalRow({ id: "goal-2", title: "Learn Rust" }),
+      ]);
+
       renderWithProviders(<GoalsScreen />);
+      expect(screen.getByText(i18n.t("goals:todayTitle"))).toBeOnTheScreen();
       expect(
-        screen.getByLabelText(i18n.t("goals:actions.newGoal")),
+        screen.getByText(i18n.t("goals:goalCount", { count: 2 })),
       ).toBeOnTheScreen();
     });
 
-    it("navigates to NewGoal when the header new-goal button is pressed", () => {
+    it("does not render an add button in the header", () => {
       renderWithProviders(<GoalsScreen />);
-      fireEvent.press(screen.getByTestId("goals-header-new-goal"));
-      expect(mockNavigate).toHaveBeenCalledWith("NewGoal");
+      // The header's old "New goal" IconButton (testID goals-header-new-goal)
+      // was removed in the cockpit redesign — the single create affordance now
+      // lives in the cockpit body, not the header (#381 S3 coherence).
+      expect(screen.queryByTestId("goals-header-new-goal")).toBeNull();
     });
   });
 
-  describe("goal list", () => {
-    it("renders goal cards when goals exist", () => {
-      const goals = [
+  describe("cockpit", () => {
+    it("renders the hero and keep-warm goals", () => {
+      mockData([
         makeGoalRow({ id: "goal-1", title: "Learn TypeScript" }),
         makeGoalRow({ id: "goal-2", title: "Learn Rust" }),
-      ];
-      mockUseQuery.mockImplementation((query: { __brand?: string }) => {
-        if (query?.__brand === "activeGoalsQuery") return goals;
-        return [];
-      });
+      ]);
 
       renderWithProviders(<GoalsScreen />);
-      expect(screen.getByText("Learn TypeScript")).toBeOnTheScreen();
+      // Hero title surfaces inside the "Do this next · <title>" overline.
+      expect(
+        screen.getByText(
+          i18n.t("goals:cockpit.doThisNext", { title: "Learn TypeScript" }),
+        ),
+      ).toBeOnTheScreen();
+      // The runner-up renders as a keep-warm card.
       expect(screen.getByText("Learn Rust")).toBeOnTheScreen();
+      expect(screen.getByTestId("keep-warm-goal-2")).toBeOnTheScreen();
     });
 
-    it("navigates to FocusMode when a goal card is pressed", () => {
-      const goals = [makeGoalRow({ id: "goal-1", title: "Learn TypeScript" })];
-      mockUseQuery.mockImplementation((query: { __brand?: string }) => {
-        if (query?.__brand === "activeGoalsQuery") return goals;
-        return [];
-      });
+    it("navigates to FocusMode when the hero Start/Resume is pressed", () => {
+      mockData([makeGoalRow({ id: "goal-1", title: "Learn TypeScript" })]);
 
       renderWithProviders(<GoalsScreen />);
-      fireEvent.press(screen.getByTestId("goal-card-goal-1"));
+      fireEvent.press(screen.getByTestId("goals-cockpit-start-resume"));
       expect(mockNavigate).toHaveBeenCalledWith("FocusMode", {
         goalId: "goal-1",
       });
     });
+
+    it("navigates to FocusMode when a keep-warm card is tapped", () => {
+      mockData([
+        makeGoalRow({ id: "goal-1", title: "Learn TypeScript" }),
+        makeGoalRow({ id: "goal-2", title: "Learn Rust" }),
+      ]);
+
+      renderWithProviders(<GoalsScreen />);
+      fireEvent.press(screen.getByTestId("keep-warm-goal-2"));
+      expect(mockNavigate).toHaveBeenCalledWith("FocusMode", {
+        goalId: "goal-2",
+      });
+    });
+  });
+
+  describe("hero recency ranking", () => {
+    it("ranks the most-recently-worked goal as the hero (D2)", () => {
+      // goal-1 is newer by creation date, but goal-2 has a step touched far more
+      // recently, so goal-2 — the goal you're actually resuming — is the hero.
+      const goals = [
+        makeGoalRow({
+          id: "goal-1",
+          title: "Newer goal",
+          createdAt: "2026-02-01T00:00:00.000Z",
+          updatedAt: "2026-02-01T00:00:00.000Z",
+        }),
+        makeGoalRow({
+          id: "goal-2",
+          title: "Older but active",
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+        }),
+      ];
+      const steps = [
+        {
+          id: "s1",
+          goalId: "goal-2",
+          parentStepId: null,
+          title: "Recently touched step",
+          status: "pending",
+          updatedAt: "2026-06-01T00:00:00.000Z",
+        },
+      ];
+      mockData(goals, steps);
+
+      renderWithProviders(<GoalsScreen />);
+      // goal-2 is promoted to hero (no keep-warm card for it)…
+      expect(screen.queryByTestId("keep-warm-goal-2")).toBeNull();
+      // …and goal-1 is demoted to keep-warm.
+      expect(screen.getByTestId("keep-warm-goal-1")).toBeOnTheScreen();
+      expect(screen.getByTestId("goals-cockpit-next-step")).toHaveTextContent(
+        "Recently touched step",
+      );
+    });
   });
 
   describe("next step surfacing", () => {
-    it("renders the first pending step's title on the goal card", () => {
-      const goals = [makeGoalRow({ id: "goal-1", title: "Save €10,000" })];
-      const steps = [
-        {
-          id: "step-1",
-          goalId: "goal-1",
-          title: "Open a savings account",
-          status: "pending",
-          ordinal: 0,
-        },
-        {
-          id: "step-2",
-          goalId: "goal-1",
-          title: "Set up direct deposit",
-          status: "pending",
-          ordinal: 1,
-        },
-      ];
-      mockUseQuery.mockImplementation((query: { __brand?: string }) => {
-        if (query?.__brand === "activeGoalsQuery") return goals;
-        if (query?.__brand === "stepsForActiveGoalsQuery") return steps;
-        return [];
-      });
+    it("surfaces the first pending step as the hero next step", () => {
+      mockData(
+        [makeGoalRow({ id: "goal-1", title: "Save €10,000" })],
+        [
+          { id: "step-1", goalId: "goal-1", parentStepId: null, title: "Open a savings account", status: "pending" }, // prettier-ignore
+          { id: "step-2", goalId: "goal-1", parentStepId: null, title: "Set up direct deposit", status: "pending" }, // prettier-ignore
+        ],
+      );
 
       renderWithProviders(<GoalsScreen />);
-      expect(screen.getByText("Open a savings account")).toBeOnTheScreen();
+      expect(screen.getByTestId("goals-cockpit-next-step")).toHaveTextContent(
+        "Open a savings account",
+      );
     });
 
     it("skips completed steps when picking the next pending one", () => {
-      const goals = [makeGoalRow({ id: "goal-1", title: "Save €10,000" })];
-      const steps = [
-        {
-          id: "step-1",
-          goalId: "goal-1",
-          title: "Open a savings account",
-          status: "completed",
-          ordinal: 0,
-        },
-        {
-          id: "step-2",
-          goalId: "goal-1",
-          title: "Set up direct deposit",
-          status: "pending",
-          ordinal: 1,
-        },
-      ];
-      mockUseQuery.mockImplementation((query: { __brand?: string }) => {
-        if (query?.__brand === "activeGoalsQuery") return goals;
-        if (query?.__brand === "stepsForActiveGoalsQuery") return steps;
-        return [];
-      });
+      mockData(
+        [makeGoalRow({ id: "goal-1", title: "Save €10,000" })],
+        [
+          { id: "step-1", goalId: "goal-1", parentStepId: null, title: "Open a savings account", status: "completed" }, // prettier-ignore
+          { id: "step-2", goalId: "goal-1", parentStepId: null, title: "Set up direct deposit", status: "pending" }, // prettier-ignore
+        ],
+      );
 
       renderWithProviders(<GoalsScreen />);
-      expect(screen.getByText("Set up direct deposit")).toBeOnTheScreen();
+      expect(screen.getByTestId("goals-cockpit-next-step")).toHaveTextContent(
+        "Set up direct deposit",
+      );
       expect(screen.queryByText("Open a savings account")).toBeNull();
     });
 
     it("scopes steps to their owning goal when multiple goals exist", () => {
-      const goals = [
-        makeGoalRow({ id: "goal-1", title: "Save €10,000" }),
-        makeGoalRow({ id: "goal-2", title: "Train to ride 200k" }),
-      ];
-      const steps = [
-        {
-          id: "step-1",
-          goalId: "goal-1",
-          title: "Open a savings account",
-          status: "pending",
-          ordinal: 0,
-        },
-        {
-          id: "step-2",
-          goalId: "goal-2",
-          title: "Buy cycling shoes",
-          status: "pending",
-          ordinal: 0,
-        },
-      ];
-      mockUseQuery.mockImplementation((query: { __brand?: string }) => {
-        if (query?.__brand === "activeGoalsQuery") return goals;
-        if (query?.__brand === "stepsForActiveGoalsQuery") return steps;
-        return [];
-      });
+      mockData(
+        [
+          makeGoalRow({ id: "goal-1", title: "Save €10,000" }),
+          makeGoalRow({ id: "goal-2", title: "Train to ride 200k" }),
+        ],
+        [
+          { id: "step-1", goalId: "goal-1", parentStepId: null, title: "Open a savings account", status: "pending" }, // prettier-ignore
+          { id: "step-2", goalId: "goal-2", parentStepId: null, title: "Buy cycling shoes", status: "pending" }, // prettier-ignore
+        ],
+      );
 
       renderWithProviders(<GoalsScreen />);
-      // Each goal card surfaces only its own next step
-      expect(screen.getByText("Open a savings account")).toBeOnTheScreen();
+      // Hero (goal-1) surfaces its own next step…
+      expect(screen.getByTestId("goals-cockpit-next-step")).toHaveTextContent(
+        "Open a savings account",
+      );
+      // …and the keep-warm card (goal-2) surfaces its own.
       expect(screen.getByText("Buy cycling shoes")).toBeOnTheScreen();
     });
   });
@@ -274,14 +308,6 @@ describe("GoalsScreen", () => {
   describe("sub-step next-step resolution", () => {
     const goalId = "goal-1";
     const goalRow = makeGoalRow({ id: goalId, title: "Build practice panel" });
-
-    const mockSteps = (steps: Record<string, unknown>[]) => {
-      mockUseQuery.mockImplementation((query: { __brand?: string }) => {
-        if (query?.__brand === "activeGoalsQuery") return [goalRow];
-        if (query?.__brand === "stepsForActiveGoalsQuery") return steps;
-        return [];
-      });
-    };
 
     // `tomas-done` shape with one child still pending → leaf state.
     const LEAF_STEPS = [
@@ -304,79 +330,76 @@ describe("GoalsScreen", () => {
       { id: "s3", goalId, parentStepId: null, title: "Inspection & labels", status: "pending" }, // prettier-ignore
     ];
 
-    it("leads with the pending leaf + parent context (leaf state)", () => {
-      mockSteps(LEAF_STEPS);
+    it("leads with the pending leaf as the hero next step (leaf state)", () => {
+      mockData([goalRow], LEAF_STEPS);
       renderWithProviders(<GoalsScreen />);
-      expect(
-        screen.getByText("20-amp small-appliance circuit"),
-      ).toBeOnTheScreen();
-      expect(
-        screen.getByText(
-          i18n.t("goals:card.nextStepContext", {
-            parent: "Wire the circuits",
-          }),
-        ),
-      ).toBeOnTheScreen();
-      // The container parent is context, not the hero.
-      expect(screen.queryByTestId("goal-card-next-step")).toHaveTextContent(
+      // The pending child is the hero; the cockpit shows no parent context line.
+      expect(screen.getByTestId("goals-cockpit-next-step")).toHaveTextContent(
         "20-amp small-appliance circuit",
       );
     });
 
-    it("leads with the parent + 'all N substeps done' readout (invite state)", () => {
-      mockSteps(INVITE_STEPS);
+    it("leads with the pending parent as the hero next step (invite state)", () => {
+      mockData([goalRow], INVITE_STEPS);
       renderWithProviders(<GoalsScreen />);
-      expect(screen.getByText("Wire the circuits")).toBeOnTheScreen();
-      expect(
-        screen.getByText(i18n.t("goals:card.allSubstepsDone", { count: 3 })),
-      ).toBeOnTheScreen();
+      expect(screen.getByTestId("goals-cockpit-next-step")).toHaveTextContent(
+        "Wire the circuits",
+      );
     });
 
     it("counts every unit (parents + children) for progress — 4/6", () => {
-      mockSteps(INVITE_STEPS);
+      mockData([goalRow], INVITE_STEPS);
       renderWithProviders(<GoalsScreen />);
+      // The ring sublabel carries the every-unit progress count.
       expect(
         screen.getByText(
-          i18n.t("goals:card.progressLabel", { completed: 4, total: 6 }),
+          i18n.t("goals:cockpit.ringSteps", { completed: 4, total: 6 }),
         ),
       ).toBeOnTheScreen();
     });
 
-    it("shows a flat step as the hero with no context line", () => {
-      mockSteps([
-        { id: "s1", goalId, parentStepId: null, title: "Open a savings account", status: "pending" }, // prettier-ignore
-      ]);
+    it("shows a flat step as the hero next step", () => {
+      mockData(
+        [goalRow],
+        [
+          { id: "s1", goalId, parentStepId: null, title: "Open a savings account", status: "pending" }, // prettier-ignore
+        ],
+      );
       renderWithProviders(<GoalsScreen />);
-      expect(screen.getByText("Open a savings account")).toBeOnTheScreen();
-      expect(screen.queryByTestId("goal-card-next-step-context")).toBeNull();
+      expect(screen.getByTestId("goals-cockpit-next-step")).toHaveTextContent(
+        "Open a savings account",
+      );
     });
 
     it("renders no next-step line when every step is completed", () => {
-      mockSteps([
-        { id: "s1", goalId, parentStepId: null, title: "Plan", status: "completed" }, // prettier-ignore
-        { id: "s2", goalId, parentStepId: null, title: "Wire", status: "completed" }, // prettier-ignore
-        { id: "s2a", goalId, parentStepId: "s2", title: "15-amp", status: "completed" }, // prettier-ignore
-      ]);
+      mockData(
+        [goalRow],
+        [
+          { id: "s1", goalId, parentStepId: null, title: "Plan", status: "completed" }, // prettier-ignore
+          { id: "s2", goalId, parentStepId: null, title: "Wire", status: "completed" }, // prettier-ignore
+          { id: "s2a", goalId, parentStepId: "s2", title: "15-amp", status: "completed" }, // prettier-ignore
+        ],
+      );
       renderWithProviders(<GoalsScreen />);
-      expect(screen.queryByTestId("goal-card-next-step")).toBeNull();
-      expect(screen.queryByTestId("goal-card-next-step-context")).toBeNull();
+      expect(screen.queryByTestId("goals-cockpit-next-step")).toBeNull();
     });
 
     it("surfaces an orphaned sub-step (deleted parent) as the next step", () => {
       // s2 was soft-deleted, leaving s2a with a dangling parentStepId. The
       // orphan is promoted to top-level so its pending work stays visible —
-      // without the promotion it would bucket under the absent s2 and the card
-      // would wrongly read "nothing to do" (#292 regression).
-      mockSteps([
-        { id: "s1", goalId, parentStepId: null, title: "Plan layout", status: "completed" }, // prettier-ignore
-        { id: "s2a", goalId, parentStepId: "s2", title: "20-amp small-appliance circuit", status: "pending" }, // prettier-ignore
-      ]);
+      // without the promotion it would bucket under the absent s2 and the
+      // cockpit would wrongly read "nothing to do" (#292 regression).
+      mockData(
+        [goalRow],
+        [
+          { id: "s1", goalId, parentStepId: null, title: "Plan layout", status: "completed" }, // prettier-ignore
+          { id: "s2a", goalId, parentStepId: "s2", title: "20-amp small-appliance circuit", status: "pending" }, // prettier-ignore
+        ],
+      );
       renderWithProviders(<GoalsScreen />);
-      expect(screen.queryByTestId("goal-card-next-step")).toHaveTextContent(
+      expect(screen.getByTestId("goals-cockpit-next-step")).toHaveTextContent(
         "20-amp small-appliance circuit",
       );
-      // Treated as a flat hero (parent is gone), so no context line.
-      expect(screen.queryByTestId("goal-card-next-step-context")).toBeNull();
     });
 
     it("surfaces a pending leaf under a manually-completed parent", () => {
@@ -384,40 +407,31 @@ describe("GoalsScreen", () => {
       // mark the parent done while a child is still pending. The pending leaf
       // must remain the next step — skipping the parent on its own status would
       // hide live work and wrongly read "nothing to do" (#338 regression).
-      mockSteps([
-        { id: "s1", goalId, parentStepId: null, title: "Plan layout", status: "completed" }, // prettier-ignore
-        { id: "s2", goalId, parentStepId: null, title: "Wire the circuits", status: "completed" }, // prettier-ignore
-        { id: "s2a", goalId, parentStepId: "s2", title: "20-amp small-appliance circuit", status: "pending" }, // prettier-ignore
-      ]);
+      mockData(
+        [goalRow],
+        [
+          { id: "s1", goalId, parentStepId: null, title: "Plan layout", status: "completed" }, // prettier-ignore
+          { id: "s2", goalId, parentStepId: null, title: "Wire the circuits", status: "completed" }, // prettier-ignore
+          { id: "s2a", goalId, parentStepId: "s2", title: "20-amp small-appliance circuit", status: "pending" }, // prettier-ignore
+        ],
+      );
       renderWithProviders(<GoalsScreen />);
-      expect(screen.queryByTestId("goal-card-next-step")).toHaveTextContent(
+      expect(screen.getByTestId("goals-cockpit-next-step")).toHaveTextContent(
         "20-amp small-appliance circuit",
       );
-      // Still rendered as a leaf, so the parent stays the context line.
-      expect(
-        screen.getByText(
-          i18n.t("goals:card.nextStepContext", {
-            parent: "Wire the circuits",
-          }),
-        ),
-      ).toBeOnTheScreen();
     });
   });
 
   describe("delete flow", () => {
     it("shows confirm modal on long press and deletes on confirm", () => {
-      const goals = [makeGoalRow({ id: "goal-1", title: "Learn TypeScript" })];
-      mockUseQuery.mockImplementation((query: { __brand?: string }) => {
-        if (query?.__brand === "activeGoalsQuery") return goals;
-        return [];
-      });
+      mockData([makeGoalRow({ id: "goal-1", title: "Learn TypeScript" })]);
 
       renderWithProviders(<GoalsScreen />);
 
-      // Long press to trigger delete
-      fireEvent(screen.getByTestId("goal-card-goal-1"), "longPress");
+      // Long press the hero to trigger delete.
+      fireEvent(screen.getByTestId("goals-cockpit-hero"), "onLongPress");
 
-      // Confirm modal should show the goal title
+      // Confirm modal should show the goal title.
       expect(
         screen.getByText(i18n.t("goals:confirmDelete.title")),
       ).toBeOnTheScreen();
@@ -443,8 +457,8 @@ describe("GoalsScreen", () => {
     });
 
     // Representative spread across header / empty-state body / interpolated
-    // confirm-modal message / interpolated a11y label. A revert that misses
-    // one screen surface won't pass by sneaking past a single asserted key.
+    // confirm-modal message / confirm-modal buttons. A revert that misses one
+    // screen surface won't pass by sneaking past a single asserted key.
     it.each(["goals:title", "goals:emptyState.body"] as const)(
       "renders %s as bracketed copy under pseudo locale",
       async (key) => {
@@ -457,15 +471,11 @@ describe("GoalsScreen", () => {
     );
 
     it("renders interpolated confirmDelete.message under pseudo locale", async () => {
-      const goals = [makeGoalRow({ id: "goal-1", title: "Learn TypeScript" })];
-      mockUseQuery.mockImplementation((query: { __brand?: string }) => {
-        if (query?.__brand === "activeGoalsQuery") return goals;
-        return [];
-      });
+      mockData([makeGoalRow({ id: "goal-1", title: "Learn TypeScript" })]);
 
       await i18n.changeLanguage("pseudo");
       renderWithProviders(<GoalsScreen />);
-      fireEvent(screen.getByTestId("goal-card-goal-1"), "longPress");
+      fireEvent(screen.getByTestId("goals-cockpit-hero"), "onLongPress");
       const pseudo = i18n.t("goals:confirmDelete.message", {
         title: "Learn TypeScript",
       });
@@ -476,70 +486,15 @@ describe("GoalsScreen", () => {
     it.each(["common:actions.delete", "common:actions.cancel"] as const)(
       "renders confirm modal %s button under pseudo locale",
       async (key) => {
-        const goals = [
-          makeGoalRow({ id: "goal-1", title: "Learn TypeScript" }),
-        ];
-        mockUseQuery.mockImplementation((query: { __brand?: string }) => {
-          if (query?.__brand === "activeGoalsQuery") return goals;
-          return [];
-        });
+        mockData([makeGoalRow({ id: "goal-1", title: "Learn TypeScript" })]);
 
         await i18n.changeLanguage("pseudo");
         renderWithProviders(<GoalsScreen />);
-        fireEvent(screen.getByTestId("goal-card-goal-1"), "longPress");
+        fireEvent(screen.getByTestId("goals-cockpit-hero"), "onLongPress");
         const pseudo = i18n.t(key);
         expect(pseudo.startsWith("[")).toBe(true);
         expect(screen.getByText(pseudo)).toBeOnTheScreen();
       },
     );
-
-    it("renders card.a11y.label (no next step) under pseudo locale", async () => {
-      const goals = [makeGoalRow({ id: "goal-1", title: "Learn TypeScript" })];
-      mockUseQuery.mockImplementation((query: { __brand?: string }) => {
-        if (query?.__brand === "activeGoalsQuery") return goals;
-        return [];
-      });
-
-      await i18n.changeLanguage("pseudo");
-      renderWithProviders(<GoalsScreen />);
-      const pseudo = i18n.t("goals:card.a11y.label", {
-        title: "Learn TypeScript",
-        stepsCompleted: 0,
-        stepsTotal: 0,
-        status: i18n.t("common:status.active"),
-      });
-      expect(pseudo.startsWith("[")).toBe(true);
-      expect(screen.getByLabelText(pseudo)).toBeOnTheScreen();
-    });
-
-    it("renders interpolated card.a11y.labelWithNextStep under pseudo locale", async () => {
-      const goals = [makeGoalRow({ id: "goal-1", title: "Learn TypeScript" })];
-      const steps = [
-        {
-          id: "step-1",
-          goalId: "goal-1",
-          title: "Open a savings account",
-          status: "pending",
-          ordinal: 0,
-        },
-      ];
-      mockUseQuery.mockImplementation((query: { __brand?: string }) => {
-        if (query?.__brand === "activeGoalsQuery") return goals;
-        if (query?.__brand === "stepsForActiveGoalsQuery") return steps;
-        return [];
-      });
-
-      await i18n.changeLanguage("pseudo");
-      renderWithProviders(<GoalsScreen />);
-      const pseudo = i18n.t("goals:card.a11y.labelWithNextStep", {
-        title: "Learn TypeScript",
-        nextStep: "Open a savings account",
-        stepsCompleted: 0,
-        stepsTotal: 1,
-        status: i18n.t("common:status.active"),
-      });
-      expect(pseudo.startsWith("[")).toBe(true);
-      expect(screen.getByLabelText(pseudo)).toBeOnTheScreen();
-    });
   });
 });

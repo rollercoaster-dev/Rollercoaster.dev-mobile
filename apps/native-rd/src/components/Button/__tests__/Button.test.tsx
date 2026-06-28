@@ -1,4 +1,5 @@
 import React from "react";
+import { StyleSheet } from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -24,5 +25,21 @@ describe("Button", () => {
     renderWithProviders(<Button label="Disabled" onPress={onPress} disabled />);
     fireEvent.press(screen.getByText("Disabled"));
     expect(onPress).not.toHaveBeenCalled();
+  });
+
+  // Regression: the icon run carried no color, so it fell back to the default
+  // text color and rendered invisibly on the primary button's dark fill. The
+  // icon must track the label color.
+  it("colors the icon to match the label", () => {
+    renderWithProviders(<Button label="Resume" icon="▶" onPress={jest.fn()} />);
+    // The icon run is accessibilityElementsHidden, so opt hidden elements in.
+    const iconColor = StyleSheet.flatten(
+      screen.getByText("▶", { includeHiddenElements: true }).props.style,
+    ).color;
+    const labelColor = StyleSheet.flatten(
+      screen.getByText("Resume").props.style,
+    ).color;
+    expect(iconColor).toBeTruthy();
+    expect(iconColor).toBe(labelColor);
   });
 });
