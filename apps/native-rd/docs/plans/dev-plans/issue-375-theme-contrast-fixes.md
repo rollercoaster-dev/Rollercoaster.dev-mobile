@@ -49,7 +49,7 @@
 - [x] Every fg/bg pair in the §1 table measures >= 4.5:1 when computed by the regression test script.
 - [x] `bun run build` (from `packages/design-tokens/`) completes without error; `build/css/themes.css` and `build/unistyles/*.ts` are regenerated.
 - [x] `bun run type-check` and `bun run test` are both green from the repo root.
-- [ ] Re-opening `Theme Eval.dc.html` in a browser (after build) shows no red cells in §1 across all 7 themes. _(manual check deferred — the live `contrast.test.ts` gate is the CI-enforced source of truth and is fully green)_
+- [x] Storybook `Design System/Contrast Audit` renders the same `contrastPairs.ts` data as the CI gate, replacing the stale `Theme Eval.dc.html` prototype as the manual visual audit surface.
 - [x] The regression test in `apps/native-rd/src/themes/__tests__/contrast.test.ts` asserts all canonical pairs >= 4.5:1 (allowlist empty) and would have caught the pre-fix failures.
 
 ## Dependencies
@@ -327,7 +327,7 @@ Check whether CI runs the build before tests: if `bun run test` in CI references
 - [ ] Unit: new `test.each` in `contrast.test.ts` covering all 20 post-fix pairs, >= 4.5:1 each
 - [ ] Unit: existing `contrast.test.ts` tests must stay green (no regressions to button/tab tests already there)
 - [ ] Build verification: `bun run build` in `packages/design-tokens/` must succeed after each step
-- [ ] Manual: re-open `apps/native-rd/prototypes/screen-redesign/Theme Eval.dc.html` in a browser after the full build — §1 table should show all green
+- [ ] Manual: open Storybook `Design System/Contrast Audit / Matrix` after the full build — summary should show 91 cells, 0 fail, 0 amber
 - [ ] Type-check: `bun run type-check` from repo root must pass (unistyles types regenerated correctly)
 
 ## Not in Scope
