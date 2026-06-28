@@ -12,12 +12,12 @@
 
 Observable criteria derived from the issue. These describe what success looks like from a user/system perspective.
 
-- [ ] When a user opens the Goals tab with active goals, they see one prominent hero card: a large progress ring (percent + step count), the next-step title labelled "DO THIS NEXT · <goal title>", and a single Start/Resume button that navigates to FocusMode.
-- [ ] Secondary goals ("KEEP WARM") render as compact cards below the hero; tapping any of them navigates to FocusMode for that goal.
-- [ ] When a user opens the Goals tab with no goals, the existing empty-state copy renders correctly (no regression); the CTA navigates to NewGoal.
+- [x] When a user opens the Goals tab with active goals, they see one prominent hero card: a large progress ring (percent + step count), the next-step title labelled "DO THIS NEXT · <goal title>", and a single Start/Resume button that navigates to FocusMode. _(PR A: GoalsCockpit hero + container nav; tests cover Start/Resume → FocusMode.)_
+- [x] Secondary goals ("KEEP WARM") render as compact cards below the hero; tapping any of them navigates to FocusMode for that goal. _(PR A: keep-warm cards; test covers keep-warm tap → FocusMode.)_
+- [x] When a user opens the Goals tab with no goals, the existing empty-state copy renders correctly (no regression); the CTA navigates to NewGoal. _(PR A: empty-state test + NewGoal nav test.)_
 - [ ] When a user opens the Badges tab with earned badges, the screen shows: a count header ("N badges"), a "JUST EARNED" spotlight card for the most recent badge (taps through to BadgeDetail), and a dense circular gallery of the remaining badges.
 - [ ] When a user opens the Badges tab with no badges, the empty-state renders correctly with a "See my goals" CTA that navigates to the Goals tab.
-- [ ] The Goals screen does NOT contain a loud "resume" button or FAB outside of the hero cockpit card — no second resume control lives in the nav or elsewhere on this screen (S3 coherence).
+- [x] The Goals screen does NOT contain a loud "resume" button or FAB outside of the hero cockpit card — no second resume control lives in the nav or elsewhere on this screen (S3 coherence). _(PR A: hero is the only Start/Resume affordance; header has no add button — test asserts it.)_
 - [ ] The badge-wall background renders correctly across all 7 themes (Full Ride, Night Ride, Bold Ink, Warm Studio, Loud & Clear, Clean Signal, Still Water) — no unreadable color combinations; if full-black (`#000` / `#161616`) does not adapt cleanly in any theme, a per-theme `badgeWall` surface token is added to the chrome contract and all 7 theme files; otherwise no new token is introduced.
 - [ ] Zero hardcoded hex values in the redesigned components after the redesign.
 
