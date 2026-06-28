@@ -16,9 +16,6 @@
       "goals": "Ziele",
       "badges": "Badges",
       "settings": "Einstellungen"
-    },
-    "fab": {
-      "newGoal": "Neues Ziel"
     }
   },
   "evidenceTypes": {

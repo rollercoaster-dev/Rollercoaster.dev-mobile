@@ -27,7 +27,13 @@ export interface Colors {
   accentPurpleFg: string;
   accentPurpleLight: string;
   accentMint: string;
+  /** On-`accentMint` ink. Dark in light themes, off-white in dark mode where
+   * mint becomes a dark surface. Pairs with the bottom-nav Slide knob (Badges). */
+  accentMintFg: string;
   accentYellow: string;
+  /** On-`accentYellow` ink. Locked dark in every theme (yellow does not flip).
+   * Pairs with the bottom-nav Slide knob (Goals). */
+  accentYellowFg: string;
   /** Attention surface (yellow band today). Themed per variant; emitted by
    * design-tokens unistyles output and present at runtime via the adapter. */
   highlight: string;

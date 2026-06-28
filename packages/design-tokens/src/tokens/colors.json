@@ -83,6 +83,16 @@
       "$value": "#ffe50c",
       "$type": "color"
     },
+    "accent-yellow-foreground": {
+      "$value": "#0a0a0a",
+      "$type": "color",
+      "$description": "On-accentYellow ink. Locked dark in every theme — accentYellow (#ffe50c) does not flip across modes. Used by the bottom-nav Slide knob (Goals)."
+    },
+    "accent-mint-foreground": {
+      "$value": "#0a0a0a",
+      "$type": "color",
+      "$description": "On-accentMint ink. Dark in the light themes; dark.json flips it to off-white where accentMint becomes a dark surface. Used by the bottom-nav Slide knob (Badges)."
+    },
     "accent-emerald": {
       "$value": "#059669",
       "$type": "color"

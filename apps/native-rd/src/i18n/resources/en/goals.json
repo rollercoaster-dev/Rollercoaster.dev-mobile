@@ -8,6 +8,9 @@
     "body": "A goal is anything you want to finish with evidence. Start small — one step counts.",
     "cta": "New goal"
   },
+  "actions": {
+    "newGoal": "New goal"
+  },
   "confirmDelete": {
     "title": "Delete this goal?",
     "message": "\"{{title}}\" and all progress will be permanently deleted."
