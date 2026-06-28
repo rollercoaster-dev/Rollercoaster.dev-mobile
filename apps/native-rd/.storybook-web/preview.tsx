@@ -1,4 +1,4 @@
-// Must configure unistyles before any component imports
+// Configure Unistyles early so stories render with the app theme.
 import { StyleSheet, UnistylesRuntime } from "react-native-unistyles";
 import { themes } from "../src/themes";
 
