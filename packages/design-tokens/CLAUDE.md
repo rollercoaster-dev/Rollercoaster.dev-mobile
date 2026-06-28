@@ -6,7 +6,7 @@ Package-specific context for Claude Code when working in `packages/design-tokens
 
 ## Purpose
 
-Single source of truth for the rollercoaster.dev design language. JSON token definitions produce CSS variables, JS objects, Tailwind config, and Unistyles theme objects for React Native.
+Single source of truth for the rollercoaster.dev design language. JSON token definitions produce Unistyles theme objects consumed by the native-rd React Native app. (The legacy CSS/JS/Tailwind/Tamagui Style Dictionary platforms were removed in issue #375, Phase 3 — Decision A: unistyles-only.)
 
 ## Token Architecture
 
@@ -15,65 +15,57 @@ src/tokens/          JSON primitives (colors, spacing, typography, narrative)
 src/themes/          JSON theme overrides (dark, high-contrast, dyslexia, etc.)
         |
         v
-style-dictionary     build-themes.js     build-unistyles.js
-        |                  |                     |
-        v                  v                     v
-build/css/           build/css/           build/unistyles/
-  tokens.css           themes.css           palette.ts
-build/js/                                    tokens.ts
-build/tailwind/                              colorModes.ts
-build/tamagui/                               variants.ts
-                                             index.ts
-css/
-  narrative.css      (hand-authored, exportable design language classes)
+build-unistyles.js   (reads JSON directly — no Style Dictionary dependency)
+        |
+        v
+build/unistyles/
+  palette.ts
+  tokens.ts
+  colorModes.ts
+  variants.ts
+  narrative.ts
+  index.ts
 ```
 
 ## Exports
 
-| Import path                                      | What                                    | Consumer                 |
-| ------------------------------------------------ | --------------------------------------- | ------------------------ |
-| `@rollercoaster-dev/design-tokens/css`           | CSS custom properties (`:root`)         | Web apps                 |
-| `@rollercoaster-dev/design-tokens/css/themes`    | Theme class overrides                   | Web apps                 |
-| `@rollercoaster-dev/design-tokens/css/narrative` | Narrative section + badge label classes | Web apps, landing page   |
-| `@rollercoaster-dev/design-tokens/unistyles`     | Palette, tokens, colorModes, variants   | native-rd (React Native) |
-| `@rollercoaster-dev/design-tokens/tailwind`      | Tailwind config preset                  | Tailwind projects        |
-| `@rollercoaster-dev/design-tokens/tamagui`       | Tamagui token config                    | Tamagui projects         |
+| Import path                                  | What                                  | Consumer                 |
+| -------------------------------------------- | ------------------------------------- | ------------------------ |
+| `@rollercoaster-dev/design-tokens/unistyles` | Palette, tokens, colorModes, variants | native-rd (React Native) |
 
 ## Build
 
 ```bash
-bun run build           # Full pipeline: style-dictionary + themes + unistyles
-bun run build:tokens    # Style Dictionary only
-bun run build:themes    # Theme CSS only
-bun run build:unistyles # Unistyles JS only
+bun run build           # node build-unistyles.js → build/unistyles/*.ts
+bun run build:unistyles # same as build
+bun run clean           # rm -rf build/*
 ```
 
 ## Key Files
 
-- `style-dictionary.config.js` -- Style Dictionary config for CSS/JS/Tailwind/Tamagui
-- `build-themes.js` -- Generates `build/css/themes.css` from theme JSON
-- `build-unistyles.js` -- Generates `build/unistyles/*.ts` from token/theme JSON
-- `css/narrative.css` -- Hand-authored design language classes (uses `var(--ob-*)`)
+- `build-unistyles.js` -- Generates `build/unistyles/*.ts` from token/theme JSON (reads the JSON directly; no Style Dictionary)
+- `src/tokens/*.json` -- DTCG `$value`/`$type` token primitives
+- `src/themes/*.json` -- per-theme overrides
 
 ## Themes (8 total)
 
-| Theme             | Class                         | Mood Name              |
-| ----------------- | ----------------------------- | ---------------------- |
-| Default (light)   | `:root`                       | The Full Ride          |
-| Dark              | `.ob-dark-theme`              | Night Ride             |
-| High Contrast     | `.ob-high-contrast-theme`     | Bold Ink               |
-| Large Text        | `.ob-large-text-theme`        | Same Ride, Bigger Seat |
-| Dyslexia-Friendly | `.ob-dyslexia-friendly-theme` | Warm Studio            |
-| Low Vision        | `.ob-low-vision-theme`        | Loud & Clear           |
-| Low Info          | `.ob-low-info-theme`          | Clean Signal           |
-| Autism-Friendly   | `.ob-autism-friendly-theme`   | Still Water            |
+| Theme             | Unistyles variant key | Mood Name              |
+| ----------------- | --------------------- | ---------------------- |
+| Default (light)   | `default`             | The Full Ride          |
+| Dark              | `default` (dark mode) | Night Ride             |
+| High Contrast     | `highContrast`        | Bold Ink               |
+| Large Text        | `largeText`           | Same Ride, Bigger Seat |
+| Dyslexia-Friendly | `dyslexia`            | Warm Studio            |
+| Low Vision        | `lowVision`           | Loud & Clear           |
+| Low Info          | `lowInfo`             | Clean Signal           |
+| Autism-Friendly   | `autismFriendly`      | Still Water            |
+
+Theme class names (`.ob-*-theme`) and `--ob-*` CSS variables no longer exist; the package emits TypeScript only. The contrast validation gate lives in `apps/native-rd/src/themes/` (`contrastPairs.ts` + `__tests__/contrast.test.ts`), surfaced visually by the Storybook `Design System/Contrast Audit` story.
 
 ## Conventions
 
 - Token JSON uses DTCG `$value`/`$type` format
-- CSS vars prefixed `--ob-`
 - Theme JSON lives in `src/themes/` with structured groups: `surface`, `interactive`, `color`, `narrative`, `form`, `typography`, `aliases`
-- `narrative.css` is hand-authored, not generated -- it contains reusable CSS classes that reference token vars
 - `build/unistyles/` files are auto-generated -- never edit directly
 
 ## Adding Tokens
@@ -81,5 +73,5 @@ bun run build:unistyles # Unistyles JS only
 1. Add to appropriate `src/tokens/*.json` file
 2. If semantic, add mapping in `src/tokens/semantic.json`
 3. If theme-varying, add overrides in each `src/themes/*.json`
-4. Run `bun run build` to regenerate all outputs
-5. If the token should appear in Unistyles output, update `build-unistyles.js`
+4. If the token should appear in Unistyles output, update `build-unistyles.js`
+5. Run `bun run build` to regenerate `build/unistyles/`
