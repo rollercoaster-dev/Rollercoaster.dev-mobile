@@ -86,27 +86,30 @@ plan claimed `TimelineNode` ships "un-integrated" so its changes are invisible.
 Observable criteria derived from the issue. These describe what success looks
 like from a user/system perspective.
 
-- [ ] When `TimelineNode` receives `status="pending"`, the node background is
+- [x] When `TimelineNode` receives `status="pending"`, the node background is
       `theme.journey.journeyStepBg` (#f0f0f0 in Full Ride), matching the design
-      language from the App Shell prototype.
-- [ ] When `TimelineNode` receives `status="in-progress"`, the node background
+      language from the App Shell prototype. _(Verified via compose probe:
+      light-default pending bg=`#f0f0f0`.)_
+- [x] When `TimelineNode` receives `status="in-progress"`, the node background
       is `theme.journey.journeyStepActiveBg` (blue in Full Ride, teal in Night Ride),
       text is `theme.journey.journeyStepActiveFg`. Zero references to
-      `palette.blue600` remain in `TimelineNode.styles.ts`.
-- [ ] When `TimelineNode` receives `status="paused"` (with `showStateBadge`), the
+      `palette.blue600` remain in `TimelineNode.styles.ts`. _(Verified: light-default
+      `#2563eb`, dark-default `#5eead4`, highContrast `#000000`; Step 4 = 0 blue600 refs.)_
+- [x] When `TimelineNode` receives `status="paused"` (with `showStateBadge`), the
       node uses the resolved paused color (`accentPurpleLight`); the state-word badge
       reads the i18n key `common:stepCard.status.paused` (added in this PR).
-- [ ] When `TimelineNode` receives `status="completed"`, the node background is
+      _(Verified: light-default paused bg=`#ede9fe`; badge-label test asserts "Paused".)_
+- [x] When `TimelineNode` receives `status="completed"`, the node background is
       `theme.journey.journeyStepCompleteBg` (green in Full Ride), text is
-      `theme.journey.journeyStepCompleteFg`.
+      `theme.journey.journeyStepCompleteFg`. _(Verified: light-default `#047857`.)_
 - [x] `theme.journey.*` is readable off every composed `ComposedTheme` — i.e.
       `themes["light-highContrast"].journey.journeyStepActiveBg` resolves and is
       `#000000` (the highContrast override). _(Step 1 — wired; CI assertion lands
       in Step 2.)_
-- [ ] The step-state map (`stepStateColorMap`) is exported from its own module;
+- [x] The step-state map (`stepStateColorMap`) is exported from its own module;
       `TimelineNode.styles.ts` consumes it as the single source of truth; no
       state color is hardwired.
-- [ ] The updated `TimelineNode.stories.tsx` has an `AllThemesMatrix` export
+- [x] The updated `TimelineNode.stories.tsx` has an `AllThemesMatrix` export
       that renders all four states across all 7 product themes.
 - [x] Three journey contrast pairs (`journeyStepActive`, `journeyStepComplete`,
       `journeyGoal`) are added to `contrastPairs.ts` and pass the CI contrast
@@ -118,8 +121,9 @@ like from a user/system perspective.
       no NEW screen wiring of `TimelineNode`. (Note: `TimelineNode` is **already**
       rendered in `TimelineJourneyScreen` / `FocusModeScreen` via `TimelineStep`; the
       re-skin reaches those screens, the opt-in badge does not — see D7.)
-- [ ] State-word badge text is driven by `t()` from the `common` namespace,
-      not hardcoded strings.
+- [x] State-word badge text is driven by `t()` from the `common` namespace,
+      not hardcoded strings. _(Step 5; badge-label test.each asserts the live
+      `t()` values "Pending"/"In Progress"/"Paused"/"Completed".)_
 
 ---
 
@@ -389,8 +393,8 @@ a `KNOWN_FAILURES` cleanup). This does not block #406.
 
 **Story:**
 
-- [ ] Add `import { themes, themeNames } from "../../themes/compose"`.
-- [ ] Add `AllThemesMatrix` export: a `ScrollView` with one labeled `ThemeRow` per
+- [x] Add `import { themes, themeNames } from "../../themes/compose"`.
+- [x] Add `AllThemesMatrix` export: a `ScrollView` with one labeled `ThemeRow` per
       `themeNames` entry; each row shows all four states. **Feasibility-confirmed
       mechanism (2026-06-29):** Unistyles v3 theme is a global runtime singleton, so
       rendering the reactive `<TimelineNode>` 7× would just show the active theme 7×.
@@ -401,23 +405,26 @@ a `KNOWN_FAILURES` cleanup). This does not block #406.
       canonical static all-7-themes matrix Joe resolved in OQ-3 — and it directly
       validates the map resolves correctly in every theme. The live `<TimelineNode>`
       component is exercised by the individual stories below (toolbar-themed).
-- [ ] Add a `Paused` story (live component, default theme, `showStateBadge`).
-- [ ] Keep existing `Pending`, `InProgress`, `Completed`, `GoalNode`, `PressableVsStatic`
+      _(Done — matrix resolves bg/fg through `stepStateNodeBg/Fg(themes[name], state)`;
+      rows labelled with the `MOOD_NAMES` mapping mirrored from ContrastAudit.)_
+- [x] Add a `Paused` story (live component, default theme, `showStateBadge`).
+- [x] Keep existing `Pending`, `InProgress`, `Completed`, `GoalNode`, `PressableVsStatic`
       (live component, toolbar-themed). Add `showStateBadge` to one of them to exercise
-      the badge on the real component.
+      the badge on the real component. _(All kept; `InProgress` gains a second row with
+      `showStateBadge` to exercise the badge on a journey-canonical state.)_
 
 **Tests:**
 
-- [ ] Extend the `it.each` glyph table to include `{ status: "paused" as const, expected: "⏸" }`.
-- [ ] Add `test.each` for state-word badge labels: for each of `pending`,
+- [x] Extend the `it.each` glyph table to include `{ status: "paused" as const, expected: "⏸" }`.
+- [x] Add `test.each` for state-word badge labels: for each of `pending`,
       `in-progress`, `paused`, `completed`, render with `showStateBadge` and non-goal
       props and assert the translated badge text appears (`"Pending"`, `"In Progress"`,
       `"Paused"`, `"Completed"` — the real `t()` values, since tests use live i18n).
-- [ ] Add a test asserting the badge is **not** rendered by default (prop omitted)
+- [x] Add a test asserting the badge is **not** rendered by default (prop omitted)
       — the no-regression contract for live consumers.
-- [ ] Add a test asserting the badge is not rendered on a goal node even when
+- [x] Add a test asserting the badge is not rendered on a goal node even when
       `showStateBadge` is set.
-- [ ] Run `bun run test --testPathPatterns TimelineNode`.
+- [x] Run `bun run test --testPathPatterns TimelineNode`. _(17 passed.)_
 
 ---
 
@@ -571,6 +578,19 @@ implementation detail, not a blocker — but confirm before writing Step 6.
 \`common:stepCard.status.${StepStateMapKey}\`` — the map stays the source of truth
   AND `t()` accepts it, matching the existing `t(\`common:modeIndicator.${mode}\`)`pattern (ModeIndicator.tsx). Pseudo regenerated with`gen:pseudo` (generated from
   en, never hand-edited).
+- [2026-06-29] **Step 6 done — story + tests.** `AllThemesMatrix` added (static
+  `themes[name]` read, node cells painted via `stepStateNodeBg/Fg` through the map,
+  rows labelled with the `MOOD_NAMES` mapping from ContrastAudit); `Paused` story
+  added; `InProgress` gains a `showStateBadge` row. Tests: paused glyph (⏸) added to
+  the glyph `it.each`, a 4-state badge-label `it.each` against live `t()` values, a
+  default-off no-regression test, and a goal-node badge-suppression test. **17/17
+  TimelineNode tests pass; type-check clean; lint 0 errors.** **Design-critical
+  colors verified** via a throwaway compose probe (deleted after): Full Ride
+  pending `#f0f0f0` / active `#2563eb` / paused `#ede9fe` / completed `#047857`;
+  Night Ride active `#5eead4` (teal, not blue); Bold Ink active `#000000` (black,
+  not blue) — exactly the OQ-3 special-attention cases. The matrix paints these
+  resolved values, so the all-7-themes design check is satisfied without a device
+  build. **All Step 6 acceptance criteria checked.**
 - [2026-06-29] **Pre-existing pseudo drift discovered (NOT fixed here).** Running
   `gen:pseudo` rewrote padding-dot counts on 4 pseudo files (common, completion,
   editGoal, focusMode) — i.e. the committed pseudo locale was generated by an older

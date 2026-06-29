@@ -16,6 +16,7 @@ describe("TimelineNode", () => {
   it.each([
     { status: "pending" as const, expected: "1" },
     { status: "in-progress" as const, expected: "1" },
+    { status: "paused" as const, expected: "\u23f8" },
     { status: "completed" as const, expected: "\u2713" },
   ])('renders "$expected" for $status status', ({ status, expected }) => {
     renderWithProviders(<TimelineNode {...baseProps} status={status} />);
@@ -78,5 +79,39 @@ describe("TimelineNode", () => {
       <TimelineNode {...baseProps} accessibilityLabel="Go to step 1" />,
     );
     expect(screen.getByLabelText("Go to step 1")).toBeOnTheScreen();
+  });
+
+  // State-word badge (showStateBadge, #406 D7). Labels come from live i18n
+  // (src/i18n/index.ts is a Jest setupFile), so these are the real `t()` values.
+  it.each([
+    { status: "pending" as const, label: "Pending" },
+    { status: "in-progress" as const, label: "In Progress" },
+    { status: "paused" as const, label: "Paused" },
+    { status: "completed" as const, label: "Completed" },
+  ])(
+    'renders the "$label" state badge for $status when showStateBadge',
+    ({ status, label }) => {
+      renderWithProviders(
+        <TimelineNode {...baseProps} status={status} showStateBadge />,
+      );
+      expect(screen.getByText(label)).toBeOnTheScreen();
+    },
+  );
+
+  it("does not render the state badge by default (live-consumer no-regression)", () => {
+    renderWithProviders(<TimelineNode {...baseProps} status="in-progress" />);
+    expect(screen.queryByText("In Progress")).toBeNull();
+  });
+
+  it("does not render the state badge on a goal node even when showStateBadge is set", () => {
+    renderWithProviders(
+      <TimelineNode
+        {...baseProps}
+        status="completed"
+        isGoalNode
+        showStateBadge
+      />,
+    );
+    expect(screen.queryByText("Completed")).toBeNull();
   });
 });
