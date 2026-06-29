@@ -17,11 +17,13 @@ import {
   chromeVariants,
   actionVariants,
   surfaceBorderVariants,
+  journeyVariants,
   type VariantOverride as TokenVariantOverride,
   type NarrativeOverride,
   type ChromeOverride,
   type ActionOverride,
   type SurfaceBorderOverride,
+  type JourneyOverride,
 } from "./adapter";
 
 export type Variant =
@@ -49,6 +51,7 @@ interface VariantOverride {
   chrome?: ChromeOverride;
   action?: ActionOverride;
   surfaceBorder?: SurfaceBorderOverride;
+  journey?: JourneyOverride;
   shadows?: { opacity: number };
   // A complete per-theme shadow map (already carries the semantic elevation
   // roles via withSemanticShadows). Sourced from `shadowVariants`, but typed as
@@ -79,6 +82,7 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
     chrome: chromeVariants.highContrast,
     action: actionVariants.highContrast,
     surfaceBorder: surfaceBorderVariants.highContrast,
+    journey: journeyVariants.highContrast,
     shadows: { opacity: 0 },
     shadow: shadowVariants.highContrast,
   },
@@ -100,6 +104,7 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
     chrome: chromeVariants.dyslexiaFriendly,
     action: actionVariants.dyslexiaFriendly,
     surfaceBorder: surfaceBorderVariants.dyslexiaFriendly,
+    journey: journeyVariants.dyslexiaFriendly,
     shadow: shadowVariants.dyslexiaFriendly,
     lineHeight: lineHeightL,
     fontFamily: "Lexend",
@@ -115,6 +120,7 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
     chrome: chromeVariants.lowVision,
     action: actionVariants.lowVision,
     surfaceBorder: surfaceBorderVariants.lowVision,
+    journey: journeyVariants.lowVision,
     shadows: { opacity: 0 },
     shadow: shadowVariants.lowVision,
     size: sizeL,
@@ -130,6 +136,7 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
     chrome: chromeVariants.autismFriendly,
     action: actionVariants.autismFriendly,
     surfaceBorder: surfaceBorderVariants.autismFriendly,
+    journey: journeyVariants.autismFriendly,
     shadows: { opacity: 0 },
     shadow: shadowVariants.autismFriendly,
   },
@@ -144,6 +151,7 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
     chrome: chromeVariants.lowInfo,
     action: actionVariants.lowInfo,
     surfaceBorder: surfaceBorderVariants.lowInfo,
+    journey: journeyVariants.lowInfo,
     shadow: shadowVariants.lowInfo,
   },
 };
