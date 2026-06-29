@@ -19,9 +19,9 @@ export const styles = StyleSheet.create((theme) => ({
   fallback: {
     width: CELL_SIZE,
     height: CELL_SIZE,
-    borderRadius: 8,
+    borderRadius: theme.radius.sm,
     backgroundColor: theme.colors.accentPurple,
-    borderWidth: 3,
+    borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.border,
     alignItems: "center",
     justifyContent: "center",
