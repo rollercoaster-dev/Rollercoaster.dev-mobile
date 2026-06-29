@@ -99,9 +99,10 @@ like from a user/system perspective.
 - [ ] When `TimelineNode` receives `status="completed"`, the node background is
       `theme.journey.journeyStepCompleteBg` (green in Full Ride), text is
       `theme.journey.journeyStepCompleteFg`.
-- [ ] `theme.journey.*` is readable off every composed `ComposedTheme` — i.e.
+- [x] `theme.journey.*` is readable off every composed `ComposedTheme` — i.e.
       `themes["light-highContrast"].journey.journeyStepActiveBg` resolves and is
-      `#000000` (the highContrast override).
+      `#000000` (the highContrast override). _(Step 1 — wired; CI assertion lands
+      in Step 2.)_
 - [ ] The step-state map (`stepStateColorMap`) is exported from its own module;
       `TimelineNode.styles.ts` consumes it as the single source of truth; no
       state color is hardwired.
@@ -246,11 +247,11 @@ a `KNOWN_FAILURES` cleanup). This does not block #406.
 **Commit**: `feat(native-rd): wire journey-* token group into ComposedTheme (#406)`
 **Changes**:
 
-- [ ] In `adapter.ts`: add imports of `lightJourneyColors`, `darkJourneyColors`,
+- [x] In `adapter.ts`: add imports of `lightJourneyColors`, `darkJourneyColors`,
       `journeyVariants`, `JourneyColors as PkgJourneyColors`, `JourneyOverride as PkgJourneyOverride`
       from `@rollercoaster-dev/design-tokens/unistyles`. Re-export them exactly as
       the chrome/action/surfaceBorder entries above them do.
-- [ ] In `compose.ts`: import `lightJourneyColors`, `darkJourneyColors`, `Journey`,
+- [x] In `compose.ts`: import `lightJourneyColors`, `darkJourneyColors`, `Journey`,
       `JourneyOverride` from `./adapter`. Add `journey: Journey` to `ComposedTheme`
       interface. Inside `composeTheme()` add the journey composition block:
   ```ts
@@ -262,7 +263,7 @@ a `KNOWN_FAILURES` cleanup). This does not block #406.
   }
   ```
   Add `journey` to the returned object.
-- [ ] In `variants.ts`: import `journeyVariants`, `JourneyOverride` from `./adapter`.
+- [x] In `variants.ts`: import `journeyVariants`, `JourneyOverride` from `./adapter`.
       Add `journey?: JourneyOverride` to `VariantOverride` interface. Wire each
       non-default variant: `highContrast.journey = journeyVariants.highContrast`,
       `dyslexia.journey = journeyVariants.dyslexiaFriendly`,
@@ -539,3 +540,6 @@ implementation detail, not a blocker — but confirm before writing Step 6.
   `AllThemesMatrix` uses the `ContrastAudit` static-swatch pattern (read
   `themes[name]`, paint node cells inline via `stepStateColorMap`) — which is what
   Joe's OQ-3 resolution specified and directly validates the map per-theme.
+- [2026-06-29 15:50] **Step 1 done & committed** (`e539b63d`). `journey` wired
+  through `adapter.ts` + `compose.ts` + `variants.ts`; type-check clean, lint 0
+  errors, all 146 themes/**tests** green. Paused at user request before Step 2.
