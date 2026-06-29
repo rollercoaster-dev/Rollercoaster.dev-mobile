@@ -108,11 +108,11 @@ like from a user/system perspective.
       state color is hardwired.
 - [ ] The updated `TimelineNode.stories.tsx` has an `AllThemesMatrix` export
       that renders all four states across all 7 product themes.
-- [ ] Three journey contrast pairs (`journeyStepActive`, `journeyStepComplete`,
+- [x] Three journey contrast pairs (`journeyStepActive`, `journeyStepComplete`,
       `journeyGoal`) are added to `contrastPairs.ts` and pass the CI contrast
       gate (`src/themes/__tests__/contrast.test.ts`). Any sub-AA pairs are entered
       into `KNOWN_FAILURES` with a TODO comment (see contrast finding below).
-- [ ] `compose.test.ts` asserts `theme.journey` is defined for every product
+- [x] `compose.test.ts` asserts `theme.journey` is defined for every product
       theme and that the highContrast override resolves correctly.
 - [ ] No screen file imports the `stepStateColorMap` directly, and this PR adds
       no NEW screen wiring of `TimelineNode`. (Note: `TimelineNode` is **already**
@@ -278,18 +278,18 @@ a `KNOWN_FAILURES` cleanup). This does not block #406.
 **Commit**: `test(native-rd): add journey contrast pairs + compose assertions (#406)`
 **Changes**:
 
-- [ ] In `contrastPairs.ts`: add three pairs using `(t) => ({ fg: t.journey.journeyStepActiveFg, bg: t.journey.journeyStepActiveBg })` etc. Keys: `journeyStepActive`, `journeyStepComplete`, `journeyGoal`. Remove the NOTE comment that called out journey as absent (it is now wired).
-- [ ] In `contrast.test.ts`: add four `KNOWN_FAILURES` entries (with
+- [x] In `contrastPairs.ts`: add three pairs using `(t) => ({ fg: t.journey.journeyStepActiveFg, bg: t.journey.journeyStepActiveBg })` etc. Keys: `journeyStepActive`, `journeyStepComplete`, `journeyGoal`. Remove the NOTE comment that called out journey as absent (it is now wired).
+- [x] In `contrast.test.ts`: add four `KNOWN_FAILURES` entries (with
       `TODO(#406-follow-up): upstream token fix needed in packages/design-tokens`):
-  - `light-dyslexia:journeyStepActive`
-  - `light-dyslexia:journeyStepComplete`
-  - `light-autismFriendly:journeyStepComplete`
-  - `light-highContrast:journeyStepComplete`
-- [ ] In `compose.test.ts`: add a `"exposes journey tokens for every product theme"` test
+  - `light-dyslexia:journeyStepActive` _(4.23:1 — verified)_
+  - `light-dyslexia:journeyStepComplete` _(3.94:1 — verified)_
+  - `light-autismFriendly:journeyStepComplete` _(3.81:1 — verified)_
+  - `light-highContrast:journeyStepComplete` _(4.46:1 — verified)_
+- [x] In `compose.test.ts`: add a `"exposes journey tokens for every product theme"` test
       in the `"theme registry"` describe block. Assert `theme.journey.journeyStepActiveBg`
       is truthy for every theme, and assert the highContrast override resolves:
       `themes["light-highContrast"].journey.journeyStepActiveBg === "#000000"`.
-- [ ] Run `bun run test --testPathPatterns themes/__tests__` to confirm gate passes.
+- [x] Run `bun run test --testPathPatterns themes/__tests__` to confirm gate passes. _(168 passed)_
 
 ### Step 3: Build `stepStateColorMap.ts`
 
