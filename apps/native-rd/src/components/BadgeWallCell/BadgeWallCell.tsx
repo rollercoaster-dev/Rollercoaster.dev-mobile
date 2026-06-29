@@ -1,10 +1,7 @@
 import { View, Text, Pressable } from "react-native";
 import { BadgeRenderer } from "../../badges/BadgeRenderer";
 import type { BadgeDesign } from "../../badges/types";
-import { styles } from "./BadgeWallCell.styles";
-
-/** Logical-pixel size each badge renders at in the wall grid. */
-const CELL_SIZE = 60;
+import { styles, CELL_SIZE } from "./BadgeWallCell.styles";
 
 /** Minimal presentational subset of a badge row this cell needs. */
 export interface BadgeWallCellBadge {
@@ -21,9 +18,10 @@ export interface BadgeWallCellProps {
 /**
  * BadgeWallCell — one pressable badge in the dense BadgesWall gallery (#403).
  *
- * Renders the badge in its OWN designed shape — circle, shield, star, hexagon,
- * roundedRect — via {@link BadgeRenderer}. There is deliberately no circular
- * clip: the wall is a "wall of proof" of distinct shapes, not a grid of
+ * Renders the badge in its OWN designed shape (circle, shield, star, hexagon,
+ * roundedRect, diamond — whatever {@link BadgeRenderer} supports). There is
+ * deliberately no circular clip: the wall is a "wall of proof" of distinct
+ * shapes, not a grid of
  * identical circles. Border and hard shadow come from the renderer and follow
  * the active theme (shadow dropped in highContrast / lowVision / autismFriendly).
  *

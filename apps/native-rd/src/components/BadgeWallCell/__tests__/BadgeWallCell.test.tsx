@@ -53,36 +53,45 @@ describe("BadgeWallCell", () => {
     expect(screen.getByText("T")).toBeOnTheScreen();
   });
 
-  it("fires onPress when pressed", () => {
-    const onPress = jest.fn();
-    renderWithProviders(
-      <BadgeWallCell
-        badge={{ title: "Trophy Goal", design: null }}
-        onPress={onPress}
-      />,
-    );
-    fireEvent.press(screen.getByRole("button"));
-    expect(onPress).toHaveBeenCalledTimes(1);
-  });
+  // The Pressable and its a11y props live on the OUTER element, identical in
+  // both render branches — but the cell's primary real-world state is "has a
+  // design", so the press + a11y contracts are asserted through BOTH branches.
+  // A regression that moved them into the fallback branch would otherwise pass.
+  describe.each<[string, BadgeDesign | null]>([
+    ["with a design", design],
+    ["with a null design", null],
+  ])("press + a11y contracts (%s)", (_label, cellDesign) => {
+    it("fires onPress when pressed", () => {
+      const onPress = jest.fn();
+      renderWithProviders(
+        <BadgeWallCell
+          badge={{ title: "Trophy Goal", design: cellDesign }}
+          onPress={onPress}
+        />,
+      );
+      fireEvent.press(screen.getByRole("button"));
+      expect(onPress).toHaveBeenCalledTimes(1);
+    });
 
-  it('has accessibilityRole="button"', () => {
-    renderWithProviders(
-      <BadgeWallCell
-        badge={{ title: "Trophy Goal", design: null }}
-        onPress={() => {}}
-      />,
-    );
-    expect(screen.getByRole("button")).toBeOnTheScreen();
-  });
+    it('has accessibilityRole="button"', () => {
+      renderWithProviders(
+        <BadgeWallCell
+          badge={{ title: "Trophy Goal", design: cellDesign }}
+          onPress={() => {}}
+        />,
+      );
+      expect(screen.getByRole("button")).toBeOnTheScreen();
+    });
 
-  it("uses the badge title as the accessibilityLabel", () => {
-    renderWithProviders(
-      <BadgeWallCell
-        badge={{ title: "Trophy Goal", design: null }}
-        onPress={() => {}}
-      />,
-    );
-    expect(screen.getByLabelText("Trophy Goal")).toBeOnTheScreen();
+    it("uses the badge title as the accessibilityLabel", () => {
+      renderWithProviders(
+        <BadgeWallCell
+          badge={{ title: "Trophy Goal", design: cellDesign }}
+          onPress={() => {}}
+        />,
+      );
+      expect(screen.getByLabelText("Trophy Goal")).toBeOnTheScreen();
+    });
   });
 
   it("guarantees a 44x44pt minimum touch target", () => {

@@ -2,7 +2,7 @@ import { StyleSheet } from "react-native-unistyles";
 import { palette } from "../../themes/palette";
 
 /** Logical-pixel size each badge renders at in the wall grid. */
-const CELL_SIZE = 60;
+export const CELL_SIZE = 60;
 
 export const styles = StyleSheet.create((theme) => ({
   // 44pt floor guarantees the touch target; the 60pt badge already clears it.
