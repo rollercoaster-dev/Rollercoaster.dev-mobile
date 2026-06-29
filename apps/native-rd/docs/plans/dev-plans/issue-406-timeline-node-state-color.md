@@ -297,8 +297,8 @@ a `KNOWN_FAILURES` cleanup). This does not block #406.
 **Commit**: `feat(TimelineNode): add step-state → journey-token map (F0, #406)`
 **Changes**:
 
-- [ ] Define `StepStateMapKey = "pending" | "in-progress" | "paused" | "completed"`.
-- [ ] Define `StepStateEntry`:
+- [x] Define `StepStateMapKey = "pending" | "in-progress" | "paused" | "completed"`.
+- [x] Define `StepStateEntry`:
   ```ts
   export interface StepStateEntry {
     /** theme.journey key for node background */
@@ -314,7 +314,7 @@ a `KNOWN_FAILURES` cleanup). This does not block #406.
     nodeGlyph?: string;
   }
   ```
-- [ ] Export `stepStateColorMap: Record<StepStateMapKey, StepStateEntry>`:
+- [x] Export `stepStateColorMap: Record<StepStateMapKey, StepStateEntry>`:
   - `pending`: `nodeBgKey: "journeyStepBg"`, `nodeFgKey: "journeyStepFg"`,
     `badgeI18nKey: "common:stepCard.status.pending"`
   - `in-progress`: `nodeBgKey: "journeyStepActiveBg"`, `nodeFgKey: "journeyStepActiveFg"`,
@@ -543,3 +543,19 @@ implementation detail, not a blocker — but confirm before writing Step 6.
 - [2026-06-29 15:50] **Step 1 done & committed** (`e539b63d`). `journey` wired
   through `adapter.ts` + `compose.ts` + `variants.ts`; type-check clean, lint 0
   errors, all 146 themes/**tests** green. Paused at user request before Step 2.
+- [2026-06-29] **Step 2 done & committed** (`5a7cfd3b`). Three journey pairs
+  added to `contrastPairs.ts`; `compose.test.ts` journey assertion added; ran the
+  gate with empty `KNOWN_FAILURES` first to verify the sub-AA cells empirically —
+  all four match the plan's predicted ratios exactly (4.23 / 3.94 / 3.81 / 4.46),
+  now in `KNOWN_FAILURES` with a `TODO(#406-follow-up)`. 168 themes tests green.
+- [2026-06-29] **Step 3 done.** `stepStateColorMap.ts` created. **Two refinements
+  over the plan's spec, both stricter/cleaner, not scope changes:**
+  1. `nodeBgColorsFallback` / `nodeFgColorsFallback` are typed `keyof Colors | null`
+     (plan said `string | null`) — type-safe indexing of `theme.colors`.
+  2. Added `stepStateNodeBg(theme, state)` / `stepStateNodeFg(theme, state)`
+     resolver helpers in the same module. These let `TimelineNode.styles.ts`
+     (Step 4) AND `AllThemesMatrix` (Step 6) resolve colors _through the map_
+     rather than re-reading raw tokens — which is exactly what the acceptance
+     criterion "styles.ts consumes the map as the single source of truth" needs.
+     Safe inside `StyleSheet.create((theme) => ...)`: mirrors the existing
+     `shadowStyle(theme, key)` call already in `TimelineNode.styles.ts`.
