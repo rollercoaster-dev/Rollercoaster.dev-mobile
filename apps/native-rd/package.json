@@ -107,7 +107,7 @@
   },
   "devDependencies": {
     "@ai-sdk/openai": "^3.0.73",
-    "@babel/core": "^7.29.7",
+    "@babel/core": "^8.0.1",
     "@babel/plugin-transform-dynamic-import": "^7.29.7",
     "@babel/plugin-transform-explicit-resource-management": "^7.29.7",
     "@babel/plugin-transform-modules-commonjs": "^7.29.7",
