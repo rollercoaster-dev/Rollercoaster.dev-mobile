@@ -39,8 +39,13 @@ export const styles = StyleSheet.create((theme) => ({
     justifyContent: "space-between",
     alignSelf: "stretch",
   },
-  // Verifiable-credential pill that sits under the badge: a card-surface
-  // chip with the screen-header border so it reads as part of the band.
+  // Prominent goal title below the badge, on the band (prototype: Anybody 900).
+  title: {
+    color: theme.chrome.screenHeaderFg,
+    textAlign: "center",
+  },
+  // Verifiable-credential pill under the title: a card-surface chip with the
+  // screen-header border so it reads as part of the band.
   chip: {
     flexDirection: "row",
     alignItems: "center",
@@ -53,13 +58,8 @@ export const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius.pill,
     ...shadowStyle(theme, "cardElevationSmall"),
   },
-  chipText: {
-    gap: theme.space[1],
-  },
-  chipTitle: {
+  chipLabel: {
     color: theme.surfaceBorder.surfaceCardFg,
-  },
-  chipDate: {
-    color: theme.colors.textMuted,
+    fontWeight: theme.fontWeight.bold,
   },
 }));

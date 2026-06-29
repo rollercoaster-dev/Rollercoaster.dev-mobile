@@ -9,10 +9,10 @@
  * before the screen is wired.
  *
  * Layout (top → bottom): nav row (back arrow · ⋯ overflow) → centered
- * BadgeRenderer → VerifiedCredentialChip. A subtle static sparkle layer sits
- * behind the content, scattered and clipped to the band — this is the
- * prototype's `showConfetti` decoration (small ✦/◆ glyphs at low opacity), NOT
- * the full-screen falling Confetti component used on goal completion.
+ * BadgeRenderer → goal title heading → VerifiedCredentialChip. A subtle static
+ * sparkle layer sits behind the content, scattered and clipped to the band —
+ * this is the prototype's `showConfetti` decoration (small ✦/◆ glyphs at low
+ * opacity), NOT the full-screen falling Confetti component used on completion.
  */
 import React from "react";
 import { View } from "react-native";
@@ -95,10 +95,14 @@ function Sparkles({ color }: { color: string }) {
 export interface CelebrationHeroHeaderProps {
   /** Stored badge design, or null to fall back to the monogram default (D4). */
   badgeDesign: BadgeDesign | null;
-  /** Display title; also seeds the monogram fallback when `badgeDesign` is null. */
+  /** Display title; the prominent heading below the badge + the monogram seed. */
   badgeTitle: string;
-  /** Formatted earned date, or null to hide the chip's date sub-line. */
-  earnedDate: string | null;
+  /**
+   * Pre-composed verifiable-credential label, e.g. "Verifiable · earned Jun 18,
+   * 2026". Null hides the chip. The caller localises this (#380 via t(),
+   * stories via a fixture) so the component stays i18n-free.
+   */
+  credentialLabel: string | null;
   /** Whether to show the verifiable-credential chip. */
   isVerified: boolean;
   /** Whether the celebratory sparkle decoration is shown in the band. */
@@ -108,33 +112,22 @@ export interface CelebrationHeroHeaderProps {
 }
 
 /**
- * Verifiable-credential pill: green check + badge title + optional earned date.
- *
- * Text is prop-driven (no literals) so this stays i18n-free until the screen is
- * wired in #380, which also owns the "verified credential" accessibility label.
+ * Verifiable-credential pill: green check + the caller-supplied credential
+ * label (single line, matching the prototype's "✓ Verifiable · earned {date}").
  */
 function VerifiedCredentialChip({
-  badgeTitle,
-  earnedDate,
+  label,
   checkColor,
 }: {
-  badgeTitle: string;
-  earnedDate: string | null;
+  label: string;
   checkColor: string;
 }) {
   return (
     <View style={styles.chip} testID="verified-credential-chip">
-      <Check size={18} weight="bold" color={checkColor} />
-      <View style={styles.chipText}>
-        <Text variant="title" style={styles.chipTitle} numberOfLines={1}>
-          {badgeTitle}
-        </Text>
-        {earnedDate ? (
-          <Text variant="caption" style={styles.chipDate}>
-            {earnedDate}
-          </Text>
-        ) : null}
-      </View>
+      <Check size={16} weight="bold" color={checkColor} />
+      <Text variant="caption" style={styles.chipLabel} numberOfLines={1}>
+        {label}
+      </Text>
     </View>
   );
 }
@@ -142,7 +135,7 @@ function VerifiedCredentialChip({
 export function CelebrationHeroHeader({
   badgeDesign,
   badgeTitle,
-  earnedDate,
+  credentialLabel,
   isVerified,
   showConfetti,
   onBack,
@@ -188,10 +181,18 @@ export function CelebrationHeroHeader({
         testID="badge-renderer"
       />
 
-      {isVerified ? (
+      <Text
+        variant="display"
+        style={styles.title}
+        numberOfLines={2}
+        accessibilityRole="header"
+      >
+        {badgeTitle}
+      </Text>
+
+      {isVerified && credentialLabel ? (
         <VerifiedCredentialChip
-          badgeTitle={badgeTitle}
-          earnedDate={earnedDate}
+          label={credentialLabel}
           checkColor={theme.colors.success}
         />
       ) : null}

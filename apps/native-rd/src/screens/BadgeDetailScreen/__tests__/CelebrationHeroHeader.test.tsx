@@ -15,7 +15,7 @@ const makeProps = (
 ): CelebrationHeroHeaderProps => ({
   badgeDesign: createDefaultBadgeDesign("90 Days Rewired"),
   badgeTitle: "90 Days Rewired",
-  earnedDate: "Jun 18, 2026",
+  credentialLabel: "Verifiable · earned Jun 18, 2026",
   isVerified: true,
   // Off in tests: Confetti renders a reanimated timer layer we don't assert on.
   showConfetti: false,
@@ -80,6 +80,26 @@ describe("CelebrationHeroHeader", () => {
       }
     },
   );
+
+  it("renders the goal title as a heading", () => {
+    renderWithProviders(
+      <CelebrationHeroHeader
+        {...makeProps({ badgeTitle: "Rewire the shop" })}
+      />,
+    );
+    expect(screen.getByText("Rewire the shop")).toBeOnTheScreen();
+  });
+
+  it("renders the credential label inside the chip when verified", () => {
+    renderWithProviders(
+      <CelebrationHeroHeader
+        {...makeProps({ credentialLabel: "Verifiable · earned Jun 18, 2026" })}
+      />,
+    );
+    expect(
+      screen.getByText("Verifiable · earned Jun 18, 2026"),
+    ).toBeOnTheScreen();
+  });
 
   it("renders the badge when a design is supplied", () => {
     renderWithProviders(<CelebrationHeroHeader {...makeProps()} />);

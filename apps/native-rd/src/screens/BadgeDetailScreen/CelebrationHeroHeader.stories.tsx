@@ -43,7 +43,7 @@ export const Designed: Story = {
   args: {
     badgeDesign: designedBadge,
     badgeTitle: "90 Days Rewired",
-    earnedDate: "Jun 18, 2026",
+    credentialLabel: "Verifiable · earned Jun 18, 2026",
     isVerified: true,
     showConfetti: true,
   },
@@ -55,7 +55,7 @@ export const Undesigned: Story = {
   args: {
     badgeDesign: null,
     badgeTitle: "Untitled Goal",
-    earnedDate: null,
+    credentialLabel: null,
     isVerified: false,
     showConfetti: false,
   },
@@ -67,7 +67,7 @@ export const NoConfetti: Story = {
   args: {
     badgeDesign: designedBadge,
     badgeTitle: "90 Days Rewired",
-    earnedDate: "Jun 18, 2026",
+    credentialLabel: "Verifiable · earned Jun 18, 2026",
     isVerified: true,
     showConfetti: false,
   },
