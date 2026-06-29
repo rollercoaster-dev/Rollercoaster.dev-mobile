@@ -331,25 +331,26 @@ a `KNOWN_FAILURES` cleanup). This does not block #406.
 **Commit**: `refactor(TimelineNode): drop palette.blue600, derive colors from journey tokens (#406)`
 **Changes**:
 
-- [ ] Keep `import { palette } from "../../themes/adapter"` (still needed by
+- [x] Keep `import { palette } from "../../themes/adapter"` (still needed by
       `goalNode`, below) but remove every `palette.blue600` reference. The acceptance
       criterion is "zero `palette.blue600`", not "zero palette" — `palette.yellow300`
       on the goal node stays. (Plan-internal contradiction resolved 2026-06-29.)
-- [ ] Replace `completedNode` and `inProgressNode` with journey-token-driven styles:
+      _(Done — 0 `blue600` refs; resolved via `stepStateNodeBg/Fg(theme, state)`.)_
+- [x] Replace `completedNode` and `inProgressNode` with journey-token-driven styles:
   - `pendingNode`: `backgroundColor: theme.journey.journeyStepBg, borderColor: theme.journey.journeyStepFg`
     (or `theme.colors.border` — check prototype; `border` is a safe default)
   - `inProgressNode`: `backgroundColor: theme.journey.journeyStepActiveBg, borderColor: theme.journey.journeyStepActiveBg, borderWidth: theme.borderWidth.medium`
   - `completedNode`: `backgroundColor: theme.journey.journeyStepCompleteBg, borderColor: theme.journey.journeyStepCompleteBg`
   - `pausedNode`: `backgroundColor: theme.colors.accentPurpleLight, borderColor: theme.colors.border`
-- [ ] Update text-color rules:
+- [x] Update text-color rules:
   - `pendingText`: `color: theme.journey.journeyStepFg`
   - `inProgressText`: `color: theme.journey.journeyStepActiveFg`
   - `completedText`: `color: theme.journey.journeyStepCompleteFg`
   - `pausedText`: `color: theme.colors.text`
-- [ ] Keep `goalNode` using `palette.yellow300` — this is a deliberate palette pin
+- [x] Keep `goalNode` using `palette.yellow300` — this is a deliberate palette pin
       (`journeyGoalBg` = amber warning, but the goal star uses `accentYellow` by
       prototype design decision; leave that reconciliation to the goal-node track).
-- [ ] Add state-word badge container styles (see Step 5).
+- [x] Add state-word badge container styles (see Step 5). _(badgeWrapper / stateBadge / stateBadgeText added.)_
 
 ### Step 5: Update `TimelineNode.tsx` + i18n
 

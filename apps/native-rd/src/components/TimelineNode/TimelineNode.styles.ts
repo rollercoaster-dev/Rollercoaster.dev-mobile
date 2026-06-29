@@ -1,6 +1,7 @@
 import { StyleSheet } from "react-native-unistyles";
 import { shadowStyle } from "../../styles/shadows";
 import { palette } from "../../themes/adapter";
+import { stepStateNodeBg, stepStateNodeFg } from "./stepStateColorMap";
 
 export const NODE_SIZE = 32;
 export const GOAL_NODE_SIZE = 40;
@@ -33,13 +34,24 @@ export const styles = StyleSheet.create((theme) => ({
     height: SMALL_NODE_SIZE,
     borderRadius: SMALL_NODE_SIZE / 2,
   },
-  completedNode: {
-    backgroundColor: palette.blue600,
-    borderColor: palette.blue600,
+  // State colors are resolved through stepStateColorMap — the single source of
+  // truth shared with the AllThemesMatrix story (#406). No state hex is hardwired
+  // here; the journey-* token (or the paused fallback) lives in the map.
+  pendingNode: {
+    backgroundColor: stepStateNodeBg(theme, "pending"),
+    borderColor: theme.colors.border,
   },
   inProgressNode: {
-    borderWidth: 4,
-    borderColor: palette.blue600,
+    backgroundColor: stepStateNodeBg(theme, "in-progress"),
+    borderColor: stepStateNodeBg(theme, "in-progress"),
+  },
+  completedNode: {
+    backgroundColor: stepStateNodeBg(theme, "completed"),
+    borderColor: stepStateNodeBg(theme, "completed"),
+  },
+  pausedNode: {
+    backgroundColor: stepStateNodeBg(theme, "paused"),
+    borderColor: theme.colors.border,
   },
   nodeText: {
     fontSize: theme.size.sm,
@@ -49,11 +61,17 @@ export const styles = StyleSheet.create((theme) => ({
   smallNodeText: {
     fontSize: theme.size.xs,
   },
-  completedText: {
-    color: theme.colors.background,
+  pendingText: {
+    color: stepStateNodeFg(theme, "pending"),
   },
   inProgressText: {
-    color: palette.blue600,
+    color: stepStateNodeFg(theme, "in-progress"),
+  },
+  completedText: {
+    color: stepStateNodeFg(theme, "completed"),
+  },
+  pausedText: {
+    color: stepStateNodeFg(theme, "paused"),
   },
   goalText: {
     fontSize: theme.size.lg,
@@ -61,5 +79,24 @@ export const styles = StyleSheet.create((theme) => ({
   },
   pressed: {
     transform: [{ scale: 1.1 }],
+  },
+  // Opt-in state-word badge (showStateBadge, #406 / D7). Wraps the node + label
+  // in a column; default-off so live consumers stay byte-identical.
+  badgeWrapper: {
+    alignItems: "center",
+    gap: theme.space[1],
+  },
+  stateBadge: {
+    paddingHorizontal: theme.space[2],
+    paddingVertical: theme.space[1],
+    borderRadius: theme.radius.sm,
+    borderWidth: theme.borderWidth.thin,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.backgroundSecondary,
+  },
+  stateBadgeText: {
+    fontSize: theme.size.xs,
+    fontWeight: theme.fontWeight.semibold,
+    color: theme.colors.text,
   },
 }));
