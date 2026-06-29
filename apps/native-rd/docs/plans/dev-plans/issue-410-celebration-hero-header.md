@@ -139,6 +139,32 @@ No existing files are modified. No screen imports the new component.
 | Point band bg / title / sparkle / nav-icon fg at `celebrationBg`/`Fg` | Once the token lands, switch `styles.band` off `screenHeaderBg` and route the title + sparkle + nav-icon foregrounds through `celebrationFg` (a `celebration` IconButton tone) | This issue, after the token PR merges                                     |
 | i18n of `credentialLabel` + nav a11y labels                           | Component takes English via props/literals; `t()` wiring happens at integration                                                                                                | #380                                                                      |
 
+## Open Questions (pending user decision — 2026-06-29)
+
+Blocking the celebration-band colour (D1). The band currently ships on `screenHeaderBg` (purple) as a placeholder; these decide the real treatment. **Key discovery:** a fully-designed, contrast-validated per-theme yellow palette already exists as the `chrome-top-bar-*` tokens.
+
+**Q1 — How does the band get its colour?**
+
+- **(A, recommended)** Add a new `celebration-bg/fg/border` token to design-tokens (separate PR) with per-theme values **copied from `chrome-top-bar-*`**. Semantically clean "payoff surface"; matches the earlier "token first" call.
+- (B) **Reuse `chrome-top-bar-*` directly** — point the band at `theme.chrome.chromeTopBarBg/Fg`. Zero token work, ships in this PR. Downside: conflates "status bar" with the celebration hero.
+- (C) New token, but **different per-theme values** (e.g. yellow-forward in more themes) — would need a fresh colour draft.
+
+**Q2 — ND-theme values.** Proposed (mirrors `chrome-top-bar-*`):
+
+| Theme                                 | celebration bg       | fg        |
+| ------------------------------------- | -------------------- | --------- |
+| light / dark (Full Ride / Night Ride) | `#ffe50c` yellow     | `#0a0a0a` |
+| highContrast (Bold Ink)               | `#ffffff` white      | `#000000` |
+| dyslexia (Warm Studio)                | `#f8f5e4` cream      | `#333333` |
+| autismFriendly (Still Water)          | `#d5c88a` muted gold | `#333333` |
+| lowVision (Loud & Clear)              | `#ffe50c` yellow     | `#000000` |
+| lowInfo (Clean Signal)                | `#ffffff` white      | `#222222` |
+
+- **(recommended)** Desaturate/neutralise for ND as above (no harsh yellow where it would be jarring; respects autismFriendly muted + lowInfo/highContrast low-noise norms).
+- (alt) Brand yellow everywhere, tuning only the foreground for contrast.
+
+**Follow-on once Q1/Q2 land:** switch `styles.band` off `screenHeaderBg`; route the title heading, sparkle layer, and nav-icon foregrounds through `celebrationFg` (likely a new `celebration` `IconButton` tone, since `tone="chrome"` resolves to `chromeTabBarFg` computed on purple, which won't contrast on yellow); add `celebrationBg/Fg` to `contrastPairs.ts` + the contrast test.
+
 ## Discovery Log
 
 - [2026-06-29] Prototype re-check (issue-linked `Badge Detail C Prototype.dc.html`) found the `showConfetti` decoration is 6 static ✦/◆ glyphs, not the falling `Confetti` component → reimplemented as inline `Sparkles`.
