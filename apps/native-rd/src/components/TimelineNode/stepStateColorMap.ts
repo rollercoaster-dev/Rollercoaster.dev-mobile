@@ -23,6 +23,13 @@ export type StepStateMapKey =
   | "paused"
   | "completed";
 
+/**
+ * Fully-namespaced i18n key for a state-word badge label. Typed as a template
+ * literal so the strictly-typed `t()` (i18next typed keys) accepts it directly,
+ * matching the `t(\`common:modeIndicator.${mode}\`)` pattern used elsewhere.
+ */
+export type StepStateBadgeKey = `common:stepCard.status.${StepStateMapKey}`;
+
 export interface StepStateEntry {
   /** `theme.journey` key for the node background, or null to use the fallback. */
   nodeBgKey: keyof Journey | null;
@@ -33,7 +40,7 @@ export interface StepStateEntry {
   /** `theme.colors` key used for the foreground when `nodeFgKey` is null. */
   nodeFgColorsFallback: keyof Colors | null;
   /** i18n key (with namespace) for the state-word badge label. */
-  badgeI18nKey: string;
+  badgeI18nKey: StepStateBadgeKey;
   /** Unicode glyph for the node interior, overriding the step number. */
   nodeGlyph?: string;
 }

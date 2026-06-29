@@ -84,7 +84,8 @@
     "status": {
       "completed": "Completed",
       "in-progress": "In Progress",
-      "pending": "Pending"
+      "pending": "Pending",
+      "paused": "Paused"
     },
     "checkbox": {
       "completed": "Completed",

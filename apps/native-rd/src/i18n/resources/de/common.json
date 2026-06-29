@@ -102,7 +102,8 @@
     "status": {
       "completed": "Abgeschlossen",
       "in-progress": "In Bearbeitung",
-      "pending": "Ausstehend"
+      "pending": "Ausstehend",
+      "paused": "Pausiert"
     },
     "checkbox": {
       "completed": "Abgeschlossen",
