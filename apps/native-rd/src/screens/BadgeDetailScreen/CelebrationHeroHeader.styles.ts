@@ -18,6 +18,18 @@ export const styles = StyleSheet.create((theme) => ({
     borderBottomColor: theme.chrome.screenHeaderBorder,
     borderBottomWidth: theme.borderWidth.medium,
   },
+  // Decorative sparkle layer fills the band; individual glyphs are positioned
+  // absolutely within it (see SPARKLES in the component). Non-interactive.
+  sparkleLayer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  sparkle: {
+    position: "absolute",
+  },
   // Back arrow (left) and ⋯ overflow (right) on the same row as the band's
   // chrome. `alignSelf: "stretch"` lets space-between push them to the edges
   // even though the band centers the badge/chip below.

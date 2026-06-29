@@ -59,6 +59,28 @@ describe("CelebrationHeroHeader", () => {
     },
   );
 
+  it.each([
+    { showConfetti: true, present: true },
+    { showConfetti: false, present: false },
+  ])(
+    "shows the celebratory sparkles only when showConfetti=$showConfetti",
+    ({ showConfetti, present }) => {
+      renderWithProviders(
+        <CelebrationHeroHeader {...makeProps({ showConfetti })} />,
+      );
+      // Decorative layer is intentionally a11y-hidden, so opt into hidden
+      // elements — otherwise the query filters it out even when present.
+      const sparkles = screen.queryByTestId("celebration-sparkles", {
+        includeHiddenElements: true,
+      });
+      if (present) {
+        expect(sparkles).toBeOnTheScreen();
+      } else {
+        expect(sparkles).toBeNull();
+      }
+    },
+  );
+
   it("renders the badge when a design is supplied", () => {
     renderWithProviders(<CelebrationHeroHeader {...makeProps()} />);
     expect(screen.getByTestId("badge-renderer")).toBeOnTheScreen();
