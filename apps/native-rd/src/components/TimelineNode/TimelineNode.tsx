@@ -24,7 +24,7 @@ export interface TimelineNodeProps {
   size?: "md" | "sm";
   /**
    * Glyph override for the node interior, e.g. a child's letter ordinal ("a").
-   * Takes precedence over `stepNumber` but not over the goal star or done check.
+   * Takes precedence over `stepNumber` but not over goal or status glyphs.
    */
   label?: string;
   /**
@@ -46,7 +46,6 @@ export function TimelineNode({
   label,
   showStateBadge = false,
 }: TimelineNodeProps) {
-  const { t } = useTranslation(["common"]);
   const isSmall = size === "sm";
 
   const nodeStyle = [
@@ -69,17 +68,15 @@ export function TimelineNode({
     !isGoalNode && status === "paused" && styles.pausedText,
   ];
 
-  // Interior precedence: goal star → done check → pause glyph → label → step
-  // number. The number/label fall through to "" (not "0" or "undefined") when a
-  // caller supplies neither, so a misconfigured node renders blank rather than a
+  // Interior precedence: goal star → state glyph → label → step number. The
+  // number/label fall through to "" (not "0" or "undefined") when a caller
+  // supplies neither, so a misconfigured node renders blank rather than a
   // misleading glyph.
   const content = isGoalNode
     ? "★"
-    : status === "completed"
-      ? "✓"
-      : status === "paused"
-        ? (stepStateColorMap.paused.nodeGlyph ?? "")
-        : (label ?? (stepNumber != null ? String(stepNumber) : ""));
+    : (stepStateColorMap[status].nodeGlyph ??
+      label ??
+      (stepNumber != null ? String(stepNumber) : ""));
 
   // Expand touch target to meet 44×44pt minimum
   const nodeSize = isGoalNode
@@ -120,11 +117,19 @@ export function TimelineNode({
   return (
     <View style={styles.badgeWrapper}>
       {circle}
-      <View accessibilityRole="text" style={styles.stateBadge}>
-        <Text style={styles.stateBadgeText}>
-          {t(stepStateColorMap[status].badgeI18nKey)}
-        </Text>
-      </View>
+      <StateBadge status={status} />
+    </View>
+  );
+}
+
+function StateBadge({ status }: { status: NodeStatus }) {
+  const { t } = useTranslation(["common"]);
+
+  return (
+    <View accessibilityRole="text" style={styles.stateBadge}>
+      <Text style={styles.stateBadgeText}>
+        {t(stepStateColorMap[status].badgeI18nKey)}
+      </Text>
     </View>
   );
 }

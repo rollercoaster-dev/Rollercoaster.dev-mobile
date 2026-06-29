@@ -30,43 +30,50 @@ export type StepStateMapKey =
  */
 export type StepStateBadgeKey = `common:stepCard.status.${StepStateMapKey}`;
 
-export interface StepStateEntry {
-  /** `theme.journey` key for the node background, or null to use the fallback. */
-  nodeBgKey: keyof Journey | null;
-  /** `theme.journey` key for the node foreground text, or null for the fallback. */
-  nodeFgKey: keyof Journey | null;
-  /** `theme.colors` key used for the background when `nodeBgKey` is null. */
-  nodeBgColorsFallback: keyof Colors | null;
-  /** `theme.colors` key used for the foreground when `nodeFgKey` is null. */
-  nodeFgColorsFallback: keyof Colors | null;
+interface StepStateBase {
   /** i18n key (with namespace) for the state-word badge label. */
   badgeI18nKey: StepStateBadgeKey;
   /** Unicode glyph for the node interior, overriding the step number. */
   nodeGlyph?: string;
 }
 
+export type StepStateEntry = StepStateBase &
+  (
+    | {
+        source: "journey";
+        /** `theme.journey` key for the node background. */
+        nodeBgKey: keyof Journey;
+        /** `theme.journey` key for the node foreground text. */
+        nodeFgKey: keyof Journey;
+      }
+    | {
+        source: "colors";
+        /** `theme.colors` key used for the background. */
+        nodeBgColorsFallback: keyof Colors;
+        /** `theme.colors` key used for the foreground. */
+        nodeFgColorsFallback: keyof Colors;
+      }
+  );
+
 export const stepStateColorMap: Record<StepStateMapKey, StepStateEntry> = {
   pending: {
+    source: "journey",
     nodeBgKey: "journeyStepBg",
     nodeFgKey: "journeyStepFg",
-    nodeBgColorsFallback: null,
-    nodeFgColorsFallback: null,
     badgeI18nKey: "common:stepCard.status.pending",
   },
   "in-progress": {
+    source: "journey",
     nodeBgKey: "journeyStepActiveBg",
     nodeFgKey: "journeyStepActiveFg",
-    nodeBgColorsFallback: null,
-    nodeFgColorsFallback: null,
     badgeI18nKey: "common:stepCard.status.in-progress",
   },
   completed: {
+    source: "journey",
     nodeBgKey: "journeyStepCompleteBg",
     nodeFgKey: "journeyStepCompleteFg",
-    nodeBgColorsFallback: null,
-    nodeFgColorsFallback: null,
     badgeI18nKey: "common:stepCard.status.completed",
-    nodeGlyph: "✓", // ✓
+    nodeGlyph: "✓",
   },
   paused: {
     // TODO(#406-follow-up): paused has no first-class journey-* token. The App
@@ -75,12 +82,11 @@ export const stepStateColorMap: Record<StepStateMapKey, StepStateEntry> = {
     // color for now. A design-tokens issue to add `journey-step-paused-bg/fg`
     // (the #375/#376-class fix) is owed; until it lands this is the one
     // non-journey state in the map.
-    nodeBgKey: null,
-    nodeFgKey: null,
+    source: "colors",
     nodeBgColorsFallback: "accentPurpleLight",
     nodeFgColorsFallback: "text",
     badgeI18nKey: "common:stepCard.status.paused",
-    nodeGlyph: "⏸", // ⏸
+    nodeGlyph: "⏸",
   },
 };
 
@@ -95,9 +101,9 @@ export function stepStateNodeBg(
   state: StepStateMapKey,
 ): string {
   const entry = stepStateColorMap[state];
-  return entry.nodeBgKey
+  return entry.source === "journey"
     ? theme.journey[entry.nodeBgKey]
-    : theme.colors[entry.nodeBgColorsFallback!];
+    : theme.colors[entry.nodeBgColorsFallback];
 }
 
 /** Resolve a step state's node foreground (text) color for `theme`. */
@@ -106,7 +112,7 @@ export function stepStateNodeFg(
   state: StepStateMapKey,
 ): string {
   const entry = stepStateColorMap[state];
-  return entry.nodeFgKey
+  return entry.source === "journey"
     ? theme.journey[entry.nodeFgKey]
-    : theme.colors[entry.nodeFgColorsFallback!];
+    : theme.colors[entry.nodeFgColorsFallback];
 }
