@@ -33,12 +33,17 @@ import {
   lightSurfaceBorderColors as pkgLightSurfaceBorderColors,
   darkSurfaceBorderColors as pkgDarkSurfaceBorderColors,
   surfaceBorderVariants as pkgSurfaceBorderVariants,
+  lightJourneyColors as pkgLightJourneyColors,
+  darkJourneyColors as pkgDarkJourneyColors,
+  journeyVariants as pkgJourneyVariants,
   type ChromeColors as PkgChromeColors,
   type ChromeOverride as PkgChromeOverride,
   type ActionColors as PkgActionColors,
   type ActionOverride as PkgActionOverride,
   type SurfaceBorderColors as PkgSurfaceBorderColors,
   type SurfaceBorderOverride as PkgSurfaceBorderOverride,
+  type JourneyColors as PkgJourneyColors,
+  type JourneyOverride as PkgJourneyOverride,
   type Narrative as PkgNarrative,
   type NarrativeOverride as PkgNarrativeOverride,
   type VariantOverride as PkgVariantOverride,
@@ -219,6 +224,17 @@ export const darkSurfaceBorderColors = pkgDarkSurfaceBorderColors;
 export const surfaceBorderVariants = pkgSurfaceBorderVariants;
 export type SurfaceBorder = PkgSurfaceBorderColors;
 export type SurfaceBorderOverride = PkgSurfaceBorderOverride;
+
+// ---------------------------------------------------------------------------
+// Journey (timeline nodes + step states, progress, goal/completion) — per color
+// mode + variant. The canonical state-color source for TimelineNode (#406).
+// ---------------------------------------------------------------------------
+
+export const lightJourneyColors = pkgLightJourneyColors;
+export const darkJourneyColors = pkgDarkJourneyColors;
+export const journeyVariants = pkgJourneyVariants;
+export type Journey = PkgJourneyColors;
+export type JourneyOverride = PkgJourneyOverride;
 
 // ---------------------------------------------------------------------------
 // New token categories — pass through

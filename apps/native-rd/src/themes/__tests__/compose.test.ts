@@ -35,6 +35,23 @@ describe("theme registry", () => {
     }
   });
 
+  it("exposes journey tokens for every product theme", () => {
+    // #406 wired the journey-* group through adapter/compose/variants so the
+    // step-state color map can read theme.journey.*. Assert it resolves for
+    // every product theme, and that the highContrast variant override lands.
+    for (const name of themeNames) {
+      const theme = themes[name];
+      expect(theme.journey.journeyStepBg).toBeTruthy();
+      expect(theme.journey.journeyStepActiveBg).toBeTruthy();
+      expect(theme.journey.journeyStepCompleteBg).toBeTruthy();
+      expect(theme.journey.journeyGoalBg).toBeTruthy();
+    }
+    // highContrast overrides the active node to pure black (journeyVariants).
+    expect(themes["light-highContrast"].journey.journeyStepActiveBg).toBe(
+      "#000000",
+    );
+  });
+
   it("maps semantic elevation roles to each theme's hard* shadow tokens", () => {
     // withSemanticShadows wires cardElevation←hardMd, cardElevationSmall←hardSm,
     // modalElevation←hardLg for every theme. Pin the mapping the whole shadow

@@ -29,10 +29,13 @@ import {
   darkActionColors,
   lightSurfaceBorderColors,
   darkSurfaceBorderColors,
+  lightJourneyColors,
+  darkJourneyColors,
   type Narrative,
   type Chrome,
   type Action,
   type SurfaceBorder,
+  type Journey,
 } from "./adapter";
 
 /** Size scale type - either normal or large */
@@ -77,6 +80,7 @@ export interface ComposedTheme {
   chrome: Chrome;
   action: Action;
   surfaceBorder: SurfaceBorder;
+  journey: Journey;
   shadows: { opacity: number };
   space: typeof space;
   size: SizeScale;
@@ -142,6 +146,13 @@ export function composeTheme(
   let surfaceBorder: SurfaceBorder = { ...baseSurfaceBorder };
   if (variantDef.surfaceBorder) {
     surfaceBorder = { ...surfaceBorder, ...variantDef.surfaceBorder };
+  }
+
+  const baseJourney =
+    colorMode === "light" ? lightJourneyColors : darkJourneyColors;
+  let journey: Journey = { ...baseJourney };
+  if (variantDef.journey) {
+    journey = { ...journey, ...variantDef.journey };
   }
 
   // Determine shadow opacity
@@ -239,6 +250,7 @@ export function composeTheme(
     chrome,
     action,
     surfaceBorder,
+    journey,
     shadows: { opacity: shadowOpacity },
     space,
     size: sizeScale,

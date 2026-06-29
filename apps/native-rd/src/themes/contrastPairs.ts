@@ -10,11 +10,6 @@
  * the theme's nested JSON shape — add/rename a token in one place and both the
  * test and the story follow.
  *
- * NOTE ON COVERAGE — these audit pairs from Theme Eval are NOT yet expressible
- * against the RN `ComposedTheme` and are intentionally absent:
- *   - `journey goal`: the package emits a `journey*` token group, but it is not
- *     wired into `compose.ts`, so it cannot be read off a `ComposedTheme` here.
- *
  * The `success` / `warning` / `info` feedback foregrounds were surfaced in the
  * issue-375 root-cause fix: `build-unistyles.js` now themes the on-colors
  * per variant and the adapter flows them onto `colors.*Foreground`.
@@ -164,6 +159,33 @@ export const contrastPairs: ContrastPair[] = [
     getColors: (t) => ({
       fg: t.colors.infoForeground,
       bg: t.colors.info,
+    }),
+  },
+  {
+    // Timeline in-progress node (#406). journey-* group, wired in compose.ts.
+    key: "journeyStepActive",
+    label: "journey step · active",
+    getColors: (t) => ({
+      fg: t.journey.journeyStepActiveFg,
+      bg: t.journey.journeyStepActiveBg,
+    }),
+  },
+  {
+    // Timeline completed node (#406).
+    key: "journeyStepComplete",
+    label: "journey step · complete",
+    getColors: (t) => ({
+      fg: t.journey.journeyStepCompleteFg,
+      bg: t.journey.journeyStepCompleteBg,
+    }),
+  },
+  {
+    // Timeline goal/finish node (#406).
+    key: "journeyGoal",
+    label: "journey goal",
+    getColors: (t) => ({
+      fg: t.journey.journeyGoalFg,
+      bg: t.journey.journeyGoalBg,
     }),
   },
 ];
