@@ -158,6 +158,8 @@
       "chrome-tab-bar-indicator": { "$value": "#ffffff" },
       "chrome-top-bar-bg": { "$value": "#ffe50c" },
       "chrome-top-bar-fg": { "$value": "#000000" },
+      "celebration-bg": { "$value": "#ffe50c" },
+      "celebration-fg": { "$value": "#000000" },
       "chrome-modal-border": { "$value": "#555555" },
       "action-primary-bg": { "$value": "#003d99" },
       "action-primary-hover-bg": { "$value": "#002d73" },

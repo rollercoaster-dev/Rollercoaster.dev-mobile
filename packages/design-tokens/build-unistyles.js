@@ -1001,6 +1001,8 @@ const SEMANTIC_CATEGORIES = [
       "chrome-modal-border",
       "chrome-top-bar-bg",
       "chrome-top-bar-fg",
+      "celebration-bg",
+      "celebration-fg",
     ],
   },
   {
