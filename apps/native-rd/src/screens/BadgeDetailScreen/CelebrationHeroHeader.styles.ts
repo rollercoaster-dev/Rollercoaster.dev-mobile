@@ -3,10 +3,12 @@ import { shadowStyle } from "../../styles/shadows";
 
 export const styles = StyleSheet.create((theme) => ({
   // Full-width celebration band. `overflow: "hidden"` is load-bearing: it
-  // clips the absolutely-positioned Confetti so particles fade at the band
-  // edge instead of raining down the whole screen (Confetti measures the
-  // window height internally). The View's default `position: relative` makes
-  // the band the containing block for that absolute Confetti layer.
+  // clips the absolutely-positioned sparkle layer so glyphs fade at the band
+  // edge instead of bleeding onto the screen. The View's default
+  // `position: relative` makes the band the containing block for that absolute
+  // sparkle layer. The band owns its own celebration surface (yellow in
+  // light/dark/lowVision, neutralised for the other ND themes) — distinct
+  // from the purple screen-header chrome.
   band: {
     alignItems: "center",
     overflow: "hidden",
@@ -14,8 +16,8 @@ export const styles = StyleSheet.create((theme) => ({
     paddingTop: theme.space[3],
     paddingBottom: theme.space[6],
     gap: theme.space[4],
-    backgroundColor: theme.chrome.screenHeaderBg,
-    borderBottomColor: theme.chrome.screenHeaderBorder,
+    backgroundColor: theme.chrome.celebrationBg,
+    borderBottomColor: theme.chrome.celebrationFg,
     borderBottomWidth: theme.borderWidth.medium,
   },
   // Decorative sparkle layer fills the band; individual glyphs are positioned
@@ -39,13 +41,13 @@ export const styles = StyleSheet.create((theme) => ({
     justifyContent: "space-between",
     alignSelf: "stretch",
   },
-  // Prominent goal title below the badge, on the band (prototype: Anybody 900).
+  // Prominent goal title below the badge, on the celebration band.
   title: {
-    color: theme.chrome.screenHeaderFg,
+    color: theme.chrome.celebrationFg,
     textAlign: "center",
   },
   // Verifiable-credential pill under the title: a card-surface chip with the
-  // screen-header border so it reads as part of the band.
+  // celebration ink as its border so it reads as part of the band.
   chip: {
     flexDirection: "row",
     alignItems: "center",
@@ -53,7 +55,7 @@ export const styles = StyleSheet.create((theme) => ({
     paddingVertical: theme.space[2],
     paddingHorizontal: theme.space[4],
     backgroundColor: theme.surfaceBorder.surfaceCardBg,
-    borderColor: theme.chrome.screenHeaderBorder,
+    borderColor: theme.chrome.celebrationFg,
     borderWidth: theme.borderWidth.medium,
     borderRadius: theme.radius.pill,
     ...shadowStyle(theme, "cardElevationSmall"),

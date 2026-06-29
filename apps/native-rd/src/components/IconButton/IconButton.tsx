@@ -58,6 +58,7 @@ export function IconButton({
   // Button.tsx. A module-level const goes stale across setTheme().
   const toneStyle = {
     chrome: styles.toneChrome,
+    celebration: styles.toneCelebration,
     ghost: styles.toneGhost,
     surface: styles.toneSurface,
     primary: styles.tonePrimary,

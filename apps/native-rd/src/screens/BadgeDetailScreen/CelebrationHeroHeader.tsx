@@ -152,7 +152,7 @@ export function CelebrationHeroHeader({
   return (
     <View style={styles.band}>
       {/* Behind the content (painted first), clipped by the band. */}
-      {showConfetti ? <Sparkles color={theme.chrome.screenHeaderFg} /> : null}
+      {showConfetti ? <Sparkles color={theme.chrome.celebrationFg} /> : null}
 
       {/* a11y labels are English literals until #380 wires the screen and
           routes them through t() (a badgeDetail:fallback.goBack key already
@@ -161,14 +161,14 @@ export function CelebrationHeroHeader({
       <View style={styles.navRow}>
         <IconButton
           icon={<ArrowLeft size={24} weight="bold" />}
-          tone="chrome"
+          tone="celebration"
           onPress={onBack}
           accessibilityLabel="Back"
           testID="celebration-hero-back"
         />
         <IconButton
           icon={<DotsThree size={24} weight="bold" />}
-          tone="chrome"
+          tone="celebration"
           onPress={onOverflow}
           accessibilityLabel="More options"
           testID="celebration-hero-overflow"
