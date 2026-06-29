@@ -59,11 +59,11 @@ Every screen redesign decomposes into these. The architecture is the one already
 
 > **Highest priority** — this work is designed, planned (#381 dev-plan Steps 4–7), and lost from the board. File fresh under #384.
 
-| Key | Type          | Title                               | Scope                                                                                                                                                          | N/R | ~LOC | Blocked by |
-| --- | ------------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- | ---- | ---------- |
-| A1  | `[Storybook]` | `BadgeCircleCell` primitive + story | 60×60 circular gallery cell: badge design via `BadgeRenderer` or initial fallback; `accessibilityRole="button"`, 44pt target                                   | NEW | 200  | —          |
-| A2  | `[Storybook]` | `BadgesWall` view + story           | Count header + "Just earned" spotlight + dense `FlatList` gallery (`numColumns`) + empty state. `AllThemesMatrix` story resolves the dark-wall token risk (D4) | NEW | 300  | A1         |
-| A3  | `[Integrate]` | `BadgesScreen` thin container       | `useQuery` → `BadgesWall` props + nav to `BadgeDetail`; container tests                                                                                        | —   | 150  | A2         |
+| Key | Type          | Title                             | Scope                                                                                                                                                                                                  | N/R | ~LOC | Blocked by |
+| --- | ------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --- | ---- | ---------- |
+| A1  | `[Storybook]` | `BadgeWallCell` primitive + story | 60px gallery cell: renders each badge in its OWN shape (circle/shield/star/hexagon) via `BadgeRenderer` — no circular clip; rounded-square initial fallback; `accessibilityRole="button"`, 44pt target | NEW | 200  | —          |
+| A2  | `[Storybook]` | `BadgesWall` view + story         | Count header + "Just earned" spotlight + dense `FlatList` gallery (`numColumns`) + empty state. `AllThemesMatrix` story resolves the dark-wall token risk (D4)                                         | NEW | 300  | A1         |
+| A3  | `[Integrate]` | `BadgesScreen` thin container     | `useQuery` → `BadgesWall` props + nav to `BadgeDetail`; container tests                                                                                                                                | —   | 150  | A2         |
 
 **Conditional (do not pre-file):** if A2's matrix shows full-black (`#000`/`#161616`) doesn't adapt in some theme, file a `badgeWall` per-theme surface token issue _then_ (epic: "don't pre-author the token"). Drop the prototype's `wall.moreCount` / "+N MORE" (D9 — wall = density, no cap).
 
