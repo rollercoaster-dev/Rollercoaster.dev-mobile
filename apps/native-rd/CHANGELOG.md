@@ -1,5 +1,20 @@
 # native-rd
 
+## [0.1.17](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/compare/v0.1.16...v0.1.17) (2026-06-28)
+
+
+### Features
+
+* **native-rd:** demote nav FAB, fold Settings into the pill + slide-knob active tab ([#379](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/379)) ([#397](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/397)) ([9bcb48c](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/9bcb48c4d0996898cb49b4b231c29b605a98b02e))
+* **native-rd:** extend token contract for redesign — screen-header, brand-accent, per-theme shadow ([#376](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/376)) ([#393](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/393)) ([2dc4b3a](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/2dc4b3a91cd394a9497a8a417c63f34f30f66344))
+* **native-rd:** goals momentum cockpit ([#381](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/381), PR A) ([#398](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/398)) ([fd72c79](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/fd72c79c96902816f138c571638ab49158303f5d))
+
+
+### Bug Fixes
+
+* **design-tokens:** clear remaining theme contrast failures ([#375](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/375)) ([#386](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/386)) ([be69d7f](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/be69d7fb066123fa488cf71fbea44c6fb5b28f93))
+* **native-rd:** load Storybook fonts from relative paths ([#395](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/395)) ([941a17f](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/941a17f42944be4b74449e3c905c60778246e1de))
+
 ## [0.1.16](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/compare/v0.1.15...v0.1.16) (2026-06-21)
 
 
