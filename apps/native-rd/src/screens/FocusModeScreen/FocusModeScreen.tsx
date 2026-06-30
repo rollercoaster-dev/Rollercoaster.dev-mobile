@@ -53,6 +53,7 @@ import {
   deleteEvidence,
   canCompleteStep,
   isPendingStep,
+  areAllStepsComplete,
   groupStepsByParent,
   flattenGroupedSteps,
   resolveNextActionableStep,
@@ -310,9 +311,7 @@ function FocusContent({ goalId }: { goalId: string }) {
 
   const goalEvidenceCount = goalEvidenceRows.length;
 
-  const allStepsComplete =
-    stepRows.length > 0 &&
-    stepRows.every((s) => s.status === StepStatus.completed);
+  const allStepsComplete = areAllStepsComplete(stepRows);
 
   // Stepless goals are tappable from mount; stepped goals gate on all-complete.
   const canMarkComplete = stepRows.length === 0 || allStepsComplete;

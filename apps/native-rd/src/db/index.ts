@@ -28,6 +28,7 @@ export {
   resolveNextActionableStep,
   isPendingStep,
   findFirstPendingIndex,
+  areAllStepsComplete,
   createStep,
   createSubStep,
   updateStep,

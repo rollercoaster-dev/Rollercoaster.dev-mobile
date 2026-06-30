@@ -351,6 +351,18 @@ export const findFirstPendingIndex = (
 ): number => rows.findIndex(isPendingStep);
 
 /**
+ * Whether every step in a goal is complete — the data-layer rule behind
+ * FocusModeScreen's "Mark complete" gate (`allStepsComplete`). An empty list is
+ * not complete (FocusModeScreen handles the stepless goal separately). `paused`
+ * is a distinct, non-completing state, so a single paused step blocks
+ * completion (#417 D6).
+ */
+export const areAllStepsComplete = (
+  rows: readonly { status: string | null }[],
+): boolean =>
+  rows.length > 0 && rows.every((s) => s.status === StepStatus.completed);
+
+/**
  * Query all non-deleted steps for a goal.
  *
  * Ordered by `(ordinal ASC, createdAt ASC)`. The createdAt tie-break makes the

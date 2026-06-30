@@ -19,6 +19,7 @@ import {
   groupStepsByParent,
   flattenGroupedSteps,
   resolveNextActionableStep,
+  areAllStepsComplete,
   type GroupedStep,
 } from "../queries";
 import { evolu } from "../evolu";
@@ -221,18 +222,13 @@ describe("Step CRUD Operations", () => {
   });
 
   describe("goal completion semantics — paused blocks completion (D6)", () => {
-    // Mirrors FocusModeScreen's `allStepsComplete` gate (grep that identifier):
-    // a goal is markable only when every step is completed. The gate is inline
-    // (not exported), so this re-states the rule at the data layer to lock the
-    // contract that `paused` is a distinct, non-completing state.
-    const isAllComplete = (
-      rows: readonly { status: string | null }[],
-    ): boolean =>
-      rows.length > 0 && rows.every((s) => s.status === StepStatus.completed);
-
+    // Asserts the production predicate `areAllStepsComplete` — the same helper
+    // FocusModeScreen's `allStepsComplete` gate now calls (grep that identifier).
+    // Testing the shared helper (not a re-implementation) keeps this contract
+    // honest: if the gate's rule changes, these assertions move with it.
     test("all steps completed → markable", () => {
       expect(
-        isAllComplete([
+        areAllStepsComplete([
           row("a", null, { status: "completed" }),
           row("b", null, { status: "completed" }),
         ]),
@@ -241,11 +237,15 @@ describe("Step CRUD Operations", () => {
 
     test("a paused step blocks completion even when every other step is done", () => {
       expect(
-        isAllComplete([
+        areAllStepsComplete([
           row("a", null, { status: "completed" }),
           row("b", null, { status: "paused" }),
         ]),
       ).toBe(false);
+    });
+
+    test("empty step list is not complete", () => {
+      expect(areAllStepsComplete([])).toBe(false);
     });
   });
 
