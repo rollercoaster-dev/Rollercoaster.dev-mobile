@@ -11,18 +11,18 @@
 
 Observable criteria derived from the issue. These describe what success looks like from a user/system perspective.
 
-- [ ] `ThemeSampleCard` rendered for each of the 7 product themes in Storybook shows its own bg color, border, shadow presence/absence, and font — verifiable by eye in the theme toolbar or an AllThemesMatrix story row
-- [ ] Night Ride sample card shows a vertical offset shadow (`0px 6px 0 0`), not a `3px 3px` hard shadow — its darkShadow token maps hardMd to `{offsetX:0, offsetY:6, opacity:1}` (**whether this should be shadowless is deferred to #429**, see Decisions D7)
-- [ ] Bold Ink, Still Water, and Loud & Clear sample cards show no visible shadow (all hard\* token opacities are 0 for those variants)
-- [ ] Warm Studio sample card renders with Lexend font body and soft blurred shadow (`opacity:0.1`), not the hard brutalist offset
-- [ ] Loud & Clear and Clean Signal sample cards render with Atkinson Hyperlegible font
-- [ ] Clean Signal sample card shows the full `2px 2px 0` hard shadow (lowInfo keeps hardSm/hardMd at opacity 0.8 with no `shadows.opacity` override) (**whether this should be shadowless is deferred to #429**, see Decisions D7)
-- [ ] `ThemeSwatchRail` renders one circular 3-stripe swatch per theme using the same `getSwatch` color extraction pattern as `ThemeChipGrid`
-- [ ] Selecting a swatch fires `onSelect(themeId)` with the correct theme ID; selected swatch shows a checkmark or active indicator
-- [ ] All 7 swatches are wrapped in a `radiogroup` with E2E gating (same pattern as `ThemeChipGrid` and `ThemeSwitcher`); each swatch has `accessibilityRole="radio"` + `themeA11yLabel`
-- [ ] Each swatch Pressable meets the 44pt min touch target requirement
-- [ ] Zero hardcoded hex colors — all colors sourced from `themes[id].colors.*` and `shadowStyle(cardTheme, "cardElevationSmall")` / `"cardElevation"`
-- [ ] No screen imports these components — they remain purely presentational pending #414 and #415
+- [x] `ThemeSampleCard` rendered for each of the 7 product themes in Storybook shows its own bg color, border, shadow presence/absence, and font — `AllThemesMatrix` story renders all 7 on their own backgrounds; `it.each(themeIds)` covers all 7 in tests (final by-eye gate is the reviewer's)
+- [x] Night Ride sample card shows a vertical offset shadow (`0px 6px 0 0`), not a `3px 3px` hard shadow — rendered faithfully via `shadowStyle(themes["dark-default"], "cardElevationSmall")` over the darkShadow token (**design intent deferred to #429**, see Decisions D7)
+- [x] Bold Ink, Still Water, and Loud & Clear sample cards show no visible shadow (all hard\* token opacities are 0 for those variants)
+- [x] Warm Studio sample card renders with Lexend font body and soft blurred shadow (`opacity:0.1`), not the hard brutalist offset — `fontFamily` threaded from `variantOverrides["dyslexia"]`
+- [x] Loud & Clear and Clean Signal sample cards render with Atkinson Hyperlegible font
+- [x] Clean Signal sample card shows the full `2px 2px 0` hard shadow (lowInfo keeps hardSm/hardMd at opacity 0.8 with no `shadows.opacity` override) (**design intent deferred to #429**, see Decisions D7)
+- [x] `ThemeSwatchRail` renders one circular 3-stripe swatch per theme using the same `getSwatch` color extraction pattern as `ThemeChipGrid` (now shared via `swatch-utils.ts`)
+- [x] Selecting a swatch fires `onSelect(themeId)` with the correct theme ID; selected swatch shows a checkmark + 3pt accent border (tested)
+- [x] All 7 swatches are wrapped in a `radiogroup` with E2E gating (same pattern as `ThemeChipGrid` and `ThemeSwitcher`); each swatch has `accessibilityRole="radio"` + `themeA11yLabel` (tested, incl. E2E-mode drop)
+- [x] Each swatch Pressable meets the 44pt min touch target requirement (48pt fixed diameter)
+- [x] Zero hardcoded hex colors — all colors sourced from `themes[id].colors.*` and `shadowStyle(cardTheme, "cardElevationSmall")`
+- [x] No screen imports these components — they remain purely presentational pending #414 and #415 (grep confirmed)
 
 ## Dependencies
 
@@ -71,9 +71,9 @@ Extract the per-theme preview card logic already embedded in `ThemeSwitcher` int
 **Commit**: `refactor(ThemeChipGrid): extract getSwatch + stripeWidths to swatch-utils`
 **Changes**:
 
-- [ ] Create `swatch-utils.ts` with `ChipSwatch` interface, `getSwatch(themeName: ThemeName): ChipSwatch`, and `stripeWidths: Record<ThemeName, [number, number]>` — exact values from current `ThemeChipGrid.tsx`
-- [ ] Update `ThemeChipGrid.tsx` to import from `./swatch-utils` in place of the inlined definitions
-- [ ] Verify `bun run test --testPathPatterns ThemeChipGrid` still passes — no behavioral change
+- [x] Create `swatch-utils.ts` with `ChipSwatch` interface, `getSwatch(themeName: ThemeName): ChipSwatch`, and `stripeWidths: Record<ThemeName, [number, number]>` — exact values from current `ThemeChipGrid.tsx`
+- [x] Update `ThemeChipGrid.tsx` to import from `./swatch-utils` in place of the inlined definitions
+- [x] Verify `bun run test --testPathPatterns ThemeChipGrid` still passes — no behavioral change (5/5 pass)
 
 ### Step 2: ThemeSampleCard component
 
@@ -81,12 +81,12 @@ Extract the per-theme preview card logic already embedded in `ThemeSwitcher` int
 **Commit**: `feat(ThemeSampleCard): extract per-theme preview card from ThemeSwitcher`
 **Changes**:
 
-- [ ] Props interface: `{ themeId: ThemeName }` — no callbacks, pure display
-- [ ] Move `previewStyles(themeId)` function verbatim from `ThemeSwitcher.tsx` into this file (or a co-located `previewStyles.ts`); it already correctly handles `themes[themeId]`, `parseThemeName`, `variantOverrides[variant]`, `size`/`lineHeight` scale, `fontFamily`, and `shadowStyle(cardTheme, "cardElevationSmall")`
-- [ ] Render the card: `View[sampleCard]` → `View[badge]` with `★` text → `View[sampleTextCol]` with title and meta texts → `View[ctaPill]` with CTA text
-- [ ] i18n keys (already confirmed present in `en/common.json`): `common:theme.preview.title` ("Daily reading"), `common:theme.preview.progress` ("3 of 5 done"), `common:theme.preview.cta` ("+ ADD")
-- [ ] Badge uses `cardTheme.colors.accentPurple` bg and `cardTheme.colors.accentPurpleFg` text — tokens confirmed present in `ComposedTheme.colors`
-- [ ] Shell `ThemeSampleCard.styles.ts` holds any static wrapper styles needed; per-theme inline styles stay in `previewStyles`
+- [x] Props interface: `{ themeId: ThemeName }` — no callbacks, pure display
+- [x] Extracted the **card subset** of `previewStyles(themeId)` from `ThemeSwitcher.tsx` (sampleCard/badge/badgeText/sampleTitle/sampleMeta/ctaPill/ctaText); threads `themes[themeId]`, `parseThemeName`, `variantOverrides[variant]`, `size` scale, `fontFamily`, and `shadowStyle(cardTheme, "cardElevationSmall")`. Dropped `label`/`description`/`checkmark` (picker-header styles, not part of the card) and the now-unused `lineHeight`/`lhScale` — see Discovery Log
+- [x] Render the card: `View[sampleCard]` → `View[badge]` with `★` text → `View[sampleTextCol]` with title and meta texts → `View[ctaPill]` with CTA text
+- [x] i18n keys (confirmed present in `en/common.json`): `common:theme.preview.title` ("Daily reading"), `common:theme.preview.progress` ("3 of 5 done"), `common:theme.preview.cta` ("+ ADD")
+- [x] Badge uses `cardTheme.colors.accentPurple` bg and `cardTheme.colors.accentPurpleFg` text — tokens confirmed present in `ComposedTheme.colors`
+- [x] Shell `ThemeSampleCard.styles.ts` holds the static `sampleTextCol`; per-theme inline styles stay in `previewStyles`
 
 ### Step 3: ThemeSampleCard stories and tests
 
@@ -94,12 +94,12 @@ Extract the per-theme preview card logic already embedded in `ThemeSwitcher` int
 **Commit**: `test(ThemeSampleCard): stories and unit tests covering all 7 themes`
 **Changes**:
 
-- [ ] Story 1 `Default`: renders `ThemeSampleCard` for `"light-default"`
-- [ ] Story 2 `AllThemesMatrix`: renders all 7 theme IDs side by side in a `ScrollView` — reviewer visual gate for the honesty matrix
-- [ ] Unit tests using `renderWithProviders` (same pattern as `ThemeSwitcher.test.tsx` and `ThemeChipGrid.test.tsx`):
-  - [ ] `test.each(themeOptions)` — each theme ID renders without crashing
-  - [ ] The card text content shows the correct i18n strings (`"Daily reading"`, `"3 of 5 done"`, `"+ ADD"`)
-  - [ ] No `accessibilityRole` on the card itself — it is display-only, not interactive
+- [x] Story 1 `Default`: renders `ThemeSampleCard` for `"light-default"`
+- [x] Story 2 `AllThemesMatrix`: renders all 7 theme IDs stacked, each on its own theme background with a `themeId` caption — reviewer visual gate for the honesty matrix (uses a plain `View`, not a nested `ScrollView`; the Storybook preview decorator already supplies the scroll container — see Discovery Log)
+- [x] Unit tests using `renderWithProviders` (same pattern as `ThemeSwitcher.test.tsx` and `ThemeChipGrid.test.tsx`):
+  - [x] `it.each(themeIds)` — each theme ID renders without crashing
+  - [x] The card text content shows the correct i18n strings (`"Daily reading"`, `"3 of 5 done"`, `"+ ADD"`)
+  - [x] No interactive `accessibilityRole` on the card — asserted no `button`/`radio` role present (display-only)
 
 ### Step 4: ThemeSwatchRail component
 
@@ -107,13 +107,13 @@ Extract the per-theme preview card logic already embedded in `ThemeSwitcher` int
 **Commit**: `feat(ThemeSwatchRail): horizontal circular swatch rail with radio a11y`
 **Changes**:
 
-- [ ] Props interface: `{ selectedThemeId: ThemeName; onSelect: (id: ThemeName) => void }`
-- [ ] Render a horizontal `ScrollView` (or `FlatList`) of 7 circular Pressables using `getSwatch` and `stripeWidths` from `swatch-utils.ts`
-- [ ] Swatch shape: 48pt circular `Pressable` (`borderRadius: 24`, overflow hidden) containing three vertical stripes — `stripeBg` fills remainder, `stripe1` covers `w1%`, `stripe2` covers `w2%` (same flex-row layout as `ThemeChipGrid`)
-- [ ] Selected treatment: `borderColor: themes[id].colors.accentPurple`, border width 3, plus a `✓` overlay text with `colors.accentPurple`; unselected: `borderColor: themes[id].colors.border`, border width 1
-- [ ] Selected theme name and description displayed below the rail using `t("common:theme.options.<id>.label")` / `.description`
-- [ ] a11y: same E2E-gated radiogroup pattern from `ThemeSwitcher` / `ThemeChipGrid`; each Pressable gets `accessibilityRole="radio"`, `accessibilityState={{ checked: isSelected }}`, `accessibilityLabel={themeA11yLabel(t, id)}`; rail wrapper gets `accessibilityRole="radiogroup"` label "Theme selection" (guarded by `EXPO_PUBLIC_E2E_MODE`)
-- [ ] Pressable min hit area: 48pt height/width meets 44pt requirement
+- [x] Props interface: `{ selectedThemeId: ThemeName; onSelect: (id: ThemeName) => void }`
+- [x] Render a horizontal `ScrollView` of 7 circular Pressables using `getSwatch` and `stripeWidths` from `swatch-utils.ts`
+- [x] Swatch shape: 48pt circular `Pressable` (`borderRadius: 24`, overflow hidden) containing three vertical stripes — `stripeBg` fills remainder (absolute-fill `stripeRow`), `stripe1` covers `w1%`, `stripe2` covers `w2%` (same flex-row layout as `ThemeChipGrid`)
+- [x] Selected treatment: `borderColor: themes[id].colors.accentPurple`, border width 3, plus a `✓` overlay text with `colors.accentPurple`; unselected: `borderColor: themes[id].colors.border`, border width 1
+- [x] Selected theme name and description displayed below the rail using `t("common:theme.options.<id>.label")` / `.description`
+- [x] a11y: same E2E-gated radiogroup pattern from `ThemeSwitcher` / `ThemeChipGrid`; each Pressable gets `accessibilityRole="radio"`, `accessibilityState={{ checked: isSelected }}`, `accessibilityLabel={themeA11yLabel(t, id)}`; rail wrapper gets `accessibilityRole="radiogroup"` label "Theme selection" (guarded by `EXPO_PUBLIC_E2E_MODE`)
+- [x] Pressable min hit area: 48pt height/width meets 44pt requirement
 
 ### Step 5: ThemeSwatchRail stories and tests
 
@@ -121,21 +121,21 @@ Extract the per-theme preview card logic already embedded in `ThemeSwitcher` int
 **Commit**: `test(ThemeSwatchRail): stories and unit tests`
 **Changes**:
 
-- [ ] Story 1 `Default`: rail with `selectedThemeId="light-default"` and a no-op `onSelect`
-- [ ] Story 2 `NightRideSelected`: shows the dark theme selected, verifying the dark swatch colors render
-- [ ] Unit tests mirroring `ThemeChipGrid.test.tsx` pattern:
-  - [ ] Renders one radio per theme with correct `themeA11yLabel`
-  - [ ] `checked` state is `true` for `selectedThemeId`, `false` for others
-  - [ ] `onSelect` called with correct `ThemeName` when swatch pressed
-  - [ ] `radiogroup` present in production mode; absent in E2E mode (`EXPO_PUBLIC_E2E_MODE=true`)
+- [x] Story 1 `Default`: rail with `selectedThemeId="light-default"` — wrapped in a stateful `InteractiveRail` (instead of a no-op `onSelect`) so swatches respond to taps in the visual gate (see Discovery Log)
+- [x] Story 2 `NightRideSelected`: shows the dark theme selected, verifying the dark swatch colors render
+- [x] Unit tests mirroring `ThemeChipGrid.test.tsx` pattern:
+  - [x] Renders one radio per theme with correct `themeA11yLabel`
+  - [x] `checked` state is `true` for `selectedThemeId`, `false` for others
+  - [x] `onSelect` called with correct `ThemeName` when swatch pressed
+  - [x] `radiogroup` present in production mode; absent in E2E mode (`EXPO_PUBLIC_E2E_MODE=true`)
 
 ## Testing Strategy
 
-- [ ] Unit tests via `bun run test --testPathPatterns "ThemeSampleCard|ThemeSwatchRail|ThemeChipGrid"` — all must pass after Step 1 refactor and new components
-- [ ] Test files at `src/components/ThemeSampleCard/__tests__/ThemeSampleCard.test.tsx` and `src/components/ThemeSwatchRail/__tests__/ThemeSwatchRail.test.tsx`, mirroring the established `ThemeChipGrid`/`ThemeSwitcher` test structure (`renderWithProviders`, `themeA11yLabel`, `test.each`)
-- [ ] `bun run test` (node-wrapped jest) — never `bun test` or `npx jest`
-- [ ] Storybook visual gate: load `ThemeSampleCard.AllThemesMatrix` and verify all 7 rows in the browser — Night Ride shows a vertical 6px shadow, Bold Ink/Still Water/Loud & Clear show no shadow, Warm Studio shows soft shadow + Lexend, Clean Signal shows the hard 3px offset shadow
-- [ ] Type-check passes: `bun run type-check`
+- [x] Unit tests via `bun run test --testPathPatterns "ThemeSampleCard|ThemeSwatchRail|ThemeChipGrid"` — all pass after Step 1 refactor and new components (ThemeChipGrid 5/5, ThemeSampleCard 9/9, ThemeSwatchRail 5/5)
+- [x] Test files at `src/components/ThemeSampleCard/__tests__/ThemeSampleCard.test.tsx` and `src/components/ThemeSwatchRail/__tests__/ThemeSwatchRail.test.tsx`, mirroring the established `ThemeChipGrid`/`ThemeSwitcher` test structure (`renderWithProviders`, `themeA11yLabel`, `it.each`)
+- [x] `bun run test` (node-wrapped jest) — full suite 9284/9284 pass; never `bun test` or `npx jest`
+- [ ] Storybook visual gate (reviewer): load `ThemeSampleCard.AllThemesMatrix` and verify all 7 rows in the browser — Night Ride shows a vertical 6px shadow, Bold Ink/Still Water/Loud & Clear show no shadow, Warm Studio shows soft shadow + Lexend, Clean Signal shows the hard 3px offset shadow
+- [x] Type-check passes: `bun run type-check`
 
 ## Shadow Honesty Matrix (verified from built token output)
 
@@ -168,6 +168,7 @@ Note: The issue body states Night Ride shadow "composes to 0 (border carries dep
 
 - [2026-06-30] Research caught two factual errors in issue #413's acceptance criteria: it claims Night Ride (`dark-default`) and Clean Signal (`light-lowInfo`) render with zero shadow. Verified against `src/themes/variants.ts`: only `highContrast`/`lowVision`/`autismFriendly` set `shadows: { opacity: 0 }`; `lowInfo` (variants.ts:148-155) does not, and Night Ride's `darkShadow` renders a `0px 6px 0` drop. User decision (Review-tokens-separately): build the pure components to real token output now; track the shadow-token design-intent question in **#429**. The two AC bullets above are annotated as deferred.
 
-<!-- Entries added by implement skill:
-- [YYYY-MM-DD HH:MM] <discovery description>
--->
+- [2026-06-30] `ThemeSampleCard` renders only the sample card, not the picker option header. Extracted just the card subset of `previewStyles` (sampleCard/badge/badgeText/sampleTitle/sampleMeta/ctaPill/ctaText); `label`/`description`/`checkmark` belong to the `ThemeSwitcher` option wrapper and would be dead code here. The now-unused `lhScale`/`lineHeight` import (they only fed `label`/`description`) was removed in a follow-up `refactor` commit after ESLint flagged it.
+- [2026-06-30] Dropped `marginTop: 12` from the standalone `sampleCard`. In `ThemeSwitcher` it separated the card from the header text above it inside a picker option; a standalone presentational card shouldn't impose its own outer margin — spacing is the parent's job (Welcome/Settings, or the story container).
+- [2026-06-30] `AllThemesMatrix` story renders a plain stacked `View` (each card on its own theme background with a `themeId` caption) rather than its own `ScrollView`. The Storybook preview decorator (`.storybook/preview.tsx`) already wraps every story in a vertical `ScrollView`; nesting a second same-orientation scroll view is an RN anti-pattern. Net effect matches the plan's "7 rows" intent.
+- [2026-06-30] `ThemeSwatchRail` `Default` story uses a stateful `InteractiveRail` wrapper instead of the planned no-op `onSelect`, so swatches actually respond to taps in the visual gate — a better demonstration of the controlled (D4) contract. `NightRideSelected` stays static to show the dark swatch in its selected state.
