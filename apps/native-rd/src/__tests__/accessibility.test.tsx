@@ -28,6 +28,11 @@ import { CollapsibleSection } from "../components/CollapsibleSection";
 import { ConfirmDeleteModal } from "../screens/ConfirmDeleteModal/ConfirmDeleteModal";
 import { StepList, type Step } from "../components/StepList/StepList";
 import { MiniTimeline } from "../components/MiniTimeline/MiniTimeline";
+import {
+  TimelineStep,
+  type TimelineStepChild,
+} from "../components/TimelineStep/TimelineStep";
+import { SMALL_NODE_SIZE } from "../components/TimelineNode/TimelineNode.styles";
 
 jest.mock("expo-haptics", () => ({
   impactAsync: jest.fn().mockResolvedValue(undefined),
@@ -451,6 +456,77 @@ describe("Accessibility Contracts", () => {
       expect(innerWidth).toBeDefined();
       expect(
         innerWidth! + 2 * (child.props.hitSlop as number),
+      ).toBeGreaterThanOrEqual(44);
+    });
+  });
+
+  // #293 timeline sub-spine: each sub-step renders a ChildRow with a small
+  // lettered node and a collapsible header. These lock the new ChildRow a11y
+  // contract — role, label, expanded state, and the small node's 44pt target.
+  describe("TimelineStep sub-step ChildRow", () => {
+    const parentStep = {
+      id: "p",
+      title: "Wire the circuits",
+      status: "in-progress" as const,
+      evidenceCount: 0,
+    };
+    const subSteps: TimelineStepChild[] = [
+      {
+        id: "c-a",
+        title: "Strip the wires",
+        status: "in-progress",
+        evidence: [],
+      },
+      {
+        id: "c-b",
+        title: "Connect the breaker",
+        status: "pending",
+        evidence: [],
+      },
+    ];
+
+    function renderWithSubSteps() {
+      renderWithProviders(
+        <TimelineStep
+          step={parentStep}
+          stepIndex={0}
+          evidence={[]}
+          onNodePress={jest.fn()}
+          onEvidencePress={jest.fn()}
+          subSteps={subSteps}
+        />,
+      );
+    }
+
+    it("child expand header has button role, label, and toggles expanded", () => {
+      renderWithSubSteps();
+      // First sub-step's letter ordinal is "a".
+      const expandLabel = i18n.t("timelineJourney:step.a11yChildExpand", {
+        ordinal: "a",
+        title: "Strip the wires",
+      });
+      const button = screen.getByLabelText(expandLabel);
+      expectAccessibleRole(button, "button");
+      expectAccessibleState(button, { expanded: false });
+
+      fireEvent.press(button);
+      expectAccessibleState(screen.getByLabelText(expandLabel), {
+        expanded: true,
+      });
+    });
+
+    it("child node has button role, go-to label, and meets the 44pt target", () => {
+      renderWithSubSteps();
+      const node = screen.getByLabelText(
+        i18n.t("timelineJourney:step.a11yGoTo", {
+          number: "a",
+          title: "Strip the wires",
+        }),
+      );
+      expectAccessibleRole(node, "button");
+      // hitPad = ceil((44 - SMALL_NODE_SIZE) / 2) → small node + 2·hitSlop ≥ 44.
+      expect(
+        SMALL_NODE_SIZE + 2 * (node.props.hitSlop as number),
       ).toBeGreaterThanOrEqual(44);
     });
   });
