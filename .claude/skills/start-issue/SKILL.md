@@ -32,7 +32,7 @@ Human-gated counterpart to `auto-issue`. Setup → research → STOP. No impleme
 
 ### Side Effects
 
-1. `setup` skill creates branch and sends Telegram notification.
+1. `setup` skill creates the branch, moves the issue's board card (#14 `Rollercoaster.dev-mobile`) to **In Progress**, and sends a Telegram notification.
 2. `issue-researcher` writes dev plan to `apps/native-rd/docs/plans/dev-plans/issue-<N>-<desc>.md`.
 3. Asks user the surfaced questions via `AskUserQuestion` (if any).
 

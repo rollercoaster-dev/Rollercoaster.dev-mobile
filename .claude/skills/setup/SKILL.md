@@ -31,7 +31,8 @@ Prep before implementation.
 ### Side Effects
 
 1. Create git branch (or check out existing)
-2. Send Telegram notification (unless skip_notify)
+2. Move the issue's card on project board #14 (`Rollercoaster.dev-mobile`) to **In Progress**
+3. Send Telegram notification (unless skip_notify)
 
 ## Workflow
 
@@ -62,7 +63,38 @@ git branch --show-current
 
 Not on target → `git checkout -b <branch_name>`. Exists → `git checkout <branch_name>`.
 
-### Step 4: Notify (unless skip_notify)
+### Step 4: Move Board Card to In Progress
+
+The issue is now actively being worked, so reflect that on project board #14
+(`Rollercoaster.dev-mobile`). `item-add` is idempotent — it returns the existing
+card if the issue is already on the board, so this both adds and selects it.
+
+```bash
+# Add (or look up) the card, capture its item id
+item_id=$(gh project item-add 14 --owner rollercoaster-dev \
+  --url https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/<issue_number> \
+  --format json --jq '.id')
+
+# Status → In Progress
+gh project item-edit --id "$item_id" \
+  --project-id PVT_kwDOB1lz3c4BZZGs \
+  --field-id PVTSSF_lADOB1lz3c4BZZGszhUYDGg \
+  --single-select-option-id 0f2b1465
+```
+
+`Status` field options (project #14):
+
+| Option      | Option ID  |
+| ----------- | ---------- |
+| Backlog     | `fbc23296` |
+| Next        | `ab3bf6f3` |
+| In Progress | `0f2b1465` |
+| Blocked     | `afd72de3` |
+| Done        | `4290dd77` |
+
+Board update fails → warn, continue (non-critical).
+
+### Step 5: Notify (unless skip_notify)
 
 Via `telegram` skill:
 
@@ -74,7 +106,7 @@ Branch: <branch>
 
 Notification fail → warn, continue (non-critical).
 
-### Step 5: Return
+### Step 6: Return
 
 ```json
 {
@@ -94,6 +126,7 @@ Notification fail → warn, continue (non-critical).
 | --------------------- | ----------------------------- |
 | Issue not found       | Return error, no side effects |
 | Branch checkout fails | Return error with git status  |
+| Board update fails    | Warn, continue                |
 | Notification fails    | Warn, continue                |
 
 ## Example

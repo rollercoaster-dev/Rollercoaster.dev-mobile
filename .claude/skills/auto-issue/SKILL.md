@@ -38,7 +38,7 @@ Run one issue from setup to PR.
 Skill(setup, args: { issue_number: <N> })
 ```
 
-Capture `branch` and issue metadata.
+Capture `branch` and issue metadata. `setup` also moves the issue's board card (#14 `Rollercoaster.dev-mobile`) to **In Progress**.
 
 ### Phase 2: Research
 
