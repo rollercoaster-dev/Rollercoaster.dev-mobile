@@ -56,7 +56,7 @@ jest.mock("../hooks/useAnimationPref", () => ({
   useAnimationPref: () => ({
     animationPref: mockAnimationPref,
     shouldAnimate: mockAnimationPref !== "none",
-    shouldReduceMotion: mockAnimationPref === "none",
+    shouldReduceMotion: mockAnimationPref !== "full",
     setAnimationPref: jest.fn(),
   }),
 }));
@@ -119,8 +119,10 @@ describe("Accessibility Contracts", () => {
 
     // #292 leaf-led next step: a pending-leaf hero adds a visual "↳ in [parent]"
     // context line. GoalCard.test.tsx covers that the line renders and that the
-    // next step is named in the label; this locks the a11y invariant the line is
-    // purely decorative — never in the screen-reader label, never a control.
+    // next step is named in the label; this locks the a11y invariant that the
+    // line is supplementary — excluded from the composite Card label (which
+    // already names the next step) and never an interactive control. (It is a
+    // plain Text, so a screen reader still reads it as trailing content.)
     it("keeps the leaf context line out of the label and gives it no role", () => {
       const leafGoal: GoalCardGoal = {
         id: "9",
