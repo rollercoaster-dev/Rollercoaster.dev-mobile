@@ -123,6 +123,36 @@ describe("Accessibility Contracts", () => {
       renderWithProviders(<GoalCard goal={activeGoal} />);
       expect(screen.queryByRole("button")).toBeNull();
     });
+
+    // #292 leaf-led next step: a pending-leaf hero adds a visual "↳ in [parent]"
+    // context line. GoalCard.test.tsx covers that the line renders and that the
+    // next step is named in the label; this locks the a11y invariant the line is
+    // purely decorative — never in the screen-reader label, never a control.
+    it("keeps the leaf context line out of the label and gives it no role", () => {
+      const leafGoal: GoalCardGoal = {
+        id: "9",
+        title: "Rewire the kitchen",
+        status: "active",
+        stepsTotal: 4,
+        stepsCompleted: 1,
+        nextStepTitle: "Fit the 20-amp circuit",
+        nextStepContext: "↳ in Wire the circuits",
+      };
+      renderWithProviders(<GoalCard goal={leafGoal} onPress={jest.fn()} />);
+
+      const expectedLabel = i18n.t("goals:card.a11y.labelWithNextStep", {
+        title: leafGoal.title,
+        stepsCompleted: leafGoal.stepsCompleted,
+        stepsTotal: leafGoal.stepsTotal,
+        status: i18n.t("common:status.active"),
+        nextStep: leafGoal.nextStepTitle,
+      });
+      const card = screen.getByRole("button", { name: expectedLabel });
+      expect(card.props.accessibilityLabel).not.toContain("↳");
+
+      const context = screen.getByTestId("goal-card-next-step-context");
+      expect(context.props.accessibilityRole).toBeUndefined();
+    });
   });
 
   describe("ProgressBar", () => {
