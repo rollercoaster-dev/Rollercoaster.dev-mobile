@@ -127,4 +127,25 @@ describe("CelebrationHeroHeader", () => {
       expect(control.props.accessibilityLabel).toBeTruthy();
     },
   );
+
+  it.each([
+    {
+      testID: "celebration-hero-back",
+      prop: "backAccessibilityLabel" as const,
+      label: "Zurück",
+    },
+    {
+      testID: "celebration-hero-overflow",
+      prop: "overflowAccessibilityLabel" as const,
+      label: "Weitere Optionen",
+    },
+  ])(
+    "honours the $prop override on the $testID control",
+    ({ testID, prop, label }) => {
+      renderWithProviders(
+        <CelebrationHeroHeader {...makeProps({ [prop]: label })} />,
+      );
+      expect(screen.getByTestId(testID).props.accessibilityLabel).toBe(label);
+    },
+  );
 });

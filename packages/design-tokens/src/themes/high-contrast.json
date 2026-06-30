@@ -140,7 +140,7 @@
       "chrome-tab-bar-indicator": { "$value": "#ffffff" },
       "chrome-top-bar-bg": { "$value": "#ffffff" },
       "chrome-top-bar-fg": { "$value": "#000000" },
-      "celebration-bg": { "$value": "#ffffff" },
+      "celebration-bg": { "$value": "#ffe50c" },
       "celebration-fg": { "$value": "#000000" },
       "chrome-modal-border": { "$value": "#000000" },
       "action-primary-bg": { "$value": "#000000" },

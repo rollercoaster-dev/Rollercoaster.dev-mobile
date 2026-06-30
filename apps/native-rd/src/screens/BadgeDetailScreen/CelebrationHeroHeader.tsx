@@ -109,6 +109,10 @@ export interface CelebrationHeroHeaderProps {
   showConfetti: boolean;
   onBack: () => void;
   onOverflow: () => void;
+  /** Localised back-button label. Defaults to English; #380 passes t() output. */
+  backAccessibilityLabel?: string;
+  /** Localised overflow-button label. Defaults to English; #380 passes t() output. */
+  overflowAccessibilityLabel?: string;
 }
 
 /**
@@ -140,6 +144,8 @@ export function CelebrationHeroHeader({
   showConfetti,
   onBack,
   onOverflow,
+  backAccessibilityLabel = "Back",
+  overflowAccessibilityLabel = "More options",
 }: CelebrationHeroHeaderProps) {
   const { theme } = useUnistyles();
 
@@ -154,23 +160,24 @@ export function CelebrationHeroHeader({
       {/* Behind the content (painted first), clipped by the band. */}
       {showConfetti ? <Sparkles color={theme.chrome.celebrationFg} /> : null}
 
-      {/* a11y labels are English literals until #380 wires the screen and
-          routes them through t() (a badgeDetail:fallback.goBack key already
-          exists for the back button). Kept literal here so the component stays
-          i18n-free and Storybook-renderable in isolation. */}
+      {/* a11y labels default to English so the component stays i18n-free and
+          Storybook-renderable in isolation. Callers pass localised strings via
+          backAccessibilityLabel / overflowAccessibilityLabel (#380 routes these
+          through t() — a badgeDetail:fallback.goBack key already exists for the
+          back button). */}
       <View style={styles.navRow}>
         <IconButton
           icon={<ArrowLeft size={24} weight="bold" />}
           tone="celebration"
           onPress={onBack}
-          accessibilityLabel="Back"
+          accessibilityLabel={backAccessibilityLabel}
           testID="celebration-hero-back"
         />
         <IconButton
           icon={<DotsThree size={24} weight="bold" />}
           tone="celebration"
           onPress={onOverflow}
-          accessibilityLabel="More options"
+          accessibilityLabel={overflowAccessibilityLabel}
           testID="celebration-hero-overflow"
         />
       </View>

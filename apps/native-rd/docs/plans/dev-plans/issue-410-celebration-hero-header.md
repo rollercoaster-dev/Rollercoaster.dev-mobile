@@ -60,7 +60,13 @@ After building against the plan, a re-check of the authoritative prototype (`pro
 - `apps/native-rd/src/screens/BadgeDetailScreen/CelebrationHeroHeader.stories.tsx` — Storybook stories: `Designed`, `Undesigned`, `NoConfetti`
 - `apps/native-rd/src/screens/BadgeDetailScreen/__tests__/CelebrationHeroHeader.test.tsx` — unit tests (mirrors `GoalsCockpit.test.tsx` pattern)
 
-No existing files are modified. No screen imports the new component.
+Existing files modified on this branch (resolved 2026-06-29, see Revision):
+
+- `packages/design-tokens` — new `celebration-bg`/`celebration-fg` chrome token + per-theme overrides (commit `ca84cace`)
+- `apps/native-rd/src/components/IconButton` — new `tone="celebration"` resolving ink to `celebrationFg`
+- `apps/native-rd/src/themes/contrastPairs.ts` — `celebration` contrast pair added
+
+No screen imports the new component.
 
 ## Implementation Plan
 
@@ -143,7 +149,21 @@ No existing files are modified. No screen imports the new component.
 
 ## Open Questions (resolved — 2026-06-29)
 
-Q1=A + Q2=recommended, shipped on this branch. See Revision §3 above and the Discovery Log.
+**Q1 (token home) → new `celebration-*` chrome token.** The locked per-theme values (below) diverge from every existing token, so reuse was off the table. Added `celebration-bg` / `celebration-fg` to `packages/design-tokens` (base + per-theme overrides) and routed the band background + ink through it.
+
+**Q2 (per-theme values) → locked by visual review (HTML swatch, 2026-06-29).** NOT the `chrome-top-bar` mirror originally proposed in the table above — `highContrast`, `dyslexia`, and `lowInfo` were each chosen to carry the _celebration_ semantic rather than copy the status-bar surface (the `chrome-top-bar` cream/white would make the band vanish into those canvases or read as a plain panel):
+
+| Theme        | id               | band bg                   | ink (fg + border) |
+| ------------ | ---------------- | ------------------------- | ----------------- |
+| Full Ride    | `light-default`  | `#ffe50c`                 | `#0a0a0a`         |
+| Night Ride   | `dark-default`   | `#ffe50c`                 | `#0a0a0a`         |
+| Bold Ink     | `highContrast`   | `#ffe50c`                 | `#000000`         |
+| Loud & Clear | `lowVision`      | `#ffe50c`                 | `#000000`         |
+| Still Water  | `autismFriendly` | `#d5c88a` (muted gold)    | `#333333`         |
+| Warm Studio  | `dyslexia`       | `#f0c43a` (soft marigold) | `#333333`         |
+| Clean Signal | `lowInfo`        | `#fdf6cc` (whisper tint)  | `#222222`         |
+
+Ink does double duty (foreground + band/chip border) → 2 values per theme, no separate border token. Token work tracked as **#419** (sub-issue of epic #384); ships with #410 in **PR #423**.
 
 ## Discovery Log
 
@@ -151,4 +171,4 @@ Q1=A + Q2=recommended, shipped on this branch. See Revision §3 above and the Di
 - [2026-06-29] Prototype has a standalone goal-title heading + a single-line "✓ Verifiable · earned {date}" chip → title moved out of the chip; chip prop `earnedDate` → `credentialLabel`.
 - [2026-06-29] Prototype band is celebration yellow (`#ffe50c`); no per-theme yellow token exists. User decision: add a per-theme `celebration-*` token (separate PR) before swapping the band off `screenHeaderBg`. Proposed values mirror the existing contrast-validated `chrome-top-bar-*` palette.
 - [2026-06-29] `IconButton tone="chrome"` (md = 44pt) used for back/overflow instead of raw `Pressable` — supplies role/label/toned-icon, matches existing `BadgeDetailScreen`.
-- [2026-06-29] Q1/Q2 resolved (A + recommended). New `celebration-bg/fg` token added to `packages/design-tokens` with per-theme overrides mirroring `chrome-top-bar-*`; `CelebrationHeroHeader` band/title/sparkles/chip-border swapped to `celebrationBg/Fg`; new `IconButton` `tone="celebration"` resolves to `celebrationFg` (the `chrome` tone's `chromeTabBarFg` goes light in dyslexia/autismFriendly and fails on yellow); `celebration` pair added to `contrastPairs.ts`. Contrast + IconButton + CelebrationHeroHeader tests green across all themes.
+- [2026-06-29] Q1/Q2 resolved. Per-theme celebration palette **locked by HTML swatch review** — yellow `#ffe50c` for light/dark/highContrast/lowVision, muted gold `#d5c88a` for autismFriendly, soft marigold `#f0c43a` for dyslexia, whisper `#fdf6cc` for lowInfo. This is **not** the `chrome-top-bar` mirror first proposed: highContrast/dyslexia/lowInfo deviate so the band carries celebration rather than copying the status-bar surface. (An in-flight implementation used the stale mirror table for those three; corrected to the locked values.) New `celebration-bg/fg` token added to `packages/design-tokens` with these per-theme overrides; `CelebrationHeroHeader` band/title/sparkles/chip-border swapped to `celebrationBg/Fg`; new `IconButton` `tone="celebration"` resolves to `celebrationFg` (the `chrome` tone's `chromeTabBarFg` goes light in dyslexia/autismFriendly and fails on yellow); `celebration` pair added to `contrastPairs.ts`. Contrast + IconButton + CelebrationHeroHeader tests green across all themes.
