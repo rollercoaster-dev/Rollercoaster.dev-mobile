@@ -11,14 +11,14 @@
 
 Observable criteria derived from the issue acceptance criteria:
 
-- [ ] When a step is paused via `pauseStep(id)`, a subsequent Evolu query for that step returns `status === "paused"` and `updatedAt` is newer than before the call.
-- [ ] When a paused step is resumed via `resumeStep(id)`, the step's `status` returns to `"pending"` and `completedAt` is null.
-- [ ] `resolveNextActionableStep` given a flat list `[paused, pending]` returns `{ kind: "flat", index: 1 }` — the paused step is skipped.
-- [ ] `resolveNextActionableStep` given a list where the only non-completed step is paused returns `{ kind: "none" }`.
-- [ ] A goal with a paused step and all other steps completed does **not** show the "Mark complete" affordance in FocusModeScreen (paused step is not `=== StepStatus.completed`).
-- [ ] Progress ratio in `buildCockpitGoal` treats paused steps as part of the denominator — a goal with 2 completed and 1 paused shows `2/3` progress.
-- [ ] `bun run type-check`, `bun run lint`, and `bun run test` all pass with no new failures.
-- [ ] No new UI affordances are introduced (no new screen components, no new props on existing screens).
+- [x] When a step is paused via `pauseStep(id)`, the write sets `status === "paused"`. _Asserted_ by the `pauseStep` unit test (`evolu.update("step", { id, status: StepStatus.paused })`); `updatedAt` is auto-stamped by Evolu on every write (#381 D2).
+- [x] When a paused step is resumed via `resumeStep(id)`, the step's `status` returns to `"pending"` and `completedAt` is null. _Asserted_ status by the `resumeStep` unit test; `completedAt` is null by invariant — pause is only applied to non-completed steps, so it was never set (D2).
+- [x] `resolveNextActionableStep` given a flat list `[paused, pending]` returns `{ kind: "flat", index: 1 }`. _Asserted_ — "paused first, pending second" case.
+- [x] `resolveNextActionableStep` given a list where the only non-completed step is paused returns `{ kind: "none" }`. _Asserted_ — "paused-only flat → none" and "all completed or paused → none" cases.
+- [x] A goal with a paused step and all other steps completed does **not** show the "Mark complete" affordance in FocusModeScreen. _Verified by inspection_ — `allStepsComplete` (FocusModeScreen.tsx:313-315) is `.every(=== completed)`; paused fails it, so `canMarkComplete` is false. Locked by the D6 contract test.
+- [x] Progress ratio in `buildCockpitGoal` treats paused steps as part of the denominator — 2 completed + 1 paused shows `2/3`. _Verified by inspection_ — `buildCockpitGoal` (GoalsScreen.tsx:61-65) numerator = `=== completed`, denominator = `steps.length` (paused rows are non-deleted, so counted). No code change needed (D5).
+- [x] `bun run type-check`, `bun run lint`, and `bun run test` all pass with no new failures. _Verified_ — type-check 4/4, lint clean, full suite 9264/9264.
+- [x] No new UI affordances are introduced (no new screen components, no new props on existing screens). _Verified_ — diff is schema/types/queries/tests + two exhaustiveness `Record` entries + the `NodeStatus` → `StepStatus` collapse; no new components, props, or screens.
 
 ## Dependencies
 
@@ -42,6 +42,7 @@ Add `paused` as a persisted `StepStatus` value in the DB schema and the UI type,
 | D4  | `isPendingStep` stays pending-only (not updated to include paused)                                      | Add paused to isPendingStep           | `isPendingStep` is used in FocusModeScreen's auto-advance logic (line 425) to find the next card to snap to after completing a step. Paused steps should not be auto-advanced to — they were deliberately set aside. The issue text also explicitly says "`isPendingStep` at `:346` stays pending-only."                                                                                                                                                         |
 | D5  | Progress denominator includes paused                                                                    | Exclude paused from denominator       | `buildCockpitGoal` (GoalsScreen.tsx:61-65) counts `steps.length` as the total. Paused steps count in the denominator — set-aside ≠ deleted. Only `completed` steps count toward the numerator. This matches the issue recommendation and preserves the every-unit rule (#292). No code change needed in `buildCockpitGoal` since it already uses `steps.length` (non-deleted) as the denominator — `paused` rows are non-deleted so they are naturally included. |
 | D6  | Goal completion requires every step `=== StepStatus.completed` — paused blocks it                       | Allow paused to not block             | `FocusModeScreen` line 313-315: `allStepsComplete = stepRows.every(s => s.status === StepStatus.completed)`. A paused step has `status === "paused"` which fails this check. The `canMarkComplete` gate therefore already blocks completion with a paused step — **no code change needed here**. Add a test to lock this contract.                                                                                                                               |
+| D7  | Steps 1 + 2 land in one commit, not two                                                                 | Keep the plan's two separate commits  | The husky pre-commit hook runs a full `bun run type-check`. Adding `paused` to `StepStatus` without updating its exhaustive `Record<StepStatus>` consumers (TimelineStep) leaves the tree non-compiling, so a Step-1-only commit can't pass the hook. The two are one atomic, buildable unit; the commit message documents both halves.                                                                                                                          |
 
 ## Affected Areas
 
@@ -66,9 +67,9 @@ Add `paused` as a persisted `StepStatus` value in the DB schema and the UI type,
 
 **Changes**:
 
-- [ ] In `schema.ts`, add `paused: NonEmptyString1000.orThrow("paused")` to the `StepStatus` const (after `pending`, before `completed`). Update the JSDoc comment.
-- [ ] In `types/steps.ts`, add `"paused"` to the `StepStatus` union type. Update the comment to reflect that `paused` is now persisted (not UI-derived).
-- [ ] Run `bun run type-check` — TypeScript will surface every exhaustive `Record<StepStatus, ...>` that needs updating. Collect the list (should be `TimelineStep.tsx` `statusToVariant` and `statusToLabelKey`).
+- [x] In `schema.ts`, add `paused: NonEmptyString1000.orThrow("paused")` to the `StepStatus` const (after `pending`, before `completed`). Update the JSDoc comment.
+- [x] In `types/steps.ts`, add `"paused"` to the `StepStatus` union type. Update the comment to reflect that `paused` is now persisted (not UI-derived).
+- [x] Run `bun run type-check` — TypeScript surfaced exactly the two predicted gaps: `TimelineStep.tsx` `statusToVariant` (41) and `statusToLabelKey` (47). `ProgressDots`/`MiniTimeline` use individual `=== "completed"` checks (not exhaustive), so they did not break.
 
 ### Step 2: Fix `Record<StepStatus>` exhaustiveness gaps
 
@@ -81,9 +82,9 @@ Add `paused` as a persisted `StepStatus` value in the DB schema and the UI type,
 
 **Changes**:
 
-- [ ] In `TimelineStep.tsx`, add `"paused": "locked"` to `statusToVariant` (paused step shows as locked/not-yet-actionable badge variant — same as pending; a follow-up can refine once the #406-follow-up design token lands).
-- [ ] In `TimelineStep.tsx`, add `"paused": "pending"` to `statusToLabelKey` (for now; the label key mapping can be a dedicated `"paused"` key once the StatusBadge vocabulary expands in a later issue).
-- [ ] In `TimelineNode.tsx`, remove the `// TODO: collapse into StepStatus once the data layer supports paused.` workaround: delete the local `type NodeStatus = StepStatus | "paused"` declaration and replace the `NodeStatus` usage with `StepStatus` directly.
+- [x] In `TimelineStep.tsx`, add `"paused": "locked"` to `statusToVariant` (paused step shows as locked/not-yet-actionable badge variant — same as pending; a follow-up can refine once the #406-follow-up design token lands).
+- [x] In `TimelineStep.tsx`, add `"paused": "pending"` to `statusToLabelKey` (for now; the label key mapping can be a dedicated `"paused"` key once the StatusBadge vocabulary expands in a later issue).
+- [x] In `TimelineNode.tsx`, remove the `// TODO: collapse into StepStatus once the data layer supports paused.` workaround: delete the local `type NodeStatus = StepStatus | "paused"` declaration and replace the `NodeStatus` usage with `StepStatus` directly.
 
 ### Step 3: Add `pauseStep` / `resumeStep` mutations
 
@@ -96,9 +97,9 @@ Add `paused` as a persisted `StepStatus` value in the DB schema and the UI type,
 
 **Changes**:
 
-- [ ] Add `pauseStep(id: StepId)` function after `uncompleteStep` (~line 762). Pattern: `evolu.update("step", { id, status: StepStatus.paused })`. No `completedAt` manipulation — paused steps were never completed. Bumps `updatedAt` automatically (Evolu stamps it on every write — this satisfies the cockpit recency ranking rule, #381 D2).
-- [ ] Add `resumeStep(id: StepId)` function immediately after `pauseStep`. Pattern: `evolu.update("step", { id, status: StepStatus.pending })`. Mirror the breadcrumb and error-handling shape of `uncompleteStep`.
-- [ ] Export both from `src/db/index.ts`.
+- [x] Add `pauseStep(id: StepId)` function after `uncompleteStep`. Pattern: `evolu.update("step", { id, status: StepStatus.paused })`. No `completedAt` manipulation — paused steps were never completed. Bumps `updatedAt` automatically (Evolu stamps it on every write — this satisfies the cockpit recency ranking rule, #381 D2). Breadcrumb uses the shared `"toggle"` verb (see Discovery Log 2026-06-30 16:12).
+- [x] Add `resumeStep(id: StepId)` function immediately after `pauseStep`. Pattern: `evolu.update("step", { id, status: StepStatus.pending })`. Mirrors the breadcrumb + error-handling shape of `uncompleteStep`.
+- [x] Export both from `src/db/index.ts`.
 
 ### Step 4: Update `resolveNextActionableStep` to skip paused
 
@@ -110,9 +111,9 @@ Add `paused` as a persisted `StepStatus` value in the DB schema and the UI type,
 
 **Changes**:
 
-- [ ] At line 517 (child-pending scan): change `c.status !== StepStatus.completed` to `c.status !== StepStatus.completed && c.status !== StepStatus.paused`. A paused child is not the next action.
-- [ ] At line 526 (top-level skip): change `if (step.status === StepStatus.completed) continue;` to `if (step.status === StepStatus.completed || step.status === StepStatus.paused) continue;`. A paused top-level step is skipped, surfacing the next pending one.
-- [ ] Update the JSDoc for `resolveNextActionableStep` to mention that paused steps are skipped along with completed ones.
+- [x] Child-pending scan (queries.ts:517): `c.status !== StepStatus.completed` → `&& c.status !== StepStatus.paused`. A paused child is not the next action.
+- [x] Top-level skip (queries.ts:526): `if (step.status === StepStatus.completed) continue;` → also `|| step.status === StepStatus.paused`. A paused top-level step is skipped, surfacing the next pending one.
+- [x] Updated the JSDoc for `resolveNextActionableStep` to state that paused steps are skipped along with completed ones. Edge case left to #377/#378 — see Not in Scope.
 
 ### Step 5: Tests
 
@@ -124,41 +125,43 @@ Add `paused` as a persisted `StepStatus` value in the DB schema and the UI type,
 
 **Changes**:
 
-- [ ] Add `resolveNextActionableStep` regression cases to the existing `test.each` block (alongside the #337 leaf/invite/flat cases):
+- [x] Added `resolveNextActionableStep` regression cases to the existing `test.each` block (alongside the #337 leaf/invite/flat cases):
   - `"paused-only flat → none"`: single paused flat step → `{ kind: "none" }`
   - `"paused first, pending second → skips paused, returns pending"`: `[paused-flat, pending-flat]` → `{ kind: "flat", index: 1 }`
-  - `"paused child skipped, next pending child returned"`: parent with one paused child and one pending child → `{ kind: "leaf", index: <pending-child-index>, parentIndex: <parent-index> }`
+  - `"paused child skipped, next pending child returned"`: parent with one paused child and one pending child → `{ kind: "leaf", index: 2, parentIndex: 0 }`
   - `"all steps completed or paused → none"`: mix of `completed` and `paused` rows → `{ kind: "none" }`
-- [ ] Add a `describe("pauseStep / resumeStep")` block with:
-  - `pauseStep` calls `evolu.update` with `status: StepStatus.paused` and the correct `id`.
+- [x] Added a `describe("pauseStep / resumeStep (#417)")` block:
+  - `pauseStep` calls `evolu.update` with `status: StepStatus.paused`, the correct `id`, and no `completedAt` key.
   - `resumeStep` calls `evolu.update` with `status: StepStatus.pending` and the correct `id`.
-  - (Mirror the existing `completeStep` / `uncompleteStep` test shape in the file.)
-- [ ] Add a `describe("goal completion semantics — paused step blocks")` block with:
-  - Assert that `stepRows.every(s => s.status === StepStatus.completed)` returns `false` when any step has `status === "paused"` (this locks D6's contract against regression). Use a plain unit assertion — no render needed.
+- [x] Added a `describe("goal completion semantics — paused blocks completion (D6)")` block: a plain unit assertion that `rows.every(s => s.status === StepStatus.completed)` is `false` when any step is `paused` (and `true` when all are completed), mirroring FocusModeScreen.tsx:313-315. No render needed.
 
 ## Testing Strategy
 
-- [ ] Unit tests only — no render tests (no UI introduced).
-- [ ] Test file: `src/db/__tests__/queries.step.test.ts` (mirrors `src/db/queries.ts` structure).
-- [ ] Use `test.each` for the new resolver cases (consistent with the existing block at line 296).
-- [ ] Run: `bun run test --testPathPatterns queries.step` to validate step tests.
-- [ ] Run: `bun run test --testPathPatterns queries` to catch any query-level regressions.
-- [ ] Run: `bun run type-check` to confirm no remaining exhaustiveness gaps.
-- [ ] Run: `bun run lint` to confirm no new lint errors.
-- [ ] Manual: confirm `bun run test` (full suite) passes.
+- [x] Unit tests only — no render tests (no UI introduced).
+- [x] Test file: `src/db/__tests__/queries.step.test.ts` (mirrors `src/db/queries.ts` structure).
+- [x] Use `test.each` for the new resolver cases (consistent with the existing block).
+- [x] Run: `bun run test --testPathPatterns queries.step` — 67 passed.
+- [x] Run: `bun run test --testPathPatterns queries` — 166 passed (6 suites).
+- [x] Run: `bun run type-check` — no remaining exhaustiveness gaps.
+- [x] Run: `bun run lint` — no new lint errors.
+- [x] Manual: full `bun run test` suite — see Phase 4 final validation.
 
 ## Not in Scope
 
-| Item                                                 | Reason                                                                                                                                                                                              | Follow-up                                                          |
-| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| "Set aside / Pick back up" button in FocusModeScreen | Lives in Focus rebuild (#377)                                                                                                                                                                       | #377                                                               |
-| "Set aside" breakdown count on Timeline              | Lives in Timeline assembly (#378)                                                                                                                                                                   | #378                                                               |
-| `paused` colour token (`journey-step-paused-bg/fg`)  | The `stepStateColorMap.ts` already uses an `accentPurpleLight` fallback with a `TODO(#406-follow-up)` comment; token is a design-system issue                                                       | Follow-up design-tokens issue (referenced in stepStateColorMap.ts) |
-| StatusBadge "paused" variant for `TimelineStep`      | `statusToVariant` maps paused → `"locked"` as a placeholder; a dedicated variant would need new StatusBadge/i18n work                                                                               | #378 or follow-up                                                  |
-| FocusModeScreen `uiSteps` mapping for `paused`       | Currently maps `row.status === StepStatus.completed` → `"completed"`, else position-based `"in-progress"` or `"pending"`. Adding `"paused"` UI rendering belongs to #377 which owns FocusModeScreen | #377                                                               |
+| Item                                                                        | Reason                                                                                                                                                                                                                                                                                                                                                                                                                                     | Follow-up                                                          |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------ |
+| "Set aside / Pick back up" button in FocusModeScreen                        | Lives in Focus rebuild (#377)                                                                                                                                                                                                                                                                                                                                                                                                              | #377                                                               |
+| "Set aside" breakdown count on Timeline                                     | Lives in Timeline assembly (#378)                                                                                                                                                                                                                                                                                                                                                                                                          | #378                                                               |
+| `paused` colour token (`journey-step-paused-bg/fg`)                         | The `stepStateColorMap.ts` already uses an `accentPurpleLight` fallback with a `TODO(#406-follow-up)` comment; token is a design-system issue                                                                                                                                                                                                                                                                                              | Follow-up design-tokens issue (referenced in stepStateColorMap.ts) |
+| StatusBadge "paused" variant for `TimelineStep`                             | `statusToVariant` maps paused → `"locked"` as a placeholder; a dedicated variant would need new StatusBadge/i18n work                                                                                                                                                                                                                                                                                                                      | #378 or follow-up                                                  |
+| FocusModeScreen `uiSteps` mapping for `paused`                              | Currently maps `row.status === StepStatus.completed` → `"completed"`, else position-based `"in-progress"` or `"pending"`. Adding `"paused"` UI rendering belongs to #377 which owns FocusModeScreen                                                                                                                                                                                                                                        | #377                                                               |
+| `invite` state when a pending parent's only non-completed child is `paused` | The resolver still returns `{ kind: "invite" }` for a pending parent whose children are all `completed`-or-`paused` (no pending child). Whether "all substeps done" should read as invite when one is merely set-aside is a UI-semantics call. The UI that can create a paused sub-step doesn't exist until #377/#378, which own FocusMode/Timeline rendering. Left unchanged here to keep the resolver change to the two specified sites. | #377/#378                                                          |
 
 ## Discovery Log
 
 <!-- Entries added by implement skill:
 - [YYYY-MM-DD HH:MM] <discovery description>
 -->
+
+- [2026-06-30 16:08] Merged Step 1 + Step 2 into a single commit (`feat(db): add paused to StepStatus enum and UI type`). The husky `prepare-commit-msg`/pre-commit chain runs a full `bun run type-check`, so a Step-1-only commit (union member added, exhaustive `Record<StepStatus>` consumers not yet updated) would fail to commit. Adding the union member and fixing its consumers are inseparable as a buildable unit. See decision D7.
+- [2026-06-30 16:12] Step 3: `breadcrumb({ category: "step", message: ... })` rejects `"pause"`/`"resume"` — the `step` category's message union is `"create" | "update" | "delete" | "reorder" | "toggle"` (sentry-report.ts:130), and `"defer"` belongs to the `appstate` category only. Per the convention comment at sentry-report.ts:125, step state-flips share the single `"toggle"` breadcrumb (as complete/uncomplete do), so both mutations use `"toggle"`. No breadcrumb-enum expansion needed (out of scope).
