@@ -34,6 +34,8 @@ export {
   canCompleteStep,
   completeStep,
   uncompleteStep,
+  pauseStep,
+  resumeStep,
   deleteStep,
   reorderSteps,
   reorderSubSteps,

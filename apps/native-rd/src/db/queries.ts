@@ -762,6 +762,47 @@ export function uncompleteStep(id: StepId) {
 }
 
 /**
+ * Set a step aside ("paused"). Leaves `completedAt` untouched — a paused step
+ * was never completed. Evolu stamps `updatedAt` on the write, so the goal keeps
+ * its place in the cockpit recency ranking (#381 D2).
+ * @param id - Step ID
+ * @returns Update command
+ */
+export function pauseStep(id: StepId) {
+  // "toggle" — step state-flips share one breadcrumb (see sentry-report.ts:125),
+  // matching completeStep / uncompleteStep.
+  breadcrumb({ category: "step", message: "toggle" });
+  try {
+    return evolu.update("step", {
+      id,
+      status: StepStatus.paused,
+    });
+  } catch (error) {
+    logger.error("Failed to pause step", { stepId: id, error });
+    throw new Error("Failed to set step aside. Please try again.");
+  }
+}
+
+/**
+ * Pick a paused step back up by returning it to "pending". Mirrors
+ * {@link uncompleteStep} minus the `completedAt` clear (paused never set it).
+ * @param id - Step ID
+ * @returns Update command
+ */
+export function resumeStep(id: StepId) {
+  breadcrumb({ category: "step", message: "toggle" });
+  try {
+    return evolu.update("step", {
+      id,
+      status: StepStatus.pending,
+    });
+  } catch (error) {
+    logger.error("Failed to resume step", { stepId: id, error });
+    throw new Error("Failed to pick step back up. Please try again.");
+  }
+}
+
+/**
  * Soft-delete step (sets isDeleted flag)
  * @param id - Step ID
  * @returns Update command
