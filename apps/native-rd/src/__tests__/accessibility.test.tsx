@@ -14,6 +14,7 @@ import { renderWithProviders, screen, fireEvent } from "./test-utils";
 import {
   expectAccessible,
   expectAccessibleRole,
+  expectAccessibleLabel,
   expectAccessibleValue,
   expectAccessibleState,
   expectModalAccessibility,
@@ -25,10 +26,46 @@ import { ProgressBar } from "../components/ProgressBar";
 import { Checkbox } from "../components/Checkbox";
 import { CollapsibleSection } from "../components/CollapsibleSection";
 import { ConfirmDeleteModal } from "../screens/ConfirmDeleteModal/ConfirmDeleteModal";
+import { StepList, type Step } from "../components/StepList/StepList";
 
 jest.mock("expo-haptics", () => ({
   impactAsync: jest.fn().mockResolvedValue(undefined),
   ImpactFeedbackStyle: { Light: "light", Medium: "medium", Heavy: "heavy" },
+}));
+
+// StepList renders inside a GestureHandlerRootView and its rows wrap
+// GestureDetector; the chainable Proxy mirrors StepList.test.tsx so the gesture
+// builder chains resolve without the native module.
+jest.mock("react-native-gesture-handler", () => {
+  const chainable = () => new Proxy({}, { get: () => chainable });
+  return {
+    GestureHandlerRootView: ({ children }: { children: React.ReactNode }) =>
+      children,
+    GestureDetector: ({ children }: { children: React.ReactNode }) => children,
+    Gesture: {
+      Pan: chainable,
+      LongPress: chainable,
+      Simultaneous: chainable,
+    },
+  };
+});
+
+jest.mock("../utils/haptics", () => ({
+  triggerDragStart: jest.fn(),
+  triggerDragDrop: jest.fn(),
+}));
+
+// Mutable so the reparent-controls block can flip on "accessible controls"
+// (showAccessibleControls = screenReaderActive || animationPref === "none").
+// Defaults to "full" — the real default — so every other test is unaffected.
+let mockAnimationPref = "full";
+jest.mock("../hooks/useAnimationPref", () => ({
+  useAnimationPref: () => ({
+    animationPref: mockAnimationPref,
+    shouldAnimate: mockAnimationPref !== "none",
+    shouldReduceMotion: mockAnimationPref === "none",
+    setAnimationPref: jest.fn(),
+  }),
 }));
 
 const activeGoal: GoalCardGoal = {
@@ -202,6 +239,76 @@ describe("Accessibility Contracts", () => {
         />,
       );
       screen.getByRole("header", { name: "Delete this item?" });
+    });
+  });
+
+  // Sub-step authoring affordance shipped in #291: the "+ add sub-step" ghost
+  // row, its expanded title input, and the submit button. Each renders once per
+  // top-level group whenever onCreateSubStep is wired.
+  describe("StepList sub-step affordance", () => {
+    const oneParent = (title: string): Step[] => [
+      { id: "p", title, completed: false },
+    ];
+
+    it.each([["Wire the circuits"], ["Read chapter one"]])(
+      'ghost row has button role, label, and hint for parent "%s"',
+      (title) => {
+        renderWithProviders(
+          <StepList steps={oneParent(title)} onCreateSubStep={jest.fn()} />,
+        );
+        const ghost = screen.getByTestId("step-list-add-sub-step-p");
+        expectAccessibleRole(ghost, "button");
+        expectAccessibleLabel(
+          ghost,
+          i18n.t("editGoal:stepList.addSubStepA11yLabel", { title }),
+        );
+        expect(ghost.props.accessibilityHint).toBe(
+          i18n.t("editGoal:stepList.addSubStepA11yHint"),
+        );
+      },
+    );
+
+    it("exposes input label and submit-button role/label once expanded", () => {
+      const title = "Wire the circuits";
+      renderWithProviders(
+        <StepList steps={oneParent(title)} onCreateSubStep={jest.fn()} />,
+      );
+      fireEvent.press(screen.getByTestId("step-list-add-sub-step-p"));
+
+      const input = screen.getByTestId("step-list-sub-step-input-p");
+      expectAccessibleLabel(
+        input,
+        i18n.t("editGoal:stepList.addSubStepInputA11yLabel", { title }),
+      );
+
+      const submit = screen.getByTestId("step-list-add-sub-step-button-p");
+      expectAccessibleRole(submit, "button");
+      expectAccessibleLabel(
+        submit,
+        i18n.t("editGoal:stepList.addSubStepButtonA11y", { title }),
+      );
+    });
+
+    it("keeps the indentation left rail out of the accessibility tree", () => {
+      // The child-row left rail is a colour-coded structural decoration (D11);
+      // it must stay hidden so it is never a separate screen-reader stop.
+      renderWithProviders(
+        <StepList
+          steps={[
+            { id: "p", title: "Parent", completed: false },
+            { id: "c", title: "Child", completed: false, parentStepId: "p" },
+          ]}
+          onCreateSubStep={jest.fn()}
+        />,
+      );
+      const hiddenDecorations = screen
+        .UNSAFE_getAllByType(View)
+        .filter(
+          (v) =>
+            v.props.accessibilityElementsHidden === true &&
+            v.props.importantForAccessibility === "no",
+        );
+      expect(hiddenDecorations.length).toBeGreaterThanOrEqual(1);
     });
   });
 });
