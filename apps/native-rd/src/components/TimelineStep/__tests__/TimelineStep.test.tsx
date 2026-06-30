@@ -32,15 +32,15 @@ const baseProps = {
 describe("TimelineStep", () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it("renders step title and status pill", () => {
+  it("renders step title and state word", () => {
     renderWithProviders(<TimelineStep {...baseProps} />);
     expect(screen.getByText("Read the docs")).toBeOnTheScreen();
-    expect(screen.getByText("Active")).toBeOnTheScreen();
+    expect(screen.getByText("In Progress")).toBeOnTheScreen();
   });
 
   it.each([
-    { status: "completed" as const, label: "Done" },
-    { status: "in-progress" as const, label: "Active" },
+    { status: "completed" as const, label: "Completed" },
+    { status: "in-progress" as const, label: "In Progress" },
     { status: "pending" as const, label: "Pending" },
   ])('shows "$label" for $status status', ({ status, label }) => {
     renderWithProviders(
@@ -56,14 +56,14 @@ describe("TimelineStep", () => {
 
   it("expands evidence on header tap", () => {
     renderWithProviders(<TimelineStep {...baseProps} />);
-    fireEvent.press(screen.getByLabelText("Read the docs, Active"));
+    fireEvent.press(screen.getByLabelText("Read the docs, In Progress"));
     expect(screen.getByText("Progress photo")).toBeOnTheScreen();
     expect(screen.getByText("Useful article")).toBeOnTheScreen();
   });
 
   it("collapses evidence on second header tap", () => {
     renderWithProviders(<TimelineStep {...baseProps} />);
-    const header = screen.getByLabelText("Read the docs, Active");
+    const header = screen.getByLabelText("Read the docs, In Progress");
     fireEvent.press(header);
     expect(screen.getByText("Progress photo")).toBeOnTheScreen();
     fireEvent.press(header);
@@ -72,7 +72,7 @@ describe("TimelineStep", () => {
 
   it('shows "No evidence yet" when empty', () => {
     renderWithProviders(<TimelineStep {...baseProps} evidence={[]} />);
-    fireEvent.press(screen.getByLabelText("Read the docs, Active"));
+    fireEvent.press(screen.getByLabelText("Read the docs, In Progress"));
     expect(screen.getByText("No evidence yet")).toBeOnTheScreen();
   });
 
@@ -90,7 +90,7 @@ describe("TimelineStep", () => {
     renderWithProviders(
       <TimelineStep {...baseProps} onEvidencePress={onEvidencePress} />,
     );
-    fireEvent.press(screen.getByLabelText("Read the docs, Active"));
+    fireEvent.press(screen.getByLabelText("Read the docs, In Progress"));
     fireEvent.press(screen.getByLabelText("photo evidence: Progress photo"));
     expect(onEvidencePress).toHaveBeenCalledWith("ev-1");
     expect(onEvidencePress).toHaveBeenCalledTimes(1);
@@ -147,11 +147,11 @@ describe("TimelineStep", () => {
     });
 
     it.each([
-      { status: "completed" as const, glyph: "✓", badge: "Done" },
-      { status: "in-progress" as const, glyph: "a", badge: "Active" },
+      { status: "completed" as const, glyph: "✓", badge: "Completed" },
+      { status: "in-progress" as const, glyph: "a", badge: "In Progress" },
       { status: "pending" as const, glyph: "a", badge: "Pending" },
     ])(
-      "renders a $status sub-step with the right node glyph and status badge",
+      "renders a $status sub-step with the right node glyph and state word",
       ({ status, glyph, badge }) => {
         renderWithProviders(
           <TimelineStep

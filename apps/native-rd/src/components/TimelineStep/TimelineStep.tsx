@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Text, Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
 import { TimelineNode } from "../TimelineNode";
-import { StatusBadge, type StatusBadgeVariant } from "../StatusBadge";
+import { stepStateColorMap } from "../TimelineNode/stepStateColorMap";
 import { TimelineEvidenceCard } from "../TimelineEvidenceCard";
 import type { StepStatus } from "../../types/steps";
 import type { EvidenceItemData } from "../EvidenceDrawer";
@@ -14,6 +14,22 @@ export interface TimelineStepData {
   title: string;
   status: StepStatus;
   evidenceCount: number;
+  /**
+   * C (dependency), internal: this step comes "after [title]". Never rendered as
+   * "blocked by" (ADR-0010/0012). Story-only display prop — no DB field yet; the
+   * [Integrate] issue (#378) owns sourcing it from real data.
+   */
+  afterStep?: string;
+  /**
+   * C (dependency), external wait: "waiting on [who] · expected [date]".
+   * Story-only display prop (#378).
+   */
+  waitingOn?: { who: string; expected?: string };
+  /**
+   * B (date): factual "due [date]" — no urgency, no "overdue" framing regardless
+   * of whether the date is past (ADR-0012). Story-only display prop (#378).
+   */
+  dueDate?: string;
 }
 
 /**
@@ -38,18 +54,6 @@ export interface TimelineStepProps {
   subSteps?: TimelineStepChild[];
 }
 
-const statusToVariant: Record<StepStatus, StatusBadgeVariant> = {
-  completed: "completed",
-  "in-progress": "active",
-  pending: "locked",
-};
-
-const statusToLabelKey: Record<StepStatus, "done" | "active" | "pending"> = {
-  completed: "done",
-  "in-progress": "active",
-  pending: "pending",
-};
-
 export function TimelineStep({
   step,
   stepIndex,
@@ -59,11 +63,11 @@ export function TimelineStep({
   defaultExpanded = false,
   subSteps = [],
 }: TimelineStepProps) {
-  const { t } = useTranslation(["timelineJourney"]);
+  const { t } = useTranslation(["common", "timelineJourney"]);
   const [expanded, setExpanded] = useState(defaultExpanded);
-  const statusLabel = t(
-    `timelineJourney:step.status.${statusToLabelKey[step.status]}`,
-  );
+  // E (state) — the one #406 color language: the header state word reads from the
+  // same map the node uses (stepStateColorMap), replacing the old StatusBadge.
+  const statusLabel = t(stepStateColorMap[step.status].badgeI18nKey);
 
   return (
     <View style={styles.wrapper}>
@@ -88,15 +92,12 @@ export function TimelineStep({
             accessibilityState={{ expanded }}
             style={styles.header}
           >
-            <StatusBadge
-              variant={statusToVariant[step.status]}
-              label={statusLabel}
-            />
             <View style={styles.titleContainer}>
               <Text style={styles.title} numberOfLines={2}>
                 {step.title}
               </Text>
             </View>
+            <StateWord status={step.status} label={statusLabel} />
             <Text
               style={[styles.chevron, expanded && styles.chevronExpanded]}
               accessibilityElementsHidden
@@ -104,6 +105,11 @@ export function TimelineStep({
               {"\u25BC"}
             </Text>
           </Pressable>
+          <MetadataBand
+            afterStep={step.afterStep}
+            waitingOn={step.waitingOn}
+            dueDate={step.dueDate}
+          />
           {expanded && (
             <View style={styles.evidenceSection}>
               {evidence.length > 0 ? (
@@ -160,11 +166,10 @@ function ChildRow({
   onNodePress: (stepIndex: number) => void;
   onEvidencePress: (evidenceId: string) => void;
 }) {
-  const { t } = useTranslation(["timelineJourney"]);
+  const { t } = useTranslation(["common", "timelineJourney"]);
   const [expanded, setExpanded] = useState(false);
-  const statusLabel = t(
-    `timelineJourney:step.status.${statusToLabelKey[child.status]}`,
-  );
+  // E-only on children (OQ-2): the state word, no C/B band, no evidence row.
+  const statusLabel = t(stepStateColorMap[child.status].badgeI18nKey);
 
   return (
     <View style={styles.childRow}>
@@ -190,15 +195,12 @@ function ChildRow({
           accessibilityState={{ expanded }}
           style={styles.childHeader}
         >
-          <StatusBadge
-            variant={statusToVariant[child.status]}
-            label={statusLabel}
-          />
           <View style={styles.titleContainer}>
             <Text style={styles.childTitle} numberOfLines={2}>
               {child.title}
             </Text>
           </View>
+          <StateWord status={child.status} label={statusLabel} />
           <Text
             style={[styles.chevron, expanded && styles.chevronExpanded]}
             accessibilityElementsHidden
@@ -224,6 +226,60 @@ function ChildRow({
           </View>
         )}
       </View>
+    </View>
+  );
+}
+
+/**
+ * E (state) as a compact header pill in the one #406 color language: background
+ * from `stepStateNodeBg` and ink from `stepStateNodeFg` — the exact bg+fg pairing
+ * the node renders — so the word reads as the same state color as its node in
+ * every theme. Replaces the old `StatusBadge`, whose active/completed/locked
+ * vocabulary was a second, drifting color language (#406 handoff line 21).
+ */
+function StateWord({ status, label }: { status: StepStatus; label: string }) {
+  return (
+    <View style={styles.stateWordPill(status)}>
+      <Text style={styles.stateWordText(status)}>{label}</Text>
+    </View>
+  );
+}
+
+/**
+ * Quiet C·B truth-lines beneath the step title (E lives in the header word, not
+ * here). C = a dependency stated as "after [step]" (internal) or "waiting on
+ * [who] · expected [date]" (external wait) — never "blocked by". B = a factual
+ * "due [date]" with no urgency/overdue framing (ADR-0010/0012). Lines render in
+ * `textSecondary` only; the prototype's amber/green glyph hues are dropped. Copy
+ * is literal pending #378, which owns real data + i18n. Renders nothing when no
+ * C/B prop is set; never shown on child rows (OQ-2, E-only).
+ */
+function MetadataBand({
+  afterStep,
+  waitingOn,
+  dueDate,
+}: {
+  afterStep?: string;
+  waitingOn?: { who: string; expected?: string };
+  dueDate?: string;
+}) {
+  const cLine = waitingOn
+    ? `waiting on ${waitingOn.who}${
+        waitingOn.expected ? ` · expected ${waitingOn.expected}` : ""
+      }`
+    : afterStep
+      ? `after ${afterStep}`
+      : null;
+  const bLine = dueDate ? `due ${dueDate}` : null;
+
+  if (!cLine && !bLine) {
+    return null;
+  }
+
+  return (
+    <View style={styles.metadataBand}>
+      {cLine ? <Text style={styles.metadataText}>{cLine}</Text> : null}
+      {bLine ? <Text style={styles.metadataText}>{bLine}</Text> : null}
     </View>
   );
 }
