@@ -16,32 +16,32 @@ screen — Storybook only (#377 owns app wiring).
 
 Observable criteria a reviewer can verify by running Storybook and the test suite:
 
-- [ ] When `FocusCurrentTaskCard` renders with `status="in-progress"`, the state pill is silent
+- [x] When `FocusCurrentTaskCard` renders with `status="in-progress"`, the state pill is silent
       (no pill rendered — "in-progress" position says it all per design brief), the title appears,
       the E·C·B band shows 0–3 truth-lines, the "Evidence · required" attribute is always
       present (every step requires evidence — full stop), planned evidence type + "change" affordance appear, captured
       evidence chips render in a rail, the pause CTA ("❙❙ Set this step aside") and the add-type
       CTA ("Add {type}") are both present, and the "✓ Mark complete" CTA appears only when
       captured evidence is present (never when the rail is empty).
-- [ ] When `status="paused"`, the state pill (color + word from `stepStateColorMap`) renders
+- [x] When `status="paused"`, the state pill (color + word from `stepStateColorMap`) renders
       beside the title, the "Set aside" body copy appears, and the "► Pick this back up"
       CTA is the sole action.
-- [ ] When `status="completed"`, the state pill renders, the title appears, the captured
+- [x] When `status="completed"`, the state pill renders, the title appears, the captured
       evidence rail is present, and "Reopen this step" is the sole CTA.
-- [ ] When `status="all-complete"`, no pill, the "Every step done." + trophy copy appears, and
+- [x] When `status="all-complete"`, no pill, the "Every step done." + trophy copy appears, and
       "Design your badge" CTA is present.
-- [ ] The state pill color AND label both come from `stepStateColorMap` (same source as
+- [x] The state pill color AND label both come from `stepStateColorMap` (same source as
       `TimelineNode` and `TimelineStep`); color is never the sole signal.
-- [ ] The E·C·B metadata band renders 0–3 lines: dependency line uses "waiting on…" or
+- [x] The E·C·B metadata band renders 0–3 lines: dependency line uses "waiting on…" or
       "after …" (never "blocked by"); date line uses `theme.fontFamily.mono` with no red
       or overdue framing.
-- [ ] No "missing", "needed", or "blocked" framing anywhere; "✓ Mark complete" is revealed
+- [x] No "missing", "needed", or "blocked" framing anywhere; "✓ Mark complete" is revealed
       by present evidence — not shown as disabled before evidence lands.
-- [ ] Zero hardcoded hex values; all colors resolve through `theme.*` tokens via
+- [x] Zero hardcoded hex values; all colors resolve through `theme.*` tokens via
       `StyleSheet.create((theme) => ...)`.
-- [ ] All interactive elements have `accessibilityRole`, `accessibilityLabel`, and
+- [x] All interactive elements have `accessibilityRole`, `accessibilityLabel`, and
       44pt minimum touch targets (`minHeight: 44`).
-- [ ] Unit tests pass; component is not imported by any screen after this PR.
+- [x] Unit tests pass; component is not imported by any screen after this PR.
 
 ## Dependencies
 
@@ -75,16 +75,20 @@ enforced by shared code.
 | D3  | In-progress state: no state pill rendered                                                                                         | Render pill with special "silent" styling                       | Design brief: "Pill stays silent for in-progress — position says it." The pill is omitted for this state only; present evidence still reveals "✓ Mark complete" via conditional rendering (not a disabled element).                                                                                                        |
 | D4  | E·C·B band re-uses the `MetadataBand` internal pattern from `TimelineStep.tsx` — extracted into props, not component import       | Import `MetadataBand` from `TimelineStep`                       | `MetadataBand` is an unexported internal function in `TimelineStep.tsx`. Extracting it to a shared file would be correct long-term but is out of scope for this deliverable. The card owns its own inline band implementation, mirroring the same pattern. A follow-up to extract it is `FocusMetadataBand` scope, not C1. |
 | D5  | `stateWordPill` styling mirrored from `TimelineStep.styles.ts`                                                                    | Share via a shared styles file                                  | Same rationale as D4: the pattern is established, the shared extraction is follow-up scope. The card's `.styles.ts` imports `stepStateNodeBg`/`stepStateNodeFg` directly, same as `TimelineStep.styles.ts`.                                                                                                                |
+| D6  | Add an `onAddEvidence?: () => void` prop (not in the original prop list)                                                          | Reuse `onChangeEvidenceType`; render the CTA without a handler  | The Intent Verification requires the "Add {type}" CTA to be present, and a CTA needs an `onPress`. "Change type" (#409) and "add a piece of evidence" are distinct actions, so they need distinct handlers. Real wiring is #377's.                                                                                         |
+| D7  | Split shared atoms (`StateWordPill`, `MetadataBand`, `CapturedEvidenceRail`) into `FocusCurrentTaskCard.parts.tsx`                | Keep one file                                                   | The single file hit 391 lines, tripping the repo's 300-line `local/file-size-limit` warning. StepCard sets the local precedent (`StepCardTopBand`/`StepCardEvidenceCapture`/`StepOverviewCard` are sibling part-files). Both files now sit under the limit.                                                                |
 
 ## Affected Areas
 
-- `src/components/FocusCurrentTaskCard/FocusCurrentTaskCard.tsx` — new component (all 4 states)
+- `src/components/FocusCurrentTaskCard/FocusCurrentTaskCard.tsx` — new component (4-state dispatcher + per-state views)
+- `src/components/FocusCurrentTaskCard/FocusCurrentTaskCard.parts.tsx` — shared atoms: `StateWordPill`, `MetadataBand`, `CapturedEvidenceRail` (D7)
 - `src/components/FocusCurrentTaskCard/FocusCurrentTaskCard.styles.ts` — Unistyles stylesheet
 - `src/components/FocusCurrentTaskCard/FocusCurrentTaskCard.stories.tsx` — per-state stories + AllThemesMatrix
 - `src/components/FocusCurrentTaskCard/index.ts` — barrel export
 - `src/components/FocusCurrentTaskCard/__tests__/FocusCurrentTaskCard.test.tsx` — unit tests
 - `src/i18n/resources/en/focusMode.json` — new i18n keys for card copy
 - `src/i18n/resources/de/focusMode.json` — German translations for new keys
+- `src/i18n/resources/pseudo/focusMode.json` — regenerated via `bun run gen:pseudo` (en↔pseudo key parity is enforced by `locale-parity.test.ts`)
 
 ## Implementation Plan
 
@@ -94,7 +98,7 @@ enforced by shared code.
 **Commit**: `i18n(focusCurrentTaskCard): add copy keys for all 4 card states`
 **Changes**:
 
-- [ ] Add `focusMode:currentTask.inProgress.*` keys:
+- [x] Add `focusMode:currentTask.inProgress.*` keys:
   - `helperLine`: `"Only evidence unlocks complete — nothing here blocks you."`
   - `evidenceRequired`: `"Evidence · required"`
   - `changeEvidenceType`: `"change"`
@@ -104,19 +108,19 @@ enforced by shared code.
   - `markCompleteCta`: `"✓ Mark complete"`
   - `markCompleteA11y`: `"Mark this step complete"`
   - `pauseA11y`: `"Set this step aside — pause it"`
-- [ ] Add `focusMode:currentTask.paused.*` keys:
+- [x] Add `focusMode:currentTask.paused.*` keys:
   - `body`: `"Set aside — still here, nothing lost. Your next step routes past it until you pick it back up."`
   - `pickUpCta`: `"► Pick this back up"`
   - `pickUpA11y`: `"Pick this step back up and continue"`
-- [ ] Add `focusMode:currentTask.completed.*` keys:
+- [x] Add `focusMode:currentTask.completed.*` keys:
   - `reopenCta`: `"Reopen this step"`
   - `reopenA11y`: `"Reopen this step to add more evidence or continue work"`
-- [ ] Add `focusMode:currentTask.allComplete.*` keys:
+- [x] Add `focusMode:currentTask.allComplete.*` keys:
   - `heading`: `"Every step done."`
   - `body`: `"🏆 Now design the badge that marks it — the keepsake comes at the end."`
   - `designBadgeCta`: `"Design your badge"`
   - `designBadgeA11y`: `"Design your badge to celebrate completing this goal"`
-- [ ] Mirror keys into `de/focusMode.json` (German)
+- [x] Mirror keys into `de/focusMode.json` (German)
 
 ### Step 2: Component and styles
 
@@ -124,9 +128,9 @@ enforced by shared code.
 **Commit**: `feat(focusCurrentTaskCard): four-state hero card with E·C·B band`
 **Changes**:
 
-- [ ] Define `FocusCardStatus = "in-progress" | "paused" | "completed" | "all-complete"` (local union)
-- [ ] Define `FocusCapturedEvidenceItem` mirroring `CapturedEvidenceItem` from `StepCard.tsx:36-42` (id, type, caption)
-- [ ] Define `FocusCurrentTaskCardProps`:
+- [x] Define `FocusCardStatus = "in-progress" | "paused" | "completed" | "all-complete"` (local union)
+- [x] Define `FocusCapturedEvidenceItem` mirroring `CapturedEvidenceItem` from `StepCard.tsx:36-42` (id, type, caption)
+- [x] Define `FocusCurrentTaskCardProps`:
   - `status: FocusCardStatus`
   - `title: string`
   - `plannedEvidenceType?: string | null` — the primary planned type label (display-only for in-progress)
@@ -140,7 +144,7 @@ enforced by shared code.
   - `afterStep?: string` — C band (dependency): "after [step]"
   - `waitingOn?: { who: string; expected?: string }` — C band (dependency): "waiting on [who] · expected [date]"
   - `dueDate?: string` — B band (date): "due [date]", mono, no red
-- [ ] Implement `InProgressView` sub-function:
+- [x] Implement `InProgressView` sub-function:
   - Title as `accessibilityRole="header"`
   - E·C·B band (0–3 lines) via inline `MetadataBand` function (mirrors `TimelineStep.tsx:259-286`); no state line (in-progress is silent)
   - "Evidence · required" attribute line — always shown (every step requires evidence); rendered in `theme.colors.textSecondary` as quiet text (Direction A's calm band, not a loud badge)
@@ -149,31 +153,31 @@ enforced by shared code.
   - Helper line in `theme.colors.textSecondary`
   - Pause CTA (`Pressable`, accessibilityRole="button", minHeight 44, calls `onPause`)
   - "✓ Mark complete" CTA — conditional: only rendered when `capturedEvidence.length > 0` (evidence present reveals it; never shown as disabled when empty)
-- [ ] Implement `PausedView` sub-function:
+- [x] Implement `PausedView` sub-function:
   - State pill via `StateWordPill` (see below) with `status="paused"` — color+word from `stepStateColorMap`
   - Title (`accessibilityRole="header"`)
   - Body copy
   - "► Pick this back up" CTA (`Pressable`, accessibilityRole="button", minHeight 44, calls `onPickUp`)
-- [ ] Implement `CompletedView` sub-function:
+- [x] Implement `CompletedView` sub-function:
   - State pill with `status="completed"`
   - Title (`accessibilityRole="header"`)
   - Captured evidence rail (same pattern as in-progress)
   - "Reopen this step" CTA (`Pressable`, calls `onReopen`)
-- [ ] Implement `AllCompleteView` sub-function:
+- [x] Implement `AllCompleteView` sub-function:
   - No pill
   - "Every step done." heading
   - Trophy body copy
   - "Design your badge" CTA (`Pressable`, calls `onDesignBadge`)
-- [ ] Implement `StateWordPill` local function (mirrors `TimelineStep.tsx:242-248`):
+- [x] Implement `StateWordPill` local function (mirrors `TimelineStep.tsx:242-248`):
   - Imports `stepStateNodeBg`, `stepStateNodeFg` from `../../components/TimelineNode/stepStateColorMap`
   - `StyleSheet.create((theme) => stateWordPill: (status) => ({ backgroundColor: stepStateNodeBg(theme, status), ... }))` pattern matching `TimelineStep.styles.ts:59-74`
   - Word sourced from `t(stepStateColorMap[status].badgeI18nKey)`
-- [ ] Implement `MetadataBand` local function (mirrors `TimelineStep.tsx:259-286`):
+- [x] Implement `MetadataBand` local function (mirrors `TimelineStep.tsx:259-286`):
   - C line: `waitingOn` → `"waiting on ${who}${expected ? ' · expected ' + expected : ''}"`, else `afterStep` → `"after ${afterStep}"`, else null
   - B line: `dueDate` → `"due ${dueDate}"` in `theme.fontFamily.mono` (no red, no "overdue")
   - Returns null when both are null
-- [ ] `FocusCurrentTaskCard.styles.ts`: `StyleSheet.create((theme) => ...)` — no hardcoded hex; tokens from `theme.colors.*`, `theme.journey.*` (via helper fns), `theme.space.*`, `theme.radius.*`, `theme.borderWidth.*`, `theme.fontWeight.*`, `theme.fontFamily.*`, `theme.size.*`; `shadowStyle(theme, "cardElevation")` for card; `shadowStyle(theme, "cardElevationSmall")` for chips/CTAs
-- [ ] `index.ts`: export `FocusCurrentTaskCard` and `FocusCardStatus`
+- [x] `FocusCurrentTaskCard.styles.ts`: `StyleSheet.create((theme) => ...)` — no hardcoded hex; tokens from `theme.colors.*`, `theme.journey.*` (via helper fns), `theme.space.*`, `theme.radius.*`, `theme.borderWidth.*`, `theme.fontWeight.*`, `theme.fontFamily.*`, `theme.size.*`; `shadowStyle(theme, "cardElevation")` for card; `shadowStyle(theme, "cardElevationSmall")` for chips/CTAs
+- [x] `index.ts`: export `FocusCurrentTaskCard` and `FocusCardStatus`
 
 ### Step 3: Stories
 
@@ -181,13 +185,13 @@ enforced by shared code.
 **Commit**: `storybook(focusCurrentTaskCard): per-state stories + AllThemesMatrix`
 **Changes**:
 
-- [ ] `InProgress` story — evidence required + one planned type + two captured chips + pause + mark-complete visible
-- [ ] `InProgressNoEvidence` story — no captured evidence, mark-complete NOT rendered
-- [ ] `InProgressWithECBBand` story — all three band lines populated (afterStep, waitingOn is skipped to keep it a single C line; also a dueDate)
-- [ ] `Paused` story
-- [ ] `Completed` story — with captured evidence rail
-- [ ] `AllComplete` story
-- [ ] `AllThemesMatrix` story: reads `themes[name]` statically (same pattern as `TimelineNode.stories.tsx:213-254`); renders each of 4 states × 7 themes in a scrollable grid showing the state pill's bg+fg colors resolving from `stepStateNodeBg`/`stepStateNodeFg`; uses `MOOD_NAMES` map (copy from TimelineNode.stories.tsx:176-184)
+- [x] `InProgress` story — evidence required + one planned type + two captured chips + pause + mark-complete visible
+- [x] `InProgressNoEvidence` story — no captured evidence, mark-complete NOT rendered
+- [x] `InProgressWithECBBand` story — all three band lines populated (afterStep, waitingOn is skipped to keep it a single C line; also a dueDate)
+- [x] `Paused` story
+- [x] `Completed` story — with captured evidence rail
+- [x] `AllComplete` story
+- [x] `AllThemesMatrix` story: reads `themes[name]` statically (same pattern as `TimelineNode.stories.tsx:213-254`); renders each of 4 states × 7 themes in a scrollable grid showing the state pill's bg+fg colors resolving from `stepStateNodeBg`/`stepStateNodeFg`; uses `MOOD_NAMES` map (copy from TimelineNode.stories.tsx:176-184)
 
 ### Step 4: Unit tests
 
@@ -195,27 +199,27 @@ enforced by shared code.
 **Commit**: `test(focusCurrentTaskCard): contract tests for all 4 states and no-"needed" rule`
 **Changes**:
 
-- [ ] Test each of the 4 states renders without crashing
-- [ ] `test.each` over all 4 states: pill renders color+word (not color-only) — verify `accessibilityLabel` contains the state word
-- [ ] In-progress: "✓ Mark complete" is NOT present when `capturedEvidence` is empty
-- [ ] In-progress: "✓ Mark complete" IS present when `capturedEvidence` has items
-- [ ] In-progress: `onMarkComplete` is called when CTA pressed
-- [ ] In-progress: `onPause` is called when pause CTA pressed
-- [ ] In-progress: `onChangeEvidenceType` is called when "change" affordance pressed
-- [ ] Paused: `onPickUp` is called when pick-up CTA pressed
-- [ ] Completed: `onReopen` is called when reopen CTA pressed
-- [ ] AllComplete: `onDesignBadge` is called when design badge CTA pressed
-- [ ] No "missing" / "needed" / "blocked" text ever renders (`test.each` over all states)
-- [ ] Metadata band: "after [step]" line renders; "waiting on [who]" line renders; "due [date]" in mono (check `fontFamily` via style); date line never contains "overdue"
-- [ ] A11y: all interactive elements have `accessibilityRole="button"` and non-empty `accessibilityLabel`
-- [ ] A11y: all interactive elements have `minHeight: 44` (verify via style prop)
+- [x] Test each of the 4 states renders without crashing
+- [x] `test.each` over all 4 states: pill renders color+word (not color-only) — verify `accessibilityLabel` contains the state word
+- [x] In-progress: "✓ Mark complete" is NOT present when `capturedEvidence` is empty
+- [x] In-progress: "✓ Mark complete" IS present when `capturedEvidence` has items
+- [x] In-progress: `onMarkComplete` is called when CTA pressed
+- [x] In-progress: `onPause` is called when pause CTA pressed
+- [x] In-progress: `onChangeEvidenceType` is called when "change" affordance pressed
+- [x] Paused: `onPickUp` is called when pick-up CTA pressed
+- [x] Completed: `onReopen` is called when reopen CTA pressed
+- [x] AllComplete: `onDesignBadge` is called when design badge CTA pressed
+- [x] No "missing" / "needed" / "blocked" text ever renders (`test.each` over all states)
+- [x] Metadata band: "after [step]" line renders; "waiting on [who]" line renders; "due [date]" in mono (check `fontFamily` via style); date line never contains "overdue"
+- [x] A11y: all interactive elements have `accessibilityRole="button"` and non-empty `accessibilityLabel`
+- [x] A11y: all interactive elements have `minHeight: 44` (verify via style prop)
 
 ## Testing Strategy
 
-- [ ] Unit tests via `bun run test --testPathPatterns FocusCurrentTaskCard` (Jest 30, `@testing-library/react-native` v13, `renderWithProviders` from `src/__tests__/test-utils.tsx`)
-- [ ] Test file at `src/components/FocusCurrentTaskCard/__tests__/FocusCurrentTaskCard.test.tsx` (mirrors `src/` structure)
-- [ ] Use `test.each` for per-state repetition (matches established pattern in `StepCard.test.tsx:50-62` and `TimelineNode.test.tsx:16-24`)
-- [ ] Manual Storybook verification: run web Storybook, open each named story, flip theme toolbar through all 7 themes; confirm AllThemesMatrix grid colors match TimelineNode grid for the same states
+- [x] Unit tests via `bun run test --testPathPatterns FocusCurrentTaskCard` (Jest 30, `@testing-library/react-native` v13, `renderWithProviders` from `src/__tests__/test-utils.tsx`)
+- [x] Test file at `src/components/FocusCurrentTaskCard/__tests__/FocusCurrentTaskCard.test.tsx` (mirrors `src/` structure)
+- [x] Use `test.each` for per-state repetition (matches established pattern in `StepCard.test.tsx:50-62` and `TimelineNode.test.tsx:16-24`)
+- [ ] Manual Storybook verification: run web Storybook, open each named story, flip theme toolbar through all 7 themes; confirm AllThemesMatrix grid colors match TimelineNode grid for the same states — **NOT done by the implement run (headless); owner must verify visually before merge** (the visual gate is the design check, not the green test suite)
 
 ## Not in Scope
 
@@ -234,3 +238,21 @@ _No items deferred that are required to meet the acceptance criteria for this is
 <!-- Entries added by implement skill:
 - [YYYY-MM-DD HH:MM] <discovery description>
 -->
+
+- [2026-06-30] Plan listed only `en`/`de` focusMode.json, but `locale-parity.test.ts` enforces
+  en↔pseudo key parity per namespace. Added `pseudo/focusMode.json` via `bun run gen:pseudo`.
+  The generator also rewrote `pseudo/completion.json` + `pseudo/editGoal.json` with pure
+  padding-dot drift (unrelated to #408) — reverted those to keep the commit atomic.
+- [2026-06-30] Added `onAddEvidence?: () => void` (D6): the AC requires the "Add {type}" CTA,
+  which needs its own handler distinct from `onChangeEvidenceType`. Added a test for it.
+- [2026-06-30] Split `FocusCurrentTaskCard.parts.tsx` out (D7) so neither file trips the
+  300-line `local/file-size-limit` warning; matches the StepCard part-file precedent.
+- [2026-06-30] Mark-complete CTA uses a `success`-tinted style (`completeCta`), distinct from
+  the mint `primaryCta` (add/pick-up/design-badge), so the "you can finish now" affordance
+  reads apart from the always-present add action. Secondary actions (pause/reopen) are outline.
+- [2026-06-30] Step 4 test deviation: the plan's "`test.each` over all 4 states: pill renders
+  color+word" can't hold literally — in-progress (D3) and all-complete render NO pill. Tests
+  assert the pill word for the two pill-bearing states (paused/completed) AND assert no pill
+  for the other two. Also fixed `StateWordPill` to use `useTranslation(["common","focusMode"])`
+  (array form) so the typed `t()` accepts the `common:` prefixed `badgeI18nKey` — the single
+  -string form returned `unknown` and broke type-check.
