@@ -45,9 +45,22 @@ const capturedTwo: FocusCapturedEvidenceItem[] = [
   { id: "ev-2", type: "link", caption: null },
 ];
 
+// R8 — constrain the card to the prototype's 344px phone width. At the full
+// Storybook canvas (~1083px) the box/button stretched into long bars and the title
+// stopped wrapping, so even a faithful card read "spread out." This is a width box
+// ONLY — no header, progress, nav, or timeline chrome (all of that is #377). The
+// card sits flat on the screen bg, exactly as in `Focus Mode A Prototype.dc.html`.
+function PhoneWidth({ children }: { children: React.ReactNode }) {
+  return (
+    <View style={storyStyles.stage}>
+      <View style={storyStyles.frame}>{children}</View>
+    </View>
+  );
+}
+
 export const InProgress: Story = {
   render: () => (
-    <View style={storyStyles.container}>
+    <PhoneWidth>
       <FocusCurrentTaskCard
         status="in-progress"
         title="Reset the kitchen before bed"
@@ -55,7 +68,7 @@ export const InProgress: Story = {
         capturedEvidence={capturedTwo}
         {...handlers}
       />
-    </View>
+    </PhoneWidth>
   ),
 };
 
@@ -63,14 +76,14 @@ export const InProgress: Story = {
 // shown disabled). The pause + add-type CTAs still stand.
 export const InProgressNoEvidence: Story = {
   render: () => (
-    <View style={storyStyles.container}>
+    <PhoneWidth>
       <FocusCurrentTaskCard
         status="in-progress"
         title="Reset the kitchen before bed"
         plannedEvidenceType="photo"
         {...handlers}
       />
-    </View>
+    </PhoneWidth>
   ),
 };
 
@@ -80,7 +93,7 @@ export const InProgressNoEvidence: Story = {
 // blocked state shows the blue "Add Note" primary + the reassurance line.
 export const InProgressWithECBBand: Story = {
   render: () => (
-    <View style={storyStyles.container}>
+    <PhoneWidth>
       <FocusCurrentTaskCard
         status="in-progress"
         title="Inspection & labels"
@@ -90,40 +103,40 @@ export const InProgressWithECBBand: Story = {
         dueDate="Fri · Jun 27"
         {...handlers}
       />
-    </View>
+    </PhoneWidth>
   ),
 };
 
 export const Paused: Story = {
   render: () => (
-    <View style={storyStyles.container}>
+    <PhoneWidth>
       <FocusCurrentTaskCard
         status="paused"
         title="Call the clinic to book a check-in"
         {...handlers}
       />
-    </View>
+    </PhoneWidth>
   ),
 };
 
 export const Completed: Story = {
   render: () => (
-    <View style={storyStyles.container}>
+    <PhoneWidth>
       <FocusCurrentTaskCard
         status="completed"
         title="Reset the kitchen before bed"
         capturedEvidence={capturedTwo}
         {...handlers}
       />
-    </View>
+    </PhoneWidth>
   ),
 };
 
 export const AllComplete: Story = {
   render: () => (
-    <View style={storyStyles.container}>
+    <PhoneWidth>
       <FocusCurrentTaskCard status="all-complete" title="" {...handlers} />
-    </View>
+    </PhoneWidth>
   ),
 };
 
@@ -221,8 +234,18 @@ export const AllThemesMatrix: Story = {
 };
 
 const storyStyles = StyleSheet.create((theme) => ({
-  container: {
-    padding: theme.space[4],
+  // Centering canvas — a slightly different bg so the 344px card area reads as a
+  // distinct surface. No phone chrome; just somewhere for the card to sit.
+  stage: {
+    alignItems: "center",
+    padding: theme.space[6],
+    backgroundColor: theme.colors.backgroundSecondary,
+  },
+  // The card only, at the prototype's 344px phone width, on the screen bg with the
+  // screen padding #377 will own. The flattened card itself carries no frame (R1).
+  frame: {
+    width: 344,
+    padding: theme.space[5],
     backgroundColor: theme.colors.background,
   },
   matrixContainer: {
