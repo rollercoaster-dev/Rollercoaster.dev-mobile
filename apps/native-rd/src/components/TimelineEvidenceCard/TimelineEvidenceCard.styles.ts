@@ -1,5 +1,4 @@
 import { StyleSheet } from "react-native-unistyles";
-import { palette } from "../../themes/palette";
 
 export const styles = StyleSheet.create((theme) => ({
   card: (isGoal: boolean) => ({
@@ -12,7 +11,7 @@ export const styles = StyleSheet.create((theme) => ({
     borderWidth: 2,
     borderColor: theme.colors.border,
     borderLeftWidth: isGoal ? 4 : 2,
-    borderLeftColor: isGoal ? palette.yellow300 : theme.colors.border,
+    borderLeftColor: isGoal ? theme.colors.accentYellow : theme.colors.border,
     borderRadius: theme.radius.sm,
     marginBottom: theme.space[1],
   }),

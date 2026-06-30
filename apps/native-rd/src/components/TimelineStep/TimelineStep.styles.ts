@@ -1,6 +1,11 @@
 import { StyleSheet } from "react-native-unistyles";
 import { shadowStyle } from "../../styles/shadows";
 import { GOAL_NODE_SIZE } from "../TimelineNode/TimelineNode.styles";
+import {
+  stepStateNodeBg,
+  stepStateNodeFg,
+  type StepStateMapKey,
+} from "../TimelineNode/stepStateColorMap";
 
 export const styles = StyleSheet.create((theme) => ({
   // Column wrapper: parent row on top, child sub-spine tucked underneath. Owns
@@ -34,7 +39,6 @@ export const styles = StyleSheet.create((theme) => ({
   },
   titleContainer: {
     flex: 1,
-    marginLeft: theme.space[2],
   },
   title: {
     fontSize: theme.size.md,
@@ -47,6 +51,38 @@ export const styles = StyleSheet.create((theme) => ({
   },
   chevronExpanded: {
     transform: [{ rotate: "180deg" }],
+  },
+  // E (state) header pill — the one #406 color language. bg = node bg, ink = node
+  // fg, so the word matches its node's color in every theme. Solid states
+  // (in-progress / completed) get a seamless border == bg; pending / paused keep a
+  // neutral border so the light fill stays visible (mirrors TimelineNode.styles).
+  stateWordPill: (status: StepStateMapKey) => ({
+    paddingHorizontal: theme.space[2],
+    paddingVertical: theme.space[1],
+    borderRadius: theme.radius.sm,
+    borderWidth: theme.borderWidth.thin,
+    backgroundColor: stepStateNodeBg(theme, status),
+    borderColor:
+      status === "in-progress" || status === "completed"
+        ? stepStateNodeBg(theme, status)
+        : theme.colors.border,
+  }),
+  stateWordText: (status: StepStateMapKey) => ({
+    fontSize: theme.size.xs,
+    fontWeight: theme.fontWeight.semibold,
+    color: stepStateNodeFg(theme, status),
+  }),
+  // C·B metadata band: quiet, always-visible truth-lines below the title. No hue
+  // (textSecondary only) — the prototype's amber/green glyph colors are dropped
+  // (ADR-0012). E is the header word, not a band line.
+  metadataBand: {
+    paddingHorizontal: theme.space[4],
+    paddingBottom: theme.space[3],
+    gap: theme.space[1],
+  },
+  metadataText: {
+    fontSize: theme.size.xs,
+    color: theme.colors.textSecondary,
   },
   evidenceSection: {
     borderTopWidth: 1,

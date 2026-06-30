@@ -354,7 +354,7 @@ describe("TimelineJourneyScreen", () => {
     setupQueries({ stepEvidence: STEP_EVIDENCE });
     renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
     // Expand first step
-    fireEvent.press(screen.getByLabelText("Read docs, Done"));
+    fireEvent.press(screen.getByLabelText("Read docs, Completed"));
     expect(screen.getByText("Photo proof")).toBeOnTheScreen();
   });
 
@@ -370,11 +370,11 @@ describe("TimelineJourneyScreen", () => {
     it("marks exactly one node in-progress — the first pending leaf", () => {
       setupQueries({ steps: STEPS_WITH_CHILDREN });
       renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
-      // The in-progress accent surfaces as a single "Active" status badge.
-      expect(screen.getAllByText("Active")).toHaveLength(1);
+      // The in-progress accent surfaces as a single "In Progress" state word.
+      expect(screen.getAllByText("In Progress")).toHaveLength(1);
       // ...and it is the first child, not the parent or the second child.
       const firstChild = screen.getByLabelText("Sub-step a: First sub-step");
-      expect(within(firstChild).getByText("Active")).toBeOnTheScreen();
+      expect(within(firstChild).getByText("In Progress")).toBeOnTheScreen();
     });
 
     it("counts every unit (parents + children) in the progress label", () => {
@@ -408,10 +408,10 @@ describe("TimelineJourneyScreen", () => {
       });
       renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
       // Exactly one accent, and it is the child — not the completed parent.
-      expect(screen.getAllByText("Active")).toHaveLength(1);
+      expect(screen.getAllByText("In Progress")).toHaveLength(1);
       const child = screen.getByLabelText("Sub-step a: Still open");
-      expect(within(child).getByText("Active")).toBeOnTheScreen();
-      expect(screen.getByLabelText("Done parent, Done")).toBeOnTheScreen();
+      expect(within(child).getByText("In Progress")).toBeOnTheScreen();
+      expect(screen.getByLabelText("Done parent, Completed")).toBeOnTheScreen();
     });
 
     // Invite state: all children done but the parent is still open, so the
@@ -444,8 +444,10 @@ describe("TimelineJourneyScreen", () => {
       });
       renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
       // The single accent sits on the parent header, not on either done child.
-      expect(screen.getAllByText("Active")).toHaveLength(1);
-      expect(screen.getByLabelText("Open parent, Active")).toBeOnTheScreen();
+      expect(screen.getAllByText("In Progress")).toHaveLength(1);
+      expect(
+        screen.getByLabelText("Open parent, In Progress"),
+      ).toBeOnTheScreen();
     });
 
     it("shows no in-progress accent when every step is completed", () => {
@@ -468,7 +470,7 @@ describe("TimelineJourneyScreen", () => {
         ],
       });
       renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
-      expect(screen.queryAllByText("Active")).toHaveLength(0);
+      expect(screen.queryAllByText("In Progress")).toHaveLength(0);
     });
   });
 });
