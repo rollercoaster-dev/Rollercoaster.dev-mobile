@@ -71,7 +71,13 @@ describe("FocusCurrentTaskCard", () => {
 
     it("in-progress renders no state pill", () => {
       renderCard({ status: "in-progress" });
-      expect(screen.queryByLabelText("In Progress")).toBeNull();
+      // "In Progress" can never label a pill (StateWordPill only takes
+      // StepStateMapKey, which excludes in-progress), so assert positively on
+      // what distinguishes the silent state: neither pill word renders, while
+      // the in-progress-only "Evidence · required" attribute does.
+      expect(screen.queryByLabelText("Paused")).toBeNull();
+      expect(screen.queryByLabelText("Completed")).toBeNull();
+      expect(screen.getByText("Evidence · required")).toBeTruthy();
     });
 
     it("all-complete renders no state pill", () => {
@@ -92,6 +98,19 @@ describe("FocusCurrentTaskCard", () => {
     it("reveals Mark complete once evidence is captured", () => {
       renderCard({ status: "in-progress", capturedEvidence: captured });
       expect(screen.getByText("✓ Mark complete")).toBeTruthy();
+    });
+
+    it("keeps Add alongside Mark complete (demoted) and still captures more", () => {
+      // Evidence-present branch: Mark complete leads as the primary, but Add
+      // stays so a second piece can be captured. Pressing it must still fire
+      // onAddEvidence — the demoted outline button is not a dead control.
+      const props = renderCard({
+        status: "in-progress",
+        capturedEvidence: captured,
+      });
+      expect(screen.getByText("✓ Mark complete")).toBeTruthy();
+      fireEvent.press(screen.getByLabelText("Add Photo"));
+      expect(props.onAddEvidence).toHaveBeenCalledTimes(1);
     });
   });
 

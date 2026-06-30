@@ -208,7 +208,8 @@ export const styles = StyleSheet.create((theme) => {
       fontWeight: theme.fontWeight.semibold,
       color: theme.colors.textSecondary,
     },
-    // Reassurance line — centered, under the Add button, blocked-state only (L6).
+    // Reassurance line — centered, under the Add button; shown only before any
+    // evidence is captured (the no-evidence in-progress branch, L6).
     helperLine: {
       fontSize: theme.size.sm,
       color: theme.colors.textSecondary,
