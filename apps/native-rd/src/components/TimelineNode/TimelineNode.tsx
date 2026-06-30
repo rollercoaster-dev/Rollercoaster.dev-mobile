@@ -10,11 +10,8 @@ import {
   SMALL_NODE_SIZE,
 } from "./TimelineNode.styles";
 
-// TODO: collapse into StepStatus once the data layer supports paused.
-type NodeStatus = StepStatus | "paused";
-
 export interface TimelineNodeProps {
-  status: NodeStatus;
+  status: StepStatus;
   /** Step number displayed in the node. Ignored when isGoalNode or label is set. */
   stepNumber?: number;
   onPress?: () => void;
@@ -122,7 +119,7 @@ export function TimelineNode({
   );
 }
 
-function StateBadge({ status }: { status: NodeStatus }) {
+function StateBadge({ status }: { status: StepStatus }) {
   const { t } = useTranslation(["common"]);
 
   return (

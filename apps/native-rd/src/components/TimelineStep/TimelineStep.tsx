@@ -41,12 +41,17 @@ export interface TimelineStepProps {
 const statusToVariant: Record<StepStatus, StatusBadgeVariant> = {
   completed: "completed",
   "in-progress": "active",
+  // Placeholder until a dedicated "set aside" badge variant lands (#378). A
+  // paused step is not-yet-actionable, so it reads like pending → "locked".
+  paused: "locked",
   pending: "locked",
 };
 
 const statusToLabelKey: Record<StepStatus, "done" | "active" | "pending"> = {
   completed: "done",
   "in-progress": "active",
+  // Placeholder label until a dedicated "set aside" status word lands (#378).
+  paused: "pending",
   pending: "pending",
 };
 
