@@ -212,14 +212,19 @@ describe("Step CRUD Operations", () => {
         id: mockStepId,
         status: StepStatus.pending,
       });
+      // Locks the documented difference from uncompleteStep: resume "mirrors
+      // uncompleteStep minus the completedAt clear" — paused never set it, so
+      // the payload must omit completedAt rather than write `null`.
+      const [, payload] = updateMock.mock.calls.at(-1)!;
+      expect(payload).not.toHaveProperty("completedAt");
     });
   });
 
   describe("goal completion semantics — paused blocks completion (D6)", () => {
-    // Mirrors FocusModeScreen's `allStepsComplete` gate (FocusModeScreen.tsx
-    // :313-315): a goal is markable only when every step is completed. The gate
-    // is inline (not exported), so this re-states the rule at the data layer to
-    // lock the contract that `paused` is a distinct, non-completing state.
+    // Mirrors FocusModeScreen's `allStepsComplete` gate (grep that identifier):
+    // a goal is markable only when every step is completed. The gate is inline
+    // (not exported), so this re-states the rule at the data layer to lock the
+    // contract that `paused` is a distinct, non-completing state.
     const isAllComplete = (
       rows: readonly { status: string | null }[],
     ): boolean =>
@@ -440,6 +445,17 @@ describe("Step CRUD Operations", () => {
           row("s1b", "s1"),
         ],
         { kind: "leaf", index: 2, parentIndex: 0 },
+      ],
+      // A pending child surfaces even when its parent is paused: the resolver
+      // finds pendingChild before applying the parent's own status skip, so a
+      // set-aside parent can't hide still-actionable work below it. Pins the
+      // pendingChild-first ordering against a refactor that moves the skip up.
+      // (Whether a paused parent *should* expose its child is a UI-semantics
+      // call deferred to #377/#378; this test locks the current behavior.)
+      [
+        "pending child under a paused parent still surfaces the child",
+        [row("s1", null, { status: "paused" }), row("s1a", "s1")],
+        { kind: "leaf", index: 1, parentIndex: 0 },
       ],
       [
         "all steps completed or paused → none",
