@@ -2,7 +2,7 @@ import { View, Text, type TextStyle, type ViewStyle } from "react-native";
 import { useTranslation } from "react-i18next";
 import { themes, parseThemeName, type ThemeName } from "../../themes/compose";
 import { variantOverrides } from "../../themes/variants";
-import { size, lineHeight } from "../../themes/tokens";
+import { size } from "../../themes/tokens";
 import { shadowStyle } from "../../styles/shadows";
 import { styles } from "./ThemeSampleCard.styles";
 
@@ -23,7 +23,6 @@ function previewStyles(themeId: ThemeName) {
   const def = variantOverrides[variant];
 
   const sizeScale = def.size ?? size;
-  const lhScale = def.lineHeight ?? lineHeight;
   const fontFamily = def.fontFamily;
 
   const sampleCard: ViewStyle = {
