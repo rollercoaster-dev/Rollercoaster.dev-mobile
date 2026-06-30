@@ -77,8 +77,8 @@ export const styles = StyleSheet.create((theme) => {
       color: stepStateNodeFg(theme, status),
     }),
     // C·B truth-lines: glyph + plain text + mono meta suffix (prototype F1–F3).
-    // The date line itself is plain (mono lives only on the trailing meta); this
-    // is the card's documented exception to ADR-0012's mono date line.
+    // The date line itself is plain (mono lives only on the trailing meta) —
+    // pure prototype fidelity; no ADR governs date typography.
     metadataBand: {
       gap: theme.space[2],
     },

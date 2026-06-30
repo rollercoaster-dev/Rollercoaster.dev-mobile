@@ -59,10 +59,10 @@ interface MetaLine {
  * Quiet C·B truth-lines (prototype `Focus Mode A`). Every present line renders
  * independently — a "waiting on…" external wait AND an internal "after…"
  * prerequisite can both show (never "blocked by"). Each line is glyph + text +
- * mono meta suffix; the "due …" date is plain text, with mono only on the
- * trailing meta (the card's documented exception to ADR-0012's mono date line).
- * Copy is literal pending #378 (which owns the real C·B data + i18n). Renders
- * nothing when no C/B prop is set.
+ * an optional mono meta suffix; the "due …" date is plain text, with mono only
+ * on the trailing meta — pure prototype fidelity (no ADR governs date
+ * typography). Copy is literal pending #378 (which owns the real C·B data +
+ * i18n). Renders nothing when no C/B prop is set.
  */
 export function MetadataBand({
   afterStep,
@@ -91,7 +91,10 @@ export function MetadataBand({
       glyph: "↩",
       glyphStyle: styles.metadataGlyphAfter,
       text: `after ${afterStep}`,
-      meta: "✓ done",
+      // No completion suffix: `afterStep` carries only the prerequisite's title,
+      // not its done-state, so a hard-coded "✓ done" would assert a fact the
+      // props can't back. #378 owns real dependency-completion data.
+      meta: null,
     });
   }
   if (dueDate) {

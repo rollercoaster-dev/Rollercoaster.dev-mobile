@@ -132,7 +132,12 @@ describe("FocusCurrentTaskCard", () => {
 
     it("in-progress fires onChangeEvidenceType", () => {
       const props = renderCard({ status: "in-progress" });
-      fireEvent.press(screen.getByLabelText("change"));
+      // The planned box announces the action + current type (not the bare
+      // visible "change"), so screen-reader users get the same context as
+      // sighted ones. renderCard plans "photo" → "Photo".
+      fireEvent.press(
+        screen.getByLabelText("Change evidence type, currently Photo"),
+      );
       expect(props.onChangeEvidenceType).toHaveBeenCalledTimes(1);
     });
 
@@ -190,9 +195,12 @@ describe("FocusCurrentTaskCard", () => {
   });
 
   describe("C·B metadata band", () => {
-    it("renders the internal 'after [step]' dependency line", () => {
+    it("renders the internal 'after [step]' dependency line without claiming it is done", () => {
       renderCard({ status: "in-progress", afterStep: "Stock the pantry" });
       expect(screen.getByText("after Stock the pantry")).toBeTruthy();
+      // The prop carries only the prerequisite's title, not its completion
+      // state, so the line must not assert "✓ done" (#378 owns real data).
+      expect(screen.queryByText("✓ done")).toBeNull();
     });
 
     it("renders the external 'waiting on [who]' line with a mono expected suffix", () => {

@@ -24,6 +24,7 @@
       "helperLine": "add evidence to complete",
       "evidenceRequired": "Evidence · required",
       "changeEvidenceType": "change",
+      "changeEvidenceTypeA11y": "Change evidence type, currently {{type}}",
       "evidenceRailLabel": "Captured",
       "addTypeCta": "Add {{type}}",
       "pauseCta": "❙❙ Set this step aside",

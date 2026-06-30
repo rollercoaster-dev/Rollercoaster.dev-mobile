@@ -37,9 +37,24 @@ export function FocusCurrentTaskCard(props: FocusCurrentTaskCardProps) {
     case "all-complete":
       return <AllCompleteView {...props} />;
     case "in-progress":
-    default:
       return <InProgressView {...props} />;
+    default:
+      // Exhaustiveness guard: once every FocusCardStatus has a case above,
+      // `props.status` is `never` here, so adding a new status without its own
+      // case fails to compile — it can never silently render the wrong UI. An
+      // out-of-union runtime value still degrades to the silent in-progress view.
+      return exhaustiveFallback(props.status, <InProgressView {...props} />);
   }
+}
+
+/**
+ * Compile-time exhaustiveness check for the status switch. Reached only with a
+ * `status` that no `case` handled — which TypeScript types as `never` once every
+ * `FocusCardStatus` is covered, so an unhandled status is a build error rather
+ * than a silent mis-render. `fallback` keeps the runtime graceful.
+ */
+function exhaustiveFallback(_status: never, fallback: React.ReactElement) {
+  return fallback;
 }
 
 /**
@@ -120,8 +135,14 @@ function InProgressView({
           style={styles.plannedBox}
           accessible
           accessibilityRole="button"
+          // `accessible` collapses the box's children, so the visible "change"
+          // text alone would announce as just "change" — ambiguous out of
+          // context. The a11y label names the action and the current planned
+          // type (which sighted users read from the box) so the control is
+          // self-describing.
           accessibilityLabel={t(
-            "focusMode:currentTask.inProgress.changeEvidenceType",
+            "focusMode:currentTask.inProgress.changeEvidenceTypeA11y",
+            { type: plannedLabel },
           )}
         >
           {plannedIcon ? (

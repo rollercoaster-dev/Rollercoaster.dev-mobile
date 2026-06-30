@@ -24,6 +24,7 @@
       "helperLine": "Nachweis hinzufügen, um abzuschließen",
       "evidenceRequired": "Nachweis · erforderlich",
       "changeEvidenceType": "ändern",
+      "changeEvidenceTypeA11y": "Nachweistyp ändern, aktuell {{type}}",
       "evidenceRailLabel": "Erfasst",
       "addTypeCta": "{{type}} hinzufügen",
       "pauseCta": "❙❙ Diesen Schritt beiseitelegen",
