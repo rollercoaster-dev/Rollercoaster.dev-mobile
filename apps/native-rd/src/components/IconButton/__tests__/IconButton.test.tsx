@@ -72,6 +72,7 @@ describe("IconButton", () => {
     ] as const;
     const tones: IconButtonTone[] = [
       "chrome",
+      "celebration",
       "ghost",
       "surface",
       "primary",

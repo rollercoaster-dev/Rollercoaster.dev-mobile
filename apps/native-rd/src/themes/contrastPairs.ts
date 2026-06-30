@@ -86,6 +86,16 @@ export const contrastPairs: ContrastPair[] = [
     }),
   },
   {
+    // Badge Detail hero celebration band (#410). Yellow in light/dark/lowVision,
+    // neutralised to white/cream/muted-gold for the other ND themes.
+    key: "celebration",
+    label: "celebration band",
+    getColors: (t) => ({
+      fg: t.chrome.celebrationFg,
+      bg: t.chrome.celebrationBg,
+    }),
+  },
+  {
     key: "brandAccent",
     label: "brand accent",
     getColors: (t) => ({

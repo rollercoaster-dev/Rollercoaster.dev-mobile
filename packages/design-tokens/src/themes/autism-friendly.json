@@ -155,6 +155,8 @@
       "chrome-tab-bar-indicator": { "$value": "#ffffff" },
       "chrome-top-bar-bg": { "$value": "#d5c88a" },
       "chrome-top-bar-fg": { "$value": "#333333" },
+      "celebration-bg": { "$value": "#d5c88a" },
+      "celebration-fg": { "$value": "#333333" },
       "chrome-modal-overlay": { "$value": "rgba(0, 0, 0, 0.3)" },
       "chrome-modal-border": { "$value": "#dddddd" },
       "action-primary-bg": { "$value": "#4d6d7d" },

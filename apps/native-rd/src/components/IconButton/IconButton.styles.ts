@@ -5,6 +5,7 @@ import type { ComposedTheme } from "../../themes/compose";
 export type IconButtonSize = "sm" | "md" | "lg";
 export type IconButtonTone =
   | "chrome"
+  | "celebration"
   | "ghost"
   | "surface"
   | "primary"
@@ -32,9 +33,14 @@ export const styles = StyleSheet.create((theme) => ({
     justifyContent: "center" as const,
     hitSlop: hitSlopValues[size],
   }),
-  // Chrome and ghost are both transparent so the surface they sit on shows
-  // through; the difference is which token the foreground resolves against.
+  // Chrome and celebration are both transparent so the surface they sit on
+  // shows through; the difference is which token the foreground resolves
+  // against. Chrome sits on the purple screen-header band; celebration sits
+  // on the yellow celebration band (Badge Detail hero).
   toneChrome: {
+    backgroundColor: "transparent",
+  },
+  toneCelebration: {
     backgroundColor: "transparent",
   },
   toneGhost: {
@@ -76,6 +82,12 @@ export function resolveIconColor(
     case "chrome":
       // Foreground on the app's purple chrome band — same role as tab bar text.
       return theme.chrome.chromeTabBarFg;
+    case "celebration":
+      // Foreground on the yellow celebration band (Badge Detail hero). The
+      // chromeTabBarFg used by "chrome" is contrast-computed on purple and
+      // goes light in dyslexia/autismFriendly, which fails on yellow — so the
+      // celebration surface owns its own ink token.
+      return theme.chrome.celebrationFg;
     case "ghost":
       return theme.surfaceBorder.surfaceCardFg;
     case "surface":

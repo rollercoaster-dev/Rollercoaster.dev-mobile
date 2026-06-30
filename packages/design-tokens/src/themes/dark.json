@@ -144,6 +144,8 @@
       "chrome-modal-border": { "$value": "#3a2d5c" },
       "chrome-top-bar-bg": { "$value": "#ffe50c" },
       "chrome-top-bar-fg": { "$value": "#0a0a0a" },
+      "celebration-bg": { "$value": "#ffe50c" },
+      "celebration-fg": { "$value": "#0a0a0a" },
       "action-primary-bg": { "$value": "#5eead4" },
       "action-primary-fg": { "$value": "#0a0a0a" },
       "action-primary-hover-bg": { "$value": "#2dd4bf" },

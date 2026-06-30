@@ -94,5 +94,15 @@
     "$value": "{color.black}",
     "$type": "color",
     "$description": "Status/top bar text — dark on yellow"
+  },
+  "celebration-bg": {
+    "$value": "{color.accent-yellow}",
+    "$type": "color",
+    "$description": "Celebration / payoff surface — brand yellow (Badge Detail hero band). A distinct surface from the purple screen-header chrome; per-theme overrides neutralise it for the ND themes."
+  },
+  "celebration-fg": {
+    "$value": "{color.black}",
+    "$type": "color",
+    "$description": "Ink on the celebration surface — title, sparkles, nav icons, and the band/chip border all resolve to this. Dark on yellow."
   }
 }

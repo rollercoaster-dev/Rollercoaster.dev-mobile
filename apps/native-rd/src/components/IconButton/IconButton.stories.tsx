@@ -11,6 +11,7 @@ import {
 
 const tones: IconButtonTone[] = [
   "chrome",
+  "celebration",
   "ghost",
   "surface",
   "primary",
@@ -33,6 +34,12 @@ function ChromeBand({ children }: { children: React.ReactNode }) {
   return <View style={storyStyles.chromeBand}>{children}</View>;
 }
 
+// Renders the celebration tone over the yellow celebration band so its ink
+// reads against the same surface it sits on in the Badge Detail hero.
+function CelebrationBand({ children }: { children: React.ReactNode }) {
+  return <View style={storyStyles.celebrationBand}>{children}</View>;
+}
+
 export const AllTones: Story = {
   render: () => (
     <View style={storyStyles.grid}>
@@ -50,7 +57,13 @@ export const AllTones: Story = {
             <Text variant="label" style={storyStyles.label}>
               {tone}
             </Text>
-            {tone === "chrome" ? <ChromeBand>{button}</ChromeBand> : button}
+            {tone === "chrome" ? (
+              <ChromeBand>{button}</ChromeBand>
+            ) : tone === "celebration" ? (
+              <CelebrationBand>{button}</CelebrationBand>
+            ) : (
+              button
+            )}
           </View>
         );
       })}
@@ -92,6 +105,11 @@ const storyStyles = StyleSheet.create((theme) => ({
   },
   chromeBand: {
     backgroundColor: theme.colors.accentPurple,
+    padding: theme.space[2],
+    borderRadius: theme.radius.sm,
+  },
+  celebrationBand: {
+    backgroundColor: theme.chrome.celebrationBg,
     padding: theme.space[2],
     borderRadius: theme.radius.sm,
   },
