@@ -11,6 +11,7 @@
 import React from "react";
 import { Modal, StyleSheet, Text as RNText, View } from "react-native";
 import { renderWithProviders, screen, fireEvent } from "./test-utils";
+import { mockTheme } from "./mocks/unistyles";
 import {
   expectAccessible,
   expectAccessibleRole,
@@ -326,14 +327,30 @@ describe("Accessibility Contracts", () => {
           onCreateSubStep={jest.fn()}
         />,
       );
-      const hiddenDecorations = screen
+      // Match the rail specifically by its flattened style (width +
+      // backgroundColor from the shared mockTheme) rather than "some hidden
+      // View exists" — otherwise this passes even if the rail itself becomes
+      // accessible, as long as any other decoration is hidden.
+      const hiddenRails = screen
         .UNSAFE_getAllByType(View)
         .filter(
           (v) =>
             v.props.accessibilityElementsHidden === true &&
             v.props.importantForAccessibility === "no",
+        )
+        .map(
+          (v) =>
+            StyleSheet.flatten(v.props.style) as {
+              width?: number;
+              backgroundColor?: string;
+            } | null,
+        )
+        .filter(
+          (style) =>
+            style?.width === mockTheme.borderWidth.thick &&
+            style?.backgroundColor === mockTheme.colors.border,
         );
-      expect(hiddenDecorations.length).toBeGreaterThanOrEqual(1);
+      expect(hiddenRails.length).toBeGreaterThanOrEqual(1);
     });
   });
 
