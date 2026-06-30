@@ -418,3 +418,20 @@ _No items deferred that are required to meet the acceptance criteria for this is
   for the other two. Also fixed `StateWordPill` to use `useTranslation(["common","focusMode"])`
   (array form) so the typed `t()` accepts the `common:` prefixed `badgeI18nKey` — the single
   -string form returned `unknown` and broke type-check.
+- [2026-06-30] Round 3 (R1–R8) applied: flattened the outer card frame, bumped title/heading
+  to `3xl`, CTAs to 54pt + `modalElevation` + `radius.md`, planned box + callout to
+  `cardElevation` + `radius.lg`, planned label/"change" to `sm`/`xs`, grouped the
+  "EVIDENCE · REQUIRED" label with the planned box so it captions it (8px).
+- [2026-06-30] R8 narrowed by Joe: the story is the **card only** at 344px width — NOT the
+  recommended inert-chrome `PhoneFrame`. Joe rejected the mock header / progress / nav pill
+  ("just the fucking card, no header/footer/timeline/nav"). The header, progress bar, and nav
+  pill are #377's surfaces; the story must never imply this card owns them. R8's "recommended
+  PhoneFrame decorator" above is **void** — the width box (`PhoneWidth`) is the whole of R8.
+- [2026-06-30] Round-3 "all 35 tests stand" was wrong for R4: the a11y test asserted
+  `minHeight === 44` on every button, but the CTAs are now 54pt. Relaxed to
+  `>= 44` — 44pt is the WCAG floor, the assertion was over-specified. The a11y test stays;
+  set-aside and the planned box still hold exactly 44.
+- [2026-06-30] `helperLine` copy simplified to **"add evidence to complete"** per Joe —
+  supersedes the prototype's longer "only evidence unlocks complete — nothing here blocks you"
+  and the section-D lowercase note. en/de/pseudo updated (pseudo via `gen:pseudo`, unrelated
+  `completion`/`editGoal` drift reverted).
