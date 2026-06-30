@@ -197,6 +197,75 @@ describe("FocusCurrentTaskCard", () => {
     });
   });
 
+  // The read-only "Captured" rail (parts.tsx): one chip per captured piece —
+  // visible caption-or-type-label beside an a11y-hidden icon, with the type kept
+  // in the chip's accessibilityLabel. Mirrors the StepCard rail contract (#360).
+  // Exercised through the completed view, which renders the same rail with no
+  // planned-type row to collide with the chip labels.
+  describe("CapturedEvidenceRail (captured chips)", () => {
+    it("shows the caption as visible text and keeps the type in the a11y label", () => {
+      renderCard({
+        status: "completed",
+        capturedEvidence: [
+          { id: "ev-1", type: "photo", caption: "Kitchen reset" },
+        ],
+      });
+      const chip = screen.getByTestId("focus-current-task-evidence-chip-ev-1");
+      expect(chip.props.accessibilityLabel).toBe(
+        "Kitchen reset, Photo captured",
+      );
+      expect(screen.getByText("Kitchen reset")).toBeTruthy();
+      expect(screen.queryByText("Photo")).toBeNull();
+    });
+
+    it("falls back to the type short-label when an item has no caption", () => {
+      renderCard({
+        status: "completed",
+        capturedEvidence: [{ id: "ev-2", type: "link", caption: null }],
+      });
+      const chip = screen.getByTestId("focus-current-task-evidence-chip-ev-2");
+      expect(chip.props.accessibilityLabel).toBe("Link captured");
+      expect(screen.getByText("Link")).toBeTruthy();
+    });
+
+    it("treats a blank caption as no caption", () => {
+      renderCard({
+        status: "completed",
+        capturedEvidence: [{ id: "ev-3", type: "text", caption: "   " }],
+      });
+      expect(screen.getByText("Note")).toBeTruthy();
+    });
+
+    it("normalizes an unknown evidence type to the file label (no raw key leaks)", () => {
+      renderCard({
+        status: "completed",
+        capturedEvidence: [{ id: "ev-4", type: "sketch", caption: null }],
+      });
+      const chip = screen.getByTestId("focus-current-task-evidence-chip-ev-4");
+      expect(chip.props.accessibilityLabel).toBe("File captured");
+      expect(screen.getByText("File")).toBeTruthy();
+      expect(screen.queryByText("sketch")).toBeNull();
+    });
+
+    it("renders one chip per item with a unique token when id-less items share a type", () => {
+      renderCard({
+        status: "completed",
+        capturedEvidence: [{ type: "photo" }, { type: "photo" }],
+      });
+      expect(
+        screen.getByTestId("focus-current-task-evidence-chip-photo-0"),
+      ).toBeTruthy();
+      expect(
+        screen.getByTestId("focus-current-task-evidence-chip-photo-1"),
+      ).toBeTruthy();
+    });
+
+    it("renders nothing when no evidence is captured", () => {
+      renderCard({ status: "completed", capturedEvidence: [] });
+      expect(screen.queryByText("Captured")).toBeNull();
+    });
+  });
+
   // 44pt touch targets + a non-empty label on every interactive element, for
   // each state (the WCAG 2.1 AA contract this app treats as day-one).
   it.each(ALL_STATES)(

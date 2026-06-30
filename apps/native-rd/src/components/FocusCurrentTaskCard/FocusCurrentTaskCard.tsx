@@ -14,9 +14,11 @@ export type { FocusCapturedEvidenceItem };
 /**
  * Card-level view state for Focus Mode's hero card. A superset of the per-step
  * DB status: `all-complete` is a goal-level state (every step done), so it lives
- * here rather than polluting `StepStatus` / `StepStateMapKey` (D2). The three
- * states that DO map to a step status (`paused`, `completed`, `in-progress`)
- * resolve their pill through `stepStateColorMap`, the one #406 color language.
+ * here rather than polluting `StepStatus` / `StepStateMapKey` (D2). Only the two
+ * states that show a state-word pill (`paused`, `completed`) resolve it through
+ * `stepStateColorMap`, the one #406 color language; `in-progress` is the
+ * "silent" state and renders no pill (position carries it), and `all-complete`
+ * has none either.
  */
 export type FocusCardStatus =
   | "in-progress"
@@ -25,31 +27,48 @@ export type FocusCardStatus =
   | "all-complete";
 
 export interface FocusCurrentTaskCardProps {
+  // Props are grouped by the view state that reads them; each sub-view
+  // destructures only its own group, so a prop set on the "wrong" status is
+  // silently ignored rather than mis-rendered.
+
+  // --- universal ---
   status: FocusCardStatus;
   title: string;
+  /**
+   * Captured-evidence chips for the read-only rail. Rendered in the in-progress
+   * and completed views; ignored by paused / all-complete.
+   */
+  capturedEvidence?: readonly FocusCapturedEvidenceItem[];
+
+  // --- in-progress ---
   /** Primary planned evidence type label (display-only, in-progress). */
   plannedEvidenceType?: string | null;
-  capturedEvidence?: readonly FocusCapturedEvidenceItem[];
-  /** Set this step aside (in-progress → paused). */
-  onPause?: () => void;
-  /** Resume a paused step (paused → in-progress). */
-  onPickUp?: () => void;
-  /** Mark complete — revealed only when evidence is captured. */
-  onMarkComplete?: () => void;
-  /** Reopen a completed step. */
-  onReopen?: () => void;
-  /** Design the badge from the all-steps-complete state. */
-  onDesignBadge?: () => void;
   /** Open the evidence-type chooser (#409). */
   onChangeEvidenceType?: () => void;
   /** Capture a new piece of the planned evidence type. */
   onAddEvidence?: () => void;
+  /** Set this step aside (in-progress → paused). */
+  onPause?: () => void;
+  /** Mark complete — revealed only when evidence is captured. */
+  onMarkComplete?: () => void;
   /** C (dependency), internal: this step comes "after [step]". Never "blocked by". */
   afterStep?: string;
   /** C (dependency), external wait: "waiting on [who] · expected [date]". */
   waitingOn?: { who: string; expected?: string };
   /** B (date): factual "due [date]" — no urgency / "overdue" framing. */
   dueDate?: string;
+
+  // --- paused ---
+  /** Resume a paused step (paused → in-progress). */
+  onPickUp?: () => void;
+
+  // --- completed ---
+  /** Reopen a completed step. */
+  onReopen?: () => void;
+
+  // --- all-complete ---
+  /** Design the badge from the all-steps-complete state. */
+  onDesignBadge?: () => void;
 }
 
 /**

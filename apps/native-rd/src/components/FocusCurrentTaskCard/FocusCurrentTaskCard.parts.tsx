@@ -58,6 +58,8 @@ export function MetadataBand({
   waitingOn?: { who: string; expected?: string };
   dueDate?: string;
 }) {
+  // TODO(#378): literal English; #378 owns the real C·B data + i18n for these
+  // lines. Remove this note and the inline strings when #378 wires them up.
   const cLine = waitingOn
     ? `waiting on ${waitingOn.who}${
         waitingOn.expected ? ` · expected ${waitingOn.expected}` : ""
@@ -107,8 +109,10 @@ export function CapturedEvidenceRail({
           // raw key or a missing icon — falls back to `file` (matches StepCard).
           const safeType = validateEvidenceType(item.type);
           const typeLabel = evidenceShortLabel(t, safeType);
-          // `id ?? type` collides when two captionless, id-less items share a
-          // type; `id ?? type-index` stays unique per chip.
+          // Stable, unique chip key/testID even when several captionless,
+          // id-less items share a type: `index` disambiguates within a type, and
+          // the raw `item.type` (not `safeType`) keeps an unknown type's chips
+          // distinct. Prefer the row id when present.
           const token = item.id ?? `${item.type}-${index}`;
           const icon = EVIDENCE_OPTIONS.find((o) => o.type === safeType)?.icon;
           const a11yLabel = hasCaption
