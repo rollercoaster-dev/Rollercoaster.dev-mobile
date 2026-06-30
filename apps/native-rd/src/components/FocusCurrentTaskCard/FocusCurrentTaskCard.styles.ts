@@ -6,10 +6,12 @@ import {
   type StepStateMapKey,
 } from "../TimelineNode/stepStateColorMap";
 
-// Focus Mode hero card. Shares the #406 state-color language with TimelineNode /
-// TimelineStep (the pill resolves through stepStateNodeBg/Fg), and mirrors the
-// StepCard evidence-rail chip and the TimelineStep state-word pill so the three
-// surfaces read as one vocabulary. No hardcoded hex: every color is a theme token.
+// Focus Mode hero card. Tuned to the `Focus Mode A` prototype (Joe, 2026-06-30):
+// blue primary action via the contrast-validated `action` group, glyph-led C·B
+// truth-lines, a bordered planned-evidence box, green captured chips, and the
+// state-word pill above the title. Color still resolves through the #406
+// `stepStateColorMap` so the pill stays one language with TimelineNode/TimelineStep.
+// No hardcoded hex: every color is a theme token.
 export const styles = StyleSheet.create((theme) => {
   // Shared CTA shape — neo-brutalist: bold border, hard small shadow, 44pt floor.
   const ctaBase = {
@@ -20,7 +22,7 @@ export const styles = StyleSheet.create((theme) => {
     minHeight: 44,
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[3],
-    borderWidth: theme.borderWidth.medium,
+    borderWidth: theme.borderWidth.thick,
     borderColor: theme.colors.border,
     borderRadius: theme.radius.sm,
     ...shadowStyle(theme, "cardElevationSmall"),
@@ -36,99 +38,123 @@ export const styles = StyleSheet.create((theme) => {
       gap: theme.space[3],
       ...shadowStyle(theme, "cardElevation"),
     },
-    // Title + state pill on one row (paused / completed); in-progress and
-    // all-complete render the title without a pill so it sits alone.
-    titleRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      gap: theme.space[2],
-    },
     title: {
-      flex: 1,
-      fontSize: theme.size.lg,
-      fontWeight: theme.fontWeight.bold,
+      fontSize: theme.size.xl,
+      fontWeight: theme.fontWeight.black,
       fontFamily: theme.fontFamily.headline,
       color: theme.colors.text,
+      lineHeight: theme.size.xl * 1.05,
     },
     heading: {
-      fontSize: theme.size.xl,
-      fontWeight: theme.fontWeight.bold,
+      fontSize: theme.size["2xl"],
+      fontWeight: theme.fontWeight.black,
       fontFamily: theme.fontFamily.headline,
       color: theme.colors.text,
     },
-    // E (state) pill — the one #406 color language, identical bg/fg pairing to
-    // the node and the TimelineStep header word. Solid states get a seamless
-    // border == bg; paused keeps a neutral border so its light fill stays visible
-    // (mirrors TimelineStep.styles.ts / TimelineNode.styles.ts).
+    // E (state) pill — above the title, left-aligned, MONO + UPPERCASE. bg/ink
+    // resolve through the #406 stepStateColorMap (one color language); the border
+    // stays neutral so the light paused / green completed fills read clearly,
+    // matching the prototype's bordered pills.
     stateWordPill: (status: StepStateMapKey) => ({
+      alignSelf: "flex-start" as const,
       paddingHorizontal: theme.space[2],
       paddingVertical: theme.space[1],
-      borderRadius: theme.radius.sm,
+      borderRadius: theme.radius.pill,
       borderWidth: theme.borderWidth.thin,
       backgroundColor: stepStateNodeBg(theme, status),
-      borderColor:
-        status === "in-progress" || status === "completed"
-          ? stepStateNodeBg(theme, status)
-          : theme.colors.border,
+      borderColor: theme.colors.border,
     }),
     stateWordText: (status: StepStateMapKey) => ({
       fontSize: theme.size.xs,
-      fontWeight: theme.fontWeight.semibold,
+      fontFamily: theme.fontFamily.mono,
+      textTransform: "uppercase" as const,
+      letterSpacing: theme.letterSpacing.wide,
       color: stepStateNodeFg(theme, status),
     }),
-    // C·B truth-lines. No hue (textSecondary only); the date line is mono and
-    // carries no red / "overdue" framing (ADR-0012), matching TimelineStep.
+    // C·B truth-lines: glyph + plain text + mono meta suffix (prototype F1–F3).
+    // The date line itself is plain (mono lives only on the trailing meta); this
+    // is the card's documented exception to ADR-0012's mono date line.
     metadataBand: {
+      gap: theme.space[2],
+    },
+    metadataLine: {
+      flexDirection: "row",
+      alignItems: "baseline",
+      flexWrap: "wrap",
       gap: theme.space[1],
     },
-    metadataText: {
-      fontSize: theme.size.xs,
+    // Glyph hues mirror the prototype: amber wait (`warning` == #d97706), green
+    // dependency (`success`), neutral date (`textSecondary`).
+    metadataGlyphWaiting: {
+      fontSize: theme.size.sm,
+      color: theme.colors.warning,
+    },
+    metadataGlyphAfter: {
+      fontSize: theme.size.sm,
+      color: theme.colors.success,
+    },
+    metadataGlyphDue: {
+      fontSize: theme.size.sm,
       color: theme.colors.textSecondary,
     },
-    metadataDate: {
+    metadataText: {
+      fontSize: theme.size.sm,
+      color: theme.colors.text,
+    },
+    metadataMeta: {
       fontSize: theme.size.xs,
       color: theme.colors.textSecondary,
       fontFamily: theme.fontFamily.mono,
     },
-    // Quiet always-present "Evidence · required" attribute — calm band copy, not
-    // a loud badge (Direction A). Never frames evidence as missing/needed.
+    // Always-present "EVIDENCE · REQUIRED" attribute — mono, uppercase, muted
+    // (L5). Never frames evidence as missing/needed.
     evidenceRequired: {
-      fontSize: theme.size.sm,
-      color: theme.colors.textSecondary,
+      fontSize: theme.size.xs,
+      color: theme.colors.textMuted,
+      fontFamily: theme.fontFamily.mono,
+      textTransform: "uppercase",
+      letterSpacing: theme.letterSpacing.wide,
     },
-    plannedRow: {
+    // Planned-evidence box — bordered, hard-shadowed; the whole box is the tap
+    // target that opens the type picker (#409). icon + bold label + blue "change".
+    plannedBox: {
       flexDirection: "row",
       alignItems: "center",
       gap: theme.space[2],
-    },
-    plannedType: {
-      fontSize: theme.size.md,
-      fontWeight: theme.fontWeight.semibold,
-      color: theme.colors.text,
-    },
-    changeAffordance: {
       minHeight: 44,
-      justifyContent: "center",
-      paddingHorizontal: theme.space[2],
+      backgroundColor: theme.colors.background,
+      borderWidth: theme.borderWidth.thick,
+      borderColor: theme.colors.border,
+      borderRadius: theme.radius.sm,
+      paddingHorizontal: theme.space[3],
+      paddingVertical: theme.space[3],
+      ...shadowStyle(theme, "cardElevationSmall"),
+    },
+    plannedIcon: {
+      fontSize: 18,
+    },
+    plannedLabel: {
+      flex: 1,
+      fontSize: theme.size.md,
+      fontWeight: theme.fontWeight.bold,
+      color: theme.colors.text,
     },
     changeText: {
       fontSize: theme.size.sm,
-      fontWeight: theme.fontWeight.semibold,
+      fontWeight: theme.fontWeight.bold,
       color: theme.colors.accentPrimary,
-      textDecorationLine: "underline",
     },
-    // Captured-evidence rail — read-only status chips, mirrors StepCard.styles.ts.
+    // Captured rail — read-only green chips (`accentMint`, the prototype's
+    // #d4f4e7), label leans green. Mirrors the StepCard rail contract (#360).
     evidenceRail: {
       gap: theme.space[1],
     },
     evidenceRailLabel: {
       fontSize: theme.size.xs,
-      fontWeight: theme.fontWeight.bold,
-      color: theme.colors.textMuted,
+      fontFamily: theme.fontFamily.mono,
+      color: theme.colors.success,
       textTransform: "uppercase",
       letterSpacing: theme.letterSpacing.wide,
-      fontFamily: theme.fontFamily.body,
     },
     evidenceRailRow: {
       flexDirection: "row",
@@ -140,7 +166,7 @@ export const styles = StyleSheet.create((theme) => {
       flexDirection: "row",
       alignItems: "center",
       gap: theme.space[1],
-      backgroundColor: theme.colors.accentPurpleLight,
+      backgroundColor: theme.colors.accentMint,
       borderWidth: theme.borderWidth.medium,
       borderColor: theme.colors.border,
       borderRadius: theme.radius.pill,
@@ -154,49 +180,78 @@ export const styles = StyleSheet.create((theme) => {
     evidenceChipText: {
       fontSize: theme.size.xs,
       fontFamily: theme.fontFamily.mono,
-      color: theme.colors.text,
+      color: theme.colors.accentMintFg,
       maxWidth: 180,
     },
+    // Quiet "set this step aside" — inline text, not a button (L3). Keeps a 44pt
+    // hit area for the touch-target contract while reading as a calm control.
+    setAside: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: theme.space[1],
+      minHeight: 44,
+    },
+    setAsideText: {
+      fontSize: theme.size.sm,
+      fontWeight: theme.fontWeight.semibold,
+      color: theme.colors.textSecondary,
+    },
+    // Reassurance line — centered, under the Add button, blocked-state only (L6).
     helperLine: {
       fontSize: theme.size.sm,
       color: theme.colors.textSecondary,
+      textAlign: "center",
     },
     bodyText: {
       fontSize: theme.size.md,
       color: theme.colors.text,
     },
+    // All-steps-done trophy callout box (L7).
+    calloutBox: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: theme.space[2],
+      backgroundColor: theme.colors.accentPurpleLight,
+      borderWidth: theme.borderWidth.medium,
+      borderColor: theme.colors.border,
+      borderRadius: theme.radius.sm,
+      padding: theme.space[3],
+      ...shadowStyle(theme, "cardElevationSmall"),
+    },
+    calloutIcon: {
+      fontSize: 18,
+    },
+    calloutText: {
+      flex: 1,
+      fontSize: theme.size.sm,
+      color: theme.colors.text,
+      lineHeight: theme.size.sm * 1.45,
+    },
     footRow: {
       gap: theme.space[2],
     },
-    // Primary action (add evidence / pick back up / design badge): filled mint.
+    // Primary action (Add / Mark complete / Pick back up / Design badge): filled
+    // blue (#2563eb light) via the contrast-validated `action` group — flips
+    // correctly across all 7 ND variants where a raw accent token would not.
     primaryCta: {
       ...ctaBase,
-      backgroundColor: theme.colors.accentMint,
+      backgroundColor: theme.action.actionPrimaryBg,
     },
     primaryCtaText: {
       fontSize: theme.size.md,
       fontWeight: theme.fontWeight.bold,
-      color: theme.colors.accentMintFg,
+      color: theme.action.actionPrimaryFg,
     },
-    // Mark-complete: success-tinted, revealed only once evidence is captured.
-    completeCta: {
-      ...ctaBase,
-      backgroundColor: theme.colors.success,
-    },
-    completeCtaText: {
-      fontSize: theme.size.md,
-      fontWeight: theme.fontWeight.bold,
-      color: theme.colors.successForeground,
-    },
-    // Secondary action (set aside / reopen): outline on card surface.
+    // Secondary action (Reopen; Add once evidence exists): outline button so a
+    // single filled-blue primary leads at a time (F5 synthesis).
     secondaryCta: {
       ...ctaBase,
-      backgroundColor: theme.colors.background,
+      backgroundColor: theme.action.actionSecondaryBg,
     },
     secondaryCtaText: {
       fontSize: theme.size.md,
       fontWeight: theme.fontWeight.semibold,
-      color: theme.colors.text,
+      color: theme.action.actionSecondaryFg,
     },
   };
 });

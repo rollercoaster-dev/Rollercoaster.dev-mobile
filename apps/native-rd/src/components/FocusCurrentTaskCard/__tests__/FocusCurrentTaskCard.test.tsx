@@ -36,7 +36,7 @@ function renderCard(overrides: Partial<FocusCurrentTaskCardProps> = {}) {
   const props: FocusCurrentTaskCardProps = {
     status: "in-progress",
     title: "Reset the kitchen",
-    plannedEvidenceType: "Photo",
+    plannedEvidenceType: "photo",
     onPause: jest.fn(),
     onPickUp: jest.fn(),
     onMarkComplete: jest.fn(),
@@ -176,23 +176,38 @@ describe("FocusCurrentTaskCard", () => {
       expect(screen.getByText("after Stock the pantry")).toBeTruthy();
     });
 
-    it("renders the external 'waiting on [who]' dependency line", () => {
+    it("renders the external 'waiting on [who]' line with a mono expected suffix", () => {
       renderCard({
         status: "in-progress",
         waitingOn: { who: "the clinic", expected: "Tue" },
       });
-      expect(
-        screen.getByText("waiting on the clinic · expected Tue"),
-      ).toBeTruthy();
+      // Lead text is plain; the trailing date detail is the mono meta suffix
+      // (prototype F1–F3 — the date split, not a whole mono line).
+      expect(screen.getByText("waiting on the clinic")).toBeTruthy();
+      const meta = screen.getByText("· expected Tue");
+      const metaFlat = StyleSheet.flatten(meta.props.style) as {
+        fontFamily?: string;
+      };
+      expect(metaFlat.fontFamily).toBe("DM Mono");
     });
 
-    it("renders the due date in mono with no overdue framing", () => {
+    it("renders both dependency lines at once (waiting on AND after — not exclusive)", () => {
+      renderCard({
+        status: "in-progress",
+        waitingOn: { who: "the clinic" },
+        afterStep: "Stock the pantry",
+      });
+      expect(screen.getByText("waiting on the clinic")).toBeTruthy();
+      expect(screen.getByText("after Stock the pantry")).toBeTruthy();
+    });
+
+    it("renders the due date as plain text (mono only on suffixes) with no overdue framing", () => {
       renderCard({ status: "in-progress", dueDate: "Fri 11 Jul" });
       const dateNode = screen.getByText("due Fri 11 Jul");
       const flat = StyleSheet.flatten(dateNode.props.style) as {
         fontFamily?: string;
       };
-      expect(flat.fontFamily).toBe("DM Mono");
+      expect(flat.fontFamily).not.toBe("DM Mono");
       expect(screen.queryByText(/overdue/i)).toBeNull();
     });
   });

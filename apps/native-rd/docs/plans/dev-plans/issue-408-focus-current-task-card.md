@@ -72,6 +72,12 @@ Timeline/StepCard that ships beside this card). Recommendation per row; final ca
   primary at a time: no evidence → Add is filled blue (`accentPrimary`) + helper line below;
   evidence present → Mark complete is filled blue and Add drops to the outline/secondary
   treatment so a second piece can still be added. Set-aside is quiet inline text regardless (L3).
+- **Token refinement (impl).** CTAs use the contrast-validated `theme.action.actionPrimary*`
+  / `actionSecondary*` group rather than raw `accentPrimary`+`textInverse` (L2) — it carries
+  the prototype blue (#2563eb) in light, flips to teal/dark correctly, and is already gated
+  for all 7 ND variants. Captured chips use `accentMint`/`accentMintFg`. A
+  `FocusCurrentTaskCard.types.ts` was split out so the main view file stays under the
+  300-line limit (same D7 rationale as `.parts.tsx`).
 
 ### C. Prop-contract refinement
 

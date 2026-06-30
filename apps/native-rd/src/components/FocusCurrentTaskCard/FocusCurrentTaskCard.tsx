@@ -1,6 +1,8 @@
 import React from "react";
 import { View, Text, Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
+import { EVIDENCE_OPTIONS, validateEvidenceType } from "../../types/evidence";
+import { evidenceShortLabel } from "../../i18n/labels";
 import { styles } from "./FocusCurrentTaskCard.styles";
 import {
   StateWordPill,
@@ -8,73 +10,23 @@ import {
   CapturedEvidenceRail,
   type FocusCapturedEvidenceItem,
 } from "./FocusCurrentTaskCard.parts";
+import type {
+  FocusCardStatus,
+  FocusCurrentTaskCardProps,
+} from "./FocusCurrentTaskCard.types";
 
-export type { FocusCapturedEvidenceItem };
-
-/**
- * Card-level view state for Focus Mode's hero card. A superset of the per-step
- * DB status: `all-complete` is a goal-level state (every step done), so it lives
- * here rather than polluting `StepStatus` / `StepStateMapKey` (D2). Only the two
- * states that show a state-word pill (`paused`, `completed`) resolve it through
- * `stepStateColorMap`, the one #406 color language; `in-progress` is the
- * "silent" state and renders no pill (position carries it), and `all-complete`
- * has none either.
- */
-export type FocusCardStatus =
-  | "in-progress"
-  | "paused"
-  | "completed"
-  | "all-complete";
-
-export interface FocusCurrentTaskCardProps {
-  // Props are grouped by the view state that reads them; each sub-view
-  // destructures only its own group, so a prop set on the "wrong" status is
-  // silently ignored rather than mis-rendered.
-
-  // --- universal ---
-  status: FocusCardStatus;
-  title: string;
-  /**
-   * Captured-evidence chips for the read-only rail. Rendered in the in-progress
-   * and completed views; ignored by paused / all-complete.
-   */
-  capturedEvidence?: readonly FocusCapturedEvidenceItem[];
-
-  // --- in-progress ---
-  /** Primary planned evidence type label (display-only, in-progress). */
-  plannedEvidenceType?: string | null;
-  /** Open the evidence-type chooser (#409). */
-  onChangeEvidenceType?: () => void;
-  /** Capture a new piece of the planned evidence type. */
-  onAddEvidence?: () => void;
-  /** Set this step aside (in-progress → paused). */
-  onPause?: () => void;
-  /** Mark complete — revealed only when evidence is captured. */
-  onMarkComplete?: () => void;
-  /** C (dependency), internal: this step comes "after [step]". Never "blocked by". */
-  afterStep?: string;
-  /** C (dependency), external wait: "waiting on [who] · expected [date]". */
-  waitingOn?: { who: string; expected?: string };
-  /** B (date): factual "due [date]" — no urgency / "overdue" framing. */
-  dueDate?: string;
-
-  // --- paused ---
-  /** Resume a paused step (paused → in-progress). */
-  onPickUp?: () => void;
-
-  // --- completed ---
-  /** Reopen a completed step. */
-  onReopen?: () => void;
-
-  // --- all-complete ---
-  /** Design the badge from the all-steps-complete state. */
-  onDesignBadge?: () => void;
-}
+export type {
+  FocusCapturedEvidenceItem,
+  FocusCardStatus,
+  FocusCurrentTaskCardProps,
+};
 
 /**
  * Focus Mode hero card. Pure presentational, prop-driven; not wired to any
  * screen (that is #377). Four view states, each its own sub-view so the JSX for
- * one state never leaks conditional clutter into another.
+ * one state never leaks conditional clutter into another. Tuned to the
+ * `Focus Mode A` prototype (Joe, 2026-06-30) — see the plan's "Prototype Fidelity
+ * Corrections" section for the per-element decisions.
  */
 export function FocusCurrentTaskCard(props: FocusCurrentTaskCardProps) {
   switch (props.status) {
@@ -91,9 +43,12 @@ export function FocusCurrentTaskCard(props: FocusCurrentTaskCardProps) {
 }
 
 /**
- * In-progress: no pill (position says it — the brief's "silent" state). Evidence
- * is always required; "✓ Mark complete" is *revealed* by captured evidence, never
- * shown disabled before it lands. Nothing frames evidence as missing/needed.
+ * In-progress: no pill (position says it — the brief's "silent" state). The
+ * planned-evidence box opens the type picker; evidence is always required. The
+ * bottom action keeps one filled-blue primary at a time — Add (no evidence) or
+ * Mark complete (evidence present), with Add demoted to an outline so a second
+ * piece can still be captured. "✓ Mark complete" is *revealed* by captured
+ * evidence, never shown disabled. Nothing frames evidence as missing/needed.
  */
 function InProgressView({
   title,
@@ -109,7 +64,43 @@ function InProgressView({
 }: FocusCurrentTaskCardProps) {
   const { t } = useTranslation(["common", "focusMode"]);
   const captured = capturedEvidence ?? [];
-  const plannedLabel = plannedEvidenceType ?? t("focusMode:evidenceFallback");
+  const hasEvidence = captured.length > 0;
+  // Prop carries a type key; derive icon + label the same way the rail does.
+  const plannedType = plannedEvidenceType
+    ? validateEvidenceType(plannedEvidenceType)
+    : null;
+  const plannedLabel = plannedType
+    ? evidenceShortLabel(t, plannedType)
+    : t("focusMode:evidenceFallback");
+  const plannedIcon = plannedType
+    ? (EVIDENCE_OPTIONS.find((o) => o.type === plannedType)?.icon ?? null)
+    : null;
+  const addLabel = t("focusMode:currentTask.inProgress.addTypeCta", {
+    type: plannedLabel,
+  });
+
+  const addButton = (primary: boolean) => (
+    <Pressable
+      onPress={onAddEvidence}
+      style={primary ? styles.primaryCta : styles.secondaryCta}
+      accessible
+      accessibilityRole="button"
+      accessibilityLabel={addLabel}
+    >
+      {plannedIcon ? (
+        <Text
+          style={primary ? styles.primaryCtaText : styles.secondaryCtaText}
+          importantForAccessibility="no"
+        >
+          {plannedIcon}
+        </Text>
+      ) : null}
+      <Text style={primary ? styles.primaryCtaText : styles.secondaryCtaText}>
+        {addLabel}
+      </Text>
+    </Pressable>
+  );
+
   return (
     <View style={styles.card}>
       <Text style={styles.title} accessible accessibilityRole="header">
@@ -123,84 +114,80 @@ function InProgressView({
       <Text style={styles.evidenceRequired}>
         {t("focusMode:currentTask.inProgress.evidenceRequired")}
       </Text>
-      <View style={styles.plannedRow}>
-        <Text style={styles.plannedType}>{plannedLabel}</Text>
-        <Pressable
-          onPress={onChangeEvidenceType}
-          style={styles.changeAffordance}
-          accessible
-          accessibilityRole="button"
-          accessibilityLabel={t(
-            "focusMode:currentTask.inProgress.changeEvidenceType",
-          )}
-        >
-          <Text style={styles.changeText}>
-            {t("focusMode:currentTask.inProgress.changeEvidenceType")}
+      <Pressable
+        onPress={onChangeEvidenceType}
+        style={styles.plannedBox}
+        accessible
+        accessibilityRole="button"
+        accessibilityLabel={t(
+          "focusMode:currentTask.inProgress.changeEvidenceType",
+        )}
+      >
+        {plannedIcon ? (
+          <Text style={styles.plannedIcon} importantForAccessibility="no">
+            {plannedIcon}
           </Text>
-        </Pressable>
-      </View>
-      <CapturedEvidenceRail items={captured} />
-      <Text style={styles.helperLine}>
-        {t("focusMode:currentTask.inProgress.helperLine")}
-      </Text>
-      <View style={styles.footRow}>
-        <Pressable
-          onPress={onAddEvidence}
-          style={styles.primaryCta}
-          accessible
-          accessibilityRole="button"
-          accessibilityLabel={t("focusMode:currentTask.inProgress.addTypeCta", {
-            type: plannedLabel,
-          })}
-        >
-          <Text style={styles.primaryCtaText}>
-            {t("focusMode:currentTask.inProgress.addTypeCta", {
-              type: plannedLabel,
-            })}
-          </Text>
-        </Pressable>
-        <Pressable
-          onPress={onPause}
-          style={styles.secondaryCta}
-          accessible
-          accessibilityRole="button"
-          accessibilityLabel={t("focusMode:currentTask.inProgress.pauseA11y")}
-        >
-          <Text style={styles.secondaryCtaText}>
-            {t("focusMode:currentTask.inProgress.pauseCta")}
-          </Text>
-        </Pressable>
-        {captured.length > 0 ? (
-          <Pressable
-            onPress={onMarkComplete}
-            style={styles.completeCta}
-            accessible
-            accessibilityRole="button"
-            accessibilityLabel={t(
-              "focusMode:currentTask.inProgress.markCompleteA11y",
-            )}
-          >
-            <Text style={styles.completeCtaText}>
-              {t("focusMode:currentTask.inProgress.markCompleteCta")}
-            </Text>
-          </Pressable>
         ) : null}
+        <Text style={styles.plannedLabel}>{plannedLabel}</Text>
+        <Text style={styles.changeText}>
+          {t("focusMode:currentTask.inProgress.changeEvidenceType")}
+        </Text>
+      </Pressable>
+      <CapturedEvidenceRail
+        items={captured}
+        label={t("focusMode:currentTask.inProgress.evidenceRailLabel")}
+      />
+      <Pressable
+        onPress={onPause}
+        style={styles.setAside}
+        accessible
+        accessibilityRole="button"
+        accessibilityLabel={t("focusMode:currentTask.inProgress.pauseA11y")}
+      >
+        <Text style={styles.setAsideText}>
+          {t("focusMode:currentTask.inProgress.pauseCta")}
+        </Text>
+      </Pressable>
+      <View style={styles.footRow}>
+        {hasEvidence ? (
+          <>
+            <Pressable
+              onPress={onMarkComplete}
+              style={styles.primaryCta}
+              accessible
+              accessibilityRole="button"
+              accessibilityLabel={t(
+                "focusMode:currentTask.inProgress.markCompleteA11y",
+              )}
+            >
+              <Text style={styles.primaryCtaText}>
+                {t("focusMode:currentTask.inProgress.markCompleteCta")}
+              </Text>
+            </Pressable>
+            {addButton(false)}
+          </>
+        ) : (
+          <>
+            {addButton(true)}
+            <Text style={styles.helperLine}>
+              {t("focusMode:currentTask.inProgress.helperLine")}
+            </Text>
+          </>
+        )}
       </View>
     </View>
   );
 }
 
-/** Paused: pill beside the title, "set aside" body, single "pick back up" CTA. */
+/** Paused: pill above the title, "set aside" body, single "pick back up" CTA. */
 function PausedView({ title, onPickUp }: FocusCurrentTaskCardProps) {
   const { t } = useTranslation(["common", "focusMode"]);
   return (
     <View style={styles.card}>
-      <View style={styles.titleRow}>
-        <Text style={styles.title} accessible accessibilityRole="header">
-          {title}
-        </Text>
-        <StateWordPill status="paused" />
-      </View>
+      <StateWordPill status="paused" />
+      <Text style={styles.title} accessible accessibilityRole="header">
+        {title}
+      </Text>
       <Text style={styles.bodyText}>
         {t("focusMode:currentTask.paused.body")}
       </Text>
@@ -219,7 +206,7 @@ function PausedView({ title, onPickUp }: FocusCurrentTaskCardProps) {
   );
 }
 
-/** Completed: pill beside the title, the captured rail, single "reopen" CTA. */
+/** Completed: pill above the title, the captured rail, single "reopen" CTA. */
 function CompletedView({
   title,
   capturedEvidence,
@@ -229,13 +216,14 @@ function CompletedView({
   const captured = capturedEvidence ?? [];
   return (
     <View style={styles.card}>
-      <View style={styles.titleRow}>
-        <Text style={styles.title} accessible accessibilityRole="header">
-          {title}
-        </Text>
-        <StateWordPill status="completed" />
-      </View>
-      <CapturedEvidenceRail items={captured} />
+      <StateWordPill status="completed" />
+      <Text style={styles.title} accessible accessibilityRole="header">
+        {title}
+      </Text>
+      <CapturedEvidenceRail
+        items={captured}
+        label={t("focusMode:evidenceRail.zoneLabel")}
+      />
       <Pressable
         onPress={onReopen}
         style={styles.secondaryCta}
@@ -251,7 +239,7 @@ function CompletedView({
   );
 }
 
-/** All steps done: no pill, trophy copy, single "design your badge" CTA. */
+/** All steps done: no pill, trophy callout box, single "design your badge" CTA. */
 function AllCompleteView({ onDesignBadge }: FocusCurrentTaskCardProps) {
   const { t } = useTranslation(["common", "focusMode"]);
   return (
@@ -259,9 +247,14 @@ function AllCompleteView({ onDesignBadge }: FocusCurrentTaskCardProps) {
       <Text style={styles.heading} accessible accessibilityRole="header">
         {t("focusMode:currentTask.allComplete.heading")}
       </Text>
-      <Text style={styles.bodyText}>
-        {t("focusMode:currentTask.allComplete.body")}
-      </Text>
+      <View style={styles.calloutBox}>
+        <Text style={styles.calloutIcon} importantForAccessibility="no">
+          {"🏆"}
+        </Text>
+        <Text style={styles.calloutText}>
+          {t("focusMode:currentTask.allComplete.body")}
+        </Text>
+      </View>
       <Pressable
         onPress={onDesignBadge}
         style={styles.primaryCta}

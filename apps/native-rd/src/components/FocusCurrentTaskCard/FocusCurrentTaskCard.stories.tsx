@@ -51,7 +51,7 @@ export const InProgress: Story = {
       <FocusCurrentTaskCard
         status="in-progress"
         title="Reset the kitchen before bed"
-        plannedEvidenceType="Photo"
+        plannedEvidenceType="photo"
         capturedEvidence={capturedTwo}
         {...handlers}
       />
@@ -67,25 +67,27 @@ export const InProgressNoEvidence: Story = {
       <FocusCurrentTaskCard
         status="in-progress"
         title="Reset the kitchen before bed"
-        plannedEvidenceType="Photo"
+        plannedEvidenceType="photo"
         {...handlers}
       />
     </View>
   ),
 };
 
-// C·B band populated: a single C line ("after …") plus a B line ("due …", mono).
-// waitingOn is omitted so the C slot reads as one line (waitingOn would win).
+// Full C·B band, mirroring the `Focus Mode A` prototype's Inspection step: an
+// external wait ("waiting on …"), an internal dependency ("after …"), and a due
+// date all render as independent glyph-led lines. No captured evidence, so the
+// blocked state shows the blue "Add Note" primary + the reassurance line.
 export const InProgressWithECBBand: Story = {
   render: () => (
     <View style={storyStyles.container}>
       <FocusCurrentTaskCard
         status="in-progress"
-        title="Draft the recovery-week meal plan"
-        plannedEvidenceType="Note"
-        capturedEvidence={capturedTwo}
-        afterStep="Stock the pantry"
-        dueDate="Fri 11 Jul"
+        title="Inspection & labels"
+        plannedEvidenceType="text"
+        waitingOn={{ who: "city inspector", expected: "Jun 24" }}
+        afterStep="Wire the circuits"
+        dueDate="Fri · Jun 27"
         {...handlers}
       />
     </View>
@@ -164,10 +166,9 @@ function MatrixPill({
 }) {
   const bg = stepStateNodeBg(theme, state);
   const fg = stepStateNodeFg(theme, state);
-  // Mirror the pill border rule: in-progress/completed are solid (border == bg);
-  // pending/paused keep a neutral border so the light fill stays visible.
-  const solid = state === "in-progress" || state === "completed";
-  const borderColor = solid ? bg : theme.colors.border;
+  // The real card pill carries a neutral border in every state (prototype L4),
+  // so the swatches do the same — these cells isolate the bg/fg color language.
+  const borderColor = theme.colors.border;
   return (
     <View style={storyStyles.matrixCell}>
       <View

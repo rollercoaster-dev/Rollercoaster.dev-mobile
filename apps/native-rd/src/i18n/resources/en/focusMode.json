@@ -21,7 +21,7 @@
   },
   "currentTask": {
     "inProgress": {
-      "helperLine": "Only evidence unlocks complete — nothing here blocks you.",
+      "helperLine": "only evidence unlocks complete — nothing here blocks you",
       "evidenceRequired": "Evidence · required",
       "changeEvidenceType": "change",
       "evidenceRailLabel": "Captured",
@@ -42,7 +42,7 @@
     },
     "allComplete": {
       "heading": "Every step done.",
-      "body": "🏆 Now design the badge that marks it — the keepsake comes at the end.",
+      "body": "Now design the badge that marks it — the keepsake comes at the end.",
       "designBadgeCta": "Design your badge",
       "designBadgeA11y": "Design your badge to celebrate completing this goal"
     }

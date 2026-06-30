@@ -24,7 +24,8 @@ export interface FocusCapturedEvidenceItem {
 
 /**
  * E (state) pill in the one #406 color language: bg = node bg, ink = node fg, so
- * the word reads as the same state color as its node in every theme. Carries the
+ * the word reads as the same state color as its node in every theme. Sits above
+ * the title, left-aligned, in mono uppercase (prototype fidelity, L4). Carries the
  * word in its `accessibilityLabel` too — color is never the sole signal.
  */
 export function StateWordPill({ status }: { status: StepStateMapKey }) {
@@ -42,12 +43,26 @@ export function StateWordPill({ status }: { status: StepStateMapKey }) {
   );
 }
 
+/** One C·B truth-line: a colored glyph, plain text, and an optional mono meta suffix. */
+// The three glyph styles share one shape ({ fontSize, color }), so the waiting
+// style's type stands in for all of them.
+type GlyphStyle = typeof styles.metadataGlyphWaiting;
+interface MetaLine {
+  key: string;
+  glyph: string;
+  glyphStyle: GlyphStyle;
+  text: string;
+  meta: string | null;
+}
+
 /**
- * Quiet C·B truth-lines. C = a dependency stated as "after [step]" (internal) or
- * "waiting on [who] · expected [date]" (external wait) — never "blocked by". B =
- * a factual "due [date]", mono, with no urgency / "overdue" framing (ADR-0010/
- * 0012). Copy is literal pending #378 (which owns real data + i18n), matching the
- * TimelineStep band. Renders nothing when no C/B prop is set.
+ * Quiet C·B truth-lines (prototype `Focus Mode A`). Every present line renders
+ * independently — a "waiting on…" external wait AND an internal "after…"
+ * prerequisite can both show (never "blocked by"). Each line is glyph + text +
+ * mono meta suffix; the "due …" date is plain text, with mono only on the
+ * trailing meta (the card's documented exception to ADR-0012's mono date line).
+ * Copy is literal pending #378 (which owns the real C·B data + i18n). Renders
+ * nothing when no C/B prop is set.
  */
 export function MetadataBand({
   afterStep,
@@ -60,37 +75,70 @@ export function MetadataBand({
 }) {
   // TODO(#378): literal English; #378 owns the real C·B data + i18n for these
   // lines. Remove this note and the inline strings when #378 wires them up.
-  const cLine = waitingOn
-    ? `waiting on ${waitingOn.who}${
-        waitingOn.expected ? ` · expected ${waitingOn.expected}` : ""
-      }`
-    : afterStep
-      ? `after ${afterStep}`
-      : null;
-  const bLine = dueDate ? `due ${dueDate}` : null;
+  const lines: MetaLine[] = [];
+  if (waitingOn) {
+    lines.push({
+      key: "waiting",
+      glyph: "⏳",
+      glyphStyle: styles.metadataGlyphWaiting,
+      text: `waiting on ${waitingOn.who}`,
+      meta: waitingOn.expected ? `· expected ${waitingOn.expected}` : null,
+    });
+  }
+  if (afterStep) {
+    lines.push({
+      key: "after",
+      glyph: "↩",
+      glyphStyle: styles.metadataGlyphAfter,
+      text: `after ${afterStep}`,
+      meta: "✓ done",
+    });
+  }
+  if (dueDate) {
+    lines.push({
+      key: "due",
+      glyph: "▦",
+      glyphStyle: styles.metadataGlyphDue,
+      text: `due ${dueDate}`,
+      meta: null,
+    });
+  }
 
-  if (!cLine && !bLine) {
+  if (lines.length === 0) {
     return null;
   }
 
   return (
     <View style={styles.metadataBand}>
-      {cLine ? <Text style={styles.metadataText}>{cLine}</Text> : null}
-      {bLine ? <Text style={styles.metadataDate}>{bLine}</Text> : null}
+      {lines.map((line) => (
+        <View key={line.key} style={styles.metadataLine}>
+          <Text style={line.glyphStyle} importantForAccessibility="no">
+            {line.glyph}
+          </Text>
+          <Text style={styles.metadataText}>{line.text}</Text>
+          {line.meta ? (
+            <Text style={styles.metadataMeta}>{line.meta}</Text>
+          ) : null}
+        </View>
+      ))}
     </View>
   );
 }
 
 /**
- * Read-only "Captured" rail — one status chip per captured piece, labelled with
- * its caption when it has one (else the type short-label). Mirrors the StepCard
- * rail: chips are `accessibilityRole="text"`, never buttons. We never surface
- * what is missing — the rail simply shows what is present. Hidden when empty.
+ * Read-only evidence rail — one green status chip per captured piece, labelled
+ * with its caption when it has one (else the type short-label). Mirrors the
+ * StepCard rail: chips are `accessibilityRole="text"`, never buttons. We never
+ * surface what is missing — the rail simply shows what is present. Hidden when
+ * empty. The section {@link label} varies by state ("Captured" in-progress,
+ * "Evidence" when completed).
  */
 export function CapturedEvidenceRail({
   items,
+  label,
 }: {
   items: readonly FocusCapturedEvidenceItem[];
+  label: string;
 }) {
   const { t } = useTranslation(["common", "focusMode"]);
   if (items.length === 0) {
@@ -99,7 +147,7 @@ export function CapturedEvidenceRail({
   return (
     <View style={styles.evidenceRail}>
       <Text style={styles.evidenceRailLabel} accessibilityRole="text">
-        {t("focusMode:currentTask.inProgress.evidenceRailLabel")}
+        {label}
       </Text>
       <View style={styles.evidenceRailRow}>
         {items.map((item, index) => {
