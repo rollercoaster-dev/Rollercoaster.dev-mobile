@@ -351,6 +351,18 @@ export const findFirstPendingIndex = (
 ): number => rows.findIndex(isPendingStep);
 
 /**
+ * Whether every step in a goal is complete — the data-layer rule behind
+ * FocusModeScreen's "Mark complete" gate (`allStepsComplete`). An empty list is
+ * not complete (FocusModeScreen handles the stepless goal separately). `paused`
+ * is a distinct, non-completing state, so a single paused step blocks
+ * completion (#417 D6).
+ */
+export const areAllStepsComplete = (
+  rows: readonly { status: string | null }[],
+): boolean =>
+  rows.length > 0 && rows.every((s) => s.status === StepStatus.completed);
+
+/**
  * Query all non-deleted steps for a goal.
  *
  * Ordered by `(ordinal ASC, createdAt ASC)`. The createdAt tie-break makes the
@@ -487,6 +499,11 @@ export type NextActionableStep =
  * — step completion is per-step, not cascaded (see {@link completeStep}). A
  * completed top-level step with no pending child is skipped (subtree closed).
  *
+ * Paused ("set aside", #417) steps are skipped exactly like completed ones —
+ * both as a candidate child and as a top-level step — so a deliberately
+ * set-aside step never surfaces as the next action. If every non-completed
+ * step is paused the result is `{ kind: "none" }`.
+ *
  * @param rows Flat rows for a single goal, in the order callers want
  *   "first pending" to mean (e.g. `(ordinal, createdAt)`-ordered).
  */
@@ -515,15 +532,21 @@ export function resolveNextActionableStep(
   for (const step of topLevel) {
     const children = childrenByParent.get(step.id) ?? [];
     const pendingChild = children.find(
-      (c) => c.status !== StepStatus.completed,
+      (c) =>
+        c.status !== StepStatus.completed && c.status !== StepStatus.paused,
     );
     // A pending leaf wins even under a completed parent — its work isn't hidden.
     if (pendingChild) {
       return { kind: "leaf", index: pendingChild.index, parentIndex: step.index }; // prettier-ignore
     }
     // No pending child: skip once the step itself is complete (a flat step, or
-    // a parent whose subtree is fully done). Otherwise it's the next action.
-    if (step.status === StepStatus.completed) continue;
+    // a parent whose subtree is fully done) or paused (deliberately set aside).
+    // Otherwise it's the next action.
+    if (
+      step.status === StepStatus.completed ||
+      step.status === StepStatus.paused
+    )
+      continue;
     // Still pending: a parent whose children are all done is the invite state;
     // a step with no children is a flat pending step.
     if (children.length > 0) {
@@ -758,6 +781,47 @@ export function uncompleteStep(id: StepId) {
   } catch (error) {
     logger.error("Failed to uncomplete step", { stepId: id, error });
     throw new Error("Failed to uncomplete step. Please try again.");
+  }
+}
+
+/**
+ * Set a step aside ("paused"). Leaves `completedAt` untouched — a paused step
+ * was never completed. Evolu stamps `updatedAt` on the write, so the goal keeps
+ * its place in the cockpit recency ranking (#381 D2).
+ * @param id - Step ID
+ * @returns Update command
+ */
+export function pauseStep(id: StepId) {
+  // "toggle" — step state-flips share one breadcrumb (see sentry-report.ts:125),
+  // matching completeStep / uncompleteStep.
+  breadcrumb({ category: "step", message: "toggle" });
+  try {
+    return evolu.update("step", {
+      id,
+      status: StepStatus.paused,
+    });
+  } catch (error) {
+    logger.error("Failed to pause step", { stepId: id, error });
+    throw new Error("Failed to set step aside. Please try again.");
+  }
+}
+
+/**
+ * Pick a paused step back up by returning it to "pending". Mirrors
+ * {@link uncompleteStep} minus the `completedAt` clear (paused never set it).
+ * @param id - Step ID
+ * @returns Update command
+ */
+export function resumeStep(id: StepId) {
+  breadcrumb({ category: "step", message: "toggle" });
+  try {
+    return evolu.update("step", {
+      id,
+      status: StepStatus.pending,
+    });
+  } catch (error) {
+    logger.error("Failed to resume step", { stepId: id, error });
+    throw new Error("Failed to pick step back up. Please try again.");
   }
 }
 

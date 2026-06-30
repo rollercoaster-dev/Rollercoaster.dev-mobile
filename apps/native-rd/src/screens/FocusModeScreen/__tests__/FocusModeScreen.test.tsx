@@ -114,6 +114,9 @@ jest.mock("../../../db", () => ({
   isPendingStep: (s: { status: string | null }) => s.status === "pending",
   findFirstPendingIndex: (rows: { status: string | null }[]) =>
     rows.findIndex((s) => s.status === "pending"),
+  // Faithful copy of the real predicate behind the "Mark complete" gate.
+  areAllStepsComplete: (rows: readonly { status: string | null }[]) =>
+    rows.length > 0 && rows.every((s) => s.status === "completed"),
   // Faithful copies of the real helpers (orphan/grandchild promotion + flatten)
   // so the screen's parent-then-children reordering is exercised, not stubbed.
   groupStepsByParent: (

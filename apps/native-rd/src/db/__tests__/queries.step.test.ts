@@ -11,16 +11,19 @@ import {
   canCompleteStep,
   completeStep,
   uncompleteStep,
+  pauseStep,
+  resumeStep,
   deleteStep,
   reorderSteps,
   reorderSubSteps,
   groupStepsByParent,
   flattenGroupedSteps,
   resolveNextActionableStep,
+  areAllStepsComplete,
   type GroupedStep,
 } from "../queries";
 import { evolu } from "../evolu";
-import type { GoalId, StepId } from "../schema";
+import { StepStatus, type GoalId, type StepId } from "../schema";
 
 const mockGoalId = "goal_test_123" as GoalId;
 const mockStepId = "step_test_456" as StepId;
@@ -182,6 +185,68 @@ describe("Step CRUD Operations", () => {
 
   test("uncompleteStep should succeed (no evidence guard)", () => {
     expect(() => uncompleteStep(mockStepId)).not.toThrow();
+  });
+
+  describe("pauseStep / resumeStep (#417)", () => {
+    const updateMock = evolu.update as jest.Mock;
+
+    beforeEach(() => {
+      updateMock.mockClear();
+    });
+
+    test("pauseStep writes status=paused and leaves completedAt untouched", () => {
+      pauseStep(mockStepId);
+      expect(updateMock).toHaveBeenCalledWith("step", {
+        id: mockStepId,
+        status: StepStatus.paused,
+      });
+      // A paused step was never completed — no completedAt in the payload
+      // (contrast completeStep, which stamps it). Guards against a copy-paste
+      // from completeStep that would clobber/zero a real completion time.
+      const [, payload] = updateMock.mock.calls.at(-1)!;
+      expect(payload).not.toHaveProperty("completedAt");
+    });
+
+    test("resumeStep writes status=pending (pick back up)", () => {
+      resumeStep(mockStepId);
+      expect(updateMock).toHaveBeenCalledWith("step", {
+        id: mockStepId,
+        status: StepStatus.pending,
+      });
+      // Locks the documented difference from uncompleteStep: resume "mirrors
+      // uncompleteStep minus the completedAt clear" — paused never set it, so
+      // the payload must omit completedAt rather than write `null`.
+      const [, payload] = updateMock.mock.calls.at(-1)!;
+      expect(payload).not.toHaveProperty("completedAt");
+    });
+  });
+
+  describe("goal completion semantics — paused blocks completion (D6)", () => {
+    // Asserts the production predicate `areAllStepsComplete` — the same helper
+    // FocusModeScreen's `allStepsComplete` gate now calls (grep that identifier).
+    // Testing the shared helper (not a re-implementation) keeps this contract
+    // honest: if the gate's rule changes, these assertions move with it.
+    test("all steps completed → markable", () => {
+      expect(
+        areAllStepsComplete([
+          row("a", null, { status: "completed" }),
+          row("b", null, { status: "completed" }),
+        ]),
+      ).toBe(true);
+    });
+
+    test("a paused step blocks completion even when every other step is done", () => {
+      expect(
+        areAllStepsComplete([
+          row("a", null, { status: "completed" }),
+          row("b", null, { status: "paused" }),
+        ]),
+      ).toBe(false);
+    });
+
+    test("empty step list is not complete", () => {
+      expect(areAllStepsComplete([])).toBe(false);
+    });
   });
 
   test("deleteStep should succeed", () => {
@@ -358,6 +423,45 @@ describe("Step CRUD Operations", () => {
           row("s1", null, { status: "completed" }),
           row("s2", null, { status: "completed" }),
           row("s2a", "s2", { status: "completed" }),
+        ],
+        { kind: "none" },
+      ],
+      // #417: paused ("set aside") steps are skipped like completed ones.
+      [
+        "paused-only flat → none",
+        [row("a", null, { status: "paused" })],
+        { kind: "none" },
+      ],
+      [
+        "paused first, pending second → skips paused, returns pending",
+        [row("a", null, { status: "paused" }), row("b", null)],
+        { kind: "flat", index: 1 },
+      ],
+      [
+        "paused child skipped, next pending child returned",
+        [
+          row("s1", null),
+          row("s1a", "s1", { status: "paused" }),
+          row("s1b", "s1"),
+        ],
+        { kind: "leaf", index: 2, parentIndex: 0 },
+      ],
+      // A pending child surfaces even when its parent is paused: the resolver
+      // finds pendingChild before applying the parent's own status skip, so a
+      // set-aside parent can't hide still-actionable work below it. Pins the
+      // pendingChild-first ordering against a refactor that moves the skip up.
+      // (Whether a paused parent *should* expose its child is a UI-semantics
+      // call deferred to #377/#378; this test locks the current behavior.)
+      [
+        "pending child under a paused parent still surfaces the child",
+        [row("s1", null, { status: "paused" }), row("s1a", "s1")],
+        { kind: "leaf", index: 1, parentIndex: 0 },
+      ],
+      [
+        "all steps completed or paused → none",
+        [
+          row("s1", null, { status: "completed" }),
+          row("s2", null, { status: "paused" }),
         ],
         { kind: "none" },
       ],

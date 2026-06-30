@@ -39,9 +39,14 @@ export type StepId = typeof StepId.Type;
  * Step status enum.
  * Values are pre-branded NonEmptyString1000 so consumers can use them directly
  * in Evolu inserts/updates and Kysely where-clauses without re-wrapping.
+ *
+ * `paused` ("set aside") is an additive value (#417): Evolu stores status as a
+ * schemaless string, so existing `pending`/`completed` rows are unaffected and
+ * no migration is needed — same pattern as the `parentStepId` column below.
  */
 export const StepStatus = {
   pending: NonEmptyString1000.orThrow("pending"),
+  paused: NonEmptyString1000.orThrow("paused"),
   completed: NonEmptyString1000.orThrow("completed"),
 } as const;
 
@@ -113,7 +118,7 @@ export const Schema = {
     parentStepId: nullOr(StepId),
     title: NonEmptyString1000,
     ordinal: nullOr(Int), // Sibling-scoped ordering: top-level steps within the goal, sub-steps within their parent
-    status: NonEmptyString1000, // 'pending' | 'completed'
+    status: NonEmptyString1000, // 'pending' | 'paused' | 'completed'
     completedAt: nullOr(DateIso),
     plannedEvidenceTypes: nullOr(NonEmptyString1000), // JSON-encoded string[] of EvidenceType values, null = no evidence requirement
   },
