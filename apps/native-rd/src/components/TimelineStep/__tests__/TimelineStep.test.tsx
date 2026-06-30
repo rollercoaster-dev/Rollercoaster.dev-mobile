@@ -195,7 +195,7 @@ describe("TimelineStep", () => {
       expect(screen.getByText("due 2026-07-15")).toBeOnTheScreen();
     });
 
-    it("renders child rows E-only — no band, no evidence row (OQ-2)", () => {
+    it("renders child rows with no C/B band (OQ-2)", () => {
       const children: TimelineStepChild[] = [
         {
           id: "c1",
@@ -206,13 +206,14 @@ describe("TimelineStep", () => {
         { id: "c2", title: "Second child", status: "pending", evidence: [] },
       ];
       renderWithProviders(<TimelineStep {...baseProps} subSteps={children} />);
-      // TimelineStepChild carries no afterStep/waitingOn/dueDate, so no band text
-      // can appear on a child row.
+      // TimelineStepChild carries no afterStep/waitingOn/dueDate, and ChildRow
+      // never renders the MetadataBand — so no band text appears on a child row,
+      // even on a child that has evidence. (Children keep their pre-existing
+      // #293 evidence drawer; its collapse/expand behavior is covered by the
+      // "sub-spine (children)" block below.)
       expect(screen.queryByText(/^after /)).toBeNull();
       expect(screen.queryByText(/^waiting on/)).toBeNull();
       expect(screen.queryByText(/^due /)).toBeNull();
-      // And a child's evidence stays in its own collapsed drawer (no evidence row).
-      expect(screen.queryByText("Child link")).toBeNull();
     });
   });
 

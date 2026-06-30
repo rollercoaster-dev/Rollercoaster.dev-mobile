@@ -168,7 +168,9 @@ function ChildRow({
 }) {
   const { t } = useTranslation(["common", "timelineJourney"]);
   const [expanded, setExpanded] = useState(false);
-  // E-only on children (OQ-2): the state word, no C/B band, no evidence row.
+  // #406 state word (E) replaces StatusBadge here too. Children carry no C/B
+  // band (OQ-2); the evidence drawer below is pre-existing #293 behavior — the
+  // prototype's E-only (no-drawer) child is a fidelity follow-up owned by #378.
   const statusLabel = t(stepStateColorMap[child.status].badgeI18nKey);
 
   return (
@@ -252,7 +254,7 @@ function StateWord({ status, label }: { status: StepStatus; label: string }) {
  * "due [date]" with no urgency/overdue framing (ADR-0010/0012). Lines render in
  * `textSecondary` only; the prototype's amber/green glyph hues are dropped. Copy
  * is literal pending #378, which owns real data + i18n. Renders nothing when no
- * C/B prop is set; never shown on child rows (OQ-2, E-only).
+ * C/B prop is set; never rendered on child rows (OQ-2 — children carry no C/B band).
  */
 function MetadataBand({
   afterStep,
