@@ -12,6 +12,93 @@ in Focus Mode. Four states (in-progress, paused, completed, all-steps-complete),
 metadata band, and an AllThemesMatrix story across all 7 product themes. Not imported by any
 screen — Storybook only (#377 owns app wiring).
 
+## ⚠️ Prototype Fidelity Corrections (2026-06-30) — AUTHORITATIVE
+
+The first implementation passed all gates (type-check / lint / tests green) but **does
+not match the prototype**. Joe pulled up `prototypes/screen-redesign/Focus Mode A
+Prototype.dc.html` (the in-progress/active state) against the built card and the gap is
+large. This section supersedes the Decisions, Implementation Plan, and Discovery Log
+below wherever they conflict (ADR-style supersession, per project convention).
+
+**Root cause.** The build was not careless — it deliberately mirrored the _shipped_
+`TimelineStep` / `StepCard` vocabulary per the original D4/D5 ("so the three surfaces read
+as one vocabulary"). But those shipped components **themselves diverge from this
+prototype**: `TimelineStep.MetadataBand` explicitly drops the prototype's glyphs and makes
+the dependency line mutually exclusive (`TimelineStep.tsx:256, 268–274`); `StepCard` uses
+`accentPurpleLight` (purple) for evidence chips where the prototype uses green; ADR-0012
+mandates a mono date line where the prototype renders it as plain text. So the real
+decision is a **direction call**: when the prototype and the shipped system disagree,
+which wins?
+
+**Scope confirmed with Joe:** _card internals only_. The top progress bar + "See all
+steps", the screen-pinned bottom CTA layout, and the nav pill stay with #377. Everything
+below is inside the card's own responsibility.
+
+### A. Unambiguous misses — LOCKED (no system conflict; the build just got these wrong)
+
+| #   | Element                         | Prototype                                                                                                                                            | Built (wrong)                                                                          | Correct token(s)                                                                                                                                                                 |
+| --- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| L1  | **Planned-evidence affordance** | White **bordered box**, hard shadow, leading **type icon** (📷/📝) + bold label + blue "change"; the whole box is the tap target → opens type picker | Bare inline text + a "change" link; no box, no icon, no shadow; only "change" tappable | bg `background`, border `border`+`borderWidth.thick`, `shadowStyle(theme,"cardElevationSmall")`, radius `radius.sm`; icon from `EVIDENCE_OPTIONS`; "change" text `accentPrimary` |
+| L2  | **Primary CTA color**           | Solid **blue** `#2563eb`, white ink                                                                                                                  | **Mint** (`accentMint`) — a previous-run invention logged in the Discovery Log         | bg `accentPrimary` (==`#2563eb`); fg = white via the contrast-validated `#2563eb` pair (`infoForeground`; verify in `contrastPairs.ts`)                                          |
+| L3  | **"Set this step aside"**       | Quiet **inline gray text** (❚❚ glyph) in the body                                                                                                    | Full **outline button** in the CTA stack — badly over-emphasized                       | `Pressable` styled as text: `textSecondary`, `fontWeight.semibold`, leading ❚❚; keep `minHeight:44` hit area, no border/bg/shadow                                                |
+| L4  | **State pill placement**        | **Above** the title, left-aligned, **DM Mono + UPPERCASE**                                                                                           | To the **right** of the title (space-between), not mono/uppercase                      | Move pill above the title; `fontFamily.mono`, `textTransform:"uppercase"`. Color still from `stepStateColorMap` (keeps the #406 one-color-language contract)                     |
+| L5  | **"EVIDENCE · REQUIRED"**       | DM Mono, uppercase, letter-spaced, muted                                                                                                             | Plain body text, sentence-case                                                         | `fontFamily.mono`, `textTransform:"uppercase"`, `letterSpacing.wide`, `textMuted`, `size.xs`                                                                                     |
+| L6  | **Helper line**                 | **Below** the button, centered, **blocked-state only**                                                                                               | **Above** the buttons, left-aligned, **always** shown                                  | Render under the Add button, `textAlign:"center"`, only when `captured.length === 0`                                                                                             |
+| L7  | **All-complete body**           | Trophy 🏆 in a **bordered purple callout box**                                                                                                       | Plain text                                                                             | wrap in box: bg `accentPurpleLight`, border, `shadowStyle(...,"cardElevationSmall")`                                                                                             |
+
+### B. Prototype-vs-system forks — PENDING Joe's direction call
+
+These all turn on one question (prototype fidelity vs consistency with the shipped
+Timeline/StepCard that ships beside this card). Recommendation per row; final call is Joe's.
+
+| #   | Fork                        | Prototype                                                                                                                  | Shipped system                                | Recommendation                                                                                                                                                                                                  |
+| --- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| F1  | **Metadata glyphs**         | Amber ⏳ / green ↩ / gray ▦ leading each line                                                                              | `TimelineStep` dropped all glyphs             | **Match prototype** (add glyphs) + file follow-up to bring `TimelineStep` band up to the same fidelity so they reconverge. `warning` (==`#d97706`) is the exact amber; ↩ uses `success`; ▦ uses `textSecondary` |
+| F2  | **Dependency lines**        | Shows **both** "waiting on…" **and** "after…" as separate lines                                                            | `TimelineStep` shows one (mutually exclusive) | **Match prototype** — render every present line independently                                                                                                                                                   |
+| F3  | **Meta suffix + date font** | Trailing meta ("· expected Jun 24", "✓ done") in **mono**; the "due …" line itself in **plain** text                       | ADR-0012: whole date line in mono             | **Match prototype** (mono only on the trailing meta), but this contradicts ADR-0012 — needs an ADR note if chosen                                                                                               |
+| F4  | **Captured chip color**     | Green `#d4f4e7` (`accentMint`)                                                                                             | `StepCard` uses `accentPurpleLight` (purple)  | **Match prototype** (`accentMint`/`accentMintFg`); minor, easy                                                                                                                                                  |
+| F5  | **Add ↔ Mark-complete**     | **Swap**: Add (no evidence) XOR ✓ Mark complete (evidence present) — never both; you cannot add a 2nd piece from this card | n/a (original plan AC said _both_ present)    | **Match prototype** (swap). Note: removes "add another piece" from the hero card. Mark-complete is still evidence-gated, so the "every step requires evidence" invariant holds                                  |
+
+### Resolved (Joe, 2026-06-30)
+
+- **F1–F4 → prototype wins.** Add glyphs (⏳ `warning` / ↩ `success` / ▦ `textSecondary`),
+  render every present dependency line, mono only on the trailing meta suffix (plain "due …"
+  text), green `accentMint`/`accentMintFg` chips. Follow-ups to file: (1) bring
+  `TimelineStep` band + `StepCard` chips to the same fidelity so the surfaces reconverge;
+  (2) ADR note recording this card's date-font exception to ADR-0012.
+- **F5 → keep both.** `Add {type}` is always present; `✓ Mark complete` is revealed once
+  evidence exists (presence logic unchanged from the build — so the related tests stand).
+  The prototype gives no precedent for showing both, so for CTA _color_ keep one filled-blue
+  primary at a time: no evidence → Add is filled blue (`accentPrimary`) + helper line below;
+  evidence present → Mark complete is filled blue and Add drops to the outline/secondary
+  treatment so a second piece can still be added. Set-aside is quiet inline text regardless (L3).
+
+### C. Prop-contract refinement
+
+`plannedEvidenceType` currently carries a **label** string (`"Photo"`), which can't yield an
+icon. Change it to carry the evidence **type key** (`"photo"` / `"text"` / …) so the box
+derives both icon (`EVIDENCE_OPTIONS`) and label (`evidenceShortLabel`), mirroring the
+captured rail. Update the four stories accordingly. (Display-only; #377 owns real wiring.)
+
+### D. i18n copy fixes
+
+- `helperLine`: drop the capital — prototype is lowercase "only evidence unlocks complete — nothing here blocks you."
+- Completed-state rail label reads **"Evidence"** in the prototype, not "Captured" — parametrize the rail label by state.
+
+### Revised commits for the fix
+
+1. `fix(focusCurrentTaskCard): planned-evidence box + blue CTA + inline set-aside (L1–L3,L6)`
+2. `fix(focusCurrentTaskCard): pill above title, mono labels, all-complete callout (L4,L5,L7)`
+3. `fix(focusCurrentTaskCard): prototype metadata glyphs + both dep lines + green chips (F1–F4)`
+4. `refactor(focusCurrentTaskCard): plannedEvidenceType → type key; story + test updates (C,D)`
+5. `test(focusCurrentTaskCard): cover prototype-faithful CTA styling + metadata band`
+
+Tests to revisit: the metadata-band assertion that assumed a single dependency line (now
+both render), and the date-line `fontFamily.mono` assertion (mono now only on the trailing
+meta suffix, not the "due …" text). The "both Add and Mark-complete present when evidence"
+and "Add present without evidence" assertions STAND (F5 = keep both). The
+set-aside-is-a-button expectation is gone — it is now inline text with a 44pt hit area.
+
 ## Intent Verification
 
 Observable criteria a reviewer can verify by running Storybook and the test suite:
