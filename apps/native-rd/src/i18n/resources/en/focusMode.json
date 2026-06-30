@@ -21,7 +21,7 @@
   },
   "currentTask": {
     "inProgress": {
-      "helperLine": "only evidence unlocks complete — nothing here blocks you",
+      "helperLine": "add evidence to complete",
       "evidenceRequired": "Evidence · required",
       "changeEvidenceType": "change",
       "evidenceRailLabel": "Captured",

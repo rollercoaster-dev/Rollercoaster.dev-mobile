@@ -21,7 +21,7 @@
   },
   "currentTask": {
     "inProgress": {
-      "helperLine": "Nur Nachweise schalten den Abschluss frei — nichts hier blockiert dich.",
+      "helperLine": "Nachweis hinzufügen, um abzuschließen",
       "evidenceRequired": "Nachweis · erforderlich",
       "changeEvidenceType": "ändern",
       "evidenceRailLabel": "Erfasst",
