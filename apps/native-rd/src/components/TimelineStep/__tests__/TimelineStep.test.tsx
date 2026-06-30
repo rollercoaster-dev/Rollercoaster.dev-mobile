@@ -32,15 +32,15 @@ const baseProps = {
 describe("TimelineStep", () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it("renders step title and status pill", () => {
+  it("renders step title and state word", () => {
     renderWithProviders(<TimelineStep {...baseProps} />);
     expect(screen.getByText("Read the docs")).toBeOnTheScreen();
-    expect(screen.getByText("Active")).toBeOnTheScreen();
+    expect(screen.getByText("In Progress")).toBeOnTheScreen();
   });
 
   it.each([
-    { status: "completed" as const, label: "Done" },
-    { status: "in-progress" as const, label: "Active" },
+    { status: "completed" as const, label: "Completed" },
+    { status: "in-progress" as const, label: "In Progress" },
     { status: "pending" as const, label: "Pending" },
   ])('shows "$label" for $status status', ({ status, label }) => {
     renderWithProviders(
@@ -56,14 +56,14 @@ describe("TimelineStep", () => {
 
   it("expands evidence on header tap", () => {
     renderWithProviders(<TimelineStep {...baseProps} />);
-    fireEvent.press(screen.getByLabelText("Read the docs, Active"));
+    fireEvent.press(screen.getByLabelText("Read the docs, In Progress"));
     expect(screen.getByText("Progress photo")).toBeOnTheScreen();
     expect(screen.getByText("Useful article")).toBeOnTheScreen();
   });
 
   it("collapses evidence on second header tap", () => {
     renderWithProviders(<TimelineStep {...baseProps} />);
-    const header = screen.getByLabelText("Read the docs, Active");
+    const header = screen.getByLabelText("Read the docs, In Progress");
     fireEvent.press(header);
     expect(screen.getByText("Progress photo")).toBeOnTheScreen();
     fireEvent.press(header);
@@ -72,7 +72,7 @@ describe("TimelineStep", () => {
 
   it('shows "No evidence yet" when empty', () => {
     renderWithProviders(<TimelineStep {...baseProps} evidence={[]} />);
-    fireEvent.press(screen.getByLabelText("Read the docs, Active"));
+    fireEvent.press(screen.getByLabelText("Read the docs, In Progress"));
     expect(screen.getByText("No evidence yet")).toBeOnTheScreen();
   });
 
@@ -90,10 +90,131 @@ describe("TimelineStep", () => {
     renderWithProviders(
       <TimelineStep {...baseProps} onEvidencePress={onEvidencePress} />,
     );
-    fireEvent.press(screen.getByLabelText("Read the docs, Active"));
+    fireEvent.press(screen.getByLabelText("Read the docs, In Progress"));
     fireEvent.press(screen.getByLabelText("photo evidence: Progress photo"));
     expect(onEvidencePress).toHaveBeenCalledWith("ev-1");
     expect(onEvidencePress).toHaveBeenCalledTimes(1);
+  });
+
+  describe("metadata band + state word", () => {
+    // E — the header word reads from stepStateColorMap (common:stepCard.status.*),
+    // replacing the old StatusBadge vocabulary (timelineJourney:step.status.*).
+    // pending is "Pending" in both vocabularies, so it can't show the swap.
+    it.each([
+      { status: "completed" as const, newWord: "Completed", oldWord: "Done" },
+      {
+        status: "in-progress" as const,
+        newWord: "In Progress",
+        oldWord: "Active",
+      },
+    ])(
+      "renders the #406 state word ($newWord), not the old StatusBadge word ($oldWord)",
+      ({ status, newWord, oldWord }) => {
+        renderWithProviders(
+          <TimelineStep {...baseProps} step={{ ...baseStep, status }} />,
+        );
+        expect(screen.getByText(newWord)).toBeOnTheScreen();
+        expect(screen.queryByText(oldWord)).toBeNull();
+      },
+    );
+
+    it("renders the C 'after' line when afterStep is set, never 'blocked by'", () => {
+      renderWithProviders(
+        <TimelineStep
+          {...baseProps}
+          step={{ ...baseStep, afterStep: "Gather materials" }}
+        />,
+      );
+      expect(screen.getByText("after Gather materials")).toBeOnTheScreen();
+      expect(screen.queryByText(/blocked by/i)).toBeNull();
+    });
+
+    it("renders the C 'waiting on' line with the expected date, never 'blocked by'", () => {
+      renderWithProviders(
+        <TimelineStep
+          {...baseProps}
+          step={{
+            ...baseStep,
+            waitingOn: { who: "city inspector", expected: "Jun 24" },
+          }}
+        />,
+      );
+      expect(
+        screen.getByText("waiting on city inspector · expected Jun 24"),
+      ).toBeOnTheScreen();
+      expect(screen.queryByText(/blocked by/i)).toBeNull();
+    });
+
+    it("omits the C line when no dependency prop is set", () => {
+      renderWithProviders(
+        <TimelineStep
+          {...baseProps}
+          step={{ ...baseStep, dueDate: "2026-07-15" }}
+        />,
+      );
+      expect(screen.queryByText(/^waiting on/)).toBeNull();
+      expect(screen.queryByText(/^after /)).toBeNull();
+    });
+
+    it("renders the B 'due' line when dueDate is set, never 'overdue'", () => {
+      renderWithProviders(
+        <TimelineStep
+          {...baseProps}
+          step={{ ...baseStep, dueDate: "2026-07-15" }}
+        />,
+      );
+      expect(screen.getByText("due 2026-07-15")).toBeOnTheScreen();
+      expect(screen.queryByText(/overdue/i)).toBeNull();
+    });
+
+    it("omits the B line when dueDate is absent", () => {
+      renderWithProviders(
+        <TimelineStep
+          {...baseProps}
+          step={{ ...baseStep, afterStep: "Gather materials" }}
+        />,
+      );
+      expect(screen.queryByText(/^due /)).toBeNull();
+    });
+
+    it("renders the band always-visible, without expanding the step", () => {
+      renderWithProviders(
+        <TimelineStep
+          {...baseProps}
+          step={{
+            ...baseStep,
+            afterStep: "Gather materials",
+            dueDate: "2026-07-15",
+          }}
+        />,
+      );
+      // The evidence drawer stays collapsed by default…
+      expect(screen.queryByText("Progress photo")).toBeNull();
+      // …yet both band lines are present without any tap.
+      expect(screen.getByText("after Gather materials")).toBeOnTheScreen();
+      expect(screen.getByText("due 2026-07-15")).toBeOnTheScreen();
+    });
+
+    it("renders child rows with no C/B band (OQ-2)", () => {
+      const children: TimelineStepChild[] = [
+        {
+          id: "c1",
+          title: "First child",
+          status: "completed",
+          evidence: [{ id: "ce1", type: "link", label: "Child link" }],
+        },
+        { id: "c2", title: "Second child", status: "pending", evidence: [] },
+      ];
+      renderWithProviders(<TimelineStep {...baseProps} subSteps={children} />);
+      // TimelineStepChild carries no afterStep/waitingOn/dueDate, and ChildRow
+      // never renders the MetadataBand — so no band text appears on a child row,
+      // even on a child that has evidence. (Children keep their pre-existing
+      // #293 evidence drawer; its collapse/expand behavior is covered by the
+      // "sub-spine (children)" block below.)
+      expect(screen.queryByText(/^after /)).toBeNull();
+      expect(screen.queryByText(/^waiting on/)).toBeNull();
+      expect(screen.queryByText(/^due /)).toBeNull();
+    });
   });
 
   describe("sub-spine (children)", () => {
@@ -147,11 +268,11 @@ describe("TimelineStep", () => {
     });
 
     it.each([
-      { status: "completed" as const, glyph: "✓", badge: "Done" },
-      { status: "in-progress" as const, glyph: "a", badge: "Active" },
+      { status: "completed" as const, glyph: "✓", badge: "Completed" },
+      { status: "in-progress" as const, glyph: "a", badge: "In Progress" },
       { status: "pending" as const, glyph: "a", badge: "Pending" },
     ])(
-      "renders a $status sub-step with the right node glyph and status badge",
+      "renders a $status sub-step with the right node glyph and state word",
       ({ status, glyph, badge }) => {
         renderWithProviders(
           <TimelineStep

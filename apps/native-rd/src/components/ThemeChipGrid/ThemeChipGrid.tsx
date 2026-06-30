@@ -2,40 +2,9 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useThemeContext, themeOptions } from "../../hooks/useTheme";
-import { themes, type ThemeName } from "../../themes/compose";
 import { themeA11yLabel } from "../../i18n/labels";
+import { getSwatch, stripeWidths } from "./swatch-utils";
 import { styles, COLUMN_COUNT } from "./ThemeChipGrid.styles";
-
-interface ChipSwatch {
-  stripeBg: string;
-  stripe1: string;
-  stripe2: string;
-  nameBarBg: string;
-  nameBarBorder: string;
-  nameBarText: string;
-}
-
-function getSwatch(themeName: ThemeName): ChipSwatch {
-  const c = themes[themeName].colors;
-  return {
-    stripeBg: c.background,
-    stripe1: c.accentPurple,
-    stripe2: c.text,
-    nameBarBg: c.backgroundSecondary,
-    nameBarBorder: c.border,
-    nameBarText: c.text,
-  };
-}
-
-const stripeWidths: Record<ThemeName, [number, number]> = {
-  "light-default": [30, 25],
-  "dark-default": [30, 25],
-  "light-highContrast": [50, 25],
-  "light-dyslexia": [30, 25],
-  "light-autismFriendly": [35, 30],
-  "light-lowVision": [60, 20],
-  "light-lowInfo": [40, 25],
-};
 
 export function ThemeChipGrid() {
   const { themeName, setTheme } = useThemeContext();
