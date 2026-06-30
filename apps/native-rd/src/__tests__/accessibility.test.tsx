@@ -311,4 +311,70 @@ describe("Accessibility Contracts", () => {
       expect(hiddenDecorations.length).toBeGreaterThanOrEqual(1);
     });
   });
+
+  // Screen-reader reparent controls shipped in #291 (#330 lineage): the
+  // nest-under trigger, the target picker modal + its rows, and the un-nest
+  // button. They surface only when showAccessibleControls is true, which
+  // animationPref "none" forces.
+  describe("StepList nest / un-nest controls", () => {
+    beforeEach(() => {
+      mockAnimationPref = "none";
+    });
+    afterEach(() => {
+      mockAnimationPref = "full";
+    });
+
+    // One fixture covers all three controls and renders exactly one picker
+    // Modal: the parent has children (no nest), the lone root nests under it,
+    // the child un-nests.
+    const mixed: Step[] = [
+      { id: "p", title: "Parent", completed: false },
+      { id: "c1", title: "Child one", completed: false, parentStepId: "p" },
+      { id: "r", title: "Lone root", completed: false },
+    ];
+
+    function renderMixed() {
+      renderWithProviders(
+        <StepList
+          steps={mixed}
+          onReorderSteps={jest.fn()}
+          onReparentStep={jest.fn()}
+        />,
+      );
+    }
+
+    it("nest-under trigger has button role and label", () => {
+      renderMixed();
+      const trigger = screen.getByTestId("step-nest-under-r");
+      expectAccessibleRole(trigger, "button");
+      expectAccessibleLabel(
+        trigger,
+        i18n.t("editGoal:stepList.a11y.nestUnderTriggerA11y"),
+      );
+    });
+
+    it("un-nest control has button role and label for a child", () => {
+      renderMixed();
+      const unNest = screen.getByTestId("step-un-nest-c1");
+      expectAccessibleRole(unNest, "button");
+      expectAccessibleLabel(
+        unNest,
+        i18n.t("editGoal:stepList.a11y.unNestA11y"),
+      );
+    });
+
+    it("picker is a modal and its rows carry button role + per-target label", () => {
+      renderMixed();
+      fireEvent.press(screen.getByTestId("step-nest-under-r"));
+
+      expectModalAccessibility(screen.UNSAFE_getByType(Modal));
+
+      const row = screen.getByTestId("step-nest-target-r-p");
+      expectAccessibleRole(row, "button");
+      expectAccessibleLabel(
+        row,
+        i18n.t("editGoal:stepList.a11y.nestUnderA11y", { title: "Parent" }),
+      );
+    });
+  });
 });
