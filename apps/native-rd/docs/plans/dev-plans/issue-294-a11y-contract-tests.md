@@ -236,15 +236,15 @@ Approximate lines: ~50.
 
 - [ ] Append to `contrastPairs` array in `contrastPairs.ts`:
       `ts
-    {
-      key: "subStepRail",
-      label: "sub-step left rail",
-      getColors: (t) => ({
-        fg: t.colors.border,
-        bg: t.colors.background,
-      }),
-    }
-    `
+{
+  key: "subStepRail",
+  label: "sub-step left rail",
+  getColors: (t) => ({
+    fg: t.colors.border,
+    bg: t.colors.background,
+  }),
+}
+`
       The left rail is `backgroundColor: theme.colors.border` rendered on
       `theme.colors.background` (StepList.styles.ts `leftRail`).
 - [ ] Run `bun run test --testPathPatterns contrast` to see which themes pass/fail.
@@ -284,7 +284,7 @@ needed).
       (orphan promotion rule in `groupStepsByParent`).
 - [ ] Test: pending sibling of a completed child does not get dropped — two children under one
       parent, first completed, second pending → resolver returns `{ kind: "leaf", index: <second
-    child index> }`.
+child index> }`.
 - [ ] Test: pending leaf under a manually-completed parent → resolver returns
       `{ kind: "leaf", ... }` not `{ kind: "none" }` (completed parent does not cascade to hide
       pending children).
