@@ -140,3 +140,48 @@ describe("Theme contrast audit (all themes × canonical pairs)", () => {
     expect(stale).toEqual([]);
   });
 });
+
+/**
+ * Sub-step indentation rail — the only net-new colour relationship introduced
+ * by the substructure grammar (#291 `StepList.styles.ts` `leftRail`): a vertical
+ * divider painted in `colors.border` over `colors.background`.
+ *
+ * It is `accessibilityElementsHidden` decoration, so the 4.5:1 TEXT gate above
+ * does not apply. As a structural graphical object it is held to the WCAG 1.4.11
+ * NON-TEXT floor (3:1) — the same "3:1 hard floor" the KNOWN_FAILURES note
+ * references — so the parent→child indentation stays perceivable in every ND
+ * variant (the rail reinforces position-based indentation; colour is never the
+ * sole channel — D11). The substructure's text/glyphs reuse already-gated pairs:
+ * sub-step titles → `body`/`muted`, timeline sub-step node glyphs → `journey*`.
+ */
+describe("Sub-step indentation rail meets non-text contrast (#294)", () => {
+  const NON_TEXT_MIN = 3.0;
+
+  // Reduced-visual-noise variants intentionally soften the border token below
+  // the 3:1 floor: autismFriendly desaturates, lowInfo strips complexity, and
+  // dyslexia sits on a cream field. The rail is pure decoration there — the
+  // parent→child relationship is carried by indentation position, never colour
+  // alone (D11) — so a soft rail loses no information. Everywhere else the rail
+  // is a load-bearing divider and must clear the 3:1 non-text floor. If a token
+  // change pushes one of these above 3:1, drop it from this set.
+  const INTENTIONALLY_SOFT_RAIL = new Set<string>([
+    "light-dyslexia",
+    "light-autismFriendly",
+    "light-lowInfo",
+  ]);
+
+  test.each(themeNames)("%s · sub-step rail (border on background)", (name) => {
+    const theme = themes[name];
+    const ratio = getContrastRatio(
+      theme.colors.border,
+      theme.colors.background,
+    );
+    if (INTENTIONALLY_SOFT_RAIL.has(name)) {
+      // Decorative-only here; just guard that the rail is still a distinct
+      // colour from the surface (never literally invisible).
+      expect(ratio).toBeGreaterThan(1);
+    } else {
+      expect(ratio).toBeGreaterThanOrEqual(NON_TEXT_MIN);
+    }
+  });
+});
