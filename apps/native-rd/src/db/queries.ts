@@ -487,6 +487,11 @@ export type NextActionableStep =
  * — step completion is per-step, not cascaded (see {@link completeStep}). A
  * completed top-level step with no pending child is skipped (subtree closed).
  *
+ * Paused ("set aside", #417) steps are skipped exactly like completed ones —
+ * both as a candidate child and as a top-level step — so a deliberately
+ * set-aside step never surfaces as the next action. If every non-completed
+ * step is paused the result is `{ kind: "none" }`.
+ *
  * @param rows Flat rows for a single goal, in the order callers want
  *   "first pending" to mean (e.g. `(ordinal, createdAt)`-ordered).
  */
@@ -515,15 +520,21 @@ export function resolveNextActionableStep(
   for (const step of topLevel) {
     const children = childrenByParent.get(step.id) ?? [];
     const pendingChild = children.find(
-      (c) => c.status !== StepStatus.completed,
+      (c) =>
+        c.status !== StepStatus.completed && c.status !== StepStatus.paused,
     );
     // A pending leaf wins even under a completed parent — its work isn't hidden.
     if (pendingChild) {
       return { kind: "leaf", index: pendingChild.index, parentIndex: step.index }; // prettier-ignore
     }
     // No pending child: skip once the step itself is complete (a flat step, or
-    // a parent whose subtree is fully done). Otherwise it's the next action.
-    if (step.status === StepStatus.completed) continue;
+    // a parent whose subtree is fully done) or paused (deliberately set aside).
+    // Otherwise it's the next action.
+    if (
+      step.status === StepStatus.completed ||
+      step.status === StepStatus.paused
+    )
+      continue;
     // Still pending: a parent whose children are all done is the invite state;
     // a step with no children is a flat pending step.
     if (children.length > 0) {
