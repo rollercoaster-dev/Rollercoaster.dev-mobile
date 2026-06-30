@@ -12,7 +12,7 @@
 Observable criteria derived from the issue acceptance criteria:
 
 - [x] When a step is paused via `pauseStep(id)`, the write sets `status === "paused"`. _Asserted_ by the `pauseStep` unit test (`evolu.update("step", { id, status: StepStatus.paused })`); `updatedAt` is auto-stamped by Evolu on every write (#381 D2).
-- [x] When a paused step is resumed via `resumeStep(id)`, the step's `status` returns to `"pending"` and `completedAt` is null. _Asserted_ status by the `resumeStep` unit test; `completedAt` is null by invariant — pause is only applied to non-completed steps, so it was never set (D2).
+- [x] When a paused step is resumed via `resumeStep(id)`, the step's `status` returns to `"pending"` and `completedAt` is left untouched (expected null under the invariant that only non-completed steps can be paused). _Asserted_ status by the `resumeStep` unit test; `resumeStep` intentionally omits `completedAt` from the update payload — it never set it (D2), so there is nothing to clear.
 - [x] `resolveNextActionableStep` given a flat list `[paused, pending]` returns `{ kind: "flat", index: 1 }`. _Asserted_ — "paused first, pending second" case.
 - [x] `resolveNextActionableStep` given a list where the only non-completed step is paused returns `{ kind: "none" }`. _Asserted_ — "paused-only flat → none" and "all completed or paused → none" cases.
 - [x] A goal with a paused step and all other steps completed does **not** show the "Mark complete" affordance in FocusModeScreen. _Verified by inspection_ — `allStepsComplete` (FocusModeScreen.tsx:313-315) is `.every(=== completed)`; paused fails it, so `canMarkComplete` is false. Locked by the D6 contract test.
