@@ -32,7 +32,76 @@ which wins?
 
 **Scope confirmed with Joe:** _card internals only_. The top progress bar + "See all
 steps", the screen-pinned bottom CTA layout, and the nav pill stay with #377. Everything
-below is inside the card's own responsibility.
+below is inside the card's own responsibility. **(Re-confirmed 2026-06-30, round 3.)**
+
+### Round 3 (2026-06-30) — flatten the frame + proportion pass — AUTHORITATIVE
+
+Rounds 1–2 (sections A / B / Resolved below) fixed the card's **contents** — they
+remain valid and shipped (commit `d77b86a2`). They did **not** fix the card's
+**container or proportions**, which is why Joe's verdict stayed "better but still doesn't
+match." This round closes that gap. Grounded in a line-by-line source diff of the
+prototype (`prototypes/screen-redesign/Focus Mode A Prototype.dc.html`) against the
+current styles — not a screenshot read.
+
+**Root cause (Joe's words: "dropshadows where none exist in the prototype").**
+`FocusCurrentTaskCard.styles.ts:32-40` — `card` wraps the whole component in a frame:
+`backgroundSecondary` fill + `borderWidth.medium` + `cardElevation` (hard 3×3) shadow +
+`radius.md` + padding. **The prototype has no such frame.** The active-step content
+(`…dc.html:45-85`) sits flat directly on the `#fafafa` screen. Only three elements carry
+border + shadow, and all three stay: the planned box (3px border, **3×3** shadow,
+`:59`), the captured chips (2px, **2×2**, `:66`), and the CTA button (3px, **4×4**,
+`:77`). So this is **not** "remove all shadows" — the neo-brutalist hard shadows on
+box/chips/button are correct and kept; only the invented outer-card frame is removed.
+
+**Confirmed proportion/typography gaps** (token math: 1rem = 16px; size `xl`=20,
+`2xl`=24, `3xl`=32, `lg`=18, `sm`=14, `xs`=12; shadow `cardElevationSmall`=hardSm(2×2),
+`cardElevation`=hardMd(3×3), `modalElevation`=hardLg(4×4)):
+
+| #   | Element                      | Prototype                     | Current (`.styles.ts`)                                | Fix                                                                         |
+| --- | ---------------------------- | ----------------------------- | ----------------------------------------------------- | --------------------------------------------------------------------------- |
+| R1  | **Outer frame**              | none — flat on screen bg      | `card` border + `cardElevation` + 2ndary bg           | **Remove** border/shadow/bg/radius/padding; flat container                  |
+| R2  | **Title**                    | 29px Anybody-900              | `size.xl` (**20px**), `:42`                           | `size["3xl"]` (32px) + lineHeight ×1.05                                     |
+| R3  | **All-complete h.**          | 34px                          | `size["2xl"]` (**24px**), `:49`                       | `size["3xl"]` (32px) + lineHeight ×1.02                                     |
+| R4  | **CTA button**               | 54px tall · 17px · 4×4 shadow | `minHeight:44` · `size.md` · 2×2, `:17-29`            | `minHeight:54`, text `size.lg`, shadow `modalElevation`, radius `radius.md` |
+| R5  | **Planned box**              | 3×3 shadow · 6px radius       | `cardElevationSmall` (2×2) · `radius.sm`, `:120`      | shadow `cardElevation`; radius `radius.lg` (8, nearest)                     |
+| R6  | **All-complete callout**     | 3×3 shadow                    | `cardElevationSmall` (2×2), `:210`                    | shadow `cardElevation`                                                      |
+| R7  | **Planned label / "change"** | 14px / 12px                   | `size.md` (16) / `size.sm` (14), `:138,:143`          | `size.sm` / `size.xs` (minor)                                               |
+| R8  | **Story canvas**             | 344px phone                   | desktop full-width (no width cap, `.stories.tsx:224`) | constrain to ~344–360px + inert phone chrome (below)                        |
+
+**Already correct — do not touch:** metadata sizes (`sm`/`sm`/`xs` ≈ proto 13.5/13/12),
+glyph hues (`warning`/`success`/`textSecondary`), captured-chip styling (2px + 2×2),
+the `❙❙` set-aside glyph (in the `pauseCta` i18n string), and all copy.
+
+**`R8` — the honest side-by-side (the actual loop-breaker).** The story renders at the
+full Storybook canvas (~1083px), which alone stretches the box/button into long bars and
+stops the title wrapping — so even a correct card reads "spread out." Required: constrain
+`storyStyles.container` to phone width (`width: 344`, `alignSelf:"center"`). Recommended:
+add a story-only `PhoneFrame` decorator (344px, `border: 3px`, `radius: 40`, `background`)
+wrapping the card with **inert** chrome — a purple (`accentPurple`) header bar, the
+"2 / 5 done · See all steps ›" + progress row, and the nav pill — each labelled "story
+chrome; real versions ship in #377." This is decoration in the story file only; it adds
+no shipped surface to #408, and makes the visual gate apples-to-apples against the
+screenshot.
+
+**ADR-0012 correction.** Sections B/Resolved/Step-2 below claim the plain "due …" line is
+an exception to ADR-0012 needing an ADR note. **This is a mis-citation.** ADR-0012 is
+_no-auto-judgment_ (never read an absence as failure); it governs no typography. No ADR
+mandates a mono date line — the mono-on-meta / plain-on-date split is pure prototype
+fidelity with no conflict. **No ADR note is needed; F3's "needs an ADR note" is void.**
+
+**Revised commits (round 3):**
+
+1. `fix(focusCurrentTaskCard): flatten outer card to match prototype (R1)` — remove
+   `card` frame; replace uniform gap with prototype per-element spacing (tune in the
+   phone-frame story).
+2. `fix(focusCurrentTaskCard): prototype typography + CTA/box/callout shadows (R2–R7)`
+3. `test(focusCurrentTaskCard): phone-frame story + inert chrome for fidelity review (R8)`
+4. `docs(plan): void the ADR-0012 mis-citation; record round-3 fidelity fix`
+
+**Tests.** R1–R7 are style-only (no prop/structure change), so the 35 existing tests
+stand. Per Joe's standing rule "the visual gate IS the design check," do **not** add
+brittle pixel/fontSize assertions for the proportion fixes — verify them by rendering the
+phone-frame story against the prototype. Keep all a11y/contract tests.
 
 ### A. Unambiguous misses — LOCKED (no system conflict; the build just got these wrong)
 
