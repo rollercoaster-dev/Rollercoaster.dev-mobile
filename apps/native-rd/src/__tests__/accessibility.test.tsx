@@ -40,22 +40,9 @@ jest.mock("expo-haptics", () => ({
 }));
 
 // StepList renders inside a GestureHandlerRootView and its rows wrap
-// GestureDetector; the chainable Proxy mirrors StepList.test.tsx so the gesture
-// builder chains resolve without the native module.
-jest.mock("react-native-gesture-handler", () => {
-  const chainable = () => new Proxy({}, { get: () => chainable });
-  return {
-    GestureHandlerRootView: ({ children }: { children: React.ReactNode }) =>
-      children,
-    GestureDetector: ({ children }: { children: React.ReactNode }) => children,
-    Gesture: {
-      Pan: chainable,
-      LongPress: chainable,
-      Simultaneous: chainable,
-    },
-  };
-});
-
+// GestureDetector; jest.config.js already redirects react-native-gesture-handler
+// to the shared mock at src/__tests__/mocks/gesture-handler.tsx, so no inline
+// mock is needed here.
 jest.mock("../utils/haptics", () => ({
   triggerDragStart: jest.fn(),
   triggerDragDrop: jest.fn(),
