@@ -96,6 +96,126 @@ describe("TimelineStep", () => {
     expect(onEvidencePress).toHaveBeenCalledTimes(1);
   });
 
+  describe("metadata band + state word", () => {
+    // E — the header word reads from stepStateColorMap (common:stepCard.status.*),
+    // replacing the old StatusBadge vocabulary (timelineJourney:step.status.*).
+    // pending is "Pending" in both vocabularies, so it can't show the swap.
+    it.each([
+      { status: "completed" as const, newWord: "Completed", oldWord: "Done" },
+      {
+        status: "in-progress" as const,
+        newWord: "In Progress",
+        oldWord: "Active",
+      },
+    ])(
+      "renders the #406 state word ($newWord), not the old StatusBadge word ($oldWord)",
+      ({ status, newWord, oldWord }) => {
+        renderWithProviders(
+          <TimelineStep {...baseProps} step={{ ...baseStep, status }} />,
+        );
+        expect(screen.getByText(newWord)).toBeOnTheScreen();
+        expect(screen.queryByText(oldWord)).toBeNull();
+      },
+    );
+
+    it("renders the C 'after' line when afterStep is set, never 'blocked by'", () => {
+      renderWithProviders(
+        <TimelineStep
+          {...baseProps}
+          step={{ ...baseStep, afterStep: "Gather materials" }}
+        />,
+      );
+      expect(screen.getByText("after Gather materials")).toBeOnTheScreen();
+      expect(screen.queryByText(/blocked by/i)).toBeNull();
+    });
+
+    it("renders the C 'waiting on' line with the expected date, never 'blocked by'", () => {
+      renderWithProviders(
+        <TimelineStep
+          {...baseProps}
+          step={{
+            ...baseStep,
+            waitingOn: { who: "city inspector", expected: "Jun 24" },
+          }}
+        />,
+      );
+      expect(
+        screen.getByText("waiting on city inspector · expected Jun 24"),
+      ).toBeOnTheScreen();
+      expect(screen.queryByText(/blocked by/i)).toBeNull();
+    });
+
+    it("omits the C line when no dependency prop is set", () => {
+      renderWithProviders(
+        <TimelineStep
+          {...baseProps}
+          step={{ ...baseStep, dueDate: "2026-07-15" }}
+        />,
+      );
+      expect(screen.queryByText(/^waiting on/)).toBeNull();
+      expect(screen.queryByText(/^after /)).toBeNull();
+    });
+
+    it("renders the B 'due' line when dueDate is set, never 'overdue'", () => {
+      renderWithProviders(
+        <TimelineStep
+          {...baseProps}
+          step={{ ...baseStep, dueDate: "2026-07-15" }}
+        />,
+      );
+      expect(screen.getByText("due 2026-07-15")).toBeOnTheScreen();
+      expect(screen.queryByText(/overdue/i)).toBeNull();
+    });
+
+    it("omits the B line when dueDate is absent", () => {
+      renderWithProviders(
+        <TimelineStep
+          {...baseProps}
+          step={{ ...baseStep, afterStep: "Gather materials" }}
+        />,
+      );
+      expect(screen.queryByText(/^due /)).toBeNull();
+    });
+
+    it("renders the band always-visible, without expanding the step", () => {
+      renderWithProviders(
+        <TimelineStep
+          {...baseProps}
+          step={{
+            ...baseStep,
+            afterStep: "Gather materials",
+            dueDate: "2026-07-15",
+          }}
+        />,
+      );
+      // The evidence drawer stays collapsed by default…
+      expect(screen.queryByText("Progress photo")).toBeNull();
+      // …yet both band lines are present without any tap.
+      expect(screen.getByText("after Gather materials")).toBeOnTheScreen();
+      expect(screen.getByText("due 2026-07-15")).toBeOnTheScreen();
+    });
+
+    it("renders child rows E-only — no band, no evidence row (OQ-2)", () => {
+      const children: TimelineStepChild[] = [
+        {
+          id: "c1",
+          title: "First child",
+          status: "completed",
+          evidence: [{ id: "ce1", type: "link", label: "Child link" }],
+        },
+        { id: "c2", title: "Second child", status: "pending", evidence: [] },
+      ];
+      renderWithProviders(<TimelineStep {...baseProps} subSteps={children} />);
+      // TimelineStepChild carries no afterStep/waitingOn/dueDate, so no band text
+      // can appear on a child row.
+      expect(screen.queryByText(/^after /)).toBeNull();
+      expect(screen.queryByText(/^waiting on/)).toBeNull();
+      expect(screen.queryByText(/^due /)).toBeNull();
+      // And a child's evidence stays in its own collapsed drawer (no evidence row).
+      expect(screen.queryByText("Child link")).toBeNull();
+    });
+  });
+
   describe("sub-spine (children)", () => {
     const subSteps: TimelineStepChild[] = [
       {
