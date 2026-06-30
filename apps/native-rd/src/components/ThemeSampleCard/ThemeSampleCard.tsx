@@ -15,7 +15,9 @@ interface ThemeSampleCardProps {
  * the variant's font/scale overrides, and `shadowStyle(..., "cardElevationSmall")`
  * so the card honestly renders each theme's real token output — including its
  * shadow (hard offset, soft blur, vertical drop, or none). Extracted from the
- * preview block in ThemeSwitcher; the per-theme treatment is identical.
+ * preview block in ThemeSwitcher: the per-theme token treatment (colors, scale,
+ * font, shadow) is preserved verbatim, but ThemeSwitcher-only layout chrome
+ * (header styles, marginTop) is intentionally left behind.
  */
 function previewStyles(themeId: ThemeName) {
   const cardTheme = themes[themeId];

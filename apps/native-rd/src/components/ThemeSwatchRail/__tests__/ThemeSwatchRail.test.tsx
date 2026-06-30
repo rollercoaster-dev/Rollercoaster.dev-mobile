@@ -11,7 +11,11 @@ import { themeA11yLabel } from "../../../i18n/labels";
 
 import { ThemeSwatchRail } from "../ThemeSwatchRail";
 
-const themeLabelOf = (id: ThemeName) => themeA11yLabel(i18n.t.bind(i18n), id);
+const t = i18n.t.bind(i18n);
+const themeLabelOf = (id: ThemeName) => themeA11yLabel(t, id);
+const captionLabelOf = (id: ThemeName) => t(`common:theme.options.${id}.label`);
+const captionDescriptionOf = (id: ThemeName) =>
+  t(`common:theme.options.${id}.description`);
 
 describe("ThemeSwatchRail", () => {
   it("renders one radio per theme option with descriptive labels", () => {
@@ -55,6 +59,38 @@ describe("ThemeSwatchRail", () => {
       <ThemeSwatchRail selectedThemeId="light-default" onSelect={jest.fn()} />,
     );
     expect(screen.getByRole("radiogroup")).toBeOnTheScreen();
+  });
+
+  it("renders the ✓ overlay on exactly the selected swatch", () => {
+    renderWithProviders(
+      <ThemeSwatchRail selectedThemeId="dark-default" onSelect={jest.fn()} />,
+    );
+    expect(screen.getAllByText("✓")).toHaveLength(1);
+  });
+
+  it("shows the selected theme's name and description in the caption", () => {
+    renderWithProviders(
+      <ThemeSwatchRail selectedThemeId="dark-default" onSelect={jest.fn()} />,
+    );
+    expect(screen.getByText(captionLabelOf("dark-default"))).toBeOnTheScreen();
+    expect(
+      screen.getByText(captionDescriptionOf("dark-default")),
+    ).toBeOnTheScreen();
+  });
+
+  it("updates the caption when the selected theme changes", () => {
+    const { rerender } = renderWithProviders(
+      <ThemeSwatchRail selectedThemeId="light-default" onSelect={jest.fn()} />,
+    );
+    expect(screen.getByText(captionLabelOf("light-default"))).toBeOnTheScreen();
+
+    rerender(
+      <ThemeSwatchRail selectedThemeId="dark-default" onSelect={jest.fn()} />,
+    );
+    expect(screen.getByText(captionLabelOf("dark-default"))).toBeOnTheScreen();
+    expect(
+      screen.queryByText(captionLabelOf("light-default")),
+    ).not.toBeOnTheScreen();
   });
 
   describe("E2E mode gating", () => {
