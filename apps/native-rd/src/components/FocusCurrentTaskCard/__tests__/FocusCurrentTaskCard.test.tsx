@@ -282,9 +282,11 @@ describe("FocusCurrentTaskCard", () => {
   });
 
   // 44pt touch targets + a non-empty label on every interactive element, for
-  // each state (the WCAG 2.1 AA contract this app treats as day-one).
+  // each state (the WCAG 2.1 AA contract this app treats as day-one). 44 is the
+  // floor, not a fixed size: the prototype CTAs stand 54pt tall (R4), while the
+  // quiet set-aside and the planned box hold the 44pt minimum — assert ≥ 44.
   it.each(ALL_STATES)(
-    "every button in %s has a label and a 44pt target",
+    "every button in %s has a label and at least a 44pt target",
     (status) => {
       renderCard({ status, capturedEvidence: captured });
       const buttons = screen.getAllByRole("button");
@@ -294,7 +296,7 @@ describe("FocusCurrentTaskCard", () => {
         const flat = StyleSheet.flatten(button.props.style) as {
           minHeight?: number;
         };
-        expect(flat.minHeight).toBe(44);
+        expect(flat.minHeight).toBeGreaterThanOrEqual(44);
       });
     },
   );

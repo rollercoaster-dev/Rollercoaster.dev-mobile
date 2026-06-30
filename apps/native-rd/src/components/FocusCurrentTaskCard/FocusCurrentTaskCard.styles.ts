@@ -13,43 +13,48 @@ import {
 // `stepStateColorMap` so the pill stays one language with TimelineNode/TimelineStep.
 // No hardcoded hex: every color is a theme token.
 export const styles = StyleSheet.create((theme) => {
-  // Shared CTA shape — neo-brutalist: bold border, hard small shadow, 44pt floor.
+  // Shared CTA shape — neo-brutalist: bold border, hard shadow, prototype's 54pt
+  // height (well above the 44pt a11y floor). Primary actions in the prototype carry
+  // a 4×4 hard shadow (`modalElevation`) and a 4px corner (`radius.md`). (R4)
   const ctaBase = {
     flexDirection: "row" as const,
     alignItems: "center" as const,
     justifyContent: "center" as const,
     gap: theme.space[2],
-    minHeight: 44,
+    minHeight: 54,
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[3],
     borderWidth: theme.borderWidth.thick,
     borderColor: theme.colors.border,
-    borderRadius: theme.radius.sm,
-    ...shadowStyle(theme, "cardElevationSmall"),
+    borderRadius: theme.radius.md,
+    ...shadowStyle(theme, "modalElevation"),
   };
 
   return {
+    // Flat container — the prototype's content sits directly on the screen bg with
+    // NO outer frame (Joe, round 3: "dropshadows where none exist in the prototype").
+    // Fill, border, radius, padding, and the card-level shadow are all removed; only
+    // the inner box/chips/CTA keep their hard shadows. Screen padding + the pinned
+    // CTA layout belong to #377 — the phone-frame story supplies them for review.
+    // Spacing follows the prototype's ~16px block rhythm, not the old 12px. (R1)
     card: {
-      backgroundColor: theme.colors.backgroundSecondary,
-      borderWidth: theme.borderWidth.medium,
-      borderColor: theme.colors.border,
-      borderRadius: theme.radius.md,
-      padding: theme.space[4],
-      gap: theme.space[3],
-      ...shadowStyle(theme, "cardElevation"),
+      gap: theme.space[4],
     },
+    // Prototype title is 29px Anybody-900; `3xl` (32) is the nearest token. (R2)
     title: {
-      fontSize: theme.size.xl,
+      fontSize: theme.size["3xl"],
       fontWeight: theme.fontWeight.black,
       fontFamily: theme.fontFamily.headline,
       color: theme.colors.text,
-      lineHeight: theme.size.xl * 1.05,
+      lineHeight: theme.size["3xl"] * 1.05,
     },
+    // Prototype all-complete heading is 34px; `3xl` (32) is the nearest token. (R3)
     heading: {
-      fontSize: theme.size["2xl"],
+      fontSize: theme.size["3xl"],
       fontWeight: theme.fontWeight.black,
       fontFamily: theme.fontFamily.headline,
       color: theme.colors.text,
+      lineHeight: theme.size["3xl"] * 1.02,
     },
     // E (state) pill — above the title, left-aligned, MONO + UPPERCASE. bg/ink
     // resolve through the #406 stepStateColorMap (one color language); the border
@@ -106,6 +111,11 @@ export const styles = StyleSheet.create((theme) => {
       color: theme.colors.textSecondary,
       fontFamily: theme.fontFamily.mono,
     },
+    // The "EVIDENCE · REQUIRED" label captions the planned box, so they sit as one
+    // tight group (8px apart, prototype) inside the card's wider block rhythm. (R1)
+    plannedGroup: {
+      gap: theme.space[2],
+    },
     // Always-present "EVIDENCE · REQUIRED" attribute — mono, uppercase, muted
     // (L5). Never frames evidence as missing/needed.
     evidenceRequired: {
@@ -117,6 +127,7 @@ export const styles = StyleSheet.create((theme) => {
     },
     // Planned-evidence box — bordered, hard-shadowed; the whole box is the tap
     // target that opens the type picker (#409). icon + bold label + blue "change".
+    // Prototype: 3×3 shadow (`cardElevation`) + 6px corner (`radius.lg`, nearest). (R5)
     plannedBox: {
       flexDirection: "row",
       alignItems: "center",
@@ -125,22 +136,23 @@ export const styles = StyleSheet.create((theme) => {
       backgroundColor: theme.colors.background,
       borderWidth: theme.borderWidth.thick,
       borderColor: theme.colors.border,
-      borderRadius: theme.radius.sm,
+      borderRadius: theme.radius.lg,
       paddingHorizontal: theme.space[3],
       paddingVertical: theme.space[3],
-      ...shadowStyle(theme, "cardElevationSmall"),
+      ...shadowStyle(theme, "cardElevation"),
     },
     plannedIcon: {
       fontSize: 18,
     },
+    // Prototype label is 14px (`sm`), "change" is 12px (`xs`). (R7)
     plannedLabel: {
       flex: 1,
-      fontSize: theme.size.md,
+      fontSize: theme.size.sm,
       fontWeight: theme.fontWeight.bold,
       color: theme.colors.text,
     },
     changeText: {
-      fontSize: theme.size.sm,
+      fontSize: theme.size.xs,
       fontWeight: theme.fontWeight.bold,
       color: theme.colors.accentPrimary,
     },
@@ -206,7 +218,8 @@ export const styles = StyleSheet.create((theme) => {
       fontSize: theme.size.md,
       color: theme.colors.text,
     },
-    // All-steps-done trophy callout box (L7).
+    // All-steps-done trophy callout box (L7). Prototype: 3×3 shadow (`cardElevation`)
+    // + 6px corner (`radius.lg`, nearest) — same box treatment as the planned box. (R6)
     calloutBox: {
       flexDirection: "row",
       alignItems: "flex-start",
@@ -214,9 +227,9 @@ export const styles = StyleSheet.create((theme) => {
       backgroundColor: theme.colors.accentPurpleLight,
       borderWidth: theme.borderWidth.medium,
       borderColor: theme.colors.border,
-      borderRadius: theme.radius.sm,
+      borderRadius: theme.radius.lg,
       padding: theme.space[3],
-      ...shadowStyle(theme, "cardElevationSmall"),
+      ...shadowStyle(theme, "cardElevation"),
     },
     calloutIcon: {
       fontSize: 18,
@@ -237,8 +250,9 @@ export const styles = StyleSheet.create((theme) => {
       ...ctaBase,
       backgroundColor: theme.action.actionPrimaryBg,
     },
+    // Prototype CTA text is 17–18px; `lg` (18) is the nearest token. (R4)
     primaryCtaText: {
-      fontSize: theme.size.md,
+      fontSize: theme.size.lg,
       fontWeight: theme.fontWeight.bold,
       color: theme.action.actionPrimaryFg,
     },
@@ -249,7 +263,7 @@ export const styles = StyleSheet.create((theme) => {
       backgroundColor: theme.action.actionSecondaryBg,
     },
     secondaryCtaText: {
-      fontSize: theme.size.md,
+      fontSize: theme.size.lg,
       fontWeight: theme.fontWeight.semibold,
       color: theme.action.actionSecondaryFg,
     },

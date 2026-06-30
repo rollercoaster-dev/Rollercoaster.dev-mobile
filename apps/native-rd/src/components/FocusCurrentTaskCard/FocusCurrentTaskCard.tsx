@@ -111,28 +111,30 @@ function InProgressView({
         waitingOn={waitingOn}
         dueDate={dueDate}
       />
-      <Text style={styles.evidenceRequired}>
-        {t("focusMode:currentTask.inProgress.evidenceRequired")}
-      </Text>
-      <Pressable
-        onPress={onChangeEvidenceType}
-        style={styles.plannedBox}
-        accessible
-        accessibilityRole="button"
-        accessibilityLabel={t(
-          "focusMode:currentTask.inProgress.changeEvidenceType",
-        )}
-      >
-        {plannedIcon ? (
-          <Text style={styles.plannedIcon} importantForAccessibility="no">
-            {plannedIcon}
-          </Text>
-        ) : null}
-        <Text style={styles.plannedLabel}>{plannedLabel}</Text>
-        <Text style={styles.changeText}>
-          {t("focusMode:currentTask.inProgress.changeEvidenceType")}
+      <View style={styles.plannedGroup}>
+        <Text style={styles.evidenceRequired}>
+          {t("focusMode:currentTask.inProgress.evidenceRequired")}
         </Text>
-      </Pressable>
+        <Pressable
+          onPress={onChangeEvidenceType}
+          style={styles.plannedBox}
+          accessible
+          accessibilityRole="button"
+          accessibilityLabel={t(
+            "focusMode:currentTask.inProgress.changeEvidenceType",
+          )}
+        >
+          {plannedIcon ? (
+            <Text style={styles.plannedIcon} importantForAccessibility="no">
+              {plannedIcon}
+            </Text>
+          ) : null}
+          <Text style={styles.plannedLabel}>{plannedLabel}</Text>
+          <Text style={styles.changeText}>
+            {t("focusMode:currentTask.inProgress.changeEvidenceType")}
+          </Text>
+        </Pressable>
+      </View>
       <CapturedEvidenceRail
         items={captured}
         label={t("focusMode:currentTask.inProgress.evidenceRailLabel")}
