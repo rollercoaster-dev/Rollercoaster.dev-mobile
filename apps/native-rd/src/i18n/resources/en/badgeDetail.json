@@ -47,6 +47,29 @@
     "delete": "Delete Badge"
   },
   "exportCaption": "Export Verifiable Badge keeps the OpenBadge credential. Save as Image is just a picture — some apps strip the proof when sharing.",
+  "share": {
+    "cta": "Share badge",
+    "sheetTitle": "Share “{{goalTitle}}”",
+    "sheetSubtitle": "Keep it provable, or just share the picture.",
+    "recommended": "RECOMMENDED",
+    "verifiable": {
+      "label": "Share verifiable badge",
+      "detail": "A PNG carrying the OB 3.0 credential — provable forever."
+    },
+    "saveImage": {
+      "label": "Save as image",
+      "detail": "Plain picture — may drop the credential."
+    },
+    "exportCredential": {
+      "label": "Export credential (JSON)",
+      "detail": "For verifiers & wallets."
+    },
+    "overflow": {
+      "shareBadge": "Share badge",
+      "exportCredential": "Export credential",
+      "deleteBadge": "Delete badge"
+    }
+  },
   "deleteConfirm": {
     "title": "Delete Badge",
     "message": "This will permanently remove this badge. This cannot be undone.",
