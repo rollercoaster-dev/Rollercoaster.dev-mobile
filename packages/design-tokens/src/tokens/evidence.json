@@ -1,0 +1,73 @@
+{
+  "$description": "Evidence semantic tokens — per-evidence-type proof-card tints for the Badge Detail proof spine (#411). Light-default base values; per-variant overrides live in themes/*.json under theme.semantic. Source: App Shell.dc.html evTint map. fg is dark ink on every pale light-default bg.",
+  "evidence-photo-bg": {
+    "$value": "{color.pale-blue}",
+    "$type": "color",
+    "$description": "Photo evidence card background"
+  },
+  "evidence-photo-fg": {
+    "$value": "{color.black}",
+    "$type": "color",
+    "$description": "Photo evidence card ink"
+  },
+  "evidence-video-bg": {
+    "$value": "{color.accent-purple-light}",
+    "$type": "color",
+    "$description": "Video evidence card background — reuses the existing evidence-indicator purple"
+  },
+  "evidence-video-fg": {
+    "$value": "{color.black}",
+    "$type": "color",
+    "$description": "Video evidence card ink"
+  },
+  "evidence-voice-memo-bg": {
+    "$value": "{color.pale-peach}",
+    "$type": "color",
+    "$description": "Audio / voice-memo evidence card background"
+  },
+  "evidence-voice-memo-fg": {
+    "$value": "{color.black}",
+    "$type": "color",
+    "$description": "Audio / voice-memo evidence card ink"
+  },
+  "evidence-text-bg": {
+    "$value": "{color.accent-mint}",
+    "$type": "color",
+    "$description": "Note / text evidence card background — reuses accent-mint"
+  },
+  "evidence-text-fg": {
+    "$value": "{color.black}",
+    "$type": "color",
+    "$description": "Note / text evidence card ink"
+  },
+  "evidence-link-bg": {
+    "$value": "{color.pale-periwinkle}",
+    "$type": "color",
+    "$description": "Link evidence card background"
+  },
+  "evidence-link-fg": {
+    "$value": "{color.black}",
+    "$type": "color",
+    "$description": "Link evidence card ink"
+  },
+  "evidence-file-bg": {
+    "$value": "{color.pale-sand}",
+    "$type": "color",
+    "$description": "File evidence card background"
+  },
+  "evidence-file-fg": {
+    "$value": "{color.black}",
+    "$type": "color",
+    "$description": "File evidence card ink"
+  },
+  "evidence-neutral-bg": {
+    "$value": "{color.gray.200}",
+    "$type": "color",
+    "$description": "Untyped (type: null) evidence card background — deliberately neutral, no type identity"
+  },
+  "evidence-neutral-fg": {
+    "$value": "{color.black}",
+    "$type": "color",
+    "$description": "Untyped evidence card ink"
+  }
+}
