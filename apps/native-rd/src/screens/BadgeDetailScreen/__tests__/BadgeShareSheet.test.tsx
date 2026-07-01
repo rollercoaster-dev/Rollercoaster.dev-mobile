@@ -140,6 +140,58 @@ describe("BadgeShareSheet", () => {
     expect(screen.queryByTestId("share-row-image-loading")).toBeNull();
   });
 
+  it("blocks the PNG rows (and marks them busy) while exporting the image", () => {
+    const onShareVerifiable = jest.fn();
+    const onSaveImage = jest.fn();
+    renderWithProviders(
+      <BadgeShareSheet
+        {...makeProps({
+          isExportingImage: true,
+          onShareVerifiable,
+          onSaveImage,
+        })}
+      />,
+    );
+
+    const verifiable = screen.getByTestId("share-row-verifiable");
+    const image = screen.getByTestId("share-row-image");
+
+    // A row is inert while it exports so the handler can't double-fire.
+    expect(verifiable.props.accessibilityState.disabled).toBe(true);
+    expect(image.props.accessibilityState.disabled).toBe(true);
+    expect(verifiable.props.accessibilityState.busy).toBe(true);
+    expect(image.props.accessibilityState.busy).toBe(true);
+
+    fireEvent.press(verifiable);
+    fireEvent.press(image);
+    expect(onShareVerifiable).not.toHaveBeenCalled();
+    expect(onSaveImage).not.toHaveBeenCalled();
+  });
+
+  it("blocks the credential row (and marks it busy) while exporting JSON", () => {
+    const onExportCredential = jest.fn();
+    renderWithProviders(
+      <BadgeShareSheet
+        {...makeProps({ isExportingJSON: true, onExportCredential })}
+      />,
+    );
+
+    const credential = screen.getByTestId("share-row-credential");
+    expect(credential.props.accessibilityState.disabled).toBe(true);
+    expect(credential.props.accessibilityState.busy).toBe(true);
+
+    fireEvent.press(credential);
+    expect(onExportCredential).not.toHaveBeenCalled();
+  });
+
+  it("interpolates a goal title containing $ characters literally", () => {
+    renderWithProviders(
+      <BadgeShareSheet {...makeProps({ goalTitle: "Buy the $$ pass" })} />,
+    );
+    // String.replace would mangle `$$` -> `$`; split/join keeps it literal.
+    expect(screen.getByText("Share “Buy the $$ pass”")).toBeOnTheScreen();
+  });
+
   it("renders the RECOMMENDED tag only on the verifiable row", () => {
     renderWithProviders(<BadgeShareSheet {...makeProps()} />);
     const tag = screen.getByTestId("share-recommended-tag");

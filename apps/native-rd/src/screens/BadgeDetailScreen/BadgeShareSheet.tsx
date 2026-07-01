@@ -83,7 +83,11 @@ export function BadgeShareSheet({
 }: BadgeShareSheetProps) {
   const { theme } = useUnistyles();
 
-  const sheetTitle = sheetTitleTemplate.replace("{{goalTitle}}", goalTitle);
+  // split/join, not String.replace: a goal title containing `$` sequences
+  // ($$, $&, $`, $') would otherwise be reinterpreted as replacement patterns
+  // and corrupt the header. goalTitle is free-form user text, so treat it as a
+  // literal.
+  const sheetTitle = sheetTitleTemplate.split("{{goalTitle}}").join(goalTitle);
 
   // A row is inert while it is exporting so the handler can't double-fire.
   const verifiableDisabled = !canShareImage || isExportingImage;
