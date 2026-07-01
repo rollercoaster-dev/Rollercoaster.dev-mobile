@@ -167,10 +167,17 @@ export function EvidenceTypePicker(props: EvidenceTypePickerProps) {
 }
 
 export interface CaptureSheetBodyProps {
+  /** Active step title shown in the sub-line; omit to hide the sub-line. */
   activeStepTitle?: string;
+  /** Pre-highlighted type; defaults to `text` ("Note") when omitted. */
   selectedType?: EvidenceTypeValue;
-  onSelectType?: (type: EvidenceTypeValue) => void;
-  onClose?: () => void;
+  /**
+   * Called when a type cell is tapped. Required — mirrors the public
+   * `mode="capture"` contract so a body can't render interactive-but-inert.
+   */
+  onSelectType: (type: EvidenceTypeValue) => void;
+  /** Closes the sheet — wired to the header × control. Required (see above). */
+  onClose: () => void;
 }
 
 /**
@@ -224,7 +231,7 @@ export function CaptureSheetBody({
             <Pressable
               key={opt.type}
               style={[styles.cell, isSelected && styles.cellSelected]}
-              onPress={() => onSelectType?.(opt.type)}
+              onPress={() => onSelectType(opt.type)}
               accessibilityRole="radio"
               accessibilityState={{ checked: isSelected }}
               accessibilityLabel={optLabel}
