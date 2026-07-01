@@ -146,4 +146,119 @@ describe("EvidenceTypePicker", () => {
       }
     });
   });
+
+  describe("capture mode", () => {
+    const captureProps = {
+      mode: "capture" as const,
+      visible: true,
+      selectedTypes: [] as EvidenceTypeValue[],
+      onSelectType: jest.fn(),
+      onClose: jest.fn(),
+    };
+
+    const closeLabel = i18n.t("common:actions.close");
+
+    it("renders all six evidence options with labels and icons", () => {
+      renderWithProviders(<EvidenceTypePicker {...captureProps} />);
+
+      for (const opt of EVIDENCE_OPTIONS) {
+        expect(screen.getByText(labelFor(opt.type))).toBeOnTheScreen();
+        expect(screen.getByText(opt.icon)).toBeOnTheScreen();
+      }
+    });
+
+    it("highlights Note (text) by default when no selectedType is given (D5)", () => {
+      renderWithProviders(<EvidenceTypePicker {...captureProps} />);
+
+      const noteCell = screen.getByLabelText(labelFor(EvidenceType.text));
+      expect(noteCell.props.accessibilityState).toEqual({ checked: true });
+
+      const photoCell = screen.getByLabelText(labelFor(EvidenceType.photo));
+      expect(photoCell.props.accessibilityState).toEqual({ checked: false });
+    });
+
+    it("highlights the provided selectedType — the change re-open case (D6)", () => {
+      renderWithProviders(
+        <EvidenceTypePicker
+          {...captureProps}
+          selectedType={EvidenceType.photo as EvidenceTypeValue}
+        />,
+      );
+
+      const photoCell = screen.getByLabelText(labelFor(EvidenceType.photo));
+      expect(photoCell.props.accessibilityState).toEqual({ checked: true });
+
+      const noteCell = screen.getByLabelText(labelFor(EvidenceType.text));
+      expect(noteCell.props.accessibilityState).toEqual({ checked: false });
+    });
+
+    it("gives each cell a radio accessibilityRole", () => {
+      renderWithProviders(<EvidenceTypePicker {...captureProps} />);
+
+      for (const opt of EVIDENCE_OPTIONS) {
+        const cell = screen.getByLabelText(labelFor(opt.type));
+        expect(cell.props.accessibilityRole).toBe("radio");
+      }
+    });
+
+    it.each(EVIDENCE_OPTIONS.map((opt) => opt.type))(
+      "calls onSelectType with %s when its cell is pressed",
+      (type) => {
+        const onSelectType = jest.fn();
+        renderWithProviders(
+          <EvidenceTypePicker {...captureProps} onSelectType={onSelectType} />,
+        );
+
+        fireEvent.press(screen.getByLabelText(labelFor(type)));
+        expect(onSelectType).toHaveBeenCalledWith(type);
+      },
+    );
+
+    it("renders the sub-line with the interpolated active step title", () => {
+      renderWithProviders(
+        <EvidenceTypePicker
+          {...captureProps}
+          activeStepTitle="Wire the relay panel"
+        />,
+      );
+
+      expect(
+        screen.getByText(
+          i18n.t("common:evidenceTypePicker.savingToActiveStep", {
+            title: "Wire the relay panel",
+          }),
+        ),
+      ).toBeOnTheScreen();
+    });
+
+    it("omits the sub-line when no active step title is given", () => {
+      renderWithProviders(<EvidenceTypePicker {...captureProps} />);
+
+      expect(screen.queryByText(/Saving to your active step/)).toBeNull();
+    });
+
+    it("calls onClose when the header close button is pressed", () => {
+      const onClose = jest.fn();
+      renderWithProviders(
+        <EvidenceTypePicker {...captureProps} onClose={onClose} />,
+      );
+
+      // The header × bubbles its press to the labelled close Pressable.
+      fireEvent.press(screen.getByText("✕"));
+      expect(onClose).toHaveBeenCalled();
+    });
+
+    it("calls onClose when the backdrop is pressed", () => {
+      const onClose = jest.fn();
+      renderWithProviders(
+        <EvidenceTypePicker {...captureProps} onClose={onClose} />,
+      );
+
+      // Backdrop is rendered before the sheet, so it is the first close target
+      // (the header × is the second). Both share the generic "Close" label.
+      const closeTargets = screen.getAllByLabelText(closeLabel);
+      fireEvent.press(closeTargets[0]);
+      expect(onClose).toHaveBeenCalled();
+    });
+  });
 });
