@@ -1,4 +1,5 @@
 import React from "react";
+import { Modal } from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -151,7 +152,6 @@ describe("EvidenceTypePicker", () => {
     const captureProps = {
       mode: "capture" as const,
       visible: true,
-      selectedTypes: [] as EvidenceTypeValue[],
       onSelectType: jest.fn(),
       onClose: jest.fn(),
     };
@@ -254,11 +254,34 @@ describe("EvidenceTypePicker", () => {
         <EvidenceTypePicker {...captureProps} onClose={onClose} />,
       );
 
-      // Backdrop is rendered before the sheet, so it is the first close target
-      // (the header × is the second). Both share the generic "Close" label.
-      const closeTargets = screen.getAllByLabelText(closeLabel);
-      fireEvent.press(closeTargets[0]);
+      // Target the backdrop by testID rather than by position among the
+      // shared-"Close"-label controls, so a z-order refactor can't silently
+      // repoint this assertion at the header ✕ instead.
+      const backdrop = screen.getByTestId("capture-sheet-backdrop");
+      expect(backdrop.props.accessibilityLabel).toBe(closeLabel);
+      fireEvent.press(backdrop);
       expect(onClose).toHaveBeenCalled();
+    });
+
+    it("calls onClose on Modal onRequestClose (Android back / gesture dismiss)", () => {
+      const onClose = jest.fn();
+      renderWithProviders(
+        <EvidenceTypePicker {...captureProps} onClose={onClose} />,
+      );
+
+      // The sole dismissal route for Android hardware/gesture back — distinct
+      // from the backdrop and header-✕ Pressables.
+      fireEvent(screen.UNSAFE_getByType(Modal), "requestClose");
+      expect(onClose).toHaveBeenCalled();
+    });
+
+    it("renders nothing when visible is false", () => {
+      renderWithProviders(
+        <EvidenceTypePicker {...captureProps} visible={false} />,
+      );
+
+      expect(screen.queryByText("✕")).toBeNull();
+      expect(screen.queryByText(labelFor(EvidenceType.text))).toBeNull();
     });
   });
 });

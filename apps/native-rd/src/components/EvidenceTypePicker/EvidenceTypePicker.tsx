@@ -7,54 +7,63 @@ import { EvidenceType } from "../../db";
 import { evidenceLabel } from "../../i18n/labels";
 import { styles } from "./EvidenceTypePicker.styles";
 
-export interface EvidenceTypePickerProps {
-  /**
-   * Presentation mode. `"authoring"` (default) is the inline multi-select chip
-   * grid used in step creation/editing. `"capture"` is the modal bottom sheet
-   * used to pick a single evidence type before capturing (Focus Mode, #377).
-   */
-  mode?: "authoring" | "capture";
-  /** Currently selected evidence types (authoring mode) */
+/**
+ * Authoring mode (default): inline multi-select chip grid used in step
+ * creation/editing to choose which evidence types are planned.
+ */
+export interface AuthoringEvidenceTypePickerProps {
+  /** Presentation mode. Omit or pass `"authoring"` for the chip grid. */
+  mode?: "authoring";
+  /** Currently selected evidence types. */
   selectedTypes: EvidenceTypeValue[];
-  /** Called when user toggles a type on/off (required in interactive mode, unused in compact) */
+  /** Called when the user toggles a type on/off (unused in `compact`). */
   onToggleType?: (type: EvidenceTypeValue) => void;
-  /** Compact mode for inline display below step titles (authoring mode only) */
+  /** Compact, read-only inline display below step titles. */
   compact?: boolean;
-  /** Optional label to show above chips (authoring mode) */
+  /** Optional label shown above the chips. */
   label?: string;
+}
 
-  // --- Capture mode (mode="capture") ---
-  /** Whether the capture sheet is visible (drives the Modal). Capture mode only. */
-  visible?: boolean;
+/**
+ * Capture mode: modal bottom sheet for single-selecting one evidence type
+ * before capturing (Focus Mode, #377).
+ */
+export interface CaptureEvidenceTypePickerProps {
+  mode: "capture";
+  /** Whether the capture sheet is visible (drives the Modal). */
+  visible: boolean;
   /** Active step title shown in the sheet sub-line; omit to hide the sub-line. */
   activeStepTitle?: string;
   /** Pre-highlighted type in the sheet; defaults to `text` ("Note") when omitted. */
   selectedType?: EvidenceTypeValue;
   /** Called when a type cell is tapped. Caller updates its selection and closes the sheet. */
-  onSelectType?: (type: EvidenceTypeValue) => void;
+  onSelectType: (type: EvidenceTypeValue) => void;
   /** Closes the sheet — wired to backdrop tap, header × control, and Android back. */
-  onClose?: () => void;
+  onClose: () => void;
 }
 
 /**
- * Multi-select chip picker for evidence types.
- * Used in step creation/editing to let users choose what evidence they plan to capture.
+ * Props for {@link EvidenceTypePicker}: a discriminated union on `mode`. The
+ * authoring chip grid and the capture bottom sheet have disjoint prop sets, so
+ * the compiler enforces that a capture sheet supplies `onSelectType`/`onClose`
+ * and never carries a meaningless `selectedTypes` (and vice versa).
  */
-export function EvidenceTypePicker({
-  mode = "authoring",
-  selectedTypes,
-  onToggleType,
-  compact = false,
-  label,
-  visible = false,
-  activeStepTitle,
-  selectedType,
-  onSelectType,
-  onClose,
-}: EvidenceTypePickerProps) {
+export type EvidenceTypePickerProps =
+  | AuthoringEvidenceTypePickerProps
+  | CaptureEvidenceTypePickerProps;
+
+/**
+ * Evidence-type picker with two presentation modes (see {@link EvidenceTypePickerProps}):
+ * `"authoring"` (default) renders an inline multi-select chip grid for step
+ * creation/editing; `"capture"` renders a modal bottom sheet for single-selecting
+ * one type before capturing (Focus Mode, #377).
+ */
+export function EvidenceTypePicker(props: EvidenceTypePickerProps) {
   const { t } = useTranslation(["common"]);
 
-  if (mode === "capture") {
+  if (props.mode === "capture") {
+    const { visible, activeStepTitle, selectedType, onSelectType, onClose } =
+      props;
     return (
       <Modal
         visible={visible}
@@ -66,6 +75,7 @@ export function EvidenceTypePicker({
         <View style={styles.overlay}>
           {/* Backdrop — tapping the exposed scrim dismisses the sheet. */}
           <Pressable
+            testID="capture-sheet-backdrop"
             style={styles.backdrop}
             onPress={onClose}
             accessibilityRole="button"
@@ -81,6 +91,8 @@ export function EvidenceTypePicker({
       </Modal>
     );
   }
+
+  const { selectedTypes, onToggleType, compact = false, label } = props;
 
   if (compact) {
     return (

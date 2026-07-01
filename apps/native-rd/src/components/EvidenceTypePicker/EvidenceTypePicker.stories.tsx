@@ -40,7 +40,6 @@ function CaptureSheetDemo({
       <Button label="Add evidence" onPress={() => setVisible(true)} />
       <EvidenceTypePicker
         mode="capture"
-        selectedTypes={[]}
         visible={visible}
         activeStepTitle="Wire the relay panel"
         selectedType={selectedType}
