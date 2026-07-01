@@ -114,6 +114,26 @@
       "$type": "color",
       "$description": "Light purple background for evidence indicators"
     },
+    "pale-blue": {
+      "$value": "#dbe7ff",
+      "$type": "color",
+      "$description": "Pale blue — Photo evidence proof-card tint (#411); exact prototype evTint swatch, distinct from info-light #dbeafe"
+    },
+    "pale-peach": {
+      "$value": "#ffe9d6",
+      "$type": "color",
+      "$description": "Pale peach — Audio/voice-memo evidence proof-card tint (#411)"
+    },
+    "pale-periwinkle": {
+      "$value": "#e9e9ff",
+      "$type": "color",
+      "$description": "Pale periwinkle — Link evidence proof-card tint (#411)"
+    },
+    "pale-sand": {
+      "$value": "#f0e9d6",
+      "$type": "color",
+      "$description": "Pale sand — File evidence proof-card tint (#411)"
+    },
     "accent-purple-vivid": {
       "$value": "#a855f7",
       "$type": "color",

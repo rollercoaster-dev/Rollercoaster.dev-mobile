@@ -25,6 +25,19 @@
     "itemA11y": "{{name}}, submitted as {{type}}",
     "fallbackType": "evidence"
   },
+  "proofSpine": {
+    "title": "THE PROOF",
+    "header_one": "THE PROOF · {{count}} STEP · SWIPE →",
+    "header_other": "THE PROOF · {{count}} STEPS · SWIPE →",
+    "emptyState": {
+      "message": "No evidence was attached to this goal — nothing to show in the gallery."
+    },
+    "a11y": {
+      "listLabel_one": "Proof gallery, {{count}} evidence item",
+      "listLabel_other": "Proof gallery, {{count}} evidence items",
+      "emptyStateLabel": "Proof gallery, empty. {{message}}"
+    }
+  },
   "actions": {
     "exportVerifiable": "Export Verifiable Badge",
     "exportCredential": "Export Credential (JSON)",

@@ -198,6 +198,63 @@ export const contrastPairs: ContrastPair[] = [
       bg: t.journey.journeyGoalBg,
     }),
   },
+  // Evidence proof-card tints (#411). evidence-* group — pale bg + dark ink fg.
+  {
+    key: "evidencePhoto",
+    label: "evidence · photo",
+    getColors: (t) => ({
+      fg: t.evidence.evidencePhotoFg,
+      bg: t.evidence.evidencePhotoBg,
+    }),
+  },
+  {
+    key: "evidenceVideo",
+    label: "evidence · video",
+    getColors: (t) => ({
+      fg: t.evidence.evidenceVideoFg,
+      bg: t.evidence.evidenceVideoBg,
+    }),
+  },
+  {
+    key: "evidenceVoiceMemo",
+    label: "evidence · voice memo",
+    getColors: (t) => ({
+      fg: t.evidence.evidenceVoiceMemoFg,
+      bg: t.evidence.evidenceVoiceMemoBg,
+    }),
+  },
+  {
+    key: "evidenceText",
+    label: "evidence · text",
+    getColors: (t) => ({
+      fg: t.evidence.evidenceTextFg,
+      bg: t.evidence.evidenceTextBg,
+    }),
+  },
+  {
+    key: "evidenceLink",
+    label: "evidence · link",
+    getColors: (t) => ({
+      fg: t.evidence.evidenceLinkFg,
+      bg: t.evidence.evidenceLinkBg,
+    }),
+  },
+  {
+    key: "evidenceFile",
+    label: "evidence · file",
+    getColors: (t) => ({
+      fg: t.evidence.evidenceFileFg,
+      bg: t.evidence.evidenceFileBg,
+    }),
+  },
+  {
+    key: "evidenceNeutral",
+    label: "evidence · neutral",
+    getColors: (t) => ({
+      fg: t.evidence.evidenceNeutralFg,
+      bg: t.evidence.evidenceNeutralBg,
+    }),
+  },
 ];
 
 /** WCAG AA normal-text threshold — the gate target for every pair × theme. */

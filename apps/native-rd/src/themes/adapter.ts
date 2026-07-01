@@ -36,6 +36,9 @@ import {
   lightJourneyColors as pkgLightJourneyColors,
   darkJourneyColors as pkgDarkJourneyColors,
   journeyVariants as pkgJourneyVariants,
+  lightEvidenceColors as pkgLightEvidenceColors,
+  darkEvidenceColors as pkgDarkEvidenceColors,
+  evidenceVariants as pkgEvidenceVariants,
   type ChromeColors as PkgChromeColors,
   type ChromeOverride as PkgChromeOverride,
   type ActionColors as PkgActionColors,
@@ -44,6 +47,8 @@ import {
   type SurfaceBorderOverride as PkgSurfaceBorderOverride,
   type JourneyColors as PkgJourneyColors,
   type JourneyOverride as PkgJourneyOverride,
+  type EvidenceColors as PkgEvidenceColors,
+  type EvidenceOverride as PkgEvidenceOverride,
   type Narrative as PkgNarrative,
   type NarrativeOverride as PkgNarrativeOverride,
   type VariantOverride as PkgVariantOverride,
@@ -235,6 +240,17 @@ export const darkJourneyColors = pkgDarkJourneyColors;
 export const journeyVariants = pkgJourneyVariants;
 export type Journey = PkgJourneyColors;
 export type JourneyOverride = PkgJourneyOverride;
+
+// ---------------------------------------------------------------------------
+// Evidence (per-evidence-type proof-card tints) — #411. Consumed by ProofCard;
+// per-variant overrides are added to the theme JSON layer as needed.
+// ---------------------------------------------------------------------------
+
+export const lightEvidenceColors = pkgLightEvidenceColors;
+export const darkEvidenceColors = pkgDarkEvidenceColors;
+export const evidenceVariants = pkgEvidenceVariants;
+export type Evidence = PkgEvidenceColors;
+export type EvidenceOverride = PkgEvidenceOverride;
 
 // ---------------------------------------------------------------------------
 // New token categories — pass through

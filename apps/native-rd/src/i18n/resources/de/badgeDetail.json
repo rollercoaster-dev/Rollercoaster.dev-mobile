@@ -25,6 +25,19 @@
     "itemA11y": "{{name}}, eingereicht als {{type}}",
     "fallbackType": "Beleg"
   },
+  "proofSpine": {
+    "title": "DER NACHWEIS",
+    "header_one": "DER NACHWEIS · {{count}} SCHRITT · WISCHEN →",
+    "header_other": "DER NACHWEIS · {{count}} SCHRITTE · WISCHEN →",
+    "emptyState": {
+      "message": "Für dieses Goal wurden keine Belege angehängt — nichts in der Galerie zu zeigen."
+    },
+    "a11y": {
+      "listLabel_one": "Nachweis-Galerie, {{count}} Beleg",
+      "listLabel_other": "Nachweis-Galerie, {{count}} Belege",
+      "emptyStateLabel": "Nachweis-Galerie, leer. {{message}}"
+    }
+  },
   "actions": {
     "exportVerifiable": "Verifizierbares Badge exportieren",
     "exportCredential": "Credential exportieren (JSON)",
