@@ -26,6 +26,7 @@
     "fallbackType": "evidence"
   },
   "proofSpine": {
+    "title": "THE PROOF",
     "header_one": "THE PROOF · {{count}} STEP · SWIPE →",
     "header_other": "THE PROOF · {{count}} STEPS · SWIPE →",
     "emptyState": {

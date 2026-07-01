@@ -28,9 +28,9 @@ export function ProofSpine({ evidence, onCardPress }: ProofSpineProps) {
     // block is deliberately non-interactive — no button role, no onCardPress.
     return (
       <View style={styles.container}>
-        <Text style={styles.header}>
-          {t("badgeDetail:proofSpine.header", { count: 0 })}
-        </Text>
+        {/* Empty state shows the plain "THE PROOF" label only — no count or
+            "SWIPE →" hint, since there is nothing to swipe (matches prototype). */}
+        <Text style={styles.header}>{t("badgeDetail:proofSpine.title")}</Text>
         <View
           style={styles.emptyState}
           accessible

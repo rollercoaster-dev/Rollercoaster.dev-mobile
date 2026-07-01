@@ -26,6 +26,7 @@
     "fallbackType": "Beleg"
   },
   "proofSpine": {
+    "title": "DER NACHWEIS",
     "header_one": "DER NACHWEIS · {{count}} SCHRITT · WISCHEN →",
     "header_other": "DER NACHWEIS · {{count}} SCHRITTE · WISCHEN →",
     "emptyState": {
