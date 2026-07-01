@@ -34,6 +34,29 @@
     "delete": "Badge löschen"
   },
   "exportCaption": "Verifizierbares Badge exportieren behält die OpenBadge-Credential. Als Bild speichern ist nur ein Bild — manche Apps entfernen den Nachweis beim Teilen.",
+  "share": {
+    "cta": "Badge teilen",
+    "sheetTitle": "„{{goalTitle}}“ teilen",
+    "sheetSubtitle": "Nachweisbar halten oder einfach das Bild teilen.",
+    "recommended": "EMPFOHLEN",
+    "verifiable": {
+      "label": "Verifizierbares Badge teilen",
+      "detail": "Ein PNG mit dem OB-3.0-Credential — für immer nachweisbar."
+    },
+    "saveImage": {
+      "label": "Als Bild speichern",
+      "detail": "Einfaches Bild — kann das Credential verlieren."
+    },
+    "exportCredential": {
+      "label": "Credential exportieren (JSON)",
+      "detail": "Für Prüfer & Wallets."
+    },
+    "overflow": {
+      "shareBadge": "Badge teilen",
+      "exportCredential": "Credential exportieren",
+      "deleteBadge": "Badge löschen"
+    }
+  },
   "deleteConfirm": {
     "title": "Badge löschen",
     "message": "Das entfernt dieses Badge dauerhaft. Das kann nicht rückgängig gemacht werden.",
