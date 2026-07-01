@@ -24,6 +24,7 @@ import {
   type ActionOverride,
   type SurfaceBorderOverride,
   type JourneyOverride,
+  type EvidenceOverride,
 } from "./adapter";
 
 export type Variant =
@@ -52,6 +53,7 @@ interface VariantOverride {
   action?: ActionOverride;
   surfaceBorder?: SurfaceBorderOverride;
   journey?: JourneyOverride;
+  evidence?: EvidenceOverride;
   shadows?: { opacity: number };
   // A complete per-theme shadow map (already carries the semantic elevation
   // roles via withSemanticShadows). Sourced from `shadowVariants`, but typed as

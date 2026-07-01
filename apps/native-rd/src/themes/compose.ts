@@ -31,11 +31,14 @@ import {
   darkSurfaceBorderColors,
   lightJourneyColors,
   darkJourneyColors,
+  lightEvidenceColors,
+  darkEvidenceColors,
   type Narrative,
   type Chrome,
   type Action,
   type SurfaceBorder,
   type Journey,
+  type Evidence,
 } from "./adapter";
 
 /** Size scale type - either normal or large */
@@ -81,6 +84,7 @@ export interface ComposedTheme {
   action: Action;
   surfaceBorder: SurfaceBorder;
   journey: Journey;
+  evidence: Evidence;
   shadows: { opacity: number };
   space: typeof space;
   size: SizeScale;
@@ -153,6 +157,13 @@ export function composeTheme(
   let journey: Journey = { ...baseJourney };
   if (variantDef.journey) {
     journey = { ...journey, ...variantDef.journey };
+  }
+
+  const baseEvidence =
+    colorMode === "light" ? lightEvidenceColors : darkEvidenceColors;
+  let evidence: Evidence = { ...baseEvidence };
+  if (variantDef.evidence) {
+    evidence = { ...evidence, ...variantDef.evidence };
   }
 
   // Determine shadow opacity
@@ -251,6 +262,7 @@ export function composeTheme(
     action,
     surfaceBorder,
     journey,
+    evidence,
     shadows: { opacity: shadowOpacity },
     space,
     size: sizeScale,
