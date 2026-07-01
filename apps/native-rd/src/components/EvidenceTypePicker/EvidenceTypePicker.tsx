@@ -55,8 +55,6 @@ export function EvidenceTypePicker({
   const { t } = useTranslation(["common"]);
 
   if (mode === "capture") {
-    // "Note" is the easy default when the caller hasn't picked a type yet (D5).
-    const effectiveSelected = selectedType ?? EvidenceType.text;
     return (
       <Modal
         visible={visible}
@@ -73,56 +71,12 @@ export function EvidenceTypePicker({
             accessibilityRole="button"
             accessibilityLabel={t("common:actions.close")}
           />
-          <SafeAreaView edges={["bottom"]} style={styles.sheet}>
-            <View style={styles.handle} />
-            <View style={styles.sheetHeader}>
-              <RNText style={styles.sheetTitle} accessibilityRole="header">
-                {t("common:evidenceTypePicker.addEvidence")}
-              </RNText>
-              <Pressable
-                style={styles.closeButton}
-                onPress={onClose}
-                accessibilityRole="button"
-                accessibilityLabel={t("common:actions.close")}
-                hitSlop={8}
-              >
-                <RNText style={styles.closeIcon}>{"✕"}</RNText>
-              </Pressable>
-            </View>
-            {activeStepTitle ? (
-              <RNText style={styles.subLine}>
-                {t("common:evidenceTypePicker.savingToActiveStep", {
-                  title: activeStepTitle,
-                })}
-              </RNText>
-            ) : null}
-            <View style={styles.grid}>
-              {EVIDENCE_OPTIONS.map((opt) => {
-                const isSelected = opt.type === effectiveSelected;
-                const optLabel = evidenceLabel(t, opt.type);
-                return (
-                  <Pressable
-                    key={opt.type}
-                    style={[styles.cell, isSelected && styles.cellSelected]}
-                    onPress={() => onSelectType?.(opt.type)}
-                    accessibilityRole="radio"
-                    accessibilityState={{ checked: isSelected }}
-                    accessibilityLabel={optLabel}
-                  >
-                    <RNText style={styles.cellIcon}>{opt.icon}</RNText>
-                    <RNText
-                      style={[
-                        styles.cellLabel,
-                        isSelected && styles.cellLabelSelected,
-                      ]}
-                    >
-                      {optLabel}
-                    </RNText>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </SafeAreaView>
+          <CaptureSheetBody
+            activeStepTitle={activeStepTitle}
+            selectedType={selectedType}
+            onSelectType={onSelectType}
+            onClose={onClose}
+          />
         </View>
       </Modal>
     );
@@ -197,5 +151,85 @@ export function EvidenceTypePicker({
         })}
       </View>
     </View>
+  );
+}
+
+export interface CaptureSheetBodyProps {
+  activeStepTitle?: string;
+  selectedType?: EvidenceTypeValue;
+  onSelectType?: (type: EvidenceTypeValue) => void;
+  onClose?: () => void;
+}
+
+/**
+ * Presentational body of the capture sheet — handle, header, sub-line, and the
+ * single-select 3-up grid. Rendered inside the Modal by `EvidenceTypePicker`'s
+ * capture branch, and directly (no Modal) by the `AllThemesMatrix` story: on web
+ * each `Modal` portals to `<body>` with `position: fixed`, so seven full sheets
+ * can't tile — the story tiles this body instead. One source of the grid JSX; not
+ * exported from the barrel, so it stays an internal helper rather than a second
+ * public picker (D7).
+ */
+export function CaptureSheetBody({
+  activeStepTitle,
+  selectedType,
+  onSelectType,
+  onClose,
+}: CaptureSheetBodyProps) {
+  const { t } = useTranslation(["common"]);
+  // "Note" is the easy default when the caller hasn't picked a type yet (D5).
+  const effectiveSelected = selectedType ?? EvidenceType.text;
+
+  return (
+    <SafeAreaView edges={["bottom"]} style={styles.sheet}>
+      <View style={styles.handle} />
+      <View style={styles.sheetHeader}>
+        <RNText style={styles.sheetTitle} accessibilityRole="header">
+          {t("common:evidenceTypePicker.addEvidence")}
+        </RNText>
+        <Pressable
+          style={styles.closeButton}
+          onPress={onClose}
+          accessibilityRole="button"
+          accessibilityLabel={t("common:actions.close")}
+          hitSlop={8}
+        >
+          <RNText style={styles.closeIcon}>{"✕"}</RNText>
+        </Pressable>
+      </View>
+      {activeStepTitle ? (
+        <RNText style={styles.subLine}>
+          {t("common:evidenceTypePicker.savingToActiveStep", {
+            title: activeStepTitle,
+          })}
+        </RNText>
+      ) : null}
+      <View style={styles.grid}>
+        {EVIDENCE_OPTIONS.map((opt) => {
+          const isSelected = opt.type === effectiveSelected;
+          const optLabel = evidenceLabel(t, opt.type);
+          return (
+            <Pressable
+              key={opt.type}
+              style={[styles.cell, isSelected && styles.cellSelected]}
+              onPress={() => onSelectType?.(opt.type)}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: isSelected }}
+              accessibilityLabel={optLabel}
+            >
+              <RNText style={styles.cellIcon}>{opt.icon}</RNText>
+              <RNText
+                style={[
+                  styles.cellLabel,
+                  isSelected && styles.cellLabelSelected,
+                ]}
+              >
+                {optLabel}
+              </RNText>
+            </Pressable>
+          );
+        })}
+      </View>
+    </SafeAreaView>
   );
 }
