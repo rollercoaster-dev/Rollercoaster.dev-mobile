@@ -44,6 +44,10 @@
       "shortLabel": "Datei"
     }
   },
+  "evidenceTypePicker": {
+    "addEvidence": "Beweis hinzufügen",
+    "savingToActiveStep": "Speichern in deinem aktiven Schritt · {{title}}"
+  },
   "theme": {
     "options": {
       "light-default": {
