@@ -63,7 +63,7 @@ The researcher surfaced three; all resolved before implementation — none remai
 - `apps/native-rd/src/screens/BadgeDetailScreen/__tests__/BadgeShareSheet.test.tsx`: **new**
 - `apps/native-rd/src/screens/BadgeDetailScreen/__tests__/BadgeOverflowMenu.test.tsx`: **new**
 - `apps/native-rd/src/screens/ConfirmDeleteModal/ConfirmDeleteModal.stories.tsx`: **modified** — add a `DeleteBadgeReframed` story demonstrating the new copy (no changes to `ConfirmDeleteModal.tsx` itself — props already support this)
-- `apps/native-rd/src/i18n/resources/en/badgeDetail.json`: **modified** — add `share.*` keys (sheet title/subtitle, 3 row labels + trade-off lines, "RECOMMENDED" tag) and update `deleteConfirm.message` to the reframed copy; author English only per D11 (`de/` is CI-synced, `pseudo/` via `bun run gen:pseudo`)
+- `apps/native-rd/src/i18n/resources/en/badgeDetail.json`: **modified** — add `share.*` keys only (CTA label, sheet title/subtitle, 3 row labels + trade-off lines, "RECOMMENDED" tag, overflow-menu labels). **Additive-only — `deleteConfirm.*` is left unchanged** (matches `main`); the reframed delete copy is deferred to #380 per the Scope decision / Discovery Log 2026-07-01, and is demonstrated here via the `DeleteBadgeReframed` story's literal props, not an i18n mutation. Author English only per D11 (`de/` is CI-synced, `pseudo/` via `bun run gen:pseudo`)
 - `apps/native-rd/src/screens/BadgeDetailScreen/BadgeDetailScreen.tsx`: **not touched** — screen wiring is #380's scope
 
 Not touched: `useBadgeExport.ts` (already exposes the exact three functions + flags this issue needs — confirmed below), `ConfirmDeleteModal.tsx`/`.styles.ts` (props already support the new copy with no code change).
