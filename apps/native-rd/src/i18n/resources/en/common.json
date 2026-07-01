@@ -26,6 +26,10 @@
     "link": { "label": "Link", "shortLabel": "Link" },
     "file": { "label": "File", "shortLabel": "File" }
   },
+  "evidenceTypePicker": {
+    "addEvidence": "Add evidence",
+    "savingToActiveStep": "Saving to your active step · {{title}}"
+  },
   "theme": {
     "options": {
       "light-default": {

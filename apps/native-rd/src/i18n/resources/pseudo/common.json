@@ -44,6 +44,10 @@
       "shortLabel": "[Ƒïĺê··]"
     }
   },
+  "evidenceTypePicker": {
+    "addEvidence": "[Àđđ êṽïđêñçê·····]",
+    "savingToActiveStep": "[Šàṽïñğ ţø ýøüŕ àçţïṽê šţêþ · {{title}}···············]"
+  },
   "theme": {
     "options": {
       "light-default": {
