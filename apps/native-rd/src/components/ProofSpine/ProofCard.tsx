@@ -36,9 +36,29 @@ function evidenceTint(type: EvidenceTypeValue | null): {
       return { bgKey: "evidenceLinkBg", fgKey: "evidenceLinkFg" };
     case "file":
       return { bgKey: "evidenceFileBg", fgKey: "evidenceFileFg" };
-    default:
+    case null:
+      // Untyped evidence → the deliberately neutral tint (see above).
       return { bgKey: "evidenceNeutralBg", fgKey: "evidenceNeutralFg" };
+    default:
+      // A future EvidenceTypeValue member reaches here typed as `never`, so it
+      // fails to compile until it gets an explicit tint above — the switch can
+      // no longer silently fold a new type into the neutral pair. Unknown
+      // runtime values still degrade gracefully to neutral (never a crash).
+      return evidenceTintFallback(type);
   }
+}
+
+/**
+ * Compile-time exhaustiveness guard for `evidenceTint`. Reached only with a
+ * `type` no `case` handled, which TypeScript narrows to `never` once every
+ * `EvidenceTypeValue` (and `null`) is covered — so an unhandled type is a build
+ * error. Returns the neutral tint to keep the runtime graceful.
+ */
+function evidenceTintFallback(_type: never): {
+  bgKey: keyof Evidence;
+  fgKey: keyof Evidence;
+} {
+  return { bgKey: "evidenceNeutralBg", fgKey: "evidenceNeutralFg" };
 }
 
 export function ProofCard({ id, name, type, onCardPress }: ProofCardProps) {

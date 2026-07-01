@@ -7,6 +7,8 @@ import {
 } from "../../../__tests__/test-utils";
 import { i18n } from "../../../i18n";
 import type { EvidenceTypeValue } from "../../../types/evidence";
+import { EVIDENCE_TYPE_ICONS } from "../../../constants/evidenceIcons";
+import { mockTheme } from "../../../__tests__/mocks/unistyles";
 import { ProofCard } from "../ProofCard";
 
 const ALL_TYPES: EvidenceTypeValue[] = [
@@ -91,5 +93,44 @@ describe("ProofCard", () => {
     ) as { minWidth?: number; minHeight?: number };
     expect(style.minWidth).toBeGreaterThanOrEqual(44);
     expect(style.minHeight).toBeGreaterThanOrEqual(44);
+  });
+
+  it.each(ALL_TYPES)("renders the mapped icon glyph for type %s", (type) => {
+    renderWithProviders(<ProofCard {...defaultProps} type={type} />);
+    // Icon Text is a11y-hidden, so it's excluded from queries by default
+    // (RNTL v13); opt it back in and match by text content, not by label.
+    expect(
+      screen.getByText(EVIDENCE_TYPE_ICONS[type], {
+        includeHiddenElements: true,
+      }),
+    ).toBeOnTheScreen();
+  });
+
+  it("degrades to a neutral bullet icon when type is null", () => {
+    renderWithProviders(<ProofCard {...defaultProps} type={null} />);
+    expect(
+      screen.getByText("•", { includeHiddenElements: true }),
+    ).toBeOnTheScreen();
+  });
+
+  it("paints the type-specific evidence tint for photo", () => {
+    renderWithProviders(<ProofCard {...defaultProps} type="photo" />);
+    const style = StyleSheet.flatten(
+      screen.getByRole("button").props.style,
+    ) as { backgroundColor?: string };
+    expect(style.backgroundColor).toBe(mockTheme.evidence.evidencePhotoBg);
+  });
+
+  it("paints the neutral tint for untyped evidence", () => {
+    renderWithProviders(<ProofCard {...defaultProps} type={null} />);
+    const style = StyleSheet.flatten(
+      screen.getByRole("button").props.style,
+    ) as { backgroundColor?: string };
+    expect(style.backgroundColor).toBe(mockTheme.evidence.evidenceNeutralBg);
+    // Distinct tokens — guards against a regression collapsing every card to
+    // a single tint (which per-type assertions alone would not catch).
+    expect(mockTheme.evidence.evidenceNeutralBg).not.toBe(
+      mockTheme.evidence.evidencePhotoBg,
+    );
   });
 });

@@ -75,6 +75,15 @@ describe("ProofSpine", () => {
       ).toBeOnTheScreen();
     });
 
+    it("announces the empty state to screen readers", () => {
+      renderWithProviders(<ProofSpine evidence={[]} onCardPress={jest.fn()} />);
+      expect(
+        screen.getByLabelText(
+          i18n.t("badgeDetail:proofSpine.a11y.emptyStateLabel"),
+        ),
+      ).toBeOnTheScreen();
+    });
+
     it("renders no interactive card and no list in the empty state", () => {
       renderWithProviders(<ProofSpine evidence={[]} onCardPress={jest.fn()} />);
       expect(screen.queryByRole("button")).toBeNull();
