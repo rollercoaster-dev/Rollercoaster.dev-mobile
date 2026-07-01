@@ -27,7 +27,7 @@ card row (line 165) — which #408's `FocusCurrentTaskCard` already ships. That 
       "Add evidence", sub-line "Saving to your active step · {activeStepTitle}", and a
       3-column grid of the 6 `EVIDENCE_OPTIONS` (Photo, Video, Voice, Note, Link, File)
       using the same icons/labels as the authoring chip grid. _(Structure + copy unit-tested;
-      pixel rendering pending the manual `storybook:web` pass below.)_
+      rendering verified in `storybook:web` — Note pre-highlighted, DM-Mono sub-line, 3-up grid.)_
 - [x] Tapping a type in the sheet calls `onSelectType(type)` — the sheet does not own
       capture-flow state (no "confirm"/"done" stages; those belong to the screen
       integration, out of scope here). _(Tested: `it.each` over all 6 types.)_
@@ -49,7 +49,8 @@ card row (line 165) — which #408's `FocusCurrentTaskCard` already ships. That 
 - [x] `EvidenceTypePicker.stories.tsx` exposes: the capture sheet (default + a
       "change" open state), the authoring chip grid, the compact variant, and an
       `AllThemesMatrix` story rendering the capture sheet across all 7 product themes.
-      _(Matrix tiles `CaptureSheetBody` inline per D7; visual confirmation pending below.)_
+      _(Matrix tiles `CaptureSheetBody` inline per D7; verified in `storybook:web` — all 7
+      themes render with correct per-theme tokens, no modal stacking.)_
 - [x] Every color/spacing/radius/shadow value in new code resolves through `theme.*` —
       `grep -n "#[0-9a-fA-F]\{3,6\}"` on the two edited/added source files (excluding
       the emoji icon strings already in `EVIDENCE_OPTIONS`) returns nothing. _(Only match
@@ -200,6 +201,16 @@ yet; that lands in #377.
 - [2026-07-01 20:20] **Sub-line/title use `fontFamily.headline`.** There is no
   `fontFamily.heading` token — the headline face (Anybody) is `headline`; the
   DM Mono sub-line uses `fontFamily.mono` as planned.
+- [2026-07-01 20:35] **Visual pass done (`storybook:web`).** Ran Storybook web and
+  eyeballed `CaptureSheet` (Note pre-highlighted, DM-Mono sub-line, 3-up grid),
+  `CaptureSheetChangeScenario` (Photo highlighted — the D6 re-open case), and
+  `AllThemesMatrix`. The matrix tiles all 7 product themes correctly (no modal
+  stacking, per D7) with faithful per-theme tokens: Note's highlight tracks each
+  theme's `accentPrimary` (blue/teal/black/slate), highContrast/autismFriendly drop
+  shadows, dyslexia uses Lexend on cream, lowVision enlarges type + wraps the
+  sub-line. One benign `Unistyles: no theme selected yet` console error fires once
+  on first paint (global Storybook+Unistyles startup race, not component-specific;
+  render is correct).
 - [2026-07-01 20:20] **Extracted `CaptureSheetBody` (D7).** See Decisions. The
   `AllThemesMatrix` story could not tile seven live `Modal`s (react-native-web
   0.21.2 portals each Modal to `<body>` with `position: fixed`, so they stack).
