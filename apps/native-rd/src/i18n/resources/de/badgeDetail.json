@@ -35,7 +35,7 @@
     "a11y": {
       "listLabel_one": "Nachweis-Galerie, {{count}} Beleg",
       "listLabel_other": "Nachweis-Galerie, {{count}} Belege",
-      "emptyStateLabel": "Nachweis-Galerie, leer"
+      "emptyStateLabel": "Nachweis-Galerie, leer. {{message}}"
     }
   },
   "actions": {

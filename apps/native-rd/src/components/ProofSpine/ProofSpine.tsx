@@ -31,10 +31,16 @@ export function ProofSpine({ evidence, onCardPress }: ProofSpineProps) {
         {/* Empty state shows the plain "THE PROOF" label only — no count or
             "SWIPE →" hint, since there is nothing to swipe (matches prototype). */}
         <Text style={styles.header}>{t("badgeDetail:proofSpine.title")}</Text>
+        {/* `accessible` collapses this block into one node, so the label must
+            carry the explanatory copy itself — otherwise screen readers announce
+            only "Proof gallery, empty" and drop the message. Interpolate the
+            message so it stays a single source of truth. */}
         <View
           style={styles.emptyState}
           accessible
-          accessibilityLabel={t("badgeDetail:proofSpine.a11y.emptyStateLabel")}
+          accessibilityLabel={t("badgeDetail:proofSpine.a11y.emptyStateLabel", {
+            message: t("badgeDetail:proofSpine.emptyState.message"),
+          })}
         >
           <Text style={styles.emptyStateText}>
             {t("badgeDetail:proofSpine.emptyState.message")}

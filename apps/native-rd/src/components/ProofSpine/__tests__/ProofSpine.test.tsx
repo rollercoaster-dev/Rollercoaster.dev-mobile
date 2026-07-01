@@ -79,9 +79,24 @@ describe("ProofSpine", () => {
       renderWithProviders(<ProofSpine evidence={[]} onCardPress={jest.fn()} />);
       expect(
         screen.getByLabelText(
-          i18n.t("badgeDetail:proofSpine.a11y.emptyStateLabel"),
+          i18n.t("badgeDetail:proofSpine.a11y.emptyStateLabel", {
+            message: i18n.t("badgeDetail:proofSpine.emptyState.message"),
+          }),
         ),
       ).toBeOnTheScreen();
+    });
+
+    it("carries the explanatory message in the a11y label", () => {
+      // `accessible` collapses the block into one node, suppressing the child
+      // Text; the label itself must include the message so screen readers hear
+      // the full explanation, not just "Proof gallery, empty".
+      const message = i18n.t("badgeDetail:proofSpine.emptyState.message");
+      const label = i18n.t("badgeDetail:proofSpine.a11y.emptyStateLabel", {
+        message,
+      });
+      renderWithProviders(<ProofSpine evidence={[]} onCardPress={jest.fn()} />);
+      expect(label).toContain(message);
+      expect(screen.getByLabelText(label)).toBeOnTheScreen();
     });
 
     it("renders no interactive card and no list in the empty state", () => {
