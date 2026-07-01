@@ -19,6 +19,35 @@
     "partA11y": "{{title}}, {{status}}",
     "partOpenHint": "Öffnet diesen Teil"
   },
+  "currentTask": {
+    "inProgress": {
+      "helperLine": "Nachweis hinzufügen, um abzuschließen",
+      "evidenceRequired": "Nachweis · erforderlich",
+      "changeEvidenceType": "ändern",
+      "changeEvidenceTypeA11y": "Nachweistyp ändern, aktuell {{type}}",
+      "evidenceRailLabel": "Erfasst",
+      "addTypeCta": "{{type}} hinzufügen",
+      "pauseCta": "❙❙ Diesen Schritt beiseitelegen",
+      "markCompleteCta": "✓ Als erledigt markieren",
+      "markCompleteA11y": "Diesen Schritt als erledigt markieren",
+      "pauseA11y": "Diesen Schritt beiseitelegen — pausieren"
+    },
+    "paused": {
+      "body": "Beiseitegelegt — immer noch da, nichts verloren. Dein nächster Schritt führt daran vorbei, bis du ihn wieder aufnimmst.",
+      "pickUpCta": "► Wieder aufnehmen",
+      "pickUpA11y": "Diesen Schritt wieder aufnehmen und fortfahren"
+    },
+    "completed": {
+      "reopenCta": "Diesen Schritt wieder öffnen",
+      "reopenA11y": "Diesen Schritt wieder öffnen, um weitere Nachweise hinzuzufügen oder weiterzuarbeiten"
+    },
+    "allComplete": {
+      "heading": "Alle Schritte erledigt.",
+      "body": "Gestalte jetzt das Abzeichen, das es markiert — das Andenken kommt zum Schluss.",
+      "designBadgeCta": "Dein Abzeichen gestalten",
+      "designBadgeA11y": "Gestalte dein Abzeichen, um den Abschluss dieses Ziels zu feiern"
+    }
+  },
   "header": {
     "showTimeline": "Zeitleiste anzeigen",
     "hideTimeline": "Zeitleiste ausblenden",

@@ -19,6 +19,35 @@
     "partA11y": "{{title}}, {{status}}",
     "partOpenHint": "Opens this part"
   },
+  "currentTask": {
+    "inProgress": {
+      "helperLine": "add evidence to complete",
+      "evidenceRequired": "Evidence · required",
+      "changeEvidenceType": "change",
+      "changeEvidenceTypeA11y": "Change evidence type, currently {{type}}",
+      "evidenceRailLabel": "Captured",
+      "addTypeCta": "Add {{type}}",
+      "pauseCta": "❙❙ Set this step aside",
+      "markCompleteCta": "✓ Mark complete",
+      "markCompleteA11y": "Mark this step complete",
+      "pauseA11y": "Set this step aside — pause it"
+    },
+    "paused": {
+      "body": "Set aside — still here, nothing lost. Your next step routes past it until you pick it back up.",
+      "pickUpCta": "► Pick this back up",
+      "pickUpA11y": "Pick this step back up and continue"
+    },
+    "completed": {
+      "reopenCta": "Reopen this step",
+      "reopenA11y": "Reopen this step to add more evidence or continue work"
+    },
+    "allComplete": {
+      "heading": "Every step done.",
+      "body": "Now design the badge that marks it — the keepsake comes at the end.",
+      "designBadgeCta": "Design your badge",
+      "designBadgeA11y": "Design your badge to celebrate completing this goal"
+    }
+  },
   "header": {
     "showTimeline": "Show timeline",
     "hideTimeline": "Hide timeline",
