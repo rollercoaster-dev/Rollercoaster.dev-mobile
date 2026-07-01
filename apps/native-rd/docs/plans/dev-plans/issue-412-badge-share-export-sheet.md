@@ -1,0 +1,182 @@
+# Development Plan: Issue #412
+
+## Issue Summary
+
+**Title**: [Storybook] Badge Detail — single Share + export sheet
+**Type**: feature (new presentational component — Track D3 of Epic #384)
+**Complexity**: SMALL
+**Estimated Lines**: ~280 lines (issue estimates ~200 LOC excl. i18n/tests; full component + styles + stories + tests + i18n keys lands slightly above that)
+
+## Intent Verification
+
+Observable criteria derived from the issue. These describe what success looks like from a user/system perspective — not generic checklists.
+
+- [ ] With the sheet closed, the page shows exactly one primary CTA labelled "Share badge" — no stacked export buttons, no caption
+- [ ] Tapping the primary CTA (or firing `onOpenSheet` in a story) reveals a bottom sheet with a header ("Share '{{goalTitle}}' · Keep it provable, or just share the picture") and 3 rows, where row 1 ("Share verifiable badge") carries a visible "RECOMMENDED" tag and its own trade-off line, and rows 2–3 each carry their own trade-off line (not a shared caption)
+- [ ] When `canShareImage=false`, the verifiable-badge row and the save-as-image row render in a disabled state (non-interactive, muted); the credential-export row stays enabled
+- [ ] When `hasCredential=false`, only the credential-export row is disabled
+- [ ] When `isExportingImage=true`, the verifiable-badge and save-as-image rows show a loading indicator instead of their icon; when `isExportingJSON=true`, the credential row does the same
+- [ ] The `⋯` overflow menu (opened via `CelebrationHeroHeader`'s existing `onOverflow`, shipped in #410) lists Share badge / Export credential / Delete badge, with Delete visually distinct (destructive tone) and never adjacent to a same-weight Share action on the page body
+- [ ] `ConfirmDeleteModal`, given the new copy, renders "Delete this badge?" as the title and a message containing "Your goal and its evidence stay in the timeline" with confirm label "Delete" and cancel label "Keep it" — verified via a Storybook story, not a screen wire-up
+- [ ] Switching the Storybook global theme toolbar through all 7 themes shows zero hardcoded hex — every color traces to a `theme.*` token
+- [ ] `bun run test --testPathPatterns BadgeShareSheet` (and any co-located overflow-menu test) passes; no screen imports the new component
+
+## Dependencies
+
+| Issue | Title                                               | Status | Type |
+| ----- | --------------------------------------------------- | ------ | ---- |
+| none  | Issue body states "Dependencies: none — start now." | N/A    | N/A  |
+
+**Status**: All dependencies met — no blockers. This issue is independent of its Track D siblings (#410 celebration hero — merged via PR #423; #411 proof spine — open, unrelated files) and of #342 (BadgeDetailScreen parser refactor, open, unrelated to the export/delete UI). The only issue that depends on this one is **#380** ([Integrate] Badge Detail assembly), which is `blocked-by` D1/D2/D3 and stays untouched here.
+
+## Objective
+
+Ship a new, pure presentational `BadgeShareSheet` (+ a co-located overflow-menu content component) that replaces today's stacked 3-button Export `Card` and standalone destructive Delete button (`BadgeDetailScreen.tsx:428-475`, confirmed below) with: one primary "Share badge" CTA, a bottom sheet exposing the three export paths with the trade-off written into each row, and Delete demoted into the `⋯` overflow menu (whose trigger button already ships on `CelebrationHeroHeader`, from #410) behind a reframed confirm. Ships to Storybook only — `BadgeDetailScreen.tsx` is not touched in this issue; #380 wires it.
+
+## Decisions
+
+| ID  | Decision                                                                                                                                                                                                                                                | Alternatives Considered                                                                                            | Rationale                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | File location: `src/screens/BadgeDetailScreen/BadgeShareSheet.tsx` (+ `.styles.ts`, `.stories.tsx`, `__tests__/BadgeShareSheet.test.tsx`)                                                                                                               | `src/components/BadgeShareSheet/`                                                                                  | Matches the established convention for this exact track: `CelebrationHeroHeader` (#410, merged) lives at `src/screens/BadgeDetailScreen/CelebrationHeroHeader.tsx`, and that plan's D7 explicitly reasons single-screen presentational views co-locate with their screen (mirrors `GoalsCockpit` under `src/screens/GoalsScreen/`).                                                                                                                                                                                                                                                                                                                                                                                          |
+| D2  | Overflow menu content ships as a second small component, `BadgeOverflowMenu`, in the same file/dir as `BadgeShareSheet` (or a sibling `BadgeOverflowMenu.tsx`)                                                                                          | Fold overflow-menu rows into `BadgeShareSheet` itself; defer overflow content entirely to #380                     | The issue body explicitly scopes "the page's primary Share button + the `⋯` overflow menu" into this issue (not just the sheet). `CelebrationHeroHeader` (#410) already ships the `⋯` trigger + `onOverflow` prop with nothing consuming it — this issue supplies the menu content those already-shipped hooks open. Keeping it a separate small component (not merged into the sheet) matches the prototype: overflow menu and share sheet are two distinct overlays with different trigger paths (⋯ vs primary CTA), both of which can independently open the sheet or the delete confirm.                                                                                                                                 |
+| D3  | Sheet implementation: `Modal transparent animationType="slide"` with content pinned to the bottom (`justifyContent: "flex-end"`), not a third-party bottom-sheet library                                                                                | `@gorhom/bottom-sheet` or similar gesture-driven library                                                           | No bottom-sheet library is in `package.json` today, and no existing component in the repo uses one — `ConfirmDeleteModal` uses `Modal transparent animationType="fade"` centered, `AudioPlayerModal` uses `Modal animationType="slide"` full-screen. A bottom-anchored `Modal` composes both existing patterns with zero new dependencies; drag-to-dismiss/gesture polish is a legitimate but separate follow-up, not required by the issue's acceptance criteria (which only requires open/closed rendering states in Storybook).                                                                                                                                                                                           |
+| D4  | Delete confirm copy update lands as a **prop change on the existing `ConfirmDeleteModal` call site**, verified via a **new Storybook story** on `ConfirmDeleteModal` itself (e.g. `DeleteBadgeReframed`), not a modification to `BadgeDetailScreen.tsx` | Build a bespoke delete-confirm component; update `BadgeDetailScreen.tsx`'s existing `ConfirmDeleteModal` usage now | `ConfirmDeleteModal` (`src/screens/ConfirmDeleteModal/`) already takes `title`/`message`/`confirmLabel`/`cancelLabel` as plain string props — no restyle is needed, only new copy. The issue says "restyle/relabel," but the props already support relabelling with zero code changes to the modal; and #412 explicitly must not touch `BadgeDetailScreen.tsx` (that screen wiring is #380's job — this issue is Storybook-only). Adding a story to the existing `ConfirmDeleteModal.stories.tsx` demonstrates and locks in the new copy without any app wiring, satisfying "story + tests" from the issue's "States to cover" list (item 6). The i18n keys for the new copy are still authored here per D11/the issue body. |
+| D5  | Icons: `Star` (verifiable badge / recommended), `Image` (save as image), `CodeBlock` (export credential JSON), `Trash` (delete, overflow row only) — all from `phosphor-react-native` (already a dependency, confirmed installed at v3.0.6)             | Emoji glyphs (★ / 📷 / {} ) as literal `Text` characters, matching the prototype's raw HTML entities               | The rest of the shipped Track D work (`CelebrationHeroHeader`) uses `phosphor-react-native` icon components exclusively (`ArrowLeft`, `Check`, `Diamond`, `DotsThree`, `Sparkle`) — no emoji literals. Matching that precedent keeps icon rendering consistent (weight/size/color props) instead of mixing font-rendered emoji with vector icons across the same screen.                                                                                                                                                                                                                                                                                                                                                     |
+| D6  | `BadgeShareSheet` and `BadgeOverflowMenu` take **no internal i18n hook — stay i18n-free**, same as `CelebrationHeroHeader` — all copy passed as string props; stories supply English fixtures                                                           | Call `useTranslation` inside the new components directly                                                           | Matches D10 in the sibling #410 plan pattern (a11y labels default to English via props, i18n wiring happens at `#380` via `t()`). Keeps the component Storybook-renderable with zero i18n provider setup and matches "pure, prop-driven" from the issue body. New i18n keys are still authored in `en/badgeDetail.json` per the issue's i18n section — #380 will thread `t()` output into the props when it wires the screen.                                                                                                                                                                                                                                                                                                |
+
+## Resolved Questions (2026-07-01)
+
+The researcher surfaced three; all resolved before implementation — none remain open.
+
+1. **RECOMMENDED-tag contrast** → **Non-issue, ships filled-yellow as prototyped.** Reading the prototype (`Badge Detail C Prototype.dc.html:160` + `App Shell.dc.html:669`) shows the tag is a self-contained pill with its own `1.5px` dark-ink border and dark-on-yellow text — it never depended on yellow-on-blue contrast. `accentYellowFg`-on-`accentYellow` is already in the contrast test suite (`contrastPairs.ts:131-137`). No outlined fallback, no Discovery-Log flag. See Grounding + Step 1.
+2. **`BadgeOverflowMenu` a11y role / E2E guard** → **`accessibilityRole="button"` on rows; NO `EXPO_PUBLIC_E2E_MODE` guard in this issue.** It's Storybook-only; Maestro/E2E handling belongs to #380 when the menu is actually wired into a screen. See Step 2 + Step 4.
+3. **Bottom-sheet gesture polish** → **Ship the plain `Modal animationType="slide"` slide-up (D3); no gesture library, no drag-to-dismiss.** Matches D3 scope and the issue's acceptance criteria (open/closed rendering only). Gesture polish stays out of scope (see Not in Scope).
+
+## Affected Areas
+
+- `apps/native-rd/src/screens/BadgeDetailScreen/BadgeShareSheet.tsx`: **new** — primary Share CTA button + the bottom sheet (3 rows: verifiable/image/credential) with per-row trade-off copy and the RECOMMENDED tag
+- `apps/native-rd/src/screens/BadgeDetailScreen/BadgeShareSheet.styles.ts`: **new** — Unistyles `StyleSheet.create((theme) => ...)`, zero hardcoded hex
+- `apps/native-rd/src/screens/BadgeDetailScreen/BadgeOverflowMenu.tsx`: **new** — the `⋯` popover menu content (Share badge / Export credential / Delete badge rows), consumed by `CelebrationHeroHeader`'s already-shipped `onOverflow` in #380
+- `apps/native-rd/src/screens/BadgeDetailScreen/BadgeOverflowMenu.styles.ts`: **new**
+- `apps/native-rd/src/screens/BadgeDetailScreen/BadgeShareSheet.stories.tsx`: **new** — stories for all 7 states listed in the issue
+- `apps/native-rd/src/screens/BadgeDetailScreen/BadgeOverflowMenu.stories.tsx`: **new**
+- `apps/native-rd/src/screens/BadgeDetailScreen/__tests__/BadgeShareSheet.test.tsx`: **new**
+- `apps/native-rd/src/screens/BadgeDetailScreen/__tests__/BadgeOverflowMenu.test.tsx`: **new**
+- `apps/native-rd/src/screens/ConfirmDeleteModal/ConfirmDeleteModal.stories.tsx`: **modified** — add a `DeleteBadgeReframed` story demonstrating the new copy (no changes to `ConfirmDeleteModal.tsx` itself — props already support this)
+- `apps/native-rd/src/i18n/resources/en/badgeDetail.json`: **modified** — add `share.*` keys (sheet title/subtitle, 3 row labels + trade-off lines, "RECOMMENDED" tag) and update `deleteConfirm.message` to the reframed copy; author English only per D11 (`de/` is CI-synced, `pseudo/` via `bun run gen:pseudo`)
+- `apps/native-rd/src/screens/BadgeDetailScreen/BadgeDetailScreen.tsx`: **not touched** — screen wiring is #380's scope
+
+Not touched: `useBadgeExport.ts` (already exposes the exact three functions + flags this issue needs — confirmed below), `ConfirmDeleteModal.tsx`/`.styles.ts` (props already support the new copy with no code change).
+
+## Grounding: confirmed against the current codebase
+
+- **Today's Export Card + Delete button** are at the exact lines the issue names: `BadgeDetailScreen.tsx:428-469` is the `Card` with 3 stacked `Button`s (`exportVerifiable` primary, `exportCredential` secondary, `saveAsImage` secondary) + a `Text variant="caption"` trade-off caption; `:471-475` is the standalone `Button variant="destructive"` Delete. Both confirmed via direct read — file is 576 lines total.
+- **Disabled-prop expressions**, verbatim from the current code: verifiable badge and save-as-image use `disabled={!hasRealImage}` where `hasRealImage = imageUri && imageUri !== PLACEHOLDER_IMAGE_URI && !imageLoadFailed`; export-credential uses `disabled={!badge.credential}`. The issue's `canShareImage` / `hasCredential` props map 1:1 onto these two boolean expressions — #380 will pass `hasRealImage` as `canShareImage` and `Boolean(badge.credential)` as `hasCredential`.
+- **`useBadgeExport()`** (`src/hooks/useBadgeExport.ts`) exposes exactly `exportVerifiableBadge(imageUri, badgeName?)`, `exportImage(imageUri)`, `exportJSON(credential, goalTitle)`, `isExportingImage`, `isExportingJSON` — confirmed by direct read of the full 227-line hook. `isExportingImage` is shared by both the verifiable-badge path and the plain-image path (both set the same flag), so a story/test that sets `isExportingImage=true` must show loading on **both** rows, not just one — this is a real hook constraint, not a component choice.
+- **`ConfirmDeleteModal`** (`src/screens/ConfirmDeleteModal/ConfirmDeleteModal.tsx`) takes `visible`, `onCancel`, `onConfirm`, `title`, `message`, and optional `confirmLabel`/`cancelLabel` (falls back to `common:actions.delete`/`common:actions.cancel` via its own `useTranslation`). No restyling is needed — the new copy is a pure prop/i18n-key change at the call site, which for Storybook purposes means a new story on the **existing** `ConfirmDeleteModal.stories.tsx` (pattern: `DeleteGoal`/`DeleteStep`/`CustomLabels` already exist there).
+- **Prototype markup** (`Badge Detail C Prototype.dc.html`, read directly, lines ~120-183) confirms every copy string in the issue verbatim: sheet header "Share 'Rewire the workshop' / Keep it provable, or just share the picture.", row 1 "Share verifiable badge" + "RECOMMENDED" tag + "A PNG carrying the OB 3.0 credential — provable forever.", row 2 "Save as image" + "Plain picture — may drop the credential.", row 3 "Export credential (JSON)" + "For verifiers & wallets.", delete confirm "Delete this badge?" / "The badge will be removed. Your goal and its evidence stay in the timeline — only the credential artifact is deleted." / buttons "Keep it" (cancel) / "Delete" (confirm). The overflow menu in the prototype lists: Share badge (★), Export credential ({}), Delete badge (🗑, red) — confirming D2's row set.
+- **`CelebrationHeroHeader`** (#410, merged in PR #423, lives at `src/screens/BadgeDetailScreen/CelebrationHeroHeader.tsx`) already renders the `⋯` trigger (`IconButton icon={<DotsThree/>} tone="celebration" onPress={onOverflow}`, `testID="celebration-hero-overflow"`) and takes `onOverflow: () => void` as a prop — nothing consumes it yet (`BadgeDetailScreen.tsx` has no `overflowOpen` state). This confirms the overflow trigger button itself is **out of scope** here (already shipped); this issue only builds the menu **content** that a future `onOverflow` handler (in #380) will show.
+- **No existing bottom-sheet or overflow-popover component** exists in the codebase (`FABMenu` is a non-modal absolute-positioned menu tied to a FAB, not a `Modal`; grepped `overflowOpen`/`OverflowMenu` — zero hits). `BadgeShareSheet`/`BadgeOverflowMenu` are genuinely new patterns, built from `Modal` + existing `Card`/`Button`/`Text` primitives, matching D3.
+- **Icons available**: `phosphor-react-native@3.0.6` (already a dependency) ships `Star`, `Image`, `CodeBlock`, `Trash`, `DotsThree`, `Check` — all icons this plan proposes exist in the installed package.
+- **Destructive-red token confirmed**: `theme.colors.error` exists per-theme (`packages/design-tokens` → `pkgPalette.error`, `#dc2626` in the default palette — matches the prototype's Delete red exactly) and already has usage precedent (`VoiceMemoScreen.styles.ts`, `VideoRecorder.styles.ts`, `IntlProbeScreen.styles.ts` all use `theme.colors.error` for recording/destructive states). The overflow menu's Delete row icon/label uses `theme.colors.error`, distinct from `Button`'s `variant="destructive"` (which intentionally maps to the amber `theme.colors.warning` for the existing full-width delete button, not a literal red) — the overflow row is a menu item, not a `Button`, so it is free to use the more literally-destructive `error` token that matches the prototype's `#dc2626`.
+- **RECOMMENDED tag token confirmed + contrast worry resolved against the prototype**: read both `Badge Detail C Prototype.dc.html:160` and `App Shell.dc.html:669` (identical markup) — the tag is a self-contained pill: `background:#ffe50c` + **`border:1.5px solid #0a0a0a`** + dark DM-Mono text. The dark border is what separates it from the blue row; the pill does **not** depend on yellow-on-blue contrast for legibility. Token mapping: `backgroundColor: theme.colors.accentYellow` (= `#ffe50c` exactly, `adapter.ts:72`), `color: theme.colors.accentYellowFg` (locked dark in every theme — "yellow does not flip", `colorModes.ts:34-36`), `borderColor: theme.colors.border` (the hard-ink border used across BadgeDetail styles). The tag's own text/bg pairing (`accentYellowFg` on `accentYellow`) is **already in the contrast test suite** (`contrastPairs.ts:131-137`, `contrast.test.ts:42-43`), so no per-theme contrast check or outlined-fallback is needed — the prototype's filled-yellow treatment ships as-is. (App Shell prototype read end-to-end per the #384 canonical-flow rule; it matches the component prototype exactly for this flow — no cross-component divergence.)
+- **Coordination risk named in the re-scope plan** (`apps/native-rd/docs/plans/2026-06-29-full-ride-redesign-rescope.md`, Track D note): open issue **#342** (extract OB3 parsers + `EvidenceList` from `BadgeDetailScreen`) touches the same screen file. This issue (#412) does not touch `BadgeDetailScreen.tsx` at all, so there is no merge collision risk from this PR — the risk is scoped to #380 ([Integrate]), not here.
+
+## Implementation Plan
+
+### Step 1: `BadgeShareSheet` component + styles
+
+**Files**: `BadgeShareSheet.tsx`, `BadgeShareSheet.styles.ts`
+**Commit**: `feat(badge-detail): BadgeShareSheet primary CTA + export sheet`
+**Changes**:
+
+- [ ] Define `BadgeShareSheetProps`: `goalTitle: string`, `isSheetOpen: boolean`, `onOpenSheet: () => void`, `onCloseSheet: () => void`, `onShareVerifiable: () => void`, `onSaveImage: () => void`, `onExportCredential: () => void`, `canShareImage: boolean`, `hasCredential: boolean`, `isExportingImage: boolean`, `isExportingJSON: boolean`, plus caller-supplied copy strings (sheet title/subtitle template, row labels, row trade-off lines, "RECOMMENDED" tag text, primary CTA label) so the component stays i18n-free per D6
+- [ ] Render the primary "Share badge" CTA as a standalone `Pressable`/styled button (not the generic `Button` component, since the prototype's primary CTA has a distinct icon-left layout — `ShareNetwork` or `Export` icon + label), `onPress={onOpenSheet}`, `accessibilityRole="button"`, 44pt+ target
+- [ ] Render the sheet as `Modal transparent visible={isSheetOpen} animationType="slide" onRequestClose={onCloseSheet} accessibilityViewIsModal`, backdrop `Pressable` (dismiss on tap, matches `ConfirmDeleteModal`'s overlay pattern) + bottom-anchored content panel (`justifyContent: "flex-end"`)
+- [ ] Sheet header: title (interpolated `goalTitle`) + subtitle line, both plain `Text`
+- [ ] Row 1 (verifiable): `Star` icon, label, "RECOMMENDED" tag (pill), trade-off line; `disabled={!canShareImage}`; when `isExportingImage`, swap the icon for an `ActivityIndicator`
+- [ ] Row 2 (save-as-image): `Image` icon, label, trade-off line; `disabled={!canShareImage}`; same `isExportingImage` loading swap
+- [ ] Row 3 (credential): `CodeBlock` icon, label, trade-off line; `disabled={!hasCredential}`; loading swap driven by `isExportingJSON`
+- [ ] Each row: `accessibilityRole="button"`, `accessibilityLabel` combining label + trade-off (so screen readers hear the trade-off, not just the title), `accessibilityState={{ disabled }}`, 44pt+ target
+- [ ] Styles via `StyleSheet.create((theme) => ...)`: sheet panel `backgroundColor: theme.colors.background` (or `surfaceBorder.surfaceCardBg`), `borderTopWidth`/`borderColor` from `theme.borderWidth`/`theme.colors.text`, `shadowStyle(theme, "cardElevation")` if elevated, row separators via `theme.colors.border`-family token, RECOMMENDED tag: `backgroundColor: theme.colors.accentYellow`, `color: theme.colors.accentYellowFg`, **`borderWidth` + `borderColor: theme.colors.border`** (the pill's own dark-ink border per the prototype — this, not yellow-on-blue contrast, is what separates it from the blue row; `accentYellowFg`-on-`accentYellow` is already contrast-tested in `contrastPairs.ts`), disabled row opacity via existing disabled-state convention (mirrors `Button.styles.ts`'s `disabled` style)
+
+### Step 2: `BadgeOverflowMenu` component + styles
+
+**Files**: `BadgeOverflowMenu.tsx`, `BadgeOverflowMenu.styles.ts`
+**Commit**: `feat(badge-detail): BadgeOverflowMenu overflow content`
+**Changes**:
+
+- [ ] Define `BadgeOverflowMenuProps`: `onShareBadge: () => void`, `onExportCredential: () => void`, `onDelete: () => void`, `hasCredential: boolean`, plus copy-string props (row labels) per D6
+- [ ] Render as a plain `View` container (no `menu` role) — **decision (Q2, Joe 2026-07-01): rows use `accessibilityRole="button"`, and this issue ships NO `EXPO_PUBLIC_E2E_MODE` Maestro-collapse guard.** Rationale: this is Storybook-only; the menu isn't driven by Maestro until #380 wires it into a screen, so E2E-mode handling belongs to #380, not here. Do not add the `menu`/`menuitem` semantics or the FABMenu-style E2E guard in this issue.
+- [ ] Three `button`-role rows: Share badge (`Star`/`ShareNetwork` icon), Export credential (`CodeBlock` icon, `disabled={!hasCredential}`), Delete badge (`Trash` icon + label tinted `theme.colors.error`, separated from the other two rows with a divider matching the prototype's red-accented last row)
+- [ ] This component only renders the menu **content** — positioning (absolute popover under the `⋯` button vs. a modal) is left to the caller; expose it as a plain content block so #380 can drop it into whatever container (`Modal`, absolute `View`) it chooses when wiring `CelebrationHeroHeader`'s `onOverflow`. Document this explicitly in a comment, since the issue names the "overflow menu" as this issue's scope but the actual open/close/positioning behavior lives with `onOverflow`'s consumer (#380)
+
+### Step 3: Storybook stories — sheet + overflow menu
+
+**Files**: `BadgeShareSheet.stories.tsx`, `BadgeOverflowMenu.stories.tsx`
+**Commit**: `feat(badge-detail): BadgeShareSheet and BadgeOverflowMenu stories`
+**Changes**:
+
+- [ ] `BadgeShareSheet.stories.tsx` meta: `title: "Screens/BadgeDetail/BadgeShareSheet"`, noop handlers
+- [ ] Story `Closed` — `isSheetOpen: false`, shows only the primary CTA (state 1 from the issue)
+- [ ] Story `Open` — `isSheetOpen: true`, `canShareImage: true`, `hasCredential: true`, all 3 rows enabled, RECOMMENDED tag visible (state 2)
+- [ ] Story `NoBakedImage` — `canShareImage: false`, `hasCredential: true` (state 3)
+- [ ] Story `NoCredential` — `canShareImage: true`, `hasCredential: false` (state 4)
+- [ ] Story `Exporting` — `isExportingImage: true` (or a second variant with `isExportingJSON: true`) to cover state 5
+- [ ] Story using the Storybook global theme toolbar (per D6 in the #410 plan's established pattern) — no separate `AllThemesMatrix` needed unless the reviewer wants one; toolbar switching covers state 7
+- [ ] `BadgeOverflowMenu.stories.tsx` meta + a `Default` story (enabled) and a `NoCredential` story (`hasCredential: false`)
+
+### Step 4: Unit tests
+
+**Files**: `__tests__/BadgeShareSheet.test.tsx`, `__tests__/BadgeOverflowMenu.test.tsx`
+**Commit**: `test(badge-detail): BadgeShareSheet and BadgeOverflowMenu unit tests`
+**Changes**:
+
+- [ ] `renderWithProviders` + `screen`/`fireEvent` from `src/__tests__/test-utils` (mirrors `CelebrationHeroHeader.test.tsx`/`FocusCurrentTaskCard.test.tsx` conventions)
+- [ ] Test: primary CTA press fires `onOpenSheet`
+- [ ] Test: closed sheet renders no rows (queryBy returns null for row testIDs); open sheet renders all 3
+- [ ] Test: each row press fires its respective callback (`onShareVerifiable`/`onSaveImage`/`onExportCredential`) when enabled
+- [ ] Test: disabled rows (`canShareImage=false` and `hasCredential=false` cases) do not fire their callback when pressed and expose `accessibilityState.disabled === true`
+- [ ] Test: `isExportingImage`/`isExportingJSON` swap the row's visible content to a loading indicator (assert via testID, mirroring how `Button`'s `loading` prop is tested)
+- [ ] Test: RECOMMENDED tag text is present only on row 1
+- [ ] `it.each` sweep: every interactive row/button across every state has a non-empty `accessibilityLabel` and a >=44pt `minHeight` (mirrors `FocusCurrentTaskCard.test.tsx`'s closing 44pt sweep)
+- [ ] `BadgeOverflowMenu.test.tsx`: press each row, assert its callback fires; `hasCredential=false` disables the credential row; Delete row always enabled with `accessibilityRole="button"` (per Q2 decision — no `menuitem`/`menu` semantics, no E2E guard in this issue)
+
+### Step 5: i18n keys + `ConfirmDeleteModal` reframed-copy story
+
+**Files**: `src/i18n/resources/en/badgeDetail.json`, `src/screens/ConfirmDeleteModal/ConfirmDeleteModal.stories.tsx`
+**Commit**: `feat(badge-detail): i18n share/delete-confirm copy + reframed delete story`
+**Changes**:
+
+- [ ] Add `badgeDetail:share.*` keys to `en/badgeDetail.json`: `share.cta` ("Share badge"), `share.sheetTitle` ("Share '{{goalTitle}}'"), `share.sheetSubtitle` ("Keep it provable, or just share the picture."), `share.recommended` ("RECOMMENDED"), `share.verifiable.label`/`share.verifiable.detail`, `share.saveImage.label`/`share.saveImage.detail`, `share.exportCredential.label`/`share.exportCredential.detail`, `share.overflow.shareBadge`/`share.overflow.exportCredential`/`share.overflow.deleteBadge`
+- [ ] Update `badgeDetail:deleteConfirm.message` to the reframed copy: "The badge will be removed. Your goal and its evidence stay in the timeline — only the credential artifact is deleted." Update `deleteConfirm.title` to "Delete this badge?" and `deleteConfirm.cancel` to "Keep it" (was "Cancel") per the prototype's exact button copy
+- [ ] Leave `de/badgeDetail.json` and `pseudo/badgeDetail.json` untouched — CI-synced / `bun run gen:pseudo` respectively, per the issue's i18n section and D11 (author `en/` only)
+- [ ] Add `DeleteBadgeReframed` story to `ConfirmDeleteModal.stories.tsx` using the new title/message/confirmLabel="Delete"/cancelLabel="Keep it" strings, demonstrating the reframed copy in isolation (no `BadgeDetailScreen.tsx` change)
+- [ ] Do **not** modify `BadgeDetailScreen.tsx`'s existing `ConfirmDeleteModal` call site — that wiring (and the `i18n` key swap at the call site) is #380's job; this step only proves the new copy renders correctly via a story
+
+## Testing Strategy
+
+- [ ] Unit tests for `BadgeShareSheet` and `BadgeOverflowMenu` (Jest 30, `@testing-library/react-native` v13), run via `bun run test --testPathPatterns BadgeShareSheet` and `--testPathPatterns BadgeOverflowMenu`
+- [ ] Test files at `src/screens/BadgeDetailScreen/__tests__/BadgeShareSheet.test.tsx` and `.../BadgeOverflowMenu.test.tsx`, mirroring the existing `CelebrationHeroHeader.test.tsx` co-location
+- [ ] Use `test.each`/`it.each` for the repetitive disabled-state and 44pt-target sweeps
+- [ ] Manual: open web Storybook, navigate to `Screens/BadgeDetail/BadgeShareSheet` and `Screens/BadgeDetail/BadgeOverflowMenu`, switch the global theme toolbar through all 7 entries (`light-default`, `dark-default`, `light-highContrast`, `light-dyslexia`, `light-autismFriendly`, `light-lowVision`, `light-lowInfo`), confirm zero hardcoded-hex bleed and readable contrast on the RECOMMENDED tag + destructive Delete row in every theme
+- [ ] `bun run type-check` and `bun run lint` must pass before PR
+- [ ] Grep the new files for raw hex literals (`#[0-9a-fA-F]{3,6}`) outside of comments before committing — zero-hardcoded-hex is a hard acceptance gate
+
+## Not in Scope
+
+| Item                                                                                | Reason                                                                                                                             | Follow-up                                           |
+| ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| Wiring `BadgeShareSheet`/`BadgeOverflowMenu` into `BadgeDetailScreen.tsx`           | Explicitly excluded — "not yet imported by any screen" per issue acceptance                                                        | #380                                                |
+| Wiring `onOverflow` on `CelebrationHeroHeader` to actually open `BadgeOverflowMenu` | The trigger button + `onOverflow` prop already ship from #410; consuming it (open/close state, positioning) is screen wiring       | #380                                                |
+| Real `useBadgeExport()` call sites                                                  | This issue takes callbacks as props; the screen supplies real handlers                                                             | #380                                                |
+| Overflow menu open/close animation and screen positioning (popover vs modal)        | Content-only component per D2; positioning is a container/integration concern                                                      | #380                                                |
+| Gesture-driven bottom-sheet polish (drag-to-dismiss, snap points)                   | No such library exists in this repo yet; `Modal`-based approach satisfies the issue's acceptance criteria without a new dependency | none — revisit if UX feedback requests it post-ship |
+| `de`/`pseudo` locale file updates                                                   | CI-synced / generated via `bun run gen:pseudo`, per D11 and the issue's i18n section                                               | CI / follow-up gen:pseudo run                       |
+| `#342` (OB3 parser/`EvidenceList` extraction)                                       | Unrelated file scope — this issue never touches `BadgeDetailScreen.tsx`                                                            | #342 (already open, independent)                    |
+
+## Discovery Log
+
+<!-- Entries added by implement skill:
+- [YYYY-MM-DD HH:MM] <discovery description>
+-->
