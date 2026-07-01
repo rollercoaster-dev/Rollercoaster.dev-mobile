@@ -6,14 +6,32 @@ import { evidenceLabel } from "../../i18n/labels";
 import { styles } from "./EvidenceTypePicker.styles";
 
 export interface EvidenceTypePickerProps {
-  /** Currently selected evidence types */
+  /**
+   * Presentation mode. `"authoring"` (default) is the inline multi-select chip
+   * grid used in step creation/editing. `"capture"` is the modal bottom sheet
+   * used to pick a single evidence type before capturing (Focus Mode, #377).
+   */
+  mode?: "authoring" | "capture";
+  /** Currently selected evidence types (authoring mode) */
   selectedTypes: EvidenceTypeValue[];
   /** Called when user toggles a type on/off (required in interactive mode, unused in compact) */
   onToggleType?: (type: EvidenceTypeValue) => void;
-  /** Compact mode for inline display below step titles */
+  /** Compact mode for inline display below step titles (authoring mode only) */
   compact?: boolean;
-  /** Optional label to show above chips */
+  /** Optional label to show above chips (authoring mode) */
   label?: string;
+
+  // --- Capture mode (mode="capture") ---
+  /** Whether the capture sheet is visible (drives the Modal). Capture mode only. */
+  visible?: boolean;
+  /** Active step title shown in the sheet sub-line; omit to hide the sub-line. */
+  activeStepTitle?: string;
+  /** Pre-highlighted type in the sheet; defaults to `text` ("Note") when omitted. */
+  selectedType?: EvidenceTypeValue;
+  /** Called when a type cell is tapped. Caller updates its selection and closes the sheet. */
+  onSelectType?: (type: EvidenceTypeValue) => void;
+  /** Closes the sheet — wired to backdrop tap, header × control, and Android back. */
+  onClose?: () => void;
 }
 
 /**
