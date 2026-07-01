@@ -23,35 +23,40 @@ card row (line 165) — which #408's `FocusCurrentTaskCard` already ships. That 
 
 ## Intent Verification
 
-- [ ] When `mode="capture"` and `visible`, a modal bottom sheet renders with header
+- [x] When `mode="capture"` and `visible`, a modal bottom sheet renders with header
       "Add evidence", sub-line "Saving to your active step · {activeStepTitle}", and a
       3-column grid of the 6 `EVIDENCE_OPTIONS` (Photo, Video, Voice, Note, Link, File)
-      using the same icons/labels as the authoring chip grid.
-- [ ] Tapping a type in the sheet calls `onSelectType(type)` — the sheet does not own
+      using the same icons/labels as the authoring chip grid. _(Structure + copy unit-tested;
+      pixel rendering pending the manual `storybook:web` pass below.)_
+- [x] Tapping a type in the sheet calls `onSelectType(type)` — the sheet does not own
       capture-flow state (no "confirm"/"done" stages; those belong to the screen
-      integration, out of scope here).
-- [ ] When a `selectedType` is passed to the capture sheet, that type renders with a
+      integration, out of scope here). _(Tested: `it.each` over all 6 types.)_
+- [x] When a `selectedType` is passed to the capture sheet, that type renders with a
       selected/highlighted visual state and "Note" (`EvidenceType.text`) is the type
       pre-highlighted when no `selectedType` is given (prototype: "Note is the easy
-      default").
-- [ ] The "change" affordance is the sheet **being re-opened with the current type
+      default"). _(Tested: default-Note + explicit-Photo highlight cases.)_
+- [x] The "change" affordance is the sheet **being re-opened with the current type
       pre-highlighted** — NOT an in-sheet "Change" row. Opening the sheet with a
       non-default `selectedType`, then tapping a different cell, swaps the pick and fires
       `onSelectType`. The invokers (the planned-evidence card row shipped in #408, the
       nav "+") live outside this component (#377 wires them). Confirmed against
       `App Shell (token-backed).dc.html` (`focus.openPicker`/`closePicker` + the external
       `[icon label  change]` card row at line 165), which has no in-sheet "Change" control.
-- [ ] The existing authoring chip grid (multi-select, `onToggleType`) and `compact`
+      _(No `onRequestChange`/Change row in the API; `CaptureSheetChangeScenario` story demos it.)_
+- [x] The existing authoring chip grid (multi-select, `onToggleType`) and `compact`
       variant render unchanged — same DOM output, same tests pass, zero behavior
-      regression.
-- [ ] `EvidenceTypePicker.stories.tsx` exposes: the capture sheet (default + a
+      regression. _(14 pre-existing tests pass unmodified.)_
+- [x] `EvidenceTypePicker.stories.tsx` exposes: the capture sheet (default + a
       "change" open state), the authoring chip grid, the compact variant, and an
       `AllThemesMatrix` story rendering the capture sheet across all 7 product themes.
-- [ ] Every color/spacing/radius/shadow value in new code resolves through `theme.*` —
+      _(Matrix tiles `CaptureSheetBody` inline per D7; visual confirmation pending below.)_
+- [x] Every color/spacing/radius/shadow value in new code resolves through `theme.*` —
       `grep -n "#[0-9a-fA-F]\{3,6\}"` on the two edited/added source files (excluding
-      the emoji icon strings already in `EVIDENCE_OPTIONS`) returns nothing.
-- [ ] All interactive targets (6 type cells + close + change) measure ≥44×44pt and
-      carry `accessibilityRole`/`accessibilityLabel`.
+      the emoji icon strings already in `EVIDENCE_OPTIONS`) returns nothing. _(Only match
+      is `#377`, an issue reference in a doc comment — not a color.)_
+- [x] All interactive targets (6 type cells + close + change) measure ≥44×44pt and
+      carry `accessibilityRole`/`accessibilityLabel`. _(Cells `minHeight:44` + ~⅓ sheet width;
+      close `44×44`; each cell `role="radio"`+label, close `role="button"`+label.)_
 
 ## Dependencies
 
@@ -88,6 +93,8 @@ yet; that lands in #377.
 | D6  | **No in-sheet "change" control.** The "change" affordance is the _external_ planned-evidence card row (`[icon  label  change]`) that opens this sheet — already shipped in #408's `FocusCurrentTaskCard` via `onChangeEvidenceType`. This component satisfies "change" by being re-openable with the current pick pre-highlighted (`selectedType`) so the user can tap a different type. (Supersedes the researcher's earlier optional `onRequestChange` in-sheet row.) | An optional `onRequestChange` prop rendering a "Change" row inside the sheet (earlier draft).                                                                                                                                                                                           | `App Shell (token-backed).dc.html` is the canonical end-to-end flow and has **no** in-sheet "Change" control: line 165 is the external card row (`onClick=focus.openPicker`, with a blue "change" label), and the picker sheet at line 624 (`focus.openPicker`/`closePicker`) is a bare `Evidence type ×` grid that highlights the current planned type (`bg: cs.planned.label === o.label ? …`) and closes on pick. Rendering a "Change" row inside the sheet would duplicate the external affordance and diverge from the prototype.                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | D4  | New copy strings ("Add evidence", "Saving to your active step · {title}", "Change") go in the existing `common` namespace (`src/i18n/resources/en/common.json`), nested under a new `evidenceTypePicker` key — not a new namespace.                                                                                                                                                                                                                                     | New `focusMode.json` keys (since the sub-line references "active step") or a brand-new namespace.                                                                                                                                                                                       | `EvidenceTypePicker` already imports only `common` (`useTranslation(["common"])`, `evidenceLabel`/`common:a11y.*`). The component has no screen/feature affinity — it's used from step-authoring today and will be used from Focus Mode later (#377) — so its own copy belongs beside its own `a11y.*` block in `common`, not borrowed into a screen-specific namespace it doesn't otherwise depend on.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | D5  | "Note" (`EvidenceType.text`) is the default highlighted cell in capture mode when the caller passes no `selectedType`, matching `Focus Mode A Prototype.dc.html`'s "Note is the easy default."                                                                                                                                                                                                                                                                          | Requiring callers to always pass an explicit `selectedType`; defaulting to the first `EVIDENCE_OPTIONS` entry (Photo).                                                                                                                                                                  | The issue quotes this prototype line verbatim as a requirement, and `EVIDENCE_OPTIONS[0]` is `photo`, not `text` — so the default has to be an explicit fallback in the component, not "just pick index 0."                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+
+| D7 | Extract the sheet body (handle + header + sub-line + 3-up grid) into an internal `CaptureSheetBody` component in the same file — rendered inside the `Modal` by the capture branch, and rendered **without** the Modal by the `AllThemesMatrix` story. **Not** exported from the barrel `index.ts`. (Added during implementation.) | (a) Keep the body inline and have `AllThemesMatrix` render seven full `mode="capture"` modals. (b) Drop `AllThemesMatrix`, verify themes via Storybook's global theme toolbar on the single `CaptureSheet` story. | (a) doesn't work: react-native-web 0.21.2 (the `@storybook/react-native-web-vite` runtime) renders `Modal` via `ModalPortal` (`createPortal` to a `<body>`-appended div) with `position: fixed` — seven live modals stack full-screen, so the "matrix" would show only the last theme. A stacked-modal matrix is a fake visual gate. (b) drops an explicit acceptance criterion. Extracting an internal presentational body keeps **one** source of the grid JSX (Modal branch and matrix render the same component — no duplication, so D1's single-source intent still holds) and lets the matrix tile real per-theme sheets inline. Kept out of the barrel so it isn't a second _public_ picker (the D1 concern); the story imports it directly from the `.tsx`. |
 
 ## Affected Areas
 
@@ -174,6 +181,28 @@ yet; that lands in #377.
 
 ## Discovery Log
 
-<!-- Entries added by implement skill:
-- [YYYY-MM-DD HH:MM] <discovery description>
--->
+- [2026-07-01 20:20] **Commit order swapped (i18n before render).** `src/i18n/i18next.d.ts`
+  strictly types translation keys against `typeof en/common.json`, so referencing
+  `common:evidenceTypePicker.*` before the key exists is a compile error, not a
+  runtime miss. Step 3 (i18n keys) therefore landed as commit `4240770` _before_
+  Step 2's render commit `849a20a`. Each still type-checks in isolation (unused
+  keys are fine). Correspondingly, the `EvidenceType` / `Modal` / `SafeAreaView`
+  imports the plan listed under Step 1 were deferred to the render commit where
+  they're actually used (importing them unused fails `no-unused-vars`); Step 1 is
+  interface-only and lint-clean.
+- [2026-07-01 20:20] **Pseudo locale is regenerated by `gen:pseudo`, not `i18n:sync`.**
+  `scripts/i18n/syncCore.ts` has `SUPPORTED_TARGETS = ["de"]` — `bun run i18n:sync`
+  only writes `de/common.json`. The `pseudo/*.json` files are committed static
+  snapshots regenerated by `bun run gen:pseudo` (`scripts/generate-pseudo-locale.ts`).
+  Ran both. `gen:pseudo` also rewrote three unrelated, already-stale pseudo files
+  (`completion`, `editGoal`, `focusMode`); reverted those to keep this PR scoped to
+  #409 (pre-existing drift is a separate concern).
+- [2026-07-01 20:20] **Sub-line/title use `fontFamily.headline`.** There is no
+  `fontFamily.heading` token — the headline face (Anybody) is `headline`; the
+  DM Mono sub-line uses `fontFamily.mono` as planned.
+- [2026-07-01 20:20] **Extracted `CaptureSheetBody` (D7).** See Decisions. The
+  `AllThemesMatrix` story could not tile seven live `Modal`s (react-native-web
+  0.21.2 portals each Modal to `<body>` with `position: fixed`, so they stack).
+  Extracted the sheet body into an internal component (not exported from the
+  barrel) rendered by both the Modal branch and the matrix story — one source of
+  the grid JSX, no duplication.
