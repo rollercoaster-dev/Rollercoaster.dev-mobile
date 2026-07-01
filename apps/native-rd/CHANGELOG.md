@@ -1,5 +1,21 @@
 # native-rd
 
+## [0.1.18](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/compare/v0.1.17...v0.1.18) (2026-07-01)
+
+
+### Features
+
+* **badge-detail:** celebration hero header + per-theme celebration token ([#410](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/410)) ([#423](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/423)) ([b6dd803](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/b6dd8036e45d8daa6b78bf1655f4a5ffdad2bffd))
+* **badge-detail:** single Share CTA + export sheet + overflow menu ([#412](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/412)) ([#437](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/437)) ([a590f3f](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/a590f3f34c4c36696ff36b835cc4649c57a7befe))
+* **db:** add paused step status + set/clear mutations ([#417](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/417)) ([#433](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/433)) ([8640309](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/8640309b8614e75a96cda482ad9bc43c76ec2943))
+* **evidence-type-picker:** capture-mode sheet + stories ([#409](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/409)) ([#439](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/439)) ([487087f](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/487087f0a76b2a887fff16a1dd25b420cf8a4b43))
+* **focusCurrentTaskCard:** Focus Mode current-task hero card ([#408](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/408)) ([#434](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/434)) ([824c1f5](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/824c1f52aab6d6b9497cf29ef9f3d90825c40f54))
+* **native-rd:** add BadgeWallCell primitive + Storybook story ([#403](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/403)) ([#418](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/418)) ([90277c7](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/90277c7217aec2a37ccfa8b5f7a2361b69464b1d))
+* **native-rd:** Badge Detail proof spine — ProofSpine + evidence-* tokens ([#411](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/411)) ([#438](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/438)) ([8a178fc](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/8a178fc339124b2c26d41da5c24570c65ff69ea5))
+* **native-rd:** unify TimelineNode state colors ([#406](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/406)) ([#421](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/421)) ([f6a4090](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/f6a40908824a648c6909ef93a6dccdbfebcabe9e))
+* **theme-picker:** ThemeSwatchRail + ThemeSampleCard ([#413](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/413)) ([#430](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/430)) ([a9133a0](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/a9133a0fc0d57d95e7e7778083a873fc4dcf1f6a))
+* **timeline-step:** E·C·B metadata band + state word, evidence-card story ([#407](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/407)) ([#432](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/432)) ([e14c152](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/e14c15201f3962405556a9e7510e2c4f583f75cf))
+
 ## [0.1.17](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/compare/v0.1.16...v0.1.17) (2026-06-28)
 
 
