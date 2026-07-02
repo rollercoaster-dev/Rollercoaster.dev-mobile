@@ -54,6 +54,7 @@ export function FocusProgressStrip({
         </Text>
       </View>
       <View
+        testID="focus-progress-strip-bar"
         style={styles.barTrack}
         accessibilityRole="progressbar"
         accessibilityValue={{ min: 0, max: 100, now }}
