@@ -25,7 +25,7 @@
 - [x] A state with `count === 0` produces **no legend chip** for that state
       (verified by a test: e.g. an all-done breakdown shows only a "done"
       chip, not "0 in motion / 0 to come / 0 set aside"). — `SEGMENT_ORDER.filter(
-    (s) => counts[s] > 0)` + drop-out unit test.
+(s) => counts[s] > 0)` + drop-out unit test.
 - [x] `ProgressBar.tsx` (`src/components/ProgressBar/`) is untouched — its
       `progress: number` single-fill contract and its 3 live callers
       (`GoalsCockpit`, `TimelineJourneyScreen`, `GoalCard`) are unmodified.
