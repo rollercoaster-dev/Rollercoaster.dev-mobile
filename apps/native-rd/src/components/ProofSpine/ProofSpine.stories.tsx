@@ -8,7 +8,7 @@ import { ProofSpine } from "./ProofSpine";
 const logCardPress = (id: string) => console.log("ProofCard pressed", id);
 
 const meta: Meta<typeof ProofSpine> = {
-  title: "ProofSpine",
+  title: "Iteration B/Badge Detail/ProofSpine",
   component: ProofSpine,
 };
 

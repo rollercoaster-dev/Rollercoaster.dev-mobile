@@ -7,7 +7,7 @@ import type { DensityLevel } from "../../utils/density";
 import { SettingsDensityRows } from "./SettingsDensityRows";
 
 const meta: Meta<typeof SettingsDensityRows> = {
-  title: "SettingsDensityRows",
+  title: "Iteration B/Theme & Settings/SettingsDensityRows",
   component: SettingsDensityRows,
 };
 

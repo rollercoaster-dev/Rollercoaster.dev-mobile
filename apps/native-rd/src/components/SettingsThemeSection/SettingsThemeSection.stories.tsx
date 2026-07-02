@@ -6,7 +6,7 @@ import { themes, type ThemeName } from "../../themes/compose";
 import { SettingsThemeSection } from "./SettingsThemeSection";
 
 const meta: Meta<typeof SettingsThemeSection> = {
-  title: "SettingsThemeSection",
+  title: "Iteration B/Theme & Settings/SettingsThemeSection",
   component: SettingsThemeSection,
 };
 

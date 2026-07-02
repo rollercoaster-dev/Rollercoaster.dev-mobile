@@ -5,7 +5,7 @@ import { BadgeOverflowMenu } from "./BadgeOverflowMenu";
 const noop = () => {};
 
 const meta: Meta<typeof BadgeOverflowMenu> = {
-  title: "Screens/BadgeDetail/BadgeOverflowMenu",
+  title: "Iteration B/Badge Detail/BadgeOverflowMenu",
   component: BadgeOverflowMenu,
   // Content-only component: pad so the popover card + its hard shadow are fully
   // visible in the Storybook canvas (positioning is #380's concern).

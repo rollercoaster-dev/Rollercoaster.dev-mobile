@@ -43,7 +43,7 @@ const MOOD_NAMES: Record<ThemeName, string> = {
 // ---------------------------------------------------------------------------
 
 const meta: Meta<typeof BadgeWallCell> = {
-  title: "Badges/BadgeWallCell",
+  title: "Iteration B/Badges Wall/BadgeWallCell",
   component: BadgeWallCell,
   args: { onPress: noop },
 };
