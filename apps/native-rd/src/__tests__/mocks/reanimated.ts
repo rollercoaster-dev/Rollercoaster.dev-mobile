@@ -32,6 +32,19 @@ const named = {
   },
   withDelay: (_delay: number, value: number) => value,
   withSpring: (toValue: number) => toValue,
+  withRepeat: (
+    animation: number,
+    numberOfReps?: number,
+    _reverse?: boolean,
+    callback?: (finished: boolean) => void,
+  ) => {
+    // A finite repeat eventually completes and fires its callback with
+    // finished === true. An infinite repeat (numberOfReps === -1) never
+    // completes in real Reanimated, so the callback must NOT fire — otherwise
+    // tests pass on a completion that can't happen at runtime.
+    if (typeof callback === "function" && numberOfReps !== -1) callback(true);
+    return animation;
+  },
   runOnJS: (fn: (...args: unknown[]) => unknown) => fn,
 };
 

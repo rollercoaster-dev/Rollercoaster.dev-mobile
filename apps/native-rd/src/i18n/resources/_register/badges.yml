@@ -40,3 +40,14 @@ notes:
     items (matches focusMode.json / common.json). `narrativeNoEvidence` is the
     zero-evidence sentence and omits the evidence clause entirely. Plural
     forms follow English's _one/_other.
+  - >-
+    The `wall.*` keys are the chrome of the BadgesWall "wall of proof" view.
+    `wall.count` (`{{count}} badges`) is the header tally, matter-of-fact with
+    no exclamation. `wall.allVerifiable` and `wall.justEarned` are all-caps
+    overlines; keep them terse and calm. "Verifiable" means the credential is
+    real and checkable, not a boast. Preserve the middot separator "·" verbatim.
+  - >-
+    The redesigned `empty.*` copy is quiet encouragement rather than a scold; it
+    names what the first badge WILL be ("Your first badge is waiting"), never
+    what is missing. `empty.action` embeds a trailing arrow "→" in the string
+    (Button's icon slot is leading-only), so keep the arrow when translating.
