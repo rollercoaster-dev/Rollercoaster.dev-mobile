@@ -32,6 +32,17 @@ const named = {
   },
   withDelay: (_delay: number, value: number) => value,
   withSpring: (toValue: number) => toValue,
+  withRepeat: (
+    animation: number,
+    _numberOfReps?: number,
+    _reverse?: boolean,
+    callback?: (finished: boolean) => void,
+  ) => {
+    // Looping animations never "finish", but invoke the callback (if any) with
+    // finished === true so components that clean up on completion behave.
+    if (typeof callback === "function") callback(true);
+    return animation;
+  },
   runOnJS: (fn: (...args: unknown[]) => unknown) => fn,
 };
 
