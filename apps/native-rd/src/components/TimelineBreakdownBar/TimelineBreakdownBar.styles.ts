@@ -1,15 +1,18 @@
 import { StyleSheet } from "react-native-unistyles";
 import { shadowStyle } from "../../styles/shadows";
 
-/** Bar height (px) — matches the prototype's 12px honest-breakdown row. */
+/** Bar height (px) — matches the prototype's honest-breakdown row. */
 export const TRACK_HEIGHT = 12;
 /** Legend swatch edge (px) — a small square color chip beside each label. */
 export const SWATCH_SIZE = 12;
 
 export const styles = StyleSheet.create((theme) => ({
   // Bordered, hard-shadowed container matching the "honest header" card in the
-  // Timeline Directions prototype (plan D7): 2px border, cardElevation (3×3
-  // hard shadow), radius.lg (nearest bucket to the 6px design intent).
+  // Timeline Directions prototype (plan D7): medium border, cardElevation (the
+  // semantic card-elevation token — a hard shadow in the flagship themes,
+  // softened or dropped to no shadow in the a11y variants), radius.lg — rounded
+  // up from the 6px design intent (no exact 6px token; md=4 and lg=8 are
+  // equidistant).
   card: {
     backgroundColor: theme.colors.background,
     borderWidth: theme.borderWidth.medium,
@@ -20,7 +23,8 @@ export const styles = StyleSheet.create((theme) => ({
     ...shadowStyle(theme, "cardElevation"),
   },
   // Segmented bar row. Segment backgroundColor + flex are set inline per state
-  // (data-driven); overflow:hidden clips segment corners to the bordered track.
+  // (data-driven); overflow:hidden contains the segment fills within the track's
+  // border box (the track itself has no radius).
   track: {
     flexDirection: "row",
     height: TRACK_HEIGHT,

@@ -97,6 +97,21 @@ export const WithoutSetAside: Story = {
   ),
 };
 
+// Empty — a goal with no steps at all: total 0 renders an empty bordered track
+// (all flex:0, no NaN crash) and zero legend chips (the drop-out contract). The
+// visual counterpart to the "renders an empty track" unit test.
+export const Empty: Story = {
+  render: () => (
+    <View style={storyStyles.container}>
+      <Frame label="Empty — total 0, empty track, no chips">
+        <TimelineBreakdownBar
+          counts={{ completed: 0, "in-progress": 0, pending: 0, paused: 0 }}
+        />
+      </Frame>
+    </View>
+  ),
+};
+
 // All 7 product themes' segment colors side by side. Unistyles' theme is a
 // global runtime singleton, so a reactive <TimelineBreakdownBar> can only render
 // the active theme. Like TimelineNode's AllThemesMatrix, this reads each composed

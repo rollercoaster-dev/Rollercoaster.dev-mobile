@@ -24,12 +24,25 @@ export interface TimelineBreakdownBarProps {
  * TimelineNode's matrix orders states differently and stepStateColorMap
  * intentionally carries no ordering.
  */
-export const SEGMENT_ORDER: StepStateMapKey[] = [
+export const SEGMENT_ORDER = [
   "completed",
   "in-progress",
   "pending",
   "paused",
-];
+] as const satisfies readonly StepStateMapKey[];
+
+// Compile-time exhaustiveness guard, mirroring the `Record<StepStateMapKey, …>`
+// that `stepStateColorMap` and the `counts` prop rely on. It is `true` only when
+// every StepStateMapKey appears in SEGMENT_ORDER above; add a state to the union
+// without listing it and the annotation narrows to `false`, so this assignment
+// fails to compile — instead of silently dropping that state's bar segment +
+// legend chip. `void` marks the check used without emitting runtime behavior.
+const _allStatesOrdered: [
+  Exclude<StepStateMapKey, (typeof SEGMENT_ORDER)[number]>,
+] extends [never]
+  ? true
+  : false = true;
+void _allStatesOrdered;
 
 /** Fully-namespaced, typed legend i18n key (mirrors StepStateBadgeKey, #406). */
 type LegendI18nKey = `common:timelineBreakdown.legend.${StepStateMapKey}`;
@@ -56,6 +69,7 @@ export function TimelineBreakdownBar({ counts }: TimelineBreakdownBarProps) {
         {SEGMENT_ORDER.map((state) => (
           <View
             key={state}
+            testID={`timeline-breakdown-segment-${state}`}
             style={[
               { flex: counts[state] },
               { backgroundColor: stepStateNodeBg(theme, state) },
