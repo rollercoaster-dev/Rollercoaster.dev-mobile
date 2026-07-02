@@ -164,6 +164,14 @@
       "goalEvidence": "Ziel-Nachweis"
     }
   },
+  "timelineBreakdown": {
+    "legend": {
+      "completed": "{{count}} erledigt",
+      "in-progress": "{{count}} in Arbeit",
+      "pending": "{{count}} noch zu tun",
+      "paused": "{{count}} zur Seite gelegt"
+    }
+  },
   "progressDots": {
     "a11y": {
       "label": "Schritt-Navigation"
