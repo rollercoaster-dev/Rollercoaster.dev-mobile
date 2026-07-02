@@ -20,9 +20,11 @@ export interface FocusProgressStripProps {
  * steps ›" header over a thin progress bar. Pure presentational (#450); not
  * wired to any screen (#377 owns that). The whole strip is one tap target that
  * fires {@link FocusProgressStripProps.onPress}. The counts are clamped into a
- * coherent range — `done` bounded to `[0, total]`, and a 0-total goal renders an
- * empty (never-NaN) bar — so the label, a11y value, and bar fill can never
- * disagree. Tuned to the canonical `App Shell.dc.html` strip markup.
+ * coherent range — `done` bounded to `[0, total]`, a 0-total goal renders an
+ * empty (never-NaN) bar, and the fill reserves 0%/100% for the true start and
+ * finish (a partial goal never rounds to either) — so the label, a11y value,
+ * and bar fill can never disagree. Tuned to the canonical `App Shell.dc.html`
+ * strip markup.
  */
 export function FocusProgressStrip({
   doneCount,
@@ -35,7 +37,18 @@ export function FocusProgressStrip({
   // `[0, total]`, and the 0-total case yields a finite 0 (never NaN).
   const total = Math.max(0, totalCount);
   const done = Math.min(Math.max(0, doneCount), total);
-  const now = total > 0 ? Math.round((done / total) * 100) : 0;
+  // Percent fill for the bar and the progressbar `now`. Reserve the 0%/100%
+  // endpoints for the true boundaries (`done === 0` / `done === total`): a
+  // partial goal must never round *up* to "complete" (e.g. 199/200 → 100) or
+  // *down* to "empty" (e.g. 1/200 → 0) and read as finished/unstarted while the
+  // label still says otherwise. Everything in between is clamped to [1, 99].
+  const fraction = total > 0 ? done / total : 0;
+  const now =
+    fraction === 0
+      ? 0
+      : fraction === 1
+        ? 100
+        : Math.min(99, Math.max(1, Math.round(fraction * 100)));
 
   const content = (
     <>

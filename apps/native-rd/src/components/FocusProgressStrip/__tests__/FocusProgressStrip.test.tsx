@@ -41,6 +41,27 @@ describe("FocusProgressStrip", () => {
     expect(getBar().props.accessibilityValue.now).toBe(0);
   });
 
+  // Out-of-range counts are pulled into `[0, total]`, and the bar's percent
+  // reserves the 0%/100% endpoints for the true boundaries — a partial goal
+  // never rounds *up* to "complete" (199/200) or *down* to "empty" (1/200) and
+  // disagrees with the label. [doneCount, totalCount, expectedLabel, expectedNow]
+  const CLAMPED: [number, number, string, number][] = [
+    [-3, 5, "0 / 5 done", 0], // negative done clamps to 0
+    [7, 5, "5 / 5 done", 100], // done over total clamps to total (reads complete)
+    [199, 200, "199 / 200 done", 99], // just shy of done never rounds up to 100
+    [1, 200, "1 / 200 done", 1], // barely started never rounds down to 0
+  ];
+  it.each(CLAMPED)(
+    "clamps %i / %i to '%s' with the bar at %i%%",
+    (doneCount, totalCount, expectedLabel, expectedNow) => {
+      renderWithProviders(
+        <FocusProgressStrip doneCount={doneCount} totalCount={totalCount} />,
+      );
+      expect(screen.getByText(expectedLabel)).toBeTruthy();
+      expect(getBar().props.accessibilityValue.now).toBe(expectedNow);
+    },
+  );
+
   it("fires onPress exactly once when the strip is tapped", () => {
     const onPress = jest.fn();
     renderWithProviders(
