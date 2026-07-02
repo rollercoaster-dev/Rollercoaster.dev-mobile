@@ -14,6 +14,19 @@ interface SettingsDensityRowsProps {
  * (D6): the parent (#416 `SettingsScreen`) owns `selectedLevel` and persists it
  * via `useDensity()`. The active row shows `✓` and reports
  * `accessibilityState.checked`.
+ *
+ * Density IS a real, honored setting — `useDensity()` scales the spacing scale
+ * across all 7 themes. For the inventory of which OTHER `userSettings` fields
+ * are backed but have no UI (and which are dead), see the "Backed-but-unsurfaced
+ * settings" findings in docs/plans/dev-plans/issue-415-settings-theme-density-rows.md.
+ * Short version for anyone extending the Settings screen:
+ *   • Reduce Motion (`animationPref`) — fully honored by 10+ components via
+ *     useAnimationPref; `setAnimationPref` has no caller. This same radiogroup
+ *     pattern (Full / Reduced / None) drops straight in. Best next real row.
+ *   • Replay welcome (`hasSeenWelcome`) — needs a reset mutation (only a
+ *     mark-seen path exists today).
+ *   • fontScale — persisted + write-validated but NOTHING reads it; do not build
+ *     a "text size" row on it without first wiring a consumer.
  */
 export function SettingsDensityRows({
   selectedLevel,

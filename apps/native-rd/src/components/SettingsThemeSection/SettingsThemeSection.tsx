@@ -18,6 +18,17 @@ interface SettingsThemeSectionProps {
  * tapping a swatch calls `onSelect` and the preview re-renders. Rail + card sit
  * inside a single wrapper `View` (D2) so `SettingsSection`'s inter-child divider
  * doesn't split the picker from its live preview.
+ *
+ * NOTE — the section BACKGROUND does not follow the picked theme, by design.
+ * `SettingsSection`'s chrome is styled with unistyles reactive tokens, which
+ * always resolve to the single globally-active theme. Only `ThemeSampleCard`
+ * previews `selectedThemeId` (it reads `themes[id]` statically). This section is
+ * context-free and never calls `setTheme`, so the active theme — and thus the bg
+ * — only changes once #416 wires `onSelect` → `useThemeContext().setTheme`. In
+ * the assembled Settings screen a tap flips the global theme and the whole app
+ * (this bg included) recolors. Corollary: the `AllThemesMatrix` story can't show
+ * 7 real section bgs at once (one active theme) — the per-theme bg there is faked
+ * by the outer wrapper.
  */
 export function SettingsThemeSection({
   selectedThemeId,
