@@ -26,7 +26,7 @@ const initialSteps: EditGoalStep[] = [
     id: "s1",
     title: "Draft the outline",
     plannedEvidenceTypes: [EvidenceType.text],
-    // A step broken into smaller steps (D12) — the indented mint-rail block.
+    // A step broken into sub-steps (D12) — the indented mint-rail block.
     subSteps: [
       {
         id: "s1a",
@@ -204,7 +204,7 @@ export const EvidencePickerInteraction: Story = {
 
 export const SubSteps: Story = {
   render: () => (
-    <InteractiveEditGoal note='Step 1 is broken into smaller steps (the indented mint-rail block): tap a smaller step to rename it, tap its chip to set evidence, × to remove it, or "add a smaller step" for another. Steps with none show "break into smaller steps" — tap it to seed the first one. Each smaller step requires its own evidence. (Reorder within a parent is a follow-up — no drag handle on smaller steps yet.)' />
+    <InteractiveEditGoal note='Step 1 is broken into sub-steps (the indented mint-rail block): tap a sub-step to rename it, tap its chip to set evidence, × to remove it, or "add a sub-step" for another. Steps with none show "break into sub-steps" — tap it to seed the first one. Each sub-step requires its own evidence. (Reorder within a parent is a follow-up — no drag handle on sub-steps yet.)' />
   ),
 };
 

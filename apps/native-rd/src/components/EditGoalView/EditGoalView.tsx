@@ -53,9 +53,9 @@ export interface EditGoalDateDepChip {
 }
 
 /**
- * A "smaller step" nested under a parent step (D12) — the app's one-level
+ * A sub-step nested under a parent step (D12) — the app's one-level
  * `parentStepId` model (`schema.ts`). It carries its own title and planned
- * evidence (every step, including a smaller step, requires evidence), but no
+ * evidence (every step, including a sub-step, requires evidence), but no
  * date/dep chips and no further nesting (depth is capped at one level).
  */
 export interface EditGoalSubStep {
@@ -77,9 +77,9 @@ export interface EditGoalStep {
   /** Optional date/dependency chips (D5). Absent/empty → no chip row. */
   dateDepChips?: EditGoalDateDepChip[];
   /**
-   * Optional one-level "smaller steps" (D12). Absent/empty → the row shows a
-   * "break into smaller steps" prompt; non-empty → an indented block of
-   * sub-rows plus an "add a smaller step" affordance. Matches the Edit Goal C
+   * Optional one-level sub-steps (D12). Absent/empty → the row shows a
+   * "break into sub-steps" prompt; non-empty → an indented block of
+   * sub-rows plus an "add a sub-step" affordance. Matches the Edit Goal C
    * prototype's edit view and the app's `parentStepId` data model.
    */
   subSteps?: EditGoalSubStep[];
@@ -103,13 +103,13 @@ export interface EditGoalViewProps {
   /** Fired when the row's evidence picker toggles a step's planned types (D8). */
   onStepEvidenceChange: (stepId: string, types: EvidenceTypeValue[]) => void;
   /**
-   * Adds a smaller step under `parentStepId` (D12). Called with `newSubStepTitle`
+   * Adds a sub-step under `parentStepId` (D12). Called with `newSubStepTitle`
    * — the new sub-row is then renameable inline (mirrors how the C prototype's
    * create flow seeds a default-titled step). Not wired to persistence.
    */
   onAddSubStep: (parentStepId: string, title: string) => void;
   onSubStepTitleChange: (subStepId: string, title: string) => void;
-  /** Fired when a smaller step's evidence picker toggles its planned types (D12/D8). */
+  /** Fired when a sub-step's evidence picker toggles its planned types (D12/D8). */
   onSubStepEvidenceChange: (
     subStepId: string,
     types: EvidenceTypeValue[],
@@ -138,12 +138,20 @@ export interface EditGoalViewProps {
   evidenceTypesLabel?: string;
   /** Pluralized step-count label. Default: "N step" / "N steps". */
   stepCountLabel?: (count: number) => string;
-  /** "add a smaller step" affordance under a step that already has some (D12). */
+  /** "add a sub-step" affordance under a step that already has some (D12). */
   addSubStepLabel?: string;
-  /** "break into smaller steps" prompt on a step with none (D12). */
+  /** "break into sub-steps" prompt on a step with none (D12). */
   breakIntoSubStepsLabel?: string;
-  /** Default title for a freshly-added smaller step, renamed inline after (D12). */
+  /** Default title for a freshly-added sub-step, renamed inline after (D12). */
   newSubStepTitle?: string;
+  /** a11y label for the "add step" + button. */
+  addStepButtonLabel?: string;
+  /** a11y label for the evidence-picker close affordances (backdrop + ✕). */
+  closeLabel?: string;
+  /** a11y label for the "break into sub-steps" prompt on a step (D12). */
+  breakIntoSubStepsA11yLabel?: (stepTitle: string) => string;
+  /** a11y label for the "add a sub-step" affordance under a step (D12). */
+  addSubStepA11yLabel?: (stepTitle: string) => string;
 }
 
 const defaultStepCountLabel = (count: number) =>
@@ -178,9 +186,14 @@ export function EditGoalView({
   evidencePickerTitle = "Planned evidence",
   evidenceTypesLabel = "Evidence types",
   stepCountLabel = defaultStepCountLabel,
-  addSubStepLabel = "add a smaller step",
-  breakIntoSubStepsLabel = "break into smaller steps",
-  newSubStepTitle = "New smaller step",
+  addSubStepLabel = "add a sub-step",
+  breakIntoSubStepsLabel = "break into sub-steps",
+  newSubStepTitle = "New sub-step",
+  addStepButtonLabel = "Add step",
+  closeLabel = "Close",
+  breakIntoSubStepsA11yLabel = (stepTitle) =>
+    `Break "${stepTitle}" into sub-steps`,
+  addSubStepA11yLabel = (stepTitle) => `Add a sub-step to "${stepTitle}"`,
 }: EditGoalViewProps) {
   const { theme } = useUnistyles();
   const { animationPref } = useAnimationPref();
@@ -295,9 +308,9 @@ export function EditGoalView({
     editingEvidenceStep?.plannedEvidenceTypes ??
     editingEvidenceSub?.plannedEvidenceTypes;
 
-  // Smaller-steps block (D12), rendered inside each parent's card. A parent with
-  // no smaller steps shows the "break into smaller steps" prompt; one with some
-  // shows the indented green-rail block of sub-rows plus "add a smaller step".
+  // Sub-steps block (D12), rendered inside each parent's card. A parent with
+  // no sub-steps shows the "break into sub-steps" prompt; one with some
+  // shows the indented green-rail block of sub-rows plus "add a sub-step".
   // Both add affordances seed a default-titled sub-step (renamed inline after).
   function renderSubStepBlock(step: EditGoalStep) {
     const subs = step.subSteps ?? [];
@@ -307,7 +320,7 @@ export function EditGoalView({
           style={styles.breakIntoRow}
           onPress={() => handleAddSubStep(step.id)}
           accessibilityRole="button"
-          accessibilityLabel={`Break "${step.title}" into smaller steps`}
+          accessibilityLabel={breakIntoSubStepsA11yLabel(step.title)}
           hitSlop={6}
           testID={`edit-goal-break-into-${step.id}`}
         >
@@ -341,7 +354,7 @@ export function EditGoalView({
           style={styles.addSubStepRow}
           onPress={() => handleAddSubStep(step.id)}
           accessibilityRole="button"
-          accessibilityLabel={`Add a smaller step to "${step.title}"`}
+          accessibilityLabel={addSubStepA11yLabel(step.title)}
           hitSlop={6}
           testID={`edit-goal-add-substep-${step.id}`}
         >
@@ -455,7 +468,7 @@ export function EditGoalView({
                 isLast={index === steps.length - 1}
                 canDrag={canDrag}
               >
-                {/* Smaller-steps block (D12), rendered inside the parent card so
+                {/* Sub-steps block (D12), rendered inside the parent card so
                     it drags with the parent. See renderSubStepBlock. */}
                 {renderSubStepBlock(step)}
               </EditGoalStepRow>
@@ -491,7 +504,7 @@ export function EditGoalView({
             onPress={handleAddStep}
             testID="edit-goal-add-step-button"
             accessibilityRole="button"
-            accessibilityLabel="Add step"
+            accessibilityLabel={addStepButtonLabel}
           >
             <RNText style={styles.addButtonText}>+</RNText>
           </Pressable>
@@ -531,7 +544,7 @@ export function EditGoalView({
             style={styles.pickerBackdrop}
             onPress={() => setEditingEvidenceId(null)}
             accessibilityRole="button"
-            accessibilityLabel="Close"
+            accessibilityLabel={closeLabel}
             testID="edit-goal-evidence-backdrop"
           />
           <SafeAreaView edges={["bottom"]} style={styles.pickerSheet}>
@@ -544,7 +557,7 @@ export function EditGoalView({
                 style={styles.pickerClose}
                 onPress={() => setEditingEvidenceId(null)}
                 accessibilityRole="button"
-                accessibilityLabel="Close"
+                accessibilityLabel={closeLabel}
                 hitSlop={8}
                 testID="edit-goal-evidence-close"
               >

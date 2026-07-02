@@ -172,7 +172,7 @@ export const styles = StyleSheet.create((theme) => ({
     zIndex: 50,
   },
 
-  // --- Smaller steps block (D12) ---
+  // --- Sub-steps block (D12) ---
   // Indented, mint-railed block under a parent step that has some. accentMint is
   // the token nearest the prototype's #d4f4e7 rail (the Badges mint family).
   subStepBlock: {
@@ -219,7 +219,7 @@ export const styles = StyleSheet.create((theme) => ({
     fontSize: theme.size.lg,
     color: theme.colors.textMuted,
   },
-  // "add a smaller step" — inside the rail, blue (accentPrimary) like the proto.
+  // "add a sub-step" — inside the rail, blue (accentPrimary) like the proto.
   addSubStepRow: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
@@ -236,7 +236,7 @@ export const styles = StyleSheet.create((theme) => ({
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.accentPrimary,
   },
-  // "break into smaller steps" — prompt on a step with none, green (success).
+  // "break into sub-steps" — prompt on a step with none, green (success).
   breakIntoRow: {
     flexDirection: "row" as const,
     alignItems: "center" as const,

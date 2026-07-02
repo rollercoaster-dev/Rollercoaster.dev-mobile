@@ -7,7 +7,7 @@
  * display-only date/dependency chip row (D5, rendered only when present).
  *
  * The optional `children` slot renders inside the card, below the row — the
- * parent (EditGoalView) passes the one-level "smaller steps" block there (D12)
+ * parent (EditGoalView) passes the one-level sub-steps block there (D12)
  * so it drags with the parent card. This row owns none of the sub-step state.
  *
  * Drag reuses the same LongPress + Pan gesture shape as StepList's
@@ -69,8 +69,20 @@ export interface EditGoalStepRowProps {
   isLast: boolean;
   /** When false, the row renders static (single step, or a title is being edited). */
   canDrag: boolean;
-  /** Rendered inside the card below the row — the smaller-steps block (D12). */
+  /** Rendered inside the card below the row — the sub-steps block (D12). */
   children?: React.ReactNode;
+
+  // --- Copy (i18n-free per D9; English defaults; [Integrate] passes t()). ---
+  /** a11y label for the inline title-edit field. */
+  editStepA11yLabel?: (stepTitle: string) => string;
+  /** a11y hint on the tap-to-edit title. */
+  tapToEditHint?: string;
+  /** a11y label for the evidence chip (opens the type picker). */
+  editEvidenceLabel?: string;
+  /** a11y label for the ↑ reorder-up fallback button. */
+  moveUpLabel?: (stepTitle: string) => string;
+  /** a11y label for the ↓ reorder-down fallback button. */
+  moveDownLabel?: (stepTitle: string) => string;
 }
 
 export function EditGoalStepRow({
@@ -96,6 +108,11 @@ export function EditGoalStepRow({
   isLast,
   canDrag,
   children,
+  editStepA11yLabel = (stepTitle) => `Edit step: ${stepTitle}`,
+  tapToEditHint = "Tap to edit step title",
+  editEvidenceLabel = "Edit planned evidence",
+  moveUpLabel = (stepTitle) => `Move "${stepTitle}" up`,
+  moveDownLabel = (stepTitle) => `Move "${stepTitle}" down`,
 }: EditGoalStepRowProps) {
   const { theme } = useUnistyles();
   const translateY = useSharedValue(0);
@@ -174,7 +191,7 @@ export function EditGoalStepRow({
         selectTextOnFocus
         placeholderTextColor={theme.colors.textMuted}
         testID={`edit-goal-step-edit-${step.id}`}
-        accessibilityLabel={`Edit step: ${step.title}`}
+        accessibilityLabel={editStepA11yLabel(step.title)}
       />
     </View>
   ) : (
@@ -193,7 +210,7 @@ export function EditGoalStepRow({
           onPress={onStartEditing}
           accessibilityRole="button"
           accessibilityLabel={step.title}
-          accessibilityHint="Tap to edit step title"
+          accessibilityHint={tapToEditHint}
           testID={`edit-goal-step-title-${step.id}`}
         >
           <RNText style={styles.rowTitleText}>{step.title}</RNText>
@@ -202,7 +219,7 @@ export function EditGoalStepRow({
           style={styles.evidenceChip}
           onPress={onEvidenceChipPress}
           accessibilityRole="button"
-          accessibilityLabel="Edit planned evidence"
+          accessibilityLabel={editEvidenceLabel}
           hitSlop={8}
           testID={`edit-goal-step-evidence-${step.id}`}
         >
@@ -218,7 +235,7 @@ export function EditGoalStepRow({
                 icon={<ArrowUp size={18} weight="bold" />}
                 onPress={onMoveUp}
                 size="sm"
-                accessibilityLabel={`Move "${step.title}" up`}
+                accessibilityLabel={moveUpLabel(step.title)}
                 testID={`edit-goal-step-up-${step.id}`}
               />
             )}
@@ -227,7 +244,7 @@ export function EditGoalStepRow({
                 icon={<ArrowDown size={18} weight="bold" />}
                 onPress={onMoveDown}
                 size="sm"
-                accessibilityLabel={`Move "${step.title}" down`}
+                accessibilityLabel={moveDownLabel(step.title)}
                 testID={`edit-goal-step-down-${step.id}`}
               />
             )}

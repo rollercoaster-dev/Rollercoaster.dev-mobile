@@ -1,5 +1,5 @@
 /**
- * EditGoalSubStepRow — one "smaller step" nested under a parent step inside
+ * EditGoalSubStepRow — one sub-step nested under a parent step inside
  * EditGoalView (D12). Rendered inside the parent card's green-rail block.
  *
  * A leaf row: a decorative ↳ indent marker + tap-to-edit title (D10) + a
@@ -25,9 +25,19 @@ export interface EditGoalSubStepRowProps {
   onEditTextChange: (text: string) => void;
   onStartEditing: () => void;
   onCommitEditing: () => void;
-  /** Opens the evidence-type picker for this smaller step (D8/D12). */
+  /** Opens the evidence-type picker for this sub-step (D8/D12). */
   onEvidenceChipPress: () => void;
   onDelete: () => void;
+
+  // --- Copy (i18n-free per D9; English defaults; [Integrate] passes t()). ---
+  /** a11y label for the inline title-edit field. */
+  editSubStepA11yLabel?: (subStepTitle: string) => string;
+  /** a11y hint on the tap-to-edit title. */
+  tapToEditHint?: string;
+  /** a11y label for the evidence chip (opens the type picker). */
+  editEvidenceLabel?: string;
+  /** a11y label for the × delete affordance. */
+  deleteSubStepLabel?: (subStepTitle: string) => string;
 }
 
 export function EditGoalSubStepRow({
@@ -39,6 +49,10 @@ export function EditGoalSubStepRow({
   onCommitEditing,
   onEvidenceChipPress,
   onDelete,
+  editSubStepA11yLabel = (subStepTitle) => `Edit sub-step: ${subStepTitle}`,
+  tapToEditHint = "Tap to edit sub-step title",
+  editEvidenceLabel = "Edit planned evidence",
+  deleteSubStepLabel = (subStepTitle) => `Delete sub-step: ${subStepTitle}`,
 }: EditGoalSubStepRowProps) {
   const { theme } = useUnistyles();
 
@@ -67,7 +81,7 @@ export function EditGoalSubStepRow({
           selectTextOnFocus
           placeholderTextColor={theme.colors.textMuted}
           testID={`edit-goal-substep-edit-${subStep.id}`}
-          accessibilityLabel={`Edit smaller step: ${subStep.title}`}
+          accessibilityLabel={editSubStepA11yLabel(subStep.title)}
         />
       </View>
     );
@@ -81,7 +95,7 @@ export function EditGoalSubStepRow({
         onPress={onStartEditing}
         accessibilityRole="button"
         accessibilityLabel={subStep.title}
-        accessibilityHint="Tap to edit smaller step title"
+        accessibilityHint={tapToEditHint}
         testID={`edit-goal-substep-title-${subStep.id}`}
       >
         <RNText style={styles.subStepTitleText}>{subStep.title}</RNText>
@@ -90,7 +104,7 @@ export function EditGoalSubStepRow({
         style={styles.evidenceChip}
         onPress={onEvidenceChipPress}
         accessibilityRole="button"
-        accessibilityLabel="Edit planned evidence"
+        accessibilityLabel={editEvidenceLabel}
         hitSlop={8}
         testID={`edit-goal-substep-evidence-${subStep.id}`}
       >
@@ -103,7 +117,7 @@ export function EditGoalSubStepRow({
         style={styles.subStepDelete}
         onPress={onDelete}
         accessibilityRole="button"
-        accessibilityLabel={`Delete smaller step: ${subStep.title}`}
+        accessibilityLabel={deleteSubStepLabel(subStep.title)}
         hitSlop={8}
         testID={`edit-goal-substep-delete-${subStep.id}`}
       >
