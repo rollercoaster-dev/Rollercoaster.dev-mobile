@@ -27,7 +27,7 @@
 
 ## Storybook reorg (done in this pass)
 
-16 story files retitled under `Iteration B/`, grouped by screen. No other code changes. Type-check and lint pass; nothing else referenced the old titles (no `storySort`, no snapshots, no test imports).
+16 story files retitled under `Iteration B/`, grouped by screen. No other code changes. Type-check and lint pass; no code/test/snapshot/storySort references depended on the old titles. Historical dev plans may still mention the previous Storybook titles.
 
 ```
 Iteration B/

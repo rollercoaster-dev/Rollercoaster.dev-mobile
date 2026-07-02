@@ -1,3 +1,4 @@
+import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import type { Meta, StoryObj } from "@storybook/react";
 import React from "react";
 import { View } from "react-native";
@@ -27,14 +28,15 @@ export default meta;
 
 type Story = StoryObj<typeof FocusPillTabBar>;
 
-function buildProps(activeIndex: number) {
+function buildProps(activeIndex: number): BottomTabBarProps {
   const routes = [
     { key: "GoalsTab-1", name: "GoalsTab" as const, params: undefined },
     { key: "BadgesTab-1", name: "BadgesTab" as const, params: undefined },
     { key: "SettingsTab-1", name: "SettingsTab" as const, params: undefined },
   ];
   // The component reads only a small slice of BottomTabBarProps. Stories
-  // don't have a real navigator so we cast a minimal mock.
+  // don't have a real navigator, so cast the minimal mock through `unknown`
+  // instead of using an explicit `any`.
 
   return {
     state: {
@@ -53,7 +55,7 @@ function buildProps(activeIndex: number) {
     },
     descriptors: {},
     insets: { top: 0, right: 0, bottom: 0, left: 0 },
-  } as any;
+  } as unknown as BottomTabBarProps;
 }
 
 function Stage({
