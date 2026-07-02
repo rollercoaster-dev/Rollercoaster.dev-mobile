@@ -146,6 +146,14 @@
       "goalEvidence": "Goal evidence"
     }
   },
+  "timelineBreakdown": {
+    "legend": {
+      "completed": "{{count}} done",
+      "in-progress": "{{count}} in motion",
+      "pending": "{{count}} to come",
+      "paused": "{{count}} set aside"
+    }
+  },
   "progressDots": {
     "a11y": {
       "label": "Step navigation"
