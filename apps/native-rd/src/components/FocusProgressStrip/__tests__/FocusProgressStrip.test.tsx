@@ -50,10 +50,21 @@ describe("FocusProgressStrip", () => {
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
-  it("exposes a button with a non-empty label and a progressbar bar", () => {
-    renderWithProviders(<FocusProgressStrip doneCount={2} totalCount={5} />);
+  it("exposes a button with a non-empty label and a progressbar bar when onPress is set", () => {
+    renderWithProviders(
+      <FocusProgressStrip doneCount={2} totalCount={5} onPress={jest.fn()} />,
+    );
     const strip = screen.getByRole("button");
     expect(strip.props.accessibilityLabel).toBeTruthy();
+    expect(getBar().props.accessibilityRole).toBe("progressbar");
+  });
+
+  it("renders no phantom button when onPress is omitted, keeping the progressbar readable", () => {
+    renderWithProviders(<FocusProgressStrip doneCount={2} totalCount={5} />);
+    // A handler-less strip must not expose a non-functional button to the
+    // accessibility tree; the count text and progressbar carry the meaning.
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(screen.getByText("2 / 5 done")).toBeTruthy();
     expect(getBar().props.accessibilityRole).toBe("progressbar");
   });
 });

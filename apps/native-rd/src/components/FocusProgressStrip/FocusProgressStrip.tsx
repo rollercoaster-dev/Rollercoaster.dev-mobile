@@ -36,16 +36,9 @@ export function FocusProgressStrip({
   const total = Math.max(0, totalCount);
   const done = Math.min(Math.max(0, doneCount), total);
   const now = total > 0 ? Math.round((done / total) * 100) : 0;
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={t("focusMode:progressStrip.a11yLabel", {
-        done,
-        total,
-      })}
-      style={styles.strip}
-    >
+
+  const content = (
+    <>
       <View style={styles.topRow}>
         <Text style={styles.doneCount} numberOfLines={1}>
           {t("focusMode:progressStrip.doneCount", {
@@ -65,6 +58,30 @@ export function FocusProgressStrip({
       >
         <View style={[styles.barFill, { width: `${now}%` }]} />
       </View>
+    </>
+  );
+
+  // Only present as a button when there's a real handler. A handler-less
+  // Pressable would put a non-functional "button" in the accessibility tree;
+  // fall back to a plain container instead (matches Card/SettingsRow/
+  // TimelineNode). Live consumers always pass onPress (#377 wires it) — the
+  // handler-less path is stories/tests, where the inner progressbar and count
+  // text stay readable on their own.
+  if (!onPress) {
+    return <View style={styles.strip}>{content}</View>;
+  }
+
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={t("focusMode:progressStrip.a11yLabel", {
+        done,
+        total,
+      })}
+      style={styles.strip}
+    >
+      {content}
     </Pressable>
   );
 }
