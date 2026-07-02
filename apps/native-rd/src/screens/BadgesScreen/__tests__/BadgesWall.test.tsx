@@ -8,12 +8,26 @@ import { i18n } from "../../../i18n";
 import { withRepeat } from "react-native-reanimated";
 import { BadgesWall } from "../BadgesWall";
 import type { BadgesWallGalleryItem, BadgesWallSpotlight } from "../BadgesWall";
+import { formatDate } from "../../../utils/format";
+import { BadgeShape, BadgeFrame, BadgeIconWeight } from "../../../badges/types";
+import type { BadgeDesign } from "../../../badges/types";
 
 // Animation pref is mocked so we can drive the glow-gating branch directly
 // (and avoid the hook's Evolu userSettings query in a unit test).
 const mockUseAnimationPref = jest.fn();
 jest.mock("../../../hooks/useAnimationPref", () => ({
   useAnimationPref: (...args: unknown[]) => mockUseAnimationPref(...args),
+}));
+
+// Stub BadgeRenderer to a testID'd host node (mirrors BadgeWallCell.test) so the
+// "designed spotlight" assertion checks that SpotlightArt DELEGATES to the
+// renderer, without pulling the real SVG/icon rendering into a unit test.
+jest.mock("../../../badges/BadgeRenderer", () => ({
+  BadgeRenderer: ({ testID = "badge-renderer" }: { testID?: string }) => {
+    const ReactActual = require("react");
+    const { View } = require("react-native");
+    return ReactActual.createElement(View, { testID });
+  },
 }));
 
 // Local reanimated mock exposing withRepeat as a jest.fn so the animation-gating
@@ -99,8 +113,40 @@ describe("BadgesWall", () => {
         screen.getByText(i18n.t("badges:wall.justEarned")),
       ).toBeOnTheScreen();
       expect(screen.getByText("Rewire the workshop")).toBeOnTheScreen();
-      // textTransform:uppercase is a style — the text node keeps the raw casing.
-      expect(screen.getByText("Jun 18, 2026")).toBeOnTheScreen();
+      // Assert the date the component actually renders, computed the same way
+      // (formatDate + active language). A hardcoded "Jun 18, 2026" would be
+      // timezone-fragile — the UTC-midnight instant renders "Jun 17" in any
+      // UTC-negative zone (jest doesn't pin TZ). textTransform:uppercase is a
+      // style, so the text node keeps formatDate's raw mixed casing.
+      expect(
+        screen.getByText(formatDate(SPOTLIGHT.earnedAt, i18n.language)),
+      ).toBeOnTheScreen();
+    });
+
+    it("renders the spotlight badge art via BadgeRenderer when a design is set", () => {
+      const design: BadgeDesign = {
+        shape: BadgeShape.star,
+        frame: BadgeFrame.none,
+        color: "#ffe50c",
+        iconName: "Star",
+        iconWeight: BadgeIconWeight.regular,
+        title: "Rewire the workshop",
+        centerMode: "icon",
+      };
+      renderWithProviders(
+        <BadgesWall
+          count={1}
+          spotlight={{ ...SPOTLIGHT, design }}
+          gallery={[]}
+          onOpenBadge={noop}
+          onSeeGoals={noop}
+        />,
+      );
+      // A designed spotlight draws the badge's own shape via BadgeRenderer, never
+      // the initial-letter fallback tile — guards against an inverted/broken
+      // `if (design)` shipping a letter "R" in place of the badge.
+      expect(screen.getByTestId("badge-renderer")).toBeOnTheScreen();
+      expect(screen.queryByText("R")).toBeNull();
     });
 
     it("omits the date row when earnedAt is null", () => {

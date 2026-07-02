@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -21,7 +21,13 @@ import { CELL_SIZE } from "../../components/BadgeWallCell/BadgeWallCell.styles";
 import { useAnimationPref } from "../../hooks/useAnimationPref";
 import { formatDate } from "../../utils/format";
 import { palette } from "../../themes/palette";
-import { styles, GALLERY_GAP, GALLERY_H_PADDING } from "./BadgesWall.styles";
+import {
+  styles,
+  GALLERY_GAP,
+  GALLERY_H_PADDING,
+  SPOTLIGHT_NARROW_WIDTH,
+  SPOTLIGHT_ART_COMPACT,
+} from "./BadgesWall.styles";
 
 /** Already-resolved most-recently-earned badge for the spotlight card (D7). */
 export interface BadgesWallSpotlight {
@@ -79,17 +85,20 @@ function GhostBadge({
 
 /** Spotlight badge art — the badge's own shape via BadgeRenderer, or a neutral
  *  rounded-square initial tile when the design isn't set (mirrors BadgeWallCell,
- *  but without its Pressable so it doesn't nest inside the spotlight's). */
+ *  but without its Pressable so it doesn't nest inside the spotlight's). `size`
+ *  shrinks on narrow surfaces so the title keeps room (see SpotlightArt caller). */
 function SpotlightArt({
   design,
   title,
+  size,
 }: {
   design: BadgeDesign | null;
   title: string;
+  size: number;
 }) {
-  if (design) return <BadgeRenderer design={design} size={CELL_SIZE} />;
+  if (design) return <BadgeRenderer design={design} size={size} />;
   return (
-    <View style={styles.spotlightArtFallback}>
+    <View style={[styles.spotlightArtFallback, { width: size, height: size }]}>
       <Text style={styles.spotlightArtFallbackText}>
         {(title.charAt(0) || "?").toUpperCase()}
       </Text>
@@ -115,7 +124,13 @@ export function BadgesWall({
 }: BadgesWallProps) {
   const { t, i18n } = useTranslation(["badges"]);
   const { animationPref } = useAnimationPref();
-  const { width } = useWindowDimensions();
+  // Lay the grid out against the surface's OWN width (measured via onLayout),
+  // not the window — so the columns fit inside whatever container the wall sits
+  // in (full-bleed screen, a Storybook preview frame, a tablet split view) and
+  // nothing spills past the right edge. `windowWidth` is the pre-layout seed.
+  const { width: windowWidth } = useWindowDimensions();
+  const [surfaceWidth, setSurfaceWidth] = useState(0);
+  const width = surfaceWidth || windowWidth;
 
   // Decorative celebration glow — loops only under the "full" animation pref;
   // "reduced"/"none" leave it static (opacity 0 → no halo, nothing pulses).
@@ -156,8 +171,18 @@ export function BadgesWall({
     );
   }
 
-  // Pack the fixed 60pt cells across the measured surface width; floor of 3 so a
-  // narrow/zero-width (test) viewport still lays out a grid.
+  // Below SPOTLIGHT_NARROW_WIDTH the spotlight row can't hold 60pt art + a
+  // trailing arrow AND a readable title, so it switches to a compact layout
+  // (smaller art, tighter gaps, no arrow) that hands the reclaimed width to the
+  // title. `width` is the surface's own measured width (window seed pre-layout),
+  // so this reacts to embedded/split containers, not just the device size.
+  const isNarrow = width > 0 && width < SPOTLIGHT_NARROW_WIDTH;
+  const spotlightArtSize = isNarrow ? SPOTLIGHT_ART_COMPACT : CELL_SIZE;
+
+  // Pack as many fixed 60pt cells as fit across the measured surface width;
+  // floor of 3 so a narrow/zero-width (test) viewport still lays out a grid.
+  // `galleryRow` centers each row, so the leftover space (cells rarely divide
+  // the width evenly) splits symmetrically instead of trailing off the right.
   const numColumns = Math.max(
     3,
     Math.floor(
@@ -183,16 +208,25 @@ export function BadgesWall({
           accessibilityRole="button"
           accessibilityLabel={spotlight.goalTitle}
           testID="badges-wall-spotlight"
-          style={styles.spotlightPressable}
+          style={[
+            styles.spotlightPressable,
+            isNarrow && styles.spotlightPressableCompact,
+          ]}
         >
-          <View style={styles.spotlightCard}>
-            <Animated.View
-              style={[styles.glowOverlay, glowStyle]}
-              pointerEvents="none"
-            />
+          <Animated.View
+            style={[styles.glowOverlay, glowStyle]}
+            pointerEvents="none"
+          />
+          <View
+            style={[
+              styles.spotlightCard,
+              isNarrow && styles.spotlightCardCompact,
+            ]}
+          >
             <SpotlightArt
               design={spotlight.design}
               title={spotlight.goalTitle}
+              size={spotlightArtSize}
             />
             <View style={styles.spotlightBody}>
               <Text style={styles.spotlightOverline}>
@@ -207,7 +241,9 @@ export function BadgesWall({
                 </Text>
               ) : null}
             </View>
-            <Text style={styles.spotlightArrow}>→</Text>
+            {/* Decorative "open" arrow — the whole card is already a button, so
+                it's dropped on narrow surfaces to give the title its width. */}
+            {isNarrow ? null : <Text style={styles.spotlightArrow}>→</Text>}
           </View>
         </Pressable>
       ) : null}
@@ -215,10 +251,13 @@ export function BadgesWall({
   );
 
   return (
-    <View style={styles.surface}>
+    <View
+      style={styles.surface}
+      onLayout={(e) => setSurfaceWidth(e.nativeEvent.layout.width)}
+    >
       <FlatList
-        // Remount when the column count changes (rotation): FlatList throws if
-        // numColumns changes without a new key.
+        // Remount when the column count changes (rotation/resize): FlatList
+        // throws if numColumns changes without a new key.
         key={`badges-wall-cols-${numColumns}`}
         data={gallery}
         keyExtractor={(item) => item.id}

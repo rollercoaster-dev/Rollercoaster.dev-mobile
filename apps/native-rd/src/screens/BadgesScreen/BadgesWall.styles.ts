@@ -12,6 +12,19 @@ export const GALLERY_H_PADDING = 16;
 /** Gap between gallery cells on both axes (logical px). */
 export const GALLERY_GAP = 12;
 
+/**
+ * Surface width (logical px) below which the spotlight card switches to its
+ * compact layout. Above this the full row (60pt art + trailing arrow) has room
+ * for a readable title; below it — small/old phones (≤359pt), tablet split
+ * views, the Storybook preview frame, or any theme/OS font-scaling that widens
+ * each line — the fixed chrome would starve the flexible title column and it
+ * truncates mid-word. The compact layout shrinks the art, tightens the gaps,
+ * and drops the decorative arrow so the title keeps enough width to stay legible.
+ */
+export const SPOTLIGHT_NARROW_WIDTH = 360;
+/** Badge-art size in the spotlight's compact (narrow-surface) layout. */
+export const SPOTLIGHT_ART_COMPACT = 48;
+
 export const styles = StyleSheet.create((theme) => ({
   // TOKEN-RISK: the wall is a deliberately fixed dark "wall of proof" surface.
   // No per-theme `chrome.badgeWallBg` token exists yet (verified absent from
@@ -29,6 +42,10 @@ export const styles = StyleSheet.create((theme) => ({
   },
   galleryRow: {
     gap: GALLERY_GAP,
+    // Center the fixed-size cells so leftover width splits evenly on both sides
+    // — the grid reads as a centered block rather than left-packed with a ragged
+    // right edge (and never spills a partial column off the surface).
+    justifyContent: "center",
   },
 
   // --- Header: count tally + overline ------------------------------------
@@ -64,6 +81,14 @@ export const styles = StyleSheet.create((theme) => ({
     marginHorizontal: GALLERY_H_PADDING,
     marginBottom: theme.space[4],
   },
+  // Narrow-surface overrides (see SPOTLIGHT_NARROW_WIDTH): reclaim horizontal
+  // space for the title by tightening the card's outer margin and inner gap.
+  spotlightPressableCompact: {
+    marginHorizontal: theme.space[3],
+  },
+  spotlightCardCompact: {
+    gap: theme.space[2],
+  },
   spotlightCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -74,10 +99,13 @@ export const styles = StyleSheet.create((theme) => ({
     borderColor: theme.chrome.celebrationBg,
     backgroundColor: palette.gray800,
   },
-  // Pulsing celebration halo — a transparent, out-of-flow box whose only paint
-  // is a colored shadow; BadgesWall.tsx animates its opacity so it breathes.
-  // Colored shadows render on web/iOS; Android degrades to no halo (acceptable:
-  // the static celebrationBg border still marks the card either way).
+  // Pulsing celebration halo. iOS only casts a shadow from an OPAQUE layer, so
+  // this box carries a solid celebrationBg fill and sits BEHIND the opaque
+  // spotlight card (a sibling, not a child): the card hides the fill and only
+  // the shadow bleeds out as the halo. BadgesWall.tsx animates its opacity so
+  // the halo breathes. iOS + web render it; Android has no `elevation` here so
+  // it degrades to no halo (acceptable: the static celebrationBg card border
+  // still marks the card either way).
   glowOverlay: {
     position: "absolute",
     top: 0,
@@ -85,6 +113,7 @@ export const styles = StyleSheet.create((theme) => ({
     right: 0,
     bottom: 0,
     borderRadius: theme.radius.sm,
+    backgroundColor: theme.chrome.celebrationBg,
     shadowColor: theme.chrome.celebrationBg,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.85,
@@ -165,6 +194,10 @@ export const styles = StyleSheet.create((theme) => ({
     alignItems: "center",
     justifyContent: "center",
   },
+  // Same opaque-fill-behind-opaque-shape technique as `glowOverlay`: the solid
+  // celebrationBg fill is hidden behind the (opaque) ghostBadge rendered on top,
+  // so iOS + web cast the breathing halo from the shadow while nothing tints the
+  // glyph. Android degrades to no halo (no elevation).
   ghostGlow: {
     position: "absolute",
     top: 0,
@@ -172,6 +205,7 @@ export const styles = StyleSheet.create((theme) => ({
     right: 0,
     bottom: 0,
     borderRadius: 54,
+    backgroundColor: theme.chrome.celebrationBg,
     shadowColor: theme.chrome.celebrationBg,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.7,
