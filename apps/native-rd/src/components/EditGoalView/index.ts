@@ -5,3 +5,5 @@ export type {
   EditGoalDateDepChip,
   EditGoalChipTone,
 } from "./EditGoalView";
+export { EditGoalOverflowMenu } from "./EditGoalOverflowMenu";
+export type { EditGoalOverflowMenuProps } from "./EditGoalOverflowMenu";
