@@ -1,13 +1,10 @@
 import { StyleSheet } from "react-native-unistyles";
 import { shadowStyle } from "../../styles/shadows";
 
-// Zero hardcoded hex (hard acceptance gate). Token mapping to the App Shell
-// prototype's `edit` route:
-//   card surface #fff            -> colors.background
-//   hard ink border #0a0a0a      -> colors.border
-//   muted label #737373          -> colors.textSecondary / textMuted
-//   info banner #ede9fe / #3b1f6b-> colors.accentPurpleLight / accentPrimary
-//   add "+" button #2563eb       -> colors.accentPrimary
+// Zero hardcoded hex (hard acceptance gate). Token map to the App Shell `edit`
+// route: card surface #fff → background · ink border #0a0a0a → border · muted
+// #737373 → textSecondary · banner #ede9fe/#3b1f6b → accentPurpleLight/
+// accentPrimary · add-button #2563eb → accentPrimary.
 export const styles = StyleSheet.create((theme) => ({
   container: {
     gap: 0,
@@ -80,11 +77,12 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.textSecondary,
   },
   stepList: {
+    position: "relative" as const,
     gap: theme.space[2],
   },
-  // Plain (non-draggable) step card — the shell placeholder. Step 2 replaces
-  // the row body with EditGoalStepRow (drag handle + evidence + date/dep chips).
-  stepCard: {
+
+  // --- Step row (EditGoalStepRow) ---
+  rowCard: {
     backgroundColor: theme.colors.background,
     borderWidth: theme.borderWidth.thick,
     borderColor: theme.colors.border,
@@ -93,10 +91,85 @@ export const styles = StyleSheet.create((theme) => ({
     paddingVertical: theme.space[3],
     ...shadowStyle(theme, "cardElevationSmall"),
   },
-  stepTitleText: {
+  rowCardDragging: {
+    borderColor: theme.colors.accentPrimary,
+  },
+  rowMain: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: theme.space[2],
+  },
+  dragHandle: {
     fontSize: theme.size.md,
+    color: theme.colors.textMuted,
+  },
+  stepNumber: {
+    fontFamily: theme.fontFamily.headline,
+    fontWeight: theme.fontWeight.bold,
+    fontSize: theme.size.sm,
+    color: theme.colors.text,
+  },
+  rowTitlePress: {
+    flex: 1,
+    minHeight: 44,
+    justifyContent: "center" as const,
+  },
+  rowTitleText: {
+    fontSize: theme.size.sm,
     fontFamily: theme.fontFamily.body,
     color: theme.colors.text,
+  },
+  editInput: {
+    flex: 1,
+    minHeight: 44,
+    fontSize: theme.size.sm,
+    fontFamily: theme.fontFamily.body,
+    color: theme.colors.text,
+    padding: 0,
+  },
+  evidenceChip: {
+    minHeight: 32,
+    justifyContent: "center" as const,
+    paddingVertical: theme.space[1],
+  },
+  reorderButtons: {
+    flexDirection: "row" as const,
+    gap: theme.space[1],
+  },
+  // Date/dependency chip row (D5) — rendered only when chips are present.
+  chipRow: {
+    flexDirection: "row" as const,
+    flexWrap: "wrap" as const,
+    gap: theme.space[2],
+    marginTop: theme.space[2],
+  },
+  dateDepChip: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 5,
+    backgroundColor: theme.colors.background,
+    borderWidth: theme.borderWidth.medium,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.pill,
+    paddingHorizontal: theme.space[2],
+    paddingVertical: 2,
+  },
+  dateDepChipGlyph: {
+    fontSize: 10,
+  },
+  dateDepChipText: {
+    fontFamily: theme.fontFamily.mono,
+    fontSize: 10,
+  },
+  // Reorder insertion indicator, drawn at the real landing slot mid-drag.
+  dropLine: {
+    position: "absolute" as const,
+    left: 0,
+    right: 0,
+    height: 3,
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.colors.accentPrimary,
+    zIndex: 50,
   },
 
   // --- Add-step row ---
@@ -165,5 +238,61 @@ export const styles = StyleSheet.create((theme) => ({
     padding: theme.space[4],
     borderTopWidth: theme.borderWidth.medium,
     borderTopColor: theme.colors.border,
+  },
+
+  // --- Evidence-type picker bottom sheet (D8) ---
+  // Mirrors EvidenceTypePicker's capture-sheet treatment: scrim + bottom-anchored
+  // neo-brutalist sheet with a hard top border and modal shadow.
+  pickerOverlay: {
+    flex: 1,
+    justifyContent: "flex-end" as const,
+    backgroundColor: `${theme.colors.shadow}cc`,
+  },
+  pickerBackdrop: {
+    position: "absolute" as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  pickerSheet: {
+    borderTopLeftRadius: theme.radius.xl,
+    borderTopRightRadius: theme.radius.xl,
+    borderTopWidth: theme.borderWidth.thick,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.background,
+    paddingHorizontal: theme.space[4],
+    paddingTop: theme.space[3],
+    paddingBottom: theme.space[4],
+    gap: theme.space[3],
+    ...shadowStyle(theme, "modalElevation"),
+  },
+  pickerHandle: {
+    alignSelf: "center" as const,
+    width: 40,
+    height: 4,
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.colors.border,
+  },
+  pickerHeader: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "space-between" as const,
+  },
+  pickerTitle: {
+    fontFamily: theme.fontFamily.headline,
+    fontWeight: theme.fontWeight.bold,
+    fontSize: theme.size.lg,
+    color: theme.colors.text,
+  },
+  pickerClose: {
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  pickerCloseIcon: {
+    fontSize: theme.size.lg,
+    color: theme.colors.text,
   },
 }));
