@@ -8,7 +8,7 @@ import type { FocusCapturedEvidenceItem } from "./FocusCurrentTaskCard";
 import { themes, themeNames, type ThemeName } from "../../themes/compose";
 
 const meta: Meta<typeof FocusCurrentTaskCard> = {
-  title: "FocusCurrentTaskCard",
+  title: "Iteration B/Focus Mode/FocusCurrentTaskCard",
   component: FocusCurrentTaskCard,
 };
 

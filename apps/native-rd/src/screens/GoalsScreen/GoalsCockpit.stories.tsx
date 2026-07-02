@@ -32,7 +32,7 @@ const keepWarm: CockpitKeepWarmGoal[] = [
 const noop = () => {};
 
 const meta: Meta<typeof GoalsCockpit> = {
-  title: "Screens/GoalsCockpit",
+  title: "Iteration B/Goals/GoalsCockpit",
   component: GoalsCockpit,
   args: {
     onStartResume: noop,

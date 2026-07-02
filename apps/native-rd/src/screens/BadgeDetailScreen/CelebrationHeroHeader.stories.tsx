@@ -25,7 +25,7 @@ const designedBadge: BadgeDesign = {
 const noop = () => {};
 
 const meta: Meta<typeof CelebrationHeroHeader> = {
-  title: "Screens/BadgeDetail/CelebrationHeroHeader",
+  title: "Iteration B/Badge Detail/CelebrationHeroHeader",
   component: CelebrationHeroHeader,
   args: {
     onBack: noop,

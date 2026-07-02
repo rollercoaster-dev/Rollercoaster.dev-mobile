@@ -19,7 +19,7 @@ import {
 } from "../../themes/compose";
 
 const meta: Meta<typeof TimelineStep> = {
-  title: "TimelineStep",
+  title: "Iteration B/Timeline/TimelineStep",
   component: TimelineStep,
 };
 

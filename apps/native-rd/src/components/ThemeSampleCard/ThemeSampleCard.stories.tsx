@@ -6,7 +6,7 @@ import { themes } from "../../themes/compose";
 import { ThemeSampleCard } from "./ThemeSampleCard";
 
 const meta: Meta<typeof ThemeSampleCard> = {
-  title: "ThemeSampleCard",
+  title: "Iteration B/Theme & Settings/ThemeSampleCard",
   component: ThemeSampleCard,
 };
 

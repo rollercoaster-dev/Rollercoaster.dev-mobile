@@ -4,7 +4,7 @@ import { BadgeShareSheet } from "./BadgeShareSheet";
 const noop = () => {};
 
 const meta: Meta<typeof BadgeShareSheet> = {
-  title: "Screens/BadgeDetail/BadgeShareSheet",
+  title: "Iteration B/Badge Detail/BadgeShareSheet",
   component: BadgeShareSheet,
   args: {
     goalTitle: "Rewire the workshop",

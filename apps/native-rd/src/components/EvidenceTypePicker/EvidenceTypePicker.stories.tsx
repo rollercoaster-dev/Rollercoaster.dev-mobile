@@ -10,7 +10,7 @@ import type { EvidenceTypeValue } from "../../types/evidence";
 import { themes, themeNames, type ThemeName } from "../../themes/compose";
 
 const meta: Meta<typeof EvidenceTypePicker> = {
-  title: "EvidenceTypePicker",
+  title: "Iteration B/Focus Mode/EvidenceTypePicker",
   component: EvidenceTypePicker,
 };
 

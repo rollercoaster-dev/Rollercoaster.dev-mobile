@@ -7,7 +7,7 @@ import { Text } from "../components/Text";
 import { FocusPillTabBar } from "./FocusPillTabBar";
 
 const meta: Meta<typeof FocusPillTabBar> = {
-  title: "Navigation/FocusPillTabBar",
+  title: "Iteration B/Navigation/FocusPillTabBar",
   component: FocusPillTabBar,
   decorators: [
     (Story) => (
@@ -35,7 +35,7 @@ function buildProps(activeIndex: number) {
   ];
   // The component reads only a small slice of BottomTabBarProps. Stories
   // don't have a real navigator so we cast a minimal mock.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   return {
     state: {
       index: activeIndex,

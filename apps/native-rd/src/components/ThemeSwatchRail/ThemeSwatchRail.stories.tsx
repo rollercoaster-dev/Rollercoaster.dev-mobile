@@ -4,7 +4,7 @@ import type { ThemeName } from "../../themes/compose";
 import { ThemeSwatchRail } from "./ThemeSwatchRail";
 
 const meta: Meta<typeof ThemeSwatchRail> = {
-  title: "ThemeSwatchRail",
+  title: "Iteration B/Theme & Settings/ThemeSwatchRail",
   component: ThemeSwatchRail,
 };
 

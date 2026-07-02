@@ -92,7 +92,7 @@ const SPOTLIGHT = {
 // ---------------------------------------------------------------------------
 
 const meta: Meta<typeof BadgesWall> = {
-  title: "Badges/BadgesWall",
+  title: "Iteration B/Badges Wall/BadgesWall",
   component: BadgesWall,
   args: { onOpenBadge: noop, onSeeGoals: noop },
 };
