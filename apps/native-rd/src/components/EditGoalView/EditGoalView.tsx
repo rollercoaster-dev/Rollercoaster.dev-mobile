@@ -511,7 +511,11 @@ export function EditGoalView({
         </View>
 
         <View style={styles.infoBanner}>
-          <RNText style={styles.infoBannerIcon} accessibilityElementsHidden>
+          <RNText
+            style={styles.infoBannerIcon}
+            accessibilityElementsHidden
+            importantForAccessibility="no"
+          >
             📅
           </RNText>
           <RNText style={styles.infoBannerText}>{datesInfoText}</RNText>
