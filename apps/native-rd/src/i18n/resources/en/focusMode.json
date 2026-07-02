@@ -48,6 +48,17 @@
       "designBadgeA11y": "Design your badge to celebrate completing this goal"
     }
   },
+  "progressStrip": {
+    "doneCount": "{{done}} / {{total}} done",
+    "seeAllSteps": "See all steps ›",
+    "a11yLabel": "{{done}} of {{total}} steps done. See all steps."
+  },
+  "parked": {
+    "heading": "Nothing in progress.",
+    "body": "{{count}} set aside — all still here, none hidden, nothing counted. Pick one back up when you're ready.",
+    "resumeCta": "resume ›",
+    "rowA11y": "{{title}}, paused. Resume."
+  },
   "header": {
     "showTimeline": "Show timeline",
     "hideTimeline": "Hide timeline",

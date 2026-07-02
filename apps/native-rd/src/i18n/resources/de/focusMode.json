@@ -48,6 +48,17 @@
       "designBadgeA11y": "Gestalte dein Abzeichen, um den Abschluss dieses Ziels zu feiern"
     }
   },
+  "progressStrip": {
+    "doneCount": "{{done}} / {{total}} erledigt",
+    "seeAllSteps": "Alle Schritte ansehen ›",
+    "a11yLabel": "{{done}} von {{total}} Schritten erledigt. Alle Schritte ansehen."
+  },
+  "parked": {
+    "heading": "Nichts läuft gerade.",
+    "body": "{{count}} zur Seite gelegt — alle noch da, nichts versteckt, nichts gezählt. Nimm eins zurück, wenn du bereit bist.",
+    "resumeCta": "fortsetzen ›",
+    "rowA11y": "{{title}}, pausiert. Fortsetzen."
+  },
   "header": {
     "showTimeline": "Zeitleiste anzeigen",
     "hideTimeline": "Zeitleiste ausblenden",
