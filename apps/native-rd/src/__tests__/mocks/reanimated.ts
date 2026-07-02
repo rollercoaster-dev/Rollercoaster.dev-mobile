@@ -34,13 +34,15 @@ const named = {
   withSpring: (toValue: number) => toValue,
   withRepeat: (
     animation: number,
-    _numberOfReps?: number,
+    numberOfReps?: number,
     _reverse?: boolean,
     callback?: (finished: boolean) => void,
   ) => {
-    // Looping animations never "finish", but invoke the callback (if any) with
-    // finished === true so components that clean up on completion behave.
-    if (typeof callback === "function") callback(true);
+    // A finite repeat eventually completes and fires its callback with
+    // finished === true. An infinite repeat (numberOfReps === -1) never
+    // completes in real Reanimated, so the callback must NOT fire — otherwise
+    // tests pass on a completion that can't happen at runtime.
+    if (typeof callback === "function" && numberOfReps !== -1) callback(true);
     return animation;
   },
   runOnJS: (fn: (...args: unknown[]) => unknown) => fn,

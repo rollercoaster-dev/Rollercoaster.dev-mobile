@@ -3,12 +3,17 @@
   "wall": {
     "count": "{{count}} badges",
     "allVerifiable": "A WALL OF PROOF · ALL VERIFIABLE",
-    "justEarned": "JUST EARNED"
+    "justEarned": "JUST EARNED",
+    "empty": {
+      "title": "Your first badge is waiting",
+      "body": "Finish a goal and you'll design a badge to mark it — a verifiable credential that's yours to keep.",
+      "action": "See my goals →"
+    }
   },
   "empty": {
-    "title": "Your first badge is waiting",
-    "body": "Finish a goal and you'll design a badge to mark it — a verifiable credential that's yours to keep.",
-    "action": "See my goals →"
+    "title": "No badges yet",
+    "body": "Complete goals to earn badges. Your collection will grow here.",
+    "action": "To Your Goals"
   },
   "card": {
     "untitledFallback": "Untitled"

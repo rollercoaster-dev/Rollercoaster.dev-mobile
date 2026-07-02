@@ -239,9 +239,15 @@ describe("BadgesWall", () => {
           onSeeGoals={noop}
         />,
       );
-      expect(screen.getByText(i18n.t("badges:empty.title"))).toBeOnTheScreen();
-      expect(screen.getByText(i18n.t("badges:empty.body"))).toBeOnTheScreen();
-      expect(screen.getByText(i18n.t("badges:empty.action"))).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("badges:wall.empty.title")),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("badges:wall.empty.body")),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("badges:wall.empty.action")),
+      ).toBeOnTheScreen();
     });
 
     it("renders neither the count header nor the spotlight in the empty state", () => {
@@ -348,9 +354,9 @@ describe("BadgesWall", () => {
     });
 
     it.each([
-      "badges:empty.title",
-      "badges:empty.body",
-      "badges:empty.action",
+      "badges:wall.empty.title",
+      "badges:wall.empty.body",
+      "badges:wall.empty.action",
     ] as const)(
       "renders %s as bracketed copy in the empty state under pseudo locale",
       async (key) => {

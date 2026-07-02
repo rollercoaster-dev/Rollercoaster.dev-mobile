@@ -135,16 +135,21 @@ export function BadgesWall({
   // Decorative celebration glow — loops only under the "full" animation pref;
   // "reduced"/"none" leave it static (opacity 0 → no halo, nothing pulses).
   // Gated identically for the spotlight and the empty-state ghost badge (D10).
+  // `glowOn` mirrors the pref as a shared value so the worklet below reacts on
+  // the UI thread when the pref flips at runtime — reading the JS `animationPref`
+  // directly would risk a stale closure leaving the halo stuck at 0.35 opacity.
   const glow = useSharedValue(0);
+  const glowOn = useSharedValue(animationPref === "full");
   useEffect(() => {
+    glowOn.value = animationPref === "full";
     if (animationPref === "full") {
       glow.value = withRepeat(withTiming(1, { duration: 1700 }), -1, true);
     } else {
       glow.value = 0;
     }
-  }, [animationPref, glow]);
+  }, [animationPref, glow, glowOn]);
   const glowStyle = useAnimatedStyle(() => ({
-    opacity: animationPref === "full" ? 0.35 + glow.value * 0.65 : 0,
+    opacity: glowOn.value ? 0.35 + glow.value * 0.65 : 0,
   }));
 
   if (count === 0) {
@@ -152,20 +157,20 @@ export function BadgesWall({
       <View style={[styles.surface, styles.empty]}>
         <GhostBadge glowStyle={glowStyle} />
         <Text style={styles.emptyTitle} accessibilityRole="header">
-          {t("badges:empty.title")}
+          {t("badges:wall.empty.title")}
         </Text>
-        <Text style={styles.emptyBody}>{t("badges:empty.body")}</Text>
+        <Text style={styles.emptyBody}>{t("badges:wall.empty.body")}</Text>
         {/* eslint-disable-next-line local/no-shared-component-reimplementation -- intentional on-surface accent CTA (D13): the shared <Button>'s accentPrimary fill is #000000 in highContrast, invisible on #161616. */}
         <Pressable
           onPress={onSeeGoals}
           accessible
           accessibilityRole="button"
-          accessibilityLabel={t("badges:empty.action")}
+          accessibilityLabel={t("badges:wall.empty.action")}
           testID="badges-wall-see-goals"
           style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}
         >
           {/* Trailing arrow lives in the copy (Button's icon slot is leading-only, D9). */}
-          <Text style={styles.ctaLabel}>{t("badges:empty.action")}</Text>
+          <Text style={styles.ctaLabel}>{t("badges:wall.empty.action")}</Text>
         </Pressable>
       </View>
     );
