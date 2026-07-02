@@ -11,29 +11,32 @@
 
 ## Intent Verification
 
-- [ ] `TimelineBreakdownBar` renders a 4-segment horizontal bar whose segment
+- [x] `TimelineBreakdownBar` renders a 4-segment horizontal bar whose segment
       widths are proportional to `counts.completed` / `counts["in-progress"]` /
       `counts.pending` / `counts.paused`, in that left-to-right order (done →
-      in motion → to come → set aside), matching `tl-mid.png`.
-- [ ] Every segment's fill color resolves through `stepStateNodeBg(theme, state)`
+      in motion → to come → set aside), matching `tl-mid.png`. — `SEGMENT_ORDER` + `flex: counts[state]` per segment.
+- [x] Every segment's fill color resolves through `stepStateNodeBg(theme, state)`
       from `stepStateColorMap.ts` (#406) — zero hardcoded hex anywhere in
-      `TimelineBreakdownBar.styles.ts`.
-- [ ] The counts legend renders `"{{count}} <label>"` chips — "done" / "in
+      `TimelineBreakdownBar.styles.ts`. — fills set inline via `stepStateNodeBg`;
+      `styles.ts` uses only `theme.*` tokens, no hex.
+- [x] The counts legend renders `"{{count}} <label>"` chips — "done" / "in
       motion" / "to come" / "set aside" — sourced from new i18n keys, not
-      inline strings.
-- [ ] A state with `count === 0` produces **no legend chip** for that state
+      inline strings. — `t(legendI18nKey(state), { count })`.
+- [x] A state with `count === 0` produces **no legend chip** for that state
       (verified by a test: e.g. an all-done breakdown shows only a "done"
-      chip, not "0 in motion / 0 to come / 0 set aside").
-- [ ] `ProgressBar.tsx` (`src/components/ProgressBar/`) is untouched — its
+      chip, not "0 in motion / 0 to come / 0 set aside"). — `SEGMENT_ORDER.filter(
+    (s) => counts[s] > 0)` + drop-out unit test.
+- [x] `ProgressBar.tsx` (`src/components/ProgressBar/`) is untouched — its
       `progress: number` single-fill contract and its 3 live callers
       (`GoalsCockpit`, `TimelineJourneyScreen`, `GoalCard`) are unmodified.
-- [ ] An `AllThemesMatrix` story renders all 7 product themes' segment colors
+      — not in the branch diff.
+- [x] An `AllThemesMatrix` story renders all 7 product themes' segment colors
       side by side (mirroring `TimelineNode.stories.tsx`), demonstrating the
       map resolves in every theme, including the `paused` →
-      `accentPurpleLight` fallback.
-- [ ] `bun run test --testPathPatterns i18n` (locale-parity + pseudo-locale
+      `accentPurpleLight` fallback. — static `themes[name]` read, one bar/row.
+- [x] `bun run test --testPathPatterns i18n` (locale-parity + pseudo-locale
       tests) passes — the new `en/common.json` keys have matching `pseudo/`
-      entries in the same PR.
+      entries in the same PR. — 373/373 green.
 
 ---
 
