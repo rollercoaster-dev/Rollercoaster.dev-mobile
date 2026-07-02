@@ -66,6 +66,7 @@ export function FocusProgressStrip({
       <View
         testID="focus-progress-strip-bar"
         style={styles.barTrack}
+        accessible
         accessibilityRole="progressbar"
         accessibilityValue={{ min: 0, max: 100, now }}
       >
@@ -87,6 +88,7 @@ export function FocusProgressStrip({
   return (
     <Pressable
       onPress={onPress}
+      accessible
       accessibilityRole="button"
       accessibilityLabel={t("focusMode:progressStrip.a11yLabel", {
         done,
