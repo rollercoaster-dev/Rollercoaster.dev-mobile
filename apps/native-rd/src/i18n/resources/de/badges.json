@@ -3,7 +3,12 @@
   "wall": {
     "count": "{{count}} Badges",
     "allVerifiable": "EINE WAND AUS NACHWEISEN · ALLE VERIFIZIERBAR",
-    "justEarned": "GERADE VERDIENT"
+    "justEarned": "GERADE VERDIENT",
+    "empty": {
+      "title": "Dein erstes Badge wartet",
+      "body": "Beende ein Ziel und gestalte ein Badge dafür — ein verifizierbarer Nachweis, der dir gehört.",
+      "action": "Meine Ziele ansehen →"
+    }
   },
   "empty": {
     "title": "Noch keine Badges",
