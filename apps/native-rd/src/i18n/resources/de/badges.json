@@ -1,5 +1,10 @@
 {
   "header": "Badges",
+  "wall": {
+    "count": "{{count}} Badges",
+    "allVerifiable": "EINE WAND AUS NACHWEISEN · ALLE VERIFIZIERBAR",
+    "justEarned": "GERADE VERDIENT"
+  },
   "empty": {
     "title": "Noch keine Badges",
     "body": "Schließe Ziele ab, um Badges zu sammeln. Deine Sammlung wächst hier.",
