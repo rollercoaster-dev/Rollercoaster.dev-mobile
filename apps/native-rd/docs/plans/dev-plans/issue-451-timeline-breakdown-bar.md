@@ -246,12 +246,12 @@ Explicitly **not** touched: `ProgressBar.*`, `stepStateColorMap.ts`,
 **Commit**: `test(TimelineBreakdownBar): add Storybook stories incl. AllThemesMatrix (#451)`
 **Changes**:
 
-- [ ] `title: "Iteration B/Timeline/TimelineBreakdownBar"`.
-- [ ] `Mixed` story: a representative counts mix (e.g. `{ completed: 3, "in-progress": 1, pending: 3, paused: 1 }`, matching `tl-mid.png`).
-- [ ] `AllDone` story: `{ completed: N, "in-progress": 0, pending: 0, paused: 0 }` — verifies the legend shows only "N done" (no zero-count chips).
-- [ ] `AllToCome` story: `{ completed: 0, "in-progress": 0, pending: N, paused: 0 }`.
-- [ ] `WithSetAside` / `WithoutSetAside` stories: same base mix with `paused` non-zero vs. zero, to visually contrast the "set aside" chip's presence/absence.
-- [ ] `AllThemesMatrix` story: reuse the `MOOD_NAMES: Record<ThemeName, string>` table and static `themes[name]` read pattern from `TimelineNode.stories.tsx:162-254`; one row per theme, painting the 4-segment bar (not individual nodes) via `stepStateNodeBg(themes[name], state)` for a fixed representative counts mix, so all 7 themes' segment colors are visible side by side without relying on the Storybook theme toolbar.
+- [x] `title: "Iteration B/Timeline/TimelineBreakdownBar"`.
+- [x] `Mixed` story: a representative counts mix (e.g. `{ completed: 3, "in-progress": 1, pending: 3, paused: 1 }`, matching `tl-mid.png`).
+- [x] `AllDone` story: `{ completed: N, "in-progress": 0, pending: 0, paused: 0 }` — verifies the legend shows only "N done" (no zero-count chips).
+- [x] `AllToCome` story: `{ completed: 0, "in-progress": 0, pending: N, paused: 0 }`.
+- [x] `WithSetAside` / `WithoutSetAside` stories: same base mix with `paused` non-zero vs. zero, to visually contrast the "set aside" chip's presence/absence.
+- [x] `AllThemesMatrix` story: reuse the `MOOD_NAMES: Record<ThemeName, string>` table and static `themes[name]` read pattern from `TimelineNode.stories.tsx:162-254`; one row per theme, painting the 4-segment bar (not individual nodes) via `stepStateNodeBg(themes[name], state)` for a fixed representative counts mix, so all 7 themes' segment colors are visible side by side without relying on the Storybook theme toolbar.
 
 ### Step 3: Unit tests
 
@@ -307,3 +307,9 @@ Explicitly **not** touched: `ProgressBar.*`, `stepStateColorMap.ts`,
   `editGoal`/`focusMode`/`settings` pseudo files (exactly the #406 precedent
   warned about). Reverted those 5; kept only the new
   `timelineBreakdown.legend.*` keys in `pseudo/common.json`.
+- [2026-07-02] Step 2: exported `SEGMENT_ORDER` from `TimelineBreakdownBar.tsx`
+  so the `AllThemesMatrix` story reuses the widget's single ordering constant
+  rather than re-declaring it (avoids D2 drift). Mirrors how
+  `TimelineNode.stories` imports `NODE_SIZE` from its styles. Matrix laid out as
+  a vertical stack of one full-width bar per theme (a bar is wide, unlike
+  TimelineNode's node-cell grid) — same static `themes[name]` read pattern.

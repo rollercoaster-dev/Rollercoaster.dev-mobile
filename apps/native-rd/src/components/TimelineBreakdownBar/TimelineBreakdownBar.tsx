@@ -24,7 +24,7 @@ export interface TimelineBreakdownBarProps {
  * TimelineNode's matrix orders states differently and stepStateColorMap
  * intentionally carries no ordering.
  */
-const SEGMENT_ORDER: StepStateMapKey[] = [
+export const SEGMENT_ORDER: StepStateMapKey[] = [
   "completed",
   "in-progress",
   "pending",
