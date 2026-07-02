@@ -50,7 +50,7 @@ describe("SettingsDensityRows", () => {
       <SettingsDensityRows selectedLevel="default" onSelect={jest.fn()} />,
     );
     expect(
-      screen.getByRole("radiogroup", { name: "Content density selection" }),
+      screen.getByRole("radiogroup", { name: t("settings:density.title") }),
     ).toBeOnTheScreen();
   });
 

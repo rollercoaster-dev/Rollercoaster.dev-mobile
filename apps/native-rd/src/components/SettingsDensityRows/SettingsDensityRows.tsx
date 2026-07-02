@@ -45,7 +45,11 @@ export function SettingsDensityRows({
     : ({
         accessible: true,
         accessibilityRole: "radiogroup" as const,
-        accessibilityLabel: "Content density selection",
+        // Reuse the visible section heading as the group's accessible name so
+        // it localizes with the app (de/pseudo) and matches Label-in-Name. The
+        // `radiogroup` role already announces "radio group", so no extra
+        // "selection"/"picker" word is needed.
+        accessibilityLabel: t("settings:density.title"),
       } as const);
 
   return (
