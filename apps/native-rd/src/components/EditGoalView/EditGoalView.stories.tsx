@@ -26,6 +26,19 @@ const initialSteps: EditGoalStep[] = [
     id: "s1",
     title: "Draft the outline",
     plannedEvidenceTypes: [EvidenceType.text],
+    // A step broken into smaller steps (D12) — the indented mint-rail block.
+    subSteps: [
+      {
+        id: "s1a",
+        title: "List the sections",
+        plannedEvidenceTypes: [EvidenceType.text],
+      },
+      {
+        id: "s1b",
+        title: "Order them",
+        plannedEvidenceTypes: [EvidenceType.photo],
+      },
+    ],
   },
   {
     id: "s2",
@@ -95,6 +108,57 @@ function InteractiveEditGoal({ note }: { note?: string }) {
     );
   }
 
+  function addSubStep(parentStepId: string, title: string) {
+    const id = `ss${nextId.current++}`;
+    setSteps((prev) =>
+      prev.map((s) =>
+        s.id === parentStepId
+          ? {
+              ...s,
+              subSteps: [
+                ...(s.subSteps ?? []),
+                { id, title, plannedEvidenceTypes: [EvidenceType.text] },
+              ],
+            }
+          : s,
+      ),
+    );
+  }
+
+  function renameSubStep(subStepId: string, title: string) {
+    setSteps((prev) =>
+      prev.map((s) => ({
+        ...s,
+        subSteps: s.subSteps?.map((ss) =>
+          ss.id === subStepId ? { ...ss, title } : ss,
+        ),
+      })),
+    );
+  }
+
+  function changeSubStepEvidence(
+    subStepId: string,
+    types: EvidenceTypeValue[],
+  ) {
+    setSteps((prev) =>
+      prev.map((s) => ({
+        ...s,
+        subSteps: s.subSteps?.map((ss) =>
+          ss.id === subStepId ? { ...ss, plannedEvidenceTypes: types } : ss,
+        ),
+      })),
+    );
+  }
+
+  function deleteSubStep(subStepId: string) {
+    setSteps((prev) =>
+      prev.map((s) => ({
+        ...s,
+        subSteps: s.subSteps?.filter((ss) => ss.id !== subStepId),
+      })),
+    );
+  }
+
   return (
     <View>
       {note ? (
@@ -110,6 +174,10 @@ function InteractiveEditGoal({ note }: { note?: string }) {
         onAddStep={addStep}
         onStepTitleChange={renameStep}
         onStepEvidenceChange={changeEvidence}
+        onAddSubStep={addSubStep}
+        onSubStepTitleChange={renameSubStep}
+        onSubStepEvidenceChange={changeSubStepEvidence}
+        onDeleteSubStep={deleteSubStep}
         onOverflowPress={() => {}}
         onBack={() => {}}
         onDone={() => {}}
@@ -131,6 +199,12 @@ export const ReorderInteraction: Story = {
 export const EvidencePickerInteraction: Story = {
   render: () => (
     <InteractiveEditGoal note='Tap a step’s evidence chip to open the planned-evidence picker, then toggle types on/off — the row’s pills update live. Try removing every type from a single-type step: the last one can’t be deselected ("every step requires evidence").' />
+  ),
+};
+
+export const SubSteps: Story = {
+  render: () => (
+    <InteractiveEditGoal note='Step 1 is broken into smaller steps (the indented mint-rail block): tap a smaller step to rename it, tap its chip to set evidence, × to remove it, or "add a smaller step" for another. Steps with none show "break into smaller steps" — tap it to seed the first one. Each smaller step requires its own evidence. (Reorder within a parent is a follow-up — no drag handle on smaller steps yet.)' />
   ),
 };
 

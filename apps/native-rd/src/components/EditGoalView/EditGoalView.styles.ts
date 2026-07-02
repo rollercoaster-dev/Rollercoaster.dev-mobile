@@ -172,6 +172,88 @@ export const styles = StyleSheet.create((theme) => ({
     zIndex: 50,
   },
 
+  // --- Smaller steps block (D12) ---
+  // Indented, mint-railed block under a parent step that has some. accentMint is
+  // the token nearest the prototype's #d4f4e7 rail (the Badges mint family).
+  subStepBlock: {
+    marginTop: theme.space[2],
+    paddingLeft: theme.space[3],
+    borderLeftWidth: theme.borderWidth.thick,
+    borderLeftColor: theme.colors.accentMint,
+    gap: theme.space[1],
+  },
+  subStepRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: theme.space[2],
+  },
+  subStepMarker: {
+    fontSize: theme.size.sm,
+    color: theme.colors.textMuted,
+  },
+  subStepTitlePress: {
+    flex: 1,
+    minHeight: 44,
+    justifyContent: "center" as const,
+  },
+  subStepTitleText: {
+    fontSize: theme.size.sm,
+    fontFamily: theme.fontFamily.body,
+    color: theme.colors.text,
+  },
+  subStepEditInput: {
+    flex: 1,
+    minHeight: 44,
+    fontSize: theme.size.sm,
+    fontFamily: theme.fontFamily.body,
+    color: theme.colors.text,
+    padding: 0,
+  },
+  subStepDelete: {
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  subStepDeleteGlyph: {
+    fontSize: theme.size.lg,
+    color: theme.colors.textMuted,
+  },
+  // "add a smaller step" — inside the rail, blue (accentPrimary) like the proto.
+  addSubStepRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: theme.space[1],
+    minHeight: 44,
+  },
+  addSubStepGlyph: {
+    fontSize: theme.size.md,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.accentPrimary,
+  },
+  addSubStepText: {
+    fontSize: theme.size.sm,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.accentPrimary,
+  },
+  // "break into smaller steps" — prompt on a step with none, green (success).
+  breakIntoRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: theme.space[1],
+    marginTop: theme.space[2],
+    minHeight: 44,
+  },
+  breakIntoGlyph: {
+    fontSize: theme.size.sm,
+    color: theme.colors.success,
+  },
+  breakIntoText: {
+    fontSize: theme.size.sm,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.success,
+  },
+
   // --- Add-step row ---
   addRow: {
     flexDirection: "row" as const,

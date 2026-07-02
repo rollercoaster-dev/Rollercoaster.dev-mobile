@@ -37,6 +37,7 @@ import { EvidenceTypePicker } from "../EvidenceTypePicker";
 import type { EvidenceTypeValue } from "../../types/evidence";
 import type { DragScrollController } from "../StepList/dragAutoScroll";
 import { EditGoalStepRow } from "./EditGoalStepRow";
+import { EditGoalSubStepRow } from "./EditGoalSubStepRow";
 import { useEditGoalDrag } from "./useEditGoalDrag";
 import { styles } from "./EditGoalView.styles";
 
@@ -51,6 +52,19 @@ export interface EditGoalDateDepChip {
   text: string;
 }
 
+/**
+ * A "smaller step" nested under a parent step (D12) — the app's one-level
+ * `parentStepId` model (`schema.ts`). It carries its own title and planned
+ * evidence (every step, including a smaller step, requires evidence), but no
+ * date/dep chips and no further nesting (depth is capped at one level).
+ */
+export interface EditGoalSubStep {
+  id: string;
+  title: string;
+  /** Planned evidence types (multi, D4). Non-empty — same invariant as a step. */
+  plannedEvidenceTypes: EvidenceTypeValue[];
+}
+
 export interface EditGoalStep {
   id: string;
   title: string;
@@ -62,6 +76,13 @@ export interface EditGoalStep {
   plannedEvidenceTypes: EvidenceTypeValue[];
   /** Optional date/dependency chips (D5). Absent/empty → no chip row. */
   dateDepChips?: EditGoalDateDepChip[];
+  /**
+   * Optional one-level "smaller steps" (D12). Absent/empty → the row shows a
+   * "break into smaller steps" prompt; non-empty → an indented block of
+   * sub-rows plus an "add a smaller step" affordance. Matches the Edit Goal C
+   * prototype's edit view and the app's `parentStepId` data model.
+   */
+  subSteps?: EditGoalSubStep[];
 }
 
 export interface EditGoalViewProps {
@@ -81,6 +102,19 @@ export interface EditGoalViewProps {
   onStepTitleChange: (stepId: string, title: string) => void;
   /** Fired when the row's evidence picker toggles a step's planned types (D8). */
   onStepEvidenceChange: (stepId: string, types: EvidenceTypeValue[]) => void;
+  /**
+   * Adds a smaller step under `parentStepId` (D12). Called with `newSubStepTitle`
+   * — the new sub-row is then renameable inline (mirrors how the C prototype's
+   * create flow seeds a default-titled step). Not wired to persistence.
+   */
+  onAddSubStep: (parentStepId: string, title: string) => void;
+  onSubStepTitleChange: (subStepId: string, title: string) => void;
+  /** Fired when a smaller step's evidence picker toggles its planned types (D12/D8). */
+  onSubStepEvidenceChange: (
+    subStepId: string,
+    types: EvidenceTypeValue[],
+  ) => void;
+  onDeleteSubStep: (subStepId: string) => void;
   onOverflowPress: () => void;
   onBack: () => void;
   onDone: () => void;
@@ -104,6 +138,12 @@ export interface EditGoalViewProps {
   evidenceTypesLabel?: string;
   /** Pluralized step-count label. Default: "N step" / "N steps". */
   stepCountLabel?: (count: number) => string;
+  /** "add a smaller step" affordance under a step that already has some (D12). */
+  addSubStepLabel?: string;
+  /** "break into smaller steps" prompt on a step with none (D12). */
+  breakIntoSubStepsLabel?: string;
+  /** Default title for a freshly-added smaller step, renamed inline after (D12). */
+  newSubStepTitle?: string;
 }
 
 const defaultStepCountLabel = (count: number) =>
@@ -119,6 +159,10 @@ export function EditGoalView({
   onAddStep,
   onStepTitleChange,
   onStepEvidenceChange,
+  onAddSubStep,
+  onSubStepTitleChange,
+  onSubStepEvidenceChange,
+  onDeleteSubStep,
   onOverflowPress,
   onBack,
   onDone,
@@ -134,18 +178,24 @@ export function EditGoalView({
   evidencePickerTitle = "Planned evidence",
   evidenceTypesLabel = "Evidence types",
   stepCountLabel = defaultStepCountLabel,
+  addSubStepLabel = "add a smaller step",
+  breakIntoSubStepsLabel = "break into smaller steps",
+  newSubStepTitle = "New smaller step",
 }: EditGoalViewProps) {
   const { theme } = useUnistyles();
   const { animationPref } = useAnimationPref();
 
   const [newStepTitle, setNewStepTitle] = useState("");
+  // A single "which id is being renamed" source, keyed by step OR sub-step id
+  // (ids are unique across both). commitEditing routes to the right callback.
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
-  // Which step's evidence picker is open (D8). Internal state — the chip tap
-  // opens it locally; `onStepEvidenceChange` is the only outward evidence event.
-  const [editingEvidenceStepId, setEditingEvidenceStepId] = useState<
-    string | null
-  >(null);
+  // Which step or sub-step's evidence picker is open (D8/D12). Internal state —
+  // the chip tap opens it locally; onStepEvidenceChange / onSubStepEvidenceChange
+  // are the only outward evidence events.
+  const [editingEvidenceId, setEditingEvidenceId] = useState<string | null>(
+    null,
+  );
   const [screenReaderActive, setScreenReaderActive] = useState(false);
 
   const drag = useEditGoalDrag({ steps, onReorderSteps, dragScrollController });
@@ -174,43 +224,139 @@ export function EditGoalView({
     setNewStepTitle("");
   }
 
-  function startEditing(step: EditGoalStep) {
-    setEditingId(step.id);
-    setEditText(step.title);
+  // Find the sub-step with `id` across every parent (one-level, D12).
+  function findSubStep(id: string): EditGoalSubStep | undefined {
+    for (const s of steps) {
+      const sub = s.subSteps?.find((ss) => ss.id === id);
+      if (sub) return sub;
+    }
+    return undefined;
+  }
+
+  function beginEdit(id: string, title: string) {
+    setEditingId(id);
+    setEditText(title);
   }
 
   function commitEditing() {
     if (editingId) {
       const trimmed = editText.trim();
-      const current = steps.find((s) => s.id === editingId);
-      if (trimmed && trimmed !== current?.title) {
-        onStepTitleChange(editingId, trimmed);
+      const step = steps.find((s) => s.id === editingId);
+      if (step) {
+        if (trimmed && trimmed !== step.title) {
+          onStepTitleChange(editingId, trimmed);
+        }
+      } else {
+        const sub = findSubStep(editingId);
+        if (sub && trimmed && trimmed !== sub.title) {
+          onSubStepTitleChange(editingId, trimmed);
+        }
       }
     }
     setEditingId(null);
     setEditText("");
   }
 
-  // Evidence-picker toggle (D8). Guards the "every step requires evidence"
-  // invariant: the last remaining type can't be deselected (no-op), so a step
-  // never lands in a 0-selected state.
+  function handleAddSubStep(parentStepId: string) {
+    onAddSubStep(parentStepId, newSubStepTitle);
+  }
+
+  // Evidence-picker toggle (D8/D12). Guards the "every step requires evidence"
+  // invariant: the last remaining type can't be deselected (no-op), so a step or
+  // sub-step never lands in a 0-selected state. Routes to the step or sub-step
+  // callback depending on which id opened the picker.
   function handleToggleEvidence(type: EvidenceTypeValue) {
-    if (editingEvidenceStepId === null) return;
-    const step = steps.find((s) => s.id === editingEvidenceStepId);
-    if (!step) return;
-    const current = step.plannedEvidenceTypes;
+    if (editingEvidenceId === null) return;
+    const step = steps.find((s) => s.id === editingEvidenceId);
+    const sub = step ? undefined : findSubStep(editingEvidenceId);
+    const current = step?.plannedEvidenceTypes ?? sub?.plannedEvidenceTypes;
+    if (!current) return;
     const isSelected = current.includes(type);
     if (isSelected && current.length === 1) return;
     const next = isSelected
       ? current.filter((t) => t !== type)
       : [...current, type];
-    onStepEvidenceChange(editingEvidenceStepId, next);
+    if (step) {
+      onStepEvidenceChange(editingEvidenceId, next);
+    } else {
+      onSubStepEvidenceChange(editingEvidenceId, next);
+    }
   }
 
   const editingEvidenceStep =
-    editingEvidenceStepId !== null
-      ? steps.find((s) => s.id === editingEvidenceStepId)
+    editingEvidenceId !== null
+      ? steps.find((s) => s.id === editingEvidenceId)
       : undefined;
+  const editingEvidenceSub =
+    editingEvidenceId !== null && !editingEvidenceStep
+      ? findSubStep(editingEvidenceId)
+      : undefined;
+  const editingEvidenceTypes =
+    editingEvidenceStep?.plannedEvidenceTypes ??
+    editingEvidenceSub?.plannedEvidenceTypes;
+
+  // Smaller-steps block (D12), rendered inside each parent's card. A parent with
+  // no smaller steps shows the "break into smaller steps" prompt; one with some
+  // shows the indented green-rail block of sub-rows plus "add a smaller step".
+  // Both add affordances seed a default-titled sub-step (renamed inline after).
+  function renderSubStepBlock(step: EditGoalStep) {
+    const subs = step.subSteps ?? [];
+    if (subs.length === 0) {
+      return (
+        <Pressable
+          style={styles.breakIntoRow}
+          onPress={() => handleAddSubStep(step.id)}
+          accessibilityRole="button"
+          accessibilityLabel={`Break "${step.title}" into smaller steps`}
+          hitSlop={6}
+          testID={`edit-goal-break-into-${step.id}`}
+        >
+          <RNText
+            style={styles.breakIntoGlyph}
+            accessibilityElementsHidden
+            importantForAccessibility="no"
+          >
+            {"⚊"}
+          </RNText>
+          <RNText style={styles.breakIntoText}>{breakIntoSubStepsLabel}</RNText>
+        </Pressable>
+      );
+    }
+    return (
+      <View style={styles.subStepBlock}>
+        {subs.map((sub) => (
+          <EditGoalSubStepRow
+            key={sub.id}
+            subStep={sub}
+            isEditing={editingId === sub.id}
+            editText={editText}
+            onEditTextChange={setEditText}
+            onStartEditing={() => beginEdit(sub.id, sub.title)}
+            onCommitEditing={commitEditing}
+            onEvidenceChipPress={() => setEditingEvidenceId(sub.id)}
+            onDelete={() => onDeleteSubStep(sub.id)}
+          />
+        ))}
+        <Pressable
+          style={styles.addSubStepRow}
+          onPress={() => handleAddSubStep(step.id)}
+          accessibilityRole="button"
+          accessibilityLabel={`Add a smaller step to "${step.title}"`}
+          hitSlop={6}
+          testID={`edit-goal-add-substep-${step.id}`}
+        >
+          <RNText
+            style={styles.addSubStepGlyph}
+            accessibilityElementsHidden
+            importantForAccessibility="no"
+          >
+            {"+"}
+          </RNText>
+          <RNText style={styles.addSubStepText}>{addSubStepLabel}</RNText>
+        </Pressable>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -290,9 +436,9 @@ export function EditGoalView({
                 isEditing={editingId === step.id}
                 editText={editText}
                 onEditTextChange={setEditText}
-                onStartEditing={() => startEditing(step)}
+                onStartEditing={() => beginEdit(step.id, step.title)}
                 onCommitEditing={commitEditing}
-                onEvidenceChipPress={() => setEditingEvidenceStepId(step.id)}
+                onEvidenceChipPress={() => setEditingEvidenceId(step.id)}
                 onDragStart={drag.handleDragStart}
                 onDragMove={drag.handleDragMove}
                 onDragEnd={drag.handleDragEnd}
@@ -308,7 +454,11 @@ export function EditGoalView({
                 isFirst={index === 0}
                 isLast={index === steps.length - 1}
                 canDrag={canDrag}
-              />
+              >
+                {/* Smaller-steps block (D12), rendered inside the parent card so
+                    it drags with the parent. See renderSubStepBlock. */}
+                {renderSubStepBlock(step)}
+              </EditGoalStepRow>
             </View>
           ))}
           {drag.isDragging && drag.dropSlot && (
@@ -364,21 +514,22 @@ export function EditGoalView({
         />
       </View>
 
-      {/* Evidence-type picker (D8): the reused multi-select authoring grid in a
-          local bottom-sheet Modal (mirrors the capture branch + nest picker).
-          Toggling updates the row's pills via onStepEvidenceChange; the last
+      {/* Evidence-type picker (D8/D12): the reused multi-select authoring grid
+          in a local bottom-sheet Modal (mirrors the capture branch + nest
+          picker). Opened by a step OR a sub-step's chip; toggling updates that
+          row's pills via onStepEvidenceChange / onSubStepEvidenceChange; the last
           remaining type can't be deselected (handleToggleEvidence guard). */}
       <Modal
-        visible={editingEvidenceStep !== undefined}
+        visible={editingEvidenceTypes !== undefined}
         transparent
         animationType="slide"
-        onRequestClose={() => setEditingEvidenceStepId(null)}
+        onRequestClose={() => setEditingEvidenceId(null)}
         accessibilityViewIsModal
       >
         <View style={styles.pickerOverlay}>
           <Pressable
             style={styles.pickerBackdrop}
-            onPress={() => setEditingEvidenceStepId(null)}
+            onPress={() => setEditingEvidenceId(null)}
             accessibilityRole="button"
             accessibilityLabel="Close"
             testID="edit-goal-evidence-backdrop"
@@ -391,7 +542,7 @@ export function EditGoalView({
               </RNText>
               <Pressable
                 style={styles.pickerClose}
-                onPress={() => setEditingEvidenceStepId(null)}
+                onPress={() => setEditingEvidenceId(null)}
                 accessibilityRole="button"
                 accessibilityLabel="Close"
                 hitSlop={8}
@@ -400,9 +551,9 @@ export function EditGoalView({
                 <RNText style={styles.pickerCloseIcon}>{"✕"}</RNText>
               </Pressable>
             </View>
-            {editingEvidenceStep ? (
+            {editingEvidenceTypes ? (
               <EvidenceTypePicker
-                selectedTypes={editingEvidenceStep.plannedEvidenceTypes}
+                selectedTypes={editingEvidenceTypes}
                 onToggleType={handleToggleEvidence}
                 label={evidenceTypesLabel}
               />

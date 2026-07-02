@@ -69,12 +69,36 @@ function makeProps(overrides?: Partial<EditGoalViewProps>): EditGoalViewProps {
     onAddStep: jest.fn(),
     onStepTitleChange: jest.fn(),
     onStepEvidenceChange: jest.fn(),
+    onAddSubStep: jest.fn(),
+    onSubStepTitleChange: jest.fn(),
+    onSubStepEvidenceChange: jest.fn(),
+    onDeleteSubStep: jest.fn(),
     onOverflowPress: jest.fn(),
     onBack: jest.fn(),
     onDone: jest.fn(),
     ...overrides,
   };
 }
+
+const withSub: EditGoalStep[] = [
+  {
+    id: "s1",
+    title: "Parent step",
+    plannedEvidenceTypes: [EvidenceType.text],
+    subSteps: [
+      {
+        id: "sub1",
+        title: "Smaller step",
+        plannedEvidenceTypes: [EvidenceType.text],
+      },
+    ],
+  },
+  {
+    id: "s2",
+    title: "Bare step",
+    plannedEvidenceTypes: [EvidenceType.photo],
+  },
+];
 
 afterEach(() => {
   mockAnimationPref = "full";
@@ -232,6 +256,119 @@ describe("EditGoalView", () => {
       expect(checked).toHaveLength(1);
       fireEvent.press(checked[0]);
       expect(onStepEvidenceChange).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("smaller steps (D12)", () => {
+    it("renders a smaller-step row inside a parent that has one", () => {
+      renderWithProviders(<EditGoalView {...makeProps({ steps: withSub })} />);
+      expect(screen.getByText("Smaller step")).toBeOnTheScreen();
+      expect(
+        screen.getByTestId("edit-goal-substep-delete-sub1"),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByTestId("edit-goal-substep-evidence-sub1"),
+      ).toBeOnTheScreen();
+    });
+
+    it("does not inflate the top-level step count with sub-steps", () => {
+      renderWithProviders(<EditGoalView {...makeProps({ steps: withSub })} />);
+      expect(screen.getByText("2 steps")).toBeOnTheScreen();
+    });
+
+    it("shows 'break into smaller steps' only on a step with none", () => {
+      renderWithProviders(<EditGoalView {...makeProps({ steps: withSub })} />);
+      // s2 has none → prompt; s1 has one → the add-affordance instead.
+      expect(screen.getByText("break into smaller steps")).toBeOnTheScreen();
+      expect(screen.getByText("add a smaller step")).toBeOnTheScreen();
+      expect(screen.getByTestId("edit-goal-break-into-s2")).toBeOnTheScreen();
+      expect(screen.queryByTestId("edit-goal-break-into-s1")).toBeNull();
+    });
+
+    it("seeds a default-titled sub-step from 'break into smaller steps'", () => {
+      const onAddSubStep = jest.fn();
+      renderWithProviders(
+        <EditGoalView {...makeProps({ steps: withSub, onAddSubStep })} />,
+      );
+      fireEvent.press(screen.getByTestId("edit-goal-break-into-s2"));
+      expect(onAddSubStep).toHaveBeenCalledWith("s2", "New smaller step");
+    });
+
+    it("adds another sub-step from 'add a smaller step'", () => {
+      const onAddSubStep = jest.fn();
+      renderWithProviders(
+        <EditGoalView {...makeProps({ steps: withSub, onAddSubStep })} />,
+      );
+      fireEvent.press(screen.getByTestId("edit-goal-add-substep-s1"));
+      expect(onAddSubStep).toHaveBeenCalledWith("s1", "New smaller step");
+    });
+
+    it("deletes a sub-step via its × button", () => {
+      const onDeleteSubStep = jest.fn();
+      renderWithProviders(
+        <EditGoalView {...makeProps({ steps: withSub, onDeleteSubStep })} />,
+      );
+      fireEvent.press(screen.getByTestId("edit-goal-substep-delete-sub1"));
+      expect(onDeleteSubStep).toHaveBeenCalledWith("sub1");
+    });
+
+    it("renames a sub-step through inline edit", () => {
+      const onSubStepTitleChange = jest.fn();
+      renderWithProviders(
+        <EditGoalView
+          {...makeProps({ steps: withSub, onSubStepTitleChange })}
+        />,
+      );
+      fireEvent.press(screen.getByTestId("edit-goal-substep-title-sub1"));
+      const input = screen.getByTestId("edit-goal-substep-edit-sub1");
+      fireEvent.changeText(input, "Renamed sub");
+      fireEvent(input, "submitEditing");
+      expect(onSubStepTitleChange).toHaveBeenCalledWith("sub1", "Renamed sub");
+    });
+
+    it("edits a sub-step's evidence via the picker (onSubStepEvidenceChange)", () => {
+      const onSubStepEvidenceChange = jest.fn();
+      renderWithProviders(
+        <EditGoalView
+          {...makeProps({ steps: withSub, onSubStepEvidenceChange })}
+        />,
+      );
+      fireEvent.press(screen.getByTestId("edit-goal-substep-evidence-sub1"));
+      expect(screen.getByTestId("edit-goal-evidence-close")).toBeOnTheScreen();
+      const unchecked = screen
+        .getAllByRole("checkbox")
+        .filter((b) => !b.props.accessibilityState?.checked);
+      fireEvent.press(unchecked[0]);
+      expect(onSubStepEvidenceChange).toHaveBeenCalledTimes(1);
+      const [subStepId, types] = onSubStepEvidenceChange.mock.calls[0];
+      expect(subStepId).toBe("sub1");
+      expect(types).toHaveLength(2);
+      expect(types).toContain(EvidenceType.text);
+    });
+
+    it("refuses to deselect a sub-step's last remaining evidence type", () => {
+      const onSubStepEvidenceChange = jest.fn();
+      renderWithProviders(
+        <EditGoalView
+          {...makeProps({ steps: withSub, onSubStepEvidenceChange })}
+        />,
+      );
+      fireEvent.press(screen.getByTestId("edit-goal-substep-evidence-sub1"));
+      const checked = screen
+        .getAllByRole("checkbox")
+        .filter((b) => b.props.accessibilityState?.checked);
+      expect(checked).toHaveLength(1);
+      fireEvent.press(checked[0]);
+      expect(onSubStepEvidenceChange).not.toHaveBeenCalled();
+    });
+
+    it("exposes the sub-step delete as a labelled button", () => {
+      renderWithProviders(<EditGoalView {...makeProps({ steps: withSub })} />);
+      const del = screen.getByTestId("edit-goal-substep-delete-sub1");
+      expect(del.props.accessibilityRole).toBe("button");
+      expect(del.props.accessibilityLabel).toBe(
+        "Delete smaller step: Smaller step",
+      );
     });
   });
 

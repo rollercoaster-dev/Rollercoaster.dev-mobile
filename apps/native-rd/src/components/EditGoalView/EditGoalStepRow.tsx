@@ -1,11 +1,14 @@
 /**
  * EditGoalStepRow — one step row inside EditGoalView (issue #445).
  *
- * A flat, single-level row: drag handle + step number + tap-to-edit title
- * (D10) + a planned-evidence chip (reused EvidenceTypePicker `compact`, one pill
- * per planned type — D4) that opens the type picker on tap (D8), plus an
- * optional display-only date/dependency chip row (D5, rendered only when
- * present). No sub-step / nesting affordances (deliberately out of scope).
+ * One parent step: drag handle + step number + tap-to-edit title (D10) + a
+ * planned-evidence chip (reused EvidenceTypePicker `compact`, one pill per
+ * planned type — D4) that opens the type picker on tap (D8), plus an optional
+ * display-only date/dependency chip row (D5, rendered only when present).
+ *
+ * The optional `children` slot renders inside the card, below the row — the
+ * parent (EditGoalView) passes the one-level "smaller steps" block there (D12)
+ * so it drags with the parent card. This row owns none of the sub-step state.
  *
  * Drag reuses the same LongPress + Pan gesture shape as StepList's
  * DraggableStepItem, stripped of all nesting/dwell state — the parent
@@ -66,6 +69,8 @@ export interface EditGoalStepRowProps {
   isLast: boolean;
   /** When false, the row renders static (single step, or a title is being edited). */
   canDrag: boolean;
+  /** Rendered inside the card below the row — the smaller-steps block (D12). */
+  children?: React.ReactNode;
 }
 
 export function EditGoalStepRow({
@@ -90,6 +95,7 @@ export function EditGoalStepRow({
   isFirst,
   isLast,
   canDrag,
+  children,
 }: EditGoalStepRowProps) {
   const { theme } = useUnistyles();
   const translateY = useSharedValue(0);
@@ -258,7 +264,12 @@ export function EditGoalStepRow({
   );
 
   if (!canDrag) {
-    return <View style={styles.rowCard}>{body}</View>;
+    return (
+      <View style={styles.rowCard}>
+        {body}
+        {children}
+      </View>
+    );
   }
 
   return (
@@ -271,6 +282,7 @@ export function EditGoalStepRow({
         ]}
       >
         {body}
+        {children}
       </Animated.View>
     </GestureDetector>
   );
