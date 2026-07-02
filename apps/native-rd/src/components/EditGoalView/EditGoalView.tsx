@@ -131,6 +131,12 @@ export interface EditGoalViewProps {
   stepsSectionLabel?: string;
   addStepPlaceholder?: string;
   descriptionPlaceholder?: string;
+  /**
+   * a11y label for the description input when no `descriptionPlaceholder` is
+   * supplied. Kept distinct from `goalSectionLabel` so the description and
+   * title inputs don't announce identically to screen readers (D3 defer path).
+   */
+  descriptionSectionLabel?: string;
   datesInfoText?: string;
   doneLabel?: string;
   overflowAccessibilityLabel?: string;
@@ -152,6 +158,12 @@ export interface EditGoalViewProps {
   breakIntoSubStepsA11yLabel?: (stepTitle: string) => string;
   /** a11y label for the "add a sub-step" affordance under a step (D12). */
   addSubStepA11yLabel?: (stepTitle: string) => string;
+  /**
+   * Builds the screen-reader announcement after a reorder (drag drop or ↑/↓
+   * fallback). `position` is 1-based. Defaults to `Moved "<title>" to position
+   * N` inside {@link useEditGoalDrag}.
+   */
+  announceReorder?: (stepTitle: string, position: number) => string;
 }
 
 const defaultStepCountLabel = (count: number) =>
@@ -180,6 +192,7 @@ export function EditGoalView({
   stepsSectionLabel = "Steps",
   addStepPlaceholder = "Add step...",
   descriptionPlaceholder,
+  descriptionSectionLabel = "Goal description",
   datesInfoText = 'Dates & dependencies live on each step — tap a step in the full planner to set "after" / "waiting on".',
   doneLabel = "Done",
   overflowAccessibilityLabel = "More options",
@@ -194,6 +207,7 @@ export function EditGoalView({
   breakIntoSubStepsA11yLabel = (stepTitle) =>
     `Break "${stepTitle}" into sub-steps`,
   addSubStepA11yLabel = (stepTitle) => `Add a sub-step to "${stepTitle}"`,
+  announceReorder,
 }: EditGoalViewProps) {
   const { theme } = useUnistyles();
   const { animationPref } = useAnimationPref();
@@ -211,7 +225,12 @@ export function EditGoalView({
   );
   const [screenReaderActive, setScreenReaderActive] = useState(false);
 
-  const drag = useEditGoalDrag({ steps, onReorderSteps, dragScrollController });
+  const drag = useEditGoalDrag({
+    steps,
+    onReorderSteps,
+    dragScrollController,
+    announceReorder,
+  });
 
   useEffect(() => {
     AccessibilityInfo.isScreenReaderEnabled()
@@ -400,7 +419,9 @@ export function EditGoalView({
               placeholderTextColor={theme.colors.textMuted}
               multiline
               testID="edit-goal-description-input"
-              accessibilityLabel={descriptionPlaceholder ?? goalSectionLabel}
+              accessibilityLabel={
+                descriptionPlaceholder ?? descriptionSectionLabel
+              }
             />
           </View>
         ) : null}

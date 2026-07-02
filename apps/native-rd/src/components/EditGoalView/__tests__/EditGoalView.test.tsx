@@ -1,4 +1,5 @@
 import React from "react";
+import { AccessibilityInfo } from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -384,6 +385,35 @@ describe("EditGoalView", () => {
       expect(field).toBeOnTheScreen();
       expect(field.props.value).toBe("Why this matters");
     });
+
+    it("labels the description input distinctly from the title (no placeholder)", () => {
+      // Regression: the fallback used to be `goalSectionLabel` ("Goal"), so the
+      // description and title inputs announced identically to screen readers.
+      renderWithProviders(
+        <EditGoalView {...makeProps({ description: "Why this matters" })} />,
+      );
+      const description = screen.getByTestId("edit-goal-description-input");
+      const title = screen.getByTestId("edit-goal-title-input");
+      expect(description.props.accessibilityLabel).toBe("Goal description");
+      expect(description.props.accessibilityLabel).not.toBe(
+        title.props.accessibilityLabel,
+      );
+    });
+
+    it("uses descriptionPlaceholder as the a11y label when supplied", () => {
+      renderWithProviders(
+        <EditGoalView
+          {...makeProps({
+            description: "Why this matters",
+            descriptionPlaceholder: "Why does this goal matter?",
+          })}
+        />,
+      );
+      const description = screen.getByTestId("edit-goal-description-input");
+      expect(description.props.accessibilityLabel).toBe(
+        "Why does this goal matter?",
+      );
+    });
   });
 
   describe("accessibility", () => {
@@ -418,6 +448,34 @@ describe("EditGoalView", () => {
       renderWithProviders(<EditGoalView {...makeProps({ onReorderSteps })} />);
       fireEvent.press(screen.getByLabelText('Move "First step" down'));
       expect(onReorderSteps).toHaveBeenCalledWith(["s2", "s1"]);
+    });
+
+    it("announces the reorder with the default English builder", () => {
+      mockAnimationPref = "none";
+      const announce = jest.spyOn(
+        AccessibilityInfo,
+        "announceForAccessibility",
+      );
+      renderWithProviders(<EditGoalView {...makeProps()} />);
+      fireEvent.press(screen.getByLabelText('Move "First step" down'));
+      expect(announce).toHaveBeenCalledWith('Moved "First step" to position 2');
+      announce.mockRestore();
+    });
+
+    it("honors a custom announceReorder builder ([Integrate] i18n)", () => {
+      mockAnimationPref = "none";
+      const announce = jest.spyOn(
+        AccessibilityInfo,
+        "announceForAccessibility",
+      );
+      const announceReorder = jest.fn(
+        (title: string, position: number) => `${title} → #${position}`,
+      );
+      renderWithProviders(<EditGoalView {...makeProps({ announceReorder })} />);
+      fireEvent.press(screen.getByLabelText('Move "First step" down'));
+      expect(announceReorder).toHaveBeenCalledWith("First step", 2);
+      expect(announce).toHaveBeenCalledWith("First step → #2");
+      announce.mockRestore();
     });
   });
 });

@@ -52,7 +52,16 @@ export interface UseEditGoalDragParams {
   onReorderSteps: (orderedStepIds: string[]) => void;
   /** Supplied by the screen that owns the ScrollView; omit to disable auto-scroll. */
   dragScrollController?: DragScrollController;
+  /**
+   * Builds the screen-reader announcement fired after a reorder (drag drop or
+   * the ↑/↓ fallback). i18n-free per D9 — English default here, [Integrate]
+   * passes a `t()`-backed builder. `position` is 1-based.
+   */
+  announceReorder?: (stepTitle: string, position: number) => string;
 }
+
+const defaultAnnounceReorder = (stepTitle: string, position: number) =>
+  `Moved "${stepTitle}" to position ${position}`;
 
 export interface UseEditGoalDrag {
   draggedIndex: number | null;
@@ -71,6 +80,7 @@ export function useEditGoalDrag({
   steps,
   onReorderSteps,
   dragScrollController,
+  announceReorder = defaultAnnounceReorder,
 }: UseEditGoalDragParams): UseEditGoalDrag {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -240,7 +250,7 @@ export function useEditGoalDrag({
       );
       triggerDragDrop();
       AccessibilityInfo.announceForAccessibility(
-        `Moved "${dragged?.title ?? ""}" to position ${to + 1}`,
+        announceReorder(dragged?.title ?? "", to + 1),
       );
     }
     draggedIndexRef.current = null;
@@ -264,7 +274,7 @@ export function useEditGoalDrag({
     );
     triggerDragDrop();
     AccessibilityInfo.announceForAccessibility(
-      `Moved "${steps[index].title}" to position ${to + 1}`,
+      announceReorder(steps[index].title, to + 1),
     );
   }
 
