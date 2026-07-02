@@ -259,10 +259,10 @@ Explicitly **not** touched: `ProgressBar.*`, `stepStateColorMap.ts`,
 **Commit**: `test(TimelineBreakdownBar): add unit tests (#451)`
 **Changes**:
 
-- [ ] `test.each` over the 4 states asserting each renders its live `t()` legend text (e.g. `"3 done"`, `"1 in motion"`) when `count > 0`.
-- [ ] A test asserting a `count === 0` state produces **no** matching text node (the "drop out" contract — e.g. render with `paused: 0` and assert `screen.queryByText(/set aside/)` is null).
-- [ ] A test asserting all 4 states render together for a mixed-counts case.
-- [ ] Run `bun run test --testPathPatterns TimelineBreakdownBar` and `bun run test --testPathPatterns i18n` (locale-parity + pseudo-locale gates) — both green.
+- [x] `test.each` over the 4 states asserting each renders its live `t()` legend text (e.g. `"3 done"`, `"1 in motion"`) when `count > 0`.
+- [x] A test asserting a `count === 0` state produces **no** matching text node (the "drop out" contract — e.g. render with `paused: 0` and assert `screen.queryByText(/set aside/)` is null).
+- [x] A test asserting all 4 states render together for a mixed-counts case.
+- [x] Run `bun run test --testPathPatterns TimelineBreakdownBar` and `bun run test --testPathPatterns i18n` (locale-parity + pseudo-locale gates) — both green.
 
 ---
 
