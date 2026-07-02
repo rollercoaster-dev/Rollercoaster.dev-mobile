@@ -12,9 +12,12 @@ import { StyleSheet } from "react-native-unistyles";
 export const styles = StyleSheet.create((theme) => ({
   // The whole strip is one tap target (prototype's outer `onClick`), so the
   // Pressable owns the column; label row + bar stack with the prototype's ~6px
-  // gap (`space[2]`, nearest).
+  // gap (`space[2]`, nearest). `minHeight: 44` meets the 44pt minimum touch
+  // target (the label+bar content is shorter); the extra area extends the tap
+  // zone below the bar, consistent with the sibling FocusParkedState row.
   strip: {
     gap: theme.space[2],
+    minHeight: 44,
   },
   topRow: {
     flexDirection: "row",
