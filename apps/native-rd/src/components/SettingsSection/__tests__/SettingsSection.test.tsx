@@ -31,4 +31,31 @@ describe("SettingsSection", () => {
     );
     expect(screen.queryAllByTestId("settings-separator")).toHaveLength(0);
   });
+
+  describe("accessibility grouping (opt-in)", () => {
+    it("exposes a radiogroup role + label when passed", () => {
+      renderWithProviders(
+        <SettingsSection
+          title="Content Density"
+          accessible
+          accessibilityRole="radiogroup"
+          accessibilityLabel="Content density selection"
+        >
+          <Text>A</Text>
+        </SettingsSection>,
+      );
+      expect(
+        screen.getByRole("radiogroup", { name: "Content density selection" }),
+      ).toBeOnTheScreen();
+    });
+
+    it("exposes no group role by default", () => {
+      renderWithProviders(
+        <SettingsSection title="Section">
+          <Text>A</Text>
+        </SettingsSection>,
+      );
+      expect(screen.queryByRole("radiogroup")).toBeNull();
+    });
+  });
 });

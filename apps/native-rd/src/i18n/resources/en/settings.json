@@ -1,5 +1,8 @@
 {
   "title": "Settings",
+  "theme": {
+    "title": "Theme"
+  },
   "density": {
     "title": "Content Density",
     "options": {

@@ -5,6 +5,8 @@ import {
   fireEvent,
 } from "../../../__tests__/test-utils";
 
+import { SettingsRow } from "../SettingsRow";
+
 // Mock Switch's internal RN module to avoid ESM parse errors in test-renderer.
 // Same pattern used in SettingsScreen tests for ScrollView/ActivityIndicator.
 jest.mock("react-native/Libraries/Components/Switch/Switch", () => {
@@ -21,8 +23,6 @@ jest.mock("react-native/Libraries/Components/Switch/Switch", () => {
     });
   return { __esModule: true, default: MockSwitch };
 });
-
-import { SettingsRow } from "../SettingsRow";
 
 describe("SettingsRow", () => {
   describe("rendering modes", () => {
@@ -116,6 +116,52 @@ describe("SettingsRow", () => {
       nativeEvent: { actionName: "longpress" },
     });
     expect(onLongPress).toHaveBeenCalledTimes(1);
+  });
+
+  describe("radio role (opt-in)", () => {
+    it('exposes accessibilityRole "radio" with checked state when selected', () => {
+      renderWithProviders(
+        <SettingsRow
+          label="Compact"
+          accessibilityRole="radio"
+          checked
+          onPress={() => {}}
+        />,
+      );
+      const radio = screen.getByRole("radio", { name: "Compact" });
+      expect(radio.props.accessibilityState).toEqual({ checked: true });
+    });
+
+    it("reports checked false for an unselected radio row", () => {
+      renderWithProviders(
+        <SettingsRow
+          label="Default"
+          accessibilityRole="radio"
+          checked={false}
+          onPress={() => {}}
+        />,
+      );
+      const radio = screen.getByRole("radio", { name: "Default" });
+      expect(radio.props.accessibilityState).toEqual({ checked: false });
+    });
+
+    it("defaults checked to false when a radio row omits the prop", () => {
+      renderWithProviders(
+        <SettingsRow
+          label="Comfortable"
+          accessibilityRole="radio"
+          onPress={() => {}}
+        />,
+      );
+      const radio = screen.getByRole("radio", { name: "Comfortable" });
+      expect(radio.props.accessibilityState).toEqual({ checked: false });
+    });
+
+    it('still renders as a "button" when accessibilityRole is omitted', () => {
+      renderWithProviders(<SettingsRow label="Account" onPress={() => {}} />);
+      expect(screen.getByRole("button", { name: "Account" })).toBeOnTheScreen();
+      expect(screen.queryByRole("radio")).toBeNull();
+    });
   });
 
   it("renders value text only when value prop is provided", () => {
