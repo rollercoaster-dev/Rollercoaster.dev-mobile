@@ -20,5 +20,7 @@ notes:
   - Progress copy stays factual. Render "{{completed}} von {{total}}
     Schritten erledigt." — no motivational framing.
   - The word "step" stays as "Schritt" (de/common.json convention).
-  - Finish-line copy is matter-of-fact, not victorious. Use "Ziel-Belege"
-    over "Beweise deines Erfolgs".
+  - Finish-line copy is matter-of-fact, not victorious. The "Finish &
+    design badge" CTA stays a plain action phrase (e.g. "Abschließen &
+    Abzeichen gestalten"), never "Beweise deines Erfolgs"-style victory
+    copy; its subtitle states the badge mechanic plainly, no cheering.

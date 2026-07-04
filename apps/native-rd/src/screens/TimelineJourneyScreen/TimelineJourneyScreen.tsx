@@ -17,8 +17,10 @@ import {
   evidenceByGoalQuery,
   stepEvidenceByGoalQuery,
   groupStepsByParent,
+  areAllStepsComplete,
   StepStatus,
 } from "../../db";
+import { parseBadgeDesign } from "../../badges/types";
 import type { GoalId, GroupedStep } from "../../db";
 import type {
   GoalsStackParamList,
@@ -226,6 +228,11 @@ function TimelineContent({
             />
           ))}
           <FinishLine
+            goalTitle={goal.title ?? ""}
+            badgeDesign={parseBadgeDesign(goal.design)}
+            allStepsComplete={areAllStepsComplete(stepRows)}
+            // TODO(#378): wire real finishing-flow navigation
+            onBadgePress={() => {}}
             goalEvidence={goalEvidence}
             onEvidencePress={handleEvidencePress}
           />

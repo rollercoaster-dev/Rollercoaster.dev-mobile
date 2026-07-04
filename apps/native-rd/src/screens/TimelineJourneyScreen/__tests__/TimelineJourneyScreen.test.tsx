@@ -57,6 +57,9 @@ jest.mock("../../../db", () => ({
   ),
   findFirstPendingIndex: (rows: { status: string | null }[]) =>
     rows.findIndex((s) => s.status === "pending"),
+  // Faithful copy of the real helper (empty list is not complete).
+  areAllStepsComplete: (rows: readonly { status: string | null }[]) =>
+    rows.length > 0 && rows.every((s) => s.status === "completed"),
   // Faithful copy of the real helper (orphan/grandchild promotion) so the
   // screen's grouping + current-leaf calc runs as real code, not stubbed.
   groupStepsByParent: (
@@ -226,10 +229,10 @@ describe("TimelineJourneyScreen", () => {
     expect(screen.getByText("Write tests")).toBeOnTheScreen();
   });
 
-  it('renders finish line with "Goal Evidence" heading', () => {
+  it('renders the finish line\'s "Finish & design badge" CTA', () => {
     setupQueries();
     renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
-    expect(screen.getByText("Goal Evidence")).toBeOnTheScreen();
+    expect(screen.getByText("Finish & design badge")).toBeOnTheScreen();
   });
 
   it("shows goal evidence in finish line", () => {
@@ -238,10 +241,10 @@ describe("TimelineJourneyScreen", () => {
     expect(screen.getByText("Reflection note")).toBeOnTheScreen();
   });
 
-  it('shows "No goal evidence yet" when no goal evidence', () => {
+  it("renders no goal-evidence absence copy when there is none (#452 D8)", () => {
     setupQueries();
     renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
-    expect(screen.getByText("No goal evidence yet")).toBeOnTheScreen();
+    expect(screen.queryByText(/no goal evidence/i)).toBeNull();
   });
 
   it('"Back to Focus" navigates to FocusMode', () => {
