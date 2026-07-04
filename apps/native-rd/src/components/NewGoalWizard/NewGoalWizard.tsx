@@ -13,10 +13,12 @@
  * so `grep -rn "NewGoalWizard" src/screens` stays empty until then.
  */
 import React from "react";
-import { View } from "react-native";
+import { View, Text as RNText, TextInput, Pressable } from "react-native";
 import { ArrowLeft, X } from "phosphor-react-native";
+import { useUnistyles } from "react-native-unistyles";
 import { Text } from "../Text";
 import { IconButton } from "../IconButton";
+import { Button } from "../Button";
 import { HeaderBand } from "../ScreenHeader/HeaderBand";
 import { styles } from "./NewGoalWizard.styles";
 
@@ -57,16 +59,39 @@ export interface NewGoalWizardProps {
   headerLabel?: string;
   backAccessibilityLabel?: string;
   closeAccessibilityLabel?: string;
+  nameEyebrow?: string;
+  nameTitle?: string;
+  goalTitlePlaceholder?: string;
+  nameHint?: string;
+  nextLabel?: string;
+  /** Plain lead-in before the quick-add link ("or "). */
+  quickAddPrefix?: string;
+  quickAddLabel?: string;
+  /** Combined a11y label for the whole quick-add fast path press target. */
+  quickAddAccessibilityLabel?: string;
 }
 
 export function NewGoalWizard({
   currentStep,
+  goalTitle,
+  onGoalTitleChange,
   onBack,
   onClose,
+  onNext,
+  onQuickAdd,
   headerLabel = "New goal",
   backAccessibilityLabel = "Go back",
   closeAccessibilityLabel = "Close",
+  nameEyebrow = "Step 1 of 4",
+  nameTitle = "What do you want to work toward?",
+  goalTitlePlaceholder = "Name your goal",
+  nameHint = "Something you'll show progress on.",
+  nextLabel = "Next →",
+  quickAddPrefix = "or ",
+  quickAddLabel = "Quick add — skip to the list ›",
+  quickAddAccessibilityLabel = "Quick add, skip to the list",
 }: NewGoalWizardProps) {
+  const { theme } = useUnistyles();
   const currentStepIndex = STEP_ORDER.indexOf(currentStep);
 
   return (
@@ -122,7 +147,49 @@ export function NewGoalWizard({
 
       {/* Step bodies land per slice: name + ready in this one (#462); "step"
           and "build" stay an inert placeholder until #463/#464 (D2). */}
-      <View style={styles.placeholderBody} />
+      {currentStep === "name" ? (
+        <>
+          <View style={styles.stepBody}>
+            <RNText style={styles.eyebrow}>{nameEyebrow}</RNText>
+            <RNText style={styles.nameHeadline} accessibilityRole="header">
+              {nameTitle}
+            </RNText>
+            <TextInput
+              style={styles.titleInput}
+              value={goalTitle}
+              onChangeText={onGoalTitleChange}
+              placeholder={goalTitlePlaceholder}
+              placeholderTextColor={theme.colors.textMuted}
+              accessibilityLabel={goalTitlePlaceholder}
+              testID="new-goal-title-input"
+            />
+            <RNText style={styles.hint}>{nameHint}</RNText>
+          </View>
+          <View style={styles.footer}>
+            <Button
+              label={nextLabel}
+              onPress={onNext}
+              disabled={!goalTitle.trim()}
+              testID="new-goal-next-button"
+            />
+            <Pressable
+              style={styles.quickAddPress}
+              onPress={onQuickAdd}
+              accessibilityRole="button"
+              accessibilityLabel={quickAddAccessibilityLabel}
+              hitSlop={6}
+              testID="new-goal-quick-add"
+            >
+              <RNText style={styles.quickAddText}>
+                {quickAddPrefix}
+                <RNText style={styles.quickAddLink}>{quickAddLabel}</RNText>
+              </RNText>
+            </Pressable>
+          </View>
+        </>
+      ) : (
+        <View style={styles.placeholderBody} />
+      )}
     </View>
   );
 }

@@ -1,4 +1,5 @@
 import { StyleSheet } from "react-native-unistyles";
+import { shadowStyle } from "../../styles/shadows";
 
 // Same width as an md IconButton (ScreenHeader.styles.ts's SPACER_WIDTH), so
 // the centered header label doesn't shift when the back arrow is absent.
@@ -44,6 +45,68 @@ export const styles = StyleSheet.create((theme) => ({
   },
   progressSegmentUnfilled: {
     backgroundColor: theme.colors.background,
+  },
+
+  // --- Shared step body / footer frame ---
+  stepBody: {
+    flex: 1,
+    justifyContent: "center" as const,
+    paddingHorizontal: theme.space[5],
+    gap: theme.space[3],
+  },
+  footer: {
+    paddingHorizontal: theme.space[4],
+    paddingTop: theme.space[3],
+    paddingBottom: theme.space[5],
+    gap: theme.space[3],
+  },
+
+  // --- Step 1 · name ---
+  eyebrow: {
+    fontFamily: theme.fontFamily.mono,
+    fontSize: theme.size.xs,
+    textTransform: "uppercase" as const,
+    letterSpacing: theme.letterSpacing.wide,
+    color: theme.colors.textSecondary,
+  },
+  nameHeadline: {
+    fontFamily: theme.fontFamily.headline,
+    fontWeight: theme.fontWeight.black,
+    fontSize: theme.size["2xl"],
+    lineHeight: theme.size["2xl"] * 1.15,
+    color: theme.colors.text,
+  },
+  titleInput: {
+    minHeight: 48,
+    fontSize: theme.size.md,
+    fontFamily: theme.fontFamily.body,
+    color: theme.colors.text,
+    backgroundColor: theme.colors.background,
+    borderWidth: theme.borderWidth.thick,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.sm,
+    paddingHorizontal: theme.space[3],
+    paddingVertical: theme.space[3],
+    ...shadowStyle(theme, "cardElevation"),
+  },
+  hint: {
+    fontSize: theme.size.sm,
+    lineHeight: theme.size.sm * 1.5,
+    color: theme.colors.textSecondary,
+  },
+  quickAddPress: {
+    minHeight: 44,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  quickAddText: {
+    fontSize: theme.size.sm,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.textSecondary,
+    textAlign: "center" as const,
+  },
+  quickAddLink: {
+    color: theme.colors.accentPrimary,
   },
 
   // --- "step" / "build" placeholder body (D2, filled by #463/#464) ---
