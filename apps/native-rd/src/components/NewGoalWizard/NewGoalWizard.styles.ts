@@ -109,6 +109,55 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.accentPrimary,
   },
 
+  // --- Step 4 · ready ---
+  readyHeadline: {
+    fontFamily: theme.fontFamily.headline,
+    fontWeight: theme.fontWeight.black,
+    fontSize: theme.size["3xl"],
+    lineHeight: theme.size["3xl"] * 1.05,
+    color: theme.colors.text,
+  },
+  summaryCard: {
+    backgroundColor: theme.colors.background,
+    borderWidth: theme.borderWidth.thick,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.sm,
+    padding: theme.space[4],
+    gap: theme.space[1],
+    ...shadowStyle(theme, "cardElevation"),
+  },
+  summaryTitle: {
+    fontFamily: theme.fontFamily.headline,
+    fontWeight: theme.fontWeight.bold,
+    fontSize: theme.size.lg,
+    color: theme.colors.text,
+  },
+  summaryMeta: {
+    fontFamily: theme.fontFamily.mono,
+    fontSize: theme.size.sm,
+    color: theme.colors.textSecondary,
+  },
+  badgeNoteBanner: {
+    flexDirection: "row" as const,
+    alignItems: "flex-start" as const,
+    gap: theme.space[2],
+    backgroundColor: theme.colors.accentPurpleLight,
+    borderWidth: theme.borderWidth.medium,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.sm,
+    paddingHorizontal: theme.space[3],
+    paddingVertical: theme.space[3],
+  },
+  badgeNoteIcon: {
+    fontSize: 14,
+  },
+  badgeNoteText: {
+    flex: 1,
+    fontSize: theme.size.sm,
+    lineHeight: theme.size.sm * 1.45,
+    color: theme.colors.accentPrimary,
+  },
+
   // --- "step" / "build" placeholder body (D2, filled by #463/#464) ---
   placeholderBody: {
     flex: 1,

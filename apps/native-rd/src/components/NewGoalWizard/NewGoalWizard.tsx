@@ -69,16 +69,26 @@ export interface NewGoalWizardProps {
   quickAddLabel?: string;
   /** Combined a11y label for the whole quick-add fast path press target. */
   quickAddAccessibilityLabel?: string;
+  readyHeadline?: string;
+  /** Pluralized summary-card meta line. Default: "N steps · evidence on each". */
+  stepCountSummary?: (count: number) => string;
+  badgeNote?: string;
+  startWorkingLabel?: string;
 }
+
+const defaultStepCountSummary = (count: number) =>
+  `${count} step${count === 1 ? "" : "s"} · evidence on each`;
 
 export function NewGoalWizard({
   currentStep,
   goalTitle,
   onGoalTitleChange,
+  stepCount,
   onBack,
   onClose,
   onNext,
   onQuickAdd,
+  onStartWorking,
   headerLabel = "New goal",
   backAccessibilityLabel = "Go back",
   closeAccessibilityLabel = "Close",
@@ -90,6 +100,10 @@ export function NewGoalWizard({
   quickAddPrefix = "or ",
   quickAddLabel = "Quick add — skip to the list ›",
   quickAddAccessibilityLabel = "Quick add, skip to the list",
+  readyHeadline = "You're set.",
+  stepCountSummary = defaultStepCountSummary,
+  badgeNote = "You'll design your badge when you finish.",
+  startWorkingLabel = "Start Working",
 }: NewGoalWizardProps) {
   const { theme } = useUnistyles();
   const currentStepIndex = STEP_ORDER.indexOf(currentStep);
@@ -185,6 +199,37 @@ export function NewGoalWizard({
                 <RNText style={styles.quickAddLink}>{quickAddLabel}</RNText>
               </RNText>
             </Pressable>
+          </View>
+        </>
+      ) : currentStep === "ready" ? (
+        <>
+          <View style={styles.stepBody}>
+            <RNText style={styles.readyHeadline} accessibilityRole="header">
+              {readyHeadline}
+            </RNText>
+            <View style={styles.summaryCard}>
+              <RNText style={styles.summaryTitle}>{goalTitle}</RNText>
+              <RNText style={styles.summaryMeta}>
+                {stepCountSummary(stepCount)}
+              </RNText>
+            </View>
+            <View style={styles.badgeNoteBanner}>
+              <RNText
+                style={styles.badgeNoteIcon}
+                accessibilityElementsHidden
+                importantForAccessibility="no"
+              >
+                🏆
+              </RNText>
+              <RNText style={styles.badgeNoteText}>{badgeNote}</RNText>
+            </View>
+          </View>
+          <View style={styles.footer}>
+            <Button
+              label={startWorkingLabel}
+              onPress={onStartWorking}
+              testID="new-goal-start-working-button"
+            />
           </View>
         </>
       ) : (
