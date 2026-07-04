@@ -21,33 +21,33 @@ stories + tests for `FinishLine`, a small additive change to `TimelineNode`
 
 ## Intent Verification
 
-- [ ] `FinishLine` renders "Finish & design badge" as its primary heading —
+- [x] `FinishLine` renders "Finish & design badge" as its primary heading —
       the old "Goal Evidence" heading is gone (`FinishLine.tsx`,
       `en/timelineJourney.json:finishLine.ctaTitle`).
-- [ ] When `badgeDesign` is `null`, the badge preview shows a neutral tile
+- [x] When `badgeDesign` is `null`, the badge preview shows a neutral tile
       with the **first letter of `goalTitle`**, uppercased (mirrors
       `BadgeWallCell`'s undesigned-badge fallback exactly —
       `BadgeWallCell.tsx:43-51`). When `badgeDesign` is non-null, the real
       `BadgeRenderer` renders instead.
-- [ ] The goal star (`TimelineNode isGoalNode`) is **white/neutral** when
+- [x] The goal star (`TimelineNode isGoalNode`) is **white/neutral** when
       `allStepsComplete` is `false` and **celebration yellow**
       (`theme.chrome.celebrationBg`/`celebrationFg`) when `true` — verified
       by two Storybook stories and a `TimelineNode` unit test, not by reading
       the unconditional `palette.yellow300` that ships today.
       `TimelineNode.styles.ts` has **zero** remaining references to
       `palette.yellow300` after this PR.
-- [ ] When `goalEvidence` is empty, **no text renders** for the evidence
+- [x] When `goalEvidence` is empty, **no text renders** for the evidence
       section — no "No goal evidence yet" or any other absent-thing copy.
       Verified by a regression test asserting
       `JSON.stringify(screen.toJSON())` does not match
       `/\b(missing|needed|no .* evidence)\b/i` (mirrors the existing
       contract test in `FocusCurrentTaskCard.test.tsx:182-194`).
-- [ ] Tapping the "Finish & design badge" row calls `onBadgePress` exactly
+- [x] Tapping the "Finish & design badge" row calls `onBadgePress` exactly
       once (Storybook + unit test); it does not also trigger
       `onEvidencePress` for any evidence row (no nested-Pressable bleed).
-- [ ] `bun run test --testPathPatterns i18n` (locale-parity + pseudo-locale
+- [x] `bun run test --testPathPatterns i18n` (locale-parity + pseudo-locale
       gates) stays green after the `en/timelineJourney.json` key changes.
-- [ ] `bun run type-check` is clean, including `TimelineJourneyScreen.tsx`'s
+- [x] `bun run type-check` is clean, including `TimelineJourneyScreen.tsx`'s
       updated (breaking) call to `<FinishLine />`.
 
 ---
@@ -279,12 +279,12 @@ are added, the map itself is untouched).
 **Commit**: `feat(TimelineNode): add celebrate variant for the goal-node star (#452)`
 **Changes**:
 
-- [ ] `stepStateColorMap.ts`: add `goalNodeBg(theme: ComposedTheme, celebrate: boolean): string` returning `celebrate ? theme.chrome.celebrationBg : theme.colors.background`, and `goalNodeFg(...)` returning `celebrate ? theme.chrome.celebrationFg : theme.colors.text`. Comment cross-referencing #420 as the place a future non-celebrating-state token decision would land (D5).
-- [ ] `TimelineNode.tsx`: add `celebrate?: boolean` (default `false`) to `TimelineNodeProps`, documented as "only meaningful when `isGoalNode`". Node style array: replace unconditional `isGoalNode && styles.goalNode` with `isGoalNode && !celebrate && styles.goalNode` / `isGoalNode && celebrate && styles.goalNodeCelebrate`; same pattern for `goalText`/`goalTextCelebrate`. Glyph logic (`content`) is unchanged — always `"★"` for goal nodes regardless of `celebrate`.
-- [ ] `TimelineNode.styles.ts`: drop the `palette` import and `goalNode`'s `backgroundColor: palette.yellow300` line; `goalNode` keeps only size/shape (`width/height/borderRadius`) plus `backgroundColor: theme.colors.background, borderColor: theme.colors.border` (neutral, matches D1). Add `goalNodeCelebrate: { backgroundColor: goalNodeBg(theme, true), borderColor: goalNodeBg(theme, true) }` (solid look, matching `completedNode`/`inProgressNode`'s border==bg convention) and `goalTextCelebrate: { color: goalNodeFg(theme, true) }`.
-- [ ] `TimelineNode.stories.tsx`: add a `GoalNodeCelebrate` story next to the existing `GoalNode` story, rendering `<TimelineNode status="completed" isGoalNode celebrate accessibilityLabel="Goal finish line, celebrating" />` labeled "Goal Node (star, celebration yellow)".
-- [ ] `__tests__/TimelineNode.test.tsx`: add a test asserting the celebrate prop doesn't change the glyph (`"★"` renders either way) — style-level assertions are out of scope for RTL text-query tests; a light `toHaveStyle`/snapshot-free check is acceptable if trivial, otherwise the story is the visual proof.
-- [ ] Run `bun run type-check` and `bun run lint` clean.
+- [x] `stepStateColorMap.ts`: add `goalNodeBg(theme: ComposedTheme, celebrate: boolean): string` returning `celebrate ? theme.chrome.celebrationBg : theme.colors.background`, and `goalNodeFg(...)` returning `celebrate ? theme.chrome.celebrationFg : theme.colors.text`. Comment cross-referencing #420 as the place a future non-celebrating-state token decision would land (D5).
+- [x] `TimelineNode.tsx`: add `celebrate?: boolean` (default `false`) to `TimelineNodeProps`, documented as "only meaningful when `isGoalNode`". Node style array: replace unconditional `isGoalNode && styles.goalNode` with `isGoalNode && !celebrate && styles.goalNode` / `isGoalNode && celebrate && styles.goalNodeCelebrate`; same pattern for `goalText`/`goalTextCelebrate`. Glyph logic (`content`) is unchanged — always `"★"` for goal nodes regardless of `celebrate`.
+- [x] `TimelineNode.styles.ts`: drop the `palette` import and `goalNode`'s `backgroundColor: palette.yellow300` line; `goalNode` keeps only size/shape (`width/height/borderRadius`) plus `backgroundColor: theme.colors.background, borderColor: theme.colors.border` (neutral, matches D1). Add `goalNodeCelebrate: { backgroundColor: goalNodeBg(theme, true), borderColor: goalNodeBg(theme, true) }` (solid look, matching `completedNode`/`inProgressNode`'s border==bg convention) and `goalTextCelebrate: { color: goalNodeFg(theme, true) }`.
+- [x] `TimelineNode.stories.tsx`: add a `GoalNodeCelebrate` story next to the existing `GoalNode` story, rendering `<TimelineNode status="completed" isGoalNode celebrate accessibilityLabel="Goal finish line, celebrating" />` labeled "Goal Node (star, celebration yellow)".
+- [x] `__tests__/TimelineNode.test.tsx`: add a test asserting the celebrate prop doesn't change the glyph (`"★"` renders either way) — style-level assertions are out of scope for RTL text-query tests; a light `toHaveStyle`/snapshot-free check is acceptable if trivial, otherwise the story is the visual proof.
+- [x] Run `bun run type-check` and `bun run lint` clean.
 
 ### Step 2: `FinishLine` component + styles + i18n
 
@@ -292,13 +292,13 @@ are added, the map itself is untouched).
 **Commit**: `feat(FinishLine): redesign as keepsake card — badge preview, CTA, celebration star (#452)`
 **Changes**:
 
-- [ ] `en/timelineJourney.json`: delete `finishLine.title` and `finishLine.noEvidence`; add `finishLine.ctaTitle` ("Finish & design badge"), `finishLine.ctaSubtitleUndesigned` ("The keepsake comes at the end — badge starts as \"{{letter}}\" until you design it.", matching `Timeline A Prototype.dc.html:88`'s exact phrasing), `finishLine.ctaSubtitleDesigned` (new copy — see Open Questions), `finishLine.ctaA11yLabel` ("Finish and design your badge"). Keep `finishLine.a11yNode` unchanged.
-- [ ] Run `bun run gen:pseudo`; stage only the `finishLine.*` diff in `pseudo/timelineJourney.json`, revert unrelated drift (per #406/#451 precedent).
-- [ ] Update `_register/timelineJourney.yml`'s "Finish-line copy is matter-of-fact..." note to describe the new CTA copy instead of the deleted "Ziel-Belege" heading example.
-- [ ] `FinishLine.tsx`: new props `goalTitle: string`, `badgeDesign: BadgeDesign | null`, `allStepsComplete: boolean`, `onBadgePress: () => void` (alongside existing `goalEvidence`/`onEvidencePress`). Render: star (`<TimelineNode status="completed" isGoalNode celebrate={allStepsComplete} accessibilityLabel={t("timelineJourney:finishLine.a11yNode")} />`, `status` prop is a harmless pre-existing placeholder, unused when `isGoalNode` — see Step 1), a `Pressable` CTA row (badge preview + `ctaTitle` + `ctaSubtitleUndesigned`/`ctaSubtitleDesigned` depending on `badgeDesign`, with the letter interpolated from `goalTitle.trim().charAt(0).toUpperCase()`), `accessibilityRole="button"` + `accessibilityLabel={t("...ctaA11yLabel")}`, `onPress={onBadgePress}`. Evidence: `goalEvidence.length > 0 ? goalEvidence.map(...) : null` — no fallback text (D8/Intent Verification).
-- [ ] Badge preview: `badgeDesign ? <BadgeRenderer design={badgeDesign} size={40} testID="finish-line-badge-preview" /> : <View style={styles.badgeFallback}><Text style={styles.badgeFallbackText}>{firstLetter}</Text></View>` (D3/D4).
-- [ ] `FinishLine.styles.ts`: remove `palette` import, `evidenceCard`/`evidenceIcon`/`evidenceLabel` (dead), `borderLeftWidth`/`borderLeftColor` off `contentCard` (the old-language yellow accent stripe). Add `ctaRow`, `ctaTextColumn`, `ctaTitle`, `ctaSubtitle`, `badgeFallback` (mirrors `BadgeWallCell.styles.ts`'s `fallback`: `theme.colors.accentPurple` bg, `theme.borderWidth.medium` border, `theme.radius.sm`), `badgeFallbackText` (`palette` re-import scoped to this one new usage is fine — but prefer `theme.colors.background` contrast helper if simpler; default to `palette.white` matching `BadgeWallCell` exactly for parity).
-- [ ] Run `bun run type-check` and `bun run lint` clean (typed `t()` keys require the `en/timelineJourney.json` edits to land in this same commit).
+- [x] `en/timelineJourney.json`: delete `finishLine.title` and `finishLine.noEvidence`; add `finishLine.ctaTitle` ("Finish & design badge"), `finishLine.ctaSubtitleUndesigned` ("The keepsake comes at the end — badge starts as \"{{letter}}\" until you design it.", matching `Timeline A Prototype.dc.html:88`'s exact phrasing), `finishLine.ctaSubtitleDesigned` (new copy — see Open Questions), `finishLine.ctaA11yLabel` ("Finish and design your badge"). Keep `finishLine.a11yNode` unchanged.
+- [x] Run `bun run gen:pseudo`; stage only the `finishLine.*` diff in `pseudo/timelineJourney.json`, revert unrelated drift (per #406/#451 precedent).
+- [x] Update `_register/timelineJourney.yml`'s "Finish-line copy is matter-of-fact..." note to describe the new CTA copy instead of the deleted "Ziel-Belege" heading example.
+- [x] `FinishLine.tsx`: new props `goalTitle: string`, `badgeDesign: BadgeDesign | null`, `allStepsComplete: boolean`, `onBadgePress: () => void` (alongside existing `goalEvidence`/`onEvidencePress`). Render: star (`<TimelineNode status="completed" isGoalNode celebrate={allStepsComplete} accessibilityLabel={t("timelineJourney:finishLine.a11yNode")} />`, `status` prop is a harmless pre-existing placeholder, unused when `isGoalNode` — see Step 1), a `Pressable` CTA row (badge preview + `ctaTitle` + `ctaSubtitleUndesigned`/`ctaSubtitleDesigned` depending on `badgeDesign`, with the letter interpolated from `goalTitle.trim().charAt(0).toUpperCase()`), `accessibilityRole="button"` + `accessibilityLabel={t("...ctaA11yLabel")}`, `onPress={onBadgePress}`. Evidence: `goalEvidence.length > 0 ? goalEvidence.map(...) : null` — no fallback text (D8/Intent Verification).
+- [x] Badge preview: `badgeDesign ? <BadgeRenderer design={badgeDesign} size={40} testID="finish-line-badge-preview" /> : <View style={styles.badgeFallback}><Text style={styles.badgeFallbackText}>{firstLetter}</Text></View>` (D3/D4).
+- [x] `FinishLine.styles.ts`: remove `palette` import, `evidenceCard`/`evidenceIcon`/`evidenceLabel` (dead), `borderLeftWidth`/`borderLeftColor` off `contentCard` (the old-language yellow accent stripe). Add `ctaRow`, `ctaTextColumn`, `ctaTitle`, `ctaSubtitle`, `badgeFallback` (mirrors `BadgeWallCell.styles.ts`'s `fallback`: `theme.colors.accentPurple` bg, `theme.borderWidth.medium` border, `theme.radius.sm`), `badgeFallbackText` (`palette` re-import scoped to this one new usage is fine — but prefer `theme.colors.background` contrast helper if simpler; default to `palette.white` matching `BadgeWallCell` exactly for parity).
+- [x] Run `bun run type-check` and `bun run lint` clean (typed `t()` keys require the `en/timelineJourney.json` edits to land in this same commit).
 
 ### Step 3: Storybook stories
 
@@ -306,11 +306,11 @@ are added, the map itself is untouched).
 **Commit**: `test(FinishLine): update Storybook stories for keepsake redesign (#452)`
 **Changes**:
 
-- [ ] `title: "Iteration B/Timeline/FinishLine"` (was bare `"FinishLine"`).
-- [ ] `UndesignedBadge`: `badgeDesign={null}`, `allStepsComplete={false}`, with a couple of evidence items — shows the letter-fallback tile + white star + a populated evidence list.
-- [ ] `DesignedBadge`: a `makeDesign()`-style `BadgeDesign` fixture (mirroring `BadgeWallCell.stories.tsx`'s helper), `allStepsComplete={false}`, `goalEvidence={[]}` — shows the real `BadgeRenderer` + white star + **no** evidence text at all (visual proof of D8/"render what's present").
-- [ ] `AllStepsDoneCelebration`: `badgeDesign={null}`, `allStepsComplete={true}` — the realistic "just finished, haven't designed yet" moment; shows the celebration-yellow star.
-- [ ] `AllThemesMatrix`: static `themes[name]`/`themeNames` read (mirrors `TimelineNode.stories.tsx:162-254`), one row per theme rendering two small circles side by side via the new `goalNodeBg/Fg(theme, celebrate)` resolvers — pre-done vs. post-done, proving neither state goes invisible/illegible in any of the 7 product themes (esp. `light-autismFriendly`'s muted celebration yellow and `light-lowInfo`'s near-white one).
+- [x] `title: "Iteration B/Timeline/FinishLine"` (was bare `"FinishLine"`).
+- [x] `UndesignedBadge`: `badgeDesign={null}`, `allStepsComplete={false}`, with a couple of evidence items — shows the letter-fallback tile + white star + a populated evidence list.
+- [x] `DesignedBadge`: a `makeDesign()`-style `BadgeDesign` fixture (mirroring `BadgeWallCell.stories.tsx`'s helper), `allStepsComplete={false}`, `goalEvidence={[]}` — shows the real `BadgeRenderer` + white star + **no** evidence text at all (visual proof of D8/"render what's present").
+- [x] `AllStepsDoneCelebration`: `badgeDesign={null}`, `allStepsComplete={true}` — the realistic "just finished, haven't designed yet" moment; shows the celebration-yellow star.
+- [x] `AllThemesMatrix`: static `themes[name]`/`themeNames` read (mirrors `TimelineNode.stories.tsx:162-254`), one row per theme rendering two small circles side by side via the new `goalNodeBg/Fg(theme, celebrate)` resolvers — pre-done vs. post-done, proving neither state goes invisible/illegible in any of the 7 product themes (esp. `light-autismFriendly`'s muted celebration yellow and `light-lowInfo`'s near-white one).
 
 ### Step 4: Unit tests
 
@@ -318,11 +318,11 @@ are added, the map itself is untouched).
 **Commit**: `test(FinishLine): update unit tests for keepsake redesign (#452)`
 **Changes**:
 
-- [ ] Replace the `"Goal Evidence"`/`"No goal evidence yet"` assertions with: renders `"Finish & design badge"`; renders the first-letter fallback (`screen.getByText("R")` for `goalTitle="Read 12 books"`, `badgeDesign={null}`); renders `BadgeRenderer` (via `screen.getByTestId("finish-line-badge-preview")`) when `badgeDesign` is set.
-- [ ] Regression test: with `goalEvidence={[]}`, `expect(JSON.stringify(screen.toJSON())).not.toMatch(/\b(missing|needed)\b/i)` and explicitly `expect(screen.queryByText(/no .* evidence/i)).toBeNull()` (mirrors `FocusCurrentTaskCard.test.tsx:182-194`'s established contract-test pattern).
-- [ ] `fireEvent.press` on the CTA row calls `onBadgePress` exactly once; pressing an evidence card still calls `onEvidencePress` and does **not** also call `onBadgePress` (no nested-Pressable bleed — D6).
-- [ ] Keep the existing "shows evidence items" / accessible-evidence-label tests (still valid, unrelated to this redesign).
-- [ ] Run `bun run test --testPathPatterns FinishLine` and `bun run test --testPathPatterns TimelineNode` green.
+- [x] Replace the `"Goal Evidence"`/`"No goal evidence yet"` assertions with: renders `"Finish & design badge"`; renders the first-letter fallback (`screen.getByText("R")` for `goalTitle="Read 12 books"`, `badgeDesign={null}`); renders `BadgeRenderer` (via `screen.getByTestId("finish-line-badge-preview")`) when `badgeDesign` is set.
+- [x] Regression test: with `goalEvidence={[]}`, `expect(JSON.stringify(screen.toJSON())).not.toMatch(/\b(missing|needed)\b/i)` and explicitly `expect(screen.queryByText(/no .* evidence/i)).toBeNull()` (mirrors `FocusCurrentTaskCard.test.tsx:182-194`'s established contract-test pattern).
+- [x] `fireEvent.press` on the CTA row calls `onBadgePress` exactly once; pressing an evidence card still calls `onEvidencePress` and does **not** also call `onBadgePress` (no nested-Pressable bleed — D6).
+- [x] Keep the existing "shows evidence items" / accessible-evidence-label tests (still valid, unrelated to this redesign).
+- [x] Run `bun run test --testPathPatterns FinishLine` and `bun run test --testPathPatterns TimelineNode` green.
 
 ### Step 5: `TimelineJourneyScreen` — satisfy the updated prop contract
 
@@ -330,22 +330,22 @@ are added, the map itself is untouched).
 **Commit**: `chore(TimelineJourneyScreen): satisfy FinishLine's updated prop contract (#452)`
 **Changes**:
 
-- [ ] Import `parseBadgeDesign` and `areAllStepsComplete`.
-- [ ] Update the `<FinishLine />` call: `goalTitle={goal.title}`, `badgeDesign={parseBadgeDesign(goal.design)}`, `allStepsComplete={areAllStepsComplete(stepRows)}`, `onBadgePress={() => {}}` with an inline `// TODO(#378): wire real finishing-flow navigation` comment — this screen is mid-transition to #378's reconciled rendering and does not yet own a real destination route; a labeled no-op keeps this PR honest rather than inventing a fake navigation target.
-- [ ] Run `bun run test --testPathPatterns TimelineJourneyScreen` and `bun run type-check` green.
+- [x] Import `parseBadgeDesign` and `areAllStepsComplete`.
+- [x] Update the `<FinishLine />` call: `goalTitle={goal.title}`, `badgeDesign={parseBadgeDesign(goal.design)}`, `allStepsComplete={areAllStepsComplete(stepRows)}`, `onBadgePress={() => {}}` with an inline `// TODO(#378): wire real finishing-flow navigation` comment — this screen is mid-transition to #378's reconciled rendering and does not yet own a real destination route; a labeled no-op keeps this PR honest rather than inventing a fake navigation target.
+- [x] Run `bun run test --testPathPatterns TimelineJourneyScreen` and `bun run type-check` green.
 
 ---
 
 ## Testing Strategy
 
-- [ ] Unit tests for `FinishLine` and `TimelineNode` (Jest 30,
+- [x] Unit tests for `FinishLine` and `TimelineNode` (Jest 30,
       `@testing-library/react-native` v13), files mirror `src/` under
       `src/components/*/​__tests__/`.
-- [ ] `test.each` not needed here (few, non-repetitive states) — matches
+- [x] `test.each` not needed here (few, non-repetitive states) — matches
       existing file style, not force-fit.
-- [ ] `bun run test --testPathPatterns i18n` must stay green after the
+- [x] `bun run test --testPathPatterns i18n` must stay green after the
       `en`/`pseudo` edits (locale-parity gate).
-- [ ] `bun run test --testPathPatterns TimelineJourneyScreen` must stay
+- [x] `bun run test --testPathPatterns TimelineJourneyScreen` must stay
       green after the Step 5 shim.
 - [ ] Manual: open `Iteration B/Timeline/FinishLine` in Storybook; visually
       diff `UndesignedBadge`/`DesignedBadge`/`AllStepsDoneCelebration`
@@ -384,3 +384,20 @@ from #452._
 <!-- Entries added by implement skill:
 - [YYYY-MM-DD HH:MM] <discovery description>
 -->
+
+- [2026-07-04 Step 1] `goalNodeCelebrate` is layered ON TOP of `goalNode`
+  (`isGoalNode && styles.goalNode, isGoalNode && celebrate && styles.goalNodeCelebrate`)
+  instead of the plan's mutually-exclusive `!celebrate`/`celebrate` branches —
+  the plan's own styles checkbox defines `goalNodeCelebrate` as colors-only
+  (no size/shape), which under exclusive branching would have collapsed the
+  celebrating star to the base 32px `NODE_SIZE`. Layering keeps size/shape in
+  one place; visual outcome identical to intent.
+- [2026-07-04 Step 1] Existing `GoalNode` story label updated
+  ("star, yellow" → "star, neutral — steps remaining") since the unconditional
+  yellow it described no longer exists — not in the plan's checklist, but the
+  old label would have been factually wrong after this change.
+- [2026-07-04 13:16] Running `bun test --testPathPatterns ...` directly
+  segfaulted in Bun 1.3.13 before executing tests. Re-ran the same targeted
+  suites through the app's Node-wrapped script (`bun run test --
+--testPathPatterns ...`), per `apps/native-rd/AGENTS.md`; FinishLine,
+  TimelineNode, TimelineJourneyScreen, and i18n suites all passed.
