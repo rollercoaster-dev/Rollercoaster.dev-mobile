@@ -14,12 +14,11 @@
  */
 import React from "react";
 import { View, Text as RNText, TextInput, Pressable } from "react-native";
-import { ArrowLeft, X } from "phosphor-react-native";
+import { X } from "phosphor-react-native";
 import { useUnistyles } from "react-native-unistyles";
-import { Text } from "../Text";
 import { IconButton } from "../IconButton";
 import { Button } from "../Button";
-import { HeaderBand } from "../ScreenHeader/HeaderBand";
+import { ScreenSubHeader } from "../ScreenHeader/ScreenSubHeader";
 import { styles } from "./NewGoalWizard.styles";
 
 /**
@@ -57,7 +56,10 @@ export interface NewGoalWizardProps {
 
   // --- Copy (i18n-free per D5; English defaults; [Integrate] passes t()). ---
   headerLabel?: string;
-  backAccessibilityLabel?: string;
+  /**
+   * Close (×) a11y label. The back arrow's label is header chrome, owned by the
+   * shared ScreenSubHeader (common:screenHeader.a11y.goBack), not a wizard prop.
+   */
   closeAccessibilityLabel?: string;
   nameEyebrow?: string;
   nameTitle?: string;
@@ -90,7 +92,6 @@ export function NewGoalWizard({
   onQuickAdd,
   onStartWorking,
   headerLabel = "New goal",
-  backAccessibilityLabel = "Go back",
   closeAccessibilityLabel = "Close",
   nameEyebrow = "Step 1 of 4",
   nameTitle = "What do you want to work toward?",
@@ -110,35 +111,22 @@ export function NewGoalWizard({
 
   return (
     <View style={styles.container}>
-      <HeaderBand>
-        {currentStep !== "name" ? (
+      {/* Shared header chrome (D8). Back arrow is omitted on the first step —
+          nowhere to go back to; ScreenSubHeader renders a leading spacer so the
+          label stays centered. The × close lives in the right slot. */}
+      <ScreenSubHeader
+        label={headerLabel}
+        onBack={currentStep !== "name" ? onBack : undefined}
+        right={
           <IconButton
-            icon={<ArrowLeft size={24} weight="bold" />}
-            onPress={onBack}
+            icon={<X size={24} weight="bold" />}
+            onPress={onClose}
             tone="chrome"
-            accessibilityLabel={backAccessibilityLabel}
-            testID="new-goal-back-button"
+            accessibilityLabel={closeAccessibilityLabel}
+            testID="new-goal-close-button"
           />
-        ) : (
-          // Same footprint as the IconButton so the centered label doesn't
-          // jump between steps (mirrors ScreenSubHeader's trailing spacer).
-          <View style={styles.headerSpacer} />
-        )}
-        <Text
-          variant="title"
-          style={styles.headerLabel}
-          accessibilityRole="header"
-        >
-          {headerLabel}
-        </Text>
-        <IconButton
-          icon={<X size={24} weight="bold" />}
-          onPress={onClose}
-          tone="chrome"
-          accessibilityLabel={closeAccessibilityLabel}
-          testID="new-goal-close-button"
-        />
-      </HeaderBand>
+        }
+      />
 
       <View style={styles.progressRow}>
         {STEP_ORDER.map((step, index) => (

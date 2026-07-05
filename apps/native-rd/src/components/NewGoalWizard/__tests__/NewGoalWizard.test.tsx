@@ -39,7 +39,8 @@ describe("NewGoalWizard", () => {
       renderWizard({ currentStep: "name", goalTitle: "" });
 
       expect(screen.getByText("New goal")).toBeOnTheScreen();
-      expect(screen.queryByTestId("new-goal-back-button")).toBeNull();
+      // Back arrow is absent on the first step (ScreenSubHeader spacer, D8).
+      expect(screen.queryByRole("button", { name: "Go back" })).toBeNull();
       expect(screen.getByTestId("new-goal-close-button")).toBeOnTheScreen();
       expect(screen.getByText("Step 1 of 4")).toBeOnTheScreen();
       expect(
@@ -103,7 +104,7 @@ describe("NewGoalWizard", () => {
     it("renders the ready summary, badge note, Start Working CTA, and back arrow", () => {
       renderWizard({ currentStep: "ready", goalTitle: "Build a birdhouse" });
 
-      expect(screen.getByTestId("new-goal-back-button")).toBeOnTheScreen();
+      expect(screen.getByRole("button", { name: "Go back" })).toBeOnTheScreen();
       expect(screen.getByText("You're set.")).toBeOnTheScreen();
       expect(screen.getByText("Build a birdhouse")).toBeOnTheScreen();
       expect(screen.getByText("2 steps · evidence on each")).toBeOnTheScreen();
@@ -130,7 +131,7 @@ describe("NewGoalWizard", () => {
       const onStartWorking = jest.fn();
       renderWizard({ currentStep: "ready", onBack, onStartWorking });
 
-      fireEvent.press(screen.getByTestId("new-goal-back-button"));
+      fireEvent.press(screen.getByRole("button", { name: "Go back" }));
       fireEvent.press(screen.getByTestId("new-goal-start-working-button"));
 
       expect(onBack).toHaveBeenCalledTimes(1);
@@ -156,7 +157,7 @@ describe("NewGoalWizard", () => {
       renderWizard({ currentStep });
 
       expect(screen.getByText("New goal")).toBeOnTheScreen();
-      expect(screen.getByTestId("new-goal-back-button")).toBeOnTheScreen();
+      expect(screen.getByRole("button", { name: "Go back" })).toBeOnTheScreen();
       expect(screen.getByTestId("new-goal-close-button")).toBeOnTheScreen();
       expect(screen.queryByText("What do you want to work toward?")).toBeNull();
       expect(screen.queryByText("You're set.")).toBeNull();
