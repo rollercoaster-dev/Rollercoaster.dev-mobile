@@ -87,6 +87,16 @@ const SPOTLIGHT = {
   earnedAt: "2026-06-18T00:00:00.000Z",
 };
 
+// Null-design spotlight — a badge earned before a design was chosen. Exercises
+// the spotlightArtFallback tile + its ink, which the designed SPOTLIGHT above
+// never renders (so it was previously unverified across themes).
+const SPOTLIGHT_NULL = {
+  id: "spotlight-null",
+  design: null,
+  goalTitle: "Rewire the workshop",
+  earnedAt: "2026-06-18T00:00:00.000Z",
+};
+
 // ---------------------------------------------------------------------------
 // Meta
 // ---------------------------------------------------------------------------
@@ -124,10 +134,16 @@ export const Empty: Story = {
 // toolbar theme; only the wall is scoped. (D4 — mirrors BadgeWallCell.stories.)
 // ---------------------------------------------------------------------------
 
-const MATRIX_GALLERY = GALLERY.slice(0, 5);
+// Includes the undesigned tile at index 6 so the gallery's null-design fallback
+// (BadgeWallCell.fallbackText) is theme-checked too, not only designed cells.
+const MATRIX_GALLERY = GALLERY.slice(0, 8);
 
-export const AllThemesMatrix: Story = {
-  render: () => (
+// Shared 7-column theme scaffold — each column scopes one product theme so the
+// fixed dark #161616 surface can be checked for legibility per mood. Label chrome
+// follows the toolbar theme; only the wall is scoped. (D4 — mirrors
+// BadgeWallCell.stories.)
+function WallMatrix({ render }: { render: () => React.ReactNode }) {
+  return (
     <ScrollView horizontal showsHorizontalScrollIndicator>
       <View style={styles.matrix}>
         {themeNames.map((name) => (
@@ -135,20 +151,67 @@ export const AllThemesMatrix: Story = {
             <Text style={styles.columnTitle}>{MOOD_NAMES[name]}</Text>
             <Text style={styles.columnKey}>{name}</Text>
             <View style={styles.wallBox}>
-              <ScopedTheme name={name}>
-                <BadgesWall
-                  count={6}
-                  spotlight={SPOTLIGHT}
-                  gallery={MATRIX_GALLERY}
-                  onOpenBadge={noop}
-                  onSeeGoals={noop}
-                />
-              </ScopedTheme>
+              <ScopedTheme name={name}>{render()}</ScopedTheme>
             </View>
           </View>
         ))}
       </View>
     </ScrollView>
+  );
+}
+
+// Populated wall (designed spotlight + a gallery that now includes an undesigned
+// tile) across all 7 themes.
+export const AllThemesMatrix: Story = {
+  render: () => (
+    <WallMatrix
+      render={() => (
+        <BadgesWall
+          count={6}
+          spotlight={SPOTLIGHT}
+          gallery={MATRIX_GALLERY}
+          onOpenBadge={noop}
+          onSeeGoals={noop}
+        />
+      )}
+    />
+  ),
+};
+
+// Null-design branch across all 7 themes: the spotlight's fallback art tile and
+// the gallery's undesigned fallback — the branches the designed fixtures never
+// render, and where the accentPurpleFg ink actually shows.
+export const NullDesignAllThemes: Story = {
+  render: () => (
+    <WallMatrix
+      render={() => (
+        <BadgesWall
+          count={3}
+          spotlight={SPOTLIGHT_NULL}
+          gallery={MATRIX_GALLERY}
+          onOpenBadge={noop}
+          onSeeGoals={noop}
+        />
+      )}
+    />
+  ),
+};
+
+// Empty state (0 badges) across all 7 themes: the ghost badge, empty copy, and
+// the celebrationBg CTA — the count===0 branch the populated matrix skips.
+export const EmptyAllThemes: Story = {
+  render: () => (
+    <WallMatrix
+      render={() => (
+        <BadgesWall
+          count={0}
+          spotlight={null}
+          gallery={[]}
+          onOpenBadge={noop}
+          onSeeGoals={noop}
+        />
+      )}
+    />
   ),
 };
 

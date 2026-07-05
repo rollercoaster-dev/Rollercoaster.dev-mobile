@@ -158,6 +158,41 @@ export const AllThemesMatrix: Story = {
   ),
 };
 
+// The authoring / chip-grid mode (mode="authoring", the default) across all 7
+// themes — the capture matrix above never exercised this mode. Renders the real
+// EvidenceTypePicker scoped per theme so the chip borders, selected fill, and
+// label all re-theme.
+export const AuthoringAllThemes: Story = {
+  render: () => (
+    <ScrollView contentContainerStyle={storyStyles.matrixContainer}>
+      {themeNames.map((name) => (
+        <View key={name} style={storyStyles.matrixThemeBlock}>
+          <View style={storyStyles.matrixThemeLabel}>
+            <Text style={storyStyles.matrixThemeName}>{MOOD_NAMES[name]}</Text>
+            <Text style={storyStyles.matrixThemeKey}>{name}</Text>
+          </View>
+          <ScopedTheme name={name}>
+            <View
+              style={[
+                storyStyles.matrixCard,
+                { backgroundColor: themes[name].colors.background },
+              ]}
+            >
+              <EvidenceTypePicker
+                selectedTypes={
+                  [EvidenceType.text, EvidenceType.photo] as EvidenceTypeValue[]
+                }
+                label="Evidence types"
+                onToggleType={noop}
+              />
+            </View>
+          </ScopedTheme>
+        </View>
+      ))}
+    </ScrollView>
+  ),
+};
+
 const storyStyles = StyleSheet.create((theme) => ({
   triggerStage: {
     flex: 1,

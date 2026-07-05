@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import React, { useState } from "react";
 import { View, Text } from "react-native";
+import { ScopedTheme } from "react-native-unistyles";
 import { themeOptions } from "../../hooks/useTheme";
 import { themes } from "../../themes/compose";
 import type { DensityLevel } from "../../utils/density";
@@ -29,9 +30,13 @@ export const Default: Story = {
 };
 
 /**
- * Reviewer visual gate: the three-row radiogroup rendered on every product
- * theme's background so the section chrome, row borders, and ✓ marker are
- * verifiable across all 7 themes. Mirrors ThemeSampleCard's matrix.
+ * Reviewer visual gate: the three-row radiogroup rendered in every product
+ * theme so the section chrome, row borders, and ✓ marker are verifiable across
+ * all 7 themes. Each cell wraps the REAL reactive component in
+ * `<ScopedTheme name={id}>` — the proven per-cell re-render idiom (see
+ * BadgesWall / the Focus family). Without the scope the component would render
+ * the active theme in all 7 cells (a "null matrix"); the tinted frame only
+ * labels each theme.
  */
 export const AllThemesMatrix: Story = {
   render: () => (
@@ -55,7 +60,9 @@ export const AllThemesMatrix: Story = {
           >
             {id}
           </Text>
-          <SettingsDensityRows selectedLevel="default" onSelect={() => {}} />
+          <ScopedTheme name={id}>
+            <SettingsDensityRows selectedLevel="default" onSelect={() => {}} />
+          </ScopedTheme>
         </View>
       ))}
     </View>
