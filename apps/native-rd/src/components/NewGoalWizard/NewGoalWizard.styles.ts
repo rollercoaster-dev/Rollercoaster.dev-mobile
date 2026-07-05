@@ -138,7 +138,9 @@ export const styles = StyleSheet.create((theme) => ({
     paddingVertical: theme.space[3],
   },
   badgeNoteIcon: {
-    fontSize: 14,
+    // theme.size.sm (14 in the base theme) so the glyph scales with the
+    // largeText/lowVision ND variants instead of staying pinned at 14.
+    fontSize: theme.size.sm,
   },
   badgeNoteText: {
     flex: 1,

@@ -180,6 +180,18 @@ describe("NewGoalWizard", () => {
     );
   });
 
+  it.each([
+    ["name", "What do you want to work toward?"],
+    ["ready", "You're set."],
+  ] as const)(
+    "marks the %s-step headline with the header role for screen readers",
+    (currentStep, headline) => {
+      renderWizard({ currentStep });
+
+      expect(screen.getByText(headline).props.accessibilityRole).toBe("header");
+    },
+  );
+
   it("exposes accessible labels and roles for controls", () => {
     renderWizard({ currentStep: "ready" });
 

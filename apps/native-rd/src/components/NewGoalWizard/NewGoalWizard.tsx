@@ -22,19 +22,17 @@ import { ScreenSubHeader } from "../ScreenHeader/ScreenSubHeader";
 import { styles } from "./NewGoalWizard.styles";
 
 /**
- * Wizard position. The full 4-value union ships with the shell (D2) so the
- * frame already accepts every step it will ever render; the "step" and
- * "build" bodies arrive with #463/#464.
+ * Ordered wizard positions — the single source of truth. Drives the progress
+ * bar's filled-segment count, and NewGoalWizardStep is derived from it so the
+ * two can't drift: a step added here can't be missed by the type, and
+ * `indexOf(currentStep)` can never return -1. The full 4-value set ships with
+ * the shell (D2) so the frame already accepts every step it will ever render;
+ * the "step" and "build" bodies arrive with #463/#464.
  */
-export type NewGoalWizardStep = "name" | "step" | "build" | "ready";
+const STEP_ORDER = ["name", "step", "build", "ready"] as const;
 
-/** Ordered steps — drives the progress bar's filled-segment count. */
-const STEP_ORDER: readonly NewGoalWizardStep[] = [
-  "name",
-  "step",
-  "build",
-  "ready",
-];
+/** Wizard position — derived from STEP_ORDER (see above). */
+export type NewGoalWizardStep = (typeof STEP_ORDER)[number];
 
 export interface NewGoalWizardProps {
   currentStep: NewGoalWizardStep;
@@ -177,6 +175,10 @@ export function NewGoalWizard({
             <Pressable
               style={styles.quickAddPress}
               onPress={onQuickAdd}
+              // `accessible` collapses the "or …" + link Text into one node so
+              // screen readers announce the single quickAddAccessibilityLabel,
+              // not each fragment separately (matches ProofSpine/FABMenu).
+              accessible
               accessibilityRole="button"
               accessibilityLabel={quickAddAccessibilityLabel}
               hitSlop={6}
