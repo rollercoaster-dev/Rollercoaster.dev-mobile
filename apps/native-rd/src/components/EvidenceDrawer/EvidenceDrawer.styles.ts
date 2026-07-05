@@ -1,5 +1,4 @@
 import { StyleSheet } from "react-native-unistyles";
-import { palette } from "../../themes/palette";
 import { PILL_LIFT } from "../../navigation/FocusPillTabBar";
 
 /** Visible peek height above the lifted pill — handle, label, FAB. */
@@ -30,7 +29,7 @@ export const styles = StyleSheet.create((theme) => ({
     right: 0,
     backgroundColor: theme.colors.background,
     borderTopWidth: isGoal ? 3 : theme.borderWidth.medium,
-    borderTopColor: isGoal ? palette.yellow300 : theme.colors.border,
+    borderTopColor: isGoal ? theme.colors.accentYellow : theme.colors.border,
     borderLeftWidth: theme.borderWidth.thin,
     borderRightWidth: theme.borderWidth.thin,
     borderLeftColor: theme.colors.border,
@@ -58,7 +57,9 @@ export const styles = StyleSheet.create((theme) => ({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: isGoal ? palette.yellow300 : theme.colors.textMuted,
+    backgroundColor: isGoal
+      ? theme.colors.accentYellow
+      : theme.colors.textMuted,
   }),
   handleLabel: {
     fontSize: theme.size.sm,

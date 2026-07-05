@@ -1,5 +1,4 @@
 import { StyleSheet } from "react-native-unistyles";
-import { palette } from "../../themes/palette";
 import type { space } from "../../themes/tokens";
 import { shadowStyle } from "../../styles/shadows";
 
@@ -41,7 +40,8 @@ export const styles = StyleSheet.create((theme) => ({
     justifyContent: "center",
   }),
   initialsText: (badgeSize: number) => ({
-    color: palette.white,
+    // Designed ink for the accentPurple initials tile — see BadgeWallCell.
+    color: theme.colors.accentPurpleFg,
     fontSize: Math.round(badgeSize * 0.4),
     lineHeight: Math.round(badgeSize * 0.4 * 1.1),
     fontWeight: theme.fontWeight.black,

@@ -1,5 +1,4 @@
 import { StyleSheet } from "react-native-unistyles";
-import { palette } from "../../themes/palette";
 
 /** Logical-pixel size each badge renders at in the wall grid. */
 export const CELL_SIZE = 60;
@@ -27,7 +26,9 @@ export const styles = StyleSheet.create((theme) => ({
     justifyContent: "center",
   },
   fallbackText: {
-    color: palette.white,
+    // Designed ink for accentPurple (dark in most themes, white only where the
+    // theme's purple is dark enough) — hardcoded white failed AA in 4/7 themes.
+    color: theme.colors.accentPurpleFg,
     fontSize: 24,
     fontWeight: theme.fontWeight.black,
     fontFamily: theme.fontFamily.headline,

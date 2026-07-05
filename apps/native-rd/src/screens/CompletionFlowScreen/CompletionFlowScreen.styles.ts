@@ -1,6 +1,5 @@
 import { StyleSheet } from "react-native-unistyles";
 import { shadowStyle } from "../../styles/shadows";
-import { palette } from "../../themes/adapter";
 
 export const styles = StyleSheet.create((theme) => ({
   container: {
@@ -74,7 +73,7 @@ export const styles = StyleSheet.create((theme) => ({
     borderWidth: 2,
     borderColor: theme.colors.border,
     borderLeftWidth: 4,
-    borderLeftColor: palette.yellow300,
+    borderLeftColor: theme.colors.accentYellow,
     borderRadius: theme.radius.sm,
     marginBottom: theme.space[1],
   },

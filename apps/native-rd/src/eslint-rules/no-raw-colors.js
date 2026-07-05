@@ -8,7 +8,7 @@ module.exports = {
     },
     messages: {
       noRawColor: [
-        "Raw color '{{ value }}' found in style. ",
+        "Non-themeable color '{{ value }}' found in style. ",
         "Use a theme token instead: theme.colors.* from react-native-unistyles. ",
         "Docs: docs/design/nd-themes.md. ",
         "If this is an intentional exception (e.g. tested contrast ratio), ",
@@ -23,12 +23,15 @@ module.exports = {
       /\\/g,
       "/",
     );
-    // Only enforce in component style files — screens may have justified raw
-    // colors (e.g. media overlays). Expand scope as violations are cleaned up.
+    // Enforce in every style file — components AND screens (screens were exempt,
+    // which let BadgesWall's #161616 through un-flagged). `palette.*` member
+    // expressions are checked too (see MemberExpression below), not just string
+    // literals, so non-themeable tokens like `palette.gray800` can no longer slip
+    // through. Intentional exceptions (media overlays, the fixed-dark BadgesWall
+    // surface) carry a justified `eslint-disable-next-line local/no-raw-colors`.
     const isStyleFile =
       filename.endsWith(".styles.ts") || filename.endsWith(".styles.tsx");
-    const isComponentFile = filename.includes("/components/");
-    if (!isStyleFile || !isComponentFile) {
+    if (!isStyleFile) {
       return {};
     }
 
@@ -105,6 +108,27 @@ module.exports = {
             });
           }
         });
+      },
+      // `palette.*` member expressions bypass the string-literal checks entirely
+      // — `palette.gray800` is not a Literal — yet a bare palette color is just as
+      // non-themeable as a hex. Flag any `palette.<name>` access in a style file.
+      MemberExpression(node) {
+        if (
+          node.object.type === "Identifier" &&
+          node.object.name === "palette"
+        ) {
+          const prop =
+            node.property.type === "Identifier"
+              ? node.property.name
+              : typeof node.property.value === "string"
+                ? node.property.value
+                : "…";
+          context.report({
+            node,
+            messageId: "noRawColor",
+            data: { value: `palette.${prop}` },
+          });
+        }
       },
     };
   },

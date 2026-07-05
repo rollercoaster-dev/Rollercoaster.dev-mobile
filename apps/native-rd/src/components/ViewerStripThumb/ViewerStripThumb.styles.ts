@@ -5,6 +5,12 @@ import type { EvidenceSource } from "../../hooks/useAllEvidenceForGoal";
 const THUMB_WIDTH = 76;
 const THUMB_HEIGHT = 76;
 
+// Step-source indicator color. No semantic "step blue" theme token exists; this
+// mirrors the legacy TimelineNode step color. The goal source uses the themed
+// accentYellow token — only this step fallback stays a fixed palette value.
+// eslint-disable-next-line local/no-raw-colors -- see comment above
+const STEP_SOURCE_COLOR = palette.blue600;
+
 export const styles = StyleSheet.create((theme) => ({
   container: (isActive: boolean) => ({
     width: THUMB_WIDTH,
@@ -33,7 +39,8 @@ export const styles = StyleSheet.create((theme) => ({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: source === "goal" ? palette.yellow300 : palette.blue600,
+    backgroundColor:
+      source === "goal" ? theme.colors.accentYellow : STEP_SOURCE_COLOR,
   }),
   icon: {
     fontSize: 22,

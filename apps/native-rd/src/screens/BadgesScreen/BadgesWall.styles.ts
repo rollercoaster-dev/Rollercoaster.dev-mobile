@@ -25,6 +25,21 @@ export const SPOTLIGHT_NARROW_WIDTH = 360;
 /** Badge-art size in the spotlight's compact (narrow-surface) layout. */
 export const SPOTLIGHT_ART_COMPACT = 48;
 
+// The badge wall is a deliberately FIXED dark "wall of proof" surface (#404
+// D5/D13): it does NOT adapt per theme. These are the only sanctioned
+// non-themeable colors here — each contrast-checked against the dark surface.
+// Hoisted behind one disable block (rather than scattered inline disables) so
+// the no-raw-colors rule still guards the REST of the file against accidental
+// hardcodes, while this one documented exception stays explicit.
+/* eslint-disable local/no-raw-colors -- fixed dark wall surface, see note above */
+const WALL_SURFACE = "#161616";
+const WALL_INK = palette.white;
+const WALL_INK_MUTED = palette.gray400;
+const WALL_PANEL = palette.gray800;
+const WALL_GHOST_BORDER = palette.gray600;
+const WALL_CTA_BORDER = palette.black;
+/* eslint-enable local/no-raw-colors */
+
 export const styles = StyleSheet.create((theme) => ({
   // TOKEN-RISK: the wall is a deliberately fixed dark "wall of proof" surface.
   // No per-theme `chrome.badgeWallBg` token exists yet (verified absent from
@@ -33,7 +48,7 @@ export const styles = StyleSheet.create((theme) => ({
   // add theme.chrome.badgeWallBg and swap this literal for it (see plan Step 5).
   surface: {
     flex: 1,
-    backgroundColor: "#161616",
+    backgroundColor: WALL_SURFACE,
   },
   galleryContent: {
     paddingHorizontal: GALLERY_H_PADDING,
@@ -72,7 +87,7 @@ export const styles = StyleSheet.create((theme) => ({
     fontSize: 10,
     letterSpacing: 1,
     textTransform: "uppercase",
-    color: palette.gray400,
+    color: WALL_INK_MUTED,
     marginTop: theme.space[2],
   },
 
@@ -97,7 +112,7 @@ export const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius.sm,
     borderWidth: theme.borderWidth.medium,
     borderColor: theme.chrome.celebrationBg,
-    backgroundColor: palette.gray800,
+    backgroundColor: WALL_PANEL,
   },
   // Pulsing celebration halo. iOS only casts a shadow from an OPAQUE layer, so
   // this box carries a solid celebrationBg fill and sits BEHIND the opaque
@@ -132,7 +147,9 @@ export const styles = StyleSheet.create((theme) => ({
     justifyContent: "center",
   },
   spotlightArtFallbackText: {
-    color: palette.white,
+    // Designed ink for accentPurple — matches BadgeWallCell.fallbackText (the
+    // null-design tile it mirrors). Hardcoded white failed AA in 4/7 themes.
+    color: theme.colors.accentPurpleFg,
     fontSize: 24,
     fontWeight: theme.fontWeight.black,
     fontFamily: theme.fontFamily.headline,
@@ -150,7 +167,7 @@ export const styles = StyleSheet.create((theme) => ({
     fontFamily: theme.fontFamily.headline,
     fontWeight: theme.fontWeight.black,
     fontSize: 15,
-    color: palette.white,
+    color: WALL_INK,
     marginTop: theme.space[1],
   },
   spotlightDate: {
@@ -158,7 +175,7 @@ export const styles = StyleSheet.create((theme) => ({
     fontSize: 10,
     letterSpacing: 0.5,
     textTransform: "uppercase",
-    color: palette.gray400,
+    color: WALL_INK_MUTED,
     marginTop: theme.space[1],
   },
   spotlightArrow: {
@@ -189,8 +206,8 @@ export const styles = StyleSheet.create((theme) => ({
     borderRadius: 54,
     borderWidth: theme.borderWidth.thick,
     borderStyle: "dashed",
-    borderColor: palette.gray600,
-    backgroundColor: palette.gray800,
+    borderColor: WALL_GHOST_BORDER,
+    backgroundColor: WALL_PANEL,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -215,7 +232,7 @@ export const styles = StyleSheet.create((theme) => ({
     fontFamily: theme.fontFamily.headline,
     fontWeight: theme.fontWeight.black,
     fontSize: 22,
-    color: palette.white,
+    color: WALL_INK,
     textAlign: "center",
     marginTop: theme.space[5],
   },
@@ -223,7 +240,7 @@ export const styles = StyleSheet.create((theme) => ({
     fontFamily: theme.fontFamily.body,
     fontSize: 13,
     lineHeight: 20,
-    color: palette.gray400,
+    color: WALL_INK_MUTED,
     textAlign: "center",
     maxWidth: 260,
     marginTop: theme.space[2],
@@ -241,7 +258,7 @@ export const styles = StyleSheet.create((theme) => ({
     justifyContent: "center",
     borderRadius: theme.radius.sm,
     borderWidth: theme.borderWidth.thick,
-    borderColor: palette.black,
+    borderColor: WALL_CTA_BORDER,
     backgroundColor: theme.chrome.celebrationBg,
     ...shadowStyle(theme, "hardMd"),
   },

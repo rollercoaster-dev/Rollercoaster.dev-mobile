@@ -1,6 +1,5 @@
 import { StyleSheet } from "react-native-unistyles";
 import { shadowStyle } from "../../styles/shadows";
-import { palette } from "../../themes/palette";
 
 export const styles = StyleSheet.create((theme) => ({
   wrapper: {
@@ -8,7 +7,7 @@ export const styles = StyleSheet.create((theme) => ({
     // same envelope as the step cards — no frame resize when swiping to it.
     flex: 1,
     borderTopWidth: 6,
-    borderTopColor: palette.yellow300,
+    borderTopColor: theme.colors.accentYellow,
   },
   container: {
     gap: theme.space[3],
