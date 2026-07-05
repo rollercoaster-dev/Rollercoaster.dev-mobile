@@ -313,10 +313,12 @@ function MatrixEditGoal() {
  * screen-reader/reduce-motion probes resolve async and `setState`. On web,
  * `<ScopedTheme>` applies the scoped theme only during the initial render pass;
  * a later re-render recomputes styles against the *active* theme, so every cell
- * would silently revert to the toolbar theme (a "null matrix"). The prop-driven,
- * never-re-rendering siblings (TimelineStep, the Focus family, …) don't hit this
- * — EditGoalView does. The component honours the active theme correctly, so the
- * toolbar switcher is the reliable way to review all 7 themes here.
+ * would silently revert to the toolbar theme (a "null matrix"). The prop-driven
+ * siblings whose matrices never re-render (TimelineNode, the Focus family, …)
+ * don't hit this — EditGoalView does, as do TimelineStep (once its expand/
+ * collapse chevron is tapped) and BadgesWall (post-mount `onLayout`), which use
+ * this same toolbar treatment. The component honours the active theme correctly,
+ * so the toolbar switcher is the reliable way to review all 7 themes here.
  */
 export const AllThemesMatrix: Story = {
   render: () => (
