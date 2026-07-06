@@ -1,10 +1,12 @@
 import { StyleSheet } from "react-native-unistyles";
 import { shadowStyle } from "../../styles/shadows";
 
-// Zero hardcoded hex (hard acceptance gate). Token map to the App Shell `edit`
-// route: card surface #fff → background · ink border #0a0a0a → border · muted
-// #737373 → textSecondary · banner #ede9fe/#3b1f6b → accentPurpleLight/
-// accentPrimary · add-button #2563eb → accentPrimary.
+// Zero hardcoded hex (hard acceptance gate). Token map to the App Shell
+// `edit` route: card surface #fff → background · ink border #0a0a0a →
+// border · muted #737373 → textSecondary · banner surface #ede9fe →
+// accentPurpleLight · add-button #2563eb → accentPrimary. The banner ink
+// #3b1f6b is *re-toned* (not a literal match) to accentPrimary — the blue
+// #2563eb accent, reused as the ink.
 export const styles = StyleSheet.create((theme) => ({
   container: {
     gap: 0,

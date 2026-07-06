@@ -128,7 +128,9 @@ describe("NewGoalWizard", () => {
       [1, "1 step · evidence on each"],
       [2, "2 steps · evidence on each"],
       [4, "4 steps · evidence on each"],
-    ])("pluralizes the step count summary for %i", (stepCount, label) => {
+      [-2, "0 steps · evidence on each"],
+      [1.5, "1 step · evidence on each"],
+    ])("pluralizes the step count summary for %s", (stepCount, label) => {
       renderWizard({ currentStep: "ready", stepCount });
 
       expect(screen.getByText(label)).toBeOnTheScreen();
@@ -211,6 +213,24 @@ describe("NewGoalWizard", () => {
       4 - filledCount,
     );
   });
+
+  it.each<[NewGoalWizardStep, number]>([
+    ["name", 1],
+    ["step", 2],
+    ["build", 3],
+    ["ready", 4],
+  ])(
+    "exposes step %s as position %i of 4 via accessibilityValue",
+    (currentStep, now) => {
+      renderWizard({ currentStep });
+
+      expect(screen.getByRole("progressbar").props.accessibilityValue).toEqual({
+        min: 1,
+        max: 4,
+        now,
+      });
+    },
+  );
 
   it.each([
     ["name", "What do you want to work toward?"],

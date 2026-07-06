@@ -76,8 +76,10 @@ export interface NewGoalWizardProps {
   startWorkingLabel?: string;
 }
 
-const defaultStepCountSummary = (count: number) =>
-  `${count} step${count === 1 ? "" : "s"} · evidence on each`;
+const defaultStepCountSummary = (count: number) => {
+  const safeCount = Math.max(0, Math.floor(count));
+  return `${safeCount} step${safeCount === 1 ? "" : "s"} · evidence on each`;
+};
 
 export function NewGoalWizard({
   currentStep,
@@ -126,7 +128,16 @@ export function NewGoalWizard({
         }
       />
 
-      <View style={styles.progressRow}>
+      <View
+        style={styles.progressRow}
+        accessible
+        accessibilityRole="progressbar"
+        accessibilityValue={{
+          min: 1,
+          max: STEP_ORDER.length,
+          now: currentStepIndex + 1,
+        }}
+      >
         {STEP_ORDER.map((step, index) => (
           <View
             key={step}
