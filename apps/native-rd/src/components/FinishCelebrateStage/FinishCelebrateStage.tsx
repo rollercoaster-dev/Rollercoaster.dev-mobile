@@ -38,6 +38,12 @@ export interface FinishCelebrateStageProps {
   ctaLabel?: string;
   /** Muted subcopy below the CTA. */
   ctaSubcopy?: string;
+  /**
+   * Seeds the internal open/closed state of the note field (uncontrolled
+   * default, like `defaultValue`). The toggle stays internal (D8); this only
+   * sets its starting position — used by the open-state story.
+   */
+  initialNoteOpen?: boolean;
 }
 
 /**
@@ -63,8 +69,9 @@ export function FinishCelebrateStage({
   onDesignBadge,
   ctaLabel = "Design your badge →",
   ctaSubcopy = "the keepsake for this win — make it yours",
+  initialNoteOpen = false,
 }: FinishCelebrateStageProps) {
-  const [noteOpen, setNoteOpen] = useState(false);
+  const [noteOpen, setNoteOpen] = useState(initialNoteOpen);
 
   return (
     <View style={styles.container} testID="finish-celebrate-stage">
