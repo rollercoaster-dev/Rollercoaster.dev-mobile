@@ -126,7 +126,16 @@ export function NewGoalWizard({
         }
       />
 
-      <View style={styles.progressRow}>
+      <View
+        style={styles.progressRow}
+        accessible
+        accessibilityRole="progressbar"
+        accessibilityValue={{
+          min: 1,
+          max: STEP_ORDER.length,
+          now: currentStepIndex + 1,
+        }}
+      >
         {STEP_ORDER.map((step, index) => (
           <View
             key={step}

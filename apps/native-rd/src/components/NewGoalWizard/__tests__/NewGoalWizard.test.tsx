@@ -212,6 +212,24 @@ describe("NewGoalWizard", () => {
     );
   });
 
+  it.each<[NewGoalWizardStep, number]>([
+    ["name", 1],
+    ["step", 2],
+    ["build", 3],
+    ["ready", 4],
+  ])(
+    "exposes step %s as position %i of 4 via accessibilityValue",
+    (currentStep, now) => {
+      renderWizard({ currentStep });
+
+      expect(screen.getByRole("progressbar").props.accessibilityValue).toEqual({
+        min: 1,
+        max: 4,
+        now,
+      });
+    },
+  );
+
   it.each([
     ["name", "What do you want to work toward?"],
     ["ready", "You're set."],
