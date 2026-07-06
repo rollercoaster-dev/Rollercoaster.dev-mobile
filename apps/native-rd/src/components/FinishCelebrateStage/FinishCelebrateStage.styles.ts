@@ -58,11 +58,6 @@ export const styles = StyleSheet.create((theme) => ({
     fontFamily: theme.fontFamily.body,
     textAlignVertical: "top",
   },
-  // Exposed so the component can pass a themed placeholder color to TextInput's
-  // `placeholderTextColor` prop (which does not read from a StyleSheet).
-  notePlaceholderColor: {
-    color: theme.colors.textMuted,
-  },
   footer: {
     paddingHorizontal: theme.space[5],
     paddingBottom: theme.space[5],

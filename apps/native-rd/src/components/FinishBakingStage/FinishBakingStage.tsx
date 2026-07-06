@@ -36,6 +36,7 @@ export function FinishBakingStage({
   return (
     <View
       style={styles.container}
+      accessible
       accessibilityRole="none"
       accessibilityLiveRegion="polite"
       accessibilityLabel={label}

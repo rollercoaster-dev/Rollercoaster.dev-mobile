@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Pressable, TextInput, View } from "react-native";
+import { useUnistyles } from "react-native-unistyles";
 
 import { Text } from "../Text";
 import { Button } from "../Button";
@@ -71,6 +72,7 @@ export function FinishCelebrateStage({
   ctaSubcopy = "the keepsake for this win — make it yours",
   initialNoteOpen = false,
 }: FinishCelebrateStageProps) {
+  const { theme } = useUnistyles();
   const [noteOpen, setNoteOpen] = useState(initialNoteOpen);
 
   return (
@@ -97,7 +99,7 @@ export function FinishCelebrateStage({
             onChangeText={onClosingNoteChange}
             onBlur={() => onSaveClosingNote?.(closingNoteValue)}
             placeholder={closingNotePlaceholder}
-            placeholderTextColor={styles.notePlaceholderColor.color}
+            placeholderTextColor={theme.colors.textMuted}
             multiline
             autoFocus
             accessibilityLabel={closingNoteAccessibilityLabel}
