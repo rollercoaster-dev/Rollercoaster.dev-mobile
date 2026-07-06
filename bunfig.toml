@@ -17,10 +17,11 @@ exact = false
 registry = "https://registry.npmjs.org"
 
 [install.cache]
-# Cache directory for faster subsequent installs
-dir = ".bun-cache"
-
-# Don't disable cache (useful for local dev)
+# Use Bun's global cache (~/.bun/install/cache) — do NOT set a repo-local dir.
+# An in-repo cache (the old `.bun-cache`) gets crawled by workspace-root tools
+# (Storybook's vite-tsconfig-paths errors on cached packages' tsconfig.json)
+# and costs ~2.4 GB per checkout/worktree, while a shared global cache makes
+# installs across worktrees faster.
 disable = false
 
 [test]
