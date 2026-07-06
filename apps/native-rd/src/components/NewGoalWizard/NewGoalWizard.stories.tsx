@@ -33,7 +33,7 @@ const noop = () => undefined;
 function PhoneStage({ children }: { children: React.ReactNode }) {
   const { height } = useWindowDimensions();
   const { theme } = useUnistyles();
-  const stageHeight = height - theme.space[4] - theme.space[16];
+  const stageHeight = Math.max(0, height - theme.space[4] - theme.space[16]);
   return (
     <View style={[storyStyles.stage, { height: stageHeight }]}>{children}</View>
   );
