@@ -58,6 +58,13 @@ describe("ScreenSubHeader", () => {
     expect(onBack).toHaveBeenCalledTimes(1);
   });
 
+  it("omits the back button when onBack is not provided", () => {
+    renderWithProviders(<ScreenSubHeader label="New goal" />);
+    // Label still renders; a leading spacer stands in for the back button.
+    expect(screen.getByText("New goal")).toBeOnTheScreen();
+    expect(screen.queryByLabelText("Go back")).toBeNull();
+  });
+
   it("renders right slot when provided", () => {
     const onPress = jest.fn();
     renderWithProviders(

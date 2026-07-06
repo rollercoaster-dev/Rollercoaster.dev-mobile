@@ -9,7 +9,12 @@ import { styles } from "./ScreenHeader.styles";
 
 export interface ScreenSubHeaderProps {
   label: string;
-  onBack: () => void;
+  /**
+   * Back action. Omit it when there's no back target (e.g. the first step of a
+   * wizard) — a leading spacer takes the back button's place so the label stays
+   * optically centered.
+   */
+  onBack?: () => void;
   right?: React.ReactNode;
 }
 
@@ -22,12 +27,18 @@ export function ScreenSubHeader({
 
   return (
     <HeaderBand>
-      <IconButton
-        icon={<ArrowLeft size={24} weight="bold" />}
-        onPress={onBack}
-        tone="chrome"
-        accessibilityLabel={t("common:screenHeader.a11y.goBack")}
-      />
+      {onBack ? (
+        <IconButton
+          icon={<ArrowLeft size={24} weight="bold" />}
+          onPress={onBack}
+          tone="chrome"
+          accessibilityLabel={t("common:screenHeader.a11y.goBack")}
+        />
+      ) : (
+        // Leading spacer mirrors the trailing one, keeping the label centered
+        // when there's no back target.
+        <View style={styles.spacer} />
+      )}
       <Text variant="title" style={styles.subLabel} accessibilityRole="header">
         {label}
       </Text>
