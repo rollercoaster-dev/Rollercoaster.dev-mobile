@@ -171,7 +171,124 @@ describe("NewGoalWizard", () => {
     });
   });
 
-  it.each(["name", "ready"] as const)(
+  describe("step 2 · first step", () => {
+    it("renders the goal recap, headline, first-step input, default Note chip, and Next CTA", () => {
+      renderWizard({
+        currentStep: "step",
+        goalTitle: "Build a birdhouse",
+        firstStepTitle: "",
+      });
+
+      expect(screen.getByText("Goal")).toBeOnTheScreen();
+      // Goal recap echoes the step-1 title so the first-step input has context.
+      expect(screen.getByText("Build a birdhouse")).toBeOnTheScreen();
+      expect(screen.getByText("What's the first step?")).toBeOnTheScreen();
+      expect(screen.getByTestId("new-goal-first-step-input")).toBeOnTheScreen();
+      // Chip is born as "Note" (D4) — a real type on first paint, never empty.
+      expect(screen.getByText("📝")).toBeOnTheScreen();
+      expect(screen.getByText("Note")).toBeOnTheScreen();
+      expect(screen.getByText("change")).toBeOnTheScreen();
+      expect(screen.getByTestId("new-goal-next-button")).toBeOnTheScreen();
+    });
+
+    it("defaults the planned-evidence chip to Note when plannedEvidenceType is omitted", () => {
+      // D4 regression: with the prop absent, the default parameter must render a
+      // real type ("Note"/📝), never a missing/undefined state.
+      renderWizard({ currentStep: "step" });
+
+      expect(screen.getByText("📝")).toBeOnTheScreen();
+      expect(screen.getByText("Note")).toBeOnTheScreen();
+    });
+
+    it("fires onFirstStepTitleChange when the first-step input changes", () => {
+      const onFirstStepTitleChange = jest.fn();
+      renderWizard({ currentStep: "step", onFirstStepTitleChange });
+
+      fireEvent.changeText(
+        screen.getByTestId("new-goal-first-step-input"),
+        "Cut the plywood",
+      );
+
+      expect(onFirstStepTitleChange).toHaveBeenCalledWith("Cut the plywood");
+    });
+
+    it.each(["", "   ", "\n\t"])(
+      "disables Next and blocks onNext for empty/whitespace-only first-step title %#",
+      (firstStepTitle) => {
+        const onNext = jest.fn();
+        renderWizard({ currentStep: "step", firstStepTitle, onNext });
+
+        const nextButton = screen.getByTestId("new-goal-next-button");
+        expect(nextButton.props.accessibilityState).toMatchObject({
+          disabled: true,
+        });
+
+        fireEvent.press(nextButton);
+        expect(onNext).not.toHaveBeenCalled();
+      },
+    );
+
+    it("enables Next when the first-step title has non-whitespace text", () => {
+      renderWizard({ currentStep: "step", firstStepTitle: "  Cut plywood  " });
+
+      expect(
+        screen.getByTestId("new-goal-next-button").props.accessibilityState,
+      ).toMatchObject({ disabled: false });
+    });
+
+    it("opens the evidence picker when the chip is pressed", () => {
+      const onOpenEvidencePicker = jest.fn();
+      renderWizard({ currentStep: "step", onOpenEvidencePicker });
+
+      fireEvent.press(screen.getByTestId("new-goal-evidence-chip"));
+
+      expect(onOpenEvidencePicker).toHaveBeenCalledTimes(1);
+    });
+
+    it("names the chip press target with the action and current type for screen readers", () => {
+      // D7 a11y contract: the whole chip is one node whose label states the
+      // action and the current planned type (mirrors FocusCurrentTaskCard).
+      renderWizard({ currentStep: "step" });
+
+      expect(
+        screen.getByRole("button", {
+          name: "Change evidence type, currently Note",
+        }),
+      ).toBeOnTheScreen();
+    });
+
+    it("shows the composed capture sheet with the 'Evidence type' header when open", () => {
+      renderWizard({ currentStep: "step", evidencePickerOpen: true });
+
+      expect(screen.getByText("Evidence type")).toBeOnTheScreen();
+      // The single-select capture grid is present (a real type option renders).
+      expect(screen.getByRole("radio", { name: "Photo" })).toBeOnTheScreen();
+    });
+
+    it("hides the capture sheet header while the picker is closed", () => {
+      renderWizard({ currentStep: "step", evidencePickerOpen: false });
+
+      expect(screen.queryByText("Evidence type")).toBeNull();
+    });
+
+    it("changes the planned type and closes the sheet when a type is selected", () => {
+      const onPlannedEvidenceTypeChange = jest.fn();
+      const onCloseEvidencePicker = jest.fn();
+      renderWizard({
+        currentStep: "step",
+        evidencePickerOpen: true,
+        onPlannedEvidenceTypeChange,
+        onCloseEvidencePicker,
+      });
+
+      fireEvent.press(screen.getByRole("radio", { name: "Photo" }));
+
+      expect(onPlannedEvidenceTypeChange).toHaveBeenCalledTimes(1);
+      expect(onCloseEvidencePicker).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it.each(["name", "step", "ready"] as const)(
     "fires onClose from the %s step",
     (currentStep) => {
       const onClose = jest.fn();
@@ -183,18 +300,30 @@ describe("NewGoalWizard", () => {
     },
   );
 
-  it.each(["step", "build"] as const)(
-    "renders the %s placeholder without a body regression",
+  it.each(["step", "ready"] as const)(
+    "renders the back arrow and fires onBack from the %s step",
     (currentStep) => {
-      renderWizard({ currentStep });
+      const onBack = jest.fn();
+      renderWizard({ currentStep, onBack });
 
-      expect(screen.getByText("New goal")).toBeOnTheScreen();
-      expect(screen.getByRole("button", { name: "Go back" })).toBeOnTheScreen();
-      expect(screen.getByTestId("new-goal-close-button")).toBeOnTheScreen();
-      expect(screen.queryByText("What do you want to work toward?")).toBeNull();
-      expect(screen.queryByText("You're set.")).toBeNull();
+      const backButton = screen.getByRole("button", { name: "Go back" });
+      expect(backButton).toBeOnTheScreen();
+
+      fireEvent.press(backButton);
+      expect(onBack).toHaveBeenCalledTimes(1);
     },
   );
+
+  it("renders the build placeholder without a body regression", () => {
+    renderWizard({ currentStep: "build" });
+
+    expect(screen.getByText("New goal")).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Go back" })).toBeOnTheScreen();
+    expect(screen.getByTestId("new-goal-close-button")).toBeOnTheScreen();
+    expect(screen.queryByText("What do you want to work toward?")).toBeNull();
+    expect(screen.queryByText("You're set.")).toBeNull();
+    expect(screen.queryByText("What's the first step?")).toBeNull();
+  });
 
   it.each<[NewGoalWizardStep, number]>([
     ["name", 1],
@@ -214,6 +343,7 @@ describe("NewGoalWizard", () => {
 
   it.each([
     ["name", "What do you want to work toward?"],
+    ["step", "What's the first step?"],
     ["ready", "You're set."],
   ] as const)(
     "marks the %s-step headline with the header role for screen readers",
