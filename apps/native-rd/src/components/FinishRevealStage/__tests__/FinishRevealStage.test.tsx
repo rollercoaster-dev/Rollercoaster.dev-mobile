@@ -69,11 +69,21 @@ describe("FinishRevealStage", () => {
     ).toBe("button");
   });
 
-  it("starts the badge at resting scale when motion is off (no undersized frame)", () => {
-    renderWithProviders(
-      <FinishRevealStage {...makeProps({ animationPref: "none" })} />,
-    );
-    const badge = screen.getByTestId("finish-reveal-badge");
-    expect(scaleFromStyle(badge.props.style)).toBe(1);
-  });
+  // full/reduced pop in from POP_INITIAL_SCALE (0.85); none starts at resting
+  // scale (1) so there is no undersized frame. The synchronous reanimated mock
+  // captures the render-time shared value, so the initial scale is assertable.
+  it.each([
+    ["full", 0.85],
+    ["reduced", 0.85],
+    ["none", 1],
+  ] as const)(
+    "starts the badge at the right scale for animationPref=%s",
+    (animationPref, expectedScale) => {
+      renderWithProviders(
+        <FinishRevealStage {...makeProps({ animationPref })} />,
+      );
+      const badge = screen.getByTestId("finish-reveal-badge");
+      expect(scaleFromStyle(badge.props.style)).toBe(expectedScale);
+    },
+  );
 });

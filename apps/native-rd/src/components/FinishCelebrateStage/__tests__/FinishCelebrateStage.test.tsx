@@ -85,4 +85,39 @@ describe("FinishCelebrateStage", () => {
     fireEvent.press(screen.getByTestId("finish-celebrate-cta"));
     expect(onDesignBadge).toHaveBeenCalledTimes(1);
   });
+
+  it("fires onSaveClosingNote with the current text when the field blurs", () => {
+    const onSaveClosingNote = jest.fn();
+    renderWithProviders(
+      <FinishCelebrateStage
+        {...makeProps({
+          initialNoteOpen: true,
+          closingNoteValue: "Felt lighter.",
+          onSaveClosingNote,
+        })}
+      />,
+    );
+    fireEvent(screen.getByTestId("finish-celebrate-note-input"), "blur");
+    expect(onSaveClosingNote).toHaveBeenCalledWith("Felt lighter.");
+  });
+
+  it("does not throw on blur when onSaveClosingNote is omitted", () => {
+    renderWithProviders(
+      <FinishCelebrateStage {...makeProps({ initialNoteOpen: true })} />,
+    );
+    expect(() =>
+      fireEvent(screen.getByTestId("finish-celebrate-note-input"), "blur"),
+    ).not.toThrow();
+  });
+
+  it("labels the open note field for a11y", () => {
+    renderWithProviders(
+      <FinishCelebrateStage {...makeProps({ initialNoteOpen: true })} />,
+    );
+    const input = screen.getByTestId("finish-celebrate-note-input");
+    expect(input.props.accessibilityLabel).toBe("Closing note");
+    expect(input.props.accessibilityHint).toBe(
+      "Optional. Write a few words about finishing this goal.",
+    );
+  });
 });
