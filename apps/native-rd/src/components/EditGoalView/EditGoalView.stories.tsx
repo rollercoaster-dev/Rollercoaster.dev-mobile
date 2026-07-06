@@ -1,11 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import React, { useRef, useState } from "react";
-import { View, Text } from "react-native";
+import { View } from "react-native";
 import { EvidenceType } from "../../db";
 import type { EvidenceTypeValue } from "../../types/evidence";
 import { EditGoalView, type EditGoalStep } from "./EditGoalView";
 import { EditGoalStepRow } from "./EditGoalStepRow";
 import { EditGoalOverflowMenu } from "./EditGoalOverflowMenu";
+import { Text } from "../Text";
 
 const noop = () => {};
 
