@@ -81,13 +81,21 @@ describe("NewGoalWizard", () => {
     });
 
     it.each(["", "   ", "\n\t"])(
-      "disables Next for empty/whitespace-only title %#",
+      "disables Next and blocks onNext for empty/whitespace-only title %#",
       (goalTitle) => {
-        renderWizard({ currentStep: "name", goalTitle });
+        const onNext = jest.fn();
+        renderWizard({ currentStep: "name", goalTitle, onNext });
 
-        expect(
-          screen.getByTestId("new-goal-next-button").props.accessibilityState,
-        ).toMatchObject({ disabled: true });
+        const nextButton = screen.getByTestId("new-goal-next-button");
+        expect(nextButton.props.accessibilityState).toMatchObject({
+          disabled: true,
+        });
+
+        // The a11y flag is only half the guard — pressing while disabled must
+        // not advance. Catches a refactor that computes `disabled` for a11y but
+        // wires the press path around it.
+        fireEvent.press(nextButton);
+        expect(onNext).not.toHaveBeenCalled();
       },
     );
 
@@ -136,6 +144,30 @@ describe("NewGoalWizard", () => {
 
       expect(onBack).toHaveBeenCalledTimes(1);
       expect(onStartWorking).toHaveBeenCalledTimes(1);
+    });
+
+    it("routes the step count through an injected stepCountSummary", () => {
+      // The pluralizer is the seam #444 threads real t() pluralization
+      // through; lock that the prop is called with stepCount and its output
+      // rendered, so a refactor can't quietly hardcode the default.
+      const stepCountSummary = jest.fn(() => "three-ish steps");
+      renderWizard({ currentStep: "ready", stepCount: 3, stepCountSummary });
+
+      expect(stepCountSummary).toHaveBeenCalledWith(3);
+      expect(screen.getByText("three-ish steps")).toBeOnTheScreen();
+    });
+
+    it("hides the decorative badge emoji from screen readers", () => {
+      // a11y contract: the 🏆 is decoration, not content — it must not be
+      // announced. It's excluded from the accessibility tree, so the query
+      // needs includeHiddenElements to reach it; that it's hidden at all is the
+      // point. Guards the accessibilityElementsHidden/importantForAccessibility
+      // pair against an edit to the banner.
+      renderWizard({ currentStep: "ready" });
+
+      const emoji = screen.getByText("🏆", { includeHiddenElements: true });
+      expect(emoji.props.importantForAccessibility).toBe("no");
+      expect(emoji.props.accessibilityElementsHidden).toBe(true);
     });
   });
 
@@ -192,7 +224,7 @@ describe("NewGoalWizard", () => {
     },
   );
 
-  it("exposes accessible labels and roles for controls", () => {
+  it("exposes accessible labels and roles for ready-step controls", () => {
     renderWizard({ currentStep: "ready" });
 
     expect(screen.getByRole("button", { name: "Go back" })).toBeOnTheScreen();
@@ -200,7 +232,9 @@ describe("NewGoalWizard", () => {
     expect(
       screen.getByRole("button", { name: "Start Working" }),
     ).toBeOnTheScreen();
+  });
 
+  it("exposes accessible labels and roles for name-step controls", () => {
     renderWizard({ currentStep: "name" });
 
     expect(screen.getByLabelText("Name your goal")).toBeOnTheScreen();

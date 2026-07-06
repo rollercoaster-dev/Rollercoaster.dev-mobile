@@ -6,8 +6,9 @@ import { shadowStyle } from "../../styles/shadows";
 // progress fill #ffe50c → accentYellow (D4 — wizard position, not step state,
 // so not journey-*) · card/input surface #fff → background · ink border
 // #0a0a0a → border · muted #737373 → textSecondary · CTA #2563eb →
-// accentPrimary (via Button) · badge banner #ede9fe/#3b1f6b →
-// accentPurpleLight/accentPrimary.
+// accentPrimary (via Button) · badge banner surface #ede9fe →
+// accentPurpleLight. The banner ink #3b1f6b is *re-toned* (not a literal
+// match) to accentPrimary — the blue #2563eb accent, reused as the ink.
 export const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
