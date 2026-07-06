@@ -24,7 +24,10 @@ const noop = () => {};
 
 // Controlled wrapper: the sheet owns no selection state (D3), so the story holds
 // it — a tapped cell sets the pick and closes, mirroring the prototype's `pick`
-// handler. The trigger button re-opens the sheet on its current pick.
+// handler. The trigger button re-opens the sheet on its current pick. The stage
+// is phone-sized and height-bounded: the sheet is an in-tree absolute overlay
+// that rises from the bottom of its frame, and Storybook's content-hugging
+// decorator would otherwise collapse a flex:1 stage to the button's height.
 function CaptureSheetDemo({
   initialType,
 }: {
@@ -115,9 +118,10 @@ export const Compact: Story = {
 
 // --- Theme matrix ---
 // The capture sheet across all 7 product themes. We tile `CaptureSheetBody`
-// directly rather than the full picker because on web every RN Modal portals to
-// <body> with position:fixed — seven live sheets would stack, not tile. Same
-// ScopedTheme-per-theme approach as FocusCurrentTaskCard.stories' AllThemesMatrix.
+// directly rather than the full picker because the picker brings an
+// absolute-fill scrim anchored to its parent — seven live pickers would stack
+// scrims over the canvas instead of tiling. Same ScopedTheme-per-theme
+// approach as FocusCurrentTaskCard.stories' AllThemesMatrix.
 const MOOD_NAMES: Record<ThemeName, string> = {
   "light-default": "Full Ride",
   "dark-default": "Night Ride",
@@ -195,7 +199,10 @@ export const AuthoringAllThemes: Story = {
 
 const storyStyles = StyleSheet.create((theme) => ({
   triggerStage: {
-    flex: 1,
+    height: 600,
+    width: "100%",
+    maxWidth: 390,
+    alignSelf: "center" as const,
     padding: theme.space[4],
     gap: theme.space[3],
     backgroundColor: theme.colors.backgroundSecondary,

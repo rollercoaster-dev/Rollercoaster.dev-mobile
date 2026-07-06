@@ -1,5 +1,5 @@
 import React from "react";
-import { Modal } from "react-native";
+import { BackHandler } from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -167,6 +167,25 @@ describe("EvidenceTypePicker", () => {
       }
     });
 
+    it("defaults the header to 'Add evidence' when no headerTitle is given", () => {
+      renderWithProviders(<EvidenceTypePicker {...captureProps} />);
+
+      expect(
+        screen.getByText(i18n.t("common:evidenceTypePicker.addEvidence")),
+      ).toBeOnTheScreen();
+    });
+
+    it("renders a provided headerTitle in place of the default (#463 D3)", () => {
+      renderWithProviders(
+        <EvidenceTypePicker {...captureProps} headerTitle="Evidence type" />,
+      );
+
+      expect(screen.getByText("Evidence type")).toBeOnTheScreen();
+      expect(
+        screen.queryByText(i18n.t("common:evidenceTypePicker.addEvidence")),
+      ).toBeNull();
+    });
+
     it("highlights Note (text) by default when no selectedType is given (D5)", () => {
       renderWithProviders(<EvidenceTypePicker {...captureProps} />);
 
@@ -263,15 +282,22 @@ describe("EvidenceTypePicker", () => {
       expect(onClose).toHaveBeenCalled();
     });
 
-    it("calls onClose on Modal onRequestClose (Android back / gesture dismiss)", () => {
+    it("calls onClose on Android hardware back while open", () => {
       const onClose = jest.fn();
+      const addSpy = jest.spyOn(BackHandler, "addEventListener");
       renderWithProviders(
         <EvidenceTypePicker {...captureProps} onClose={onClose} />,
       );
 
       // The sole dismissal route for Android hardware/gesture back — distinct
-      // from the backdrop and header-✕ Pressables.
-      fireEvent(screen.UNSAFE_getByType(Modal), "requestClose");
+      // from the backdrop and header-✕ Pressables. The in-tree sheet registers
+      // its own BackHandler listener (the RN Modal used to own this).
+      const handler = addSpy.mock.calls.find(
+        ([event]) => event === "hardwareBackPress",
+      )?.[1];
+      expect(handler).toBeDefined();
+      // Returning true claims the event so the host screen doesn't also pop.
+      expect(handler?.()).toBe(true);
       expect(onClose).toHaveBeenCalled();
     });
 

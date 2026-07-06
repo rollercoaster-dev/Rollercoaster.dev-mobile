@@ -1,7 +1,21 @@
-import React from "react";
-import { View, Pressable, Modal, Text as RNText } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Pressable,
+  Text as RNText,
+  BackHandler,
+  useWindowDimensions,
+} from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  runOnJS,
+} from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
+import { useAnimationPref } from "../../hooks/useAnimationPref";
+import { getTimingConfig } from "../../utils/animation";
 import { EVIDENCE_OPTIONS, type EvidenceTypeValue } from "../../types/evidence";
 import { EvidenceType } from "../../db";
 import { evidenceLabel } from "../../i18n/labels";
@@ -25,13 +39,21 @@ export interface AuthoringEvidenceTypePickerProps {
 }
 
 /**
- * Capture mode: modal bottom sheet for single-selecting one evidence type
- * before capturing (Focus Mode, #377).
+ * Capture mode: bottom sheet for single-selecting one evidence type before
+ * capturing (Focus Mode, #377). Rendered in-tree (scrim + sheet rising from
+ * the bottom of the caller's frame), not as an RN Modal — see CaptureSheet.
  */
 export interface CaptureEvidenceTypePickerProps {
   mode: "capture";
-  /** Whether the capture sheet is visible (drives the Modal). */
+  /** Whether the capture sheet is open (drives the slide-up/scrim animation). */
   visible: boolean;
+  /**
+   * Sheet header copy. Defaults to "Add evidence"
+   * (common:evidenceTypePicker.addEvidence). Callers choosing a *planned* type
+   * (rather than capturing now) pass their own — e.g. the New Goal wizard's
+   * "Evidence type" during goal creation (#463, D3).
+   */
+  headerTitle?: string;
   /** Active step title shown in the sheet sub-line; omit to hide the sub-line. */
   activeStepTitle?: string;
   /** Pre-highlighted type in the sheet; defaults to `text` ("Note") when omitted. */
@@ -55,41 +77,15 @@ export type EvidenceTypePickerProps =
 /**
  * Evidence-type picker with two presentation modes (see {@link EvidenceTypePickerProps}):
  * `"authoring"` (default) renders an inline multi-select chip grid for step
- * creation/editing; `"capture"` renders a modal bottom sheet for single-selecting
- * one type before capturing (Focus Mode, #377).
+ * creation/editing; `"capture"` renders an in-tree bottom sheet for
+ * single-selecting one type before capturing (Focus Mode, #377).
  */
 export function EvidenceTypePicker(props: EvidenceTypePickerProps) {
   const { t } = useTranslation(["common"]);
 
   if (props.mode === "capture") {
-    const { visible, activeStepTitle, selectedType, onSelectType, onClose } =
-      props;
-    return (
-      <Modal
-        visible={visible}
-        transparent
-        animationType="slide"
-        onRequestClose={onClose}
-        accessibilityViewIsModal
-      >
-        <View style={styles.overlay}>
-          {/* Backdrop — tapping the exposed scrim dismisses the sheet. */}
-          <Pressable
-            testID="capture-sheet-backdrop"
-            style={styles.backdrop}
-            onPress={onClose}
-            accessibilityRole="button"
-            accessibilityLabel={t("common:actions.close")}
-          />
-          <CaptureSheetBody
-            activeStepTitle={activeStepTitle}
-            selectedType={selectedType}
-            onSelectType={onSelectType}
-            onClose={onClose}
-          />
-        </View>
-      </Modal>
-    );
+    const { mode: _mode, ...captureProps } = props;
+    return <CaptureSheet {...captureProps} />;
   }
 
   const { selectedTypes, onToggleType, compact = false, label } = props;
@@ -166,7 +162,99 @@ export function EvidenceTypePicker(props: EvidenceTypePickerProps) {
   );
 }
 
+/**
+ * Capture-mode bottom sheet — an **in-tree** absolute scrim + sheet that rises
+ * from the bottom of the nearest screen-sized ancestor, mirroring
+ * EvidenceDrawer's overlay/drawer pattern. Deliberately NOT an RN `Modal`:
+ * a Modal portals to the OS layer (and to `<body>` on web), escaping the
+ * phone frame and losing the sheet chrome — the caller's frame is the
+ * correct boundary for a mobile bottom sheet. Slide-up/scrim-fade timing
+ * respects the animation preference (autism-friendly / OS reduce-motion →
+ * instant), and Android hardware back dismisses while open (the job the
+ * Modal's `onRequestClose` used to do).
+ */
+function CaptureSheet({
+  visible,
+  headerTitle,
+  activeStepTitle,
+  selectedType,
+  onSelectType,
+  onClose,
+}: Omit<CaptureEvidenceTypePickerProps, "mode">) {
+  const { t } = useTranslation(["common"]);
+  const { animationPref } = useAnimationPref();
+  const { height: windowHeight } = useWindowDimensions();
+  // Mounted while visible OR still sliding out; unmounts when the exit
+  // animation completes so nothing lingers in the a11y tree.
+  const [rendered, setRendered] = useState(visible);
+  // 0 = parked below the frame, 1 = resting position.
+  const progress = useSharedValue(0);
+
+  useEffect(() => {
+    const config = getTimingConfig(animationPref, "normal");
+    if (visible) {
+      setRendered(true);
+      progress.value = withTiming(1, config);
+    } else {
+      progress.value = withTiming(0, config, (finished) => {
+        if (finished) runOnJS(setRendered)(false);
+      });
+    }
+  }, [visible, animationPref, progress]);
+
+  // Android hardware/gesture back closes the sheet instead of the screen.
+  useEffect(() => {
+    if (!visible) return;
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      onClose();
+      return true;
+    });
+    return () => sub.remove();
+  }, [visible, onClose]);
+
+  const scrimAnimStyle = useAnimatedStyle(() => ({
+    opacity: progress.value,
+  }));
+  const sheetAnimStyle = useAnimatedStyle(() => ({
+    // windowHeight overshoots the sheet's own height, which just means the
+    // rise starts from safely offscreen — no layout measurement needed.
+    transform: [{ translateY: (1 - progress.value) * windowHeight }],
+  }));
+
+  if (!rendered) return null;
+
+  return (
+    <View
+      style={styles.overlay}
+      pointerEvents={visible ? "auto" : "none"}
+      accessibilityViewIsModal
+    >
+      {/* Backdrop — tapping the exposed scrim dismisses the sheet. */}
+      <Animated.View style={[styles.scrim, scrimAnimStyle]}>
+        <Pressable
+          testID="capture-sheet-backdrop"
+          style={styles.backdrop}
+          onPress={onClose}
+          accessibilityRole="button"
+          accessibilityLabel={t("common:actions.close")}
+        />
+      </Animated.View>
+      <Animated.View style={sheetAnimStyle}>
+        <CaptureSheetBody
+          headerTitle={headerTitle}
+          activeStepTitle={activeStepTitle}
+          selectedType={selectedType}
+          onSelectType={onSelectType}
+          onClose={onClose}
+        />
+      </Animated.View>
+    </View>
+  );
+}
+
 export interface CaptureSheetBodyProps {
+  /** Sheet header copy; defaults to "Add evidence" when omitted. */
+  headerTitle?: string;
   /** Active step title shown in the sub-line; omit to hide the sub-line. */
   activeStepTitle?: string;
   /** Pre-highlighted type; defaults to `text` ("Note") when omitted. */
@@ -182,29 +270,35 @@ export interface CaptureSheetBodyProps {
 
 /**
  * Presentational body of the capture sheet — handle, header, sub-line, and the
- * single-select 3-up grid. Rendered inside the Modal by `EvidenceTypePicker`'s
- * capture branch, and directly (no Modal) by the `AllThemesMatrix` story: on web
- * each `Modal` portals to `<body>` with `position: fixed`, so seven full sheets
- * can't tile — the story tiles this body instead. One source of the grid JSX; not
- * exported from the barrel, so it stays an internal helper rather than a second
- * public picker (D7).
+ * single-select 3-up grid, on the EvidenceDrawer sheet chrome (background +
+ * top/side borders + rounded top corners). Rendered inside the animated
+ * overlay by `CaptureSheet`, and directly by the `AllThemesMatrix` story —
+ * the full picker brings an absolute-fill scrim anchored to its parent, so
+ * seven live pickers would stack over the canvas; the body alone tiles. The
+ * root is a plain styled `View` (bottom inset applied via `useSafeAreaInsets`)
+ * rather than a styled `SafeAreaView`: unistyles styles on the third-party
+ * SafeAreaView are silently dropped on web, which rendered the sheet with no
+ * background at all. One source of the grid JSX; not exported from the barrel,
+ * so it stays an internal helper rather than a second public picker (D7).
  */
 export function CaptureSheetBody({
+  headerTitle,
   activeStepTitle,
   selectedType,
   onSelectType,
   onClose,
 }: CaptureSheetBodyProps) {
   const { t } = useTranslation(["common"]);
+  const insets = useSafeAreaInsets();
   // "Note" is the easy default when the caller hasn't picked a type yet (D5).
   const effectiveSelected = selectedType ?? EvidenceType.text;
 
   return (
-    <SafeAreaView edges={["bottom"]} style={styles.sheet}>
+    <View style={styles.sheet(insets.bottom)}>
       <View style={styles.handle} />
       <View style={styles.sheetHeader}>
         <RNText style={styles.sheetTitle} accessibilityRole="header">
-          {t("common:evidenceTypePicker.addEvidence")}
+          {headerTitle ?? t("common:evidenceTypePicker.addEvidence")}
         </RNText>
         <Pressable
           style={styles.closeButton}
@@ -249,6 +343,6 @@ export function CaptureSheetBody({
           );
         })}
       </View>
-    </SafeAreaView>
+    </View>
   );
 }

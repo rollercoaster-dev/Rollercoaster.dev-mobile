@@ -73,35 +73,53 @@ export const styles = StyleSheet.create((theme) => ({
   },
 
   // --- Capture mode (mode="capture") bottom sheet ---
-  // Scrim fills the screen and anchors the sheet to the bottom. Alpha suffix on
-  // theme.colors.shadow mirrors EvidenceDrawer.styles.ts's overlay treatment.
+  // In-tree overlay (no RN Modal): fills the nearest screen-sized ancestor and
+  // anchors the sheet to its bottom edge. zIndex tiers mirror
+  // EvidenceDrawer.styles.ts (scrim below, sheet above sibling content).
   overlay: {
-    flex: 1,
-    justifyContent: "flex-end",
-    backgroundColor: `${theme.colors.shadow}cc`,
-  },
-  // Full-screen backdrop behind the sheet; tapping the exposed area dismisses.
-  // Rendered before the sheet so the sheet sits on top and absorbs its own taps.
-  backdrop: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
+    justifyContent: "flex-end",
+    zIndex: 20,
   },
-  // Neo-brutalist bottom sheet: hard top border + rounded top corners + hard shadow.
-  sheet: {
+  // Fading scrim layer. Alpha suffix on theme.colors.shadow mirrors
+  // EvidenceDrawer.styles.ts's overlay treatment.
+  scrim: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: `${theme.colors.shadow}cc`,
+  },
+  // Backdrop press target fills the scrim; tapping the exposed area dismisses.
+  // Rendered before the sheet so the sheet sits on top and absorbs its own taps.
+  backdrop: {
+    flex: 1,
+  },
+  // Sheet chrome matches EvidenceDrawer's drawer: opaque surface, medium top
+  // border + thin side borders, rounded top corners. Bottom safe-area inset is
+  // folded into paddingBottom (the root is a plain View, not SafeAreaView —
+  // unistyles styles on SafeAreaView are dropped on web).
+  sheet: (bottomInset: number) => ({
     borderTopLeftRadius: theme.radius.xl,
     borderTopRightRadius: theme.radius.xl,
-    borderTopWidth: theme.borderWidth.thick,
-    borderColor: theme.colors.border,
+    borderTopWidth: theme.borderWidth.medium,
+    borderTopColor: theme.colors.border,
+    borderLeftWidth: theme.borderWidth.thin,
+    borderRightWidth: theme.borderWidth.thin,
+    borderLeftColor: theme.colors.border,
+    borderRightColor: theme.colors.border,
     backgroundColor: theme.colors.background,
     paddingHorizontal: theme.space[4],
     paddingTop: theme.space[3],
-    paddingBottom: theme.space[4],
+    paddingBottom: theme.space[4] + bottomInset,
     gap: theme.space[3],
-    ...shadowStyle(theme, "modalElevation"),
-  },
+    overflow: "hidden" as const,
+  }),
   handle: {
     alignSelf: "center",
     width: 40,
