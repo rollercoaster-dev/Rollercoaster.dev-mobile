@@ -1,12 +1,14 @@
 /**
- * NewGoalWizard — the New Goal modal wizard frame (issue #462, slice 1/3 of
- * umbrella #443, Epic #384). Implements the App Shell prototype's `newgoal`
- * route shell: a header band (conditional back · "New goal" · × close), a
- * 4-segment progress bar, and a body/footer switch over the wizard's four
- * steps. Slice 1/3 shipped the bookends — Step 1 · name and Step 4 · ready;
- * slice 2/3 (#463) fills Step 2 · first step (goal recap, first-step input, and
- * the planned-evidence chip that composes EvidenceTypePicker's capture sheet).
- * Step "build" stays an inert placeholder until slice 3/3 (#464).
+ * NewGoalWizard — the New Goal modal wizard frame (umbrella #443, Epic #384).
+ * Implements the App Shell prototype's `newgoal` route: a header band
+ * (conditional back · "New goal" · × close), a 4-segment progress bar, and a
+ * body/footer switch over the wizard's four steps, all shipped across three
+ * slices:
+ *   - Step 1 · name and Step 4 · ready — slice 1/3 (#462)
+ *   - Step 2 · first step (goal recap, first-step input, planned-evidence chip
+ *     composing EvidenceTypePicker's capture sheet) — slice 2/3 (#463)
+ *   - Step 3 · build (flat "Your steps" list, per-row evidence chip reusing the
+ *     same picker, add-step affordance, "I'm ready →" CTA) — slice 3/3 (#464)
  *
  * Pure, prop-driven, i18n-free (D5): all copy arrives as props with English
  * defaults; the future [Integrate] issue (#444) threads real t() output
@@ -14,7 +16,13 @@
  * so `grep -rn "NewGoalWizard" src/screens` stays empty until then.
  */
 import React from "react";
-import { View, Text as RNText, TextInput, Pressable } from "react-native";
+import {
+  View,
+  Text as RNText,
+  TextInput,
+  Pressable,
+  ScrollView,
+} from "react-native";
 import { X } from "phosphor-react-native";
 import { useUnistyles } from "react-native-unistyles";
 import { IconButton } from "../IconButton";
@@ -29,14 +37,25 @@ import { styles } from "./NewGoalWizard.styles";
  * Ordered wizard positions — the single source of truth. Drives the progress
  * bar's filled-segment count, and NewGoalWizardStep is derived from it so the
  * two can't drift: a step added here can't be missed by the type, and
- * `indexOf(currentStep)` can never return -1. The full 4-value set ships with
- * the shell (D2) so the frame already accepts every step it will ever render;
- * the "step" body arrives with #463 and "build" with #464.
+ * `indexOf(currentStep)` can never return -1. All four bodies now render real
+ * content (name/ready #462, step #463, build #464).
  */
 const STEP_ORDER = ["name", "step", "build", "ready"] as const;
 
 /** Wizard position — derived from STEP_ORDER (see above). */
 export type NewGoalWizardStep = (typeof STEP_ORDER)[number];
+
+/**
+ * A row on the build list (Step 3). `id` is a stable per-row key the caller
+ * owns (used to target the shared evidence picker at one row); `evidenceType`
+ * is never unset — every step is born with a planned evidence type (D3), so the
+ * chip always renders a real type, never a missing/empty state.
+ */
+export interface BuildStep {
+  id: string;
+  title: string;
+  evidenceType: EvidenceTypeValue;
+}
 
 export interface NewGoalWizardProps {
   currentStep: NewGoalWizardStep;
@@ -75,6 +94,27 @@ export interface NewGoalWizardProps {
   onOpenEvidencePicker?: () => void;
   onCloseEvidencePicker?: () => void;
 
+  // --- Step 3 · build list (#464) ---
+  /**
+   * The full step list rendered on the build screen. Required — the build
+   * screen has nothing meaningful to show without it (unlike step 2's
+   * optional-with-defaults props). Independent of firstStepTitle/
+   * plannedEvidenceType this slice (D2); [Integrate] (#444) unifies them.
+   */
+  buildSteps?: BuildStep[];
+  /** Appends a new row. No args (D3) — the caller owns the new row's defaults. */
+  onAddStep?: () => void;
+  /**
+   * Which build row's evidence picker is open (D1). null/undefined = closed.
+   * The single EvidenceTypePicker instance is reused for both step 2's chip and
+   * step 3's rows, keyed here by row id when on the build step.
+   */
+  openBuildStepEvidenceId?: string | null;
+  onOpenBuildStepEvidence?: (id: string) => void;
+  onCloseBuildStepEvidence?: () => void;
+  /** Updates one build row's planned evidence type (from the shared picker). */
+  onBuildStepEvidenceTypeChange?: (id: string, type: EvidenceTypeValue) => void;
+
   // --- Copy (i18n-free per D5; English defaults; [Integrate] passes t()). ---
   headerLabel?: string;
   /**
@@ -105,6 +145,23 @@ export interface NewGoalWizardProps {
   quickAddLabel?: string;
   /** Combined a11y label for the whole quick-add fast path press target. */
   quickAddAccessibilityLabel?: string;
+  // Step 3 · build list copy (English defaults; [Integrate] passes t()).
+  /** Build-list header. Default: "Your steps". */
+  yourStepsLabel?: string;
+  /** Visible add-step link text. Default: "add another step". */
+  addStepLabel?: string;
+  /** a11y label for the add-step press target. Default: "Add another step". */
+  addStepAccessibilityLabel?: string;
+  /**
+   * a11y label for a build row's evidence chip — names the action + which row +
+   * its current type (parallels changeEvidenceAccessibilityLabel's shape).
+   */
+  buildStepEvidenceAccessibilityLabel?: (
+    title: string,
+    label: string,
+  ) => string;
+  /** Footer CTA on the build step — distinct copy from nextLabel (D7). */
+  buildReadyLabel?: string;
   readyHeadline?: string;
   /** Pluralized summary-card meta line. Default: "N steps · evidence on each". */
   stepCountSummary?: (count: number) => string;
@@ -134,8 +191,17 @@ const DEFAULT_PLANNED_EVIDENCE_LABEL: Record<EvidenceTypeValue, string> = {
 const defaultPlannedEvidenceLabel = (type: EvidenceTypeValue) =>
   DEFAULT_PLANNED_EVIDENCE_LABEL[type];
 
+/** Emoji glyph for an evidence type, sourced from the shared EVIDENCE_OPTIONS. */
+const evidenceIcon = (type: EvidenceTypeValue) =>
+  EVIDENCE_OPTIONS.find((opt) => opt.type === type)?.icon ?? "";
+
 const defaultChangeEvidenceAccessibilityLabel = (label: string) =>
   `Change evidence type, currently ${label}`;
+
+const defaultBuildStepEvidenceAccessibilityLabel = (
+  title: string,
+  label: string,
+) => `Change evidence type for ${title}, currently ${label}`;
 
 const noop = () => undefined;
 
@@ -156,6 +222,12 @@ export function NewGoalWizard({
   evidencePickerOpen = false,
   onOpenEvidencePicker = noop,
   onCloseEvidencePicker = noop,
+  buildSteps = [],
+  onAddStep = noop,
+  openBuildStepEvidenceId = null,
+  onOpenBuildStepEvidence = noop,
+  onCloseBuildStepEvidence = noop,
+  onBuildStepEvidenceTypeChange = noop,
   headerLabel = "New goal",
   closeAccessibilityLabel = "Close",
   nameEyebrow = "Step 1 of 4",
@@ -174,6 +246,11 @@ export function NewGoalWizard({
   quickAddPrefix = "or ",
   quickAddLabel = "Quick add — skip to the list ›",
   quickAddAccessibilityLabel = "Quick add, skip to the list",
+  yourStepsLabel = "Your steps",
+  addStepLabel = "add another step",
+  addStepAccessibilityLabel = "Add another step",
+  buildStepEvidenceAccessibilityLabel = defaultBuildStepEvidenceAccessibilityLabel,
+  buildReadyLabel = "I'm ready →",
   readyHeadline = "You're set.",
   stepCountSummary = defaultStepCountSummary,
   badgeNote = "You'll design your badge when you finish.",
@@ -181,10 +258,32 @@ export function NewGoalWizard({
 }: NewGoalWizardProps) {
   const { theme } = useUnistyles();
   const currentStepIndex = STEP_ORDER.indexOf(currentStep);
-  const plannedIcon =
-    EVIDENCE_OPTIONS.find((opt) => opt.type === plannedEvidenceType)?.icon ??
-    "";
+  const plannedIcon = evidenceIcon(plannedEvidenceType);
   const plannedLabel = plannedEvidenceLabel(plannedEvidenceType);
+
+  // The single EvidenceTypePicker instance is shared across steps 2 and 3 (D1):
+  // its visible/selectedType/onSelect/onClose are derived from currentStep.
+  // On "build", it targets the row named by openBuildStepEvidenceId.
+  const isBuild = currentStep === "build";
+  const openBuildStep =
+    openBuildStepEvidenceId != null
+      ? buildSteps.find((step) => step.id === openBuildStepEvidenceId)
+      : undefined;
+  const pickerVisible = isBuild ? openBuildStep != null : evidencePickerOpen;
+  const pickerSelectedType =
+    isBuild && openBuildStep ? openBuildStep.evidenceType : plannedEvidenceType;
+  const handlePickerSelect = (type: EvidenceTypeValue) => {
+    if (isBuild) {
+      if (openBuildStep) onBuildStepEvidenceTypeChange(openBuildStep.id, type);
+      onCloseBuildStepEvidence();
+    } else {
+      onPlannedEvidenceTypeChange(type);
+      onCloseEvidencePicker();
+    }
+  };
+  const handlePickerClose = isBuild
+    ? onCloseBuildStepEvidence
+    : onCloseEvidencePicker;
 
   return (
     <View style={styles.container}>
@@ -233,8 +332,9 @@ export function NewGoalWizard({
         ))}
       </View>
 
-      {/* Step bodies land per slice: name + ready (#462), first step (#463);
-          "build" stays an inert placeholder until #464 (D2). */}
+      {/* Step bodies: name + ready (#462), first step (#463), build (#464).
+          The trailing `null` is unreachable — currentStep is one of the four
+          STEP_ORDER values — but keeps the chain total for the type-checker. */}
       {currentStep === "name" ? (
         <>
           <View style={styles.stepBody}>
@@ -341,6 +441,101 @@ export function NewGoalWizard({
             />
           </View>
         </>
+      ) : currentStep === "build" ? (
+        <>
+          <View style={styles.buildBody}>
+            <ScrollView
+              contentContainerStyle={styles.buildScrollContent}
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={styles.buildHeaderRow}>
+                <RNText
+                  style={styles.buildHeaderTitle}
+                  accessibilityRole="header"
+                >
+                  {yourStepsLabel}
+                </RNText>
+                {/* Count derived internally as buildSteps.length (D8). */}
+                <RNText style={styles.buildHeaderCount}>
+                  {buildSteps.length}
+                </RNText>
+              </View>
+              {buildSteps.map((step, index) => {
+                const label = plannedEvidenceLabel(step.evidenceType);
+                return (
+                  <View
+                    key={step.id}
+                    style={styles.buildRowCard}
+                    testID={`new-goal-build-row-${step.id}`}
+                  >
+                    <View style={styles.buildRowInner}>
+                      <RNText
+                        style={styles.buildRowNumber}
+                        importantForAccessibility="no"
+                      >
+                        {index + 1}
+                      </RNText>
+                      <RNText style={styles.buildRowTitle}>{step.title}</RNText>
+                      {/* Whole chip opens the shared picker targeted at this row
+                          (D1); one collapsed a11y node names row + type (D7). */}
+                      <Pressable
+                        style={styles.buildRowEvidencePress}
+                        onPress={() => onOpenBuildStepEvidence(step.id)}
+                        accessible
+                        accessibilityRole="button"
+                        accessibilityLabel={buildStepEvidenceAccessibilityLabel(
+                          step.title,
+                          label,
+                        )}
+                        hitSlop={6}
+                        testID={`new-goal-build-evidence-chip-${step.id}`}
+                      >
+                        <View style={styles.evidenceChip}>
+                          <RNText
+                            style={styles.evidenceChipIcon}
+                            importantForAccessibility="no"
+                          >
+                            {evidenceIcon(step.evidenceType)}
+                          </RNText>
+                          <RNText style={styles.evidenceChipLabel}>
+                            {label}
+                          </RNText>
+                        </View>
+                      </Pressable>
+                    </View>
+                  </View>
+                );
+              })}
+              <Pressable
+                style={styles.addStepPress}
+                onPress={onAddStep}
+                accessible
+                accessibilityRole="button"
+                accessibilityLabel={addStepAccessibilityLabel}
+                hitSlop={6}
+                testID="new-goal-add-step-button"
+              >
+                <RNText
+                  style={styles.addStepPlus}
+                  importantForAccessibility="no"
+                >
+                  +
+                </RNText>
+                <RNText style={styles.addStepLabel}>{addStepLabel}</RNText>
+              </Pressable>
+            </ScrollView>
+          </View>
+          <View style={styles.footer}>
+            {/* Same linear-advance onNext as name/step; only the label differs
+                (D7). Always enabled — buildSteps is never empty here and the
+                prototype gates nothing on this screen. */}
+            <Button
+              label={buildReadyLabel}
+              onPress={onNext}
+              testID="new-goal-build-ready-button"
+            />
+          </View>
+        </>
       ) : currentStep === "ready" ? (
         <>
           <View style={styles.stepBody}>
@@ -372,28 +567,25 @@ export function NewGoalWizard({
             />
           </View>
         </>
-      ) : (
-        <View style={styles.placeholderBody} />
-      )}
+      ) : null}
 
       {/* Planned-evidence picker — reuse #409's capture sheet whole (D2), no
-          fork. No activeStepTitle: there is no active step during goal creation
-          (D3), so the "Saving to your active step" sub-line is omitted. It
-          renders in-tree as an absolute overlay anchored to this wizard frame
-          (scrim + sheet rising from the bottom) and gates on `visible`, so
-          rendering it unconditionally is inert until the chip opens it.
-          Selecting a type updates the chip and closes the sheet in one
-          gesture. */}
+          fork. Shared across step 2 (the planned-evidence chip) and step 3
+          (each build row); visible/selectedType/onSelect/onClose are derived
+          from currentStep above (D1). No activeStepTitle: there is no active
+          step during goal creation (D3), so the "Saving to your active step"
+          sub-line is omitted. It renders in-tree as an absolute overlay
+          anchored to this wizard frame (scrim + sheet rising from the bottom)
+          and gates on `visible`, so rendering it unconditionally is inert until
+          a chip opens it. Selecting a type updates the chip and closes the
+          sheet in one gesture. */}
       <EvidenceTypePicker
         mode="capture"
-        visible={evidencePickerOpen}
+        visible={pickerVisible}
         headerTitle={evidenceSheetTitle}
-        selectedType={plannedEvidenceType}
-        onSelectType={(type) => {
-          onPlannedEvidenceTypeChange(type);
-          onCloseEvidencePicker();
-        }}
-        onClose={onCloseEvidencePicker}
+        selectedType={pickerSelectedType}
+        onSelectType={handlePickerSelect}
+        onClose={handlePickerClose}
       />
     </View>
   );
