@@ -167,6 +167,25 @@ describe("EvidenceTypePicker", () => {
       }
     });
 
+    it("defaults the header to 'Add evidence' when no headerTitle is given", () => {
+      renderWithProviders(<EvidenceTypePicker {...captureProps} />);
+
+      expect(
+        screen.getByText(i18n.t("common:evidenceTypePicker.addEvidence")),
+      ).toBeOnTheScreen();
+    });
+
+    it("renders a provided headerTitle in place of the default (#463 D3)", () => {
+      renderWithProviders(
+        <EvidenceTypePicker {...captureProps} headerTitle="Evidence type" />,
+      );
+
+      expect(screen.getByText("Evidence type")).toBeOnTheScreen();
+      expect(
+        screen.queryByText(i18n.t("common:evidenceTypePicker.addEvidence")),
+      ).toBeNull();
+    });
+
     it("highlights Note (text) by default when no selectedType is given (D5)", () => {
       renderWithProviders(<EvidenceTypePicker {...captureProps} />);
 

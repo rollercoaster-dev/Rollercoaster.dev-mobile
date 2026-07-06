@@ -32,6 +32,13 @@ export interface CaptureEvidenceTypePickerProps {
   mode: "capture";
   /** Whether the capture sheet is visible (drives the Modal). */
   visible: boolean;
+  /**
+   * Sheet header copy. Defaults to "Add evidence"
+   * (common:evidenceTypePicker.addEvidence). Callers choosing a *planned* type
+   * (rather than capturing now) pass their own — e.g. the New Goal wizard's
+   * "Evidence type" during goal creation (#463, D3).
+   */
+  headerTitle?: string;
   /** Active step title shown in the sheet sub-line; omit to hide the sub-line. */
   activeStepTitle?: string;
   /** Pre-highlighted type in the sheet; defaults to `text` ("Note") when omitted. */
@@ -62,8 +69,14 @@ export function EvidenceTypePicker(props: EvidenceTypePickerProps) {
   const { t } = useTranslation(["common"]);
 
   if (props.mode === "capture") {
-    const { visible, activeStepTitle, selectedType, onSelectType, onClose } =
-      props;
+    const {
+      visible,
+      headerTitle,
+      activeStepTitle,
+      selectedType,
+      onSelectType,
+      onClose,
+    } = props;
     return (
       <Modal
         visible={visible}
@@ -82,6 +95,7 @@ export function EvidenceTypePicker(props: EvidenceTypePickerProps) {
             accessibilityLabel={t("common:actions.close")}
           />
           <CaptureSheetBody
+            headerTitle={headerTitle}
             activeStepTitle={activeStepTitle}
             selectedType={selectedType}
             onSelectType={onSelectType}
@@ -167,6 +181,8 @@ export function EvidenceTypePicker(props: EvidenceTypePickerProps) {
 }
 
 export interface CaptureSheetBodyProps {
+  /** Sheet header copy; defaults to "Add evidence" when omitted. */
+  headerTitle?: string;
   /** Active step title shown in the sub-line; omit to hide the sub-line. */
   activeStepTitle?: string;
   /** Pre-highlighted type; defaults to `text` ("Note") when omitted. */
@@ -190,6 +206,7 @@ export interface CaptureSheetBodyProps {
  * public picker (D7).
  */
 export function CaptureSheetBody({
+  headerTitle,
   activeStepTitle,
   selectedType,
   onSelectType,
@@ -204,7 +221,7 @@ export function CaptureSheetBody({
       <View style={styles.handle} />
       <View style={styles.sheetHeader}>
         <RNText style={styles.sheetTitle} accessibilityRole="header">
-          {t("common:evidenceTypePicker.addEvidence")}
+          {headerTitle ?? t("common:evidenceTypePicker.addEvidence")}
         </RNText>
         <Pressable
           style={styles.closeButton}
