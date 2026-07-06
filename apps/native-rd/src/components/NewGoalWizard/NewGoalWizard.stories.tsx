@@ -3,6 +3,8 @@ import React, { useState } from "react";
 import { useWindowDimensions, View } from "react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { NewGoalWizard } from "./NewGoalWizard";
+import { EvidenceType } from "../../db";
+import type { EvidenceTypeValue } from "../../types/evidence";
 
 const meta: Meta<typeof NewGoalWizard> = {
   title: "Iteration B/Goals/NewGoalWizard",
@@ -74,6 +76,54 @@ function InteractiveNameStep() {
 
 export const NameStep: Story = {
   render: () => <InteractiveNameStep />,
+};
+
+/**
+ * Stateful wrapper for step 2 (mirrors InteractiveNameStep): the story owns the
+ * first-step title, the planned evidence type, and the capture-sheet visibility.
+ * Seeded with the prototype's sample goal ("Build a birdhouse") and an empty
+ * first-step title, so the disabled "Next →" state shows by default. The chip is
+ * born as "Note" (D4) and updates in place when a type is picked in the sheet.
+ * `pickerOpen` lets Step2PickerOpen seed the sheet open on mount.
+ */
+function InteractiveStep2({ pickerOpen = false }: { pickerOpen?: boolean }) {
+  const [firstStepTitle, setFirstStepTitle] = useState("");
+  const [plannedEvidenceType, setPlannedEvidenceType] =
+    useState<EvidenceTypeValue>(EvidenceType.text);
+  const [evidencePickerOpen, setEvidencePickerOpen] = useState(pickerOpen);
+  return (
+    <PhoneStage>
+      <NewGoalWizard
+        currentStep="step"
+        goalTitle="Build a birdhouse"
+        onGoalTitleChange={noop}
+        stepCount={0}
+        onBack={noop}
+        onClose={noop}
+        onNext={noop}
+        onQuickAdd={noop}
+        onStartWorking={noop}
+        firstStepTitle={firstStepTitle}
+        onFirstStepTitleChange={setFirstStepTitle}
+        plannedEvidenceType={plannedEvidenceType}
+        onPlannedEvidenceTypeChange={setPlannedEvidenceType}
+        evidencePickerOpen={evidencePickerOpen}
+        onOpenEvidencePicker={() => setEvidencePickerOpen(true)}
+        onCloseEvidencePicker={() => setEvidencePickerOpen(false)}
+      />
+    </PhoneStage>
+  );
+}
+
+export const Step2: Story = {
+  render: () => <InteractiveStep2 />,
+};
+
+// Same wrapper with the capture sheet seeded open on mount — a static visual
+// state of the composed EvidenceTypePicker inside the wizard frame (the issue's
+// explicit "incl. picker-open state" ask; no interaction needed to see it).
+export const Step2PickerOpen: Story = {
+  render: () => <InteractiveStep2 pickerOpen />,
 };
 
 // Sample data matches the prototype's own seed ("Build a birdhouse", 2 steps).
