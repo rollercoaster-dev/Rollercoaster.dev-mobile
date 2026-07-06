@@ -1,6 +1,5 @@
 import { StyleSheet } from "react-native-unistyles";
 import { shadowStyle } from "../../styles/shadows";
-import { palette } from "../../themes/palette";
 
 export const styles = StyleSheet.create((theme) => ({
   container: (isGoal: boolean) => ({
@@ -17,7 +16,7 @@ export const styles = StyleSheet.create((theme) => ({
     borderColor: theme.colors.border,
     borderRadius: theme.radius.sm,
     borderLeftWidth: isGoal ? 4 : theme.borderWidth.thin,
-    borderLeftColor: isGoal ? palette.yellow300 : theme.colors.border,
+    borderLeftColor: isGoal ? theme.colors.accentYellow : theme.colors.border,
     ...shadowStyle(theme, "cardElevationSmall"),
   }),
   pressed: {

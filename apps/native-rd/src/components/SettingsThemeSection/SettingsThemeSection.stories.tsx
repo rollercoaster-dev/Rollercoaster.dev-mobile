@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import React, { useState } from "react";
 import { View, Text } from "react-native";
+import { ScopedTheme } from "react-native-unistyles";
 import { themeOptions } from "../../hooks/useTheme";
 import { themes, type ThemeName } from "../../themes/compose";
 import { SettingsThemeSection } from "./SettingsThemeSection";
@@ -30,8 +31,11 @@ export const Default: Story = {
 
 /**
  * Reviewer visual gate: every product theme selected in turn, on its own
- * background, so the rail's per-swatch colors and the live sample card are
- * verifiable by eye across all 7 themes. Mirrors ThemeSampleCard's matrix.
+ * background, so the rail's per-swatch colors AND the live sample card are
+ * verifiable by eye across all 7 themes. Each cell wraps the section in
+ * `<ScopedTheme name={id}>` so the SettingsSection chrome (header, row borders)
+ * re-themes too — not just the prop-driven ThemeSampleCard inside it. Without
+ * the scope the chrome stayed on the active toolbar theme in every cell.
  */
 export const AllThemesMatrix: Story = {
   render: () => (
@@ -55,7 +59,9 @@ export const AllThemesMatrix: Story = {
           >
             {id}
           </Text>
-          <SettingsThemeSection selectedThemeId={id} onSelect={() => {}} />
+          <ScopedTheme name={id}>
+            <SettingsThemeSection selectedThemeId={id} onSelect={() => {}} />
+          </ScopedTheme>
         </View>
       ))}
     </View>

@@ -178,6 +178,53 @@ export const AllThemesMatrix: Story = {
   ),
 };
 
+// The states AllThemesMatrix doesn't exercise — paused + completed pill colors
+// and the metadata-band glyph hues — rendered per theme so those #406 colors are
+// comparable across all 7 moods (the primary matrix shows in-progress only).
+export const StatesAllThemes: Story = {
+  render: () => (
+    <ScrollView contentContainerStyle={storyStyles.matrixContainer}>
+      {themeNames.map((name) => (
+        <View key={name} style={storyStyles.matrixThemeBlock}>
+          <View style={storyStyles.matrixThemeLabel}>
+            <Text style={storyStyles.matrixThemeName}>{MOOD_NAMES[name]}</Text>
+            <Text style={storyStyles.matrixThemeKey}>{name}</Text>
+          </View>
+          <ScopedTheme name={name}>
+            <View
+              style={[
+                storyStyles.matrixCardStack,
+                { backgroundColor: themes[name].colors.background },
+              ]}
+            >
+              <FocusCurrentTaskCard
+                status="in-progress"
+                title="Inspection & labels"
+                plannedEvidenceType="text"
+                waitingOn={{ who: "city inspector", expected: "Jun 24" }}
+                afterStep="Wire the circuits"
+                dueDate="Fri · Jun 27"
+                {...handlers}
+              />
+              <FocusCurrentTaskCard
+                status="paused"
+                title="Call the clinic to book a check-in"
+                {...handlers}
+              />
+              <FocusCurrentTaskCard
+                status="completed"
+                title="Reset the kitchen before bed"
+                capturedEvidence={capturedTwo}
+                {...handlers}
+              />
+            </View>
+          </ScopedTheme>
+        </View>
+      ))}
+    </ScrollView>
+  ),
+};
+
 const storyStyles = StyleSheet.create((theme) => ({
   // Centering canvas — a slightly different bg so the 344px card area reads as a
   // distinct surface. No phone chrome; just somewhere for the card to sit.
@@ -225,5 +272,11 @@ const storyStyles = StyleSheet.create((theme) => ({
   matrixCard: {
     width: 344,
     padding: theme.space[5],
+  },
+  // Like matrixCard but stacks several state variants of the card in one column.
+  matrixCardStack: {
+    width: 344,
+    padding: theme.space[5],
+    gap: theme.space[4],
   },
 }));

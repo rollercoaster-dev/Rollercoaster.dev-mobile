@@ -1,22 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import React from "react";
 import { ScrollView, View } from "react-native";
-import { StyleSheet } from "react-native-unistyles";
+import { ScopedTheme, StyleSheet } from "react-native-unistyles";
 import { Text } from "../Text";
 import { TimelineNode } from "./TimelineNode";
-import { NODE_SIZE } from "./TimelineNode.styles";
-import {
-  stepStateColorMap,
-  stepStateNodeBg,
-  stepStateNodeFg,
-  type StepStateMapKey,
-} from "./stepStateColorMap";
-import {
-  themes,
-  themeNames,
-  type ComposedTheme,
-  type ThemeName,
-} from "../../themes/compose";
+import type { StepStatus } from "../../types/steps";
+import { themeNames, type ThemeName } from "../../themes/compose";
 
 const meta: Meta<typeof TimelineNode> = {
   title: "Iteration B/Timeline/TimelineNode",
@@ -152,27 +141,6 @@ export const Paused: Story = {
   ),
 };
 
-// All 4 states × 7 product themes (OQ-3, #406). Unistyles' theme is a global
-// runtime singleton, so a reactive <TimelineNode> can only ever render the
-// active theme. Like ContrastAudit.stories.tsx, this matrix reads each composed
-// `themes[name]` statically and paints node-shaped cells inline, resolving every
-// bg/fg THROUGH `stepStateColorMap` — which both demonstrates the re-skin across
-// themes and validates the map resolves correctly in each one (e.g. active node
-// is black in Bold Ink / highContrast, teal in Night Ride / dark).
-const MATRIX_STATES: StepStateMapKey[] = [
-  "pending",
-  "in-progress",
-  "paused",
-  "completed",
-];
-
-const STATE_LABELS: Record<StepStateMapKey, string> = {
-  pending: "Pending",
-  "in-progress": "In Progress",
-  paused: "Paused",
-  completed: "Completed",
-};
-
 const MOOD_NAMES: Record<ThemeName, string> = {
   "light-default": "Full Ride",
   "dark-default": "Night Ride",
@@ -183,32 +151,24 @@ const MOOD_NAMES: Record<ThemeName, string> = {
   "light-lowInfo": "Clean Signal",
 };
 
-function MatrixNode({
-  theme,
-  state,
-  stepNumber,
-}: {
-  theme: ComposedTheme;
-  state: StepStateMapKey;
-  stepNumber: number;
-}) {
-  const bg = stepStateNodeBg(theme, state);
-  const fg = stepStateNodeFg(theme, state);
-  // Mirror TimelineNode.styles: in-progress/completed are solid (border == bg);
-  // pending/paused keep a neutral border from the same theme.
-  const solid = state === "in-progress" || state === "completed";
-  const borderColor = solid ? bg : theme.colors.border;
-  const glyph = stepStateColorMap[state].nodeGlyph ?? String(stepNumber);
-  return (
-    <View style={storyStyles.matrixCell}>
-      <View
-        style={[storyStyles.matrixNode, { backgroundColor: bg, borderColor }]}
-      >
-        <Text style={[storyStyles.matrixNodeText, { color: fg }]}>{glyph}</Text>
-      </View>
-    </View>
-  );
-}
+// 4 states + the goal node × 7 product themes. Each cell wraps the REAL reactive
+// <TimelineNode> in `<ScopedTheme name={name}>` (the proven per-cell idiom — see
+// BadgesWall / the Focus family), so every theme genuinely re-renders the node,
+// its border, and its glyph ink. The previous version hand-painted look-alike
+// circles from stepStateColorMap; this renders the component itself, and adds
+// the goal node the reconstruction omitted.
+const MATRIX_COLUMNS: {
+  key: string;
+  label: string;
+  status: StepStatus;
+  goal?: boolean;
+}[] = [
+  { key: "pending", label: "Pending", status: "pending" },
+  { key: "in-progress", label: "In Progress", status: "in-progress" },
+  { key: "paused", label: "Paused", status: "paused" },
+  { key: "completed", label: "Completed", status: "completed" },
+  { key: "goal", label: "Goal", status: "completed", goal: true },
+];
 
 export const AllThemesMatrix: Story = {
   render: () => (
@@ -221,10 +181,10 @@ export const AllThemesMatrix: Story = {
                 Theme
               </Text>
             </View>
-            {MATRIX_STATES.map((state) => (
-              <View key={state} style={storyStyles.matrixCell}>
+            {MATRIX_COLUMNS.map((col) => (
+              <View key={col.key} style={storyStyles.matrixCell}>
                 <Text variant="label" style={storyStyles.matrixHeaderText}>
-                  {STATE_LABELS[state]}
+                  {col.label}
                 </Text>
               </View>
             ))}
@@ -237,13 +197,24 @@ export const AllThemesMatrix: Story = {
                 </Text>
                 <Text style={storyStyles.matrixThemeKey}>{name}</Text>
               </View>
-              {MATRIX_STATES.map((state, i) => (
-                <MatrixNode
-                  key={state}
-                  theme={themes[name]}
-                  state={state}
-                  stepNumber={i + 1}
-                />
+              {MATRIX_COLUMNS.map((col, i) => (
+                <View key={col.key} style={storyStyles.matrixCell}>
+                  <ScopedTheme name={name}>
+                    {col.goal ? (
+                      <TimelineNode
+                        status="completed"
+                        isGoalNode
+                        accessibilityLabel="Goal finish line"
+                      />
+                    ) : (
+                      <TimelineNode
+                        status={col.status}
+                        stepNumber={i + 1}
+                        accessibilityLabel={`${col.label} step ${i + 1}`}
+                      />
+                    )}
+                  </ScopedTheme>
+                </View>
               ))}
             </View>
           ))}
@@ -303,17 +274,5 @@ const storyStyles = StyleSheet.create((theme) => ({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: theme.space[2],
-  },
-  matrixNode: {
-    width: NODE_SIZE,
-    height: NODE_SIZE,
-    borderRadius: NODE_SIZE / 2,
-    borderWidth: theme.borderWidth.medium,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  matrixNodeText: {
-    fontSize: theme.size.sm,
-    fontWeight: theme.fontWeight.bold,
   },
 }));

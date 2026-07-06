@@ -1,6 +1,5 @@
 import { StyleSheet } from "react-native-unistyles";
 import { shadowStyle } from "../../styles/shadows";
-import { palette } from "../../themes/adapter";
 import { stepStateNodeBg, stepStateNodeFg } from "./stepStateColorMap";
 
 export const NODE_SIZE = 32;
@@ -26,7 +25,7 @@ export const styles = StyleSheet.create((theme) => ({
     width: GOAL_NODE_SIZE,
     height: GOAL_NODE_SIZE,
     borderRadius: GOAL_NODE_SIZE / 2,
-    backgroundColor: palette.yellow300,
+    backgroundColor: theme.colors.accentYellow,
     borderColor: theme.colors.text,
   },
   smallNode: {
@@ -75,7 +74,10 @@ export const styles = StyleSheet.create((theme) => ({
   },
   goalText: {
     fontSize: theme.size.lg,
-    color: theme.colors.text,
+    // Ink designed for the accentYellow goal node — locked dark in every theme
+    // (yellow does not flip), so the ★ stays legible; theme.colors.text would
+    // be light on yellow in dark modes.
+    color: theme.colors.accentYellowFg,
   },
   pressed: {
     transform: [{ scale: 1.1 }],

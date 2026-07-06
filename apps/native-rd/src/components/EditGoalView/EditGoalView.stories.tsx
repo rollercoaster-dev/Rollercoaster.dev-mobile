@@ -1,13 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import React, { useRef, useState } from "react";
-import { View, Text } from "react-native";
-import { themeOptions } from "../../hooks/useTheme";
-import { themes } from "../../themes/compose";
+import { View } from "react-native";
 import { EvidenceType } from "../../db";
 import type { EvidenceTypeValue } from "../../types/evidence";
 import { EditGoalView, type EditGoalStep } from "./EditGoalView";
 import { EditGoalStepRow } from "./EditGoalStepRow";
 import { EditGoalOverflowMenu } from "./EditGoalOverflowMenu";
+import { Text } from "../Text";
+
+const noop = () => {};
 
 const meta: Meta<typeof EditGoalView> = {
   title: "Iteration B/Goals/EditGoalView",
@@ -279,37 +280,57 @@ export const RowAnatomy: Story = {
   ),
 };
 
+// Static (non-interactive) EditGoalView for theme review — the whole view, so
+// it covers the goal-title card, description, add-step row, dates, footer/Done,
+// and the sub-step mint rail. Callbacks are no-ops: this is a visual gate, not
+// an interaction (that's what the Interactive* stories are for).
+function MatrixEditGoal() {
+  return (
+    <EditGoalView
+      goalTitle="Learn watercolor basics"
+      onGoalTitleChange={noop}
+      steps={initialSteps}
+      onReorderSteps={noop}
+      onAddStep={noop}
+      onStepTitleChange={noop}
+      onStepEvidenceChange={noop}
+      onAddSubStep={noop}
+      onSubStepTitleChange={noop}
+      onSubStepEvidenceChange={noop}
+      onDeleteSubStep={noop}
+      onOverflowPress={noop}
+      onBack={noop}
+      onDone={noop}
+    />
+  );
+}
+
 /**
- * The row-anatomy piece rendered once per product theme, framed with that
- * theme's own background + text tokens (zero hardcoded hex). Mirrors
- * SettingsDensityRows' AllThemesMatrix. Switch the Storybook theme toolbar to
- * re-render the rows themselves across all 7 themes.
+ * EditGoalView in the active theme — reviewed across themes via the Storybook
+ * theme toolbar (top bar), NOT a live per-cell matrix.
+ *
+ * Why no 7-cell `<ScopedTheme>` matrix like the sibling components? EditGoalView
+ * re-renders after mount — its `useAnimationPref` + the AccessibilityInfo
+ * screen-reader/reduce-motion probes resolve async and `setState`. On web,
+ * `<ScopedTheme>` applies the scoped theme only during the initial render pass;
+ * a later re-render recomputes styles against the *active* theme, so every cell
+ * would silently revert to the toolbar theme (a "null matrix"). The prop-driven
+ * siblings whose matrices never re-render (TimelineNode, the Focus family, …)
+ * don't hit this — EditGoalView does, as do TimelineStep (once its expand/
+ * collapse chevron is tapped) and BadgesWall (post-mount `onLayout`), which use
+ * this same toolbar treatment. The component honours the active theme correctly,
+ * so the toolbar switcher is the reliable way to review all 7 themes here.
  */
 export const AllThemesMatrix: Story = {
   render: () => (
-    <View style={{ gap: 16 }}>
-      {themeOptions.map(({ id }) => (
-        <View
-          key={id}
-          style={{
-            gap: 8,
-            padding: 12,
-            borderRadius: 8,
-            backgroundColor: themes[id].colors.backgroundSecondary,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 12,
-              fontWeight: "700",
-              color: themes[id].colors.text,
-            }}
-          >
-            {id}
-          </Text>
-          <AnatomyRow step={anatomyChips} />
-        </View>
-      ))}
+    <View style={{ gap: 12 }}>
+      <Text style={{ fontSize: 12, fontStyle: "italic", padding: 12 }}>
+        Switch the theme toolbar (top bar) to review this screen across all 7
+        product themes. A live per-cell matrix can’t work here: EditGoalView
+        re-renders after mount, and on web that reverts a ScopedTheme cell to
+        the active theme.
+      </Text>
+      <MatrixEditGoal />
     </View>
   ),
 };

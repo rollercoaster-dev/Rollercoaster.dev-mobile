@@ -1,12 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import React from "react";
 import { ScrollView, View } from "react-native";
-import { StyleSheet } from "react-native-unistyles";
+import { ScopedTheme, StyleSheet } from "react-native-unistyles";
 import { Text } from "../Text";
 import { TimelineBreakdownBar, SEGMENT_ORDER } from "./TimelineBreakdownBar";
-import { TRACK_HEIGHT } from "./TimelineBreakdownBar.styles";
-import { stepStateNodeBg } from "../TimelineNode/stepStateColorMap";
-import { themes, themeNames, type ThemeName } from "../../themes/compose";
+import { themeNames, type ThemeName } from "../../themes/compose";
 
 const meta: Meta<typeof TimelineBreakdownBar> = {
   title: "Iteration B/Timeline/TimelineBreakdownBar",
@@ -112,11 +110,11 @@ export const Empty: Story = {
   ),
 };
 
-// All 7 product themes' segment colors side by side. Unistyles' theme is a
-// global runtime singleton, so a reactive <TimelineBreakdownBar> can only render
-// the active theme. Like TimelineNode's AllThemesMatrix, this reads each composed
-// `themes[name]` statically and paints bar segments inline via stepStateNodeBg,
-// proving the map resolves in every theme (incl. paused → accentPurpleLight).
+// All 7 product themes' bars side by side. Each cell wraps the REAL reactive
+// <TimelineBreakdownBar> in `<ScopedTheme name={name}>` (the proven per-cell
+// idiom — see BadgesWall / the Focus family), so every theme genuinely re-renders
+// the full component: bordered track, all four segments, AND the count legend —
+// not just the bar track the previous hand-reconstruction painted.
 const MATRIX_COUNTS: Record<(typeof SEGMENT_ORDER)[number], number> = {
   completed: 3,
   "in-progress": 1,
@@ -143,22 +141,9 @@ export const AllThemesMatrix: Story = {
             <Text style={storyStyles.matrixThemeName}>{MOOD_NAMES[name]}</Text>
             <Text style={storyStyles.matrixThemeKey}>{name}</Text>
           </View>
-          <View
-            style={[
-              storyStyles.matrixTrack,
-              { borderColor: themes[name].colors.border },
-            ]}
-          >
-            {SEGMENT_ORDER.map((state) => (
-              <View
-                key={state}
-                style={[
-                  { flex: MATRIX_COUNTS[state] },
-                  { backgroundColor: stepStateNodeBg(themes[name], state) },
-                ]}
-              />
-            ))}
-          </View>
+          <ScopedTheme name={name}>
+            <TimelineBreakdownBar counts={MATRIX_COUNTS} />
+          </ScopedTheme>
         </View>
       ))}
     </ScrollView>
@@ -198,11 +183,5 @@ const storyStyles = StyleSheet.create((theme) => ({
     fontFamily: theme.fontFamily.mono,
     fontSize: theme.size.xs,
     color: theme.colors.textMuted,
-  },
-  matrixTrack: {
-    flexDirection: "row",
-    height: TRACK_HEIGHT,
-    borderWidth: theme.borderWidth.medium,
-    overflow: "hidden",
   },
 }));

@@ -1,22 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import React from "react";
 import { ScrollView, View } from "react-native";
-import { StyleSheet } from "react-native-unistyles";
+import { ScopedTheme, StyleSheet } from "react-native-unistyles";
 import { Text } from "../Text";
 import { TimelineStep } from "./TimelineStep";
 import type { TimelineStepData, TimelineStepChild } from "./TimelineStep";
 import type { EvidenceItemData } from "../EvidenceDrawer";
-import {
-  stepStateNodeBg,
-  stepStateNodeFg,
-  type StepStateMapKey,
-} from "../TimelineNode/stepStateColorMap";
-import {
-  themes,
-  themeNames,
-  type ComposedTheme,
-  type ThemeName,
-} from "../../themes/compose";
+import { themeNames, type ThemeName } from "../../themes/compose";
 
 const meta: Meta<typeof TimelineStep> = {
   title: "Iteration B/Timeline/TimelineStep",
@@ -260,27 +250,6 @@ export const LongTitle: Story = {
   ),
 };
 
-// All 4 states × 7 product themes (#406, #407). Unistyles' theme is a global
-// runtime singleton, so a reactive <TimelineStep> can only render the active
-// theme. Like TimelineNode/AllThemesMatrix, this reads each composed themes[name]
-// statically and paints the header word pill inline, resolving bg/fg THROUGH
-// stepStateColorMap. The reviewer confirms each word pill's color matches the
-// TimelineNode/AllThemesMatrix node color for the same state in the same theme —
-// if they differ, the word is not consuming the #406 token correctly.
-const MATRIX_STATES: StepStateMapKey[] = [
-  "pending",
-  "in-progress",
-  "paused",
-  "completed",
-];
-
-const STATE_LABELS: Record<StepStateMapKey, string> = {
-  pending: "Pending",
-  "in-progress": "In Progress",
-  paused: "Paused",
-  completed: "Completed",
-};
-
 const MOOD_NAMES: Record<ThemeName, string> = {
   "light-default": "Full Ride",
   "dark-default": "Night Ride",
@@ -291,69 +260,49 @@ const MOOD_NAMES: Record<ThemeName, string> = {
   "light-lowInfo": "Clean Signal",
 };
 
-function MatrixWord({
-  theme,
-  state,
-}: {
-  theme: ComposedTheme;
-  state: StepStateMapKey;
-}) {
-  const bg = stepStateNodeBg(theme, state);
-  const fg = stepStateNodeFg(theme, state);
-  // Mirror stateWordPill / TimelineNode.styles: in-progress & completed are solid
-  // (border == bg); pending & paused keep a neutral border so the light fill reads.
-  const solid = state === "in-progress" || state === "completed";
-  const borderColor = solid ? bg : theme.colors.border;
-  return (
-    <View style={storyStyles.matrixCell}>
-      <View
-        style={[
-          storyStyles.matrixWordPill,
-          { backgroundColor: bg, borderColor },
-        ]}
-      >
-        <Text style={[storyStyles.matrixWordText, { color: fg }]}>
-          {STATE_LABELS[state]}
-        </Text>
-      </View>
-    </View>
-  );
-}
+// A rich in-progress step (C/B band + captured evidence + sub-steps) so the
+// matrix exercises the FULL anatomy per theme.
+const matrixStep: TimelineStepData = {
+  id: "matrix",
+  title: "Inspection & labels",
+  status: "in-progress",
+  evidenceCount: 2,
+  waitingOn: { who: "city inspector", expected: "Jun 24" },
+  dueDate: "Thu · Jun 26",
+};
 
+// The REAL <TimelineStep> rendered once per product theme, each wrapped in
+// `<ScopedTheme name={name}>` for at-rest visual coverage. This is not an
+// interaction-safe proof on Storybook-web: expanding/collapsing triggers a
+// re-render and can revert that cell to the active toolbar theme, so interactive
+// review still belongs in the toolbar-selected theme. The previous version
+// reconstructed only the header word pill from stepStateColorMap, so it never
+// exercised the title, chevron, C·B band, evidence section, content-card chrome,
+// the child sub-spine, or the nested <TimelineNode>. This renders all of them
+// per theme at initial paint. Per-state node/word colors across themes stay
+// covered by StateWords (this file) + TimelineNode's matrix.
 export const AllThemesMatrix: Story = {
   render: () => (
     <ScrollView contentContainerStyle={storyStyles.matrixContainer}>
-      <ScrollView horizontal showsHorizontalScrollIndicator>
-        <View>
-          <View style={storyStyles.matrixRow}>
-            <View style={storyStyles.matrixRowLabel}>
-              <Text variant="label" style={storyStyles.matrixHeaderText}>
-                Theme
-              </Text>
-            </View>
-            {MATRIX_STATES.map((state) => (
-              <View key={state} style={storyStyles.matrixCell}>
-                <Text variant="label" style={storyStyles.matrixHeaderText}>
-                  {STATE_LABELS[state]}
-                </Text>
-              </View>
-            ))}
+      {themeNames.map((name) => (
+        <View key={name} style={storyStyles.matrixSection}>
+          <View>
+            <Text style={storyStyles.matrixThemeName}>{MOOD_NAMES[name]}</Text>
+            <Text style={storyStyles.matrixThemeKey}>{name}</Text>
           </View>
-          {themeNames.map((name) => (
-            <View key={name} style={storyStyles.matrixRow}>
-              <View style={storyStyles.matrixRowLabel}>
-                <Text style={storyStyles.matrixThemeName}>
-                  {MOOD_NAMES[name]}
-                </Text>
-                <Text style={storyStyles.matrixThemeKey}>{name}</Text>
-              </View>
-              {MATRIX_STATES.map((state) => (
-                <MatrixWord key={state} theme={themes[name]} state={state} />
-              ))}
-            </View>
-          ))}
+          <ScopedTheme name={name}>
+            <TimelineStep
+              step={matrixStep}
+              stepIndex={2}
+              evidence={mockEvidence.slice(0, 2)}
+              onNodePress={noop}
+              onEvidencePress={noop}
+              subSteps={subSteps}
+              defaultExpanded
+            />
+          </ScopedTheme>
         </View>
-      </ScrollView>
+      ))}
     </ScrollView>
   ),
 };
@@ -366,20 +315,11 @@ const storyStyles = StyleSheet.create((theme) => ({
   },
   matrixContainer: {
     padding: theme.space[4],
+    gap: theme.space[6],
     backgroundColor: theme.colors.background,
   },
-  matrixRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  matrixRowLabel: {
-    width: 132,
-    paddingVertical: theme.space[2],
-    paddingRight: theme.space[2],
-    justifyContent: "center",
-  },
-  matrixHeaderText: {
-    color: theme.colors.textMuted,
+  matrixSection: {
+    gap: theme.space[2],
   },
   matrixThemeName: {
     fontWeight: theme.fontWeight.semibold,
@@ -389,22 +329,5 @@ const storyStyles = StyleSheet.create((theme) => ({
     fontFamily: theme.fontFamily.mono,
     fontSize: theme.size.xs,
     color: theme.colors.textMuted,
-  },
-  matrixCell: {
-    width: 120,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: theme.space[2],
-    paddingHorizontal: theme.space[1],
-  },
-  matrixWordPill: {
-    paddingHorizontal: theme.space[2],
-    paddingVertical: theme.space[1],
-    borderRadius: theme.radius.sm,
-    borderWidth: theme.borderWidth.thin,
-  },
-  matrixWordText: {
-    fontSize: theme.size.xs,
-    fontWeight: theme.fontWeight.semibold,
   },
 }));
