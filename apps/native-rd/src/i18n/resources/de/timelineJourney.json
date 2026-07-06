@@ -18,8 +18,10 @@
     "noEvidence": "Noch keine Belege"
   },
   "finishLine": {
-    "title": "Ziel-Belege",
-    "noEvidence": "Noch keine Ziel-Belege",
+    "ctaTitle": "Abschließen & Abzeichen gestalten",
+    "ctaSubtitleUndesigned": "Das Andenken kommt am Ende — das Abzeichen beginnt als '{{letter}}', bis du es gestaltest.",
+    "ctaSubtitleDesigned": "Tippen, um dein Abzeichendesign anzusehen oder zu aktualisieren.",
+    "ctaA11yLabel": "Schließ ab und gestalte dein Abzeichen",
     "a11yNode": "Ziel-Zielgerade"
   }
 }

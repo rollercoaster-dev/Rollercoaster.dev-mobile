@@ -28,6 +28,11 @@ describe("TimelineNode", () => {
     expect(screen.getByText("\u2605")).toBeOnTheScreen();
   });
 
+  it("renders the same star glyph when celebrating (#452 \u2014 celebrate only recolors)", () => {
+    renderWithProviders(<TimelineNode {...baseProps} isGoalNode celebrate />);
+    expect(screen.getByText("\u2605")).toBeOnTheScreen();
+  });
+
   it("renders the label override instead of the step number", () => {
     renderWithProviders(<TimelineNode {...baseProps} label="a" />);
     expect(screen.getByText("a")).toBeOnTheScreen();

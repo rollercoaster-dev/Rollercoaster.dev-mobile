@@ -116,3 +116,19 @@ export function stepStateNodeFg(
     ? theme.journey[entry.nodeFgKey]
     : theme.colors[entry.nodeFgColorsFallback];
 }
+
+/**
+ * Goal-node (finish-line star) background — a separate axis from step states.
+ * Neutral until every step is complete; celebration yellow once they all are
+ * (`chrome.celebrationBg/Fg`, the audited pair CelebrationHeroHeader uses).
+ * If #420 lands a dedicated token for the non-celebrating goal node, this is
+ * the one place to swap it in.
+ */
+export function goalNodeBg(theme: ComposedTheme, celebrate: boolean): string {
+  return celebrate ? theme.chrome.celebrationBg : theme.colors.background;
+}
+
+/** Goal-node foreground (star glyph) color — see `goalNodeBg`. */
+export function goalNodeFg(theme: ComposedTheme, celebrate: boolean): string {
+  return celebrate ? theme.chrome.celebrationFg : theme.colors.text;
+}

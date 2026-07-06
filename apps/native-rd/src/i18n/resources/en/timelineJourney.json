@@ -18,8 +18,10 @@
     "noEvidence": "No evidence yet"
   },
   "finishLine": {
-    "title": "Goal Evidence",
-    "noEvidence": "No goal evidence yet",
+    "ctaTitle": "Finish & design badge",
+    "ctaSubtitleUndesigned": "The keepsake comes at the end — badge starts as '{{letter}}' until you design it.",
+    "ctaSubtitleDesigned": "Tap to view or update your badge design.",
+    "ctaA11yLabel": "Finish and design your badge",
     "a11yNode": "Goal finish line"
   }
 }

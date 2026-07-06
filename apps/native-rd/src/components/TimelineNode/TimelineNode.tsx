@@ -31,6 +31,11 @@ export interface TimelineNodeProps {
    * byte-identical; only stories opt in (#406 D7).
    */
   showStateBadge?: boolean;
+  /**
+   * Only meaningful when `isGoalNode`: paints the star celebration yellow once
+   * every step is complete. Neutral (card-background) otherwise (#452).
+   */
+  celebrate?: boolean;
 }
 
 export function TimelineNode({
@@ -42,6 +47,7 @@ export function TimelineNode({
   size = "md",
   label,
   showStateBadge = false,
+  celebrate = false,
 }: TimelineNodeProps) {
   const isSmall = size === "sm";
 
@@ -49,6 +55,7 @@ export function TimelineNode({
     styles.node,
     isSmall && styles.smallNode,
     isGoalNode && styles.goalNode,
+    isGoalNode && celebrate && styles.goalNodeCelebrate,
     !isGoalNode && status === "pending" && styles.pendingNode,
     !isGoalNode && status === "in-progress" && styles.inProgressNode,
     !isGoalNode && status === "completed" && styles.completedNode,
@@ -59,6 +66,7 @@ export function TimelineNode({
     styles.nodeText,
     isSmall && styles.smallNodeText,
     isGoalNode && styles.goalText,
+    isGoalNode && celebrate && styles.goalTextCelebrate,
     !isGoalNode && status === "pending" && styles.pendingText,
     !isGoalNode && status === "in-progress" && styles.inProgressText,
     !isGoalNode && status === "completed" && styles.completedText,

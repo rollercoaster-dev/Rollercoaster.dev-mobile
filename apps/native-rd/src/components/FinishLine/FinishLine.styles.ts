@@ -1,5 +1,12 @@
 import { StyleSheet } from "react-native-unistyles";
 import { shadowStyle } from "../../styles/shadows";
+import { GOAL_NODE_SIZE } from "../TimelineNode/TimelineNode.styles";
+
+/**
+ * Inline badge-preview size — derived from GOAL_NODE_SIZE so the preview keeps
+ * visual rhythm with the star it sits beside (#452 D4).
+ */
+export const BADGE_PREVIEW_SIZE = GOAL_NODE_SIZE;
 
 export const styles = StyleSheet.create((theme) => ({
   container: {
@@ -7,7 +14,7 @@ export const styles = StyleSheet.create((theme) => ({
     marginTop: theme.space[2],
   },
   nodeColumn: {
-    width: 40,
+    width: GOAL_NODE_SIZE,
     alignItems: "center",
     marginRight: theme.space[3],
   },
@@ -16,43 +23,48 @@ export const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.backgroundSecondary,
     borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.border,
-    borderLeftWidth: 5,
-    borderLeftColor: theme.colors.accentYellow,
     borderRadius: theme.radius.sm,
     padding: theme.space[4],
     ...shadowStyle(theme, "cardElevationSmall"),
   },
-  heading: {
+  ctaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    minHeight: 44,
+    gap: theme.space[3],
+  },
+  ctaTextColumn: {
+    flex: 1,
+  },
+  ctaTitle: {
     fontSize: 18,
     fontWeight: theme.fontWeight.black,
     color: theme.colors.text,
-    marginBottom: theme.space[2],
   },
-  evidenceCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.space[2],
-    paddingVertical: theme.space[2],
-    paddingHorizontal: theme.space[3],
-    backgroundColor: theme.colors.background,
-    borderWidth: 2,
-    borderColor: theme.colors.border,
-    borderLeftWidth: 4,
-    borderLeftColor: theme.colors.accentYellow,
-    borderRadius: theme.radius.sm,
-    marginBottom: theme.space[1],
-  },
-  evidenceIcon: {
-    fontSize: 14,
-  },
-  evidenceLabel: {
-    flex: 1,
-    fontSize: 13,
-    color: theme.colors.text,
-  },
-  noEvidence: {
+  ctaSubtitle: {
     fontSize: 13,
     color: theme.colors.textSecondary,
-    fontStyle: "italic",
+    marginTop: theme.space[1],
+  },
+  // Undesigned fallback — mirrors BadgeWallCell's monogram tile: a neutral
+  // rounded square (a null design has no shape to represent).
+  badgeFallback: {
+    width: BADGE_PREVIEW_SIZE,
+    height: BADGE_PREVIEW_SIZE,
+    borderRadius: theme.radius.sm,
+    backgroundColor: theme.colors.accentPurple,
+    borderWidth: theme.borderWidth.medium,
+    borderColor: theme.colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  badgeFallbackText: {
+    color: theme.colors.accentPurpleFg,
+    fontSize: theme.size.md,
+    fontWeight: theme.fontWeight.black,
+    fontFamily: theme.fontFamily.headline,
+  },
+  evidenceList: {
+    marginTop: theme.space[3],
   },
 }));

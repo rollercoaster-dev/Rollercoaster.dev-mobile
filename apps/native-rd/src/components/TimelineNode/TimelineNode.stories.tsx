@@ -91,11 +91,26 @@ export const Completed: Story = {
 export const GoalNode: Story = {
   render: () => (
     <View style={storyStyles.container}>
-      <Row label="Goal Node (star, yellow)">
+      <Row label="Goal Node (star, neutral — steps remaining)">
         <TimelineNode
           status="completed"
           isGoalNode
           accessibilityLabel="Goal finish line"
+        />
+      </Row>
+    </View>
+  ),
+};
+
+export const GoalNodeCelebrate: Story = {
+  render: () => (
+    <View style={storyStyles.container}>
+      <Row label="Goal Node (star, celebration yellow)">
+        <TimelineNode
+          status="completed"
+          isGoalNode
+          celebrate
+          accessibilityLabel="Goal finish line, celebrating"
         />
       </Row>
     </View>
