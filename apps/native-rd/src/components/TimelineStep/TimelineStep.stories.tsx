@@ -272,12 +272,15 @@ const matrixStep: TimelineStepData = {
 };
 
 // The REAL <TimelineStep> rendered once per product theme, each wrapped in
-// `<ScopedTheme name={name}>` (the proven per-cell idiom — see BadgesWall / the
-// Focus family). The previous version reconstructed only the header word pill
-// from stepStateColorMap, so it never exercised the title, chevron, C·B band,
-// evidence section, content-card chrome, the child sub-spine, or the nested
-// <TimelineNode>. This renders all of them per theme. Per-state node/word colors
-// across themes stay covered by StateWords (this file) + TimelineNode's matrix.
+// `<ScopedTheme name={name}>` for at-rest visual coverage. This is not an
+// interaction-safe proof on Storybook-web: expanding/collapsing triggers a
+// re-render and can revert that cell to the active toolbar theme, so interactive
+// review still belongs in the toolbar-selected theme. The previous version
+// reconstructed only the header word pill from stepStateColorMap, so it never
+// exercised the title, chevron, C·B band, evidence section, content-card chrome,
+// the child sub-spine, or the nested <TimelineNode>. This renders all of them
+// per theme at initial paint. Per-state node/word colors across themes stay
+// covered by StateWords (this file) + TimelineNode's matrix.
 export const AllThemesMatrix: Story = {
   render: () => (
     <ScrollView contentContainerStyle={storyStyles.matrixContainer}>

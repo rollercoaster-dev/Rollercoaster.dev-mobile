@@ -111,22 +111,29 @@ module.exports = {
       },
       // `palette.*` member expressions bypass the string-literal checks entirely
       // — `palette.gray800` is not a Literal — yet a bare palette color is just as
-      // non-themeable as a hex. Flag any `palette.<name>` access in a style file.
+      // non-themeable as a hex. Flag any palette access in a style file. Computed
+      // non-string properties are reported as computed instead of pretending they
+      // are literal dot-properties (e.g. `palette[shade]`, not `palette.shade`).
       MemberExpression(node) {
         if (
           node.object.type === "Identifier" &&
           node.object.name === "palette"
         ) {
-          const prop =
-            node.property.type === "Identifier"
-              ? node.property.name
-              : typeof node.property.value === "string"
-                ? node.property.value
-                : "…";
+          let value = "palette[computed]";
+          if (!node.computed && node.property.type === "Identifier") {
+            value = `palette.${node.property.name}`;
+          } else if (
+            node.computed &&
+            node.property.type === "Literal" &&
+            typeof node.property.value === "string"
+          ) {
+            value = `palette.${node.property.value}`;
+          }
+
           context.report({
             node,
             messageId: "noRawColor",
-            data: { value: `palette.${prop}` },
+            data: { value },
           });
         }
       },

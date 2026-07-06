@@ -58,12 +58,16 @@ ruleTester.run("no-raw-colors", rule, {
       filename: screenStyleFile,
       errors: [{ messageId: "noRawColor", data: { value: "palette.gray800" } }],
     },
-    // Computed string-literal property — the middle branch of the extraction
-    // ternary (`palette["gray800"]` is valid JS a dev could write in a style file).
+    // Computed properties: string literals can still name the exact palette key,
+    // while non-string expressions must be reported as computed (not misleadingly
+    // as a literal dot-property like `palette.shade`).
     {
-      code: 'const bg = palette["gray800"];',
+      code: 'const bg = palette["gray800"]; const fg = palette[shade];',
       filename: componentStyleFile,
-      errors: [{ messageId: "noRawColor", data: { value: "palette.gray800" } }],
+      errors: [
+        { messageId: "noRawColor", data: { value: "palette.gray800" } },
+        { messageId: "noRawColor", data: { value: "palette[computed]" } },
+      ],
     },
     // Named CSS color.
     {
