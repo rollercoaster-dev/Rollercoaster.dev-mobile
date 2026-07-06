@@ -235,6 +235,15 @@ describe("TimelineJourneyScreen", () => {
     expect(screen.getByText("Finish & design badge")).toBeOnTheScreen();
   });
 
+  it('navigates to CompletionFlow when the "Finish & design badge" CTA is tapped', () => {
+    setupQueries();
+    renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+    fireEvent.press(screen.getByLabelText("Finish and design your badge"));
+    expect(mockNavigate).toHaveBeenCalledWith("CompletionFlow", {
+      goalId: "goal-1",
+    });
+  });
+
   it("shows goal evidence in finish line", () => {
     setupQueries({ goalEvidence: GOAL_EVIDENCE });
     renderWithProviders(<TimelineJourneyScreen {...routeProps} />);

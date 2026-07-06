@@ -1,6 +1,5 @@
 import { StyleSheet } from "react-native-unistyles";
 import { shadowStyle } from "../../styles/shadows";
-import { palette } from "../../themes/palette";
 import { GOAL_NODE_SIZE } from "../TimelineNode/TimelineNode.styles";
 
 /**
@@ -60,7 +59,7 @@ export const styles = StyleSheet.create((theme) => ({
     justifyContent: "center",
   },
   badgeFallbackText: {
-    color: palette.white,
+    color: theme.colors.accentPurpleFg,
     fontSize: theme.size.md,
     fontWeight: theme.fontWeight.black,
     fontFamily: theme.fontFamily.headline,

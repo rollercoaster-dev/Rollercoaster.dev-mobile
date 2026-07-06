@@ -173,6 +173,10 @@ function TimelineContent({
     });
   };
 
+  const handleBadgePress = () => {
+    navigation.navigate("CompletionFlow", { goalId });
+  };
+
   return (
     <View style={{ flex: 1 }}>
       {/* Header */}
@@ -231,8 +235,7 @@ function TimelineContent({
             goalTitle={goal.title ?? ""}
             badgeDesign={parseBadgeDesign(goal.design)}
             allStepsComplete={areAllStepsComplete(stepRows)}
-            // TODO(#378): wire real finishing-flow navigation
-            onBadgePress={() => {}}
+            onBadgePress={handleBadgePress}
             goalEvidence={goalEvidence}
             onEvidencePress={handleEvidencePress}
           />
