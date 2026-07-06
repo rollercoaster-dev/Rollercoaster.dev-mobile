@@ -1,0 +1,102 @@
+import React, { useState } from "react";
+import { View } from "react-native";
+import { ScopedTheme } from "react-native-unistyles";
+import type { Meta, StoryObj } from "@storybook/react";
+
+import {
+  FinishDesignStage,
+  type FinishDesignSection,
+} from "./FinishDesignStage";
+import { createDefaultBadgeDesign, type BadgeDesign } from "../../badges/types";
+
+const meta: Meta<typeof FinishDesignStage> = {
+  title: "Iteration B/Finish/FinishDesignStage",
+  component: FinishDesignStage,
+};
+export default meta;
+
+type Story = StoryObj<typeof FinishDesignStage>;
+
+const GOAL_TITLE = "Rewire the workshop";
+const GOAL_COLOR = "#34d399";
+
+/** Wrapper holding the badge design in local state so every control
+ * round-trips through `onDesignChange`, mirroring how the integration (#449)
+ * will wire it and matching `FinishCelebrateStage`'s `InteractiveCelebrate`. */
+function InteractiveDesign({
+  initialExpandedSection = "shape",
+  goalTitle = GOAL_TITLE,
+  designOverrides,
+}: {
+  initialExpandedSection?: FinishDesignSection | null;
+  goalTitle?: string;
+  designOverrides?: Partial<BadgeDesign>;
+}) {
+  const [design, setDesign] = useState<BadgeDesign>(() => ({
+    ...createDefaultBadgeDesign(goalTitle, GOAL_COLOR),
+    ...designOverrides,
+  }));
+  return (
+    <FinishDesignStage
+      design={design}
+      onDesignChange={setDesign}
+      goalColor={GOAL_COLOR}
+      goalTitle={goalTitle}
+      onBack={() => {}}
+      onBake={() => {}}
+      initialExpandedSection={initialExpandedSection}
+    />
+  );
+}
+
+export const Default: Story = {
+  render: () => <InteractiveDesign />,
+};
+
+export const ShapeOpen: Story = {
+  render: () => <InteractiveDesign initialExpandedSection="shape" />,
+};
+
+export const ColorOpen: Story = {
+  render: () => <InteractiveDesign initialExpandedSection="color" />,
+};
+
+export const CenterOpen: Story = {
+  render: () => <InteractiveDesign initialExpandedSection="center" />,
+};
+
+export const BottomLabelOpen: Story = {
+  render: () => <InteractiveDesign initialExpandedSection="bottomLabel" />,
+};
+
+/** Longest allowed bottom label (24 chars) and a long goal title — confirms the
+ * input and the live SVG preview both render without clipping. */
+export const LongLabels: Story = {
+  render: () => (
+    <InteractiveDesign
+      initialExpandedSection="bottomLabel"
+      goalTitle="Rewire the entire workshop from scratch"
+      designOverrides={{ bottomLabel: "COMPLETED · SEPTEMBER 26" }}
+    />
+  ),
+};
+
+/** Small-device viewport — the section list scrolls under the pinned preview
+ * without clipping the footer CTA. Same technique as FinishCelebrateStage. */
+export const Constrained: Story = {
+  render: () => (
+    <View style={{ flex: 1, height: 480 }}>
+      <InteractiveDesign />
+    </View>
+  ),
+};
+
+/** Reduced-visual-complexity ND variant — every section/label/swatch stays
+ * legible. */
+export const ReducedDensity: Story = {
+  render: () => (
+    <ScopedTheme name="light-lowInfo">
+      <InteractiveDesign />
+    </ScopedTheme>
+  ),
+};
