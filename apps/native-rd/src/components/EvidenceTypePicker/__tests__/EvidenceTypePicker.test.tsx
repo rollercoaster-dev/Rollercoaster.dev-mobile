@@ -1,5 +1,5 @@
 import React from "react";
-import { Modal } from "react-native";
+import { BackHandler } from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -282,15 +282,22 @@ describe("EvidenceTypePicker", () => {
       expect(onClose).toHaveBeenCalled();
     });
 
-    it("calls onClose on Modal onRequestClose (Android back / gesture dismiss)", () => {
+    it("calls onClose on Android hardware back while open", () => {
       const onClose = jest.fn();
+      const addSpy = jest.spyOn(BackHandler, "addEventListener");
       renderWithProviders(
         <EvidenceTypePicker {...captureProps} onClose={onClose} />,
       );
 
       // The sole dismissal route for Android hardware/gesture back — distinct
-      // from the backdrop and header-✕ Pressables.
-      fireEvent(screen.UNSAFE_getByType(Modal), "requestClose");
+      // from the backdrop and header-✕ Pressables. The in-tree sheet registers
+      // its own BackHandler listener (the RN Modal used to own this).
+      const handler = addSpy.mock.calls.find(
+        ([event]) => event === "hardwareBackPress",
+      )?.[1];
+      expect(handler).toBeDefined();
+      // Returning true claims the event so the host screen doesn't also pop.
+      expect(handler?.()).toBe(true);
       expect(onClose).toHaveBeenCalled();
     });
 

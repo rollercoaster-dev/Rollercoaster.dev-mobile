@@ -367,10 +367,12 @@ export function NewGoalWizard({
 
       {/* Planned-evidence picker — reuse #409's capture sheet whole (D2), no
           fork. No activeStepTitle: there is no active step during goal creation
-          (D3), so the "Saving to your active step" sub-line is omitted. Its own
-          Modal gates on `visible`, so rendering it unconditionally is inert
-          until the chip opens it. Selecting a type updates the chip and closes
-          the sheet in one gesture. */}
+          (D3), so the "Saving to your active step" sub-line is omitted. It
+          renders in-tree as an absolute overlay anchored to this wizard frame
+          (scrim + sheet rising from the bottom) and gates on `visible`, so
+          rendering it unconditionally is inert until the chip opens it.
+          Selecting a type updates the chip and closes the sheet in one
+          gesture. */}
       <EvidenceTypePicker
         mode="capture"
         visible={evidencePickerOpen}
