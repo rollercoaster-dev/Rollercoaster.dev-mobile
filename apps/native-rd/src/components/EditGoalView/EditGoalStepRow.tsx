@@ -305,18 +305,24 @@ export function EditGoalStepRow({
     );
   }
 
+  // The GestureDetector wraps only the row body — the `children` slot (the
+  // sub-step block, #459) stays inside the transformed Animated.View but
+  // outside the detector, so the whole card still lifts/scales together while
+  // dragging, yet a nested per-sub-step LongPress/Pan never double-fires this
+  // row's drag (RNGH dispatches a touch to every detector whose view contains
+  // it, with no implicit parent/child priority — D1).
   return (
-    <GestureDetector gesture={composed}>
-      <Animated.View
-        style={[
-          styles.rowCard,
-          isBeingDragged && styles.rowCardDragging,
-          animatedStyle,
-        ]}
-      >
-        {body}
-        {children}
-      </Animated.View>
-    </GestureDetector>
+    <Animated.View
+      style={[
+        styles.rowCard,
+        isBeingDragged && styles.rowCardDragging,
+        animatedStyle,
+      ]}
+    >
+      <GestureDetector gesture={composed}>
+        <View>{body}</View>
+      </GestureDetector>
+      {children}
+    </Animated.View>
   );
 }
