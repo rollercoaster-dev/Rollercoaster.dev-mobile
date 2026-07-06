@@ -35,7 +35,8 @@ export function FinishLine({
   onEvidencePress,
 }: FinishLineProps) {
   const { t } = useTranslation(["timelineJourney"]);
-  // Mirrors BadgeWallCell's undesigned-badge monogram exactly.
+  // Shares BadgeWallCell's undesigned-badge initial while FinishLine owns
+  // the preview sizing.
   const letter = (goalTitle.trim().charAt(0) || "?").toUpperCase();
 
   return (

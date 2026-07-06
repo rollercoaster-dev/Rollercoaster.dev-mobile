@@ -1,12 +1,13 @@
 import { StyleSheet } from "react-native-unistyles";
 import { shadowStyle } from "../../styles/shadows";
 import { palette } from "../../themes/palette";
+import { GOAL_NODE_SIZE } from "../TimelineNode/TimelineNode.styles";
 
 /**
- * Inline badge-preview size — matches GOAL_NODE_SIZE so the preview keeps
+ * Inline badge-preview size — derived from GOAL_NODE_SIZE so the preview keeps
  * visual rhythm with the star it sits beside (#452 D4).
  */
-export const BADGE_PREVIEW_SIZE = 40;
+export const BADGE_PREVIEW_SIZE = GOAL_NODE_SIZE;
 
 export const styles = StyleSheet.create((theme) => ({
   container: {
@@ -14,7 +15,7 @@ export const styles = StyleSheet.create((theme) => ({
     marginTop: theme.space[2],
   },
   nodeColumn: {
-    width: 40,
+    width: GOAL_NODE_SIZE,
     alignItems: "center",
     marginRight: theme.space[3],
   },
@@ -30,6 +31,7 @@ export const styles = StyleSheet.create((theme) => ({
   ctaRow: {
     flexDirection: "row",
     alignItems: "center",
+    minHeight: 44,
     gap: theme.space[3],
   },
   ctaTextColumn: {
