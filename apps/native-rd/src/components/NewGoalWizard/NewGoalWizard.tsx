@@ -76,8 +76,10 @@ export interface NewGoalWizardProps {
   startWorkingLabel?: string;
 }
 
-const defaultStepCountSummary = (count: number) =>
-  `${count} step${count === 1 ? "" : "s"} · evidence on each`;
+const defaultStepCountSummary = (count: number) => {
+  const safeCount = Math.max(0, Math.floor(count));
+  return `${safeCount} step${safeCount === 1 ? "" : "s"} · evidence on each`;
+};
 
 export function NewGoalWizard({
   currentStep,

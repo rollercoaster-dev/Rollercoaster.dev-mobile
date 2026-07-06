@@ -128,6 +128,8 @@ describe("NewGoalWizard", () => {
       [1, "1 step · evidence on each"],
       [2, "2 steps · evidence on each"],
       [4, "4 steps · evidence on each"],
+      [-2, "0 steps · evidence on each"],
+      [1.5, "1 step · evidence on each"],
     ])("pluralizes the step count summary for %i", (stepCount, label) => {
       renderWizard({ currentStep: "ready", stepCount });
 
