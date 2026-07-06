@@ -150,7 +150,57 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.accentPrimary,
   },
 
-  // --- "step" / "build" placeholder body (D2, filled by #463/#464) ---
+  // --- Step 2 · first step (#463) ---
+  // Goal-title echo under the "Goal" eyebrow — quiet body text so the recap
+  // reads as context, not a second headline.
+  stepGoalRecap: {
+    fontSize: theme.size.sm,
+    color: theme.colors.textSecondary,
+  },
+  evidenceRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: theme.space[2],
+  },
+  // Whole press target (chip + "change"); a 44pt-min row keeps the tap area
+  // honest even though the chip itself is compact.
+  evidencePress: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: theme.space[2],
+    minHeight: 44,
+  },
+  // Compact recap pill — the prototype's #ede9fe / 9999px / 12px DM Mono chip,
+  // shared with the build-row and ready-banner tier (accentPurpleLight). Uses
+  // the small hard-shadow token, which theme-aware ND variants zero out (D8).
+  evidenceChip: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: theme.space[1],
+    backgroundColor: theme.colors.accentPurpleLight,
+    borderWidth: theme.borderWidth.medium,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.full,
+    paddingHorizontal: theme.space[2],
+    paddingVertical: theme.space[1],
+    ...shadowStyle(theme, "hardSm"),
+  },
+  evidenceChipIcon: {
+    // size.xs (12) — scales with the largeText/lowVision ND variants.
+    fontSize: theme.size.xs,
+  },
+  evidenceChipLabel: {
+    fontFamily: theme.fontFamily.mono,
+    fontSize: theme.size.xs,
+    color: theme.colors.text,
+  },
+  evidenceChipChange: {
+    fontSize: theme.size.xs,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.accentPrimary,
+  },
+
+  // --- "build" placeholder body (D2, filled by #464) ---
   placeholderBody: {
     flex: 1,
   },
