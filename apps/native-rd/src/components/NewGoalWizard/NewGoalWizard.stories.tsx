@@ -1,8 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import React, { useState } from "react";
-import { useWindowDimensions, View } from "react-native";
+import { Text, useWindowDimensions, View } from "react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
-import { NewGoalWizard } from "./NewGoalWizard";
+import {
+  NewGoalWizard,
+  type BuildStep as BuildStepData,
+  type NewGoalWizardStep,
+} from "./NewGoalWizard";
 import { EvidenceType } from "../../db";
 import type { EvidenceTypeValue } from "../../types/evidence";
 
@@ -142,5 +146,192 @@ export const ReadyStep: Story = {
         onStartWorking={noop}
       />
     </PhoneStage>
+  ),
+};
+
+// The prototype's own initNG() seed — two steps, distinct evidence types
+// ("Sand the edges"/Note, "Paint it"/Photo) so both chips render differently.
+const SAMPLE_BUILD_STEPS: BuildStepData[] = [
+  { id: "step-1", title: "Sand the edges", evidenceType: EvidenceType.text },
+  { id: "step-2", title: "Paint it", evidenceType: EvidenceType.photo },
+];
+
+// Appends the prototype's default new row ({ "New step", Note }). The id stays
+// unique via list length — these stories only grow the list (no removal).
+function appendBuildStep(steps: BuildStepData[]): BuildStepData[] {
+  return [
+    ...steps,
+    {
+      id: `step-${steps.length + 1}`,
+      title: "New step",
+      evidenceType: EvidenceType.text,
+    },
+  ];
+}
+
+function updateBuildStepEvidence(
+  steps: BuildStepData[],
+  id: string,
+  type: EvidenceTypeValue,
+): BuildStepData[] {
+  return steps.map((step) =>
+    step.id === id ? { ...step, evidenceType: type } : step,
+  );
+}
+
+/**
+ * Stateful wrapper for step 3 (mirrors InteractiveStep2): the story owns the
+ * build-step list and which row's evidence picker is open. Seeded with the
+ * prototype's own sample steps so the story matches the canonical mock exactly.
+ * Adding a row appends "New step"/Note; each row's chip opens the shared
+ * capture sheet targeted at that row and updates only that row's type.
+ */
+function InteractiveBuildStep() {
+  const [buildSteps, setBuildSteps] =
+    useState<BuildStepData[]>(SAMPLE_BUILD_STEPS);
+  const [openBuildStepEvidenceId, setOpenBuildStepEvidenceId] = useState<
+    string | null
+  >(null);
+  return (
+    <PhoneStage>
+      <NewGoalWizard
+        currentStep="build"
+        goalTitle="Build a birdhouse"
+        onGoalTitleChange={noop}
+        stepCount={buildSteps.length}
+        onBack={noop}
+        onClose={noop}
+        onNext={noop}
+        onQuickAdd={noop}
+        onStartWorking={noop}
+        buildSteps={buildSteps}
+        onAddStep={() => setBuildSteps(appendBuildStep)}
+        openBuildStepEvidenceId={openBuildStepEvidenceId}
+        onOpenBuildStepEvidence={setOpenBuildStepEvidenceId}
+        onCloseBuildStepEvidence={() => setOpenBuildStepEvidenceId(null)}
+        onBuildStepEvidenceTypeChange={(id, type) =>
+          setBuildSteps((prev) => updateBuildStepEvidence(prev, id, type))
+        }
+      />
+    </PhoneStage>
+  );
+}
+
+export const BuildStep: Story = {
+  render: () => <InteractiveBuildStep />,
+};
+
+const FLOW_ORDER: NewGoalWizardStep[] = ["name", "step", "build", "ready"];
+
+/**
+ * End-to-end flow: the wizard owns every step's state and advances through
+ * name → first step → build → ready with real data carried forward. The goal
+ * title (step 1) and first-step title/evidence (step 2) reappear on the build
+ * list (row 1) and the ready summary card — the story-level bridge D2 defers to
+ * [Integrate] (#444) for real Evolu data. Quick-add jumps straight to build
+ * (matching the prototype), seeding row 1 the same way.
+ */
+function InteractiveFlowWizard() {
+  const [currentStep, setCurrentStep] = useState<NewGoalWizardStep>("name");
+  const [goalTitle, setGoalTitle] = useState("");
+  const [firstStepTitle, setFirstStepTitle] = useState("");
+  const [plannedEvidenceType, setPlannedEvidenceType] =
+    useState<EvidenceTypeValue>(EvidenceType.text);
+  const [evidencePickerOpen, setEvidencePickerOpen] = useState(false);
+  const [buildSteps, setBuildSteps] = useState<BuildStepData[]>([]);
+  const [openBuildStepEvidenceId, setOpenBuildStepEvidenceId] = useState<
+    string | null
+  >(null);
+
+  // Seed row 1 from the first-step data on first arrival at build (D2 bridge).
+  const goToBuild = () => {
+    setBuildSteps((prev) =>
+      prev.length > 0
+        ? prev
+        : [
+            {
+              id: "step-1",
+              title: firstStepTitle.trim() || "Your first step",
+              evidenceType: plannedEvidenceType,
+            },
+          ],
+    );
+    setCurrentStep("build");
+  };
+
+  const handleNext = () => {
+    const next = FLOW_ORDER[FLOW_ORDER.indexOf(currentStep) + 1];
+    if (next === "build") goToBuild();
+    else if (next) setCurrentStep(next);
+  };
+
+  const handleBack = () => {
+    const prev = FLOW_ORDER[FLOW_ORDER.indexOf(currentStep) - 1];
+    if (prev) setCurrentStep(prev);
+  };
+
+  return (
+    <PhoneStage>
+      <NewGoalWizard
+        currentStep={currentStep}
+        goalTitle={goalTitle}
+        onGoalTitleChange={setGoalTitle}
+        stepCount={buildSteps.length}
+        onBack={handleBack}
+        onClose={noop}
+        onNext={handleNext}
+        onQuickAdd={goToBuild}
+        onStartWorking={noop}
+        firstStepTitle={firstStepTitle}
+        onFirstStepTitleChange={setFirstStepTitle}
+        plannedEvidenceType={plannedEvidenceType}
+        onPlannedEvidenceTypeChange={setPlannedEvidenceType}
+        evidencePickerOpen={evidencePickerOpen}
+        onOpenEvidencePicker={() => setEvidencePickerOpen(true)}
+        onCloseEvidencePicker={() => setEvidencePickerOpen(false)}
+        buildSteps={buildSteps}
+        onAddStep={() => setBuildSteps(appendBuildStep)}
+        openBuildStepEvidenceId={openBuildStepEvidenceId}
+        onOpenBuildStepEvidence={setOpenBuildStepEvidenceId}
+        onCloseBuildStepEvidence={() => setOpenBuildStepEvidenceId(null)}
+        onBuildStepEvidenceTypeChange={(id, type) =>
+          setBuildSteps((prev) => updateBuildStepEvidence(prev, id, type))
+        }
+      />
+    </PhoneStage>
+  );
+}
+
+export const InteractiveFlow: Story = {
+  render: () => <InteractiveFlowWizard />,
+};
+
+/**
+ * NewGoalWizard in the active theme — reviewed across themes via the Storybook
+ * theme toolbar (top bar), NOT a live per-cell matrix.
+ *
+ * Why no 7-cell `<ScopedTheme>` matrix like the prop-driven siblings? The
+ * wizard composes EvidenceTypePicker, whose `useAnimationPref` probe resolves
+ * async and `setState`s after mount. On web, `<ScopedTheme>` applies the scoped
+ * theme only during the initial render pass; that post-mount re-render
+ * recomputes styles against the *active* theme, so every cell would silently
+ * revert to the toolbar theme (a "null matrix"). The component honours the
+ * active theme correctly, so the toolbar switcher is the reliable way to review
+ * all 7 product themes here — the EditGoalView/TimelineStep/BadgesWall
+ * treatment. The build step is the richest (header, rows, chips, CTA), so it's
+ * the one rendered.
+ */
+export const AllThemesMatrix: Story = {
+  render: () => (
+    <View style={{ gap: 12 }}>
+      <Text style={{ fontSize: 12, fontStyle: "italic", padding: 12 }}>
+        Switch the theme toolbar (top bar) to review this screen across all 7
+        product themes. A live per-cell matrix can’t work here: NewGoalWizard
+        composes EvidenceTypePicker, whose animation-pref probe resolves async
+        and re-renders after mount, and on web that reverts a ScopedTheme cell
+        to the active theme.
+      </Text>
+      <InteractiveBuildStep />
+    </View>
   ),
 };
