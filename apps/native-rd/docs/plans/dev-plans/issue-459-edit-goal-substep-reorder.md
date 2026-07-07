@@ -9,13 +9,13 @@
 
 ## Intent Verification
 
-- [ ] Long-pressing and dragging a sub-step row (`≡` handle) reorders it among its own parent's sub-steps only; siblings under a different parent, and the parent step itself, never move.
-- [ ] `EditGoalView` fires `onReorderSubSteps(parentStepId, orderedSubStepIds)` with the new sibling order on drop — never `onReorderSteps` (the top-level callback).
-- [ ] With a screen reader on or "reduced motion" set, each sub-step row shows ↑/↓ buttons that reorder it within its parent and announce the move (`AccessibilityInfo.announceForAccessibility`), exactly like the parent rows' existing fallback.
-- [ ] A parent with exactly one sub-step shows no ↑/↓ buttons (both `isFirst`/`isLast`) and no functional drag (mirrors the top-level `canDrag = steps.length > 1` rule).
-- [ ] Long-pressing inside a parent card's sub-step block never also triggers the parent row's own drag (no double-fire from the nested `GestureDetector`s).
-- [ ] The `↳` glyph is gone from sub-step rows; `≡` renders in its place and is hidden from screen readers (`accessibilityElementsHidden`), matching the parent row's handle.
-- [ ] `reorderStepIds` (from `useEditGoalDrag`) is exercised against a sub-step id array by the new code path — no new pure-reorder function is introduced.
+- [x] Long-pressing and dragging a sub-step row (`≡` handle) reorders it among its own parent's sub-steps only; siblings under a different parent, and the parent step itself, never move. _(Per-parent `useEditGoalDrag` instance; scoping guarded by the two-parent unit test + Storybook eyeball for the drag gesture itself, which is mocked in Node.)_
+- [x] `EditGoalView` fires `onReorderSubSteps(parentStepId, orderedSubStepIds)` with the new sibling order on drop — never `onReorderSteps` (the top-level callback). _(Unit-tested.)_
+- [x] With a screen reader on or "reduced motion" set, each sub-step row shows ↑/↓ buttons that reorder it within its parent and announce the move (`AccessibilityInfo.announceForAccessibility`), exactly like the parent rows' existing fallback. _(Unit-tested.)_
+- [x] A parent with exactly one sub-step shows no ↑/↓ buttons (both `isFirst`/`isLast`) and no functional drag (mirrors the top-level `canDrag = steps.length > 1` rule). _(Unit-tested.)_
+- [x] Long-pressing inside a parent card's sub-step block never also triggers the parent row's own drag (no double-fire from the nested `GestureDetector`s). _(Step 1 structural fix — gesture scoped to the row body; verify in Storybook, not unit-testable with gestures mocked.)_
+- [x] The `↳` glyph is gone from sub-step rows; `≡` renders in its place and is hidden from screen readers (`accessibilityElementsHidden`), matching the parent row's handle. _(Unit-tested.)_
+- [x] `reorderStepIds` (from `useEditGoalDrag`) is exercised against a sub-step id array by the new code path — no new pure-reorder function is introduced. _(Same hook reused per-parent.)_
 
 ## Dependencies
 
@@ -110,12 +110,12 @@ The feature is almost entirely assembled from existing, already-tested parts —
 **Commit**: `test(edit-goal): cover sub-step reorder, ↑/↓ fallback, and parent scoping`
 **Changes**:
 
-- [ ] Extend the `withSub` fixture (or add a second fixture) with a parent carrying ≥2 sub-steps to exercise reorder, plus keep a 1-sub-step parent to assert the fallback is absent there.
-- [ ] `≡` renders (not `↳`) on sub-step rows and is `accessibilityElementsHidden`.
-- [ ] With `mockAnimationPref = "none"`: ↑/↓ buttons appear on a parent's 2+ sub-steps, absent on a parent's lone sub-step (both `isFirst`/`isLast`).
-- [ ] Pressing a sub-step's ↓ fallback calls `onReorderSubSteps(parentStepId, orderedIds)` with the new sibling order — and does **not** call `onReorderSteps`.
-- [ ] Announces the reorder via `AccessibilityInfo.announceForAccessibility` with the sub-step's title (default English builder), mirroring the existing parent-row assertions.
-- [ ] Two parents each with 2 sub-steps: reordering one parent's sub-steps only calls `onReorderSubSteps` with that parent's id and that parent's ids — the other parent's list is untouched (scoping regression guard).
+- [x] Extend the `withSub` fixture (or add a second fixture) with a parent carrying ≥2 sub-steps to exercise reorder, plus keep a 1-sub-step parent to assert the fallback is absent there. _(Added `withMultiSub`: Parent A 3 sub-steps, Parent B 2; `withSub` covers the lone-sub-step fallback-absent case.)_
+- [x] `≡` renders (not `↳`) on sub-step rows and is `accessibilityElementsHidden`.
+- [x] With `mockAnimationPref = "none"`: ↑/↓ buttons appear on a parent's 2+ sub-steps, absent on a parent's lone sub-step (both `isFirst`/`isLast`).
+- [x] Pressing a sub-step's ↓ fallback calls `onReorderSubSteps(parentStepId, orderedIds)` with the new sibling order — and does **not** call `onReorderSteps`.
+- [x] Announces the reorder via `AccessibilityInfo.announceForAccessibility` with the sub-step's title (default English builder), mirroring the existing parent-row assertions.
+- [x] Two parents each with 2 sub-steps: reordering one parent's sub-steps only calls `onReorderSubSteps` with that parent's id and that parent's ids — the other parent's list is untouched (scoping regression guard).
 
 ### Step 5: Storybook
 
@@ -123,9 +123,9 @@ The feature is almost entirely assembled from existing, already-tested parts —
 **Commit**: `docs(edit-goal): wire sub-step reorder into the Storybook interactive story`
 **Changes**:
 
-- [ ] `InteractiveEditGoal`: add a `reorderSubSteps(parentStepId, orderedIds)` handler (mirrors `reorder` but scoped to `s.id === parentStepId`'s `subSteps`) and pass it as `onReorderSubSteps`.
-- [ ] Update the `SubSteps` story's note — remove "no drag handle on sub-steps yet"; mention long-press-and-drag now works within a parent, plus the ↑/↓ fallback.
-- [ ] Give `initialSteps`'s `s1` a third sub-step (currently 2) so the reorder interaction has a non-trivial middle position to verify. (Confirmed in scope — a middle position is needed to prove reorder-to-middle, not just swap.)
+- [x] `InteractiveEditGoal`: add a `reorderSubSteps(parentStepId, orderedIds)` handler (mirrors `reorder` but scoped to `s.id === parentStepId`'s `subSteps`) and pass it as `onReorderSubSteps`. _(Landed in the feat commit; verified present.)_
+- [x] Update the `SubSteps` story's note — remove "no drag handle on sub-steps yet"; mention long-press-and-drag now works within a parent, plus the ↑/↓ fallback.
+- [x] Give `initialSteps`'s `s1` a third sub-step (currently 2) so the reorder interaction has a non-trivial middle position to verify. _(Added `s1c` "Note gaps to research".)_
 
 ## Testing Strategy
 
@@ -151,12 +151,12 @@ The feature is almost entirely assembled from existing, already-tested parts —
 
 ## Progress & Resume (for a fresh context)
 
-**Branch:** `feat/issue-459-reorder-smaller-steps` — 2 commits so far, both green (type-check + lint + `EditGoalView` tests, 39 passing), DCO-signed, **not yet pushed**.
+**Branch:** `feat/issue-459-reorder-smaller-steps` — all 5 steps landed, DCO-signed. Full suite green: `type-check` ✅, `lint` ✅ (only pre-existing warnings in untouched files), `test` ✅ (204 suites / 9777 tests). Ready for `/finalize` (push + PR).
 
 - ✅ **Step 1** — `refactor(edit-goal): scope step row's drag gesture to the row body only` (SHA 668832ea). `GestureDetector` now wraps only the row body; `children` (sub-step block) stays inside the transformed `Animated.View` but outside the detector (D1).
 - ✅ **Steps 2 + 3** — `feat(edit-goal): add per-parent sub-step reorder …` (SHA 2c694373). Row drag handle + ↑/↓ fallback, `EditGoalSubStepList`, `onReorderSubSteps` prop, styles, hook doc. See Discovery Log for why they merged.
-- ⬜ **Step 4 — Tests.** Add to `EditGoalView.test.tsx` (mock for `react-native-gesture-handler` already stubs `Gesture`/`GestureDetector`, so ↑/↓-fallback + `onReorderSubSteps` assertions work in Node; drag gestures themselves aren't exercised). Cases from the plan: `≡` (not `↳`) renders on sub-step rows and is `accessibilityElementsHidden`; with `mockAnimationPref="none"` the ↑/↓ buttons appear on a 2+-sub-step parent and are absent on a lone sub-step; pressing a sub-step ↓ calls `onReorderSubSteps(parentId, orderedIds)` and **not** `onReorderSteps`; announce via `AccessibilityInfo.announceForAccessibility`; two-parent scoping guard (reordering one parent leaves the other's ids untouched). Extend the existing `withSub` fixture with a parent carrying ≥2 sub-steps; keep the 1-sub-step parent for the absent-fallback assertion. TestIDs available: `edit-goal-substep-up-<id>` / `edit-goal-substep-down-<id>`. Commit: `test(edit-goal): cover sub-step reorder, ↑/↓ fallback, and parent scoping`.
-- ⬜ **Step 5 — Storybook enrichment.** The `reorderSubSteps` handler + `onReorderSubSteps` wiring already exist in `InteractiveEditGoal` (landed in the feat commit). Remaining: (a) update the `SubSteps` story note — remove "no drag handle on sub-steps yet", mention long-press-drag within a parent + the ↑/↓ fallback; (b) give `initialSteps`'s `s1` a **third** sub-step so reorder-to-middle is verifiable. Commit: `docs(edit-goal): wire sub-step reorder into the Storybook interactive story`.
-- ⬜ **Final validation** — full `bun run type-check` / `bun run lint` / `bun run test` / `bun run build` (build is a no-op), then verify the Intent Verification checklist above, then `/finalize` (push + PR). Run tests with `bun run test --testPathPatterns EditGoalView` — **never** `bun test` / `npx jest`.
+- ✅ **Step 4 — Tests** — `test(edit-goal): cover sub-step reorder, ↑/↓ fallback, and parent scoping` (SHA 3b319d1b). Added `withMultiSub` fixture (Parent A 3 sub-steps / Parent B 2) + a `sub-step reorder (#459)` describe block: `≡`-not-`↳` + hidden handle, ↑/↓ presence on 2+ and absence on the lone sub-step, `onReorderSubSteps` fired (not `onReorderSteps`), announce, and the two-parent scoping guard. 6 new cases (39 → 45 in the file).
+- ✅ **Step 5 — Storybook** — `docs(edit-goal): wire sub-step reorder into the Storybook interactive story` (SHA 37af6d64). Rewrote the `SubSteps` note (drag + ↑/↓ fallback) and added a third sub-step `s1c` so reorder-to-middle is demonstrable. `reorderSubSteps` handler was already present from the feat commit.
+- ⬜ **Final validation & PR** — local gates all green (above). Remaining: `/finalize` (push + PR). Manual Storybook eyeball still worth doing for the two gesture-only intent items (drag stays within parent; parent card doesn't co-drag) and the `subStepRowDragging` border note below — gestures are mocked in Node so those aren't unit-covered.
 
 **Open verification note for reviewers:** `subStepRowDragging` adds a `borderWidth.thick` accentPrimary border only while a row is lifted (the bare `subStepRow` has none to swap, unlike the parent's always-bordered `rowCard`). This nudges row content inward by the border width for the duration of the drag — acceptable since the row is simultaneously lifted/scaled/`zIndex`-raised, but worth an eyeball in Storybook (`SubSteps` / `AllThemesMatrix`) before PR.
