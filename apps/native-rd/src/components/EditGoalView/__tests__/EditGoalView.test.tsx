@@ -67,6 +67,7 @@ function makeProps(overrides?: Partial<EditGoalViewProps>): EditGoalViewProps {
     onGoalTitleChange: jest.fn(),
     steps: baseSteps,
     onReorderSteps: jest.fn(),
+    onReorderSubSteps: jest.fn(),
     onAddStep: jest.fn(),
     onStepTitleChange: jest.fn(),
     onStepEvidenceChange: jest.fn(),

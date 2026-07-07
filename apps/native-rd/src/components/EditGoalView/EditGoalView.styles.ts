@@ -189,6 +189,9 @@ export const styles = StyleSheet.create((theme) => ({
   // Indented, mint-railed block under a parent step that has some. accentMint is
   // the token nearest the prototype's #d4f4e7 rail (the Badges mint family).
   subStepBlock: {
+    // position: relative anchors the per-parent drop-line (#459), which is
+    // absolutely positioned among the sub-step rows it shares this box with.
+    position: "relative" as const,
     marginTop: theme.space[2],
     paddingLeft: theme.space[3],
     borderLeftWidth: theme.borderWidth.thick,
@@ -200,8 +203,16 @@ export const styles = StyleSheet.create((theme) => ({
     alignItems: "center" as const,
     gap: theme.space[2],
   },
+  // Lifted-row accent while dragging (#459, D3). A bare subStepRow has no border
+  // to swap (unlike the parent's rowCard → rowCardDragging), so add the same
+  // accentPrimary border here — tokens only, mirroring the parent's accent.
+  subStepRowDragging: {
+    borderWidth: theme.borderWidth.thick,
+    borderColor: theme.colors.accentPrimary,
+    borderRadius: theme.radius.sm,
+  },
   subStepMarker: {
-    fontSize: theme.size.sm,
+    fontSize: theme.size.md,
     color: theme.colors.textMuted,
   },
   subStepTitlePress: {

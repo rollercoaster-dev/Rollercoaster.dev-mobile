@@ -43,7 +43,7 @@ import type { EvidenceTypeValue } from "../../types/evidence";
 import type { DragScrollController } from "../StepList/dragAutoScroll";
 import { ConfirmDeleteModal } from "../ConfirmDeleteModal";
 import { EditGoalStepRow } from "./EditGoalStepRow";
-import { EditGoalSubStepRow } from "./EditGoalSubStepRow";
+import { EditGoalSubStepList } from "./EditGoalSubStepList";
 import { useEditGoalDrag } from "./useEditGoalDrag";
 import { styles } from "./EditGoalView.styles";
 
@@ -104,6 +104,14 @@ export interface EditGoalViewProps {
   steps: EditGoalStep[];
   /** Fired on drop with the full new step order. Not wired to persistence. */
   onReorderSteps: (orderedStepIds: string[]) => void;
+  /**
+   * Fired on drop / ↑↓ with a parent's new sub-step order (#459). Scoped to one
+   * parent — siblings under other parents never move. Not wired to persistence.
+   */
+  onReorderSubSteps: (
+    parentStepId: string,
+    orderedSubStepIds: string[],
+  ) => void;
   onAddStep: (title: string) => void;
   onStepTitleChange: (stepId: string, title: string) => void;
   /** Fired when the row's evidence picker toggles a step's planned types (D8). */
@@ -196,6 +204,7 @@ export function EditGoalView({
   onDescriptionChange,
   steps,
   onReorderSteps,
+  onReorderSubSteps,
   onAddStep,
   onStepTitleChange,
   onStepEvidenceChange,
@@ -390,25 +399,27 @@ export function EditGoalView({
     }
     return (
       <View style={styles.subStepBlock}>
-        {subs.map((sub) => (
-          <EditGoalSubStepRow
-            key={sub.id}
-            subStep={sub}
-            isEditing={editingId === sub.id}
-            editText={editText}
-            onEditTextChange={setEditText}
-            onStartEditing={() => beginEdit(sub.id, sub.title)}
-            onCommitEditing={commitEditing}
-            onEvidenceChipPress={() => setEditingEvidenceId(sub.id)}
-            onDelete={() =>
-              setPendingDelete({
-                kind: "subStep",
-                id: sub.id,
-                title: sub.title,
-              })
-            }
-          />
-        ))}
+        <EditGoalSubStepList
+          subSteps={subs}
+          onReorder={(ids) => onReorderSubSteps(step.id, ids)}
+          editingId={editingId}
+          editText={editText}
+          onEditTextChange={setEditText}
+          onStartEditing={(id, title) => beginEdit(id, title)}
+          onCommitEditing={commitEditing}
+          onEvidenceChipPress={(id) => setEditingEvidenceId(id)}
+          onDelete={(id) =>
+            setPendingDelete({
+              kind: "subStep",
+              id,
+              title: subs.find((s) => s.id === id)?.title ?? "",
+            })
+          }
+          showAccessibleControls={showAccessibleControls}
+          animationPref={animationPref}
+          dragScrollController={dragScrollController}
+          announceReorder={announceReorder}
+        />
         <Pressable
           style={styles.addSubStepRow}
           onPress={() => handleAddSubStep(step.id)}
