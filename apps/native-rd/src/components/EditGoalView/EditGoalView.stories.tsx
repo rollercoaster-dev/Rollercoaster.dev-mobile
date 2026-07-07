@@ -3,7 +3,11 @@ import React, { useRef, useState } from "react";
 import { View } from "react-native";
 import { EvidenceType } from "../../db";
 import type { EvidenceTypeValue } from "../../types/evidence";
-import { EditGoalView, type EditGoalStep } from "./EditGoalView";
+import {
+  EditGoalView,
+  type EditGoalStep,
+  type EditGoalSubStep,
+} from "./EditGoalView";
 import { EditGoalStepRow } from "./EditGoalStepRow";
 import { EditGoalOverflowMenu } from "./EditGoalOverflowMenu";
 import { Text } from "../Text";
@@ -38,6 +42,11 @@ const initialSteps: EditGoalStep[] = [
         id: "s1b",
         title: "Order them",
         plannedEvidenceTypes: [EvidenceType.photo],
+      },
+      {
+        id: "s1c",
+        title: "Note gaps to research",
+        plannedEvidenceTypes: [EvidenceType.text],
       },
     ],
   },
@@ -84,6 +93,21 @@ function InteractiveEditGoal({ note }: { note?: string }) {
       orderedIds
         .map((id) => prev.find((s) => s.id === id))
         .filter((s): s is EditGoalStep => s !== undefined),
+    );
+  }
+
+  function reorderSubSteps(parentStepId: string, orderedIds: string[]) {
+    setSteps((prev) =>
+      prev.map((s) =>
+        s.id === parentStepId
+          ? {
+              ...s,
+              subSteps: orderedIds
+                .map((id) => s.subSteps?.find((ss) => ss.id === id))
+                .filter((ss): ss is EditGoalSubStep => ss !== undefined),
+            }
+          : s,
+      ),
     );
   }
 
@@ -176,6 +200,7 @@ function InteractiveEditGoal({ note }: { note?: string }) {
         onGoalTitleChange={setGoalTitle}
         steps={steps}
         onReorderSteps={reorder}
+        onReorderSubSteps={reorderSubSteps}
         onAddStep={addStep}
         onStepTitleChange={renameStep}
         onStepEvidenceChange={changeEvidence}
@@ -210,7 +235,7 @@ export const EvidencePickerInteraction: Story = {
 
 export const SubSteps: Story = {
   render: () => (
-    <InteractiveEditGoal note='Step 1 is broken into sub-steps (the indented mint-rail block): tap a sub-step to rename it, tap its chip to set evidence, × to remove it, or "add a sub-step" for another. Steps with none show "break into sub-steps" — tap it to seed the first one. Each sub-step requires its own evidence. (Reorder within a parent is a follow-up — no drag handle on sub-steps yet.)' />
+    <InteractiveEditGoal note='Step 1 is broken into three sub-steps (the indented mint-rail block): tap a sub-step to rename it, tap its chip to set evidence, × to remove it, or "add a sub-step" for another. Steps with none show "break into sub-steps" — tap it to seed the first one. Each sub-step requires its own evidence. Reorder within a parent: long-press a sub-step’s ≡ handle and drag it among its siblings (it never leaves its parent, and the parent card itself does not drag). With a screen reader on or reduced motion set, ↑/↓ buttons appear on each sub-step as the accessible fallback.' />
   ),
 };
 
@@ -297,6 +322,7 @@ function MatrixEditGoal() {
       onGoalTitleChange={noop}
       steps={initialSteps}
       onReorderSteps={noop}
+      onReorderSubSteps={noop}
       onAddStep={noop}
       onStepTitleChange={noop}
       onStepEvidenceChange={noop}

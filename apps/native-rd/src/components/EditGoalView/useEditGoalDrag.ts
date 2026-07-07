@@ -7,6 +7,11 @@
  * functions). Deliberately has no substep / nesting / dwell concept — every
  * step is a top-level sibling. Extracted from the view so the reorder logic
  * stays independently testable (`reorderStepIds`) and the component readable.
+ *
+ * Since #459 this hook is also instantiated per-parent by EditGoalSubStepList
+ * to reorder that parent's sub-step siblings — the `{ id, title }[]` shape is
+ * already generic, so each instance is just another flat sibling list. No
+ * top-level-only assumptions; no functional change was needed for that reuse.
  */
 import { useEffect, useRef, useState } from "react";
 import { AccessibilityInfo } from "react-native";
