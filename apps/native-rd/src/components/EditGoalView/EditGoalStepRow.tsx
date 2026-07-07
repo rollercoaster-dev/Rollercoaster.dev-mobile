@@ -69,6 +69,8 @@ export interface EditGoalStepRowProps {
   isLast: boolean;
   /** When false, the row renders static (single step, or a title is being edited). */
   canDrag: boolean;
+  /** Signal intent to delete this step (D1) — opens the confirm modal in the view. */
+  onDelete: () => void;
   /** Rendered inside the card below the row — the sub-steps block (D12). */
   children?: React.ReactNode;
 
@@ -83,6 +85,8 @@ export interface EditGoalStepRowProps {
   moveUpLabel?: (stepTitle: string) => string;
   /** a11y label for the ↓ reorder-down fallback button. */
   moveDownLabel?: (stepTitle: string) => string;
+  /** a11y label for the × delete affordance. */
+  deleteStepLabel?: (stepTitle: string) => string;
 }
 
 export function EditGoalStepRow({
@@ -107,12 +111,14 @@ export function EditGoalStepRow({
   isFirst,
   isLast,
   canDrag,
+  onDelete,
   children,
   editStepA11yLabel = (stepTitle) => `Edit step: ${stepTitle}`,
   tapToEditHint = "Tap to edit step title",
   editEvidenceLabel = "Edit planned evidence",
   moveUpLabel = (stepTitle) => `Move "${stepTitle}" up`,
   moveDownLabel = (stepTitle) => `Move "${stepTitle}" down`,
+  deleteStepLabel = (stepTitle) => `Delete step: ${stepTitle}`,
 }: EditGoalStepRowProps) {
   const { theme } = useUnistyles();
   const translateY = useSharedValue(0);
@@ -250,6 +256,16 @@ export function EditGoalStepRow({
             )}
           </View>
         )}
+        <Pressable
+          style={styles.stepDelete}
+          onPress={onDelete}
+          accessibilityRole="button"
+          accessibilityLabel={deleteStepLabel(step.title)}
+          hitSlop={8}
+          testID={`edit-goal-step-delete-${step.id}`}
+        >
+          <RNText style={styles.stepDeleteGlyph}>{"×"}</RNText>
+        </Pressable>
       </View>
       {step.dateDepChips && step.dateDepChips.length > 0 && (
         <View style={styles.chipRow}>

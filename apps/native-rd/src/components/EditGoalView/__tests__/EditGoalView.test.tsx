@@ -74,6 +74,7 @@ function makeProps(overrides?: Partial<EditGoalViewProps>): EditGoalViewProps {
     onSubStepTitleChange: jest.fn(),
     onSubStepEvidenceChange: jest.fn(),
     onDeleteSubStep: jest.fn(),
+    onDeleteStep: jest.fn(),
     onOverflowPress: jest.fn(),
     onBack: jest.fn(),
     onDone: jest.fn(),
@@ -304,13 +305,35 @@ describe("EditGoalView", () => {
       expect(onAddSubStep).toHaveBeenCalledWith("s1", "New sub-step");
     });
 
-    it("deletes a sub-step via its × button", () => {
+    it("deletes a sub-step via its × button after confirming (#460)", () => {
       const onDeleteSubStep = jest.fn();
       renderWithProviders(
         <EditGoalView {...makeProps({ steps: withSub, onDeleteSubStep })} />,
       );
       fireEvent.press(screen.getByTestId("edit-goal-substep-delete-sub1"));
+      // The × now opens the confirm modal rather than deleting immediately.
+      expect(screen.getByText("Delete sub-step?")).toBeOnTheScreen();
+      // Locks the message ternary to the sub-step branch (title interpolated,
+      // no "and any sub-steps" clause) — guards against a message swap.
+      expect(
+        screen.getByText(
+          'Delete "Sub-step"? Its evidence will be removed too.',
+        ),
+      ).toBeOnTheScreen();
+      expect(onDeleteSubStep).not.toHaveBeenCalled();
+      fireEvent.press(screen.getByText("Delete"));
       expect(onDeleteSubStep).toHaveBeenCalledWith("sub1");
+    });
+
+    it("does not delete a sub-step when the confirm is cancelled (#460)", () => {
+      const onDeleteSubStep = jest.fn();
+      renderWithProviders(
+        <EditGoalView {...makeProps({ steps: withSub, onDeleteSubStep })} />,
+      );
+      fireEvent.press(screen.getByTestId("edit-goal-substep-delete-sub1"));
+      fireEvent.press(screen.getByText("Cancel"));
+      expect(onDeleteSubStep).not.toHaveBeenCalled();
+      expect(screen.queryByText("Delete sub-step?")).toBeNull();
     });
 
     it("renames a sub-step through inline edit", () => {
@@ -368,6 +391,60 @@ describe("EditGoalView", () => {
       const del = screen.getByTestId("edit-goal-substep-delete-sub1");
       expect(del.props.accessibilityRole).toBe("button");
       expect(del.props.accessibilityLabel).toBe("Delete sub-step: Sub-step");
+    });
+  });
+
+  describe("step delete (#460)", () => {
+    it("renders a × delete affordance on each main step row", () => {
+      renderWithProviders(<EditGoalView {...makeProps()} />);
+      expect(screen.getByTestId("edit-goal-step-delete-s1")).toBeOnTheScreen();
+      expect(screen.getByTestId("edit-goal-step-delete-s2")).toBeOnTheScreen();
+    });
+
+    it("opens the confirm modal on × press without deleting immediately", () => {
+      const onDeleteStep = jest.fn();
+      renderWithProviders(<EditGoalView {...makeProps({ onDeleteStep })} />);
+      fireEvent.press(screen.getByTestId("edit-goal-step-delete-s1"));
+      expect(screen.getByText("Delete step?")).toBeOnTheScreen();
+      // Locks the message ternary to the step branch (title interpolated,
+      // "and any sub-steps" clause present) — guards against a message swap.
+      expect(
+        screen.getByText(
+          'Delete "First step"? Its evidence and any sub-steps will be removed too.',
+        ),
+      ).toBeOnTheScreen();
+      expect(onDeleteStep).not.toHaveBeenCalled();
+    });
+
+    it("calls onDeleteStep with the step id on Confirm", () => {
+      const onDeleteStep = jest.fn();
+      renderWithProviders(<EditGoalView {...makeProps({ onDeleteStep })} />);
+      fireEvent.press(screen.getByTestId("edit-goal-step-delete-s1"));
+      fireEvent.press(screen.getByText("Delete"));
+      expect(onDeleteStep).toHaveBeenCalledWith("s1");
+    });
+
+    it("does not call onDeleteStep when the confirm is cancelled", () => {
+      const onDeleteStep = jest.fn();
+      renderWithProviders(<EditGoalView {...makeProps({ onDeleteStep })} />);
+      fireEvent.press(screen.getByTestId("edit-goal-step-delete-s1"));
+      fireEvent.press(screen.getByText("Cancel"));
+      expect(onDeleteStep).not.toHaveBeenCalled();
+      expect(screen.queryByText("Delete step?")).toBeNull();
+    });
+
+    it("exposes the × as a labelled button", () => {
+      renderWithProviders(<EditGoalView {...makeProps()} />);
+      const del = screen.getByTestId("edit-goal-step-delete-s1");
+      expect(del.props.accessibilityRole).toBe("button");
+      expect(del.props.accessibilityLabel).toBe("Delete step: First step");
+    });
+
+    it("hides the × while the row is in inline-edit mode", () => {
+      renderWithProviders(<EditGoalView {...makeProps()} />);
+      fireEvent.press(screen.getByTestId("edit-goal-step-title-s1"));
+      expect(screen.getByTestId("edit-goal-step-edit-s1")).toBeOnTheScreen();
+      expect(screen.queryByTestId("edit-goal-step-delete-s1")).toBeNull();
     });
   });
 

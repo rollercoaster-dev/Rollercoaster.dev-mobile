@@ -42,7 +42,7 @@ import {
 } from "../../components/EvidenceDrawer";
 import { ModeIndicator } from "../../components/ModeIndicator";
 import { parsePlannedEvidenceTypes } from "../../utils/parsePlannedEvidenceTypes";
-import { ConfirmDeleteModal } from "../ConfirmDeleteModal";
+import { ConfirmDeleteModal } from "../../components/ConfirmDeleteModal";
 import {
   goalsQuery,
   stepsByGoalQuery,

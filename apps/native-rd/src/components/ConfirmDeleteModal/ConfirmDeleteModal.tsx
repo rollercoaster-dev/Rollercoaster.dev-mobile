@@ -3,9 +3,9 @@ import { View, Modal } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUnistyles } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
-import { Text } from "../../components/Text";
-import { Card } from "../../components/Card";
-import { Button } from "../../components/Button";
+import { Text } from "../Text";
+import { Card } from "../Card";
+import { Button } from "../Button";
 import { styles } from "./ConfirmDeleteModal.styles";
 
 export interface ConfirmDeleteModalProps {

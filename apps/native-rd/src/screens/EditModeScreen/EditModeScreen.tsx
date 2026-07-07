@@ -32,7 +32,7 @@ import {
   type DragScrollController,
   type DragScrollMetrics,
 } from "../../components/StepList";
-import { ConfirmDeleteModal } from "../ConfirmDeleteModal";
+import { ConfirmDeleteModal } from "../../components/ConfirmDeleteModal";
 import {
   goalsQuery,
   updateGoal,

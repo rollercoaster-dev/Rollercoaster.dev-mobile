@@ -6,10 +6,15 @@
  * step..." row, a dates/deps info banner, and a "Done" footer — with "Delete
  * goal" demoted into a ⋯ overflow menu (see EditGoalOverflowMenu).
  *
+ * Per-row deletion (#460): each step and sub-step carries a × that opens the
+ * shared ConfirmDeleteModal; onDeleteStep / onDeleteSubStep fire only on Confirm
+ * (D1). One modal instance, driven by local pendingDelete state (D2).
+ *
  * Pure, prop-driven, i18n-free (D9): all copy arrives as props with English
  * defaults; the future [Integrate] issue threads real t() output through them
- * and wires the callbacks to Evolu. Storybook-first, so every theme + the
- * reorder/evidence interactions can be verified before the screen is wired.
+ * and wires the callbacks (including goal-level delete confirm) to Evolu.
+ * Storybook-first, so every theme + the reorder/evidence/delete interactions can
+ * be verified before the screen is wired.
  * `grep -rn "EditGoalView" src/screens` stays empty until then.
  *
  * Drag orchestration lives in useEditGoalDrag; the row anatomy in
@@ -36,6 +41,7 @@ import { ScreenSubHeader } from "../ScreenHeader/ScreenSubHeader";
 import { EvidenceTypePicker } from "../EvidenceTypePicker";
 import type { EvidenceTypeValue } from "../../types/evidence";
 import type { DragScrollController } from "../StepList/dragAutoScroll";
+import { ConfirmDeleteModal } from "../ConfirmDeleteModal";
 import { EditGoalStepRow } from "./EditGoalStepRow";
 import { EditGoalSubStepRow } from "./EditGoalSubStepRow";
 import { useEditGoalDrag } from "./useEditGoalDrag";
@@ -115,6 +121,8 @@ export interface EditGoalViewProps {
     types: EvidenceTypeValue[],
   ) => void;
   onDeleteSubStep: (subStepId: string) => void;
+  /** Deletes a top-level step (#460). Fired only after the user confirms (D1). */
+  onDeleteStep: (stepId: string) => void;
   onOverflowPress: () => void;
   onBack: () => void;
   onDone: () => void;
@@ -164,6 +172,18 @@ export interface EditGoalViewProps {
    * N` inside {@link useEditGoalDrag}.
    */
   announceReorder?: (stepTitle: string, position: number) => string;
+
+  // --- Confirm-delete copy (D5; English defaults; [Integrate] passes t()).
+  // The modal's own Delete/Cancel button labels come from ConfirmDeleteModal's
+  // internal i18n — only the title + message are threaded here. ---
+  /** Confirm-modal title when deleting a step. */
+  deleteStepConfirmTitle?: string;
+  /** Confirm-modal message when deleting a step (receives the step title). */
+  deleteStepConfirmMessage?: (title: string) => string;
+  /** Confirm-modal title when deleting a sub-step. */
+  deleteSubStepConfirmTitle?: string;
+  /** Confirm-modal message when deleting a sub-step (receives the sub-step title). */
+  deleteSubStepConfirmMessage?: (title: string) => string;
 }
 
 const defaultStepCountLabel = (count: number) =>
@@ -183,6 +203,7 @@ export function EditGoalView({
   onSubStepTitleChange,
   onSubStepEvidenceChange,
   onDeleteSubStep,
+  onDeleteStep,
   onOverflowPress,
   onBack,
   onDone,
@@ -208,6 +229,12 @@ export function EditGoalView({
     `Break "${stepTitle}" into sub-steps`,
   addSubStepA11yLabel = (stepTitle) => `Add a sub-step to "${stepTitle}"`,
   announceReorder,
+  deleteStepConfirmTitle = "Delete step?",
+  deleteStepConfirmMessage = (title) =>
+    `Delete "${title}"? Its evidence and any sub-steps will be removed too.`,
+  deleteSubStepConfirmTitle = "Delete sub-step?",
+  deleteSubStepConfirmMessage = (title) =>
+    `Delete "${title}"? Its evidence will be removed too.`,
 }: EditGoalViewProps) {
   const { theme } = useUnistyles();
   const { animationPref } = useAnimationPref();
@@ -224,6 +251,13 @@ export function EditGoalView({
     null,
   );
   const [screenReaderActive, setScreenReaderActive] = useState(false);
+  // Which row-level delete is awaiting confirmation (#460, D1/D2). One modal
+  // instance below is driven by this; the rows only signal intent.
+  const [pendingDelete, setPendingDelete] = useState<{
+    kind: "step" | "subStep";
+    id: string;
+    title: string;
+  } | null>(null);
 
   const drag = useEditGoalDrag({
     steps,
@@ -366,7 +400,13 @@ export function EditGoalView({
             onStartEditing={() => beginEdit(sub.id, sub.title)}
             onCommitEditing={commitEditing}
             onEvidenceChipPress={() => setEditingEvidenceId(sub.id)}
-            onDelete={() => onDeleteSubStep(sub.id)}
+            onDelete={() =>
+              setPendingDelete({
+                kind: "subStep",
+                id: sub.id,
+                title: sub.title,
+              })
+            }
           />
         ))}
         <Pressable
@@ -488,6 +528,13 @@ export function EditGoalView({
                 isFirst={index === 0}
                 isLast={index === steps.length - 1}
                 canDrag={canDrag}
+                onDelete={() =>
+                  setPendingDelete({
+                    kind: "step",
+                    id: step.id,
+                    title: step.title,
+                  })
+                }
               >
                 {/* Sub-steps block (D12), rendered inside the parent card so
                     it drags with the parent. See renderSubStepBlock. */}
@@ -599,6 +646,37 @@ export function EditGoalView({
           </SafeAreaView>
         </View>
       </Modal>
+
+      {/* Confirm-delete modal (#460, D1/D2): one instance for both row-level
+          deletions. The main-step × and the sub-step × both open it via
+          pendingDelete; onDeleteStep / onDeleteSubStep fire only on Confirm.
+          The modal supplies its own themed, i18n-aware Delete/Cancel buttons. */}
+      <ConfirmDeleteModal
+        visible={pendingDelete !== null}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => {
+          if (pendingDelete) {
+            if (pendingDelete.kind === "step") {
+              onDeleteStep(pendingDelete.id);
+            } else {
+              onDeleteSubStep(pendingDelete.id);
+            }
+          }
+          setPendingDelete(null);
+        }}
+        title={
+          pendingDelete?.kind === "subStep"
+            ? deleteSubStepConfirmTitle
+            : deleteStepConfirmTitle
+        }
+        message={
+          pendingDelete
+            ? pendingDelete.kind === "subStep"
+              ? deleteSubStepConfirmMessage(pendingDelete.title)
+              : deleteStepConfirmMessage(pendingDelete.title)
+            : ""
+        }
+      />
     </View>
   );
 }

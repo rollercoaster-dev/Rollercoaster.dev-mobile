@@ -8,7 +8,7 @@ import { useQuery } from "@evolu/react";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { Text } from "../../components/Text";
-import { ConfirmDeleteModal } from "../ConfirmDeleteModal";
+import { ConfirmDeleteModal } from "../../components/ConfirmDeleteModal";
 import { Logger } from "../../shims/rd-logger";
 import {
   activeGoalsQuery,

@@ -26,7 +26,7 @@ import { GoalCard, type GoalCardGoal } from "../components/GoalCard";
 import { ProgressBar } from "../components/ProgressBar";
 import { Checkbox } from "../components/Checkbox";
 import { CollapsibleSection } from "../components/CollapsibleSection";
-import { ConfirmDeleteModal } from "../screens/ConfirmDeleteModal/ConfirmDeleteModal";
+import { ConfirmDeleteModal } from "../components/ConfirmDeleteModal/ConfirmDeleteModal";
 import { StepList, type Step } from "../components/StepList/StepList";
 import { MiniTimeline } from "../components/MiniTimeline/MiniTimeline";
 import {
