@@ -14,7 +14,7 @@
 - [ ] The goal title/summary text typed or seeded on the celebrate stage is reflected consistently in the design stage's header subtitle and the reveal stage's goal-title heading (same string, not independently hardcoded per stage).
 - [ ] A `LongContent` flow story seeds a long goal title + long closing note + a near-max-length bottom label once at the top of the flow, and every stage the flow passes through renders it without clipping (celebrate summary, design header subtitle + bottom-label input + live preview, reveal goal-title heading).
 - [ ] A `ReducedMotion` flow story passes `animationPref="none"` into the reveal stage and the badge appears at resting scale with no pop-in, matching `FinishRevealStage`'s existing `ReducedMotion` story behavior.
-- [ ] An `AllThemesMatrix` story shows `FinishDesignStage` (the `screenHeaderBg`/`Fg`/`Border` chrome) and `FinishRevealStage` (the `celebrationBg`/`Fg` chrome, #419's tokens) side by side across all 7 product themes via `ScopedTheme`, and neither stage's header/celebration text disappears into its own background in any theme (worst case checked visually: Still Water/autismFriendly's muted palette, Clean Signal/lowInfo's near-white).
+- [x] An `AllThemesMatrix` story shows `FinishDesignStage` (the `screenHeaderBg`/`Fg`/`Border` chrome) and `FinishRevealStage` (the `celebrationBg`/`Fg` chrome, #419's tokens) side by side across all 7 product themes via `ScopedTheme`, and neither stage's header/celebration text disappears into its own background in any theme (worst case checked visually: Still Water/autismFriendly's muted palette, Clean Signal/lowInfo's near-white).
 - [ ] `grep -rn "useCreateBadge\|bakePNG\|updateBadge\|updateGoal\|useNavigation" apps/native-rd/src/stories/finish` returns no matches — the flow harness stays presentational/local-state only.
 - [ ] `grep -n "#[0-9a-fA-F]\{3,6\}" apps/native-rd/src/stories/finish/*.tsx` returns no matches outside comments (goal-color fixture excluded per existing precedent in `FinishDesignStage.stories.tsx`/`FinishLine.stories.tsx`, which use an intentionally off-palette fixture hex the same way).
 
@@ -80,10 +80,12 @@ No `src/screens/` or navigation files are touched (screen wiring is #449's).
 **Commit**: `test(finish-flow): AllThemesMatrix for FinishDesignStage + FinishRevealStage chrome tokens`
 **Changes**:
 
-- [ ] Import `themeNames`, `themes`/`ScopedTheme` per the `BadgeWallCell.stories.tsx`/`TimelineNode.stories.tsx` precedent.
-- [ ] `AllThemesMatrix: Story` — horizontal `ScrollView`, one column per theme name (`MOOD_NAMES` label mapping mirrored from `FinishLine.stories.tsx`), each column stacking two `ScopedTheme`-wrapped, `height: 640` cells: a static (non-interactive, props-only) `FinishDesignStage` instance and a static `FinishRevealStage` instance, using the same fixture `design`/`goalTitle`/`earnedDateLabel` as the flow story.
-- [ ] Column/cell styling via `StyleSheet.create` at the bottom of the file, matching `FinishLine.stories.tsx`'s `matrixContainer`/`matrixRow`/`matrixCell` naming convention.
-- [ ] Short doc comment above the story explaining why a live per-cell matrix is safe here (unlike `NewGoalWizard`/`EditGoalView`) — same rationale as D3, condensed.
+- [x] Import `themeNames`, `themes`/`ScopedTheme` per the `BadgeWallCell.stories.tsx`/`TimelineNode.stories.tsx` precedent.
+- [x] `AllThemesMatrix: Story` — horizontal `ScrollView`, one column per theme name (`MOOD_NAMES` label mapping mirrored from `FinishLine.stories.tsx`), each column stacking two `ScopedTheme`-wrapped, `height: 640` cells: a static (non-interactive, props-only) `FinishDesignStage` instance and a static `FinishRevealStage` instance (`animationPref="none"` so the badge sits at resting scale), using the same fixture `design`/`goalTitle`/`earnedDateLabel` as the flow story.
+- [x] Column/cell styling via `StyleSheet.create` at the bottom of the file, matching `FinishLine.stories.tsx`'s `matrixContainer`/`matrixCell` naming convention. Cells are `width: 320`/`height: 640` (each stage is a full screen, so cells need an explicit width in the horizontal scroll — wider than `BadgeWallCell`'s intrinsic-width tiles).
+- [x] Short doc comment above the story explaining why a live per-cell matrix is safe here (unlike `NewGoalWizard`/`EditGoalView`) — same rationale as D3, condensed.
+
+**Committed**: type-check (all four tsconfigs) + file-scoped `eslint` (exit 0) green; guardrail greps clean (integration keywords + off-fixture hex only match comments / the intentional `GOAL_COLOR`).
 
 ### Step 3: Visual polish pass (conditional)
 
