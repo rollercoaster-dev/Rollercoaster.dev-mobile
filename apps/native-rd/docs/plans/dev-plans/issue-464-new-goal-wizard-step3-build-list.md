@@ -97,7 +97,7 @@ Fill the `currentStep === "build"` branch of the existing `NewGoalWizard` compon
 
 - [x] Unit tests for `NewGoalWizard` build step (Jest 30, `@testing-library/react-native` v13) — `bun run test --testPathPatterns NewGoalWizard` (58 pass).
 - [x] `test.each` for the disabled/empty-state cases if any are introduced (none introduced — build's CTA is always enabled per D7; extended the cross-step `onClose`/back-arrow `it.each` tables to include `"build"`).
-- [ ] Manual/Storybook: `Iteration B/Goals/NewGoalWizard` → `BuildStep` (add a row, open/close each row's evidence sheet, confirm independent chips), `InteractiveFlow` (click through all 4 steps, confirm data carries forward), `AllThemesMatrix` (switch the theme toolbar through all 7 product themes, confirm zero hardcoded hex and legible contrast in `highContrast`/`lowVision`). **← PENDING: not yet run; do before PR.**
+- [x] Manual/Storybook: `Iteration B/Goals/NewGoalWizard` → `BuildStep` (add a row, open/close each row's evidence sheet, confirm independent chips), `InteractiveFlow` (click through all 4 steps, confirm data carries forward), `AllThemesMatrix` (switch the theme toolbar through the 7 product themes, confirm zero hardcoded hex and legible contrast in `highContrast`/`lowVision`). **← DONE 2026-07-07 (web Storybook :6007): BuildStep interactions all pass (per-row sheet pre-select, independent chip update, add-step → "New step"+Note default, count increments); InteractiveFlow carries goal title + first-step title/evidence into `buildSteps[0]` and the ready summary across all 4 steps; AllThemesMatrix toolbar genuinely re-themes (light-default + light-highContrast verified — highContrast solid-black/strong-border/no-shadow, chips legible). icon+label chip divergence reads cleanly.**
 - [x] `bun run type-check` and `bun run lint` clean (only pre-existing file-size warning on `NewGoalWizard.tsx`, 596 lines — expected, all 4 steps in one file per slices 1–3); zero hardcoded hex in the diff (`theme.colors.*`/`theme.radius.*`/`theme.space.*`/`shadowStyle` only). Full suite 9782 pass; `bun run build` no-op.
 
 ## Not in Scope
@@ -136,6 +136,6 @@ Fill the `currentStep === "build"` branch of the existing `NewGoalWizard` compon
 
 **Remaining before PR:**
 
-1. **Manual Storybook visual pass** (the one unchecked box) — `BuildStep` (add row, open/close each row's sheet, independent chips), `InteractiveFlow` (click all 4 steps, data carries forward), `AllThemesMatrix` (toolbar through all 7 themes; check `highContrast`/`lowVision` contrast). **Watch the icon+label vs. icon-only chip divergence here** — confirm the richer chip reads well against the prototype.
+1. ~~Manual Storybook visual pass~~ **DONE 2026-07-07** (web Storybook :6007) — all three stories driven and verified (see Testing Strategy). icon+label chip confirmed reading cleanly; highContrast contrast good. Substep absence confirmed intentional (flat list per prototype; nesting → #465) — Joe, 2026-07-07: keep flat, finalize #464.
 2. **`/finalize`** — push branch, open PR. At PR time: flag `dep:blocked` label removal on #464 (stale, per Dependencies §) and note umbrella #443 closes when #462–#464 all close.
 3. Follow-up **#482** (inline rename + delete on build rows) stays out of scope (Not in Scope §).
