@@ -234,6 +234,27 @@ describe("FinishDesignStage", () => {
     });
   });
 
+  it("patches the monogram and leaves every other field byte-identical (D8)", () => {
+    const onDesignChange = jest.fn();
+    // Default center mode is monogram, so the monogram input is mounted with
+    // the center section open — no mode switch needed.
+    const design = makeDesign();
+    renderWithProviders(
+      <FinishDesignStage
+        {...makeProps({
+          design,
+          onDesignChange,
+          initialExpandedSection: "center",
+        })}
+      />,
+    );
+    fireEvent.changeText(screen.getByLabelText("Monogram text"), "RW");
+    expect(onDesignChange).toHaveBeenCalledWith({
+      ...design,
+      monogram: "RW",
+    });
+  });
+
   it("patches the bottom label through onDesignChange", () => {
     const onDesignChange = jest.fn();
     const design = makeDesign();
