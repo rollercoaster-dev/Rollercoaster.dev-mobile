@@ -53,6 +53,12 @@ export interface FinishDesignStageProps {
   bottomLabelAccessibilityLabel?: string;
   /** Primary CTA label. */
   bakeLabel?: string;
+  /**
+   * Leading glyph on the CTA. Passed to `Button`'s `icon` prop so it renders in
+   * its own `<Text>` run (dodging the Android emoji+font glyph-drop bug) and
+   * stays out of the accessible name.
+   */
+  bakeIcon?: string;
   /** Muted subcopy below the CTA. */
   bakeSubcopy?: string;
   /** Live preview size in logical pixels (matches the prototype's `badgePreviewMd`). */
@@ -91,7 +97,8 @@ export function FinishDesignStage({
   bottomLabelSectionTitle = "Bottom label",
   bottomLabelPlaceholder = "EARNED 2026",
   bottomLabelAccessibilityLabel = "Bottom label",
-  bakeLabel = "✓ Bake my badge",
+  bakeLabel = "Bake my badge",
+  bakeIcon = "✓",
   bakeSubcopy = "saves & seals it into a verifiable badge",
   badgeSize = 150,
   initialExpandedSection = "shape",
@@ -250,6 +257,7 @@ export function FinishDesignStage({
       <View style={styles.footer}>
         <Button
           label={bakeLabel}
+          icon={bakeIcon}
           onPress={onBake}
           variant="primary"
           size="lg"
