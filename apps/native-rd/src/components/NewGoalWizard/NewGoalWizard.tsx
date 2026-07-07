@@ -9,6 +9,8 @@
  *     composing EvidenceTypePicker's capture sheet) — slice 2/3 (#463)
  *   - Step 3 · build (flat "Your steps" list, per-row evidence chip reusing the
  *     same picker, add-step affordance, "I'm ready →" CTA) — slice 3/3 (#464)
+ *   - Step 3 · build-row inline rename + confirmed delete (tap-to-edit title,
+ *     × routing through the shared ConfirmDeleteModal) — follow-up (#482)
  *
  * Pure, prop-driven, i18n-free (D5): all copy arrives as props with English
  * defaults; the future [Integrate] issue (#444) threads real t() output
@@ -120,6 +122,34 @@ export interface NewGoalWizardProps {
   /** Updates one build row's planned evidence type (from the shared picker). */
   onBuildStepEvidenceTypeChange?: (id: string, type: EvidenceTypeValue) => void;
 
+  // --- Step 3 · build-row inline rename (#482) ---
+  /**
+   * Which build row is mid-rename (D3). null/undefined = none editing. The row
+   * whose id matches renders a focused TextInput seeded with buildStepEditText
+   * in place of its tap-to-edit title; its evidence chip and × are suppressed
+   * while editing (D4), mirroring EditGoalStepRow's isEditing branch.
+   */
+  editingBuildStepId?: string | null;
+  /** In-flight edit text for the row named by editingBuildStepId. */
+  buildStepEditText?: string;
+  /** Enter edit mode for a row — caller seeds buildStepEditText with the title. */
+  onStartEditingBuildStep?: (id: string, currentTitle: string) => void;
+  onBuildStepEditTextChange?: (text: string) => void;
+  /** Commit the in-flight edit (return key / blur); caller applies + clears. */
+  onCommitBuildStepEditing?: () => void;
+
+  // --- Step 3 · build-row delete (#482) ---
+  /**
+   * Which build row has a pending delete confirmation (D1/D3). null/undefined =
+   * none pending. When set, the shared ConfirmDeleteModal is visible; the row is
+   * removed only on Confirm, never on the raw × press.
+   */
+  pendingDeleteBuildStepId?: string | null;
+  /** × pressed on a row — opens the confirm modal (does not remove the row). */
+  onRequestDeleteBuildStep?: (id: string) => void;
+  onCancelDeleteBuildStep?: () => void;
+  onConfirmDeleteBuildStep?: () => void;
+
   // --- Copy (i18n-free per D5; English defaults; [Integrate] passes t()). ---
   headerLabel?: string;
   /**
@@ -165,6 +195,19 @@ export interface NewGoalWizardProps {
     title: string,
     label: string,
   ) => string;
+  /** a11y label for a build row's inline title-edit field (#482). */
+  buildStepEditA11yLabel?: (stepTitle: string) => string;
+  /** a11y hint on a build row's tap-to-edit title (#482). */
+  tapToEditBuildStepHint?: string;
+  /** a11y label for a build row's × delete affordance (#482). */
+  deleteBuildStepLabel?: (stepTitle: string) => string;
+  /** Confirm-modal title for a build-row delete (#482). */
+  deleteBuildStepConfirmTitle?: string;
+  /**
+   * Confirm-modal message for a build-row delete (#482). No evidence/sub-step
+   * clause — a wizard-stage build row has neither yet (D8), unlike EditGoalView.
+   */
+  deleteBuildStepConfirmMessage?: (stepTitle: string) => string;
   /** Footer CTA on the build step — distinct copy from nextLabel (D7). */
   buildReadyLabel?: string;
   readyHeadline?: string;
@@ -233,6 +276,15 @@ export function NewGoalWizard({
   onOpenBuildStepEvidence = noop,
   onCloseBuildStepEvidence = noop,
   onBuildStepEvidenceTypeChange = noop,
+  editingBuildStepId = null,
+  buildStepEditText = "",
+  onStartEditingBuildStep = noop,
+  onBuildStepEditTextChange = noop,
+  onCommitBuildStepEditing = noop,
+  pendingDeleteBuildStepId = null,
+  onRequestDeleteBuildStep = noop,
+  onCancelDeleteBuildStep = noop,
+  onConfirmDeleteBuildStep = noop,
   headerLabel = "New goal",
   closeAccessibilityLabel = "Close",
   nameEyebrow = "Step 1 of 4",
@@ -255,6 +307,12 @@ export function NewGoalWizard({
   addStepLabel = "add another step",
   addStepAccessibilityLabel = "Add another step",
   buildStepEvidenceAccessibilityLabel = defaultBuildStepEvidenceAccessibilityLabel,
+  buildStepEditA11yLabel = (stepTitle) => `Edit step: ${stepTitle}`,
+  tapToEditBuildStepHint = "Tap to edit step title",
+  deleteBuildStepLabel = (stepTitle) => `Delete step: ${stepTitle}`,
+  deleteBuildStepConfirmTitle = "Delete step?",
+  deleteBuildStepConfirmMessage = (stepTitle) =>
+    `Remove "${stepTitle}" from your step list?`,
   buildReadyLabel = "I'm ready →",
   readyHeadline = "You're set.",
   stepCountSummary = defaultStepCountSummary,
@@ -471,46 +529,92 @@ export function NewGoalWizard({
               </View>
               {buildSteps.map((step, index) => {
                 const label = plannedEvidenceLabel(step.evidenceType);
+                // Mid-rename rows render only [number][TextInput] — chip and ×
+                // are suppressed while the field owns focus (D4), mirroring
+                // EditGoalStepRow's isEditing branch.
+                const isEditing = editingBuildStepId === step.id;
                 return (
                   <View
                     key={step.id}
                     style={styles.buildRowCard}
                     testID={`new-goal-build-row-${step.id}`}
                   >
+                    {/* Wrap layout (D7): buildRowLead grows to fill the line and
+                        holds [number][title/input]; buildRowControls (chip + ×)
+                        wraps to its own right-aligned line on narrow/largeText
+                        renders instead of crushing the title. */}
                     <View style={styles.buildRowInner}>
-                      <RNText
-                        style={styles.buildRowNumber}
-                        importantForAccessibility="no"
-                      >
-                        {index + 1}
-                      </RNText>
-                      <RNText style={styles.buildRowTitle}>{step.title}</RNText>
-                      {/* Whole chip opens the shared picker targeted at this row
-                          (D1); one collapsed a11y node names row + type (D7). */}
-                      <Pressable
-                        style={styles.buildRowEvidencePress}
-                        onPress={() => onOpenBuildStepEvidence(step.id)}
-                        accessible
-                        accessibilityRole="button"
-                        accessibilityLabel={buildStepEvidenceAccessibilityLabel(
-                          step.title,
-                          label,
-                        )}
-                        hitSlop={6}
-                        testID={`new-goal-build-evidence-chip-${step.id}`}
-                      >
-                        <View style={styles.evidenceChip}>
-                          <RNText
-                            style={styles.evidenceChipIcon}
-                            importantForAccessibility="no"
+                      <View style={styles.buildRowLead}>
+                        <RNText
+                          style={styles.buildRowNumber}
+                          importantForAccessibility="no"
+                        >
+                          {index + 1}
+                        </RNText>
+                        {isEditing ? (
+                          <TextInput
+                            style={styles.buildRowEditInput}
+                            value={buildStepEditText}
+                            onChangeText={onBuildStepEditTextChange}
+                            onSubmitEditing={onCommitBuildStepEditing}
+                            onBlur={onCommitBuildStepEditing}
+                            autoFocus
+                            selectTextOnFocus
+                            returnKeyType="done"
+                            placeholderTextColor={theme.colors.textMuted}
+                            testID={`new-goal-build-step-edit-${step.id}`}
+                            accessibilityLabel={buildStepEditA11yLabel(
+                              step.title,
+                            )}
+                          />
+                        ) : (
+                          <Pressable
+                            style={styles.buildRowTitlePress}
+                            onPress={() =>
+                              onStartEditingBuildStep(step.id, step.title)
+                            }
+                            accessibilityRole="button"
+                            accessibilityLabel={step.title}
+                            accessibilityHint={tapToEditBuildStepHint}
+                            testID={`new-goal-build-step-title-${step.id}`}
                           >
-                            {evidenceIcon(step.evidenceType)}
-                          </RNText>
-                          <RNText style={styles.evidenceChipLabel}>
-                            {label}
-                          </RNText>
+                            <RNText style={styles.buildRowTitle}>
+                              {step.title}
+                            </RNText>
+                          </Pressable>
+                        )}
+                      </View>
+                      {!isEditing && (
+                        <View style={styles.buildRowControls}>
+                          {/* Whole chip opens the shared picker targeted at this
+                              row (D1); one collapsed a11y node names row + type
+                              (D7). */}
+                          <Pressable
+                            style={styles.buildRowEvidencePress}
+                            onPress={() => onOpenBuildStepEvidence(step.id)}
+                            accessible
+                            accessibilityRole="button"
+                            accessibilityLabel={buildStepEvidenceAccessibilityLabel(
+                              step.title,
+                              label,
+                            )}
+                            hitSlop={6}
+                            testID={`new-goal-build-evidence-chip-${step.id}`}
+                          >
+                            <View style={styles.evidenceChip}>
+                              <RNText
+                                style={styles.evidenceChipIcon}
+                                importantForAccessibility="no"
+                              >
+                                {evidenceIcon(step.evidenceType)}
+                              </RNText>
+                              <RNText style={styles.evidenceChipLabel}>
+                                {label}
+                              </RNText>
+                            </View>
+                          </Pressable>
                         </View>
-                      </Pressable>
+                      )}
                     </View>
                   </View>
                 );
