@@ -69,6 +69,13 @@ export const BottomLabelOpen: Story = {
   render: () => <InteractiveDesign initialExpandedSection="bottomLabel" />,
 };
 
+/** Color section open with the trailing "Custom…" cell reachable — tapping it
+ * opens the full-screen `ColorPickerModal`; a confirmed off-palette hex
+ * re-renders the live preview through the same `onDesignChange` round-trip. */
+export const CustomColor: Story = {
+  render: () => <InteractiveDesign initialExpandedSection="color" />,
+};
+
 /** Longest allowed bottom label (24 chars) and a long goal title — confirms the
  * input and the live SVG preview both render without clipping. */
 export const LongLabels: Story = {

@@ -12,6 +12,7 @@ import { ShapeSelector } from "../../badges/ShapeSelector";
 import { ColorPicker } from "../../badges/ColorPicker";
 import { CenterModeSelector } from "../../badges/CenterModeSelector";
 import { IconPicker } from "../../badges/IconPicker";
+import { ColorPickerModal } from "../../badges/ColorPickerModal";
 import { BOTTOM_LABEL_INPUT_MAX_CHARS } from "../../badges/text/BottomLabel";
 import {
   BadgeCenterMode,
@@ -106,6 +107,11 @@ export function FinishDesignStage({
     setExpandedSection(next ? id : null);
   };
 
+  // Custom-hex picker open-state — pure UI state, no persistence (same
+  // rationale as the accordion toggle, D10). Only the base fill color gets a
+  // modal; border/frame/icon channels stay out (D8).
+  const [customColorPickerOpen, setCustomColorPickerOpen] = useState(false);
+
   // Every handler spreads `{ ...design, <changed field> }` so untouched fields
   // (frame, pathText, banner, borderColor, frameColor, iconColor) pass through
   // byte-identical (D8).
@@ -193,6 +199,7 @@ export function FinishDesignStage({
             selectedColor={design.color}
             onSelectColor={handleColorChange}
             goalColor={goalColor ?? undefined}
+            onOpenCustomPicker={() => setCustomColorPickerOpen(true)}
           />
         </CollapsibleSection>
 
@@ -252,6 +259,19 @@ export function FinishDesignStage({
           {bakeSubcopy}
         </Text>
       </View>
+
+      {/* Base-fill custom-hex picker. `Modal` portals regardless of tree
+          position; confirmed hex flows out through the same handleColorChange
+          path as a swatch tap, so the D8 pass-through guarantee is unchanged. */}
+      <ColorPickerModal
+        visible={customColorPickerOpen}
+        initialColor={design.color}
+        onConfirm={(hex) => {
+          handleColorChange(hex);
+          setCustomColorPickerOpen(false);
+        }}
+        onClose={() => setCustomColorPickerOpen(false)}
+      />
     </View>
   );
 }

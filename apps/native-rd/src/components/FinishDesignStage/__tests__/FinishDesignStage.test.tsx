@@ -20,6 +20,41 @@ import {
   type BadgeDesign,
 } from "../../../badges/types";
 
+// ColorPickerModal stub: rendering the real reanimated-color-picker is out of
+// scope for a unit test. This exposes the Confirm and Close paths as Pressables
+// so we can drive them deterministically, mirroring BadgeDesignerScreen's stub.
+jest.mock("../../../badges/ColorPickerModal", () => {
+  const React = require("react");
+  const { Pressable, View } = require("react-native");
+  return {
+    ColorPickerModal: ({
+      visible,
+      initialColor,
+      onConfirm,
+      onClose,
+    }: {
+      visible: boolean;
+      initialColor: string;
+      onConfirm: (hex: string) => void;
+      onClose: () => void;
+    }) => {
+      if (!visible) return null;
+      return (
+        <View
+          testID="mock-color-picker-modal"
+          accessibilityLabel={initialColor}
+        >
+          <Pressable
+            testID="mock-color-picker-modal-confirm"
+            onPress={() => onConfirm("#deadbe")}
+          />
+          <Pressable testID="mock-color-picker-modal-close" onPress={onClose} />
+        </View>
+      );
+    },
+  };
+});
+
 // A design carrying the pass-through fields this component must NOT touch
 // (frame, pathText, banner, frameColor, iconColor), so the D8 regression can
 // assert they survive a change byte-identical.
@@ -132,6 +167,51 @@ describe("FinishDesignStage", () => {
       ...design,
       color: ACCENT_COLORS[1].hex,
     });
+  });
+
+  it("opens the custom-hex modal when the Custom… cell is tapped", () => {
+    renderWithProviders(
+      <FinishDesignStage {...makeProps({ initialExpandedSection: "color" })} />,
+    );
+    // Modal is closed until the trailing custom cell is pressed.
+    expect(screen.queryByTestId("mock-color-picker-modal")).toBeNull();
+    fireEvent.press(screen.getByTestId("color-picker-custom"));
+    expect(screen.getByTestId("mock-color-picker-modal")).toBeOnTheScreen();
+  });
+
+  it("confirming a custom hex patches only color, byte-identical otherwise (D8)", () => {
+    const onDesignChange = jest.fn();
+    const design = makeDesign();
+    renderWithProviders(
+      <FinishDesignStage
+        {...makeProps({
+          design,
+          onDesignChange,
+          initialExpandedSection: "color",
+        })}
+      />,
+    );
+    fireEvent.press(screen.getByTestId("color-picker-custom"));
+    fireEvent.press(screen.getByTestId("mock-color-picker-modal-confirm"));
+    expect(onDesignChange).toHaveBeenCalledWith({
+      ...design,
+      color: "#deadbe",
+    });
+    // Modal closes on confirm.
+    expect(screen.queryByTestId("mock-color-picker-modal")).toBeNull();
+  });
+
+  it("closing the custom-hex modal leaves the design untouched", () => {
+    const onDesignChange = jest.fn();
+    renderWithProviders(
+      <FinishDesignStage
+        {...makeProps({ onDesignChange, initialExpandedSection: "color" })}
+      />,
+    );
+    fireEvent.press(screen.getByTestId("color-picker-custom"));
+    fireEvent.press(screen.getByTestId("mock-color-picker-modal-close"));
+    expect(onDesignChange).not.toHaveBeenCalled();
+    expect(screen.queryByTestId("mock-color-picker-modal")).toBeNull();
   });
 
   it("patches center mode through onDesignChange", () => {
