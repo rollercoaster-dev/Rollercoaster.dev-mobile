@@ -160,6 +160,10 @@ function InteractiveEditGoal({ note }: { note?: string }) {
     );
   }
 
+  function deleteStep(stepId: string) {
+    setSteps((prev) => prev.filter((s) => s.id !== stepId));
+  }
+
   return (
     <View>
       {note ? (
@@ -179,6 +183,7 @@ function InteractiveEditGoal({ note }: { note?: string }) {
         onSubStepTitleChange={renameSubStep}
         onSubStepEvidenceChange={changeSubStepEvidence}
         onDeleteSubStep={deleteSubStep}
+        onDeleteStep={deleteStep}
         onOverflowPress={() => {}}
         onBack={() => {}}
         onDone={() => {}}
@@ -232,6 +237,7 @@ function AnatomyRow({ step }: { step: EditGoalStep }) {
       isFirst
       isLast
       canDrag={false}
+      onDelete={() => {}}
     />
   );
 }
@@ -298,6 +304,7 @@ function MatrixEditGoal() {
       onSubStepTitleChange={noop}
       onSubStepEvidenceChange={noop}
       onDeleteSubStep={noop}
+      onDeleteStep={noop}
       onOverflowPress={noop}
       onBack={noop}
       onDone={noop}
