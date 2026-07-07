@@ -47,14 +47,18 @@ export type NewGoalWizardStep = (typeof STEP_ORDER)[number];
 
 /**
  * A row on the build list (Step 3). `id` is a stable per-row key the caller
- * owns (used to target the shared evidence picker at one row); `evidenceType`
- * is never unset — every step is born with a planned evidence type (D3), so the
- * chip always renders a real type, never a missing/empty state.
+ * owns — it must be unique within `buildSteps`, since it's both the React `key`
+ * and the handle `openBuildStepEvidenceId` targets the shared picker at (a
+ * duplicate would collide the key and make `find` match the wrong row).
+ * `evidenceType` is never unset — every step is born with a planned evidence
+ * type (D3), so the chip always renders a real type, never a missing/empty
+ * state. Fields are `readonly`: the component only ever reads a row (maps over
+ * it, never mutates), and the caller owns the state.
  */
 export interface BuildStep {
-  id: string;
-  title: string;
-  evidenceType: EvidenceTypeValue;
+  readonly id: string;
+  readonly title: string;
+  readonly evidenceType: EvidenceTypeValue;
 }
 
 export interface NewGoalWizardProps {
@@ -96,12 +100,13 @@ export interface NewGoalWizardProps {
 
   // --- Step 3 · build list (#464) ---
   /**
-   * The full step list rendered on the build screen. Required — the build
-   * screen has nothing meaningful to show without it (unlike step 2's
-   * optional-with-defaults props). Independent of firstStepTitle/
-   * plannedEvidenceType this slice (D2); [Integrate] (#444) unifies them.
+   * The full step list rendered on the build screen. Optional with an empty
+   * default (like step 2's props), so a caller can mount "build" before seeding
+   * rows; an empty list renders a count of 0 and no rows. Independent of
+   * firstStepTitle/plannedEvidenceType this slice (D2); [Integrate] (#444)
+   * unifies them.
    */
-  buildSteps?: BuildStep[];
+  buildSteps?: readonly BuildStep[];
   /** Appends a new row. No args (D3) — the caller owns the new row's defaults. */
   onAddStep?: () => void;
   /**
@@ -334,7 +339,8 @@ export function NewGoalWizard({
 
       {/* Step bodies: name + ready (#462), first step (#463), build (#464).
           The trailing `null` is unreachable — currentStep is one of the four
-          STEP_ORDER values — but keeps the chain total for the type-checker. */}
+          STEP_ORDER values — and is kept so every step stays an explicit
+          `currentStep === …` test rather than a catch-all `else`. */}
       {currentStep === "name" ? (
         <>
           <View style={styles.stepBody}>
@@ -530,8 +536,8 @@ export function NewGoalWizard({
           </View>
           <View style={styles.footer}>
             {/* Same linear-advance onNext as name/step; only the label differs
-                (D7). Always enabled — buildSteps is never empty here and the
-                prototype gates nothing on this screen. */}
+                (D7). Unconditionally enabled — the prototype gates nothing on
+                this screen. */}
             <Button
               label={buildReadyLabel}
               onPress={onNext}
