@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View } from "react-native";
-import { Button } from "../../components/Button";
+import { Button } from "../Button";
 import { ConfirmDeleteModal } from "./ConfirmDeleteModal";
 
 export default {
