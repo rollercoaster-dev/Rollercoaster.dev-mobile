@@ -313,6 +313,13 @@ describe("EditGoalView", () => {
       fireEvent.press(screen.getByTestId("edit-goal-substep-delete-sub1"));
       // The × now opens the confirm modal rather than deleting immediately.
       expect(screen.getByText("Delete sub-step?")).toBeOnTheScreen();
+      // Locks the message ternary to the sub-step branch (title interpolated,
+      // no "and any sub-steps" clause) — guards against a message swap.
+      expect(
+        screen.getByText(
+          'Delete "Sub-step"? Its evidence will be removed too.',
+        ),
+      ).toBeOnTheScreen();
       expect(onDeleteSubStep).not.toHaveBeenCalled();
       fireEvent.press(screen.getByText("Delete"));
       expect(onDeleteSubStep).toHaveBeenCalledWith("sub1");
@@ -399,6 +406,13 @@ describe("EditGoalView", () => {
       renderWithProviders(<EditGoalView {...makeProps({ onDeleteStep })} />);
       fireEvent.press(screen.getByTestId("edit-goal-step-delete-s1"));
       expect(screen.getByText("Delete step?")).toBeOnTheScreen();
+      // Locks the message ternary to the step branch (title interpolated,
+      // "and any sub-steps" clause present) — guards against a message swap.
+      expect(
+        screen.getByText(
+          'Delete "First step"? Its evidence and any sub-steps will be removed too.',
+        ),
+      ).toBeOnTheScreen();
       expect(onDeleteStep).not.toHaveBeenCalled();
     });
 
