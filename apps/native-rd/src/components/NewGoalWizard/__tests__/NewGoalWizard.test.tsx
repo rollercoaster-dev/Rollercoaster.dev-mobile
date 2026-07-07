@@ -6,9 +6,18 @@ import {
 } from "../../../__tests__/test-utils";
 import {
   NewGoalWizard,
+  type BuildStep,
   type NewGoalWizardProps,
   type NewGoalWizardStep,
 } from "../NewGoalWizard";
+import { EvidenceType } from "../../../db";
+
+// The prototype's own initNG() seed — two rows, distinct evidence types so the
+// two chips (and pre-selection assertions) can be told apart.
+const BUILD_STEPS: BuildStep[] = [
+  { id: "s1", title: "Sand the edges", evidenceType: EvidenceType.text },
+  { id: "s2", title: "Paint it", evidenceType: EvidenceType.photo },
+];
 
 function makeProps(
   overrides?: Partial<NewGoalWizardProps>,
@@ -267,6 +276,39 @@ describe("NewGoalWizard", () => {
       expect(screen.getByRole("radio", { name: "Photo" })).toBeOnTheScreen();
     });
 
+    it("pre-selects the current planned type in the sheet (parallels the build side)", () => {
+      // pickerSelectedType derives from plannedEvidenceType on the step; guards
+      // the step-2 half of that derivation the way the build test guards its own.
+      renderWizard({
+        currentStep: "step",
+        evidencePickerOpen: true,
+        plannedEvidenceType: EvidenceType.text,
+      });
+
+      expect(
+        screen.getByRole("radio", { name: "Note" }).props.accessibilityState,
+      ).toMatchObject({ checked: true });
+    });
+
+    it("dismisses the sheet without changing the type when the backdrop is tapped", () => {
+      // Distinct from the select-a-type path: tapping outside abandons the pick.
+      // Catches a refactor that swaps handlePickerClose's ternary arms or wires
+      // the backdrop to the wrong wizard callback.
+      const onCloseEvidencePicker = jest.fn();
+      const onPlannedEvidenceTypeChange = jest.fn();
+      renderWizard({
+        currentStep: "step",
+        evidencePickerOpen: true,
+        onCloseEvidencePicker,
+        onPlannedEvidenceTypeChange,
+      });
+
+      fireEvent.press(screen.getByTestId("capture-sheet-backdrop"));
+
+      expect(onCloseEvidencePicker).toHaveBeenCalledTimes(1);
+      expect(onPlannedEvidenceTypeChange).not.toHaveBeenCalled();
+    });
+
     it("hides the capture sheet header while the picker is closed", () => {
       renderWizard({ currentStep: "step", evidencePickerOpen: false });
 
@@ -290,7 +332,7 @@ describe("NewGoalWizard", () => {
     });
   });
 
-  it.each(["name", "step", "ready"] as const)(
+  it.each(["name", "step", "build", "ready"] as const)(
     "fires onClose from the %s step",
     (currentStep) => {
       const onClose = jest.fn();
@@ -302,7 +344,7 @@ describe("NewGoalWizard", () => {
     },
   );
 
-  it.each(["step", "ready"] as const)(
+  it.each(["step", "build", "ready"] as const)(
     "renders the back arrow and fires onBack from the %s step",
     (currentStep) => {
       const onBack = jest.fn();
@@ -316,15 +358,177 @@ describe("NewGoalWizard", () => {
     },
   );
 
-  it("renders the build placeholder without a body regression", () => {
-    renderWizard({ currentStep: "build" });
+  describe("build step", () => {
+    it("renders the shell, 'Your steps' header + count, and the ready CTA — not the other steps' bodies", () => {
+      // Replaces the old "build placeholder" regression: the build body now
+      // renders real content, so this asserts it's present *and* that the
+      // other steps' bodies stay absent (the cross-step exclusivity the
+      // placeholder test used to guard).
+      renderWizard({ currentStep: "build", buildSteps: BUILD_STEPS });
 
-    expect(screen.getByText("New goal")).toBeOnTheScreen();
-    expect(screen.getByRole("button", { name: "Go back" })).toBeOnTheScreen();
-    expect(screen.getByTestId("new-goal-close-button")).toBeOnTheScreen();
-    expect(screen.queryByText("What do you want to work toward?")).toBeNull();
-    expect(screen.queryByText("You're set.")).toBeNull();
-    expect(screen.queryByText("What's the first step?")).toBeNull();
+      expect(screen.getByText("New goal")).toBeOnTheScreen();
+      expect(screen.getByRole("button", { name: "Go back" })).toBeOnTheScreen();
+      expect(screen.getByTestId("new-goal-close-button")).toBeOnTheScreen();
+      expect(screen.getByText("Your steps")).toBeOnTheScreen();
+      // Count is derived from buildSteps.length (D8), not the stepCount prop.
+      expect(screen.getByTestId("new-goal-build-count")).toHaveTextContent(
+        String(BUILD_STEPS.length),
+      );
+      expect(
+        screen.getByTestId("new-goal-build-ready-button"),
+      ).toBeOnTheScreen();
+
+      expect(screen.queryByText("What do you want to work toward?")).toBeNull();
+      expect(screen.queryByText("You're set.")).toBeNull();
+      expect(screen.queryByText("What's the first step?")).toBeNull();
+    });
+
+    it("renders a row per build step — number, title, and its evidence icon+label", () => {
+      renderWizard({ currentStep: "build", buildSteps: BUILD_STEPS });
+
+      expect(screen.getByTestId("new-goal-build-row-s1")).toBeOnTheScreen();
+      expect(screen.getByTestId("new-goal-build-row-s2")).toBeOnTheScreen();
+      expect(screen.getByText("Sand the edges")).toBeOnTheScreen();
+      expect(screen.getByText("Paint it")).toBeOnTheScreen();
+      // Distinct types render distinct chips: Note (📝) and Photo (📷).
+      expect(screen.getByText("📝")).toBeOnTheScreen();
+      expect(screen.getByText("Note")).toBeOnTheScreen();
+      expect(screen.getByText("📷")).toBeOnTheScreen();
+      expect(screen.getByText("Photo")).toBeOnTheScreen();
+    });
+
+    it("derives the header count from buildSteps.length, ignoring the stepCount prop (D8)", () => {
+      renderWizard({
+        currentStep: "build",
+        buildSteps: BUILD_STEPS,
+        stepCount: 99,
+      });
+
+      expect(screen.getByTestId("new-goal-build-count")).toHaveTextContent("2");
+      expect(screen.queryByText("99")).toBeNull();
+    });
+
+    it("fires onAddStep when the add-step affordance is pressed", () => {
+      const onAddStep = jest.fn();
+      renderWizard({
+        currentStep: "build",
+        buildSteps: BUILD_STEPS,
+        onAddStep,
+      });
+
+      fireEvent.press(screen.getByTestId("new-goal-add-step-button"));
+
+      expect(onAddStep).toHaveBeenCalledTimes(1);
+    });
+
+    it("fires onOpenBuildStepEvidence with the row id when a row's chip is pressed", () => {
+      const onOpenBuildStepEvidence = jest.fn();
+      renderWizard({
+        currentStep: "build",
+        buildSteps: BUILD_STEPS,
+        onOpenBuildStepEvidence,
+      });
+
+      fireEvent.press(screen.getByTestId("new-goal-build-evidence-chip-s2"));
+
+      expect(onOpenBuildStepEvidence).toHaveBeenCalledWith("s2");
+    });
+
+    it("names each row's chip press target with the action, row title, and current type", () => {
+      // D7 a11y contract, parallel to step 2's chip: one collapsed node whose
+      // label states the action + which row + its current planned type.
+      renderWizard({ currentStep: "build", buildSteps: BUILD_STEPS });
+
+      expect(
+        screen.getByRole("button", {
+          name: "Change evidence type for Paint it, currently Photo",
+        }),
+      ).toBeOnTheScreen();
+    });
+
+    it("shows the shared capture sheet, pre-selecting the open row's current type", () => {
+      renderWizard({
+        currentStep: "build",
+        buildSteps: BUILD_STEPS,
+        openBuildStepEvidenceId: "s2",
+      });
+
+      expect(screen.getByText("Evidence type")).toBeOnTheScreen();
+      // Row s2 is Photo, so the Photo radio is the checked one.
+      expect(
+        screen.getByRole("radio", { name: "Photo" }).props.accessibilityState,
+      ).toMatchObject({ checked: true });
+    });
+
+    it("keeps the capture sheet closed when no row is targeted", () => {
+      renderWizard({
+        currentStep: "build",
+        buildSteps: BUILD_STEPS,
+        openBuildStepEvidenceId: null,
+      });
+
+      expect(screen.queryByText("Evidence type")).toBeNull();
+    });
+
+    it("changes the targeted row's type and closes the sheet when a type is selected", () => {
+      const onBuildStepEvidenceTypeChange = jest.fn();
+      const onCloseBuildStepEvidence = jest.fn();
+      renderWizard({
+        currentStep: "build",
+        buildSteps: BUILD_STEPS,
+        openBuildStepEvidenceId: "s1",
+        onBuildStepEvidenceTypeChange,
+        onCloseBuildStepEvidence,
+      });
+
+      fireEvent.press(screen.getByRole("radio", { name: "Photo" }));
+
+      expect(onBuildStepEvidenceTypeChange).toHaveBeenCalledWith(
+        "s1",
+        EvidenceType.photo,
+      );
+      expect(onCloseBuildStepEvidence).toHaveBeenCalledTimes(1);
+    });
+
+    it("dismisses the sheet without changing a row's type when the backdrop is tapped", () => {
+      const onBuildStepEvidenceTypeChange = jest.fn();
+      const onCloseBuildStepEvidence = jest.fn();
+      renderWizard({
+        currentStep: "build",
+        buildSteps: BUILD_STEPS,
+        openBuildStepEvidenceId: "s1",
+        onBuildStepEvidenceTypeChange,
+        onCloseBuildStepEvidence,
+      });
+
+      fireEvent.press(screen.getByTestId("capture-sheet-backdrop"));
+
+      expect(onCloseBuildStepEvidence).toHaveBeenCalledTimes(1);
+      expect(onBuildStepEvidenceTypeChange).not.toHaveBeenCalled();
+    });
+
+    it("renders the safe empty state (count 0, no rows, add-step still present) for an empty list", () => {
+      // buildSteps defaults to [] and a caller can mount "build" before seeding
+      // rows; the screen must render a 0 count with the add-step affordance, not
+      // crash or show phantom rows.
+      renderWizard({ currentStep: "build", buildSteps: [] });
+
+      expect(screen.getByTestId("new-goal-build-count")).toHaveTextContent("0");
+      expect(screen.getByTestId("new-goal-add-step-button")).toBeOnTheScreen();
+      expect(
+        screen.getByTestId("new-goal-build-ready-button"),
+      ).toBeOnTheScreen();
+      expect(screen.queryByTestId("new-goal-build-row-s1")).toBeNull();
+    });
+
+    it("fires onNext from the 'I'm ready →' CTA", () => {
+      const onNext = jest.fn();
+      renderWizard({ currentStep: "build", buildSteps: BUILD_STEPS, onNext });
+
+      fireEvent.press(screen.getByTestId("new-goal-build-ready-button"));
+
+      expect(onNext).toHaveBeenCalledTimes(1);
+    });
   });
 
   it.each<[NewGoalWizardStep, number]>([
@@ -364,6 +568,7 @@ describe("NewGoalWizard", () => {
   it.each([
     ["name", "What do you want to work toward?"],
     ["step", "What's the first step?"],
+    ["build", "Your steps"],
     ["ready", "You're set."],
   ] as const)(
     "marks the %s-step headline with the header role for screen readers",

@@ -200,8 +200,87 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.accentPrimary,
   },
 
-  // --- "build" placeholder body (D2, filled by #464) ---
-  placeholderBody: {
+  // --- Step 3 · build list (#464) ---
+  // Top-aligned (not centered like stepBody): the list grows from the top and
+  // scrolls, so its content must start at the top edge. flex:1 lets the
+  // ScrollView claim the space between progress bar and footer.
+  buildBody: {
     flex: 1,
+  },
+  buildScrollContent: {
+    paddingHorizontal: theme.space[5],
+    paddingTop: theme.space[4],
+  },
+  // "Your steps" + live count, baseline-aligned across the row edges.
+  buildHeaderRow: {
+    flexDirection: "row" as const,
+    alignItems: "baseline" as const,
+    justifyContent: "space-between" as const,
+    marginBottom: theme.space[3],
+  },
+  buildHeaderTitle: {
+    fontFamily: theme.fontFamily.headline,
+    fontWeight: theme.fontWeight.bold,
+    fontSize: theme.size.lg,
+    color: theme.colors.text,
+  },
+  buildHeaderCount: {
+    fontFamily: theme.fontFamily.mono,
+    fontSize: theme.size.sm,
+    color: theme.colors.textSecondary,
+  },
+  // Per-step card — same surface/border/hard-shadow idiom as the ready
+  // summaryCard, one tier lighter (hardSm) since rows stack.
+  buildRowCard: {
+    backgroundColor: theme.colors.background,
+    borderWidth: theme.borderWidth.thick,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.sm,
+    padding: theme.space[3],
+    marginBottom: theme.space[2],
+    ...shadowStyle(theme, "hardSm"),
+  },
+  buildRowInner: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: theme.space[2],
+  },
+  buildRowNumber: {
+    fontFamily: theme.fontFamily.headline,
+    fontWeight: theme.fontWeight.bold,
+    fontSize: theme.size.sm,
+    color: theme.colors.text,
+  },
+  buildRowTitle: {
+    flex: 1,
+    fontSize: theme.size.sm,
+    color: theme.colors.text,
+  },
+  // Whole chip is the press target here (no separate "change" link like step 2);
+  // 44pt-min keeps the tap area honest even though the pill is compact.
+  buildRowEvidencePress: {
+    minHeight: 44,
+    minWidth: 44,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  // "+ add another step" — mirrors quickAddPress's single-accessible-node shape;
+  // an accent link row below the list, not a bordered button (prototype).
+  addStepPress: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: theme.space[1],
+    minHeight: 44,
+    paddingBottom: theme.space[3],
+  },
+  addStepPlus: {
+    fontSize: theme.size.md,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.accentPrimary,
+  },
+  addStepLabel: {
+    fontSize: theme.size.sm,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.accentPrimary,
   },
 }));
