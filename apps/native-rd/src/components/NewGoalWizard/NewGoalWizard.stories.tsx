@@ -179,19 +179,95 @@ function updateBuildStepEvidence(
   );
 }
 
+function renameBuildStep(
+  steps: BuildStepData[],
+  id: string,
+  title: string,
+): BuildStepData[] {
+  return steps.map((step) => (step.id === id ? { ...step, title } : step));
+}
+
+function removeBuildStep(steps: BuildStepData[], id: string): BuildStepData[] {
+  return steps.filter((step) => step.id !== id);
+}
+
+/**
+ * Rename + confirmed-delete state for the build rows (#482), shared by the
+ * step-3 wrapper and the end-to-end flow so both exercise it. Rename commits on
+ * return/blur — trimmed, no-op on empty; delete routes through the caller-owned
+ * pendingDelete flag so the row is removed only on Confirm, never on the raw ×.
+ * `initialPendingDeleteId` lets the frozen BuildStepDeleteConfirm story open the
+ * modal on mount (mirrors InteractiveStep2's `pickerOpen`).
+ */
+function useBuildStepEditing(
+  buildSteps: BuildStepData[],
+  setBuildSteps: React.Dispatch<React.SetStateAction<BuildStepData[]>>,
+  initialPendingDeleteId: string | null = null,
+) {
+  const [editingBuildStepId, setEditingBuildStepId] = useState<string | null>(
+    null,
+  );
+  const [buildStepEditText, setBuildStepEditText] = useState("");
+  const [pendingDeleteBuildStepId, setPendingDeleteBuildStepId] = useState<
+    string | null
+  >(initialPendingDeleteId);
+
+  return {
+    buildSteps,
+    editingBuildStepId,
+    buildStepEditText,
+    onStartEditingBuildStep: (id: string, currentTitle: string) => {
+      setEditingBuildStepId(id);
+      setBuildStepEditText(currentTitle);
+    },
+    onBuildStepEditTextChange: setBuildStepEditText,
+    onCommitBuildStepEditing: () => {
+      const trimmed = buildStepEditText.trim();
+      if (editingBuildStepId && trimmed) {
+        setBuildSteps((prev) =>
+          renameBuildStep(prev, editingBuildStepId, trimmed),
+        );
+      }
+      setEditingBuildStepId(null);
+      setBuildStepEditText("");
+    },
+    pendingDeleteBuildStepId,
+    onRequestDeleteBuildStep: setPendingDeleteBuildStepId,
+    onCancelDeleteBuildStep: () => setPendingDeleteBuildStepId(null),
+    onConfirmDeleteBuildStep: () => {
+      if (pendingDeleteBuildStepId) {
+        setBuildSteps((prev) =>
+          removeBuildStep(prev, pendingDeleteBuildStepId),
+        );
+      }
+      setPendingDeleteBuildStepId(null);
+    },
+  };
+}
+
 /**
  * Stateful wrapper for step 3 (mirrors InteractiveStep2): the story owns the
  * build-step list and which row's evidence picker is open. Seeded with the
  * prototype's own sample steps so the story matches the canonical mock exactly.
  * Adding a row appends "New step"/Note; each row's chip opens the shared
- * capture sheet targeted at that row and updates only that row's type.
+ * capture sheet targeted at that row and updates only that row's type. Rename +
+ * delete state comes from useBuildStepEditing (#482).
  */
-function InteractiveBuildStep() {
+function InteractiveBuildStep({
+  initialPendingDeleteId = null,
+}: {
+  initialPendingDeleteId?: string | null;
+}) {
   const [buildSteps, setBuildSteps] =
     useState<BuildStepData[]>(SAMPLE_BUILD_STEPS);
   const [openBuildStepEvidenceId, setOpenBuildStepEvidenceId] = useState<
     string | null
   >(null);
+  const editing = useBuildStepEditing(
+    buildSteps,
+    setBuildSteps,
+    initialPendingDeleteId,
+  );
   return (
     <PhoneStage>
       <NewGoalWizard
@@ -204,7 +280,6 @@ function InteractiveBuildStep() {
         onNext={noop}
         onQuickAdd={noop}
         onStartWorking={noop}
-        buildSteps={buildSteps}
         onAddStep={() => setBuildSteps(appendBuildStep)}
         openBuildStepEvidenceId={openBuildStepEvidenceId}
         onOpenBuildStepEvidence={setOpenBuildStepEvidenceId}
@@ -212,6 +287,7 @@ function InteractiveBuildStep() {
         onBuildStepEvidenceTypeChange={(id, type) =>
           setBuildSteps((prev) => updateBuildStepEvidence(prev, id, type))
         }
+        {...editing}
       />
     </PhoneStage>
   );
@@ -219,6 +295,13 @@ function InteractiveBuildStep() {
 
 export const BuildStep: Story = {
   render: () => <InteractiveBuildStep />,
+};
+
+// Frozen variant: the confirm modal is open on mount (row "step-1" targeted),
+// so the delete-confirm state is reviewable with no interaction — the same
+// rationale as Step2PickerOpen.
+export const BuildStepDeleteConfirm: Story = {
+  render: () => <InteractiveBuildStep initialPendingDeleteId="step-1" />,
 };
 
 const FLOW_ORDER: NewGoalWizardStep[] = ["name", "step", "build", "ready"];
@@ -242,6 +325,7 @@ function InteractiveFlowWizard() {
   const [openBuildStepEvidenceId, setOpenBuildStepEvidenceId] = useState<
     string | null
   >(null);
+  const editing = useBuildStepEditing(buildSteps, setBuildSteps);
 
   // Seed row 1 from the first-step data on first arrival at build (D2 bridge).
   const goToBuild = () => {
@@ -289,7 +373,6 @@ function InteractiveFlowWizard() {
         evidencePickerOpen={evidencePickerOpen}
         onOpenEvidencePicker={() => setEvidencePickerOpen(true)}
         onCloseEvidencePicker={() => setEvidencePickerOpen(false)}
-        buildSteps={buildSteps}
         onAddStep={() => setBuildSteps(appendBuildStep)}
         openBuildStepEvidenceId={openBuildStepEvidenceId}
         onOpenBuildStepEvidence={setOpenBuildStepEvidenceId}
@@ -297,6 +380,7 @@ function InteractiveFlowWizard() {
         onBuildStepEvidenceTypeChange={(id, type) =>
           setBuildSteps((prev) => updateBuildStepEvidence(prev, id, type))
         }
+        {...editing}
       />
     </PhoneStage>
   );

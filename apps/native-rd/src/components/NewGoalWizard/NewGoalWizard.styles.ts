@@ -240,10 +240,35 @@ export const styles = StyleSheet.create((theme) => ({
     marginBottom: theme.space[2],
     ...shadowStyle(theme, "hardSm"),
   },
+  // Wraps so the trailing controls (chip + ×) drop to a second line on narrow /
+  // largeText renders instead of crushing the title (D7) — the same treatment
+  // EditGoalStepRow's rowMain uses now that the row carries three affordances.
   buildRowInner: {
+    flexDirection: "row" as const,
+    flexWrap: "wrap" as const,
+    alignItems: "center" as const,
+    columnGap: theme.space[2],
+    rowGap: theme.space[2],
+  },
+  // Leading cluster: [number][title/input]. Grows to fill the line but never
+  // shrinks below a legible floor — below that buildRowControls wraps instead.
+  buildRowLead: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
     gap: theme.space[2],
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 0,
+    minWidth: 140,
+  },
+  // Trailing cluster: natural width, never shrinks; wraps to its own line,
+  // right-aligned there via marginLeft auto (mirrors EditGoalStepRow rowControls).
+  buildRowControls: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: theme.space[2],
+    flexShrink: 0,
+    marginLeft: "auto" as const,
   },
   buildRowNumber: {
     fontFamily: theme.fontFamily.headline,
@@ -251,10 +276,26 @@ export const styles = StyleSheet.create((theme) => ({
     fontSize: theme.size.sm,
     color: theme.colors.text,
   },
-  buildRowTitle: {
+  // Tap-to-edit title press target — 44pt-min row keeps the tap area honest
+  // (mirrors EditGoalStepRow's rowTitlePress/rowTitleText).
+  buildRowTitlePress: {
     flex: 1,
+    minHeight: 44,
+    justifyContent: "center" as const,
+  },
+  buildRowTitle: {
     fontSize: theme.size.sm,
+    fontFamily: theme.fontFamily.body,
     color: theme.colors.text,
+  },
+  // Inline title-edit field replacing the title while a row is mid-rename.
+  buildRowEditInput: {
+    flex: 1,
+    minHeight: 44,
+    fontSize: theme.size.sm,
+    fontFamily: theme.fontFamily.body,
+    color: theme.colors.text,
+    padding: 0,
   },
   // Whole chip is the press target here (no separate "change" link like step 2);
   // 44pt-min keeps the tap area honest even though the pill is compact.
@@ -263,6 +304,18 @@ export const styles = StyleSheet.create((theme) => ({
     minWidth: 44,
     alignItems: "center" as const,
     justifyContent: "center" as const,
+  },
+  // Per-row × delete (#482) — 44×44 min touch target, muted glyph. Mirrors
+  // EditGoalView.styles' stepDelete/stepDeleteGlyph (D6).
+  buildRowDelete: {
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  buildRowDeleteGlyph: {
+    fontSize: theme.size.lg,
+    color: theme.colors.textMuted,
   },
   // "+ add another step" — mirrors quickAddPress's single-accessible-node shape;
   // an accent link row below the list, not a bordered button (prototype).

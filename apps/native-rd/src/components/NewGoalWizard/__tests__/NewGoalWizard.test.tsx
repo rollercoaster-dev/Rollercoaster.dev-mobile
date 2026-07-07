@@ -531,6 +531,190 @@ describe("NewGoalWizard", () => {
     });
   });
 
+  describe("build step · rename (#482)", () => {
+    it("renders each row's title as a tap-to-edit button that fires onStartEditingBuildStep", () => {
+      const onStartEditingBuildStep = jest.fn();
+      renderWizard({
+        currentStep: "build",
+        buildSteps: BUILD_STEPS,
+        onStartEditingBuildStep,
+      });
+
+      const title = screen.getByTestId("new-goal-build-step-title-s1");
+      expect(title.props.accessibilityRole).toBe("button");
+      expect(title.props.accessibilityLabel).toBe("Sand the edges");
+      expect(title.props.accessibilityHint).toBe("Tap to edit step title");
+
+      fireEvent.press(title);
+      expect(onStartEditingBuildStep).toHaveBeenCalledWith(
+        "s1",
+        "Sand the edges",
+      );
+    });
+
+    it("renders a seeded edit field (not the title button) only for the row being edited", () => {
+      renderWizard({
+        currentStep: "build",
+        buildSteps: BUILD_STEPS,
+        editingBuildStepId: "s1",
+        buildStepEditText: "Sand the edges",
+      });
+
+      const input = screen.getByTestId("new-goal-build-step-edit-s1");
+      expect(input.props.value).toBe("Sand the edges");
+      expect(input.props.accessibilityLabel).toBe("Edit step: Sand the edges");
+      // The tap-to-edit title button for that row is gone while editing…
+      expect(screen.queryByTestId("new-goal-build-step-title-s1")).toBeNull();
+      // …but other rows stay in display mode.
+      expect(
+        screen.getByTestId("new-goal-build-step-title-s2"),
+      ).toBeOnTheScreen();
+    });
+
+    it("fires onBuildStepEditTextChange while typing in the edit field", () => {
+      const onBuildStepEditTextChange = jest.fn();
+      renderWizard({
+        currentStep: "build",
+        buildSteps: BUILD_STEPS,
+        editingBuildStepId: "s1",
+        buildStepEditText: "Sand",
+        onBuildStepEditTextChange,
+      });
+
+      fireEvent.changeText(
+        screen.getByTestId("new-goal-build-step-edit-s1"),
+        "Sand the edges smooth",
+      );
+
+      expect(onBuildStepEditTextChange).toHaveBeenCalledWith(
+        "Sand the edges smooth",
+      );
+    });
+
+    it("commits the edit on both submit and blur", () => {
+      const onCommitBuildStepEditing = jest.fn();
+      renderWizard({
+        currentStep: "build",
+        buildSteps: BUILD_STEPS,
+        editingBuildStepId: "s1",
+        onCommitBuildStepEditing,
+      });
+
+      const input = screen.getByTestId("new-goal-build-step-edit-s1");
+      fireEvent(input, "submitEditing");
+      fireEvent(input, "blur");
+
+      expect(onCommitBuildStepEditing).toHaveBeenCalledTimes(2);
+    });
+
+    it("suppresses the mid-rename row's evidence chip and × but keeps other rows' intact (D4)", () => {
+      renderWizard({
+        currentStep: "build",
+        buildSteps: BUILD_STEPS,
+        editingBuildStepId: "s1",
+      });
+
+      // Editing row: neither the chip nor the × render while the field owns focus.
+      expect(
+        screen.queryByTestId("new-goal-build-evidence-chip-s1"),
+      ).toBeNull();
+      expect(screen.queryByTestId("new-goal-build-step-delete-s1")).toBeNull();
+      // Non-editing row: both remain.
+      expect(
+        screen.getByTestId("new-goal-build-evidence-chip-s2"),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByTestId("new-goal-build-step-delete-s2"),
+      ).toBeOnTheScreen();
+    });
+  });
+
+  describe("build step · delete (#482)", () => {
+    it.each([
+      ["s1", "Sand the edges"],
+      ["s2", "Paint it"],
+    ])("labels the × for row %s as a delete button", (id, title) => {
+      renderWizard({ currentStep: "build", buildSteps: BUILD_STEPS });
+
+      const del = screen.getByTestId(`new-goal-build-step-delete-${id}`);
+      expect(del.props.accessibilityRole).toBe("button");
+      expect(del.props.accessibilityLabel).toBe(`Delete step: ${title}`);
+    });
+
+    it("fires onRequestDeleteBuildStep on × press without removing the row or confirming", () => {
+      const onRequestDeleteBuildStep = jest.fn();
+      const onConfirmDeleteBuildStep = jest.fn();
+      renderWizard({
+        currentStep: "build",
+        buildSteps: BUILD_STEPS,
+        onRequestDeleteBuildStep,
+        onConfirmDeleteBuildStep,
+      });
+
+      fireEvent.press(screen.getByTestId("new-goal-build-step-delete-s2"));
+
+      expect(onRequestDeleteBuildStep).toHaveBeenCalledWith("s2");
+      // The raw × is request-only — it never removes the row nor confirms.
+      expect(onConfirmDeleteBuildStep).not.toHaveBeenCalled();
+      expect(screen.getByTestId("new-goal-build-row-s2")).toBeOnTheScreen();
+    });
+
+    it("keeps the confirm modal closed when no delete is pending", () => {
+      renderWizard({ currentStep: "build", buildSteps: BUILD_STEPS });
+
+      expect(screen.queryByText("Delete step?")).toBeNull();
+    });
+
+    it("shows the confirm modal with wizard-stage copy for the pending row (D8)", () => {
+      renderWizard({
+        currentStep: "build",
+        buildSteps: BUILD_STEPS,
+        pendingDeleteBuildStepId: "s2",
+      });
+
+      expect(screen.getByText("Delete step?")).toBeOnTheScreen();
+      // Wizard-appropriate message: no evidence/sub-step clause (D8), unlike
+      // EditGoalView's equivalent copy — a build row has neither yet.
+      expect(
+        screen.getByText('Remove "Paint it" from your step list?'),
+      ).toBeOnTheScreen();
+    });
+
+    it("fires onConfirmDeleteBuildStep on Confirm, never onCancel", () => {
+      const onConfirmDeleteBuildStep = jest.fn();
+      const onCancelDeleteBuildStep = jest.fn();
+      renderWizard({
+        currentStep: "build",
+        buildSteps: BUILD_STEPS,
+        pendingDeleteBuildStepId: "s1",
+        onConfirmDeleteBuildStep,
+        onCancelDeleteBuildStep,
+      });
+
+      fireEvent.press(screen.getByText("Delete"));
+
+      expect(onConfirmDeleteBuildStep).toHaveBeenCalledTimes(1);
+      expect(onCancelDeleteBuildStep).not.toHaveBeenCalled();
+    });
+
+    it("fires onCancelDeleteBuildStep on Cancel, never onConfirm", () => {
+      const onConfirmDeleteBuildStep = jest.fn();
+      const onCancelDeleteBuildStep = jest.fn();
+      renderWizard({
+        currentStep: "build",
+        buildSteps: BUILD_STEPS,
+        pendingDeleteBuildStepId: "s1",
+        onConfirmDeleteBuildStep,
+        onCancelDeleteBuildStep,
+      });
+
+      fireEvent.press(screen.getByText("Cancel"));
+
+      expect(onCancelDeleteBuildStep).toHaveBeenCalledTimes(1);
+      expect(onConfirmDeleteBuildStep).not.toHaveBeenCalled();
+    });
+  });
+
   it.each<[NewGoalWizardStep, number]>([
     ["name", 1],
     ["step", 2],
