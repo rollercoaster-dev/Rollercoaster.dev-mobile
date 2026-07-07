@@ -64,6 +64,36 @@ describe("ColorPicker", () => {
     expect(screen.queryByLabelText("Goal color")).toBeNull();
   });
 
+  it("suppresses the goal swatch when goalColor duplicates a palette accent", () => {
+    // #34d399 is the Mint accent — prepending a "goal" swatch here would put a
+    // duplicate hex in the radiogroup, so it must fall through to the palette.
+    renderWithProviders(
+      <ColorPicker
+        selectedColor="#34d399"
+        onSelectColor={onSelectColor}
+        goalColor="#34d399"
+      />,
+    );
+
+    expect(screen.queryByLabelText("Goal color")).toBeNull();
+    // The single surviving Mint swatch stays the one flagged checked.
+    expect(
+      screen.getByLabelText("Mint color").props.accessibilityState,
+    ).toEqual(expect.objectContaining({ checked: true }));
+  });
+
+  it("suppresses the goal swatch regardless of hex casing", () => {
+    renderWithProviders(
+      <ColorPicker
+        selectedColor="#34d399"
+        onSelectColor={onSelectColor}
+        goalColor="#34D399"
+      />,
+    );
+
+    expect(screen.queryByLabelText("Goal color")).toBeNull();
+  });
+
   it("marks selected color as checked", () => {
     renderWithProviders(
       <ColorPicker selectedColor="#34d399" onSelectColor={onSelectColor} />,
@@ -73,6 +103,32 @@ describe("ColorPicker", () => {
     expect(mintRadio.props.accessibilityState).toEqual(
       expect.objectContaining({ checked: true }),
     );
+  });
+
+  it("marks a palette swatch checked when selectedColor casing differs", () => {
+    // Custom picker hexes can arrive uppercase; the matching palette swatch
+    // must still register as selected.
+    renderWithProviders(
+      <ColorPicker selectedColor="#34D399" onSelectColor={onSelectColor} />,
+    );
+
+    expect(
+      screen.getByLabelText("Mint color").props.accessibilityState,
+    ).toEqual(expect.objectContaining({ checked: true }));
+  });
+
+  it("does not highlight Custom… when an uppercase hex matches the palette", () => {
+    renderWithProviders(
+      <ColorPicker
+        selectedColor="#34D399"
+        onSelectColor={onSelectColor}
+        onOpenCustomPicker={jest.fn()}
+      />,
+    );
+    const ringColor = getRingBorderColor(
+      screen.getByTestId("color-picker-custom"),
+    );
+    expect(ringColor).toBe(mockTheme.colors.border);
   });
 
   it("marks non-selected colors as unchecked", () => {

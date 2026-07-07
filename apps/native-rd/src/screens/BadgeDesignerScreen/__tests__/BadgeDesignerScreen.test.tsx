@@ -239,7 +239,9 @@ const makeRow = (overrides: Record<string, unknown> = {}) => ({
   createdAt: "2026-01-28T00:00:00.000Z",
   goalTitle: "Learn TypeScript",
   completedAt: "2026-01-28T00:00:00.000Z",
-  goalColor: "#06b6d4",
+  // Off-palette hex so ColorPicker surfaces a distinct "goal" swatch rather
+  // than de-duping it against a matching accent (#06b6d4 is the "teal" accent).
+  goalColor: "#c026d3",
   ...overrides,
 });
 

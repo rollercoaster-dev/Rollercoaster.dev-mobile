@@ -62,15 +62,24 @@ export function ColorPicker({
   const swatches = useMemo<
     readonly { id: AccentColorId; hex: string }[]
   >(() => {
-    if (goalColor) {
+    // Only surface the extra "goal" swatch when its hex isn't already one of
+    // the palette accents. Otherwise the radiogroup would carry a duplicate
+    // hex — two swatches, both flagged `checked` when it's the selected color.
+    const isPaletteColor = ACCENT_COLORS.some(
+      (c) => c.hex.toLowerCase() === goalColor?.toLowerCase(),
+    );
+    if (goalColor && !isPaletteColor) {
       return [{ id: "goal", hex: goalColor }, ...ACCENT_COLORS];
     }
     return ACCENT_COLORS;
   }, [goalColor]);
 
+  // Custom picker hexes can arrive uppercase, so compare case-insensitively
+  // against the (lowercase) palette hexes.
+  const normalizedSelected = selectedColor.toLowerCase();
   const isCustomSelected =
     onOpenCustomPicker !== undefined &&
-    !swatches.some((s) => s.hex === selectedColor);
+    !swatches.some((s) => s.hex.toLowerCase() === normalizedSelected);
 
   return (
     <View
@@ -84,7 +93,7 @@ export function ColorPicker({
         contentContainerStyle={selectorStyles.row}
       >
         {swatches.map(({ id, hex }) => {
-          const isSelected = hex === selectedColor;
+          const isSelected = hex.toLowerCase() === normalizedSelected;
           const label = t(`color.options.${id}`);
           return (
             <Pressable
