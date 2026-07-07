@@ -187,7 +187,7 @@ export const AllThemesMatrix: Story = {
             <Text style={styles.columnTitle}>{MOOD_NAMES[name]}</Text>
             <Text style={styles.columnKey}>{name}</Text>
             <ScopedTheme name={name}>
-              <View style={styles.matrixCell}>
+              <View style={styles.matrixCell} pointerEvents="none">
                 <FinishDesignStage
                   design={MATRIX_DESIGN}
                   onDesignChange={noop}
@@ -199,7 +199,7 @@ export const AllThemesMatrix: Story = {
               </View>
             </ScopedTheme>
             <ScopedTheme name={name}>
-              <View style={styles.matrixCell}>
+              <View style={styles.matrixCell} pointerEvents="none">
                 <FinishRevealStage
                   badgeDesign={MATRIX_DESIGN}
                   goalTitle={GOAL_TITLE}
