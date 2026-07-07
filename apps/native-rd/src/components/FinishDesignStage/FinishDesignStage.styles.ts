@@ -46,6 +46,9 @@ export const styles = StyleSheet.create((theme) => ({
   },
   centerStack: {
     gap: theme.space[3],
+    // Breathing room below the monogram input / IconPicker so the last control
+    // isn't crammed against the section's bottom border.
+    paddingBottom: theme.space[3],
   },
   bottomLabelInput: {
     minHeight: 44,
