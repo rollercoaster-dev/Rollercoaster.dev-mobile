@@ -43,6 +43,11 @@ const initialSteps: EditGoalStep[] = [
         title: "Order them",
         plannedEvidenceTypes: [EvidenceType.photo],
       },
+      {
+        id: "s1c",
+        title: "Note gaps to research",
+        plannedEvidenceTypes: [EvidenceType.text],
+      },
     ],
   },
   {
@@ -230,7 +235,7 @@ export const EvidencePickerInteraction: Story = {
 
 export const SubSteps: Story = {
   render: () => (
-    <InteractiveEditGoal note='Step 1 is broken into sub-steps (the indented mint-rail block): tap a sub-step to rename it, tap its chip to set evidence, × to remove it, or "add a sub-step" for another. Steps with none show "break into sub-steps" — tap it to seed the first one. Each sub-step requires its own evidence. (Reorder within a parent is a follow-up — no drag handle on sub-steps yet.)' />
+    <InteractiveEditGoal note='Step 1 is broken into three sub-steps (the indented mint-rail block): tap a sub-step to rename it, tap its chip to set evidence, × to remove it, or "add a sub-step" for another. Steps with none show "break into sub-steps" — tap it to seed the first one. Each sub-step requires its own evidence. Reorder within a parent: long-press a sub-step’s ≡ handle and drag it among its siblings (it never leaves its parent, and the parent card itself does not drag). With a screen reader on or reduced motion set, ↑/↓ buttons appear on each sub-step as the accessible fallback.' />
   ),
 };
 
