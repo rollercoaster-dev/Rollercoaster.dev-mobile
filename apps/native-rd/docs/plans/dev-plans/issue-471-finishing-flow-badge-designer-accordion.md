@@ -1,5 +1,22 @@
 # Development Plan: Issue #471
 
+## Implementation Status — ✅ COMPLETE (all 3 steps + plan), not yet pushed
+
+**As of 2026-07-06 · branch `feat/issue-471-badge-designer-accordion` · 4 commits ahead of `origin/main`, working tree clean.**
+
+| #   | Commit                                                                           | SHA        | Files                                                            |
+| --- | -------------------------------------------------------------------------------- | ---------- | ---------------------------------------------------------------- |
+| 1   | `feat(finish-flow): FinishDesignStage — badge designer accordion + live preview` | `8c9eed5f` | `FinishDesignStage.tsx` (257), `.styles.ts` (71), `index.ts` (5) |
+| 2   | `test(finish-flow): stories for FinishDesignStage`                               | `2873f520` | `FinishDesignStage.stories.tsx` (102)                            |
+| 3   | `test(finish-flow): unit tests for FinishDesignStage`                            | `7d3f9332` | `__tests__/FinishDesignStage.test.tsx` (212)                     |
+| 4   | `docs(finish-flow): issue #471 dev plan — completed checklist + discovery log`   | `b5f2d215` | this plan file                                                   |
+
+**Validation (all green):** `type-check` ✅ · `lint` ✅ (0 errors; 214 pre-existing warnings, none in these files) · `test` ✅ (full suite 9790/9790; `FinishDesignStage` 12/12) · `build` ✅ (no-op). Every commit carries a DCO `Signed-off-by` trailer.
+
+**Diff vs `origin/main`:** exactly 5 `FinishDesignStage/*` files + this plan, 647 insertions, **zero existing files touched.** Component/barrel source = 333 LOC (under the 500 cap); stories+tests = 314.
+
+**Next step:** `/self-review` then `/finalize` (push + PR). No open questions remain (D6/D7 resolved by Joe 2026-07-06). Downstream: #472 (flow story + `AllThemesMatrix`), then #449 (screen wiring) — both explicitly out of scope here.
+
 ## Issue Summary
 
 **Title**: [Storybook] Finishing flow 2/3 — badge designer accordion + live preview
