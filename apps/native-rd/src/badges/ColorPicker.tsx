@@ -74,9 +74,12 @@ export function ColorPicker({
     return ACCENT_COLORS;
   }, [goalColor]);
 
+  // Custom picker hexes can arrive uppercase, so compare case-insensitively
+  // against the (lowercase) palette hexes.
+  const normalizedSelected = selectedColor.toLowerCase();
   const isCustomSelected =
     onOpenCustomPicker !== undefined &&
-    !swatches.some((s) => s.hex === selectedColor);
+    !swatches.some((s) => s.hex.toLowerCase() === normalizedSelected);
 
   return (
     <View
@@ -90,7 +93,7 @@ export function ColorPicker({
         contentContainerStyle={selectorStyles.row}
       >
         {swatches.map(({ id, hex }) => {
-          const isSelected = hex === selectedColor;
+          const isSelected = hex.toLowerCase() === normalizedSelected;
           const label = t(`color.options.${id}`);
           return (
             <Pressable

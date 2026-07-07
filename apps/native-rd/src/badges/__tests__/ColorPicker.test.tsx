@@ -105,6 +105,32 @@ describe("ColorPicker", () => {
     );
   });
 
+  it("marks a palette swatch checked when selectedColor casing differs", () => {
+    // Custom picker hexes can arrive uppercase; the matching palette swatch
+    // must still register as selected.
+    renderWithProviders(
+      <ColorPicker selectedColor="#34D399" onSelectColor={onSelectColor} />,
+    );
+
+    expect(
+      screen.getByLabelText("Mint color").props.accessibilityState,
+    ).toEqual(expect.objectContaining({ checked: true }));
+  });
+
+  it("does not highlight Custom… when an uppercase hex matches the palette", () => {
+    renderWithProviders(
+      <ColorPicker
+        selectedColor="#34D399"
+        onSelectColor={onSelectColor}
+        onOpenCustomPicker={jest.fn()}
+      />,
+    );
+    const ringColor = getRingBorderColor(
+      screen.getByTestId("color-picker-custom"),
+    );
+    expect(ringColor).toBe(mockTheme.colors.border);
+  });
+
   it("marks non-selected colors as unchecked", () => {
     renderWithProviders(
       <ColorPicker selectedColor="#a78bfa" onSelectColor={onSelectColor} />,
