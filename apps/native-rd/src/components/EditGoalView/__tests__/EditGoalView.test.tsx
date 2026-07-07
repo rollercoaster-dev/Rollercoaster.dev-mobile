@@ -256,6 +256,20 @@ describe("EditGoalView", () => {
       expect(screen.getByText("Link")).toBeOnTheScreen();
       expect(screen.getByText("Photo")).toBeOnTheScreen();
     });
+
+    it("keeps the title and every control on a two-type step with the ↑/↓ fallback (D5 clustering)", () => {
+      // The narrow-screen fix splits the row into a rowLead (title) + rowControls
+      // (evidence + ↑/↓) so controls wrap instead of crushing the title. This is
+      // the worst case for width (two pills + both arrows); the restructure must
+      // not drop the title or any control. Layout wrapping itself is verified in
+      // Storybook — the Node renderer has no width.
+      mockAnimationPref = "none";
+      renderWithProviders(<EditGoalView {...makeProps()} />);
+      expect(screen.getByText("Second step")).toBeOnTheScreen();
+      expect(screen.getByText("Link")).toBeOnTheScreen();
+      expect(screen.getByText("Photo")).toBeOnTheScreen();
+      expect(screen.getByLabelText('Move "Second step" up')).toBeOnTheScreen();
+    });
   });
 
   describe("evidence picker (D8)", () => {

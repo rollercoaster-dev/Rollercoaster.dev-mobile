@@ -96,10 +96,35 @@ export const styles = StyleSheet.create((theme) => ({
   rowCardDragging: {
     borderColor: theme.colors.accentPrimary,
   },
+  // Wraps so the trailing controls drop to a second line on narrow screens
+  // instead of crushing the title (D5). rowLead holds [handle][number][title]
+  // and grows to fill; rowControls holds [evidence][↑↓] and wraps under it.
   rowMain: {
+    flexDirection: "row" as const,
+    flexWrap: "wrap" as const,
+    alignItems: "center" as const,
+    columnGap: theme.space[2],
+    rowGap: theme.space[2],
+  },
+  // Leading cluster: grows to fill the line but never shrinks below a legible
+  // floor — below that the sibling rowControls wraps rather than the title.
+  rowLead: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
     gap: theme.space[2],
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 0,
+    minWidth: 140,
+  },
+  // Trailing cluster: natural width, never shrinks; wraps to its own line when
+  // the row can't hold both clusters (right-aligned there via marginLeft auto).
+  rowControls: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: theme.space[2],
+    flexShrink: 0,
+    marginLeft: "auto" as const,
   },
   dragHandle: {
     fontSize: theme.size.md,
@@ -198,10 +223,15 @@ export const styles = StyleSheet.create((theme) => ({
     borderLeftColor: theme.colors.accentMint,
     gap: theme.space[1],
   },
+  // Same wrap treatment as rowMain (D5): [handle][title] in rowLead, and
+  // [evidence][↑↓][×] in rowControls, which drops to a second line on narrow
+  // screens rather than crushing the sub-step title.
   subStepRow: {
     flexDirection: "row" as const,
+    flexWrap: "wrap" as const,
     alignItems: "center" as const,
-    gap: theme.space[2],
+    columnGap: theme.space[2],
+    rowGap: theme.space[2],
   },
   // Lifted-row accent while dragging (#459, D3). A bare subStepRow has no border
   // to swap (unlike the parent's rowCard → rowCardDragging), so add the same

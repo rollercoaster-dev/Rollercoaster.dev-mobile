@@ -203,69 +203,73 @@ export function EditGoalStepRow({
   ) : (
     <>
       <View style={styles.rowMain}>
-        <RNText
-          style={styles.dragHandle}
-          accessibilityElementsHidden
-          importantForAccessibility="no"
-        >
-          {"≡"}
-        </RNText>
-        <RNText style={styles.stepNumber}>{stepNumber}</RNText>
-        <Pressable
-          style={styles.rowTitlePress}
-          onPress={onStartEditing}
-          accessibilityRole="button"
-          accessibilityLabel={step.title}
-          accessibilityHint={tapToEditHint}
-          testID={`edit-goal-step-title-${step.id}`}
-        >
-          <RNText style={styles.rowTitleText}>{step.title}</RNText>
-        </Pressable>
-        <Pressable
-          style={styles.evidenceChip}
-          onPress={onEvidenceChipPress}
-          accessibilityRole="button"
-          accessibilityLabel={editEvidenceLabel}
-          hitSlop={8}
-          testID={`edit-goal-step-evidence-${step.id}`}
-        >
-          <EvidenceTypePicker
-            selectedTypes={step.plannedEvidenceTypes}
-            compact
-          />
-        </Pressable>
-        {showAccessibleControls && (
-          <View style={styles.reorderButtons}>
-            {onMoveUp && !isFirst && (
-              <IconButton
-                icon={<ArrowUp size={18} weight="bold" />}
-                onPress={onMoveUp}
-                size="sm"
-                accessibilityLabel={moveUpLabel(step.title)}
-                testID={`edit-goal-step-up-${step.id}`}
-              />
-            )}
-            {onMoveDown && !isLast && (
-              <IconButton
-                icon={<ArrowDown size={18} weight="bold" />}
-                onPress={onMoveDown}
-                size="sm"
-                accessibilityLabel={moveDownLabel(step.title)}
-                testID={`edit-goal-step-down-${step.id}`}
-              />
-            )}
-          </View>
-        )}
-        <Pressable
-          style={styles.stepDelete}
-          onPress={onDelete}
-          accessibilityRole="button"
-          accessibilityLabel={deleteStepLabel(step.title)}
-          hitSlop={8}
-          testID={`edit-goal-step-delete-${step.id}`}
-        >
-          <RNText style={styles.stepDeleteGlyph}>{"×"}</RNText>
-        </Pressable>
+        <View style={styles.rowLead}>
+          <RNText
+            style={styles.dragHandle}
+            accessibilityElementsHidden
+            importantForAccessibility="no"
+          >
+            {"≡"}
+          </RNText>
+          <RNText style={styles.stepNumber}>{stepNumber}</RNText>
+          <Pressable
+            style={styles.rowTitlePress}
+            onPress={onStartEditing}
+            accessibilityRole="button"
+            accessibilityLabel={step.title}
+            accessibilityHint={tapToEditHint}
+            testID={`edit-goal-step-title-${step.id}`}
+          >
+            <RNText style={styles.rowTitleText}>{step.title}</RNText>
+          </Pressable>
+        </View>
+        <View style={styles.rowControls}>
+          <Pressable
+            style={styles.evidenceChip}
+            onPress={onEvidenceChipPress}
+            accessibilityRole="button"
+            accessibilityLabel={editEvidenceLabel}
+            hitSlop={8}
+            testID={`edit-goal-step-evidence-${step.id}`}
+          >
+            <EvidenceTypePicker
+              selectedTypes={step.plannedEvidenceTypes}
+              compact
+            />
+          </Pressable>
+          {showAccessibleControls && (
+            <View style={styles.reorderButtons}>
+              {onMoveUp && !isFirst && (
+                <IconButton
+                  icon={<ArrowUp size={18} weight="bold" />}
+                  onPress={onMoveUp}
+                  size="sm"
+                  accessibilityLabel={moveUpLabel(step.title)}
+                  testID={`edit-goal-step-up-${step.id}`}
+                />
+              )}
+              {onMoveDown && !isLast && (
+                <IconButton
+                  icon={<ArrowDown size={18} weight="bold" />}
+                  onPress={onMoveDown}
+                  size="sm"
+                  accessibilityLabel={moveDownLabel(step.title)}
+                  testID={`edit-goal-step-down-${step.id}`}
+                />
+              )}
+            </View>
+          )}
+          <Pressable
+            style={styles.stepDelete}
+            onPress={onDelete}
+            accessibilityRole="button"
+            accessibilityLabel={deleteStepLabel(step.title)}
+            hitSlop={8}
+            testID={`edit-goal-step-delete-${step.id}`}
+          >
+            <RNText style={styles.stepDeleteGlyph}>{"×"}</RNText>
+          </Pressable>
+        </View>
       </View>
       {step.dateDepChips && step.dateDepChips.length > 0 && (
         <View style={styles.chipRow}>

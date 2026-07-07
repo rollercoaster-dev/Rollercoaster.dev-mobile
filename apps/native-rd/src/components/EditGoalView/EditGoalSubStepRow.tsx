@@ -187,62 +187,66 @@ export function EditGoalSubStepRow({
 
   const body = (
     <>
-      {marker}
-      <Pressable
-        style={styles.subStepTitlePress}
-        onPress={onStartEditing}
-        accessibilityRole="button"
-        accessibilityLabel={subStep.title}
-        accessibilityHint={tapToEditHint}
-        testID={`edit-goal-substep-title-${subStep.id}`}
-      >
-        <RNText style={styles.subStepTitleText}>{subStep.title}</RNText>
-      </Pressable>
-      <Pressable
-        style={styles.evidenceChip}
-        onPress={onEvidenceChipPress}
-        accessibilityRole="button"
-        accessibilityLabel={editEvidenceLabel}
-        hitSlop={8}
-        testID={`edit-goal-substep-evidence-${subStep.id}`}
-      >
-        <EvidenceTypePicker
-          selectedTypes={subStep.plannedEvidenceTypes}
-          compact
-        />
-      </Pressable>
-      {showAccessibleControls && (
-        <View style={styles.reorderButtons}>
-          {onMoveUp && !isFirst && (
-            <IconButton
-              icon={<ArrowUp size={18} weight="bold" />}
-              onPress={onMoveUp}
-              size="sm"
-              accessibilityLabel={moveSubStepUpLabel(subStep.title)}
-              testID={`edit-goal-substep-up-${subStep.id}`}
-            />
-          )}
-          {onMoveDown && !isLast && (
-            <IconButton
-              icon={<ArrowDown size={18} weight="bold" />}
-              onPress={onMoveDown}
-              size="sm"
-              accessibilityLabel={moveSubStepDownLabel(subStep.title)}
-              testID={`edit-goal-substep-down-${subStep.id}`}
-            />
-          )}
-        </View>
-      )}
-      <Pressable
-        style={styles.subStepDelete}
-        onPress={onDelete}
-        accessibilityRole="button"
-        accessibilityLabel={deleteSubStepLabel(subStep.title)}
-        hitSlop={8}
-        testID={`edit-goal-substep-delete-${subStep.id}`}
-      >
-        <RNText style={styles.subStepDeleteGlyph}>{"×"}</RNText>
-      </Pressable>
+      <View style={styles.rowLead}>
+        {marker}
+        <Pressable
+          style={styles.subStepTitlePress}
+          onPress={onStartEditing}
+          accessibilityRole="button"
+          accessibilityLabel={subStep.title}
+          accessibilityHint={tapToEditHint}
+          testID={`edit-goal-substep-title-${subStep.id}`}
+        >
+          <RNText style={styles.subStepTitleText}>{subStep.title}</RNText>
+        </Pressable>
+      </View>
+      <View style={styles.rowControls}>
+        <Pressable
+          style={styles.evidenceChip}
+          onPress={onEvidenceChipPress}
+          accessibilityRole="button"
+          accessibilityLabel={editEvidenceLabel}
+          hitSlop={8}
+          testID={`edit-goal-substep-evidence-${subStep.id}`}
+        >
+          <EvidenceTypePicker
+            selectedTypes={subStep.plannedEvidenceTypes}
+            compact
+          />
+        </Pressable>
+        {showAccessibleControls && (
+          <View style={styles.reorderButtons}>
+            {onMoveUp && !isFirst && (
+              <IconButton
+                icon={<ArrowUp size={18} weight="bold" />}
+                onPress={onMoveUp}
+                size="sm"
+                accessibilityLabel={moveSubStepUpLabel(subStep.title)}
+                testID={`edit-goal-substep-up-${subStep.id}`}
+              />
+            )}
+            {onMoveDown && !isLast && (
+              <IconButton
+                icon={<ArrowDown size={18} weight="bold" />}
+                onPress={onMoveDown}
+                size="sm"
+                accessibilityLabel={moveSubStepDownLabel(subStep.title)}
+                testID={`edit-goal-substep-down-${subStep.id}`}
+              />
+            )}
+          </View>
+        )}
+        <Pressable
+          style={styles.subStepDelete}
+          onPress={onDelete}
+          accessibilityRole="button"
+          accessibilityLabel={deleteSubStepLabel(subStep.title)}
+          hitSlop={8}
+          testID={`edit-goal-substep-delete-${subStep.id}`}
+        >
+          <RNText style={styles.subStepDeleteGlyph}>{"×"}</RNText>
+        </Pressable>
+      </View>
     </>
   );
 
