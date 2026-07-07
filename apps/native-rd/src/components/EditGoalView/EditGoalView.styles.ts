@@ -138,6 +138,17 @@ export const styles = StyleSheet.create((theme) => ({
     flexDirection: "row" as const,
     gap: theme.space[1],
   },
+  // Per-step delete × on the main row (#460) — mirrors subStepDelete/Glyph (D3).
+  stepDelete: {
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  stepDeleteGlyph: {
+    fontSize: theme.size.lg,
+    color: theme.colors.textMuted,
+  },
   // Date/dependency chip row (D5) — rendered only when chips are present.
   chipRow: {
     flexDirection: "row" as const,
