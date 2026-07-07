@@ -305,6 +305,18 @@ export const styles = StyleSheet.create((theme) => ({
     alignItems: "center" as const,
     justifyContent: "center" as const,
   },
+  // Per-row × delete (#482) — 44×44 min touch target, muted glyph. Mirrors
+  // EditGoalView.styles' stepDelete/stepDeleteGlyph (D6).
+  buildRowDelete: {
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  buildRowDeleteGlyph: {
+    fontSize: theme.size.lg,
+    color: theme.colors.textMuted,
+  },
   // "+ add another step" — mirrors quickAddPress's single-accessible-node shape;
   // an accent link row below the list, not a bordered button (prototype).
   addStepPress: {

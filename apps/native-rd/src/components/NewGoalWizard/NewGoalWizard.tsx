@@ -31,6 +31,7 @@ import { IconButton } from "../IconButton";
 import { Button } from "../Button";
 import { ScreenSubHeader } from "../ScreenHeader/ScreenSubHeader";
 import { EvidenceTypePicker } from "../EvidenceTypePicker";
+import { ConfirmDeleteModal } from "../ConfirmDeleteModal";
 import { EvidenceType } from "../../db";
 import { EVIDENCE_OPTIONS, type EvidenceTypeValue } from "../../types/evidence";
 import { styles } from "./NewGoalWizard.styles";
@@ -348,6 +349,13 @@ export function NewGoalWizard({
     ? onCloseBuildStepEvidence
     : onCloseEvidencePicker;
 
+  // The build row targeted by a pending delete (D1) — mirrors openBuildStep's
+  // derivation. Drives the single ConfirmDeleteModal's visibility + message.
+  const pendingDeleteStep =
+    pendingDeleteBuildStepId != null
+      ? buildSteps.find((step) => step.id === pendingDeleteBuildStepId)
+      : undefined;
+
   return (
     <View style={styles.container}>
       {/* Shared header chrome (D8). Back arrow is omitted on the first step —
@@ -613,6 +621,23 @@ export function NewGoalWizard({
                               </RNText>
                             </View>
                           </Pressable>
+                          {/* × opens the shared ConfirmDeleteModal (D1) — never
+                              removes the row on the raw press. Hidden while this
+                              row is mid-rename via the enclosing !isEditing. */}
+                          <Pressable
+                            style={styles.buildRowDelete}
+                            onPress={() => onRequestDeleteBuildStep(step.id)}
+                            accessibilityRole="button"
+                            accessibilityLabel={deleteBuildStepLabel(
+                              step.title,
+                            )}
+                            hitSlop={8}
+                            testID={`new-goal-build-step-delete-${step.id}`}
+                          >
+                            <RNText style={styles.buildRowDeleteGlyph}>
+                              {"×"}
+                            </RNText>
+                          </Pressable>
                         </View>
                       )}
                     </View>
@@ -699,6 +724,22 @@ export function NewGoalWizard({
         selectedType={pickerSelectedType}
         onSelectType={handlePickerSelect}
         onClose={handlePickerClose}
+      />
+
+      {/* Build-row delete confirmation (D1). One instance, gated on
+          pendingDeleteBuildStepId — only ever set while on the build step, but
+          rendered unconditionally (inert until visible) like the picker above.
+          onConfirmDeleteBuildStep is the only path that removes a row. */}
+      <ConfirmDeleteModal
+        visible={pendingDeleteBuildStepId != null}
+        onCancel={onCancelDeleteBuildStep}
+        onConfirm={onConfirmDeleteBuildStep}
+        title={deleteBuildStepConfirmTitle}
+        message={
+          pendingDeleteStep
+            ? deleteBuildStepConfirmMessage(pendingDeleteStep.title)
+            : ""
+        }
       />
     </View>
   );
