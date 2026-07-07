@@ -726,12 +726,14 @@ export function NewGoalWizard({
         onClose={handlePickerClose}
       />
 
-      {/* Build-row delete confirmation (D1). One instance, gated on
-          pendingDeleteBuildStepId — only ever set while on the build step, but
+      {/* Build-row delete confirmation (D1). One instance, gated on the
+          resolved pendingDeleteStep — only ever set while on the build step, but
           rendered unconditionally (inert until visible) like the picker above.
+          Gating on the resolved row (not the raw id) means a stale/unknown
+          pendingDeleteBuildStepId can never surface an empty-message modal.
           onConfirmDeleteBuildStep is the only path that removes a row. */}
       <ConfirmDeleteModal
-        visible={pendingDeleteBuildStepId != null}
+        visible={pendingDeleteStep != null}
         onCancel={onCancelDeleteBuildStep}
         onConfirm={onConfirmDeleteBuildStep}
         title={deleteBuildStepConfirmTitle}
