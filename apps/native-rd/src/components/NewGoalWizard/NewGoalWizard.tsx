@@ -456,7 +456,10 @@ export function NewGoalWizard({
                   {yourStepsLabel}
                 </RNText>
                 {/* Count derived internally as buildSteps.length (D8). */}
-                <RNText style={styles.buildHeaderCount}>
+                <RNText
+                  style={styles.buildHeaderCount}
+                  testID="new-goal-build-count"
+                >
                   {buildSteps.length}
                 </RNText>
               </View>
