@@ -103,6 +103,51 @@ const withSub: EditGoalStep[] = [
   },
 ];
 
+// Two parents, each with ≥2 sub-steps (Parent A has a middle position so
+// reorder-to-middle is exercised, not just a swap) — plus `withSub`'s lone
+// sub-step covers the fallback-absent case. Used by the #459 reorder specs.
+const withMultiSub: EditGoalStep[] = [
+  {
+    id: "s1",
+    title: "Parent A",
+    plannedEvidenceTypes: [EvidenceType.text],
+    subSteps: [
+      {
+        id: "a1",
+        title: "Alpha one",
+        plannedEvidenceTypes: [EvidenceType.text],
+      },
+      {
+        id: "a2",
+        title: "Alpha two",
+        plannedEvidenceTypes: [EvidenceType.text],
+      },
+      {
+        id: "a3",
+        title: "Alpha three",
+        plannedEvidenceTypes: [EvidenceType.text],
+      },
+    ],
+  },
+  {
+    id: "s2",
+    title: "Parent B",
+    plannedEvidenceTypes: [EvidenceType.photo],
+    subSteps: [
+      {
+        id: "b1",
+        title: "Beta one",
+        plannedEvidenceTypes: [EvidenceType.text],
+      },
+      {
+        id: "b2",
+        title: "Beta two",
+        plannedEvidenceTypes: [EvidenceType.text],
+      },
+    ],
+  },
+];
+
 afterEach(() => {
   mockAnimationPref = "full";
 });
@@ -446,6 +491,88 @@ describe("EditGoalView", () => {
       fireEvent.press(screen.getByTestId("edit-goal-step-title-s1"));
       expect(screen.getByTestId("edit-goal-step-edit-s1")).toBeOnTheScreen();
       expect(screen.queryByTestId("edit-goal-step-delete-s1")).toBeNull();
+    });
+  });
+
+  describe("sub-step reorder (#459)", () => {
+    it("renders the ≡ handle (not ↳) on sub-step rows, hidden from screen readers", () => {
+      renderWithProviders(<EditGoalView {...makeProps({ steps: withSub })} />);
+      expect(
+        screen.queryByText("↳", { includeHiddenElements: true }),
+      ).toBeNull();
+      // 2 parent rows + 1 sub-step row all carry a hidden ≡ handle.
+      const handles = screen.getAllByText("≡", { includeHiddenElements: true });
+      expect(handles).toHaveLength(3);
+      handles.forEach((h) =>
+        expect(h.props.accessibilityElementsHidden).toBe(true),
+      );
+    });
+
+    it("shows ↑/↓ fallback on a parent's 2+ sub-steps when motion is off", () => {
+      mockAnimationPref = "none";
+      renderWithProviders(
+        <EditGoalView {...makeProps({ steps: withMultiSub })} />,
+      );
+      // Middle sub-step gets both; ends get only the one that keeps it in-list.
+      expect(screen.getByLabelText('Move "Alpha one" down')).toBeOnTheScreen();
+      expect(screen.getByLabelText('Move "Alpha two" up')).toBeOnTheScreen();
+      expect(screen.getByLabelText('Move "Alpha two" down')).toBeOnTheScreen();
+      expect(screen.getByLabelText('Move "Alpha three" up')).toBeOnTheScreen();
+      // First has no ↑, last has no ↓.
+      expect(screen.queryByLabelText('Move "Alpha one" up')).toBeNull();
+      expect(screen.queryByLabelText('Move "Alpha three" down')).toBeNull();
+    });
+
+    it("shows no ↑/↓ fallback on a parent's lone sub-step (isFirst && isLast)", () => {
+      mockAnimationPref = "none";
+      renderWithProviders(<EditGoalView {...makeProps({ steps: withSub })} />);
+      expect(screen.queryByLabelText('Move "Sub-step" up')).toBeNull();
+      expect(screen.queryByLabelText('Move "Sub-step" down')).toBeNull();
+    });
+
+    it("fires onReorderSubSteps with the parent id + new sibling order — not onReorderSteps", () => {
+      mockAnimationPref = "none";
+      const onReorderSubSteps = jest.fn();
+      const onReorderSteps = jest.fn();
+      renderWithProviders(
+        <EditGoalView
+          {...makeProps({
+            steps: withMultiSub,
+            onReorderSubSteps,
+            onReorderSteps,
+          })}
+        />,
+      );
+      fireEvent.press(screen.getByLabelText('Move "Alpha one" down'));
+      expect(onReorderSubSteps).toHaveBeenCalledWith("s1", ["a2", "a1", "a3"]);
+      expect(onReorderSteps).not.toHaveBeenCalled();
+    });
+
+    it("announces the sub-step reorder with the default English builder", () => {
+      mockAnimationPref = "none";
+      const announce = jest.spyOn(
+        AccessibilityInfo,
+        "announceForAccessibility",
+      );
+      renderWithProviders(
+        <EditGoalView {...makeProps({ steps: withMultiSub })} />,
+      );
+      fireEvent.press(screen.getByLabelText('Move "Alpha one" down'));
+      expect(announce).toHaveBeenCalledWith('Moved "Alpha one" to position 2');
+      announce.mockRestore();
+    });
+
+    it("scopes reorder to one parent — the other parent's sub-steps are untouched", () => {
+      mockAnimationPref = "none";
+      const onReorderSubSteps = jest.fn();
+      renderWithProviders(
+        <EditGoalView
+          {...makeProps({ steps: withMultiSub, onReorderSubSteps })}
+        />,
+      );
+      fireEvent.press(screen.getByLabelText('Move "Beta one" down'));
+      expect(onReorderSubSteps).toHaveBeenCalledTimes(1);
+      expect(onReorderSubSteps).toHaveBeenCalledWith("s2", ["b2", "b1"]);
     });
   });
 
