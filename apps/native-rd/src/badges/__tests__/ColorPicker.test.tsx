@@ -64,6 +64,36 @@ describe("ColorPicker", () => {
     expect(screen.queryByLabelText("Goal color")).toBeNull();
   });
 
+  it("suppresses the goal swatch when goalColor duplicates a palette accent", () => {
+    // #34d399 is the Mint accent — prepending a "goal" swatch here would put a
+    // duplicate hex in the radiogroup, so it must fall through to the palette.
+    renderWithProviders(
+      <ColorPicker
+        selectedColor="#34d399"
+        onSelectColor={onSelectColor}
+        goalColor="#34d399"
+      />,
+    );
+
+    expect(screen.queryByLabelText("Goal color")).toBeNull();
+    // The single surviving Mint swatch stays the one flagged checked.
+    expect(
+      screen.getByLabelText("Mint color").props.accessibilityState,
+    ).toEqual(expect.objectContaining({ checked: true }));
+  });
+
+  it("suppresses the goal swatch regardless of hex casing", () => {
+    renderWithProviders(
+      <ColorPicker
+        selectedColor="#34d399"
+        onSelectColor={onSelectColor}
+        goalColor="#34D399"
+      />,
+    );
+
+    expect(screen.queryByLabelText("Goal color")).toBeNull();
+  });
+
   it("marks selected color as checked", () => {
     renderWithProviders(
       <ColorPicker selectedColor="#34d399" onSelectColor={onSelectColor} />,

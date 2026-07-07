@@ -140,8 +140,9 @@ describe("FinishDesignStage", () => {
         })}
       />,
     );
-    // SHAPES order starts with `circle`; the default design is `roundedRect`.
-    fireEvent.press(screen.getAllByRole("radio")[0]);
+    // Default design is `roundedRect`; target the Circle option by its a11y
+    // label so the test doesn't depend on SHAPES ordering.
+    fireEvent.press(screen.getByLabelText("Circle shape"));
     expect(onDesignChange).toHaveBeenCalledWith({
       ...design,
       shape: BadgeShape.circle,
@@ -160,12 +161,13 @@ describe("FinishDesignStage", () => {
         })}
       />,
     );
-    // No goalColor → swatches are exactly ACCENT_COLORS; index 1 is a color
-    // other than the default fill.
-    fireEvent.press(screen.getAllByRole("radio")[1]);
+    // No goalColor → swatches are exactly ACCENT_COLORS. Target the Mint
+    // swatch by its a11y label so the test doesn't depend on palette ordering.
+    const mint = ACCENT_COLORS.find((c) => c.id === "mint")!;
+    fireEvent.press(screen.getByLabelText("Mint color"));
     expect(onDesignChange).toHaveBeenCalledWith({
       ...design,
-      color: ACCENT_COLORS[1].hex,
+      color: mint.hex,
     });
   });
 
@@ -226,8 +228,9 @@ describe("FinishDesignStage", () => {
         })}
       />,
     );
-    // MODES order is [icon, monogram]; the default design is monogram.
-    fireEvent.press(screen.getAllByRole("radio")[0]);
+    // Default design is monogram; target the Icon option by its a11y label so
+    // the test doesn't depend on MODES ordering.
+    fireEvent.press(screen.getByLabelText("Icon center"));
     expect(onDesignChange).toHaveBeenCalledWith({
       ...design,
       centerMode: BadgeCenterMode.icon,

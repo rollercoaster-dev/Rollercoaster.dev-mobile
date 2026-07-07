@@ -18,7 +18,10 @@ export default meta;
 type Story = StoryObj<typeof FinishDesignStage>;
 
 const GOAL_TITLE = "Rewire the workshop";
-const GOAL_COLOR = "#34d399";
+// Deliberately off-palette (not in ColorPicker's ACCENT_COLORS) so the extra
+// "goal" swatch renders as a distinct entry — a palette hex would be de-duped
+// away and the story wouldn't exercise the goal-swatch affordance.
+const GOAL_COLOR = "#e11d48";
 
 /** Wrapper holding the badge design in local state so every control
  * round-trips through `onDesignChange`, mirroring how the integration (#449)

@@ -62,7 +62,13 @@ export function ColorPicker({
   const swatches = useMemo<
     readonly { id: AccentColorId; hex: string }[]
   >(() => {
-    if (goalColor) {
+    // Only surface the extra "goal" swatch when its hex isn't already one of
+    // the palette accents. Otherwise the radiogroup would carry a duplicate
+    // hex — two swatches, both flagged `checked` when it's the selected color.
+    const isPaletteColor = ACCENT_COLORS.some(
+      (c) => c.hex.toLowerCase() === goalColor?.toLowerCase(),
+    );
+    if (goalColor && !isPaletteColor) {
       return [{ id: "goal", hex: goalColor }, ...ACCENT_COLORS];
     }
     return ACCENT_COLORS;
