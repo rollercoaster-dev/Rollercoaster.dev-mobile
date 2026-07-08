@@ -6,6 +6,8 @@ export type {
   EditGoalDateDepChip,
   EditGoalChipTone,
 } from "./EditGoalView";
+export { EditGoalStepList } from "./EditGoalStepList";
+export type { EditGoalStepListProps } from "./EditGoalStepList";
 export { EditGoalStepRow } from "./EditGoalStepRow";
 export type { EditGoalStepRowProps } from "./EditGoalStepRow";
 export { EditGoalSubStepRow } from "./EditGoalSubStepRow";
