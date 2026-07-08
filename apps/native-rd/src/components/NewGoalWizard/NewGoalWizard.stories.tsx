@@ -7,6 +7,7 @@ import {
   type BuildStep as BuildStepData,
   type NewGoalWizardStep,
 } from "./NewGoalWizard";
+import type { EditGoalSubStep } from "../EditGoalView";
 import { EvidenceType } from "../../db";
 import type { EvidenceTypeValue } from "../../types/evidence";
 
@@ -156,6 +157,25 @@ const SAMPLE_BUILD_STEPS: BuildStepData[] = [
   { id: "step-2", title: "Paint it", evidenceType: EvidenceType.photo },
 ];
 
+// Sub-stepped variant (#465), matching the Edit Goal C prototype's seed: row 1
+// carries one sub-step ("Check by hand"/Note — the mint-rail block), row 2 has
+// none (shows the "break into sub-steps" prompt) — both states in one render.
+const SAMPLE_BUILD_STEPS_WITH_SUBSTEPS: BuildStepData[] = [
+  {
+    id: "step-1",
+    title: "Sand the edges",
+    evidenceType: EvidenceType.text,
+    subSteps: [
+      {
+        id: "step-1-sub-1",
+        title: "Check by hand",
+        plannedEvidenceTypes: [EvidenceType.text],
+      },
+    ],
+  },
+  { id: "step-2", title: "Paint it", evidenceType: EvidenceType.photo },
+];
+
 // Appends the prototype's default new row ({ "New step", Note }). The id stays
 // unique via list length — these stories only grow the list (no removal).
 function appendBuildStep(steps: BuildStepData[]): BuildStepData[] {
@@ -169,14 +189,29 @@ function appendBuildStep(steps: BuildStepData[]): BuildStepData[] {
   ];
 }
 
+// The rename/evidence/remove helpers below search nested subSteps when the id
+// doesn't match a top-level row (#465) — the story-reducer mirror of the
+// component's findSubStep, since the wizard reuses one id-keyed callback set
+// across both levels (ids are unique across levels). A sub-step's evidence is
+// stored as a singleton plannedEvidenceTypes array (the reused EditGoalSubStep
+// shape) but stays single-type on this screen, like every build row.
+
 function updateBuildStepEvidence(
   steps: BuildStepData[],
   id: string,
   type: EvidenceTypeValue,
 ): BuildStepData[] {
-  return steps.map((step) =>
-    step.id === id ? { ...step, evidenceType: type } : step,
-  );
+  return steps.map((step) => {
+    if (step.id === id) return { ...step, evidenceType: type };
+    const subs = step.subSteps;
+    if (!subs?.some((sub) => sub.id === id)) return step;
+    return {
+      ...step,
+      subSteps: subs.map((sub) =>
+        sub.id === id ? { ...sub, plannedEvidenceTypes: [type] } : sub,
+      ),
+    };
+  });
 }
 
 function renameBuildStep(
@@ -184,11 +219,71 @@ function renameBuildStep(
   id: string,
   title: string,
 ): BuildStepData[] {
-  return steps.map((step) => (step.id === id ? { ...step, title } : step));
+  return steps.map((step) => {
+    if (step.id === id) return { ...step, title };
+    const subs = step.subSteps;
+    if (!subs?.some((sub) => sub.id === id)) return step;
+    return {
+      ...step,
+      subSteps: subs.map((sub) => (sub.id === id ? { ...sub, title } : sub)),
+    };
+  });
 }
 
 function removeBuildStep(steps: BuildStepData[], id: string): BuildStepData[] {
-  return steps.filter((step) => step.id !== id);
+  return steps
+    .filter((step) => step.id !== id)
+    .map((step) => {
+      const subs = step.subSteps;
+      if (!subs?.some((sub) => sub.id === id)) return step;
+      return { ...step, subSteps: subs.filter((sub) => sub.id !== id) };
+    });
+}
+
+// Appends a default sub-step under the named parent (#465) — title arrives
+// from the wizard's newSubStepTitle ("New sub-step"), born as Note like every
+// new row. The id stays unique via the parent's sub-step count (same growth
+// caveat as appendBuildStep).
+function addSubStep(
+  steps: BuildStepData[],
+  parentStepId: string,
+  title: string,
+): BuildStepData[] {
+  return steps.map((step) => {
+    if (step.id !== parentStepId) return step;
+    const subs = step.subSteps ?? [];
+    return {
+      ...step,
+      subSteps: [
+        ...subs,
+        {
+          id: `${parentStepId}-sub-${subs.length + 1}`,
+          title,
+          plannedEvidenceTypes: [EvidenceType.text],
+        },
+      ],
+    };
+  });
+}
+
+// Applies the wizard's ↑/↓ swap result: reorders only the named parent's
+// sub-steps to match orderedSubStepIds — a sibling parent's never move (#465).
+function reorderSubSteps(
+  steps: BuildStepData[],
+  parentStepId: string,
+  orderedSubStepIds: string[],
+): BuildStepData[] {
+  return steps.map((step) => {
+    const subs = step.subSteps;
+    if (step.id !== parentStepId || !subs) return step;
+    const byId = new Map(subs.map((sub) => [sub.id, sub]));
+    return {
+      ...step,
+      subSteps: orderedSubStepIds
+        .map((id) => byId.get(id))
+        .filter((sub): sub is EditGoalSubStep => sub != null),
+    };
+  });
 }
 
 /**
@@ -251,15 +346,18 @@ function useBuildStepEditing(
  * prototype's own sample steps so the story matches the canonical mock exactly.
  * Adding a row appends "New step"/Note; each row's chip opens the shared
  * capture sheet targeted at that row and updates only that row's type. Rename +
- * delete state comes from useBuildStepEditing (#482).
+ * delete state comes from useBuildStepEditing (#482). `initialSteps` lets
+ * BuildStepWithSubSteps (#465) seed the sub-stepped sample set without a
+ * duplicate wrapper; the sub-step handlers are inert on sub-step-free seeds.
  */
 function InteractiveBuildStep({
   initialPendingDeleteId = null,
+  initialSteps = SAMPLE_BUILD_STEPS,
 }: {
   initialPendingDeleteId?: string | null;
+  initialSteps?: BuildStepData[];
 }) {
-  const [buildSteps, setBuildSteps] =
-    useState<BuildStepData[]>(SAMPLE_BUILD_STEPS);
+  const [buildSteps, setBuildSteps] = useState<BuildStepData[]>(initialSteps);
   const [openBuildStepEvidenceId, setOpenBuildStepEvidenceId] = useState<
     string | null
   >(null);
@@ -287,6 +385,14 @@ function InteractiveBuildStep({
         onBuildStepEvidenceTypeChange={(id, type) =>
           setBuildSteps((prev) => updateBuildStepEvidence(prev, id, type))
         }
+        onAddSubStep={(parentStepId, title) =>
+          setBuildSteps((prev) => addSubStep(prev, parentStepId, title))
+        }
+        onReorderSubSteps={(parentStepId, orderedSubStepIds) =>
+          setBuildSteps((prev) =>
+            reorderSubSteps(prev, parentStepId, orderedSubStepIds),
+          )
+        }
         {...editing}
       />
     </PhoneStage>
@@ -295,6 +401,17 @@ function InteractiveBuildStep({
 
 export const BuildStep: Story = {
   render: () => <InteractiveBuildStep />,
+};
+
+// Sub-stepped build state (#465): row 1 renders the mint-rail block (reused
+// EditGoalSubStepRow — tap-to-edit title, evidence chip, ×, and ↑/↓ once a
+// second sub-step is added), row 2 the "break into sub-steps" prompt. Fully
+// interactive: both add affordances, inline rename, the shared capture sheet,
+// and the shared delete confirm all work on sub-steps.
+export const BuildStepWithSubSteps: Story = {
+  render: () => (
+    <InteractiveBuildStep initialSteps={SAMPLE_BUILD_STEPS_WITH_SUBSTEPS} />
+  ),
 };
 
 // Frozen variant: the confirm modal is open on mount (row "step-1" targeted),
@@ -403,7 +520,9 @@ export const InteractiveFlow: Story = {
  * active theme correctly, so the toolbar switcher is the reliable way to review
  * all 7 product themes here — the EditGoalView/TimelineStep/BadgesWall
  * treatment. The build step is the richest (header, rows, chips, CTA), so it's
- * the one rendered.
+ * the one rendered — seeded with the sub-stepped sample set (#465) so the
+ * toolbar review also covers the sub-step rail (accentMint), "add a sub-step"
+ * (accentPrimary), and "break into sub-steps" (success) colors.
  */
 export const AllThemesMatrix: Story = {
   render: () => (
@@ -415,7 +534,7 @@ export const AllThemesMatrix: Story = {
         and re-renders after mount, and on web that reverts a ScopedTheme cell
         to the active theme.
       </Text>
-      <InteractiveBuildStep />
+      <InteractiveBuildStep initialSteps={SAMPLE_BUILD_STEPS_WITH_SUBSTEPS} />
     </View>
   ),
 };
