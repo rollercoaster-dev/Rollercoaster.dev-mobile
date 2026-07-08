@@ -11,6 +11,9 @@
  *     same picker, add-step affordance, "I'm ready →" CTA) — slice 3/3 (#464)
  *   - Step 3 · build-row inline rename + confirmed delete (tap-to-edit title,
  *     × routing through the shared ConfirmDeleteModal) — follow-up (#482)
+ *   - Step 3 · build-row sub-steps tier (reused EditGoalSubStepRow inside a
+ *     mint-rail block, "break into sub-steps" prompt, ↑/↓ reorder) — follow-up
+ *     (#465)
  *
  * Pure, prop-driven, i18n-free (D5): all copy arrives as props with English
  * defaults; the future [Integrate] issue (#444) threads real t() output
@@ -32,6 +35,8 @@ import { Button } from "../Button";
 import { ScreenSubHeader } from "../ScreenHeader/ScreenSubHeader";
 import { EvidenceTypePicker } from "../EvidenceTypePicker";
 import { ConfirmDeleteModal } from "../ConfirmDeleteModal";
+import { EditGoalSubStepRow, type EditGoalSubStep } from "../EditGoalView";
+import { useAnimationPref } from "../../hooks/useAnimationPref";
 import { EvidenceType } from "../../db";
 import { EVIDENCE_OPTIONS, type EvidenceTypeValue } from "../../types/evidence";
 import { styles } from "./NewGoalWizard.styles";
@@ -62,6 +67,17 @@ export interface BuildStep {
   readonly id: string;
   readonly title: string;
   readonly evidenceType: EvidenceTypeValue;
+  /**
+   * Optional one-level sub-steps (#465), reusing EditGoalView's row + type
+   * verbatim. Absent/empty → the row shows a "break into sub-steps" prompt;
+   * non-empty → an indented mint-railed block of sub-rows plus an "add a
+   * sub-step" affordance. Sub-step ids share this list's uniqueness contract:
+   * they're the handles editingBuildStepId/openBuildStepEvidenceId/
+   * pendingDeleteBuildStepId target, so an id must never collide with a
+   * top-level row's. One level only — EditGoalSubStep has no subSteps field,
+   * matching schema.ts's parentStepId cap.
+   */
+  readonly subSteps?: readonly EditGoalSubStep[];
 }
 
 export interface NewGoalWizardProps {
@@ -151,6 +167,26 @@ export interface NewGoalWizardProps {
   onCancelDeleteBuildStep?: () => void;
   onConfirmDeleteBuildStep?: () => void;
 
+  // --- Step 3 · build-row sub-steps (#465) ---
+  /**
+   * Adds a sub-step under `parentStepId`, called with `newSubStepTitle` — the
+   * new sub-row is then renameable inline (mirrors EditGoalView's D12). Fired
+   * by both the "break into sub-steps" prompt and the "add a sub-step"
+   * affordance. Rename/evidence/delete on a sub-step reuse the id-keyed
+   * build-step callbacks above (ids are unique across both levels), so no
+   * parallel onSubStep* prop set exists.
+   */
+  onAddSubStep?: (parentStepId: string, title: string) => void;
+  /**
+   * Reorders one parent's sub-steps (↑/↓ buttons — always visible, no drag
+   * gesture on this screen). `orderedSubStepIds` is the parent's complete
+   * sub-step id list in its new order; a sibling parent's sub-steps never move.
+   */
+  onReorderSubSteps?: (
+    parentStepId: string,
+    orderedSubStepIds: string[],
+  ) => void;
+
   // --- Copy (i18n-free per D5; English defaults; [Integrate] passes t()). ---
   headerLabel?: string;
   /**
@@ -209,6 +245,16 @@ export interface NewGoalWizardProps {
    * clause — a wizard-stage build row has neither yet (D8), unlike EditGoalView.
    */
   deleteBuildStepConfirmMessage?: (stepTitle: string) => string;
+  /** "add a sub-step" affordance under a row that already has some (#465). */
+  addSubStepLabel?: string;
+  /** a11y label for the "add a sub-step" affordance under a row (#465). */
+  addSubStepA11yLabel?: (stepTitle: string) => string;
+  /** "break into sub-steps" prompt on a row with none (#465). */
+  breakIntoSubStepsLabel?: string;
+  /** a11y label for the "break into sub-steps" prompt on a row (#465). */
+  breakIntoSubStepsA11yLabel?: (stepTitle: string) => string;
+  /** Default title for a freshly-added sub-step, renamed inline after (#465). */
+  newSubStepTitle?: string;
   /** Footer CTA on the build step — distinct copy from nextLabel (D7). */
   buildReadyLabel?: string;
   readyHeadline?: string;
@@ -286,6 +332,8 @@ export function NewGoalWizard({
   onRequestDeleteBuildStep = noop,
   onCancelDeleteBuildStep = noop,
   onConfirmDeleteBuildStep = noop,
+  onAddSubStep = noop,
+  onReorderSubSteps = noop,
   headerLabel = "New goal",
   closeAccessibilityLabel = "Close",
   nameEyebrow = "Step 1 of 4",
@@ -314,6 +362,12 @@ export function NewGoalWizard({
   deleteBuildStepConfirmTitle = "Delete step?",
   deleteBuildStepConfirmMessage = (stepTitle) =>
     `Remove "${stepTitle}" from your step list?`,
+  addSubStepLabel = "add a sub-step",
+  addSubStepA11yLabel = (stepTitle) => `Add a sub-step to "${stepTitle}"`,
+  breakIntoSubStepsLabel = "break into sub-steps",
+  breakIntoSubStepsA11yLabel = (stepTitle) =>
+    `Break "${stepTitle}" into sub-steps`,
+  newSubStepTitle = "New sub-step",
   buildReadyLabel = "I'm ready →",
   readyHeadline = "You're set.",
   stepCountSummary = defaultStepCountSummary,
@@ -321,24 +375,52 @@ export function NewGoalWizard({
   startWorkingLabel = "Start Working",
 }: NewGoalWizardProps) {
   const { theme } = useUnistyles();
+  // Required by EditGoalSubStepRow. A read-only settings hook, not data state —
+  // the wizard's zero-internal-state contract is about goal/step data (#465 D6).
+  const { animationPref } = useAnimationPref();
   const currentStepIndex = STEP_ORDER.indexOf(currentStep);
   const plannedIcon = evidenceIcon(plannedEvidenceType);
   const plannedLabel = plannedEvidenceLabel(plannedEvidenceType);
 
+  // Find the sub-step with `id` across every build row (one level, #465) —
+  // mirrors EditGoalView's findSubStep. Lets the id-keyed shared state
+  // (openBuildStepEvidenceId/pendingDeleteBuildStepId) resolve sub-step ids too.
+  function findSubStep(id: string): EditGoalSubStep | undefined {
+    for (const step of buildSteps) {
+      const sub = step.subSteps?.find((ss) => ss.id === id);
+      if (sub) return sub;
+    }
+    return undefined;
+  }
+
   // The single EvidenceTypePicker instance is shared across steps 2 and 3 (D1):
   // its visible/selectedType/onSelect/onClose are derived from currentStep.
-  // On "build", it targets the row named by openBuildStepEvidenceId.
+  // On "build", it targets the row — or, failing that, the sub-step (#465) —
+  // named by openBuildStepEvidenceId.
   const isBuild = currentStep === "build";
   const openBuildStep =
     openBuildStepEvidenceId != null
       ? buildSteps.find((step) => step.id === openBuildStepEvidenceId)
       : undefined;
-  const pickerVisible = isBuild ? openBuildStep != null : evidencePickerOpen;
-  const pickerSelectedType =
-    isBuild && openBuildStep ? openBuildStep.evidenceType : plannedEvidenceType;
+  const openBuildSubStep =
+    openBuildStepEvidenceId != null && !openBuildStep
+      ? findSubStep(openBuildStepEvidenceId)
+      : undefined;
+  const pickerVisible = isBuild
+    ? openBuildStep != null || openBuildSubStep != null
+    : evidencePickerOpen;
+  // A sub-step stores its planned evidence as a singleton array (the reused
+  // EditGoalSubStep shape); on this screen it's single-type like every build
+  // row (#465 D3), so the sheet pre-selects its first (only) entry.
+  const pickerSelectedType = isBuild
+    ? (openBuildStep?.evidenceType ??
+      openBuildSubStep?.plannedEvidenceTypes[0] ??
+      plannedEvidenceType)
+    : plannedEvidenceType;
   const handlePickerSelect = (type: EvidenceTypeValue) => {
     if (isBuild) {
-      if (openBuildStep) onBuildStepEvidenceTypeChange(openBuildStep.id, type);
+      const targetId = openBuildStep?.id ?? openBuildSubStep?.id;
+      if (targetId != null) onBuildStepEvidenceTypeChange(targetId, type);
       onCloseBuildStepEvidence();
     } else {
       onPlannedEvidenceTypeChange(type);
@@ -349,12 +431,113 @@ export function NewGoalWizard({
     ? onCloseBuildStepEvidence
     : onCloseEvidencePicker;
 
-  // The build row targeted by a pending delete (D1) — mirrors openBuildStep's
-  // derivation. Drives the single ConfirmDeleteModal's visibility + message.
+  // The build row — or sub-step (#465) — targeted by a pending delete (D1);
+  // mirrors the picker derivation above. Drives the single ConfirmDeleteModal's
+  // visibility + message.
   const pendingDeleteStep =
     pendingDeleteBuildStepId != null
       ? buildSteps.find((step) => step.id === pendingDeleteBuildStepId)
       : undefined;
+  const pendingDeleteSubStep =
+    pendingDeleteBuildStepId != null && !pendingDeleteStep
+      ? findSubStep(pendingDeleteBuildStepId)
+      : undefined;
+  const pendingDeleteTitle =
+    pendingDeleteStep?.title ?? pendingDeleteSubStep?.title;
+
+  // Swap-reorder one parent's sub-steps by one position (↑/↓ buttons, #465).
+  // Emits the parent's full id list so the caller can apply it in one pass.
+  function handleMoveSubStep(step: BuildStep, index: number, delta: number) {
+    const subs = step.subSteps ?? [];
+    const target = index + delta;
+    if (target < 0 || target >= subs.length) return;
+    const ids = subs.map((sub) => sub.id);
+    [ids[index], ids[target]] = [ids[target], ids[index]];
+    onReorderSubSteps(step.id, ids);
+  }
+
+  // Sub-steps block (#465), rendered inside each build row's card — mirrors
+  // EditGoalView's renderSubStepBlock. A row with none shows the "break into
+  // sub-steps" prompt; one with some shows the indented mint-rail block of
+  // reused EditGoalSubStepRows plus "add a sub-step". Rows render static
+  // (canDrag=false) with always-visible ↑/↓ reorder buttons — no drag gesture
+  // on this screen (#465 D5); the row itself hides the buttons for a lone
+  // sub-step (isFirst && isLast). Rename/evidence/delete reuse the id-keyed
+  // build-step callbacks (#465 D4); the row's own a11y copy stays at its
+  // built-in defaults (D1 covers the wizard's affordances, not the row's).
+  function renderSubStepsBlock(step: BuildStep) {
+    const subs = step.subSteps ?? [];
+    if (subs.length === 0) {
+      return (
+        <Pressable
+          style={styles.breakIntoRow}
+          onPress={() => onAddSubStep(step.id, newSubStepTitle)}
+          accessibilityRole="button"
+          accessibilityLabel={breakIntoSubStepsA11yLabel(step.title)}
+          hitSlop={6}
+          testID={`new-goal-break-into-substeps-${step.id}`}
+        >
+          <RNText
+            style={styles.breakIntoGlyph}
+            accessibilityElementsHidden
+            importantForAccessibility="no"
+          >
+            {"⚊"}
+          </RNText>
+          <RNText style={styles.breakIntoText}>{breakIntoSubStepsLabel}</RNText>
+        </Pressable>
+      );
+    }
+    return (
+      <View
+        style={styles.subStepBlock}
+        testID={`new-goal-build-substeps-${step.id}`}
+      >
+        {subs.map((sub, index) => (
+          <EditGoalSubStepRow
+            key={sub.id}
+            subStep={sub}
+            index={index}
+            isBeingDragged={false}
+            isEditing={editingBuildStepId === sub.id}
+            editText={buildStepEditText}
+            onEditTextChange={onBuildStepEditTextChange}
+            onStartEditing={() => onStartEditingBuildStep(sub.id, sub.title)}
+            onCommitEditing={onCommitBuildStepEditing}
+            onEvidenceChipPress={() => onOpenBuildStepEvidence(sub.id)}
+            onDelete={() => onRequestDeleteBuildStep(sub.id)}
+            onDragStart={noop}
+            onDragMove={noop}
+            onDragEnd={noop}
+            onMoveUp={() => handleMoveSubStep(step, index, -1)}
+            onMoveDown={() => handleMoveSubStep(step, index, 1)}
+            showAccessibleControls
+            animationPref={animationPref}
+            isFirst={index === 0}
+            isLast={index === subs.length - 1}
+            canDrag={false}
+          />
+        ))}
+        <Pressable
+          style={styles.addSubStepRow}
+          onPress={() => onAddSubStep(step.id, newSubStepTitle)}
+          accessibilityRole="button"
+          accessibilityLabel={addSubStepA11yLabel(step.title)}
+          hitSlop={6}
+          testID={`new-goal-add-substep-${step.id}`}
+        >
+          <RNText
+            style={styles.addSubStepGlyph}
+            accessibilityElementsHidden
+            importantForAccessibility="no"
+          >
+            {"+"}
+          </RNText>
+          <RNText style={styles.addSubStepText}>{addSubStepLabel}</RNText>
+        </Pressable>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -641,6 +824,10 @@ export function NewGoalWizard({
                         </View>
                       )}
                     </View>
+                    {/* Sub-steps tier (#465) — rendered unconditionally (like
+                        EditGoalStepRow's children slot), independent of this
+                        row's own isEditing. */}
+                    {renderSubStepsBlock(step)}
                   </View>
                 );
               })}
@@ -726,20 +913,21 @@ export function NewGoalWizard({
         onClose={handlePickerClose}
       />
 
-      {/* Build-row delete confirmation (D1). One instance, gated on the
-          resolved pendingDeleteStep — only ever set while on the build step, but
-          rendered unconditionally (inert until visible) like the picker above.
-          Gating on the resolved row (not the raw id) means a stale/unknown
-          pendingDeleteBuildStepId can never surface an empty-message modal.
-          onConfirmDeleteBuildStep is the only path that removes a row. */}
+      {/* Build-row delete confirmation (D1). One instance, shared by top-level
+          rows and their sub-steps (#465) — only ever set while on the build
+          step, but rendered unconditionally (inert until visible) like the
+          picker above. Gating on the resolved title (not the raw id) means a
+          stale/unknown pendingDeleteBuildStepId can never surface an
+          empty-message modal. onConfirmDeleteBuildStep is the only path that
+          removes a row. */}
       <ConfirmDeleteModal
-        visible={pendingDeleteStep != null}
+        visible={pendingDeleteTitle != null}
         onCancel={onCancelDeleteBuildStep}
         onConfirm={onConfirmDeleteBuildStep}
         title={deleteBuildStepConfirmTitle}
         message={
-          pendingDeleteStep
-            ? deleteBuildStepConfirmMessage(pendingDeleteStep.title)
+          pendingDeleteTitle != null
+            ? deleteBuildStepConfirmMessage(pendingDeleteTitle)
             : ""
         }
       />

@@ -317,6 +317,50 @@ export const styles = StyleSheet.create((theme) => ({
     fontSize: theme.size.lg,
     color: theme.colors.textMuted,
   },
+  // --- Step 3 · sub-steps tier (#465) ---
+  // Same token names as EditGoalView.styles.ts's D12 block (defined locally —
+  // per-component .styles.ts convention, no cross-folder style import): mint
+  // rail, blue "add a sub-step", green "break into sub-steps".
+  subStepBlock: {
+    marginTop: theme.space[2],
+    paddingLeft: theme.space[3],
+    borderLeftWidth: theme.borderWidth.thick,
+    borderLeftColor: theme.colors.accentMint,
+    gap: theme.space[1],
+  },
+  addSubStepRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: theme.space[1],
+    minHeight: 44,
+  },
+  addSubStepGlyph: {
+    fontSize: theme.size.md,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.accentPrimary,
+  },
+  addSubStepText: {
+    fontSize: theme.size.sm,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.accentPrimary,
+  },
+  breakIntoRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: theme.space[1],
+    marginTop: theme.space[2],
+    minHeight: 44,
+  },
+  breakIntoGlyph: {
+    fontSize: theme.size.sm,
+    color: theme.colors.success,
+  },
+  breakIntoText: {
+    fontSize: theme.size.sm,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.success,
+  },
+
   // "+ add another step" — mirrors quickAddPress's single-accessible-node shape;
   // an accent link row below the list, not a bordered button (prototype).
   addStepPress: {
