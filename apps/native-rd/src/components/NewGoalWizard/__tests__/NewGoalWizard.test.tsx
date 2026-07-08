@@ -10,6 +10,7 @@ import {
   type NewGoalWizardProps,
   type NewGoalWizardStep,
 } from "../NewGoalWizard";
+import type { EditGoalSubStep } from "../../EditGoalView";
 import { EvidenceType } from "../../../db";
 
 // NewGoalWizard imports EditGoalSubStepRow via the EditGoalView barrel (#465),
@@ -726,6 +727,301 @@ describe("NewGoalWizard", () => {
 
       expect(onCancelDeleteBuildStep).toHaveBeenCalledTimes(1);
       expect(onConfirmDeleteBuildStep).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("build step · sub-steps (#465)", () => {
+    // Two sub-steps under row s1 (distinct types, like BUILD_STEPS itself) so
+    // reorder controls render and pre-selection assertions can be told apart;
+    // row s2 stays sub-step-free to show the "break into sub-steps" prompt.
+    // Wiring-only coverage — EditGoalSubStepRow's own a11y contract is already
+    // locked by EditGoalView.test.tsx's D12/#459 blocks, not re-tested here.
+    const SUB_STEPS: EditGoalSubStep[] = [
+      {
+        id: "s1-a",
+        title: "Check by hand",
+        plannedEvidenceTypes: [EvidenceType.text],
+      },
+      {
+        id: "s1-b",
+        title: "Wipe the dust",
+        plannedEvidenceTypes: [EvidenceType.photo],
+      },
+    ];
+    const WITH_SUBSTEPS: BuildStep[] = [
+      { ...BUILD_STEPS[0], subSteps: SUB_STEPS },
+      BUILD_STEPS[1],
+    ];
+
+    it("renders a sub-stepped row's rail block and a sub-step-free row's break-into prompt", () => {
+      renderWizard({ currentStep: "build", buildSteps: WITH_SUBSTEPS });
+
+      // Row s1 (has sub-steps): rail with both sub-rows (title + evidence
+      // chip) and the add affordance — no prompt.
+      expect(
+        screen.getByTestId("new-goal-build-substeps-s1"),
+      ).toBeOnTheScreen();
+      expect(screen.getByText("Check by hand")).toBeOnTheScreen();
+      expect(screen.getByText("Wipe the dust")).toBeOnTheScreen();
+      expect(
+        screen.getByTestId("edit-goal-substep-evidence-s1-a"),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByTestId("edit-goal-substep-evidence-s1-b"),
+      ).toBeOnTheScreen();
+      expect(screen.getByTestId("new-goal-add-substep-s1")).toBeOnTheScreen();
+      expect(
+        screen.queryByTestId("new-goal-break-into-substeps-s1"),
+      ).toBeNull();
+
+      // Row s2 (none): prompt only — no rail, no add affordance.
+      expect(
+        screen.getByTestId("new-goal-break-into-substeps-s2"),
+      ).toBeOnTheScreen();
+      expect(screen.queryByTestId("new-goal-build-substeps-s2")).toBeNull();
+      expect(screen.queryByTestId("new-goal-add-substep-s2")).toBeNull();
+    });
+
+    it("treats an empty subSteps array like an absent one (prompt, no rail)", () => {
+      renderWizard({
+        currentStep: "build",
+        buildSteps: [{ ...BUILD_STEPS[0], subSteps: [] }],
+      });
+
+      expect(
+        screen.getByTestId("new-goal-break-into-substeps-s1"),
+      ).toBeOnTheScreen();
+      expect(screen.queryByTestId("new-goal-build-substeps-s1")).toBeNull();
+    });
+
+    it.each([
+      ["break-into prompt", "new-goal-break-into-substeps-s2", "s2"],
+      ["add-a-sub-step affordance", "new-goal-add-substep-s1", "s1"],
+    ])(
+      "fires onAddSubStep with the parent id and default title from the %s",
+      (_affordance, testID, parentId) => {
+        const onAddSubStep = jest.fn();
+        renderWizard({
+          currentStep: "build",
+          buildSteps: WITH_SUBSTEPS,
+          onAddSubStep,
+        });
+
+        fireEvent.press(screen.getByTestId(testID));
+
+        expect(onAddSubStep).toHaveBeenCalledWith(parentId, "New sub-step");
+      },
+    );
+
+    it("names both add affordances for screen readers with the parent step's title", () => {
+      renderWizard({ currentStep: "build", buildSteps: WITH_SUBSTEPS });
+
+      expect(
+        screen.getByRole("button", {
+          name: 'Add a sub-step to "Sand the edges"',
+        }),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByRole("button", { name: 'Break "Paint it" into sub-steps' }),
+      ).toBeOnTheScreen();
+    });
+
+    it("fires onOpenBuildStepEvidence with the sub-step id when its chip is pressed (shared callback, D4)", () => {
+      const onOpenBuildStepEvidence = jest.fn();
+      renderWizard({
+        currentStep: "build",
+        buildSteps: WITH_SUBSTEPS,
+        onOpenBuildStepEvidence,
+      });
+
+      fireEvent.press(screen.getByTestId("edit-goal-substep-evidence-s1-b"));
+
+      expect(onOpenBuildStepEvidence).toHaveBeenCalledWith("s1-b");
+    });
+
+    it("shows the shared capture sheet pre-selecting the open sub-step's current type (D3)", () => {
+      renderWizard({
+        currentStep: "build",
+        buildSteps: WITH_SUBSTEPS,
+        openBuildStepEvidenceId: "s1-b",
+      });
+
+      expect(screen.getByText("Evidence type")).toBeOnTheScreen();
+      // Sub-step s1-b's singleton plannedEvidenceTypes is [photo].
+      expect(
+        screen.getByRole("radio", { name: "Photo" }).props.accessibilityState,
+      ).toMatchObject({ checked: true });
+    });
+
+    it("changes the targeted sub-step's type via the shared callback and closes the sheet", () => {
+      const onBuildStepEvidenceTypeChange = jest.fn();
+      const onCloseBuildStepEvidence = jest.fn();
+      renderWizard({
+        currentStep: "build",
+        buildSteps: WITH_SUBSTEPS,
+        openBuildStepEvidenceId: "s1-a",
+        onBuildStepEvidenceTypeChange,
+        onCloseBuildStepEvidence,
+      });
+
+      fireEvent.press(screen.getByRole("radio", { name: "Photo" }));
+
+      expect(onBuildStepEvidenceTypeChange).toHaveBeenCalledWith(
+        "s1-a",
+        EvidenceType.photo,
+      );
+      expect(onCloseBuildStepEvidence).toHaveBeenCalledTimes(1);
+    });
+
+    it("starts a sub-step rename through the shared editing callbacks (D4)", () => {
+      const onStartEditingBuildStep = jest.fn();
+      renderWizard({
+        currentStep: "build",
+        buildSteps: WITH_SUBSTEPS,
+        onStartEditingBuildStep,
+      });
+
+      fireEvent.press(screen.getByTestId("edit-goal-substep-title-s1-a"));
+
+      expect(onStartEditingBuildStep).toHaveBeenCalledWith(
+        "s1-a",
+        "Check by hand",
+      );
+    });
+
+    it("renders a seeded edit field for the sub-step being edited and commits on submit and blur", () => {
+      const onCommitBuildStepEditing = jest.fn();
+      renderWizard({
+        currentStep: "build",
+        buildSteps: WITH_SUBSTEPS,
+        editingBuildStepId: "s1-a",
+        buildStepEditText: "Check by hand",
+        onCommitBuildStepEditing,
+      });
+
+      const input = screen.getByTestId("edit-goal-substep-edit-s1-a");
+      expect(input.props.value).toBe("Check by hand");
+      // The editing sub-row swaps its tap-to-edit title for the field; its
+      // sibling stays in display mode.
+      expect(screen.queryByTestId("edit-goal-substep-title-s1-a")).toBeNull();
+      expect(
+        screen.getByTestId("edit-goal-substep-title-s1-b"),
+      ).toBeOnTheScreen();
+
+      fireEvent(input, "submitEditing");
+      fireEvent(input, "blur");
+      expect(onCommitBuildStepEditing).toHaveBeenCalledTimes(2);
+    });
+
+    it("fires onRequestDeleteBuildStep from a sub-step's × without removing the row", () => {
+      const onRequestDeleteBuildStep = jest.fn();
+      const onConfirmDeleteBuildStep = jest.fn();
+      renderWizard({
+        currentStep: "build",
+        buildSteps: WITH_SUBSTEPS,
+        onRequestDeleteBuildStep,
+        onConfirmDeleteBuildStep,
+      });
+
+      fireEvent.press(screen.getByTestId("edit-goal-substep-delete-s1-a"));
+
+      expect(onRequestDeleteBuildStep).toHaveBeenCalledWith("s1-a");
+      expect(onConfirmDeleteBuildStep).not.toHaveBeenCalled();
+      expect(screen.getByText("Check by hand")).toBeOnTheScreen();
+    });
+
+    it("shows the shared confirm modal for a pending sub-step id and routes Cancel/Confirm", () => {
+      const onConfirmDeleteBuildStep = jest.fn();
+      const onCancelDeleteBuildStep = jest.fn();
+      renderWizard({
+        currentStep: "build",
+        buildSteps: WITH_SUBSTEPS,
+        pendingDeleteBuildStepId: "s1-b",
+        onConfirmDeleteBuildStep,
+        onCancelDeleteBuildStep,
+      });
+
+      expect(screen.getByText("Delete step?")).toBeOnTheScreen();
+      expect(
+        screen.getByText('Remove "Wipe the dust" from your step list?'),
+      ).toBeOnTheScreen();
+
+      fireEvent.press(screen.getByText("Cancel"));
+      expect(onCancelDeleteBuildStep).toHaveBeenCalledTimes(1);
+      expect(onConfirmDeleteBuildStep).not.toHaveBeenCalled();
+
+      fireEvent.press(screen.getByText("Delete"));
+      expect(onConfirmDeleteBuildStep).toHaveBeenCalledTimes(1);
+    });
+
+    it("shows ↑/↓ controls with 2+ sub-steps (unconditionally, D5) and fires onReorderSubSteps with the swapped order", () => {
+      const onReorderSubSteps = jest.fn();
+      renderWizard({
+        currentStep: "build",
+        buildSteps: WITH_SUBSTEPS,
+        onReorderSubSteps,
+      });
+
+      // Edge rows hide the impossible direction (isFirst/isLast).
+      expect(screen.queryByLabelText('Move "Check by hand" up')).toBeNull();
+      expect(screen.queryByLabelText('Move "Wipe the dust" down')).toBeNull();
+
+      fireEvent.press(screen.getByLabelText('Move "Check by hand" down'));
+      fireEvent.press(screen.getByLabelText('Move "Wipe the dust" up'));
+
+      // Prop-driven: the list never actually moved between presses, so both
+      // swaps emit the same s1-scoped order.
+      expect(onReorderSubSteps).toHaveBeenNthCalledWith(1, "s1", [
+        "s1-b",
+        "s1-a",
+      ]);
+      expect(onReorderSubSteps).toHaveBeenNthCalledWith(2, "s1", [
+        "s1-b",
+        "s1-a",
+      ]);
+    });
+
+    it("renders a lone sub-step static — no ↑/↓ controls", () => {
+      renderWizard({
+        currentStep: "build",
+        buildSteps: [{ ...BUILD_STEPS[0], subSteps: [SUB_STEPS[0]] }],
+      });
+
+      expect(screen.getByText("Check by hand")).toBeOnTheScreen();
+      expect(screen.queryByLabelText('Move "Check by hand" up')).toBeNull();
+      expect(screen.queryByLabelText('Move "Check by hand" down')).toBeNull();
+    });
+
+    it("scopes a reorder to the owning parent — a sibling parent's sub-steps never move", () => {
+      const onReorderSubSteps = jest.fn();
+      const twoParents: BuildStep[] = [
+        { ...BUILD_STEPS[0], subSteps: SUB_STEPS },
+        {
+          ...BUILD_STEPS[1],
+          subSteps: [
+            {
+              id: "s2-a",
+              title: "Mask the windows",
+              plannedEvidenceTypes: [EvidenceType.text],
+            },
+            {
+              id: "s2-b",
+              title: "First coat",
+              plannedEvidenceTypes: [EvidenceType.photo],
+            },
+          ],
+        },
+      ];
+      renderWizard({
+        currentStep: "build",
+        buildSteps: twoParents,
+        onReorderSubSteps,
+      });
+
+      fireEvent.press(screen.getByLabelText('Move "Mask the windows" down'));
+
+      expect(onReorderSubSteps).toHaveBeenCalledTimes(1);
+      expect(onReorderSubSteps).toHaveBeenCalledWith("s2", ["s2-b", "s2-a"]);
     });
   });
 
