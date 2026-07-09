@@ -35,7 +35,12 @@ import { Button } from "../Button";
 import { ScreenSubHeader } from "../ScreenHeader/ScreenSubHeader";
 import { EvidenceTypePicker } from "../EvidenceTypePicker";
 import { ConfirmDeleteModal } from "../ConfirmDeleteModal";
-import { EditGoalSubStepRow, type EditGoalSubStep } from "../EditGoalView";
+// Import the row component directly, not via the EditGoalView barrel: the
+// barrel re-exports EditGoalView, whose chain (→ EditGoalSubStepList →
+// useEditGoalDrag) reaches expo-haptics and the drag graph this screen never
+// uses. The type is import-type-only, so it's erased and pulls in nothing.
+import { EditGoalSubStepRow } from "../EditGoalView/EditGoalSubStepRow";
+import type { EditGoalSubStep } from "../EditGoalView";
 import { useAnimationPref } from "../../hooks/useAnimationPref";
 import { EvidenceType } from "../../db";
 import { EVIDENCE_OPTIONS, type EvidenceTypeValue } from "../../types/evidence";

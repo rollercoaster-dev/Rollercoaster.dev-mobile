@@ -13,20 +13,6 @@ import {
 import type { EditGoalSubStep } from "../../EditGoalView";
 import { EvidenceType } from "../../../db";
 
-// NewGoalWizard imports EditGoalSubStepRow via the EditGoalView barrel (#465),
-// whose chain (EditGoalView → EditGoalSubStepList → useEditGoalDrag) reaches
-// expo-haptics — untransformed ESM under Jest. Same mocks as EditGoalView's
-// own test; the wizard's static (canDrag=false) rows never fire them.
-jest.mock("expo-haptics", () => ({
-  impactAsync: jest.fn().mockResolvedValue(undefined),
-  ImpactFeedbackStyle: { Light: "light", Medium: "medium", Heavy: "heavy" },
-}));
-
-jest.mock("../../../utils/haptics", () => ({
-  triggerDragStart: jest.fn(),
-  triggerDragDrop: jest.fn(),
-}));
-
 // The prototype's own initNG() seed — two rows, distinct evidence types so the
 // two chips (and pre-selection assertions) can be told apart.
 const BUILD_STEPS: BuildStep[] = [
