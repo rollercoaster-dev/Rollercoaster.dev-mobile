@@ -96,18 +96,17 @@ export const styles = StyleSheet.create((theme) => ({
   rowCardDragging: {
     borderColor: theme.colors.accentPrimary,
   },
-  // Wraps so the trailing controls drop to a second line on narrow screens
-  // instead of crushing the title (D5). rowLead holds [handle][number][title]
-  // and grows to fill; rowControls holds [evidence][↑↓] and wraps under it.
+  // A plain single flex row (A-D4): rowLead absorbs remaining width and the
+  // title wraps to as many lines as it needs *inside its own box*, so the
+  // controls cluster can never wrap on top of the next row's title. No
+  // flexWrap — the old wrap heuristic is what caused the row-collision class.
   rowMain: {
     flexDirection: "row" as const,
-    flexWrap: "wrap" as const,
     alignItems: "center" as const,
     columnGap: theme.space[2],
-    rowGap: theme.space[2],
   },
-  // Leading cluster: grows to fill the line but never shrinks below a legible
-  // floor — below that the sibling rowControls wraps rather than the title.
+  // Leading cluster: grows to fill the line and shrinks to yield width to the
+  // controls; its title Text wraps in place rather than pushing the row wider.
   rowLead: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
@@ -115,16 +114,14 @@ export const styles = StyleSheet.create((theme) => ({
     flexGrow: 1,
     flexShrink: 1,
     flexBasis: 0,
-    minWidth: 140,
   },
-  // Trailing cluster: natural width, never shrinks; wraps to its own line when
-  // the row can't hold both clusters (right-aligned there via marginLeft auto).
+  // Trailing cluster: natural width, never shrinks; vertically centered beside
+  // a title that may wrap to multiple lines.
   rowControls: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
     gap: theme.space[2],
     flexShrink: 0,
-    marginLeft: "auto" as const,
   },
   dragHandle: {
     fontSize: theme.size.md,
@@ -229,17 +226,15 @@ export const styles = StyleSheet.create((theme) => ({
     paddingLeft: theme.space[3],
     borderLeftWidth: theme.borderWidth.thick,
     borderLeftColor: theme.colors.accentMint,
-    gap: theme.space[1],
+    gap: theme.space[2],
   },
-  // Same wrap treatment as rowMain (D5): [handle][title] in rowLead, and
-  // [evidence][↑↓][×] in rowControls, which drops to a second line on narrow
-  // screens rather than crushing the sub-step title.
+  // Same plain single-row treatment as rowMain (A-D4): [handle][title] in
+  // rowLead (title wraps in place), [evidence][↑↓][×] in rowControls at natural
+  // width — no flexWrap, so the controls never paint over the next sub-row.
   subStepRow: {
     flexDirection: "row" as const,
-    flexWrap: "wrap" as const,
     alignItems: "center" as const,
     columnGap: theme.space[2],
-    rowGap: theme.space[2],
   },
   // Lifted-row accent while dragging (#459, D3). A bare subStepRow has no border
   // to swap (unlike the parent's rowCard → rowCardDragging), so add the same
