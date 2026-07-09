@@ -17,23 +17,34 @@
  * be verified before the screen is wired.
  * `grep -rn "EditGoalView" src/screens` stays empty until then.
  *
- * This component is a thin composition (header, goal-title card, optional
- * description, EditGoalStepList, dates info banner, Done footer). The step-row
- * list layer — rows, sub-step blocks, add-step affordance, inline-rename /
- * evidence-picker / delete-confirm state, and the two modals those drive —
+ * This component is the screen host: a flex:1 column (header, an internal
+ * ScrollView wrapping the goal-title card / optional description /
+ * EditGoalStepList / dates info banner, then a pinned Done footer) with the
+ * shared evidence-picker AnimatedSheet as a root-level sibling of that
+ * ScrollView. The sheet's in-tree absolute overlay therefore fills the
+ * viewport, not the scroll content (#493/D8) — so it rises from the bottom of
+ * the screen with a full-frame scrim, matching the New Goal wizard's capture
+ * sheet, instead of the bottom of the list. The evidence-picker open state
+ * (editingEvidenceId) + its toggle handler live here for the same reason.
+ *
+ * The step-row list layer — rows, sub-step blocks, add-step affordance,
+ * inline-rename / delete-confirm state, and the ConfirmDeleteModal it drives —
  * lives in EditGoalStepList (issue #489), which the New Goal wizard reuses
- * (#490). The shared step/sub-step types stay defined here (D2).
+ * (#490); it signals evidence-chip taps outward via onEvidenceChipPress. The
+ * shared step/sub-step types stay defined here (D2).
  *
  * Drag orchestration lives in useEditGoalDrag; the row anatomy in
  * EditGoalStepRow; the ⋯ menu content in EditGoalOverflowMenu.
  */
-import React from "react";
-import { View, Text as RNText, TextInput } from "react-native";
+import React, { useState } from "react";
+import { View, Text as RNText, TextInput, ScrollView } from "react-native";
 import { DotsThree, Pencil } from "phosphor-react-native";
 import { useUnistyles } from "react-native-unistyles";
 import { IconButton } from "../IconButton";
 import { Button } from "../Button";
 import { ScreenSubHeader } from "../ScreenHeader/ScreenSubHeader";
+import { EvidenceTypePicker } from "../EvidenceTypePicker";
+import { AnimatedSheet } from "../EvidenceTypePicker/AnimatedSheet";
 import type { EvidenceTypeValue } from "../../types/evidence";
 import type { DragScrollController } from "../StepList/dragAutoScroll";
 import { EditGoalStepList } from "./EditGoalStepList";
@@ -213,19 +224,22 @@ export function EditGoalView({
   datesInfoText = 'Dates & dependencies live on each step — tap a step in the full planner to set "after" / "waiting on".',
   doneLabel = "Done",
   overflowAccessibilityLabel = "More options",
+  // Evidence-picker copy is consumed here now — the sheet + its state were
+  // lifted up from EditGoalStepList (#493/D8), so their English defaults live
+  // here rather than being forwarded to the list.
+  evidencePickerTitle = "Planned evidence",
+  evidenceTypesLabel = "Evidence types",
+  closeLabel = "Close",
   // Copy consumed only by the step-row list layer — forwarded straight to
   // EditGoalStepList, which owns their English defaults. Not defaulted
   // here so there's a single source of truth per prop.
   stepsSectionLabel,
   addStepPlaceholder,
-  evidencePickerTitle,
-  evidenceTypesLabel,
   stepCountLabel,
   addSubStepLabel,
   breakIntoSubStepsLabel,
   newSubStepTitle,
   addStepButtonLabel,
-  closeLabel,
   breakIntoSubStepsA11yLabel,
   addSubStepA11yLabel,
   announceReorder,
@@ -235,6 +249,58 @@ export function EditGoalView({
   deleteSubStepConfirmMessage,
 }: EditGoalViewProps) {
   const { theme } = useUnistyles();
+
+  // Evidence-picker open state, lifted here from EditGoalStepList (#493/D8) so
+  // the shared AnimatedSheet can render as a root-level sibling of the
+  // ScrollView (i.e. anchored to the viewport, not the scroll content). A chip
+  // tap in the list calls onEvidenceChipPress → setEditingEvidenceId; the sheet
+  // gates on the derived editingEvidenceTypes below.
+  const [editingEvidenceId, setEditingEvidenceId] = useState<string | null>(
+    null,
+  );
+
+  // Find the sub-step with `id` across every parent (one-level, D12).
+  function findSubStep(id: string) {
+    for (const s of steps) {
+      const sub = s.subSteps?.find((ss) => ss.id === id);
+      if (sub) return sub;
+    }
+    return undefined;
+  }
+
+  const editingEvidenceStep =
+    editingEvidenceId !== null
+      ? steps.find((s) => s.id === editingEvidenceId)
+      : undefined;
+  const editingEvidenceSub =
+    editingEvidenceId !== null && !editingEvidenceStep
+      ? findSubStep(editingEvidenceId)
+      : undefined;
+  const editingEvidenceTypes =
+    editingEvidenceStep?.plannedEvidenceTypes ??
+    editingEvidenceSub?.plannedEvidenceTypes;
+
+  // Evidence-picker toggle (D8/D12). Guards the "every step requires evidence"
+  // invariant: the last remaining type can't be deselected (no-op), so a step
+  // or sub-step never lands in a 0-selected state. Routes to the step or
+  // sub-step callback depending on which id opened the picker.
+  function handleToggleEvidence(type: EvidenceTypeValue) {
+    if (editingEvidenceId === null) return;
+    const step = steps.find((s) => s.id === editingEvidenceId);
+    const sub = step ? undefined : findSubStep(editingEvidenceId);
+    const current = step?.plannedEvidenceTypes ?? sub?.plannedEvidenceTypes;
+    if (!current) return;
+    const isSelected = current.includes(type);
+    if (isSelected && current.length === 1) return;
+    const next = isSelected
+      ? current.filter((t) => t !== type)
+      : [...current, type];
+    if (step) {
+      onStepEvidenceChange(editingEvidenceId, next);
+    } else {
+      onSubStepEvidenceChange(editingEvidenceId, next);
+    }
+  }
 
   return (
     <View style={styles.container}>
@@ -252,7 +318,15 @@ export function EditGoalView({
         }
       />
 
-      <View style={styles.body}>
+      {/* Scrollable content. Internal ScrollView (not the body View it replaced)
+          so the flex:1 container splits into [header][scroll][footer] and the
+          sheet's absolute overlay — a sibling below — fills the viewport rather
+          than the scroll content (#493/D8). */}
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Optional description (D3) — rendered only when the prop is supplied;
             no "add a description" affordance when absent. */}
         {description !== undefined ? (
@@ -285,31 +359,28 @@ export function EditGoalView({
         </View>
 
         {/* Step-row list layer (#489): "Steps" header + count, drag-reorderable
-            rows, sub-step blocks, add-step affordance, and the evidence-picker /
-            confirm-delete modals. All editing state lives inside it. */}
+            rows, sub-step blocks, add-step affordance, and the confirm-delete
+            modal. It reports evidence-chip taps outward via onEvidenceChipPress;
+            the picker sheet itself is owned here (#493/D8). */}
         <EditGoalStepList
           steps={steps}
           onReorderSteps={onReorderSteps}
           onReorderSubSteps={onReorderSubSteps}
           onAddStep={onAddStep}
           onStepTitleChange={onStepTitleChange}
-          onStepEvidenceChange={onStepEvidenceChange}
+          onEvidenceChipPress={setEditingEvidenceId}
           onAddSubStep={onAddSubStep}
           onSubStepTitleChange={onSubStepTitleChange}
-          onSubStepEvidenceChange={onSubStepEvidenceChange}
           onDeleteSubStep={onDeleteSubStep}
           onDeleteStep={onDeleteStep}
           dragScrollController={dragScrollController}
           stepsSectionLabel={stepsSectionLabel}
           addStepPlaceholder={addStepPlaceholder}
-          evidencePickerTitle={evidencePickerTitle}
-          evidenceTypesLabel={evidenceTypesLabel}
           stepCountLabel={stepCountLabel}
           addSubStepLabel={addSubStepLabel}
           breakIntoSubStepsLabel={breakIntoSubStepsLabel}
           newSubStepTitle={newSubStepTitle}
           addStepButtonLabel={addStepButtonLabel}
-          closeLabel={closeLabel}
           breakIntoSubStepsA11yLabel={breakIntoSubStepsA11yLabel}
           addSubStepA11yLabel={addSubStepA11yLabel}
           announceReorder={announceReorder}
@@ -329,7 +400,7 @@ export function EditGoalView({
           </RNText>
           <RNText style={styles.infoBannerText}>{datesInfoText}</RNText>
         </View>
-      </View>
+      </ScrollView>
 
       <View style={styles.footer}>
         <Button
@@ -339,6 +410,31 @@ export function EditGoalView({
           testID="edit-goal-done-button"
         />
       </View>
+
+      {/* Evidence-type picker (D8/D12): the reused multi-select authoring grid
+          in the shared AnimatedSheet chrome (#493). A root-level sibling of the
+          ScrollView + footer, so its in-tree absolute overlay fills the flex:1
+          container (= the viewport) and rises from the screen bottom with a
+          full-frame scrim — same reanimated slide/scrim, Android-back dismiss
+          and animation-pref timing as the New Goal wizard's capture sheet.
+          Opened by a step OR a sub-step's chip; toggling updates that row's
+          pills via onStepEvidenceChange / onSubStepEvidenceChange; the last
+          remaining type can't be deselected (handleToggleEvidence guard). */}
+      <AnimatedSheet
+        visible={editingEvidenceTypes !== undefined}
+        onClose={() => setEditingEvidenceId(null)}
+        title={evidencePickerTitle}
+        closeLabel={closeLabel}
+        closeTestID="edit-goal-evidence-close"
+      >
+        {editingEvidenceTypes ? (
+          <EvidenceTypePicker
+            selectedTypes={editingEvidenceTypes}
+            onToggleType={handleToggleEvidence}
+            label={evidenceTypesLabel}
+          />
+        ) : null}
+      </AnimatedSheet>
     </View>
   );
 }

@@ -8,10 +8,21 @@ import { shadowStyle } from "../../styles/shadows";
 // #3b1f6b is *re-toned* (not a literal match) to accentPrimary — the blue
 // #2563eb accent, reused as the ink.
 export const styles = StyleSheet.create((theme) => ({
+  // flex:1 screen host (#493/D8): splits into [header][scroll][footer] so the
+  // evidence sheet's absolute overlay — a sibling of the ScrollView — fills the
+  // viewport, not the scroll content. Was `gap: 0` when the body was a plain
+  // content-sized View.
   container: {
-    gap: 0,
+    flex: 1,
   },
-  body: {
+  // The internal ScrollView claims the space between header and footer.
+  scroll: {
+    flex: 1,
+  },
+  // Padding + inter-section gap that used to live on the `body` View now ride
+  // the ScrollView's contentContainerStyle (the scrollable content is a flex
+  // column, so `gap` still applies).
+  scrollContent: {
     padding: theme.space[4],
     gap: theme.space[3],
   },
