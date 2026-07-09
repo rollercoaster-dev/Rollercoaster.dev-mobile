@@ -3,6 +3,7 @@ import {
   renderWithProviders,
   screen,
   fireEvent,
+  act,
 } from "../../../__tests__/test-utils";
 import {
   NewGoalWizard,
@@ -509,7 +510,7 @@ describe("NewGoalWizard", () => {
       expect(onAddStep).toHaveBeenCalledWith("Seal it");
     });
 
-    it("toggles a row's planned evidence via the list's picker (onStepEvidenceChange)", () => {
+    it("toggles a row's planned evidence via the wizard's evidence sheet (onStepEvidenceChange)", () => {
       const onStepEvidenceChange = jest.fn();
       renderWizard({
         currentStep: "build",
@@ -517,7 +518,7 @@ describe("NewGoalWizard", () => {
         onStepEvidenceChange,
       });
 
-      // Open row s1's evidence picker and add a second type.
+      // The chip opens the wizard-owned AnimatedSheet (#494); add a second type.
       fireEvent.press(screen.getByTestId("edit-goal-step-evidence-s1"));
       const unchecked = screen
         .getAllByRole("checkbox")
@@ -667,7 +668,8 @@ describe("NewGoalWizard", () => {
         "Rough sanding pass",
       );
 
-      // Evidence.
+      // Evidence — the sub-step chip opens the wizard-owned AnimatedSheet
+      // (#494); toggling a type in its grid routes through onSubStepEvidenceChange.
       fireEvent.press(screen.getByTestId("edit-goal-substep-evidence-sub2"));
       const unchecked = screen
         .getAllByRole("checkbox")
@@ -675,6 +677,12 @@ describe("NewGoalWizard", () => {
       fireEvent.press(unchecked[0]);
       expect(onSubStepEvidenceChange).toHaveBeenCalledTimes(1);
       expect(onSubStepEvidenceChange.mock.calls[0][0]).toBe("sub2");
+
+      // Close the sheet before deleting — while open it's modal, hiding the
+      // underlying rows from queries (RNTL excludes a11y-hidden nodes).
+      act(() => {
+        fireEvent.press(screen.getByTestId("new-goal-evidence-backdrop"));
+      });
 
       // Delete (confirmed).
       fireEvent.press(screen.getByTestId("edit-goal-substep-delete-sub1"));

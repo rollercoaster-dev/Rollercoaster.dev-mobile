@@ -7,10 +7,13 @@
  *   - Step 1 · name and Step 4 · ready — slice 1/3 (#462)
  *   - Step 2 · first step (goal recap, first-step input, planned-evidence chip
  *     composing EvidenceTypePicker's capture sheet) — slice 2/3 (#463)
- *   - Step 3 · build — reuses EditGoalStepList verbatim (#489/#490): the same
- *     "Your steps" header + count, drag-reorderable rows, multi-select evidence
- *     chips, inline rename, confirmed delete, and one-level sub-steps that the
- *     Edit Goal screen uses. The wizard keeps only its frame chrome (header
+ *   - Step 3 · build — reuses EditGoalStepList (#489/#490): the same "Your
+ *     steps" header + count, drag-reorderable rows, evidence chips, inline
+ *     rename, confirmed delete, and one-level sub-steps that the Edit Goal
+ *     screen uses. Following #493/#494, the list reports evidence-chip taps
+ *     outward via onEvidenceChipPress and the wizard owns the shared
+ *     EvidenceTypePicker sheet (AnimatedSheet chrome) as a root-level sibling,
+ *     mirroring EditGoalView. The wizard keeps only its frame chrome (header
  *     band, progress bar, "I'm ready →" footer); it no longer carries a second,
  *     weaker step editor. This also deletes the BuildStep/EditGoalStep data-model
  *     fork [Integrate] (#444) would otherwise reconcile.
@@ -20,7 +23,7 @@
  * through them and wires the callbacks to navigation + Evolu. Storybook-first,
  * so `grep -rn "NewGoalWizard" src/screens` stays empty until then.
  */
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text as RNText,
@@ -34,6 +37,7 @@ import { IconButton } from "../IconButton";
 import { Button } from "../Button";
 import { ScreenSubHeader } from "../ScreenHeader/ScreenSubHeader";
 import { EvidenceTypePicker } from "../EvidenceTypePicker";
+import { AnimatedSheet } from "../EvidenceTypePicker/AnimatedSheet";
 import { EditGoalStepList, type EditGoalStep } from "../EditGoalView";
 import type { DragScrollController } from "../StepList/dragAutoScroll";
 import { EvidenceType } from "../../db";
@@ -165,7 +169,9 @@ export interface NewGoalWizardProps {
   /** Build-list header, fed to EditGoalStepList as stepsSectionLabel. Default: "Your steps". */
   yourStepsLabel?: string;
   addStepPlaceholder?: string;
+  /** Header title of the build step's evidence sheet (wizard-owned since #494). Default: "Planned evidence". */
   evidencePickerTitle?: string;
+  /** Label above the multi-select grid in the build step's evidence sheet. Default: "Evidence types". */
   evidenceTypesLabel?: string;
   /** Pluralized step-count label. Default: "N step" / "N steps". */
   stepCountLabel?: (count: number) => string;
@@ -177,7 +183,7 @@ export interface NewGoalWizardProps {
   newSubStepTitle?: string;
   /** a11y label for the "add step" + button. */
   addStepButtonLabel?: string;
-  /** a11y label for the evidence-picker close affordances (backdrop + ✕). */
+  /** a11y label for the build evidence sheet's close affordances (backdrop + ✕). Default: "Close". */
   closeLabel?: string;
   /** a11y label for the "break into sub-steps" prompt on a step. */
   breakIntoSubStepsA11yLabel?: (stepTitle: string) => string;
@@ -280,20 +286,22 @@ export function NewGoalWizard({
   quickAddPrefix = "or ",
   quickAddLabel = "Quick add — skip to the list ›",
   quickAddAccessibilityLabel = "Quick add, skip to the list",
-  // Build-list copy — forwarded straight to EditGoalStepList, which owns their
-  // English defaults (D4). Only yourStepsLabel carries a wizard-side default,
-  // since it maps to EditGoalStepList's stepsSectionLabel with wizard-specific
-  // "Your steps" wording (vs the editor's "Steps").
+  // Build-list copy — mostly forwarded straight to EditGoalStepList, which owns
+  // their English defaults (D4). yourStepsLabel carries a wizard-side default
+  // (maps to stepsSectionLabel with "Your steps" vs the editor's "Steps"). The
+  // evidence-sheet copy (evidencePickerTitle/evidenceTypesLabel/closeLabel) is
+  // wizard-owned since #494 — the sheet moved out of the list — so those carry
+  // wizard-side defaults mirroring EditGoalView.
   yourStepsLabel = "Your steps",
   addStepPlaceholder,
-  evidencePickerTitle,
-  evidenceTypesLabel,
+  evidencePickerTitle = "Planned evidence",
+  evidenceTypesLabel = "Evidence types",
   stepCountLabel,
   addSubStepLabel,
   breakIntoSubStepsLabel,
   newSubStepTitle,
   addStepButtonLabel,
-  closeLabel,
+  closeLabel = "Close",
   breakIntoSubStepsA11yLabel,
   addSubStepA11yLabel,
   announceReorder,
@@ -312,12 +320,82 @@ export function NewGoalWizard({
   const plannedIcon = evidenceIcon(plannedEvidenceType);
   const plannedLabel = plannedEvidenceLabel(plannedEvidenceType);
 
-  // The EvidenceTypePicker now serves only step 2's planned-evidence chip — the
-  // build step owns its own evidence picker inside EditGoalStepList (#489).
+  // Step 2's capture sheet: a single-select planned-evidence chip. Distinct from
+  // the build step's multi-select sheet below.
   const handlePickerSelect = (type: EvidenceTypeValue) => {
     onPlannedEvidenceTypeChange(type);
     onCloseEvidencePicker();
   };
+
+  // Build step's evidence-picker open state, lifted here from EditGoalStepList
+  // (#493/#494/D8) so the shared AnimatedSheet renders as a root-level sibling
+  // of the build ScrollView (anchored to the viewport, not the scroll content).
+  // A chip tap in the list calls onEvidenceChipPress → setEditingEvidenceId; the
+  // sheet gates on the derived editingEvidenceTypes below. Mirrors EditGoalView.
+  const [editingEvidenceId, setEditingEvidenceId] = useState<string | null>(
+    null,
+  );
+
+  // Find the sub-step with `id` across every parent (one-level, D12).
+  function findSubStep(id: string) {
+    for (const s of steps) {
+      const sub = s.subSteps?.find((ss) => ss.id === id);
+      if (sub) return sub;
+    }
+    return undefined;
+  }
+
+  const editingEvidenceStep =
+    editingEvidenceId !== null
+      ? steps.find((s) => s.id === editingEvidenceId)
+      : undefined;
+  const editingEvidenceSub =
+    editingEvidenceId !== null && !editingEvidenceStep
+      ? findSubStep(editingEvidenceId)
+      : undefined;
+  const editingEvidenceTypes =
+    editingEvidenceStep?.plannedEvidenceTypes ??
+    editingEvidenceSub?.plannedEvidenceTypes;
+
+  // Keep the last non-undefined selection so the picker grid renders through the
+  // sheet's slide-out. On close, editingEvidenceId → null flips both `visible`
+  // and `editingEvidenceTypes` to undefined on the same render; the sheet keeps
+  // its chrome mounted for the exit animation, so gating the grid directly on
+  // editingEvidenceTypes would animate out an empty sheet (#493). Adjusting
+  // state during render (React's sanctioned "store info from a previous render"
+  // pattern) rather than a ref keeps the React Compiler happy.
+  const [retainedEvidenceTypes, setRetainedEvidenceTypes] = useState<
+    EvidenceTypeValue[] | undefined
+  >(undefined);
+  if (
+    editingEvidenceTypes !== undefined &&
+    editingEvidenceTypes !== retainedEvidenceTypes
+  ) {
+    setRetainedEvidenceTypes(editingEvidenceTypes);
+  }
+  const sheetEvidenceTypes = editingEvidenceTypes ?? retainedEvidenceTypes;
+
+  // Evidence-picker toggle (D8/D12). Guards the "every step requires evidence"
+  // invariant: the last remaining type can't be deselected (no-op), so a step or
+  // sub-step never lands in a 0-selected state. Routes to the step or sub-step
+  // callback depending on which id opened the picker.
+  function handleToggleEvidence(type: EvidenceTypeValue) {
+    if (editingEvidenceId === null) return;
+    const step = steps.find((s) => s.id === editingEvidenceId);
+    const sub = step ? undefined : findSubStep(editingEvidenceId);
+    const current = step?.plannedEvidenceTypes ?? sub?.plannedEvidenceTypes;
+    if (!current) return;
+    const isSelected = current.includes(type);
+    if (isSelected && current.length === 1) return;
+    const next = isSelected
+      ? current.filter((t) => t !== type)
+      : [...current, type];
+    if (step) {
+      onStepEvidenceChange(editingEvidenceId, next);
+    } else {
+      onSubStepEvidenceChange(editingEvidenceId, next);
+    }
+  }
 
   return (
     <View style={styles.container}>
@@ -483,36 +561,34 @@ export function NewGoalWizard({
               contentContainerStyle={styles.buildScrollContent}
               showsVerticalScrollIndicator={false}
             >
-              {/* The build step reuses EditGoalStepList verbatim (#489/#490) —
-                  same "Your steps" header + count, drag-reorderable rows,
-                  multi-select evidence chips, inline rename, confirmed delete,
-                  and one-level sub-steps as the Edit Goal screen. All editing
-                  state lives inside it; the wizard only forwards data +
-                  callbacks + copy (D2/D3/D4). yourStepsLabel maps to the built-in
-                  header's stepsSectionLabel (D1). */}
+              {/* The build step reuses EditGoalStepList (#489/#490) — same "Your
+                  steps" header + count, drag-reorderable rows, evidence chips,
+                  inline rename, confirmed delete, and one-level sub-steps as the
+                  Edit Goal screen. The list reports evidence-chip taps outward
+                  via onEvidenceChipPress; the picker sheet itself is owned by the
+                  wizard (#493/#494/D8), rendered as a root-level sibling below.
+                  Otherwise the wizard only forwards data + callbacks + copy
+                  (D2/D3/D4). yourStepsLabel maps to the built-in header's
+                  stepsSectionLabel (D1). */}
               <EditGoalStepList
                 steps={steps}
                 onReorderSteps={onReorderSteps}
                 onReorderSubSteps={onReorderSubSteps}
                 onAddStep={onAddStep}
                 onStepTitleChange={onStepTitleChange}
-                onStepEvidenceChange={onStepEvidenceChange}
+                onEvidenceChipPress={setEditingEvidenceId}
                 onAddSubStep={onAddSubStep}
                 onSubStepTitleChange={onSubStepTitleChange}
-                onSubStepEvidenceChange={onSubStepEvidenceChange}
                 onDeleteSubStep={onDeleteSubStep}
                 onDeleteStep={onDeleteStep}
                 dragScrollController={dragScrollController}
                 stepsSectionLabel={yourStepsLabel}
                 addStepPlaceholder={addStepPlaceholder}
-                evidencePickerTitle={evidencePickerTitle}
-                evidenceTypesLabel={evidenceTypesLabel}
                 stepCountLabel={stepCountLabel}
                 addSubStepLabel={addSubStepLabel}
                 breakIntoSubStepsLabel={breakIntoSubStepsLabel}
                 newSubStepTitle={newSubStepTitle}
                 addStepButtonLabel={addStepButtonLabel}
-                closeLabel={closeLabel}
                 breakIntoSubStepsA11yLabel={breakIntoSubStepsA11yLabel}
                 addSubStepA11yLabel={addSubStepA11yLabel}
                 announceReorder={announceReorder}
@@ -567,15 +643,14 @@ export function NewGoalWizard({
         </>
       ) : null}
 
-      {/* Planned-evidence picker — reuse #409's capture sheet whole (D2), no
-          fork. Serves only step 2's planned-evidence chip now; the build step
-          owns its own evidence picker inside EditGoalStepList (#489). No
-          activeStepTitle: there is no active step during goal creation (D3), so
-          the "Saving to your active step" sub-line is omitted. It renders
-          in-tree as an absolute overlay anchored to this wizard frame (scrim +
-          sheet rising from the bottom) and gates on `visible`, so rendering it
-          unconditionally is inert until the chip opens it. Selecting a type
-          updates the chip and closes the sheet in one gesture. */}
+      {/* Step 2 · planned-evidence picker — reuse #409's capture sheet whole
+          (D2), no fork. Single-select, serves only step 2's planned-evidence
+          chip. No activeStepTitle: there is no active step during goal creation
+          (D3), so the "Saving to your active step" sub-line is omitted. It
+          renders in-tree as an absolute overlay anchored to this wizard frame
+          (scrim + sheet rising from the bottom) and gates on `visible`, so
+          rendering it unconditionally is inert until the chip opens it.
+          Selecting a type updates the chip and closes the sheet in one gesture. */}
       <EvidenceTypePicker
         mode="capture"
         visible={evidencePickerOpen}
@@ -584,6 +659,31 @@ export function NewGoalWizard({
         onSelectType={handlePickerSelect}
         onClose={onCloseEvidencePicker}
       />
+
+      {/* Step 3 · build evidence picker (D8/D12): the reused multi-select
+          authoring grid in the shared AnimatedSheet chrome (#493/#494), lifted
+          out of EditGoalStepList so it renders as a root-level sibling here —
+          same reanimated slide/scrim, Android-back dismiss and animation-pref
+          timing as the step-2 capture sheet. Opened by a step OR a sub-step's
+          chip via onEvidenceChipPress; toggling updates that row's pills via
+          onStepEvidenceChange / onSubStepEvidenceChange; the last remaining type
+          can't be deselected (handleToggleEvidence guard). Mirrors EditGoalView. */}
+      <AnimatedSheet
+        visible={editingEvidenceTypes !== undefined}
+        onClose={() => setEditingEvidenceId(null)}
+        title={evidencePickerTitle}
+        closeLabel={closeLabel}
+        closeTestID="new-goal-evidence-close"
+        backdropTestID="new-goal-evidence-backdrop"
+      >
+        {sheetEvidenceTypes ? (
+          <EvidenceTypePicker
+            selectedTypes={sheetEvidenceTypes}
+            onToggleType={handleToggleEvidence}
+            label={evidenceTypesLabel}
+          />
+        ) : null}
+      </AnimatedSheet>
     </View>
   );
 }
