@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import React, { useRef, useState } from "react";
-import { View } from "react-native";
+import { useWindowDimensions, View } from "react-native";
+import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { EvidenceType } from "../../db";
 import type { EvidenceTypeValue } from "../../types/evidence";
 import {
@@ -22,6 +23,36 @@ const meta: Meta<typeof EditGoalView> = {
 export default meta;
 
 type Story = StoryObj<typeof EditGoalView>;
+
+/**
+ * Phone-sized stage (#493/D8). EditGoalView is now a full-height flex column
+ * (header · scrollable body · footer) with the evidence sheet as a root-level
+ * sibling — its `container:{flex:1}` and the sheet's viewport-filling overlay
+ * only resolve against a *bounded* height. In-app the screen frame supplies it,
+ * but Storybook's global decorator renders every story inside a content-hugging
+ * ScrollView, so without a bounded stage the flex column collapses to content
+ * height and the sheet would again span the (tall) content instead of the
+ * viewport. We size the stage to the visible canvas — the decorator pads its
+ * ScrollView by space[4] (top) + space[16] (bottom), read from the same tokens
+ * so it can't drift — mirroring NewGoalWizard's PhoneStage. This is the surface
+ * the sheet's from-the-bottom rise + full-frame scrim is reviewed against.
+ */
+function PhoneStage({ children }: { children: React.ReactNode }) {
+  const { height } = useWindowDimensions();
+  const { theme } = useUnistyles();
+  const stageHeight = Math.max(0, height - theme.space[4] - theme.space[16]);
+  return (
+    <View style={[storyStyles.stage, { height: stageHeight }]}>{children}</View>
+  );
+}
+
+const storyStyles = StyleSheet.create(() => ({
+  stage: {
+    width: "100%",
+    maxWidth: 390,
+    alignSelf: "center" as const,
+  },
+}));
 
 // Mixed anatomy: mostly one planned type (the prototype-faithful common case),
 // one step with two types (multi-pill, D4), and two steps carrying date/dep
@@ -195,24 +226,26 @@ function InteractiveEditGoal({ note }: { note?: string }) {
           {note}
         </Text>
       ) : null}
-      <EditGoalView
-        goalTitle={goalTitle}
-        onGoalTitleChange={setGoalTitle}
-        steps={steps}
-        onReorderSteps={reorder}
-        onReorderSubSteps={reorderSubSteps}
-        onAddStep={addStep}
-        onStepTitleChange={renameStep}
-        onStepEvidenceChange={changeEvidence}
-        onAddSubStep={addSubStep}
-        onSubStepTitleChange={renameSubStep}
-        onSubStepEvidenceChange={changeSubStepEvidence}
-        onDeleteSubStep={deleteSubStep}
-        onDeleteStep={deleteStep}
-        onOverflowPress={() => {}}
-        onBack={() => {}}
-        onDone={() => {}}
-      />
+      <PhoneStage>
+        <EditGoalView
+          goalTitle={goalTitle}
+          onGoalTitleChange={setGoalTitle}
+          steps={steps}
+          onReorderSteps={reorder}
+          onReorderSubSteps={reorderSubSteps}
+          onAddStep={addStep}
+          onStepTitleChange={renameStep}
+          onStepEvidenceChange={changeEvidence}
+          onAddSubStep={addSubStep}
+          onSubStepTitleChange={renameSubStep}
+          onSubStepEvidenceChange={changeSubStepEvidence}
+          onDeleteSubStep={deleteSubStep}
+          onDeleteStep={deleteStep}
+          onOverflowPress={() => {}}
+          onBack={() => {}}
+          onDone={() => {}}
+        />
+      </PhoneStage>
     </View>
   );
 }
@@ -317,24 +350,26 @@ export const RowAnatomy: Story = {
 // an interaction (that's what the Interactive* stories are for).
 function MatrixEditGoal() {
   return (
-    <EditGoalView
-      goalTitle="Learn watercolor basics"
-      onGoalTitleChange={noop}
-      steps={initialSteps}
-      onReorderSteps={noop}
-      onReorderSubSteps={noop}
-      onAddStep={noop}
-      onStepTitleChange={noop}
-      onStepEvidenceChange={noop}
-      onAddSubStep={noop}
-      onSubStepTitleChange={noop}
-      onSubStepEvidenceChange={noop}
-      onDeleteSubStep={noop}
-      onDeleteStep={noop}
-      onOverflowPress={noop}
-      onBack={noop}
-      onDone={noop}
-    />
+    <PhoneStage>
+      <EditGoalView
+        goalTitle="Learn watercolor basics"
+        onGoalTitleChange={noop}
+        steps={initialSteps}
+        onReorderSteps={noop}
+        onReorderSubSteps={noop}
+        onAddStep={noop}
+        onStepTitleChange={noop}
+        onStepEvidenceChange={noop}
+        onAddSubStep={noop}
+        onSubStepTitleChange={noop}
+        onSubStepEvidenceChange={noop}
+        onDeleteSubStep={noop}
+        onDeleteStep={noop}
+        onOverflowPress={noop}
+        onBack={noop}
+        onDone={noop}
+      />
+    </PhoneStage>
   );
 }
 
