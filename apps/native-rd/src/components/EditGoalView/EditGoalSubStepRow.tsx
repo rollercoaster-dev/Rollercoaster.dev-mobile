@@ -216,23 +216,29 @@ export function EditGoalSubStepRow({
         </Pressable>
         {showAccessibleControls && (
           <View style={styles.reorderButtons}>
-            {onMoveUp && !isFirst && (
+            {onMoveUp && !isFirst ? (
               <IconButton
                 icon={<ArrowUp size={18} weight="bold" />}
                 onPress={onMoveUp}
                 size="sm"
+                tone="ghost"
                 accessibilityLabel={moveSubStepUpLabel(subStep.title)}
                 testID={`edit-goal-substep-up-${subStep.id}`}
               />
+            ) : (
+              <View style={styles.reorderSlot} />
             )}
-            {onMoveDown && !isLast && (
+            {onMoveDown && !isLast ? (
               <IconButton
                 icon={<ArrowDown size={18} weight="bold" />}
                 onPress={onMoveDown}
                 size="sm"
+                tone="ghost"
                 accessibilityLabel={moveSubStepDownLabel(subStep.title)}
                 testID={`edit-goal-substep-down-${subStep.id}`}
               />
+            ) : (
+              <View style={styles.reorderSlot} />
             )}
           </View>
         )}

@@ -163,6 +163,14 @@ export const styles = StyleSheet.create((theme) => ({
     flexDirection: "row" as const,
     gap: theme.space[1],
   },
+  // Empty placeholder that fills a hidden arrow's slot (first row hides ↑, last
+  // row hides ↓) so every row reserves two reorder slots and the chip/× columns
+  // stay aligned across rows (A-D3). Matches the `sm` IconButton footprint
+  // (36pt). Label-free, so reorder tests that assert arrow absence by label hold.
+  reorderSlot: {
+    width: 36,
+    height: 36,
+  },
   // Per-step delete × on the main row (#460) — mirrors subStepDelete/Glyph (D3).
   stepDelete: {
     minWidth: 44,
