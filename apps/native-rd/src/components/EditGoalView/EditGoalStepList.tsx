@@ -23,15 +23,14 @@ import {
   Text as RNText,
   TextInput,
   Pressable,
-  Modal,
   AccessibilityInfo,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useUnistyles } from "react-native-unistyles";
 import { useAnimationPref } from "../../hooks/useAnimationPref";
 import { Text } from "../Text";
 import { EvidenceTypePicker } from "../EvidenceTypePicker";
+import { AnimatedSheet } from "../EvidenceTypePicker/AnimatedSheet";
 import type { EvidenceTypeValue } from "../../types/evidence";
 import type { DragScrollController } from "../StepList/dragAutoScroll";
 import { ConfirmDeleteModal } from "../ConfirmDeleteModal";
@@ -453,52 +452,26 @@ export function EditGoalStepList({
       </View>
 
       {/* Evidence-type picker (D8/D12): the reused multi-select authoring grid
-          in a local bottom-sheet Modal (mirrors the capture branch + nest
-          picker). Opened by a step OR a sub-step's chip; toggling updates that
-          row's pills via onStepEvidenceChange / onSubStepEvidenceChange; the last
-          remaining type can't be deselected (handleToggleEvidence guard). */}
-      <Modal
+          in the shared AnimatedSheet chrome (#493) — same reanimated slide/scrim,
+          Android-back dismiss and animation-pref timing as the capture sheet.
+          Opened by a step OR a sub-step's chip; toggling updates that row's pills
+          via onStepEvidenceChange / onSubStepEvidenceChange; the last remaining
+          type can't be deselected (handleToggleEvidence guard). */}
+      <AnimatedSheet
         visible={editingEvidenceTypes !== undefined}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setEditingEvidenceId(null)}
-        accessibilityViewIsModal
+        onClose={() => setEditingEvidenceId(null)}
+        title={evidencePickerTitle}
+        closeLabel={closeLabel}
+        closeTestID="edit-goal-evidence-close"
       >
-        <View style={styles.pickerOverlay}>
-          <Pressable
-            style={styles.pickerBackdrop}
-            onPress={() => setEditingEvidenceId(null)}
-            accessibilityRole="button"
-            accessibilityLabel={closeLabel}
-            testID="edit-goal-evidence-backdrop"
+        {editingEvidenceTypes ? (
+          <EvidenceTypePicker
+            selectedTypes={editingEvidenceTypes}
+            onToggleType={handleToggleEvidence}
+            label={evidenceTypesLabel}
           />
-          <SafeAreaView edges={["bottom"]} style={styles.pickerSheet}>
-            <View style={styles.pickerHandle} />
-            <View style={styles.pickerHeader}>
-              <RNText style={styles.pickerTitle} accessibilityRole="header">
-                {evidencePickerTitle}
-              </RNText>
-              <Pressable
-                style={styles.pickerClose}
-                onPress={() => setEditingEvidenceId(null)}
-                accessibilityRole="button"
-                accessibilityLabel={closeLabel}
-                hitSlop={8}
-                testID="edit-goal-evidence-close"
-              >
-                <RNText style={styles.pickerCloseIcon}>{"✕"}</RNText>
-              </Pressable>
-            </View>
-            {editingEvidenceTypes ? (
-              <EvidenceTypePicker
-                selectedTypes={editingEvidenceTypes}
-                onToggleType={handleToggleEvidence}
-                label={evidenceTypesLabel}
-              />
-            ) : null}
-          </SafeAreaView>
-        </View>
-      </Modal>
+        ) : null}
+      </AnimatedSheet>
 
       {/* Confirm-delete modal (#460, D1/D2): one instance for both row-level
           deletions. The main-step × and the sub-step × both open it via

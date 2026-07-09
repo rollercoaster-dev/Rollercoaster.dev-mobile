@@ -74,13 +74,13 @@ Retire `EditGoalStepList`'s hand-rolled `Modal`-based evidence-type-picker sheet
 **Commit**: `refactor(edit-goal): replace picker Modal with shared AnimatedSheet`
 **Changes**:
 
-- [ ] Import `AnimatedSheet` directly from `"../EvidenceTypePicker/AnimatedSheet"` (D2).
-- [ ] Replace the `Modal`/`SafeAreaView` block (`:460-501`) with `<AnimatedSheet visible={editingEvidenceTypes !== undefined} onClose={() => setEditingEvidenceId(null)} title={evidencePickerTitle} closeLabel={closeLabel} closeTestID="edit-goal-evidence-close">{editingEvidenceTypes ? <EvidenceTypePicker selectedTypes={editingEvidenceTypes} onToggleType={handleToggleEvidence} label={evidenceTypesLabel} /> : null}</AnimatedSheet>`. No `subLine` — Edit Goal has never had one.
-- [ ] Remove the now-unused `Modal` import (from `react-native`) and `SafeAreaView` import (from `react-native-safe-area-context`) — confirmed unused elsewhere in this file.
-- [ ] Delete the `picker*` block from `EditGoalView.styles.ts` (`:379-434`, 8 keys).
-- [ ] Add to `EditGoalView.test.tsx`, in the existing `describe("evidence picker (D8)")` block: a test that opens the picker (`fireEvent.press(screen.getByTestId("edit-goal-step-evidence-s1"))`), spies on `BackHandler.addEventListener` (mirroring `EvidenceTypePicker.test.tsx`'s "calls onClose on Android hardware back" pattern), invokes the captured `"hardwareBackPress"` handler, and asserts it returns `true` and the picker closes (`screen.queryByTestId("edit-goal-evidence-close")` becomes `null`).
-- [ ] Confirm (no new test needed — already covered) the existing "opens the multi-select picker...", "adds a type on toggle...", and "refuses to deselect the last remaining type..." tests still pass unmodified — they exercise the exact selection semantics D1-D7 must not touch.
-- [ ] Run `bun run test --testPathPatterns EditGoalView`, `bun run type-check`, `bun run lint`.
+- [x] Import `AnimatedSheet` directly from `"../EvidenceTypePicker/AnimatedSheet"` (D2).
+- [x] Replace the `Modal`/`SafeAreaView` block (`:460-501`) with `<AnimatedSheet visible={editingEvidenceTypes !== undefined} onClose={() => setEditingEvidenceId(null)} title={evidencePickerTitle} closeLabel={closeLabel} closeTestID="edit-goal-evidence-close">{editingEvidenceTypes ? <EvidenceTypePicker selectedTypes={editingEvidenceTypes} onToggleType={handleToggleEvidence} label={evidenceTypesLabel} /> : null}</AnimatedSheet>`. No `subLine` — Edit Goal has never had one.
+- [x] Remove the now-unused `Modal` import (from `react-native`) and `SafeAreaView` import (from `react-native-safe-area-context`) — confirmed unused elsewhere in this file.
+- [x] Delete the `picker*` block from `EditGoalView.styles.ts` (`:379-434`, 8 keys).
+- [x] Add to `EditGoalView.test.tsx`, in the existing `describe("evidence picker (D8)")` block: a test that opens the picker, spies on `BackHandler.addEventListener`, invokes the captured `"hardwareBackPress"` handler (wrapped in `act` — the exit-timing callback synchronously unmounts the sheet under the reanimated mock), and asserts it returns `true` and the picker closes (`edit-goal-evidence-close` → `null`).
+- [x] Confirm (no new test needed — already covered) the existing "opens the multi-select picker...", "adds a type on toggle...", and "refuses to deselect the last remaining type..." tests still pass unmodified — they exercise the exact selection semantics D1-D7 must not touch.
+- [x] Run `bun run test --testPathPatterns EditGoalView` (54/54), `bun run type-check`, `bun run lint` — all clean (0 errors).
 
 ## Testing Strategy
 
@@ -104,3 +104,5 @@ Retire `EditGoalStepList`'s hand-rolled `Modal`-based evidence-type-picker sheet
 <!-- Entries added by implement skill:
 - [YYYY-MM-DD HH:MM] <discovery description>
 -->
+
+- [2026-07-09 17:11] Step 2 Android-back test: the captured `hardwareBackPress` handler must be invoked **inside `act()`**, not called bare as the capture-mode reference test does. Unlike that test (which only asserts `onClose` fired), this test also asserts the sheet unmounts — which requires two state updates to flush (`setEditingEvidenceId(null)` → re-render → `AnimatedSheet` exit-timing callback → `setRendered(false)`). Calling the handler bare left those updates unflushed (React "not wrapped in act" warning) and the `queryByTestId` still saw the sheet. Also typed the captured return as `boolean | null | undefined` (RN's `BackHandler` listener signature allows `null`) to satisfy `tsc`.

@@ -1,9 +1,10 @@
 import React from "react";
-import { AccessibilityInfo } from "react-native";
+import { AccessibilityInfo, BackHandler } from "react-native";
 import {
   renderWithProviders,
   screen,
   fireEvent,
+  act,
 } from "../../../__tests__/test-utils";
 import {
   EditGoalView,
@@ -318,6 +319,29 @@ describe("EditGoalView", () => {
       expect(checked).toHaveLength(1);
       fireEvent.press(checked[0]);
       expect(onStepEvidenceChange).not.toHaveBeenCalled();
+    });
+
+    it("closes on Android hardware back while open (#493 — shared AnimatedSheet)", () => {
+      const addSpy = jest.spyOn(BackHandler, "addEventListener");
+      renderWithProviders(<EditGoalView {...makeProps({ steps: soloStep })} />);
+      fireEvent.press(screen.getByTestId("edit-goal-step-evidence-s1"));
+      expect(screen.getByTestId("edit-goal-evidence-close")).toBeOnTheScreen();
+
+      // The AnimatedSheet registers its own hardwareBackPress listener (the job
+      // the old RN Modal's onRequestClose used to do). Invoking it must claim
+      // the event (return true) and dismiss the sheet, not pop the screen.
+      const handler = addSpy.mock.calls.find(
+        ([event]) => event === "hardwareBackPress",
+      )?.[1];
+      expect(handler).toBeDefined();
+      // Wrap in act: onClose flips the sheet to visible=false, whose exit-timing
+      // completion callback synchronously unmounts it (reanimated mock).
+      let claimed: boolean | null | undefined;
+      act(() => {
+        claimed = handler?.();
+      });
+      expect(claimed).toBe(true);
+      expect(screen.queryByTestId("edit-goal-evidence-close")).toBeNull();
     });
   });
 
