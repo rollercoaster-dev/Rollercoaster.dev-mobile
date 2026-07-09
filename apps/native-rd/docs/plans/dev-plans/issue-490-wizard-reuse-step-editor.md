@@ -139,3 +139,78 @@ Delete the wizard's second, weaker step editor (bespoke numbered `buildRowCard` 
 - [2026-07-09] Tests emit benign `act(...)` warnings from `EditGoalStepList`'s async screen-reader probe (`AccessibilityInfo.isScreenReaderEnabled().then(setScreenReaderActive)`). Same warnings appear in EditGoalView's own suite; not fixable here without touching the #489 file (D1 forbids), tests pass regardless.
 - [2026-07-09] `stepCountLabel` passthrough left undefined → the built-in count renders "N steps" (e.g. "2 steps"), which is what the rewritten header assertion queries. Wizard's old `new-goal-build-count` testID is gone (header is now EditGoalStepList's).
 - [2026-07-09] Manual Storybook visual pass (Step 2's last checkbox) NOT yet run — no simulator in this session. Flagged as the remaining gate before merge; green CI ≠ visual correctness (project memory).
+- [2026-07-09] Joe's visual review of the wizard build step (web Storybook screenshot) found the reused editor "tight and cluttered, buttons the loudest part". Diagnosis + fix scoped as **Amendment A** below — the defects live in the shared #489 row files, so D1's "don't touch EditGoalStepList" is partially lifted (see A-D1).
+
+---
+
+## Amendment A — Step-editor visual quieting + row-collision fix (2026-07-09, with Joe)
+
+Joe reviewed the wizard's build step in web Storybook and judged it worse than the
+old bespoke rows. The diagnosis (verified against the code, not just the
+screenshot) found three defects, all in the **shared** step-editor files from
+#489 — so fixing them here repairs both the wizard's build step and the Edit
+Goal screen at once:
+
+1. **The ↑/↓ reorder fallback out-shouts everything.** `EditGoalStepRow` /
+   `EditGoalSubStepRow` render the fallback as default-tone `IconButton`s
+   (`tone="surface"`: bordered box + hard shadow) — the design language's
+   real-action treatment, on the _least_ important control, up to twice per row.
+   Critically this is **not** a rare state: `useAnimationPref` forces
+   `animationPref="none"` for the **autism-friendly theme** and for OS
+   reduce-motion, so the users who most need low visual noise permanently get
+   the loudest version. (It's also why Joe sees it in web Storybook — macOS
+   reduce-motion maps through.)
+2. **Rows collide.** `rowMain`/`subStepRow` use a `flexWrap` heuristic to drop
+   the controls cluster under long titles; in the wrapped state the controls
+   paint on top of the _next_ row's title (visible in the screenshot on the
+   "Finish with 220-grit" → "New sub-step with a longer name…" pair). Sub-steps
+   hit this constantly because the mint-rail indent removes width.
+3. **Ragged control clusters + density.** First rows render only ↓, last rows
+   only ↑, so every cluster is a different width and nothing aligns vertically;
+   the sub-step block packs rows at `gap: space[1]`.
+
+### Amendment decisions
+
+| ID   | Decision                                                                                                                                                                                                                                                                                                                                                     | Alternatives Considered                                                                                             | Rationale                                                                                                                                                                                                                                                                                            |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A-D1 | **Partially lift D1**: this amendment MAY edit `EditGoalStepRow.tsx`, `EditGoalSubStepRow.tsx`, and `EditGoalView.styles.ts`. `EditGoalStepList.tsx`'s props/behavior contract stays untouched (no API change), so #490's wiring/tests/stories from Steps 1–3 are unaffected.                                                                                | Split into a separate issue/PR against #489's files.                                                                | Joe explicitly chose "add to the existing plan for this PR". The visual defects were _surfaced by_ this PR's reuse (the wizard is where they were first seen at review density) and the fix is small (~2 style-file-heavy commits), keeping the PR well under the 500-LOC cap.                       |
+| A-D2 | **Reorder fallback goes ghost**: the four `IconButton`s (↑/↓ in both row files) switch to the existing `tone="ghost"` (transparent bg, no border, no hard shadow, `surfaceCardFg` ink — `IconButton.styles.ts`). Labels, testIDs, sizes, hit targets unchanged.                                                                                              | (a) New muted tone; (b) bespoke Pressable chevrons; (c) remove visible fallback in favor of `accessibilityActions`. | Ghost already exists and is themed/contrast-checked; zero new design surface. (c) is a real idea but drops the visible affordance reduce-motion users rely on — filed as follow-up instead (see Not in scope).                                                                                       |
+| A-D3 | **Constant-width reorder cluster**: `reorderButtons` always reserves two slots; when `isFirst`/`isLast` hides an arrow, an empty spacer `View` (same footprint as the `sm` IconButton) fills its slot.                                                                                                                                                       | Keep conditional rendering with no spacer (status quo).                                                             | Aligns every row's chip/×/arrows into clean columns. Tests assert arrow _absence_ via `queryByLabelText('Move "…" up')` — spacers carry no label/testID, so all existing assertions in `EditGoalView.test.tsx` / `NewGoalWizard.test.tsx` hold as written.                                           |
+| A-D4 | **Deterministic single-line-flow row layout**: remove `flexWrap`/`rowGap`/`minWidth` wrap heuristic from `rowMain`, `rowLead`, `subStepRow`. The row is a plain flex row: `rowLead` flexes and the **title wraps to multiple lines inside its own box** (no truncation — never hide content); the controls cluster keeps natural width, vertically centered. | (a) `numberOfLines={1}` + ellipsis on titles; (b) debug and keep the flexWrap layout.                               | A flexible title wrapping _within_ `rowLead` can never overlap a sibling row — the collision class disappears structurally instead of being patched. Truncation (a) hides content, which violates the project's "show what's present" principle and hurts the exact ND audiences this screen serves. |
+| A-D5 | **Loosen density**: `subStepBlock` gap `space[1]` → `space[2]`.                                                                                                                                                                                                                                                                                              | Larger paddings on `rowCard` too.                                                                                   | The card padding matches the App Shell prototype; the sub-step rail gap is the one place the screenshot reads as cramped. One-token change; revisit after the visual pass if still tight.                                                                                                            |
+
+### Step 4: Quiet the reorder fallback + stabilize control clusters
+
+**Files**: `apps/native-rd/src/components/EditGoalView/EditGoalStepRow.tsx`, `apps/native-rd/src/components/EditGoalView/EditGoalSubStepRow.tsx`, `apps/native-rd/src/components/EditGoalView/EditGoalView.styles.ts`
+**Commit**: `fix(edit-goal): ghost the ↑/↓ reorder fallback, align row control clusters (#490)`
+**Changes**:
+
+- [x] Add `tone="ghost"` to the four reorder `IconButton`s (↑/↓ in `EditGoalStepRow`, ↑/↓ in `EditGoalSubStepRow`). All labels/testIDs (`edit-goal-step-up-*`, `edit-goal-substep-down-*`, …) unchanged.
+- [x] In both row files, render a spacer `View` in place of a hidden arrow (`isFirst` hides ↑, `isLast` hides ↓) so the cluster is always two slots wide; add a `reorderSlot` style to `EditGoalView.styles.ts` sized to the `sm` IconButton footprint (36pt).
+- [x] `bun run test --testPathPatterns "EditGoalView|NewGoalWizard"` clean — the reorder tests press by label and assert absence by label; spacers are label-free.
+
+### Step 5: Deterministic row layout — kill the wrap collision, loosen density
+
+**Files**: `apps/native-rd/src/components/EditGoalView/EditGoalView.styles.ts` (possibly small JSX touch-ups in the two row files)
+**Commit**: `fix(edit-goal): let titles wrap in place instead of wrapping controls over neighbors (#490)`
+**Changes**:
+
+- [x] `rowMain` / `subStepRow`: drop `flexWrap` + `rowGap`; plain flex row, `alignItems: "center"`.
+- [x] `rowLead`: drop the `minWidth: 140` floor (it existed only to trigger the wrap); keep `flexGrow/flexShrink/flexBasis` so the title column absorbs remaining width and the title text wraps to as many lines as it needs **inside** its own box.
+- [x] `rowControls`: keep natural width / `flexShrink: 0`. Chip-internal pill wrapping not needed yet (deferred to the visual gate's width check).
+- [x] `subStepBlock` gap `space[1]` → `space[2]` (A-D5).
+- [x] `bun run test --testPathPatterns "EditGoalView|NewGoalWizard"` clean; `bun run type-check`; `bun run lint` (all via the pre-commit hook).
+- [ ] **Visual gate (the actual acceptance for this amendment)** — web Storybook with OS reduce-motion ON (arrows visible, Joe's review condition): `NewGoalWizard/BuildStepWithSubSteps` (has the long sub-step title that reproduced the overlap) and `EditGoalView` equivalents, across `light-default` + `autismFriendly` (the always-arrows audience) + one dark variant via the toolbar switcher. Check: no control/text overlap at any width, control clusters vertically aligned across rows, title never truncated, arrows quieter than the title, sub-step rail breathing.
+
+### Amendment testing strategy
+
+- [x] Full `bun run test --testPathPatterns "EditGoalView|NewGoalWizard"` after each step (both suites exercise the reorder fallback with `mockAnimationPref = "none"`) — 118 pass after Step 4 and again after Step 5.
+- [ ] The visual gate above is the decision point: if the quiet-arrows + no-collision layout still reads as cluttered to Joe, the next move is **design candidates in a phone-viewport HTML prototype** (different row anatomies, side by side) — not further style-tweaking of this anatomy.
+
+### Amendment not-in-scope
+
+| Item                                                                                                                                    | Reason                                                                                                                                   | Follow-up                                        |
+| --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| Replacing the visible ↑/↓ fallback for screen-reader users with `accessibilityActions` (Move up / Move down / Delete on the row itself) | Real simplification (removes 2 controls/row for SR users) but changes the a11y contract + its tests; too big to ride along on this PR    | file as a new issue after this PR merges         |
+| Row-anatomy redesign (fewer always-visible controls, actions behind edit mode, etc.)                                                    | Anatomy matches the App Shell prototype's `edit` route; current defects are execution-level. Only revisit if the visual gate still fails | HTML prototype with design candidates, if needed |
+| Chip-internal wrapping of multi-type evidence pills                                                                                     | Only needed if the Step-5 width check fails; `EvidenceTypePicker` is a shared component with its own consumers                           | decide during Step 5's width check               |
