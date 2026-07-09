@@ -8,10 +8,21 @@ import { shadowStyle } from "../../styles/shadows";
 // #3b1f6b is *re-toned* (not a literal match) to accentPrimary — the blue
 // #2563eb accent, reused as the ink.
 export const styles = StyleSheet.create((theme) => ({
+  // flex:1 screen host (#493/D8): splits into [header][scroll][footer] so the
+  // evidence sheet's absolute overlay — a sibling of the ScrollView — fills the
+  // viewport, not the scroll content. Was `gap: 0` when the body was a plain
+  // content-sized View.
   container: {
-    gap: 0,
+    flex: 1,
   },
-  body: {
+  // The internal ScrollView claims the space between header and footer.
+  scroll: {
+    flex: 1,
+  },
+  // Padding + inter-section gap that used to live on the `body` View now ride
+  // the ScrollView's contentContainerStyle (the scrollable content is a flex
+  // column, so `gap` still applies).
+  scrollContent: {
     padding: theme.space[4],
     gap: theme.space[3],
   },
@@ -374,61 +385,5 @@ export const styles = StyleSheet.create((theme) => ({
     padding: theme.space[4],
     borderTopWidth: theme.borderWidth.medium,
     borderTopColor: theme.colors.border,
-  },
-
-  // --- Evidence-type picker bottom sheet (D8) ---
-  // Mirrors EvidenceTypePicker's capture-sheet treatment: scrim + bottom-anchored
-  // neo-brutalist sheet with a hard top border and modal shadow.
-  pickerOverlay: {
-    flex: 1,
-    justifyContent: "flex-end" as const,
-    backgroundColor: `${theme.colors.shadow}cc`,
-  },
-  pickerBackdrop: {
-    position: "absolute" as const,
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  pickerSheet: {
-    borderTopLeftRadius: theme.radius.xl,
-    borderTopRightRadius: theme.radius.xl,
-    borderTopWidth: theme.borderWidth.thick,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.background,
-    paddingHorizontal: theme.space[4],
-    paddingTop: theme.space[3],
-    paddingBottom: theme.space[4],
-    gap: theme.space[3],
-    ...shadowStyle(theme, "modalElevation"),
-  },
-  pickerHandle: {
-    alignSelf: "center" as const,
-    width: 40,
-    height: 4,
-    borderRadius: theme.radius.pill,
-    backgroundColor: theme.colors.border,
-  },
-  pickerHeader: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "space-between" as const,
-  },
-  pickerTitle: {
-    fontFamily: theme.fontFamily.headline,
-    fontWeight: theme.fontWeight.bold,
-    fontSize: theme.size.lg,
-    color: theme.colors.text,
-  },
-  pickerClose: {
-    minWidth: 44,
-    minHeight: 44,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-  },
-  pickerCloseIcon: {
-    fontSize: theme.size.lg,
-    color: theme.colors.text,
   },
 }));

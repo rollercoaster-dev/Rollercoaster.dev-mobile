@@ -3,14 +3,19 @@
  * EditGoalView (issue #489, Track of Epic #384). It owns the "Steps" section
  * label + count, the drag-reorderable step rows (via useEditGoalDrag), each
  * parent's one-level sub-step block (EditGoalSubStepList), the inline "Add
- * step..." affordance, and the two local modals its state drives: the
- * evidence-type picker and the ConfirmDeleteModal (D1).
+ * step..." affordance, and the local ConfirmDeleteModal its pendingDelete
+ * state drives (D1).
  *
- * All editing state lives here — inline-rename (editingId/editText),
- * evidence-picker (editingEvidenceId), delete-confirm (pendingDelete), the
- * new-step draft (newStepTitle) — plus the screen-reader/animation-pref
- * subscriptions that decide whether the ↑/↓ fallback shows (D5). EditGoalView
- * became a thin composition around this; the New Goal wizard (#490) reuses it.
+ * The evidence-type picker's sheet + state was lifted up to the host
+ * (EditGoalView) in #493/D8 so the shared AnimatedSheet anchors to the screen
+ * viewport, not this list's content box; this layer now just signals a chip
+ * tap outward via onEvidenceChipPress(id).
+ *
+ * Editing state that stays here — inline-rename (editingId/editText),
+ * delete-confirm (pendingDelete), the new-step draft (newStepTitle) — plus the
+ * screen-reader/animation-pref subscriptions that decide whether the ↑/↓
+ * fallback shows (D5). EditGoalView became a thin composition around this; the
+ * New Goal wizard (#490) reuses it.
  *
  * The shared step types stay defined in EditGoalView (D2); the two this file
  * needs — EditGoalStep/EditGoalSubStep — are imported here type-only. Styles
@@ -23,16 +28,12 @@ import {
   Text as RNText,
   TextInput,
   Pressable,
-  Modal,
   AccessibilityInfo,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useUnistyles } from "react-native-unistyles";
 import { useAnimationPref } from "../../hooks/useAnimationPref";
 import { Text } from "../Text";
-import { EvidenceTypePicker } from "../EvidenceTypePicker";
-import type { EvidenceTypeValue } from "../../types/evidence";
 import type { DragScrollController } from "../StepList/dragAutoScroll";
 import { ConfirmDeleteModal } from "../ConfirmDeleteModal";
 import { EditGoalStepRow } from "./EditGoalStepRow";
@@ -55,19 +56,18 @@ export interface EditGoalStepListProps {
   ) => void;
   onAddStep: (title: string) => void;
   onStepTitleChange: (stepId: string, title: string) => void;
-  /** Fired when the row's evidence picker toggles a step's planned types (D8). */
-  onStepEvidenceChange: (stepId: string, types: EvidenceTypeValue[]) => void;
+  /**
+   * Fired when a step's or sub-step's evidence chip is tapped (#493/D8). The
+   * host (EditGoalView) owns the picker sheet + its open state; this list only
+   * reports which id was tapped. Ids are unique across steps and sub-steps.
+   */
+  onEvidenceChipPress: (id: string) => void;
   /**
    * Adds a sub-step under `parentStepId` (D12). Called with `newSubStepTitle`
    * — the new sub-row is then renameable inline. Not wired to persistence.
    */
   onAddSubStep: (parentStepId: string, title: string) => void;
   onSubStepTitleChange: (subStepId: string, title: string) => void;
-  /** Fired when a sub-step's evidence picker toggles its planned types (D12/D8). */
-  onSubStepEvidenceChange: (
-    subStepId: string,
-    types: EvidenceTypeValue[],
-  ) => void;
   onDeleteSubStep: (subStepId: string) => void;
   /** Deletes a top-level step (#460). Fired only after the user confirms (D1). */
   onDeleteStep: (stepId: string) => void;
@@ -81,8 +81,6 @@ export interface EditGoalStepListProps {
   // --- Copy (i18n-free per D9; English defaults; [Integrate] passes t()). ---
   stepsSectionLabel?: string;
   addStepPlaceholder?: string;
-  evidencePickerTitle?: string;
-  evidenceTypesLabel?: string;
   /** Pluralized step-count label. Default: "N step" / "N steps". */
   stepCountLabel?: (count: number) => string;
   /** "add a sub-step" affordance under a step that already has some (D12). */
@@ -93,8 +91,6 @@ export interface EditGoalStepListProps {
   newSubStepTitle?: string;
   /** a11y label for the "add step" + button. */
   addStepButtonLabel?: string;
-  /** a11y label for the evidence-picker close affordances (backdrop + ✕). */
-  closeLabel?: string;
   /** a11y label for the "break into sub-steps" prompt on a step (D12). */
   breakIntoSubStepsA11yLabel?: (stepTitle: string) => string;
   /** a11y label for the "add a sub-step" affordance under a step (D12). */
@@ -128,23 +124,19 @@ export function EditGoalStepList({
   onReorderSubSteps,
   onAddStep,
   onStepTitleChange,
-  onStepEvidenceChange,
+  onEvidenceChipPress,
   onAddSubStep,
   onSubStepTitleChange,
-  onSubStepEvidenceChange,
   onDeleteSubStep,
   onDeleteStep,
   dragScrollController,
   stepsSectionLabel = "Steps",
   addStepPlaceholder = "Add step...",
-  evidencePickerTitle = "Planned evidence",
-  evidenceTypesLabel = "Evidence types",
   stepCountLabel = defaultStepCountLabel,
   addSubStepLabel = "add a sub-step",
   breakIntoSubStepsLabel = "break into sub-steps",
   newSubStepTitle = "New sub-step",
   addStepButtonLabel = "Add step",
-  closeLabel = "Close",
   breakIntoSubStepsA11yLabel = (stepTitle) =>
     `Break "${stepTitle}" into sub-steps`,
   addSubStepA11yLabel = (stepTitle) => `Add a sub-step to "${stepTitle}"`,
@@ -164,12 +156,6 @@ export function EditGoalStepList({
   // (ids are unique across both). commitEditing routes to the right callback.
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
-  // Which step or sub-step's evidence picker is open (D8/D12). Internal state —
-  // the chip tap opens it locally; onStepEvidenceChange / onSubStepEvidenceChange
-  // are the only outward evidence events.
-  const [editingEvidenceId, setEditingEvidenceId] = useState<string | null>(
-    null,
-  );
   const [screenReaderActive, setScreenReaderActive] = useState(false);
   // Which row-level delete is awaiting confirmation (#460, D1/D2). One modal
   // instance below is driven by this; the rows only signal intent.
@@ -247,40 +233,6 @@ export function EditGoalStepList({
     onAddSubStep(parentStepId, newSubStepTitle);
   }
 
-  // Evidence-picker toggle (D8/D12). Guards the "every step requires evidence"
-  // invariant: the last remaining type can't be deselected (no-op), so a step or
-  // sub-step never lands in a 0-selected state. Routes to the step or sub-step
-  // callback depending on which id opened the picker.
-  function handleToggleEvidence(type: EvidenceTypeValue) {
-    if (editingEvidenceId === null) return;
-    const step = steps.find((s) => s.id === editingEvidenceId);
-    const sub = step ? undefined : findSubStep(editingEvidenceId);
-    const current = step?.plannedEvidenceTypes ?? sub?.plannedEvidenceTypes;
-    if (!current) return;
-    const isSelected = current.includes(type);
-    if (isSelected && current.length === 1) return;
-    const next = isSelected
-      ? current.filter((t) => t !== type)
-      : [...current, type];
-    if (step) {
-      onStepEvidenceChange(editingEvidenceId, next);
-    } else {
-      onSubStepEvidenceChange(editingEvidenceId, next);
-    }
-  }
-
-  const editingEvidenceStep =
-    editingEvidenceId !== null
-      ? steps.find((s) => s.id === editingEvidenceId)
-      : undefined;
-  const editingEvidenceSub =
-    editingEvidenceId !== null && !editingEvidenceStep
-      ? findSubStep(editingEvidenceId)
-      : undefined;
-  const editingEvidenceTypes =
-    editingEvidenceStep?.plannedEvidenceTypes ??
-    editingEvidenceSub?.plannedEvidenceTypes;
-
   // Sub-steps block (D12), rendered inside each parent's card. A parent with
   // no sub-steps shows the "break into sub-steps" prompt; one with some
   // shows the indented green-rail block of sub-rows plus "add a sub-step".
@@ -318,7 +270,7 @@ export function EditGoalStepList({
           onEditTextChange={setEditText}
           onStartEditing={(id, title) => beginEdit(id, title)}
           onCommitEditing={commitEditing}
-          onEvidenceChipPress={(id) => setEditingEvidenceId(id)}
+          onEvidenceChipPress={(id) => onEvidenceChipPress(id)}
           onDelete={(id) =>
             setPendingDelete({
               kind: "subStep",
@@ -386,7 +338,7 @@ export function EditGoalStepList({
               onEditTextChange={setEditText}
               onStartEditing={() => beginEdit(step.id, step.title)}
               onCommitEditing={commitEditing}
-              onEvidenceChipPress={() => setEditingEvidenceId(step.id)}
+              onEvidenceChipPress={() => onEvidenceChipPress(step.id)}
               onDragStart={drag.handleDragStart}
               onDragMove={drag.handleDragMove}
               onDragEnd={drag.handleDragEnd}
@@ -451,54 +403,6 @@ export function EditGoalStepList({
           <RNText style={styles.addButtonText}>+</RNText>
         </Pressable>
       </View>
-
-      {/* Evidence-type picker (D8/D12): the reused multi-select authoring grid
-          in a local bottom-sheet Modal (mirrors the capture branch + nest
-          picker). Opened by a step OR a sub-step's chip; toggling updates that
-          row's pills via onStepEvidenceChange / onSubStepEvidenceChange; the last
-          remaining type can't be deselected (handleToggleEvidence guard). */}
-      <Modal
-        visible={editingEvidenceTypes !== undefined}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setEditingEvidenceId(null)}
-        accessibilityViewIsModal
-      >
-        <View style={styles.pickerOverlay}>
-          <Pressable
-            style={styles.pickerBackdrop}
-            onPress={() => setEditingEvidenceId(null)}
-            accessibilityRole="button"
-            accessibilityLabel={closeLabel}
-            testID="edit-goal-evidence-backdrop"
-          />
-          <SafeAreaView edges={["bottom"]} style={styles.pickerSheet}>
-            <View style={styles.pickerHandle} />
-            <View style={styles.pickerHeader}>
-              <RNText style={styles.pickerTitle} accessibilityRole="header">
-                {evidencePickerTitle}
-              </RNText>
-              <Pressable
-                style={styles.pickerClose}
-                onPress={() => setEditingEvidenceId(null)}
-                accessibilityRole="button"
-                accessibilityLabel={closeLabel}
-                hitSlop={8}
-                testID="edit-goal-evidence-close"
-              >
-                <RNText style={styles.pickerCloseIcon}>{"✕"}</RNText>
-              </Pressable>
-            </View>
-            {editingEvidenceTypes ? (
-              <EvidenceTypePicker
-                selectedTypes={editingEvidenceTypes}
-                onToggleType={handleToggleEvidence}
-                label={evidenceTypesLabel}
-              />
-            ) : null}
-          </SafeAreaView>
-        </View>
-      </Modal>
 
       {/* Confirm-delete modal (#460, D1/D2): one instance for both row-level
           deletions. The main-step × and the sub-step × both open it via
