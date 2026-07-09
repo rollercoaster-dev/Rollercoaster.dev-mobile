@@ -156,17 +156,16 @@ export const styles = StyleSheet.create((theme) => ({
     justifyContent: "center" as const,
     paddingVertical: theme.space[1],
   },
+  // Fixed-width (two 36pt `sm` IconButton footprints + gap) so the evidence and ×
+  // columns stay aligned across rows regardless of how many arrows show. Contents
+  // are right-aligned (`flex-end`), so a row with a single arrow (first row has no
+  // ↑, last row has no ↓) parks that arrow in the rightmost slot next to the × —
+  // every visible arrow lands in one column instead of staircasing (A-D3).
   reorderButtons: {
     flexDirection: "row" as const,
+    justifyContent: "flex-end" as const,
     gap: theme.space[1],
-  },
-  // Empty placeholder that fills a hidden arrow's slot (first row hides ↑, last
-  // row hides ↓) so every row reserves two reorder slots and the chip/× columns
-  // stay aligned across rows (A-D3). Matches the `sm` IconButton footprint
-  // (36pt). Label-free, so reorder tests that assert arrow absence by label hold.
-  reorderSlot: {
-    width: 36,
-    height: 36,
+    width: 36 * 2 + theme.space[1],
   },
   // Per-step delete × on the main row (#460) — mirrors subStepDelete/Glyph (D3).
   stepDelete: {

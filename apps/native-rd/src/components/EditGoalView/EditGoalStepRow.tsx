@@ -239,7 +239,7 @@ export function EditGoalStepRow({
           </Pressable>
           {showAccessibleControls && (
             <View style={styles.reorderButtons}>
-              {onMoveUp && !isFirst ? (
+              {onMoveUp && !isFirst && (
                 <IconButton
                   icon={<ArrowUp size={18} weight="bold" />}
                   onPress={onMoveUp}
@@ -248,10 +248,8 @@ export function EditGoalStepRow({
                   accessibilityLabel={moveUpLabel(step.title)}
                   testID={`edit-goal-step-up-${step.id}`}
                 />
-              ) : (
-                <View style={styles.reorderSlot} />
               )}
-              {onMoveDown && !isLast ? (
+              {onMoveDown && !isLast && (
                 <IconButton
                   icon={<ArrowDown size={18} weight="bold" />}
                   onPress={onMoveDown}
@@ -260,8 +258,6 @@ export function EditGoalStepRow({
                   accessibilityLabel={moveDownLabel(step.title)}
                   testID={`edit-goal-step-down-${step.id}`}
                 />
-              ) : (
-                <View style={styles.reorderSlot} />
               )}
             </View>
           )}
