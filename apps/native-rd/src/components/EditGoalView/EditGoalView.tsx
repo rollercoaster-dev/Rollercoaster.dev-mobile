@@ -1,5 +1,5 @@
 /**
- * EditGoalView — the redesigned Edit Goal screen body (issue #445, Track of
+ * EditGoalView — the redesigned Edit Goal screen host (issue #445, Track of
  * Epic #384). Implements the App Shell prototype's `edit` route: an editable
  * goal-title card, a "Steps" section with drag-reorderable rows (title +
  * planned-evidence chip + optional date/dependency chips), an inline "Add
@@ -117,7 +117,10 @@ export interface EditGoalViewProps {
   ) => void;
   onAddStep: (title: string) => void;
   onStepTitleChange: (stepId: string, title: string) => void;
-  /** Fired when the row's evidence picker toggles a step's planned types (D8). */
+  /**
+   * Fired when the host's evidence sheet toggles a step's planned types
+   * (#493/D8) — the last remaining type can't be deselected.
+   */
   onStepEvidenceChange: (stepId: string, types: EvidenceTypeValue[]) => void;
   /**
    * Adds a sub-step under `parentStepId` (D12). Called with `newSubStepTitle`
@@ -126,7 +129,10 @@ export interface EditGoalViewProps {
    */
   onAddSubStep: (parentStepId: string, title: string) => void;
   onSubStepTitleChange: (subStepId: string, title: string) => void;
-  /** Fired when a sub-step's evidence picker toggles its planned types (D12/D8). */
+  /**
+   * Fired when the host's evidence sheet toggles a sub-step's planned types
+   * (#493/D8, D12) — the last remaining type can't be deselected.
+   */
   onSubStepEvidenceChange: (
     subStepId: string,
     types: EvidenceTypeValue[],
@@ -280,6 +286,24 @@ export function EditGoalView({
     editingEvidenceStep?.plannedEvidenceTypes ??
     editingEvidenceSub?.plannedEvidenceTypes;
 
+  // Keep the last non-undefined selection so the picker grid renders through
+  // the sheet's slide-out. On close, editingEvidenceId → null flips both
+  // `visible` and `editingEvidenceTypes` to undefined on the same render; the
+  // sheet keeps its chrome mounted for the exit animation, so gating the grid
+  // directly on editingEvidenceTypes would animate out an empty sheet (#493).
+  // Adjusting state during render (React's sanctioned "store info from a
+  // previous render" pattern) rather than a ref keeps the React Compiler happy.
+  const [retainedEvidenceTypes, setRetainedEvidenceTypes] = useState<
+    EvidenceTypeValue[] | undefined
+  >(undefined);
+  if (
+    editingEvidenceTypes !== undefined &&
+    editingEvidenceTypes !== retainedEvidenceTypes
+  ) {
+    setRetainedEvidenceTypes(editingEvidenceTypes);
+  }
+  const sheetEvidenceTypes = editingEvidenceTypes ?? retainedEvidenceTypes;
+
   // Evidence-picker toggle (D8/D12). Guards the "every step requires evidence"
   // invariant: the last remaining type can't be deselected (no-op), so a step
   // or sub-step never lands in a 0-selected state. Routes to the step or
@@ -426,10 +450,11 @@ export function EditGoalView({
         title={evidencePickerTitle}
         closeLabel={closeLabel}
         closeTestID="edit-goal-evidence-close"
+        backdropTestID="edit-goal-evidence-backdrop"
       >
-        {editingEvidenceTypes ? (
+        {sheetEvidenceTypes ? (
           <EvidenceTypePicker
-            selectedTypes={editingEvidenceTypes}
+            selectedTypes={sheetEvidenceTypes}
             onToggleType={handleToggleEvidence}
             label={evidenceTypesLabel}
           />

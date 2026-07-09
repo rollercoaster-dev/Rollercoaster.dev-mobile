@@ -30,6 +30,12 @@ export interface AnimatedSheetProps {
   closeLabel: string;
   /** Optional testID for the × close control; undefined → no testID (D6). */
   closeTestID?: string;
+  /**
+   * testID for the backdrop Pressable so each consumer's sheet stays
+   * independently addressable. Defaults to "capture-sheet-backdrop" (the
+   * capture-sheet's original hook); the edit-goal sheet passes its own.
+   */
+  backdropTestID?: string;
   /** Body content rendered below the header (the picker grid). */
   children: React.ReactNode;
 }
@@ -59,6 +65,7 @@ export function AnimatedSheet({
   subLine,
   closeLabel,
   closeTestID,
+  backdropTestID = "capture-sheet-backdrop",
   children,
 }: AnimatedSheetProps) {
   const { animationPref } = useAnimationPref();
@@ -112,7 +119,7 @@ export function AnimatedSheet({
       {/* Backdrop — tapping the exposed scrim dismisses the sheet. */}
       <Animated.View style={[styles.scrim, scrimAnimStyle]}>
         <Pressable
-          testID="capture-sheet-backdrop"
+          testID={backdropTestID}
           style={styles.backdrop}
           onPress={onClose}
           accessibilityRole="button"
