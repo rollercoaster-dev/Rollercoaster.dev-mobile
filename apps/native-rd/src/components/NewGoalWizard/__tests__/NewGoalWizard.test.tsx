@@ -1023,6 +1023,93 @@ describe("NewGoalWizard", () => {
       expect(onReorderSubSteps).toHaveBeenCalledTimes(1);
       expect(onReorderSubSteps).toHaveBeenCalledWith("s2", ["s2-b", "s2-a"]);
     });
+
+    it("resolves a sub-step owned by a non-first build row for the shared delete modal (findSubStep past row 0)", () => {
+      // Row s1 carries no sub-steps, so findSubStep must scan past it to row s2
+      // to resolve "s2-a". A regression that only looked at buildSteps[0] would
+      // leave pendingDeleteTitle undefined and the modal would never render.
+      renderWizard({
+        currentStep: "build",
+        buildSteps: [
+          BUILD_STEPS[0],
+          {
+            ...BUILD_STEPS[1],
+            subSteps: [
+              {
+                id: "s2-a",
+                title: "Mask the windows",
+                plannedEvidenceTypes: [EvidenceType.text],
+              },
+            ],
+          },
+        ],
+        pendingDeleteBuildStepId: "s2-a",
+      });
+
+      expect(screen.getByText("Delete step?")).toBeOnTheScreen();
+      expect(
+        screen.getByText('Remove "Mask the windows" from your step list?'),
+      ).toBeOnTheScreen();
+    });
+
+    it("distinguishes ↑ from ↓ on a middle sub-step — each direction emits a different order (delta sign + handler assignment, D5)", () => {
+      const onReorderSubSteps = jest.fn();
+      // Three sub-steps so the middle row (s1-b) shows BOTH ↑ and ↓ — the only
+      // arrangement that tells a move-up from a move-down (a two-item list makes
+      // them the same swap, and the edge rows hide one direction each).
+      const threeSubs: EditGoalSubStep[] = [
+        { ...SUB_STEPS[0] },
+        { ...SUB_STEPS[1] },
+        {
+          id: "s1-c",
+          title: "Buff it out",
+          plannedEvidenceTypes: [EvidenceType.text],
+        },
+      ];
+      renderWizard({
+        currentStep: "build",
+        buildSteps: [{ ...BUILD_STEPS[0], subSteps: threeSubs }],
+        onReorderSubSteps,
+      });
+
+      fireEvent.press(screen.getByLabelText('Move "Wipe the dust" up'));
+      fireEvent.press(screen.getByLabelText('Move "Wipe the dust" down'));
+
+      // Prop-driven: the list never moves between presses, so each swap is
+      // computed from the original [s1-a, s1-b, s1-c] — up swaps s1-b with the
+      // row above (s1-a), down swaps it with the row below (s1-c). Distinct
+      // orders pin both the delta sign and the onMoveUp/onMoveDown wiring.
+      expect(onReorderSubSteps).toHaveBeenNthCalledWith(1, "s1", [
+        "s1-b",
+        "s1-a",
+        "s1-c",
+      ]);
+      expect(onReorderSubSteps).toHaveBeenNthCalledWith(2, "s1", [
+        "s1-a",
+        "s1-c",
+        "s1-b",
+      ]);
+    });
+
+    it("keeps the sub-steps rail on screen while the parent row itself is being renamed (block is independent of the parent's isEditing)", () => {
+      renderWizard({
+        currentStep: "build",
+        buildSteps: WITH_SUBSTEPS,
+        editingBuildStepId: "s1",
+        buildStepEditText: "Sand the edges",
+      });
+
+      // Parent row s1 is mid-rename (its title swapped for the edit field)...
+      expect(
+        screen.getByTestId("new-goal-build-step-edit-s1"),
+      ).toBeOnTheScreen();
+      // ...yet its sub-steps block still renders — it lives outside the row's
+      // isEditing branch, so a refactor that nested it inside would fail here.
+      expect(
+        screen.getByTestId("new-goal-build-substeps-s1"),
+      ).toBeOnTheScreen();
+      expect(screen.getByText("Check by hand")).toBeOnTheScreen();
+    });
   });
 
   it.each<[NewGoalWizardStep, number]>([
