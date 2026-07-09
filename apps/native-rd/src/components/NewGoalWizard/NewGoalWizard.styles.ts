@@ -200,140 +200,17 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.accentPrimary,
   },
 
-  // --- Step 3 · build list (#464) ---
-  // Top-aligned (not centered like stepBody): the list grows from the top and
-  // scrolls, so its content must start at the top edge. flex:1 lets the
-  // ScrollView claim the space between progress bar and footer.
+  // --- Step 3 · build list (#464/#490) ---
+  // The build body reuses EditGoalStepList (#489) for the whole list — header,
+  // rows, chips, add affordance, sub-steps — so the wizard keeps only the frame
+  // here: a top-aligned ScrollView (the list grows from the top and scrolls)
+  // filling the space between progress bar and footer. All row/header styling
+  // lives in the shared EditGoalView.styles module.
   buildBody: {
     flex: 1,
   },
   buildScrollContent: {
     paddingHorizontal: theme.space[5],
     paddingTop: theme.space[4],
-  },
-  // "Your steps" + live count, baseline-aligned across the row edges.
-  buildHeaderRow: {
-    flexDirection: "row" as const,
-    alignItems: "baseline" as const,
-    justifyContent: "space-between" as const,
-    marginBottom: theme.space[3],
-  },
-  buildHeaderTitle: {
-    fontFamily: theme.fontFamily.headline,
-    fontWeight: theme.fontWeight.bold,
-    fontSize: theme.size.lg,
-    color: theme.colors.text,
-  },
-  buildHeaderCount: {
-    fontFamily: theme.fontFamily.mono,
-    fontSize: theme.size.sm,
-    color: theme.colors.textSecondary,
-  },
-  // Per-step card — same surface/border/hard-shadow idiom as the ready
-  // summaryCard, one tier lighter (hardSm) since rows stack.
-  buildRowCard: {
-    backgroundColor: theme.colors.background,
-    borderWidth: theme.borderWidth.thick,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.sm,
-    padding: theme.space[3],
-    marginBottom: theme.space[2],
-    ...shadowStyle(theme, "hardSm"),
-  },
-  // Wraps so the trailing controls (chip + ×) drop to a second line on narrow /
-  // largeText renders instead of crushing the title (D7) — the same treatment
-  // EditGoalStepRow's rowMain uses now that the row carries three affordances.
-  buildRowInner: {
-    flexDirection: "row" as const,
-    flexWrap: "wrap" as const,
-    alignItems: "center" as const,
-    columnGap: theme.space[2],
-    rowGap: theme.space[2],
-  },
-  // Leading cluster: [number][title/input]. Grows to fill the line but never
-  // shrinks below a legible floor — below that buildRowControls wraps instead.
-  buildRowLead: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    gap: theme.space[2],
-    flexGrow: 1,
-    flexShrink: 1,
-    flexBasis: 0,
-    minWidth: 140,
-  },
-  // Trailing cluster: natural width, never shrinks; wraps to its own line,
-  // right-aligned there via marginLeft auto (mirrors EditGoalStepRow rowControls).
-  buildRowControls: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    gap: theme.space[2],
-    flexShrink: 0,
-    marginLeft: "auto" as const,
-  },
-  buildRowNumber: {
-    fontFamily: theme.fontFamily.headline,
-    fontWeight: theme.fontWeight.bold,
-    fontSize: theme.size.sm,
-    color: theme.colors.text,
-  },
-  // Tap-to-edit title press target — 44pt-min row keeps the tap area honest
-  // (mirrors EditGoalStepRow's rowTitlePress/rowTitleText).
-  buildRowTitlePress: {
-    flex: 1,
-    minHeight: 44,
-    justifyContent: "center" as const,
-  },
-  buildRowTitle: {
-    fontSize: theme.size.sm,
-    fontFamily: theme.fontFamily.body,
-    color: theme.colors.text,
-  },
-  // Inline title-edit field replacing the title while a row is mid-rename.
-  buildRowEditInput: {
-    flex: 1,
-    minHeight: 44,
-    fontSize: theme.size.sm,
-    fontFamily: theme.fontFamily.body,
-    color: theme.colors.text,
-    padding: 0,
-  },
-  // Whole chip is the press target here (no separate "change" link like step 2);
-  // 44pt-min keeps the tap area honest even though the pill is compact.
-  buildRowEvidencePress: {
-    minHeight: 44,
-    minWidth: 44,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-  },
-  // Per-row × delete (#482) — 44×44 min touch target, muted glyph. Mirrors
-  // EditGoalView.styles' stepDelete/stepDeleteGlyph (D6).
-  buildRowDelete: {
-    minWidth: 44,
-    minHeight: 44,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-  },
-  buildRowDeleteGlyph: {
-    fontSize: theme.size.lg,
-    color: theme.colors.textMuted,
-  },
-  // "+ add another step" — mirrors quickAddPress's single-accessible-node shape;
-  // an accent link row below the list, not a bordered button (prototype).
-  addStepPress: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    gap: theme.space[1],
-    minHeight: 44,
-    paddingBottom: theme.space[3],
-  },
-  addStepPlus: {
-    fontSize: theme.size.md,
-    fontWeight: theme.fontWeight.bold,
-    color: theme.colors.accentPrimary,
-  },
-  addStepLabel: {
-    fontSize: theme.size.sm,
-    fontWeight: theme.fontWeight.bold,
-    color: theme.colors.accentPrimary,
   },
 }));
