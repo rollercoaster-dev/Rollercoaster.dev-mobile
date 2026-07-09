@@ -1,24 +1,11 @@
-import React, { useEffect, useState } from "react";
-import {
-  View,
-  Pressable,
-  Text as RNText,
-  BackHandler,
-  useWindowDimensions,
-} from "react-native";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  runOnJS,
-} from "react-native-reanimated";
+import React from "react";
+import { View, Pressable, Text as RNText } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
-import { useAnimationPref } from "../../hooks/useAnimationPref";
-import { getTimingConfig } from "../../utils/animation";
 import { EVIDENCE_OPTIONS, type EvidenceTypeValue } from "../../types/evidence";
 import { EvidenceType } from "../../db";
 import { evidenceLabel } from "../../i18n/labels";
+import { AnimatedSheet } from "./AnimatedSheet";
 import { styles } from "./EvidenceTypePicker.styles";
 
 /**
@@ -163,15 +150,12 @@ export function EvidenceTypePicker(props: EvidenceTypePickerProps) {
 }
 
 /**
- * Capture-mode bottom sheet — an **in-tree** absolute scrim + sheet that rises
- * from the bottom of the nearest screen-sized ancestor, mirroring
- * EvidenceDrawer's overlay/drawer pattern. Deliberately NOT an RN `Modal`:
- * a Modal portals to the OS layer (and to `<body>` on web), escaping the
- * phone frame and losing the sheet chrome — the caller's frame is the
- * correct boundary for a mobile bottom sheet. Slide-up/scrim-fade timing
- * respects the animation preference (autism-friendly / OS reduce-motion →
- * instant), and Android hardware back dismisses while open (the job the
- * Modal's `onRequestClose` used to do).
+ * Capture-mode bottom sheet — wraps the single-select {@link CaptureGrid} in
+ * the shared {@link AnimatedSheet} shell, which owns the in-tree scrim, slide,
+ * Android-back handling and animation-pref-aware timing (see AnimatedSheet).
+ * This function only resolves the capture-mode copy (default "Add evidence"
+ * title, the optional "saving to <step>" sub-line, the close label) and hands
+ * pre-resolved strings down — AnimatedSheet itself is i18n-free (D7).
  */
 function CaptureSheet({
   visible,
@@ -182,72 +166,68 @@ function CaptureSheet({
   onClose,
 }: Omit<CaptureEvidenceTypePickerProps, "mode">) {
   const { t } = useTranslation(["common"]);
-  const { animationPref } = useAnimationPref();
-  const { height: windowHeight } = useWindowDimensions();
-  // Mounted while visible OR still sliding out; unmounts when the exit
-  // animation completes so nothing lingers in the a11y tree.
-  const [rendered, setRendered] = useState(visible);
-  // 0 = parked below the frame, 1 = resting position.
-  const progress = useSharedValue(0);
-
-  useEffect(() => {
-    const config = getTimingConfig(animationPref, "normal");
-    if (visible) {
-      setRendered(true);
-      progress.value = withTiming(1, config);
-    } else {
-      progress.value = withTiming(0, config, (finished) => {
-        if (finished) runOnJS(setRendered)(false);
-      });
-    }
-  }, [visible, animationPref, progress]);
-
-  // Android hardware/gesture back closes the sheet instead of the screen.
-  useEffect(() => {
-    if (!visible) return;
-    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      onClose();
-      return true;
-    });
-    return () => sub.remove();
-  }, [visible, onClose]);
-
-  const scrimAnimStyle = useAnimatedStyle(() => ({
-    opacity: progress.value,
-  }));
-  const sheetAnimStyle = useAnimatedStyle(() => ({
-    // windowHeight overshoots the sheet's own height, which just means the
-    // rise starts from safely offscreen — no layout measurement needed.
-    transform: [{ translateY: (1 - progress.value) * windowHeight }],
-  }));
-
-  if (!rendered) return null;
+  const title = headerTitle ?? t("common:evidenceTypePicker.addEvidence");
+  const subLine = activeStepTitle
+    ? t("common:evidenceTypePicker.savingToActiveStep", {
+        title: activeStepTitle,
+      })
+    : undefined;
 
   return (
-    <View
-      style={styles.overlay}
-      pointerEvents={visible ? "auto" : "none"}
-      accessibilityViewIsModal
+    <AnimatedSheet
+      visible={visible}
+      onClose={onClose}
+      title={title}
+      subLine={subLine}
+      closeLabel={t("common:actions.close")}
     >
-      {/* Backdrop — tapping the exposed scrim dismisses the sheet. */}
-      <Animated.View style={[styles.scrim, scrimAnimStyle]}>
-        <Pressable
-          testID="capture-sheet-backdrop"
-          style={styles.backdrop}
-          onPress={onClose}
-          accessibilityRole="button"
-          accessibilityLabel={t("common:actions.close")}
-        />
-      </Animated.View>
-      <Animated.View style={sheetAnimStyle}>
-        <CaptureSheetBody
-          headerTitle={headerTitle}
-          activeStepTitle={activeStepTitle}
-          selectedType={selectedType}
-          onSelectType={onSelectType}
-          onClose={onClose}
-        />
-      </Animated.View>
+      <CaptureGrid selectedType={selectedType} onSelectType={onSelectType} />
+    </AnimatedSheet>
+  );
+}
+
+interface CaptureGridProps {
+  /** Pre-highlighted type; defaults to `text` ("Note") when omitted (D5). */
+  selectedType?: EvidenceTypeValue;
+  /** Called when a type cell is tapped. */
+  onSelectType: (type: EvidenceTypeValue) => void;
+}
+
+/**
+ * The single-select 3-up radio grid at the heart of the capture sheet. Sole
+ * source of the grid JSX (D4): rendered live inside {@link AnimatedSheet} by
+ * {@link CaptureSheet}, and standalone by {@link CaptureSheetBody} for the
+ * theme-matrix story. Unexported — an internal helper, not a second public
+ * picker (D7).
+ */
+function CaptureGrid({ selectedType, onSelectType }: CaptureGridProps) {
+  const { t } = useTranslation(["common"]);
+  // "Note" is the easy default when the caller hasn't picked a type yet (D5).
+  const effectiveSelected = selectedType ?? EvidenceType.text;
+
+  return (
+    <View style={styles.grid}>
+      {EVIDENCE_OPTIONS.map((opt) => {
+        const isSelected = opt.type === effectiveSelected;
+        const optLabel = evidenceLabel(t, opt.type);
+        return (
+          <Pressable
+            key={opt.type}
+            style={[styles.cell, isSelected && styles.cellSelected]}
+            onPress={() => onSelectType(opt.type)}
+            accessibilityRole="radio"
+            accessibilityState={{ checked: isSelected }}
+            accessibilityLabel={optLabel}
+          >
+            <RNText style={styles.cellIcon}>{opt.icon}</RNText>
+            <RNText
+              style={[styles.cellLabel, isSelected && styles.cellLabelSelected]}
+            >
+              {optLabel}
+            </RNText>
+          </Pressable>
+        );
+      })}
     </View>
   );
 }
@@ -278,8 +258,15 @@ export interface CaptureSheetBodyProps {
  * root is a plain styled `View` (bottom inset applied via `useSafeAreaInsets`)
  * rather than a styled `SafeAreaView`: unistyles styles on the third-party
  * SafeAreaView are silently dropped on web, which rendered the sheet with no
- * background at all. One source of the grid JSX; not exported from the barrel,
- * so it stays an internal helper rather than a second public picker (D7).
+ * background at all. Not exported from the barrel, so it stays an internal
+ * helper rather than a second public picker (D7).
+ *
+ * Deliberately duplicates {@link AnimatedSheet}'s chrome markup (handle +
+ * header + sub-line) rather than delegating to it, so it can render standalone
+ * — without a scrim — for `AllThemesMatrix` (seven live scrims would stack
+ * over the canvas) (D3). The grid itself is *not* duplicated: both this body
+ * and the live {@link AnimatedSheet} path render the same {@link CaptureGrid}
+ * (D4).
  */
 export function CaptureSheetBody({
   headerTitle,
@@ -290,8 +277,6 @@ export function CaptureSheetBody({
 }: CaptureSheetBodyProps) {
   const { t } = useTranslation(["common"]);
   const insets = useSafeAreaInsets();
-  // "Note" is the easy default when the caller hasn't picked a type yet (D5).
-  const effectiveSelected = selectedType ?? EvidenceType.text;
 
   return (
     <View style={styles.sheet(insets.bottom)}>
@@ -317,32 +302,7 @@ export function CaptureSheetBody({
           })}
         </RNText>
       ) : null}
-      <View style={styles.grid}>
-        {EVIDENCE_OPTIONS.map((opt) => {
-          const isSelected = opt.type === effectiveSelected;
-          const optLabel = evidenceLabel(t, opt.type);
-          return (
-            <Pressable
-              key={opt.type}
-              style={[styles.cell, isSelected && styles.cellSelected]}
-              onPress={() => onSelectType(opt.type)}
-              accessibilityRole="radio"
-              accessibilityState={{ checked: isSelected }}
-              accessibilityLabel={optLabel}
-            >
-              <RNText style={styles.cellIcon}>{opt.icon}</RNText>
-              <RNText
-                style={[
-                  styles.cellLabel,
-                  isSelected && styles.cellLabelSelected,
-                ]}
-              >
-                {optLabel}
-              </RNText>
-            </Pressable>
-          );
-        })}
-      </View>
+      <CaptureGrid selectedType={selectedType} onSelectType={onSelectType} />
     </View>
   );
 }
