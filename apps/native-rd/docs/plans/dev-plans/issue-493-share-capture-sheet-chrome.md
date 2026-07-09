@@ -9,13 +9,13 @@
 
 ## Intent Verification
 
-- [ ] Opening a step's or sub-step's evidence chip in `EditGoalView` shows the same reanimated slide-up + fading scrim as the New Goal wizard's capture sheet (verified in Storybook/device — Jest can't assert real transform/opacity timing).
-- [ ] With Autism-Friendly theme or OS reduce-motion active, Edit Goal's evidence sheet appears/dismisses instantly (zero-duration timing via `useAnimationPref`), matching the capture sheet's existing behavior — it does not today.
-- [ ] Pressing Android hardware back while Edit Goal's evidence sheet is open calls `onClose` (closes the sheet) instead of the OS Modal's back-press-pops-the-screen default — it does not today.
-- [ ] Edit Goal's evidence sheet keeps its multi-select semantics unchanged: tapping an unselected type adds it, tapping the sole remaining selected type is a no-op (existing `EditGoalView.test.tsx` "refuses to deselect the last remaining type" case passes unmodified).
-- [ ] `EvidenceTypePicker.stories.tsx`'s `CaptureSheet`, `CaptureSheetChangeScenario`, `AllThemesMatrix`, and `AuthoringAllThemes` stories render pixel-identical output to before the refactor (verified by `CaptureSheetBody`'s public prop signature and rendered structure staying untouched).
-- [ ] `EditGoalView.styles.ts` no longer contains any `picker*` style keys; `EditGoalStepList.tsx` no longer imports `Modal` or `SafeAreaView`.
-- [ ] `EvidenceTypePicker/index.ts`'s barrel still exports only `EvidenceTypePicker` + `EvidenceTypePickerProps` — no second public picker/shell added to the public surface (D7).
+- [~] Opening a step's or sub-step's evidence chip in `EditGoalView` shows the same reanimated slide-up + fading scrim as the New Goal wizard's capture sheet (verified in Storybook/device — Jest can't assert real transform/opacity timing). **Code-complete** (Edit Goal now renders the shared `AnimatedSheet`, same overlay/scrim/slide as the capture path); **manual Storybook/device confirmation still pending** — can't be driven autonomously here.
+- [~] With Autism-Friendly theme or OS reduce-motion active, Edit Goal's evidence sheet appears/dismisses instantly (zero-duration timing via `useAnimationPref`), matching the capture sheet's existing behavior — it does not today. **Code-complete** (`AnimatedSheet` uses `useAnimationPref` + `getTimingConfig`); **manual confirmation pending**.
+- [x] Pressing Android hardware back while Edit Goal's evidence sheet is open calls `onClose` (closes the sheet) instead of the OS Modal's back-press-pops-the-screen default — it does not today. **New test asserts this** (`closes on Android hardware back while open (#493)`).
+- [x] Edit Goal's evidence sheet keeps its multi-select semantics unchanged: tapping an unselected type adds it, tapping the sole remaining selected type is a no-op (existing `EditGoalView.test.tsx` "refuses to deselect the last remaining type" case passes unmodified). **54/54 EditGoalView tests pass, existing cases unmodified.**
+- [x] `EvidenceTypePicker.stories.tsx`'s `CaptureSheet`, `CaptureSheetChangeScenario`, `AllThemesMatrix`, and `AuthoringAllThemes` stories render pixel-identical output to before the refactor (verified by `CaptureSheetBody`'s public prop signature and rendered structure staying untouched). **`CaptureSheetBody` signature + markup unchanged (grid delegated to `CaptureGrid`, same output); 28/28 EvidenceTypePicker tests pass; stories file untouched.**
+- [x] `EditGoalView.styles.ts` no longer contains any `picker*` style keys; `EditGoalStepList.tsx` no longer imports `Modal` or `SafeAreaView`. **Verified by grep (0 matches each).**
+- [x] `EvidenceTypePicker/index.ts`'s barrel still exports only `EvidenceTypePicker` + `EvidenceTypePickerProps` — no second public picker/shell added to the public surface (D7). **Barrel untouched; `AnimatedSheet` imported directly (D2).**
 
 ## Dependencies
 
