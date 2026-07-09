@@ -3,20 +3,102 @@ import {
   renderWithProviders,
   screen,
   fireEvent,
+  act,
 } from "../../../__tests__/test-utils";
 import {
   NewGoalWizard,
-  type BuildStep,
   type NewGoalWizardProps,
   type NewGoalWizardStep,
 } from "../NewGoalWizard";
+import type { EditGoalStep } from "../../EditGoalView";
 import { EvidenceType } from "../../../db";
 
-// The prototype's own initNG() seed — two rows, distinct evidence types so the
-// two chips (and pre-selection assertions) can be told apart.
-const BUILD_STEPS: BuildStep[] = [
-  { id: "s1", title: "Sand the edges", evidenceType: EvidenceType.text },
-  { id: "s2", title: "Paint it", evidenceType: EvidenceType.photo },
+// The build step reuses EditGoalStepList (#489/#490), which drives drag reorder
+// through react-native-gesture-handler + haptics and gates its ↑/↓ fallback on
+// the animation pref. Mirror EditGoalView.test.tsx's setup so the reused list
+// renders in Node and the fallback can be flipped on per-test.
+jest.mock("react-native-gesture-handler", () => {
+  const chainable = () => new Proxy({}, { get: () => chainable });
+  return {
+    GestureHandlerRootView: ({ children }: { children: React.ReactNode }) =>
+      children,
+    GestureDetector: ({ children }: { children: React.ReactNode }) => children,
+    Gesture: {
+      Pan: chainable,
+      LongPress: chainable,
+      Simultaneous: chainable,
+    },
+  };
+});
+
+jest.mock("expo-haptics", () => ({
+  impactAsync: jest.fn().mockResolvedValue(undefined),
+  ImpactFeedbackStyle: { Light: "light", Medium: "medium", Heavy: "heavy" },
+}));
+
+jest.mock("../../../utils/haptics", () => ({
+  triggerDragStart: jest.fn(),
+  triggerDragDrop: jest.fn(),
+}));
+
+// Mutable so a test can flip on "accessible controls" (the ↑/↓ move buttons,
+// which only render when a screen reader is on or motion is off).
+let mockAnimationPref = "full";
+jest.mock("../../../hooks/useAnimationPref", () => ({
+  useAnimationPref: () => ({
+    animationPref: mockAnimationPref,
+    shouldAnimate: mockAnimationPref !== "none",
+    shouldReduceMotion: mockAnimationPref === "none",
+    setAnimationPref: jest.fn(),
+  }),
+}));
+
+afterEach(() => {
+  mockAnimationPref = "full";
+});
+
+// The prototype's own initNG() seed, on EditGoalStepList's rich shape — two
+// rows, distinct evidence types (Note / Photo) so the two pills can be told
+// apart, multi-select (`plannedEvidenceTypes`, min 1).
+const BUILD_STEPS: EditGoalStep[] = [
+  {
+    id: "s1",
+    title: "Sand the edges",
+    plannedEvidenceTypes: [EvidenceType.text],
+  },
+  {
+    id: "s2",
+    title: "Paint it",
+    plannedEvidenceTypes: [EvidenceType.photo],
+  },
+];
+
+// One parent broken into two sub-steps + a bare sibling — exercises the
+// sub-step block, its rename/evidence/delete/reorder, and the "break into
+// sub-steps" prompt on the row that has none.
+const BUILD_STEPS_WITH_SUB: EditGoalStep[] = [
+  {
+    id: "s1",
+    title: "Sand the edges",
+    plannedEvidenceTypes: [EvidenceType.text],
+    subSteps: [
+      {
+        id: "sub1",
+        title: "Rough pass",
+        plannedEvidenceTypes: [EvidenceType.photo],
+      },
+      {
+        id: "sub2",
+        title: "Fine pass",
+        plannedEvidenceTypes: [EvidenceType.text],
+      },
+    ],
+  },
+  {
+    id: "s2",
+    title: "Paint it",
+    plannedEvidenceTypes: [EvidenceType.photo],
+  },
 ];
 
 function makeProps(
@@ -358,22 +440,26 @@ describe("NewGoalWizard", () => {
     },
   );
 
+  // The build step reuses EditGoalStepList (#489) whole, so these are
+  // wiring-only tests: the wizard renders the list with the right `steps` and
+  // each callback fires with the right id/args. The list's own internal
+  // behavior (edit-state transitions, picker toggling, drag math) is covered by
+  // EditGoalView.test.tsx and is not re-asserted here.
   describe("build step", () => {
     it("renders the shell, 'Your steps' header + count, and the ready CTA — not the other steps' bodies", () => {
       // Replaces the old "build placeholder" regression: the build body now
-      // renders real content, so this asserts it's present *and* that the
-      // other steps' bodies stay absent (the cross-step exclusivity the
-      // placeholder test used to guard).
-      renderWizard({ currentStep: "build", buildSteps: BUILD_STEPS });
+      // renders EditGoalStepList, so this asserts its header/count/rows are
+      // present *and* that the other steps' bodies stay absent (the cross-step
+      // exclusivity the placeholder test used to guard).
+      renderWizard({ currentStep: "build", steps: BUILD_STEPS });
 
       expect(screen.getByText("New goal")).toBeOnTheScreen();
       expect(screen.getByRole("button", { name: "Go back" })).toBeOnTheScreen();
       expect(screen.getByTestId("new-goal-close-button")).toBeOnTheScreen();
+      // "Your steps" is fed to EditGoalStepList as stepsSectionLabel (D1); the
+      // count is the list's own default "N steps" label over steps.length.
       expect(screen.getByText("Your steps")).toBeOnTheScreen();
-      // Count is derived from buildSteps.length (D8), not the stepCount prop.
-      expect(screen.getByTestId("new-goal-build-count")).toHaveTextContent(
-        String(BUILD_STEPS.length),
-      );
+      expect(screen.getByText("2 steps")).toBeOnTheScreen();
       expect(
         screen.getByTestId("new-goal-build-ready-button"),
       ).toBeOnTheScreen();
@@ -383,147 +469,98 @@ describe("NewGoalWizard", () => {
       expect(screen.queryByText("What's the first step?")).toBeNull();
     });
 
-    it("renders a row per build step — number, title, and its evidence icon+label", () => {
-      renderWizard({ currentStep: "build", buildSteps: BUILD_STEPS });
+    it("renders a row per step via EditGoalStepList — title + evidence pill", () => {
+      renderWizard({ currentStep: "build", steps: BUILD_STEPS });
 
-      expect(screen.getByTestId("new-goal-build-row-s1")).toBeOnTheScreen();
-      expect(screen.getByTestId("new-goal-build-row-s2")).toBeOnTheScreen();
+      expect(screen.getByTestId("edit-goal-step-title-s1")).toBeOnTheScreen();
+      expect(screen.getByTestId("edit-goal-step-title-s2")).toBeOnTheScreen();
       expect(screen.getByText("Sand the edges")).toBeOnTheScreen();
       expect(screen.getByText("Paint it")).toBeOnTheScreen();
-      // Distinct types render distinct chips: Note (📝) and Photo (📷).
-      expect(screen.getByText("📝")).toBeOnTheScreen();
+      // Distinct types render distinct pills: Note (text) and Photo.
       expect(screen.getByText("Note")).toBeOnTheScreen();
-      expect(screen.getByText("📷")).toBeOnTheScreen();
       expect(screen.getByText("Photo")).toBeOnTheScreen();
     });
 
-    it("derives the header count from buildSteps.length, ignoring the stepCount prop (D8)", () => {
+    it("reflects steps.length in the built-in count, ignoring the stepCount prop", () => {
+      // The build-step count comes from EditGoalStepList over the `steps` prop,
+      // not the ready-card `stepCount` — a stale stepCount can't leak in.
       renderWizard({
         currentStep: "build",
-        buildSteps: BUILD_STEPS,
+        steps: BUILD_STEPS,
         stepCount: 99,
       });
 
-      expect(screen.getByTestId("new-goal-build-count")).toHaveTextContent("2");
+      expect(screen.getByText("2 steps")).toBeOnTheScreen();
       expect(screen.queryByText("99")).toBeNull();
     });
 
-    it("fires onAddStep when the add-step affordance is pressed", () => {
+    it("adds a step with the typed title via the list's inline input (D3)", () => {
+      // The wizard's old title-less '+ add another step' link is gone; add now
+      // flows through EditGoalStepList's typed input + button, firing onAddStep
+      // with the entered title.
       const onAddStep = jest.fn();
-      renderWizard({
-        currentStep: "build",
-        buildSteps: BUILD_STEPS,
-        onAddStep,
-      });
+      renderWizard({ currentStep: "build", steps: BUILD_STEPS, onAddStep });
 
-      fireEvent.press(screen.getByTestId("new-goal-add-step-button"));
-
-      expect(onAddStep).toHaveBeenCalledTimes(1);
-    });
-
-    it("fires onOpenBuildStepEvidence with the row id when a row's chip is pressed", () => {
-      const onOpenBuildStepEvidence = jest.fn();
-      renderWizard({
-        currentStep: "build",
-        buildSteps: BUILD_STEPS,
-        onOpenBuildStepEvidence,
-      });
-
-      fireEvent.press(screen.getByTestId("new-goal-build-evidence-chip-s2"));
-
-      expect(onOpenBuildStepEvidence).toHaveBeenCalledWith("s2");
-    });
-
-    it("names each row's chip press target with the action, row title, and current type", () => {
-      // D7 a11y contract, parallel to step 2's chip: one collapsed node whose
-      // label states the action + which row + its current planned type.
-      renderWizard({ currentStep: "build", buildSteps: BUILD_STEPS });
-
-      expect(
-        screen.getByRole("button", {
-          name: "Change evidence type for Paint it, currently Photo",
-        }),
-      ).toBeOnTheScreen();
-    });
-
-    it("shows the shared capture sheet, pre-selecting the open row's current type", () => {
-      renderWizard({
-        currentStep: "build",
-        buildSteps: BUILD_STEPS,
-        openBuildStepEvidenceId: "s2",
-      });
-
-      expect(screen.getByText("Evidence type")).toBeOnTheScreen();
-      // Row s2 is Photo, so the Photo radio is the checked one.
-      expect(
-        screen.getByRole("radio", { name: "Photo" }).props.accessibilityState,
-      ).toMatchObject({ checked: true });
-    });
-
-    it("keeps the capture sheet closed when no row is targeted", () => {
-      renderWizard({
-        currentStep: "build",
-        buildSteps: BUILD_STEPS,
-        openBuildStepEvidenceId: null,
-      });
-
-      expect(screen.queryByText("Evidence type")).toBeNull();
-    });
-
-    it("changes the targeted row's type and closes the sheet when a type is selected", () => {
-      const onBuildStepEvidenceTypeChange = jest.fn();
-      const onCloseBuildStepEvidence = jest.fn();
-      renderWizard({
-        currentStep: "build",
-        buildSteps: BUILD_STEPS,
-        openBuildStepEvidenceId: "s1",
-        onBuildStepEvidenceTypeChange,
-        onCloseBuildStepEvidence,
-      });
-
-      fireEvent.press(screen.getByRole("radio", { name: "Photo" }));
-
-      expect(onBuildStepEvidenceTypeChange).toHaveBeenCalledWith(
-        "s1",
-        EvidenceType.photo,
+      fireEvent.changeText(
+        screen.getByTestId("edit-goal-add-step-input"),
+        "Seal it",
       );
-      expect(onCloseBuildStepEvidence).toHaveBeenCalledTimes(1);
+      fireEvent.press(screen.getByTestId("edit-goal-add-step-button"));
+
+      expect(onAddStep).toHaveBeenCalledWith("Seal it");
     });
 
-    it("dismisses the sheet without changing a row's type when the backdrop is tapped", () => {
-      const onBuildStepEvidenceTypeChange = jest.fn();
-      const onCloseBuildStepEvidence = jest.fn();
+    it("toggles a row's planned evidence via the wizard's evidence sheet (onStepEvidenceChange)", () => {
+      const onStepEvidenceChange = jest.fn();
       renderWizard({
         currentStep: "build",
-        buildSteps: BUILD_STEPS,
-        openBuildStepEvidenceId: "s1",
-        onBuildStepEvidenceTypeChange,
-        onCloseBuildStepEvidence,
+        steps: BUILD_STEPS,
+        onStepEvidenceChange,
       });
 
-      fireEvent.press(screen.getByTestId("capture-sheet-backdrop"));
+      // The chip opens the wizard-owned AnimatedSheet (#494); add a second type.
+      fireEvent.press(screen.getByTestId("edit-goal-step-evidence-s1"));
+      const unchecked = screen
+        .getAllByRole("checkbox")
+        .filter((n) => !n.props.accessibilityState?.checked);
+      fireEvent.press(unchecked[0]);
 
-      expect(onCloseBuildStepEvidence).toHaveBeenCalledTimes(1);
-      expect(onBuildStepEvidenceTypeChange).not.toHaveBeenCalled();
+      expect(onStepEvidenceChange).toHaveBeenCalledTimes(1);
+      expect(onStepEvidenceChange.mock.calls[0][0]).toBe("s1");
     });
 
-    it("renders the safe empty state (count 0, no rows, add-step still present) for an empty list", () => {
-      // buildSteps defaults to [] and a caller can mount "build" before seeding
-      // rows; the screen must render a 0 count with the add-step affordance, not
-      // crash or show phantom rows.
-      renderWizard({ currentStep: "build", buildSteps: [] });
+    it("fires onReorderSteps from the ↑/↓ fallback, scoped to the step order", () => {
+      // With motion off the accessible ↑/↓ controls render; pressing one is the
+      // deterministic reorder path in Node (drag needs a native runtime).
+      mockAnimationPref = "none";
+      const onReorderSteps = jest.fn();
+      renderWizard({
+        currentStep: "build",
+        steps: BUILD_STEPS,
+        onReorderSteps,
+      });
 
-      expect(screen.getByTestId("new-goal-build-count")).toHaveTextContent("0");
-      expect(screen.getByTestId("new-goal-add-step-button")).toBeOnTheScreen();
+      fireEvent.press(screen.getByLabelText('Move "Sand the edges" down'));
+
+      expect(onReorderSteps).toHaveBeenCalledWith(["s2", "s1"]);
+    });
+
+    it("renders the safe empty state (list header + add input, no rows) for an empty list", () => {
+      // steps defaults to [] and a caller can mount "build" before seeding rows;
+      // the screen must render a 0 count with the add affordance, not crash.
+      renderWizard({ currentStep: "build", steps: [] });
+
+      expect(screen.getByText("0 steps")).toBeOnTheScreen();
+      expect(screen.getByTestId("edit-goal-add-step-input")).toBeOnTheScreen();
       expect(
         screen.getByTestId("new-goal-build-ready-button"),
       ).toBeOnTheScreen();
-      expect(screen.queryByTestId("new-goal-build-row-s1")).toBeNull();
+      expect(screen.queryByTestId("edit-goal-step-title-s1")).toBeNull();
     });
 
     it("fires onNext from the 'I'm ready →' CTA", () => {
       const onNext = jest.fn();
-      renderWizard({ currentStep: "build", buildSteps: BUILD_STEPS, onNext });
+      renderWizard({ currentStep: "build", steps: BUILD_STEPS, onNext });
 
       fireEvent.press(screen.getByTestId("new-goal-build-ready-button"));
 
@@ -531,187 +568,143 @@ describe("NewGoalWizard", () => {
     });
   });
 
-  describe("build step · rename (#482)", () => {
-    it("renders each row's title as a tap-to-edit button that fires onStartEditingBuildStep", () => {
-      const onStartEditingBuildStep = jest.fn();
+  describe("build step · rename", () => {
+    it("routes an inline title edit through onStepTitleChange", () => {
+      const onStepTitleChange = jest.fn();
       renderWizard({
         currentStep: "build",
-        buildSteps: BUILD_STEPS,
-        onStartEditingBuildStep,
+        steps: BUILD_STEPS,
+        onStepTitleChange,
       });
 
-      const title = screen.getByTestId("new-goal-build-step-title-s1");
-      expect(title.props.accessibilityRole).toBe("button");
-      expect(title.props.accessibilityLabel).toBe("Sand the edges");
-      expect(title.props.accessibilityHint).toBe("Tap to edit step title");
-
-      fireEvent.press(title);
-      expect(onStartEditingBuildStep).toHaveBeenCalledWith(
-        "s1",
-        "Sand the edges",
-      );
-    });
-
-    it("renders a seeded edit field (not the title button) only for the row being edited", () => {
-      renderWizard({
-        currentStep: "build",
-        buildSteps: BUILD_STEPS,
-        editingBuildStepId: "s1",
-        buildStepEditText: "Sand the edges",
-      });
-
-      const input = screen.getByTestId("new-goal-build-step-edit-s1");
-      expect(input.props.value).toBe("Sand the edges");
-      expect(input.props.accessibilityLabel).toBe("Edit step: Sand the edges");
-      // The tap-to-edit title button for that row is gone while editing…
-      expect(screen.queryByTestId("new-goal-build-step-title-s1")).toBeNull();
-      // …but other rows stay in display mode.
-      expect(
-        screen.getByTestId("new-goal-build-step-title-s2"),
-      ).toBeOnTheScreen();
-    });
-
-    it("fires onBuildStepEditTextChange while typing in the edit field", () => {
-      const onBuildStepEditTextChange = jest.fn();
-      renderWizard({
-        currentStep: "build",
-        buildSteps: BUILD_STEPS,
-        editingBuildStepId: "s1",
-        buildStepEditText: "Sand",
-        onBuildStepEditTextChange,
-      });
-
-      fireEvent.changeText(
-        screen.getByTestId("new-goal-build-step-edit-s1"),
-        "Sand the edges smooth",
-      );
-
-      expect(onBuildStepEditTextChange).toHaveBeenCalledWith(
-        "Sand the edges smooth",
-      );
-    });
-
-    it("commits the edit on both submit and blur", () => {
-      const onCommitBuildStepEditing = jest.fn();
-      renderWizard({
-        currentStep: "build",
-        buildSteps: BUILD_STEPS,
-        editingBuildStepId: "s1",
-        onCommitBuildStepEditing,
-      });
-
-      const input = screen.getByTestId("new-goal-build-step-edit-s1");
+      // Tap the title to enter edit mode (EditGoalStepList owns the edit state),
+      // then commit a new title — the wizard's callback carries it out.
+      fireEvent.press(screen.getByTestId("edit-goal-step-title-s1"));
+      const input = screen.getByTestId("edit-goal-step-edit-s1");
+      fireEvent.changeText(input, "Sand the edges smooth");
       fireEvent(input, "submitEditing");
-      fireEvent(input, "blur");
 
-      expect(onCommitBuildStepEditing).toHaveBeenCalledTimes(2);
-    });
-
-    it("suppresses the mid-rename row's evidence chip and × but keeps other rows' intact (D4)", () => {
-      renderWizard({
-        currentStep: "build",
-        buildSteps: BUILD_STEPS,
-        editingBuildStepId: "s1",
-      });
-
-      // Editing row: neither the chip nor the × render while the field owns focus.
-      expect(
-        screen.queryByTestId("new-goal-build-evidence-chip-s1"),
-      ).toBeNull();
-      expect(screen.queryByTestId("new-goal-build-step-delete-s1")).toBeNull();
-      // Non-editing row: both remain.
-      expect(
-        screen.getByTestId("new-goal-build-evidence-chip-s2"),
-      ).toBeOnTheScreen();
-      expect(
-        screen.getByTestId("new-goal-build-step-delete-s2"),
-      ).toBeOnTheScreen();
+      expect(onStepTitleChange).toHaveBeenCalledWith(
+        "s1",
+        "Sand the edges smooth",
+      );
     });
   });
 
-  describe("build step · delete (#482)", () => {
-    it.each([
-      ["s1", "Sand the edges"],
-      ["s2", "Paint it"],
-    ])("labels the × for row %s as a delete button", (id, title) => {
-      renderWizard({ currentStep: "build", buildSteps: BUILD_STEPS });
-
-      const del = screen.getByTestId(`new-goal-build-step-delete-${id}`);
-      expect(del.props.accessibilityRole).toBe("button");
-      expect(del.props.accessibilityLabel).toBe(`Delete step: ${title}`);
-    });
-
-    it("fires onRequestDeleteBuildStep on × press without removing the row or confirming", () => {
-      const onRequestDeleteBuildStep = jest.fn();
-      const onConfirmDeleteBuildStep = jest.fn();
+  describe("build step · delete", () => {
+    it("opens the confirm modal on × and fires onDeleteStep only on Confirm", () => {
+      const onDeleteStep = jest.fn();
       renderWizard({
         currentStep: "build",
-        buildSteps: BUILD_STEPS,
-        onRequestDeleteBuildStep,
-        onConfirmDeleteBuildStep,
+        steps: BUILD_STEPS,
+        onDeleteStep,
       });
 
-      fireEvent.press(screen.getByTestId("new-goal-build-step-delete-s2"));
-
-      expect(onRequestDeleteBuildStep).toHaveBeenCalledWith("s2");
-      // The raw × is request-only — it never removes the row nor confirms.
-      expect(onConfirmDeleteBuildStep).not.toHaveBeenCalled();
-      expect(screen.getByTestId("new-goal-build-row-s2")).toBeOnTheScreen();
-    });
-
-    it("keeps the confirm modal closed when no delete is pending", () => {
-      renderWizard({ currentStep: "build", buildSteps: BUILD_STEPS });
-
-      expect(screen.queryByText("Delete step?")).toBeNull();
-    });
-
-    it("shows the confirm modal with wizard-stage copy for the pending row (D8)", () => {
-      renderWizard({
-        currentStep: "build",
-        buildSteps: BUILD_STEPS,
-        pendingDeleteBuildStepId: "s2",
-      });
-
+      // The × opens EditGoalStepList's own ConfirmDeleteModal — it does not
+      // remove the row on the raw press.
+      fireEvent.press(screen.getByTestId("edit-goal-step-delete-s2"));
       expect(screen.getByText("Delete step?")).toBeOnTheScreen();
-      // Wizard-appropriate message: no evidence/sub-step clause (D8), unlike
-      // EditGoalView's equivalent copy — a build row has neither yet.
-      expect(
-        screen.getByText('Remove "Paint it" from your step list?'),
-      ).toBeOnTheScreen();
-    });
-
-    it("fires onConfirmDeleteBuildStep on Confirm, never onCancel", () => {
-      const onConfirmDeleteBuildStep = jest.fn();
-      const onCancelDeleteBuildStep = jest.fn();
-      renderWizard({
-        currentStep: "build",
-        buildSteps: BUILD_STEPS,
-        pendingDeleteBuildStepId: "s1",
-        onConfirmDeleteBuildStep,
-        onCancelDeleteBuildStep,
-      });
+      expect(onDeleteStep).not.toHaveBeenCalled();
 
       fireEvent.press(screen.getByText("Delete"));
-
-      expect(onConfirmDeleteBuildStep).toHaveBeenCalledTimes(1);
-      expect(onCancelDeleteBuildStep).not.toHaveBeenCalled();
+      expect(onDeleteStep).toHaveBeenCalledWith("s2");
     });
 
-    it("fires onCancelDeleteBuildStep on Cancel, never onConfirm", () => {
-      const onConfirmDeleteBuildStep = jest.fn();
-      const onCancelDeleteBuildStep = jest.fn();
+    it("does not fire onDeleteStep when the confirm is cancelled", () => {
+      const onDeleteStep = jest.fn();
       renderWizard({
         currentStep: "build",
-        buildSteps: BUILD_STEPS,
-        pendingDeleteBuildStepId: "s1",
-        onConfirmDeleteBuildStep,
-        onCancelDeleteBuildStep,
+        steps: BUILD_STEPS,
+        onDeleteStep,
       });
 
+      fireEvent.press(screen.getByTestId("edit-goal-step-delete-s1"));
       fireEvent.press(screen.getByText("Cancel"));
 
-      expect(onCancelDeleteBuildStep).toHaveBeenCalledTimes(1);
-      expect(onConfirmDeleteBuildStep).not.toHaveBeenCalled();
+      expect(onDeleteStep).not.toHaveBeenCalled();
+    });
+  });
+
+  // New coverage — one-level sub-steps were impossible on the wizard's build
+  // step before this reuse. Still wiring-only: assert the wizard's callbacks
+  // fire; EditGoalView.test.tsx owns the list's internal sub-step behavior.
+  describe("build step · sub-steps", () => {
+    it("fires onAddSubStep from the 'break into sub-steps' prompt on a row with none", () => {
+      const onAddSubStep = jest.fn();
+      renderWizard({
+        currentStep: "build",
+        steps: BUILD_STEPS,
+        onAddSubStep,
+      });
+
+      fireEvent.press(screen.getByTestId("edit-goal-break-into-s1"));
+
+      expect(onAddSubStep).toHaveBeenCalledWith("s1", "New sub-step");
+    });
+
+    it("renders seeded sub-steps and routes rename/evidence/delete through their callbacks", () => {
+      const onSubStepTitleChange = jest.fn();
+      const onSubStepEvidenceChange = jest.fn();
+      const onDeleteSubStep = jest.fn();
+      renderWizard({
+        currentStep: "build",
+        steps: BUILD_STEPS_WITH_SUB,
+        onSubStepTitleChange,
+        onSubStepEvidenceChange,
+        onDeleteSubStep,
+      });
+
+      // Sub-step rows render inside their parent.
+      expect(screen.getByText("Rough pass")).toBeOnTheScreen();
+      expect(screen.getByText("Fine pass")).toBeOnTheScreen();
+
+      // Rename.
+      fireEvent.press(screen.getByTestId("edit-goal-substep-title-sub1"));
+      const input = screen.getByTestId("edit-goal-substep-edit-sub1");
+      fireEvent.changeText(input, "Rough sanding pass");
+      fireEvent(input, "submitEditing");
+      expect(onSubStepTitleChange).toHaveBeenCalledWith(
+        "sub1",
+        "Rough sanding pass",
+      );
+
+      // Evidence — the sub-step chip opens the wizard-owned AnimatedSheet
+      // (#494); toggling a type in its grid routes through onSubStepEvidenceChange.
+      fireEvent.press(screen.getByTestId("edit-goal-substep-evidence-sub2"));
+      const unchecked = screen
+        .getAllByRole("checkbox")
+        .filter((n) => !n.props.accessibilityState?.checked);
+      fireEvent.press(unchecked[0]);
+      expect(onSubStepEvidenceChange).toHaveBeenCalledTimes(1);
+      expect(onSubStepEvidenceChange.mock.calls[0][0]).toBe("sub2");
+
+      // Close the sheet before deleting — while open it's modal, hiding the
+      // underlying rows from queries (RNTL excludes a11y-hidden nodes).
+      act(() => {
+        fireEvent.press(screen.getByTestId("new-goal-evidence-backdrop"));
+      });
+
+      // Delete (confirmed).
+      fireEvent.press(screen.getByTestId("edit-goal-substep-delete-sub1"));
+      fireEvent.press(screen.getByText("Delete"));
+      expect(onDeleteSubStep).toHaveBeenCalledWith("sub1");
+    });
+
+    it("fires onReorderSubSteps scoped to one parent from the ↑/↓ fallback", () => {
+      mockAnimationPref = "none";
+      const onReorderSubSteps = jest.fn();
+      const onReorderSteps = jest.fn();
+      renderWizard({
+        currentStep: "build",
+        steps: BUILD_STEPS_WITH_SUB,
+        onReorderSubSteps,
+        onReorderSteps,
+      });
+
+      fireEvent.press(screen.getByLabelText('Move "Rough pass" down'));
+
+      expect(onReorderSubSteps).toHaveBeenCalledWith("s1", ["sub2", "sub1"]);
+      expect(onReorderSteps).not.toHaveBeenCalled();
     });
   });
 

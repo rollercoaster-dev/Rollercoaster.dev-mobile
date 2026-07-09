@@ -221,6 +221,7 @@ export function EditGoalSubStepRow({
                 icon={<ArrowUp size={18} weight="bold" />}
                 onPress={onMoveUp}
                 size="sm"
+                tone="ghost"
                 accessibilityLabel={moveSubStepUpLabel(subStep.title)}
                 testID={`edit-goal-substep-up-${subStep.id}`}
               />
@@ -230,6 +231,7 @@ export function EditGoalSubStepRow({
                 icon={<ArrowDown size={18} weight="bold" />}
                 onPress={onMoveDown}
                 size="sm"
+                tone="ghost"
                 accessibilityLabel={moveSubStepDownLabel(subStep.title)}
                 testID={`edit-goal-substep-down-${subStep.id}`}
               />
@@ -254,16 +256,22 @@ export function EditGoalSubStepRow({
     return <View style={styles.subStepRow}>{body}</View>;
   }
 
+  // The flex-row layout (`subStepRow`) lives on a plain inner View, never on
+  // the Animated.View: unistyles styles handed straight to a reanimated
+  // Animated.View aren't applied on web (no class injected), so `flexDirection:
+  // "row"` would silently drop and the controls would stack under the title.
+  // Mirrors StepList's DraggableStepItem and this file's own !canDrag branch.
   return (
     <GestureDetector gesture={composed}>
-      <Animated.View
-        style={[
-          styles.subStepRow,
-          isBeingDragged && styles.subStepRowDragging,
-          animatedStyle,
-        ]}
-      >
-        {body}
+      <Animated.View style={animatedStyle}>
+        <View
+          style={[
+            styles.subStepRow,
+            isBeingDragged && styles.subStepRowDragging,
+          ]}
+        >
+          {body}
+        </View>
       </Animated.View>
     </GestureDetector>
   );

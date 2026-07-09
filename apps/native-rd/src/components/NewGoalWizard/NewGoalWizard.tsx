@@ -7,17 +7,23 @@
  *   - Step 1 · name and Step 4 · ready — slice 1/3 (#462)
  *   - Step 2 · first step (goal recap, first-step input, planned-evidence chip
  *     composing EvidenceTypePicker's capture sheet) — slice 2/3 (#463)
- *   - Step 3 · build (flat "Your steps" list, per-row evidence chip reusing the
- *     same picker, add-step affordance, "I'm ready →" CTA) — slice 3/3 (#464)
- *   - Step 3 · build-row inline rename + confirmed delete (tap-to-edit title,
- *     × routing through the shared ConfirmDeleteModal) — follow-up (#482)
+ *   - Step 3 · build — reuses EditGoalStepList (#489/#490): the same "Your
+ *     steps" header + count, drag-reorderable rows, evidence chips, inline
+ *     rename, confirmed delete, and one-level sub-steps that the Edit Goal
+ *     screen uses. Following #493/#494, the list reports evidence-chip taps
+ *     outward via onEvidenceChipPress and the wizard owns the shared
+ *     EvidenceTypePicker sheet (AnimatedSheet chrome) as a root-level sibling,
+ *     mirroring EditGoalView. The wizard keeps only its frame chrome (header
+ *     band, progress bar, "I'm ready →" footer); it no longer carries a second,
+ *     weaker step editor. This also deletes the BuildStep/EditGoalStep data-model
+ *     fork [Integrate] (#444) would otherwise reconcile.
  *
  * Pure, prop-driven, i18n-free (D5): all copy arrives as props with English
  * defaults; the future [Integrate] issue (#444) threads real t() output
  * through them and wires the callbacks to navigation + Evolu. Storybook-first,
  * so `grep -rn "NewGoalWizard" src/screens` stays empty until then.
  */
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text as RNText,
@@ -31,7 +37,9 @@ import { IconButton } from "../IconButton";
 import { Button } from "../Button";
 import { ScreenSubHeader } from "../ScreenHeader/ScreenSubHeader";
 import { EvidenceTypePicker } from "../EvidenceTypePicker";
-import { ConfirmDeleteModal } from "../ConfirmDeleteModal";
+import { AnimatedSheet } from "../EvidenceTypePicker/AnimatedSheet";
+import { EditGoalStepList, type EditGoalStep } from "../EditGoalView";
+import type { DragScrollController } from "../StepList/dragAutoScroll";
 import { EvidenceType } from "../../db";
 import { EVIDENCE_OPTIONS, type EvidenceTypeValue } from "../../types/evidence";
 import { styles } from "./NewGoalWizard.styles";
@@ -47,22 +55,6 @@ const STEP_ORDER = ["name", "step", "build", "ready"] as const;
 
 /** Wizard position — derived from STEP_ORDER (see above). */
 export type NewGoalWizardStep = (typeof STEP_ORDER)[number];
-
-/**
- * A row on the build list (Step 3). `id` is a stable per-row key the caller
- * owns — it must be unique within `buildSteps`, since it's both the React `key`
- * and the handle `openBuildStepEvidenceId` targets the shared picker at (a
- * duplicate would collide the key and make `find` match the wrong row).
- * `evidenceType` is never unset — every step is born with a planned evidence
- * type (D3), so the chip always renders a real type, never a missing/empty
- * state. Fields are `readonly`: the component only ever reads a row (maps over
- * it, never mutates), and the caller owns the state.
- */
-export interface BuildStep {
-  readonly id: string;
-  readonly title: string;
-  readonly evidenceType: EvidenceTypeValue;
-}
 
 export interface NewGoalWizardProps {
   currentStep: NewGoalWizardStep;
@@ -101,55 +93,45 @@ export interface NewGoalWizardProps {
   onOpenEvidencePicker?: () => void;
   onCloseEvidencePicker?: () => void;
 
-  // --- Step 3 · build list (#464) ---
+  // --- Step 3 · build — reuses EditGoalStepList (#489/#490, D2). ---
   /**
    * The full step list rendered on the build screen. Optional with an empty
    * default (like step 2's props), so a caller can mount "build" before seeding
-   * rows; an empty list renders a count of 0 and no rows. Independent of
+   * rows; an empty list renders a count of 0 and no rows. The rich multi-select
+   * shape (`plannedEvidenceTypes`, min 1) + one-level sub-steps is the identical
+   * data model the Edit Goal screen edits — no BuildStep fork. Independent of
    * firstStepTitle/plannedEvidenceType this slice (D2); [Integrate] (#444)
    * unifies them.
    */
-  buildSteps?: readonly BuildStep[];
-  /** Appends a new row. No args (D3) — the caller owns the new row's defaults. */
-  onAddStep?: () => void;
+  steps?: EditGoalStep[];
+  /** Fired on drop / ↑↓ with the full new step order. */
+  onReorderSteps?: (orderedStepIds: string[]) => void;
+  /** Fired on drop / ↑↓ with a parent's new sub-step order (scoped to it). */
+  onReorderSubSteps?: (
+    parentStepId: string,
+    orderedSubStepIds: string[],
+  ) => void;
+  /** Appends a step titled from EditGoalStepList's inline "Add step..." input (D3). */
+  onAddStep?: (title: string) => void;
+  onStepTitleChange?: (stepId: string, title: string) => void;
+  /** Toggles a step's planned evidence types (multi-select, min 1). */
+  onStepEvidenceChange?: (stepId: string, types: EvidenceTypeValue[]) => void;
+  /** Adds a sub-step under `parentStepId` (renameable inline after). */
+  onAddSubStep?: (parentStepId: string, title: string) => void;
+  onSubStepTitleChange?: (subStepId: string, title: string) => void;
+  onSubStepEvidenceChange?: (
+    subStepId: string,
+    types: EvidenceTypeValue[],
+  ) => void;
+  onDeleteSubStep?: (subStepId: string) => void;
+  /** Deletes a top-level step. Fired only after the user confirms (D1). */
+  onDeleteStep?: (stepId: string) => void;
   /**
-   * Which build row's evidence picker is open (D1). null/undefined = closed.
-   * The single EvidenceTypePicker instance is reused for both step 2's chip and
-   * step 3's rows, keyed here by row id when on the build step.
+   * Optional auto-scroll controller for drags near the viewport edge, supplied
+   * by the screen that owns the ScrollView ([Integrate]). Omitted in Storybook
+   * (short lists don't scroll); reorder still works without it (D6).
    */
-  openBuildStepEvidenceId?: string | null;
-  onOpenBuildStepEvidence?: (id: string) => void;
-  onCloseBuildStepEvidence?: () => void;
-  /** Updates one build row's planned evidence type (from the shared picker). */
-  onBuildStepEvidenceTypeChange?: (id: string, type: EvidenceTypeValue) => void;
-
-  // --- Step 3 · build-row inline rename (#482) ---
-  /**
-   * Which build row is mid-rename (D3). null/undefined = none editing. The row
-   * whose id matches renders a focused TextInput seeded with buildStepEditText
-   * in place of its tap-to-edit title; its evidence chip and × are suppressed
-   * while editing (D4), mirroring EditGoalStepRow's isEditing branch.
-   */
-  editingBuildStepId?: string | null;
-  /** In-flight edit text for the row named by editingBuildStepId. */
-  buildStepEditText?: string;
-  /** Enter edit mode for a row — caller seeds buildStepEditText with the title. */
-  onStartEditingBuildStep?: (id: string, currentTitle: string) => void;
-  onBuildStepEditTextChange?: (text: string) => void;
-  /** Commit the in-flight edit (return key / blur); caller applies + clears. */
-  onCommitBuildStepEditing?: () => void;
-
-  // --- Step 3 · build-row delete (#482) ---
-  /**
-   * Which build row has a pending delete confirmation (D1/D3). null/undefined =
-   * none pending. When set, the shared ConfirmDeleteModal is visible; the row is
-   * removed only on Confirm, never on the raw × press.
-   */
-  pendingDeleteBuildStepId?: string | null;
-  /** × pressed on a row — opens the confirm modal (does not remove the row). */
-  onRequestDeleteBuildStep?: (id: string) => void;
-  onCancelDeleteBuildStep?: () => void;
-  onConfirmDeleteBuildStep?: () => void;
+  dragScrollController?: DragScrollController;
 
   // --- Copy (i18n-free per D5; English defaults; [Integrate] passes t()). ---
   headerLabel?: string;
@@ -181,34 +163,42 @@ export interface NewGoalWizardProps {
   quickAddLabel?: string;
   /** Combined a11y label for the whole quick-add fast path press target. */
   quickAddAccessibilityLabel?: string;
-  // Step 3 · build list copy (English defaults; [Integrate] passes t()).
-  /** Build-list header. Default: "Your steps". */
+  // Step 3 · build list copy — wired straight through to EditGoalStepList (D4).
+  // All optional; left undefined so EditGoalStepList's own English defaults
+  // render, exactly as EditGoalView forwards them.
+  /** Build-list header, fed to EditGoalStepList as stepsSectionLabel. Default: "Your steps". */
   yourStepsLabel?: string;
-  /** Visible add-step link text. Default: "add another step". */
-  addStepLabel?: string;
-  /** a11y label for the add-step press target. Default: "Add another step". */
-  addStepAccessibilityLabel?: string;
-  /**
-   * a11y label for a build row's evidence chip — names the action + which row +
-   * its current type (parallels changeEvidenceAccessibilityLabel's shape).
-   */
-  buildStepEvidenceAccessibilityLabel?: (
-    title: string,
-    label: string,
-  ) => string;
-  /** a11y label for a build row's inline title-edit field (#482). */
-  buildStepEditA11yLabel?: (stepTitle: string) => string;
-  /** a11y hint on a build row's tap-to-edit title (#482). */
-  tapToEditBuildStepHint?: string;
-  /** a11y label for a build row's × delete affordance (#482). */
-  deleteBuildStepLabel?: (stepTitle: string) => string;
-  /** Confirm-modal title for a build-row delete (#482). */
-  deleteBuildStepConfirmTitle?: string;
-  /**
-   * Confirm-modal message for a build-row delete (#482). No evidence/sub-step
-   * clause — a wizard-stage build row has neither yet (D8), unlike EditGoalView.
-   */
-  deleteBuildStepConfirmMessage?: (stepTitle: string) => string;
+  addStepPlaceholder?: string;
+  /** Header title of the build step's evidence sheet (wizard-owned since #494). Default: "Planned evidence". */
+  evidencePickerTitle?: string;
+  /** Label above the multi-select grid in the build step's evidence sheet. Default: "Evidence types". */
+  evidenceTypesLabel?: string;
+  /** Pluralized step-count label. Default: "N step" / "N steps". */
+  stepCountLabel?: (count: number) => string;
+  /** "add a sub-step" affordance under a step that already has some. */
+  addSubStepLabel?: string;
+  /** "break into sub-steps" prompt on a step with none. */
+  breakIntoSubStepsLabel?: string;
+  /** Default title for a freshly-added sub-step, renamed inline after. */
+  newSubStepTitle?: string;
+  /** a11y label for the "add step" + button. */
+  addStepButtonLabel?: string;
+  /** a11y label for the build evidence sheet's close affordances (backdrop + ✕). Default: "Close". */
+  closeLabel?: string;
+  /** a11y label for the "break into sub-steps" prompt on a step. */
+  breakIntoSubStepsA11yLabel?: (stepTitle: string) => string;
+  /** a11y label for the "add a sub-step" affordance under a step. */
+  addSubStepA11yLabel?: (stepTitle: string) => string;
+  /** Screen-reader announcement after a reorder (drag drop or ↑/↓). */
+  announceReorder?: (stepTitle: string, position: number) => string;
+  /** Confirm-modal title when deleting a step. */
+  deleteStepConfirmTitle?: string;
+  /** Confirm-modal message when deleting a step (receives the step title). */
+  deleteStepConfirmMessage?: (title: string) => string;
+  /** Confirm-modal title when deleting a sub-step. */
+  deleteSubStepConfirmTitle?: string;
+  /** Confirm-modal message when deleting a sub-step (receives the sub-step title). */
+  deleteSubStepConfirmMessage?: (title: string) => string;
   /** Footer CTA on the build step — distinct copy from nextLabel (D7). */
   buildReadyLabel?: string;
   readyHeadline?: string;
@@ -247,11 +237,6 @@ const evidenceIcon = (type: EvidenceTypeValue) =>
 const defaultChangeEvidenceAccessibilityLabel = (label: string) =>
   `Change evidence type, currently ${label}`;
 
-const defaultBuildStepEvidenceAccessibilityLabel = (
-  title: string,
-  label: string,
-) => `Change evidence type for ${title}, currently ${label}`;
-
 const noop = () => undefined;
 
 export function NewGoalWizard({
@@ -271,21 +256,18 @@ export function NewGoalWizard({
   evidencePickerOpen = false,
   onOpenEvidencePicker = noop,
   onCloseEvidencePicker = noop,
-  buildSteps = [],
+  steps = [],
+  onReorderSteps = noop,
+  onReorderSubSteps = noop,
   onAddStep = noop,
-  openBuildStepEvidenceId = null,
-  onOpenBuildStepEvidence = noop,
-  onCloseBuildStepEvidence = noop,
-  onBuildStepEvidenceTypeChange = noop,
-  editingBuildStepId = null,
-  buildStepEditText = "",
-  onStartEditingBuildStep = noop,
-  onBuildStepEditTextChange = noop,
-  onCommitBuildStepEditing = noop,
-  pendingDeleteBuildStepId = null,
-  onRequestDeleteBuildStep = noop,
-  onCancelDeleteBuildStep = noop,
-  onConfirmDeleteBuildStep = noop,
+  onStepTitleChange = noop,
+  onStepEvidenceChange = noop,
+  onAddSubStep = noop,
+  onSubStepTitleChange = noop,
+  onSubStepEvidenceChange = noop,
+  onDeleteSubStep = noop,
+  onDeleteStep = noop,
+  dragScrollController,
   headerLabel = "New goal",
   closeAccessibilityLabel = "Close",
   nameEyebrow = "Step 1 of 4",
@@ -304,16 +286,29 @@ export function NewGoalWizard({
   quickAddPrefix = "or ",
   quickAddLabel = "Quick add — skip to the list ›",
   quickAddAccessibilityLabel = "Quick add, skip to the list",
+  // Build-list copy — mostly forwarded straight to EditGoalStepList, which owns
+  // their English defaults (D4). yourStepsLabel carries a wizard-side default
+  // (maps to stepsSectionLabel with "Your steps" vs the editor's "Steps"). The
+  // evidence-sheet copy (evidencePickerTitle/evidenceTypesLabel/closeLabel) is
+  // wizard-owned since #494 — the sheet moved out of the list — so those carry
+  // wizard-side defaults mirroring EditGoalView.
   yourStepsLabel = "Your steps",
-  addStepLabel = "add another step",
-  addStepAccessibilityLabel = "Add another step",
-  buildStepEvidenceAccessibilityLabel = defaultBuildStepEvidenceAccessibilityLabel,
-  buildStepEditA11yLabel = (stepTitle) => `Edit step: ${stepTitle}`,
-  tapToEditBuildStepHint = "Tap to edit step title",
-  deleteBuildStepLabel = (stepTitle) => `Delete step: ${stepTitle}`,
-  deleteBuildStepConfirmTitle = "Delete step?",
-  deleteBuildStepConfirmMessage = (stepTitle) =>
-    `Remove "${stepTitle}" from your step list?`,
+  addStepPlaceholder,
+  evidencePickerTitle = "Planned evidence",
+  evidenceTypesLabel = "Evidence types",
+  stepCountLabel,
+  addSubStepLabel,
+  breakIntoSubStepsLabel,
+  newSubStepTitle,
+  addStepButtonLabel,
+  closeLabel = "Close",
+  breakIntoSubStepsA11yLabel,
+  addSubStepA11yLabel,
+  announceReorder,
+  deleteStepConfirmTitle,
+  deleteStepConfirmMessage,
+  deleteSubStepConfirmTitle,
+  deleteSubStepConfirmMessage,
   buildReadyLabel = "I'm ready →",
   readyHeadline = "You're set.",
   stepCountSummary = defaultStepCountSummary,
@@ -325,36 +320,82 @@ export function NewGoalWizard({
   const plannedIcon = evidenceIcon(plannedEvidenceType);
   const plannedLabel = plannedEvidenceLabel(plannedEvidenceType);
 
-  // The single EvidenceTypePicker instance is shared across steps 2 and 3 (D1):
-  // its visible/selectedType/onSelect/onClose are derived from currentStep.
-  // On "build", it targets the row named by openBuildStepEvidenceId.
-  const isBuild = currentStep === "build";
-  const openBuildStep =
-    openBuildStepEvidenceId != null
-      ? buildSteps.find((step) => step.id === openBuildStepEvidenceId)
-      : undefined;
-  const pickerVisible = isBuild ? openBuildStep != null : evidencePickerOpen;
-  const pickerSelectedType =
-    isBuild && openBuildStep ? openBuildStep.evidenceType : plannedEvidenceType;
+  // Step 2's capture sheet: a single-select planned-evidence chip. Distinct from
+  // the build step's multi-select sheet below.
   const handlePickerSelect = (type: EvidenceTypeValue) => {
-    if (isBuild) {
-      if (openBuildStep) onBuildStepEvidenceTypeChange(openBuildStep.id, type);
-      onCloseBuildStepEvidence();
-    } else {
-      onPlannedEvidenceTypeChange(type);
-      onCloseEvidencePicker();
-    }
+    onPlannedEvidenceTypeChange(type);
+    onCloseEvidencePicker();
   };
-  const handlePickerClose = isBuild
-    ? onCloseBuildStepEvidence
-    : onCloseEvidencePicker;
 
-  // The build row targeted by a pending delete (D1) — mirrors openBuildStep's
-  // derivation. Drives the single ConfirmDeleteModal's visibility + message.
-  const pendingDeleteStep =
-    pendingDeleteBuildStepId != null
-      ? buildSteps.find((step) => step.id === pendingDeleteBuildStepId)
+  // Build step's evidence-picker open state, lifted here from EditGoalStepList
+  // (#493/#494/D8) so the shared AnimatedSheet renders as a root-level sibling
+  // of the build ScrollView (anchored to the viewport, not the scroll content).
+  // A chip tap in the list calls onEvidenceChipPress → setEditingEvidenceId; the
+  // sheet gates on the derived editingEvidenceTypes below. Mirrors EditGoalView.
+  const [editingEvidenceId, setEditingEvidenceId] = useState<string | null>(
+    null,
+  );
+
+  // Find the sub-step with `id` across every parent (one-level, D12).
+  function findSubStep(id: string) {
+    for (const s of steps) {
+      const sub = s.subSteps?.find((ss) => ss.id === id);
+      if (sub) return sub;
+    }
+    return undefined;
+  }
+
+  const editingEvidenceStep =
+    editingEvidenceId !== null
+      ? steps.find((s) => s.id === editingEvidenceId)
       : undefined;
+  const editingEvidenceSub =
+    editingEvidenceId !== null && !editingEvidenceStep
+      ? findSubStep(editingEvidenceId)
+      : undefined;
+  const editingEvidenceTypes =
+    editingEvidenceStep?.plannedEvidenceTypes ??
+    editingEvidenceSub?.plannedEvidenceTypes;
+
+  // Keep the last non-undefined selection so the picker grid renders through the
+  // sheet's slide-out. On close, editingEvidenceId → null flips both `visible`
+  // and `editingEvidenceTypes` to undefined on the same render; the sheet keeps
+  // its chrome mounted for the exit animation, so gating the grid directly on
+  // editingEvidenceTypes would animate out an empty sheet (#493). Adjusting
+  // state during render (React's sanctioned "store info from a previous render"
+  // pattern) rather than a ref keeps the React Compiler happy.
+  const [retainedEvidenceTypes, setRetainedEvidenceTypes] = useState<
+    EvidenceTypeValue[] | undefined
+  >(undefined);
+  if (
+    editingEvidenceTypes !== undefined &&
+    editingEvidenceTypes !== retainedEvidenceTypes
+  ) {
+    setRetainedEvidenceTypes(editingEvidenceTypes);
+  }
+  const sheetEvidenceTypes = editingEvidenceTypes ?? retainedEvidenceTypes;
+
+  // Evidence-picker toggle (D8/D12). Guards the "every step requires evidence"
+  // invariant: the last remaining type can't be deselected (no-op), so a step or
+  // sub-step never lands in a 0-selected state. Routes to the step or sub-step
+  // callback depending on which id opened the picker.
+  function handleToggleEvidence(type: EvidenceTypeValue) {
+    if (editingEvidenceId === null) return;
+    const step = steps.find((s) => s.id === editingEvidenceId);
+    const sub = step ? undefined : findSubStep(editingEvidenceId);
+    const current = step?.plannedEvidenceTypes ?? sub?.plannedEvidenceTypes;
+    if (!current) return;
+    const isSelected = current.includes(type);
+    if (isSelected && current.length === 1) return;
+    const next = isSelected
+      ? current.filter((t) => t !== type)
+      : [...current, type];
+    if (step) {
+      onStepEvidenceChange(editingEvidenceId, next);
+    } else {
+      onSubStepEvidenceChange(editingEvidenceId, next);
+    }
+  }
 
   return (
     <View style={styles.container}>
@@ -520,147 +561,42 @@ export function NewGoalWizard({
               contentContainerStyle={styles.buildScrollContent}
               showsVerticalScrollIndicator={false}
             >
-              <View style={styles.buildHeaderRow}>
-                <RNText
-                  style={styles.buildHeaderTitle}
-                  accessibilityRole="header"
-                >
-                  {yourStepsLabel}
-                </RNText>
-                {/* Count derived internally as buildSteps.length (D8). */}
-                <RNText
-                  style={styles.buildHeaderCount}
-                  testID="new-goal-build-count"
-                >
-                  {buildSteps.length}
-                </RNText>
-              </View>
-              {buildSteps.map((step, index) => {
-                const label = plannedEvidenceLabel(step.evidenceType);
-                // Mid-rename rows render only [number][TextInput] — chip and ×
-                // are suppressed while the field owns focus (D4), mirroring
-                // EditGoalStepRow's isEditing branch.
-                const isEditing = editingBuildStepId === step.id;
-                return (
-                  <View
-                    key={step.id}
-                    style={styles.buildRowCard}
-                    testID={`new-goal-build-row-${step.id}`}
-                  >
-                    {/* Wrap layout (D7): buildRowLead grows to fill the line and
-                        holds [number][title/input]; buildRowControls (chip + ×)
-                        wraps to its own right-aligned line on narrow/largeText
-                        renders instead of crushing the title. */}
-                    <View style={styles.buildRowInner}>
-                      <View style={styles.buildRowLead}>
-                        <RNText
-                          style={styles.buildRowNumber}
-                          importantForAccessibility="no"
-                        >
-                          {index + 1}
-                        </RNText>
-                        {isEditing ? (
-                          <TextInput
-                            style={styles.buildRowEditInput}
-                            value={buildStepEditText}
-                            onChangeText={onBuildStepEditTextChange}
-                            onSubmitEditing={onCommitBuildStepEditing}
-                            onBlur={onCommitBuildStepEditing}
-                            autoFocus
-                            selectTextOnFocus
-                            returnKeyType="done"
-                            placeholderTextColor={theme.colors.textMuted}
-                            testID={`new-goal-build-step-edit-${step.id}`}
-                            accessibilityLabel={buildStepEditA11yLabel(
-                              step.title,
-                            )}
-                          />
-                        ) : (
-                          <Pressable
-                            style={styles.buildRowTitlePress}
-                            onPress={() =>
-                              onStartEditingBuildStep(step.id, step.title)
-                            }
-                            accessibilityRole="button"
-                            accessibilityLabel={step.title}
-                            accessibilityHint={tapToEditBuildStepHint}
-                            testID={`new-goal-build-step-title-${step.id}`}
-                          >
-                            <RNText style={styles.buildRowTitle}>
-                              {step.title}
-                            </RNText>
-                          </Pressable>
-                        )}
-                      </View>
-                      {!isEditing && (
-                        <View style={styles.buildRowControls}>
-                          {/* Whole chip opens the shared picker targeted at this
-                              row (D1); one collapsed a11y node names row + type
-                              (D7). */}
-                          <Pressable
-                            style={styles.buildRowEvidencePress}
-                            onPress={() => onOpenBuildStepEvidence(step.id)}
-                            accessible
-                            accessibilityRole="button"
-                            accessibilityLabel={buildStepEvidenceAccessibilityLabel(
-                              step.title,
-                              label,
-                            )}
-                            hitSlop={6}
-                            testID={`new-goal-build-evidence-chip-${step.id}`}
-                          >
-                            <View style={styles.evidenceChip}>
-                              <RNText
-                                style={styles.evidenceChipIcon}
-                                importantForAccessibility="no"
-                              >
-                                {evidenceIcon(step.evidenceType)}
-                              </RNText>
-                              <RNText style={styles.evidenceChipLabel}>
-                                {label}
-                              </RNText>
-                            </View>
-                          </Pressable>
-                          {/* × opens the shared ConfirmDeleteModal (D1) — never
-                              removes the row on the raw press. Hidden while this
-                              row is mid-rename via the enclosing !isEditing. */}
-                          <Pressable
-                            style={styles.buildRowDelete}
-                            onPress={() => onRequestDeleteBuildStep(step.id)}
-                            accessibilityRole="button"
-                            accessibilityLabel={deleteBuildStepLabel(
-                              step.title,
-                            )}
-                            hitSlop={8}
-                            testID={`new-goal-build-step-delete-${step.id}`}
-                          >
-                            <RNText style={styles.buildRowDeleteGlyph}>
-                              {"×"}
-                            </RNText>
-                          </Pressable>
-                        </View>
-                      )}
-                    </View>
-                  </View>
-                );
-              })}
-              <Pressable
-                style={styles.addStepPress}
-                onPress={onAddStep}
-                accessible
-                accessibilityRole="button"
-                accessibilityLabel={addStepAccessibilityLabel}
-                hitSlop={6}
-                testID="new-goal-add-step-button"
-              >
-                <RNText
-                  style={styles.addStepPlus}
-                  importantForAccessibility="no"
-                >
-                  +
-                </RNText>
-                <RNText style={styles.addStepLabel}>{addStepLabel}</RNText>
-              </Pressable>
+              {/* The build step reuses EditGoalStepList (#489/#490) — same "Your
+                  steps" header + count, drag-reorderable rows, evidence chips,
+                  inline rename, confirmed delete, and one-level sub-steps as the
+                  Edit Goal screen. The list reports evidence-chip taps outward
+                  via onEvidenceChipPress; the picker sheet itself is owned by the
+                  wizard (#493/#494/D8), rendered as a root-level sibling below.
+                  Otherwise the wizard only forwards data + callbacks + copy
+                  (D2/D3/D4). yourStepsLabel maps to the built-in header's
+                  stepsSectionLabel (D1). */}
+              <EditGoalStepList
+                steps={steps}
+                onReorderSteps={onReorderSteps}
+                onReorderSubSteps={onReorderSubSteps}
+                onAddStep={onAddStep}
+                onStepTitleChange={onStepTitleChange}
+                onEvidenceChipPress={setEditingEvidenceId}
+                onAddSubStep={onAddSubStep}
+                onSubStepTitleChange={onSubStepTitleChange}
+                onDeleteSubStep={onDeleteSubStep}
+                onDeleteStep={onDeleteStep}
+                dragScrollController={dragScrollController}
+                stepsSectionLabel={yourStepsLabel}
+                addStepPlaceholder={addStepPlaceholder}
+                stepCountLabel={stepCountLabel}
+                addSubStepLabel={addSubStepLabel}
+                breakIntoSubStepsLabel={breakIntoSubStepsLabel}
+                newSubStepTitle={newSubStepTitle}
+                addStepButtonLabel={addStepButtonLabel}
+                breakIntoSubStepsA11yLabel={breakIntoSubStepsA11yLabel}
+                addSubStepA11yLabel={addSubStepA11yLabel}
+                announceReorder={announceReorder}
+                deleteStepConfirmTitle={deleteStepConfirmTitle}
+                deleteStepConfirmMessage={deleteStepConfirmMessage}
+                deleteSubStepConfirmTitle={deleteSubStepConfirmTitle}
+                deleteSubStepConfirmMessage={deleteSubStepConfirmMessage}
+              />
             </ScrollView>
           </View>
           <View style={styles.footer}>
@@ -707,42 +643,47 @@ export function NewGoalWizard({
         </>
       ) : null}
 
-      {/* Planned-evidence picker — reuse #409's capture sheet whole (D2), no
-          fork. Shared across step 2 (the planned-evidence chip) and step 3
-          (each build row); visible/selectedType/onSelect/onClose are derived
-          from currentStep above (D1). No activeStepTitle: there is no active
-          step during goal creation (D3), so the "Saving to your active step"
-          sub-line is omitted. It renders in-tree as an absolute overlay
-          anchored to this wizard frame (scrim + sheet rising from the bottom)
-          and gates on `visible`, so rendering it unconditionally is inert until
-          a chip opens it. Selecting a type updates the chip and closes the
-          sheet in one gesture. */}
+      {/* Step 2 · planned-evidence picker — reuse #409's capture sheet whole
+          (D2), no fork. Single-select, serves only step 2's planned-evidence
+          chip. No activeStepTitle: there is no active step during goal creation
+          (D3), so the "Saving to your active step" sub-line is omitted. It
+          renders in-tree as an absolute overlay anchored to this wizard frame
+          (scrim + sheet rising from the bottom) and gates on `visible`, so
+          rendering it unconditionally is inert until the chip opens it.
+          Selecting a type updates the chip and closes the sheet in one gesture. */}
       <EvidenceTypePicker
         mode="capture"
-        visible={pickerVisible}
+        visible={evidencePickerOpen}
         headerTitle={evidenceSheetTitle}
-        selectedType={pickerSelectedType}
+        selectedType={plannedEvidenceType}
         onSelectType={handlePickerSelect}
-        onClose={handlePickerClose}
+        onClose={onCloseEvidencePicker}
       />
 
-      {/* Build-row delete confirmation (D1). One instance, gated on the
-          resolved pendingDeleteStep — only ever set while on the build step, but
-          rendered unconditionally (inert until visible) like the picker above.
-          Gating on the resolved row (not the raw id) means a stale/unknown
-          pendingDeleteBuildStepId can never surface an empty-message modal.
-          onConfirmDeleteBuildStep is the only path that removes a row. */}
-      <ConfirmDeleteModal
-        visible={pendingDeleteStep != null}
-        onCancel={onCancelDeleteBuildStep}
-        onConfirm={onConfirmDeleteBuildStep}
-        title={deleteBuildStepConfirmTitle}
-        message={
-          pendingDeleteStep
-            ? deleteBuildStepConfirmMessage(pendingDeleteStep.title)
-            : ""
-        }
-      />
+      {/* Step 3 · build evidence picker (D8/D12): the reused multi-select
+          authoring grid in the shared AnimatedSheet chrome (#493/#494), lifted
+          out of EditGoalStepList so it renders as a root-level sibling here —
+          same reanimated slide/scrim, Android-back dismiss and animation-pref
+          timing as the step-2 capture sheet. Opened by a step OR a sub-step's
+          chip via onEvidenceChipPress; toggling updates that row's pills via
+          onStepEvidenceChange / onSubStepEvidenceChange; the last remaining type
+          can't be deselected (handleToggleEvidence guard). Mirrors EditGoalView. */}
+      <AnimatedSheet
+        visible={editingEvidenceTypes !== undefined}
+        onClose={() => setEditingEvidenceId(null)}
+        title={evidencePickerTitle}
+        closeLabel={closeLabel}
+        closeTestID="new-goal-evidence-close"
+        backdropTestID="new-goal-evidence-backdrop"
+      >
+        {sheetEvidenceTypes ? (
+          <EvidenceTypePicker
+            selectedTypes={sheetEvidenceTypes}
+            onToggleType={handleToggleEvidence}
+            label={evidenceTypesLabel}
+          />
+        ) : null}
+      </AnimatedSheet>
     </View>
   );
 }

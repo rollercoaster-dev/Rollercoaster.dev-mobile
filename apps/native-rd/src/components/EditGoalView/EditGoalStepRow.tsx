@@ -244,6 +244,7 @@ export function EditGoalStepRow({
                   icon={<ArrowUp size={18} weight="bold" />}
                   onPress={onMoveUp}
                   size="sm"
+                  tone="ghost"
                   accessibilityLabel={moveUpLabel(step.title)}
                   testID={`edit-goal-step-up-${step.id}`}
                 />
@@ -253,6 +254,7 @@ export function EditGoalStepRow({
                   icon={<ArrowDown size={18} weight="bold" />}
                   onPress={onMoveDown}
                   size="sm"
+                  tone="ghost"
                   accessibilityLabel={moveDownLabel(step.title)}
                   testID={`edit-goal-step-down-${step.id}`}
                 />

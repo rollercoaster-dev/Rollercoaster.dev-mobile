@@ -1,12 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { Text, useWindowDimensions, View } from "react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
-import {
-  NewGoalWizard,
-  type BuildStep as BuildStepData,
-  type NewGoalWizardStep,
-} from "./NewGoalWizard";
+import { NewGoalWizard, type NewGoalWizardStep } from "./NewGoalWizard";
+import type { EditGoalStep, EditGoalSubStep } from "../EditGoalView";
 import { EvidenceType } from "../../db";
 import type { EvidenceTypeValue } from "../../types/evidence";
 
@@ -149,145 +146,183 @@ export const ReadyStep: Story = {
   ),
 };
 
-// The prototype's own initNG() seed — two steps, distinct evidence types
-// ("Sand the edges"/Note, "Paint it"/Photo) so both chips render differently.
-const SAMPLE_BUILD_STEPS: BuildStepData[] = [
-  { id: "step-1", title: "Sand the edges", evidenceType: EvidenceType.text },
-  { id: "step-2", title: "Paint it", evidenceType: EvidenceType.photo },
+// The prototype's own initNG() seed, on EditGoalStepList's rich shape — two
+// steps, distinct evidence types ("Sand the edges"/Note, "Paint it"/Photo) so
+// both chips render differently. Same titles/types as before, now multi-select
+// (`plannedEvidenceTypes`, min 1) so create and edit share one data model.
+const SAMPLE_STEPS: EditGoalStep[] = [
+  {
+    id: "step-1",
+    title: "Sand the edges",
+    plannedEvidenceTypes: [EvidenceType.text],
+  },
+  {
+    id: "step-2",
+    title: "Paint it",
+    plannedEvidenceTypes: [EvidenceType.photo],
+  },
 ];
 
-// Appends the prototype's default new row ({ "New step", Note }). The id stays
-// unique via list length — these stories only grow the list (no removal).
-function appendBuildStep(steps: BuildStepData[]): BuildStepData[] {
-  return [
-    ...steps,
-    {
-      id: `step-${steps.length + 1}`,
-      title: "New step",
-      evidenceType: EvidenceType.text,
-    },
-  ];
-}
-
-function updateBuildStepEvidence(
-  steps: BuildStepData[],
-  id: string,
-  type: EvidenceTypeValue,
-): BuildStepData[] {
-  return steps.map((step) =>
-    step.id === id ? { ...step, evidenceType: type } : step,
-  );
-}
-
-function renameBuildStep(
-  steps: BuildStepData[],
-  id: string,
-  title: string,
-): BuildStepData[] {
-  return steps.map((step) => (step.id === id ? { ...step, title } : step));
-}
-
-function removeBuildStep(steps: BuildStepData[], id: string): BuildStepData[] {
-  return steps.filter((step) => step.id !== id);
-}
+// One row already broken into two sub-steps (distinct evidence types), so the
+// mint-rail block, its per-sub rename/evidence/delete, and the sibling row's
+// "break into sub-steps" prompt are all visible without interaction.
+const SAMPLE_STEPS_WITH_SUBSTEPS: EditGoalStep[] = [
+  {
+    id: "step-1",
+    title: "Sand the edges",
+    plannedEvidenceTypes: [EvidenceType.text],
+    subSteps: [
+      {
+        id: "sub-1",
+        title: "Rough pass with 80-grit",
+        plannedEvidenceTypes: [EvidenceType.photo],
+      },
+      {
+        id: "sub-2",
+        title: "Finish with 220-grit",
+        plannedEvidenceTypes: [EvidenceType.text],
+      },
+    ],
+  },
+  {
+    id: "step-2",
+    title: "Paint it",
+    plannedEvidenceTypes: [EvidenceType.photo],
+  },
+];
 
 /**
- * Rename + confirmed-delete state for the build rows (#482), shared by the
- * step-3 wrapper and the end-to-end flow so both exercise it. Rename commits on
- * return/blur — trimmed, no-op on empty; delete routes through the caller-owned
- * pendingDelete flag so the row is removed only on Confirm, never on the raw ×.
- * `initialPendingDeleteId` lets the frozen BuildStepDeleteConfirm story open the
- * modal on mount (mirrors InteractiveStep2's `pickerOpen`).
+ * The ten EditGoalStepList callbacks over a local `steps` state, mirroring
+ * EditGoalView.stories.tsx's InteractiveEditGoal reducer functions verbatim
+ * (reorder / add / rename / evidence / sub-step variants). Shared by the step-3
+ * wrapper and the end-to-end flow so both exercise the reused list. A ref-based
+ * id counter keeps freshly-added rows unique without Math.random.
  */
-function useBuildStepEditing(
-  buildSteps: BuildStepData[],
-  setBuildSteps: React.Dispatch<React.SetStateAction<BuildStepData[]>>,
-  initialPendingDeleteId: string | null = null,
-) {
-  const [editingBuildStepId, setEditingBuildStepId] = useState<string | null>(
-    null,
-  );
-  const [buildStepEditText, setBuildStepEditText] = useState("");
-  const [pendingDeleteBuildStepId, setPendingDeleteBuildStepId] = useState<
-    string | null
-  >(initialPendingDeleteId);
+function useInteractiveSteps(initialSteps: EditGoalStep[]) {
+  const [steps, setSteps] = useState<EditGoalStep[]>(initialSteps);
+  const nextId = useRef(initialSteps.length + 1);
 
   return {
-    buildSteps,
-    editingBuildStepId,
-    buildStepEditText,
-    onStartEditingBuildStep: (id: string, currentTitle: string) => {
-      setEditingBuildStepId(id);
-      setBuildStepEditText(currentTitle);
-    },
-    onBuildStepEditTextChange: setBuildStepEditText,
-    onCommitBuildStepEditing: () => {
-      const trimmed = buildStepEditText.trim();
-      if (editingBuildStepId && trimmed) {
-        setBuildSteps((prev) =>
-          renameBuildStep(prev, editingBuildStepId, trimmed),
-        );
-      }
-      setEditingBuildStepId(null);
-      setBuildStepEditText("");
-    },
-    pendingDeleteBuildStepId,
-    onRequestDeleteBuildStep: setPendingDeleteBuildStepId,
-    onCancelDeleteBuildStep: () => setPendingDeleteBuildStepId(null),
-    onConfirmDeleteBuildStep: () => {
-      if (pendingDeleteBuildStepId) {
-        setBuildSteps((prev) =>
-          removeBuildStep(prev, pendingDeleteBuildStepId),
-        );
-      }
-      setPendingDeleteBuildStepId(null);
+    steps,
+    setSteps,
+    callbacks: {
+      onReorderSteps: (orderedIds: string[]) =>
+        setSteps((prev) =>
+          orderedIds
+            .map((id) => prev.find((s) => s.id === id))
+            .filter((s): s is EditGoalStep => s !== undefined),
+        ),
+      onReorderSubSteps: (parentStepId: string, orderedIds: string[]) =>
+        setSteps((prev) =>
+          prev.map((s) =>
+            s.id === parentStepId
+              ? {
+                  ...s,
+                  subSteps: orderedIds
+                    .map((id) => s.subSteps?.find((ss) => ss.id === id))
+                    .filter((ss): ss is EditGoalSubStep => ss !== undefined),
+                }
+              : s,
+          ),
+        ),
+      onAddStep: (title: string) =>
+        setSteps((prev) => [
+          ...prev,
+          {
+            id: `step-${nextId.current++}`,
+            title,
+            plannedEvidenceTypes: [EvidenceType.text],
+          },
+        ]),
+      onStepTitleChange: (stepId: string, title: string) =>
+        setSteps((prev) =>
+          prev.map((s) => (s.id === stepId ? { ...s, title } : s)),
+        ),
+      onStepEvidenceChange: (stepId: string, types: EvidenceTypeValue[]) =>
+        setSteps((prev) =>
+          prev.map((s) =>
+            s.id === stepId ? { ...s, plannedEvidenceTypes: types } : s,
+          ),
+        ),
+      onAddSubStep: (parentStepId: string, title: string) =>
+        setSteps((prev) =>
+          prev.map((s) =>
+            s.id === parentStepId
+              ? {
+                  ...s,
+                  subSteps: [
+                    ...(s.subSteps ?? []),
+                    {
+                      id: `sub-${nextId.current++}`,
+                      title,
+                      plannedEvidenceTypes: [EvidenceType.text],
+                    },
+                  ],
+                }
+              : s,
+          ),
+        ),
+      onSubStepTitleChange: (subStepId: string, title: string) =>
+        setSteps((prev) =>
+          prev.map((s) => ({
+            ...s,
+            subSteps: s.subSteps?.map((ss) =>
+              ss.id === subStepId ? { ...ss, title } : ss,
+            ),
+          })),
+        ),
+      onSubStepEvidenceChange: (
+        subStepId: string,
+        types: EvidenceTypeValue[],
+      ) =>
+        setSteps((prev) =>
+          prev.map((s) => ({
+            ...s,
+            subSteps: s.subSteps?.map((ss) =>
+              ss.id === subStepId ? { ...ss, plannedEvidenceTypes: types } : ss,
+            ),
+          })),
+        ),
+      onDeleteSubStep: (subStepId: string) =>
+        setSteps((prev) =>
+          prev.map((s) => ({
+            ...s,
+            subSteps: s.subSteps?.filter((ss) => ss.id !== subStepId),
+          })),
+        ),
+      onDeleteStep: (stepId: string) =>
+        setSteps((prev) => prev.filter((s) => s.id !== stepId)),
     },
   };
 }
 
 /**
  * Stateful wrapper for step 3 (mirrors InteractiveStep2): the story owns the
- * build-step list and which row's evidence picker is open. Seeded with the
+ * step list and wires the ten EditGoalStepList callbacks. Seeded with the
  * prototype's own sample steps so the story matches the canonical mock exactly.
- * Adding a row appends "New step"/Note; each row's chip opens the shared
- * capture sheet targeted at that row and updates only that row's type. Rename +
- * delete state comes from useBuildStepEditing (#482).
+ * All rename/evidence/delete/reorder/sub-step editing state lives inside
+ * EditGoalStepList (#489) — the story only owns the data.
  */
 function InteractiveBuildStep({
-  initialPendingDeleteId = null,
+  initialSteps = SAMPLE_STEPS,
 }: {
-  initialPendingDeleteId?: string | null;
+  initialSteps?: EditGoalStep[];
 }) {
-  const [buildSteps, setBuildSteps] =
-    useState<BuildStepData[]>(SAMPLE_BUILD_STEPS);
-  const [openBuildStepEvidenceId, setOpenBuildStepEvidenceId] = useState<
-    string | null
-  >(null);
-  const editing = useBuildStepEditing(
-    buildSteps,
-    setBuildSteps,
-    initialPendingDeleteId,
-  );
+  const { steps, callbacks } = useInteractiveSteps(initialSteps);
   return (
     <PhoneStage>
       <NewGoalWizard
         currentStep="build"
         goalTitle="Build a birdhouse"
         onGoalTitleChange={noop}
-        stepCount={buildSteps.length}
+        stepCount={steps.length}
         onBack={noop}
         onClose={noop}
         onNext={noop}
         onQuickAdd={noop}
         onStartWorking={noop}
-        onAddStep={() => setBuildSteps(appendBuildStep)}
-        openBuildStepEvidenceId={openBuildStepEvidenceId}
-        onOpenBuildStepEvidence={setOpenBuildStepEvidenceId}
-        onCloseBuildStepEvidence={() => setOpenBuildStepEvidenceId(null)}
-        onBuildStepEvidenceTypeChange={(id, type) =>
-          setBuildSteps((prev) => updateBuildStepEvidence(prev, id, type))
-        }
-        {...editing}
+        steps={steps}
+        {...callbacks}
       />
     </PhoneStage>
   );
@@ -297,11 +332,13 @@ export const BuildStep: Story = {
   render: () => <InteractiveBuildStep />,
 };
 
-// Frozen variant: the confirm modal is open on mount (row "step-1" targeted),
-// so the delete-confirm state is reviewable with no interaction — the same
-// rationale as Step2PickerOpen.
-export const BuildStepDeleteConfirm: Story = {
-  render: () => <InteractiveBuildStep initialPendingDeleteId="step-1" />,
+// One row pre-broken into sub-steps, so the mint-rail sub-step block and the
+// sibling's "break into sub-steps" prompt are both reviewable with no
+// interaction — the interaction set the wizard's build step never had before.
+export const BuildStepWithSubSteps: Story = {
+  render: () => (
+    <InteractiveBuildStep initialSteps={SAMPLE_STEPS_WITH_SUBSTEPS} />
+  ),
 };
 
 const FLOW_ORDER: NewGoalWizardStep[] = ["name", "step", "build", "ready"];
@@ -321,22 +358,21 @@ function InteractiveFlowWizard() {
   const [plannedEvidenceType, setPlannedEvidenceType] =
     useState<EvidenceTypeValue>(EvidenceType.text);
   const [evidencePickerOpen, setEvidencePickerOpen] = useState(false);
-  const [buildSteps, setBuildSteps] = useState<BuildStepData[]>([]);
-  const [openBuildStepEvidenceId, setOpenBuildStepEvidenceId] = useState<
-    string | null
-  >(null);
-  const editing = useBuildStepEditing(buildSteps, setBuildSteps);
+  const { steps, setSteps, callbacks } = useInteractiveSteps([]);
 
-  // Seed row 1 from the first-step data on first arrival at build (D2 bridge).
+  // Seed row 1 from the first-step data on first arrival at build (D2 bridge):
+  // the step-2 single planned type becomes the row's one-element
+  // plannedEvidenceTypes array. A distinct id namespace avoids colliding with
+  // the "step-N" ids onAddStep mints later.
   const goToBuild = () => {
-    setBuildSteps((prev) =>
+    setSteps((prev) =>
       prev.length > 0
         ? prev
         : [
             {
-              id: "step-1",
+              id: "flow-step-1",
               title: firstStepTitle.trim() || "Your first step",
-              evidenceType: plannedEvidenceType,
+              plannedEvidenceTypes: [plannedEvidenceType],
             },
           ],
     );
@@ -360,7 +396,7 @@ function InteractiveFlowWizard() {
         currentStep={currentStep}
         goalTitle={goalTitle}
         onGoalTitleChange={setGoalTitle}
-        stepCount={buildSteps.length}
+        stepCount={steps.length}
         onBack={handleBack}
         onClose={noop}
         onNext={handleNext}
@@ -373,14 +409,8 @@ function InteractiveFlowWizard() {
         evidencePickerOpen={evidencePickerOpen}
         onOpenEvidencePicker={() => setEvidencePickerOpen(true)}
         onCloseEvidencePicker={() => setEvidencePickerOpen(false)}
-        onAddStep={() => setBuildSteps(appendBuildStep)}
-        openBuildStepEvidenceId={openBuildStepEvidenceId}
-        onOpenBuildStepEvidence={setOpenBuildStepEvidenceId}
-        onCloseBuildStepEvidence={() => setOpenBuildStepEvidenceId(null)}
-        onBuildStepEvidenceTypeChange={(id, type) =>
-          setBuildSteps((prev) => updateBuildStepEvidence(prev, id, type))
-        }
-        {...editing}
+        steps={steps}
+        {...callbacks}
       />
     </PhoneStage>
   );
@@ -394,28 +424,28 @@ export const InteractiveFlow: Story = {
  * NewGoalWizard in the active theme — reviewed across themes via the Storybook
  * theme toolbar (top bar), NOT a live per-cell matrix.
  *
- * Why no 7-cell `<ScopedTheme>` matrix like the prop-driven siblings? The
- * wizard composes EvidenceTypePicker, whose `useAnimationPref` probe resolves
- * async and `setState`s after mount. On web, `<ScopedTheme>` applies the scoped
- * theme only during the initial render pass; that post-mount re-render
- * recomputes styles against the *active* theme, so every cell would silently
- * revert to the toolbar theme (a "null matrix"). The component honours the
- * active theme correctly, so the toolbar switcher is the reliable way to review
- * all 7 product themes here — the EditGoalView/TimelineStep/BadgesWall
- * treatment. The build step is the richest (header, rows, chips, CTA), so it's
- * the one rendered.
+ * Why no 7-cell `<ScopedTheme>` matrix like the prop-driven siblings? The build
+ * step reuses EditGoalStepList (#489), whose `useAnimationPref` probe resolves
+ * async and `setState`s after mount (as does the composed EvidenceTypePicker).
+ * On web, `<ScopedTheme>` applies the scoped theme only during the initial
+ * render pass; that post-mount re-render recomputes styles against the *active*
+ * theme, so every cell would silently revert to the toolbar theme (a "null
+ * matrix"). The component honours the active theme correctly, so the toolbar
+ * switcher is the reliable way to review all 7 product themes here — the
+ * EditGoalView/TimelineStep/BadgesWall treatment. The sub-stepped build state is
+ * the richest (header, rows, chips, mint-rail sub-steps, CTA), so it's rendered.
  */
 export const AllThemesMatrix: Story = {
   render: () => (
     <View style={{ gap: 12 }}>
       <Text style={{ fontSize: 12, fontStyle: "italic", padding: 12 }}>
         Switch the theme toolbar (top bar) to review this screen across all 7
-        product themes. A live per-cell matrix can’t work here: NewGoalWizard
-        composes EvidenceTypePicker, whose animation-pref probe resolves async
-        and re-renders after mount, and on web that reverts a ScopedTheme cell
-        to the active theme.
+        product themes. A live per-cell matrix can’t work here: the reused
+        EditGoalStepList (and the composed EvidenceTypePicker) run an
+        animation-pref probe that resolves async and re-renders after mount, and
+        on web that reverts a ScopedTheme cell to the active theme.
       </Text>
-      <InteractiveBuildStep />
+      <InteractiveBuildStep initialSteps={SAMPLE_STEPS_WITH_SUBSTEPS} />
     </View>
   ),
 };
