@@ -12,10 +12,10 @@
  * subscriptions that decide whether the ↑/↓ fallback shows (D5). EditGoalView
  * became a thin composition around this; the New Goal wizard (#490) reuses it.
  *
- * Types (EditGoalStep/EditGoalSubStep/EditGoalChipTone) stay defined in
- * EditGoalView and are imported here type-only (D2). Styles are the shared
- * EditGoalView.styles module (D4). Drag orchestration lives in useEditGoalDrag;
- * the row anatomy in EditGoalStepRow.
+ * The shared step types stay defined in EditGoalView (D2); the two this file
+ * needs — EditGoalStep/EditGoalSubStep — are imported here type-only. Styles
+ * are the shared EditGoalView.styles module (D4). Drag orchestration lives in
+ * useEditGoalDrag; the row anatomy in EditGoalStepRow.
  */
 import React, { useEffect, useState } from "react";
 import {

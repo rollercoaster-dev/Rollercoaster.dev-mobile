@@ -214,7 +214,7 @@ export function EditGoalView({
   doneLabel = "Done",
   overflowAccessibilityLabel = "More options",
   // Copy consumed only by the step-row list layer — forwarded straight to
-  // EditGoalStepList, which owns their English defaults (D2). Not defaulted
+  // EditGoalStepList, which owns their English defaults. Not defaulted
   // here so there's a single source of truth per prop.
   stepsSectionLabel,
   addStepPlaceholder,
