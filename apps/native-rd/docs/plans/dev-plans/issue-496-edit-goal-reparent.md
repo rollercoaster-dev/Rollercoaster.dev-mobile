@@ -158,19 +158,19 @@ i18n resources.
 
 **Commit**: `feat(editgoal): add flatten + applyReparent pure helpers`
 
-- [ ] `flattenEditGoalSteps(steps: EditGoalStep[]): ClassifyStep[]` — each
+- [x] `flattenEditGoalSteps(steps: EditGoalStep[]): ClassifyStep[]` — each
       parent emits `{ id, parentStepId: null }` then its `subSteps[]` as
       `{ id, parentStepId: parent.id }`, in render order.
-- [ ] `applyReparent(steps, stepId, newParentId): EditGoalStep[]` — removes the
+- [x] `applyReparent(steps, stepId, newParentId): EditGoalStep[]` — removes the
       step (root or sub-step) from its source location and appends it to the
       destination: `newParentId === null` → append to the root array; otherwise
       append to that parent's `subSteps[]`. Returns a new array (immutable).
       Refuses (returns input unchanged) when the move would violate the one-
       level cap (a parent-with-children demoted) — mirroring `classifyDrop`'s
       guard, for story safety.
-- [ ] `flattenEditGoalSteps` tests: flat list; one parent + 3 sub-steps; two
+- [x] `flattenEditGoalSteps` tests: flat list; one parent + 3 sub-steps; two
       parents each with children; empty; parent with `subSteps: []`.
-- [ ] `applyReparent` tests (review #5): promote a child → appended to root
+- [x] `applyReparent` tests (review #5): promote a child → appended to root
       array, source parent's `subSteps` loses it; demote a leaf root → appended
       to target parent's `subSteps`, root array loses it; move-between-parents
       → removed from source parent, appended to destination parent's
@@ -218,7 +218,7 @@ i18n resources.
       hovered-row-id change, armed only on root header bands that are valid
       `classifyDrop` dwell targets (leaf dragged, target is a root, not self).
 - [ ] `handleDragEnd` calls `classifyDrop(flatSteps, draggedFlatIndex,
-    hoverFlatIndex, armedTargetIdRef.current)` and dispatches: - `reorder` + `parentStepId === null` → `onReorderSteps(orderedIds)` - `reorder` + `parentStepId !== null` → `onReorderSubSteps(parent, ids)` - `reparent` → `onReparentStep?.(stepId, newParentStepId)` (no-op if
+  hoverFlatIndex, armedTargetIdRef.current)` and dispatches: - `reorder` + `parentStepId === null` → `onReorderSteps(orderedIds)` - `reorder` + `parentStepId !== null` → `onReorderSubSteps(parent, ids)` - `reparent` → `onReparentStep?.(stepId, newParentStepId)` (no-op if
       omitted) - `none` → snap-back.
 - [ ] **R13 `canDrag` derivation**: the coordinator exposes a
       `canDragRow(rowId)` (and the list derives `canDrag` per row) from the
