@@ -222,6 +222,15 @@ Expected targeted coverage:
 | Timeline/Focus screen integration work                                                | Owned by downstream #378, #466, and #467.                                                                                                                                          |
 | Committing generated Unistyles output                                                 | It is ignored build output; the authored JSON is the source of truth.                                                                                                              |
 
+## Follow-ups
+
+- [ ] Add a direct resolver contract test for `stepStateColorMap` proving
+      `in-progress` and `completed` resolve to the active/complete journey
+      token pairs. The review test analyzer rated this gap 5/10 (non-blocking).
+      It is deferred because #498 changes only authored token values; the map
+      and its three consumers are unchanged and remain covered by composition,
+      contrast, consumer, and visual gates in this PR.
+
 ## Discovery Log
 
 <!-- Entries added during implementation:
