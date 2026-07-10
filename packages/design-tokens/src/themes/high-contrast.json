@@ -166,7 +166,7 @@
       "border-success": { "$value": "#008866" },
       "journey-step-active-bg": { "$value": "#000000" },
       "journey-step-active-fg": { "$value": "#ffffff" },
-      "journey-step-complete-bg": { "$value": "#008866" },
+      "journey-step-complete-bg": { "$value": "#007755" },
       "journey-step-complete-fg": { "$value": "#ffffff" },
       "journey-progress-fill": { "$value": "#000000" },
       "journey-completion-bg": { "$value": "#008866" },

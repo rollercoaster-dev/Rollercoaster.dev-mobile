@@ -97,20 +97,7 @@ describe("WCAG AA Color Contrast Compliance", () => {
  *
  * Key format: `${themeName}:${pairKey}`.
  */
-const KNOWN_FAILURES = new Set<string>([
-  // TODO(#406-follow-up): upstream token fix needed in packages/design-tokens.
-  // The journey-step active/complete bg tokens for these ND variants land
-  // 3.8–4.5:1 against their (inherited light) foreground — sub-AA but well
-  // above the 3:1 hard floor, same class as the success/warning/info cells in
-  // "Theme Refactor Prep Spec.md" §1. The real fix is darkening the bg (or
-  // flipping the fg) in packages/design-tokens/src/themes/*.json, which is
-  // #375/#376-class work, not #406. Listed here so the gate still guards
-  // against further regressions without blocking the journey wiring.
-  "light-dyslexia:journeyStepActive", // 4.23:1
-  "light-dyslexia:journeyStepComplete", // 3.94:1
-  "light-autismFriendly:journeyStepComplete", // 3.81:1
-  "light-highContrast:journeyStepComplete", // 4.46:1
-]);
+const KNOWN_FAILURES = new Set<string>([]);
 
 describe("Theme contrast audit (all themes × canonical pairs)", () => {
   const cases = themeNames.flatMap((name) =>
