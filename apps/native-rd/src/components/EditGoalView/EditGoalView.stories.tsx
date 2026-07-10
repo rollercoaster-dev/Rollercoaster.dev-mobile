@@ -290,6 +290,8 @@ function AnatomyRow({ step }: { step: EditGoalStep }) {
       onDragStart={() => {}}
       onDragMove={() => {}}
       onDragEnd={() => {}}
+      registerRowLayout={() => {}}
+      registerRemeasure={() => {}}
       showAccessibleControls={false}
       animationPref="full"
       isFirst

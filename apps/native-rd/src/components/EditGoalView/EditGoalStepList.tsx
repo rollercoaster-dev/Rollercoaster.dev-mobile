@@ -22,7 +22,7 @@
  * are the shared EditGoalView.styles module (D4). Drag orchestration lives in
  * useEditGoalDrag; the row anatomy in EditGoalStepRow.
  */
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text as RNText,
@@ -38,7 +38,7 @@ import type { DragScrollController } from "../StepList/dragAutoScroll";
 import { ConfirmDeleteModal } from "../ConfirmDeleteModal";
 import { EditGoalStepRow } from "./EditGoalStepRow";
 import { EditGoalSubStepList } from "./EditGoalSubStepList";
-import { useEditGoalDrag } from "./useEditGoalDrag";
+import { useEditGoalHierarchyDrag } from "./useEditGoalHierarchyDrag";
 import { styles } from "./EditGoalView.styles";
 import type { EditGoalStep, EditGoalSubStep } from "./EditGoalView";
 
@@ -54,6 +54,12 @@ export interface EditGoalStepListProps {
     parentStepId: string,
     orderedSubStepIds: string[],
   ) => void;
+  /**
+   * Fired on a drag-reparent / nest-under / un-nest (#496). When omitted the
+   * coordinator collapses to local sibling reorder only (R5) and the
+   * nest/un-nest accessible controls do not render.
+   */
+  onReparentStep?: (stepId: string, newParentStepId: string | null) => void;
   onAddStep: (title: string) => void;
   onStepTitleChange: (stepId: string, title: string) => void;
   /**
@@ -113,6 +119,14 @@ export interface EditGoalStepListProps {
   deleteSubStepConfirmTitle?: string;
   /** Confirm-modal message when deleting a sub-step (receives the sub-step title). */
   deleteSubStepConfirmMessage?: (title: string) => string;
+  // --- Nest-under / un-nest copy (#496, R10) ---
+  nestUnderTriggerA11yLabel?: string;
+  nestUnderPickerTitle?: string;
+  nestUnderRowLabel?: (targetTitle: string) => string;
+  nestUnderRowA11yLabel?: (targetTitle: string) => string;
+  unNestA11yLabel?: string;
+  announcePromote?: (stepTitle: string) => string;
+  announceNestedUnder?: (stepTitle: string, parentTitle: string) => string;
 }
 
 const defaultStepCountLabel = (count: number) =>
@@ -122,6 +136,7 @@ export function EditGoalStepList({
   steps,
   onReorderSteps,
   onReorderSubSteps,
+  onReparentStep,
   onAddStep,
   onStepTitleChange,
   onEvidenceChipPress,
@@ -147,6 +162,14 @@ export function EditGoalStepList({
   deleteSubStepConfirmTitle = "Delete sub-step?",
   deleteSubStepConfirmMessage = (title) =>
     `Delete "${title}"? Its evidence will be removed too.`,
+  nestUnderTriggerA11yLabel = "Nest this step under another step",
+  nestUnderPickerTitle = "Choose a step to nest under",
+  nestUnderRowLabel = (targetTitle) => `Nest under "${targetTitle}"`,
+  nestUnderRowA11yLabel = (targetTitle) =>
+    `Nest this step under ${targetTitle}`,
+  unNestA11yLabel = "Promote this step to top level",
+  announcePromote,
+  announceNestedUnder,
 }: EditGoalStepListProps) {
   const { theme } = useUnistyles();
   const { animationPref } = useAnimationPref();
@@ -165,12 +188,34 @@ export function EditGoalStepList({
     title: string;
   } | null>(null);
 
-  const drag = useEditGoalDrag({
+  const drag = useEditGoalHierarchyDrag({
     steps,
     onReorderSteps,
+    onReorderSubSteps,
+    onReparentStep,
     dragScrollController,
+    editingId,
     announceReorder,
+    announcePromote,
+    announceNestedUnder,
   });
+
+  // R14: register the list container's screen-absolute origin so drop outlines
+  // render in list-local coordinates. measureInWindow is called from onLayout
+  // of the list container below (listOriginRef is owned by the coordinator).
+  const listContainerRef = useRef<View>(null);
+  function measureListOrigin() {
+    const node = listContainerRef.current as unknown as {
+      measureInWindow?: (
+        cb: (x: number, y: number, w: number, h: number) => void,
+      ) => void;
+    } | null;
+    if (node?.measureInWindow) {
+      node.measureInWindow((_x, y) => {
+        drag.registerListOrigin(y);
+      });
+    }
+  }
 
   useEffect(() => {
     AccessibilityInfo.isScreenReaderEnabled()
@@ -187,7 +232,10 @@ export function EditGoalStepList({
   }, []);
 
   const showAccessibleControls = screenReaderActive || animationPref === "none";
-  const canDrag = steps.length > 1 && editingId === null;
+  // R13: canDrag per row is derived by the coordinator from the flattened
+  // hierarchy + edit state + available actions (a lone child can promote when
+  // reparent is enabled). The list-level `editingId === null` guard is retained
+  // via the coordinator's editingId param.
 
   function handleAddStep() {
     const trimmed = newStepTitle.trim();
@@ -280,8 +328,22 @@ export function EditGoalStepList({
           }
           showAccessibleControls={showAccessibleControls}
           animationPref={animationPref}
-          dragScrollController={dragScrollController}
-          announceReorder={announceReorder}
+          onDragStart={drag.handleDragStart}
+          onDragMove={drag.handleDragMove}
+          onDragEnd={drag.handleDragEnd}
+          registerRowLayout={drag.registerRowLayout}
+          registerRemeasure={drag.registerRemeasure}
+          dragScrollCompensation={drag.dragScrollCompensation}
+          canDragRow={drag.canDragRow}
+          draggedRowId={drag.draggedRowId}
+          moveStep={drag.moveStep}
+          canUnNest={!!onReparentStep}
+          onUnNest={
+            onReparentStep
+              ? (subStepId) => onReparentStep(subStepId, null)
+              : undefined
+          }
+          unNestA11yLabel={unNestA11yLabel}
         />
         <Pressable
           style={styles.addSubStepRow}
@@ -317,63 +379,111 @@ export function EditGoalStepList({
         <RNText style={styles.stepCount}>{stepCountLabel(steps.length)}</RNText>
       </View>
 
-      <GestureHandlerRootView style={styles.stepList}>
-        {steps.map((step, index) => (
-          <View
-            key={step.id}
-            onLayout={(e) =>
-              drag.registerRowLayout(index, {
-                y: e.nativeEvent.layout.y,
-                height: e.nativeEvent.layout.height,
-              })
-            }
-          >
-            <EditGoalStepRow
-              step={step}
-              index={index}
-              stepNumber={index + 1}
-              isBeingDragged={drag.draggedIndex === index}
-              isEditing={editingId === step.id}
-              editText={editText}
-              onEditTextChange={setEditText}
-              onStartEditing={() => beginEdit(step.id, step.title)}
-              onCommitEditing={commitEditing}
-              onEvidenceChipPress={() => onEvidenceChipPress(step.id)}
-              onDragStart={drag.handleDragStart}
-              onDragMove={drag.handleDragMove}
-              onDragEnd={drag.handleDragEnd}
-              dragScrollCompensation={
-                drag.draggedIndex === index
-                  ? drag.dragScrollCompensation
-                  : undefined
-              }
-              onMoveUp={() => drag.moveStep(index, -1)}
-              onMoveDown={() => drag.moveStep(index, 1)}
-              showAccessibleControls={showAccessibleControls}
-              animationPref={animationPref}
-              isFirst={index === 0}
-              isLast={index === steps.length - 1}
-              canDrag={canDrag}
-              onDelete={() =>
-                setPendingDelete({
-                  kind: "step",
-                  id: step.id,
-                  title: step.title,
-                })
-              }
-            >
-              {/* Sub-steps block (D12), rendered inside the parent card so
-                  it drags with the parent. See renderSubStepBlock. */}
-              {renderSubStepBlock(step)}
-            </EditGoalStepRow>
-          </View>
-        ))}
-        {drag.isDragging && drag.dropSlot && (
+      <GestureHandlerRootView
+        onLayout={measureListOrigin}
+        style={styles.stepList}
+      >
+        <View
+          ref={listContainerRef}
+          onLayout={measureListOrigin}
+          accessibilityElementsHidden
+          importantForAccessibility="no"
+          style={{ position: "absolute", top: 0, left: 0, height: 0, width: 0 }}
+        />
+        {steps.map((step, index) => {
+          const isLeafRoot = (step.subSteps?.length ?? 0) === 0;
+          const nestTargets = steps
+            .filter((s) => s.id !== step.id)
+            .map((s) => ({ id: s.id, title: s.title }));
+          const canNestUnder =
+            !!onReparentStep && isLeafRoot && nestTargets.length > 0;
+          return (
+            <View key={step.id}>
+              <EditGoalStepRow
+                step={step}
+                index={index}
+                stepNumber={index + 1}
+                isBeingDragged={drag.draggedRowId === step.id}
+                isEditing={editingId === step.id}
+                editText={editText}
+                onEditTextChange={setEditText}
+                onStartEditing={() => beginEdit(step.id, step.title)}
+                onCommitEditing={commitEditing}
+                onEvidenceChipPress={() => onEvidenceChipPress(step.id)}
+                onDragStart={drag.handleDragStart}
+                onDragMove={drag.handleDragMove}
+                onDragEnd={drag.handleDragEnd}
+                registerRowLayout={drag.registerRowLayout}
+                registerRemeasure={drag.registerRemeasure}
+                dragScrollCompensation={
+                  drag.draggedRowId === step.id
+                    ? drag.dragScrollCompensation
+                    : undefined
+                }
+                onMoveUp={() => drag.moveStep(step.id, -1)}
+                onMoveDown={() => drag.moveStep(step.id, 1)}
+                showAccessibleControls={showAccessibleControls}
+                animationPref={animationPref}
+                isFirst={index === 0}
+                isLast={index === steps.length - 1}
+                canDrag={drag.canDragRow(step.id)}
+                isArmedTarget={
+                  drag.isDragging && drag.armedTargetId === step.id
+                }
+                canNestUnder={canNestUnder}
+                nestTargets={nestTargets}
+                onNestUnder={
+                  onReparentStep
+                    ? (targetId) => onReparentStep(step.id, targetId)
+                    : undefined
+                }
+                onDelete={() =>
+                  setPendingDelete({
+                    kind: "step",
+                    id: step.id,
+                    title: step.title,
+                  })
+                }
+                nestUnderTriggerA11yLabel={nestUnderTriggerA11yLabel}
+                nestUnderPickerTitle={nestUnderPickerTitle}
+                nestUnderRowLabel={nestUnderRowLabel}
+                nestUnderRowA11yLabel={nestUnderRowA11yLabel}
+              >
+                {/* Sub-steps block (D12), rendered inside the parent card so
+                    it drags with the parent. See renderSubStepBlock. */}
+                {renderSubStepBlock(step)}
+              </EditGoalStepRow>
+            </View>
+          );
+        })}
+        {drag.isDragging && drag.dropOutline?.kind === "line" && (
           <View
             pointerEvents="none"
             accessibilityElementsHidden
             importantForAccessibility="no"
-            style={[styles.dropLine, { top: drag.dropSlot.top }]}
+            style={[styles.dropLine, { top: drag.dropOutline.top }]}
+          />
+        )}
+        {drag.isDragging && drag.dropOutline?.kind === "nested" && (
+          <View
+            pointerEvents="none"
+            accessibilityElementsHidden
+            importantForAccessibility="no"
+            style={[
+              styles.nestedDropOutline,
+              { top: drag.dropOutline.top, height: drag.dropOutline.height },
+            ]}
+          />
+        )}
+        {drag.isDragging && drag.dropOutline?.kind === "group" && (
+          <View
+            pointerEvents="none"
+            accessibilityElementsHidden
+            importantForAccessibility="no"
+            style={[
+              styles.groupDropOutline,
+              { top: drag.dropOutline.top, height: drag.dropOutline.height },
+            ]}
           />
         )}
       </GestureHandlerRootView>

@@ -224,6 +224,83 @@ export const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.accentPrimary,
     zIndex: 50,
   },
+  // Armed dwell-target feedback (R12): a sustained dashed success outline
+  // that stays for the whole time the root header is armed. Dashed + the
+  // success token read as a distinct "drop here to nest" target, separate
+  // from the dragged row's solid accent border. Static for all motion settings
+  // (no separate reduced-motion path needed).
+  armedTargetItem: {
+    borderStyle: "dashed" as const,
+    borderWidth: theme.borderWidth.thick + 1,
+    borderColor: theme.colors.success,
+  },
+  // Nested drop destination: outline the full target sub-step band rather
+  // than a small insertion line, so the destination remains legible under the
+  // translated dragged card.
+  nestedDropOutline: {
+    position: "absolute" as const,
+    left: theme.space[3],
+    right: 0,
+    borderStyle: "dashed" as const,
+    borderWidth: theme.borderWidth.thick + 1,
+    borderColor: theme.colors.success,
+    borderRadius: theme.radius.md,
+    zIndex: 150,
+  },
+  // Group drop destination: outline a whole parent+children group during a
+  // root-with-children block reorder.
+  groupDropOutline: {
+    position: "absolute" as const,
+    left: 0,
+    right: 0,
+    borderStyle: "dashed" as const,
+    borderWidth: theme.borderWidth.thick + 1,
+    borderColor: theme.colors.success,
+    borderRadius: theme.radius.md,
+    zIndex: 150,
+  },
+  // --- Nest-under picker (accessible control, R8) ---
+  pickerOverlay: {
+    flex: 1,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    padding: theme.space[4],
+  },
+  pickerContainer: {
+    width: "100%" as const,
+    maxWidth: 400,
+  },
+  pickerCard: {
+    backgroundColor: theme.colors.background,
+    borderWidth: theme.borderWidth.thick,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.md,
+    padding: theme.space[4],
+    gap: theme.space[2],
+    ...shadowStyle(theme, "cardElevation"),
+  },
+  pickerTitle: {
+    fontFamily: theme.fontFamily.headline,
+    fontWeight: theme.fontWeight.bold,
+    fontSize: theme.size.md,
+    color: theme.colors.text,
+    marginBottom: theme.space[2],
+  },
+  pickerRow: {
+    minHeight: 44,
+    justifyContent: "center" as const,
+    paddingHorizontal: theme.space[3],
+    paddingVertical: theme.space[2],
+    borderWidth: theme.borderWidth.medium,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.sm,
+    backgroundColor: theme.colors.backgroundSecondary,
+  },
+  pickerRowText: {
+    fontSize: theme.size.md,
+    fontFamily: theme.fontFamily.body,
+    color: theme.colors.text,
+  },
 
   // --- Sub-steps block (D12) ---
   // Indented, mint-railed block under a parent step that has some. accentMint is

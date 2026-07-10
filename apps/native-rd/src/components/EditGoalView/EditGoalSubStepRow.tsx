@@ -14,7 +14,7 @@
  * motion is off, so keyboard/VoiceOver users are never drag-only. A parent with
  * one sub-step renders the row static (`canDrag={false}`), no ↑/↓ buttons.
  */
-import React from "react";
+import React, { useRef } from "react";
 import { View, Text as RNText, TextInput, Pressable } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useUnistyles } from "react-native-unistyles";
@@ -25,13 +25,14 @@ import Animated, {
   withTiming,
   runOnJS,
 } from "react-native-reanimated";
-import { ArrowUp, ArrowDown } from "phosphor-react-native";
+import { ArrowUp, ArrowDown, ArrowBendUpLeft } from "phosphor-react-native";
 import type { AnimationPref } from "../../hooks/useAnimationPref";
 import { getTimingConfig } from "../../utils/animation";
 import { IconButton } from "../IconButton";
 import { EvidenceTypePicker } from "../EvidenceTypePicker";
 import { styles } from "./EditGoalView.styles";
 import type { EditGoalSubStep } from "./EditGoalView";
+import type { RowGeometry } from "./useEditGoalHierarchyDrag";
 
 export interface EditGoalSubStepRowProps {
   subStep: EditGoalSubStep;
@@ -46,9 +47,12 @@ export interface EditGoalSubStepRowProps {
   /** Opens the evidence-type picker for this sub-step (D8/D12). */
   onEvidenceChipPress: () => void;
   onDelete: () => void;
-  onDragStart: (index: number) => void;
+  onDragStart: (rowId: string) => void;
   onDragMove: (translationY: number, absoluteY: number) => void;
   onDragEnd: () => void;
+  /** Register this sub-step's screen-absolute geometry (R3/R15). */
+  registerRowLayout: (rowId: string, geometry: RowGeometry) => void;
+  registerRemeasure: (rowId: string, fn: (() => void) | null) => void;
   dragScrollCompensation?: SharedValue<number>;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
@@ -58,6 +62,9 @@ export interface EditGoalSubStepRowProps {
   isLast: boolean;
   /** When false, the row renders static (single sibling, or a title is being edited). */
   canDrag: boolean;
+  /** Accessible un-nest control (R8) — a sub-step can promote to root. */
+  canUnNest?: boolean;
+  onUnNest?: () => void;
 
   // --- Copy (i18n-free per D9; English defaults; [Integrate] passes t()). ---
   /** a11y label for the inline title-edit field. */
@@ -72,6 +79,8 @@ export interface EditGoalSubStepRowProps {
   moveSubStepUpLabel?: (subStepTitle: string) => string;
   /** a11y label for the ↓ reorder-down fallback button. */
   moveSubStepDownLabel?: (subStepTitle: string) => string;
+  /** a11y label for the un-nest button (R8). */
+  unNestA11yLabel?: string;
 }
 
 export function EditGoalSubStepRow({
@@ -88,6 +97,8 @@ export function EditGoalSubStepRow({
   onDragStart,
   onDragMove,
   onDragEnd,
+  registerRowLayout,
+  registerRemeasure,
   dragScrollCompensation,
   onMoveUp,
   onMoveDown,
@@ -96,17 +107,41 @@ export function EditGoalSubStepRow({
   isFirst,
   isLast,
   canDrag,
+  canUnNest = false,
+  onUnNest,
   editSubStepA11yLabel = (subStepTitle) => `Edit sub-step: ${subStepTitle}`,
   tapToEditHint = "Tap to edit sub-step title",
   editEvidenceLabel = "Edit planned evidence",
   deleteSubStepLabel = (subStepTitle) => `Delete sub-step: ${subStepTitle}`,
   moveSubStepUpLabel = (subStepTitle) => `Move "${subStepTitle}" up`,
   moveSubStepDownLabel = (subStepTitle) => `Move "${subStepTitle}" down`,
+  unNestA11yLabel = "Promote this step to top level",
 }: EditGoalSubStepRowProps) {
   const { theme } = useUnistyles();
   const translateY = useSharedValue(0);
   const scale = useSharedValue(1);
   const isDragging = useSharedValue(false);
+  const rowRef = useRef<View>(null);
+
+  // R3/R15: register this sub-step's screen-absolute geometry so the unified
+  // coordinator can hit-test it in the same flat coordinate space as roots.
+  function measureAndRegister() {
+    const node = rowRef.current as unknown as {
+      measureInWindow?: (
+        cb: (x: number, y: number, w: number, h: number) => void,
+      ) => void;
+    } | null;
+    if (node?.measureInWindow) {
+      node.measureInWindow((_x, y, _w, h) => {
+        registerRowLayout(subStep.id, { absoluteY: y, height: h });
+      });
+    }
+  }
+  React.useEffect(() => {
+    registerRemeasure(subStep.id, measureAndRegister);
+    return () => registerRemeasure(subStep.id, null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subStep.id]);
 
   const timingQuick = getTimingConfig(animationPref, "quick");
   const timingNormal = getTimingConfig(animationPref, "normal");
@@ -136,7 +171,7 @@ export function EditGoalSubStepRow({
     .onStart(() => {
       isDragging.value = true;
       scale.value = noAnimation ? 1.02 : withTiming(1.02, timingQuick);
-      runOnJS(onDragStart)(index);
+      runOnJS(onDragStart)(subStep.id);
     });
 
   const pan = Gesture.Pan()
@@ -166,7 +201,11 @@ export function EditGoalSubStepRow({
 
   if (isEditing) {
     return (
-      <View style={styles.subStepRow}>
+      <View
+        ref={rowRef}
+        onLayout={measureAndRegister}
+        style={styles.subStepRow}
+      >
         {marker}
         <TextInput
           style={styles.subStepEditInput}
@@ -187,7 +226,7 @@ export function EditGoalSubStepRow({
 
   const body = (
     <>
-      <View style={styles.rowLead}>
+      <View ref={rowRef} onLayout={measureAndRegister} style={styles.rowLead}>
         {marker}
         <Pressable
           style={styles.subStepTitlePress}
@@ -234,6 +273,16 @@ export function EditGoalSubStepRow({
                 tone="ghost"
                 accessibilityLabel={moveSubStepDownLabel(subStep.title)}
                 testID={`edit-goal-substep-down-${subStep.id}`}
+              />
+            )}
+            {canUnNest && onUnNest && (
+              <IconButton
+                icon={<ArrowBendUpLeft size={18} weight="bold" />}
+                onPress={onUnNest}
+                size="sm"
+                tone="ghost"
+                accessibilityLabel={unNestA11yLabel}
+                testID={`edit-goal-substep-un-nest-${subStep.id}`}
               />
             )}
           </View>

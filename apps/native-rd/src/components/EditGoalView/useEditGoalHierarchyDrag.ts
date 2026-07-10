@@ -140,6 +140,17 @@ export function useEditGoalHierarchyDrag({
   const reparentEnabledRef = useRef(reparentEnabled);
   reparentEnabledRef.current = reparentEnabled;
 
+  // Look up a row's display title across both roots and sub-steps (ids are
+  // unique across both). Used for accessibility announcements.
+  function titleForRowId(rowId: string): string {
+    for (const s of stepsRef.current) {
+      if (s.id === rowId) return s.title;
+      const sub = s.subSteps?.find((ss) => ss.id === rowId);
+      if (sub) return sub.title;
+    }
+    return rowId;
+  }
+
   const [draggedRowId, setDraggedRowId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [armedTargetId, setArmedTargetId] = useState<string | null>(null);
@@ -476,9 +487,7 @@ export function useEditGoalHierarchyDrag({
         if (dispatched) {
           triggerDragDrop();
           if (result.kind === "reparent") {
-            const stepTitle =
-              stepsRef.current.find((s) => s.id === result.stepId)?.title ??
-              result.stepId;
+            const stepTitle = titleForRowId(result.stepId);
             if (result.newParentStepId === null) {
               AccessibilityInfo.announceForAccessibility(
                 announcePromote(stepTitle),
@@ -492,9 +501,7 @@ export function useEditGoalHierarchyDrag({
               );
             }
           } else if (result.kind === "reorder") {
-            const draggedTitle =
-              stepsRef.current.find((s) => s.id === draggedId)?.title ??
-              draggedId;
+            const draggedTitle = titleForRowId(draggedId);
             AccessibilityInfo.announceForAccessibility(
               announceReorder(
                 draggedTitle,
@@ -541,7 +548,7 @@ export function useEditGoalHierarchyDrag({
       onReorderSubSteps(parent, ids);
     }
     triggerDragDrop();
-    const title = stepsRef.current.find((s) => s.id === rowId)?.title ?? rowId;
+    const title = titleForRowId(rowId);
     AccessibilityInfo.announceForAccessibility(
       announceReorder(title, swapWith + 1),
     );
