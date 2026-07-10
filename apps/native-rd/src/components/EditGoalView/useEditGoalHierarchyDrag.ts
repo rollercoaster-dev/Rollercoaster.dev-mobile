@@ -17,6 +17,7 @@ import {
   flatIndexAtY,
   isArmableDwellTarget,
   isInsideBand,
+  retainEqualDropOutline,
   siblingReorder,
   titleForRowId,
   DWELL_ARM_MS,
@@ -163,17 +164,18 @@ export function useEditGoalHierarchyDrag({
     }
 
     // Drop outline preview (suppressed while armed).
-    setDropOutline(
-      computeDropOutline(
-        flat,
-        latestRef.current.steps,
-        geometryRef.current,
-        listOriginRef.current,
-        draggedId,
-        draggedFlat,
-        hoverFlat,
-        armedTargetIdRef.current !== null,
-      ),
+    const nextDropOutline = computeDropOutline(
+      flat,
+      latestRef.current.steps,
+      geometryRef.current,
+      listOriginRef.current,
+      draggedId,
+      draggedFlat,
+      hoverFlat,
+      armedTargetIdRef.current !== null,
+    );
+    setDropOutline((previous) =>
+      retainEqualDropOutline(previous, nextDropOutline),
     );
   }
 

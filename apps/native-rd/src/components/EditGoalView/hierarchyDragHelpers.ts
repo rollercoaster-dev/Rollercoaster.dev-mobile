@@ -176,6 +176,20 @@ export function computeDropOutline(
   return { top: toLocalTop(top, listOriginY), height: 3, kind: "line" };
 }
 
+/** Preserve outline identity when a drag frame produces no visual change. */
+export function retainEqualDropOutline(
+  previous: DropOutline | null,
+  next: DropOutline | null,
+): DropOutline | null {
+  if (previous === next) return previous;
+  if (previous === null || next === null) return next;
+  return previous.kind === next.kind &&
+    previous.top === next.top &&
+    previous.height === next.height
+    ? previous
+    : next;
+}
+
 /** Look up a row's display title across roots and sub-steps (ids are unique). */
 export function titleForRowId(
   steps: readonly EditGoalStep[],
