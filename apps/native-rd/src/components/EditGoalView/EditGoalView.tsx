@@ -115,6 +115,12 @@ export interface EditGoalViewProps {
     parentStepId: string,
     orderedSubStepIds: string[],
   ) => void;
+  /**
+   * Fired on a drag-reparent / nest-under / un-nest (#496). When omitted the
+   * editor collapses to sibling reorder only and the nest/un-nest accessible
+   * controls do not render (R5).
+   */
+  onReparentStep?: (stepId: string, newParentStepId: string | null) => void;
   onAddStep: (title: string) => void;
   onStepTitleChange: (stepId: string, title: string) => void;
   /**
@@ -201,6 +207,14 @@ export interface EditGoalViewProps {
   deleteSubStepConfirmTitle?: string;
   /** Confirm-modal message when deleting a sub-step (receives the sub-step title). */
   deleteSubStepConfirmMessage?: (title: string) => string;
+  // --- Nest-under / un-nest copy (#496, R10) ---
+  nestUnderTriggerA11yLabel?: string;
+  nestUnderPickerTitle?: string;
+  nestUnderRowLabel?: (targetTitle: string) => string;
+  nestUnderRowA11yLabel?: (targetTitle: string) => string;
+  unNestA11yLabel?: string;
+  announcePromote?: (stepTitle: string) => string;
+  announceNestedUnder?: (stepTitle: string, parentTitle: string) => string;
 }
 
 export function EditGoalView({
@@ -211,6 +225,7 @@ export function EditGoalView({
   steps,
   onReorderSteps,
   onReorderSubSteps,
+  onReparentStep,
   onAddStep,
   onStepTitleChange,
   onStepEvidenceChange,
@@ -253,6 +268,13 @@ export function EditGoalView({
   deleteStepConfirmMessage,
   deleteSubStepConfirmTitle,
   deleteSubStepConfirmMessage,
+  nestUnderTriggerA11yLabel,
+  nestUnderPickerTitle,
+  nestUnderRowLabel,
+  nestUnderRowA11yLabel,
+  unNestA11yLabel,
+  announcePromote,
+  announceNestedUnder,
 }: EditGoalViewProps) {
   const { theme } = useUnistyles();
 
@@ -390,6 +412,7 @@ export function EditGoalView({
           steps={steps}
           onReorderSteps={onReorderSteps}
           onReorderSubSteps={onReorderSubSteps}
+          onReparentStep={onReparentStep}
           onAddStep={onAddStep}
           onStepTitleChange={onStepTitleChange}
           onEvidenceChipPress={setEditingEvidenceId}
@@ -412,6 +435,13 @@ export function EditGoalView({
           deleteStepConfirmMessage={deleteStepConfirmMessage}
           deleteSubStepConfirmTitle={deleteSubStepConfirmTitle}
           deleteSubStepConfirmMessage={deleteSubStepConfirmMessage}
+          nestUnderTriggerA11yLabel={nestUnderTriggerA11yLabel}
+          nestUnderPickerTitle={nestUnderPickerTitle}
+          nestUnderRowLabel={nestUnderRowLabel}
+          nestUnderRowA11yLabel={nestUnderRowA11yLabel}
+          unNestA11yLabel={unNestA11yLabel}
+          announcePromote={announcePromote}
+          announceNestedUnder={announceNestedUnder}
         />
 
         <View style={styles.infoBanner}>
