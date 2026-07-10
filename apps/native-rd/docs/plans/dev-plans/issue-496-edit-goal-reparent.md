@@ -29,20 +29,20 @@ real `t()` + persistence through the contract this issue lands.
 Observable criteria derived from the issue acceptance checklist. Verifiable by
 running Storybook / Jest component tests.
 
-- [ ] A child can be promoted to a root (`onReparentStep(id, null)` fires from
+- [x] A child can be promoted to a root (`onReparentStep(id, null)` fires from
       the redesigned list, via drag-above-parent and via the Un-nest button).
-- [ ] A leaf root can be nested under a valid root (`onReparentStep(id, target)`
+- [x] A leaf root can be nested under a valid root (`onReparentStep(id, target)`
       fires; ineligible targets are refused).
-- [ ] A child can move between valid parents with correct sibling ordinals.
-- [ ] A parent-with-children and any depth>1 operation is refused (no callback
+- [x] A child can move between valid parents with correct sibling ordinals.
+- [x] A parent-with-children and any depth>1 operation is refused (no callback
       fires; snap-back; no Nest-under control renders).
-- [ ] Equivalent non-gesture controls (Nest-under picker + Un-nest button) are
+- [x] Equivalent non-gesture controls (Nest-under picker + Un-nest button) are
       available to screen-reader / reduced-motion users.
-- [ ] A child row is wired to the shared hierarchy drag coordinator (component
+- [x] A child row is wired to the shared hierarchy drag coordinator (component
       test proves a sub-step drag dispatches through the unified hook, not a
       parent-local hook).
-- [ ] Component tests cover callback payloads and hierarchy guards.
-- [ ] New Goal wizard can reuse the same step-editor contract — `onReparentStep`
+- [x] Component tests cover callback payloads and hierarchy guards.
+- [x] New Goal wizard can reuse the same step-editor contract — `onReparentStep`
       is a real `NewGoalWizardProps` member, forwarded to `EditGoalStepList`,
       and tested both enabled and omitted.
 
@@ -218,7 +218,7 @@ i18n resources.
       hovered-row-id change, armed only on root header bands that are valid
       `classifyDrop` dwell targets (leaf dragged, target is a root, not self).
 - [ ] `handleDragEnd` calls `classifyDrop(flatSteps, draggedFlatIndex,
-  hoverFlatIndex, armedTargetIdRef.current)` and dispatches: - `reorder` + `parentStepId === null` → `onReorderSteps(orderedIds)` - `reorder` + `parentStepId !== null` → `onReorderSubSteps(parent, ids)` - `reparent` → `onReparentStep?.(stepId, newParentStepId)` (no-op if
+hoverFlatIndex, armedTargetIdRef.current)` and dispatches: - `reorder` + `parentStepId === null` → `onReorderSteps(orderedIds)` - `reorder` + `parentStepId !== null` → `onReorderSubSteps(parent, ids)` - `reparent` → `onReparentStep?.(stepId, newParentStepId)` (no-op if
       omitted) - `none` → snap-back.
 - [ ] **R13 `canDrag` derivation**: the coordinator exposes a
       `canDragRow(rowId)` (and the list derives `canDrag` per row) from the
@@ -432,18 +432,18 @@ i18n resources.
 
 ## Testing Strategy
 
-- [ ] Unit tests for `flattenEditGoalSteps` (Step 1).
-- [ ] Unit tests for `applyReparent` append ordering (Step 1, review #5).
-- [ ] Unit tests for `useEditGoalHierarchyDrag` dispatch wiring + omitted-prop
+- [x] Unit tests for `flattenEditGoalSteps` (Step 1).
+- [x] Unit tests for `applyReparent` append ordering (Step 1, review #5).
+- [x] Unit tests for `useEditGoalHierarchyDrag` dispatch wiring + omitted-prop
       collapse + R13 `canDrag` derivation / lone-child promote (Step 2). No
       `classifyDrop` guard duplication (review #6).
-- [ ] Pure unit tests for geometry normalization (absolute→local outline
+- [x] Pure unit tests for geometry normalization (absolute→local outline
       conversion + scroll-delta pointer normalization) (Step 2, R14).
-- [ ] Component tests for `EditGoalView` reparent contract + SR controls +
+- [x] Component tests for `EditGoalView` reparent contract + SR controls +
       child-wired-to-coordinator integration (Step 7, review #6).
-- [ ] Component tests for `NewGoalWizard` forwarding (enabled + omitted)
+- [x] Component tests for `NewGoalWizard` forwarding (enabled + omitted)
       (Step 7, review #3).
-- [ ] `reorderStepIds` (existing) and `classifyDrop` (existing, 13 cases) are
+- [x] `reorderStepIds` (existing) and `classifyDrop` (existing, 13 cases) are
       reused unchanged — no new tests there.
 - [ ] `bun run type-check` + `bun run lint` after each commit; component tests
       via `bash apps/native-rd/scripts/jest-node.sh` (Bun segfaults on RN
