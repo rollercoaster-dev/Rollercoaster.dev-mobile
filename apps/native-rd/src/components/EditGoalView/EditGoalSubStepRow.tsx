@@ -197,7 +197,7 @@ export function EditGoalSubStepRow({
 
   const body = (
     <>
-      <View ref={rowRef} onLayout={measureAndRegister} style={styles.rowLead}>
+      <View style={styles.rowLead}>
         {marker}
         <Pressable
           style={styles.subStepTitlePress}
@@ -257,27 +257,38 @@ export function EditGoalSubStepRow({
     />
   ) : null;
 
+  // Measure and highlight the complete primary row band, including both the
+  // title and controls. The separate accessible hierarchy actions move with
+  // the item but remain outside this row's drag border and hover geometry.
+  const primaryRow = (
+    <View
+      ref={rowRef}
+      onLayout={measureAndRegister}
+      style={[styles.subStepRow, isBeingDragged && styles.subStepRowDragging]}
+    >
+      {body}
+    </View>
+  );
+
   if (!canDrag) {
     return (
       <View>
-        <View style={styles.subStepRow}>{body}</View>
+        {primaryRow}
         {accessibleActions}
       </View>
     );
   }
 
-  // The flex-row layout (`subStepRow`) lives on a plain inner View, never on
-  // the Animated.View: unistyles styles handed straight to a reanimated
+  // The flex-row layout (`subStepRow`) lives on the plain primaryRow View,
+  // never on the Animated.View: unistyles styles handed straight to a reanimated
   // Animated.View aren't applied on web (no class injected), so `flexDirection:
   // "row"` would silently drop and the controls would stack under the title.
   // Mirrors StepList's DraggableStepItem and this file's own !canDrag branch.
   return (
     <GestureDetector gesture={composed}>
       <Animated.View style={animatedStyle}>
-        <View style={[isBeingDragged && styles.subStepRowDragging]}>
-          <View style={styles.subStepRow}>{body}</View>
-          {accessibleActions}
-        </View>
+        {primaryRow}
+        {accessibleActions}
       </Animated.View>
     </GestureDetector>
   );
