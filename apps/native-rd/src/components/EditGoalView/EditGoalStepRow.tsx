@@ -16,8 +16,15 @@
  * appears when a screen reader is active or motion is off, so keyboard/VoiceOver
  * users are never drag-only.
  */
-import React from "react";
-import { View, Text as RNText, TextInput, Pressable } from "react-native";
+import React, { useState } from "react";
+import {
+  View,
+  Text as RNText,
+  TextInput,
+  Pressable,
+  Modal,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useUnistyles } from "react-native-unistyles";
 import Animated, {
@@ -27,13 +34,15 @@ import Animated, {
   withTiming,
   runOnJS,
 } from "react-native-reanimated";
-import { ArrowUp, ArrowDown } from "phosphor-react-native";
 import type { AnimationPref } from "../../hooks/useAnimationPref";
 import { getTimingConfig } from "../../utils/animation";
-import { IconButton } from "../IconButton";
+import { Button } from "../Button";
 import { EvidenceTypePicker } from "../EvidenceTypePicker";
 import { styles } from "./EditGoalView.styles";
 import type { EditGoalChipTone, EditGoalStep } from "./EditGoalView";
+import { HierarchyActionRow } from "./HierarchyActionRow";
+import type { RowGeometry } from "./useEditGoalHierarchyDragTypes";
+import { useRowGeometryRegistration } from "./useRowGeometryRegistration";
 
 // Date/dependency chip glyphs, transcribed from the App Shell prototype's
 // `edit` route (subOf/editSteps): after ↩ / waiting ⏳ / due ▦.
@@ -45,7 +54,6 @@ const CHIP_GLYPH: Record<EditGoalChipTone, string> = {
 
 export interface EditGoalStepRowProps {
   step: EditGoalStep;
-  index: number;
   /** 1-based display number shown before the title. */
   stepNumber: number;
   isBeingDragged: boolean;
@@ -57,9 +65,14 @@ export interface EditGoalStepRowProps {
   onCommitEditing: () => void;
   /** Opens the evidence-type picker for this step (D8). */
   onEvidenceChipPress: () => void;
-  onDragStart: (index: number) => void;
+  /** Unified coordinator handlers, keyed by row id (#496, R2). */
+  onDragStart: (rowId: string) => void;
   onDragMove: (translationY: number, absoluteY: number) => void;
   onDragEnd: () => void;
+  /** Register the root header's screen-absolute geometry (R3/R4/R15). */
+  registerRowLayout: (rowId: string, geometry: RowGeometry) => void;
+  /** Register a remeasure callback so drag-start can refresh geometry (R15). */
+  registerRemeasure: (rowId: string, fn: (() => void) | null) => void;
   dragScrollCompensation?: SharedValue<number>;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
@@ -71,6 +84,12 @@ export interface EditGoalStepRowProps {
   canDrag: boolean;
   /** Signal intent to delete this step (D1) — opens the confirm modal in the view. */
   onDelete: () => void;
+  /** Dwell-arm highlight on this root header (R12). */
+  isArmedTarget?: boolean;
+  /** Accessible nest-under control eligibility (R8). */
+  canNestUnder?: boolean;
+  nestTargets?: { id: string; title: string }[];
+  onNestUnder?: (targetId: string) => void;
   /** Rendered inside the card below the row — the sub-steps block (D12). */
   children?: React.ReactNode;
 
@@ -87,11 +106,20 @@ export interface EditGoalStepRowProps {
   moveDownLabel?: (stepTitle: string) => string;
   /** a11y label for the × delete affordance. */
   deleteStepLabel?: (stepTitle: string) => string;
+  /** a11y label for the “Nest under…” trigger (R8). */
+  nestUnderTriggerA11yLabel?: string;
+  /** Title of the nest-under picker modal. */
+  nestUnderPickerTitle?: string;
+  /** Row label inside the nest-under picker (receives the target title). */
+  nestUnderRowLabel?: (targetTitle: string) => string;
+  /** a11y label for a nest-under picker row. */
+  nestUnderRowA11yLabel?: (targetTitle: string) => string;
+  /** Visible label on the picker cancel button (R10 / review finding 4). */
+  nestUnderCancelLabel?: string;
 }
 
 export function EditGoalStepRow({
   step,
-  index,
   stepNumber,
   isBeingDragged,
   isEditing,
@@ -103,6 +131,8 @@ export function EditGoalStepRow({
   onDragStart,
   onDragMove,
   onDragEnd,
+  registerRowLayout,
+  registerRemeasure,
   dragScrollCompensation,
   onMoveUp,
   onMoveDown,
@@ -112,6 +142,10 @@ export function EditGoalStepRow({
   isLast,
   canDrag,
   onDelete,
+  isArmedTarget = false,
+  canNestUnder = false,
+  nestTargets = [],
+  onNestUnder,
   children,
   editStepA11yLabel = (stepTitle) => `Edit step: ${stepTitle}`,
   tapToEditHint = "Tap to edit step title",
@@ -119,11 +153,23 @@ export function EditGoalStepRow({
   moveUpLabel = (stepTitle) => `Move "${stepTitle}" up`,
   moveDownLabel = (stepTitle) => `Move "${stepTitle}" down`,
   deleteStepLabel = (stepTitle) => `Delete step: ${stepTitle}`,
+  nestUnderTriggerA11yLabel = "Nest this step under another step",
+  nestUnderPickerTitle = "Choose a step to nest under",
+  nestUnderRowLabel = (targetTitle) => `Nest under "${targetTitle}"`,
+  nestUnderRowA11yLabel = (targetTitle) =>
+    `Nest this step under ${targetTitle}`,
+  nestUnderCancelLabel = "Cancel",
 }: EditGoalStepRowProps) {
   const { theme } = useUnistyles();
   const translateY = useSharedValue(0);
   const scale = useSharedValue(1);
   const isDragging = useSharedValue(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const { ref: headerRef, measureAndRegister } = useRowGeometryRegistration(
+    step.id,
+    registerRowLayout,
+    registerRemeasure,
+  );
 
   const timingQuick = getTimingConfig(animationPref, "quick");
   const timingNormal = getTimingConfig(animationPref, "normal");
@@ -149,7 +195,7 @@ export function EditGoalStepRow({
     .onStart(() => {
       isDragging.value = true;
       scale.value = noAnimation ? 1.02 : withTiming(1.02, timingQuick);
-      runOnJS(onDragStart)(index);
+      runOnJS(onDragStart)(step.id);
     });
 
   const pan = Gesture.Pan()
@@ -178,7 +224,7 @@ export function EditGoalStepRow({
   }));
 
   const body = isEditing ? (
-    <View style={styles.rowMain}>
+    <View ref={headerRef} onLayout={measureAndRegister} style={styles.rowMain}>
       <RNText
         style={styles.dragHandle}
         accessibilityElementsHidden
@@ -202,7 +248,11 @@ export function EditGoalStepRow({
     </View>
   ) : (
     <>
-      <View style={styles.rowMain}>
+      <View
+        ref={headerRef}
+        onLayout={measureAndRegister}
+        style={styles.rowMain}
+      >
         <View style={styles.rowLead}>
           <RNText
             style={styles.dragHandle}
@@ -237,30 +287,6 @@ export function EditGoalStepRow({
               compact
             />
           </Pressable>
-          {showAccessibleControls && (
-            <View style={styles.reorderButtons}>
-              {onMoveUp && !isFirst && (
-                <IconButton
-                  icon={<ArrowUp size={18} weight="bold" />}
-                  onPress={onMoveUp}
-                  size="sm"
-                  tone="ghost"
-                  accessibilityLabel={moveUpLabel(step.title)}
-                  testID={`edit-goal-step-up-${step.id}`}
-                />
-              )}
-              {onMoveDown && !isLast && (
-                <IconButton
-                  icon={<ArrowDown size={18} weight="bold" />}
-                  onPress={onMoveDown}
-                  size="sm"
-                  tone="ghost"
-                  accessibilityLabel={moveDownLabel(step.title)}
-                  testID={`edit-goal-step-down-${step.id}`}
-                />
-              )}
-            </View>
-          )}
           <Pressable
             style={styles.stepDelete}
             onPress={onDelete}
@@ -302,11 +328,88 @@ export function EditGoalStepRow({
     </>
   );
 
+  // A root can expose up, down, and nest-under simultaneously. Give those
+  // fallback controls a dedicated line so they never compete with evidence,
+  // title, or delete for horizontal space.
+  const accessibleActions =
+    !isEditing && showAccessibleControls ? (
+      <HierarchyActionRow
+        testID={`edit-goal-step-hierarchy-actions-${step.id}`}
+        onMoveUp={!isFirst ? onMoveUp : undefined}
+        onMoveDown={!isLast ? onMoveDown : undefined}
+        onReparent={
+          canNestUnder && onNestUnder ? () => setPickerOpen(true) : undefined
+        }
+        moveUpLabel={moveUpLabel(step.title)}
+        moveDownLabel={moveDownLabel(step.title)}
+        reparentLabel={nestUnderTriggerA11yLabel}
+        moveUpTestID={`edit-goal-step-up-${step.id}`}
+        moveDownTestID={`edit-goal-step-down-${step.id}`}
+        reparentTestID={`edit-goal-step-nest-under-${step.id}`}
+        reparentDirection="demote"
+      />
+    ) : null;
+
+  // Nest-under picker (R8): an accessible modal listing eligible root
+  // targets. Reuses DraggableStepItem's picker pattern, adapted to the
+  // redesigned mint-rail tokens. Suppresses rendering when the list has no
+  // targets (canNestUnder already gates the trigger, but the modal is only
+  // mounted when opened).
+  const picker =
+    canNestUnder && onNestUnder ? (
+      <Modal
+        visible={pickerOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPickerOpen(false)}
+        accessibilityViewIsModal
+      >
+        <View
+          style={[
+            styles.pickerOverlay,
+            { backgroundColor: `${theme.colors.shadow}80` },
+          ]}
+        >
+          <SafeAreaView edges={["bottom"]} style={styles.pickerContainer}>
+            <View style={styles.pickerCard}>
+              <RNText style={styles.pickerTitle} accessibilityRole="header">
+                {nestUnderPickerTitle}
+              </RNText>
+              {nestTargets.map((target) => (
+                <Pressable
+                  key={target.id}
+                  style={styles.pickerRow}
+                  onPress={() => {
+                    onNestUnder(target.id);
+                    setPickerOpen(false);
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel={nestUnderRowA11yLabel(target.title)}
+                  testID={`edit-goal-step-nest-target-${step.id}-${target.id}`}
+                >
+                  <RNText style={styles.pickerRowText}>
+                    {nestUnderRowLabel(target.title)}
+                  </RNText>
+                </Pressable>
+              ))}
+              <Button
+                label={nestUnderCancelLabel}
+                variant="secondary"
+                onPress={() => setPickerOpen(false)}
+              />
+            </View>
+          </SafeAreaView>
+        </View>
+      </Modal>
+    ) : null;
+
   if (!canDrag) {
     return (
-      <View style={styles.rowCard}>
+      <View style={[styles.rowCard, isArmedTarget && styles.armedTargetItem]}>
         {body}
+        {accessibleActions}
         {children}
+        {picker}
       </View>
     );
   }
@@ -322,13 +425,16 @@ export function EditGoalStepRow({
       style={[
         styles.rowCard,
         isBeingDragged && styles.rowCardDragging,
+        isArmedTarget && styles.armedTargetItem,
         animatedStyle,
       ]}
     >
       <GestureDetector gesture={composed}>
         <View>{body}</View>
       </GestureDetector>
+      {accessibleActions}
       {children}
+      {picker}
     </Animated.View>
   );
 }

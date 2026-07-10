@@ -69,6 +69,7 @@ function makeProps(overrides?: Partial<EditGoalViewProps>): EditGoalViewProps {
     steps: baseSteps,
     onReorderSteps: jest.fn(),
     onReorderSubSteps: jest.fn(),
+    onReparentStep: jest.fn(),
     onAddStep: jest.fn(),
     onStepTitleChange: jest.fn(),
     onStepEvidenceChange: jest.fn(),
@@ -258,17 +259,18 @@ describe("EditGoalView", () => {
       expect(screen.getByText("Photo")).toBeOnTheScreen();
     });
 
-    it("keeps the title and every control on a two-type step with the ↑/↓ fallback (D5 clustering)", () => {
-      // The narrow-screen fix splits the row into a rowLead (title) + rowControls
-      // (evidence + ↑/↓) so controls wrap instead of crushing the title. This is
-      // the worst case for width (two pills + both arrows); the restructure must
-      // not drop the title or any control. Layout wrapping itself is verified in
-      // Storybook — the Node renderer has no width.
+    it("keeps hierarchy fallbacks separate from a two-type evidence row (D5 clustering)", () => {
+      // The narrow-screen layout reserves the primary row for title, evidence,
+      // and delete, then renders hierarchy fallbacks in a dedicated action row.
+      // Geometry is verified in Storybook because the Node renderer has no width.
       mockAnimationPref = "none";
       renderWithProviders(<EditGoalView {...makeProps()} />);
       expect(screen.getByText("Second step")).toBeOnTheScreen();
       expect(screen.getByText("Link")).toBeOnTheScreen();
       expect(screen.getByText("Photo")).toBeOnTheScreen();
+      expect(
+        screen.getByTestId("edit-goal-step-hierarchy-actions-s2"),
+      ).toBeOnTheScreen();
       expect(screen.getByLabelText('Move "Second step" up')).toBeOnTheScreen();
     });
   });
@@ -568,6 +570,9 @@ describe("EditGoalView", () => {
       expect(screen.getByLabelText('Move "Alpha one" down')).toBeOnTheScreen();
       expect(screen.getByLabelText('Move "Alpha two" up')).toBeOnTheScreen();
       expect(screen.getByLabelText('Move "Alpha two" down')).toBeOnTheScreen();
+      expect(
+        screen.getByTestId("edit-goal-substep-hierarchy-actions-a2"),
+      ).toBeOnTheScreen();
       expect(screen.getByLabelText('Move "Alpha three" up')).toBeOnTheScreen();
       // First has no ↑, last has no ↓.
       expect(screen.queryByLabelText('Move "Alpha one" up')).toBeNull();
@@ -732,6 +737,177 @@ describe("EditGoalView", () => {
       expect(announceReorder).toHaveBeenCalledWith("First step", 2);
       expect(announce).toHaveBeenCalledWith("First step → #2");
       announce.mockRestore();
+    });
+  });
+
+  describe("reparent (#496)", () => {
+    it("fires onReparentStep(id, null) from a sub-step’s Un-nest button", () => {
+      mockAnimationPref = "none";
+      const onReparentStep = jest.fn();
+      renderWithProviders(
+        <EditGoalView {...makeProps({ steps: withSub, onReparentStep })} />,
+      );
+      fireEvent.press(screen.getByTestId("edit-goal-substep-un-nest-sub1"));
+      expect(onReparentStep).toHaveBeenCalledWith("sub1", null);
+    });
+
+    it("fires onReparentStep(id, targetId) from a leaf root’s Nest-under picker", () => {
+      mockAnimationPref = "none";
+      const onReparentStep = jest.fn();
+      // withSub: s1 (parent with sub1), s2 (bare leaf root). s2 can nest under s1.
+      renderWithProviders(
+        <EditGoalView {...makeProps({ steps: withSub, onReparentStep })} />,
+      );
+      fireEvent.press(screen.getByTestId("edit-goal-step-nest-under-s2"));
+      // Picker lists eligible roots excluding s2 → s1.
+      fireEvent.press(screen.getByTestId("edit-goal-step-nest-target-s2-s1"));
+      expect(onReparentStep).toHaveBeenCalledWith("s2", "s1");
+    });
+
+    it("uses the English default for the nest-under picker cancel action", () => {
+      mockAnimationPref = "none";
+      renderWithProviders(
+        <EditGoalView
+          {...makeProps({ steps: withSub, onReparentStep: jest.fn() })}
+        />,
+      );
+      fireEvent.press(screen.getByTestId("edit-goal-step-nest-under-s2"));
+      expect(screen.getByRole("button", { name: "Cancel" })).toBeOnTheScreen();
+    });
+
+    it("renders no Nest-under control on a parent-with-children", () => {
+      mockAnimationPref = "none";
+      const onReparentStep = jest.fn();
+      renderWithProviders(
+        <EditGoalView {...makeProps({ steps: withSub, onReparentStep })} />,
+      );
+      // s1 has children → no nest-under trigger.
+      expect(screen.queryByTestId("edit-goal-step-nest-under-s1")).toBeNull();
+    });
+
+    it("renders no Nest-under control on a sub-step (one-level cap)", () => {
+      mockAnimationPref = "none";
+      const onReparentStep = jest.fn();
+      renderWithProviders(
+        <EditGoalView {...makeProps({ steps: withSub, onReparentStep })} />,
+      );
+      expect(
+        screen.queryByTestId("edit-goal-substep-nest-under-sub1"),
+      ).toBeNull();
+    });
+
+    it("renders no nest/un-nest controls when onReparentStep is omitted", () => {
+      mockAnimationPref = "none";
+      renderWithProviders(
+        <EditGoalView
+          {...makeProps({ steps: withSub, onReparentStep: undefined })}
+        />,
+      );
+      expect(screen.queryByTestId("edit-goal-step-nest-under-s2")).toBeNull();
+      expect(screen.queryByTestId("edit-goal-substep-un-nest-sub1")).toBeNull();
+    });
+
+    it("does not render a Nest-under trigger when there is only one root", () => {
+      mockAnimationPref = "none";
+      const onReparentStep = jest.fn();
+      const steps: EditGoalStep[] = [
+        {
+          id: "s1",
+          title: "Only step",
+          plannedEvidenceTypes: [EvidenceType.text],
+        },
+      ];
+      renderWithProviders(
+        <EditGoalView {...makeProps({ steps, onReparentStep })} />,
+      );
+      expect(screen.queryByTestId("edit-goal-step-nest-under-s1")).toBeNull();
+    });
+
+    it("↑/↓ on a child at its group boundary does not promote (no onReparentStep)", () => {
+      mockAnimationPref = "none";
+      const onReparentStep = jest.fn();
+      const onReorderSubSteps = jest.fn();
+      renderWithProviders(
+        <EditGoalView
+          {...makeProps({
+            steps: withMultiSub,
+            onReparentStep,
+            onReorderSubSteps,
+          })}
+        />,
+      );
+      // Alpha one is first in its group → moving up is a no-op (no promote).
+      expect(screen.queryByLabelText('Move "Alpha one" up')).toBeNull();
+      // Moving down is a sibling reorder, not a reparent.
+      fireEvent.press(screen.getByLabelText('Move "Alpha one" down'));
+      expect(onReorderSubSteps).toHaveBeenCalledWith("s1", ["a2", "a1", "a3"]);
+      expect(onReparentStep).not.toHaveBeenCalled();
+    });
+
+    it("a sub-step reorder dispatches onReorderSubSteps through the shared coordinator (child-wired-to-coordinator)", () => {
+      mockAnimationPref = "none";
+      const onReorderSubSteps = jest.fn();
+      const onReparentStep = jest.fn();
+      renderWithProviders(
+        <EditGoalView
+          {...makeProps({
+            steps: withMultiSub,
+            onReorderSubSteps,
+            onReparentStep,
+          })}
+        />,
+      );
+      // Driving a sub-step’s ↑/↓ routes through the unified coordinator’s
+      // moveStep (scoped to the sub-step’s parent), proving the sub-step row
+      // is wired to the shared hierarchy coordinator, not a parent-local hook.
+      fireEvent.press(screen.getByLabelText('Move "Beta one" down'));
+      expect(onReorderSubSteps).toHaveBeenCalledWith("s2", ["b2", "b1"]);
+    });
+
+    it("R13: a lone sub-step is draggable (Un-nest present) when reparent is enabled", () => {
+      mockAnimationPref = "none";
+      const onReparentStep = jest.fn();
+      // A parent with a single sub-step.
+      const steps: EditGoalStep[] = [
+        {
+          id: "s1",
+          title: "Parent",
+          plannedEvidenceTypes: [EvidenceType.text],
+          subSteps: [
+            {
+              id: "only",
+              title: "Only child",
+              plannedEvidenceTypes: [EvidenceType.text],
+            },
+          ],
+        },
+        {
+          id: "s2",
+          title: "Other root",
+          plannedEvidenceTypes: [EvidenceType.text],
+        },
+      ];
+      renderWithProviders(
+        <EditGoalView {...makeProps({ steps, onReparentStep })} />,
+      );
+      // The lone sub-step has an Un-nest control (reparent enabled) and can
+      // promote via it — the component-level proof that the old sibling-count
+      // gate no longer blocks the single-child promote path.
+      fireEvent.press(screen.getByTestId("edit-goal-substep-un-nest-only"));
+      expect(onReparentStep).toHaveBeenCalledWith("only", null);
+    });
+
+    it("forwards onReparentStep through to the list (prop-chain guard)", () => {
+      mockAnimationPref = "none";
+      const onReparentStep = jest.fn();
+      renderWithProviders(
+        <EditGoalView {...makeProps({ steps: withSub, onReparentStep })} />,
+      );
+      // The nest-under trigger is only rendered when the list received
+      // onReparentStep, so its presence proves the host forwarded it.
+      expect(
+        screen.getByTestId("edit-goal-step-nest-under-s2"),
+      ).toBeOnTheScreen();
     });
   });
 });

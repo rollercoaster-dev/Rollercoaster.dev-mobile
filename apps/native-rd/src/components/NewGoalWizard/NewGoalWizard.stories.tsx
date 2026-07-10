@@ -4,6 +4,7 @@ import { Text, useWindowDimensions, View } from "react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { NewGoalWizard, type NewGoalWizardStep } from "./NewGoalWizard";
 import type { EditGoalStep, EditGoalSubStep } from "../EditGoalView";
+import { applyReparent } from "../EditGoalView/applyReparent";
 import { EvidenceType } from "../../db";
 import type { EvidenceTypeValue } from "../../types/evidence";
 
@@ -338,6 +339,59 @@ export const BuildStep: Story = {
 export const BuildStepWithSubSteps: Story = {
   render: () => (
     <InteractiveBuildStep initialSteps={SAMPLE_STEPS_WITH_SUBSTEPS} />
+  ),
+};
+
+/**
+ * Build step with reparent enabled (#496): the wizard forwards onReparentStep
+ * to EditGoalStepList, so a leaf root can be nested (Nest under… picker or
+ * drag/dwell) and a sub-step can be un-nested. Stateful via applyReparent so
+ * the reviewer sees the real nesting change. Requires a screen reader or
+ * reduced motion to surface the accessible Nest under… / Un-nest controls.
+ */
+function InteractiveBuildStepReparent() {
+  const { steps, setSteps, callbacks } = useInteractiveSteps(
+    SAMPLE_STEPS_WITH_SUBSTEPS,
+  );
+  return (
+    <PhoneStage>
+      <NewGoalWizard
+        currentStep="build"
+        goalTitle="Build a birdhouse"
+        onGoalTitleChange={noop}
+        stepCount={steps.length}
+        onBack={noop}
+        onClose={noop}
+        onNext={noop}
+        onQuickAdd={noop}
+        onStartWorking={noop}
+        steps={steps}
+        {...callbacks}
+        onReparentStep={(stepId, newParentId) =>
+          setSteps((prev) => applyReparent(prev, stepId, newParentId))
+        }
+      />
+    </PhoneStage>
+  );
+}
+
+export const BuildStepReparent: Story = {
+  render: () => (
+    <View>
+      <Text
+        style={{
+          fontSize: 12,
+          fontStyle: "italic",
+          padding: 12,
+        }}
+      >
+        Reparent is enabled on the build step: long-press a leaf root and dwell
+        on another root ~220ms to nest it, or enable a screen reader / reduced
+        motion to use the “Nest under…” picker and “Un-nest” button. A
+        parent-with-children cannot be demoted (snap-back).
+      </Text>
+      <InteractiveBuildStepReparent />
+    </View>
   ),
 };
 

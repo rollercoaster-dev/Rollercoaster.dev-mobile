@@ -111,6 +111,9 @@ export interface NewGoalWizardProps {
     parentStepId: string,
     orderedSubStepIds: string[],
   ) => void;
+  /** Fired on a drag-reparent / nest-under / un-nest (#496). Optional; when
+   * omitted the build step collapses to sibling reorder only. */
+  onReparentStep?: (stepId: string, newParentStepId: string | null) => void;
   /** Appends a step titled from EditGoalStepList's inline "Add step..." input (D3). */
   onAddStep?: (title: string) => void;
   onStepTitleChange?: (stepId: string, title: string) => void;
@@ -199,6 +202,15 @@ export interface NewGoalWizardProps {
   deleteSubStepConfirmTitle?: string;
   /** Confirm-modal message when deleting a sub-step (receives the sub-step title). */
   deleteSubStepConfirmMessage?: (title: string) => string;
+  // --- Nest-under / un-nest copy (#496, forwarded to EditGoalStepList) ---
+  nestUnderTriggerA11yLabel?: string;
+  nestUnderPickerTitle?: string;
+  nestUnderRowLabel?: (targetTitle: string) => string;
+  nestUnderRowA11yLabel?: (targetTitle: string) => string;
+  nestUnderCancelLabel?: string;
+  unNestA11yLabel?: string;
+  announcePromote?: (stepTitle: string) => string;
+  announceNestedUnder?: (stepTitle: string, parentTitle: string) => string;
   /** Footer CTA on the build step — distinct copy from nextLabel (D7). */
   buildReadyLabel?: string;
   readyHeadline?: string;
@@ -259,6 +271,7 @@ export function NewGoalWizard({
   steps = [],
   onReorderSteps = noop,
   onReorderSubSteps = noop,
+  onReparentStep,
   onAddStep = noop,
   onStepTitleChange = noop,
   onStepEvidenceChange = noop,
@@ -309,6 +322,14 @@ export function NewGoalWizard({
   deleteStepConfirmMessage,
   deleteSubStepConfirmTitle,
   deleteSubStepConfirmMessage,
+  nestUnderTriggerA11yLabel,
+  nestUnderPickerTitle,
+  nestUnderRowLabel,
+  nestUnderRowA11yLabel,
+  nestUnderCancelLabel,
+  unNestA11yLabel,
+  announcePromote,
+  announceNestedUnder,
   buildReadyLabel = "I'm ready →",
   readyHeadline = "You're set.",
   stepCountSummary = defaultStepCountSummary,
@@ -574,6 +595,7 @@ export function NewGoalWizard({
                 steps={steps}
                 onReorderSteps={onReorderSteps}
                 onReorderSubSteps={onReorderSubSteps}
+                onReparentStep={onReparentStep}
                 onAddStep={onAddStep}
                 onStepTitleChange={onStepTitleChange}
                 onEvidenceChipPress={setEditingEvidenceId}
@@ -596,6 +618,14 @@ export function NewGoalWizard({
                 deleteStepConfirmMessage={deleteStepConfirmMessage}
                 deleteSubStepConfirmTitle={deleteSubStepConfirmTitle}
                 deleteSubStepConfirmMessage={deleteSubStepConfirmMessage}
+                nestUnderTriggerA11yLabel={nestUnderTriggerA11yLabel}
+                nestUnderPickerTitle={nestUnderPickerTitle}
+                nestUnderRowLabel={nestUnderRowLabel}
+                nestUnderRowA11yLabel={nestUnderRowA11yLabel}
+                nestUnderCancelLabel={nestUnderCancelLabel}
+                unNestA11yLabel={unNestA11yLabel}
+                announcePromote={announcePromote}
+                announceNestedUnder={announceNestedUnder}
               />
             </ScrollView>
           </View>

@@ -774,4 +774,59 @@ describe("NewGoalWizard", () => {
       screen.getByRole("button", { name: "Quick add, skip to the list" }),
     ).toBeOnTheScreen();
   });
+
+  describe("build step · reparent (#496)", () => {
+    it("forwards onReparentStep: nest-under picker dispatches through the wizard", () => {
+      mockAnimationPref = "none";
+      const onReparentStep = jest.fn();
+      renderWizard({
+        currentStep: "build",
+        steps: BUILD_STEPS_WITH_SUB,
+        onReparentStep,
+      });
+      // s2 is a bare leaf root; it can nest under s1 (the parent).
+      fireEvent.press(screen.getByTestId("edit-goal-step-nest-under-s2"));
+      fireEvent.press(screen.getByTestId("edit-goal-step-nest-target-s2-s1"));
+      expect(onReparentStep).toHaveBeenCalledWith("s2", "s1");
+    });
+
+    it("forwards onReparentStep: a sub-step Un-nest dispatches through the wizard", () => {
+      mockAnimationPref = "none";
+      const onReparentStep = jest.fn();
+      renderWizard({
+        currentStep: "build",
+        steps: BUILD_STEPS_WITH_SUB,
+        onReparentStep,
+      });
+      fireEvent.press(screen.getByTestId("edit-goal-substep-un-nest-sub1"));
+      expect(onReparentStep).toHaveBeenCalledWith("sub1", null);
+    });
+
+    it("forwards custom nest-under cancel copy", () => {
+      mockAnimationPref = "none";
+      renderWizard({
+        currentStep: "build",
+        steps: BUILD_STEPS_WITH_SUB,
+        onReparentStep: jest.fn(),
+        nestUnderCancelLabel: "Not now",
+      });
+      fireEvent.press(screen.getByTestId("edit-goal-step-nest-under-s2"));
+      expect(screen.getByRole("button", { name: "Not now" })).toBeOnTheScreen();
+    });
+
+    it("omitted onReparentStep: build step still reorders and renders no reparent controls", () => {
+      mockAnimationPref = "none";
+      const onReorderSteps = jest.fn();
+      renderWizard({
+        currentStep: "build",
+        steps: BUILD_STEPS,
+        onReorderSteps,
+        onReparentStep: undefined,
+      });
+      expect(screen.queryByTestId("edit-goal-step-nest-under-s1")).toBeNull();
+      // Reorder still works (sibling reorder only).
+      fireEvent.press(screen.getByLabelText('Move "Sand the edges" down'));
+      expect(onReorderSteps).toHaveBeenCalledWith(["s2", "s1"]);
+    });
+  });
 });
