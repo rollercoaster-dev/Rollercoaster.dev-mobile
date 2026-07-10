@@ -176,8 +176,8 @@
       "border-focus": { "$value": "#4e7d9e" },
       "border-destructive": { "$value": "#b54942" },
       "border-success": { "$value": "#4a8a62" },
-      "journey-step-active-bg": { "$value": "#4e7d9e" },
-      "journey-step-complete-bg": { "$value": "#4a8a62" },
+      "journey-step-active-bg": { "$value": "#3a6280" },
+      "journey-step-complete-bg": { "$value": "#3a7050" },
       "journey-progress-fill": { "$value": "#4e7d9e" },
       "journey-completion-bg": { "$value": "#4a8a62" }
     }

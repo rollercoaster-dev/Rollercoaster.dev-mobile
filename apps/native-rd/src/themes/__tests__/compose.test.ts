@@ -52,6 +52,21 @@ describe("theme registry", () => {
     );
   });
 
+  it("composes the accessible journey recipes for affected ND themes", () => {
+    expect(themes["light-dyslexia"].journey.journeyStepActiveBg).toBe(
+      "#3a6280",
+    );
+    expect(themes["light-dyslexia"].journey.journeyStepCompleteBg).toBe(
+      "#3a7050",
+    );
+    expect(themes["light-autismFriendly"].journey.journeyStepCompleteBg).toBe(
+      "#446858",
+    );
+    expect(themes["light-highContrast"].journey.journeyStepCompleteBg).toBe(
+      "#007755",
+    );
+  });
+
   it("maps semantic elevation roles to each theme's hard* shadow tokens", () => {
     // withSemanticShadows wires cardElevation←hardMd, cardElevationSmall←hardSm,
     // modalElevation←hardLg for every theme. Pin the mapping the whole shadow

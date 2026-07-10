@@ -176,7 +176,7 @@
       "border-destructive": { "$value": "#9a5a5a" },
       "border-success": { "$value": "#5a8a6a" },
       "journey-step-active-bg": { "$value": "#4d6d7d" },
-      "journey-step-complete-bg": { "$value": "#5a8a6a" },
+      "journey-step-complete-bg": { "$value": "#446858" },
       "journey-progress-fill": { "$value": "#4d6d7d" },
       "journey-completion-bg": { "$value": "#5a8a6a" },
       "reward-badge-accent-1": { "$value": "#d5c88a" },
