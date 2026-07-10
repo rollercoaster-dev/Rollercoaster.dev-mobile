@@ -9,6 +9,7 @@ import {
   type EditGoalStep,
   type EditGoalSubStep,
 } from "./EditGoalView";
+import { applyReparent } from "./applyReparent";
 import { EditGoalStepRow } from "./EditGoalStepRow";
 import { EditGoalOverflowMenu } from "./EditGoalOverflowMenu";
 import { Text } from "../Text";
@@ -114,10 +115,16 @@ const initialSteps: EditGoalStep[] = [
  * chip, dragging a row, adding a step, or renaming one all update local state so
  * the reviewer sees the real interaction (persistence is the [Integrate] job).
  */
-function InteractiveEditGoal({ note }: { note?: string }) {
+function InteractiveEditGoal({
+  note,
+  initialSteps: seed = initialSteps,
+}: {
+  note?: string;
+  initialSteps?: EditGoalStep[];
+}) {
   const [goalTitle, setGoalTitle] = useState("Learn watercolor basics");
-  const [steps, setSteps] = useState<EditGoalStep[]>(initialSteps);
-  const nextId = useRef(initialSteps.length + 1);
+  const [steps, setSteps] = useState<EditGoalStep[]>(seed);
+  const nextId = useRef(seed.length + 1);
 
   function reorder(orderedIds: string[]) {
     setSteps((prev) =>
@@ -219,6 +226,10 @@ function InteractiveEditGoal({ note }: { note?: string }) {
     setSteps((prev) => prev.filter((s) => s.id !== stepId));
   }
 
+  function reparent(stepId: string, newParentId: string | null) {
+    setSteps((prev) => applyReparent(prev, stepId, newParentId));
+  }
+
   return (
     <View>
       {note ? (
@@ -233,6 +244,7 @@ function InteractiveEditGoal({ note }: { note?: string }) {
           steps={steps}
           onReorderSteps={reorder}
           onReorderSubSteps={reorderSubSteps}
+          onReparentStep={reparent}
           onAddStep={addStep}
           onStepTitleChange={renameStep}
           onStepEvidenceChange={changeEvidence}
@@ -269,6 +281,69 @@ export const EvidencePickerInteraction: Story = {
 export const SubSteps: Story = {
   render: () => (
     <InteractiveEditGoal note='Step 1 is broken into three sub-steps (the indented mint-rail block): tap a sub-step to rename it, tap its chip to set evidence, × to remove it, or "add a sub-step" for another. Steps with none show "break into sub-steps" — tap it to seed the first one. Each sub-step requires its own evidence. Reorder within a parent: long-press a sub-step’s ≡ handle and drag it among its siblings (it never leaves its parent, and the parent card itself does not drag). With a screen reader on or reduced motion set, ↑/↓ buttons appear on each sub-step as the accessible fallback.' />
+  ),
+};
+
+export const ReparentInteraction: Story = {
+  render: () => (
+    <InteractiveEditGoal note="Reparent is enabled: long-press a leaf root (e.g. “Gather references”) and dwell on another root ~220ms — the target shows a dashed success outline — then release to nest it under that root. The nested step moves into the target’s mint-rail block." />
+  ),
+};
+
+export const PromoteInteraction: Story = {
+  render: () => (
+    <InteractiveEditGoal note="Long-press a sub-step (inside Step 1’s mint-rail block) and drag it above its parent’s header — on release it promotes to a top-level root step at the end of the list." />
+  ),
+};
+
+export const MoveBetweenParents: Story = {
+  render: () => (
+    <InteractiveEditGoal
+      initialSteps={[
+        {
+          id: "s1",
+          title: "Draft the outline",
+          plannedEvidenceTypes: [EvidenceType.text],
+          subSteps: [
+            {
+              id: "s1a",
+              title: "List sections",
+              plannedEvidenceTypes: [EvidenceType.text],
+            },
+            {
+              id: "s1b",
+              title: "Order them",
+              plannedEvidenceTypes: [EvidenceType.photo],
+            },
+          ],
+        },
+        {
+          id: "s2",
+          title: "Gather references",
+          plannedEvidenceTypes: [EvidenceType.link],
+          subSteps: [
+            {
+              id: "s2a",
+              title: "Library books",
+              plannedEvidenceTypes: [EvidenceType.link],
+            },
+          ],
+        },
+      ]}
+      note="With two parents each carrying sub-steps: long-press a sub-step and drag it into the other parent’s child block. It leaves its source parent and is appended to the destination parent’s sub-steps."
+    />
+  ),
+};
+
+export const InvalidReparentTargets: Story = {
+  render: () => (
+    <InteractiveEditGoal note="Invalid reparent targets: a parent that already has children (Step 1) cannot be demoted — it snaps back with no write and shows no “Nest under…” control. A sub-step cannot be demoted further (one-level cap) — only “Un-nest” is available." />
+  ),
+};
+
+export const AccessibleNestControls: Story = {
+  render: () => (
+    <InteractiveEditGoal note="With a screen reader on or reduced motion set, each leaf root shows a “Nest under…” trigger (↳) that opens an accessible picker of eligible roots, and each sub-step shows an “Un-nest” button (↰) that promotes it to a root. ↑/↓ stay sibling-reorder only." />
   ),
 };
 
