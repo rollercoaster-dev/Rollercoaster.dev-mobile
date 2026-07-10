@@ -212,6 +212,7 @@ export interface EditGoalViewProps {
   nestUnderPickerTitle?: string;
   nestUnderRowLabel?: (targetTitle: string) => string;
   nestUnderRowA11yLabel?: (targetTitle: string) => string;
+  nestUnderCancelLabel?: string;
   unNestA11yLabel?: string;
   announcePromote?: (stepTitle: string) => string;
   announceNestedUnder?: (stepTitle: string, parentTitle: string) => string;
@@ -272,6 +273,7 @@ export function EditGoalView({
   nestUnderPickerTitle,
   nestUnderRowLabel,
   nestUnderRowA11yLabel,
+  nestUnderCancelLabel,
   unNestA11yLabel,
   announcePromote,
   announceNestedUnder,
@@ -439,6 +441,7 @@ export function EditGoalView({
           nestUnderPickerTitle={nestUnderPickerTitle}
           nestUnderRowLabel={nestUnderRowLabel}
           nestUnderRowA11yLabel={nestUnderRowA11yLabel}
+          nestUnderCancelLabel={nestUnderCancelLabel}
           unNestA11yLabel={unNestA11yLabel}
           announcePromote={announcePromote}
           announceNestedUnder={announceNestedUnder}

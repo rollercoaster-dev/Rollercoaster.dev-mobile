@@ -353,7 +353,6 @@ function AnatomyRow({ step }: { step: EditGoalStep }) {
   return (
     <EditGoalStepRow
       step={step}
-      index={0}
       stepNumber={1}
       isBeingDragged={false}
       isEditing={false}

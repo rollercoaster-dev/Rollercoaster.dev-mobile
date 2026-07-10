@@ -802,6 +802,18 @@ describe("NewGoalWizard", () => {
       expect(onReparentStep).toHaveBeenCalledWith("sub1", null);
     });
 
+    it("forwards custom nest-under cancel copy", () => {
+      mockAnimationPref = "none";
+      renderWizard({
+        currentStep: "build",
+        steps: BUILD_STEPS_WITH_SUB,
+        onReparentStep: jest.fn(),
+        nestUnderCancelLabel: "Not now",
+      });
+      fireEvent.press(screen.getByTestId("edit-goal-step-nest-under-s2"));
+      expect(screen.getByRole("button", { name: "Not now" })).toBeOnTheScreen();
+    });
+
     it("omitted onReparentStep: build step still reorders and renders no reparent controls", () => {
       mockAnimationPref = "none";
       const onReorderSteps = jest.fn();

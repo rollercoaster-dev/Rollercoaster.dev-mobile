@@ -1,20 +1,9 @@
 /**
- * EditGoalSubStepRow — one sub-step nested under a parent step inside
- * EditGoalView (D12). Rendered inside the parent card's mint-rail block.
- *
- * A leaf row: a functional `≡` drag handle + tap-to-edit title (D10) + a
- * planned-evidence chip (reused EvidenceTypePicker `compact`, one pill per
- * planned type — D4; opens the type picker on tap — D8) + a × delete button.
- *
- * Reorder-within-parent (#459) reuses the exact LongPress + Pan gesture shape
- * as EditGoalStepRow, stripped of all nesting/dwell state — the parent
- * (EditGoalSubStepList) owns reorder math and auto-scroll via useEditGoalDrag,
- * scoped to a single parent's siblings. The `≡` handle is hidden from screen
- * readers; a visible ↑/↓ fallback appears when a screen reader is active or
- * motion is off, so keyboard/VoiceOver users are never drag-only. A parent with
- * one sub-step renders the row static (`canDrag={false}`), no ↑/↓ buttons.
+ * Nested leaf row for EditGoalView. It shares the hierarchy drag coordinator
+ * with root rows, while explicit ↑/↓ and Un-nest controls preserve equivalent
+ * screen-reader and reduced-motion access.
  */
-import React, { useRef } from "react";
+import React from "react";
 import { View, Text as RNText, TextInput, Pressable } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useUnistyles } from "react-native-unistyles";
@@ -25,18 +14,17 @@ import Animated, {
   withTiming,
   runOnJS,
 } from "react-native-reanimated";
-import { ArrowUp, ArrowDown, ArrowBendUpLeft } from "phosphor-react-native";
 import type { AnimationPref } from "../../hooks/useAnimationPref";
 import { getTimingConfig } from "../../utils/animation";
-import { IconButton } from "../IconButton";
 import { EvidenceTypePicker } from "../EvidenceTypePicker";
 import { styles } from "./EditGoalView.styles";
 import type { EditGoalSubStep } from "./EditGoalView";
-import type { RowGeometry } from "./useEditGoalHierarchyDrag";
+import { HierarchyActionRow } from "./HierarchyActionRow";
+import type { RowGeometry } from "./useEditGoalHierarchyDragTypes";
+import { useRowGeometryRegistration } from "./useRowGeometryRegistration";
 
 export interface EditGoalSubStepRowProps {
   subStep: EditGoalSubStep;
-  index: number;
   isBeingDragged: boolean;
   /** Whether this sub-row's title is in inline-edit mode (state lives in the view). */
   isEditing: boolean;
@@ -85,7 +73,6 @@ export interface EditGoalSubStepRowProps {
 
 export function EditGoalSubStepRow({
   subStep,
-  index,
   isBeingDragged,
   isEditing,
   editText,
@@ -121,27 +108,11 @@ export function EditGoalSubStepRow({
   const translateY = useSharedValue(0);
   const scale = useSharedValue(1);
   const isDragging = useSharedValue(false);
-  const rowRef = useRef<View>(null);
-
-  // R3/R15: register this sub-step's screen-absolute geometry so the unified
-  // coordinator can hit-test it in the same flat coordinate space as roots.
-  function measureAndRegister() {
-    const node = rowRef.current as unknown as {
-      measureInWindow?: (
-        cb: (x: number, y: number, w: number, h: number) => void,
-      ) => void;
-    } | null;
-    if (node?.measureInWindow) {
-      node.measureInWindow((_x, y, _w, h) => {
-        registerRowLayout(subStep.id, { absoluteY: y, height: h });
-      });
-    }
-  }
-  React.useEffect(() => {
-    registerRemeasure(subStep.id, measureAndRegister);
-    return () => registerRemeasure(subStep.id, null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subStep.id]);
+  const { ref: rowRef, measureAndRegister } = useRowGeometryRegistration(
+    subStep.id,
+    registerRowLayout,
+    registerRemeasure,
+  );
 
   const timingQuick = getTimingConfig(animationPref, "quick");
   const timingNormal = getTimingConfig(animationPref, "normal");
@@ -253,40 +224,6 @@ export function EditGoalSubStepRow({
             compact
           />
         </Pressable>
-        {showAccessibleControls && (
-          <View style={styles.reorderButtons}>
-            {onMoveUp && !isFirst && (
-              <IconButton
-                icon={<ArrowUp size={18} weight="bold" />}
-                onPress={onMoveUp}
-                size="sm"
-                tone="ghost"
-                accessibilityLabel={moveSubStepUpLabel(subStep.title)}
-                testID={`edit-goal-substep-up-${subStep.id}`}
-              />
-            )}
-            {onMoveDown && !isLast && (
-              <IconButton
-                icon={<ArrowDown size={18} weight="bold" />}
-                onPress={onMoveDown}
-                size="sm"
-                tone="ghost"
-                accessibilityLabel={moveSubStepDownLabel(subStep.title)}
-                testID={`edit-goal-substep-down-${subStep.id}`}
-              />
-            )}
-            {canUnNest && onUnNest && (
-              <IconButton
-                icon={<ArrowBendUpLeft size={18} weight="bold" />}
-                onPress={onUnNest}
-                size="sm"
-                tone="ghost"
-                accessibilityLabel={unNestA11yLabel}
-                testID={`edit-goal-substep-un-nest-${subStep.id}`}
-              />
-            )}
-          </View>
-        )}
         <Pressable
           style={styles.subStepDelete}
           onPress={onDelete}
@@ -301,8 +238,32 @@ export function EditGoalSubStepRow({
     </>
   );
 
+  // Keep non-gesture hierarchy actions on their own line. A sub-step can show
+  // up, down, and promote at once; placing that cluster beside evidence made
+  // the fixed-width controls overlap the evidence chip on narrow screens.
+  const accessibleActions = showAccessibleControls ? (
+    <HierarchyActionRow
+      testID={`edit-goal-substep-hierarchy-actions-${subStep.id}`}
+      onMoveUp={!isFirst ? onMoveUp : undefined}
+      onMoveDown={!isLast ? onMoveDown : undefined}
+      onReparent={canUnNest ? onUnNest : undefined}
+      moveUpLabel={moveSubStepUpLabel(subStep.title)}
+      moveDownLabel={moveSubStepDownLabel(subStep.title)}
+      reparentLabel={unNestA11yLabel}
+      moveUpTestID={`edit-goal-substep-up-${subStep.id}`}
+      moveDownTestID={`edit-goal-substep-down-${subStep.id}`}
+      reparentTestID={`edit-goal-substep-un-nest-${subStep.id}`}
+      reparentDirection="promote"
+    />
+  ) : null;
+
   if (!canDrag) {
-    return <View style={styles.subStepRow}>{body}</View>;
+    return (
+      <View>
+        <View style={styles.subStepRow}>{body}</View>
+        {accessibleActions}
+      </View>
+    );
   }
 
   // The flex-row layout (`subStepRow`) lives on a plain inner View, never on
@@ -313,13 +274,9 @@ export function EditGoalSubStepRow({
   return (
     <GestureDetector gesture={composed}>
       <Animated.View style={animatedStyle}>
-        <View
-          style={[
-            styles.subStepRow,
-            isBeingDragged && styles.subStepRowDragging,
-          ]}
-        >
-          {body}
+        <View style={[isBeingDragged && styles.subStepRowDragging]}>
+          <View style={styles.subStepRow}>{body}</View>
+          {accessibleActions}
         </View>
       </Animated.View>
     </GestureDetector>

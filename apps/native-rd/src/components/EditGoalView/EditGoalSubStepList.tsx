@@ -14,7 +14,6 @@
 import React from "react";
 import { View } from "react-native";
 import type { AnimationPref } from "../../hooks/useAnimationPref";
-import type { DragScrollController } from "../StepList/dragAutoScroll";
 import type { SharedValue } from "react-native-reanimated";
 import { EditGoalSubStepRow } from "./EditGoalSubStepRow";
 import type { EditGoalSubStep } from "./EditGoalView";
@@ -22,8 +21,6 @@ import type { RowGeometry } from "./useEditGoalHierarchyDrag";
 
 export interface EditGoalSubStepListProps {
   subSteps: EditGoalSubStep[];
-  /** Fired on drop / ↑↓ with this parent's new sub-step order. */
-  onReorder: (orderedSubStepIds: string[]) => void;
   /** Which id (step or sub-step) is being renamed inline; drag off while editing. */
   editingId: string | null;
   editText: string;
@@ -34,8 +31,6 @@ export interface EditGoalSubStepListProps {
   onDelete: (id: string) => void;
   showAccessibleControls: boolean;
   animationPref: AnimationPref;
-  dragScrollController?: DragScrollController;
-  announceReorder?: (subStepTitle: string, position: number) => string;
   // --- Unified coordinator wiring (#496, R2) ---
   /** Shared drag handlers from the coordinator, keyed by row id. */
   onDragStart: (rowId: string) => void;
@@ -87,7 +82,6 @@ export function EditGoalSubStepList({
         <View key={sub.id}>
           <EditGoalSubStepRow
             subStep={sub}
-            index={index}
             isBeingDragged={draggedRowId === sub.id}
             isEditing={editingId === sub.id}
             editText={editText}

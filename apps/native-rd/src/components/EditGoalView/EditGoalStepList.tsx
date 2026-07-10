@@ -124,6 +124,7 @@ export interface EditGoalStepListProps {
   nestUnderPickerTitle?: string;
   nestUnderRowLabel?: (targetTitle: string) => string;
   nestUnderRowA11yLabel?: (targetTitle: string) => string;
+  nestUnderCancelLabel?: string;
   unNestA11yLabel?: string;
   announcePromote?: (stepTitle: string) => string;
   announceNestedUnder?: (stepTitle: string, parentTitle: string) => string;
@@ -167,6 +168,7 @@ export function EditGoalStepList({
   nestUnderRowLabel = (targetTitle) => `Nest under "${targetTitle}"`,
   nestUnderRowA11yLabel = (targetTitle) =>
     `Nest this step under ${targetTitle}`,
+  nestUnderCancelLabel = "Cancel",
   unNestA11yLabel = "Promote this step to top level",
   announcePromote,
   announceNestedUnder,
@@ -187,7 +189,6 @@ export function EditGoalStepList({
     id: string;
     title: string;
   } | null>(null);
-
   const drag = useEditGoalHierarchyDrag({
     steps,
     onReorderSteps,
@@ -216,6 +217,13 @@ export function EditGoalStepList({
       });
     }
   }
+
+  useEffect(() => {
+    drag.registerListOriginRemeasure(measureListOrigin);
+    return () => drag.registerListOriginRemeasure(null);
+    // Coordinator registry functions read stable refs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     AccessibilityInfo.isScreenReaderEnabled()
@@ -312,7 +320,6 @@ export function EditGoalStepList({
       <View style={styles.subStepBlock}>
         <EditGoalSubStepList
           subSteps={subs}
-          onReorder={(ids) => onReorderSubSteps(step.id, ids)}
           editingId={editingId}
           editText={editText}
           onEditTextChange={setEditText}
@@ -401,7 +408,6 @@ export function EditGoalStepList({
             <View key={step.id}>
               <EditGoalStepRow
                 step={step}
-                index={index}
                 stepNumber={index + 1}
                 isBeingDragged={drag.draggedRowId === step.id}
                 isEditing={editingId === step.id}
@@ -448,6 +454,7 @@ export function EditGoalStepList({
                 nestUnderPickerTitle={nestUnderPickerTitle}
                 nestUnderRowLabel={nestUnderRowLabel}
                 nestUnderRowA11yLabel={nestUnderRowA11yLabel}
+                nestUnderCancelLabel={nestUnderCancelLabel}
               >
                 {/* Sub-steps block (D12), rendered inside the parent card so
                     it drags with the parent. See renderSubStepBlock. */}

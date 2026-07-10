@@ -95,6 +95,51 @@ describe("useEditGoalHierarchyDrag", () => {
       expect(onReorderSubSteps).toHaveBeenCalledWith("a", ["a2", "a3", "a1"]);
       expect(onReorderSteps).not.toHaveBeenCalled();
     });
+
+    it("refreshes the list origin and every row before using absolute geometry", () => {
+      const onReorderSteps = jest.fn();
+      const steps = [step("a", "A"), step("b", "B"), step("c", "C")];
+      const { result } = renderHook(() =>
+        useEditGoalHierarchyDrag({
+          steps,
+          onReorderSteps,
+          onReorderSubSteps: jest.fn(),
+        }),
+      );
+
+      // Stale pre-scroll coordinates. Drag start must replace all of them.
+      registerGrid(result.current, ["a", "b", "c"], 50);
+      result.current.registerRowLayout("a", { absoluteY: 1000, height: 50 });
+      result.current.registerRowLayout("b", { absoluteY: 1050, height: 50 });
+      result.current.registerRowLayout("c", { absoluteY: 1100, height: 50 });
+      const originRemeasure = jest.fn(() =>
+        result.current.registerListOrigin(0),
+      );
+      const rowRemeasures = ["a", "b", "c"].map((id, index) =>
+        jest.fn(() =>
+          result.current.registerRowLayout(id, {
+            absoluteY: index * 50,
+            height: 50,
+          }),
+        ),
+      );
+      result.current.registerListOriginRemeasure(originRemeasure);
+      ["a", "b", "c"].forEach((id, index) =>
+        result.current.registerRemeasure(id, rowRemeasures[index]),
+      );
+
+      act(() => {
+        result.current.handleDragStart("a");
+        result.current.handleDragMove(120, 120);
+        result.current.handleDragEnd();
+      });
+
+      expect(originRemeasure).toHaveBeenCalledTimes(1);
+      rowRemeasures.forEach((remeasure) =>
+        expect(remeasure).toHaveBeenCalledTimes(1),
+      );
+      expect(onReorderSteps).toHaveBeenCalledWith(["b", "c", "a"]);
+    });
   });
 
   describe("reparent dispatch (onReparentStep supplied)", () => {
@@ -151,6 +196,61 @@ describe("useEditGoalHierarchyDrag", () => {
         result.current.handleDragEnd();
       });
       expect(onReparentStep).toHaveBeenCalledWith("b", "a");
+      jest.useRealTimers();
+    });
+
+    it("does not arm when the insertion target is outside its measured band", () => {
+      jest.useFakeTimers();
+      const onReparentStep = jest.fn();
+      const steps = [step("a", "A"), step("b", "B")];
+      const { result } = renderHook(() =>
+        useEditGoalHierarchyDrag({
+          steps,
+          onReorderSteps: jest.fn(),
+          onReorderSubSteps: jest.fn(),
+          onReparentStep,
+        }),
+      );
+      result.current.registerRowLayout("a", { absoluteY: 0, height: 20 });
+      result.current.registerRowLayout("b", { absoluteY: 100, height: 20 });
+
+      act(() => {
+        result.current.handleDragStart("b");
+        // Center moves above a. It still maps to a as the insertion target,
+        // but is outside a's 0..20 dwell band.
+        result.current.handleDragMove(-130, -20);
+        jest.advanceTimersByTime(250);
+        result.current.handleDragEnd();
+      });
+
+      expect(onReparentStep).not.toHaveBeenCalledWith("b", "a");
+      jest.useRealTimers();
+    });
+
+    it("disarms when leaving a target band without changing the hover id", () => {
+      jest.useFakeTimers();
+      const onReparentStep = jest.fn();
+      const steps = [step("a", "A"), step("b", "B")];
+      const { result } = renderHook(() =>
+        useEditGoalHierarchyDrag({
+          steps,
+          onReorderSteps: jest.fn(),
+          onReorderSubSteps: jest.fn(),
+          onReparentStep,
+        }),
+      );
+      result.current.registerRowLayout("a", { absoluteY: 0, height: 20 });
+      result.current.registerRowLayout("b", { absoluteY: 100, height: 20 });
+
+      act(() => {
+        result.current.handleDragStart("b");
+        result.current.handleDragMove(-100, 10); // center 10: inside a
+        result.current.handleDragMove(-130, -20); // still hover a, now outside
+        jest.advanceTimersByTime(250);
+        result.current.handleDragEnd();
+      });
+
+      expect(onReparentStep).not.toHaveBeenCalledWith("b", "a");
       jest.useRealTimers();
     });
 

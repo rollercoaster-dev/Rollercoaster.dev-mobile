@@ -178,6 +178,17 @@ export const styles = StyleSheet.create((theme) => ({
     gap: theme.space[1],
     width: 36 * 2 + theme.space[1],
   },
+  // Screen-reader/reduced-motion hierarchy fallbacks can expose three actions
+  // at once. Their own line prevents arrows from covering evidence on compact
+  // screens and keeps the primary content row visually stable.
+  hierarchyActionRow: {
+    flexDirection: "row" as const,
+    justifyContent: "flex-end" as const,
+    alignItems: "center" as const,
+    gap: theme.space[1],
+    minHeight: 44,
+    marginTop: theme.space[1],
+  },
   // Per-step delete × on the main row (#460) — mirrors subStepDelete/Glyph (D3).
   stepDelete: {
     minWidth: 44,
@@ -316,8 +327,8 @@ export const styles = StyleSheet.create((theme) => ({
     gap: theme.space[2],
   },
   // Same plain single-row treatment as rowMain (A-D4): [handle][title] in
-  // rowLead (title wraps in place), [evidence][↑↓][×] in rowControls at natural
-  // width — no flexWrap, so the controls never paint over the next sub-row.
+  // rowLead (title wraps in place), with [evidence][×] in rowControls. Optional
+  // hierarchy actions render below in hierarchyActionRow.
   subStepRow: {
     flexDirection: "row" as const,
     alignItems: "center" as const,

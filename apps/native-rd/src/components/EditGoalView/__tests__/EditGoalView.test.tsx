@@ -259,17 +259,18 @@ describe("EditGoalView", () => {
       expect(screen.getByText("Photo")).toBeOnTheScreen();
     });
 
-    it("keeps the title and every control on a two-type step with the ↑/↓ fallback (D5 clustering)", () => {
-      // The narrow-screen fix splits the row into a rowLead (title) + rowControls
-      // (evidence + ↑/↓) so controls wrap instead of crushing the title. This is
-      // the worst case for width (two pills + both arrows); the restructure must
-      // not drop the title or any control. Layout wrapping itself is verified in
-      // Storybook — the Node renderer has no width.
+    it("keeps hierarchy fallbacks separate from a two-type evidence row (D5 clustering)", () => {
+      // The narrow-screen layout reserves the primary row for title, evidence,
+      // and delete, then renders hierarchy fallbacks in a dedicated action row.
+      // Geometry is verified in Storybook because the Node renderer has no width.
       mockAnimationPref = "none";
       renderWithProviders(<EditGoalView {...makeProps()} />);
       expect(screen.getByText("Second step")).toBeOnTheScreen();
       expect(screen.getByText("Link")).toBeOnTheScreen();
       expect(screen.getByText("Photo")).toBeOnTheScreen();
+      expect(
+        screen.getByTestId("edit-goal-step-hierarchy-actions-s2"),
+      ).toBeOnTheScreen();
       expect(screen.getByLabelText('Move "Second step" up')).toBeOnTheScreen();
     });
   });
@@ -569,6 +570,9 @@ describe("EditGoalView", () => {
       expect(screen.getByLabelText('Move "Alpha one" down')).toBeOnTheScreen();
       expect(screen.getByLabelText('Move "Alpha two" up')).toBeOnTheScreen();
       expect(screen.getByLabelText('Move "Alpha two" down')).toBeOnTheScreen();
+      expect(
+        screen.getByTestId("edit-goal-substep-hierarchy-actions-a2"),
+      ).toBeOnTheScreen();
       expect(screen.getByLabelText('Move "Alpha three" up')).toBeOnTheScreen();
       // First has no ↑, last has no ↓.
       expect(screen.queryByLabelText('Move "Alpha one" up')).toBeNull();
@@ -758,6 +762,17 @@ describe("EditGoalView", () => {
       // Picker lists eligible roots excluding s2 → s1.
       fireEvent.press(screen.getByTestId("edit-goal-step-nest-target-s2-s1"));
       expect(onReparentStep).toHaveBeenCalledWith("s2", "s1");
+    });
+
+    it("uses the English default for the nest-under picker cancel action", () => {
+      mockAnimationPref = "none";
+      renderWithProviders(
+        <EditGoalView
+          {...makeProps({ steps: withSub, onReparentStep: jest.fn() })}
+        />,
+      );
+      fireEvent.press(screen.getByTestId("edit-goal-step-nest-under-s2"));
+      expect(screen.getByRole("button", { name: "Cancel" })).toBeOnTheScreen();
     });
 
     it("renders no Nest-under control on a parent-with-children", () => {
