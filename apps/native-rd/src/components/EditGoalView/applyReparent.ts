@@ -15,7 +15,7 @@
 import type { EditGoalStep } from "./EditGoalView";
 
 export function applyReparent(
-  steps: readonly EditGoalStep[],
+  steps: EditGoalStep[],
   stepId: string,
   newParentId: string | null,
 ): EditGoalStep[] {
@@ -23,11 +23,11 @@ export function applyReparent(
   if (newParentId !== null) {
     const dragged = steps.find((s) => s.id === stepId);
     if (dragged && (dragged.subSteps?.length ?? 0) > 0) {
-      return [...steps];
+      return steps;
     }
     // Can't nest under a non-existent parent, or under self.
     const target = steps.find((s) => s.id === newParentId);
-    if (!target || newParentId === stepId) return [...steps];
+    if (!target || newParentId === stepId) return steps;
   }
 
   // Pull the moved step out of its source location and strip its sub-steps on
@@ -59,7 +59,7 @@ export function applyReparent(
       withoutSource.push(step);
     }
   }
-  if (!movedStep) return [...steps];
+  if (!movedStep) return steps;
 
   if (newParentId === null) {
     // Promote: append to the root array.

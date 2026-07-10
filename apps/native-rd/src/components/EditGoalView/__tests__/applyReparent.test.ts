@@ -61,18 +61,27 @@ describe("applyReparent", () => {
     expect(
       result.find((s) => s.id === "a")?.subSteps?.map((ss) => ss.id),
     ).toEqual(["a1"]);
+    expect(result).toBe(steps);
   });
 
   it("refuses to nest a step under itself and returns the input unchanged", () => {
     const steps = [step("a", "A"), step("b", "B")];
     const result = applyReparent(steps, "a", "a");
     expect(result.map((s) => s.id)).toEqual(["a", "b"]);
+    expect(result).toBe(steps);
   });
 
   it("refuses to nest under a non-existent parent and returns the input unchanged", () => {
     const steps = [step("a", "A")];
     const result = applyReparent(steps, "a", "nope");
     expect(result.map((s) => s.id)).toEqual(["a"]);
+    expect(result).toBe(steps);
+  });
+
+  it("returns the input unchanged when the moved step does not exist", () => {
+    const steps = [step("a", "A")];
+    const result = applyReparent(steps, "nope", null);
+    expect(result).toBe(steps);
   });
 
   it("does not mutate the input array", () => {

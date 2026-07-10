@@ -10,11 +10,11 @@
  * remeasure callback is registered so drag-start can refresh this row's
  * geometry (the registry never goes stale after manual scroll — finding 2).
  *
- * @param rowId      Stable id of the row (step or sub-step).
- * @param ref        React ref to the View whose band should be measured.
- * @param register   Coordinator callback that stores `{ absoluteY, height }`.
+ * @param rowId Stable id of the row (step or sub-step).
+ * @param register Coordinator callback that stores `{ absoluteY, height }`.
  * @param registerRemeasure Coordinator callback that stores a remeasure fn.
- * @returns `measureAndRegister` — pass to the View's `onLayout`.
+ * @returns The created View `ref` and `measureAndRegister` callback to pass to
+ * the measured View's `ref` and `onLayout` props.
  */
 import { useEffect, useRef } from "react";
 import type { View } from "react-native";
