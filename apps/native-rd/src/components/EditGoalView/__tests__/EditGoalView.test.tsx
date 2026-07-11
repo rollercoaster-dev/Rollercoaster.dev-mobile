@@ -360,6 +360,90 @@ describe("EditGoalView", () => {
     });
   });
 
+  // The evidence sheet captures the pressed chip's native tag
+  // (event.nativeEvent.target) and restores screen-reader focus to it on every
+  // dismissal path (#501). The multi-select sheet doesn't close on selection,
+  // so the applicable paths are ×, backdrop, and Android back.
+  describe("evidence sheet focus restoration (#501)", () => {
+    const soloStep: EditGoalStep[] = [
+      { id: "s1", title: "Solo", plannedEvidenceTypes: [EvidenceType.text] },
+    ];
+    const CHIP_TAG = 555;
+    let setFocus: jest.SpyInstance;
+
+    beforeEach(() => {
+      jest.useFakeTimers();
+      setFocus = jest
+        .spyOn(AccessibilityInfo, "setAccessibilityFocus")
+        .mockImplementation(() => undefined);
+    });
+
+    afterEach(() => {
+      act(() => {
+        jest.runOnlyPendingTimers();
+      });
+      jest.useRealTimers();
+      setFocus.mockRestore();
+    });
+
+    function openSheet() {
+      // The press event carries the chip's native tag, as a real Pressable does.
+      act(() => {
+        fireEvent.press(screen.getByTestId("edit-goal-step-evidence-s1"), {
+          nativeEvent: { target: CHIP_TAG },
+        });
+      });
+      expect(screen.getByTestId("edit-goal-evidence-close")).toBeOnTheScreen();
+    }
+
+    it("restores focus to the evidence chip when closed via the × button", () => {
+      renderWithProviders(<EditGoalView {...makeProps({ steps: soloStep })} />);
+      openSheet();
+      setFocus.mockClear();
+      act(() => {
+        fireEvent.press(screen.getByTestId("edit-goal-evidence-close"));
+      });
+      act(() => {
+        jest.runAllTimers();
+      });
+      expect(setFocus).toHaveBeenCalledWith(CHIP_TAG);
+    });
+
+    it("restores focus to the evidence chip when closed via the backdrop", () => {
+      renderWithProviders(<EditGoalView {...makeProps({ steps: soloStep })} />);
+      openSheet();
+      setFocus.mockClear();
+      act(() => {
+        fireEvent.press(screen.getByTestId("edit-goal-evidence-backdrop"));
+      });
+      act(() => {
+        jest.runAllTimers();
+      });
+      expect(setFocus).toHaveBeenCalledWith(CHIP_TAG);
+    });
+
+    it("restores focus to the evidence chip when closed via Android back", () => {
+      const addSpy = jest.spyOn(BackHandler, "addEventListener");
+      renderWithProviders(<EditGoalView {...makeProps({ steps: soloStep })} />);
+      openSheet();
+      setFocus.mockClear();
+      // The sheet re-registers its listener each render (onClose identity
+      // changes); the most recent registration holds the live onClose.
+      const backCalls = addSpy.mock.calls.filter(
+        ([event]) => event === "hardwareBackPress",
+      );
+      const handler = backCalls[backCalls.length - 1]?.[1];
+      act(() => {
+        handler?.();
+      });
+      act(() => {
+        jest.runAllTimers();
+      });
+      expect(setFocus).toHaveBeenCalledWith(CHIP_TAG);
+      addSpy.mockRestore();
+    });
+  });
+
   describe("sub-steps (D12)", () => {
     it("renders a sub-step row inside a parent that has one", () => {
       renderWithProviders(<EditGoalView {...makeProps({ steps: withSub })} />);
