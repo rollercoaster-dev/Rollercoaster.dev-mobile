@@ -12,7 +12,7 @@
  * shared handlers + the un-nest accessible control (R8).
  */
 import React from "react";
-import { View } from "react-native";
+import { View, type GestureResponderEvent } from "react-native";
 import type { AnimationPref } from "../../hooks/useAnimationPref";
 import type { SharedValue } from "react-native-reanimated";
 import { EditGoalSubStepRow } from "./EditGoalSubStepRow";
@@ -27,7 +27,7 @@ export interface EditGoalSubStepListProps {
   onEditTextChange: (text: string) => void;
   onStartEditing: (id: string, title: string) => void;
   onCommitEditing: () => void;
-  onEvidenceChipPress: (id: string) => void;
+  onEvidenceChipPress: (id: string, event: GestureResponderEvent) => void;
   onDelete: (id: string) => void;
   showAccessibleControls: boolean;
   animationPref: AnimationPref;
@@ -88,7 +88,7 @@ export function EditGoalSubStepList({
             onEditTextChange={onEditTextChange}
             onStartEditing={() => onStartEditing(sub.id, sub.title)}
             onCommitEditing={onCommitEditing}
-            onEvidenceChipPress={() => onEvidenceChipPress(sub.id)}
+            onEvidenceChipPress={(e) => onEvidenceChipPress(sub.id, e)}
             onDelete={() => onDelete(sub.id)}
             onDragStart={onDragStart}
             onDragMove={onDragMove}

@@ -4,7 +4,13 @@
  * screen-reader and reduced-motion access.
  */
 import React from "react";
-import { View, Text as RNText, TextInput, Pressable } from "react-native";
+import {
+  View,
+  Text as RNText,
+  TextInput,
+  Pressable,
+  type GestureResponderEvent,
+} from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useUnistyles } from "react-native-unistyles";
 import Animated, {
@@ -32,8 +38,12 @@ export interface EditGoalSubStepRowProps {
   onEditTextChange: (text: string) => void;
   onStartEditing: () => void;
   onCommitEditing: () => void;
-  /** Opens the evidence-type picker for this sub-step (D8/D12). */
-  onEvidenceChipPress: () => void;
+  /**
+   * Opens the evidence-type picker for this sub-step (D8/D12). Receives the
+   * press event so the host can capture the chip's native tag and restore
+   * screen-reader focus here when the sheet closes (#501).
+   */
+  onEvidenceChipPress: (event: GestureResponderEvent) => void;
   onDelete: () => void;
   onDragStart: (rowId: string) => void;
   onDragMove: (translationY: number, absoluteY: number) => void;

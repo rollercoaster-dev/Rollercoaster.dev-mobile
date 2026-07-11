@@ -363,6 +363,22 @@ export function NewGoalWizard({
     null,
   );
 
+  // Native tag of the build-step evidence chip that opened the sheet, captured
+  // from the list row's press event (#501) — threaded into AnimatedSheet's
+  // restoreFocusRef so focus returns to that chip on any dismissal. Mirrors
+  // EditGoalView; avoids threading a View ref through the list/row layers (D2).
+  const buildRestoreFocusTagRef = useRef<number | null>(null);
+  function handleBuildEvidenceChipPress(
+    id: string,
+    event: GestureResponderEvent,
+  ) {
+    // RN types nativeEvent.target as string, but it's the numeric react tag at
+    // runtime — the exact input setAccessibilityFocus expects.
+    buildRestoreFocusTagRef.current =
+      (event?.nativeEvent?.target as unknown as number | undefined) ?? null;
+    setEditingEvidenceId(id);
+  }
+
   // Find the sub-step with `id` across every parent (one-level, D12).
   function findSubStep(id: string) {
     for (const s of steps) {
@@ -605,7 +621,7 @@ export function NewGoalWizard({
                 onReparentStep={onReparentStep}
                 onAddStep={onAddStep}
                 onStepTitleChange={onStepTitleChange}
-                onEvidenceChipPress={setEditingEvidenceId}
+                onEvidenceChipPress={handleBuildEvidenceChipPress}
                 onAddSubStep={onAddSubStep}
                 onSubStepTitleChange={onSubStepTitleChange}
                 onDeleteSubStep={onDeleteSubStep}
@@ -713,6 +729,7 @@ export function NewGoalWizard({
         closeLabel={closeLabel}
         closeTestID="new-goal-evidence-close"
         backdropTestID="new-goal-evidence-backdrop"
+        restoreFocusRef={buildRestoreFocusTagRef}
       >
         {sheetEvidenceTypes ? (
           <EvidenceTypePicker

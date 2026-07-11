@@ -36,8 +36,14 @@
  * Drag orchestration lives in useEditGoalDrag; the row anatomy in
  * EditGoalStepRow; the ⋯ menu content in EditGoalOverflowMenu.
  */
-import React, { useState } from "react";
-import { View, Text as RNText, TextInput, ScrollView } from "react-native";
+import React, { useRef, useState } from "react";
+import {
+  View,
+  Text as RNText,
+  TextInput,
+  ScrollView,
+  type GestureResponderEvent,
+} from "react-native";
 import { DotsThree, Pencil } from "phosphor-react-native";
 import { useUnistyles } from "react-native-unistyles";
 import { IconButton } from "../IconButton";
@@ -289,6 +295,20 @@ export function EditGoalView({
     null,
   );
 
+  // Native tag of the evidence chip that opened the sheet, captured from the
+  // Pressable's press event (#501). Threaded straight into AnimatedSheet's
+  // restoreFocusRef so focus returns to that chip on any dismissal — avoids
+  // threading a View ref down through the list/row layers (D2). A RefObject
+  // whose current is a number; focusAccessibilityRef uses it as the tag.
+  const restoreFocusTagRef = useRef<number | null>(null);
+  function handleEvidenceChipPress(id: string, event: GestureResponderEvent) {
+    // RN types nativeEvent.target as string, but it's the numeric react tag at
+    // runtime — the exact input setAccessibilityFocus expects.
+    restoreFocusTagRef.current =
+      (event?.nativeEvent?.target as unknown as number | undefined) ?? null;
+    setEditingEvidenceId(id);
+  }
+
   // Find the sub-step with `id` across every parent (one-level, D12).
   function findSubStep(id: string) {
     for (const s of steps) {
@@ -417,7 +437,7 @@ export function EditGoalView({
           onReparentStep={onReparentStep}
           onAddStep={onAddStep}
           onStepTitleChange={onStepTitleChange}
-          onEvidenceChipPress={setEditingEvidenceId}
+          onEvidenceChipPress={handleEvidenceChipPress}
           onAddSubStep={onAddSubStep}
           onSubStepTitleChange={onSubStepTitleChange}
           onDeleteSubStep={onDeleteSubStep}
@@ -484,6 +504,7 @@ export function EditGoalView({
         closeLabel={closeLabel}
         closeTestID="edit-goal-evidence-close"
         backdropTestID="edit-goal-evidence-backdrop"
+        restoreFocusRef={restoreFocusTagRef}
       >
         {sheetEvidenceTypes ? (
           <EvidenceTypePicker
