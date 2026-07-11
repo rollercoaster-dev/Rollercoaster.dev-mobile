@@ -7,6 +7,7 @@ import {
   act,
 } from "../../../__tests__/test-utils";
 import { AnimatedSheet } from "../AnimatedSheet";
+import { expectModalAccessibility } from "../../../__tests__/a11y-helpers";
 
 // findNodeHandle is a lazy getter on react-native's index — jest.spyOn can't
 // replace it in place, so redefine it to resolve any view instance to a fixed
@@ -81,7 +82,7 @@ describe("AnimatedSheet", () => {
   it("restores focus to restoreFocusRef once the sheet finishes closing", () => {
     // Numeric current = a captured native tag; resolved without findNodeHandle
     // so it's distinct from the title's tag.
-    const restoreFocusRef = { current: 555 } as React.RefObject<unknown>;
+    const restoreFocusRef = { current: 555 } as React.RefObject<number>;
     const { rerender } = renderWithProviders(
       <Sheet visible={true} restoreFocusRef={restoreFocusRef} />,
     );
@@ -97,6 +98,41 @@ describe("AnimatedSheet", () => {
     });
     expect(setFocus).toHaveBeenCalledWith(555);
     expect(setFocus).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not fire a stale restore when reopened before the delay elapses", () => {
+    // Numeric current = a captured native tag; distinct from the title's 111.
+    const restoreFocusRef = { current: 555 } as React.RefObject<number>;
+    const { rerender } = renderWithProviders(
+      <Sheet visible={true} restoreFocusRef={restoreFocusRef} />,
+    );
+    act(() => {
+      jest.runAllTimers();
+    });
+    // Title focused on open; isolate what follows the close→reopen.
+    setFocus.mockClear();
+
+    // Close then reopen within the same pending-timer window: act() flushes the
+    // effects (so close schedules the restore timer) but does NOT advance the
+    // fake timer, so the reopen must cancel the pending restore before it fires.
+    act(() => {
+      rerender(<Sheet visible={false} restoreFocusRef={restoreFocusRef} />);
+    });
+    act(() => {
+      rerender(<Sheet visible={true} restoreFocusRef={restoreFocusRef} />);
+    });
+    act(() => {
+      jest.runAllTimers();
+    });
+
+    // Reopen re-focuses the title; the cancelled restore must never land on 555.
+    expect(setFocus).toHaveBeenCalledWith(TITLE_TAG);
+    expect(setFocus).not.toHaveBeenCalledWith(555);
+  });
+
+  it("marks the overlay as a modal so content behind it is hidden (iOS)", () => {
+    renderWithProviders(<Sheet visible={true} />);
+    expectModalAccessibility(screen.getByTestId("animated-sheet-overlay"));
   });
 
   it("does not throw when restoreFocusRef is omitted", () => {

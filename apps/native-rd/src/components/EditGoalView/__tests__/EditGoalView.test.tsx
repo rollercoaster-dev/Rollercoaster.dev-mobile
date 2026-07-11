@@ -323,6 +323,25 @@ describe("EditGoalView", () => {
       expect(onStepEvidenceChange).not.toHaveBeenCalled();
     });
 
+    it("hides the screen content from TalkBack while the sheet is open (#501, Android)", () => {
+      renderWithProviders(<EditGoalView {...makeProps({ steps: soloStep })} />);
+      // includeHiddenElements: once the sheet opens, the content wrapper marks
+      // its own subtree accessibility-hidden — which is exactly what we assert —
+      // so it drops out of the default (a11y-visible-only) query.
+      const hideState = () =>
+        screen.getByTestId("edit-goal-content", { includeHiddenElements: true })
+          .props.importantForAccessibility;
+      expect(hideState()).toBe("auto");
+
+      fireEvent.press(screen.getByTestId("edit-goal-step-evidence-s1"));
+      expect(hideState()).toBe("no-hide-descendants");
+
+      act(() => {
+        fireEvent.press(screen.getByTestId("edit-goal-evidence-backdrop"));
+      });
+      expect(hideState()).toBe("auto");
+    });
+
     it("dismisses via its own backdrop testID, distinct from the capture sheet (#493)", () => {
       renderWithProviders(<EditGoalView {...makeProps({ steps: soloStep })} />);
       fireEvent.press(screen.getByTestId("edit-goal-step-evidence-s1"));

@@ -44,7 +44,7 @@ export interface AnimatedSheetProps {
    * `current` is already a native tag captured from a press event
    * (`event.nativeEvent.target`). Omit it and no focus is restored on close.
    */
-  restoreFocusRef?: React.RefObject<unknown>;
+  restoreFocusRef?: React.RefObject<View | number | null>;
   /** Body content rendered below the header (the picker grid). */
   children: React.ReactNode;
 }
@@ -150,6 +150,7 @@ export function AnimatedSheet({
 
   return (
     <View
+      testID="animated-sheet-overlay"
       style={styles.overlay}
       pointerEvents={visible ? "auto" : "none"}
       accessibilityViewIsModal

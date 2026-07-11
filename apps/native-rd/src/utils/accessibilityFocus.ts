@@ -1,4 +1,5 @@
 import { AccessibilityInfo, findNodeHandle } from "react-native";
+import type { View } from "react-native";
 import type { RefObject } from "react";
 
 /**
@@ -14,13 +15,15 @@ import type { RefObject } from "react";
  * layers (see EditGoalView / NewGoalWizard evidence-chip restoration).
  *
  * No-ops when the ref is absent, its `current` is null/undefined, or the tag
- * can't be resolved. Returns a cancel function (or `undefined` when it no-ops)
- * so callers can drop a still-pending focus request if the component unmounts
- * or the sheet reopens before the delay elapses — otherwise an interrupted
- * open→close→open cycle could fire a stale restore after the sheet is back up.
+ * can't be resolved. Returns `undefined` only when `ref` itself is absent;
+ * otherwise it always returns a cancel function (the current/tag no-op is
+ * decided later, inside the deferred callback). Callers use the cancel function
+ * to drop a still-pending focus request if the component unmounts or the sheet
+ * reopens before the delay elapses — otherwise an interrupted open→close→open
+ * cycle could fire a stale restore after the sheet is back up.
  */
 export function focusAccessibilityRef(
-  ref: RefObject<unknown> | null | undefined,
+  ref: RefObject<View | number | null> | null | undefined,
   delayMs = 50,
 ): (() => void) | undefined {
   if (ref == null) return undefined;
@@ -34,10 +37,7 @@ export function focusAccessibilityRef(
     if (current == null) return;
     // An already-numeric current is a native tag (a captured press target) —
     // skip findNodeHandle, which only resolves component instances.
-    const tag =
-      typeof current === "number"
-        ? current
-        : findNodeHandle(current as Parameters<typeof findNodeHandle>[0]);
+    const tag = typeof current === "number" ? current : findNodeHandle(current);
     if (tag == null) return;
     AccessibilityInfo.setAccessibilityFocus(tag);
   }, delayMs);

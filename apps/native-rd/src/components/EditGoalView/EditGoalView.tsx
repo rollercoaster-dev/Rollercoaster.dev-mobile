@@ -381,6 +381,7 @@ export function EditGoalView({
           sheet control can't reach content behind it (#501). Accessibility-tree
           only — no layout/visual change. */}
       <View
+        testID="edit-goal-content"
         style={styles.content}
         importantForAccessibility={sheetOpen ? "no-hide-descendants" : "auto"}
       >

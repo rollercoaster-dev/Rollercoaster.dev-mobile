@@ -371,6 +371,22 @@ describe("NewGoalWizard", () => {
       expect(screen.getByRole("radio", { name: "Photo" })).toBeOnTheScreen();
     });
 
+    it("hides the wizard body from TalkBack while a sheet is open (#501, Android)", () => {
+      const props = makeProps({ currentStep: "step" });
+      const { rerender } = renderWithProviders(<NewGoalWizard {...props} />);
+      // includeHiddenElements: once a sheet opens, the content wrapper marks its
+      // own subtree accessibility-hidden — which is exactly what we assert — so
+      // it drops out of the default (a11y-visible-only) query.
+      const hideState = () =>
+        screen.getByTestId("new-goal-wizard-content", {
+          includeHiddenElements: true,
+        }).props.importantForAccessibility;
+      expect(hideState()).toBe("auto");
+
+      rerender(<NewGoalWizard {...props} evidencePickerOpen />);
+      expect(hideState()).toBe("no-hide-descendants");
+    });
+
     it("pre-selects the current planned type in the sheet (parallels the build side)", () => {
       // pickerSelectedType derives from plannedEvidenceType on the step; guards
       // the step-2 half of that derivation the way the build test guards its own.

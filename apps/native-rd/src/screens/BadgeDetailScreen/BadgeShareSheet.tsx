@@ -8,7 +8,7 @@
  *   2. Save as image           — plain picture, may drop the credential
  *   3. Export credential (JSON)— for verifiers & wallets
  *
- * Pure, prop-driven, and i18n-free (D6): all copy arrives as string props with
+ * Pure, prop-driven, and i18n-free (#412, D6): all copy arrives as string props with
  * English defaults; #380 threads t() output through when it wires the screen.
  * The sheet composes the shared {@link AnimatedSheet} (#501, D3) — the same
  * bottom-sheet chrome the capture / evidence sheets use — so it inherits a
@@ -111,7 +111,7 @@ export function BadgeShareSheet({
           info-surface bar with a leading vector icon, and the sheet rows are
           two-line (label + trade-off) list items with disabled/loading/
           highlighted states — neither shape the single-line <Button> models
-          (D5, Step 1). */}
+          (#412, D5, Step 1). */}
       {/* eslint-disable-next-line local/no-shared-component-reimplementation */}
       <Pressable
         ref={ctaRef}

@@ -220,7 +220,10 @@ layer for focus behaviour. It implements the contract itself (#501):
   every screen that mounts an `AnimatedSheet` alongside other content wraps that
   content in a `View` with
   `importantForAccessibility={sheetOpen ? "no-hide-descendants" : "auto"}`, so
-  swiping past the last sheet control can't reach content behind it.
+  swiping past the last sheet control can't reach content behind it. The
+  Edit Goal and New Goal wizards do this today; `BadgeShareSheet` has no sibling
+  content of its own to hide, so the wrap becomes a prerequisite for whichever
+  issue mounts it into `BadgeDetailScreen` alongside the rest of the screen.
 
 The shared helper `focusAccessibilityRef` (`src/utils/accessibilityFocus.ts`)
 resolves the tag and calls `AccessibilityInfo.setAccessibilityFocus` after a

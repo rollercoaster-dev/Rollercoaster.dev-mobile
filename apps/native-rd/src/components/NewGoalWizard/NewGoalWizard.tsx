@@ -452,6 +452,7 @@ export function NewGoalWizard({
           is open so swiping past the last sheet control can't reach wizard
           content behind it. Accessibility-tree only, no layout change. */}
       <View
+        testID="new-goal-wizard-content"
         style={styles.content}
         importantForAccessibility={
           anySheetOpen ? "no-hide-descendants" : "auto"

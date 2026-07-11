@@ -1,5 +1,10 @@
 import { AccessibilityInfo, findNodeHandle } from "react-native";
+import type { View } from "react-native";
 import { focusAccessibilityRef } from "../accessibilityFocus";
+
+// Stand-in for a mounted View instance: the mocked findNodeHandle resolves any
+// non-null current to a fixed tag, so only its presence (not its shape) matters.
+const fakeView = {} as unknown as View;
 
 // findNodeHandle is a lazy getter on react-native's index, so jest.spyOn can't
 // replace it in place. The helper only touches findNodeHandle + AccessibilityInfo
@@ -29,7 +34,7 @@ describe("focusAccessibilityRef", () => {
   });
 
   it("focuses the resolved native tag after the delay elapses", () => {
-    focusAccessibilityRef({ current: {} });
+    focusAccessibilityRef({ current: fakeView });
     // Nothing fires synchronously — the delay lets the view register first.
     expect(setFocus).not.toHaveBeenCalled();
     jest.advanceTimersByTime(50);
@@ -56,23 +61,23 @@ describe("focusAccessibilityRef", () => {
   });
 
   it("resolves current lazily — a ref populated after scheduling still focuses", () => {
-    const ref: { current: unknown } = { current: null };
+    const ref: { current: View | null } = { current: null };
     focusAccessibilityRef(ref);
     // The view mounts after the focus request is scheduled.
-    ref.current = {};
+    ref.current = fakeView;
     jest.runAllTimers();
     expect(setFocus).toHaveBeenCalledWith(4242);
   });
 
   it("does not focus when findNodeHandle resolves to null", () => {
     findHandle.mockReturnValue(null);
-    focusAccessibilityRef({ current: {} });
+    focusAccessibilityRef({ current: fakeView });
     jest.runAllTimers();
     expect(setFocus).not.toHaveBeenCalled();
   });
 
   it("cancel function prevents the delayed focus from firing", () => {
-    const cancel = focusAccessibilityRef({ current: {} });
+    const cancel = focusAccessibilityRef({ current: fakeView });
     cancel?.();
     jest.runAllTimers();
     expect(setFocus).not.toHaveBeenCalled();
