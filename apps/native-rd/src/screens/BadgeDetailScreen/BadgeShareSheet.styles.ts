@@ -36,41 +36,9 @@ export const styles = StyleSheet.create((theme) => ({
     fontWeight: theme.fontWeight.bold,
   },
 
-  // Scrim behind the sheet; bottom-anchors the panel. The scrim color is
-  // applied inline in the component (shadow token + alpha), mirroring
-  // ConfirmDeleteModal, so no raw hex lands here.
-  backdrop: {
-    flex: 1,
-    justifyContent: "flex-end",
-  },
-  // Bottom-anchored sheet panel.
-  sheet: {
-    backgroundColor: theme.surfaceBorder.surfaceSheetBg,
-    borderTopWidth: theme.borderWidth.thick,
-    borderColor: theme.surfaceBorder.borderStrong,
-    borderTopLeftRadius: theme.radius.xl,
-    borderTopRightRadius: theme.radius.xl,
-    paddingHorizontal: theme.space[4],
-    paddingTop: theme.space[3],
-    paddingBottom: theme.space[6],
-  },
-  // Small grabber handle centered at the top of the sheet.
-  grabber: {
-    width: 42,
-    height: 4,
-    alignSelf: "center",
-    borderRadius: theme.radius.pill,
-    backgroundColor: theme.surfaceBorder.borderSubtle,
-    marginBottom: theme.space[4],
-  },
-  sheetTitle: {
-    color: theme.surfaceBorder.surfaceSheetFg,
-    marginBottom: theme.space[1],
-  },
-  sheetSubtitle: {
-    color: theme.colors.textMuted,
-    marginBottom: theme.space[4],
-  },
+  // The sheet's chrome (backdrop, panel, grabber, title, sub-line) is now owned
+  // by the shared AnimatedSheet / EvidenceTypePicker.styles (#501, D3); only the
+  // share-row styles below remain bespoke to this screen.
 
   // Row 1 — verifiable badge, the recommended path. Blue panel matching the CTA
   // so it reads as the primary choice inside the sheet.

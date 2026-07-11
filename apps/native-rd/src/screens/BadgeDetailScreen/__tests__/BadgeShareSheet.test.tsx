@@ -222,8 +222,12 @@ describe("BadgeShareSheet", () => {
       expect(button.props.accessibilityLabel).toBeTruthy();
       const flat = StyleSheet.flatten(button.props.style) as {
         minHeight?: number;
+        flex?: number;
       };
-      expect(flat.minHeight).toBeGreaterThanOrEqual(44);
+      // The shared sheet's backdrop is a full-screen dismiss target (flex:1);
+      // every other control carries an explicit >=44pt minHeight.
+      const meetsTarget = (flat.minHeight ?? 0) >= 44 || flat.flex === 1;
+      expect(meetsTarget).toBe(true);
     });
   });
 });
