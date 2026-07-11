@@ -198,6 +198,36 @@ Modals must trap focus and announce their presence:
 </Modal>
 ```
 
+### In-Tree Bottom Sheets (AnimatedSheet)
+
+The `Modal` guidance above covers OS-level modals. The app's shared bottom sheet
+`AnimatedSheet` (used by the capture sheet, the New Goal / Edit Goal evidence
+sheets, and `BadgeShareSheet`) is **in-tree** — an absolute scrim + panel inside
+the current screen, not a portalled `Modal` — so it can't rely on the modal
+layer for focus behaviour. It implements the contract itself (#501):
+
+- **Focus enters on open.** When the sheet becomes visible, focus moves onto its
+  header title so assistive tech steps into the sheet instead of staying on the
+  trigger behind it.
+- **Focus returns to the trigger on close.** Every dismissal path — the × close,
+  a backdrop tap, a row/selection that closes it, and Android hardware back —
+  restores focus to the control that opened the sheet, via
+  `restoreFocusRef`. Pass it a `View` ref when the trigger is a direct sibling,
+  or a `RefObject` holding the pressed element's native tag
+  (`event.nativeEvent.target`) when the trigger is nested several layers down.
+- **Siblings are hidden on Android.** iOS gets isolation from
+  `accessibilityViewIsModal`, which has **no Android implementation** in RN. So
+  every screen that mounts an `AnimatedSheet` alongside other content wraps that
+  content in a `View` with
+  `importantForAccessibility={sheetOpen ? "no-hide-descendants" : "auto"}`, so
+  swiping past the last sheet control can't reach content behind it.
+
+The shared helper `focusAccessibilityRef` (`src/utils/accessibilityFocus.ts`)
+resolves the tag and calls `AccessibilityInfo.setAccessibilityFocus` after a
+short delay (the native view must register with the a11y tree first), and
+returns a cancel function so an interrupted open→close→open cycle can't fire a
+stale focus restore.
+
 ### Focus Traps
 
 Ensure users can navigate out of all interactive elements:
