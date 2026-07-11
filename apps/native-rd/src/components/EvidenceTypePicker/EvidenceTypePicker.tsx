@@ -49,6 +49,12 @@ export interface CaptureEvidenceTypePickerProps {
   onSelectType: (type: EvidenceTypeValue) => void;
   /** Closes the sheet — wired to backdrop tap, header × control, and Android back. */
   onClose: () => void;
+  /**
+   * Control to restore screen-reader focus to when the sheet closes — the chip
+   * that opened it. Forwarded to {@link AnimatedSheet}; omit and no focus is
+   * restored (e.g. the theme-matrix story).
+   */
+  restoreFocusRef?: React.RefObject<View | null>;
 }
 
 /**
@@ -164,6 +170,7 @@ function CaptureSheet({
   selectedType,
   onSelectType,
   onClose,
+  restoreFocusRef,
 }: Omit<CaptureEvidenceTypePickerProps, "mode">) {
   const { t } = useTranslation(["common"]);
   const title = headerTitle ?? t("common:evidenceTypePicker.addEvidence");
@@ -180,6 +187,7 @@ function CaptureSheet({
       title={title}
       subLine={subLine}
       closeLabel={t("common:actions.close")}
+      restoreFocusRef={restoreFocusRef}
     >
       <CaptureGrid selectedType={selectedType} onSelectType={onSelectType} />
     </AnimatedSheet>

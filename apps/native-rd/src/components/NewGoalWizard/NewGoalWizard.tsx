@@ -23,13 +23,14 @@
  * through them and wires the callbacks to navigation + Evolu. Storybook-first,
  * so `grep -rn "NewGoalWizard" src/screens` stays empty until then.
  */
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   View,
   Text as RNText,
   TextInput,
   Pressable,
   ScrollView,
+  type GestureResponderEvent,
 } from "react-native";
 import { X } from "phosphor-react-native";
 import { useUnistyles } from "react-native-unistyles";
@@ -341,6 +342,11 @@ export function NewGoalWizard({
   const plannedIcon = evidenceIcon(plannedEvidenceType);
   const plannedLabel = plannedEvidenceLabel(plannedEvidenceType);
 
+  // Step 2's planned-evidence chip is a direct sibling of the capture sheet, so
+  // a plain local ref restores focus to it on close — no press-target trick
+  // needed (unlike the build step's deeply-nested list rows below).
+  const evidenceChipRef = useRef<View>(null);
+
   // Step 2's capture sheet: a single-select planned-evidence chip. Distinct from
   // the build step's multi-select sheet below.
   const handlePickerSelect = (type: EvidenceTypeValue) => {
@@ -539,6 +545,7 @@ export function NewGoalWizard({
                   the icon+label; "change" sits outside it as a plain link, both
                   inside the single Pressable. */}
               <Pressable
+                ref={evidenceChipRef}
                 style={styles.evidencePress}
                 onPress={onOpenEvidencePicker}
                 accessible
@@ -688,6 +695,7 @@ export function NewGoalWizard({
         selectedType={plannedEvidenceType}
         onSelectType={handlePickerSelect}
         onClose={onCloseEvidencePicker}
+        restoreFocusRef={evidenceChipRef}
       />
 
       {/* Step 3 · build evidence picker (D8/D12): the reused multi-select
