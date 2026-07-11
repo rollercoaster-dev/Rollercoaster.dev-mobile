@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Pressable,
@@ -15,6 +15,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAnimationPref } from "../../hooks/useAnimationPref";
 import { getTimingConfig } from "../../utils/animation";
+import { focusAccessibilityRef } from "../../utils/accessibilityFocus";
 import { styles } from "./EvidenceTypePicker.styles";
 
 export interface AnimatedSheetProps {
@@ -36,6 +37,14 @@ export interface AnimatedSheetProps {
    * capture-sheet's original hook); the edit-goal sheet passes its own.
    */
   backdropTestID?: string;
+  /**
+   * Control to restore screen-reader focus to once the sheet finishes closing
+   * — the element that opened it (the "Share badge" CTA, an evidence chip, the
+   * "Add evidence" trigger). Accepts a `View` ref, or a `RefObject` whose
+   * `current` is already a native tag captured from a press event
+   * (`event.nativeEvent.target`). Omit it and no focus is restored on close.
+   */
+  restoreFocusRef?: React.RefObject<unknown>;
   /** Body content rendered below the header (the picker grid). */
   children: React.ReactNode;
 }
@@ -66,6 +75,7 @@ export function AnimatedSheet({
   closeLabel,
   closeTestID,
   backdropTestID = "capture-sheet-backdrop",
+  restoreFocusRef,
   children,
 }: AnimatedSheetProps) {
   const { animationPref } = useAnimationPref();
@@ -76,18 +86,46 @@ export function AnimatedSheet({
   const [rendered, setRendered] = useState(visible);
   // 0 = parked below the frame, 1 = resting position.
   const progress = useSharedValue(0);
+  // The header title — focus lands here on open so assistive tech enters the
+  // sheet rather than staying on the trigger behind it.
+  const titleRef = useRef<RNText>(null);
+  // Cancels a still-pending (delayed) focus request, so an interrupted
+  // open→close→open cycle can't fire a stale restore after the sheet reopens.
+  const pendingFocusCancel = useRef<(() => void) | undefined>(undefined);
+  // false→true edge detector so the title is focused on an actual open, not on
+  // every re-render (or an animation-pref change) while already visible.
+  const wasVisible = useRef(false);
 
+  // Re-runs on every visible transition, so the onExitComplete closure captures
+  // the current restoreFocusRef (whose .current is read lazily when the exit
+  // animation finishes) — no mirror ref needed.
   useEffect(() => {
     const config = getTimingConfig(animationPref, "normal");
+    const opening = visible && !wasVisible.current;
+    wasVisible.current = visible;
     if (visible) {
       setRendered(true);
       progress.value = withTiming(1, config);
+      if (opening) {
+        pendingFocusCancel.current?.();
+        pendingFocusCancel.current = focusAccessibilityRef(titleRef);
+      }
     } else {
+      // On the rendered:true→false transition (exit animation complete), move
+      // focus back to whatever opened the sheet.
+      const onExitComplete = () => {
+        setRendered(false);
+        pendingFocusCancel.current?.();
+        pendingFocusCancel.current = focusAccessibilityRef(restoreFocusRef);
+      };
       progress.value = withTiming(0, config, (finished) => {
-        if (finished) runOnJS(setRendered)(false);
+        if (finished) runOnJS(onExitComplete)();
       });
     }
-  }, [visible, animationPref, progress]);
+  }, [visible, animationPref, progress, restoreFocusRef]);
+
+  // Drop any pending focus request if the sheet unmounts before it fires.
+  useEffect(() => () => pendingFocusCancel.current?.(), []);
 
   // Android hardware/gesture back closes the sheet instead of the screen.
   useEffect(() => {
@@ -130,7 +168,11 @@ export function AnimatedSheet({
         <View style={styles.sheet(insets.bottom)}>
           <View style={styles.handle} />
           <View style={styles.sheetHeader}>
-            <RNText style={styles.sheetTitle} accessibilityRole="header">
+            <RNText
+              ref={titleRef}
+              style={styles.sheetTitle}
+              accessibilityRole="header"
+            >
               {title}
             </RNText>
             <Pressable
