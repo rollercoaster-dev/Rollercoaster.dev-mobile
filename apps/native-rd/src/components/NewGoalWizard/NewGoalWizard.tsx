@@ -440,172 +440,187 @@ export function NewGoalWizard({
     }
   }
 
+  // Either sheet (step-2 capture or build-step multi-select) shares the same
+  // in-tree AnimatedSheet/overlay, and neither isolates Android from the rest
+  // of the wizard (accessibilityViewIsModal is iOS-only). Hide the wizard body
+  // from TalkBack while either is open (#501).
+  const anySheetOpen = evidencePickerOpen || editingEvidenceTypes !== undefined;
+
   return (
     <View style={styles.container}>
-      {/* Shared header chrome (D8). Back arrow is omitted on the first step —
-          nowhere to go back to; ScreenSubHeader renders a leading spacer so the
-          label stays centered. The × close lives in the right slot. */}
-      <ScreenSubHeader
-        label={headerLabel}
-        onBack={currentStep !== "name" ? onBack : undefined}
-        right={
-          <IconButton
-            icon={<X size={24} weight="bold" />}
-            onPress={onClose}
-            tone="chrome"
-            accessibilityLabel={closeAccessibilityLabel}
-            testID="new-goal-close-button"
-          />
-        }
-      />
-
+      {/* Everything except the two sheets — hidden from TalkBack while a sheet
+          is open so swiping past the last sheet control can't reach wizard
+          content behind it. Accessibility-tree only, no layout change. */}
       <View
-        style={styles.progressRow}
-        accessible
-        accessibilityRole="progressbar"
-        accessibilityValue={{
-          min: 1,
-          max: STEP_ORDER.length,
-          now: currentStepIndex + 1,
-        }}
+        style={styles.content}
+        importantForAccessibility={
+          anySheetOpen ? "no-hide-descendants" : "auto"
+        }
       >
-        {STEP_ORDER.map((step, index) => (
-          <View
-            key={step}
-            style={[
-              styles.progressSegment,
-              index <= currentStepIndex
-                ? styles.progressSegmentFilled
-                : styles.progressSegmentUnfilled,
-            ]}
-            testID={
-              index <= currentStepIndex
-                ? "new-goal-progress-filled"
-                : "new-goal-progress-unfilled"
-            }
-          />
-        ))}
-      </View>
+        {/* Shared header chrome (D8). Back arrow is omitted on the first step —
+            nowhere to go back to; ScreenSubHeader renders a leading spacer so
+            the label stays centered. The × close lives in the right slot. */}
+        <ScreenSubHeader
+          label={headerLabel}
+          onBack={currentStep !== "name" ? onBack : undefined}
+          right={
+            <IconButton
+              icon={<X size={24} weight="bold" />}
+              onPress={onClose}
+              tone="chrome"
+              accessibilityLabel={closeAccessibilityLabel}
+              testID="new-goal-close-button"
+            />
+          }
+        />
 
-      {/* Step bodies: name + ready (#462), first step (#463), build (#464).
+        <View
+          style={styles.progressRow}
+          accessible
+          accessibilityRole="progressbar"
+          accessibilityValue={{
+            min: 1,
+            max: STEP_ORDER.length,
+            now: currentStepIndex + 1,
+          }}
+        >
+          {STEP_ORDER.map((step, index) => (
+            <View
+              key={step}
+              style={[
+                styles.progressSegment,
+                index <= currentStepIndex
+                  ? styles.progressSegmentFilled
+                  : styles.progressSegmentUnfilled,
+              ]}
+              testID={
+                index <= currentStepIndex
+                  ? "new-goal-progress-filled"
+                  : "new-goal-progress-unfilled"
+              }
+            />
+          ))}
+        </View>
+
+        {/* Step bodies: name + ready (#462), first step (#463), build (#464).
           The trailing `null` is unreachable — currentStep is one of the four
           STEP_ORDER values — and is kept so every step stays an explicit
           `currentStep === …` test rather than a catch-all `else`. */}
-      {currentStep === "name" ? (
-        <>
-          <View style={styles.stepBody}>
-            <RNText style={styles.eyebrow}>{nameEyebrow}</RNText>
-            <RNText style={styles.nameHeadline} accessibilityRole="header">
-              {nameTitle}
-            </RNText>
-            <TextInput
-              style={styles.titleInput}
-              value={goalTitle}
-              onChangeText={onGoalTitleChange}
-              placeholder={goalTitlePlaceholder}
-              placeholderTextColor={theme.colors.textMuted}
-              accessibilityLabel={goalTitlePlaceholder}
-              testID="new-goal-title-input"
-            />
-            <RNText style={styles.hint}>{nameHint}</RNText>
-          </View>
-          <View style={styles.footer}>
-            <Button
-              label={nextLabel}
-              onPress={onNext}
-              disabled={!goalTitle.trim()}
-              testID="new-goal-next-button"
-            />
-            <Pressable
-              style={styles.quickAddPress}
-              onPress={onQuickAdd}
-              // `accessible` collapses the "or …" + link Text into one node so
-              // screen readers announce the single quickAddAccessibilityLabel,
-              // not each fragment separately (matches ProofSpine/FABMenu).
-              accessible
-              accessibilityRole="button"
-              accessibilityLabel={quickAddAccessibilityLabel}
-              hitSlop={6}
-              testID="new-goal-quick-add"
-            >
-              <RNText style={styles.quickAddText}>
-                {quickAddPrefix}
-                <RNText style={styles.quickAddLink}>{quickAddLabel}</RNText>
+        {currentStep === "name" ? (
+          <>
+            <View style={styles.stepBody}>
+              <RNText style={styles.eyebrow}>{nameEyebrow}</RNText>
+              <RNText style={styles.nameHeadline} accessibilityRole="header">
+                {nameTitle}
               </RNText>
-            </Pressable>
-          </View>
-        </>
-      ) : currentStep === "step" ? (
-        <>
-          <View style={styles.stepBody}>
-            {/* Goal recap: the title from step 1, echoed so the first-step
-                input has context (prototype's "Goal" eyebrow + title line). */}
-            <RNText style={styles.eyebrow}>{stepGoalEyebrow}</RNText>
-            <RNText style={styles.stepGoalRecap}>{goalTitle}</RNText>
-            <RNText style={styles.nameHeadline} accessibilityRole="header">
-              {stepHeadline}
-            </RNText>
-            <TextInput
-              style={styles.titleInput}
-              value={firstStepTitle}
-              onChangeText={onFirstStepTitleChange}
-              placeholder={firstStepPlaceholder}
-              placeholderTextColor={theme.colors.textMuted}
-              accessibilityLabel={firstStepPlaceholder}
-              testID="new-goal-first-step-input"
-            />
-            <View style={styles.evidenceRow}>
-              <RNText style={styles.eyebrow}>{evidenceEyebrow}</RNText>
-              {/* One collapsed a11y node (icon + label + "change"); the whole
-                  press target opens the picker (D7). The purple chip carries
-                  the icon+label; "change" sits outside it as a plain link, both
-                  inside the single Pressable. */}
+              <TextInput
+                style={styles.titleInput}
+                value={goalTitle}
+                onChangeText={onGoalTitleChange}
+                placeholder={goalTitlePlaceholder}
+                placeholderTextColor={theme.colors.textMuted}
+                accessibilityLabel={goalTitlePlaceholder}
+                testID="new-goal-title-input"
+              />
+              <RNText style={styles.hint}>{nameHint}</RNText>
+            </View>
+            <View style={styles.footer}>
+              <Button
+                label={nextLabel}
+                onPress={onNext}
+                disabled={!goalTitle.trim()}
+                testID="new-goal-next-button"
+              />
               <Pressable
-                ref={evidenceChipRef}
-                style={styles.evidencePress}
-                onPress={onOpenEvidencePicker}
+                style={styles.quickAddPress}
+                onPress={onQuickAdd}
+                // `accessible` collapses the "or …" + link Text into one node so
+                // screen readers announce the single quickAddAccessibilityLabel,
+                // not each fragment separately (matches ProofSpine/FABMenu).
                 accessible
                 accessibilityRole="button"
-                accessibilityLabel={changeEvidenceAccessibilityLabel(
-                  plannedLabel,
-                )}
+                accessibilityLabel={quickAddAccessibilityLabel}
                 hitSlop={6}
-                testID="new-goal-evidence-chip"
+                testID="new-goal-quick-add"
               >
-                <View style={styles.evidenceChip}>
-                  <RNText
-                    style={styles.evidenceChipIcon}
-                    importantForAccessibility="no"
-                  >
-                    {plannedIcon}
-                  </RNText>
-                  <RNText style={styles.evidenceChipLabel}>
-                    {plannedLabel}
-                  </RNText>
-                </View>
-                <RNText style={styles.evidenceChipChange}>
-                  {changeEvidenceLabel}
+                <RNText style={styles.quickAddText}>
+                  {quickAddPrefix}
+                  <RNText style={styles.quickAddLink}>{quickAddLabel}</RNText>
                 </RNText>
               </Pressable>
             </View>
-          </View>
-          <View style={styles.footer}>
-            <Button
-              label={nextLabel}
-              onPress={onNext}
-              disabled={!firstStepTitle.trim()}
-              testID="new-goal-next-button"
-            />
-          </View>
-        </>
-      ) : currentStep === "build" ? (
-        <>
-          <View style={styles.buildBody}>
-            <ScrollView
-              contentContainerStyle={styles.buildScrollContent}
-              showsVerticalScrollIndicator={false}
-            >
-              {/* The build step reuses EditGoalStepList (#489/#490) — same "Your
+          </>
+        ) : currentStep === "step" ? (
+          <>
+            <View style={styles.stepBody}>
+              {/* Goal recap: the title from step 1, echoed so the first-step
+                input has context (prototype's "Goal" eyebrow + title line). */}
+              <RNText style={styles.eyebrow}>{stepGoalEyebrow}</RNText>
+              <RNText style={styles.stepGoalRecap}>{goalTitle}</RNText>
+              <RNText style={styles.nameHeadline} accessibilityRole="header">
+                {stepHeadline}
+              </RNText>
+              <TextInput
+                style={styles.titleInput}
+                value={firstStepTitle}
+                onChangeText={onFirstStepTitleChange}
+                placeholder={firstStepPlaceholder}
+                placeholderTextColor={theme.colors.textMuted}
+                accessibilityLabel={firstStepPlaceholder}
+                testID="new-goal-first-step-input"
+              />
+              <View style={styles.evidenceRow}>
+                <RNText style={styles.eyebrow}>{evidenceEyebrow}</RNText>
+                {/* One collapsed a11y node (icon + label + "change"); the whole
+                  press target opens the picker (D7). The purple chip carries
+                  the icon+label; "change" sits outside it as a plain link, both
+                  inside the single Pressable. */}
+                <Pressable
+                  ref={evidenceChipRef}
+                  style={styles.evidencePress}
+                  onPress={onOpenEvidencePicker}
+                  accessible
+                  accessibilityRole="button"
+                  accessibilityLabel={changeEvidenceAccessibilityLabel(
+                    plannedLabel,
+                  )}
+                  hitSlop={6}
+                  testID="new-goal-evidence-chip"
+                >
+                  <View style={styles.evidenceChip}>
+                    <RNText
+                      style={styles.evidenceChipIcon}
+                      importantForAccessibility="no"
+                    >
+                      {plannedIcon}
+                    </RNText>
+                    <RNText style={styles.evidenceChipLabel}>
+                      {plannedLabel}
+                    </RNText>
+                  </View>
+                  <RNText style={styles.evidenceChipChange}>
+                    {changeEvidenceLabel}
+                  </RNText>
+                </Pressable>
+              </View>
+            </View>
+            <View style={styles.footer}>
+              <Button
+                label={nextLabel}
+                onPress={onNext}
+                disabled={!firstStepTitle.trim()}
+                testID="new-goal-next-button"
+              />
+            </View>
+          </>
+        ) : currentStep === "build" ? (
+          <>
+            <View style={styles.buildBody}>
+              <ScrollView
+                contentContainerStyle={styles.buildScrollContent}
+                showsVerticalScrollIndicator={false}
+              >
+                {/* The build step reuses EditGoalStepList (#489/#490) — same "Your
                   steps" header + count, drag-reorderable rows, evidence chips,
                   inline rename, confirmed delete, and one-level sub-steps as the
                   Edit Goal screen. The list reports evidence-chip taps outward
@@ -614,87 +629,88 @@ export function NewGoalWizard({
                   Otherwise the wizard only forwards data + callbacks + copy
                   (D2/D3/D4). yourStepsLabel maps to the built-in header's
                   stepsSectionLabel (D1). */}
-              <EditGoalStepList
-                steps={steps}
-                onReorderSteps={onReorderSteps}
-                onReorderSubSteps={onReorderSubSteps}
-                onReparentStep={onReparentStep}
-                onAddStep={onAddStep}
-                onStepTitleChange={onStepTitleChange}
-                onEvidenceChipPress={handleBuildEvidenceChipPress}
-                onAddSubStep={onAddSubStep}
-                onSubStepTitleChange={onSubStepTitleChange}
-                onDeleteSubStep={onDeleteSubStep}
-                onDeleteStep={onDeleteStep}
-                dragScrollController={dragScrollController}
-                stepsSectionLabel={yourStepsLabel}
-                addStepPlaceholder={addStepPlaceholder}
-                stepCountLabel={stepCountLabel}
-                addSubStepLabel={addSubStepLabel}
-                breakIntoSubStepsLabel={breakIntoSubStepsLabel}
-                newSubStepTitle={newSubStepTitle}
-                addStepButtonLabel={addStepButtonLabel}
-                breakIntoSubStepsA11yLabel={breakIntoSubStepsA11yLabel}
-                addSubStepA11yLabel={addSubStepA11yLabel}
-                announceReorder={announceReorder}
-                deleteStepConfirmTitle={deleteStepConfirmTitle}
-                deleteStepConfirmMessage={deleteStepConfirmMessage}
-                deleteSubStepConfirmTitle={deleteSubStepConfirmTitle}
-                deleteSubStepConfirmMessage={deleteSubStepConfirmMessage}
-                nestUnderTriggerA11yLabel={nestUnderTriggerA11yLabel}
-                nestUnderPickerTitle={nestUnderPickerTitle}
-                nestUnderRowLabel={nestUnderRowLabel}
-                nestUnderRowA11yLabel={nestUnderRowA11yLabel}
-                nestUnderCancelLabel={nestUnderCancelLabel}
-                unNestA11yLabel={unNestA11yLabel}
-                announcePromote={announcePromote}
-                announceNestedUnder={announceNestedUnder}
-              />
-            </ScrollView>
-          </View>
-          <View style={styles.footer}>
-            {/* Same linear-advance onNext as name/step; only the label differs
+                <EditGoalStepList
+                  steps={steps}
+                  onReorderSteps={onReorderSteps}
+                  onReorderSubSteps={onReorderSubSteps}
+                  onReparentStep={onReparentStep}
+                  onAddStep={onAddStep}
+                  onStepTitleChange={onStepTitleChange}
+                  onEvidenceChipPress={handleBuildEvidenceChipPress}
+                  onAddSubStep={onAddSubStep}
+                  onSubStepTitleChange={onSubStepTitleChange}
+                  onDeleteSubStep={onDeleteSubStep}
+                  onDeleteStep={onDeleteStep}
+                  dragScrollController={dragScrollController}
+                  stepsSectionLabel={yourStepsLabel}
+                  addStepPlaceholder={addStepPlaceholder}
+                  stepCountLabel={stepCountLabel}
+                  addSubStepLabel={addSubStepLabel}
+                  breakIntoSubStepsLabel={breakIntoSubStepsLabel}
+                  newSubStepTitle={newSubStepTitle}
+                  addStepButtonLabel={addStepButtonLabel}
+                  breakIntoSubStepsA11yLabel={breakIntoSubStepsA11yLabel}
+                  addSubStepA11yLabel={addSubStepA11yLabel}
+                  announceReorder={announceReorder}
+                  deleteStepConfirmTitle={deleteStepConfirmTitle}
+                  deleteStepConfirmMessage={deleteStepConfirmMessage}
+                  deleteSubStepConfirmTitle={deleteSubStepConfirmTitle}
+                  deleteSubStepConfirmMessage={deleteSubStepConfirmMessage}
+                  nestUnderTriggerA11yLabel={nestUnderTriggerA11yLabel}
+                  nestUnderPickerTitle={nestUnderPickerTitle}
+                  nestUnderRowLabel={nestUnderRowLabel}
+                  nestUnderRowA11yLabel={nestUnderRowA11yLabel}
+                  nestUnderCancelLabel={nestUnderCancelLabel}
+                  unNestA11yLabel={unNestA11yLabel}
+                  announcePromote={announcePromote}
+                  announceNestedUnder={announceNestedUnder}
+                />
+              </ScrollView>
+            </View>
+            <View style={styles.footer}>
+              {/* Same linear-advance onNext as name/step; only the label differs
                 (D7). Unconditionally enabled — the prototype gates nothing on
                 this screen. */}
-            <Button
-              label={buildReadyLabel}
-              onPress={onNext}
-              testID="new-goal-build-ready-button"
-            />
-          </View>
-        </>
-      ) : currentStep === "ready" ? (
-        <>
-          <View style={styles.stepBody}>
-            <RNText style={styles.readyHeadline} accessibilityRole="header">
-              {readyHeadline}
-            </RNText>
-            <View style={styles.summaryCard}>
-              <RNText style={styles.summaryTitle}>{goalTitle}</RNText>
-              <RNText style={styles.summaryMeta}>
-                {stepCountSummary(stepCount)}
-              </RNText>
+              <Button
+                label={buildReadyLabel}
+                onPress={onNext}
+                testID="new-goal-build-ready-button"
+              />
             </View>
-            <View style={styles.badgeNoteBanner}>
-              <RNText
-                style={styles.badgeNoteIcon}
-                accessibilityElementsHidden
-                importantForAccessibility="no"
-              >
-                🏆
+          </>
+        ) : currentStep === "ready" ? (
+          <>
+            <View style={styles.stepBody}>
+              <RNText style={styles.readyHeadline} accessibilityRole="header">
+                {readyHeadline}
               </RNText>
-              <RNText style={styles.badgeNoteText}>{badgeNote}</RNText>
+              <View style={styles.summaryCard}>
+                <RNText style={styles.summaryTitle}>{goalTitle}</RNText>
+                <RNText style={styles.summaryMeta}>
+                  {stepCountSummary(stepCount)}
+                </RNText>
+              </View>
+              <View style={styles.badgeNoteBanner}>
+                <RNText
+                  style={styles.badgeNoteIcon}
+                  accessibilityElementsHidden
+                  importantForAccessibility="no"
+                >
+                  🏆
+                </RNText>
+                <RNText style={styles.badgeNoteText}>{badgeNote}</RNText>
+              </View>
             </View>
-          </View>
-          <View style={styles.footer}>
-            <Button
-              label={startWorkingLabel}
-              onPress={onStartWorking}
-              testID="new-goal-start-working-button"
-            />
-          </View>
-        </>
-      ) : null}
+            <View style={styles.footer}>
+              <Button
+                label={startWorkingLabel}
+                onPress={onStartWorking}
+                testID="new-goal-start-working-button"
+              />
+            </View>
+          </>
+        ) : null}
+      </View>
 
       {/* Step 2 · planned-evidence picker — reuse #409's capture sheet whole
           (D2), no fork. Single-select, serves only step 2's planned-evidence

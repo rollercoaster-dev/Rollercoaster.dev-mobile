@@ -15,6 +15,14 @@ export const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.background,
   },
 
+  // Wraps everything except the two evidence sheets so the wizard body can be
+  // hidden from TalkBack while a sheet is open (#501). flex:1 to fill the
+  // container exactly as the header/progress/step bodies did before; the sheets'
+  // absolute overlays still anchor to the container (their sibling), not this.
+  content: {
+    flex: 1,
+  },
+
   // Header chrome now comes from the shared ScreenSubHeader (D8).
 
   // --- 4-segment progress bar (D4) ---
