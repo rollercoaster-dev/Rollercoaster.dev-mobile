@@ -1,4 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import React from "react";
+import { View } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
 import { BadgeShareSheet } from "./BadgeShareSheet";
 
 const noop = () => {};
@@ -6,6 +9,18 @@ const noop = () => {};
 const meta: Meta<typeof BadgeShareSheet> = {
   title: "Iteration B/Badge Detail/BadgeShareSheet",
   component: BadgeShareSheet,
+  // The sheet is an in-tree absolute overlay that rises from the bottom of its
+  // nearest sized ancestor (see AnimatedSheet). Storybook's content-hugging
+  // canvas would otherwise collapse that overlay to the CTA's height and render
+  // the open sheet out of frame at the top, so bound every story to a
+  // phone-sized stage — mirrors EvidenceTypePicker's CaptureSheet stories.
+  decorators: [
+    (Story) => (
+      <View style={storyStyles.stage}>
+        <Story />
+      </View>
+    ),
+  ],
   args: {
     goalTitle: "Rewire the workshop",
     isSheetOpen: true,
@@ -58,3 +73,18 @@ export const ExportingImage: Story = {
 export const ExportingCredential: Story = {
   args: { isSheetOpen: true, isExportingJSON: true },
 };
+
+const storyStyles = StyleSheet.create((theme) => ({
+  stage: {
+    height: 600,
+    width: "100%",
+    maxWidth: 390,
+    alignSelf: "center" as const,
+    // Push the CTA to the foot of the frame, mirroring the prototype's ACTIONS
+    // block low on the Badge Detail screen. The sheet is an absolute overlay,
+    // unaffected by this — it always rises from the frame's bottom edge.
+    justifyContent: "flex-end" as const,
+    padding: theme.space[4],
+    backgroundColor: theme.colors.backgroundSecondary,
+  },
+}));
