@@ -1,18 +1,27 @@
 import { AccessibilityInfo, findNodeHandle } from "react-native";
-import type { View } from "react-native";
 import type { RefObject } from "react";
 
 /**
- * Move VoiceOver/TalkBack focus onto the view (or already-resolved native tag)
- * held by `ref`, after a short delay so the native view has registered with the
- * accessibility tree first (a straight synchronous call is dropped when the
- * view isn't in the tree yet).
+ * A ref target this helper can move accessibility focus to: anything
+ * `findNodeHandle` accepts — any native component instance (`View`, `Text`,
+ * `Pressable`, …) or an already-resolved native tag (`number`). Kept in lockstep
+ * with `findNodeHandle`'s argument type so callers never have to narrow a
+ * specific native component ref (e.g. AnimatedSheet's `Text` title) to `View`.
+ */
+type FocusTarget = Parameters<typeof findNodeHandle>[0];
+
+/**
+ * Move VoiceOver/TalkBack focus onto the component (or already-resolved native
+ * tag) held by `ref`, after a short delay so the native view has registered
+ * with the accessibility tree first (a straight synchronous call is dropped
+ * when the view isn't in the tree yet).
  *
- * Accepts either a `RefObject<View>` (resolved via `findNodeHandle`) or a
- * `RefObject<number>` whose `current` is already a native tag — the latter lets
- * callers pass an element tag captured from a `Pressable` press event
- * (`event.nativeEvent.target`) without threading a `View` ref through prop
- * layers (see EditGoalView / NewGoalWizard evidence-chip restoration).
+ * Accepts a ref to any native component instance (`View`, `Text`, …, resolved
+ * via `findNodeHandle`) or a `RefObject<number>` whose `current` is already a
+ * native tag — the latter lets callers pass an element tag captured from a
+ * `Pressable` press event (`event.nativeEvent.target`) without threading a
+ * component ref through prop layers (see EditGoalView / NewGoalWizard
+ * evidence-chip restoration).
  *
  * No-ops when the ref is absent, its `current` is null/undefined, or the tag
  * can't be resolved. Returns `undefined` only when `ref` itself is absent;
@@ -23,7 +32,7 @@ import type { RefObject } from "react";
  * cycle could fire a stale restore after the sheet is back up.
  */
 export function focusAccessibilityRef(
-  ref: RefObject<View | number | null> | null | undefined,
+  ref: RefObject<FocusTarget> | null | undefined,
   delayMs = 50,
 ): (() => void) | undefined {
   if (ref == null) return undefined;
