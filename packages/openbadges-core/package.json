@@ -65,7 +65,7 @@
   "homepage": "https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/tree/main/packages/openbadges-core#readme",
   "devDependencies": {
     "tsup": "^8.4.0",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "eslint": "^9.39.4",
     "@eslint/js": "^10.0.1",
     "typescript-eslint": "^8.62.1"
