@@ -66,9 +66,9 @@
   "devDependencies": {
     "tsup": "^8.4.0",
     "typescript": "^6.0.3",
-    "eslint": "^9.39.4",
+    "eslint": "^9.39.5",
     "@eslint/js": "^10.0.1",
-    "typescript-eslint": "^8.62.1"
+    "typescript-eslint": "^8.63.0"
   },
   "dependencies": {
     "@rollercoaster-dev/rd-logger": "^0.4.0",
