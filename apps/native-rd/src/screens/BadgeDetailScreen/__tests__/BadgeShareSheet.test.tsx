@@ -1,11 +1,24 @@
 import React from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, AccessibilityInfo, BackHandler } from "react-native";
 import {
   renderWithProviders,
   screen,
   fireEvent,
+  act,
 } from "../../../__tests__/test-utils";
 import { BadgeShareSheet, type BadgeShareSheetProps } from "../BadgeShareSheet";
+
+// findNodeHandle is a lazy getter on react-native's index — redefine it so the
+// shared AnimatedSheet's title/CTA refs resolve to a fixed tag under test
+// (#501). Otherwise the real one returns undefined in Node and focus no-ops.
+jest.mock("react-native", () => {
+  const RN = jest.requireActual("react-native");
+  Object.defineProperty(RN, "findNodeHandle", {
+    configurable: true,
+    value: jest.fn(() => 111),
+  });
+  return RN;
+});
 
 const makeProps = (
   overrides?: Partial<BadgeShareSheetProps>,
@@ -222,8 +235,104 @@ describe("BadgeShareSheet", () => {
       expect(button.props.accessibilityLabel).toBeTruthy();
       const flat = StyleSheet.flatten(button.props.style) as {
         minHeight?: number;
+        flex?: number;
+      };
+      // The shared sheet's backdrop is a full-screen dismiss target (flex:1);
+      // every other control carries an explicit >=44pt minHeight.
+      const meetsTarget = (flat.minHeight ?? 0) >= 44 || flat.flex === 1;
+      expect(meetsTarget).toBe(true);
+    });
+  });
+
+  // Focus contract inherited from the shared AnimatedSheet (#501, D3): a
+  // labelled Close, focus lands on the title on open, and returns to the CTA on
+  // every dismissal path.
+  describe("focus contract (#501)", () => {
+    let setFocus: jest.SpyInstance;
+
+    beforeEach(() => {
+      jest.useFakeTimers();
+      setFocus = jest
+        .spyOn(AccessibilityInfo, "setAccessibilityFocus")
+        .mockImplementation(() => undefined);
+    });
+
+    afterEach(() => {
+      act(() => {
+        jest.runOnlyPendingTimers();
+      });
+      jest.useRealTimers();
+      setFocus.mockRestore();
+    });
+
+    it("exposes a labelled, >=44pt Close control", () => {
+      renderWithProviders(<BadgeShareSheet {...makeProps()} />);
+      const close = screen.getByTestId("badge-share-close");
+      expect(close.props.accessibilityRole).toBe("button");
+      expect(close.props.accessibilityLabel).toBe("Close");
+      const flat = StyleSheet.flatten(close.props.style) as {
+        minHeight?: number;
       };
       expect(flat.minHeight).toBeGreaterThanOrEqual(44);
+    });
+
+    it("moves focus onto the sheet title when it opens", () => {
+      const { rerender } = renderWithProviders(
+        <BadgeShareSheet {...makeProps({ isSheetOpen: false })} />,
+      );
+      rerender(<BadgeShareSheet {...makeProps({ isSheetOpen: true })} />);
+      act(() => {
+        jest.runAllTimers();
+      });
+      // 111 is the mocked findNodeHandle tag for the title ref.
+      expect(setFocus).toHaveBeenCalledWith(111);
+    });
+
+    it("restores focus to the Share CTA once the sheet closes", () => {
+      const { rerender } = renderWithProviders(
+        <BadgeShareSheet {...makeProps({ isSheetOpen: true })} />,
+      );
+      act(() => {
+        jest.runAllTimers();
+      });
+      // Isolate the close-restore from the open-focus.
+      setFocus.mockClear();
+      rerender(<BadgeShareSheet {...makeProps({ isSheetOpen: false })} />);
+      act(() => {
+        jest.runAllTimers();
+      });
+      // Only the CTA ref is restored on close (title is unmounted by now).
+      expect(setFocus).toHaveBeenCalledTimes(1);
+      expect(setFocus).toHaveBeenCalledWith(111);
+    });
+
+    it.each([
+      { path: "× close", testID: "badge-share-close" },
+      { path: "backdrop", testID: "badge-share-backdrop" },
+    ])("dismisses via $path (fires onCloseSheet)", ({ testID }) => {
+      const onCloseSheet = jest.fn();
+      renderWithProviders(<BadgeShareSheet {...makeProps({ onCloseSheet })} />);
+      act(() => {
+        fireEvent.press(screen.getByTestId(testID));
+      });
+      expect(onCloseSheet).toHaveBeenCalledTimes(1);
+    });
+
+    it("dismisses via Android hardware back (fires onCloseSheet)", () => {
+      const onCloseSheet = jest.fn();
+      const addSpy = jest.spyOn(BackHandler, "addEventListener");
+      renderWithProviders(<BadgeShareSheet {...makeProps({ onCloseSheet })} />);
+      const handler = addSpy.mock.calls.find(
+        ([event]) => event === "hardwareBackPress",
+      )?.[1];
+      expect(handler).toBeDefined();
+      let claimed: boolean | null | undefined;
+      act(() => {
+        claimed = handler?.();
+      });
+      expect(claimed).toBe(true);
+      expect(onCloseSheet).toHaveBeenCalledTimes(1);
+      addSpy.mockRestore();
     });
   });
 });

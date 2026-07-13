@@ -1,4 +1,5 @@
 import React from "react";
+import { AccessibilityInfo, BackHandler } from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -12,6 +13,18 @@ import {
 } from "../NewGoalWizard";
 import type { EditGoalStep } from "../../EditGoalView";
 import { EvidenceType } from "../../../db";
+
+// findNodeHandle is a lazy getter on react-native's index — redefine it so the
+// step-2 capture sheet's View-ref restore target resolves to a fixed tag (#501).
+// The build sheet uses a numeric press-target tag, which bypasses it.
+jest.mock("react-native", () => {
+  const RN = jest.requireActual("react-native");
+  Object.defineProperty(RN, "findNodeHandle", {
+    configurable: true,
+    value: jest.fn(() => 111),
+  });
+  return RN;
+});
 
 // The build step reuses EditGoalStepList (#489/#490), which drives drag reorder
 // through react-native-gesture-handler + haptics and gates its ↑/↓ fallback on
@@ -356,6 +369,22 @@ describe("NewGoalWizard", () => {
       expect(screen.getByText("Evidence type")).toBeOnTheScreen();
       // The single-select capture grid is present (a real type option renders).
       expect(screen.getByRole("radio", { name: "Photo" })).toBeOnTheScreen();
+    });
+
+    it("hides the wizard body from TalkBack while a sheet is open (#501, Android)", () => {
+      const props = makeProps({ currentStep: "step" });
+      const { rerender } = renderWithProviders(<NewGoalWizard {...props} />);
+      // includeHiddenElements: once a sheet opens, the content wrapper marks its
+      // own subtree accessibility-hidden — which is exactly what we assert — so
+      // it drops out of the default (a11y-visible-only) query.
+      const hideState = () =>
+        screen.getByTestId("new-goal-wizard-content", {
+          includeHiddenElements: true,
+        }).props.importantForAccessibility;
+      expect(hideState()).toBe("auto");
+
+      rerender(<NewGoalWizard {...props} evidencePickerOpen />);
+      expect(hideState()).toBe("no-hide-descendants");
     });
 
     it("pre-selects the current planned type in the sheet (parallels the build side)", () => {
@@ -827,6 +856,103 @@ describe("NewGoalWizard", () => {
       // Reorder still works (sibling reorder only).
       fireEvent.press(screen.getByLabelText('Move "Sand the edges" down'));
       expect(onReorderSteps).toHaveBeenCalledWith(["s2", "s1"]);
+    });
+  });
+
+  // Both sheets inherit AnimatedSheet's focus contract (#501): focus enters the
+  // title on open and returns to the trigger on close.
+  describe("evidence sheet focus restoration (#501)", () => {
+    let setFocus: jest.SpyInstance;
+
+    beforeEach(() => {
+      jest.useFakeTimers();
+      setFocus = jest
+        .spyOn(AccessibilityInfo, "setAccessibilityFocus")
+        .mockImplementation(() => undefined);
+    });
+
+    afterEach(() => {
+      act(() => {
+        jest.runOnlyPendingTimers();
+      });
+      jest.useRealTimers();
+      setFocus.mockRestore();
+    });
+
+    // The build sheet restores to the pressed list chip via its captured native
+    // tag (event.nativeEvent.target), so a distinct value proves the target.
+    const CHIP_TAG = 555;
+
+    function openBuildSheet() {
+      act(() => {
+        fireEvent.press(screen.getByTestId("edit-goal-step-evidence-s1"), {
+          nativeEvent: { target: CHIP_TAG },
+        });
+      });
+      expect(screen.getByTestId("new-goal-evidence-close")).toBeOnTheScreen();
+    }
+
+    it.each([
+      { path: "× button", testID: "new-goal-evidence-close" },
+      { path: "backdrop", testID: "new-goal-evidence-backdrop" },
+    ])(
+      "restores focus to the build chip when closed via the $path",
+      ({ testID }) => {
+        renderWizard({ currentStep: "build", steps: BUILD_STEPS });
+        openBuildSheet();
+        setFocus.mockClear();
+        act(() => {
+          fireEvent.press(screen.getByTestId(testID));
+        });
+        act(() => {
+          jest.runAllTimers();
+        });
+        expect(setFocus).toHaveBeenCalledWith(CHIP_TAG);
+      },
+    );
+
+    it("restores focus to the build chip when closed via Android back", () => {
+      const addSpy = jest.spyOn(BackHandler, "addEventListener");
+      renderWizard({ currentStep: "build", steps: BUILD_STEPS });
+      openBuildSheet();
+      setFocus.mockClear();
+      const backCalls = addSpy.mock.calls.filter(
+        ([event]) => event === "hardwareBackPress",
+      );
+      const handler = backCalls[backCalls.length - 1]?.[1];
+      act(() => {
+        handler?.();
+      });
+      act(() => {
+        jest.runAllTimers();
+      });
+      expect(setFocus).toHaveBeenCalledWith(CHIP_TAG);
+      addSpy.mockRestore();
+    });
+
+    it("restores focus to the step-2 chip when the capture sheet closes", () => {
+      // The capture sheet's restore target is a View ref (the planned-evidence
+      // chip), resolved via the mocked findNodeHandle to tag 111.
+      const { rerender } = (() => {
+        const props = makeProps({
+          currentStep: "step",
+          evidencePickerOpen: true,
+        });
+        return renderWithProviders(<NewGoalWizard {...props} />);
+      })();
+      act(() => {
+        jest.runAllTimers();
+      });
+      setFocus.mockClear();
+      rerender(
+        <NewGoalWizard
+          {...makeProps({ currentStep: "step", evidencePickerOpen: false })}
+        />,
+      );
+      act(() => {
+        jest.runAllTimers();
+      });
+      expect(setFocus).toHaveBeenCalledWith(111);
     });
   });
 });

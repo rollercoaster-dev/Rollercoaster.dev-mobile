@@ -23,6 +23,7 @@ import {
   TextInput,
   Pressable,
   Modal,
+  type GestureResponderEvent,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -63,8 +64,12 @@ export interface EditGoalStepRowProps {
   onEditTextChange: (text: string) => void;
   onStartEditing: () => void;
   onCommitEditing: () => void;
-  /** Opens the evidence-type picker for this step (D8). */
-  onEvidenceChipPress: () => void;
+  /**
+   * Opens the evidence-type picker for this step (D8). Receives the press event
+   * so the host can capture the chip's native tag (`event.nativeEvent.target`)
+   * and restore screen-reader focus here when the sheet closes (#501).
+   */
+  onEvidenceChipPress: (event: GestureResponderEvent) => void;
   /** Unified coordinator handlers, keyed by row id (#496, R2). */
   onDragStart: (rowId: string) => void;
   onDragMove: (translationY: number, absoluteY: number) => void;

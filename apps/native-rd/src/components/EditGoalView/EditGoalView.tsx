@@ -36,8 +36,14 @@
  * Drag orchestration lives in useEditGoalDrag; the row anatomy in
  * EditGoalStepRow; the ⋯ menu content in EditGoalOverflowMenu.
  */
-import React, { useState } from "react";
-import { View, Text as RNText, TextInput, ScrollView } from "react-native";
+import React, { useRef, useState } from "react";
+import {
+  View,
+  Text as RNText,
+  TextInput,
+  ScrollView,
+  type GestureResponderEvent,
+} from "react-native";
 import { DotsThree, Pencil } from "phosphor-react-native";
 import { useUnistyles } from "react-native-unistyles";
 import { IconButton } from "../IconButton";
@@ -289,6 +295,20 @@ export function EditGoalView({
     null,
   );
 
+  // Native tag of the evidence chip that opened the sheet, captured from the
+  // Pressable's press event (#501). Threaded straight into AnimatedSheet's
+  // restoreFocusRef so focus returns to that chip on any dismissal — avoids
+  // threading a View ref down through the list/row layers (D2). A RefObject
+  // whose current is a number; focusAccessibilityRef uses it as the tag.
+  const restoreFocusTagRef = useRef<number | null>(null);
+  function handleEvidenceChipPress(id: string, event: GestureResponderEvent) {
+    // RN types nativeEvent.target as string, but it's the numeric react tag at
+    // runtime — the exact input setAccessibilityFocus expects.
+    restoreFocusTagRef.current =
+      (event?.nativeEvent?.target as unknown as number | undefined) ?? null;
+    setEditingEvidenceId(id);
+  }
+
   // Find the sub-step with `id` across every parent (one-level, D12).
   function findSubStep(id: string) {
     for (const s of steps) {
@@ -350,122 +370,140 @@ export function EditGoalView({
     }
   }
 
+  const sheetOpen = editingEvidenceTypes !== undefined;
+
   return (
     <View style={styles.container}>
-      <ScreenSubHeader
-        label={headerLabel}
-        onBack={onBack}
-        right={
-          <IconButton
-            icon={<DotsThree size={24} weight="bold" />}
-            tone="chrome"
-            onPress={onOverflowPress}
-            accessibilityLabel={overflowAccessibilityLabel}
-            testID="edit-goal-overflow-trigger"
-          />
-        }
-      />
+      {/* Everything except the sheet. iOS gets modal isolation from
+          AnimatedSheet's accessibilityViewIsModal; Android has no equivalent
+          (accessibilityViewIsModal is iOS-only in RN 0.85), so hide this
+          subtree from TalkBack while the sheet is open so swiping past the last
+          sheet control can't reach content behind it (#501). Accessibility-tree
+          only — no layout/visual change. */}
+      <View
+        testID="edit-goal-content"
+        style={styles.content}
+        importantForAccessibility={sheetOpen ? "no-hide-descendants" : "auto"}
+      >
+        <ScreenSubHeader
+          label={headerLabel}
+          onBack={onBack}
+          right={
+            <IconButton
+              icon={<DotsThree size={24} weight="bold" />}
+              tone="chrome"
+              onPress={onOverflowPress}
+              accessibilityLabel={overflowAccessibilityLabel}
+              testID="edit-goal-overflow-trigger"
+            />
+          }
+        />
 
-      {/* Scrollable content. Internal ScrollView (not the body View it replaced)
+        {/* Scrollable content. Internal ScrollView (not the body View it replaced)
           so the flex:1 container splits into [header][scroll][footer] and the
           sheet's absolute overlay — a sibling below — fills the viewport rather
           than the scroll content (#493/D8). */}
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Optional description (D3) — rendered only when the prop is supplied;
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Optional description (D3) — rendered only when the prop is supplied;
             no "add a description" affordance when absent. */}
-        {description !== undefined ? (
-          <View style={styles.descriptionBlock}>
+          {description !== undefined ? (
+            <View style={styles.descriptionBlock}>
+              <TextInput
+                style={styles.descriptionInput}
+                value={description}
+                onChangeText={onDescriptionChange}
+                placeholder={descriptionPlaceholder}
+                placeholderTextColor={theme.colors.textMuted}
+                multiline
+                testID="edit-goal-description-input"
+                accessibilityLabel={
+                  descriptionPlaceholder ?? descriptionSectionLabel
+                }
+              />
+            </View>
+          ) : null}
+
+          <RNText style={styles.sectionLabel}>{goalSectionLabel}</RNText>
+          <View style={styles.titleCard}>
             <TextInput
-              style={styles.descriptionInput}
-              value={description}
-              onChangeText={onDescriptionChange}
-              placeholder={descriptionPlaceholder}
-              placeholderTextColor={theme.colors.textMuted}
-              multiline
-              testID="edit-goal-description-input"
-              accessibilityLabel={
-                descriptionPlaceholder ?? descriptionSectionLabel
-              }
+              style={styles.titleInput}
+              value={goalTitle}
+              onChangeText={onGoalTitleChange}
+              testID="edit-goal-title-input"
+              accessibilityLabel={goalSectionLabel}
+            />
+            <Pencil
+              size={16}
+              weight="bold"
+              color={theme.colors.textSecondary}
             />
           </View>
-        ) : null}
 
-        <RNText style={styles.sectionLabel}>{goalSectionLabel}</RNText>
-        <View style={styles.titleCard}>
-          <TextInput
-            style={styles.titleInput}
-            value={goalTitle}
-            onChangeText={onGoalTitleChange}
-            testID="edit-goal-title-input"
-            accessibilityLabel={goalSectionLabel}
-          />
-          <Pencil size={16} weight="bold" color={theme.colors.textSecondary} />
-        </View>
-
-        {/* Step-row list layer (#489): "Steps" header + count, drag-reorderable
+          {/* Step-row list layer (#489): "Steps" header + count, drag-reorderable
             rows, sub-step blocks, add-step affordance, and the confirm-delete
             modal. It reports evidence-chip taps outward via onEvidenceChipPress;
             the picker sheet itself is owned here (#493/D8). */}
-        <EditGoalStepList
-          steps={steps}
-          onReorderSteps={onReorderSteps}
-          onReorderSubSteps={onReorderSubSteps}
-          onReparentStep={onReparentStep}
-          onAddStep={onAddStep}
-          onStepTitleChange={onStepTitleChange}
-          onEvidenceChipPress={setEditingEvidenceId}
-          onAddSubStep={onAddSubStep}
-          onSubStepTitleChange={onSubStepTitleChange}
-          onDeleteSubStep={onDeleteSubStep}
-          onDeleteStep={onDeleteStep}
-          dragScrollController={dragScrollController}
-          stepsSectionLabel={stepsSectionLabel}
-          addStepPlaceholder={addStepPlaceholder}
-          stepCountLabel={stepCountLabel}
-          addSubStepLabel={addSubStepLabel}
-          breakIntoSubStepsLabel={breakIntoSubStepsLabel}
-          newSubStepTitle={newSubStepTitle}
-          addStepButtonLabel={addStepButtonLabel}
-          breakIntoSubStepsA11yLabel={breakIntoSubStepsA11yLabel}
-          addSubStepA11yLabel={addSubStepA11yLabel}
-          announceReorder={announceReorder}
-          deleteStepConfirmTitle={deleteStepConfirmTitle}
-          deleteStepConfirmMessage={deleteStepConfirmMessage}
-          deleteSubStepConfirmTitle={deleteSubStepConfirmTitle}
-          deleteSubStepConfirmMessage={deleteSubStepConfirmMessage}
-          nestUnderTriggerA11yLabel={nestUnderTriggerA11yLabel}
-          nestUnderPickerTitle={nestUnderPickerTitle}
-          nestUnderRowLabel={nestUnderRowLabel}
-          nestUnderRowA11yLabel={nestUnderRowA11yLabel}
-          nestUnderCancelLabel={nestUnderCancelLabel}
-          unNestA11yLabel={unNestA11yLabel}
-          announcePromote={announcePromote}
-          announceNestedUnder={announceNestedUnder}
-        />
+          <EditGoalStepList
+            steps={steps}
+            onReorderSteps={onReorderSteps}
+            onReorderSubSteps={onReorderSubSteps}
+            onReparentStep={onReparentStep}
+            onAddStep={onAddStep}
+            onStepTitleChange={onStepTitleChange}
+            onEvidenceChipPress={handleEvidenceChipPress}
+            onAddSubStep={onAddSubStep}
+            onSubStepTitleChange={onSubStepTitleChange}
+            onDeleteSubStep={onDeleteSubStep}
+            onDeleteStep={onDeleteStep}
+            dragScrollController={dragScrollController}
+            stepsSectionLabel={stepsSectionLabel}
+            addStepPlaceholder={addStepPlaceholder}
+            stepCountLabel={stepCountLabel}
+            addSubStepLabel={addSubStepLabel}
+            breakIntoSubStepsLabel={breakIntoSubStepsLabel}
+            newSubStepTitle={newSubStepTitle}
+            addStepButtonLabel={addStepButtonLabel}
+            breakIntoSubStepsA11yLabel={breakIntoSubStepsA11yLabel}
+            addSubStepA11yLabel={addSubStepA11yLabel}
+            announceReorder={announceReorder}
+            deleteStepConfirmTitle={deleteStepConfirmTitle}
+            deleteStepConfirmMessage={deleteStepConfirmMessage}
+            deleteSubStepConfirmTitle={deleteSubStepConfirmTitle}
+            deleteSubStepConfirmMessage={deleteSubStepConfirmMessage}
+            nestUnderTriggerA11yLabel={nestUnderTriggerA11yLabel}
+            nestUnderPickerTitle={nestUnderPickerTitle}
+            nestUnderRowLabel={nestUnderRowLabel}
+            nestUnderRowA11yLabel={nestUnderRowA11yLabel}
+            nestUnderCancelLabel={nestUnderCancelLabel}
+            unNestA11yLabel={unNestA11yLabel}
+            announcePromote={announcePromote}
+            announceNestedUnder={announceNestedUnder}
+          />
 
-        <View style={styles.infoBanner}>
-          <RNText
-            style={styles.infoBannerIcon}
-            accessibilityElementsHidden
-            importantForAccessibility="no"
-          >
-            📅
-          </RNText>
-          <RNText style={styles.infoBannerText}>{datesInfoText}</RNText>
+          <View style={styles.infoBanner}>
+            <RNText
+              style={styles.infoBannerIcon}
+              accessibilityElementsHidden
+              importantForAccessibility="no"
+            >
+              📅
+            </RNText>
+            <RNText style={styles.infoBannerText}>{datesInfoText}</RNText>
+          </View>
+        </ScrollView>
+
+        <View style={styles.footer}>
+          <Button
+            label={doneLabel}
+            variant="secondary"
+            onPress={onDone}
+            testID="edit-goal-done-button"
+          />
         </View>
-      </ScrollView>
-
-      <View style={styles.footer}>
-        <Button
-          label={doneLabel}
-          variant="secondary"
-          onPress={onDone}
-          testID="edit-goal-done-button"
-        />
       </View>
 
       {/* Evidence-type picker (D8/D12): the reused multi-select authoring grid
@@ -478,12 +516,13 @@ export function EditGoalView({
           pills via onStepEvidenceChange / onSubStepEvidenceChange; the last
           remaining type can't be deselected (handleToggleEvidence guard). */}
       <AnimatedSheet
-        visible={editingEvidenceTypes !== undefined}
+        visible={sheetOpen}
         onClose={() => setEditingEvidenceId(null)}
         title={evidencePickerTitle}
         closeLabel={closeLabel}
         closeTestID="edit-goal-evidence-close"
         backdropTestID="edit-goal-evidence-backdrop"
+        restoreFocusRef={restoreFocusTagRef}
       >
         {sheetEvidenceTypes ? (
           <EvidenceTypePicker

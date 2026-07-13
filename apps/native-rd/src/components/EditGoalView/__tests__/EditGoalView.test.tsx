@@ -323,6 +323,25 @@ describe("EditGoalView", () => {
       expect(onStepEvidenceChange).not.toHaveBeenCalled();
     });
 
+    it("hides the screen content from TalkBack while the sheet is open (#501, Android)", () => {
+      renderWithProviders(<EditGoalView {...makeProps({ steps: soloStep })} />);
+      // includeHiddenElements: once the sheet opens, the content wrapper marks
+      // its own subtree accessibility-hidden — which is exactly what we assert —
+      // so it drops out of the default (a11y-visible-only) query.
+      const hideState = () =>
+        screen.getByTestId("edit-goal-content", { includeHiddenElements: true })
+          .props.importantForAccessibility;
+      expect(hideState()).toBe("auto");
+
+      fireEvent.press(screen.getByTestId("edit-goal-step-evidence-s1"));
+      expect(hideState()).toBe("no-hide-descendants");
+
+      act(() => {
+        fireEvent.press(screen.getByTestId("edit-goal-evidence-backdrop"));
+      });
+      expect(hideState()).toBe("auto");
+    });
+
     it("dismisses via its own backdrop testID, distinct from the capture sheet (#493)", () => {
       renderWithProviders(<EditGoalView {...makeProps({ steps: soloStep })} />);
       fireEvent.press(screen.getByTestId("edit-goal-step-evidence-s1"));
@@ -357,6 +376,90 @@ describe("EditGoalView", () => {
       });
       expect(claimed).toBe(true);
       expect(screen.queryByTestId("edit-goal-evidence-close")).toBeNull();
+    });
+  });
+
+  // The evidence sheet captures the pressed chip's native tag
+  // (event.nativeEvent.target) and restores screen-reader focus to it on every
+  // dismissal path (#501). The multi-select sheet doesn't close on selection,
+  // so the applicable paths are ×, backdrop, and Android back.
+  describe("evidence sheet focus restoration (#501)", () => {
+    const soloStep: EditGoalStep[] = [
+      { id: "s1", title: "Solo", plannedEvidenceTypes: [EvidenceType.text] },
+    ];
+    const CHIP_TAG = 555;
+    let setFocus: jest.SpyInstance;
+
+    beforeEach(() => {
+      jest.useFakeTimers();
+      setFocus = jest
+        .spyOn(AccessibilityInfo, "setAccessibilityFocus")
+        .mockImplementation(() => undefined);
+    });
+
+    afterEach(() => {
+      act(() => {
+        jest.runOnlyPendingTimers();
+      });
+      jest.useRealTimers();
+      setFocus.mockRestore();
+    });
+
+    function openSheet() {
+      // The press event carries the chip's native tag, as a real Pressable does.
+      act(() => {
+        fireEvent.press(screen.getByTestId("edit-goal-step-evidence-s1"), {
+          nativeEvent: { target: CHIP_TAG },
+        });
+      });
+      expect(screen.getByTestId("edit-goal-evidence-close")).toBeOnTheScreen();
+    }
+
+    it("restores focus to the evidence chip when closed via the × button", () => {
+      renderWithProviders(<EditGoalView {...makeProps({ steps: soloStep })} />);
+      openSheet();
+      setFocus.mockClear();
+      act(() => {
+        fireEvent.press(screen.getByTestId("edit-goal-evidence-close"));
+      });
+      act(() => {
+        jest.runAllTimers();
+      });
+      expect(setFocus).toHaveBeenCalledWith(CHIP_TAG);
+    });
+
+    it("restores focus to the evidence chip when closed via the backdrop", () => {
+      renderWithProviders(<EditGoalView {...makeProps({ steps: soloStep })} />);
+      openSheet();
+      setFocus.mockClear();
+      act(() => {
+        fireEvent.press(screen.getByTestId("edit-goal-evidence-backdrop"));
+      });
+      act(() => {
+        jest.runAllTimers();
+      });
+      expect(setFocus).toHaveBeenCalledWith(CHIP_TAG);
+    });
+
+    it("restores focus to the evidence chip when closed via Android back", () => {
+      const addSpy = jest.spyOn(BackHandler, "addEventListener");
+      renderWithProviders(<EditGoalView {...makeProps({ steps: soloStep })} />);
+      openSheet();
+      setFocus.mockClear();
+      // The sheet re-registers its listener each render (onClose identity
+      // changes); the most recent registration holds the live onClose.
+      const backCalls = addSpy.mock.calls.filter(
+        ([event]) => event === "hardwareBackPress",
+      );
+      const handler = backCalls[backCalls.length - 1]?.[1];
+      act(() => {
+        handler?.();
+      });
+      act(() => {
+        jest.runAllTimers();
+      });
+      expect(setFocus).toHaveBeenCalledWith(CHIP_TAG);
+      addSpy.mockRestore();
     });
   });
 

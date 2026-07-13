@@ -15,6 +15,13 @@ export const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
   },
+  // Wraps everything except the evidence sheet so the whole screen subtree can
+  // be hidden from TalkBack while the sheet is open (#501). flex:1 so it fills
+  // the container exactly as the header/scroll/footer did before — the sheet's
+  // absolute overlay still anchors to the container (its sibling), not this.
+  content: {
+    flex: 1,
+  },
   // The internal ScrollView claims the space between header and footer.
   scroll: {
     flex: 1,

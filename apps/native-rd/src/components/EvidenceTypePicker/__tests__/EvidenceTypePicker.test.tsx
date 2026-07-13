@@ -1,9 +1,10 @@
 import React from "react";
-import { BackHandler } from "react-native";
+import { BackHandler, AccessibilityInfo, type View } from "react-native";
 import {
   renderWithProviders,
   screen,
   fireEvent,
+  act,
 } from "../../../__tests__/test-utils";
 import { EvidenceTypePicker } from "../EvidenceTypePicker";
 import { EvidenceType } from "../../../db";
@@ -11,6 +12,17 @@ import { EVIDENCE_OPTIONS } from "../../../types/evidence";
 import type { EvidenceTypeValue } from "../../../types/evidence";
 import { i18n } from "../../../i18n";
 import { evidenceLabel } from "../../../i18n/labels";
+
+// findNodeHandle is a lazy getter on react-native's index — redefine it so the
+// capture sheet's restoreFocusRef resolves to a fixed tag under test (#501).
+jest.mock("react-native", () => {
+  const RN = jest.requireActual("react-native");
+  Object.defineProperty(RN, "findNodeHandle", {
+    configurable: true,
+    value: jest.fn(() => 111),
+  });
+  return RN;
+});
 
 const labelFor = (type: EvidenceTypeValue) =>
   evidenceLabel(i18n.t.bind(i18n), type);
@@ -308,6 +320,44 @@ describe("EvidenceTypePicker", () => {
 
       expect(screen.queryByText("✕")).toBeNull();
       expect(screen.queryByText(labelFor(EvidenceType.text))).toBeNull();
+    });
+
+    it("forwards restoreFocusRef so focus returns to the trigger on close (#501)", () => {
+      jest.useFakeTimers();
+      const setFocus = jest
+        .spyOn(AccessibilityInfo, "setAccessibilityFocus")
+        .mockImplementation(() => undefined);
+      // A stand-in trigger ref; the mocked findNodeHandle resolves it to 111.
+      const restoreFocusRef = {
+        current: {},
+      } as unknown as React.RefObject<View>;
+
+      const { rerender } = renderWithProviders(
+        <EvidenceTypePicker
+          {...captureProps}
+          visible
+          restoreFocusRef={restoreFocusRef}
+        />,
+      );
+      act(() => {
+        jest.runAllTimers();
+      });
+      // Isolate the close-restore from the open (title) focus.
+      setFocus.mockClear();
+      rerender(
+        <EvidenceTypePicker
+          {...captureProps}
+          visible={false}
+          restoreFocusRef={restoreFocusRef}
+        />,
+      );
+      act(() => {
+        jest.runAllTimers();
+      });
+      expect(setFocus).toHaveBeenCalledWith(111);
+
+      jest.useRealTimers();
+      setFocus.mockRestore();
     });
   });
 });

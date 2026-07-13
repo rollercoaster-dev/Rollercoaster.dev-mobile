@@ -29,6 +29,7 @@ import {
   TextInput,
   Pressable,
   AccessibilityInfo,
+  type GestureResponderEvent,
 } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useUnistyles } from "react-native-unistyles";
@@ -65,9 +66,11 @@ export interface EditGoalStepListProps {
   /**
    * Fired when a step's or sub-step's evidence chip is tapped (#493/D8). The
    * host (EditGoalView) owns the picker sheet + its open state; this list only
-   * reports which id was tapped. Ids are unique across steps and sub-steps.
+   * reports which id was tapped, plus the press event so the host can capture
+   * the chip's native tag to restore focus on close (#501). Ids are unique
+   * across steps and sub-steps.
    */
-  onEvidenceChipPress: (id: string) => void;
+  onEvidenceChipPress: (id: string, event: GestureResponderEvent) => void;
   /**
    * Adds a sub-step under `parentStepId` (D12). Called with `newSubStepTitle`
    * — the new sub-row is then renameable inline. Not wired to persistence.
@@ -325,7 +328,7 @@ export function EditGoalStepList({
           onEditTextChange={setEditText}
           onStartEditing={(id, title) => beginEdit(id, title)}
           onCommitEditing={commitEditing}
-          onEvidenceChipPress={(id) => onEvidenceChipPress(id)}
+          onEvidenceChipPress={(id, e) => onEvidenceChipPress(id, e)}
           onDelete={(id) =>
             setPendingDelete({
               kind: "subStep",
@@ -415,7 +418,7 @@ export function EditGoalStepList({
                 onEditTextChange={setEditText}
                 onStartEditing={() => beginEdit(step.id, step.title)}
                 onCommitEditing={commitEditing}
-                onEvidenceChipPress={() => onEvidenceChipPress(step.id)}
+                onEvidenceChipPress={(e) => onEvidenceChipPress(step.id, e)}
                 onDragStart={drag.handleDragStart}
                 onDragMove={drag.handleDragMove}
                 onDragEnd={drag.handleDragEnd}
