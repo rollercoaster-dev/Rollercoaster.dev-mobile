@@ -37,12 +37,12 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/node": "^26.0.1",
-    "eslint": "^9.39.4",
+    "@types/node": "^26.1.1",
+    "eslint": "^9.39.5",
     "husky": "9.1.7",
-    "lint-staged": "17.0.8",
+    "lint-staged": "17.1.0",
     "prettier": "^3.8.5",
-    "turbo": "^2.10.0",
+    "turbo": "^2.10.5",
     "typescript": "^6.0.3"
   },
   "lint-staged": {
