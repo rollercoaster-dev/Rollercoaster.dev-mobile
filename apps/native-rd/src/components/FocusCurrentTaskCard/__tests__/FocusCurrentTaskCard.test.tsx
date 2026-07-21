@@ -32,21 +32,45 @@ const PILL_STATES: [FocusCardStatus, string][] = [
   ["completed", "Completed"],
 ];
 
-function renderCard(overrides: Partial<FocusCurrentTaskCardProps> = {}) {
-  const props: FocusCurrentTaskCardProps = {
-    status: "in-progress",
+// The card's prop shape is a discriminated union on `status` (#497), so no single
+// literal can carry every variant's handlers. The helper builds a permissive
+// superset (all handlers as spies) and casts at the JSX boundary; the union's
+// "every rendered CTA's handler is required" contract is proven at compile time by
+// the stories' spread, not here. Returned so tests can assert on the spies.
+interface TestOverrides {
+  status?: FocusCardStatus;
+  title?: string;
+  plannedEvidenceTypes?: readonly string[];
+  capturedEvidence?: readonly FocusCapturedEvidenceItem[];
+  onPause?: () => void;
+  onPickUp?: () => void;
+  onMarkComplete?: () => void;
+  onReopen?: () => void;
+  onDesignBadge?: () => void;
+  onChangeEvidencePlan?: () => void;
+  onAddEvidence?: (type?: string) => void;
+  afterStep?: string;
+  waitingOn?: { who: string; expected?: string };
+  dueDate?: string;
+}
+
+function renderCard(overrides: TestOverrides = {}) {
+  const props = {
+    status: "in-progress" as FocusCardStatus,
     title: "Reset the kitchen",
-    plannedEvidenceType: "photo",
+    plannedEvidenceTypes: ["photo"],
     onPause: jest.fn(),
     onPickUp: jest.fn(),
     onMarkComplete: jest.fn(),
     onReopen: jest.fn(),
     onDesignBadge: jest.fn(),
-    onChangeEvidenceType: jest.fn(),
+    onChangeEvidencePlan: jest.fn(),
     onAddEvidence: jest.fn(),
     ...overrides,
   };
-  renderWithProviders(<FocusCurrentTaskCard {...props} />);
+  renderWithProviders(
+    <FocusCurrentTaskCard {...(props as FocusCurrentTaskCardProps)} />,
+  );
   return props;
 }
 
@@ -88,29 +112,86 @@ describe("FocusCurrentTaskCard", () => {
     });
   });
 
-  describe("in-progress evidence gate", () => {
+  describe("in-progress multi-evidence completion gate", () => {
     it("hides Mark complete when no evidence is captured", () => {
       renderCard({ status: "in-progress", capturedEvidence: [] });
       expect(screen.queryByText("✓ Mark complete")).toBeNull();
       expect(screen.queryByLabelText("Mark this step complete")).toBeNull();
     });
 
-    it("reveals Mark complete once evidence is captured", () => {
+    it("reveals Mark complete once every planned type is captured", () => {
+      // Single-type plan ("photo"), a photo captured → the plan is satisfied.
       renderCard({ status: "in-progress", capturedEvidence: captured });
       expect(screen.getByText("✓ Mark complete")).toBeTruthy();
     });
 
-    it("keeps Add alongside Mark complete (demoted) and still captures more", () => {
-      // Evidence-present branch: Mark complete leads as the primary, but Add
-      // stays so a second piece can be captured. Pressing it must still fire
-      // onAddEvidence — the demoted outline button is not a dead control.
+    it("withholds Mark complete when a two-type plan is only partly captured", () => {
+      // Photo + Note planned, only a photo captured: the plan is unsatisfied, so
+      // Mark complete stays absent and only the still-needed "Add Note" invite
+      // shows — the satisfied "Add Photo" invite is gone (never framed missing).
+      renderCard({
+        status: "in-progress",
+        plannedEvidenceTypes: ["photo", "text"],
+        capturedEvidence: [{ id: "ev-1", type: "photo", caption: null }],
+      });
+      expect(screen.queryByText("✓ Mark complete")).toBeNull();
+      expect(screen.getByLabelText("Add Note")).toBeTruthy();
+      expect(screen.queryByLabelText("Add Photo")).toBeNull();
+    });
+
+    it("reveals Mark complete + generic Add-more once both planned types are captured", () => {
+      // Photo + Note planned, both captured: the plan is satisfied. Mark complete
+      // leads, a generic "Add more evidence" secondary lets a further piece land,
+      // and no per-type "Add {type}" invite remains (no single type is still due).
+      renderCard({
+        status: "in-progress",
+        plannedEvidenceTypes: ["photo", "text"],
+        capturedEvidence: [
+          { id: "ev-1", type: "photo", caption: null },
+          { id: "ev-2", type: "text", caption: null },
+        ],
+      });
+      expect(screen.getByText("✓ Mark complete")).toBeTruthy();
+      expect(
+        screen.getByLabelText("Add more evidence to this step"),
+      ).toBeTruthy();
+      expect(screen.queryByLabelText("Add Photo")).toBeNull();
+      expect(screen.queryByLabelText("Add Note")).toBeNull();
+    });
+
+    it("fires onAddEvidence with no type from the generic Add-more secondary", () => {
       const props = renderCard({
         status: "in-progress",
         capturedEvidence: captured,
       });
       expect(screen.getByText("✓ Mark complete")).toBeTruthy();
-      fireEvent.press(screen.getByLabelText("Add Photo"));
+      fireEvent.press(screen.getByLabelText("Add more evidence to this step"));
       expect(props.onAddEvidence).toHaveBeenCalledTimes(1);
+      expect(props.onAddEvidence).toHaveBeenCalledWith();
+    });
+  });
+
+  describe("Change evidence plan vs Add {type} are distinct targets", () => {
+    it("pressing one control never fires the other's handler", () => {
+      const props = renderCard({
+        status: "in-progress",
+        plannedEvidenceTypes: ["photo", "text"],
+        capturedEvidence: [],
+      });
+      // The planned box announces the action + the whole plan (joined labels),
+      // not the bare visible "change".
+      fireEvent.press(
+        screen.getByLabelText("Change evidence plan, currently Photo, Note"),
+      );
+      expect(props.onChangeEvidencePlan).toHaveBeenCalledTimes(1);
+      expect(props.onAddEvidence).not.toHaveBeenCalled();
+
+      // Pressing a per-type Add invite fires only onAddEvidence (with its type),
+      // never the plan-change handler.
+      fireEvent.press(screen.getByLabelText("Add Note"));
+      expect(props.onAddEvidence).toHaveBeenCalledTimes(1);
+      expect(props.onAddEvidence).toHaveBeenCalledWith("text");
+      expect(props.onChangeEvidencePlan).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -130,21 +211,20 @@ describe("FocusCurrentTaskCard", () => {
       expect(props.onPause).toHaveBeenCalledTimes(1);
     });
 
-    it("in-progress fires onChangeEvidenceType", () => {
+    it("in-progress fires onChangeEvidencePlan", () => {
       const props = renderCard({ status: "in-progress" });
-      // The planned box announces the action + current type (not the bare
-      // visible "change"), so screen-reader users get the same context as
-      // sighted ones. renderCard plans "photo" → "Photo".
+      // renderCard plans "photo" → the joined plan label is just "Photo".
       fireEvent.press(
-        screen.getByLabelText("Change evidence type, currently Photo"),
+        screen.getByLabelText("Change evidence plan, currently Photo"),
       );
-      expect(props.onChangeEvidenceType).toHaveBeenCalledTimes(1);
+      expect(props.onChangeEvidencePlan).toHaveBeenCalledTimes(1);
     });
 
-    it("in-progress fires onAddEvidence", () => {
+    it("in-progress fires onAddEvidence with the planned type", () => {
       const props = renderCard({ status: "in-progress" });
       fireEvent.press(screen.getByLabelText("Add Photo"));
       expect(props.onAddEvidence).toHaveBeenCalledTimes(1);
+      expect(props.onAddEvidence).toHaveBeenCalledWith("photo");
     });
 
     it("paused fires onPickUp", () => {
@@ -188,6 +268,19 @@ describe("FocusCurrentTaskCard", () => {
       capturedEvidence: captured,
       afterStep: "Stock the pantry",
       dueDate: "Fri 11 Jul",
+    });
+    expect(JSON.stringify(screen.toJSON())).not.toMatch(
+      /\b(missing|needed|blocked)\b/i,
+    );
+  });
+
+  it("never frames evidence as absent for a partly-captured multi-type plan", () => {
+    // The state most tempted toward "missing" framing: a plan with an
+    // outstanding type. The per-type invite must read as an invite, not a lack.
+    renderCard({
+      status: "in-progress",
+      plannedEvidenceTypes: ["photo", "text"],
+      capturedEvidence: [{ id: "ev-1", type: "photo", caption: null }],
     });
     expect(JSON.stringify(screen.toJSON())).not.toMatch(
       /\b(missing|needed|blocked)\b/i,
@@ -316,15 +409,30 @@ describe("FocusCurrentTaskCard", () => {
     "every button in %s has a label and at least a 44pt target",
     (status) => {
       renderCard({ status, capturedEvidence: captured });
-      const buttons = screen.getAllByRole("button");
-      expect(buttons.length).toBeGreaterThan(0);
-      buttons.forEach((button) => {
-        expect(button.props.accessibilityLabel).toBeTruthy();
-        const flat = StyleSheet.flatten(button.props.style) as {
-          minHeight?: number;
-        };
-        expect(flat.minHeight).toBeGreaterThanOrEqual(44);
-      });
+      assertButtonsLabelledAndSized();
     },
   );
+
+  it("every button in a partly-captured multi-type plan is labelled and 44pt", () => {
+    // Exercises the per-type Add row specifically (the ALL_STATES sweep hits the
+    // satisfied footer, which shows Mark complete + generic Add-more instead).
+    renderCard({
+      status: "in-progress",
+      plannedEvidenceTypes: ["photo", "text"],
+      capturedEvidence: [{ id: "ev-1", type: "photo", caption: null }],
+    });
+    assertButtonsLabelledAndSized();
+  });
 });
+
+function assertButtonsLabelledAndSized() {
+  const buttons = screen.getAllByRole("button");
+  expect(buttons.length).toBeGreaterThan(0);
+  buttons.forEach((button) => {
+    expect(button.props.accessibilityLabel).toBeTruthy();
+    const flat = StyleSheet.flatten(button.props.style) as {
+      minHeight?: number;
+    };
+    expect(flat.minHeight).toBeGreaterThanOrEqual(44);
+  });
+}
