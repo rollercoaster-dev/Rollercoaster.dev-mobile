@@ -15,5 +15,17 @@ export const styles = StyleSheet.create((theme) => ({
   },
   label: {
     color: theme.colors.textSecondary,
+    textAlign: "center",
+  },
+  // Stacks the no-key/error alert above its escape/retry action, mirroring
+  // CompletionFlowScreen.styles.ts's `badgeErrorContainer` shape.
+  messageContainer: {
+    width: "100%",
+    alignItems: "center",
+    gap: theme.space[3],
+  },
+  errorText: {
+    color: theme.colors.error,
+    textAlign: "center",
   },
 }));
