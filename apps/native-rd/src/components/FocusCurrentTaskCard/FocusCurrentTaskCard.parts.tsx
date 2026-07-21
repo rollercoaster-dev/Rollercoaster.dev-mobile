@@ -162,16 +162,23 @@ export function PlannedEvidenceBox({
     };
   });
   const joinedLabels = entries.map((e) => e.label).join(", ");
+  // An empty plan is an unexpected, invalid state ("every step needs evidence"),
+  // but the control must still describe itself: joining zero labels yields "",
+  // which would render "…currently " with a dangling blank for a screen reader.
+  // Fall back to the action the box offers when nothing is planned yet.
+  const accessibilityLabel =
+    entries.length > 0
+      ? t("focusMode:currentTask.inProgress.changeEvidencePlanA11y", {
+          types: joinedLabels,
+        })
+      : t("focusMode:currentTask.inProgress.changeEvidencePlanEmptyA11y");
   return (
     <Pressable
       onPress={onChangeEvidencePlan}
       style={styles.plannedBox}
       accessible
       accessibilityRole="button"
-      accessibilityLabel={t(
-        "focusMode:currentTask.inProgress.changeEvidencePlanA11y",
-        { types: joinedLabels },
-      )}
+      accessibilityLabel={accessibilityLabel}
       testID="focus-current-task-change-plan"
     >
       <View style={styles.plannedTypeList}>

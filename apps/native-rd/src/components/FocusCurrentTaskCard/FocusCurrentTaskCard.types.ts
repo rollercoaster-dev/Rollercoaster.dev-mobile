@@ -30,10 +30,13 @@ export interface FocusInProgressCardProps extends FocusCardBase {
   status: "in-progress";
   /**
    * Planned evidence **type keys** (e.g. `["photo", "text"]`). Each drives an
-   * icon + short label in the planned-evidence box. Unknown values fall back to
-   * `file` for icon/label lookup (matches the captured rail). A plain array, not
-   * a non-empty tuple (D3): the "every step needs evidence" invariant is enforced
-   * by the completion gate and callers, not by the type.
+   * icon + short label in the planned-evidence box, and each must be captured
+   * before "Mark complete" is revealed. Unknown values are normalized to `file`
+   * — for icon/label lookup (matching the captured rail) *and* in the completion
+   * gate, so an unknown key gates as `file` rather than being silently dropped.
+   * A plain array, not a non-empty tuple (D3): the "every step needs evidence"
+   * invariant is enforced at runtime by the completion gate (an empty plan never
+   * reveals "Mark complete") and by callers, not by the type.
    */
   plannedEvidenceTypes: readonly string[];
   /**

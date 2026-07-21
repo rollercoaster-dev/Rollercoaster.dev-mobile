@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
 import { evidenceShortLabel } from "../../i18n/labels";
+import { validateEvidenceType } from "../../types/evidence";
 import { getMissingQuickEvidenceOptions } from "../StepCard/StepCardEvidenceCapture";
 import { styles } from "./FocusCurrentTaskCard.styles";
 import {
@@ -95,15 +96,28 @@ function InProgressView({
 }: FocusInProgressCardProps) {
   const { t } = useTranslation(["common", "focusMode"]);
   const captured = capturedEvidence ?? [];
+  // Normalize both plan and capture keys through the same `file` fallback the
+  // planned box and captured rail use (`validateEvidenceType`). Without this an
+  // unknown planned key (e.g. "sketch") would never appear in
+  // `EVIDENCE_CAPTURE_OPTIONS`, so the gate below would silently drop it —
+  // treating a plan that is *not* satisfied as satisfied. Normalizing makes it
+  // gate as `file`, matching what the planned box already shows.
+  const capturedTypes = captured.map((item) => validateEvidenceType(item.type));
+  const normalizedPlannedTypes = plannedEvidenceTypes.map(validateEvidenceType);
   // The exact app-wide predicate StepCard uses (D1): planned types with no
-  // captured piece yet, in capture-button order. Completion unlocks when it's
-  // empty — "every planned type captured," never "at least one."
-  const capturedTypes = captured.map((item) => item.type);
+  // captured piece yet, in capture-button order.
   const unsatisfiedTypes = getMissingQuickEvidenceOptions(
-    plannedEvidenceTypes,
+    normalizedPlannedTypes,
     capturedTypes,
   );
-  const completionReady = unsatisfiedTypes.length === 0;
+  // Ready only when the step actually plans evidence AND every planned type has
+  // a captured piece. The empty-plan guard is load-bearing: with no planned
+  // types `unsatisfiedTypes` is trivially empty, so without it an empty plan
+  // would reveal "Mark complete" with zero evidence — violating "every step
+  // needs evidence" (#360/#408). This is the "every planned type captured"
+  // contract, never "at least one," and never "none."
+  const completionReady =
+    normalizedPlannedTypes.length > 0 && unsatisfiedTypes.length === 0;
 
   return (
     <View style={styles.card}>

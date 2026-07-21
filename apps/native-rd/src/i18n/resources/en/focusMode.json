@@ -25,6 +25,7 @@
       "evidenceRequired": "Evidence · required",
       "changeEvidencePlan": "change",
       "changeEvidencePlanA11y": "Change evidence plan, currently {{types}}",
+      "changeEvidencePlanEmptyA11y": "Set an evidence plan for this step",
       "evidenceRailLabel": "Captured",
       "addTypeCta": "Add {{type}}",
       "addMoreEvidenceCta": "Add more evidence",

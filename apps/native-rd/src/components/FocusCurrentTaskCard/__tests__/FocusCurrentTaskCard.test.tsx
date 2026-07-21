@@ -119,6 +119,44 @@ describe("FocusCurrentTaskCard", () => {
       expect(screen.queryByLabelText("Mark this step complete")).toBeNull();
     });
 
+    it("hides Mark complete for an empty plan and keeps the plan box self-describing", () => {
+      // An empty plan must never read as complete ("every step needs evidence"):
+      // with no planned types the still-needed set is trivially empty, so the
+      // gate has to fall back on the plan being non-empty. The plan box also
+      // names its action instead of announcing a blank "currently ".
+      renderCard({
+        status: "in-progress",
+        plannedEvidenceTypes: [],
+        capturedEvidence: [],
+      });
+      expect(screen.queryByText("✓ Mark complete")).toBeNull();
+      expect(
+        screen.getByLabelText("Set an evidence plan for this step"),
+      ).toBeTruthy();
+    });
+
+    it("gates completion on an unknown planned type instead of dropping it", () => {
+      // "sketch" is not a known evidence type → normalized to `file`. Nothing
+      // captured, so the plan is unsatisfied: Mark complete stays hidden and the
+      // still-needed invite shows for the normalized `file` type.
+      renderCard({
+        status: "in-progress",
+        plannedEvidenceTypes: ["sketch"],
+        capturedEvidence: [],
+      });
+      expect(screen.queryByText("✓ Mark complete")).toBeNull();
+      expect(screen.getByLabelText("Add File")).toBeTruthy();
+    });
+
+    it("reveals Mark complete once a file capture satisfies an unknown planned type", () => {
+      renderCard({
+        status: "in-progress",
+        plannedEvidenceTypes: ["sketch"],
+        capturedEvidence: [{ id: "ev-1", type: "file", caption: null }],
+      });
+      expect(screen.getByText("✓ Mark complete")).toBeTruthy();
+    });
+
     it("reveals Mark complete once every planned type is captured", () => {
       // Single-type plan ("photo"), a photo captured → the plan is satisfied.
       renderCard({ status: "in-progress", capturedEvidence: captured });
