@@ -133,15 +133,27 @@ describe("FinishBakingStage", () => {
       ).toBeOnTheScreen();
     });
 
-    it("falls back to a default message so the alert is never label-less", () => {
-      renderWithProviders(
-        <FinishBakingStage badgeDesign={badgeDesign} status="error" />,
-      );
-      const alert = screen.getByTestId("finish-baking-error-alert");
-      expect(alert.props.accessibilityRole).toBe("alert");
-      expect(typeof alert.props.accessibilityLabel).toBe("string");
-      expect(alert.props.accessibilityLabel.length).toBeGreaterThan(0);
-    });
+    it.each([
+      ["undefined", undefined],
+      ["null", null],
+      ["empty string", ""],
+      ["whitespace-only", "   "],
+    ])(
+      "falls back to a default message when errorMessage is %s, so the alert is never label-less",
+      (_label, errorMessage) => {
+        renderWithProviders(
+          <FinishBakingStage
+            badgeDesign={badgeDesign}
+            status="error"
+            errorMessage={errorMessage}
+          />,
+        );
+        const alert = screen.getByTestId("finish-baking-error-alert");
+        expect(alert.props.accessibilityRole).toBe("alert");
+        expect(typeof alert.props.accessibilityLabel).toBe("string");
+        expect(alert.props.accessibilityLabel.trim().length).toBeGreaterThan(0);
+      },
+    );
 
     it("fires onRetry when Retry is pressed", () => {
       const onRetry = jest.fn();
@@ -207,6 +219,10 @@ describe("FinishBakingStage", () => {
       while (node && typeof node.props.onPress !== "function") {
         node = node.parent;
       }
+      // Fail loudly here if the traversal never finds the Pressable's onPress
+      // (e.g. Button's internals changed) rather than throwing an opaque
+      // "onPress is not a function" when we invoke it below.
+      expect(typeof node?.props.onPress).toBe("function");
       const onPress = node?.props.onPress as () => void;
       act(() => {
         onPress();

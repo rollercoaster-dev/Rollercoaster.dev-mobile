@@ -173,9 +173,13 @@ export function FinishBakingStage({
   }
 
   if (status === "error") {
-    // Coalesce null/undefined to a generic default so the alert always carries
-    // an accessible label — never a label-less, empty-text alert.
-    const errorText = errorMessage ?? DEFAULT_ERROR_MESSAGE;
+    // Coalesce null/undefined *and* empty/whitespace-only strings to a generic
+    // default so the alert always carries an accessible label — never a
+    // label-less, empty-text alert.
+    const errorText =
+      errorMessage != null && errorMessage.trim().length > 0
+        ? errorMessage
+        : DEFAULT_ERROR_MESSAGE;
     return (
       <View style={styles.container} testID="finish-baking-stage">
         <View style={styles.badgeDim} testID="finish-baking-badge-dim">
