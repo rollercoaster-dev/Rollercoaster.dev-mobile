@@ -50,8 +50,7 @@ export function FocusCurrentTaskCard(props: FocusCurrentTaskCardProps) {
     default:
       // Exhaustiveness guard: once every FocusCardStatus has a case above,
       // `props` is `never` here, so adding a new status without its own case
-      // fails to compile — it can never silently render the wrong UI. An
-      // out-of-union runtime value still degrades to the silent in-progress view.
+      // fails to compile — it can never silently render the wrong UI.
       return exhaustiveFallback(props);
   }
 }
@@ -60,11 +59,14 @@ export function FocusCurrentTaskCard(props: FocusCurrentTaskCardProps) {
  * Compile-time exhaustiveness check for the status switch. Reached only with a
  * `props` whose `status` no `case` handled — which TypeScript types as `never`
  * once every `FocusCardStatus` is covered, so an unhandled status is a build
- * error rather than a silent mis-render. The cast keeps the runtime graceful:
- * an out-of-union value still renders the silent in-progress view.
+ * error rather than a silent mis-render. Should such a value slip through at
+ * runtime (an untyped or malformed caller), we render nothing: casting it into
+ * a real view would read fields the shape may not carry (e.g.
+ * `plannedEvidenceTypes`) and crash the screen, so a blank card is the safe
+ * degradation.
  */
-function exhaustiveFallback(props: never): React.ReactElement {
-  return <InProgressView {...(props as FocusInProgressCardProps)} />;
+function exhaustiveFallback(_props: never): React.ReactElement | null {
+  return null;
 }
 
 /**
