@@ -13,51 +13,87 @@ export type FocusCardStatus =
   | "completed"
   | "all-complete";
 
-export interface FocusCurrentTaskCardProps {
-  // Props are grouped by the view state that reads them; each sub-view
-  // destructures only its own group, so a prop set on the "wrong" status is
-  // silently ignored rather than mis-rendered.
-
-  // --- universal ---
-  status: FocusCardStatus;
+/** Fields every variant carries, regardless of status. */
+interface FocusCardBase {
   title: string;
+}
+
+/**
+ * In-progress: the working state. Plans **N** evidence types and only reveals
+ * "Mark complete" once *every* planned type has at least one captured piece —
+ * the app-wide multi-evidence completion contract (`StepCard`, #360). Every
+ * handler a rendered control fires is **required**: a discriminated union (below)
+ * means the compiler rejects an in-progress card that omits, say, `onAddEvidence`,
+ * so a `Pressable`'s `onPress` can never resolve to `undefined` (#497).
+ */
+export interface FocusInProgressCardProps extends FocusCardBase {
+  status: "in-progress";
   /**
-   * Captured-evidence chips for the read-only rail. Rendered in the in-progress
-   * and completed views; ignored by paused / all-complete.
+   * Planned evidence **type keys** (e.g. `["photo", "text"]`). Each drives an
+   * icon + short label in the planned-evidence box. Unknown values fall back to
+   * `file` for icon/label lookup (matches the captured rail). A plain array, not
+   * a non-empty tuple (D3): the "every step needs evidence" invariant is enforced
+   * by the completion gate and callers, not by the type.
+   */
+  plannedEvidenceTypes: readonly string[];
+  /**
+   * Captured-evidence chips for the read-only rail. Shows what is present, never
+   * what is absent (#360).
    */
   capturedEvidence?: readonly FocusCapturedEvidenceItem[];
-
-  // --- in-progress ---
+  /** Open the evidence-plan chooser (#409) — the whole planned box is the target. */
+  onChangeEvidencePlan: () => void;
   /**
-   * Planned evidence **type key** (e.g. `"photo"`, `"text"`) — drives both the
-   * icon and the label in the planned-evidence box. An unknown value falls back
-   * to `file`; null/omitted shows a generic "Evidence" label with no icon.
+   * Capture evidence. Pass a `type` to capture that specific planned type (the
+   * per-type "Add {type}" invites); call with no argument to open the capture
+   * chooser with no type pre-implied (the post-completion "Add more evidence").
    */
-  plannedEvidenceType?: string | null;
-  /** Open the evidence-type chooser (#409) — the whole planned box is the target. */
-  onChangeEvidenceType?: () => void;
-  /** Capture a new piece of the planned evidence type. */
-  onAddEvidence?: () => void;
+  onAddEvidence: (type?: string) => void;
   /** Set this step aside (in-progress → paused). */
-  onPause?: () => void;
-  /** Mark complete — revealed only when evidence is captured. */
-  onMarkComplete?: () => void;
+  onPause: () => void;
+  /** Mark complete — revealed only once every planned type is captured. */
+  onMarkComplete: () => void;
   /** C (dependency), internal: this step comes "after [step]". Never "blocked by". */
   afterStep?: string;
   /** C (dependency), external wait: "waiting on [who] · expected [date]". */
   waitingOn?: { who: string; expected?: string };
   /** B (date): factual "due [date]" — no urgency / "overdue" framing. */
   dueDate?: string;
-
-  // --- paused ---
-  /** Resume a paused step (paused → in-progress). */
-  onPickUp?: () => void;
-
-  // --- completed ---
-  /** Reopen a completed step. */
-  onReopen?: () => void;
-
-  // --- all-complete ---
-  /** Design the badge from the all-steps-complete state. */
-  onDesignBadge?: () => void;
 }
+
+/** Paused: pill + "set aside" body + a single "pick back up" CTA. */
+export interface FocusPausedCardProps extends FocusCardBase {
+  status: "paused";
+  /** Resume a paused step (paused → in-progress). */
+  onPickUp: () => void;
+}
+
+/** Completed: pill + the read-only captured rail + a single "reopen" CTA. */
+export interface FocusCompletedCardProps extends FocusCardBase {
+  status: "completed";
+  /** Captured-evidence chips for the read-only rail. */
+  capturedEvidence?: readonly FocusCapturedEvidenceItem[];
+  /** Reopen a completed step. */
+  onReopen: () => void;
+}
+
+/** All steps done (goal-level): trophy callout + a single "design badge" CTA. */
+export interface FocusAllCompleteCardProps extends FocusCardBase {
+  status: "all-complete";
+  /** Design the badge from the all-steps-complete state. */
+  onDesignBadge: () => void;
+}
+
+/**
+ * Props for {@link FocusCurrentTaskCard}: a **discriminated union on `status`**
+ * (D2), mirroring `EvidenceTypePickerProps` one folder over. Each variant lists
+ * only the props/handlers its own view renders, all required — so a control the
+ * matched status renders can never have an `undefined` `onPress`, and a prop set
+ * on the wrong status is a compile error rather than being silently ignored (the
+ * failure mode of the previous flat all-optional interface).
+ */
+export type FocusCurrentTaskCardProps =
+  | FocusInProgressCardProps
+  | FocusPausedCardProps
+  | FocusCompletedCardProps
+  | FocusAllCompleteCardProps;
