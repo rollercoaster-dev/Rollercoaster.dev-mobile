@@ -5,7 +5,10 @@ import type { Meta, StoryObj } from "@storybook/react";
 
 import { FinishCelebrateStage } from "../../components/FinishCelebrateStage";
 import { FinishDesignStage } from "../../components/FinishDesignStage";
-import { FinishBakingStage } from "../../components/FinishBakingStage";
+import {
+  FinishBakingStage,
+  type FinishBakingStatus,
+} from "../../components/FinishBakingStage";
 import { FinishRevealStage } from "../../components/FinishRevealStage";
 import { createDefaultBadgeDesign, type BadgeDesign } from "../../badges/types";
 import type { AnimationPref } from "../../hooks/useAnimationPref";
@@ -21,12 +24,20 @@ type Story = StoryObj;
 /** The four sequential stages of the finishing flow. */
 type FlowStage = "celebrate" | "design" | "baking" | "reveal";
 
+/** How the modeled bake resolves — the seam #449 replaces with real hook state. */
+type BakeOutcome = "success" | "no-key" | "error";
+
 const GOAL_TITLE = "Rewire the workshop";
 // Deliberately off-palette (not in ColorPicker's ACCENT_COLORS) so the extra
 // "goal" swatch renders as a distinct entry in the design stage — same
 // fixture-hex convention as FinishDesignStage.stories.tsx.
 const GOAL_COLOR = "#e11d48";
 const EARNED_DATE_LABEL = "Jun 23, 2026";
+
+// Fixture copy for the modeled error state — English literal, mirroring the
+// component's own defaults (D2). #449 threads real t() output through here.
+const BAKE_ERROR_MESSAGE =
+  "We couldn't finish baking your badge. Please try again.";
 
 // Threads the goal title into the celebrate summary so the same string surfaces
 // on celebrate (summary), design (header subtitle), and reveal (heading) —
@@ -37,6 +48,9 @@ const makeSummary = (title: string) =>
 // Auto-advance duration for baking → reveal, matching the canonical prototype's
 // own bake() handler (Finishing Flow A Prototype.dc.html: setTimeout(…, 1100)).
 const BAKE_DURATION_MS = 1100;
+// Brief hold on the success sub-state before advancing to reveal, so the
+// distinct "Badge created!" moment (D6) is observable, not an instant cut.
+const SUCCESS_HOLD_MS = 700;
 
 interface InteractiveFinishFlowProps {
   /** Passed straight through to the reveal stage's pop-in (D2/#470 contract). */
@@ -49,13 +63,20 @@ interface InteractiveFinishFlowProps {
   initialNoteOpen?: boolean;
   /** Merged over the seeded default design (e.g. a long bottom label). */
   designOverrides?: Partial<BadgeDesign>;
+  /**
+   * How the modeled bake resolves. `"success"` auto-advances to reveal;
+   * `"no-key"` and `"error"` are terminal until the user acts (exit / retry).
+   */
+  bakeOutcome?: BakeOutcome;
 }
 
 /**
  * Story-local harness chaining the four already-shipped Finish*Stage components
  * through `useState` — no app navigation, no `useCreateBadge`, no real bake.
- * A single `design`/`goalTitle` threads through every stage; baking auto-
- * advances to reveal after a fixed timer (D2). Integration is #449's job.
+ * A single `design`/`goalTitle` threads through every stage; the modeled bake
+ * resolves per `bakeOutcome` (success auto-advances to reveal; error offers a
+ * working Retry that loops back through busy → success → reveal). Integration
+ * is #449's job.
  */
 function InteractiveFinishFlow({
   animationPref = "full",
@@ -63,6 +84,7 @@ function InteractiveFinishFlow({
   initialClosingNote = "",
   initialNoteOpen = false,
   designOverrides,
+  bakeOutcome = "success",
 }: InteractiveFinishFlowProps) {
   const [stage, setStage] = useState<FlowStage>("celebrate");
   const [closingNote, setClosingNote] = useState(initialClosingNote);
@@ -70,13 +92,31 @@ function InteractiveFinishFlow({
     ...createDefaultBadgeDesign(goalTitle, GOAL_COLOR),
     ...designOverrides,
   }));
+  const [bakeStatus, setBakeStatus] = useState<FinishBakingStatus>("building");
+  // Which outcome the current busy phase resolves to. Seeded from bakeOutcome
+  // on entering baking; a Retry always re-targets "success".
+  const [bakeTarget, setBakeTarget] = useState<BakeOutcome>(bakeOutcome);
 
-  // Auto-advance baking → reveal with no tap, mirroring the prototype's timer.
+  // Entering the baking stage (re)seeds a fresh busy phase.
   useEffect(() => {
     if (stage !== "baking") return;
-    const timer = setTimeout(() => setStage("reveal"), BAKE_DURATION_MS);
+    setBakeTarget(bakeOutcome);
+    setBakeStatus("building");
+  }, [stage, bakeOutcome]);
+
+  // Resolve a busy phase to its target after the bake timer.
+  useEffect(() => {
+    if (bakeStatus !== "building") return;
+    const timer = setTimeout(() => setBakeStatus(bakeTarget), BAKE_DURATION_MS);
     return () => clearTimeout(timer);
-  }, [stage]);
+  }, [bakeStatus, bakeTarget]);
+
+  // A resolved success briefly holds, then advances to the reveal stage.
+  useEffect(() => {
+    if (bakeStatus !== "success") return;
+    const timer = setTimeout(() => setStage("reveal"), SUCCESS_HOLD_MS);
+    return () => clearTimeout(timer);
+  }, [bakeStatus]);
 
   return (
     <View style={{ flex: 1, height: 640 }}>
@@ -99,7 +139,22 @@ function InteractiveFinishFlow({
           onBake={() => setStage("baking")}
         />
       )}
-      {stage === "baking" && <FinishBakingStage badgeDesign={design} />}
+      {stage === "baking" && (
+        <FinishBakingStage
+          badgeDesign={design}
+          status={bakeStatus}
+          errorMessage={BAKE_ERROR_MESSAGE}
+          // Retry re-targets success and loops back through busy → reveal,
+          // demonstrating the full error → retry → success → reveal recovery.
+          onRetry={() => {
+            setBakeTarget("success");
+            setBakeStatus("building");
+          }}
+          // No-op escape seam — real navigation is #449's job, matching the
+          // reveal stage's onViewBadge/onBackToGoals no-ops.
+          onExitWithoutBadge={() => {}}
+        />
+      )}
       {stage === "reveal" && (
         <FinishRevealStage
           badgeDesign={design}
@@ -115,8 +170,8 @@ function InteractiveFinishFlow({
 }
 
 /** Full sequence: press "Design your badge →", edit the badge, press "Bake my
- * badge", and the baking interstitial auto-advances to the reveal after 1100ms.
- * The threaded `design`/`goalTitle` is the same value at every stage. */
+ * badge", the baking interstitial resolves to success and auto-advances to the
+ * reveal. The threaded `design`/`goalTitle` is the same value at every stage. */
 export const Default: Story = {
   render: () => <InteractiveFinishFlow />,
 };
@@ -141,19 +196,33 @@ export const LongContent: Story = {
   ),
 };
 
+/** Bake resolves to the no-key permanent failure — the interstitial surfaces
+ * the escape affordance ("Continue without a badge") and does not advance. */
+export const NoKey: Story = {
+  render: () => <InteractiveFinishFlow bakeOutcome="no-key" />,
+};
+
+/** Bake fails, the error copy + Retry appear; tapping Retry returns to a busy
+ * phase, resolves to success, and advances to reveal — the full recovery loop. */
+export const FailureThenRetry: Story = {
+  render: () => <InteractiveFinishFlow bakeOutcome="error" />,
+};
+
 // ---------------------------------------------------------------------------
-// AllThemesMatrix — the two stages that carry theme-varying chrome tokens,
-// side by side across all 7 product themes (D3). Design owns
+// AllThemesMatrix — the stages that carry theme-varying chrome/state tokens,
+// side by side across all 7 product themes. Design owns
 // `chrome.screenHeaderBg/Fg/Border`; reveal owns `chrome.celebrationBg/Fg`
-// (#419). Celebrate/baking both style off plain `colors.background`, so they
-// add no matrix signal and are omitted.
+// (#419). The baking stage's success/no-key/error content pairs
+// `colors.error` against theme-varying background/text/border, so its three
+// resolved states are matrix-worthy (D7 — superseding #472's original note,
+// which was correct for the plain busy spinner that added no signal).
 //
 // A live per-cell `ScopedTheme` matrix is safe here — unlike the
 // NewGoalWizard/EditGoalView toolbar-switcher fallback, which exists because
 // those compose a hook that setStates after mount and defeats ScopedTheme on
-// web. All four Finish*Stage components are useState-only/prop-driven, and the
-// reveal pop-in uses a reanimated shared value (not React setState), so no
-// post-mount re-render reverts a cell to the toolbar theme.
+// web. All Finish*Stage cells below are prop-driven (no post-mount setState),
+// and the reveal pop-in uses a reanimated shared value (not React setState),
+// so no post-mount re-render reverts a cell to the toolbar theme.
 // ---------------------------------------------------------------------------
 
 // Human-facing mood label for each of the 7 product themes — mirror of the
@@ -168,7 +237,7 @@ const MOOD_NAMES: Record<ThemeName, string> = {
   "light-lowInfo": "Clean Signal",
 };
 
-// Shared, non-interactive fixture design threaded into both matrix rows —
+// Shared, non-interactive fixture design threaded into every matrix row —
 // same seed as the flow story (goal color + title), so the matrix and the
 // interactive flow show the same badge.
 const MATRIX_DESIGN: BadgeDesign = createDefaultBadgeDesign(
@@ -207,6 +276,33 @@ export const AllThemesMatrix: Story = {
                   animationPref="none"
                   onViewBadge={noop}
                   onBackToGoals={noop}
+                />
+              </View>
+            </ScopedTheme>
+            <ScopedTheme name={name}>
+              <View style={styles.matrixCell} pointerEvents="none">
+                <FinishBakingStage
+                  badgeDesign={MATRIX_DESIGN}
+                  status="success"
+                />
+              </View>
+            </ScopedTheme>
+            <ScopedTheme name={name}>
+              <View style={styles.matrixCell} pointerEvents="none">
+                <FinishBakingStage
+                  badgeDesign={MATRIX_DESIGN}
+                  status="no-key"
+                  onExitWithoutBadge={noop}
+                />
+              </View>
+            </ScopedTheme>
+            <ScopedTheme name={name}>
+              <View style={styles.matrixCell} pointerEvents="none">
+                <FinishBakingStage
+                  badgeDesign={MATRIX_DESIGN}
+                  status="error"
+                  errorMessage={BAKE_ERROR_MESSAGE}
+                  onRetry={noop}
                 />
               </View>
             </ScopedTheme>
