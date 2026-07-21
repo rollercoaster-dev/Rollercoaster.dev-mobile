@@ -141,12 +141,26 @@ export const styles = StyleSheet.create((theme) => {
       paddingVertical: theme.space[3],
       ...shadowStyle(theme, "cardElevation"),
     },
+    // The planned types flow left, wrapping if a 3-type plan runs long; the
+    // trailing "change" text is pushed to the right by this list's flex.
+    plannedTypeList: {
+      flex: 1,
+      flexDirection: "row",
+      flexWrap: "wrap",
+      alignItems: "center",
+      gap: theme.space[2],
+    },
+    // One icon + label pair per planned type inside the box.
+    plannedType: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: theme.space[1],
+    },
     plannedIcon: {
       fontSize: 18,
     },
     // Prototype label is 14px (`sm`), "change" is 12px (`xs`). (R7)
     plannedLabel: {
-      flex: 1,
       fontSize: theme.size.sm,
       fontWeight: theme.fontWeight.bold,
       color: theme.colors.text,
