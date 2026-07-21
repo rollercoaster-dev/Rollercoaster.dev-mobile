@@ -19,6 +19,7 @@ import { ScreenHeader } from "../../components/ScreenHeader";
 import { SettingsSection } from "../../components/SettingsSection";
 import { SettingsRow } from "../../components/SettingsRow";
 import { ThemeSwitcher } from "../../components/ThemeSwitcher";
+import { useToast } from "../../components/Toast";
 import { useDensity } from "../../hooks/useDensity";
 import { densityOptions } from "../../utils/density";
 import { Logger } from "../../shims/rd-logger";
@@ -49,6 +50,7 @@ export function triggerSentryNativeCrash(): void {
 
 function DensityPicker() {
   const { densityLevel, setDensity } = useDensity();
+  const { showToast } = useToast();
   const { t } = useTranslation(["settings"]);
 
   return (
@@ -62,7 +64,13 @@ function DensityPicker() {
               ? "✓"
               : t(`settings:density.options.${option.id}.description`)
           }
-          onPress={() => setDensity(option.id)}
+          onPress={() => {
+            // setDensity returns false only when the persist failed; surface a
+            // toast so the row doesn't look "saved" while nothing persisted.
+            if (!setDensity(option.id)) {
+              showToast({ message: t("settings:errors.densitySaveFailed") });
+            }
+          }}
         />
       ))}
     </SettingsSection>

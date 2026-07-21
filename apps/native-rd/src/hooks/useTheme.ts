@@ -48,7 +48,10 @@ interface ThemeContextValue {
   theme: ComposedTheme;
   isDark: boolean;
   variant: Variant;
-  setTheme: (name: ThemeName) => void;
+  // Returns false only when persisting the theme to Evolu failed, so the
+  // calling UI can surface a toast (#503). The outer-provider stub throws, and
+  // the pre-Evolu Unistyles-only provider returns void — both remain assignable.
+  setTheme: (name: ThemeName) => boolean;
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);

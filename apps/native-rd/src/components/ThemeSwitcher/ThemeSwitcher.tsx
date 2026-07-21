@@ -7,6 +7,7 @@ import {
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useThemeContext, themeOptions } from "../../hooks/useTheme";
+import { useToast } from "../Toast";
 import { themeA11yLabel } from "../../i18n/labels";
 import { themes, parseThemeName, type ThemeName } from "../../themes/compose";
 import { variantOverrides } from "../../themes/variants";
@@ -121,7 +122,8 @@ function previewStyles(themeId: ThemeName) {
 
 export function ThemeSwitcher() {
   const { themeName, setTheme } = useThemeContext();
-  const { t } = useTranslation(["common"]);
+  const { showToast } = useToast();
+  const { t } = useTranslation(["common", "settings"]);
 
   // The radiogroup wrapper collapses descendant Pressables into a single
   // a11y node on iOS, which hides individual options from Maestro element
@@ -154,7 +156,16 @@ export function ThemeSwitcher() {
           return (
             <Pressable
               key={option.id}
-              onPress={() => setTheme(option.id)}
+              onPress={() => {
+                // setTheme returns false only when the persist failed; surface
+                // a toast so the option doesn't look selected while nothing
+                // persisted.
+                if (!setTheme(option.id)) {
+                  showToast({
+                    message: t("settings:errors.themeSaveFailed"),
+                  });
+                }
+              }}
               accessible
               accessibilityRole="radio"
               accessibilityState={{ checked: isSelected }}
