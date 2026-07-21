@@ -465,6 +465,53 @@ export function flattenGroupedSteps(
   return out;
 }
 
+/** Minimal step shape {@link resolveStepDependencyBand} reads. */
+export interface StepDependencyRowLike {
+  id: string;
+  title: string | null;
+  afterStepId: string | null;
+  waitingOnLabel: string | null;
+  waitingOnExpectedAt: string | null;
+  dueAt: string | null;
+}
+
+/**
+ * Resolved dependency + due-date band data for one step (#454). Deliberately
+ * **raw**, not final display strings: `afterStepTitle` is the referenced
+ * sibling's title (or null if unresolved) and the label/date fields pass
+ * straight through. Callers (#377/#378) format dates and assemble the
+ * "waiting on X · expected Y" / "due Z" text — no date-formatting utility
+ * lives in this layer by design (D3).
+ */
+export interface StepDependencyBand {
+  afterStepTitle: string | null;
+  waitingOnLabel: string | null;
+  waitingOnExpectedAt: string | null;
+  dueAt: string | null;
+}
+
+/**
+ * Resolve a step's dependency/due-date columns into band shape. Pure — reads
+ * an already-fetched per-goal step list rather than issuing a self-join (D4).
+ * A non-null `afterStepId` absent from `goalSteps` (e.g. the referenced sibling
+ * was soft-deleted) yields `afterStepTitle: null`.
+ */
+export function resolveStepDependencyBand(
+  step: StepDependencyRowLike,
+  goalSteps: readonly StepDependencyRowLike[],
+): StepDependencyBand {
+  const afterStep =
+    step.afterStepId === null
+      ? null
+      : (goalSteps.find((s) => s.id === step.afterStepId) ?? null);
+  return {
+    afterStepTitle: afterStep?.title ?? null,
+    waitingOnLabel: step.waitingOnLabel,
+    waitingOnExpectedAt: step.waitingOnExpectedAt,
+    dueAt: step.dueAt,
+  };
+}
+
 /** Minimal step shape {@link resolveNextActionableStep} reads. */
 export interface NextActionableStepInput {
   id: string;
