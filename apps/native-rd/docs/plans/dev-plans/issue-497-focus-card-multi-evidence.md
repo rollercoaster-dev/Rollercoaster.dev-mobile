@@ -128,7 +128,7 @@ undefined `onPress`. Add stories for a partially- and a fully-satisfied multi-ty
 **Changes**:
 
 - [ ] Split `FocusCurrentTaskCardProps` into `FocusInProgressCardProps \| FocusPausedCardProps \|
-    FocusCompletedCardProps \| FocusAllCompleteCardProps`, discriminated on `status` (mirrors
+FocusCompletedCardProps \| FocusAllCompleteCardProps`, discriminated on `status` (mirrors
       `EvidenceTypePickerProps`, D2).
 - [ ] `FocusInProgressCardProps.plannedEvidenceTypes: readonly string[]` (D3),
       replacing `plannedEvidenceType?: string | null`.
