@@ -26,13 +26,24 @@ const handlers = {
   onMarkComplete: noop,
   onReopen: noop,
   onDesignBadge: noop,
-  onChangeEvidenceType: noop,
+  onChangeEvidencePlan: noop,
   onAddEvidence: noop,
 };
 
 const capturedTwo: FocusCapturedEvidenceItem[] = [
   { id: "ev-1", type: "photo", caption: "Kitchen reset — day 3" },
   { id: "ev-2", type: "link", caption: null },
+];
+
+// A photo-only capture against a two-type plan: the plan is not yet satisfied.
+const capturedPhotoOnly: FocusCapturedEvidenceItem[] = [
+  { id: "ev-1", type: "photo", caption: "Kitchen reset — day 3" },
+];
+
+// Both planned types captured — the plan is fully satisfied.
+const capturedPhotoAndNote: FocusCapturedEvidenceItem[] = [
+  { id: "ev-1", type: "photo", caption: "Kitchen reset — day 3" },
+  { id: "ev-2", type: "text", caption: "What I noticed" },
 ];
 
 // R8 — constrain the card to the prototype's 344px phone width. At the full
@@ -54,7 +65,7 @@ export const InProgress: Story = {
       <FocusCurrentTaskCard
         status="in-progress"
         title="Reset the kitchen before bed"
-        plannedEvidenceType="photo"
+        plannedEvidenceTypes={["photo"]}
         capturedEvidence={capturedTwo}
         {...handlers}
       />
@@ -70,7 +81,41 @@ export const InProgressNoEvidence: Story = {
       <FocusCurrentTaskCard
         status="in-progress"
         title="Reset the kitchen before bed"
-        plannedEvidenceType="photo"
+        plannedEvidenceTypes={["photo"]}
+        {...handlers}
+      />
+    </PhoneWidth>
+  ),
+};
+
+// A two-type plan (photo + note) with only the photo captured: the plan is not
+// yet satisfied, so "✓ Mark complete" is absent and the footer shows just the
+// still-needed "Add Note" invite (the satisfied photo type is gone).
+export const InProgressMultiEvidencePartial: Story = {
+  render: () => (
+    <PhoneWidth>
+      <FocusCurrentTaskCard
+        status="in-progress"
+        title="Reset the kitchen before bed"
+        plannedEvidenceTypes={["photo", "text"]}
+        capturedEvidence={capturedPhotoOnly}
+        {...handlers}
+      />
+    </PhoneWidth>
+  ),
+};
+
+// Same two-type plan, both photo and note captured: the plan is satisfied, so
+// "✓ Mark complete" leads with a generic "Add more evidence" secondary — no
+// per-type invite remains, because no single type is still outstanding.
+export const InProgressMultiEvidenceSatisfied: Story = {
+  render: () => (
+    <PhoneWidth>
+      <FocusCurrentTaskCard
+        status="in-progress"
+        title="Reset the kitchen before bed"
+        plannedEvidenceTypes={["photo", "text"]}
+        capturedEvidence={capturedPhotoAndNote}
         {...handlers}
       />
     </PhoneWidth>
@@ -87,7 +132,7 @@ export const InProgressWithECBBand: Story = {
       <FocusCurrentTaskCard
         status="in-progress"
         title="Inspection & labels"
-        plannedEvidenceType="text"
+        plannedEvidenceTypes={["text"]}
         waitingOn={{ who: "city inspector", expected: "Jun 24" }}
         afterStep="Wire the circuits"
         dueDate="Fri · Jun 27"
@@ -166,7 +211,7 @@ export const AllThemesMatrix: Story = {
               <FocusCurrentTaskCard
                 status="in-progress"
                 title="Reset the kitchen before bed"
-                plannedEvidenceType="photo"
+                plannedEvidenceTypes={["photo"]}
                 capturedEvidence={capturedTwo}
                 {...handlers}
               />
@@ -200,7 +245,7 @@ export const StatesAllThemes: Story = {
               <FocusCurrentTaskCard
                 status="in-progress"
                 title="Inspection & labels"
-                plannedEvidenceType="text"
+                plannedEvidenceTypes={["text"]}
                 waitingOn={{ who: "city inspector", expected: "Jun 24" }}
                 afterStep="Wire the circuits"
                 dueDate="Fri · Jun 27"
