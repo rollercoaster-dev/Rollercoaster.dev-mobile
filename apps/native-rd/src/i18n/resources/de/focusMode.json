@@ -23,14 +23,18 @@
     "inProgress": {
       "helperLine": "Nachweis hinzufügen, um abzuschließen",
       "evidenceRequired": "Nachweis · erforderlich",
-      "changeEvidenceType": "ändern",
-      "changeEvidenceTypeA11y": "Nachweistyp ändern, aktuell {{type}}",
+      "changeEvidencePlan": "ändern",
+      "changeEvidencePlanA11y": "Evidenzplan ändern, aktuell {{types}}",
       "evidenceRailLabel": "Erfasst",
       "addTypeCta": "{{type}} hinzufügen",
+      "addMoreEvidenceCta": "Mehr Evidenz hinzufügen",
+      "addMoreEvidenceA11y": "Mehr Evidenz zu diesem Schritt hinzufügen",
       "pauseCta": "❙❙ Diesen Schritt beiseitelegen",
       "markCompleteCta": "✓ Als erledigt markieren",
       "markCompleteA11y": "Diesen Schritt als erledigt markieren",
-      "pauseA11y": "Diesen Schritt beiseitelegen — pausieren"
+      "pauseA11y": "Diesen Schritt beiseitelegen — pausieren",
+      "changeEvidenceType": "ändern",
+      "changeEvidenceTypeA11y": "Nachweistyp ändern, aktuell {{type}}"
     },
     "paused": {
       "body": "Beiseitegelegt — immer noch da, nichts verloren. Dein nächster Schritt führt daran vorbei, bis du ihn wieder aufnimmst.",
