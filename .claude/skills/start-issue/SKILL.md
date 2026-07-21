@@ -60,7 +60,7 @@ Pass the issue body through so the agent doesn't re-fetch:
 Agent({
   description: "Research issue #<N>",
   subagent_type: "issue-researcher",
-  prompt: "Research issue #<N> and create the dev plan at the hardcoded path under apps/native-rd/docs/plans/dev-plans/. The issue body is already fetched (paste it here). After producing the plan, surface a clearly-labeled '## Open Questions' section in your final reply listing every decision, assumption, or piece of missing context where the user's input would change the plan. Prefer questions over silent assumptions. If you genuinely have none, say so explicitly."
+  prompt: "Research issue #<N> and create the dev plan at the hardcoded path under apps/native-rd/docs/plans/dev-plans/. The issue body is already fetched (paste it here). FIRST resolve every code-answerable question against precedent — existing columns/enums, sibling code, established conventions, CI, tokens — and record each as a Decision in the plan citing the file:line that answers it. Only surface a question when the codebase genuinely does not determine the answer: a product or UX judgment call the user must make. Do NOT dress up your own implementation choices as open questions when a precedent already dictates them. After producing the plan, list any genuine judgment-call questions under a clearly-labeled '## Open Questions' section in your final reply; if there are none, say so explicitly."
 })
 ```
 
@@ -70,9 +70,17 @@ If the agent reports issue-not-found or scope-too-large with no path forward →
 
 ### Phase 3: Surface Questions
 
-Read the agent's open questions. There are three cases:
+**Gate first — vet every question before it reaches the user.** For each question the researcher returned, ask: _is this answerable from precedent?_ — an existing column/enum, sibling code, an established convention, CI config, or design tokens. If yes, it is NOT an open question: resolve it, apply the precedent-consistent answer, and move it into the plan's Decisions table citing the `file:line` that answers it. Only what genuinely survives this gate — a product/UX judgment call the codebase does not determine — may be surfaced to the user.
 
-**Case A — agent returned no questions:**
+A question fails the gate (do NOT ask it) when it is really the researcher's own implementation choice and a precedent already dictates the answer. Examples that must be resolved silently, not asked:
+
+- "What shape should this new column be?" when every sibling field on the table uses the same shape.
+- "Should the query return raw or formatted data?" when existing queries already establish one or the other.
+- "Should we validate/guard X?" when an analogous field is documented as leaving that to the caller.
+
+Only genuine judgment calls remain. Then apply the cases below to whatever survived.
+
+**Case A — nothing survived the gate (no genuine questions):**
 
 Report the plan path, the complexity, the blocker status. Status = `ready_to_implement`. Suggest next step: `/implement <N>` or run `auto-issue` from here.
 
