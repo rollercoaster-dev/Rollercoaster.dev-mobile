@@ -1,4 +1,5 @@
 import React from "react";
+import { Alert } from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -84,12 +85,20 @@ jest.mock("../../../db", () => ({
   },
 }));
 
+const mockReportError = jest.fn();
+jest.mock("../../../services/sentry-report", () => ({
+  reportError: (...args: unknown[]) => mockReportError(...args),
+}));
+
 const { deleteGoal } = require("../../../db");
 
 beforeEach(() => {
   jest.clearAllMocks();
   // Default: empty goals
   mockUseQuery.mockReturnValue([]);
+  // deleteGoal returns an Evolu Result; confirmDelete now gates the modal
+  // close on `.ok`, so the mock must hand back a success Result by default.
+  deleteGoal.mockReturnValue({ ok: true, value: {} });
 });
 
 const makeGoalRow = (overrides: Record<string, unknown> = {}) => ({
@@ -444,6 +453,54 @@ describe("GoalsScreen", () => {
       fireEvent.press(screen.getByText(i18n.t("common:actions.delete")));
       expect(deleteGoal).toHaveBeenCalledWith("goal-1");
       expect(deleteGoal).toHaveBeenCalledTimes(1);
+      // Modal dismissed on success — the confirm prompt is gone.
+      expect(
+        screen.queryByText(i18n.t("goals:confirmDelete.title")),
+      ).toBeNull();
+    });
+
+    // confirmDelete had NO error handling before #503 — it closed the modal
+    // unconditionally. Evolu signals write failures via { ok: false } as well
+    // as by throwing; both must keep the modal open and surface the failure.
+    it.each([
+      {
+        label: "{ ok: false }",
+        arm: () =>
+          deleteGoal.mockReturnValue({
+            ok: false,
+            error: { type: "WriteError" },
+          }),
+      },
+      {
+        label: "thrown error",
+        arm: () =>
+          deleteGoal.mockImplementation(() => {
+            throw new Error("Failed to delete goal. Please try again.");
+          }),
+      },
+    ])("keeps the modal open and reports when delete fails (%s)", ({ arm }) => {
+      mockData([makeGoalRow({ id: "goal-1", title: "Learn TypeScript" })]);
+      arm();
+      const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+
+      renderWithProviders(<GoalsScreen />);
+      fireEvent(screen.getByTestId("goals-cockpit-hero"), "onLongPress");
+      fireEvent.press(screen.getByText(i18n.t("common:actions.delete")));
+
+      expect(mockReportError).toHaveBeenCalledWith(expect.anything(), {
+        area: "goal.mutate",
+        kind: "delete",
+      });
+      expect(alertSpy).toHaveBeenCalledWith(
+        i18n.t("goals:deleteError.title"),
+        i18n.t("goals:deleteError.message"),
+      );
+      // Modal stays open: the confirm prompt is still on screen.
+      expect(
+        screen.getByText(i18n.t("goals:confirmDelete.title")),
+      ).toBeOnTheScreen();
+
+      alertSpy.mockRestore();
     });
   });
 
