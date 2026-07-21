@@ -11,11 +11,11 @@
 
 Observable criteria derived from the issue's scope and acceptance intent.
 
-- [ ] `updateStep` can set `afterStepId`, `waitingOnLabel`, `waitingOnExpectedAt`, and `dueAt` independently (each field updates without touching the others), and can clear each back to `null`.
-- [ ] A step with all four new fields `null` (every existing row, pre- and post-migration) round-trips through `stepsByGoalQuery` unchanged — no migration file, no backfill, existing `queries.step.test.ts` assertions keep passing untouched.
-- [ ] `resolveStepDependencyBand(step, goalSteps)` returns all-`null` fields for a step with no dependency/date data — i.e. there is nothing for a future band to render, matching "hidden while empty, nothing changes visually until data exists."
-- [ ] `resolveStepDependencyBand` resolves a non-null `afterStepId` to the referenced sibling's `title` when that sibling is present in `goalSteps`; returns `afterStepTitle: null` when the id isn't found (e.g. the referenced step was soft-deleted).
-- [ ] `bun run type-check`, `bun run lint`, and `bun run test --testPathPatterns queries.step` all pass with no new failures.
+- [x] `updateStep` can set `afterStepId`, `waitingOnLabel`, `waitingOnExpectedAt`, and `dueAt` independently (each field updates without touching the others), and can clear each back to `null`.
+- [x] A step with all four new fields `null` (every existing row, pre- and post-migration) round-trips through `stepsByGoalQuery` unchanged — no migration file, no backfill, existing `queries.step.test.ts` assertions keep passing untouched.
+- [x] `resolveStepDependencyBand(step, goalSteps)` returns all-`null` fields for a step with no dependency/date data — i.e. there is nothing for a future band to render, matching "hidden while empty, nothing changes visually until data exists."
+- [x] `resolveStepDependencyBand` resolves a non-null `afterStepId` to the referenced sibling's `title` when that sibling is present in `goalSteps`; returns `afterStepTitle: null` when the id isn't found (e.g. the referenced step was soft-deleted).
+- [x] `bun run type-check`, `bun run lint`, and `bun run test --testPathPatterns queries.step` all pass with no new failures.
 
 ## Dependencies
 
@@ -62,11 +62,11 @@ Add four additive, nullable Evolu columns to the `step` table — `afterStepId` 
 **Commit**: `feat(db): add step dependency and due-date columns to schema`
 **Changes**:
 
-- [ ] Add `afterStepId: nullOr(StepId)` to the `step` table, with a doc comment: intra-goal dependency reference (#454), additive/no migration, same pattern as `parentStepId`.
-- [ ] Add `waitingOnLabel: nullOr(NonEmptyString1000)` — free-text external blocker label.
-- [ ] Add `waitingOnExpectedAt: nullOr(DateIso)` — optional expected-resolution date for the external wait; only meaningful alongside `waitingOnLabel`, but not enforced at the schema level (matches the app's existing "nullable fields aren't cross-validated in the schema" precedent, e.g. `evidence.goalId`/`stepId`).
-- [ ] Add `dueAt: nullOr(DateIso)` — due date.
-- [ ] Import `DateIso` from `@evolu/common` (already imported for `dateToDateIso` — confirm the type import is present alongside it; `schema.ts` currently imports `DateIso` for `completedAt` already, so no new import line is expected).
+- [x] Add `afterStepId: nullOr(StepId)` to the `step` table, with a doc comment: intra-goal dependency reference (#454), additive/no migration, same pattern as `parentStepId`.
+- [x] Add `waitingOnLabel: nullOr(NonEmptyString1000)` — free-text external blocker label.
+- [x] Add `waitingOnExpectedAt: nullOr(DateIso)` — optional expected-resolution date for the external wait; only meaningful alongside `waitingOnLabel`, but not enforced at the schema level (matches the app's existing "nullable fields aren't cross-validated in the schema" precedent, e.g. `evidence.goalId`/`stepId`).
+- [x] Add `dueAt: nullOr(DateIso)` — due date.
+- [x] Import `DateIso` from `@evolu/common` (already imported for `dateToDateIso` — confirm the type import is present alongside it; `schema.ts` currently imports `DateIso` for `completedAt` already, so no new import line is expected).
 
 ### Step 2: Extend `updateStep` and `GroupedStep`
 
@@ -74,9 +74,9 @@ Add four additive, nullable Evolu columns to the `step` table — `afterStepId` 
 **Commit**: `feat(db): support dependency and due-date fields in updateStep`
 **Changes**:
 
-- [ ] Add `afterStepId?: StepId | null`, `waitingOnLabel?: string | null`, `waitingOnExpectedAt?: string | null`, `dueAt?: string | null` to `updateStep`'s `fields` parameter type.
-- [ ] In the body, pass each through when `!== undefined` (mirrors the existing `parentStepId` block at queries.ts:707-709 — `undefined` means "don't touch", `null` means "clear"). `waitingOnLabel` needs `NonEmptyString1000.orNull(...)` validation/trim when non-null, matching `title`'s pattern; empty-string input clears to `null` rather than throwing (the field is optional, unlike `title`).
-- [ ] Add the same four fields to the `GroupedStep` interface (after `plannedEvidenceTypes`), each typed `string | null` (Evolu's `selectAll()` nullability convention already documented on the interface).
+- [x] Add `afterStepId?: StepId | null`, `waitingOnLabel?: string | null`, `waitingOnExpectedAt?: string | null`, `dueAt?: string | null` to `updateStep`'s `fields` parameter type.
+- [x] In the body, pass each through when `!== undefined` (mirrors the existing `parentStepId` block at queries.ts:707-709 — `undefined` means "don't touch", `null` means "clear"). `waitingOnLabel` needs `NonEmptyString1000.orNull(...)` validation/trim when non-null, matching `title`'s pattern; empty-string input clears to `null` rather than throwing (the field is optional, unlike `title`).
+- [x] Add the same four fields to the `GroupedStep` interface (after `plannedEvidenceTypes`), each typed `string | null` (Evolu's `selectAll()` nullability convention already documented on the interface).
 
 ### Step 3: Add `resolveStepDependencyBand`
 
@@ -84,9 +84,9 @@ Add four additive, nullable Evolu columns to the `step` table — `afterStepId` 
 **Commit**: `feat(db): add resolveStepDependencyBand query helper`
 **Changes**:
 
-- [ ] Add an exported `StepDependencyBand` interface: `{ afterStepTitle: string | null; waitingOnLabel: string | null; waitingOnExpectedAt: string | null; dueAt: string | null }`.
-- [ ] Add `resolveStepDependencyBand(step: StepDependencyRowLike, goalSteps: readonly StepDependencyRowLike[]): StepDependencyBand` near `groupStepsByParent` — looks up `step.afterStepId` in `goalSteps` by `id` and reads its `title`; passes `waitingOnLabel`/`waitingOnExpectedAt`/`dueAt` straight through. Document that this is deliberately **not** the final band display strings (see D3) — callers (#377/#378) format dates and assemble the "waiting on X · expected Y" / "due Z" text.
-- [ ] Export `resolveStepDependencyBand` and `StepDependencyBand` from `apps/native-rd/src/db/index.ts`.
+- [x] Add an exported `StepDependencyBand` interface: `{ afterStepTitle: string | null; waitingOnLabel: string | null; waitingOnExpectedAt: string | null; dueAt: string | null }`.
+- [x] Add `resolveStepDependencyBand(step: StepDependencyRowLike, goalSteps: readonly StepDependencyRowLike[]): StepDependencyBand` near `groupStepsByParent` — looks up `step.afterStepId` in `goalSteps` by `id` and reads its `title`; passes `waitingOnLabel`/`waitingOnExpectedAt`/`dueAt` straight through. Document that this is deliberately **not** the final band display strings (see D3) — callers (#377/#378) format dates and assemble the "waiting on X · expected Y" / "due Z" text.
+- [x] Export `resolveStepDependencyBand` and `StepDependencyBand` from `apps/native-rd/src/db/index.ts`.
 
 ### Step 4: Tests
 
@@ -94,9 +94,9 @@ Add four additive, nullable Evolu columns to the `step` table — `afterStepId` 
 **Commit**: `test(db): cover step dependency and due-date fields`
 **Changes**:
 
-- [ ] `updateStep` round-trip cases: setting each of the four fields individually calls `evolu.update` with only that key present (plus `id`); setting a field to `null` clears it; omitting a field (`undefined`) leaves it out of the update payload entirely (existing convention for optional-field tests in this file).
-- [ ] `waitingOnLabel` validation case: an empty/whitespace string clears to `null` rather than throwing (distinct from `title`, which throws on empty).
-- [ ] `resolveStepDependencyBand` cases via `test.each`:
+- [x] `updateStep` round-trip cases: setting each of the four fields individually calls `evolu.update` with only that key present (plus `id`); setting a field to `null` clears it; omitting a field (`undefined`) leaves it out of the update payload entirely (existing convention for optional-field tests in this file).
+- [x] `waitingOnLabel` validation case: an empty/whitespace string clears to `null` rather than throwing (distinct from `title`, which throws on empty).
+- [x] `resolveStepDependencyBand` cases via `test.each`:
   - all four DB fields `null` → all four result fields `null`.
   - `afterStepId` pointing at a present sibling in `goalSteps` → `afterStepTitle` is that sibling's `title`.
   - `afterStepId` pointing at an id absent from `goalSteps` (soft-deleted/orphaned) → `afterStepTitle: null`.
@@ -105,12 +105,12 @@ Add four additive, nullable Evolu columns to the `step` table — `afterStepId` 
 
 ## Testing Strategy
 
-- [ ] Unit tests only — no render tests (no UI introduced). Jest 30, mirrors `src/db/queries.ts` structure per project convention.
-- [ ] Test file: `apps/native-rd/src/db/__tests__/queries.step.test.ts` (existing file — extend, don't create a new one).
-- [ ] Use `test.each` for the `resolveStepDependencyBand` cases (consistent with the existing `resolveNextActionableStep` block in the same file).
-- [ ] Run: `bun run test --testPathPatterns queries.step`.
-- [ ] Run: `bun run type-check` and `bun run lint`.
-- [ ] Manual testing: none applicable — no UI surface changes.
+- [x] Unit tests only — no render tests (no UI introduced). Jest 30, mirrors `src/db/queries.ts` structure per project convention.
+- [x] Test file: `apps/native-rd/src/db/__tests__/queries.step.test.ts` (existing file — extend, don't create a new one).
+- [x] Use `test.each` for the `resolveStepDependencyBand` cases (consistent with the existing `resolveNextActionableStep` block in the same file).
+- [x] Run: `bun run test --testPathPatterns queries.step`.
+- [x] Run: `bun run type-check` and `bun run lint`.
+- [x] Manual testing: none applicable — no UI surface changes.
 
 ## Not in Scope
 
@@ -124,6 +124,7 @@ Add four additive, nullable Evolu columns to the `step` table — `afterStepId` 
 
 ## Discovery Log
 
-<!-- Entries added by implement skill:
-- [YYYY-MM-DD HH:MM] <discovery description>
--->
+- [2026-07-21 21:10] **Write-side date typing deviation from the plan.** Plan Step 2 typed `waitingOnExpectedAt?` / `dueAt?` as `string | null` in `updateStep`'s params. Changed to `DateIso | null` (branded) to match the established write-side convention — `completedAt` is written branded (`dateToDateIso().value`) and `parentStepId` is typed as its branded `StepId | null`. This forces future callers to supply a validated `DateIso` and avoids a runtime Evolu validation surprise from a raw string. Read side (`GroupedStep`) stays `string | null` per the plan (Evolu's `selectAll` returns dates as strings). Imported `DateIso` as a type-only import in `queries.ts`.
+- [2026-07-21 21:10] **`GroupedStep` field additions are required, not optional**, so the existing `row()` test fixture (`queries.step.test.ts`) needed `null` defaults for the four new fields to keep compiling. Added those defaults in the Step 2 commit (the interface change that broke it) rather than Step 4, so each commit type-checks standalone.
+- [2026-07-21 21:10] **`resolveStepDependencyBand` reuses the "minimal row shape" pattern.** Added an exported `StepDependencyRowLike` interface (mirroring `NextActionableStepInput`) instead of depending on the full `GroupedStep`, so the helper and its `StepDependencyBand` output both read from a minimal structural subset. The existing `row()` test fixture satisfies it structurally — no separate fixture needed.
+- [2026-07-21 21:12] **Root `bun run test --testPathPatterns` fails** — turbo intercepts the flag. Scoped test runs must be invoked from `apps/native-rd/` (`cd apps/native-rd && bun run test --testPathPatterns queries.step`). Full `bun run test` from root is fine.
