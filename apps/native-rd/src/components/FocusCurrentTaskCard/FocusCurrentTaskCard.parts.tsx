@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
 import {
   stepStateColorMap,
@@ -125,6 +125,71 @@ export function MetadataBand({
         </View>
       ))}
     </View>
+  );
+}
+
+/**
+ * The planned-evidence box (in-progress only). Generalizes the old single-type
+ * box to the N-type plan: one icon + short-label per planned type inside the one
+ * bordered/shadowed box, with a trailing "change" affordance. The **whole box is
+ * a single tap target** that opens the evidence-plan chooser (D4) — its purpose
+ * (see / change the plan) stays structurally distinct from the footer's per-type
+ * "Add {type}" invites (capture a still-needed piece).
+ *
+ * `accessible` collapses the box's children, so the a11y label names the action
+ * and joins every planned-type short label so a screen-reader user hears the same
+ * plan a sighted user reads. Labels are joined with a plain separator, not
+ * `Intl.ListFormat` — that API throws on Hermes on-device (issue #66 probe;
+ * `docs/research/hermes-intl-spike-66-findings.md`), so it can't be used in a
+ * component #466 will mount in the real app.
+ */
+export function PlannedEvidenceBox({
+  plannedTypes,
+  onChangeEvidencePlan,
+}: {
+  plannedTypes: readonly string[];
+  onChangeEvidencePlan: () => void;
+}) {
+  const { t } = useTranslation(["common", "focusMode"]);
+  const entries = plannedTypes.map((raw, index) => {
+    // Normalize for icon/label lookup so an unknown planned key can't leak a raw
+    // string or a missing icon — falls back to `file` (matches the captured rail).
+    const safeType = validateEvidenceType(raw);
+    return {
+      key: `${raw}-${index}`,
+      label: evidenceShortLabel(t, safeType),
+      icon: EVIDENCE_OPTIONS.find((o) => o.type === safeType)?.icon ?? null,
+    };
+  });
+  const joinedLabels = entries.map((e) => e.label).join(", ");
+  return (
+    <Pressable
+      onPress={onChangeEvidencePlan}
+      style={styles.plannedBox}
+      accessible
+      accessibilityRole="button"
+      accessibilityLabel={t(
+        "focusMode:currentTask.inProgress.changeEvidencePlanA11y",
+        { types: joinedLabels },
+      )}
+      testID="focus-current-task-change-plan"
+    >
+      <View style={styles.plannedTypeList}>
+        {entries.map((entry) => (
+          <View key={entry.key} style={styles.plannedType}>
+            {entry.icon ? (
+              <Text style={styles.plannedIcon} importantForAccessibility="no">
+                {entry.icon}
+              </Text>
+            ) : null}
+            <Text style={styles.plannedLabel}>{entry.label}</Text>
+          </View>
+        ))}
+      </View>
+      <Text style={styles.changeText}>
+        {t("focusMode:currentTask.inProgress.changeEvidencePlan")}
+      </Text>
+    </Pressable>
   );
 }
 
