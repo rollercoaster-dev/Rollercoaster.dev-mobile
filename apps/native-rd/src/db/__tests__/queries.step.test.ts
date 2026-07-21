@@ -43,6 +43,10 @@ function row(
     status: "pending",
     completedAt: null,
     plannedEvidenceTypes: null,
+    afterStepId: null,
+    waitingOnLabel: null,
+    waitingOnExpectedAt: null,
+    dueAt: null,
     ...overrides,
   };
 }

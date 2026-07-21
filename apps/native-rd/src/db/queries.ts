@@ -16,6 +16,7 @@ import {
   sqliteTrue,
   Int,
 } from "@evolu/common";
+import type { DateIso } from "@evolu/common";
 import { breadcrumb } from "../services/sentry-report";
 import { Logger } from "../shims/rd-logger";
 import type { EvidenceTypeValue } from "../types/evidence";
@@ -399,6 +400,13 @@ export interface GroupedStep {
   status: string | null;
   completedAt: string | null;
   plannedEvidenceTypes: string | null;
+  // Step dependency + due-date metadata (#454). Read back as nullable strings
+  // per Evolu's selectAll convention; resolved into band shape by
+  // resolveStepDependencyBand.
+  afterStepId: StepId | null;
+  waitingOnLabel: string | null;
+  waitingOnExpectedAt: string | null;
+  dueAt: string | null;
   children: GroupedStep[];
 }
 
@@ -677,6 +685,13 @@ export function updateStep(
     ordinal?: number | null;
     plannedEvidenceTypes?: readonly string[] | null;
     parentStepId?: StepId | null;
+    // Step dependency + due-date metadata (#454). Date fields take branded
+    // DateIso values (same write-side convention as completedAt); undefined =
+    // "don't touch", null = "clear".
+    afterStepId?: StepId | null;
+    waitingOnLabel?: string | null;
+    waitingOnExpectedAt?: DateIso | null;
+    dueAt?: DateIso | null;
   },
 ) {
   breadcrumb({ category: "step", message: "update" });
@@ -711,6 +726,30 @@ export function updateStep(
   const serializedTypes = serializePlannedTypes(fields.plannedEvidenceTypes);
   if (serializedTypes !== undefined) {
     update.plannedEvidenceTypes = serializedTypes;
+  }
+
+  // Step dependency + due-date metadata (#454). afterStepId is unvalidated —
+  // the same-goal / no-cycle constraint is the caller's responsibility, same
+  // as parentStepId above. Date fields pass through branded.
+  if (fields.afterStepId !== undefined) {
+    update.afterStepId = fields.afterStepId;
+  }
+
+  // Empty/whitespace clears the label rather than throwing (optional field,
+  // unlike title).
+  if (fields.waitingOnLabel !== undefined) {
+    update.waitingOnLabel =
+      fields.waitingOnLabel === null
+        ? null
+        : NonEmptyString1000.orNull(fields.waitingOnLabel.trim());
+  }
+
+  if (fields.waitingOnExpectedAt !== undefined) {
+    update.waitingOnExpectedAt = fields.waitingOnExpectedAt;
+  }
+
+  if (fields.dueAt !== undefined) {
+    update.dueAt = fields.dueAt;
   }
 
   try {
