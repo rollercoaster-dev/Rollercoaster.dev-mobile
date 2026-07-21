@@ -34,8 +34,9 @@ const GOAL_TITLE = "Rewire the workshop";
 const GOAL_COLOR = "#e11d48";
 const EARNED_DATE_LABEL = "Jun 23, 2026";
 
-// Fixture copy for the modeled error state — English literal, mirroring the
-// component's own defaults (D2). #449 threads real t() output through here.
+// Fixture copy for the modeled error state — English literal, in keeping with
+// D2's caller-supplied-copy convention. #449 threads real t() output through
+// here.
 const BAKE_ERROR_MESSAGE =
   "We couldn't finish baking your badge. Please try again.";
 
@@ -104,19 +105,23 @@ function InteractiveFinishFlow({
     setBakeStatus("building");
   }, [stage, bakeOutcome]);
 
-  // Resolve a busy phase to its target after the bake timer.
+  // Resolve a busy phase to its target after the bake timer. Gated on `stage`
+  // too: `bakeStatus` seeds to "building", so without the stage guard this
+  // timer would fire at mount (on celebrate) and drive the flow forward before
+  // the user ever reaches baking.
   useEffect(() => {
-    if (bakeStatus !== "building") return;
+    if (stage !== "baking" || bakeStatus !== "building") return;
     const timer = setTimeout(() => setBakeStatus(bakeTarget), BAKE_DURATION_MS);
     return () => clearTimeout(timer);
-  }, [bakeStatus, bakeTarget]);
+  }, [stage, bakeStatus, bakeTarget]);
 
-  // A resolved success briefly holds, then advances to the reveal stage.
+  // A resolved success briefly holds, then advances to the reveal stage. Also
+  // stage-gated so a stale "success" can't yank a user off another stage.
   useEffect(() => {
-    if (bakeStatus !== "success") return;
+    if (stage !== "baking" || bakeStatus !== "success") return;
     const timer = setTimeout(() => setStage("reveal"), SUCCESS_HOLD_MS);
     return () => clearTimeout(timer);
-  }, [bakeStatus]);
+  }, [stage, bakeStatus]);
 
   return (
     <View style={{ flex: 1, height: 640 }}>
@@ -212,17 +217,19 @@ export const FailureThenRetry: Story = {
 // AllThemesMatrix — the stages that carry theme-varying chrome/state tokens,
 // side by side across all 7 product themes. Design owns
 // `chrome.screenHeaderBg/Fg/Border`; reveal owns `chrome.celebrationBg/Fg`
-// (#419). The baking stage's success/no-key/error content pairs
-// `colors.error` against theme-varying background/text/border, so its three
-// resolved states are matrix-worthy (D7 — superseding #472's original note,
-// which was correct for the plain busy spinner that added no signal).
+// (#419). The baking stage's error cell pairs `colors.error` against the theme
+// background, and all three resolved states (success/no-key/error) add
+// theme-varying secondary-Button/text/border chrome — the matrix signal the
+// plain busy spinner lacked (D7 — superseding #472's original note, which was
+// correct for that spinner).
 //
 // A live per-cell `ScopedTheme` matrix is safe here — unlike the
 // NewGoalWizard/EditGoalView toolbar-switcher fallback, which exists because
 // those compose a hook that setStates after mount and defeats ScopedTheme on
-// web. All Finish*Stage cells below are prop-driven (no post-mount setState),
-// and the reveal pop-in uses a reanimated shared value (not React setState),
-// so no post-mount re-render reverts a cell to the toolbar theme.
+// web. The reveal pop-in uses a reanimated shared value (not React setState),
+// and `FinishBakingStage`'s only setState is a synchronous same-value
+// `retryPending` reset on mount that React bails out of — so no post-mount
+// re-render reverts a cell to the toolbar theme.
 // ---------------------------------------------------------------------------
 
 // Human-facing mood label for each of the 7 product themes — mirror of the

@@ -9,16 +9,21 @@ import { Text } from "../Text";
 import { styles } from "./FinishBakingStage.styles";
 
 const DEFAULT_BADGE_SIZE = 146;
+const DEFAULT_ERROR_MESSAGE = "We couldn't finish baking your badge.";
 
 /**
- * The in-flight bake sub-statuses. Mirror `useCreateBadge`'s
- * `BadgeCreationStatus` (minus the pre-render `idle`/`loading`/`done`) so #449
- * can thread the hook's live `status` straight through. All four render
- * identically (D8) — no per-phase copy.
+ * The four in-flight bake phases — the busy subset of `useCreateBadge`'s
+ * `BadgeCreationStatus`. All four render identically (D8) — no per-phase copy.
  */
 export type FinishBakingPhase = "building" | "signing" | "baking" | "storing";
 
-/** Full render-state union for the baking interstitial. */
+/**
+ * Full render-state union for the baking interstitial: the busy phases plus the
+ * three terminal states. Mirrors `BadgeCreationStatus` with `idle`/`loading`
+ * dropped (nothing to render pre-bake) and `done` surfaced as `success`, so
+ * #449 maps the hook's live `status` onto this (a near-verbatim pass-through,
+ * modulo that one rename).
+ */
 export type FinishBakingStatus =
   | FinishBakingPhase
   | "no-key"
@@ -49,7 +54,11 @@ export interface FinishBakingStageProps {
    * the navigation destination is #449's job.
    */
   onExitWithoutBadge?: () => void;
-  /** Caller-supplied terminal-error copy (shown as an a11y alert). */
+  /**
+   * Caller-supplied terminal-error copy (shown as an a11y alert). Falls back to
+   * a generic English default so the `error` state can never surface a
+   * label-less alert; #449 threads real `t()` copy through here.
+   */
   errorMessage?: string | null;
   /** Retry-button label for the error state. */
   retryLabel?: string;
@@ -164,6 +173,9 @@ export function FinishBakingStage({
   }
 
   if (status === "error") {
+    // Coalesce null/undefined to a generic default so the alert always carries
+    // an accessible label — never a label-less, empty-text alert.
+    const errorText = errorMessage ?? DEFAULT_ERROR_MESSAGE;
     return (
       <View style={styles.container} testID="finish-baking-stage">
         <View style={styles.badgeDim} testID="finish-baking-badge-dim">
@@ -173,11 +185,11 @@ export function FinishBakingStage({
           <View
             accessible
             accessibilityRole="alert"
-            accessibilityLabel={errorMessage ?? undefined}
+            accessibilityLabel={errorText}
             testID="finish-baking-error-alert"
           >
             <Text variant="mono" style={styles.errorText}>
-              {errorMessage}
+              {errorText}
             </Text>
           </View>
           {onRetry ? (
