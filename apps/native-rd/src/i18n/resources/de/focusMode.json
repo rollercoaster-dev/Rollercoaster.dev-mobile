@@ -25,6 +25,7 @@
       "evidenceRequired": "Nachweis · erforderlich",
       "changeEvidencePlan": "ändern",
       "changeEvidencePlanA11y": "Evidenzplan ändern, aktuell {{types}}",
+      "changeEvidencePlanEmptyA11y": "Erstelle einen Evidenzplan für diesen Schritt",
       "evidenceRailLabel": "Erfasst",
       "addTypeCta": "{{type}} hinzufügen",
       "addMoreEvidenceCta": "Mehr Evidenz hinzufügen",
