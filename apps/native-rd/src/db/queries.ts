@@ -495,14 +495,17 @@ export interface StepDependencyBand {
  * Resolve a step's dependency/due-date columns into band shape. Pure — reads
  * an already-fetched per-goal step list rather than issuing a self-join (D4).
  * A non-null `afterStepId` absent from `goalSteps` (e.g. the referenced sibling
- * was soft-deleted) yields `afterStepTitle: null`.
+ * was soft-deleted) yields `afterStepTitle: null`. A self-reference
+ * (`afterStepId === step.id`) is invalid — it names a sibling, not this step —
+ * so it is treated as unresolved (`afterStepTitle: null`) rather than rendering
+ * a nonsensical "waiting on [itself]" band.
  */
 export function resolveStepDependencyBand(
   step: StepDependencyRowLike,
   goalSteps: readonly StepDependencyRowLike[],
 ): StepDependencyBand {
   const afterStep =
-    step.afterStepId === null
+    step.afterStepId === null || step.afterStepId === step.id
       ? null
       : (goalSteps.find((s) => s.id === step.afterStepId) ?? null);
   return {
@@ -784,12 +787,26 @@ export function updateStep(
   }
 
   // Empty/whitespace clears the label rather than throwing (optional field,
-  // unlike title).
+  // unlike title). A non-empty but invalid label (over 1000 chars) throws
+  // instead of silently clearing — clearing user-entered text on an
+  // over-length value would be surprising data loss, not an intended reset.
   if (fields.waitingOnLabel !== undefined) {
-    update.waitingOnLabel =
-      fields.waitingOnLabel === null
-        ? null
-        : NonEmptyString1000.orNull(fields.waitingOnLabel.trim());
+    if (fields.waitingOnLabel === null) {
+      update.waitingOnLabel = null;
+    } else {
+      const trimmed = fields.waitingOnLabel.trim();
+      const parsed = trimmed === "" ? null : NonEmptyString1000.orNull(trimmed);
+      if (trimmed !== "" && !parsed) {
+        logger.error("Step waitingOnLabel validation failed during update", {
+          stepId: id,
+          labelLength: trimmed.length,
+        });
+        throw new Error(
+          `Waiting-on label must be 1-1000 characters (received ${trimmed.length} characters)`,
+        );
+      }
+      update.waitingOnLabel = parsed;
+    }
   }
 
   if (fields.waitingOnExpectedAt !== undefined) {

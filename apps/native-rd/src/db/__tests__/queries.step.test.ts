@@ -188,6 +188,13 @@ describe("Step CRUD Operations", () => {
       const [, payload] = updateMock.mock.calls.at(-1)!;
       expect(payload).toEqual({ id: mockStepId, waitingOnLabel: null });
     });
+
+    test("over-length waitingOnLabel throws rather than silently clearing", () => {
+      expect(() =>
+        updateStep(mockStepId, { waitingOnLabel: "x".repeat(1001) }),
+      ).toThrow(/Waiting-on label must be 1-1000 characters/);
+      expect(updateMock).not.toHaveBeenCalled();
+    });
   });
 
   describe("canCompleteStep", () => {
@@ -578,6 +585,22 @@ describe("Step CRUD Operations", () => {
       [
         "afterStepId absent from goalSteps (soft-deleted) → afterStepTitle null",
         row("s", null, { afterStepId: "ghost_step" as StepId }),
+        {
+          afterStepTitle: null,
+          waitingOnLabel: null,
+          waitingOnExpectedAt: null,
+          dueAt: null,
+        },
+      ],
+      [
+        // The step is itself present in goalSteps, so an unguarded find() would
+        // resolve afterStepId to its own title ("Draft the outline") — the guard
+        // must return null instead.
+        "afterStepId pointing at the step itself (self-reference) → afterStepTitle null",
+        row("sibling_a", null, {
+          title: "Draft the outline",
+          afterStepId: "sibling_a" as StepId,
+        }),
         {
           afterStepTitle: null,
           waitingOnLabel: null,
