@@ -38,4 +38,25 @@ describe("runEvoluMutation", () => {
     expect(onFailure).toHaveBeenCalledTimes(1);
     expect(onFailure).toHaveBeenCalledWith(thrown);
   });
+
+  it("does not invoke onFailure a second time when onFailure itself throws", () => {
+    const handlerError = new Error("handler blew up");
+    const onFailure = jest.fn(() => {
+      throw handlerError;
+    });
+
+    // The handler's own throw must propagate to the caller, not be swallowed
+    // and re-routed back into onFailure with the wrong error.
+    expect(() =>
+      runEvoluMutation(
+        () =>
+          ({ ok: false, error: { type: "WriteError" } }) as Result<
+            never,
+            unknown
+          >,
+        onFailure,
+      ),
+    ).toThrow(handlerError);
+    expect(onFailure).toHaveBeenCalledTimes(1);
+  });
 });

@@ -31,19 +31,23 @@ import type { Result } from "@evolu/common";
  * for application error handling. Generalizes the `if (!result.ok)` pattern
  * already used in `EditModeScreen`.
  */
-export function runEvoluMutation<T, E>(
-  mutate: () => Result<T, E>,
-  onFailure: (error: E | unknown) => void,
+export function runEvoluMutation(
+  mutate: () => Result<unknown, unknown>,
+  onFailure: (error: unknown) => void,
 ): boolean {
+  // Only `mutate()` is inside the try — an `onFailure` that itself throws must
+  // propagate, not fall into the catch and invoke `onFailure` a second time
+  // with its own error.
+  let result: Result<unknown, unknown>;
   try {
-    const result = mutate();
-    if (!result.ok) {
-      onFailure(result.error);
-      return false;
-    }
-    return true;
+    result = mutate();
   } catch (error) {
     onFailure(error);
     return false;
   }
+  if (!result.ok) {
+    onFailure(result.error);
+    return false;
+  }
+  return true;
 }

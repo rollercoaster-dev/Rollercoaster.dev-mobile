@@ -480,6 +480,45 @@ describe("EditModeScreen", () => {
       ).toBeOnTheScreen();
     });
 
+    // Description saves fire-and-forget on a debounce; a rejected write must
+    // still surface an alert. Both failure modes (thrown + { ok: false }) must
+    // converge on the same feedback — mirrors the title-update coverage above.
+    it.each([
+      [
+        "throws",
+        () =>
+          mockUpdateGoal.mockImplementation(() => {
+            throw new Error("fail");
+          }),
+      ],
+      [
+        "returns { ok: false }",
+        () =>
+          mockUpdateGoal.mockReturnValue({
+            ok: false,
+            error: { type: "WriteError" },
+          }),
+      ],
+    ])("shows alert when updateGoal description %s", async (_desc, arm) => {
+      setupQueries();
+      arm();
+      const alertSpy = jest.spyOn(Alert, "alert");
+
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+      fireEvent.changeText(
+        screen.getByLabelText("Goal description"),
+        "New description",
+      );
+
+      await act(async () => {
+        jest.advanceTimersByTime(500);
+      });
+      expect(alertSpy).toHaveBeenCalledWith(
+        i18n.t("editGoal:errors.alertErrorTitle"),
+        i18n.t("editGoal:errors.updateDescriptionMessage"),
+      );
+    });
+
     it("shows alert when createStep returns { ok: false }", () => {
       setupQueries();
       mockCreateStep.mockReturnValue({
