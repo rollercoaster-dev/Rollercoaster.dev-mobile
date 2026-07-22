@@ -400,8 +400,9 @@ export interface GroupedStep {
   status: string | null;
   completedAt: string | null;
   plannedEvidenceTypes: string | null;
-  // Step dependency + due-date metadata (#454). Read back as nullable strings
-  // per Evolu's selectAll convention; resolved into band shape by
+  // Step dependency + due-date metadata (#454). Read back as nullable columns
+  // per Evolu's selectAll convention (afterStepId keeps its StepId brand; the
+  // date fields arrive as plain strings); resolved into band shape by
   // resolveStepDependencyBand.
   afterStepId: StepId | null;
   waitingOnLabel: string | null;

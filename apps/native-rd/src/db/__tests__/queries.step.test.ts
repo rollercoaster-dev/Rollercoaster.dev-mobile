@@ -596,6 +596,19 @@ describe("Step CRUD Operations", () => {
         },
       ],
       [
+        "waitingOnLabel + expected date both pass through (the 'waiting on X · expected Y' pair)",
+        row("s", null, {
+          waitingOnLabel: "Manager sign-off",
+          waitingOnExpectedAt: "2026-06-24T00:00:00.000Z",
+        }),
+        {
+          afterStepTitle: null,
+          waitingOnLabel: "Manager sign-off",
+          waitingOnExpectedAt: "2026-06-24T00:00:00.000Z",
+          dueAt: null,
+        },
+      ],
+      [
         "dueAt alone → only dueAt non-null in the band",
         row("s", null, { dueAt: "2026-06-12T00:00:00.000Z" }),
         {
