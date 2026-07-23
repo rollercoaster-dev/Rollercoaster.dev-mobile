@@ -19,14 +19,23 @@ import {
   groupStepsByParent,
   flattenGroupedSteps,
   resolveNextActionableStep,
+  resolveStepDependencyBand,
   areAllStepsComplete,
   type GroupedStep,
 } from "../queries";
 import { evolu } from "../evolu";
+import { dateToDateIso } from "@evolu/common";
 import { StepStatus, type GoalId, type StepId } from "../schema";
 
 const mockGoalId = "goal_test_123" as GoalId;
 const mockStepId = "step_test_456" as StepId;
+
+/** Build a branded DateIso for update-payload assertions (#454). */
+function dateIso(iso: string) {
+  const result = dateToDateIso(new Date(iso));
+  if (!result.ok) throw new Error(`invalid test date: ${iso}`);
+  return result.value;
+}
 
 /** Build a flat step-row (the post-query shape groupStepsByParent reads). */
 function row(
@@ -43,6 +52,10 @@ function row(
     status: "pending",
     completedAt: null,
     plannedEvidenceTypes: null,
+    afterStepId: null,
+    waitingOnLabel: null,
+    waitingOnExpectedAt: null,
+    dueAt: null,
     ...overrides,
   };
 }
@@ -111,6 +124,77 @@ describe("Step CRUD Operations", () => {
     } else {
       expect(() => updateStep(mockStepId, fields)).not.toThrow();
     }
+  });
+
+  describe("updateStep dependency + due-date fields (#454)", () => {
+    const updateMock = evolu.update as jest.Mock;
+    const siblingId = "step_sibling_1" as StepId;
+    const expectedDate = dateIso("2026-06-24T00:00:00.000Z");
+    const dueDate = dateIso("2026-06-12T00:00:00.000Z");
+
+    beforeEach(() => {
+      updateMock.mockClear();
+    });
+
+    test("sets afterStepId alone — only id + afterStepId in payload", () => {
+      updateStep(mockStepId, { afterStepId: siblingId });
+      const [, payload] = updateMock.mock.calls.at(-1)!;
+      expect(payload).toEqual({ id: mockStepId, afterStepId: siblingId });
+    });
+
+    test("sets waitingOnLabel + waitingOnExpectedAt together", () => {
+      updateStep(mockStepId, {
+        waitingOnLabel: "Manager sign-off",
+        waitingOnExpectedAt: expectedDate,
+      });
+      const [, payload] = updateMock.mock.calls.at(-1)!;
+      expect(payload).toEqual({
+        id: mockStepId,
+        waitingOnLabel: "Manager sign-off",
+        waitingOnExpectedAt: expectedDate,
+      });
+    });
+
+    test("sets dueAt alone", () => {
+      updateStep(mockStepId, { dueAt: dueDate });
+      const [, payload] = updateMock.mock.calls.at(-1)!;
+      expect(payload).toEqual({ id: mockStepId, dueAt: dueDate });
+    });
+
+    test.each([
+      ["afterStepId", { afterStepId: null }],
+      ["waitingOnLabel", { waitingOnLabel: null }],
+      ["waitingOnExpectedAt", { waitingOnExpectedAt: null }],
+      ["dueAt", { dueAt: null }],
+    ] as const)("clears %s back to null", (key, fields) => {
+      updateStep(mockStepId, fields);
+      const [, payload] = updateMock.mock.calls.at(-1)!;
+      expect(payload).toEqual({ id: mockStepId, [key]: null });
+    });
+
+    test("omitted new fields are absent from the payload entirely", () => {
+      updateStep(mockStepId, { title: "Same Title" });
+      const [, payload] = updateMock.mock.calls.at(-1)!;
+      expect(payload).not.toHaveProperty("afterStepId");
+      expect(payload).not.toHaveProperty("waitingOnLabel");
+      expect(payload).not.toHaveProperty("waitingOnExpectedAt");
+      expect(payload).not.toHaveProperty("dueAt");
+    });
+
+    test("empty/whitespace waitingOnLabel clears to null rather than throwing", () => {
+      expect(() =>
+        updateStep(mockStepId, { waitingOnLabel: "   \n\t " }),
+      ).not.toThrow();
+      const [, payload] = updateMock.mock.calls.at(-1)!;
+      expect(payload).toEqual({ id: mockStepId, waitingOnLabel: null });
+    });
+
+    test("over-length waitingOnLabel throws rather than silently clearing", () => {
+      expect(() =>
+        updateStep(mockStepId, { waitingOnLabel: "x".repeat(1001) }),
+      ).toThrow(/Waiting-on label must be 1-1000 characters/);
+      expect(updateMock).not.toHaveBeenCalled();
+    });
   });
 
   describe("canCompleteStep", () => {
@@ -467,6 +551,98 @@ describe("Step CRUD Operations", () => {
       ],
     ])("%s", (_label, rows, expected) => {
       expect(resolveNextActionableStep(rows)).toEqual(expected);
+    });
+  });
+
+  describe("resolveStepDependencyBand (#454)", () => {
+    // Sibling present in the goal list so afterStepId can resolve to its title.
+    const goalSteps = [
+      row("sibling_a", null, { title: "Draft the outline" }),
+      row("other", null),
+    ];
+
+    test.each([
+      [
+        "no dependency/date data → every band field null",
+        row("s", null),
+        {
+          afterStepTitle: null,
+          waitingOnLabel: null,
+          waitingOnExpectedAt: null,
+          dueAt: null,
+        },
+      ],
+      [
+        "afterStepId resolves to the present sibling's title",
+        row("s", null, { afterStepId: "sibling_a" as StepId }),
+        {
+          afterStepTitle: "Draft the outline",
+          waitingOnLabel: null,
+          waitingOnExpectedAt: null,
+          dueAt: null,
+        },
+      ],
+      [
+        "afterStepId absent from goalSteps (soft-deleted) → afterStepTitle null",
+        row("s", null, { afterStepId: "ghost_step" as StepId }),
+        {
+          afterStepTitle: null,
+          waitingOnLabel: null,
+          waitingOnExpectedAt: null,
+          dueAt: null,
+        },
+      ],
+      [
+        // The step is itself present in goalSteps, so an unguarded find() would
+        // resolve afterStepId to its own title ("Draft the outline") — the guard
+        // must return null instead.
+        "afterStepId pointing at the step itself (self-reference) → afterStepTitle null",
+        row("sibling_a", null, {
+          title: "Draft the outline",
+          afterStepId: "sibling_a" as StepId,
+        }),
+        {
+          afterStepTitle: null,
+          waitingOnLabel: null,
+          waitingOnExpectedAt: null,
+          dueAt: null,
+        },
+      ],
+      [
+        "waitingOnLabel without expected date passes through unpaired",
+        row("s", null, { waitingOnLabel: "Vendor quote" }),
+        {
+          afterStepTitle: null,
+          waitingOnLabel: "Vendor quote",
+          waitingOnExpectedAt: null,
+          dueAt: null,
+        },
+      ],
+      [
+        "waitingOnLabel + expected date both pass through (the 'waiting on X · expected Y' pair)",
+        row("s", null, {
+          waitingOnLabel: "Manager sign-off",
+          waitingOnExpectedAt: "2026-06-24T00:00:00.000Z",
+        }),
+        {
+          afterStepTitle: null,
+          waitingOnLabel: "Manager sign-off",
+          waitingOnExpectedAt: "2026-06-24T00:00:00.000Z",
+          dueAt: null,
+        },
+      ],
+      [
+        "dueAt alone → only dueAt non-null in the band",
+        row("s", null, { dueAt: "2026-06-12T00:00:00.000Z" }),
+        {
+          afterStepTitle: null,
+          waitingOnLabel: null,
+          waitingOnExpectedAt: null,
+          dueAt: "2026-06-12T00:00:00.000Z",
+        },
+      ],
+    ])("%s", (_label, step, expected) => {
+      expect(resolveStepDependencyBand(step, goalSteps)).toEqual(expected);
     });
   });
 

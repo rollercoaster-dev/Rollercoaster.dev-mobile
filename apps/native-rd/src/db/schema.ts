@@ -121,6 +121,14 @@ export const Schema = {
     status: NonEmptyString1000, // 'pending' | 'paused' | 'completed'
     completedAt: nullOr(DateIso),
     plannedEvidenceTypes: nullOr(NonEmptyString1000), // JSON-encoded string[] of EvidenceType values, null = no evidence requirement
+    // Step dependency + due-date metadata backing the timeline dependency/due-date
+    // band (#454; "Set C · Set B" in the plan). All four
+    // are additive columns: Evolu reads existing rows as null, so no migration
+    // is needed — same pattern as `parentStepId` above.
+    afterStepId: nullOr(StepId), // Intra-goal dependency: this step comes after the referenced sibling
+    waitingOnLabel: nullOr(NonEmptyString1000), // Free-text external blocker label
+    waitingOnExpectedAt: nullOr(DateIso), // Optional expected-resolution date for the external wait
+    dueAt: nullOr(DateIso), // Due date
   },
 
   /**
