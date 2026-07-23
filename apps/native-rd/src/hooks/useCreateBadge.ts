@@ -361,8 +361,13 @@ export function useCreateBadge(
               ...(designRef.current ? { design: designRef.current } : {}),
             });
         if (!badgeResult.ok) {
+          // Stable user-facing message (FinishBakingStage renders err.message);
+          // the raw Evolu error rides on `cause` for logs/Sentry only, never the
+          // UI — JSON.stringify here could leak internals or throw on a
+          // non-serializable error.
           throw new Error(
-            `Failed to ${existingBadge ? "update" : "create"} badge record: ${JSON.stringify(badgeResult.error)}`,
+            `Failed to ${existingBadge ? "update" : "create"} badge record`,
+            { cause: badgeResult.error },
           );
         }
 
@@ -372,9 +377,10 @@ export function useCreateBadge(
         // NOT report "done" when the completion write itself failed.
         const completeResult = completeGoal(goalId, goalEvidenceForGating);
         if (!completeResult.ok) {
-          throw new Error(
-            `Failed to complete goal: ${JSON.stringify(completeResult.error)}`,
-          );
+          // Same as above: stable message for the UI, Evolu error on `cause`.
+          throw new Error("Failed to complete goal", {
+            cause: completeResult.error,
+          });
         }
 
         setStatus("done");

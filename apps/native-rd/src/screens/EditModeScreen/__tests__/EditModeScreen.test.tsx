@@ -579,7 +579,7 @@ describe("EditModeScreen", () => {
           }),
       },
     ])(
-      "keeps the modal open and does not navigate when delete fails (%s)",
+      "keeps the modal open and does not navigate when delete fails ($label)",
       ({ arm }) => {
         setupQueries();
         arm();

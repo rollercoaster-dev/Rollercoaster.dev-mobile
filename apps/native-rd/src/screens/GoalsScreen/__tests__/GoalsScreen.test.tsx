@@ -478,30 +478,35 @@ describe("GoalsScreen", () => {
             throw new Error("Failed to delete goal. Please try again.");
           }),
       },
-    ])("keeps the modal open and reports when delete fails (%s)", ({ arm }) => {
-      mockData([makeGoalRow({ id: "goal-1", title: "Learn TypeScript" })]);
-      arm();
-      const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    ])(
+      "keeps the modal open and reports when delete fails ($label)",
+      ({ arm }) => {
+        mockData([makeGoalRow({ id: "goal-1", title: "Learn TypeScript" })]);
+        arm();
+        const alertSpy = jest
+          .spyOn(Alert, "alert")
+          .mockImplementation(() => {});
 
-      renderWithProviders(<GoalsScreen />);
-      fireEvent(screen.getByTestId("goals-cockpit-hero"), "onLongPress");
-      fireEvent.press(screen.getByText(i18n.t("common:actions.delete")));
+        renderWithProviders(<GoalsScreen />);
+        fireEvent(screen.getByTestId("goals-cockpit-hero"), "onLongPress");
+        fireEvent.press(screen.getByText(i18n.t("common:actions.delete")));
 
-      expect(mockReportError).toHaveBeenCalledWith(expect.anything(), {
-        area: "goal.mutate",
-        kind: "delete",
-      });
-      expect(alertSpy).toHaveBeenCalledWith(
-        i18n.t("goals:deleteError.title"),
-        i18n.t("goals:deleteError.message"),
-      );
-      // Modal stays open: the confirm prompt is still on screen.
-      expect(
-        screen.getByText(i18n.t("goals:confirmDelete.title")),
-      ).toBeOnTheScreen();
+        expect(mockReportError).toHaveBeenCalledWith(expect.anything(), {
+          area: "goal.mutate",
+          kind: "delete",
+        });
+        expect(alertSpy).toHaveBeenCalledWith(
+          i18n.t("goals:deleteError.title"),
+          i18n.t("goals:deleteError.message"),
+        );
+        // Modal stays open: the confirm prompt is still on screen.
+        expect(
+          screen.getByText(i18n.t("goals:confirmDelete.title")),
+        ).toBeOnTheScreen();
 
-      alertSpy.mockRestore();
-    });
+        alertSpy.mockRestore();
+      },
+    );
   });
 
   describe("pseudo locale", () => {

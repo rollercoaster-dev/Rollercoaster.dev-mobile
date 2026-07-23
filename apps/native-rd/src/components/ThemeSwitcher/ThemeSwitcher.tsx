@@ -157,9 +157,10 @@ export function ThemeSwitcher() {
             <Pressable
               key={option.id}
               onPress={() => {
-                // setTheme returns false only when the persist failed; surface
-                // a toast so the option doesn't look selected while nothing
-                // persisted.
+                // setTheme applies the theme in-session immediately, then
+                // returns false only when persisting it failed. The option
+                // still shows as selected (the theme did change); the toast
+                // tells the user the choice won't survive a restart.
                 if (!setTheme(option.id)) {
                   showToast({
                     message: t("settings:errors.themeSaveFailed"),
