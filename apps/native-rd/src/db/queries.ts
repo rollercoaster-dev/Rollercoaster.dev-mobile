@@ -496,9 +496,10 @@ export interface StepDependencyBand {
  * an already-fetched per-goal step list rather than issuing a self-join (D4).
  * A non-null `afterStepId` absent from `goalSteps` (e.g. the referenced sibling
  * was soft-deleted) yields `afterStepTitle: null`. A self-reference
- * (`afterStepId === step.id`) is invalid — it names a sibling, not this step —
- * so it is treated as unresolved (`afterStepTitle: null`) rather than rendering
- * a nonsensical "waiting on [itself]" band.
+ * (`afterStepId === step.id`) is invalid — `afterStepId` names a sibling this
+ * step comes after, not this step — so it is treated as unresolved
+ * (`afterStepTitle: null`) rather than resolving `afterStepTitle` to this
+ * step's own title.
  */
 export function resolveStepDependencyBand(
   step: StepDependencyRowLike,

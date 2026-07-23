@@ -15,7 +15,7 @@ Observable criteria derived from the issue's scope and acceptance intent.
 - [x] A step with all four new fields `null` (every existing row, pre- and post-migration) round-trips through `stepsByGoalQuery` unchanged — no migration file, no backfill, existing `queries.step.test.ts` assertions keep passing untouched.
 - [x] `resolveStepDependencyBand(step, goalSteps)` returns all-`null` fields for a step with no dependency/date data — i.e. there is nothing for a future band to render, matching "hidden while empty, nothing changes visually until data exists."
 - [x] `resolveStepDependencyBand` resolves a non-null `afterStepId` to the referenced sibling's `title` when that sibling is present in `goalSteps`; returns `afterStepTitle: null` when the id isn't found (e.g. the referenced step was soft-deleted).
-- [x] `bun run type-check`, `bun run lint`, and `bun run test --testPathPatterns queries.step` all pass with no new failures.
+- [x] `bun run type-check`, `bun run lint`, and `cd apps/native-rd && bun run test --testPathPatterns queries.step` all pass with no new failures.
 
 ## Dependencies
 
@@ -108,7 +108,7 @@ Add four additive, nullable Evolu columns to the `step` table — `afterStepId` 
 - [x] Unit tests only — no render tests (no UI introduced). Jest 30, mirrors `src/db/queries.ts` structure per project convention.
 - [x] Test file: `apps/native-rd/src/db/__tests__/queries.step.test.ts` (existing file — extend, don't create a new one).
 - [x] Use `test.each` for the `resolveStepDependencyBand` cases (consistent with the existing `resolveNextActionableStep` block in the same file).
-- [x] Run: `bun run test --testPathPatterns queries.step`.
+- [x] Run: `cd apps/native-rd && bun run test --testPathPatterns queries.step` (scoped runs must be invoked from `apps/native-rd/` — turbo intercepts `--testPathPatterns` at the repo root; see Discovery Log).
 - [x] Run: `bun run type-check` and `bun run lint`.
 - [x] Manual testing: none applicable — no UI surface changes.
 
