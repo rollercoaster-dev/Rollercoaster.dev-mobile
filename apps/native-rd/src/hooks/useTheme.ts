@@ -48,7 +48,11 @@ interface ThemeContextValue {
   theme: ComposedTheme;
   isDark: boolean;
   variant: Variant;
-  setTheme: (name: ThemeName) => void;
+  // Returns false only when persisting the theme to Evolu failed, so the
+  // calling UI can surface a toast (#503). The outer-provider stub satisfies
+  // this contract by throwing — its `never` return is assignable to boolean —
+  // while every real provider returns an actual boolean.
+  setTheme: (name: ThemeName) => boolean;
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);

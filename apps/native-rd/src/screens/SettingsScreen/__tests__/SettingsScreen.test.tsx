@@ -109,6 +109,10 @@ const mockWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
 
 beforeEach(() => {
   jest.clearAllMocks();
+  // setTheme/setDensity return a success boolean; default to success so a
+  // press doesn't spuriously trip the failure toast.
+  mockSetTheme.mockReturnValue(true);
+  mockSetDensity.mockReturnValue(true);
   Object.defineProperty(Platform, "OS", {
     configurable: true,
     value: originalPlatform,
@@ -178,6 +182,25 @@ describe("SettingsScreen", () => {
     ).toBeOnTheScreen();
     expect(
       screen.getByText(i18n.t("settings:density.options.comfortable.label")),
+    ).toBeOnTheScreen();
+  });
+
+  it("calls setDensity with the pressed level", () => {
+    renderWithProviders(<SettingsScreen />);
+    fireEvent.press(
+      screen.getByText(i18n.t("settings:density.options.compact.label")),
+    );
+    expect(mockSetDensity).toHaveBeenCalledWith("compact");
+  });
+
+  it("shows a toast when setDensity reports a failed persist", () => {
+    mockSetDensity.mockReturnValue(false);
+    renderWithProviders(<SettingsScreen />);
+    fireEvent.press(
+      screen.getByText(i18n.t("settings:density.options.compact.label")),
+    );
+    expect(
+      screen.getByText(i18n.t("settings:errors.densitySaveFailed")),
     ).toBeOnTheScreen();
   });
 

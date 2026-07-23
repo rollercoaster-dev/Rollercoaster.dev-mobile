@@ -27,7 +27,10 @@ jest.mock("../../../hooks/useTheme", () => {
 });
 
 beforeEach(() => {
-  mockSetTheme.mockClear();
+  mockSetTheme.mockReset();
+  // setTheme returns a success boolean; default to success so a press doesn't
+  // spuriously trip the failure toast.
+  mockSetTheme.mockReturnValue(true);
 });
 
 describe("ThemeSwitcher", () => {
@@ -51,6 +54,24 @@ describe("ThemeSwitcher", () => {
     const secondOption = themeOptions[1];
     fireEvent.press(screen.getByLabelText(themeLabelOf(secondOption.id)));
     expect(mockSetTheme).toHaveBeenCalledWith(secondOption.id);
+  });
+
+  it("shows a toast when setTheme reports a failed persist", () => {
+    mockSetTheme.mockReturnValue(false);
+    renderWithProviders(<ThemeSwitcher />);
+    fireEvent.press(screen.getByLabelText(themeLabelOf(themeOptions[1].id)));
+    expect(
+      screen.getByText(i18n.t("settings:errors.themeSaveFailed")),
+    ).toBeOnTheScreen();
+  });
+
+  it("does not show a toast when setTheme reports success", () => {
+    mockSetTheme.mockReturnValue(true);
+    renderWithProviders(<ThemeSwitcher />);
+    fireEvent.press(screen.getByLabelText(themeLabelOf(themeOptions[1].id)));
+    expect(
+      screen.queryByText(i18n.t("settings:errors.themeSaveFailed")),
+    ).toBeNull();
   });
 
   it('has accessibilityRole "radiogroup" on the container', () => {

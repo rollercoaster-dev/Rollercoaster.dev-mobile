@@ -89,6 +89,9 @@ const mockRoute = {
 beforeEach(() => {
   jest.clearAllMocks();
   mockUseQuery.mockReturnValue([]);
+  // deleteBadge returns an Evolu Result; the handler now checks `.ok`, so the
+  // mock must hand back a success Result by default. Failure tests override.
+  mockDeleteBadge.mockReturnValue({ ok: true, value: {} });
 });
 
 describe("BadgeDetailScreen", () => {
@@ -209,7 +212,7 @@ describe("BadgeDetailScreen", () => {
       expect(mockGoBack).not.toHaveBeenCalled();
     });
 
-    it("keeps the user on the screen and reports when delete fails", () => {
+    it("keeps the user on the screen and reports when delete throws", () => {
       mockUseQuery.mockReturnValue([makeRow()]);
       mockDeleteBadge.mockImplementationOnce(() => {
         throw new Error("Failed to delete badge. Please try again.");
@@ -222,10 +225,37 @@ describe("BadgeDetailScreen", () => {
       fireEvent.press(screen.getByRole("button", { name: "Delete Badge" }));
       fireEvent.press(screen.getByRole("button", { name: "Delete" }));
 
-      // Failure is surfaced and reported; the user is NOT navigated away.
+      // Failure is surfaced and reported; the user is NOT navigated away and
+      // the confirmation modal stays open (its confirm button is still there).
       expect(mockReportError).toHaveBeenCalled();
       expect(alertSpy).toHaveBeenCalled();
       expect(mockGoBack).not.toHaveBeenCalled();
+      expect(screen.getByRole("button", { name: "Delete" })).toBeOnTheScreen();
+
+      alertSpy.mockRestore();
+    });
+
+    // deleteBadge signals a DB write failure with { ok: false } WITHOUT
+    // throwing — the pre-fix catch never fired for this, so the modal closed
+    // and the screen navigated away as if the delete succeeded.
+    it("keeps the user on the screen and reports when delete returns { ok: false }", () => {
+      mockUseQuery.mockReturnValue([makeRow()]);
+      mockDeleteBadge.mockReturnValueOnce({
+        ok: false,
+        error: { type: "WriteError" },
+      });
+      const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      fireEvent.press(screen.getByRole("button", { name: "Delete Badge" }));
+      fireEvent.press(screen.getByRole("button", { name: "Delete" }));
+
+      expect(mockReportError).toHaveBeenCalled();
+      expect(alertSpy).toHaveBeenCalled();
+      expect(mockGoBack).not.toHaveBeenCalled();
+      expect(screen.getByRole("button", { name: "Delete" })).toBeOnTheScreen();
 
       alertSpy.mockRestore();
     });

@@ -10,6 +10,8 @@ import {
 } from "../utils/density";
 import { space as baseSpace } from "../themes/tokens";
 import { themeNames } from "../themes/compose";
+import { reportError } from "../services/sentry-report";
+import { runEvoluMutation } from "../utils/evoluMutation";
 import { Logger } from "../shims/rd-logger";
 
 const logger = new Logger("useDensity");
@@ -63,10 +65,19 @@ export function useDensity() {
     }
   }, [densityLevel, runWhenActive]);
 
+  // Returns true when the density change was persisted (or there is no settings
+  // row yet, so there is nothing to persist); false only when the Evolu write
+  // was attempted and failed. The calling UI shows a toast on false — this hook
+  // can't, because it runs above <ToastProvider> in the tree (see #503 D2).
   const setDensity = useCallback(
-    (level: DensityLevel) => {
-      if (!settings) return;
-      updateUserSettings(settings.id, { density: level });
+    (level: DensityLevel): boolean => {
+      if (!settings) return true;
+      return runEvoluMutation(
+        () => updateUserSettings(settings.id, { density: level }),
+        (error) => {
+          reportError(error, { area: "settings.density" });
+        },
+      );
     },
     [settings],
   );

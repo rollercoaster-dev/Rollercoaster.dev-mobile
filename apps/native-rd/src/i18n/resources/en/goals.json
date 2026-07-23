@@ -15,6 +15,10 @@
     "title": "Delete this goal?",
     "message": "\"{{title}}\" and all progress will be permanently deleted."
   },
+  "deleteError": {
+    "title": "Couldn't delete goal",
+    "message": "Something went wrong. Please try again."
+  },
   "cockpit": {
     "doThisNext": "Do this next · {{title}}",
     "ringSteps": "{{completed}} / {{total}} steps",

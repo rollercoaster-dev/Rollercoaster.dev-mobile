@@ -346,21 +346,42 @@ export function useCreateBadge(
 
         // createBadge / updateBadge validate inputs and can throw before
         // completeGoal — a failure leaves the goal active rather than
-        // completed-without-badge.
-        if (existingBadge) {
-          updateBadge(existingBadge.id as BadgeId, {
-            credential: credentialJsonOut,
-            imageUri,
-          });
-        } else {
-          createBadge({
-            goalId,
-            credential: credentialJsonOut,
-            imageUri,
-            ...(designRef.current ? { design: designRef.current } : {}),
+        // completed-without-badge. Evolu also reports write failures via a
+        // { ok: false } Result without throwing, so check both: a discarded
+        // Result would let a failed persist fall through to setStatus("done").
+        const badgeResult = existingBadge
+          ? updateBadge(existingBadge.id as BadgeId, {
+              credential: credentialJsonOut,
+              imageUri,
+            })
+          : createBadge({
+              goalId,
+              credential: credentialJsonOut,
+              imageUri,
+              ...(designRef.current ? { design: designRef.current } : {}),
+            });
+        if (!badgeResult.ok) {
+          // Stable user-facing message (FinishBakingStage renders err.message);
+          // the raw Evolu error rides on `cause` for logs/Sentry only, never the
+          // UI — JSON.stringify here could leak internals or throw on a
+          // non-serializable error.
+          throw new Error(
+            `Failed to ${existingBadge ? "update" : "create"} badge record`,
+            { cause: badgeResult.error },
+          );
+        }
+
+        // completeGoal may also fail after the badge row was written. We accept
+        // that partial state (badge exists, goal still active) rather than roll
+        // back — the goal stays active and the user can re-attempt — but we must
+        // NOT report "done" when the completion write itself failed.
+        const completeResult = completeGoal(goalId, goalEvidenceForGating);
+        if (!completeResult.ok) {
+          // Same as above: stable message for the UI, Evolu error on `cause`.
+          throw new Error("Failed to complete goal", {
+            cause: completeResult.error,
           });
         }
-        completeGoal(goalId, goalEvidenceForGating);
 
         setStatus("done");
         logger.info("Badge credential created", { goalId, credentialId });
