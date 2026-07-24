@@ -208,6 +208,12 @@ function TimelineContent({
     navigation.navigate("CompletionFlow", { goalId });
   };
 
+  // No `cameFromFocus` — that flag only relabels EditMode's exit CTA ("Back to
+  // Focus" vs. "Start working"), and this entry point is the Timeline, not Focus.
+  const handleEditPress = () => {
+    navigation.navigate("EditMode", { goalId });
+  };
+
   return (
     <View style={{ flex: 1 }}>
       {/* Header */}
@@ -221,16 +227,24 @@ function TimelineContent({
           >
             {goal.title}
           </Text>
-          <Button
-            label={
-              originBadgeId
-                ? t("timelineJourney:backToBadge")
-                : t("timelineJourney:backToFocus")
-            }
-            onPress={handleBack}
-            variant="secondary"
-            size="sm"
-          />
+          <View style={styles.headerActions}>
+            <Button
+              label={
+                originBadgeId
+                  ? t("timelineJourney:backToBadge")
+                  : t("timelineJourney:backToFocus")
+              }
+              onPress={handleBack}
+              variant="secondary"
+              size="sm"
+            />
+            <Button
+              label={t("timelineJourney:editButton")}
+              onPress={handleEditPress}
+              variant="secondary"
+              size="sm"
+            />
+          </View>
         </View>
         {goal.description && (
           <Text style={styles.description} numberOfLines={3}>

@@ -30,6 +30,13 @@ export const styles = StyleSheet.create((theme) => ({
     justifyContent: "space-between",
     gap: theme.space[2],
   },
+  // Back + "Edit ›" sit side by side at the end of the header row; the title
+  // keeps `flex: 1` so it takes the remaining width and wraps.
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.space[2],
+  },
   title: {
     flex: 1,
     fontSize: 22,

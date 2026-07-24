@@ -2,6 +2,7 @@
   "title": "Zeitstrahl",
   "backToFocus": "Zurück zu Fokus",
   "backToBadge": "Zurück zum Badge",
+  "editButton": "Bearbeiten ›",
   "errors": {
     "goalNotFound": "Ziel nicht gefunden."
   },

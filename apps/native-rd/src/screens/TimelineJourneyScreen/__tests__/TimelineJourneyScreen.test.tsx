@@ -410,6 +410,14 @@ describe("TimelineJourneyScreen", () => {
     });
   });
 
+  it('"Edit ›" navigates to EditMode for this goal', () => {
+    setupQueries();
+    renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+    fireEvent.press(screen.getByLabelText("Edit ›"));
+    // No cameFromFocus — this entry is from the Timeline, not Focus (D5).
+    expect(mockNavigate).toHaveBeenCalledWith("EditMode", { goalId: "goal-1" });
+  });
+
   it("back button navigates back", () => {
     setupQueries();
     renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
