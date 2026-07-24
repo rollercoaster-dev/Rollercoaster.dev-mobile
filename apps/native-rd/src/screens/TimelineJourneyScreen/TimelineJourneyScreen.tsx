@@ -20,8 +20,10 @@ import {
   groupStepsByParent,
   areAllStepsComplete,
   resolveNextActionableStep,
+  resolveStepDependencyBand,
   StepStatus,
 } from "../../db";
+import { formatDate } from "../../utils/format";
 import { parseBadgeDesign } from "../../badges/types";
 import type { GoalId } from "../../db";
 import type {
@@ -67,7 +69,7 @@ function TimelineContent({
   originBadgeId?: string;
 }) {
   const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
-  const { t } = useTranslation(["timelineJourney"]);
+  const { t, i18n } = useTranslation(["timelineJourney"]);
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
   const stepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
@@ -103,12 +105,28 @@ function TimelineContent({
 
   const stepsWithChildren = groupedSteps.map((root) => {
     const evidence = evidenceByStepId.get(root.id) ?? [];
+    // C·B band (#454): the resolver hands back raw fields, so this caller owns
+    // the date formatting (locale from the active UI language) and leaves each
+    // prop undefined when its column is unset — MetadataBand then renders
+    // nothing rather than a placeholder line. Roots only: sub-steps carry no
+    // C/B band (#407 OQ-2), so `children` below deliberately omits these props.
+    const band = resolveStepDependencyBand(root, stepRows);
     return {
       id: root.id,
       title: root.title ?? "",
       status: statusFor(root.id, root.status),
       evidenceCount: evidence.length,
       evidence,
+      afterStep: band.afterStepTitle ?? undefined,
+      waitingOn: band.waitingOnLabel
+        ? {
+            who: band.waitingOnLabel,
+            expected: band.waitingOnExpectedAt
+              ? formatDate(band.waitingOnExpectedAt, i18n.language)
+              : undefined,
+          }
+        : undefined,
+      dueDate: band.dueAt ? formatDate(band.dueAt, i18n.language) : undefined,
       children: root.children.map<TimelineStepChild>((child) => ({
         id: child.id,
         title: child.title ?? "",

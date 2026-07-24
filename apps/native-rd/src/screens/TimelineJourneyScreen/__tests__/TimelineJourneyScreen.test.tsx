@@ -87,6 +87,30 @@ jest.mock("../../../db", () => ({
     }
     return roots;
   },
+  // Faithful copy of the real resolver (queries.ts), incl. the unresolved-
+  // reference and self-reference guards, so the C·B band wiring is exercised
+  // against real resolution rules rather than a stub.
+  resolveStepDependencyBand: (
+    step: {
+      id: string;
+      afterStepId: string | null;
+      waitingOnLabel: string | null;
+      waitingOnExpectedAt: string | null;
+      dueAt: string | null;
+    },
+    goalSteps: readonly { id: string; title: string | null }[],
+  ) => {
+    const afterStep =
+      step.afterStepId === null || step.afterStepId === step.id
+        ? null
+        : (goalSteps.find((s) => s.id === step.afterStepId) ?? null);
+    return {
+      afterStepTitle: afterStep?.title ?? null,
+      waitingOnLabel: step.waitingOnLabel,
+      waitingOnExpectedAt: step.waitingOnExpectedAt,
+      dueAt: step.dueAt,
+    };
+  },
   // Faithful copy of the real resolver (queries.ts) so the screen's accent runs
   // real leaf/invite/flat bucketing — including the paused skip (#417) — instead
   // of a stub. Same convention as groupStepsByParent above.
@@ -216,6 +240,24 @@ const STEPS_WITH_PAUSED = [
     parentStepId: null,
   },
 ];
+
+// Fixed local-time noon (no trailing `Z`) so the formatted-date assertions
+// depend on neither the runner's clock nor its timezone — mirrors the same
+// guard in utils/__tests__/format.test.ts.
+const BAND_ISO = "2026-01-28T12:00:00";
+const BAND_ISO_FORMATTED = "Jan 28, 2026";
+
+/** A step row with every #454 dependency/due column explicitly unset. */
+const bandStep = (over: Record<string, unknown>) => ({
+  status: "completed",
+  ordinal: 0,
+  parentStepId: null,
+  afterStepId: null,
+  waitingOnLabel: null,
+  waitingOnExpectedAt: null,
+  dueAt: null,
+  ...over,
+});
 
 const STEP_EVIDENCE = [
   {
@@ -498,6 +540,59 @@ describe("TimelineJourneyScreen", () => {
       // ...and the node paints the shared paused glyph from stepStateColorMap
       // (#406) rather than its step number.
       expect(screen.getByText("⏸")).toBeOnTheScreen();
+    });
+  });
+
+  describe("dependency + due-date band (#454)", () => {
+    const GROUNDWORK = bandStep({ id: "step-a", title: "Groundwork" });
+
+    test.each([
+      ["after (internal dependency)", { afterStepId: "step-a" }, "after Groundwork"], // prettier-ignore
+      [
+        "waiting on + expected",
+        { waitingOnLabel: "Alex", waitingOnExpectedAt: BAND_ISO },
+        `waiting on Alex · expected ${BAND_ISO_FORMATTED}`,
+      ],
+      ["due date", { dueAt: BAND_ISO }, `due ${BAND_ISO_FORMATTED}`],
+    ])("renders the %s line from real columns", (_name, columns, expected) => {
+      setupQueries({
+        steps: [
+          GROUNDWORK,
+          bandStep({ id: "step-b", title: "The work", ...columns }),
+        ],
+      });
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      expect(screen.getByText(expected)).toBeOnTheScreen();
+    });
+
+    it("renders no band line when none of the three columns is set", () => {
+      setupQueries({
+        steps: [GROUNDWORK, bandStep({ id: "step-b", title: "The work" })],
+      });
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      expect(screen.queryByText(/^(after|waiting on|due) /)).toBeNull();
+    });
+
+    it("never renders a band on a sub-step, even with the columns set", () => {
+      // Children carry no C/B band (#407 OQ-2) — the screen must not pass these
+      // fields down, so a sub-step with real columns stays band-free.
+      setupQueries({
+        steps: [
+          bandStep({ id: "parent", title: "Parent", status: "pending" }),
+          bandStep({
+            id: "child",
+            title: "Child",
+            status: "pending",
+            parentStepId: "parent",
+            waitingOnLabel: "Sam",
+            dueAt: BAND_ISO,
+          }),
+        ],
+      });
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      expect(screen.getByText("Child")).toBeOnTheScreen();
+      expect(screen.queryByText(/waiting on Sam/)).toBeNull();
+      expect(screen.queryByText(`due ${BAND_ISO_FORMATTED}`)).toBeNull();
     });
   });
 
