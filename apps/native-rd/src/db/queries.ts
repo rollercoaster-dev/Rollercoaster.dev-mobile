@@ -16,6 +16,7 @@ import {
   sqliteTrue,
   Int,
 } from "@evolu/common";
+import type { DateIso } from "@evolu/common";
 import { breadcrumb } from "../services/sentry-report";
 import { Logger } from "../shims/rd-logger";
 import type { EvidenceTypeValue } from "../types/evidence";
@@ -399,6 +400,14 @@ export interface GroupedStep {
   status: string | null;
   completedAt: string | null;
   plannedEvidenceTypes: string | null;
+  // Step dependency + due-date metadata (#454). Read back as nullable columns
+  // per Evolu's selectAll convention (afterStepId keeps its StepId brand; the
+  // date fields arrive as plain strings); resolved into band shape by
+  // resolveStepDependencyBand.
+  afterStepId: StepId | null;
+  waitingOnLabel: string | null;
+  waitingOnExpectedAt: string | null;
+  dueAt: string | null;
   children: GroupedStep[];
 }
 
@@ -455,6 +464,57 @@ export function flattenGroupedSteps(
     out.push(...root.children);
   }
   return out;
+}
+
+/** Minimal step shape {@link resolveStepDependencyBand} reads. */
+export interface StepDependencyRowLike {
+  id: string;
+  title: string | null;
+  afterStepId: string | null;
+  waitingOnLabel: string | null;
+  waitingOnExpectedAt: string | null;
+  dueAt: string | null;
+}
+
+/**
+ * Resolved dependency + due-date band data for one step (#454). Deliberately
+ * **raw**, not final display strings: `afterStepTitle` is the referenced
+ * sibling's title (or null if unresolved) and the label/date fields pass
+ * straight through. Callers (#377/#378) format dates and assemble the
+ * "waiting on X · expected Y" / "due Z" text — no date-formatting utility
+ * lives in this layer by design (D3).
+ */
+export interface StepDependencyBand {
+  afterStepTitle: string | null;
+  waitingOnLabel: string | null;
+  waitingOnExpectedAt: string | null;
+  dueAt: string | null;
+}
+
+/**
+ * Resolve a step's dependency/due-date columns into band shape. Pure — reads
+ * an already-fetched per-goal step list rather than issuing a self-join (D4).
+ * A non-null `afterStepId` absent from `goalSteps` (e.g. the referenced sibling
+ * was soft-deleted) yields `afterStepTitle: null`. A self-reference
+ * (`afterStepId === step.id`) is invalid — `afterStepId` names a sibling this
+ * step comes after, not this step — so it is treated as unresolved
+ * (`afterStepTitle: null`) rather than resolving `afterStepTitle` to this
+ * step's own title.
+ */
+export function resolveStepDependencyBand(
+  step: StepDependencyRowLike,
+  goalSteps: readonly StepDependencyRowLike[],
+): StepDependencyBand {
+  const afterStep =
+    step.afterStepId === null || step.afterStepId === step.id
+      ? null
+      : (goalSteps.find((s) => s.id === step.afterStepId) ?? null);
+  return {
+    afterStepTitle: afterStep?.title ?? null,
+    waitingOnLabel: step.waitingOnLabel,
+    waitingOnExpectedAt: step.waitingOnExpectedAt,
+    dueAt: step.dueAt,
+  };
 }
 
 /** Minimal step shape {@link resolveNextActionableStep} reads. */
@@ -677,6 +737,13 @@ export function updateStep(
     ordinal?: number | null;
     plannedEvidenceTypes?: readonly string[] | null;
     parentStepId?: StepId | null;
+    // Step dependency + due-date metadata (#454). Date fields take branded
+    // DateIso values (same write-side convention as completedAt); undefined =
+    // "don't touch", null = "clear".
+    afterStepId?: StepId | null;
+    waitingOnLabel?: string | null;
+    waitingOnExpectedAt?: DateIso | null;
+    dueAt?: DateIso | null;
   },
 ) {
   breadcrumb({ category: "step", message: "update" });
@@ -711,6 +778,44 @@ export function updateStep(
   const serializedTypes = serializePlannedTypes(fields.plannedEvidenceTypes);
   if (serializedTypes !== undefined) {
     update.plannedEvidenceTypes = serializedTypes;
+  }
+
+  // Step dependency + due-date metadata (#454). afterStepId is unvalidated —
+  // the same-goal / no-cycle constraint is the caller's responsibility, same
+  // as parentStepId above. Date fields pass through branded.
+  if (fields.afterStepId !== undefined) {
+    update.afterStepId = fields.afterStepId;
+  }
+
+  // Empty/whitespace clears the label rather than throwing (optional field,
+  // unlike title). A non-empty but invalid label (over 1000 chars) throws
+  // instead of silently clearing — clearing user-entered text on an
+  // over-length value would be surprising data loss, not an intended reset.
+  if (fields.waitingOnLabel !== undefined) {
+    if (fields.waitingOnLabel === null) {
+      update.waitingOnLabel = null;
+    } else {
+      const trimmed = fields.waitingOnLabel.trim();
+      const parsed = trimmed === "" ? null : NonEmptyString1000.orNull(trimmed);
+      if (trimmed !== "" && !parsed) {
+        logger.error("Step waitingOnLabel validation failed during update", {
+          stepId: id,
+          labelLength: trimmed.length,
+        });
+        throw new Error(
+          `Waiting-on label must be 1-1000 characters (received ${trimmed.length} characters)`,
+        );
+      }
+      update.waitingOnLabel = parsed;
+    }
+  }
+
+  if (fields.waitingOnExpectedAt !== undefined) {
+    update.waitingOnExpectedAt = fields.waitingOnExpectedAt;
+  }
+
+  if (fields.dueAt !== undefined) {
+    update.dueAt = fields.dueAt;
   }
 
   try {

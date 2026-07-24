@@ -26,6 +26,7 @@ export {
   groupStepsByParent,
   flattenGroupedSteps,
   resolveNextActionableStep,
+  resolveStepDependencyBand,
   isPendingStep,
   findFirstPendingIndex,
   areAllStepsComplete,
@@ -70,4 +71,6 @@ export type {
   GroupedStep,
   NextActionableStep,
   NextActionableStepInput,
+  StepDependencyBand,
+  StepDependencyRowLike,
 } from "./queries";
