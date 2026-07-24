@@ -111,6 +111,12 @@ beforeEach(() => {
   mockBadges.saveBadgePNG.mockResolvedValue(
     "file:///app/badges/test-badge.png",
   );
+  // Evolu mutations return a Result — default them to ok so the success paths
+  // reach setStatus("done"). Individual tests override with an ok:false Result
+  // or a thrown error to exercise the failure branches.
+  mockCreateBadge.mockReturnValue({ ok: true, value: { id: "badge-new" } });
+  mockUpdateBadge.mockReturnValue({ ok: true, value: {} });
+  mockCompleteGoal.mockReturnValue({ ok: true, value: {} });
   // Default: configure mockUseQuery to return values in sequence per render
   mockUseQuery.mockImplementation((query: string) => {
     if (query === "mock-goals-query") return [MOCK_GOAL];
@@ -311,8 +317,14 @@ describe("useCreateBadge", () => {
 
     it("calls createBadge before completeGoal (so a createBadge failure does not leave goal completed without badge)", async () => {
       const callOrder: string[] = [];
-      mockCompleteGoal.mockImplementation(() => callOrder.push("completeGoal"));
-      mockCreateBadge.mockImplementation(() => callOrder.push("createBadge"));
+      mockCompleteGoal.mockImplementation(() => {
+        callOrder.push("completeGoal");
+        return { ok: true, value: {} };
+      });
+      mockCreateBadge.mockImplementation(() => {
+        callOrder.push("createBadge");
+        return { ok: true, value: { id: "badge-new" } };
+      });
 
       renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
       await act(async () => {});
@@ -507,6 +519,66 @@ describe("useCreateBadge", () => {
       expect(result.current.status).toBe("error");
       expect(result.current.error).toContain("db write failed");
       expect(mockCompleteGoal).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("when a persistence mutation returns { ok: false } (no throw)", () => {
+    it("createBadge ok:false → status error, does NOT reach done or completeGoal", async () => {
+      mockCreateBadge.mockReturnValueOnce({
+        ok: false,
+        error: { type: "WriteError" },
+      });
+
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
+      await act(async () => {});
+
+      expect(result.current.status).toBe("error");
+      expect(result.current.error).toContain("Failed to create badge record");
+      expect(mockCompleteGoal).not.toHaveBeenCalled();
+    });
+
+    it("updateBadge ok:false on re-bake → status error, does NOT reach done or completeGoal", async () => {
+      mockUseQuery.mockImplementation((query: string) => {
+        if (query === "mock-goals-query") return [MOCK_GOAL]; // active
+        if (query === "mock-evidence-query")
+          return [{ id: "ev-1", type: "photo", goalId: GOAL_ID }];
+        if (query === "mock-badge-query")
+          return [
+            {
+              id: "badge-01",
+              goalId: GOAL_ID,
+              imageUri: "file:///app/badges/old-badge.png",
+            },
+          ];
+        return [];
+      });
+      mockUpdateBadge.mockReturnValueOnce({
+        ok: false,
+        error: { type: "WriteError" },
+      });
+
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID));
+      await act(async () => {});
+
+      expect(result.current.status).toBe("error");
+      expect(result.current.error).toContain("Failed to update badge record");
+      expect(mockCompleteGoal).not.toHaveBeenCalled();
+    });
+
+    it("completeGoal ok:false → status error even though the badge row was written (accepted partial state)", async () => {
+      mockCompleteGoal.mockReturnValueOnce({
+        ok: false,
+        error: { type: "WriteError" },
+      });
+
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
+      await act(async () => {});
+
+      expect(result.current.status).toBe("error");
+      expect(result.current.error).toContain("Failed to complete goal");
+      // The badge row was already written — we accept badge-exists/goal-active
+      // partial state rather than reporting a completed goal with no badge.
+      expect(mockCreateBadge).toHaveBeenCalledTimes(1);
     });
   });
 

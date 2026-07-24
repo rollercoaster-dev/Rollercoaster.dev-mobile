@@ -24,6 +24,10 @@
     "title": "Sprache (dev)",
     "pseudo": "Pseudo-Locale"
   },
+  "errors": {
+    "densitySaveFailed": "Dichte konnte nicht gespeichert werden. Versuch es nochmal.",
+    "themeSaveFailed": "Theme konnte nicht gespeichert werden. Versuch es nochmal."
+  },
   "about": {
     "title": "Über",
     "appLabel": "App",

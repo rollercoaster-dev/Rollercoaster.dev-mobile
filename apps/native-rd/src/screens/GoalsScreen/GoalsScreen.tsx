@@ -1,5 +1,5 @@
 import React, { Suspense, useMemo, useState } from "react";
-import { View, ScrollView, ActivityIndicator } from "react-native";
+import { View, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useNavigation } from "@react-navigation/native";
 import { useTabScreenContentInset } from "../../navigation/useTabScreenContentInset";
@@ -9,6 +9,8 @@ import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { Text } from "../../components/Text";
 import { ConfirmDeleteModal } from "../../components/ConfirmDeleteModal";
+import { reportError } from "../../services/sentry-report";
+import { runEvoluMutation } from "../../utils/evoluMutation";
 import { Logger } from "../../shims/rd-logger";
 import {
   activeGoalsQuery,
@@ -144,10 +146,25 @@ function GoalsCockpitContainer({
   const goalCount = ranked.length;
 
   function confirmDelete() {
-    if (deleteTarget) {
-      deleteGoal(deleteTarget.id);
-      setDeleteTarget(null);
-    }
+    if (!deleteTarget) return;
+    // Only dismiss the confirmation modal when the soft-delete actually
+    // succeeded. Evolu reports write failures via { ok: false } as well as by
+    // throwing, so a discarded Result would close the modal on a goal that was
+    // never deleted — leaving it silently on the list. Keep the modal open and
+    // surface the failure instead.
+    const target = deleteTarget;
+    const ok = runEvoluMutation(
+      () => deleteGoal(target.id),
+      (error) => {
+        logger.error("Failed to delete goal", { goalId: target.id, error });
+        reportError(error, { area: "goal.mutate", kind: "delete" });
+        Alert.alert(
+          t("goals:deleteError.title"),
+          t("goals:deleteError.message"),
+        );
+      },
+    );
+    if (ok) setDeleteTarget(null);
   }
 
   return (

@@ -50,6 +50,7 @@ import {
 } from "../../db";
 import type { GoalId, StepId } from "../../db";
 import { reportError } from "../../services/sentry-report";
+import { runEvoluMutation } from "../../utils/evoluMutation";
 import {
   validateEvidenceType,
   type EvidenceTypeValue,
@@ -153,17 +154,18 @@ function EditContent({
           return;
         }
         setTitleError("");
-        try {
-          updateGoal(goalId as GoalId, { title: trimmed });
-        } catch (error) {
-          console.error("[EditModeScreen] Failed to update title", {
-            goalId,
-            title: trimmed,
-            error,
-          });
-          reportError(error, { area: "goal.mutate", kind: "update" });
-          setTitleError(t("editGoal:errors.updateTitleFailed"));
-        }
+        runEvoluMutation(
+          () => updateGoal(goalId as GoalId, { title: trimmed }),
+          (error) => {
+            console.error("[EditModeScreen] Failed to update title", {
+              goalId,
+              title: trimmed,
+              error,
+            });
+            reportError(error, { area: "goal.mutate", kind: "update" });
+            setTitleError(t("editGoal:errors.updateTitleFailed"));
+          },
+        );
       }, DEBOUNCE_MS);
     },
     [goalId, t],
@@ -173,20 +175,21 @@ function EditContent({
     (newDesc: string) => {
       if (descTimer.current) clearTimeout(descTimer.current);
       descTimer.current = setTimeout(() => {
-        try {
-          const value = newDesc.trim() || null;
-          updateGoal(goalId as GoalId, { description: value });
-        } catch (error) {
-          console.error("[EditModeScreen] Failed to update description", {
-            goalId,
-            error,
-          });
-          reportError(error, { area: "goal.mutate", kind: "update" });
-          Alert.alert(
-            t("editGoal:errors.alertErrorTitle"),
-            t("editGoal:errors.updateDescriptionMessage"),
-          );
-        }
+        const value = newDesc.trim() || null;
+        runEvoluMutation(
+          () => updateGoal(goalId as GoalId, { description: value }),
+          (error) => {
+            console.error("[EditModeScreen] Failed to update description", {
+              goalId,
+              error,
+            });
+            reportError(error, { area: "goal.mutate", kind: "update" });
+            Alert.alert(
+              t("editGoal:errors.alertErrorTitle"),
+              t("editGoal:errors.updateDescriptionMessage"),
+            );
+          },
+        );
       }, DEBOUNCE_MS);
     },
     [goalId, t],
@@ -215,41 +218,46 @@ function EditContent({
     newTitle: string,
     plannedEvidenceTypes?: EvidenceTypeValue[],
   ) {
-    try {
-      updateStep(stepId as StepId, {
-        title: newTitle,
-        ...(plannedEvidenceTypes !== undefined ? { plannedEvidenceTypes } : {}),
-      });
-    } catch (error) {
-      console.error("[EditModeScreen] Failed to update step", {
-        stepId,
-        newTitle,
-        error,
-      });
-      reportError(error, { area: "step.mutate", kind: "update" });
-      Alert.alert(
-        t("editGoal:errors.alertErrorTitle"),
-        t("editGoal:errors.updateStepMessage"),
-      );
-    }
+    runEvoluMutation(
+      () =>
+        updateStep(stepId as StepId, {
+          title: newTitle,
+          ...(plannedEvidenceTypes !== undefined
+            ? { plannedEvidenceTypes }
+            : {}),
+        }),
+      (error) => {
+        console.error("[EditModeScreen] Failed to update step", {
+          stepId,
+          newTitle,
+          error,
+        });
+        reportError(error, { area: "step.mutate", kind: "update" });
+        Alert.alert(
+          t("editGoal:errors.alertErrorTitle"),
+          t("editGoal:errors.updateStepMessage"),
+        );
+      },
+    );
   }
 
   function handleDeleteStep(stepId: string) {
     if (stepRows.length <= 1) return;
-    try {
-      deleteStep(stepId as StepId);
-    } catch (error) {
-      console.error("[EditModeScreen] Failed to delete step", {
-        goalId,
-        stepId,
-        error,
-      });
-      reportError(error, { area: "step.mutate", kind: "delete" });
-      Alert.alert(
-        t("editGoal:errors.alertErrorTitle"),
-        t("editGoal:errors.deleteStepMessage"),
-      );
-    }
+    runEvoluMutation(
+      () => deleteStep(stepId as StepId),
+      (error) => {
+        console.error("[EditModeScreen] Failed to delete step", {
+          goalId,
+          stepId,
+          error,
+        });
+        reportError(error, { area: "step.mutate", kind: "delete" });
+        Alert.alert(
+          t("editGoal:errors.alertErrorTitle"),
+          t("editGoal:errors.deleteStepMessage"),
+        );
+      },
+    );
   }
 
   function handleCreateStep(
@@ -263,25 +271,27 @@ function EditContent({
         s.parentStepId == null ? Math.max(max, s.ordinal ?? -1) : max,
       -1,
     );
-    try {
-      createStep(
-        goalId as GoalId,
-        stepTitle,
-        maxOrdinal + 1,
-        plannedEvidenceTypes,
-      );
-    } catch (error) {
-      console.error("[EditModeScreen] Failed to create step", {
-        goalId,
-        stepTitle,
-        error,
-      });
-      reportError(error, { area: "step.mutate", kind: "create" });
-      Alert.alert(
-        t("editGoal:errors.alertErrorTitle"),
-        t("editGoal:errors.createStepMessage"),
-      );
-    }
+    runEvoluMutation(
+      () =>
+        createStep(
+          goalId as GoalId,
+          stepTitle,
+          maxOrdinal + 1,
+          plannedEvidenceTypes,
+        ),
+      (error) => {
+        console.error("[EditModeScreen] Failed to create step", {
+          goalId,
+          stepTitle,
+          error,
+        });
+        reportError(error, { area: "step.mutate", kind: "create" });
+        Alert.alert(
+          t("editGoal:errors.alertErrorTitle"),
+          t("editGoal:errors.createStepMessage"),
+        );
+      },
+    );
   }
 
   function handleCreateSubStep(
@@ -297,31 +307,29 @@ function EditContent({
     );
     // Evolu reports validation/write failures via a { ok: false } Result rather
     // than throwing, so a discarded Result would swallow the failure silently.
-    const reportFailure = (error: unknown) => {
-      console.error("[EditModeScreen] Failed to create sub-step", {
-        goalId,
-        parentStepId,
-        subStepTitle,
-        error,
-      });
-      reportError(error, { area: "step.mutate", kind: "create" });
-      Alert.alert(
-        t("editGoal:errors.alertErrorTitle"),
-        t("editGoal:errors.createStepMessage"),
-      );
-    };
-    try {
-      const result = createSubStep(
-        goalId as GoalId,
-        parentStepId as StepId,
-        subStepTitle,
-        maxChildOrdinal + 1,
-        plannedEvidenceTypes,
-      );
-      if (!result.ok) reportFailure(result.error);
-    } catch (error) {
-      reportFailure(error);
-    }
+    runEvoluMutation(
+      () =>
+        createSubStep(
+          goalId as GoalId,
+          parentStepId as StepId,
+          subStepTitle,
+          maxChildOrdinal + 1,
+          plannedEvidenceTypes,
+        ),
+      (error) => {
+        console.error("[EditModeScreen] Failed to create sub-step", {
+          goalId,
+          parentStepId,
+          subStepTitle,
+          error,
+        });
+        reportError(error, { area: "step.mutate", kind: "create" });
+        Alert.alert(
+          t("editGoal:errors.alertErrorTitle"),
+          t("editGoal:errors.createStepMessage"),
+        );
+      },
+    );
   }
 
   function handleReorderSteps(stepIds: string[]) {
@@ -385,46 +393,50 @@ function EditContent({
     // Evolu reports validation/write failures via a { ok: false } Result rather
     // than throwing, so a discarded Result would let a failed reparent snap the
     // dragged step back with no feedback. Surface it like the catch does.
-    const reportFailure = (error: unknown) => {
-      console.error("[EditModeScreen] Failed to reparent step", {
-        goalId,
-        stepId,
-        newParentStepId,
-        error,
-      });
-      reportError(error, { area: "step.mutate", kind: "update" });
-      Alert.alert(
-        t("editGoal:errors.alertErrorTitle"),
-        t("editGoal:errors.updateStepMessage"),
-      );
-    };
-    try {
-      const result = updateStep(stepId as StepId, {
-        parentStepId: newParentStepId as StepId | null,
-        ordinal: nextOrdinal,
-      });
-      if (!result.ok) reportFailure(result.error);
-    } catch (error) {
-      reportFailure(error);
-    }
+    runEvoluMutation(
+      () =>
+        updateStep(stepId as StepId, {
+          parentStepId: newParentStepId as StepId | null,
+          ordinal: nextOrdinal,
+        }),
+      (error) => {
+        console.error("[EditModeScreen] Failed to reparent step", {
+          goalId,
+          stepId,
+          newParentStepId,
+          error,
+        });
+        reportError(error, { area: "step.mutate", kind: "update" });
+        Alert.alert(
+          t("editGoal:errors.alertErrorTitle"),
+          t("editGoal:errors.updateStepMessage"),
+        );
+      },
+    );
   }
 
   function handleDeleteGoal() {
-    try {
-      deleteGoal(goalId as GoalId);
+    // Only dismiss the confirmation modal and navigate away when the delete
+    // actually succeeded — a rejected soft-delete (thrown or { ok: false })
+    // must keep the goal on screen with an error, not silently drop the user
+    // back on the Goals list as if the goal were gone.
+    const ok = runEvoluMutation(
+      () => deleteGoal(goalId as GoalId),
+      (error) => {
+        console.error("[EditModeScreen] Failed to delete goal", {
+          goalId,
+          error,
+        });
+        reportError(error, { area: "goal.mutate", kind: "delete" });
+        Alert.alert(
+          t("editGoal:errors.deleteGoalTitle"),
+          t("editGoal:errors.deleteGoalMessage"),
+        );
+      },
+    );
+    if (ok) {
       setShowDeleteGoalModal(false);
       navigation.navigate("Goals");
-    } catch (error) {
-      console.error("[EditModeScreen] Failed to delete goal", {
-        goalId,
-        error,
-      });
-      reportError(error, { area: "goal.mutate", kind: "delete" });
-      setShowDeleteGoalModal(false);
-      Alert.alert(
-        t("editGoal:errors.deleteGoalTitle"),
-        t("editGoal:errors.deleteGoalMessage"),
-      );
     }
   }
 

@@ -58,13 +58,21 @@ jest.mock("../../../hooks/useAnimationPref", () => ({
   }),
 }));
 
-const mockUpdateGoal = jest.fn();
-const mockCreateStep = jest.fn();
-// createSubStep/updateStep return an Evolu Result; the handlers now check
-// `result.ok`, so the mocks must hand back a success Result.
-const mockCreateSubStep = jest.fn((..._args: unknown[]) => ({ ok: true }));
-const mockUpdateStep = jest.fn((..._args: unknown[]) => ({ ok: true }));
-const mockDeleteStep = jest.fn();
+// All goal/step mutations return an Evolu Result; the handlers now route
+// through runEvoluMutation and check `result.ok`, so the mocks must hand back a
+// success Result by default. Individual tests override with an ok:false Result
+// or a thrown error to exercise the failure branches. reorderSteps/
+// reorderSubSteps return void (they throw on failure), so they stay bare.
+type MockResult = { ok: true } | { ok: false; error: unknown };
+const okResult: MockResult = { ok: true };
+const mockUpdateGoal = jest.fn((..._args: unknown[]): MockResult => okResult);
+const mockCreateStep = jest.fn((..._args: unknown[]): MockResult => okResult);
+const mockCreateSubStep = jest.fn(
+  (..._args: unknown[]): MockResult => okResult,
+);
+const mockUpdateStep = jest.fn((..._args: unknown[]): MockResult => okResult);
+const mockDeleteStep = jest.fn((..._args: unknown[]): MockResult => okResult);
+const mockDeleteGoal = jest.fn((..._args: unknown[]): MockResult => okResult);
 const mockReorderSteps = jest.fn();
 const mockReorderSubSteps = jest.fn();
 
@@ -88,6 +96,7 @@ jest.mock("../../../db", () => ({
   goalsQuery: "goalsQuery",
   stepsByGoalQuery: jest.fn(() => "stepsByGoalQuery"),
   updateGoal: (...args: unknown[]) => mockUpdateGoal(...args),
+  deleteGoal: (...args: unknown[]) => mockDeleteGoal(...args),
   createStep: (...args: unknown[]) => mockCreateStep(...args),
   createSubStep: (...args: unknown[]) => mockCreateSubStep(...args),
   updateStep: (...args: unknown[]) => mockUpdateStep(...args),
@@ -449,6 +458,147 @@ describe("EditModeScreen", () => {
         screen.getByText(i18n.t("editGoal:errors.updateTitleFailed")),
       ).toBeOnTheScreen();
     });
+
+    // Evolu reports write failures via { ok: false } WITHOUT throwing, so the
+    // ok:false path must surface the same feedback as the thrown path — a
+    // discarded Result would let the failure vanish silently.
+    it("shows error text when updateGoal title returns { ok: false }", async () => {
+      setupQueries();
+      mockUpdateGoal.mockReturnValue({
+        ok: false,
+        error: { type: "WriteError" },
+      });
+
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+      fireEvent.changeText(screen.getByLabelText("Goal title"), "Valid Title");
+
+      await act(async () => {
+        jest.advanceTimersByTime(500);
+      });
+      expect(
+        screen.getByText(i18n.t("editGoal:errors.updateTitleFailed")),
+      ).toBeOnTheScreen();
+    });
+
+    // Description saves fire-and-forget on a debounce; a rejected write must
+    // still surface an alert. Both failure modes (thrown + { ok: false }) must
+    // converge on the same feedback — mirrors the title-update coverage above.
+    it.each([
+      [
+        "throws",
+        () =>
+          mockUpdateGoal.mockImplementation(() => {
+            throw new Error("fail");
+          }),
+      ],
+      [
+        "returns { ok: false }",
+        () =>
+          mockUpdateGoal.mockReturnValue({
+            ok: false,
+            error: { type: "WriteError" },
+          }),
+      ],
+    ])("shows alert when updateGoal description %s", async (_desc, arm) => {
+      setupQueries();
+      arm();
+      const alertSpy = jest.spyOn(Alert, "alert");
+
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+      fireEvent.changeText(
+        screen.getByLabelText("Goal description"),
+        "New description",
+      );
+
+      await act(async () => {
+        jest.advanceTimersByTime(500);
+      });
+      expect(alertSpy).toHaveBeenCalledWith(
+        i18n.t("editGoal:errors.alertErrorTitle"),
+        i18n.t("editGoal:errors.updateDescriptionMessage"),
+      );
+    });
+
+    it("shows alert when createStep returns { ok: false }", () => {
+      setupQueries();
+      mockCreateStep.mockReturnValue({
+        ok: false,
+        error: { type: "WriteError" },
+      });
+      const alertSpy = jest.spyOn(Alert, "alert");
+
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+      const addInput = screen.getByLabelText("Add a new step");
+      fireEvent.changeText(addInput, "Bad step");
+      fireEvent(addInput, "submitEditing");
+
+      expect(alertSpy).toHaveBeenCalledWith(
+        i18n.t("editGoal:errors.alertErrorTitle"),
+        i18n.t("editGoal:errors.createStepMessage"),
+      );
+    });
+  });
+
+  describe("delete goal (destructive navigation guard)", () => {
+    function openDeleteConfirm() {
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+      fireEvent.press(
+        screen.getByRole("button", {
+          name: i18n.t("editGoal:actions.deleteGoal"),
+        }),
+      );
+    }
+
+    it("navigates to Goals and closes the modal only after a successful delete", () => {
+      setupQueries();
+      openDeleteConfirm();
+      fireEvent.press(screen.getByRole("button", { name: "Delete" }));
+
+      expect(mockDeleteGoal).toHaveBeenCalledWith("goal-1");
+      expect(mockNavigate).toHaveBeenCalledWith("Goals");
+      // Modal is dismissed on success — its confirm button is gone.
+      expect(screen.queryByRole("button", { name: "Delete" })).toBeNull();
+    });
+
+    // Both failure modes must keep the user on the Edit screen with the modal
+    // open — the pre-fix bug closed the modal and navigated away regardless.
+    it.each([
+      {
+        label: "{ ok: false }",
+        arm: () =>
+          mockDeleteGoal.mockReturnValue({
+            ok: false,
+            error: { type: "WriteError" },
+          }),
+      },
+      {
+        label: "thrown error",
+        arm: () =>
+          mockDeleteGoal.mockImplementation(() => {
+            throw new Error("Failed to delete goal. Please try again.");
+          }),
+      },
+    ])(
+      "keeps the modal open and does not navigate when delete fails ($label)",
+      ({ arm }) => {
+        setupQueries();
+        arm();
+        const alertSpy = jest.spyOn(Alert, "alert");
+        openDeleteConfirm();
+
+        fireEvent.press(screen.getByRole("button", { name: "Delete" }));
+
+        expect(mockNavigate).not.toHaveBeenCalled();
+        expect(alertSpy).toHaveBeenCalledWith(
+          i18n.t("editGoal:errors.deleteGoalTitle"),
+          i18n.t("editGoal:errors.deleteGoalMessage"),
+        );
+        // Modal stays open: its confirm button is still on screen.
+        expect(
+          screen.getByRole("button", { name: "Delete" }),
+        ).toBeOnTheScreen();
+      },
+    );
   });
 
   describe("reparent wiring (#330)", () => {

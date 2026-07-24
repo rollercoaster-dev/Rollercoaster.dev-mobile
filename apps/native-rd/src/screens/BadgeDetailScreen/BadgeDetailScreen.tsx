@@ -32,6 +32,7 @@ import { EVIDENCE_TYPE_ICONS } from "../../constants/evidenceIcons";
 import type { EvidenceTypeValue } from "../../types/evidence";
 import { formatDate } from "../../utils/format";
 import { reportError } from "../../services/sentry-report";
+import { runEvoluMutation } from "../../utils/evoluMutation";
 import { Logger } from "../../shims/rd-logger";
 import type {
   BadgeDetailScreenProps,
@@ -232,19 +233,25 @@ function BadgeDetailContent({
   };
 
   const handleConfirmDelete = () => {
-    setShowDeleteModal(false);
-    try {
-      deleteBadge(badgeId as BadgeId);
+    // Dismiss the modal and navigate back ONLY after a successful soft-delete.
+    // deleteBadge never throws on a DB write failure — it returns { ok: false }
+    // — so the old catch was dead code and the unconditional close/goBack
+    // dismissed the modal onto an unchanged screen even when nothing was
+    // deleted. Gate both side effects on the Result.
+    const ok = runEvoluMutation(
+      () => deleteBadge(badgeId as BadgeId),
+      (error) => {
+        logger.error("Failed to delete badge", { badgeId, error });
+        reportError(error, { area: "badge.storage", kind: "delete" });
+        Alert.alert(
+          t("badgeDetail:deleteError.title"),
+          t("badgeDetail:deleteError.message"),
+        );
+      },
+    );
+    if (ok) {
+      setShowDeleteModal(false);
       navigation.goBack();
-    } catch (error) {
-      // Soft-delete failed at the DB layer; keep the user on the screen and
-      // tell them, rather than dismissing the modal onto an unchanged screen.
-      logger.error("Failed to delete badge", { badgeId, error });
-      reportError(error, { area: "badge.storage", kind: "delete" });
-      Alert.alert(
-        t("badgeDetail:deleteError.title"),
-        t("badgeDetail:deleteError.message"),
-      );
     }
   };
 

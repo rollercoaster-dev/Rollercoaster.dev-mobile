@@ -40,12 +40,23 @@ jest.mock("../../db", () => ({
   updateUserSettings: (...args: unknown[]) => mockUpdateUserSettings(...args),
 }));
 
+const mockReportError = jest.fn();
+jest.mock("../../services/sentry-report", () => ({
+  // Keep breadcrumb (used by useAppStateGuard on defer/flush) real — Sentry is
+  // globally mocked — and override only reportError so we can assert on it.
+  ...jest.requireActual("../../services/sentry-report"),
+  reportError: (...args: unknown[]) => mockReportError(...args),
+}));
+
 const setThemeSpy = jest.spyOn(UnistylesRuntime, "setTheme");
 
 beforeEach(() => {
   jest.clearAllMocks();
   setThemeSpy.mockClear();
   mockUseQuery.mockReturnValue([]);
+  // updateUserSettings returns an Evolu Result; setTheme now gates its success
+  // boolean on `.ok`, so default the mock to a success Result.
+  mockUpdateUserSettings.mockReturnValue({ ok: true, value: {} });
   __resetUserSettingsRowInitForTests();
 
   appStateListeners = [];
@@ -164,16 +175,54 @@ describe("useThemePersistence", () => {
       expect(mockUpdateUserSettings).not.toHaveBeenCalled();
     });
 
-    it("swallows updateUserSettings errors so the UI still updates", () => {
+    it("returns true and does not report on a successful persist", () => {
+      mockUseQuery.mockReturnValue([makeSettings({ theme: null })]);
+      const { result } = renderHook(() => useThemePersistence());
+      let ok: boolean | undefined;
+      act(() => {
+        ok = result.current.setTheme("dark-default");
+      });
+      expect(ok).toBe(true);
+      expect(mockReportError).not.toHaveBeenCalled();
+    });
+
+    it("swallows updateUserSettings throws, returns false, reports, and still updates the UI", () => {
       mockUseQuery.mockReturnValue([makeSettings({ theme: null })]);
       mockUpdateUserSettings.mockImplementation(() => {
         throw new Error("simulated Evolu failure");
       });
       const { result } = renderHook(() => useThemePersistence());
+      let ok: boolean | undefined;
       expect(() =>
-        act(() => result.current.setTheme("dark-default")),
+        act(() => {
+          ok = result.current.setTheme("dark-default");
+        }),
       ).not.toThrow();
+      expect(ok).toBe(false);
       expect(setThemeSpy).toHaveBeenCalledWith("dark-default");
+      expect(mockReportError).toHaveBeenCalledWith(expect.anything(), {
+        area: "settings.theme",
+      });
+    });
+
+    // Evolu reports a rejected write via { ok: false } (no throw); the old
+    // try/catch was dead against this, silently swallowing the failure.
+    it("returns false and reports when updateUserSettings returns { ok: false }", () => {
+      mockUseQuery.mockReturnValue([makeSettings({ theme: null })]);
+      mockUpdateUserSettings.mockReturnValue({
+        ok: false,
+        error: { type: "WriteError" },
+      });
+      const { result } = renderHook(() => useThemePersistence());
+      let ok: boolean | undefined;
+      act(() => {
+        ok = result.current.setTheme("dark-default");
+      });
+      expect(ok).toBe(false);
+      expect(setThemeSpy).toHaveBeenCalledWith("dark-default");
+      expect(mockReportError).toHaveBeenCalledWith(expect.anything(), {
+        area: "settings.theme",
+      });
     });
   });
 

@@ -24,6 +24,10 @@
     "title": "Language (dev)",
     "pseudo": "Pseudo locale"
   },
+  "errors": {
+    "densitySaveFailed": "Couldn't save that density. Please try again.",
+    "themeSaveFailed": "Couldn't save that theme. Please try again."
+  },
   "about": {
     "title": "About",
     "appLabel": "App",

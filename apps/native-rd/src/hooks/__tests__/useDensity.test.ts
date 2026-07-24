@@ -85,6 +85,14 @@ jest.mock("../../db", () => ({
   updateUserSettings: (...args: unknown[]) => mockUpdateUserSettings(...args),
 }));
 
+const mockReportError = jest.fn();
+jest.mock("../../services/sentry-report", () => ({
+  // Keep breadcrumb (used by useAppStateGuard on defer/flush) real — Sentry is
+  // globally mocked — and override only reportError so we can assert on it.
+  ...jest.requireActual("../../services/sentry-report"),
+  reportError: (...args: unknown[]) => mockReportError(...args),
+}));
+
 const updateThemeSpy = jest.spyOn(UnistylesRuntime, "updateTheme");
 
 const makeSettings = (overrides: Record<string, unknown> = {}) => ({
@@ -103,6 +111,9 @@ beforeEach(() => {
   jest.clearAllMocks();
   updateThemeSpy.mockClear();
   mockUseQuery.mockReturnValue([]);
+  // updateUserSettings returns an Evolu Result; setDensity now gates its
+  // success boolean on `.ok`, so default the mock to a success Result.
+  mockUpdateUserSettings.mockReturnValue({ ok: true, value: {} });
   __resetUserSettingsRowInitForTests();
 
   appStateListeners = [];
@@ -144,12 +155,52 @@ describe("useDensity", () => {
   });
 
   describe("write path — setDensity()", () => {
-    it("persists the new level via updateUserSettings", () => {
+    it("persists the new level via updateUserSettings and returns true", () => {
       mockUseQuery.mockReturnValue([makeSettings({ density: "default" })]);
       const { result } = renderHook(() => useDensity());
-      act(() => result.current.setDensity("compact"));
+      let ok: boolean | undefined;
+      act(() => {
+        ok = result.current.setDensity("compact");
+      });
       expect(mockUpdateUserSettings).toHaveBeenCalledWith("settings-1", {
         density: "compact",
+      });
+      expect(ok).toBe(true);
+      expect(mockReportError).not.toHaveBeenCalled();
+    });
+
+    // Evolu reports a rejected write via { ok: false } (no throw); setDensity
+    // must return false and report so the UI can show a toast.
+    it("returns false and reports when updateUserSettings returns { ok: false }", () => {
+      mockUseQuery.mockReturnValue([makeSettings({ density: "default" })]);
+      mockUpdateUserSettings.mockReturnValue({
+        ok: false,
+        error: { type: "WriteError" },
+      });
+      const { result } = renderHook(() => useDensity());
+      let ok: boolean | undefined;
+      act(() => {
+        ok = result.current.setDensity("compact");
+      });
+      expect(ok).toBe(false);
+      expect(mockReportError).toHaveBeenCalledWith(expect.anything(), {
+        area: "settings.density",
+      });
+    });
+
+    it("returns false and reports when updateUserSettings throws", () => {
+      mockUseQuery.mockReturnValue([makeSettings({ density: "default" })]);
+      mockUpdateUserSettings.mockImplementation(() => {
+        throw new Error("Failed to update settings. Please try again.");
+      });
+      const { result } = renderHook(() => useDensity());
+      let ok: boolean | undefined;
+      act(() => {
+        ok = result.current.setDensity("compact");
+      });
+      expect(ok).toBe(false);
+      expect(mockReportError).toHaveBeenCalledWith(expect.anything(), {
+        area: "settings.density",
       });
     });
   });

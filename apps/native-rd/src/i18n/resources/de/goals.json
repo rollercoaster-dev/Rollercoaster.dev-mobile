@@ -15,6 +15,10 @@
     "title": "Dieses Ziel löschen?",
     "message": "\"{{title}}\" und alle Fortschritte werden dauerhaft gelöscht."
   },
+  "deleteError": {
+    "title": "Ziel konnte nicht gelöscht werden",
+    "message": "Etwas ist schiefgelaufen. Versuch es nochmal."
+  },
   "cockpit": {
     "doThisNext": "Mach das nächste · {{title}}",
     "ringSteps": "{{completed}} / {{total}} Schritte",

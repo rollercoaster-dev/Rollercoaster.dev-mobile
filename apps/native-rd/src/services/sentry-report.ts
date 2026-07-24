@@ -56,6 +56,7 @@ export type ReportContext =
   | { area: "navigation" }
   | { area: "db.write" }
   | { area: "settings.density" }
+  | { area: "settings.theme" }
   | { area: "render" };
 
 // No-op in dev — `initSentry()` returns early before any client is installed,

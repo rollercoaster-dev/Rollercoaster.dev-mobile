@@ -5,6 +5,8 @@ import { useUserSettingsRow } from "./useUserSettingsRow";
 import { FALLBACK_THEME_NAME, isValidThemeName } from "./useTheme";
 import { useAppStateGuard } from "./useAppStateGuard";
 import type { ThemeName } from "../themes/compose";
+import { reportError } from "../services/sentry-report";
+import { runEvoluMutation } from "../utils/evoluMutation";
 import { Logger } from "../shims/rd-logger";
 
 const logger = new Logger("useThemePersistence");
@@ -55,11 +57,16 @@ export function useThemePersistence() {
     runWhenActive(() => UnistylesRuntime.setTheme(savedRaw));
   }, [savedRaw, runWhenActive]);
 
+  // Returns true when the theme change was persisted, applied without a
+  // settings row to persist to, dropped by the in-flight guard, or rejected as
+  // an unsupported name; false only when the Evolu write was attempted and
+  // failed. The calling UI (ThemeSwitcher) shows a toast on false — this hook
+  // can't, because it runs above <ToastProvider> in the tree (see #503 D2).
   const setTheme = useCallback(
-    (name: ThemeName) => {
+    (name: ThemeName): boolean => {
       if (!isValidThemeName(name)) {
         logger.warn("Refusing to set unsupported theme", { name });
-        return;
+        return true;
       }
       // Drop the call when another setTheme is mid-flight. Rapid foreground
       // taps used to dispatch back-to-back onPlatformDependenciesChange
@@ -74,7 +81,7 @@ export function useThemePersistence() {
       // same value (sync echo) instead of queueing a second deferred
       // setTheme that would fire alongside the original on resume.
       if (inFlightThemeRef.current !== null) {
-        return;
+        return true;
       }
       inFlightThemeRef.current = name;
       lastAppliedRef.current = name;
@@ -88,12 +95,17 @@ export function useThemePersistence() {
           inFlightThemeRef.current = null;
         }
       });
-      if (!settings) return;
-      try {
-        updateUserSettings(settings.id, { theme: name });
-      } catch (error) {
-        logger.error("Failed to persist theme", { name, error });
-      }
+      if (!settings) return true;
+      // updateUserSettings reports a rejected write via { ok: false } (not a
+      // throw), so the previous try/catch was dead against that path and the
+      // failure was swallowed. Normalize both modes and report the failure.
+      return runEvoluMutation(
+        () => updateUserSettings(settings.id, { theme: name }),
+        (error) => {
+          logger.error("Failed to persist theme", { name, error });
+          reportError(error, { area: "settings.theme" });
+        },
+      );
     },
     [settings, runWhenActive],
   );
