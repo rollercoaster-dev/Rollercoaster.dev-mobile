@@ -18,10 +18,11 @@ import {
   stepEvidenceByGoalQuery,
   groupStepsByParent,
   areAllStepsComplete,
+  resolveNextActionableStep,
   StepStatus,
 } from "../../db";
 import { parseBadgeDesign } from "../../badges/types";
-import type { GoalId, GroupedStep } from "../../db";
+import type { GoalId } from "../../db";
 import type {
   GoalsStackParamList,
   RootTabParamList,
@@ -37,23 +38,24 @@ const logger = new Logger("TimelineJourneyScreen");
 
 /**
  * Id of the leaf to highlight as the journey's single in-progress accent (#293).
- * Mirrors FocusMode's findFirstPendingLeafIndex (#292) over the grouped tree so
- * the accent lands on the same step FocusMode snaps to: walk roots in order; a
- * root's first pending child wins (a pending leaf stays reachable even under a
- * manually-completed parent — completion is per-step, not cascaded); otherwise a
- * pending childless root is itself current, as is the invite state (all children
- * done but the parent still open). Returns null when nothing is pending.
+ * Thin adapter over the shared {@link resolveNextActionableStep} — the same
+ * resolver FocusMode's findFirstPendingLeafIndex uses (#337) — so the accent
+ * lands on exactly the step FocusMode snaps to: a root's first pending child
+ * wins (a pending leaf stays reachable even under a manually-completed parent —
+ * completion is per-step, not cascaded), otherwise a pending childless root is
+ * itself current, as is the invite state (all children done, parent still open).
+ * Completed *and* paused steps are skipped, so a deliberately set-aside step
+ * never takes the accent (#417). Returns null when nothing is actionable.
  */
-function findCurrentLeafId(grouped: readonly GroupedStep[]): string | null {
-  for (const root of grouped) {
-    const pendingChild = root.children.find(
-      (c) => c.status !== StepStatus.completed,
-    );
-    if (pendingChild) return pendingChild.id;
-    if (root.status === StepStatus.completed) continue;
-    return root.id;
-  }
-  return null;
+function findCurrentLeafId(
+  rows: readonly {
+    id: string;
+    parentStepId: string | null;
+    status: string | null;
+  }[],
+): string | null {
+  const result = resolveNextActionableStep(rows);
+  return result.kind === "none" ? null : (rows[result.index]?.id ?? null);
 }
 
 function TimelineContent({
@@ -73,12 +75,10 @@ function TimelineContent({
   const evidenceFallbackLabel = t("timelineJourney:evidenceFallbackLabel");
 
   // Group the flat rows into a one-level parent → children tree and resolve the
-  // current leaf — the journey's single in-progress accent (#293).
+  // current leaf — the journey's single in-progress accent (#293). The resolver
+  // reads the flat `(ordinal, createdAt)`-ordered rows, not the tree.
   const groupedSteps = useMemo(() => groupStepsByParent(stepRows), [stepRows]);
-  const currentLeafId = useMemo(
-    () => findCurrentLeafId(groupedSteps),
-    [groupedSteps],
-  );
+  const currentLeafId = useMemo(() => findCurrentLeafId(stepRows), [stepRows]);
 
   // Evidence keyed by step id — looked up for roots and children alike.
   const evidenceByStepId = useStepEvidence(
@@ -87,14 +87,18 @@ function TimelineContent({
   );
 
   // A node (root or child) is in-progress iff it is the current leaf; otherwise
-  // completed/pending from its own DB status. currentLeafId never points at a
-  // completed step, so the in-progress check is safe to take first.
+  // completed/paused/pending from its own DB status. currentLeafId never points
+  // at a completed or paused step, so the in-progress check is safe to take
+  // first — and a set-aside step keeps its own `paused` color language (#417)
+  // instead of masquerading as pending.
   const statusFor = (id: string, dbStatus: string | null): UIStepStatus =>
     id === currentLeafId
       ? "in-progress"
       : dbStatus === StepStatus.completed
         ? "completed"
-        : "pending";
+        : dbStatus === StepStatus.paused
+          ? "paused"
+          : "pending";
 
   const stepsWithChildren = groupedSteps.map((root) => {
     const evidence = evidenceByStepId.get(root.id) ?? [];
