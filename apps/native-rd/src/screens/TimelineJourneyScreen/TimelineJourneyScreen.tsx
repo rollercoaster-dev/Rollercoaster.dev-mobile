@@ -7,7 +7,8 @@ import { Text } from "../../components/Text";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { Button } from "../../components/Button";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
-import { ProgressBar } from "../../components/ProgressBar";
+import { TimelineBreakdownBar } from "../../components/TimelineBreakdownBar";
+import type { StepStateMapKey } from "../../components/TimelineNode/stepStateColorMap";
 import { TimelineStep } from "../../components/TimelineStep";
 import type { TimelineStepChild } from "../../components/TimelineStep";
 import { FinishLine } from "../../components/FinishLine";
@@ -125,12 +126,20 @@ function TimelineContent({
       row.description ?? row.type ?? t("timelineJourney:evidenceFallbackLabel"),
   }));
 
-  // Every-unit progress: stepRows already counts parents + children, matching
-  // #292's goal-card rule (the journey counts each step, parent or sub-step).
-  const completedCount = stepRows.filter(
-    (s) => s.status === StepStatus.completed,
-  ).length;
-  const progress = stepRows.length > 0 ? completedCount / stepRows.length : 0;
+  // Every-unit honest breakdown (#451): stepRows already counts parents +
+  // children, matching #292's goal-card rule (the journey counts each step,
+  // parent or sub-step), so the four buckets always sum to stepRows.length.
+  // Tallied here because TimelineBreakdownBar does no traversal of its own —
+  // and tallied *through statusFor* so the bar's buckets can't drift from the
+  // colors the nodes render (the in-progress accent counts as in-progress, a
+  // set-aside step as paused rather than pending).
+  const counts = stepRows.reduce<Record<StepStateMapKey, number>>(
+    (tally, row) => {
+      tally[statusFor(row.id, row.status)] += 1;
+      return tally;
+    },
+    { completed: 0, "in-progress": 0, pending: 0, paused: 0 },
+  );
 
   if (!goal) {
     return (
@@ -210,14 +219,8 @@ function TimelineContent({
             {goal.description}
           </Text>
         )}
-        <View style={styles.progressContainer}>
-          <ProgressBar progress={progress} />
-          <Text style={styles.progressLabel}>
-            {t("timelineJourney:progress", {
-              completed: completedCount,
-              total: stepRows.length,
-            })}
-          </Text>
+        <View style={styles.breakdownContainer}>
+          <TimelineBreakdownBar counts={counts} />
         </View>
       </View>
 

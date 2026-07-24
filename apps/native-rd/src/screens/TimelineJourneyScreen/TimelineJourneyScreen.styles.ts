@@ -41,14 +41,10 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.textSecondary,
     marginTop: theme.space[1],
   },
-  progressContainer: {
+  // Spacing wrapper only — TimelineBreakdownBar owns its own card chrome and
+  // carries no outer margin, so the header holds it off the title/description.
+  breakdownContainer: {
     marginTop: theme.space[3],
-  },
-  progressLabel: {
-    fontSize: 12,
-    fontWeight: theme.fontWeight.bold,
-    color: theme.colors.textSecondary,
-    marginTop: theme.space[1],
   },
   scrollContent: {
     padding: theme.space[4],

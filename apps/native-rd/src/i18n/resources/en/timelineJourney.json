@@ -2,7 +2,6 @@
   "title": "Timeline",
   "backToFocus": "Back to Focus",
   "backToBadge": "Back to Badge",
-  "progress": "{{completed}} of {{total}} steps completed",
   "errors": {
     "goalNotFound": "Goal not found."
   },

@@ -294,10 +294,33 @@ describe("TimelineJourneyScreen", () => {
     expect(screen.getAllByText("Timeline").length).toBeGreaterThanOrEqual(1);
   });
 
-  it("shows progress bar and completion label", () => {
-    setupQueries();
-    renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
-    expect(screen.getByText("2 of 4 steps completed")).toBeOnTheScreen();
+  describe("honest breakdown bar (#451)", () => {
+    it("names each bucket instead of a bare completed/total ratio", () => {
+      setupQueries();
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      // 2 completed + the in-progress accent on step-3 + 1 still pending.
+      expect(screen.getByText("2 done")).toBeOnTheScreen();
+      expect(screen.getByText("1 in motion")).toBeOnTheScreen();
+      expect(screen.getByText("1 to come")).toBeOnTheScreen();
+      // The replaced bare ratio is gone.
+      expect(screen.queryByText(/of 4 steps completed/)).toBeNull();
+    });
+
+    it("drops the set-aside chip when nothing is paused", () => {
+      setupQueries();
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      expect(screen.queryByText(/set aside/)).toBeNull();
+    });
+
+    it("counts paused steps into their own set-aside bucket", () => {
+      setupQueries({ steps: STEPS_WITH_PAUSED });
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      expect(screen.getByText("1 done")).toBeOnTheScreen();
+      expect(screen.getByText("1 in motion")).toBeOnTheScreen();
+      expect(screen.getByText("1 set aside")).toBeOnTheScreen();
+      // ...and it is NOT double-counted as pending.
+      expect(screen.queryByText(/to come/)).toBeNull();
+    });
   });
 
   it("renders timeline steps", () => {
@@ -497,10 +520,14 @@ describe("TimelineJourneyScreen", () => {
       expect(within(firstChild).getByText("In Progress")).toBeOnTheScreen();
     });
 
-    it("counts every unit (parents + children) in the progress label", () => {
+    it("counts every unit (parents + children) in the breakdown buckets", () => {
       setupQueries({ steps: STEPS_WITH_CHILDREN });
       renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
-      expect(screen.getByText("0 of 3 steps completed")).toBeOnTheScreen();
+      // 3 rows (1 parent + 2 children): the accent leaf in motion, the other
+      // two to come. The buckets sum to stepRows.length, not to the roots.
+      expect(screen.getByText("1 in motion")).toBeOnTheScreen();
+      expect(screen.getByText("2 to come")).toBeOnTheScreen();
+      expect(screen.queryByText(/done/)).toBeNull();
     });
 
     // A manually-completed parent does NOT hide a still-pending child — the
