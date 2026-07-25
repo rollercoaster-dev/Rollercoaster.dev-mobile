@@ -88,24 +88,33 @@ describe("TimelineNode", () => {
 
   // State-word badge (showStateBadge, #406 D7). Labels come from live i18n
   // (src/i18n/index.ts is a Jest setupFile), so these are the real `t()` values.
+  // The words are the prototype vocabulary from timelineJourney:step.stateWord.*
+  // (#453) — `staleWord` is the common:stepCard.status.* word the badge used to
+  // render, asserted absent so a silent repoint back to `badgeI18nKey` fails here
+  // rather than shipping two vocabularies onto one screen.
   it.each([
-    { status: "pending" as const, label: "Pending" },
-    { status: "in-progress" as const, label: "In Progress" },
-    { status: "paused" as const, label: "Paused" },
-    { status: "completed" as const, label: "Completed" },
+    { status: "pending" as const, label: "Up next", staleWord: "Pending" },
+    {
+      status: "in-progress" as const,
+      label: "Working",
+      staleWord: "In Progress",
+    },
+    { status: "paused" as const, label: "Set aside", staleWord: "Paused" },
+    { status: "completed" as const, label: "Done", staleWord: "Completed" },
   ])(
-    'renders the "$label" state badge for $status when showStateBadge',
-    ({ status, label }) => {
+    'renders the "$label" state badge for $status when showStateBadge, not "$staleWord"',
+    ({ status, label, staleWord }) => {
       renderWithProviders(
         <TimelineNode {...baseProps} status={status} showStateBadge />,
       );
       expect(screen.getByText(label)).toBeOnTheScreen();
+      expect(screen.queryByText(staleWord)).toBeNull();
     },
   );
 
   it("does not render the state badge by default (live-consumer no-regression)", () => {
     renderWithProviders(<TimelineNode {...baseProps} status="in-progress" />);
-    expect(screen.queryByText("In Progress")).toBeNull();
+    expect(screen.queryByText("Working")).toBeNull();
   });
 
   it("does not render the state badge on a goal node even when showStateBadge is set", () => {
@@ -117,6 +126,6 @@ describe("TimelineNode", () => {
         showStateBadge
       />,
     );
-    expect(screen.queryByText("Completed")).toBeNull();
+    expect(screen.queryByText("Done")).toBeNull();
   });
 });
