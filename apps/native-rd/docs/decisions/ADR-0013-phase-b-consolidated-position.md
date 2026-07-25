@@ -80,7 +80,8 @@ crosswalk table and ADR-0011's re-map table.
 
 ### Reading rule
 
-This ADR and [`index.md`](./index.md) are the current reference. Read the
+Once Accepted, this ADR and [`index.md`](./index.md) are the current
+reference. Read the
 superseded chain only when rationale or history is needed. Changes to anything
 restated here require a new ADR superseding ADR-0013 (and, where the change
 touches the anti-pathologizing core, saying so explicitly). Do not amend this
