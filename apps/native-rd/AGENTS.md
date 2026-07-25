@@ -87,6 +87,23 @@ Each `docs/` subdirectory has an `index.md` with a summary and links:
 - `docs/research/index.md` — Completed research (UI libraries, sync layers, Evolu prototype)
 - `docs/plans/index.md` — Active and completed implementation plans
 
+### ADR rules (binding for agents)
+
+1. **Read `docs/decisions/index.md` § Current positions first.** It states the
+   net-current decision per topic. Open individual ADRs only for rationale or
+   history. Never reconstruct current scope by diffing a supersession chain —
+   that is how the ADR-0012 drift incident happened.
+2. **Never edit the body of an accepted ADR.** Bodies are immutable. To change
+   a decision, write a new ADR that supersedes it.
+3. **Headers are the mutable surface.** When a new ADR supersedes or restates
+   an old one, update the old ADR's Status line with a pointer — nothing else.
+4. **Same-PR projection update.** Any PR that adds, accepts, or supersedes an
+   ADR must update `docs/decisions/index.md` (Current positions + Ledger) in
+   the same PR.
+5. **Quote guardrails, don't paraphrase.** When restating a guardrail in a
+   living doc, quote the governing ADR's wording and cite it; paraphrase is
+   where drift starts.
+
 ## Agent Workflow
 
 - **Planning**: graph-flow planning stack (`mcp__graph-flow__p-*`)
