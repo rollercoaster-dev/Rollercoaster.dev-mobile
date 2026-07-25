@@ -26,3 +26,9 @@ banned_phrasings:
 notes:
   - Identity-first ND vocab (autistisch, ADHS, bipolar — never deficit-first).
   - Short sentences. Concrete verbs. No corporate filler.
+  - timelineBreakdown.legend.* are the count chips beside the timeline
+    progress bar ("{{count}} erledigt", "{{count}} in Arbeit", …). Each is
+    a bare count plus a neutral state label — no motivational framing, no
+    ratio ("von {{total}}"), no exclamation mark. "paused" means the person
+    set the step aside on purpose — keep it neutral ("zur Seite gelegt"),
+    never "abgebrochen", "liegen geblieben" or "vernachlässigt".

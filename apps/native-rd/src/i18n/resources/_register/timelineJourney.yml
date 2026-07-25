@@ -17,8 +17,9 @@ notes:
   - Status labels are short and neutral. Use "Erledigt" / "Aktiv" /
     "Ausstehend" — not "Geschafft!" / "Du arbeitest dran!" / "Wartet
     auf dich".
-  - Progress copy stays factual. Render "{{completed}} von {{total}}
-    Schritten erledigt." — no motivational framing.
+  - This namespace carries no progress-ratio copy. Overall progress is
+    shown by TimelineBreakdownBar, whose legend lives in
+    common:timelineBreakdown.legend.* — translate it there, not here.
   - The word "step" stays as "Schritt" (de/common.json convention).
   - step.metadata.* are the quiet dependency/date lines under a step
     title. They state a fact, never pressure — "nach …", "wartet auf …",
