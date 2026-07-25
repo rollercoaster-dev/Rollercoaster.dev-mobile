@@ -61,8 +61,19 @@ interface MetaLine {
  * prerequisite can both show (never "blocked by"). Each line is glyph + text +
  * an optional mono meta suffix; the "due …" date is plain text, with mono only
  * on the trailing meta — pure prototype fidelity (no ADR governs date
- * typography). Copy is literal pending #378 (which owns the real C·B data +
- * i18n). Renders nothing when no C/B prop is set.
+ * typography). Renders nothing when no C/B prop is set.
+ *
+ * Connective copy lives in `focusMode:currentTask.metadata.*`, mirroring
+ * `timelineJourney:step.metadata.*` on the Timeline's own band. The one shape
+ * difference: waiting-on's date is a *separate* key
+ * (`waitingOnExpectedMeta`) rather than a second full sentence, because this
+ * band renders it as its own mono `Text` node. That split is typographic, not
+ * grammatical — the whole clause including its "·" separator is the
+ * translator's to rewrite, so it is not the fragment-concatenation docs/i18n.md
+ * forbids, but it does fix the date clause as trailing. The Timeline band, which
+ * renders one flat line, uses two whole-sentence keys instead and stays
+ * reorderable. Interpolated values arrive final: titles are user content, and
+ * the caller formats dates for the active locale.
  */
 export function MetadataBand({
   afterStep,
@@ -73,16 +84,22 @@ export function MetadataBand({
   waitingOn?: { who: string; expected?: string };
   dueDate?: string;
 }) {
-  // TODO(#378): literal English; #378 owns the real C·B data + i18n for these
-  // lines. Remove this note and the inline strings when #378 wires them up.
+  const { t } = useTranslation(["focusMode"]);
+
   const lines: MetaLine[] = [];
   if (waitingOn) {
     lines.push({
       key: "waiting",
       glyph: "⏳",
       glyphStyle: styles.metadataGlyphWaiting,
-      text: `waiting on ${waitingOn.who}`,
-      meta: waitingOn.expected ? `· expected ${waitingOn.expected}` : null,
+      text: t("focusMode:currentTask.metadata.waitingOn", {
+        who: waitingOn.who,
+      }),
+      meta: waitingOn.expected
+        ? t("focusMode:currentTask.metadata.waitingOnExpectedMeta", {
+            date: waitingOn.expected,
+          })
+        : null,
     });
   }
   if (afterStep) {
@@ -90,10 +107,10 @@ export function MetadataBand({
       key: "after",
       glyph: "↩",
       glyphStyle: styles.metadataGlyphAfter,
-      text: `after ${afterStep}`,
+      text: t("focusMode:currentTask.metadata.after", { title: afterStep }),
       // No completion suffix: `afterStep` carries only the prerequisite's title,
       // not its done-state, so a hard-coded "✓ done" would assert a fact the
-      // props can't back. #378 owns real dependency-completion data.
+      // props can't back. Real dependency-completion data is still unsourced.
       meta: null,
     });
   }
@@ -102,7 +119,7 @@ export function MetadataBand({
       key: "due",
       glyph: "▦",
       glyphStyle: styles.metadataGlyphDue,
-      text: `due ${dueDate}`,
+      text: t("focusMode:currentTask.metadata.due", { date: dueDate }),
       meta: null,
     });
   }

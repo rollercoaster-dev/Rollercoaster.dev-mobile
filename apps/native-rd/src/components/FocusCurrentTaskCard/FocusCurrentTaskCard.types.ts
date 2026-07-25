@@ -56,11 +56,22 @@ export interface FocusInProgressCardProps extends FocusCardBase {
   onPause: () => void;
   /** Mark complete — revealed only once every planned type is captured. */
   onMarkComplete: () => void;
-  /** C (dependency), internal: this step comes "after [step]". Never "blocked by". */
+  /**
+   * C (dependency), internal: this step comes "after [step]". Never "blocked by".
+   * Carries the prerequisite's raw title; the connective copy around it is
+   * localized in `MetadataBand`.
+   */
   afterStep?: string;
-  /** C (dependency), external wait: "waiting on [who] · expected [date]". */
+  /**
+   * C (dependency), external wait: "waiting on [who] · expected [date]".
+   * `expected` is a display date the caller has already formatted for the active
+   * locale — the band only wraps it in localized copy.
+   */
   waitingOn?: { who: string; expected?: string };
-  /** B (date): factual "due [date]" — no urgency / "overdue" framing. */
+  /**
+   * B (date): factual "due [date]" — no urgency / "overdue" framing.
+   * Caller-formatted display date, as with `waitingOn.expected`.
+   */
   dueDate?: string;
 }
 

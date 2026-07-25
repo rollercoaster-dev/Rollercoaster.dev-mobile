@@ -35,6 +35,12 @@
       "markCompleteA11y": "Mark this step complete",
       "pauseA11y": "Set this step aside — pause it"
     },
+    "metadata": {
+      "after": "after {{title}}",
+      "waitingOn": "waiting on {{who}}",
+      "waitingOnExpectedMeta": "· expected {{date}}",
+      "due": "due {{date}}"
+    },
     "paused": {
       "body": "Set aside — still here, nothing lost. Your next step routes past it until you pick it back up.",
       "pickUpCta": "► Pick this back up",

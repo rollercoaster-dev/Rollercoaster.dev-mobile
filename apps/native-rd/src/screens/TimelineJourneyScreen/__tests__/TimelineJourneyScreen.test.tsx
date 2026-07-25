@@ -39,7 +39,7 @@ jest.mock("../../../hooks/useAnimationPref", () => ({
 }));
 
 jest.mock("../../../db", () => ({
-  StepStatus: { pending: "pending", completed: "completed" },
+  StepStatus: { pending: "pending", paused: "paused", completed: "completed" },
   EvidenceType: {
     photo: "photo",
     text: "text",
@@ -86,6 +86,84 @@ jest.mock("../../../db", () => ({
       }
     }
     return roots;
+  },
+  // Faithful copy of the real resolver (queries.ts), incl. the unresolved-
+  // reference and self-reference guards, so the C·B band wiring is exercised
+  // against real resolution rules rather than a stub.
+  resolveStepDependencyBand: (
+    step: {
+      id: string;
+      afterStepId: string | null;
+      waitingOnLabel: string | null;
+      waitingOnExpectedAt: string | null;
+      dueAt: string | null;
+    },
+    goalSteps: readonly { id: string; title: string | null }[],
+  ) => {
+    const afterStep =
+      step.afterStepId === null || step.afterStepId === step.id
+        ? null
+        : (goalSteps.find((s) => s.id === step.afterStepId) ?? null);
+    return {
+      afterStepTitle: afterStep?.title ?? null,
+      waitingOnLabel: step.waitingOnLabel,
+      waitingOnExpectedAt: step.waitingOnExpectedAt,
+      dueAt: step.dueAt,
+    };
+  },
+  // Faithful copy of the real resolver (queries.ts) so the screen's accent runs
+  // real leaf/invite/flat bucketing — including the paused skip (#417) — instead
+  // of a stub. Same convention as groupStepsByParent above.
+  resolveNextActionableStep: (
+    rows: readonly {
+      id: string;
+      parentStepId: string | null;
+      status: string | null;
+    }[],
+  ) => {
+    const rootIds = new Set(
+      rows.filter((r) => r.parentStepId == null).map((r) => r.id),
+    );
+    const childrenByParent = new Map<
+      string,
+      { index: number; status: string | null }[]
+    >();
+    const topLevel: { id: string; index: number; status: string | null }[] = [];
+    rows.forEach((row, index) => {
+      if (row.parentStepId != null && rootIds.has(row.parentStepId)) {
+        const list = childrenByParent.get(row.parentStepId);
+        if (list) list.push({ index, status: row.status });
+        else
+          childrenByParent.set(row.parentStepId, [
+            { index, status: row.status },
+          ]);
+      } else {
+        topLevel.push({ id: row.id, index, status: row.status });
+      }
+    });
+    for (const step of topLevel) {
+      const children = childrenByParent.get(step.id) ?? [];
+      const pendingChild = children.find(
+        (c) => c.status !== "completed" && c.status !== "paused",
+      );
+      if (pendingChild) {
+        return {
+          kind: "leaf",
+          index: pendingChild.index,
+          parentIndex: step.index,
+        };
+      }
+      if (step.status === "completed" || step.status === "paused") continue;
+      if (children.length > 0) {
+        return {
+          kind: "invite",
+          index: step.index,
+          childCount: children.length,
+        };
+      }
+      return { kind: "flat", index: step.index };
+    }
+    return { kind: "none" };
   },
 }));
 
@@ -136,6 +214,50 @@ const STEPS_WITH_CHILDREN = [
     parentStepId: "parent-1",
   },
 ];
+
+// The first non-completed row is paused ("set aside", #417) — it must neither
+// take the in-progress accent nor render as pending.
+const STEPS_WITH_PAUSED = [
+  {
+    id: "step-1",
+    title: "Done thing",
+    status: "completed",
+    ordinal: 0,
+    parentStepId: null,
+  },
+  {
+    id: "step-2",
+    title: "Set aside thing",
+    status: "paused",
+    ordinal: 1,
+    parentStepId: null,
+  },
+  {
+    id: "step-3",
+    title: "Next thing",
+    status: "pending",
+    ordinal: 2,
+    parentStepId: null,
+  },
+];
+
+// Fixed local-time noon (no trailing `Z`) so the formatted-date assertions
+// depend on neither the runner's clock nor its timezone — mirrors the same
+// guard in utils/__tests__/format.test.ts.
+const BAND_ISO = "2026-01-28T12:00:00";
+const BAND_ISO_FORMATTED = "Jan 28, 2026";
+
+/** A step row with every #454 dependency/due column explicitly unset. */
+const bandStep = (over: Record<string, unknown>) => ({
+  status: "completed",
+  ordinal: 0,
+  parentStepId: null,
+  afterStepId: null,
+  waitingOnLabel: null,
+  waitingOnExpectedAt: null,
+  dueAt: null,
+  ...over,
+});
 
 const STEP_EVIDENCE = [
   {
@@ -214,10 +336,33 @@ describe("TimelineJourneyScreen", () => {
     expect(screen.getAllByText("Timeline").length).toBeGreaterThanOrEqual(1);
   });
 
-  it("shows progress bar and completion label", () => {
-    setupQueries();
-    renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
-    expect(screen.getByText("2 of 4 steps completed")).toBeOnTheScreen();
+  describe("honest breakdown bar (#451)", () => {
+    it("names each bucket instead of a bare completed/total ratio", () => {
+      setupQueries();
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      // 2 completed + the in-progress accent on step-3 + 1 still pending.
+      expect(screen.getByText("2 done")).toBeOnTheScreen();
+      expect(screen.getByText("1 in motion")).toBeOnTheScreen();
+      expect(screen.getByText("1 to come")).toBeOnTheScreen();
+      // The replaced bare ratio is gone.
+      expect(screen.queryByText(/of 4 steps completed/)).toBeNull();
+    });
+
+    it("drops the set-aside chip when nothing is paused", () => {
+      setupQueries();
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      expect(screen.queryByText(/set aside/)).toBeNull();
+    });
+
+    it("counts paused steps into their own set-aside bucket", () => {
+      setupQueries({ steps: STEPS_WITH_PAUSED });
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      expect(screen.getByText("1 done")).toBeOnTheScreen();
+      expect(screen.getByText("1 in motion")).toBeOnTheScreen();
+      expect(screen.getByText("1 set aside")).toBeOnTheScreen();
+      // ...and it is NOT double-counted as pending.
+      expect(screen.queryByText(/to come/)).toBeNull();
+    });
   });
 
   it("renders timeline steps", () => {
@@ -263,6 +408,14 @@ describe("TimelineJourneyScreen", () => {
     expect(mockNavigate).toHaveBeenCalledWith("FocusMode", {
       goalId: "goal-1",
     });
+  });
+
+  it('"Edit ›" navigates to EditMode for this goal', () => {
+    setupQueries();
+    renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+    fireEvent.press(screen.getByLabelText("Edit ›"));
+    // No cameFromFocus — this entry is from the Timeline, not Focus (D5).
+    expect(mockNavigate).toHaveBeenCalledWith("EditMode", { goalId: "goal-1" });
   });
 
   it("back button navigates back", () => {
@@ -370,6 +523,87 @@ describe("TimelineJourneyScreen", () => {
     expect(screen.getByText("Photo proof")).toBeOnTheScreen();
   });
 
+  describe("paused steps (#417)", () => {
+    it("never takes the in-progress accent, even as the first non-completed row", () => {
+      setupQueries({ steps: STEPS_WITH_PAUSED });
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      expect(screen.getAllByText("In Progress")).toHaveLength(1);
+      // The accent skips the paused row and lands on the next pending one.
+      expect(
+        screen.getByLabelText("Next thing, In Progress"),
+      ).toBeOnTheScreen();
+      expect(
+        screen.queryByLabelText("Set aside thing, In Progress"),
+      ).toBeNull();
+    });
+
+    it('renders in the "paused" state language, not "pending"', () => {
+      setupQueries({ steps: STEPS_WITH_PAUSED });
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      // Pill + a11y label read Paused...
+      expect(
+        screen.getByLabelText("Set aside thing, Paused"),
+      ).toBeOnTheScreen();
+      expect(screen.queryByLabelText("Set aside thing, Pending")).toBeNull();
+      // ...and the node paints the shared paused glyph from stepStateColorMap
+      // (#406) rather than its step number.
+      expect(screen.getByText("⏸")).toBeOnTheScreen();
+    });
+  });
+
+  describe("dependency + due-date band (#454)", () => {
+    const GROUNDWORK = bandStep({ id: "step-a", title: "Groundwork" });
+
+    test.each([
+      ["after (internal dependency)", { afterStepId: "step-a" }, "after Groundwork"], // prettier-ignore
+      [
+        "waiting on + expected",
+        { waitingOnLabel: "Alex", waitingOnExpectedAt: BAND_ISO },
+        `waiting on Alex · expected ${BAND_ISO_FORMATTED}`,
+      ],
+      ["due date", { dueAt: BAND_ISO }, `due ${BAND_ISO_FORMATTED}`],
+    ])("renders the %s line from real columns", (_name, columns, expected) => {
+      setupQueries({
+        steps: [
+          GROUNDWORK,
+          bandStep({ id: "step-b", title: "The work", ...columns }),
+        ],
+      });
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      expect(screen.getByText(expected)).toBeOnTheScreen();
+    });
+
+    it("renders no band line when none of the three columns is set", () => {
+      setupQueries({
+        steps: [GROUNDWORK, bandStep({ id: "step-b", title: "The work" })],
+      });
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      expect(screen.queryByText(/^(after|waiting on|due) /)).toBeNull();
+    });
+
+    it("never renders a band on a sub-step, even with the columns set", () => {
+      // Children carry no C/B band (#407 OQ-2) — the screen must not pass these
+      // fields down, so a sub-step with real columns stays band-free.
+      setupQueries({
+        steps: [
+          bandStep({ id: "parent", title: "Parent", status: "pending" }),
+          bandStep({
+            id: "child",
+            title: "Child",
+            status: "pending",
+            parentStepId: "parent",
+            waitingOnLabel: "Sam",
+            dueAt: BAND_ISO,
+          }),
+        ],
+      });
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      expect(screen.getByText("Child")).toBeOnTheScreen();
+      expect(screen.queryByText(/waiting on Sam/)).toBeNull();
+      expect(screen.queryByText(`due ${BAND_ISO_FORMATTED}`)).toBeNull();
+    });
+  });
+
   describe("sub-steps", () => {
     it("groups flat rows and renders the parent with its sub-steps", () => {
       setupQueries({ steps: STEPS_WITH_CHILDREN });
@@ -389,10 +623,14 @@ describe("TimelineJourneyScreen", () => {
       expect(within(firstChild).getByText("In Progress")).toBeOnTheScreen();
     });
 
-    it("counts every unit (parents + children) in the progress label", () => {
+    it("counts every unit (parents + children) in the breakdown buckets", () => {
       setupQueries({ steps: STEPS_WITH_CHILDREN });
       renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
-      expect(screen.getByText("0 of 3 steps completed")).toBeOnTheScreen();
+      // 3 rows (1 parent + 2 children): the accent leaf in motion, the other
+      // two to come. The buckets sum to stepRows.length, not to the roots.
+      expect(screen.getByText("1 in motion")).toBeOnTheScreen();
+      expect(screen.getByText("2 to come")).toBeOnTheScreen();
+      expect(screen.queryByText(/done/)).toBeNull();
     });
 
     // A manually-completed parent does NOT hide a still-pending child — the
@@ -460,6 +698,41 @@ describe("TimelineJourneyScreen", () => {
       expect(
         screen.getByLabelText("Open parent, In Progress"),
       ).toBeOnTheScreen();
+    });
+
+    it("never accents a paused sub-step, even as the first non-completed leaf", () => {
+      setupQueries({
+        steps: [
+          {
+            id: "p",
+            title: "Open parent",
+            status: "pending",
+            ordinal: 0,
+            parentStepId: null,
+          },
+          {
+            id: "c1",
+            title: "Set aside sub",
+            status: "paused",
+            ordinal: 0,
+            parentStepId: "p",
+          },
+          {
+            id: "c2",
+            title: "Open sub",
+            status: "pending",
+            ordinal: 1,
+            parentStepId: "p",
+          },
+        ],
+      });
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      expect(screen.getAllByText("In Progress")).toHaveLength(1);
+      // The accent skips the paused first child and lands on the second.
+      const openSub = screen.getByLabelText("Sub-step b: Open sub");
+      expect(within(openSub).getByText("In Progress")).toBeOnTheScreen();
+      const pausedSub = screen.getByLabelText("Sub-step a: Set aside sub");
+      expect(within(pausedSub).getByText("Paused")).toBeOnTheScreen();
     });
 
     it("shows no in-progress accent when every step is completed", () => {

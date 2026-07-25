@@ -30,6 +30,13 @@ export const styles = StyleSheet.create((theme) => ({
     justifyContent: "space-between",
     gap: theme.space[2],
   },
+  // Back + "Edit ›" sit side by side at the end of the header row; the title
+  // keeps `flex: 1` so it takes the remaining width and wraps.
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.space[2],
+  },
   title: {
     flex: 1,
     fontSize: 22,
@@ -41,14 +48,10 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.textSecondary,
     marginTop: theme.space[1],
   },
-  progressContainer: {
+  // Spacing wrapper only — TimelineBreakdownBar owns its own card chrome and
+  // carries no outer margin, so the header holds it off the title/description.
+  breakdownContainer: {
     marginTop: theme.space[3],
-  },
-  progressLabel: {
-    fontSize: 12,
-    fontWeight: theme.fontWeight.bold,
-    color: theme.colors.textSecondary,
-    marginTop: theme.space[1],
   },
   scrollContent: {
     padding: theme.space[4],

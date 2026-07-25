@@ -7,7 +7,8 @@ import { Text } from "../../components/Text";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { Button } from "../../components/Button";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
-import { ProgressBar } from "../../components/ProgressBar";
+import { TimelineBreakdownBar } from "../../components/TimelineBreakdownBar";
+import type { StepStateMapKey } from "../../components/TimelineNode/stepStateColorMap";
 import { TimelineStep } from "../../components/TimelineStep";
 import type { TimelineStepChild } from "../../components/TimelineStep";
 import { FinishLine } from "../../components/FinishLine";
@@ -18,10 +19,13 @@ import {
   stepEvidenceByGoalQuery,
   groupStepsByParent,
   areAllStepsComplete,
+  resolveNextActionableStep,
+  resolveStepDependencyBand,
   StepStatus,
 } from "../../db";
+import { formatDate } from "../../utils/format";
 import { parseBadgeDesign } from "../../badges/types";
-import type { GoalId, GroupedStep } from "../../db";
+import type { GoalId } from "../../db";
 import type {
   GoalsStackParamList,
   RootTabParamList,
@@ -37,23 +41,24 @@ const logger = new Logger("TimelineJourneyScreen");
 
 /**
  * Id of the leaf to highlight as the journey's single in-progress accent (#293).
- * Mirrors FocusMode's findFirstPendingLeafIndex (#292) over the grouped tree so
- * the accent lands on the same step FocusMode snaps to: walk roots in order; a
- * root's first pending child wins (a pending leaf stays reachable even under a
- * manually-completed parent — completion is per-step, not cascaded); otherwise a
- * pending childless root is itself current, as is the invite state (all children
- * done but the parent still open). Returns null when nothing is pending.
+ * Thin adapter over the shared {@link resolveNextActionableStep} — the same
+ * resolver FocusMode's findFirstPendingLeafIndex uses (#337) — so the accent
+ * lands on exactly the step FocusMode snaps to: a root's first pending child
+ * wins (a pending leaf stays reachable even under a manually-completed parent —
+ * completion is per-step, not cascaded), otherwise a pending childless root is
+ * itself current, as is the invite state (all children done, parent still open).
+ * Completed *and* paused steps are skipped, so a deliberately set-aside step
+ * never takes the accent (#417). Returns null when nothing is actionable.
  */
-function findCurrentLeafId(grouped: readonly GroupedStep[]): string | null {
-  for (const root of grouped) {
-    const pendingChild = root.children.find(
-      (c) => c.status !== StepStatus.completed,
-    );
-    if (pendingChild) return pendingChild.id;
-    if (root.status === StepStatus.completed) continue;
-    return root.id;
-  }
-  return null;
+function findCurrentLeafId(
+  rows: readonly {
+    id: string;
+    parentStepId: string | null;
+    status: string | null;
+  }[],
+): string | null {
+  const result = resolveNextActionableStep(rows);
+  return result.kind === "none" ? null : (rows[result.index]?.id ?? null);
 }
 
 function TimelineContent({
@@ -64,7 +69,7 @@ function TimelineContent({
   originBadgeId?: string;
 }) {
   const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
-  const { t } = useTranslation(["timelineJourney"]);
+  const { t, i18n } = useTranslation(["timelineJourney"]);
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
   const stepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
@@ -73,12 +78,10 @@ function TimelineContent({
   const evidenceFallbackLabel = t("timelineJourney:evidenceFallbackLabel");
 
   // Group the flat rows into a one-level parent → children tree and resolve the
-  // current leaf — the journey's single in-progress accent (#293).
+  // current leaf — the journey's single in-progress accent (#293). The resolver
+  // reads the flat `(ordinal, createdAt)`-ordered rows, not the tree.
   const groupedSteps = useMemo(() => groupStepsByParent(stepRows), [stepRows]);
-  const currentLeafId = useMemo(
-    () => findCurrentLeafId(groupedSteps),
-    [groupedSteps],
-  );
+  const currentLeafId = useMemo(() => findCurrentLeafId(stepRows), [stepRows]);
 
   // Evidence keyed by step id — looked up for roots and children alike.
   const evidenceByStepId = useStepEvidence(
@@ -87,23 +90,43 @@ function TimelineContent({
   );
 
   // A node (root or child) is in-progress iff it is the current leaf; otherwise
-  // completed/pending from its own DB status. currentLeafId never points at a
-  // completed step, so the in-progress check is safe to take first.
+  // completed/paused/pending from its own DB status. currentLeafId never points
+  // at a completed or paused step, so the in-progress check is safe to take
+  // first — and a set-aside step keeps its own `paused` color language (#417)
+  // instead of masquerading as pending.
   const statusFor = (id: string, dbStatus: string | null): UIStepStatus =>
     id === currentLeafId
       ? "in-progress"
       : dbStatus === StepStatus.completed
         ? "completed"
-        : "pending";
+        : dbStatus === StepStatus.paused
+          ? "paused"
+          : "pending";
 
   const stepsWithChildren = groupedSteps.map((root) => {
     const evidence = evidenceByStepId.get(root.id) ?? [];
+    // C·B band (#454): the resolver hands back raw fields, so this caller owns
+    // the date formatting (locale from the active UI language) and leaves each
+    // prop undefined when its column is unset — MetadataBand then renders
+    // nothing rather than a placeholder line. Roots only: sub-steps carry no
+    // C/B band (#407 OQ-2), so `children` below deliberately omits these props.
+    const band = resolveStepDependencyBand(root, stepRows);
     return {
       id: root.id,
       title: root.title ?? "",
       status: statusFor(root.id, root.status),
       evidenceCount: evidence.length,
       evidence,
+      afterStep: band.afterStepTitle ?? undefined,
+      waitingOn: band.waitingOnLabel
+        ? {
+            who: band.waitingOnLabel,
+            expected: band.waitingOnExpectedAt
+              ? formatDate(band.waitingOnExpectedAt, i18n.language)
+              : undefined,
+          }
+        : undefined,
+      dueDate: band.dueAt ? formatDate(band.dueAt, i18n.language) : undefined,
       children: root.children.map<TimelineStepChild>((child) => ({
         id: child.id,
         title: child.title ?? "",
@@ -121,12 +144,20 @@ function TimelineContent({
       row.description ?? row.type ?? t("timelineJourney:evidenceFallbackLabel"),
   }));
 
-  // Every-unit progress: stepRows already counts parents + children, matching
-  // #292's goal-card rule (the journey counts each step, parent or sub-step).
-  const completedCount = stepRows.filter(
-    (s) => s.status === StepStatus.completed,
-  ).length;
-  const progress = stepRows.length > 0 ? completedCount / stepRows.length : 0;
+  // Every-unit honest breakdown (#451): stepRows already counts parents +
+  // children, matching #292's goal-card rule (the journey counts each step,
+  // parent or sub-step), so the four buckets always sum to stepRows.length.
+  // Tallied here because TimelineBreakdownBar does no traversal of its own —
+  // and tallied *through statusFor* so the bar's buckets can't drift from the
+  // colors the nodes render (the in-progress accent counts as in-progress, a
+  // set-aside step as paused rather than pending).
+  const counts = stepRows.reduce<Record<StepStateMapKey, number>>(
+    (tally, row) => {
+      tally[statusFor(row.id, row.status)] += 1;
+      return tally;
+    },
+    { completed: 0, "in-progress": 0, pending: 0, paused: 0 },
+  );
 
   if (!goal) {
     return (
@@ -177,6 +208,12 @@ function TimelineContent({
     navigation.navigate("CompletionFlow", { goalId });
   };
 
+  // No `cameFromFocus` — that flag only relabels EditMode's exit CTA ("Back to
+  // Focus" vs. "Start working"), and this entry point is the Timeline, not Focus.
+  const handleEditPress = () => {
+    navigation.navigate("EditMode", { goalId });
+  };
+
   return (
     <View style={{ flex: 1 }}>
       {/* Header */}
@@ -190,30 +227,32 @@ function TimelineContent({
           >
             {goal.title}
           </Text>
-          <Button
-            label={
-              originBadgeId
-                ? t("timelineJourney:backToBadge")
-                : t("timelineJourney:backToFocus")
-            }
-            onPress={handleBack}
-            variant="secondary"
-            size="sm"
-          />
+          <View style={styles.headerActions}>
+            <Button
+              label={
+                originBadgeId
+                  ? t("timelineJourney:backToBadge")
+                  : t("timelineJourney:backToFocus")
+              }
+              onPress={handleBack}
+              variant="secondary"
+              size="sm"
+            />
+            <Button
+              label={t("timelineJourney:editButton")}
+              onPress={handleEditPress}
+              variant="secondary"
+              size="sm"
+            />
+          </View>
         </View>
         {goal.description && (
           <Text style={styles.description} numberOfLines={3}>
             {goal.description}
           </Text>
         )}
-        <View style={styles.progressContainer}>
-          <ProgressBar progress={progress} />
-          <Text style={styles.progressLabel}>
-            {t("timelineJourney:progress", {
-              completed: completedCount,
-              total: stepRows.length,
-            })}
-          </Text>
+        <View style={styles.breakdownContainer}>
+          <TimelineBreakdownBar counts={counts} />
         </View>
       </View>
 

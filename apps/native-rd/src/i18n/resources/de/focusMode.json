@@ -35,6 +35,12 @@
       "markCompleteA11y": "Diesen Schritt als erledigt markieren",
       "pauseA11y": "Diesen Schritt beiseitelegen — pausieren"
     },
+    "metadata": {
+      "after": "nach {{title}}",
+      "waitingOn": "wartet auf {{who}}",
+      "waitingOnExpectedMeta": "· voraussichtlich {{date}}",
+      "due": "fällig am {{date}}"
+    },
     "paused": {
       "body": "Beiseitegelegt — immer noch da, nichts verloren. Dein nächster Schritt führt daran vorbei, bis du ihn wieder aufnimmst.",
       "pickUpCta": "► Wieder aufnehmen",

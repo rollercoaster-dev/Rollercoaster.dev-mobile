@@ -17,9 +17,18 @@ notes:
   - Status labels are short and neutral. Use "Erledigt" / "Aktiv" /
     "Ausstehend" — not "Geschafft!" / "Du arbeitest dran!" / "Wartet
     auf dich".
-  - Progress copy stays factual. Render "{{completed}} von {{total}}
-    Schritten erledigt." — no motivational framing.
+  - This namespace carries no progress-ratio copy. Overall progress is
+    shown by TimelineBreakdownBar, whose legend lives in
+    common:timelineBreakdown.legend.* — translate it there, not here.
   - The word "step" stays as "Schritt" (de/common.json convention).
+  - step.metadata.* are the quiet dependency/date lines under a step
+    title. They state a fact, never pressure — "nach …", "wartet auf …",
+    "fällig am …" — never "blockiert von", "überfällig", "dringend" or an
+    exclamation mark. waitingOn and waitingOnExpected are separate whole
+    sentences on purpose — reorder the person and the date freely, the
+    "· voraussichtlich …" tail need not trail the name. The date
+    placeholder arrives already formatted for the locale — pass it
+    through, never re-word or re-order the date itself.
   - Finish-line copy is matter-of-fact, not victorious. The "Finish &
     design badge" CTA stays a plain action phrase (e.g. "Abschließen &
     Abzeichen gestalten"), never "Beweise deines Erfolgs"-style victory
