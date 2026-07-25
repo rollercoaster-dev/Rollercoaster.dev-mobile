@@ -6,7 +6,7 @@ also accepts [ADR-0011](./ADR-0011-step-model-names.md) and
 [ADR-0012](./ADR-0012-no-auto-judgment.md), whose decisions are restated here
 unchanged.
 **Owner:** Joe
-**Supersedes, as the current Phase B reference only:**
+**Supersedes:** as the current Phase B reference only —
 [ADR-0001](./ADR-0001-iteration-strategy.md) (Iteration B section),
 [ADR-0006](./ADR-0006-iteration-b-scope-amendment.md),
 [ADR-0010](./ADR-0010-phase-b-step-model-crosswalk.md),
