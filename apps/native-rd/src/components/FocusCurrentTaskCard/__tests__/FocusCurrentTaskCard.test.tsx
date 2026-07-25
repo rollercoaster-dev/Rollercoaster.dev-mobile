@@ -5,6 +5,7 @@ import {
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
+import { i18n } from "../../../i18n";
 import { FocusCurrentTaskCard } from "../FocusCurrentTaskCard";
 import type {
   FocusCardStatus,
@@ -367,6 +368,53 @@ describe("FocusCurrentTaskCard", () => {
       };
       expect(flat.fontFamily).not.toBe("DM Mono");
       expect(screen.queryByText(/overdue/i)).toBeNull();
+    });
+
+    // The band's connective copy ("after …", "waiting on …", "· expected …",
+    // "due …") was literal English wrapped around caller-formatted dates. Pseudo
+    // is the regression net: an un-localized fragment shows as plain English
+    // beside bracketed copy. The mono meta suffix is its own key, so it gets its
+    // own assertion — reverting just that half must fail too.
+    describe("pseudo locale", () => {
+      afterEach(async () => {
+        if (i18n.language !== "en") await i18n.changeLanguage("en");
+      });
+
+      it.each([
+        {
+          line: "after",
+          props: { afterStep: "Stock the pantry" },
+          key: "focusMode:currentTask.metadata.after",
+          values: { title: "Stock the pantry" },
+        },
+        {
+          line: "waitingOn",
+          props: { waitingOn: { who: "the clinic" } },
+          key: "focusMode:currentTask.metadata.waitingOn",
+          values: { who: "the clinic" },
+        },
+        {
+          line: "waitingOnExpectedMeta",
+          props: { waitingOn: { who: "the clinic", expected: "Tue" } },
+          key: "focusMode:currentTask.metadata.waitingOnExpectedMeta",
+          values: { date: "Tue" },
+        },
+        {
+          line: "due",
+          props: { dueDate: "Fri 11 Jul" },
+          key: "focusMode:currentTask.metadata.due",
+          values: { date: "Fri 11 Jul" },
+        },
+      ] as const)(
+        "renders the $line line as bracketed copy under pseudo locale",
+        async ({ props, key, values }) => {
+          await i18n.changeLanguage("pseudo");
+          renderCard({ status: "in-progress", ...props });
+          const pseudo = i18n.t(key, values);
+          expect(pseudo.startsWith("[")).toBe(true);
+          expect(screen.getByText(pseudo)).toBeTruthy();
+        },
+      );
     });
   });
 

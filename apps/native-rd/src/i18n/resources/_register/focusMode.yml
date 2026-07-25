@@ -16,3 +16,11 @@ banned_phrasings:
 notes:
   - Quiet register. No exclamations, no urgency cues.
   - 'Plain labels: "Pause" beats "Mach jetzt eine Pause!".'
+  - currentTask.metadata.* are the quiet dependency/date lines under the
+    step title. They state a fact, never pressure — "nach …", "wartet
+    auf …", "fällig am …" — never "blockiert von", "überfällig" or
+    "dringend". waitingOnExpectedMeta is the trailing date detail of the
+    waiting-on line and renders in its own smaller mono type, so it stays
+    a separate short clause (keep a leading separator like "·") rather
+    than folding into waitingOn. Same wording as
+    timelineJourney.step.metadata.* — keep the two in step.
