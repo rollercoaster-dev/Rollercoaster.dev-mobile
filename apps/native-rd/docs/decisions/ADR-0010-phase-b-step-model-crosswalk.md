@@ -1,7 +1,7 @@
 # ADR-0010: Phase B step-model crosswalk
 
 **Date:** 2026-06-08
-**Status:** Accepted
+**Status:** Accepted — current Phase B position consolidated in [ADR-0013](./ADR-0013-phase-b-consolidated-position.md) (proposed 2026-07-25)
 **Owner:** Joe
 **Supersedes:** [ADR-0006](./ADR-0006-iteration-b-scope-amendment.md) — Step-model enrichment scope only
 
