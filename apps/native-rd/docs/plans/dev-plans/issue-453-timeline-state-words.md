@@ -9,7 +9,9 @@
 
 ## Status
 
-Branch `feat/issue-453-timeline-state-words` cut from `main` @ `3214556f`. Plan written; **no implementation yet**. Q1 and Q2 below need answers before Step 2 lands.
+Branch `feat/issue-453-timeline-state-words` cut from `main` @ `3214556f`, pushed. Plan written and **all questions resolved (2026-07-25)** — see Resolved Questions. **No implementation yet.**
+
+**Resuming from a fresh context?** Start at Step 0 of the Commit Plan. Everything needed is in this file; nothing is waiting on the user. Read `apps/native-rd/CLAUDE.md` first for the hard rules (`bun run test` never `bun test`, `--testPathPatterns` plural, DCO sign-off on every commit, no hardcoded hex, no interactive CLI commands).
 
 ## Why now
 
@@ -52,22 +54,35 @@ Verified against `main` @ `3214556f`:
 | D4  | `StepCard`'s own keys stay untouched.                                                                                                                                                                      | Migrate StepCard too                                                                                                                        | Issue is explicit: StepCard is old language being replaced by #377/#466, "not worth churning."                                                                                                                                                                                                          |
 | D5  | Register note goes in `_register/timelineJourney.yml`, and it must state that the pill words are intentionally **not** the legend words.                                                                   | Leave the register silent                                                                                                                   | Two similar-but-different vocabularies in one namespace is precisely what a translator will "helpfully" unify. The `common.yml` legend note added in #517 already guards the other side.                                                                                                                |
 
-## Open Questions — answer before Step 2
+## Resolved Questions (user, 2026-07-25)
 
-**Q1 — Does `TimelineNode`'s `StateBadge` adopt the new words too?**
-`TimelineNode.tsx:136` renders a visible badge from `badgeI18nKey`. It sits on the Timeline screen next to `TimelineStep`'s pill, so leaving it behind trades the current inconsistency for a subtler one ("Done" pill above a "Completed" badge). But `TimelineNode` is imported by more than the Timeline screen — `grep -rl TimelineNode src` also hits `FocusProgressStrip`, `FocusCurrentTaskCard.parts.tsx`, `FinishLine`, and `TimelineBreakdownBar`. **Most of those import `stepStateColorMap`/`stepStateNodeBg` from the `TimelineNode/` directory rather than rendering the component**, but that must be confirmed per-file before switching `StateBadge` — if any Focus surface renders an actual `<TimelineNode>`, the new words leak into Focus.
-_Recommendation:_ switch `StateBadge` as well, **after** confirming only `TimelineJourneyScreen`/`TimelineStep` render the component. Step 0 below does that check.
+**Q1 — Does `TimelineNode`'s `StateBadge` adopt the new words too? → YES.**
+`TimelineNode.tsx:136` renders a visible badge from `badgeI18nKey`, sitting on the Timeline screen next to `TimelineStep`'s pill, so leaving it behind would trade the current inconsistency for a subtler one ("Done" pill above a "Completed" badge). Switch it.
 
-**Q2 — "Up next" or "To do" for `pending`?**
-Issue title and body say "Up next"; the two Timeline prototypes say "To do". _Recommendation:_ ship **"Up next"** — the issue title is the recorded decision from the 2026-07-02 readiness review and "To do" collides with generic task-app phrasing. Flag it in the PR body so the reviewer can veto cheaply (it's a one-line change to one JSON value).
+The Step 0 audit still runs, but it no longer decides _whether_ — only what to do if it finds a leak. `grep -rl TimelineNode src` hits `FocusProgressStrip`, `FocusCurrentTaskCard.parts.tsx`, `FinishLine`, and `TimelineBreakdownBar`; the expectation is that all of those import `stepStateColorMap`/`stepStateNodeBg` from the `TimelineNode/` **directory** rather than rendering the component. Decision rule, so this cannot reopen mid-implementation:
 
-**Q3 — Casing.** Prototype pills render lowercase in some places ("set aside"). #450 D4 already resolved the analogous question in favour of Title-Case for app-wide consistency. _Recommendation:_ Title-Case — "Done / Set aside / Working / Up next" exactly as the issue title writes them.
+- **No non-Timeline renderer of `<TimelineNode>`** (expected case) → switch `StateBadge` to `stateWordI18nKey` outright.
+- **A Focus surface does render `<TimelineNode>`** → do **not** switch `StateBadge`. Leave it on `badgeI18nKey`, ship the `TimelineStep` half only, and file a follow-up issue for a per-call-site label choice (a `stateWordSource`-style prop, or lifting the badge out of the shared node). Note it in the PR body. Do not invent the prop in this PR — it is scope creep on a copy fix.
+
+**Q2 — "Up next" or "To do" for `pending`? → "Up next".**
+The issue title is the recorded 2026-07-02 readiness-review decision, and "To do" collides with generic task-app phrasing. The two Timeline prototypes say "To do", so flag the divergence in the PR body — reverting is one JSON value if a reviewer disagrees.
+
+**Q3 — Casing → Title-Case**, exactly as the issue title writes them: "Done / Set aside / Working / Up next". Resolved by precedent rather than fresh decision: #450 D4 settled the analogous lowercase-mockup question in favour of app-wide Title-Case.
+
+**Final word list** (`timelineJourney:step.stateWord.*`):
+
+| `StepStateMapKey` | Word      |
+| ----------------- | --------- |
+| `completed`       | Done      |
+| `paused`          | Set aside |
+| `in-progress`     | Working   |
+| `pending`         | Up next   |
 
 ## Affected Areas
 
 - `src/components/TimelineNode/stepStateColorMap.ts` — new `StepStateWordKey` template-literal type + `stateWordI18nKey` on all four entries.
 - `src/components/TimelineStep/TimelineStep.tsx` — lines 73 and 177 switch to `stateWordI18nKey`. The `useTranslation` call already loads `["common", "timelineJourney"]`, so no namespace change needed.
-- `src/components/TimelineNode/TimelineNode.tsx` — `StateBadge` switches (pending Q1); its `useTranslation(["common"])` gains `"timelineJourney"`.
+- `src/components/TimelineNode/TimelineNode.tsx` — `StateBadge` switches (Q1 = yes); its `useTranslation(["common"])` at line 131 gains `"timelineJourney"`.
 - `src/i18n/resources/en/timelineJourney.json` — new `step.stateWord` group.
 - `src/i18n/resources/_register/timelineJourney.yml` — voice note per D5.
 - `src/i18n/resources/pseudo/timelineJourney.json` — regenerated.
@@ -75,12 +90,12 @@ Issue title and body say "Up next"; the two Timeline prototypes say "To do". _Re
 
 ## Commit Plan
 
-| #   | Commit                                                                     | Contents                                                                                                        |
-| --- | -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| 0   | _(no commit)_                                                              | Answer Q1 by auditing every `TimelineNode` importer: does it render the component or only import the map?       |
-| 1   | `feat(i18n): add timelineJourney step state words (#453)`                  | `en/timelineJourney.json` group + `_register` note (D5) + regenerated `pseudo/`. No consumers yet — inert.      |
-| 2   | `feat(timeline): route step state pills to prototype state words (#453)`   | `stateWordI18nKey` on `stepStateColorMap`; `TimelineStep:73/177` switched; `TimelineNode.StateBadge` if Q1 yes. |
-| 3   | `test(timeline): assert prototype state words on timeline surfaces (#453)` | Update the assertions above; add one case per state so a future silent repoint fails loudly.                    |
+| #   | Commit                                                                     | Contents                                                                                                                     |
+| --- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| 0   | _(no commit)_                                                              | Audit every `TimelineNode` importer — renders `<TimelineNode>` or only imports the map? Apply the Q1 decision rule.          |
+| 1   | `feat(i18n): add timelineJourney step state words (#453)`                  | `en/timelineJourney.json` group (word list above) + `_register` note (D5) + regenerated `pseudo/`. No consumers yet — inert. |
+| 2   | `feat(timeline): route step state pills to prototype state words (#453)`   | `stateWordI18nKey` on `stepStateColorMap`; `TimelineStep:73/177` switched; `TimelineNode.StateBadge` switched per Q1.        |
+| 3   | `test(timeline): assert prototype state words on timeline surfaces (#453)` | Update the assertions above; add one case per state so a future silent repoint fails loudly.                                 |
 
 Keep them separate: commit 1 is reviewable as pure copy, commit 2 as pure routing.
 
