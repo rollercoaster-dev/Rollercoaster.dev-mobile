@@ -17,6 +17,15 @@ notes:
   - Status labels are short and neutral. Use "Erledigt" / "Aktiv" /
     "Ausstehend" — not "Geschafft!" / "Du arbeitest dran!" / "Wartet
     auf dich".
+  - step.stateWord.* are the state pills on each timeline step, and on
+    the node's own state badge — "Erledigt" / "Zur Seite gelegt" / "In
+    Arbeit" / "Als Nächstes". They are deliberately NOT the same wording
+    as the count chips in common:timelineBreakdown.legend.* — the
+    prototype wants a pill on one step ("Als Nächstes") to read
+    differently from a tally of steps ("4 noch offen"). Do not unify the
+    two sets. Keep them short and neutral — "paused" is a deliberate
+    setting-aside, "pending" is simply not started yet, never
+    "überfällig"-style urgency.
   - This namespace carries no progress-ratio copy. Overall progress is
     shown by TimelineBreakdownBar, whose legend lives in
     common:timelineBreakdown.legend.* — translate it there, not here.

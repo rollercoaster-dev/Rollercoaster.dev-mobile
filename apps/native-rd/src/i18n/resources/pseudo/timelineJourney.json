@@ -15,6 +15,12 @@
       "active": "[Àçţïṽê··]",
       "pending": "[Þêñđïñğ···]"
     },
+    "stateWord": {
+      "completed": "[Đøñê··]",
+      "paused": "[Šêţ àšïđê····]",
+      "in-progress": "[Ŵøŕķïñğ···]",
+      "pending": "[Üþ ñêẋţ···]"
+    },
     "noEvidence": "[Ñø êṽïđêñçê ýêţ······]",
     "metadata": {
       "after": "[àƒţêŕ {{title}}······]",

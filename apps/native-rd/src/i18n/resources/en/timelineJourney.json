@@ -15,6 +15,12 @@
       "active": "Active",
       "pending": "Pending"
     },
+    "stateWord": {
+      "completed": "Done",
+      "paused": "Set aside",
+      "in-progress": "Working",
+      "pending": "Up next"
+    },
     "noEvidence": "No evidence yet",
     "metadata": {
       "after": "after {{title}}",
