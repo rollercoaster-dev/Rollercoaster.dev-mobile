@@ -15,7 +15,13 @@
       "active": "Aktiv",
       "pending": "Ausstehend"
     },
-    "noEvidence": "Noch keine Belege"
+    "noEvidence": "Noch keine Belege",
+    "metadata": {
+      "after": "nach {{title}}",
+      "waitingOn": "wartet auf {{who}}",
+      "waitingOnExpected": "wartet auf {{who}} · voraussichtlich {{date}}",
+      "due": "fällig am {{date}}"
+    }
   },
   "finishLine": {
     "ctaTitle": "Abschließen & Abzeichen gestalten",

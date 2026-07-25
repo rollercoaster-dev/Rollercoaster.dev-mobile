@@ -7,6 +7,7 @@ import { TimelineEvidenceCard } from "../TimelineEvidenceCard";
 import type { StepStatus } from "../../types/steps";
 import type { EvidenceItemData } from "../EvidenceDrawer";
 import { toLetterOrdinal } from "../../utils/format";
+import { MetadataBand } from "./TimelineStep.parts";
 import { styles } from "./TimelineStep.styles";
 
 export interface TimelineStepData {
@@ -16,18 +17,20 @@ export interface TimelineStepData {
   evidenceCount: number;
   /**
    * C (dependency), internal: this step comes "after [title]". Never rendered as
-   * "blocked by" (ADR-0010/0012). Story-only display prop — no DB field yet; the
-   * [Integrate] issue (#378) owns sourcing it from real data.
+   * "blocked by" (ADR-0010/0012). Carries the prerequisite's raw title — the
+   * connective copy around it is localized in {@link MetadataBand}.
    */
   afterStep?: string;
   /**
    * C (dependency), external wait: "waiting on [who] · expected [date]".
-   * Story-only display prop (#378).
+   * `expected` is a display date the caller has already formatted for the active
+   * locale; the band only wraps it in localized copy.
    */
   waitingOn?: { who: string; expected?: string };
   /**
    * B (date): factual "due [date]" — no urgency, no "overdue" framing regardless
-   * of whether the date is past (ADR-0012). Story-only display prop (#378).
+   * of whether the date is past (ADR-0012). Caller-formatted display date, as
+   * with `waitingOn.expected`.
    */
   dueDate?: string;
 }
@@ -243,45 +246,6 @@ function StateWord({ status, label }: { status: StepStatus; label: string }) {
   return (
     <View style={styles.stateWordPill(status)}>
       <Text style={styles.stateWordText(status)}>{label}</Text>
-    </View>
-  );
-}
-
-/**
- * Quiet C·B truth-lines beneath the step title (E lives in the header word, not
- * here). C = a dependency stated as "after [step]" (internal) or "waiting on
- * [who] · expected [date]" (external wait) — never "blocked by". B = a factual
- * "due [date]" with no urgency/overdue framing (ADR-0010/0012). Lines render in
- * `textSecondary` only; the prototype's amber/green glyph hues are dropped. Copy
- * is literal pending #378, which owns real data + i18n. Renders nothing when no
- * C/B prop is set; never rendered on child rows (OQ-2 — children carry no C/B band).
- */
-function MetadataBand({
-  afterStep,
-  waitingOn,
-  dueDate,
-}: {
-  afterStep?: string;
-  waitingOn?: { who: string; expected?: string };
-  dueDate?: string;
-}) {
-  const cLine = waitingOn
-    ? `waiting on ${waitingOn.who}${
-        waitingOn.expected ? ` · expected ${waitingOn.expected}` : ""
-      }`
-    : afterStep
-      ? `after ${afterStep}`
-      : null;
-  const bLine = dueDate ? `due ${dueDate}` : null;
-
-  if (!cLine && !bLine) {
-    return null;
-  }
-
-  return (
-    <View style={styles.metadataBand}>
-      {cLine ? <Text style={styles.metadataText}>{cLine}</Text> : null}
-      {bLine ? <Text style={styles.metadataText}>{bLine}</Text> : null}
     </View>
   );
 }

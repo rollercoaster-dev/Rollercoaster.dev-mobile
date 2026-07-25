@@ -5,6 +5,7 @@ import {
   fireEvent,
   within,
 } from "../../../__tests__/test-utils";
+import { i18n } from "../../../i18n";
 import { TimelineStep } from "../TimelineStep";
 import type { TimelineStepChild } from "../TimelineStep";
 import type { EvidenceItemData } from "../../EvidenceDrawer";
@@ -214,6 +215,55 @@ describe("TimelineStep", () => {
       expect(screen.queryByText(/^after /)).toBeNull();
       expect(screen.queryByText(/^waiting on/)).toBeNull();
       expect(screen.queryByText(/^due /)).toBeNull();
+    });
+
+    // The band's connective copy ("after …", "waiting on … · expected …",
+    // "due …") used to be literal English wrapped around localized dates, so a
+    // German user would have read English fragments the moment the DB columns
+    // were populated. Pseudo is the regression net: an un-localized fragment
+    // shows as plain English next to bracketed copy.
+    describe("pseudo locale", () => {
+      afterEach(async () => {
+        if (i18n.language !== "en") await i18n.changeLanguage("en");
+      });
+
+      it.each([
+        {
+          line: "after",
+          step: { afterStep: "Gather materials" },
+          key: "timelineJourney:step.metadata.after",
+          values: { title: "Gather materials" },
+        },
+        {
+          line: "waitingOn",
+          step: { waitingOn: { who: "city inspector" } },
+          key: "timelineJourney:step.metadata.waitingOn",
+          values: { who: "city inspector" },
+        },
+        {
+          line: "waitingOnExpected",
+          step: { waitingOn: { who: "city inspector", expected: "Jun 24" } },
+          key: "timelineJourney:step.metadata.waitingOnExpected",
+          values: { who: "city inspector", date: "Jun 24" },
+        },
+        {
+          line: "due",
+          step: { dueDate: "2026-07-15" },
+          key: "timelineJourney:step.metadata.due",
+          values: { date: "2026-07-15" },
+        },
+      ] as const)(
+        "renders the $line line as bracketed copy under pseudo locale",
+        async ({ step, key, values }) => {
+          await i18n.changeLanguage("pseudo");
+          renderWithProviders(
+            <TimelineStep {...baseProps} step={{ ...baseStep, ...step }} />,
+          );
+          const pseudo = i18n.t(key, values);
+          expect(pseudo.startsWith("[")).toBe(true);
+          expect(screen.getByText(pseudo)).toBeOnTheScreen();
+        },
+      );
     });
   });
 

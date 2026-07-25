@@ -15,7 +15,13 @@
       "active": "Active",
       "pending": "Pending"
     },
-    "noEvidence": "No evidence yet"
+    "noEvidence": "No evidence yet",
+    "metadata": {
+      "after": "after {{title}}",
+      "waitingOn": "waiting on {{who}}",
+      "waitingOnExpected": "waiting on {{who}} · expected {{date}}",
+      "due": "due {{date}}"
+    }
   },
   "finishLine": {
     "ctaTitle": "Finish & design badge",
