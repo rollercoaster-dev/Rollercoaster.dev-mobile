@@ -26,7 +26,7 @@ export interface TimelineNodeProps {
   label?: string;
   /**
    * When true (and not a goal node), render a state-word badge below the node,
-   * labelled from the `common` namespace via stepStateColorMap. Default-off so
+   * labelled from `timelineJourney` via stepStateColorMap (#453). Default-off so
    * live consumers — which already render a StatusBadge beside each node — stay
    * byte-identical; only stories opt in (#406 D7).
    */
@@ -128,12 +128,12 @@ export function TimelineNode({
 }
 
 function StateBadge({ status }: { status: StepStatus }) {
-  const { t } = useTranslation(["common"]);
+  const { t } = useTranslation(["timelineJourney"]);
 
   return (
     <View accessibilityRole="text" style={styles.stateBadge}>
       <Text style={styles.stateBadgeText}>
-        {t(stepStateColorMap[status].badgeI18nKey)}
+        {t(stepStateColorMap[status].stateWordI18nKey)}
       </Text>
     </View>
   );
