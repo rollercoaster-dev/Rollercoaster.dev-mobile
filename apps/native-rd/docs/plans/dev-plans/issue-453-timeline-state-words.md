@@ -9,9 +9,21 @@
 
 ## Status
 
-Branch `feat/issue-453-timeline-state-words` cut from `main` @ `3214556f`, pushed. Plan written and **all questions resolved (2026-07-25)** — see Resolved Questions. **No implementation yet.**
+Branch `feat/issue-453-timeline-state-words` cut from `main` @ `3214556f`. Plan written, **all questions resolved (2026-07-25)**, and **implemented (2026-07-25)** — all three commits landed as planned:
 
-**Resuming from a fresh context?** Start at Step 0 of the Commit Plan. Everything needed is in this file; nothing is waiting on the user. Read `apps/native-rd/CLAUDE.md` first for the hard rules (`bun run test` never `bun test`, `--testPathPatterns` plural, DCO sign-off on every commit, no hardcoded hex, no interactive CLI commands).
+| #   | Commit     | Subject                                                             |
+| --- | ---------- | ------------------------------------------------------------------- |
+| 1   | `3c12a55d` | `feat(i18n): add timelineJourney step state words`                  |
+| 2   | `9ab0c173` | `feat(timeline): route step state pills to prototype state words`   |
+| 3   | `d1466eb3` | `test(timeline): assert prototype state words on timeline surfaces` |
+
+Gates: `bun run type-check` clean, `bun run lint` 0 errors (222 pre-existing warnings), full `bun run test` green — **213 suites / 10022 tests**. `StepCard` / `FocusCurrentTaskCard` / `FocusParkedState` suites pass **untouched**, which is the check that D1 held.
+
+Not yet done: no PR (`/self-review` → `/finalize` still to run), and the **visual pass across the 7 ND variants is outstanding** — see Testing Strategy for what to look for ("Set aside" is longer than "Paused").
+
+### Step 0 audit result (Q1 decision rule → switch)
+
+`grep -rn "<TimelineNode"` finds three renderers: `TimelineStep.tsx:79` and `:181` (both Timeline), and `FinishLine.tsx:45` — which renders `isGoalNode` without `showStateBadge`, and a goal node never carries a `StateBadge` at all (`TimelineNode.tsx:118`). The Focus surfaces import only the map (`FocusCurrentTaskCard.parts.tsx:33` reads `badgeI18nKey`; nothing renders the component). **No non-Timeline renderer → `StateBadge` switched outright**, no `stateWordSource` prop needed, no follow-up owed.
 
 ## Why now
 
@@ -116,9 +128,10 @@ Keep them separate: commit 1 is reviewable as pure copy, commit 2 as pure routin
 
 ## Follow-ups (file as issues, not chat)
 
-1. Once #466/#467 retire the old Focus chrome, `common:stepCard.status.*` may have no Timeline-adjacent consumers left — revisit whether `badgeI18nKey` and `stateWordI18nKey` should collapse back into one field.
-2. Decide the fate of the now-overlapping `timelineJourney:step.status.*` group (D2) — likely dead once the a11y strings are audited.
-3. `TimelineJourneyScreen.tsx` matched a grep for old state-label strings; if that's a hardcoded literal rather than a comment, it's a separate a11y-literal bug (candidate for the #455 cleanup sweep).
+1. **Open — filed as #519.** Once #466/#467 retire the old Focus chrome, `common:stepCard.status.*` may have no Timeline-adjacent consumers left — revisit whether `badgeI18nKey` and `stateWordI18nKey` should collapse back into one field.
+2. **Open — filed as #520, and confirmed dead.** The `timelineJourney:step.status.*` group (D2) has **zero code consumers**: `grep -rn "step\.status"` over `src/` returns only `step.status` _data_ reads (`StepCard`, `FocusModeScreen`, tests) plus the resource files themselves. Nothing resolved it even before this change — the a11y-strings audit D2 deferred to is unnecessary, it can just be deleted (en + pseudo + register note).
+3. **Resolved, no issue needed.** The `TimelineJourneyScreen.tsx` grep hits are both prose comments (lines 45 and 50, describing the accent resolver), not display literals. No a11y-literal bug, nothing for the #455 sweep.
+4. **New — filed as #521.** `bun run gen:pseudo` is not idempotent on `main`: re-running it also rewrites padding in `pseudo/badgeDetail.json`, `pseudo/completion.json`, and `pseudo/editGoal.json` (dot-padding lengths only, no key changes — which is why `locale-parity` never caught it). Those three were reverted here to keep this PR's diff scoped to copy + routing. Someone should regenerate them on their own commit and check whether the generator's padding formula changed after those namespaces were last written.
 
 ## Coordination
 
