@@ -180,6 +180,7 @@ function FocusContent({ goalId }: { goalId: string }) {
     () =>
       resolvePlannedEvidenceTypes(
         (currentStep?.plannedEvidenceTypes as string | null) ?? null,
+        logger,
       ),
     [currentStep],
   );
