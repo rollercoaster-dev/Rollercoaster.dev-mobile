@@ -9,17 +9,17 @@
 
 ## Intent Verification
 
-- [ ] Opening Focus Mode for a goal with a pending step renders exactly one `FocusCurrentTaskCard` (in-progress) for the step `resolveNextActionableStep` resolves — no `CardCarousel`, `MiniTimeline`, `ProgressDots`, or swipeable second card on screen.
-- [ ] The header shows only the goal title + edit pencil; the eye/timeline-toggle icon and `ModeIndicator` "Focus" pill are gone.
-- [ ] A `FocusProgressStrip` ("{done} / {total} done · See all steps ›") replaces the removed dual indicators, and tapping it navigates to `TimelineJourney` with `{ goalId }` — the exact call `handleTimelineTap` already makes today.
-- [ ] Tapping "Set this step aside" on an in-progress card calls `pauseStep(stepId)` and the card re-renders as the `paused` variant ("Pick this back up" CTA) for that same step — no navigation away.
-- [ ] Tapping "Pick this back up" on a paused card calls `resumeStep(stepId)` and the card re-renders as `in-progress` for that same step.
-- [ ] Tapping "Reopen this step" on a completed card calls `uncompleteStep(stepId)` and the card re-renders as `in-progress`.
-- [ ] The planned-evidence box's "change" affordance opens an `EvidenceTypePicker` (authoring/multi-select) sheet; toggling a type calls `updateStep(stepId, { plannedEvidenceTypes })`, mirroring `NewGoalWizard`'s build-list sheet, including the "can't deselect the last remaining type" guard.
-- [ ] Tapping an "Add {type}" invite (or the post-completion "Add more evidence") with no type opens the `EvidenceTypePicker` capture-mode sheet; selecting a type navigates to the mapped `Capture*` screen with `{ goalId, stepId }` — same `EVIDENCE_ROUTE_MAP` used today. Tapping a specific "Add {type}" invite navigates directly, skipping the sheet.
-- [ ] "✓ Mark complete" is revealed only once every planned type has a captured piece (`canCompleteStep`), matching the existing evidence-gated-completion contract (#497/#514) — never shown disabled, never framed as "missing."
-- [ ] A step whose `plannedEvidenceTypes` is `null` invites one text evidence item and reveals "✓ Mark complete" only once one is captured — the DB gate and the card's gate agree (D4).
-- [ ] The #292/#337 next-actionable-step resolution (leaf-under-parent, invite, orphan-promotion) still determines which step is "current" on mount; the surviving subset of `FocusModeScreen.test.tsx`'s sub-step regression tests pass against the new single-card render.
+- [x] Opening Focus Mode for a goal with a pending step renders exactly one `FocusCurrentTaskCard` (in-progress) for the step `resolveNextActionableStep` resolves — no `CardCarousel`, `MiniTimeline`, `ProgressDots`, or swipeable second card on screen.
+- [x] The header shows only the goal title + edit pencil; the eye/timeline-toggle icon and `ModeIndicator` "Focus" pill are gone.
+- [x] A `FocusProgressStrip` ("{done} / {total} done · See all steps ›") replaces the removed dual indicators, and tapping it navigates to `TimelineJourney` with `{ goalId }` — the exact call `handleTimelineTap` already makes today.
+- [x] Tapping "Set this step aside" on an in-progress card calls `pauseStep(stepId)` and the card re-renders as the `paused` variant ("Pick this back up" CTA) for that same step — no navigation away.
+- [x] Tapping "Pick this back up" on a paused card calls `resumeStep(stepId)` and the card re-renders as `in-progress` for that same step.
+- [x] Tapping "Reopen this step" on a completed card calls `uncompleteStep(stepId)` and the card re-renders as `in-progress`.
+- [x] The planned-evidence box's "change" affordance opens an `EvidenceTypePicker` (authoring/multi-select) sheet; toggling a type calls `updateStep(stepId, { plannedEvidenceTypes })`, mirroring `NewGoalWizard`'s build-list sheet, including the "can't deselect the last remaining type" guard.
+- [x] Tapping an "Add {type}" invite (or the post-completion "Add more evidence") with no type opens the `EvidenceTypePicker` capture-mode sheet; selecting a type navigates to the mapped `Capture*` screen with `{ goalId, stepId }` — same `EVIDENCE_ROUTE_MAP` used today. Tapping a specific "Add {type}" invite navigates directly, skipping the sheet.
+- [x] "✓ Mark complete" is revealed only once every planned type has a captured piece (`canCompleteStep`), matching the existing evidence-gated-completion contract (#497/#514) — never shown disabled, never framed as "missing."
+- [x] A step whose `plannedEvidenceTypes` is `null` invites one text evidence item and reveals "✓ Mark complete" only once one is captured — the DB gate and the card's gate agree (D4).
+- [x] The #292/#337 next-actionable-step resolution (leaf-under-parent, invite, orphan-promotion) still determines which step is "current" on mount; the surviving subset of `FocusModeScreen.test.tsx`'s sub-step regression tests pass against the new single-card render.
 
 ## Dependencies
 
@@ -69,11 +69,11 @@ Replace `FocusModeScreen`'s three overlapping navigators (`MiniTimeline` + `Prog
 **Commit**: `refactor(focus-mode): mount FocusCurrentTaskCard as the single body, drop CardCarousel/MiniTimeline/ProgressDots`
 **Changes**:
 
-- [ ] Replace `currentCardIndex` state with `currentStepId: string | null`, initialized on mount via `resolveNextActionableStep(stepRows)` (reuse the existing `findFirstPendingLeafIndex` adapter, resolved to an id instead of an index) — preserves #292/#337 behavior (D1).
-- [ ] Derive the current step's full view model (title, status, `plannedEvidenceTypes`, `capturedEvidence`, `afterStep`/`waitingOn`/`dueDate` via `resolveStepDependencyBand`, formatted the same way `TimelineJourneyScreen.tsx:106-129` does) from `stepRows`/`allStepEvidenceRows`.
-- [ ] Render `FocusCurrentTaskCard` with `status: "in-progress" | "paused" | "completed"` mapped from `StepStatus` (never `"all-complete"` — D3).
-- [ ] Remove `CardCarousel`, `MiniTimeline`, `ProgressDots`, `StepCard`, `GoalEvidenceCard` imports/usages and the `stepRootIds`/`uiSteps`/`stepsWithEvidence`/`partsByParentId`/`partInfoByChildId`/`timelineSteps`/`dotSteps` derivations that only fed them.
-- [ ] Remove the `handleIndexChange`/`handleOpenPart`/`isGoalCard`/snap-to-goal-card effect; keep the mount-time snap effect, retargeted to set `currentStepId`.
+- [x] Replace `currentCardIndex` state with `currentStepId: string | null`, initialized on mount via `resolveNextActionableStep(stepRows)` (reuse the existing `findFirstPendingLeafIndex` adapter, resolved to an id instead of an index) — preserves #292/#337 behavior (D1).
+- [x] Derive the current step's full view model (title, status, `plannedEvidenceTypes`, `capturedEvidence`, `afterStep`/`waitingOn`/`dueDate` via `resolveStepDependencyBand`, formatted the same way `TimelineJourneyScreen.tsx:106-129` does) from `stepRows`/`allStepEvidenceRows`.
+- [x] Render `FocusCurrentTaskCard` with `status: "in-progress" | "paused" | "completed"` mapped from `StepStatus` (never `"all-complete"` — D3).
+- [x] Remove `CardCarousel`, `MiniTimeline`, `ProgressDots`, `StepCard`, `GoalEvidenceCard` imports/usages and the `stepRootIds`/`uiSteps`/`stepsWithEvidence`/`partsByParentId`/`partInfoByChildId`/`timelineSteps`/`dotSteps` derivations that only fed them.
+- [x] Remove the `handleIndexChange`/`handleOpenPart`/`isGoalCard`/snap-to-goal-card effect; keep the mount-time snap effect, retargeted to set `currentStepId`.
 
 ### Step 2: Progress chip + header cleanup
 
@@ -81,10 +81,10 @@ Replace `FocusModeScreen`'s three overlapping navigators (`MiniTimeline` + `Prog
 **Commit**: `refactor(focus-mode): replace dual indicators with FocusProgressStrip, drop eye-toggle and ModeIndicator`
 **Changes**:
 
-- [ ] Mount `FocusProgressStrip` with `doneCount`/`totalCount` from `stepRows`, `onPress={handleTimelineTap}` (unchanged body — D2).
-- [ ] Remove the header eye/timeline-toggle `IconButton`, `useFocusModePrefs` import/usage, and `ModeIndicator`.
-- [ ] Keep the edit-pencil `IconButton` (`handleEditPress`, unchanged) and `ScreenSubHeader` title.
-- [ ] Strip corresponding dead styles (`carouselSection`'s `DRAWER_CLOSED_HEIGHT` padding, etc.) from `FocusModeScreen.styles.ts`; add whatever minimal layout the strip + card stack need.
+- [x] Mount `FocusProgressStrip` with `doneCount`/`totalCount` from `stepRows`, `onPress={handleTimelineTap}` (unchanged body — D2).
+- [x] Remove the header eye/timeline-toggle `IconButton`, `useFocusModePrefs` import/usage, and `ModeIndicator`.
+- [x] Keep the edit-pencil `IconButton` (`handleEditPress`, unchanged) and `ScreenSubHeader` title.
+- [x] Strip corresponding dead styles (`carouselSection`'s `DRAWER_CLOSED_HEIGHT` padding, etc.) from `FocusModeScreen.styles.ts`; add whatever minimal layout the strip + card stack need.
 
 ### Step 3: Wire pause / resume / reopen
 
@@ -92,10 +92,10 @@ Replace `FocusModeScreen`'s three overlapping navigators (`MiniTimeline` + `Prog
 **Commit**: `feat(focus-mode): wire Set aside / Pick back up / Reopen via pauseStep/resumeStep/uncompleteStep`
 **Changes**:
 
-- [ ] `onPause` → `pauseStep(currentStepId)`.
-- [ ] `onPickUp` → `resumeStep(currentStepId)`.
-- [ ] `onReopen` → `uncompleteStep(currentStepId)` (existing helper, already used for the completed→pending toggle today).
-- [ ] Wrap each in the same try/catch + `reportError`/toast pattern the existing `handleToggleStep` uses, so a write failure surfaces the same way completion failures do today.
+- [x] `onPause` → `pauseStep(currentStepId)`.
+- [x] `onPickUp` → `resumeStep(currentStepId)`.
+- [x] `onReopen` → `uncompleteStep(currentStepId)` (existing helper, already used for the completed→pending toggle today).
+- [x] Wrap each in the same try/catch + `reportError`/toast pattern the existing `handleToggleStep` uses, so a write failure surfaces the same way completion failures do today.
 
 ### Step 4: Wire the evidence-plan and evidence-capture sheets
 
@@ -103,9 +103,9 @@ Replace `FocusModeScreen`'s three overlapping navigators (`MiniTimeline` + `Prog
 **Commit**: `feat(focus-mode): wire EvidenceTypePicker plan-editor and capture-type sheets`
 **Changes**:
 
-- [ ] `onChangeEvidencePlan` opens an `AnimatedSheet` + `EvidenceTypePicker` (authoring mode) sheet seeded with the current step's `plannedEvidenceTypes`; `onToggleType` calls `updateStep(currentStepId, { plannedEvidenceTypes: next })`, including the "can't deselect the last remaining type" guard (mirror `NewGoalWizard.tsx:425-441`) (D6).
-- [ ] `onAddEvidence(type?)`: with a `type`, navigate directly via `EVIDENCE_ROUTE_MAP` (reuse today's `handleQuickEvidence` body). With no `type`, open the `EvidenceTypePicker` `mode="capture"` sheet; `onSelectType` closes the sheet and navigates via `EVIDENCE_ROUTE_MAP` (reuse today's `handleSelectEvidenceType` body) (D7).
-- [ ] Remove `EvidenceDrawer`, the add-evidence FAB fan-out (`isFABMenuOpen`, `handleToggleFABMenu`), `ConfirmDeleteModal`, `handleRequestDeleteEvidence`/`handleConfirmDeleteEvidence`/`handleViewEvidence`, and the `useEvidenceViewer` wiring that only served the drawer (D5). Confirm no other code path in this screen still needs `viewEvidence`/`viewerModals` before deleting.
+- [x] `onChangeEvidencePlan` opens an `AnimatedSheet` + `EvidenceTypePicker` (authoring mode) sheet seeded with the current step's `plannedEvidenceTypes`; `onToggleType` calls `updateStep(currentStepId, { plannedEvidenceTypes: next })`, including the "can't deselect the last remaining type" guard (mirror `NewGoalWizard.tsx:425-441`) (D6).
+- [x] `onAddEvidence(type?)`: with a `type`, navigate directly via `EVIDENCE_ROUTE_MAP` (reuse today's `handleQuickEvidence` body). With no `type`, open the `EvidenceTypePicker` `mode="capture"` sheet; `onSelectType` closes the sheet and navigates via `EVIDENCE_ROUTE_MAP` (reuse today's `handleSelectEvidenceType` body) (D7).
+- [x] Remove `EvidenceDrawer`, the add-evidence FAB fan-out (`isFABMenuOpen`, `handleToggleFABMenu`), `ConfirmDeleteModal`, `handleRequestDeleteEvidence`/`handleConfirmDeleteEvidence`/`handleViewEvidence`, and the `useEvidenceViewer` wiring that only served the drawer (D5). Confirm no other code path in this screen still needs `viewEvidence`/`viewerModals` before deleting.
 
 ### Step 5: Test rewrite
 
@@ -113,11 +113,11 @@ Replace `FocusModeScreen`'s three overlapping navigators (`MiniTimeline` + `Prog
 **Commit**: `test(focus-mode): rewrite FocusModeScreen suite for the single-current-task model`
 **Changes**:
 
-- [ ] Rewrite render assertions around the single `FocusCurrentTaskCard` (title, status pill, planned box, captured rail, footer CTAs) instead of carousel position text / `StepCard` checkbox roles.
-- [ ] Port the #292/#337 sub-step resolution suite (`LEAF_STEPS`, `INVITE_STEPS`, `INTERLEAVED_STEPS`, `PARTIAL_LEAF_STEPS`, `ORPHAN_STEPS`, `COMPLETED_PARENT_PENDING_CHILD_STEPS`) to assert the resolved current step's _id/title_, not `MiniTimeline` node widths or carousel `stepIndex`/`totalSteps` text.
-- [ ] Add coverage for: pause → paused card, no navigation; resume → in-progress card; reopen → in-progress card; evidence-plan sheet toggling calling `updateStep`; capture-sheet type selection navigating with `{ goalId, stepId }`; direct `Add {type}` navigating with no sheet; `canCompleteStep`/`completeStep` gating unchanged.
-- [ ] Drop tests for: `CardCarousel` swipe navigation, `MiniTimeline`/`ProgressDots` rendering, the eye-toggle, `EvidenceDrawer`/FAB open/close, evidence delete/confirm/cancel/toast, `GoalEvidenceCard`/goal-card-via-carousel, auto-navigate-to-CompletionFlow guards (all either removed or #467-owned). Before deleting each, confirm no other suite (e.g. `FocusCurrentTaskCard.test.tsx`, `EvidenceTypePicker.test.tsx`, `TimelineJourneyScreen.test.tsx`) already covers the underlying behavior at the component level — per `AGENTS.md`'s "grep before deleting a test" rule.
-- [ ] Update the `jest.mock("../../../db", ...)` block: it already includes `StepStatus: { pending, completed }` without `paused` — add `paused: "paused"` and the mocked `pauseStep`/`resumeStep`/`updateStep`.
+- [x] Rewrite render assertions around the single `FocusCurrentTaskCard` (title, status pill, planned box, captured rail, footer CTAs) instead of carousel position text / `StepCard` checkbox roles.
+- [x] Port the #292/#337 sub-step resolution suite (`LEAF_STEPS`, `INVITE_STEPS`, `INTERLEAVED_STEPS`, `PARTIAL_LEAF_STEPS`, `ORPHAN_STEPS`, `COMPLETED_PARENT_PENDING_CHILD_STEPS`) to assert the resolved current step's _id/title_, not `MiniTimeline` node widths or carousel `stepIndex`/`totalSteps` text.
+- [x] Add coverage for: pause → paused card, no navigation; resume → in-progress card; reopen → in-progress card; evidence-plan sheet toggling calling `updateStep`; capture-sheet type selection navigating with `{ goalId, stepId }`; direct `Add {type}` navigating with no sheet; `canCompleteStep`/`completeStep` gating unchanged.
+- [x] Drop tests for: `CardCarousel` swipe navigation, `MiniTimeline`/`ProgressDots` rendering, the eye-toggle, `EvidenceDrawer`/FAB open/close, evidence delete/confirm/cancel/toast, `GoalEvidenceCard`/goal-card-via-carousel, auto-navigate-to-CompletionFlow guards (all either removed or #467-owned). Before deleting each, confirm no other suite (e.g. `FocusCurrentTaskCard.test.tsx`, `EvidenceTypePicker.test.tsx`, `TimelineJourneyScreen.test.tsx`) already covers the underlying behavior at the component level — per `AGENTS.md`'s "grep before deleting a test" rule.
+- [x] Update the `jest.mock("../../../db", ...)` block: it already includes `StepStatus: { pending, completed }` without `paused` — add `paused: "paused"` and the mocked `pauseStep`/`resumeStep`/`updateStep`.
 
 ### Step 6: Align the null-evidence-plan contract (D4)
 
@@ -125,18 +125,18 @@ Replace `FocusModeScreen`'s three overlapping navigators (`MiniTimeline` + `Prog
 **Commit**: `fix(evidence): treat an unset evidence plan as ["text"] so the DB gate matches the card`
 **Changes**:
 
-- [ ] In `canCompleteStep` (`src/db/queries.ts:317-331`), replace `if (plannedTypes === null) return true;` with a `["text"]` default so a null plan requires one text evidence item, matching `FocusCurrentTaskCard`'s gate.
-- [ ] Update the doc comment at `:309-311` ("If null, no step evidence is required") — it now states the opposite.
-- [ ] Apply the same `["text"]` default where the screen builds the card's `plannedEvidenceTypes` prop, so display and gate never diverge.
-- [ ] Update existing `canCompleteStep` null-case tests; add a regression test that a null-plan step is **not** completable with zero evidence and **is** completable once a text item exists.
-- [ ] Keep this as its own commit — it changes completion behavior for existing steps created via `EditGoalView`'s default add-step flow, and must be callable out in the PR body.
+- [x] In `canCompleteStep` (`src/db/queries.ts:317-331`), replace `if (plannedTypes === null) return true;` with a `["text"]` default so a null plan requires one text evidence item, matching `FocusCurrentTaskCard`'s gate.
+- [x] Update the doc comment at `:309-311` ("If null, no step evidence is required") — it now states the opposite.
+- [x] Apply the same `["text"]` default where the screen builds the card's `plannedEvidenceTypes` prop, so display and gate never diverge.
+- [x] Update existing `canCompleteStep` null-case tests; add a regression test that a null-plan step is **not** completable with zero evidence and **is** completable once a text item exists.
+- [x] Keep this as its own commit — it changes completion behavior for existing steps created via `EditGoalView`'s default add-step flow, and must be callable out in the PR body.
 
 ## Testing Strategy
 
-- [ ] Unit tests for `FocusModeScreen` (Jest 30, `@testing-library/react-native` v13) per Step 5 above.
-- [ ] Test file path stays `src/screens/FocusModeScreen/__tests__/FocusModeScreen.test.tsx` (mirrors existing convention).
-- [ ] Use `test.each` for the repeated pause/resume/reopen-call-shape assertions.
-- [ ] Manual testing: `npx expo run:ios` — open a goal with (a) a plain pending step, (b) a step with sub-steps (invite state), (c) a paused step reached by pausing it live, (d) a completed step reached by completing it live, (e) a step created via `EditGoalView`'s default add-step flow so `plannedEvidenceTypes` is `null` — per D4 it should now invite one text item and reveal "Mark complete" only after one is captured.
+- [x] Unit tests for `FocusModeScreen` (Jest 30, `@testing-library/react-native` v13) per Step 5 above.
+- [x] Test file path stays `src/screens/FocusModeScreen/__tests__/FocusModeScreen.test.tsx` (mirrors existing convention).
+- [x] Use `test.each` for the repeated pause/resume/reopen-call-shape assertions.
+- [x] Manual testing: `npx expo run:ios` — open a goal with (a) a plain pending step, (b) a step with sub-steps (invite state), (c) a paused step reached by pausing it live, (d) a completed step reached by completing it live, (e) a step created via `EditGoalView`'s default add-step flow so `plannedEvidenceTypes` is `null` — per D4 it should now invite one text item and reveal "Mark complete" only after one is captured.
 
 ## Not in Scope
 
@@ -151,6 +151,32 @@ Replace `FocusModeScreen`'s three overlapping navigators (`MiniTimeline` + `Prog
 
 ## Discovery Log
 
-<!-- Entries added by implement skill:
-- [YYYY-MM-DD HH:MM] <discovery description>
--->
+- [2026-07-26] **Commit granularity deviated from the plan's 6 steps to 3.** Steps 1–5
+  could not each land green: `FocusCurrentTaskCardProps` is a discriminated union
+  whose in-progress variant requires `onPause`, `onChangeEvidencePlan`,
+  `onAddEvidence` and `onMarkComplete` all at once, so mounting the card (step 1)
+  forces steps 3–4's wiring in the same commit; and the old 1,746-line test suite
+  is built entirely on the removed chrome, so the screen rewrite and the test
+  rewrite are red apart. Shipped as: the D4 contract fix (independent, standalone),
+  then the screen + styles + hook deletion + test rewrite as one coherent
+  "replace the Focus Mode body" commit. Each commit type-checks, lints, and passes
+  the full suite on its own.
+- [2026-07-26] **D10 added** — the plan did not say what to render when
+  `resolveNextActionableStep` returns `none` (every step completed or paused).
+  Falling through to an empty body would have been a blank screen. Resolved by
+  falling back to the first paused step, then the last step, so the shipped
+  `paused` / `completed` card variants carry those states until #467 lands the
+  dedicated all-paused and all-done screens. No new UI invented.
+- [2026-07-26] **`ReportContext`'s `focus.mode` kinds changed.** `"evidence-delete"`
+  became unreachable (the delete path is gone, D5) and the new plan-editor needed a
+  facet, so the union is now `"enter" | "exit" | "step-toggle" | "evidence-plan"`.
+  All four step state-flips report as `step-toggle`, matching the single `"toggle"`
+  breadcrumb the DB mutations already emit.
+- [2026-07-26] **Two extra dead references removed with `useFocusModePrefs`**: its
+  `SCOPE_TO_AREA` entry in `services/sentry-report.ts` (plus that entry's test) and
+  a stale mention in `useUserSettingsRow.ts`'s comment.
+- [2026-07-26] **Two i18n keys added** (`focusMode:evidencePlanSheet.title` /
+  `.typesLabel`) for the plan-editor sheet chrome — en + de written by hand, pseudo
+  regenerated via `bun run gen:pseudo`. Unrelated pseudo padding drift in
+  `badgeDetail` / `completion` / `editGoal` that the generator also rewrote was
+  reverted to keep the diff on-topic.
