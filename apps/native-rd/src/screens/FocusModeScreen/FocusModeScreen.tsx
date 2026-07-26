@@ -94,7 +94,7 @@ function resolveFocusStepId(rows: readonly StepRowLike[]): string | null {
   if (actionable.kind !== "none") return rows[actionable.index]?.id ?? null;
   const paused = rows.find((r) => r.status === StepStatus.paused);
   if (paused) return paused.id;
-  return rows.at(-1)?.id ?? null;
+  return rows[rows.length - 1]?.id ?? null;
 }
 
 function FocusContent({ goalId }: { goalId: string }) {
