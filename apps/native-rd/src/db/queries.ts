@@ -308,9 +308,16 @@ function serializePlannedTypes(
  *
  * At least one evidence item must match a planned type. An *unset* plan
  * (null/invalid/empty JSON) resolves to {@link DEFAULT_PLANNED_EVIDENCE_TYPES}
- * rather than exempting the step (#466 D4) — every step owes evidence, and this
- * is the same list `FocusCurrentTaskCard` renders, so the gate and the card's
- * "Mark complete" reveal can never disagree.
+ * rather than exempting the step (#466 D4) — every step owes evidence, and it
+ * resolves to the same list `FocusCurrentTaskCard` renders, so the two never
+ * disagree about *which* types were planned.
+ *
+ * They do differ in strictness, deliberately: this is the data-layer floor
+ * ("at least one planned type captured"), while the card's "✓ Mark complete"
+ * reveal is stricter — it waits for *every* planned type
+ * (`FocusCurrentTaskCard`'s `completionReady`, D1). So a step the card still
+ * shows as unfinished can pass this gate. Callers must not treat a `true` here
+ * as "the card would offer completion"; it only means completion is permitted.
  *
  * @param plannedEvidenceTypesJson - Value from step.plannedEvidenceTypes column (JSON string or null)
  * @param stepEvidence - All non-deleted evidence rows for this step
