@@ -1,8 +1,8 @@
 # ADR-0013: Phase B consolidated position — scope, step model, guardrails
 
 **Date:** 2026-07-25
-**Status:** Proposed — becomes Accepted with Joe's sign-off. Accepting this ADR
-also accepts [ADR-0011](./ADR-0011-step-model-names.md) and
+**Status:** Accepted 2026-07-26 (Joe's sign-off = merge of PR #518). Accepting
+this ADR also accepted [ADR-0011](./ADR-0011-step-model-names.md) and
 [ADR-0012](./ADR-0012-no-auto-judgment.md), whose decisions are restated here
 unchanged.
 **Owner:** Joe
@@ -80,8 +80,7 @@ crosswalk table and ADR-0011's re-map table.
 
 ### Reading rule
 
-Once Accepted, this ADR and [`index.md`](./index.md) are the current
-reference. Read the
+This ADR and [`index.md`](./index.md) are the current reference. Read the
 superseded chain only when rationale or history is needed. Changes to anything
 restated here require a new ADR superseding ADR-0013 (and, where the change
 touches the anti-pathologizing core, saying so explicitly). Do not amend this
@@ -102,4 +101,4 @@ ADR in place.
 
 ---
 
-_Proposed 2026-07-25. One document to know where we stand; five to know why._
+_Accepted 2026-07-26. One document to know where we stand; five to know why._
