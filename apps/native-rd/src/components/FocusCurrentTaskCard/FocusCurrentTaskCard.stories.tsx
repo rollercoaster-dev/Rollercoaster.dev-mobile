@@ -46,11 +46,12 @@ const capturedPhotoAndNote: FocusCapturedEvidenceItem[] = [
   { id: "ev-2", type: "text", caption: "What I noticed" },
 ];
 
-// R8 — constrain the card to the prototype's 344px phone width. At the full
-// Storybook canvas (~1083px) the box/button stretched into long bars and the title
-// stopped wrapping, so even a faithful card read "spread out." This is a width box
-// ONLY — no header, progress, nav, or timeline chrome (all of that is #377). The
-// card sits flat on the screen bg, exactly as in `Focus Mode A Prototype.dc.html`.
+// R8 — constrain the card to a 344px phone width. At the full Storybook canvas
+// (~1083px) the box/button stretched into long bars and the title stopped wrapping.
+// No header, progress, nav, or timeline chrome; the card sits flat on the screen bg.
+//
+// Height is bounded too: the card fills its host and pins its footer to the bottom
+// edge, so an auto-height host would collapse it.
 function PhoneWidth({ children }: { children: React.ReactNode }) {
   return (
     <View style={storyStyles.stage}>
@@ -242,26 +243,32 @@ export const StatesAllThemes: Story = {
                 { backgroundColor: themes[name].colors.background },
               ]}
             >
-              <FocusCurrentTaskCard
-                status="in-progress"
-                title="Inspection & labels"
-                plannedEvidenceTypes={["text"]}
-                waitingOn={{ who: "city inspector", expected: "Jun 24" }}
-                afterStep="Wire the circuits"
-                dueDate="Fri · Jun 27"
-                {...handlers}
-              />
-              <FocusCurrentTaskCard
-                status="paused"
-                title="Call the clinic to book a check-in"
-                {...handlers}
-              />
-              <FocusCurrentTaskCard
-                status="completed"
-                title="Reset the kitchen before bed"
-                capturedEvidence={capturedTwo}
-                {...handlers}
-              />
+              <View style={storyStyles.stateSlot}>
+                <FocusCurrentTaskCard
+                  status="in-progress"
+                  title="Inspection & labels"
+                  plannedEvidenceTypes={["text"]}
+                  waitingOn={{ who: "city inspector", expected: "Jun 24" }}
+                  afterStep="Wire the circuits"
+                  dueDate="Fri · Jun 27"
+                  {...handlers}
+                />
+              </View>
+              <View style={storyStyles.stateSlot}>
+                <FocusCurrentTaskCard
+                  status="paused"
+                  title="Call the clinic to book a check-in"
+                  {...handlers}
+                />
+              </View>
+              <View style={storyStyles.stateSlot}>
+                <FocusCurrentTaskCard
+                  status="completed"
+                  title="Reset the kitchen before bed"
+                  capturedEvidence={capturedTwo}
+                  {...handlers}
+                />
+              </View>
             </View>
           </ScopedTheme>
         </View>
@@ -269,6 +276,10 @@ export const StatesAllThemes: Story = {
     </ScrollView>
   ),
 };
+
+// Roughly what the real screen leaves the card between the progress strip and the
+// tab bar on a 6.1" phone.
+const CARD_AREA_HEIGHT = 520;
 
 const storyStyles = StyleSheet.create((theme) => ({
   // Centering canvas — a slightly different bg so the 344px card area reads as a
@@ -282,6 +293,7 @@ const storyStyles = StyleSheet.create((theme) => ({
   // screen padding #377 will own. The flattened card itself carries no frame (R1).
   frame: {
     width: 344,
+    height: CARD_AREA_HEIGHT,
     padding: theme.space[5],
     backgroundColor: theme.colors.background,
   },
@@ -316,12 +328,18 @@ const storyStyles = StyleSheet.create((theme) => ({
   // matrix card reads exactly like the real card on its theme's screen bg.
   matrixCard: {
     width: 344,
+    height: CARD_AREA_HEIGHT,
     padding: theme.space[5],
   },
-  // Like matrixCard but stacks several state variants of the card in one column.
+  // Like matrixCard but stacks several state variants of the card in one column,
+  // each in its own bounded `stateSlot` since every card pins its own footer.
   matrixCardStack: {
     width: 344,
     padding: theme.space[5],
     gap: theme.space[4],
+  },
+  // Shorter than a full card area so three fit in one reviewable column.
+  stateSlot: {
+    height: 300,
   },
 }));

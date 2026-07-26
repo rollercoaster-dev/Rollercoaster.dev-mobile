@@ -1,4 +1,5 @@
 import { StyleSheet } from "react-native-unistyles";
+import { PILL_LIFT } from "../../navigation/FocusPillTabBar";
 
 export const styles = StyleSheet.create((theme) => ({
   screen: {
@@ -27,6 +28,13 @@ export const styles = StyleSheet.create((theme) => ({
     // strip is otherwise flush, leaving the card cramped up top.
     paddingTop: theme.space[4],
     paddingHorizontal: theme.space[4],
+    // The card pins its footer to this section's bottom edge, so the section owns
+    // the clearance for the part of the tab pill that sticks up above its own slot
+    // (`PILL_LIFT`) — without it the pill buries the footer's helper line. Not
+    // `useTabScreenContentInset()`: that doubles the lift and adds the safe-area
+    // inset for content scrolling *under* the bar, stranding ~100pt of dead space
+    // beneath a pinned footer.
+    paddingBottom: PILL_LIFT + theme.space[3],
   },
   headerRow: {
     flexDirection: "row",
