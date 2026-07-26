@@ -48,7 +48,11 @@ export type ReportContext =
     }
   | {
       area: "focus.mode";
-      kind?: "enter" | "exit" | "step-toggle" | "evidence-delete";
+      // "step-toggle" covers every state flip of the focused step — complete,
+      // reopen, set aside, pick back up — matching the single "toggle"
+      // breadcrumb the step mutations emit in db/queries.ts. "evidence-plan" is
+      // a change to *which* evidence types the step plans, not a state flip.
+      kind?: "enter" | "exit" | "step-toggle" | "evidence-plan";
     }
   | { area: "completion.flow" }
   | { area: "audio.record"; kind?: "start" | "stop" | "permission" | "cleanup" }
@@ -86,7 +90,6 @@ export function reportError(error: unknown, ctx: ReportContext): void {
  * double-reporting the same error.
  */
 const SCOPE_TO_AREA: Record<string, ReportContext> = {
-  useFocusModePrefs: { area: "focus.mode" },
   evidenceCleanup: { area: "evidence.cleanup" },
   // db.queries spans 5 entity types; stack frame distinguishes which function.
   "db.queries": { area: "db.write" },

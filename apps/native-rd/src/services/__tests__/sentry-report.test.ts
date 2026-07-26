@@ -190,12 +190,6 @@ describe("reportLoggerError", () => {
   });
 
   describe("production SCOPE_TO_AREA registrations", () => {
-    it("routes useFocusModePrefs to focus.mode", () => {
-      reportLoggerError("useFocusModePrefs", new Error("boom"));
-      expect(mockState.captured).toHaveLength(1);
-      expect(mockState.captured[0].scope.tags).toEqual({ area: "focus.mode" });
-    });
-
     it("routes evidenceCleanup to evidence.cleanup", () => {
       reportLoggerError("evidenceCleanup", new Error("boom"));
       expect(mockState.captured).toHaveLength(1);

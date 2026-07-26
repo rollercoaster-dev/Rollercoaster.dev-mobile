@@ -1,5 +1,4 @@
 import { StyleSheet } from "react-native-unistyles";
-import { DRAWER_CLOSED_HEIGHT } from "../../components/EvidenceDrawer/EvidenceDrawer.styles";
 
 export const styles = StyleSheet.create((theme) => ({
   screen: {
@@ -22,12 +21,12 @@ export const styles = StyleSheet.create((theme) => ({
     alignItems: "center",
     padding: theme.space[4],
   },
-  carouselSection: {
+  cardSection: {
     flex: 1,
-    // Breathing room between the MiniTimeline (or header) and the card's top
-    // edge — the track is otherwise flush, leaving the cards cramped up top.
+    // Breathing room between the progress strip and the card's top edge — the
+    // strip is otherwise flush, leaving the card cramped up top.
     paddingTop: theme.space[4],
-    paddingBottom: DRAWER_CLOSED_HEIGHT + theme.space[3],
+    paddingHorizontal: theme.space[4],
   },
   headerRow: {
     flexDirection: "row",

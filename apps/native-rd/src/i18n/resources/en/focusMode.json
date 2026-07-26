@@ -57,6 +57,10 @@
       "designBadgeA11y": "Design your badge to celebrate completing this goal"
     }
   },
+  "evidencePlanSheet": {
+    "title": "Planned evidence",
+    "typesLabel": "Evidence types"
+  },
   "progressStrip": {
     "doneCount": "{{done}} / {{total}} done",
     "seeAllSteps": "See all steps ›",

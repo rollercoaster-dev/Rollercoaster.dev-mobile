@@ -1,66 +1,44 @@
-import {
-  Suspense,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import {
   View,
   ActivityIndicator,
   AccessibilityInfo,
-  Alert,
   KeyboardAvoidingView,
 } from "react-native";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import { useQuery } from "@evolu/react";
-import { Pencil, Eye, EyeSlash } from "phosphor-react-native";
+import { Pencil } from "phosphor-react-native";
 import { useTranslation } from "react-i18next";
 import { Text } from "../../components/Text";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { IconButton } from "../../components/IconButton";
-import { CardCarousel } from "../../components/CardCarousel";
 import {
-  MiniTimeline,
-  type MiniTimelineStep,
-} from "../../components/MiniTimeline";
-import {
-  ProgressDots,
-  type ProgressDotsStep,
-} from "../../components/ProgressDots";
-import {
-  StepCard,
-  type StepCardStatus,
-  type StepCardPart,
-} from "../../components/StepCard";
-import { GoalEvidenceCard } from "../../components/GoalEvidenceCard";
-import {
-  EvidenceDrawer,
-  type EvidenceItemData,
-} from "../../components/EvidenceDrawer";
-import { ModeIndicator } from "../../components/ModeIndicator";
-import { parsePlannedEvidenceTypes } from "../../utils/parsePlannedEvidenceTypes";
-import { ConfirmDeleteModal } from "../../components/ConfirmDeleteModal";
+  FocusCurrentTaskCard,
+  type FocusCapturedEvidenceItem,
+} from "../../components/FocusCurrentTaskCard";
+import { FocusProgressStrip } from "../../components/FocusProgressStrip";
+import { EvidenceTypePicker } from "../../components/EvidenceTypePicker";
+import { AnimatedSheet } from "../../components/EvidenceTypePicker/AnimatedSheet";
+import { resolvePlannedEvidenceTypes } from "../../utils/parsePlannedEvidenceTypes";
 import {
   goalsQuery,
   stepsByGoalQuery,
-  evidenceByGoalQuery,
   stepEvidenceByGoalQuery,
   completeStep,
   uncompleteStep,
-  deleteEvidence,
+  pauseStep,
+  resumeStep,
+  updateStep,
   canCompleteStep,
-  isPendingStep,
-  areAllStepsComplete,
   groupStepsByParent,
   flattenGroupedSteps,
   resolveNextActionableStep,
+  resolveStepDependencyBand,
   EvidenceType,
   StepStatus,
 } from "../../db";
-import type { GoalId, StepId, EvidenceId } from "../../db";
+import type { GoalId, StepId } from "../../db";
 import { useToast } from "../../components/Toast";
 import type {
   GoalsStackParamList,
@@ -70,16 +48,12 @@ import type {
 import {
   validateEvidenceType,
   type EvidenceTypeValue,
-  type QuickEvidenceType,
 } from "../../types/evidence";
 import { evidenceShortLabel } from "../../i18n/labels";
-import type { StepStatus as UIStepStatus } from "../../types/steps";
-import { deleteEvidenceFile } from "../../utils/evidenceCleanup";
+import { formatDate } from "../../utils/format";
 import { Logger } from "../../shims/rd-logger";
 import { reportError, breadcrumb } from "../../services/sentry-report";
 import { KEYBOARD_AVOIDING_PROPS } from "../../utils/keyboard";
-import { useEvidenceViewer } from "../../utils/evidenceViewers";
-import { useFocusModePrefs } from "../../hooks/useFocusModePrefs";
 import { styles } from "./FocusModeScreen.styles";
 
 const logger = new Logger("FocusModeScreen");
@@ -95,67 +69,61 @@ const EVIDENCE_ROUTE_MAP: Partial<
   [EvidenceType.file]: "CaptureFile",
 };
 
+/** Minimal row shape the step-focused helpers below read. */
+type StepRowLike = {
+  id: string;
+  parentStepId: string | null;
+  status: string | null;
+};
+
 /**
- * Index (into the flat `stepRows`) of the first pending *leaf* to snap to on
- * mount (#292), or -1 when nothing is pending. Thin adapter over the shared
- * {@link resolveNextActionableStep}: leaf, invite, and flat all resolve to the
- * actionable row's flat index, and the orphan-promotion rule lives in the
- * resolver — so FocusMode and the goal card can't drift apart (#337).
+ * Which step Focus Mode is "on".
+ *
+ * The actionable step per {@link resolveNextActionableStep} (leaf / invite /
+ * flat, orphan-promotion included — #292/#337). When nothing is actionable the
+ * goal is either fully set aside or fully done, and the resolver reports
+ * `none` for both; fall back to the first paused step, then to the last step,
+ * so the screen still shows that step's own card (paused → "Pick this back
+ * up", completed → "Reopen") rather than nothing at all. The dedicated
+ * all-paused and all-done *screens* are #467's (D10).
  */
-function findFirstPendingLeafIndex(
-  rows: readonly {
-    id: string;
-    parentStepId: string | null;
-    status: string | null;
-  }[],
-): number {
-  const result = resolveNextActionableStep(rows);
-  return result.kind === "none" ? -1 : result.index;
+function resolveFocusStepId(rows: readonly StepRowLike[]): string | null {
+  const actionable = resolveNextActionableStep(rows);
+  if (actionable.kind !== "none") return rows[actionable.index]?.id ?? null;
+  const paused = rows.find((r) => r.status === StepStatus.paused);
+  if (paused) return paused.id;
+  return rows.at(-1)?.id ?? null;
 }
 
 function FocusContent({ goalId }: { goalId: string }) {
-  const { t } = useTranslation(["focusMode", "common"]);
+  const { t, i18n } = useTranslation(["focusMode", "common"]);
   const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
   const { showToast } = useToast();
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
   const rawStepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
   // Order rows parent-then-children (orphans promoted to top-level) so the
-  // carousel and MiniTimeline render the sub-spine correctly. The raw query is
-  // `(ordinal, createdAt)`-ordered with sibling-scoped child ordinals, which
-  // interleaves children among parents (#292) — flatten via groupStepsByParent
-  // as EditModeScreen does. All downstream indexing uses this ordered list.
+  // resolver sees the same sub-spine order EditModeScreen and the goal card do.
+  // The raw query is `(ordinal, createdAt)`-ordered with sibling-scoped child
+  // ordinals, which interleaves children among parents (#292).
   const stepRows = useMemo(
     () => flattenGroupedSteps(groupStepsByParent(rawStepRows)),
     [rawStepRows],
   );
-  // Ids of the present top-level steps — lets the UI tell a real sub-step from a
-  // promoted orphan (parent soft-deleted) so the orphan renders as a lead.
-  const stepRootIds = useMemo(
-    () =>
-      new Set(stepRows.filter((r) => r.parentStepId == null).map((r) => r.id)),
-    [stepRows],
-  );
-  const goalEvidenceRows = useQuery(evidenceByGoalQuery(goalId as GoalId));
-
   const allStepEvidenceRows = useQuery(
     stepEvidenceByGoalQuery(goalId as GoalId),
   );
 
-  const [currentCardIndex, setCurrentCardIndex] = useState(0);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [isFABMenuOpen, setIsFABMenuOpen] = useState(false);
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const { viewEvidence, viewerModals } = useEvidenceViewer();
-  const { timelineHidden, setTimelineHidden } = useFocusModePrefs();
-  const lifecycle = useRef({
-    snappedToFirstPending: false,
-    snappedToGoalCard: false,
-    // Reopen Goal lands FocusMode with steps already completed; without this
-    // guard, the snap-to-goal effect fires on mount instead of only on a
-    // genuine pending → complete transition.
-    sawIncomplete: false,
-  });
+  // The step this screen is focused on. Resolved once, when rows first arrive,
+  // and then held: completing or setting aside the current step re-renders
+  // *that same step* in its new state rather than jumping to another one.
+  // Auto-advance-on-complete is #467's (D1).
+  const [currentStepId, setCurrentStepId] = useState<string | null>(null);
+  // Authoring sheet: change which evidence types this step plans.
+  const [isPlanSheetOpen, setIsPlanSheetOpen] = useState(false);
+  // Capture sheet: pick a type to capture right now, with none pre-implied.
+  const [isCaptureSheetOpen, setIsCaptureSheetOpen] = useState(false);
+
   useEffect(() => {
     breadcrumb({ category: "focus", message: "enter" });
     return () => {
@@ -163,135 +131,21 @@ function FocusContent({ goalId }: { goalId: string }) {
     };
   }, []);
 
-  const isGoalCard = currentCardIndex >= stepRows.length;
+  // Resolve on the first non-empty emission only. Dep is stepRows.length —
+  // useQuery returns a fresh array each emission, so depending on stepRows
+  // would re-fire pointlessly.
+  const stepRowsLength = stepRows.length;
+  useEffect(() => {
+    if (stepRowsLength === 0) return;
+    setCurrentStepId((prev) => prev ?? resolveFocusStepId(stepRows));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only fire on initial population
+  }, [stepRowsLength]);
 
-  // Derive UI step status: current step is 'in-progress', others are mapped from DB
-  const uiSteps = useMemo(() => {
-    // id → title, built once so the per-row parent lookup below is O(1) rather
-    // than the O(n²) of re-scanning stepRows.find for every sub-step.
-    const titleById = new Map(stepRows.map((r) => [r.id, r.title ?? null] as const)); // prettier-ignore
-    return stepRows.map((row, index) => {
-      // A sub-step is a row whose parent is a present top-level step (#292).
-      // An orphan (parent soft-deleted) is treated as top-level so it renders
-      // as a lead, not an indented child of whatever precedes it. Resolve the
-      // parent's title for the StepCard / MiniTimeline context line.
-      const isChild =
-        row.parentStepId != null && stepRootIds.has(row.parentStepId);
-      return {
-        id: row.id,
-        title: row.title ?? "",
-        status:
-          row.status === StepStatus.completed
-            ? ("completed" as UIStepStatus)
-            : index === currentCardIndex
-              ? ("in-progress" as UIStepStatus)
-              : ("pending" as UIStepStatus),
-        evidenceCount: 0, // Will be enriched below
-        isChild,
-        parentTitle:
-          isChild && row.parentStepId != null
-            ? (titleById.get(row.parentStepId) ?? null)
-            : null,
-      };
-    });
-  }, [stepRows, stepRootIds, currentCardIndex]);
-
-  // Evidence counts per step (reuses allStepEvidenceRows to avoid duplicate query)
-  const stepEvidenceCounts = useStepEvidenceCounts(
-    allStepEvidenceRows,
-    stepRows,
+  const currentStep = useMemo(
+    () => stepRows.find((s) => s.id === currentStepId) ?? null,
+    [stepRows, currentStepId],
   );
 
-  // Enrich step evidence counts and evidence type info
-  const stepsWithEvidence = useMemo(
-    () =>
-      uiSteps.map((step, i) => {
-        const stepEvidence = allStepEvidenceRows.filter(
-          (e) => e.stepId === step.id,
-        );
-        const capturedTypes = [
-          ...new Set(
-            stepEvidence.map((e) => e.type).filter(Boolean) as string[],
-          ),
-        ];
-        // Per-item evidence for the rail chips — each carries its caption
-        // (evidence.description) so a chip can show it instead of the bare type.
-        const capturedEvidence = stepEvidence
-          .filter((e) => Boolean(e.type))
-          .map((e) => ({
-            id: e.id as string,
-            type: e.type as string,
-            caption: (e.description as string | null) ?? null,
-          }));
-        const rawPlanned = stepRows[i]?.plannedEvidenceTypes as string | null;
-        const plannedTypes = parsePlannedEvidenceTypes(rawPlanned);
-        if (rawPlanned != null && plannedTypes == null) {
-          console.warn(
-            "[FocusModeScreen] Failed to parse plannedEvidenceTypes",
-            {
-              stepId: step.id,
-              plannedEvidenceTypes: rawPlanned,
-            },
-          );
-        }
-        return {
-          ...step,
-          evidenceCount: stepEvidenceCounts[i] ?? 0,
-          plannedEvidenceTypes: plannedTypes,
-          capturedEvidenceTypes: capturedTypes,
-          capturedEvidence,
-        };
-      }),
-    [uiSteps, stepRows, allStepEvidenceRows, stepEvidenceCounts],
-  );
-
-  // Candidate C (#360): a top-level step that has present children renders as an
-  // overview card. Bucket each parent's parts (id, title, status, evidence) so
-  // the overview can list them as a spine and roll up their evidence. Children
-  // and flat steps stay leaf cards.
-  const partsByParentId = useMemo(() => {
-    const map = new Map<string, StepCardPart[]>();
-    stepsWithEvidence.forEach((step, i) => {
-      const parentId = stepRows[i]?.parentStepId;
-      if (parentId != null && stepRootIds.has(parentId)) {
-        const part: StepCardPart = {
-          id: step.id,
-          title: step.title,
-          status: step.status as StepCardStatus,
-          evidenceCount: step.evidenceCount,
-        };
-        const list = map.get(parentId);
-        if (list) list.push(part);
-        else map.set(parentId, [part]);
-      }
-    });
-    return map;
-  }, [stepsWithEvidence, stepRows, stepRootIds]);
-
-  // Per-child part numbering for the purple "↳ parent · part N of M" band (#360).
-  const partInfoByChildId = useMemo(() => {
-    const map = new Map<string, { index: number; total: number }>();
-    for (const parts of partsByParentId.values()) {
-      parts.forEach((part, i) => {
-        map.set(part.id, { index: i + 1, total: parts.length });
-      });
-    }
-    return map;
-  }, [partsByParentId]);
-
-  // Timeline + dot steps (memoized to prevent child re-renders on unrelated state changes)
-  const timelineSteps = useMemo<MiniTimelineStep[]>(
-    () =>
-      stepsWithEvidence.map((s) => ({ status: s.status, isChild: s.isChild })),
-    [stepsWithEvidence],
-  );
-  const dotSteps = useMemo<ProgressDotsStep[]>(
-    () => stepsWithEvidence.map((s) => ({ status: s.status })),
-    [stepsWithEvidence],
-  );
-
-  // Current evidence for the drawer
-  const currentStepId = isGoalCard ? null : stepRows[currentCardIndex]?.id;
   const currentStepEvidenceRows = useMemo(
     () =>
       currentStepId
@@ -300,282 +154,211 @@ function FocusContent({ goalId }: { goalId: string }) {
     [allStepEvidenceRows, currentStepId],
   );
 
-  const evidenceFallbackLabel = t("focusMode:evidenceFallback");
-  const drawerEvidence: EvidenceItemData[] = (
-    isGoalCard ? goalEvidenceRows : currentStepEvidenceRows
-  ).map((row) => ({
-    id: row.id,
-    type: validateEvidenceType(row.type ?? "file"),
-    label: row.description ?? row.type ?? evidenceFallbackLabel,
-  }));
+  // Read-only chips for the captured rail — what is present, never what is
+  // absent (#360). Each carries its caption so a chip can show it instead of
+  // the bare type label.
+  const capturedEvidence = useMemo<FocusCapturedEvidenceItem[]>(
+    () =>
+      currentStepEvidenceRows
+        .filter((e) => Boolean(e.type))
+        .map((e) => ({
+          id: e.id as string,
+          type: e.type as string,
+          caption: (e.description as string | null) ?? null,
+        })),
+    [currentStepEvidenceRows],
+  );
 
-  const goalEvidenceCount = goalEvidenceRows.length;
+  // An unset plan means one text note (#466 D4) — the same list canCompleteStep
+  // gates on, so the card's "Mark complete" reveal and the DB verdict agree.
+  const plannedEvidenceTypes = useMemo(
+    () =>
+      resolvePlannedEvidenceTypes(
+        (currentStep?.plannedEvidenceTypes as string | null) ?? null,
+      ),
+    [currentStep],
+  );
 
-  const allStepsComplete = areAllStepsComplete(stepRows);
+  // C·B band (#454): the resolver hands back raw fields, so this caller owns
+  // the date formatting (locale from the active UI language) and leaves each
+  // prop undefined when its column is unset — MetadataBand then renders
+  // nothing rather than a placeholder line. Same shape TimelineJourneyScreen
+  // builds, so the two surfaces read a step's dependencies identically.
+  const band = useMemo(() => {
+    if (!currentStep) return null;
+    const resolved = resolveStepDependencyBand(currentStep, stepRows);
+    return {
+      afterStep: resolved.afterStepTitle ?? undefined,
+      waitingOn: resolved.waitingOnLabel
+        ? {
+            who: resolved.waitingOnLabel,
+            expected: resolved.waitingOnExpectedAt
+              ? formatDate(resolved.waitingOnExpectedAt, i18n.language)
+              : undefined,
+          }
+        : undefined,
+      dueDate: resolved.dueAt
+        ? formatDate(resolved.dueAt, i18n.language)
+        : undefined,
+    };
+  }, [currentStep, stepRows, i18n.language]);
 
-  // Stepless goals are tappable from mount; stepped goals gate on all-complete.
-  const canMarkComplete = stepRows.length === 0 || allStepsComplete;
-
-  // Snap to first pending step on initial load. Dep is stepRows.length —
-  // useQuery returns a fresh array each emission, so depending on stepRows
-  // would re-fire pointlessly.
-  const stepRowsLength = stepRows.length;
-  useEffect(() => {
-    if (lifecycle.current.snappedToFirstPending) return;
-    if (stepRowsLength === 0) return;
-    lifecycle.current.snappedToFirstPending = true;
-    const firstPendingIndex = findFirstPendingLeafIndex(stepRows);
-    if (firstPendingIndex > 0) {
-      setCurrentCardIndex(firstPendingIndex);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only fire on initial population
-  }, [stepRowsLength]);
-
-  // On the pending → complete transition, snap to the goal card so the
-  // user sees the Mark Complete affordance without scrolling.
-  const goalTitleForAnnouncement = goal?.title as string | undefined;
-  useEffect(() => {
-    if (!goalTitleForAnnouncement) return;
-    if (!allStepsComplete) {
-      lifecycle.current.sawIncomplete = true;
-      return;
-    }
-    if (!lifecycle.current.sawIncomplete) return;
-    if (lifecycle.current.snappedToGoalCard) return;
-    lifecycle.current.snappedToGoalCard = true;
-    setCurrentCardIndex(stepRowsLength);
-    AccessibilityInfo.announceForAccessibility(
-      t("focusMode:a11y.allStepsComplete", {
-        title: goalTitleForAnnouncement,
-      }),
-    );
-  }, [goalTitleForAnnouncement, allStepsComplete, stepRowsLength, t]);
+  const doneCount = useMemo(
+    () => stepRows.filter((s) => s.status === StepStatus.completed).length,
+    [stepRows],
+  );
 
   // --- Event Handlers ---
 
-  const handleIndexChange = useCallback((index: number) => {
-    setCurrentCardIndex(index);
-    setIsDrawerOpen(false);
-    setIsFABMenuOpen(false);
-  }, []);
-
-  // Overview spine rows link to their part's own card (#360): resolve the part's
-  // position in the flat stepRows and snap the carousel to it.
-  const handleOpenPart = useCallback(
-    (partId: string) => {
-      const index = stepRows.findIndex((s) => s.id === partId);
-      if (index !== -1) handleIndexChange(index);
-    },
-    [stepRows, handleIndexChange],
-  );
-
-  const handleMarkComplete = useCallback(() => {
-    navigation.navigate("CompletionFlow", { goalId });
-  }, [goalId, navigation]);
-
-  const handleBadgePress = useCallback(() => {
-    navigation.navigate("BadgeDesigner", {
-      mode: "new-goal",
-      goalId,
-      returnVia: "back",
-    });
-  }, [goalId, navigation]);
-
-  const handleToggleStep = useCallback(
-    (stepId: string) => {
-      const step = stepRows.find((s) => s.id === stepId);
-      if (!step) {
-        console.warn(
-          `[FocusModeScreen] handleToggleStep: step not found for id "${stepId}"`,
-        );
-        return;
-      }
-
+  /**
+   * Run a step mutation, surfacing a failure the same way step completion
+   * already does — toast + Sentry — rather than letting it reject silently.
+   *
+   * `op` is the specific operation, for the log line; `kind` is the coarser
+   * Sentry facet (see ReportContext's focus.mode entry).
+   */
+  const runStepMutation = useCallback(
+    (
+      op: string,
+      kind: "step-toggle" | "evidence-plan",
+      mutate: () => void,
+      announcement?: string,
+    ) => {
       try {
-        if (step.status === StepStatus.completed) {
-          uncompleteStep(stepId as StepId);
-          AccessibilityInfo.announceForAccessibility(
-            t("focusMode:a11y.stepUncompleted", { title: step.title }),
-          );
-        } else {
-          const stepEvidence = allStepEvidenceRows
-            .filter((e) => e.stepId === stepId)
-            .map((e) => ({ type: (e.type as string | null) ?? null }));
-          const plannedTypes =
-            (step.plannedEvidenceTypes as string | null) ?? null;
-
-          if (!canCompleteStep(plannedTypes, stepEvidence)) {
-            showToast({
-              message: t("focusMode:toast.evidenceRequired"),
-              duration: 3000,
-            });
-            return;
-          }
-
-          completeStep(stepId as StepId, plannedTypes, stepEvidence);
-          AccessibilityInfo.announceForAccessibility(
-            t("focusMode:a11y.stepCompleted", { title: step.title }),
-          );
-          // Advance past the just-completed step to the next pending one.
-          // stepRows is the pre-completion snapshot, so skip stepId explicitly.
-          // Forward first, then wrap; if nothing remains pending, the
-          // all-steps-complete effect navigates to CompletionFlow.
-          const isOtherPending = (s: (typeof stepRows)[number]): boolean =>
-            s.id !== stepId && isPendingStep(s);
-          const completedIndex = stepRows.findIndex((s) => s.id === stepId);
-          const forwardIndex = stepRows.findIndex(
-            (s, i) => i > completedIndex && isOtherPending(s),
-          );
-          const nextIndex =
-            forwardIndex !== -1
-              ? forwardIndex
-              : stepRows.findIndex(isOtherPending);
-          if (nextIndex !== -1) {
-            // Use handleIndexChange (not setCurrentCardIndex) so the evidence
-            // drawer / FAB menu close — otherwise an open overlay would persist
-            // over the new step's content.
-            handleIndexChange(nextIndex);
-          }
+        mutate();
+        if (announcement) {
+          AccessibilityInfo.announceForAccessibility(announcement);
         }
       } catch (error) {
         const message =
           error instanceof Error
             ? error.message
             : t("focusMode:errors.somethingWrong");
-        console.error("[FocusModeScreen] Failed to toggle step completion", {
-          stepId,
-          error,
-        });
-        reportError(error, { area: "focus.mode", kind: "step-toggle" });
+        logger.error("Step mutation failed", { op, error });
+        reportError(error, { area: "focus.mode", kind });
         showToast({
           message: t("focusMode:errors.couldNotUpdateStep", { message }),
           duration: 3000,
         });
       }
     },
-    [allStepEvidenceRows, handleIndexChange, showToast, stepRows, t],
+    [showToast, t],
   );
 
-  const handleEvidenceTap = useCallback(() => {
-    setIsDrawerOpen(true);
-  }, []);
+  const handleMarkComplete = useCallback(() => {
+    if (!currentStep) return;
+    const stepId = currentStep.id;
+    const stepEvidence = currentStepEvidenceRows.map((e) => ({
+      type: (e.type as string | null) ?? null,
+    }));
+    const plannedJson =
+      (currentStep.plannedEvidenceTypes as string | null) ?? null;
 
-  const handleToggleDrawer = useCallback(() => {
-    setIsDrawerOpen((prev) => !prev);
-  }, []);
+    // The card only reveals "Mark complete" once the plan is satisfied, so this
+    // is a backstop against a race (evidence deleted elsewhere mid-session),
+    // not the primary gate.
+    if (!canCompleteStep(plannedJson, stepEvidence)) {
+      showToast({
+        message: t("focusMode:toast.evidenceRequired"),
+        duration: 3000,
+      });
+      return;
+    }
 
-  const handleToggleFABMenu = useCallback(() => {
-    setIsFABMenuOpen((prev) => !prev);
-    if (!isDrawerOpen) setIsDrawerOpen(true);
-  }, [isDrawerOpen]);
+    runStepMutation(
+      "step-complete",
+      "step-toggle",
+      () => completeStep(stepId as StepId, plannedJson, stepEvidence),
+      t("focusMode:a11y.stepCompleted", { title: currentStep.title }),
+    );
+  }, [currentStep, currentStepEvidenceRows, runStepMutation, showToast, t]);
 
-  const handleSelectEvidenceType = useCallback(
-    (type: EvidenceTypeValue) => {
-      setIsFABMenuOpen(false);
+  const handlePause = useCallback(() => {
+    if (!currentStep) return;
+    runStepMutation("step-pause", "step-toggle", () =>
+      pauseStep(currentStep.id as StepId),
+    );
+  }, [currentStep, runStepMutation]);
+
+  const handlePickUp = useCallback(() => {
+    if (!currentStep) return;
+    runStepMutation("step-resume", "step-toggle", () =>
+      resumeStep(currentStep.id as StepId),
+    );
+  }, [currentStep, runStepMutation]);
+
+  const handleReopen = useCallback(() => {
+    if (!currentStep) return;
+    runStepMutation(
+      "step-reopen",
+      "step-toggle",
+      () => uncompleteStep(currentStep.id as StepId),
+      t("focusMode:a11y.stepUncompleted", { title: currentStep.title }),
+    );
+  }, [currentStep, runStepMutation, t]);
+
+  const navigateToCapture = useCallback(
+    (type: EvidenceTypeValue, stepId: string) => {
       const routeName = EVIDENCE_ROUTE_MAP[type];
       if (!routeName) {
         logger.error("No capture route mapped for evidence type", { type });
-        const label = evidenceShortLabel(t, type);
         showToast({
-          message: t("focusMode:errors.couldNotOpenCapture", { label }),
+          message: t("focusMode:errors.couldNotOpenCapture", {
+            label: evidenceShortLabel(t, type),
+          }),
           duration: 3000,
         });
         return;
       }
-
-      navigation.navigate(routeName, {
-        goalId,
-        stepId: isGoalCard ? undefined : stepRows[currentCardIndex]?.id,
-      });
-    },
-    [currentCardIndex, goalId, isGoalCard, navigation, showToast, stepRows, t],
-  );
-
-  const handleQuickEvidence = useCallback(
-    (stepId: string, type: QuickEvidenceType) => {
-      setIsFABMenuOpen(false);
-      const routeName = EVIDENCE_ROUTE_MAP[type];
-      if (!routeName) {
-        logger.error("No capture route mapped for evidence type", { type });
-        const label = evidenceShortLabel(t, type);
-        showToast({
-          message: t("focusMode:errors.couldNotOpenCapture", { label }),
-          duration: 3000,
-        });
-        return;
-      }
-
-      navigation.navigate(routeName, {
-        goalId,
-        stepId,
-      });
+      navigation.navigate(routeName, { goalId, stepId });
     },
     [goalId, navigation, showToast, t],
   );
 
-  const handleRequestDeleteEvidence = useCallback((id: string) => {
-    setPendingDeleteId(id);
-  }, []);
-
-  const handleConfirmDeleteEvidence = useCallback(() => {
-    if (!pendingDeleteId) return;
-    const id = pendingDeleteId;
-    setPendingDeleteId(null);
-    const row =
-      currentStepEvidenceRows.find((r) => r.id === id) ??
-      goalEvidenceRows.find((r) => r.id === id);
-    try {
-      deleteEvidence(id as EvidenceId);
-
-      // Soft-delete is committed on confirm; clean up the backing file
-      // immediately. There is no undo, so there is nothing to defer.
-      if (row?.uri && row.type) {
-        deleteEvidenceFile(row.uri, row.type);
+  /**
+   * A `type` means a specific "Add {type}" invite — go straight to that capture
+   * screen. No `type` is the open-ended "Add more evidence" — open the capture
+   * sheet so the user picks one first (FocusCurrentTaskCard.types.ts:49-54).
+   */
+  const handleAddEvidence = useCallback(
+    (type?: string) => {
+      if (!currentStepId) return;
+      if (type === undefined) {
+        setIsCaptureSheetOpen(true);
+        return;
       }
-
-      showToast({
-        message: t("focusMode:toast.evidenceDeleted"),
-        duration: 5000,
-      });
-    } catch (error) {
-      console.error("[FocusModeScreen] Failed to delete evidence", {
-        evidenceId: id,
-        error,
-      });
-      reportError(error, { area: "focus.mode", kind: "evidence-delete" });
-      Alert.alert(
-        t("focusMode:errors.couldNotDeleteEvidenceTitle"),
-        t("focusMode:errors.somethingWrong"),
-      );
-    }
-  }, [
-    currentStepEvidenceRows,
-    goalEvidenceRows,
-    pendingDeleteId,
-    showToast,
-    t,
-  ]);
-
-  const handleViewEvidence = useCallback(
-    (id: string) => {
-      const row =
-        currentStepEvidenceRows.find((r) => r.id === id) ??
-        goalEvidenceRows.find((r) => r.id === id);
-      if (!row) return;
-      viewEvidence({
-        id: row.id,
-        title: row.description ?? row.type ?? evidenceFallbackLabel,
-        type: validateEvidenceType(row.type ?? "file"),
-        uri: row.uri ?? undefined,
-        metadata: row.metadata ?? undefined,
-      });
+      navigateToCapture(validateEvidenceType(type), currentStepId);
     },
-    [
-      currentStepEvidenceRows,
-      evidenceFallbackLabel,
-      goalEvidenceRows,
-      viewEvidence,
-    ],
+    [currentStepId, navigateToCapture],
+  );
+
+  const handleSelectCaptureType = useCallback(
+    (type: EvidenceTypeValue) => {
+      setIsCaptureSheetOpen(false);
+      if (!currentStepId) return;
+      navigateToCapture(type, currentStepId);
+    },
+    [currentStepId, navigateToCapture],
+  );
+
+  /**
+   * Toggle a planned type. Guards the "every step requires evidence" invariant
+   * the same way the New Goal wizard does: the last remaining type can't be
+   * deselected, so a step never lands in a 0-selected state.
+   */
+  const handleTogglePlannedType = useCallback(
+    (type: EvidenceTypeValue) => {
+      if (!currentStepId) return;
+      const isSelected = plannedEvidenceTypes.includes(type);
+      if (isSelected && plannedEvidenceTypes.length === 1) return;
+      const next = isSelected
+        ? plannedEvidenceTypes.filter((planned) => planned !== type)
+        : [...plannedEvidenceTypes, type];
+      runStepMutation("step-evidence-plan", "evidence-plan", () =>
+        updateStep(currentStepId as StepId, { plannedEvidenceTypes: next }),
+      );
+    },
+    [currentStepId, plannedEvidenceTypes, runStepMutation],
   );
 
   const handleTimelineTap = useCallback(() => {
@@ -598,7 +381,6 @@ function FocusContent({ goalId }: { goalId: string }) {
 
   return (
     <View style={styles.content}>
-      {/* Header */}
       <View style={styles.headerRow}>
         <Text
           variant="title"
@@ -609,25 +391,6 @@ function FocusContent({ goalId }: { goalId: string }) {
         >
           {goal.title}
         </Text>
-        {stepRows.length > 0 && (
-          <IconButton
-            icon={
-              timelineHidden ? (
-                <EyeSlash size={20} weight="bold" />
-              ) : (
-                <Eye size={20} weight="bold" />
-              )
-            }
-            onPress={() => setTimelineHidden(!timelineHidden)}
-            tone="ghost"
-            accessibilityLabel={
-              timelineHidden
-                ? t("focusMode:header.showTimeline")
-                : t("focusMode:header.hideTimeline")
-            }
-            size="sm"
-          />
-        )}
         <IconButton
           icon={<Pencil size={20} weight="bold" />}
           onPress={handleEditPress}
@@ -637,129 +400,77 @@ function FocusContent({ goalId }: { goalId: string }) {
         />
       </View>
 
-      {!timelineHidden && stepRows.length > 0 && (
-        <MiniTimeline
-          steps={timelineSteps}
-          currentIndex={currentCardIndex}
-          onStepTap={handleIndexChange}
-          onTimelineTap={handleTimelineTap}
-          accessibilityLabel={t("common:timeline.a11y.label")}
-        />
-      )}
+      {/* The one way to see everything: progress + "See all steps ›" in a
+          single tap target, replacing the old MiniTimeline/ProgressDots pair. */}
+      <FocusProgressStrip
+        doneCount={doneCount}
+        totalCount={stepRows.length}
+        onPress={handleTimelineTap}
+      />
 
-      {/* CardCarousel with ProgressDots as indicator */}
-      <View style={styles.carouselSection}>
-        <CardCarousel
-          currentIndex={currentCardIndex}
-          onIndexChange={handleIndexChange}
-          accessibilityLabel={t("focusMode:a11y.carousel", {
-            count: stepRows.length,
-          })}
-          renderIndicator={() => (
-            <ProgressDots
-              steps={dotSteps}
-              currentIndex={currentCardIndex}
-              onDotTap={handleIndexChange}
-              showGoalDot
+      <View style={styles.cardSection}>
+        {currentStep ? (
+          currentStep.status === StepStatus.completed ? (
+            <FocusCurrentTaskCard
+              status="completed"
+              title={currentStep.title ?? ""}
+              capturedEvidence={capturedEvidence}
+              onReopen={handleReopen}
             />
-          )}
-        >
-          {[
-            ...stepsWithEvidence.map((step, index) => {
-              // A top-level step with present children renders as an overview
-              // card; children and flat steps stay leaf cards (#360).
-              const parts = step.isChild
-                ? undefined
-                : partsByParentId.get(step.id);
-              const isOverview = parts != null && parts.length > 0;
-              const partInfo = step.isChild
-                ? partInfoByChildId.get(step.id)
-                : undefined;
-              return (
-                <StepCard
-                  key={step.id}
-                  kind={isOverview ? "overview" : "leaf"}
-                  parts={parts}
-                  onOpenPart={isOverview ? handleOpenPart : undefined}
-                  step={{
-                    id: step.id,
-                    title: step.title,
-                    status: step.status as StepCardStatus,
-                    evidenceCount: step.evidenceCount,
-                    plannedEvidenceTypes: step.plannedEvidenceTypes,
-                    capturedEvidenceTypes: step.capturedEvidenceTypes,
-                    capturedEvidence: step.capturedEvidence,
-                    parentTitle: step.parentTitle,
-                    partIndex: partInfo?.index ?? null,
-                    partTotal: partInfo?.total ?? null,
-                  }}
-                  stepIndex={index}
-                  totalSteps={stepRows.length}
-                  onToggleComplete={handleToggleStep}
-                  onEvidenceTap={handleEvidenceTap}
-                  onQuickEvidence={handleQuickEvidence}
-                />
-              );
-            }),
-            <GoalEvidenceCard
-              key="goal-evidence"
-              goalTitle={goal.title as string}
-              goalDescription={(goal.description as string | null) ?? null}
-              goalColor={(goal.color as string | null) ?? null}
-              goalDesignJson={(goal.design as string | null) ?? null}
-              onBadgePress={handleBadgePress}
-              evidenceCount={goalEvidenceCount}
-              onEvidenceTap={handleEvidenceTap}
-              onMarkComplete={canMarkComplete ? handleMarkComplete : undefined}
-            />,
-          ]}
-        </CardCarousel>
+          ) : currentStep.status === StepStatus.paused ? (
+            <FocusCurrentTaskCard
+              status="paused"
+              title={currentStep.title ?? ""}
+              onPickUp={handlePickUp}
+            />
+          ) : (
+            <FocusCurrentTaskCard
+              status="in-progress"
+              title={currentStep.title ?? ""}
+              plannedEvidenceTypes={plannedEvidenceTypes}
+              capturedEvidence={capturedEvidence}
+              onChangeEvidencePlan={() => setIsPlanSheetOpen(true)}
+              onAddEvidence={handleAddEvidence}
+              onPause={handlePause}
+              onMarkComplete={handleMarkComplete}
+              afterStep={band?.afterStep}
+              waitingOn={band?.waitingOn}
+              dueDate={band?.dueDate}
+            />
+          )
+        ) : null}
       </View>
 
-      {/* EvidenceDrawer */}
-      <EvidenceDrawer
-        evidence={drawerEvidence}
-        isGoal={isGoalCard}
-        isOpen={isDrawerOpen}
-        onToggle={handleToggleDrawer}
-        onViewEvidence={handleViewEvidence}
-        onDeleteEvidence={handleRequestDeleteEvidence}
-        isFABMenuOpen={isFABMenuOpen}
-        onAddEvidence={handleToggleFABMenu}
-        onSelectEvidenceType={handleSelectEvidenceType}
+      {/* Capture sheet — pick a type, then capture. Reuses #409's capture mode
+          whole, as the New Goal wizard's step 2 does. Renders in-tree and gates
+          on `visible`, so mounting it unconditionally is inert until opened. */}
+      <EvidenceTypePicker
+        mode="capture"
+        visible={isCaptureSheetOpen}
+        activeStepTitle={currentStep?.title ?? undefined}
+        onSelectType={handleSelectCaptureType}
+        onClose={() => setIsCaptureSheetOpen(false)}
       />
 
-      {/* Confirm delete evidence modal */}
-      <ConfirmDeleteModal
-        visible={!!pendingDeleteId}
-        title={t("focusMode:confirmDelete.title")}
-        message={t("focusMode:confirmDelete.message")}
-        onConfirm={handleConfirmDeleteEvidence}
-        onCancel={() => setPendingDeleteId(null)}
-      />
-
-      {/* Evidence viewer modals */}
-      {viewerModals}
+      {/* Evidence-plan sheet — change *which* types this step plans. The
+          authoring multi-select grid in the shared AnimatedSheet chrome,
+          mirroring the wizard's build-step sheet. */}
+      <AnimatedSheet
+        visible={isPlanSheetOpen}
+        onClose={() => setIsPlanSheetOpen(false)}
+        title={t("focusMode:evidencePlanSheet.title")}
+        closeLabel={t("common:actions.close")}
+        closeTestID="focus-evidence-plan-close"
+        backdropTestID="focus-evidence-plan-backdrop"
+      >
+        <EvidenceTypePicker
+          selectedTypes={plannedEvidenceTypes.map(validateEvidenceType)}
+          onToggleType={handleTogglePlannedType}
+          label={t("focusMode:evidencePlanSheet.typesLabel")}
+        />
+      </AnimatedSheet>
     </View>
   );
-}
-
-/**
- * Hook to get evidence counts per step using a single joined query.
- * Avoids hooks-in-loop by fetching all step evidence for the goal at once,
- * then grouping counts client-side with useMemo.
- */
-function useStepEvidenceCounts(
-  allStepEvidence: readonly { stepId: string | null }[],
-  stepRows: readonly { id: string }[],
-): number[] {
-  return useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const ev of allStepEvidence) {
-      if (ev.stepId) counts.set(ev.stepId, (counts.get(ev.stepId) ?? 0) + 1);
-    }
-    return stepRows.map((s) => counts.get(s.id) ?? 0);
-  }, [allStepEvidence, stepRows]);
 }
 
 export function FocusModeScreen({ route }: FocusModeNavProps) {
@@ -785,7 +496,6 @@ export function FocusModeScreen({ route }: FocusModeNavProps) {
             <FocusContent goalId={route.params.goalId} />
           </Suspense>
         </ErrorBoundary>
-        <ModeIndicator mode="focus" />
       </KeyboardAvoidingView>
     </View>
   );
