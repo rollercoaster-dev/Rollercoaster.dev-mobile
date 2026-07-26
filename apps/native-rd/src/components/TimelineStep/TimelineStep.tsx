@@ -66,11 +66,12 @@ export function TimelineStep({
   defaultExpanded = false,
   subSteps = [],
 }: TimelineStepProps) {
-  const { t } = useTranslation(["common", "timelineJourney"]);
+  const { t } = useTranslation(["timelineJourney"]);
   const [expanded, setExpanded] = useState(defaultExpanded);
   // E (state) — the one #406 color language: the header state word reads from the
   // same map the node uses (stepStateColorMap), replacing the old StatusBadge.
-  const statusLabel = t(stepStateColorMap[step.status].badgeI18nKey);
+  // The word itself is the Timeline's own vocabulary (#453), not StepCard's.
+  const statusLabel = t(stepStateColorMap[step.status].stateWordI18nKey);
 
   return (
     <View style={styles.wrapper}>
@@ -169,12 +170,12 @@ function ChildRow({
   onNodePress: (stepIndex: number) => void;
   onEvidencePress: (evidenceId: string) => void;
 }) {
-  const { t } = useTranslation(["common", "timelineJourney"]);
+  const { t } = useTranslation(["timelineJourney"]);
   const [expanded, setExpanded] = useState(false);
   // #406 state word (E) replaces StatusBadge here too. Children carry no C/B
   // band (OQ-2); the evidence drawer below is pre-existing #293 behavior — the
   // prototype's E-only (no-drawer) child is a fidelity follow-up owned by #378.
-  const statusLabel = t(stepStateColorMap[child.status].badgeI18nKey);
+  const statusLabel = t(stepStateColorMap[child.status].stateWordI18nKey);
 
   return (
     <View style={styles.childRow}>

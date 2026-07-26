@@ -519,7 +519,7 @@ describe("TimelineJourneyScreen", () => {
     setupQueries({ stepEvidence: STEP_EVIDENCE });
     renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
     // Expand first step
-    fireEvent.press(screen.getByLabelText("Read docs, Completed"));
+    fireEvent.press(screen.getByLabelText("Read docs, Done"));
     expect(screen.getByText("Photo proof")).toBeOnTheScreen();
   });
 
@@ -527,24 +527,21 @@ describe("TimelineJourneyScreen", () => {
     it("never takes the in-progress accent, even as the first non-completed row", () => {
       setupQueries({ steps: STEPS_WITH_PAUSED });
       renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
-      expect(screen.getAllByText("In Progress")).toHaveLength(1);
+      expect(screen.getAllByText("Working")).toHaveLength(1);
       // The accent skips the paused row and lands on the next pending one.
-      expect(
-        screen.getByLabelText("Next thing, In Progress"),
-      ).toBeOnTheScreen();
-      expect(
-        screen.queryByLabelText("Set aside thing, In Progress"),
-      ).toBeNull();
+      expect(screen.getByLabelText("Next thing, Working")).toBeOnTheScreen();
+      expect(screen.queryByLabelText("Set aside thing, Working")).toBeNull();
     });
 
     it('renders in the "paused" state language, not "pending"', () => {
       setupQueries({ steps: STEPS_WITH_PAUSED });
       renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
-      // Pill + a11y label read Paused...
+      // Pill + a11y label read the paused word ("Set aside", #453) — the step's
+      // title happens to be "Set aside thing", hence the doubled label...
       expect(
-        screen.getByLabelText("Set aside thing, Paused"),
+        screen.getByLabelText("Set aside thing, Set aside"),
       ).toBeOnTheScreen();
-      expect(screen.queryByLabelText("Set aside thing, Pending")).toBeNull();
+      expect(screen.queryByLabelText("Set aside thing, Up next")).toBeNull();
       // ...and the node paints the shared paused glyph from stepStateColorMap
       // (#406) rather than its step number.
       expect(screen.getByText("⏸")).toBeOnTheScreen();
@@ -616,11 +613,11 @@ describe("TimelineJourneyScreen", () => {
     it("marks exactly one node in-progress — the first pending leaf", () => {
       setupQueries({ steps: STEPS_WITH_CHILDREN });
       renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
-      // The in-progress accent surfaces as a single "In Progress" state word.
-      expect(screen.getAllByText("In Progress")).toHaveLength(1);
+      // The in-progress accent surfaces as a single "Working" state word.
+      expect(screen.getAllByText("Working")).toHaveLength(1);
       // ...and it is the first child, not the parent or the second child.
       const firstChild = screen.getByLabelText("Sub-step a: First sub-step");
-      expect(within(firstChild).getByText("In Progress")).toBeOnTheScreen();
+      expect(within(firstChild).getByText("Working")).toBeOnTheScreen();
     });
 
     it("counts every unit (parents + children) in the breakdown buckets", () => {
@@ -658,10 +655,10 @@ describe("TimelineJourneyScreen", () => {
       });
       renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
       // Exactly one accent, and it is the child — not the completed parent.
-      expect(screen.getAllByText("In Progress")).toHaveLength(1);
+      expect(screen.getAllByText("Working")).toHaveLength(1);
       const child = screen.getByLabelText("Sub-step a: Still open");
-      expect(within(child).getByText("In Progress")).toBeOnTheScreen();
-      expect(screen.getByLabelText("Done parent, Completed")).toBeOnTheScreen();
+      expect(within(child).getByText("Working")).toBeOnTheScreen();
+      expect(screen.getByLabelText("Done parent, Done")).toBeOnTheScreen();
     });
 
     // Invite state: all children done but the parent is still open, so the
@@ -694,10 +691,8 @@ describe("TimelineJourneyScreen", () => {
       });
       renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
       // The single accent sits on the parent header, not on either done child.
-      expect(screen.getAllByText("In Progress")).toHaveLength(1);
-      expect(
-        screen.getByLabelText("Open parent, In Progress"),
-      ).toBeOnTheScreen();
+      expect(screen.getAllByText("Working")).toHaveLength(1);
+      expect(screen.getByLabelText("Open parent, Working")).toBeOnTheScreen();
     });
 
     it("never accents a paused sub-step, even as the first non-completed leaf", () => {
@@ -727,12 +722,12 @@ describe("TimelineJourneyScreen", () => {
         ],
       });
       renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
-      expect(screen.getAllByText("In Progress")).toHaveLength(1);
+      expect(screen.getAllByText("Working")).toHaveLength(1);
       // The accent skips the paused first child and lands on the second.
       const openSub = screen.getByLabelText("Sub-step b: Open sub");
-      expect(within(openSub).getByText("In Progress")).toBeOnTheScreen();
+      expect(within(openSub).getByText("Working")).toBeOnTheScreen();
       const pausedSub = screen.getByLabelText("Sub-step a: Set aside sub");
-      expect(within(pausedSub).getByText("Paused")).toBeOnTheScreen();
+      expect(within(pausedSub).getByText("Set aside")).toBeOnTheScreen();
     });
 
     it("shows no in-progress accent when every step is completed", () => {
@@ -755,7 +750,7 @@ describe("TimelineJourneyScreen", () => {
         ],
       });
       renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
-      expect(screen.queryAllByText("In Progress")).toHaveLength(0);
+      expect(screen.queryAllByText("Working")).toHaveLength(0);
     });
   });
 });

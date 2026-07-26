@@ -36,13 +36,14 @@ describe("TimelineStep", () => {
   it("renders step title and state word", () => {
     renderWithProviders(<TimelineStep {...baseProps} />);
     expect(screen.getByText("Read the docs")).toBeOnTheScreen();
-    expect(screen.getByText("In Progress")).toBeOnTheScreen();
+    expect(screen.getByText("Working")).toBeOnTheScreen();
   });
 
   it.each([
-    { status: "completed" as const, label: "Completed" },
-    { status: "in-progress" as const, label: "In Progress" },
-    { status: "pending" as const, label: "Pending" },
+    { status: "completed" as const, label: "Done" },
+    { status: "in-progress" as const, label: "Working" },
+    { status: "pending" as const, label: "Up next" },
+    { status: "paused" as const, label: "Set aside" },
   ])('shows "$label" for $status status', ({ status, label }) => {
     renderWithProviders(
       <TimelineStep {...baseProps} step={{ ...baseStep, status }} />,
@@ -57,14 +58,14 @@ describe("TimelineStep", () => {
 
   it("expands evidence on header tap", () => {
     renderWithProviders(<TimelineStep {...baseProps} />);
-    fireEvent.press(screen.getByLabelText("Read the docs, In Progress"));
+    fireEvent.press(screen.getByLabelText("Read the docs, Working"));
     expect(screen.getByText("Progress photo")).toBeOnTheScreen();
     expect(screen.getByText("Useful article")).toBeOnTheScreen();
   });
 
   it("collapses evidence on second header tap", () => {
     renderWithProviders(<TimelineStep {...baseProps} />);
-    const header = screen.getByLabelText("Read the docs, In Progress");
+    const header = screen.getByLabelText("Read the docs, Working");
     fireEvent.press(header);
     expect(screen.getByText("Progress photo")).toBeOnTheScreen();
     fireEvent.press(header);
@@ -73,7 +74,7 @@ describe("TimelineStep", () => {
 
   it('shows "No evidence yet" when empty', () => {
     renderWithProviders(<TimelineStep {...baseProps} evidence={[]} />);
-    fireEvent.press(screen.getByLabelText("Read the docs, In Progress"));
+    fireEvent.press(screen.getByLabelText("Read the docs, Working"));
     expect(screen.getByText("No evidence yet")).toBeOnTheScreen();
   });
 
@@ -91,31 +92,55 @@ describe("TimelineStep", () => {
     renderWithProviders(
       <TimelineStep {...baseProps} onEvidencePress={onEvidencePress} />,
     );
-    fireEvent.press(screen.getByLabelText("Read the docs, In Progress"));
+    fireEvent.press(screen.getByLabelText("Read the docs, Working"));
     fireEvent.press(screen.getByLabelText("photo evidence: Progress photo"));
     expect(onEvidencePress).toHaveBeenCalledWith("ev-1");
     expect(onEvidencePress).toHaveBeenCalledTimes(1);
   });
 
   describe("metadata band + state word", () => {
-    // E — the header word reads from stepStateColorMap (common:stepCard.status.*),
-    // replacing the old StatusBadge vocabulary (timelineJourney:step.status.*).
-    // pending is "Pending" in both vocabularies, so it can't show the swap.
+    // E — the header word reads from stepStateColorMap, and since #453 it reads
+    // the map's `stateWordI18nKey` (timelineJourney:step.stateWord.*, the
+    // prototype vocabulary) rather than its `badgeI18nKey`
+    // (common:stepCard.status.*, which StepCard and the Focus surfaces still
+    // speak). Asserting the shared field's word is *absent* is the point: it is
+    // what makes a silent repoint of `badgeI18nKey` — the change that would drag
+    // StepCard's words back onto the timeline — fail here.
     it.each([
-      { status: "completed" as const, newWord: "Completed", oldWord: "Done" },
+      { status: "completed" as const, word: "Done", sharedWord: "Completed" },
       {
         status: "in-progress" as const,
-        newWord: "In Progress",
-        oldWord: "Active",
+        word: "Working",
+        sharedWord: "In Progress",
       },
+      { status: "pending" as const, word: "Up next", sharedWord: "Pending" },
+      { status: "paused" as const, word: "Set aside", sharedWord: "Paused" },
     ])(
-      "renders the #406 state word ($newWord), not the old StatusBadge word ($oldWord)",
-      ({ status, newWord, oldWord }) => {
+      "renders the #453 state word ($word), not the shared StepCard word ($sharedWord)",
+      ({ status, word, sharedWord }) => {
         renderWithProviders(
           <TimelineStep {...baseProps} step={{ ...baseStep, status }} />,
         );
-        expect(screen.getByText(newWord)).toBeOnTheScreen();
-        expect(screen.queryByText(oldWord)).toBeNull();
+        expect(screen.getByText(word)).toBeOnTheScreen();
+        expect(screen.queryByText(sharedWord)).toBeNull();
+      },
+    );
+
+    // #406's original guard, still live: the word must not come from the legacy
+    // StatusBadge group either (timelineJourney:step.status.* — "Done" / "Active"
+    // / "Pending"). `completed` can no longer demonstrate this — #453's word for
+    // it is also "Done" — so the two states whose vocabularies still differ
+    // carry the assertion.
+    it.each([
+      { status: "in-progress" as const, legacyWord: "Active" },
+      { status: "pending" as const, legacyWord: "Pending" },
+    ])(
+      "does not render the legacy StatusBadge word ($legacyWord) for $status",
+      ({ status, legacyWord }) => {
+        renderWithProviders(
+          <TimelineStep {...baseProps} step={{ ...baseStep, status }} />,
+        );
+        expect(screen.queryByText(legacyWord)).toBeNull();
       },
     );
 
@@ -317,10 +342,13 @@ describe("TimelineStep", () => {
       expect(screen.getByText("c")).toBeOnTheScreen();
     });
 
+    // Child rows read the same #453 state words as their parent — the two pill
+    // call sites are separate `t()` calls, so each needs its own coverage.
     it.each([
-      { status: "completed" as const, glyph: "✓", badge: "Completed" },
-      { status: "in-progress" as const, glyph: "a", badge: "In Progress" },
-      { status: "pending" as const, glyph: "a", badge: "Pending" },
+      { status: "completed" as const, glyph: "✓", badge: "Done" },
+      { status: "in-progress" as const, glyph: "a", badge: "Working" },
+      { status: "pending" as const, glyph: "a", badge: "Up next" },
+      { status: "paused" as const, glyph: "⏸", badge: "Set aside" },
     ])(
       "renders a $status sub-step with the right node glyph and state word",
       ({ status, glyph, badge }) => {

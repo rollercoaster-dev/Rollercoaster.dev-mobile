@@ -30,9 +30,31 @@ export type StepStateMapKey =
  */
 export type StepStateBadgeKey = `common:stepCard.status.${StepStateMapKey}`;
 
+/**
+ * Fully-namespaced i18n key for the Timeline's own state word — the prototype
+ * vocabulary "Done / Set aside / Working / Up next" (#453). Same
+ * template-literal shape as {@link StepStateBadgeKey}, different namespace.
+ */
+export type StepStateWordKey =
+  `timelineJourney:step.stateWord.${StepStateMapKey}`;
+
 interface StepStateBase {
-  /** i18n key (with namespace) for the state-word badge label. */
+  /**
+   * i18n key (with namespace) for the state-word badge label, in the older
+   * `common:stepCard.status.*` vocabulary ("Completed / In Progress / Pending /
+   * Paused"). Read by `StepCard` and the Focus surfaces. Timeline surfaces read
+   * {@link StepStateBase.stateWordI18nKey} instead — see the note there.
+   */
   badgeI18nKey: StepStateBadgeKey;
+  /**
+   * i18n key (with namespace) for the Timeline's state word (#453). Deliberately
+   * a second field rather than a repointed `badgeI18nKey`: the Timeline speaks
+   * the prototype's vocabulary while `StepCard` / `FocusCurrentTaskCard` /
+   * `FocusParkedState` keep theirs (the last of which is a recorded decision,
+   * #450 D4). One map, two labelled uses — so the two vocabularies cannot drift
+   * apart in separate per-component resolvers.
+   */
+  stateWordI18nKey: StepStateWordKey;
   /** Unicode glyph for the node interior, overriding the step number. */
   nodeGlyph?: string;
 }
@@ -61,18 +83,21 @@ export const stepStateColorMap: Record<StepStateMapKey, StepStateEntry> = {
     nodeBgKey: "journeyStepBg",
     nodeFgKey: "journeyStepFg",
     badgeI18nKey: "common:stepCard.status.pending",
+    stateWordI18nKey: "timelineJourney:step.stateWord.pending",
   },
   "in-progress": {
     source: "journey",
     nodeBgKey: "journeyStepActiveBg",
     nodeFgKey: "journeyStepActiveFg",
     badgeI18nKey: "common:stepCard.status.in-progress",
+    stateWordI18nKey: "timelineJourney:step.stateWord.in-progress",
   },
   completed: {
     source: "journey",
     nodeBgKey: "journeyStepCompleteBg",
     nodeFgKey: "journeyStepCompleteFg",
     badgeI18nKey: "common:stepCard.status.completed",
+    stateWordI18nKey: "timelineJourney:step.stateWord.completed",
     nodeGlyph: "✓",
   },
   paused: {
@@ -86,6 +111,7 @@ export const stepStateColorMap: Record<StepStateMapKey, StepStateEntry> = {
     nodeBgColorsFallback: "accentPurpleLight",
     nodeFgColorsFallback: "text",
     badgeI18nKey: "common:stepCard.status.paused",
+    stateWordI18nKey: "timelineJourney:step.stateWord.paused",
     nodeGlyph: "⏸",
   },
 };
