@@ -1,7 +1,7 @@
 # ADR-0011: Step-model names and letter consolidation
 
 **Date:** 2026-06-12
-**Status:** Proposed — becomes Accepted with Joe's sign-off
+**Status:** Accepted 2026-07-26 — via acceptance of [ADR-0013](./ADR-0013-phase-b-consolidated-position.md), which restates this decision unchanged
 **Owner:** Joe
 **Supersedes:** [ADR-0010](./ADR-0010-phase-b-step-model-crosswalk.md) — letter structure and naming only
 

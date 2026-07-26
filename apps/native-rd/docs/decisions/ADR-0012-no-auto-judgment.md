@@ -1,7 +1,7 @@
 # ADR-0012: No-auto-judgment (reframing the no-auto-state guardrail)
 
 **Date:** 2026-06-14
-**Status:** Proposed — becomes Accepted with Joe's sign-off
+**Status:** Accepted 2026-07-26 — via acceptance of [ADR-0013](./ADR-0013-phase-b-consolidated-position.md), which restates this decision unchanged
 **Owner:** Joe
 **Supersedes:** [ADR-0010](./ADR-0010-phase-b-step-model-crosswalk.md) — the
 no-auto-state guardrail's name and scope only; carried forward by
