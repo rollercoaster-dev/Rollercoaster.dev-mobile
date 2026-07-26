@@ -20,7 +20,7 @@ import type { DateIso } from "@evolu/common";
 import { breadcrumb } from "../services/sentry-report";
 import { Logger } from "../shims/rd-logger";
 import type { EvidenceTypeValue } from "../types/evidence";
-import { parsePlannedEvidenceTypes } from "../utils/parsePlannedEvidenceTypes";
+import { resolvePlannedEvidenceTypes } from "../utils/parsePlannedEvidenceTypes";
 import { evolu } from "./evolu";
 import {
   GoalId,
@@ -306,9 +306,11 @@ function serializePlannedTypes(
 /**
  * Check if a step has sufficient evidence to be completed.
  *
- * If plannedEvidenceTypes is set (non-null JSON array), at least one
- * evidence item must match a planned type. If null, no step evidence is
- * required.
+ * At least one evidence item must match a planned type. An *unset* plan
+ * (null/invalid/empty JSON) resolves to {@link DEFAULT_PLANNED_EVIDENCE_TYPES}
+ * rather than exempting the step (#466 D4) — every step owes evidence, and this
+ * is the same list `FocusCurrentTaskCard` renders, so the gate and the card's
+ * "Mark complete" reveal can never disagree.
  *
  * @param plannedEvidenceTypesJson - Value from step.plannedEvidenceTypes column (JSON string or null)
  * @param stepEvidence - All non-deleted evidence rows for this step
@@ -318,11 +320,10 @@ export function canCompleteStep(
   plannedEvidenceTypesJson: string | null,
   stepEvidence: { type: string | null }[],
 ): boolean {
-  const plannedTypes = parsePlannedEvidenceTypes(
+  const plannedTypes = resolvePlannedEvidenceTypes(
     plannedEvidenceTypesJson,
     logger,
   );
-  if (plannedTypes === null) return true;
 
   const validEvidence = stepEvidence.filter((e) => e.type !== null);
   if (validEvidence.length === 0) return false;

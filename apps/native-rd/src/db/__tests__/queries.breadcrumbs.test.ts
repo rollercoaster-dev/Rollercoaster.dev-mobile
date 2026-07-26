@@ -104,7 +104,9 @@ describe("step mutation breadcrumbs", () => {
   });
 
   it("completeStep emits step/toggle", () => {
-    completeStep(STEP_ID, null, [{ type: "photo" }]);
+    // Evidence must satisfy the plan for completeStep to get past its gate; a
+    // null plan means the default ["text"] (#466 D4), so pass a text item.
+    completeStep(STEP_ID, null, [{ type: "text" }]);
     expect(lastBreadcrumb()).toMatchObject({
       category: "step",
       message: "toggle",
