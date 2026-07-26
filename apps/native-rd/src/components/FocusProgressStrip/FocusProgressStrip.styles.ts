@@ -18,6 +18,13 @@ export const styles = StyleSheet.create((theme) => ({
   strip: {
     gap: theme.space[2],
     minHeight: 44,
+    // The prototype's `padding:13px 18px 0` on the strip's own wrapper. Owned
+    // here, not by the caller: the bar is *not* full-bleed in the prototype, so
+    // padding the container from outside would still leave the track running
+    // edge to edge. `space[4]` (16) over `space[5]` (20) — equally near 18, but
+    // it matches the Focus Mode card gutter below so the two align.
+    paddingTop: theme.space[3],
+    paddingHorizontal: theme.space[4],
   },
   topRow: {
     flexDirection: "row",
