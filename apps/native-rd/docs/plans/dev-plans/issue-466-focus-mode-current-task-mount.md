@@ -148,6 +148,33 @@ Replace `FocusModeScreen`'s three overlapping navigators (`MiniTimeline` + `Prog
 | All-done / trophy state (`FocusCurrentTaskCard` `all-complete`) + "Design your badge →" handoff | Explicitly #467's scope; `GoalEvidenceCard` removed instead of retained as a stand-in (D3)                                                                                                                 | #467                   |
 | Goal-level evidence viewing/capture (the old "goal card" reached by swiping past all steps)     | Its only entry point (`CardCarousel`'s goal card) is removed; no replacement surface specified anywhere in #466/#467/#408/#409. Rows, queries, and mutations are left intact — only the UI route goes (D9) | #523                   |
 | Evidence deletion from Focus Mode                                                               | `FocusCurrentTaskCard`'s captured rail is deliberately read-only, decided upstream in #408 (D5)                                                                                                            | none — settled by #408 |
+| Completing the last sub-step returning focus to its parent                                      | Needs no new resolver logic — `resolveNextActionableStep` already returns the parent as `{ kind: "invite" }` — but it can never fire while D1 holds `currentStepId` fixed. Rides on #467's re-resolve      | #467                   |
+
+## Handoff to #467 — confirmed on device, 2026-07-26
+
+Slice 1/2 was run on the simulator against a real 3-step goal. Two behaviors are
+working as designed here and are slice 2/2's to change; **#467's issue body has
+been updated with all of this**, so that issue is the single place to pick the
+work up from.
+
+1. **No progression on completion.** Completing step 2 of 3 leaves you on step
+   2's `completed` card with "Reopen this step" — exactly D1. #467 replaces the
+   resolve-once-and-hold with a re-resolve after each state change.
+2. **Sub-step → parent.** Finishing every sub-step of a parent should land you
+   back on the parent to close it out. The resolver already does this (the
+   `focuses the parent itself once all its children are done` case in
+   `FocusModeScreen.test.tsx` passes today); it is dormant only because of D1.
+   #467 owes the re-resolve, an explicit "completing the _last_ sub-step lands
+   on the parent" test, and a call on whether that child→parent jump warrants
+   its own a11y announcement — it is a bigger context shift than moving between
+   siblings.
+
+Also fixed during device testing, outside the original plan: `FocusProgressStrip`
+shipped (#450) with no padding of its own, so at its first real mount the
+done-count clipped left, "See all steps ›" clipped right, and the bar ran edge to
+edge. The canonical `App Shell.dc.html` puts `padding:13px 18px 0` on the strip's
+own wrapper (the bar is not full-bleed), so the fix went into the component
+rather than the caller — a caller cannot inset the track from outside.
 
 ## Discovery Log
 
