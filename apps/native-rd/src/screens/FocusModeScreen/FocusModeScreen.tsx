@@ -213,6 +213,12 @@ function FocusContent({ goalId }: { goalId: string }) {
     [stepRows],
   );
 
+  // `title` is nullable at the row level only — `createStep` validates it as a
+  // NonEmptyString1000, so an unset one is unreachable in practice. One derived
+  // value regardless, so the card and the screen-reader announcements can't
+  // disagree about the fallback.
+  const currentStepTitle = currentStep?.title ?? "";
+
   // --- Event Handlers ---
 
   /**
@@ -275,9 +281,16 @@ function FocusContent({ goalId }: { goalId: string }) {
       "step-complete",
       "step-toggle",
       () => completeStep(stepId as StepId, plannedJson, stepEvidence),
-      t("focusMode:a11y.stepCompleted", { title: currentStep.title }),
+      t("focusMode:a11y.stepCompleted", { title: currentStepTitle }),
     );
-  }, [currentStep, currentStepEvidenceRows, runStepMutation, showToast, t]);
+  }, [
+    currentStep,
+    currentStepTitle,
+    currentStepEvidenceRows,
+    runStepMutation,
+    showToast,
+    t,
+  ]);
 
   const handlePause = useCallback(() => {
     if (!currentStep) return;
@@ -299,9 +312,9 @@ function FocusContent({ goalId }: { goalId: string }) {
       "step-reopen",
       "step-toggle",
       () => uncompleteStep(currentStep.id as StepId),
-      t("focusMode:a11y.stepUncompleted", { title: currentStep.title }),
+      t("focusMode:a11y.stepUncompleted", { title: currentStepTitle }),
     );
-  }, [currentStep, runStepMutation, t]);
+  }, [currentStep, currentStepTitle, runStepMutation, t]);
 
   const navigateToCapture = useCallback(
     (type: EvidenceTypeValue, stepId: string) => {
@@ -419,20 +432,20 @@ function FocusContent({ goalId }: { goalId: string }) {
           currentStep.status === StepStatus.completed ? (
             <FocusCurrentTaskCard
               status="completed"
-              title={currentStep.title ?? ""}
+              title={currentStepTitle}
               capturedEvidence={capturedEvidence}
               onReopen={handleReopen}
             />
           ) : currentStep.status === StepStatus.paused ? (
             <FocusCurrentTaskCard
               status="paused"
-              title={currentStep.title ?? ""}
+              title={currentStepTitle}
               onPickUp={handlePickUp}
             />
           ) : (
             <FocusCurrentTaskCard
               status="in-progress"
-              title={currentStep.title ?? ""}
+              title={currentStepTitle}
               plannedEvidenceTypes={plannedEvidenceTypes}
               capturedEvidence={capturedEvidence}
               onChangeEvidencePlan={() => setIsPlanSheetOpen(true)}

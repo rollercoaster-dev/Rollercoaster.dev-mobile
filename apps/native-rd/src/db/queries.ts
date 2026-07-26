@@ -307,10 +307,11 @@ function serializePlannedTypes(
  * Check if a step has sufficient evidence to be completed.
  *
  * At least one evidence item must match a planned type. An *unset* plan
- * (null/invalid/empty JSON) resolves to {@link DEFAULT_PLANNED_EVIDENCE_TYPES}
- * rather than exempting the step (#466 D4) — every step owes evidence, and it
- * resolves to the same list `FocusCurrentTaskCard` renders, so the two never
- * disagree about *which* types were planned.
+ * (null/invalid/empty JSON) resolves through
+ * {@link resolvePlannedEvidenceTypes} to its default of one text note rather
+ * than exempting the step (#466 D4) — every step owes evidence, and that is the
+ * same list `FocusCurrentTaskCard` renders, so the two never disagree about
+ * *which* types were planned.
  *
  * They do differ in strictness, deliberately: this is the data-layer floor
  * ("at least one planned type captured"), while the card's "✓ Mark complete"
