@@ -1,7 +1,7 @@
 # ADR-0013: Phase B consolidated position — scope, step model, guardrails
 
 **Date:** 2026-07-25
-**Status:** Accepted 2026-07-26 (Joe's sign-off = merge of PR #518). Accepting
+**Status:** Accepted 2026-07-26 (Joe's sign-off on PR #518). Accepting
 this ADR also accepted [ADR-0011](./ADR-0011-step-model-names.md) and
 [ADR-0012](./ADR-0012-no-auto-judgment.md), whose decisions are restated here
 unchanged.
