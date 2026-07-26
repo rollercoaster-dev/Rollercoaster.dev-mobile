@@ -1,9 +1,11 @@
 import React from "react";
+import { AccessibilityInfo } from "react-native";
 import {
   renderWithProviders,
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
+import { reportError } from "../../../services/sentry-report";
 import { i18n } from "../../../i18n";
 import { evidenceLabel, evidenceShortLabel } from "../../../i18n/labels";
 import { FocusModeScreen } from "../FocusModeScreen";
@@ -47,11 +49,16 @@ jest.mock("../../../services/sentry-report", () => ({
   breadcrumb: jest.fn(),
 }));
 
-const mockCompleteStep = jest.fn();
-const mockUncompleteStep = jest.fn();
-const mockPauseStep = jest.fn();
-const mockResumeStep = jest.fn();
-const mockUpdateStep = jest.fn();
+// Evolu writes return a Result rather than void, and the screen now checks it —
+// so these mocks hand back `{ ok: true }` like a successful real write. A test
+// that wants the returned-failure path overrides with `{ ok: false, error }`.
+const okMutation = () =>
+  jest.fn((..._args: unknown[]) => ({ ok: true as const, value: undefined }));
+const mockCompleteStep = okMutation();
+const mockUncompleteStep = okMutation();
+const mockPauseStep = okMutation();
+const mockResumeStep = okMutation();
+const mockUpdateStep = okMutation();
 
 jest.mock("../../../db", () => ({
   // `paused` is load-bearing here — the screen branches on it for the
@@ -504,6 +511,108 @@ describe("FocusModeScreen", () => {
           t("focusMode:errors.couldNotUpdateStep", { message: "write failed" }),
         ),
       ).toBeOnTheScreen();
+    });
+
+    it("toasts and reports when a mutation returns a failed Result", () => {
+      // Evolu's engine reports write failures by returning `{ ok: false }`
+      // without throwing — that path must surface exactly like a thrown one.
+      mockPauseStep.mockReturnValueOnce({
+        ok: false,
+        error: new Error("write rejected"),
+      } as never);
+      setupQueries();
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      fireEvent.press(
+        screen.getByLabelText(t("focusMode:currentTask.inProgress.pauseA11y")),
+      );
+      expect(
+        screen.getByText(
+          t("focusMode:errors.couldNotUpdateStep", {
+            message: "write rejected",
+          }),
+        ),
+      ).toBeOnTheScreen();
+      expect(reportError).toHaveBeenCalledWith(expect.any(Error), {
+        area: "focus.mode",
+        kind: "step-toggle",
+      });
+    });
+
+    it("announces the reopen only when the write succeeds", () => {
+      const announce = jest.spyOn(
+        AccessibilityInfo,
+        "announceForAccessibility",
+      );
+      // The failure toast announces itself, so assert on the success line
+      // specifically rather than on "nothing was announced".
+      const successLine = t("focusMode:a11y.stepUncompleted", {
+        title: "step-1",
+      });
+      mockUncompleteStep.mockReturnValueOnce({
+        ok: false,
+        error: new Error("write rejected"),
+      } as never);
+      setupQueries({ steps: [step("step-1", { status: "completed" })] });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+      const reopen = screen.getByLabelText(
+        t("focusMode:currentTask.completed.reopenA11y"),
+      );
+
+      fireEvent.press(reopen);
+      expect(announce).not.toHaveBeenCalledWith(successLine);
+
+      // Second press falls through to the `{ ok: true }` default.
+      fireEvent.press(reopen);
+      expect(announce).toHaveBeenCalledWith(successLine);
+      announce.mockRestore();
+    });
+  });
+
+  describe("current-step resolution while mounted", () => {
+    it("holds the same step when its status changes under it", () => {
+      setupQueries({
+        steps: [
+          step("step-1", { title: "Read docs" }),
+          step("step-2", { title: "Practice", ordinal: 1 }),
+        ],
+      });
+      const { rerender } = renderWithProviders(
+        <FocusModeScreen {...routeProps} />,
+      );
+      expect(currentCardTitle()).toBe("Read docs");
+
+      // Completing step-1 must not jump the screen to step-2 (#467 D1 owns
+      // auto-advance).
+      setupQueries({
+        steps: [
+          step("step-1", { title: "Read docs", status: "completed" }),
+          step("step-2", { title: "Practice", ordinal: 1 }),
+        ],
+      });
+      rerender(<FocusModeScreen {...routeProps} />);
+
+      expect(currentCardTitle()).toBe("Read docs");
+    });
+
+    it("re-resolves when the held step is gone from the rows", () => {
+      setupQueries({
+        steps: [
+          step("step-1", { title: "Read docs" }),
+          step("step-2", { title: "Practice", ordinal: 1 }),
+        ],
+      });
+      const { rerender } = renderWithProviders(
+        <FocusModeScreen {...routeProps} />,
+      );
+      expect(currentCardTitle()).toBe("Read docs");
+
+      // EditMode deletes the focused step while this screen stays mounted — a
+      // dangling id would leave the card section empty.
+      setupQueries({ steps: [step("step-2", { title: "Practice" })] });
+      rerender(<FocusModeScreen {...routeProps} />);
+
+      expect(currentCardTitle()).toBe("Practice");
     });
   });
 

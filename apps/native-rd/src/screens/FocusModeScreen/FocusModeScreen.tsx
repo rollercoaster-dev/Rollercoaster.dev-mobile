@@ -8,6 +8,7 @@ import {
 import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import { useQuery } from "@evolu/react";
+import type { Result } from "@evolu/common";
 import { Pencil } from "phosphor-react-native";
 import { useTranslation } from "react-i18next";
 import { Text } from "../../components/Text";
@@ -54,6 +55,7 @@ import { formatDate } from "../../utils/format";
 import { Logger } from "../../shims/rd-logger";
 import { reportError, breadcrumb } from "../../services/sentry-report";
 import { KEYBOARD_AVOIDING_PROPS } from "../../utils/keyboard";
+import { runEvoluMutation } from "../../utils/evoluMutation";
 import { styles } from "./FocusModeScreen.styles";
 
 const logger = new Logger("FocusModeScreen");
@@ -114,9 +116,9 @@ function FocusContent({ goalId }: { goalId: string }) {
     stepEvidenceByGoalQuery(goalId as GoalId),
   );
 
-  // The step this screen is focused on. Resolved once, when rows first arrive,
-  // and then held: completing or setting aside the current step re-renders
-  // *that same step* in its new state rather than jumping to another one.
+  // The step this screen is focused on. Resolved when rows first arrive and
+  // then held: completing or setting aside the current step re-renders *that
+  // same step* in its new state rather than jumping to another one.
   // Auto-advance-on-complete is #467's (D1).
   const [currentStepId, setCurrentStepId] = useState<string | null>(null);
   // Authoring sheet: change which evidence types this step plans.
@@ -131,15 +133,18 @@ function FocusContent({ goalId }: { goalId: string }) {
     };
   }, []);
 
-  // Resolve on the first non-empty emission only. Dep is stepRows.length —
-  // useQuery returns a fresh array each emission, so depending on stepRows
-  // would re-fire pointlessly.
-  const stepRowsLength = stepRows.length;
+  // Resolve on the first non-empty emission, and re-resolve only when the held
+  // id is no longer in the rows — the screen can stay mounted while EditMode
+  // deletes or reparents steps, and a dangling id would leave the card section
+  // empty. A status change keeps the id present, so "held" still holds.
   useEffect(() => {
-    if (stepRowsLength === 0) return;
-    setCurrentStepId((prev) => prev ?? resolveFocusStepId(stepRows));
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only fire on initial population
-  }, [stepRowsLength]);
+    if (stepRows.length === 0) return;
+    setCurrentStepId((prev) =>
+      prev !== null && stepRows.some((s) => s.id === prev)
+        ? prev
+        : resolveFocusStepId(stepRows),
+    );
+  }, [stepRows]);
 
   const currentStep = useMemo(
     () => stepRows.find((s) => s.id === currentStepId) ?? null,
@@ -212,7 +217,10 @@ function FocusContent({ goalId }: { goalId: string }) {
 
   /**
    * Run a step mutation, surfacing a failure the same way step completion
-   * already does — toast + Sentry — rather than letting it reject silently.
+   * already does — toast + Sentry — rather than letting it fail silently.
+   * {@link runEvoluMutation} covers both of Evolu's failure modes (a thrown
+   * validation error from `db/queries.ts` *and* a returned `{ ok: false }`
+   * write Result), and the success-only announcement is gated on its verdict.
    *
    * `op` is the specific operation, for the log line; `kind` is the coarser
    * Sentry facet (see ReportContext's focus.mode entry).
@@ -221,15 +229,10 @@ function FocusContent({ goalId }: { goalId: string }) {
     (
       op: string,
       kind: "step-toggle" | "evidence-plan",
-      mutate: () => void,
+      mutate: () => Result<unknown, unknown>,
       announcement?: string,
     ) => {
-      try {
-        mutate();
-        if (announcement) {
-          AccessibilityInfo.announceForAccessibility(announcement);
-        }
-      } catch (error) {
+      const ok = runEvoluMutation(mutate, (error) => {
         const message =
           error instanceof Error
             ? error.message
@@ -240,6 +243,9 @@ function FocusContent({ goalId }: { goalId: string }) {
           message: t("focusMode:errors.couldNotUpdateStep", { message }),
           duration: 3000,
         });
+      });
+      if (ok && announcement) {
+        AccessibilityInfo.announceForAccessibility(announcement);
       }
     },
     [showToast, t],
