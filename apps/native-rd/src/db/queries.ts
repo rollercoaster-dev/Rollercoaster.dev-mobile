@@ -316,7 +316,7 @@ function serializePlannedTypes(
  * They do differ in strictness, deliberately: this is the data-layer floor
  * ("at least one planned type captured"), while the card's "✓ Mark complete"
  * reveal is stricter — it waits for *every* planned type
- * (`FocusCurrentTaskCard`'s `completionReady`, D1). So a step the card still
+ * (`FocusCurrentTaskCard`'s `completionReady`, #497 D1). So a step the card still
  * shows as unfinished can pass this gate. Callers must not treat a `true` here
  * as "the card would offer completion"; it only means completion is permitted.
  *
