@@ -15,8 +15,8 @@ import { styles } from "./EvidenceTypePicker.styles";
 export interface AuthoringEvidenceTypePickerProps {
   /** Presentation mode. Omit or pass `"authoring"` for the chip grid. */
   mode?: "authoring";
-  /** Currently selected evidence types. */
-  selectedTypes: EvidenceTypeValue[];
+  /** Currently selected evidence types. Read-only — toggles go through `onToggleType`. */
+  selectedTypes: readonly EvidenceTypeValue[];
   /** Called when the user toggles a type on/off (unused in `compact`). */
   onToggleType?: (type: EvidenceTypeValue) => void;
   /** Compact, read-only inline display below step titles. */

@@ -176,12 +176,22 @@ function FocusContent({ goalId }: { goalId: string }) {
 
   // An unset plan means one text note (#466 D4) — the same list canCompleteStep
   // gates on, so the card's "Mark complete" reveal and the DB verdict agree.
-  const plannedEvidenceTypes = useMemo(
-    () =>
-      resolvePlannedEvidenceTypes(
-        (currentStep?.plannedEvidenceTypes as string | null) ?? null,
-        logger,
+  //
+  // Normalized (and de-duplicated) here rather than at each reader: the column
+  // is free-form JSON, and the card, the plan sheet's selection, and
+  // `handleTogglePlannedType`'s add/remove math must all key off the *same*
+  // list. Left raw, an unknown stored type would render and select as `file`
+  // (`validateEvidenceType`) while the toggle compared against the raw key, so
+  // tapping that chip would append `file` instead of clearing it.
+  const plannedEvidenceTypes = useMemo<readonly EvidenceTypeValue[]>(
+    () => [
+      ...new Set(
+        resolvePlannedEvidenceTypes(
+          (currentStep?.plannedEvidenceTypes as string | null) ?? null,
+          logger,
+        ).map(validateEvidenceType),
       ),
+    ],
     [currentStep],
   );
 
@@ -484,7 +494,7 @@ function FocusContent({ goalId }: { goalId: string }) {
         backdropTestID="focus-evidence-plan-backdrop"
       >
         <EvidenceTypePicker
-          selectedTypes={plannedEvidenceTypes.map(validateEvidenceType)}
+          selectedTypes={plannedEvidenceTypes}
           onToggleType={handleTogglePlannedType}
           label={t("focusMode:evidencePlanSheet.typesLabel")}
         />

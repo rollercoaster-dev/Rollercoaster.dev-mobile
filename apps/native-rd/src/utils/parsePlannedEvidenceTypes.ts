@@ -1,3 +1,5 @@
+import type { EvidenceTypeValue } from "../types/evidence";
+
 export type ParseLogger = {
   warn: (...args: unknown[]) => void;
   error: (...args: unknown[]) => void;
@@ -14,11 +16,15 @@ export type ParseLogger = {
  * "Mark complete" once every planned type is captured, so a step planning
  * nothing could never be completed from Focus Mode at all.
  *
- * Kept as a bare string literal rather than `EvidenceType.text` on purpose:
- * `src/db/queries.ts` imports this module, so importing the schema back would
- * close a cycle.
+ * The *value* is a bare string literal rather than `EvidenceType.text` on
+ * purpose: `src/db/queries.ts` imports this module, so importing the schema
+ * back would close a runtime cycle. The annotation still pins it to
+ * `EvidenceTypeValue` — `import type` is erased at compile time, so this buys
+ * a typo check on a cross-layer contract without reopening that cycle.
  */
-export const DEFAULT_PLANNED_EVIDENCE_TYPES: readonly string[] = ["text"];
+export const DEFAULT_PLANNED_EVIDENCE_TYPES: readonly EvidenceTypeValue[] = [
+  "text",
+];
 
 /**
  * {@link parsePlannedEvidenceTypes}, with the unset case resolved to

@@ -792,6 +792,25 @@ describe("FocusModeScreen", () => {
       );
       expect(mockUpdateStep).not.toHaveBeenCalled();
     });
+
+    it("clears rather than re-adds a chip an unknown stored type selected", () => {
+      // The column is free-form JSON, so an unknown type can be stored. It
+      // renders and selects as `file` (`validateEvidenceType`); the toggle must
+      // compare against that same normalized key, or tapping the chip would
+      // append "file" alongside the unknown one instead of clearing it.
+      setupQueries({
+        steps: [step("step-1", { plannedEvidenceTypes: '["sketch","photo"]' })],
+      });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      fireEvent.press(screen.getByTestId("focus-current-task-change-plan"));
+      fireEvent.press(
+        screen.getByRole("checkbox", { name: evidenceLabel(t, "file") }),
+      );
+      expect(mockUpdateStep).toHaveBeenCalledWith("step-1", {
+        plannedEvidenceTypes: ["photo"],
+      });
+    });
   });
 
   describe("dependency + due-date band (#454)", () => {
