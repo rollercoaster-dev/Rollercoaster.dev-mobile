@@ -60,147 +60,166 @@ const mockPauseStep = okMutation();
 const mockResumeStep = okMutation();
 const mockUpdateStep = okMutation();
 
-jest.mock("../../../db", () => ({
-  // `paused` is load-bearing here — the screen branches on it for the
-  // "Pick this back up" card and the resolver skips it (#417).
-  StepStatus: { pending: "pending", completed: "completed", paused: "paused" },
-  EvidenceType: {
-    photo: "photo",
-    text: "text",
-    voice_memo: "voice_memo",
-    video: "video",
-    link: "link",
-    file: "file",
-  },
-  TEXT_EVIDENCE_PREFIX: "content:text;",
-  goalsQuery: "goalsQuery",
-  stepsByGoalQuery: jest.fn((id: string) => `stepsByGoalQuery-${id}`),
-  stepEvidenceByGoalQuery: jest.fn(
-    (id: string) => `stepEvidenceByGoalQuery-${id}`,
-  ),
-  userSettingsQuery: "userSettingsQuery",
-  createUserSettings: jest.fn(),
-  updateUserSettings: jest.fn(),
-  completeStep: (...args: unknown[]) => mockCompleteStep(...args),
-  uncompleteStep: (...args: unknown[]) => mockUncompleteStep(...args),
-  pauseStep: (...args: unknown[]) => mockPauseStep(...args),
-  resumeStep: (...args: unknown[]) => mockResumeStep(...args),
-  updateStep: (...args: unknown[]) => mockUpdateStep(...args),
-  // Faithful copy of the real gate, including the #466 D4 default: an unset
-  // plan means ["text"], so the screen's backstop matches the card's reveal.
-  canCompleteStep: (
-    plannedJson: string | null,
-    evidence: { type: string | null }[],
-  ) => {
-    let planned: string[] | null = null;
-    try {
-      const parsed = plannedJson ? JSON.parse(plannedJson) : null;
-      if (Array.isArray(parsed) && parsed.length > 0) planned = parsed;
-    } catch {
-      planned = null;
-    }
-    const types = planned ?? ["text"];
-    const valid = evidence.filter((e) => e.type !== null);
-    return valid.length > 0 && valid.some((e) => types.includes(e.type!));
-  },
-  resolveStepDependencyBand: (
-    step: {
-      id: string;
-      afterStepId: string | null;
-      waitingOnLabel: string | null;
-      waitingOnExpectedAt: string | null;
-      dueAt: string | null;
+jest.mock("../../../db", () => {
+  // The completion gate below calls the *production* helpers rather than
+  // re-deriving their behavior: `resolvePlannedEvidenceTypes` drops non-string
+  // elements and treats an all-non-string array as unset (→ ["text"], #466 D4),
+  // and `validateEvidenceType` folds unknown types to `file`. Hand-copying
+  // either is how a mock silently diverges from real gating on corrupted JSON.
+  // Both are pure leaf modules, so requiring them here pulls in no Evolu
+  // runtime.
+  const { resolvePlannedEvidenceTypes } = jest.requireActual<
+    typeof import("../../../utils/parsePlannedEvidenceTypes")
+  >("../../../utils/parsePlannedEvidenceTypes");
+  const { validateEvidenceType } = jest.requireActual<
+    typeof import("../../../types/evidence")
+  >("../../../types/evidence");
+  // Fixtures feed deliberately corrupt JSON; the real gate logs those through
+  // rd-logger, so swallow them here instead of spraying the test output.
+  const quietLogger = { warn: () => {}, error: () => {} };
+
+  return {
+    // `paused` is load-bearing here — the screen branches on it for the
+    // "Pick this back up" card and the resolver skips it (#417).
+    StepStatus: {
+      pending: "pending",
+      completed: "completed",
+      paused: "paused",
     },
-    goalSteps: readonly { id: string; title: string | null }[],
-  ) => ({
-    afterStepTitle:
-      step.afterStepId && step.afterStepId !== step.id
-        ? (goalSteps.find((s) => s.id === step.afterStepId)?.title ?? null)
-        : null,
-    waitingOnLabel: step.waitingOnLabel ?? null,
-    waitingOnExpectedAt: step.waitingOnExpectedAt ?? null,
-    dueAt: step.dueAt ?? null,
-  }),
-  // Faithful copies of the real helpers (orphan/grandchild promotion + flatten)
-  // so the screen's parent-then-children reordering is exercised, not stubbed.
-  groupStepsByParent: (
-    rows: readonly { id: string; parentStepId: string | null }[],
-  ) => {
-    const rootIds = new Set(
-      rows.filter((r) => r.parentStepId == null).map((r) => r.id),
-    );
-    const nodes = new Map(
-      rows.map((r) => [r.id, { ...r, children: [] as unknown[] }]),
-    );
-    const roots: {
-      id: string;
-      parentStepId: string | null;
-      children: unknown[];
-    }[] = [];
-    for (const row of rows) {
-      const node = nodes.get(row.id)!;
-      const parentId = row.parentStepId;
-      if (parentId != null && rootIds.has(parentId)) {
-        (nodes.get(parentId)!.children as unknown[]).push(node);
-      } else {
-        roots.push(node);
+    EvidenceType: {
+      photo: "photo",
+      text: "text",
+      voice_memo: "voice_memo",
+      video: "video",
+      link: "link",
+      file: "file",
+    },
+    TEXT_EVIDENCE_PREFIX: "content:text;",
+    goalsQuery: "goalsQuery",
+    stepsByGoalQuery: jest.fn((id: string) => `stepsByGoalQuery-${id}`),
+    stepEvidenceByGoalQuery: jest.fn(
+      (id: string) => `stepEvidenceByGoalQuery-${id}`,
+    ),
+    userSettingsQuery: "userSettingsQuery",
+    createUserSettings: jest.fn(),
+    updateUserSettings: jest.fn(),
+    completeStep: (...args: unknown[]) => mockCompleteStep(...args),
+    uncompleteStep: (...args: unknown[]) => mockUncompleteStep(...args),
+    pauseStep: (...args: unknown[]) => mockPauseStep(...args),
+    resumeStep: (...args: unknown[]) => mockResumeStep(...args),
+    updateStep: (...args: unknown[]) => mockUpdateStep(...args),
+    canCompleteStep: (
+      plannedJson: string | null,
+      evidence: { type: string | null }[],
+    ) => {
+      const planned = resolvePlannedEvidenceTypes(plannedJson, quietLogger).map(
+        validateEvidenceType,
+      );
+      const captured = evidence
+        .filter((e) => e.type !== null)
+        .map((e) => validateEvidenceType(e.type!));
+      return captured.some((type) => planned.includes(type));
+    },
+    resolveStepDependencyBand: (
+      step: {
+        id: string;
+        afterStepId: string | null;
+        waitingOnLabel: string | null;
+        waitingOnExpectedAt: string | null;
+        dueAt: string | null;
+      },
+      goalSteps: readonly { id: string; title: string | null }[],
+    ) => ({
+      afterStepTitle:
+        step.afterStepId && step.afterStepId !== step.id
+          ? (goalSteps.find((s) => s.id === step.afterStepId)?.title ?? null)
+          : null,
+      waitingOnLabel: step.waitingOnLabel ?? null,
+      waitingOnExpectedAt: step.waitingOnExpectedAt ?? null,
+      dueAt: step.dueAt ?? null,
+    }),
+    // Faithful copies of the real helpers (orphan/grandchild promotion + flatten)
+    // so the screen's parent-then-children reordering is exercised, not stubbed.
+    groupStepsByParent: (
+      rows: readonly { id: string; parentStepId: string | null }[],
+    ) => {
+      const rootIds = new Set(
+        rows.filter((r) => r.parentStepId == null).map((r) => r.id),
+      );
+      const nodes = new Map(
+        rows.map((r) => [r.id, { ...r, children: [] as unknown[] }]),
+      );
+      const roots: {
+        id: string;
+        parentStepId: string | null;
+        children: unknown[];
+      }[] = [];
+      for (const row of rows) {
+        const node = nodes.get(row.id)!;
+        const parentId = row.parentStepId;
+        if (parentId != null && rootIds.has(parentId)) {
+          (nodes.get(parentId)!.children as unknown[]).push(node);
+        } else {
+          roots.push(node);
+        }
       }
-    }
-    return roots;
-  },
-  flattenGroupedSteps: (grouped: readonly { children: unknown[] }[]) => {
-    const out: unknown[] = [];
-    for (const root of grouped) {
-      out.push(root);
-      out.push(...root.children);
-    }
-    return out;
-  },
-  // Faithful copy of the real resolver (leaf/invite/flat/none + orphan
-  // promotion, paused skipped like completed) so the #292/#337 resolution the
-  // screen depends on is exercised, not stubbed.
-  // Keep in sync with resolveNextActionableStep in src/db/queries.ts.
-  resolveNextActionableStep: (
-    rows: readonly {
-      id: string;
-      parentStepId: string | null;
-      status: string | null;
-    }[],
-  ) => {
-    const skip = (s: string | null) => s === "completed" || s === "paused";
-    const rootIds = new Set(
-      rows.filter((r) => r.parentStepId == null).map((r) => r.id),
-    );
-    const childrenByParent = new Map<
-      string,
-      { index: number; status: string | null }[]
-    >();
-    const topLevel: { id: string; index: number; status: string | null }[] = [];
-    rows.forEach((row, index) => {
-      if (row.parentStepId != null && rootIds.has(row.parentStepId)) {
-        const entry = { index, status: row.status };
-        const list = childrenByParent.get(row.parentStepId);
-        if (list) list.push(entry);
-        else childrenByParent.set(row.parentStepId, [entry]);
-      } else {
-        topLevel.push({ id: row.id, index, status: row.status });
+      return roots;
+    },
+    flattenGroupedSteps: (grouped: readonly { children: unknown[] }[]) => {
+      const out: unknown[] = [];
+      for (const root of grouped) {
+        out.push(root);
+        out.push(...root.children);
       }
-    });
-    for (const step of topLevel) {
-      const children = childrenByParent.get(step.id) ?? [];
-      const pendingChild = children.find((c) => !skip(c.status));
-      if (pendingChild) {
-        return { kind: "leaf", index: pendingChild.index, parentIndex: step.index }; // prettier-ignore
+      return out;
+    },
+    // Faithful copy of the real resolver (leaf/invite/flat/none + orphan
+    // promotion, paused skipped like completed) so the #292/#337 resolution the
+    // screen depends on is exercised, not stubbed.
+    // Keep in sync with resolveNextActionableStep in src/db/queries.ts.
+    resolveNextActionableStep: (
+      rows: readonly {
+        id: string;
+        parentStepId: string | null;
+        status: string | null;
+      }[],
+    ) => {
+      const skip = (s: string | null) => s === "completed" || s === "paused";
+      const rootIds = new Set(
+        rows.filter((r) => r.parentStepId == null).map((r) => r.id),
+      );
+      const childrenByParent = new Map<
+        string,
+        { index: number; status: string | null }[]
+      >();
+      const topLevel: { id: string; index: number; status: string | null }[] =
+        [];
+      rows.forEach((row, index) => {
+        if (row.parentStepId != null && rootIds.has(row.parentStepId)) {
+          const entry = { index, status: row.status };
+          const list = childrenByParent.get(row.parentStepId);
+          if (list) list.push(entry);
+          else childrenByParent.set(row.parentStepId, [entry]);
+        } else {
+          topLevel.push({ id: row.id, index, status: row.status });
+        }
+      });
+      for (const step of topLevel) {
+        const children = childrenByParent.get(step.id) ?? [];
+        const pendingChild = children.find((c) => !skip(c.status));
+        if (pendingChild) {
+          return { kind: "leaf", index: pendingChild.index, parentIndex: step.index }; // prettier-ignore
+        }
+        if (skip(step.status)) continue;
+        if (children.length > 0) {
+          return { kind: "invite", index: step.index, childCount: children.length }; // prettier-ignore
+        }
+        return { kind: "flat", index: step.index };
       }
-      if (skip(step.status)) continue;
-      if (children.length > 0) {
-        return { kind: "invite", index: step.index, childCount: children.length }; // prettier-ignore
-      }
-      return { kind: "flat", index: step.index };
-    }
-    return { kind: "none" };
-  },
-}));
+      return { kind: "none" };
+    },
+  };
+});
 
 const mockUseQuery = jest.fn();
 jest.mock("@evolu/react", () => ({
@@ -682,6 +701,23 @@ describe("FocusModeScreen", () => {
       ]);
     });
 
+    it("falls back to the default plan when every stored type is unusable", () => {
+      // The column is free-form JSON, so `[1,2,3]` is reachable. Every element
+      // is dropped as a non-string, which parses as *unset* rather than as an
+      // empty plan — so the step owes a text note, not nothing.
+      setupQueries({
+        steps: [step("step-1", { plannedEvidenceTypes: "[1,2,3]" })],
+      });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      expect(
+        screen.getByTestId("focus-current-task-add-text"),
+      ).toBeOnTheScreen();
+      expect(
+        screen.queryByText(t("focusMode:currentTask.inProgress.markCompleteCta")), // prettier-ignore
+      ).toBeNull();
+    });
+
     it("shows captured evidence on the read-only rail", () => {
       setupQueries({
         steps: [step("step-1", { plannedEvidenceTypes: '["photo"]' })],
@@ -793,7 +829,7 @@ describe("FocusModeScreen", () => {
       expect(mockUpdateStep).not.toHaveBeenCalled();
     });
 
-    it("clears rather than re-adds a chip an unknown stored type selected", () => {
+    it("clears rather than re-adds a chip when an unknown stored type selected it", () => {
       // The column is free-form JSON, so an unknown type can be stored. It
       // renders and selects as `file` (`validateEvidenceType`); the toggle must
       // compare against that same normalized key, or tapping the chip would
