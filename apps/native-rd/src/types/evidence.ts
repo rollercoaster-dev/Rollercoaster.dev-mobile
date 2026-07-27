@@ -1,4 +1,8 @@
-import { EvidenceType } from "../db";
+// Imported from `../db/schema` rather than the `../db` barrel on purpose:
+// `src/db/queries.ts` imports `validateEvidenceType` at runtime, and the barrel
+// re-exports `queries.ts`, so going through it would close a runtime cycle.
+// `schema.ts` is a leaf module, so this edge is safe.
+import { EvidenceType } from "../db/schema";
 
 export type EvidenceTypeValue =
   (typeof EvidenceType)[keyof typeof EvidenceType];

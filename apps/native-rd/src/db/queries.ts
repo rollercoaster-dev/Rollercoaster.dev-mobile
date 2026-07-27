@@ -19,6 +19,7 @@ import {
 import type { DateIso } from "@evolu/common";
 import { breadcrumb } from "../services/sentry-report";
 import { Logger } from "../shims/rd-logger";
+import { validateEvidenceType } from "../types/evidence";
 import type { EvidenceTypeValue } from "../types/evidence";
 import { resolvePlannedEvidenceTypes } from "../utils/parsePlannedEvidenceTypes";
 import { evolu } from "./evolu";
@@ -313,6 +314,12 @@ function serializePlannedTypes(
  * same list `FocusCurrentTaskCard` renders, so the two never disagree about
  * *which* types were planned.
  *
+ * Both sides of the comparison run through `validateEvidenceType`, the same
+ * unknown → `file` fallback `FocusCurrentTaskCard` applies to plan and capture
+ * keys. Persisted data can hold a planned key that is not an `EvidenceType`
+ * (e.g. "sketch"); the card gates that as `file`, so comparing raw strings here
+ * would let the card reveal "Mark complete" on a step this gate then refuses.
+ *
  * They do differ in strictness, deliberately: this is the data-layer floor
  * ("at least one planned type captured"), while the card's "✓ Mark complete"
  * reveal is stricter — it waits for *every* planned type
@@ -331,12 +338,14 @@ export function canCompleteStep(
   const plannedTypes = resolvePlannedEvidenceTypes(
     plannedEvidenceTypesJson,
     logger,
-  );
+  ).map(validateEvidenceType);
 
-  const validEvidence = stepEvidence.filter((e) => e.type !== null);
-  if (validEvidence.length === 0) return false;
+  const capturedTypes = stepEvidence
+    .filter((e) => e.type !== null)
+    .map((e) => validateEvidenceType(e.type!));
+  if (capturedTypes.length === 0) return false;
 
-  return validEvidence.some((e) => plannedTypes.includes(e.type!));
+  return capturedTypes.some((type) => plannedTypes.includes(type));
 }
 
 /**

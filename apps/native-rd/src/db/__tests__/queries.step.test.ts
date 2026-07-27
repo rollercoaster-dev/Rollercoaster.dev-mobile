@@ -252,6 +252,27 @@ describe("Step CRUD Operations", () => {
         [{ type: null }],
         false,
       ],
+      // Unknown keys normalize to `file` on both sides, matching
+      // FocusCurrentTaskCard's validateEvidenceType fallback — otherwise the
+      // card could reveal "Mark complete" on a step this gate refuses.
+      [
+        "unknown planned type is satisfied by file evidence",
+        '["sketch"]',
+        [{ type: "file" }],
+        true,
+      ],
+      [
+        "unknown planned type is satisfied by equally unknown evidence",
+        '["sketch"]',
+        [{ type: "doodle" }],
+        true,
+      ],
+      [
+        "unknown planned type is not satisfied by an unrelated known type",
+        '["sketch"]',
+        [{ type: "photo" }],
+        false,
+      ],
     ])("%s → %s", (_label, plannedJson, evidence, expected) => {
       expect(canCompleteStep(plannedJson, evidence)).toBe(expected);
     });
