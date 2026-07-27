@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, ScrollView } from "react-native";
 import { useTranslation } from "react-i18next";
 import { evidenceShortLabel } from "../../i18n/labels";
 import { validateEvidenceType } from "../../types/evidence";
@@ -71,6 +71,43 @@ function exhaustiveFallback(_props: never): React.ReactElement | null {
 }
 
 /**
+ * Card layout shell: scrolling body, pinned action footer.
+ *
+ * Pinning the footer keeps the primary CTA in the same place in every state and at
+ * every text scale; unpinned it drifts with whatever the body holds (0–3 metadata
+ * lines, a captured rail or not, 1–3 stacked invites).
+ *
+ * Only the action group goes in `footer` — quiet controls like "set this step
+ * aside" stay in the body, since a pinned bar would undo their calm (L3).
+ * `centerBody` centers the short states (paused, completed, all-complete);
+ * in-progress stays top-aligned.
+ */
+function CardShell({
+  body,
+  footer,
+  centerBody = false,
+}: {
+  body: React.ReactNode;
+  footer: React.ReactNode;
+  centerBody?: boolean;
+}) {
+  return (
+    <View style={styles.card}>
+      <ScrollView
+        style={styles.body}
+        contentContainerStyle={
+          centerBody ? styles.bodyContentCentered : styles.bodyContent
+        }
+        showsVerticalScrollIndicator={false}
+      >
+        {body}
+      </ScrollView>
+      <View style={styles.footRow}>{footer}</View>
+    </View>
+  );
+}
+
+/**
  * In-progress: no pill (position says it — the brief's "silent" state). The
  * planned-evidence box opens the plan chooser; evidence is always required. The
  * card plans N evidence types and "✓ Mark complete" is *revealed* only once
@@ -120,41 +157,45 @@ function InProgressView({
     normalizedPlannedTypes.length > 0 && unsatisfiedTypes.length === 0;
 
   return (
-    <View style={styles.card}>
-      <Text style={styles.title} accessible accessibilityRole="header">
-        {title}
-      </Text>
-      <MetadataBand
-        afterStep={afterStep}
-        waitingOn={waitingOn}
-        dueDate={dueDate}
-      />
-      <View style={styles.plannedGroup}>
-        <Text style={styles.evidenceRequired}>
-          {t("focusMode:currentTask.inProgress.evidenceRequired")}
-        </Text>
-        <PlannedEvidenceBox
-          plannedTypes={plannedEvidenceTypes}
-          onChangeEvidencePlan={onChangeEvidencePlan}
-        />
-      </View>
-      <CapturedEvidenceRail
-        items={captured}
-        label={t("focusMode:currentTask.inProgress.evidenceRailLabel")}
-      />
-      <Pressable
-        onPress={onPause}
-        style={styles.setAside}
-        accessible
-        accessibilityRole="button"
-        accessibilityLabel={t("focusMode:currentTask.inProgress.pauseA11y")}
-      >
-        <Text style={styles.setAsideText}>
-          {t("focusMode:currentTask.inProgress.pauseCta")}
-        </Text>
-      </Pressable>
-      <View style={styles.footRow}>
-        {completionReady ? (
+    <CardShell
+      body={
+        <>
+          <Text style={styles.title} accessible accessibilityRole="header">
+            {title}
+          </Text>
+          <MetadataBand
+            afterStep={afterStep}
+            waitingOn={waitingOn}
+            dueDate={dueDate}
+          />
+          <View style={styles.plannedGroup}>
+            <Text style={styles.evidenceRequired}>
+              {t("focusMode:currentTask.inProgress.evidenceRequired")}
+            </Text>
+            <PlannedEvidenceBox
+              plannedTypes={plannedEvidenceTypes}
+              onChangeEvidencePlan={onChangeEvidencePlan}
+            />
+          </View>
+          <CapturedEvidenceRail
+            items={captured}
+            label={t("focusMode:currentTask.inProgress.evidenceRailLabel")}
+          />
+          <Pressable
+            onPress={onPause}
+            style={styles.setAside}
+            accessible
+            accessibilityRole="button"
+            accessibilityLabel={t("focusMode:currentTask.inProgress.pauseA11y")}
+          >
+            <Text style={styles.setAsideText}>
+              {t("focusMode:currentTask.inProgress.pauseCta")}
+            </Text>
+          </Pressable>
+        </>
+      }
+      footer={
+        completionReady ? (
           <>
             <Pressable
               onPress={onMarkComplete}
@@ -223,9 +264,9 @@ function InProgressView({
               {t("focusMode:currentTask.inProgress.helperLine")}
             </Text>
           </>
-        )}
-      </View>
-    </View>
+        )
+      }
+    />
   );
 }
 
@@ -233,26 +274,33 @@ function InProgressView({
 function PausedView({ title, onPickUp }: FocusPausedCardProps) {
   const { t } = useTranslation(["common", "focusMode"]);
   return (
-    <View style={styles.card}>
-      <StateWordPill status="paused" />
-      <Text style={styles.title} accessible accessibilityRole="header">
-        {title}
-      </Text>
-      <Text style={styles.bodyText}>
-        {t("focusMode:currentTask.paused.body")}
-      </Text>
-      <Pressable
-        onPress={onPickUp}
-        style={styles.primaryCta}
-        accessible
-        accessibilityRole="button"
-        accessibilityLabel={t("focusMode:currentTask.paused.pickUpA11y")}
-      >
-        <Text style={styles.primaryCtaText}>
-          {t("focusMode:currentTask.paused.pickUpCta")}
-        </Text>
-      </Pressable>
-    </View>
+    <CardShell
+      centerBody
+      body={
+        <>
+          <StateWordPill status="paused" />
+          <Text style={styles.title} accessible accessibilityRole="header">
+            {title}
+          </Text>
+          <Text style={styles.bodyText}>
+            {t("focusMode:currentTask.paused.body")}
+          </Text>
+        </>
+      }
+      footer={
+        <Pressable
+          onPress={onPickUp}
+          style={styles.primaryCta}
+          accessible
+          accessibilityRole="button"
+          accessibilityLabel={t("focusMode:currentTask.paused.pickUpA11y")}
+        >
+          <Text style={styles.primaryCtaText}>
+            {t("focusMode:currentTask.paused.pickUpCta")}
+          </Text>
+        </Pressable>
+      }
+    />
   );
 }
 
@@ -265,27 +313,34 @@ function CompletedView({
   const { t } = useTranslation(["common", "focusMode"]);
   const captured = capturedEvidence ?? [];
   return (
-    <View style={styles.card}>
-      <StateWordPill status="completed" />
-      <Text style={styles.title} accessible accessibilityRole="header">
-        {title}
-      </Text>
-      <CapturedEvidenceRail
-        items={captured}
-        label={t("focusMode:evidenceRail.zoneLabel")}
-      />
-      <Pressable
-        onPress={onReopen}
-        style={styles.secondaryCta}
-        accessible
-        accessibilityRole="button"
-        accessibilityLabel={t("focusMode:currentTask.completed.reopenA11y")}
-      >
-        <Text style={styles.secondaryCtaText}>
-          {t("focusMode:currentTask.completed.reopenCta")}
-        </Text>
-      </Pressable>
-    </View>
+    <CardShell
+      centerBody
+      body={
+        <>
+          <StateWordPill status="completed" />
+          <Text style={styles.title} accessible accessibilityRole="header">
+            {title}
+          </Text>
+          <CapturedEvidenceRail
+            items={captured}
+            label={t("focusMode:evidenceRail.zoneLabel")}
+          />
+        </>
+      }
+      footer={
+        <Pressable
+          onPress={onReopen}
+          style={styles.secondaryCta}
+          accessible
+          accessibilityRole="button"
+          accessibilityLabel={t("focusMode:currentTask.completed.reopenA11y")}
+        >
+          <Text style={styles.secondaryCtaText}>
+            {t("focusMode:currentTask.completed.reopenCta")}
+          </Text>
+        </Pressable>
+      }
+    />
   );
 }
 
@@ -293,31 +348,38 @@ function CompletedView({
 function AllCompleteView({ onDesignBadge }: FocusAllCompleteCardProps) {
   const { t } = useTranslation(["common", "focusMode"]);
   return (
-    <View style={styles.card}>
-      <Text style={styles.heading} accessible accessibilityRole="header">
-        {t("focusMode:currentTask.allComplete.heading")}
-      </Text>
-      <View style={styles.calloutBox}>
-        <Text style={styles.calloutIcon} importantForAccessibility="no">
-          {"🏆"}
-        </Text>
-        <Text style={styles.calloutText}>
-          {t("focusMode:currentTask.allComplete.body")}
-        </Text>
-      </View>
-      <Pressable
-        onPress={onDesignBadge}
-        style={styles.primaryCta}
-        accessible
-        accessibilityRole="button"
-        accessibilityLabel={t(
-          "focusMode:currentTask.allComplete.designBadgeA11y",
-        )}
-      >
-        <Text style={styles.primaryCtaText}>
-          {t("focusMode:currentTask.allComplete.designBadgeCta")}
-        </Text>
-      </Pressable>
-    </View>
+    <CardShell
+      centerBody
+      body={
+        <>
+          <Text style={styles.heading} accessible accessibilityRole="header">
+            {t("focusMode:currentTask.allComplete.heading")}
+          </Text>
+          <View style={styles.calloutBox}>
+            <Text style={styles.calloutIcon} importantForAccessibility="no">
+              {"🏆"}
+            </Text>
+            <Text style={styles.calloutText}>
+              {t("focusMode:currentTask.allComplete.body")}
+            </Text>
+          </View>
+        </>
+      }
+      footer={
+        <Pressable
+          onPress={onDesignBadge}
+          style={styles.primaryCta}
+          accessible
+          accessibilityRole="button"
+          accessibilityLabel={t(
+            "focusMode:currentTask.allComplete.designBadgeA11y",
+          )}
+        >
+          <Text style={styles.primaryCtaText}>
+            {t("focusMode:currentTask.allComplete.designBadgeCta")}
+          </Text>
+        </Pressable>
+      }
+    />
   );
 }

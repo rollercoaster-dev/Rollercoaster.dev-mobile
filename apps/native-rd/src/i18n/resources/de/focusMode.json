@@ -57,6 +57,10 @@
       "designBadgeA11y": "Gestalte dein Abzeichen, um den Abschluss dieses Ziels zu feiern"
     }
   },
+  "evidencePlanSheet": {
+    "title": "Geplante Nachweise",
+    "typesLabel": "Nachweisarten"
+  },
   "progressStrip": {
     "doneCount": "{{done}} / {{total}} erledigt",
     "seeAllSteps": "Alle Schritte ansehen ›",

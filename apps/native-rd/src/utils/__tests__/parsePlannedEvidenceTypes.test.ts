@@ -1,4 +1,8 @@
-import { parsePlannedEvidenceTypes } from "../parsePlannedEvidenceTypes";
+import {
+  DEFAULT_PLANNED_EVIDENCE_TYPES,
+  parsePlannedEvidenceTypes,
+  resolvePlannedEvidenceTypes,
+} from "../parsePlannedEvidenceTypes";
 
 describe("parsePlannedEvidenceTypes", () => {
   // Suppress console noise from cases that trigger warnings/errors
@@ -77,5 +81,53 @@ describe("parsePlannedEvidenceTypes", () => {
     parsePlannedEvidenceTypes('"string"', logger);
     expect(logger.warn).toHaveBeenCalled();
     expect(warnSpy).not.toHaveBeenCalled();
+  });
+});
+
+// The unset-plan default is a cross-layer contract: `canCompleteStep` gates on
+// it and `FocusCurrentTaskCard` renders it, so the two agree about *which*
+// types a plan-less step owes (#466 D4). Pinned here rather than only through
+// those two callers, so a change to the default fails at its source.
+describe("resolvePlannedEvidenceTypes", () => {
+  beforeEach(() => {
+    jest.spyOn(console, "warn").mockImplementation();
+    jest.spyOn(console, "error").mockImplementation();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it("defaults an unset plan to one text note", () => {
+    expect(DEFAULT_PLANNED_EVIDENCE_TYPES).toEqual(["text"]);
+  });
+
+  test.each([
+    { input: null, label: "null" },
+    { input: undefined, label: "undefined" },
+    { input: "", label: "empty string" },
+    { input: "[]", label: "empty array" },
+    { input: "{bad", label: "invalid JSON" },
+    { input: '{"a":1}', label: "non-array JSON" },
+    { input: "[1,2,3]", label: "all-non-string array" },
+  ])("resolves $label to the default plan", ({ input }) => {
+    expect(resolvePlannedEvidenceTypes(input)).toEqual(
+      DEFAULT_PLANNED_EVIDENCE_TYPES,
+    );
+  });
+
+  it("passes a parsed plan through untouched", () => {
+    expect(resolvePlannedEvidenceTypes('["photo","video"]')).toEqual([
+      "photo",
+      "video",
+    ]);
+  });
+
+  it("routes parse warnings through the supplied logger", () => {
+    const logger = { warn: jest.fn(), error: jest.fn() };
+    expect(resolvePlannedEvidenceTypes("{bad", logger)).toEqual(
+      DEFAULT_PLANNED_EVIDENCE_TYPES,
+    );
+    expect(logger.error).toHaveBeenCalled();
   });
 });

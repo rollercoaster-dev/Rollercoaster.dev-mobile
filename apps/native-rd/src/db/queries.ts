@@ -19,8 +19,9 @@ import {
 import type { DateIso } from "@evolu/common";
 import { breadcrumb } from "../services/sentry-report";
 import { Logger } from "../shims/rd-logger";
+import { validateEvidenceType } from "../types/evidence";
 import type { EvidenceTypeValue } from "../types/evidence";
-import { parsePlannedEvidenceTypes } from "../utils/parsePlannedEvidenceTypes";
+import { resolvePlannedEvidenceTypes } from "../utils/parsePlannedEvidenceTypes";
 import { evolu } from "./evolu";
 import {
   GoalId,
@@ -306,9 +307,25 @@ function serializePlannedTypes(
 /**
  * Check if a step has sufficient evidence to be completed.
  *
- * If plannedEvidenceTypes is set (non-null JSON array), at least one
- * evidence item must match a planned type. If null, no step evidence is
- * required.
+ * At least one evidence item must match a planned type. An *unset* plan
+ * (null/invalid/empty JSON) resolves through
+ * {@link resolvePlannedEvidenceTypes} to its default of one text note rather
+ * than exempting the step (#466 D4) — every step owes evidence, and that is the
+ * same list `FocusCurrentTaskCard` renders, so the two never disagree about
+ * *which* types were planned.
+ *
+ * Both sides of the comparison run through `validateEvidenceType`, the same
+ * unknown → `file` fallback `FocusCurrentTaskCard` applies to plan and capture
+ * keys. Persisted data can hold a planned key that is not an `EvidenceType`
+ * (e.g. "sketch"); the card gates that as `file`, so comparing raw strings here
+ * would let the card reveal "Mark complete" on a step this gate then refuses.
+ *
+ * They do differ in strictness, deliberately: this is the data-layer floor
+ * ("at least one planned type captured"), while the card's "✓ Mark complete"
+ * reveal is stricter — it waits for *every* planned type
+ * (`FocusCurrentTaskCard`'s `completionReady`, #497 D1). So a step the card still
+ * shows as unfinished can pass this gate. Callers must not treat a `true` here
+ * as "the card would offer completion"; it only means completion is permitted.
  *
  * @param plannedEvidenceTypesJson - Value from step.plannedEvidenceTypes column (JSON string or null)
  * @param stepEvidence - All non-deleted evidence rows for this step
@@ -318,16 +335,17 @@ export function canCompleteStep(
   plannedEvidenceTypesJson: string | null,
   stepEvidence: { type: string | null }[],
 ): boolean {
-  const plannedTypes = parsePlannedEvidenceTypes(
+  const plannedTypes = resolvePlannedEvidenceTypes(
     plannedEvidenceTypesJson,
     logger,
-  );
-  if (plannedTypes === null) return true;
+  ).map(validateEvidenceType);
 
-  const validEvidence = stepEvidence.filter((e) => e.type !== null);
-  if (validEvidence.length === 0) return false;
+  const capturedTypes = stepEvidence
+    .filter((e) => e.type !== null)
+    .map((e) => validateEvidenceType(e.type!));
+  if (capturedTypes.length === 0) return false;
 
-  return validEvidence.some((e) => plannedTypes.includes(e.type!));
+  return capturedTypes.some((type) => plannedTypes.includes(type));
 }
 
 /**

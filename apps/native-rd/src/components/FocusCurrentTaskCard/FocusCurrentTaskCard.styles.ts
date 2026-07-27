@@ -31,14 +31,25 @@ export const styles = StyleSheet.create((theme) => {
   };
 
   return {
-    // Flat container — the prototype's content sits directly on the screen bg with
-    // NO outer frame (Joe, round 3: "dropshadows where none exist in the prototype").
-    // Fill, border, radius, padding, and the card-level shadow are all removed; only
-    // the inner box/chips/CTA keep their hard shadows. Screen padding + the pinned
-    // CTA layout belong to #377 — the phone-frame story supplies them for review.
-    // Spacing follows the prototype's ~16px block rhythm, not the old 12px. (R1)
+    // Frameless: no fill, border, radius, padding, or card-level shadow — only the
+    // inner box/chips/CTA are shadowed, and screen padding is the host's. Fills its
+    // host so `footRow` can pin to the bottom edge, so the host must bound its height.
     card: {
+      flex: 1,
+    },
+    body: {
+      flex: 1,
+    },
+    bodyContent: {
       gap: theme.space[4],
+      paddingBottom: theme.space[2],
+    },
+    // Short states center against the footer; `flexGrow` still lets tall content scroll.
+    bodyContentCentered: {
+      flexGrow: 1,
+      justifyContent: "center" as const,
+      gap: theme.space[4],
+      paddingBottom: theme.space[2],
     },
     // Prototype title is 29px Anybody-900; `3xl` (32) is the nearest token. (R2)
     title: {
@@ -255,8 +266,10 @@ export const styles = StyleSheet.create((theme) => {
       color: theme.colors.text,
       lineHeight: theme.size.sm * 1.45,
     },
+    // Pinned to the card's bottom edge: the CTA lands in the same spot every time.
     footRow: {
       gap: theme.space[2],
+      paddingTop: theme.space[3],
     },
     // Primary action (Add / Mark complete / Pick back up / Design badge): filled
     // blue (#2563eb light) via the contrast-validated `action` group — flips

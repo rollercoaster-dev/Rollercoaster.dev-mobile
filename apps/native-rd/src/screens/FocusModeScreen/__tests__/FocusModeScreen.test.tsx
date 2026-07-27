@@ -1,12 +1,13 @@
 import React from "react";
-import { StyleSheet } from "react-native";
+import { AccessibilityInfo } from "react-native";
 import {
   renderWithProviders,
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
+import { reportError } from "../../../services/sentry-report";
 import { i18n } from "../../../i18n";
-import { evidenceByStepQuery } from "../../../db";
+import { evidenceLabel, evidenceShortLabel } from "../../../i18n/labels";
 import { FocusModeScreen } from "../FocusModeScreen";
 
 // --- Mocks ---
@@ -34,19 +35,6 @@ jest.mock("expo-haptics", () => ({
   ImpactFeedbackStyle: { Light: "light", Medium: "medium", Heavy: "heavy" },
 }));
 
-// GoalEvidenceCard now renders BadgeRenderer (react-native-svg). jsdom can't
-// render SVG, and there's no global RN-SVG mock — so stub the renderer the same
-// way BadgeCard.test.tsx and CompletionFlowScreen.test.tsx do.
-jest.mock("../../../badges/BadgeRenderer", () => ({
-  BadgeRenderer: () => null,
-  getRendererLayoutOptions: () => ({ strokeWidth: 3, hasShadow: false }),
-}));
-
-jest.mock("../../../utils/haptics", () => ({
-  triggerDragStart: jest.fn(),
-  triggerDragDrop: jest.fn(),
-}));
-
 jest.mock("../../../hooks/useAnimationPref", () => ({
   useAnimationPref: () => ({
     animationPref: "full",
@@ -56,146 +44,182 @@ jest.mock("../../../hooks/useAnimationPref", () => ({
   }),
 }));
 
-const mockUseFlashOnIncrease = jest.fn((_count: number) => ({}));
-jest.mock("../../../hooks/useFlashOnIncrease", () => ({
-  useFlashOnIncrease: (count: number) => mockUseFlashOnIncrease(count),
-}));
-
-const mockCompleteStep = jest.fn();
-const mockUncompleteStep = jest.fn();
-const mockDeleteEvidence = jest.fn();
-const mockCreateEvidence = jest.fn();
-const mockCanCompleteStep = jest.fn().mockReturnValue(true);
-const mockDeleteEvidenceFile = jest.fn((_uri: string, _type: string) => {});
-jest.mock("../../../utils/evidenceCleanup", () => ({
-  deleteEvidenceFile: (uri: string, type: string) =>
-    mockDeleteEvidenceFile(uri, type),
-}));
-
 jest.mock("../../../services/sentry-report", () => ({
   reportError: jest.fn(),
   breadcrumb: jest.fn(),
 }));
 
-const mockViewEvidence = jest.fn();
-jest.mock("../../../utils/evidenceViewers", () => ({
-  useEvidenceViewer: () => ({
-    viewEvidence: mockViewEvidence,
-    viewerModals: null,
-  }),
-}));
+// Evolu writes return a Result rather than void, and the screen now checks it —
+// so these mocks hand back `{ ok: true }` like a successful real write. A test
+// that wants the returned-failure path overrides with `{ ok: false, error }`.
+const okMutation = () =>
+  jest.fn((..._args: unknown[]) => ({ ok: true as const, value: undefined }));
+const mockCompleteStep = okMutation();
+const mockUncompleteStep = okMutation();
+const mockPauseStep = okMutation();
+const mockResumeStep = okMutation();
+const mockUpdateStep = okMutation();
 
-jest.mock("../../../db", () => ({
-  StepStatus: { pending: "pending", completed: "completed" },
-  EvidenceType: {
-    photo: "photo",
-    text: "text",
-    voice_memo: "voice_memo",
-    video: "video",
-    link: "link",
-    file: "file",
-  },
-  TEXT_EVIDENCE_PREFIX: "content:text;",
-  goalsQuery: "goalsQuery",
-  stepsByGoalQuery: jest.fn((id: string) => `stepsByGoalQuery-${id}`),
-  evidenceByGoalQuery: jest.fn((id: string) => `evidenceByGoalQuery-${id}`),
-  evidenceByStepQuery: jest.fn((id: string) => `evidenceByStepQuery-${id}`),
-  stepEvidenceByGoalQuery: jest.fn(
-    (id: string) => `stepEvidenceByGoalQuery-${id}`,
-  ),
-  userSettingsQuery: "userSettingsQuery",
-  completeStep: (...args: unknown[]) => mockCompleteStep(...args),
-  uncompleteStep: (...args: unknown[]) => mockUncompleteStep(...args),
-  deleteEvidence: (...args: unknown[]) => mockDeleteEvidence(...args),
-  createEvidence: (...args: unknown[]) => mockCreateEvidence(...args),
-  canCompleteStep: (...args: unknown[]) => mockCanCompleteStep(...args),
-  createUserSettings: jest.fn(),
-  updateUserSettings: jest.fn(),
-  isPendingStep: (s: { status: string | null }) => s.status === "pending",
-  findFirstPendingIndex: (rows: { status: string | null }[]) =>
-    rows.findIndex((s) => s.status === "pending"),
-  // Faithful copy of the real predicate behind the "Mark complete" gate.
-  areAllStepsComplete: (rows: readonly { status: string | null }[]) =>
-    rows.length > 0 && rows.every((s) => s.status === "completed"),
-  // Faithful copies of the real helpers (orphan/grandchild promotion + flatten)
-  // so the screen's parent-then-children reordering is exercised, not stubbed.
-  groupStepsByParent: (
-    rows: readonly { id: string; parentStepId: string | null }[],
-  ) => {
-    const rootIds = new Set(
-      rows.filter((r) => r.parentStepId == null).map((r) => r.id),
-    );
-    const nodes = new Map(
-      rows.map((r) => [r.id, { ...r, children: [] as unknown[] }]),
-    );
-    const roots: {
-      id: string;
-      parentStepId: string | null;
-      children: unknown[];
-    }[] = [];
-    for (const row of rows) {
-      const node = nodes.get(row.id)!;
-      const parentId = row.parentStepId;
-      if (parentId != null && rootIds.has(parentId)) {
-        (nodes.get(parentId)!.children as unknown[]).push(node);
-      } else {
-        roots.push(node);
+jest.mock("../../../db", () => {
+  // The completion gate below calls the *production* helpers rather than
+  // re-deriving their behavior: `resolvePlannedEvidenceTypes` drops non-string
+  // elements and treats an all-non-string array as unset (→ ["text"], #466 D4),
+  // and `validateEvidenceType` folds unknown types to `file`. Hand-copying
+  // either is how a mock silently diverges from real gating on corrupted JSON.
+  // Both are pure leaf modules, so requiring them here pulls in no Evolu
+  // runtime.
+  const { resolvePlannedEvidenceTypes } = jest.requireActual<
+    typeof import("../../../utils/parsePlannedEvidenceTypes")
+  >("../../../utils/parsePlannedEvidenceTypes");
+  const { validateEvidenceType } = jest.requireActual<
+    typeof import("../../../types/evidence")
+  >("../../../types/evidence");
+  // Fixtures feed deliberately corrupt JSON; the real gate logs those through
+  // rd-logger, so swallow them here instead of spraying the test output.
+  const quietLogger = { warn: () => {}, error: () => {} };
+
+  return {
+    // `paused` is load-bearing here — the screen branches on it for the
+    // "Pick this back up" card and the resolver skips it (#417).
+    StepStatus: {
+      pending: "pending",
+      completed: "completed",
+      paused: "paused",
+    },
+    EvidenceType: {
+      photo: "photo",
+      text: "text",
+      voice_memo: "voice_memo",
+      video: "video",
+      link: "link",
+      file: "file",
+    },
+    TEXT_EVIDENCE_PREFIX: "content:text;",
+    goalsQuery: "goalsQuery",
+    stepsByGoalQuery: jest.fn((id: string) => `stepsByGoalQuery-${id}`),
+    stepEvidenceByGoalQuery: jest.fn(
+      (id: string) => `stepEvidenceByGoalQuery-${id}`,
+    ),
+    userSettingsQuery: "userSettingsQuery",
+    createUserSettings: jest.fn(),
+    updateUserSettings: jest.fn(),
+    completeStep: (...args: unknown[]) => mockCompleteStep(...args),
+    uncompleteStep: (...args: unknown[]) => mockUncompleteStep(...args),
+    pauseStep: (...args: unknown[]) => mockPauseStep(...args),
+    resumeStep: (...args: unknown[]) => mockResumeStep(...args),
+    updateStep: (...args: unknown[]) => mockUpdateStep(...args),
+    canCompleteStep: (
+      plannedJson: string | null,
+      evidence: { type: string | null }[],
+    ) => {
+      const planned = resolvePlannedEvidenceTypes(plannedJson, quietLogger).map(
+        validateEvidenceType,
+      );
+      const captured = evidence
+        .filter((e) => e.type !== null)
+        .map((e) => validateEvidenceType(e.type!));
+      return captured.some((type) => planned.includes(type));
+    },
+    resolveStepDependencyBand: (
+      step: {
+        id: string;
+        afterStepId: string | null;
+        waitingOnLabel: string | null;
+        waitingOnExpectedAt: string | null;
+        dueAt: string | null;
+      },
+      goalSteps: readonly { id: string; title: string | null }[],
+    ) => ({
+      afterStepTitle:
+        step.afterStepId && step.afterStepId !== step.id
+          ? (goalSteps.find((s) => s.id === step.afterStepId)?.title ?? null)
+          : null,
+      waitingOnLabel: step.waitingOnLabel ?? null,
+      waitingOnExpectedAt: step.waitingOnExpectedAt ?? null,
+      dueAt: step.dueAt ?? null,
+    }),
+    // Faithful copies of the real helpers (orphan/grandchild promotion + flatten)
+    // so the screen's parent-then-children reordering is exercised, not stubbed.
+    groupStepsByParent: (
+      rows: readonly { id: string; parentStepId: string | null }[],
+    ) => {
+      const rootIds = new Set(
+        rows.filter((r) => r.parentStepId == null).map((r) => r.id),
+      );
+      const nodes = new Map(
+        rows.map((r) => [r.id, { ...r, children: [] as unknown[] }]),
+      );
+      const roots: {
+        id: string;
+        parentStepId: string | null;
+        children: unknown[];
+      }[] = [];
+      for (const row of rows) {
+        const node = nodes.get(row.id)!;
+        const parentId = row.parentStepId;
+        if (parentId != null && rootIds.has(parentId)) {
+          (nodes.get(parentId)!.children as unknown[]).push(node);
+        } else {
+          roots.push(node);
+        }
       }
-    }
-    return roots;
-  },
-  flattenGroupedSteps: (grouped: readonly { children: unknown[] }[]) => {
-    const out: unknown[] = [];
-    for (const root of grouped) {
-      out.push(root);
-      out.push(...root.children);
-    }
-    return out;
-  },
-  // Faithful copy of the real resolver (leaf/invite/flat/none + orphan
-  // promotion) so findFirstPendingLeafIndex's delegation is exercised, not
-  // stubbed — keeps the #292 snap behaviour under test after the #337 extract.
-  // Keep in sync with resolveNextActionableStep in src/db/queries.ts.
-  resolveNextActionableStep: (
-    rows: readonly {
-      id: string;
-      parentStepId: string | null;
-      status: string | null;
-    }[],
-  ) => {
-    const rootIds = new Set(
-      rows.filter((r) => r.parentStepId == null).map((r) => r.id),
-    );
-    const childrenByParent = new Map<
-      string,
-      { index: number; status: string | null }[]
-    >();
-    const topLevel: { id: string; index: number; status: string | null }[] = [];
-    rows.forEach((row, index) => {
-      if (row.parentStepId != null && rootIds.has(row.parentStepId)) {
-        const entry = { index, status: row.status };
-        const list = childrenByParent.get(row.parentStepId);
-        if (list) list.push(entry);
-        else childrenByParent.set(row.parentStepId, [entry]);
-      } else {
-        topLevel.push({ id: row.id, index, status: row.status });
+      return roots;
+    },
+    flattenGroupedSteps: (grouped: readonly { children: unknown[] }[]) => {
+      const out: unknown[] = [];
+      for (const root of grouped) {
+        out.push(root);
+        out.push(...root.children);
       }
-    });
-    for (const step of topLevel) {
-      const children = childrenByParent.get(step.id) ?? [];
-      const pendingChild = children.find((c) => c.status !== "completed");
-      if (pendingChild) {
-        return { kind: "leaf", index: pendingChild.index, parentIndex: step.index }; // prettier-ignore
+      return out;
+    },
+    // Faithful copy of the real resolver (leaf/invite/flat/none + orphan
+    // promotion, paused skipped like completed) so the #292/#337 resolution the
+    // screen depends on is exercised, not stubbed.
+    // Keep in sync with resolveNextActionableStep in src/db/queries.ts.
+    resolveNextActionableStep: (
+      rows: readonly {
+        id: string;
+        parentStepId: string | null;
+        status: string | null;
+      }[],
+    ) => {
+      const skip = (s: string | null) => s === "completed" || s === "paused";
+      const rootIds = new Set(
+        rows.filter((r) => r.parentStepId == null).map((r) => r.id),
+      );
+      const childrenByParent = new Map<
+        string,
+        { index: number; status: string | null }[]
+      >();
+      const topLevel: { id: string; index: number; status: string | null }[] =
+        [];
+      rows.forEach((row, index) => {
+        if (row.parentStepId != null && rootIds.has(row.parentStepId)) {
+          const entry = { index, status: row.status };
+          const list = childrenByParent.get(row.parentStepId);
+          if (list) list.push(entry);
+          else childrenByParent.set(row.parentStepId, [entry]);
+        } else {
+          topLevel.push({ id: row.id, index, status: row.status });
+        }
+      });
+      for (const step of topLevel) {
+        const children = childrenByParent.get(step.id) ?? [];
+        const pendingChild = children.find((c) => !skip(c.status));
+        if (pendingChild) {
+          return { kind: "leaf", index: pendingChild.index, parentIndex: step.index }; // prettier-ignore
+        }
+        if (skip(step.status)) continue;
+        if (children.length > 0) {
+          return { kind: "invite", index: step.index, childCount: children.length }; // prettier-ignore
+        }
+        return { kind: "flat", index: step.index };
       }
-      if (step.status === "completed") continue;
-      if (children.length > 0) {
-        return { kind: "invite", index: step.index, childCount: children.length }; // prettier-ignore
-      }
-      return { kind: "flat", index: step.index };
-    }
-    return { kind: "none" };
-  },
-}));
+      return { kind: "none" };
+    },
+  };
+});
 
 const mockUseQuery = jest.fn();
 jest.mock("@evolu/react", () => ({
@@ -212,40 +236,42 @@ const GOAL = {
   status: "active",
 };
 
-const STEPS = [
-  {
-    id: "step-1",
-    title: "Read docs",
+/** A flat step row in the shape `stepsByGoalQuery` returns. */
+function step(
+  id: string,
+  overrides: Partial<{
+    title: string;
+    status: string;
+    ordinal: number;
+    parentStepId: string | null;
+    plannedEvidenceTypes: string | null;
+    afterStepId: string | null;
+    waitingOnLabel: string | null;
+    waitingOnExpectedAt: string | null;
+    dueAt: string | null;
+  }> = {},
+) {
+  return {
+    id,
+    title: id,
     status: "pending",
     ordinal: 0,
+    parentStepId: null,
     plannedEvidenceTypes: null,
-  },
-  {
-    id: "step-2",
-    title: "Practice",
-    status: "completed",
-    ordinal: 1,
-    plannedEvidenceTypes: null,
-  },
-];
+    afterStepId: null,
+    waitingOnLabel: null,
+    waitingOnExpectedAt: null,
+    dueAt: null,
+    ...overrides,
+  };
+}
 
-const GOAL_EVIDENCE = [
-  {
-    id: "ev-g1",
-    type: "photo",
-    uri: "/goal-photo.jpg",
-    description: "Goal photo",
-  },
-];
-
-const STEP_EVIDENCE = [
-  {
-    id: "ev-s1",
-    type: "text",
-    uri: "content:text;My notes",
-    description: "Step notes",
-    stepId: "step-1",
-  },
+/** One pending step planning a photo, with nothing captured yet. */
+const PHOTO_STEP = [
+  step("step-1", {
+    title: "Read docs",
+    plannedEvidenceTypes: '["photo"]',
+  }),
 ];
 
 const routeProps = {
@@ -254,30 +280,24 @@ const routeProps = {
     name: "FocusMode" as const,
     params: { goalId: "goal-1" },
   },
-  navigation: {} as any,
+  navigation: {} as never,
 };
 
 function setupQueries({
   goal = GOAL,
-  steps = STEPS,
-  goalEvidence = GOAL_EVIDENCE,
-  stepEvidence = STEP_EVIDENCE,
+  steps = PHOTO_STEP,
+  stepEvidence = [] as object[],
 }: {
   goal?: object | null;
   steps?: object[];
-  goalEvidence?: object[];
   stepEvidence?: object[];
 } = {}) {
   mockUseQuery.mockImplementation((query: unknown) => {
     if (query === "goalsQuery") return goal ? [goal] : [];
-    if (typeof query === "string" && query.startsWith("evidenceByGoalQuery"))
-      return goalEvidence;
     if (
       typeof query === "string" &&
       query.startsWith("stepEvidenceByGoalQuery")
     )
-      return stepEvidence;
-    if (typeof query === "string" && query.startsWith("evidenceByStepQuery"))
       return stepEvidence;
     if (typeof query === "string" && query.startsWith("stepsByGoalQuery"))
       return steps;
@@ -285,1132 +305,665 @@ function setupQueries({
   });
 }
 
+/**
+ * The title of the single rendered current-task card. Three headers are on
+ * screen, in tree order: the ScreenSubHeader label, the goal title, and last
+ * the card's step title (every card variant renders it as a header). Asserting
+ * the count keeps this honest — a second card would break it rather than
+ * silently changing which title is read.
+ */
+function currentCardTitle(): string {
+  const headers = screen.getAllByRole("header");
+  expect(headers).toHaveLength(3);
+  return headers[2].props.children as string;
+}
+
+const t = i18n.t.bind(i18n);
+
+beforeEach(() => {
+  jest.clearAllMocks();
+});
+
 // --- Tests ---
 
 describe("FocusModeScreen", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    mockUseQuery.mockReturnValue([]);
-    mockCanCompleteStep.mockReturnValue(true);
-  });
+  describe("single-card body (#466)", () => {
+    it("renders exactly one current-task card for the resolved step", () => {
+      setupQueries({
+        steps: [
+          step("step-1", { title: "Read docs", status: "completed" }),
+          step("step-2", { title: "Practice", ordinal: 1 }),
+          step("step-3", { title: "Build it", ordinal: 2 }),
+        ],
+      });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
 
-  it("renders goal title in header", () => {
-    setupQueries();
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-    expect(screen.getByText("Learn TypeScript")).toBeOnTheScreen();
-  });
-
-  it('shows "Goal not found" when goal does not exist', () => {
-    setupQueries({ goal: null, steps: [] });
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-    expect(
-      screen.getByText(i18n.t("focusMode:errors.goalNotFound")),
-    ).toBeOnTheScreen();
-  });
-
-  it("renders MiniTimeline with step navigation", () => {
-    setupQueries();
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-    // Labels appear in both MiniTimeline (button) and ProgressDots (tab)
-    expect(
-      screen.getAllByLabelText("Step 1: in-progress").length,
-    ).toBeGreaterThanOrEqual(1);
-    expect(
-      screen.getAllByLabelText("Step 2: completed").length,
-    ).toBeGreaterThanOrEqual(1);
-  });
-
-  it("renders ProgressDots with step and goal dots", () => {
-    setupQueries();
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-    // ProgressDots renders tab elements
-    expect(
-      screen.getByLabelText(i18n.t("common:progressDots.a11y.label")),
-    ).toBeOnTheScreen();
-    // "Goal evidence" label appears in both MiniTimeline and ProgressDots
-    expect(
-      screen.getAllByLabelText(i18n.t("common:timeline.a11y.goalEvidence"))
-        .length,
-    ).toBeGreaterThanOrEqual(2);
-  });
-
-  it("renders StepCard for current step", () => {
-    setupQueries();
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-    expect(
-      screen.getByText(
-        i18n.t("common:stepCard.progress", { current: 1, total: 2 }),
-      ),
-    ).toBeOnTheScreen();
-    expect(screen.getByText("Read docs")).toBeOnTheScreen();
-  });
-
-  it("never creates a per-step evidence query while navigating or opening the drawer", () => {
-    setupQueries();
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-
-    fireEvent.press(screen.getByLabelText("Next card"));
-    fireEvent.press(screen.getByLabelText("Toggle evidence drawer"));
-
-    expect(evidenceByStepQuery).not.toHaveBeenCalled();
-  });
-
-  it("only re-renders the outgoing and incoming cards during navigation", () => {
-    setupQueries({
-      steps: [
-        { id: "step-1", title: "Read docs", status: "pending", ordinal: 0 },
-        { id: "step-2", title: "Practice", status: "pending", ordinal: 1 },
-        { id: "step-3", title: "Build it", status: "pending", ordinal: 2 },
-      ],
-      stepEvidence: [],
-    });
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-
-    mockUseFlashOnIncrease.mockClear();
-    fireEvent.press(screen.getByLabelText("Next card"));
-
-    // useFlashOnIncrease runs during each StepCard/GoalEvidenceCard render.
-    // Only the two StepCards whose derived status changed should render.
-    expect(mockUseFlashOnIncrease).toHaveBeenCalledTimes(2);
-  });
-
-  it("advances the carousel to the next pending step after completing one", () => {
-    setupQueries({
-      steps: [
-        {
-          id: "step-1",
-          title: "Read docs",
-          status: "pending",
-          ordinal: 0,
-          plannedEvidenceTypes: null,
-        },
-        {
-          id: "step-2",
-          title: "Practice",
-          status: "pending",
-          ordinal: 1,
-          plannedEvidenceTypes: null,
-        },
-      ],
-      stepEvidence: [],
-    });
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-    // Lands on step-1 (first pending). Mark it complete.
-    expect(
-      screen.getByText(
-        i18n.t("common:stepCard.progress", { current: 1, total: 2 }),
-      ),
-    ).toBeOnTheScreen();
-    fireEvent.press(
-      screen.getByRole("checkbox", {
-        name: i18n.t("common:stepCard.checkbox.markComplete"),
-      }),
-    );
-    expect(mockCompleteStep).toHaveBeenCalledWith("step-1", null, []);
-    // Carousel should advance to step-2 instead of staying on the completed step.
-    expect(
-      screen.getByText(
-        i18n.t("common:stepCard.progress", { current: 2, total: 2 }),
-      ),
-    ).toBeOnTheScreen();
-    expect(screen.getByText("Practice")).toBeOnTheScreen();
-  });
-
-  it("auto-snaps the carousel to the first pending step on mount", () => {
-    setupQueries({
-      steps: [
-        { id: "step-1", title: "Read docs", status: "completed", ordinal: 0 },
-        { id: "step-2", title: "Practice", status: "completed", ordinal: 1 },
-        { id: "step-3", title: "Build it", status: "pending", ordinal: 2 },
-      ],
-    });
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-    // The current step indicator reflects the snapped index, so users land on
-    // the first pending step instead of swiping past completed ones.
-    expect(
-      screen.getByText(
-        i18n.t("common:stepCard.progress", { current: 3, total: 3 }),
-      ),
-    ).toBeOnTheScreen();
-    expect(screen.getByText("Build it")).toBeOnTheScreen();
-  });
-
-  it("does not snap when the first step is already pending", () => {
-    setupQueries({
-      steps: [
-        { id: "step-1", title: "Read docs", status: "pending", ordinal: 0 },
-        { id: "step-2", title: "Practice", status: "pending", ordinal: 1 },
-      ],
-    });
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-    expect(
-      screen.getByText(
-        i18n.t("common:stepCard.progress", { current: 1, total: 2 }),
-      ),
-    ).toBeOnTheScreen();
-    expect(screen.getByText("Read docs")).toBeOnTheScreen();
-  });
-
-  it("wraps backward to find a pending step earlier than the just-completed one", () => {
-    setupQueries({
-      steps: [
-        { id: "step-1", title: "Read docs", status: "pending", ordinal: 0 },
-        { id: "step-2", title: "Practice", status: "completed", ordinal: 1 },
-        { id: "step-3", title: "Build it", status: "pending", ordinal: 2 },
-      ],
-      stepEvidence: [],
-    });
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-    // Snap puts us on step-1 (first pending). Swipe forward twice to reach
-    // step-3 (also pending), bypassing the completed step-2.
-    fireEvent.press(screen.getByLabelText("Next card"));
-    fireEvent.press(screen.getByLabelText("Next card"));
-    expect(
-      screen.getByText(
-        i18n.t("common:stepCard.progress", { current: 3, total: 3 }),
-      ),
-    ).toBeOnTheScreen();
-    // Complete step-3. Forward search finds nothing pending, so the wrap
-    // path must pull the carousel back to step-1.
-    fireEvent.press(
-      screen.getByRole("checkbox", {
-        name: i18n.t("common:stepCard.checkbox.markComplete"),
-      }),
-    );
-    expect(mockCompleteStep).toHaveBeenCalledWith("step-3", null, []);
-    expect(
-      screen.getByText(
-        i18n.t("common:stepCard.progress", { current: 1, total: 3 }),
-      ),
-    ).toBeOnTheScreen();
-  });
-
-  it("does not advance when the last pending step is completed", () => {
-    setupQueries({
-      steps: [
-        { id: "step-1", title: "Read docs", status: "completed", ordinal: 0 },
-        { id: "step-2", title: "Practice", status: "pending", ordinal: 1 },
-      ],
-      stepEvidence: [],
-    });
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-    // Snap puts us on step-2 (the only pending one).
-    expect(
-      screen.getByText(
-        i18n.t("common:stepCard.progress", { current: 2, total: 2 }),
-      ),
-    ).toBeOnTheScreen();
-    fireEvent.press(
-      screen.getByRole("checkbox", {
-        name: i18n.t("common:stepCard.checkbox.markComplete"),
-      }),
-    );
-    expect(mockCompleteStep).toHaveBeenCalledWith("step-2", null, []);
-    // No other pending steps — carousel stays put. The all-steps-complete
-    // effect handles the navigation to CompletionFlow separately.
-    expect(
-      screen.getByText(
-        i18n.t("common:stepCard.progress", { current: 2, total: 2 }),
-      ),
-    ).toBeOnTheScreen();
-  });
-
-  it("closes the evidence drawer when auto-advancing after step completion", () => {
-    setupQueries({
-      steps: [
-        { id: "step-1", title: "Read docs", status: "pending", ordinal: 0 },
-        { id: "step-2", title: "Practice", status: "pending", ordinal: 1 },
-      ],
-      stepEvidence: [
-        {
-          id: "ev-s1",
-          type: "text",
-          uri: "/note.txt",
-          description: "Step notes",
-          stepId: "step-1",
-        },
-      ],
-    });
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-    // Open the evidence drawer on step-1. The overlay's `accessible` prop
-    // tracks the drawer's open state — true when open, false when closed.
-    fireEvent.press(screen.getByLabelText("Toggle evidence drawer"));
-    expect(
-      screen.getByLabelText("Close evidence drawer").props.accessible,
-    ).toBe(true);
-    // Complete step-1; advance to step-2 must also close the drawer so the
-    // overlay doesn't persist over the next step's content.
-    fireEvent.press(
-      screen.getByRole("checkbox", {
-        name: i18n.t("common:stepCard.checkbox.markComplete"),
-      }),
-    );
-    expect(
-      screen.getByText(
-        i18n.t("common:stepCard.progress", { current: 2, total: 2 }),
-      ),
-    ).toBeOnTheScreen();
-    expect(
-      screen.getByLabelText("Close evidence drawer").props.accessible,
-    ).toBe(false);
-  });
-
-  it("keeps the carousel in place and toasts when completeStep throws", () => {
-    setupQueries({
-      steps: [
-        { id: "step-1", title: "Read docs", status: "pending", ordinal: 0 },
-        { id: "step-2", title: "Practice", status: "pending", ordinal: 1 },
-      ],
-      stepEvidence: [],
-    });
-    mockCompleteStep.mockImplementationOnce(() => {
-      throw new Error("DB write failed");
-    });
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-    expect(
-      screen.getByText(
-        i18n.t("common:stepCard.progress", { current: 1, total: 2 }),
-      ),
-    ).toBeOnTheScreen();
-    fireEvent.press(
-      screen.getByRole("checkbox", {
-        name: i18n.t("common:stepCard.checkbox.markComplete"),
-      }),
-    );
-    // Error toast appears, carousel must NOT advance.
-    expect(
-      screen.getByText(
-        i18n.t("focusMode:errors.couldNotUpdateStep", {
-          message: "DB write failed",
-        }),
-      ),
-    ).toBeOnTheScreen();
-    expect(
-      screen.getByText(
-        i18n.t("common:stepCard.progress", { current: 1, total: 2 }),
-      ),
-    ).toBeOnTheScreen();
-  });
-
-  it("calls completeStep when step checkbox is toggled", () => {
-    setupQueries();
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-    fireEvent.press(
-      screen.getByRole("checkbox", {
-        name: i18n.t("common:stepCard.checkbox.markComplete"),
-      }),
-    );
-    expect(mockCompleteStep).toHaveBeenCalledWith("step-1", null, [
-      { type: "text" },
-    ]);
-  });
-
-  it("calls uncompleteStep when completed step checkbox is toggled", () => {
-    setupQueries({
-      steps: [
-        { id: "step-1", title: "Read docs", status: "completed", ordinal: 0 },
-        { id: "step-2", title: "Practice", status: "pending", ordinal: 1 },
-      ],
-    });
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-    // FocusMode auto-snaps to the first pending step (step-2). Swipe back to
-    // the completed step so its checkbox is the active card.
-    fireEvent.press(screen.getByLabelText("Previous card"));
-    // Role query scopes to the checkbox, skipping the StatusBadge that also
-    // shows "Completed" — no need to index into a getAllByText list.
-    fireEvent.press(
-      screen.getByRole("checkbox", {
-        name: i18n.t("common:stepCard.checkbox.completed"),
-      }),
-    );
-    expect(mockUncompleteStep).toHaveBeenCalledWith("step-1");
-  });
-
-  it("renders FAB button for adding evidence", () => {
-    setupQueries();
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-    expect(screen.getByLabelText("Add evidence")).toBeOnTheScreen();
-  });
-
-  it("opens FABMenu when FAB is pressed", () => {
-    setupQueries();
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-    fireEvent.press(screen.getByLabelText("Add evidence"));
-    expect(screen.getByLabelText("Add evidence menu")).toBeOnTheScreen();
-  });
-
-  it("navigates to capture screen when evidence type is selected", () => {
-    setupQueries();
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-    // Open FAB menu
-    fireEvent.press(screen.getByLabelText("Add evidence"));
-    // Select Photo
-    fireEvent.press(screen.getByLabelText("Photo"));
-    expect(mockNavigate).toHaveBeenCalledWith("CapturePhoto", {
-      goalId: "goal-1",
-      stepId: "step-1",
-    });
-  });
-
-  it("navigates to capture screen when quick evidence action is pressed", () => {
-    setupQueries({
-      steps: [
-        {
-          id: "step-1",
-          title: "Read docs",
-          status: "pending",
-          ordinal: 0,
-          plannedEvidenceTypes: '["photo"]',
-        },
-        {
-          id: "step-2",
-          title: "Practice",
-          status: "completed",
-          ordinal: 1,
-          plannedEvidenceTypes: null,
-        },
-      ],
-      stepEvidence: [],
-    });
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-    fireEvent.press(screen.getByLabelText("Add Photo evidence"));
-    expect(mockNavigate).toHaveBeenCalledWith("CapturePhoto", {
-      goalId: "goal-1",
-      stepId: "step-1",
-    });
-  });
-
-  it("navigates back when back button is pressed", () => {
-    setupQueries();
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-    fireEvent.press(screen.getByLabelText("Go back"));
-    expect(mockGoBack).toHaveBeenCalled();
-  });
-
-  it("navigates to EditMode when edit button is pressed", () => {
-    setupQueries();
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-    fireEvent.press(screen.getByLabelText("Edit goal"));
-    expect(mockNavigate).toHaveBeenCalledWith("EditMode", {
-      goalId: "goal-1",
-      cameFromFocus: true,
-    });
-  });
-
-  it('renders "Focus Mode" label in top bar', () => {
-    setupQueries();
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-    expect(screen.getByText(i18n.t("focusMode:title"))).toBeOnTheScreen();
-  });
-
-  // The goal card lives at the end of the CardCarousel, which sets
-  // accessibilityElementsHidden on every non-center card. Navigate to the
-  // goal card via the "Goal evidence" indicator before asserting on the
-  // Mark Complete check — that's what a real user does.
-  const navigateToGoalCard = () => {
-    fireEvent.press(
-      screen.getAllByLabelText(i18n.t("common:timeline.a11y.goalEvidence"))[0],
-    );
-  };
-
-  it("Mark Complete check is hidden while any step is pending", () => {
-    setupQueries({
-      steps: [
-        { id: "step-1", title: "Read docs", status: "completed", ordinal: 0 },
-        { id: "step-2", title: "Practice", status: "pending", ordinal: 1 },
-      ],
-    });
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-    navigateToGoalCard();
-
-    expect(
-      screen.queryByRole("button", {
-        name: i18n.t("common:goalCard.markComplete"),
-      }),
-    ).toBeNull();
-  });
-
-  it("Mark Complete check appears when all steps are complete", () => {
-    setupQueries({
-      steps: [
-        { id: "step-1", title: "Read docs", status: "completed", ordinal: 0 },
-        { id: "step-2", title: "Practice", status: "pending", ordinal: 1 },
-      ],
-    });
-    const view = renderWithProviders(<FocusModeScreen {...routeProps} />);
-    navigateToGoalCard();
-    expect(
-      screen.queryByRole("button", {
-        name: i18n.t("common:goalCard.markComplete"),
-      }),
-    ).toBeNull();
-
-    // Flip the pending step to completed and rerender. The snap effect
-    // moves the carousel back to the goal card on the incomplete →
-    // complete transition, so the check becomes queryable without a
-    // second manual navigation.
-    setupQueries({
-      steps: [
-        { id: "step-1", title: "Read docs", status: "completed", ordinal: 0 },
-        { id: "step-2", title: "Practice", status: "completed", ordinal: 1 },
-      ],
-    });
-    view.rerender(<FocusModeScreen {...routeProps} />);
-
-    expect(
-      screen.getByRole("button", {
-        name: i18n.t("common:goalCard.markComplete"),
-      }),
-    ).toBeOnTheScreen();
-  });
-
-  it("tapping Mark Complete navigates to CompletionFlow", () => {
-    setupQueries({
-      steps: [
-        { id: "step-1", title: "Read docs", status: "completed", ordinal: 0 },
-        { id: "step-2", title: "Practice", status: "completed", ordinal: 1 },
-      ],
-    });
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-    navigateToGoalCard();
-
-    fireEvent.press(
-      screen.getByRole("button", {
-        name: i18n.t("common:goalCard.markComplete"),
-      }),
-    );
-    expect(mockNavigate).toHaveBeenCalledWith("CompletionFlow", {
-      goalId: "goal-1",
-    });
-  });
-
-  it("does NOT auto-navigate to CompletionFlow on the pending→complete transition", () => {
-    jest.useFakeTimers();
-    // Regression guard for the removed auto-nav. The user must tap
-    // Mark Complete themselves; observing the transition alone must
-    // never trigger navigation.
-    setupQueries({
-      steps: [
-        { id: "step-1", title: "Read docs", status: "completed", ordinal: 0 },
-        { id: "step-2", title: "Practice", status: "pending", ordinal: 1 },
-      ],
-    });
-    const view = renderWithProviders(<FocusModeScreen {...routeProps} />);
-
-    setupQueries({
-      steps: [
-        { id: "step-1", title: "Read docs", status: "completed", ordinal: 0 },
-        { id: "step-2", title: "Practice", status: "completed", ordinal: 1 },
-      ],
-    });
-    view.rerender(<FocusModeScreen {...routeProps} />);
-    // Drain any timers in case a future regression reintroduces deferred nav.
-    jest.advanceTimersByTime(2000);
-
-    expect(mockNavigate).not.toHaveBeenCalledWith("CompletionFlow", {
-      goalId: "goal-1",
-    });
-    jest.useRealTimers();
-  });
-
-  it("stepless goal: Mark Complete is visible from first mount", () => {
-    setupQueries({ steps: [] });
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-
-    expect(
-      screen.getByRole("button", {
-        name: i18n.t("common:goalCard.markComplete"),
-      }),
-    ).toBeOnTheScreen();
-  });
-
-  it("stepless goal: timeline toggle (eye icon) is hidden — nothing to toggle", () => {
-    setupQueries({ steps: [] });
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-
-    expect(screen.queryByLabelText("Hide timeline")).toBeNull();
-    expect(screen.queryByLabelText("Show timeline")).toBeNull();
-  });
-
-  it("stepped goal: timeline toggle (eye icon) is visible", () => {
-    setupQueries();
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-
-    expect(screen.getByLabelText("Hide timeline")).toBeOnTheScreen();
-  });
-
-  it("badge on goal card navigates to BadgeDesigner in new-goal mode", () => {
-    setupQueries({ steps: [] });
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-
-    fireEvent.press(
-      screen.getByLabelText(
-        "Badge preview for Learn TypeScript, tap to edit design",
-      ),
-    );
-    expect(mockNavigate).toHaveBeenCalledWith("BadgeDesigner", {
-      mode: "new-goal",
-      goalId: "goal-1",
-      returnVia: "back",
-    });
-  });
-
-  it("renders goal description on the goal card when present", () => {
-    setupQueries({ steps: [] });
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-
-    expect(screen.getByText("Master the type system")).toBeOnTheScreen();
-  });
-
-  it("omits goal description on the goal card when null", () => {
-    setupQueries({
-      goal: { ...GOAL, description: null },
-      steps: [],
-    });
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-
-    expect(screen.queryByText("Master the type system")).toBeNull();
-  });
-
-  it("stepless goal: tapping Mark Complete navigates to CompletionFlow", () => {
-    setupQueries({ steps: [] });
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-
-    fireEvent.press(
-      screen.getByRole("button", {
-        name: i18n.t("common:goalCard.markComplete"),
-      }),
-    );
-    expect(mockNavigate).toHaveBeenCalledWith("CompletionFlow", {
-      goalId: "goal-1",
-    });
-  });
-
-  it("does not auto-navigate when steps are still pending", () => {
-    jest.useFakeTimers();
-    setupQueries();
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-
-    jest.advanceTimersByTime(500);
-    expect(mockNavigate).not.toHaveBeenCalledWith(
-      "CompletionFlow",
-      expect.anything(),
-    );
-    jest.useRealTimers();
-  });
-
-  it("shows confirm dialog on evidence long-press and deletes on confirm", () => {
-    setupQueries();
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-
-    // Open the evidence drawer first
-    fireEvent.press(screen.getByLabelText("Toggle evidence drawer"));
-
-    // Long press on evidence item to trigger delete
-    const evidenceItem = screen.getByLabelText(/text evidence:/);
-    fireEvent(evidenceItem, "longPress");
-
-    // Confirm dialog should appear
-    expect(
-      screen.getByText(i18n.t("focusMode:confirmDelete.title")),
-    ).toBeOnTheScreen();
-
-    // Confirm the deletion
-    fireEvent.press(
-      screen.getByRole("button", { name: i18n.t("common:actions.delete") }),
-    );
-    expect(mockDeleteEvidence).toHaveBeenCalledWith("ev-s1");
-  });
-
-  it("uses the current step's goal-wide evidence row for view and delete", () => {
-    jest.useFakeTimers();
-    setupQueries({
-      steps: [
-        { id: "step-1", title: "Read docs", status: "pending", ordinal: 0 },
-        { id: "step-2", title: "Practice", status: "pending", ordinal: 1 },
-      ],
-      stepEvidence: [
-        {
-          id: "ev-s1",
-          type: "text",
-          uri: "content:text;First",
-          description: "First step note",
-          stepId: "step-1",
-        },
-        {
-          id: "ev-s2",
-          type: "photo",
-          uri: "/step-2.jpg",
-          description: "Second step photo",
-          metadata: '{"width":1200}',
-          stepId: "step-2",
-        },
-      ],
-    });
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-
-    fireEvent.press(screen.getByLabelText("Next card"));
-    fireEvent.press(screen.getByLabelText("Toggle evidence drawer"));
-
-    const evidenceItem = screen.getByLabelText(
-      "photo evidence: Second step photo",
-    );
-    expect(
-      screen.queryByLabelText(/text evidence: First step note/),
-    ).toBeNull();
-
-    fireEvent.press(evidenceItem);
-    expect(mockViewEvidence).toHaveBeenCalledWith({
-      id: "ev-s2",
-      title: "Second step photo",
-      type: "photo",
-      uri: "/step-2.jpg",
-      metadata: '{"width":1200}',
+      // step-2 is the first actionable step; step-3 must not also be on screen.
+      expect(
+        screen.getByRole("header", { name: "Practice" }),
+      ).toBeOnTheScreen();
+      expect(screen.queryByText("Build it")).toBeNull();
+      expect(screen.queryByText("Read docs")).toBeNull();
     });
 
-    fireEvent(evidenceItem, "longPress");
-    fireEvent.press(
-      screen.getByRole("button", { name: i18n.t("common:actions.delete") }),
-    );
-    expect(mockDeleteEvidence).toHaveBeenCalledWith("ev-s2");
+    it("drops the old navigators and drawer chrome", () => {
+      setupQueries();
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
 
-    jest.advanceTimersByTime(5000);
-    expect(mockDeleteEvidenceFile).toHaveBeenCalledWith("/step-2.jpg", "photo");
-    jest.useRealTimers();
-  });
-
-  it("cancels evidence deletion when cancel is pressed", () => {
-    setupQueries();
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-
-    // Open the evidence drawer first
-    fireEvent.press(screen.getByLabelText("Toggle evidence drawer"));
-
-    // Long press to open confirm dialog
-    const evidenceItem = screen.getByLabelText(/text evidence:/);
-    fireEvent(evidenceItem, "longPress");
-
-    // Cancel the deletion
-    fireEvent.press(
-      screen.getByRole("button", { name: i18n.t("common:actions.cancel") }),
-    );
-    expect(mockDeleteEvidence).not.toHaveBeenCalled();
-  });
-
-  it("shows a confirmation toast without an undo action after confirming", () => {
-    setupQueries();
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-
-    // Open drawer → long-press → confirm
-    fireEvent.press(screen.getByLabelText("Toggle evidence drawer"));
-    fireEvent(screen.getByLabelText(/text evidence:/), "longPress");
-    fireEvent.press(
-      screen.getByRole("button", { name: i18n.t("common:actions.delete") }),
-    );
-
-    // The informational toast appears, but there is no undo action to chase.
-    expect(
-      screen.getByText(i18n.t("focusMode:toast.evidenceDeleted")),
-    ).toBeOnTheScreen();
-    expect(screen.queryByLabelText(i18n.t("common:actions.undo"))).toBeNull();
-  });
-
-  it("cleans up the evidence file immediately on confirm (no deferred timer)", () => {
-    setupQueries();
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-
-    // Open drawer → long-press → confirm
-    fireEvent.press(screen.getByLabelText("Toggle evidence drawer"));
-    fireEvent(screen.getByLabelText(/text evidence:/), "longPress");
-    fireEvent.press(
-      screen.getByRole("button", { name: i18n.t("common:actions.delete") }),
-    );
-
-    // Soft-delete and file cleanup both fire synchronously on confirm.
-    expect(mockDeleteEvidence).toHaveBeenCalledWith("ev-s1");
-    expect(mockDeleteEvidenceFile).toHaveBeenCalledWith(
-      "content:text;My notes",
-      "text",
-    );
-  });
-
-  // --- Evidence-gated completion ---
-
-  it("does not call completeStep when canCompleteStep returns false", () => {
-    mockCanCompleteStep.mockReturnValue(false);
-    setupQueries({
-      steps: [
-        {
-          id: "step-1",
-          title: "Read docs",
-          status: "pending",
-          ordinal: 0,
-          plannedEvidenceTypes: '["photo"]',
-        },
-        {
-          id: "step-2",
-          title: "Practice",
-          status: "pending",
-          ordinal: 1,
-          plannedEvidenceTypes: null,
-        },
-      ],
-      stepEvidence: [
-        {
-          id: "ev-s1",
-          type: "photo",
-          uri: "/photo.jpg",
-          description: "Photo",
-          stepId: "step-1",
-        },
-      ],
-    });
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-    fireEvent.press(
-      screen.getByRole("checkbox", {
-        name: i18n.t("common:stepCard.checkbox.markComplete"),
-      }),
-    );
-    expect(mockCompleteStep).not.toHaveBeenCalled();
-  });
-
-  it("calls completeStep for a step with no planned types and no evidence", () => {
-    mockCanCompleteStep.mockReturnValue(true);
-    setupQueries({
-      steps: [
-        {
-          id: "step-1",
-          title: "Read docs",
-          status: "pending",
-          ordinal: 0,
-          plannedEvidenceTypes: null,
-        },
-        {
-          id: "step-2",
-          title: "Practice",
-          status: "completed",
-          ordinal: 1,
-          plannedEvidenceTypes: null,
-        },
-      ],
-      stepEvidence: [],
-    });
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-    fireEvent.press(
-      screen.getByRole("checkbox", {
-        name: i18n.t("common:stepCard.checkbox.markComplete"),
-      }),
-    );
-    expect(mockCanCompleteStep).toHaveBeenCalledWith(null, []);
-    expect(mockCompleteStep).toHaveBeenCalledWith("step-1", null, []);
-  });
-
-  it("calls completeStep when canCompleteStep returns true", () => {
-    setupQueries({
-      steps: [
-        {
-          id: "step-1",
-          title: "Read docs",
-          status: "pending",
-          ordinal: 0,
-          plannedEvidenceTypes: '["photo"]',
-        },
-        {
-          id: "step-2",
-          title: "Practice",
-          status: "pending",
-          ordinal: 1,
-          plannedEvidenceTypes: null,
-        },
-      ],
-      stepEvidence: [
-        {
-          id: "ev-s1",
-          type: "photo",
-          uri: "/photo.jpg",
-          description: "Photo",
-          stepId: "step-1",
-        },
-      ],
-    });
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-    fireEvent.press(
-      screen.getByRole("checkbox", {
-        name: i18n.t("common:stepCard.checkbox.markComplete"),
-      }),
-    );
-    expect(mockCompleteStep).toHaveBeenCalledWith("step-1", '["photo"]', [
-      { type: "photo" },
-    ]);
-  });
-
-  it("calls uncompleteStep without evidence check", () => {
-    setupQueries({
-      steps: [
-        {
-          id: "step-1",
-          title: "Read docs",
-          status: "completed",
-          ordinal: 0,
-          plannedEvidenceTypes: '["photo"]',
-        },
-        {
-          id: "step-2",
-          title: "Practice",
-          status: "pending",
-          ordinal: 1,
-          plannedEvidenceTypes: null,
-        },
-      ],
-    });
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-    // Auto-snap puts us on step-2 (pending); swipe back to the completed step.
-    fireEvent.press(screen.getByLabelText("Previous card"));
-    // Role query scopes to the checkbox, skipping the StatusBadge "Completed".
-    fireEvent.press(
-      screen.getByRole("checkbox", {
-        name: i18n.t("common:stepCard.checkbox.completed"),
-      }),
-    );
-    expect(mockUncompleteStep).toHaveBeenCalledWith("step-1");
-    expect(mockCanCompleteStep).not.toHaveBeenCalled();
-  });
-
-  it("navigates to CaptureTextNote when the Note quick-action is pressed", () => {
-    setupQueries({
-      steps: [
-        {
-          id: "step-1",
-          title: "Read docs",
-          status: "pending",
-          ordinal: 0,
-          plannedEvidenceTypes: '["text"]',
-        },
-        {
-          id: "step-2",
-          title: "Practice",
-          status: "completed",
-          ordinal: 1,
-          plannedEvidenceTypes: null,
-        },
-      ],
-      stepEvidence: [],
-    });
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-    fireEvent.press(screen.getByLabelText("Add Note evidence"));
-    expect(mockNavigate).toHaveBeenCalledWith("CaptureTextNote", {
-      goalId: "goal-1",
-      stepId: "step-1",
-    });
-  });
-
-  it("supports the text-note then complete flow once captured externally", () => {
-    const steps = [
-      {
-        id: "step-1",
-        title: "Read docs",
-        status: "pending",
-        ordinal: 0,
-        plannedEvidenceTypes: '["text"]',
-      },
-      {
-        id: "step-2",
-        title: "Practice",
-        status: "completed",
-        ordinal: 1,
-        plannedEvidenceTypes: null,
-      },
-    ];
-
-    // Step 1: from Focus Mode, tapping the Note quick-action navigates to
-    // the dedicated capture screen — text creation itself happens there.
-    setupQueries({ steps, stepEvidence: [] });
-    const view = renderWithProviders(<FocusModeScreen {...routeProps} />);
-    fireEvent.press(screen.getByLabelText("Add Note evidence"));
-    expect(mockNavigate).toHaveBeenCalledWith("CaptureTextNote", {
-      goalId: "goal-1",
-      stepId: "step-1",
+      // MiniTimeline nodes, ProgressDots, the carousel and the evidence drawer
+      // all had these hooks; none should survive the rebuild.
+      expect(screen.queryByTestId("timeline-node-0")).toBeNull();
+      expect(screen.queryByTestId("step-card-parent-band")).toBeNull();
+      expect(screen.queryByTestId("step-card-top-band")).toBeNull();
+      expect(
+        screen.queryByLabelText(t("focusMode:a11y.carousel", { count: 1 })),
+      ).toBeNull();
     });
 
-    // Step 2: once the user has captured a text note in CaptureTextNote and
-    // returned, FocusMode should let them complete the step.
-    setupQueries({
-      steps,
-      stepEvidence: [
-        {
-          id: "ev-s1",
-          type: "text",
-          uri: "content:text;My reflection",
-          description: "My reflection",
-          stepId: "step-1",
-        },
-      ],
+    it("keeps the edit pencil and drops the timeline eye-toggle", () => {
+      setupQueries();
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      expect(
+        screen.getByLabelText(t("focusMode:header.editGoal")),
+      ).toBeOnTheScreen();
+      expect(
+        screen.queryByLabelText(t("focusMode:header.hideTimeline")),
+      ).toBeNull();
+      expect(
+        screen.queryByLabelText(t("focusMode:header.showTimeline")),
+      ).toBeNull();
     });
 
-    view.unmount();
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-    fireEvent.press(
-      screen.getAllByRole("checkbox", {
-        name: i18n.t("common:stepCard.checkbox.markComplete"),
-      })[0],
-    );
+    it("renders nothing but chrome when the goal has no steps", () => {
+      setupQueries({ steps: [] });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
 
-    expect(mockCompleteStep).toHaveBeenCalledWith("step-1", '["text"]', [
-      { type: "text" },
-    ]);
-  });
-
-  it("Mark Complete stays hidden while an evidence-gated step is incomplete, appears after it completes", () => {
-    setupQueries({
-      steps: [
-        {
-          id: "step-1",
-          title: "Read docs",
-          status: "completed",
-          ordinal: 0,
-          plannedEvidenceTypes: '["text"]',
-        },
-        {
-          id: "step-2",
-          title: "Practice",
-          status: "pending",
-          ordinal: 1,
-          plannedEvidenceTypes: null,
-        },
-      ],
-    });
-    const view = renderWithProviders(<FocusModeScreen {...routeProps} />);
-    fireEvent.press(
-      screen.getAllByLabelText(i18n.t("common:timeline.a11y.goalEvidence"))[0],
-    );
-    expect(
-      screen.queryByRole("button", {
-        name: i18n.t("common:goalCard.markComplete"),
-      }),
-    ).toBeNull();
-
-    setupQueries({
-      steps: [
-        {
-          id: "step-1",
-          title: "Read docs",
-          status: "completed",
-          ordinal: 0,
-          plannedEvidenceTypes: '["text"]',
-        },
-        {
-          id: "step-2",
-          title: "Practice",
-          status: "completed",
-          ordinal: 1,
-          plannedEvidenceTypes: null,
-        },
-      ],
-    });
-    view.rerender(<FocusModeScreen {...routeProps} />);
-    expect(
-      screen.getByRole("button", {
-        name: i18n.t("common:goalCard.markComplete"),
-      }),
-    ).toBeOnTheScreen();
-  });
-
-  it("treats malformed plannedEvidenceTypes JSON as null (no gating)", () => {
-    setupQueries({
-      steps: [
-        {
-          id: "step-1",
-          title: "Read docs",
-          status: "pending",
-          ordinal: 0,
-          plannedEvidenceTypes: "not-valid-json",
-        },
-        {
-          id: "step-2",
-          title: "Practice",
-          status: "pending",
-          ordinal: 1,
-          plannedEvidenceTypes: null,
-        },
-      ],
-      stepEvidence: [],
-    });
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-    expect(
-      screen.getByRole("checkbox", {
-        name: i18n.t("common:stepCard.checkbox.markComplete"),
-      }),
-    ).toBeOnTheScreen();
-  });
-
-  it("completes step without planned types even with no evidence", () => {
-    setupQueries({
-      steps: [
-        {
-          id: "step-1",
-          title: "Read docs",
-          status: "pending",
-          ordinal: 0,
-          plannedEvidenceTypes: null,
-        },
-        {
-          id: "step-2",
-          title: "Practice",
-          status: "pending",
-          ordinal: 1,
-          plannedEvidenceTypes: null,
-        },
-      ],
-      stepEvidence: [],
-    });
-    renderWithProviders(<FocusModeScreen {...routeProps} />);
-    fireEvent.press(
-      screen.getByRole("checkbox", {
-        name: i18n.t("common:stepCard.checkbox.markComplete"),
-      }),
-    );
-    expect(mockCompleteStep).toHaveBeenCalledWith("step-1", null, []);
-  });
-
-  describe("pseudo locale", () => {
-    afterEach(async () => {
-      if (i18n.language !== "en") await i18n.changeLanguage("en");
+      expect(screen.getByText("Learn TypeScript")).toBeOnTheScreen();
+      expect(
+        screen.getByText(t("focusMode:progressStrip.doneCount", { done: 0, total: 0 })), // prettier-ignore
+      ).toBeOnTheScreen();
+      expect(
+        screen.queryByText(t("focusMode:currentTask.inProgress.evidenceRequired")), // prettier-ignore
+      ).toBeNull();
     });
 
-    it.each([
-      { key: "focusMode:title", query: "text" },
-      { key: "focusMode:header.editGoal", query: "label" },
-      { key: "focusMode:header.hideTimeline", query: "label" },
-    ] as const)(
-      "renders $key as bracketed copy under pseudo locale",
-      async ({ key, query }) => {
-        await i18n.changeLanguage("pseudo");
-        setupQueries();
-        renderWithProviders(<FocusModeScreen {...routeProps} />);
-        const pseudo = i18n.t(key);
-        expect(pseudo.startsWith("[")).toBe(true);
-        const get = query === "text" ? screen.getByText : screen.getByLabelText;
-        expect(get(pseudo)).toBeOnTheScreen();
-      },
-    );
-
-    it("renders the Goal not found error under pseudo locale", async () => {
-      await i18n.changeLanguage("pseudo");
+    it("shows the goal-not-found message when the goal is missing", () => {
       setupQueries({ goal: null, steps: [] });
       renderWithProviders(<FocusModeScreen {...routeProps} />);
-      const pseudo = i18n.t("focusMode:errors.goalNotFound");
-      expect(pseudo.startsWith("[")).toBe(true);
-      expect(screen.getByText(pseudo)).toBeOnTheScreen();
+      expect(
+        screen.getByText(t("focusMode:errors.goalNotFound")),
+      ).toBeOnTheScreen();
+    });
+  });
+
+  describe("progress strip", () => {
+    it("counts completed steps against the total", () => {
+      setupQueries({
+        steps: [
+          step("step-1", { status: "completed" }),
+          step("step-2", { status: "completed", ordinal: 1 }),
+          step("step-3", { ordinal: 2 }),
+        ],
+      });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      expect(
+        screen.getByText(t("focusMode:progressStrip.doneCount", { done: 2, total: 3 })), // prettier-ignore
+      ).toBeOnTheScreen();
     });
 
-    it("resolves interpolated step-uncompleted announcement under pseudo locale", async () => {
-      // Announcements fire through AccessibilityInfo and aren't queryable in jsdom.
-      await i18n.changeLanguage("pseudo");
-      const pseudo = i18n.t("focusMode:a11y.stepUncompleted", {
-        title: "Read docs",
+    it("navigates to the Timeline when tapped", () => {
+      setupQueries();
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      fireEvent.press(
+        screen.getByLabelText(
+          t("focusMode:progressStrip.a11yLabel", { done: 0, total: 1 }),
+        ),
+      );
+      expect(mockNavigate).toHaveBeenCalledWith("TimelineJourney", {
+        goalId: "goal-1",
       });
-      expect(pseudo.startsWith("[")).toBe(true);
-      expect(pseudo).toContain("Read docs");
+    });
+  });
+
+  describe("step state mapping", () => {
+    it.each([
+      ["pending", "pending", "currentTask.inProgress.pauseCta"],
+      ["paused", "paused", "currentTask.paused.pickUpCta"],
+      ["completed", "completed", "currentTask.completed.reopenCta"],
+    ] as const)(
+      "renders the %s card variant for a %s step",
+      (_label, status, ctaKey) => {
+        setupQueries({
+          steps: [step("step-1", { title: "Read docs", status })],
+        });
+        renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+        expect(currentCardTitle()).toBe("Read docs");
+        expect(screen.getByText(t(`focusMode:${ctaKey}`))).toBeOnTheScreen();
+      },
+    );
+
+    it("falls back to a paused step when nothing is actionable", () => {
+      // Resolver returns `none` for an all-paused goal; the screen still shows
+      // that step's own card rather than an empty body (D10).
+      setupQueries({
+        steps: [
+          step("step-1", { title: "Read docs", status: "paused" }),
+          step("step-2", { title: "Practice", status: "paused", ordinal: 1 }),
+        ],
+      });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      expect(currentCardTitle()).toBe("Read docs");
+      expect(
+        screen.getByText(t("focusMode:currentTask.paused.pickUpCta")),
+      ).toBeOnTheScreen();
+    });
+
+    it("falls back to the last step when every step is done", () => {
+      setupQueries({
+        steps: [
+          step("step-1", { title: "Read docs", status: "completed" }),
+          step("step-2", {
+            title: "Practice",
+            status: "completed",
+            ordinal: 1,
+          }),
+        ],
+      });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      expect(currentCardTitle()).toBe("Practice");
+      expect(
+        screen.getByText(t("focusMode:currentTask.completed.reopenCta")),
+      ).toBeOnTheScreen();
+    });
+  });
+
+  describe("set aside / pick back up / reopen (#417)", () => {
+    it("calls pauseStep and stays on the same step", () => {
+      setupQueries();
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      fireEvent.press(
+        screen.getByLabelText(t("focusMode:currentTask.inProgress.pauseA11y")),
+      );
+      expect(mockPauseStep).toHaveBeenCalledWith("step-1");
+      expect(mockNavigate).not.toHaveBeenCalled();
+    });
+
+    it("calls resumeStep from a paused card", () => {
+      setupQueries({ steps: [step("step-1", { status: "paused" })] });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      fireEvent.press(
+        screen.getByLabelText(t("focusMode:currentTask.paused.pickUpA11y")),
+      );
+      expect(mockResumeStep).toHaveBeenCalledWith("step-1");
+    });
+
+    it("calls uncompleteStep from a completed card", () => {
+      setupQueries({ steps: [step("step-1", { status: "completed" })] });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      fireEvent.press(
+        screen.getByLabelText(t("focusMode:currentTask.completed.reopenA11y")),
+      );
+      expect(mockUncompleteStep).toHaveBeenCalledWith("step-1");
+    });
+
+    it("toasts rather than throwing when a mutation fails", () => {
+      mockPauseStep.mockImplementationOnce(() => {
+        throw new Error("write failed");
+      });
+      setupQueries();
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      fireEvent.press(
+        screen.getByLabelText(t("focusMode:currentTask.inProgress.pauseA11y")),
+      );
+      expect(
+        screen.getByText(
+          t("focusMode:errors.couldNotUpdateStep", { message: "write failed" }),
+        ),
+      ).toBeOnTheScreen();
+    });
+
+    it("toasts and reports when a mutation returns a failed Result", () => {
+      // Evolu's engine reports write failures by returning `{ ok: false }`
+      // without throwing — that path must surface exactly like a thrown one.
+      mockPauseStep.mockReturnValueOnce({
+        ok: false,
+        error: new Error("write rejected"),
+      } as never);
+      setupQueries();
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      fireEvent.press(
+        screen.getByLabelText(t("focusMode:currentTask.inProgress.pauseA11y")),
+      );
+      expect(
+        screen.getByText(
+          t("focusMode:errors.couldNotUpdateStep", {
+            message: "write rejected",
+          }),
+        ),
+      ).toBeOnTheScreen();
+      expect(reportError).toHaveBeenCalledWith(expect.any(Error), {
+        area: "focus.mode",
+        kind: "step-toggle",
+      });
+    });
+
+    it("announces the reopen only when the write succeeds", () => {
+      const announce = jest.spyOn(
+        AccessibilityInfo,
+        "announceForAccessibility",
+      );
+      // The failure toast announces itself, so assert on the success line
+      // specifically rather than on "nothing was announced".
+      const successLine = t("focusMode:a11y.stepUncompleted", {
+        title: "step-1",
+      });
+      mockUncompleteStep.mockReturnValueOnce({
+        ok: false,
+        error: new Error("write rejected"),
+      } as never);
+      setupQueries({ steps: [step("step-1", { status: "completed" })] });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+      const reopen = screen.getByLabelText(
+        t("focusMode:currentTask.completed.reopenA11y"),
+      );
+
+      fireEvent.press(reopen);
+      expect(announce).not.toHaveBeenCalledWith(successLine);
+
+      // Second press falls through to the `{ ok: true }` default.
+      fireEvent.press(reopen);
+      expect(announce).toHaveBeenCalledWith(successLine);
+      announce.mockRestore();
+    });
+  });
+
+  describe("current-step resolution while mounted", () => {
+    it("holds the same step when its status changes under it", () => {
+      setupQueries({
+        steps: [
+          step("step-1", { title: "Read docs" }),
+          step("step-2", { title: "Practice", ordinal: 1 }),
+        ],
+      });
+      const { rerender } = renderWithProviders(
+        <FocusModeScreen {...routeProps} />,
+      );
+      expect(currentCardTitle()).toBe("Read docs");
+
+      // Completing step-1 must not jump the screen to step-2 (#467 D1 owns
+      // auto-advance).
+      setupQueries({
+        steps: [
+          step("step-1", { title: "Read docs", status: "completed" }),
+          step("step-2", { title: "Practice", ordinal: 1 }),
+        ],
+      });
+      rerender(<FocusModeScreen {...routeProps} />);
+
+      expect(currentCardTitle()).toBe("Read docs");
+    });
+
+    it("re-resolves when the held step is gone from the rows", () => {
+      setupQueries({
+        steps: [
+          step("step-1", { title: "Read docs" }),
+          step("step-2", { title: "Practice", ordinal: 1 }),
+        ],
+      });
+      const { rerender } = renderWithProviders(
+        <FocusModeScreen {...routeProps} />,
+      );
+      expect(currentCardTitle()).toBe("Read docs");
+
+      // EditMode deletes the focused step while this screen stays mounted — a
+      // dangling id would leave the card section empty.
+      setupQueries({ steps: [step("step-2", { title: "Practice" })] });
+      rerender(<FocusModeScreen {...routeProps} />);
+
+      expect(currentCardTitle()).toBe("Practice");
+    });
+  });
+
+  describe("evidence-gated completion", () => {
+    it("hides Mark complete until every planned type is captured", () => {
+      setupQueries({
+        steps: [step("step-1", { plannedEvidenceTypes: '["photo","text"]' })],
+        stepEvidence: [{ id: "ev-1", type: "photo", stepId: "step-1" }],
+      });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      expect(
+        screen.queryByText(t("focusMode:currentTask.inProgress.markCompleteCta")), // prettier-ignore
+      ).toBeNull();
+      // The unmet type is still invited; the met one is not.
+      expect(
+        screen.getByTestId("focus-current-task-add-text"),
+      ).toBeOnTheScreen();
+      expect(screen.queryByTestId("focus-current-task-add-photo")).toBeNull();
+    });
+
+    it("reveals Mark complete once the plan is satisfied and completes the step", () => {
+      setupQueries({
+        steps: [step("step-1", { plannedEvidenceTypes: '["photo"]' })],
+        stepEvidence: [{ id: "ev-1", type: "photo", stepId: "step-1" }],
+      });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      fireEvent.press(
+        screen.getByLabelText(
+          t("focusMode:currentTask.inProgress.markCompleteA11y"),
+        ),
+      );
+      expect(mockCompleteStep).toHaveBeenCalledWith("step-1", '["photo"]', [
+        { type: "photo" },
+      ]);
+    });
+
+    it("invites a text note when the step has no evidence plan (#466 D4)", () => {
+      // plannedEvidenceTypes is null — the default ["text"] applies, so the step
+      // owes one note rather than being completable with nothing.
+      setupQueries({ steps: [step("step-1")] });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      expect(
+        screen.getByTestId("focus-current-task-add-text"),
+      ).toBeOnTheScreen();
+      expect(
+        screen.queryByText(t("focusMode:currentTask.inProgress.markCompleteCta")), // prettier-ignore
+      ).toBeNull();
+    });
+
+    it("completes a null-plan step once a text note exists (#466 D4)", () => {
+      setupQueries({
+        steps: [step("step-1")],
+        stepEvidence: [{ id: "ev-1", type: "text", stepId: "step-1" }],
+      });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      fireEvent.press(
+        screen.getByLabelText(
+          t("focusMode:currentTask.inProgress.markCompleteA11y"),
+        ),
+      );
+      expect(mockCompleteStep).toHaveBeenCalledWith("step-1", null, [
+        { type: "text" },
+      ]);
+    });
+
+    it("falls back to the default plan when every stored type is unusable", () => {
+      // The column is free-form JSON, so `[1,2,3]` is reachable. Every element
+      // is dropped as a non-string, which parses as *unset* rather than as an
+      // empty plan — so the step owes a text note, not nothing.
+      setupQueries({
+        steps: [step("step-1", { plannedEvidenceTypes: "[1,2,3]" })],
+      });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      expect(
+        screen.getByTestId("focus-current-task-add-text"),
+      ).toBeOnTheScreen();
+      expect(
+        screen.queryByText(t("focusMode:currentTask.inProgress.markCompleteCta")), // prettier-ignore
+      ).toBeNull();
+    });
+
+    it("shows captured evidence on the read-only rail", () => {
+      setupQueries({
+        steps: [step("step-1", { plannedEvidenceTypes: '["photo"]' })],
+        stepEvidence: [
+          {
+            id: "ev-1",
+            type: "photo",
+            stepId: "step-1",
+            description: "Bench shot",
+          },
+        ],
+      });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      expect(screen.getByText("Bench shot")).toBeOnTheScreen();
+    });
+  });
+
+  describe("evidence capture (#409 capture sheet)", () => {
+    it("navigates straight to the capture screen for a specific type", () => {
+      setupQueries({
+        steps: [step("step-1", { plannedEvidenceTypes: '["photo"]' })],
+      });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      fireEvent.press(screen.getByTestId("focus-current-task-add-photo"));
+      expect(mockNavigate).toHaveBeenCalledWith("CapturePhoto", {
+        goalId: "goal-1",
+        stepId: "step-1",
+      });
+    });
+
+    it("opens the capture sheet for the open-ended add, then navigates on pick", () => {
+      setupQueries({
+        steps: [step("step-1", { plannedEvidenceTypes: '["photo"]' })],
+        stepEvidence: [{ id: "ev-1", type: "photo", stepId: "step-1" }],
+      });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      // Plan satisfied → the generic "Add more evidence" CTA is the one shown.
+      fireEvent.press(screen.getByTestId("focus-current-task-add-more"));
+      expect(mockNavigate).not.toHaveBeenCalled();
+
+      fireEvent.press(
+        screen.getByRole("radio", { name: evidenceLabel(t, "link") }),
+      );
+      expect(mockNavigate).toHaveBeenCalledWith("CaptureLink", {
+        goalId: "goal-1",
+        stepId: "step-1",
+      });
+    });
+  });
+
+  describe("evidence plan sheet (#409 authoring grid)", () => {
+    it("is closed until the planned box's change affordance is tapped", () => {
+      setupQueries();
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      expect(
+        screen.queryByText(t("focusMode:evidencePlanSheet.title")),
+      ).toBeNull();
+      fireEvent.press(screen.getByTestId("focus-current-task-change-plan"));
+      expect(
+        screen.getByText(t("focusMode:evidencePlanSheet.title")),
+      ).toBeOnTheScreen();
+    });
+
+    it("writes the new plan when a type is toggled on", () => {
+      setupQueries({
+        steps: [step("step-1", { plannedEvidenceTypes: '["photo"]' })],
+      });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      fireEvent.press(screen.getByTestId("focus-current-task-change-plan"));
+      fireEvent.press(
+        screen.getByRole("checkbox", { name: evidenceLabel(t, "video") }),
+      );
+      expect(mockUpdateStep).toHaveBeenCalledWith("step-1", {
+        plannedEvidenceTypes: ["photo", "video"],
+      });
+    });
+
+    it("writes the reduced plan when a type is toggled off", () => {
+      setupQueries({
+        steps: [step("step-1", { plannedEvidenceTypes: '["photo","video"]' })],
+      });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      fireEvent.press(screen.getByTestId("focus-current-task-change-plan"));
+      fireEvent.press(
+        screen.getByRole("checkbox", { name: evidenceLabel(t, "video") }),
+      );
+      expect(mockUpdateStep).toHaveBeenCalledWith("step-1", {
+        plannedEvidenceTypes: ["photo"],
+      });
+    });
+
+    it("refuses to deselect the last remaining type", () => {
+      // "Every step requires evidence" — a step must never reach a 0-type plan.
+      setupQueries({
+        steps: [step("step-1", { plannedEvidenceTypes: '["photo"]' })],
+      });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      fireEvent.press(screen.getByTestId("focus-current-task-change-plan"));
+      fireEvent.press(
+        screen.getByRole("checkbox", { name: evidenceLabel(t, "photo") }),
+      );
+      expect(mockUpdateStep).not.toHaveBeenCalled();
+    });
+
+    it("clears rather than re-adds a chip when an unknown stored type selected it", () => {
+      // The column is free-form JSON, so an unknown type can be stored. It
+      // renders and selects as `file` (`validateEvidenceType`); the toggle must
+      // compare against that same normalized key, or tapping the chip would
+      // append "file" alongside the unknown one instead of clearing it.
+      setupQueries({
+        steps: [step("step-1", { plannedEvidenceTypes: '["sketch","photo"]' })],
+      });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      fireEvent.press(screen.getByTestId("focus-current-task-change-plan"));
+      fireEvent.press(
+        screen.getByRole("checkbox", { name: evidenceLabel(t, "file") }),
+      );
+      expect(mockUpdateStep).toHaveBeenCalledWith("step-1", {
+        plannedEvidenceTypes: ["photo"],
+      });
+    });
+  });
+
+  describe("dependency + due-date band (#454)", () => {
+    it("renders the after-step and waiting-on lines from the resolved band", () => {
+      setupQueries({
+        steps: [
+          step("step-1", { title: "Read docs", status: "completed" }),
+          step("step-2", {
+            title: "Practice",
+            ordinal: 1,
+            afterStepId: "step-1",
+            waitingOnLabel: "Manager sign-off",
+          }),
+        ],
+      });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      expect(
+        screen.getByText(
+          t("focusMode:currentTask.metadata.after", { title: "Read docs" }),
+        ),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByText(
+          t("focusMode:currentTask.metadata.waitingOn", {
+            who: "Manager sign-off",
+          }),
+        ),
+      ).toBeOnTheScreen();
+    });
+
+    it("omits the band entirely when no dependency fields are set", () => {
+      setupQueries();
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      expect(
+        screen.queryByText(
+          t("focusMode:currentTask.metadata.after", { title: "Read docs" }),
+        ),
+      ).toBeNull();
+    });
+  });
+
+  // #292/#337: which step is "current" is decided by the shared resolver. The
+  // old suite asserted this through carousel index / MiniTimeline node widths;
+  // with one card on screen the current step *is* the card's title.
+  describe("next-actionable-step resolution (#292/#337)", () => {
+    const LEAF_STEPS = [
+      step("step-1", { title: "Read docs", status: "completed" }),
+      step("step-2", { title: "Practice", ordinal: 1 }),
+      step("step-2a", { title: "Drill A", parentStepId: "step-2" }),
+      step("step-2b", { title: "Drill B", ordinal: 1, parentStepId: "step-2" }),
+      step("step-3", { title: "Build it", ordinal: 2 }),
+    ];
+
+    const INVITE_STEPS = [
+      step("step-1", { title: "Read docs", status: "completed" }),
+      step("step-2", { title: "Practice", ordinal: 1 }),
+      step("step-2a", { title: "Drill A", status: "completed", parentStepId: "step-2" }), // prettier-ignore
+      step("step-2b", { title: "Drill B", status: "completed", ordinal: 1, parentStepId: "step-2" }), // prettier-ignore
+      step("step-3", { title: "Build it", ordinal: 2 }),
+    ];
+
+    // Real query order: child ordinals are sibling-scoped, so a child sorts
+    // before its own parent. The screen must flatten before resolving (#292).
+    const INTERLEAVED_STEPS = [
+      step("step-1", { title: "Read docs", status: "completed" }),
+      step("step-2a", { title: "Drill A", parentStepId: "step-2" }),
+      step("step-2", { title: "Practice", ordinal: 1 }),
+      step("step-3", { title: "Build it", ordinal: 2 }),
+    ];
+
+    // First child done, second pending → must pick the first *pending* child,
+    // not children[0].
+    const PARTIAL_LEAF_STEPS = [
+      step("step-1", { title: "Read docs", status: "completed" }),
+      step("step-2", { title: "Practice", ordinal: 1 }),
+      step("step-2a", { title: "Drill A", status: "completed", parentStepId: "step-2" }), // prettier-ignore
+      step("step-2b", { title: "Drill B", ordinal: 1, parentStepId: "step-2" }),
+      step("step-3", { title: "Build it", ordinal: 2 }),
+    ];
+
+    // Orphan: step-2a's parent was soft-deleted, leaving a dangling
+    // parentStepId. It must be promoted, not hidden.
+    const ORPHAN_STEPS = [
+      step("step-1", { title: "Read docs", status: "completed" }),
+      step("step-2a", { title: "Drill A", parentStepId: "step-2" }),
+    ];
+
+    // Parent manually completed while a child is still pending — reachable,
+    // because completion is per-step, not cascaded.
+    const COMPLETED_PARENT_PENDING_CHILD_STEPS = [
+      step("step-1", { title: "Read docs", status: "completed" }),
+      step("step-2", { title: "Practice", status: "completed", ordinal: 1 }),
+      step("step-2a", { title: "Drill A", status: "completed", parentStepId: "step-2" }), // prettier-ignore
+      step("step-2b", { title: "Drill B", ordinal: 1, parentStepId: "step-2" }),
+      step("step-3", { title: "Build it", status: "completed", ordinal: 2 }),
+    ];
+
+    // A pending step deliberately set aside is skipped like a completed one.
+    const PAUSED_SKIP_STEPS = [
+      step("step-1", { title: "Read docs", status: "paused" }),
+      step("step-2", { title: "Practice", ordinal: 1 }),
+    ];
+
+    it.each([
+      ["the first pending leaf, not its container parent", LEAF_STEPS, "Drill A"], // prettier-ignore
+      ["the parent itself once all its children are done", INVITE_STEPS, "Practice"], // prettier-ignore
+      ["the leaf after flattening interleaved query order", INTERLEAVED_STEPS, "Drill A"], // prettier-ignore
+      ["the first pending child when an earlier sibling is done", PARTIAL_LEAF_STEPS, "Drill B"], // prettier-ignore
+      ["an orphaned sub-step promoted to a reachable lead", ORPHAN_STEPS, "Drill A"], // prettier-ignore
+      ["a pending leaf under a manually completed parent", COMPLETED_PARENT_PENDING_CHILD_STEPS, "Drill B"], // prettier-ignore
+      ["past a step that was set aside", PAUSED_SKIP_STEPS, "Practice"],
+    ] as const)("focuses %s", (_label, steps, expectedTitle) => {
+      setupQueries({ steps: [...steps] });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+      expect(currentCardTitle()).toBe(expectedTitle);
     });
   });
 
@@ -1443,304 +996,43 @@ describe("FocusModeScreen", () => {
     });
   });
 
-  describe("sub-steps (#292)", () => {
-    // Parent step-2 has a pending child → snap should resolve to the leaf, not
-    // the container parent.
-    const LEAF_STEPS = [
-      { id: "step-1", title: "Read docs", status: "completed", ordinal: 0, parentStepId: null }, // prettier-ignore
-      { id: "step-2", title: "Practice", status: "pending", ordinal: 1, parentStepId: null }, // prettier-ignore
-      { id: "step-2a", title: "Drill A", status: "pending", ordinal: 0, parentStepId: "step-2" }, // prettier-ignore
-      { id: "step-2b", title: "Drill B", status: "pending", ordinal: 1, parentStepId: "step-2" }, // prettier-ignore
-      { id: "step-3", title: "Build it", status: "pending", ordinal: 2, parentStepId: null }, // prettier-ignore
-    ];
-
-    // All of step-2's children done, parent still pending → invite state; snap
-    // resolves to the parent and the children are non-current child nodes.
-    const INVITE_STEPS = [
-      { id: "step-1", title: "Read docs", status: "completed", ordinal: 0, parentStepId: null }, // prettier-ignore
-      { id: "step-2", title: "Practice", status: "pending", ordinal: 1, parentStepId: null }, // prettier-ignore
-      { id: "step-2a", title: "Drill A", status: "completed", ordinal: 0, parentStepId: "step-2" }, // prettier-ignore
-      { id: "step-2b", title: "Drill B", status: "completed", ordinal: 1, parentStepId: "step-2" }, // prettier-ignore
-      { id: "step-3", title: "Build it", status: "pending", ordinal: 2, parentStepId: null }, // prettier-ignore
-    ];
-
-    const nodeWidth = (index: number): number | undefined => {
-      const flat = StyleSheet.flatten(
-        screen.getByTestId(`timeline-node-${index}`).props.style,
-      ) as Record<string, unknown> | null;
-      return flat?.width as number | undefined;
-    };
-
-    it("snaps to the first pending leaf, not the parent that contains it", () => {
-      setupQueries({ steps: LEAF_STEPS, stepEvidence: [] });
-      renderWithProviders(<FocusModeScreen {...routeProps} />);
-      // step-2a is the first pending leaf (part 1 of 2). Child cards show the
-      // parent band, not a global "N of M" (#360); the band being on-screen
-      // (off-screen cards are hidden) confirms it is the current card. The
-      // carousel index itself is asserted via the MiniTimeline node tests.
-      expect(
-        screen.getByText(
-          i18n.t("focusMode:band.childContext", {
-            parent: "Practice",
-            index: 1,
-            total: 2,
-          }),
-        ),
-      ).toBeOnTheScreen();
-      // The child title also appears in the parent's overview spine (#360), so
-      // scope to the leaf card's header to confirm it is the current card.
-      expect(screen.getByRole("header", { name: "Drill A" })).toBeOnTheScreen();
+  describe("pseudo locale", () => {
+    afterEach(async () => {
+      if (i18n.language !== "en") await i18n.changeLanguage("en");
     });
 
-    it("renders the parent band on a leaf step card", () => {
-      setupQueries({ steps: LEAF_STEPS, stepEvidence: [] });
+    it.each([
+      { key: "focusMode:title", query: "text" },
+      { key: "focusMode:header.editGoal", query: "label" },
+      { key: "focusMode:currentTask.inProgress.pauseA11y", query: "label" },
+    ] as const)(
+      "renders $key as bracketed copy under pseudo locale",
+      async ({ key, query }) => {
+        await i18n.changeLanguage("pseudo");
+        setupQueries();
+        renderWithProviders(<FocusModeScreen {...routeProps} />);
+        const pseudo = i18n.t(key);
+        expect(pseudo.startsWith("[")).toBe(true);
+        const get = query === "text" ? screen.getByText : screen.getByLabelText;
+        expect(get(pseudo)).toBeOnTheScreen();
+      },
+    );
+
+    it("renders the Goal not found error under pseudo locale", async () => {
+      await i18n.changeLanguage("pseudo");
+      setupQueries({ goal: null, steps: [] });
       renderWithProviders(<FocusModeScreen {...routeProps} />);
-      expect(screen.getByTestId("step-card-parent-band")).toBeOnTheScreen();
-      expect(
-        screen.getByText(
-          i18n.t("focusMode:band.childContext", {
-            parent: "Practice",
-            index: 1,
-            total: 2,
-          }),
-        ),
-      ).toBeOnTheScreen();
+      const pseudo = i18n.t("focusMode:errors.goalNotFound");
+      expect(pseudo.startsWith("[")).toBe(true);
+      expect(screen.getByText(pseudo)).toBeOnTheScreen();
     });
 
-    it("passes isChild through to the MiniTimeline (smaller child node)", () => {
-      // Invite state snaps to the parent (index 1), so the children stay
-      // non-current — their nodes render at the smaller sub-step size.
-      setupQueries({ steps: INVITE_STEPS, stepEvidence: [] });
-      renderWithProviders(<FocusModeScreen {...routeProps} />);
-      expect(nodeWidth(0)).toBe(14); // top-level step
-      expect(nodeWidth(2)).toBe(10); // sub-step (child) node
-    });
-
-    it("opens a part's own card when its overview spine row is tapped (#360)", () => {
-      // Invite state snaps to the parent overview card (index 1). Drill A/B
-      // appear there only as spine rows, not headers, until their leaf is opened.
-      setupQueries({ steps: INVITE_STEPS, stepEvidence: [] });
-      renderWithProviders(<FocusModeScreen {...routeProps} />);
-      fireEvent.press(screen.getByTestId("overview-part-step-2b"));
-      // step-2b's leaf is now the current card → its header is on screen.
-      expect(screen.getByRole("header", { name: "Drill B" })).toBeOnTheScreen();
-    });
-
-    // Real query order: `stepsByGoalQuery` is `(ordinal, createdAt)`-ordered and
-    // child ordinals are sibling-scoped, so a child of a later parent interleaves
-    // among the top-level steps — here `step-2a` (ord 0) sorts before its parent
-    // `step-2` (ord 1). The screen must flatten via groupStepsByParent before
-    // rendering; otherwise the leaf lands at the wrong carousel index and the
-    // MiniTimeline groups it under the wrong lead (#292).
-    const INTERLEAVED_STEPS = [
-      { id: "step-1", title: "Read docs", status: "completed", ordinal: 0, parentStepId: null }, // prettier-ignore
-      { id: "step-2a", title: "Drill A", status: "pending", ordinal: 0, parentStepId: "step-2" }, // prettier-ignore
-      { id: "step-2", title: "Practice", status: "pending", ordinal: 1, parentStepId: null }, // prettier-ignore
-      { id: "step-3", title: "Build it", status: "pending", ordinal: 2, parentStepId: null }, // prettier-ignore
-    ];
-
-    it("reorders interleaved (real-query-order) rows so the leaf snaps to its flattened position", () => {
-      setupQueries({ steps: INTERLEAVED_STEPS, stepEvidence: [] });
-      renderWithProviders(<FocusModeScreen {...routeProps} />);
-      // After flatten: [step-1, step-2, step-2a, step-3] → leaf step-2a is the
-      // current card (the only child of step-2 → part 1 of 1). Without the
-      // flatten it would land on the wrong index and group under the wrong lead.
-      expect(
-        screen.getByText(
-          i18n.t("focusMode:band.childContext", {
-            parent: "Practice",
-            index: 1,
-            total: 1,
-          }),
-        ),
-      ).toBeOnTheScreen();
-      expect(screen.getByRole("header", { name: "Drill A" })).toBeOnTheScreen();
-      // step-2a is the current leaf → child-current width (14), not the
-      // lead-current width (18). Proves it renders as a sub-step, not a lead.
-      expect(nodeWidth(2)).toBe(14);
-    });
-
-    // Parent step-2's first child is done, second pending → resolution must pick
-    // the first *pending* child via .find(pending), not children[0].
-    const PARTIAL_LEAF_STEPS = [
-      { id: "step-1", title: "Read docs", status: "completed", ordinal: 0, parentStepId: null }, // prettier-ignore
-      { id: "step-2", title: "Practice", status: "pending", ordinal: 1, parentStepId: null }, // prettier-ignore
-      { id: "step-2a", title: "Drill A", status: "completed", ordinal: 0, parentStepId: "step-2" }, // prettier-ignore
-      { id: "step-2b", title: "Drill B", status: "pending", ordinal: 1, parentStepId: "step-2" }, // prettier-ignore
-      { id: "step-3", title: "Build it", status: "pending", ordinal: 2, parentStepId: null }, // prettier-ignore
-    ];
-
-    it("snaps to the first pending child when an earlier sibling is complete", () => {
-      setupQueries({ steps: PARTIAL_LEAF_STEPS, stepEvidence: [] });
-      renderWithProviders(<FocusModeScreen {...routeProps} />);
-      // step-2b is the first pending leaf (part 2 of 2). A children[0] resolution
-      // would wrongly land on the completed step-2a (part 1 of 2).
-      expect(screen.getByRole("header", { name: "Drill B" })).toBeOnTheScreen();
-      expect(
-        screen.getByText(
-          i18n.t("focusMode:band.childContext", {
-            parent: "Practice",
-            index: 2,
-            total: 2,
-          }),
-        ),
-      ).toBeOnTheScreen();
-    });
-
-    // Orphan: step-2a's parent (step-2) was soft-deleted, so only the child
-    // survives carrying a dangling parentStepId. It must be promoted to a
-    // reachable top-level step, not hidden (#292 regression — the old flat
-    // find(isPendingStep) surfaced it; bucketed resolution dropped it).
-    const ORPHAN_STEPS = [
-      { id: "step-1", title: "Read docs", status: "completed", ordinal: 0, parentStepId: null }, // prettier-ignore
-      { id: "step-2a", title: "Drill A", status: "pending", ordinal: 0, parentStepId: "step-2" }, // prettier-ignore
-    ];
-
-    it("promotes an orphaned sub-step (deleted parent) to a reachable lead", () => {
-      setupQueries({ steps: ORPHAN_STEPS, stepEvidence: [] });
-      renderWithProviders(<FocusModeScreen {...routeProps} />);
-      // The orphan is the only pending step → snap lands on it ("2 of 2").
-      // Old bucketed resolution returned -1 here and left the user on the
-      // completed step-1 ("1 of 2").
-      expect(
-        screen.getByText(
-          i18n.t("common:stepCard.progress", { current: 2, total: 2 }),
-        ),
-      ).toBeOnTheScreen();
-      expect(screen.getByText("Drill A")).toBeOnTheScreen();
-      // The orphan is the current step → lead-current width (18), not the
-      // child-current width (14). Proves it renders as a lead, not a sub-step.
-      // And the plain band (no purple parent band), since its parent is gone.
-      expect(nodeWidth(1)).toBe(18);
-      expect(screen.queryByTestId("step-card-parent-band")).toBeNull();
-      expect(screen.getByTestId("step-card-top-band")).toBeOnTheScreen();
-    });
-
-    // Parent step-2 is manually completed while child step-2b is still pending.
-    // Step completion is per-step, not cascaded (completeStep), so this state is
-    // reachable. The snap must still land on the pending leaf — skipping the
-    // parent on its own status would return -1 and strand the user on step-1.
-    const COMPLETED_PARENT_PENDING_CHILD_STEPS = [
-      { id: "step-1", title: "Read docs", status: "completed", ordinal: 0, parentStepId: null }, // prettier-ignore
-      { id: "step-2", title: "Practice", status: "completed", ordinal: 1, parentStepId: null }, // prettier-ignore
-      { id: "step-2a", title: "Drill A", status: "completed", ordinal: 0, parentStepId: "step-2" }, // prettier-ignore
-      { id: "step-2b", title: "Drill B", status: "pending", ordinal: 1, parentStepId: "step-2" }, // prettier-ignore
-      { id: "step-3", title: "Build it", status: "completed", ordinal: 2, parentStepId: null }, // prettier-ignore
-    ];
-
-    it("snaps to a pending leaf even when its parent is manually completed", () => {
-      setupQueries({
-        steps: COMPLETED_PARENT_PENDING_CHILD_STEPS,
-        stepEvidence: [],
+    it("resolves the interpolated capture-error message under pseudo locale", async () => {
+      await i18n.changeLanguage("pseudo");
+      const pseudo = i18n.t("focusMode:errors.couldNotOpenCapture", {
+        label: evidenceShortLabel(i18n.t.bind(i18n), "photo"),
       });
-      renderWithProviders(<FocusModeScreen {...routeProps} />);
-      // step-2b is the only pending work (part 2 of 2). A resolution that skipped
-      // the completed parent first would return -1 and leave the carousel on the
-      // completed step-1.
-      expect(screen.getByRole("header", { name: "Drill B" })).toBeOnTheScreen();
-      // Still a leaf, so the parent band stays.
-      expect(
-        screen.getByText(
-          i18n.t("focusMode:band.childContext", {
-            parent: "Practice",
-            index: 2,
-            total: 2,
-          }),
-        ),
-      ).toBeOnTheScreen();
-    });
-  });
-
-  // Candidate C (#360): a parent with present children renders as an overview
-  // card — a spine of its parts, an evidence rollup, and the manual complete
-  // invite once all parts are done.
-  describe("parent overview (#360)", () => {
-    // step-2's children are all done → snap lands on the parent (invite state),
-    // so the overview is the current, visible card.
-    const INVITE_STEPS = [
-      { id: "step-1", title: "Read docs", status: "completed", ordinal: 0, parentStepId: null }, // prettier-ignore
-      { id: "step-2", title: "Practice", status: "pending", ordinal: 1, parentStepId: null }, // prettier-ignore
-      { id: "step-2a", title: "Drill A", status: "completed", ordinal: 0, parentStepId: "step-2" }, // prettier-ignore
-      { id: "step-2b", title: "Drill B", status: "completed", ordinal: 1, parentStepId: "step-2" }, // prettier-ignore
-      { id: "step-3", title: "Build it", status: "pending", ordinal: 2, parentStepId: null }, // prettier-ignore
-    ];
-
-    it("renders a parent as an overview card with a spine of its parts", () => {
-      setupQueries({ steps: INVITE_STEPS, stepEvidence: [] });
-      renderWithProviders(<FocusModeScreen {...routeProps} />);
-      expect(screen.getByTestId("overview-part-step-2a")).toBeOnTheScreen();
-      expect(screen.getByTestId("overview-part-step-2b")).toBeOnTheScreen();
-    });
-
-    it("rolls up evidence as the sum across the parent's parts", () => {
-      setupQueries({
-        steps: INVITE_STEPS,
-        stepEvidence: [
-          { id: "e1", type: "photo", stepId: "step-2a" },
-          { id: "e2", type: "text", stepId: "step-2a" },
-          { id: "e3", type: "photo", stepId: "step-2b" },
-        ],
-      });
-      renderWithProviders(<FocusModeScreen {...routeProps} />);
-      // 2 (step-2a) + 1 (step-2b) = 3
-      expect(
-        screen.getByLabelText("Evidence across parts: 3"),
-      ).toBeOnTheScreen();
-    });
-
-    it("offers the mark-parent-complete invite when all parts are done", () => {
-      setupQueries({ steps: INVITE_STEPS, stepEvidence: [] });
-      renderWithProviders(<FocusModeScreen {...routeProps} />);
-      expect(
-        screen.getByRole("checkbox", {
-          name: i18n.t("focusMode:overview.markComplete", {
-            parent: "Practice",
-          }),
-        }),
-      ).toBeOnTheScreen();
-    });
-
-    // step-A is a flat pending step, so the snap stays on it (index 0), leaving
-    // the parent overview at index 1 — reachable by swiping forward.
-    const PENDING_PARENT_STEPS = [
-      { id: "step-A", title: "Gather parts", status: "pending", ordinal: 0, parentStepId: null }, // prettier-ignore
-      { id: "step-B", title: "Wire it", status: "pending", ordinal: 1, parentStepId: null }, // prettier-ignore
-      { id: "step-B1", title: "Solder joints", status: "pending", ordinal: 0, parentStepId: "step-B" }, // prettier-ignore
-      { id: "step-B2", title: "Test continuity", status: "pending", ordinal: 1, parentStepId: "step-B" }, // prettier-ignore
-    ];
-
-    it("shows the complete-the-parts prompt (no completion control) while parts are pending", () => {
-      setupQueries({ steps: PENDING_PARENT_STEPS, stepEvidence: [] });
-      renderWithProviders(<FocusModeScreen {...routeProps} />);
-      // Snap stays on the flat step-A; move to the parent overview (index 1).
-      fireEvent.press(screen.getByLabelText("Next card"));
-      // The overview foot mirrors a blocked leaf card: a quiet prompt, no
-      // completion control and no bespoke navigation (parts are reached by
-      // swiping, like every other card).
-      expect(
-        screen.getByTestId("overview-parts-pending-prompt"),
-      ).toBeOnTheScreen();
-      expect(screen.queryByRole("checkbox")).toBeNull();
-    });
-
-    it("each child part is reachable by swiping past the overview", () => {
-      setupQueries({ steps: PENDING_PARENT_STEPS, stepEvidence: [] });
-      renderWithProviders(<FocusModeScreen {...routeProps} />);
-      // step-A (0) → overview (1) → step-B1 (2): the first pending part.
-      fireEvent.press(screen.getByLabelText("Next card"));
-      fireEvent.press(screen.getByLabelText("Next card"));
-      expect(
-        screen.getByText(
-          i18n.t("focusMode:band.childContext", {
-            parent: "Wire it",
-            index: 1,
-            total: 2,
-          }),
-        ),
-      ).toBeOnTheScreen();
-      expect(
-        screen.getByRole("header", { name: "Solder joints" }),
-      ).toBeOnTheScreen();
+      expect(pseudo.startsWith("[")).toBe(true);
     });
   });
 });

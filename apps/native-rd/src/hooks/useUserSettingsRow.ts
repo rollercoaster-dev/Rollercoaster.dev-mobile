@@ -3,7 +3,7 @@ import { useQuery } from "@evolu/react";
 import { userSettingsQuery, createUserSettings } from "../db";
 
 // Module-level guard so multiple hook instances mounting in the same render
-// pass (useDensity + useFirstLaunch + useUserKey + useFocusModePrefs all run
+// pass (useDensity + useFirstLaunch + useUserKey all run
 // during ThemedApp's first render) cannot each fire createUserSettings()
 // before Evolu's insert propagates back through the query — that would
 // produce duplicate rows and the `limit(1)` query would serve them

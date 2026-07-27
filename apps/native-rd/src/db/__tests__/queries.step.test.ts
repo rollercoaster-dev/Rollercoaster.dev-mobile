@@ -198,8 +198,11 @@ describe("Step CRUD Operations", () => {
   });
 
   describe("canCompleteStep", () => {
+    // An unset plan resolves to the default ["text"] rather than exempting the
+    // step (#466 D4) — same list FocusCurrentTaskCard renders, so the gate and
+    // the card's "Mark complete" reveal cannot disagree.
     test.each([
-      ["no evidence, null planned types", null, [], true],
+      ["no evidence, null planned types", null, [], false],
       ["no evidence, planned types set", '["photo"]', [], false],
       [
         'wrong type evidence, planned types = ["photo"]',
@@ -213,7 +216,24 @@ describe("Step CRUD Operations", () => {
         [{ type: "photo" }],
         true,
       ],
-      ["any evidence, null planned types", null, [{ type: "text" }], true],
+      [
+        "text evidence satisfies the default plan (null planned types)",
+        null,
+        [{ type: "text" }],
+        true,
+      ],
+      [
+        "non-text evidence does not satisfy the default plan",
+        null,
+        [{ type: "photo" }],
+        false,
+      ],
+      [
+        "empty planned array falls back to the default plan",
+        "[]",
+        [{ type: "text" }],
+        true,
+      ],
       [
         "multiple planned types, partial match",
         '["photo","video"]',
@@ -221,7 +241,7 @@ describe("Step CRUD Operations", () => {
         true,
       ],
       [
-        "malformed JSON treats as any-type",
+        "malformed JSON falls back to the default plan",
         "not-json",
         [{ type: "text" }],
         true,
@@ -230,7 +250,28 @@ describe("Step CRUD Operations", () => {
         "evidence with null type only, null planned types",
         null,
         [{ type: null }],
+        false,
+      ],
+      // Unknown keys normalize to `file` on both sides, matching
+      // FocusCurrentTaskCard's validateEvidenceType fallback — otherwise the
+      // card could reveal "Mark complete" on a step this gate refuses.
+      [
+        "unknown planned type is satisfied by file evidence",
+        '["sketch"]',
+        [{ type: "file" }],
         true,
+      ],
+      [
+        "unknown planned type is satisfied by equally unknown evidence",
+        '["sketch"]',
+        [{ type: "doodle" }],
+        true,
+      ],
+      [
+        "unknown planned type is not satisfied by an unrelated known type",
+        '["sketch"]',
+        [{ type: "photo" }],
+        false,
       ],
     ])("%s → %s", (_label, plannedJson, evidence, expected) => {
       expect(canCompleteStep(plannedJson, evidence)).toBe(expected);
@@ -238,8 +279,17 @@ describe("Step CRUD Operations", () => {
   });
 
   describe("completeStep with gating", () => {
-    test("no planned evidence types and no evidence → succeeds", () => {
-      expect(() => completeStep(mockStepId, null, [])).not.toThrow();
+    // #466 D4: an unset plan is no longer an exemption — it means one text note.
+    test("no planned evidence types and no evidence → throws", () => {
+      expect(() => completeStep(mockStepId, null, [])).toThrow(
+        "Cannot complete step: no evidence attached",
+      );
+    });
+
+    test("no planned evidence types, non-text evidence → throws", () => {
+      expect(() => completeStep(mockStepId, null, [{ type: "photo" }])).toThrow(
+        "Cannot complete step: no evidence matching the planned types",
+      );
     });
 
     test("planned type with no evidence → throws descriptive message", () => {
