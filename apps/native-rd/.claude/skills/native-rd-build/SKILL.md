@@ -3,12 +3,22 @@ name: native-rd-build
 description: Build native-rd for any target — local iOS simulator/device, local Release builds, EAS development/preview/production, Android (when generated). Use when the user hits a build failure, asks how to produce a build of any kind, needs to diagnose runtime errors that look build-related ("No script URL provided", missing assets, signing issues), or wants to understand what `eas.json` / `app.json` / `Podfile.properties.json` settings actually do. Also use as a pre-flight checklist before starting a fresh build.
 metadata:
   author: rollercoaster.dev
-  version: "2.6.0"
+  version: "2.7.0"
 ---
 
 # native-rd Build Playbook
 
-Comprehensive build reference for `apps/native-rd`. Stack: **Expo SDK 54 + RN 0.81.5 + Hermes + new architecture (`newArchEnabled: true`)**, building with **Xcode 26.x** and EAS CLI ≥ 13.
+Comprehensive build reference for `apps/native-rd`. Stack: **Expo SDK 56 + RN 0.85.3 + Hermes + new architecture (`newArchEnabled: true`)**, building with **Xcode 26.x** and EAS CLI ≥ 13.
+
+Android toolchain versions the Expo root project actually resolves (printed as `[ExpoRootProject] Using the following versions:` at the top of every Gradle run) — `[VERIFIED 2026-07-28]`:
+
+| Component  | Version       |
+| ---------- | ------------- |
+| compileSdk | 36            |
+| buildTools | 36.0.0        |
+| ndk        | 27.1.12297006 |
+| kotlin     | 2.1.20        |
+| Gradle     | 9.3.1         |
 
 > **This skill is a living document. Update it every time you use it.** Sections are tagged with their evidence status; promote `[UNTESTED]` → `[VERIFIED <date>]` after the first successful real run, demote to `[BROKEN]` if it fails for a non-trivial reason, and add new Gotcha sections when you hit something new. Untested guidance left untouched is exactly how playbooks rot. See "Maintaining this skill" at the bottom.
 
@@ -63,20 +73,20 @@ In Android Studio: wait for Gradle sync, pick an AVD from the device dropdown, h
 
 ## Build matrix
 
-| Target                         | Local command                                                                | EAS profile                                              | Status                                                                                                                                                                                                                                                                                                                                  |
-| ------------------------------ | ---------------------------------------------------------------------------- | -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| iOS Simulator (dev client)     | `bun run ios` (with `IOS_DEVICE_ID` empty)                                   | `eas build -p ios --profile development`                 | `[VERIFIED 2026-05-11]` local sim + EAS development profile (cloud build). `scripts/run-ios.sh` pins `REACT_NATIVE_PACKAGER_HOSTNAME=localhost` on the sim branch to avoid Gotcha 11                                                                                                                                                    |
-| iOS Device (dev client)        | `bun run ios` (or `IOS_DEVICE_ID=… bun run ios:device`)                      | `eas build -p ios --profile development` (then sideload) | `[VERIFIED 2026-06-14]` local device — build + sign work, but **Expo's CLI installer can crash at `LockdowndClient.startSession` on a current paired iPhone** (Gotcha 13); install the built `.app` with `xcrun devicectl` + launch, run Metro separately                                                                               |
-| iOS Release (local sim)        | `npx expo run:ios --configuration Release`                                   | n/a                                                      | `[VERIFIED 2026-05-02]` per `docs/plans/2026-05-02-expo-doctor-build-validation.md`                                                                                                                                                                                                                                                     |
-| iOS Release (local device)     | `npx expo run:ios --configuration Release --device <udid>`                   | n/a                                                      | `[UNTESTED]`                                                                                                                                                                                                                                                                                                                            |
-| iOS preview build (signed IPA) | n/a                                                                          | `eas build -p ios --profile preview`                     | `[UNTESTED]`                                                                                                                                                                                                                                                                                                                            |
-| iOS production build           | n/a                                                                          | `eas build -p ios --profile production`                  | `[UNTESTED]`                                                                                                                                                                                                                                                                                                                            |
-| iOS App Store submit           | n/a                                                                          | `eas submit -p ios --profile production`                 | `[BROKEN]` `ascAppId` placeholder in `eas.json`                                                                                                                                                                                                                                                                                         |
-| Android Emulator (dev client)  | `bun run android`                                                            | `eas build -p android --profile development`             | `[VERIFIED 2026-05-07]` local emulator (Pixel 6a / API 35 / Google APIs / arm64-v8a). Now routes through `scripts/run-android.sh` which handles `adb reverse` + localhost pinning (Gotcha 11). Required: write `android/local.properties`, install NDK `27.1.12297006`, bump `react-native-nitro-modules` to `^0.35.6` (Gotchas 7/8/9)  |
-| Android Device (dev client)    | `bun run android` (single device — **NOT `android:device`**, see Gotcha 13b) | same                                                     | `[VERIFIED 2026-06-14]` local device (Samsung Galaxy A16 / SM-A165F, USB). Built + installed first try once the bogus `--device <serial>` was dropped. `bun run android:device` with `ANDROID_DEVICE_ID=<adb-serial>` is **broken** — Expo's `--device` wants a device _name_, not the serial (Gotcha 13b). Same Gotchas 7/8/9/11 apply |
-| Android preview APK            | n/a                                                                          | `eas build -p android --profile preview`                 | `[VERIFIED 2026-05-07]` ~33min cloud build, signed APK artifact downloadable from EAS dashboard. First attempt errored in POST_INSTALL_HOOK (Gotcha 10) — fix in commit 2d2e46b4 unblocked it                                                                                                                                           |
-| Android production AAB         | n/a                                                                          | `eas build -p android --profile production`              | `[UNTESTED]`                                                                                                                                                                                                                                                                                                                            |
-| Android Play Store submit      | n/a                                                                          | `eas submit -p android --profile production`             | `[BROKEN]` `play-service-account.json` not committed (rightfully so — needs developer-local copy)                                                                                                                                                                                                                                       |
+| Target                         | Local command                                                                | EAS profile                                              | Status                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------------------ | ---------------------------------------------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| iOS Simulator (dev client)     | `bun run ios` (with `IOS_DEVICE_ID` empty)                                   | `eas build -p ios --profile development`                 | `[VERIFIED 2026-05-11]` local sim + EAS development profile (cloud build). `scripts/run-ios.sh` pins `REACT_NATIVE_PACKAGER_HOSTNAME=localhost` on the sim branch to avoid Gotcha 11                                                                                                                                                                                                                                                                                                                              |
+| iOS Device (dev client)        | `bun run ios` (or `IOS_DEVICE_ID=… bun run ios:device`)                      | `eas build -p ios --profile development` (then sideload) | `[VERIFIED 2026-06-14]` local device — build + sign work, but **Expo's CLI installer can crash at `LockdowndClient.startSession` on a current paired iPhone** (Gotcha 13); install the built `.app` with `xcrun devicectl` + launch, run Metro separately                                                                                                                                                                                                                                                         |
+| iOS Release (local sim)        | `npx expo run:ios --configuration Release`                                   | n/a                                                      | `[VERIFIED 2026-05-02]` per `docs/plans/2026-05-02-expo-doctor-build-validation.md`                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| iOS Release (local device)     | `npx expo run:ios --configuration Release --device <udid>`                   | n/a                                                      | `[UNTESTED]`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| iOS preview build (signed IPA) | n/a                                                                          | `eas build -p ios --profile preview`                     | `[UNTESTED]`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| iOS production build           | n/a                                                                          | `eas build -p ios --profile production`                  | `[UNTESTED]`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| iOS App Store submit           | n/a                                                                          | `eas submit -p ios --profile production`                 | `[BROKEN]` `ascAppId` placeholder in `eas.json`                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Android Emulator (dev client)  | `bun run android`                                                            | `eas build -p android --profile development`             | `[VERIFIED 2026-07-28]` local emulator (Pixel 8 / API 36 / Google APIs / arm64-v8a) on Expo 56 / RN 0.85.3 — clean-machine setup, ~12 min first Gradle build. Also `[VERIFIED 2026-05-07]` Pixel 6a / API 35. Routes through `scripts/run-android.sh` which handles `adb reverse` + localhost pinning (Gotcha 11). Required: write `android/local.properties`, a real **JDK 17** (Gotcha 14), and `bun run build` before the bundle resolves (Gotcha 6 variant). NDK now self-installs on this path (Gotchas 7/8) |
+| Android Device (dev client)    | `bun run android` (single device — **NOT `android:device`**, see Gotcha 13b) | same                                                     | `[VERIFIED 2026-06-14]` local device (Samsung Galaxy A16 / SM-A165F, USB). Built + installed first try once the bogus `--device <serial>` was dropped. `bun run android:device` with `ANDROID_DEVICE_ID=<adb-serial>` is **broken** — Expo's `--device` wants a device _name_, not the serial (Gotcha 13b). Same Gotchas 7/8/9/11 apply                                                                                                                                                                           |
+| Android preview APK            | n/a                                                                          | `eas build -p android --profile preview`                 | `[VERIFIED 2026-05-07]` ~33min cloud build, signed APK artifact downloadable from EAS dashboard. First attempt errored in POST_INSTALL_HOOK (Gotcha 10) — fix in commit 2d2e46b4 unblocked it                                                                                                                                                                                                                                                                                                                     |
+| Android production AAB         | n/a                                                                          | `eas build -p android --profile production`              | `[UNTESTED]`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Android Play Store submit      | n/a                                                                          | `eas submit -p android --profile production`             | `[BROKEN]` `play-service-account.json` not committed (rightfully so — needs developer-local copy)                                                                                                                                                                                                                                                                                                                                                                                                                 |
 
 ---
 
@@ -146,24 +156,45 @@ For device Release, signing comes from your Apple Team (currently `86VL756N99` p
 
 ## Local Android — dev client
 
-`[VERIFIED 2026-05-07]` Pixel 6a emulator (API 35, Google APIs, arm64-v8a). New architecture + Hermes work; bundles 6107 modules in ~17s.
+`[VERIFIED 2026-07-28]` Pixel 8 emulator (API 36, Google APIs, arm64-v8a) on Expo 56 / RN 0.85.3, set up from scratch on a machine with no prior Android toolchain. New architecture confirmed live (`Running "main" with {"fabric":true}`). First Gradle build ~12 min; NDK downloads itself during the first configure.
+
+Also `[VERIFIED 2026-05-07]` Pixel 6a emulator (API 35) on the older Expo 54 / RN 0.81.5 stack; bundled 6107 modules in ~17s.
 
 ### One-time toolchain prerequisites
 
-Set up by Android Studio Standard wizard, with three additions:
+The GUI wizard is optional. A full headless bootstrap on a clean machine — `[VERIFIED 2026-07-28]`, ~15 min including downloads:
 
-1. **Android Studio** — `brew install --cask android-studio`. Run "Standard" setup wizard to install SDK to `~/Library/Android/sdk`.
-2. **SDK packages** beyond Standard wizard (via Settings → Languages & Frameworks → Android SDK):
-   - SDK Tools tab: tick **Android SDK Command-line Tools (latest)** (provides `sdkmanager`, `avdmanager`)
-   - SDK Platforms tab: enable **Show Package Details**, expand **Android 15.0 / API 35**, tick **Android SDK Platform 35** + **Google APIs ARM 64 v8a System Image** (Apple Silicon needs ARM64; the x86_64 image is unusably slow under Rosetta)
-3. **NDK 27.1.12297006** — required by Expo SDK 54 build config; **NOT installed by Standard wizard**. See Gotcha 8.
-4. **Env vars** in `~/.zshenv` (sourced for non-interactive shells too):
+```bash
+brew install --cask android-studio        # provides the IDE + a bundled JBR 21
+export ANDROID_HOME="$HOME/Library/Android/sdk"
+export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 
-   ```sh
-   export ANDROID_HOME="$HOME/Library/Android/sdk"
-   export ANDROID_SDK_ROOT="$ANDROID_HOME"
-   export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
-   ```
+brew install --cask android-commandlinetools   # sdkmanager/avdmanager without the wizard
+yes | sdkmanager --sdk_root="$ANDROID_HOME" \
+  "cmdline-tools;latest" "platform-tools" "emulator" \
+  "platforms;android-36" "build-tools;36.0.0" \
+  "system-images;android-36;google_apis;arm64-v8a"
+yes | sdkmanager --sdk_root="$ANDROID_HOME" --licenses
+
+avdmanager create avd -n Pixel_8_API_36 \
+  -k "system-images;android-36;google_apis;arm64-v8a" -d medium_phone
+```
+
+Notes on the above:
+
+- **`--sdk_root` is required**, otherwise brew's cmdline-tools cask installs packages under its own Homebrew prefix instead of `$ANDROID_HOME`.
+- **Apple Silicon needs the `arm64-v8a` image.** The x86_64 image is unusably slow under Rosetta.
+- **Two harmless `Could not load devices from .../devices.xml` errors** during `avdmanager create` are expected — the system image ships no device profiles. The AVD is still created and `-d medium_phone` still applies (check `hw.device.name` in its `config.ini`).
+- **NDK 27.1.12297006 installs itself.** Gradle auto-downloads it on the first configure once licences are accepted, and lands a valid `source.properties` — so Gotcha 8's empty-placeholder problem doesn't occur on this path. It only bites when Android Studio's wizard created the directory first.
+- **JDK 17 is mandatory, separately from the bundled JBR 21.** See Gotcha 14 — the build hard-fails without it.
+- **Env vars** — already in `~/.config/zsh/path.zsh` on the maintainer's machine, incl. `ANDROID_USER_HOME` (Gotcha 15):
+
+  ```sh
+  export ANDROID_HOME="$HOME/Library/Android/sdk"
+  export ANDROID_SDK_ROOT="$ANDROID_HOME"
+  export ANDROID_USER_HOME="$HOME/.android"
+  export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
+  ```
 
 ### Per-project bootstrap
 
@@ -462,6 +493,20 @@ Then **shake the device** → Reload. Metro re-bundles from scratch (slow first 
 
 Best practice: always kill Metro **before** running `bun add` / `bunx expo install`, then restart with `--clear`. Saves a debugging round trip.
 
+### Variant: unbuilt workspace package, not a poisoned cache
+
+`[VERIFIED 2026-07-28]`
+
+The same `Unable to resolve module` screen appears for `@rollercoaster-dev/design-tokens/unistyles` (imported by `src/themes/adapter.ts`) on a **fresh clone** where only `bun install` has run. Nothing is cached wrong — the subpath genuinely doesn't exist yet, because `design-tokens` generates its Unistyles export at build time via `node build-unistyles.js`.
+
+Clearing Metro's cache will not help. Build the packages:
+
+```bash
+bun run build      # repo root — turbo builds design-tokens + openbadges-core
+```
+
+Distinguishing the two: if the missing module is a `@rollercoaster-dev/*` workspace package, it's this; if it's a third-party package from `node_modules`, it's the cache-poisoning case above. Note the native build and install succeed either way — the failure only surfaces when the dev client fetches the bundle.
+
 ---
 
 ## Gotcha 7 — Android: `SDK location not found` despite `ANDROID_HOME` set
@@ -744,6 +789,70 @@ cd apps/native-rd && bun run android
 **Survives `expo prebuild`?** Yes — the bug is in the launcher script, not generated state.
 
 **Does this affect EAS?** No — EAS doesn't use `run-android.sh`.
+
+---
+
+## Gotcha 14 — Android: `NoSuchFieldError: JvmVendorSpec.IBM_SEMERU` on a machine with no JDK 17
+
+`[VERIFIED 2026-07-28]`
+
+**Symptom (Gradle configuration phase, before any compilation):**
+
+```
+* What went wrong:
+Could not initialize class org.gradle.toolchains.foojay.DistributionsKt
+> Exception java.lang.NoSuchFieldError: Class org.gradle.jvm.toolchain.JvmVendorSpec
+  does not have member field 'org.gradle.jvm.toolchain.JvmVendorSpec IBM_SEMERU'
+```
+
+**Cause:** a version collision inside RN's own toolchain, not in this repo. `@react-native/gradle-plugin`'s `settings.gradle.kts` pins `org.gradle.toolchains.foojay-resolver-convention` **0.5.0**, which references `JvmVendorSpec.IBM_SEMERU` — a field **removed in Gradle 9**. RN 0.85.3 ships a Gradle **9.3.1** wrapper, so the two are mutually incompatible.
+
+It only detonates when Gradle actually needs the resolver, i.e. when the `jvmToolchain(17)` that all four RN gradle-plugin subprojects request cannot be satisfied locally. Android Studio's bundled JBR is **21**, so a machine whose only JDK is the JBR hits this on its very first Android build. This is why a clean-machine setup fails while an existing dev box (which has a JDK 17 lying around) never sees it.
+
+**Fix:** give Gradle a real JDK 17 and forbid auto-provisioning, so the broken resolver is never constructed.
+
+```bash
+mise use -g java@temurin-17.0.19+10   # brew's temurin@17 cask needs sudo; mise doesn't
+
+cat > ~/.gradle/gradle.properties <<'EOF'
+org.gradle.java.installations.paths=/Users/<you>/.local/share/mise/installs/java/temurin-17.0.19+10,/Applications/Android Studio.app/Contents/jbr/Contents/Home
+org.gradle.java.installations.auto-download=false
+EOF
+```
+
+Gradle does **not** auto-detect mise-managed JDKs, hence the explicit `installations.paths`. Absolute paths are required — `$HOME`/`~` are not expanded in `gradle.properties`.
+
+**Do not** try to fix this by upgrading the foojay plugin: it's pinned inside `node_modules`, and patching it would mean a `patchedDependencies` entry for a file that `expo prebuild` doesn't own.
+
+**Survives `expo prebuild`?** Yes — the fix lives in `~/.gradle`, outside the project.
+
+**Does this affect EAS?** No — EAS images ship a JDK 17.
+
+---
+
+## Gotcha 15 — Android: AVDs created from the CLI are invisible to Android Studio
+
+`[VERIFIED 2026-07-28]`
+
+**Symptom:** `avdmanager create avd` reports success and `avdmanager list avd` shows the AVD, but Android Studio's Device Manager is empty and `emulator -list-avds` may disagree. `avdmanager list avd` reveals the real problem in the `Path:` line:
+
+```
+Path: /Users/jc/.config/.android/avd/Pixel_8_API_36.avd
+```
+
+**Cause:** modern Android command-line tools honour `XDG_CONFIG_HOME` and place their user dir at `$XDG_CONFIG_HOME/.android`. Android Studio still looks in `$HOME/.android`. Any shell that exports `XDG_CONFIG_HOME` (this maintainer's does) therefore splits the two tools across different AVD directories.
+
+**Fix:** pin the location explicitly, for every shell:
+
+```sh
+export ANDROID_USER_HOME="$HOME/.android"
+```
+
+Then recreate the AVD — moving the directory by hand leaves absolute paths inside `config.ini` pointing at the old location.
+
+**Survives `expo prebuild`?** Yes — AVDs are global, not per-project.
+
+**Does this affect EAS?** No.
 
 ---
 
