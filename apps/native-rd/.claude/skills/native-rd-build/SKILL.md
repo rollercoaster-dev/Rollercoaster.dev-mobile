@@ -167,6 +167,9 @@ The GUI wizard is optional. A full headless bootstrap on a clean machine — `[V
 ```bash
 brew install --cask android-studio        # provides the IDE + a bundled JBR 21
 export ANDROID_HOME="$HOME/Library/Android/sdk"
+
+# JAVA_HOME here is only so sdkmanager/avdmanager have *a* JVM to run under —
+# any JDK does. It is NOT the JDK Gradle builds with; see the JDK 17 step below.
 export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 
 brew install --cask android-commandlinetools   # sdkmanager/avdmanager without the wizard
@@ -178,6 +181,9 @@ yes | sdkmanager --sdk_root="$ANDROID_HOME" --licenses
 
 avdmanager create avd -n Pixel_8_API_36 \
   -k "system-images;android-36;google_apis;arm64-v8a" -d medium_phone
+
+# Mandatory: a real JDK 17 for the Gradle toolchain (Gotcha 14).
+mise use -g java@temurin-17.0.19+10
 ```
 
 Notes on the above:
@@ -186,7 +192,8 @@ Notes on the above:
 - **Apple Silicon needs the `arm64-v8a` image.** The x86_64 image is unusably slow under Rosetta.
 - **Two harmless `Could not load devices from .../devices.xml` errors** during `avdmanager create` are expected — the system image ships no device profiles. The AVD is still created and `-d medium_phone` still applies (check `hw.device.name` in its `config.ini`).
 - **NDK 27.1.12297006 installs itself.** Gradle auto-downloads it on the first configure once licences are accepted, and lands a valid `source.properties` — so Gotcha 8's empty-placeholder problem doesn't occur on this path. It only bites when Android Studio's wizard created the directory first.
-- **JDK 17 is mandatory, separately from the bundled JBR 21.** See Gotcha 14 — the build hard-fails without it.
+- **JDK 17 is mandatory, separately from the bundled JBR 21**, and installing it is not enough on its own — Gradle also has to be told where it is. Do the `~/.gradle/gradle.properties` step in Gotcha 14 before the first build; without it the build hard-fails at configuration.
+- **Which JDK ends up in `JAVA_HOME` doesn't matter much** once Gotcha 14's `installations.paths` is set — the Gradle daemon runs happily under JBR 21 and still resolves the requested `jvmToolchain(17)` from that list. What breaks the build is JDK 17 being absent or undiscoverable, not `JAVA_HOME` pointing at 21.
 - **Env vars** — already in `~/.config/zsh/path.zsh` on the maintainer's machine, incl. `ANDROID_USER_HOME` (Gotcha 15):
 
   ```sh
@@ -814,13 +821,16 @@ It only detonates when Gradle actually needs the resolver, i.e. when the `jvmToo
 ```bash
 mise use -g java@temurin-17.0.19+10   # brew's temurin@17 cask needs sudo; mise doesn't
 
-cat > ~/.gradle/gradle.properties <<'EOF'
+mkdir -p ~/.gradle                    # doesn't exist until Gradle first runs
+cat >> ~/.gradle/gradle.properties <<'EOF'
 org.gradle.java.installations.paths=/Users/<you>/.local/share/mise/installs/java/temurin-17.0.19+10,/Applications/Android Studio.app/Contents/jbr/Contents/Home
 org.gradle.java.installations.auto-download=false
 EOF
 ```
 
-Gradle does **not** auto-detect mise-managed JDKs, hence the explicit `installations.paths`. Absolute paths are required — `$HOME`/`~` are not expanded in `gradle.properties`.
+**Append, don't overwrite.** `~/.gradle/gradle.properties` is machine-global and may already carry unrelated settings (`org.gradle.jvmargs`, proxy config, cache dirs) that a `>` would silently destroy. If either key is already present, edit the existing line instead — Gradle takes the **last** occurrence of a duplicated key, so a blind append can leave a confusing file even when it happens to work.
+
+Gradle does **not** auto-detect mise-managed JDKs, hence the explicit `installations.paths`. Absolute paths are required — `$HOME` / `~` are not expanded in `gradle.properties`. Entries are comma-separated, and unquoted spaces inside a path are fine (the Android Studio JBR path has one).
 
 **Do not** try to fix this by upgrading the foojay plugin: it's pinned inside `node_modules`, and patching it would mean a `patchedDependencies` entry for a file that `expo prebuild` doesn't own.
 
