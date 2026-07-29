@@ -9,13 +9,13 @@
 
 ## Intent Verification
 
-- [ ] Tapping a node (root or sub-step) in `TimelineJourneyScreen` navigates to `FocusMode` with that node's own `stepId`, and `FocusModeScreen` renders **that step's own card** (in its current status — in-progress/paused/completed), not whatever `resolveNextActionableStep` would otherwise pick.
-- [ ] Tapping "Set this step aside", "Pick this back up", "✓ Mark complete", or "Reopen this step" no longer leaves the screen on the same step: the card immediately reflects the freshly-recomputed next actionable step (leaf, invite, or flat), skipping paused/completed rows, exactly as `resolveNextActionableStep` already resolves for `GoalsScreen`/`TimelineJourneyScreen`.
-- [ ] Completing the last pending sub-step of a parent renders the **parent's own card** next (the resolver's existing `{ kind: "invite" }` result, now reachable because the screen re-resolves after the mutation instead of holding the child's id).
-- [ ] A goal with at least one pending/in-progress step, at least one paused step, and no actionable step renders `FocusParkedState` ("Nothing in progress." / "`{N}` set aside") with one resumable row per paused step; tapping a row's "resume ›" resumes that row's step and the screen then shows whichever step becomes actionable.
-- [ ] A goal whose every step is `completed` renders `FocusCurrentTaskCard`'s `all-complete` state ("Every step done." + trophy callout); tapping "Design your badge" navigates to `CompletionFlow` with `{ goalId }` — the same route `TimelineJourneyScreen`'s `FinishLine.onBadgePress` already uses.
-- [ ] A goal with zero steps still renders chrome-only (header + `0 / 0 done` strip, no card, no parked state) — the existing `renders nothing but chrome when the goal has no steps` regression stays green untouched.
-- [ ] `FocusProgressStrip` ("`{done}` / `{total}` done · See all steps ›") stays mounted above the card/parked/all-done body in every state, matching the canonical `Focus Mode A Prototype.dc.html` markup (the strip's own `<div>` wraps every `sc-if` body branch, not just the active-step one).
+- [x] Tapping a node (root or sub-step) in `TimelineJourneyScreen` navigates to `FocusMode` with that node's own `stepId`, and `FocusModeScreen` renders **that step's own card** (in its current status — in-progress/paused/completed), not whatever `resolveNextActionableStep` would otherwise pick.
+- [x] Tapping "Set this step aside", "Pick this back up", "✓ Mark complete", or "Reopen this step" no longer leaves the screen on the same step: the card immediately reflects the freshly-recomputed next actionable step (leaf, invite, or flat), skipping paused/completed rows, exactly as `resolveNextActionableStep` already resolves for `GoalsScreen`/`TimelineJourneyScreen`.
+- [x] Completing the last pending sub-step of a parent renders the **parent's own card** next (the resolver's existing `{ kind: "invite" }` result, now reachable because the screen re-resolves after the mutation instead of holding the child's id).
+- [x] A goal with at least one pending/in-progress step, at least one paused step, and no actionable step renders `FocusParkedState` ("Nothing in progress." / "`{N}` set aside") with one resumable row per paused step; tapping a row's "resume ›" resumes that row's step and the screen then shows whichever step becomes actionable.
+- [x] A goal whose every step is `completed` renders `FocusCurrentTaskCard`'s `all-complete` state ("Every step done." + trophy callout); tapping "Design your badge" navigates to `CompletionFlow` with `{ goalId }` — the same route `TimelineJourneyScreen`'s `FinishLine.onBadgePress` already uses.
+- [x] A goal with zero steps still renders chrome-only (header + `0 / 0 done` strip, no card, no parked state) — the existing `renders nothing but chrome when the goal has no steps` regression stays green untouched.
+- [x] `FocusProgressStrip` ("`{done}` / `{total}` done · See all steps ›") stays mounted above the card/parked/all-done body in every state, matching the canonical `Focus Mode A Prototype.dc.html` markup (the strip's own `<div>` wraps every `sc-if` body branch, not just the active-step one).
 
 ## Dependencies
 
@@ -75,12 +75,12 @@ Close the two seams #466 deliberately deferred (its D1 and D2): replace the "res
 **Commit**: `feat(timeline): carry stepId on node-tap navigation to FocusMode`
 **Changes**:
 
-- [ ] Add `stepId?: string` to `GoalsStackParamList["FocusMode"]` with a doc comment (mirroring `originBadgeId`'s) explaining it's set only by the Timeline-return leg (D4).
-- [ ] Change `TimelineStepProps["onNodePress"]` to `(stepId: string) => void`; the root `TimelineNode`'s `onPress` calls `onNodePress(step.id)` (`TimelineStep.tsx:83`).
-- [ ] `ChildRow` calls `onNodePress(child.id)` instead of `onNodePress(parentIndex)`; drop the now-unused `parentIndex` prop from `ChildRow`'s props and its call site in `TimelineStep` (D3).
-- [ ] `TimelineJourneyScreen.handleNodePress(stepId: string)` navigates `navigation.navigate("FocusMode", { goalId, stepId })` (`TimelineJourneyScreen.tsx:196-198`).
-- [ ] Update `TimelineStep.test.tsx`'s two `onNodePress` assertions: root-node press expects `toHaveBeenCalledWith("step-1")` (the fixture's `baseStep.id`), sub-step press expects `toHaveBeenCalledWith(<child's own id>)` — update the test's title away from "with the parent index" since that's the bug being fixed.
-- [ ] Update `TimelineJourneyScreen.test.tsx`'s "step node press navigates to FocusMode" to expect `{ goalId: "goal-1", stepId: "step-1" }` (the default fixture's first step).
+- [x] Add `stepId?: string` to `GoalsStackParamList["FocusMode"]` with a doc comment (mirroring `originBadgeId`'s) explaining it's set only by the Timeline-return leg (D4).
+- [x] Change `TimelineStepProps["onNodePress"]` to `(stepId: string) => void`; the root `TimelineNode`'s `onPress` calls `onNodePress(step.id)` (`TimelineStep.tsx:83`).
+- [x] `ChildRow` calls `onNodePress(child.id)` instead of `onNodePress(parentIndex)`; drop the now-unused `parentIndex` prop from `ChildRow`'s props and its call site in `TimelineStep` (D3).
+- [x] `TimelineJourneyScreen.handleNodePress(stepId: string)` navigates `navigation.navigate("FocusMode", { goalId, stepId })` (`TimelineJourneyScreen.tsx:196-198`).
+- [x] Update `TimelineStep.test.tsx`'s two `onNodePress` assertions: root-node press expects `toHaveBeenCalledWith("step-1")` (the fixture's `baseStep.id`), sub-step press expects `toHaveBeenCalledWith(<child's own id>)` — update the test's title away from "with the parent index" since that's the bug being fixed.
+- [x] Update `TimelineJourneyScreen.test.tsx`'s "step node press navigates to FocusMode" to expect `{ goalId: "goal-1", stepId: "step-1" }` (the default fixture's first step).
 
 ### Step 2: Auto-advance — drop the held id, land the Timeline return leg
 
@@ -88,16 +88,16 @@ Close the two seams #466 deliberately deferred (its D1 and D2): replace the "res
 **Commit**: `feat(focus-mode): auto-advance after step-toggle mutations, land Timeline returns on the tapped step`
 **Changes**:
 
-- [ ] Route-scope `useNavigation` to `NativeStackNavigationProp<GoalsStackParamList, "FocusMode">` (D10).
-- [ ] Replace the `currentStepId` state + resolve-on-mount effect (`FocusModeScreen.tsx:123, :140-147`) with: `resolveFocusStepId(stepRows)` as a pure `useMemo`-free derivation (D1), a `pinnedStepId` state seeded to `null`, and a `useFocusEffect` that — when `route.params.stepId` is set — calls `setPinnedStepId(route.params.stepId)` and `navigation.setParams({ stepId: undefined })` in the same tick (D2).
-- [ ] `currentStepId = pinnedStepId && stepRows.some(r => r.id === pinnedStepId) ? pinnedStepId : resolveFocusStepId(stepRows)`.
-- [ ] In `runStepMutation`, on a successful `"step-toggle"` mutation, also call `setPinnedStepId(null)` (in addition to firing the existing announcement) — this is what turns "landed here via Timeline" into "now following auto-advance" the moment the user acts on the pinned step.
-- [ ] Remove the D10 paused/last-step fallback from `resolveFocusStepId`'s doc comment and body — it now returns `null` on `{ kind: "none" }` with no fallback; the render branch (Step 3/4) owns what to show instead.
-- [ ] Rewrite the `current-step resolution while mounted` describe block (`FocusModeScreen.test.tsx:591-636`): the "holds the same step when its status changes under it" test (`:592-615`) asserted the _opposite_ of this issue's scope and must be replaced with an "auto-advances to the next actionable step once the held step completes" test using the same fixture/`rerender` idiom, expecting `currentCardTitle()` to flip from "Read docs" to "Practice". The "re-resolves when the held step is gone from the rows" test (`:617-635`) stays conceptually valid under pure derivation — keep it, retitled to drop the "held" framing.
-- [ ] Add a dynamic sub-step→parent test: start from `PARTIAL_LEAF_STEPS`-shaped data (Drill A completed, Drill B pending, `Practice` as parent), fire `handleMarkComplete` (via the "✓ Mark complete" button) on Drill B, `rerender` with Drill B now completed, and assert `currentCardTitle()` becomes "Practice" — the explicit dynamic regression the issue calls out (distinct from the existing static-mount `focuses %s` resolution table at `:955-967`, which only proves the resolver's answer on first render, not that a live transition reaches it).
-- [ ] Add a return-leg test: render `FocusModeScreen` with `routeProps.route.params = { goalId: "goal-1", stepId: "step-2" }` against fixture data where the resolver would otherwise pick `step-1`, and assert `currentCardTitle()` is `step-2`'s title.
-- [ ] Add a pin-then-act test: same return-leg setup landing on a _paused_ step-2, fire "Pick this back up", and assert the card no longer requires the pin to keep showing step-2 (i.e. a subsequent `rerender` with step-1 completed now flips to whatever the resolver picks, proving the pin cleared).
-- [ ] Extend the local `useNavigation` mock override in this file with `setParams: mockSetParams` (a new top-level `jest.fn()`) alongside the existing `goBack`/`navigate` overrides, since `../../../__tests__/mocks/navigation.ts`'s shared `useNavigation` stub has no `setParams`.
+- [x] Route-scope `useNavigation` to `NativeStackNavigationProp<GoalsStackParamList, "FocusMode">` (D10).
+- [x] Replace the `currentStepId` state + resolve-on-mount effect (`FocusModeScreen.tsx:123, :140-147`) with: `resolveFocusStepId(stepRows)` as a pure `useMemo`-free derivation (D1), a `pinnedStepId` state seeded to `null`, and a `useFocusEffect` that — when `route.params.stepId` is set — calls `setPinnedStepId(route.params.stepId)` and `navigation.setParams({ stepId: undefined })` in the same tick (D2).
+- [x] `currentStepId = pinnedStepId && stepRows.some(r => r.id === pinnedStepId) ? pinnedStepId : resolveFocusStepId(stepRows)`.
+- [x] In `runStepMutation`, on a successful `"step-toggle"` mutation, also call `setPinnedStepId(null)` (in addition to firing the existing announcement) — this is what turns "landed here via Timeline" into "now following auto-advance" the moment the user acts on the pinned step.
+- [x] Remove the D10 paused/last-step fallback from `resolveFocusStepId`'s doc comment and body — it now returns `null` on `{ kind: "none" }` with no fallback; the render branch (Step 3/4) owns what to show instead.
+- [x] Rewrite the `current-step resolution while mounted` describe block (`FocusModeScreen.test.tsx:591-636`): the "holds the same step when its status changes under it" test (`:592-615`) asserted the _opposite_ of this issue's scope and must be replaced with an "auto-advances to the next actionable step once the held step completes" test using the same fixture/`rerender` idiom, expecting `currentCardTitle()` to flip from "Read docs" to "Practice". The "re-resolves when the held step is gone from the rows" test (`:617-635`) stays conceptually valid under pure derivation — keep it, retitled to drop the "held" framing.
+- [x] Add a dynamic sub-step→parent test: start from `PARTIAL_LEAF_STEPS`-shaped data (Drill A completed, Drill B pending, `Practice` as parent), fire `handleMarkComplete` (via the "✓ Mark complete" button) on Drill B, `rerender` with Drill B now completed, and assert `currentCardTitle()` becomes "Practice" — the explicit dynamic regression the issue calls out (distinct from the existing static-mount `focuses %s` resolution table at `:955-967`, which only proves the resolver's answer on first render, not that a live transition reaches it).
+- [x] Add a return-leg test: render `FocusModeScreen` with `routeProps.route.params = { goalId: "goal-1", stepId: "step-2" }` against fixture data where the resolver would otherwise pick `step-1`, and assert `currentCardTitle()` is `step-2`'s title.
+- [x] Add a pin-then-act test: same return-leg setup landing on a _paused_ step-2, fire "Pick this back up", and assert the card no longer requires the pin to keep showing step-2 (i.e. a subsequent `rerender` with step-1 completed now flips to whatever the resolver picks, proving the pin cleared).
+- [x] Extend the local `useNavigation` mock override in this file with `setParams: mockSetParams` (a new top-level `jest.fn()`) alongside the existing `goBack`/`navigate` overrides, since `../../../__tests__/mocks/navigation.ts`'s shared `useNavigation` stub has no `setParams`.
 
 ### Step 3: All-paused screen state
 
@@ -105,11 +105,11 @@ Close the two seams #466 deliberately deferred (its D1 and D2): replace the "res
 **Commit**: `feat(focus-mode): mount FocusParkedState when nothing is actionable`
 **Changes**:
 
-- [ ] Import `FocusParkedState` and `areAllStepsComplete`.
-- [ ] Add the render branch: `currentStep` present → existing card logic; else `stepRows.length === 0` → render nothing (D6, unchanged); else `areAllStepsComplete(stepRows)` → Step 4's all-done card; else → `FocusParkedState` wrapped in a `ScrollView` (D9) fed `rows = stepRows.filter(s => s.status === StepStatus.paused).map(s => ({ id: s.id, title: s.title ?? "", onResume: () => handleResumeStep(s.id) }))`.
-- [ ] Add `handleResumeStep(stepId: string)` (D7): `runStepMutation("step-resume", "step-toggle", () => resumeStep(stepId as StepId))`; refactor `handlePickUp` to call it with `currentStep.id`.
-- [ ] Add the `parkedScrollContent` style (D9).
-- [ ] Tests: a goal with one pending-but-paused-first step (all remaining paused, none actionable) renders `FocusParkedState`'s heading/count; tapping a row's resume label calls `resumeStep` with that row's id; a goal with a mix of one completed + N paused steps (none actionable, not all complete) also renders the parked state, not the all-done one (pins D5's ordering).
+- [x] Import `FocusParkedState` and `areAllStepsComplete`.
+- [x] Add the render branch: `currentStep` present → existing card logic; else `stepRows.length === 0` → render nothing (D6, unchanged); else `areAllStepsComplete(stepRows)` → Step 4's all-done card; else → `FocusParkedState` wrapped in a `ScrollView` (D9) fed `rows = stepRows.filter(s => s.status === StepStatus.paused).map(s => ({ id: s.id, title: s.title ?? "", onResume: () => handleResumeStep(s.id) }))`.
+- [x] Add `handleResumeStep(stepId: string)` (D7): `runStepMutation("step-resume", "step-toggle", () => resumeStep(stepId as StepId))`; refactor `handlePickUp` to call it with `currentStep.id`.
+- [x] Add the `parkedScrollContent` style (D9).
+- [x] Tests: a goal with one pending-but-paused-first step (all remaining paused, none actionable) renders `FocusParkedState`'s heading/count; tapping a row's resume label calls `resumeStep` with that row's id; a goal with a mix of one completed + N paused steps (none actionable, not all complete) also renders the parked state, not the all-done one (pins D5's ordering).
 
 ### Step 4: All-done screen state
 
@@ -117,16 +117,16 @@ Close the two seams #466 deliberately deferred (its D1 and D2): replace the "res
 **Commit**: `feat(focus-mode): mount the all-complete card and wire Design your badge`
 **Changes**:
 
-- [ ] Render `FocusCurrentTaskCard status="all-complete" title={goal.title ?? ""} onDesignBadge={handleDesignBadge}` when `areAllStepsComplete(stepRows)` is true (D5, ordered before the parked-state check per Step 3).
-- [ ] Add `handleDesignBadge`: `navigation.navigate("CompletionFlow", { goalId })` (D8).
-- [ ] Tests: a goal whose every step is `completed` renders the "Every step done." heading and the trophy callout body; tapping "Design your badge" calls `mockNavigate` with `("CompletionFlow", { goalId: "goal-1" })`.
+- [x] Render `FocusCurrentTaskCard status="all-complete" title={goal.title ?? ""} onDesignBadge={handleDesignBadge}` when `areAllStepsComplete(stepRows)` is true (D5, ordered before the parked-state check per Step 3).
+- [x] Add `handleDesignBadge`: `navigation.navigate("CompletionFlow", { goalId })` (D8).
+- [x] Tests: a goal whose every step is `completed` renders the "Every step done." heading and the trophy callout body; tapping "Design your badge" calls `mockNavigate` with `("CompletionFlow", { goalId: "goal-1" })`.
 
 ## Testing Strategy
 
-- [ ] Unit tests for `TimelineStep`, `TimelineJourneyScreen`, and `FocusModeScreen` (Jest 30, `@testing-library/react-native` v13), per the Implementation Plan steps above.
-- [ ] Test files stay at their existing paths (`src/components/TimelineStep/__tests__/`, `src/screens/TimelineJourneyScreen/__tests__/`, `src/screens/FocusModeScreen/__tests__/`).
-- [ ] Use `test.each`/the existing `it.each` resolution table (`FocusModeScreen.test.tsx:955-967`) for any additional static-mount fixture cases; use the `rerender`-after-`setupQueries` idiom already established at `:592-635` for every _dynamic_ (post-mutation) assertion, since that is what the mocked `useQuery` supports.
-- [ ] Before deleting the "holds the same step when its status changes under it" test (Step 2), confirm no other suite pins the old hold behavior — grep for `#466 D1` / "resolve-once-and-hold" outside this file first (per `AGENTS.md`'s "grep before deleting a test" rule); expected to find none, since #466's own test suite (already merged) never asserted this from the Timeline/TimelineStep side.
+- [x] Unit tests for `TimelineStep`, `TimelineJourneyScreen`, and `FocusModeScreen` (Jest 30, `@testing-library/react-native` v13), per the Implementation Plan steps above.
+- [x] Test files stay at their existing paths (`src/components/TimelineStep/__tests__/`, `src/screens/TimelineJourneyScreen/__tests__/`, `src/screens/FocusModeScreen/__tests__/`).
+- [x] Use `test.each`/the existing `it.each` resolution table (`FocusModeScreen.test.tsx:955-967`) for any additional static-mount fixture cases; use the `rerender`-after-`setupQueries` idiom already established at `:592-635` for every _dynamic_ (post-mutation) assertion, since that is what the mocked `useQuery` supports.
+- [x] Before deleting the "holds the same step when its status changes under it" test (Step 2), confirm no other suite pins the old hold behavior — grep for `#466 D1` / "resolve-once-and-hold" outside this file first (per `AGENTS.md`'s "grep before deleting a test" rule); expected to find none, since #466's own test suite (already merged) never asserted this from the Timeline/TimelineStep side.
 - [ ] Manual testing: `npx expo run:ios` — (a) open a 3-step goal, tap "See all steps ›", tap a _different, non-current_ node in Timeline, confirm Focus lands on that exact step; (b) from there, tap the same node again on a second visit (repeat-tap case D2 is designed for) and confirm it still lands correctly; (c) mark the current step complete and confirm the card advances without navigating away from Focus Mode; (d) set aside every remaining step and confirm the parked state appears with correct resumable rows; (e) complete every step and confirm the all-done state appears and "Design your badge" opens `CompletionFlow`; (f) complete the last sub-step of a parent and confirm focus lands on the parent.
 
 ## Not in Scope
@@ -147,6 +147,9 @@ Close the two seams #466 deliberately deferred (its D1 and D2): replace the "res
 
 ## Discovery Log
 
-<!-- Entries added by implement skill:
-- [YYYY-MM-DD HH:MM] <discovery description>
--->
+- [2026-07-29 Step 2] **The paused and completed card variants became pin-only, which the plan did not anticipate.** `resolveNextActionableStep` skips both statuses, so once `resolveFocusStepId` stopped falling back (D1), nothing unpinned can ever resolve to a paused or completed step — those two variants are now reachable _only_ via the Timeline pin. That is exactly the intended behavior (Intent #2: acting on a step must not leave the screen on it), but it invalidated five existing tests that reached those variants through a single-step goal on the plain route: the `step state mapping` `it.each` rows for `paused`/`completed`, "calls resumeStep from a paused card", "calls uncompleteStep from a completed card", and "announces the reopen only when the write succeeds". All five now render through a new `routePropsForStep(stepId)` helper (route params as the Timeline-return leg passes them) rather than being deleted, so the variants stay covered by the path that actually reaches them.
+- [2026-07-29 Step 2] Two tests the plan expected Steps 3/4 to own had to be handled in Step 2 to keep every commit green: the D10-fallback tests ("falls back to a paused step when nothing is actionable" / "falls back to the last step when every step is done") assert behavior removed by Step 2 but replaced only in Steps 3/4. Step 2 rewrote them as interim "renders no step card when …" assertions; Step 3 replaced the paused one with the real `FocusParkedState` block, Step 4 replaced the all-done one with the real all-complete block. No commit is left without coverage of that branch.
+- [2026-07-29 Step 3] The three no-actionable-step branches (D5/D6/D9) went into a module-level `NoActionableBody` component rather than inline in `FocusContent`'s JSX. The card section's status branch is already a 3-way nested ternary; adding three more levels inline would have made a 5-deep nest. `NoActionableBody` takes `stepCount`/`allStepsComplete`/`parkedRows` (plus Step 4's `goalTitle`/`onDesignBadge`) — booleans and rows, not the raw step array, so the D5/D6 ordering is stated once at its only call site.
+- [2026-07-29 Step 3] Retitled "calls pauseStep and stays on the same step" → "calls pauseStep without navigating away". Its assertions were unchanged and still valid (`pauseStep` called, no `navigate`), but "stays on the same step" now describes the opposite of the shipped behavior.
+- [2026-07-29 Step 4] `FocusAllCompleteCardProps` requires `title` but `AllCompleteView` never renders it (its heading is the fixed "Every step done." copy). Passed `goal.title ?? ""` as D8 implies; no change to the shipped component.
+- [2026-07-29 Final] Manual on-device verification (Testing Strategy's last item) is **not** done — left unchecked. Everything it covers is asserted by the suite (return leg, repeat-tap consume, auto-advance, parked rows, all-done + CTA route, child→parent), but the visual read of the parked `ScrollView` (D9) and the all-done card in the real card section has not been eyeballed.
