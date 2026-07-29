@@ -4,6 +4,7 @@ import {
   ActivityIndicator,
   AccessibilityInfo,
   KeyboardAvoidingView,
+  ScrollView,
 } from "react-native";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
@@ -20,6 +21,10 @@ import {
   type FocusCapturedEvidenceItem,
 } from "../../components/FocusCurrentTaskCard";
 import { FocusProgressStrip } from "../../components/FocusProgressStrip";
+import {
+  FocusParkedState,
+  type FocusParkedRow,
+} from "../../components/FocusParkedState";
 import { EvidenceTypePicker } from "../../components/EvidenceTypePicker";
 import { AnimatedSheet } from "../../components/EvidenceTypePicker/AnimatedSheet";
 import { resolvePlannedEvidenceTypes } from "../../utils/parsePlannedEvidenceTypes";
@@ -33,6 +38,7 @@ import {
   resumeStep,
   updateStep,
   canCompleteStep,
+  areAllStepsComplete,
   groupStepsByParent,
   flattenGroupedSteps,
   resolveNextActionableStep,
@@ -92,6 +98,36 @@ function resolveFocusStepId(rows: readonly StepRowLike[]): string | null {
   const actionable = resolveNextActionableStep(rows);
   if (actionable.kind === "none") return null;
   return rows[actionable.index]?.id ?? null;
+}
+
+/**
+ * The card-section body when no step is actionable.
+ *
+ * `resolveNextActionableStep` reports `none` for both "every step is done" and
+ * "every step that's left is set aside", so the tie-break lives here (D5). The
+ * stepless goal is checked *first*: `areAllStepsComplete([])` is `false`, so it
+ * would otherwise land in the parked state as a nonsensical "Nothing in
+ * progress. 0 set aside" — a goal with no steps stays chrome-only (D6).
+ */
+function NoActionableBody({
+  stepCount,
+  allStepsComplete,
+  parkedRows,
+}: {
+  stepCount: number;
+  allStepsComplete: boolean;
+  parkedRows: readonly FocusParkedRow[];
+}) {
+  if (stepCount === 0) return null;
+  if (allStepsComplete) return null;
+  // Scrolled at the call site, not inside FocusParkedState: its own `rows`
+  // container is a plain gap-only View, and a goal can have more set-aside steps
+  // than fit one screen (D9).
+  return (
+    <ScrollView contentContainerStyle={styles.parkedScrollContent}>
+      <FocusParkedState rows={parkedRows} />
+    </ScrollView>
+  );
 }
 
 function FocusContent({
@@ -338,12 +374,25 @@ function FocusContent({
     );
   }, [currentStep, runStepMutation]);
 
+  /**
+   * Resume one specific step. Explicit-id (rather than reading `currentStep`)
+   * because the parked state resumes a row while there is no current step at all
+   * (D7) — and it still goes through {@link runStepMutation}, so a parked row's
+   * write failure surfaces exactly like every other path's.
+   */
+  const handleResumeStep = useCallback(
+    (stepId: string) => {
+      runStepMutation("step-resume", "step-toggle", () =>
+        resumeStep(stepId as StepId),
+      );
+    },
+    [runStepMutation],
+  );
+
   const handlePickUp = useCallback(() => {
     if (!currentStep) return;
-    runStepMutation("step-resume", "step-toggle", () =>
-      resumeStep(currentStep.id as StepId),
-    );
-  }, [currentStep, runStepMutation]);
+    handleResumeStep(currentStep.id);
+  }, [currentStep, handleResumeStep]);
 
   const handleReopen = useCallback(() => {
     if (!currentStep) return;
@@ -427,6 +476,20 @@ function FocusContent({
     navigation.navigate("EditMode", { goalId, cameFromFocus: true });
   }, [goalId, navigation]);
 
+  // One resumable row per set-aside step, for the parked state. Each row closes
+  // over its own id, so tapping row N can only ever resume row N.
+  const parkedRows = useMemo<FocusParkedRow[]>(
+    () =>
+      stepRows
+        .filter((s) => s.status === StepStatus.paused)
+        .map((s) => ({
+          id: s.id,
+          title: s.title ?? "",
+          onResume: () => handleResumeStep(s.id),
+        })),
+    [stepRows, handleResumeStep],
+  );
+
   if (!goal) {
     return (
       <View style={styles.centered}>
@@ -496,7 +559,13 @@ function FocusContent({
               dueDate={band?.dueDate}
             />
           )
-        ) : null}
+        ) : (
+          <NoActionableBody
+            stepCount={stepRows.length}
+            allStepsComplete={areAllStepsComplete(stepRows)}
+            parkedRows={parkedRows}
+          />
+        )}
       </View>
 
       {/* Capture sheet — pick a type, then capture. Reuses #409's capture mode

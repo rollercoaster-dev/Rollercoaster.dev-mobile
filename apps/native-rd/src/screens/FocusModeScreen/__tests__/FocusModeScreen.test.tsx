@@ -124,6 +124,10 @@ jest.mock("../../../db", () => {
         .map((e) => validateEvidenceType(e.type!));
       return captured.some((type) => planned.includes(type));
     },
+    // Faithful copy: an empty list is *not* complete, which is what makes the
+    // screen's stepless-goal branch (D6) distinguishable from the all-done one.
+    areAllStepsComplete: (rows: readonly { status: string | null }[]) =>
+      rows.length > 0 && rows.every((s) => s.status === "completed"),
     resolveStepDependencyBand: (
       step: {
         id: string;
@@ -398,6 +402,9 @@ describe("FocusModeScreen", () => {
       expect(
         screen.queryByText(t("focusMode:currentTask.inProgress.evidenceRequired")), // prettier-ignore
       ).toBeNull();
+      // Not the parked state either: "0 set aside" is nonsense for a goal that
+      // has no steps at all (#467 D6).
+      expect(screen.queryByText(t("focusMode:parked.heading"))).toBeNull();
     });
 
     it("shows the goal-not-found message when the goal is missing", () => {
@@ -464,26 +471,6 @@ describe("FocusModeScreen", () => {
       },
     );
 
-    // #466's D10 placeholder (fall back to the first paused / last step) is
-    // gone: the resolver's `none` now renders no step card at all. The dedicated
-    // parked and all-done screen states that fill this gap land in the next two
-    // commits, which rewrite these two tests to assert them.
-    it("renders no step card when every remaining step is set aside", () => {
-      setupQueries({
-        steps: [
-          step("step-1", { title: "Read docs", status: "paused" }),
-          step("step-2", { title: "Practice", status: "paused", ordinal: 1 }),
-        ],
-      });
-      renderWithProviders(<FocusModeScreen {...routeProps} />);
-
-      // Only the sub-header and the goal title — no card title header.
-      expect(screen.getAllByRole("header")).toHaveLength(2);
-      expect(
-        screen.queryByText(t("focusMode:currentTask.paused.pickUpCta")),
-      ).toBeNull();
-    });
-
     it("renders no step card when every step is done", () => {
       setupQueries({
         steps: [
@@ -504,8 +491,95 @@ describe("FocusModeScreen", () => {
     });
   });
 
+  describe("parked state (#467 D5/D9)", () => {
+    it("renders the parked state when every remaining step is set aside", () => {
+      setupQueries({
+        steps: [
+          step("step-1", { title: "Read docs", status: "paused" }),
+          step("step-2", { title: "Practice", status: "paused", ordinal: 1 }),
+        ],
+      });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      expect(screen.getByText(t("focusMode:parked.heading"))).toBeOnTheScreen();
+      expect(
+        screen.getByText(t("focusMode:parked.body", { count: 2 })),
+      ).toBeOnTheScreen();
+      // One resumable row per set-aside step, and no step card beside them.
+      expect(screen.getByTestId("focus-parked-row-step-1")).toBeOnTheScreen();
+      expect(screen.getByTestId("focus-parked-row-step-2")).toBeOnTheScreen();
+      expect(
+        screen.queryByText(t("focusMode:currentTask.paused.pickUpCta")),
+      ).toBeNull();
+    });
+
+    it("resumes that row's own step when a row is tapped", () => {
+      setupQueries({
+        steps: [
+          step("step-1", { title: "Read docs", status: "paused" }),
+          step("step-2", { title: "Practice", status: "paused", ordinal: 1 }),
+        ],
+      });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      fireEvent.press(screen.getByTestId("focus-parked-row-step-2"));
+      expect(mockResumeStep).toHaveBeenCalledWith("step-2");
+      expect(mockResumeStep).toHaveBeenCalledTimes(1);
+    });
+
+    it("surfaces a failed row resume as a toast rather than silently", () => {
+      // Parked rows go through runStepMutation like every other write (D7).
+      mockResumeStep.mockImplementationOnce(() => {
+        throw new Error("write failed");
+      });
+      setupQueries({
+        steps: [step("step-1", { title: "Read docs", status: "paused" })],
+      });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      fireEvent.press(screen.getByTestId("focus-parked-row-step-1"));
+      expect(
+        screen.getByText(
+          t("focusMode:errors.couldNotUpdateStep", { message: "write failed" }),
+        ),
+      ).toBeOnTheScreen();
+    });
+
+    it("prefers the parked state over the all-done one for a mixed goal", () => {
+      // Nothing actionable, but not every step is complete — the D5 ordering
+      // (all-done checked first) must not claim this goal as finished.
+      setupQueries({
+        steps: [
+          step("step-1", { title: "Read docs", status: "completed" }),
+          step("step-2", { title: "Practice", status: "paused", ordinal: 1 }),
+        ],
+      });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      expect(
+        screen.getByText(t("focusMode:parked.body", { count: 1 })),
+      ).toBeOnTheScreen();
+      expect(
+        screen.queryByText(t("focusMode:currentTask.allComplete.heading")),
+      ).toBeNull();
+    });
+
+    it("shows the card, not the parked state, while a step is still actionable", () => {
+      setupQueries({
+        steps: [
+          step("step-1", { title: "Read docs", status: "paused" }),
+          step("step-2", { title: "Practice", ordinal: 1 }),
+        ],
+      });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      expect(currentCardTitle()).toBe("Practice");
+      expect(screen.queryByText(t("focusMode:parked.heading"))).toBeNull();
+    });
+  });
+
   describe("set aside / pick back up / reopen (#417)", () => {
-    it("calls pauseStep and stays on the same step", () => {
+    it("calls pauseStep without navigating away", () => {
       setupQueries();
       renderWithProviders(<FocusModeScreen {...routeProps} />);
 
