@@ -890,7 +890,7 @@ Verify with `xcrun simctl list runtimes` → `iOS 26.5 (26.5 - 23F77)` and ~11 d
 **Also on a fresh install, before any of that:** `xcode-select -p` still points at `/Library/Developer/CommandLineTools`, so `xcodebuild` and `simctl` don't exist at all. These three need a password and cannot be run by an agent:
 
 ```bash
-sudo xcode-select -s /Applications/Xcode.app
+sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 sudo xcodebuild -license accept
 sudo xcodebuild -runFirstLaunch
 ```
