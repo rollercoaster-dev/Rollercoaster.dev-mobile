@@ -402,9 +402,12 @@ describe("FocusModeScreen", () => {
       expect(
         screen.queryByText(t("focusMode:currentTask.inProgress.evidenceRequired")), // prettier-ignore
       ).toBeNull();
-      // Not the parked state either: "0 set aside" is nonsense for a goal that
-      // has no steps at all (#467 D6).
+      // Neither the parked nor the all-done state: "0 set aside" and "every step
+      // done" are both nonsense for a goal with no steps at all (#467 D6).
       expect(screen.queryByText(t("focusMode:parked.heading"))).toBeNull();
+      expect(
+        screen.queryByText(t("focusMode:currentTask.allComplete.heading")),
+      ).toBeNull();
     });
 
     it("shows the goal-not-found message when the goal is missing", () => {
@@ -470,24 +473,71 @@ describe("FocusModeScreen", () => {
         expect(screen.getByText(t(`focusMode:${ctaKey}`))).toBeOnTheScreen();
       },
     );
+  });
 
-    it("renders no step card when every step is done", () => {
-      setupQueries({
-        steps: [
-          step("step-1", { title: "Read docs", status: "completed" }),
-          step("step-2", {
-            title: "Practice",
-            status: "completed",
-            ordinal: 1,
-          }),
-        ],
-      });
+  describe("all-done state (#467 D5/D8)", () => {
+    const ALL_DONE_STEPS = [
+      step("step-1", { title: "Read docs", status: "completed" }),
+      step("step-2", { title: "Practice", status: "completed", ordinal: 1 }),
+    ];
+
+    it("renders the all-complete card when every step is done", () => {
+      setupQueries({ steps: ALL_DONE_STEPS });
       renderWithProviders(<FocusModeScreen {...routeProps} />);
 
-      expect(screen.getAllByRole("header")).toHaveLength(2);
+      expect(
+        screen.getByText(t("focusMode:currentTask.allComplete.heading")),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByText(t("focusMode:currentTask.allComplete.body")),
+      ).toBeOnTheScreen();
+      // Not a per-step card: no "Reopen this step" for the last completed step.
       expect(
         screen.queryByText(t("focusMode:currentTask.completed.reopenCta")),
       ).toBeNull();
+    });
+
+    it("opens CompletionFlow from Design your badge", () => {
+      setupQueries({ steps: ALL_DONE_STEPS });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      fireEvent.press(
+        screen.getByLabelText(
+          t("focusMode:currentTask.allComplete.designBadgeA11y"),
+        ),
+      );
+      expect(mockNavigate).toHaveBeenCalledWith("CompletionFlow", {
+        goalId: "goal-1",
+      });
+    });
+
+    it("reaches the all-done state by completing the last pending step", () => {
+      setupQueries({
+        steps: [
+          step("step-1", { title: "Read docs", status: "completed" }),
+          step("step-2", { title: "Practice", ordinal: 1 }),
+        ],
+        stepEvidence: [{ id: "ev-1", type: "text", stepId: "step-2" }],
+      });
+      const { rerender } = renderWithProviders(
+        <FocusModeScreen {...routeProps} />,
+      );
+      expect(currentCardTitle()).toBe("Practice");
+
+      fireEvent.press(
+        screen.getByLabelText(
+          t("focusMode:currentTask.inProgress.markCompleteA11y"),
+        ),
+      );
+      setupQueries({
+        steps: ALL_DONE_STEPS,
+        stepEvidence: [{ id: "ev-1", type: "text", stepId: "step-2" }],
+      });
+      rerender(<FocusModeScreen {...routeProps} />);
+
+      expect(
+        screen.getByText(t("focusMode:currentTask.allComplete.heading")),
+      ).toBeOnTheScreen();
     });
   });
 

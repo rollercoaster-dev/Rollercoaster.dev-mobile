@@ -113,13 +113,25 @@ function NoActionableBody({
   stepCount,
   allStepsComplete,
   parkedRows,
+  goalTitle,
+  onDesignBadge,
 }: {
   stepCount: number;
   allStepsComplete: boolean;
   parkedRows: readonly FocusParkedRow[];
+  goalTitle: string;
+  onDesignBadge: () => void;
 }) {
   if (stepCount === 0) return null;
-  if (allStepsComplete) return null;
+  if (allStepsComplete) {
+    return (
+      <FocusCurrentTaskCard
+        status="all-complete"
+        title={goalTitle}
+        onDesignBadge={onDesignBadge}
+      />
+    );
+  }
   // Scrolled at the call site, not inside FocusParkedState: its own `rows`
   // container is a plain gap-only View, and a goal can have more set-aside steps
   // than fit one screen (D9).
@@ -476,6 +488,12 @@ function FocusContent({
     navigation.navigate("EditMode", { goalId, cameFromFocus: true });
   }, [goalId, navigation]);
 
+  // The same finishing entry point every other surface uses (TimelineJourney's
+  // FinishLine badge CTA) — one route, so #449 has a single path to retire (D8).
+  const handleDesignBadge = useCallback(() => {
+    navigation.navigate("CompletionFlow", { goalId });
+  }, [goalId, navigation]);
+
   // One resumable row per set-aside step, for the parked state. Each row closes
   // over its own id, so tapping row N can only ever resume row N.
   const parkedRows = useMemo<FocusParkedRow[]>(
@@ -564,6 +582,8 @@ function FocusContent({
             stepCount={stepRows.length}
             allStepsComplete={areAllStepsComplete(stepRows)}
             parkedRows={parkedRows}
+            goalTitle={goal.title ?? ""}
+            onDesignBadge={handleDesignBadge}
           />
         )}
       </View>
