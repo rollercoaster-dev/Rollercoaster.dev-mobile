@@ -14,6 +14,9 @@ import { FocusModeScreen } from "../FocusModeScreen";
 
 const mockGoBack = jest.fn();
 const mockNavigate = jest.fn();
+// The shared navigation stub has no `setParams`; the screen calls it to consume
+// the Timeline-return `stepId` param (#467 D2), so it needs one here.
+const mockSetParams = jest.fn();
 jest.mock("@react-navigation/native", () => {
   const actual = jest.requireActual("../../../__tests__/mocks/navigation");
   let navigation: ReturnType<typeof actual.useNavigation> | undefined;
@@ -24,6 +27,7 @@ jest.mock("@react-navigation/native", () => {
         ...actual.useNavigation(),
         goBack: mockGoBack,
         navigate: mockNavigate,
+        setParams: mockSetParams,
       };
       return navigation;
     }),
@@ -283,6 +287,14 @@ const routeProps = {
   navigation: {} as never,
 };
 
+/** Route props as the Timeline-return leg passes them: a tapped step's id. */
+function routePropsForStep(stepId: string) {
+  return {
+    ...routeProps,
+    route: { ...routeProps.route, params: { goalId: "goal-1", stepId } },
+  };
+}
+
 function setupQueries({
   goal = GOAL,
   steps = PHOTO_STEP,
@@ -429,6 +441,10 @@ describe("FocusModeScreen", () => {
   });
 
   describe("step state mapping", () => {
+    // Routed with the step pinned (#467 D2). The resolver skips paused and
+    // completed steps, so those two variants are only ever on screen because the
+    // user tapped that node in the Timeline — pinning is how the screen reaches
+    // them at all now that auto-advance owns the unpinned case.
     it.each([
       ["pending", "pending", "currentTask.inProgress.pauseCta"],
       ["paused", "paused", "currentTask.paused.pickUpCta"],
@@ -439,16 +455,20 @@ describe("FocusModeScreen", () => {
         setupQueries({
           steps: [step("step-1", { title: "Read docs", status })],
         });
-        renderWithProviders(<FocusModeScreen {...routeProps} />);
+        renderWithProviders(
+          <FocusModeScreen {...routePropsForStep("step-1")} />,
+        );
 
         expect(currentCardTitle()).toBe("Read docs");
         expect(screen.getByText(t(`focusMode:${ctaKey}`))).toBeOnTheScreen();
       },
     );
 
-    it("falls back to a paused step when nothing is actionable", () => {
-      // Resolver returns `none` for an all-paused goal; the screen still shows
-      // that step's own card rather than an empty body (D10).
+    // #466's D10 placeholder (fall back to the first paused / last step) is
+    // gone: the resolver's `none` now renders no step card at all. The dedicated
+    // parked and all-done screen states that fill this gap land in the next two
+    // commits, which rewrite these two tests to assert them.
+    it("renders no step card when every remaining step is set aside", () => {
       setupQueries({
         steps: [
           step("step-1", { title: "Read docs", status: "paused" }),
@@ -457,13 +477,14 @@ describe("FocusModeScreen", () => {
       });
       renderWithProviders(<FocusModeScreen {...routeProps} />);
 
-      expect(currentCardTitle()).toBe("Read docs");
+      // Only the sub-header and the goal title — no card title header.
+      expect(screen.getAllByRole("header")).toHaveLength(2);
       expect(
-        screen.getByText(t("focusMode:currentTask.paused.pickUpCta")),
-      ).toBeOnTheScreen();
+        screen.queryByText(t("focusMode:currentTask.paused.pickUpCta")),
+      ).toBeNull();
     });
 
-    it("falls back to the last step when every step is done", () => {
+    it("renders no step card when every step is done", () => {
       setupQueries({
         steps: [
           step("step-1", { title: "Read docs", status: "completed" }),
@@ -476,10 +497,10 @@ describe("FocusModeScreen", () => {
       });
       renderWithProviders(<FocusModeScreen {...routeProps} />);
 
-      expect(currentCardTitle()).toBe("Practice");
+      expect(screen.getAllByRole("header")).toHaveLength(2);
       expect(
-        screen.getByText(t("focusMode:currentTask.completed.reopenCta")),
-      ).toBeOnTheScreen();
+        screen.queryByText(t("focusMode:currentTask.completed.reopenCta")),
+      ).toBeNull();
     });
   });
 
@@ -497,7 +518,7 @@ describe("FocusModeScreen", () => {
 
     it("calls resumeStep from a paused card", () => {
       setupQueries({ steps: [step("step-1", { status: "paused" })] });
-      renderWithProviders(<FocusModeScreen {...routeProps} />);
+      renderWithProviders(<FocusModeScreen {...routePropsForStep("step-1")} />);
 
       fireEvent.press(
         screen.getByLabelText(t("focusMode:currentTask.paused.pickUpA11y")),
@@ -507,7 +528,7 @@ describe("FocusModeScreen", () => {
 
     it("calls uncompleteStep from a completed card", () => {
       setupQueries({ steps: [step("step-1", { status: "completed" })] });
-      renderWithProviders(<FocusModeScreen {...routeProps} />);
+      renderWithProviders(<FocusModeScreen {...routePropsForStep("step-1")} />);
 
       fireEvent.press(
         screen.getByLabelText(t("focusMode:currentTask.completed.reopenA11y")),
@@ -573,7 +594,7 @@ describe("FocusModeScreen", () => {
         error: new Error("write rejected"),
       } as never);
       setupQueries({ steps: [step("step-1", { status: "completed" })] });
-      renderWithProviders(<FocusModeScreen {...routeProps} />);
+      renderWithProviders(<FocusModeScreen {...routePropsForStep("step-1")} />);
       const reopen = screen.getByLabelText(
         t("focusMode:currentTask.completed.reopenA11y"),
       );
@@ -589,7 +610,7 @@ describe("FocusModeScreen", () => {
   });
 
   describe("current-step resolution while mounted", () => {
-    it("holds the same step when its status changes under it", () => {
+    it("auto-advances to the next actionable step once the focused step completes", () => {
       setupQueries({
         steps: [
           step("step-1", { title: "Read docs" }),
@@ -601,8 +622,8 @@ describe("FocusModeScreen", () => {
       );
       expect(currentCardTitle()).toBe("Read docs");
 
-      // Completing step-1 must not jump the screen to step-2 (#467 D1 owns
-      // auto-advance).
+      // The query re-emits with step-1 completed — the card must move on rather
+      // than sit on the finished step (#467 D1 replaces #466's resolve-and-hold).
       setupQueries({
         steps: [
           step("step-1", { title: "Read docs", status: "completed" }),
@@ -611,10 +632,69 @@ describe("FocusModeScreen", () => {
       });
       rerender(<FocusModeScreen {...routeProps} />);
 
-      expect(currentCardTitle()).toBe("Read docs");
+      expect(currentCardTitle()).toBe("Practice");
     });
 
-    it("re-resolves when the held step is gone from the rows", () => {
+    it("advances past a step that was set aside", () => {
+      setupQueries({
+        steps: [
+          step("step-1", { title: "Read docs" }),
+          step("step-2", { title: "Practice", ordinal: 1 }),
+        ],
+      });
+      const { rerender } = renderWithProviders(
+        <FocusModeScreen {...routeProps} />,
+      );
+
+      fireEvent.press(
+        screen.getByLabelText(t("focusMode:currentTask.inProgress.pauseA11y")),
+      );
+      expect(mockPauseStep).toHaveBeenCalledWith("step-1");
+
+      setupQueries({
+        steps: [
+          step("step-1", { title: "Read docs", status: "paused" }),
+          step("step-2", { title: "Practice", ordinal: 1 }),
+        ],
+      });
+      rerender(<FocusModeScreen {...routeProps} />);
+
+      expect(currentCardTitle()).toBe("Practice");
+    });
+
+    it("lands on the parent once its last pending sub-step completes", () => {
+      // The static resolution table below proves the resolver's answer on first
+      // render; this proves a *live* child → parent transition reaches it.
+      const steps = (drillBStatus: string) => [
+        step("step-1", { title: "Read docs", status: "completed" }),
+        step("step-2", { title: "Practice", ordinal: 1 }),
+        step("step-2a", { title: "Drill A", status: "completed", parentStepId: "step-2" }), // prettier-ignore
+        step("step-2b", { title: "Drill B", status: drillBStatus, ordinal: 1, parentStepId: "step-2" }), // prettier-ignore
+      ];
+      const evidence = [{ id: "ev-1", type: "text", stepId: "step-2b" }];
+      setupQueries({ steps: steps("pending"), stepEvidence: evidence });
+      const { rerender } = renderWithProviders(
+        <FocusModeScreen {...routeProps} />,
+      );
+      expect(currentCardTitle()).toBe("Drill B");
+
+      fireEvent.press(
+        screen.getByLabelText(
+          t("focusMode:currentTask.inProgress.markCompleteA11y"),
+        ),
+      );
+      expect(mockCompleteStep).toHaveBeenCalledWith("step-2b", null, [
+        { type: "text" },
+      ]);
+
+      setupQueries({ steps: steps("completed"), stepEvidence: evidence });
+      rerender(<FocusModeScreen {...routeProps} />);
+
+      // Every child done → the resolver's `invite` on the parent itself.
+      expect(currentCardTitle()).toBe("Practice");
+    });
+
+    it("re-resolves when the focused step is gone from the rows", () => {
       setupQueries({
         steps: [
           step("step-1", { title: "Read docs" }),
@@ -632,6 +712,62 @@ describe("FocusModeScreen", () => {
       rerender(<FocusModeScreen {...routeProps} />);
 
       expect(currentCardTitle()).toBe("Practice");
+    });
+  });
+
+  describe("Timeline return leg (#467 D2)", () => {
+    const TWO_PENDING = [
+      step("step-1", { title: "Read docs" }),
+      step("step-2", { title: "Practice", ordinal: 1 }),
+    ];
+
+    it("lands on the tapped step instead of the resolver's pick", () => {
+      // The resolver would pick step-1 (first pending); the route param wins.
+      setupQueries({ steps: TWO_PENDING });
+      renderWithProviders(<FocusModeScreen {...routePropsForStep("step-2")} />);
+
+      expect(currentCardTitle()).toBe("Practice");
+    });
+
+    it("consumes the param so a later arrival cannot re-pin a stale step", () => {
+      setupQueries({ steps: TWO_PENDING });
+      renderWithProviders(<FocusModeScreen {...routePropsForStep("step-2")} />);
+
+      expect(mockSetParams).toHaveBeenCalledWith({ stepId: undefined });
+    });
+
+    it("ignores a pinned id that is not in the rows", () => {
+      // EditMode can delete the step between the Timeline tap and this render.
+      setupQueries({ steps: TWO_PENDING });
+      renderWithProviders(<FocusModeScreen {...routePropsForStep("gone")} />);
+
+      expect(currentCardTitle()).toBe("Read docs");
+    });
+
+    it("drops the pin once the user acts on the pinned step", () => {
+      setupQueries({
+        steps: [
+          step("step-1", { title: "Read docs" }),
+          step("step-2", { title: "Practice", status: "paused", ordinal: 1 }),
+        ],
+      });
+      const { rerender } = renderWithProviders(
+        <FocusModeScreen {...routePropsForStep("step-2")} />,
+      );
+      expect(currentCardTitle()).toBe("Practice");
+
+      fireEvent.press(
+        screen.getByLabelText(t("focusMode:currentTask.paused.pickUpA11y")),
+      );
+      expect(mockResumeStep).toHaveBeenCalledWith("step-2");
+
+      // step-2 is still in the rows, so a *held* pin would keep showing it. With
+      // the pin dropped, resolution is back to the resolver — which picks
+      // step-1, the earlier pending step.
+      setupQueries({ steps: TWO_PENDING });
+      rerender(<FocusModeScreen {...routePropsForStep("step-2")} />);
+
+      expect(currentCardTitle()).toBe("Read docs");
     });
   });
 

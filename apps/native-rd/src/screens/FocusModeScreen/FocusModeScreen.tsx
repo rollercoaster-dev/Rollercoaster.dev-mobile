@@ -6,7 +6,8 @@ import {
   KeyboardAvoidingView,
 } from "react-native";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
-import { useNavigation, type NavigationProp } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@evolu/react";
 import type { Result } from "@evolu/common";
 import { Pencil } from "phosphor-react-native";
@@ -82,24 +83,31 @@ type StepRowLike = {
  * Which step Focus Mode is "on".
  *
  * The actionable step per {@link resolveNextActionableStep} (leaf / invite /
- * flat, orphan-promotion included — #292/#337). When nothing is actionable the
- * goal is either fully set aside or fully done, and the resolver reports
- * `none` for both; fall back to the first paused step, then to the last step,
- * so the screen still shows that step's own card (paused → "Pick this back
- * up", completed → "Reopen") rather than nothing at all. The dedicated
- * all-paused and all-done *screens* are #467's (D10).
+ * flat, orphan-promotion included — #292/#337), and `null` when nothing is
+ * actionable. Nothing actionable means the goal is either fully set aside or
+ * fully done, and the screen renders a dedicated state for each (#467 D5/D6) —
+ * so this returns no fallback step rather than picking one.
  */
 function resolveFocusStepId(rows: readonly StepRowLike[]): string | null {
   const actionable = resolveNextActionableStep(rows);
-  if (actionable.kind !== "none") return rows[actionable.index]?.id ?? null;
-  const paused = rows.find((r) => r.status === StepStatus.paused);
-  if (paused) return paused.id;
-  return rows[rows.length - 1]?.id ?? null;
+  if (actionable.kind === "none") return null;
+  return rows[actionable.index]?.id ?? null;
 }
 
-function FocusContent({ goalId }: { goalId: string }) {
+function FocusContent({
+  goalId,
+  routeStepId,
+}: {
+  goalId: string;
+  /** The Timeline-return leg's tapped step, if this visit came from there. */
+  routeStepId?: string;
+}) {
   const { t, i18n } = useTranslation(["focusMode", "common"]);
-  const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
+  // Route-scoped so `setParams` is typed against FocusMode's own params (D10).
+  const navigation =
+    useNavigation<
+      NativeStackNavigationProp<GoalsStackParamList, "FocusMode">
+    >();
   const { showToast } = useToast();
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
@@ -116,11 +124,12 @@ function FocusContent({ goalId }: { goalId: string }) {
     stepEvidenceByGoalQuery(goalId as GoalId),
   );
 
-  // The step this screen is focused on. Resolved when rows first arrive and
-  // then held: completing or setting aside the current step re-renders *that
-  // same step* in its new state rather than jumping to another one.
-  // Auto-advance-on-complete is #467's (D1).
-  const [currentStepId, setCurrentStepId] = useState<string | null>(null);
+  // The Timeline-return pin (D2): a one-shot override of the derived step,
+  // holding whichever node the user tapped in TimelineJourney so they land on
+  // that exact step even when it is done or set aside. Cleared on the first
+  // step-toggle mutation (see `runStepMutation`), after which the screen follows
+  // auto-advance again.
+  const [pinnedStepId, setPinnedStepId] = useState<string | null>(null);
   // Authoring sheet: change which evidence types this step plans.
   const [isPlanSheetOpen, setIsPlanSheetOpen] = useState(false);
   // Capture sheet: pick a type to capture right now, with none pre-implied.
@@ -133,18 +142,32 @@ function FocusContent({ goalId }: { goalId: string }) {
     };
   }, []);
 
-  // Resolve on the first non-empty emission, and re-resolve only when the held
-  // id is no longer in the rows — the screen can stay mounted while EditMode
-  // deletes or reparents steps, and a dangling id would leave the card section
-  // empty. A status change keeps the id present, so "held" still holds.
-  useEffect(() => {
-    if (stepRows.length === 0) return;
-    setCurrentStepId((prev) =>
-      prev !== null && stepRows.some((s) => s.id === prev)
-        ? prev
-        : resolveFocusStepId(stepRows),
-    );
-  }, [stepRows]);
+  // Consume the Timeline-return param on every focus transition, not once on
+  // mount: this screen is already mounted *underneath* TimelineJourney, so a
+  // node tap re-focuses this instance rather than remounting it. `useFocusEffect`
+  // also fires when the same node is tapped twice in a row, which a
+  // `[route.params.stepId]`-keyed `useEffect` would skip (D2).
+  //
+  // Clearing the param is the other half: left set, any later arrival here from
+  // an unrelated path would silently re-pin a by-then-stale step and undo
+  // whatever auto-advance happened in between.
+  useFocusEffect(
+    useCallback(() => {
+      if (!routeStepId) return;
+      setPinnedStepId(routeStepId);
+      navigation.setParams({ stepId: undefined });
+    }, [routeStepId, navigation]),
+  );
+
+  // Pure derivation, no held state (D1): the resolver runs against the live
+  // query rows on every render, so completing / setting aside / resuming /
+  // reopening a step auto-advances the card to whatever became actionable — and
+  // a step deleted out from under the screen (EditMode, still mounted) can never
+  // leave a dangling id behind.
+  const currentStepId =
+    pinnedStepId !== null && stepRows.some((s) => s.id === pinnedStepId)
+      ? pinnedStepId
+      : resolveFocusStepId(stepRows);
 
   const currentStep = useMemo(
     () => stepRows.find((s) => s.id === currentStepId) ?? null,
@@ -261,7 +284,12 @@ function FocusContent({ goalId }: { goalId: string }) {
           duration: 3000,
         });
       });
-      if (ok && announcement) {
+      if (!ok) return;
+      // Acting on the step is the second way the Timeline pin is consumed (D2):
+      // from here on the card follows auto-advance rather than staying on the
+      // step the user arrived at.
+      if (kind === "step-toggle") setPinnedStepId(null);
+      if (announcement) {
         AccessibilityInfo.announceForAccessibility(announcement);
       }
     },
@@ -523,7 +551,10 @@ export function FocusModeScreen({ route }: FocusModeNavProps) {
               <ActivityIndicator style={styles.loadingIndicator} size="large" />
             }
           >
-            <FocusContent goalId={route.params.goalId} />
+            <FocusContent
+              goalId={route.params.goalId}
+              routeStepId={route.params.stepId}
+            />
           </Suspense>
         </ErrorBoundary>
       </KeyboardAvoidingView>
