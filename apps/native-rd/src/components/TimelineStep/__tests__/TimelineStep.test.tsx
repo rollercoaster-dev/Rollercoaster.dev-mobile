@@ -78,13 +78,13 @@ describe("TimelineStep", () => {
     expect(screen.getByText("No evidence yet")).toBeOnTheScreen();
   });
 
-  it("calls onNodePress when node is tapped", () => {
+  it("calls onNodePress with the step's own id when node is tapped", () => {
     const onNodePress = jest.fn();
     renderWithProviders(
       <TimelineStep {...baseProps} stepIndex={2} onNodePress={onNodePress} />,
     );
     fireEvent.press(screen.getByLabelText("Go to step 3: Read the docs"));
-    expect(onNodePress).toHaveBeenCalledWith(2);
+    expect(onNodePress).toHaveBeenCalledWith("step-1");
   });
 
   it("calls onEvidencePress with evidence id when an evidence card is tapped", () => {
@@ -390,7 +390,9 @@ describe("TimelineStep", () => {
       expect(screen.getByText("No evidence yet")).toBeOnTheScreen();
     });
 
-    it("calls onNodePress with the parent index when a sub-step node is tapped", () => {
+    it("calls onNodePress with the sub-step's own id, not its parent's", () => {
+      // Pre-#467 this reported the parent's *index* — a tapped sub-step named
+      // the wrong step, invisible only because the handler ignored its argument.
       const onNodePress = jest.fn();
       renderWithProviders(
         <TimelineStep
@@ -401,7 +403,7 @@ describe("TimelineStep", () => {
         />,
       );
       fireEvent.press(screen.getByLabelText("Go to step b: Sub two"));
-      expect(onNodePress).toHaveBeenCalledWith(2);
+      expect(onNodePress).toHaveBeenCalledWith("p2");
     });
   });
 });

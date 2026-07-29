@@ -428,12 +428,13 @@ describe("TimelineJourneyScreen", () => {
     expect(mockParentNavigate).not.toHaveBeenCalled();
   });
 
-  it("step node press navigates to FocusMode", () => {
+  it("step node press navigates to FocusMode with the tapped step's id", () => {
     setupQueries();
     renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
     fireEvent.press(screen.getByLabelText("Go to step 1: Read docs"));
     expect(mockNavigate).toHaveBeenCalledWith("FocusMode", {
       goalId: "goal-1",
+      stepId: "step-1",
     });
   });
 
