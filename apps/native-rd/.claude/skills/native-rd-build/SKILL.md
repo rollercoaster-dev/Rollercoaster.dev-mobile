@@ -3,7 +3,7 @@ name: native-rd-build
 description: Build native-rd for any target — local iOS simulator/device, local Release builds, EAS development/preview/production, Android (when generated). Use when the user hits a build failure, asks how to produce a build of any kind, needs to diagnose runtime errors that look build-related ("No script URL provided", missing assets, signing issues), or wants to understand what `eas.json` / `app.json` / `Podfile.properties.json` settings actually do. Also use as a pre-flight checklist before starting a fresh build.
 metadata:
   author: rollercoaster.dev
-  version: "2.7.0"
+  version: "2.8.0"
 ---
 
 # native-rd Build Playbook
@@ -31,6 +31,8 @@ Android toolchain versions the Expo root project actually resolves (printed as `
 **If yes, default to the GUI flow, not the CLI matrix below.** The whole rest of this skill is CLI-first because that is the right default for autonomous agent work — but when the user explicitly names the GUI tool, that overrides the CLI default. Don't redirect them to `bun run ios` / `bun run android`.
 
 ### iOS — first-time setup in Xcode.app
+
+**Brand-new Xcode install?** Do Gotcha 16 first (`xcode-select` switch + license + the 8.5 GB simulator runtime), or there will be no destination to build to.
 
 ```bash
 cd apps/native-rd
@@ -863,6 +865,45 @@ Then recreate the AVD — moving the directory by hand leaves absolute paths ins
 **Survives `expo prebuild`?** Yes — AVDs are global, not per-project.
 
 **Does this affect EAS?** No.
+
+---
+
+## Gotcha 16 — Fresh Xcode 26 install ships zero simulator runtimes
+
+`[VERIFIED 2026-07-29]`
+
+**Symptom:** on a machine where Xcode.app was just installed, Xcode's destination dropdown lists no simulators and `npx expo run:ios` has nothing to target. `xcodebuild -showsdks` is misleading — it lists `Simulator - iOS 26.5`, because the **SDK** is bundled while the **runtime** is a separate ~8.5 GB download. The honest checks:
+
+```bash
+xcrun simctl list runtimes            # "== Runtimes ==" with nothing under it
+xcrun simctl list devices available   # "== Devices ==" with nothing under it
+```
+
+**Fix:**
+
+```bash
+xcodebuild -downloadPlatform iOS      # ~8.5 GB, installs itself, NO sudo needed
+```
+
+Verify with `xcrun simctl list runtimes` → `iOS 26.5 (26.5 - 23F77)` and ~11 devices (iPhone 17 Pro / 17 / Air / 17e, iPads).
+
+**Also on a fresh install, before any of that:** `xcode-select -p` still points at `/Library/Developer/CommandLineTools`, so `xcodebuild` and `simctl` don't exist at all. These three need a password and cannot be run by an agent:
+
+```bash
+sudo xcode-select -s /Applications/Xcode.app
+sudo xcodebuild -license accept
+sudo xcodebuild -runFirstLaunch
+```
+
+`xcodebuild -checkFirstLaunchStatus; echo $?` → `0` means the components are in.
+
+**Restart Xcode after the runtime installs.** An Xcode session opened beforehand can keep showing an empty destination list.
+
+**Simulator builds need no signing.** A fresh machine has 0 codesigning identities (`security find-identity -v -p codesigning`) and the generated project sets no `DEVELOPMENT_TEAM` — ▶ to a simulator works anyway. Team `86VL756N99` and an Apple ID in Xcode → Settings → Accounts are only required for device builds.
+
+**Survives `expo prebuild`?** N/A — machine-level, not project state.
+
+**Does this affect EAS?** No — cloud builders bring their own toolchain.
 
 ---
 
