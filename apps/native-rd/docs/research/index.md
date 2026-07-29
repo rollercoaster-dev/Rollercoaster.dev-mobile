@@ -17,3 +17,4 @@ Completed research documents. These informed ADRs but are not the decisions them
 | [duotone-opacity-slider.md](./duotone-opacity-slider.md)                             | Slider lib evaluation for duotone fill opacity in Icon tab   | 2026-06-07    |
 | [evolu-step-model-feasibility-spike.md](./evolu-step-model-feasibility-spike.md)     | Phase B data-layer spike: recursive Steps, sibling order, E  | 2026-06-11    |
 | [pear-p2p-evaluation.md](./pear-p2p-evaluation.md)                                   | Holepunch Pear P2P runtime fit: transport not verification   | 2026-07-01    |
+| [atproto-evaluation.md](./atproto-evaluation.md)                                     | AT Protocol fit: public badge hosting + identity, not sync   | 2026-07-29    |
