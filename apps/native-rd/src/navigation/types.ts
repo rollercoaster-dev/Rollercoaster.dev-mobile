@@ -24,7 +24,16 @@ export type CaptureScreenName = keyof CaptureRoutes;
 
 export type GoalsStackParamList = {
   Goals: undefined;
-  FocusMode: { goalId: string };
+  FocusMode: {
+    goalId: string;
+    /**
+     * Set only by the Timeline-return leg (a node tap in TimelineJourney).
+     * Presence pins Focus Mode to that step for one visit instead of letting
+     * `resolveNextActionableStep` pick; the screen consumes it on focus and
+     * clears it again, so it can never re-pin a stale step later (#467 D2/D4).
+     */
+    stepId?: string;
+  };
   CompletionFlow: { goalId: string };
   TimelineJourney: {
     goalId: string;

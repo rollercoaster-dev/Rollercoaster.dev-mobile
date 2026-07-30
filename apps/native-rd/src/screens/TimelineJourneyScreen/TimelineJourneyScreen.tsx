@@ -193,8 +193,11 @@ function TimelineContent({
     navigation.navigate("FocusMode", { goalId });
   };
 
-  const handleNodePress = (_stepIndex: number) => {
-    navigation.navigate("FocusMode", { goalId });
+  // The return leg (#467): Focus Mode lands on the *tapped* step rather than on
+  // whatever `resolveNextActionableStep` would otherwise pick, so tapping a
+  // done or set-aside node shows that step's own card.
+  const handleNodePress = (stepId: string) => {
+    navigation.navigate("FocusMode", { goalId, stepId });
   };
 
   const handleEvidencePress = (evidenceId: string) => {

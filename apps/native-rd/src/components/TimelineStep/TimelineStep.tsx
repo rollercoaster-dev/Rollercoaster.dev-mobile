@@ -50,7 +50,12 @@ export interface TimelineStepProps {
   step: TimelineStepData;
   stepIndex: number;
   evidence: EvidenceItemData[];
-  onNodePress: (stepIndex: number) => void;
+  /**
+   * Go to the tapped node's step. Receives the tapped step's **own** id — a
+   * sub-step node reports the sub-step, never its parent (#467 D3), so the
+   * Focus Mode return leg lands on exactly what was tapped.
+   */
+  onNodePress: (stepId: string) => void;
   onEvidencePress: (evidenceId: string) => void;
   defaultExpanded?: boolean;
   /** Sub-steps shown as an indented sub-spine under this step. Empty = flat step. */
@@ -80,7 +85,7 @@ export function TimelineStep({
           <TimelineNode
             status={step.status}
             stepNumber={stepIndex + 1}
-            onPress={() => onNodePress(stepIndex)}
+            onPress={() => onNodePress(step.id)}
             accessibilityLabel={t("timelineJourney:step.a11yGoTo", {
               number: stepIndex + 1,
               title: step.title,
@@ -140,7 +145,6 @@ export function TimelineStep({
               key={child.id}
               child={child}
               ordinal={toLetterOrdinal(index)}
-              parentIndex={stepIndex}
               onNodePress={onNodePress}
               onEvidencePress={onEvidencePress}
             />
@@ -160,14 +164,12 @@ export function TimelineStep({
 function ChildRow({
   child,
   ordinal,
-  parentIndex,
   onNodePress,
   onEvidencePress,
 }: {
   child: TimelineStepChild;
   ordinal: string;
-  parentIndex: number;
-  onNodePress: (stepIndex: number) => void;
+  onNodePress: (stepId: string) => void;
   onEvidencePress: (evidenceId: string) => void;
 }) {
   const { t } = useTranslation(["timelineJourney"]);
@@ -183,7 +185,7 @@ function ChildRow({
         status={child.status}
         size="sm"
         label={ordinal}
-        onPress={() => onNodePress(parentIndex)}
+        onPress={() => onNodePress(child.id)}
         accessibilityLabel={t("timelineJourney:step.a11yGoTo", {
           number: ordinal,
           title: child.title,

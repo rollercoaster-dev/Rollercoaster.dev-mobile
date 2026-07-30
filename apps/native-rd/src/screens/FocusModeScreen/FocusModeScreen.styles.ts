@@ -36,6 +36,15 @@ export const styles = StyleSheet.create((theme) => ({
     // beneath a pinned footer.
     paddingBottom: PILL_LIFT + theme.space[3],
   },
+  // The parked state's scroll body (D9). `flexGrow` lets a short list center in
+  // the section the way the card's own short states do, while a long one still
+  // scrolls. Tab-pill clearance already comes from `cardSection`, this ScrollView's
+  // parent — the padding here is just breathing room under the last row.
+  parkedScrollContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    paddingBottom: theme.space[3],
+  },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
