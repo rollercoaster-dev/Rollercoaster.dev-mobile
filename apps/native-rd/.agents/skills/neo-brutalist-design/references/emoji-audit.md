@@ -50,7 +50,10 @@ How each was resolved:
   (which is what makes `"+"` and `"✓"` callers work untouched, and what avoids the
   Android glyph+font bug documented on the prop); elements render as-is with the
   caller owning size and color, because only the caller knows the variant's
-  foreground. Empty strings render nothing rather than leaking a bare `""` child.
+  foreground. Branching on `typeof` rather than truthiness is what keeps a string
+  out of the element branch, where a bare `""` would be a text child outside a
+  `<Text>`; a separate `length > 0` check skips the run for `icon=""`, which would
+  otherwise be an empty `<Text>` still consuming the pressable's `gap`.
 
 Coverage: `TimelineNode`, `TimelineStep`, and `TimelineJourneyScreen` tests now
 assert the Pause icon by testID **and** that `⏸` is absent, so a regression back

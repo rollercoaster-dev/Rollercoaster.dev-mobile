@@ -62,10 +62,22 @@ describe("Button", () => {
     expect(screen.getByText("Resume")).toBeOnTheScreen();
   });
 
-  // An empty string must not reach the tree as a bare "" child (RN rejects
-  // strings outside <Text>) and must not open a gap where no icon exists.
+  // `icon=""` must not render an empty <Text> run: it would consume the
+  // pressable's `gap` and offset the label as if an icon were there.
   it("renders no icon run for an empty string icon", () => {
     renderWithProviders(<Button label="Plain" icon="" onPress={jest.fn()} />);
+    expect(
+      screen.queryByTestId("button-icon-run", { includeHiddenElements: true }),
+    ).toBeNull();
     expect(screen.getByText("Plain")).toBeOnTheScreen();
+  });
+
+  // The counterpart: a non-empty string does produce the run, so the assertion
+  // above is pinning the guard rather than a testID that never exists.
+  it("renders the icon run for a non-empty string icon", () => {
+    renderWithProviders(<Button label="Add" icon="+" onPress={jest.fn()} />);
+    expect(
+      screen.getByTestId("button-icon-run", { includeHiddenElements: true }),
+    ).toBeOnTheScreen();
   });
 });

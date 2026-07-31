@@ -65,15 +65,22 @@ export function Button({
   // A string icon gets its own <Text> run; an element renders as-is (see the
   // `icon` prop docs). `labelStyle` on that run carries only the variant's color
   // (no fontFamily), so the glyph tracks the label instead of the default text
-  // color — invisible on the primary button's dark fill. `length > 0` rather
-  // than a truthy check, so an empty string yields `false` — renderable —
-  // instead of a bare "" child, which RN rejects outside a <Text>.
+  // color — invisible on the primary button's dark fill.
+  //
+  // Two details, each doing a different job:
+  //   - Branching on `typeof icon === "string"` (not truthiness) is what keeps a
+  //     string out of the element branch. A bare "" returned from there would be
+  //     a string child outside a <Text>, which RN rejects.
+  //   - `icon.length > 0` skips the run for `icon=""`, which would otherwise be
+  //     an empty <Text> still consuming the pressable's `gap` and offsetting the
+  //     label. It yields `false`, which React ignores — nothing is rendered.
   const iconRun =
     typeof icon === "string"
       ? icon.length > 0 && (
           <Text
             style={[styles.icon(size), labelStyle]}
             accessibilityElementsHidden
+            testID="button-icon-run"
           >
             {icon}
           </Text>
