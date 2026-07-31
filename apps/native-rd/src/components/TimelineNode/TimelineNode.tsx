@@ -1,8 +1,9 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
+import { useUnistyles } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
 import type { StepStatus } from "../../types/steps";
-import { stepStateColorMap } from "./stepStateColorMap";
+import { stepStateColorMap, stepStateNodeFg } from "./stepStateColorMap";
 import {
   styles,
   NODE_SIZE,
@@ -50,6 +51,7 @@ export function TimelineNode({
   celebrate = false,
 }: TimelineNodeProps) {
   const isSmall = size === "sm";
+  const { theme } = useUnistyles();
 
   const nodeStyle = [
     styles.node,
@@ -73,15 +75,36 @@ export function TimelineNode({
     !isGoalNode && status === "paused" && styles.pausedText,
   ];
 
-  // Interior precedence: goal star → state glyph → label → step number. The
-  // number/label fall through to "" (not "0" or "undefined") when a caller
-  // supplies neither, so a misconfigured node renders blank rather than a
+  // A Phosphor icon for states whose marker would otherwise need an
+  // emoji-presentation codepoint — `paused` is the only one today. Goal nodes
+  // never take a state icon; they own the star. Sized to match the text glyphs
+  // below (`✓` uses the same tokens) so the two states have one optical weight,
+  // and colored from the same `stepStateNodeFg` the text styles resolve — which
+  // is the whole point: the old `⏸` emoji ignored it (design system Rule 8).
+  const StateIcon = isGoalNode ? undefined : stepStateColorMap[status].nodeIcon;
+
+  // Interior precedence: goal star → state icon → state glyph → label → step
+  // number. The number/label fall through to "" (not "0" or "undefined") when a
+  // caller supplies neither, so a misconfigured node renders blank rather than a
   // misleading glyph.
-  const content = isGoalNode
-    ? "★"
-    : (stepStateColorMap[status].nodeGlyph ??
-      label ??
-      (stepNumber != null ? String(stepNumber) : ""));
+  const content = StateIcon ? (
+    <StateIcon
+      size={isSmall ? theme.size.xs : theme.size.sm}
+      weight="bold"
+      color={stepStateNodeFg(theme, status)}
+      // The interior marker is not text, so it cannot be asserted with
+      // getByText the way `✓` and the step number are.
+      testID={`timeline-node-state-icon-${status}`}
+    />
+  ) : (
+    <Text style={textStyle}>
+      {isGoalNode
+        ? "★"
+        : (stepStateColorMap[status].nodeGlyph ??
+          label ??
+          (stepNumber != null ? String(stepNumber) : ""))}
+    </Text>
+  );
 
   // Expand touch target to meet 44×44pt minimum
   const nodeSize = isGoalNode
@@ -98,7 +121,7 @@ export function TimelineNode({
       accessibilityLabel={accessibilityLabel}
       style={nodeStyle}
     >
-      <Text style={textStyle}>{content}</Text>
+      {content}
     </View>
   ) : (
     <Pressable
@@ -109,7 +132,7 @@ export function TimelineNode({
       accessibilityLabel={accessibilityLabel}
       style={({ pressed }) => [nodeStyle, pressed && styles.pressed]}
     >
-      <Text style={textStyle}>{content}</Text>
+      {content}
     </Pressable>
   );
 

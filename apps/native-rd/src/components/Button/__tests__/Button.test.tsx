@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -28,18 +28,44 @@ describe("Button", () => {
   });
 
   // Regression: the icon run carried no color, so it fell back to the default
-  // text color and rendered invisibly on the primary button's dark fill. The
-  // icon must track the label color.
-  it("colors the icon to match the label", () => {
-    renderWithProviders(<Button label="Resume" icon="▶" onPress={jest.fn()} />);
+  // text color and rendered invisibly on the primary button's dark fill. A
+  // string icon must track the label color.
+  it("colors a string icon to match the label", () => {
+    renderWithProviders(<Button label="Add" icon="+" onPress={jest.fn()} />);
     // The icon run is accessibilityElementsHidden, so opt hidden elements in.
     const iconColor = StyleSheet.flatten(
-      screen.getByText("▶", { includeHiddenElements: true }).props.style,
+      screen.getByText("+", { includeHiddenElements: true }).props.style,
     ).color;
     const labelColor = StyleSheet.flatten(
-      screen.getByText("Resume").props.style,
+      screen.getByText("Add").props.style,
     ).color;
     expect(iconColor).toBeTruthy();
     expect(iconColor).toBe(labelColor);
+  });
+
+  // The element path exists so action icons can be Phosphor components instead
+  // of emoji (design system Rule 8). An element must render as-is — wrapping it
+  // in the string path's <Text> would break both its layout and its color.
+  it("renders an element icon without wrapping it in a text run", () => {
+    renderWithProviders(
+      <Button
+        label="Resume"
+        icon={<View testID="button-icon-element" />}
+        onPress={jest.fn()}
+      />,
+    );
+    expect(
+      screen.getByTestId("button-icon-element", {
+        includeHiddenElements: true,
+      }),
+    ).toBeOnTheScreen();
+    expect(screen.getByText("Resume")).toBeOnTheScreen();
+  });
+
+  // An empty string must not reach the tree as a bare "" child (RN rejects
+  // strings outside <Text>) and must not open a gap where no icon exists.
+  it("renders no icon run for an empty string icon", () => {
+    renderWithProviders(<Button label="Plain" icon="" onPress={jest.fn()} />);
+    expect(screen.getByText("Plain")).toBeOnTheScreen();
   });
 });

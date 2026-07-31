@@ -12,6 +12,8 @@
  * exception — see the TODO on the `paused` entry below.
  */
 
+import type { Icon } from "phosphor-react-native";
+import { Pause } from "phosphor-react-native";
 import type { Colors } from "../../themes/colorModes";
 import type { Journey } from "../../themes/adapter";
 import type { ComposedTheme } from "../../themes/compose";
@@ -55,8 +57,20 @@ interface StepStateBase {
    * apart in separate per-component resolvers.
    */
   stateWordI18nKey: StepStateWordKey;
-  /** Unicode glyph for the node interior, overriding the step number. */
+  /**
+   * Text-presentation glyph for the node interior, overriding the step number.
+   * Only for codepoints that honor `color` (e.g. `✓`) so the glyph tracks
+   * `stepStateNodeFg`. Anything emoji-presentation renders in the platform's
+   * color emoji font and ignores the theme — use {@link StepStateBase.nodeIcon}
+   * for those (design system Rule 8).
+   */
   nodeGlyph?: string;
+  /**
+   * Phosphor icon for the node interior, overriding both `nodeGlyph` and the
+   * step number. Rendered at the resolved `stepStateNodeFg` color so the state
+   * reads correctly in all 14 themes — which a `⏸` emoji could not do.
+   */
+  nodeIcon?: Icon;
 }
 
 export type StepStateEntry = StepStateBase &
@@ -112,7 +126,7 @@ export const stepStateColorMap: Record<StepStateMapKey, StepStateEntry> = {
     nodeFgColorsFallback: "text",
     badgeI18nKey: "common:stepCard.status.paused",
     stateWordI18nKey: "timelineJourney:step.stateWord.paused",
-    nodeGlyph: "⏸",
+    nodeIcon: Pause,
   },
 };
 

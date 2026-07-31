@@ -19,34 +19,43 @@ touch it.
 
 ## Tier A — Violations: emoji encoding an action or a state
 
-Must migrate to Phosphor. Ordered by user-visible impact.
+**All three migrated to Phosphor.** Kept here as the worked examples of what the
+rule catches and how each was resolved.
 
-| #   | Site                                                   | Glyph   | What it encodes                              | Suggested Phosphor                    |
-| --- | ------------------------------------------------------ | ------- | -------------------------------------------- | ------------------------------------- |
-| A1  | `src/components/TimelineNode/stepStateColorMap.ts:115` | `⏸`     | **state** — `paused` step node (`nodeGlyph`) | `PauseCircle` / `Pause` weight `bold` |
-| A2  | `src/components/AudioPlayer/AudioPlayer.tsx:59`        | `⏸` `▶` | **action** — play/pause transport control    | `Pause` / `Play` weight `fill`        |
-| A3  | `src/screens/GoalsScreen/GoalsCockpit.tsx:150`         | `▶`     | **action** — resume goal (`<Button icon>`)   | `Play` weight `fill`                  |
+| #   | Site                                               | Was     | What it encoded                            | Now                                                       |
+| --- | -------------------------------------------------- | ------- | ------------------------------------------ | --------------------------------------------------------- |
+| A1  | `src/components/TimelineNode/stepStateColorMap.ts` | `⏸`     | **state** — `paused` step node             | `nodeIcon: Pause`, weight `bold`, `stepStateNodeFg` color |
+| A2  | `src/components/AudioPlayer/AudioPlayer.tsx`       | `⏸` `▶` | **action** — play/pause transport control  | `Pause` / `Play`, weight `fill`, `colors.background`      |
+| A3  | `src/screens/GoalsScreen/GoalsCockpit.tsx`         | `▶`     | **action** — resume goal (`<Button icon>`) | `Play`, weight `fill`, `colors.background`                |
 
-What makes these three different from the accent emoji in Tiers B and C: the
-glyph is the **only** thing communicating the action or state. There is no
-adjacent word doing the work. A1 is a bare node interior, A2 toggles meaning
-between two glyphs with no label, A3 is a `<Button icon>` sitting beside a label
-that says "Resume" but relies on the glyph for the play affordance.
+What made these three different from the accent emoji in Tiers B and C: the glyph
+was the **only** thing communicating the action or state. No adjacent word did
+the work. A1 was a bare node interior, A2 toggled meaning between two glyphs with
+no label, A3 sat beside a "Resume" label but carried the play affordance itself.
 
-Notes:
+How each was resolved:
 
-- **A1** is the screenshot's offender. It reaches the screen via
-  `TimelineNode.tsx:81` (`nodeGlyph`) and is asserted in
-  `TimelineNode/__tests__/TimelineNode.test.tsx:19`,
-  `TimelineStep/__tests__/TimelineStep.test.tsx:351`, and
-  `TimelineJourneyScreen/__tests__/TimelineJourneyScreen.test.tsx:548`. Migrating
-  it means `nodeGlyph: string` becomes a component reference. Note the sibling
-  `completed` state at `:101` uses `✓` (Tier D, themed correctly) — so the map
-  only has this one bad entry, and `⏸` is visibly the odd one out on screen.
-- **A3** passes a string through `Button`'s `icon` prop. `Button.tsx:13` and
-  `:88` already carry comments about emoji glyphs mis-rendering and matching the
-  dark fill — evidence the string-icon path is the problem, not the choice of
-  glyph.
+- **A1** — the screenshot's offender. `StepStateBase` gained a `nodeIcon?: Icon`
+  field alongside the existing `nodeGlyph?: string`, and `TimelineNode` renders
+  the icon at `stepStateNodeFg(theme, status)` when one is set. `nodeGlyph`
+  survives for text-presentation marks: the sibling `completed` state still uses
+  `✓`, which honors `color` correctly. So the map now expresses both kinds
+  without the caller needing to know which is which. The icon carries
+  `testID="timeline-node-state-icon-{status}"` because an SVG cannot be asserted
+  with `getByText` the way the glyph could.
+- **A2** — the dead `playIcon` text style was deleted; `PLAY_ICON_SIZE = 16`
+  preserves the size it set.
+- **A3** — the structural fix the audit called for: `Button`'s `icon` prop widened
+  from `string` to `ReactNode`. Strings still route to the original `<Text>` run
+  (which is what makes `"+"` and `"✓"` callers work untouched, and what avoids the
+  Android glyph+font bug documented on the prop); elements render as-is with the
+  caller owning size and color, because only the caller knows the variant's
+  foreground. Empty strings render nothing rather than leaking a bare `""` child.
+
+Coverage: `TimelineNode`, `TimelineStep`, and `TimelineJourneyScreen` tests now
+assert the Pause icon by testID **and** that `⏸` is absent, so a regression back
+to the emoji fails rather than passing quietly. `Button` gained tests for the
+element path and the empty-string guard.
 
 ## Tier B — Judgment calls
 
@@ -146,11 +155,16 @@ reads themed green. Do not add them to Tier D.
 Not violations themselves, but they hard-assert the glyphs above and must move
 in the same commit as their Tier A/B source:
 
-- `src/components/TimelineNode/__tests__/TimelineNode.test.tsx:19` — `⏸`
-- `src/components/TimelineStep/__tests__/TimelineStep.test.tsx:351` — `⏸`
-- `src/screens/TimelineJourneyScreen/__tests__/TimelineJourneyScreen.test.tsx:548` — `⏸`
+Already handled with their Tier A source (listed for the record — these now assert
+the icon and the _absence_ of the emoji):
+
+- ~~`TimelineNode.test.tsx`~~, ~~`TimelineStep.test.tsx`~~,
+  ~~`TimelineJourneyScreen.test.tsx`~~ — were `⏸`
+- ~~`Button.test.tsx`~~ — was `▶`, now `"+"` plus an element-icon case
+
+Still pinned to Tier B/C glyphs:
+
 - `src/components/ModeIndicator/__tests__/ModeIndicator.test.tsx:34` — `📝`
-- `src/components/Button/__tests__/Button.test.tsx:34,37` — `▶`
 - `src/components/EvidenceThumbnail/__tests__/EvidenceThumbnail.test.tsx:114,131,154,168` — `📷` `🎬` `🎤`
 - `src/components/EmptyState/__tests__/EmptyState.test.tsx:13,14,19` — `📦`
 - `src/components/NewGoalWizard/__tests__/NewGoalWizard.test.tsx:274,294,305` — `🏆` `📝`
