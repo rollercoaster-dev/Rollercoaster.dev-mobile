@@ -491,10 +491,10 @@ It covers all four directions:
 
 ### Follow-ups (sequenced)
 
-1. **ADR-0014 — "Containment is informative in both directions: the app offers, never asserts, never refuses."** Records the unified rule and settles Q9. **First** — it is what the other three implement.
-2. **F2 — resolver predicate split.** `invite` requires every child `completed`; a new `parked` kind for the all-set-aside parent. Data layer + exhaustiveness check across the three consuming surfaces. Small. Fold in the trivial `areAllStepsComplete` docstring fix (§Correction) or file it separately.
-3. **F3 — stop discarding the resolver's structural return value.** Keep `kind` / `parentIndex` / `childCount` in `resolveFocusStepId`; render leaf child-context via the existing `focusMode:band.childContext`; port `StepOverviewCard` for the `invite` (and `parked`) states. Sized as _wire existing, already-translated UI_.
-4. **F6 — parent-completion parts offer.** New bulk modal in `FocusModeScreen`, fired after completion, three options (_Keep them · Set the parts aside · Edit the parts…_), trigger and scope per §The offer, new `focusMode:partsOffer.*` keys in en/de/pseudo. "Edit the parts…" navigates to Edit mode — **no new delete path is built**. Sequenced **after F3**: its "keep them" outcome only reads well once child context exists.
+1. **#535 — ADR-0014: "Containment is informative in both directions: the app offers, never asserts, never refuses."** Records the unified rule and settles Q9. **First** — it is what the other three implement.
+2. **#536 — F2, resolver predicate split.** `invite` requires every child `completed`; a new `parked` kind for the all-set-aside parent. Data layer + exhaustiveness check across the three consuming surfaces. Small. Fold in the trivial `areAllStepsComplete` docstring fix (§Correction) or file it separately.
+3. **#537 — F3, stop discarding the resolver's structural return value.** Keep `kind` / `parentIndex` / `childCount` in `resolveFocusStepId`; render leaf child-context via the existing `focusMode:band.childContext`; port `StepOverviewCard` for the `invite` (and `parked`) states. Sized as _wire existing, already-translated UI_.
+4. **#538 — F6, parent-completion parts offer.** New bulk modal in `FocusModeScreen`, fired after completion, three options (_Keep them · Set the parts aside · Edit the parts…_), trigger and scope per §The offer, new `focusMode:partsOffer.*` keys in en/de/pseudo. "Edit the parts…" navigates to Edit mode — **no new delete path is built**. Sequenced **after #537**: its "keep them" outcome only reads well once child context exists.
 
 Not filed: **F4** and **F5** — verdicts recorded here.
 
@@ -541,4 +541,4 @@ Only what survives. Q4 (depth) is withdrawn — answered by precedent (§Reach o
 
 **Issues**
 
-#533 (this research) · #467 (surfaced it) · #435 · #449 · #526 · #378
+#533 (this research) · #535 · #536 · #537 · #538 (follow-ups filed) · #467 (surfaced it) · #435 · #449 · #526 · #378
