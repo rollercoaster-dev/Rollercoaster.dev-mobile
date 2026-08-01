@@ -1,10 +1,15 @@
 import React from "react";
 import { View, Pressable } from "react-native";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
+import { useUnistyles } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
+import { Pause, Play } from "phosphor-react-native";
 import { Text } from "../Text";
 import { formatDuration } from "../../utils/format";
 import { styles } from "./AudioPlayer.styles";
+
+/** Matches the `fontSize: 16` the play/pause text glyph used before Rule 8. */
+const PLAY_ICON_SIZE = 16;
 
 export interface AudioPlayerProps {
   uri: string;
@@ -13,6 +18,7 @@ export interface AudioPlayerProps {
 
 export function AudioPlayer({ uri, durationMs }: AudioPlayerProps) {
   const { t } = useTranslation(["common"]);
+  const { theme } = useUnistyles();
   const player = useAudioPlayer(uri);
   const status = useAudioPlayerStatus(player);
 
@@ -56,7 +62,24 @@ export function AudioPlayer({ uri, durationMs }: AudioPlayerProps) {
           pressed && styles.playButtonPressed,
         ]}
       >
-        <Text style={styles.playIcon}>{isPlaying ? "\u23F8" : "\u25B6"}</Text>
+        {/* `fill` weight: a transport control reads as a solid play/pause mark,
+            not an outline. `colors.background` inverts against the button's
+            `accentPrimary` fill \u2014 the same token the replaced text glyph used.
+            Rule 8: `\u23F8`/`\u25B6` are emoji-presentation codepoints, so they ignored
+            that color and rendered in the platform emoji font instead. */}
+        {isPlaying ? (
+          <Pause
+            size={PLAY_ICON_SIZE}
+            weight="fill"
+            color={theme.colors.background}
+          />
+        ) : (
+          <Play
+            size={PLAY_ICON_SIZE}
+            weight="fill"
+            color={theme.colors.background}
+          />
+        )}
       </Pressable>
 
       <View style={styles.progressContainer}>

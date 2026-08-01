@@ -543,9 +543,13 @@ describe("TimelineJourneyScreen", () => {
         screen.getByLabelText("Set aside thing, Set aside"),
       ).toBeOnTheScreen();
       expect(screen.queryByLabelText("Set aside thing, Up next")).toBeNull();
-      // ...and the node paints the shared paused glyph from stepStateColorMap
-      // (#406) rather than its step number.
-      expect(screen.getByText("⏸")).toBeOnTheScreen();
+      // ...and the node paints the shared paused marker from stepStateColorMap
+      // (#406) rather than its step number. A Phosphor icon since Rule 8: the
+      // previous `⏸` rendered in the platform emoji font and ignored the theme.
+      expect(
+        screen.getByTestId("timeline-node-state-icon-paused"),
+      ).toBeOnTheScreen();
+      expect(screen.queryByText("⏸")).toBeNull();
     });
   });
 

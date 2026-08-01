@@ -24,10 +24,6 @@ export const styles = StyleSheet.create((theme) => ({
   playButtonPressed: {
     opacity: 0.8,
   },
-  playIcon: {
-    fontSize: 16,
-    color: theme.colors.background,
-  },
   progressContainer: {
     flex: 1,
   },

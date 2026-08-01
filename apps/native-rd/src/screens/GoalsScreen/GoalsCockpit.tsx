@@ -3,6 +3,7 @@ import { Pressable, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useUnistyles } from "react-native-unistyles";
 import Svg, { Circle } from "react-native-svg";
+import { Play } from "phosphor-react-native";
 import { ProgressRing } from "../../components/ProgressRing";
 import { ProgressBar } from "../../components/ProgressBar";
 import { Button } from "../../components/Button";
@@ -147,7 +148,17 @@ export function GoalsCockpit({
         <View style={styles.heroAction}>
           <Button
             label={resumeLabel}
-            icon="▶"
+            // `fill` reads as a solid play mark at the hero's scale. Sized to
+            // the lg label and colored `background` to match `labelPrimary` on
+            // the primary variant's dark fill — the `▶` this replaces could do
+            // neither, being an emoji-presentation codepoint (Rule 8).
+            icon={
+              <Play
+                size={theme.size.lg}
+                weight="fill"
+                color={theme.colors.background}
+              />
+            }
             size="lg"
             onPress={() => onStartResume(hero.id)}
             testID="goals-cockpit-start-resume"

@@ -16,11 +16,29 @@ describe("TimelineNode", () => {
   it.each([
     { status: "pending" as const, expected: "1" },
     { status: "in-progress" as const, expected: "1" },
-    { status: "paused" as const, expected: "\u23f8" },
     { status: "completed" as const, expected: "\u2713" },
   ])('renders "$expected" for $status status', ({ status, expected }) => {
     renderWithProviders(<TimelineNode {...baseProps} status={status} />);
     expect(screen.getByText(expected)).toBeOnTheScreen();
+  });
+
+  // `paused` is the one state whose marker is a Phosphor icon rather than a
+  // text glyph, so it is asserted by testID. It used to render `\u23f8`, an
+  // emoji-presentation codepoint that ignored the node's foreground color in
+  // all 14 themes (design system Rule 8) \u2014 hence the second assertion.
+  it("renders a Pause icon, not an emoji, for paused status", () => {
+    renderWithProviders(<TimelineNode {...baseProps} status="paused" />);
+    expect(
+      screen.getByTestId("timeline-node-state-icon-paused"),
+    ).toBeOnTheScreen();
+    expect(screen.queryByText("\u23f8")).toBeNull();
+  });
+
+  it("the paused icon takes precedence over the step number", () => {
+    renderWithProviders(
+      <TimelineNode {...baseProps} status="paused" stepNumber={7} />,
+    );
+    expect(screen.queryByText("7")).toBeNull();
   });
 
   it("renders star for goal node", () => {

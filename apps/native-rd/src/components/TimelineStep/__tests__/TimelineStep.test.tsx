@@ -348,7 +348,6 @@ describe("TimelineStep", () => {
       { status: "completed" as const, glyph: "✓", badge: "Done" },
       { status: "in-progress" as const, glyph: "a", badge: "Working" },
       { status: "pending" as const, glyph: "a", badge: "Up next" },
-      { status: "paused" as const, glyph: "⏸", badge: "Set aside" },
     ])(
       "renders a $status sub-step with the right node glyph and state word",
       ({ status, glyph, badge }) => {
@@ -366,6 +365,26 @@ describe("TimelineStep", () => {
         expect(within(card).getByText(badge)).toBeOnTheScreen();
       },
     );
+
+    // Split out of the table above: paused marks its node with a Phosphor icon
+    // instead of a text glyph, so it needs getByTestId rather than getByText
+    // (design system Rule 8 — the former `⏸` ignored the theme).
+    it("renders a paused sub-step with the Pause node icon and state word", () => {
+      renderWithProviders(
+        <TimelineStep
+          {...baseProps}
+          subSteps={[
+            { id: "only", title: "Only child", status: "paused", evidence: [] },
+          ]}
+        />,
+      );
+      const node = screen.getByLabelText("Go to step a: Only child");
+      expect(
+        within(node).getByTestId("timeline-node-state-icon-paused"),
+      ).toBeOnTheScreen();
+      const card = screen.getByLabelText("Sub-step a: Only child");
+      expect(within(card).getByText("Set aside")).toBeOnTheScreen();
+    });
 
     it("expands a sub-step's evidence independently of the parent", () => {
       renderWithProviders(<TimelineStep {...baseProps} subSteps={subSteps} />);
