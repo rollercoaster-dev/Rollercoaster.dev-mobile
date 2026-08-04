@@ -4,7 +4,10 @@
 **Status:** Accepted 2026-07-26 (Joe's sign-off on PR #518). Accepting
 this ADR also accepted [ADR-0011](./ADR-0011-step-model-names.md) and
 [ADR-0012](./ADR-0012-no-auto-judgment.md), whose decisions are restated here
-unchanged.
+unchanged. The reopened A-prototype Q9 (parent auto-completion, in Consequences
+below) is settled by
+[ADR-0014](./ADR-0014-containment-offers-never-refuses.md) (proposed
+2026-08-04); the rest of this position stands.
 **Owner:** Joe
 **Supersedes:** as the current Phase B reference only —
 [ADR-0001](./ADR-0001-iteration-strategy.md) (Iteration B section),
