@@ -19,6 +19,7 @@ import {
   groupStepsByParent,
   flattenGroupedSteps,
   resolveNextActionableStep,
+  resolveActionableIndex,
   resolveStepDependencyBand,
   areAllStepsComplete,
   type GroupedStep,
@@ -528,6 +529,55 @@ describe("Step CRUD Operations", () => {
         ],
         { kind: "invite", index: 1, childCount: 3 },
       ],
+      // #536 / #533 F2: `invite` means the subtree is *finished*, so it must
+      // require every child completed. A parent whose remaining children are
+      // merely set aside is `parked` — a distinct non-actionable state — so the
+      // "all parts done, want to close this?" offer can never appear over work
+      // nobody finished. `childCount` is the total child count either way (D3).
+      [
+        "parked state: every child paused, parent still pending",
+        [
+          row("s1", null),
+          row("s1a", "s1", { status: "paused" }),
+          row("s1b", "s1", { status: "paused" }),
+        ],
+        { kind: "parked", index: 0, childCount: 2 },
+      ],
+      [
+        "parked state: completed + paused mix is not invite",
+        [
+          row("s1", null),
+          row("s1a", "s1", { status: "completed" }),
+          row("s1b", "s1", { status: "paused" }),
+        ],
+        { kind: "parked", index: 0, childCount: 2 },
+      ],
+      [
+        "a pending child still beats an otherwise-parked parent",
+        [
+          row("s1", null),
+          row("s1a", "s1", { status: "paused" }),
+          row("s1b", "s1", { status: "completed" }),
+          row("s1c", "s1"),
+        ],
+        { kind: "leaf", index: 3, parentIndex: 0 },
+      ],
+      [
+        "a paused parent is still skipped, parked or not",
+        [
+          row("s1", null, { status: "paused" }),
+          row("s1a", "s1", { status: "paused" }),
+        ],
+        { kind: "none" },
+      ],
+      [
+        "a completed parent with a paused child is skipped, not parked",
+        [
+          row("s1", null, { status: "completed" }),
+          row("s1a", "s1", { status: "paused" }),
+        ],
+        { kind: "none" },
+      ],
       [
         "orphan (parent absent) is promoted and read as a flat step",
         [row("s1", null, { status: "completed" }), row("s2a", "s2")],
@@ -601,6 +651,22 @@ describe("Step CRUD Operations", () => {
       ],
     ])("%s", (_label, rows, expected) => {
       expect(resolveNextActionableStep(rows)).toEqual(expected);
+    });
+  });
+
+  describe("resolveActionableIndex (#536)", () => {
+    // The collapse three screens share. Exhaustiveness is enforced at compile
+    // time by its assertNever; what these pin is that every actionable kind —
+    // `parked` included — still yields its row rather than falling through to
+    // null, which is what would silently blank a screen's next-step readout.
+    test.each([
+      ["leaf", { kind: "leaf", index: 3, parentIndex: 1 }, 3],
+      ["invite", { kind: "invite", index: 1, childCount: 2 }, 1],
+      ["parked", { kind: "parked", index: 1, childCount: 2 }, 1],
+      ["flat", { kind: "flat", index: 0 }, 0],
+      ["none", { kind: "none" }, null],
+    ] as const)("%s → %s", (_label, result, expected) => {
+      expect(resolveActionableIndex(result)).toBe(expected);
     });
   });
 
