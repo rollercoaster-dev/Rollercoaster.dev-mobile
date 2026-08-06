@@ -370,11 +370,18 @@ export const findFirstPendingIndex = (
 ): number => rows.findIndex(isPendingStep);
 
 /**
- * Whether every step in a goal is complete — the data-layer rule behind
- * FocusModeScreen's "Mark complete" gate (`allStepsComplete`). An empty list is
- * not complete (FocusModeScreen handles the stepless goal separately). `paused`
- * is a distinct, non-completing state, so a single paused step blocks
- * completion (#417 D6).
+ * Whether every step in a goal is complete. This gates nothing — it never
+ * blocks an action, it only picks which finished-looking presentation to show
+ * (#533 D4). Its two live consumers both read it that way:
+ *
+ * - `TimelineJourneyScreen` → `FinishLine` → `TimelineNode`'s `celebrate` prop
+ *   (a star colour on the finish node).
+ * - `FocusModeScreen` → `NoActionableBody`, as the all-done vs. set-aside
+ *   tie-break when the resolver reports nothing actionable (#467 D5).
+ *
+ * An empty list is not complete (FocusModeScreen handles the stepless goal
+ * separately, #467 D6). `paused` is a distinct, non-completing state, so a
+ * single paused step makes this false (#417 D6).
  */
 export const areAllStepsComplete = (
   rows: readonly { status: string | null }[],
@@ -543,20 +550,28 @@ export interface NextActionableStepInput {
 }
 
 /**
- * The single next actionable step, tagged by which of the four states it is.
+ * The single next actionable step, tagged by which of the five states it is.
  * Both `index` and `parentIndex` are positions in the input `rows` array, so a
  * caller maps either straight back to a row via `rows[...]`.
  *
  * - `leaf`   — first pending child under a top-level step; `parentIndex` is the
  *              container step (use it for the "↳ in [parent]" context line).
- * - `invite` — all of a pending parent's children are done; `childCount` is how
- *              many are done (use it for the "all N substeps done" readout).
+ * - `invite` — *every* one of a pending parent's children is `completed`;
+ *              `childCount` is how many are done (use it for the "all N
+ *              substeps done" readout).
+ * - `parked` — a pending parent with no pending child whose non-completed
+ *              children are all `paused` — set aside, not finished (#536 /
+ *              #533 F2). Distinct from `invite` precisely so the "all parts
+ *              done, want to close this?" offer can never appear over work
+ *              that was merely parked. `childCount` is the *total* child count
+ *              (same shape as `invite`'s), not a paused-only count.
  * - `flat`   — a pending top-level step with no children.
  * - `none`   — nothing is pending.
  */
 export type NextActionableStep =
   | { kind: "leaf"; index: number; parentIndex: number }
   | { kind: "invite"; index: number; childCount: number }
+  | { kind: "parked"; index: number; childCount: number }
   | { kind: "flat"; index: number }
   | { kind: "none" };
 
@@ -579,8 +594,10 @@ export type NextActionableStep =
  *
  * Paused ("set aside", #417) steps are skipped exactly like completed ones —
  * both as a candidate child and as a top-level step — so a deliberately
- * set-aside step never surfaces as the next action. If every non-completed
- * step is paused the result is `{ kind: "none" }`.
+ * set-aside step never surfaces as the next action. Skipping is *not* the same
+ * as finishing, though: a pending parent whose remaining children are all
+ * paused resolves to `parked`, not `invite` (#536). Only when no top-level
+ * step is left actionable at all is the result `{ kind: "none" }`.
  *
  * @param rows Flat rows for a single goal, in the order callers want
  *   "first pending" to mean (e.g. `(ordinal, createdAt)`-ordered).
@@ -625,14 +642,55 @@ export function resolveNextActionableStep(
       step.status === StepStatus.paused
     )
       continue;
-    // Still pending: a parent whose children are all done is the invite state;
-    // a step with no children is a flat pending step.
+    // Still pending, with children: every child is `completed` or `paused` by
+    // now (anything else would have matched pendingChild above). All completed
+    // is the invite state — the subtree really is finished. Anything else means
+    // at least one child is merely set aside, which is `parked`, not done
+    // (#536 / #533 F2). A step with no children is a flat pending step.
     if (children.length > 0) {
-      return { kind: "invite", index: step.index, childCount: children.length };
+      const allDone = children.every((c) => c.status === StepStatus.completed);
+      return {
+        kind: allDone ? "invite" : "parked",
+        index: step.index,
+        childCount: children.length,
+      };
     }
     return { kind: "flat", index: step.index };
   }
   return { kind: "none" };
+}
+
+/**
+ * The row index a {@link NextActionableStep} points at, or `null` when nothing
+ * is actionable.
+ *
+ * Every actionable kind carries an `index` into the same input `rows` array, so
+ * every surface that only needs "which row?" does the same collapse. Lives here
+ * next to the resolver for the reason the bucketing itself does (#337): three
+ * screens consume this and a new kind must not mean three independent ternary
+ * rewrites. The `assertNever` default is what makes adding a sixth kind a
+ * compile error at this one site instead of a silent `null` at three.
+ */
+export function resolveActionableIndex(
+  result: NextActionableStep,
+): number | null {
+  switch (result.kind) {
+    case "none":
+      return null;
+    case "leaf":
+    case "invite":
+    case "parked":
+    case "flat":
+      return result.index;
+    default:
+      return assertNever(result);
+  }
+}
+
+function assertNever(value: never): never {
+  throw new Error(
+    `Unhandled NextActionableStep kind: ${(value as { kind: string }).kind}`,
+  );
 }
 
 /**

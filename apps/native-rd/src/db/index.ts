@@ -26,6 +26,7 @@ export {
   groupStepsByParent,
   flattenGroupedSteps,
   resolveNextActionableStep,
+  resolveActionableIndex,
   resolveStepDependencyBand,
   isPendingStep,
   findFirstPendingIndex,
