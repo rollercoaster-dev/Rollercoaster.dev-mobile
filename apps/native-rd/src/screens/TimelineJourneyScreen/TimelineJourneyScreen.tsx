@@ -20,6 +20,7 @@ import {
   groupStepsByParent,
   areAllStepsComplete,
   resolveNextActionableStep,
+  resolveActionableIndex,
   resolveStepDependencyBand,
   StepStatus,
 } from "../../db";
@@ -46,9 +47,11 @@ const logger = new Logger("TimelineJourneyScreen");
  * lands on exactly the step FocusMode snaps to: a root's first pending child
  * wins (a pending leaf stays reachable even under a manually-completed parent —
  * completion is per-step, not cascaded), otherwise a pending childless root is
- * itself current, as is the invite state (all children done, parent still open).
- * Completed *and* paused steps are skipped, so a deliberately set-aside step
- * never takes the accent (#417). Returns null when nothing is actionable.
+ * itself current, as is the invite state (all children done, parent still open)
+ * or the parked state (parent still open, all its remaining children set
+ * aside — #536). Completed *and* paused steps are skipped, so a deliberately
+ * set-aside step never takes the accent (#417). Returns null when nothing is
+ * actionable.
  */
 function findCurrentLeafId(
   rows: readonly {
@@ -57,8 +60,8 @@ function findCurrentLeafId(
     status: string | null;
   }[],
 ): string | null {
-  const result = resolveNextActionableStep(rows);
-  return result.kind === "none" ? null : (rows[result.index]?.id ?? null);
+  const index = resolveActionableIndex(resolveNextActionableStep(rows));
+  return index === null ? null : (rows[index]?.id ?? null);
 }
 
 function TimelineContent({

@@ -16,6 +16,7 @@ import {
   activeGoalsQuery,
   stepsForActiveGoalsQuery,
   resolveNextActionableStep,
+  resolveActionableIndex,
   deleteGoal,
   StepStatus,
 } from "../../db";
@@ -67,12 +68,13 @@ function buildCockpitGoal(
   const progress = stepsTotal > 0 ? stepsCompleted / stepsTotal : 0;
 
   // Resolve the single next-action title via the shared resolver (#337), which
-  // owns the leaf/invite/flat bucketing and orphan promotion. The cockpit hero
+  // owns the leaf/invite/parked/flat bucketing and orphan promotion, and its
+  // companion index collapse (the one place a new kind is handled). The hero
   // shows only the title — no "↳ in parent" / "all N substeps done" context
   // line (that detail lives in FocusMode, not on the home cockpit).
-  const next = resolveNextActionableStep(steps);
+  const nextIndex = resolveActionableIndex(resolveNextActionableStep(steps));
   const nextStepTitle =
-    next.kind === "none" ? null : (steps[next.index]?.title ?? null);
+    nextIndex === null ? null : (steps[nextIndex]?.title ?? null);
 
   return {
     id: goalRow.id,

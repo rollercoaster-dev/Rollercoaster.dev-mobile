@@ -165,6 +165,9 @@ jest.mock("../../../db", () => ({
     }
     return { kind: "none" };
   },
+  // Faithful copy of the index collapse every actionable kind goes through.
+  resolveActionableIndex: (result: { kind: string; index?: number }) =>
+    result.kind === "none" ? null : (result.index ?? null),
 }));
 
 const mockUseQuery = jest.fn();
