@@ -39,10 +39,11 @@ jest.mock("../../../db", () => ({
   activeGoalsQuery: { __brand: "activeGoalsQuery" },
   stepsForActiveGoalsQuery: { __brand: "stepsForActiveGoalsQuery" },
   deleteGoal: jest.fn(),
-  StepStatus: { pending: "pending", completed: "completed" },
-  // Faithful copy of the real resolver (leaf/invite/flat/none + orphan
-  // promotion) so buildCockpitGoal's next-step resolution is exercised, not
-  // stubbed — keeps the #292/#337/#338 sub-step cases under test.
+  StepStatus: { pending: "pending", completed: "completed", paused: "paused" },
+  // Faithful copy of the real resolver (leaf/invite/parked/flat/none + orphan
+  // promotion, paused skipped like completed) so buildCockpitGoal's next-step
+  // resolution is exercised, not stubbed — keeps the #292/#337/#338 sub-step
+  // cases under test.
   // Keep in sync with resolveNextActionableStep in src/db/queries.ts.
   resolveNextActionableStep: (
     rows: readonly {
@@ -71,13 +72,17 @@ jest.mock("../../../db", () => ({
     });
     for (const step of topLevel) {
       const children = childrenByParent.get(step.id) ?? [];
-      const pendingChild = children.find((c) => c.status !== "completed");
+      const skip = (s: string | null) => s === "completed" || s === "paused";
+      const pendingChild = children.find((c) => !skip(c.status));
       if (pendingChild) {
         return { kind: "leaf", index: pendingChild.index, parentIndex: step.index }; // prettier-ignore
       }
-      if (step.status === "completed") continue;
+      if (skip(step.status)) continue;
       if (children.length > 0) {
-        return { kind: "invite", index: step.index, childCount: children.length }; // prettier-ignore
+        // All children completed is `invite`; any paused among them is
+        // `parked` — set aside is not done (#536).
+        const allDone = children.every((c) => c.status === "completed");
+        return { kind: allDone ? "invite" : "parked", index: step.index, childCount: children.length }; // prettier-ignore
       }
       return { kind: "flat", index: step.index };
     }

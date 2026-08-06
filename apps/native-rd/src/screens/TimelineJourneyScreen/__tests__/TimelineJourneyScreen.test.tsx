@@ -112,8 +112,8 @@ jest.mock("../../../db", () => ({
     };
   },
   // Faithful copy of the real resolver (queries.ts) so the screen's accent runs
-  // real leaf/invite/flat bucketing — including the paused skip (#417) — instead
-  // of a stub. Same convention as groupStepsByParent above.
+  // real leaf/invite/parked/flat bucketing — including the paused skip (#417)
+  // — instead of a stub. Same convention as groupStepsByParent above.
   resolveNextActionableStep: (
     rows: readonly {
       id: string;
@@ -155,8 +155,11 @@ jest.mock("../../../db", () => ({
       }
       if (step.status === "completed" || step.status === "paused") continue;
       if (children.length > 0) {
+        // All children completed is `invite`; any paused among them is
+        // `parked` — set aside is not done (#536).
+        const allDone = children.every((c) => c.status === "completed");
         return {
-          kind: "invite",
+          kind: allDone ? "invite" : "parked",
           index: step.index,
           childCount: children.length,
         };

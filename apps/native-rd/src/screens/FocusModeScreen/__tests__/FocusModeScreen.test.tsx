@@ -181,7 +181,7 @@ jest.mock("../../../db", () => {
       }
       return out;
     },
-    // Faithful copy of the real resolver (leaf/invite/flat/none + orphan
+    // Faithful copy of the real resolver (leaf/invite/parked/flat/none + orphan
     // promotion, paused skipped like completed) so the #292/#337 resolution the
     // screen depends on is exercised, not stubbed.
     // Keep in sync with resolveNextActionableStep in src/db/queries.ts.
@@ -220,7 +220,10 @@ jest.mock("../../../db", () => {
         }
         if (skip(step.status)) continue;
         if (children.length > 0) {
-          return { kind: "invite", index: step.index, childCount: children.length }; // prettier-ignore
+          // All children completed is `invite`; any paused among them is
+          // `parked` — set aside is not done (#536).
+          const allDone = children.every((c) => c.status === "completed");
+          return { kind: allDone ? "invite" : "parked", index: step.index, childCount: children.length }; // prettier-ignore
         }
         return { kind: "flat", index: step.index };
       }
