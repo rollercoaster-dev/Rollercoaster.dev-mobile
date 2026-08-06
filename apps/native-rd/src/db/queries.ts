@@ -648,9 +648,11 @@ export function resolveNextActionableStep(
     // at least one child is merely set aside, which is `parked`, not done
     // (#536 / #533 F2). A step with no children is a flat pending step.
     if (children.length > 0) {
-      const allDone = children.every((c) => c.status === StepStatus.completed);
+      const allChildrenCompleted = children.every(
+        (c) => c.status === StepStatus.completed,
+      );
       return {
-        kind: allDone ? "invite" : "parked",
+        kind: allChildrenCompleted ? "invite" : "parked",
         index: step.index,
         childCount: children.length,
       };
@@ -668,8 +670,10 @@ export function resolveNextActionableStep(
  * every surface that only needs "which row?" does the same collapse. Lives here
  * next to the resolver for the reason the bucketing itself does (#337): three
  * screens consume this and a new kind must not mean three independent ternary
- * rewrites. The `assertNever` default is what makes adding a sixth kind a
- * compile error at this one site instead of a silent `null` at three.
+ * rewrites. The declared `number | null` return is what makes a sixth kind a
+ * compile error here (TS2366, no fall-through return) rather than a silent
+ * `null` at three call sites; `assertNever` is the runtime echo of that, not
+ * the mechanism.
  */
 export function resolveActionableIndex(
   result: NextActionableStep,

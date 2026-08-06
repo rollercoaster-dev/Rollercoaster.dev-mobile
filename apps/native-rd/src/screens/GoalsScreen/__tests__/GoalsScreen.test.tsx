@@ -81,14 +81,18 @@ jest.mock("../../../db", () => ({
       if (children.length > 0) {
         // All children completed is `invite`; any paused among them is
         // `parked` — set aside is not done (#536).
-        const allDone = children.every((c) => c.status === "completed");
-        return { kind: allDone ? "invite" : "parked", index: step.index, childCount: children.length }; // prettier-ignore
+        const allChildrenCompleted = children.every((c) => c.status === "completed"); // prettier-ignore
+        return { kind: allChildrenCompleted ? "invite" : "parked", index: step.index, childCount: children.length }; // prettier-ignore
       }
       return { kind: "flat", index: step.index };
     }
     return { kind: "none" };
   },
-  // Faithful copy of the index collapse every actionable kind goes through.
+  // Behavioural stub of the index collapse, not a structural copy: the real
+  // resolveActionableIndex is an exhaustive switch, so a kind added without a
+  // case fails to compile there. This shim would silently return null instead —
+  // it agrees only for the five kinds above. queries.step.test.ts owns the
+  // real helper's coverage.
   resolveActionableIndex: (result: { kind: string; index?: number }) =>
     result.kind === "none" ? null : (result.index ?? null),
 }));

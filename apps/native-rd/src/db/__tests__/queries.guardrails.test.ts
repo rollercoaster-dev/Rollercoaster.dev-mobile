@@ -7,13 +7,15 @@
  * not state outright. All pure — no Evolu.
  *
  * Parity note: GoalCard (`GoalsScreen.buildCockpitGoal`) and FocusMode
- * (`FocusModeScreen.findFirstPendingLeafIndex`) both derive "the next step" from
- * `resolveNextActionableStep(...).index`, each mapping `none` → null / -1. A
- * single resolver result therefore drives both surfaces — they cannot disagree
- * by construction; the parity test below pins that shared mapping.
+ * (`FocusModeScreen.resolveFocusStepId`) both derive "the next step" from a
+ * single `resolveNextActionableStep` result collapsed through the shared
+ * `resolveActionableIndex` (#536). They cannot disagree by construction; the
+ * parity test below pins that shared mapping by calling it, not by re-copying
+ * it — a hand-copied collapse here could pass while the real one is broken.
  */
 import {
   resolveNextActionableStep,
+  resolveActionableIndex,
   type NextActionableStepInput,
 } from "../queries";
 
@@ -63,12 +65,12 @@ describe("substructure guardrails (#294)", () => {
     ];
     const result = resolveNextActionableStep(rows);
 
-    // The exact derivations both screens apply over the single resolver result.
-    const focusModeIndex = result.kind === "none" ? -1 : result.index;
-    const goalCardNextRowId =
-      result.kind === "none" ? null : rows[result.index].id;
+    // The exact collapse both screens apply over the single resolver result —
+    // the production helper itself, so this cannot drift from what they run.
+    const nextIndex = resolveActionableIndex(result);
+    const goalCardNextRowId = nextIndex === null ? null : rows[nextIndex].id;
 
-    expect(focusModeIndex).toBe(2);
+    expect(nextIndex).toBe(2);
     expect(goalCardNextRowId).toBe("c2");
   });
 });
