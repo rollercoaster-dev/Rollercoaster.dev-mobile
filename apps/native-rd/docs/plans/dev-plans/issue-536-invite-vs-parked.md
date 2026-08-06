@@ -9,12 +9,12 @@
 
 ## Intent Verification
 
-- [ ] `resolveNextActionableStep` returns `{ kind: "invite" }` for a pending parent **only when every child is `completed`**.
-- [ ] `resolveNextActionableStep` returns `{ kind: "parked" }` for a pending parent whose non-completed children are all `paused` (all-paused, or a completed+paused mix) — never `invite`.
-- [ ] A pending child still wins over everything, including under a completed parent — unchanged, pinned by the existing test at `queries.step.test.ts` and the guardrail at `queries.guardrails.test.ts:42-49`.
-- [ ] Paused steps still never surface as the next action — `queries.step.test.ts`'s existing paused-skip cases keep passing unmodified.
-- [ ] `GoalsScreen`, `TimelineJourneyScreen`, `FocusModeScreen` all compile against the 5-member `NextActionableStep` union through one shared exhaustiveness-checked helper, not three independent re-derivations.
-- [ ] `areAllStepsComplete`'s docstring no longer claims it gates `FocusModeScreen`'s "Mark complete" — it names its actual sole consumer (`TimelineJourneyScreen` → `FinishLine` → `TimelineNode`'s `celebrate` prop).
+- [x] `resolveNextActionableStep` returns `{ kind: "invite" }` for a pending parent **only when every child is `completed`**.
+- [x] `resolveNextActionableStep` returns `{ kind: "parked" }` for a pending parent whose non-completed children are all `paused` (all-paused, or a completed+paused mix) — never `invite`.
+- [x] A pending child still wins over everything, including under a completed parent — unchanged, pinned by the existing test at `queries.step.test.ts` and the guardrail at `queries.guardrails.test.ts:42-49`.
+- [x] Paused steps still never surface as the next action — `queries.step.test.ts`'s existing paused-skip cases keep passing unmodified.
+- [x] `GoalsScreen`, `TimelineJourneyScreen`, `FocusModeScreen` all compile against the 5-member `NextActionableStep` union through one shared exhaustiveness-checked helper, not three independent re-derivations.
+- [x] `areAllStepsComplete`'s docstring no longer claims it gates `FocusModeScreen`'s "Mark complete" — it names its actual consumers (see Discovery Log: there are two, not one).
 
 ## Dependencies
 
@@ -123,6 +123,7 @@ Split the resolver's overloaded "is any child still pending?" predicate into two
 
 ## Discovery Log
 
-<!-- Entries added by implement skill:
-- [YYYY-MM-DD HH:MM] <discovery description>
--->
+- [2026-08-06] **D4's "sole consumer" is wrong — `areAllStepsComplete` has two.** The plan (from #533 D4) said the only live consumer is `TimelineJourneyScreen` → `FinishLine` → `TimelineNode.celebrate`. `FocusModeScreen.tsx:583` also passes it to `NoActionableBody` as the all-done vs. set-aside tie-break, added by #467 D5 after #533's research was written. The stale claim being corrected is the _"Mark complete" gate_ wording — that gate doesn't exist — not the count of consumers. Docstring names both and states plainly that it gates nothing, it only picks a presentation.
+- [2026-08-06] **The three screen test mocks needed the new export, not just the new predicate.** Each `jest.mock("../../db", ...)` is a full module replacement, so routing the screens through `resolveActionableIndex` (Step 2) would have thrown "not a function" in all three suites before Step 3 ran. The `resolveActionableIndex` mock stub was folded into Step 2's commit so no commit in the series is red; Step 3 stayed the predicate sync it was scoped to be.
+- [2026-08-06] **Added a `resolveActionableIndex` test table** beyond the plan's Step 4 list. The helper's exhaustiveness is compile-time, but its _mapping_ isn't checked by anything: a kind falling through to `null` would silently blank a screen's next-step readout with a green type-check.
+- [2026-08-06] **Two extra resolver cases pinned the boundary of the new kind**: a paused parent and a completed parent, each with a paused child, are still `none` — skipped, not `parked`. `parked` requires the parent itself to be pending.
