@@ -89,7 +89,9 @@ export function completeStep(
   id: StepId,
   plannedEvidenceTypesJson: string | null,
   stepEvidence: { type: string | null }[],
-);
+) {
+  // …
+}
 ```
 
 — `completeStep`, `src/db/queries.ts`
