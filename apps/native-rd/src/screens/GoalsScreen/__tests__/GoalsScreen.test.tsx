@@ -368,6 +368,40 @@ describe("GoalsScreen", () => {
       );
     });
 
+    // Same shape as INVITE_STEPS with one child set aside instead of done, so
+    // the resolver returns `parked` rather than `invite` (#536).
+    const PARKED_STEPS = [
+      { id: "s1", goalId, parentStepId: null, title: "Plan layout", status: "completed" }, // prettier-ignore
+      { id: "s2", goalId, parentStepId: null, title: "Wire the circuits", status: "pending" }, // prettier-ignore
+      { id: "s2a", goalId, parentStepId: "s2", title: "15-amp lighting circuit", status: "completed" }, // prettier-ignore
+      { id: "s2b", goalId, parentStepId: "s2", title: "20-amp small-appliance circuit", status: "completed" }, // prettier-ignore
+      { id: "s2c", goalId, parentStepId: "s2", title: "240V dryer circuit", status: "paused" }, // prettier-ignore
+      { id: "s3", goalId, parentStepId: null, title: "Inspection & labels", status: "pending" }, // prettier-ignore
+    ];
+
+    // #536 splits `parked` out of `invite`; the cockpit is explicitly *not*
+    // supposed to change as a result (#537 owns any distinct rendering). This
+    // pins that, and is the only place a parked result reaches a screen at all
+    // — without it the parked branch in this file's resolver mock is dead code.
+    it("leads with the pending parent as the hero next step (parked state)", () => {
+      mockData([goalRow], PARKED_STEPS);
+      renderWithProviders(<GoalsScreen />);
+      expect(screen.getByTestId("goals-cockpit-next-step")).toHaveTextContent(
+        "Wire the circuits",
+      );
+    });
+
+    // A paused sub-step is skipped, not treated as the next action — the mock
+    // resolver's paused skip had silently diverged from production until #536
+    // and no fixture here exercised it.
+    it("never offers a set-aside sub-step as the hero next step", () => {
+      mockData([goalRow], PARKED_STEPS);
+      renderWithProviders(<GoalsScreen />);
+      expect(
+        screen.getByTestId("goals-cockpit-next-step"),
+      ).not.toHaveTextContent("240V dryer circuit");
+    });
+
     it("counts every unit (parents + children) for progress — 4/6", () => {
       mockData([goalRow], INVITE_STEPS);
       renderWithProviders(<GoalsScreen />);

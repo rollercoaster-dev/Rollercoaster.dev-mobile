@@ -1222,9 +1222,23 @@ describe("FocusModeScreen", () => {
       step("step-2", { title: "Practice", ordinal: 1 }),
     ];
 
+    // INVITE_STEPS with one child set aside instead of done → `parked`, not
+    // `invite` (#536). Focus Mode must still land on the parent: the split is a
+    // resolver-level honesty fix, and rendering it differently is #537's job.
+    // Without this row the parked branch of this file's resolver mock is never
+    // evaluated, so "no screen behavior changed" would be untested.
+    const PARKED_STEPS = [
+      step("step-1", { title: "Read docs", status: "completed" }),
+      step("step-2", { title: "Practice", ordinal: 1 }),
+      step("step-2a", { title: "Drill A", status: "completed", parentStepId: "step-2" }), // prettier-ignore
+      step("step-2b", { title: "Drill B", status: "paused", ordinal: 1, parentStepId: "step-2" }), // prettier-ignore
+      step("step-3", { title: "Build it", ordinal: 2 }),
+    ];
+
     it.each([
       ["the first pending leaf, not its container parent", LEAF_STEPS, "Drill A"], // prettier-ignore
       ["the parent itself once all its children are done", INVITE_STEPS, "Practice"], // prettier-ignore
+      ["the parent itself when its remaining children are set aside", PARKED_STEPS, "Practice"], // prettier-ignore
       ["the leaf after flattening interleaved query order", INTERLEAVED_STEPS, "Drill A"], // prettier-ignore
       ["the first pending child when an earlier sibling is done", PARTIAL_LEAF_STEPS, "Drill B"], // prettier-ignore
       ["an orphaned sub-step promoted to a reachable lead", ORPHAN_STEPS, "Drill A"], // prettier-ignore

@@ -670,10 +670,15 @@ export function resolveNextActionableStep(
  * every surface that only needs "which row?" does the same collapse. Lives here
  * next to the resolver for the reason the bucketing itself does (#337): three
  * screens consume this and a new kind must not mean three independent ternary
- * rewrites. The declared `number | null` return is what makes a sixth kind a
- * compile error here (TS2366, no fall-through return) rather than a silent
- * `null` at three call sites; `assertNever` is the runtime echo of that, not
- * the mechanism.
+ * rewrites. A sixth kind is a compile error here rather than a silent `null` at
+ * three call sites: the `default` branch narrows it to a non-`never` type and
+ * `assertNever` rejects it (TS2345). Belt and braces — drop that branch and the
+ * declared `number | null` return catches the same mistake as TS2366, since the
+ * switch would no longer be exhaustive. Both verified against this repo's tsc.
+ *
+ * Note this is a *two-level* model: `groupStepsByParent` only ever nests one
+ * deep, so the invite/parked split reasons about a top-level step's direct
+ * children. A grandchild is promoted to top level, never weighed here.
  */
 export function resolveActionableIndex(
   result: NextActionableStep,

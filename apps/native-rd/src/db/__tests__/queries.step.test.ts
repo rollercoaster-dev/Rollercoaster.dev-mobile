@@ -578,6 +578,58 @@ describe("Step CRUD Operations", () => {
         ],
         { kind: "none" },
       ],
+      // `parked` must *terminate* the top-level scan exactly as `invite` does —
+      // it is a pending parent, so it is still the next action, it just isn't a
+      // finished one. Without a later pending sibling in the fixture, a resolver
+      // that `continue`d past parked instead of returning would look identical.
+      // #537 gives `parked` distinct rendering, which is precisely when someone
+      // is tempted to skip it; this pins that skipping it is a behavior change.
+      [
+        "parked parent short-circuits the scan — a later pending root loses",
+        [
+          row("s1", null),
+          row("s1a", "s1", { status: "paused" }),
+          row("s2", null),
+        ],
+        { kind: "parked", index: 0, childCount: 1 },
+      ],
+      // The invite/parked split rests on pendingChild having already caught
+      // anything that is neither `completed` nor `paused`. These pin that
+      // invariant at the boundary: a null or unrecognised status is *pending*,
+      // so it yields `leaf` and never reaches the `every(completed)` test. If
+      // the skip set ever grows, these fail rather than silently bucketing the
+      // new status as `parked`.
+      [
+        "a null-status child is pending, not parked",
+        [row("s1", null), row("s1a", "s1", { status: null })],
+        { kind: "leaf", index: 1, parentIndex: 0 },
+      ],
+      [
+        "an unrecognised child status is pending, not parked",
+        [row("s1", null), row("s1a", "s1", { status: "blocked" })],
+        { kind: "leaf", index: 1, parentIndex: 0 },
+      ],
+      // Two-level model: a grandchild is promoted to top level, so `s1`'s only
+      // *direct* child being paused makes it parked, and the promoted pending
+      // grandchild at index 2 is never reached.
+      [
+        "parked reasons over direct children only — a pending grandchild loses",
+        [
+          row("s1", null),
+          row("s1a", "s1", { status: "paused" }),
+          row("s1a1", "s1a"),
+        ],
+        { kind: "parked", index: 0, childCount: 1 },
+      ],
+      [
+        "a parked parent beats a promoted pending orphan",
+        [
+          row("s1", null),
+          row("s1a", "s1", { status: "paused" }),
+          row("orphan", "ghost"),
+        ],
+        { kind: "parked", index: 0, childCount: 1 },
+      ],
       [
         "orphan (parent absent) is promoted and read as a flat step",
         [row("s1", null, { status: "completed" }), row("s2a", "s2")],
@@ -667,6 +719,16 @@ describe("Step CRUD Operations", () => {
       ["none", { kind: "none" }, null],
     ] as const)("%s → %s", (_label, result, expected) => {
       expect(resolveActionableIndex(result)).toBe(expected);
+    });
+
+    // Unreachable from typed callers — the point is that it throws loudly
+    // rather than returning null, which would blank the next-step readout with
+    // no signal. Pins the choice so nobody "simplifies" the default branch into
+    // a silent fallback.
+    test("an unknown kind throws instead of silently resolving to null", () => {
+      expect(() => resolveActionableIndex({ kind: "future" } as never)).toThrow(
+        /Unhandled NextActionableStep kind: future/,
+      );
     });
   });
 

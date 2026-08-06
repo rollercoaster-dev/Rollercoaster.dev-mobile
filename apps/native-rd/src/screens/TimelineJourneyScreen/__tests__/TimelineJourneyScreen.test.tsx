@@ -712,6 +712,43 @@ describe("TimelineJourneyScreen", () => {
       expect(screen.getByLabelText("Open parent, Working")).toBeOnTheScreen();
     });
 
+    // Parked state (#536): same shape as the invite case but one child is set
+    // aside rather than done, so the resolver returns `parked`. The accent must
+    // land in exactly the same place — the split is a resolver-level honesty
+    // fix, and giving parked its own rendering belongs to #537. This is the
+    // only Timeline fixture that evaluates the parked branch of the resolver
+    // mock above.
+    it("marks the parent current in the parked state (remaining children set aside)", () => {
+      setupQueries({
+        steps: [
+          {
+            id: "p",
+            title: "Open parent",
+            status: "pending",
+            ordinal: 0,
+            parentStepId: null,
+          },
+          {
+            id: "c1",
+            title: "Sub done",
+            status: "completed",
+            ordinal: 0,
+            parentStepId: "p",
+          },
+          {
+            id: "c2",
+            title: "Sub set aside",
+            status: "paused",
+            ordinal: 1,
+            parentStepId: "p",
+          },
+        ],
+      });
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      expect(screen.getAllByText("Working")).toHaveLength(1);
+      expect(screen.getByLabelText("Open parent, Working")).toBeOnTheScreen();
+    });
+
     it("never accents a paused sub-step, even as the first non-completed leaf", () => {
       setupQueries({
         steps: [
