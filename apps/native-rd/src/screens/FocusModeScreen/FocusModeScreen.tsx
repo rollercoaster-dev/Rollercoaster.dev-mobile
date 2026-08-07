@@ -489,7 +489,7 @@ function FocusContent({
   }, [goalId, navigation]);
 
   const handleEditPress = useCallback(() => {
-    navigation.navigate("EditMode", { goalId, cameFromFocus: true });
+    navigation.navigate("EditMode", { goalId });
   }, [goalId, navigation]);
 
   // The same finishing entry point every other surface uses (TimelineJourney's
