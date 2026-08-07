@@ -68,6 +68,10 @@ jest.mock("../../../hooks/useBadgeExport", () => ({
   }),
 }));
 
+const designJSON = JSON.stringify(
+  createDefaultBadgeDesign("Learn TypeScript", "#4caf50"),
+);
+
 /** Helper to create a joined badge+goal row matching badgeWithGoalQuery shape */
 const makeRow = (overrides: Record<string, unknown> = {}) => ({
   id: "badge-1",
@@ -122,33 +126,6 @@ describe("BadgeDetailScreen", () => {
     expect(screen.getByText("Earned Jan 28, 2026")).toBeOnTheScreen();
   });
 
-  it("shows initial letter fallback when image is placeholder", () => {
-    mockUseQuery.mockReturnValue([
-      makeRow({ imageUri: "pending:baked-image" }),
-    ]);
-
-    renderWithProviders(
-      <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
-    );
-    expect(screen.getByText("L")).toBeOnTheScreen();
-  });
-
-  it("renders Image with accessibility label when badge has a real imageUri", () => {
-    mockUseQuery.mockReturnValue([
-      makeRow({
-        imageUri: "file:///path/to/badge.png",
-        goalTitle: "Learn Rust",
-      }),
-    ]);
-
-    renderWithProviders(
-      <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
-    );
-    expect(
-      screen.getByLabelText("Badge image for Learn Rust"),
-    ).toBeOnTheScreen();
-  });
-
   it('renders "Untitled" when goal is null (orphaned badge)', () => {
     mockUseQuery.mockReturnValue([
       makeRow({ goalTitle: null, completedAt: null }),
@@ -160,12 +137,162 @@ describe("BadgeDetailScreen", () => {
     expect(screen.getByText("Untitled")).toBeOnTheScreen();
   });
 
-  it("navigates back when back button is pressed", () => {
+  it("navigates back from the not-found state's fallback header", () => {
+    // Default mockUseQuery is [] — no badge, so the hero can't render and the
+    // fallback header owns the only way out.
     renderWithProviders(
       <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
     );
     fireEvent.press(screen.getByLabelText("Go back"));
     expect(mockGoBack).toHaveBeenCalled();
+  });
+
+  describe("celebration hero", () => {
+    it("navigates back when the hero's back arrow is pressed", () => {
+      mockUseQuery.mockReturnValue([makeRow()]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      fireEvent.press(screen.getByTestId("celebration-hero-back"));
+      expect(mockGoBack).toHaveBeenCalled();
+    });
+
+    // The old floating preview had a three-way chain (design → raw Image →
+    // initial-on-tile). The hero owns the undesigned fallback now: a null
+    // design still renders a badge (monogram), never a blank slot.
+    it.each([
+      { name: "designed", design: designJSON },
+      { name: "undesigned", design: null },
+    ])("renders the hero badge for a $name badge", ({ design }) => {
+      mockUseQuery.mockReturnValue([makeRow({ design })]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      expect(screen.getByTestId("badge-renderer")).toBeOnTheScreen();
+    });
+
+    it("shows the verifiable chip with the earned date when a credential exists", () => {
+      mockUseQuery.mockReturnValue([
+        makeRow({
+          credential: '{"type":"VC"}',
+          completedAt: "2026-01-28T00:00:00.000Z",
+        }),
+      ]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      expect(
+        screen.getByText("Verifiable · earned Jan 28, 2026"),
+      ).toBeOnTheScreen();
+    });
+
+    // No credential means no verifiability claim — the chip is absent rather
+    // than shown in a "missing"/"unverified" framing.
+    it("hides the verifiable chip when the badge has no credential", () => {
+      mockUseQuery.mockReturnValue([makeRow({ credential: null })]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      expect(screen.queryByTestId("verified-credential-chip")).toBeNull();
+    });
+  });
+
+  describe("overflow menu", () => {
+    const openMenu = () => {
+      fireEvent.press(screen.getByTestId("celebration-hero-overflow"));
+    };
+
+    it("is closed until the ⋯ control is pressed", () => {
+      mockUseQuery.mockReturnValue([makeRow()]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      expect(screen.queryByTestId("overflow-row-share")).toBeNull();
+
+      openMenu();
+      expect(screen.getByTestId("overflow-row-share")).toBeOnTheScreen();
+    });
+
+    it("closes when the backdrop is pressed", () => {
+      mockUseQuery.mockReturnValue([makeRow()]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      openMenu();
+      fireEvent.press(screen.getByTestId("overflow-backdrop"));
+
+      expect(screen.queryByTestId("overflow-row-share")).toBeNull();
+    });
+
+    // Interim wiring: the real share sheet lands with #469, but the row must
+    // still do something rather than be a dead tap.
+    it("exports the verifiable badge from the Share row", () => {
+      mockUseQuery.mockReturnValue([
+        makeRow({ imageUri: "file:///badges/badge.png" }),
+      ]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      openMenu();
+      fireEvent.press(screen.getByTestId("overflow-row-share"));
+
+      expect(mockExportVerifiableBadge).toHaveBeenCalledWith(
+        "file:///badges/badge.png",
+        "Learn TypeScript",
+      );
+    });
+
+    it("exports the credential from the Export credential row", () => {
+      mockUseQuery.mockReturnValue([makeRow({ credential: '{"type":"VC"}' })]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      openMenu();
+      fireEvent.press(screen.getByTestId("overflow-row-credential"));
+
+      expect(mockExportJSON).toHaveBeenCalledWith(
+        '{"type":"VC"}',
+        "Learn TypeScript",
+      );
+    });
+
+    it("disables the Export credential row when the badge has no credential", () => {
+      mockUseQuery.mockReturnValue([makeRow({ credential: null })]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      openMenu();
+
+      expect(
+        screen.getByTestId("overflow-row-credential").props.accessibilityState,
+      ).toEqual(expect.objectContaining({ disabled: true }));
+    });
+
+    it("opens the confirm-delete modal from the Delete row", () => {
+      mockUseQuery.mockReturnValue([makeRow()]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      openMenu();
+      fireEvent.press(screen.getByTestId("overflow-row-delete"));
+
+      expect(
+        screen.getByText(
+          "This will permanently remove this badge. This cannot be undone.",
+        ),
+      ).toBeOnTheScreen();
+      expect(mockDeleteBadge).not.toHaveBeenCalled();
+    });
   });
 
   describe("delete badge", () => {

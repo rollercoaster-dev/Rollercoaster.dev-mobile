@@ -6,6 +6,12 @@
   },
   "earned": "Earned {{date}}",
   "createdAt": "Created {{date}}",
+  "hero": {
+    "credentialLabel": "Verifiable · earned {{date}}",
+    "credentialLabelUndated": "Verifiable",
+    "overflowLabel": "More options",
+    "overflowDismiss": "Close menu"
+  },
   "sections": {
     "about": "About",
     "howEarned": "How it was earned",

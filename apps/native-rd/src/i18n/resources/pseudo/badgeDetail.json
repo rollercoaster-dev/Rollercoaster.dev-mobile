@@ -6,6 +6,12 @@
   },
   "earned": "[Êàŕñêđ {{date}}······]",
   "createdAt": "[Çŕêàţêđ {{date}}······]",
+  "hero": {
+    "credentialLabel": "[Ṽêŕïƒïàƀĺê · êàŕñêđ {{date}}···········]",
+    "credentialLabelUndated": "[Ṽêŕïƒïàƀĺê····]",
+    "overflowLabel": "[Ɱøŕê øþţïøñš·····]",
+    "overflowDismiss": "[Çĺøšê ɱêñü····]"
+  },
   "sections": {
     "about": "[Àƀøüţ··]",
     "howEarned": "[Ĥøŵ ïţ ŵàš êàŕñêđ·······]",
@@ -35,7 +41,7 @@
     "a11y": {
       "listLabel_one": "[Þŕøøƒ ğàĺĺêŕý, {{count}} êṽïđêñçê ïţêɱ···············]",
       "listLabel_other": "[Þŕøøƒ ğàĺĺêŕý, {{count}} êṽïđêñçê ïţêɱš················]",
-      "emptyStateLabel": "[Þŕøøƒ ğàĺĺêŕý, êɱþţý. {{message}}····]"
+      "emptyStateLabel": "[Þŕøøƒ ğàĺĺêŕý, êɱþţý. {{message}}·············]"
     }
   },
   "actions": {
