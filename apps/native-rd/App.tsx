@@ -1,4 +1,8 @@
 import { useMemo } from "react";
+import {
+  TopInsetColorProvider,
+  useTopInsetColorState,
+} from "./src/navigation/TopInsetColor";
 import { StatusBar } from "expo-status-bar";
 import { View } from "react-native";
 import {
@@ -46,6 +50,7 @@ function ThemedApp() {
   const { isFirstLaunch, markSeen } = useFirstLaunch();
   const { setTheme: persistingSetTheme } = useThemePersistence();
   const insets = useSafeAreaInsets();
+  const { topInsetColor, setTopInsetColor } = useTopInsetColorState();
   useDensity(); // Apply saved density to all themes on mount
   useAnimationPref(); // Initialize OS reduceMotion listener
 
@@ -91,12 +96,24 @@ function ThemedApp() {
     // clock/wifi/battery glyphs read as part of the header on every theme —
     // light glyphs on the near-black high-contrast/low-info headers, dark
     // glyphs on the light default header.
+    // A focused screen may claim the strip (useTopInsetColor) when it renders a
+    // full-bleed surface instead of a header band — then the glyph polarity
+    // follows that surface rather than the header foreground.
     const headerFgIsLight =
       getContrastRatio(theme.chrome.screenHeaderFg, "#000000") >
       getContrastRatio(theme.chrome.screenHeaderFg, "#ffffff");
+    const stripNeedsLightGlyphs = topInsetColor
+      ? getContrastRatio(topInsetColor, "#ffffff") >
+        getContrastRatio(topInsetColor, "#000000")
+      : headerFgIsLight;
     body = (
-      <View style={{ flex: 1, backgroundColor: theme.chrome.screenHeaderBg }}>
-        <StatusBar style={headerFgIsLight ? "light" : "dark"} />
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: topInsetColor ?? theme.chrome.screenHeaderBg,
+        }}
+      >
+        <StatusBar style={stripNeedsLightGlyphs ? "light" : "dark"} />
         <View
           style={{
             flex: 1,
@@ -105,9 +122,11 @@ function ThemedApp() {
           }}
         >
           <NavigationContainer theme={navTheme}>
-            <ToastProvider>
-              <TabNavigator />
-            </ToastProvider>
+            <TopInsetColorProvider onChange={setTopInsetColor}>
+              <ToastProvider>
+                <TabNavigator />
+              </ToastProvider>
+            </TopInsetColorProvider>
           </NavigationContainer>
         </View>
       </View>

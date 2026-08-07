@@ -5,6 +5,8 @@ import {
   fireEvent,
 } from "../../../__tests__/test-utils";
 import { i18n } from "../../../i18n";
+import { TopInsetColorProvider } from "../../../navigation/TopInsetColor";
+import { WALL_SURFACE } from "../BadgesWall.styles";
 import { BadgesScreen } from "../BadgesScreen";
 
 const mockNavigate = jest.fn();
@@ -169,6 +171,43 @@ describe("BadgesScreen", () => {
       expect(mockNavigate).toHaveBeenCalledWith("BadgeDetail", {
         badgeId: "badge-2",
       });
+    });
+  });
+
+  // App.tsx paints the device top-inset strip in the header color; the
+  // full-bleed wall has no header to continue, so it claims the strip instead.
+  describe("top-inset strip", () => {
+    const renderWithStrip = () => {
+      const onChange = jest.fn();
+      renderWithProviders(
+        <TopInsetColorProvider onChange={onChange}>
+          <BadgesScreen />
+        </TopInsetColorProvider>,
+      );
+      return onChange;
+    };
+
+    it("extends the wall surface into the strip when populated", () => {
+      mockBadges([makeBadgeRow()]);
+      expect(renderWithStrip()).toHaveBeenCalledWith(WALL_SURFACE);
+    });
+
+    it("leaves the strip at the header color in the empty state", () => {
+      mockBadges([]);
+      expect(renderWithStrip()).not.toHaveBeenCalled();
+    });
+
+    it("releases the strip on unmount", () => {
+      mockBadges([makeBadgeRow()]);
+      const onChange = jest.fn();
+      const view = renderWithProviders(
+        <TopInsetColorProvider onChange={onChange}>
+          <BadgesScreen />
+        </TopInsetColorProvider>,
+      );
+      onChange.mockClear();
+      view.unmount();
+      expect(onChange).toHaveBeenCalledWith(null);
     });
   });
 
