@@ -7,11 +7,13 @@ export interface SettingsSectionProps {
   children: React.ReactNode;
   /**
    * Optional accessibility grouping applied to the rows container. Used by
-   * SettingsDensityRows to mark its three rows as a `radiogroup` (and to drop
-   * that grouping in E2E mode via `accessible={false}`). Unset for ordinary
-   * sections, preserving today's behavior.
+   * SettingsDensityRows to mark its three rows as a `radiogroup`. Unset for
+   * ordinary sections, preserving today's behavior.
+   *
+   * There is deliberately no `accessible` prop: setting it on the container
+   * collapses every row into a single a11y node on iOS, so screen readers
+   * could reach the group but never the individual radios (#500).
    */
-  accessible?: boolean;
   accessibilityRole?: "radiogroup";
   accessibilityLabel?: string;
 }
@@ -19,7 +21,6 @@ export interface SettingsSectionProps {
 export function SettingsSection({
   title,
   children,
-  accessible,
   accessibilityRole,
   accessibilityLabel,
 }: SettingsSectionProps) {
@@ -30,7 +31,6 @@ export function SettingsSection({
       <Text style={styles.title}>{title}</Text>
       <View
         style={styles.rows}
-        accessible={accessible}
         accessibilityRole={accessibilityRole}
         accessibilityLabel={accessibilityLabel}
       >

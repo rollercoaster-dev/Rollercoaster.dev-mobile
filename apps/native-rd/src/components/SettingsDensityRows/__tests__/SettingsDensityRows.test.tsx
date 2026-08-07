@@ -6,11 +6,15 @@ import {
 } from "../../../__tests__/test-utils";
 import { i18n } from "../../../i18n";
 import { densityOptions, type DensityLevel } from "../../../utils/density";
+import { densityA11yLabel } from "../../../i18n/labels";
 
 import { SettingsDensityRows } from "../SettingsDensityRows";
 
 const t = i18n.t.bind(i18n);
 const labelOf = (id: DensityLevel) => t(`settings:density.options.${id}.label`);
+const descriptionOf = (id: DensityLevel) =>
+  t(`settings:density.options.${id}.description`);
+const a11yLabelOf = (id: DensityLevel) => densityA11yLabel(t, id);
 
 describe("SettingsDensityRows", () => {
   it("renders exactly three radio rows", () => {
@@ -29,7 +33,9 @@ describe("SettingsDensityRows", () => {
       (r) => r.props.accessibilityState?.checked === true,
     );
     expect(checked).toHaveLength(1);
-    expect(checked[0].props.accessibilityLabel).toBe(labelOf("comfortable"));
+    expect(checked[0].props.accessibilityLabel).toBe(
+      a11yLabelOf("comfortable"),
+    );
     expect(screen.getAllByText("✓")).toHaveLength(1);
   });
 
@@ -40,7 +46,7 @@ describe("SettingsDensityRows", () => {
       renderWithProviders(
         <SettingsDensityRows selectedLevel="default" onSelect={onSelect} />,
       );
-      fireEvent.press(screen.getByRole("radio", { name: labelOf(id) }));
+      fireEvent.press(screen.getByRole("radio", { name: a11yLabelOf(id) }));
       expect(onSelect).toHaveBeenCalledWith(id);
     },
   );
@@ -49,33 +55,44 @@ describe("SettingsDensityRows", () => {
     renderWithProviders(
       <SettingsDensityRows selectedLevel="default" onSelect={jest.fn()} />,
     );
-    expect(
-      screen.getByRole("radiogroup", { name: t("settings:density.title") }),
-    ).toBeOnTheScreen();
+    // Queried via label, not getByRole: the group deliberately omits
+    // `accessible` (so it doesn't swallow its rows) and RNTL's role query
+    // only matches elements whose `accessible` prop is truthy.
+    const group = screen.getByLabelText(t("settings:density.title"));
+    expect(group.props.accessibilityRole).toBe("radiogroup");
   });
 
-  describe("E2E mode gating", () => {
-    const originalE2E = process.env.EXPO_PUBLIC_E2E_MODE;
-    beforeAll(() => {
-      process.env.EXPO_PUBLIC_E2E_MODE = "true";
-    });
-    afterAll(() => {
-      if (originalE2E === undefined) {
-        delete process.env.EXPO_PUBLIC_E2E_MODE;
-      } else {
-        process.env.EXPO_PUBLIC_E2E_MODE = originalE2E;
+  it("keeps every row individually reachable in production (no E2E branch)", () => {
+    expect(process.env.EXPO_PUBLIC_E2E_MODE).toBeUndefined();
+    renderWithProviders(
+      <SettingsDensityRows selectedLevel="default" onSelect={jest.fn()} />,
+    );
+    // Regression guard for #500: the group used to set `accessible={true}`
+    // outside E2E mode, collapsing all three rows into one VoiceOver node.
+    expect(screen.getAllByRole("radio")).toHaveLength(3);
+    for (const { id } of densityOptions) {
+      expect(screen.getByLabelText(a11yLabelOf(id))).toBeOnTheScreen();
+    }
+  });
+
+  it.each(densityOptions.map((o) => o.id))(
+    "announces %s as '<label>. <description>' in both checked and unchecked states",
+    (id) => {
+      for (const selectedLevel of [id, "default"] as DensityLevel[]) {
+        const { unmount } = renderWithProviders(
+          <SettingsDensityRows
+            selectedLevel={selectedLevel}
+            onSelect={jest.fn()}
+          />,
+        );
+        const radio = screen.getByLabelText(a11yLabelOf(id));
+        // The description is the row's visible `value` only while unselected —
+        // once "✓" replaces it, the accessible name must still carry it.
+        expect(radio.props.accessibilityLabel).toBe(
+          `${labelOf(id)}. ${descriptionOf(id)}`,
+        );
+        unmount();
       }
-    });
-
-    it("drops the radiogroup wrapper so descendant rows stay reachable", () => {
-      renderWithProviders(
-        <SettingsDensityRows selectedLevel="default" onSelect={jest.fn()} />,
-      );
-      // Under EXPO_PUBLIC_E2E_MODE=true the outer grouping is disabled so
-      // Maestro can resolve each row's label without colliding with the
-      // parent radiogroup, while each row keeps its own radio role.
-      expect(screen.queryByRole("radiogroup")).toBeNull();
-      expect(screen.getAllByRole("radio")).toHaveLength(3);
-    });
-  });
+    },
+  );
 });

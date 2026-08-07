@@ -37,16 +37,34 @@ describe("SettingsSection", () => {
       renderWithProviders(
         <SettingsSection
           title="Content Density"
-          accessible
           accessibilityRole="radiogroup"
           accessibilityLabel="Content density selection"
         >
           <Text>A</Text>
         </SettingsSection>,
       );
+      // Queried via label, not getByRole: the container deliberately omits
+      // `accessible` (so it doesn't swallow its rows) and RNTL's role query
+      // only matches elements whose `accessible` prop is truthy.
+      const group = screen.getByLabelText("Content density selection");
+      expect(group.props.accessibilityRole).toBe("radiogroup");
+    });
+
+    it("never sets accessible on the rows container, so children stay reachable", () => {
+      renderWithProviders(
+        <SettingsSection
+          title="Content Density"
+          accessibilityRole="radiogroup"
+          accessibilityLabel="Content density selection"
+        >
+          <Text>A</Text>
+        </SettingsSection>,
+      );
+      // Regression guard for #500 — `accessible` collapses the whole section
+      // into one VoiceOver node on iOS.
       expect(
-        screen.getByRole("radiogroup", { name: "Content density selection" }),
-      ).toBeOnTheScreen();
+        screen.getByLabelText("Content density selection").props.accessible,
+      ).toBeUndefined();
     });
 
     it("exposes no group role by default", () => {
@@ -56,6 +74,7 @@ describe("SettingsSection", () => {
         </SettingsSection>,
       );
       expect(screen.queryByRole("radiogroup")).toBeNull();
+      expect(screen.queryByLabelText("Section")).toBeNull();
     });
   });
 });

@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { SettingsSection } from "../SettingsSection";
 import { SettingsRow } from "../SettingsRow";
 import { densityOptions, type DensityLevel } from "../../utils/density";
+import { densityA11yLabel } from "../../i18n/labels";
 
 interface SettingsDensityRowsProps {
   selectedLevel: DensityLevel;
@@ -34,26 +35,19 @@ export function SettingsDensityRows({
 }: SettingsDensityRowsProps) {
   const { t } = useTranslation(["settings"]);
 
-  // Mirror ThemeSwatchRail: the radiogroup wrapper collapses its descendant
-  // rows into a single a11y node on iOS, which hides individual rows from
-  // Maestro element lookup. Drop the grouping in E2E mode; each SettingsRow
-  // keeps its own radio role + label so screen readers still treat the three
-  // as discrete radios in production.
-  const isE2E = process.env.EXPO_PUBLIC_E2E_MODE === "true";
-  const groupingA11y = isE2E
-    ? ({ accessible: false } as const)
-    : ({
-        accessible: true,
-        accessibilityRole: "radiogroup" as const,
-        // Reuse the visible section heading as the group's accessible name so
-        // it localizes with the app (de/pseudo) and matches Label-in-Name. The
-        // `radiogroup` role already announces "radio group", so no extra
-        // "selection"/"picker" word is needed.
-        accessibilityLabel: t("settings:density.title"),
-      } as const);
-
   return (
-    <SettingsSection title={t("settings:density.title")} {...groupingA11y}>
+    // Mirror ThemeSwatchRail: role + label mark the group without an
+    // `accessible` prop, which would collapse the three rows into one a11y
+    // node on iOS and hide the individual radios from VoiceOver/TalkBack
+    // (#500). The visible section heading doubles as the group's accessible
+    // name so it localizes with the app (de/pseudo) and matches
+    // Label-in-Name; the `radiogroup` role already announces "radio group",
+    // so no extra "selection"/"picker" word is needed.
+    <SettingsSection
+      title={t("settings:density.title")}
+      accessibilityRole="radiogroup"
+      accessibilityLabel={t("settings:density.title")}
+    >
       {densityOptions.map((option) => {
         const isSelected = selectedLevel === option.id;
         return (
@@ -65,6 +59,10 @@ export function SettingsDensityRows({
                 ? "✓"
                 : t(`settings:density.options.${option.id}.description`)
             }
+            // The description is visible copy for unselected rows and is
+            // replaced by "✓" once selected — compose it into the accessible
+            // name so screen readers hear it in both states.
+            accessibilityLabel={densityA11yLabel(t, option.id)}
             accessibilityRole="radio"
             checked={isSelected}
             onPress={() => onSelect(option.id)}
