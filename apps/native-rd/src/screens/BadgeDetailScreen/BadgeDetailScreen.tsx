@@ -477,6 +477,7 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
         transparent
         animationType="fade"
         onRequestClose={closeOverflowMenu}
+        accessibilityViewIsModal
       >
         <Pressable
           style={styles.overflowBackdrop}
