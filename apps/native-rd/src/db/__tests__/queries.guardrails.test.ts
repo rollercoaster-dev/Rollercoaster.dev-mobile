@@ -6,10 +6,12 @@
  * named contracts, and adds the cross-screen parity check the unit suite does
  * not state outright. All pure — no Evolu.
  *
- * Parity note: GoalCard (`GoalsScreen.buildCockpitGoal`) and FocusMode
- * (`FocusModeScreen.resolveFocusStepId`) both derive "the next step" by passing
- * one `resolveNextActionableStep` result through the shared
- * `resolveActionableIndex` (#536), then indexing the same rows array.
+ * Parity note: the Goals cockpit, Focus Mode and the Timeline journey accent all
+ * derive "the next step" by passing one `resolveNextActionableStep` result
+ * through the shared `resolveActionableIndex` (#536), then indexing the same
+ * rows array. Deliberately named by the exported functions rather than by the
+ * private helper each screen wraps them in: those wrapper names have already
+ * been renamed out from under comments that referenced them.
  *
  * Be precise about what the test below can and cannot show. That the two
  * screens call the *same* collapse is enforced by the type checker and by them

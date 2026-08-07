@@ -649,8 +649,9 @@ describe("TimelineJourneyScreen", () => {
 
     // A manually-completed parent does NOT hide a still-pending child — the
     // pending leaf stays current (completion is per-step, not cascaded). This is
-    // the branch that makes findCurrentLeafId diverge from the prototype's
-    // nextInfo; it mirrors FocusMode's findFirstPendingLeafIndex (#292/#293).
+    // the branch that makes this screen's accent diverge from the prototype's
+    // nextInfo, and it comes from the shared resolveNextActionableStep, so Focus
+    // Mode agrees with it by construction rather than by convention (#292/#293).
     it("keeps a pending child current even when its parent is completed", () => {
       setupQueries({
         steps: [

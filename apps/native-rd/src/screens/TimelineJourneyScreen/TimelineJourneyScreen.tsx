@@ -42,9 +42,11 @@ const logger = new Logger("TimelineJourneyScreen");
 
 /**
  * Id of the leaf to highlight as the journey's single in-progress accent (#293).
- * Thin adapter over the shared {@link resolveNextActionableStep} — the same
- * resolver FocusMode's findFirstPendingLeafIndex uses (#337) — so the accent
- * lands on exactly the step FocusMode snaps to: a root's first pending child
+ * Thin adapter over the shared {@link resolveNextActionableStep}, which Focus
+ * Mode also resolves through (#337) — named here rather than whichever private
+ * helper Focus Mode wraps it in, because that name has already changed twice.
+ * The accent therefore lands on exactly the step FocusMode snaps to: a root's
+ * first pending child
  * wins (a pending leaf stays reachable even under a manually-completed parent —
  * completion is per-step, not cascaded), otherwise a pending childless root is
  * itself current, as is the invite state (all children done, parent still open)
