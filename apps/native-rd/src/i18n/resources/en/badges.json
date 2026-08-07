@@ -22,20 +22,5 @@
     "narrative_one": "Complete all steps for: {{title}}. Evidence: {{count}} item.",
     "narrative_other": "Complete all steps for: {{title}}. Evidence: {{count}} items.",
     "narrativeNoEvidence": "Complete all steps for: {{title}}"
-  },
-  "earned": {
-    "microcopy": {
-      "first": "First one. (noted.)",
-      "subsequent": "Badge earned."
-    },
-    "a11y": {
-      "card": "Badge earned",
-      "image": "Badge image",
-      "imagePlaceholder": "Badge image placeholder"
-    },
-    "actions": {
-      "view": "View Badge",
-      "continue": "Keep going"
-    }
   }
 }

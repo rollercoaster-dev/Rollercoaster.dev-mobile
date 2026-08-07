@@ -1,6 +1,7 @@
 # completion — ND adult completing a goal.
-# Celebration phase + evidence-capture phase. Tone is warm but not
-# achievement-porn — completion is self-validation, not external approval.
+# The four-stage finishing flow (celebrate → design → baking → reveal). Tone is
+# warm but not achievement-porn — completion is self-validation, not external
+# approval.
 
 speaker: app
 audience: ND adult completing a goal
@@ -23,16 +24,33 @@ banned_phrasings:
 notes:
   - Completion is matter-of-fact, not victorious. Prefer "Geschafft."
     over "Du hast es geschafft!". Warmth comes from brevity, not
-    exclamations.
+    exclamations. Note the headline ends in a period, never an exclamation
+    mark — that punctuation choice is the whole register in miniature.
   - No comparison to "what you should feel" — never tell the user they
     should be proud or deserve to celebrate.
-  - The "Bake It" string is the imperative for finalizing the badge —
+  - >-
+    The `finish.celebrate.*` keys are the first stage: an eyebrow, the
+    headline, a summary naming the goal and its step count, and an optional
+    closing note. The note is genuinely optional — `closingNoteOptionalLabel`
+    ("optional") must read as permission to skip, never as a prompt to fill
+    it in. `ctaSubcopy` frames the badge as a keepsake, not a reward.
+  - >-
+    The `finish.design.*` keys label the badge designer's four accordion
+    sections and its CTA. "Bake my badge" is the imperative for finalizing —
     translate as "Badge fertigstellen" or similar verb phrase. The noun
     "Badge" stays as the English loanword (de/common.json convention).
-  - The "Redesign First" string is offered as a low-stakes alternative —
-    use "Erst neu gestalten" over "Lieber nochmal designen".
-  - The "One last thing!" string is a friendly nudge, not pressure. Use
-    "Noch eine Sache." and avoid exclamation marks.
+    `bottomLabelPlaceholder` is example text inside an empty field, shown in
+    caps.
+  - >-
+    The `finish.baking.*` keys cover the interstitial. `label` is the busy
+    state, `successLabel` the moment the badge exists, and
+    `exitWithoutBadgeLabel` the escape offered when the signing key is
+    unavailable — it must read as a calm, blameless way out, never as giving
+    up.
+  - >-
+    The `finish.reveal.*` keys are the earned-badge moment: an "Earned"
+    eyebrow and the two exits. Keep them terse; the badge itself carries the
+    weight.
   - Error messages around badge creation stay factual. Prefer
     "Signaturschlüssel nicht verfügbar." over "Hoppla! Etwas ist
     schiefgelaufen.".
