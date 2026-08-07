@@ -16,6 +16,12 @@ export interface SettingsSectionProps {
    */
   accessibilityRole?: "radiogroup";
   accessibilityLabel?: string;
+  /**
+   * Test-only handle on the rows container. Deliberately opt-in and undefined
+   * by default: several sections render on one screen, so a hardcoded testID
+   * would put duplicate ids in the live tree and make E2E selectors ambiguous.
+   */
+  rowsTestID?: string;
 }
 
 export function SettingsSection({
@@ -23,6 +29,7 @@ export function SettingsSection({
   children,
   accessibilityRole,
   accessibilityLabel,
+  rowsTestID,
 }: SettingsSectionProps) {
   const childArray = React.Children.toArray(children);
 
@@ -30,7 +37,7 @@ export function SettingsSection({
     <View style={styles.container}>
       <Text style={styles.title}>{title}</Text>
       <View
-        testID="settings-rows"
+        testID={rowsTestID}
         style={styles.rows}
         accessibilityRole={accessibilityRole}
         accessibilityLabel={accessibilityLabel}
