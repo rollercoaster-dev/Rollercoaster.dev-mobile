@@ -650,6 +650,62 @@ describe("EditGoalView", () => {
     });
   });
 
+  // Clearing the field is distinct from deleting the row: it only empties
+  // the rename input, so a long title can be replaced without backspacing.
+  describe("clear title while renaming", () => {
+    it("empties the step field without committing or deleting", () => {
+      const onStepTitleChange = jest.fn();
+      const onDeleteStep = jest.fn();
+      renderWithProviders(
+        <EditGoalView {...makeProps({ onStepTitleChange, onDeleteStep })} />,
+      );
+      fireEvent.press(screen.getByTestId("edit-goal-step-title-s1"));
+      fireEvent.press(screen.getByTestId("edit-goal-step-clear-s1"));
+      expect(screen.getByTestId("edit-goal-step-edit-s1").props.value).toBe("");
+      expect(onStepTitleChange).not.toHaveBeenCalled();
+      expect(onDeleteStep).not.toHaveBeenCalled();
+    });
+
+    it("hides the clear control once the step field is empty", () => {
+      renderWithProviders(<EditGoalView {...makeProps()} />);
+      fireEvent.press(screen.getByTestId("edit-goal-step-title-s1"));
+      fireEvent.press(screen.getByTestId("edit-goal-step-clear-s1"));
+      expect(screen.queryByTestId("edit-goal-step-clear-s1")).toBeNull();
+    });
+
+    it("does not render the clear control outside inline-edit mode", () => {
+      renderWithProviders(<EditGoalView {...makeProps()} />);
+      expect(screen.queryByTestId("edit-goal-step-clear-s1")).toBeNull();
+    });
+
+    it("empties the sub-step field without committing", () => {
+      const onSubStepTitleChange = jest.fn();
+      renderWithProviders(
+        <EditGoalView
+          {...makeProps({ steps: withSub, onSubStepTitleChange })}
+        />,
+      );
+      fireEvent.press(screen.getByTestId("edit-goal-substep-title-sub1"));
+      fireEvent.press(screen.getByTestId("edit-goal-substep-clear-sub1"));
+      expect(
+        screen.getByTestId("edit-goal-substep-edit-sub1").props.value,
+      ).toBe("");
+      expect(onSubStepTitleChange).not.toHaveBeenCalled();
+    });
+
+    it("exposes both clears as labelled buttons", () => {
+      renderWithProviders(<EditGoalView {...makeProps({ steps: withSub })} />);
+      fireEvent.press(screen.getByTestId("edit-goal-step-title-s1"));
+      const stepClear = screen.getByTestId("edit-goal-step-clear-s1");
+      expect(stepClear.props.accessibilityRole).toBe("button");
+      expect(stepClear.props.accessibilityLabel).toBe("Clear step title");
+
+      fireEvent.press(screen.getByTestId("edit-goal-substep-title-sub1"));
+      const subClear = screen.getByTestId("edit-goal-substep-clear-sub1");
+      expect(subClear.props.accessibilityLabel).toBe("Clear sub-step title");
+    });
+  });
+
   describe("sub-step reorder (#459)", () => {
     it("renders the ≡ handle (not ↳) on sub-step rows, hidden from screen readers", () => {
       renderWithProviders(<EditGoalView {...makeProps({ steps: withSub })} />);

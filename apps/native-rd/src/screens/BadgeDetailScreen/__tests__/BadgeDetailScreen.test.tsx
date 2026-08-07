@@ -8,6 +8,8 @@ import {
 import { BadgeDetailScreen } from "../BadgeDetailScreen";
 import type { BadgeDetailScreenProps } from "../../../navigation/types";
 import { createDefaultBadgeDesign } from "../../../badges/types";
+import { TopInsetColorProvider } from "../../../navigation/TopInsetColor";
+import { mockTheme } from "../../../__tests__/mocks/unistyles";
 
 const mockNavigate = jest.fn();
 const mockGoBack = jest.fn();
@@ -820,6 +822,43 @@ describe("BadgeDetailScreen", () => {
         fireEvent.press(screen.getByLabelText("View timeline")),
       ).not.toThrow();
       expect(mockParentNavigate).not.toHaveBeenCalled();
+    });
+  });
+
+  // The celebration band runs to the top of the screen, so App.tsx's top-inset
+  // strip has to be the band's surface — not the purple header chrome, which
+  // belongs to screens that render a ScreenHeader.
+  describe("top-inset strip", () => {
+    const renderWithStrip = () => {
+      const onChange = jest.fn();
+      const view = renderWithProviders(
+        <TopInsetColorProvider onChange={onChange}>
+          <BadgeDetailScreen route={mockRoute} navigation={{} as never} />
+        </TopInsetColorProvider>,
+      );
+      return { onChange, view };
+    };
+
+    it("extends the celebration surface into the strip", () => {
+      mockUseQuery.mockReturnValue([makeRow()]);
+      expect(renderWithStrip().onChange).toHaveBeenCalledWith(
+        mockTheme.chrome.celebrationBg,
+      );
+    });
+
+    it("leaves the strip at the header color when the badge is missing", () => {
+      // The not-found path renders DetailFallbackHeader — a real header band,
+      // which the default strip color already continues.
+      mockUseQuery.mockReturnValue([]);
+      expect(renderWithStrip().onChange).not.toHaveBeenCalled();
+    });
+
+    it("releases the strip on unmount", () => {
+      mockUseQuery.mockReturnValue([makeRow()]);
+      const { onChange, view } = renderWithStrip();
+      onChange.mockClear();
+      view.unmount();
+      expect(onChange).toHaveBeenCalledWith(null);
     });
   });
 });
