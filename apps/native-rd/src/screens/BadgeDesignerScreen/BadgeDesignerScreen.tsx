@@ -28,7 +28,7 @@ import { BOTTOM_LABEL_INPUT_MAX_CHARS } from "../../badges/text/BottomLabel";
 import { ShapeSelector } from "../../badges/ShapeSelector";
 import { ACCENT_COLORS } from "../../badges/ColorPicker";
 import { ColorPickerModal } from "../../badges/ColorPickerModal";
-import { BadgeColorsAccordion } from "./BadgeColorsAccordion";
+import { BadgeColorsAccordion } from "../../badges/BadgeColorsAccordion";
 import { IconPicker } from "../../badges/IconPicker";
 import { FrameSelector } from "../../badges/FrameSelector";
 import { useFrameParamsForGoal } from "../../badges/frames";

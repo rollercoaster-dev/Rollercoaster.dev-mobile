@@ -60,23 +60,27 @@ export const ShapeOpen: Story = {
   render: () => <InteractiveDesign initialExpandedSection="shape" />,
 };
 
-export const ColorOpen: Story = {
-  render: () => <InteractiveDesign initialExpandedSection="color" />,
+export const FrameOpen: Story = {
+  render: () => <InteractiveDesign initialExpandedSection="frame" />,
+};
+
+export const ColorsOpen: Story = {
+  render: () => <InteractiveDesign initialExpandedSection="colors" />,
 };
 
 export const CenterOpen: Story = {
   render: () => <InteractiveDesign initialExpandedSection="center" />,
 };
 
-export const BottomLabelOpen: Story = {
-  render: () => <InteractiveDesign initialExpandedSection="bottomLabel" />,
+export const InscriptionsOpen: Story = {
+  render: () => <InteractiveDesign initialExpandedSection="inscriptions" />,
 };
 
 /** Color section open with the trailing "Custom…" cell reachable — tapping it
  * opens the full-screen `ColorPickerModal`; a confirmed off-palette hex
  * re-renders the live preview through the same `onDesignChange` round-trip. */
 export const CustomColor: Story = {
-  render: () => <InteractiveDesign initialExpandedSection="color" />,
+  render: () => <InteractiveDesign initialExpandedSection="colors" />,
 };
 
 /** Longest allowed bottom label (24 chars) and a long goal title — confirms the
@@ -84,7 +88,7 @@ export const CustomColor: Story = {
 export const LongLabels: Story = {
   render: () => (
     <InteractiveDesign
-      initialExpandedSection="bottomLabel"
+      initialExpandedSection="inscriptions"
       goalTitle="Rewire the entire workshop from scratch"
       designOverrides={{ bottomLabel: "COMPLETED · SEPTEMBER 26" }}
     />

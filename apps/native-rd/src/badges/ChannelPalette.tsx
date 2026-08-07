@@ -2,8 +2,8 @@ import React from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { useUnistyles } from "react-native-unistyles";
 
-import { Text } from "../../components/Text";
-import { ACCENT_COLORS } from "../../badges/ColorPicker";
+import { Text } from "../components/Text";
+import { ACCENT_COLORS } from "./ColorPicker";
 import { styles } from "./BadgeColorsAccordion.styles";
 
 type AccentSwatchId = (typeof ACCENT_COLORS)[number]["id"];

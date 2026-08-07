@@ -20,12 +20,6 @@
     "design": {
       "headerTitle": "Gestalte dein Badge",
       "backA11yLabel": "Zurück",
-      "shapeSectionTitle": "Form",
-      "colorSectionTitle": "Farbe",
-      "centerSectionTitle": "Mitte",
-      "bottomLabelSectionTitle": "Unterschrift",
-      "bottomLabelPlaceholder": "ERREICHT 2026",
-      "bottomLabelA11yLabel": "Unterschrift",
       "bakeLabel": "Badge fertigstellen",
       "bakeSubcopy": "wird gespeichert und zu einem überprüfbaren Badge versiegelt"
     },

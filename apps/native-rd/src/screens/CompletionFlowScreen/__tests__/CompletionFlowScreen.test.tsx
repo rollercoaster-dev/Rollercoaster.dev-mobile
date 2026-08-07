@@ -529,6 +529,20 @@ describe("CompletionFlowScreen", () => {
       });
     });
 
+    // The finish route is presented as a modal on GoalsStack, and an iOS
+    // native-stack modal covers the whole screen. Switching the tab underneath
+    // without dismissing it leaves BadgeDetail rendering invisibly behind the
+    // modal — which reads as "View badge does nothing".
+    it("dismisses the finish modal before hopping to the badges tab", async () => {
+      await renderAtReveal();
+      fireEvent.press(screen.getByTestId("finish-reveal-view-badge"));
+
+      expect(mockPopToTop).toHaveBeenCalledTimes(1);
+      expect(mockPopToTop.mock.invocationCallOrder[0]).toBeLessThan(
+        mockParentNavigate.mock.invocationCallOrder[0],
+      );
+    });
+
     it("pops to the goals list on Back to goals", async () => {
       await renderAtReveal();
       fireEvent.press(screen.getByTestId("finish-reveal-back-to-goals"));

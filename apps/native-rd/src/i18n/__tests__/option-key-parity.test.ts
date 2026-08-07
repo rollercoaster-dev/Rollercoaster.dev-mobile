@@ -11,7 +11,7 @@ import {
   PathTextPosition,
   BannerPosition,
 } from "../../badges/types";
-import { BADGE_COLOR_CHANNELS } from "../../screens/BadgeDesignerScreen/BadgeColorsAccordion";
+import { BADGE_COLOR_CHANNELS } from "../../badges/BadgeColorsAccordion";
 
 // `LIFECYCLE_MODES` is derived from `MODE_CONFIG: Record<LifecycleMode, …>`
 // in ModeIndicator.tsx, so adding a union member without updating the config

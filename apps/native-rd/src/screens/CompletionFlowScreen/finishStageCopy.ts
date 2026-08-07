@@ -18,8 +18,14 @@ import type { BadgeCreationStatus } from "../../hooks/useCreateBadge";
  * *does* is still readable in one place.
  */
 
-/** The `t` the screen holds: `useTranslation(["completion", "common"])`. */
-export type FinishT = TFunction<["completion", "common"]>;
+/**
+ * The `t` the screen holds. `badgeDesigner` is in the list because the design
+ * stage composes the same `src/badges/` selectors BadgeDesignerScreen does —
+ * those controls already localize themselves out of that namespace, so their
+ * section headings belong there too rather than being duplicated under
+ * `completion:`.
+ */
+export type FinishT = TFunction<["completion", "common", "badgeDesigner"]>;
 
 /** Copy-only subset of each stage's props — behavior stays at the call site. */
 type CopyProps<P, K extends keyof P> = Pick<P, K>;
@@ -77,9 +83,10 @@ export function designCopy(
   | "headerTitle"
   | "backAccessibilityLabel"
   | "shapeSectionTitle"
-  | "colorSectionTitle"
+  | "frameSectionTitle"
   | "centerSectionTitle"
-  | "bottomLabelSectionTitle"
+  | "colorSectionTitle"
+  | "inscriptionsSectionTitle"
   | "bottomLabelPlaceholder"
   | "bottomLabelAccessibilityLabel"
   | "bakeLabel"
@@ -88,18 +95,18 @@ export function designCopy(
   return {
     headerTitle: t("completion:finish.design.headerTitle"),
     backAccessibilityLabel: t("completion:finish.design.backA11yLabel"),
-    shapeSectionTitle: t("completion:finish.design.shapeSectionTitle"),
-    colorSectionTitle: t("completion:finish.design.colorSectionTitle"),
-    centerSectionTitle: t("completion:finish.design.centerSectionTitle"),
-    bottomLabelSectionTitle: t(
-      "completion:finish.design.bottomLabelSectionTitle",
+    // Section titles reuse badgeDesigner's accordion labels: these are the same
+    // five sections that screen shows, and the controls inside them already
+    // localize themselves out of that namespace.
+    shapeSectionTitle: t("badgeDesigner:accordion.sections.shape"),
+    frameSectionTitle: t("badgeDesigner:accordion.sections.frame"),
+    centerSectionTitle: t("badgeDesigner:accordion.sections.center"),
+    colorSectionTitle: t("badgeDesigner:accordion.sections.colors"),
+    inscriptionsSectionTitle: t(
+      "badgeDesigner:accordion.sections.inscriptions",
     ),
-    bottomLabelPlaceholder: t(
-      "completion:finish.design.bottomLabelPlaceholder",
-    ),
-    bottomLabelAccessibilityLabel: t(
-      "completion:finish.design.bottomLabelA11yLabel",
-    ),
+    bottomLabelPlaceholder: t("badgeDesigner:bottomLabel.placeholder"),
+    bottomLabelAccessibilityLabel: t("badgeDesigner:bottomLabel.a11y"),
     bakeLabel: t("completion:finish.design.bakeLabel"),
     bakeSubcopy: t("completion:finish.design.bakeSubcopy"),
   };

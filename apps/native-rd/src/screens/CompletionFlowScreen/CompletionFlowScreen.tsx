@@ -23,6 +23,7 @@ import {
 import { captureBadge, getCaptureDimensions } from "../../badges/captureBadge";
 import { createDefaultBadgeDesign, parseBadgeDesign } from "../../badges/types";
 import type { BadgeDesign } from "../../badges/types";
+import { useFrameParamsForGoal } from "../../badges/frames";
 import {
   goalsQuery,
   stepsByGoalQuery,
@@ -79,7 +80,7 @@ function FinishFlowContent({ goalId }: { goalId: string }) {
   // button can use the shared common:actions.retry label. react-i18next binds
   // the key union to the namespaces passed here, so it must be listed even
   // though it is loaded globally and keys stay fully prefixed at the call site.
-  const { t, i18n } = useTranslation(["completion", "common"]);
+  const { t, i18n } = useTranslation(["completion", "common", "badgeDesigner"]);
   const { animationPref } = useAnimationPref();
 
   const goals = useQuery(goalsQuery);
@@ -108,6 +109,14 @@ function FinishFlowContent({ goalId }: { goalId: string }) {
     parseBadgeDesign(goalDesignJson) ??
     createDefaultBadgeDesign(goalTitle, goalColor);
   const currentDesign = design ?? seededDesign;
+
+  // Feeds the data-driven frames (step count, evidence count, elapsed days) so
+  // picking one in the design stage renders real numbers, not a paramless ring.
+  const frameParams = useFrameParamsForGoal(
+    goalId as GoalId,
+    (goal?.createdAt as string | null | undefined) ?? null,
+    (goal?.completedAt as string | null | undefined) ?? null,
+  );
 
   const previewRef = useRef<BadgeRendererHandle | null>(null);
   const capturingRef = useRef(false);
@@ -209,7 +218,15 @@ function FinishFlowContent({ goalId }: { goalId: string }) {
   }, [navigation]);
 
   const handleViewBadge = useCallback(() => {
-    if (!badgeRow) return;
+    if (!badgeRow) {
+      // Only reachable if the badge row hasn't arrived from Evolu yet — the
+      // reveal stage is gated on a successful bake, so this is a sync lag, not
+      // a missing badge. Log rather than dead-ending in silence.
+      logger.warn("View badge pressed before the badge row was queryable", {
+        goalId,
+      });
+      return;
+    }
     const parentNav = navigation.getParent<NavigationProp<RootTabParamList>>();
     if (!parentNav) {
       logger.warn(
@@ -217,6 +234,12 @@ function FinishFlowContent({ goalId }: { goalId: string }) {
       );
       return;
     }
+    // Dismiss the finish modal FIRST. It is presented on GoalsStack, and an
+    // iOS native-stack modal covers the whole screen — switching the tab
+    // underneath it leaves BadgeDetail rendering invisibly behind the modal,
+    // which reads to the user as "View badge does nothing". popToTop removes
+    // CompletionFlow from the stack, dismissing the presentation.
+    navigation.popToTop();
     parentNav.navigate("BadgesTab", {
       screen: "BadgeDetail",
       params: { badgeId: String(badgeRow.id) },
@@ -226,7 +249,7 @@ function FinishFlowContent({ goalId }: { goalId: string }) {
       // and there's nothing to pop to (#325).
       initial: false,
     });
-  }, [badgeRow, navigation]);
+  }, [badgeRow, goalId, navigation]);
 
   if (!goal) {
     return (
@@ -256,6 +279,7 @@ function FinishFlowContent({ goalId }: { goalId: string }) {
         onDesignChange={setDesign}
         goalColor={goalColor}
         goalTitle={goalTitle}
+        frameParams={frameParams}
         badgeSize={DESIGN_PREVIEW_SIZE}
         previewRef={previewRef}
         onBack={() => setStage("celebrate")}
