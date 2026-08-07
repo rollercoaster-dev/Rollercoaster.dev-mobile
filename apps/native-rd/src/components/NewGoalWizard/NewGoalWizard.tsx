@@ -605,7 +605,7 @@ export function NewGoalWizard({
                 </Pressable>
               </View>
             </View>
-            <View style={styles.footer}>
+            <View style={[styles.footer, styles.footerSingleCta]}>
               <Button
                 label={nextLabel}
                 onPress={onNext}
@@ -668,7 +668,7 @@ export function NewGoalWizard({
                 />
               </ScrollView>
             </View>
-            <View style={styles.footer}>
+            <View style={[styles.footer, styles.footerSingleCta]}>
               {/* Same linear-advance onNext as name/step; only the label differs
                 (D7). Unconditionally enabled — the prototype gates nothing on
                 this screen. */}
@@ -702,7 +702,7 @@ export function NewGoalWizard({
                 <RNText style={styles.badgeNoteText}>{badgeNote}</RNText>
               </View>
             </View>
-            <View style={styles.footer}>
+            <View style={[styles.footer, styles.footerSingleCta]}>
               <Button
                 label={startWorkingLabel}
                 onPress={onStartWorking}

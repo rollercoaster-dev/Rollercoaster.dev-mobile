@@ -9,6 +9,13 @@ import { shadowStyle } from "../../styles/shadows";
 // accentPrimary (via Button) · badge banner surface #ede9fe →
 // accentPurpleLight. The banner ink #3b1f6b is *re-toned* (not a literal
 // match) to accentPrimary — the blue #2563eb accent, reused as the ink.
+
+/**
+ * Quick-add press target height — the 44pt minimum tap target. Named because
+ * `footerSingleCta` reserves this same height, so the two can't drift.
+ */
+const QUICK_ADD_MIN_HEIGHT = 44;
+
 export const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
@@ -58,6 +65,17 @@ export const styles = StyleSheet.create((theme) => ({
     paddingBottom: theme.space[5],
     gap: theme.space[3],
   },
+  /**
+   * Composed over `footer` on the three steps whose footer is the CTA alone
+   * (first step, build, ready). Only the name step has a second row — the
+   * quick-add link — under its button, so without this those three CTAs drop by
+   * that row's height and sit tight against the bottom edge. Reserving the same
+   * `gap + press target` keeps the primary CTA at one height off the bottom on
+   * all four steps, and clears the home indicator with room to spare.
+   */
+  footerSingleCta: {
+    paddingBottom: theme.space[5] + theme.space[3] + QUICK_ADD_MIN_HEIGHT,
+  },
 
   // --- Step 1 · name ---
   eyebrow: {
@@ -93,7 +111,7 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.textSecondary,
   },
   quickAddPress: {
-    minHeight: 44,
+    minHeight: QUICK_ADD_MIN_HEIGHT,
     alignItems: "center" as const,
     justifyContent: "center" as const,
   },
