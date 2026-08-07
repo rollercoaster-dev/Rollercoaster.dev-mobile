@@ -364,7 +364,7 @@ Settings
 | --------------------- | ------------------------------- | ------------------ |
 | WelcomeScreen         | Full screen (first launch only) | —                  |
 | GoalsScreen           | Tab root                        | `Goals`            |
-| NewGoalModal          | Modal                           | `NewGoal`          |
+| NewGoalScreen         | Modal                           | `NewGoal`          |
 | FocusModeScreen       | Stack screen                    | `FocusMode`        |
 | EditModeScreen        | Stack screen                    | `EditMode`         |
 | TimelineJourneyScreen | Stack screen                    | `TimelineJourney`  |

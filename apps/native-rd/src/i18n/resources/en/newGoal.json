@@ -1,14 +1,4 @@
 {
-  "title": "New Goal",
-  "fields": {
-    "title": {
-      "label": "Title",
-      "placeholder": "What do you want to learn?"
-    }
-  },
-  "cta": {
-    "create": "Create Goal"
-  },
   "header": {
     "label": "New goal"
   },
@@ -68,8 +58,6 @@
     "startWorking": "Start Working"
   },
   "errors": {
-    "titleRequired": "Title is required",
-    "createFailed": "Failed to create goal",
     "createFailedTitle": "Could not create goal",
     "createFailedMessage": "Something went wrong. Please try again."
   }
