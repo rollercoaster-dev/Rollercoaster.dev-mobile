@@ -1,8 +1,11 @@
 import { i18n, NAMESPACES } from "../index";
 
-// Pseudo locale's job is to make untranslated strings visible during dev.
-// A key that exists in en but is missing in pseudo silently falls back to en,
-// defeating the leak detection. This test fails loudly when that drift appears.
+// Every non-en locale is checked against en, because `fallbackLng: "en"` makes
+// a missing key invisible: the UI silently renders English instead of failing.
+// For pseudo that defeats leak detection during dev; for de it ships untranslated
+// strings to real users. Both drift modes fail loudly here.
+const TRANSLATION_LOCALES = ["de", "pseudo"] as const;
+
 function flattenKeys(value: unknown, prefix = ""): string[] {
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
     return [prefix];
@@ -21,24 +24,21 @@ function flattenKeys(value: unknown, prefix = ""): string[] {
   return result;
 }
 
+const CASES = TRANSLATION_LOCALES.flatMap((locale) =>
+  NAMESPACES.map((ns) => [locale, ns] as const),
+);
+
 describe("i18n locale key parity", () => {
-  test.each(NAMESPACES)(
-    "%s namespace has identical key sets in en and pseudo",
-    (ns) => {
-      const en = i18n.getResourceBundle("en", ns);
-      const pseudo = i18n.getResourceBundle("pseudo", ns);
-      const enKeys = new Set(flattenKeys(en));
-      const pseudoKeys = new Set(flattenKeys(pseudo));
-      const missingInPseudo = [...enKeys]
-        .filter((k) => !pseudoKeys.has(k))
-        .sort();
-      const extraInPseudo = [...pseudoKeys]
-        .filter((k) => !enKeys.has(k))
-        .sort();
-      expect({ missingInPseudo, extraInPseudo }).toEqual({
-        missingInPseudo: [],
-        extraInPseudo: [],
-      });
+  test.each(CASES)(
+    "%s has identical key sets to en in the %s namespace",
+    (locale, ns) => {
+      const enKeys = new Set(flattenKeys(i18n.getResourceBundle("en", ns)));
+      const localeKeys = new Set(
+        flattenKeys(i18n.getResourceBundle(locale, ns)),
+      );
+      const missing = [...enKeys].filter((k) => !localeKeys.has(k)).sort();
+      const extra = [...localeKeys].filter((k) => !enKeys.has(k)).sort();
+      expect({ missing, extra }).toEqual({ missing: [], extra: [] });
     },
   );
 });
